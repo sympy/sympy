@@ -608,6 +608,13 @@ def test_as_independent():
            (Integral(x, (x, 1, 2)), x)
 
 
+@XFAIL
+def test_call_2():
+    # TODO UndefinedFunction does not subclass Expr
+    f = Function('f')
+    assert (2*f)(x) == 2*f(x)
+
+
 def test_replace():
     f = log(sin(x)) + tan(sin(x**2))
 
