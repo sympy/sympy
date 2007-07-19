@@ -1,0 +1,135 @@
+#! /usr/bin/env python
+"""
+Python shell for sympy. Imports sympy and defines the symbols x, y, z. 
+
+command line options: 
+  -c : permits to specify a python interactive interpreter, currently only 
+       python or ipython. Example usage: 
+           isympy -c python
+       default is set to ipython
+       
+  -h : prints this help message
+
+  --version: prints version number
+"""
+
+__author__ = "Fabian Seoane <fabian@fseoane.net>"
+__version__ = "0.2"
+    
+import sys
+sys.path.append('..')
+sys.path.append('.')
+
+basic_modules = """
+    sympy
+    sympy.core
+    sympy.modules
+    sympy.modules.polynomials
+    sympy.modules.integrate
+"""
+
+welcome_msg = """Python console for sympy."""
+
+#Imported modules (from module import *): 
+#""" + basic_modules + """
+#Symbols defined: x, y, z
+#"""
+
+welcome_msg_ipython = welcome_msg + """
+?       -> Introduction to IPython's features.
+%magic  -> Information about IPython's 'magic' % functions.
+help    -> Python's own help system.
+object? -> Details about 'object'. ?object also works, ?? prints more."""
+
+basic_import_code = """
+from sympy import *
+"""
+
+init_code = """
+x = Symbol('x')
+y = Symbol('y')
+z = Symbol('z')
+"""
+
+def run_ipython_interpreter():
+	
+    from IPython.Shell import IPShellEmbed
+
+    args = ['-nopprint']
+    ipshell = IPShellEmbed(args)
+    api = ipshell.IP.getapi()
+    api.ex(basic_import_code)
+    api.ex(init_code)
+    
+    ### create some magic commands
+    
+    #def pretty_print(self, arg):
+    #    self.api.ex("print str((%s).__pretty__())" % arg)
+        
+    #api.expose_magic("pprint", pretty_print)
+
+    # Now start an embedded ipython.
+    ipshell(welcome_msg_ipython)
+    sys.exit("Exiting ...")
+
+def run_python_interpreter():
+    print """
+Couldn't locate IPython. Having IPython installed is greatly recomended.	
+See http://ipython.scipy.org for more details. If you use Debian, just install
+the "ipython" package and start isympy again.\n"""
+	
+    import code
+    import readline
+    import atexit
+    import os
+
+
+    class HistoryConsole(code.InteractiveConsole):
+        def __init__(self, locals=None, filename="<console>",
+	                 histfile=os.path.expanduser("~/.sympy-history")):
+	        code.InteractiveConsole.__init__(self)
+	        self.init_history(histfile)
+	
+        def init_history(self, histfile):
+	        readline.parse_and_bind("tab: complete")
+	        if hasattr(readline, "read_history_file"):
+	            try:
+	                readline.read_history_file(histfile)
+	            except IOError:
+	                pass
+                atexit.register(self.save_history, histfile)
+	
+        def save_history(self, histfile):
+            readline.write_history_file(histfile)
+	
+    sh = HistoryConsole()
+    sh.runcode(basic_import_code)
+    sh.runcode("x = Symbol('x')")
+    sh.runcode("y = Symbol('y')")
+    sh.runcode("z = Symbol('z')")
+    sh.interact(welcome_msg)
+    sys.exit("Exiting ...")
+
+
+from optparse import OptionParser
+
+def main():
+    parser = OptionParser("usage: isympy [options]", version=__version__ )
+    parser.add_option("-c", "--console", dest="console",
+                      help="specify a python interactive interpreter, python or ipython")
+    (options, args) = parser.parse_args()
+
+    if options.console == "python":
+        run_python_interpreter()
+    elif options.console == "ipython":
+        run_ipython_interpreter()
+    else:
+	    try:
+	        run_ipython_interpreter()
+	
+	    except ImportError:
+	        run_python_interpreter()
+
+if __name__ == "__main__":
+    main()
+
