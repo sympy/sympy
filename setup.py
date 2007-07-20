@@ -92,16 +92,6 @@ class test_sympy_core(Command):
     description = "Automatically run the core test suite for Sympy."
     user_options = []  # distutils complains if this is not here.
 
-    i = 0
-    tests_to_run = ["tests/test_arit.py", "tests/test_basic.py", 
-                   "tests/test_diff.py", "tests/test_equal.py", 
-                   "tests/test_eval.py", "tests/test_evalf.py", 
-                   "tests/test_functions.py", "tests/test_hashing.py", 
-                   "tests/test_numbers.py", "tests/test_series.py", 
-                   "tests/test_str.py", "tests/test_subs.py", 
-                   "tests/test_symbol.py"
-                   ][i:i+1]
-    
     def initialize_options(self):  # distutils wants this
         pass
     
@@ -118,7 +108,7 @@ class test_sympy_core(Command):
             If you are on debian systems, the package is named python-codespeak-lib
             """
             sys.exit(-1)
-        py.test.cmdline.main(args=self.tests_to_run)
+        py.test.cmdline.main(args=["sympy/core/tests"])
         
 
 class test_sympy(Command):
@@ -147,7 +137,7 @@ class test_sympy(Command):
             If you are on debian systems, the package is named python-codespeak-lib
             """
             sys.exit(-1)
-        pylib.test.cmdline.main(args=["tests", "--nomagic"])
+        pylib.test.cmdline.main(args=["sympy", "--nomagic"])
         tdoc = test_sympy_doc(self.args)
         tdoc.run() # run also the doc test suite
 
@@ -221,12 +211,17 @@ setup(
                     'sympy.modules.concrete',
                     'sympy.modules.geometry',
                     'sympy.modules.mathml', 
+                    'sympy.modules.matrices',
                     'sympy.modules.plotting',
                     'sympy.modules.plotting.renderables',
                     'sympy.modules.plotting.scene',
                     'sympy.modules.polynomials',
                     'sympy.modules.printing',
+                    'sympy.modules.series',
+                    'sympy.modules.simplify',
+                    'sympy.modules.solvers',
                     'sympy.modules.specfun',
+                    'sympy.modules.utilities'
                   ],
       package_data = {'sympy.modules.mathml' : ['data/*.xsl']}, 
       scripts = ['bin/isympy'],
