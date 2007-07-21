@@ -166,8 +166,14 @@ class test_sympy_doc(Command):
         files = [f.replace("\\","/") for f in files]
         
         # files without doctests or that don't work
-        #files.remove('sympy/modules/printing/pygame_.py')
-        #files.remove('sympy/modules/printing/pretty.py') # see issue 53
+        files.remove('sympy/core/add.py')
+        files.remove('sympy/core/relational.py')
+        files.remove('sympy/core/interval.py')
+        files.remove('sympy/modules/__init__.py')
+        files.remove('sympy/modules/series/__init__.py')
+        files.remove('sympy/modules/utilities/__init__.py')
+        print files
+        #stop
         # at this time Plot does not have doctests
         plotting_path = 'sympy/modules/plotting'
         files = [f for f in files if not f.startswith(plotting_path)]
@@ -190,7 +196,7 @@ class test_sympy_doc(Command):
             modules.append(x.replace('/', '.')[:-3])
             #put . as separator and strip the extension (.py)
 
-        modules.append('sympy')
+        #modules.append('sympy')
         
         suite = unittest.TestSuite()
         for mod in modules:
