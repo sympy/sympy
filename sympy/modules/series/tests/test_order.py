@@ -1,4 +1,4 @@
-from sympy.core import *
+from sympy import *
 
 x = Symbol('x')
 y = Symbol('y')
@@ -12,7 +12,7 @@ def test_simple_1():
     assert Order(x)*3 == Order(x)
     assert -28*Order(x) == Order(x)
     assert Order(-23) == Order(1)
-    assert Order(exp(x)),Order(1 == x)
+    assert Order(exp(x)) == Order(1,x)
     assert Order(exp(1/x)).expr == exp(1/x)
     assert Order(x*exp(1/x)).expr == x*exp(1/x)
     assert Order(x**(o/3)).expr == x**(o/3)
@@ -20,7 +20,7 @@ def test_simple_1():
 
 def test_simple_2():
     assert Order(2*x)*x == Order(x**2)
-    assert Order(2*x)/x,Order(1 == x)
+    assert Order(2*x)/x == Order(1,x)
     assert Order(2*x)*x*exp(1/x) == Order(x**2*exp(1/x))
     assert (Order(2*x)*x*exp(1/x)/ln(x)**3).expr == x**2*exp(1/x)*ln(x)**-3
 
@@ -83,7 +83,7 @@ def test_contains_3():
 def test_add_1():
     assert Order(x+x) == Order(x)
     assert Order(3*x-2*x**2) == Order(x)
-    assert Order(1+x), Order(1 == x)
+    assert Order(1+x) == Order(1,x)
     assert Order(1+1/x) == Order(1/x)
     assert Order(ln(x)+1/ln(x)) == Order(ln(x))
     assert Order(exp(1/x)+x) == Order(exp(1/x))
@@ -118,12 +118,12 @@ def test_multivar_2():
     assert Order(x**2*y+y**2*x,x,y).expr == x**2*y+y**2*x
 
 def test_multivar_mul_1():
-    assert Order(x+y)*x,Order(x**2+y*x,x == y)
+    assert Order(x+y)*x == Order(x**2+y*x,x,y)
 
 def test_multivar_3():
     assert (Order(x)+Order(y))[:],(Order(x) == Order(y))
     assert Order(x)+Order(y)+Order(x+y) == Order(x+y)
-    assert (Order(x**2*y)+Order(y**2*x))[:],(Order(x*y**2) == Order(y*x**2))
+    assert (Order(x**2*y)+Order(y**2*x))[:] == (Order(x*y**2), Order(y*x**2))
     assert (Order(x**2*y)+Order(y*x)) == Order(x*y)
     
 def test_w():

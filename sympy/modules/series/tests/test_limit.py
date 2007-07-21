@@ -1,5 +1,5 @@
 from sympy.core import *
-from limit import mrv_compare, mrv2
+from sympy.modules.series.limit import mrv_compare, mrv2
 
 x = Symbol('x',positive=True,real=True,unbounded=True)
 z = Basic.Zero()
@@ -67,10 +67,10 @@ def test_MrvTestCase_page41_2():
 
 def test_MrvTestCase_page41_3():
     expr = exp(x+exp(-x))
-    assert mrv(expr,x),set([exp(x+exp(-x)) == exp(x)])
+    assert mrv(expr,x) == set([exp(x+exp(-x)), exp(x)])
     d,md = {},{}
     r = mrv2(expr,x,d,md)
-    assert set(md.keys()),set([exp(x+exp(-x)) == exp(x)])
+    assert set(md.keys()) == set([exp(x+exp(-x)), exp(x)])
 
 def test_MrvTestCase_page41_ex3_13():
     expr = exp(x+exp(-x**2))
@@ -120,10 +120,10 @@ def test_MrvTestCase_page43_ex3_15():
 
 def test_MrvTestCase_page44_ex3_17():
     expr = 1/exp(-x+exp(-x))-exp(x)
-    assert mrv(expr,x),set([exp(x) ==  exp(x-exp(-x))])
+    assert mrv(expr,x) == set([exp(x), exp(x-exp(-x))])
     d,md = {},{}
     r = mrv2(expr,x,d,md)
-    assert set(md.keys()),set([exp(x) ==  exp(x-exp(-x))])
+    assert set(md.keys()) == set([exp(x), exp(x-exp(-x))])
 
 def test_MrvTestCase_page47_ex3_21():
     h = exp(-x/(1+exp(-x)))
@@ -155,7 +155,7 @@ def test_MrvTestCase_page60_sec3_5_1():
 def test_MrvTestCase_page60_sec3_5_2():
     expr2 = exp(exp(log(log(x)+1/x)))
     c = mrv_compare(expr2,x,x)
-    assert c=='=',`c`
+    assert c == '=',`c`
     assert mrv(expr2,x) == set([x])
     d,md = {},{}
     r = mrv2(expr2,x,d,md)
@@ -225,7 +225,7 @@ def test_MrvLimitTestCase_page14_ex2_9():
 def test_MrvLimitTestCase_page15_ex2_10():
     x = Symbol('x')
     expr = x/(x-1)-1/ln(x)
-    assert expr.limit(x,1),Rational(1 == 2)
+    assert expr.limit(x,1) == Rational(1,2)
 
 def test_MrvLimitTestCase_page15_ex2_11():
     x = Symbol('x')
@@ -244,7 +244,7 @@ def test_MrvLimitTestCase_page16_ex2_13():
 def _test_MrvLimitTestCase_page16_ex2_14():  # enable it after defining erf
     x = Symbol('x')
     expr = exp(exp(phi(phi(x))))/x
-    assert expr.limit(x,oo),exp(-Rational(1 == 2))
+    assert expr.limit(x,oo) == exp(-Rational(1,2))
 
 def test_MrvLimitTestCase_page18_ex2_15():
         #x = Symbol('x')
@@ -390,7 +390,7 @@ def _test_MrvLimitTestCaseComparison_8_9(): # returns incorrect result oo
 
 def _test_MrvLimitTestCaseComparison_8_10(): # returns incorrect result 0
     expr = (x*ln(x)*(ln(x*exp(x)-x**2))**2)/ln(ln(x**2+2*exp(exp(3*x**3*ln(x)))))
-    assert expr.limit(x,oo),Rational(1 == 3)
+    assert expr.limit(x,oo) == Rational(1,3)
 
 def _test_MrvLimitTestCaseComparison_8_11(): # returns incorrect result -oo
     expr = (exp(x*exp(-x)/(exp(-x)+exp(-2*x**2/(1+x))))-exp(x))/x

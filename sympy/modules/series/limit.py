@@ -1,6 +1,6 @@
 
-from basic import Basic, S, cache_it, cache_it_immutable
-from methods import RelMeths, ArithMeths
+from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
+from sympy.core.methods import RelMeths, ArithMeths
 
 class Limit(Basic, RelMeths, ArithMeths):
     """ Find the limit of the expression under process x->xlim.

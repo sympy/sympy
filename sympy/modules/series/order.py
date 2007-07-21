@@ -1,6 +1,6 @@
 
-from basic import Basic, S, cache_it, cache_it_immutable
-from methods import ArithMeths, RelMeths
+from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
+from sympy.core.methods import ArithMeths, RelMeths
 
 class Order(Basic, ArithMeths, RelMeths):
     """

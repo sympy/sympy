@@ -137,7 +137,7 @@ class test_sympy(Command):
             If you are on debian systems, the package is named python-codespeak-lib
             """
             sys.exit(-1)
-        pylib.test.cmdline.main(args=["sympy", "--nomagic"])
+        pylib.test.cmdline.main(args=["sympy"])
         tdoc = test_sympy_doc(self.args)
         tdoc.run() # run also the doc test suite
 
@@ -166,8 +166,8 @@ class test_sympy_doc(Command):
         files = [f.replace("\\","/") for f in files]
         
         # files without doctests or that don't work
-        files.remove('sympy/modules/printing/pygame_.py')
-        files.remove('sympy/modules/printing/pretty.py') # see issue 53
+        #files.remove('sympy/modules/printing/pygame_.py')
+        #files.remove('sympy/modules/printing/pretty.py') # see issue 53
         # at this time Plot does not have doctests
         plotting_path = 'sympy/modules/plotting'
         files = [f for f in files if not f.startswith(plotting_path)]
@@ -178,8 +178,9 @@ class test_sympy_doc(Command):
             import libxslt
         except ImportError:
             #remove tests that make use of libxslt1
-            files.remove('sympy/modules/printing/latex.py')
-            files.remove('sympy/modules/printing/__init__.py')
+            #files.remove('sympy/modules/printing/latex.py')
+            #files.remove('sympy/modules/printing/__init__.py')
+            pass
 
         modules = []
         for x in files:

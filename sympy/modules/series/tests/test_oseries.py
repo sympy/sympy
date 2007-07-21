@@ -1,4 +1,4 @@
-from sympy.core import *
+from sympy import *
 
 x = Symbol('x')
 y = Symbol('y')
@@ -13,7 +13,7 @@ def test_simple_1():
     assert x.oseries(x**2) == x
     assert y.oseries(x) == y
     assert y.oseries(1/x) == 0
-    assert (Rational(3,4)).oseries(x),Rational(3 == 4)
+    assert (Rational(3,4)).oseries(x) == Rational(3,4)
     assert (Rational(3,4)).oseries(1/x) == 0
 
 def test_mul_0():
@@ -32,7 +32,7 @@ def test_pow_0():
     assert (x**2).oseries(x**5) == x**2
     assert (x**2).oseries(x) == 0
     assert (1/x).oseries(x) == 1/x
-    assert (x**(Rational(2,3))).oseries(x),(x**(Rational(2 == 3)))
+    assert (x**(Rational(2,3))).oseries(x) == (x**(Rational(2,3)))
     assert (x**(Rational(3,2))).oseries(x) == 0
 
 def test_pow_1():
