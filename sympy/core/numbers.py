@@ -432,21 +432,29 @@ class Rational(Number):
                     q = e.q
                     for b1,e1 in factors.items():
                         ee = abs(e1)
+
                         i = ee//q
                         r = ee - q*i
+
                         if i:
                             if e1<0:
                                 l12.append((b1**i, -1))
                             else:
                                 l1.append(b1 ** i)
                         if r:
-                            l2.append((b1**r, e))
+                            if e1<0:
+                                l2.append((b1**r, -e))
+                            else:
+                                l2.append((b1**r, e))
+
                     if not (l1 or l12):
                         return
-                    l1 += [Basic.Pow(*be) for be in l2 + l12]
-                    return Basic.Mul(*l1)
+                    else:
+                        l1 += [Basic.Pow(*be) for be in l2 + l12]
+                        return Basic.Mul(*l1)
                 else:
-                    return ((b**e.p)**(e//e.p))
+                    return (b**e.p)**Rational(1, e.q)
+
         return
 
     def _as_decimal(self):

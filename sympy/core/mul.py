@@ -7,7 +7,6 @@ class Mul(AssocOp, RelMeths, ArithMeths):
 
     @classmethod
     def flatten(cls, seq):
-#        import pdb; pdb.set_trace()
         # apply associativity, separate commutative part of seq
         c_part = []
         nc_part = []
@@ -46,21 +45,9 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                         b = t[0]
 
                 if b in c_powers:
-                    ne = c_powers[b] + e
-
-                    if isinstance(ne, Basic.Integer) and isinstance(b, Basic.Rational):
-                        coeff *= b ** ne
-                        del c_powers[b]
-                    else:
-                        c_powers[b] = ne
+                    c_powers[b] += e
                 else:
                     c_powers[b] = e
-
-                # NOTE: remove this
-                #if c_powers.has_key(b):
-                #    c_powers[b] += e
-                #else:
-                #    c_powers[b] = e
             else:
                 o = nc_seq.pop(0)
                 if isinstance(o, Basic.Function):
@@ -87,16 +74,21 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 else:
                     nc_part.append(o1)
                     nc_part.append(o)
-        for b,e in c_powers.items():
+
+        for b, e in c_powers.items():
             if isinstance(e, Basic.Zero):
                 continue
+
             if isinstance(e, Basic.One):
                 if isinstance(b, Basic.Number):
                     coeff *= b
                 else:
                     c_part.append(b)
+            elif isinstance(e, Basic.Integer) and isinstance(b, Basic.Number):
+                coeff *= b ** e
             else:
                 c_part.append(Basic.Pow(b, e))
+
         if isinstance(coeff, (Basic.Infinity, Basic.NegativeInfinity)):
             new_c_part = []
             for t in c_part:
