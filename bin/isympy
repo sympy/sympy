@@ -14,7 +14,10 @@ command line options:
 """
 
 __author__ = "Fabian Seoane <fabian@fseoane.net>"
-__version__ = "0.2"
+#doesn't always work:
+#from sympy import __version__ as sympy_version
+#__version__ = sympy_version
+__version__ = "0.5.0"
     
 import sys
 sys.path.append('..')
