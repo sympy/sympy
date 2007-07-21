@@ -172,11 +172,6 @@ class test_sympy_doc(Command):
         files.remove('sympy/modules/__init__.py')
         files.remove('sympy/modules/series/__init__.py')
         files.remove('sympy/modules/utilities/__init__.py')
-        print files
-        #stop
-        # at this time Plot does not have doctests
-        plotting_path = 'sympy/modules/plotting'
-        files = [f for f in files if not f.startswith(plotting_path)]
 
         
         #testing for optional libraries
