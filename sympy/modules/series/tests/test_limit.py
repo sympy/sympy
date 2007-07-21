@@ -6,6 +6,13 @@ z = Basic.Zero()
 o = Basic.One()
 
 
+###
+def mrv(expr, var):
+    d,md = {},{}
+    mrv2(expr, var, d, md)
+    return set(md.keys())
+###
+
 def test_MrvCompareLeadTerm_simple_1():
     assert mrv_compare(x,x,x) == '='
 
