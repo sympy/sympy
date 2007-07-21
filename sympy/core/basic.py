@@ -127,6 +127,10 @@ class Basic(BasicMeths):
             return Basic.Real(a)
         if isinstance(a, complex):
             real, imag = Basic.sympify(a.real), Basic.sympify(a.imag)
+            ireal, iimag = int(real), int(imag) 
+            t = ireal + iimag*1j
+            if t == a:
+                return ireal + iimag*Basic.ImaginaryUnit()
             return real + Basic.ImaginaryUnit() * imag
         if isinstance(a, str):
             return parser.Expr(a).tosymbolic()

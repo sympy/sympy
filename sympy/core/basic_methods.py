@@ -258,6 +258,12 @@ class BasicMeths(AssumeMeths):
             raise AttributeError("'%s' object has no attribute '%s'"%
                                  (self.__class__.__name__, name))
 
+    def __setattr__(self, name, val):
+        if name.startswith('is_'):
+            raise AttributeError("Modification of assumptions is not allowed")
+        else:
+            AssumeMeths.__setattr__(self, name, val)
+
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
         # occurs as hash is needed for setting cache dictionary keys

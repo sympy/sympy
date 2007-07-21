@@ -1,3 +1,4 @@
+import py
 from sympy.core import *
 
 
@@ -251,3 +252,70 @@ def test_neg_symbol_nonpositive():
     assert x.is_nonpositive == None
     assert x.is_negative == False
     assert x.is_nonnegative == True
+
+def _test_prime_symbol():
+    x = Basic.Symbol('x', prime=True)
+    assert x.is_prime == True
+    assert x.is_integer == True
+    assert x.is_positive == True
+    assert x.is_negative == False
+    assert x.is_nonpositive == False
+    assert x.is_nonnegative == None
+
+    # XXX x.is_integer currently will be True
+    x = Basic.Symbol('x', prime=False)
+    assert x.is_prime == False
+    assert x.is_integer == None
+    assert x.is_positive == None
+    assert x.is_negative == None
+    assert x.is_nonpositive == None
+    assert x.is_nonnegative == None
+
+def _test_other_symbol():
+    x = Basic.Symbol('x', integer=True)
+    assert x.is_integer == True
+    assert x.is_real == True
+
+    # XXX These two require changes to the way aliases are handled when
+    #     being examined (they're fine when just setting)
+    x = Basic.Symbol('x', integer=True, nonnegative=True)
+    assert x.is_nni == True
+    assert x.is_ni == False
+    assert x.is_pi == None
+
+    x = Basic.Symbol('x', integer=True, nonpositive=True)
+    assert x.is_npi == True
+    assert x.is_pi == False
+    assert x.is_ni == None
+
+    x = Basic.Symbol('x', odd=True)
+    assert x.is_odd == True
+    assert x.is_even == False
+    assert x.is_integer == True
+
+    # XXX x.is_even currently will be True
+    x = Basic.Symbol('x', odd=False)
+    assert x.is_odd == False
+    assert x.is_even == None
+    assert x.is_integer == None
+
+    x = Basic.Symbol('x', even=True)
+    assert x.is_even == True
+    assert x.is_odd == False
+    assert x.is_integer == True
+
+    # XXX x.is_odd currently will be True
+    x = Basic.Symbol('x', even=False)
+    assert x.is_even == False
+    assert x.is_odd == None
+    assert x.is_integer == None
+
+    x = Basic.Symbol('x', nni=True)
+    assert x.is_integer == True
+    assert x.is_nonnegative == True
+
+    x = Basic.Symbol('x', npi=True)
+    assert x.is_integer == True
+    assert x.is_nonpositive == True
+
+    py.test.raises(AttributeError, "x.is_real = False")
