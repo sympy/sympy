@@ -44,7 +44,7 @@ class Order(Basic, ArithMeths, RelMeths):
     >>> O(x)
     O(x)
     >>> O(x)*x
-    O(x**2)
+    O(x ** 2)
     >>> O(x)-O(x)
     O(x)
 

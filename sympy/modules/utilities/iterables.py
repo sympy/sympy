@@ -56,9 +56,9 @@ def make_list(expr, kind):
        >>> make_list(x*y, Mul)
        [x, y]
        >>> make_list(x*y, Add)
-       [x*y]
+       [x * y]
        >>> make_list(x*y + y, Add)
-       [y, x*y]
+       [y, x * y]
 
     """
     if isinstance(expr, kind):
