@@ -527,7 +527,7 @@ class Composition(AssocOp, Function):
     """ Composition of functions.
     
     Composition(f1,f2,f3)(x) -> f1(f2(f3(x)))
-
+    >>> from sympy import exp,log
     >>> l1 = Lambda('x**2','x')
     >>> l2 = Lambda('x+1','x')
     >>> Composition(l1,l2)('y')

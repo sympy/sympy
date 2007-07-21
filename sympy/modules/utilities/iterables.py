@@ -5,7 +5,7 @@ def all(iterable):
        but this behaviour can be simulated easily using
        list comprehension.
 
-       >>> from sympy.modules.utils import all
+       >>> from sympy.modules.utilities import all
 
        >>> all( [True, True, True] )
        True
@@ -29,8 +29,7 @@ def any(iterable):
        but this behaviour can be simulated easily using
        list comprehension.
 
-       >>> from sympy.modules.utils import any
-
+       >>> from sympy.modules.utilities import any
        >>> any( [False, False, False] )
        False
        >>> any( [False, True, False] )
@@ -53,20 +52,17 @@ def make_list(expr, kind):
        otherwise (Rational, Pow etc.).
 
        >>> from sympy import *
-       >>> x, y = symbols('x', 'y')
-
+       >>> x, y = map(Symbol, 'xy')
        >>> make_list(x*y, Mul)
        [x, y]
-
        >>> make_list(x*y, Add)
        [x*y]
-
        >>> make_list(x*y + y, Add)
-       [x*y, y]
+       [y, x*y]
 
     """
     if isinstance(expr, kind):
-        return expr[:]
+        return list(expr[:])
     else:
         return [expr]
 
@@ -75,10 +71,8 @@ def flatten(iterable):
 
        >>> flatten([1, 2, 3])
        [1, 2, 3]
-
        >>> flatten([1, 2, [3]])
        [1, 2, 3]
-
        >>> flatten([1, [2, 3], [4, 5]])
        [1, 2, 3, 4, 5]
     """

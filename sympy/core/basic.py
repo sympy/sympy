@@ -258,10 +258,11 @@ class Basic(BasicMeths):
         Helper method for match() - switches the pattern and expr.
 
         Can be used to solve linear equations:
-
-          >>> x=Wild('x')
+          >>> from sympy import Symbol, Wild
+          >>> a,b = map(Symbol, 'ab')
+          >>> x = Wild('x')
           >>> (a+b*x).matches(0)
-          {x_: -a * b ** (-1)}
+          {x_: -a / b}
 
         """
         if evaluate:

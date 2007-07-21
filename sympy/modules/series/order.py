@@ -42,7 +42,7 @@ class Order(Basic, ArithMeths, RelMeths):
     >>> from sympy import *
     >>> x = Symbol("x")
     >>> O(x)
-    O(x, x)
+    O(x)
     >>> O(x)*x
     O(x**2)
     >>> O(x)-O(x)
@@ -212,7 +212,10 @@ class Order(Basic, ArithMeths, RelMeths):
         return self._args[1:]
 
     def tostr(self, level = 0):
-        r = 'O(%s)' % (', '.join([s.tostr() for s in self]))
+        if len(self.symbols) <= 1:
+            r = 'O(%s)' % self.expr.tostr()
+        else:
+            r = 'O(%s)' % (', '.join([s.tostr() for s in self]))
         if self.precedence <= level:
             r = '(%s)' % (r)
         return r
