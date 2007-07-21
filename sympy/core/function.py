@@ -531,9 +531,9 @@ class Composition(AssocOp, Function):
     >>> l1 = Lambda('x**2','x')
     >>> l2 = Lambda('x+1','x')
     >>> Composition(l1,l2)('y')
-    (1 + y) ** 2
+    (1 + y)**2
     >>> Composition(l2,l1)('y')
-    1 + y ** 2
+    1 + y**2
     >>> Composition(exp,log,exp,exp)('x')
     exp(exp(x))
     """

@@ -127,10 +127,10 @@ class Pow(Basic, ArithMeths, RelMeths):
         precedence = self.precedence
         b = self.base.tostr(precedence)
         if isinstance(self.exp, Basic.NegativeOne):
-            r = '1 / %s' % (b)
+            r = '1/%s' % (b)
         else:
-            r = '%s ** %s' % (b,self.exp.tostr(precedence))
-        if precedence<=level:
+            r = '%s**%s' % (b,self.exp.tostr(precedence))
+        if precedence <= level:
             return '(%s)' % (r)
         return r
 

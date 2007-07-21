@@ -154,17 +154,17 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             coeff = -coeff
             if not isinstance(coeff, Basic.One):
                 terms.insert(0, coeff)
-            r = '-' + ' * '.join([t.tostr(precedence) for t in terms])
+            r = '-' + '*'.join([t.tostr(precedence) for t in terms])
         else:
-            r = ' * '.join([t.tostr(precedence) for t in self])
-        r = r.replace(' * 1 / ',' / ')
-        if precedence<=level:
+            r = '*'.join([t.tostr(precedence) for t in self])
+        r = r.replace('*1/', '/')
+        if precedence <= level:
             return '(%s)' % r
         return r
     
         numer,denom = self.as_numer_denom()
         if isinstance(denom, Basic.One):
-            delim = ' * '
+            delim = '*'
             coeff, rest = self.as_coeff_terms()
             r = delim.join([s.tostr(precedence) for s in rest])
             if isinstance(coeff, Basic.One):

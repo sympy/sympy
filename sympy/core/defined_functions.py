@@ -93,7 +93,7 @@ class ApplyExp(Apply):
         p = self.precedence
         b, e = self.as_base_exp()
         if e.is_negative:
-            r = '1 / %s(%s)' % (self.func, -self.args[0])
+            r = '1/%s(%s)' % (self.func, -self.args[0])
         else:
             r = '%s(%s)' % (self.func, self.args[0])
         if p <= level:

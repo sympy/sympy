@@ -262,7 +262,7 @@ class Basic(BasicMeths):
           >>> a,b = map(Symbol, 'ab')
           >>> x = Wild('x')
           >>> (a+b*x).matches(0)
-          {x_: -a / b}
+          {x_: -a/b}
 
         """
         if evaluate:
