@@ -54,6 +54,7 @@ def test_exp_1():
     assert exp(1/x).oseries(x**5) == exp(1/x)
     assert exp(1/(1+x)).oseries(x**4) == (E*(1-x-13*x**3/6+3*x**2/2)).expand()
     assert exp(2+x).oseries(x**5) == (exp(2)*(1+x+x**2/2+x**3/6+x**4/24)).expand()
+    assert exp(x).oseries(x**12) == 1+x+x**2/2+x**3/6+x**4/24+x**5/120+x**6/720+x**7/5040+x**8/40320+x**9/362880+x**10/3628800+x**11/39916800
 
 def test_exp_sqrt_1():
     assert exp(1+sqrt(x)).oseries(x**2) == (exp(1)*(1+sqrt(x)+x/2+sqrt(x)*x/6)).expand()

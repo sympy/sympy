@@ -541,10 +541,13 @@ class Basic(BasicMeths):
         """
         x = order.symbols[0]
         ln = Basic.Log()
-        o = Basic.Order(arg*x, x)
+        o = Basic.Order(arg, x)
         if isinstance(o, Basic.Zero):
             return unevaluated_func(arg)
-        e = ln(order.expr)/ln(o.expr)
+        if o.expr==1:
+            e = ln(order.expr*x)/ln(x)
+        else:
+            e = ln(order.expr)/ln(o.expr)
         n = e.limit(x,0) + 1 + correction
         if n.is_unbounded:
             # requested accuracy gives infinite series,

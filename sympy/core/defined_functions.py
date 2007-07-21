@@ -438,12 +438,12 @@ class Sin(DefinedFunction):
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
-        if n<0: return Basic.Zero()
+        if n<0 or not n%2: return Basic.Zero()
         x = Basic.sympify(x)
-        if len(previous_terms)>1:
-            p = previous_terms[-1]
-            return -p * x**2 / ((2*n+1)*2*n)
-        return (1-2*(n%2))*x**(2*n+1)/Basic.Factorial()(2*n+1)
+        if len(previous_terms)>2:
+            p = previous_terms[-2]
+            return -p * x**2 / (n*(n-1))
+        return (-1)**(n//2) *x**(n)/Basic.Factorial()(n)
 
 
 class ApplySin(Apply):
@@ -510,12 +510,12 @@ class Cos(DefinedFunction):
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
-        if n<0: return Basic.Zero()
+        if n<0 or n%2: return Basic.Zero()
         x = Basic.sympify(x)
-        if len(previous_terms)>1:
-            p = previous_terms[-1]
-            return -p * x**2 / ((2*n)*(2*n-1))
-        return (1-2*(n%2))*x**(2*n)/Basic.Factorial()(2*n)
+        if len(previous_terms)>2:
+            p = previous_terms[-2]
+            return -p * x**2 / (n*(n-1))
+        return (-1)**(n//2)*x**(n)/Basic.Factorial()(n)
 
 class ApplyCos(Apply):
 
@@ -565,21 +565,6 @@ class Tan(DefinedFunction):
                 return arg
         return
 
-    def _eval_apply_leadterm(self, x, arg):
-        raise
-        c0, e0 = arg.leadterm(x)
-        if isinstance(e0, Basic.Zero):
-            # tan(5+x) -> tan(5)
-            c0 = self(c0)
-            if not isinstance(c0, Basic.Zero):
-                return c0, e0
-            # tan(Pi+x) -> tan(-x)
-            raise NotImplementedError("compute leading term %s(%s) at %s=0" % (self, arg, x))
-        if e0.is_positive:
-            # tan(2*x) -> 2 * x
-            return c0, e0
-        # tan(1/x)
-        raise ValueError("unable to compute leading term %s(%s) at %s=0" % (self, arg, x))
 
 class Sign(DefinedFunction):
 
