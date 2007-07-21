@@ -154,7 +154,15 @@ class AssumeMeths(object):
                                     % (self.__class__.__name__,k,v))
             assumptions[k] = v
         d = self._assumptions = getattr(self, '_assumptions', {})
-        
+
+        ###
+        if "negative" in assumptions:
+            if "positive" not in assumptions:
+                self._change_assumption(d, "positive", not assumptions["negative"])
+        elif "positive" in assumptions:
+            self._change_assumption(d, "negative", not assumptions["positive"])
+        ###
+
         processed = {}
         aliases = self._assume_aliases 
         negs = self._assume_negs
@@ -195,31 +203,26 @@ class AssumeMeths(object):
                             assumptions[a] = v
                         elif assumptions[a] != v:
                             raise ValueError('%s: detected inconsistency between %s=%s and %s=%s in negation' \
-                                             % (self.__class__,k, v, a, assumptions[a]))
+                                            % (self.__class__,k, v, a, assumptions[a]))
                     elif processed[a] != v:
                         raise ValueError('%s:detected inconsistency between %s=%s and %s=%s in processed negation'\
-                                         % (self.__class__,k, v, a, processed[a]))
+                                        % (self.__class__,k, v, a, processed[a]))
                 else:
                     if a not in processed:
                         if a not in assumptions:
                             assumptions[a] = not v
                         elif assumptions[a] != (not v):
                             raise ValueError('%s: detected inconsistency between %s=%s and %s=%s in negation' \
-                                             % (self.__class__,k, v, a, assumptions[a]))
+                                            % (self.__class__,k, v, a, assumptions[a]))
                     elif processed[a] != (not v):
                         raise ValueError('%s: detected inconsistency between %s=%s and %s=%s in processed negation' \
-                                         % (self.__class__,k, v, a, processed[a]))
+                                        % (self.__class__,k, v, a, processed[a]))
                 processed[k] = v
                 continue
 
+            self._change_assumption(d, k, v)
             if negs.has_key(k):
                 a = negs[k]
-            else:
-                a = None
-
-            self._change_assumption(d, k, v)
-
-            if a is not None:
                 if v is None:
                     self._change_assumption(d, a, v)
                 else:

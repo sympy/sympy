@@ -223,6 +223,7 @@ class Real(Number):
 
     def _eval_is_positive(self):
         return self.num.as_tuple()[0] == 0
+
     def _eval_is_negative(self):
         return self.num.as_tuple()[0] != 0
 
@@ -366,11 +367,10 @@ class Rational(Number):
         return Basic.Mul_precedence
 
     def _eval_is_positive(self):
-        if self.p > 0:
-            return True
+        return self.p > 0
+
     def _eval_is_negative(self):
-        if self.p < 0:
-            return True
+        return self.p < 0
 
     def __neg__(self): return Rational(-self.p, self.q)
 
@@ -839,6 +839,7 @@ class Exp1(NumberSymbol):
 
     is_real = True
     is_positive = True
+    is_negative = False # XXX Forces is_negative/is_nonnegative
     is_irrational = True
 
     def tostr(self, level=0):
@@ -860,6 +861,7 @@ class Pi(NumberSymbol):
 
     is_real = True
     is_positive = True
+    is_negative = False # XXX Forces is_negative/is_nonnegative
     is_irrational = True
 
     def approximation_interval(self, number_cls):

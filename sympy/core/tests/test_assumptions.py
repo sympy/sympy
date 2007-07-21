@@ -229,7 +229,7 @@ def test_symbol_positive():
     assert x.is_positive == True
     assert x.is_nonpositive == False
     assert x.is_negative == False
-    assert x.is_nonnegative == True
+    assert x.is_nonnegative == None
 
 def test_neg_symbol_positive():
     x = -Basic.Symbol('x',positive=True)
