@@ -15,9 +15,8 @@ from sympy.modules.polynomials import sqf_
 # TODO: Remove/incorporate in Polynomial
 def coeff(poly, x, n):
     """Returns the coefficient of x**n in the polynomial"""
-    assert ispoly(poly,x)
     p = Polynomial(poly, x)
-    t = filter(lambda t:t[1]==n,p.cl)
+    t = filter(lambda t:t[1] == n, p.cl)
     if len(t) == 0:
         return S.Zero
     else:
@@ -306,8 +305,8 @@ def resultant(f, g, x, method='bezout'):
 
     from sympy.modules.matrices import zero
 
-    fp = coeff_list(f, x)
-    gp = coeff_list(g, x)
+    fp = Polynomial(f, x).cl
+    gp = Polynomial(g, x).cl
 
     m, n = int(fp[0][1]), int(gp[0][1])
 

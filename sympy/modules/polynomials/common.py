@@ -1,25 +1,12 @@
 """Simple helper functions common to several algorithms"""
 
-# TODO: clean up imports
-from sympy import Add, Basic, Mul, Number, Pow, Rational, Real, Symbol
-from sympy.core.basic import S
-from sympy.core import numbers
-from sympy.core.numbers import NumberSymbol, ImaginaryUnit
+from sympy.core import *
+from sympy.core.basic import S # Use Singleton comparisons.
+from sympy.core import numbers # Need numbers.gcd
+from sympy.core.numbers import NumberSymbol, ImaginaryUnit # To look for numbers
+from sympy.modules.utilities import *
+
 from sympy.modules.polynomials.base import PolynomialException, coeff_rings
-
-def all(iterable):
-    """True if all elements are True"""
-    for element in iterable:
-        if not element:
-            return False
-    return True
-
-def one(iterable):
-    """True if at least one element is True"""
-    for element in iterable:
-        if element:
-            return True
-    return False
 
 def reverse(lisp):
     """Return a list with reversed order"""

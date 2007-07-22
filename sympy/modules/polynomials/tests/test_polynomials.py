@@ -42,31 +42,39 @@ def test_Polynomial():
     assert Polynomial(x**2 + y**2)(3,-4) == 25
     assert Polynomial(y*x)(-z, z) == -z**2
 
-def test_coeff_list():
-    x = Symbol('x')
-    y = Symbol('y')
-    z = Symbol('z')
-
+    #TODO better test that differs between all orders ?
     from sympy import sin
-
-    assert coeff_list(1) == [[1]]
-    assert coeff_list(x) == [[1,1]]
-    assert coeff_list(x**2+y**3, order='lex') == [[1,2,0], [1,0,3]]
-    assert coeff_list(x**2+y**3, [y,x]) == [[1,3,0], [1,0,2]]
-    assert coeff_list(x*y) == [[1,1,1]]
-    assert coeff_list(x**2*y**4 + sin(z)*x**3 + x*y**5, [x,y], order='lex') \
+    assert Polynomial(1).cl == [[1]]
+    assert Polynomial(x).cl == [[1,1]]
+    assert Polynomial(x**2+y**3, order='lex').cl == [[1,2,0], [1,0,3]]
+    assert Polynomial(x**2+y**3, [y,x]).cl == [[1,3,0], [1,0,2]]
+    assert Polynomial(x*y).cl == [[1,1,1]]
+    assert Polynomial(x**2*y**4 + sin(z)*x**3 + x*y**5, [x,y], order='lex').cl \
            == [[sin(z), 3, 0], [1, 2, 4], [1, 1, 5]]
-    assert coeff_list(x**2*y**4 + sin(z)*x**3 + x*y**5, [x,y], order='grlex') \
+    assert Polynomial(x**2*y**4 + sin(z)*x**3 + x*y**5,
+                      [x,y], order='grlex').cl \
            == [[1, 2, 4], [1, 1, 5], [sin(z), 3, 0]]
-    assert coeff_list(x**2*y**4 + sin(z)*x**3 + x**5*y, [x,y],
-               order='grevlex') == [[1, 5, 1], [1, 2, 4], [sin(z), 3, 0]]
-    assert coeff_list(z*x + x**2*y**2 + x**3*y, [z,x,y], order='1-el') \
+    assert Polynomial(x**2*y**4 + sin(z)*x**3 + x**5*y,
+                      [x,y], order='grevlex').cl \
+               == [[1, 5, 1], [1, 2, 4], [sin(z), 3, 0]]
+    assert Polynomial(z*x + x**2*y**2 + x**3*y, [z,x,y], order='1-el').cl \
            == [[1,1,1,0], [1,0,3,1], [1,0,2,2]]
 
-    #TODO better test that differs between all orders ?
+    py.test.raises(PolynomialException, "Polynomial(sqrt(x),x).cl")
+    py.test.raises(PolynomialException, "Polynomial(sin(x),x).cl")
 
-    py.test.raises(PolynomialException, "coeff_list(sqrt(x),x)")
-    py.test.raises(PolynomialException, "coeff_list(sin(x),x)")
+    assert 3*x**2 == Polynomial([[3, 2]], [x]).basic
+    assert 2*x + 3*x**2 - 5 == Polynomial(
+        [[-5, 0], [2, 1], [3, 2]], [x]).basic
+    assert 2*x**100 + 3*x**2 - 5 \
+           == Polynomial([[-5, 0], [3, 2], [2, 100]], [x]).basic
+    assert 2*x**100 + 3*x**2 - 6 \
+           != Polynomial([[-5, 0], [3, 2], [2, 100]], [x]).basic
+
+    assert sqrt(y)*x == Polynomial([[sqrt(y), 1]], [x]).basic
+    assert x**2 + 3*x*sqrt(y) - 8 == Polynomial(
+           [[-8, 0], [3*sqrt(y), 1], [1, 2]], [x]).basic
+
     
 def test_ispoly():
     x = Symbol("x")
@@ -80,18 +88,6 @@ def test_ispoly():
     assert ispoly( x**2 + 3*x*sqrt(y) - 8, x)
     assert not ispoly( x**2 + 3*x*sqrt(y) - 8 , y)
     assert ispoly((x**2)*(y**2) + x*(y**2) + y*x + x + exp(2), (x,y) )
-
-def test_poly():
-    x = Symbol("x")
-    y = Symbol("y")
-    assert 3*x**2 == poly([(3,2)],x)
-    assert 2*x+3*x**2 - 5 == poly([(-5, 0), (2, 1), (3,2)],x)
-    assert 2*x**100+3*x**2 - 5 == poly([(-5, 0), (3,2), (2, 100)],x)
-    assert 2*x**100+3*x**2 - 6 != poly([(-5, 0), (3,2), (2, 100)],x)
-
-    assert sqrt(y)*x == poly([(sqrt(y),1)],x)
-    assert x**2 + 3*x*sqrt(y) - 8 == poly([(-8, 0), (3*sqrt(y), 1),
-        (1, 2)],x)
 
 ## sympy/modules/polynomials/common.py
 

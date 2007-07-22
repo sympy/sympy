@@ -25,12 +25,12 @@ class Polynomial(object):
     True
     >>> bool(s == y**2 - x*y + x + 1)
     True
-    
+
     """
     def __init__(self, p, var=None, order=None, coeff=None):
         # Constructor by coeff list:
         if isinstance(p, list):
-            if var is None or order is None:
+            if var is None or (len(var) > 1 and order is None):
                 raise PolynomialException(
                     'Ambigous coefficient list given, need var/order.')
             self._cl = p
@@ -57,7 +57,7 @@ class Polynomial(object):
 
     def get_basic(self):
         if self._basic is None:
-            self._basic = poly(self.cl, self.var)
+            self._basic = self.poly()
         return self._basic
     def set_basic(self, p):
         p = Basic.sympify(p)
@@ -71,7 +71,7 @@ class Polynomial(object):
 
     def get_cl(self):
         if self._cl is None:
-            self._cl = coeff_list(self.basic, self.var, self.order)
+            self._cl = self.coeff_list()
         # TODO: Take care that self._cl isn't changed by __setitem__
         #       or self._basic will remain incompatible!
         return self._cl
@@ -84,7 +84,7 @@ class Polynomial(object):
     def get_coeff(self):
         if self._coeff is None:
             # TODO: Determine coefficient ring.
-            self._coeff = 'sym' # == worst case
+            self._coeff = coeff_rings[-1] # == worst case
         return self._coeff
     def set_coeff(self, coeff):
         if not coeff in coeff_rings:
@@ -95,7 +95,7 @@ class Polynomial(object):
 
     def get_order(self):
         if self._order is None:
-            self._order = 'grevlex' #default_order
+            self._order = default_order
         return self._order
     def set_order(self, order):
         # TODO: Check if order is implemented? (Is checked below, in sort_cl)
@@ -328,6 +328,88 @@ class Polynomial(object):
             r = r.subs(vv, xx)
         return r
 
+    def coeff_list(self):
+        """Return the list of coeffs and exponents.
+
+        Currently, lexicographic ('lex'), graded lex ('grlex'), graded
+        reverse lex ('grevlex') and 1-elimination ('1-el')orders are implemented.
+        The list of variables determines the order of the variables.
+        The coefficients are assumed to be non-zero real numbers, that is,
+        you can divide by them.
+
+        """
+
+        p = self.basic.expand()
+
+        result = []
+        if isinstance(p, Add):
+            terms = p[:]
+        else:
+            terms = [p]
+        for term in terms:
+            if isinstance(term, Mul):
+                factors = term[:]
+            else:
+                factors = [term]
+            result_term = [S.One] + [S.Zero]*len(self.var)
+            for factor in factors:
+                # Check if any of the variables occur.
+                if filter(lambda x:x in self.var, factor.atoms(type=Symbol)):
+                    if isinstance(factor, Pow) \
+                           and factor.exp.is_integer \
+                           and factor.exp.is_positive:
+                        result_term[self.var.index(factor.base)+1] += factor.exp
+                    elif isinstance(factor, Symbol):
+                        result_term[self.var.index(factor)+1] += 1
+                    else:
+                        raise PolynomialException('Not a polynomial!')
+                else: # The factor is relativly constant.
+                    result_term[0] *= factor
+            result.append(result_term)
+        sort_cl(result, self.order)
+
+        # Unify monomials:
+        # This works for sorted monomials and would be much simpler
+        # if the algorithm was using dictionaries in place of lists.
+
+        size = len(result)
+        i, final = 0, []
+
+        while i < size:
+            term = result[i]
+            i, coeff = i+1, []
+
+            while i < size and term[1:] == result[i][1:]:
+                coeff, i = coeff + [result[i][0]], i+1
+
+            final.append([Add(*([term[0]] + coeff))] + term[1:])
+
+        return final
+
+        #    result2 = result[0:1]
+        #    for term in result[1:]:
+        #        if term[1:] == result2[0][1:]:
+        #            result2[0][0] += term[0]
+        #        else:
+        #            result2.append(term)
+
+        #    return result2
+
+    def poly(self):
+        """Makes a sympy expression out of a coefficient list."""
+        if len(self.cl) == 0:
+            raise PolynomialException('Bad coefficient list.')
+        elif len(self.cl[0]) != len(self.var) + 1:
+            raise PolynomialException('Wrong number of variables given.')
+
+        r = S.Zero
+        for term in self.cl:
+            c = term[0]
+            for v in self.var:
+                c *= v**term[self.var.index(v)+1]
+            r += c
+        return r
+
     def copy(self):
         r = Polynomial(S.Zero, self.var, self.order, self.coeff)
         r._basic = self._basic
@@ -365,93 +447,6 @@ class Polynomial(object):
             return Polynomial(S.Zero, self.var, self.order, self.coeff)
         r.cl = map(lambda t:[t[0]*t[i]] + t[1:i] + [t[i]-1] + t[i+1:], r.cl)
         return r
-
-def coeff_list(p, var=None, order='grevlex'):
-    """Return the list of coeffs and exponents.
-
-    Currently, lexicographic ('lex'), graded lex ('grlex'), graded
-    reverse lex ('grevlex') and 1-elimination ('1-el')orders are implemented.
-    The list of variables determines the order of the variables.
-    The coefficients are assumed to be non-zero real numbers, that is,
-    you can divide by them.
-
-    Examples:
-    >>> x = Symbol('x')
-    >>> y = Symbol('y')
-    >>> from sympy import sin
-    >>> coeff_list(x + sin(y)*x**2, [x])
-    [[sin(y), 2], [1, 1]]
-
-    >>> coeff_list(6*y**3 + 7*y*x**2)
-    [[7, 2, 1], [6, 0, 3]]
-
-    >>> coeff_list(6*y**3+7*y*x**2, [y,x])
-    [[6, 3, 0], [7, 1, 2]]
-
-    """
-    p = Basic.sympify(p).expand()
-
-    if isinstance(var, Symbol):
-        var = [var]
-    if var is None:
-        var = list(p.atoms(type=Symbol))
-        var.sort()
-
-    result = []
-    if isinstance(p, Add):
-        terms = p[:]
-    else:
-        terms = [p]
-    for term in terms:
-        if isinstance(term, Mul):
-            factors = term[:]
-        else:
-            factors = [term]
-        result_term = [S.One] + [S.Zero]*len(var)
-        for factor in factors:
-            # Check if any of the variables occur.
-            if filter(lambda x:x in var, list(factor.atoms(type=Symbol))):
-                if isinstance(factor, Pow) \
-                       and factor.exp.is_integer \
-                       and factor.exp.is_positive:
-                    result_term[var.index(factor.base)+1] += factor.exp
-                elif isinstance(factor, Symbol):
-                    result_term[var.index(factor)+1] += 1
-                else:
-                    raise PolynomialException('Not a polynomial!')
-            else: # The factor is relativly constant.
-                result_term[0] *= factor
-        result.append(result_term)
-
-    sort_cl(result, order)
-
-    # Unify monomials
-
-    # this works for sorted monomials and would be much simpler
-    # if the algorithm was using dictionaries in place of lists
-
-    size = len(result)
-    i, final = 0, []
-
-    while i < size:
-        term = result[i]
-        i, coeff = i+1, []
-
-        while i < size and term[1:] == result[i][1:]:
-            coeff, i = coeff + [result[i][0]], i+1
-
-        final.append([Add(*([term[0]] + coeff))] + term[1:])
-
-    return final
-
-#    result2 = result[0:1]
-#    for term in result[1:]:
-#        if term[1:] == result2[0][1:]:
-#            result2[0][0] += term[0]
-#        else:
-#            result2.append(term)
-
-#    return result2
 
 def ispoly(p, var=None):
     """
@@ -507,24 +502,3 @@ def ispoly(p, var=None):
         return True
     else:
         return False
-
-
-def poly(p, var):
-    """Returns a sympy polynomial from the representation p returned by
-    coeff_list().
-    """
-    if isinstance(var, Symbol):
-        var = [var]
-    if len(p) == 0:
-        raise PolynomialException('Bad coefficient list.')
-    elif len(p[0]) != len(var) + 1:
-        raise PolynomialException('Wrong number of variables given.')
-
-    r = S.Zero
-    for item in p:
-        c = item[0]
-        for v in var:
-            c *= v**item[var.index(v)+1]
-        r += c
-    return r
-
