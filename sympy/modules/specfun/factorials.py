@@ -26,7 +26,7 @@ def _lanczos(z):
         return exp(logw)
 
 
-class factorial(DefinedFunction):
+class Factorial(DefinedFunction):
     """
     Usage
     =====
@@ -51,8 +51,8 @@ class factorial(DefinedFunction):
         15/8*pi**(1/2)
 
     """
-    def eval(self):
-        x = self._args
+    def _eval_apply(self, args):
+        x = args
         if isinstance(x, Rational):
             if x.is_integer:
                 if x < 0:
@@ -98,6 +98,8 @@ class factorial(DefinedFunction):
         else:
             s = "(" + x.__latex__() + ")"
         return s + "!"
+
+factorial = Factorial()
 
 def _fac(x):
     return factorial(x, evaluate=False)
