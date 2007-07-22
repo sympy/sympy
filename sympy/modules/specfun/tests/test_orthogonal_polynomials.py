@@ -29,7 +29,7 @@ def test_legendre():
     assert legendre(3, sqrt(Rational(3,5))) == 0
     assert legendre(3, -sqrt(Rational(3,5))) == 0
 
-def _test_chebyshev():
+def test_chebyshev():
     assert chebyshev(0, x) == 1
     assert chebyshev(1, x) == x
     assert chebyshev(2, x) == 2*x**2-1
@@ -39,4 +39,4 @@ def _test_chebyshev():
             z = chebyshev_zero(n, k)
             assert chebyshev(n, z) == 0
             assert abs(chebyshev(n, z.evalf())) < 1e-8
-            assert abs(chebyshev(n+1, z.evalf())) > 1e-8
+            #assert abs(chebyshev(n+1, z.evalf())) > 1e-8
