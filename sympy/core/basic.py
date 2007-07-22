@@ -316,8 +316,9 @@ class Basic(BasicMeths):
             result = self.match(pat)
             if result is not None:
                 for w,s in zip(wilds, syms):
-                    result[s] = result[w]
-                    del result[w]
+                    if w in result:
+                        result[s] = result[w]
+                        del result[w]
             return result
         #
         return Basic.sympify(pattern).matches(self, {})
