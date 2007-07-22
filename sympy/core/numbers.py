@@ -313,6 +313,36 @@ class Real(Number):
             return bool(self._as_decimal()<=other._as_decimal())
         return RelMeths.__le__(self, other)
 
+
+def _parse_rational(s):
+    """Parse rational number from string representation"""
+    # Simple fraction
+    if "/" in s:
+        p, q = s.split("/")
+        return int(p), int(q)
+    # Recurring decimal
+    elif "[" in s:
+        sign = 1
+        if s[0] == "-":
+            sign = -1
+            s = s[1:]
+        s, periodic = s.split("[")
+        periodic = periodic.rstrip("]")
+        offset = len(s) - s.index(".") - 1
+        n1 = int(periodic)
+        n2 = int("9" * len(periodic))
+        r = Rational(*_parse_rational(s)) + Rational(n1, n2*10**offset)
+        return sign*r.p, r.q
+    # Ordinary decimal string. Use the Decimal class's built-in parser
+    else:
+        sign, digits, expt = decimal.Decimal(s).as_tuple()
+        p = (1, -1)[sign] * int("".join(str(x) for x in digits))
+        if expt >= 0:
+            return p*(10**expt), 1
+        else:
+            return p, 10**-expt
+
+
 class Rational(Number):
     """Represents integers and rational numbers (p/q) of any size.
 
@@ -327,10 +357,13 @@ class Rational(Number):
     is_integer = False
     is_rational = True
 
-    @Memorizer((type, (int, long), (int, long, type(None))))
+    @Memorizer((type, (int, long, str), (int, long, type(None))))
     def __new__(cls, p, q = None):
         if q is None:
-            return Integer(p)
+            if isinstance(p, str):
+                p, q = _parse_rational(p)
+            else:
+                return Integer(p)
         if q==0:
             if p==0: return NaN()
             if p<0: return NegativeInfinity()

@@ -1,8 +1,8 @@
-from sympy import Rational, Symbol, Real, sqrt, oo, pi
-#from sympy.core.power import integer_nthroot
+from sympy import Rational, Symbol, Real, I, sqrt, oo, pi
+from sympy.core.power import integer_nthroot
 import py
 
-def _test_Rational():
+def test_Rational():
     n1 = Rational(1,4)
     n2 = Rational(1,3)
     n3 = Rational(2,4)
@@ -27,7 +27,6 @@ def _test_Rational():
     assert str(n2**n7) == "1/27"
     assert str(n2**n8) == "27"
     assert str(n7**n8) == "1/27"
-    # XXX Rational no longer accepts a string
     assert str(Rational("-25")) == "-25"
     assert str(Rational("25/7")) == "25/7"
     assert str(Rational("-123/569")) == "-123/569"
@@ -105,7 +104,7 @@ def test_Infinity():
     #py.test.raises(ArithmeticError, "oo*0")
     #py.test.raises(ArithmeticError, "oo/oo")
 
-def _test_powers():
+def test_powers():
     assert integer_nthroot(1, 2) == (1, True)
     assert integer_nthroot(1, 5) == (1, True)
     assert integer_nthroot(2, 1) == (2, True)
@@ -116,37 +115,35 @@ def _test_powers():
     assert integer_nthroot(123**25+1, 25) == (123, False)
     assert integer_nthroot(123**25-1, 25) == (122, False)
 
+    assert 64**(Rational(1)/3)==4
+    assert 64**(Rational(2)/3)==16
+    assert 24*64**(-Rational(1)/2)==3
+
+    assert Rational(5**3, 8**3)**Rational(4,3) == Rational(5**4, 8**4)
+    assert Rational(-4,7)**Rational(1,2) == I*Rational(4,7)**Rational(1,2)
+
     assert str(Rational(1,4) ** Rational(1,2)) == "1/2"
     assert str(Rational(1,36) ** Rational(1,2)) == "1/6"
-    assert str(Rational(5**3, 8**3) ** Rational(4,3)) == \
-        str(Rational(5**4, 8**4))
-    assert str(Rational(-4,7) ** Rational(1,2)) == \
-        str(g.I*Rational(4,7)**Rational(1,2))
 
     assert str((123**25) ** Rational(1,25)) == "123"
-    assert str((123**25+1)**Rational(1,25)) != "123"
-    assert str((123**25-1)**Rational(1,25)) != "123"
-    assert str((123**25-1)**Rational(1,25)) != "122"
-    assert str(Rational(3,5)**(-Rational(1,2))) == "3/5**(-1/2)"
+    #assert str((123**25+1)**Rational(1,25)) != "123"
+    #assert str((123**25-1)**Rational(1,25)) != "123"
+    #assert str((123**25-1)**Rational(1,25)) != "122"
+    assert str(Rational(3,5)**(-Rational(1,2))) == "5**(1/2)*(1/3)**(1/2)"
     assert str(Rational(81,36)**(Rational(3,2))) == "27/8"
     assert str(Rational(81,36)**(-Rational(3,2))) == "8/27"
 
-    assert 64**(g.Rational(1)/3)==4
-    assert 64**(g.Rational(2)/3)==16
-    assert 24*64**(-g.Rational(1)/2)==3
-
-    assert str((-4)**Rational(1,2)) == str(2*g.I)
-
-def test_accept_int():
-    assert Real(4) == 4
-
-def _test_accept_str():
-    # XXX Failing
-    assert Real("0.2") == 0.2
+    assert str((-4)**Rational(1,2)) == str(2*I)
 
 def test_abs1():
     assert str(abs(Rational(1,6))) == "1/6"
     assert str(abs(Rational(-1,6))) == "1/6"
+
+def test_accept_int():
+    assert Real(4) == 4
+
+def test_accept_str():
+    assert Real("0.2") == "0.2"
 
 def test_int():
     a = Rational(5)

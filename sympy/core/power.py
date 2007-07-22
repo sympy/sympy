@@ -2,6 +2,48 @@
 from basic import Basic, S, cache_it, cache_it_immutable
 from methods import ArithMeths, RelMeths, NoRelMeths
 
+
+def integer_nthroot(y, n):
+    """
+    Usage
+    =====
+        Return a tuple containing x = floor(y**(1/n))
+        and a boolean indicating whether the result is exact (that is,
+        whether x**n == y).
+
+    Examples
+    ========
+
+        >>> integer_nthroot(16,2)
+        (4, True)
+        >>> integer_nthroot(26,2)
+        (5, False)
+        >>> integer_nthroot(1234567**7, 7)
+        (1234567L, True)
+        >>> integer_nthroot(1234567**7+1, 7)
+        (1234567L, False)
+    """
+
+    y = int(y); n = int(n)
+    if y < 0: raise ValueError, "y must not be negative"
+    if n < 1: raise ValueError, "n must be positive"
+    if y in (0, 1): return y, True
+    if n == 1: return y, True
+
+    # Search with Newton's method, starting from floating-point
+    # approximation. Care must be taken to avoid overflow.
+    from math import log as _log
+    guess = 2**int(_log(y, 2)/n)
+    xprev, x = -1, guess
+    while abs(x - xprev) > 1:
+        t = x**(n-1)
+        xprev, x = x, x - (t*x-y)//(n*t)
+    # Compensate
+    while x**n > y:
+        x -= 1
+    return x, x**n == y
+
+
 class Pow(Basic, ArithMeths, RelMeths):
 
     precedence = Basic.Pow_precedence
