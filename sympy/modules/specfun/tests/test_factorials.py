@@ -109,16 +109,16 @@ def _test_binomial():
         4999999999999999999950000000000000000000
     assert latex(binomial(8,3,evaluate=False)) == r"${{8}\choose{3}}$"
 
-def _test_gamma():
+def test_gamma():
     assert gamma(0) == oo
     assert gamma(1) == 1
     assert gamma(2) == 1
     assert gamma(3) == 2
     assert gamma(Rational(1,2)) == sqrt(pi)
-    assert latex(gamma(3+x)) == "$\Gamma(3+x)$"
-    from sympy import simplify
-    assert simplify(lower_gamma(1,x) + upper_gamma(1,x)) == gamma(1)
-    assert simplify(lower_gamma(5,x) + upper_gamma(5,x)) == gamma(5)
+    #assert latex(gamma(3+x)) == "$\Gamma(3+x)$"
+    #from sympy import simplify
+    #assert simplify(lower_gamma(1,x) + upper_gamma(1,x)) == gamma(1)
+    #assert simplify(lower_gamma(5,x) + upper_gamma(5,x)) == gamma(5)
 
 def _test_derivatives():
     x = Symbol('x')
