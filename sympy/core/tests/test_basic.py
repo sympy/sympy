@@ -1,7 +1,5 @@
-import sys
-sys.path.append(".")
-
 from sympy import Basic, Symbol, Real, Rational, cos, exp, log, oo
+
 
 def dotest(s):
     x = Symbol("x")

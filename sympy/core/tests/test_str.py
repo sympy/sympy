@@ -1,4 +1,4 @@
-from sympy import Symbol, Rational, Derivative, Integral, log, sqrt, exp
+from sympy import Symbol, Rational, Derivative, Integral, I, log, sqrt, exp
 
 #from sympy.core.stringPict import *
 #from sympy.modules.printing.pretty import pretty
@@ -11,7 +11,6 @@ w = Symbol('w')
 
 def test_pow():
     assert str(1/x) == "1/x"
-
 
 def test_poly_str():
     #if any of these tests fails, it can still be correct, just the terms can
@@ -32,12 +31,10 @@ def test_poly_str():
             "x - y**2*w*z**2","x - z**2*y**2*w","-w*z**2*y**2 + x",
             "-w*y**2*z**2 + x","x - z**2*w*y**2"]
 
-
 def test_bug1():
     e = (x-1*y*x*y)
     a = str(e)
     a = str(e.eval())
-
 
 def test_bug2():
     e = x-y
@@ -45,12 +42,10 @@ def test_bug2():
     b = str(e)
     assert a == b
 
-
 def test_bug3():
     x = Symbol("x")
     e = sqrt(x)
     assert str(e) == "x**(1/2)"
-
 
 def test_bug4():
     x = Symbol("x")
@@ -61,13 +56,11 @@ def test_bug4():
     assert str(e) in ["-2*x**(1/2) - 1/2*x**(-1/2)*w", "-2*x**(1/2) - 1/2*w*x**(-1/2)", 
                       "-1/2*x**(-1/2)*w - 2*x**(1/2)", "-1/2*w*x**(-1/2) - 2*x**(1/2)"]
 
-
 def _test_Derivative():
     # XXX Derivatives appear to always be evaluated
     x = Symbol("x")
     e = Derivative(x**2, x, evaluate=False)
     assert str(e) == "(x**2)'"
-
 
 def test_x_div_y():
     x = Symbol("x")

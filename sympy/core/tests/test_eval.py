@@ -21,7 +21,6 @@ def test_add_eval():
     assert c+p == Rational(6)
     assert b+a-b == a
 
-
 def test_addmul_eval():
     a = Symbol("a")
     b = Symbol("b")
@@ -31,7 +30,6 @@ def test_addmul_eval():
     assert a*2+p+a == a*2+5+a
     assert a*2+p+a == 3*a+5
     assert a*2+a == 3*a
-
 
 def test_pow_eval():
     # XXX Pow does not fully support conversion of negative numbers
@@ -51,22 +49,18 @@ def test_pow_eval():
 
     assert (cos(2) / tan(2))**2 == (cos(2) / tan(2))**2
 
-
 def test_mulpow_eval():
     x = Symbol('x')
     assert sqrt(50)/(sqrt(2)*x) == 5/x
     assert sqrt(27)/sqrt(3) == 3
-
 
 def test_evalpow_bug():
     x = Symbol("x")
     assert 1/(1/x) == x
     assert 1/(-1/x) == -x
 
-
 def test_expbug():
     assert exp(-log(3))**(-1) == 3
-
 
 def test_symbol_expand():
     x = Symbol('x')
