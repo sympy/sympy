@@ -39,7 +39,7 @@ def _test_factorial_evalf():
     assert relcmp(re, 1.84428481562553) < 1e-10
     assert relcmp(im, -125.96060801751909) < 1e-10
 
-def _test_factorial2():
+def test_factorial2():
     assert factorial2(0) == 1
     assert factorial2(2) == 2
     assert factorial2(4) == 2*4
@@ -54,9 +54,9 @@ def _test_factorial2():
     assert factorial2(-3) == -1
     assert factorial2(-7) == Rational(-1,15)
     assert factorial2(-9) == Rational(1,105)
-    assert latex(factorial2(x, evaluate=False)) == "$x!!$"
-    assert latex(factorial2(-4, evaluate=False)) == "$(-4)!!$"
-    assert latex(factorial2(-x, evaluate=False)) == "$(- x)!!$"
+    #assert latex(factorial2(x, evaluate=False)) == "$x!!$"
+    #assert latex(factorial2(-4, evaluate=False)) == "$(-4)!!$"
+    #assert latex(factorial2(-x, evaluate=False)) == "$(- x)!!$"
 
 def _test_factorial_simplify():
     assert fs(fac(x+5)/fac(x+5)) == 1
