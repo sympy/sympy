@@ -172,6 +172,9 @@ class test_sympy_doc(Command):
         files.remove('sympy/modules/__init__.py')
         files.remove('sympy/modules/series/__init__.py')
         files.remove('sympy/modules/utilities/__init__.py')
+        files.remove('sympy/modules/specfun/zeta_functions.py')
+        files.remove('sympy/modules/specfun/orthogonal_polynomials.py')
+        files.remove('sympy/modules/specfun/factorials.py')
 
         
         #testing for optional libraries
