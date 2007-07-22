@@ -304,14 +304,15 @@ def resultant(f, g, x, method='bezout'):
              it is O(s**3), where s = max(deg(f), deg(g)).
     """
 
+    from sympy.modules.matrices import zero
+
     fp = coeff_list(f, x)
     gp = coeff_list(g, x)
 
     m, n = int(fp[0][1]), int(gp[0][1])
 
-    import sympy
     if method is 'sylvester':
-        M = sympy.modules.matrices.zero(m+n)
+        M = zero(m+n)
 
         for i in range(n):
             for coeff, j in fp:
@@ -328,7 +329,8 @@ def resultant(f, g, x, method='bezout'):
         else:
             s = m
 
-        p, q = [0]*(s+1), [0]*(s+1)
+        p = [Basic.Zero()] * (s+1)
+        q = [Basic.Zero()] * (s+1)
 
         for coeff, j in fp:
             p[int(j)] = coeff
@@ -336,12 +338,12 @@ def resultant(f, g, x, method='bezout'):
         for coeff, j in gp:
             q[int(j)] = coeff
 
-        M = sympy.modules.matrices.zero(s)
+        M = zero(s)
 
         for i in range(s):
             for j in range(i, s):
                 z = 1 + min(i, s-1-j)
-                terms = [0] * z
+                terms = [Basic.Zero()] * z
 
                 for k in range(z):
                     terms[k] = p[j+k+1]*q[i-k] - p[i-k]*q[j+k+1]

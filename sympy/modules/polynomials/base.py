@@ -390,6 +390,7 @@ def coeff_list(p, var=None, order='grevlex'):
 
     """
     p = Basic.sympify(p).expand()
+
     if isinstance(var, Symbol):
         var = [var]
     if var is None:
@@ -421,17 +422,36 @@ def coeff_list(p, var=None, order='grevlex'):
             else: # The factor is relativly constant.
                 result_term[0] *= factor
         result.append(result_term)
+
     sort_cl(result, order)
 
     # Unify monomials
-    result2 = result[0:1]
-    for term in result[1:]:
-        if term[1:] == result2[0][1:]:
-            result2[0][0] += term[0]
-        else:
-            result2.append(term)
-    
-    return result2
+
+    # this works for sorted monomials and would be much simpler
+    # if the algorithm was using dictionaries in place of lists
+
+    size = len(result)
+    i, final = 0, []
+
+    while i < size:
+        term = result[i]
+        i, coeff = i+1, []
+
+        while i < size and term[1:] == result[i][1:]:
+            coeff, i = coeff + [result[i][0]], i+1
+
+        final.append([Add(*([term[0]] + coeff))] + term[1:])
+
+    return final
+
+#    result2 = result[0:1]
+#    for term in result[1:]:
+#        if term[1:] == result2[0][1:]:
+#            result2[0][0] += term[0]
+#        else:
+#            result2.append(term)
+
+#    return result2
 
 def ispoly(p, var=None):
     """

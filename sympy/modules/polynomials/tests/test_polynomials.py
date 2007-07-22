@@ -221,53 +221,58 @@ def test_real_roots():
     assert real_roots(f, None, Rational(0)) == 1
     assert real_roots(f, Rational(-1), Rational(1)) == 0
 
-## def test_resultant():
-##     x, a, b, c, = [Symbol(y) for y in ['x', 'a', 'b', 'c']]
+def test_resultant():
+     x, a, b, c, = [Symbol(y) for y in ['x', 'a', 'b', 'c']]
 
-##     s_res = resultant(x**2-1, x**3-x**2+2, x, method='sylvester').expand()
-##     b_res = resultant(x**2-1, x**3-x**2+2, x, method='bezout').expand()
+     s_res = resultant(x**2-1, x**3-x**2+2, x, method='sylvester').expand()
+     b_res = resultant(x**2-1, x**3-x**2+2, x, method='bezout').expand()
 
-##     assert b_res == s_res == 0
+     assert b_res == s_res == 0
 
-##     s_res = resultant(3*x**3-x, 5*x**2+1, x, method='sylvester').expand()
-##     b_res = resultant(3*x**3-x, 5*x**2+1, x, method='bezout').expand()
+     s_res = resultant(3*x**3-x, 5*x**2+1, x, method='sylvester').expand()
+     b_res = resultant(3*x**3-x, 5*x**2+1, x, method='bezout').expand()
 
-##     assert b_res == s_res == 64
+     assert b_res == s_res == 64
 
-##     s_res = resultant(x**2-2*x+7, x**3-x+5, x, method='sylvester').expand()
-##     b_res = resultant(x**2-2*x+7, x**3-x+5, x, method='bezout').expand()
+     s_res = resultant(x**2-2*x+7, x**3-x+5, x, method='sylvester').expand()
+     b_res = resultant(x**2-2*x+7, x**3-x+5, x, method='bezout').expand()
 
-##     assert b_res == s_res == 265
+     assert b_res == s_res == 265
 
-##     s_res = resultant((x-a)**2-2, a**2-3, a, method='sylvester').expand()
-##     b_res = resultant((x-a)**2-2, a**2-3, a, method='bezout').expand()
+     s_res = resultant((x-a)**2-2, a**2-3, a, method='sylvester').expand()
+     b_res = resultant((x-a)**2-2, a**2-3, a, method='bezout').expand()
 
-##     assert b_res == s_res == 1 - 10*x**2 + x**4
+     assert b_res == s_res == 1 - 10*x**2 + x**4
 
-##     s_res = resultant((x-1)*(x-2)*(x-3), (x-4)*(x-5)*(x-6), x, method='sylvester').expand()
-##     b_res = resultant((x-1)*(x-2)*(x-3), (x-4)*(x-5)*(x-6), x, method='bezout').expand()
+     s_res = resultant((x-1)*(x-2)*(x-3), (x-4)*(x-5)*(x-6), x, method='sylvester').expand()
+     b_res = resultant((x-1)*(x-2)*(x-3), (x-4)*(x-5)*(x-6), x, method='bezout').expand()
 
-##     assert b_res == s_res == -8640
+     assert b_res == s_res == -8640
 
-##     s_res = resultant((x-1)*(x-2)*(x-3), (x-4)*(x-5)*(x-1), x, method='sylvester').expand()
-##     b_res = resultant((x-1)*(x-2)*(x-3), (x-4)*(x-5)*(x-1), x, method='bezout').expand()
+     s_res = resultant((x-1)*(x-2)*(x-3), (x-4)*(x-5)*(x-1), x, method='sylvester').expand()
+     b_res = resultant((x-1)*(x-2)*(x-3), (x-4)*(x-5)*(x-1), x, method='bezout').expand()
 
-##     assert b_res == s_res == 0
+     assert b_res == s_res == 0
 
-##     s_res = resultant(x**3-1, x**3+2*x**2+2*x-1, x, method='sylvester').expand()
-##     b_res = resultant(x**3-1, x**3+2*x**2+2*x-1, x, method='bezout').expand()
+     s_res = resultant(x**3-1, x**3+2*x**2+2*x-1, x, method='sylvester').expand()
+     b_res = resultant(x**3-1, x**3+2*x**2+2*x-1, x, method='bezout').expand()
 
-##     assert b_res == s_res == 16
+     assert b_res == s_res == 16
 
-##     s_res = resultant(3*x**2+2*a*x+3*a**2-2, 3*x**2-2*a*x+3*a**2-2, x, method='sylvester').expand()
-##     b_res = resultant(3*x**2+2*a*x+3*a**2-2, 3*x**2-2*a*x+3*a**2-2, x, method='bezout').expand()
+     s_res = resultant(x**8-2, x-1, x, method='sylvester').expand()
+     b_res = resultant(x**8-2, x-1, x, method='bezout').expand()
 
-##     assert b_res == s_res == 144*a**4 - 96*a**2
+     assert b_res == s_res == -1
 
-##     s_res = resultant((x-a)*(x-b), x-c, x, method='sylvester').expand()
-##     b_res = resultant((x-a)*(x-b), x-c, x, method='bezout').expand()
+     s_res = resultant(3*x**2+2*a*x+3*a**2-2, 3*x**2-2*a*x+3*a**2-2, x, method='sylvester').expand()
+     b_res = resultant(3*x**2+2*a*x+3*a**2-2, 3*x**2-2*a*x+3*a**2-2, x, method='bezout').expand()
 
-##     assert b_res == s_res == ((a-c)*(b-c)).expand()
+     assert b_res == s_res == 144*a**4 - 96*a**2
+
+     s_res = resultant((x-a)*(x-b), x-c, x, method='sylvester').expand()
+     b_res = resultant((x-a)*(x-b), x-c, x, method='bezout').expand()
+
+     assert b_res == s_res == ((a-c)*(b-c)).expand()
 
 def test_roots():
     a = Symbol("a")
