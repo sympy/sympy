@@ -7,6 +7,9 @@ from sympy import Symbol, Add, Mul, Pow, Basic
 
 # Factorial and gamma related functions
 
+def sqrt(arg):
+    return arg**(Rational(1,2))
+
 
 # Lanczos approximation for low-precision numerical factorial
 # This implementation is not particularly numerically stable
@@ -105,7 +108,7 @@ def _fac(x):
     return factorial(x, evaluate=False)
 
 
-class factorial2(DefinedFunction):
+class Factorial2(DefinedFunction):
     """
     Usage
     =====
@@ -128,8 +131,8 @@ class factorial2(DefinedFunction):
         48
 
     """
-    def eval(self):
-        x = self._args
+    def _eval_apply(self,args):
+        x = args
         if isinstance(x, Rational) and x.is_integer:
             if int(x) % 2 == 0:
                 if x < 0:
@@ -151,6 +154,8 @@ class factorial2(DefinedFunction):
         else:
             s = "(" + x.__latex__() + ")"
         return s + "!!"
+
+factorial2 = Factorial2()
 
 
 # factorial_simplify helpers; could use refactoring
