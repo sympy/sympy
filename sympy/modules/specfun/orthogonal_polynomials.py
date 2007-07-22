@@ -147,7 +147,7 @@ legendre_zero = Legendre_zero()
 legendre._zero_class = legendre_zero
 
 
-class chebyshev(_PolynomialSequence):
+class Chebyshev(_PolynomialSequence):
     """
     Usage
     =====
@@ -178,8 +178,10 @@ class chebyshev(_PolynomialSequence):
         if n == 1: return self._x
         return 2*self._x*self._memo[n-1] - self._memo[n-2]
 
+chebyshev = Chebyshev()
 
-class chebyshev_zero(Function2):
+
+class Chebyshev_zero(DefinedFunction):
     """
     Usage
     =====
@@ -197,9 +199,12 @@ class chebyshev_zero(Function2):
         True
 
     """
+    nofargs = 2
+
     def eval(self):
         n, k = self._args
         return cos(pi*(2*k+1)/(2*n))
 
 
+chebyshev_zero = Chebyshev_zero()
 chebyshev._zero_class = chebyshev_zero
