@@ -2,7 +2,7 @@
 from sympy.core.function import DefinedFunction
 from sympy.core.numbers import Number, Rational, Real, pi, oo
 #from sympy.modules.trigonometric import cos, sin, tan
-from factorials import factorial, binomial, Function2
+from factorials import factorial, Function2
 
 # first some utilities for calculating Bernoulli numbers
 

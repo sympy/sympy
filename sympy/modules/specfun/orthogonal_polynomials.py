@@ -147,7 +147,7 @@ legendre_zero = Legendre_zero()
 legendre._zero_class = legendre_zero
 
 
-class Chebyshev(_PolynomialSequence):
+class Chebyshev3(_PolynomialSequence):
     """
     Usage
     =====
@@ -178,7 +178,7 @@ class Chebyshev(_PolynomialSequence):
         if n == 1: return self._x
         return 2*self._x*self._memo[n-1] - self._memo[n-2]
 
-chebyshev = Chebyshev()
+#chebyshev = Chebyshev()
 
 
 class Chebyshev_zero(DefinedFunction):
@@ -207,4 +207,4 @@ class Chebyshev_zero(DefinedFunction):
 
 
 chebyshev_zero = Chebyshev_zero()
-chebyshev._zero_class = chebyshev_zero
+Chebyshev3._zero_class = chebyshev_zero

@@ -347,7 +347,7 @@ class Falling_factorial(DefinedFunction):
 falling_factorial = Falling_factorial()
 
 
-class Binomial(DefinedFunction):
+class Binomial2(DefinedFunction):
     """
     Usage
     =====
@@ -398,7 +398,7 @@ class Binomial(DefinedFunction):
         n, k = self._args
         return r"{{%s}\choose{%s}}" % (n.__latex__(), k.__latex__())
 
-binomial = Binomial()
+#binomial = Binomial()
 
 class Gamma(DefinedFunction):
     """

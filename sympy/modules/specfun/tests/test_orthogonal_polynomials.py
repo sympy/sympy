@@ -1,10 +1,6 @@
-import sys
-sys.path.append(".")
-
-import py
-
 from sympy import *
-from sympy.modules.specfun.orthogonal_polynomials import *
+from sympy.core.orthogonal_polynomials import *
+from sympy.modules.specfun.orthogonal_polynomials import Chebyshev3
 
 x = Symbol('x')
 
@@ -30,6 +26,7 @@ def test_legendre():
     assert legendre(3, -sqrt(Rational(3,5))) == 0
 
 def test_chebyshev():
+    chebyshev = Chebyshev3()
     assert chebyshev(0, x) == 1
     assert chebyshev(1, x) == x
     assert chebyshev(2, x) == 2*x**2-1
