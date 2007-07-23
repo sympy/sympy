@@ -2,10 +2,10 @@
 import math
 import decimal
 import decimal_math
-from basic import Basic, Atom, Singleton, S, Memorizer
+from basic import Basic, Atom, Singleton, S, Memoizer, MemoizerArg
 from methods import RelMeths, ArithMeths
 
-@Memorizer(((int,long), (int, long)))
+@Memoizer((int, long), (int, long))
 def gcd(a, b):
     '''Returns the Greatest Common Divisor,
     implementing Euclid\'s algorithm.'''
@@ -13,7 +13,7 @@ def gcd(a, b):
         a, b = b%a, a
     return b
 
-@Memorizer(((int,long),), return_value_converter = lambda d: d.copy())
+@Memoizer((int, long), return_value_converter = lambda d: d.copy())
 def factor_trial_division(n):
     """
     Factor any integer into a product of primes, 0, 1, and -1.
@@ -175,7 +175,7 @@ class Real(Number):
     is_irrational = False
     is_integer = False
 
-    @Memorizer((type, (str, int, long, float, decimal.Decimal)), (None, convert_to_Decimal))
+    @Memoizer(type, MemoizerArg((str, int, long, float, decimal.Decimal), convert_to_Decimal))
     def __new__(cls, num):
         singleton_cls_name = decimal_to_Number_cls.get(num.as_tuple(), None)
         if singleton_cls_name is not None:
@@ -357,7 +357,7 @@ class Rational(Number):
     is_integer = False
     is_rational = True
 
-    @Memorizer((type, (int, long, str), (int, long, type(None))))
+    @Memoizer(type, (int, long, str), MemoizerArg((int, long, type(None)), name="q"))
     def __new__(cls, p, q = None):
         if q is None:
             if isinstance(p, str):
@@ -568,7 +568,7 @@ class Integer(Rational):
     q = 1
     is_integer = True
 
-    @Memorizer((type, (int, long)))
+    @Memoizer(type, (int, long))
     def __new__(cls, i):
         if isinstance(i, Integer):
             return i
