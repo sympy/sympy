@@ -6,7 +6,7 @@ from methods import RelMeths, ArithMeths
 class Add(AssocOp, RelMeths, ArithMeths):
 
     precedence = Basic.Add_precedence
-    
+
     @classmethod
     def flatten(cls, seq):
         # apply associativity, all terms are commutable with respect to addition
@@ -78,7 +78,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
                 if t is not None:
                     newseq2.append(t)
             newseq = newseq2 + order_factors
-            
+
         newseq.sort(Basic.compare)
         if noncommutative:
             return [],newseq,lambda_args,None
@@ -173,6 +173,12 @@ class Add(AssocOp, RelMeths, ArithMeths):
     def _eval_defined_integral(self, s,a,b):
         return Add(*[f.integral(s==[a,b]) for f in self])
 
+    def _eval_is_polynomial(self, syms):
+        for term in self:
+            if not term._eval_is_polynomial(syms):
+                return False
+        return True
+
     # assumption methods
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
@@ -239,7 +245,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         if isinstance(self[0], Basic.Number) and self[0].is_negative:
             return -Basic.One(),[-self]
         return Basic.One(),[self]
-        
+
     def _eval_subs(self, old, new):
         if self==old: return new
         coeff1,factors1 = self.as_coeff_factors()
@@ -248,7 +254,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
             return new + coeff1 - coeff2
         if isinstance(old, Add):
             l1,l2 = len(factors1),len(factors2)
-            if l2<l1: # (a+b+c+d).subs(b+c,x) -> a+x+d 
+            if l2<l1: # (a+b+c+d).subs(b+c,x) -> a+x+d
                 for i in range(l1-l2+1):
                     if factors2==factors1[i:i+l2]:
                         return Add(*([coeff1-coeff2]+factors1[:i]+[new]+factors1[i+l2:]))

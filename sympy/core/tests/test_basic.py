@@ -1,4 +1,4 @@
-from sympy import Basic, Symbol, Real, Rational, cos, exp, log, oo
+from sympy import Basic, Symbol, Real, Rational, cos, exp, log, oo, sqrt
 
 
 def dotest(s):
@@ -71,3 +71,34 @@ def test_atoms():
    assert list((2*(x**(y**x))).atoms()) == [2,x,y]
    assert list(Rational(1,2).atoms()) == [Rational(1,2)]
    assert list(Rational(1,2).atoms(type=type(oo))) == []
+
+def test_is_polynomial():
+    x, y, z = map(Symbol, 'xyz')
+
+    assert Rational(2).is_polynomial(x, y, z) == True
+    assert (Basic.Pi()).is_polynomial(x, y, z) == True
+
+    assert x.is_polynomial(x) == True
+    assert x.is_polynomial(y) == True
+
+    assert (x**2).is_polynomial(x) == True
+    assert (x**2).is_polynomial(y) == True
+
+    assert (x**(-2)).is_polynomial(x) == False
+    assert (x**(-2)).is_polynomial(y) == True
+
+    assert (2**x).is_polynomial(x) == False
+    assert (2**x).is_polynomial(y) == True
+
+    assert (x**2 + 3*x - 8).is_polynomial(x) == True
+    assert (x**2 + 3*x - 8).is_polynomial(y) == True
+
+    assert sqrt(x).is_polynomial(x) == False
+    assert (x**Basic.Half()).is_polynomial(x) == False
+    assert (x**Rational(3,2)).is_polynomial(x) == False
+
+    assert (x**2 + 3*x*sqrt(y) - 8).is_polynomial(x) == True
+    assert (x**2 + 3*x*sqrt(y) - 8).is_polynomial(y) == False
+
+    assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(2)).is_polynomial(x, y) == True
+    assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) == False

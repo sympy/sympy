@@ -5,6 +5,7 @@ __version__ = "0.5.0"
 
 from series import *
 from matrices import *
+from polynomials import *
 from utilities import *
 from specfun import *
 

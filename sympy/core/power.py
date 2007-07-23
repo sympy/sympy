@@ -230,7 +230,7 @@ class Pow(Basic, ArithMeths, RelMeths):
                 ##   P(x)^m = sum_{k=0}^{m n} a(m,k) x^k
                 ## The coefficients a(m,k) can be computed using the
                 ## J.C.P. Miller Pure Recurrence [see D.E.Knuth,
-                ## Seminumerical Algorithms, The art of Computer                
+                ## Seminumerical Algorithms, The art of Computer
                 ## Programming v.2, Addison Wesley, Reading, 1981;]:
                 ##  a(m,k) = 1/(k p_0) sum_{i=1}^n p_i ((m+1)i-k) a(m,k-i),
                 ## where a(m,0) = p_0^m.
@@ -253,7 +253,7 @@ class Pow(Basic, ArithMeths, RelMeths):
                     if m==2:
                         p = base[:]
                         return Basic.Add(*[t1*t2 for t1 in p for t2 in p])
-                    return Basic.Mul(base, Pow(base, m-1).expand()).expand()                        
+                    return Basic.Mul(base, Pow(base, m-1).expand()).expand()
         return result
 
     def _eval_derivative(self, s):
@@ -306,7 +306,7 @@ class Pow(Basic, ArithMeths, RelMeths):
                 dx = 1/self.base.diff(x)
                 if not dx.has(s):
                     return (y**self.exp*dx).integral(y).subs(y, self.base)
-        
+
     def _eval_defined_integral(self, s, a, b):
         if not self.exp.has(s):
             if self.base==s:
@@ -318,6 +318,15 @@ class Pow(Basic, ArithMeths, RelMeths):
                 if isinstance(dx, Basic.Number):
                     y = Basic.Symbol('y',dummy=True)
                     return (y**self.exp*dx).integral(y==[self.base.subs(s,a), self.base.subs(s,b)])
+
+    def _eval_is_polynomial(self, syms):
+        if self.base.has(*syms):
+            # it would be nice to have is_nni (or its explicit version) working
+            return self.base._eval_is_polynomial(syms) and \
+                   self.exp.is_nonnegative and \
+                   self.exp.is_integer
+        else:
+            return not self.exp.has(*syms)
 
     def as_numer_denom(self):
         base, exp = self.as_base_exp()
@@ -374,7 +383,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         z = (b/b0-1)
         r = self._compute_oseries(z, o, self.taylor_term, lambda z: 1+z) * b0**e
         return r
-        
+
     def _eval_as_leading_term(self, x):
         if not self.exp.has(x):
             return self.base.as_leading_term(x) ** self.exp

@@ -110,13 +110,13 @@ class Apply(Basic, ArithMeths, RelMeths):
         if obj is not None:
             return obj
         return Basic._seq_subs(self, old, new)
-    
+
     def evalf(self):
         obj = self.func._eval_apply_evalf(*self.args)
         if obj is None:
             return self
         return obj
-        
+
     def _eval_is_comparable(self):
         if isinstance(self.func, DefinedFunction):
             r = True
@@ -126,7 +126,7 @@ class Apply(Basic, ArithMeths, RelMeths):
                 if not c: r = False
             return r
         return
-        
+
     def _eval_derivative(self, s):
         # Apply(f(x), x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
         i = 0
@@ -192,6 +192,11 @@ class Apply(Basic, ArithMeths, RelMeths):
             return e1.oseries(order)
         return self._compute_oseries(arg, order, self.func.taylor_term, self.func)
 
+    def _eval_is_polynomial(self, syms):
+        for arg in self.args:
+            if arg.has(*syms):
+                return False
+        return True
 
 class Function(Basic, ArithMeths, NoRelMeths):
     """ Base class for function objects, represents also undefined functions.
@@ -200,7 +205,7 @@ class Function(Basic, ArithMeths, NoRelMeths):
       f = Function('f', nofargs=1)
       f.fdiff(1) -> FApply(DF(1), f)
       f(x).diff(x) -> Apply(f,x).diff(x) -> Apply(FApply(DF(1),f),x)
-      
+
     Defined functions:
       exp = Exp()
       f.fdiff(1) -> exp
@@ -224,7 +229,7 @@ class Function(Basic, ArithMeths, NoRelMeths):
       e2.fdiff(1) -> Lambda(exp(sin(_x)).diff(_x), _x) -> Lambda(Apply(exp, Apply(sin, _x)).diff(_x), _x)
                   -> Lambda(Apply(Compostion(exp, sin), _x).diff(_x), _x)
                   -> Lambda(Apply(FApply(DF(1),exp), Apply(sin, _x)) * Apply(FApply(DF(1), sin),_x), _x)
-      
+
     """
 
     nofargs = None
@@ -323,7 +328,7 @@ class FApply(Function):
     DF(1)(f) -> FApply(DF(1), f)
     DF(2)(FApply(DF(1), f)) -> FApply(DF(2), FApply(DF(1),f)) -> FApply(DF(1,2), f)
     """
-    
+
     def __new__(cls, operator, *funcs, **assumptions):
         operator = Basic.sympify(operator)
         funcs = map(Basic.sympify, funcs)
@@ -525,7 +530,7 @@ class FPow(Function):
 
 class Composition(AssocOp, Function):
     """ Composition of functions.
-    
+
     Composition(f1,f2,f3)(x) -> f1(f2(f3(x)))
     >>> from sympy import exp,log
     >>> l1 = Lambda('x**2','x')
@@ -537,7 +542,7 @@ class Composition(AssocOp, Function):
     >>> Composition(exp,log,exp,exp)('x')
     exp(exp(x))
     """
-    
+
     @classmethod
     def flatten(cls, seq):
         c_part = []
@@ -584,7 +589,7 @@ class Composition(AssocOp, Function):
     def _hashable_content(self):
         return self._args
 
-    def _matches_simple(pattern, expr, repl_dict):        
+    def _matches_simple(pattern, expr, repl_dict):
         return
 
 
@@ -692,7 +697,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
                 return Derivative(obj.expr, *(obj.symbols+self.symbols))
             return Derivative(obj, *self.symbols)
         return Derivative(self.expr, *((s,)+self.symbols))
-        
+
     @property
     def expr(self):
         return self._args[0]
@@ -710,7 +715,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
     def _eval_subs(self, old, new):
         for a in list(old.atoms(Basic.Symbol)):
             if a in self.symbols:
-                return self.as_apply().subs(old, new)                
+                return self.as_apply().subs(old, new)
         return self.__class__(*[s.subs(old, new) for s in self])
 
 
@@ -755,7 +760,7 @@ class Integral(Basic, ArithMeths, RelMeths):
 class DefinedFunction(Function, Singleton, Atom):
     """ Base class for defined functions.
     """
-    
+
     is_commutative = True # the values of functions are commutative
 
     def __new__(cls, **assumptions):

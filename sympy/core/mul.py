@@ -161,7 +161,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         if precedence <= level:
             return '(%s)' % r
         return r
-    
+
         numer,denom = self.as_numer_denom()
         if isinstance(denom, Basic.One):
             delim = '*'
@@ -269,7 +269,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         v = Mul(*(self[1:]))
         uv = u * v
         return uv - (u*v.diff(s)).integral(s)
-        
+
     def _eval_defined_integral(self, s, a, b):
         coeffs = []
         terms = []
@@ -284,11 +284,18 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         uv = u * v
         return (uv.subs(s,b) - uv.subs(s,a)) - (u*v.diff(s)).integral(s==[a,b])
 
+    def _eval_is_polynomial(self, syms):
+        for term in self:
+            if not term._eval_is_polynomial(syms):
+                return False
+        return True
+
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
     _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
     _eval_is_comparable = lambda self: self._eval_template_is_attr('is_comparable')
+
     def _eval_is_irrational(self):
         for t in self:
             a = t.is_irrational
@@ -357,7 +364,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         if terms1==terms2: # (2*a).subs(3*a,y) -> 2/3*y
             return new * coeff1/coeff2
         l1,l2 = len(terms1),len(terms2)
-        if l2<l1: # (a*b*c*d).subs(b*c,x) -> a*x*d 
+        if l2<l1: # (a*b*c*d).subs(b*c,x) -> a*x*d
             for i in range(l1-l2+1):
                 if terms2==terms1[i:i+l2]:
                     m1 = Mul(*terms1[:i]).subs(old,new)

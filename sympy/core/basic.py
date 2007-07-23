@@ -91,18 +91,18 @@ class Basic(BasicMeths):
             Converts an arbitrary expression to a type that can be used
             inside sympy. For example, it will convert python int's into
             instance of sympy.Rational, floats into intances of sympy.Real, etc.
-            
+
         Notes
         =====
-            It currently accepts as arguments: 
+            It currently accepts as arguments:
                 - any object defined in sympy (except maybe matrices [TODO])
                 - standard numeric python types: int, long, float, Decimal
                 - strings (like "0.09" or "2e-19")
-            
+
             If the argument is already a type that sympy understands, it will do
             nothing but return that value - this can be used at the begining of a
-            method to ensure you are workint with the corerct type. 
-            
+            method to ensure you are workint with the corerct type.
+
         Examples
         ========
             >>> def is_real(a):
@@ -127,7 +127,7 @@ class Basic(BasicMeths):
             return Basic.Real(a)
         if isinstance(a, complex):
             real, imag = Basic.sympify(a.real), Basic.sympify(a.imag)
-            ireal, iimag = int(real), int(imag) 
+            ireal, iimag = int(real), int(imag)
             t = ireal + iimag*1j
             if t == a:
                 return ireal + iimag*Basic.ImaginaryUnit()
@@ -140,19 +140,19 @@ class Basic(BasicMeths):
 
     @cache_it
     def atoms(self, type=None):
-        """Returns the atoms that form current object. 
-        
-        Example: 
+        """Returns the atoms that form current object.
+
+        Example:
         >>> from sympy import *
         >>> x = Symbol('x')
         >>> y = Symbol('y')
         >>> (x+y**2+ 2*x*y).atoms()
         set([2, x, y])
-        
+
         You can also filter the results by a given type of object
         >>> (x+y+2+y**2*sin(x)).atoms(type=Symbol)
         set([x, y])
-        
+
         >>> (x+y+2+y**2*sin(x)).atoms(type=Number)
         set([2])
         """
@@ -166,6 +166,17 @@ class Basic(BasicMeths):
             for obj in self:
                 result = result.union(obj.atoms(type=type))
         return result
+
+    def _eval_is_polynomial(self, syms):
+        return False
+
+    def is_polynomial(self, *syms):
+        if syms:
+            syms = map(Basic.sympify, syms)
+        else:
+            syms = list(self.atoms(type=Basic.Symbol))
+
+        return self._eval_is_polynomial(syms)
 
     def _eval_subs(self, old, new):
         if self==old:
@@ -380,7 +391,7 @@ class Basic(BasicMeths):
     def _eval_expand(self):
         if isinstance(self, Atom):
             return self
-        return self.__class__(*[t.expand() for t in self], **self._assumptions)        
+        return self.__class__(*[t.expand() for t in self], **self._assumptions)
 
     @cache_it_immutable
     def expand(self):
@@ -534,7 +545,7 @@ class Basic(BasicMeths):
             if obj2 != obj:
                 return obj2.oseries(order)
             return obj2
-        raise NotImplementedError('(%s).oseries(%s)' % (self, order))    
+        raise NotImplementedError('(%s).oseries(%s)' % (self, order))
 
     def _eval_oseries(self, order):
         return
@@ -575,7 +586,7 @@ class Basic(BasicMeths):
 
 
     def inflimit(self, x): # inflimit has its own cache
-        x = Basic.sympify(x)        
+        x = Basic.sympify(x)
         return Basic.InfLimit(self, x)
 
     @cache_it_immutable
@@ -659,6 +670,9 @@ class Atom(Basic):
         if s==self:
             return (b**2-a**2)/2
         return self*(b-a)
+
+    def _eval_is_polynomial(self, syms):
+        return True
 
     def _eval_oseries(self, order):
         # .oseries() method checks for order.contains(self)

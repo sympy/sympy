@@ -25,12 +25,12 @@ class Symbol(Atom, RelMeths, ArithMeths):
     def __new__(cls, name, commutative=True, dummy=False,
                 **assumptions):
         """if dummy == True, then this Symbol is totally unique, i.e.::
-        
+
         >>> bool(Symbol("x") == Symbol("x")) == True
         True
-        
+
         but with the dummy variable ::
-        
+
         >>> bool(Symbol("x", dummy = True) == Symbol("x", dummy = True)) == True
         False
 
