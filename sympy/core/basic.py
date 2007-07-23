@@ -585,7 +585,10 @@ class Basic(BasicMeths):
         """
         x = Basic.sympify(x)
         o = Basic.Order(x**n,x)
-        return self.oseries(o) + o
+        r = self.oseries(o)
+        if r==self:
+            return self
+        return r + o
 
     @cache_it_immutable
     def oseries(self, order, _cache={}):
@@ -666,7 +669,6 @@ class Basic(BasicMeths):
         """ Compute limit x->xlim.
         """
         return Basic.Limit(self, x, xlim, direction)
-
 
     def inflimit(self, x): # inflimit has its own cache
         x = Basic.sympify(x)

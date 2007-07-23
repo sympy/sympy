@@ -3,7 +3,7 @@ import sympy as g
 from sympy import Symbol, Rational, sin, log, exp, O
 
 
-def _testseries1():
+def testseries1():
     x = Symbol("x")
     e = sin(x)
     assert e.series(x,0) != 0
@@ -20,19 +20,17 @@ def _testseries1():
 
     assert x.series(x,0) == O(1, x)
     assert x.series(x,1) == O(x, x)
-    # fails because of an O(X**2,x) on the end
     assert x.series(x,2) == x
 
 def testseriesbug1():
     x = Symbol("x")
-    assert (1/x).series(x,3) == 1/x + O(x**3, x)
-    assert (x+1/x).series(x,3) == x+1/x + O(x**3, x)
+    assert (1/x).series(x,3) == 1/x
+    assert (x+1/x).series(x,3) == x+1/x
 
-def _testseries2():
+def testseries2():
     x = Symbol("x")
     assert ((x+1)**(-2)).series(x,4) == 1-2*x+3*x**2-4*x**3+O(x**4, x)
     assert ((x+1)**(-1)).series(x,4) == 1-x+x**2-x**3+O(x**4, x)
-    # XXX The next two fail because of an additional O(x**3,x) on the end
     assert ((x+1)**0).series(x,3) == 1
     assert ((x+1)**1).series(x,3) == 1+x
     assert ((x+1)**2).series(x,3) == 1+2*x+x**2+O(x**3, x)
@@ -68,7 +66,7 @@ def test_bug2():
     e = (w**(-1)+w**(-log(3)*log(2)**(-1)))**(-1)*(3*w**(-log(3)*log(2)**(-1))+2*w**(-1))
     e = e.eval().expand()
     #should be 3, but is 2
-#    print e.series(w,4)
+    assert e.series(w,4).subs(w,0)==3
 
 def test_exp():
     x = Symbol("x")
@@ -88,7 +86,7 @@ def test_bug3():
     e = (2/x+3/x**2)/(1/x+1/x**2)
     assert e.series(x,1) == 3+O(x)
 
-def _test_generalexponent():
+def test_generalexponent():
     x = Symbol("x")
     p = 2
     e = (2/x+3/x**p)/(1/x+1/x**p)
@@ -100,7 +98,6 @@ def _test_generalexponent():
     e = (2/x+3/x**p)/(1/x+1/x**p)
     assert e.eval().series(x,1).leadterm(x) == (3,0)
 
-    # XXX fails due to an O(x**4, x) on the end
     e=1+x**Rational(1,2)
     assert e.eval().series(x,4) == 1+x**Rational(1,2)
 
