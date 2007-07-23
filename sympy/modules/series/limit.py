@@ -127,13 +127,18 @@ class InfLimit(Basic):
         return result
 
 @cache_it_immutable
-def mrv_inflimit(expr, x):
+def mrv_inflimit(expr, x, _cache = {}):
+    if _cache.has_key((expr, x)):
+        raise RuntimeError('Detected recursion while computing mrv_inflimit(%s, %s)' % (expr, x))
+    _cache[(expr, x)] = 1
     expr_map = {}
     mrv_map = {}
     newexpr = mrv2(expr, x, expr_map, mrv_map)
     if mrv_map.has_key(x):
         t = Basic.Temporary(unbounded=True, positive=True)
-        return mrv_inflimit(expr.subs(S.Log(x), t).subs(x, S.Exp(t)).subs(t, x), x)
+        r = mrv_inflimit(expr.subs(S.Log(x), t).subs(x, S.Exp(t)).subs(t, x), x)
+        del _cache[(expr, x)]
+        return r
     w = Basic.Symbol('w_0',dummy=True, positive=True, infinitesimal=True)
     germ, new_mrv_map = rewrite_mrv_map(mrv_map, x, w)
     new_expr = rewrite_expr(newexpr, germ, new_mrv_map, w)
@@ -143,10 +148,14 @@ def mrv_inflimit(expr, x):
     c,e = lt.as_coeff_exponent(w)
     assert not c.has(w),`c`
     if e==0:
-        return c.inflimit(x)
+        r = c.inflimit(x)
+        del _cache[(expr, x)]
+        return r
     if e.is_positive:
+        del _cache[(expr, x)]
         return S.Zero
     if e.is_negative:
+        del _cache[(expr, x)]
         return S.Sign(c) * S.Infinity
     raise RuntimeError('Failed to compute mrv_inflimit(%s, %s), got lt=%s' % (self, x, lt))
 
