@@ -5,7 +5,7 @@
 # Created: May 2007
 
 from basic import Basic
-from symbol import Symbol, Wild
+from symbol import Symbol, Wild, symbols
 from numbers import Number, Real, Rational, Integer
 from power import Pow
 from mul import Mul
