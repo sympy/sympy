@@ -75,20 +75,6 @@ def test_Polynomial():
     assert x**2 + 3*x*sqrt(y) - 8 == Polynomial(
            [[-8, 0], [3*sqrt(y), 1], [1, 2]], [x]).basic
 
-    
-def test_ispoly():
-    x = Symbol("x")
-    y = Symbol("y")
-    assert not ispoly( sqrt(x), x )
-    assert ispoly( Rational(2), x)
-    assert ispoly(x**2+1, x)
-    assert ispoly( x, x)
-    assert ispoly( x**2, x)
-    assert ispoly( x**2 + 3*x - 8, x)
-    assert ispoly( x**2 + 3*x*sqrt(y) - 8, x)
-    assert not ispoly( x**2 + 3*x*sqrt(y) - 8 , y)
-    assert ispoly((x**2)*(y**2) + x*(y**2) + y*x + x + exp(2), (x,y) )
-
 ## sympy/modules/polynomials/common.py
 
 def test_coeff_ring():

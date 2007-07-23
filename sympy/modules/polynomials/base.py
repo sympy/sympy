@@ -318,7 +318,7 @@ class Polynomial(object):
         r = self.copy()
         r.basic **= exp
         return r
-        
+
     def __call__(self, *x):
         # TODO: implement Horner's method for coefficient list?
         if len(x) != len(self.var):
@@ -386,15 +386,6 @@ class Polynomial(object):
 
         return final
 
-        #    result2 = result[0:1]
-        #    for term in result[1:]:
-        #        if term[1:] == result2[0][1:]:
-        #            result2[0][0] += term[0]
-        #        else:
-        #            result2.append(term)
-
-        #    return result2
-
     def poly(self):
         """Makes a sympy expression out of a coefficient list."""
         if len(self.cl) == 0:
@@ -447,58 +438,3 @@ class Polynomial(object):
             return Polynomial(S.Zero, self.var, self.order, self.coeff)
         r.cl = map(lambda t:[t[0]*t[i]] + t[1:i] + [t[i]-1] + t[i+1:], r.cl)
         return r
-
-def ispoly(p, var=None):
-    """
-    Usage:
-      ispoly(p, var) -> Returns True if p is a polynomial in variable var.
-                        Returns False otherwise.
-
-    Notes:
-        You can check wether it's a polynomial in several variables at
-        once giving a tuple of symbols second argument
-        (like ispoly(x**2 + y + 1, (x,y)) ).
-
-    Examples:
-        >>> from sympy import *
-        >>> from sympy.modules.polynomials import *
-        >>> x = Symbol('x')
-        >>> ispoly(x**2+x+1, x)
-        True
-        >>> y = Symbol('y')
-        >>> ispoly(x**2 + y + 1, (x,y)) #polynomial in variables x and y
-        True
-        >>> ispoly(x**2 + exp(y) + 1, (x,y))
-        False
-
-    See also:
-       L{coeff_list}, L{coeff}
-
-    """
-    p = Basic.sympify(p)
-    if var is None:
-        var = list(p.atoms(type=Symbol))
-    elif isinstance(var, Symbol):
-        var = [var] # We want to iterate.
-    if len(var) == 0:
-        return True # Constants are polynomials.
-    elif len(var) > 1:
-        return ispoly(p, var[0]) and ispoly(p, var[1:])
-
-    if not var[0] in list(p.atoms(type=Symbol)):
-        return True # Constants are polynomials.
-    # Now we look for one variable, guaranteed to be in the expression.
-    elif isinstance(p, Pow):
-        if p.exp.is_integer and p.exp.is_positive:
-            return ispoly(p.base, var[0])
-        else:
-            return False
-    elif isinstance(p, (Add, Mul)):
-        for item in p[:]:
-            if not ispoly(item, var[0]):
-                return False
-        return True
-    elif isinstance(p, Symbol): # This is the right Symbol, see above.
-        return True
-    else:
-        return False
