@@ -2,8 +2,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.numbers import Rational, Real, pi
 from sympy.core.function import DefinedFunction
 #from sympy.modules.trigonometric import cos
-from factorials import Function2
-import decimal
+#import decimal
 
 
 # Simple implementation of Newton's method for root-finding
@@ -106,9 +105,10 @@ class Legendre_zero(DefinedFunction):
         True
 
     """
+    nofargs = 2
 
-    def eval(self):
-        n, k = self._args
+    def _eval_apply(self, n, k):
+        from sympy.core import sqrt
         if n.is_odd and (n-1)/2 == k:
             return Rational(0)
         if n == 2 and k == 0: return -sqrt(Rational(1,3))
@@ -118,7 +118,6 @@ class Legendre_zero(DefinedFunction):
         # We could use SymPy's polynomial root-finding code for higher-degree
         # polynomials, but it might not be helpful to do so by default
         # since the expressions grow extremely complicated
-        return self
 
     def evalf(self, prec=10):
         # Increasing the precision is really just a matter of using
@@ -201,8 +200,8 @@ class Chebyshev_zero(DefinedFunction):
     """
     nofargs = 2
 
-    def eval(self):
-        n, k = self._args
+    def _eval_apply(self, n, k):
+        from sympy.core import cos
         return cos(pi*(2*k+1)/(2*n))
 
 

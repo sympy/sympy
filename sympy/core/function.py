@@ -719,44 +719,6 @@ class Derivative(Basic, ArithMeths, RelMeths):
         return self.__class__(*[s.subs(old, new) for s in self])
 
 
-class Integral(Basic, ArithMeths, RelMeths):
-    """
-    Carries out integration of the given expression with respect to symbols.
-
-    expr must define ._eval_integral(symbol) method that returns integration result or None.
-
-    Integral(Integral(expr, x), y) -> Integral(expr, x, y)
-
-    Defined integral is represented as
-      Integral(expr, x==[a,b])
-    """
-
-    precedence = Basic.Apply_precedence
-
-    def __new__(cls, expr, *symbols, **assumptions):
-        expr = Basic.sympify(expr)
-        if not symbols: return expr
-        symbols = map(Basic.sympify, symbols)
-        unevaluated_symbols = []
-        for s in symbols:
-            if isinstance(s, Basic.Equality):
-                obj = expr._eval_defined_integral(s.lhs, s.rhs.start, s.rhs.end)
-            else:
-                obj = expr._eval_integral(s)
-            if obj is None:
-                unevaluated_symbols.append(s)
-            else:
-                expr = obj
-        if not unevaluated_symbols:
-            return expr
-        return Basic.__new__(cls, expr, *unevaluated_symbols)
-
-    def tostr(self, level=0):
-        r = 'Int' + `tuple(self)`
-        if self.precedence <= level:
-            r = '(%s)' % (r)
-        return r
-
 class DefinedFunction(Function, Singleton, Atom):
     """ Base class for defined functions.
     """
@@ -773,6 +735,4 @@ class DefinedFunction(Function, Singleton, Atom):
 
 Basic.singleton['D'] = lambda : Derivative
 Basic.singleton['FD'] = lambda : FDerivative
-Basic.singleton['Int'] = lambda : Integral
-
-
+#Basic.singleton['Int'] = lambda : Integral

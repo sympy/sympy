@@ -11,7 +11,7 @@ from power import Pow
 from mul import Mul
 from add import Add
 from relational import Equality, Inequality, Unequality, StrictInequality
-from function import Lambda, Function, Apply, FApply, Composition, FPow, WildFunction, Integral, Derivative
+from function import Lambda, Function, Apply, FApply, Composition, FPow, WildFunction, Derivative
 from interval import Interval
 
 import defined_functions

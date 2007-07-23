@@ -1,4 +1,5 @@
-from sympy import Symbol, Rational, Derivative, Integral, I, log, sqrt, exp
+from sympy import Symbol, Rational, Derivative, I, log, sqrt, exp
+from sympy.modules.integrals import Integral
 
 #from sympy.core.stringPict import *
 #from sympy.modules.printing.pretty import pretty

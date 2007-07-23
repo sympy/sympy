@@ -1,6 +1,6 @@
 from sympy.core.function import DefinedFunction
 from sympy.core.numbers import Number, Real, Rational, pi, I, oo
-from sympy import Symbol, Add, Mul, Pow, Basic
+from sympy import Symbol, Add, Mul, Pow, Basic, exp, log, sin
 #from sympy.modules.simplify import simplify
 #from sympy import O
 #from sympy.modules.trigonometric import sin
@@ -54,8 +54,9 @@ class Factorial(DefinedFunction):
         15/8*pi**(1/2)
 
     """
-    def _eval_apply(self, args):
-        x = args
+    nofargs = 1
+
+    def _eval_apply(self, x):
         if isinstance(x, Rational):
             if x.is_integer:
                 if x < 0:
@@ -69,7 +70,6 @@ class Factorial(DefinedFunction):
                 if n < 0:
                     return (-1)**(-n+1) * pi * x / factorial(-x)
                 return sqrt(pi) * Rational(1, 2**n) * factorial2(2*n-1)
-        return self
 
     def diff(self, sym):
         return gamma(self._args+1).diff(sym)
@@ -102,7 +102,6 @@ class Factorial(DefinedFunction):
             s = "(" + x.__latex__() + ")"
         return s + "!"
 
-factorial = Factorial()
 
 def _fac(x):
     return factorial(x, evaluate=False)
@@ -131,8 +130,9 @@ class Factorial2(DefinedFunction):
         48
 
     """
-    def _eval_apply(self,args):
-        x = args
+    nofargs = 1
+
+    def _eval_apply(self, x):
         if isinstance(x, Rational) and x.is_integer:
             if int(x) % 2 == 0:
                 if x < 0:
@@ -144,7 +144,6 @@ class Factorial2(DefinedFunction):
                     return factorial2(x+2) / (x+2)
                 else:
                     return factorial(x) / 2**((x-1)/2) / factorial((x-1)/2)
-        return self
 
     def __latex__(self):
         x = self._args
@@ -154,8 +153,6 @@ class Factorial2(DefinedFunction):
         else:
             s = "(" + x.__latex__() + ")"
         return s + "!!"
-
-factorial2 = Factorial2()
 
 
 # factorial_simplify helpers; could use refactoring
@@ -270,30 +267,6 @@ def factorial_simplify(expr):
 
     return expr
 
-
-# This class is a temporary solution
-class Function2(DefinedFunction):
-
-    def __init__(self, x, y):
-        Basic.__init__(self, is_commutative=True)
-        self._args = self.sympify(x), self.sympify(y)
-
-    def atoms(self, s=[], type=None):
-        x, y = self._args
-
-        s_temp = list(set(x.atoms()) | set(y.atoms()))
-
-        if type is not None:
-            return filter(lambda x : isinstance(x, type), s_temp)
-
-        return s_temp
-
-    def subs(self, old, new):
-        x, y = self._args
-        x = x.subs(old, new)
-        y = y.subs(old, new)
-        return self.__class__(x, y)
-
 class Rising_factorial(DefinedFunction):
     """
     Usage
@@ -310,15 +283,13 @@ class Rising_factorial(DefinedFunction):
     """
     nofargs = 2
 
-    def _eval_apply(self):
-        x, n = self._args
+    def _eval_apply(self, x, n):
         return factorial_simplify(_fac(x+n-1) / _fac(x-1))
 
     def __latex__(self):
         x, n = self._args
         return "{(%s)}^{(%s)}" % (x.__latex__(), n.__latex__())
 
-rising_factorial = Rising_factorial()
 
 class Falling_factorial(DefinedFunction):
     """
@@ -336,15 +307,12 @@ class Falling_factorial(DefinedFunction):
     """
     nofargs = 2
 
-    def eval(self):
-        x, n = self._args
+    def _eval_apply(self, x, n):
         return factorial_simplify(_fac(x) / _fac(x-n))
 
     def __latex__(self):
         x, n = self._args
         return "{(%s)}_{(%s)}" % (x.__latex__(), n.__latex__())
-
-falling_factorial = Falling_factorial()
 
 
 class Binomial2(DefinedFunction):
@@ -398,7 +366,6 @@ class Binomial2(DefinedFunction):
         n, k = self._args
         return r"{{%s}\choose{%s}}" % (n.__latex__(), k.__latex__())
 
-#binomial = Binomial()
 
 class Gamma(DefinedFunction):
     """
@@ -423,13 +390,12 @@ class Gamma(DefinedFunction):
         pi**(1/2)
 
     """
+    nofargs = 1
 
     def _eval_apply(self, x):
         y = factorial(x-1)
         try:
-            if isinstance(y.func, Factorial):
-                return self
-            else:
+            if not isinstance(y.func, Factorial):
                 return y
         except:
             return y
@@ -442,33 +408,33 @@ class Gamma(DefinedFunction):
     def __latex__(self):
         return "\Gamma(" + self._args.__latex__() + ")"
 
-gamma = Gamma()
 
-
-class lower_gamma(Function2):
+class LowerGamma(DefinedFunction):
     """
     Lower incomplete gamma function
-    
+
     gamma(a, x)
     """
-    def eval(self):
-        a, x = self._args
+    nofargs = 2
+
+    def _eval_apply(self, a, x):
         if a == 1:
             return 1 - exp(-x)
         if a.is_integer and a > 1:
             b = a-1
             return b*lower_gamma(b, x) - x**b * exp(-x)
-        return self
+        #return self
 
 
-class upper_gamma(Function2):
+class UpperGamma(DefinedFunction):
     """
     Upper incomplete gamma function
 
     Gamma(a, x)
     """
-    def eval(self):
-        a, x = self._args
+    nofargs = 2
+
+    def _eval_apply(self, a, x):
         if x == 0:
             return gamma(a)
         if a == 1:
@@ -476,4 +442,14 @@ class upper_gamma(Function2):
         if a.is_integer and a > 1:
             b = a-1
             return b*upper_gamma(b, x) + x**b * exp(-x)
-        return self
+        #return self
+
+
+factorial = Factorial()
+factorial2 = Factorial2()
+rising_factorial = Rising_factorial()
+falling_factorial = Falling_factorial()
+#binomial = Binomial()
+upper_gamma = UpperGamma()
+lower_gamma = LowerGamma()
+gamma = Gamma()
