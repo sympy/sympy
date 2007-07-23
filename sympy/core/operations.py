@@ -15,7 +15,7 @@ class AssocOp(Basic):
         if len(args)==0:
             return cls.identity()
         if len(args)==1:
-            return args[0]        
+            return Basic.sympify(args[0])
         c_part, nc_part, lambda_args, order_symbols = cls.flatten(map(Basic.sympify, args))
         if len(c_part) + len(nc_part) <= 1:
             if c_part: obj = c_part[0]
