@@ -75,6 +75,8 @@ def test_atoms():
 def test_is_polynomial():
     x, y, z = map(Symbol, 'xyz')
 
+    k = Symbol('k', nonnegative=True, integer=True)
+
     assert Rational(2).is_polynomial(x, y, z) == True
     assert (Basic.Pi()).is_polynomial(x, y, z) == True
 
@@ -89,6 +91,15 @@ def test_is_polynomial():
 
     assert (2**x).is_polynomial(x) == False
     assert (2**x).is_polynomial(y) == True
+
+    assert (x**k).is_polynomial(x) == True
+    assert (x**k).is_polynomial(k) == False
+    assert (x**x).is_polynomial(x) == False
+    assert (k**k).is_polynomial(k) == False
+    assert (k**x).is_polynomial(k) == None
+
+    assert (x**(-k)).is_polynomial(x) == None
+    assert ((2*x)**k).is_polynomial(x) == True
 
     assert (x**2 + 3*x - 8).is_polynomial(x) == True
     assert (x**2 + 3*x - 8).is_polynomial(y) == True

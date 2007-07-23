@@ -320,13 +320,16 @@ class Pow(Basic, ArithMeths, RelMeths):
                     return (y**self.exp*dx).integral(y==[self.base.subs(s,a), self.base.subs(s,b)])
 
     def _eval_is_polynomial(self, syms):
+        if self.exp.has(*syms):
+            return False
+
         if self.base.has(*syms):
-            # it would be nice to have is_nni (or its explicit version) working
+            # it would be nice to have is_nni working
             return self.base._eval_is_polynomial(syms) and \
                    self.exp.is_nonnegative and \
                    self.exp.is_integer
         else:
-            return not self.exp.has(*syms)
+            return True
 
     def as_numer_denom(self):
         base, exp = self.as_base_exp()
