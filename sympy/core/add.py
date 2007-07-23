@@ -64,7 +64,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         if isinstance(coeff, Basic.NaN):
             newseq = [coeff]
         elif isinstance(coeff, (Basic.Infinity, Basic.NegativeInfinity)):
-            newseq = [coeff] + [f for f in newseq if f.is_unbounded]
+            newseq = [coeff] + [f for f in newseq if not f.is_real]
         elif not isinstance(coeff, Basic.Zero):
             newseq.insert(0, coeff)
 
