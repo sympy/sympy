@@ -122,18 +122,23 @@ class Temporary(Symbol):
         return Symbol.__new__(cls, name, **assumptions)
 
 def symbols(*names, **kwargs):
-    """Returns a list of symbols with names declared in 'names'
-       argument. All newly created symbols have assumptions set
-       acordingly to 'kwargs'. Main intentention behind this
-       function is to simplify and shorten examples code in
-       doc-strings.
+    """Returns a list of symbols with names taken from 'names'
+       argument, which can be a string, then each character
+       forms a separate symbol or a sequence of strings.
 
-       >>> from sympy.core.symbol import symbols
+       All newly created symbols have assumptions set acordingly
+       to 'kwargs'. Main intentention behind this function is to
+       simplify and shorten examples code in doc-strings.
 
-       >>> x, y, z = symbols('x', 'y', 'z', real=True)
+       >>> x, y, z = symbols('xyz', integer=True)
+
+       >>> xx, yy, zz = symbols('xx', 'yy', 'zz', real=True)
 
        >>> y.is_real
        True
 
     """
-    return [ Symbol(name, **kwargs) for name in names ]
+    if len(names) == 1 and isinstance(names[0], str):
+        return [ Symbol(name, **kwargs) for name in names[0] ]
+    else:
+        return [ Symbol(name, **kwargs) for name in names ]

@@ -177,6 +177,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         return r
 
     def _eval_subs(self, old, new):
+        #import pdb; pdb.set_trace()
         if self==old: return new
         if isinstance(old, self.__class__) and self.base==old.base:
             coeff1,terms1 = self.exp.as_coeff_terms()
