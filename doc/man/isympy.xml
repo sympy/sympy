@@ -1,0 +1,174 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<?xml-stylesheet type="text/xsl"
+	href="http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+	"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd" [
+
+<!-- Process this file with an XSLT processor, e.g. xsltproc:    -->
+<!-- `xsltproc \
+      -''-nonet \
+      -''-param man.charmap.use.subset "0" \
+      -''-param make.year.ranges "1" \
+      -''-param make.single.year.ranges "1" \
+      manpage.xml'                                               -->
+
+  <!-- Fill in your name for FIRSTNAME and SURNAME.              -->
+  <!ENTITY dhfirstname "Fabian">
+  <!ENTITY dhsurname   "Seoane">
+  <!ENTITY dhemail     "fabian@fseoane.net">
+  <!-- dhusername could also be set to "&firstname; &surname;".  -->
+  <!ENTITY dhusername  "&dhfirstname; &dhsurname;">
+
+  <!-- Please adjust the date whenever revising the manpage.     -->
+  <!ENTITY dhdate      "2007-04-12">
+
+  <!-- TITLE should be something like "User commands",           -->
+  <!-- "&dhpackage; command-line reference" or similar (see e.g. -->
+  <!-- http://www.tldp.org/HOWTO/Man-Page/q2.html). But limit    -->
+  <!-- the length to 30 chars.                                   -->
+  <!ENTITY dhtitle     "&dhpackage; command-line reference">
+  
+  <!ENTITY dhucpackage "isympy">
+  <!ENTITY dhpackage   "isympy">
+
+  <!-- If the application e.g. belongs to a package like X.org,  -->
+  <!-- this should be set to the its name instead.               -->
+  <!ENTITY dhproduct   "python-sympy">
+  <!ENTITY dhrelease   "0.4">
+
+  <!-- SECTION should be 1-8, maybe w/ subsection other          -->
+  <!-- parameters are allowed: see man(7), man(1) and            -->
+  <!-- http://www.tldp.org/HOWTO/Man-Page/q2.html.               -->
+  <!ENTITY dhsection   "1">
+
+]>
+
+<refentry>
+	<refentryinfo>
+		<title>&dhtitle;</title>
+		<productname>&dhpackage;</productname>
+		<releaseinfo role="version">&dhrelease;</releaseinfo>
+		<date>&dhdate;</date>
+		<authorgroup>
+			<author>
+				<firstname>Ondrej</firstname>
+				<surname>Certik</surname>
+				<contrib>Design, programming.</contrib>
+				<address>
+					<email>ondrej@certik.cz</email>
+				</address>
+			</author>
+			<author>
+				<firstname>&dhfirstname;</firstname>
+				<surname>&dhsurname;</surname>
+				<contrib>Programming.</contrib>
+				<address>
+					<email>&dhemail;</email>
+				</address>
+			</author>
+		</authorgroup>
+		<copyright>
+			<year>2007</year>
+			<holder>Ondrej Certik</holder>
+		</copyright>
+		<legalnotice>
+			<para>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</para>
+			<orderedlist>
+				<listitem>
+					<para>Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</para>
+				</listitem>
+				<listitem>
+					<para>Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.</para>
+				</listitem>
+			</orderedlist>
+			<para>THIS SOFTWARE IS PROVIDED BY THE AUTHOR &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</para>
+		</legalnotice>
+	</refentryinfo>
+	<refmeta>
+		<refentrytitle>&dhucpackage;</refentrytitle>
+		<manvolnum>&dhsection;</manvolnum>
+	</refmeta>
+	<refnamediv>
+		<refname>&dhpackage;</refname>
+		<refpurpose>interactive shell for SymPy</refpurpose>
+	</refnamediv>
+	<refsynopsisdiv>
+		<cmdsynopsis>
+			<command>&dhpackage;</command>
+			<group choice="opt">
+				<arg choice="plain"><option>-c</option></arg>
+				<arg choice="plain"><option>--console</option></arg>
+			</group>
+		</cmdsynopsis>
+		<cmdsynopsis>
+			<command>&dhpackage;</command>
+      <!-- Normally the help and version options make the programs stop
+			     right after outputting the requested information. -->
+			<group choice="opt">
+				<arg choice="plain">
+					<group choice="req">
+						<arg choice="plain"><option>-h</option></arg>
+						<arg choice="plain"><option>--help</option></arg>
+					</group>
+				</arg>
+				<arg choice="plain">
+					<group choice="req">
+						<arg choice="plain"><option>-v</option></arg>
+						<arg choice="plain"><option>--version</option></arg>
+					</group>
+				</arg>
+			</group>
+		</cmdsynopsis>
+	</refsynopsisdiv>
+	<refsect1 id="description">
+		<title>DESCRIPTION</title>
+    <para>isympy is a Python shell for SymPy. It is just a normal python shell (ipython shell if you have the ipython package installed) that imports
+          all the stuff SymPy needs so you don't have to. It imports the modules sympy, sympy.core, sympy.modules and tries to import the module 
+          sympy.modules.graphing if you have matplotlib installed. It also defines the symbols x, y, z. 
+    </para>
+	</refsect1>
+	<refsect1 id="options">
+		<title>OPTIONS</title>
+		<variablelist>
+			<!-- Use the variablelist.term.separator and the
+			     variablelist.term.break.after parameters to
+			     control the term elements. -->
+			<varlistentry>
+				<term><option>-c <replaceable class="parameter">shell</replaceable></option></term>
+				<term><option>--console=<replaceable class="parameter">shell</replaceable></option></term>
+				<listitem>
+					<para>Use the specified shell (python or ipython) as console backend instead of the default one (ipython                                        if present or python in other case).</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsect1>
+	<refsect1 id="files">
+		<title>FILES</title>
+		<variablelist>
+			<varlistentry>
+				<term><filename>${HOME}/.sympy-history</filename></term>
+				<listitem>
+					<para>Saves the history of commands when using the python shell as backed.</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</refsect1>
+	
+	<refsect1 id="bugs">
+		<!-- Or use this section to tell about upstream BTS. -->
+		<title>BUGS</title>
+		<para>The upstreams <acronym>BTS</acronym> can be found at <ulink url="http://code.google.com/p/sympy/issues/list">http://code.google.com/p/sympy/issues/list</ulink></para>
+	</refsect1>
+	<refsect1 id="see_also">
+		<title>SEE ALSO</title>
+		<!-- In alpabetical order. -->
+		<para><citerefentry>
+				<refentrytitle>ipython</refentrytitle>
+				<manvolnum>1</manvolnum>
+			</citerefentry>, <citerefentry>
+				<refentrytitle>python</refentrytitle>
+				<manvolnum>1</manvolnum>
+			</citerefentry></para>
+	</refsect1>
+</refentry>
+

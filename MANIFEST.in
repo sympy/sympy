@@ -1,0 +1,9 @@
+include sympy/modules/mathml/data/*
+include doc/*
+include doc/logo/logo.txt
+include doc/logo/sympy-160px.png
+include doc/man/*
+include examples/*
+include tests/*
+include LICENSE
+include TODO
