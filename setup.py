@@ -189,6 +189,7 @@ class test_sympy_doc(Command):
         files.remove('sympy/modules/solvers/__init__.py')
         files.remove('sympy/modules/specfun/__init__.py')
         files.remove('sympy/modules/utilities/__init__.py')
+        files.remove('sympy/modules/integrals/__init__.py')
 
         #testing for optional libraries
         try:
