@@ -347,12 +347,26 @@ def _parse_rational(s):
 class Rational(Number):
     """Represents integers and rational numbers (p/q) of any size.
 
-    Thanks to support of long ints in Python. 
+    Examples
+    ========
+        >>> Rational(3)
+        3
+        >>> Rational(1,2)
+        1/2
 
-    Usage:
+    You can create a rational from a string:
+        >>> Rational("3/5")
+        3/5
+        >>> Rational("1.23")
+        123/100
 
-    Rational(3)      ... 3
-    Rational(1,2)    ... 1/2
+    Use square brackets to indicate a recurring decimal:
+        >>> Rational("0.[333]")
+        1/3
+        >>> Rational("1.2[05]")
+        1193/990
+        >>> float(Rational(1193,990))
+        1.2050505050505051
     """
     is_real = True
     is_integer = False
