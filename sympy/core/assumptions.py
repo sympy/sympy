@@ -120,7 +120,8 @@ class AssumeMeths(object):
                        'homogeneous','inhomogeneous',
                        'comparable',
                        'dummy','order',
-                       'nni','pi')
+                       'nni','pi',
+                       'evaluate')
 
     def _change_assumption(self, d, name, value, extra_msg = ''):
         default_assumptions = self.__class__.default_assumptions

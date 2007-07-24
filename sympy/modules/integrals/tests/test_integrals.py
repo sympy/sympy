@@ -15,7 +15,6 @@ def diff(expr, sym):
 
 
 def _test_basics():
-    # XXX Things are always automatically evaluated with no way to stop this
     e=(t+1)**2
     assert integrate(e, t==(0,x), evaluate=False).diff(x)==(1+x)**2
     assert integrate(e, t==(0,x), evaluate=False).diff(a)==0

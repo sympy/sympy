@@ -19,24 +19,17 @@ class Integral(Basic, ArithMeths, RelMeths):
 
     precedence = Basic.Apply_precedence
 
-    def __new__(cls, expr, *symbols, **assumptions):
-        #expr = Basic.sympify(expr)
-        #if not symbols: return expr
-        #symbols = map(Basic.sympify, symbols)
-        #unevaluated_symbols = []
-        #for s in symbols:
-        #    if isinstance(s, Basic.Equality):
-        #        obj = expr._eval_defined_integral(s.lhs, s.rhs.start, s.rhs.end)
-        #    else:
-        #        obj = expr._eval_integral(s)
-        #    if obj is None:
-        #        unevaluated_symbols.append(s)
-        #    else:
-        #        expr = obj
-        #if not unevaluated_symbols:
-        #    return expr
-        #return Basic.__new__(cls, expr, *unevaluated_symbols)
+    def __new__(cls, expr, *symbols,  **assumptions):
         expr = Basic.sympify(expr)
+        if assumptions.has_key("evaluate"):
+            evaluate = assumptions["evaluate"]
+            del assumptions["evaluate"]
+        else:
+            evaluate = True
+        if not evaluate:
+            r = super(Integral, cls).__new__(cls, **assumptions)
+            r._args = [expr,symbols]
+            return r
         for s in symbols:
             if isinstance(s, Basic.Equality):
                 expr = cls.doit(cls, expr, s.lhs, s.rhs.start, s.rhs.end)
@@ -45,7 +38,7 @@ class Integral(Basic, ArithMeths, RelMeths):
         return expr
 
     def tostr(self, level=0):
-        r = 'Int' + `tuple(self)`
+        r = 'Int%s'%repr(tuple(self))
         if self.precedence <= level:
             r = '(%s)' % (r)
         return r
@@ -179,4 +172,4 @@ def integrate(f, *args, **kargs):
       - External links
         - U{Riemman integral<http://planetmath.org/encyclopedia/RiemannIntegral.html>}
     """
-    return Integral(f, *args)
+    return Integral(f, *args, **kargs)

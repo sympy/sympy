@@ -11,4 +11,4 @@ from geometry import *
 from polynomials import *
 from utilities import *
 from specfun import *
-
+from integrals import *
