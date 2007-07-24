@@ -258,15 +258,16 @@ class Real(Number):
         if isinstance(e, Number):
             if isinstance(e, Integer):
                 e = e.p
-            else:
-                e = e._as_decimal()
-            if b.is_negative:
-                m = decimal_math.pow(-b.num, e)
-                a = decimal_math.pi() * e
+                return Real(decimal_math.pow(b.num, e))
+
+            e2 = e._as_decimal()
+            if b.is_negative and not e.is_integer:
+                m = decimal_math.pow(-b.num, e2)
+                a = decimal_math.pi() * e2
                 s = m * decimal_math.sin(a)
                 c = m * decimal_math.cos(a)
                 return Real(s) + Real(c) * ImaginaryUnit()
-            return Real(decimal_math.pow(b.num, e))
+            return Real(decimal_math.pow(b.num, e2))
         return
 
     def __abs__(self):
