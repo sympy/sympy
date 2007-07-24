@@ -174,6 +174,22 @@ class test_sympy_doc(Command):
         files.remove('sympy/modules/specfun/orthogonal_polynomials.py')
         files.remove('sympy/modules/specfun/factorials.py')
 
+        files.remove('sympy/modules/plotting/plot_camera.py')
+        files.remove('sympy/modules/plotting/cartesian.py')
+        files.remove('sympy/modules/plotting/spherical.py')
+        files.remove('sympy/modules/plotting/managed_window.py')
+        files.remove('sympy/modules/plotting/polar.py')
+        files.remove('sympy/modules/plotting/cartesian2d.py')
+        files.remove('sympy/modules/plotting/bounding_box.py')
+        files.remove('sympy/modules/plotting/plot_controller.py')
+        files.remove('sympy/modules/plotting/plot_rotation.py')
+        files.remove('sympy/modules/plotting/parametric.py')
+        files.remove('sympy/modules/plotting/polar2d.py')
+        files.remove('sympy/modules/plotting/cartesian3d.py')
+        files.remove('sympy/modules/plotting/polar3d.py')
+        files.remove('sympy/modules/plotting/grid_plane.py')
+        files.remove('sympy/modules/plotting/plot_window.py')
+
         files.remove('sympy/core/__init__.py')
         files.remove('sympy/modules/__init__.py')
 
