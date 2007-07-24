@@ -466,3 +466,8 @@ def _test_MrvLimitTestCaseComparison_8_37(): # need to finish max_,min_ implemen
 
 def test_interface():
     assert limit(sin(x)/x, x, 0) == 1
+
+def test_loglogloglimit():
+    #from Gruntz somewhere
+    e=(log(log(x)+log(log(x)))-log(log(x)))/log(log(x)+log(log(log(x))))*log(x)
+    assert limit(e,x,oo) == 1
