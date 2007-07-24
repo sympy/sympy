@@ -14,7 +14,7 @@ def diff(expr, sym):
         return Derivative(expr, sym[0]==[sym[1], sym[2]])
 
 
-def _test_basics():
+def test_basics():
     e=(t+1)**2
     assert integrate(e, t==(0,x), evaluate=False).diff(x)==(1+x)**2
     assert integrate(e, t==(0,x), evaluate=False).diff(a)==0

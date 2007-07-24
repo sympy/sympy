@@ -88,6 +88,7 @@ class RelMeths(object):
     def __lt__(self, other):
         return Basic.StrictInequality(self, other)
     def __gt__(self, other):
+        #return Basic.StrictInequality(other, self)
         return Basic.sympify(other) < self
     def __le__(self, other):
         return Basic.Inequality(self, other)
@@ -101,8 +102,10 @@ class NoRelMeths(object):
     def __ne__(self, other):
         return Basic.Unequality(self, other)
     def __lt__(self, other):
+        #return hash(self) < hash(other)
         raise TypeError, _no_binary_operation('<', self, other)
     def __gt__(self, other):
+        #return hash(self) > hash(other)
         raise TypeError, _no_binary_operation('>', self, other)
     def __le__(self, other):
         raise TypeError, _no_binary_operation('<=', self, other)

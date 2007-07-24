@@ -28,7 +28,13 @@ class Integral(Basic, ArithMeths, RelMeths):
             evaluate = True
         if not evaluate:
             r = super(Integral, cls).__new__(cls, **assumptions)
-            r._args = [expr,symbols]
+            r._args = (expr,)+symbols
+            #this is so that diff() works correctly, obviously
+            #it will only work for 1D integrals
+            r.f=expr
+            r.x=symbols[0].lhs
+            r.a=symbols[0].rhs.start
+            r.b=symbols[0].rhs.end
             return r
         for s in symbols:
             if isinstance(s, Basic.Equality):
@@ -43,11 +49,11 @@ class Integral(Basic, ArithMeths, RelMeths):
             r = '(%s)' % (r)
         return r
 
-    #def diff(self, sym):
-    #    if sym == self.x:
-    #        raise IntegralError("Cannot differentiate the integration variable")
-    #    return (self.b.diff(sym)*self.f.subs(self.x,self.b)-\
-    #        self.a.diff(sym)*self.f.subs(self.x,self.a))
+    def diff(self, sym):
+        if sym == self.x:
+            raise IntegralError("Cannot differentiate the integration variable")
+        return (self.b.diff(sym)*self.f.subs(self.x,self.b)-\
+            self.a.diff(sym)*self.f.subs(self.x,self.a))
 
     @staticmethod
     def doit(cls, f, x, a, b):
