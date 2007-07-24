@@ -195,6 +195,7 @@ class test_sympy_doc(Command):
 
         files.remove('sympy/modules/concrete/__init__.py')
         files.remove('sympy/modules/geometry/__init__.py')
+        files.remove('sympy/modules/integrals/__init__.py')
         files.remove('sympy/modules/matrices/__init__.py')
         files.remove('sympy/modules/physics/__init__.py')
         files.remove('sympy/modules/plotting/__init__.py')
@@ -205,7 +206,6 @@ class test_sympy_doc(Command):
         files.remove('sympy/modules/solvers/__init__.py')
         files.remove('sympy/modules/specfun/__init__.py')
         files.remove('sympy/modules/utilities/__init__.py')
-        files.remove('sympy/modules/integrals/__init__.py')
 
         #testing for optional libraries
         try:

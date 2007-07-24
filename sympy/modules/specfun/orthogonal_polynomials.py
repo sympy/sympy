@@ -1,9 +1,10 @@
-from sympy.core.symbol import Symbol
-from sympy.core.numbers import Rational, Real, pi
-from sympy.core.function import DefinedFunction
+#from sympy.core.symbol import Symbol
+#from sympy.core.numbers import Rational, Real, pi
+#from sympy.core.function import DefinedFunction
 #from sympy.modules.trigonometric import cos
 #import decimal
 
+from sympy.core import *
 
 # Simple implementation of Newton's method for root-finding
 def _newton(h, x0, eps):

@@ -65,7 +65,7 @@ class Exp(DefinedFunction):
                         al.append(f)
             if l:
                 return Basic.Mul(*(l+[self(Basic.Add(*al))]))
-                
+
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
         if isinstance(arg, Basic.Number):
@@ -229,7 +229,7 @@ class Log(DefinedFunction):
         arg = arg.evalf()
         if isinstance(arg, Basic.Number):
             return arg.log()
-    
+
     def _calc_apply_positive(self, x):
         if x.is_positive and x.is_unbounded: return True
 
@@ -311,7 +311,7 @@ class ApplyMrvLog(ApplyLog):
 class Sqrt(DefinedFunction):
 
     nofargs = 1
-    
+
     def fdiff(self, argindex=1):
         if argindex==1:
             s = Basic.Symbol('x',dummy=True)
@@ -347,7 +347,7 @@ class Sqrt(DefinedFunction):
         base, exp = arg.as_base_exp()
         if isinstance(exp, Basic.Number):
             return base ** (exp/2)
-        
+
     def _eval_apply_power(self, arg, exp):
         if isinstance(exp, Basic.Number):
             return arg ** (exp/2)
@@ -377,7 +377,7 @@ class ApplySqrt(Apply):
 class Abs(DefinedFunction):
 
     nofargs = 1
-    
+
     def fdiff(self, argindex=1):
         if argindex==1:
             raise NotImplementedError("Abs.fdiff()")
@@ -402,9 +402,9 @@ def Pi_coeff(expr):
     if c * pi == expr:
         return c
     return
- 
+
 class Sin(DefinedFunction):
-    
+
     nofargs = 1
 
     def fdiff(self, argindex=1):
@@ -476,7 +476,7 @@ class ApplySin(Apply):
         if arg.is_real: return True
 
 class Cos(DefinedFunction):
-    
+
     nofargs = 1
 
     def fdiff(self, argindex=1):
@@ -546,7 +546,7 @@ class ApplyCos(Apply):
         if arg.is_real: return True
 
 class Tan(DefinedFunction):
-    
+
     nofargs = 1
 
     def fdiff(self, argindex=1):
@@ -640,3 +640,112 @@ Basic.singleton['max_'] = Max
 Basic.singleton['min_'] = Min
 Basic.singleton['sign'] = Sign
 Basic.singleton['conjugate'] = Conjugate
+
+
+################################################################################
+#
+#    NEW FUNCTIONALITY - NOT TESTED
+#
+################################################################################
+
+class ArcSin(DefinedFunction):
+
+    nofargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            s = Basic.Symbol('x', dummy=True)
+            return Lambda((1 - x**2)**(-Basic.Half()), s)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            return arg.asin()
+
+#    @cache_it_immutable
+#    def taylor_term(self, n, x, *previous_terms):
+#        if n < 0 or n % 2:
+#            return Basic.Zero()
+#        else:
+#            x = Basic.sympify(x)
+
+#            if len(previous_terms) > 2:
+#                p = previous_terms[-2]
+#                return -p * x**2 / (n*(n-1))
+#            else:
+#                return x**n / Basic.Factorial()(n)
+
+class ApplyArcSin(Apply):
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if Basic.Order(1,x).contains(arg):
+            return arg
+        else:
+            return self.func(arg)
+
+class ArcCos(DefinedFunction):
+
+    nofargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            s = Basic.Symbol('x', dummy=True)
+            return Lambda(-(1 - x**2)**(-Basic.Half()), s)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            return arg.acos()
+
+class ApplyArcCos(Apply):
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if Basic.Order(1,x).contains(arg):
+            return arg
+        else:
+            return self.func(arg)
+
+class ArcTan(DefinedFunction):
+
+    nofargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            s = Basic.Symbol('x', dummy=True)
+            return Lambda((1 + x**2)**(Basic.MinusOne()), s)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            return arg.atan()
+
+class ApplyArcTan(Apply):
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if Basic.Order(1,x).contains(arg):
+            return arg
+        else:
+            return self.func(arg)
+
+#Basic.singleton['sin'] = Sin
+#Basic.singleton['cos'] = Cos
+#Basic.singleton['tan'] = Tan
+
+Basic.singleton['asin'] = ArcSin
+Basic.singleton['acos'] = ArcCos
+Basic.singleton['atan'] = ArcTan

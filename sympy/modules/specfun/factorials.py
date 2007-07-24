@@ -1,9 +1,11 @@
-from sympy.core.function import DefinedFunction
-from sympy.core.numbers import Number, Real, Rational, pi, I, oo
-from sympy import Symbol, Add, Mul, Pow, Basic, exp, log, sin
+#from sympy.core.function import DefinedFunction
+#from sympy.core.numbers import Number, Real, Rational, pi, I, oo
+#from sympy import Symbol, Add, Mul, Pow, Basic, exp, log, sin
 #from sympy.modules.simplify import simplify
 #from sympy import O
 #from sympy.modules.trigonometric import sin
+
+from sympy.core import *
 
 # Factorial and gamma related functions
 

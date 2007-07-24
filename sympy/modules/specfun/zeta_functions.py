@@ -1,8 +1,10 @@
 #from sympy.core.functions import Function, log, sqrt
-from sympy.core.function import DefinedFunction
-from sympy.core.numbers import Number, Rational, Real, pi, oo
+#from sympy.core.function import DefinedFunction
+#from sympy.core.numbers import Number, Rational, Real, pi, oo
 #from sympy.modules.trigonometric import cos, sin, tan
 from factorials import factorial
+
+from sympy.core import *
 
 # first some utilities for calculating Bernoulli numbers
 

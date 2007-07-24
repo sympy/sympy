@@ -928,7 +928,7 @@ class ImaginaryUnit(Singleton, Atom, RelMeths, ArithMeths):
         return 'I'
 
     def _eval_conjugate(self):
-        return -I
+        return -Basic.ImaginaryUnit()
 
     def _eval_derivative(self, s):
         return Zero()
@@ -968,8 +968,3 @@ Basic.singleton['Pi'] = Pi
 Basic.singleton['I'] = ImaginaryUnit
 Basic.singleton['oo'] = Infinity
 Basic.singleton['nan'] = NaN
-
-# backward compatibility code, to be removed:
-pi = Pi()
-I = ImaginaryUnit()
-oo = Infinity()
