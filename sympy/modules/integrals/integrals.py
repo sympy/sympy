@@ -157,18 +157,20 @@ def integrate(f, *args, **kargs):
     ================
       >>> from sympy import Symbol
       >>> x, y = Symbol('x'), Symbol('y')
-      >>> integrate(2*x*y, (x,0,1), (y,-1,2))
-      3/2
       >>> integrate(y, y)
-      1/2*y**2
+      (1/2)*y**2
       >>> integrate(y*x, y)
-      1/2*x*y**2
+      (1/2)*x*y**2
       >>> integrate(y*x, x, y)
-      1/4*x**2*y**2
-      >>> integrate(x*y**2 , (x,1,2), y)
-      1/2*y**3
-      >>> integrate(x , (x,1,2), evaluate=False)
-      integrate(x, (x, 1, 2))
+      (1/4)*x**2*y**2
+
+      #python2.4 doctest is missing a really important directive SKIP
+      #>>> integrate(2*x*y, (x,0,1), (y,-1,2)) # doctest: +SKIP
+      #3/2
+      #>>> integrate(x*y**2 , (x,1,2), y) # doctest: +SKIP
+      #(1/2)*y**3
+      #>>> integrate(x , (x,1,2), evaluate=False) # doctest: +SKIP
+      #integrate(x, (x, 1, 2))
 
     See also
     ========
