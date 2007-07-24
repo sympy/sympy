@@ -303,3 +303,6 @@ def rewrite_expr(expr, germ, mrv_map, w):
     return e
 
 Basic.singleton['limit'] = lambda : Limit
+
+def limit(e, x, x0):
+    return e.limit(x, x0)

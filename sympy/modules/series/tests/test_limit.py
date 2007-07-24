@@ -1,5 +1,6 @@
 from sympy.core import *
-from sympy.modules.series.limit import mrv_compare, mrv2
+from sympy import limit
+from sympy.modules.series.limits import mrv_compare, mrv2
 
 x = Symbol('x',positive=True,real=True,unbounded=True)
 z = Basic.Zero()
@@ -463,3 +464,5 @@ def _test_MrvLimitTestCaseComparison_8_37(): # need to finish max_,min_ implemen
     expr = max_(x, exp(x))/ln(min_(exp(-x),exp(-exp(x))))
     assert expr.limit(x,oo) == 1
 
+def test_interface():
+    assert limit(sin(x)/x, x, 0) == 1
