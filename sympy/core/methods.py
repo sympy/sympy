@@ -20,23 +20,23 @@ class ArithMeths(object):
     def __add__(self, other):
         return Basic.Add(self, other)
     def __radd__(self, other):
-        return Basic.sympify(other) + self
+        return Basic.sympify(other).__add__(self)
     def __sub__(self, other):
         return self + (-Basic.sympify(other))
     def __rsub__(self, other):
-        return Basic.sympify(other) - self
+        return Basic.sympify(other).__sub__(self)
     def __mul__(self, other):
         return Basic.Mul(self, other)
     def __rmul__(self, other):
-        return Basic.sympify(other) * self
+        return Basic.sympify(other).__mul__(self)
     def __pow__(self, other):
         return Basic.Pow(self, other)
     def __rpow__(self, other):
-        return Basic.sympify(other) ** self
+        return Basic.sympify(other).__pow__(self)
     def __div__(self, other):
         return self * (Basic.sympify(other) ** Basic.Integer(-1))
     def __rdiv__(self, other):
-        return Basic.sympify(other) / self
+        return Basic.sympify(other).__div__(self)
     def _eval_power(self, other):
         """ Evaluate Pow(self, other), return new object or None if
         no evaluation can be carried out. This method can be called
