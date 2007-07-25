@@ -107,7 +107,7 @@ class Integral(Basic, ArithMeths, RelMeths):
                 # Note: the next two entries are special cases of the
                 # third and would be redundant with a more powerful match()
                 exp(a*x) : exp(a*x)/a,
-                x * exp(a*x) : exp(a*x) * (a*x-1) / a**2,
+                #x * exp(a*x) : exp(a*x) * (a*x-1) / a**2,
                 x**a * exp(b*x) : (-1)*x**(a+1)*(-b*x)**(-a-1)*upper_gamma(a+1,-b*x)
                 }
         for k in integral_table:
@@ -115,10 +115,10 @@ class Integral(Basic, ArithMeths, RelMeths):
             if r != None:
                 # Prevent matching nonconstant expressions 
                 if [1 for v in r.values() if v.has(x)]:
-                    break
+                    continue
                 return integral_table[k].subs_dict(r)
 
-        raise IntegralError("Don't know how to do this integral. :(")
+        raise IntegralError("Don't know how to do this integral: " + str(f))
 
 
 def integrate(f, *args, **kargs):

@@ -351,6 +351,16 @@ class Basic(BasicMeths):
           {x_: -a/b}
 
         """
+        
+        from sympy.core.mul import Mul
+
+        # weed out negative one prefixes
+        sign = 1
+        if isinstance(pattern,Mul) and pattern[0] == -1:
+          pattern = -pattern; sign = -sign
+        if isinstance(expr, Mul) and expr[0] == -1:
+          expr = -expr; sign = -sign
+
         if evaluate:
             pat = pattern
             for old,new in repl_dict.items():
@@ -359,16 +369,48 @@ class Basic(BasicMeths):
                 return pat.matches(expr, repl_dict)
         expr = Basic.sympify(expr)
         if not isinstance(expr, pattern.__class__):
+            from sympy.core.numbers import Rational
+            # if we can omit the first factor, we can match it to sign * one
+            if isinstance(pattern, Mul) and Mul(*pattern[1:]) == expr:
+               return pattern[0].matches(Rational(sign), repl_dict, evaluate)
+            # two-factor product: if the 2nd factor matches, the first part must be sign * one
+            if isinstance(pattern, Mul) and len(pattern[:]) == 2:
+               dd = pattern[1].matches(expr, repl_dict, evaluate)
+               if dd == None: return None
+               dd = pattern[0].matches(Rational(sign), dd, evaluate)
+               return dd
             return None
-        if len(expr[:]) != len(pattern[:]):
-            return None
+        
         if len(pattern[:])==0:
             if pattern==expr:
                 return repl_dict
             return None
         d = repl_dict.copy()
+        
+        # weed out identical terms
+        pp = list(pattern[:])
+        ee = list(expr[:])
+        for p in pattern:
+          for e in expr:
+            if e == p:
+              if e in ee: ee.remove(e)
+              if p in pp: pp.remove(p)
+        
+        # only one symbol left in pattern -> match the remaining expression
+        from sympy.core.symbol import Wild
+        if len(pp) == 1 and isinstance(pp[0], Wild):
+          if len(ee) == 1: d[pp[0]] = sign * ee[0]
+          else: d[pp[0]] = sign * (type(expr)(*ee))
+          return d
+        
+        if len(ee) != len(pp):
+            return None
+
         i = 0
-        for p,e in zip(pattern, expr):
+        for p,e in zip(pp, ee):
+            if i == 0 and sign != 1:
+              try: e = sign * e
+              except TypeError: return None
             d = p.matches(e, d, evaluate=not i)
             i += 1
             if d is None:
