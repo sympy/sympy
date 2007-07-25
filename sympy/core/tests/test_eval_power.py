@@ -21,3 +21,7 @@ def test_negative_real():
         return abs(a - b) < 1E-10
 
     assert feq(Basic.One() / Real(-0.5), -Integer(2))
+
+def test_issue153():
+    #test that is runs:
+    a = sqrt(2*(1+sqrt(2)))
