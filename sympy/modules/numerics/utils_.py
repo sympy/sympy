@@ -23,23 +23,6 @@ def trailing_zeros(n):
     while not n & 1: n >>= 1; t += 1
     return t
 
-def isqrt(y):
-    """Calculate floor square root of an integer"""
-    # Start from regular floating-point estimate. Rewrite as
-    # sqrt(y)=2**(log_2(y)/2-n)*2**n to avoid overflow.
-    if y == 0:
-        return 0
-    lg = _clog(y, 2)/2
-    n = max(int(lg)-52, 0)
-    guess = int(2.0**(lg-n)) << n
-    # Newton iteration
-    xprev, x = -1, guess
-    while abs(x - xprev) > 1:
-        xprev, x = x, (x + y//x)>>1
-    while x*x > y:
-        x -= 1
-    return x
-
 def make_fixed(x, prec):
     """Convert a Float to a fixed-point big integer"""
     offset = x.exp+prec
@@ -47,3 +30,32 @@ def make_fixed(x, prec):
         return x.man << offset
     else:
         return x.man >> (-offset)
+
+def bin_to_radix(x, xbits, base, bdigits):
+    return x * (base**bdigits) >> xbits
+
+_numerals = '0123456789abcdefghijklmnopqrstuvwxyz'
+
+def small_numeral(n, base=10):
+    # Calculate numeral of n*(base**digits) in the given base
+    if base == 10:
+        return str(n)
+    digs = []
+    while n:
+        n, digit = divmod(n, base)
+        digs.append(_numerals[digit])
+    return "".join(digs[::-1])
+
+# TODO: speed up for bases 2, 4, 8, 16, ...
+def fixed_to_str(x, base, digits):
+    if digits < 789:
+        return small_numeral(x, base)
+    half = (digits // 2) + (digits & 1)
+    if "verbose" in global_options and half > 50000:
+        print "  dividing..."
+    A, B = divmod(x, base**half)
+    ad = fixed_to_str(A, base, half)
+    bd = fixed_to_str(B, base, half).rjust(half, "0")
+    return ad + bd
+
+global_options = {}

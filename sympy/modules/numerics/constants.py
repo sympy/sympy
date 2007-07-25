@@ -7,7 +7,8 @@ returns Float(const), rounded to the current Float working precision
 """
 
 from math import log as _clog
-from float import Float
+from float_ import Float
+from utils_ import global_options
 
 # Only re-compute a constant if the precision level is raised
 def _constmemo(f):
@@ -77,21 +78,33 @@ def _pi_agm(prec):
     from functions import _sqrt_fixed2
     prec += 50
     a = 1 << prec
+    if "verbose" in global_options:
+        print "  computing initial square root..."
     b = _sqrt_fixed2(a >> 1, prec)
     t = a >> 2
     p = 1
+    step = 1
     while 1:
         an = (a+b)>>1
+        adiff = a - an
+        if "verbose" in global_options:
+            base = global_options.get("verbose_base", 10)
+            try:
+                logdiff = _clog(adiff, base)
+            except ValueError:
+                logdiff = 0
+            digits = int(prec/_clog(base,2) - logdiff)
+            print "  iteration", step, ("(accuracy ~= %i base-%i digits)" % (digits, base))
+        if p > 16 and abs(adiff) < 1000:
+            break
         prod = (a*b)>>prec
         b = _sqrt_fixed2(prod, prec)
-        adiff = a - an
         t = t - p*((adiff**2) >> prec)
-        if p > 16 and abs(adiff) < 10000:
-            break
-        # show progress:
-        # print p, prec/_clog(10,2) - _clog(adiff, 10)
         p = 2*p
         a = an
+        step += 1
+    if "verbose" in global_options:
+        print "  final division"
     return ((((a+b)**2) >> 2) // t) >> 50
 
 @_constmemo

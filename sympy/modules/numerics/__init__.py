@@ -15,6 +15,6 @@ numerical computations.
 
 """
 
-from float import *
+from float_ import *
 from constants import *
 from functions import *
