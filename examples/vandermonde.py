@@ -1,8 +1,8 @@
 import sys
 sys.path.append("..")
-from sympy import sqrt, Symbol, eye
+from sympy import sqrt, symbols, eye
 
-w, x, y, z = Symbol('w'), Symbol('x'), Symbol('y'), Symbol('z')
+w, x, y, z = symbols("wxyz")
 L = [x,y,z]
 V = eye(len(L))
 for i in range(len(L)):
