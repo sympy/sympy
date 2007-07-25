@@ -6,10 +6,7 @@ import sys
 sys.path.append(".")
 sys.path.append("..")
 
-from sympy import exp, Symbol, sin, Rational, Derivative, dsolve
-
-from sympy.core import Basic, Function
-from sympy.modules.matrices import Matrix
+from sympy import exp, Symbol, sin, Rational, Derivative, dsolve, Function, Matrix
 
 def grad(f,X):
     a=[]
@@ -85,15 +82,17 @@ class Ricci(object):
 def curvature(Rmn):
     return Rmn.ud(0,0)+Rmn.ud(1,1)+Rmn.ud(2,2)+Rmn.ud(3,3)
 
-class nu(Function):
-    def getname(self):
-        return r"\nu"
-        return r"nu"
+#class nu(Function):
+#    def getname(self):
+#        return r"\nu"
+#        return r"nu"
 
-class lam(Function):
-    def getname(self):
-        return r"\lambda"
-        return r"lambda"
+#class lam(Function):
+#    def getname(self):
+#        return r"\lambda"
+#        return r"lambda"
+nu = Function("nu")
+lam = Function("lam")
 
 t=Symbol("t")
 r=Symbol("r")
