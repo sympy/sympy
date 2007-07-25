@@ -1,6 +1,6 @@
 from pyglet.gl import *
 from plot_function import PlotFunction, PlotFunctionRegistry, fsubs, get_vars, count_vars, vrange
-    
+
 class ParametricFunction(PlotFunction):
 
     def __new__(cls, functions, intervals, options):
@@ -13,7 +13,7 @@ class ParametricFunction(PlotFunction):
         # Check that we only have one parameter
         for f in functions:
             for iv in get_vars(f):
-                if v == None:
+                if v is None:
                     v = iv
                 elif iv != v:
                     raise Exception("A parametric function cannot use more than 1 parameter (multiple Symbols found in functions).")
@@ -24,7 +24,7 @@ class ParametricFunction(PlotFunction):
             raise ValueError("Cannot plot a parametric function with %i dimensions." % d)
 
 class ParametricCurve(PlotFunction):
-    
+
     def __init__(self, functions, intervals, options):
         self.f = functions
         self.intervals = intervals
@@ -37,7 +37,7 @@ class ParametricCurve(PlotFunction):
             raise NotImplementedError("Automatic interval not implemented.")
 
         t, t_min, t_max, t_steps = self.intervals[0]
-        if t_steps == None: t_steps = 60
+        if t_steps is None: t_steps = 60
 
         t_set = vrange(t_min, t_max, t_steps)
 
@@ -54,7 +54,7 @@ class ParametricCurve(PlotFunction):
     def render(self):
         glBegin(GL_LINE_STRIP)
         for x in range(0, len(self.vertices)):
-            if self.vertices[x][1] == None:
+            if self.vertices[x][1] is None:
                 glEnd()
                 glBegin(GL_LINE_STRIP)
                 continue

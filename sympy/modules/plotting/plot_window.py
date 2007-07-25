@@ -47,7 +47,7 @@ class PlotWindow(ManagedWindow):
 
     def on_resize(self, w, h):
         super(PlotWindow, self).on_resize(w, h)
-        if self.camera != None:
+        if self.camera is not None:
             self.camera.setup_projection()
 
     def setup_polygon_mode(self):

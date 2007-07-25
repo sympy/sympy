@@ -14,23 +14,23 @@ class SphericalFunction(PlotFunction):
         self.calculate_vertices()
         self.calculate_bounding_box()
         self.calculate_color_vertices()
-        
+
     def calculate_vertices(self):
         if len(self.intervals) != 2:
             raise NotImplementedError("Automatic intervals not implemented.")
 
         t, t_min, t_max, t_steps = self.intervals[0]
-        if t_steps == None: t_steps = 40
+        if t_steps is None: t_steps = 40
 
         p, p_min, p_max, p_steps = self.intervals[1]
-        if p_steps == None: p_steps = 20
+        if p_steps is None: p_steps = 20
 
         t_set = vrange(t_min, t_max, t_steps)
         p_set = vrange(p_min, p_max, p_steps)
 
         def cyl_fsubs(f, t, _t, p, _p):
             r = fsubs(f, t, _t, p, _p)
-            if r == None:
+            if r is None:
                 return (None, None, None)
             return r*sin(_p)*cos(_t), r*cos(_p), r*sin(_p)*sin(_t)
 
@@ -43,15 +43,15 @@ class SphericalFunction(PlotFunction):
 
         for x in range(x_len):
             for y in range(y_len):
-                if self.vertices[x][y][0] != None:
+                if self.vertices[x][y][0] is not None:
                     self.x_min = min([self.x_min, self.vertices[x][y][0]])
                     self.x_max = max([self.x_max, self.vertices[x][y][0]])
 
-                if self.vertices[x][y][1] != None:
+                if self.vertices[x][y][1] is not None:
                     self.y_min = min([self.y_min, self.vertices[x][y][1]])
                     self.y_max = max([self.y_max, self.vertices[x][y][1]])
 
-                if self.vertices[x][y][2] != None:
+                if self.vertices[x][y][2] is not None:
                     self.z_min = min([self.z_min, self.vertices[x][y][2]])
                     self.z_max = max([self.z_max, self.vertices[x][y][2]])
 
@@ -63,7 +63,7 @@ class SphericalFunction(PlotFunction):
 
         for x in range(x_len):
             for y in range(y_len):
-                if self.vertices[x][y][2] == None:
+                if self.vertices[x][y][2] is None:
                     self.color_vertices[x][y] = (0.0, 0.0, 0.0)
                 else:
                     cx = interpolate( min_brightness, max_brightness,
@@ -88,11 +88,11 @@ class SphericalFunction(PlotFunction):
             glBegin(GL_TRIANGLE_STRIP)
             for h in range(0, h_len):
 
-                if (self.vertices[t][h][1] == None) or (self.vertices[t-1][h][1] == None):
+                if (self.vertices[t][h][1] is None) or (self.vertices[t-1][h][1] is None):
                     glEnd()
                     glBegin(GL_TRIANGLE_STRIP)
                     continue
-                
+
                 glColor3f(*self.color_vertices[t][h])
                 glVertex3f(*self.vertices[t][h]);
 

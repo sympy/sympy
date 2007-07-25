@@ -34,7 +34,7 @@ class Plot(object):
         self.grid = kwargs.get('grid', None)
         if isinstance(self.grid, str):
             self.grid = (self.grid,)
-        if self.grid != None:
+        if self.grid is not None:
             self.grid = GridPlane(*self.grid)
             self._append_plotobject(self.grid)
 
@@ -51,7 +51,7 @@ class Plot(object):
         """
         Displays a UI window representing the Plot.
         """
-        if self.window != None and not self.window.has_exit and self.window.context != None:
+        if self.window is not None and not self.window.has_exit and self.window.context is not None:
             if self.window.visible:
                 self.window.activate()
         else:
@@ -81,6 +81,7 @@ class Plot(object):
         return self._functions[i]
 
     def __setitem__(self, i, args):
+        #import pdb; pdb.set_trace()
         if not (isinstance(i, int) and i > 0):
             raise ValueError("Function index must be a positive integer.")
         if isinstance(args, PlotFunction):

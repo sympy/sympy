@@ -5,7 +5,7 @@ from sympy import Basic
 from math import tan
 
 class CartesianFunction3d(PlotFunction):
-    
+
     def __init__(self, f, intervals, options):
         self.f = f
         self.intervals = intervals
@@ -19,11 +19,11 @@ class CartesianFunction3d(PlotFunction):
             raise NotImplementedError("Automatic intervals not implemented.")
 
         x, self.x_min, self.x_max, x_steps = self.intervals[0]
-        if x_steps == None: x_steps = 12
-        
+        if x_steps is None: x_steps = 12
+
         y, self.y_min, self.y_max, y_steps = self.intervals[1]
-        if y_steps == None: y_steps = 12
-        
+        if y_steps is None: y_steps = 12
+
         x_set = vrange(self.x_min, self.x_max, x_steps)
         y_set = vrange(self.y_min, self.y_max, y_steps)
 
@@ -42,7 +42,7 @@ class CartesianFunction3d(PlotFunction):
                 self.y_min = min([self.y_min, self.vertices[x][y][1]])
                 self.y_max = max([self.y_max, self.vertices[x][y][1]])
 
-                if self.vertices[x][y][2] != None:
+                if self.vertices[x][y][2] is not None:
                     self.z_min = min([self.z_min, self.vertices[x][y][2]])
                     self.z_max = max([self.z_max, self.vertices[x][y][2]])
 
@@ -54,7 +54,7 @@ class CartesianFunction3d(PlotFunction):
 
         for x in range(x_len):
             for y in range(y_len):
-                if self.vertices[x][y][2] == None:
+                if self.vertices[x][y][2] is None:
                     self.color_vertices[x][y] = (0.0, 0.0, 0.0)
                 else:
                     cx = interpolate( min_brightness, max_brightness,
@@ -79,7 +79,7 @@ class CartesianFunction3d(PlotFunction):
             glBegin(GL_TRIANGLE_STRIP)
             for y in range(0, y_len):
 
-                if (self.vertices[x][y][2] == None) or (self.vertices[x-1][y][2] == None):
+                if (self.vertices[x][y][2] is None) or (self.vertices[x-1][y][2] is None):
                     glEnd()
                     glBegin(GL_TRIANGLE_STRIP)
                     continue

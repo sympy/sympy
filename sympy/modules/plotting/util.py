@@ -110,11 +110,11 @@ def frange(start, end=None, inc=None):
     http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66472
     """
 
-    if end == None:
+    if end is None:
         end = start + 0.0
         start = 0.0
 
-    if inc == None:
+    if inc is None:
         inc = 1.0
 
     L = []

@@ -6,14 +6,14 @@ class PlotFunction(PlotObject):
     f = None
     intervals = []
     options = {}
-    
+
     x_min, x_max = 0.0, 0.0
     y_min, y_max = 0.0, 0.0
     z_min, z_max = 0.0, 0.0
 
     def __new__(cls, f, intervals, options):
         subcls = PlotFunctionRegistry.get(options['mode'])
-        if subcls == None:
+        if subcls is None:
             error_str = "Plot mode '%s' is not supported (or not registered)."
             raise Exception(error_str % (options['mode']))
         o = subcls(f, intervals, options)
@@ -104,7 +104,7 @@ def fsubs(f, a, _a, b=None, _b=None):
     Returns a float z = f(a) or z = f(a,b).
     """
     try:
-        if b == None:
+        if b is None:
             return float(f.subs(a, _a)) # seems the best choice right now
             #return f.subs(a, _a).evalf(precision=10) # not a float val
             #return float(f.subs(a, _a).evalf(precision=10))

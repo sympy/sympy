@@ -17,7 +17,7 @@ class PlotCamera(object):
         self._dist = 0.0
         self._x, self._y = 0.0, 0.0
         self._rot = None
-    
+
         self.window = window
         self.ortho = ortho
         if self.ortho:
@@ -52,12 +52,12 @@ class PlotCamera(object):
     def apply_transformation(self):
         glLoadIdentity()
         glTranslatef(self._x, self._y, -self._dist)
-        if self._rot != None:
+        if self._rot is not None:
             glMultMatrixf(self._rot)
 
     def spherical_rotate(self, p1, p2, sensitivity=1.0):
         mat = get_spherical_rotatation(p1, p2, self.window.width, self.window.height, sensitivity)
-        if mat != None: self.mult_rot_matrix(mat)
+        if mat is not None: self.mult_rot_matrix(mat)
 
     def euler_rotate(self, angle, x, y, z):
         glPushMatrix()
@@ -67,7 +67,7 @@ class PlotCamera(object):
         glPopMatrix()
 
     def zoom_relative(self, clicks, sensitivity):
-        
+
         if self.ortho:
             dist_d = clicks * sensitivity * 50.0
             min_dist = self.min_ortho_dist

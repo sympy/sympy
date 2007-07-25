@@ -6,7 +6,7 @@ from util import frange, billboard_matrix, get_basis_vectors, get_view_direction
 from math import sqrt
 
 class BoundingBox(PlotObject):
-    
+
     def __init__(self,
                  line_color=(0.7,0.75,0.8),
                  fill_color=(0.97,0.97,0.98),
@@ -33,7 +33,7 @@ class BoundingBox(PlotObject):
         self.font_face = font_face
         self.font_size = font_size
         self.label_font = None
-    
+
     def consider_function(self, f):
         def pad_stride(v, axis, isMin):
             #s = self.stride[axis]
@@ -54,9 +54,9 @@ class BoundingBox(PlotObject):
             return
         if self.show_axes:
             self.render_axes()
-        if self.fill_color != None:
+        if self.fill_color is not None:
             self.render_box(line=False)
-        if self.line_color != None:
+        if self.line_color is not None:
             self.render_box(line=True)
 
     def render_direction_vectors(self):
@@ -153,7 +153,7 @@ class BoundingBox(PlotObject):
         #self.draw_text(vstr(end[axis]), end, color)
 
     def draw_text(self, text, position, color):
-        if self.label_font == None:
+        if self.label_font is None:
             self.label_font = font.load(self.font_face, self.font_size,
                                         bold=True, italic=False)
         label = font.Text(self.label_font, text, color=color,

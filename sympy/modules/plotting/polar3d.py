@@ -3,7 +3,7 @@ from plot_function import PlotFunction, vrange, fsubs, rinterpolate, interpolate
 from math import sin, cos
 
 class PolarFunction3d(PlotFunction):
-    
+
     def __init__(self, f, intervals, options):
         self.f = f
         self.intervals = intervals
@@ -11,23 +11,23 @@ class PolarFunction3d(PlotFunction):
         self.calculate_vertices()
         self.calculate_bounding_box()
         self.calculate_color_vertices()
-        
+
     def calculate_vertices(self):
         if len(self.intervals) != 2:
             raise NotImplementedError("Automatic intervals not implemented.")
 
         t, t_min, t_max, t_steps = self.intervals[0]
-        if t_steps == None: t_steps = 40
+        if t_steps is None: t_steps = 40
 
         h, h_min, h_max, h_steps = self.intervals[1]
-        if h_steps == None: h_steps = 20
+        if h_steps is None: h_steps = 20
 
         t_set = vrange(t_min, t_max, t_steps)
         h_set = vrange(h_min, h_max, h_steps)
 
         def cyl_fsubs(f, t, _t, h, _h):
             r = fsubs(f, t, _t, h, _h)
-            if r == None:
+            if r is None:
                 return (None, None, None)
             return (r*cos(_t), r*sin(_t), _h)
 
@@ -40,15 +40,15 @@ class PolarFunction3d(PlotFunction):
 
         for x in range(x_len):
             for y in range(y_len):
-                if self.vertices[x][y][0] != None:
+                if self.vertices[x][y][0] is not None:
                     self.x_min = min([self.x_min, self.vertices[x][y][0]])
                     self.x_max = max([self.x_max, self.vertices[x][y][0]])
 
-                if self.vertices[x][y][1] != None:
+                if self.vertices[x][y][1] is not None:
                     self.y_min = min([self.y_min, self.vertices[x][y][1]])
                     self.y_max = max([self.y_max, self.vertices[x][y][1]])
 
-                if self.vertices[x][y][2] != None:
+                if self.vertices[x][y][2] is not None:
                     self.z_min = min([self.z_min, self.vertices[x][y][2]])
                     self.z_max = max([self.z_max, self.vertices[x][y][2]])
 
@@ -60,7 +60,7 @@ class PolarFunction3d(PlotFunction):
 
         for x in range(x_len):
             for y in range(y_len):
-                if self.vertices[x][y][2] == None:
+                if self.vertices[x][y][2] is None:
                     self.color_vertices[x][y] = (0.0, 0.0, 0.0)
                 else:
                     cx = interpolate( min_brightness, max_brightness,
@@ -85,11 +85,11 @@ class PolarFunction3d(PlotFunction):
             glBegin(GL_TRIANGLE_STRIP)
             for h in range(0, h_len):
 
-                if (self.vertices[t][h][1] == None) or (self.vertices[t-1][h][1] == None):
+                if (self.vertices[t][h][1] is None) or (self.vertices[t-1][h][1] is None):
                     glEnd()
                     glBegin(GL_TRIANGLE_STRIP)
                     continue
-                
+
                 glColor3f(*self.color_vertices[t][h])
                 glVertex3f(*self.vertices[t][h]);
 

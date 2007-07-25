@@ -22,21 +22,25 @@ def parse_interval(i):
         return None
     var, v_min, v_max, v_steps = None, None, None, None
     try:
-        var = i[0]
-        if not isinstance(var, Symbol):
+        if not isinstance(i[0], Symbol):
             raise ValueError( "First element of interval must be a Symbol representing a dependent variable." )
-        v_min = float(i[1])
-        v_max = float(i[2])
-        if len(i) == 4 and i[3] != None: v_steps = int(i[3])
+
+        v_min = float(Basic.sympify(i[1]).evalf())
+        v_max = float(Basic.sympify(i[2]).evalf())
+
+        if len(i) == 4 and i[3] is not None:
+             v_steps = int(i[3])
     except:
         return None
-    return (var, v_min, v_max, v_steps)
+
+    return (i[0], v_min, v_max, v_steps)
 
 def parse_intervals(args):
     t = []
     while len(args) > 0:
         i = parse_interval(args[0])
-        if i == None: break
+        if i is None:
+            break
         t.append(i)
         args.pop(0)
     return t
@@ -60,7 +64,7 @@ def parse_option_strings(args):
     t = {'mode':'cartesian'}
     while len(args) > 0:
         a = parse_option_string(args[0])
-        if a == None: break
+        if a is None: break
         t = dict(t, **a)
         args.pop(0)
     return t
@@ -99,6 +103,7 @@ def parse_function_args(*args):
     Note:       There can be multiple functions if option
                 'type=parametric' is specified
     """
+    #import pdb; pdb.set_trace()
     args = list(args)
     if len(args) == 0:
         raise ValueError( "No arguments given." )

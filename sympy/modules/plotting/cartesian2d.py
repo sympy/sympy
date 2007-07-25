@@ -15,7 +15,7 @@ class CartesianFunction2d(PlotFunction):
             raise NotImplementedError("Automatic intervals not implemented.")
 
         x, x_min, x_max, x_steps = self.intervals[0]
-        if x_steps == None: x_steps = 60
+        if x_steps is None: x_steps = 60
 
         x_set = vrange(x_min, x_max, x_steps)
         self.vertices = list( (x_e, fsubs(self.f, x, x_e), 0.0) for x_e in x_set )
@@ -28,7 +28,7 @@ class CartesianFunction2d(PlotFunction):
     def render(self):
         glBegin(GL_LINE_STRIP)
         for x in range(0, len(self.vertices)):
-            if self.vertices[x][1] == None:
+            if self.vertices[x][1] is None:
                 glEnd()
                 glBegin(GL_LINE_STRIP)
                 continue
