@@ -1,9 +1,10 @@
-
 import math
 import decimal
 import decimal_math
 from basic import Basic, Atom, Singleton, S, Memoizer, MemoizerArg
 from methods import RelMeths, ArithMeths
+from power import integer_nthroot
+
 
 @Memoizer((int, long), (int, long))
 def gcd(a, b):
@@ -469,39 +470,34 @@ class Rational(Number):
                 # (4/3)**2 -> 4**2 / 3**2
                 return Rational(b.p ** e.p, b.q ** e.p)
             if isinstance(e, Rational):
-                if b.p!= 1:
+                if b.p != 1:
                     # (4/3)**(5/6) -> 4**(5/6) * 3**(-5/6)
                     return Integer(b.p) ** e * Integer(b.q) ** (-e)
-                if abs(e.p)==1:
-                    factors = b.factors()
-                    l1 = []
-                    l12 = []
-                    l2 = []
-                    q = e.q
-                    for b1,e1 in factors.items():
-                        ee = abs(e1)
-
-                        i = ee//q
-                        r = ee - q*i
-
-                        if i:
-                            if e1<0:
-                                l12.append((b1**i, -1))
-                            else:
-                                l1.append(b1 ** i)
-                        if r:
-                            if e1<0:
-                                l2.append((b1**r, -e))
-                            else:
-                                l2.append((b1**r, e))
-
-                    if not (l1 or l12):
-                        return
+                if b >= 0:
+                    x, xexact = integer_nthroot(b.p, e.q)
+                    y, yexact = integer_nthroot(b.q, e.q)
+                    if xexact and yexact:
+                        res = Rational(x ** abs(e.p), y ** abs(e.p))
+                        if e >= 0:
+                            return res
+                        else:
+                            return 1/res
+                    # Now check also devisors of the exponents denominator
+                    # TODO: Check if this slows down to much.
+                    for i in range(2, e.q/2 + 1):
+                        if e.q % i == 0:
+                            x, xexact = integer_nthroot(b.p, i)
+                            y, yexact = integer_nthroot(b.q, i)
+                            if xexact and yexact:
+                                return Rational(x, y)**Rational(e.p, e.q/i)
                     else:
-                        l1 += [Basic.Pow(*be) for be in l2 + l12]
-                        return Basic.Mul(*l1)
+                        # Try to get some part of the base out, if exp > 1
+                        if e.p > e.q:
+                            i = e.p / e.q
+                            r = e.p % e.q
+                            return b**i * b**Rational(r, e.q)
                 else:
-                    return (b**e.p)**Rational(1, e.q)
+                    return (-1)**e * (-b)**e
 
         return
 
@@ -634,28 +630,35 @@ class Integer(Rational):
                 # (4/3)**2 -> 4**2 / 3**2
                 return Integer(b.p ** e.p)
             if isinstance(e, Rational):
-                i = int(e)
-                if i:
-                    i = Integer(i)
-                    return b ** i * b ** (e - i)
-                if abs(e.p)==1:
-                    factors = b.factors()
-                    l1 = []
-                    l2 = []
-                    q = e.q
-                    for b1,e1 in factors.items():
-                        i = e1//q
-                        r = e1 - q*i
-                        if i:
-                            l1.append(b1 ** i)
-                        if r:
-                            l2.append((b1**r, e))
-                    if not l1:
-                        return
-                    l1 += [Basic.Pow(*be) for be in l2]
-                    return Basic.Mul(*l1)
+                if b == -1:
+                    # calculate the roots of -1
+                    from sympy.modules.trigonometric import sin, cos
+                    from sympy.core.numbers import pi
+                    r = cos(pi/e.q) + ImaginaryUnit()*sin(pi/e.q)
+                    return r**e.p
+                if b >= 0:
+                    x, xexact = integer_nthroot(b.p, e.q)
+                    if xexact:
+                        res = Integer(x ** abs(e.p))
+                        if e >= 0:
+                            return res
+                        else:
+                            return 1/res
+                    # Now check also devisors of the exponents denominator
+                    # TODO: Check if this slows down to much.
+                    for i in range(2, e.q/2 + 1):
+                        if e.q % i == 0:
+                            x, xexact = integer_nthroot(b.p, i)
+                            if xexact:
+                                return Integer(x)**Integer(b.p * i)
+                    else:
+                        # Try to get some part of the base out, if exp > 1
+                        if e.p > e.q:
+                            i = e.p / e.q
+                            r = e.p % e.q
+                            return b**i * b**Rational(r, e.q)
                 else:
-                    return ((b**e.p)**(e/e.p))
+                    return (-1)**e * (-b)**e
         return
 
     def as_numer_denom(self):

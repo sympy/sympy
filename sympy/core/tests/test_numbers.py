@@ -99,11 +99,6 @@ def test_Infinity():
     assert 1/(-oo)  == 0
     assert 8/oo  == 0
 
-    # XXX These now are NaN
-    #py.test.raises(ArithmeticError, "oo-oo")
-    #py.test.raises(ArithmeticError, "oo*0")
-    #py.test.raises(ArithmeticError, "oo/oo")
-
 def test_powers():
     assert integer_nthroot(1, 2) == (1, True)
     assert integer_nthroot(1, 5) == (1, True)
@@ -126,9 +121,9 @@ def test_powers():
     assert str(Rational(1,36) ** Rational(1,2)) == "1/6"
 
     assert str((123**25) ** Rational(1,25)) == "123"
-    #assert str((123**25+1)**Rational(1,25)) != "123"
-    #assert str((123**25-1)**Rational(1,25)) != "123"
-    #assert str((123**25-1)**Rational(1,25)) != "122"
+    assert str((123**25+1)**Rational(1,25)) != "123"
+    assert str((123**25-1)**Rational(1,25)) != "123"
+    assert str((123**25-1)**Rational(1,25)) != "122"
     assert str(Rational(3,5)**(-Rational(1,2))) == "5**(1/2)*(1/3)**(1/2)"
     assert str(Rational(81,36)**(Rational(3,2))) == "27/8"
     assert str(Rational(81,36)**(-Rational(3,2))) == "8/27"
