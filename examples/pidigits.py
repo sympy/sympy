@@ -1,7 +1,8 @@
+import sys
+sys.path.append("..")
 from sympy.modules.numerics import *
 from sympy.modules.numerics.utils_ import *
 import math
-import sys
 from time import clock
 
 def display_fraction(digits, skip=0, colwidth=10, columns=5):
