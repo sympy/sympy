@@ -237,3 +237,13 @@ def _test_expbug5():
 def test_sinsinbug():
     x = Symbol("x")
     assert sin(sin(x)).series(x,8) == x-x**3/3+x**5/10-8*x**7/315+O(x**8)
+
+def test_issue159():
+    x = Symbol("x")
+    a=x/(exp(x)-1)
+    assert a.series(x,5) == 1 - x/2 - x**4/720 + x**2/12 + O(x**5)
+
+def test_issue105():
+    x = Symbol("x")
+    f = sin(x**3)**Rational(1,3)
+    assert f.series(x, 17) == x - x**7/18 - x**13/3240 + O(x**17)
