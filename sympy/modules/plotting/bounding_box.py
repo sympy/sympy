@@ -1,7 +1,7 @@
 from pyglet.gl import *
 from plot_object import PlotObject
 from plot_function import PlotFunction
-from pyglet import font
+#from pyglet import font
 from util import frange, billboard_matrix, get_basis_vectors, get_view_direction_vectors, invert_vector, model_to_screen_ratio
 from math import sqrt
 
@@ -14,8 +14,8 @@ class BoundingBox(PlotObject):
                  x_stride=0.5,
                  y_stride=0.5,
                  z_stride=0.5,
-                 font_face="Courier New",
-                 font_size=14,
+                 #font_face="Courier New",
+                 #font_size=14,
                  cull_line_front=True,
                  default_radius=0.0):
 
@@ -30,9 +30,9 @@ class BoundingBox(PlotObject):
 
         self.show_axes = show_axes
         self.stride = [x_stride, y_stride, z_stride]
-        self.font_face = font_face
-        self.font_size = font_size
-        self.label_font = None
+        #self.font_face = font_face
+        #self.font_size = font_size
+        #self.label_font = None
 
     def consider_function(self, f):
         def pad_stride(v, axis, isMin):
@@ -52,8 +52,8 @@ class BoundingBox(PlotObject):
     def render(self):
         if self.x_min == self.x_max and self.y_min == self.y_max and self.z_min == self.z_max:
             return
-        if self.show_axes:
-            self.render_axes()
+        #if self.show_axes:
+        #    self.render_axes()
         if self.fill_color is not None:
             self.render_box(line=False)
         if self.line_color is not None:
@@ -97,7 +97,7 @@ class BoundingBox(PlotObject):
 
         glEnd()
 
-    def render_axes(self):
+    """def render_axes(self):
         glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_DEPTH_BUFFER_BIT)
         glDisable(GL_DEPTH_TEST)
 
@@ -165,7 +165,7 @@ class BoundingBox(PlotObject):
         glScalef(0.007, 0.007, 0.007)
         glColor4f(0, 0, 0, 0)
         label.draw()
-        glPopMatrix()
+        glPopMatrix()"""
 
     def render_box(self, line=True):
         glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_DEPTH_BUFFER_BIT)

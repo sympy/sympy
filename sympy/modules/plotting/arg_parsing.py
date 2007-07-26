@@ -22,25 +22,34 @@ def parse_interval(i):
         return None
     var, v_min, v_max, v_steps = None, None, None, None
     try:
-        if not isinstance(i[0], Symbol):
+        var = i[0]
+        if not isinstance(var, Symbol):
             raise ValueError( "First element of interval must be a Symbol representing a dependent variable." )
-
-        v_min = float(Basic.sympify(i[1]).evalf())
-        v_max = float(Basic.sympify(i[2]).evalf())
-
-        if len(i) == 4 and i[3] is not None:
-             v_steps = int(i[3])
+        try:
+            v_min = Basic.sympify(i[1]).evalf()
+        except Exception, e:
+            print "Warning: %s in %s could not be converted into a float." % (str(i[1]), i)
+            raise e
+        try:
+            v_max = Basic.sympify(i[2]).evalf()
+        except Exception, e:
+            print "Warning: %s in %s could not be converted into a float." % (str(i[2]), i)
+            raise e
+        if len(i) == 4 and i[3] != None:
+            try:
+                v_steps = int(i[3])
+            except Exception, e:
+                print "Warning: %s in %s could not be converted into an int." % (str(i[3]), i)
+                raise e
     except:
         return None
-
-    return (i[0], v_min, v_max, v_steps)
+    return (var, v_min, v_max, v_steps)
 
 def parse_intervals(args):
     t = []
     while len(args) > 0:
         i = parse_interval(args[0])
-        if i is None:
-            break
+        if i == None: break
         t.append(i)
         args.pop(0)
     return t
@@ -64,7 +73,7 @@ def parse_option_strings(args):
     t = {'mode':'cartesian'}
     while len(args) > 0:
         a = parse_option_string(args[0])
-        if a is None: break
+        if a == None: break
         t = dict(t, **a)
         args.pop(0)
     return t

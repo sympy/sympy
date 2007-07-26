@@ -20,7 +20,6 @@ if __name__ == "__main__":
              antialiasing = True,
              ortho = False)
              #ortho = True)
-    p.bounding_box.show_axes = True
 
     #p[1]  =  1/x, [x,-3,3]
     #p[2]  =  x**2, [x,-3,3]
