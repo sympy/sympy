@@ -127,7 +127,7 @@ def symbols(*names, **kwargs):
        forms a separate symbol or a sequence of strings.
 
        All newly created symbols have assumptions set acordingly
-       to 'kwargs'. Main intentention behind this function is to
+       to 'kwargs'. Main intention behind this function is to
        simplify and shorten examples code in doc-strings.
 
        >>> x, y, z = symbols('xyz', integer=True)
