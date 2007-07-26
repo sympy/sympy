@@ -353,9 +353,6 @@ class BasicMeths(AssumeMeths):
             if c: return c
         return 0
 
-    def evalf(self):
-        return self
-
     def eval(self):
         return self
 

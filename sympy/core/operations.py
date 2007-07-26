@@ -106,5 +106,5 @@ class AssocOp(Basic):
             if r and not a: r = False
         return r
 
-    evalf = Basic._seq_evalf
+    _eval_evalf = Basic._seq_eval_evalf
     

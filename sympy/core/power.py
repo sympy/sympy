@@ -261,7 +261,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         dexp = self.exp.diff(s)
         return self * (dexp * Basic.Log()(self.base) + dbase * self.exp/self.base)
 
-    evalf = Basic._seq_evalf
+    _eval_evalf = Basic._seq_eval_evalf
 
     def _calc_splitter(self, d):
         if d.has_key(self):

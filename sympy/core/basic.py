@@ -266,9 +266,6 @@ class Basic(BasicMeths):
             return new
         return self.__class__(*[s.subs(old, new) for s in self])
 
-    def _seq_evalf(self):
-        return self.__class__(*[s.evalf() for s in self])
-
     def has(self, *patterns):
         """
         Return True if self has any of the patterns.
@@ -610,6 +607,24 @@ class Basic(BasicMeths):
     def __call__(self, *args):
         return Basic.Apply(self, *args)
 
+    def _eval_evalf(self):
+        return
+
+    def _seq_eval_evalf(self):
+        return self.__class__(*[s.evalf() for s in self])
+
+    def evalf(self, precision=None):
+        if precision is None:
+            r = self._eval_evalf()
+        else:
+            old_precision = Basic.set_precision(precision)
+            r = self._eval_evalf()
+            print self, old_precision, precision, r
+            Basic.set_precision(old_precision)
+        if r is None:
+            r = self
+        return r
+
     ###################################################################################
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
     ###################################################################################
@@ -807,6 +822,7 @@ class Atom(Basic):
 
     def _eval_as_leading_term(self, x):
         return self
+
 
 class Singleton(Basic):
     """ Singleton object.

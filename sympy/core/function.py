@@ -111,7 +111,7 @@ class Apply(Basic, ArithMeths, RelMeths):
             return obj
         return Basic._seq_subs(self, old, new)
 
-    def evalf(self):
+    def _eval_evalf(self):
         obj = self.func._eval_apply_evalf(*self.args)
         if obj is None:
             return self

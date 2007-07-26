@@ -86,8 +86,9 @@ class Number(Atom, RelMeths, ArithMeths):
     def eval(self):
         return self
 
-    def evalf(self):
-        return Real(self._as_decimal())
+    def _eval_evalf(self):
+        r = self._as_decimal()
+        return Real(r)
 
     def __float__(self):
         return float(self._as_decimal())
@@ -230,7 +231,8 @@ class Real(Number):
     def _eval_is_negative(self):
         return self.num.as_tuple()[0] != 0
 
-    def evalf(self): return self
+    def _eval_evalf(self):
+        return self
 
     def _as_decimal(self):
         return self.num
@@ -908,7 +910,7 @@ class Exp1(NumberSymbol):
     def tostr(self, level=0):
         return 'E'
 
-    def evalf(self):
+    def _eval_evalf(self):
         return Real(decimal_math.e())
 
     def approximation_interval(self, number_cls):
@@ -936,7 +938,7 @@ class Pi(NumberSymbol):
     def tostr(self, level=0):
         return 'Pi'
 
-    def evalf(self):
+    def _eval_evalf(self):
         return Real(decimal_math.pi())
 
 class ImaginaryUnit(Singleton, Atom, RelMeths, ArithMeths):
