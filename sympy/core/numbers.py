@@ -151,6 +151,7 @@ class Number(Atom, RelMeths, ArithMeths):
 
 decimal_to_Number_cls = {
     decimal.Decimal('0').as_tuple():'Zero',
+    decimal.Decimal('-0').as_tuple():'Zero',
     decimal.Decimal('1').as_tuple():'One',
     decimal.Decimal('-1').as_tuple():'NegativeOne',
     decimal.Decimal('Infinity').as_tuple():'Infinity',
