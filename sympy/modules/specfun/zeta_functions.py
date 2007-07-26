@@ -24,14 +24,14 @@ class _memo:
 
 def _product(low, high):
     p = 1
-    for k in range(low, high+1):
+    for k in xrange(low, high+1):
         p *= k
     return p
 
 def _bernoulli_sum(m, mtop):
     s = 0
     a = int(binomial(m+3, m-6))
-    for j in range(1, mtop+1):
+    for j in xrange(1, mtop+1):
         s += a*bernoulli(m-6*j)
         a *= _product(m-6 - 6*j + 1, m-6*j)
         a //= _product(6*j+4, 6*j+9)
@@ -92,7 +92,7 @@ class BernoulliPoly(DefinedFunction):
     def _eval_apply(self, n, x):
         if isinstance(n, Rational) and n.is_integer:
             s = 0
-            for k in range(n+1):
+            for k in xrange(n.p+1):
                 s += binomial(n,k)*bernoulli(k)*x**(n-k)
             return s
 
@@ -163,7 +163,7 @@ class Harmonic(DefinedFunction):
             if n == 0:
                 return 0
             s = 0
-            for i in range(1, n+1):
+            for i in xrange(1, n.p+1):
                 s += Rational(1)/i**m
             return s
         if n == oo:

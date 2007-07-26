@@ -37,7 +37,7 @@ class Binomial(IntegerSequence):
             assert not k.is_negative,`k`
             l = []
             zk = z - k
-            for n in range(1,k+1):
+            for n in xrange(1, k.p+1):
                 l.append(zk+n)
             return (Basic.Mul(*l)/Factorial()(k)).expand()
 

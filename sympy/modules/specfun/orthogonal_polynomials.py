@@ -33,7 +33,7 @@ class _PolynomialSequence(DefinedFunction):
         if n < m:
             return self._memo[n]
         else:
-            for i in range(m, n+1):
+            for i in xrange(m, n+1):
                 L = self._calc(i)
                 L = L.expand()
                 self._memo[i] = L
@@ -43,7 +43,7 @@ class _PolynomialSequence(DefinedFunction):
         if isinstance(x, Legendre_zero) and x._args[0] == n:
             return 0
         if n.is_integer and n >= 0:
-            for k in range(n):
+            for k in xrange(int(n)):
                 if x == self._zero_class(n, k):
                     return 0
             #return self.poly().subs(self._x, x)

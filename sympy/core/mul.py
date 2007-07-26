@@ -216,7 +216,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
     def _eval_derivative(self, s):
         terms = list(self)
         factors = []
-        for i in range(len(terms)):
+        for i in xrange(len(terms)):
             t = terms[i].diff(s)
             if isinstance(t, Basic.Zero):
                 continue
@@ -365,7 +365,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             return new * coeff1/coeff2
         l1,l2 = len(terms1),len(terms2)
         if l2<l1: # (a*b*c*d).subs(b*c,x) -> a*x*d
-            for i in range(l1-l2+1):
+            for i in xrange(l1-l2+1):
                 if terms2==terms1[i:i+l2]:
                     m1 = Mul(*terms1[:i]).subs(old,new)
                     m2 = Mul(*terms1[i+l2:]).subs(old,new)
@@ -388,7 +388,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             return Mul(*l)
         if len(r)==1:
             return Mul(*(l + [r[0].oseries(order)]))
-        for i in range(len(r)):
+        for i in xrange(len(r)):
             m = Mul(*(lt[:i]+lt[i+1:]))
             o = order/m
             l.append(r[i].oseries(o))

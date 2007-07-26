@@ -240,9 +240,9 @@ class Pow(Basic, ArithMeths, RelMeths):
                     l = [cache[0]]
                     Mul = Basic.Mul
                     Rational = Basic.Rational
-                    for k in range(1, m * n + 1):
+                    for k in xrange(1, m * n + 1):
                         a = []
-                        for i in range(1,n+1):
+                        for i in xrange(1,n+1):
                             if i<=k:
                                 a.append(Mul(Rational((m+1)*i-k,k), p0[i], cache[k-i]).expand())
                         a = Basic.Add(*a)

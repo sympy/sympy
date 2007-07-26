@@ -196,8 +196,7 @@ def test_ellipse():
     assert g.intersection(c1, g.Point(1, 0)) == [g.Point(1, 0)]
     assert g.intersection(c1, l1) == [g.Point(1, 0)]
     assert g.intersection(c1, l2) == [g.Point(0, -1)]
-    # Requires simplification of square roots [ sqrt(8) == 2sqrt(2) ]
-    #assert g.intersection(c1, l3) in [pts_c1_l3, [pts_c1_l3[1], pts_c1_l3[0]]]
+    assert g.intersection(c1, l3) in [pts_c1_l3, [pts_c1_l3[1], pts_c1_l3[0]]]
 
     e1 = g.Circle(g.Point(0, 0), 5)
     e2 = g.Ellipse(g.Point(0, 0), 5, 20)
@@ -286,7 +285,6 @@ def test_polygon():
     assert g.Point(5, 5) not in t2
     assert t1.is_convex()
     assert feq(t1.angles[p1].evalf(), pi.evalf()/2)
-    #assert feq(t1.angles[p1].evalf(precision=20), pi.evalf(precision=20)/2)
 
     assert t1.is_equilateral() == False
     assert t2.is_equilateral()

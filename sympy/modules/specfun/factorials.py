@@ -64,7 +64,7 @@ class Factorial(DefinedFunction):
                 if x < 0:
                     return oo
                 y = Rational(1)
-                for m in range(1, x+1):
+                for m in xrange(1, x.p+1):
                     y *= m
                 return y
             if x.q == 2:
@@ -175,9 +175,9 @@ def _collect_factors(expr):
             if isinstance(base, factorial) and \
                 isinstance(exp, Rational) and exp.is_integer:
                 if exp > 0:
-                    for i in range(exp): numer_args.append(base._args)
+                    for i in xrange(exp.p): numer_args.append(base._args)
                 else:
-                    for i in range(-exp): denom_args.append(base._args)
+                    for i in xrange(-exp.p): denom_args.append(base._args)
             else:
                 other.append(x)
         elif isinstance(x, factorial):
@@ -204,10 +204,10 @@ def _simplify_quotient(na, da, other):
             q = da[j]
             t = Rational(1)
             if delta > 0:
-                for k in range(1, delta+1):
+                for k in xrange(1, int(delta)+1):
                     t *= (q+k)
             else:
-                for k in range(1, -delta+1):
+                for k in xrange(1, -int(delta)+1):
                     t /= (p+k)
             other.append(t)
             del na[i], da[j]

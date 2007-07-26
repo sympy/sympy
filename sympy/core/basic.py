@@ -723,7 +723,7 @@ class Basic(BasicMeths):
         assert n>=0,`n`
         l = []
         g = None
-        for i in range(n+2):
+        for i in xrange(n+2):
             g = taylor_term(i, arg, g)
             g = g.oseries(order)
             l.append(g)

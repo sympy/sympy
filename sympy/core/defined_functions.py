@@ -1046,14 +1046,14 @@ class RisingFactorial(DefinedFunction):
                         else:
                             return Basic.Infinity()
                     else:
-                        return reduce(lambda r, i: r*(x+i), xrange(0, k), 1)
+                        return reduce(lambda r, i: r*(x+i), xrange(0, k.p), 1)
                 else:
                     if isinstance(x, Basic.Infinity):
                         return Basic.Infinity()
                     elif isinstance(x, Basic.NegativeInfinity):
                         return Basic.Infinity()
                     else:
-                        return 1/reduce(lambda r, i: r*(x-i), xrange(1, abs(k)+1), 1)
+                        return 1/reduce(lambda r, i: r*(x-i), xrange(1, abs(k.p)+1), 1)
 
 class FallingFactorial(DefinedFunction):
     """Falling factorial (related to rising factorial) is a double valued
@@ -1111,14 +1111,14 @@ class FallingFactorial(DefinedFunction):
                         else:
                             return Basic.Infinity()
                     else:
-                        return reduce(lambda r, i: r*(x-i), xrange(0, k), 1)
+                        return reduce(lambda r, i: r*(x-i), xrange(0, k.p), 1)
                 else:
                     if isinstance(x, Basic.Infinity):
                         return Basic.Infinity()
                     elif isinstance(x, Basic.NegativeInfinity):
                         return Basic.Infinity()
                     else:
-                        return 1/reduce(lambda r, i: r*(x+i), xrange(1, abs(k)+1), 1)
+                        return 1/reduce(lambda r, i: r*(x+i), xrange(1, abs(k.p)+1), 1)
 
 Basic.singleton['pochhammer'] = RisingFactorial
 

@@ -429,7 +429,7 @@ class Lambda(Function):
         """
         if isinstance(e, Basic.Integer) and e.is_positive and e.p < 10 and len(b.args)==1:
             r = b.body
-            for i in range(e.p-1):
+            for i in xrange(e.p-1):
                 r = b(r)
             return Lambda(r, *b.args)
 
@@ -509,7 +509,7 @@ class FPow(Function):
     def _eval_apply(self, *args):
         if isinstance(self.exp, Basic.Integer) and self.exp.is_positive and self.exp.p < 10:
             r = self.base(*args)
-            for i in range(self.exp.p-1):
+            for i in xrange(self.exp.p-1):
                 r = self.base(r)
             return r
 

@@ -490,7 +490,7 @@ class Rational(Number):
                             return 1/res
                     # Now check also devisors of the exponents denominator
                     # TODO: Check if this slows down to much.
-                    for i in range(2, e.q/2 + 1):
+                    for i in xrange(2, e.q/2 + 1):
                         if e.q % i == 0:
                             x, xexact = integer_nthroot(b.p, i)
                             y, yexact = integer_nthroot(b.q, i)
@@ -652,7 +652,7 @@ class Integer(Rational):
                             return 1/res
                     # Now check also devisors of the exponents denominator
                     # TODO: Check if this slows down to much.
-                    for i in range(2, e.q/2 + 1):
+                    for i in xrange(2, e.q/2 + 1):
                         if e.q % i == 0:
                             x, xexact = integer_nthroot(b.p, i)
                             if xexact:
