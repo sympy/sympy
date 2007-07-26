@@ -619,7 +619,6 @@ class Basic(BasicMeths):
         else:
             old_precision = Basic.set_precision(precision)
             r = self._eval_evalf()
-            print self, old_precision, precision, r
             Basic.set_precision(old_precision)
         if r is None:
             r = self
