@@ -35,9 +35,6 @@ class Symbol(Atom, RelMeths, ArithMeths):
         False
 
         """
-        obj = Basic.singleton.get(name) # parser uses it
-        if obj is not None:
-            return obj()
         obj = Basic.__new__(cls,
                             commutative=commutative,
                             dummy=dummy,

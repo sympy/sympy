@@ -650,6 +650,9 @@ class Identifier(StringBase):
     match = staticmethod(match)
 
     def tosymbolic(self, commutative=True):
+        obj = Basic.singleton.get(self.string)
+        if obj is not None:
+            return obj()
         return Basic.Symbol(self.string)
 
 
