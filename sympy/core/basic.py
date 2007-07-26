@@ -156,58 +156,66 @@ class Basic(BasicMeths):
 
     @staticmethod
     def sympify(a):
-        """
-        Usage
-        =====
-            Converts an arbitrary expression to a type that can be used
-            inside sympy. For example, it will convert python int's into
-            instance of sympy.Rational, floats into intances of sympy.Real, etc.
+        """Converts an arbitrary expression to a type that can be used
+           inside sympy. For example, it will convert python int's into
+           instance of sympy.Rational, floats into intances of sympy.Real,
+           etc. It is also able to coerce symbolic expressions which does
+           inherit after Basic. This can be useful in cooperation with SAGE.
 
-        Notes
-        =====
-            It currently accepts as arguments:
-                - any object defined in sympy (except maybe matrices [TODO])
-                - standard numeric python types: int, long, float, Decimal
-                - strings (like "0.09" or "2e-19")
+           It currently accepts as arguments:
+               - any object defined in sympy (except maybe matrices [TODO])
+               - standard numeric python types: int, long, float, Decimal
+               - strings (like "0.09" or "2e-19")
 
-            If the argument is already a type that sympy understands, it will do
-            nothing but return that value - this can be used at the begining of a
-            method to ensure you are workint with the corerct type.
+           If the argument is already a type that sympy understands, it will do
+           nothing but return that value. This can be used at the begining of a
+           function to ensure you are working with the correct type.
 
-        Examples
-        ========
-            >>> def is_real(a):
-            ...     a = Basic.sympify(a)
-            ...     return a.is_real
-            >>> is_real(2.0)
-            True
-            >>> is_real(2)
-            True
-            >>> is_real("2.0")
-            True
-            >>> is_real("2e-45")
-            True
+           >>> from sympy import *
+
+           >>> sympify(2).is_integer
+           True
+           >>> sympify(2).is_real
+           True
+
+           >>> sympify(2.0).is_real
+           True
+           >>> sympify("2.0").is_real
+           True
+           >>> sympify("2e-45").is_real
+           True
+
         """
         if isinstance(a, Basic):
             return a
-        if isinstance(a, bool):
+        elif isinstance(a, bool):
             raise NotImplementedError("bool support")
-        if isinstance(a, (int, long)):
+        elif isinstance(a, (int, long)):
             return Basic.Integer(a)
-        if isinstance(a, (float, decimal.Decimal)):
+        elif isinstance(a, (float, decimal.Decimal)):
             return Basic.Real(a)
-        if isinstance(a, complex):
-            real, imag = Basic.sympify(a.real), Basic.sympify(a.imag)
+        elif isinstance(a, complex):
+            real, imag = map(Basic.sympify, (a.real, a.imag))
             ireal, iimag = int(real), int(imag)
-            t = ireal + iimag*1j
-            if t == a:
+
+            if ireal + iimag*1j == a:
                 return ireal + iimag*Basic.ImaginaryUnit()
-            return real + Basic.ImaginaryUnit() * imag
-        if isinstance(a, str):
-            return parser.Expr(a).tosymbolic()
-        if isinstance(a, (list,tuple)) and len(a)==2:
+            else:
+                return real + Basic.ImaginaryUnit() * imag
+        elif isinstance(a, (list,tuple)) and len(a)==2:
             return Basic.Interval(*a)
-        raise ValueError("%s must be a subclass of Basic" % (`a`))
+        else:
+            if not isinstance(a, str):
+                # At this point we were given arbitray expression
+                # which does not inherit after Basic. This may be
+                # SAGE's expression (or something alike) so take
+                # its normal form via repr() and try to parse it.
+                a = repr(a)
+
+            try:
+                return parser.Expr(a).tosymbolic()
+            except:
+                raise ValueError("%r is NOT a valid SymPy expression" % a)
 
     @Memoizer('Basic', MemoizerArg((type, type(None)), name='type'), return_value_converter = lambda obj: obj.copy())
     def atoms(self, type=None):
