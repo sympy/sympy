@@ -10,7 +10,7 @@ def test_sqrt():
         assert sqrt(Float(i**2)) == i
     # These should round identically
     for x in [0, 1e-7, 0.1, 0.5, 1, 2, 3, 4, 5, 0.333, 76.19]:
-        assert Float(x).sqrt() == float(x)**0.5
+        assert sqrt(Float(x)) == float(x)**0.5
 
 def test_hypot():
     assert hypot(0, 0) == 0

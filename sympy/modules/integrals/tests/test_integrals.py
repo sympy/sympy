@@ -19,7 +19,8 @@ def test_basics():
     assert integrate(e, t==(0,x), evaluate=False).diff(x)==(1+x)**2
     assert integrate(e, t==(0,x), evaluate=False).diff(a)==0
 
-    py.test.raises(IntegralError,"integrate(e,t==(0,x), evaluate=False).diff(t)")
+    py.test.raises(IntegralError,"integrate(e, t==(0,x), evaluate=False).diff(t)")
+    py.test.raises(IntegralError,"integrate(e, t, evaluate=False).diff(x)")
 
     assert integrate(e, t==(a,x), evaluate=False).diff(x)==(1+x)**2
     assert integrate(e, t==(a,x), evaluate=False).diff(x)!=-(1+x)**2

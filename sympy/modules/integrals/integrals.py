@@ -31,10 +31,14 @@ class Integral(Basic, ArithMeths, RelMeths):
             r._args = (expr,)+symbols
             #this is so that diff() works correctly, obviously
             #it will only work for 1D integrals
-            r.f=expr
-            r.x=symbols[0].lhs
-            r.a=symbols[0].rhs.start
-            r.b=symbols[0].rhs.end
+            r.f = expr
+            if isinstance(symbols[0], Basic.Equality):
+                r.x = symbols[0].lhs
+                r.a = symbols[0].rhs.start
+                r.b = symbols[0].rhs.end
+            else:
+                r.x = symbols[0]
+                r.a = r.b = None
             return r
         for s in symbols:
             if isinstance(s, Basic.Equality):
@@ -52,6 +56,8 @@ class Integral(Basic, ArithMeths, RelMeths):
     def diff(self, sym):
         if sym == self.x:
             raise IntegralError("Cannot differentiate the integration variable")
+        if self.a is None or self.b is None:
+            raise IntegralError("Cannot differentiate because no endpoints specified")
         return (self.b.diff(sym)*self.f.subs(self.x,self.b)-\
             self.a.diff(sym)*self.f.subs(self.x,self.a))
 
