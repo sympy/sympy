@@ -1,6 +1,6 @@
 import py
 import sympy as g
-from sympy import Symbol, Rational, sin, log, exp, O
+from sympy import Symbol, Rational, sin, log, exp, O, sqrt
 
 
 def testseries1():
@@ -247,3 +247,8 @@ def test_issue105():
     x = Symbol("x")
     f = sin(x**3)**Rational(1,3)
     assert f.series(x, 17) == x - x**7/18 - x**13/3240 + O(x**17)
+
+def test_issue125():
+    y = Symbol("y")
+    f=(1-y**(Rational(1)/2))**(Rational(1)/2)
+    assert f.series(y,2) == 1 - sqrt(y)/2-y/8-y**Rational(3,2)/16+O(y**2)
