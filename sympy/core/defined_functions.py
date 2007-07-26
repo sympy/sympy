@@ -862,12 +862,7 @@ class Floor(DefinedFunction):
             elif isinstance(arg, Basic.Rational):
                 return Basic.Integer(arg.p // arg.q)
             elif isinstance(arg, Basic.Real):
-                int_arg = int(arg)
-
-                if int_arg != arg and arg.is_negative:
-                    return Basic.Integer(int_arg - 1)
-                else:
-                    return Basic.Integer(int_arg)
+                return arg.floor()
         elif isinstance(arg, Basic.NumberSymbol):
             return arg.approximation_interval(Basic.Integer)[0]
         elif arg.has(Basic.ImaginaryUnit()):
@@ -960,12 +955,7 @@ class Ceiling(DefinedFunction):
             elif isinstance(arg, Basic.Rational):
                 return Basic.Integer(arg.p // arg.q + 1)
             elif isinstance(arg, Basic.Real):
-                int_arg = int(arg)
-
-                if int_arg != arg and arg.is_positive:
-                    return Basic.Integer(int_arg + 1)
-                else:
-                    return Basic.Integer(int_arg)
+                return arg.ceiling()
         elif isinstance(arg, Basic.NumberSymbol):
             return arg.approximation_interval(Basic.Integer)[1]
         elif arg.has(Basic.ImaginaryUnit()):

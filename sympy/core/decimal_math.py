@@ -7,12 +7,12 @@ Author: Pearu Peterson <pearu.peterson@gmail.com>
 Created: February, 2007
 """
 
-__all__ = ['acos', 'asin', 'atan', 'atan2', 'ceil', 'cos', 'cosh', 'degrees',
+__all__ = ['acos', 'asin', 'atan', 'atan2', 'ceiling', 'cos', 'cosh', 'degrees',
            'e', 'exp', 'floor', 'golden_ratio', 'hypot', 'log', 'log10', 'pi',
            'pow', 'radians', 'sign', 'sin', 'sinh', 'sqrt', 'tan', 'tanh',
            'cot','coth']
 
-import math
+import math, decimal
 
 from decimal import getcontext
 from decimal import Decimal as D
@@ -274,7 +274,7 @@ def radians(x):
     """radians(x) -> converts Decimal angle x from degrees to radians"""
     return +(x * pi() / 180)
 
-def ceil(x):
+def ceiling(x):
     """Return the smallest integral value >= x."""
     return x.to_integral(rounding=decimal.ROUND_CEILING)
 

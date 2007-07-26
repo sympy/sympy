@@ -59,9 +59,6 @@ def test_evalpow_bug():
     assert 1/(1/x) == x
     assert 1/(-1/x) == -x
 
-def test_expbug():
-    assert exp(-log(3))**(-1) == 3
-
 def test_symbol_expand():
     x = Symbol('x')
     y = Symbol('y')

@@ -1,7 +1,7 @@
 
 from sympy import *
 
-def test_log_eval_apply():
+def test_log_apply_eval():
 
     assert log(nan) == nan
 
@@ -31,6 +31,8 @@ def test_log_eval_apply():
     assert log(oo*I) == oo
     assert log(-oo*I) == oo
 
+    assert exp(-log(3))**(-1) == 3
+
     x, y = symbols('xy')
 
     assert log(x) == log(x)
@@ -52,7 +54,7 @@ def test_log_eval_apply():
     assert log(-x) == log(-x)
     assert log(-k) == log(-k)
 
-def test_floor_eval_apply():
+def test_floor_apply_eval():
 
     x = Symbol('x')
     y = Symbol('y', real=True)
@@ -130,7 +132,7 @@ def test_floor_eval_apply():
     assert floor(sin(1)) == 0
     assert floor(sin(-1)) == -1
 
-def test_ceiling_eval_apply():
+def test_ceiling_apply_eval():
 
     x = Symbol('x')
     y = Symbol('y', real=True)
@@ -208,7 +210,7 @@ def test_ceiling_eval_apply():
     assert ceiling(sin(1)) == 1
     assert ceiling(sin(-1)) == 0
 
-def test_rf_eval_apply():
+def test_rf_apply_eval():
 
     x, y = symbols('xy')
 
@@ -236,7 +238,7 @@ def test_rf_eval_apply():
 
     assert rf(1, 100) == factorial(100)
 
-def test_ff_eval_apply():
+def test_ff_apply_eval():
 
     x, y = symbols('xy')
 
@@ -263,3 +265,8 @@ def test_ff_eval_apply():
     assert ff(x, -3) == 1/((x+1)*(x+2)*(x+3))
 
     assert ff(100, 100) == factorial(100)
+
+def test_apply_evalf():
+    value = (log(3)/log(2)-1).evalf()
+
+    assert value.epsilon_eq(Real("0.58496250072115618145373"))

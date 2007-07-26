@@ -127,6 +127,8 @@ class Number(Atom, RelMeths, ArithMeths):
     def acosh(self): return Real(decimal_math.acosh(self._as_decimal()))
     def atanh(self): return Real(decimal_math.atanh(self._as_decimal()))
     def acoth(self): return Real(decimal_math.acoth(self._as_decimal()))
+    def floor(self): return Real(decimal_math.floor(self._as_decimal()))
+    def ceiling(self): return Real(decimal_math.ceiling(self._as_decimal()))
 
     def __eq__(self, other):
         raise NotImplementedError,'%s needs .__eq__() method' % (self.__class__.__name__)
@@ -170,7 +172,7 @@ class Real(Number):
 
     Real(3.5)   .... 3.5 (the 3.5 was converted from a python float)
     Real("3.0000000000000005")
-    
+
     """
     is_real = True
     is_irrational = False
@@ -315,6 +317,8 @@ class Real(Number):
             return bool(self._as_decimal()<=other._as_decimal())
         return RelMeths.__le__(self, other)
 
+    def epsilon_eq(self, other, epsilon="10e-16"):
+        return abs(self - other) < Basic.Real(epsilon)
 
 def _parse_rational(s):
     """Parse rational number from string representation"""
@@ -804,7 +808,7 @@ class NegativeInfinity(Singleton, Rational):
         (-oo) ** (-oo) -> nan
         (-oo) ** e -> oo, e is positive even integer
         (-oo) ** o -> -oo, o is positive odd integer
-        
+
         """
         if isinstance(e, Number):
             if isinstance(e, (NaN, Infinity, NegativeInfinity)):
