@@ -622,9 +622,9 @@ class Basic(BasicMeths):
         return self.__class__(*[s.evalf() for s in self])
 
     def __float__(self):
-        result = self.evalf()
+        result = self.evalf(precision=16)
 
-        if isinstance(result, Basic.Real):
+        if isinstance(result, Basic.Number):
             return float(result)
         else:
             raise ValueError("Symbolic value, can't compute")
