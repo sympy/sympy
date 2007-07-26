@@ -621,6 +621,9 @@ class Basic(BasicMeths):
     def _seq_eval_evalf(self):
         return self.__class__(*[s.evalf() for s in self])
 
+    def __float__(self):
+        return float(self.evalf())
+
     def evalf(self, precision=None):
         if precision is None:
             r = self._eval_evalf()

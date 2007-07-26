@@ -988,9 +988,9 @@ class ApplyCeiling(Apply):
 Basic.singleton['floor'] = Floor
 Basic.singleton['ceiling'] = Ceiling
 
-################################################################################
-######################## RISING and FALLING FACTORIALS #########################
-################################################################################
+###############################################################################
+######################## RISING and FALLING FACTORIALS ########################
+###############################################################################
 
 class RisingFactorial(DefinedFunction):
     """Rising factorial (also called Pochhammer symbol) is a double valued
@@ -1046,14 +1046,14 @@ class RisingFactorial(DefinedFunction):
                         else:
                             return Basic.Infinity()
                     else:
-                        return reduce(lambda r, i: r*(x+i), xrange(0, k.p), 1)
+                        return reduce(lambda r, i: r*(x+i), xrange(0, int(k)), 1)
                 else:
                     if isinstance(x, Basic.Infinity):
                         return Basic.Infinity()
                     elif isinstance(x, Basic.NegativeInfinity):
                         return Basic.Infinity()
                     else:
-                        return 1/reduce(lambda r, i: r*(x-i), xrange(1, abs(k.p)+1), 1)
+                        return 1/reduce(lambda r, i: r*(x-i), xrange(1, abs(int(k))+1), 1)
 
 class FallingFactorial(DefinedFunction):
     """Falling factorial (related to rising factorial) is a double valued
@@ -1111,20 +1111,20 @@ class FallingFactorial(DefinedFunction):
                         else:
                             return Basic.Infinity()
                     else:
-                        return reduce(lambda r, i: r*(x-i), xrange(0, k.p), 1)
+                        return reduce(lambda r, i: r*(x-i), xrange(0, int(k)), 1)
                 else:
                     if isinstance(x, Basic.Infinity):
                         return Basic.Infinity()
                     elif isinstance(x, Basic.NegativeInfinity):
                         return Basic.Infinity()
                     else:
-                        return 1/reduce(lambda r, i: r*(x+i), xrange(1, abs(k.p)+1), 1)
+                        return 1/reduce(lambda r, i: r*(x+i), xrange(1, abs(int(k))+1), 1)
 
 Basic.singleton['pochhammer'] = RisingFactorial
 
 Basic.singleton['rf'] = RisingFactorial
 Basic.singleton['ff'] = FallingFactorial
 
-################################################################################
-############## REAL and IMAGINARY PARTS, CONJUNGATION, ARGUMENT ################
-################################################################################
+###############################################################################
+############## REAL and IMAGINARY PARTS, CONJUNGATION, ARGUMENT ###############
+###############################################################################
