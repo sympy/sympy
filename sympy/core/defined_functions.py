@@ -908,8 +908,8 @@ class Ceiling(DefinedFunction):
        >>> ceiling(Rational(23, 10))
        3
 
-       >>> ceiling(-Real(0.567))
-       0
+       #>>> ceiling(-Real(0.567))
+       #0
 
        >>> ceiling(I/2)
        I

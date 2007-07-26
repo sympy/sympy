@@ -162,17 +162,38 @@ class test_sympy_doc(Command):
         print "Testing docstrings."
 
         files = glob.glob('sympy/*/*.py') + glob.glob('sympy/modules/*/*.py')
-        #make it work on Windows too:
-        files = [f.replace("\\","/") for f in files]
+        files = [ f.replace("\\","/") for f in files ]  # make it work on Windows too
 
         # files without doctests or that don't work
+        files.remove('sympy/core/__init__.py')
+        files.remove('sympy/modules/__init__.py')
+
         files.remove('sympy/core/add.py')
         files.remove('sympy/core/relational.py')
         files.remove('sympy/core/interval.py')
 
+        files.remove('sympy/modules/concrete/__init__.py')
+        files.remove('sympy/modules/geometry/__init__.py')
+        files.remove('sympy/modules/integrals/__init__.py')
+        files.remove('sympy/modules/matrices/__init__.py')
+        files.remove('sympy/modules/physics/__init__.py')
+        files.remove('sympy/modules/polynomials/__init__.py')
+        files.remove('sympy/modules/printing/__init__.py')
+        files.remove('sympy/modules/series/__init__.py')
+        files.remove('sympy/modules/simplify/__init__.py')
+        files.remove('sympy/modules/solvers/__init__.py')
+        files.remove('sympy/modules/specfun/__init__.py')
+        files.remove('sympy/modules/utilities/__init__.py')
+
         files.remove('sympy/modules/specfun/zeta_functions.py')
         files.remove('sympy/modules/specfun/orthogonal_polynomials.py')
         files.remove('sympy/modules/specfun/factorials.py')
+
+        files.remove('sympy/modules/plotting/__init__.py')
+
+        # fix line 164 above
+        #files.remove('sympy/modules/plotting/scene/__init__.py')
+        #files.remove('sympy/modules/plotting/renderables/__init__.py')
 
         files.remove('sympy/modules/plotting/plot_camera.py')
         files.remove('sympy/modules/plotting/cartesian.py')
@@ -190,43 +211,24 @@ class test_sympy_doc(Command):
         files.remove('sympy/modules/plotting/grid_plane.py')
         files.remove('sympy/modules/plotting/plot_window.py')
 
-        files.remove('sympy/core/__init__.py')
-        files.remove('sympy/modules/__init__.py')
-
-        files.remove('sympy/modules/concrete/__init__.py')
-        files.remove('sympy/modules/geometry/__init__.py')
-        files.remove('sympy/modules/integrals/__init__.py')
-        files.remove('sympy/modules/matrices/__init__.py')
-        files.remove('sympy/modules/physics/__init__.py')
-        files.remove('sympy/modules/plotting/__init__.py')
-        files.remove('sympy/modules/polynomials/__init__.py')
-        files.remove('sympy/modules/printing/__init__.py')
-        files.remove('sympy/modules/series/__init__.py')
-        files.remove('sympy/modules/simplify/__init__.py')
-        files.remove('sympy/modules/solvers/__init__.py')
-        files.remove('sympy/modules/specfun/__init__.py')
-        files.remove('sympy/modules/utilities/__init__.py')
-
-        #testing for optional libraries
         try:
+            #testing for optional libraries
             import libxslt
         except ImportError:
-            #remove tests that make use of libxslt1
-            #files.remove('sympy/modules/printing/latex.py')
-            #files.remove('sympy/modules/printing/__init__.py')
             pass
 
         modules = []
+
         for x in files:
             if len(x) > 12 and x[-11:] == '__init__.py':
                 x = x.replace('/__init__', '')
                 print x
-            modules.append(x.replace('/', '.')[:-3])
-            #put . as separator and strip the extension (.py)
 
-        #modules.append('sympy')
+            #put . as separator and strip the extension (.py)
+            modules.append(x.replace('/', '.')[:-3])
 
         suite = unittest.TestSuite()
+
         for mod in modules:
             suite.addTest(doctest.DocTestSuite(mod))
 
@@ -245,20 +247,30 @@ setup(
                     'sympy.core', 'sympy.modules',
                     'sympy.modules.concrete',
                     'sympy.modules.geometry',
-                    'sympy.modules.mathml',
                     'sympy.modules.matrices',
-                    'sympy.modules.plotting',
-                    'sympy.modules.plotting.renderables',
-                    'sympy.modules.plotting.scene',
                     'sympy.modules.polynomials',
                     'sympy.modules.printing',
                     'sympy.modules.series',
                     'sympy.modules.simplify',
                     'sympy.modules.solvers',
                     'sympy.modules.specfun',
-                    'sympy.modules.utilities'
+                    'sympy.modules.utilities',
+
+                    'sympy.modules.plotting',
+                    'sympy.modules.plotting.scene',
+                    'sympy.modules.plotting.renderables',
+                    'sympy.modules.plotting.pyglet',
+                    'sympy.modules.plotting.pyglet.ext',
+                    'sympy.modules.plotting.pyglet.font',
+                    'sympy.modules.plotting.pyglet.gl',
+                    'sympy.modules.plotting.pyglet.image',
+                    'sympy.modules.plotting.pyglet.image.codecs',
+                    'sympy.modules.plotting.pyglet.media',
+                    'sympy.modules.plotting.pyglet.window',
+                    'sympy.modules.plotting.pyglet.window.carbon',
+                    'sympy.modules.plotting.pyglet.window.win32',
+                    'sympy.modules.plotting.pyglet.window.xlib',
                   ],
-      package_data = {'sympy.modules.mathml' : ['data/*.xsl']},
       scripts = ['bin/isympy'],
       ext_modules = [],
       data_files = [('share/man/man1', ['doc/man/isympy.1'])],

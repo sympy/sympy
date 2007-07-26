@@ -1,0 +1,51 @@
+.\" -*- coding: us-ascii -*-
+.if \n(.g .ds T< \\FC
+.if \n(.g .ds T> \\F[\n[.fam]]
+.de URL
+\\$2 \(la\\$1\(ra\\$3
+..
+.if \n(.g .mso www.tmac
+.TH isympy 1 2007-04-12 "" ""
+.SH NAME
+isympy \- interactive shell for SymPy
+.SH SYNOPSIS
+'nh
+.fi
+.ad l
+\fBisympy\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+[\fB-c\fR | \fB--console\fR]
+'in \n(.iu-\nxu
+.ad b
+'hy
+'nh
+.fi
+.ad l
+\fBisympy\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+[
+{\fB-h\fR | \fB--help\fR}
+| 
+{\fB-v\fR | \fB--version\fR}
+]
+'in \n(.iu-\nxu
+.ad b
+'hy
+.SH DESCRIPTION
+isympy is a Python shell for SymPy. It is just a normal python shell (ipython shell if you have the ipython package installed) that imports
+all the stuff SymPy needs so you don't have to. It imports the modules sympy, sympy.core, sympy.modules and tries to import the module 
+sympy.modules.graphing if you have matplotlib installed. It also defines the symbols x, y, z. 
+.SH OPTIONS
+.TP 
+\*(T<\fB\-c \fR\*(T>\fIshell\fR, \*(T<\fB\-\-console=\fR\*(T>\fIshell\fR
+Use the specified shell (python or ipython) as console backend instead of the default one (ipython if present or python in other case).
+.SH FILES
+.TP 
+\*(T<\fI${HOME}/.sympy\-history\fR\*(T>
+Saves the history of commands when using the python shell as backed.
+.SH BUGS
+The upstreams BTS can be found at \(lahttp://code.google.com/p/sympy/issues/list\(ra
+.SH "SEE ALSO"
+\fBipython\fR(1), \fBpython\fR(1)

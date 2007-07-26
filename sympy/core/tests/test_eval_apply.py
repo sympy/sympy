@@ -41,6 +41,8 @@ def test_log_apply_eval():
     assert log(x**2) == 2*log(x)
     assert log(x**y) == log(x**y)
 
+    assert log(exp(x)) == log(exp(x))
+
     x, y = symbols('xy', real=True)
 
     assert log(x) == log(x)
@@ -48,6 +50,9 @@ def test_log_apply_eval():
 
     assert log(x**2) == 2*log(x)
     assert log(x**y) == log(x**y)
+
+    assert log(exp(x)) == x
+    assert log(-exp(x)) == x + I*pi
 
     k = Symbol('k', positive=True)
 
