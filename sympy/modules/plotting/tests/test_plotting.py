@@ -34,7 +34,7 @@ class TestPlotting:
         from sympy.modules.plotting import Plot
         Plot(1/x, [x, -3, 3], [y, -1, 1, 1], show=False)
 
-    def test_plot_2d_polar(self):
+    def _test_plot_2d_polar(self):
         from sympy.modules.plotting import Plot
         Plot(log(x), [x,0,6.282], 'mode=polar', show=False)
         Plot(1/x, [x,-1,1,4], 'mode=polar', show=False)

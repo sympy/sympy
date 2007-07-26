@@ -423,14 +423,27 @@ class Abs(DefinedFunction):
         return
 
 def Pi_coeff(expr):
+    """
+    Exctracts the coefficient at pi.
+
+    Examples:
+    >>> from sympy import pi
+    >>> x=Symbol("x")
+    >>> Pi_coeff(pi)
+    1
+    >>> Pi_coeff(2*pi)
+    2
+    >>> Pi_coeff(2*pi+18)
+    >>> Pi_coeff(2*pi*x)
+    2*x
+    """
     pi = Basic.Pi()
     if not expr.has(pi):
-        return None
+        return
     x = Basic.Symbol('x',dummy=True)
     c = expr.subs(pi, x).diff(x)
     if c * pi == expr:
         return c
-    return
 
 class Sin(DefinedFunction):
 
