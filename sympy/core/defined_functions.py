@@ -1,7 +1,7 @@
 
 from basic import Basic, S, cache_it, cache_it_immutable
-
 from function import DefinedFunction, Apply, Lambda
+from symbol import Symbol
 
 class Exp(DefinedFunction):
     """ Exp() -> exp
@@ -190,37 +190,66 @@ class Log(DefinedFunction):
     nofargs = 1
 
     def fdiff(self, argindex=1):
-        if argindex==1:
-            s = Basic.Symbol('x',dummy=True)
-            return Lambda(s**(-1),s)
-        raise TypeError("argindex=%s is out of range [1,1] for %s" % (argindex,self))
+        if argindex == 1:
+            s = Basic.Symbol('x', dummy=True)
+            return Lambda(s**(-1), s)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
         return Exp()
 
     def _eval_apply(self, arg, base=None):
+        I = Basic.ImaginaryUnit()
+
         if base is not None:
             base = Basic.sympify(base)
+
             if not isinstance(base, Basic.Exp1):
                 return self(arg)/self(base)
+
         arg = Basic.sympify(arg)
-        if isinstance(arg, Basic.Exp1):
-            return S.One
-        elif isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.One):
-                return S.Zero
-            if isinstance(arg, Basic.Infinity):
-                return S.Infinity
-            if isinstance(arg, Basic.NaN):
-                return S.NaN
-            if arg.is_negative:
-                return S.Pi * S.ImaginaryUnit + self(-arg)
-        elif isinstance(arg, Basic.Pow) and isinstance(arg.exp, Basic.Number):
-            return arg.exp * self(arg.base)
+
+        if isinstance(arg, Basic.Number):
+            if isinstance(arg, Basic.Zero):
+                return Basic.NegativeInfinity()
+            elif isinstance(arg, Basic.One):
+                return Basic.Zero()
+            elif isinstance(arg, Basic.Infinity):
+                return Basic.Infinity()
+            elif isinstance(arg, Basic.NegativeInfinity):
+                return Basic.Infinity()
+            elif isinstance(arg, Basic.NaN):
+                return Basic.NaN()
+            elif arg.is_negative:
+                return Basic.Pi() * I + self(-arg)
+        elif isinstance(arg, Basic.Exp1):
+            return Basic.One()
         elif isinstance(arg, ApplyExp) and arg.args[0].is_real:
             return arg.args[0]
+        elif isinstance(arg, Basic.Pow):
+            if isinstance(arg.exp, Basic.Number) or \
+               isinstance(arg.exp, Basic.NumberSymbol):
+                return arg.exp * self(arg.base)
         elif isinstance(arg, Basic.Mul) and arg.is_real:
             return Basic.Add(*[self(a) for a in arg])
+        elif not isinstance(arg, Basic.Add):
+            x = Basic.Wild('x')
+
+            coeff = arg.match(x*I)
+
+            if coeff is not None:
+                coeff = coeff[x]
+
+                if isinstance(coeff, Basic.Infinity):
+                    return Basic.Infinity()
+                elif isinstance(coeff, Basic.NegativeInfinity):
+                    return Basic.Infinity()
+                elif isinstance(coeff, Basic.Rational):
+                    if coeff.is_nonnegative:
+                        return Basic.Pi() * I * Basic.Half() + self(coeff)
+                    else:
+                        return -Basic.Pi() * I * Basic.Half() + self(-coeff)
 
     def as_base_exp(self):
         return Exp(),Basic.Integer(-1)
@@ -436,6 +465,12 @@ class Sin(DefinedFunction):
             return -self(-arg)
         return
 
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            return arg.sin()
+
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
         if n<0 or not n%2: return Basic.Zero()
@@ -444,7 +479,6 @@ class Sin(DefinedFunction):
             p = previous_terms[-2]
             return -p * x**2 / (n*(n-1))
         return (-1)**(n//2) *x**(n)/Basic.Factorial()(n)
-
 
 class ApplySin(Apply):
 
@@ -508,6 +542,12 @@ class Cos(DefinedFunction):
             return self(-arg)
         return
 
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            return arg.cos()
+
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
         if n<0 or n%2: return Basic.Zero()
@@ -565,6 +605,11 @@ class Tan(DefinedFunction):
                 return arg
         return
 
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            return arg.tan()
 
 class Sign(DefinedFunction):
 
@@ -749,3 +794,347 @@ class ApplyArcTan(Apply):
 Basic.singleton['asin'] = ArcSin
 Basic.singleton['acos'] = ArcCos
 Basic.singleton['atan'] = ArcTan
+
+################################################################################
+######################### FLOOR and CEILING FUNCTIONS ##########################
+################################################################################
+
+class Floor(DefinedFunction):
+    """Floor is a univariate function which returns the largest integer
+       value not greater than its argument. However this implementaion
+       generalizes floor to complex numbers.
+
+       More information you will find in "Concrete mathematics" by Graham,
+       pp. 87 or visit http://mathworld.wolfram.com/FloorFunction.html.
+
+       >>> from sympy import *
+
+       >>> floor(17)
+       17
+
+       >>> floor(Rational(23, 10))
+       2
+
+       >>> floor(-Real(0.567))
+       -1
+
+       >>> floor(-I/2)
+       -I
+
+    """
+
+    nofargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            raise NotImplementedError("Floor.fdiff()")
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_apply(self, arg):
+        arg = Basic.sympify(arg)
+
+        if arg.is_integer:
+            return arg
+        elif isinstance(arg, Basic.Add):
+            included, excluded = [], []
+
+            for term in arg:
+                if term.atoms(type=Basic.Symbol):
+                    if term.is_integer:
+                        excluded.append(term)
+                    else:
+                        included.append(term)
+                else:
+                    excluded.append(self(term))
+
+            if excluded:
+                return self(Basic.Add(*included)) + Basic.Add(*excluded)
+        elif isinstance(arg, Basic.Number):
+            if isinstance(arg, Basic.Infinity):
+                return Basic.Infinity()
+            elif isinstance(arg, Basic.NegativeInfinity):
+                return Basic.NegativeInfinity()
+            elif isinstance(arg, Basic.NaN):
+                return Basic.NaN()
+            elif isinstance(arg, Basic.Integer):
+                return arg
+            elif isinstance(arg, Basic.Rational):
+                return Basic.Integer(arg.p // arg.q)
+            elif isinstance(arg, Basic.Real):
+                int_arg = int(arg)
+
+                if int_arg != arg and arg.is_negative:
+                    return Basic.Integer(int_arg - 1)
+                else:
+                    return Basic.Integer(int_arg)
+        elif isinstance(arg, Basic.NumberSymbol):
+            return arg.approximation_interval(Basic.Integer)[0]
+        elif arg.has(Basic.ImaginaryUnit()):
+            coeff, terms = arg.as_coeff_terms(Basic.ImaginaryUnit())
+
+            if terms == [Basic.ImaginaryUnit()]:
+                if not coeff.atoms(type=Basic.Symbol):
+                    return self(coeff) * Basic.ImaginaryUnit()
+                elif coeff.is_integer:
+                    return coeff * Basic.ImaginaryUnit()
+        elif not arg.atoms(type=Basic.Symbol):
+            if arg < 0:
+                return -Ceiling()(-arg)
+            elif isinstance(arg, Basic.Mul):
+                return Basic.Mul(*[ self(term) for term in arg ])
+            else:
+                return self(arg.evalf())
+
+class ApplyFloor(Apply):
+
+    def _eval_is_bounded(self):
+        return self.args[0].is_bounded
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _eval_is_integer(self):
+        return self.args[0].is_real
+
+class Ceiling(DefinedFunction):
+    """Ceiling is a univariate function which returns the smallest integer
+       value not less than its argument. Ceiling function is generalized
+       in this implementation to complex numbers.
+
+       More information you will find in "Concrete mathematics" by Graham,
+       pp. 87 or visit http://mathworld.wolfram.com/CeilingFunction.html.
+
+       >>> from sympy import *
+
+       >>> ceiling(17)
+       17
+
+       >>> ceiling(Rational(23, 10))
+       3
+
+       >>> ceiling(-Real(0.567))
+       0
+
+       >>> ceiling(I/2)
+       I
+
+    """
+
+    nofargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            raise NotImplementedError("Ceiling.fdiff()")
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_apply(self, arg):
+        arg = Basic.sympify(arg)
+
+        if arg.is_integer:
+            return arg
+        elif isinstance(arg, Basic.Add):
+            included, excluded = [], []
+
+            for term in arg:
+                if term.atoms(type=Basic.Symbol):
+                    if term.is_integer:
+                        excluded.append(term)
+                    else:
+                        included.append(term)
+                else:
+                    excluded.append(self(term))
+
+            if excluded:
+                return self(Basic.Add(*included)) + Basic.Add(*excluded)
+        elif isinstance(arg, Basic.Number):
+            if isinstance(arg, Basic.Infinity):
+                return Basic.Infinity()
+            elif isinstance(arg, Basic.NegativeInfinity):
+                return Basic.NegativeInfinity()
+            elif isinstance(arg, Basic.NaN):
+                return Basic.NaN()
+            elif isinstance(arg, Basic.Integer):
+                return arg
+            elif isinstance(arg, Basic.Rational):
+                return Basic.Integer(arg.p // arg.q + 1)
+            elif isinstance(arg, Basic.Real):
+                int_arg = int(arg)
+
+                if int_arg != arg and arg.is_positive:
+                    return Basic.Integer(int_arg + 1)
+                else:
+                    return Basic.Integer(int_arg)
+        elif isinstance(arg, Basic.NumberSymbol):
+            return arg.approximation_interval(Basic.Integer)[1]
+        elif arg.has(Basic.ImaginaryUnit()):
+            coeff, terms = arg.as_coeff_terms(Basic.ImaginaryUnit())
+
+            if terms == [Basic.ImaginaryUnit()]:
+                if not coeff.atoms(type=Basic.Symbol):
+                    return self(coeff) * Basic.ImaginaryUnit()
+                elif coeff.is_integer:
+                    return coeff * Basic.ImaginaryUnit()
+        elif not arg.atoms(type=Basic.Symbol):
+            if arg < 0:
+                return -Floor()(-arg)
+            elif isinstance(arg, Basic.Mul):
+                return Basic.Mul(*[ self(term) for term in arg ])
+            else:
+                return self(arg.evalf())
+
+class ApplyCeiling(Apply):
+
+    def _eval_is_bounded(self):
+        return self.args[0].is_bounded
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _eval_is_integer(self):
+        return self.args[0].is_real
+
+Basic.singleton['floor'] = Floor
+Basic.singleton['ceiling'] = Ceiling
+
+################################################################################
+######################## RISING and FALLING FACTORIALS #########################
+################################################################################
+
+class RisingFactorial(DefinedFunction):
+    """Rising factorial (also called Pochhammer symbol) is a double valued
+       function arising in concrete mathematics, hypergeometric functions
+       and series expanansions. It is defined by
+
+                   rf(x, k) = x * (x+1) * ... * (x + k-1)
+
+       where 'x' can be arbitrary expression and 'k' is an integer. For
+       more information check "Concrete mathematics" by Graham, pp. 66
+       or visit http://mathworld.wolfram.com/RisingFactorial.html page.
+
+       >>> from sympy import *
+       >>> x = Symbol('x')
+
+       >>> rf(x, 0)
+       1
+
+       >>> rf(1, 5)
+       120
+
+       >>> rf(x, 5)
+       x*(1 + x)*(2 + x)*(3 + x)*(4 + x)
+
+    """
+
+    nofargs = 2
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            raise NotImplementedError("RisingFactorial.fdiff()")
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_apply(self, x, k):
+        x = Basic.sympify(x)
+        k = Basic.sympify(k)
+
+        if isinstance(x, Basic.NaN):
+            return Basic.NaN()
+        elif isinstance(k, Basic.Integer):
+            if isinstance(k, Basic.NaN):
+                return Basic.NaN()
+            if isinstance(k, Basic.Zero):
+                return Basic.One()
+            else:
+                if k.is_positive:
+                    if isinstance(x, Basic.Infinity):
+                        return Basic.Infinity()
+                    elif isinstance(x, Basic.NegativeInfinity):
+                        if k.is_odd:
+                            return Basic.NegativeInfinity()
+                        else:
+                            return Basic.Infinity()
+                    else:
+                        return reduce(lambda r, i: r*(x+i), xrange(0, k), 1)
+                else:
+                    if isinstance(x, Basic.Infinity):
+                        return Basic.Infinity()
+                    elif isinstance(x, Basic.NegativeInfinity):
+                        return Basic.Infinity()
+                    else:
+                        return 1/reduce(lambda r, i: r*(x-i), xrange(1, abs(k)+1), 1)
+
+class FallingFactorial(DefinedFunction):
+    """Falling factorial (related to rising factorial) is a double valued
+       function arising in concrete mathematics, hypergeometric functions
+       and series expanansions. It is defined by
+
+                   ff(x, k) = x * (x-1) * ... * (x - k+1)
+
+       where 'x' can be arbitrary expression and 'k' is an integer. For
+       more information check "Concrete mathematics" by Graham, pp. 66
+       or visit http://mathworld.wolfram.com/FallingFactorial.html page.
+
+       >>> from sympy import *
+       >>> x = Symbol('x')
+
+       >>> ff(x, 0)
+       1
+
+       >>> ff(5, 5)
+       120
+
+       >>> ff(x, 5)
+       x*(1 - x)*(2 - x)*(3 - x)*(4 - x)
+
+    """
+
+    nofargs = 2
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            raise NotImplementedError("FallingFactorial.fdiff()")
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_apply(self, x, k):
+        x = Basic.sympify(x)
+        k = Basic.sympify(k)
+
+        if isinstance(x, Basic.NaN):
+            return Basic.NaN()
+        elif isinstance(k, Basic.Integer):
+            if isinstance(k, Basic.NaN):
+                return Basic.NaN()
+            if isinstance(k, Basic.Zero):
+                return Basic.One()
+            else:
+                result = Basic.One()
+
+                if k.is_positive:
+                    if isinstance(x, Basic.Infinity):
+                        return Basic.Infinity()
+                    elif isinstance(x, Basic.NegativeInfinity):
+                        if k.is_odd:
+                            return Basic.NegativeInfinity()
+                        else:
+                            return Basic.Infinity()
+                    else:
+                        return reduce(lambda r, i: r*(x-i), xrange(0, k), 1)
+                else:
+                    if isinstance(x, Basic.Infinity):
+                        return Basic.Infinity()
+                    elif isinstance(x, Basic.NegativeInfinity):
+                        return Basic.Infinity()
+                    else:
+                        return 1/reduce(lambda r, i: r*(x+i), xrange(1, abs(k)+1), 1)
+
+Basic.singleton['pochhammer'] = RisingFactorial
+
+Basic.singleton['rf'] = RisingFactorial
+Basic.singleton['ff'] = FallingFactorial
+
+################################################################################
+############## REAL and IMAGINARY PARTS, CONJUNGATION, ARGUMENT ################
+################################################################################

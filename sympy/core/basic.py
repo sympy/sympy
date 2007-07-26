@@ -536,7 +536,7 @@ class Basic(BasicMeths):
                 new_terms.append(x)
             else:
                 indeps.append(x)
-        return Mul(*indeps), Mul(*new_terms)
+        return Basic.Mul(*indeps), Basic.Mul(*new_terms)
 
     def as_coeff_factors(self, x=None):
         # a -> c + f

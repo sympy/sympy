@@ -103,7 +103,6 @@ def parse_function_args(*args):
     Note:       There can be multiple functions if option
                 'type=parametric' is specified
     """
-    #import pdb; pdb.set_trace()
     args = list(args)
     if len(args) == 0:
         raise ValueError( "No arguments given." )

@@ -650,17 +650,12 @@ def ratsimp(expr):
         if r is not None and len(r) == 2:
             return r[a],r[b]
         return x, 1
-    #x,y = expr.getab()
-
-    #import pdb; pdb.set_trace()
 
     x = expr[0]
     y = Add(*expr[1:])
 
     a,b = get_num_denum(ratsimp(x))
     c,d = get_num_denum(ratsimp(y))
-
-    #pdb.set_trace()
 
     num = a*d+b*c
     denum = b*d

@@ -81,7 +81,6 @@ class Plot(object):
         return self._functions[i]
 
     def __setitem__(self, i, args):
-        #import pdb; pdb.set_trace()
         if not (isinstance(i, int) and i > 0):
             raise ValueError("Function index must be a positive integer.")
         if isinstance(args, PlotFunction):

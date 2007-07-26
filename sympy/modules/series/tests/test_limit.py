@@ -298,12 +298,11 @@ def test_MrvLimitTestCase_page51_ex3_25():
 
 def test_MrvLimitTestCase_bug_0():
     expr = ln(x+x**2)/ln(x) # (ln(x)+ln(1+x))/ln(x)
-    assert expr.limit(x,0) == 0
+    assert expr.limit(x,0) == 1
 
 def test_MrvLimitTestCase_page77_ex5_2():
     expr = exp(sin(1/x+exp(-x))-sin(1/x))
     assert expr.limit(x,oo) == 1
-
 
 def _test_MrvLimitTestCaseWorkInProgress_page7(): # enable it after defining erf
     x = Symbol('x')
