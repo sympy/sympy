@@ -58,13 +58,12 @@ def xtest_log():
     x = Symbol("x")
     ec = exp(Rational(1))
     e = (log(1/x+ec)-ec) / (x*log(1/x+1))
-    print e.eval()
     d = e.diff(x)
 
 def _test_bug2(): ### 1/log(0) * log(0) problem
     w = Symbol("w")
     e = (w**(-1)+w**(-log(3)*log(2)**(-1)))**(-1)*(3*w**(-log(3)*log(2)**(-1))+2*w**(-1))
-    e = e.eval().expand()
+    e = e.expand()
     #should be 3, but is 2
     assert e.series(w,4).subs(w,0)==3
 
@@ -79,7 +78,7 @@ def _test_exp2():
     x = Symbol("x")
     w = Symbol("w")
     e = w**(1-log(x)/(log(2) + log(x)))
-    assert e.eval().series(w,1) != 0
+    assert e.series(w,1) != 0
 
 def test_bug3():
     x = Symbol("x")
@@ -90,19 +89,19 @@ def test_generalexponent():
     x = Symbol("x")
     p = 2
     e = (2/x+3/x**p)/(1/x+1/x**p)
-    assert e.eval().series(x,1).leadterm(x) == (3,0)
+    assert e.series(x,1).leadterm(x) == (3,0)
     p = Rational(1,2)
     e = (2/x+3/x**p)/(1/x+1/x**p)
-    assert e.eval().series(x,1).leadterm(x) == (2,0)
+    assert e.series(x,1).leadterm(x) == (2,0)
     p = Rational(3,2)
     e = (2/x+3/x**p)/(1/x+1/x**p)
-    assert e.eval().series(x,1).leadterm(x) == (3,0)
+    assert e.series(x,1).leadterm(x) == (3,0)
 
     e=1+x**Rational(1,2)
-    assert e.eval().series(x,4) == 1+x**Rational(1,2)
+    assert e.series(x,4) == 1+x**Rational(1,2)
 
     e=1/(1+x**Rational(1,2))
-    assert e.eval().series(x,2) == \
+    assert e.series(x,2) == \
                 1+x-x**Rational(1,2)-x**Rational(3,2)+O(x**2, x)
 
 def _test_subsbug1():

@@ -607,10 +607,10 @@ class Matrix(object):
             for j in range(self.cols):
                 self[i,j] = self[i,j].expand()
 
-    def evaluate(self):
-        for i in range(self.lines):
-            for j in range(self.cols):
-                self[i,j] = self[i,j].eval()
+    #def evaluate(self):    # no more eval() so should be removed
+    #    for i in range(self.lines):
+    #        for j in range(self.cols):
+    #            self[i,j] = self[i,j].eval()
 
     def cross(self, b):
         assert isinstance(b, (list, tuple, Matrix))
