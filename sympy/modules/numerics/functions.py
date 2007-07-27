@@ -209,6 +209,7 @@ def exp(x):
     y = _exp_series(t, prec)
     return Float((y, -prec+n))
 
+
 #----------------------------------------------------------------------
 # Natural logarithm
 #
@@ -270,7 +271,7 @@ def log(x, b=None):
     # Estimated precision needed for log(t) + n*log(2)
     prec = Float._prec + int(_clog(1+abs(bc+x.exp), 2)) + 10
 
-    # Watch out for the case when x is very close to 0
+    # Watch out for the case when x is very close to 1
     if -1 < bc+x.exp < 2:
         near_one = abs(x-1)
         if near_one == 0:
@@ -283,6 +284,110 @@ def log(x, b=None):
     l = _log_newton(t, prec)
     a = (x.exp+bc) * log2_fixed(prec)
     return Float((l+a, -prec))
+
+
+#----------------------------------------------------------------------
+# Trigonometric functions
+#
+
+"""
+We compute sin(x) around 0 from its Taylor series, and cos(x) around 0
+from sqrt(1-sin(x)**2). This way we can simultaneously compute sin and
+cos, which are often needed together (e.g. for the tangent function or
+the complex exponential), with little extra cost compared to computing
+just one of them. The main reason for computing sin first (and not cos
+from sin) is to obtain high relative accuracy for x extremely close to
+0, where the operation sqrt(1-cos(x)**2) can cause huge cancellations.
+
+For any value of x, we can reduce it to the interval A = [-pi/4, pi/4]
+(where the Taylor series converges quickly) by translations, changing
+signs, and switching the roles of cos and sin:
+
+   A : sin(x) = sin(x)           cos(x) = cos(x)
+   B : sin(x) = cos(x-pi/2)      cos(x) = -sin(x-pi/2)
+   C : sin(x) = -sin(x-pi)       cos(x) = -cos(x-pi)
+   D : sin(x) = -cos(x-3*pi/2)   cos(x) = sin(x-3*pi/2)
+
+|     A      |      B     |      C     |     D     |
+v            v            v            v           v
+
+   1 |  ____   ..........                            ____
+     |      _..          ..                        __
+     |      . __           .                     __
+     |    ..    _           ..                  _
+     |   .       __           .               __
+-----| -.----------_-----------.-------------_-----------
+     | .            _           ..          _           .
+     |               __           .       __           .
+     |                 _           ..    _           ..
+     |                  __           . __           .
+     |                    __         _..          ..
+  -1 |                      _________   ..........
+      0                       pi                     2*pi
+
+TODO: check if the reduced x is very close to 0 and in that case repeat
+the mod operation at a higher level of precision.
+"""
+
+from constants import pi_fixed
+
+def _sin_series(x, prec):
+    x2 = (x*x) >> prec
+    s = a = x
+    k = 3
+    while a:
+        a = ((a * x2) >> prec) // (-k*(k-1))
+        s += a
+        k += 2
+    return s
+
+def _trig_reduce(x, prec):
+    pi_ = pi_fixed(prec)
+    pi4 = pi_ >> 2
+    pi2 = pi_ >> 1
+    n, rem = divmod(x + pi4, pi2)
+    rem -= pi4
+    return n, rem
+
+def cos_sin(x):
+    """
+    cos_sin(x) calculates both the cosine and the sine of x rounded
+    to the nearest Float value, and returns the tuple (cos(x), sin(x)).
+    """
+    if not isinstance(x, Float):
+        x = Float(x)
+    bits_from_unit = abs(bitcount(x.man) + x.exp)
+    prec = Float._prec + bits_from_unit + 15
+    xf = make_fixed(x, prec)
+    n, rx = _trig_reduce(xf, prec)
+    case = n % 4
+    one = 1<<prec
+    if case == 0:
+        s = _sin_series(rx, prec)
+        c = _sqrt_fixed(one - ((s*s)>>prec), prec)
+    elif case == 1:
+        c = -_sin_series(rx, prec)
+        s = _sqrt_fixed(one - ((c*c)>>prec), prec)
+    elif case == 2:
+        s = -_sin_series(rx, prec)
+        c = -_sqrt_fixed(one - ((s*s)>>prec), prec)
+    elif case == 3:
+        c = _sin_series(rx, prec)
+        s = -_sqrt_fixed(one - ((c*c)>>prec), prec)
+    return Float((c, -prec)), Float((s, -prec))
+
+def cos(x):
+    return cos_sin(x)[0]
+
+def sin(x):
+    return cos_sin(x)[1]
+
+def tan(x):
+    Float._prec += 2
+    c, s = cos_sin(x)
+    t = s / c
+    Float._prec -= 2
+    return t
 
 
 #----------------------------------------------------------------------

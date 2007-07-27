@@ -33,6 +33,19 @@ def test_log():
     assert log(1024, 2) == 10
     assert log(10**1234, 10) == 1234
 
+def test_trig_basic():
+    for x in (range(100) + range(-100,0)):
+        t = x / 4.1
+        assert cos(Float(t)).ae(math.cos(t))
+        assert sin(Float(t)).ae(math.sin(t))
+        assert tan(Float(t)).ae(math.tan(t))
+
+def test_trig_hard():
+    assert sin(Float(10**50, 150)).ae(-0.7896724934293100827)
+    assert cos(Float(10**50, 150)).ae(-0.6135286082336635622)
+    assert sin(1e-6).ae(9.999999999998333e-007)
+    assert cos(1e-6).ae(0.9999999999995)
+
 def test_atan():
     import math
     assert atan2(1,1).ae(math.atan2(1,1))

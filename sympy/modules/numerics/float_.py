@@ -349,6 +349,9 @@ class Float(object):
             m = s.man >> n
             return math.ldexp(m, s.exp + n)
 
+    def __int__(s):
+        return rshift(s.man, -s.exp, 0)
+
     #------------------------------------------------------------------
     # Comparison
     #
@@ -458,7 +461,7 @@ class Float(object):
         if t == 0:
             raise ZeroDivisionError
         if isinstance(t, Float):
-            extra = s._prec - bitcount(s.man) + bitcount(t.man) + 4
+            extra = max(0, s._prec - bitcount(s.man) + bitcount(t.man) + 4)
             return Float(((s.man<<extra)//t.man, s.exp-t.exp-extra))
         if isinstance(t, (int, long)):
             extra = s._prec - bitcount(s.man) + bitcount(t) + 4

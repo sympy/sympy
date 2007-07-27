@@ -119,6 +119,11 @@ def test_almost_equal():
     assert Float(1.2).ae(Float(1.20000001), 1e-7)
     assert not Float(1.2).ae(Float(1.20000001), 1e-9)
 
+def test_int():
+    for i in range(-100, 100):
+        assert int(Float(i)) == i
+    assert int(Float(2**500 + 23)) == 2**500
+
 def test_contexts():
     Float.store()
     Float.setprec(100)
