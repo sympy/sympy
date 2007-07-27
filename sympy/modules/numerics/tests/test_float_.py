@@ -124,6 +124,16 @@ def test_int():
         assert int(Float(i)) == i
     assert int(Float(2**500 + 23)) == 2**500
 
+def test_add():
+    assert Float(4) + Float(-70) == -66
+    assert Float(1) + Float(1.1)/80 == 1 + 1.1/80
+    assert Float((1, 10000000000)) + Float(3) == Float((1, 10000000000))
+    assert Float(3) + Float((1, 10000000000)) == Float((1, 10000000000))
+    assert Float((1, -10000000000)) + Float(3) == Float(3)
+    assert Float(3) + Float((1, -10000000000)) == Float(3)
+    assert Float(1) + 1e-15 != 1
+    assert Float(1) + 1e-20 == 1
+
 def test_contexts():
     Float.store()
     Float.setprec(100)
