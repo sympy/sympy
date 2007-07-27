@@ -437,6 +437,7 @@ class Float(object):
         if isinstance(t, (int, long)):
             # XXX: cancellation is possible here
             return s + Float(t)
+        return s + Float(t)
 
     __radd__ = __add__
 
@@ -452,8 +453,9 @@ class Float(object):
     def __mul__(s, t):
         if isinstance(t, Float):
             return Float((s.man*t.man, s.exp+t.exp))
-        if isinstance(t, (int, long)):
-            return 
+        #if isinstance(t, (int, long)):
+        #    return 
+        return s * Float(t)
 
     __rmul__ = __mul__
 
@@ -466,6 +468,10 @@ class Float(object):
         if isinstance(t, (int, long)):
             extra = s._prec - bitcount(s.man) + bitcount(t) + 4
             return Float(((s.man<<extra)//t, s.exp-extra))
+        return s / Float(t)
+
+    def __rdiv__(s, t):
+        return Float(t) / s
 
     def __pow__(s, n):
         """Calculate (man*2**exp)**n, currently for integral n only."""
@@ -473,10 +479,10 @@ class Float(object):
             if n == 0: return Float((1, 0))
             if n == 1: return +s
             if n == 2: return s * s
-            if n == -1: return 1 / s
+            if n == -1: return Float(1) / s
             if n < 0:
                 Float._prec += 2
-                r = 1 / (s ** -n)
+                r = Float(1) / (s ** -n)
                 Float._prec -= 2
                 return +r
             else:
