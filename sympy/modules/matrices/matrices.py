@@ -643,6 +643,12 @@ class Matrix(object):
             out += self[i]*self[i]
         return out**Basic.Half()
 
+    def normalized(self):
+        assert self.lines == 1 or self.cols == 1
+        norm = self.norm()
+        out = self[:,:].applyfunc(lambda i: i / norm)
+        return out
+
     def project(self, v):
         # project ONTO v
         return v * (self.dot(v) / v.dot(v))
@@ -801,7 +807,7 @@ class Matrix(object):
         basis = []
         # create a set of vectors for the basis
         for i in range(self.cols - len(pivots)):
-            basis.append(zeronm(1,self.cols))
+            basis.append(zeronm(self.cols,1))
         # contains the variable index to which the vector corresponds
         basiskey, cur = [-1]*len(basis), 0
         for i in range(self.cols):
@@ -810,13 +816,13 @@ class Matrix(object):
                 cur += 1
         for i in range(self.cols):
             if i not in pivots: # free var, just set vector's ith place to 1
-                basis[basiskey.index(i)][0,i] = 1
+                basis[basiskey.index(i)][i,0] = 1
             else:               # add negative of nonpivot entry to corr vector
                 for j in range(i+1, self.cols):
                     line = pivots.index(i)
                     if reduced[line, j] != 0:
                         assert j not in pivots
-                        basis[basiskey.index(j)][0,i] = -1 * reduced[line, j]
+                        basis[basiskey.index(j)][i,0] = -1 * reduced[line, j]
         return basis
 
     def charpoly(self, var):
@@ -922,7 +928,7 @@ def hessian(f, varlist):
             out[i,j] = out[j,i]
     return out
 
-def GramSchmidt(vlist):
+def GramSchmidt(vlist, orthog=False):
     out = []
     m = len(vlist)
     for i in range(m):
@@ -932,6 +938,9 @@ def GramSchmidt(vlist):
         if tmp == Matrix([[0,0,0]]):
             raise "GramSchmidt: vector set not linearly independent"
         out.append(tmp)
+    if orthog:
+        for i in range(len(out)):
+            out[i] = out[i].normalized()
     return out
 
 class SMatrix(Matrix):

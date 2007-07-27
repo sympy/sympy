@@ -284,10 +284,10 @@ def test_nullspace():
                                [0,0,0,0,0,0,0]])
     # now check the vectors
     basis = M.nullspace()
-    assert basis[0] == Matrix([[-3,1,0,0,0,0,0]])
-    assert basis[1] == Matrix([[0,0,1,0,0,0,0]])
-    assert basis[2] == Matrix([[-2,0,0,-2,1,0,0]])
-    assert basis[3] == Matrix([[0,0,0,0,0,R(-1)/3, 1]])
+    assert basis[0] == Matrix([-3,1,0,0,0,0,0])
+    assert basis[1] == Matrix([0,0,1,0,0,0,0])
+    assert basis[2] == Matrix([-2,0,0,-2,1,0,0])
+    assert basis[3] == Matrix([0,0,0,0,0,R(-1)/3, 1])
 
 def test_eigen():
     # test charpoly
@@ -308,13 +308,13 @@ def test_eigen():
     M = Matrix([ [1,0,0],
                  [0,1,0],
                  [0,0,1]])
-    assert M.eigenvects() == [[1, 3, [Matrix(1,3,[1,0,0]), Matrix(1,3,[0,1,0]), Matrix(1,3,[0,0,1])]]]
+    assert M.eigenvects() == [[1, 3, [Matrix([1,0,0]), Matrix([0,1,0]), Matrix([0,0,1])]]]
     M = Matrix([ [5,0,2],
                  [3,2,0],
                  [0,0,1]])
-    assert M.eigenvects() == [[1, 1, [Matrix(1,3,[R(-1)/2,R(3)/2,1])]],
-                              [2, 1, [Matrix(1,3,[0,1,0])]],
-                              [5, 1, [Matrix(1,3,[1,1,0])]]]
+    assert M.eigenvects() == [[1, 1, [Matrix([R(-1)/2,R(3)/2,1])]],
+                              [2, 1, [Matrix([0,1,0])]],
+                              [5, 1, [Matrix([1,1,0])]]]
 
 def test_sparse_matrix():
     return
@@ -561,9 +561,9 @@ def test_sparse_matrix():
     L = SMatrix(1,2,[x, x**2*y**3])
     assert L.jacobian(syms) == SMatrix([[1, 0], [2*x*y**3, x**2*3*y**2]])
 
-    # test_GramSchmidt
+    # test_QR
     A = Matrix([[1,2],[2,3]])
-    Q, S = A.GramSchmidt()
+    Q, S = A.QRdecomposition()
     R = Rational
     assert Q == Matrix([[5**R(-1,2), (R(2)/5)*(R(1)/5)**R(-1,2)], [2*5**R(-1,2), (-R(1)/5)*(R(1)/5)**R(-1,2)]])
     assert S == Matrix([[5**R(1,2), 8*5**R(-1,2)], [0, (R(1)/5)**R(1,2)]])
