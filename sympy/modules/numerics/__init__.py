@@ -18,4 +18,5 @@ numerical computations.
 from float_ import *
 from constants import *
 from functions import *
+from functions2 import *
 from quad import TanhSinh
