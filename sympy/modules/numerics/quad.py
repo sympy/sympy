@@ -22,13 +22,13 @@ class Quadrature:
         sa = Float(sa)
         sb = Float(sb)
         if (a, b) == (sa, sb):
-            return f
+            return g
         else:
             # linear change of variables
             C = (b-a)/2
             D = (b+a)/2
             def h(x):
-                return C * f(D + C*x)
+                return C * g(D + C*x)
             return h
 
 def _ts_weight(k, h):

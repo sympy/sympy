@@ -199,7 +199,7 @@ def exp(x):
     if not isinstance(x, Float):
         x = Float(x)
     # extra precision needs to be similar in magnitude to log_2(|x|)
-    prec = Float._prec + 4 + (bitcount(x.man) + x.exp)
+    prec = Float._prec + 4 + max(0, bitcount(x.man) + x.exp)
     t = make_fixed(x, prec)
     if abs(x) > 1:
         lg2 = log2_fixed(prec)

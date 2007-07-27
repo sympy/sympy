@@ -433,6 +433,11 @@ class Float(object):
         if isinstance(t, Float):
             if t.exp > s.exp:
                 s, t = t, s
+            if s.exp - t.exp > 100:
+                bitdelta = (bitcount(s.man)+s.exp)-(bitcount(t.man)+t.exp)
+                if bitdelta > s._prec+5:
+                    # XXX: handle rounding
+                    return +s
             return Float((t.man+(s.man<<(s.exp-t.exp)), t.exp))
         if isinstance(t, (int, long)):
             # XXX: cancellation is possible here
