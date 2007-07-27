@@ -181,7 +181,7 @@ class Line(LinearEntity):
 
     def arbitrary_point(self, parameter_name='t'):
         """Returns a symbolic point that is on this line."""
-        t = Symbol(parameter_name)
+        t = Symbol(parameter_name, real=True)
         if self.slope == oo:
             return Point(self._p1[0], t)
         else:
@@ -193,15 +193,15 @@ class Line(LinearEntity):
         """Returns a random point on this line."""
         from random import randint
         from sys import maxint
-        t = Symbol('t')
+        t = Symbol('t', real=True)
         p = self.arbitrary_point('t')
         subs_val = randint(-maxint-1, maxint)
         return Point(p[0].subs(t, subs_val), p[1].subs(t, subs_val))
 
     def equation(self, xaxis_name='x', yaxis_name='y'):
         """Returns the equation for this line"""
-        x = Symbol(xaxis_name)
-        y = Symbol(yaxis_name)
+        x = Symbol(xaxis_name, real=True)
+        y = Symbol(yaxis_name, real=True)
         a,b,c = self.coefficients
         return simplify(a*x + b*y + c)
 
@@ -209,8 +209,8 @@ class Line(LinearEntity):
         if isinstance(o, Line):
             return self.__eq__(o)
         elif isinstance(o, Point):
-            x = Symbol('x')
-            y = Symbol('y')
+            x = Symbol('x', real=True)
+            y = Symbol('y', real=True)
             r = self.equation().subs_dict({x: o[0], y: o[1]})
             x = simplify(r)
             return bool(x == 0)

@@ -182,6 +182,15 @@ class ApplyExp(Apply):
             return S.One
         return S.Exp(arg)
 
+    def _eval_expand(self):
+        arg = self.args[0].expand()
+        if isinstance(arg, Basic.Add):
+            expr = 1
+            for x in arg:
+                expr *= self.func(x).expand()
+            return expr
+        return self.func(arg)
+
 
 class Log(DefinedFunction):
     """ Log() -> log
@@ -322,6 +331,17 @@ class ApplyLog(Apply):
             return (self.args[0] - 1).as_leading_term(x)
         return self.func(arg)
 
+    def _eval_expand(self):
+        arg = self.args[0]
+        if isinstance(arg, Basic.Mul):
+            expr = 0
+            for x in arg:
+                expr += self.func(x).expand()
+            return expr
+        elif isinstance(arg, Basic.Pow):
+            return arg.exp * self.func(arg.base).expand()
+        return self
+
 # MrvLog is used by limit.py
 class MrvLog(Log):
     pass
@@ -370,9 +390,10 @@ class Sqrt(DefinedFunction):
                         n *= Basic.Integer(k) ** Basic.Half()
                 return n
             return arg ** Basic.Half()
-        coeff, terms = arg.as_coeff_terms()
-        if not isinstance(coeff, Basic.One):
-            return self(coeff) * self(Basic.Mul(*terms))
+        if arg.is_nonnegative:
+            coeff, terms = arg.as_coeff_terms()
+            if not isinstance(coeff, Basic.One):
+                return self(coeff) * self(Basic.Mul(*terms))
         base, exp = arg.as_base_exp()
         if isinstance(exp, Basic.Number):
             return base ** (exp/2)

@@ -1,14 +1,12 @@
-
 from sympy import *
-
 import sympy.modules.geometry as g
 
-x = Symbol('x')
-y = Symbol('y')
-x1 = Symbol('x1')
-x2 = Symbol('x2')
-y1 = Symbol('y1')
-y2 = Symbol('y2')
+x = Symbol('x', real=True)
+y = Symbol('y', real=True)
+x1 = Symbol('x1', real=True)
+x2 = Symbol('x2', real=True)
+y1 = Symbol('y1', real=True)
+y2 = Symbol('y2', real=True)
 half = Rational(1,2)
 
 def feq(a, b):

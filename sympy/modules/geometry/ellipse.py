@@ -99,22 +99,22 @@ class Ellipse(GeometryEntity):
 
     def arbitrary_point(self, parameter_name='t'):
         """Returns a symbolic point that is on the ellipse."""
-        t = Symbol(parameter_name)
+        t = Symbol(parameter_name, real=True)
         return Point(self._c[0] + self._hr*cos(t), self._c[1] + self._vr*sin(t))
 
     def random_point(self):
         """Returns a random point on the ellipse."""
         from random import randint
         from sys import maxint
-        t = Symbol('t')
+        t = Symbol('t', real=True)
         p = self.arbitrary_point('t')
         subs_val = randint(-maxint-1, maxint)
         return Point(p[0].subs(t, subs_val), p[1].subs(t, subs_val))
 
     def equation(self, xaxis_name='x', yaxis_name='y'):
         """Returns the equation of the ellipse."""
-        x = Symbol(xaxis_name)
-        y = Symbol(yaxis_name)
+        x = Symbol(xaxis_name, real=True)
+        y = Symbol(yaxis_name, real=True)
         t1 = ((x - self._c[0]) / self._hr)**Rational(2)
         t2 = ((y - self._c[1]) / self._vr)**Rational(2)
         return t1 + t2 - Rational(1)
@@ -198,8 +198,8 @@ class Ellipse(GeometryEntity):
 
     def __contains__(self, o):
         if isinstance(o, Point):
-            x = Symbol('x')
-            y = Symbol('y')
+            x = Symbol('x', real=True)
+            y = Symbol('y', real=True)
             res = self.equation('x', 'y').subs_dict({x: o[0], y: o[1]})
             #res = trigsimp(simplify(res)) 
             res = simplify(res)
@@ -241,8 +241,8 @@ class Circle(Ellipse):
 
     def equation(self, xaxis_name='x', yaxis_name='y'):
         """Returns the equation of the circle."""
-        x = Symbol(xaxis_name)
-        y = Symbol(yaxis_name)
+        x = Symbol(xaxis_name, real=True)
+        y = Symbol(yaxis_name, real=True)
         t1 = (x - self._c[0])**Rational(2)
         t2 = (y - self._c[1])**Rational(2)
         return t1 + t2 - self._hr**Rational(2)

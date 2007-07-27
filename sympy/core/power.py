@@ -123,6 +123,9 @@ class Pow(Basic, ArithMeths, RelMeths):
         elif self.base.is_nonpositive:
             if self.exp.is_even:
                 return False
+        elif self.base.is_real:
+            if self.exp.is_even:
+                return False
 
     def _eval_is_integer(self):
         c1 = self.base.is_integer

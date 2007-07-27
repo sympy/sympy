@@ -127,6 +127,11 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 if isinstance(e, Basic.Integer):
                     # (a*b)**2 -> a**2 * b**2
                     return Mul(*[s**e for s in b])
+
+                if e.is_rational and not b.is_nonnegative:
+                    if not isinstance(b, (Basic.Pow, Basic.Number)):
+                        return
+
                 coeff, rest = b.as_coeff_terms()
                 if not isinstance(coeff, Basic.One):
                     # (2*a)**3 -> 2**3 * a**3
@@ -139,7 +144,6 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 return coeff**e * Mul(*l)
         if e.atoms(Basic.Wild):
             return Mul(*[t**e for t in b])
-        return
 
     @property
     def precedence(self):

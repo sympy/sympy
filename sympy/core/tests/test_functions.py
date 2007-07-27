@@ -35,12 +35,12 @@ def test_exp_log():
     assert log(exp(x)) == x
     assert exp(log(x)) == x
 
-def _test_log_expansion():
-    # XXX Log expansion currently not functioning
+def test_log_expansion():
     x = Symbol("x")
     y = Symbol("y")
     assert log(x*y) != log(x)+log(y)
-    assert log(x**2) != 2*log(x)
+    # XXX This is automatically expanded currently
+    #assert log(x**2) != 2*log(x)
     assert log(x*y).expand() == log(x)+log(y)
     assert log(x**2).expand() == 2*log(x)
     assert (log(x**-5)**-1).expand() == -1/log(x)/5
@@ -68,28 +68,25 @@ def test_log_hashing_bug():
 def test_sign():
     assert sign(log(2)) == 1
 
-
 def test_exp_bug():
     x = Symbol("x")
     assert exp(1*log(x)) == x
 
-def _test_exp_expand():
-    # XXX Expand currently not functioning
+def test_exp_expand():
     x = Symbol("x")
     y = Symbol("y")
     e = exp(log(Rational(2))*(1+x)-log(Rational(2))*x)
     assert e.expand() == 2
-    assert exp(x+y) != exp(x)*exp(y)
+    #assert exp(x+y) != exp(x)*exp(y)
     assert exp(x+y).expand() == exp(x)*exp(y)
 
-def _test_pi(): ## uncomment when trigs are done
+def test_pi():
     assert cos(pi)==-1
     assert cos(2*pi)==1
     assert sin(pi)==0
     assert sin(2*pi)==0
 
-def _test_bug1():
-    # XXX Tests below fail
+def test_bug1():
     x = Symbol("x")
     w = Symbol("w")
     e = sqrt(-log(w))
@@ -105,22 +102,21 @@ def test_Derivative():
 
 def _test_invtrig():
     # XXX No inverse trig yet
-    x=Symbol("x")
+    x = Symbol("x")
     assert atan(0) == 0
     assert atan(x).diff(x) == 1/(1+x**2)
 
-def _test_general_function():
-    # XXX Doesn't work (arbitrary function support doesn't exist)
-    class nu(Function):
-        pass
+def test_general_function():
+    class nu(DefinedFunction): nofargs = 1
+    nu = nu()
 
-    x=Symbol("x")
-    y=Symbol("y")
-    e=nu(x)
-    edx=e.diff(x)
-    edy=e.diff(y)
-    edxdx=e.diff(x).diff(x)
-    edxdy=e.diff(x).diff(y)
+    x = Symbol("x")
+    y = Symbol("y")
+    e = nu(x)
+    edx = e.diff(x)
+    edy = e.diff(y)
+    edxdx = e.diff(x).diff(x)
+    edxdy = e.diff(x).diff(y)
     assert e == nu(x)
     assert edx != nu(x)
     assert edx == Derivative(nu(x), x)
@@ -128,30 +124,41 @@ def _test_general_function():
     assert edxdx == Derivative(Derivative(nu(x), x), x)
     assert edxdy == 0
 
-    #this works, but is semantically wrong, we need to settle on some interface
-    #first
-    assert nu(x**2).diff(x) == Derivative(nu(x**2), x**2) * 2*x
+    # this works, but is semantically wrong, we need to settle on some
+    # interface first
 
-def _test_derivative_subs_bug():
-    # XXX Doesn't work (arbitrary function support doesn't exist)
+    # XXX The test would now sort of look like this, but it doesn't really
+    #     do anything in terms of testing (since automatically lhs == rhs)
+    #xsq = Lambda(x**2, x)
+    #e = Composition(nu, xsq)('x')
+    #assert e.diff(x) == Derivative(e, x)
+
+def test_derivative_subs_bug():
     x = Symbol("x")
-    class l(Function): pass
-    class n(Function): pass
-    e = Derivative(n(x), x)
-    assert e.subs(n(x), l(x)) != e
-    assert e.subs(n(x), l(x)) == Derivative(l(x), x)
-    assert e.subs(n(x), -l(x)) == Derivative(-l(x), x)
 
-def _test_derivative_linearity():
-    # XXX Doesn't work (arbitrary function support doesn't exist)
+    class l(DefinedFunction): nofargs = 1
+    l = l()
+
+    class n(DefinedFunction): nofargs = 1
+    n = n()
+
+    e = Derivative(n(x), x)
+    assert e.subs(n, l) != e
+    assert e.subs(n, l) == Derivative(l(x), x)
+    assert e.subs(n, -l) == Derivative(-l(x), x)
+
+def test_derivative_linearity():
     x = Symbol("x")
     y = Symbol("y")
-    class n(Function): pass
+
+    class n(DefinedFunction): nofargs = 1
+    n = n()
+
     assert Derivative(-n(x), x) == -Derivative(n(x), x)
     assert Derivative(8*n(x), x) == 8*Derivative(n(x), x)
     assert Derivative(8*n(x), x) != 7*Derivative(n(x), x)
-    assert Derivative(8*n(x)*x, x) == 8*Derivative(x*n(x), x)
-    assert Derivative(8*n(x)*y*x, x) == 8*y*Derivative(x*n(x), x)
+    assert Derivative(8*n(x)*x, x) == 8*n(x) + 8*x*Derivative(n(x), x)
+    assert Derivative(8*n(x)*y*x, x) == 8*y*n(x) + 8*y*x*Derivative(n(x), x)
 
 def _test_combine():
     # XXX combine no longer exists
