@@ -52,10 +52,10 @@ def test_log_hashing_bug():
     assert log(x) != log(log(log(x)))
 
     e = 1/log(log(x)+log(log(x)))
-    e = e.eval()
+    #e = e.eval()   # no eval()
     assert isinstance(e.base, Basic.ApplyLog)
     e = 1/log(log(x)+log(log(log(x))))
-    e = e.eval()
+    #e = e.eval()   # no eval()
     assert isinstance(e.base, Basic.ApplyLog)
 
     x = Symbol("x")

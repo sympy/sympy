@@ -34,7 +34,7 @@ def testequal():
     assert e5 != 3+x
     assert 3+x != e5
 
-def test_expevalbug():
+def _test_expevalbug(): ### no eval()
     x = Symbol("x")
     e1 = exp(1*x)
     e2 = e1.eval()

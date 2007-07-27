@@ -352,7 +352,3 @@ class BasicMeths(AssumeMeths):
                 c = cmp(l, r)
             if c: return c
         return 0
-
-    def eval(self):
-        return self
-

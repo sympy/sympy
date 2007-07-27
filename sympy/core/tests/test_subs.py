@@ -32,11 +32,11 @@ def test_subs():
     e=e.subs(g.sin(x),g.cos(x))
     assert e == 2*g.cos(x)**2
 
-def test_logexppow():
+def test_logexppow():   # no eval()
     x = g.Symbol("x")
     w = g.Symbol("dummy :)")
     e = (3**(1+x)+2**(1+x))/(3**x+2**x)
-    e = e.eval()
+    #e = e.eval()
     assert e.subs(2**x, w) != e
     assert e.subs(g.exp(x*g.log(g.Rational(2))),w) != e
 

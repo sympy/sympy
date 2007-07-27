@@ -7,7 +7,7 @@ def test_add_eval():
 
     e = a+b+a+b
     s1 = str(e)
-    e.eval()
+    #e.eval()       # no eval()
     s2 = str(e)
     assert s1 == s2
 

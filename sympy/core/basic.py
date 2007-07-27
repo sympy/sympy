@@ -138,7 +138,7 @@ class Memoizer:
                     pass
                 cache[new_args, new_kw_items] = cache[args, kw_items] = r
                 return self.return_value_converter(r)
-        return wrapper        
+        return wrapper
 
 #####
 
@@ -209,8 +209,8 @@ class Basic(BasicMeths):
                 # At this point we were given arbitray expression
                 # which does not inherit after Basic. This may be
                 # SAGE's expression (or something alike) so take
-                # its normal form via repr() and try to parse it.
-                a = repr(a)
+                # its normal form via str() and try to parse it.
+                a = str(a)
 
             try:
                 return parser.Expr(a).tosymbolic()
@@ -356,7 +356,7 @@ class Basic(BasicMeths):
           {x_: -a/b}
 
         """
-        
+
         from sympy.core.mul import Mul
 
         # weed out negative one prefixes
@@ -385,13 +385,13 @@ class Basic(BasicMeths):
                dd = pattern[0].matches(Rational(sign), dd, evaluate)
                return dd
             return None
-        
+
         if len(pattern[:])==0:
             if pattern==expr:
                 return repl_dict
             return None
         d = repl_dict.copy()
-        
+
         # weed out identical terms
         pp = list(pattern[:])
         ee = list(expr[:])
@@ -400,14 +400,14 @@ class Basic(BasicMeths):
             if e == p:
               if e in ee: ee.remove(e)
               if p in pp: pp.remove(p)
-        
+
         # only one symbol left in pattern -> match the remaining expression
         from sympy.core.symbol import Wild
         if len(pp) == 1 and isinstance(pp[0], Wild):
           if len(ee) == 1: d[pp[0]] = sign * ee[0]
           else: d[pp[0]] = sign * (type(expr)(*ee))
           return d
-        
+
         if len(ee) != len(pp):
             return None
 
@@ -524,6 +524,21 @@ class Basic(BasicMeths):
     def as_base_exp(self):
         # a -> b ** e
         return self, Basic.One()
+
+    def as_coefficient(self, expr):
+        expr = Basic.sympify(expr)
+
+        if not self.has(expr):
+            return None
+        else:
+            x = Basic.Symbol('x', dummy=True)
+
+            coeff = self.subs(expr, x).diff(x)
+
+            if (coeff*expr).expand() == self:
+                return coeff
+            else:
+                return None
 
     def as_coeff_terms(self, x=None):
         # a -> c * t
@@ -703,7 +718,7 @@ class Basic(BasicMeths):
             del _cache[(self, order)]
             return obj2
         del _cache[(self, order)]
-        raise NotImplementedError('(%s).oseries(%s)' % (self, order))    
+        raise NotImplementedError('(%s).oseries(%s)' % (self, order))
 
     def _eval_oseries(self, order):
         return

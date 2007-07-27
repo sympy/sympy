@@ -83,9 +83,6 @@ class Number(Atom, RelMeths, ArithMeths):
             return obj
         raise TypeError("expected str|int|long|float|Decimal|Number object but got %r" % (obj))
 
-    def eval(self):
-        return self
-
     def _eval_evalf(self):
         r = self._as_decimal()
         return Real(r)
