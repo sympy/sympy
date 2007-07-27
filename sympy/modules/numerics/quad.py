@@ -57,6 +57,7 @@ class TanhSinh(Quadrature):
 
     Simple usage example (integrating 3*x**2 from 2 to 3):
 
+        >>> Float.setdps(15)
         >>> t = TanhSinh()
         >>> print t(lambda x: 3*x**2, 2, 3)
         19.0000000000000
