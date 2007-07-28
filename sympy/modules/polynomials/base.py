@@ -84,33 +84,49 @@ class Polynomial(Basic):
             obj.order = order
         return obj
 
-##     def __getattribute__(self, name):
-##         """Redirect most attributes to the underlying SymPy expression."""
+    def __getattribute__(self, name):
+        """Redirect most attributes to the underlying SymPy expression."""
 
-##         # Check if the attribute belongs to the Polynomial itself:
-##         if name not in ("__add__",
-##                         "__class__",
-##                         "__dict__",
-##                         "__neg__",
-##                         "__pos__",
-##                         "__radd__",
-##                         "__rsub__",
-##                         "__repr__",
-##                         "__sub__"
-##                         "coeffs",
-##                         "order",
-##                         "sympy_expr",
-##                         "var"):
-##             try:
-##                 # This fails when the Polynomial is instantiated.
-##                 se = object.__getattribute__(self, "__dict__")["sympy_expr"]
-##                 # This uses the SymPy expressions' attributes
-##                 return object.__getattribute__(se, name)
-##             except KeyError:
-##                 pass
+        # Check if the attribute belongs to the Polynomial itself:
+        if name not in ("__class__",
+                        "__dict__",
+                        "__new__",
+                        "__getattribute__",
+                        "__str__",
+                        "__repr__",
+                        "__eq__",
+                        "__neq__",
+                        "__pos__",
+                        "__neg__",
+                        "__add__",
+                        "__radd__",
+                        "__sub__",
+                        "__rsub__",
+                        "__mul__",
+                        "__rmul__",
+                        "__call__",
+                        "as_integer",
+                        "as_monic",
+                        "as_primitive",
+                        "content",
+                        "diff",
+                        "leading_coeff",
+                        "leading_term",
+                        "nth_coeff",
+                        "coeffs",
+                        "order",
+                        "sympy_expr",
+                        "var"):
+            try:
+                # This fails when the Polynomial is instantiated.
+                se = object.__getattribute__(self, "__dict__")["sympy_expr"]
+                # This uses the SymPy expressions' attributes
+                return object.__getattribute__(se, name)
+            except KeyError:
+                pass
 
-##         # This uses the Polynomial's attributes
-##         return object.__getattribute__(self, name)
+        # This uses the Polynomial's attributes
+        return object.__getattribute__(self, name)
 
     def __str__(self):
         return str(self.sympy_expr)
