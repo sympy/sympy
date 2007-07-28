@@ -7,6 +7,8 @@ from constants import pi_float
 from functions import exp, log, sqrt, sin
 from utils_ import make_fixed
 
+from sympy import Rational
+
 
 #----------------------------------------------------------------------
 # Gamma function
@@ -79,7 +81,7 @@ def gamma(x):
 
     x must not be a negative integer or 0
     """
-    if not isinstance(x, Float):
+    if not isinstance(x, (Float, Rational)):
         x = Float(x)
     if x < 0.25:
         if x == int(x):
@@ -93,11 +95,21 @@ def gamma(x):
     x -= 1
     prec, a, c = _get_spouge(Float.getprec() + 10)
     # Perform summation in fixed-point mode
-    xf = make_fixed(x, prec)
     s = c[0]
-    for k in xrange(1, a):
-        term = (c[k] << prec) // (xf + (k << prec))
-        s += term
+    # Optimize for rational numbers
+    if isinstance(x, Rational):
+        p = x.p
+        q = x.q
+        for k in xrange(1, a):
+            s += c[k] * q // (p+q*k)
+    else:
+        xf = make_fixed(x, prec)
+        for k in xrange(1, a):
+            s += (c[k] << prec) // (xf + (k << prec))
+    #print "moo", s
+    if isinstance(x, Rational):
+        # XXX: need to count bits to avoid loss of precision
+        x = Float(((x.p<<prec)//x.q, -prec))
     Float._prec += 8
     g = exp(log(x+a)*(x+Float(0.5))) * exp(-(x+a)) * Float((s, -prec))
     Float._prec -= 8
