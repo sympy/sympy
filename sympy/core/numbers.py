@@ -60,7 +60,7 @@ class Number(Atom, RelMeths, ArithMeths):
 
     Floating point numbers are represented by the Real class.
     Integer numbers (of any size), together with rational numbers (again, there
-    is no limit on their size) are represented by the Rational class. 
+    is no limit on their size) are represented by the Rational class.
 
     If you want to represent for example 1+sqrt(2), then you need to do:
 
@@ -673,7 +673,7 @@ class Integer(Rational):
 
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
-        
+
 class Zero(Singleton, Integer):
 
     p = 0
@@ -757,7 +757,7 @@ class Infinity(Singleton, Rational):
     is_bounded = False
     is_finite = None
     is_odd = None
-    
+
     def tostr(self, level=0):
         return 'oo'
 
@@ -793,7 +793,7 @@ class NegativeInfinity(Singleton, Rational):
     is_positive = False
     is_bounded = False
     is_finite = False
-    
+
     precedence = 40 # same as Add
 
     def tostr(self, level=0):
@@ -924,20 +924,77 @@ class Pi(NumberSymbol):
 
     is_real = True
     is_positive = True
-    is_negative = False # XXX Forces is_negative/is_nonnegative
+    is_negative = False
     is_irrational = True
 
+    def _eval_evalf(self):
+        return Real(decimal_math.pi())
+
     def approximation_interval(self, number_cls):
-        if issubclass(number_cls,Integer):
-            return (Integer(3),Integer(4))
-        elif issubclass(number_cls,Rational):
-            pass
+        if issubclass(number_cls, Integer):
+            return (Integer(3), Integer(4))
+        elif issubclass(number_cls, Rational):
+            return (Rational(223,71), Rational(22,7))
 
     def tostr(self, level=0):
         return 'Pi'
 
+class GoldenRatio(NumberSymbol):
+
+    is_real = True
+    is_positive = True
+    is_negative = False
+    is_irrational = True
+
     def _eval_evalf(self):
-        return Real(decimal_math.pi())
+        return Real(decimal_math.golden_ratio())
+
+    def approximation_interval(self, number_cls):
+        if issubclass(number_cls, Integer):
+            return (S.One, Rational(2))
+        elif issubclass(number_cls, Rational):
+            pass
+
+    def tostr(self, level=0):
+        return 'GoldenRatio'
+
+class EulerGamma(NumberSymbol):
+
+    is_real = True
+    is_positive = True
+    is_negative = False
+    is_irrational = None
+
+    def _eval_evalf(self):
+        return
+
+    def approximation_interval(self, number_cls):
+        if issubclass(number_cls, Integer):
+            return (S.Zero, S.One)
+        elif issubclass(number_cls, Rational):
+            return (S.Half, Rational(3, 5))
+
+    def tostr(self, level=0):
+        return 'EulerGamma'
+
+class Catalan(NumberSymbol):
+
+    is_real = True
+    is_positive = True
+    is_negative = False
+    is_irrational = None
+
+    def _eval_evalf(self):
+        return
+
+    def approximation_interval(self, number_cls):
+        if issubclass(number_cls, Integer):
+            return (S.Zero, S.One)
+        elif issubclass(number_cls, Rational):
+            return (Rational(9, 10), S.One)
+
+    def tostr(self, level=0):
+        return 'Catalan'
 
 class ImaginaryUnit(Singleton, Atom, RelMeths, ArithMeths):
 
@@ -990,3 +1047,7 @@ Basic.singleton['Pi'] = Pi
 Basic.singleton['I'] = ImaginaryUnit
 Basic.singleton['oo'] = Infinity
 Basic.singleton['nan'] = NaN
+
+Basic.singleton['GoldenRatio'] = GoldenRatio
+Basic.singleton['EulerGamma'] = EulerGamma
+Basic.singleton['Catalan'] = Catalan

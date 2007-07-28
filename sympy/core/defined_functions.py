@@ -196,7 +196,7 @@ class Log(DefinedFunction):
     """ Log() -> log
     """
     is_comparable = True
-    nofargs = 1
+    #nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -209,8 +209,6 @@ class Log(DefinedFunction):
         return Exp()
 
     def _eval_apply(self, arg, base=None):
-        I = Basic.ImaginaryUnit()
-
         if base is not None:
             base = Basic.sympify(base)
 
@@ -221,19 +219,19 @@ class Log(DefinedFunction):
 
         if isinstance(arg, Basic.Number):
             if isinstance(arg, Basic.Zero):
-                return Basic.NegativeInfinity()
+                return S.NegativeInfinity
             elif isinstance(arg, Basic.One):
-                return Basic.Zero()
+                return S.Zero
             elif isinstance(arg, Basic.Infinity):
-                return Basic.Infinity()
+                return S.Infinity
             elif isinstance(arg, Basic.NegativeInfinity):
-                return Basic.Infinity()
+                return S.Infinity
             elif isinstance(arg, Basic.NaN):
-                return Basic.NaN()
+                return S.NaN
             elif arg.is_negative:
-                return Basic.Pi() * I + self(-arg)
+                return S.Pi * S.ImaginaryUnit + self(-arg)
         elif isinstance(arg, Basic.Exp1):
-            return Basic.One()
+            return S.One
         elif isinstance(arg, ApplyExp) and arg.args[0].is_real:
             return arg.args[0]
         elif isinstance(arg, Basic.Pow):
@@ -243,25 +241,21 @@ class Log(DefinedFunction):
         elif isinstance(arg, Basic.Mul) and arg.is_real:
             return Basic.Add(*[self(a) for a in arg])
         elif not isinstance(arg, Basic.Add):
-            x = Basic.Wild('x')
-
-            coeff = arg.match(x*I)
+            coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if coeff is not None:
-                coeff = coeff[x]
-
                 if isinstance(coeff, Basic.Infinity):
-                    return Basic.Infinity()
+                    return S.Infinity
                 elif isinstance(coeff, Basic.NegativeInfinity):
-                    return Basic.Infinity()
+                    return S.Infinity
                 elif isinstance(coeff, Basic.Rational):
                     if coeff.is_nonnegative:
-                        return Basic.Pi() * I * Basic.Half() + self(coeff)
+                        return S.Pi * S.ImaginaryUnit * S.Half + self(coeff)
                     else:
-                        return -Basic.Pi() * I * Basic.Half() + self(-coeff)
+                        return -S.Pi * S.ImaginaryUnit * S.Half + self(-coeff)
 
     def as_base_exp(self):
-        return Exp(),Basic.Integer(-1)
+        return Exp(), Basic.Integer(-1)
 
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
@@ -719,7 +713,7 @@ class Floor(DefinedFunction):
             elif isinstance(arg, Basic.Rational):
                 return Basic.Integer(arg.p // arg.q)
             elif isinstance(arg, Basic.Real):
-                return arg.floor()
+                return Basic.Integer(int(arg.floor()))
         elif isinstance(arg, Basic.NumberSymbol):
             return arg.approximation_interval(Basic.Integer)[0]
         elif arg.has(Basic.ImaginaryUnit()):
@@ -812,7 +806,7 @@ class Ceiling(DefinedFunction):
             elif isinstance(arg, Basic.Rational):
                 return Basic.Integer(arg.p // arg.q + 1)
             elif isinstance(arg, Basic.Real):
-                return arg.ceiling()
+                return Basic.Integer(int(arg.ceiling()))
         elif isinstance(arg, Basic.NumberSymbol):
             return arg.approximation_interval(Basic.Integer)[1]
         elif arg.has(Basic.ImaginaryUnit()):
@@ -912,6 +906,16 @@ class RisingFactorial(DefinedFunction):
                     else:
                         return 1/reduce(lambda r, i: r*(x-i), xrange(1, abs(int(k))+1), 1)
 
+class ApplyRisingFactorial(Apply):
+
+    def tostr(self, level=0):
+        r = 'rf(%s)' % ', '.join([a.tostr() for a in self.args])
+
+        if self.precedence <= level:
+            return '(%s)' % (r)
+        else:
+            return r
+
 class FallingFactorial(DefinedFunction):
     """Falling factorial (related to rising factorial) is a double valued
        function arising in concrete mathematics, hypergeometric functions
@@ -977,6 +981,16 @@ class FallingFactorial(DefinedFunction):
                     else:
                         return 1/reduce(lambda r, i: r*(x+i), xrange(1, abs(int(k))+1), 1)
 
+class ApplyFallingFactorial(Apply):
+
+    def tostr(self, level=0):
+        r = 'ff(%s)' % ', '.join([a.tostr() for a in self.args])
+
+        if self.precedence <= level:
+            return '(%s)' % (r)
+        else:
+            return r
+
 Basic.singleton['pochhammer'] = RisingFactorial
 
 Basic.singleton['rf'] = RisingFactorial
@@ -985,6 +999,8 @@ Basic.singleton['ff'] = FallingFactorial
 ###############################################################################
 ############## REAL and IMAGINARY PARTS, CONJUNGATION, ARGUMENT ###############
 ###############################################################################
+
+# TBD : re, im, arg
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################

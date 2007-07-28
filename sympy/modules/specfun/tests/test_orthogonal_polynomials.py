@@ -1,6 +1,6 @@
 from sympy import *
 from sympy.core.orthogonal_polynomials import *
-from sympy.modules.specfun.orthogonal_polynomials import Chebyshev3
+from sympy.modules.specfun.orthogonal_polynomials import Chebyshev3, legendre, legendre_zero, chebyshev_zero
 
 x = Symbol('x')
 
