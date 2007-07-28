@@ -1078,7 +1078,7 @@ class ApplySin(Apply):
             y = Basic.Add(*arg[1:])
         else:
             coeff, terms = arg.as_coeff_terms()
-            if not isinstance(coeff, Basic.One) and isinstance(coeff, Basic.Integer):
+            if not isinstance(coeff, Basic.One) and isinstance(coeff, Basic.Integer) and terms:
                 x = Basic.Mul(*terms)
                 y = (coeff-1)*x
         if x is not None:
@@ -1187,7 +1187,7 @@ class ApplyCos(Apply):
             return (cos(x)*cos(y)-sin(y)*sin(x)).expand()
         else:
             coeff, terms = arg.as_coeff_terms()
-            if not isinstance(coeff, Basic.One) and isinstance(coeff, Basic.Integer):
+            if not isinstance(coeff, Basic.One) and isinstance(coeff, Basic.Integer) and terms:
                 x = Basic.Mul(*terms)
                 return Basic.Chebyshev(coeff)(cos(x)).expand()
         return cos(arg)
