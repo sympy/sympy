@@ -165,7 +165,6 @@ class test_sympy_doc(Command):
         files = [ f.replace("\\","/") for f in files ]  # make it work on Windows too
 
         # files without doctests or that don't work
-        files.remove('sympy/core/__init__.py')
         files.remove('sympy/modules/__init__.py')
 
         files.remove('sympy/core/add.py')
@@ -173,16 +172,13 @@ class test_sympy_doc(Command):
         files.remove('sympy/core/interval.py')
 
         files.remove('sympy/modules/concrete/__init__.py')
-        files.remove('sympy/modules/geometry/__init__.py')
         files.remove('sympy/modules/integrals/__init__.py')
         files.remove('sympy/modules/matrices/__init__.py')
         files.remove('sympy/modules/physics/__init__.py')
-        files.remove('sympy/modules/polynomials/__init__.py')
         files.remove('sympy/modules/printing/__init__.py')
         files.remove('sympy/modules/series/__init__.py')
         files.remove('sympy/modules/simplify/__init__.py')
         files.remove('sympy/modules/solvers/__init__.py')
-        files.remove('sympy/modules/specfun/__init__.py')
         files.remove('sympy/modules/utilities/__init__.py')
 
         files.remove('sympy/modules/specfun/zeta_functions.py')
