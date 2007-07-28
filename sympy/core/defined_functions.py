@@ -661,7 +661,7 @@ class Floor(DefinedFunction):
        value not greater than its argument. However this implementaion
        generalizes floor to complex numbers.
 
-       More information you will find in "Concrete mathematics" by Graham,
+       More information can be found in "Concrete mathematics" by Graham,
        pp. 87 or visit http://mathworld.wolfram.com/FloorFunction.html.
 
        >>> from sympy import *
@@ -754,7 +754,7 @@ class Ceiling(DefinedFunction):
        value not less than its argument. Ceiling function is generalized
        in this implementation to complex numbers.
 
-       More information you will find in "Concrete mathematics" by Graham,
+       More information can be found in "Concrete mathematics" by Graham,
        pp. 87 or visit http://mathworld.wolfram.com/CeilingFunction.html.
 
        >>> from sympy import *
