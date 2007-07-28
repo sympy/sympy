@@ -443,6 +443,9 @@ class Abs(DefinedFunction):
             return self(coeff) * self(Basic.Mul(*terms))
         return
 
+####
+##  REMOVE
+
 def Pi_coeff(expr):
     """
     Exctracts the coefficient at pi.
@@ -466,184 +469,7 @@ def Pi_coeff(expr):
     if c * pi == expr:
         return c
 
-class Sin(DefinedFunction):
-
-    nofargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex==1:
-            return Cos()
-        raise TypeError("argindex=%s is out of range [1,1] for %s" % (argindex,self))
-
-    def inverse(self, argindex=1):
-        return ASin()
-
-    def _eval_apply(self, arg):
-        if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
-                return S.NaN
-            if isinstance(arg, Basic.Zero):
-                return arg
-        c = Pi_coeff(arg)
-        if c is not None:
-            if isinstance(c, Basic.Integer):
-                return Basic.Zero()
-            if isinstance(c, Basic.Rational):
-                c2 = 2 * c
-                if isinstance(c2, Basic.Integer):
-                    if (c2//2).is_even:
-                        return Basic.One()
-                    return Basic.NegativeOne()
-        coeff, terms = arg.as_coeff_terms()
-        if coeff.is_negative:
-            return -self(-arg)
-        return
-
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.sin()
-
-    @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
-        if n<0 or not n%2: return Basic.Zero()
-        x = Basic.sympify(x)
-        if len(previous_terms)>2:
-            p = previous_terms[-2]
-            return -p * x**2 / (n*(n-1))
-        return (-1)**(n//2) *x**(n)/Basic.Factorial()(n)
-
-class ApplySin(Apply):
-
-    def _eval_expand(self):
-        arg = self.args[0].expand()
-        cos = Basic.Cos()
-        sin = Basic.Sin()
-        x = None
-        if isinstance(arg, Basic.Add):
-            x = arg[0]
-            y = Basic.Add(*arg[1:])
-        else:
-            coeff, terms = arg.as_coeff_terms()
-            if not isinstance(coeff, Basic.One) and isinstance(coeff, Basic.Integer):
-                x = Basic.Mul(*terms)
-                y = (coeff-1)*x
-        if x is not None:
-            return (sin(x)*cos(y) + sin(y)*cos(x)).expand()
-        return sin(arg)
-
-    def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
-        if Basic.Order(1,x).contains(arg):
-            return arg
-        return self.func(arg)
-
-    def _eval_is_bounded(self):
-        arg = self.args[0]
-        if arg.is_real: return True
-
-class Cos(DefinedFunction):
-
-    nofargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex==1:
-            return -Sin()
-        raise TypeError("argindex=%s is out of range [1,1] for %s" % (argindex,self))
-
-    def inverse(self, argindex=1):
-        return ACos()
-
-    def _eval_apply(self, arg):
-        if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
-                return S.NaN
-            if isinstance(arg, Basic.Zero):
-                return Basic.One()
-        c = Pi_coeff(arg)
-        if c is not None:
-            if isinstance(c, Basic.Integer):
-                if c.is_even:
-                    return Basic.One()
-                return Basic.NegativeOne()
-            if isinstance(c, Basic.Rational):
-                c2 = 2 * c
-                if isinstance(c2, Basic.Integer):
-                    return Basic.Zero()
-        coeff, terms = arg.as_coeff_terms()
-        if coeff.is_negative:
-            return self(-arg)
-        return
-
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.cos()
-
-    @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
-        if n<0 or n%2: return Basic.Zero()
-        x = Basic.sympify(x)
-        if len(previous_terms)>2:
-            p = previous_terms[-2]
-            return -p * x**2 / (n*(n-1))
-        return (-1)**(n//2)*x**(n)/Basic.Factorial()(n)
-
-class ApplyCos(Apply):
-
-    def _eval_expand(self):
-        arg = self.args[0].expand()
-        cos = Basic.Cos()
-        sin = Basic.Sin()
-        x = None
-        if isinstance(arg, Basic.Add):
-            x = arg[0]
-            y = Basic.Add(*arg[1:])
-            return (cos(x)*cos(y)-sin(y)*sin(x)).expand()
-        else:
-            coeff, terms = arg.as_coeff_terms()
-            if not isinstance(coeff, Basic.One) and isinstance(coeff, Basic.Integer):
-                x = Basic.Mul(*terms)
-                return Basic.Chebyshev(coeff)(cos(x)).expand()
-        return cos(arg)
-
-    def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
-        if Basic.Order(1,x).contains(arg):
-            return Basic.One()
-        return self.func(arg)
-
-    def _eval_is_bounded(self):
-        arg = self.args[0]
-        if arg.is_real: return True
-
-class Tan(DefinedFunction):
-
-    nofargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex==1:
-            return 1+self**2
-        raise TypeError("argindex=%s is out of range [1,1] for %s" % (argindex,self))
-
-    def inverse(self, argindex=1):
-        return ATan()
-
-    def _eval_apply(self, arg):
-        if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
-                return S.NaN
-            if isinstance(arg, Basic.Zero):
-                return arg
-        return
-
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.tan()
+####
 
 class Sign(DefinedFunction):
 
@@ -710,9 +536,6 @@ class Min(DefinedFunction):
 Basic.singleton['exp'] = Exp
 Basic.singleton['log'] = Log
 Basic.singleton['ln'] = Log
-Basic.singleton['sin'] = Sin
-Basic.singleton['cos'] = Cos
-Basic.singleton['tan'] = Tan
 Basic.singleton['sqrt'] = Sqrt
 Basic.singleton['abs_'] = Abs
 Basic.singleton['max_'] = Max
@@ -900,9 +723,9 @@ class Floor(DefinedFunction):
         elif isinstance(arg, Basic.NumberSymbol):
             return arg.approximation_interval(Basic.Integer)[0]
         elif arg.has(Basic.ImaginaryUnit()):
-            coeff, terms = arg.as_coeff_terms(Basic.ImaginaryUnit())
+            coeff = arg.as_coefficient(Basic.ImaginaryUnit())
 
-            if terms == [Basic.ImaginaryUnit()]:
+            if coeff is not None:
                 if not coeff.atoms(type=Basic.Symbol):
                     return self(coeff) * Basic.ImaginaryUnit()
                 elif coeff.is_integer:
@@ -993,9 +816,9 @@ class Ceiling(DefinedFunction):
         elif isinstance(arg, Basic.NumberSymbol):
             return arg.approximation_interval(Basic.Integer)[1]
         elif arg.has(Basic.ImaginaryUnit()):
-            coeff, terms = arg.as_coeff_terms(Basic.ImaginaryUnit())
+            coeff = arg.as_coefficient(Basic.ImaginaryUnit())
 
-            if terms == [Basic.ImaginaryUnit()]:
+            if coeff is not None:
                 if not coeff.atoms(type=Basic.Symbol):
                     return self(coeff) * Basic.ImaginaryUnit()
                 elif coeff.is_integer:
@@ -1162,3 +985,582 @@ Basic.singleton['ff'] = FallingFactorial
 ###############################################################################
 ############## REAL and IMAGINARY PARTS, CONJUNGATION, ARGUMENT ###############
 ###############################################################################
+
+###############################################################################
+########################## TRIGONOMETRIC FUNCTIONS ############################
+###############################################################################
+
+class Sin(DefinedFunction):
+
+    nofargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return Cos()
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        return ASin()
+
+    def _eval_apply(self, arg):
+        arg = Basic.sympify(arg)
+
+        if isinstance(arg, Basic.Number):
+            if isinstance(arg, Basic.NaN):
+                return S.NaN
+            elif isinstance(arg, Basic.Zero):
+                return S.Zero
+            elif arg.is_negative:
+                return -self(-arg)
+        else:
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+            if i_coeff is not None:
+                return S.ImaginaryUnit * Sinh()(i_coeff)
+            else:
+                pi_coeff = arg.as_coefficient(S.Pi)
+
+                if pi_coeff is not None:
+                    if pi_coeff.is_integer:
+                        return S.Zero
+                    elif isinstance(pi_coeff, Basic.Rational):
+                        cst_table = {
+                            2 : Basic.One(),
+                            3 : Basic.Half()*Sqrt()(3),
+                            4 : Basic.Half()*Sqrt()(2),
+                            6 : Basic.Half()
+                        }
+
+                        try:
+                            result = cst_table[pi_coeff.q]
+
+                            if (pi_coeff.p // pi_coeff.q) % 2 == 1:
+                                return -result
+                            else:
+                                return result
+                        except KeyError:
+                            pass
+
+                coeff, terms = arg.as_coeff_terms()
+
+                if coeff.is_negative:
+                    return -self(-arg)
+
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            return arg.sin()
+
+    @cache_it_immutable
+    def taylor_term(self, n, x, *previous_terms):
+        if n < 0 or n % 2 == 0:
+            return Basic.Zero()
+        else:
+            x = Basic.sympify(x)
+
+            if len(previous_terms) > 2:
+                p = previous_terms[-2]
+                return -p * x**2 / (n*(n-1))
+            else:
+                return (-1)**(n//2) * x**(n)/Basic.Factorial()(n)
+
+class ApplySin(Apply):
+
+    def _eval_expand(self):
+        arg = self.args[0].expand()
+        cos = Basic.Cos()
+        sin = Basic.Sin()
+        x = None
+        if isinstance(arg, Basic.Add):
+            x = arg[0]
+            y = Basic.Add(*arg[1:])
+        else:
+            coeff, terms = arg.as_coeff_terms()
+            if not isinstance(coeff, Basic.One) and isinstance(coeff, Basic.Integer):
+                x = Basic.Mul(*terms)
+                y = (coeff-1)*x
+        if x is not None:
+            return (sin(x)*cos(y) + sin(y)*cos(x)).expand()
+        return sin(arg)
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if Basic.Order(1,x).contains(arg):
+            return arg
+        else:
+            return self.func(arg)
+
+    def _eval_is_bounded(self):
+        arg = self.args[0]
+
+        if arg.is_real:
+            return True
+
+class Cos(DefinedFunction):
+
+    nofargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -Sin()
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        return ACos()
+
+    def _eval_apply(self, arg):
+        arg = Basic.sympify(arg)
+
+        if isinstance(arg, Basic.Number):
+            if isinstance(arg, Basic.NaN):
+                return S.NaN
+            elif isinstance(arg, Basic.Zero):
+                return S.One
+            elif arg.is_negative:
+                return self(-arg)
+        else:
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+            if i_coeff is not None:
+                return Cosh()(i_coeff)
+            else:
+                pi_coeff = arg.as_coefficient(S.Pi)
+
+                if pi_coeff is not None:
+                    if isinstance(pi_coeff, Basic.Rational):
+                        cst_table = {
+                            1 : Basic.One(),
+                            2 : Basic.Zero(),
+                            3 : Basic.Half(),
+                            4 : Basic.Half()*Sqrt()(2),
+                            6 : Basic.Half()*Sqrt()(3)
+                        }
+
+                        try:
+                            result = cst_table[pi_coeff.q]
+
+                            if (2*pi_coeff.p // pi_coeff.q) % 4 in (1, 2):
+                                return -result
+                            else:
+                                return result
+                        except KeyError:
+                            pass
+
+                coeff, terms = arg.as_coeff_terms()
+
+                if coeff.is_negative:
+                    return self(-arg)
+
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            return arg.cos()
+
+    @cache_it_immutable
+    def taylor_term(self, n, x, *previous_terms):
+        if n < 0 or n % 2 == 1:
+            return Basic.Zero()
+        else:
+            x = Basic.sympify(x)
+
+            if len(previous_terms) > 2:
+                p = previous_terms[-2]
+                return -p * x**2 / (n*(n-1))
+            else:
+                return (-1)**(n//2)*x**(n)/Basic.Factorial()(n)
+
+class ApplyCos(Apply):
+
+    def _eval_expand(self):
+        arg = self.args[0].expand()
+        cos = Basic.Cos()
+        sin = Basic.Sin()
+        x = None
+        if isinstance(arg, Basic.Add):
+            x = arg[0]
+            y = Basic.Add(*arg[1:])
+            return (cos(x)*cos(y)-sin(y)*sin(x)).expand()
+        else:
+            coeff, terms = arg.as_coeff_terms()
+            if not isinstance(coeff, Basic.One) and isinstance(coeff, Basic.Integer):
+                x = Basic.Mul(*terms)
+                return Basic.Chebyshev(coeff)(cos(x)).expand()
+        return cos(arg)
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if Basic.Order(1,x).contains(arg):
+            return Basic.One()
+        else:
+            return self.func(arg)
+
+    def _eval_is_bounded(self):
+        arg = self.args[0]
+
+        if arg.is_real:
+            return True
+
+class Tan(DefinedFunction):
+
+    nofargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex==1:
+            return 1/Cos()**2
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        return ATan()
+
+    def _eval_apply(self, arg):
+
+        if isinstance(arg, Basic.Number):
+            if isinstance(arg, Basic.NaN):
+                return S.NaN
+            if isinstance(arg, Basic.Zero):
+                return arg
+
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            return arg.tan()
+
+class ApplyTan(Apply):
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if Basic.Order(1,x).contains(arg):
+            return Basic.One()
+        else:
+            return self.func(arg)
+
+class Cot(DefinedFunction):
+
+    nofargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -1/Sin()**2
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        return ACot()
+
+    def _eval_apply(self, arg):
+
+        if isinstance(arg, Basic.Number):
+            if isinstance(arg, Basic.NaN):
+                return S.NaN
+            if isinstance(arg, Basic.Zero):
+                return arg
+
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            return arg.cot()
+
+class ApplyCot(Apply):
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if Basic.Order(1,x).contains(arg):
+            return Basic.One()
+        else:
+            return self.func(arg)
+
+Basic.singleton['sin'] = Sin
+Basic.singleton['cos'] = Cos
+Basic.singleton['tan'] = Tan
+Basic.singleton['cot'] = Cot
+
+###############################################################################
+########################### HYPERBOLIC FUNCTIONS ##############################
+###############################################################################
+
+class Sinh(DefinedFunction):
+
+    nofargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return Cosh()
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        return ASinh()
+
+    def _eval_apply(self, arg):
+        arg = Basic.sympify(arg)
+
+        if isinstance(arg, Basic.Number):
+            if isinstance(arg, Basic.NaN):
+                return S.NaN
+            elif isinstance(arg, Basic.Infinity):
+                return S.Infinity
+            elif isinstance(arg, Basic.NegativeInfinity):
+                return S.NegativeInfinity
+            elif isinstance(arg, Basic.Zero):
+                return S.Zero
+            elif arg.is_negative:
+                return -self(-arg)
+        else:
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+            if i_coeff is not None:
+                pi_coeff = i_coeff.as_coefficient(S.Pi)
+
+                if pi_coeff is not None:
+                    if pi_coeff.is_integer:
+                        return S.Zero
+                    elif isinstance(pi_coeff, Basic.Rational):
+                        cst_table = {
+                            2 : Basic.One(),
+                            3 : Basic.Half()*Sqrt()(3),
+                            4 : Basic.Half()*Sqrt()(2),
+                            6 : Basic.Half()
+                        }
+
+                        try:
+                            result = cst_table[pi_coeff.q] * S.ImaginaryUnit
+
+                            if (pi_coeff.p // pi_coeff.q) % 2 == 1:
+                                return -result
+                            else:
+                                return result
+                        except KeyError:
+                            pass
+
+                return S.ImaginaryUnit * Sin()(i_coeff)
+            else:
+                coeff, terms = arg.as_coeff_terms()
+
+                if coeff.is_negative:
+                    return -self(-arg)
+
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            return arg.sinh()
+
+    @cache_it_immutable
+    def taylor_term(self, n, x, *previous_terms):
+        if n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = Basic.sympify(x)
+
+            if len(previous_terms) > 2:
+                p = previous_terms[-2]
+                return p * x**2 / (n*(n-1))
+            else:
+                return x**(n) / Basic.Factorial()(n)
+
+class ApplySinh(Apply):
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if Basic.Order(1,x).contains(arg):
+            return Basic.One()
+        else:
+            return self.func(arg)
+
+class Cosh(DefinedFunction):
+
+    nofargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return Sinh()
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        return ACosh()
+
+    def _eval_apply(self, arg):
+        arg = Basic.sympify(arg)
+
+        if isinstance(arg, Basic.Number):
+            if isinstance(arg, Basic.NaN):
+                return S.NaN
+            elif isinstance(arg, Basic.Infinity):
+                return S.Infinity
+            elif isinstance(arg, Basic.NegativeInfinity):
+                return S.Infinity
+            elif isinstance(arg, Basic.Zero):
+                return S.One
+            elif arg.is_negative:
+                return self(-arg)
+        else:
+            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+
+            if i_coeff is not None:
+                pi_coeff = i_coeff.as_coefficient(S.Pi)
+
+                if pi_coeff is not None:
+                    if isinstance(pi_coeff, Basic.Rational):
+                        cst_table = {
+                            1 : Basic.One(),
+                            2 : Basic.Zero(),
+                            3 : Basic.Half(),
+                            4 : Basic.Half()*Sqrt()(2),
+                            6 : Basic.Half()*Sqrt()(3)
+                        }
+
+                        try:
+                            result = cst_table[pi_coeff.q]
+
+                            if (2*pi_coeff.p // pi_coeff.q) % 4 in (1, 2):
+                                return -result
+                            else:
+                                return result
+                        except KeyError:
+                            pass
+
+                return Cos()(i_coeff)
+            else:
+                coeff, terms = arg.as_coeff_terms()
+
+                if coeff.is_negative:
+                    return self(-arg)
+
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            return arg.cosh()
+
+    @cache_it_immutable
+    def taylor_term(self, n, x, *previous_terms):
+        if n < 0 or n % 2 == 1:
+            return Basic.Zero()
+        else:
+            x = Basic.sympify(x)
+
+            if len(previous_terms) > 2:
+                p = previous_terms[-2]
+                return p * x**2 / (n*(n-1))
+            else:
+                return x**(n)/Basic.Factorial()(n)
+
+class ApplyCosh(Apply):
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if Basic.Order(1,x).contains(arg):
+            return Basic.One()
+        else:
+            return self.func(arg)
+
+class Tanh(DefinedFunction):
+
+    nofargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return 1/Cosh()**2
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        return ATanh()
+
+    def _eval_apply(self, arg):
+
+        if isinstance(arg, Basic.Number):
+            if isinstance(arg, Basic.NaN):
+                return S.NaN
+            if isinstance(arg, Basic.Zero):
+                return arg
+
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            return arg.tanh()
+
+class ApplyTanh(Apply):
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if Basic.Order(1,x).contains(arg):
+            return Basic.One()
+        else:
+            return self.func(arg)
+
+class Coth(DefinedFunction):
+
+    nofargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return 1/Sinh()**2
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        return ACoth()
+
+    def _eval_apply(self, arg):
+
+        if isinstance(arg, Basic.Number):
+            if isinstance(arg, Basic.NaN):
+                return S.NaN
+            if isinstance(arg, Basic.Zero):
+                return arg
+
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            return arg.coth()
+
+class ApplyCoth(Apply):
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if Basic.Order(1,x).contains(arg):
+            return Basic.One()
+        else:
+            return self.func(arg)
+
+Basic.singleton['sinh'] = Sinh
+Basic.singleton['cosh'] = Cosh
+Basic.singleton['tanh'] = Tanh
+Basic.singleton['coth'] = Coth
+
+###############################################################################
+########################### TRIGONOMETRIC INVERSES ############################
+###############################################################################
+
+#Basic.singleton['asin'] = ASin
+#Basic.singleton['acos'] = ACos
+#Basic.singleton['atan'] = ATan
+#Basic.singleton['acot'] = ACot
+
+###############################################################################
+############################# HYPERBOLIC INVERSES #############################
+###############################################################################
+
+#Basic.singleton['asinh'] = ASinh
+#Basic.singleton['acosh'] = ACosh
+#Basic.singleton['atanh'] = ATanh
+#Basic.singleton['acoth'] = ACoth

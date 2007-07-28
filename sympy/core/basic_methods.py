@@ -18,16 +18,26 @@ ordering_of_classes = [
     # arithmetic operations
     'Pow', 'Mul', 'Add',
     # function values
-    'Apply','ApplyExp','ApplyLog','ApplySin','ApplyCos','ApplySqrt','ApplyAbs','ApplySign',
+    'Apply',
+    'ApplyExp','ApplyLog',
+    'ApplySin','ApplyCos','ApplyTan','ApplyCot',
+    'ApplyASin','ApplyACos','ApplyATan','ApplyACot',
+    'ApplySinh','ApplyCosh','ApplyTanh','ApplyCoth',
+    'ApplyASinh','ApplyACosh','ApplyATanh','ApplyACoth',
+    'ApplyRisingFactorial','ApplyFallingFactorial',
+    'ApplyFloor', 'ApplyCeiling',
+    'ApplySqrt','ApplyAbs','ApplySign',
     'ApplyConjugate',
     'ApplyMrvLog',
-    'ApplyChebyshev',    'ApplyChebyshev2',
+    'ApplyChebyshev','ApplyChebyshev2',
     'Derivative','Integral',
     # defined singleton functions
+    'Floor', 'Ceiling',
     'Abs','Sign','Sqrt','Exp','Log','MrvLog',
     'Conjugate',
     'Sin','Cos','Tan','Cot','ASin','ACos','ATan','ACot',
     'Sinh','Cosh','Tanh','Coth','ASinh','ACosh','ATanh','ACoth',
+    'RisingFactorial','FallingFactorial',
     # special polynomials
     'Chebyshev','Chebyshev2',
     # undefined functions
@@ -41,7 +51,7 @@ ordering_of_classes = [
     # Landau O symbol
     'Order',
     # relational operations
-    'Equality', 'Unequality', 'StrictInequality', 'Inequality', 
+    'Equality', 'Unequality', 'StrictInequality', 'Inequality',
     ]
 
 #
@@ -176,7 +186,7 @@ class MetaBasicMeths(type):
         else:
             print 'Ignoring redefinition of %s: %s defined earlier than %s' % (n, c, cls)
         type.__init__(cls, *args, **kws)
-        
+
         # initialize default_assumptions dictionary
         default_assumptions = {}
         for k in dir(cls):
@@ -187,7 +197,7 @@ class MetaBasicMeths(type):
             if isinstance(v,(bool,int,long)):
                 default_assumptions[k] = bool(v)
         cls.default_assumptions = default_assumptions
-        
+
     def __getattr__(cls, name):
         try: return MetaBasicMeths.classnamespace[name]
         except KeyError: pass
@@ -223,7 +233,7 @@ class BasicMeths(AssumeMeths):
     Apply_precedence = 70
     Item_precedence = 75
     Atom_precedence = 1000
-    
+
     def __getattr__(self, name):
         if name.startswith('is_'):
             # default implementation for assumptions
@@ -294,7 +304,7 @@ class BasicMeths(AssumeMeths):
             except AttributeError:
                 l.append(repr(o))
         return self.__class__.__name__ + '(' + ', '.join(l) + ')'
-    
+
     def __str__(self):
         return self.tostr()
 
