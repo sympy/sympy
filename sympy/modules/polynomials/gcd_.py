@@ -9,11 +9,9 @@ def uv(f, g):
     """
     from sympy.modules.polynomials import div_
 
-    f = f.copy()
-    g = g.copy()
     while True:
-        if g.cl[0][0] != 0:
-            g.cl = map(lambda t: [t[0]/g.cl[0][0]] + t[1:], g.cl)
+        if g.sympy_expr is not S.Zero:
+            lc, g = g.as_monic()
             f, g = g, div_.mv(f, g)[-1]
         else:
             break
@@ -24,22 +22,17 @@ def uv_int(f, g):
     """
     from sympy.modules.polynomials import div_
 
-    assert f.coeff == 'int' and g.coeff == 'int'
-    f = f.copy()
-    cf = f.content()
-    f.cl = map(lambda t:[t[0]/cf] + t[1:], f.cl)
-    g = g.copy()
-    cg = g.content()
-    g.cl = map(lambda t:[t[0]/cg] + t[1:], g.cl)
-    c = numbers.gcd(cf.p, cg.p)
+    cf, f = f.as_primitive()
+    cg, g = g.as_primitive()
+    c = Integer(numbers.gcd(int(cf.p), int(cg.p)))
 
     while True:
-        if g.cl[0][0] != 0:
+        if g.sympy_expr is not S.Zero:
             f, g = g, div_.mv(f, g)[-1]
         else:
             break
-    f.cl = map(lambda t:[t[0]*c] + t[1:], f.cl)
-    return f
+    return Polynomial(coeffs=tuple(map(lambda t:(t[0]*c) + t[1:], f.coeffs)),
+                      var=f.var, order=f.order)
     
 def mv(f, g):
     """Computes the gcd of 2 polynomials by dividing their product by their lcm.
@@ -52,7 +45,6 @@ def mv(f, g):
 
     lcm = lcm_.mv(f, g)
     q, r = div_.mv(f*g, lcm)
-    assert r == S.Zero
+    assert r.sympy_expr is S.Zero
     q = q[0] # q is a list!
-    q.cl = map(lambda t:[t[0]/q.cl[0][0]] + t[1:], q.cl)
-    return q
+    return q.as_monic()[1]

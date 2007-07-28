@@ -12,7 +12,7 @@ def uv(f):
 
     """
     f = [f]
-    while f[-1].cl[0][1] != 0:
+    while f[-1].coeffs[0][1] is not S.Zero:
         f.append(gcd_.uv(f[-1], f[-1].diff(f[-1].var[0])))
     g = []
     for i in range(1, len(f)):
@@ -28,23 +28,26 @@ def uv_int(f):
 
     Here, the ai are pairwise prime and square-free polynomials, returned
     in a list. f is assumed to be a univariate instance of Polynomial.
-    The numeric factor is re-distributed to keep integer coefficients.
+    The numeric factor is re-distributed to keep integer coeffs.
     """
-    assert f.coeff == 'int'
     a = uv(f)
 
     ca = int(a[0].content())
     c = ca
     for i,p in enumerate(a[1:]):
-        # Compute lcm of denominators in coefficients:
+        # Compute lcm of denominators in coeffs:
         l = 1
-        for term in p.cl:
+        for term in p.coeffs:
             l = l*term[0].q / numbers.gcd(l ,term[0].q)
         assert c % (l**(i+2)) == 0
         c /= l**(i+2)
-        p.cl = map(lambda t:[t[0]*Rational(l)] + t[1:], p.cl)
+        p = Polynomial(coeffs=tuple(map(lambda t:(t[0]*Rational(l),) + t[1:],
+                                        p.coeffs)),
+                       var=p.var, order=p.order)
     ca /= c
-    a[0].cl = map(lambda t:[t[0]*Rational(1,ca)] + t[1:], a[0].cl)
+    a[0] = Polynomial(coeffs=tuple(map(lambda t:(t[0]*Rational(1,ca),) + t[1:],
+                                       a[0].coeffs)),
+                      var=a[0].var, order=a[0].order)
     return a
 
 def uv_part(f):

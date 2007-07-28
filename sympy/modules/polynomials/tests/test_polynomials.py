@@ -5,7 +5,7 @@ sys.path.append(".")
 import py
 
 from sympy import *
-from sympy.modules.polynomials import *
+#from sympy.modules.polynomials import *
 
 ## sympy/modules/polynomials/base.py
 
@@ -17,63 +17,78 @@ def test_Polynomial():
     g = Polynomial(y**2-1)
     h = f + g
     assert f.var == [x]
-    assert f.cl == [[1,1], [2,0]]
+    assert f.coeffs == ((1, 1), (2, 0))
     assert str(f) == "2 + x"
-    assert repr(f) == "Polynomial(2 + x, [x], 'grevlex', 'sym')"
-    assert f.basic == 2 + x
-    assert f == Polynomial(f.cl, f.var, f.var)
+    assert repr(f) == "Polynomial(2 + x, ((1, 1), (2, 0)), [x], 'grevlex')"
+    assert f == 2 + x
+    assert f == Polynomial(None, f.coeffs, f.var, f.order)
     assert f.nth_coeff(0) == 2
     assert f.nth_coeff(2) == 0
     assert h.var == [x, y]
-    assert h.cl == [[1, 0, 2], [1, 1, 0], [1, 0, 0]]
-    h = f*Polynomial(y,[x])
+    assert h.coeffs == ((1, 0, 2), (1, 1, 0), (1, 0, 0))
+    h = f*Polynomial(y, var=x)
     assert h.var == [x]
-    assert h.cl == [[y, 1], [2*y, 0]]
+    assert h.coeffs == ((y, 1), (2*y, 0))
     h = f*y
-    assert h.var == [x, y]
-    assert h.cl == [[1, 1, 1], [2, 0, 1]]
-    h.var=[y]
+    assert h == (x + 2)*y
+    assert not isinstance(h, Polynomial)
+    h = Polynomial(h, var=y)
     assert h.var == [y]
-    assert h.cl == [[2+x, 1]]
-    assert Polynomial(Rational(1),[x]).diff(x) \
-           == Polynomial(Rational(0), [x])
+    assert h.coeffs == ((2+x, 1),)
+    assert Polynomial(1, var=x).diff(x) == Polynomial(0, var=x)
     assert Polynomial(x**3*y).diff(x) == Polynomial(3*x**2*y)
-    assert Polynomial([[1,1]], [x], 'lex').diff(x) == Polynomial(Rational(1), [x])
+    assert Polynomial(coeffs=((Integer(1), Integer(1)),), var=x).diff(x) \
+           == Polynomial(1, var=x)
     assert Polynomial(x**2 + y**2)(3,-4) == 25
     assert Polynomial(y*x)(-z, z) == -z**2
 
     #TODO better test that differs between all orders ?
     from sympy import sin
-    assert Polynomial(1).cl == [[1]]
-    assert Polynomial(x).cl == [[1,1]]
-    assert Polynomial(x**2+y**3, order='lex').cl == [[1,2,0], [1,0,3]]
-    assert Polynomial(x**2+y**3, [y,x]).cl == [[1,3,0], [1,0,2]]
-    assert Polynomial(x*y).cl == [[1,1,1]]
-    assert Polynomial(x**2*y**4 + sin(z)*x**3 + x*y**5, [x,y], order='lex').cl \
-           == [[sin(z), 3, 0], [1, 2, 4], [1, 1, 5]]
+    assert Polynomial(1).coeffs == ((1,),)
+    assert Polynomial(x).coeffs == ((1, 1),)
+    assert Polynomial(x**2+y**3, order='lex').coeffs \
+                   == ((1, 2, 0), (1, 0, 3))
+    assert Polynomial(x**2+y**3, var=[y, x]).coeffs == ((1,3,0), (1,0,2))
+    assert Polynomial(x*y).coeffs == ((1, 1, 1),)
     assert Polynomial(x**2*y**4 + sin(z)*x**3 + x*y**5,
-                      [x,y], order='grlex').cl \
-           == [[1, 2, 4], [1, 1, 5], [sin(z), 3, 0]]
+                      var=[x, y], order='lex').coeffs \
+           == ((sin(z), 3, 0), (1, 2, 4), (1, 1, 5))
+    assert Polynomial(x**2*y**4 + sin(z)*x**3 + x*y**5,
+                      var=[x, y], order='grlex').coeffs \
+           == ((1, 2, 4), (1, 1, 5), (sin(z), 3, 0))
     assert Polynomial(x**2*y**4 + sin(z)*x**3 + x**5*y,
-                      [x,y], order='grevlex').cl \
-               == [[1, 5, 1], [1, 2, 4], [sin(z), 3, 0]]
-    assert Polynomial(z*x + x**2*y**2 + x**3*y, [z,x,y], order='1-el').cl \
-           == [[1,1,1,0], [1,0,3,1], [1,0,2,2]]
+                      var=[x, y], order='grevlex').coeffs \
+               == ((1, 5, 1), (1, 2, 4), (sin(z), 3, 0))
+    assert Polynomial(z*x + x**2*y**2 + x**3*y,
+                      var=[z, x, y], order='1-el').coeffs \
+           == ((1, 1, 1, 0), (1, 0, 3, 1), (1, 0, 2, 2))
 
-    py.test.raises(PolynomialException, "Polynomial(sqrt(x),x).cl")
-    py.test.raises(PolynomialException, "Polynomial(sin(x),x).cl")
+    py.test.raises(PolynomialException, "Polynomial(sqrt(x),var=x)")
+    py.test.raises(PolynomialException, "Polynomial(sin(x),var=x)")
 
-    assert 3*x**2 == Polynomial([[3, 2]], [x]).basic
-    assert 2*x + 3*x**2 - 5 == Polynomial(
-        [[-5, 0], [2, 1], [3, 2]], [x]).basic
+    assert 3*x**2 == Polynomial(coeffs=((Integer(3), Integer(2)),),
+                                var=x).sympy_expr
+    assert 2*x + 3*x**2 - 5 \
+           == Polynomial(coeffs=((Integer(-5), Integer(0)),
+                                 (Integer(2), Integer(1)),
+                                 (Integer(3), Integer(2))),
+                         var=[x]).sympy_expr
     assert 2*x**100 + 3*x**2 - 5 \
-           == Polynomial([[-5, 0], [3, 2], [2, 100]], [x]).basic
-    assert 2*x**100 + 3*x**2 - 6 \
-           != Polynomial([[-5, 0], [3, 2], [2, 100]], [x]).basic
+           == Polynomial(coeffs=((Integer(-5), Integer(0)),
+                                 (Integer(3), Integer(2)),
+                                 (Integer(2), Integer(100))),
+                         var=[x]).sympy_expr
 
-    assert sqrt(y)*x == Polynomial([[sqrt(y), 1]], [x]).basic
-    assert x**2 + 3*x*sqrt(y) - 8 == Polynomial(
-           [[-8, 0], [3*sqrt(y), 1], [1, 2]], [x]).basic
+    assert sqrt(y)*x == Polynomial(coeffs=((sqrt(y), Integer(1)),),
+                                   var=[x]).sympy_expr
+    p = Polynomial(x/3 + 12*y + x**2/8)
+    assert p.as_integer() == (24, Polynomial(3*x**2 + 8*x + 288*y))
+    assert p.as_monic() == (Rational(1,8), Polynomial(x**2 + 96*y + 8*x/3))
+    assert p.as_primitive() == (0, p)
+    p = Polynomial(100*x + 12*y + 8*x**2)
+    assert p.as_primitive() == (4, Polynomial(2*x**2 + 3*y + 25*x))
+    assert p.leading_coeff() == Rational(8)
+    assert p.leading_term() == Polynomial(8*x**2)
 
 ## sympy/modules/polynomials/common.py
 
@@ -89,16 +104,6 @@ def test_coeff_ring():
 
 ## sympy/modules/polynomials/wrapper.py
 
-def test_coeff():
-    x = Symbol("x")
-    assert coeff(x**2, x, 1) == 0
-    assert coeff(x**2, x, 2) == 1
-    assert coeff(x**2, x, 2) != 0
-
-    assert coeff(2*x+18*x**8, x, 1) == 2
-    assert coeff(2*x+18*x**8, x, 4) == 0
-    assert coeff(2*x+18*x**8, x, 8) == 18
-
 def test_div():
     x = Symbol("x")
     y = Symbol('y')
@@ -112,14 +117,14 @@ def test_div():
     assert div(3*x**3, x**2, x) == (3*x, 0)
 
     assert div(1,1) == (1, 0)
-    assert div(1,x,[x]) == (0, 1)
-    assert div(x*y+2*x+y,x,[x]) == (2+y, y)
-    assert div(x*y+2*x+y,x,[y]) == (2+(1+1/x)*y, 0)
+    assert div(1,x,x) == (0, 1)
+    assert div(x*y+2*x+y,x,x) == (2+y, y)
+    assert div(x*y+2*x+y,x,y) == (2+(1+1/x)*y, 0)
 
     assert div(x*y**2 + 1, [x*y+1, y+1], [x,y]) == ([y, -1], 2)
-    assert div(x**2*y+x*y**2+y**2, [x*y-1, y**2-1], [x,y]) \
+    assert div(x**2*y+x*y**2+y**2, [x*y-1, y**2-1], [x, y]) \
            == ([x+y, 1], 1+x+y)
-    assert div(x**2*y+x*y**2+y**2, [y**2-1, x*y-1], [x,y]) \
+    assert div(x**2*y+x*y**2+y**2, [y**2-1, x*y-1], [x, y]) \
            == ([1+x, x], 1+2*x)
 
 def test_factor():
@@ -165,9 +170,9 @@ def test_groebner():
     y = Symbol('y')
     z = Symbol('z')
 
-    assert groebner(y*x, [x]) == [x]
-    assert groebner(y*x, [x], reduced=False) == [x*y]
-    assert groebner(x*y, [z]) == [1]
+    assert groebner(y*x, x) == [x]
+    assert groebner(y*x, x, reduced=False) == [x*y]
+    assert groebner(x*y, z) == [1]
     
     # This one already is a Groebner base.
     assert groebner([y-x**2, z-x**3], [y,z,x], 'lex', reduced=False) \
@@ -187,7 +192,7 @@ def test_lcm():
     assert lcm(6, 4, coeff='rat') == Rational(1)
     assert lcm(4, y) == 4*y
     assert lcm(x, y) == x*y
-    assert lcm(y*(x+1), x, [x]) ==x+x**2
+    assert lcm(y*(x+1), x, x) ==x+x**2
     assert lcm(2*x, x**2) == 2*x**2 
 
 def test_real_roots():
@@ -274,7 +279,7 @@ def test_roots():
     assert roots(x**3) == [0]
     assert roots(x**3-x) == [0,-1,1]
     assert roots(Rational(2),x) == []
-    assert roots(a*x**2 + b*x + c, var=[x], coeff='sym') == \
+    assert roots(a*x**2 + b*x + c, var=[x]) == \
            [-b/(a*2)+(((b/a)**2-4*c/a)**Rational(1,2))/2,
             -b/(a*2)-(((b/a)**2-4*c/a)**Rational(1,2))/2]
     assert roots(x**3 + x**2 + x + 1) == [-1, -I, I]
@@ -289,9 +294,6 @@ def test_roots():
             Rational(1,2)**Rational(1,5)*3**Rational(1,5)*exp(4*Pi*I/5),
             Rational(1,2)**Rational(1,5)*3**Rational(1,5)*exp(6*Pi*I/5),
             Rational(1,2)**Rational(1,5)*3**Rational(1,5)*exp(8*Pi*I/5)]
-    assert roots(x**5 - Rational(3,2), coeff='real') == \
-           [Rational(3,2)**Rational(1,5)]
-    assert roots(x**5 - Rational(3,2), coeff='int') == []
 
 def test_solve_system():
     x = Symbol("x")
@@ -305,7 +307,6 @@ def test_solve_system():
     assert solve_system([y - x**2, y + x**2 + 1]) == \
            [[-I*2**Rational(1,2)/2, Rational(-1,2)],
             [I*2**Rational(1,2)/2, Rational(-1,2)]]
-    assert solve_system([y - x**2, y + x**2 + 1], coeff='real') == []
            
 def test_sqf():
     x = Symbol("x")
@@ -346,12 +347,12 @@ def test_sturm():
     from sympy.modules.polynomials import roots_
     x = Symbol('x')
 
-    f = Polynomial(Rational(5), x)
+    f = Polynomial(Rational(5), var=x)
     assert roots_.sturm(f) == [f]
     f = Polynomial(2*x)
-    assert roots_.sturm(f) == [f, Polynomial(2, x)]
+    assert roots_.sturm(f) == [f, Polynomial(2, var=x)]
     f = Polynomial(x**3 - 2*x**2 + 3*x -5)
     assert roots_.sturm(f) == \
            [Polynomial(-5-2*x**2+x**3+3*x), Polynomial(3+3*x**2-4*x),
             Polynomial(Rational(13,3)-Rational(10,9)*x),
-            Polynomial(Rational(-3303,100), [x])]
+            Polynomial(Rational(-3303,100), var=x)]

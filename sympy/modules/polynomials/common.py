@@ -8,22 +8,21 @@ from sympy.modules.utilities import *
 
 from sympy.modules.polynomials.base import PolynomialException, coeff_rings
 
-def reverse(lisp):
-    """Return a list with reversed order"""
-    lisp.reverse()
-    return lisp
+def reverse(t):
+    """Return a tuple with reversed order"""
+    return tuple([t[i] for i in range(len(t)-1, 0, -1)])
 
 def term_cmp(a, b, order):
     if order == 'lex':
         return cmp(a[1:], b[1:])
     elif order == 'grlex':
-        return cmp([sum(a[1:])]+a[1:], [sum(b[1:])]+b[1:])
+        return cmp((sum(a[1:]),) + a[1:], (sum(b[1:]),) + b[1:])
     elif order == 'grevlex':
-        return cmp([sum(a[1:])]+reverse(map(lambda l:-l, a[1:])),
-                   [sum(b[1:])]+reverse(map(lambda l:-l, b[1:])))
+        return cmp((sum(a[1:]),) + reverse(map(lambda l:-l, a[1:])),
+                   (sum(b[1:]),) + reverse(map(lambda l:-l, b[1:])))
     elif order == '1-el':
-        return cmp([a[1]]+[sum(a[2:])]+reverse(map(lambda l:-l,a[2:])),
-                   [b[1]]+[sum(b[2:])]+reverse(map(lambda l:-l,b[2:])))
+        return cmp((a[1], sum(a[2:])) + reverse(map(lambda l:-l,a[2:])),
+                   (b[1], sum(b[2:])) + reverse(map(lambda l:-l,b[2:])))
     else:
         raise PolynomialException(str(order) + 'is not an implemented order.')
 
@@ -33,7 +32,8 @@ def term_mult(a, b):
     a and b are assumed to be terms of coefficient lists of
     Polynomials of same the variables.
     """
-    return [(a[0]*b[0]).expand()] + map(lambda (x,y): x+y, zip(a[1:], b[1:]))
+    return ((a[0]*b[0]).expand(),) \
+           + tuple(map(lambda (x,y): x+y, zip(a[1:], b[1:])))
 
 def term_div(a, b):
     """Returns a term that represents the division of a by b.
@@ -41,22 +41,20 @@ def term_div(a, b):
     a and b are assumed to be terms of coefficient lists of
     Polynomials of same the variables. Divisibility is not tested.
     """
-    # TODO: Check if expand is necessary?
-    return [(a[0]/b[0]).expand()] + map(lambda (x,y): x-y, zip(a[1:], b[1:]))
+    return ((a[0]/b[0]).expand(),) \
+           + tuple(map(lambda (x,y): x-y, zip(a[1:], b[1:])))
 
 def term_is_mult(a, b):
     """Return True if a is a multiple of b
 
     a and b are assumed to be terms of coefficient lists of
     Polynomials of same the variables."""
-    return all([x >= 0 for x in term_div(a, b)[1:]])
+    return all([x.is_nonnegative for x in term_div(a, b)[1:]])
 
 def term_lcm(a, b):
     # TODO: Compute lcm oder product of coefficients?
-    r = [S.One] # [a[0]*b[0]]
-    for aa, bb in zip(a[1:], b[1:]):
-        r.append(max(aa, bb))
-    return r
+    return (S.One,) + tuple([max(aa, bb)
+                             for aa, bb in zip(a[1:], b[1:])])
 
 def merge_var(*a):
     """Return a sorted list of the symbols in the arguments"""
@@ -67,29 +65,6 @@ def merge_var(*a):
                 result.append(sym)
     result.sort()
     return result
-
-def copy_cl(cl):
-    """Deep copy of nested lists like the coefficient list of Polynomial"""
-    result = []
-    for term in cl:
-        result.append(term[:])
-    return result
-
-def sort_cl(cl, order):
-    """Sort a given list with respect to the given order"""
-    if order == 'lex':
-        cl.sort(key=lambda x: x[1:], reverse=True)
-    elif order == 'grlex':
-        cl.sort(key=lambda x: [sum(x[1:])] + x[1:], reverse=True)
-    elif order == 'grevlex':
-        cl.sort(key=lambda x: [sum(x[1:])]
-                 + reverse(map(lambda l:-l, x[1:])), reverse=True)
-    elif order == '1-el':
-        cl.sort(key=lambda x: [x[1]] + [sum(x[2:])]
-                 + reverse(map(lambda l:-l, x[2:])), reverse=True)
-    else:
-        raise PolynomialException(str(order) + 'is not an implemented order.')
-    return cl
 
 def coeff_ring(atom):
     """Determine the coefficient ring of some atom, or some list of atoms.

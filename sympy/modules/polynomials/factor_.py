@@ -12,21 +12,20 @@ def uv_int(f):
     a = sqf_.uv_int(f)
     result = []
     for i, p in enumerate(a):
-        if p.cl[0][1] != 0: # Filter out constant S.One factors
+        if p.coeffs[0][1] is not S.Zero: # Filter out constant factors
             # Check for rational roots first:
             rr = roots_.rat_roots(p)
             # In a square-free polynomial, the roots appear only once.
             for root in rr:
-                pp = Polynomial(
-                    [[Rational(root.q), 1],
-                     [Rational(-root.p), 0]],
-                    f.var, f.order, f.coeff)
+                pp = Polynomial(coeffs=((Rational(root.q), S.One),
+                                       (Rational(-root.p), S.Zero)),
+                                var=f.var, order=f.order)
                 result += [pp]*(i+1)
                 # TODO: remove assertion, speed up!
                 q, r = div_.mv_int(p, pp)
-                assert r.cl[0][0] == 0
+                assert r.sympy_expr is S.Zero
                 p = q[0] # q is a list!
-            if p.cl[0][1] != 0: # Filter out constant S.One factors
+            if p.coeffs[0][1] is not S.Zero: # Filter out constant factors
                 # Then try the rest with the kronecker algorithm:
                 for pp in kronecker(p):
                     result += [pp]*(i+1)
@@ -34,22 +33,24 @@ def uv_int(f):
 
 def kronecker(f):
     """Recursive factorization of an univariate polynomial with integer
-    coefficients using interpolation.
+    coeffs using interpolation.
     """
     def lagrange_base(pos):
         """Compute the base polynomials used for interpolation."""
         l=[]
         for x in pos:
-            l.append(Polynomial([[S.One,1],[-x,0]], f.var, f.order, f.coeff))
+            l.append(Polynomial(coeffs=((S.One, S.One),(-x, S.Zero)),
+                                var=f.var, order=f.order))
         b=[]
         for i, x in enumerate(pos):
-            p = Polynomial([[S.One,0]], f.var, f.order, f.coeff)
+            p = Polynomial(coeffs=((S.One, S.Zero),), var=f.var, order=f.order)
             for ll in l[:i]+l[i+1:]:
                 p *= ll
             c = S.One
             for xx in pos[:i]+pos[i+1:]:
                 c *= (x-xx)
-            p.cl = map(lambda t:[t[0]/c]+t[1:], p.cl)
+            p = Polynomial(coeffs=tuple(map(lambda t:(t[0]/c,)+t[1:], p.coeffs)),
+                           var=p.var, order=p.order)
             b.append(p)
         return b
 
@@ -67,7 +68,7 @@ def kronecker(f):
         return lst
 
     # Half the degree for a possible polynomial divisor g.
-    deg = int(f.cl[0][1])/2
+    deg = int(f.coeffs[0][1])/2
     # Points for interpolation
     pos = map(Rational, range(0-deg/2, deg+1-deg/2))
     # Reusable Lagrange base polynomials.
@@ -79,10 +80,10 @@ def kronecker(f):
     lfs = []
     for x, y in zip(pos, values):
         if y == 0:
-            lfs.append(Polynomial(
-                [[S.One,1], [-x, 0]], f.var, f.order, f.coeff))
+            lfs.append(Polynomial(coeffs=((S.One, S.One), (-x, S.Zero)),
+                                  var=f.var, order=f.order))
     if len(lfs) > 0:
-        ff = Polynomial([[S.One,0]], f.var, f.order, f.coeff)
+        ff = Polynomial(S.One, ((S.One, S.Zero),), f.var, f.order)
         for lf in lfs:
             ff *= lf
         return lfs + kronecker(div_.mv_int(f, ff)[0][0])
@@ -93,18 +94,24 @@ def kronecker(f):
     # Construct candidates for g.
     cands = []
     for comb in combs:
-        cand = Polynomial(S.Zero, f.var, f.order, f.coeff) 
+        cand = Polynomial(S.Zero, var=f.var, order=f.order)
         for c,b in zip(comb, base):
-            cand += c*b
+            cand += Polynomial(coeffs=tuple([(c*term[0],) + term[1:]
+                                             for term in b.coeffs]),
+                               var=b.var, order=b.order)
+            
         # Filter out constant and non-integer polynomials!
-        if not (len(cand.cl) == 1 and cand.cl[0][1] == 0):
-            if all(map(lambda t:t[0].is_integer, cand.cl)):
+        if not (len(cand.coeffs) == 1
+                and cand.coeffs[0][1] is S.Zero):
+            if all(map(lambda t:t[0].is_integer, cand.coeffs)):
                 cands.append(cand)
 
-    # Get leading coefficient positive:
+    # Make leading coefficient positive:
     for cand in cands:
-        if cand.cl[0][0] < 0:
-            cand.cl = map(lambda t:[t[0]*Rational(-1)] + t[1:], cand.cl)
+        if cand.coeffs[0][0] < S.Zero:
+            cand = Polynomial(coeffs=tuple([(t[0]*S.NegativeOne,) + t[1:]
+                                            for t in cand.coeffs]),
+                              var=cand.var, order=cand.order)
 
     # Filter double entries:
     cands2 = []
@@ -118,7 +125,7 @@ def kronecker(f):
 
     for g in cands:
         q, r =  div_.mv_int(f,g)
-        if r.cl[0][0] == 0:
+        if r.sympy_expr is S.Zero:
             return kronecker(q[0]) + kronecker(g)
     else:
         # No divisor found, f irreducible.
@@ -129,8 +136,8 @@ def kronecker_mv(f):
     """Multivariate polynomial factorization.
 
     Depends on univariate factorization, and hence is restricted to
-    rational coefficients. Expects an instance of Polynomial with at
-    least 2 variables.
+    rational coeffs. Expects an instance of Polynomial with at
+    least 2 var.
 
     """
     
@@ -147,25 +154,27 @@ def kronecker_mv(f):
             for el in recursion(fa, lisp[i + 1:], m - 1):
                 yield el
 
-    # First sort the variables by occuring exponents.
+    # First sort the var by occuring exponents.
     # Then get degree bound, that is larger than all individual degrees.
     max_exp = {}
     for v in f.var:
         max_exp[v] = 0
-    for term in f.cl:
+    for term in f.coeffs:
         for v, exponent in zip(f.var, term[1:]):
             if exponent > max_exp[v]:
                 max_exp[v] = exponent
-    f.var.sort(key=lambda v:max_exp[v], reverse=True)
+    new_var = list(f.var)
+    new_var.sort(key=lambda v:max_exp[v], reverse=True)
+    f = Polynomial(f.sympy_expr, var=new_var, order=f.order)
     d = int(max_exp[f.var[0]]) + 1
 
     # Now reduce the polynomial f to g in just variable, by the
     # substitution x_i -> y**(d**i)
-    g = f.copy()
+    g = f.sympy_expr
     y = Symbol('y', dummy=True)
-    for v in f.var:
-        g.basic = g.basic.subs(v, y**(d**g.var.index(v)))
-    g.var = [y]
+    for i, v in enumerate(f.var):
+        g = g.subs(v, y**(d**i))
+    g = Polynomial(g, var=y, order=f.order)
 
     # We can now call the univariate factorization algorithm for g.
     g_factors = uv_int(g)
@@ -179,7 +188,7 @@ def kronecker_mv(f):
                 continue
             # Inverse reduction
             ff = S.Zero
-            for term in cand.cl:
+            for term in cand.coeffs:
                 ff_term = term[0]
                 y_deg = term[1]
                 for v in f.var:
@@ -187,16 +196,16 @@ def kronecker_mv(f):
                     y_deg = (y_deg - v_deg)/d
                     ff_term *= v**v_deg
                 ff += ff_term
-            if ff == S.One:
+            if ff is S.One:
                 continue
-            candidate = Polynomial(ff, f.var, f.order, f.coeff)
+            candidate = Polynomial(ff, var=f.var, order=f.order)
             q, r = div_.mv_int(f, candidate)
-            if r == 0: # found a factor
+            if r.sympy_expr is S.Zero: # found a factor
                 result.append(candidate)
                 f = q[0]
             else:
                 tested.append(cand)
-    if f != S.One:
+    if f.sympy_expr is not S.One:
         result.append(f)
     return result
 
@@ -212,7 +221,7 @@ def kronecker_mv(f):
 ##     # or the degree is small!
 ##     x = var[0]
 ##     f.var = [x]
-##     # Get coefficients, now polynomials in the rest of the variables
+##     # Get coeffs, now polynomials in the rest of the var
 ##     c = map(lambda t:t[0], f.cl)
 ##     c = map(lambda t: Polynomial(t, var=var[1:]), c)
 
@@ -248,7 +257,7 @@ def kronecker_mv(f):
 ##         subs[i] += 1
 ##         return subs
 
-##     # First substitute the variables in var with integers,
+##     # First substitute the var in var with integers,
 ##     # such that the resulting polynomial is of same degree
 ##     # and still square free
 ##     # TODO: Which integers to use?
