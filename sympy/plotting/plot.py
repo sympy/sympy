@@ -20,6 +20,8 @@ class Plot(object):
         Any given positional arguments are used to initialize
         a plot function at index 1. In other words...
 
+        >>> from sympy.core import Symbol
+        >>> x = Symbol('x')
         >>> p = Plot(x**2, visible=False)
 
         ...is equivalent to...

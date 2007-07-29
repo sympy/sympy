@@ -1,4 +1,4 @@
-from sympy.core import Basic, Symbol, Number, Mul, Pow, Add
+from sympy.core import Basic, Symbol, Wild, Number, Mul, Pow, Add
 from sympy.core.methods import ArithMeths, RelMeths
 
 
@@ -100,7 +100,7 @@ class Integral(Basic, ArithMeths, RelMeths):
                     if f.exp==-1: return log(abs(x)) * other
                     else: return x**(f.exp+1)/(f.exp+1) * other
 
-        a,b,c = [Symbol(s, dummy = True) for s in ["a","b","c"]]
+        a,b,c = map(Wild, 'abc')
         integral_table = {
                 a/(b*x+c): a/b * log(abs(b*x+c)),
                 a*sin(b*x): -a/b * cos(b*x),
@@ -113,7 +113,7 @@ class Integral(Basic, ArithMeths, RelMeths):
                 x**a * exp(b*x) : (-1)*x**(a+1)*(-b*x)**(-a-1)*upper_gamma(a+1,-b*x)
                 }
         for k in integral_table:
-            r = f.match(k, [a,b,c])
+            r = f.match(k)
             if r != None:
                 # Prevent matching nonconstant expressions 
                 if [1 for v in r.values() if v.has(x)]:

@@ -50,10 +50,13 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     c_powers[b] = e
             else:
                 o = nc_seq.pop(0)
-                if isinstance(o, Basic.Function):
+                if isinstance(o, Basic.WildFunction):
+                    pass
+                elif isinstance(o, Basic.Function):
                     o, lambda_args = o.with_dummy_arguments(lambda_args)
-                if isinstance(o, Basic.Order):
+                elif isinstance(o, Basic.Order):
                     o, order_symbols = o.as_expr_symbols(order_symbols)
+
                 if o.is_commutative:
                     # separate commutative symbols
                     c_seq.append(o)
@@ -242,6 +245,8 @@ class Mul(AssocOp, RelMeths, ArithMeths):
 
     @staticmethod
     def _combine_inverse(lhs, rhs):
+        if lhs == rhs:
+            return Basic.One()
         return lhs / rhs
 
     def as_numer_denom(self):

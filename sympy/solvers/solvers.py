@@ -322,24 +322,24 @@ def dsolve(eq, funcs):
             f = funcs
 
         x = f[1]
-        a,b,c = [Symbol(s, dummy = True) for s in ["a","b","c"]]
+        a,b,c = map(Wild, 'abc')
 
-        r = eq.match(a*Derivative(f,x) + b, [a,b])
+        r = eq.match(a*Derivative(f,x) + b)
         if r and _wo(r,f): return solve_ODE_first_order(r[a], r[b], f, x)
 
-        r = eq.match(a*Derivative(Derivative(f,x),x) + b*f, [a,b])
+        r = eq.match(a*Derivative(Derivative(f,x),x) + b*f)
         if r and _wo(r,f): return solve_ODE_second_order(r[a], 0, r[b], f, x)
 
         #special equations, that we know how to solve
         t = x*exp(-f)
         tt = (a*t.diff(x, 2)/t).expand()
-        r = eq.match(tt, [a])
+        r = eq.match(tt)
         if r:
             #check, that we've rewritten the equation correctly:
             #assert ( r[a]*t.diff(x,2)/t ) == eq.subs(f, t)
             return solve_ODE_1(f, x)
         neq = (eq*exp(f)/exp(-f)).expand()
-        r = neq.match(tt, [a])
+        r = neq.match(tt)
         if r:
             #check, that we've rewritten the equation correctly:
             #assert ( t.diff(x,2)*r[a]/t ).expand() == eq

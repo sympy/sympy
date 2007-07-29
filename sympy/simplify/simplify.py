@@ -637,8 +637,7 @@ def ratsimp(expr):
 
     def get_num_denum(x):
         """Matches x = a/b and returns a/b."""
-        a = Wild("a")
-        b = Wild("b")
+        a,b = map(Wild, 'ab')
         r = x.match(a/b)
         if r is not None and len(r) == 2:
             return r[a],r[b]
@@ -699,8 +698,7 @@ def ratsimp(expr):
 #        return Pow(trigsimp(expr.base), trigsimp(expr.exp))
 #    elif isinstance(expr, Add) and len(expr[:]) > 1:
 #        # The type of functions we're interested in
-#        a = Symbol('a', is_dummy=True)
-#        b = Symbol('b', is_dummy=True)
+#        a,b = map(Wild, 'ab')
 #        matchers = {"sin": a*sin(b)**2, "tan": a*tan(b)**2, "cot": a*cot(b)**2}#
 
         # The matches we find
@@ -713,10 +711,7 @@ def ratsimp(expr):
 #            res = None
 #            ex = [atom for atom in expr.atoms() if isinstance(atom, Symbol)]
 #            for mname in matchers:
-#                try:
-#                    res = x.match(matchers[mname], [a,b], exclude=ex)
-#                except:
-#                    res = x.match(matchers[mname], [a,b])
+#                res = x.match(matchers[mname])
 #                if res is not None:
 #                    if a in res and b in res:
 #                        matches[mname].append( (res[a], res[b]) )

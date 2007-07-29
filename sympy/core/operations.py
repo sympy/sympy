@@ -59,14 +59,14 @@ class AssocOp(Basic):
             pat = pattern
             for old,new in repl_dict.items():
                 pat = pat.subs(old, new)
-            if pat!=pattern:
+            if pat != pattern:
                 return pat.matches(expr, repl_dict)
 
         # handle simple patterns
         d = pattern._matches_simple(expr, repl_dict)
         if d is not None:
             return d
-        
+
         # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
         wild_part = []
         exact_part = []
@@ -85,6 +85,7 @@ class AssocOp(Basic):
             expr_list = list(expr)
         else:
             expr_list = [expr]
+
         while expr_list:
             last_op = expr_list.pop()
             tmp = wild_part[:]

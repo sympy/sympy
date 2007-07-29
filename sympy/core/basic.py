@@ -434,7 +434,7 @@ class Basic(BasicMeths):
                 return None
         return d
 
-    def match(self, pattern, syms = None):
+    def match(self, pattern):
         """
         Pattern matching.
 
@@ -446,22 +446,6 @@ class Basic(BasicMeths):
           pattern.subs_dict(self.match(pattern)) == self
 
         """
-        # syms argument is used for backward compatibility, will be removed
-        if syms is not None:
-            pat = pattern
-            wilds = []
-            for s in syms:
-                w = Basic.Wild(s.name)
-                pat = pat.subs(s,w)
-                wilds.append(w)
-            result = self.match(pat)
-            if result is not None:
-                for w,s in zip(wilds, syms):
-                    if w in result:
-                        result[s] = result[w]
-                        del result[w]
-            return result
-        #
         return Basic.sympify(pattern).matches(self, {})
 
     def solve4linearsymbol(eqn, rhs, symbols = None):
