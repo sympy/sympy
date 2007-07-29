@@ -12,10 +12,4 @@ from polynomials import *
 from utilities import *
 #from specfun import *
 from integrals import *
-
-try:
-    from plotting import Plot
-except ImportError, e:
-    class Plot(object):
-        def __init__(*args, **kwargs):
-            raise e
+from plotting import Plot
