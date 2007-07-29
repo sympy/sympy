@@ -59,6 +59,9 @@ def test_log_apply_eval():
     assert log(-x) == log(-x)
     assert log(-k) == log(-k)
 
+    assert log(x, 2) == log(x)/log(2)
+    assert log(E, 2) == 1/log(2)
+
 def test_log_apply_evalf():
     value = (log(3)/log(2)-1).evalf()
 
@@ -519,3 +522,4 @@ def test_cosh():
     assert cosh(17*k*pi*I) == cos(17*k*pi)
 
     assert cosh(k*pi) == cosh(k*pi)
+

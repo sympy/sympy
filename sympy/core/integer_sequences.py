@@ -64,28 +64,26 @@ Basic.singleton['binomial'] = Binomial
 ###################### BERNOULLI NUMBERS and POLYNOMIALS ######################
 ###############################################################################
 
-def _bernoulli_sum(m, bound):
-    r, a = S.Zero, int(Binomial()(m+3, m-6))
+def _bernoulli_sum(m, M):
+    s = 0
 
-    for j in xrange(1, bound+1):
-        r += a * Bernoulli()(m-6*j)
+    for j in range(M, 0, -1):
+        b = Binomial()(m+3, m-6*j)
+        s += b * Bernoulli()(m-6*j)
 
-        a *= reduce(lambda r, k: r*k, range(m-6*j-5, m-6*j+1), 1)
-        a //= reduce(lambda r, k: r*k, range(6*j+4, 6*j+10), 1)
-
-    return r
+    return s
 
 @Memoizer((int, long))
 def _b0mod6(m):
-    return Rational(m+3, 3) - _bernoulli_sum(m, m//6)
+    return (Rational(m+3, 3) - _bernoulli_sum(m, m//6)) / Binomial()(m+3, m)
 
 @Memoizer((int, long))
 def _b2mod6(m):
-    return Rational(m+3, 3) - _bernoulli_sum(m, (m-2)//6)
+    return (Rational(m+3, 3) - _bernoulli_sum(m, (m-2)//6)) / Binomial()(m+3, m)
 
 @Memoizer((int, long))
 def _b4mod6(m):
-    return -Rational(m+3, 6) - _bernoulli_sum(m, (m-4)//6)
+    return (-Rational(m+3, 6) - _bernoulli_sum(m, (m-4)//6)) / Binomial()(m+3, m)
 
 class Bernoulli(DefinedFunction):
 
@@ -112,8 +110,7 @@ class Bernoulli(DefinedFunction):
                         }
 
                         try:
-                            value = val_table[m % 6](m)
-                            return value / Binomial()(m+3, m)
+                            return val_table[m % 6](m)
                         except KeyError:
                             return S.Zero
                     else:

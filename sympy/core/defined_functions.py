@@ -199,7 +199,6 @@ class Log(DefinedFunction):
     """ Log() -> log
     """
     is_comparable = True
-    #nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1264,6 +1263,21 @@ class Tan(DefinedFunction):
 
         if isinstance(arg, Basic.Number):
             return arg.tan()
+
+    #@cache_it_immutable
+    #def taylor_term(self, n, x, *previous_terms):
+    #    if n < 0 or n % 2 == 0:
+    #        return Basic.Zero()
+    #    else:
+    #        x = Basic.sympify(x)
+    #
+    #        if len(previous_terms) > 2:
+    #            p = previous_terms[-2]
+    #            return -p * x**2 / (n*(n-1))
+    #        else:
+    #
+    #
+    #            return (-1)**(n//2)*x**(n)/Basic.Factorial()(n)
 
 class ApplyTan(Apply):
 
