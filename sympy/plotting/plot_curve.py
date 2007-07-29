@@ -13,7 +13,7 @@ class PlotCurve(PlotObject):
         self.function        =  function
         self.line_color      =  kwargs.pop('line_color', self.default_line_color)
         self.t_interval      =  PlotInterval.try_parse(t_interval)
-        self.display_list    =  None
+        self.display_list    =  -1
 
         self.vertices   = list([self.function(t), t] for t in self.t_interval.vrange())
 
@@ -48,6 +48,7 @@ class PlotCurve(PlotObject):
         glEndList()
 
     def draw(self):
-        if not self.display_list:
+        if GL_FALSE == glIsList(self.display_list):
             self.compile()
+
         glCallList(self.display_list)

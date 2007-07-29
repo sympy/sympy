@@ -92,7 +92,7 @@ class PlotSurface(PlotObject):
         glEndList()
 
     def draw(self):
-        if glIsList(self.display_list) == GL_FALSE:
+        if GL_FALSE == glIsList(self.display_list):
             self.compile()
 
         glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT)
