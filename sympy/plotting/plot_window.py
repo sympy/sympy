@@ -6,23 +6,18 @@ from plot_controller import PlotController
 
 class PlotWindow(ManagedWindow):
 
-    def __init__(self, plot,
-                 title="SymPy Plot",
-                 wireframe=False,
-                 antialiasing=True,
-                 ortho=False,
-                 **window_args):
-
+    def __init__(self, plot, **kwargs):
         self.plot = plot
-        self.title = title
-        self.wireframe = wireframe
-        self.antialiasing = antialiasing
-        self.ortho = ortho
-        self._calculating = False
-        self.camera = None
 
-        window_args['caption'] = title
-        super(PlotWindow, self).__init__(**window_args)
+        self.camera = None
+        self._calculating = False
+
+        self.wireframe    = kwargs.pop('wireframe', False)
+        self.antialiasing = kwargs.pop('antialiasing', True)
+        self.ortho        = kwargs.pop('ortho', False)
+        self.title = kwargs.setdefault('caption', "SymPy Plot")
+
+        super(PlotWindow, self).__init__(**kwargs)
 
     def setup(self):
         self.camera = PlotCamera(self, ortho = self.ortho)
@@ -61,17 +56,21 @@ class PlotWindow(ManagedWindow):
         self.controller.update(dt)
 
     def draw(self):
-        self.plot.lock_begin()
+        self.plot._render_lock.acquire()
+
         self.camera.apply_transformation()
-        for r in self.plot._plotobjects:
+
+        for r in self.plot._pobjects:
             glPushMatrix()
-            r.do_render()
+            r._draw()
             glPopMatrix()
+
         for r in self.plot._functions.itervalues():
             glPushMatrix()
-            r.do_render()
+            r._draw()
             glPopMatrix()
-        self.plot.lock_end()
+
+        self.plot._render_lock.release()
 
     def update_caption(self):
         if not self._calculating and self.plot._calculations_in_progress > 0:

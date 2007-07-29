@@ -1,159 +1,199 @@
 from threading import Lock
-from arg_parsing import parse_plot_args, parse_function_args
+
 from plot_object import PlotObject
 from plot_function import PlotFunction
 from plot_window import PlotWindow
-from bounding_box import BoundingBox
-from grid_plane import GridPlane
 
 class Plot(object):
     """
-    Flexible interface for plotting SymPy functions.
+    Summary
+    =======
+
+    A flexible interface for plotting sympy functions
+    and parametric equations.
     """
+    def __init__(self, *fargs, **win_args):
+        """
+        Positional Arguments
+        ====================
 
-    default_width = 600
-    default_height = 600
+        Any given positional arguments are used to initialize
+        a plot function at index 1. In other words...
 
-    def __init__(self, *args, **kwargs):
-        self._render_object_lock = Lock() # see lock_begin/lock_end
+        >>> p = Plot(x**2, visible=False)
 
-        self.clear() # initialize _functions list
-        self._clear_plotobjects() # initialize _plotobjects list
+        ...is equivalent to...
 
-        self.width = kwargs.get('width', self.default_width)
-        self.height = kwargs.get('height', self.default_height)
-        self.wireframe = kwargs.get('wireframe', False)
-        self.antialiasing = kwargs.get('antialiasing', True)
-        self.vsync = kwargs.get('vsync', False)
-        self.ortho = kwargs.get('ortho', False)
+        >>> p = Plot(visible=False)
+        >>> p[1] = x**2
 
-        self.bounding_box = BoundingBox()
-        self.bounding_box.visible = kwargs.get('bounding_box', False)
-        self._append_plotobject(self.bounding_box)
+        Note that in earlier versions of the plotting module,
+        you were able to specify multiple functions in the
+        initializer. This functionality has been dropped in
+        favor of better automatic plot mode detection.
 
-        self.grid = kwargs.get('grid', None)
-        if isinstance(self.grid, str):
-            self.grid = (self.grid,)
-        if self.grid is not None:
-            self.grid = GridPlane(*self.grid)
-            self._append_plotobject(self.grid)
+        Named Arguments
+        ===============
 
-        self._calculations_in_progress = 0        
+        Any given named arguments are passed as arguments to
+        window initialization. There is one default argument,
+        visible=True. This means show() will be called at the
+        end of initialization. If visible=False, show() is not
+        called, and must be called explicitly to create and
+        display the window.
 
-        for f in parse_plot_args(*args):
-            self.append(f)     
+        See PlotWindow.__init__ for information about other
+        valid arguments.
+        """
+        self._win_args = win_args
+        self._window = None
 
-        self.window = None
-        if kwargs.get('show', True):
+        self._render_lock = Lock()
+        self._calculations_in_progress = 0
+
+        self._functions = {}
+        self._pobjects = []
+
+        self[1] = fargs
+        if win_args.get('visible', True):
             self.show()
+
+    ## Window Interfaces
 
     def show(self):
         """
-        Displays a UI window representing the Plot.
+        Creates and displays a plot window, or activates it
+        (gives it focus) if it has already been created.
         """
-        if self.window is not None and not self.window.has_exit and self.window.context is not None:
-            if self.window.visible:
-                self.window.activate()
+        if self._window and not self._window.has_exit:
+            self._window.activate()
         else:
-            self.window = None
-            self.window = PlotWindow(self,
-                                     wireframe=self.wireframe,
-                                     antialiasing=self.antialiasing,
-                                     width=self.width,
-                                     height=self.height,
-                                     vsync=self.vsync,
-                                     ortho=self.ortho)
+            self._win_args['visible'] = True
+            self._window = PlotWindow(self, **self._win_args)
 
     def close(self):
-        self.window.close()
+        """
+        Closes the plot window.
+        """
+        if self._window:
+            self._window.close()
 
     def saveimage(self, filepath, **kwargs):
+        """
+        Saves a screen capture of the plot window to an
+        image file. Not implemented yet.
+        """
         raise NotImplementedError()
 
-    ### PlotFunction List Interfaces (for end-users) ###
+    ## Function List Interfaces
 
     def clear(self):
-        self.lock_begin()
+        """
+        Clears the function list of this plot.
+        """
+        self._render_lock.acquire()
         self._functions = {}
-        self.lock_end()
+        self._render_lock.release()
 
     def __getitem__(self, i):
+        """
+        Returns the function at position i in the
+        function list.
+        """
         return self._functions[i]
 
     def __setitem__(self, i, args):
+        """
+        Parses and adds a PlotFunction to the function
+        list.
+        """
         if not (isinstance(i, int) and i > 0):
             raise ValueError("Function index must be a positive integer.")
-        if isinstance(args, PlotFunction):
+
+        if isinstance(args, PlotObject):
             f = args
+
         else:
-            if not isinstance(args, (tuple, list)): args = [args]
+            if not isinstance(args, (list, tuple)):
+                args = [args]
+            if len(args) == 0:
+                return # no arguments given
+
             self._calculations_in_progress += 1
-            #print "Calculating..."
-            f = parse_function_args(*args)
-            #print "Finished."
+            f = PlotFunction(*args)
             self._calculations_in_progress -= 1
-            assert isinstance(f, PlotFunction)
-        self.bounding_box.consider_function(f)
-        self.lock_begin()
-        self._functions[i] = f
-        self.lock_end()
+
+        if f:
+            self._render_lock.acquire()
+            self._functions[i] = f
+            self._render_lock.release()
+
+        else:
+            raise ValueError("Failed to parse '%s'." % ', '.join(str(a) for a in args))
 
     def __delitem__(self, i):
-        self.lock_begin()
+        """
+        Removes the function in the function list at
+        position i.
+        """
+        self._render_lock.acquire()
         del self._functions[i] 
-        self.lock_end()
+        self._render_lock.release()
 
     def firstavailableindex(self):
-        i=1
-        self.lock_begin()
+        """
+        Returns the first unused index in the function list.
+        """
+        i = 1
+        self._render_lock.acquire()
         while i in self._functions: i += 1
-        self.lock_end()
+        self._render_lock.release()
         return i
 
     def append(self, args):
-        # synchronization handled in __setitem__
+        """
+        Parses and adds a PlotFunction to the function
+        list at the first available index.
+        """
         self[self.firstavailableindex()] = args
 
     def __len__(self):
+        """
+        Returns the number of functions in the function list.
+        """
         return len(self._functions)
 
     def __iter__(self):
+        """
+        Allows iteration of the function list.
+        """
         return self._functions.itervalues()
 
     def __str__(self):
+        """
+        Returns a string containing a new-line separated
+        list of the functions in the function list.
+        """
         s = ""
         if len(self._functions) == 0:
-            s += "<empty>"
+            s += "<blank plot>"
         else:
-            self.lock_begin()
+            self._render_lock.acquire()
             s += "\n".join(["%s[%i]: %s" % ("", i, str(self._functions[i]))
                               for i in self._functions])
-            self.lock_end()
+            self._render_lock.release()
         return s
 
-    ### PlotObject List Interfaces (for internal use and intrepid hackery) ##
+if __name__ == '__main__':
 
-    def _clear_plotobjects(self):
-        self.lock_begin()
-        self._plotobjects = []
-        self.lock_end()
+    from sympy import symbols
+    x,y,t = symbols('xyt')
 
-    def _append_plotobject(self, o):
-        assert isinstance(o, PlotObject)
-        self.lock_begin()
-        self._plotobjects.append(o)
-        self.lock_end()
+    p = Plot()
 
-    def _remove_plotobject(self, o):
-        self.lock_begin()
-        self._plotobjects.remove(o)
-        self.lock_end()
+    p[1] = 1, 'mode=polar'
+    p[2] = x**2, [x,-10,10,100], [y,-1,1,1]
+    p[3] = x**2+y**2
+    p[4] = x,y,x**2+y**2, [x,-1,1,1], [y,-1,1,1], 'mode=surface'
 
-    ### Thread Synchronization ###
-
-    def lock_begin(self):
-        self._render_object_lock.acquire()
-
-    def lock_end(self):
-        self._render_object_lock.release()
-
+    print p

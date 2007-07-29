@@ -1,6 +1,6 @@
 from pyglet.gl import *
 from plot_rotation import get_spherical_rotatation
-from util import get_matrix
+from util import get_model_matrix
 
 class PlotCamera(object):
 
@@ -29,14 +29,14 @@ class PlotCamera(object):
     def init_rot_matrix(self):
         glPushMatrix()
         glLoadIdentity()
-        self._rot = get_matrix()
+        self._rot = get_model_matrix()
         glPopMatrix()
 
     def mult_rot_matrix(self, rot):
         glPushMatrix()
         glLoadMatrixf(rot)
         glMultMatrixf(self._rot)
-        self._rot = get_matrix()
+        self._rot = get_model_matrix()
         glPopMatrix()
 
     def setup_projection(self):
@@ -63,7 +63,7 @@ class PlotCamera(object):
         glPushMatrix()
         glLoadMatrixf(self._rot)
         glRotatef(angle, x, y, z)
-        self._rot = get_matrix()
+        self._rot = get_model_matrix()
         glPopMatrix()
 
     def zoom_relative(self, clicks, sensitivity):

@@ -12,4 +12,7 @@ from polynomials import *
 from utilities import *
 #from specfun import *
 from integrals import *
-
+try:
+    from plotting import Plot
+except ImportError, e:
+    print str(e)

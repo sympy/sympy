@@ -1,20 +1,17 @@
 class PlotObject(object):
     """
-    Base class for all objects which can be displayed on a Plot.
-    This includes basis vectors, boundary boxes, and most importantly
-    PlotFunctions.
+    Base class for objects which can be displayed in
+    a Plot.
     """
     visible = True
 
-    def do_render(self):
-        """
-        Do not override in child class.
-        """
+    def _draw(self):
         if self.visible:
-            self.render()
+            self.draw()
 
-    def render(self):
+    def draw(self):
         """
-        OpenGL code to display this plot object.
+        OpenGL rendering code for the plot object.
+        Override in base class.
         """
-        raise Exception("PlotObject class is abstract. Override render in subclass.")
+        pass

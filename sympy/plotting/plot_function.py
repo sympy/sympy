@@ -1,116 +1,111 @@
 from sympy import Basic, Symbol
+
 from plot_object import PlotObject
+from plot_curve import PlotCurve
+from plot_surface import PlotSurface
+from plot_interval import PlotInterval
+from plot_modes import get_plot_mode, fill_intervals, fill_i_vars
 
 class PlotFunction(PlotObject):
+    """
+    """
+    def __init__(self, *args, **kwargs):
+        args, kwargs = extract_options(args, kwargs)
+        self.visible = 'True' == kwargs.pop('visible', 'True')
+        self.mode_str = kwargs.pop('mode', '')
 
-    f = None
-    intervals = []
-    options = {}
+        d_vars, intervals = interpret_args(args)
+        i_vars, interval_bindings = find_independent_vars(d_vars, intervals)
+        i_var_c, d_var_c = len(i_vars), len(d_vars)
 
-    x_min, x_max = 0.0, 0.0
-    y_min, y_max = 0.0, 0.0
-    z_min, z_max = 0.0, 0.0
+        if isinstance(self.mode_str, str):
+            mode, self.mode_str = get_plot_mode(self.mode_str, d_var_c, i_var_c)
+            i_vars = fill_i_vars(self.mode_str, i_vars)
+            intervals = fill_intervals(self.mode_str, i_vars, intervals)
+        elif callable(self.mode_str):
+            self.mode_str, mode = self.mode_str.__name__, self.mode_str
+            if len(intervals) != len(i_vars):
+                raise ValueError("Intervals must be provided for each independent " +
+                                 "variable when using a custom plot mode.")
+        else: raise ValueError("'mode' named argument must be a string or a callable.")
 
-    def __new__(cls, f, intervals, options):
-        subcls = PlotFunctionRegistry.get(options['mode'])
-        if subcls is None:
-            error_str = "Plot mode '%s' is not supported (or not registered)."
-            raise Exception(error_str % (options['mode']))
-        o = subcls(f, intervals, options)
-        if 'visible' in options and options['visible'] == 'false':
-            o.visible = False
-            del options['visible']
-        return o
+        try:
+            f = mode(*(d_vars+i_vars))
+        except Exception, e:
+            raise ValueError( mode_init_error % (str(e)) )
 
-    def __init__(self, *args):
-        raise Exception("PlotFunction is not meant to be directly instantiated.")
+        plot_object_choice = {1: PlotCurve, 2: PlotSurface}
+        try: cls = plot_object_choice[len(intervals)]
+        except: raise ValueError("Cannot plot in %i dimensions." % (dimensions))
 
-    def __repr__(self):
-        f_str = ""
-        if isinstance(self.f, (tuple, list)):
-            f_str = ", ".join( [str(f) for f in self.f] )
+        self.plot_object = cls(f, *intervals, **kwargs)
+
+    def draw(self):
+        self.plot_object.draw()
+
+interval_wrong_order = "Interval %s was given before any function(s)."
+interpret_error = "Could not interpret %s as a function or interval."
+mode_init_error = "Mode initialization failed. Inner exception: %s"
+
+def interpret_args(args):
+    functions, intervals = [], []
+    for a in args:
+        i = PlotInterval.try_parse(a)
+        if i is not None:
+            if len(functions) == 0:
+                raise ValueError(interval_wrong_order % (str(i)))
+            else:
+                intervals.append(i)
         else:
-            f_str = str(self.f)
-        i_str = ", ".join([ "[" + ( ",".join( [str(k) for k in i] ) )
-                          + "]" for i in self.intervals ])
-        o_str = options_str(self.options)
+            try:
+                f = Basic.sympify(a)
+                functions.append(f)
+            except:
+                raise ValueError(interpret_error % str(a))
+    return functions, intervals
 
-        a_list = [f_str]
-        if i_str != "": a_list.append(i_str)
-        if o_str != "": a_list.append(o_str)
-
-        return ", ".join( a_list )
-
-    def __str__(self):
-        return self.__repr__()
-
-class PlotFunctionRegistry(object):
-    _r = {}
-
-    @staticmethod
-    def get(i):
-        if i not in PlotFunctionRegistry._r:
-            return None
-        return PlotFunctionRegistry._r[i]
-
-    @staticmethod
-    def register(i, plot_type):
-        assert isinstance(i, str)
-        assert isinstance(plot_type, type)
-        PlotFunctionRegistry._r[i] = plot_type
-
-    @staticmethod
-    def remove(i):
-        del PlotFunctionRegistry._r[i]
-
-    @staticmethod
-    def list():
-        return list(iter(PlotFunctionRegistry._r))
-
-def get_vars(f):
-    assert isinstance(f, Basic)
-    return f.atoms(type=Symbol)
-
-def count_vars(f):
-    return len(get_vars(f))
-
-def options_str(d):
-    o_list = list("%s=%s" % (k, d[k]) for k in d)
-    o_str = ";".join(o_list)
-    return "'" + o_str + "'"
-
-def vrange(a_min, a_max, a_steps):
+def find_independent_vars(functions, intervals):
     """
-    Helper function which returns an array containing a_step+1
-    elements ranging from a_min to a_max.
+    i_vars collects the independent variables first in the
+    order specified by any given intervals, followed by any
+    remaining Symbols found in functions.
+    
+    interval_bindings maps each variable to an interval, or
+    None if no interval given.
     """
-    a_delta = (a_max-a_min)/float(a_steps)
-    return list(a_min+a_delta*i for i in range(a_steps+1))
+    i_vars, interval_bindings = [], {}
+    for i in intervals:
+        if i.v not in interval_bindings:
+            interval_bindings[i.v] = i
+            i_vars.append(i.v)
+    for f in functions:
+        for a in f.atoms(type=Symbol):
+            if a not in interval_bindings:
+                interval_bindings[a] = None
+                i_vars.append(a)
+    return i_vars, interval_bindings
 
-def interpolate(a_min, a_max, a_ratio):
-    return a_min + a_ratio * (a_max - a_min)
-
-def rinterpolate(a_min, a_max, a_value):
-    a_range = a_max-a_min
-    if a_range == 0:
-        a_range = 1.0
-    return (a_value - a_min) / float(a_range)
-
-def interpolate_color(color1, color2, ratio):
-    return [interpolate(color1[i], color2[i], ratio) for i in range(3)]
-
-def fsubs(f, a, _a, b=None, _b=None):
-    """
-    Returns a float z = f(a) or z = f(a,b).
-    """
-    try:
-        if b is None:
-            return float(f.subs(a, _a)) # seems the best choice right now
-            #return f.subs(a, _a).evalf(precision=10) # not a float val
-            #return float(f.subs(a, _a).evalf(precision=10))
-        else:
-            return float(f.subs(a, _a).subs(b, _b))
-            #return f.subs(a, _a).subs(b, _b).evalf(precision=10)
-            #return float(f.subs(a, _a).subs(b, _b).evalf(precision=10))
-    except:
+def parse_option_string(s):
+    if not isinstance(s, str):
         return None
+    options = {}
+    for token in s.split(';'):
+        pieces = token.split('=')
+        if len(pieces) == 1:
+            option, value = pieces[0], ""
+        elif len(pieces) == 2:
+            option, value = pieces
+        else:
+            raise ValueError("Plot option string '%s' is malformed." % (s))
+        options[option.strip()] = value.strip()
+    return options
+
+def extract_options(args, kwargs):
+    nkwargs, nargs = {}, []
+    for a in args:
+        if isinstance(a, str):
+            nkwargs = dict(nkwargs, **parse_option_string(a))
+        else:
+            nargs.append(a)
+    nkwargs = dict(nkwargs, **kwargs)
+    return nargs, nkwargs

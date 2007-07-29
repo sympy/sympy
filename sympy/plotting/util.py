@@ -1,6 +1,6 @@
 from pyglet.gl import *
 
-def get_matrix():
+def get_model_matrix():
     """
     Returns the current modelview matrix.
     """
@@ -16,6 +16,21 @@ def get_projection_matrix():
     glGetFloatv(GL_PROJECTION_MATRIX, m)
     return m
 
+def get_direction_vectors():
+    m = get_model_matrix()
+    return ((m[0], m[4], m[8]),
+            (m[1], m[5], m[9]),
+            (m[2], m[6], m[10]))
+
+def get_view_direction_vectors():
+    m = get_model_matrix()
+    return ((m[0], m[1], m[2]),
+            (m[4], m[5], m[6]),
+            (m[8], m[9], m[10]))
+
+def get_basis_vectors():
+    return ((1,0,0), (0,1,0), (0,0,1))
+
 def billboard_matrix():
     """
     Removes rotational components of
@@ -27,103 +42,61 @@ def billboard_matrix():
     |0|0|1|x| (x means left unchanged)
     |x|x|x|x|
     """
-    m = get_matrix()
+    m = get_model_matrix()
     m[0] =1;m[1] =0;m[2] =0
     m[4] =0;m[5] =1;m[6] =0
     m[8] =0;m[9] =0;m[10]=1
     glLoadMatrixf(m)
 
-def get_direction_vectors():
-    m = get_matrix()
-    return ((m[0], m[4], m[8]),
-            (m[1], m[5], m[9]),
-            (m[2], m[6], m[10]))
+def find_bounds_2d(vertices):
+    bounds = [[None,None], [None,None], [None,None]]
+    for v in vertices:
+        v = v[0]
+        if v is None: continue
+        for axis in range(len(bounds)):
+            if v[axis] is not None:
+                if bounds[axis][0] is None: bounds[axis][0] = v[axis]
+                else: bounds[axis][0] = min( [v[axis], bounds[axis][0]] )
+                if bounds[axis][1] is None: bounds[axis][1] = v[axis]
+                else: bounds[axis][1] = max( [v[axis], bounds[axis][1]] )
+    return bounds
 
-def get_view_direction_vectors():
-    m = get_matrix()
-    return ((m[0], m[1], m[2]),
-            (m[4], m[5], m[6]),
-            (m[8], m[9], m[10]))
+def find_bounds_3d(vertices):
+    bounds = [[None,None], [None,None], [None,None]]
+    for w in vertices:
+        for v in w:
+            v = v[0]
+            if v is None: continue
+            for axis in range(len(bounds)):
+                if v[axis] is not None:
+                    if bounds[axis][0] is None: bounds[axis][0] = v[axis]
+                    else: bounds[axis][0] = min( [v[axis], bounds[axis][0]] )
+                    if bounds[axis][1] is None: bounds[axis][1] = v[axis]
+                    else: bounds[axis][1] = max( [v[axis], bounds[axis][1]] )
+    return bounds
 
-def get_basis_vectors():
-    return ((1,0,0), (0,1,0), (0,0,1))
+def interpolate(a_min, a_max, a_ratio):
+    return a_min + a_ratio * (a_max - a_min)
 
-def invert_vector(v):
-    return (-v[0], -v[1], -v[2])
+def rinterpolate(a_min, a_max, a_value):
+    a_range = a_max-a_min
+    if a_range == 0:
+        a_range = 1.0
+    return (a_value - a_min) / float(a_range)
 
-def get_matrix_d():
-    """
-    Returns the current modelview matrix (double).
-    """
-    m = (c_double*16)()
-    glGetDoublev(GL_MODELVIEW_MATRIX, m)
-    return m
+def interpolate_color(color1, color2, ratio):
+    return [interpolate(color1[i], color2[i], ratio) for i in range(3)]
 
-def get_projection_matrix_d():
-    """
-    Returns the current modelview matrix (double).
-    """
-    m = (c_double*16)()
-    glGetDoublev(GL_PROJECTION_MATRIX, m)
-    return m
+def calc_color(color_function, p, pbounds, i, ibounds):
+    if not p:
+        return (0, 0, 0)
+    x, y, z = p
+    x, y, z = ( rinterpolate(pbounds[0][0], pbounds[0][1], x),
+                rinterpolate(pbounds[1][0], pbounds[1][1], y),
+                rinterpolate(pbounds[2][0], pbounds[2][1], z) )
+    k = i[::]
+    for j in range(len(k)):
+        k[j] = rinterpolate(ibounds[j][0], ibounds[j][1], k[j])
 
-def get_viewport():
-    v = (c_int*4)()
-    glGetIntegerv(GL_VIEWPORT, v)
-    return v
+    return color_function(x, y, z, *k)
 
-def model_to_screen(c):
-    m = get_matrix_d()
-    p = get_projection_matrix_d()
-    v = get_viewport()
-    x,y,z = c_double(),c_double(),c_double()
-    if GL_FALSE == gluProject(c[0], c[1], c[2],
-                              m, p, v, x, y, z):
-        raise Exception("gluProject failed.")
-    return (x,y,z)
-
-def model_to_screen_ratio(c):
-    m = get_matrix_d()
-    p = get_projection_matrix_d()
-    v = get_viewport()
-    x,y,z = c_double(),c_double(),c_double()
-    if GL_FALSE == gluProject(c[0], c[1], c[2],
-                              m, p, v, x, y, z):
-        raise Exception("gluProject failed.")
-    return (x.value/float(v[2])-0.5,y.value/float(v[3])-0.5)
-
-def inner_product(v1, v2):
-    s = 0
-    for i in xrange(len(v1)):
-        s += v1[i] * v2[i]
-    return s
-
-def mat_mult(m, v):
-    if len(v) != 4:
-        v = (v[0],v[1],v[2],1)
-    return [inner_product((m[i], m[i+1], m[i+2], m[i+3]), v)
-            for i in range(0,len(m),4)]
-
-def frange(start, end=None, inc=None):
-    """
-    A range function, that does accept float increments...
-    http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66472
-    """
-
-    if end is None:
-        end = start + 0.0
-        start = 0.0
-
-    if inc is None:
-        inc = 1.0
-
-    L = []
-    while 1:
-        next = start + len(L) * inc
-        if inc > 0 and next >= end:
-            break
-        elif inc < 0 and next <= end:
-            break
-        L.append(next)
-        
-    return L

@@ -1,6 +1,6 @@
 from pyglet.window import key
 from pyglet.window.mouse import LEFT, RIGHT
-from util import get_direction_vectors, mat_mult
+from util import get_direction_vectors
 
 class PlotController(object):
     
@@ -32,11 +32,6 @@ class PlotController(object):
                 key.E:'spin_right',
                 key.NUM_9:'spin_right',
 
-                key.Z:'euler_y_neg',
-                key.NUM_1:'euler_y_neg',
-                key.C:'euler_y_pos',
-                key.NUM_3:'euler_y_pos',
-
                 key.X:'reset_rotations',
                 key.NUM_5:'reset_rotations',
                 
@@ -53,6 +48,7 @@ class PlotController(object):
              }
 
     def __init__(self, window):
+        self.window = window
         self.action = {
                 # Rotation around the view Y (up) vector
                 'left':False,
@@ -63,9 +59,6 @@ class PlotController(object):
                 # Rotation around the view Z vector
                 'spin_left':False,
                 'spin_right':False,
-                # Rotation around the model Y vector
-                'euler_y_neg':False,
-                'euler_y_pos':False,
                 # Reset to the default rotation
                 'reset_rotations':False,
                 # Performs camera z-translation
@@ -73,9 +66,7 @@ class PlotController(object):
                 'zoom_out':False,
                 # Use alternative sensitivity (speed)
                 'modify_sensitivity':False,
-
             }
-        self.window = window
         
     def update(self, dt):
         z = 0
@@ -97,12 +88,6 @@ class PlotController(object):
             self.window.camera.euler_rotate(dy*dt*self.get_key_sensitivity(), *(get_direction_vectors()[0]))
         if dz != 0:
             self.window.camera.euler_rotate(dz*dt*self.get_key_sensitivity(), *(get_direction_vectors()[2]))
-
-        ey = 0
-        if self.action['euler_y_neg']: ey -= 1
-        if self.action['euler_y_pos']: ey += 1
-        if ey != 0:
-            self.window.camera.euler_rotate(ey*dt*self.get_key_sensitivity(), *(0,1,0))
 
         if self.action['reset_rotations']:
             self.window.camera.init_rot_matrix()
