@@ -161,51 +161,49 @@ class test_sympy_doc(Command):
 
         print "Testing docstrings."
 
-        files = glob.glob('sympy/*/*.py') + glob.glob('sympy/modules/*/*.py')
+        files = glob.glob('sympy/*/*.py')# + glob.glob('sympy/modules/*/*.py')
         files = [ f.replace("\\","/") for f in files ]  # make it work on Windows too
 
         # files without doctests or that don't work
-        files.remove('sympy/modules/__init__.py')
-
         files.remove('sympy/core/add.py')
         files.remove('sympy/core/relational.py')
         files.remove('sympy/core/interval.py')
 
-        files.remove('sympy/modules/concrete/__init__.py')
-        files.remove('sympy/modules/integrals/__init__.py')
-        files.remove('sympy/modules/matrices/__init__.py')
-        files.remove('sympy/modules/physics/__init__.py')
-        files.remove('sympy/modules/printing/__init__.py')
-        files.remove('sympy/modules/series/__init__.py')
-        files.remove('sympy/modules/simplify/__init__.py')
-        files.remove('sympy/modules/solvers/__init__.py')
-        files.remove('sympy/modules/utilities/__init__.py')
+        files.remove('sympy/concrete/__init__.py')
+        files.remove('sympy/integrals/__init__.py')
+        files.remove('sympy/matrices/__init__.py')
+        files.remove('sympy/physics/__init__.py')
+        files.remove('sympy/printing/__init__.py')
+        files.remove('sympy/series/__init__.py')
+        files.remove('sympy/simplify/__init__.py')
+        files.remove('sympy/solvers/__init__.py')
+        files.remove('sympy/utilities/__init__.py')
 
-        files.remove('sympy/modules/specfun/zeta_functions.py')
-        files.remove('sympy/modules/specfun/orthogonal_polynomials.py')
-        files.remove('sympy/modules/specfun/factorials.py')
+        files.remove('sympy/specfun/zeta_functions.py')
+        files.remove('sympy/specfun/orthogonal_polynomials.py')
+        files.remove('sympy/specfun/factorials.py')
 
-        files.remove('sympy/modules/plotting/__init__.py')
+        files.remove('sympy/plotting/__init__.py')
 
         # fix line 164 above
         #files.remove('sympy/modules/plotting/scene/__init__.py')
         #files.remove('sympy/modules/plotting/renderables/__init__.py')
 
-        files.remove('sympy/modules/plotting/plot_camera.py')
-        files.remove('sympy/modules/plotting/cartesian.py')
-        files.remove('sympy/modules/plotting/spherical.py')
-        files.remove('sympy/modules/plotting/managed_window.py')
-        files.remove('sympy/modules/plotting/polar.py')
-        files.remove('sympy/modules/plotting/cartesian2d.py')
-        files.remove('sympy/modules/plotting/bounding_box.py')
-        files.remove('sympy/modules/plotting/plot_controller.py')
-        files.remove('sympy/modules/plotting/plot_rotation.py')
-        files.remove('sympy/modules/plotting/parametric.py')
-        files.remove('sympy/modules/plotting/polar2d.py')
-        files.remove('sympy/modules/plotting/cartesian3d.py')
-        files.remove('sympy/modules/plotting/polar3d.py')
-        files.remove('sympy/modules/plotting/grid_plane.py')
-        files.remove('sympy/modules/plotting/plot_window.py')
+        files.remove('sympy/plotting/plot_camera.py')
+        files.remove('sympy/plotting/cartesian.py')
+        files.remove('sympy/plotting/spherical.py')
+        files.remove('sympy/plotting/managed_window.py')
+        files.remove('sympy/plotting/polar.py')
+        files.remove('sympy/plotting/cartesian2d.py')
+        files.remove('sympy/plotting/bounding_box.py')
+        files.remove('sympy/plotting/plot_controller.py')
+        files.remove('sympy/plotting/plot_rotation.py')
+        files.remove('sympy/plotting/parametric.py')
+        files.remove('sympy/plotting/polar2d.py')
+        files.remove('sympy/plotting/cartesian3d.py')
+        files.remove('sympy/plotting/polar3d.py')
+        files.remove('sympy/plotting/grid_plane.py')
+        files.remove('sympy/plotting/plot_window.py')
 
         try:
             #testing for optional libraries
@@ -240,35 +238,35 @@ setup(
       license = 'BSD',
       url = 'http://code.google.com/p/sympy',
       packages = ['sympy',
-                    'sympy.core', 'sympy.modules',
-                    'sympy.modules.concrete',
-                    'sympy.modules.geometry',
-                    'sympy.modules.integrals',
-                    'sympy.modules.matrices',
-                    'sympy.modules.numerics',
-                    'sympy.modules.physics',
-                    'sympy.modules.polynomials',
-                    'sympy.modules.printing',
-                    'sympy.modules.series',
-                    'sympy.modules.simplify',
-                    'sympy.modules.solvers',
-                    'sympy.modules.specfun',
-                    'sympy.modules.utilities',
+                    'sympy.core',
+                    'sympy.concrete',
+                    'sympy.geometry',
+                    'sympy.integrals',
+                    'sympy.matrices',
+                    'sympy.numerics',
+                    'sympy.physics',
+                    'sympy.polynomials',
+                    'sympy.printing',
+                    'sympy.series',
+                    'sympy.simplify',
+                    'sympy.solvers',
+                    'sympy.specfun',
+                    'sympy.utilities',
 
-                    'sympy.modules.plotting',
-                    'sympy.modules.plotting.scene',
-                    'sympy.modules.plotting.renderables',
-                    'sympy.modules.plotting.pyglet',
-                    'sympy.modules.plotting.pyglet.ext',
-                    'sympy.modules.plotting.pyglet.font',
-                    'sympy.modules.plotting.pyglet.gl',
-                    'sympy.modules.plotting.pyglet.image',
-                    'sympy.modules.plotting.pyglet.image.codecs',
-                    'sympy.modules.plotting.pyglet.media',
-                    'sympy.modules.plotting.pyglet.window',
-                    'sympy.modules.plotting.pyglet.window.carbon',
-                    'sympy.modules.plotting.pyglet.window.win32',
-                    'sympy.modules.plotting.pyglet.window.xlib',
+                    'sympy.plotting',
+                    'sympy.plotting.scene',
+                    'sympy.plotting.renderables',
+                    'sympy.plotting.pyglet',
+                    'sympy.plotting.pyglet.ext',
+                    'sympy.plotting.pyglet.font',
+                    'sympy.plotting.pyglet.gl',
+                    'sympy.plotting.pyglet.image',
+                    'sympy.plotting.pyglet.image.codecs',
+                    'sympy.plotting.pyglet.media',
+                    'sympy.plotting.pyglet.window',
+                    'sympy.plotting.pyglet.window.carbon',
+                    'sympy.plotting.pyglet.window.win32',
+                    'sympy.plotting.pyglet.window.xlib',
                   ],
       scripts = ['bin/isympy'],
       ext_modules = [],

@@ -631,10 +631,8 @@ class Integer(Rational):
                 # (4/3)**2 -> 4**2 / 3**2
                 return Integer(b.p ** e.p)
             if isinstance(e, Rational):
-                if b == -1:
+                if b == -1:  # any one has tested this ???
                     # calculate the roots of -1
-                    from sympy.modules.trigonometric import sin, cos
-                    from sympy.core.numbers import pi
                     r = cos(pi/e.q) + ImaginaryUnit()*sin(pi/e.q)
                     return r**e.p
                 if b >= 0:
