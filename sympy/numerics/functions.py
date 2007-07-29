@@ -4,7 +4,7 @@ This module implements standard mathematical functions
 be provied in a complementary file cfunctions.py.
 """
 
-from float_ import Float
+from float_ import Float, ComplexFloat
 from constants import pi_float, log2_fixed, log2_float, log10_float
 from utils_ import bitcount, make_fixed
 from math import log as _clog
@@ -194,20 +194,26 @@ def _exp_series(x, prec):
 
 def exp(x):
     """
-    exp(x) -- compute the exponential function of the real number x
+    exp(x) -- compute the exponential function of the real or complex
+    number x
     """
-    if not isinstance(x, Float):
-        x = Float(x)
-    # extra precision needs to be similar in magnitude to log_2(|x|)
-    prec = Float._prec + 4 + max(0, bitcount(x.man) + x.exp)
-    t = make_fixed(x, prec)
-    if abs(x) > 1:
-        lg2 = log2_fixed(prec)
-        n, t = divmod(t, lg2)
+    if isinstance(x, (ComplexFloat, complex)):
+        mag = exp(x.real)
+        re, im = cos_sin(x.imag)
+        return ComplexFloat(mag*re, mag*im)
     else:
-        n = 0
-    y = _exp_series(t, prec)
-    return Float((y, -prec+n))
+        if not isinstance(x, Float):
+            x = Float(x)
+        # extra precision needs to be similar in magnitude to log_2(|x|)
+        prec = Float._prec + 4 + max(0, bitcount(x.man) + x.exp)
+        t = make_fixed(x, prec)
+        if abs(x) > 1:
+            lg2 = log2_fixed(prec)
+            n, t = divmod(t, lg2)
+        else:
+            n = 0
+        y = _exp_series(t, prec)
+        return Float((y, -prec+n))
 
 
 #----------------------------------------------------------------------
@@ -252,7 +258,6 @@ def log(x, b=None):
     log(x)    -> the natural (base e) logarithm of x
     log(x, b) -> the base b logarithm of x
 
-    Both x and b must be positive real numbers (with b != 1).
     """
     # Basic input management
     if b is not None:
@@ -263,9 +268,22 @@ def log(x, b=None):
         l = log(x) / blog
         Float._prec -= 3
         return l
-    if not isinstance(x, Float): x = Float(x)
+
+    if x == 0:
+        raise ValueError, "logarithm of 0"
+
+    if isinstance(x, (ComplexFloat, complex)):
+        mag = abs(x)
+        phase = atan2(x.imag, x.real)
+        return ComplexFloat(log(mag), phase)
+
+    if not isinstance(x, Float):
+        x = Float(x)
+
+    if x < 0:
+        return log(ComplexFloat(x))
+
     if x == 1: return Float((0, 0))
-    if x <= 0: raise ValueError, "complex logarithm not implemented"
 
     bc = bitcount(x.man)
     # Estimated precision needed for log(t) + n*log(2)

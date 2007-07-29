@@ -146,3 +146,9 @@ def test_contexts():
     assert Float.getprec() == 53
     Float.revert()
     assert Float.getprec() == 53
+
+def test_complex():
+    # many more tests needed
+    assert 1 + ComplexFloat(2) == 3
+    assert not ComplexFloat(2).ae(2+1e-13)
+    assert ComplexFloat(2+1e-15j).ae(2)

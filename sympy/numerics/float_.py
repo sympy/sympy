@@ -2,7 +2,7 @@
 This module implements a class Float for arbitrary-precision binary
 floating-point arithmetic. It is typically 10-100 times faster
 than Python's standard Decimals. For details on usage, refer to the
-docstrings in the Float class.
+docstrings in the Float class. A ComplexFloat class is also provided.
 """
 
 import math
@@ -442,6 +442,8 @@ class Float(object):
         if isinstance(t, (int, long)):
             # XXX: cancellation is possible here
             return s + Float(t)
+        if isinstance(t, ComplexFloat):
+            return ComplexFloat(s) + t
         return s + Float(t)
 
     __radd__ = __add__
@@ -460,6 +462,8 @@ class Float(object):
             return Float((s.man*t.man, s.exp+t.exp))
         #if isinstance(t, (int, long)):
         #    return 
+        if isinstance(t, ComplexFloat):
+            return ComplexFloat(s) * t
         return s * Float(t)
 
     __rmul__ = __mul__
@@ -473,9 +477,13 @@ class Float(object):
         if isinstance(t, (int, long)):
             extra = s._prec - bitcount(s.man) + bitcount(t) + 4
             return Float(((s.man<<extra)//t, s.exp-extra))
+        if isinstance(t, ComplexFloat):
+            return ComplexFloat(s) / t
         return s / Float(t)
 
     def __rdiv__(s, t):
+        if isinstance(t, ComplexFloat):
+            return t / ComplexFloat(s)
         return Float(t) / s
 
     def __pow__(s, n):
@@ -501,7 +509,120 @@ class Float(object):
                     man, exp = normalize(man*man, exp+exp, prec2, ROUND_FLOOR)
                     n = n // 2
                 return Float((pm, pe))
+        # TODO: support arbitrary powers through exp
         if n == 0.5:
-            return s.sqrt()
+            from functions import sqrt
+            return sqrt(s)
         raise ValueError
 
+
+class ComplexFloat(object):
+
+    def __init__(s, real=0, imag=0):
+        if isinstance(real, (complex, ComplexFloat)):
+            real, imag = real.real, real.imag
+        s.real = Float(real)
+        s.imag = Float(imag)
+
+    def __repr__(s):
+        r = repr(s.real)[6:-1]
+        i = repr(s.imag)[6:-1]
+        return "ComplexFloat(real=%s, imag=%s)" % (r, i)
+
+    def __str__(s):
+        return "(%s + %s*I)" % (s.real, s.imag)
+
+    def __complex__(s):
+        return complex(float(s.real), float(s.imag))
+
+    def __abs__(s):
+        from functions import hypot
+        return hypot(s.real, s.imag)
+
+    def __eq__(s, t):
+        if not isinstance(t, ComplexFloat):
+            t = ComplexFloat(t)
+        return s.real == t.real and s.imag == t.imag
+
+    # TODO: refactor and merge with Float.ae
+    def ae(s, t, rel_eps=None, abs_eps=None):
+        if not isinstance(t, ComplexFloat):
+            t = ComplexFloat(t)
+        if abs_eps is None and rel_eps is None:
+            rel_eps = Float((1, -s.real._prec+4))
+        if abs_eps is None:
+            abs_eps = rel_eps
+        elif rel_eps is None:
+            rel_eps = abs_eps
+        diff = abs(s-t)
+        if diff <= abs_eps:
+            return True
+        abss = abs(s)
+        abst = abs(t)
+        if abss < abst:
+            err = diff/abst
+        else:
+            err = diff/abss
+        return err <= rel_eps
+
+    def __nonzero__(s):
+        return s.real != 0 or s.imag != 0
+
+    def conjugate(s):
+        return ComplexFloat(s.real, -s.imag)
+
+    def __add__(s, t):
+        if not isinstance(t, ComplexFloat):
+            t = ComplexFloat(t)
+        return ComplexFloat(s.real+t.real, s.imag+t.imag)
+
+    __radd__ = __add__
+
+    def __neg__(s):
+        return ComplexFloat(-s.real, -s.imag)
+
+    def __sub__(s, t):
+        if not isinstance(t, ComplexFloat):
+            t = ComplexFloat(t)
+        return ComplexFloat(s.real-t.real, s.imag-t.imag)
+
+    def __rsub__(s, t):
+        return (-s) + t
+
+    def __mul__(s, t):
+        if not isinstance(t, ComplexFloat):
+            t = ComplexFloat(t)
+        a = s.real; b = s.imag; c = t.real; d = t.imag
+        if b == d == 0:
+            return ComplexFloat(a*c, 0)
+        else:
+            return ComplexFloat(a*c-b*d, a*d+b*c)
+
+    __rmul__ = __mul__
+
+    def __div__(s, t):
+        if not isinstance(t, ComplexFloat):
+            t = ComplexFloat(t)
+        a = s.real; b = s.imag; c = t.real; d = t.imag
+        mag = c*c + d*d
+        return ComplexFloat((a*c+b*d)/mag, (b*c-a*d)/mag)
+
+    def __rdiv__(s, t):
+        return ComplexFloat(t) / s
+
+    def __pow__(s, n):
+        if n == 0: return ComplexFloat(1)
+        if n == 1: return +s
+        if n == -1: return 1/s
+        if n == 2: return s*s
+        if isinstance(n, (int, long)) and n > 0:
+            # TODO: should increase working precision here
+            w = ComplexFloat(1)
+            while n:
+                if n & 1:
+                    w = w*s
+                    n -= 1
+                s = s*s
+                n //= 2
+            return w
+        raise NotImplementedError
