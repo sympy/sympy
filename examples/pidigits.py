@@ -1,7 +1,7 @@
 import sys
 sys.path.append("..")
-from sympy.modules.numerics import *
-from sympy.modules.numerics.utils_ import *
+from sympy.numerics import *
+from sympy.numerics.utils_ import *
 import math
 from time import clock
 

@@ -9,7 +9,7 @@ sys.path.append("..")
 
 from time import sleep
 from sympy import Symbol, sin, cos, log, pi, sqrt
-from sympy.modules.plotting import Plot
+from sympy.plotting import Plot
 
 if __name__ == "__main__":
     x, y = Symbol('x'), Symbol('y')
