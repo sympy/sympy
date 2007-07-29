@@ -3,6 +3,7 @@ sys.path.append(".")
 import py
 from sympy import *
 from sympy.numerics import *
+from sympy.numerics.constants import *
 
 pi = "3.1415926535897932384626433832795028841971693993751058209749445923078\
 1640628620899862803482534211706798"

@@ -2,7 +2,9 @@
 This module contains functions and classes for arbitrary-precision
 numerical computations.
 
->>> from sympy.numerics import *
+>>> from sympy.numerics import Float
+>>> from sympy.numerics.functions import exp, log, sqrt
+>>> from sympy.numerics.constants import pi_float
 >>> Float.setdps(50)
 >>> print pi_float()
 3.1415926535897932384626433832795028841971693993751
@@ -16,7 +18,8 @@ numerical computations.
 """
 
 from float_ import *
-from constants import *
-from functions import *
-from functions2 import *
+#from constants import *
+#from functions import *
+#from functions2 import *
 from quad import TanhSinh
+from evalf_ import evalf

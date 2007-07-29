@@ -3,6 +3,7 @@ sys.path.append(".")
 import py
 from sympy import *
 from sympy.numerics import *
+from sympy.numerics.functions import *
 
 def test_tanhsinh():
     Float.store()

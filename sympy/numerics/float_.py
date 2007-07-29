@@ -535,6 +535,9 @@ class ComplexFloat(object):
     def __complex__(s):
         return complex(float(s.real), float(s.imag))
 
+    def __pos__(s):
+        return ComplexFloat(s.real, s.imag)
+
     def __abs__(s):
         from functions import hypot
         return hypot(s.real, s.imag)
