@@ -267,6 +267,18 @@ class Basic(BasicMeths):
         """Substitutes an expression old -> new."""
         old = Basic.sympify(old)
         new = Basic.sympify(new)
+
+        # TODO This code is a start for issue 264. Currently, uncommenting
+        #      this code will break A LOT of tests!
+        #
+        #if not old.is_dummy:
+        #    exclude = ['dummy', 'comparable']
+        #    for x in self._assume_defined:
+        #        if x in exclude: continue
+        #        old_val = getattr(old, 'is_' + x)
+        #        if old_val is not None and old_val != getattr(new, 'is_' + x):
+        #            raise ValueError("Cannot substitute '%s' for '%s' because assumptions do not match" % (str(new), str(old)))
+
         return self._eval_subs(old, new)
 
     def _seq_subs(self, old, new):

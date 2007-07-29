@@ -19,13 +19,9 @@ class Integral(Basic, ArithMeths, RelMeths):
 
     precedence = Basic.Apply_precedence
 
-    def __new__(cls, expr, *symbols,  **assumptions):
+    def __new__(cls, expr, *symbols, **assumptions):
         expr = Basic.sympify(expr)
-        if assumptions.has_key("evaluate"):
-            evaluate = assumptions["evaluate"]
-            del assumptions["evaluate"]
-        else:
-            evaluate = True
+        evaluate = assumptions.get("evaluate", True)
         if not evaluate:
             r = super(Integral, cls).__new__(cls, **assumptions)
             r._args = (expr,)+symbols

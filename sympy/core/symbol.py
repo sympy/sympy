@@ -6,12 +6,11 @@ from methods import RelMeths, ArithMeths
 class Symbol(Atom, RelMeths, ArithMeths):
     """
     Assumptions::
-       is_real = True
-       is_commutative = True
+       real = True
+       commutative = True
 
     You can override the default assumptions in the constructor::
-       >>> A = Symbol('A', is_commutative = False)
-       >>> B = Symbol('B', is_commutative = False)
+       >>> A,B = symbols('AB', commutative = False)
        >>> bool(A*B != B*A)
        True
        >>> bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative

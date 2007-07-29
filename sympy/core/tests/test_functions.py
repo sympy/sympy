@@ -29,6 +29,8 @@ def test_func():
 
 def test_log():
     assert log(2) > 0
+    assert log(1).is_zero
+    assert log(0.5).is_negative == True
 
 def test_exp_log():
     x = Symbol("x", real=True)

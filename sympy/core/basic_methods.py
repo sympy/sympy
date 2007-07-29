@@ -235,34 +235,12 @@ class BasicMeths(AssumeMeths):
     Atom_precedence = 1000
 
     def __getattr__(self, name):
-        if name.startswith('is_'):
-            # default implementation for assumptions
-            k = name[3:]
-            if k not in self._assume_defined:
-                raise AttributeError('undefined assumption %r' % (k))
-            assumptions = self._assumptions
-            try: return assumptions[k]
-            except KeyError: pass
-            try: ik = self._assume_inegs[k]
-            except KeyError: ik = None
-            if ik is None:
-                if hasattr(self, '_eval_is_'+k):
-                    a = getattr(self,'_eval_is_'+k)()
-                    if a is not None:
-                        self.assume(**{k:a})
-                        return getattr(self, name)
-                    return a
-            else:
-                if hasattr(self, '_eval_is_'+k):
-                    print 'TODO: implement %s._eval_is_%s as _eval_is_%s' % (self.__class__, k, ik)
-                if hasattr(self, '_eval_is_'+ik):
-                    a = getattr(self,'_eval_is_'+ik)()
-                    if a is not None:
-                        self.assume(**{ik:a})
-                        return getattr(self, name)
-                    return a
-            return None
-        elif BasicMeths.classnamespace.has_key(name):
+        try:
+            return self._get_assumption(name)
+        except AttributeError:
+            pass
+
+        if BasicMeths.classnamespace.has_key(name):
             return BasicMeths.classnamespace[name]
         else:
             raise AttributeError("'%s' object has no attribute '%s'"%

@@ -86,8 +86,8 @@ class AssumeMeths(object):
 
     # implications (property -> super property)
     _assume_impl = (('zero','infinitesimal'),
-                    #('negative', 'nonpositive'),
-                    #('positive', 'nonnegative'),
+                    ('negative', 'nonpositive'),
+                    ('positive', 'nonnegative'),
                     ('finite', 'nonzero'),
                     ('zero', 'even'),
                     ('complex', 'commutative'),
@@ -122,6 +122,36 @@ class AssumeMeths(object):
                        'dummy','order',
                        'nni','pi',
                        'evaluate')
+
+    def _get_assumption(self, name):
+        k = name[3:]
+        if k in self._assume_defined:
+            assumptions = self._assumptions
+            try: return assumptions[k]
+            except KeyError: pass
+
+            # First try the assumption evaluation function if it exists
+            if hasattr(self, '_eval_is_'+k):
+                a = getattr(self,'_eval_is_'+k)()
+                if a is not None:
+                    self.assume(**{k:a})
+                    return getattr(self, name)
+
+            # Try the negative assumption evaluation function
+            ik = ''
+            if k in self._assume_negs:
+                ik = self._assume_negs[k]
+            elif k in self._assume_inegs:
+                ik = self._assume_inegs[k]
+            if hasattr(self, '_eval_is_'+ik):
+                a = getattr(self,'_eval_is_'+ik)()
+                if a is not None:
+                    self.assume(**{ik:a})
+                    return getattr(self, name)
+
+            # No result, return None
+            return None
+        raise AttributeError('undefined assumption %r' % (k))
 
     def _change_assumption(self, d, name, value, extra_msg = ''):
         default_assumptions = self.__class__.default_assumptions
@@ -158,13 +188,15 @@ class AssumeMeths(object):
 
         ###
         if "negative" in assumptions:
-            if "positive" not in assumptions:
-                self._change_assumption(d, "positive", not assumptions["negative"])
+            if "positive" not in assumptions and assumptions["negative"] == True:
+                self._change_assumption(d, "positive", False)
         elif "positive" in assumptions:
-            self._change_assumption(d, "negative", not assumptions["positive"])
+            if assumptions["positive"] == True:
+                self._change_assumption(d, "negative", False)
         ###
 
         processed = {}
+        replace = []
         aliases = self._assume_aliases 
         negs = self._assume_negs
         inegs = self._assume_inegs
@@ -173,11 +205,6 @@ class AssumeMeths(object):
         defined = self._assume_defined
         while assumptions:
             k, v = assumptions.popitem()
-            # obsolete, to be removed:
-            if k.startswith('is_'):
-                k = k[3:]
-                assumptions[k] = v
-                continue
             #
             if aliases.has_key(k):
                 for a in aliases[k]:
@@ -190,7 +217,9 @@ class AssumeMeths(object):
                 continue
 
             if k not in defined:
-                raise ValueError('unrecognized assumption item (%r:%r)' % (k,v))
+                replace.append( (k, v) )
+                continue
+                #raise ValueError('unrecognized assumption item (%r:%r)' % (k,v))
 
             if k=='order':
                 v = self.Order(v)
@@ -254,11 +283,27 @@ class AssumeMeths(object):
                             assert processed[p2]==True, `k,v,p2,processed[p2]`
                         else:
                             assumptions[p2] = True
-            
-        return
+
+        # Anything that wasn't a known assumption can be placed back in
+        for k,v in replace:
+            assumptions[k] = v
 
     def _assume_hashable_content(self):
         d = self._assumptions
         keys = d.keys()
         keys.sort()
         return tuple([(k+'=', d[k]) for k in keys])
+
+    def _eval_is_nonnegative(self):
+        a = None
+        if hasattr(self, '_eval_is_zero'):
+            a = self._eval_is_zero()
+
+        b = None
+        if hasattr(self, '_eval_is_positive'):
+            b = self._eval_is_positive()
+
+        if a == True or b == True:
+            return True
+        elif a == False and b == False:
+            return False

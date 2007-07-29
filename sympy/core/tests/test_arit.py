@@ -834,7 +834,7 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (k**x).is_nonnegative == True
     assert ((-k)**x).is_nonnegative == None
     assert ((-k)**n).is_nonnegative == True
-    assert ((-k)**m).is_nonnegative == False
+    assert ((-k)**m).is_nonnegative == None
 
     assert (2**x).is_nonpositive == False
     assert ((-2)**x).is_nonpositive == None
@@ -846,5 +846,5 @@ def test_Pow_is_nonpositive_nonnegative():
 
     assert (k**x).is_nonpositive == None
     assert ((-k)**x).is_nonpositive == None
-    assert ((-k)**n).is_nonpositive == False
+    assert ((-k)**n).is_nonpositive == None
     assert ((-k)**m).is_nonpositive == True

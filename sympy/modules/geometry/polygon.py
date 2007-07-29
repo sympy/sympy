@@ -303,7 +303,6 @@ class Triangle(Polygon):
             e1 = simplify(u1/v1)
             e2 = simplify(u2/v2)
             e3 = simplify(u3/v3)
-            print e1, e2, e3
             return bool(e1 == e2) and bool(e2 == e3)
 
         # There's only 6 permutations, so write them out

@@ -60,8 +60,8 @@ class Apply(Basic, ArithMeths, RelMeths):
     precedence = Basic.Apply_precedence
 
     @cache_it
-    def __new__(cls, *args, **assumptions):
-        args = map(Basic.sympify,args)
+    def __new__(cls, *args, **kwargs):
+        args = map(Basic.sympify, args)
         func = args[0]
         func_args = args[1:]
 
@@ -82,11 +82,15 @@ class Apply(Basic, ArithMeths, RelMeths):
                     n += 1
                 return f(*new_args) + dfa * o0**n
 
-        obj = func._eval_apply(*func_args)
+        # Prevent evaluation if evaluate=False in kwargs
+        obj = None
+        if kwargs.get('evaluate', True):
+            obj = func._eval_apply(*func_args)
+
         if obj is None:
             assert isinstance(func, Function),`args`
             cls = getattr(Basic,'Apply'+func.__class__.__name__, cls)
-            obj = Basic.__new__(cls, *args, **assumptions)
+            obj = Basic.__new__(cls, *args, **kwargs)
         return obj
 
     @property

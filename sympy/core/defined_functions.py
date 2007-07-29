@@ -148,7 +148,8 @@ class ApplyExp(Apply):
     def _eval_is_real(self):
         return self.args[0].is_real
     def _eval_is_positive(self):
-        return self.args[0].is_real
+        if self.args[0].is_real:
+            return True
     def _eval_is_bounded(self):
         arg = self.args[0]
         if arg.is_unbounded:
@@ -156,6 +157,8 @@ class ApplyExp(Apply):
             if arg.is_positive: return False
         if arg.is_bounded:
             return True
+    def _eval_is_zero(self):
+        return isinstance(self.args[0], Basic.NegativeInfinity)
 
     def _eval_power(b, e):
         return b.func(b.args[0] * e)
@@ -295,6 +298,8 @@ class ApplyLog(Apply):
             if arg.is_infinitesimal: return False
             if isinstance(arg, Basic.Number):
                 return arg>1
+    def _eval_is_zero(self):
+        return isinstance(self.args[0], Basic.One)
 
     def as_numer_denom(self):
         n, d = self.args[0].as_numer_denom()
@@ -407,6 +412,8 @@ class Sqrt(DefinedFunction):
             return new ** (exp/2)
 
 class ApplySqrt(Apply):
+    def _eval_is_zero(self):
+        return isinstance(self.args, Basic.Zero)
 
     def as_base_exp(self):
         return self.args[0], Basic.Half()
@@ -436,6 +443,9 @@ class Abs(DefinedFunction):
         if not isinstance(coeff, Basic.One):
             return self(coeff) * self(Basic.Mul(*terms))
         return
+
+    def _eval_is_zero(self):
+        return isinstance(self.args[0], Basic.Zero)
 
 ####
 ##  REMOVE
@@ -484,6 +494,9 @@ class ApplySign(Apply):
 
     is_bounded = True
 
+    def _eval_is_zero(self):
+        return isinstance(self.args[0], Basic.Zero)
+
 class Conjugate(DefinedFunction):
 
     nofargs = 1
@@ -497,6 +510,9 @@ class ApplyConjugate(Apply):
 
     def _eval_conjugate(self):
         return self.args[0]
+
+    def _eval_is_zero(self):
+        return isinstance(self.args[0], Basic.Zero)
 
 class Max(DefinedFunction):
 

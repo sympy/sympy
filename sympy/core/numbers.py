@@ -226,9 +226,6 @@ class Real(Number):
     def _eval_is_positive(self):
         return self.num.as_tuple()[0] == 0
 
-    def _eval_is_negative(self):
-        return self.num.as_tuple()[0] != 0
-
     def _eval_evalf(self):
         return self
 
@@ -422,8 +419,8 @@ class Rational(Number):
     def _eval_is_positive(self):
         return self.p > 0
 
-    def _eval_is_negative(self):
-        return self.p < 0
+    def _eval_is_zero(self):
+        return self.p == 0
 
     def __neg__(self): return Rational(-self.p, self.q)
 
@@ -681,6 +678,7 @@ class Zero(Singleton, Integer):
     is_positive = False
     is_negative = False
     is_finite = False
+    is_zero = True
 
     def _eval_power(b, e):
         if e.is_negative:
