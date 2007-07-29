@@ -55,11 +55,15 @@ def test_bug4():
     assert str(e) in ["-2*x**(1/2) - 1/2*x**(-1/2)*w", "-2*x**(1/2) - 1/2*w*x**(-1/2)", 
                       "-1/2*x**(-1/2)*w - 2*x**(1/2)", "-1/2*w*x**(-1/2) - 2*x**(1/2)"]
 
-def _test_Derivative():
-    # XXX Derivatives appear to always be evaluated
+def test_Derivative():
     x = Symbol("x")
+    y = Symbol("y")
+
     e = Derivative(x**2, x, evaluate=False)
-    assert str(e) == "(x**2)'"
+    assert str(e) == "D(x**2, x)"
+
+    e = Derivative(x**2/y, x, y, evaluate=False)
+    assert str(e) == "D(x**2/y, x, y)"
 
 def test_x_div_y():
     x = Symbol("x")

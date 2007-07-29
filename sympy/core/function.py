@@ -667,10 +667,16 @@ class Derivative(Basic, ArithMeths, RelMeths):
         expr = Basic.sympify(expr)
         if not symbols: return expr
         symbols = map(Basic.sympify, symbols)
+
+        if not assumptions.get("evaluate", True):
+            obj = Basic.__new__(cls, expr, *symbols)
+            return obj
+
         for s in symbols:
             assert isinstance(s, Basic.Symbol),`s`
             if not expr.has(s):
                 return Basic.Zero()
+
         unevaluated_symbols = []
         for s in symbols:
             obj = expr._eval_derivative(s)
@@ -678,6 +684,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
                 unevaluated_symbols.append(s)
             else:
                 expr = obj
+
         if not unevaluated_symbols:
             return expr
         return Basic.__new__(cls, expr, *unevaluated_symbols)
@@ -702,6 +709,9 @@ class Derivative(Basic, ArithMeths, RelMeths):
             return Derivative(obj, *self.symbols)
         return Derivative(self.expr, *((s,)+self.symbols))
 
+    def doit(self):
+        return Derivative(self.expr, *self.symbols)
+
     @property
     def expr(self):
         return self._args[0]
@@ -717,10 +727,11 @@ class Derivative(Basic, ArithMeths, RelMeths):
         return r
 
     def _eval_subs(self, old, new):
-        for a in list(old.atoms(Basic.Symbol)):
-            if a in self.symbols:
-                return self.as_apply().subs(old, new)
-        return self.__class__(*[s.subs(old, new) for s in self])
+        # XXX Is this required?
+        #for a in list(old.atoms(Basic.Symbol)):
+        #    if a in self.symbols:
+        #        return self.as_apply().subs(old, new)
+        return self.__class__(*[s.subs(old, new) for s in self], **{'evaluate': False})
 
 
 class DefinedFunction(Function, Singleton, Atom):
