@@ -55,7 +55,7 @@ def test_power():
     assert e.match(p**p) == None
 
     e = (x+y)**(x+y)
-    assert e.match(p**p,) == {p: x+y}
+    assert e.match(p**p) == {p: x+y}
     assert e.match(p**q) == {p: x+y, q: x+y}
 
     e = 3/(4*x+5)
@@ -63,10 +63,6 @@ def test_power():
 
     e = 3/(4*x+5)
     assert e.match(p/(q*x+r)) == {p: 3, q: 4, r: 5}
-
-    e = 3*x**2+y*x+a
-    # XXX This one fails, not with an "incorrect" match, but a less pretty one
-    #assert e.match(p*x**2+q*x+r) == {p: 3, q: y, r: a}
 
     e = 2/(x+1)
     assert e.match(p/(q*x+r)) == {p: 2, q: 1, r: 1}
@@ -76,6 +72,12 @@ def test_power():
 
     e = (2*x)**2
     assert e.match(p*q**r) == {p: 4, q: x, r: 2}
+
+    p = Wild('p', exclude=[x])
+    q = Wild('q', exclude=[x])
+    r = Wild('r', exclude=[x])
+    e = 3*x**2 + y*x + a
+    assert e.match(p*x**2 + q*x + r) == {p: 3, q: y, r: a}
 
 def test_mul():
     x,y,a,b,c = map(Symbol, 'xyabc')
@@ -179,10 +181,9 @@ def test_match_bug4():
     e = x
     assert e.match(-p*x) == {p: -1}
 
-def _test_match_bug5():
-    # XXX THIS TEST FAILS
+def test_match_bug5():
     x = Symbol('x')
-    p = Symbol('p')
+    p = Wild('p')
     e = -x
     assert e.match(-p*x) == {p: 1}
 

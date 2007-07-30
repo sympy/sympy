@@ -87,17 +87,26 @@ class Wild(Symbol):
     Wild() matches any expression but another Wild().
     """
 
-    def __new__(cls, name = None, **assumptions):
+    def __new__(cls, name=None, exclude=None, **assumptions):
         assumptions['dummy'] = True
         if name is None:
             name = 'W%s' % (Symbol.dummycount+1)
-        return Symbol.__new__(cls, name, **assumptions)
+        obj = Symbol.__new__(cls, name, **assumptions)
+        if exclude is None:
+            obj.exclude = None
+        else:
+            obj.exclude = [Basic.sympify(x) for x in exclude]
+        return obj
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         for p,v in repl_dict.items():
             if p==pattern:
                 if v==expr: return repl_dict
                 return None
+        if pattern.exclude:
+            for x in expr.atoms():
+                if x in pattern.exclude:
+                    return None
         repl_dict = repl_dict.copy()
         repl_dict[pattern] = expr
         return repl_dict
