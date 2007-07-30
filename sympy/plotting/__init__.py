@@ -15,6 +15,5 @@ try:
     from plot import Plot
 
 except Exception, e:
-    class Plot(object):
-        def __init__(*args, **kwargs):
-            raise e
+    def Plot(*args, **kwargs):
+        raise e

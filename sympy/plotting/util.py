@@ -1,19 +1,27 @@
 from pyglet.gl import *
 
-def get_model_matrix():
+def get_model_matrix(array_type=c_float, glGetMethod=glGetFloatv):
     """
     Returns the current modelview matrix.
     """
-    m = (c_float*16)()
-    glGetFloatv(GL_MODELVIEW_MATRIX, m)
+    m = (array_type*16)()
+    glGetMethod(GL_MODELVIEW_MATRIX, m)
     return m
 
-def get_projection_matrix():
+def get_projection_matrix(array_type=c_float, glGetMethod=glGetFloatv):
     """
     Returns the current modelview matrix.
     """
-    m = (c_float*16)()
-    glGetFloatv(GL_PROJECTION_MATRIX, m)
+    m = (array_type*16)()
+    glGetMethod(GL_PROJECTION_MATRIX, m)
+    return m
+
+def get_viewport():
+    """
+    Returns the current viewport.
+    """
+    m = (c_int*4)()
+    glGetIntegerv(GL_VIEWPORT, m)
     return m
 
 def get_direction_vectors():
@@ -30,6 +38,14 @@ def get_view_direction_vectors():
 
 def get_basis_vectors():
     return ((1,0,0), (0,1,0), (0,0,1))
+
+def screen_to_model(x,y,z):
+    m = get_model_matrix(c_double, glGetDoublev)
+    p = get_projection_matrix(c_double, glGetDoublev)
+    w = get_viewport()
+    mx,my,mz = c_double(),c_double(),c_double()
+    gluUnProject(x,y,z,m,p,w,mx,my,mz)
+    return mx,my,mz
 
 def billboard_matrix():
     """

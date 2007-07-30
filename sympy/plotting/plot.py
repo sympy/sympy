@@ -152,12 +152,12 @@ class Plot(object):
         self._render_lock.release()
         return i
 
-    def append(self, args):
+    def append(self, *args):
         """
         Parses and adds a PlotFunction to the function
         list at the first available index.
         """
-        self[self.firstavailableindex()] = args
+        self.__setitem__(self.firstavailableindex(), args)
 
     def __len__(self):
         """
