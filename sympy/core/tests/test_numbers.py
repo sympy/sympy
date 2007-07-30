@@ -1,4 +1,4 @@
-from sympy import Rational, Symbol, Real, I, sqrt, oo, pi
+from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi
 from sympy.core.power import integer_nthroot
 import py
 
@@ -98,6 +98,23 @@ def test_Infinity():
     assert 1/oo  == 0
     assert 1/(-oo)  == 0
     assert 8/oo  == 0
+
+def test_NaN():
+    assert nan == nan
+    assert nan != 1
+    assert 1*nan == nan
+    assert 1 != nan
+    assert nan == -nan
+    assert oo != Symbol("x")**3
+    assert nan + 1 == nan
+    assert 2 + nan == nan
+    assert 3*nan + 2 == nan
+    assert -nan*3 == nan
+    assert nan + nan == nan
+    assert -nan + nan*(-5) == nan
+    assert 1/nan  == nan
+    assert 1/(-nan)  == nan
+    assert 8/nan  == nan
 
 def test_powers():
     assert integer_nthroot(1, 2) == (1, True)

@@ -194,7 +194,11 @@ class Real(Number):
         # mantissa and exponent to compute an equivalent Decimal.  If this cannot
         # be done exactly, then retry with more precision.
 
-        mantissa, exponent = math.frexp(f)
+        try:
+            mantissa, exponent = math.frexp(f)
+        except OverflowError:
+            return decimal.Inf
+
         while mantissa != int(mantissa):
             mantissa *= 2.0
             exponent -= 1
@@ -243,6 +247,8 @@ class Real(Number):
 
     def __add__(self, other):
         other = Basic.sympify(other)
+        if isinstance(other, NaN) or isinstance(self, NaN):
+            return NaN()
         if isinstance(other, Number):
             return Real(self.num + other._as_decimal())
         return Number.__add__(self, other)
@@ -426,6 +432,8 @@ class Rational(Number):
 
     def __mul__(self, other):
         other = Basic.sympify(other)
+        if isinstance(other, NaN) or isinstance(self, NaN):
+            return NaN()
         if isinstance(other, Real):
             return Real(self._as_decimal() * other.num)
         if isinstance(other, Rational):
@@ -434,6 +442,8 @@ class Rational(Number):
 
     def __add__(self, other):
         other = Basic.sympify(other)
+        if isinstance(other, NaN) or isinstance(self, NaN):
+            return NaN()
         if isinstance(other, Real):
             return Real(self._as_decimal() + other.num)
         if isinstance(other, Rational):

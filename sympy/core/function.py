@@ -319,6 +319,12 @@ class WildFunction(Function):
             if p==pattern:
                 if v==expr: return repl_dict
                 return None
+        if pattern.nofargs != None:
+            if isinstance(expr, Apply):
+                if pattern.nofargs != expr.func.nofargs:
+                    return None
+            elif pattern.nofargs != expr.nofargs:
+                return None
         repl_dict = repl_dict.copy()
         repl_dict[pattern] = expr
         return repl_dict
