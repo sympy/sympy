@@ -401,6 +401,128 @@ def test_cos():
 
     assert cos(k*pi*I) == cosh(k*pi)
 
+def test_tan():
+    x, y = symbols('xy')
+
+    k = Symbol('k', integer=True)
+
+    assert tan(nan) == nan
+
+    assert tan(oo*I) == I
+    assert tan(-oo*I) == -I
+
+    assert tan(0) == 0
+
+    assert tan(1) == tan(1)
+    assert tan(-1) == -tan(1)
+
+    assert tan(x) == tan(x)
+    assert tan(-x) == -tan(x)
+
+    assert tan(pi*I) == tanh(pi)*I
+    assert tan(-pi*I) == -tanh(pi)*I
+
+    assert tan(2**1024 * E) == tan(2**1024 * E)
+    assert tan(-2**1024 * E) == -tan(2**1024 * E)
+
+    assert tan(pi) == 0
+    assert tan(-pi) == 0
+    assert tan(2*pi) == 0
+    assert tan(-2*pi) == 0
+    assert tan(-3*10**73*pi) == 0
+    assert tan(7*10**103*pi) == 0
+
+    assert tan(pi/2) == tan(pi/2)
+    assert tan(-pi/2) == -tan(pi/2)
+    assert tan(5*pi/2) == tan(5*pi/2)
+    assert tan(7*pi/2) == tan(7*pi/2)
+
+    assert tan(pi/3) == sqrt(3)
+    assert tan(-2*pi/3) == sqrt(3)
+
+    assert tan(pi/4) == Basic.One()
+    assert tan(-pi/4) == -Basic.One()
+    assert tan(17*pi/4) == Basic.One()
+    assert tan(-3*pi/4) == Basic.One()
+
+    assert tan(pi/6) == 1/sqrt(3)
+    assert tan(-pi/6) == -1/sqrt(3)
+    assert tan(7*pi/6) == 1/sqrt(3)
+    assert tan(-5*pi/6) == 1/sqrt(3)
+
+    assert tan(pi/105) == tan(pi/105)
+    assert tan(-pi/105) == -tan(pi/105)
+
+    assert tan(2 + 3*I) == tan(2 + 3*I)
+
+    assert tan(x*I) == tanh(x)*I
+
+    assert tan(k*pi) == 0
+    assert tan(17*k*pi) == 0
+
+    assert tan(k*pi*I) == tanh(k*pi)*I
+
+def test_cot():
+    x, y = symbols('xy')
+
+    k = Symbol('k', integer=True)
+
+    assert cot(nan) == nan
+
+    assert cot(oo*I) == -I
+    assert cot(-oo*I) == I
+
+    assert cot(0) == cot(0)
+
+    assert cot(1) == cot(1)
+    assert cot(-1) == -cot(1)
+
+    assert cot(x) == cot(x)
+    assert cot(-x) == -cot(x)
+
+    assert cot(pi*I) == -coth(pi)*I
+    assert cot(-pi*I) == coth(pi)*I
+
+    assert cot(2**1024 * E) == cot(2**1024 * E)
+    assert cot(-2**1024 * E) == -cot(2**1024 * E)
+
+    assert cot(pi) == cot(pi)
+    assert cot(-pi) == -cot(pi)
+    assert cot(2*pi) == cot(2*pi)
+    assert cot(-2*pi) == -cot(2*pi)
+    assert cot(-3*10**73*pi) == -cot(3*10**73*pi)
+    assert cot(7*10**103*pi) == cot(7*10**103*pi)
+
+    assert cot(pi/2) == 0
+    assert cot(-pi/2) == 0
+    assert cot(5*pi/2) == 0
+    assert cot(7*pi/2) == 0
+
+    assert cot(pi/3) == 1/sqrt(3)
+    assert cot(-2*pi/3) == 1/sqrt(3)
+
+    assert cot(pi/4) == Basic.One()
+    assert cot(-pi/4) == -Basic.One()
+    assert cot(17*pi/4) == Basic.One()
+    assert cot(-3*pi/4) == Basic.One()
+
+    assert cot(pi/6) == sqrt(3)
+    assert cot(-pi/6) == -sqrt(3)
+    assert cot(7*pi/6) == sqrt(3)
+    assert cot(-5*pi/6) == sqrt(3)
+
+    assert cot(pi/105) == cot(pi/105)
+    assert cot(-pi/105) == -cot(pi/105)
+
+    assert cot(2 + 3*I) == cot(2 + 3*I)
+
+    assert cot(x*I) == -coth(x)*I
+
+    assert cot(k*pi) == cot(k*pi)
+    assert cot(17*k*pi) == cot(17*k*pi)
+
+    assert cot(k*pi*I) == -coth(k*pi)*I
+
 def test_sinh():
     x, y = symbols('xy')
 
@@ -523,3 +645,134 @@ def test_cosh():
 
     assert cosh(k*pi) == cosh(k*pi)
 
+def test_tanh():
+    x, y = symbols('xy')
+
+    k = Symbol('k', integer=True)
+
+    assert tanh(nan) == nan
+
+    assert tanh(oo) == 1
+    assert tanh(-oo) == -1
+
+    assert tanh(0) == 0
+
+    assert tanh(1) == tanh(1)
+    assert tanh(-1) == -tanh(1)
+
+    assert tanh(x) == tanh(x)
+    assert tanh(-x) == -tanh(x)
+
+    assert tanh(pi) == tanh(pi)
+    assert tanh(-pi) == -tanh(pi)
+
+    assert tanh(2**1024 * E) == tanh(2**1024 * E)
+    assert tanh(-2**1024 * E) == -tanh(2**1024 * E)
+
+    assert tanh(pi*I) == 0
+    assert tanh(-pi*I) == 0
+    assert tanh(2*pi*I) == 0
+    assert tanh(-2*pi*I) == 0
+    assert tanh(-3*10**73*pi*I) == 0
+    assert tanh(7*10**103*pi*I) == 0
+
+    assert tanh(pi*I/2) == tanh(pi*I/2)
+    assert tanh(-pi*I/2) == -tanh(pi*I/2)
+    assert tanh(5*pi*I/2) == tanh(5*pi*I/2)
+    assert tanh(7*pi*I/2) == tanh(7*pi*I/2)
+
+    assert tanh(pi*I/3) == sqrt(3)*I
+    assert tanh(-2*pi*I/3) == sqrt(3)*I
+
+    assert tanh(pi*I/4) == I
+    assert tanh(-pi*I/4) == -I
+    assert tanh(17*pi*I/4) == I
+    assert tanh(-3*pi*I/4) == I
+
+    assert tanh(pi*I/6) == I/sqrt(3)
+    assert tanh(-pi*I/6) == -I/sqrt(3)
+    assert tanh(7*pi*I/6) == I/sqrt(3)
+    assert tanh(-5*pi*I/6) == I/sqrt(3)
+
+    assert tanh(pi*I/105) == tan(pi/105)*I
+    assert tanh(-pi*I/105) == -tan(pi/105)*I
+
+    assert tanh(2 + 3*I) == tanh(2 + 3*I)
+
+    assert tanh(x*I) == tan(x)*I
+
+    assert tanh(k*pi*I) == 0
+    assert tanh(17*k*pi*I) == 0
+
+    assert tanh(k*pi*I/2) == tan(k*pi/2)*I
+
+def test_coth():
+    x, y = symbols('xy')
+
+    k = Symbol('k', integer=True)
+
+    assert coth(nan) == nan
+
+    assert coth(oo) == 1
+    assert coth(-oo) == -1
+
+    assert coth(0) == coth(0)
+
+    assert coth(1) == coth(1)
+    assert coth(-1) == -coth(1)
+
+    assert coth(x) == coth(x)
+    assert coth(-x) == -coth(x)
+
+    assert coth(pi*I) == -cot(pi)*I
+    assert coth(-pi*I) == cot(pi)*I
+
+    assert coth(2**1024 * E) == coth(2**1024 * E)
+    assert coth(-2**1024 * E) == -coth(2**1024 * E)
+
+    assert coth(pi*I) == -cot(pi)*I
+    assert coth(-pi*I) == cot(pi)*I
+    assert coth(2*pi*I) == -cot(2*pi)*I
+    assert coth(-2*pi*I) == cot(2*pi)*I
+    assert coth(-3*10**73*pi*I) == cot(3*10**73*pi)*I
+    assert coth(7*10**103*pi*I) == -cot(7*10**103*pi)*I
+
+    assert coth(pi*I/2) == 0
+    assert coth(-pi*I/2) == 0
+    assert coth(5*pi*I/2) == 0
+    assert coth(7*pi*I/2) == 0
+
+    assert coth(pi*I/3) == -I/sqrt(3)
+    assert coth(-2*pi*I/3) == -I/sqrt(3)
+
+    assert coth(pi*I/4) == -I
+    assert coth(-pi*I/4) == I
+    assert coth(17*pi*I/4) == -I
+    assert coth(-3*pi*I/4) == -I
+
+    assert coth(pi*I/6) == -sqrt(3)*I
+    assert coth(-pi*I/6) == sqrt(3)*I
+    assert coth(7*pi*I/6) == -sqrt(3)*I
+    assert coth(-5*pi*I/6) == -sqrt(3)*I
+
+    assert coth(pi*I/105) == -cot(pi/105)*I
+    assert coth(-pi*I/105) == cot(pi/105)*I
+
+    assert coth(2 + 3*I) == coth(2 + 3*I)
+
+    assert coth(x*I) == -cot(x)*I
+
+    assert coth(k*pi*I) == -cot(k*pi)*I
+    assert coth(17*k*pi*I) == -cot(17*k*pi)*I
+
+    assert coth(k*pi*I) == -cot(k*pi)*I
+
+#def test_asin():
+#def test_acos():
+#def test_atan():
+#def test_acot():
+
+#def test_asinh():
+#def test_acosh():
+#def test_atanh():
+#def test_acoth():
