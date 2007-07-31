@@ -2,6 +2,7 @@ import sys
 sys.path.append("..")
 from sympy.numerics import *
 from sympy.numerics.utils_ import *
+from sympy.numerics.constants import pi_float
 import math
 from time import clock
 
