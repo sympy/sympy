@@ -72,8 +72,15 @@ def plot_mode(i_var_str, d_var_str, default_intervals, aliases=None, default=Fal
     default_i_vars = symbols(i_var_str)
     default_d_vars = symbols(d_var_str)
 
-    d = len(default_d_vars)
-    i = len(default_i_vars)
+    if not isinstance(default_i_vars, list):
+        default_i_vars, i = [default_i_vars], 1
+    else:
+        i = len(default_i_vars)
+
+    if not isinstance(default_d_vars, list):
+        default_d_vars, d = [default_d_vars], 1
+    else:
+        d = len(default_d_vars)
 
     if aliases is None: aliases = []
 

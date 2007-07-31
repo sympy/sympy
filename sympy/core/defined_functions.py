@@ -84,6 +84,12 @@ class Exp(DefinedFunction):
 
 class ApplyExp(Apply):
 
+    def _eval_complex_expand(self):
+        re, im = self.args[0].as_real_imag()
+
+        exp, cos, sin = Exp()(re), Cos()(im), Sin()(im)
+        return exp * cos + S.ImaginaryUnit * exp * sin
+
     def precedence(self):
         b, e = self.as_base_exp()
         if e.is_negative: return 50 # same as default Mul
@@ -268,6 +274,7 @@ class Log(DefinedFunction):
         if x.is_positive and x.is_unbounded: return True
 
     def _calc_apply_unbounded(self, x):
+        import pdb; pdb.set_trace()
         return x.is_unbounded
 
     @cache_it_immutable
@@ -283,6 +290,12 @@ class Log(DefinedFunction):
 
 class ApplyLog(Apply):
 
+    def _eval_complex_expand(self):
+        re, im = self.args[0].as_real_imag()
+
+        return Log()(Sqrt()(re) + Sqrt()(im)) + \
+               S.ImaginaryUnit * Arg()(self.args[0])
+
     def _eval_is_real(self):
         return self.args[0].is_positive
     def _eval_is_bounded(self):
@@ -297,7 +310,7 @@ class ApplyLog(Apply):
             if arg.is_infinitesimal: return False
             if isinstance(arg, Basic.Number):
                 return arg>1
-    def _eval_is_zero(self):
+    def _eval_is_zero(self): # USELESS
         return isinstance(self.args[0], Basic.One)
 
     def as_numer_denom(self):
@@ -306,6 +319,8 @@ class ApplyLog(Apply):
             return self.func(n), d
         return (self.func(n) - self.func(d)).as_numer_denom()
 
+    # similar code must be added to other functions with have singularites
+    # in their domains eg. cot(), tan() ...
     def _eval_oseries(self, order):
         arg = self.args[0]
         x = order.symbols[0]
@@ -329,7 +344,7 @@ class ApplyLog(Apply):
             return (self.args[0] - 1).as_leading_term(x)
         return self.func(arg)
 
-    def _eval_expand(self):
+    def _eval_expand(self): # WRONG
         arg = self.args[0]
         if isinstance(arg, Basic.Mul):
             expr = 0
@@ -446,34 +461,6 @@ class Abs(DefinedFunction):
     def _eval_is_zero(self):
         return isinstance(self.args[0], Basic.Zero)
 
-####
-##  REMOVE
-
-def Pi_coeff(expr):
-    """
-    Exctracts the coefficient at pi.
-
-    Examples:
-    >>> from sympy import pi
-    >>> x=Symbol("x")
-    >>> Pi_coeff(pi)
-    1
-    >>> Pi_coeff(2*pi)
-    2
-    >>> Pi_coeff(2*pi+18)
-    >>> Pi_coeff(2*pi*x)
-    2*x
-    """
-    pi = Basic.Pi()
-    if not expr.has(pi):
-        return
-    x = Basic.Symbol('x',dummy=True)
-    c = expr.subs(pi, x).diff(x)
-    if c * pi == expr:
-        return c
-
-####
-
 class Sign(DefinedFunction):
 
     nofargs = 1
@@ -492,23 +479,6 @@ class Sign(DefinedFunction):
 class ApplySign(Apply):
 
     is_bounded = True
-
-    def _eval_is_zero(self):
-        return isinstance(self.args[0], Basic.Zero)
-
-class Conjugate(DefinedFunction):
-
-    nofargs = 1
-
-    def _eval_apply(self, arg):
-        obj = arg._eval_conjugate()
-        if obj is not None:
-            return obj
-
-class ApplyConjugate(Apply):
-
-    def _eval_conjugate(self):
-        return self.args[0]
 
     def _eval_is_zero(self):
         return isinstance(self.args[0], Basic.Zero)
@@ -550,11 +520,10 @@ Basic.singleton['abs_'] = Abs
 Basic.singleton['max_'] = Max
 Basic.singleton['min_'] = Min
 Basic.singleton['sign'] = Sign
-Basic.singleton['conjugate'] = Conjugate
 
-################################################################################
-######################### FLOOR and CEILING FUNCTIONS ##########################
-################################################################################
+###############################################################################
+######################### FLOOR and CEILING FUNCTIONS #########################
+###############################################################################
 
 class Floor(DefinedFunction):
     """Floor is a univariate function which returns the largest integer
@@ -572,6 +541,9 @@ class Floor(DefinedFunction):
        >>> floor(Rational(23, 10))
        2
 
+       >>> floor(2*E)
+       5
+
        >>> floor(-Real(0.567))
        -1
 
@@ -582,38 +554,18 @@ class Floor(DefinedFunction):
 
     nofargs = 1
 
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            raise NotImplementedError("Floor.fdiff()")
-        else:
-            raise ArgumentIndexError(self, argindex)
-
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
         if arg.is_integer:
             return arg
-        elif isinstance(arg, Basic.Add):
-            included, excluded = [], []
-
-            for term in arg:
-                if term.atoms(type=Basic.Symbol):
-                    if term.is_integer:
-                        excluded.append(term)
-                    else:
-                        included.append(term)
-                else:
-                    excluded.append(self(term))
-
-            if excluded:
-                return self(Basic.Add(*included)) + Basic.Add(*excluded)
         elif isinstance(arg, Basic.Number):
             if isinstance(arg, Basic.Infinity):
-                return Basic.Infinity()
+                return S.Infinity
             elif isinstance(arg, Basic.NegativeInfinity):
-                return Basic.NegativeInfinity()
+                return S.NegativeInfinity
             elif isinstance(arg, Basic.NaN):
-                return Basic.NaN()
+                return S.NaN
             elif isinstance(arg, Basic.Integer):
                 return arg
             elif isinstance(arg, Basic.Rational):
@@ -622,21 +574,36 @@ class Floor(DefinedFunction):
                 return Basic.Integer(int(arg.floor()))
         elif isinstance(arg, Basic.NumberSymbol):
             return arg.approximation_interval(Basic.Integer)[0]
-        elif arg.has(Basic.ImaginaryUnit()):
-            coeff = arg.as_coefficient(Basic.ImaginaryUnit())
+        elif isinstance(arg, Basic.ImaginaryUnit):
+            return S.ImaginaryUnit
+        elif isinstance(arg, Basic.Add):
+            included, excluded = [], []
 
-            if coeff is not None:
-                if not coeff.atoms(type=Basic.Symbol):
-                    return self(coeff) * Basic.ImaginaryUnit()
-                elif coeff.is_integer:
-                    return coeff * Basic.ImaginaryUnit()
-        elif not arg.atoms(type=Basic.Symbol):
-            if arg < 0:
-                return -Ceiling()(-arg)
-            elif isinstance(arg, Basic.Mul):
-                return Basic.Mul(*[ self(term) for term in arg ])
-            else:
-                return self(arg.evalf())
+            for term in arg:
+                coeff = term.as_coefficient(S.ImaginaryUnit)
+
+                if coeff is not None and coeff.is_real:
+                    excluded.append(self(coeff)*S.ImaginaryUnit)
+                elif term.is_real:
+                    if term.is_integer:
+                        excluded.append(term)
+                    else:
+                        included.append(term)
+                else:
+                    return
+
+            if excluded:
+                return self(Basic.Add(*included)) + Basic.Add(*excluded)
+        else:
+            coeff, terms = arg.as_coeff_terms(S.ImaginaryUnit)
+
+            if not terms and not arg.atoms(type=Basic.Symbol):
+                if arg.is_negative:
+                    return -Ceiling()(-arg)
+                else:
+                    return self(arg.evalf())
+            elif terms == [ S.ImaginaryUnit ] and coeff.is_real:
+                return self(coeff)*S.ImaginaryUnit
 
 class ApplyFloor(Apply):
 
@@ -665,6 +632,9 @@ class Ceiling(DefinedFunction):
        >>> ceiling(Rational(23, 10))
        3
 
+       >>> ceiling(2*E)
+       6
+
        >>> ceiling(-Real(0.567))
        0
 
@@ -675,38 +645,18 @@ class Ceiling(DefinedFunction):
 
     nofargs = 1
 
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            raise NotImplementedError("Ceiling.fdiff()")
-        else:
-            raise ArgumentIndexError(self, argindex)
-
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
         if arg.is_integer:
             return arg
-        elif isinstance(arg, Basic.Add):
-            included, excluded = [], []
-
-            for term in arg:
-                if term.atoms(type=Basic.Symbol):
-                    if term.is_integer:
-                        excluded.append(term)
-                    else:
-                        included.append(term)
-                else:
-                    excluded.append(self(term))
-
-            if excluded:
-                return self(Basic.Add(*included)) + Basic.Add(*excluded)
         elif isinstance(arg, Basic.Number):
             if isinstance(arg, Basic.Infinity):
-                return Basic.Infinity()
+                return S.Infinity
             elif isinstance(arg, Basic.NegativeInfinity):
-                return Basic.NegativeInfinity()
+                return S.NegativeInfinity
             elif isinstance(arg, Basic.NaN):
-                return Basic.NaN()
+                return S.NaN
             elif isinstance(arg, Basic.Integer):
                 return arg
             elif isinstance(arg, Basic.Rational):
@@ -715,21 +665,36 @@ class Ceiling(DefinedFunction):
                 return Basic.Integer(int(arg.ceiling()))
         elif isinstance(arg, Basic.NumberSymbol):
             return arg.approximation_interval(Basic.Integer)[1]
-        elif arg.has(Basic.ImaginaryUnit()):
-            coeff = arg.as_coefficient(Basic.ImaginaryUnit())
+        elif isinstance(arg, Basic.ImaginaryUnit):
+            return S.ImaginaryUnit
+        elif isinstance(arg, Basic.Add):
+            included, excluded = [], []
 
-            if coeff is not None:
-                if not coeff.atoms(type=Basic.Symbol):
-                    return self(coeff) * Basic.ImaginaryUnit()
-                elif coeff.is_integer:
-                    return coeff * Basic.ImaginaryUnit()
-        elif not arg.atoms(type=Basic.Symbol):
-            if arg < 0:
-                return -Floor()(-arg)
-            elif isinstance(arg, Basic.Mul):
-                return Basic.Mul(*[ self(term) for term in arg ])
-            else:
-                return self(arg.evalf())
+            for term in arg:
+                coeff = term.as_coefficient(S.ImaginaryUnit)
+
+                if coeff is not None and coeff.is_real:
+                    excluded.append(self(coeff)*S.ImaginaryUnit)
+                elif term.is_real:
+                    if term.is_integer:
+                        excluded.append(term)
+                    else:
+                        included.append(term)
+                else:
+                    return
+
+            if excluded:
+                return self(Basic.Add(*included)) + Basic.Add(*excluded)
+        else:
+            coeff, terms = arg.as_coeff_terms(S.ImaginaryUnit)
+
+            if not terms and not arg.atoms(type=Basic.Symbol):
+                if arg.is_negative:
+                    return -Floor()(-arg)
+                else:
+                    return self(arg.evalf())
+            elif terms == [ S.ImaginaryUnit ] and coeff.is_real:
+                return self(coeff)*S.ImaginaryUnit
 
 class ApplyCeiling(Apply):
 
@@ -775,12 +740,6 @@ class RisingFactorial(DefinedFunction):
     """
 
     nofargs = 2
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            raise NotImplementedError("RisingFactorial.fdiff()")
-        else:
-            raise ArgumentIndexError(self, argindex)
 
     def _eval_apply(self, x, k):
         x = Basic.sympify(x)
@@ -849,12 +808,6 @@ class FallingFactorial(DefinedFunction):
 
     nofargs = 2
 
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            raise NotImplementedError("FallingFactorial.fdiff()")
-        else:
-            raise ArgumentIndexError(self, argindex)
-
     def _eval_apply(self, x, k):
         x = Basic.sympify(x)
         k = Basic.sympify(k)
@@ -903,10 +856,180 @@ Basic.singleton['rf'] = RisingFactorial
 Basic.singleton['ff'] = FallingFactorial
 
 ###############################################################################
-############## REAL and IMAGINARY PARTS, CONJUNGATION, ARGUMENT ###############
+############## REAL and IMAGINARY PARTS, ARGUMENT, CONJUGATION ################
 ###############################################################################
 
-# TBD : re, im, arg
+class Re(DefinedFunction):
+    """Returns real part of expression. This function performs only
+       elementary analysis and so it will fail to decompose properly
+       more complicated expressions. If completely simplified result
+       is needed then use Basic.as_real_imag() or perform complex
+       expansion on instance of this function.
+
+       >>> from sympy import *
+
+       >>> x, y = symbols('x', 'y')
+
+       >>> re(2*E)
+       2*E
+
+       >>> re(2*I + 17)
+       17
+
+       >>> re(2*I)
+       0
+
+       >>> re(x*I)
+       -im(x)
+
+       >>> re(im(x) + x*I + 2)
+       2
+
+    """
+
+    nofargs = 1
+
+    is_real = True
+
+    def _eval_apply(self, arg):
+        arg = Basic.sympify(arg)
+
+        if isinstance(arg, Basic.NaN):
+            return S.NaN
+        elif arg.is_real:
+            return arg
+        else:
+            if not isinstance(arg, Basic.Add):
+                arg = [arg]
+
+            included, reverted, excluded = [], [], []
+
+            for term in arg:
+                coeff = term.as_coefficient(S.ImaginaryUnit)
+
+                if coeff is not None:
+                    if not coeff.is_real:
+                        reverted.append(coeff)
+                elif not term.has(S.ImaginaryUnit) and term.is_real:
+                    excluded.append(term)
+                else:
+                    included.append(term)
+
+            if len(arg[:]) != len(included):
+                a, b, c = map(lambda xs: Basic.Add(*xs),
+                    [included, reverted, excluded])
+
+                return self(a) - Im()(b) + c
+
+class ApplyRe(Apply):
+
+    def _eval_is_real(self):
+        return True
+
+    def _eval_complex_expand(self):
+        return self.func(self.args[0].as_real_imag()[0])
+
+class Im(DefinedFunction):
+    """Returns imaginary part of expression. This function performs
+       only elementary analysis and so it will fail to decompose
+       properly more complicated expressions. If completely simplified
+       result is needed then use Basic.as_real_imag() or perform complex
+       expansion on instance of this function.
+
+       >>> from sympy import *
+
+       >>> x, y = symbols('x', 'y')
+
+       >>> im(2*E)
+       0
+
+       >>> re(2*I + 17)
+       17
+
+       >>> im(x*I)
+       re(x)
+
+       >>> im(re(x) + y)
+       im(y)
+
+    """
+
+    nofargs = 1
+
+    is_real = True
+
+    def _eval_apply(self, arg):
+        arg = Basic.sympify(arg)
+
+        if isinstance(arg, Basic.NaN):
+            return S.NaN
+        elif arg.is_real:
+            return S.Zero
+        else:
+            if not isinstance(arg, Basic.Add):
+                arg = [arg]
+
+            included, reverted, excluded = [], [], []
+
+            for term in arg:
+                coeff = term.as_coefficient(S.ImaginaryUnit)
+
+                if coeff is not None:
+                    if not coeff.is_real:
+                        reverted.append(coeff)
+                    else:
+                        excluded.append(coeff)
+                elif term.has(S.ImaginaryUnit) or not term.is_real:
+                    included.append(term)
+
+            if len(arg[:]) != len(included):
+                a, b, c = map(lambda xs: Basic.Add(*xs),
+                    [included, reverted, excluded])
+
+                return self(a) + Re()(b) + c
+
+class ApplyIm(Apply):
+
+    def _eval_is_real(self):
+        return True
+
+    def _eval_complex_expand(self):
+        return self.func(self.args[0].as_real_imag()[1])
+
+class Arg(DefinedFunction):
+
+    nofargs = 1
+
+    is_real = True
+
+    def _eval_apply(self, arg):
+        return
+
+class ApplyArg(Apply):
+
+    def _eval_is_real(self):
+        return True
+
+Basic.singleton['re'] = Re
+Basic.singleton['im'] = Im
+Basic.singleton['arg'] = Arg
+
+class Conjugate(DefinedFunction):
+
+    nofargs = 1
+
+    def _eval_apply(self, arg):
+        obj = arg._eval_conjugate()
+
+        if obj is not None:
+            return obj
+
+class ApplyConjugate(Apply):
+
+    def _eval_conjugate(self):
+        return self.args[0]
+
+Basic.singleton['conjugate'] = Conjugate
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -990,6 +1113,12 @@ class Sin(DefinedFunction):
 
 class ApplySin(Apply):
 
+    def _eval_complex_expand(self):
+        re, im = self.args[0].as_real_imag()
+
+        return Sin()(re)*Cosh()(im) + \
+            S.ImaginaryUnit*Cos()(re)*Sinh()(im)
+
     def _eval_expand(self):
         arg = self.args[0].expand()
         cos = Basic.Cos()
@@ -1006,6 +1135,8 @@ class ApplySin(Apply):
         if x is not None:
             return (sin(x)*cos(y) + sin(y)*cos(x)).expand()
         return sin(arg)
+
+    #def _eval_complex_expand(self):
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
@@ -1097,6 +1228,12 @@ class Cos(DefinedFunction):
                 return (-1)**(n//2)*x**(n)/Basic.Factorial()(n)
 
 class ApplyCos(Apply):
+
+    def _eval_complex_expand(self):
+        re, im = self.args[0].as_real_imag()
+
+        return Cos()(re)*Cosh()(im) - \
+            S.ImaginaryUnit*Sin()(re)*Sinh()(im)
 
     def _eval_expand(self):
         arg = self.args[0].expand()

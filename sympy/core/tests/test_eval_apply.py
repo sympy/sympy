@@ -86,6 +86,9 @@ def test_floor_apply_eval():
     assert floor(E) == 2
     assert floor(-E) == -3
 
+    assert floor(2*E) == 5
+    assert floor(-2*E) == -6
+
     assert floor(pi) == 3
     assert floor(-pi) == -4
 
@@ -134,7 +137,13 @@ def test_floor_apply_eval():
     assert floor(k/2) == floor(k/2)
 
     assert floor(x + y) == floor(x + y)
-    assert floor(x + k) == floor(x) + k
+
+    assert floor(x + 3) == floor(x + 3)
+    assert floor(x + k) == floor(x + k)
+
+    assert floor(y + 3) == floor(y) + 3
+    assert floor(y + k) == floor(y) + k
+
     assert floor(k + n) == k + n
 
     assert floor(x*I) == floor(x*I)
@@ -163,6 +172,9 @@ def test_ceiling_apply_eval():
 
     assert ceiling(E) == 3
     assert ceiling(-E) == -2
+
+    assert ceiling(2*E) == 6
+    assert ceiling(-2*E) == -5
 
     assert ceiling(pi) == 4
     assert ceiling(-pi) == -3
@@ -212,7 +224,13 @@ def test_ceiling_apply_eval():
     assert ceiling(k/2) == ceiling(k/2)
 
     assert ceiling(x + y) == ceiling(x + y)
-    assert ceiling(x + k) == ceiling(x) + k
+
+    assert ceiling(x + 3) == ceiling(x + 3)
+    assert ceiling(x + k) == ceiling(x + k)
+
+    assert ceiling(y + 3) == ceiling(y) + 3
+    assert ceiling(y + k) == ceiling(y) + k
+
     assert ceiling(k + n) == k + n
 
     assert ceiling(x*I) == ceiling(x*I)
@@ -222,6 +240,85 @@ def test_ceiling_apply_eval():
 
     assert ceiling(sin(1)) == 1
     assert ceiling(sin(-1)) == 0
+
+def _test_re_apply_eval():
+
+    x, y = symbols('xy')
+
+    r = Symbol('r', real=True)
+
+    assert re(nan) == nan
+
+    assert re(oo) == oo
+    assert re(-oo) == -oo
+
+    assert re(0) == 0
+
+    assert re(1) == 1
+    assert re(-1) == -1
+
+    assert re(E) == E
+    assert re(-E) == -E
+
+    assert re(x) == re(x)
+    assert re(x*I) == -im(x)
+    assert re(r*I) == 0
+    assert re(r) == r
+
+    assert re(x + y) == re(x + y)
+    assert re(x + r) == re(x) + r
+
+    assert re(re(x)) == re(x)
+
+    assert re(2 + I) == 2
+    assert re(x + I) == re(x)
+
+    assert re(x + y*I) == re(x) - im(y)
+    assert re(x + r*I) == re(x)
+
+    assert re(log(2*I)) == log(2)
+
+def _test_im_apply_eval():
+
+    x, y = symbols('xy')
+
+    r = Symbol('r', real=True)
+
+    assert im(nan) == nan
+
+    assert im(oo*I) == oo
+    assert im(-oo*I) == -oo
+
+    assert im(0) == 0
+
+    assert im(1) == 0
+    assert im(-1) == 0
+
+    assert im(E*I) == E
+    assert im(-E*I) == -E
+
+    assert im(x) == im(x)
+    assert im(x*I) == re(x)
+    assert im(r*I) == r
+    assert im(r) == 0
+
+    assert im(x + y) == im(x + y)
+    assert im(x + r) == im(x)
+    assert im(x + r*I) == im(x) + r
+
+    assert im(im(x)*I) == im(x)
+
+    assert im(2 + I) == 1
+    assert im(x + I) == im(x) + 1
+
+    assert im(x + y*I) == im(x) + re(y)
+    assert im(x + r*I) == im(x) + r
+
+    assert im(log(2*I)) == Pi/2
+
+#def test_arg_apply_eval():
+
+#def test_conjugate_apply_eval():
 
 def test_rf_apply_eval():
 

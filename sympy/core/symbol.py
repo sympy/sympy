@@ -82,6 +82,9 @@ class Symbol(Atom, RelMeths, ArithMeths):
             return (b**2-a**2)/2
         return self*(b-a)
 
+    def _eval_complex_expand(self):
+        return S.Re(self) + S.Im(self)*S.ImaginaryUnit
+
 class Wild(Symbol):
     """
     Wild() matches any expression but another Wild().
@@ -129,21 +132,31 @@ class Temporary(Symbol):
 def symbols(*names, **kwargs):
     """Returns a list of symbols with names taken from 'names'
        argument, which can be a string, then each character
-       forms a separate symbol or a sequence of strings.
+       forms a separate symbol, or a sequence of strings.
 
        All newly created symbols have assumptions set acordingly
        to 'kwargs'. Main intention behind this function is to
        simplify and shorten examples code in doc-strings.
 
-       >>> x, y, z = symbols('xyz', integer=True)
+       >>> x, y, z = symbols('xyz')
+
+       >>> a = symbols('a', integer=True)
+
+       >>> a.is_integer
+       True
 
        >>> xx, yy, zz = symbols('xx', 'yy', 'zz', real=True)
 
-       >>> y.is_real
+       >>> xx.is_real and yy.is_real and zz.is_real
        True
 
     """
-    if len(names) == 1 and isinstance(names[0], str):
-        return [ Symbol(name, **kwargs) for name in names[0] ]
+    if len(names) == 1:
+        result = [ Symbol(name, **kwargs) for name in names[0] ]
     else:
-        return [ Symbol(name, **kwargs) for name in names ]
+        result = [ Symbol(name, **kwargs) for name in names ]
+
+    if len(result) == 1:
+        return result[0]
+    else:
+        return result

@@ -247,7 +247,7 @@ class Basic(BasicMeths):
         return result
 
     def _eval_is_polynomial(self, syms):
-        return False
+        return
 
     def is_polynomial(self, *syms):
         if syms:
@@ -498,30 +498,49 @@ class Basic(BasicMeths):
         """
         return Basic.Integer(len(self[:])-1) + sum([t.count_ops(symbolic=symbolic) for t in self])
 
-    ###################################################################################
-    ##################### EXPRESSION REPRESENTATION METHODS ###########################
-    ###################################################################################
+    ###########################################################################
+    ################# EXPRESSION REPRESENTATION METHODS #######################
+    ###########################################################################
+
+    def _eval_complex_expand(self):
+        terms = [ term._eval_complex_expand() for term in self ]
+        return self.__class__(*terms, **self._assumptions)#.expand()
 
     def _eval_expand(self):
         if isinstance(self, Atom):
             return self
         return self.__class__(*[t.expand() for t in self], **self._assumptions)
 
-    @cache_it_immutable
-    def expand(self):
-        return self._eval_expand()
-
-    def normal(self):
-        n, d = self.as_numer_denom()
-        if isinstance(d, Basic.One):
-            return n
-        return n/d
-
-    def as_base_exp(self):
-        # a -> b ** e
-        return self, Basic.One()
+    def expand(self, **hints):
+        if 'complex' in hints and hints['complex']:
+            return self._eval_complex_expand()
+        else:
+            return self._eval_expand()
 
     def as_coefficient(self, expr):
+        """Extracts symbolic coefficient at the given expression. In
+           other words, this functions separates 'self' into product
+           of 'expr' and 'expr'-free coefficient. If such separation
+           is not possible it will return None. Additionally this
+           function can be used as a 'collect' replacement for
+           trivial cases.
+
+           >>> from sympy import *
+           >>> x, y = symbols('xy')
+
+           >>> E.as_coefficient(E)
+           1
+           >>> (2*E).as_coefficient(E)
+           2
+
+           >>> (2*E).as_coefficient(x)
+           >>> (2*E + x).as_coefficient(x)
+           >>> (2*sin(E)*E).as_coefficient(x)
+
+           >>> (2*x*I + Pi*y*I).as_coefficient(I)
+           2*x + Pi*y
+
+        """
         expr = Basic.sympify(expr)
 
         if not self.has(expr):
@@ -535,6 +554,50 @@ class Basic(BasicMeths):
                 return coeff
             else:
                 return None
+
+    def as_real_imag(self):
+        """Performs complex expansion on 'self' and returns a tuple
+           containing collected both real and imaginary parts. This
+           method can't be confused with re() and im() functions,
+           which does not perform complex expansion at evaluation.
+
+           However it is possible to expand both re() and im()
+           functions and get exactly the same results as with
+           a single call to this function.
+
+           >>> from sympy import *
+
+           >>> x, y = symbols('xy', real=True)
+
+           >>> (x + y*I).as_real_imag()
+           (x, y)
+
+           >>> z, w = symbols('zw')
+
+           >>> (z + w*I).as_real_imag()
+           (-im(w) + re(z), re(w) + im(z))
+
+        """
+        expr = self._eval_complex_expand()
+
+        if not isinstance(expr, Basic.Add):
+            expr = [expr]
+
+        re_part, im_part = [], []
+
+        for term in expr:
+            coeff = term.as_coefficient(S.ImaginaryUnit)
+
+            if coeff is None:
+                re_part.append(term)
+            else:
+                im_part.append(coeff)
+
+        return (Basic.Add(*re_part), Basic.Add(*im_part))
+
+    def as_base_exp(self):
+        # a -> b ** e
+        return self, Basic.One()
 
     def as_coeff_terms(self, x=None):
         # a -> c * t
@@ -586,6 +649,12 @@ class Basic(BasicMeths):
         else:
             l1.append(self)
         return Basic.Add(*l1), Basic.Add(*l2)
+
+    def normal(self):
+        n, d = self.as_numer_denom()
+        if isinstance(d, Basic.One):
+            return n
+        return n/d
 
     ###################################################################################
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
@@ -838,6 +907,9 @@ class Atom(Basic):
         if s==self:
             return (b**2-a**2)/2
         return self*(b-a)
+
+    def _eval_complex_expand(self):
+        return self
 
     def _eval_is_polynomial(self, syms):
         return True

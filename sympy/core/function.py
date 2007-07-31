@@ -202,6 +202,10 @@ class Apply(Basic, ArithMeths, RelMeths):
                 return False
         return True
 
+    def _eval_complex_expand(self):
+        func = self.func(*[ term._eval_complex_expand() for term in self.args ])
+        return Basic.Re()(func) + S.ImaginaryUnit * Basic.Im()(func)
+
 class Function(Basic, ArithMeths, NoRelMeths):
     """ Base class for function objects, represents also undefined functions.
 
@@ -282,8 +286,8 @@ class Function(Basic, ArithMeths, NoRelMeths):
                 self.nofargs = len(args)
         return self(*args), args
 
-    def expand(self):
-        return self
+    #def expand(self):
+    #    return self
 
     def fdiff(self, argindex=1):
         if self.nofargs is not None:
@@ -454,7 +458,7 @@ class Lambda(Function):
             expr = expr.subs(a, na)
         return expr, args
 
-    @cache_it
+    #@cache_it
     def expand(self):
         return Lambda(self.body.expand(), *self.args)
 
