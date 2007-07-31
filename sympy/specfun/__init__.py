@@ -11,6 +11,6 @@ from factorials import factorial_, factorial2, binomial2, rising_factorial, \
 from orthogonal_polynomials import legendre, legendre_zero, \
     chebyshev_zero
 
-from zeta_functions import bernoulli, bernoulli_poly, zeta, \
+from zeta_functions import bernoulli2, bernoulli_poly, zeta, \
     dirichlet_eta, harmonic, polygamma, digamma, \
     trigamma, tetragamma

@@ -1,4 +1,4 @@
-from factorials import factorial
+from factorials import factorial_, binomial2
 
 from sympy.core import *
 
@@ -26,30 +26,30 @@ def _product(low, high):
 
 def _bernoulli_sum(m, mtop):
     s = 0
-    a = int(binomial(m+3, m-6))
+    a = int(binomial2(m+3, m-6))
     for j in xrange(1, mtop+1):
-        s += a*bernoulli(m-6*j)
+        s += a*bernoulli2(m-6*j)
         a *= _product(m-6 - 6*j + 1, m-6*j)
         a //= _product(6*j+4, 6*j+9)
     return s
 
 @_memo
 def _b0mod6(m):
-    return (Rational(m+3, 3) - _bernoulli_sum(m, m//6)) / binomial(m+3, m)
+    return (Rational(m+3, 3) - _bernoulli_sum(m, m//6)) / binomial2(m+3, m)
 
 @_memo
 def _b2mod6(m):
-    return (Rational(m+3, 3) - _bernoulli_sum(m, (m-2)//6)) / binomial(m+3, m)
+    return (Rational(m+3, 3) - _bernoulli_sum(m, (m-2)//6)) / binomial2(m+3, m)
 
 @_memo
 def _b4mod6(m):
-    return (-Rational(m+3, 6) - _bernoulli_sum(m, (m-4)//6)) / binomial(m+3, m)
+    return (-Rational(m+3, 6) - _bernoulli_sum(m, (m-4)//6)) / binomial2(m+3, m)
 
-class Bernoulli(DefinedFunction):
+class Bernoulli2(DefinedFunction):
     """
     Usage
     =====
-        bernoulli(n) -> nth Bernoulli number, B_n
+        bernoulli2(n) -> nth Bernoulli number, B_n
 
     Notes
     =====
@@ -59,9 +59,9 @@ class Bernoulli(DefinedFunction):
     Examples
     ========
         >>> from sympy.specfun.zeta_functions import *
-        >>> [bernoulli(n) for n in range(11)]
+        >>> [bernoulli2(n) for n in range(11)]
         [1, -1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66]
-        >>> bernoulli(1000001)
+        >>> bernoulli2(1000001)
         0
 
     """
@@ -89,11 +89,11 @@ class BernoulliPoly(DefinedFunction):
         if isinstance(n, Rational) and n.is_integer:
             s = 0
             for k in xrange(n.p+1):
-                s += binomial(n,k)*bernoulli(k)*x**(n-k)
+                s += binomial2(n,k)*bernoulli2(k)*x**(n-k)
             return s
 
 
-class zeta(DefinedFunction):
+class Zeta(DefinedFunction):
     """
     Usage
     =====
@@ -124,9 +124,9 @@ class zeta(DefinedFunction):
             if s == 1:
                 return oo
             if s > 1 and int(s) % 2 == 0:
-                return abs(bernoulli(s)) * 2**(s-1) / factorial(s) * pi**s
+                return abs(bernoulli2(s)) * 2**(s-1) / factorial(s) * pi**s
             if s < 1:
-                return -bernoulli(-s+1)/(-s+1)
+                return -bernoulli2(-s+1)/(-s+1)
 
 
 class DirichletEta(DefinedFunction):
@@ -148,46 +148,35 @@ class Harmonic(DefinedFunction):
     """
     nofargs = 2
 
-    def __repr__(self):
-        return "harmonic(%r, %r)" % self._args
+    #def __repr__(self):
+    #    return "harmonic(%r, %r)" % self._args
 
-    __str__ = __repr__
+    #__str__ = __repr__
 
     def _eval_apply(self, n, m):
+        if n == oo:
+            return zeta(m)
         if isinstance(n, Rational) and n >= 0 and \
            isinstance(m, Rational) and m >= 0:
+            print "yeska", n, m
             if n == 0:
                 return 0
             s = 0
             for i in xrange(1, n.p+1):
                 s += Rational(1)/i**m
             return s
-        if n == oo:
-            return zeta(m)
-
-
-# TODO: implement properly
-class _euler_gamma(Number):
-    def __str__(self):
-        return "euler_gamma"
-    def __latex__(self):
-        return "\gamma"
-    def evalf(self, prec=15):
-        return Real("0.57721566490153286060651209008")
-
-#euler_gamma = _euler_gamma()
 
 
 class PolyGamma(DefinedFunction):
     """
-    polygamma(m, z) -- m'th order polygamma function of z
+    polygamma(m, z) -- mth order polygamma function of z
     """
     nofargs = 2
 
-    def __repr__(self):
-        return "polygamma(%r, %r)" % self._args
+    #def __repr__(self):
+    #    return "polygamma(%r, %r)" % self._args
 
-    __str__ = __repr__
+    #__str__ = __repr__
 
     def _eval_apply(self, m, z):
         # TODO: rational arguments, reflection formula
@@ -198,20 +187,23 @@ class PolyGamma(DefinedFunction):
                 #if z < 0:
                 #    return polygamma(0, 1-z) - pi/tan(pi*z)
                 if z.is_integer and z > 0:
-                    return -euler_gamma + harmonic(z-1)
+                    return -EulerGamma + harmonic(z-1, 1)
         # if m == 1:
         #    if isinstance(z, Rational) and z < 0:
         #        return -polygamma(1, 1-z) + pi**2 / sin(pi*z)**2
         if m.is_integer and m > 0 and z.is_integer and z > 0:
-            return (-1)**(m+1)*factorial(m)*(zeta(m+1)-harmonic(z-1, m+1))
+            return (-1)**(m+1)*factorial_(m)*(zeta(m+1)-harmonic(z-1, m+1))
         if m.is_integer and z == Rational(1,2):
-            return (-1)**(m+1)*factorial(m)*(2**(m+1)-1)*zeta(m+1)
+            return (-1)**(m+1)*factorial_(m)*(2**(m+1)-1)*zeta(m+1)
 
-    def diff(self, sym):
-        m, z = self._args
-        if m.diff(sym) != 0:
+    def fdiff(self, argindex=2):
+        if argindex == 2:
+            m = Basic.Symbol('m', dummy=True)
+            z = Basic.Symbol('z', dummy=True)
+            return Lambda(polygamma(m+1, z), m, z)
+        else:
             raise NotImplementedError
-        return polygamma(m+1, z) * z.diff(sym)
+
 
 def digamma(z):
     return polygamma(0, z)
@@ -223,8 +215,9 @@ def tetragamma(z):
     return polygamma(2, z)
 
 
-bernoulli = Bernoulli()
+bernoulli2 = Bernoulli2()
 bernoulli_poly = BernoulliPoly()
+zeta = Zeta()
 dirichlet_eta = DirichletEta()
 harmonic = Harmonic()
 polygamma = PolyGamma()

@@ -67,8 +67,13 @@ class Factorial_(DefinedFunction):
                     return (-1)**(-n+1) * pi * x / factorial_(-x)
                 return sqrt(pi) * Rational(1, 2**n) * factorial2(2*n-1)
 
-    def diff(self, sym):
-        return gamma(self._args+1).diff(sym)
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            from zeta_functions import polygamma
+            x = Basic.Symbol('x', dummy=True)
+            return Lambda(gamma(x+1)*polygamma(0, x+1), x)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     def evalf(self):
         """Return a low-precision approximation of self."""
@@ -403,10 +408,13 @@ class Gamma(DefinedFunction):
         except:
             return y
 
-    def diff(self, sym):
-        from zeta_functions import polygamma
-        x = self._args
-        return gamma(x)*polygamma(0,x)*x.diff(sym)
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            from zeta_functions import polygamma
+            x = Basic.Symbol('x', dummy=True)
+            return Lambda(gamma(x)*polygamma(0, x), x)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     def __latex__(self):
         return "\Gamma(" + self._args.__latex__() + ")"
