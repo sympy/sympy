@@ -218,7 +218,7 @@ def sturm(f):
     seq = [f]
     seq.append(f.diff(f.var[0]))
     while seq[-1].sympy_expr is not S.Zero:
-        seq.append(-(div_.mv(seq[-2], seq[-1])[-1]))
+        seq.append(-(div_.div(seq[-2], seq[-1])[-1]))
     return seq[:-1]
 
 def uv(f, verbose=False):

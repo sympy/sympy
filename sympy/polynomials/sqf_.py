@@ -1,7 +1,6 @@
 """Algorithms for square-free decomposition of polynomials"""
 
 from sympy.polynomials.base import *
-from sympy.polynomials import gcd_
 from sympy.polynomials import div_
 
 def uv(f):
@@ -13,13 +12,13 @@ def uv(f):
     """
     f = [f]
     while f[-1].coeffs[0][1] is not S.Zero:
-        f.append(gcd_.uv(f[-1], f[-1].diff(f[-1].var[0])))
+        f.append(div_.gcd(f[-1], f[-1].diff(f[-1].var[0])))
     g = []
     for i in range(1, len(f)):
-        g.append(div_.mv(f[i-1], f[i])[0][0])
+        g.append(div_.div(f[i-1], f[i])[0])
     a = []
     for i in range(0, len(g)-1):
-        a.append(div_.mv(g[i], g[i+1])[0][0])
+        a.append(div_.div(g[i], g[i+1])[0])
     a.append(g[-1])
     return a
 
@@ -56,5 +55,5 @@ def uv_part(f):
     f is assumed to be a univariate instance of Polynomial.
 
     """
-    ff = gcd_.uv(f, f.diff(f.var[0]))
-    return div_.mv(f, ff)[0][0]
+    ff = div_.gcd(f, f.diff(f.var[0]))
+    return div_.div(f, ff)[0]

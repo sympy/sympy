@@ -44,7 +44,7 @@ def groebner(f, reduced=True):
             factor_j = Polynomial(coeffs=(term_div(lcm, f[j].coeffs[0]),),
                                   var=f[0].var, order=f[0].order)
             s_poly = f[i]*factor_i - f[j]*factor_j
-            s_poly = div_.mv(s_poly, f)[-1] # reduce
+            s_poly = div_.div(s_poly, f)[-1] # reduce
             if s_poly.sympy_expr is not S.Zero:
                 # we still have to add it to the base.
                 s += 1
@@ -86,7 +86,7 @@ def groebner(f, reduced=True):
     # rest of the base (without touching the leading terms).
     # As the basis is already sorted, the rest gets smaller each time.
     for i,p in enumerate(f[0:-1]):
-        pp = div_.mv(p, f[i+1:])[-1]
+        pp = div_.div(p, f[i+1:])[-1]
         f[i] = pp
 
     return f

@@ -1,9 +1,9 @@
 """Various algorithms for the factorization of polynomials."""
 
-import random
+#import random
 
 from sympy.polynomials.base import *
-from sympy.polynomials import div_, gcd_, roots_, sqf_
+from sympy.polynomials import div_, roots_, sqf_
 
 def uv_int(f):
     """Find the factorization of an univariate integer polynomial.
@@ -22,9 +22,8 @@ def uv_int(f):
                                 var=f.var, order=f.order)
                 result += [pp]*(i+1)
                 # TODO: remove assertion, speed up!
-                q, r = div_.mv_int(p, pp)
+                p, r = div_.div(p, pp, coeff='int')
                 assert r.sympy_expr is S.Zero
-                p = q[0] # q is a list!
             if p.coeffs[0][1] is not S.Zero: # Filter out constant factors
                 # Then try the rest with the kronecker algorithm:
                 for pp in kronecker(p):
@@ -86,7 +85,7 @@ def kronecker(f):
         ff = Polynomial(S.One, ((S.One, S.Zero),), f.var, f.order)
         for lf in lfs:
             ff *= lf
-        return lfs + kronecker(div_.mv_int(f, ff)[0][0])
+        return lfs + kronecker(div_.div(f, ff, coeff='int')[0])
     # All divisors of the values give possible values for g.
     divs = map(integer_divisors, map(int, values))
     # Assemble all possible divisor combination
@@ -124,9 +123,9 @@ def kronecker(f):
     # TODO: Use iterators instead of lists!
 
     for g in cands:
-        q, r =  div_.mv_int(f,g)
+        q, r =  div_.div(f, g, coeff='int')
         if r.sympy_expr is S.Zero:
-            return kronecker(q[0]) + kronecker(g)
+            return kronecker(q) + kronecker(g)
     else:
         # No divisor found, f irreducible.
         # TODO: Try again with smaller degree divisors?
@@ -199,10 +198,10 @@ def kronecker_mv(f):
             if ff is S.One:
                 continue
             candidate = Polynomial(ff, var=f.var, order=f.order)
-            q, r = div_.mv_int(f, candidate)
+            q, r = div_.div(f, candidate, coeff='int')
             if r.sympy_expr is S.Zero: # found a factor
                 result.append(candidate)
-                f = q[0]
+                f = q
             else:
                 tested.append(cand)
     if f.sympy_expr is not S.One:

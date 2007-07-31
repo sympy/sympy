@@ -1,4 +1,3 @@
-
 import sys
 sys.path.append(".")
 
@@ -92,7 +91,7 @@ def test_Polynomial():
 ## sympy/modules/polynomials/common.py
 
 def test_coeff_ring():
-    from sympy.polynomials.common import coeff_ring
+    from sympy.polynomials.base import coeff_ring
     x = Symbol("x")
     assert coeff_ring([Rational(2)]) == 'int'
     assert coeff_ring([Rational(2), Rational(1,2)]) == 'rat'

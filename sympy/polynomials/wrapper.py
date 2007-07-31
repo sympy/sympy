@@ -3,9 +3,7 @@
 from sympy.polynomials.base import *
 from sympy.polynomials import div_
 from sympy.polynomials import factor_
-from sympy.polynomials import gcd_
 from sympy.polynomials import groebner_
-from sympy.polynomials import lcm_
 from sympy.polynomials import roots_
 from sympy.polynomials import sqf_
 
@@ -18,7 +16,7 @@ def div(f, g, var=None, order=None, coeff=None):
     instead tries to reduce smaller terms after that. When dealing
     with multiple var, the monomial ordering in use has
     influence over the result. Optionally, a ring of coefficients can
-    be indicated, to restrict computations to this domain.
+    be indicated, to restrict computations to this domain (the integers.)
 
     Examples:
     >>> x = Symbol('x')
@@ -31,32 +29,12 @@ def div(f, g, var=None, order=None, coeff=None):
     ([-y + 2*y**4 + 2*x*y**3 + 2*x**2*y**2, (-1) + y + 2*y**3], 0)
 
     """
-    f = sympify(f)
-    if not isinstance(g, list):
-        g = [g]
-    g = map(lambda x: sympify(x), g)
-    if isinstance(var, Symbol):
-        var = [var]
-    if var is None:
-        var = merge_var(list(f.atoms(type=Symbol)),
-                        *[list(g_i.atoms(type=Symbol)) for g_i in g])
-    f = Polynomial(f, var=var, order=order)
-    g = map(lambda x: Polynomial(x, var=var, order=order), g)
-    if coeff is not None:
-        if not coeff in coeff_rings:
-            raise PolynomialException(
-                "%s is not an implemented coefficient ring." % coeff)
-        elif coeff == 'int':
-            # TODO: Check if given polynomials have integer coeffs?
-            q, r = div_.mv_int(f, g)
-        else:
-            q, r = div_.mv(f, g)
-    else: # coeff is None
-        q, r = div_.mv(f, g)
-    if len(q) == 1:
-        return q[0].sympy_expr, r.sympy_expr
-    else:
+    q, r = div_.div(f, g, var, order, coeff)
+    
+    if isinstance(q, list):
         return map(lambda x: x.sympy_expr, q), r.sympy_expr
+    else:
+        return q.sympy_expr, r.sympy_expr
 
 def factor(f):
     """Factors the polynomial f over the rationals.
@@ -94,43 +72,21 @@ def gcd(f, g, var=None, order=None, coeff=None):
     2*x*y
 
     """
-    f = sympify(f)
-    g = sympify(g)
-    if var is None:
-        var = merge_var(f.atoms(type=Symbol), g.atoms(type=Symbol))
-    if isinstance(var, Symbol):
-        var = [var]
+
+    # First check if the polynomials have integer coefficients.
     if coeff is None:
-        atoms = f.atoms().union(g.atoms())
-        atoms = filter(lambda a: not a in var, atoms)
-        coeff = coeff_ring(atoms)
-    if len(var) == 0:
-        if coeff == 'int':
-            assert isinstance(f, Rational) and isinstance(g, Rational)
-            assert f.is_integer and g.is_integer
-            return abs(numbers.gcd(f.p, g.p))
-        else:
-            return S.One
-    elif len(var) == 1:
-        if coeff == 'int':
-            cf, f = Polynomial(f, var=var, order=order).as_primitive()
-            cg, g = Polynomial(g, var=var, order=order).as_primitive()
-            return abs(numbers.gcd(cf.p, cg.p)) * \
-                   gcd_.uv(f, g).sympy_expr
-        else:
-            r =  gcd_.uv(Polynomial(f, None, var, order),
-                         Polynomial(g, None, var, order))
-            return r.sympy_expr
-    else:
-        if coeff == 'int':
-            cf, f = Polynomial(f, var=var, order=order).as_primitive()
-            cg, g = Polynomial(g, var=var, order=order).as_primitive()
-            return abs(numbers.gcd(cf.p, cg.p)) * \
-                   gcd_.mv(f, g).sympy_expr
-        else:
-            r =  gcd_.mv(Polynomial(f, None, var, order),
-                         Polynomial(g, None, var, order))
-            return r.sympy_expr
+        coeff_f = coeff_ring(get_numbers(f))
+        coeff_g = coeff_ring(get_numbers(g))
+        if coeff_f == 'int' and coeff_g == 'int':
+            coeff = 'int'
+        if var is not None:
+            if isinstance(var, Symbol):
+                var = [var]
+            if [v for v in f.atoms(type=Symbol).union(g.atoms(type=Symbol))
+                if v not in var]:
+                coeff = 'sym'
+    
+    return div_.gcd(f, g, var, order, coeff).sympy_expr
 
 def groebner(f, var=None, order=None, reduced=True):
     """Computes the (reduced) Groebner base of given polynomials.
@@ -172,49 +128,20 @@ def lcm(f, g, var=None, order=None, coeff=None):
     >>> lcm(4*x**2*y, 6*x*y**2)
     12*x**2*y**2
     """
-    f = sympify(f)
-    g = sympify(g)
-    if var is None:
-        var = merge_var(f.atoms(type=Symbol), g.atoms(type=Symbol))
-    if isinstance(var, Symbol):
-        var = [var]
+    # First check if the polynomials have integer coefficients.
     if coeff is None:
-        atoms = f.atoms().union(g.atoms())
-        atoms = filter(lambda a: not a in var, atoms)
-        coeff = coeff_ring(atoms)
-    if len(var) == 0:
-        if coeff == 'int':
-            assert isinstance(f, Rational) and isinstance(g, Rational)
-            assert f.is_integer and g.is_integer
-            if f == S.Zero or g == S.Zero:
-                return S.Zero
-            return abs(f*g / numbers.gcd(f.p, g.p))
-        else:
-            return S.One
-    if len(var) == 1:
-        if coeff == 'int':
-            cf, f = Polynomial(f, var=var, order=order).as_primitive()
-            cg, g = Polynomial(g, var=var, order=order).as_primitive()
-            if cf is S.Zero or cg is S.Zero:
-                return S.Zero
-            return abs(cf*cg / numbers.gcd(cf.p, cg.p)) * \
-                   lcm_.uv(f, g).sympy_expr
-        else:
-            r = lcm_.uv(Polynomial(f, var=var, order=order),
-                        Polynomial(g, var=var, order=order))
-            return r.sympy_expr
-    else:
-        if coeff == 'int':
-            cf, f = Polynomial(f, var=var, order=order).as_primitive()
-            cg, g = Polynomial(g, var=var, order=order).as_primitive()
-            if cf is S.Zero or cg is S.Zero:
-                return S.Zero
-            return abs(cf*cg / numbers.gcd(cf.p, cg.p)) * \
-                   lcm_.mv(f, g).sympy_expr
-        else:
-            r = lcm_.mv(Polynomial(f, var=var, order=order),
-                        Polynomial(g, var=var, order=order))
-            return r.sympy_expr
+        coeff_f = coeff_ring(get_numbers(f))
+        coeff_g = coeff_ring(get_numbers(g))
+        if coeff_f == 'int' and coeff_g == 'int':
+            coeff = 'int'
+        if var is not None:
+            if isinstance(var, Symbol):
+                var = [var]
+            if [v for v in f.atoms(type=Symbol).union(g.atoms(type=Symbol))
+                if v not in var]:
+                coeff = 'sym'
+    
+    return div_.lcm(f, g, var, order, coeff).sympy_expr
 
 def real_roots(f, a=None, b=None):
     """Returns the number of unique real roots of f in the interval (a, b].
@@ -430,4 +357,4 @@ def sqf_part(f, var=None):
     2*x + 2*x**2
 
     """
-    return (sqf_.uv_part(Polynomial(f, var=var))).sympy_expr
+    return sqf_.uv_part(Polynomial(f, var=var)).sympy_expr
