@@ -82,7 +82,7 @@ class PlotCurve(PlotObject):
         self.calculate_colors()
 
     def calculate_vertices(self):
-        self.vertices = list((self.vertex_function(t), t) for t in self.t_interval.vrange())
+        self.vertices = list((self.vertex_function(t), float(t)) for t in self.t_interval.vrange())
         self.vertices_ready.set()
 
     def calculate_colors(self):

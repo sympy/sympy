@@ -113,7 +113,7 @@ class PlotSurface(PlotObject):
     def calculate_vertices(self):
         v_set = list(float(v) for v in self.v_interval.vrange())
         u_set = list(float(u) for u in self.u_interval.vrange())
-        self.vertices = list(list((self.vertex_function(u,v), u, v) for v in v_set) for u in u_set)
+        self.vertices = list(list((self.vertex_function(u,v), float(u), float(v)) for v in v_set) for u in u_set)
         self.vertices_ready.set()
 
     def calculate_colors(self):

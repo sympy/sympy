@@ -42,6 +42,20 @@ class PlotFunction(PlotObject):
 
         self.plot_object = cls(f, *intervals, **kwargs)
 
+        def make_str():
+            d = ", ".join(str(d) for d in d_vars)
+            i = ", ".join(str(i) for i in intervals)
+            m = "mode=%s" % (self.mode_str)
+            s = ", ".join((d,i,m))
+            return s
+        self.str_repr = make_str()
+
+    def __repr__(self):
+        return self.str_repr
+
+    def __str__(self):
+        return repr(self)
+
     def set_style(self, rs):
         self.plot_object.set_style(rs)
 
