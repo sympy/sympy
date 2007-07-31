@@ -99,3 +99,12 @@ class PlotInterval(object):
             yield a, b
             a = b
 
+    def frange(self):
+        """
+        Yields v_steps+1 floats ranging from
+        v_min to v_max.
+        """
+        d = (self.v_max - self.v_min) / self.v_steps
+        for i in xrange(self.v_steps+1):
+            a = self.v_min + (d * Integer(i))
+            yield float(a)

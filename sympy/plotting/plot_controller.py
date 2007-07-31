@@ -1,6 +1,6 @@
 from pyglet.window import key
 from pyglet.window.mouse import LEFT, RIGHT
-from util import get_direction_vectors
+from util import get_direction_vectors, get_basis_vectors
 
 class PlotController(object):
     
@@ -26,6 +26,12 @@ class PlotController(object):
                 key.DOWN:'down',
                 key.S:'down',
                 key.NUM_2:'down',
+                
+                key.Z:'rotate_z_neg',
+                key.NUM_1:'rotate_z_neg',
+                
+                key.C:'rotate_z_pos',
+                key.NUM_3:'rotate_z_pos',
                 
                 key.Q:'spin_left',
                 key.NUM_7:'spin_left',
@@ -59,6 +65,9 @@ class PlotController(object):
                 # Rotation around the view Z vector
                 'spin_left':False,
                 'spin_right':False,
+                # Rotation around the model Z vector
+                'rotate_z_neg':False,
+                'rotate_z_pos':False,
                 # Reset to the default rotation
                 'reset_rotations':False,
                 # Performs camera z-translation
@@ -88,6 +97,12 @@ class PlotController(object):
             self.window.camera.euler_rotate(dy*dt*self.get_key_sensitivity(), *(get_direction_vectors()[0]))
         if dz != 0:
             self.window.camera.euler_rotate(dz*dt*self.get_key_sensitivity(), *(get_direction_vectors()[2]))
+
+        rz = 0
+        if self.action['rotate_z_neg']: rz -= 1
+        if self.action['rotate_z_pos']: rz += 1
+        if rz != 0:
+            self.window.camera.euler_rotate(rz*dt*self.get_key_sensitivity(), *(get_basis_vectors()[2]))
 
         if self.action['reset_rotations']:
             self.window.camera.init_rot_matrix()

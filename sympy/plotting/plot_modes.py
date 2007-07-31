@@ -160,7 +160,7 @@ def cartesian_curve(fy, x):
 def cartesian_surface(fz, x, y):
     return parametric_surface(x, y, fz, x, y)
 
-@plot_mode('t', 'r', [[0,2*pi,80]], aliases=['polar'])
+@plot_mode('t', 'r', [[0,2*pi,60]], aliases=['polar'])
 def polar_curve(fr, t):
     #return parametric_curve2d(fr * cos(t), fr * sin(t), t)
     fr = Basic.sympify(fr)
@@ -187,7 +187,7 @@ def cylindrical_surface(fr, t, h):
         return (_r*pcos(_t), _r*psin(_t), _h)
     return _f
 
-@plot_mode('pt', 'r', [[0,pi,16], [0,2*pi,24]], aliases=['spherical'])
+@plot_mode('pt', 'r', [[0,pi,12], [0,2*pi,16]], aliases=['spherical'])
 def spherical_surface(fr, p, t):
     #return parametric_surface(fr * sin(p) * cos(t), fr * sin(p) * sin(t), fr * cos(p), t, h)
     fr = Basic.sympify(fr)

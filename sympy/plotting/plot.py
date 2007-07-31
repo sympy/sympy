@@ -51,7 +51,6 @@ class Plot(object):
         self._window = None
 
         self._render_lock = Lock()
-        self._calculations_in_progress = 0
 
         self._functions = {}
         self._pobjects = []
@@ -120,10 +119,7 @@ class Plot(object):
                 args = [args]
             if len(args) == 0:
                 return # no arguments given
-
-            self._calculations_in_progress += 1
             f = PlotFunction(*args)
-            self._calculations_in_progress -= 1
 
         if f:
             self._render_lock.acquire()
@@ -171,6 +167,9 @@ class Plot(object):
         """
         return self._functions.itervalues()
 
+    def __repr__(self):
+        return str(self)
+
     def __str__(self):
         """
         Returns a string containing a new-line separated
@@ -185,17 +184,3 @@ class Plot(object):
                               for i in self._functions])
             self._render_lock.release()
         return s
-
-if __name__ == '__main__':
-
-    from sympy import symbols
-    x,y,t = symbols('xyt')
-
-    p = Plot()
-
-    p[1] = 1, 'mode=polar'
-    p[2] = x**2, [x,-10,10,100], [y,-1,1,1]
-    p[3] = x**2+y**2
-    p[4] = x,y,x**2+y**2, [x,-1,1,1], [y,-1,1,1], 'mode=surface'
-
-    print p

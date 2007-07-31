@@ -6,6 +6,8 @@ from plot_surface import PlotSurface
 from plot_interval import PlotInterval
 from plot_modes import get_plot_mode, fill_intervals, fill_i_vars
 
+from time import clock
+
 class PlotFunction(PlotObject):
     """
     """
@@ -39,6 +41,12 @@ class PlotFunction(PlotObject):
         except: raise ValueError("Cannot plot in %i dimensions." % (dimensions))
 
         self.plot_object = cls(f, *intervals, **kwargs)
+
+    def set_style(self, rs):
+        self.plot_object.set_style(rs)
+
+    def get_calc_state(self):
+        return self.plot_object.get_calc_state()
 
     def draw(self):
         self.plot_object.draw()

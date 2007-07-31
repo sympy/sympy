@@ -32,7 +32,8 @@ class PlotWindow(ManagedWindow):
 
         glShadeModel(GL_SMOOTH)
 
-        self.setup_polygon_mode()
+        # now done at the function level
+        # glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
         if self.antialiasing:
             glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
@@ -45,20 +46,14 @@ class PlotWindow(ManagedWindow):
         if self.camera is not None:
             self.camera.setup_projection()
 
-    def setup_polygon_mode(self):
-        if self.wireframe:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-        else:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-
     def update(self, dt):
-        self.update_caption()
         self.controller.update(dt)
 
     def draw(self):
         self.plot._render_lock.acquire()
-
         self.camera.apply_transformation()
+        
+        calc_verts, calc_colors = 0, 0
 
         for r in self.plot._pobjects:
             glPushMatrix()
@@ -68,14 +63,27 @@ class PlotWindow(ManagedWindow):
         for r in self.plot._functions.itervalues():
             glPushMatrix()
             r._draw()
+            try:
+                r_calc_verts, r_calc_colors = r.get_calc_state()
+                if r_calc_verts: calc_verts += 1
+                if r_calc_colors: calc_colors += 1
+            except: pass
             glPopMatrix()
 
+        self.update_caption(calc_verts, calc_colors)
         self.plot._render_lock.release()
 
-    def update_caption(self):
-        if not self._calculating and self.plot._calculations_in_progress > 0:
-            self.set_caption(self.title + " (calculating...)")
-            self._calculating = True
-        elif self._calculating and self.plot._calculations_in_progress == 0:
-            self.set_caption(self.title)
-            self._calculating = False
+    def update_caption(self, calc_verts, calc_colors):
+        caption = self.title
+
+        if calc_verts == 1:
+            caption = self.title + " (calculating vertices...)"
+        elif calc_verts > 1:
+            caption = self.title + " (calculating vertices for %i objects...)" % (calc_verts)
+        elif calc_colors == 1:
+            caption = self.title + " (calculating color map...)"
+        elif calc_colors > 1:
+            caption = self.title + " (calculating color maps for %i objects...)" % (calc_colors)
+
+        if self.caption != caption:        
+            self.set_caption(caption)

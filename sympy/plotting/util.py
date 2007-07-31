@@ -103,16 +103,21 @@ def rinterpolate(a_min, a_max, a_value):
 def interpolate_color(color1, color2, ratio):
     return [interpolate(color1[i], color2[i], ratio) for i in range(3)]
 
-def calc_color(color_function, p, pbounds, i, ibounds):
+def calc_color_1(color_function, p, pbounds, i, ibounds):
     if not p:
         return (0, 0, 0)
-    x, y, z = p
-    x, y, z = ( rinterpolate(pbounds[0][0], pbounds[0][1], x),
-                rinterpolate(pbounds[1][0], pbounds[1][1], y),
-                rinterpolate(pbounds[2][0], pbounds[2][1], z) )
-    k = i[::]
-    for j in range(len(k)):
-        k[j] = rinterpolate(ibounds[j][0], ibounds[j][1], k[j])
+    k = ( rinterpolate(pbounds[0][0], pbounds[0][1], p[0]),
+          rinterpolate(pbounds[1][0], pbounds[1][1], p[1]),
+          rinterpolate(pbounds[2][0], pbounds[2][1], p[2]),
+          rinterpolate(ibounds[0][0], ibounds[0][1], i[0]) )
+    return color_function(*k)
 
-    return color_function(x, y, z, *k)
-
+def calc_color_2(color_function, p, pbounds, i, ibounds):
+    if not p:
+        return (0, 0, 0)
+    k = ( rinterpolate(pbounds[0][0], pbounds[0][1], p[0]),
+          rinterpolate(pbounds[1][0], pbounds[1][1], p[1]),
+          rinterpolate(pbounds[2][0], pbounds[2][1], p[2]),
+          rinterpolate(ibounds[0][0], ibounds[0][1], i[0]),
+          rinterpolate(ibounds[1][0], ibounds[1][1], i[1]) )
+    return color_function(*k)
