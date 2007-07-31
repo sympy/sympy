@@ -184,3 +184,11 @@ class Plot(object):
                               for i in self._functions])
             self._render_lock.release()
         return s
+
+    def wait_for_calculations(self):
+        self._render_lock.acquire()
+        for f in self._functions:
+            a,b = self._functions[f].get_calc_state()
+            while a or b:
+                a,b = self._functions[f].get_calc_state()
+        self._render_lock.release()

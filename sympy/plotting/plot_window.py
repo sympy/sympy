@@ -76,14 +76,10 @@ class PlotWindow(ManagedWindow):
     def update_caption(self, calc_verts, calc_colors):
         caption = self.title
 
-        if calc_verts == 1:
+        if calc_verts > 0:
             caption = self.title + " (calculating vertices...)"
-        elif calc_verts > 1:
-            caption = self.title + " (calculating vertices for %i objects...)" % (calc_verts)
-        elif calc_colors == 1:
-            caption = self.title + " (calculating color map...)"
-        elif calc_colors > 1:
-            caption = self.title + " (calculating color maps for %i objects...)" % (calc_colors)
+        elif calc_colors > 0:
+            caption = self.title + " (calculating colors...)"
 
         if self.caption != caption:        
             self.set_caption(caption)

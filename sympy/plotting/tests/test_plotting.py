@@ -20,41 +20,47 @@ class TestPlotting:
 
     def test_plot_2d(self):
         from sympy import Plot
-        Plot(x, [x, -5, 5, 10], visible=False)
+        p=Plot(x, [x, -5, 5, 4], visible=False)
+        p.wait_for_calculations()
         
     def test_plot_2d_discontinuous(self):
         from sympy import Plot
-        Plot(1/x, [x, -1, 1, 2], visible=False)
+        p=Plot(1/x, [x, -1, 1, 2], visible=False)
+        p.wait_for_calculations()
     
     def test_plot_3d(self):
         from sympy import Plot
-        Plot(x*y, [x, -5, 5, 10], [y, -5, 5, 10], visible=False)
+        p=Plot(x*y, [x, -5, 5, 5], [y, -5, 5, 5], visible=False)
+        p.wait_for_calculations()
 
     def test_plot_3d_discontinuous(self):
         from sympy import Plot
-        Plot(1/x, [x, -3, 3], [y, -1, 1, 1], visible=False)
+        p=Plot(1/x, [x, -3, 3, 6], [y, -1, 1, 1], visible=False)
+        p.wait_for_calculations()
 
-    def _test_plot_2d_polar(self):
+    def test_plot_2d_polar(self):
         from sympy import Plot
-        Plot(log(x), [x,0,6.282], 'mode=polar', visible=False)
-        Plot(1/x, [x,-1,1,4], 'mode=polar', visible=False)
+        p=Plot(log(x), [x,0,6.282,4], 'mode=polar', visible=False)
+        p.wait_for_calculations()
+        p=Plot(1/x, [x,-1,1,4], 'mode=polar', visible=False)
+        p.wait_for_calculations()
 
     def test_plot_3d_cylinder(self):
         from sympy import Plot
-        Plot(1/y, [x,0,6.282], [y,-1,1,6], 'mode=polar', visible=False)
+        p=Plot(1/y, [x,0,6.282,4], [y,-1,1,4], 'mode=polar', visible=False)
+        p.wait_for_calculations()
 
     def test_plot_3d_spherical(self):
         from sympy import Plot
-        Plot(1, [x,0,6.282], [y,0,3.141], 'mode=spherical', visible=False)
+        p=Plot(1, [x,0,6.282,4], [y,0,3.141,4], 'mode=spherical', visible=False)
+        p.wait_for_calculations()
 
-    def _test_plot_2d_parametric(self):
+    def test_plot_2d_parametric(self):
         from sympy import Plot
-        Plot(sin(x), cos(x), [x, 0, 6.282], 'mode=parametric', visible=False)
+        p=Plot(sin(x), cos(x), [x, 0, 6.282, 4], visible=False)
+        p.wait_for_calculations()
 
-    def _test_plot_3d_parametric(self):
+    def test_plot_3d_parametric(self):
         from sympy import Plot
-        Plot(sin(x), cos(x), x/5.0, [x, 0, 6.282], 'mode=parametric', visible=False)
-
-    def test_plot_grid(self):
-        from sympy import Plot
-        Plot(x, [x, -5, 5, 10], grid='xy', visible=False)
+        p=Plot(sin(x), cos(x), x/5.0, [x, 0, 6.282, 4], visible=False)
+        p.wait_for_calculations()

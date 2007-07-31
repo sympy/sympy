@@ -10,13 +10,15 @@ sys.path.append("..")
 from sympy import symbols
 from sympy import Plot
 from sympy import sin, cos, pi, sqrt
+
 import cProfile
 from pstats import Stats
 
 if __name__ == "__main__":
     x, y = symbols('xy')
     p = Plot(width=600, height=500, ortho=False)
-    a,b = 1, 0.5 # radius, thickness for p[10] (a torus)
+    a,b = 1, 0.5 # radius, thickness for p[10] (a torus
+                 # which takes forever to render)
 
     #p[1] = x**2
     #p[2] = x**2+y**2, [x,-1,1,20], [y,-1,1,20]
