@@ -16,9 +16,8 @@ from sympy.matrices import zeronm
 from sympy.polynomials import roots
 from sympy.simplify import simplify, collect
 
-### NOTE: set simplified=True when 'simplify' module will be merged !!!
 
-def solve(eq, syms, simplified=False):
+def solve(eq, syms, simplified=True):
     """Solves univariate polynomial equations and linear systems with
        arbitrary symbolic coefficients. This function is just a wrapper
        which makes analysis of its arguments and executes more specific
@@ -307,7 +306,7 @@ def dsolve(eq, funcs):
     ========
         >>> from sympy import *
         >>> x = Symbol('x')
-        >>> f = Symbol('f')
+        >>> f = Function('f')
         >>> fx = f(x)
         >>> dsolve(Derivative(Derivative(fx,x),x)+9*fx, fx)
         C1*sin(3*x) + C2*cos(3*x)
@@ -322,29 +321,34 @@ def dsolve(eq, funcs):
             f = funcs
 
         x = f[1]
-        a,b,c = map(Wild, 'abc')
+        f = f[0]
 
-        r = eq.match(a*Derivative(f,x) + b)
-        if r and _wo(r,f): return solve_ODE_first_order(r[a], r[b], f, x)
+        # This assumes f is an ApplyXXX object
+        a = Wild('a', exclude=[f])
+        b = Wild('b', exclude=[f])
+        c = Wild('c', exclude=[f])
 
-        r = eq.match(a*Derivative(Derivative(f,x),x) + b*f)
-        if r and _wo(r,f): return solve_ODE_second_order(r[a], 0, r[b], f, x)
+        r = eq.match(a*Derivative(f(x),x) + b)
+        if r: return solve_ODE_first_order(r[a], r[b], f(x), x)
+
+        r = eq.match(a*Derivative(f(x),x,x) + b*f(x))
+        if r: return solve_ODE_second_order(r[a], 0, r[b], f(x), x)
 
         #special equations, that we know how to solve
-        t = x*exp(-f)
-        tt = (a*t.diff(x, 2)/t).expand()
-        r = eq.match(tt)
+        t = x*exp(-f(x))
+        tt = a*Derivative(t,x,x)/t
+        r = eq.match(tt.expand())
         if r:
             #check, that we've rewritten the equation correctly:
             #assert ( r[a]*t.diff(x,2)/t ) == eq.subs(f, t)
-            return solve_ODE_1(f, x)
-        neq = (eq*exp(f)/exp(-f)).expand()
-        r = neq.match(tt)
+            return solve_ODE_1(f(x), x)
+
+        neq = eq*exp(f(x))/exp(-f(x))
+        r = neq.match(tt.expand())
         if r:
             #check, that we've rewritten the equation correctly:
             #assert ( t.diff(x,2)*r[a]/t ).expand() == eq
-            return solve_ODE_1(f, x)
-
+            return solve_ODE_1(f(x), x)
     raise NotImplementedError("dsolve: Cannot solve " + str(eq))
 
 def solve_ODE_first_order(a, b, f, x):
@@ -362,10 +366,3 @@ def solve_ODE_1(f, x):
     C1 = Symbol("C1")
     C2 = Symbol("C2")
     return -log(C1+C2/x)
-
-def _wo(di, x):
-    """Are all items in the dictionary "di" without "x"?"""
-    for d in di:
-        if di[d].has(x):
-            return False
-    return True

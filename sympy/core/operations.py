@@ -71,7 +71,7 @@ class AssocOp(Basic):
         wild_part = []
         exact_part = []
         for p in pattern:
-            if p.atoms(type=Basic.Wild):
+            if p.atoms(type=(Basic.Wild, Basic.WildFunction)):
                 wild_part.append(p)
             else:
                 exact_part.append(p)

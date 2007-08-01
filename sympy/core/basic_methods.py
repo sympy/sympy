@@ -301,6 +301,13 @@ class BasicMeths(AssumeMeths):
     def __getitem__(self, iter):
         return self._args[iter]
 
+    def __contains__(self, what):
+        if self == what: return True
+        for x in self._args:
+            if what in x:
+                return True
+        return False
+
     @staticmethod
     def set_precision(prec = None):
         """

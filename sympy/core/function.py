@@ -113,7 +113,26 @@ class Apply(Basic, ArithMeths, RelMeths):
         obj = self.func._eval_apply_subs(*(self.args + (old,) + (new,)))
         if obj is not None:
             return obj
+
+        # Very special case for replacing something in a derivative
+        if isinstance(self.func, FApply):
+            if isinstance(old, Apply):
+                old = old.func
+            func, args = self.func[0], self.func[1:]
+            if len(args) == 1 and isinstance(func, FDerivative) and args[0] == old:
+                variables = []
+                for index in func.indices:
+                    variables.append(self.args[int(index)-1])
+                if isinstance(new, Function):
+                    func = new(*self.args)
+                else:
+                    func = new
+                return Derivative(func, *variables)
+
         return Basic._seq_subs(self, old, new)
+
+    def _eval_expand(self):
+        return self
 
     def _eval_evalf(self):
         obj = self.func._eval_apply_evalf(*self.args)
@@ -245,11 +264,11 @@ class Function(Basic, ArithMeths, NoRelMeths):
     body = None
     has_derivative = False
 
-    def __new__(cls, name, nofargs = None, **assumptions):
+    def __new__(cls, name, nofargs = None, commutative=True, **assumptions):
         obj = Basic.singleton.get(name)
         if obj is not None:
             return obj()
-        obj = Basic.__new__(cls, **assumptions)
+        obj = Basic.__new__(cls, commutative=commutative, **assumptions)
         obj.name = name
         obj.nofargs = nofargs
         return obj
@@ -299,6 +318,8 @@ class Function(Basic, ArithMeths, NoRelMeths):
         raise TypeError('%s.diff not usable for functions, use .fdiff() method instead.' % (self.__class__.__name__))
 
     def _eval_power(b, e):
+        if b.nofargs is None:
+            return
         body, args = b.with_dummy_arguments()
         return Lambda(body**e, *args)
 
@@ -316,7 +337,7 @@ class Function(Basic, ArithMeths, NoRelMeths):
     def taylor_term(self, n, x, *previous_terms):
         raise NotImplementedError('%s.taylor_term(..)' % (self))
 
-class WildFunction(Function):
+class WildFunction(Function, Atom):
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         for p,v in repl_dict.items():

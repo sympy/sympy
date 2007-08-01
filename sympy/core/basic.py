@@ -217,7 +217,7 @@ class Basic(BasicMeths):
             except:
                 raise ValueError("%r is NOT a valid SymPy expression" % a)
 
-    @Memoizer('Basic', MemoizerArg((type, type(None)), name='type'), return_value_converter = lambda obj: obj.copy())
+    @Memoizer('Basic', MemoizerArg((type, type(None), tuple), name='type'), return_value_converter = lambda obj: obj.copy())
     def atoms(self, type=None):
         """Returns the atoms that form current object.
 
@@ -228,15 +228,18 @@ class Basic(BasicMeths):
         >>> (x+y**2+ 2*x*y).atoms()
         set([2, x, y])
 
-        You can also filter the results by a given type of object
+        You can also filter the results by a given type(s) of object
         >>> (x+y+2+y**2*sin(x)).atoms(type=Symbol)
         set([x, y])
 
         >>> (x+y+2+y**2*sin(x)).atoms(type=Number)
         set([2])
+
+        >>> (x+y+2+y**2*sin(x)).atoms(type=(Symbol, Number))
+        set([2, x, y])
         """
         result = set()
-        if type is not None and not isinstance(type, type_class):
+        if type is not None and not isinstance(type, (type_class, tuple)):
             type = Basic.sympify(type).__class__
         if isinstance(self, Atom):
             if type is None or isinstance(self, type):

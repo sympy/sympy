@@ -21,7 +21,8 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 # first process commutative objects
                 o = c_seq.pop(0)
                 if isinstance(o, Basic.Function):
-                    o, lambda_args = o.with_dummy_arguments(lambda_args)
+                    if o.nofargs is not None:
+                        o, lambda_args = o.with_dummy_arguments(lambda_args)
                 if isinstance(o, Basic.Order):
                     o, order_symbols = o.as_expr_symbols(order_symbols)
                 if o.__class__ is cls:
@@ -238,8 +239,9 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         return
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
-        if pattern.is_commutative and expr.is_commutative:
-            return AssocOp._matches_commutative(pattern, expr, repl_dict, evaluate)
+        if not pattern.atoms(Basic.WildFunction):
+            if pattern.is_commutative and expr.is_commutative:
+                return AssocOp._matches_commutative(pattern, expr, repl_dict, evaluate)
         # todo for commutative parts, until then use the default matches method for non-commutative products
         return Basic.matches(pattern, expr, repl_dict, evaluate)
 

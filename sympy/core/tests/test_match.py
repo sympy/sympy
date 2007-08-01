@@ -73,12 +73,6 @@ def test_power():
     e = (2*x)**2
     assert e.match(p*q**r) == {p: 4, q: x, r: 2}
 
-    p = Wild('p', exclude=[x])
-    q = Wild('q', exclude=[x])
-    r = Wild('r', exclude=[x])
-    e = 3*x**2 + y*x + a
-    assert e.match(p*x**2 + q*x + r) == {p: 3, q: y, r: a}
-
 def test_mul():
     x,y,a,b,c = map(Symbol, 'xyabc')
     p,q = map(Wild, 'pq')
@@ -112,8 +106,9 @@ def test_complex():
 def test_functions():
     from sympy.core.function import WildFunction
     x = Symbol('x')
-    p,q = map(Wild, 'pq')
     g = WildFunction('g')
+    p = Wild('p')
+    q = Wild('q')
 
     f = cos(5*x)
     assert f.match(p*cos(q*x)) == {p: 1, q: 5}
@@ -212,3 +207,34 @@ def test_behavior2():
     a = Wild('a', exclude = [x])
     assert e.expand().match(a*x**2 + a*x + 2*a) == None
     assert e.expand().match(p*x**2 + p*x + 2*p) == {p: 3/x}
+
+def test_match_polynomial():
+    x = Symbol('x')
+    a = Wild('a', exclude=[x])
+    b = Wild('b', exclude=[x])
+    c = Wild('c', exclude=[x])
+    d = Wild('d', exclude=[x])
+
+    eq = 4*x**3 + 3*x**2 + 2*x + 1
+    pattern = a*x**3 + b*x**2 + c*x + d
+    assert eq.match(pattern) == {a: 4, b: 3, c: 2, d: 1}
+    assert (eq-3*x**2).match(pattern) == {a: 4, b: 0, c: 2, d: 1}
+
+def test_exclude():
+    x,y,a = map(Symbol, 'xya')
+    p = Wild('p', exclude=[1,x])
+    q = Wild('q', exclude=[x])
+    r = Wild('r', exclude=[sin,y])
+
+    e = 3*x**2 + y*x + a
+    assert e.match(p*x**2 + q*x + r) == {p: 3, q: y, r: a}
+
+    e = x+1
+    assert e.match(x+p) == None
+    assert e.match(p+1) == None
+    assert e.match(x+1+p) == {p: 0}
+
+    e = cos(x) + 5*sin(y)
+    assert e.match(r) == None
+    assert e.match(cos(y) + r) == None
+    assert e.match(r + p*sin(q)) == {r: cos(x), p: 5, q: y}

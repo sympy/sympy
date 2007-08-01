@@ -35,32 +35,26 @@ def test_linear_systemLU():
                                                   y: 6*n/(n**2+18*n)}
 
 def test_ODE_first_order():
-    x = Symbol("x")
-    f = Symbol('f')
-    f = f(x)
-    assert dsolve(3*f.diff(x) -1, f) == x/3+Symbol("C1")
-    assert dsolve(x*f.diff(x) -1, f) == log(abs(x))+Symbol("C1")
+    f = Function('f')
+    x = Symbol('x')
+    assert dsolve(3*f(x).diff(x) -1, f(x)) == x/3 + Symbol("C1")
+    assert dsolve(x*f(x).diff(x) -1, f(x)) == log(abs(x)) + Symbol("C1")
 
 def test_ODE_second_order():
-    x = Symbol("x")
-    f = Symbol('f')
-    f = f(x)
-    C1, C2 = Symbol("C1"), Symbol("C2")
-    assert dsolve(Derivative(Derivative(f,x),x)+9*f, [f]) == \
-        sin(3*x)*C1+cos(3*x)*C2
+    f = Function('f')
+    x, C1, C2 = map(Symbol, ['x', 'C1', 'C2'])
+    assert dsolve(Derivative(f(x),x,x) + 9*f(x), [f(x)]) in \
+        [sin(3*x)*C1 + cos(3*x)*C2, sin(3*x)*C2 + cos(3*x)*C1]
 
-def _test_ODE_1():
-    l = Symbol('l')
+def test_ODE_1():
+    l = Function('l')
+    r = Symbol('r')
 
-    r = Symbol("r")
-
-    e = Derivative(l(r),r)/r+Derivative(Derivative(l(r),r),r)/2- \
+    e = Derivative(l(r),r)/r+Derivative(l(r),r,r)/2- \
         Derivative(l(r),r)**2/2
-
     sol = dsolve(e, [l(r)]) # fails
-    assert (e.subs(l(r), sol).doit()).expand() == 0
+    assert (e.subs(l(r), sol)).expand() == 0
 
     e = e*exp(-l(r))/exp(l(r))
-
     sol = dsolve(e, [l(r)])
-    assert (e.subs(l(r), sol).doit()).expand() == 0
+    assert (e.subs(l(r), sol)).expand() == 0

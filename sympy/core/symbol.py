@@ -65,7 +65,8 @@ class Symbol(Atom, RelMeths, ArithMeths):
         assumptions['dummy'] = True
         return self.__class__(self.name, **assumptions)
 
-    def __call__(self, *args, **assumptions):
+    def __call__(self, *args):
+        assumptions = self._assumptions
         return Basic.Function(self.name, nofargs=len(args))(*args, **assumptions)
 
     #def __mathml__(self): ..
@@ -107,8 +108,8 @@ class Wild(Symbol):
                 if v==expr: return repl_dict
                 return None
         if pattern.exclude:
-            for x in expr.atoms():
-                if x in pattern.exclude:
+            for x in pattern.exclude:
+                if x in expr:
                     return None
         repl_dict = repl_dict.copy()
         repl_dict[pattern] = expr
