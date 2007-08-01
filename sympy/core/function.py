@@ -113,22 +113,6 @@ class Apply(Basic, ArithMeths, RelMeths):
         obj = self.func._eval_apply_subs(*(self.args + (old,) + (new,)))
         if obj is not None:
             return obj
-
-        # Very special case for replacing something in a derivative
-        if isinstance(self.func, FApply):
-            if isinstance(old, Apply):
-                old = old.func
-            func, args = self.func[0], self.func[1:]
-            if len(args) == 1 and isinstance(func, FDerivative) and args[0] == old:
-                variables = []
-                for index in func.indices:
-                    variables.append(self.args[int(index)-1])
-                if isinstance(new, Function):
-                    func = new(*self.args)
-                else:
-                    func = new
-                return Derivative(func, *variables)
-
         return Basic._seq_subs(self, old, new)
 
     def _eval_expand(self):
@@ -308,10 +292,19 @@ class Function(Basic, ArithMeths, NoRelMeths):
 
     def __call__(self, *args, **assumptions):
         n = self.nofargs
-        if n is not None and n!=len(args):
-            raise TypeError('%s takes exactly %s arguments (got %s)'\
-                            % (self, n, len(args)))
+        if n is not None:
+            if isinstance(n, int):
+                n1,n2 = n,n
+            else:
+                n1,n2 = n
+            if not (n1<=len(args)<=n2):
+                raise TypeError('%s takes %s to %s arguments (got %s)'\
+                            % (self, n1,n2, len(args)))
         return Apply(self, *args, **assumptions)
+
+    def as_lambda(self):
+        body, args = self.with_dummy_arguments()
+        return Lambda(body, *args)
 
     def with_dummy_arguments(self, args = None):
         """ Return a function value with dummy arguments.
@@ -331,8 +324,12 @@ class Function(Basic, ArithMeths, NoRelMeths):
 
     def fdiff(self, argindex=1):
         if self.nofargs is not None:
-            if not (1<=argindex<=self.nofargs):
-                raise TypeError("argument index %r is out of range [1,%s]" % (i,self.nofargs))
+            if isinstance(self.nofargs, tuple):
+                nofargs = self.nofargs[-1]
+            else:
+                nofargs = self.nofargs
+            if not (1<=argindex<=nofargs):
+                raise TypeError("argument index %r is out of range [1,%s]" % (i,nofargs))
         return FDerivative(argindex)(self)
 
     def diff(self,*args,**assumptions):
@@ -658,7 +655,6 @@ class FDerivative(Function):
         indices.sort(Basic.compare)
         return Basic.__new__(cls, *indices, **assumptions)
 
-
     def _hashable_content(self):
         return self._args
 
@@ -672,6 +668,8 @@ class FDerivative(Function):
     def _eval_fapply(self, *funcs):
         if len(funcs)==1:
             func = funcs[0]
+            if not self.indices:
+                return func
             if isinstance(func, FApply) and isinstance(func.operator, FDerivative):
                 # FApply(FD(1),FApply(FD(2),f)) -> FApply(FD(1,2), f)
                 return FApply(FDerivative(*(self.indices+func.operator.indices)), *func.funcs)
@@ -692,6 +690,13 @@ class FDerivative(Function):
                 if not unevaluated_indices:
                     return Lambda(expr, *func.args)
                 return FApply(FDerivative(*unevaluated_indices), Lambda(expr, *func.args))
+            if isinstance(func, DefinedFunction):
+                for i in range(len(self.indices)):
+                    di = self.indices[i]
+                    if isinstance(di, Basic.Integer):
+                        dfunc = func.fdiff(int(di))
+                        new_indices = self.indices[:i] + self.indices[i+1:]
+                        return FDerivative(*new_indices)(dfunc)
         return
 
     def _eval_power(b, e):

@@ -204,6 +204,7 @@ class ApplyExp(Apply):
 class Log(DefinedFunction):
     """ Log() -> log
     """
+    nofargs = 1,2
     is_comparable = True
 
     def fdiff(self, argindex=1):

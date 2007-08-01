@@ -109,9 +109,8 @@ def _test_invtrig():
     assert atan(x).diff(x) == 1/(1+x**2)
 
 def test_general_function():
-    class nu(DefinedFunction): nofargs = 1
-    nu = nu()
 
+    nu = Function('nu', nofargs=1)
     x = Symbol("x")
     y = Symbol("y")
     e = nu(x)
@@ -138,11 +137,9 @@ def test_general_function():
 def test_derivative_subs_bug():
     x = Symbol("x")
 
-    class l(DefinedFunction): nofargs = 1
-    l = l()
+    l = Function('l', nofargs=1)
 
-    class n(DefinedFunction): nofargs = 1
-    n = n()
+    n = Function('n', nofargs=1)
 
     e = Derivative(n(x), x)
     assert e.subs(n, l) != e
@@ -153,8 +150,7 @@ def test_derivative_linearity():
     x = Symbol("x")
     y = Symbol("y")
 
-    class n(DefinedFunction): nofargs = 1
-    n = n()
+    n = Function('n', nofargs=1)
 
     assert Derivative(-n(x), x) == -Derivative(n(x), x)
     assert Derivative(8*n(x), x) == 8*Derivative(n(x), x)
