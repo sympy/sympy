@@ -132,7 +132,8 @@ X=(t,r,theta,phi)
 Gamma=G(g,X)
 Rmn=Ricci(Riemann(Gamma,X),X)
 
-if __name__ == "__main__":
+def main():
+
     #print g
     print "-"*40
     print "Christoffel symbols:"
@@ -170,3 +171,6 @@ if __name__ == "__main__":
     metric = gdd.subs(lam(r), l).subs(nu(r),-l).combine()
     print "metric:"
     print metric
+
+if __name__ == "__main__":
+    main()
