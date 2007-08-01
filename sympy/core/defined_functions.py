@@ -1113,6 +1113,10 @@ class Sin(DefinedFunction):
 
 class ApplySin(Apply):
 
+    def _eval_rewrite_as_exp(self, arg):
+        exp, I = Basic.Exp(), S.ImaginaryUnit
+        return (exp(arg*I) - exp(-arg*I)) / (2*I)
+
     def _eval_complex_expand(self):
         re, im = self.args[0].as_real_imag()
 
@@ -1120,7 +1124,10 @@ class ApplySin(Apply):
             S.ImaginaryUnit*Cos()(re)*Sinh()(im)
 
     def _eval_expand(self):
+
         arg = self.args[0].expand()
+        #return Sin()(arg)
+        ###
         cos = Basic.Cos()
         sin = Basic.Sin()
         x = None
@@ -1135,8 +1142,6 @@ class ApplySin(Apply):
         if x is not None:
             return (sin(x)*cos(y) + sin(y)*cos(x)).expand()
         return sin(arg)
-
-    #def _eval_complex_expand(self):
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
@@ -1228,6 +1233,10 @@ class Cos(DefinedFunction):
                 return (-1)**(n//2)*x**(n)/Basic.Factorial()(n)
 
 class ApplyCos(Apply):
+
+    def _eval_rewrite_as_exp(self, arg):
+        exp, I = Basic.Exp(), S.ImaginaryUnit
+        return (exp(arg*I) + exp(-arg*I)) / 2
 
     def _eval_complex_expand(self):
         re, im = self.args[0].as_real_imag()
@@ -1343,6 +1352,12 @@ class Tan(DefinedFunction):
 
 class ApplyTan(Apply):
 
+    def _eval_rewrite_as_exp(self, arg):
+        neg_exp = Exp()(-arg*S.ImaginaryUnit)
+        pos_exp = Exp()(arg*S.ImaginaryUnit)
+
+        return S.ImaginaryUnit*(neg_exp-pos_exp)/(neg_exp+pos_exp)
+
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
@@ -1432,6 +1447,12 @@ class Cot(DefinedFunction):
 
 class ApplyCot(Apply):
 
+    def _eval_rewrite_as_exp(self, arg):
+        neg_exp = Exp()(-arg*S.ImaginaryUnit)
+        pos_exp = Exp()(arg*S.ImaginaryUnit)
+
+        return -S.ImaginaryUnit*(neg_exp+pos_exp)/(neg_exp-pos_exp)
+
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
@@ -1508,6 +1529,9 @@ class Sinh(DefinedFunction):
 
 class ApplySinh(Apply):
 
+    def _eval_rewrite_as_exp(self, arg):
+        return (Exp()(arg) - Exp()(-arg)) / 2
+
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
@@ -1580,6 +1604,9 @@ class Cosh(DefinedFunction):
                 return x**(n)/Basic.Factorial()(n)
 
 class ApplyCosh(Apply):
+
+    def _eval_rewrite_as_exp(self, arg):
+        return (Exp()(arg) + Exp()(-arg)) / 2
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
@@ -1655,6 +1682,10 @@ class Tanh(DefinedFunction):
 
 class ApplyTanh(Apply):
 
+    def _eval_rewrite_as_exp(self, arg):
+        neg_exp, pos_exp = Exp()(-arg), Exp()(arg)
+        return (pos_exp-neg_exp)/(pos_exp+neg_exp)
+
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
@@ -1728,6 +1759,10 @@ class Coth(DefinedFunction):
             return 2**(n+1) * B/F * x**n
 
 class ApplyCoth(Apply):
+
+    def _eval_rewrite_as_exp(self, arg):
+        neg_exp, pos_exp = Exp()(-arg), Exp()(arg)
+        return (pos_exp+neg_exp)/(pos_exp-neg_exp)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)

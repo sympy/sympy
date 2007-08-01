@@ -205,12 +205,12 @@ class Basic(BasicMeths):
         elif isinstance(a, (list,tuple)) and len(a)==2:
             return Basic.Interval(*a)
         else:
-           # if not isinstance(a, str):
+            if not isinstance(a, str):
                 # At this point we were given arbitray expression
                 # which does not inherit after Basic. This may be
                 # SAGE's expression (or something alike) so take
                 # its normal form via str() and try to parse it.
-           #     a = str(a)
+                a = str(a)
 
             try:
                 return parser.Expr(a).tosymbolic()
@@ -519,6 +519,69 @@ class Basic(BasicMeths):
             return self._eval_complex_expand()
         else:
             return self._eval_expand()
+
+    def _eval_rewrite(self, classes, rule, **hints):
+        if isinstance(self, Atom):
+            return self
+        else:
+            terms = [ t._eval_rewrite(classes, rule, **hints) for t in self ]
+
+            for cls in classes:
+                if issubclass(self.__class__, cls):
+                    method = '_eval_rewrite_as_' + rule
+
+                    if hasattr(self, method):
+                        rewritten = getattr(self, method)(*args)
+
+                        if rewritten is not None:
+                            return rewritten
+
+                    break
+
+            return self.__class__(*terms, **self._assumptions)
+
+    def rewrite(self, pattern, rule, **hints):
+        """Rewrites one or several expressions in terms of expressions
+           of different kind. For example it is possible to rewrite
+           trigonometric or hyperbolic functions as combinations of
+           complex exponential functions.
+
+           As a pattern to rewrite this functions accepts a singleton
+           class or an instance of DefinedFunction, or a list of such
+           species. As a revrite rule it accepts a string or arbitray
+           object with tostr() method.
+
+           There is also possibility to pass hints on how to rewrite
+           the given expressions. For now there is only one such hint
+           defined called 'deep'. When 'deep' is set to False it will
+           forbid functions to rewrite their contents.
+
+           >>> from sympy import *
+           >>> x, y = symbols('xy')
+
+           >>> sin(x).rewrite(sin, exp)
+           -1/2*I*(-1/exp(I*x) + exp(I*x))
+
+        """
+        if not isinstance(rule, str):
+            rule = rule.tostr()
+
+        if not isinstance(pattern, list):
+            pattern = [pattern]
+
+        classes = []
+
+        for item in pattern:
+            if self.has(item):
+                if not hasattr(item, '__name__'):
+                    classes.append(item.__class__)
+                else:
+                    classes.append(item)
+
+        if classes:
+            return self._eval_rewrite(classes, rule, **hints)
+        else:
+            return self
 
     def as_coefficient(self, expr):
         """Extracts symbolic coefficient at the given expression. In
