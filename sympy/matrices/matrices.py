@@ -837,7 +837,7 @@ class Matrix(object):
         return copy.det()
 
     def eigenvals(self, var=None):
-        """ Calls wrapper.py's roots(), doesn't support coeff type right now """
+        """ Calls polynomials's roots(), doesn't support coeff type right now """
         # returns list of pairs (eigenval, multiplicty)
         if var == None:
             var = Symbol('x')

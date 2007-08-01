@@ -1,7 +1,5 @@
 """Algorithms to determine the roots of polynomials"""
 
-from sympy import exp, I, pi, sqrt 
-
 from sympy.polynomials.base import *
 from sympy.polynomials import div_, groebner_
 
@@ -33,66 +31,6 @@ def cubic(f):
 
     return map(lambda u: (p/(u*3) - u - a/3).expand(), [u1, u2, u3])
 
-def equation_system(eqs):
-    """Solves a system of polynomial equation by variable elimination.
-
-    Assumes to get a list of instances of Polynomial, with matching
-    var. Only works for zero-dimensional varieties, that is, a
-    finite number of solutions (untested!). 
-    """
-    def is_uv(f):
-        """Is an instance of Polynomial univariate in its last variable?
-        """
-        for term in f.coeffs:
-            for exponent in term[1:-1]:
-                if exponent > 0:
-                    return False
-        return True
-
-    # First compute a Groebner base with the polynomials,
-    # with lexicographic ordering, so that the last polynomial is
-    # univariate and can be solved.
-    for i, f in enumerate(eqs):
-        eqs[i] = Polynomial(f.sympy_expr, var=f.var, order='lex')
-    gb = groebner_.groebner(eqs)
-
-    # Now filter the the base elements, to get only the univariate
-    eliminated = filter(is_uv, gb)
-    if len(eliminated) != 1:
-        raise PolynomialException("System currently not solvable.")
-
-    # Try to solve the polynomials with var eliminated.
-    # TODO: Use another function in roots_ (to be written)
-    f = eliminated[0]
-    from sympy.polynomials import roots
-    partial_solutions = roots(f.sympy_expr, f.var[-1])
-
-    # No solutions were found.
-    # TODO: Check if there exist some anyways?
-    if len(partial_solutions) == 0:
-        return []
-
-    # Is this the last equation, that is, deepest hierarchy?
-    if len(gb) == 1:
-        return map(lambda s:[s], partial_solutions)
-
-    # Finally, call this function recursively for each root replacing
-    # the corresponding variable in the system.
-    result = []
-    for r in partial_solutions:
-        new_system = []
-        for eq in gb[:-1]:
-            new_eq = eq.sympy_expr.subs(eq.var[-1], r).expand()
-            if new_eq is not S.Zero:
-                new_system.append(
-                    Polynomial(new_eq, var=eq.var[:-1], order='lex'))
-        if not new_system:
-            return []
-        for nps in equation_system(new_system):
-            result.append(nps + [r])
-
-    return result
-
 def n_poly(f):
     """Checks if the polynomial can be simplifed by substituting the
     variable by a power.
@@ -117,15 +55,9 @@ def n_poly(f):
 
     ff = Polynomial(coeffs=tuple(map(lambda t:(t[0], t[1]/g), f.coeffs)),
                     var=f.var, order=f.order)
-    # TODO: use uv() here?
-    if n == 1:
-        sol = [-(ff.coeffs[1][0]/ff.coeffs[0][0])]
-    if n == 2:
-        sol = quadratic(ff)
-    elif n == 3:
-        sol = cubic(ff)
+
     return [(zeta*s**Rational(1,g)).expand()
-            for s in sol for zeta in roots_of_unity(g)]
+            for s in roots(ff) for zeta in roots_of_unity(g)]
         
 def quadratic(f):
     """Returns the real or complex roots of a quadratic polynomial.
@@ -177,7 +109,7 @@ def rat_roots(f):
                 result.append(Rational(p, q))
             if f(Rational(-p, q)) is S.Zero:
                 result.append(Rational(-p, q))
-    # Now check, if 0 is a root
+    # Now check if 0 is a root.
     if f.sympy_expr.subs(f.var[0], S.Zero).expand() is S.Zero:
         result.append(S.Zero)
     return result
@@ -188,7 +120,16 @@ def real_roots(s, a=None, b=None):
     Assumes a sturm sequence of an univariate, square-free instance of
     Polynomial with real coeffs. The boundaries a and b can be omitted
     to check the whole real line.
+
+    Examples:
+    >>> x = Symbol('x')
+    >>> real_roots(x**2 - 1)
+    2
+    >>> real_roots(x**2 - 1, 0, 2)
+    1
+
     """
+
     def sign_changes(list):
         counter = 0
         current = list[0]
@@ -198,6 +139,15 @@ def real_roots(s, a=None, b=None):
                 counter += 1
             current = el
         return counter
+
+    # Allow a polynomial instead of its Sturm sequence
+    if not isinstance(s, list):
+        s = sturm(s)
+
+    if a is not None:
+        a = sympify(a)
+    if b is not None:
+        b = sympify(b)
     
     if a is None: # a = -oo
         sa = sign_changes(map(
@@ -211,31 +161,144 @@ def real_roots(s, a=None, b=None):
     return sa - sb
     
 def sturm(f):
-    """Compute the Sturm sequence of given polynomial
-
-    Assumes an univariate instance of Polynomial with real coeffs.
-    """
+    """Compute the Sturm sequence of given polynomial."""
+    if not isinstance(f, Polynomial):
+        f = Polynomial(f)
     seq = [f]
     seq.append(f.diff(f.var[0]))
     while seq[-1].sympy_expr is not S.Zero:
         seq.append(-(div_.div(seq[-2], seq[-1])[-1]))
     return seq[:-1]
 
-def uv(f, verbose=False):
+def roots(f, var=None, order=None):
     """Compute the roots of an univariate polynomial.
-    """
-    n = f.coeffs[0][1] # degree
-    if n == 0: # constant
-        return []
-    elif n == 1:
-        result = [-(f.coeffs[1][0] / f.coeffs[0][0])]
-    elif n == 2:
-        result = quadratic(f)
-    elif n == 3:
-        result = cubic(f)
-    else:
-        result = n_poly(f)
-        if result is None:
-            return []
 
+    Examples:
+    >>> x = Symbol('x')
+    >>> roots(x**2 - 1)
+    [-1, 1]
+    """
+    from sympy.polynomials import factor_
+
+    if not isinstance(f, Polynomial):
+        f = Polynomial(f, var=var, order=None)
+    if len(f.var) == 0:
+        return []
+    if len(f.var) > 1:
+        raise PolynomialException('Multivariate polynomials not supported.')
+
+    # Determine type of coeffs (for factorization purposes)
+    symbols = f.sympy_expr.atoms(type=Symbol)
+    symbols = filter(lambda a: not a in f.var, symbols)
+    if symbols:
+        coeff = 'sym'
+    else:
+        coeff = coeff_ring(get_numbers(f.sympy_expr))
+        
+    if coeff == 'rat':
+        denom, f = f.as_integer()
+        coeff = 'int'
+    if coeff == 'int':
+        content, f = f.as_primitive()
+        factors = factor_.factor(f)
+    else: # It's not possible to factorize.
+        factors = [f]
+        
+    # Now check for roots in each factor
+    result = []
+    for p in factors:
+        n = p.coeffs[0][1] # degree
+        if n == 0: # constant
+            pass
+        elif n == 1:
+            if len(p.coeffs) == 2:
+                result += [-(p.coeffs[1][0] / p.coeffs[0][0])]
+            else:
+                result += [S.Zero]
+        elif n == 2:
+            result += quadratic(p)
+        elif n == 3:
+            result += cubic(p)
+        else:
+            res = n_poly(p)
+            if res is not None:
+                result += res
+    result.sort()
+    return result
+
+def solve_system(eqs, var=None):
+    """Solves a system of polynomial equation by variable elimination.
+
+    Assumes to get a list of instances of Polynomial, with matching
+    var. Only works for zero-dimensional varieties, that is, a
+    finite number of solutions (untested!). 
+
+    Examples:
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+    >>> f = y - x           
+    >>> g = x**2 + y**2 - 1 
+    >>> solve_system([f, g])
+    [(-1/2*2**(1/2), -1/2*2**(1/2)), ((1/2)*2**(1/2), (1/2)*2**(1/2))]
+
+    """
+
+    def is_uv(f):
+        """Is an instance of Polynomial univariate in its last variable?
+        """
+        for term in f.coeffs:
+            for exponent in term[1:-1]:
+                if exponent > 0:
+                    return False
+        return True
+
+    if not isinstance(eqs, list):
+        eqs = [eqs]
+    if not isinstance(eqs[0], Polynomial):
+        if var is None:
+            var = merge_var(*[f.atoms(type=Symbol) for f in eqs])
+        eqs = [Polynomial(f, var=var, order='lex') for f in eqs]
+    else:
+        eqs = [Polynomial(f.sympy_expr, var=f.var, order='lex') for f in eqs]
+    
+    # First compute a Groebner base with the polynomials,
+    # with lexicographic ordering, so that the last polynomial is
+    # univariate and can be solved.
+    gb = groebner_.groebner(eqs)
+
+    # Now filter the the base elements, to get only the univariate
+    eliminated = filter(is_uv, gb)
+    if len(eliminated) != 1:
+        raise PolynomialException("System currently not solvable.")
+
+    # Try to solve the polynomials with var eliminated.
+    f = eliminated[0]
+    partial_solutions = set(roots(f.sympy_expr, var=f.var[-1]))
+
+    # No solutions were found.
+    # TODO: Check if there exist some anyways?
+    if len(partial_solutions) == 0:
+        return []
+
+    # Is this the last equation, that is, deepest hierarchy?
+    if len(gb) == 1:
+        return map(lambda s:(s,), partial_solutions)
+
+    # Finally, call this function recursively for each root replacing
+    # the corresponding variable in the system.
+    result = []
+    for r in partial_solutions:
+        new_system = []
+        for eq in gb[:-1]:
+            new_eq = eq.sympy_expr.subs(eq.var[-1], r).expand()
+            if new_eq is not S.Zero:
+                new_system.append(
+                    Polynomial(new_eq, var=eq.var[:-1], order='lex'))
+        if not new_system:
+            return []
+        for nps in solve_system(new_system):
+            result.append(nps + (r,))
+
+    # Now sort the roots.
+    result.sort()
     return result

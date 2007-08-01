@@ -4,6 +4,7 @@ sys.path.append(".")
 import py
 
 from sympy import *
+from sympy.core.basic import S # Use Singleton comparisons.
 
 ## sympy/modules/polynomials/base.py
 
@@ -264,27 +265,25 @@ def test_roots():
     b = Symbol("b")
     c = Symbol("c")
     x = Symbol("x")
-    assert roots(x**2-3*x+2) == [1,2]  
-    assert roots(x**2-3*x/2+Rational(1,2)) == [1,Rational(1,2)]
-    assert roots(2*x**2-3*x+1) == [1,Rational(1,2)]
+    assert roots(x**2-3*x+2) == [1, 2]
+    assert roots(x**2-3*x/2+Rational(1,2)) == [Rational(1,2), 1]
+    assert roots(2*x**2-3*x+1) == [Rational(1,2), 1]
     assert roots(x**2-1) == [-1, 1]
-    assert roots(x**2+1) == [-I, I]
-    assert roots(x**3-1) == [-(-1)**Rational(1,3),
-                             (-1)** Rational(1,3)/2
-                             -(-1)**Rational(5,6)/2 *3**Rational(1,2),
-                             (-1)**Rational(1,3)/2
-                             +(-1)**Rational(5,6)/2*3**Rational(1,2)]
-    assert roots(x**3) == [0]
-    assert roots(x**3-x) == [0,-1,1]
+    assert roots(x**2+1) == [I, -I]
+    assert roots(x**3-1) == [1,
+                             Rational(-1,2) + I*Rational(1,2)*3**Rational(1,2),
+                             Rational(-1,2) - I*Rational(1,2)*3**Rational(1,2)]
+    assert roots(x**3) == [0, 0, 0]
+    assert roots(x**3-x) == [-1, 0, 1]
     assert roots(Rational(2),x) == []
     assert roots(a*x**2 + b*x + c, var=[x]) == \
            [-b/(a*2)+(((b/a)**2-4*c/a)**Rational(1,2))/2,
             -b/(a*2)-(((b/a)**2-4*c/a)**Rational(1,2))/2]
-    assert roots(x**3 + x**2 + x + 1) == [-1, -I, I]
-    assert roots(x**4 - 1) == [1, exp(Pi*I/2), exp(Pi*I), exp(3*Pi*I/2)]
+    assert roots(x**3 + x**2 + x + 1) == [-1, I, -I]
+    assert roots(x**4 - 1) == [-1, 1, I, -I]
     assert roots(x**4 + 1) == [(-1)**Rational(1,4),
-                               (-1)**Rational(1,4)*exp(Pi*I/2),
                                (-1)**Rational(1,4)*exp(Pi*I),
+                               (-1)**Rational(1,4)*exp(Pi*I/2),
                                (-1)**Rational(1,4)*exp(3*Pi*I/2)]
     assert roots(x**5 - Rational(3,2)) == \
            [Rational(1,2)**Rational(1,5)*3**Rational(1,5),
@@ -297,14 +296,14 @@ def test_solve_system():
     x = Symbol("x")
     y = Symbol("y")
     z = Symbol("z")
-    assert solve_system(x-1) == [[1]]
+    assert solve_system(x-1) == [(S.One,)]
     assert solve_system([2*x - 3, 3*y/2 - 2*x, z - 5*y]) \
-           == [[Rational(3, 2), 2, 10]]
+           == [(Rational(3, 2), Integer(2), Integer(10))]
     assert solve_system([y - x, y - x - 1]) == []
-    assert solve_system([y - x**2, y + x**2]) == [[0, 0]]
+    assert solve_system([y - x**2, y + x**2]) == [(S.Zero, S.Zero)]
     assert solve_system([y - x**2, y + x**2 + 1]) == \
-           [[-I*2**Rational(1,2)/2, Rational(-1,2)],
-            [I*2**Rational(1,2)/2, Rational(-1,2)]]
+           [(I*2**Rational(1,2)/2, Rational(-1,2)),
+            (-I*2**Rational(1,2)/2, Rational(-1,2))]
            
 def test_sqf():
     x = Symbol("x")

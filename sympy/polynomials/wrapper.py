@@ -5,7 +5,6 @@ from sympy.polynomials import div_
 from sympy.polynomials import factor_
 from sympy.polynomials import groebner_
 from sympy.polynomials import roots_
-from sympy.polynomials import sqf_
 
 def div(f, g, var=None, order=None, coeff=None):
     """Polynomial division of f by g, returns quotients and remainder.
@@ -36,7 +35,7 @@ def div(f, g, var=None, order=None, coeff=None):
     else:
         return q.sympy_expr, r.sympy_expr
 
-def factor(f):
+def factor(f, var=None, order=None):
     """Factors the polynomial f over the rationals.
 
     Example:
@@ -47,18 +46,8 @@ def factor(f):
     >>> factor(x**2 - y**2)
     (y - x)*(-x - y)
     """
-    l, f = Polynomial(f).as_integer()
-    c, f = f.as_primitive()
-
-    # Get an re-assemble factors:
-    result = S.One
-    if len(f.var) == 1:
-        for p in factor_.uv_int(f):
-            result *= p.sympy_expr.expand()
-    if len(f.var) > 1:
-        for p in factor_.kronecker_mv(f):
-            result *= p.sympy_expr.expand()
-    return result*c/l
+    # Re-assemble factors:
+    return Mul(*[ff.sympy_expr for ff in factor_.factor(f, var, order)])
 
 def gcd(f, g, var=None, order=None, coeff=None):
     """Greatest common divisor of two polynomials.
@@ -98,23 +87,7 @@ def groebner(f, var=None, order=None, reduced=True):
     [x - y**2, y**3 + y**4]
 
     """
-    if isinstance(f, Basic):
-        f = [f]
-    f = map(lambda p: sympify(p).expand(), f)
-    # filter trivial or double entries
-    ff = filter(lambda x: x!=0, f)
-    if not ff: # Zero Ideal
-        return [S.Zero]
-    f = []
-    for p in ff:
-        if not p in f:
-            f.append(p)
-    if var is None:
-        var = merge_var(*map(lambda p: p.atoms(type=Symbol),f))
-    if isinstance(var, Symbol):
-        var = [var]
-    f = map(lambda p: Polynomial(p, var=var, order=order), f)
-    g = groebner_.groebner(f, reduced)
+    g = groebner_.groebner(f, var, order, reduced)
     return map(lambda p: p.sympy_expr, g)
 
 def lcm(f, g, var=None, order=None, coeff=None):
@@ -142,33 +115,6 @@ def lcm(f, g, var=None, order=None, coeff=None):
                 coeff = 'sym'
     
     return div_.lcm(f, g, var, order, coeff).sympy_expr
-
-def real_roots(f, a=None, b=None):
-    """Returns the number of unique real roots of f in the interval (a, b].
-
-    Assumes an univariate, square-free polynomial with real coeffs.
-    The boundaries a and b can be omitted to check the whole real line.
-
-    Examples:
-    >>> x = Symbol('x')
-    >>> real_roots(x**2 - 1)
-    2
-    >>> real_roots(x**2 - 1, 0, 2)
-    1
-
-    """
-    f = sympify(f)
-    if a is not None:
-        a = sympify(a)
-    if b is not None:
-        b = sympify(b)
-    var = list(f.atoms(type=Symbol))
-    if len(var) == 1:
-        var = var[0]
-    else:
-        raise PolynomialException('Not an univariate polynomial.')
-    ss = roots_.sturm(Polynomial(f))
-    return roots_.real_roots(ss, a, b)
 
 def resultant(f, g, x, method='bezout'):
     """Computes resultant of two polynomials in one variable. This
@@ -242,93 +188,7 @@ def resultant(f, g, x, method='bezout'):
     else:
         raise ValueError("Invalid method: '%s'" % method)
 
-def roots(f, var=None):
-    """Compute the roots of an univariate polynomial.
-
-    The coeff argument determines the type of the roots to look
-    for. The supported types include 'int', 'rat', 'real' and 'cplx'
-    and the coeffs of given polynomials are assumed to be of
-    this type.
-
-    Examples:
-    >>> x = Symbol('x')
-    >>> roots(x**2 - 1)
-    [-1, 1]
-    
-    """
-
-    f = Polynomial(f, var=var)
-    if len(f.var) == 0:
-        return []
-    if len(f.var) > 1:
-        raise PolynomialException(
-            'Multivariate polynomials not supported.')
-    # Determine type of coeffs (for factorization purposes)
-    symbols = f.sympy_expr.atoms(type=Symbol)
-    symbols = filter(lambda a: not a in f.var, symbols)
-    if symbols:
-        coeff = 'sym'
-    else:
-        coeff = coeff_ring(get_numbers(f.sympy_expr))
-        
-    if coeff == 'rat':
-        l, f = f.as_integer()
-        coeff = 'int'
-    if coeff in ['int', 'rat']:
-        c, f = f.as_primitive()
-        # Hacks for special cases (where factorization would do harm)
-        # TODO: Support these cases differently, in roots_.uv
-        if len(f.coeffs) == 1:
-            if f.coeffs[0][1] == 0:
-                return []
-            else:
-                return[S.Zero]
-        if len(f.coeffs) == 2:
-            result = []
-            if f.coeffs[1][1] > 0:
-                result.append(S.Zero)
-                f = Polynomial(coeffs=tuple([(t[0], t[1] - f.coeffs[1][1])
-                                             for t in f.coeffs]),
-                               var=f.var, order=f.order)
-            return result + roots_.uv(f)    
-        else:
-            # Factor without multiplicity.
-            factors = []
-            factors = filter(lambda p: not p in factors,
-                             factor_.uv_int(f))
-    else:
-        factors = [f]
-        
-    # Now check for roots in each factor
-    result = []
-    for p in factors:
-        result += roots_.uv(p)
-        
-    return result
-
-def solve_system(eqs, var=None):
-    """Solve a system of polynomial equations.
-
-    Only works for finite sets of solutions, which is not
-    tested. Currently, some equations can't be solved.
-
-    Examples:
-    >>> x = Symbol('x')
-    >>> y = Symbol('y')
-    >>> f = y - x           
-    >>> g = x**2 + y**2 - 1 
-    >>> solve_system([f, g])
-    [[-1/2*2**(1/2), -1/2*2**(1/2)], [(1/2)*2**(1/2), (1/2)*2**(1/2)]]
-    
-    """
-    if not isinstance(eqs, list):
-        eqs = [eqs]
-    if var is None:
-        var = merge_var(*[eq.atoms(type=Symbol) for eq in eqs])
-    eqs = map(lambda eq:Polynomial(eq, None, var, 'lex'), eqs)
-    return roots_.equation_system(eqs)
-
-def sqf(f, var=None):
+def sqf(f, var=None, order=None, coeff=None):
     """Computes the square-free decomposition of 'f'.
 
     Only works for univariate polynomials.
@@ -339,14 +199,13 @@ def sqf(f, var=None):
     x**2*(2 + 2*x)
 
     """
-    a = sqf_.uv(Polynomial(f, var=var))
-
-    result = 1
+    a = factor_.sqf(f, var, order, coeff)
+    result = S.One
     for i, p in enumerate(a):
         result *= (p.sympy_expr)**(i+1)
     return result
 
-def sqf_part(f, var=None):
+def sqf_part(f, var=None, order=None):
     """Computes the square-free part of f.
 
     Only works for univariate polynomials.
@@ -357,4 +216,4 @@ def sqf_part(f, var=None):
     2*x + 2*x**2
 
     """
-    return sqf_.uv_part(Polynomial(f, var=var)).sympy_expr
+    return factor_.sqf_part(f, var=var, order=order).sympy_expr

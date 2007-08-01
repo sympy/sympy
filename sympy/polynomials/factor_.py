@@ -1,34 +1,95 @@
 """Various algorithms for the factorization of polynomials."""
 
-#import random
-
 from sympy.polynomials.base import *
-from sympy.polynomials import div_, roots_, sqf_
+from sympy.polynomials import div_
 
-def uv_int(f):
+def sqf(f, var=None, order=None, coeff=None):
+    """Returns a decomposition of f in a1 * a2**2 * ... * an**n.
+
+    Here, the ai are pairwise prime and square-free polynomials, returned
+    in a list. f is assumed to be a univariate instance of Polynomial.
+    """
+    if not isinstance(f, Polynomial):
+        f = Polynomial(f, var=var, order=order)
+
+    # Check for constant polynomials:
+    if f.var == [] or f.coeffs[0][1] is S.Zero:
+        return [f]
+    
+    f = [f]
+    while f[-1].coeffs[0][1] is not S.Zero:
+        f.append(div_.gcd(f[-1], f[-1].diff(f[-1].var[0])))
+    g = []
+    for i in range(1, len(f)):
+        g.append(div_.div(f[i-1], f[i])[0])
+    a = []
+    for i in range(0, len(g)-1):
+        a.append(div_.div(g[i], g[i+1])[0])
+    a.append(g[-1])
+    
+    if coeff == 'int': # Redistribute the constants.
+        ca = int(a[0].content())
+        c = ca
+        for i, p in enumerate(a[1:]):
+            # Compute lcm of denominators in coeffs:
+            l, a[i+1] = p.as_integer()
+            c /= int(l)**(i+2)
+        ca = Integer(ca/c)
+        a[0] = Polynomial(coeffs=tuple([(t[0]/ca,) + t[1:]
+                                        for t in a[0].coeffs]),
+                          var=a[0].var, order=a[0].order)
+    return a
+
+
+def sqf_part(f, var=None, order=None):
+    """Returns the square-free part of f.
+    """
+    if not isinstance(f, Polynomial):
+        f = Polynomial(f, var=var, order=order)
+            
+    ff = div_.gcd(f, f.diff(f.var[0]))
+    return div_.div(f, ff)[0]
+
+
+def factor(f, var=None, order=None):
     """Find the factorization of an univariate integer polynomial.
 
-    Using square-free factorization and Kronecker's algorithm."""
-    a = sqf_.uv_int(f)
-    result = []
-    for i, p in enumerate(a):
-        if p.coeffs[0][1] is not S.Zero: # Filter out constant factors
-            # Check for rational roots first:
-            rr = roots_.rat_roots(p)
-            # In a square-free polynomial, the roots appear only once.
-            for root in rr:
-                pp = Polynomial(coeffs=((Rational(root.q), S.One),
-                                       (Rational(-root.p), S.Zero)),
-                                var=f.var, order=f.order)
-                result += [pp]*(i+1)
-                # TODO: remove assertion, speed up!
-                p, r = div_.div(p, pp, coeff='int')
-                assert r.sympy_expr is S.Zero
-            if p.coeffs[0][1] is not S.Zero: # Filter out constant factors
-                # Then try the rest with the kronecker algorithm:
-                for pp in kronecker(p):
-                    result += [pp]*(i+1)
+    Using square-free factorization and Kronecker's algorithm.
+    """
+    from sympy.polynomials import roots_
+    
+    if not isinstance(f, Polynomial):
+        f = Polynomial(f, var=var, order=order)
+
+    # Make it a primitive polynomial in integer coefficients.
+    denom, f = f.as_integer()
+    content, f = f.as_primitive()
+    result = [Polynomial(content/denom, var=f.var, order=f.order)]
+
+    if len(f.var) == 0 or f.coeffs[0][1:] == tuple([S.Zero]*len(f.var)):
+        return result
+    elif len(f.var) == 1:
+        # Continue the factorization for each square-free part.
+        for i, p in enumerate(sqf(f, coeff='int')):
+            if p.coeffs[0][1] is not S.Zero: # Filter out constant 1 factors
+                # Check for rational roots first:
+                rr = roots_.rat_roots(p)
+                # In a square-free polynomial, the roots appear only once.
+                for root in rr:
+                    pp = Polynomial(coeffs=((Integer(root.q), S.One),
+                                            (Integer(-root.p), S.Zero)),
+                                    var=f.var, order=f.order)
+                    result += [pp]*(i + 1)
+                    p, r = div_.div(p, pp, coeff='int')
+                # Filter out constant 1 factors
+                if p.coeffs[0][1] is not S.Zero: 
+                    # Then try the rest with the kronecker algorithm:
+                    for divisor in kronecker(p):
+                        result += [divisor]*(i + 1)
+    else: # len(f.var) > 1
+        result += kronecker_mv(f)
     return result
+
 
 def kronecker(f):
     """Recursive factorization of an univariate polynomial with integer
@@ -176,7 +237,7 @@ def kronecker_mv(f):
     g = Polynomial(g, var=y, order=f.order)
 
     # We can now call the univariate factorization algorithm for g.
-    g_factors = uv_int(g)
+    g_factors = factor(g)
 
     # Trial division with all combinations of factors of g.
     tested = []

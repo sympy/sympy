@@ -3,17 +3,26 @@
 from sympy.polynomials.base import *
 from sympy.polynomials import div_
 
-def groebner(f, reduced=True):
+def groebner(f, var=None, order=None, reduced=True):
     """Computes a (reduced) Groebner base for a given list of polynomials.
 
     Using an improved version of Buchberger's algorithm, following
     Cox, Little, O'Shea: Ideals, Varieties and Algorithms.
     """
-    
-    # Filter out the zero elements
+
+    if isinstance(f, Basic):
+        f = [f]
+    if not isinstance(f[0], Polynomial):
+        if var is None:
+            var = merge_var(*map(lambda p: p.atoms(type=Symbol), f))
+        if isinstance(var, Symbol):
+            var = [var]
+        f = map(lambda p: Polynomial(p, var=var, order=order), f)
+
+    # Filter out the zero elements.
     f = filter(lambda p: p.sympy_expr is not S.Zero, f)
 
-    # empty ideal
+    # Empty Ideal.
     if len(f) == 0:
         return [Polynomial(S.Zero)]
 
