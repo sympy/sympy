@@ -622,3 +622,7 @@ def test_sparse_matrix():
     assert M.eigenvects() == [[1, 1, [Matrix(1,3,[R(-1)/2,R(3)/2,1])]],
                               [2, 1, [Matrix(1,3,[0,1,0])]],
                               [5, 1, [Matrix(1,3,[1,1,0])]]]
+
+def test_subs():
+    x = Symbol('x')
+    assert Matrix([[1,x],[x,4]]).subs(x, 5) == Matrix([[1,5],[5,4]])

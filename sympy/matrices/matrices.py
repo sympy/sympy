@@ -193,7 +193,7 @@ class Matrix(object):
 
     def subs(self,a,b):
         out = self[:,:]
-        out[:,:] = Matrix(self.lines, self.cols, lambda i,j: self[i,j].subs())
+        out[:,:] = Matrix(self.lines, self.cols, lambda i,j: self[i,j].subs(a,b))
         return out
 
     def __sub__(self,a):

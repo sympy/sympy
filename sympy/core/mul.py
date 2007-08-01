@@ -54,7 +54,8 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 if isinstance(o, Basic.WildFunction):
                     pass
                 elif isinstance(o, Basic.Function):
-                    o, lambda_args = o.with_dummy_arguments(lambda_args)
+                    if o.nofargs is not None:
+                        o, lambda_args = o.with_dummy_arguments(lambda_args)
                 elif isinstance(o, Basic.Order):
                     o, order_symbols = o.as_expr_symbols(order_symbols)
 
