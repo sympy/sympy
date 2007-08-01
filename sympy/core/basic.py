@@ -205,12 +205,12 @@ class Basic(BasicMeths):
         elif isinstance(a, (list,tuple)) and len(a)==2:
             return Basic.Interval(*a)
         else:
-            if not isinstance(a, str):
+           # if not isinstance(a, str):
                 # At this point we were given arbitray expression
                 # which does not inherit after Basic. This may be
                 # SAGE's expression (or something alike) so take
                 # its normal form via str() and try to parse it.
-                a = str(a)
+           #     a = str(a)
 
             try:
                 return parser.Expr(a).tosymbolic()
@@ -504,7 +504,7 @@ class Basic(BasicMeths):
 
     def _eval_complex_expand(self):
         terms = [ term._eval_complex_expand() for term in self ]
-        return self.__class__(*terms, **self._assumptions)#.expand()
+        return self.__class__(*terms, **self._assumptions).expand()
 
     def _eval_expand(self):
         if isinstance(self, Atom):
@@ -521,9 +521,7 @@ class Basic(BasicMeths):
         """Extracts symbolic coefficient at the given expression. In
            other words, this functions separates 'self' into product
            of 'expr' and 'expr'-free coefficient. If such separation
-           is not possible it will return None. Additionally this
-           function can be used as a 'collect' replacement for
-           trivial cases.
+           is not possible it will return None.
 
            >>> from sympy import *
            >>> x, y = symbols('xy')
@@ -537,23 +535,18 @@ class Basic(BasicMeths):
            >>> (2*E + x).as_coefficient(x)
            >>> (2*sin(E)*E).as_coefficient(x)
 
-           >>> (2*x*I + Pi*y*I).as_coefficient(I)
-           2*x + Pi*y
-
         """
-        expr = Basic.sympify(expr)
+        w = Basic.Wild('w')
 
-        if not self.has(expr):
-            return None
-        else:
-            x = Basic.Symbol('x', dummy=True)
+        coeff = self.match(w * expr)
 
-            coeff = self.subs(expr, x).diff(x)
-
-            if (coeff*expr).expand() == self:
-                return coeff
-            else:
+        if coeff is not None:
+            if coeff[w].has(expr):
                 return None
+            else:
+                return coeff[w]
+        else:
+            return None
 
     def as_real_imag(self):
         """Performs complex expansion on 'self' and returns a tuple

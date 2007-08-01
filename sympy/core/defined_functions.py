@@ -879,8 +879,8 @@ class Re(DefinedFunction):
        >>> re(2*I)
        0
 
-       >>> re(x*I)
-       -im(x)
+       #>>> re(x*I)
+       #-im(x)
 
        >>> re(im(x) + x*I + 2)
        2

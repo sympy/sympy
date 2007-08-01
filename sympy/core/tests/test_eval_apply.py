@@ -241,7 +241,7 @@ def test_ceiling_apply_eval():
     assert ceiling(sin(1)) == 1
     assert ceiling(sin(-1)) == 0
 
-def _test_re_apply_eval():
+def test_re_apply_eval():
 
     x, y = symbols('xy')
 
@@ -278,7 +278,7 @@ def _test_re_apply_eval():
 
     assert re(log(2*I)) == log(2)
 
-def _test_im_apply_eval():
+def test_im_apply_eval():
 
     x, y = symbols('xy')
 
