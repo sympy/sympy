@@ -110,6 +110,11 @@ class Apply(Basic, ArithMeths, RelMeths):
 
     def _eval_subs(self, old, new):
         if self==old: return new
+        if isinstance(old, Apply) and old.args==self.args:
+            newfunc = Lambda(new, *old.args)
+            func = self.func.subs(old.func, newfunc)
+            if func!=self.func:
+                return func(*self.args)
         obj = self.func._eval_apply_subs(*(self.args + (old,) + (new,)))
         if obj is not None:
             return obj
