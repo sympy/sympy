@@ -19,7 +19,7 @@ def _product(a, b):
         p *= k
     return p
 
-def recurrence_memo(nofterms, initial):
+def recurrence_memo(initial):
     cache = initial
     def decorator(f):
         def g(n):
@@ -27,7 +27,7 @@ def recurrence_memo(nofterms, initial):
             if n <= L - 1:
                 return cache[n]
             for i in xrange(L, n+1):
-                cache.append(f(i, *cache[i-nofterms:i]))
+                cache.append(f(i, cache))
             return cache[-1]
         return g
     return decorator
@@ -75,14 +75,14 @@ class Fibonacci(DefinedFunction):
 
     """
     @staticmethod
-    @recurrence_memo(2, [0, 1])
-    def _fib(n, prev2, prev1):
-        return prev2 + prev1
+    @recurrence_memo([0, 1])
+    def _fib(n, prev):
+        return prev[-1] + prev[-2]
 
     @staticmethod
-    @recurrence_memo(2, [None, Integer(1), _sym])
-    def _fibpoly(n, prev2, prev1):
-        return (prev2 + _sym*prev1).expand()
+    @recurrence_memo([None, Integer(1), _sym])
+    def _fibpoly(n, prev):
+        return (prev[-2] + _sym*prev[-1]).expand()
 
     def _eval_apply(self, n, sym=None):
         if isinstance(n, Integer):
@@ -266,3 +266,94 @@ class Bernoulli(DefinedFunction):
                                  " for nonnegative integer indices.")
 
 bernoulli = Bernoulli()
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                             Bell numbers                                   #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+class Bell(DefinedFunction):
+    r"""
+    Bell numbers / Bell polynomials
+
+    Usage
+    =====
+        bell(n) gives the nth Bell number, B_n
+        bell(n, x) gives the nth Bell polynomial, B_n(x)
+
+        Not to be confused with Bernoulli numbers and Bernoulli polynomials,
+        which use the same notation.
+
+    Examples
+    ========
+        >>> [bell(n) for n in range(11)]
+        [1, 1, 2, 5, 15, 52, 203, 877, 4140, 21147, 115975]
+        >>> bell(30)
+        846749014511809332450147
+        >>> bell(4, Symbol('t'))
+        t + t**4 + 6*t**3 + 7*t**2
+
+    Mathematical description
+    ========================
+        The Bell numbers satisfy B_0 = 1 and
+                 n-1
+                 ___
+                \      / n - 1 \
+          B   =  )     |       | * B .
+           n    /___   \   k   /    k
+                k = 0
+
+        They are also given by
+                      oo
+                     ___    n
+                1   \      k
+          B   = - *  )     --.
+           n    e   /___   k!
+                    k = 0
+
+        The Bell polynomials are given by B_0 = 1 and
+                        n-1
+                        ___
+                       \      / n - 1 \
+          B (x)  = x *  )     |       | * B   (x).
+           n           /___   \ k - 1 /    k-1
+                       k = 1
+
+    References and further reading
+    ==============================
+        * http://en.wikipedia.org/wiki/Bell_number
+        * http://mathworld.wolfram.com/BellNumber.html
+        * http://mathworld.wolfram.com/BellPolynomial.html
+
+    """
+
+    @staticmethod
+    @recurrence_memo([1, 1])
+    def _bell(n, prev):
+        s = 1
+        a = 1
+        for k in xrange(1, n):
+            a = a * (n-k) // k
+            s += a * prev[k]
+        return s
+
+    @staticmethod
+    @recurrence_memo([Integer(1), _sym])
+    def _bell_poly(n, prev):
+        s = 1
+        a = 1
+        for k in xrange(2, n+1):
+            a = a * (n-k+1) // (k-1)
+            s += a * prev[k-1]
+        return (_sym * s).expand()
+
+    def _eval_apply(self, n, sym=None):
+        if isinstance(n, Integer) and n.is_nonnegative:
+            if sym is None:
+                return Integer(self._bell(int(n)))
+            else:
+                return self._bell_poly(int(n)).subs(_sym, sym)
+
+bell = Bell()

@@ -34,3 +34,11 @@ def test_fibonacci():
     assert fibonacci(2, x) == x
     assert fibonacci(3, x) == x**2 + 1
     assert fibonacci(4, x) == x**3 + 2*x
+
+def test_bell():
+    assert [bell(n) for n in range(8)] == [1, 1, 2, 5, 15, 52, 203, 877]
+    x = Symbol('x')
+    assert bell(0, x) == 1
+    assert bell(1, x) == x
+    assert bell(2, x) == x**2 + x
+    assert bell(5, x) == x**5 + 10*x**4 + 25*x**3 + 15*x**2 + x
