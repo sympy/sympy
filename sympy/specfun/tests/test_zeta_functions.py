@@ -6,26 +6,6 @@ import py
 from sympy import *
 from sympy.specfun.zeta_functions import *
 
-def test_bernoulli2():
-    assert bernoulli2(0) == 1
-    assert bernoulli2(1) == Rational(-1,2)
-    assert bernoulli2(2) == Rational(1,6)
-    assert bernoulli2(3) == 0
-    assert bernoulli2(4) == Rational(-1,30)
-    assert bernoulli2(5) == 0
-    assert bernoulli2(6) == Rational(1,42)
-    assert bernoulli2(7) == 0
-    assert bernoulli2(8) == Rational(-1,30)
-    assert bernoulli2(10) == Rational(5,66)
-    assert bernoulli2(1000001) == 0
-
-def test_bernoulli_poly():
-    x = Symbol('x')
-    assert bernoulli_poly(0, x) == 1
-    assert bernoulli_poly(1, x) == x-Rational(1,2)
-    assert bernoulli_poly(2, x) == x**2-x+Rational(1,6)
-    assert bernoulli_poly(3, x) == x**3 - (3*x**2)/2 + x/2
-
 def test_zeta():
     assert zeta(0) == Rational(-1,2)
     assert zeta(1) == oo

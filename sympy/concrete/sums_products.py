@@ -1,7 +1,7 @@
 from sympy import *
 from sympy.specfun import rising_factorial, factorial_, factorial_simplify
 from sympy.specfun.factorials import unfac
-from sympy.specfun import bernoulli2, bernoulli_poly
+from sympy.specfun import bernoulli
 from sympy.polynomials import factor, PolynomialException
 
 def ispoly(expr, var):
@@ -78,7 +78,7 @@ class Sum(_BigOperator):
         if e != None:
             c = p.subs_dict(e)
             if c.is_integer and c >= 0:
-                s = (bernoulli_poly(c+1, b+1)-bernoulli_poly(c+1, a))/(c+1)
+                s = (bernoulli(c+1, b+1)-bernoulli(c+1, a))/(c+1)
                 return s.expand()
 
         # Geometric terms
@@ -116,7 +116,7 @@ class Sum(_BigOperator):
             s += (f.subs(i, a) + f.subs(i, b))/2
         for k in range(1, n):
             g = f.diff(i, 2*k-1)
-            s += bernoulli2(2*k)/factorial_(2*k)*(g.subs(i,b)-g.subs(i,a))
+            s += bernoulli(2*k)/factorial_(2*k)*(g.subs(i,b)-g.subs(i,a))
         return s
 
 

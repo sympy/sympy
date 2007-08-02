@@ -1346,7 +1346,8 @@ class Tan(DefinedFunction):
 
             a, b = ((n-1)//2), 2**(n+1)
 
-            B = Basic.Bernoulli()(n+1)
+            from sympy.specfun.combinatorial import bernoulli
+            B = bernoulli(n+1)
             F = Basic.Factorial()(n+1)
 
             return (-1)**a * b*(b-1) * B/F * x**n
@@ -1441,7 +1442,8 @@ class Cot(DefinedFunction):
         else:
             x = Basic.sympify(x)
 
-            B = Basic.Bernoulli()(n+1)
+            from sympy.specfun.combinatorial import bernoulli
+            B = bernoulli(n+1)
             F = Basic.Factorial()(n+1)
 
             return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
@@ -1676,7 +1678,8 @@ class Tanh(DefinedFunction):
 
             a = 2**(n+1)
 
-            B = Basic.Bernoulli()(n+1)
+            from sympy.specfun.combinatorial import bernoulli
+            B = bernoulli(n+1)
             F = Basic.Factorial()(n+1)
 
             return a*(a-1) * B/F * x**n
@@ -1754,7 +1757,8 @@ class Coth(DefinedFunction):
         else:
             x = Basic.sympify(x)
 
-            B = Basic.Bernoulli()(n+1)
+            from sympy.specfun.combinatorial import bernoulli
+            B = bernoulli(n+1)
             F = Basic.Factorial()(n+1)
 
             return 2**(n+1) * B/F * x**n

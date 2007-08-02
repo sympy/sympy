@@ -1,96 +1,6 @@
+from combinatorial import bernoulli
 from factorials import factorial_, binomial2
-
 from sympy.core import *
-
-# first some utilities for calculating Bernoulli numbers
-
-class _memo:
-    def __init__(self, f):
-        self.func = f
-        self.cache = {}
-        self.highest = 0
-    def __call__(self, m):
-        if m < self.highest:
-            return self.cache[m]
-        else:
-            x = self.func(m)
-            self.cache[m] = x
-            self.highest = m
-            return x
-
-def _product(low, high):
-    p = 1
-    for k in xrange(low, high+1):
-        p *= k
-    return p
-
-def _bernoulli_sum(m, mtop):
-    s = 0
-    a = int(binomial2(m+3, m-6))
-    for j in xrange(1, mtop+1):
-        s += a*bernoulli2(m-6*j)
-        a *= _product(m-6 - 6*j + 1, m-6*j)
-        a //= _product(6*j+4, 6*j+9)
-    return s
-
-@_memo
-def _b0mod6(m):
-    return (Rational(m+3, 3) - _bernoulli_sum(m, m//6)) / binomial2(m+3, m)
-
-@_memo
-def _b2mod6(m):
-    return (Rational(m+3, 3) - _bernoulli_sum(m, (m-2)//6)) / binomial2(m+3, m)
-
-@_memo
-def _b4mod6(m):
-    return (-Rational(m+3, 6) - _bernoulli_sum(m, (m-4)//6)) / binomial2(m+3, m)
-
-class Bernoulli2(DefinedFunction):
-    """
-    Usage
-    =====
-        bernoulli2(n) -> nth Bernoulli number, B_n
-
-    Notes
-    =====
-        * Bernoulli numbers are rational numbers
-        * For odd integers n > 1, bernoulli(n) = 0
-
-    Examples
-    ========
-        >>> from sympy.specfun.zeta_functions import *
-        >>> [bernoulli2(n) for n in range(11)]
-        [1, -1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66]
-        >>> bernoulli2(1000001)
-        0
-
-    """
-    nofargs = 1
-
-    def _eval_apply(self, m):
-        if m.is_integer and m >= 0:
-            m = int(m)
-            if m == 0: return 1
-            if m == 1: return -Rational(1,2)
-            if m % 6 == 0: return _b0mod6(m)
-            if m % 6 == 2: return _b2mod6(m)
-            if m % 6 == 4: return _b4mod6(m)
-            return 0
-
-
-# TODO: speed up
-class BernoulliPoly(DefinedFunction):
-    """
-    bernoulli_poly(n, x) - nth Bernoulli polynomial of x
-    """
-    nofargs = 2
-
-    def _eval_apply(self, n, x):
-        if isinstance(n, Rational) and n.is_integer:
-            s = 0
-            for k in xrange(n.p+1):
-                s += binomial2(n,k)*bernoulli2(k)*x**(n-k)
-            return s
 
 
 class Zeta(DefinedFunction):
@@ -124,9 +34,9 @@ class Zeta(DefinedFunction):
             if s == 1:
                 return oo
             if s > 1 and int(s) % 2 == 0:
-                return abs(bernoulli2(s)) * 2**(s-1) / factorial(s) * pi**s
+                return abs(bernoulli(s)) * 2**(s-1) / factorial(s) * pi**s
             if s < 1:
-                return -bernoulli2(-s+1)/(-s+1)
+                return -bernoulli(-s+1)/(-s+1)
 
 
 class DirichletEta(DefinedFunction):
@@ -215,8 +125,6 @@ def tetragamma(z):
     return polygamma(2, z)
 
 
-bernoulli2 = Bernoulli2()
-bernoulli_poly = BernoulliPoly()
 zeta = Zeta()
 dirichlet_eta = DirichletEta()
 harmonic = Harmonic()
