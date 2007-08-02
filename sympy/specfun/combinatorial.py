@@ -313,7 +313,7 @@ class Bell(DefinedFunction):
            n    e   /___   k!
                     k = 0
 
-        The Bell polynomials are given by B_0 = 1 and
+        The Bell polynomials are given by B_0(x) = 1 and
                         n-1
                         ___
                        \      / n - 1 \
@@ -357,3 +357,72 @@ class Bell(DefinedFunction):
                 return self._bell_poly(int(n)).subs(_sym, sym)
 
 bell = Bell()
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Harmonic numbers                                 #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+class Harmonic(DefinedFunction):
+    r"""
+    Harmonic numbers
+
+    Usage
+    =====
+        harmonic(n) gives the nth harmonic number, H_n
+
+        harmonic(n, m) gives the nth generalized harmonic number
+            of order m, H_{n,m}, where harmonic(n) == harmonic(n, 1)
+
+    Examples
+    ========
+        >>> [harmonic(n) for n in range(6)]
+        [0, 1, 3/2, 11/6, 25/12, 137/60]
+        >>> [harmonic(n, 2) for n in range(6)]
+        [0, 1, 5/4, 49/36, 205/144, 5269/3600]
+        >>> harmonic(oo, 2)
+        (1/6)*Pi**2
+
+    Mathematical description
+    ========================
+        The nth harmonic number is given by 1 + 1/2 + 1/3 + ... + 1/n.
+        More generally,
+                   n
+                  ___
+                 \       -m
+          H    =  )     k   .
+           n,m   /___ 
+                 k = 1
+
+        As n -> oo, H_{n,m} -> zeta(m) (the Riemann zeta function)
+
+    References and further reading
+    ==============================
+        * http://en.wikipedia.org/wiki/Harmonic_number
+
+    """
+
+    # Generate one memoized Harmonic number-generating function for each
+    # order and store it in a dictionary
+    _functions = {}
+
+    def _eval_apply(self, n, m=None):
+        if m is None:
+            m = Integer(1)
+        if n == oo:
+            from zeta_functions import zeta
+            return zeta(m)
+        if isinstance(n, Integer) and n.is_nonnegative and \
+            isinstance(m, Integer):
+            if n == 0:
+                return S.Zero
+            if not m in self._functions:
+                @recurrence_memo([0])
+                def f(n, prev):
+                    return prev[-1] + S.One / n**m
+                self._functions[m] = f
+            return self._functions[m](int(n))
+
+harmonic = Harmonic()

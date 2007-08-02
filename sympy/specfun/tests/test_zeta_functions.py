@@ -25,17 +25,6 @@ def test_dirichlet_eta():
     assert dirichlet_eta(2) == pi**2/12
     assert dirichlet_eta(4) == pi**4*Rational(7,720)
 
-def test_harmonic():
-    assert harmonic(1,1) == 1
-    assert harmonic(2,1) == Rational(3,2)
-    assert harmonic(3,1) == Rational(11,6)
-    assert harmonic(4,1) == Rational(25,12)
-    # assert harmonic(3,1) == harmonic(3)
-    assert harmonic(3,5) == 1 + Rational(1,2**5) + Rational(1,3**5)
-    assert harmonic(10,0) == 10
-    assert harmonic(oo,1) == oo
-    assert harmonic(oo,2) == (pi**2)/6
-
 def test_polygamma():
     assert polygamma(0, 1) == -EulerGamma
     assert polygamma(0, 7) == Rational(49,20)-EulerGamma

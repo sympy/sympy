@@ -52,29 +52,6 @@ class DirichletEta(DefinedFunction):
             return (1-2**(1-s)) * zeta(s)
 
 
-class Harmonic(DefinedFunction):
-    """
-    harmonic(n, m=1) -- nth harmonic number (of order m)
-    """
-    nofargs = 2
-
-    #def __repr__(self):
-    #    return "harmonic(%r, %r)" % self._args
-
-    #__str__ = __repr__
-
-    def _eval_apply(self, n, m):
-        if n == oo:
-            return zeta(m)
-        if isinstance(n, Rational) and n >= 0 and \
-           isinstance(m, Rational) and m >= 0:
-            print "yeska", n, m
-            if n == 0:
-                return 0
-            s = 0
-            for i in xrange(1, n.p+1):
-                s += Rational(1)/i**m
-            return s
 
 
 class PolyGamma(DefinedFunction):
@@ -86,9 +63,8 @@ class PolyGamma(DefinedFunction):
     #def __repr__(self):
     #    return "polygamma(%r, %r)" % self._args
 
-    #__str__ = __repr__
-
     def _eval_apply(self, m, z):
+        from combinatorial import harmonic
         # TODO: rational arguments, reflection formula
         if m.is_integer and m >= 0 and z == 0:
             return oo
@@ -127,5 +103,4 @@ def tetragamma(z):
 
 zeta = Zeta()
 dirichlet_eta = DirichletEta()
-harmonic = Harmonic()
 polygamma = PolyGamma()
