@@ -44,18 +44,21 @@ if __name__ == "__main__":
         """
         start = clock()
         p[4] = 1, 'mode=spherical', [32], [16]
+        sleep(0)
         p.wait_for_calculations()
         print "sphere vertex calculation took %s seconds." % (clock()-start)
 
         lambda_color_function = 'z*.5+.3, 0.1, 1-(z*.5+.3)'
         start = clock()
         p[4].color = lambda_color_function
+        sleep(0)
         p.wait_for_calculations()
         print "lambda color function took %s seconds." % (clock()-start)
         
         sympy_color_function = 1-(z*.5+.3), 0.1, z*.5+.3
         start = clock()
         p[4].color = sympy_color_function
+        sleep(0)
         p.wait_for_calculations()
         print "sympy color function took %s seconds." % (clock()-start)
 
@@ -83,8 +86,8 @@ if __name__ == "__main__":
 
     @example_wrapper
     def extruded_hyperbolas():
-        p[11] = 1/x, [x,100], [y,-1,1,1], 'style=wireframe'
-        p[12] = -1/x, [x,100], [y,-1,1,1], 'style=solid'
+        p[11] = 1/x, [x,-10,10,100], [y,-1,1,1], 'style=wireframe'
+        p[12] = -1/x, [x,-10,10,100], [y,-1,1,1], 'style=solid'
 
     @example_wrapper
     def torus():
