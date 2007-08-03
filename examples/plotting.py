@@ -134,6 +134,7 @@ if __name__ == "__main__":
         else: print "Not a valid example.\n"
         print p
 
+    mirrored_saddles()
     print help_str()
 
     #def profile_plotting():
