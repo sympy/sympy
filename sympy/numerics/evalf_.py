@@ -5,6 +5,32 @@ import functions
 import constants
 from utils_ import bitcount
 
+
+def polyfunc(expr):
+    """
+    Convert a SymPy expression representing a univariate polynomial
+    into a function for numerical evaluation using Floats /
+    ComplexFloats.
+
+        >>> x = Symbol('x')
+        >>> polyfunc(x**3 + 4)(2)
+        Float('12')
+
+    """
+    poly = Polynomial(expr)
+    degree = poly.coeffs[0][1]
+    coeffs = [0] * int(degree + 1)
+    for c, e in poly.coeffs:
+        coeffs[int(e)] = evalf(c)
+    def g(x):
+        x = evalf(x)
+        y = 0
+        for c in reversed(coeffs):
+            y = y*x+c
+        return y
+    return g
+
+
 def evalf(expr):
     """
     evalf(expr) attempts to evaluate a SymPy expression to a Float or
@@ -13,11 +39,17 @@ def evalf(expr):
 
     if isinstance(expr, (Float, ComplexFloat)):
         return expr
+    elif isinstance(expr, (int, float)):
+        return Float(expr)
+    elif isinstance(expr, complex):
+        return ComplexFloat(expr)
 
     expr = Basic.sympify(expr)
 
-    if isinstance(expr, Rational):
+    if isinstance(expr, (Rational)):
         y = Float(expr)
+    elif isinstance(expr, Real):
+        y = Float(str(expr))
 
     elif expr is I:
         y = ComplexFloat(0,1)
