@@ -4,6 +4,8 @@ from managed_window import ManagedWindow
 from plot_camera import PlotCamera
 from plot_controller import PlotController
 
+from time import clock
+
 class PlotWindow(ManagedWindow):
 
     def __init__(self, plot, **kwargs):
@@ -16,6 +18,8 @@ class PlotWindow(ManagedWindow):
         self.antialiasing = kwargs.pop('antialiasing', True)
         self.ortho        = kwargs.pop('ortho', False)
         self.title = kwargs.setdefault('caption', "SymPy Plot")
+        self.last_caption_update = 0
+        self.caption_update_interval = 0.2
 
         super(PlotWindow, self).__init__(**kwargs)
 
@@ -53,7 +57,11 @@ class PlotWindow(ManagedWindow):
         self.plot._render_lock.acquire()
         self.camera.apply_transformation()
         
-        calc_verts, calc_colors = 0, 0
+        calc_verts_pos, calc_verts_len = 0, 0
+        calc_cverts_pos, calc_cverts_len = 0, 0
+
+        should_update_caption = (clock()-self.last_caption_update > 
+                                 self.caption_update_interval)
 
         for r in self.plot._pobjects:
             glPushMatrix()
@@ -63,23 +71,38 @@ class PlotWindow(ManagedWindow):
         for r in self.plot._functions.itervalues():
             glPushMatrix()
             r._draw()
-            try:
-                r_calc_verts, r_calc_colors = r.get_calc_state()
-                if r_calc_verts: calc_verts += 1
-                if r_calc_colors: calc_colors += 1
-            except: pass
             glPopMatrix()
+            
+            # might as well do this while we are
+            # iterating and have the lock rather
+            # than locking and iterating twice
+            # per frame:
 
-        self.update_caption(calc_verts, calc_colors)
+            if should_update_caption:
+                try:
+                    if r.calculating_verts:
+                        calc_verts_pos += r.calculating_verts_pos
+                        calc_verts_len += r.calculating_verts_len
+                    if r.calculating_cverts:
+                        calc_cverts_pos += r.calculating_cverts_pos
+                        calc_cverts_len += r.calculating_cverts_len
+                except: pass
+
+        if should_update_caption:
+            self.update_caption(calc_verts_pos, calc_verts_len, calc_cverts_pos, calc_cverts_len)
+            self.last_caption_update = clock()
+
         self.plot._render_lock.release()
 
-    def update_caption(self, calc_verts, calc_colors):
+    def update_caption(self, calc_verts_pos, calc_verts_len, calc_cverts_pos, calc_cverts_len):
         caption = self.title
-
-        if calc_verts > 0:
-            caption = self.title + " (calculating vertices...)"
-        elif calc_colors > 0:
-            caption = self.title + " (calculating colors...)"
-
-        if self.caption != caption:        
-            self.set_caption(caption)
+        if calc_verts_len or calc_cverts_len:
+            caption += " (calculating"
+            if calc_verts_len > 0:
+                p = (calc_verts_pos/calc_verts_len)*100
+                caption += " vertices %i%%" % (p)
+            if calc_cverts_len > 0:
+                p = (calc_cverts_pos/calc_cverts_len)*100
+                caption += " colors %i%%" % (p)
+            caption += ")"
+        if self.caption != caption: self.set_caption(caption)

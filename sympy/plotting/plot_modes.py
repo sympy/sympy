@@ -1,224 +1,168 @@
-from sympy import Basic, symbols, sin, cos, pi
-from plot_interval import PlotInterval
+from plot_curve import PlotCurve
+from plot_surface import PlotSurface
+from util import scale_value
 
-from math import sin as psin
-from math import cos as pcos
+from sympy import Pi
+from math import sin as p_sin
+from math import cos as p_cos
 
-plot_modes = {}
-
-plot_mode_aliases = {
-    0: [], # position 0 holds every alias string
-    1: {1: {},
-        2: {}},
-    2: {1: {},
-        2: {}},
-    3: {1: {},
-        2: {}},
-}
-
-plot_mode_defaults = {
-    1: {1: '',
-        2: ''},
-    2: {1: '',
-        2: ''},
-    3: {1: '',
-        2: ''},
-}
-
-plot_mode_default_i_vars = {}
-plot_mode_default_intervals = {}
-
-default_mode_error = ("Don't know how to plot %i independent " +
-                      "and %i dependent variables.")
-unknown_mode = ("Didn't recognize plot mode string '%s'.")
-alias_error = ("No appropriate %s mode found for %i independent " +
-               "and %i dependent variables.")
-
-def get_plot_mode(mode_str, d_var_c, i_var_c):
-    if not mode_str:
-        def find_mode_from_defaults(i):            
-            try: return plot_mode_defaults[d_var_c][i]
-            except:
-                if i < 2: return find_mode_from_defaults(i+1)
-                else: raise ValueError(default_mode_error % (i_var_c, d_var_c))
-        mode_str = find_mode_from_defaults(i_var_c)
-
-    if mode_str in plot_mode_aliases[0]:
-        def find_mode_from_alias(mode_str, i, i_var_c):
-            try: return plot_mode_aliases[d_var_c][i][mode_str]
-            except:
-                if i < 2: return find_mode_from_alias(mode_str, i+1, i_var_c)
-                else: raise ValueError(alias_error % (mode_str, i_var_c, d_var_c))
-        mode_str = find_mode_from_alias(mode_str, i_var_c, i_var_c)
-
-    try: mode = plot_modes[mode_str]
-    except: raise ValueError(unknown_mode % (mode_str))
-
-    return mode, mode_str
-
-def fill_i_vars(mode_str, i_vars):
-    default_i_vars = plot_mode_default_i_vars[mode_str]
-    for i in xrange(len(i_vars), len(default_i_vars)):
-        i_vars.append(default_i_vars[i])
-    return i_vars
-
-def fill_intervals(mode_str, i_vars, intervals):
-    default_intervals = plot_mode_default_intervals[mode_str]
-    for i in xrange(len(intervals), len(default_intervals)):
-        intervals.append(PlotInterval(i_vars[i], *default_intervals[i]))
-    return intervals
-
-def plot_mode(i_var_str, d_var_str, default_intervals, aliases=None, default=False):
-    default_i_vars = symbols(i_var_str)
-    default_d_vars = symbols(d_var_str)
-
-    if not isinstance(default_i_vars, list):
-        default_i_vars, i = [default_i_vars], 1
-    else:
-        i = len(default_i_vars)
-
-    if not isinstance(default_d_vars, list):
-        default_d_vars, d = [default_d_vars], 1
-    else:
-        d = len(default_d_vars)
-
-    if aliases is None: aliases = []
-
-    def plot_mode_decorator(mode_function):
-        name = mode_function.__name__
-        plot_modes[name] = mode_function
-
-        for a in aliases:
-            plot_mode_aliases[d][i][a] = name
-            if a not in plot_mode_aliases[0]:
-                plot_mode_aliases[0].append(a)
-        if default:
-            plot_mode_defaults[d][i] = name
-
-        plot_mode_default_i_vars[name] = default_i_vars
-        plot_mode_default_intervals[name] = default_intervals
-
-        def base_plot_mode(*args):
-            d_vars = list(args[:d])
-            i_vars = list(args[d:])
-            if len(d_vars) != d:
-                raise ValueError(("%s takes %i dependent function(s) " +
-                                  " (%i given).") % (name, d, len(d_vars)))
-            if len(i_vars) > i:
-                raise ValueError(("%s takes at most %i independent" +
-                                  " variables (%i given).") % (name, i, len(i_vars)) )
-            for j in range(len(i_vars), i):
-                i_vars.append(default_i_vars[j])
-            return mode_function(*(d_vars+i_vars))
-
-        return base_plot_mode
-
-    return plot_mode_decorator
-
-def float_vector(x, y, z):
-    try:
-        #print (x,y,z)
-        float(x.evalf())
-        float(y.evalf())
-        float(z.evalf())
-    except:
-        return None
-    return x, y, z
-
-@plot_mode('t', 'xyz', [[0,2*pi,60]], aliases=['parametric'], default=True)
-def parametric_curve3d(fx, fy, fz, t):
-    fx = Basic.sympify(fx)
-    fy = Basic.sympify(fy)
-    fz = Basic.sympify(fz)
-    def _f(_t):
+def float_vec3(f):
+    def inner(*args):
         try:
-            x = fx.subs(t,_t)
-            y = fy.subs(t,_t)
-            z = fz.subs(t,_t)
+            v = f(*args)
+            return float(v[0]), float(v[1]), float(v[2])
         except:
             return None
-        return float_vector(x,y,z)
-    return _f
+    return inner
 
-@plot_mode('t', 'xy', [[0,2*pi,60]], aliases=['parametric'], default=True)
-def parametric_curve2d(fx, fy, t):
-    return parametric_curve3d(fx, fy, 0.0, t)
+class Cartesian2D(PlotCurve):
+    i_vars, d_vars = 'x', 'y'
+    intervals = [[-5,5,60]]
+    aliases = ['cartesian']
+    is_default = True
+    
+    def _get_evaluator(self):
+        fy = self.d_vars[0]
+        x  = self.t_interval.v
+        @float_vec3
+        def e(_x):
+            return ( _x, fy.subs(x, _x), 0.0 )
+        return e
 
-@plot_mode('uv', 'xyz', [[-1,1,10], [-1,1,10]], aliases=['parametric'], default=True)
-def parametric_surface(fx, fy, fz, u, v):
-    fx = Basic.sympify(fx)
-    fy = Basic.sympify(fy)
-    fz = Basic.sympify(fz)
-    def _f(_u, _v):
-        try:
-            x = fx.subs(u,_u).subs(v,_v)
-            y = fy.subs(u,_u).subs(v,_v)
-            z = fz.subs(u,_u).subs(v,_v)
-        except:
-            return None
-        return float_vector(x,y,z)
-    return _f
+    def calculate_one_cvert(self, t):
+        return self.color(self.st_set[t],
+                          scale_value(self.verts[t][1], self.bounds[1][0], self.bounds[1][2]),
+                          scale_value(self.verts[t][2], self.bounds[2][0], self.bounds[2][2]),
+                          self.st_set[t], None)
 
-@plot_mode('x', 'y', [[-5,5,60]], aliases=['cartesian'], default=True)
-def cartesian_curve(fy, x):
-    return parametric_curve2d(x, fy, x)
+class Cartesian3D(PlotSurface):
+    i_vars, d_vars = 'xy', 'z'
+    intervals = [[-1,1,20], [-1,1,20]]
+    aliases = ['cartesian', 'monge']
+    is_default = True
+    
+    def _get_evaluator(self):
+        fz = self.d_vars[0]
+        x  = self.u_interval.v
+        y  = self.v_interval.v
+        @float_vec3
+        def e(_x, _y):
+            return ( _x, _y, fz.subs(x, _x).subs(y, _y) )
+        return e
 
-@plot_mode('xy', 'z', [[-1,1,10], [-1,1,10]], aliases=['cartesian'], default=True)
-def cartesian_surface(fz, x, y):
-    return parametric_surface(x, y, fz, x, y)
+    def calculate_one_cvert(self, u, v):
+        vert = self.verts[u][v]
+        return self.color(self.su_set[u], self.sv_set[v],
+                          scale_value(vert[2], self.bounds[2][0], self.bounds[2][2]),
+                          self.su_set[u], self.sv_set[v])
 
-@plot_mode('t', 'r', [[0,2*pi,80]], aliases=['polar'])
-def polar_curve(fr, t):
-    #return parametric_curve2d(fr * cos(t), fr * sin(t), t)
-    fr = Basic.sympify(fr)
-    def _f(_t):
-        try:
-            _t = float(_t)
-            _r = float(fr.subs(t,_t).evalf())
-        except:
-            return None
-        return (_r*pcos(_t), _r*psin(_t), 0.0)
-    return _f
 
-@plot_mode('th', 'r', [[0,2*pi,20], [-0.5,0.5,6]], aliases=['cylindrical','polar'])
-def cylindrical_surface(fr, t, h):
-    #return parametric_surface(fr * cos(t), fr * sin(t), h, t, h)
-    fr = Basic.sympify(fr)
-    def _f(_t, _h):
-        try:
-            _r = float(fr.subs(t,_t).subs(h,_h).evalf())
-        except:
-            return None
-        _t = float(_t)
-        _h = float(_h)
-        return (_r*pcos(_t), _r*psin(_t), _h)
-    return _f
+class ParametricCurve2D(PlotCurve):
+    i_vars, d_vars = 't', 'xy'
+    intervals = [[0,1,60]]
+    aliases = ['parametric']
+    is_default = True
 
-@plot_mode('pt', 'r', [[0,pi,12], [0,2*pi,16]], aliases=['spherical'])
-def spherical_surface(fr, p, t):
-    #return parametric_surface(fr * sin(p) * cos(t), fr * sin(p) * sin(t), fr * cos(p), t, h)
-    fr = Basic.sympify(fr)
-    def _f(_p, _t):
-        try:
-            _r = float(fr.subs(p,_p).subs(t,_t).evalf())
-        except:
-            return None
-        _p = float(_p)
-        _t = float(_t)
-        return (_r*psin(_p)*pcos(_t), _r*psin(_p)*psin(_t), _r*pcos(_p))
-    return _f
+    def _get_evaluator(self):
+        fx, fy = self.d_vars
+        t  = self.t_interval.v
+        @float_vec3
+        def e(_t):
+            return ( fx.subs(t, _t),
+                     fy.subs(t, _t),
+                     0.0 )
+        return e
 
-def print_mode_aliases():
-    for d in plot_mode_aliases:
-        for i in plot_mode_aliases[d]:
-            print "[%i][%i]: %s" % (d,i,plot_mode_aliases[d][i])
+class ParametricCurve3D(PlotCurve):
+    i_vars, d_vars = 't', 'xyz'
+    intervals = [[0,1,60]]
+    aliases = ['parametric']
+    is_default = True
 
-def print_mode_defaults():
-    for d in plot_mode_defaults:
-        for i in plot_mode_defaults[d]:
-            print "[%i][%i]: %s" % (d,i,plot_mode_defaults[d][i])
+    def _get_evaluator(self):
+        fx, fy, fz = self.d_vars
+        t  = self.t_interval.v
+        @float_vec3
+        def e(_t):
+            return ( fx.subs(t, _t),
+                     fy.subs(t, _t),
+                     fz.subs(t, _t) )
+        return e
 
-def torus(radius=2.5, thickness=1.0):
-    a=radius
-    b=thickness
-    return (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x)
+class ParametricSurface(PlotSurface):
+    i_vars, d_vars = 'uv', 'xyz'
+    intervals = [[-1,1,20], [-1,1,20]]
+    aliases = ['parametric']
+    is_default = True
+
+    def _get_evaluator(self):
+        fx, fy, fz = self.d_vars
+        u  = self.u_interval.v
+        v  = self.v_interval.v
+        @float_vec3
+        def e(_u, _v):
+            return ( fx.subs(u, _u).subs(v, _v),
+                     fy.subs(u, _u).subs(v, _v),
+                     fz.subs(u, _u).subs(v, _v) )
+        return e
+
+class Polar(PlotCurve):
+    i_vars, d_vars = 't', 'r'
+    intervals = [[0,2*Pi,64]]
+    aliases = ['polar']
+    is_default = False
+
+    def _get_evaluator(self):
+        fr = self.d_vars[0]
+        t  = self.t_interval.v
+        def e(_t):
+            try:
+                _r = float( fr.subs(t, _t) )
+                return ( _r*p_cos(_t), _r*p_sin(_t), 0.0 )
+            except: return None
+        return e
+
+class Cylindrical(PlotSurface):
+    i_vars, d_vars = 'th', 'r'
+    intervals = [[0,2*Pi,24], [-1,1,10]]
+    aliases = ['cylindrical', 'polar']
+    is_default = False
+
+    def _get_evaluator(self):
+        fr = self.d_vars[0]
+        t  = self.u_interval.v
+        h  = self.v_interval.v
+        def e(_t, _h):
+            try:
+                _r = float( fr.subs(t, _t).subs(h, _h) )
+                return ( _r*p_cos(_t), _r*p_sin(_t), _h )
+            except: return None
+        return e
+
+class Spherical(PlotSurface):
+    i_vars, d_vars = 'tp', 'r'
+    intervals = [[0,2*Pi,24], [0,Pi,12]]
+    aliases = ['spherical']
+    is_default = False
+
+    def _get_evaluator(self):
+        fr = self.d_vars[0]
+        t  = self.u_interval.v
+        p  = self.v_interval.v
+        def e(_t, _p):
+            try:
+                _r = float( fr.subs(t, _t).subs(p, _p) )
+                return ( _r*p_cos(_t)*p_sin(_p),
+                         _r*p_sin(_t)*p_sin(_p),
+                         _r*p_cos(_p) )
+            except: return None
+        return e
+
+Cartesian2D._register()
+Cartesian3D._register()
+ParametricCurve2D._register()
+ParametricCurve3D._register()
+ParametricSurface._register()
+Polar._register()
+Cylindrical._register()
+Spherical._register()

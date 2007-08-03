@@ -1,8 +1,11 @@
 from threading import Lock
 
 from plot_object import PlotObject
-from plot_function import PlotFunction
 from plot_window import PlotWindow
+from plot_mode import PlotMode
+import plot_modes
+
+from time import sleep
 
 class Plot(object):
     """
@@ -32,7 +35,7 @@ class Plot(object):
         Note that in earlier versions of the plotting module,
         you were able to specify multiple functions in the
         initializer. This functionality has been dropped in
-        favor of better automatic plot mode detection.
+        favor of better automatic plot plot_mode detection.
 
         Named Arguments
         ===============
@@ -105,29 +108,29 @@ class Plot(object):
 
     def __setitem__(self, i, args):
         """
-        Parses and adds a PlotFunction to the function
+        Parses and adds a PlotMode to the function
         list.
         """
         if not (isinstance(i, int) and i > 0):
-            raise ValueError("Function index must be a positive integer.")
+            raise ValueError("Function index must "
+                             "be a positive integer.")
 
         if isinstance(args, PlotObject):
             f = args
-
         else:
             if not isinstance(args, (list, tuple)):
                 args = [args]
             if len(args) == 0:
                 return # no arguments given
-            f = PlotFunction(*args)
+            f = PlotMode(*args)
 
         if f:
             self._render_lock.acquire()
             self._functions[i] = f
             self._render_lock.release()
-
         else:
-            raise ValueError("Failed to parse '%s'." % ', '.join(str(a) for a in args))
+            raise ValueError("Failed to parse '%s'."
+                    % ', '.join(str(a) for a in args))
 
     def __delitem__(self, i):
         """
@@ -150,7 +153,7 @@ class Plot(object):
 
     def append(self, *args):
         """
-        Parses and adds a PlotFunction to the function
+        Parses and adds a PlotMode to the function
         list at the first available index.
         """
         self.__setitem__(self.firstavailableindex(), args)
@@ -188,7 +191,7 @@ class Plot(object):
     def wait_for_calculations(self):
         self._render_lock.acquire()
         for f in self._functions:
-            a,b = self._functions[f].get_calc_state()
-            while a or b:
-                a,b = self._functions[f].get_calc_state()
+            a = self._functions[f]._get_calculating_verts
+            b = self._functions[f]._get_calculating_cverts
+            while a() or b(): sleep(0)
         self._render_lock.release()
