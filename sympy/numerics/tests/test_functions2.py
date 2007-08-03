@@ -17,6 +17,9 @@ def test_gamma():
     assert gamma(-7.43).ae('0.00026524416464197007186')
     assert gamma(Rational(1,2)) == gamma(0.5)
     assert gamma(Rational(-7,3)).ae(gamma(Float(7)/3))
+    assert gamma(1+1j).ae(0.49801566811835604271 - 0.15494982830181068512j)
+    assert gamma(-1+0.01j).ae(-0.422733904013474115 + 99.985883082635367436j)
+    assert gamma(20+30j).ae(-1453876687.5534810 + 1163777777.8031573j)
     # Should always give exact factorials when they can
     # be represented as Floats under the current working precision
     fact = 1

@@ -43,6 +43,8 @@ def test_trig_basic():
         assert cos(Float(t)).ae(math.cos(t))
         assert sin(Float(t)).ae(math.sin(t))
         assert tan(Float(t)).ae(math.tan(t))
+    assert sin(1+1j).ae(cmath.sin(1+1j))
+    assert sin(-4-3.6j).ae(cmath.sin(-4-3.6j))
 
 def test_trig_hard():
     assert sin(Float(10**50, 150)).ae(-0.7896724934293100827)

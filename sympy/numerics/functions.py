@@ -398,7 +398,15 @@ def cos(x):
     return cos_sin(x)[0]
 
 def sin(x):
-    return cos_sin(x)[1]
+    if isinstance(x, (ComplexFloat, complex)):
+        c, s = cos_sin(x.real)
+        expb1 = exp(x.imag)
+        expb2 = 1 / expb1
+        ch = (expb1 + expb2) / 2
+        sh = (expb1 - expb2) / 2
+        return ComplexFloat(s*ch, c*sh)
+    else:
+        return cos_sin(x)[1]
 
 def tan(x):
     Float._prec += 2

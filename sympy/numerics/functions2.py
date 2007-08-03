@@ -2,7 +2,7 @@
 Numerical implementations of special functions (gamma, ...)
 """
 
-from float_ import Float
+from float_ import Float, ComplexFloat
 from constants import pi_float
 from functions import exp, log, sqrt, sin
 from utils_ import make_fixed
@@ -102,74 +102,85 @@ def _get_spouge_coefficients(prec):
     return _spouge_cache[prec]
 
 
-#----------------------------------------------------------------------
-# Helper functions for computing the sum part, S(x)
-#
+# This function computes S
+def _spouge_sum(x, prec, a, c):
+    if isinstance(x, Float):
+        # Regular fixed-point summation
+        x = make_fixed(x, prec)
+        s = c[0]
+        for k in xrange(1, a):
+            s += (c[k] << prec) // (x + (k << prec))
+        return Float((s, -prec))
+    elif isinstance(x, (Rational, int, long)):
+        # Here we can save some work
+        if isinstance(x, (int, long)):
+            p, q = x, 1
+        else:
+            p, q = x.p, x.q
+        s = c[0]
+        for k in xrange(1, a):
+            s += c[k] * q // (p+q*k)
+        return Float((s, -prec))
+    elif isinstance(x, ComplexFloat):
+        """
+        For a complex number a + b*I, we have
 
-# Optimizing for different types of numbers makes the computation
-# several times faster in some common cases
+              c_k          (a+k)*c_k     b * c_k
+        -------------  =   ---------  -  ------- * I
+        (a + b*I) + k          M            M
 
-def _spouge_sum_float(x, prec, a, c):
-    xf = make_fixed(x, prec)
-    s = c[0]
-    for k in xrange(1, a):
-        s += (c[k] << prec) // (xf + (k << prec))
-    return Float((s, -prec))
+                       2    2      2   2              2
+        where M = (a+k)  + b   = (a + b ) + (2*a*k + k )
+        """
+        re = make_fixed(x.real, prec)
+        im = make_fixed(x.imag, prec)
+        sre, sim = c[0], 0
+        mag = ((re**2)>>prec) + ((im**2)>>prec)
+        for k in xrange(1, a):
+            M = mag + re*(2*k) + ((k**2) << prec)
+            sre += (c[k] * (re + (k << prec))) // M
+            sim -= (c[k] * im) // M
+        return ComplexFloat(Float((sre, -prec)), Float((sim, -prec)))
 
-def _spouge_sum_rational(p, q, prec, a, c):
-    s = c[0]
-    for k in xrange(1, a):
-        s += c[k] * q // (p+q*k)
-    return Float((s, -prec))
-
-# to be implemented
-def _spouge_sum_complex():
-    pass
-
-
-#----------------------------------------------------------------------
-# Main function
-#
 
 def gamma(x):
     """
-    gamma(x) -- calculate the gamma function of the real number x.
-
+    gamma(x) -- calculate the gamma function of a real or complex
+    number x.
+    
     x must not be a negative integer or 0
     """
     Float.store()
     Float._prec += 2
 
-    if not isinstance(x, (Float, Rational, int, long)):
+    if isinstance(x, complex):
+        x = ComplexFloat(x)
+    elif not isinstance(x, (Float, ComplexFloat, Rational, int, long)):
         x = Float(x)
+
+    if isinstance(x, (ComplexFloat, complex)):
+        re, im = x.real, x.imag
+    else:
+        re, im = x, 0
 
     # For negative x (or positive x close to the pole at x = 0),
     # we use the reflection formula
-    if x < 0.25:
-        if x == int(x):
+    if re < 0.25:
+        if re == int(re) and im == 0:
             raise ZeroDivisionError, "gamma function pole"
         Float._prec += 3
         p = pi_float()
         g = p / (sin(p*x) * gamma(1-x))
-        Float._prec -= 3
-        return +g
-
-    x -= 1
-    prec, a, c = _get_spouge_coefficients(Float.getprec()+7)
-    # Sum the series
-    if isinstance(x, (int, long)):
-        x = Rational(x)
-    if isinstance(x, Rational):
-        s = _spouge_sum_rational(x.p, x.q, prec, a, c)
-        x = Float(x)
     else:
-        x = Float(x)
-        s = _spouge_sum_float(x, prec, a, c)
-
-    # TODO: higher precision may be needed here when the precision
-    # and/or size of x are extremely large
-    Float._prec += 10
-    g = exp(log(x+a)*(x+Float(0.5))) * exp(-x-a) * s
+        x -= 1
+        prec, a, c = _get_spouge_coefficients(Float.getprec()+7)
+        s = _spouge_sum(x, prec, a, c)
+        if not isinstance(x, (Float, ComplexFloat)):
+            x = Float(x)
+        # TODO: higher precision may be needed here when the precision
+        # and/or size of x are extremely large
+        Float._prec += 10
+        g = exp(log(x+a)*(x+Float(0.5))) * exp(-x-a) * s
 
     Float.revert()
     return +g

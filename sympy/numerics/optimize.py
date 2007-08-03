@@ -36,8 +36,8 @@ def polyroots(poly, maxsteps=20):
     roots that are very close together. In general, if n-multiple roots
     are present, polyroots will typically only locate their values to
     within 1/n of the working precision. For example, with the standard
-    precision of ~15 decimal digits, the expected accuracy is 7-8
-    decimals:
+    precision of ~15 decimal digits, the expected accuracy for a double
+    root is 7-8 decimals:
 
         >>> Float.setdps(15)
         >>> r, e = polyroots((x-2)**2)
