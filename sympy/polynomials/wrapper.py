@@ -7,26 +7,9 @@ from sympy.polynomials import groebner_
 from sympy.polynomials import roots_
 
 def div(f, g, var=None, order=None, coeff=None):
-    """Polynomial division of f by g, returns quotients and remainder.
+    """Division with remainder.
 
-    Univariate and multivariate polynomials are possible. The argument
-    g can also be a list of polynomials to be used as divisors. This
-    algorithm doesn't stop when the leading terms don't divide, but
-    instead tries to reduce smaller terms after that. When dealing
-    with multiple var, the monomial ordering in use has
-    influence over the result. Optionally, a ring of coefficients can
-    be indicated, to restrict computations to this domain (the integers.)
-
-    Examples:
-    >>> x = Symbol('x')
-    >>> y = Symbol('y')
-    >>> div(x**2+6*x+1, 3*x-1)
-    (19/9 + (1/3)*x, 28/9)
-    >>> div(x**2+6*x+1, 3*x-1, coeff='int')
-    (2, 3 + x**2)
-    >>> div(2*x**3*y**2 - x*y + y**3, [x-y, y**2], [x,y], 'lex')
-    ([-y + 2*y**4 + 2*x*y**3 + 2*x**2*y**2, (-1) + y + 2*y**3], 0)
-
+    A thin wrapper that returns SymPy expressions coming from L{div_.div}.
     """
     q, r = div_.div(f, g, var, order, coeff)
     
@@ -52,14 +35,7 @@ def factor(f, var=None, order=None):
 def gcd(f, g, var=None, order=None, coeff=None):
     """Greatest common divisor of two polynomials.
 
-    Examples:
-    >>> x = Symbol('x')
-    >>> y = Symbol('y')
-    >>> gcd(4*x**2*y, 6*x*y**2, coeff='rat')
-    x*y
-    >>> gcd(4*x**2*y, 6*x*y**2)
-    2*x*y
-
+    A thin wrapper returning a SymPy expression from L{div_.gcd}'s result.
     """
 
     # First check if the polynomials have integer coefficients.
@@ -93,13 +69,7 @@ def groebner(f, var=None, order=None, reduced=True):
 def lcm(f, g, var=None, order=None, coeff=None):
     """Least common divisor of two polynomials.
 
-    Examples:
-    >>> x = Symbol('x')
-    >>> y = Symbol('y')
-    >>> lcm(4*x**2*y, 6*x*y**2, coeff='rat')
-    x**2*y**2
-    >>> lcm(4*x**2*y, 6*x*y**2)
-    12*x**2*y**2
+    A thin wrapper returning a SymPy expression from L{div_.lcm}'s result.
     """
     # First check if the polynomials have integer coefficients.
     if coeff is None:
