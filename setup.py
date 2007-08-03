@@ -183,29 +183,20 @@ class test_sympy_doc(Command):
         files.remove('sympy/specfun/orthogonal_polynomials.py')
         files.remove('sympy/specfun/factorials.py')
 
-        files.remove('sympy/plotting/__init__.py')
-
         # fix line 164 above
-        #files.remove('sympy/modules/plotting/scene/__init__.py')
-        #files.remove('sympy/modules/plotting/renderables/__init__.py')
 
+        files.remove('sympy/plotting/__init__.py')
         files.remove('sympy/plotting/plot_camera.py')
-        #files.remove('sympy/plotting/cartesian.py')
-        #files.remove('sympy/plotting/spherical.py')
+        files.remove('sympy/plotting/plot_curve.py')
+        files.remove('sympy/plotting/plot_surface.py')
+        files.remove('sympy/plotting/color_scheme.py')
         files.remove('sympy/plotting/managed_window.py')
-        #files.remove('sympy/plotting/polar.py')
-        #files.remove('sympy/plotting/cartesian2d.py')
-        #files.remove('sympy/plotting/bounding_box.py')
         files.remove('sympy/plotting/plot_controller.py')
         files.remove('sympy/plotting/plot_rotation.py')
-        #files.remove('sympy/plotting/parametric.py')
-        #files.remove('sympy/plotting/polar2d.py')
-        #files.remove('sympy/plotting/cartesian3d.py')
-        #files.remove('sympy/plotting/polar3d.py')
-        #files.remove('sympy/plotting/grid_plane.py')
         files.remove('sympy/plotting/plot_window.py')
+        files.remove('sympy/plotting/plot_mode.py')
         files.remove('sympy/plotting/plot_modes.py')
-        files.remove('sympy/plotting/plot_eval.py')
+        files.remove('sympy/plotting/plot_mode_base.py')
 
         try:
             #testing for optional libraries
