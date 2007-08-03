@@ -3,7 +3,7 @@ Numerical implementations of special functions (gamma, ...)
 """
 
 from float_ import Float, ComplexFloat
-from constants import pi_float
+from constants import pi_float, gamma_float
 from functions import exp, log, sqrt, sin
 from utils_ import make_fixed
 
@@ -184,3 +184,73 @@ def gamma(x):
 
     Float.revert()
     return +g
+
+
+#---------------------------------------------------------------------------#
+#                                                                           #
+#                       Incomplete gamma functions                          #
+#                                                                           #
+#---------------------------------------------------------------------------#
+
+"""
+We compute the lower incomplete gamma function g(a,z) using the formula
+g(a,z) = z**a * exp(-z) * S(a,z) / a, where
+                 oo
+                ___            k
+               \              z
+  S(a,z) = 1 +  )     ------------------.
+               /___   (a+1)(a+2)...(a+k)
+               k = 1
+
+Then, in turn, various functions such as erf and exponential integrals
+can be computed from the incomplete gamma function.
+"""
+
+def _lower_gamma_series(are, aim, zre, zim, prec):
+    are = make_fixed(are, prec)
+    aim = make_fixed(aim, prec)
+    zre = make_fixed(zre, prec)
+    zim = make_fixed(zim, prec)
+    one = 1 << prec
+    cre = sre = one
+    cim = sim = 0
+    while abs(cre) > 3 or abs(cim) > 3:
+        # c = (c * z) << prec
+        cre, cim = (cre*zre-cim*zim)>>prec, (cim*zre+cre*zim)>>prec
+        # c = c / (a+k)
+        are += one
+        mag = ((are**2 + aim**2) >> prec)
+        cre, cim = (cre*are + cim*aim)//mag, (cim*are - cre*aim)//mag
+        sre += cre
+        sim += cim
+        #k += 1
+    sre = Float((sre, -prec))
+    sim = Float((sim, -prec))
+    return ComplexFloat(sre, sim)
+
+def lower_gamma(a, z):
+    Float.store()
+    prec = Float._prec
+    # XXX: may need more precision
+    Float._prec += 15
+    a = ComplexFloat(a)
+    z = ComplexFloat(z)
+    s = _lower_gamma_series(a.real, a.imag, z.real, z.imag, prec)
+    y = exp(log(z)*a) * exp(-z) * s / a
+    Float.revert()
+    return +y
+
+def upper_gamma(a, z):
+    return gamma(a) - lower_gamma(a, z)
+
+def erf(x):
+    x = ComplexFloat(x)
+    if x == 0: return Float(0)
+    if x.real < 0: return -erf(-x)
+    Float.store()
+    Float._prec += 10
+    y = lower_gamma(0.5, x**2) / sqrt(pi_float())
+    if x.imag == 0:
+        y = y.real
+    Float.revert()
+    return +y

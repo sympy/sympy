@@ -7,6 +7,19 @@ from sympy.numerics.functions import *
 from sympy.numerics.functions2 import *
 import math
 
+def test_incomplete_gamma():
+    Float.store()
+    Float.setprec(53)
+    assert upper_gamma(-2.5,-0.5).ae(-0.9453087204829418812-5.3164237738936178621j)
+    assert erf(0) == 0
+    assert erf(1).ae('0.84270079294971486934')
+    assert erf(3+4j).ae(-120.186991395079444098 - 27.750337293623902498j)
+    assert erf(-4-3j).ae(-0.99991066178539168236 + 0.00004972026054496604j)
+    assert erf(pi_float()).ae(0.99999112385363235839)
+    Float.revert()
+
+test_incomplete_gamma()
+
 def test_gamma():
     Float.store()
     Float.setprec(53)
@@ -33,3 +46,4 @@ def test_gamma():
     Float.setdps(100)
     assert gamma(0.5).ae(sqrt(pi_float()))
     Float.revert()
+
