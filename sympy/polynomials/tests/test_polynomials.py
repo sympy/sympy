@@ -143,6 +143,7 @@ def test_factor():
     assert factor(x**2 + y**2) == x**2 + y**2
     assert factor(x*y + x*z + y*z) == x*y + x*z + y*z
     assert factor(x*(y+1) + x*z) == x*(z + y + 1)
+    assert factor(x**5 - y**2) == x**5 - y**2
     
 def test_gcd():
     x = Symbol("x")
@@ -280,6 +281,10 @@ def test_roots():
            [-b/(a*2)+(((b/a)**2-4*c/a)**Rational(1,2))/2,
             -b/(a*2)-(((b/a)**2-4*c/a)**Rational(1,2))/2]
     assert roots(x**3 + x**2 + x + 1) == [-1, I, -I]
+    assert roots(x**3 + x**2 - x + 1) == \
+           [Rational(-1,3) - (Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3) - Rational(4,9)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(-1,3),
+            Rational(-1,3) + Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3) + Rational(4,9)/(Rational(1,2) + Rational(1,2)*I*3**Rational(1,2))*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(-1,3) + Rational(1,2)*I*3**Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3),
+            Rational(-1,3) + Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3) + Rational(4,9)/(Rational(1,2) - Rational(1,2)*I*3**Rational(1,2))*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(-1,3) - Rational(1,2)*I*3**Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3)]
     assert roots(x**4 - 1) == [-1, 1, I, -I]
     assert roots(x**4 + 1) == [(-1)**Rational(1,4),
                                (-1)**Rational(1,4)*exp(Pi*I),

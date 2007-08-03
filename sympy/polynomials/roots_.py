@@ -7,7 +7,7 @@ def cubic(f):
     """Returns the real or complex roots of a cubic polynomial.
 
     Works for univariate instances of Polynomial only."""
-    # Get monic polynomial, for p-q formula
+    # Get monic polynomial.
     f = f.as_monic()[1]
     
     a = f.nth_coeff(2)
@@ -16,10 +16,10 @@ def cubic(f):
 
     # Substitute variable to get depressed cubic: t**3 + p * t + q
     p = b + -a**2/3
-    q = c + Rational(2, 27)*a**3 - a*b/9
+    q = c + (2*a**3 - 9*a*b)/27
 
-    if p == 0: # Solve special cases:
-        if q == 0:
+    if p is S.Zero: # Solve special cases:
+        if q is S.Zero:
             return [-a/3]
         else:
             u1 = q**Rational(1, 3)
