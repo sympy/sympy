@@ -1,6 +1,9 @@
 from pyglet.gl import *
 from plot_rotation import get_spherical_rotatation
-from util import get_model_matrix, get_direction_vectors, screen_to_model, model_to_screen, vec_subs
+from util import get_model_matrix, get_projection_matrix
+from util import get_view_direction_vectors, get_basis_vectors
+from util import screen_to_model, model_to_screen
+from util import vec_subs, get_direction_vectors
 
 class PlotCamera(object):
 
@@ -18,6 +21,7 @@ class PlotCamera(object):
         self._dist = 0.0
         self._x, self._y = 0.0, 0.0
         self._rot = None
+        self._proj = None
 
         self.window = window
         self.ortho = ortho
@@ -45,14 +49,16 @@ class PlotCamera(object):
         glLoadIdentity()
         if self.ortho:
             # yep, this is pseudo ortho (don't tell anyone)
-            gluPerspective(0.3, float(self.window.width) / float(self.window.height), self.min_ortho_dist-0.01, self.max_ortho_dist+0.01)
+            gluPerspective(0.3, float(self.window.width)/float(self.window.height),
+                           self.min_ortho_dist-0.01, self.max_ortho_dist+0.01)
         else:
-            gluPerspective(30.0, float(self.window.width) / float(self.window.height), self.min_dist-0.01, self.max_dist+0.01)
+            gluPerspective(30.0, float(self.window.width)/float(self.window.height),
+                           self.min_dist-0.01, self.max_dist+0.01)
         glMatrixMode(GL_MODELVIEW)
 
     def apply_transformation(self):
         glLoadIdentity()
-        glTranslatef(self._x, self._y, -self._dist)
+        glTranslatef(0, 0, -self._dist)
         if self._rot is not None:
             glMultMatrixf(self._rot)
 
