@@ -45,7 +45,18 @@ def screen_to_model(x,y,z):
     w = get_viewport()
     mx,my,mz = c_double(),c_double(),c_double()
     gluUnProject(x,y,z,m,p,w,mx,my,mz)
-    return mx,my,mz
+    return float(mx.value),float(my.value),float(mz.value)
+
+def model_to_screen(x,y,z):
+    m = get_model_matrix(c_double, glGetDoublev)
+    p = get_projection_matrix(c_double, glGetDoublev)
+    w = get_viewport()
+    mx,my,mz = c_double(),c_double(),c_double()
+    gluProject(x,y,z,m,p,w,mx,my,mz)
+    return float(mx.value),float(my.value),float(mz.value)
+
+def vec_subs(a,b):
+    return tuple(a[i]-b[i] for i in xrange(len(a)))
 
 def billboard_matrix():
     """

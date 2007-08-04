@@ -1,6 +1,6 @@
 from pyglet.gl import *
 from plot_rotation import get_spherical_rotatation
-from util import get_model_matrix
+from util import get_model_matrix, get_direction_vectors, screen_to_model, model_to_screen, vec_subs
 
 class PlotCamera(object):
 
@@ -82,6 +82,9 @@ class PlotCamera(object):
         if (clicks < 0 and new_dist < max_dist) or new_dist > min_dist:
             self._dist = new_dist
 
-    def translate(self, dx, dy, sensitivity):
-        self._x += dx*sensitivity/200.0
-        self._y += dy*sensitivity/200.0
+    def mouse_translate(self, x, y, dx, dy):
+        z = model_to_screen(0,0,0)[2]
+        d = vec_subs(screen_to_model(x,y,z), screen_to_model(x-dx,y-dy,z))
+        self._x += d[0]
+        self._y += d[1]
+
