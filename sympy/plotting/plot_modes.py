@@ -193,7 +193,6 @@ class Cylindrical(PlotSurface):
         h  = str(self.v_interval.v)
         result_str = "(%s)*cos(%s),(%s)*sin(%s),%s" % (fr, t, fr, t, h)
         lambda_str = "lambda %s,%s: (%s)" % (t, h, result_str)
-        print lambda_str
         e = eval(lambda_str)
         return e
 
