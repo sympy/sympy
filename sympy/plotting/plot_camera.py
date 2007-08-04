@@ -18,24 +18,25 @@ class PlotCamera(object):
     _default_ortho_dist = 1200.0
 
     def __init__(self, window, ortho = False):
-        self._dist = 0.0
-        self._x, self._y = 0.0, 0.0
-        self._rot = None
-        self._proj = None
-
         self.window = window
         self.ortho = ortho
-        if self.ortho:
-            self._dist = self._default_ortho_dist
-        else:
-            self._dist = self._default_dist
-        self.init_rot_matrix()
+        self.reset()
 
     def init_rot_matrix(self):
         glPushMatrix()
         glLoadIdentity()
         self._rot = get_model_matrix()
         glPopMatrix()
+
+    def reset(self):
+        self._dist = 0.0
+        self._x, self._y = 0.0, 0.0
+        self._rot = None
+        if self.ortho:
+            self._dist = self._default_ortho_dist
+        else:
+            self._dist = self._default_dist
+        self.init_rot_matrix()
 
     def mult_rot_matrix(self, rot):
         glPushMatrix()
@@ -58,7 +59,7 @@ class PlotCamera(object):
 
     def apply_transformation(self):
         glLoadIdentity()
-        glTranslatef(0, 0, -self._dist)
+        glTranslatef(self._x, self._y, -self._dist)
         if self._rot is not None:
             glMultMatrixf(self._rot)
 
@@ -89,8 +90,11 @@ class PlotCamera(object):
             self._dist = new_dist
 
     def mouse_translate(self, x, y, dx, dy):
+        glPushMatrix()
+        glLoadIdentity()
+        glTranslatef(0,0,-self._dist)
         z = model_to_screen(0,0,0)[2]
         d = vec_subs(screen_to_model(x,y,z), screen_to_model(x-dx,y-dy,z))
+        glPopMatrix()
         self._x += d[0]
         self._y += d[1]
-

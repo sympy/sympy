@@ -38,8 +38,8 @@ class PlotController(object):
                 key.E:'spin_right',
                 key.NUM_9:'spin_right',
 
-                key.X:'reset_rotations',
-                key.NUM_5:'reset_rotations',
+                key.X:'reset_camera',
+                key.NUM_5:'reset_camera',
                 
                 key.NUM_ADD:'zoom_in',
                 key.PAGEUP:'zoom_in',
@@ -69,7 +69,7 @@ class PlotController(object):
                 'rotate_z_neg':False,
                 'rotate_z_pos':False,
                 # Reset to the default rotation
-                'reset_rotations':False,
+                'reset_camera':False,
                 # Performs camera z-translation
                 'zoom_in':False, 
                 'zoom_out':False,
@@ -104,8 +104,8 @@ class PlotController(object):
         if rz != 0:
             self.window.camera.euler_rotate(rz*dt*self.get_key_sensitivity(), *(get_basis_vectors()[2]))
 
-        if self.action['reset_rotations']:
-            self.window.camera.init_rot_matrix()
+        if self.action['reset_camera']:
+            self.window.camera.reset()
 
         return True
 
