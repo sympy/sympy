@@ -304,6 +304,11 @@ def log(x, b=None):
     return Float((l+a, -prec))
 
 
+# XXX: need to increase working precision here
+def power(x, y):
+    return exp(log(x) * y)
+
+
 #----------------------------------------------------------------------
 # Trigonometric functions
 #

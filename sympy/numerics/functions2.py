@@ -4,7 +4,7 @@ Numerical implementations of special functions (gamma, ...)
 
 from float_ import Float, ComplexFloat
 from constants import pi_float, gamma_float
-from functions import exp, log, sqrt, sin
+from functions import exp, log, sqrt, sin, power
 from utils_ import make_fixed
 
 from sympy import Rational
@@ -254,3 +254,111 @@ def erf(x):
         y = y.real
     Float.revert()
     return +y
+
+
+#---------------------------------------------------------------------------#
+#                                                                           #
+#                         Riemann zeta function                             #
+#                                                                           #
+#---------------------------------------------------------------------------#
+
+"""
+We use zeta(s) = eta(s) * (1 - 2**(1-s)) and Borwein's approximation
+                  n-1
+                  ___       k
+             -1  \      (-1)  (d_k - d_n)
+  eta(s) ~= ----  )     ------------------
+             d_n /___              s
+                 k = 0      (k + 1)
+where
+             k
+             ___                i
+            \     (n + i - 1)! 4
+  d_k  =  n  )    ---------------.
+            /___   (n - i)! (2i)!
+            i = 0
+
+If s = a + b*I, the absolute error for eta(s) is bounded by
+
+    3 (1 + 2|b|)
+    ------------ * exp(|b| pi/2)
+               n
+    (3+sqrt(8))
+
+Disregarding the linear term, we have approximately,
+
+  log(err) ~= log(exp(1.58*|b|)) - log(5.8**n)
+  log(err) ~= 1.58*|b| - log(5.8)*n
+  log(err) ~= 1.58*|b| - 1.76*n
+  log2(err) ~= 2.28*|b| - 2.54*n
+
+So for p bits, we should choose n > (p + 2.28*|b|) / 2.54.
+
+Reference:
+Peter Borwein, "An Efficient Algorithm for the Riemann Zeta Function"
+http://www.cecm.sfu.ca/personal/pborwein/PAPERS/P117.ps
+
+http://en.wikipedia.org/wiki/Dirichlet_eta_function
+"""
+
+_d_cache = {}
+
+def _zeta_coefs(n):
+    if n in _d_cache:
+        return _d_cache[n]
+    ds = [0] * (n+1)
+    d = 1
+    s = ds[0] = 1
+    for i in range(1, n+1):
+        d = d * 4 * (n+i-1) * (n-i+1)
+        d //= ((2*i) * ((2*i)-1))
+        s += d
+        ds[i] = s
+    _d_cache[n] = ds
+    return ds
+
+# Integer logarithms
+_log_cache = {}
+
+def _logk(k):
+    p = Float._prec
+    if k in _log_cache and _log_cache[k][0] >= p:
+        return +_log_cache[k][1]
+    else:
+        x = log(k)
+        _log_cache[k] = (p, x)
+        return x
+
+def zeta(s):
+    """
+    zeta(s) -- calculate the Riemann zeta function of a real or complex
+    argument s.
+
+    """
+    Float.store()
+    Float._prec += 8
+    si = s
+    s = ComplexFloat(s)
+    if s.real < 0:
+        # Reflection formula (XXX: gets bad around the zeros)
+        pi = pi_float()
+        y = power(2, s) * power(pi, s-1) * sin(pi*s/2) * gamma(1-s) * zeta(1-s)
+    else:
+        p = Float._prec
+        n = int((p + 2.28*abs(float(s.imag)))/2.54) + 3
+        d = _zeta_coefs(n)
+        if isinstance(si, (int, long)):
+            t = 0
+            for k in range(n):
+                t += (((-1)**k * (d[k] - d[n])) << p) // (k+1)**si
+            y = (Float((t, -p)) / -d[n]) / (Float(1) - Float(2)**(1-si))
+        else:
+            t = Float(0)
+            for k in range(n):
+                t += (-1)**k * Float(d[k]-d[n]) * exp(-_logk(k+1)*s)
+            y = (t / -d[n]) / (Float(1) - exp(log(2)*(1-s)))
+    Float.revert()
+    if isinstance(y, ComplexFloat) and s.imag == 0:
+        return +y.real
+    else:
+        return +y

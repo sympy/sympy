@@ -18,8 +18,6 @@ def test_incomplete_gamma():
     assert erf(pi_float()).ae(0.99999112385363235839)
     Float.revert()
 
-test_incomplete_gamma()
-
 def test_gamma():
     Float.store()
     Float.setprec(53)
@@ -47,3 +45,24 @@ def test_gamma():
     assert gamma(0.5).ae(sqrt(pi_float()))
     Float.revert()
 
+def test_zeta():
+    Float.store()
+    Float.setprec(53)
+    assert zeta(2).ae(pi_float()**2 / 6)
+    assert zeta(2.0).ae(pi_float()**2 / 6)
+    assert zeta(ComplexFloat(2)).ae(pi_float()**2 / 6)
+    assert zeta(100).ae(1)
+    assert zeta(0).ae(-0.5)
+    assert zeta(0.5).ae('-1.46035450880958681')
+    assert zeta(-1).ae(-Float(1)/12)
+    assert zeta(-2).ae(0)
+    assert zeta(-3).ae(Float(1)/120)
+    assert zeta(-4).ae(0)
+    # Zeros in the critical strip
+    assert zeta(ComplexFloat(0.5, 14.1347251417346937904)).ae(0)
+    assert zeta(ComplexFloat(0.5, 21.0220396387715549926)).ae(0)
+    assert zeta(ComplexFloat(0.5, 25.0108575801456887632)).ae(0)
+    Float.setdps(50)
+    im = '236.5242296658162058024755079556629786895294952121891237'
+    assert zeta(ComplexFloat(0.5, im)).ae(0, 1e-46)
+    Float.revert()
