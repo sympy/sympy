@@ -1,5 +1,5 @@
 from pyglet.window import key
-from pyglet.window.mouse import LEFT, RIGHT
+from pyglet.window.mouse import LEFT, RIGHT, MIDDLE
 from util import get_direction_vectors, get_basis_vectors
 
 class PlotController(object):
@@ -82,7 +82,7 @@ class PlotController(object):
         if self.action['zoom_out']: z -= 1
         if self.action['zoom_in']: z += 1
         if z != 0:
-            self.window.camera.zoom_relative(z/10.0, self.get_key_sensitivity()/10.0)        
+            self.window.camera.zoom_relative(z/10.0, self.get_key_sensitivity()/10.0)
         
         dx, dy, dz = 0, 0, 0
         if self.action['left']: dx -= 1
@@ -134,6 +134,8 @@ class PlotController(object):
             self.window.camera.spherical_rotate((x-dx,y-dy),(x,y), self.get_mouse_sensitivity())
         if buttons & RIGHT:
             self.window.camera.translate(dx, dy, self.get_mouse_sensitivity())
+        if buttons & MIDDLE:
+            self.window.camera.zoom_relative(dy, self.get_mouse_sensitivity()/20.0)
 
     def on_mouse_scroll(self, x, y, dx, dy):
         self.window.camera.zoom_relative(dy, self.get_mouse_sensitivity())
