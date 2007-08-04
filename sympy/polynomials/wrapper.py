@@ -56,13 +56,10 @@ def gcd(f, g, var=None, order=None, coeff=None):
 def groebner(f, var=None, order=None, reduced=True):
     """Computes the (reduced) Groebner base of given polynomials.
 
-    Examples:
-    >>> x = Symbol('x')
-    >>> y = Symbol('y')
-    >>> groebner([x**2 + y**3, y**2-x], order='lex')
-    [x - y**2, y**3 + y**4]
-
+    Thin wrapper returning SymPy expressions from L{groebner_.groebner}.
+    
     """
+
     g = groebner_.groebner(f, var, order, reduced)
     return map(lambda p: p.sympy_expr, g)
 
