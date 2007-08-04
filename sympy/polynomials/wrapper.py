@@ -10,7 +10,9 @@ def div(f, g, var=None, order=None, coeff=None):
     """Division with remainder.
 
     A thin wrapper that returns SymPy expressions coming from L{div_.div}.
+
     """
+
     q, r = div_.div(f, g, var, order, coeff)
     
     if isinstance(q, list):
@@ -18,24 +20,25 @@ def div(f, g, var=None, order=None, coeff=None):
     else:
         return q.sympy_expr, r.sympy_expr
 
-def factor(f, var=None, order=None):
-    """Factors the polynomial f over the rationals.
 
-    Example:
-    >>> x = Symbol('x')
-    >>> y = Symbol('y')
-    >>> factor(x**4 - 1)
-    -(1 + x)*(1 + x**2)*(1 - x)
-    >>> factor(x**2 - y**2)
-    (y - x)*(-x - y)
+def factor(f, var=None, order=None):
+    """Factorization of polynomials over the rationals.
+
+    A thin wrapper that returns a SymPy expression by multiplying the
+    different factors coming from L{factor_.factor}
+
     """
+
     # Re-assemble factors:
     return Mul(*[ff.sympy_expr for ff in factor_.factor(f, var, order)])
+
 
 def gcd(f, g, var=None, order=None, coeff=None):
     """Greatest common divisor of two polynomials.
 
-    A thin wrapper returning a SymPy expression from L{div_.gcd}'s result.
+    A thin wrapper returning a SymPy expression from L{div_.gcd}'s
+    result after checking the coefficients' type.
+
     """
 
     # First check if the polynomials have integer coefficients.
@@ -67,7 +70,9 @@ def lcm(f, g, var=None, order=None, coeff=None):
     """Least common divisor of two polynomials.
 
     A thin wrapper returning a SymPy expression from L{div_.lcm}'s result.
+
     """
+
     # First check if the polynomials have integer coefficients.
     if coeff is None:
         coeff_f = coeff_ring(get_numbers(f))
@@ -98,6 +103,7 @@ def resultant(f, g, x, method='bezout'):
 
        TODO: Make Bezout approach run in O(s**2). Currently
              it is O(s**3), where s = max(deg(f), deg(g)).
+
     """
 
     from sympy.matrices import zero
@@ -155,32 +161,28 @@ def resultant(f, g, x, method='bezout'):
     else:
         raise ValueError("Invalid method: '%s'" % method)
 
+
 def sqf(f, var=None, order=None, coeff=None):
-    """Computes the square-free decomposition of 'f'.
+    """Square-free decomposition.
 
-    Only works for univariate polynomials.
-
-    Examples:
-    >>> x = Symbol('x')
-    >>> sqf(2*x**3 + 2*x**2)
-    x**2*(2 + 2*x)
-
+    Thin wrapper that multiplies the factors of L{factor_.sqf} as
+    SymPy expressions.
+    
     """
+
     a = factor_.sqf(f, var, order, coeff)
     result = S.One
     for i, p in enumerate(a):
         result *= (p.sympy_expr)**(i+1)
     return result
 
+
 def sqf_part(f, var=None, order=None):
-    """Computes the square-free part of f.
+    """Square-free part.
 
-    Only works for univariate polynomials.
-
-    Examples:
-    >>> x = Symbol('x')
-    >>> sqf_part(2*x**3 + 2*x**2)
-    2*x + 2*x**2
+    Thin wrapper that returns the result of L{factor_.sqf_part} as a
+    SymPy expression.
 
     """
+
     return factor_.sqf_part(f, var=var, order=order).sympy_expr

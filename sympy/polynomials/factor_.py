@@ -4,11 +4,47 @@ from sympy.polynomials.base import *
 from sympy.polynomials import div_
 
 def sqf(f, var=None, order=None, coeff=None):
-    """Returns a decomposition of f in a1 * a2**2 * ... * an**n.
+    """Square-free decomposition.
 
-    Here, the ai are pairwise prime and square-free polynomials, returned
-    in a list. f is assumed to be a univariate instance of Polynomial.
+    Usage:
+    ======
+        Computes a decomposition of f in a1 * a2**2 * ... * an**n,
+        where the ai are pairwise prime and square-free polynomials.
+
+        The input is assumed to be a univariate polynomial, either as
+        a SymPy expression or an instance of Polynomial. In the first
+        case, you can optionally specify the variables and monomial
+        order with the arguments 'var' and 'order'.
+
+        If the argument 'coeff' is set to 'int', the constant factors
+        are redistributed to the different ai, so that they have
+        integer coefficients. Otherwise, they are made monic.
+
+        A list is returned, with an instance of Polynomial at each
+        index, which represents the multiplicity (except beginning
+        with 1 instead of 0).
+    
+    Examples:
+    =========
+        >>> x = Symbol('x')
+        >>> a = sqf(3 - 12*x - 4*x**3 + 4*x**4 + 13*x**2)
+        >>> for i, f in enumerate(a): print (i + 1), f
+        1 12 + 4*x**2
+        2 (-1/2) + x
+        >>> b = sqf(3 - 12*x - 4*x**3 + 4*x**4 + 13*x**2, coeff='int')
+        >>> for i, f in enumerate(b): print (i + 1), f
+        1 3 + x**2
+        2 (-1) + 2*x
+        
+    References:
+    ===========
+        Gathen, Gerhard: Modern Computer Algebra,
+        Cambridge University Press, 1. edition, p. 371
+
+    Also see L{sqf_part}, L{factor}.
+
     """
+
     if not isinstance(f, Polynomial):
         f = Polynomial(f, var=var, order=order)
 
@@ -43,19 +79,90 @@ def sqf(f, var=None, order=None, coeff=None):
 
 def sqf_part(f, var=None, order=None):
     """Returns the square-free part of f.
+
+    Usage:
+    ======
+        Computes the square-free part of f.
+
+        The input is assumed to be a univariate polynomial, either as
+        a SymPy expression or an instance of Polynomial. In the first
+        case, you can optionally specify the variables and monomial
+        order with the arguments 'var' and 'order'.
+
+        The result is returned as an instance of Polynomial.
+    
+    Examples:
+    =========
+        >>> x = Symbol('x')
+        >>> print sqf_part(2*x**3 + 2*x**2)
+        2*x + 2*x**2
+
+    References:
+    ===========
+        Gathen, Gerhard: Modern Computer Algebra,
+        Cambridge University Press, 1. edition, p. 370
+
+    Also see L{sqf}.
+
     """
+
     if not isinstance(f, Polynomial):
         f = Polynomial(f, var=var, order=order)
-            
+
+    # The gcd of f with its derivative is the multiple part.
     ff = div_.gcd(f, f.diff(f.var[0]))
     return div_.div(f, ff)[0]
 
 
 def factor(f, var=None, order=None):
-    """Find the factorization of an univariate integer polynomial.
+    """Factorization of polynomials over the rationals.
 
-    Using square-free factorization and Kronecker's algorithm.
+    Usage:
+    ======
+        As input, a polynomial is taken, either as a SymPy expression
+        or as an instance of Polynomial. In the first case, the
+        variables and monomial order can optionally be specified
+        through the arguments 'var' and 'order'.
+
+        The result is a list containing all the irreducible factors as
+        instances of Polynomial.
+
+    Notes:
+    ======
+        In the univariate case, the first step is a square-free
+        decomposition. Then, for each factor, we get all the linear
+        factors by looking for rational roots. The remainder is
+        finally factored by a method due to Kronecker, which uses
+        polynomial interpolation to guess divisors. Due to this
+        method, the univariate factoring is rather limited, but
+        planned to be replaced soon.
+
+        The multivariate polynomials are reduced to univariate ones,
+        also due to a method by Kronecker. The univariate factors are
+        then re-assembled and reformed to potential divisors of f, for
+        trial division.
+
+        Factorization over the integers and rationals is equivalent,
+        since you can always multiply with the common denominator and
+        then remove the content of the polynomial.
+
+    Examples:
+    =========
+        >>> x, y = symbols('xy')
+        >>> for f in factor(2*x**4 - 2): print f
+        2
+        (-1) + x
+        1 + x
+        1 + x**2
+        >>> for f in factor(4*x**2/3 - y**2/3): print f
+        1/3
+        y + 2*x
+        -y + 2*x
+
+    Also see L{sqf}, L{kronecker}, L{kronecker_mv}, L{roots_.rat_roots}.
+    
     """
+
     from sympy.polynomials import roots_
     
     if not isinstance(f, Polynomial):
@@ -92,11 +199,16 @@ def factor(f, var=None, order=None):
 
 
 def kronecker(f):
-    """Recursive factorization of an univariate polynomial with integer
-    coeffs using interpolation.
-    """
+    """One step in univariate factorization, see L{factor}."""
+    
     def lagrange_base(pos):
-        """Compute the base polynomials used for interpolation."""
+        """Compute the base polynomials used for Lagrange interpolation.
+
+        They are constructed such that they evaluate to 1 at their
+        position but 0 at all other points.
+
+        """
+
         l=[]
         for x in pos:
             l.append(Polynomial(coeffs=((S.One, S.One),(-x, S.Zero)),
@@ -115,6 +227,7 @@ def kronecker(f):
         return b
 
     def combine(divs):
+        """Combine the divisors of all coefficients."""
         # Don't try negative divisors for first value.
         lst = map(lambda el: [el], divs[0])
         for choices in divs[1:]:
@@ -135,21 +248,9 @@ def kronecker(f):
     base = lagrange_base(pos)
     # Evaluate at points.
     values = map(f, pos)
-    # Look for roots, that is, zeros in values:
-    # TODO: Move out of kronecker()!
-    lfs = []
-    for x, y in zip(pos, values):
-        if y == 0:
-            lfs.append(Polynomial(coeffs=((S.One, S.One), (-x, S.Zero)),
-                                  var=f.var, order=f.order))
-    if len(lfs) > 0:
-        ff = Polynomial(S.One, ((S.One, S.Zero),), f.var, f.order)
-        for lf in lfs:
-            ff *= lf
-        return lfs + kronecker(div_.div(f, ff, coeff='int')[0])
     # All divisors of the values give possible values for g.
     divs = map(integer_divisors, map(int, values))
-    # Assemble all possible divisor combination
+    # Assemble all possible divisor combinations.
     combs = combine(divs)
     # Construct candidates for g.
     cands = []
@@ -189,18 +290,14 @@ def kronecker(f):
             return kronecker(q) + kronecker(g)
     else:
         # No divisor found, f irreducible.
-        # TODO: Try again with smaller degree divisors?
+        # TODO: Try again with divisors of smaller degree?
         return [f]
 
+
 def kronecker_mv(f):
-    """Multivariate polynomial factorization.
+    """One step in multivariate factorization, see L{factor}."""
 
-    Depends on univariate factorization, and hence is restricted to
-    rational coeffs. Expects an instance of Polynomial with at
-    least 2 var.
-
-    """
-    
+    # Given a list of factors, re-assemble all m-subsets of them.
     def factor_combinations(lisp, m):
         def recursion(fa, lisp, m):
             if m == 0:
@@ -214,7 +311,7 @@ def kronecker_mv(f):
             for el in recursion(fa, lisp[i + 1:], m - 1):
                 yield el
 
-    # First sort the var by occuring exponents.
+    # First sort the variables by occuring exponents.
     # Then get degree bound, that is larger than all individual degrees.
     max_exp = {}
     for v in f.var:
@@ -268,84 +365,3 @@ def kronecker_mv(f):
     if f.sympy_expr is not S.One:
         result.append(f)
     return result
-
-## def mv_int(f):
-##     """Complete multivariate polynomial factorization over the integers.
-
-##     Depends on univariate factorization.
-##     """
-
-##     var = f.var
-
-##     # TODO: Choose best main variable, such that leading coefficient is 1
-##     # or the degree is small!
-##     x = var[0]
-##     f.var = [x]
-##     # Get coeffs, now polynomials in the rest of the var
-##     c = map(lambda t:t[0], f.cl)
-##     c = map(lambda t: Polynomial(t, var=var[1:]), c)
-
-##     # Get content removed from the polynomial, can be factored seperately
-##     content = reduce(gcd_.mv, c)
-##     for term, coeff in zip(f.cl, c):
-##         q, r = div_.mv(coeff, content)
-##         term[0] = q[0].basic
-##     f.cl = f.cl # To clear f.basic
-
-##     # Do square-free factorization with main variable
-##     a = sqf_.uv_int(f)
-
-##     # Run Wang's algorithm for all factors
-##     for i, p in enumerate(a):
-##         if p.cl[0][1:] != [0]*len(var): # Filter out constants
-##             for pp in wang(p, var):
-##                 result += [pp]*(i+1)
-
-##     # Combine result with content's factorization
-##     return  mv_int(content) + result
-
-## def wang(f, var):
-##     """Following
-##     Factoring Multivariate Polynomials Over the Integers
-##     Paul S. Wang; Linda Preiss Rothschild
-##     Mathematics of Computation, Vol. 29, No. 131. (July, 1975), pp. 935-950
-
-##     """
-
-##     def change(subs):
-##         i = random.randint(0, len(subs) + 1)
-##         subs[i] += 1
-##         return subs
-
-##     # First substitute the var in var with integers,
-##     # such that the resulting polynomial is of same degree
-##     # and still square free
-##     # TODO: Which integers to use?
-##     substitutes = [S.Zero]*len(var)
-##     while True:
-##         lead_coeff = f.cl[0][0]
-##         basic = f.basic
-##         for i, v in enumerate(var):
-##             lead_coeff = lead_coeff.subs(v, substitutes[i])
-##         if lead_coeff == S.Zero:
-##             substitutes = change(substitutes)
-##             continue
-##         for i, v in enumerate(var):
-##             basic = basic.subs(v, substitutes[i])
-##         if basic != sqf_part(basic):
-##             substitutes = change(substitutes)
-##             continue
-##         else: # Substitutes are fine, go on.
-##             break
-
-##     # Now factorize the remaining polynomial in one variable.
-##     ff = Polynomial(basic, f.var, f.order, f.coeff)
-##     factors = uv_int(ff)
-
-##     # When univariate polynomial is irreducible, the original was, too.
-##     if len(factors) == 1:
-##         return Polynomial(f.basic, f.var + var, f.order, f.coeff)
-
-##     # Now, try to reconstruct multivariate factor candidates from
-##     # the univariate ones.
-    
