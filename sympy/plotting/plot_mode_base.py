@@ -92,8 +92,8 @@ class PlotModeBase(PlotMode):
         in PlotModeBase.
     """
 
-    default_wireframe_color = (0.7,0.7,0.9)
-    default_solid_color = (0.3,0.3,0.7)
+    default_wireframe_color = (0.85,0.85,0.85)
+    default_solid_color = (0.6,0.6,0.9)
 
     ##
     ## Instance-Level Attributes
@@ -101,6 +101,22 @@ class PlotModeBase(PlotMode):
 
     ## 'Abstract' member functions
     def _get_evaluator(self):
+        if self.use_lambda_eval:
+            try:
+                e = self._get_lambda_evaluator()
+                ## try it out (doesn't work with discontinuities :-S)
+                #e(*(i.v_min for i in self.intervals))
+                #e(*(i.v_max for i in self.intervals))
+                return e
+            except:
+                print ("\nWarning: lambda evaluator failed. "
+                       "Falling back on sympy evaluator.")
+        return self._get_sympy_evaluator()
+
+    def _get_sympy_evaluator(self):
+        raise NotImplementedError()
+
+    def _get_lambda_evaluator(self):
         raise NotImplementedError()
 
     def _on_calculate_verts(self):
@@ -130,6 +146,7 @@ class PlotModeBase(PlotMode):
         self._style = None
         self._color = None
 
+        self.use_lambda_eval = bool(self.options.pop('use_lambda', None) is not None)
         self.style = self.options.pop('style', 'both')
         self.color = self.options.pop('color', 'rainbow')
 

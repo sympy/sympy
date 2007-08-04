@@ -21,7 +21,8 @@ class PlotSurface(PlotModeBase):
         for u in self.u_set:
             column = list()
             for v in self.v_set:
-                _e = evaluate(u, v) # calculate vertex
+                try: _e = evaluate(u, v) # calculate vertex
+                except: _e = None
                 if _e is not None:  # update bounding box
                     for axis in xrange(3):
                         b[axis][0] = min([b[axis][0], _e[axis]])

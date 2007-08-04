@@ -25,12 +25,12 @@ if __name__ == "__main__":
 
     @example_wrapper
     def ding_dong_surface():
-        p[1] = sqrt(1-y)*y, [x,0,2*pi,40], [y,-1,4,120], 'mode=cylindrical; style=solid; color=zfade'
+        p[1] = sqrt(1.0-y)*y, [x,0,2*pi,40], [y,-1,4,100], 'mode=cylindrical; style=solid'
 
     @example_wrapper
     def mirrored_ellipsoids():
-        p[2] = x**2+y**2, [x,-1,1,30], [y,-1,1,30], 'style=solid'
-        p[3] =-x**2-y**2, [x,-1,1,30], [y,-1,1,30], 'style=solid'
+        p[2] = x**2+y**2, 'style=solid; use_lambda'
+        p[3] =-x**2-y**2, 'style=solid; use_lambda'
 
     @example_wrapper
     def color_functions():
@@ -39,11 +39,11 @@ if __name__ == "__main__":
         sympy symbols OR string expressions
         using the characters x,y,z,u,v.
         
-        Notice that the string (eval->lambda)
+        Notice that the string (lambda)
         version is much faster.
         """
         start = clock()
-        p[4] = 1, 'mode=spherical', [32], [16]
+        p[4] = 1, 'mode=spherical; use_lambda', [32], [16]
         sleep(0)
         p.wait_for_calculations()
         print "sphere vertex calculation took %s seconds." % (clock()-start)
@@ -64,35 +64,35 @@ if __name__ == "__main__":
 
     @example_wrapper
     def mirrored_saddles():
-        p[5] = x**2-y**2, [-1,1], [-1,1]
-        p[6] = y**2-x**2, [-1,1], [-1,1]
+        p[5] = x**2-y**2, [20], [20], 'use_lambda'
+        p[6] = y**2-x**2, [20], [20], 'use_lambda'
 
     @example_wrapper
     def polar_circle():
-        p[7] = 1, 'mode=polar'
+        p[7] = 1, 'mode=polar; use_lambda'
 
     @example_wrapper
     def polar_flower():
-        p[8] = sin(4*x), 'mode=polar; color=.3+u*.5, .3+x*.5, .3+y*.5'
+        p[8] = 2*sin(4*x), [180], 'mode=polar; color=.5+u*.4, .5+x*.4, .5+y*.4; use_lambda'
 
     @example_wrapper
     def simple_cylinder():
-        p[9] = 1, 'mode=cylindrical'
+        p[9] = 1, 'mode=cylindrical; use_lambda'
 
     @example_wrapper
     def cylindrical_hyperbola():
         ## (note that polar is an alias for cylindrical)
-        p[10] = 1/y, 'mode=polar', [x,0,2*pi,20], [y,-2,2,10]
+        p[10] = 1/y, 'mode=polar; use_lambda', [x], [y,-2,2,20]
 
     @example_wrapper
     def extruded_hyperbolas():
-        p[11] = 1/x, [x,-10,10,100], [y,-1,1,1], 'style=wireframe'
-        p[12] = -1/x, [x,-10,10,100], [y,-1,1,1], 'style=solid'
+        p[11] = 1/x, [x,-10,10,100], [1], 'style=wireframe; use_lambda'
+        p[12] = -1/x, [x,-10,10,100], [1], 'style=solid; use_lambda'
 
     @example_wrapper
     def torus():
         a,b = 1, 0.5 # radius, thickness
-        p[13] = (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x), [x,0,pi*2,24], [y,0,pi*2,24]
+        p[13] = (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x), [x,0,pi*2,40], [y,0,pi*2,40], 'use_lambda'
 
     @example_wrapper
     def parametric_spiral():
@@ -100,8 +100,8 @@ if __name__ == "__main__":
 
     @example_wrapper
     def sphere_with_ring():
-        p[15] = 2, 'mode=polar; color=x,y,u'
-        p[16] = 1, 'mode=spherical'
+        p[15] = 2, 'mode=polar; color=x,y,u; use_lambda'
+        p[16] = 1, 'mode=spherical; use_lambda'
 
     @example_wrapper
     def str_and_repr_demo():
@@ -112,6 +112,19 @@ if __name__ == "__main__":
         print str(p[18])
         print repr(p[18])
 
+    @example_wrapper
+    def lambda_vs_sympy_evaluation():
+        start = clock()
+        p[4] = 1, 'mode=spherical; use_lambda', [64], [32]
+        sleep(0)
+        p.wait_for_calculations()
+        print "lambda-based calculation took %s seconds." % (clock()-start)
+
+        start = clock()
+        p[4] = 1, 'mode=spherical', [64], [32]
+        sleep(0)
+        p.wait_for_calculations()
+        print "sympy substitution-based calculation took %s seconds." % (clock()-start)
 
     def help_str():
         s =  ("\nPlot p has been created. Useful commands: \n"

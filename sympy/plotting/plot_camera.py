@@ -4,7 +4,8 @@ from util import get_model_matrix
 
 class PlotCamera(object):
 
-    min_dist = 1.0
+   #min_dist = 1.0
+    min_dist = 0.05
     max_dist = 500.0
 
     min_ortho_dist = 100.0
@@ -44,9 +45,9 @@ class PlotCamera(object):
         glLoadIdentity()
         if self.ortho:
             # yep, this is pseudo ortho (don't tell anyone)
-            gluPerspective(0.3, float(self.window.width) / float(self.window.height), self.min_ortho_dist-0.5, self.max_ortho_dist+0.5)
+            gluPerspective(0.3, float(self.window.width) / float(self.window.height), self.min_ortho_dist-0.01, self.max_ortho_dist+0.01)
         else:
-            gluPerspective(30.0, float(self.window.width) / float(self.window.height), self.min_dist-0.5, self.max_dist+0.5)
+            gluPerspective(30.0, float(self.window.width) / float(self.window.height), self.min_dist-0.01, self.max_dist+0.01)
         glMatrixMode(GL_MODELVIEW)
 
     def apply_transformation(self):

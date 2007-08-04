@@ -19,7 +19,8 @@ class PlotCurve(PlotModeBase):
         self.verts = list()
         b = self.bounds
         for t in self.t_set:
-            _e = evaluate(t)   # calculate vertex
+            try: _e = evaluate(t)   # calculate vertex
+            except: _e = None
             if _e is not None: # update bounding box
                 for axis in xrange(3):
                     b[axis][0] = min([b[axis][0], _e[axis]])
