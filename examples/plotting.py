@@ -99,9 +99,9 @@ if __name__ == "__main__":
         p[14] = cos(y), sin(y), y/10.0, [y,-4*pi,4*pi,100]
 
     @example_wrapper
-    def sphere_with_ring():
-        p[15] = 2, 'mode=polar; color=x,y,u; use_lambda'
-        p[16] = 1, 'mode=spherical; use_lambda'
+    def inside_a_sphere():
+        p[15] = 50, 'mode=spherical; use_lambda; color=.5+x*.5,.5+y*.5,.5+z*.5'
+        p[16] = 1, 'mode=spherical; use_lambda; color=0.5+z*0.5,0.5+y*0.5,0.5+x*0.5'
 
     @example_wrapper
     def str_and_repr_demo():

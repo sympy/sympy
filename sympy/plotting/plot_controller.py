@@ -132,10 +132,10 @@ class PlotController(object):
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         if buttons & LEFT:
             self.window.camera.spherical_rotate((x-dx,y-dy),(x,y), self.get_mouse_sensitivity())
-        if buttons & RIGHT:
-            self.window.camera.mouse_translate(x, y, dx, dy)
         if buttons & MIDDLE:
             self.window.camera.zoom_relative(dy, self.get_mouse_sensitivity()/20.0)
+        if buttons & RIGHT:
+            self.window.camera.mouse_translate(x, y, dx, dy)
 
     def on_mouse_scroll(self, x, y, dx, dy):
         self.window.camera.zoom_relative(dy, self.get_mouse_sensitivity())
