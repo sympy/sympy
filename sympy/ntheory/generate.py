@@ -104,7 +104,7 @@ class Sieve:
 
     def __getitem__(self, n):
         """Return the nth prime number"""
-        self.extend_to_no(n-1)
+        self.extend_to_no(n)
         return self._list[n-1]
 
 
