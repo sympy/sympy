@@ -139,7 +139,7 @@ class PlotModeBase(PlotMode):
         self._calculating_cverts_pos = 0.0
         self._calculating_cverts_len = 0.0
 
-        self._max_render_stack_size = 10
+        self._max_render_stack_size = 3
         self._draw_wireframe = [-1]
         self._draw_solid = [-1]
 
@@ -186,15 +186,27 @@ class PlotModeBase(PlotMode):
         if len(self._draw_solid) > self._max_render_stack_size:
             del self._draw_solid[1] # leave marker element
 
+    def _create_display_list(self, function):
+        dl = glGenLists(1)
+        glNewList(dl, GL_COMPILE)
+        function()
+        glEndList()
+        return dl
+
     def _render_stack_top(self, render_stack):
         top = render_stack[-1]
-        if callable(top):
-            dl = glGenLists(1)
-            glNewList(dl, GL_COMPILE)
-            top()
-            glEndList()
-            top = render_stack[-1] = dl
-        return top
+        if top == -1:
+            return -1 # nothing to display
+        elif callable(top):
+            dl = self._create_display_list(top)
+            render_stack[-1] = (dl, top)
+            return dl # display newly added list
+        elif len(top) == 2:
+            if GL_TRUE == glIsList(top[0]):
+                return top[0] # display stored list
+            dl = self._create_display_list(top[1])
+            render_stack[-1] = (dl, top[1])
+            return dl # display regenerated list
 
     def _draw_solid_display_list(self, dl):
         glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT)

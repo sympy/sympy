@@ -3,7 +3,7 @@ from plot_surface import PlotSurface
 from util import scale_value
 
 from sympy import Pi
-from math import sin, cos, tan, log
+from math import sin, cos, tan, log, sqrt, exp
 Pi = pi = float(Pi)
 
 def float_vec3(f):

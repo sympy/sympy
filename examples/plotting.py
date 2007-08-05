@@ -9,7 +9,7 @@ sys.path.append("..")
 
 from sympy import symbols
 from sympy import Plot
-from sympy import sin, cos, pi, sqrt
+from sympy import sin, cos, Pi, sqrt
 
 from time import sleep, clock
 
@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     @example_wrapper
     def ding_dong_surface():
-        p[1] = sqrt(1.0-y)*y, [x,0,2*pi,40], [y,-1,4,100], 'mode=cylindrical; style=solid'
+        p[1] = sqrt(1.0-y)*y, [x,0,2*Pi,40], [y,-1,4,100], 'mode=cylindrical; style=solid'
 
     @example_wrapper
     def mirrored_ellipsoids():
@@ -92,11 +92,11 @@ if __name__ == "__main__":
     @example_wrapper
     def torus():
         a,b = 1, 0.5 # radius, thickness
-        p[13] = (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x), [x,0,pi*2,40], [y,0,pi*2,40], 'use_lambda'
+        p[13] = (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x), [x,0,Pi*2,40], [y,0,Pi*2,40], 'use_lambda'
 
     @example_wrapper
     def parametric_spiral():
-        p[14] = cos(y), sin(y), y/10.0, [y,-4*pi,4*pi,100]
+        p[14] = cos(y), sin(y), y/10.0, [y,-4*Pi,4*Pi,100]
 
     @example_wrapper
     def inside_a_sphere():
