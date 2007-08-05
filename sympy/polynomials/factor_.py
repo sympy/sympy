@@ -159,6 +159,11 @@ def factor(f, var=None, order=None):
         y + 2*x
         -y + 2*x
 
+    References:
+    ===========
+        Buchberger, Collins, Loos, Albrecht: Computer Algebra,
+        ACM SIGSAM Bulletin 1982
+
     Also see L{sqf}, L{kronecker}, L{kronecker_mv}, L{roots_.rat_roots}.
     
     """

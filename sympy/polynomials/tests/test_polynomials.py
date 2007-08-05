@@ -195,18 +195,18 @@ def test_lcm():
     assert lcm(y*(x+1), x, x) ==x+x**2
     assert lcm(2*x, x**2) == 2*x**2 
 
-def test_real_roots():
+def test_count_real_roots():
     x = Symbol('x')
 
     f = x-1
-    assert real_roots(f) == 1
-    assert real_roots(f, None, Rational(0)) == 0
-    assert real_roots(f, Rational(0), Rational(1)) == 1
-    assert real_roots(f, Rational(1), None) == 0
+    assert count_real_roots(f) == 1
+    assert count_real_roots(f, None, Rational(0)) == 0
+    assert count_real_roots(f, Rational(0), Rational(1)) == 1
+    assert count_real_roots(f, Rational(1), None) == 0
     f = x**2 - 4
-    assert real_roots(f) == 2
-    assert real_roots(f, None, Rational(0)) == 1
-    assert real_roots(f, Rational(-1), Rational(1)) == 0
+    assert count_real_roots(f) == 2
+    assert count_real_roots(f, None, Rational(0)) == 1
+    assert count_real_roots(f, Rational(-1), Rational(1)) == 0
 
 def test_resultant():
      x, a, b, c, = [Symbol(y) for y in ['x', 'a', 'b', 'c']]

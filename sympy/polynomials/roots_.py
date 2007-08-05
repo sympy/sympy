@@ -4,9 +4,20 @@ from sympy.polynomials.base import *
 from sympy.polynomials import div_, groebner_
 
 def cubic(f):
-    """Returns the real or complex roots of a cubic polynomial.
+    """Computes the roots of a cubic polynomial.
 
-    Works for univariate instances of Polynomial only."""
+    Usage:
+    ======
+        This function is called by the wrapper L{roots}, don't use it
+        directly. The input is assumed to be a univariate instance of
+        Polynomial of degree 3.
+
+    References:
+    ===========
+        http://en.wikipedia.org/wiki/Cubic_equation#Cardano.27s_method
+        
+    """
+
     # Get monic polynomial.
     f = f.as_monic()[1]
     
@@ -31,14 +42,26 @@ def cubic(f):
 
     return map(lambda u: (p/(u*3) - u - a/3).expand(), [u1, u2, u3])
 
-def n_poly(f):
-    """Checks if the polynomial can be simplifed by substituting the
-    variable by a power.
 
-    Returns a list of real or complex roots, or None, if no solution
-    was found. Works for univariate instances of Polynomial only.
+def n_poly(f):
+    """Tries to substitute a power of a variable, to simplify.
+
+    Usage:
+    ======
+        This function is called by the wrapper L{roots}, don't use it
+        directly. It returns 'None' if no such simplifcation is
+        possible. The input f is assumed to be a univariate instance
+        of Polynomial.
+
+    References:
+    ===========
+        http://en.wikipedia.org/wiki/Root_of_unity
+        http://en.wikipedia.org/wiki/Radical_root#Positive_real_numbers
+    
     """
+
     def roots_of_unity(n):
+        """Computes the list of the n-th roots of unity."""
         result = []
         for i in range(0,n):
             # result.append((exp(2*i*pi*I/n)).evalc())
@@ -59,10 +82,21 @@ def n_poly(f):
     return [(zeta*s**Rational(1,g)).expand()
             for s in roots(ff) for zeta in roots_of_unity(g)]
         
-def quadratic(f):
-    """Returns the real or complex roots of a quadratic polynomial.
 
-    Works for univariate instances of Polynomial only."""
+def quadratic(f):
+    """Computes the roots of a quadratic polynomial.
+
+    Usage:
+    ======
+        This function is called by the wrapper L{roots}, don't use it
+        directly. The input is assumed to be a univariate instance of
+        Polynomial of degree 2.
+
+    References:
+    ===========
+        http://en.wikipedia.org/wiki/Quadratic_equation#Quadratic_formula
+
+    """
 
     # Get monic polynomial, for p-q formula
     f = f.as_monic()[1]
@@ -92,14 +126,27 @@ def quadratic(f):
         return [-p/2 + I*sqrt(-discr)/2,
                 -p/2 - I*sqrt(-discr)/2]
 
+
 # TODO: Implement function to find roots of quartic polynomials?
 
-def rat_roots(f):
-    """Returns a list of rational roots of an integer Polynomial.
 
-    For an polynomial an*x**n + ... + a0, all rational roots are of
-    the form p/q, where p and q are integer factors of a0 and an.
+def rat_roots(f):
+    """Computes the rational roots of a polynomial.
+
+    Usage:
+    ======
+        This function is called by the wrapper L{roots}, don't use it
+        directly. The input is assumed to be a univariate and
+        square-free instance of Polynomial, with integer coefficients.
+
+    References:
+    ===========
+        http://en.wikipedia.org/wiki/Rational_root_theorem
+
     """
+
+    # For an integer polynomial an*x**n + ... + a0, all rational roots
+    # are of the form p/q, where p and q are factors of a0 and an.
     an_divs = integer_divisors(int(f.coeffs[0][0]))
     a0_divs = integer_divisors(int(f.coeffs[-1][0]))
     result = []
@@ -114,26 +161,37 @@ def rat_roots(f):
         result.append(S.Zero)
     return result
 
-def real_roots(s, a=None, b=None):
+def count_real_roots(s, a=None, b=None):
     """Returns the number of unique real roots of f in the interval (a, b].
 
-    Assumes a sturm sequence of an univariate, square-free instance of
-    Polynomial with real coeffs. The boundaries a and b can be omitted
-    to check the whole real line.
+    Usage:
+    ======
+        The input can be a square-free and univariate polynomial, or a
+        precomputed Sturm sequence, if you want to check one specific
+        polynomial with several intervals. See L{sturm}.
+        
+        The boundaries a and b can be omitted to check the whole real
+        line or one ray.
 
     Examples:
-    >>> x = Symbol('x')
-    >>> real_roots(x**2 - 1)
-    2
-    >>> real_roots(x**2 - 1, 0, 2)
-    1
+    =========
+        >>> x = Symbol('x')
+        >>> count_real_roots(x**2 - 1)
+        2
+        >>> count_real_roots(x**2 - 1, 0, 2)
+        1
+
+    References:
+    ===========
+        Davenport, Siret, Tournier: Computer Algebra, 1988
 
     """
 
-    def sign_changes(list):
+    def sign_changes(lisp):
+        """Counts how often the sign of consecutive list elements"""
         counter = 0
-        current = list[0]
-        for el in list:
+        current = lisp[0]
+        for el in lisp:
             if (current < 0 and el >= 0) or \
                (current > 0 and el <= 0):
                 counter += 1
@@ -159,9 +217,29 @@ def real_roots(s, a=None, b=None):
     else:
         sb = sign_changes(map(lambda p:p.sympy_expr.subs(p.var[0], b), s))
     return sa - sb
-    
+
+
 def sturm(f):
-    """Compute the Sturm sequence of given polynomial."""
+    """Compute the Sturm sequence of given polynomial.
+
+    Usage:
+    ======
+        The input is assumed to be a square-free and univariate
+        polynomial, either as a SymPy expression or as instance of
+        Polynomial.
+
+        The output is a list representing f's Sturm sequence, which is
+        built similarly to the euclidian algorithm, beginning with f
+        and its derivative.
+
+        The result can be used in L{count_real_roots}.
+
+    References:
+    ===========
+        Davenport, Siret, Tournier: Computer Algebra, 1988
+
+    """
+
     if not isinstance(f, Polynomial):
         f = Polynomial(f)
     seq = [f]
@@ -170,14 +248,32 @@ def sturm(f):
         seq.append(-(div_.div(seq[-2], seq[-1])[-1]))
     return seq[:-1]
 
-def roots(f, var=None, order=None):
-    """Compute the roots of an univariate polynomial.
+
+def roots(f, var=None):
+    """Compute the roots of a univariate polynomial.
+
+    Usage:
+    ======
+        The input f is assumed to be a univariate polynomial, either
+        as SymPy expression or as instance of Polynomial. In the
+        latter case, you can optionally specify the variable with
+        'var'.
+
+        The output is a list of all found roots with multiplicity.
 
     Examples:
-    >>> x = Symbol('x')
-    >>> roots(x**2 - 1)
-    [-1, 1]
+    =========
+        >>> x, y = symbols('xy')
+        >>> roots(x**2 - 1)
+        [-1, 1]
+        >>> roots(x - y, x)
+        [y]
+        
+    Also see L{factor_.factor}, L{quadratic}, L{cubic}. L{n-poly},
+    L{count_real_roots}.
+    
     """
+    
     from sympy.polynomials import factor_
 
     if not isinstance(f, Polynomial):
@@ -204,11 +300,11 @@ def roots(f, var=None, order=None):
     else: # It's not possible to factorize.
         factors = [f]
         
-    # Now check for roots in each factor
+    # Now check for roots in each factor.
     result = []
     for p in factors:
-        n = p.coeffs[0][1] # degree
-        if n == 0: # constant
+        n = p.coeffs[0][1] # Degree of the factor.
+        if n == 0: # We have a constant factor.
             pass
         elif n == 1:
             if len(p.coeffs) == 2:
@@ -226,26 +322,40 @@ def roots(f, var=None, order=None):
     result.sort()
     return result
 
-def solve_system(eqs, var=None):
-    """Solves a system of polynomial equation by variable elimination.
 
-    Assumes to get a list of instances of Polynomial, with matching
-    var. Only works for zero-dimensional varieties, that is, a
-    finite number of solutions (untested!). 
+def solve_system(eqs, var=None, order=None):
+    """Solves a system of polynomial equations.
+
+    Usage:
+    ======
+        Assumes to get a list of polynomials, either as SymPy
+        expressions or instances of Polynomial. In the first case, you
+        should specify the variables and monomial order through 'var'
+        and 'order'. Otherwise, the polynomials should have matching
+        variables and orders already. Only the first polynomial is
+        checked for its type.
+
+        This algorithm uses variable elimination and only works for
+        zero-dimensional varieties, that is, a finite number of
+        solutions, which is currently not tested.
 
     Examples:
-    >>> x = Symbol('x')
-    >>> y = Symbol('y')
-    >>> f = y - x           
-    >>> g = x**2 + y**2 - 1 
-    >>> solve_system([f, g])
-    [(-1/2*2**(1/2), -1/2*2**(1/2)), ((1/2)*2**(1/2), (1/2)*2**(1/2))]
+    =========
+        >>> x, y = symbols('xy')
+        >>> f = y - x           
+        >>> g = x**2 + y**2 - 1 
+        >>> solve_system([f, g])
+        [(-1/2*2**(1/2), -1/2*2**(1/2)), ((1/2)*2**(1/2), (1/2)*2**(1/2))]
+
+    References:
+    ===========
+        Cox, Little, O'Shea: Ideals, Varieties and Algorithms,
+        Springer, 2. edition, p. 113
 
     """
 
     def is_uv(f):
-        """Is an instance of Polynomial univariate in its last variable?
-        """
+        """Is an instance of Polynomial univariate in its last variable?"""
         for term in f.coeffs:
             for exponent in term[1:-1]:
                 if exponent > 0:
@@ -266,7 +376,7 @@ def solve_system(eqs, var=None):
     # univariate and can be solved.
     gb = groebner_.groebner(eqs)
 
-    # Now filter the the base elements, to get only the univariate
+    # Now filter the the base elements, to get only the univariate ones.
     eliminated = filter(is_uv, gb)
     if len(eliminated) != 1:
         raise PolynomialException("System currently not solvable.")
