@@ -199,7 +199,7 @@ def factorint(n, limit=None, verbose=False):
         >>> factorint(5715365922033905625269)
         [(74358036521L, 1), (76862786989L, 1)]
 
-    This number has an enormous semiprime factor that is bettered
+    This number has an enormous semiprime factor that is better
     ignored:
 
         >>> a = 1407633717262338957430697921446883
@@ -256,6 +256,9 @@ def factorint(n, limit=None, verbose=False):
                 factors += [(f, m)]
                 n //= f**(m)
 
+        if n == 1:
+            break
+
         if isprime(n):
             factors += [(int(n), 1)]
             break
@@ -263,8 +266,7 @@ def factorint(n, limit=None, verbose=False):
         low, high = high, high*5
 
         if high > limit:
-            if n != 1:
-                factors += [(int(n), 1)]
+            factors += [(int(n), 1)]
             break
 
     return sorted(factors)

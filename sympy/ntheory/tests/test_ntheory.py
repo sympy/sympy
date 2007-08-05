@@ -63,6 +63,8 @@ def test_generate():
             A = list(s.primerange(i, i+j))
             B = list(primerange(i, i+j))
             assert A == B
+    s = Sieve()
+    assert s[10] == 29
 
 def test_randprime():
     import random
@@ -88,3 +90,4 @@ def test_factor():
     assert primefactors(123456) == [2, 3, 643]
     assert factorint(-16) == [(-1, 1), (2, 4)]
     assert factorint(2**(2**6) + 1) == [(274177, 1), (67280421310721, 1)]
+    assert factorint(5951757) == [(3, 1), (7, 1), (29, 2), (337, 1)]
