@@ -2,7 +2,7 @@
 Integer factorization
 """
 
-from sympy import gcd
+from sympy.core import numbers
 import random
 from primetest import isprime
 from generate import sieve, prime
@@ -58,7 +58,7 @@ def pollard_rho(n, max_iters=5, seed=1234):
         while 1:
             U = F(U)
             V = F(F(V))
-            g = gcd(U-V, n)
+            g = numbers.gcd(U-V, n)
             if g == 1:
                 continue
             if g == n:
@@ -83,7 +83,7 @@ def pollard_pm1(n, B=10, seed=1234):
 
     Increasing the smoothness bound helps:
         >>> pollard_pm1(21477639576571, 2000)
-        4410317
+        4410317L
 
     References
     ==========
@@ -97,7 +97,7 @@ def pollard_pm1(n, B=10, seed=1234):
     for p in sieve.primerange(2, B):
         e = int(log(B, p))
         a = pow(a, p**e, n)
-    g = int(gcd(a-1, n))
+    g = numbers.gcd(a-1, n)
     if 1 < g < n:
         return g
     else:
