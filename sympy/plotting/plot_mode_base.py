@@ -249,8 +249,10 @@ class PlotModeBase(PlotMode):
         Thread(target=self._calculate_all).start()
 
     def _calculate_all(self):
+        print "Calculation thread entered."
         self._calculate_verts()
         self._calculate_cverts()
+        print "Calculation thread exited."
 
     def _calculate_verts(self):
         if self._calculating_verts.isSet(): return
