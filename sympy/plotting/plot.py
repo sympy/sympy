@@ -205,6 +205,7 @@ class Plot(object):
         self._render_lock.release()
 
     def wait_for_calculations(self):
+        sleep(0)
         self._render_lock.acquire()
         for f in self._functions:
             a = self._functions[f]._get_calculating_verts

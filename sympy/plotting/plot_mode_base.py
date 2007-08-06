@@ -4,24 +4,24 @@ from threading import Thread, Event, RLock
 from color_scheme import ColorScheme
 from sympy import oo
 
-class g(object):
-    c = 0
-    cv = 0
+#class g(object):
+    #c = 0
+    #cv = 0
 
-def print_state(a, s):
-    print "[%s / %s] (c: %s, cv: %s)" % (a, s, g.c, g.cv)
-def enter_c(s):
-    g.c += 1
-    print_state('c+ ', s)
-def exit_c(s):
-    g.c -= 1
-    print_state('c- ', s)
-def enter_cv(s):
-    g.cv += 1
-    print_state('cv+', s)
-def exit_cv(s):
-    g.cv -= 1
-    print_state('cv-', s)
+#def print_state(a, s):
+    #print "[%s / %s] (c: %s, cv: %s)" % (a, s, g.c, g.cv)
+#def enter_c(s):
+    #g.c += 1
+    #print_state('c+ ', s)
+#def exit_c(s):
+    #g.c -= 1
+    #print_state('c- ', s)
+#def enter_cv(s):
+    #g.cv += 1
+    #print_state('cv+', s)
+#def exit_cv(s):
+    #g.cv -= 1
+    #print_state('cv-', s)
 
 class PlotModeBase(PlotMode):
     """
@@ -268,13 +268,13 @@ class PlotModeBase(PlotMode):
         Thread(target=self._calculate_all).start()
 
     def _calculate_all(self):
-        s = str(self)
-        enter_c(s)
+        #s = str(self)
+        #enter_c(s)
         self._calculate_verts()
-        exit_c(s)
-        enter_cv(s)
+        #exit_c(s)
+        #enter_cv(s)
         self._calculate_cverts()
-        exit_cv(s)
+        #exit_cv(s)
 
     def _calculate_verts(self):
         if self._calculating_verts.isSet(): return
