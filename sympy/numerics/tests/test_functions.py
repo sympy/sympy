@@ -13,6 +13,14 @@ def test_sqrt():
     # These should round identically
     for x in [0, 1e-7, 0.1, 0.5, 1, 2, 3, 4, 5, 0.333, 76.19]:
         assert sqrt(Float(x)) == float(x)**0.5
+    assert sqrt(-1) == 1j
+    assert sqrt(-2).ae(cmath.sqrt(-2))
+    assert sqrt(-3).ae(cmath.sqrt(-3))
+    assert sqrt(-100).ae(cmath.sqrt(-100))
+    assert sqrt(1j).ae(cmath.sqrt(1j))
+    assert sqrt(-1j).ae(cmath.sqrt(-1j))
+    assert sqrt(math.pi + math.e*1j).ae(cmath.sqrt(math.pi + math.e*1j))
+    assert sqrt(math.pi - math.e*1j).ae(cmath.sqrt(math.pi - math.e*1j))
 
 def test_hypot():
     assert hypot(0, 0) == 0

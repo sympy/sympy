@@ -45,13 +45,13 @@ Two functions are implemented: _sqrt_fixed and _sqrt_fixed2.
   to calculate 1/sqrt(y), and then multiplies by y to obtain
   sqrt(y).
 
-The first iteration is slightly faster at low precision levels, since it
-essentially just requires one division at each step, compared
-to the three multiplications in the second formula. However, the second
+The first iteration is slightly faster at low precision levels, since
+it essentially just requires one division at each step, compared to
+the three multiplications in the second formula. However, the second
 iteration is much better at extremely high precision levels. This is
-likely due to the fact that Python uses the Karatsuba algorithm
-for integer multiplication, which is asymptotically faster than
-its division algorithm.
+due to the fact that Python uses the Karatsuba algorithm for integer
+multiplication, which is asymptotically faster than its division
+algorithm.
 
 For optimal speed, we exploit the "self-correcting" nature of
 Newton's method to perform subcomputations at as low a precision level
@@ -103,16 +103,19 @@ def _sqrt_fixed2(y, prec):
 
 def sqrt(x):
     """
-    sqrt(x) returns the square root of x as a Float, rounded to
-    the current working precision. This function only handles real-
-    valued square roots (it raises ValueError if x is negative).
+    If x is a positive Float, sqrt(x) returns the square root of x as a
+    Float, rounded to the current working precision. If x is negative
+    or a ComplexFloat, it returns the principal square root of x
+    as a ComplexFloat.
     """
+    if isinstance(x, (complex, ComplexFloat)):
+        return _csqrt(x)
     if not isinstance(x, Float):
         x = Float(x)
     if x == 0:
         return Float(0)
     if x < 0:
-        raise ValueError
+        return _csqrt(ComplexFloat(x,0))
     prec = Float._prec + 4
     # Convert to a fixed-point number with prec bits. Adjust
     # exponents to be even so that they can be divided in half
@@ -130,6 +133,32 @@ def sqrt(x):
     else:
         man = _sqrt_fixed2(man, prec)
     return Float((man, (exp+shift-prec)//2))
+
+"""
+For complex square roots, we have
+
+  sqrt(a+b*I) = sqrt((r+a)/2) + I*b/sqrt(2*(r+a))
+
+where r = abs(a+b*I), when a+b*I is not a negative real number.
+(http://en.wikipedia.org/wiki/Square_root)
+"""
+
+def _csqrt(z):
+    if not isinstance(z, ComplexFloat):
+        z = ComplexFloat(z)
+    Float._prec += 4
+    if z == 0:
+        return z
+    if z.real < 0 and z.imag == 0:
+        w = ComplexFloat(0, sqrt(-z.real))
+    else:
+        r = abs(z)
+        rpx = r + z.real
+        re = sqrt(rpx/2)
+        im = z.imag / sqrt(2*rpx)
+        w = ComplexFloat(re, im)
+    Float._prec -= 4
+    return +w
 
 def hypot(x, y):
     """hypot(x, y) computes the distance function sqrt(x**2+y**2)"""
