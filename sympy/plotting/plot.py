@@ -1,11 +1,13 @@
-from threading import Lock
+from threading import RLock
 
 from plot_object import PlotObject
+from plot_axes import PlotAxes
 from plot_window import PlotWindow
 from plot_mode import PlotMode
 import plot_modes
 
 from time import sleep
+from util import parse_option_string
 
 class Plot(object):
     """
@@ -53,10 +55,14 @@ class Plot(object):
         self._win_args = win_args
         self._window = None
 
-        self._render_lock = Lock()
+        self._render_lock = RLock()
 
         self._functions = {}
         self._pobjects = []
+
+        axe_options = parse_option_string(win_args.pop('axes', ''))
+        self.axes = PlotAxes(**axe_options)
+        self._pobjects.append(self.axes)
 
         self[1] = fargs
         if win_args.get('visible', True):
@@ -97,6 +103,7 @@ class Plot(object):
         """
         self._render_lock.acquire()
         self._functions = {}
+        self.adjust_all_bounds()
         self._render_lock.release()
 
     def __getitem__(self, i):
@@ -122,7 +129,8 @@ class Plot(object):
                 args = [args]
             if len(args) == 0:
                 return # no arguments given
-            f = PlotMode(*args)
+            kwargs = dict(bounds_callback=self.adjust_all_bounds)
+            f = PlotMode(*args, **kwargs)
 
         if f:
             self._render_lock.acquire()
@@ -138,7 +146,8 @@ class Plot(object):
         position i.
         """
         self._render_lock.acquire()
-        del self._functions[i] 
+        del self._functions[i]
+        self.adjust_all_bounds()
         self._render_lock.release()
 
     def firstavailableindex(self):
@@ -187,6 +196,13 @@ class Plot(object):
                               for i in self._functions])
             self._render_lock.release()
         return s
+
+    def adjust_all_bounds(self):
+        self._render_lock.acquire()
+        self.axes.reset_bounding_box()
+        for f in self._functions:
+            self.axes.adjust_bounds(self._functions[f].bounds)
+        self._render_lock.release()
 
     def wait_for_calculations(self):
         self._render_lock.acquire()

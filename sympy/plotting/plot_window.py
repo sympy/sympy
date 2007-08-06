@@ -14,10 +14,11 @@ class PlotWindow(ManagedWindow):
         self.camera = None
         self._calculating = False
 
-        self.wireframe    = kwargs.pop('wireframe', False)
-        self.antialiasing = kwargs.pop('antialiasing', True)
-        self.ortho        = kwargs.pop('ortho', False)
-        self.title = kwargs.setdefault('caption', "SymPy Plot")
+        self.wireframe          = kwargs.pop('wireframe', False)
+        self.antialiasing       = kwargs.pop('antialiasing', True)
+        self.ortho              = kwargs.pop('ortho', False)
+        self.invert_mouse_zoom  = kwargs.pop('invert_mouse_zoom', False)
+        self.title  =  kwargs.setdefault('caption', "SymPy Plot")
         self.last_caption_update = 0
         self.caption_update_interval = 0.2
 
@@ -25,7 +26,8 @@ class PlotWindow(ManagedWindow):
 
     def setup(self):
         self.camera = PlotCamera(self, ortho = self.ortho)
-        self.controller = PlotController(self)
+        self.controller = PlotController(self,
+                invert_mouse_zoom=self.invert_mouse_zoom)
         self.push_handlers(self.controller)
 
         glClearColor(1.0, 1.0, 1.0, 0.0)
@@ -63,11 +65,6 @@ class PlotWindow(ManagedWindow):
         should_update_caption = (clock()-self.last_caption_update > 
                                  self.caption_update_interval)
 
-        for r in self.plot._pobjects:
-            glPushMatrix()
-            r._draw()
-            glPopMatrix()
-
         for r in self.plot._functions.itervalues():
             glPushMatrix()
             r._draw()
@@ -87,6 +84,11 @@ class PlotWindow(ManagedWindow):
                         calc_cverts_pos += r.calculating_cverts_pos
                         calc_cverts_len += r.calculating_cverts_len
                 except: pass
+
+        for r in self.plot._pobjects:
+            glPushMatrix()
+            r._draw()
+            glPopMatrix()
 
         if should_update_caption:
             self.update_caption(calc_verts_pos, calc_verts_len, calc_cverts_pos, calc_cverts_len)

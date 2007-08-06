@@ -2,6 +2,7 @@ from sympy import Basic, Symbol, symbols
 from plot_interval import PlotInterval
 from plot_object import PlotObject
 from color_scheme import ColorScheme
+from util import parse_option_string
 
 class PlotMode(PlotObject):
     """
@@ -377,22 +378,6 @@ class PlotMode(PlotObject):
     @staticmethod
     def _extract_options(args, kwargs):
         nkwargs, nargs = {}, []
-    
-        def parse_option_string(s):
-            if not isinstance(s, str):
-                return None
-            options = {}
-            for token in s.split(';'):
-                pieces = token.split('=')
-                if len(pieces) == 1:
-                    option, value = pieces[0], ""
-                elif len(pieces) == 2:
-                    option, value = pieces
-                else:
-                    raise ValueError("Plot option string '%s' is malformed." % (s))
-                options[option.strip()] = value.strip()
-            return options
-    
         for a in args:
             if isinstance(a, str):
                 nkwargs = dict(nkwargs, **parse_option_string(a))

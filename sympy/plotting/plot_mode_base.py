@@ -2,6 +2,7 @@ from pyglet.gl import *
 from plot_mode import PlotMode
 from threading import Thread, Event, RLock
 from color_scheme import ColorScheme
+from sympy import oo
 
 class PlotModeBase(PlotMode):
     """
@@ -129,6 +130,7 @@ class PlotModeBase(PlotMode):
     def __init__(self, *args, **kwargs):
         self.verts = []
         self.cverts = []
+        self.bounds = [ [oo,-oo,0],[oo,-oo,0],[oo,-oo,0] ]
 
         self._draw_lock = RLock()
 
@@ -149,6 +151,7 @@ class PlotModeBase(PlotMode):
         self.use_lambda_eval = bool(self.options.pop('use_lambda', None) is not None)
         self.style = self.options.pop('style', 'both')
         self.color = self.options.pop('color', 'rainbow')
+        self.bounds_callback = kwargs.pop('bounds_callback', None)
 
         self._on_calculate()
 
@@ -252,8 +255,11 @@ class PlotModeBase(PlotMode):
     def _calculate_verts(self):
         if self._calculating_verts.isSet(): return
         self._calculating_verts.set()
-        try: self._on_calculate_verts()
+        try:
+            self._on_calculate_verts()
         finally: self._calculating_verts.clear()
+        if callable(self.bounds_callback):
+            self.bounds_callback()
 
     def _calculate_cverts(self):
         if self._calculating_verts.isSet(): return

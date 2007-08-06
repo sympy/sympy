@@ -16,7 +16,9 @@ from time import sleep, clock
 if __name__ == "__main__":
 
     x,y,z = symbols('xyz')
-    p = Plot(width=600, height=500, ortho=False)
+    axes_options = 'ordinate; colored=false; overlay=true; stride=0.25' # ordinate is the default anyway
+    #axes_options = 'none; colored=true; overlay=false; stride=(1.0, 0.5, 0.25)'
+    p = Plot(width=600, height=500, ortho=False, invert_mouse_zoom=False, axes=axes_options)
 
     examples = []
     def example_wrapper(f):
@@ -45,6 +47,7 @@ if __name__ == "__main__":
         start = clock()
         p[4] = 1, 'mode=spherical; use_lambda', [32], [16]
         sleep(0)
+        print "waiting"
         p.wait_for_calculations()
         print "sphere vertex calculation took %s seconds." % (clock()-start)
 
@@ -95,6 +98,11 @@ if __name__ == "__main__":
         p[13] = (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x), [x,0,Pi*2,40], [y,0,Pi*2,40], 'use_lambda'
 
     @example_wrapper
+    def warped_torus():
+        a,b = 2, 1 # radius, thickness
+        p[13] = (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x)+0.5*sin(4*y), [x,0,Pi*2,40], [y,0,Pi*2,40], 'use_lambda'
+
+    @example_wrapper
     def parametric_spiral():
         p[14] = cos(y), sin(y), y/10.0, [y,-4*Pi,4*Pi,100]
 
@@ -106,8 +114,8 @@ if __name__ == "__main__":
     @example_wrapper
     def str_and_repr_demo():
         p[17] = x**2
-        p[18] = eval(repr(p[2]))
-        p[18].color = 1,0,0
+        p[18] = eval(repr(p[17]))
+        p[18].color = 0.9,0.4,0.4
         p[17].visible = False
         print str(p[18])
         print repr(p[18])

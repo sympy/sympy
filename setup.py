@@ -197,6 +197,7 @@ class test_sympy_doc(Command):
         files.remove('sympy/plotting/plot_mode.py')
         files.remove('sympy/plotting/plot_modes.py')
         files.remove('sympy/plotting/plot_mode_base.py')
+        files.remove('sympy/plotting/plot_axes.py')
 
         try:
             #testing for optional libraries

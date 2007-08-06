@@ -53,7 +53,8 @@ class PlotController(object):
                 key.LSHIFT:'modify_sensitivity',
              }
 
-    def __init__(self, window):
+    def __init__(self, window, **kwargs):
+        self.invert_mouse_zoom = kwargs.pop('invert_mouse_zoom', False)
         self.window = window
         self.action = {
                 # Rotation around the view Y (up) vector
@@ -133,9 +134,9 @@ class PlotController(object):
         if buttons & LEFT:
             self.window.camera.spherical_rotate((x-dx,y-dy),(x,y), self.get_mouse_sensitivity())
         if buttons & MIDDLE:
-            self.window.camera.zoom_relative(dy, self.get_mouse_sensitivity()/20.0)
+            self.window.camera.zoom_relative([1,-1][self.invert_mouse_zoom]*dy, self.get_mouse_sensitivity()/20.0)
         if buttons & RIGHT:
             self.window.camera.mouse_translate(x, y, dx, dy)
 
     def on_mouse_scroll(self, x, y, dx, dy):
-        self.window.camera.zoom_relative(dy, self.get_mouse_sensitivity())
+        self.window.camera.zoom_relative([1,-1][self.invert_mouse_zoom]*dy, self.get_mouse_sensitivity())
