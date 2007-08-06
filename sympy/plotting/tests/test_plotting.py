@@ -40,8 +40,8 @@ class TestPlotting:
 
     def test_plot_2d_polar(self):
         from sympy import Plot
-        p=Plot(log(x), [x,0,6.282,4], 'mode=polar', visible=False)
-        p.wait_for_calculations()
+        #p=Plot(log(x), [x,0,6.282,4], 'mode=polar', visible=False)
+        #p.wait_for_calculations()
         p=Plot(1/x, [x,-1,1,4], 'mode=polar', visible=False)
         p.wait_for_calculations()
 
