@@ -51,6 +51,11 @@ def test_subbug1():
     e=(x**x).subs(x,1)
     e=(x**x).subs(x,1.0)
 
+def test_subbug2():
+    # Ensure this does not cause infinite recursion
+    x = g.Symbol('x')
+    assert g.Real(7.7).epsilon_eq(abs(x).subs(x, -7.7))
+
 def test_dict():
     x = Symbol('x')
     a,b,c = map(Wild, 'abc')

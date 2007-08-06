@@ -230,6 +230,9 @@ class Real(Number):
     def _eval_is_positive(self):
         return self.num.as_tuple()[0] == 0
 
+    def _eval_is_negative(self):
+        return self.num.as_tuple()[0] == 1
+
     def _eval_evalf(self):
         return self
 

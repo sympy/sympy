@@ -462,6 +462,10 @@ class Abs(DefinedFunction):
     def _eval_is_zero(self):
         return isinstance(self.args[0], Basic.Zero)
 
+class ApplyAbs(Apply):
+    pass
+
+
 class Sign(DefinedFunction):
 
     nofargs = 1
