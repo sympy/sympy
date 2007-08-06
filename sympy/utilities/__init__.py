@@ -8,3 +8,5 @@ if sys.version_info[1] < 5:
 else:
     any = any
     all = all
+
+from lambdify import lambdify
