@@ -371,8 +371,8 @@ class Basic(BasicMeths):
           {x_: -a/b}
 
         """
-
         from sympy.core.mul import Mul
+        from sympy.core.power import Pow
 
         # weed out negative one prefixes
         sign = 1
@@ -449,7 +449,8 @@ class Basic(BasicMeths):
           pattern.subs_dict(self.match(pattern)) == self
 
         """
-        return Basic.sympify(pattern).matches(self, {})
+        pattern = Basic.sympify(pattern)
+        return pattern.matches(self, {})
 
     def solve4linearsymbol(eqn, rhs, symbols = None):
         """ Solve equation

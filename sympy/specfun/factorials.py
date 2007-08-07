@@ -104,11 +104,11 @@ class Factorial_(DefinedFunction):
         return s + "!"
 
 
-class UnevalatedFactorial(Factorial_):
+class UnevaluatedFactorial(Factorial_):
     def _eval_apply(self, x):
         return None
 
-unfac = UnevalatedFactorial()
+unfac = UnevaluatedFactorial()
 
 
 class Factorial2(DefinedFunction):

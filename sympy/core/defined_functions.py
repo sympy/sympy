@@ -163,6 +163,8 @@ class ApplyExp(Apply):
             if arg.is_positive: return False
         if arg.is_bounded:
             return True
+        if arg.is_real:
+            return False
     def _eval_is_zero(self):
         return isinstance(self.args[0], Basic.NegativeInfinity)
 
@@ -1158,7 +1160,6 @@ class ApplySin(Apply):
 
     def _eval_is_bounded(self):
         arg = self.args[0]
-
         if arg.is_real:
             return True
 

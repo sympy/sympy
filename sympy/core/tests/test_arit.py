@@ -1,7 +1,7 @@
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational
 
 a = Symbol("a")
-b = Symbol("b")
+b = Symbol("b", positive=True)
 c = Symbol("c")
 
 
@@ -14,7 +14,7 @@ def test_Symbol():
     assert a*b*b+c==c+a*b**2
     assert a*b*b-c==-c+a*b**2
 
-def _test_arit():
+def test_arit():
     p = Rational(5)
     e=a*b
     assert e == a*b
@@ -89,7 +89,6 @@ def _testpow():
     assert e == Rational(1)
     e=a**(b-b)
     assert e == Rational(1)
-    # XXX Fails, returns 0**b instead of 0
     e=(a-a)**b
     assert e == Rational(0)
     e=(a+Rational(1)-a)**b
@@ -139,6 +138,7 @@ def _testpow():
     assert (-2)**k == 2**k
     assert (-1)**k == 1
 
+    # XXX These fail
     assert ((-x)**2)**Rational(1,3) == ((-x)**Rational(1,3))**2
     assert (-x)**Rational(2,3) == x**Rational(2,3)
     assert (-x)**Rational(5,7) == -x**Rational(5,7)
@@ -168,7 +168,6 @@ def test_expand():
     x=Symbol("x")
     s=exp(x*x)-1
     e=s.series(x,5)/x**2
-    #assert e == (x**2+x**4/2)/x**2
     assert e.expand() ==  1+x**2/2+O(x**3)
 
 def test_power_expand():
@@ -246,13 +245,11 @@ def test_Add_Mul_is_integer():
     assert (k+n*x).is_integer == None
     assert (k+n/3).is_integer == False
 
-def _test_Add_Mul_is_bounded():
-    x = Symbol('x')
+def test_Add_Mul_is_bounded():
+    x = Symbol('x', real=True, bounded=False)
 
-    # XXX Fails, and the assertion isn't correct. The assertion below can
-    #     only be made when x is real.
     assert sin(x).is_bounded == True
-    assert (x*sin(x)).is_bounded == None
+    assert (x*sin(x)).is_bounded == False
     assert (1024*sin(x)).is_bounded == True
     assert (sin(x)*exp(x)).is_bounded == False
     assert (sin(x)*cos(x)).is_bounded == True
@@ -331,7 +328,7 @@ def test_Add_is_even_odd():
     assert (2*k+n*x).is_odd == None
     assert (2*k+n*x).is_even == None
 
-def _test_Mul_is_negative_positive():
+def test_Mul_is_negative_positive():
     x = Symbol('x', real=True)
     y = Symbol('y', real=False)
 
@@ -346,7 +343,6 @@ def _test_Mul_is_negative_positive():
 
     assert n.is_negative == False
     assert (-n).is_negative == True
-    # XXX Fails, but the assertion is correct
     assert (2*n).is_negative == False
 
     assert (n*k).is_negative == True
@@ -427,7 +423,7 @@ def _test_Mul_is_negative_positive():
     assert (x*k).is_positive == None
     assert (u*v*n*x*k).is_positive == None
 
-def _test_Mul_is_nonpositive_nonnegative():
+def test_Mul_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
 
     k = Symbol('k', negative=True)
@@ -435,7 +431,6 @@ def _test_Mul_is_nonpositive_nonnegative():
     u = Symbol('u', nonnegative=True)
     v = Symbol('v', nonpositive=True)
 
-    # XXX Fails, but the assertion is correct
     assert k.is_nonpositive == True
     assert (-k).is_nonpositive == False
     assert (2*k).is_nonpositive == True
@@ -551,7 +546,7 @@ def test_Add_is_even_odd():
     assert (k+n+x+m).is_even == None
     assert (k+n+x+m).is_odd == None
 
-def _test_Add_is_negative_positive():
+def test_Add_is_negative_positive():
     x = Symbol('x', real=True)
 
     k = Symbol('k', negative=True)
@@ -567,7 +562,6 @@ def _test_Add_is_negative_positive():
     assert (k-n).is_negative == True
     assert (k+n).is_negative == None
     assert (-k-n).is_negative == None
-    # XXX Fails, but the assertion is correct
     assert (-k+n).is_negative == False
 
     assert (k-n-2).is_negative == True
@@ -578,7 +572,7 @@ def _test_Add_is_negative_positive():
     assert (-2*k+123*n+17).is_negative == False
 
     assert (k+u).is_negative == None
-    assert (k+v).is_negative == None
+    assert (k+v).is_negative == True
     assert (n+u).is_negative == False
     assert (n+v).is_negative == None
 
@@ -614,7 +608,7 @@ def _test_Add_is_negative_positive():
 
     assert (k+u).is_positive == None
     assert (k+v).is_positive == False
-    assert (n+u).is_positive == None
+    assert (n+u).is_positive == True
     assert (n+v).is_positive == None
 
     assert (u-v).is_positive == None
@@ -630,7 +624,7 @@ def _test_Add_is_negative_positive():
     assert (n+x).is_positive == None
     assert (n+x-k).is_positive == None
 
-def _test_Add_is_nonpositive_nonnegative():
+def test_Add_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
 
     k = Symbol('k', negative=True)
@@ -656,9 +650,8 @@ def _test_Add_is_nonpositive_nonnegative():
     assert (-2*u+123*v-17).is_nonpositive == True
 
     assert (k+u).is_nonpositive == None
-    # XXX Fails, but the assertion is correct
     assert (k+v).is_nonpositive == True
-    assert (n+u).is_nonpositive == None
+    assert (n+u).is_nonpositive == False
     assert (n+v).is_nonpositive == None
 
     assert (k-n).is_nonpositive == True
@@ -669,14 +662,14 @@ def _test_Add_is_nonpositive_nonnegative():
     assert (k-n+u+2).is_nonpositive == None
     assert (k+n+u+2).is_nonpositive == None
     assert (-k-n+u+2).is_nonpositive == None
-    assert (-k+n+u+2).is_nonpositive == None
+    assert (-k+n+u+2).is_nonpositive == False
 
     assert (u+x).is_nonpositive == None
     assert (v-x-n).is_nonpositive == None
 
     assert (u-2).is_nonnegative == None
     assert (u+17).is_nonnegative == True
-    assert (-u-5).is_nonnegative == None
+    assert (-u-5).is_nonnegative == False
     assert (-u+123).is_nonnegative == None
 
     assert (u-v).is_nonnegative == True
@@ -687,12 +680,12 @@ def _test_Add_is_nonpositive_nonnegative():
     assert (u-v+2).is_nonnegative == True
     assert (u+v+17).is_nonnegative == None
     assert (-u-v-5).is_nonnegative == None
-    assert (-u+v-123).is_nonnegative == None
+    assert (-u+v-123).is_nonnegative == False
 
     assert (2*u-123*v+17).is_nonnegative == True
 
     assert (k+u).is_nonnegative == None
-    assert (k+v).is_nonnegative == None
+    assert (k+v).is_nonnegative == False
     assert (n+u).is_nonnegative == True
     assert (n+v).is_nonnegative == None
 
@@ -701,7 +694,7 @@ def _test_Add_is_nonpositive_nonnegative():
     assert (-k-n).is_nonnegative == None
     assert (-k+n).is_nonnegative == True
 
-    assert (k-n-u-2).is_nonnegative == None
+    assert (k-n-u-2).is_nonnegative == False
     assert (k+n-u-2).is_nonnegative == None
     assert (-k-n-u-2).is_nonnegative == None
     assert (-k+n-u-2).is_nonnegative == None
@@ -709,7 +702,7 @@ def _test_Add_is_nonpositive_nonnegative():
     assert (u-x).is_nonnegative == None
     assert (v+x+n).is_nonnegative == None
 
-def _test_Pow_is_integer():
+def test_Pow_is_integer():
     x = Symbol('x')
 
     k = Symbol('k', integer=True)
@@ -723,8 +716,6 @@ def _test_Pow_is_integer():
     assert (2**(-k)).is_integer == None
 
     assert (2**n).is_integer == True
-    # XXX Fails, returns False (n could be 0, and hence this value
-    #     would still be an integer, so the assertion is correct)
     assert (2**(-n)).is_integer == None
 
     assert (2**m).is_integer == True
@@ -743,19 +734,19 @@ def _test_Pow_is_integer():
     assert (k**(-n*m)).is_integer == None
 
 def _test_Pow_is_bounded():
-    x = Symbol('x')
+    x = Symbol('x', real=True)
 
-    # XXX is failing for some reason
     assert (x**2).is_bounded == None
 
     assert (sin(x)**2).is_bounded == True
     assert (sin(x)**x).is_bounded == None
-    assert (sin(x)**exp(x)).is_bounded == False
+    assert (sin(x)**exp(x)).is_bounded == None
 
+    # XXX This first one fails
     assert (1/sin(x)).is_bounded == False
     assert (1/exp(x)).is_bounded == False
 
-def _test_Pow_is_even_odd():
+def test_Pow_is_even_odd():
     x = Symbol('x')
 
     k = Symbol('k', even=True)
@@ -770,8 +761,7 @@ def _test_Pow_is_even_odd():
     assert (n**m).is_even == False
 
     assert (k**x).is_even == None
-    # XXX Fails
-    assert (n**x).is_even == False
+    assert (n**x).is_even == None
 
     assert (k**2).is_odd == False
     assert (n**2).is_odd == True
@@ -780,7 +770,7 @@ def _test_Pow_is_even_odd():
     assert (k**m).is_odd == False
     assert (n**m).is_odd == True
 
-    assert (k**x).is_odd == False
+    assert (k**x).is_odd == None
     assert (n**x).is_odd == None
 
 def test_Pow_is_negative_positive():

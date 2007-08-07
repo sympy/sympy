@@ -95,6 +95,13 @@ class Pow(Basic, ArithMeths, RelMeths):
         if c2 is None: return
         return c1 and c2
 
+    def _eval_is_even(self):
+        if self.exp.is_integer and self.exp.is_positive:
+            if self.base.is_even:
+                return True
+            if self.exp.is_integer:
+                return False
+
     def _eval_is_positive(self):
         if self.base.is_positive:
             if self.exp.is_real:
@@ -351,12 +358,22 @@ class Pow(Basic, ArithMeths, RelMeths):
                 pat = pat.subs(old, new)
             if pat!=pattern:
                 return pat.matches(expr, repl_dict)
+
         expr = Basic.sympify(expr)
         b, e = expr.as_base_exp()
+
+        # special case, pattern = 1 and expr.exp can match to 0
+        if isinstance(expr, Basic.One):
+            d = repl_dict.copy()
+            d = pattern.exp.matches(Basic.Integer(0), d, evaluate=False)
+            if d is not None:
+                return d
+
         d = repl_dict.copy()
         d = pattern.base.matches(b, d, evaluate=False)
         if d is None:
             return None
+
         d = pattern.exp.matches(e, d, evaluate=True)
         if d is None:
             return Basic.matches(pattern, expr, repl_dict, evaluate)

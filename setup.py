@@ -112,7 +112,7 @@ class test_sympy_core(Command):
 
 
 class test_sympy(Command):
-    """Runs all tests under the tests/ folder
+    """Runs all tests under the sympy/ folder
     """
 
     description = "Automatically run the test suite for Sympy."

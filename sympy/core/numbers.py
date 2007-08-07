@@ -513,6 +513,10 @@ class Rational(Number):
                 else:
                     return (-1)**e * (-b)**e
 
+        c,t = b.as_coeff_terms()
+        if e.is_even and isinstance(c, Basic.Number) and c < 0:
+            return (-c * Basic.Mul(*t)) ** e
+
         return
 
     def _as_decimal(self):
@@ -671,7 +675,16 @@ class Integer(Rational):
                             return b**i * b**Rational(r, e.q)
                 else:
                     return (-1)**e * (-b)**e
+
+        c,t = b.as_coeff_terms()
+        if e.is_even and isinstance(c, Basic.Number) and c < 0:
+            return (-c * Basic.Mul(*t)) ** e
+
         return
+
+    def _eval_is_prime(self):
+        if self.p < 0:
+            return False
 
     def as_numer_denom(self):
         return self, One()
@@ -690,6 +703,8 @@ class Zero(Singleton, Integer):
     is_negative = False
     is_finite = False
     is_zero = True
+    is_prime = False
+    is_composite = True
 
     def _eval_power(b, e):
         if e.is_negative:
@@ -715,6 +730,8 @@ class One(Singleton, Integer):
 
     p = 1
     q = 1
+
+    is_prime = True
 
     def _eval_power(b, e):
         return b

@@ -74,8 +74,8 @@ class AssumeMeths(object):
     _properties = ['dummy','order'] # todo: rm is_order
 
     # inclusion relations (subset, superset)
-    _assume_rels = (('prime', 'integer'),
-                    ('odd', 'integer'),
+    _assume_rels = (#('prime', 'integer'),
+                    ('odd', 'integer'), # XXX This one has to move
                     ('integer', 'rational'),
                     ('rational', 'real'),
                     ('real', 'complex'),
@@ -91,6 +91,9 @@ class AssumeMeths(object):
                     ('finite', 'nonzero'),
                     ('zero', 'even'),
                     ('complex', 'commutative'),
+                    ('prime', 'positive'),
+                    ('prime', 'integer'),
+                    #('odd', 'integer')
                     )
 
     # (property, negative property) mapping
@@ -151,6 +154,14 @@ class AssumeMeths(object):
 
             # No result, return None
             return None
+        elif k in self._assume_aliases:
+            for p in self._assume_aliases[k]:
+                v = getattr(self, 'is_' + p)
+                if v is None:
+                    return None
+                elif v is False:
+                    return False
+            return True
         raise AttributeError('undefined assumption %r' % (k))
 
     def _change_assumption(self, d, name, value, extra_msg = ''):

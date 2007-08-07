@@ -42,7 +42,7 @@ ordering_of_classes = [
     'Sinh','Cosh','Tanh','Coth','ASinh','ACosh','ATanh','ACoth',
     'RisingFactorial','FallingFactorial',
     # special polynomials
-    'Chebyshev','Chebyshev2',
+    'Chebyshev','Chebyshev2','UnevaluatedFactorial',
     # undefined functions
     'Function','WildFunction',
     # anonymous functions

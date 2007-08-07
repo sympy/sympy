@@ -42,8 +42,10 @@ def solve(eq, syms, simplified=True):
        >>> from sympy import *
        >>> x, y, a = symbols('x', 'y', 'a')
 
-       >>> solve(x**2 - 3*x + 2, x)
-       [2, 1]
+       >>> r = solve(x**2 - 3*x + 2, x)
+       >>> r.sort()
+       >>> print r
+       [1, 2]
 
        >>> solve(x**2 == a, x)
        [-a**(1/2), a**(1/2)]

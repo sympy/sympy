@@ -147,6 +147,11 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 if e.is_negative:
                     l.reverse()
                 return coeff**e * Mul(*l)
+
+        c,t = b.as_coeff_terms()
+        if e.is_even and isinstance(c, Basic.Number) and c < 0:
+            return (-c * Basic.Mul(*t)) ** e
+
         if e.atoms(Basic.Wild):
             return Mul(*[t**e for t in b])
 
@@ -240,6 +245,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         return
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
+        expr = Basic.sympify(expr)
         if not pattern.atoms(Basic.WildFunction):
             if pattern.is_commutative and expr.is_commutative:
                 return AssocOp._matches_commutative(pattern, expr, repl_dict, evaluate)

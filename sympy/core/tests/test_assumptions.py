@@ -34,8 +34,8 @@ def test_zero():
     assert z.is_finite == False
     assert z.is_infinitesimal == True
     assert z.is_comparable == True
-    #assert z.is_prime == False
-    #assert z.is_composite == True
+    assert z.is_prime == False
+    assert z.is_composite == True
 
 def test_one():
     z = Integer(1)
@@ -59,8 +59,8 @@ def test_one():
     assert z.is_finite == True
     assert z.is_infinitesimal == False
     assert z.is_comparable == True
-    #assert z.is_prime == True
-    #assert z.is_composite == False
+    assert z.is_prime == True
+    assert z.is_composite == False
 
 def test_negativeone():
     z = Integer(-1)
@@ -84,8 +84,8 @@ def test_negativeone():
     assert z.is_finite == True
     assert z.is_infinitesimal == False
     assert z.is_comparable == True
-    #assert z.is_prime == True
-    #assert z.is_composite == False
+    assert z.is_prime == False
+    assert z.is_composite == True
 
 def test_pos_rational():
     r = Rational(3,4)
@@ -111,7 +111,7 @@ def test_pos_rational():
     assert r.is_comparable == True
     assert r.is_prime == None
     assert r.is_composite == None
-        
+
     r = Rational(1,4)
     assert r.is_nonpositive == False
     assert r.is_positive == True
@@ -253,16 +253,15 @@ def test_neg_symbol_nonpositive():
     assert x.is_negative == False
     assert x.is_nonnegative == True
 
-def _test_prime_symbol():
+def test_prime_symbol():
     x = Basic.Symbol('x', prime=True)
     assert x.is_prime == True
     assert x.is_integer == True
     assert x.is_positive == True
     assert x.is_negative == False
     assert x.is_nonpositive == False
-    assert x.is_nonnegative == None
+    assert x.is_nonnegative == True
 
-    # XXX x.is_integer currently will be True
     x = Basic.Symbol('x', prime=False)
     assert x.is_prime == False
     assert x.is_integer == None
@@ -276,8 +275,6 @@ def _test_other_symbol():
     assert x.is_integer == True
     assert x.is_real == True
 
-    # XXX These two require changes to the way aliases are handled when
-    #     being examined (they're fine when just setting)
     x = Basic.Symbol('x', integer=True, nonnegative=True)
     assert x.is_nni == True
     assert x.is_ni == False

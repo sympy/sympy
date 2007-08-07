@@ -73,6 +73,9 @@ def test_power():
     e = (2*x)**2
     assert e.match(p*q**r) == {p: 4, q: x, r: 2}
 
+    e = Integer(1)
+    assert e.match(x**p) == {p: 0}
+
 def test_mul():
     x,y,a,b,c = map(Symbol, 'xyabc')
     p,q = map(Wild, 'pq')
@@ -90,6 +93,9 @@ def test_mul():
 
     e = x
     assert e.match(p*x) == {p: 1}
+
+    e = exp(x)
+    assert e.match(x**p*exp(x*q)) == {p: 0, q: 1}
 
 def test_complex():
     a,b,c = map(Symbol, 'abc')

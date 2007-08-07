@@ -10,8 +10,8 @@ def test_solve():
     assert solve(3*x-2, x) == [Rational(2,3)]
     assert solve(3*x == 2, x) == [Rational(2,3)]
 
-    assert solve(x**2-1, x) == [-1, 1]
-    assert solve(x**2 == 1, x) == [-1, 1]
+    assert solve(x**2-1, x) in [[-1, 1], [1, -1]]
+    assert solve(x**2 == 1, x) in [[-1, 1], [1, -1]]
 
 def _test_linear_system(): # needs simplify()
     x, y, z, t, n = map(Symbol, 'xyztn')
