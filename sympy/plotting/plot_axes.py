@@ -101,12 +101,11 @@ class PlotAxesBase(PlotObject):
 
     def draw(self):
         color = [  ([0.2,0.1,0.3], [0.2,0.1,0.3], [0.2,0.1,0.3]),
-                   ([0.9,0.3,0.5], [0.5,1.0,0.5], [0.3,0.3,0.9])  ][self._p._colored]
+                   ([0.9,0.3,0.5], [0.5,1.0,0.5], [0.3,0.3,0.9])  ][ self._p._colored ]
         self.draw_background(color)
         self.draw_axis(2, color[2])
         self.draw_axis(1, color[1])
         self.draw_axis(0, color[0])
-        
 
     def draw_background(self, color):
         pass # optional
@@ -140,12 +139,8 @@ class PlotAxesBase(PlotObject):
         o = self._p._origin
         glBegin(GL_LINES)
         glColor3f(*color)
-        glVertex3f(v[0][0] + o[0],
-                   v[0][1] + o[1],
-                   v[0][2] + o[2])
-        glVertex3f(v[1][0] + o[0],
-                   v[1][1] + o[1],
-                   v[1][2] + o[2])
+        glVertex3f(v[0][0] + o[0], v[0][1] + o[1], v[0][2] + o[2])
+        glVertex3f(v[1][0] + o[0], v[1][1] + o[1], v[1][2] + o[2])
         glEnd()
 
 class PlotAxesOrdinate(PlotAxesBase):
@@ -187,8 +182,8 @@ class PlotAxesOrdinate(PlotAxesBase):
     def draw_axis_line_labels(self, axis, color, axis_line):
         if not self._p._label_axes: return
         axis_labels = [axis_line[0][::], axis_line[1][::]]
-        axis_labels[0][axis] -= 0.35
-        axis_labels[1][axis] += 0.35
+        axis_labels[0][axis] -= 0.3
+        axis_labels[1][axis] += 0.3
         a_str = ['X', 'Y', 'Z'][axis]
         self.draw_text("-" + a_str, axis_labels[0], color)
         self.draw_text("+" + a_str, axis_labels[1], color)

@@ -114,6 +114,7 @@ class PlotModeBase(PlotMode):
 
     default_wireframe_color = (0.85,0.85,0.85)
     default_solid_color = (0.6,0.6,0.9)
+    default_rot_preset = 'xy'
 
     ##
     ## Instance-Level Attributes

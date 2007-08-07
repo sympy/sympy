@@ -51,6 +51,11 @@ class PlotController(object):
                 
                 key.RSHIFT:'modify_sensitivity',
                 key.LSHIFT:'modify_sensitivity',
+
+                key.F1:'rot_preset_xy',
+                key.F2:'rot_preset_xz',
+                key.F3:'rot_preset_yz',
+                key.F4:'rot_preset_perspective'
              }
 
     def __init__(self, window, **kwargs):
@@ -76,6 +81,11 @@ class PlotController(object):
                 'zoom_out':False,
                 # Use alternative sensitivity (speed)
                 'modify_sensitivity':False,
+                # Rotation presets
+                'rot_preset_xy':False,
+                'rot_preset_xz':False,
+                'rot_preset_yz':False,
+                'rot_preset_perspective':False
             }
         
     def update(self, dt):
@@ -107,6 +117,15 @@ class PlotController(object):
 
         if self.action['reset_camera']:
             self.window.camera.reset()
+
+        if self.action['rot_preset_xy']:
+            self.window.camera.set_rot_preset('xy')
+        if self.action['rot_preset_xz']:
+            self.window.camera.set_rot_preset('xz')
+        if self.action['rot_preset_yz']:
+            self.window.camera.set_rot_preset('yz')
+        if self.action['rot_preset_perspective']:
+            self.window.camera.set_rot_preset('perspective')
 
         return True
 

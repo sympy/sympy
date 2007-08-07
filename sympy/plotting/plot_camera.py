@@ -7,7 +7,6 @@ from util import vec_subs, get_direction_vectors
 
 class PlotCamera(object):
 
-   #min_dist = 1.0
     min_dist = 0.05
     max_dist = 500.0
 
@@ -27,6 +26,24 @@ class PlotCamera(object):
         glLoadIdentity()
         self._rot = get_model_matrix()
         glPopMatrix()
+
+    rot_presets = {
+        'xy':(0,0,0),
+        'xz':(-90,0,0),
+        'yz':(0,90,0),
+        'perspective':(-45,0,-45)
+    }
+
+    def set_rot_preset(self, preset_name):
+        self.init_rot_matrix()
+        try: r = self.rot_presets[preset_name]
+        except:
+            raise ValueError("%s is not a valid rotation preset." % preset_name)
+        try:
+            self.euler_rotate(r[0], 1, 0, 0)
+            self.euler_rotate(r[1], 0, 1, 0)
+            self.euler_rotate(r[2], 0, 0, 1)
+        except: pass
 
     def reset(self):
         self._dist = 0.0

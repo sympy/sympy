@@ -5,6 +5,8 @@ from util import scale_value, scale_value_list
 
 class PlotSurface(PlotModeBase):
 
+    default_rot_preset = 'perspective'
+
     def _on_calculate_verts(self):
         self.u_interval = self.intervals[0]
         self.u_set = list(self.u_interval.frange())

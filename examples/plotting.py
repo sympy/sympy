@@ -19,7 +19,7 @@ if __name__ == "__main__":
     axes_options = 'colored=true; label_ticks=true; label_axes=true; overlay=true; stride=0.5'
     #axes_options = 'colored=false; overlay=false; stride=(1.0, 0.5, 0.5)'
     #axes_options = 'none'
-    p = Plot(width=600, height=500, ortho=False, invert_mouse_zoom=False, axes=axes_options)
+    p = Plot(width=600, height=600, ortho=False, invert_mouse_zoom=False, axes=axes_options)
 
     examples = []
     def example_wrapper(f):
@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     @example_wrapper
     def polar_flower():
-        p[8] = 2*sin(4*x), [160], 'mode=polar; color=.5+u*.4, .5+x*.4, .5+y*.4'
+        p[8] = 1.6*sin(4*x), [160], 'mode=polar; color=.5+u*.4, .5+x*.4, .5+y*.4'
 
     @example_wrapper
     def simple_cylinder():

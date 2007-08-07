@@ -21,6 +21,7 @@ class PlotWindow(ManagedWindow):
         self.title  =  kwargs.setdefault('caption', "SymPy Plot")
         self.last_caption_update = 0
         self.caption_update_interval = 0.2
+        self.drawing_first_object = True
 
         super(PlotWindow, self).__init__(**kwargs)
 
@@ -66,7 +67,14 @@ class PlotWindow(ManagedWindow):
         should_update_caption = (clock()-self.last_caption_update > 
                                  self.caption_update_interval)
 
+        if len(self.plot._functions.values()) == 0:
+            self.drawing_first_object = True
+
         for r in self.plot._functions.itervalues():
+            if self.drawing_first_object:
+                self.camera.set_rot_preset(r.default_rot_preset)
+                self.drawing_first_object = False
+
             glPushMatrix()
             r._draw()
             glPopMatrix()
