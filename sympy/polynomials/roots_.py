@@ -319,7 +319,11 @@ def roots(f, var=None):
             res = n_poly(p)
             if res is not None:
                 result += res
-    result.sort()
+
+    # With symbols, __nonzero__ returns a StrictInequality, Exception.
+    try: result.sort()
+    except: pass
+        
     return result
 
 
@@ -409,6 +413,8 @@ def solve_system(eqs, var=None, order=None):
         for nps in solve_system(new_system):
             result.append(nps + (r,))
 
-    # Now sort the roots.
-    result.sort()
+    # With symbols, __nonzero__ returns a StrictInequality, Exception.
+    try: result.sort()
+    except: pass
+    
     return result

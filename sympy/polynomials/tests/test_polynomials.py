@@ -290,6 +290,12 @@ def test_roots():
                                (-1)**Rational(1,4)*exp(Pi*I),
                                (-1)**Rational(1,4)*exp(Pi*I/2),
                                (-1)**Rational(1,4)*exp(3*Pi*I/2)]
+    assert roots(x**8 - 1) == [1, -1,
+                               (-1)**Rational(1,4),
+                               (-1)**Rational(1,4)*exp(Pi*I/2),
+                               (-1)**Rational(1,4)*exp(Pi*I),
+                               (-1)**Rational(1,4)*exp(3*Pi*I/2),
+                               -I, I]
     assert roots(x**5 - Rational(3,2)) == \
            [Rational(1,2)**Rational(1,5)*3**Rational(1,5),
             Rational(1,2)**Rational(1,5)*3**Rational(1,5)*exp(2*Pi*I/5),
