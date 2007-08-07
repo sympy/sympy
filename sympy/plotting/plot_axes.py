@@ -97,7 +97,7 @@ class PlotAxesOrdinate(PlotObject):
         r = p._tick_length / 2.0
         if not a or len(a) < 2: return
         self.draw_axe_line(axis, c, a[0], a[-1])
-        if len(a)%2: del a[len(a)//2]
+        #if len(a)%2: del a[len(a)//2]
         for t in a: self.draw_tick_line(axis, c, r, t)
 
     def draw_axe_line(self, axis, c, a_min, a_max):
