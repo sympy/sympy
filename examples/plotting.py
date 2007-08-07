@@ -31,85 +31,49 @@ if __name__ == "__main__":
 
     @example_wrapper
     def mirrored_ellipsoids():
-        p[2] = x**2+y**2, 'style=solid; use_lambda'
-        p[3] =-x**2-y**2, 'style=solid; use_lambda'
-
-    @example_wrapper
-    def color_functions():
-        """
-        You can create color functions with
-        sympy symbols OR string expressions
-        using the characters x,y,z,u,v.
-        
-        Notice that the string (lambda)
-        version is much faster.
-        """
-        start = clock()
-        p[4] = 1, 'mode=spherical; use_lambda', [32], [16]
-        sleep(0)
-        print "waiting"
-        p.wait_for_calculations()
-        print "sphere vertex calculation took %s seconds." % (clock()-start)
-
-        lambda_color_function = 'z*.5+.3, 0.1, 1-(z*.5+.3)'
-        start = clock()
-        p[4].color = lambda_color_function
-        sleep(0)
-        p.wait_for_calculations()
-        print "lambda color function took %s seconds." % (clock()-start)
-        
-        sympy_color_function = 1-(z*.5+.3), 0.1, z*.5+.3
-        start = clock()
-        p[4].color = sympy_color_function
-        sleep(0)
-        p.wait_for_calculations()
-        print "sympy color function took %s seconds." % (clock()-start)
+        p[2] = x**2+y**2, 'style=solid'
+        p[3] =-x**2-y**2, 'style=solid'
 
     @example_wrapper
     def mirrored_saddles():
-        p[5] = x**2-y**2, [20], [20], 'use_lambda'
-        p[6] = y**2-x**2, [20], [20], 'use_lambda'
+        p[5] = x**2-y**2, [20], [20]
+        p[6] = y**2-x**2, [20], [20]
 
     @example_wrapper
     def polar_circle():
-        p[7] = 1, 'mode=polar; use_lambda'
+        p[7] = 1, 'mode=polar'
 
     @example_wrapper
     def polar_flower():
-        p[8] = 2*sin(4*x), [180], 'mode=polar; color=.5+u*.4, .5+x*.4, .5+y*.4; use_lambda'
+        p[8] = 2*sin(4*x), [160], 'mode=polar; color=.5+u*.4, .5+x*.4, .5+y*.4'
 
     @example_wrapper
     def simple_cylinder():
-        p[9] = 1, 'mode=cylindrical; use_lambda'
+        p[9] = 1, 'mode=cylindrical'
 
     @example_wrapper
     def cylindrical_hyperbola():
         ## (note that polar is an alias for cylindrical)
-        p[10] = 1/y, 'mode=polar; use_lambda', [x], [y,-2,2,20]
+        p[10] = 1/y, 'mode=polar', [x], [y,-2,2,20]
 
     @example_wrapper
     def extruded_hyperbolas():
-        p[11] = 1/x, [x,-10,10,100], [1], 'style=wireframe; use_lambda'
-        p[12] = -1/x, [x,-10,10,100], [1], 'style=solid; use_lambda'
+        p[11] = 1/x, [x,-10,10,100], [1], 'style=wireframe'
+        p[12] = -1/x, [x,-10,10,100], [1], 'style=solid'
 
     @example_wrapper
     def torus():
         a,b = 1, 0.5 # radius, thickness
-        p[13] = (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x), [x,0,Pi*2,40], [y,0,Pi*2,40], 'use_lambda'
+        p[13] = (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x), [x,0,Pi*2,40], [y,0,Pi*2,40]
 
     @example_wrapper
     def warped_torus():
         a,b = 2, 1 # radius, thickness
-        p[13] = (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x)+0.5*sin(4*y), [x,0,Pi*2,40], [y,0,Pi*2,40], 'use_lambda'
+        p[13] = (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x)+0.5*sin(4*y), [x,0,Pi*2,40], [y,0,Pi*2,40]
 
     @example_wrapper
     def parametric_spiral():
         p[14] = cos(y), sin(y), y/10.0, [y,-4*Pi,4*Pi,100]
-
-    @example_wrapper
-    def inside_a_sphere():
-        p[15] = 50, 'mode=spherical; use_lambda; color=.5+x*.5,.5+y*.5,.5+z*.5'
-        p[16] = 1, 'mode=spherical; use_lambda; color=0.5+z*0.5,0.5+y*0.5,0.5+x*0.5'
 
     @example_wrapper
     def str_and_repr_demo():
@@ -123,14 +87,12 @@ if __name__ == "__main__":
     @example_wrapper
     def lambda_vs_sympy_evaluation():
         start = clock()
-        p[4] = 1, 'mode=spherical; use_lambda', [64], [32]
-        sleep(0)
+        p[4] = x**2+y**2, [100], [100], 'style=solid'
         p.wait_for_calculations()
         print "lambda-based calculation took %s seconds." % (clock()-start)
 
         start = clock()
-        p[4] = 1, 'mode=spherical', [64], [32]
-        sleep(0)
+        p[4] = x**2+y**2, [100], [100], 'style=solid; use_sympy_eval'
         p.wait_for_calculations()
         print "sympy substitution-based calculation took %s seconds." % (clock()-start)
 

@@ -129,8 +129,8 @@ class PlotModeBase(PlotMode):
                 #e(*(i.v_max for i in self.intervals))
                 return e
             except:
-                print ("\nWarning: lambda evaluator failed. "
-                       "Falling back on sympy evaluator.")
+                print ("\nWarning: creating lambda evaluator failed. "
+                       "Falling back on sympy subs evaluator.")
         return self._get_sympy_evaluator()
 
     def _get_sympy_evaluator(self):
@@ -167,7 +167,7 @@ class PlotModeBase(PlotMode):
         self._style = None
         self._color = None
 
-        self.use_lambda_eval = bool(self.options.pop('use_lambda', None) is not None)
+        self.use_lambda_eval = self.options.pop('use_sympy_eval', None) is None
         self.style = self.options.pop('style', 'both')
         self.color = self.options.pop('color', 'rainbow')
         self.bounds_callback = kwargs.pop('bounds_callback', None)

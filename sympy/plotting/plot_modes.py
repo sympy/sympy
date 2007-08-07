@@ -2,9 +2,9 @@ from plot_curve import PlotCurve
 from plot_surface import PlotSurface
 from util import scale_value
 
-from sympy import Pi
-from math import sin, cos, tan, log, sqrt, exp
-Pi = pi = float(Pi)
+from sympy import lambdify, sin, cos, Pi
+from math import sin as p_sin
+from math import cos as p_cos
 
 def float_vec3(f):
     def inner(*args):
@@ -27,22 +27,13 @@ class Cartesian2D(PlotCurve):
         return e
 
     def _get_lambda_evaluator(self):
-        fy = str(self.d_vars[0])
-        x  = str(self.t_interval.v)
-        result_str = "%s,%s,0.0" % (x, fy)
-        lambda_str = "lambda %s: (%s)" % (x, result_str)
-        e = eval(lambda_str)
-        return e
-
-    def calculate_one_cvert(self, t):
-        return self.color(self.st_set[t],
-                          scale_value(self.verts[t][1], self.bounds[1][0], self.bounds[1][2]),
-                          scale_value(self.verts[t][2], self.bounds[2][0], self.bounds[2][2]),
-                          self.st_set[t], None)
+        fy = self.d_vars[0]
+        x  = self.t_interval.v
+        return lambdify([x, fy, 0.0], [x])
 
 class Cartesian3D(PlotSurface):
     i_vars, d_vars = 'xy', 'z'
-    intervals = [[-1,1,40], [-1,1,40]]
+    intervals = [[-1,1,50], [-1,1,50]]
     aliases = ['cartesian', 'monge']
     is_default = True
     
@@ -56,24 +47,14 @@ class Cartesian3D(PlotSurface):
         return e
 
     def _get_lambda_evaluator(self):
-        fz = str(self.d_vars[0])
-        x  = str(self.u_interval.v)
-        y  = str(self.v_interval.v)
-        result_str = "%s,%s,%s" % (x, y, fz)
-        lambda_str = "lambda %s,%s: (%s)" % (x, y, result_str)
-        e = eval(lambda_str)
-        return e
-
-    def calculate_one_cvert(self, u, v):
-        vert = self.verts[u][v]
-        return self.color(self.su_set[u], self.sv_set[v],
-                          scale_value(vert[2], self.bounds[2][0], self.bounds[2][2]),
-                          self.su_set[u], self.sv_set[v])
-
+        fz = self.d_vars[0]
+        x  = self.u_interval.v
+        y  = self.v_interval.v
+        return lambdify([x,y,fz], [x,y])
 
 class ParametricCurve2D(PlotCurve):
     i_vars, d_vars = 't', 'xy'
-    intervals = [[0,2*pi,100]]
+    intervals = [[0,2*Pi,100]]
     aliases = ['parametric']
     is_default = True
 
@@ -88,17 +69,13 @@ class ParametricCurve2D(PlotCurve):
         return e
 
     def _get_lambda_evaluator(self):
-        fx = str(self.d_vars[0])
-        fy = str(self.d_vars[1])
-        t  = str(self.t_interval.v)
-        result_str = "%s,%s,0.0" % (fx, fy)
-        lambda_str = "lambda %s: (%s)" % (t, result_str)
-        e = eval(lambda_str)
-        return e
+        fx, fy = self.d_vars
+        t  = self.t_interval.v
+        return lambdify([fx,fy,0.0], [t])
 
 class ParametricCurve3D(PlotCurve):
     i_vars, d_vars = 't', 'xyz'
-    intervals = [[0,2*pi,100]]
+    intervals = [[0,2*Pi,100]]
     aliases = ['parametric']
     is_default = True
 
@@ -113,14 +90,9 @@ class ParametricCurve3D(PlotCurve):
         return e
 
     def _get_lambda_evaluator(self):
-        fx = str(self.d_vars[0])
-        fy = str(self.d_vars[1])
-        fz = str(self.d_vars[2])
-        t  = str(self.t_interval.v)
-        result_str = "%s,%s,%s" % (fx, fy, fz)
-        lambda_str = "lambda %s: (%s)" % (t, result_str)
-        e = eval(lambda_str)
-        return e
+        fx, fy, fz = self.d_vars
+        t  = self.t_interval.v
+        return lambdify([fx,fy,fz], [t])
 
 class ParametricSurface(PlotSurface):
     i_vars, d_vars = 'uv', 'xyz'
@@ -140,15 +112,10 @@ class ParametricSurface(PlotSurface):
         return e
 
     def _get_lambda_evaluator(self):
-        fx = str(self.d_vars[0])
-        fy = str(self.d_vars[1])
-        fz = str(self.d_vars[2])
-        u  = str(self.u_interval.v)
-        v  = str(self.v_interval.v)
-        result_str = "%s,%s,%s" % (fx, fy, fz)
-        lambda_str = "lambda %s,%s: (%s)" % (u, v, result_str)
-        e = eval(lambda_str)
-        return e
+        fx, fy, fz = self.d_vars
+        u  = self.u_interval.v
+        v  = self.v_interval.v
+        return lambdify([fx, fy, fz], [u,v])
 
 class Polar(PlotCurve):
     i_vars, d_vars = 't', 'r'
@@ -161,16 +128,14 @@ class Polar(PlotCurve):
         t  = self.t_interval.v
         def e(_t):
             _r = float( fr.subs(t, _t) )
-            return ( _r*cos(_t), _r*sin(_t), 0.0 )
+            return ( _r*p_cos(_t), _r*p_sin(_t), 0.0 )
         return e
 
     def _get_lambda_evaluator(self):
-        fr = str(self.d_vars[0])
-        t  = str(self.t_interval.v)
-        result_str = "(%s)*cos(%s),(%s)*sin(%s),0.0" % (fr, t, fr, t)
-        lambda_str = "lambda %s: (%s)" % (t, result_str)
-        e = eval(lambda_str)
-        return e
+        fr = self.d_vars[0]
+        t  = self.t_interval.v
+        fx, fy = fr*cos(t), fr*sin(t)
+        return lambdify([fx,fy,0.0], [t])
 
 class Cylindrical(PlotSurface):
     i_vars, d_vars = 'th', 'r'
@@ -184,21 +149,19 @@ class Cylindrical(PlotSurface):
         h  = self.v_interval.v
         def e(_t, _h):
             _r = float( fr.subs(t, _t).subs(h, _h) )
-            return ( _r*cos(_t), _r*sin(_t), _h )
+            return ( _r*p_cos(_t), _r*p_sin(_t), _h )
         return e
 
     def _get_lambda_evaluator(self):
-        fr = str(self.d_vars[0])
-        t  = str(self.u_interval.v)
-        h  = str(self.v_interval.v)
-        result_str = "(%s)*cos(%s),(%s)*sin(%s),%s" % (fr, t, fr, t, h)
-        lambda_str = "lambda %s,%s: (%s)" % (t, h, result_str)
-        e = eval(lambda_str)
-        return e
+        fr = self.d_vars[0]
+        t  = self.u_interval.v
+        h  = self.v_interval.v
+        fx, fy = fr*cos(t), fr*sin(t)
+        return lambdify([fx,fy,h], [t,h])
 
 class Spherical(PlotSurface):
     i_vars, d_vars = 'tp', 'r'
-    intervals = [[0,2*Pi,60], [0,Pi,40]]
+    intervals = [[0,2*Pi,40], [0,Pi,20]]
     aliases = ['spherical']
     is_default = False
 
@@ -208,19 +171,19 @@ class Spherical(PlotSurface):
         p  = self.v_interval.v
         def e(_t, _p):
             _r = float( fr.subs(t, _t).subs(p, _p) )
-            return ( _r*cos(_t)*sin(_p),
-                     _r*sin(_t)*sin(_p),
-                     _r*cos(_p) )
+            return ( _r*p_cos(_t)*p_sin(_p),
+                     _r*p_sin(_t)*p_sin(_p),
+                     _r*p_cos(_p) )
         return e
 
     def _get_lambda_evaluator(self):
-        fr = str(self.d_vars[0])
-        t  = str(self.u_interval.v)
-        p  = str(self.v_interval.v)
-        result_str = "(%s)*cos(%s)*sin(%s),(%s)*sin(%s)*sin(%s),(%s)*cos(%s)" % (fr, t, p, fr, t, p, fr, p)
-        lambda_str = "lambda %s,%s: (%s)" % (t, p, result_str)
-        e = eval(lambda_str)
-        return e
+        fr = self.d_vars[0]
+        t  = self.u_interval.v
+        p  = self.v_interval.v
+        fx = fr*cos(t)*sin(p)
+        fy = fr*sin(t)*sin(p)
+        fz = fr*cos(p)
+        return lambdify([fx,fy,fz], [t,p])
 
 Cartesian2D._register()
 Cartesian3D._register()
