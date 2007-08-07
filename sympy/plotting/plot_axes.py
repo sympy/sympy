@@ -12,11 +12,13 @@ class PlotAxes(PlotObject):
     def __init__(self, *args, **kwargs):
         # initialize style parameter
         style = kwargs.pop('style', '').lower()
+
         # allow alias kwargs to override style kwarg
         if kwargs.pop('none', None) is not None: style = 'none'
         if kwargs.pop('frame', None) is not None: style = 'frame'
         if kwargs.pop('box', None) is not None: style = 'box'
         if kwargs.pop('ordinate', None) is not None: style = 'ordinate'
+
         if style in ['', 'ordinate']:
             self._render_object = PlotAxesOrdinate(self)
         elif style in ['frame', 'box']:
@@ -49,15 +51,17 @@ class PlotAxes(PlotObject):
             return default
 
         # initialize remaining parameters
-        self._overlay = flexible_boolean(kwargs.pop('overlay',''), True)
-        self._colored = flexible_boolean(kwargs.pop('colored',''), False)
-        self._label_axes = flexible_boolean(kwargs.pop('label_axes', ''), False)
-        self._label_ticks = flexible_boolean(kwargs.pop('label_ticks', ''), True)
+        self._overlay     =  flexible_boolean(kwargs.pop('overlay',''), True)
+        self._colored     =  flexible_boolean(kwargs.pop('colored',''), False)
+        self._label_axes  =  flexible_boolean(kwargs.pop('label_axes', ''), False)
+        self._label_ticks =  flexible_boolean(kwargs.pop('label_ticks', ''), True)
 
         # setup label font
         self.font_face = kwargs.pop('font_face', 'Arial')
         self.font_size = kwargs.pop('font_size', 28)
 
+        # this is also used to reinit the
+        # font on window close/reopen
         self.reset_resources()
 
     def reset_resources(self):
@@ -70,8 +74,7 @@ class PlotAxes(PlotObject):
     def draw(self):
         if self._render_object:
             glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_DEPTH_BUFFER_BIT)
-            if self._overlay:
-                glDisable(GL_DEPTH_TEST)
+            if self._overlay: glDisable(GL_DEPTH_TEST)
             self._render_object.draw()
             glPopAttrib()
 
@@ -82,9 +85,9 @@ class PlotAxes(PlotObject):
             if abs(c[i][0]) == oo or abs(c[i][1]) == oo: continue
             b[i][0] = [ min([b[i][0], c[i][0]]), c[i][0] ][ b[i][0] is None ]
             b[i][1] = [ max([b[i][1], c[i][1]]), c[i][1] ][ b[i][1] is None ]
-            self._adjust_axis_ticks(i)
+            self._recalculate_axis_ticks(i)
 
-    def _adjust_axis_ticks(self, axis):
+    def _recalculate_axis_ticks(self, axis):
         b = self._bounding_box
         if b[axis][0] is None or b[axis][1] is None:
             self._axis_ticks[axis] = []
@@ -93,27 +96,50 @@ class PlotAxes(PlotObject):
 
 class PlotAxesBase(PlotObject):
 
-    def draw_text(self, text, position, c, scale=1.0):
-        if len(c) == 3: c = [c[0], c[1], c[2], 1.0]
-        p = self._parent_axes
-        if p.label_font is None:
-            p.label_font = font.load(p.font_face, p.font_size, bold=True, italic=False)
-        label = font.Text(p.label_font, text, color=c, valign=font.Text.BASELINE, halign=font.Text.CENTER)
+    def __init__(self, parent_axes):
+        self._p = parent_axes
+
+    def draw(self):
+        color = [  ([0.2,0.1,0.3], [0.2,0.1,0.3], [0.2,0.1,0.3]),
+                   ([0.9,0.3,0.5], [0.5,1.0,0.5], [0.3,0.3,0.9])  ][self._p._colored]
+        self.draw_background(color)
+        self.draw_axis(2, color[2])
+        self.draw_axis(1, color[1])
+        self.draw_axis(0, color[0])
+        
+
+    def draw_background(self, color):
+        pass # optional
+
+    def draw_axis(self, axis, color):
+        raise NotImplementedError()
+
+    def draw_text(self, text, position, color, scale=1.0):
+        if len(color) == 3: color = (color[0], color[1], color[2], 1.0)
+
+        if self._p.label_font is None:
+            self._p.label_font = font.load(self._p.font_face,
+                                           self._p.font_size,
+                                           bold=True, italic=False)
+
+        label = font.Text(self._p.label_font, text,
+                          color=color,
+                          valign=font.Text.BASELINE,
+                          halign=font.Text.CENTER)
 
         glPushMatrix()
         glTranslatef(*position)
         billboard_matrix()
-        scalef = 0.005*scale
-        glScalef(scalef, scalef, scalef)
-        glColor4f(0, 0, 0, 0)
+        scale_factor = 0.005*scale
+        glScalef(scale_factor, scale_factor, scale_factor)
+        glColor4f(0,0,0,0)
         label.draw()
         glPopMatrix()
 
-    def draw_line(self, v, c):
-        p = self._parent_axes
-        o = p._origin
+    def draw_line(self, v, color):
+        o = self._p._origin
         glBegin(GL_LINES)
-        glColor3f(*c)
+        glColor3f(*color)
         glVertex3f(v[0][0] + o[0],
                    v[0][1] + o[1],
                    v[0][2] + o[2])
@@ -125,79 +151,70 @@ class PlotAxesBase(PlotObject):
 class PlotAxesOrdinate(PlotAxesBase):
 
     def __init__(self, parent_axes):
-        self._parent_axes = parent_axes
+        super(PlotAxesOrdinate, self).__init__(parent_axes)
 
-    def draw(self):
-        p = self._parent_axes
-        #c = [ [0.2,0.1,0.3], ([0.9,0.3,0.5], [0.5,0.8,0.5], [0.3,0.3,0.9]) ][p._colored]
-        c = [ [0.2,0.1,0.3], ([0.9,0.3,0.5], [0.5,1.0,0.5], [0.3,0.3,0.9]) ][p._colored]
+    def draw_axis(self, axis, color):
+        ticks = self._p._axis_ticks[axis]
+        radius = self._p._tick_length / 2.0
+        if len(ticks) < 2: return
 
-        self.draw_axe(p, 0, c)
-        self.draw_axe(p, 1, c)
-        self.draw_axe(p, 2, c)
+        # calculate the vector for this axis
+        axis_lines = [[0,0,0], [0,0,0]]
+        axis_lines[0][axis], axis_lines[1][axis] = ticks[0], ticks[-1]
+        axis_vector = vec_sub( axis_lines[1], axis_lines[0] )
 
-    def draw_axe(self, p, axis, c):
-        if p._colored: c = c[axis]
-        b = p._bounding_box
-        a = p._axis_ticks[axis]
-        r = p._tick_length / 2.0
-        if not a or len(a) < 2: return
-        v = [[0,0,0], [0,0,0]]
-        v[0][axis] = a[0]
-        v[1][axis] = a[-1]
-        v = vec_sub(v[1], v[0])
-        d = abs(dot_product(v, get_direction_vectors()[2]))
-        labels_visible = abs(d/vec_mag(v) - 1) > 0.02
-        self.draw_axe_line(axis, c, a[0], a[-1], labels_visible)
-        for t in a:
-            self.draw_tick_line(axis, c, r, t, labels_visible)
+        # calculate angle to the z direction vector
+        pos_z = get_direction_vectors()[2]
+        d = abs( dot_product(axis_vector, pos_z) )
+        d = d / vec_mag(axis_vector)
 
-    def draw_axe_line(self, axis, c, a_min, a_max, labels_visible):
-        v = [[0,0,0], [0,0,0]]
-        v[0][axis] = a_min
-        v[1][axis] = a_max
-        self.draw_line(v, c)
-        if labels_visible:
-            self.draw_axe_line_labels(axis, c, a_min, a_max)
+        # don't draw labels if we're looking down the axis
+        labels_visible = abs(d - 1.0) > 0.02
 
-    def draw_axe_line_labels(self, axis, c, a_min, a_max):
-        if not self._parent_axes._label_axes: return
-        v = [[0,0,0], [0,0,0]]
-        v[0][axis] = a_min-0.35
-        v[1][axis] = a_max+0.35
+        # draw the ticks and labels
+        for tick in ticks:
+            self.draw_tick_line(axis, color, radius, tick, labels_visible)
+
+        # draw the axis line and labels
+        self.draw_axis_line(axis, color, ticks[0], ticks[-1], labels_visible)
+
+    def draw_axis_line(self, axis, color, a_min, a_max, labels_visible):
+        axis_line = [[0,0,0], [0,0,0]]
+        axis_line[0][axis], axis_line[1][axis] = a_min, a_max
+        self.draw_line(axis_line, color)
+        if labels_visible: self.draw_axis_line_labels(axis, color, axis_line)
+
+    def draw_axis_line_labels(self, axis, color, axis_line):
+        if not self._p._label_axes: return
+        axis_labels = [axis_line[0][::], axis_line[1][::]]
+        axis_labels[0][axis] -= 0.35
+        axis_labels[1][axis] += 0.35
         a_str = ['X', 'Y', 'Z'][axis]
-        max_str = "+" + a_str
-        min_str = "-" + a_str
-        self.draw_text(min_str, v[0], c)
-        self.draw_text(max_str, v[1], c)
+        self.draw_text("-" + a_str, axis_labels[0], color)
+        self.draw_text("+" + a_str, axis_labels[1], color)
 
-    tick_axis = {0: 1, 1: 0, 2: 1}
-    def draw_tick_line(self, axis, c, r, t, labels_visible, two_pronged=False):
-        def d(a):
-            v = [[0,0,0], [0,0,0]]
-            v[0][axis] = v[1][axis] = t
-            v[0][a], v[1][a] = -r, r
-            self.draw_line(v, c)
-        if two_pronged:
-            alist = [0,1,2]
-            alist.remove(axis)
-            for a in alist: d(a)
-        else: d(PlotAxesOrdinate.tick_axis[axis])
-        if labels_visible:
-            self.draw_tick_line_label(axis, c, r, t)
+    def draw_tick_line(self, axis, color, radius, tick, labels_visible):
+        tick_axis = {0: 1, 1: 0, 2: 1}[axis]
+        tick_line = [[0,0,0], [0,0,0]]
+        tick_line[0][axis] = tick_line[1][axis] = tick
+        tick_line[0][tick_axis], tick_line[1][tick_axis] = -radius, radius
+        self.draw_line(tick_line, color)
+        if labels_visible: self.draw_tick_line_label(axis, color, radius, tick)
             
-    def draw_tick_line_label(self, axis, c, r, t):
-        if not self._parent_axes._label_axes: return
-        v = [0,0,0]
-        v[axis] = t
-        v[PlotAxesOrdinate.tick_axis[axis]] = [-1,1,1][axis]*r*3.5
-        self.draw_text(str(t), v, c, scale=0.5)
+    def draw_tick_line_label(self, axis, color, radius, tick):
+        if not self._p._label_axes: return
+        tick_label_vector = [0,0,0]
+        tick_label_vector[axis] = tick
+        tick_label_vector[{0: 1, 1: 0, 2: 1}[axis]] = [-1,1,1][axis]*radius*3.5
+        self.draw_text(str(tick), tick_label_vector, color, scale=0.5)
 
 class PlotAxesFrame(PlotAxesBase):
 
     def __init__(self, parent_axes):
-        self._parent_axes = parent_axes
+        super(PlotAxesFrame, self).__init__(parent_axes)
 
-    def draw(self):
+    def draw_background(self, color):
+        pass
+
+    def draw_axis(self, axis, color):
         raise NotImplementedError()
-
