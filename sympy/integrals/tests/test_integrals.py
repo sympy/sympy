@@ -1,5 +1,5 @@
 import py
-from sympy.core import Symbol, Rational, cos, sin, log, exp
+from sympy.core import *
 from sympy.integrals import integrate, IntegralError
 
 x = Symbol("x")
@@ -52,11 +52,18 @@ def test_multiple_integration():
     assert integrate((y**2)*(x**2), x, y) == Rational(1,9)*(x**3)*(y**3)
 
 def test_integration_table():
-    assert integrate(1/(x+1), x) == log(abs(x+1))
-    assert integrate(-4*sin(4*x), x) == cos(4*x)
-    assert integrate(3*cos(4*x), x) == 3*sin(4*x)/4
     assert integrate(log(x), x) == x*log(x) - x
     assert integrate(log(3*x), x) == x*log(3*x) - x
+    assert integrate(log(x+1), x) == (x+1)*log(x+1)-x
+    assert integrate(1/(x+1), x) == log(x+1)
+    # Equality testing fails
+    #assert integrate((3*x+2)**a, x) == (3*x+2)**(a+1) / (3*a+3)
+    assert integrate((3*x+2)**a, x) == (3*x+2)**(a+1) / (1+a)/3
+    assert integrate(x/(2*x+1), x) == (2*x-log(2*x+1))/4
+    assert integrate(2*x/(4*x+a)**2, x) == a/(a+4*x)/8 + log(a+4*x)/8
+
+    assert integrate(-4*sin(4*x), x) == cos(4*x)
+    assert integrate(3*cos(4*x), x) == 3*sin(4*x)/4
 
     # This test is to ensure that the integral table does not look
     # up the *wrong* answer.

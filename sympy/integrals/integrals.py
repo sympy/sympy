@@ -1,4 +1,4 @@
-from sympy.core import Basic, Symbol, Wild, Number, Mul, Pow, Add
+from sympy.core import *
 from sympy.core.methods import ArithMeths, RelMeths
 
 
@@ -102,14 +102,17 @@ class Integral(Basic, ArithMeths, RelMeths):
 
         a,b,c = map(Wild, 'abc')
         integral_table = {
-                a/(b*x+c): a/b * log(abs(b*x+c)),
+                (a*x+b)**c: (a*x+b)**(c+1) / a / (c+1),
+                1/(a*x+b): 1/a * log(a*x+b),
+                x/(a*x+b): x/a - b/a**2 * log(a*x+b),
+                x/(a*x+b)**2: b/(a**2 * (a*x+b)) + log(a*x+b)/a**2,
+                1/(x**2 + a) : atan(x/sqrt(a)) / sqrt(a),
+                #1/(x**2 - a) : -atanh(x/sqrt(a)) / sqrt(a),
                 a*sin(b*x): -a/b * cos(b*x),
                 a*cos(b*x): a/b * sin(b*x),
-                log(a*x): x*log(a*x)-x,
+                log(a*x+b): (x+b/a)*log(a*x+b)-x,
                 # Note: the next two entries are special cases of the
                 # third and would be redundant with a more powerful match()
-                #exp(a*x) : exp(a*x)/a,
-                #x * exp(a*x) : exp(a*x) * (a*x-1) / a**2,
                 x**a * exp(b*x) : (-1)*x**(a+1)*(-b*x)**(-a-1)*upper_gamma(a+1,-b*x)
                 }
         for k in integral_table:
