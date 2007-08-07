@@ -55,6 +55,10 @@ class PlotAxes(PlotObject):
         # setup label font
         self.font_face = kwargs.pop('font_face', 'Arial')
         self.font_size = kwargs.pop('font_size', 28)
+
+        self.reset_resources()
+
+    def reset_resources(self):
         self.label_font = None
 
     def reset_bounding_box(self):

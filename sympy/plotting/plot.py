@@ -79,6 +79,7 @@ class Plot(object):
             self._window.activate()
         else:
             self._win_args['visible'] = True
+            self.axes.reset_resources()
             self._window = PlotWindow(self, **self._win_args)
 
     def close(self):
