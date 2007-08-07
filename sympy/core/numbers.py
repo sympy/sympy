@@ -625,6 +625,9 @@ class Integer(Rational):
     def torepr(self):
         return '%s(%r)' % (self.__class__.__name__, self.p)
 
+    def _eval_evalf(self):
+        return self
+
     def _eval_power(b, e):
         if isinstance(e, Number):
             if isinstance(e, NaN): return NaN()
