@@ -30,7 +30,8 @@ class PlotWindow(ManagedWindow):
                 invert_mouse_zoom=self.invert_mouse_zoom)
         self.push_handlers(self.controller)
 
-        glClearColor(1.0, 1.0, 1.0, 0.0)
+        #glClearColor(1.0, 1.0, 1.0, 0.0)
+        glClearColor(0.95, 0.95, 0.95, 0.0)
         glClearDepth(1.0)
 
         glDepthFunc(GL_LESS)

@@ -3,6 +3,8 @@ from pyglet import font
 
 from plot_object import PlotObject
 from util import strided_range, billboard_matrix
+from util import get_direction_vectors
+from util import dot_product, vec_sub, vec_mag
 from sympy import oo
 
 class PlotAxes(PlotObject):
@@ -127,7 +129,8 @@ class PlotAxesOrdinate(PlotAxesBase):
 
     def draw(self):
         p = self._parent_axes
-        c = [ [0.2,0.1,0.3], ([0.9,0.3,0.5], [0.5,0.8,0.5], [0.3,0.3,0.9]) ][p._colored]
+        #c = [ [0.2,0.1,0.3], ([0.9,0.3,0.5], [0.5,0.8,0.5], [0.3,0.3,0.9]) ][p._colored]
+        c = [ [0.2,0.1,0.3], ([0.9,0.3,0.5], [0.5,1.0,0.5], [0.3,0.3,0.9]) ][p._colored]
 
         self.draw_axe(p, 0, c)
         self.draw_axe(p, 1, c)
@@ -139,35 +142,37 @@ class PlotAxesOrdinate(PlotAxesBase):
         a = p._axis_ticks[axis]
         r = p._tick_length / 2.0
         if not a or len(a) < 2: return
-        self.draw_axe_line(axis, c, a[0], a[-1])
-        #if len(a)%2: del a[len(a)//2]
+        v = [[0,0,0], [0,0,0]]
+        v[0][axis] = a[0]
+        v[1][axis] = a[-1]
+        v = vec_sub(v[1], v[0])
+        d = abs(dot_product(v, get_direction_vectors()[2]))
+        labels_visible = abs(d/vec_mag(v) - 1) > 0.02
+        self.draw_axe_line(axis, c, a[0], a[-1], labels_visible)
         for t in a:
-            self.draw_tick_line(axis, c, r, t)
+            self.draw_tick_line(axis, c, r, t, labels_visible)
 
-    def draw_axe_line(self, axis, c, a_min, a_max):
+    def draw_axe_line(self, axis, c, a_min, a_max, labels_visible):
         v = [[0,0,0], [0,0,0]]
         v[0][axis] = a_min
         v[1][axis] = a_max
         self.draw_line(v, c)
-        self.draw_axe_line_labels(axis, c, a_min, a_max)
+        if labels_visible:
+            self.draw_axe_line_labels(axis, c, a_min, a_max)
 
     def draw_axe_line_labels(self, axis, c, a_min, a_max):
-        p = self._parent_axes
+        if not self._parent_axes._label_axes: return
         v = [[0,0,0], [0,0,0]]
         v[0][axis] = a_min-0.35
         v[1][axis] = a_max+0.35
-        if p._label_axes:
-            max_str = ['X', 'Y', 'Z'][axis]
-            min_str = "-" + max_str
-        #else:
-        #    min_str, max_str = str(a_min), str(a_max)
-        else: return
+        a_str = ['X', 'Y', 'Z'][axis]
+        max_str = "+" + a_str
+        min_str = "-" + a_str
         self.draw_text(min_str, v[0], c)
         self.draw_text(max_str, v[1], c)
 
     tick_axis = {0: 1, 1: 0, 2: 1}
-    def draw_tick_line(self, axis, c, r, t, two_pronged=False):
-        p = self._parent_axes
+    def draw_tick_line(self, axis, c, r, t, labels_visible, two_pronged=False):
         def d(a):
             v = [[0,0,0], [0,0,0]]
             v[0][axis] = v[1][axis] = t
@@ -178,13 +183,14 @@ class PlotAxesOrdinate(PlotAxesBase):
             alist.remove(axis)
             for a in alist: d(a)
         else: d(PlotAxesOrdinate.tick_axis[axis])
-        if p._label_ticks:
+        if labels_visible:
             self.draw_tick_line_label(axis, c, r, t)
             
     def draw_tick_line_label(self, axis, c, r, t):
+        if not self._parent_axes._label_axes: return
         v = [0,0,0]
         v[axis] = t
-        v[PlotAxesOrdinate.tick_axis[axis]] = r*3
+        v[PlotAxesOrdinate.tick_axis[axis]] = [-1,1,1][axis]*r*3.5
         self.draw_text(str(t), v, c, scale=0.5)
 
 class PlotAxesFrame(PlotAxesBase):

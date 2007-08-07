@@ -122,7 +122,7 @@ def scale_value_list(flist):
         v_len = v_max-v_min
         return list(scale_value(f,v_min,v_len) for f in flist)
 
-def strided_range(r_min, r_max, stride, max_steps=50):
+def strided_range(r_min, r_max, stride, max_steps=20):
     o_min, o_max = r_min, r_max
     if abs(r_min-r_max) < 0.001: return []
     try: xrange(int(r_min-r_max))
@@ -153,3 +153,12 @@ def parse_option_string(s):
             raise ValueError("Plot option string '%s' is malformed." % (s))
         options[option.strip()] = value.strip()
     return options
+
+def dot_product(v1, v2):
+    return sum(v1[i]*v2[i] for i in xrange(3))
+
+def vec_sub(v1, v2):
+    return tuple(v1[i]-v2[i] for i in xrange(3))
+
+def vec_mag(v):
+    return sum(v[i]**2 for i in xrange(3))**(0.5)
