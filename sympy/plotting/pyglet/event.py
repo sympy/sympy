@@ -117,8 +117,10 @@ example::
 Dispatching events
 ==================
 
-pyglet uses a single-threaded model for all application code.  Events are
-never called except when explicitly calling `EventDispatcher.dispatch_events`.
+pyglet uses a single-threaded model for all application code.  Event
+handlers are only ever invoked as a result of calling
+EventDispatcher.dispatch_events`.
+
 It is up to the specific event dispatcher to queue relevant events until they
 can be dispatched, at which point the handlers are called in the order the
 events were originally generated.
@@ -131,12 +133,12 @@ updates the application state and checks for new events::
         # ... additional per-frame processing
 
 Not all event dispatchers require the call to ``dispatch_events``; check with
-the particular class's documentation.
+the particular class documentation.
 
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: event.py 970 2007-06-28 07:22:14Z Alex.Holkner $'
+__version__ = '$Id: event.py 1109 2007-08-06 13:06:13Z Alex.Holkner $'
 
 import inspect
 
@@ -257,6 +259,8 @@ class EventDispatcher(object):
                 Arguments to pass to the event handler.
 
         '''
+        assert event_type in self.event_types
+
         # Search handler stack for matching event handlers
         for frame in self._event_stack:
             handler = frame.get(event_type, None)

@@ -122,24 +122,22 @@ def scale_value_list(flist):
         v_len = v_max-v_min
         return list(scale_value(f,v_min,v_len) for f in flist)
 
-def strided_range(r_min, r_max, stride):
+def strided_range(r_min, r_max, stride, max_steps=50):
+    o_min, o_max = r_min, r_max
     if abs(r_min-r_max) < 0.001: return []
     try: xrange(int(r_min-r_max))
     except: return []
     assert r_min < r_max
-    r_min_s = r_min % stride
-    r_max_s = r_max % stride
-    if r_min_s and r_max_s == 0.0:
-        r_max_s += stride
-    elif r_max_s and r_min_s == 0.0:
-        r_min_s += stride
+    r_min_s = (r_min % stride)
+    r_max_s = stride - (r_max % stride)
+    if abs(r_max_s-stride) < 0.001:
+        r_max_s = 0.0
     r_min -= r_min_s
     r_max += r_max_s
-    r = list()
     r_steps = int( (r_max-r_min) / stride )
-    r = list(r_min+e*stride for e in xrange(r_steps+1))
-    #print "%s-%s: %s" % (r_min, r_max, r)
-    return r
+    if max_steps and r_steps > max_steps:
+        return strided_range(o_min, o_max, stride*2)
+    return [r_min] + list( r_min+e*stride for e in xrange(1, r_steps+1) ) + [r_max]
 
 def parse_option_string(s):
     if not isinstance(s, str):

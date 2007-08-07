@@ -53,7 +53,7 @@ Or, if using more than one display::
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: glx_info.py 878 2007-06-09 04:58:51Z Alex.Holkner $'
+__version__ = '$Id: glx_info.py 1070 2007-07-29 02:08:32Z Alex.Holkner $'
 
 from ctypes import *
 
@@ -79,8 +79,11 @@ class GLXInfo(object):
         if not glXQueryExtension(self.display, None, None):
             raise GLXInfoException('pyglet requires an X server with GLX')
 
-        server = [int(i) for i in self.get_server_version().split('.')]
-        client = [int(i) for i in self.get_client_version().split('.')]
+        server_version = self.get_server_version().split()[0]
+        client_version = self.get_client_version().split()[0]
+
+        server = [int(i) for i in server_version.split('.')]
+        client = [int(i) for i in client_version.split('.')]
         return (tuple(server) >= (major, minor) and 
                 tuple(client) >= (major, minor))
 

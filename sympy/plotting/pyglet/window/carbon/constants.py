@@ -191,6 +191,7 @@ typeEventRef = _name('evrf')
 # CarbonEvents.h
 
 kEventParamWindowRef          = _name('wind')
+kEventParamWindowPartCode     = _name('wpar')
 kEventParamGrafPort           = _name('graf')
 kEventParamMenuRef            = _name('menu')
 kEventParamEventRef           = _name('evnt')
@@ -217,6 +218,7 @@ kEventParamIndex              = _name('indx')
 kEventParamUserData           = _name('usrd')
 kEventParamShape              = _name('shap')
 typeWindowRef                 = _name('wind')
+typeWindowPartCode            = _name('wpar')
 typeGrafPtr                   = _name('graf')
 typeGWorldPtr                 = _name('gwld')
 typeMenuRef                   = _name('menu')
@@ -226,6 +228,8 @@ typeQDRgnHandle               = _name('rgnh')
 typeOSStatus                  = _name('osst')
 typeCFIndex                   = _name('cfix')
 typeCGContextRef              = _name('cntx')
+typeQDPoint                   = _name('QDpt')
+typeHICommand                 = _name('hcmd')
 typeHIPoint                   = _name('hipt')
 typeHISize                    = _name('hisz')
 typeHIRect                    = _name('hirc')
@@ -233,6 +237,7 @@ typeHIShapeRef                = _name('shap')
 typeVoidPtr                   = _name('void')
 typeGDHandle                  = _name('gdev') 
 
+kCoreEventClass = _name('aevt')
 kEventClassMouse = _name('mous')
 kEventClassKeyboard = _name('keyb')
 kEventClassTextInput = _name('text')
@@ -278,6 +283,17 @@ kThemeResizeUpCursor          = 19
 kThemeResizeDownCursor        = 20
 kThemeResizeUpDownCursor      = 21
 kThemePoofCursor              = 22
+
+# AE
+kEventAppleEvent                = 1
+kEventAppQuit                   = 3
+kAEQuitApplication              = _name('quit')
+
+# Commands
+kEventProcessCommand            = 1
+kEventParamHICommand            = _name('hcmd')
+kEventParamDirectObject         = _name('----')
+kHICommandQuit                  = _name('quit')
 
 # Keyboard
 kEventRawKeyDown                = 1

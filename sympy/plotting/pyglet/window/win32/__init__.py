@@ -93,8 +93,12 @@ class Win32Exception(WindowException):
     pass
 
 class Win32Platform(Platform):
+    _display = None
+
     def get_default_display(self):
-        return Win32Display()
+        if not self._display:
+            self._display = Win32Display()
+        return self._display
     
 class Win32Display(Display):
     def get_screens(self):
@@ -371,6 +375,10 @@ class Win32Window(BaseWindow):
     _minimum_size = None
     _maximum_size = None
 
+    # Events are posted to the _event_queue as long as dispatch_events is not
+    # on the frame stack.
+    _defer_event_dispatch = True
+
     def __init__(self, *args, **kwargs):
         # Bind event handlers
         self._event_handlers = {}
@@ -420,7 +428,6 @@ class Win32Window(BaseWindow):
             self._window_class.lpfnWndProc = WNDPROC(self._wnd_proc)
             self._window_class.style = CS_VREDRAW | CS_HREDRAW
             self._window_class.hInstance = 0
-            #self._window_class.hIcon = _user32.LoadIconA(0, IDI_APPLICATION)
             self._window_class.hIcon = _user32.LoadIconA(module, 1)
             self._window_class.hCursor = _user32.LoadCursorA(0, IDC_ARROW)
             self._window_class.hbrBackground = white
@@ -486,6 +493,10 @@ class Win32Window(BaseWindow):
 
         self.switch_to()
         self.set_vsync(self._vsync)
+
+        if self._visible:
+            self._event_queue.append((event.EVENT_SHOW,))
+            self._event_queue.append((event.EVENT_EXPOSE,))
 
     def close(self):
         super(Win32Window, self).close()
@@ -560,11 +571,12 @@ class Win32Window(BaseWindow):
                     SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
             else:
                 _user32.ShowWindow(self._hwnd, SW_SHOW)
-            self.dispatch_event(event.EVENT_SHOW)
+            self._event_queue.append((event.EVENT_SHOW,))
             self.activate()
         else:
             _user32.ShowWindow(self._hwnd, SW_HIDE)
-            self.dispatch_event(event.EVENT_HIDE)
+            self._event_queue.append((event.EVENT_HIDE,))
+        self._visible = visible
         self.set_mouse_platform_visible()
 
     def minimize(self):
@@ -776,16 +788,31 @@ class Win32Window(BaseWindow):
     # Event dispatching
 
     def dispatch_events(self):
+        self._defer_event_dispatch = False
+        while self._event_queue:
+            event = self._event_queue.pop(0)
+            if type(event[0]) is str:
+                # pyglet event
+                self.dispatch_event(*event)
+            else:
+                # win32 event
+                event[0](*event[1:])
+
         msg = MSG()
         while _user32.PeekMessageA(byref(msg), self._hwnd, 0, 0, PM_REMOVE):
             _user32.TranslateMessage(byref(msg))
             _user32.DispatchMessageA(byref(msg))
+        self._defer_event_dispatch = True
 
     def _wnd_proc(self, hwnd, msg, wParam, lParam):
         event_handler = self._event_handlers.get(msg, None)
         result = None
         if event_handler:
-            result = event_handler(msg, wParam, lParam)
+            if self._defer_event_dispatch:
+                self._event_queue.append((event_handler, msg, wParam, lParam))
+                result = 0
+            else:
+                result = event_handler(msg, wParam, lParam)
         if result is None:
             result = _user32.DefWindowProcA(c_int(hwnd), c_int(msg),
                 c_int(wParam), c_int(lParam)) 

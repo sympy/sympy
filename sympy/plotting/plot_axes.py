@@ -1,6 +1,8 @@
 from pyglet.gl import *
+from pyglet import font
+
 from plot_object import PlotObject
-from util import strided_range
+from util import strided_range, billboard_matrix
 from sympy import oo
 
 class PlotAxes(PlotObject):
@@ -47,6 +49,13 @@ class PlotAxes(PlotObject):
         # initialize remaining parameters
         self._overlay = flexible_boolean(kwargs.pop('overlay',''), True)
         self._colored = flexible_boolean(kwargs.pop('colored',''), False)
+        self._label_axes = flexible_boolean(kwargs.pop('label_axes', ''), False)
+        self._label_ticks = flexible_boolean(kwargs.pop('label_ticks', ''), True)
+
+        # setup label font
+        self.font_face = kwargs.pop('font_face', 'Arial')
+        self.font_size = kwargs.pop('font_size', 28)
+        self.label_font = None
 
     def reset_bounding_box(self):
         self._bounding_box = [[None,None], [None,None], [None,None]]
@@ -76,52 +85,27 @@ class PlotAxes(PlotObject):
         else:
             self._axis_ticks[axis] = strided_range(b[axis][0], b[axis][1], self._stride[axis])
 
-class PlotAxesOrdinate(PlotObject):
+class PlotAxesBase(PlotObject):
 
-    def __init__(self, parent_axes):
-        self._parent_axes = parent_axes
-
-    def draw(self):
+    def draw_text(self, text, position, c, scale=1.0):
+        if len(c) == 3: c = [c[0], c[1], c[2], 1.0]
         p = self._parent_axes
-        c = [ [0.2,0.1,0.3], [0.1,0.1,0.1] ][p._colored]
+        if p.label_font is None:
+            p.label_font = font.load(p.font_face, p.font_size, bold=True, italic=False)
+        label = font.Text(p.label_font, text, color=c, valign=font.Text.BASELINE, halign=font.Text.CENTER)
 
-        self.draw_axe(p, 0, c)
-        self.draw_axe(p, 1, c)
-        self.draw_axe(p, 2, c)
-
-    def draw_axe(self, p, axis, c):
-        c = c[::]
-        if p._colored: c[axis] = 1.0
-        b = p._bounding_box
-        a = p._axis_ticks[axis]
-        r = p._tick_length / 2.0
-        if not a or len(a) < 2: return
-        self.draw_axe_line(axis, c, a[0], a[-1])
-        #if len(a)%2: del a[len(a)//2]
-        for t in a: self.draw_tick_line(axis, c, r, t)
-
-    def draw_axe_line(self, axis, c, a_min, a_max):
-        v = [[0,0,0], [0,0,0]]
-        v[0][axis] = a_min
-        v[1][axis] = a_max
-        self.draw_line(v, c)
-
-    tick_axis = {0: 1, 1: 0, 2: 1}
-    def draw_tick_line(self, axis, c, r, t, two_pronged=False):
-        def d(a):
-            v = [[0,0,0], [0,0,0]]
-            v[0][axis] = v[1][axis] = t
-            v[0][a], v[1][a] = -r, r
-            self.draw_line(v, c)
-        if two_pronged:
-            alist = [0,1,2]
-            alist.remove(axis)
-            for a in alist: d(a)
-        else:
-            d(PlotAxesOrdinate.tick_axis[axis])
+        glPushMatrix()
+        glTranslatef(*position)
+        billboard_matrix()
+        scalef = 0.005*scale
+        glScalef(scalef, scalef, scalef)
+        glColor4f(0, 0, 0, 0)
+        label.draw()
+        glPopMatrix()
 
     def draw_line(self, v, c):
-        o = self._parent_axes._origin
+        p = self._parent_axes
+        o = p._origin
         glBegin(GL_LINES)
         glColor3f(*c)
         glVertex3f(v[0][0] + o[0],
@@ -132,7 +116,74 @@ class PlotAxesOrdinate(PlotObject):
                    v[1][2] + o[2])
         glEnd()
 
-class PlotAxesFrame(PlotObject):
+class PlotAxesOrdinate(PlotAxesBase):
+
+    def __init__(self, parent_axes):
+        self._parent_axes = parent_axes
+
+    def draw(self):
+        p = self._parent_axes
+        c = [ [0.2,0.1,0.3], ([0.9,0.3,0.5], [0.5,0.8,0.5], [0.3,0.3,0.9]) ][p._colored]
+
+        self.draw_axe(p, 0, c)
+        self.draw_axe(p, 1, c)
+        self.draw_axe(p, 2, c)
+
+    def draw_axe(self, p, axis, c):
+        if p._colored: c = c[axis]
+        b = p._bounding_box
+        a = p._axis_ticks[axis]
+        r = p._tick_length / 2.0
+        if not a or len(a) < 2: return
+        self.draw_axe_line(axis, c, a[0], a[-1])
+        #if len(a)%2: del a[len(a)//2]
+        for t in a:
+            self.draw_tick_line(axis, c, r, t)
+
+    def draw_axe_line(self, axis, c, a_min, a_max):
+        v = [[0,0,0], [0,0,0]]
+        v[0][axis] = a_min
+        v[1][axis] = a_max
+        self.draw_line(v, c)
+        self.draw_axe_line_labels(axis, c, a_min, a_max)
+
+    def draw_axe_line_labels(self, axis, c, a_min, a_max):
+        p = self._parent_axes
+        v = [[0,0,0], [0,0,0]]
+        v[0][axis] = a_min-0.35
+        v[1][axis] = a_max+0.35
+        if p._label_axes:
+            max_str = ['X', 'Y', 'Z'][axis]
+            min_str = "-" + max_str
+        #else:
+        #    min_str, max_str = str(a_min), str(a_max)
+        else: return
+        self.draw_text(min_str, v[0], c)
+        self.draw_text(max_str, v[1], c)
+
+    tick_axis = {0: 1, 1: 0, 2: 1}
+    def draw_tick_line(self, axis, c, r, t, two_pronged=False):
+        p = self._parent_axes
+        def d(a):
+            v = [[0,0,0], [0,0,0]]
+            v[0][axis] = v[1][axis] = t
+            v[0][a], v[1][a] = -r, r
+            self.draw_line(v, c)
+        if two_pronged:
+            alist = [0,1,2]
+            alist.remove(axis)
+            for a in alist: d(a)
+        else: d(PlotAxesOrdinate.tick_axis[axis])
+        if p._label_ticks:
+            self.draw_tick_line_label(axis, c, r, t)
+            
+    def draw_tick_line_label(self, axis, c, r, t):
+        v = [0,0,0]
+        v[axis] = t
+        v[PlotAxesOrdinate.tick_axis[axis]] = r*3
+        self.draw_text(str(t), v, c, scale=0.5)
+
+class PlotAxesFrame(PlotAxesBase):
 
     def __init__(self, parent_axes):
         self._parent_axes = parent_axes

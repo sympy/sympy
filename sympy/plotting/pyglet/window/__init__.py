@@ -145,7 +145,7 @@ above, "Working with multiple screens")::
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1036 2007-07-14 07:08:07Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1110 2007-08-06 13:11:47Z Alex.Holkner $'
 
 import pprint
 import sys
@@ -212,6 +212,9 @@ class Display(object):
     Use `Platform.get_display` or `Platform.get_default_display` to obtain
     an instance of this class.  Use a display to obtain `Screen` instances.
     '''
+    def __init__(self):
+        self._windows = []
+
     def get_screens(self):
         '''Get the available screens.
 
@@ -233,6 +236,13 @@ class Display(object):
         :rtype: `Screen`
         '''
         return self.get_screens()[0]
+
+    def get_windows(self):
+        '''Get the windows currently attached to this display.
+
+        :rtype: sequence of `Window`
+        '''
+        return self._windows
 
 class Screen(object):
     '''A virtual monitor that supports fullscreen windows.
@@ -479,6 +489,8 @@ class BaseWindow(WindowEventDispatcher, WindowExitHandler):
     _mouse_exclusive = False
     _mouse_in_window = True
 
+    _event_queue = None
+
     def __init__(self, 
                  width=640,
                  height=480,
@@ -549,6 +561,7 @@ class BaseWindow(WindowEventDispatcher, WindowExitHandler):
 
         '''
         WindowEventDispatcher.__init__(self)
+        self._event_queue = []
 
         if not display:
             display = get_platform().get_default_display()
@@ -589,6 +602,7 @@ class BaseWindow(WindowEventDispatcher, WindowExitHandler):
             caption = sys.argv[0]
         self._caption = caption
 
+        display._windows.append(self)
         self._create()
 
         self.switch_to()
@@ -673,6 +687,7 @@ class BaseWindow(WindowEventDispatcher, WindowExitHandler):
         After closing the window, the GL context will be invalid.  The
         window instance cannot be reused once closed (see also `set_visible`).
         '''
+        self._display._windows.remove(self)
         self._context.destroy()
         self._config = None
         self._context = None

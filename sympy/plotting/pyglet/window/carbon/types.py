@@ -105,6 +105,11 @@ EventRef = c_void_p
 EventTargetRef = c_void_p
 EventHandlerRef = c_void_p
 
+MenuRef = c_void_p
+MenuID = c_int16
+MenuItemIndex = c_uint16
+MenuCommand = c_uint32
+
 CFStringEncoding = c_uint
 WindowClass = c_uint32
 WindowAttributes = c_uint32
@@ -129,3 +134,24 @@ class ProcessSerialNumber(Structure):
                 ('lowLongOfPSN', c_uint32)]
 
 
+class HICommand_Menu(Structure):
+    _fields_ = [
+        ('menuRef', MenuRef),
+        ('menuItemIndex', MenuItemIndex),
+    ]
+
+class HICommand(Structure):
+    _fields_ = [
+        ('attributes', c_uint32),
+        ('commandID', c_uint32),
+        ('menu', HICommand_Menu)
+    ]
+
+class EventRecord(Structure):
+    _fields_ = [
+        ('what', c_uint16),
+        ('message', c_uint32),
+        ('when', c_uint32),
+        ('where', Point),
+        ('modifiers', c_uint16)
+    ]

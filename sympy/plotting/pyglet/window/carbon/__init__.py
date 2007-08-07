@@ -67,11 +67,6 @@ carbon = pyglet.lib.load_library(
 quicktime = pyglet.lib.load_library(
     framework='/System/Library/Frameworks/Quicktime.framework')
 
-import MacOS
-if not MacOS.WMAvailable():
-    raise CarbonException('Window manager is not available.  ' \
-                          'Ensure you run "pythonw", not "python"')
-
 carbon.GetEventDispatcherTarget.restype = EventTargetRef
 carbon.ReceiveNextEvent.argtypes = \
     [c_uint32, c_void_p, c_double, c_ubyte, POINTER(EventRef)]
@@ -105,19 +100,146 @@ _motion_map = {
 }
 
 class CarbonPlatform(Platform):
+    _display = None
+
     def get_default_display(self):
-        return CarbonDisplay()
+        if not self._display:
+            self._display = CarbonDisplay()
+        return self._display
 
 class CarbonDisplay(Display):
     # TODO: CarbonDisplay could be per display device, which would make
     # reporting of screens and available configs more accurate.  The number of
     # Macs with more than one video card is probably small, though.
+    def __init__(self):
+        super(CarbonDisplay, self).__init__()
+
+        import MacOS
+        if not MacOS.WMAvailable():
+            raise CarbonException('Window manager is not available.  ' \
+                                  'Ensure you run "pythonw", not "python"')
+
+        self._install_application_event_handlers()
+        
     def get_screens(self):
         count = CGDisplayCount()
         carbon.CGGetActiveDisplayList(0, None, byref(count))
         displays = (CGDirectDisplayID * count.value)()
         carbon.CGGetActiveDisplayList(count.value, displays, byref(count))
         return [CarbonScreen(self, id) for id in displays]
+
+    def _install_application_event_handlers(self):
+        self._carbon_event_handlers = []
+        self._carbon_event_handler_refs = []
+
+        target = carbon.GetApplicationEventTarget()
+
+        # TODO something with a metaclass or hacky like CarbonWindow
+        # to make this list extensible
+        handlers = [
+            (self._on_mouse_down, kEventClassMouse, kEventMouseDown),
+            (self._on_apple_event, kEventClassAppleEvent, kEventAppleEvent),
+            (self._on_command, kEventClassCommand, kEventProcessCommand),
+        ]
+
+        ae_handlers = [
+            (self._on_ae_quit, kCoreEventClass, kAEQuitApplication),
+        ]
+
+        # Install the application-wide handlers
+        for method, cls, event in handlers:
+            proc = EventHandlerProcPtr(method)
+            self._carbon_event_handlers.append(proc)
+            upp = carbon.NewEventHandlerUPP(proc)
+            types = EventTypeSpec()
+            types.eventClass = cls
+            types.eventKind = event
+            handler_ref = EventHandlerRef()
+            carbon.InstallEventHandler(
+                target,
+                upp,
+                1,
+                byref(types),
+                c_void_p(),
+                byref(handler_ref))
+            self._carbon_event_handler_refs.append(handler_ref)
+
+        # Install Apple event handlers
+        for method, cls, event in ae_handlers:
+            proc = EventHandlerProcPtr(method)
+            self._carbon_event_handlers.append(proc)
+            upp = carbon.NewAEEventHandlerUPP(proc)
+            carbon.AEInstallEventHandler(
+                cls,
+                event,
+                upp,
+                0,
+                False)
+
+    def _on_command(self, next_handler, ev, data):
+        command = HICommand()
+        carbon.GetEventParameter(ev, kEventParamDirectObject,
+            typeHICommand, c_void_p(), sizeof(command), c_void_p(),
+            byref(command))
+
+        if command.commandID == kHICommandQuit:
+            self._on_quit()
+
+        return noErr
+
+    def _on_mouse_down(self, next_handler, ev, data):
+        # Check for menubar hit
+        position = Point()
+        carbon.GetEventParameter(ev, kEventParamMouseLocation,
+            typeQDPoint, c_void_p(), sizeof(position), c_void_p(),
+            byref(position))
+        if carbon.FindWindow(position, None) == inMenuBar:
+            # Mouse down in menu bar.  MenuSelect() takes care of all
+            # menu tracking and blocks until the menu is dismissed.
+            # Use command events to handle actual menu item invokations.
+            carbon.MenuSelect(position)
+            carbon.HiliteMenu(0)
+
+        carbon.CallNextEventHandler(next_handler, ev)
+        return noErr
+
+    def _on_apple_event(self, next_handler, ev, data):
+        # Somewhat involved way of redispatching Apple event contained
+        # within a Carbon event, described in
+        # http://developer.apple.com/documentation/AppleScript/
+        #  Conceptual/AppleEvents/dispatch_aes_aepg/chapter_4_section_3.html
+
+        release = False
+        if carbon.IsEventInQueue(carbon.GetMainEventQueue(), ev):
+            carbon.RetainEvent(ev)
+            release = True
+            carbon.RemoveEventFromQueue(carbon.GetMainEventQueue(), ev)
+
+        ev_record = EventRecord()
+        carbon.ConvertEventRefToEventRecord(ev, byref(ev_record))
+        carbon.AEProcessAppleEvent(byref(ev_record))
+
+        if release:
+            carbon.ReleaseEvent(ev)
+        
+        return noErr
+
+    def _on_ae_quit(self, ae, reply, refcon):
+        self._on_quit()
+        return noErr
+
+    def _on_quit(self):
+        '''Called when the user tries to quit the application.
+
+        This is not an actual event handler, it is called in response
+        to Command+Q, the Quit menu item, and the Dock context menu's Quit
+        item.
+
+        The default implementation sets `has_exit` to true on all open
+        windows.
+        '''
+        for window in self.get_windows():
+            window.has_exit = True
     
 class CarbonScreen(Screen):
     def __init__(self, display, id):
@@ -322,9 +444,6 @@ class CarbonWindow(BaseWindow):
         self._create()
 
     def _create(self):
-        # TODO make this standard on all platforms?
-        self._queued_events = []
-
         self._agl_context = self.context._context
 
         if self._window:
@@ -358,9 +477,10 @@ class CarbonWindow(BaseWindow):
             agl.aglSetFullScreen(self._agl_context, 
                                  self._width, self._height, 0, 0)
 
-            self._queued_events.append((event.EVENT_RESIZE, 
+            self._event_queue.append((event.EVENT_RESIZE, 
                                        self._width, self._height))
-            self._queued_events.append((event.EVENT_EXPOSE,))
+            self._event_queue.append((event.EVENT_SHOW,))
+            self._event_queue.append((event.EVENT_EXPOSE,))
         else:
             # Create floating window
             rect = Rect()
@@ -452,6 +572,10 @@ class CarbonWindow(BaseWindow):
         self._remove_event_handlers()
         self._remove_track_region()
 
+        # Restore cursor visibility
+        self.set_mouse_platform_visible(True)
+        self.set_exclusive_mouse(False)
+
         if self._fullscreen:
             quicktime.EndFullScreen(self._fullscreen_restore, 0)
         else:
@@ -482,18 +606,22 @@ class CarbonWindow(BaseWindow):
         agl.aglSetInteger(self._agl_context, agl.AGL_SWAP_INTERVAL, byref(swap))
 
     def dispatch_events(self):
-        while self._queued_events:
-            self.dispatch_event(*self._queued_events.pop(0))
+        if self._recreate_deferred:
+            self._recreate_immediate()
+
+        while self._event_queue:
+            self.dispatch_event(*self._event_queue.pop(0))
 
         e = EventRef()
         result = carbon.ReceiveNextEvent(0, c_void_p(), 0, True, byref(e))
-        if result == noErr:
+        while result == noErr:
             carbon.SendEventToEventTarget(e, self._event_dispatcher)
             carbon.ReleaseEvent(e)
 
             if self._recreate_deferred:
                 self._recreate_immediate()
-        elif result != eventLoopTimedOutErr:
+            result = carbon.ReceiveNextEvent(0, c_void_p(), 0, True, byref(e))
+        if result != eventLoopTimedOutErr:
             raise 'Error %d' % result
 
     def set_caption(self, caption):
@@ -577,9 +705,10 @@ class CarbonWindow(BaseWindow):
         self._visible = visible
         if visible:
             carbon.ShowWindow(self._window)
-            self._queued_events.append((event.EVENT_RESIZE, 
+            self._event_queue.append((event.EVENT_RESIZE, 
                                        self._width, self._height))
-            self._queued_events.append((event.EVENT_EXPOSE,))
+            self._event_queue.append((event.EVENT_SHOW,))
+            self._event_queue.append((event.EVENT_EXPOSE,))
         else:
             carbon.HideWindow(self._window)
 
@@ -908,6 +1037,7 @@ class CarbonWindow(BaseWindow):
 
     @CarbonEventHandler(kEventClassMouse, kEventMouseDown)
     def _on_mouse_down(self, next_handler, ev, data):
+
         button, modifiers = self._get_mouse_button_and_modifiers(ev)
         x, y = self._get_mouse_position(ev)
         y = self.height - y
@@ -957,8 +1087,6 @@ class CarbonWindow(BaseWindow):
         button, modifiers = self._get_mouse_button_and_modifiers(ev)
         x, y = self._get_mouse_position(ev)
         y = self.height - y
-        if x < 0 or y < 0:
-            return noErr
 
         self._mouse_x = x
         self._mouse_y = y

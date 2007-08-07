@@ -14,8 +14,8 @@ class PlotCamera(object):
     min_ortho_dist = 100.0
     max_ortho_dist = 10000.0
 
-    _default_dist = 12.0
-    _default_ortho_dist = 1200.0
+    _default_dist = 6.0
+    _default_ortho_dist = 600.0
 
     def __init__(self, window, ortho = False):
         self.window = window

@@ -16,8 +16,9 @@ from time import sleep, clock
 if __name__ == "__main__":
 
     x,y,z = symbols('xyz')
-    axes_options = 'ordinate; colored=false; overlay=true; stride=0.25' # ordinate is the default anyway
-    #axes_options = 'none; colored=true; overlay=false; stride=(1.0, 0.5, 0.25)'
+    axes_options = 'colored=true; label_ticks=true; label_axes=true; overlay=true; stride=0.5'
+    #axes_options = 'colored=false; overlay=false; stride=(1.0, 0.5, 0.5)'
+    #axes_options = 'none'
     p = Plot(width=600, height=500, ortho=False, invert_mouse_zoom=False, axes=axes_options)
 
     examples = []
