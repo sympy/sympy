@@ -1,4 +1,5 @@
 from pyglet.gl import *
+from sympy import oo
 
 def get_model_matrix(array_type=c_float, glGetMethod=glGetFloatv):
     """
@@ -75,32 +76,14 @@ def billboard_matrix():
     m[8] =0;m[9] =0;m[10]=1
     glLoadMatrixf(m)
 
-def find_bounds_2d(vertices):
-    bounds = [[None,None], [None,None], [None,None]]
-    for v in vertices:
-        v = v[0]
-        if v is None: continue
-        for axis in range(len(bounds)):
-            if v[axis] is not None:
-                if bounds[axis][0] is None: bounds[axis][0] = v[axis]
-                else: bounds[axis][0] = min( [v[axis], bounds[axis][0]] )
-                if bounds[axis][1] is None: bounds[axis][1] = v[axis]
-                else: bounds[axis][1] = max( [v[axis], bounds[axis][1]] )
-    return bounds
+def create_bounds():
+    return [ [oo,-oo,0],[oo,-oo,0],[oo,-oo,0] ]
 
-def find_bounds_3d(vertices):
-    bounds = [[None,None], [None,None], [None,None]]
-    for w in vertices:
-        for v in w:
-            v = v[0]
-            if v is None: continue
-            for axis in range(len(bounds)):
-                if v[axis] is not None:
-                    if bounds[axis][0] is None: bounds[axis][0] = v[axis]
-                    else: bounds[axis][0] = min( [v[axis], bounds[axis][0]] )
-                    if bounds[axis][1] is None: bounds[axis][1] = v[axis]
-                    else: bounds[axis][1] = max( [v[axis], bounds[axis][1]] )
-    return bounds
+def update_bounds(b, v):
+    if v is None: return
+    for axis in xrange(3):
+        b[axis][0] = min([b[axis][0], v[axis]])
+        b[axis][1] = max([b[axis][1], v[axis]])
 
 def interpolate(a_min, a_max, a_ratio):
     return a_min + a_ratio * (a_max - a_min)
@@ -112,7 +95,7 @@ def rinterpolate(a_min, a_max, a_value):
     return (a_value - a_min) / float(a_range)
 
 def interpolate_color(color1, color2, ratio):
-    return [interpolate(color1[i], color2[i], ratio) for i in range(3)]
+    return tuple(interpolate(color1[i], color2[i], ratio) for i in xrange(3))
 
 def scale_value(v, v_min, v_len):
     return (v-v_min)/v_len
@@ -122,7 +105,7 @@ def scale_value_list(flist):
         v_len = v_max-v_min
         return list(scale_value(f,v_min,v_len) for f in flist)
 
-def strided_range(r_min, r_max, stride, max_steps=20):
+def strided_range(r_min, r_max, stride, max_steps=50):
     o_min, o_max = r_min, r_max
     if abs(r_min-r_max) < 0.001: return []
     try: xrange(int(r_min-r_max))

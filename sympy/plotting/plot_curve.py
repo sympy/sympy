@@ -36,26 +36,16 @@ class PlotCurve(PlotModeBase):
 
     def _on_calculate_cverts(self):
         if not self.verts or not self.color: return
-        self.st_set = scale_value_list(self.t_set)
-
-        self._calculating_cverts_pos = 0.0
-        self._calculating_cverts_len = float(self.t_interval.v_len)
-
-        self.cverts = list()
-        for t in xrange(self.t_interval.v_len):
-            if self.verts[t] is None: _c = (0,0,0)
-            else: _c = self.calculate_one_cvert(t)
-            self.cverts.append(_c)
-            self._calculating_cverts_pos += 1.0
-
+        def set_work_len(n): self._calculating_cverts_len = float(n)
+        def inc_work_pos(): self._calculating_cverts_pos += 1.0
+        set_work_len(1); self._calculating_cverts_pos = 0
+        self.cverts = self.color.apply_to_curve(self.verts, self.t_set, set_len=set_work_len, inc_pos=inc_work_pos)
         self.push_wireframe(self.draw_verts(True))
 
     def calculate_one_cvert(self, t):
         vert = self.verts[t]
-        return self.color(scale_value(vert[0], self.bounds[0][0], self.bounds[0][2]),
-                          scale_value(vert[1], self.bounds[1][0], self.bounds[1][2]),
-                          scale_value(vert[2], self.bounds[2][0], self.bounds[2][2]),
-                          self.st_set[t], None)
+        return self.color(vert[0], vert[1], vert[2],
+                          self.t_set[t], None)
 
     def draw_verts(self, use_cverts):
         def f():

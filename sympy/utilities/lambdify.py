@@ -18,7 +18,9 @@ def lambdify(*args):
     >>> f(4)
     2.0
     """
-    return eval(lambdastr(*args))
+    lstr = lambdastr(*args)
+    #print lstr
+    return eval(lstr)
 
 def lambdastr(*args):
     """
@@ -30,29 +32,36 @@ def lambdastr(*args):
     'lambda x,y,z: (z,y,x)'
     """
     assert len(args) == 2
-    assert isinstance(args[1], (list, tuple))
 
-    vargs = args[1]
-    for v in vargs:
-        assert isinstance(v, Symbol)
+    if isinstance(args[0], str) and isinstance(args[1], str):
+        exprs, vargs = args
 
-    if isinstance(args[0], (list, tuple)):
-        exprs = list(args[0])
-    else: exprs = [args[0]]
+    elif isinstance(args[1], (list, tuple)):
+        vargs = args[1]
 
-    for e in xrange(len(exprs)):
-        exprs[e] = Basic.sympify(exprs[e])
-        for a in exprs[e].atoms(type=Symbol):
-            assert a in vargs
+        for v in vargs:
+            assert isinstance(v, Symbol)
 
-    vargs = ','.join(str(v) for v in vargs)
-    exprs = ','.join(str(e) for e in exprs)
+        if isinstance(args[0], (list, tuple)):
+            exprs = list(args[0])
+        else: exprs = [args[0]]
+
+        for e in xrange(len(exprs)):
+            exprs[e] = Basic.sympify(exprs[e])
+            for a in exprs[e].atoms(type=Symbol):
+                assert a in vargs
+
+        vargs = ','.join(str(v) for v in vargs)
+        exprs = ','.join(str(e) for e in exprs)
+
+    else: raise ValueError("Lambdification requires arguments "
+                           "of the form expr(s), vars. Examples: "
+                           "(x**2, [x]) or ([x**2, 1/y], [x,y]).")
+
     return "lambda %s: (%s)" % (vargs, exprs)
 
 if __name__ == '__main__':
     from sympy import symbols
-
     x,y,z = symbols('xyz')
     print lambdastr(x**2, [x])
     print lambdastr([z,y,x], [x,y,z])
-

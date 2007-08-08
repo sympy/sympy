@@ -80,9 +80,19 @@ def test_bad_args():
         # vargs must be a list
         f = lambdify(1, x)
         raise Exception()
-    except AssertionError: pass
+    except ValueError: pass
     try:
         # y is not in vargs
         f = lambdify(y, [x])
         raise Exception()
     except AssertionError: pass
+
+def test_str_args():
+    f = lambdify('z,y,x', 'x,y,z')
+    assert f(3,2,1) == (1,2,3)
+    assert f(1.0,2.0,3.0) == (3.0,2.0,1.0)
+    # make sure correct number of args required
+    try:
+        f(0)
+        raise Exception()
+    except TypeError: pass

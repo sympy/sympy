@@ -43,33 +43,16 @@ class PlotSurface(PlotModeBase):
 
     def _on_calculate_cverts(self):
         if not self.verts or not self.color: return
-
-        self.su_set = scale_value_list(self.u_set)
-        self.sv_set = scale_value_list(self.v_set)
-
-        self._calculating_cverts_pos = 0.0
-        self._calculating_cverts_len = float(self.u_interval.v_len*self.v_interval.v_len)
-
-        cverts = list()
-        for u in xrange(self.u_interval.v_len):
-            column = list()
-            for v in xrange(self.v_interval.v_len):
-                if self.verts[u][v] is None: _c = (0,0,0)
-                else: _c = self.calculate_one_cvert(u,v)
-                column.append(_c)
-                self._calculating_cverts_pos += 1.0
-
-            cverts.append(column)
-
-        self.cverts = cverts
+        def set_work_len(n): self._calculating_cverts_len = float(n)
+        def inc_work_pos(): self._calculating_cverts_pos += 1.0
+        set_work_len(1); self._calculating_cverts_pos = 0
+        self.cverts = self.color.apply_to_surface(self.verts, self.u_set, self.v_set)
         self.push_solid(self.draw_verts(True, True))
 
     def calculate_one_cvert(self, u, v):
         vert = self.verts[u][v]
-        return self.color(scale_value(vert[0], self.bounds[0][0], self.bounds[0][2]),
-                          scale_value(vert[1], self.bounds[1][0], self.bounds[1][2]),
-                          scale_value(vert[2], self.bounds[2][0], self.bounds[2][2]),
-                          self.su_set[u], self.sv_set[v])
+        return self.color(vert[0], vert[1], vert[2],
+                          self.u_set[u], self.v_set[v])
 
     def draw_verts(self, use_cverts, use_solid_color):
         def f():

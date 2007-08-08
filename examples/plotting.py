@@ -46,7 +46,8 @@ if __name__ == "__main__":
 
     @example_wrapper
     def polar_flower():
-        p[8] = 1.6*sin(4*x), [160], 'mode=polar; color=.5+u*.4, .5+x*.4, .5+y*.4'
+        p[8] = 1.6*sin(4*x), [160], 'mode=polar'
+        p[8].color = z, x, y, (0.5,0.5,0.5), (0.8,0.8,0.8), (x,y,None,z) # z is used for t
 
     @example_wrapper
     def simple_cylinder():
@@ -80,7 +81,7 @@ if __name__ == "__main__":
     def str_and_repr_demo():
         p[17] = x**2
         p[18] = eval(repr(p[17]))
-        p[18].color = 0.9,0.4,0.4
+        p[18].color = 0.9, 0.4, 0.4
         p[17].visible = False
         print str(p[18])
         print repr(p[18])
@@ -119,6 +120,7 @@ if __name__ == "__main__":
         print p
 
     mirrored_saddles()
+    #ding_dong_surface()
     print help_str()
 
     #def profile_plotting():

@@ -150,7 +150,8 @@ class PlotModeBase(PlotMode):
     def __init__(self, *args, **kwargs):
         self.verts = []
         self.cverts = []
-        self.bounds = [ [oo,-oo,0],[oo,-oo,0],[oo,-oo,0] ]
+        self.bounds  = [ [oo,-oo,0],[oo,-oo,0],[oo,-oo,0] ]
+        self.cbounds = [ [oo,-oo,0],[oo,-oo,0],[oo,-oo,0] ]
 
         self._draw_lock = RLock()
 
@@ -335,7 +336,9 @@ class PlotModeBase(PlotMode):
     def _set_color(self, v):
         try:
             if v is not None:
-                v = ColorScheme(v)
+                if isinstance(v, (list, tuple)):
+                    v = ColorScheme(*v)
+                else: v = ColorScheme(v)
             if repr(v) == repr(self._color): return
             self._on_change_color(v)
             self._color = v
