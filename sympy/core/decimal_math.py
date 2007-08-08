@@ -234,9 +234,24 @@ def log(x, base=None):
         return D(1)
     elif x == 0:
         return D('-Inf')
-    
-    getcontext().prec += 2    
-    
+
+    getcontext().prec += 2
+
+    if x < 1 or x > 10:
+        # Consider x = a / 10^b, with |b| > 1 and 1 < a < 10. As long as our
+        # log calculation is fast for 1 <= x <= 10, then we can consider x
+        # in this form and then log(x) = log(a/10^b) = log(a) - b*log(10)
+        r1 = list(x.as_tuple())
+        r1[2] = 1 - len(r1[1])
+        a = D(tuple(r1))
+
+        r2 = list(x.as_tuple())
+        b = 1 - r2[2] - len(r2[1])
+
+        ret = log(a, base) - b*log(D(10), base)
+        getcontext().prec -= 2
+        return +ret
+
     if base is None:
         log_base = 1
         approx = math.log(x)
@@ -249,6 +264,7 @@ def log(x, base=None):
         lasts = s
         s = s - 1 + x / exp(s)
     s /= log_base
+
     getcontext().prec -= 2
     return +s
 
