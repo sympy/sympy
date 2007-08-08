@@ -1,7 +1,9 @@
 """Various algorithms for the factorization of polynomials."""
 
+from sympy import ntheory
+
 from sympy.polynomials.base import *
-from sympy.polynomials import div_
+from sympy.polynomials import div_, modular
 
 def sqf(f, var=None, order=None, coeff=None):
     """Square-free decomposition.
@@ -203,6 +205,29 @@ def factor(f, var=None, order=None):
     return result
 
 
+def factor2(f, var=None, order=None):
+    """Factorization of univariate polynomials over the rationals."""
+    
+    if not isinstance(f, Polynomial):
+        f = Polynomial(f, var=var, order=order)
+
+    # Make it a primitive polynomial in integer coefficients.
+    denom, f = f.as_integer()
+    content, f = f.as_primitive()
+    result = [Polynomial(content/denom, var=f.var, order=f.order)]
+
+    assert len(f.var) == 1
+
+    # Continue the factorization for each square-free part.
+    for i, p in enumerate(sqf(f, coeff='int')):
+        if p.coeffs[0][1] is not S.Zero: # Filter out constant 1 factors
+            if p.coeffs[0][1] is not S.Zero: 
+                # Then try the rest with the big prime algorithm:
+                for divisor in big_prime(p):
+                    result += [divisor]*(i + 1)
+    return result
+
+
 def kronecker(f):
     """One step in univariate factorization, see L{factor}."""
     
@@ -370,3 +395,68 @@ def kronecker_mv(f):
     if f.sympy_expr is not S.One:
         result.append(f)
     return result
+
+
+def big_prime(f):
+    """One step in univariate factorization, see L{factor}."""
+
+    def subsets(M, k):
+        """Generates all k-subsets of M."""
+        def recursion(result, M, k):
+            if k == 0:
+                 yield result
+            else:
+                for i, result2 in enumerate(M[0 : len(M) + 1 - k]):
+                    for el in recursion(result + [result2], M[i + 1:], k - 1):
+                        yield el
+
+        for i, result in enumerate(M[0 : len(M) + 1 - k]):
+            for el in recursion([result], M[i + 1:], k - 1):
+                yield el
+
+    n = f.coeffs[0][1] # Degree
+    if n == 1:
+        return [f]
+    A = max([abs(t[0]) for t in f.coeffs])
+    b = abs(int(f.leading_coeff()))
+    B = int((sqrt(n + 1)*2**n*A*b).evalf()) # Mignotte coefficient bound
+
+    # Choose big prime p
+    for p in ntheory.primerange(2*B + 1, 4*B):
+        ff = modular.poly_new(f.coeffs, p)
+        g = modular.poly_gcd(ff, modular.poly_diff(ff, p), p)
+        if g.keys() == [0]: # Constant
+            break
+
+    # Find factors mod p
+    ff = modular.poly_monic(ff, p)
+    mod_factors = modular.factor(ff, p)
+
+    # Prepare trial division
+    G = []
+    T = range(0, len(mod_factors))
+    s = 1
+    while 2*s <= len(T):
+        for S in subsets(T, s):
+            g = modular.poly_multi_mul([mod_factors[i] for i in S], p)
+            g = modular.poly_scale(g, b, 0, p)
+            g = Polynomial(coeffs=modular.poly2coeffs(g, p),
+                           var=f.var, order=f.order)
+            h = modular.poly_multi_mul(
+                [mod_factors[i] for i in T if i not in S], p)
+            h = modular.poly_scale(h, b, 0, p)
+            h = Polynomial(coeffs=modular.poly2coeffs(h, p),
+                           var=f.var, order=f.order)
+            # Check if constant terms match:
+            if g.coeffs[-1][0]*h.coeffs[-1][0] == b*f.coeffs[-1][0]:
+                # Good divisor lie within the bound.
+                if max([abs(t[0]) for t in (g*h).coeffs]) <= B:
+                    T = [i for i in T if i not in S]
+                    G.append(g.as_primitive()[1])
+                    b, f = h.as_primitive()
+                    b = int(b)
+                    break
+        else:
+            s += 1
+    G.append(f)
+    return G
