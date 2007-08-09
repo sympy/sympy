@@ -90,11 +90,11 @@ if __name__ == "__main__":
     @example_wrapper
     def multistep_gradient():
         p[1] = 1, 'mode=spherical'
-        gradient = [ 0.0, (0.5,0.5,0.97), 0.4, (0.5,0.7,0.6),
-                     0.6, (0.6,0.7,0.5), 1.0, (0.97,0.5,0.5) ]
+        gradient = [ 0.0, (0.5,0.5,0.97), 0.4, (0.5,0.8,0.6),
+                     0.6, (0.6,0.8,0.5), 1.0, (0.97,0.5,0.5) ]
         # this gradient is the same as 'zfade3',
         # shown explicitly as an example of how
-        # to create new gradients
+        # to create new multi-step color schemes
         p[1].color = z, [None, None, z], gradient
 
     @example_wrapper
