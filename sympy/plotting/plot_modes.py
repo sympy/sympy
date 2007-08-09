@@ -33,7 +33,7 @@ class Cartesian2D(PlotCurve):
 
 class Cartesian3D(PlotSurface):
     i_vars, d_vars = 'xy', 'z'
-    intervals = [[-1,1,50], [-1,1,50]]
+    intervals = [[-1,1,40], [-1,1,40]]
     aliases = ['cartesian', 'monge']
     is_default = True
     

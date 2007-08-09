@@ -51,6 +51,7 @@ class PlotAxes(PlotObject):
             return default
 
         # initialize remaining parameters
+        self.visible      =  flexible_boolean(kwargs.pop('visible',''), True)
         self._overlay     =  flexible_boolean(kwargs.pop('overlay',''), True)
         self._colored     =  flexible_boolean(kwargs.pop('colored',''), False)
         self._label_axes  =  flexible_boolean(kwargs.pop('label_axes', ''), False)
@@ -93,6 +94,12 @@ class PlotAxes(PlotObject):
             self._axis_ticks[axis] = []
         else:
             self._axis_ticks[axis] = strided_range(b[axis][0], b[axis][1], self._stride[axis])
+
+    def toggle_visible(self):
+        self.visible = not self.visible
+    
+    def toggle_colors(self):
+        self._colored = not self._colored
 
 class PlotAxesBase(PlotObject):
 

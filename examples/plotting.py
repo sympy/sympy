@@ -16,9 +16,11 @@ from time import sleep, clock
 if __name__ == "__main__":
 
     x,y,z = symbols('xyz')
-    axes_options = 'colored=true; label_ticks=true; label_axes=true; overlay=true; stride=0.5'
+
+    # toggle axes visibility with F5, colors with F6
+    axes_options = 'visible=false; colored=true; label_ticks=true; label_axes=true; overlay=true; stride=0.5'
     #axes_options = 'colored=false; overlay=false; stride=(1.0, 0.5, 0.5)'
-    #axes_options = 'none'
+
     p = Plot(width=600, height=600, ortho=False, invert_mouse_zoom=False, axes=axes_options)
 
     examples = []
@@ -27,18 +29,25 @@ if __name__ == "__main__":
         return f
 
     @example_wrapper
-    def ding_dong_surface():
-        p[1] = sqrt(1.0-y)*y, [x,0,2*Pi,40], [y,-1,4,100], 'mode=cylindrical; style=solid'
-
-    @example_wrapper
-    def mirrored_ellipsoids():
-        p[2] = x**2+y**2, 'style=solid'
-        p[3] =-x**2-y**2, 'style=solid'
-
-    @example_wrapper
     def mirrored_saddles():
         p[5] = x**2-y**2, [20], [20]
         p[6] = y**2-x**2, [20], [20]
+
+    @example_wrapper
+    def mirrored_ellipsoids():
+        p[2] =  x**2+y**2, [40], [40], 'color=zfade'
+        p[3] = -x**2-y**2, [40], [40], 'color=zfade'
+
+    @example_wrapper
+    def saddle_colored_by_derivative():
+        f = x**2-y**2
+        p[1] = f, 'style=solid'
+        p[1].color = abs(f.diff(x)), abs(f.diff(x) + f.diff(y)), abs(f.diff(y))
+
+    @example_wrapper
+    def ding_dong_surface():
+        f = sqrt(1.0-y)*y
+        p[1] = f, [x,0,2*Pi,40], [y,-1,4,100], 'mode=cylindrical; style=solid'
 
     @example_wrapper
     def polar_circle():
@@ -46,7 +55,7 @@ if __name__ == "__main__":
 
     @example_wrapper
     def polar_flower():
-        p[8] = 1.6*sin(4*x), [160], 'mode=polar'
+        p[8] = 1.5*sin(4*x), [160], 'mode=polar'
         p[8].color = z, x, y, (0.5,0.5,0.5), (0.8,0.8,0.8), (x,y,None,z) # z is used for t
 
     @example_wrapper
@@ -76,15 +85,17 @@ if __name__ == "__main__":
     @example_wrapper
     def parametric_spiral():
         p[14] = cos(y), sin(y), y/10.0, [y,-4*Pi,4*Pi,100]
+        p[14].color = x,(0.1,0.9),y,(0.1,0.9),z,(0.1,0.9)
 
     @example_wrapper
-    def str_and_repr_demo():
-        p[17] = x**2
-        p[18] = eval(repr(p[17]))
-        p[18].color = 0.9, 0.4, 0.4
-        p[17].visible = False
-        print str(p[18])
-        print repr(p[18])
+    def multistep_gradient():
+        p[1] = 1, 'mode=spherical'
+        gradient = [ 0.0, (0.5,0.5,0.97), 0.4, (0.5,0.7,0.6),
+                     0.6, (0.6,0.7,0.5), 1.0, (0.97,0.5,0.5) ]
+        # this gradient is the same as 'zfade3',
+        # shown explicitly as an example of how
+        # to create new gradients
+        p[1].color = z, [None, None, z], gradient
 
     @example_wrapper
     def lambda_vs_sympy_evaluation():
@@ -119,8 +130,11 @@ if __name__ == "__main__":
         else: print "Not a valid example.\n"
         print p
 
-    mirrored_saddles()
     #ding_dong_surface()
+    #mirrored_saddles()
+    #parametric_spiral()
+    multistep_gradient()
+    #example(0)
     print help_str()
 
     #def profile_plotting():

@@ -2,6 +2,7 @@ from pyglet.gl import *
 from plot_mode_base import PlotModeBase
 from sympy import oo
 from util import scale_value, scale_value_list
+#from time import sleep
 
 class PlotSurface(PlotModeBase):
 
@@ -46,7 +47,8 @@ class PlotSurface(PlotModeBase):
         def set_work_len(n): self._calculating_cverts_len = float(n)
         def inc_work_pos(): self._calculating_cverts_pos += 1.0
         set_work_len(1); self._calculating_cverts_pos = 0
-        self.cverts = self.color.apply_to_surface(self.verts, self.u_set, self.v_set)
+        self.cverts = self.color.apply_to_surface(self.verts, self.u_set, self.v_set,
+                                                  set_len=set_work_len, inc_pos=inc_work_pos)
         self.push_solid(self.draw_verts(True, True))
 
     def calculate_one_cvert(self, u, v):
@@ -68,6 +70,10 @@ class PlotSurface(PlotModeBase):
                     if use_cverts:
                         ca = self.cverts[u-1][v]
                         cb = self.cverts[u][v]
+                        if ca is None:
+                            ca = (0,0,0)
+                        if cb is None:
+                            cb = (0,0,0)
                     else:
                         if use_solid_color: ca = cb = self.default_solid_color
                         else: ca = cb = self.default_wireframe_color

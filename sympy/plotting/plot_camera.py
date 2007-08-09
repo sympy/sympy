@@ -4,6 +4,7 @@ from util import get_model_matrix, get_projection_matrix
 from util import get_view_direction_vectors, get_basis_vectors
 from util import screen_to_model, model_to_screen
 from util import vec_subs, get_direction_vectors
+from sympy import oo
 
 class PlotCamera(object):
 
@@ -16,8 +17,16 @@ class PlotCamera(object):
     _default_dist = 6.0
     _default_ortho_dist = 600.0
 
+    rot_presets = {
+        'xy':(0,0,0),
+        'xz':(-90,0,0),
+        'yz':(0,90,0),
+        'perspective':(-45,0,-45)
+    }
+
     def __init__(self, window, ortho = False):
         self.window = window
+        self.axes = self.window.plot.axes
         self.ortho = ortho
         self.reset()
 
@@ -26,13 +35,6 @@ class PlotCamera(object):
         glLoadIdentity()
         self._rot = get_model_matrix()
         glPopMatrix()
-
-    rot_presets = {
-        'xy':(0,0,0),
-        'xz':(-90,0,0),
-        'yz':(0,90,0),
-        'perspective':(-45,0,-45)
-    }
 
     def set_rot_preset(self, preset_name):
         self.init_rot_matrix()
@@ -74,11 +76,15 @@ class PlotCamera(object):
                            self.min_dist-0.01, self.max_dist+0.01)
         glMatrixMode(GL_MODELVIEW)
 
+    def _get_scale(self):
+        return 1.0, 1.0, 1.0
+
     def apply_transformation(self):
         glLoadIdentity()
         glTranslatef(self._x, self._y, -self._dist)
         if self._rot is not None:
             glMultMatrixf(self._rot)
+        glScalef(*self._get_scale())
 
     def spherical_rotate(self, p1, p2, sensitivity=1.0):
         mat = get_spherical_rotatation(p1, p2, self.window.width, self.window.height, sensitivity)

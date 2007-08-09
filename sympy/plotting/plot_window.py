@@ -60,7 +60,7 @@ class PlotWindow(ManagedWindow):
     def draw(self):
         self.plot._render_lock.acquire()
         self.camera.apply_transformation()
-        
+
         calc_verts_pos, calc_verts_len = 0, 0
         calc_cverts_pos, calc_cverts_len = 0, 0
 

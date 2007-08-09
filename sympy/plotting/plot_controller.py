@@ -55,12 +55,16 @@ class PlotController(object):
                 key.F1:'rot_preset_xy',
                 key.F2:'rot_preset_xz',
                 key.F3:'rot_preset_yz',
-                key.F4:'rot_preset_perspective'
+                key.F4:'rot_preset_perspective',
+                
+                key.F5:'toggle_axes',
+                key.F6:'toggle_axe_colors'
              }
 
     def __init__(self, window, **kwargs):
         self.invert_mouse_zoom = kwargs.pop('invert_mouse_zoom', False)
         self.window = window
+        self.camera = window.camera
         self.action = {
                 # Rotation around the view Y (up) vector
                 'left':False,
@@ -85,7 +89,10 @@ class PlotController(object):
                 'rot_preset_xy':False,
                 'rot_preset_xz':False,
                 'rot_preset_yz':False,
-                'rot_preset_perspective':False
+                'rot_preset_perspective':False,
+                # axes
+                'toggle_axes':False,
+                'toggle_axe_colors':False
             }
         
     def update(self, dt):
@@ -93,7 +100,7 @@ class PlotController(object):
         if self.action['zoom_out']: z -= 1
         if self.action['zoom_in']: z += 1
         if z != 0:
-            self.window.camera.zoom_relative(z/10.0, self.get_key_sensitivity()/10.0)
+            self.camera.zoom_relative(z/10.0, self.get_key_sensitivity()/10.0)
         
         dx, dy, dz = 0, 0, 0
         if self.action['left']: dx -= 1
@@ -103,29 +110,37 @@ class PlotController(object):
         if self.action['spin_left']: dz += 1
         if self.action['spin_right']: dz -= 1
         if dx != 0:
-            self.window.camera.euler_rotate(dx*dt*self.get_key_sensitivity(), *(get_direction_vectors()[1]))
+            self.camera.euler_rotate(dx*dt*self.get_key_sensitivity(), *(get_direction_vectors()[1]))
         if dy != 0:
-            self.window.camera.euler_rotate(dy*dt*self.get_key_sensitivity(), *(get_direction_vectors()[0]))
+            self.camera.euler_rotate(dy*dt*self.get_key_sensitivity(), *(get_direction_vectors()[0]))
         if dz != 0:
-            self.window.camera.euler_rotate(dz*dt*self.get_key_sensitivity(), *(get_direction_vectors()[2]))
+            self.camera.euler_rotate(dz*dt*self.get_key_sensitivity(), *(get_direction_vectors()[2]))
 
         rz = 0
         if self.action['rotate_z_neg']: rz -= 1
         if self.action['rotate_z_pos']: rz += 1
         if rz != 0:
-            self.window.camera.euler_rotate(rz*dt*self.get_key_sensitivity(), *(get_basis_vectors()[2]))
+            self.camera.euler_rotate(rz*dt*self.get_key_sensitivity(), *(get_basis_vectors()[2]))
 
         if self.action['reset_camera']:
-            self.window.camera.reset()
+            self.camera.reset()
 
         if self.action['rot_preset_xy']:
-            self.window.camera.set_rot_preset('xy')
+            self.camera.set_rot_preset('xy')
         if self.action['rot_preset_xz']:
-            self.window.camera.set_rot_preset('xz')
+            self.camera.set_rot_preset('xz')
         if self.action['rot_preset_yz']:
-            self.window.camera.set_rot_preset('yz')
+            self.camera.set_rot_preset('yz')
         if self.action['rot_preset_perspective']:
-            self.window.camera.set_rot_preset('perspective')
+            self.camera.set_rot_preset('perspective')
+
+        if self.action['toggle_axes']:
+            self.action['toggle_axes'] = False
+            self.camera.axes.toggle_visible()
+
+        if self.action['toggle_axe_colors']:
+            self.action['toggle_axe_colors'] = False
+            self.camera.axes.toggle_colors()
 
         return True
 
@@ -151,11 +166,11 @@ class PlotController(object):
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         if buttons & LEFT:
-            self.window.camera.spherical_rotate((x-dx,y-dy),(x,y), self.get_mouse_sensitivity())
+            self.camera.spherical_rotate((x-dx,y-dy),(x,y), self.get_mouse_sensitivity())
         if buttons & MIDDLE:
-            self.window.camera.zoom_relative([1,-1][self.invert_mouse_zoom]*dy, self.get_mouse_sensitivity()/20.0)
+            self.camera.zoom_relative([1,-1][self.invert_mouse_zoom]*dy, self.get_mouse_sensitivity()/20.0)
         if buttons & RIGHT:
-            self.window.camera.mouse_translate(x, y, dx, dy)
+            self.camera.mouse_translate(x, y, dx, dy)
 
     def on_mouse_scroll(self, x, y, dx, dy):
-        self.window.camera.zoom_relative([1,-1][self.invert_mouse_zoom]*dy, self.get_mouse_sensitivity())
+        self.camera.zoom_relative([1,-1][self.invert_mouse_zoom]*dy, self.get_mouse_sensitivity())

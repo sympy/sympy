@@ -2,6 +2,7 @@ from pyglet.gl import *
 from plot_mode_base import PlotModeBase
 from sympy import oo
 from util import scale_value, scale_value_list
+#from time import sleep
 
 class PlotCurve(PlotModeBase):
 
@@ -56,7 +57,10 @@ class PlotCurve(PlotModeBase):
                     glEnd()
                     glBegin(GL_LINE_STRIP)
                     continue
-                if use_cverts: glColor3f(*self.cverts[t])
+                if use_cverts:
+                    c = self.cverts[t]
+                    if c is None: c = (0, 0, 0)
+                    glColor3f(*c)
                 else: glColor3f(*self.default_wireframe_color)
                 glVertex3f(*p)
             glEnd()
