@@ -1,8 +1,9 @@
 from __future__ import division
 
 from sympy import Basic, Symbol
-from math import sin, cos, tan, asin, acos, atan, log, pi
+from math import sin, cos, tan, asin, acos, atan, log, pi, exp
 Pi = pi
+E = exp(1)
 
 def lambdify(*args):
     """

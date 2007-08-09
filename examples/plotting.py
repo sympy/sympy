@@ -9,7 +9,7 @@ sys.path.append("..")
 
 from sympy import symbols
 from sympy import Plot
-from sympy import sin, cos, Pi, sqrt
+from sympy import sin, cos, Pi, sqrt, exp
 
 from time import sleep, clock
 
@@ -89,13 +89,15 @@ if __name__ == "__main__":
 
     @example_wrapper
     def multistep_gradient():
-        p[1] = 1, 'mode=spherical'
-        gradient = [ 0.0, (0.5,0.5,0.97), 0.4, (0.5,0.8,0.6),
-                     0.6, (0.6,0.8,0.5), 1.0, (0.97,0.5,0.5) ]
+        #p[1] = exp(-x**2-y**2+(x*y)/4), [-2,2,100], [-2,2,100], 'style=solid'
+        p[1] = 5*x*y*exp(-x**2-y**2), [-2,2,100], [-2,2,100]
+        gradient = [ 0.0, (0.2,0.2,0.97), 0.4, (0.2,0.8,0.4),
+                     0.6, (0.4,0.8,0.2),  1.0, (0.97,0.2,0.2) ]
         # this gradient is the same as 'zfade3',
         # shown explicitly as an example of how
         # to create new multi-step color schemes
         p[1].color = z, [None, None, z], gradient
+        #p[1].color = 'zfade3'
 
     @example_wrapper
     def lambda_vs_sympy_evaluation():
