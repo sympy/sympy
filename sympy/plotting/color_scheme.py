@@ -284,8 +284,16 @@ x,y,z,t,u,v = symbols('xyztuv')
 
 default_color_schemes['rainbow'] = ColorScheme( z, y, x )
 default_color_schemes['zfade'] = ColorScheme( z, (0.4,0.4,0.97), (0.97,0.4,0.4), (None, None, z) )
-default_color_schemes['zfade3'] = ColorScheme( z, (None, None, z), [ 0.0, (0.2,0.2,0.97),
-                                                                     0.4, (0.2,0.8,0.4),
-                                                                     0.6, (0.4,0.8,0.2),
-                                                                     1.0, (0.97,0.2,0.2) ] )
+default_color_schemes['zfade3'] = ColorScheme( z, (None, None, z), [ 0.00, (0.2,0.2,1.0),
+                                                                     0.35, (0.2,0.8,0.4),
+                                                                     0.50, (0.3,0.9,0.3),
+                                                                     0.65, (0.4,0.8,0.2),
+                                                                     1.00, (1.0,0.2,0.2) ] )
+
+default_color_schemes['zfade4'] = ColorScheme( z, (None, None, z), [ 0.0,  (0.3, 0.3, 1.0),
+                                                                     0.30, (0.3, 1.0, 0.3),
+                                                                     0.55, (0.95,1.0, 0.2),
+                                                                     0.65, (1.0,0.95, 0.2),
+                                                                     0.85, (1.0, 0.7, 0.2),
+                                                                     1.0,  (1.0, 0.3, 0.2) ] )
 

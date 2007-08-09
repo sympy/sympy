@@ -47,7 +47,7 @@ if __name__ == "__main__":
     @example_wrapper
     def ding_dong_surface():
         f = sqrt(1.0-y)*y
-        p[1] = f, [x,0,2*Pi,40], [y,-1,4,100], 'mode=cylindrical; style=solid'
+        p[1] = f, [x,0,2*Pi,40], [y,-1,4,100], 'mode=cylindrical; style=solid; color=zfade4'
 
     @example_wrapper
     def polar_circle():
@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     @example_wrapper
     def extruded_hyperbolas():
-        p[11] = 1/x, [x,-10,10,100], [1], 'style=wireframe'
+        p[11] = 1/x, [x,-10,10,100], [1], 'style=solid'
         p[12] = -1/x, [x,-10,10,100], [1], 'style=solid'
 
     @example_wrapper
@@ -89,14 +89,17 @@ if __name__ == "__main__":
 
     @example_wrapper
     def multistep_gradient():
-        #p[1] = exp(-x**2-y**2+(x*y)/4), [-2,2,100], [-2,2,100], 'style=solid'
-        p[1] = 5*x*y*exp(-x**2-y**2), [-2,2,100], [-2,2,100]
-        gradient = [ 0.0, (0.2,0.2,0.97), 0.4, (0.2,0.8,0.4),
-                     0.6, (0.4,0.8,0.2),  1.0, (0.97,0.2,0.2) ]
-        # this gradient is the same as 'zfade3',
-        # shown explicitly as an example of how
-        # to create new multi-step color schemes
+        #p[1] = 1, 'mode=spherical'
+        p[1] = exp(-x**2-y**2+(x*y)/4), [-1.7,1.7,100], [-1.7,1.7,100], 'style=solid'
+        #p[1] = 5*x*y*exp(-x**2-y**2), [-2,2,100], [-2,2,100]
+        gradient = [ 0.0,  (0.3, 0.3, 1.0),
+                     0.30, (0.3, 1.0, 0.3),
+                     0.55, (0.95,1.0, 0.2),
+                     0.65, (1.0,0.95, 0.2),
+                     0.85, (1.0, 0.7, 0.2),
+                     1.0,  (1.0, 0.3, 0.2) ]
         p[1].color = z, [None, None, z], gradient
+        #p[1].color = 'zfade'
         #p[1].color = 'zfade3'
 
     @example_wrapper
