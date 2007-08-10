@@ -246,9 +246,8 @@ class Mul(AssocOp, RelMeths, ArithMeths):
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         expr = Basic.sympify(expr)
-        if not pattern.atoms(Basic.WildFunction):
-            if pattern.is_commutative and expr.is_commutative:
-                return AssocOp._matches_commutative(pattern, expr, repl_dict, evaluate)
+        if pattern.is_commutative and expr.is_commutative:
+            return AssocOp._matches_commutative(pattern, expr, repl_dict, evaluate)
         # todo for commutative parts, until then use the default matches method for non-commutative products
         return Basic.matches(pattern, expr, repl_dict, evaluate)
 

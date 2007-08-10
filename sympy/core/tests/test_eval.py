@@ -7,7 +7,6 @@ def test_add_eval():
 
     e = a+b+a+b
     s1 = str(e)
-    #e.eval()       # no eval()
     s2 = str(e)
     assert s1 == s2
 
@@ -42,7 +41,7 @@ def test_pow_eval():
     assert sqrt( 4) == 2
     assert (8)**Rational(1,3) == 2
 
-    #assert sqrt(-2) == I*sqrt(2)
+    assert sqrt(-2) == I*sqrt(2)
     assert (-1)**Rational(1,3) != I
     assert (-10)**Rational(1,3) != I*((10)**Rational(1,3))
     assert (-2)**Rational(1,4) != (2)**Rational(1,4)

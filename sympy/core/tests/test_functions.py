@@ -41,7 +41,7 @@ def test_log_expansion():
     x = Symbol("x")
     y = Symbol("y")
     assert log(x*y) != log(x)+log(y)
-    # XXX This is automatically expanded currently
+    # XXX The LHS is automatically expanded so it equals the RHS
     #assert log(x**2) != 2*log(x)
     assert log(x*y).expand() == log(x)+log(y)
     assert log(x**2).expand() == 2*log(x)
@@ -54,10 +54,8 @@ def test_log_hashing_bug():
     assert log(x) != log(log(log(x)))
 
     e = 1/log(log(x)+log(log(x)))
-    #e = e.eval()   # no eval()
     assert isinstance(e.base, Basic.ApplyLog)
     e = 1/log(log(x)+log(log(log(x))))
-    #e = e.eval()   # no eval()
     assert isinstance(e.base, Basic.ApplyLog)
 
     x = Symbol("x")
@@ -77,8 +75,10 @@ def test_exp_bug():
 def test_exp_expand():
     x = Symbol("x")
     y = Symbol("y")
+
     e = exp(log(Rational(2))*(1+x)-log(Rational(2))*x)
     assert e.expand() == 2
+    # XXX The RHS is automatically combined so that it equals the LHS
     #assert exp(x+y) != exp(x)*exp(y)
     assert exp(x+y).expand() == exp(x)*exp(y)
 
@@ -91,6 +91,7 @@ def test_pi():
 def test_bug1():
     x = Symbol("x")
     w = Symbol("w")
+
     e = sqrt(-log(w))
     assert e.subs(log(w),-x) == sqrt(x)
 
@@ -102,17 +103,16 @@ def test_Derivative():
     e = Derivative(log(x),x)
     assert e == 1/x
 
-def _test_invtrig():
-    # XXX No inverse trig yet
+def _test_invtrig(): # XXX No inverse trig yet
     x = Symbol("x")
     assert atan(0) == 0
     assert atan(x).diff(x) == 1/(1+x**2)
 
 def test_general_function():
-
     nu = Function('nu', nofargs=1)
     x = Symbol("x")
     y = Symbol("y")
+
     e = nu(x)
     edx = e.diff(x)
     edy = e.diff(y)
@@ -125,20 +125,9 @@ def test_general_function():
     assert edxdx == Derivative(Derivative(nu(x), x), x)
     assert edxdy == 0
 
-    # this works, but is semantically wrong, we need to settle on some
-    # interface first
-
-    # XXX The test would now sort of look like this, but it doesn't really
-    #     do anything in terms of testing (since automatically lhs == rhs)
-    #xsq = Lambda(x**2, x)
-    #e = Composition(nu, xsq)('x')
-    #assert e.diff(x) == Derivative(e, x)
-
 def test_derivative_subs_bug():
     x = Symbol("x")
-
     l = Function('l', nofargs=1)
-
     n = Function('n', nofargs=1)
 
     e = Derivative(n(x), x)
@@ -149,7 +138,6 @@ def test_derivative_subs_bug():
 def test_derivative_linearity():
     x = Symbol("x")
     y = Symbol("y")
-
     n = Function('n', nofargs=1)
 
     assert Derivative(-n(x), x) == -Derivative(n(x), x)

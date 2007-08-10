@@ -64,7 +64,24 @@ class Integral(Basic, ArithMeths, RelMeths):
         if isinstance(a, type(None)):
             return F
         else:
-            return (F.subs(x, b)-F.subs(x, a))
+            # TODO This works fine as long as no discontinuties in between
+            #      the two endpoints. A proper evaluation would involve
+            #      finding D = {x_1, x_2, ..., x_n} the [ordered] set of
+            #      discontinuities in the interval (a,b) and then doing
+            #      something of the form
+            #         v = limit(F,x,x_1) - limit(F,x,a)
+            #         v += limit(F,x,b) - limit(F,x,x_n)
+            #         v += sum( limit(F,x,x_{i+1}) - limit(F,x,x_i), i=1..n-1)
+            #         return v
+            v1 = F.subs(x, b)
+            v2 = F.subs(x, a)
+            if isinstance(v1, Basic.NaN):
+                from sympy.series.limits import limit
+                v1 = limit(F, x, b)
+            if isinstance(v2, Basic.NaN):
+                from sympy.series.limits import limit
+                v2 = limit(F, x, a)
+            return (v1 - v2)
 
     @staticmethod
     def primitive_function(f, x):
@@ -75,53 +92,58 @@ class Integral(Basic, ArithMeths, RelMeths):
         from sympy import exp, cos, sin, log
         from sympy.specfun.factorials import upper_gamma
 
-        if isinstance(f,Mul):
-            #a,b = f.getab()
-            a,b = f[0],Mul(*f[1:])
-            if not a.has(x): return a*Integral.primitive_function(b, x)
-            if not b.has(x): return b*Integral.primitive_function(a, x)
-        if isinstance(f,Add):
-            #a,b = f.getab()
-            a,b = f[0],Add(*f[1:])
-            return Integral.primitive_function(a,x)+Integral.primitive_function(b,x)
         if not f.has(x): return f*x
-        if f==x: return x**2/2
-        if isinstance(f,Pow):
+        if f == x: return x**2/2
+
+        if isinstance(f, Mul):
+            # Pull out coefficient
+            coeff, terms = f.as_coeff_terms(x)
+            if coeff != 1:
+                return coeff*Integral.primitive_function(Mul(*terms), x)
+        elif isinstance(f, Add):
+            result = 0
+            for term in f:
+                result += Integral.primitive_function(term, x)
+            return result
+        elif isinstance(f, Pow):
             if isinstance(f.exp,Number):
                 if x == f.base:
                     if f.exp==-1: return log(abs(x))
                     else: return x**(f.exp+1)/(f.exp+1)
-                elif x in f.base and isinstance(f.base, Mul):
-                    other = 1
+                elif isinstance(f.base, Mul) and x in f.base[:]:
+                    coeff = 1
                     for b in f.base:
-                        if b != x: other *= b
-                    other = other ** f.exp
+                        if b != x:
+                            if x in b:
+                                coeff = None
+                                break
+                            else:
+                                coeff *= b
+                    if coeff is not None:
+                        coeff = coeff ** f.exp
+                        if f.exp == -1: return log(abs(x)) / coeff
+                        else: return x**(f.exp+1)/(f.exp+1) * coeff
 
-                    if f.exp==-1: return log(abs(x)) * other
-                    else: return x**(f.exp+1)/(f.exp+1) * other
+        a = Wild('a', exclude=[x])
+        b = Wild('b', exclude=[x])
+        c = Wild('c', exclude=[x])
+        integral_table = (
+            ( x**(c-1)/(a*x**c+b), log(abs(a*x**c+b)) / a / c ),
+            ( x/(a*x+b), x/a - b/a**2 * log(abs(a*x+b)) ),
+            ( x/(a*x+b)**2, b/(a**2 * (a*x+b)) + log(abs(a*x+b))/a**2 ),
+            ( (a*x+b)**c, (a*x+b)**(c+1) / a / (c+1) ),
+            ( 1/(x**2 + a), atan(x/sqrt(a)) / sqrt(a) ),
+            #( 1/(x**2 - a), -atanh(x/sqrt(a)) / sqrt(a) ),
+            ( sin(a*x), -1/a * cos(a*x) ),
+            ( cos(a*x), 1/a * sin(a*x) ),
+            ( log(a*x+b), (x+b/a)*log(a*x+b)-x ),
+            ( x**a * exp(b*x), (-1)*x**(a+1)*(-b*x)**(-a-1)*upper_gamma(a+1,-b*x) )
+        )
 
-        a,b,c = map(Wild, 'abc')
-        integral_table = {
-                (a*x+b)**c: (a*x+b)**(c+1) / a / (c+1),
-                1/(a*x+b): 1/a * log(a*x+b),
-                x/(a*x+b): x/a - b/a**2 * log(a*x+b),
-                x/(a*x+b)**2: b/(a**2 * (a*x+b)) + log(a*x+b)/a**2,
-                1/(x**2 + a) : atan(x/sqrt(a)) / sqrt(a),
-                #1/(x**2 - a) : -atanh(x/sqrt(a)) / sqrt(a),
-                a*sin(b*x): -a/b * cos(b*x),
-                a*cos(b*x): a/b * sin(b*x),
-                log(a*x+b): (x+b/a)*log(a*x+b)-x,
-                # Note: the next two entries are special cases of the
-                # third and would be redundant with a more powerful match()
-                x**a * exp(b*x) : (-1)*x**(a+1)*(-b*x)**(-a-1)*upper_gamma(a+1,-b*x)
-                }
-        for k in integral_table:
+        for k,v in integral_table:
             r = f.match(k)
             if r != None:
-                # Prevent matching nonconstant expressions 
-                if [1 for v in r.values() if v.has(x)]:
-                    continue
-                return integral_table[k].subs_dict(r)
+                return v.subs_dict(r)
 
         raise IntegralError("Don't know how to do this integral: " + str(f))
 

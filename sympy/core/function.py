@@ -115,6 +115,9 @@ class Apply(Basic, ArithMeths, RelMeths):
             func = self.func.subs(old.func, newfunc)
             if func!=self.func:
                 return func(*self.args)
+        elif isinstance(old, Function) and isinstance(new, Function):
+            if old == self.func and old.nofargs == new.nofargs:
+                return new(*self.args)
         obj = self.func._eval_apply_subs(*(self.args + (old,) + (new,)))
         if obj is not None:
             return obj
@@ -324,9 +327,6 @@ class Function(Basic, ArithMeths, NoRelMeths):
                 self.nofargs = len(args)
         return self(*args), args
 
-    #def expand(self):
-    #    return self
-
     def fdiff(self, argindex=1):
         if self.nofargs is not None:
             if isinstance(self.nofargs, tuple):
@@ -337,7 +337,7 @@ class Function(Basic, ArithMeths, NoRelMeths):
                 raise TypeError("argument index %r is out of range [1,%s]" % (i,nofargs))
         return FDerivative(argindex)(self)
 
-    def diff(self,*args,**assumptions):
+    def diff(self, *args, **assumptions):
         raise TypeError('%s.diff not usable for functions, use .fdiff() method instead.' % (self.__class__.__name__))
 
     def _eval_power(b, e):
@@ -367,7 +367,7 @@ class WildFunction(Function, Atom):
             if p==pattern:
                 if v==expr: return repl_dict
                 return None
-        if pattern.nofargs != None:
+        if pattern.nofargs is not None:
             if isinstance(expr, Apply):
                 if pattern.nofargs != expr.func.nofargs:
                     return None
@@ -381,12 +381,12 @@ class WildFunction(Function, Atom):
         return self.name + '_'
 
 class FApply(Function):
-    """ Defines n-ary operator that acts on symbolic functions.
+    """
+    Defines n-ary operator that acts on symbolic functions.
 
     DF(1)(f) -> FApply(DF(1), f)
     DF(2)(FApply(DF(1), f)) -> FApply(DF(2), FApply(DF(1),f)) -> FApply(DF(1,2), f)
     """
-
     def __new__(cls, operator, *funcs, **assumptions):
         operator = Basic.sympify(operator)
         funcs = map(Basic.sympify, funcs)
@@ -503,10 +503,10 @@ class Lambda(Function):
         return expr, args
 
     #@cache_it
-    def expand(self):
+    def _eval_expand(self):
         return Lambda(self.body.expand(), *self.args)
 
-    def diff(self,*symbols):
+    def diff(self, *symbols):
         return Lambda(self.body.diff(*symbols), *self.args)
 
     def fdiff(self, argindex=1):
@@ -531,7 +531,6 @@ class Lambda(Function):
 
 
 class FPow(Function):
-
     precedence = Basic.Apply_precedence
 
     def __new__(cls, a, b, **assumptions):

@@ -149,7 +149,7 @@ class ApplyExp(Apply):
                     r = Basic.Mul(*new_l)
                     return r
         old = o
-        return self.func(arg.subs(old, new))
+        return Apply._eval_subs(self, old, new)
 
     def _eval_is_real(self):
         return self.args[0].is_real
@@ -434,12 +434,6 @@ class ApplySqrt(Apply):
 
     def as_base_exp(self):
         return self.args[0], Basic.Half()
-
-    def _eval_subs(self, old, new):
-        if self==old: return new
-        arg = self.args[0]
-        func = self.func
-        return func(arg.subs(old, new))
 
 
 class Abs(DefinedFunction):

@@ -39,6 +39,7 @@ def test_integration():
     assert integrate(1/t, t==(1,x)) == log(abs(x))
     assert integrate(t**2+5*t-8, t==(0,x))==x**3/3+5*x**2/2-8*x
     assert integrate(x**2, x) == x**3/3
+    assert integrate((3*t*x)**5, x) == (3*t)**5 * x**6 / 6
 
     b = Symbol("b")
     c = Symbol("c")
@@ -55,15 +56,18 @@ def test_integration_table():
     assert integrate(log(x), x) == x*log(x) - x
     assert integrate(log(3*x), x) == x*log(3*x) - x
     assert integrate(log(x+1), x) == (x+1)*log(x+1)-x
-    assert integrate(1/(x+1), x) == log(x+1)
-    # Equality testing fails
+    assert integrate(1/(x+1), x) == log(abs(x+1))
+    assert integrate(5*x**5/(2*x**6+5), x) == 5*log(abs(2*x**6+5))/12
+
+    # XXX Equality testing fails
     #assert integrate((3*x+2)**a, x) == (3*x+2)**(a+1) / (3*a+3)
-    assert integrate((3*x+2)**a, x) == (3*x+2)**(a+1) / (1+a)/3
-    assert integrate(x/(2*x+1), x) == (2*x-log(2*x+1))/4
-    assert integrate(2*x/(4*x+a)**2, x) == a/(a+4*x)/8 + log(a+4*x)/8
+    assert integrate((3*x+2)**a, x) == (3*x+2)**(a+1) / (1+a) / 3
+    assert integrate(x/(2*x+1), x) == (2*x-log(abs(2*x+1)))/4
+    assert integrate(2*x/(4*x+a)**2, x) == a/(a+4*x)/8 + log(abs(a+4*x))/8
 
     assert integrate(-4*sin(4*x), x) == cos(4*x)
     assert integrate(3*cos(4*x), x) == 3*sin(4*x)/4
+    assert integrate(3*t*cos(4*x) + 4*sin(x), x) == 3*t*sin(4*x)/4 - 4*cos(x)
 
     # This test is to ensure that the integral table does not look
     # up the *wrong* answer.
@@ -71,6 +75,8 @@ def test_integration_table():
 
     assert integrate(exp(x), x) == exp(x)
     assert integrate(2*exp(3*x), x) == 2*exp(3*x)/3
+    assert diff(integrate(x**3 * exp(4*x), x), x) == x**3 * exp(4*x)
 
-    from sympy.simplify import simplify
-    assert simplify(diff(integrate(x**3 * exp(4*x), x), x)) == x**3 * exp(4*x)
+def test_improper_integral():
+    assert integrate(ln(x), x==(0,1)) == -1
+    assert integrate(x**(-2), x==(1,oo)) == 1
