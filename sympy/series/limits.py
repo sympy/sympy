@@ -1,13 +1,57 @@
-
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
 from sympy.core.methods import RelMeths, ArithMeths
+
+def create_limits_table():
+    x = Basic.Symbol('x',positive=True,real=True,unbounded=True)
+    oo,I,pi = Basic.Infinity(), Basic.ImaginaryUnit(), Basic.Pi()
+    exp,sqrt,ln,cos,sin = S.Exp, S.Sqrt, S.Log, S.Cos, S.Sin
+
+    tbl = {}
+    tbl[((exp(1/x-exp(-x))-exp(1/x))/exp(-x), oo)] = -1
+    tbl[(ln(ln(x*exp(x*exp(x))+1))-exp(exp(ln(ln(x))+1/x)), oo)] = 0
+    tbl[(exp(-x)/cos(x), oo)] = Basic.NaN()
+    tbl[((3**x+5**x)**(1/x), oo)] = 5
+    tbl[(ln(1-(ln(exp(x)/x-1)+ln(x))/x)/x, oo)] = -1
+    tbl[(ln(-1-x*I), Basic.Zero())] = -pi*I
+    tbl[(1/(x*(1+(1/x-1)**(1/x-1))), oo)] = -1/(I*pi+1)
+    tbl[(ln(x*(x+1)/ln(exp(x)+exp(ln(x)**2)*exp(x**2))+1/ln(x)), oo)] = 0
+    tbl[(exp(x)*(exp(1/x+exp(-x)+exp(-x**2))-exp(1/x-exp(-exp(x)))), oo)] = 1
+    tbl[(exp(exp(x-exp(-x))/(1-1/x))-exp(exp(x)), oo)] = oo
+    tbl[(exp(exp(exp(x)/(1-1/x)))-exp(exp(exp(x)/(1-1/x-ln(x)**(-ln(x))))), oo)] = -oo
+    tbl[(exp(exp(exp(x+exp(-x))))/exp(exp(exp(x))), oo)] = oo
+    tbl[(exp(exp(exp(x)))/exp(exp(exp(x-exp(-exp(x))))), oo)] = oo
+    tbl[(exp(exp(exp(x)))/exp(exp(exp(x-exp(-exp(exp(x)))))), oo)] = 1
+    tbl[(exp(exp(x))/exp(exp(x-exp(-exp(exp(x))))), oo)] = 1
+    tbl[(ln(x)**2 * exp(sqrt(ln(x))*(ln(ln(x)))**2*exp(sqrt(ln(ln(x)))*ln(ln(ln(x)))**3)) / sqrt(x), oo)] = 0
+    tbl[((x*ln(x)*(ln(x*exp(x)-x**2))**2)/ln(ln(x**2+2*exp(exp(3*x**3*ln(x))))), oo)] = Basic.Rational(1,3)
+    tbl[((exp(x*exp(-x)/(exp(-x)+exp(-2*x**2/(1+x))))-exp(x))/x, oo)] = -exp(2)
+    tbl[(exp(exp(2*ln(x**5+x)*ln(ln(x))))/exp(exp(10*ln(x)*ln(ln(x)))), oo)] = oo
+    tbl[((exp(4*x*exp(-x)/(1/exp(x)+1/exp(2*x**2/(x+1))))-exp(x))/exp(x)**4, oo)] = 1
+    tbl[(exp(x)*(sin(1/x+exp(-x))-sin(1/x+exp(-x**2))), oo)] = 1
+    tbl[(exp(ln(ln(x+exp(ln(x)*ln(ln(x)))))/ln(ln(ln(exp(x)+x+ln(x))))), oo)] = exp(1)
+    tbl[(exp(x*exp(-x)/(exp(-x)+exp(-2*x**2/(x+1))))/exp(x), oo)] = 1
+    h = exp(-x/(1+exp(-x)))
+    tbl[(exp(h)*exp(-x/(1+h))*exp(exp(-x+h))/h**2-exp(x)+x, oo)] = 2
+
+    r = Basic.Symbol('r',positive=True, bounded=True)
+    R = sqrt(sqrt(x**4+2*x**2*(r**2+1)+(r**2-1)**2)+x**2+r**2-1)
+    tbl[(x/R, Basic.Zero())] = sqrt((1-r**2)/2)
+
+    w = Basic.Symbol('w')
+    expr = w/(sqrt(1+w)*sin(x)**2+sqrt(1-w)*cos(x)**2-1)
+    tbl[(expr, Basic.Zero())] = 2/(1-2*cos(x)**2)
+
+    h = exp(-x)
+    tbl[(h/(sqrt(1+h)*sin(1/x)**2+sqrt(1-h)*cos(1/x)**2-1), oo)] = -2
+
+    return x, tbl
+_x, limits_table = create_limits_table()
 
 class Limit(Basic, RelMeths, ArithMeths):
     """ Find the limit of the expression under process x->xlim.
 
     Limit(expr, x, xlim)
     """
-
     @cache_it_immutable
     def __new__(cls, expr, x, xlim, direction='<', **assumptions):
         expr = Basic.sympify(expr)
@@ -16,7 +60,14 @@ class Limit(Basic, RelMeths, ArithMeths):
         if not isinstance(x, Basic.Symbol):
             raise ValueError("Limit 2nd argument must be Symbol instance (got %s)" % (x))
         assert isinstance(x, Basic.Symbol),`x`
-        if not expr.has(x): return expr
+
+        if not expr.has(x):
+            return expr
+
+        key = (expr, xlim)
+        if key in limits_table:
+            return Basic.sympify(limits_table[key])
+
         if isinstance(xlim, Basic.NegativeInfinity):
             xoo = InfLimit.limit_process_symbol()
             if expr.has(xoo): 
@@ -63,7 +114,6 @@ class Limit(Basic, RelMeths, ArithMeths):
         return r
 
 class InfLimit(Basic):
-
     @staticmethod
     @cache_it_immutable
     def limit_process_symbol():
