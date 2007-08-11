@@ -269,7 +269,7 @@ def test_roots():
     assert roots(x**2-3*x+2) == [1, 2]
     assert roots(x**2-3*x/2+Rational(1,2)) == [Rational(1,2), 1]
     assert roots(2*x**2-3*x+1) == [Rational(1,2), 1]
-    assert roots(x**2-1) == [-1, 1]
+    assert roots(x**2-1) == [1, -1]
     assert roots(x**2+1) == [I, -I]
     assert roots(x**3-1) == [1,
                              Rational(-1,2) + I*Rational(1,2)*3**Rational(1,2),
@@ -285,23 +285,25 @@ def test_roots():
            [Rational(-1,3) - (Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3) - Rational(4,9)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(-1,3),
             Rational(-1,3) + Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3) + Rational(4,9)/(Rational(1,2) + Rational(1,2)*I*3**Rational(1,2))*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(-1,3) + Rational(1,2)*I*3**Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3),
             Rational(-1,3) + Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3) + Rational(4,9)/(Rational(1,2) - Rational(1,2)*I*3**Rational(1,2))*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(-1,3) - Rational(1,2)*I*3**Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3)]
-    assert roots(x**4 - 1) == [-1, 1, I, -I]
+    assert roots(x**4 - 1) == [1, I, -1, -I]
     assert roots(x**4 + 1) == [(-1)**Rational(1,4),
-                               (-1)**Rational(1,4)*exp(Pi*I),
-                               (-1)**Rational(1,4)*exp(Pi*I/2),
-                               (-1)**Rational(1,4)*exp(3*Pi*I/2)]
-    assert roots(x**8 - 1) == [1, -1,
-                               (-1)**Rational(1,4),
-                               (-1)**Rational(1,4)*exp(Pi*I/2),
-                               (-1)**Rational(1,4)*exp(Pi*I),
-                               (-1)**Rational(1,4)*exp(3*Pi*I/2),
-                               -I, I]
+                               (-1)**Rational(3,4),
+                               -(-1)**Rational(1,4),
+                               -(-1)**Rational(3,4)]
+    assert roots(x**8 - 1) == [1, 2**Rational(1,2)/2 + I*2**Rational(1,2)/2,
+                               I, -2**Rational(1,2)/2 + I*2**Rational(1,2)/2,
+                               -1, -2**Rational(1,2)/2 - I*2**Rational(1,2)/2,
+                               -I, 2**Rational(1,2)/2 - I*2**Rational(1,2)/2]
     assert roots(x**5 - Rational(3,2)) == \
            [Rational(1,2)**Rational(1,5)*3**Rational(1,5),
-            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*exp(2*Pi*I/5),
-            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*exp(4*Pi*I/5),
-            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*exp(6*Pi*I/5),
-            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*exp(8*Pi*I/5)]
+            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*cos(2*Pi/5)
+            + I*Rational(1,2)**Rational(1,5)*3**Rational(1,5)*sin(2*Pi/5),
+            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*cos(4*Pi/5)
+            + I*Rational(1,2)**Rational(1,5)*3**Rational(1,5)*sin(4*Pi/5),
+            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*cos(6*Pi/5)
+            + I*Rational(1,2)**Rational(1,5)*3**Rational(1,5)*sin(6*Pi/5),
+            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*cos(8*Pi/5)
+            + I*Rational(1,2)**Rational(1,5)*3**Rational(1,5)*sin(8*Pi/5)]
 
 def test_solve_system():
     x = Symbol("x")
@@ -313,8 +315,8 @@ def test_solve_system():
     assert solve_system([y - x, y - x - 1]) == []
     assert solve_system([y - x**2, y + x**2]) == [(S.Zero, S.Zero)]
     assert solve_system([y - x**2, y + x**2 + 1]) == \
-           [(I*2**Rational(1,2)/2, Rational(-1,2)),
-            (-I*2**Rational(1,2)/2, Rational(-1,2))]
+           [(I*Rational(1,2)**Rational(1,2), Rational(-1,2)),
+            (-I*Rational(1,2)**Rational(1,2), Rational(-1,2))]
            
 def test_sqf():
     x = Symbol("x")

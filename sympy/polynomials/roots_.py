@@ -64,13 +64,12 @@ def n_poly(f):
         """Computes the list of the n-th roots of unity."""
         result = []
         for i in range(0,n):
-            # result.append((exp(2*i*pi*I/n)).evalc())
             result.append(exp(2*i*pi*I/n))
         return result
 
     exponents = map(lambda t:int(t[1]), f.coeffs)
     g = reduce(numbers.gcd, exponents)
-    if g == 1:
+    if g == 1 or g == 0:
         return None
     n = int(f.coeffs[0][1]/g)
     if not n in [1, 2, 3]: # Cases where solution can be computed
@@ -79,7 +78,7 @@ def n_poly(f):
     ff = Polynomial(coeffs=tuple(map(lambda t:(t[0], t[1]/g), f.coeffs)),
                     var=f.var, order=f.order)
 
-    return [(zeta*s**Rational(1,g)).expand()
+    return [(zeta*s**Rational(1,g)).expand(complex=True)
             for s in roots(ff) for zeta in roots_of_unity(g)]
         
 
@@ -265,7 +264,7 @@ def roots(f, var=None):
     =========
         >>> x, y = symbols('xy')
         >>> roots(x**2 - 1)
-        [-1, 1]
+        [1, -1]
         >>> roots(x - y, x)
         [y]
         
@@ -296,6 +295,10 @@ def roots(f, var=None):
         coeff = 'int'
     if coeff == 'int':
         content, f = f.as_primitive()
+        # Hack to get some additional cases right:
+        result = n_poly(f)
+        if result is not None:
+            return result
         factors = factor_.factor(f)
     else: # It's not possible to factorize.
         factors = [f]
@@ -349,7 +352,7 @@ def solve_system(eqs, var=None, order=None):
         >>> f = y - x           
         >>> g = x**2 + y**2 - 1 
         >>> solve_system([f, g])
-        [(-1/2*2**(1/2), -1/2*2**(1/2)), ((1/2)*2**(1/2), (1/2)*2**(1/2))]
+        [(-(1/2)**(1/2), -(1/2)**(1/2)), ((1/2)**(1/2), (1/2)**(1/2))]
 
     References:
     ===========
