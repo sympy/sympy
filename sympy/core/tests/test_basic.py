@@ -118,3 +118,12 @@ def test_is_polynomial():
 
     assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(2)).is_polynomial(x, y) == True
     assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) == False
+
+def test_SAGE():
+    #see http://code.google.com/p/sympy/issues/detail?id=247
+    class MyInt:
+        def __str__(self):
+            return "5"
+    m = MyInt()
+    e = Rational(2)*m
+    assert e == 10
