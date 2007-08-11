@@ -812,3 +812,19 @@ class DefinedFunction(Function, Singleton, Atom):
 Basic.singleton['D'] = lambda : Derivative
 Basic.singleton['FD'] = lambda : FDerivative
 #Basic.singleton['Int'] = lambda : Integral
+
+def diff(f, x, times = 1, evaluate=True):
+    """Derivate f with respect to x
+
+    It's just a wrapper to unify .diff() and the Derivative class,
+    it's interface is similar to that of integrate()
+
+    see http://documents.wolfram.com/v5/Built-inFunctions/AlgebraicComputation/Calculus/D.html
+    """
+    f = Basic.sympify(f)
+    if evaluate == True:
+        for i in range(0,times):
+            f = f.diff(x)
+        return f
+    else:
+        return Derivative(f, x)
