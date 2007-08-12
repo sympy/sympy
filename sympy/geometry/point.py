@@ -1,4 +1,4 @@
-from sympy import *
+from sympy.core.basic import Basic, S
 from sympy.simplify import simplify
 from entity import GeometryEntity
 
@@ -56,10 +56,10 @@ class Point(GeometryEntity):
         if len(points) == 3: return (not Point.is_collinear(points))
 
         def f(u):
-            dd = u[0]**Rational(2) + u[1]**Rational(2) + Rational(1)
-            u1 = Rational(2)*u[0] / dd
-            u2 = Rational(2)*u[1] / dd
-            u3 = (dd - Rational(2)) / dd
+            dd = u[0]**2 + u[1]**2 + 1
+            u1 = 2*u[0] / dd
+            u2 = 2*u[1] / dd
+            u3 = (dd - 2) / dd
             return dd,u1,u2,u3
 
         d1,u1,u2,u3 = f(points[0])
@@ -79,25 +79,24 @@ class Point(GeometryEntity):
     @staticmethod
     def distance(p1, p2):
         """Get the Euclidean distance between two points."""
-        res = Rational(0)
+        res = 0
         for ind in xrange(0, len(p1)):
-            res += (p1[ind] - p2[ind])**Rational(2)
-        return sqrt(simplify(res))
+            res += (p1[ind] - p2[ind])**2
+        return S.Sqrt(simplify(res))
 
     @staticmethod
     def midpoint(p1, p2):
         """Get the midpoint of two points."""
-        return Point( simplify((p1[ind] + p2[ind])*Rational(1,2)) for ind in xrange(0, len(p1)) )
+        return Point( simplify((p1[ind] + p2[ind])*S.Half) for ind in xrange(0, len(p1)) )
 
     def evalf(self, precision=18):
         """
         Evaluate and return a Point where every coordinate is evaluated to
         a floating point number.
         """
-        from sympy.core.numbers import Real
         coords = []
         for x in self._coords:
-            coords.append( Real(x, precision) )
+            coords.append( Basic.Real(x, precision) )
         return Point(coords)
 
     def __getitem__(self, ind):

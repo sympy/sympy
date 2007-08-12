@@ -1,5 +1,4 @@
-from sympy import *
-
+from sympy.core.basic import Basic, S
 from sympy.simplify import simplify
 
 from entity import GeometryEntity
@@ -32,7 +31,7 @@ class Polygon(GeometryEntity):
             pi = self._vertices[ind]
             pii = self._vertices[ind+1]
             area += pi[0]*pii[1]-pii[0]*pi[1]
-        return simplify(area) / Rational(2)
+        return simplify(area) / 2
 
     @property
     def angles(self):
@@ -219,7 +218,7 @@ class RegularPolygon(Polygon):
         self._r = r
         points = []
         for k in xrange(0, n):
-            points.append( Point(c[0] + r*cos(2*k*pi/n), c[1] + r*sin(2*k*pi/n)) )
+            points.append( Point(c[0] + r*S.Cos(2*k*S.Pi/n), c[1] + r*S.Sin(2*k*S.Pi/n)) )
         Polygon.__init__(self, points, **kwargs)
 
     @property
@@ -245,19 +244,19 @@ class RegularPolygon(Polygon):
         radius of the inscribed circle).
         """
         n = len(self._vertices)
-        return self._r * cos(pi/n)
+        return self._r * S.Cos(S.Pi/n)
 
     @property
     def interior_angle(self):
         """Returns the measure of the interior angles."""
         n = len(self._vertices)
-        return (n-2)*pi/n
+        return (n-2)*S.Pi/n
 
     @property
     def exterior_angle(self):
         """Returns the measure of the exterior angles."""
         n = len(self._vertices)
-        return 2*pi/n
+        return 2*S.Pi/n
 
     @property
     def circumcircle(self):

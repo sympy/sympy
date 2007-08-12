@@ -55,7 +55,7 @@ def test_pretty_functions():
     f = Function('f')
     assert pretty(f(x)) == 'f(x)'
     assert pretty(f(x, y)) == 'f(x, y)'
-    assert pretty(f(x/(y+1), y)) == ' /  x     \\\nf|-----, y|\n \\1 + y   /'
+    assert pretty(f(x/(y+1), y)) == '    x      \nf(-----, y)\n  1 + y    '
 
     # Nesting of square roots
     assert pretty( sqrt((sqrt(x+1))+1) ) == '    _______________\n   /       _______ \n \\/  1 + \\/ 1 + x  '

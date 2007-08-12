@@ -1,4 +1,4 @@
-from sympy import *
+from sympy.core.basic import Basic, S
 from sympy.simplify import simplify
 
 from entity import GeometryEntity
@@ -68,7 +68,7 @@ class LinearEntity(GeometryEntity):
         """Returns an angle formed between the two lines lines."""
         v1 = l1._p2 - l1._p1
         v2 = l2._p2 - l2._p1
-        return acos( (v1[0]*v2[0]+v1[1]*v2[1]) / (abs(v1)*abs(v2)) )
+        return S.ACos( (v1[0]*v2[0]+v1[1]*v2[1]) / (abs(v1)*abs(v2)) )
 
     def parallel_line(self, p):
         """
@@ -89,7 +89,7 @@ class LinearEntity(GeometryEntity):
         d2 = self._p1[1] - self._p2[1]
         if d2 == 0: # If an horizontal line
             if p[1] == self._p1[1]: # if p is on this line
-                p2 = Point(p[0], p[1] + Rational(1))
+                p2 = Point(p[0], p[1] + 1)
                 return Line(p, p2)
             else:
                 p2 = Point(p[0], self._p1[1])
@@ -133,14 +133,11 @@ class LinearEntity(GeometryEntity):
     @property
     def slope(self):
         """Returns the slope of this line, or sympy.oo (infinity) if vertical."""
-        d1 = self._p1[0] - self._p2[0]
-        d2 = self._p1[1] - self._p2[1]
-        if d1 == Rational(0):
-            return oo
-        elif isinstance(d1, int) and isinstance(d2, int):
-            return Rational(d2, d1)
-        else:
-            return d2/d1
+        d1 = Basic.sympify(self._p1[0] - self._p2[0])
+        d2 = Basic.sympify(self._p1[1] - self._p2[1])
+        if d1 == 0:
+            return S.Infinity
+        return d2/d1
 
     @property
     def points(self):
@@ -181,27 +178,24 @@ class Line(LinearEntity):
 
     def arbitrary_point(self, parameter_name='t'):
         """Returns a symbolic point that is on this line."""
-        t = Symbol(parameter_name, real=True)
-        if self.slope == oo:
-            return Point(self._p1[0], t)
-        else:
-            x = simplify(self._p1[0] + t*(self._p2[0] - self._p1[0]))
-            y = simplify(self._p1[1] + t*(self._p2[1] - self._p1[1]))
-            return Point(x, y)
+        t = Basic.Symbol(parameter_name, real=True)
+        x = simplify(self._p1[0] + t*(self._p2[0] - self._p1[0]))
+        y = simplify(self._p1[1] + t*(self._p2[1] - self._p1[1]))
+        return Point(x, y)
 
     def random_point(self):
         """Returns a random point on this line."""
         from random import randint
         from sys import maxint
-        t = Symbol('t', real=True)
+        t = Basic.Symbol('t', real=True)
         p = self.arbitrary_point('t')
         subs_val = randint(-maxint-1, maxint)
         return Point(p[0].subs(t, subs_val), p[1].subs(t, subs_val))
 
     def equation(self, xaxis_name='x', yaxis_name='y'):
         """Returns the equation for this line"""
-        x = Symbol(xaxis_name, real=True)
-        y = Symbol(yaxis_name, real=True)
+        x = Basic.Symbol(xaxis_name, real=True)
+        y = Basic.Symbol(yaxis_name, real=True)
         a,b,c = self.coefficients
         return simplify(a*x + b*y + c)
 
@@ -209,8 +203,8 @@ class Line(LinearEntity):
         if isinstance(o, Line):
             return self.__eq__(o)
         elif isinstance(o, Point):
-            x = Symbol('x', real=True)
-            y = Symbol('y', real=True)
+            x = Basic.Symbol('x', real=True)
+            y = Basic.Symbol('y', real=True)
             r = self.equation().subs_dict({x: o[0], y: o[1]})
             x = simplify(r)
             return bool(x == 0)
@@ -240,7 +234,7 @@ class Ray(LinearEntity):
         """Returns a random point on this ray."""
         from random import randint
         from sys import maxint
-        if self.slope == oo:
+        if self.slope == S.Infinity:
             x = self._p1[0]
             y = randint(self._p1[1], maxint)
         else:
@@ -272,10 +266,8 @@ class Ray(LinearEntity):
             return ((o._p1 in self) and (o._p2 in self))
         elif isinstance(o, Point):
             if Point.is_collinear(self._p1, self._p2, o):
-                
-                
-                if (not self._p1[0].atoms(type=Symbol)) and (not self._p1[1].atoms(type=Symbol)) \
-                        and (not self._p2[0].atoms(type=Symbol)) and (not self._p2[1].atoms(type=Symbol)):
+                if (not self._p1[0].atoms(type=Basic.Symbol)) and (not self._p1[1].atoms(type=Basic.Symbol)) \
+                        and (not self._p2[0].atoms(type=Basic.Symbol)) and (not self._p2[1].atoms(type=Basic.Symbol)):
                     if self._p1[0] == self._p2[0]:
                         if self._p1[1] < self._p2[1]:
                             return o[1] >= self._p1[1]
@@ -310,7 +302,7 @@ class Segment(LinearEntity):
         """Returns a random point on this segment."""
         from random import randint
         from sys import maxint
-        if self.slope == oo:
+        if self.slope == S.Infinity:
             x = self._p1[0]
             y = randint(self._p1[1], self._p2[1])
         else:
@@ -363,7 +355,7 @@ class Segment(LinearEntity):
         elif isinstance(o, Point):
             if Point.is_collinear(self._p1, self._p2, o):
                 x1,x2 = self._p1[0], self._p2[0]
-                if (not x1.atoms(type=Symbol)) and (not x2.atoms(type=Symbol)):
+                if (not x1.atoms(type=Basic.Symbol)) and (not x2.atoms(type=Basic.Symbol)):
                     return (min(x1,x2) <= o[0] <= max(x1,x2))
                 else:
                     return True

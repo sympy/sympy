@@ -1,5 +1,3 @@
-from sympy import *
-
 class GeometryEntity(object):
     """The base class for any geometrical entity."""
 

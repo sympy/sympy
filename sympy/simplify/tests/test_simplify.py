@@ -18,10 +18,10 @@ def test_ratsimp():
     #assert e != 1
     #assert ratsimp(e) == 1
 
-    #e = 1/(1+1/x)
-    #assert ratsimp(e) == x/(x+1)
-    #assert (x+1)*ratsimp(e)/x == 1
-    #assert ratsimp(exp(e)) == exp(x/(x+1))
+    e = 1/(1+1/x)
+    assert ratsimp(e) == x/(x+1)
+    assert (x+1)*ratsimp(e)/x == 1
+    assert ratsimp(exp(e)) == exp(x/(x+1))
 
 #def test_trigsimp():
 #    x = Symbol('x')
@@ -47,7 +47,6 @@ def test_simplify():
     assert simplify(e) == (x+y)/(x*y)
 
     e = (4+4*x-2*(2+2*x))/(2+2*x)
-    # assert e != 0
     assert simplify(e) == 0
 
 def test_fraction():

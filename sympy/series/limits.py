@@ -75,7 +75,7 @@ def create_limits_table():
     tbl[(base ** exponent, Basic.Zero())] = exp(1)
 
     return x, tbl
-_x, limits_table = create_limits_table()
+_x, limits_table = None, None
 
 class Limit(Basic, RelMeths, ArithMeths):
     """ Find the limit of the expression under process x->xlim.
@@ -93,6 +93,12 @@ class Limit(Basic, RelMeths, ArithMeths):
 
         if not expr.has(x):
             return expr
+
+        # Try to create the look-up table and use it before falling back on
+        # the proper algorithm
+        global _x, limits_table
+        if _x is None or limits_table is None:
+            _x, limits_table = create_limits_table()
 
         key = (expr.subs(x, _x), xlim)
         if key in limits_table:

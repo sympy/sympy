@@ -1,4 +1,4 @@
-from sympy import *
+from sympy.core.basic import S, Basic
 from sympy.simplify import simplify#, trigsimp
 from entity import GeometryEntity
 from point import Point
@@ -33,7 +33,7 @@ class Ellipse(GeometryEntity):
     @property
     def area(self):
         """Returns the area of the ellipse."""
-        return simplify(pi * self._hr * self._vr)
+        return simplify(S.Pi * self._hr * self._vr)
 
     @property
     def circumference(self):
@@ -48,14 +48,13 @@ class Ellipse(GeometryEntity):
         if self._hr == self._vr:
             return c
 
-        if self._hr.atoms(type=Symbol) or self._vr.atoms(type=Symbol):
+        if self._hr.atoms(type=Basic.Symbol) or self._vr.atoms(type=Basic.Symbol):
             raise Exception("foci can only be determined on numerical radii")
-
         elif self._hr < self._vr:
-            v = sqrt(self._vr**2 - self._hr**2)
+            v = S.Sqrt(self._vr**2 - self._hr**2)
             return (c+Point(0, -v), c+Point(0, v))
         else:
-            v = sqrt(self._hr**2 - self._vr**2)
+            v = S.Sqrt(self._hr**2 - self._vr**2)
             return (c+Point(-v, 0), c+Point(v, 0))
 
     def tangent_line(self, p):
@@ -65,8 +64,8 @@ class Ellipse(GeometryEntity):
         None if no tangent line is possible (e.g., p inside ellipse).
         """
         if p in self:
-            rise = (self._hr ** Rational(2))*(self._c[0] - p[0])
-            run = (self._vr ** Rational(2))*(p[1] - self._c[1])
+            rise = (self._hr ** 2)*(self._c[0] - p[0])
+            run = (self._vr ** 2)*(p[1] - self._c[1])
             p2 = Point(simplify(p[0] + run),
                        simplify(p[1] + rise))
             return Line(p, p2)
@@ -100,24 +99,24 @@ class Ellipse(GeometryEntity):
     def arbitrary_point(self, parameter_name='t'):
         """Returns a symbolic point that is on the ellipse."""
         t = Symbol(parameter_name, real=True)
-        return Point(self._c[0] + self._hr*cos(t), self._c[1] + self._vr*sin(t))
+        return Point(self._c[0] + self._hr*S.Cos(t), self._c[1] + self._vr*S.Sin(t))
 
     def random_point(self):
         """Returns a random point on the ellipse."""
         from random import randint
         from sys import maxint
-        t = Symbol('t', real=True)
+        t = Basic.Symbol('t', real=True)
         p = self.arbitrary_point('t')
         subs_val = randint(-maxint-1, maxint)
         return Point(p[0].subs(t, subs_val), p[1].subs(t, subs_val))
 
     def equation(self, xaxis_name='x', yaxis_name='y'):
         """Returns the equation of the ellipse."""
-        x = Symbol(xaxis_name, real=True)
-        y = Symbol(yaxis_name, real=True)
-        t1 = ((x - self._c[0]) / self._hr)**Rational(2)
-        t2 = ((y - self._c[1]) / self._vr)**Rational(2)
-        return t1 + t2 - Rational(1)
+        x = Basic.Symbol(xaxis_name, real=True)
+        y = Basic.Symbol(yaxis_name, real=True)
+        t1 = ((x - self._c[0]) / self._hr)**2
+        t2 = ((y - self._c[1]) / self._vr)**2
+        return t1 + t2 - 1
 
     def _do_line_intersection(self, o):
         """
@@ -126,13 +125,13 @@ class Ellipse(GeometryEntity):
         intersection results one must invoke intersection() to remove bad results.
         """
         def dot(p1, p2):
-            sum = Rational(0)
+            sum = 0
             for ind in xrange(0, len(p1)):
                 sum += p1[ind] * p2[ind]
             return simplify(sum)
 
-        hr_sq = self._hr ** Rational(2)
-        vr_sq = self._vr ** Rational(2)
+        hr_sq = self._hr ** 2
+        vr_sq = self._vr ** 2
         lp = o.points
 
         ldir = lp[1] - lp[0]
@@ -142,7 +141,7 @@ class Ellipse(GeometryEntity):
 
         a = dot(ldir, mdir)
         b = dot(ldir, mdiff)
-        c = dot(diff, mdiff) - Rational(1)
+        c = dot(diff, mdiff) - 1
         det = simplify(b*b - a*c);
 
         result = []
@@ -157,7 +156,7 @@ class Ellipse(GeometryEntity):
                 is_good = True
 
             if is_good:
-                root = sqrt(det)
+                root = S.Sqrt(det)
                 t_a = (-b - root) / a
                 t_b = (-b + root) / a
                 result.append( lp[0] + (lp[1] - lp[0]) * t_a )
@@ -198,8 +197,8 @@ class Ellipse(GeometryEntity):
 
     def __contains__(self, o):
         if isinstance(o, Point):
-            x = Symbol('x', real=True)
-            y = Symbol('y', real=True)
+            x = Basic.Symbol('x', real=True)
+            y = Basic.Symbol('y', real=True)
             res = self.equation('x', 'y').subs_dict({x: o[0], y: o[1]})
             #res = trigsimp(simplify(res)) 
             res = simplify(res)
@@ -237,26 +236,26 @@ class Circle(Ellipse):
 
     @property
     def circumference(self):
-        return Rational(2) * pi * self.radius
+        return 2 * Basic.Pi() * self.radius
 
     def equation(self, xaxis_name='x', yaxis_name='y'):
         """Returns the equation of the circle."""
-        x = Symbol(xaxis_name, real=True)
-        y = Symbol(yaxis_name, real=True)
-        t1 = (x - self._c[0])**Rational(2)
-        t2 = (y - self._c[1])**Rational(2)
-        return t1 + t2 - self._hr**Rational(2)
+        x = Basic.Symbol(xaxis_name, real=True)
+        y = Basic.Symbol(yaxis_name, real=True)
+        t1 = (x - self._c[0])**2
+        t2 = (y - self._c[1])**2
+        return t1 + t2 - self._hr**2
 
     def _intersection(self, o):
         if isinstance(o, Circle):
             dx,dy = o._c - self._c
-            d = sqrt( simplify(dy**2 + dx**2) )
-            a = simplify((self._hr**2 - o._hr**2 + d**2) / (Rational(2) * d))
+            d = S.Sqrt( simplify(dy**2 + dx**2) )
+            a = simplify((self._hr**2 - o._hr**2 + d**2) / (2*d))
 
             x2 = self._c[0] + (dx * a/d)
             y2 = self._c[1] + (dy * a/d)
 
-            h = sqrt( simplify(self._hr**2 - a**2) )
+            h = S.Sqrt( simplify(self._hr**2 - a**2) )
             rx = -dy * (h/d)
             ry =  dx * (h/d)
 
@@ -271,8 +270,8 @@ class Circle(Ellipse):
             return ret
         elif isinstance(o, Ellipse):
             a,b,r = o.horizontal_radius,o.vertical_radius,self._hr
-            x = a*sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
-            y = b*sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
+            x = a*S.Sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
+            y = b*S.Sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
             return list(set([Point(x,y), Point(x,-y), Point(-x,y), Point(-x,-y)]))
 
         return Ellipse._intersection(self, o)
