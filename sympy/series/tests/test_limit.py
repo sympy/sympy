@@ -2,7 +2,7 @@ from sympy.core import *
 from sympy import limit
 from sympy.series.limits import mrv_compare, mrv2
 
-x = Symbol('x',positive=True,real=True,unbounded=True)
+x = Symbol('x', real=True, unbounded=True)
 z = Basic.Zero()
 o = Basic.One()
 
