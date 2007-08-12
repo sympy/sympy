@@ -13,3 +13,4 @@ from utilities import *
 #from specfun import *
 from integrals import *
 from plotting import Plot
+from printing.pretty import pprint
