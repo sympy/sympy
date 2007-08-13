@@ -65,7 +65,7 @@ class Chebyshev(OrthogonalPolynomial):
         cls._cache[i] = r
         return r
 
-    def _eval_expand(self):
+    def _eval_expand_basic(self):
         return self.as_lambda()
 
     def _eval_apply(self, x):

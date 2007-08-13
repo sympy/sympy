@@ -83,7 +83,7 @@ class Symbol(Atom, RelMeths, ArithMeths):
             return (b**2-a**2)/2
         return self*(b-a)
 
-    def _eval_complex_expand(self):
+    def _eval_expand_complex(self):
         return S.Re(self) + S.Im(self)*S.ImaginaryUnit
 
 class Wild(Symbol):

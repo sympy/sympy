@@ -506,20 +506,35 @@ class Basic(BasicMeths):
     ################# EXPRESSION REPRESENTATION METHODS #######################
     ###########################################################################
 
-    def _eval_complex_expand(self):
-        terms = [ term._eval_complex_expand() for term in self ]
-        return self.__class__(*terms, **self._assumptions).expand()
-
-    def _eval_expand(self):
+    def _eval_expand_complex(self):
         if isinstance(self, Atom):
             return self
-        return self.__class__(*[t.expand() for t in self], **self._assumptions)
+        terms = [ term._eval_expand_complex() for term in self ]
+        return self.__class__(*terms, **self._assumptions)
+
+    def _eval_expand_basic(self):
+        if isinstance(self, Atom):
+            return self
+        terms = [ term._eval_expand_basic() for term in self ]
+        return self.__class__(*terms, **self._assumptions)
 
     def expand(self, **hints):
-        if 'complex' in hints and hints['complex']:
-            return self._eval_complex_expand()
-        else:
-            return self._eval_expand()
+        """
+        Expand an expression based on different hints. The known hints
+        are basic, complex, and trig.
+        """
+        obj = self
+        for hint in hints:
+            func = getattr(obj, '_eval_expand_'+hint, None)
+            if func is not None:
+                obj = func()
+
+        # Perform basic expansion again, if needed
+        if hints.get('basic', True):
+            func = getattr(obj, '_eval_expand_basic', None)
+            if func is not None:
+                obj = func()
+        return obj
 
     def _eval_rewrite(self, classes, rule, **hints):
         if isinstance(self, Atom):
@@ -638,7 +653,7 @@ class Basic(BasicMeths):
            (-im(w) + re(z), re(w) + im(z))
 
         """
-        expr = self._eval_complex_expand()
+        expr = self.expand(complex=True)
 
         if not isinstance(expr, Basic.Add):
             expr = [expr]
@@ -967,9 +982,6 @@ class Atom(Basic):
         if s==self:
             return (b**2-a**2)/2
         return self*(b-a)
-
-    def _eval_complex_expand(self):
-        return self
 
     def _eval_is_polynomial(self, syms):
         return True

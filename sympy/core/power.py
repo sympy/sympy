@@ -53,7 +53,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         a = Basic.sympify(a)
         b = Basic.sympify(b)
         if isinstance(b, Basic.Zero):
-            return Basic.One()
+            return S.One
         if isinstance(b, Basic.One):
             return a
         obj = a._eval_power(b)
@@ -194,7 +194,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3*y)
         if isinstance(old, Basic.ApplyExp):
             coeff1,terms1 = old.args[0].as_coeff_terms()
-            coeff2,terms2 = (self.exp * Basic.Log()(self.base)).as_coeff_terms()
+            coeff2,terms2 = (self.exp * S.Log(self.base)).as_coeff_terms()
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(exp(3*y*log(x)),z) -> z**(2/3*y)
         return self.base.subs(old, new) ** self.exp.subs(old, new)
 
@@ -203,7 +203,23 @@ class Pow(Basic, ArithMeths, RelMeths):
             return 1/self.base, -self.exp
         return self.base, self.exp
 
-    def _eval_expand(self):
+    def _eval_expand_complex(self):
+        # XXX This is not totally correct since for x**(p/q) with x being
+        #     imaginary there are actually q roots, but only a single one
+        #     is returned from here
+        if not self.exp.is_integer:
+            re,im = self.base.as_real_imag()
+            r = S.Sqrt(re**2 + im**2)
+            t = S.ATan(im / re)
+            if im == 0 and re == -1:
+                t = S.Pi
+
+            rp = r**self.exp
+            tp = t*self.exp
+            return rp*S.Cos(tp) + rp*S.Sin(tp)*S.ImaginaryUnit
+        return self
+
+    def _eval_expand_basic(self):
         """
         (a*b)**n -> a**n * b**n
         (a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is positive integer
@@ -269,7 +285,7 @@ class Pow(Basic, ArithMeths, RelMeths):
     def _eval_derivative(self, s):
         dbase = self.base.diff(s)
         dexp = self.exp.diff(s)
-        return self * (dexp * Basic.Log()(self.base) + dbase * self.exp/self.base)
+        return self * (dexp * S.Log(self.base) + dbase * self.exp/self.base)
 
     _eval_evalf = Basic._seq_eval_evalf
 
@@ -387,8 +403,8 @@ class Pow(Basic, ArithMeths, RelMeths):
         x = order.symbols[0]
         e = self.exp
         b = self.base
-        ln = Basic.Log()
-        exp = Basic.Exp()
+        ln = S.Log
+        exp = S.Exp
         if e.has(x):
             return exp(e * ln(b)).oseries(order)
         if b==x: return self
@@ -410,10 +426,10 @@ class Pow(Basic, ArithMeths, RelMeths):
     def _eval_as_leading_term(self, x):
         if not self.exp.has(x):
             return self.base.as_leading_term(x) ** self.exp
-        return Basic.Exp()(self.exp * Basic.Log()(self.base)).as_leading_term(x)
+        return S.Exp(self.exp * S.Log(self.base)).as_leading_term(x)
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms): # of (1+x)**e
-        if n<0: return Basic.Zero()
+        if n<0: return S.Zero
         x = Basic.sympify(x)
-        return Basic.Binomial()(self.exp, n) * x**n
+        return S.Binomial(self.exp, n) * x**n

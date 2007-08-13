@@ -123,7 +123,10 @@ class Apply(Basic, ArithMeths, RelMeths):
             return obj
         return Basic._seq_subs(self, old, new)
 
-    def _eval_expand(self):
+    def _eval_conjugate(self):
+        return Apply(self.func, *[t.conjugate() for t in self.args])
+
+    def _eval_expand_basic(self):
         return self
 
     def _eval_evalf(self):
@@ -213,8 +216,8 @@ class Apply(Basic, ArithMeths, RelMeths):
                 return False
         return True
 
-    def _eval_complex_expand(self):
-        func = self.func(*[ term._eval_complex_expand() for term in self.args ])
+    def _eval_expand_complex(self):
+        func = self.func(*[ term._eval_expand_complex() for term in self.args ])
         return Basic.Re()(func) + S.ImaginaryUnit * Basic.Im()(func)
 
     def _eval_rewrite(self, classes, rule, **hints):

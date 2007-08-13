@@ -2,11 +2,14 @@ from sympy import *
 
 
 def test_complex():
-    a = Symbol("a")
-    b = Symbol("b")
+    a=Symbol("a", real=True)
+    b=Symbol("b", real=True)
+    x=Symbol('x')
     e = (a+I*b)*(a-I*b)
     assert e.expand() == a**2+b**2
-    assert (a+I*b).conjugate() == conjugate(a)-I*conjugate(b)
+    assert (a+I*b).conjugate() == a-I*b
+    assert exp(a+I*b).conjugate() == exp(a-I*b)
+    assert exp(I*x).conjugate() == exp(-I*conjugate(x))
     assert str(abs(a)) == "abs(a)"
 
 def test_abs1():
@@ -14,34 +17,32 @@ def test_abs1():
     b=Symbol("b", real=True)
     assert abs(a) == abs(a)
     assert abs(-a) == abs(a)
-    # XXX this isn't working
-    #assert abs(a+I*b) == sqrt(a*a+b*b)
+    assert abs(a+I*b) == sqrt(a**2+b**2)
 
 def test_abs2():
     a=Symbol("a", real=False)
     b=Symbol("b", real=False)
     assert abs(a) != a
     assert abs(-a) != a
-    assert abs(a+I*b) != sqrt(a*a+b*b)
+    assert abs(a+I*b) != sqrt(a**2+b**2)
 
-def _test_evalc():
-    # XXX evalc() methods currently do not exist
+def test_evalc():
     x=Symbol("x", real=True)
     y=Symbol("y", real=True)
-    assert ((x+I*y)**2).evalc() == x**2+2*I*x*y - y**2
+    assert ((x+I*y)**2).expand(complex=True) == x**2+2*I*x*y - y**2
 
     assert exp(I*x) != cos(x)+I*sin(x)
-    assert exp(I*x).evalc() == cos(x)+I*sin(x)
+    assert exp(I*x).expand(complex=True) == cos(x)+I*sin(x)
 
-    assert exp(I*x+y).evalc() == exp(y)*cos(x)+I*sin(x)*exp(y)
+    assert exp(I*x+y).expand(complex=True) == exp(y)*cos(x)+I*sin(x)*exp(y)
 
-    assert sin(I*x).evalc() == I * (exp(x)/2-exp(-x)/2)
-    assert sin(x+I*y).evalc() == sin(x)*(exp(y)/2+exp(-y)/2) + \
-            I * (exp(y)/2-exp(-y)/2) * cos(x)
+    assert sin(I*x).expand(complex=True) == I * sinh(x)
+    assert sin(x+I*y).expand(complex=True) == sin(x)*cosh(y) + \
+            I * sinh(y) * cos(x)
 
-    assert cos(I*x).evalc() == (exp(x)/2+exp(-x)/2)
-    assert cos(x+I*y).evalc() == cos(x)*(exp(y)/2+exp(-y)/2) - \
-            I * (exp(y)/2-exp(-y)/2) * sin(x)
+    assert cos(I*x).expand(complex=True) == cosh(x)
+    assert cos(x+I*y).expand(complex=True) == cos(x)*cosh(y) - \
+            I * sinh(y) * sin(x)
 
 
 def test_pythoncomplex():
@@ -50,7 +51,6 @@ def test_pythoncomplex():
     assert 4j*x != 4.0*x*I
     assert 4.1j*x != 4*x*I
 
-def _test_rootcomplex():
-    # XXX evalc() methods currently do not exist
-    assert ((1+I)**Rational(1,2)).evalc() == 2**Rational(1,4)*cos(Rational(1,2)*atan(1))+2**(Rational(1,4))*sin(Rational(1,2)*atan(1))*I
-    assert (sqrt(-10)*I).get_re_im() == (-sqrt(10), 0)
+def test_rootcomplex():
+    assert ((1+I)**Rational(1,2)).expand(complex=True) == 2**Rational(1,4)*cos(Rational(1,2)*atan(1))+2**(Rational(1,4))*sin(Rational(1,2)*atan(1))*I
+    assert (sqrt(-10)*I).as_real_imag() == (-sqrt(10), 0)

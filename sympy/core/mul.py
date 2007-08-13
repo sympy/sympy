@@ -214,13 +214,13 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             return coeff, list(self[1:])
         return Basic.One(), list(self[:])
 
-    def _eval_expand(self):
+    def _eval_expand_basic(self):
         """
         (a + b + ..) * c -> a * c + b * c + ..
         """
-        seq = [Basic.One()]
+        seq = [S.One]
         for t in self:
-            t = t.expand()
+            t = t._eval_expand_basic()
             if isinstance(t, Basic.Add):
                 seq = [f1*f2 for f1 in seq for f2 in t]
             else:

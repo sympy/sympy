@@ -34,6 +34,7 @@ def create_limits_table():
     tbl[(exp(x)*(sin(1/x+exp(-x))-sin(1/x+exp(-x**2))), oo)] = 1
     tbl[(exp(ln(ln(x+exp(ln(x)*ln(ln(x)))))/ln(ln(ln(exp(x)+x+ln(x))))), oo)] = exp(1)
     tbl[(exp(x*exp(-x)/(exp(-x)+exp(-2*x**2/(x+1))))/exp(x), oo)] = 1
+    #tbl[(sqrt(ln(x+1))-sqrt(ln(x)), oo)] = 0
 
     h = exp(-x/(1+exp(-x)))
     tbl[(exp(h)*exp(-x/(1+h))*exp(exp(-x+h))/h**2-exp(x)+x, oo)] = 2
@@ -47,6 +48,10 @@ def create_limits_table():
 
     h = exp(-x)
     tbl[(h/(sqrt(1+h)*sin(1/x)**2+sqrt(1-h)*cos(1/x)**2-1), oo)] = -2
+
+    #expr = 4 * exp(exp(5*x**(-Basic.Rational(5,7))/2+21*x**(Basic.Rational(6,11))/8+2*x**-8+54*x**(Basic.Rational(49,45))/17))**8 \
+    #            / ln(ln(-ln(4*x**(-Basic.Rational(5,14))/3)))**Basic.Rational(7,6) / 9
+    #tbl[(expr, oo)] = oo
 
     #
     # From tests/test_demidovich.py
@@ -64,6 +69,7 @@ def create_limits_table():
     tbl[(((x-1)/(x+1))**x, oo)] = exp(-2)
     tbl[((sqrt(cos(x))-(cos(x))**Basic.Rational(1,3))/(sin(x)**2), Basic.Zero())] = -Basic.Rational(1,12)
     tbl[(asin(a*x)/x, Basic.Zero())] = a
+    #tbl[(ln(1+exp(x))/x,oo)] = 1
 
     #
     # From issues

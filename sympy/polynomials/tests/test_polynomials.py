@@ -286,10 +286,10 @@ def test_roots():
             Rational(-1,3) + Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3) + Rational(4,9)/(Rational(1,2) + Rational(1,2)*I*3**Rational(1,2))*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(-1,3) + Rational(1,2)*I*3**Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3),
             Rational(-1,3) + Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3) + Rational(4,9)/(Rational(1,2) - Rational(1,2)*I*3**Rational(1,2))*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(-1,3) - Rational(1,2)*I*3**Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3)]
     assert roots(x**4 - 1) == [1, I, -1, -I]
-    assert roots(x**4 + 1) == [(-1)**Rational(1,4),
-                               (-1)**Rational(3,4),
-                               -(-1)**Rational(1,4),
-                               -(-1)**Rational(3,4)]
+    assert roots(x**4 + 1) == [((-1)**Rational(1,4)).expand(complex=True),
+                               ((-1)**Rational(3,4)).expand(complex=True),
+                               (-(-1)**Rational(1,4)).expand(complex=True),
+                               (-(-1)**Rational(3,4)).expand(complex=True)]
     assert roots(x**8 - 1) == [1, 2**Rational(1,2)/2 + I*2**Rational(1,2)/2,
                                I, -2**Rational(1,2)/2 + I*2**Rational(1,2)/2,
                                -1, -2**Rational(1,2)/2 - I*2**Rational(1,2)/2,

@@ -14,10 +14,10 @@ def test_log_apply_eval():
     assert log(-1) == I*pi
 
     assert log(E) == 1
-    assert log(-E) == 1 + I*pi
+    assert log(-E).expand() == 1 + I*pi
 
     assert log(pi) == log(pi)
-    assert log(-pi) == log(pi) + I*pi
+    assert log(-pi).expand() == log(pi) + I*pi
 
     assert log(17) == log(17)
     assert log(-17) == log(17) + I*pi
@@ -26,7 +26,7 @@ def test_log_apply_eval():
     assert log(-I) == -I*pi/2
 
     assert log(17*I) == I*pi/2 + log(17)
-    assert log(-17*I) == -I*pi/2 + log(17)
+    assert log(-17*I).expand() == -I*pi/2 + log(17)
 
     assert log(oo*I) == oo
     assert log(-oo*I) == oo
@@ -36,23 +36,27 @@ def test_log_apply_eval():
     x, y = symbols('xy')
 
     assert log(x) == log(x)
-    assert log(x*y) == log(x*y)
+    assert log(x*y) != log(x) + log(y)
 
-    assert log(x**2) == 2*log(x)
-    assert log(x**y) == log(x**y)
+    #assert log(x**2) != 2*log(x)
+    assert log(x**2).expand() == 2*log(x)
+    assert log(x**y) != y*log(x)
 
-    assert log(exp(x)) == log(exp(x))
+    assert log(exp(x)) != x
 
     x, y = symbols('xy', real=True)
 
     assert log(x) == log(x)
-    assert log(x*y) == log(x) + log(y)
+    #assert log(x*y) != log(x) + log(y)
+    assert log(x*y).expand() == log(x) + log(y)
 
-    assert log(x**2) == 2*log(x)
-    assert log(x**y) == log(x**y)
+    #assert log(x**2) != 2*log(x)
+    assert log(x**2).expand() == 2*log(x)
+    assert log(x**y) != y*log(x)
 
     assert log(exp(x)) == x
-    assert log(-exp(x)) == x + I*pi
+    #assert log(-exp(x)) != x + I*pi
+    assert log(-exp(x)).expand() == x + I*pi
 
     k = Symbol('k', positive=True)
 

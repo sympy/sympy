@@ -38,10 +38,9 @@ def test_exp_log():
     assert exp(log(x)) == x
 
 def test_log_expansion():
-    x = Symbol("x")
-    y = Symbol("y")
-    assert log(x*y) != log(x)+log(y)
-    # XXX The LHS is automatically expanded so it equals the RHS
+    x = Symbol("x", real=True)
+    y = Symbol("y", real=True)
+    #assert log(x*y) != log(x)+log(y)
     #assert log(x**2) != 2*log(x)
     assert log(x*y).expand() == log(x)+log(y)
     assert log(x**2).expand() == 2*log(x)
