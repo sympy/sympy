@@ -1066,7 +1066,7 @@ class ImaginaryUnit(Singleton, Atom, RelMeths, ArithMeths):
                 if e==1: return S.ImaginaryUnit
                 if e==2: return -S.One
                 return -S.ImaginaryUnit
-            return -S.One ** (e * S.Half)
+            return (-S.One) ** (e * S.Half)
         return
 
     def as_base_exp(self):

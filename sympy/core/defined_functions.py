@@ -106,6 +106,9 @@ class ApplyExp(Apply):
             return '(%s)' % (r)
         return r
 
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
     def as_base_exp(self):
         #return Basic.Exp1(), self.args[0]
         coeff, terms = self.args[0].as_coeff_terms()
@@ -927,6 +930,8 @@ class Re(DefinedFunction):
                 return self(a) - S.Im(b) + c
 
 class ApplyRe(Apply):
+    def _eval_conjugate(self):
+        return self
 
     def _eval_is_real(self):
         return True
@@ -994,6 +999,8 @@ class Im(DefinedFunction):
                 return self(a) + S.Re(b) + c
 
 class ApplyIm(Apply):
+    def _eval_conjugate(self):
+        return self
 
     def _eval_is_real(self):
         return True
@@ -1011,6 +1018,8 @@ class Arg(DefinedFunction):
         return
 
 class ApplyArg(Apply):
+    def _eval_conjugate(self):
+        return self
 
     def _eval_is_real(self):
         return True
@@ -1025,7 +1034,6 @@ class Conjugate(DefinedFunction):
 
     def _eval_apply(self, arg):
         obj = arg._eval_conjugate()
-
         if obj is not None:
             return obj
 
@@ -1117,7 +1125,6 @@ class Sin(DefinedFunction):
                 return (-1)**(n//2) * x**(n)/S.Factorial(n)
 
 class ApplySin(Apply):
-
     def _eval_rewrite_as_exp(self, arg):
         exp, I = S.Exp, S.ImaginaryUnit
         return (exp(arg*I) - exp(-arg*I)) / (2*I)

@@ -123,9 +123,6 @@ class Apply(Basic, ArithMeths, RelMeths):
             return obj
         return Basic._seq_subs(self, old, new)
 
-    def _eval_conjugate(self):
-        return Apply(self.func, *[t.conjugate() for t in self.args])
-
     def _eval_expand_basic(self):
         return self
 

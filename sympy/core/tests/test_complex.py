@@ -10,6 +10,7 @@ def test_complex():
     assert (a+I*b).conjugate() == a-I*b
     assert exp(a+I*b).conjugate() == exp(a-I*b)
     assert exp(I*x).conjugate() == exp(-I*conjugate(x))
+    assert sqrt(I) == (-1)**Rational(1,4)
     assert str(abs(a)) == "abs(a)"
 
 def test_abs1():
