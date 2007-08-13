@@ -512,6 +512,12 @@ class Basic(BasicMeths):
         terms = [ term._eval_expand_complex() for term in self ]
         return self.__class__(*terms, **self._assumptions)
 
+    def _eval_expand_trig(self):
+        if isinstance(self, Atom):
+            return self
+        terms = [ term._eval_expand_trig() for term in self ]
+        return self.__class__(*terms, **self._assumptions)
+
     def _eval_expand_basic(self):
         if isinstance(self, Atom):
             return self
@@ -531,9 +537,7 @@ class Basic(BasicMeths):
 
         # Perform basic expansion again, if needed
         if hints.get('basic', True):
-            func = getattr(obj, '_eval_expand_basic', None)
-            if func is not None:
-                obj = func()
+            obj = obj._eval_expand_basic()
         return obj
 
     def _eval_rewrite(self, classes, rule, **hints):
@@ -740,9 +744,9 @@ class Basic(BasicMeths):
         for s in symbols:
             s = Basic.sympify(s)
             if isinstance(s, Basic.Integer) and new_symbols:
-                last_s = new_symbols[-1]
+                last_s = new_symbols.pop()
                 i = int(s)
-                new_symbols += [last_s] * (i-1)
+                new_symbols += [last_s] * i
             elif isinstance(s, Basic.Symbol):
                 new_symbols.append(s)
             else:
@@ -850,7 +854,7 @@ class Basic(BasicMeths):
             return self
         obj = self._eval_oseries(order)
         if obj is not None:
-            obj2 = obj.expand()
+            obj2 = obj.expand(trig=True)
             if obj2 != obj:
                 r = obj2.oseries(order)
                 del _cache[(self, order)]
@@ -914,7 +918,7 @@ class Basic(BasicMeths):
         assert isinstance(x, Basic.Symbol),`x`
         if not self.has(x):
             return self
-        expr = self.expand()
+        expr = self.expand(trig=True)
         obj = expr._eval_as_leading_term(x)
         if obj is not None:
             return obj

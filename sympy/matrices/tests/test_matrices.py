@@ -305,6 +305,16 @@ def test_nullspace():
     assert basis[2] == Matrix([-2,0,0,-2,1,0,0])
     assert basis[3] == Matrix([0,0,0,0,0,R(-1)/3, 1])
 
+def test_wronskian():
+    x = Symbol('x')
+    assert wronskian([cos(x), sin(x)], x) == cos(x)**2 + sin(x)**2
+    assert wronskian([exp(x), exp(2*x)], x) == exp(3*x)
+    assert wronskian([exp(x), x], x) == exp(x) - x*exp(x)
+    assert wronskian([1, x, x**2], x) == 2
+    assert wronskian([exp(x), cos(x), x**3], x).expand() == \
+        -6*exp(x)*sin(x)*x + 6*cos(x)*exp(x)*x**2 - 6*exp(x)*cos(x)*x - \
+        exp(x)*cos(x)*x**3 + exp(x)*sin(x)*x**3
+
 def test_eigen():
     # test charpoly
     x = Symbol('x')

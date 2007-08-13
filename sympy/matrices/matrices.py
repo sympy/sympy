@@ -982,6 +982,13 @@ def GramSchmidt(vlist, orthog=False):
             out[i] = out[i].normalized()
     return out
 
+def wronskian(functions, var):
+    for index in xrange(0, len(functions)):
+        functions[index] = Basic.sympify(functions[index])
+    n = len(functions)
+    W = Matrix(n, n, lambda i,j: functions[i].diff(var, j) )
+    return W.det()
+
 class SMatrix(Matrix):
     def __init__(self, *args):
         if len(args) == 3 and callable(args[2]):

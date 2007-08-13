@@ -82,7 +82,7 @@ class Order(Basic, ArithMeths, RelMeths):
 
     @cache_it_immutable
     def __new__(cls, expr, *symbols, **assumptions):
-        expr = Basic.sympify(expr).expand()
+        expr = Basic.sympify(expr).expand(trig=True)
         if isinstance(expr, Basic.NaN):
             return S.NaN
         

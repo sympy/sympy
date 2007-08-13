@@ -1,32 +1,6 @@
 from sympy import *
 
 
-def test_func():
-    a = Symbol("a")
-    b = Symbol("b")
-    c = Symbol("c")
-    p = Rational(5)
-    e = a*b + sin(b**p)
-    assert e == a*b + sin(b**5)
-    assert e.diff(a) == b
-    assert e.diff(b) == a+5*b**4*cos(b**5)
-    e = tan(c)
-    assert e == tan(c)
-    assert e.diff(c) in [cos(c)**(-2),1 + sin(c)**2/cos(c)**2, 1 + tan(c)**2]
-    e = c*log(c)-c
-    assert e == -c+c*log(c)
-    assert e.diff(c) == log(c)
-    e = log(sin(c))
-    assert e == log(sin(c))
-    assert e.diff(c) == sin(c)**(-1)*cos(c)
-    assert e.diff(c) != cos(c)**(-1)*sin(c)
-    assert e.diff(c) != sin(c)**(-2)*cos(c)
-    assert e.diff(c) != sin(c)**(-3)*cos(c)
-    t = Rational(2)
-    e = (t**a/log(t))
-    assert e == 2**a*log(Rational(2))**(-1)
-    assert e.diff(a) == 2**a
-
 def test_log():
     assert log(2) > 0
     assert log(1).is_zero
@@ -40,7 +14,7 @@ def test_exp_log():
 def test_log_expansion():
     x = Symbol("x", real=True)
     y = Symbol("y", real=True)
-    #assert log(x*y) != log(x)+log(y)
+    ##assert log(x*y) != log(x)+log(y)
     #assert log(x**2) != 2*log(x)
     assert log(x*y).expand() == log(x)+log(y)
     assert log(x**2).expand() == 2*log(x)
@@ -96,11 +70,6 @@ def test_bug1():
 
     e = sqrt(-5*log(w))
     assert e.subs(log(w),-x) == sqrt(5*x)
-
-def test_Derivative():
-    x = Symbol("x")
-    e = Derivative(log(x),x)
-    assert e == 1/x
 
 def _test_invtrig(): # XXX No inverse trig yet
     x = Symbol("x")

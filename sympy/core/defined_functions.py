@@ -86,7 +86,6 @@ class ApplyExp(Apply):
 
     def _eval_expand_complex(self):
         re, im = self.args[0].as_real_imag()
-
         exp, cos, sin = S.Exp(re), S.Cos(im), S.Sin(im)
         return exp * cos + S.ImaginaryUnit * exp * sin
 
@@ -314,7 +313,9 @@ class ApplyLog(Apply):
             if arg.is_infinitesimal: return False
             if isinstance(arg, Basic.Number):
                 return arg>1
-    def _eval_is_zero(self): # USELESS
+    def _eval_is_zero(self):
+        # XXX This is not quite useless. Try evaluating log(0.5).is_negative
+        #     without it. There's probably a nicer way though.
         return isinstance(self.args[0], Basic.One)
 
     def as_numer_denom(self):
@@ -466,7 +467,8 @@ class Abs(DefinedFunction):
         return isinstance(self.args[0], Basic.Zero)
 
 class ApplyAbs(Apply):
-    pass
+    def _eval_conjugate(self):
+        return self
 
 
 class Sign(DefinedFunction):
@@ -487,6 +489,9 @@ class Sign(DefinedFunction):
 class ApplySign(Apply):
 
     is_bounded = True
+
+    def _eval_conjugate(self):
+        return self
 
     def _eval_is_zero(self):
         return isinstance(self.args[0], Basic.Zero)
@@ -1129,19 +1134,19 @@ class ApplySin(Apply):
         exp, I = S.Exp, S.ImaginaryUnit
         return (exp(arg*I) - exp(-arg*I)) / (2*I)
 
-    def _eval_expand_complex(self):
-        re, im = self.args[0].as_real_imag()
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
 
+    def _eval_expand_complex(self):
+        if self.args[0].is_real:
+            return self
+        re, im = self.args[0].as_real_imag()
         return S.Sin(re)*S.Cosh(im) + \
             S.ImaginaryUnit*S.Cos(re)*S.Sinh(im)
 
-    def _eval_expand_basic(self):
-
+    def _eval_expand_trig(self):
         arg = self.args[0].expand()
-        #return S.Sin(arg)
-        ###
-        cos = S.Cos
-        sin = S.Sin
+        cos, sin = S.Cos, S.Sin
         x = None
         if isinstance(arg, Basic.Add):
             x = arg[0]
@@ -1152,7 +1157,7 @@ class ApplySin(Apply):
                 x = Basic.Mul(*terms)
                 y = (coeff-1)*x
         if x is not None:
-            return (sin(x)*cos(y) + sin(y)*cos(x)).expand()
+            return (sin(x)*cos(y) + sin(y)*cos(x)).expand(trig=True)
         return sin(arg)
 
     def _eval_as_leading_term(self, x):
@@ -1251,13 +1256,17 @@ class ApplyCos(Apply):
         exp, I = S.Exp, S.ImaginaryUnit
         return (exp(arg*I) + exp(-arg*I)) / 2
 
-    def _eval_expand_complex(self):
-        re, im = self.args[0].as_real_imag()
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
 
+    def _eval_expand_complex(self):
+        if self.args[0].is_real:
+            return self
+        re, im = self.args[0].as_real_imag()
         return S.Cos(re)*S.Cosh(im) - \
             S.ImaginaryUnit*S.Sin(re)*S.Sinh(im)
 
-    def _eval_expand_basic(self):
+    def _eval_expand_trig(self):
         arg = self.args[0].expand()
         cos = S.Cos
         sin = S.Sin
@@ -1265,12 +1274,12 @@ class ApplyCos(Apply):
         if isinstance(arg, Basic.Add):
             x = arg[0]
             y = Basic.Add(*arg[1:])
-            return (cos(x)*cos(y)-sin(y)*sin(x)).expand()
+            return (cos(x)*cos(y) - sin(y)*sin(x)).expand(trig=True)
         else:
             coeff, terms = arg.as_coeff_terms()
             if not isinstance(coeff, Basic.One) and isinstance(coeff, Basic.Integer) and terms:
                 x = Basic.Mul(*terms)
-                return Basic.Chebyshev(coeff)(cos(x)).expand()
+                return Basic.Chebyshev(coeff)(cos(x))
         return cos(arg)
 
     def _eval_as_leading_term(self, x):
@@ -1365,6 +1374,20 @@ class Tan(DefinedFunction):
             return (-1)**a * b*(b-1) * B/F * x**n
 
 class ApplyTan(Apply):
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_expand_complex(self):
+        if self.args[0].is_real:
+            return self
+        re, im = self.args[0].as_real_imag()
+        denom = S.Cos(re)**2 + S.Sinh(im)**2
+        return (S.Sin(re)*S.Cos(re) + \
+            S.ImaginaryUnit*S.Sinh(im)*S.Cosh(im))/denom
+
+    def _eval_expand_trig(self):
+        return self
 
     def _eval_rewrite_as_exp(self, arg):
         neg_exp = S.Exp(-arg*S.ImaginaryUnit)
@@ -1462,6 +1485,17 @@ class Cot(DefinedFunction):
 
 class ApplyCot(Apply):
 
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_expand_complex(self):
+        if self.args[0].is_real:
+            return self
+        re, im = self.args[0].as_real_imag()
+        denom = S.Sin(re)**2 + S.Sinh(im)**2
+        return (S.Sin(re)*S.Cos(re) - \
+            S.ImaginaryUnit*S.Sinh(im)*S.Cosh(im))/denom
+
     def _eval_rewrite_as_exp(self, arg):
         neg_exp = S.Exp(-arg*S.ImaginaryUnit)
         pos_exp = S.Exp(arg*S.ImaginaryUnit)
@@ -1544,6 +1578,15 @@ class Sinh(DefinedFunction):
 
 class ApplySinh(Apply):
 
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_expand_complex(self):
+        if self.args[0].is_real:
+            return self
+        re, im = self.args[0].as_real_imag()
+        return S.Sinh(re)*S.Cos(im) + S.Cosh(re)*S.Sin(im)*S.ImaginaryUnit
+
     def _eval_rewrite_as_exp(self, arg):
         return (S.Exp(arg) - S.Exp(-arg)) / 2
 
@@ -1620,6 +1663,14 @@ class Cosh(DefinedFunction):
                 return x**(n)/S.Factorial(n)
 
 class ApplyCosh(Apply):
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_expand_complex(self):
+        if self.args[0].is_real:
+            return self
+        re, im = self.args[0].as_real_imag()
+        return S.Cosh(re)*S.Cos(im) + S.Sinh(re)*S.Sin(im)*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
         return (S.Exp(arg) + S.Exp(-arg)) / 2
@@ -1700,6 +1751,17 @@ class Tanh(DefinedFunction):
 
 class ApplyTanh(Apply):
 
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_expand_complex(self):
+        if self.args[0].is_real:
+            return self
+        re, im = self.args[0].as_real_imag()
+        denom = S.Sinh(re)**2 + S.Cos(im)**2
+        return (S.Sinh(re)*S.Cosh(re) + \
+            S.ImaginaryUnit*S.Sin(im)*S.Cos(im))/denom
+
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = S.Exp(-arg), S.Exp(arg)
         return (pos_exp-neg_exp)/(pos_exp+neg_exp)
@@ -1779,6 +1841,17 @@ class Coth(DefinedFunction):
             return 2**(n+1) * B/F * x**n
 
 class ApplyCoth(Apply):
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_expand_complex(self):
+        if self.args[0].is_real:
+            return self
+        re, im = self.args[0].as_real_imag()
+        denom = S.Sinh(re)**2 + S.Sin(im)**2
+        return (S.Sinh(re)*S.Cosh(re) - \
+            S.ImaginaryUnit*S.Sin(im)*S.Cos(im))/denom
 
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = S.Exp(-arg), S.Exp(arg)

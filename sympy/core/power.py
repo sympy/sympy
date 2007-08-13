@@ -203,6 +203,9 @@ class Pow(Basic, ArithMeths, RelMeths):
             return 1/self.base, -self.exp
         return self.base, self.exp
 
+    def _eval_conjugate(self):
+        return S.Conjugate(self.base)**self.exp
+
     def _eval_expand_complex(self):
         # XXX This is not totally correct since for x**(p/q) with x being
         #     imaginary there are actually q roots, but only a single one

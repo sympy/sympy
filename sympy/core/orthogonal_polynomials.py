@@ -43,6 +43,7 @@ class Chebyshev(OrthogonalPolynomial):
     nofargs = 1
     _cache = {}
     kind = 1
+    is_commutative = True
 
     def as_lambda(self):
         i = self.index
@@ -93,7 +94,7 @@ class Chebyshev2(Chebyshev):
 
 class ApplyChebyshev(Apply):
 
-    def expand(self):
+    def _eval_expand_basic(self):
         return self.func.as_lambda()(self.args[0]).expand()
 
 class ApplyChebyshev2(ApplyChebyshev):
