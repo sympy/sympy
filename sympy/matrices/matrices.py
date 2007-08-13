@@ -526,8 +526,47 @@ class Matrix(object):
                 A[i,j] = A[i,j] * scale
         return A, p
 
-    def LUdecomposition_Block(self):
-        raise NotImplementedError("Not yet implemented")
+
+    def LUdecompositionFF(self):
+        # returns 4 matrices P, L, D, U such that PA = L D**-1 U
+        # from the paper "fraction-free matrix factors..." by Zhou and Jeffrey
+        n, m = self.lines, self.cols
+        U, L, P = self[:,:], eye(n), eye(n)
+        DD = zero(n) # store it smarter since it's just diagonal
+        oldpivot = 1
+
+        for k in range(n-1):
+            if U[k,k] == 0:
+                kpivot = k+1
+                Notfound = True
+                while kpivot < n and Notfound:
+                    if U[kpivot, k] != 0:
+                        Notfound = False
+                    else:
+                        kpivot = kpivot + 1
+                if kpivot == n+1:
+                    raise "Matrix is not full rank"
+                else:
+                    swap = U[k, k:]
+                    U[k,k:] = U[kpivot,k:]
+                    U[kpivot, k:] = swap
+                    swap = P[k, k:]
+                    P[k, k:] = P[kpivot, k:]
+                    P[kpivot, k:] = swap
+            assert U[k, k] != 0
+            L[k,k] = U[k,k]
+            DD[k,k] = oldpivot * U[k,k]
+            assert DD[k,k] != 0
+            Ukk = U[k,k]
+            for i in range(k+1, n):
+                L[i,k] = U[i,k]
+                Uik = U[i,k]
+                for j in range(k+1, m):
+                    U[i,j] = (Ukk * U[i,j] - U[k,j]*Uik) / oldpivot
+                U[i,k] = 0
+            oldpivot = U[k,k]
+        DD[n-1,n-1] = oldpivot
+        return P, L, DD, U
 
     def cofactorMatrix(self):
         out = self[:,:]

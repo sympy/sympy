@@ -191,6 +191,22 @@ def test_LUdecomp():
     assert U.is_upper()
     assert (L*U).permuteBkwd(p)-M == zero(3)
 
+    # test FF LUdecomp
+    M = Matrix([[1, 3, 3],
+                [3, 2, 6],
+                [3, 2, 2]])
+    P, L, Dee, U = M.LUdecompositionFF()
+    assert P*M == L*Dee.inv()*U
+
+    M = Matrix([[1, 2, 3, 4],
+                 [3, -1, 2, 3],
+                 [3, 1, 3, -2],
+                 [6, -1, 0, 2]])
+    P, L, Dee, U = M.LUdecompositionFF()
+    assert P*M == L*Dee.inv()*U
+
+
+
 def test_LUsolve():
     A = Matrix([[2,3,5],
                 [3,6,2],
