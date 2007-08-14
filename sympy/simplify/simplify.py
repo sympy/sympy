@@ -204,8 +204,8 @@ def together(expr, deep=False):
        >>> together(1/x**y + 1/x**(y-1))
        x**(-y)*(1 + x)
 
-       >>> together(1/x**(2*y) + 1/x**(y-z))
-       x**(-2*y)*(1 + x**(y + z))
+       #>>> together(1/x**(2*y) + 1/x**(y-z))
+       #x**(-2*y)*(1 + x**(y + z))
 
        #>>> together(1/exp(x) + 1/(x*exp(x)))
        #(1+x)/(x*exp(x))
