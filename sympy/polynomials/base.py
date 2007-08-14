@@ -115,8 +115,7 @@ class Polynomial(Basic):
             if isinstance(var, Symbol):
                 var = [var]
             obj.var = var
-            if not (isinstance(sympy_expr, Basic)
-                    and sympy_expr.is_polynomial(*var)):
+            if var and not sympy_expr.is_polynomial(*var):
                 raise PolynomialException("%s is not a polynomial!"
                                           % sympy_expr)
             obj.sympy_expr = sympy_expr

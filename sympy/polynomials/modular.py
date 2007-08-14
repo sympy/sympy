@@ -182,7 +182,6 @@ def mod_poly_truncate(f, n):
 
 def mod_poly_pow(f, n, p, m):
     """Repeated squaring."""
-    """Repeated squaring."""
     assert isinstance(n, (int, long))
     if not n:
         return {0: 1}
