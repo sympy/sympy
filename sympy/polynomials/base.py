@@ -167,7 +167,7 @@ class Polynomial(Basic):
                         "__str__",
                         "__repr__",
                         "__eq__",
-                        "__neq__",
+                        "__ne__",
                         "__pos__",
                         "__neg__",
                         "__add__",
@@ -227,7 +227,7 @@ class Polynomial(Basic):
             return self.sympy_expr == other
 
 
-    def __neq__(self, other):
+    def __ne__(self, other):
         """Also see L{__eq__}."""
         if isinstance(other, Polynomial):
             return self.sympy_expr != other.sympy_expr
