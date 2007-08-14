@@ -72,6 +72,10 @@ class PrettyPrinter:
         pform = prettyForm(*stringPict.next(pform, r))
         return pform
 
+    def _pretty_ApplyConjugate(self, e):
+        pform = self._pretty(e.args[0])
+        return prettyForm(*stringPict.top(pform, '_'*pform.width()))
+
     def _pretty_ApplyAbs(self, e):
         pform = self._pretty(e.args[0])
         pform.baseline = 0
@@ -162,7 +166,7 @@ class PrettyPrinter:
         for x in sum:
             # Check for negative "things" so that this information can be enforce upon
             # the pretty form so that it can be made of use (such as in a sum).
-            if isinstance(x, Basic.Mul) and isinstance(x[0], Basic.Number) and x[0] < 0:
+            if isinstance(x, Basic.Mul) and x.as_coeff_terms()[0] < 0:
                 pform1 = self._pretty(-x)
                 if len(pforms) == 0:
                     if pform1.height() > 1:

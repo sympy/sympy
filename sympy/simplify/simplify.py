@@ -227,28 +227,30 @@ def together(expr, deep=False):
                 denom = {}
 
                 for term in make_list(q.expand(), Mul):
-                    expo = Rational(1)
+                    expo = Integer(1)
+                    coeff = Integer(1)
 
                     if isinstance(term, Pow):
                         if isinstance(term.exp, Rational):
                             term, expo = term.base, term.exp
                         elif isinstance(term.exp, Mul):
-                            coeff, tail = term.exp[0], Mul(*term.exp[1:])#term.exp.getab()
-
+                            coeff, tail = term.as_coeff_terms()
                             if isinstance(coeff, Rational):
+                                tail = Basic.Mul(*terms)
                                 term, expo = Pow(term.base, tail), coeff
+                        coeff = Integer(1)
                     elif isinstance(term, Basic.Exp):
                         if isinstance(term._args, Rational):
                             term, expo = Basic.E, term.args
                         elif isinstance(term.args, Mul):
-                            coeff, tail = term.args[0], Mul(*term.args[1:])#term.exp.getab()
-                            #coeff, tail = term.args.getab()
-
+                            coeff, tail = term.as_coeff_terms()
                             if isinstance(coeff, Rational):
+                                tail = Basic.Mul(*terms)
                                 term, expo = Basic.Exp()(tail), coeff
+                        coeff = Integer(1)
                     elif isinstance(term, Rational):
-                        coeffs.append(term)
-                        continue
+                        coeff = Integer(term.q)
+                        term = Integer(term.p)
 
                     if term in denom:
                         denom[term] += expo
@@ -265,8 +267,7 @@ def together(expr, deep=False):
                     else:
                         basis[term] = (expo, expo)
 
-                    coeffs.append(Rational(1))
-
+                    coeffs.append(coeff)
                 items.append((numer, denom))
 
             numerator, denominator = [], []

@@ -15,6 +15,8 @@ ordering_of_classes = [
     'Exp1','Pi','ImaginaryUnit',
     # symbols
     'Symbol','Wild','Temporary',
+    # Functions that should come before Pow/Add/Mul
+    'ApplyConjugate', 'ApplyAbs',
     # arithmetic operations
     'Pow', 'Mul', 'Add',
     # function values
@@ -27,8 +29,7 @@ ordering_of_classes = [
     'ApplyRisingFactorial','ApplyFallingFactorial',
     'ApplyFloor', 'ApplyCeiling',
     'ApplyRe','ApplyIm', 'ApplyArg',
-    'ApplySqrt','ApplyAbs','ApplySign',
-    'ApplyConjugate',
+    'ApplySqrt','ApplySign',
     'ApplyMrvLog',
     'ApplyChebyshev','ApplyChebyshev2',
     'Derivative','Integral',

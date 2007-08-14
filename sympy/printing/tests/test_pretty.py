@@ -60,6 +60,11 @@ def test_pretty_functions():
     # Nesting of square roots
     assert pretty( sqrt((sqrt(x+1))+1) ) == '    _______________\n   /       _______ \n \\/  1 + \\/ 1 + x  '
 
+    # Conjugates
+    a,b = map(Symbol, 'ab')
+    assert pretty( conjugate(a+b*I) ) == '_     _\na - I*b'
+    assert pretty( conjugate(exp(a+b*I)) ) == ' _     _\n a - I*b\ne       '
+
 def test_pretty_derivatives():
     # Simple
     f_1 = Derivative(log(x), x, evaluate=False)

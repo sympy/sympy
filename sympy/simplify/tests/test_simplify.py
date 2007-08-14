@@ -91,6 +91,8 @@ def test_together():
     assert together(sin(1/x+1/y)) == sin(1/x+1/y)
     assert together(sin(1/x+1/y), deep=True) == sin((x+y)/(x*y))
 
+    assert together(Rational(1,2) + x/2) == (x+1)/2
+
 def test_separate():
     x, y, z = map(Symbol, 'xyz')
 
