@@ -2,7 +2,7 @@
 from sympy.core import *
 
 # Simple implementation of Newton's method for root-finding
-def _newton(h, x0, eps):
+def _newton(h, x0, eps=1e-10):
     x = x0
     prevdiff = 1
     while 1:
@@ -35,12 +35,12 @@ class _PolynomialSequence(DefinedFunction):
             return self._memo[n]
 
     def _eval_apply(self, n, x):
-        if isinstance(x, Legendre_zero) and x._args[0] == n:
-            return 0
+        if isinstance(x, Apply) and x.func == self._zero_class and x.args[0] == n:
+            return Basic.Zero()
         if n.is_integer and n >= 0:
             for k in xrange(int(n)):
                 if x == self._zero_class(n, k):
-                    return 0
+                    return Basic.Zero()
             #return self.poly().subs(self._x, x)
             return self.poly(n, x).subs(self._x, x)
         #return self
@@ -76,12 +76,11 @@ class Legendre(_PolynomialSequence):
     _memo = {}
 
     def _calc(self, n):
-        if n == 0: return Rational(1)
+        if n == 0: return Basic.One()
         if n == 1: return self._x
         return ((2*n-1)*self._x*self._memo[n-1] - (n-1)*self._memo[n-2])/n
 
 legendre = Legendre()
-
 
 class Legendre_zero(DefinedFunction):
     """
@@ -104,9 +103,8 @@ class Legendre_zero(DefinedFunction):
     nofargs = 2
 
     def _eval_apply(self, n, k):
-        from sympy.core import sqrt
         if n.is_odd and (n-1)/2 == k:
-            return Rational(0)
+            return Basic.Zero()
         if n == 2 and k == 0: return -sqrt(Rational(1,3))
         if n == 2 and k == 1: return sqrt(Rational(1,3))
         if n == 3 and k == 0: return -sqrt(Rational(3,5))
@@ -115,31 +113,30 @@ class Legendre_zero(DefinedFunction):
         # polynomials, but it might not be helpful to do so by default
         # since the expressions grow extremely complicated
 
-    def evalf(self, prec=10):
+class ApplyLegendre_zero(Apply):
+    def _eval_evalf(self):
         # Increasing the precision is really just a matter of using
         # a lower epsilon; the problem is that numerical evaluation of
         # polynomials currently doesn't work as it should
-        if prec > 10:
-            raise NotImplementedError
-        eps = 1e-10
+        x = Symbol('x')
+        t = Symbol('t')
 
-        n, k = self._args
+        n, k = self.args
         assert 0 <= k < n
 
-        L = lambda x: legendre(n, x)
-
-        t = Symbol('t')
+        #L = lambda x: legendre(n, x)
+        L = Lambda(legendre(n, x), x)
         Ldpol = legendre(n, t).diff(t)
-        Ld = lambda x: Ldpol.subs(t, x)
+        Ld = Lambda(Ldpol.subs(t, x), x)
 
         # Good initial estimate for use with Newton's method
         import math
         x = -math.cos(math.pi*(k+1-0.25)/(n+0.5))
 
-        return _newton(lambda t: L(t)/Ld(t), x, eps)
+        return _newton(lambda t: L(t)/Ld(t), x)
 
 legendre_zero = Legendre_zero()
-legendre._zero_class = legendre_zero
+Legendre._zero_class = legendre_zero
 
 
 class Chebyshev3(_PolynomialSequence):
@@ -169,7 +166,7 @@ class Chebyshev3(_PolynomialSequence):
     _memo = {}
 
     def _calc(self, n):
-        if n == 0: return Rational(1)
+        if n == 0: return Basic.One()
         if n == 1: return self._x
         return 2*self._x*self._memo[n-1] - self._memo[n-2]
 
@@ -197,7 +194,6 @@ class Chebyshev_zero(DefinedFunction):
     nofargs = 2
 
     def _eval_apply(self, n, k):
-        from sympy.core import cos
         return cos(pi*(2*k+1)/(2*n))
 
 

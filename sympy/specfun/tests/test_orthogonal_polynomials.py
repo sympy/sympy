@@ -20,8 +20,7 @@ def test_legendre():
             z = legendre_zero(n, k)
             assert legendre(n, z) == 0
             assert abs(legendre(n, z.evalf())) < 1e-8
-            #this fails:
-            #assert abs(legendre(n+1, z.evalf())) > 1e-8
+            assert abs(legendre(n+1, z.evalf())) > 1e-8
     assert legendre(3, sqrt(Rational(3,5))) == 0
     assert legendre(3, -sqrt(Rational(3,5))) == 0
 
@@ -36,4 +35,4 @@ def test_chebyshev():
             z = chebyshev_zero(n, k)
             assert chebyshev(n, z) == 0
             assert abs(chebyshev(n, z.evalf())) < 1e-8
-            #assert abs(chebyshev(n+1, z.evalf())) > 1e-8
+            assert abs(chebyshev(n+1, z.evalf())) > 1e-8
