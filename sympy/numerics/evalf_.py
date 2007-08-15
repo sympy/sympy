@@ -6,7 +6,7 @@ import constants
 from utils_ import bitcount
 
 
-def polyfunc(expr):
+def polyfunc(expr, derivative=False):
     """
     Convert a SymPy expression representing a univariate polynomial
     into a function for numerical evaluation using Floats /
@@ -16,6 +16,9 @@ def polyfunc(expr):
         >>> polyfunc(x**3 + 4)(2)
         Float('12')
 
+    If derivative=True is set, the evaluation function evaluates both
+    the polynomial and its derivative at the given point and returns
+    the two values as a tuple.
     """
     poly = Polynomial(expr)
     degree = poly.coeffs[0][1]
@@ -24,10 +27,16 @@ def polyfunc(expr):
         coeffs[int(e)] = evalf(c)
     def g(x):
         x = evalf(x)
-        y = 0
-        for c in reversed(coeffs):
-            y = y*x+c
-        return y
+        p = coeffs[int(degree)]
+        q = 0
+        for i in xrange(degree-1, -1, -1):
+            if derivative:
+                q = p + x*q
+            p = coeffs[i] + x*p
+        if derivative:
+            return p, q
+        else:
+            return p
     return g
 
 

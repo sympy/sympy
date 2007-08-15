@@ -17,3 +17,7 @@ def test_polyfunc():
     assert p(0).ae(q(0))
     assert p(1).ae(q(1))
     assert p(-7.5).ae(q(-7.5))
+    p = x**3 - 5*x**2 + 4*x - 6
+    pd = p.diff(x)
+    assert polyfunc(p)(2) == p.subs(x, 2)
+    assert polyfunc(p, True)(2) == (p.subs(x, 2), pd.subs(x, 2))
