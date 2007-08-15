@@ -1,8 +1,5 @@
 """Core module. Provides the basic operations needed in sympy.
 """
-# merging symbolic and sympy.core
-# Author: Pearu Peterson <pearu.peterson@gmail.com>
-# Created: May 2007
 
 from basic import Basic
 from symbol import Symbol, Wild, symbols

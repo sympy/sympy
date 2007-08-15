@@ -95,3 +95,16 @@ Now you can call "py.test" from anywhere.
 To clean everything (thus getting the same tree as in the svn):
 
 ./setup.py clean
+
+
+6. Brief History
+----------------
+
+SymPy was started by Ondrej Certik in 2005, he wrote some code during the
+summer, then he wrote some more code during the summer 2006. In February 2007,
+Fabian Seoane joined the project and helped fixed many things, contributed
+documentation and made it alive again. 5 students improved SymPy incredibly
+during the summer 2007 as part of the Google Summer of Code. Pearu Peterson
+joined the development during the summer 2007 and he has made SymPy much more
+competitive by rewriting the core from scratch, that has made it from 10x to
+100x faster. 

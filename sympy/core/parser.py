@@ -36,9 +36,6 @@ Defines parser for the following syntax rules:
 <call> = <primary> ( [ <argument-list> ] )
 <argument> = [ <identifier> = ] <expr>
 
-Author: Pearu Peterson <pearu.peterson@gmail.com>
-Created: January 2007
-
 """
 
 __all__ = ['Expr','Lambda_Test', 'XOr_Test', 'Or_Test','And_Test','Not_Test','Relational','Arith',

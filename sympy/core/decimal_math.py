@@ -3,8 +3,6 @@ Decimal math functions.
 
 Heavily copied from http://code.google.com/p/dmath/, generalized pow to non-integer exponents.
 
-Author: Pearu Peterson <pearu.peterson@gmail.com>
-Created: February, 2007
 """
 
 __all__ = ['acos', 'asin', 'atan', 'atan2', 'ceiling', 'cos', 'cosh', 'degrees',
