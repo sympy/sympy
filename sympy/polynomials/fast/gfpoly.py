@@ -22,6 +22,13 @@ def GFPolyFactory(p):
                     result_dict[e] = cc
             return newClass(result_dict)
 
+        def to_int_dict(self):
+            """Returns the dictionaries of integer representators."""
+            result_dict = {}
+            for e, c in self.coeffs.iteritems():
+                result_dict[e] = c.value
+            return result_dict
+
         def to_sym_int_dict(self):
             """Returns the dictionaries of symmetric integer representators."""
             result_dict = {}

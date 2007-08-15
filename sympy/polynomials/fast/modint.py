@@ -114,3 +114,28 @@ def xgcd(a, b):
         (c, q) = (a%b, a/b)
         (a, b, r, s, x, y) = (b, c, x-q*r, y-q*s, r, s)
     return (a, x*x_sign, y*y_sign)
+
+def crt(m, v, symmetric=False):
+    """Chinese remainder theorem.
+
+    The integers in m are assumed to be pairwise coprime. The output
+    is then an integer f, such that that f = v_i mod m_i for each pair
+    out of v and m.
+    """
+    mm = 1
+    for m_i in m:
+        mm *= m_i
+    result = 0
+    for m_i, v_i in zip(m, v):
+        e = mm/m_i
+        g, s, t = xgcd(e, m_i)
+        c = (v_i*s) % m_i
+        result += c*e
+    result %= mm
+    if symmetric:
+        if result <= mm/2:
+            return result
+        else:
+            return result - mm
+    else:
+        return result

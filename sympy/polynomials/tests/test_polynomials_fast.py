@@ -29,6 +29,11 @@ def test_ModularInteger():
     assert IntMod5(3)**7 == IntMod5(1) / IntMod5(3)
     assert IntMod5(2)
 
+    assert modint.crt([2, 3, 5], [0, 0, 0]) == 0
+    assert modint.crt([2, 3, 5], [1, 1, 1]) == 1
+    assert modint.crt([2, 3, 5], [-1, -1, -1], True) == -1
+    assert modint.crt([2, 3, 5], [-1, -1, -1], False) == 2*3*5 - 1    
+
 # polynomials/fast/gfpoly.py
 
 def test_GFPoly():
@@ -121,3 +126,29 @@ def test_GFPoly():
         test_dict[item[1]] = item[0].to_sym_int_dict()
     assert test_dict == {1: {1:1}, 3:{2:1, 0:1}, 6:{1:1, 0:1},
                          7:{2:1, 1:1, 0:-1}}
+
+
+# polynomials/fast/intpoly.py
+
+def test_IntPoly():
+    from sympy.polynomials.fast import intpoly
+
+    f = intpoly.IntPoly()
+    lc, pp = f.primitive()
+    assert lc == 0
+    assert pp == f
+
+    f = intpoly.IntPoly({2:12, 1:8, 0:-20})
+    lc, pp = f.primitive()
+    assert lc == 4
+    assert pp == intpoly.IntPoly({2:3, 1:2, 0:-5})
+
+    g = intpoly.IntPoly({1:3})
+    q, r = intpoly.div(f, g)
+    assert q == intpoly.IntPoly({1:4})
+    assert r == intpoly.IntPoly({1:8, 0:-20})
+
+    assert intpoly.gcd_small_primes(f, g) == intpoly.IntPoly({0: 1})
+    f = intpoly.IntPoly({3:2, 2:3})
+    g = intpoly.IntPoly({1:10, 0:15})
+    assert intpoly.gcd_small_primes(f, g) == intpoly.IntPoly({1:2, 0:3})
