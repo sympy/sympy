@@ -234,18 +234,18 @@ def together(expr, deep=False):
                         if isinstance(term.exp, Rational):
                             term, expo = term.base, term.exp
                         elif isinstance(term.exp, Mul):
-                            coeff, tail = term.as_coeff_terms()
+                            coeff, tail = term.exp.as_coeff_terms()
                             if isinstance(coeff, Rational):
-                                tail = Basic.Mul(*terms)
+                                tail = Basic.Mul(*tail)
                                 term, expo = Pow(term.base, tail), coeff
                         coeff = Integer(1)
                     elif isinstance(term, Basic.Exp):
-                        if isinstance(term._args, Rational):
+                        if isinstance(term.args[0], Rational):
                             term, expo = Basic.E, term.args
-                        elif isinstance(term.args, Mul):
-                            coeff, tail = term.as_coeff_terms()
+                        elif isinstance(term.args[0], Mul):
+                            coeff, tail = term.args[0].as_coeff_terms()
                             if isinstance(coeff, Rational):
-                                tail = Basic.Mul(*terms)
+                                tail = Basic.Mul(*tail)
                                 term, expo = Basic.Exp()(tail), coeff
                         coeff = Integer(1)
                     elif isinstance(term, Rational):
