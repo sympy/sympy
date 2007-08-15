@@ -350,6 +350,7 @@ def test_rf_apply_eval():
     assert rf(x, -2) == 1/((x-1)*(x-2))
     assert rf(x, -3) == 1/((x-1)*(x-2)*(x-3))
 
+    from sympy.specfun.factorials import factorial
     assert rf(1, 100) == factorial(100)
 
 def test_ff_apply_eval():
@@ -378,6 +379,7 @@ def test_ff_apply_eval():
     assert ff(x, -2) == 1/((x+1)*(x+2))
     assert ff(x, -3) == 1/((x+1)*(x+2)*(x+3))
 
+    from sympy.specfun.factorials import factorial
     assert ff(100, 100) == factorial(100)
 
 def test_sin():

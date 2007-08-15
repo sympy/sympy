@@ -1,5 +1,5 @@
 from combinatorial import bernoulli
-from factorials import factorial_, binomial2
+from factorials import factorial, binomial2
 from sympy.core import *
 
 
@@ -78,9 +78,9 @@ class PolyGamma(DefinedFunction):
         #    if isinstance(z, Rational) and z < 0:
         #        return -polygamma(1, 1-z) + pi**2 / sin(pi*z)**2
         if m.is_integer and m > 0 and z.is_integer and z > 0:
-            return (-1)**(m+1)*factorial_(m)*(zeta(m+1)-harmonic(z-1, m+1))
+            return (-1)**(m+1)*factorial(m)*(zeta(m+1)-harmonic(z-1, m+1))
         if m.is_integer and z == Rational(1,2):
-            return (-1)**(m+1)*factorial_(m)*(2**(m+1)-1)*zeta(m+1)
+            return (-1)**(m+1)*factorial(m)*(2**(m+1)-1)*zeta(m+1)
 
     def fdiff(self, argindex=2):
         if argindex == 2:

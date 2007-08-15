@@ -1,14 +1,9 @@
-
 from sympy.core import *
+from sympy.core.basic import S
 
-# Factorial and gamma related functions
-
-def sqrt(arg):
-    return arg**(Rational(1,2))
-
+from sympy.utilities.memoization import recurrence_memo
 
 # Lanczos approximation for low-precision numerical factorial
-# This implementation is not particularly numerically stable
 _lanczos_coef = [0.99999999999980993, 676.5203681218851, -1259.1392167224028,
   771.32342877765313, -176.61502916214059, 12.507343278686905,
     -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7]
@@ -24,49 +19,106 @@ def _lanczos(z):
         logw = 0.91893853320467267+(z+0.5)*log(z+7.5)+log(x)-z-7.5
         return exp(logw)
 
-
-class Factorial_(DefinedFunction):
+class Factorial(DefinedFunction):
     """
+    Factorials and multiple factorials
+
     Usage
     =====
-        factorial(x) -> Returns the factorial of x, defined as
-        x! = 1*2*3*...*x if x is a positive integer
+        factorial(x) gives the factorial of x, defined as
+        x! = 1*2*3*...*x if x is a positive integer. If x is not a
+        positive integer, the value of x! is defined in terms of the
+        gamma function.
 
-    Notes
-    =====
-        factorial(x) is evaluated explicitly if x is an integer or
-        half an integer. If x is a negative integer, the value is
-        infinite.
+        factorial(x, m) returns the m-th order multifactorial of x;
+        i.e., 1 * ... * (x-2*m) * (x-m) * x. In particular,
+        factorial(x, 2) returns the double factorial of x,
+
+          * x!! = 2*4*...*(x-2)*x if x is a positive even integer
+          * x!! = 1*3*...*(x-2)*x if x is a positive odd integer
+
+        The argument m must be a positive integer.
 
     Examples
     ========
-        >>> from sympy import *
-        >>> from sympy.specfun.factorials import *
         >>> factorial(5)
         120
         >>> factorial(0)
         1
         >>> factorial(Rational(5,2))
-        15/8*pi**(1/2)
+        (15/8)*Pi**(1/2)
+
+        >>> factorial(5, 2)
+        15
+        >>> factorial(6, 2)
+        48
 
     """
-    nofargs = 1
 
-    def _eval_apply(self, x):
-        if isinstance(x, Rational):
-            if x.is_integer:
-                if x < 0:
-                    return oo
-                y = 1
-                for m in xrange(1, x.p+1):
-                    y *= m
-                return Rational(y)
-            if x.q == 2:
-                n = (x.p + 1) / 2
-                if n < 0:
-                    return (-1)**(-n+1) * pi * x / factorial_(-x)
-                return sqrt(pi) * Rational(1, 2**n) * factorial2(2*n-1)
+    @staticmethod
+    @recurrence_memo([1])
+    def _fac1(n, prev):
+        return n * prev[-1]
 
+    # generators for multifactorials
+    _generators = {}
+
+    def _eval_apply(self, x, m=1):
+
+        # the usual case
+        if m == 1 and x.is_integer:
+            # handle factorial poles, also for symbols with assumptions
+            if x.is_negative:
+                return oo
+            if isinstance(x, Integer):
+                return Integer(self._fac1(int(x)))
+
+        # half-integer case of the ordinary factorial
+        if m == 1 and isinstance(x, Rational) and x.q == 2:
+            n = (x.p + 1) / 2
+            if n < 0:
+                return (-1)**(-n+1) * pi * x / factorial(-x)
+            return sqrt(pi) * Rational(1, 2**n) * factorial(2*n-1, 2)
+
+        # multifactorials are only defined for integers
+        if (not isinstance(m, Integer) and m > 0) or not \
+            isinstance(x, Integer):
+            return
+
+        x = int(x)
+        m = int(m)
+
+        if x == 0:
+            return Integer(1)
+
+        # e.g., for double factorials, the start value is 1 for odd x
+        # and 2 for even x
+        start_value = x % m
+        if start_value == 0:
+            start_value = m
+
+        # we can define the m-multifactorials for negative numbers
+        # to satisfy f(x,m) = f(x+m,m) / (x+m)
+        if x < 0:
+            if start_value == m:
+                return oo
+            return factorial(x+m, m) / (x+m)
+
+        # positive case
+        if not (m, start_value) in self._generators:
+            @recurrence_memo([start_value])
+            def _f(k, prev):
+                return (k*m + start_value) * prev[-1]
+            self._generators[m, start_value] = _f
+
+        return Integer(self._generators[m, start_value]((x-start_value) // m))
+
+    # This should give a series expansion around x = oo. Needs fixing
+    # def series(self, x, n):
+    #    return sqrt(2*pi*x) * x**x * exp(-x) * (1 + O(1/x))
+
+    # Derivatives are given in terms of polygamma functions
+    # (XXX: only for order m = 1)
     def fdiff(self, argindex=1):
         if argindex == 1:
             from zeta_functions import polygamma
@@ -75,94 +127,31 @@ class Factorial_(DefinedFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def evalf(self):
-        """Return a low-precision approximation of self."""
-        a, b = self._args.get_re_im()
+    def _eval_apply_evalf(self, x, m=1):
+        """Return a low-precision numerical approximation."""
+        assert m == 1
+        a, b = x.as_real_imag()
         y = _lanczos(complex(a, b))
-        return Real(y.real) + I*Real(y.imag)
-
-    # This should give a series expansion around x = oo. Needs fixing
-    def _series(self, x, n):
-        return sqrt(2*pi*x) * x**x * exp(-x) * (1 + O(1/x))
-
-    def __str__(self):
-        x = self._args
-        if (isinstance(x, Rational) and x.is_integer and x >= 0) or \
-            isinstance(x, Symbol):
-            s = str(x)
+        if b == 0:
+            return Real(y.real)
         else:
-            s = "(" + str(x) + ")"
-        return s + "!"
+            Real(y.real) + I*Real(y.imag)
 
-    def __latex__(self):
-        x = self._args
-        if (isinstance(x, Rational) and x.is_integer and x >= 0) or \
-            isinstance(x, Symbol):
-            s = x.__latex__()
-        else:
-            s = "(" + x.__latex__() + ")"
-        return s + "!"
+factorial = Factorial()
 
 
-class UnevaluatedFactorial(Factorial_):
-    def _eval_apply(self, x):
+class UnevaluatedFactorial(Factorial):
+    def _eval_apply(self, x, m=1):
         return None
 
 unfac = UnevaluatedFactorial()
 
 
-class Factorial2(DefinedFunction):
-    """
-    Usage
-    =====
-        factorial2(x) -> Returns the double factorial of x, defined as
-        x!! = 2*4*6*...*x if x is a positive even integer and as
-        x!! = 1*3*5*...*x if x is a positive odd integer.
-
-    Notes
-    =====
-        Also defined for negative odd integers, but infinite for
-        negative even integers.
-
-    Examples
-    ========
-        >>> from sympy import *
-        >>> from sympy.specfun.factorials import *
-        >>> factorial2(5)
-        15
-        >>> factorial2(6)
-        48
-
-    """
-    nofargs = 1
-
-    def _eval_apply(self, x):
-        if isinstance(x, Rational) and x.is_integer:
-            if int(x) % 2 == 0:
-                if x < 0:
-                    return oo
-                else:
-                    return 2**(x/2) * factorial(x/2)
-            else:
-                if x < 0:
-                    return factorial2(x+2) / (x+2)
-                else:
-                    return factorial(x) / 2**((x-1)/2) / factorial((x-1)/2)
-
-    def __latex__(self):
-        x = self._args
-        if (isinstance(x, Rational) and x.is_integer and x >= 0) or \
-            isinstance(x, Symbol):
-            s = x.__latex__()
-        else:
-            s = "(" + x.__latex__() + ")"
-        return s + "!!"
-
 
 # factorial_simplify helpers; could use refactoring
 
 def _isfactorial(expr):
-    return isinstance(expr, Apply) and isinstance(expr[0], Factorial_)
+    return isinstance(expr, Apply) and isinstance(expr[0], Factorial)
 
 def _collect_factors(expr):
     assert isinstance(expr, Mul)
@@ -252,7 +241,7 @@ def factorial_simplify(expr):
     if isinstance(expr, Add):
         return Add(*(factorial_simplify(x) for x in expr))
 
-    if isinstance(expr, Factorial_):
+    if isinstance(expr, Factorial):
         #return expr.eval()
         return expr
 
@@ -266,12 +255,12 @@ def factorial_simplify(expr):
         _simplify_recurrence(da, other, reciprocal=True)
 
         result = Rational(1)
-        for n in na: result *= factorial_(n)
-        for d in da: result /= factorial_(d)
+        for n in na: result *= factorial(n)
+        for d in da: result /= factorial(d)
         for o in other: result *= o
         return result
 
-    expr = expr.subs(unfac, factorial_)
+    expr = expr.subs(unfac, factorial)
 
     return expr
 
@@ -284,7 +273,6 @@ class Rising_factorial(DefinedFunction):
 
     Examples
     ========
-        >>> from sympy.specfun.factorials import *
         >>> rising_factorial(3, 2)
         12
 
@@ -308,7 +296,6 @@ class Falling_factorial(DefinedFunction):
 
     Examples
     ========
-        >>> from sympy.specfun.factorials import *
         >>> falling_factorial(5, 3)
         60
 
@@ -339,8 +326,6 @@ class Binomial2(DefinedFunction):
 
     Examples
     ========
-        >>> from sympy import *
-        >>> from sympy.specfun.factorials import *
         >>> binomial2(15,8)
         6435
         >>> # Building Pascal's triangle
@@ -390,8 +375,6 @@ class Gamma(DefinedFunction):
 
     Examples
     ========
-        >>> from sympy import *
-        >>> from sympy.specfun.factorials import *
         >>> gamma(3)
         2
         >>> gamma(Rational(1,2))
@@ -401,9 +384,9 @@ class Gamma(DefinedFunction):
     nofargs = 1
 
     def _eval_apply(self, x):
-        y = factorial_(x-1)
+        y = factorial(x-1)
         try:
-            if not isinstance(y.func, Factorial_):
+            if not isinstance(y.func, Factorial):
                 return y
         except:
             return y
@@ -456,8 +439,8 @@ class UpperGamma(DefinedFunction):
             return b*upper_gamma(b, x) + x**b * exp(-x)
 
 
-factorial_ = Factorial_()
-factorial2 = Factorial2()
+factorial_ = factorial
+
 rising_factorial = Rising_factorial()
 falling_factorial = Falling_factorial()
 binomial2 = Binomial2()

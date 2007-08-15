@@ -80,7 +80,8 @@ class Exp(DefinedFunction):
             p = previous_terms[-1]
             if p is not None:
                 return p * x / n
-        return x**n/S.Factorial(n)
+        from sympy.specfun.factorials import factorial
+        return x**n/factorial(n)
 
 class ApplyExp(Apply):
 
@@ -1127,7 +1128,8 @@ class Sin(DefinedFunction):
                 p = previous_terms[-2]
                 return -p * x**2 / (n*(n-1))
             else:
-                return (-1)**(n//2) * x**(n)/S.Factorial(n)
+                from sympy.specfun.factorials import factorial
+                return (-1)**(n//2) * x**(n)/factorial(n)
 
 class ApplySin(Apply):
     def _eval_rewrite_as_exp(self, arg):
@@ -1248,7 +1250,8 @@ class Cos(DefinedFunction):
                 p = previous_terms[-2]
                 return -p * x**2 / (n*(n-1))
             else:
-                return (-1)**(n//2)*x**(n)/S.Factorial(n)
+                from sympy.specfun.factorials import factorial
+                return (-1)**(n//2)*x**(n)/factorial(n)
 
 class ApplyCos(Apply):
 
@@ -1368,8 +1371,9 @@ class Tan(DefinedFunction):
             a, b = ((n-1)//2), 2**(n+1)
 
             from sympy.specfun.combinatorial import bernoulli
+            from sympy.specfun.factorials import factorial
             B = bernoulli(n+1)
-            F = S.Factorial(n+1)
+            F = factorial(n+1)
 
             return (-1)**a * b*(b-1) * B/F * x**n
 
@@ -1479,7 +1483,7 @@ class Cot(DefinedFunction):
 
             from sympy.specfun.combinatorial import bernoulli
             B = bernoulli(n+1)
-            F = S.Factorial(n+1)
+            F = factorial(n+1)
 
             return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
 
@@ -1574,7 +1578,8 @@ class Sinh(DefinedFunction):
                 p = previous_terms[-2]
                 return p * x**2 / (n*(n-1))
             else:
-                return x**(n) / S.Factorial(n)
+                from sympy.specfun.factorials import factorial
+                return x**(n) / factorial(n)
 
 class ApplySinh(Apply):
 
@@ -1660,7 +1665,8 @@ class Cosh(DefinedFunction):
                 p = previous_terms[-2]
                 return p * x**2 / (n*(n-1))
             else:
-                return x**(n)/S.Factorial(n)
+                from sympy.specfun.factorials import factorial
+                return x**(n)/factorial(n)
 
 class ApplyCosh(Apply):
     def _eval_conjugate(self):
@@ -1744,8 +1750,9 @@ class Tanh(DefinedFunction):
             a = 2**(n+1)
 
             from sympy.specfun.combinatorial import bernoulli
+            from sympy.specfun.factorials import factorial
             B = bernoulli(n+1)
-            F = S.Factorial(n+1)
+            F = factorial(n+1)
 
             return a*(a-1) * B/F * x**n
 
@@ -1835,8 +1842,9 @@ class Coth(DefinedFunction):
             x = Basic.sympify(x)
 
             from sympy.specfun.combinatorial import bernoulli
+            from sympy.specfun.factorials import factorial
             B = bernoulli(n+1)
-            F = S.Factorial(n+1)
+            F = factorial(n+1)
 
             return 2**(n+1) * B/F * x**n
 
@@ -1948,7 +1956,8 @@ class ASin(DefinedFunction):
                 k = (n - 1) // 2
 
                 R = S.RisingFactorial(S.Half, k)
-                F = S.Factorial(k)
+                from sympy.specfun.factorials import factorial
+                F = factorial(k)
 
                 return R / F * x**n / n
 
@@ -2026,7 +2035,8 @@ class ACos(DefinedFunction):
                 k = (n - 1) // 2
 
                 R = S.RisingFactorial(S.Half, k)
-                F = S.Factorial(k)
+                from sympy.specfun.factorials import factorial
+                F = factorial(k)
 
                 return -R / F * x**n / n
 
@@ -2263,7 +2273,8 @@ class ASinh(DefinedFunction):
                 k = (n - 1) // 2
 
                 R = S.RisingFactorial(S.Half, k)
-                F = S.Factorial(k)
+                from sympy.specfun.factorials import factorial
+                F = factorial(k)
 
                 return (-1)**k * R / F * x**n / n
 
@@ -2341,7 +2352,8 @@ class ACosh(DefinedFunction):
                 k = (n - 1) // 2
 
                 R = S.RisingFactorial(S.Half, k)
-                F = S.Factorial(k)
+                from sympy.specfun.factorials import factorial
+                F = factorial(k)
 
                 return -R / F * S.ImaginaryUnit * x**n / n
 

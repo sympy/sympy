@@ -4,7 +4,7 @@ as trigonometric functions, orthogonal polynomials, the gamma function,
 and so on.
 """
 
-from factorials import factorial_, factorial2, binomial2, rising_factorial, \
+from factorials import factorial, binomial2, rising_factorial, \
     falling_factorial, gamma, lower_gamma, upper_gamma, \
     factorial_simplify
 

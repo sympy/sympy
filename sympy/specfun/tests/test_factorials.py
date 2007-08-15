@@ -6,7 +6,7 @@ y = Symbol('y')
 z = Symbol('z')
 
 fs = factorial_simplify
-fac = factorial_
+fac = factorial
 
 def test_factorial1():
     assert [fac(t) for t in [0,1,2,3,4]] == [1,1,2,6,24]
@@ -22,40 +22,40 @@ def test_factorial1():
     #assert latex(fac(-4, evaluate=False)) == "$(-4)!$"
     #assert latex(fac(-x, evaluate=False)) == "$(- x)!$"
 
-def _test_factorial_evalf():
+def test_factorial_evalf():
     def relcmp(a,b):
-        return abs(float(a-b))/abs(float(a))
+        return abs(a-b)/abs(a)
     for i in range(20):
-        assert relcmp(fac(i, evaluate=False).evalf(), fac(i)) < 1e-10
+        assert relcmp(unfac(i).evalf(), fac(i)) < Real(1e-10)
     for i in range(-7, 7, 2):
         x = Rational(i)/2
-        assert relcmp(fac(x, evaluate=False).evalf(), fac(x)) < 1e-10
-    assert relcmp(fac(165, evaluate=False).evalf(), fac(165)) < 1e-10
-    assert relcmp(fac(-0.75).evalf(), 3.6256099082219083) < 1e-10
-    assert relcmp((1-fac(1e-8).evalf())*10**8, 0.5772157) < 1e-5
-    assert relcmp((fac(-1e-8).evalf()-1)*10**8, 0.5772157) < 1e-5
-    re, im = fac(7+8*I).evalf().get_re_im()
-    assert relcmp(re, 1.84428481562553) < 1e-10
-    assert relcmp(im, -125.96060801751909) < 1e-10
+        assert relcmp(unfac(x).evalf(), fac(x).evalf()) < Real(1e-10)
+    assert relcmp(unfac(165).evalf(), fac(165)) < Real(1e-10)
+    assert relcmp(fac(-0.75).evalf(), 3.6256099082219083) < Real(1e-10)
+    assert relcmp((1-fac(1e-8).evalf())*10**8, 0.5772157) < Real(1e-5)
+    assert relcmp((fac(-1e-8).evalf()-1)*10**8, 0.5772157) < Real(1e-5)
+    #re, im = fac(7+8*I).evalf().as_real_imag()
+    #assert relcmp(re, 1.84428481562553) < Real(1e-10)
+    #assert relcmp(im, -125.96060801751909) < Real(1e-10)
 
-def test_factorial2():
-    assert factorial2(0) == 1
-    assert factorial2(2) == 2
-    assert factorial2(4) == 2*4
-    assert factorial2(6) == 2*4*6
-    assert factorial2(1) == 1
-    assert factorial2(3) == 3
-    assert factorial2(5) == 3*5
-    assert factorial2(7) == 3*5*7
-    assert (factorial2(-2) == oo) == True
-    assert (factorial2(-4) == oo) == True
-    assert factorial2(-1) == 1
-    assert factorial2(-3) == -1
-    assert factorial2(-7) == Rational(-1,15)
-    assert factorial2(-9) == Rational(1,105)
+def test_multifactorials():
+    # OEIS: A006882 
+    assert [factorial(n, 2) for n in range(10)] == [1, 1, 2, 3, 8, 15, 48, 105, 384, 945]
+
+    assert (factorial(-2, 2) == oo) == True
+    assert (factorial(-4, 2) == oo) == True
+    assert factorial(-1, 2) == 1
+    assert factorial(-3, 2) == -1
+    assert factorial(-7, 2) == Rational(-1,15)
+    assert factorial(-9, 2) == Rational(1,105)
     #assert latex(factorial2(x, evaluate=False)) == "$x!!$"
     #assert latex(factorial2(-4, evaluate=False)) == "$(-4)!!$"
     #assert latex(factorial2(-x, evaluate=False)) == "$(- x)!!$"
+
+    # OEIS: A007661
+    assert [factorial(n, 3) for n in range(10)] == [1, 1, 2, 3, 4, 10, 18, 28, 80, 162]
+    # OEIS: A007662
+    assert [factorial(n, 4) for n in range(10)] == [1, 1, 2, 3, 4, 5, 12, 21, 32, 45]
 
 def test_factorial_simplify():
     assert fs(fac(x+5)/fac(x+5)) == 1

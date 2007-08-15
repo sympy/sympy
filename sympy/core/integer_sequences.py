@@ -14,6 +14,7 @@ class IntegerSequence(DefinedFunction):
 ########################### FACTORIALS and BINOMIAL ###########################
 ###############################################################################
 
+"""
 class Factorial(IntegerSequence):
 
     nofargs = 1
@@ -35,6 +36,7 @@ class Factorial(IntegerSequence):
                         k -= 1
 
                     return Integer(n)
+"""
 
 class Binomial(IntegerSequence):
 
@@ -44,6 +46,7 @@ class Binomial(IntegerSequence):
         r, k = map(Basic.sympify, (r, k))
 
         if isinstance(k, Basic.Integer):
+            from sympy.specfun.factorials import factorial
             if k.is_negative:
                 return S.Zero
             else:
@@ -53,9 +56,9 @@ class Binomial(IntegerSequence):
                     result.append(rk+i)
 
                 numer = Basic.Mul(*result)
-                denom = Factorial()(k)
+                denom = factorial(k)
 
                 return (numer/denom).expand()
 
-Basic.singleton['factorial'] = Factorial
+#Basic.singleton['factorial'] = Factorial
 Basic.singleton['binomial'] = Binomial

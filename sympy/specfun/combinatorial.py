@@ -19,18 +19,8 @@ def _product(a, b):
         p *= k
     return p
 
-def recurrence_memo(initial):
-    cache = initial
-    def decorator(f):
-        def g(n):
-            L = len(cache)
-            if n <= L - 1:
-                return cache[n]
-            for i in xrange(L, n+1):
-                cache.append(f(i, cache))
-            return cache[-1]
-        return g
-    return decorator
+from sympy.utilities.memoization import recurrence_memo
+
 
 # Dummy symbol used for computing polynomial sequences
 _sym = Symbol('x')

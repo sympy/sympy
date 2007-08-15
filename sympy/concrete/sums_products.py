@@ -1,5 +1,5 @@
 from sympy import *
-from sympy.specfun import rising_factorial, factorial_, factorial_simplify
+from sympy.specfun import rising_factorial, factorial, factorial_simplify
 from sympy.specfun.factorials import unfac
 from sympy.specfun import bernoulli
 from sympy.polynomials import factor, PolynomialException
@@ -116,7 +116,7 @@ class Sum(_BigOperator):
             s += (f.subs(i, a) + f.subs(i, b))/2
         for k in range(1, n):
             g = f.diff(i, 2*k-1)
-            s += bernoulli(2*k)/factorial_(2*k)*(g.subs(i,b)-g.subs(i,a))
+            s += bernoulli(2*k)/factorial(2*k)*(g.subs(i,b)-g.subs(i,a))
         return s
 
 
