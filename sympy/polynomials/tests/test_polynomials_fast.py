@@ -88,6 +88,15 @@ def test_GFPoly():
     assert sorted([g.to_sym_int_dict() for g in c]) \
            == sorted([{2:1, 0:1}, {2:1, 1:1, 0:-1}])
 
+    r = gfpoly.factor_sqf(f)
+    assert r[0] == IntMod3Poly.coeff_type(1)
+    r = r[1:]
+    assert len(r) == 4
+    assert IntMod3Poly.from_int_dict({1:1}) in r
+    assert IntMod3Poly.from_int_dict({1:1, 0:1}) in r
+    assert IntMod3Poly.from_int_dict({2:1, 0:1}) in r
+    assert IntMod3Poly.from_int_dict({2:1, 1:1, 0:2}) in r
+
     f = IntMod3Poly.from_int_dict({1:1}) \
     * IntMod3Poly.from_int_dict({1:1, 0:1}) \
     * IntMod3Poly.from_int_dict({1:1, 0:1}) \

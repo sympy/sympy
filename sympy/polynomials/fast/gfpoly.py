@@ -170,7 +170,8 @@ def equal_degree_factor(f, degree):
 def factor(f):
     """Factorization of a univariate polynomial over a Galois field.
 
-    Returns a list of the monic factors with their multiplicities.
+    Returns a list of the leading coefficient of f and the monic
+    factors with their multiplicities.
     """
     p = f.__class__.coeff_type.modulus
     leading_coeff, f = f.monic()
@@ -198,3 +199,19 @@ def factor(f):
                     q, r = div(f, gg)
                 result.append((gg, e))
     return result
+
+def factor_sqf(f):
+    """Factorization of a univariate square-free polynomial over a Galois field.
+
+    Returns a list of the leading coefficient and the monic factors of f.
+    """
+
+    one_poly = f.__class__({0: f.__class__.coeff_type(1)})
+    leading_coeff, f = f.monic()
+    result = [leading_coeff]
+    for degree, divisor in enumerate(distinct_degree_factor(f)):
+        if divisor == one_poly:
+            continue
+        result += equal_degree_factor(divisor, degree + 1)
+    return result
+
