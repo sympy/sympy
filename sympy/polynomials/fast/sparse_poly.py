@@ -110,3 +110,9 @@ class SparsePolynomial(object):
                 if coeff:
                     result_dict[e-1] = coeff
         return self.__class__(result_dict)
+
+    def evaluate(self, point):
+        result = self.zero
+        for e, c in self.coeffs.iteritems():
+            result += c*point**e
+        return result

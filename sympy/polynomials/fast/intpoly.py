@@ -125,3 +125,36 @@ def gcd_small_primes(f, g):
     content, result =  IntPoly(w_dict).primitive()
     print content
     return result
+
+def gcd_heuristic(f, g):
+    """Heuristic gcd for primitive univariate polynomials."""
+    def reconstruct_poly(u, c):
+        result_dict = {}
+        i = 0
+        while c:
+            rem = c % u
+            if rem:
+                if rem > u/2:
+                    rem -= u
+                result_dict[i] = rem
+                c -= rem
+            i += 1
+            c /= u
+        return IntPoly(result_dict)
+
+    A = max([abs(c) for c in f.coeffs.itervalues()]
+            + [abs(c) for c in g.coeffs.itervalues()])
+    u = 4*A + 1
+
+    while True:
+        ff = f.evaluate(u)
+        gg = g.evaluate(u)
+        hh = modint.gcd(ff, gg)
+        h = reconstruct_poly(u, hh)
+        q, r = div(f, h)
+        if not r:
+            q, r = div(g, h)
+            if not r:
+                return h
+        u *= 2
+    

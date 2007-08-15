@@ -137,11 +137,16 @@ def test_IntPoly():
     lc, pp = f.primitive()
     assert lc == 0
     assert pp == f
-
+    assert f.evaluate(0) == 0
+    assert f.evaluate(100) == 0
+    assert f.evaluate(-2) == 0
+    
     f = intpoly.IntPoly({2:12, 1:8, 0:-20})
     lc, pp = f.primitive()
     assert lc == 4
     assert pp == intpoly.IntPoly({2:3, 1:2, 0:-5})
+    assert f.evaluate(0) == -20
+    assert f.evaluate(100) == 120780
 
     g = intpoly.IntPoly({1:3})
     q, r = intpoly.div(f, g)
@@ -149,6 +154,8 @@ def test_IntPoly():
     assert r == intpoly.IntPoly({1:8, 0:-20})
 
     assert intpoly.gcd_small_primes(f, g) == intpoly.IntPoly({0: 1})
+    assert intpoly.gcd_heuristic(f, g) == intpoly.IntPoly({0: 1})
     f = intpoly.IntPoly({3:2, 2:3})
     g = intpoly.IntPoly({1:10, 0:15})
     assert intpoly.gcd_small_primes(f, g) == intpoly.IntPoly({1:2, 0:3})
+    assert intpoly.gcd_heuristic(f, g) == intpoly.IntPoly({1:2, 0:3})
