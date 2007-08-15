@@ -434,7 +434,6 @@ class LowerGamma(DefinedFunction):
         if a.is_integer and a > 1:
             b = a-1
             return b*lower_gamma(b, x) - x**b * exp(-x)
-        #return self
 
 
 class UpperGamma(DefinedFunction):
@@ -448,12 +447,13 @@ class UpperGamma(DefinedFunction):
     def _eval_apply(self, a, x):
         if x == 0:
             return gamma(a)
+        if x == oo:
+            return 0
         if a == 1:
             return exp(-x)
         if a.is_integer and a > 1:
             b = a-1
             return b*upper_gamma(b, x) + x**b * exp(-x)
-        #return self
 
 
 factorial_ = Factorial_()

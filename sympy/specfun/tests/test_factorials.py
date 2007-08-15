@@ -115,6 +115,8 @@ def test_gamma():
     assert gamma(3) == 2
     assert gamma(Rational(1,2)) == sqrt(pi)
     #assert latex(gamma(3+x)) == "$\Gamma(3+x)$"
+    assert upper_gamma(4,0) == 6
+    assert upper_gamma(3,oo) == 0
     assert lower_gamma(1,x) + upper_gamma(1,x) == gamma(1)
     assert lower_gamma(5,x) + upper_gamma(5,x) == gamma(5)
 
