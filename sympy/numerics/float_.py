@@ -437,6 +437,8 @@ class Float(object):
 
     def __add__(s, t):
         if isinstance(t, Float):
+            if t.man == 0:
+                return +s
             if t.exp > s.exp:
                 s, t = t, s
             if s.exp - t.exp > 100:

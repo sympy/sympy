@@ -134,6 +134,7 @@ def test_add():
     assert Float(3) + Float((1, -10000000000)) == Float(3)
     assert Float(1) + 1e-15 != 1
     assert Float(1) + 1e-20 == 1
+    assert Float(1.07e-22) + 0 == Float(1.07e-22)
 
 def test_contexts():
     Float.store()

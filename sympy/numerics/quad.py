@@ -15,8 +15,6 @@ from evalf_ import polyfunc
 
 import math
 
-class ConvergenceError(Exception):
-    pass
 
 class Quadrature:
     """
@@ -65,16 +63,14 @@ class Quadrature:
     def adaptive(self, f, a, b, eps, steps=0, maxsteps=5000, verbose=False):
         """Apply rule adaptively (must support error estimation)"""
         s, err = self(f, a, b, verbose=verbose)
-        if err <= eps:
-            return s, steps+1
+        if err <= eps or steps >= maxsteps:
+            return s, err, steps+1
         if verbose:
             print steps, a, b
-        if steps >= maxsteps:
-            raise ConvergenceError
         mid = (a+b)/2
-        s1, steps = self.adaptive(f, a, mid, eps, steps+1, maxsteps, verbose)
-        s2, steps = self.adaptive(f, mid, b, eps, steps, maxsteps, verbose)
-        return s1 + s2, steps
+        s1, e1, steps = self.adaptive(f, a, mid, eps, steps+1, maxsteps, verbose)
+        s2, e2, steps = self.adaptive(f, mid, b, eps, steps, maxsteps, verbose)
+        return s1 + s2, e1 + e2, steps
 
 
 #----------------------------------------------------------------------------#
@@ -309,10 +305,8 @@ class AdaptiveTanhSinh(Quadrature):
             ts = TanhSinh(eps, m, verbose=verbose)
             s, err = ts(f, a, b, verbose=verbose)
             steps = 2*len(ts.x)
-            if err <= eps:
-                return s, steps
-            if steps > maxsteps:
-                raise ConvergenceError
+            if err <= eps or steps >= maxsteps:
+                return s, err, steps
 
 
 #----------------------------------------------------------------------------#
@@ -360,12 +354,14 @@ def nintegrate(f, a, b, method=0, maxsteps=5000, verbose=False):
     Nintegrate attempts to obtain a value that is fully accurate within
     the current working precision (i.e., correct to 15 decimal places
     at the default precision level). If nintegrate fails to reach full
-    accuracy after a certain number of steps, a ConvergenceError
-    exception is raised. This event either signifies that the integral
-    is either divergent or, if convergent, ill-behaved. It may still be
-    possible to evaluate an ill-behaved integral by increasing the
-    'maxsteps' setting, changing the integration method, and/or
-    manually transforming the integrand.
+    accuracy after a certain number of steps, it prints a warning
+    message.
+
+    This message signifies either that the integral is either divergent
+    or, if convergent, ill-behaved. It may still be possible to
+    evaluate an ill-behaved integral by increasing the 'maxsteps'
+    setting, changing the integration method, and/or manually
+    transforming the integrand.
 
     Nintegrate currently supports the following integration methods:
 
@@ -381,7 +377,8 @@ def nintegrate(f, a, b, method=0, maxsteps=5000, verbose=False):
     The tanh-sinh algorithm is often better if the integration interval
     is infinite or if singularities are present at the endpoints;
     especially at very high precision levels. It does not perform well
-    if there are singularities between the endpoints.
+    if there are singularities between the endpoints or the integrand
+    is bumpy or oscillatory.
 
     It may help to manually transform the integrand, e.g. changing
     variables to remove singularities or breaking up the integration
@@ -398,14 +395,19 @@ def nintegrate(f, a, b, method=0, maxsteps=5000, verbose=False):
     if a == -oo or b == oo:
         g = f
         if a == -oo and b == oo:
-            f = lambda x: g(x) + g(Float(1)/x)/x**2 + g(-x) + g(Float(-1)/x)/(-x)**2
+            def f(x):
+                # make adaptive quadrature work from the left
+                x = 1 - x
+                return g(x) + g(Float(1)/x)/x**2 + g(-x) + g(Float(-1)/x)/(-x)**2
         elif b == oo:
             aa = Float(a)
             def f(x):
+                x = 1 - x
                 return g(x + aa) + g(Float(1)/x + aa)/x**2
         elif a == -oo:
             bb = Float(b)
             def f(x):
+                x = 1 - x
                 return g(-x + bb) + g(Float(-1)/x + bb)/(-x)**2
         a, b = Float(0), Float(1)
     else:
@@ -423,7 +425,15 @@ def nintegrate(f, a, b, method=0, maxsteps=5000, verbose=False):
         Float.revert()
         raise ValueError("unknown method")
 
-    s, steps = rule.adaptive(f, Float(a), Float(b), eps, steps=0, maxsteps=maxsteps, verbose=verbose)
+    s, err, steps = rule.adaptive(f, Float(a), Float(b), eps, steps=0, maxsteps=maxsteps, verbose=verbose)
 
     Float.revert()
+
+    if not err.ae(0):
+        Float.store()
+        Float.setdps(1)
+        print ("Warning: failed to reach full accuracy. "
+            "Estimated magnitude of error:", str(err))
+        Float.revert()
+
     return +s

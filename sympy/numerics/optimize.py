@@ -23,7 +23,7 @@ def polyroots(poly, maxsteps=20):
         >>> r[1]
         ComplexFloat(real='3', imag='-4.6222318665293660E-33')
         >>> e
-        Float('7.0435024728931298E-18')
+        Float('2.2204460492503131E-16')
 
     Polyroots attempts to achieve a maximum error less than the epsilon
     of the current working precision, but may fail to do so if the
@@ -48,15 +48,13 @@ def polyroots(poly, maxsteps=20):
         >>> e
         Float('5.4076851354766810E-8')
 
-    The error estimate is also easily fooled when multiple roots are
-    present. In the previous example, increasing 'maxsteps' will only
-    have this effect:
+    Increasting 'maxsteps' does not help:
 
         >>> r, e = polyroots((x-2)**2, maxsteps=30)
         >>> r[0].real
-        Float('1.9999999832018203')
+        Float('1.9999999995097915')
         >>> e
-        Float('0')
+        Float('5.2076271636139687E-10')
 
     An effective cure is to multiply the working precision n times (in
     the case of a double root, doubling it):
@@ -66,7 +64,7 @@ def polyroots(poly, maxsteps=20):
         >>> r[0].real
         Float('1.9999999999999997562825649058053')
         >>> e
-        Float('0')
+        Float('1.9134951728346688825145639061887E-16')
 
     The error estimate is again wrong, but the result is good to 15
     decimals.
@@ -94,4 +92,6 @@ def polyroots(poly, maxsteps=20):
                 roots[i] = p - x
                 error[i] = abs(x)
     roots.sort(key=abs)
-    return roots, max(error)
+    err = max(error)
+    err = max(err, Float((1, -Float._prec+1)))
+    return roots, err

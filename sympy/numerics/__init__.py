@@ -21,5 +21,5 @@ from float_ import *
 #from constants import *
 #from functions import *
 #from functions2 import *
-from quad import nintegrate, ConvergenceError
+from quad import nintegrate
 from evalf_ import evalf
