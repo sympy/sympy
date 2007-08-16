@@ -319,6 +319,12 @@ class Float(object):
         else:
             raise TypeError
 
+    def __hash__(s):
+        try:
+            return hash(float(s))
+        except OverflowError:
+            return hash(self.man) + hash(self.exp)
+
     def __pos__(s):
         """s.__pos__() <==> +s
 
@@ -408,9 +414,9 @@ class Float(object):
         abss = abs(s)
         abst = abs(t)
         if abss < abst:
-            err = diff/t
+            err = diff/abst
         else:
-            err = diff/s
+            err = diff/abss
         return err <= rel_eps
 
     def almost_zero(s, prec):
@@ -442,7 +448,7 @@ class Float(object):
         if isinstance(t, (int, long)):
             # XXX: cancellation is possible here
             return s + Float(t)
-        if isinstance(t, ComplexFloat):
+        if isinstance(t, (ComplexFloat, complex)):
             return ComplexFloat(s) + t
         return s + Float(t)
 
@@ -462,7 +468,7 @@ class Float(object):
             return Float((s.man*t.man, s.exp+t.exp))
         #if isinstance(t, (int, long)):
         #    return 
-        if isinstance(t, ComplexFloat):
+        if isinstance(t, (ComplexFloat, complex)):
             return ComplexFloat(s) * t
         return s * Float(t)
 
@@ -477,12 +483,12 @@ class Float(object):
         if isinstance(t, (int, long)):
             extra = s._prec - bitcount(s.man) + bitcount(t) + 4
             return Float(((s.man<<extra)//t, s.exp-extra))
-        if isinstance(t, ComplexFloat):
+        if isinstance(t, (ComplexFloat, complex)):
             return ComplexFloat(s) / t
         return s / Float(t)
 
     def __rdiv__(s, t):
-        if isinstance(t, ComplexFloat):
+        if isinstance(t, (ComplexFloat, complex)):
             return t / ComplexFloat(s)
         return Float(t) / s
 

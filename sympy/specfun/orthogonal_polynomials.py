@@ -35,12 +35,12 @@ class _PolynomialSequence(DefinedFunction):
             return self._memo[n]
 
     def _eval_apply(self, n, x):
-        if isinstance(x, Apply) and x.func == self._zero_class and x.args[0] == n:
-            return Basic.Zero()
+        #if isinstance(x, Apply) and x.func == self._zero_class and x.args[0] == n:
+        #    return Basic.Zero()
         if n.is_integer and n >= 0:
-            for k in xrange(int(n)):
-                if x == self._zero_class(n, k):
-                    return Basic.Zero()
+            #for k in xrange(int(n)):
+            #    if x == self._zero_class(n, k):
+            #        return Basic.Zero()
             #return self.poly().subs(self._x, x)
             return self.poly(n, x).subs(self._x, x)
         #return self
@@ -82,6 +82,7 @@ class Legendre(_PolynomialSequence):
 
 legendre = Legendre()
 
+'''
 class Legendre_zero(DefinedFunction):
     """
     Usage
@@ -137,7 +138,7 @@ class ApplyLegendre_zero(Apply):
 
 legendre_zero = Legendre_zero()
 Legendre._zero_class = legendre_zero
-
+'''
 
 class Chebyshev3(_PolynomialSequence):
     """
