@@ -432,8 +432,8 @@ def nintegrate(f, a, b, method=0, maxsteps=5000, verbose=False):
     if not err.ae(0):
         Float.store()
         Float.setdps(1)
-        print ("Warning: failed to reach full accuracy. "
-            "Estimated magnitude of error:", str(err))
+        print "Warning: failed to reach full accuracy.", \
+            "Estimated magnitude of error: ", str(err)
         Float.revert()
 
     return +s
