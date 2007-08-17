@@ -274,6 +274,8 @@ class TanhSinh(Quadrature):
         m = self.m
         res = []
         for k in xrange(1, m+1):
+            if verbose:
+                print "tanh-sinh sum level", k, "of", m
             h = h / 2
             for i in xrange(0, len(self.x), 2**(m-k)):
                 if i % (2**(m-k+1)) != 0 or k == 1:
@@ -307,6 +309,8 @@ class AdaptiveTanhSinh(Quadrature):
             steps = 2*len(ts.x)
             if err <= eps or steps >= maxsteps:
                 return s, err, steps
+            if verbose:
+                print "error = ", err
 
 
 #----------------------------------------------------------------------------#
