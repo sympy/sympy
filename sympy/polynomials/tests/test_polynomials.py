@@ -144,6 +144,10 @@ def test_factor():
     assert factor(x*y + x*z + y*z) == x*y + x*z + y*z
     assert factor(x*(y+1) + x*z) == x*(z + y + 1)
     assert factor(x**5 - y**2) == x**5 - y**2
+
+    assert factor(-2) == -2
+    assert factor(-x) == -x
+    assert factor(-2*x**2+x) == x*(1 - 2*x)
     
 def test_gcd():
     x = Symbol("x")

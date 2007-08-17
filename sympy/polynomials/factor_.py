@@ -127,7 +127,8 @@ def factor(f, var=None, order=None):
         through the arguments 'var' and 'order'.
 
         The result is a list containing all the irreducible factors as
-        instances of Polynomial.
+        instances of Polynomial, the first element being a constant
+        factor. 
 
     Notes:
     ======
@@ -201,7 +202,9 @@ def factor(f, var=None, order=None):
                     for divisor in kronecker(p):
                         result += [divisor]*(i + 1)
     else: # len(f.var) > 1
-        result += kronecker_mv(f)
+        factors = kronecker_mv(f)
+        result[0] *= factors[0]
+        result += factors[1:]
     return result
 
 
@@ -364,12 +367,13 @@ def kronecker_mv(f):
     g = Polynomial(g, var=y, order=f.order)
 
     # We can now call the univariate factorization algorithm for g.
-    g_factors = factor(g)
+    g_factors = factor(g)[1:] # Don't use constant factor.
+    constant_factor = Polynomial(S.One, var=f.var, order=f.order)
 
     # Trial division with all combinations of factors of g.
     tested = []
     result = []
-    for m in range(1, len(g_factors)):
+    for m in range(1, len(g_factors)/2 + 1):
         for cand in factor_combinations(g_factors, m):
             if cand in tested:
                 continue
@@ -386,15 +390,28 @@ def kronecker_mv(f):
             if ff is S.One:
                 continue
             candidate = Polynomial(ff, var=f.var, order=f.order)
+            # Make leading_coefficient positive:
+            if candidate.coeffs[0][0] < 0:
+                candidate = Polynomial(
+                    coeffs=[(-t[0],)+t[1:] for t in candidate.coeffs],
+                    var=candidate.var, order=candidate.order)
             q, r = div_.div(f, candidate, coeff='int')
             if r.sympy_expr is S.Zero: # found a factor
                 result.append(candidate)
                 f = q
             else:
                 tested.append(cand)
+            # Check if f is constant.
+            if f.coeffs[0][1:] == tuple([S.Zero]*len(f.var)):
+                constant_factor = f
+                f = Polynomial(S.One, var=f.var, order=f.order)
+                break
+        if f.sympy_expr is S.One:
+            break
     if f.sympy_expr is not S.One:
         result.append(f)
-    return result
+
+    return [constant_factor] + result
 
 
 def big_prime(f):

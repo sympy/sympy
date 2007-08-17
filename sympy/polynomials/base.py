@@ -535,13 +535,19 @@ class Polynomial(Basic):
         Also see L{as_integer}, L{as_monic}, L{content}.
 
         """
-
+    
         c = self.content()
+        if self.coeffs[0][0] < 0:
+            sign = -1
+        else:
+            sign = 1
+            
         if c is S.Zero:
             return S.Zero, self
-        elif c is S.One:
+        if c is S.One and sign == 1:
             return S.One, self
         else:
+            c *= sign
             return c, Polynomial(coeffs=tuple([(term[0]/c,) + term[1:]
                                                for term in self.coeffs]),
                                  var=self.var, order=self.order)
@@ -552,8 +558,8 @@ class Polynomial(Basic):
 
         Usage:
         ======
-            Returns the content, that is, the greatest common divisor of the
-            (integer) coefficients.
+            Returns the content, that is, the positive greatest common
+            divisor of the (integer) coefficients.
 
         Examples:
         =========
@@ -571,7 +577,7 @@ class Polynomial(Basic):
             if not isinstance(term[0], Integer):
                 print "%s is no integer coefficient!" % term[0]
                 return S.Zero
-            result = numbers.gcd(result, abs(int(term[0])))
+            result = abs(numbers.gcd(result, abs(int(term[0]))))
         return Integer(result)
 
 
