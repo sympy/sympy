@@ -3,6 +3,7 @@ from sympy.specfun import rising_factorial, factorial, factorial_simplify
 from sympy.specfun.factorials import unfac
 from sympy.specfun import bernoulli
 from sympy.polynomials import factor, PolynomialException
+from sympy.simplify import powsimp
 
 def ispoly(expr, var):
     return False
@@ -133,16 +134,12 @@ class Product(_BigOperator):
     __str__ = __repr__
 
     def eval(self):
-        # Perform factorial_simplify on any subproduct. It
-        # would be better to do this only once at the end, but this
-        # currently creates SymPy-unequal output for mathematically
-        # equal input (see Wallis product example
-        # in test_sums_products)
+        # Simplify subproducts
         p = self._eval()
         if isinstance(p, Product):
             return self
         else:
-            return factorial_simplify(p)
+            return powsimp(factorial_simplify(p))
         return p
 
     def _eval(self):

@@ -74,12 +74,13 @@ def test_rational_products():
     assert Product(n*(n+1)/(n-1)/(n-2), (n, a, b)) \
            == b**2*(b-1)*(1+b)/(a-1)**2/(a*(a-2))
 
-def _test_wallis_product():
+def test_wallis_product():
     # Wallis product, given in two different forms to ensure that Product
     # can factor simple rational expressions
     A = Product(4*n**2 / (4*n**2-1), (n, 1, b))
     B = Product((2*n)*(2*n)/(2*n-1)/(2*n+1), (n, 1, b))
-    R = 2**(-1-2*b)*factorial(b)**2*4**b*pi/(factorial(-Rational(1,2)+b)*factorial(Rational(1,2)+b))
+    half = Rational(1,2)
+    R = pi/2 * factorial(b)**2 / factorial(b-half) / factorial(b+half)
     assert A == R
     assert B == R
     # This one should eventually also be doable (Euler's product formula for sin)
