@@ -258,6 +258,10 @@ class Basic(BasicMeths):
         else:
             syms = list(self.atoms(type=Basic.Symbol))
 
+        if not syms:
+            # No symbols so it can be considered "constant" and
+            # hence is a polynomial
+            return True
         return self._eval_is_polynomial(syms)
 
     def as_polynomial(self, *syms, **kwargs):

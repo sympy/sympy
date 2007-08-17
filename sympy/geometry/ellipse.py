@@ -1,5 +1,5 @@
 from sympy.core.basic import S, Basic
-from sympy.simplify import simplify#, trigsimp
+from sympy.simplify import simplify, trigsimp
 from entity import GeometryEntity
 from point import Point
 from line import LinearEntity, Line
@@ -98,7 +98,7 @@ class Ellipse(GeometryEntity):
 
     def arbitrary_point(self, parameter_name='t'):
         """Returns a symbolic point that is on the ellipse."""
-        t = Symbol(parameter_name, real=True)
+        t = Basic.Symbol(parameter_name, real=True)
         return Point(self._c[0] + self._hr*S.Cos(t), self._c[1] + self._vr*S.Sin(t))
 
     def random_point(self):
@@ -200,8 +200,7 @@ class Ellipse(GeometryEntity):
             x = Basic.Symbol('x', real=True)
             y = Basic.Symbol('y', real=True)
             res = self.equation('x', 'y').subs_dict({x: o[0], y: o[1]})
-            #res = trigsimp(simplify(res)) 
-            res = simplify(res)
+            res = trigsimp(simplify(res)) 
             return bool(res == 0)
         elif isinstance(o, Ellipse):
             return (self == o)

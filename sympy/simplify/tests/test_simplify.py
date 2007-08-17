@@ -23,13 +23,12 @@ def test_ratsimp():
     assert (x+1)*ratsimp(e)/x == 1
     assert ratsimp(exp(e)) == exp(x/(x+1))
 
-#def test_trigsimp():
-#    x = Symbol('x')
-#    y = Symbol('y')
-#    assert trigsimp(5*cos(x)**2 + 5*sin(x)**2) == 5
-#    assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) == 2 + 3*cos(x/2)**2
-#    assert trigsimp(1 + tan(x)**2) == sec(x)**2
-#    assert trigsimp(1 + cot(x)**2) == csc(x)**2
+def test_trigsimp():
+    x,y = map(Symbol, 'xy')
+    assert trigsimp(5*cos(x)**2 + 5*sin(x)**2) == 5
+    assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) == 2 + 3*cos(x/2)**2
+    assert trigsimp(1 + tan(x)**2) == 1/cos(x)**2
+    assert trigsimp(1 + cot(x)**2) == 1/sin(x)**2
 
 #def test_factorial_simplify():
     # There are more tests in test_factorials.py. These are just to
@@ -48,6 +47,15 @@ def test_simplify():
 
     e = (4+4*x-2*(2+2*x))/(2+2*x)
     assert simplify(e) == 0
+
+    e = (-4*x*y**2-2*y**3-2*x**2*y)/(x+y)**2
+    assert simplify(e) == -2*y
+    
+    e = (x+y)**2/(-4*x*y**2-2*y**3-2*x**2*y)
+    assert simplify(e) == 1 / (-2*y)
+
+    e = -x-y-(x+y)**(-1)*y**2+(x+y)**(-1)*x**2 
+    assert simplify(e) == -2*y
 
 def test_fraction():
     x, y, z = map(Symbol, 'xyz')
@@ -110,5 +118,13 @@ def test_separate():
     assert separate((exp((x*y)**z)*exp(y))**2) == exp(2*(x*y)**z)*exp(2*y)
     assert separate((exp((x*y)**z)*exp(y))**2, deep=True) == exp(2*x**z*y**z)*exp(2*y)
 
+def test_powsimp():
+    x,y,n = symbols('xyn')
+    assert powsimp( y**n * (y/x)**(-n) ) == x**n
+    assert powsimp( 4**x * 2**(-x) * 2**(-x) ) == 1
+    assert powsimp( (-4)**x * (-2)**(-x) * 2**(-x) ) == 1
+
 def test_collect():
-    pass
+    x,y,n = symbols('xyn')
+    assert collect(2*x**2 + y*x**2 + 3*x*y, [x]) == x**2*(2+y) + 3*x*y
+    assert collect(2*x**2 + y*x**2 + 3*x*y, [y]) == 2*x**2 + y*(x**2+3*x)

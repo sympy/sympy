@@ -22,6 +22,10 @@ def test_negative_real():
 
     assert feq(Basic.One() / Real(-0.5), -Integer(2))
 
+def test_expand():
+    x = Symbol('x')
+    assert (2**(-1-x)).expand() == Rational(1,2)*2**(-x)
+
 def test_issue153():
     #test that is runs:
     a = sqrt(2*(1+sqrt(2)))

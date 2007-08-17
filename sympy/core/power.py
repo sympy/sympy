@@ -77,6 +77,10 @@ class Pow(Basic, ArithMeths, RelMeths):
             if isinstance(other, Basic.Integer):
                 # (a ** b) ** 3 -> a ** (3 * b)
                 return Pow(self.base, self.exp * other)
+        elif isinstance(other, (Basic.Add, Basic.Mul)):
+            # (a**b)**c = a**(b*c)
+            return Pow(self.base, self.exp * other)
+
         if other.atoms(Basic.Wild):
             return Pow(self.base, self.exp * other)
         return
@@ -283,6 +287,17 @@ class Pow(Basic, ArithMeths, RelMeths):
                         p = base[:]
                         return Basic.Add(*[t1*t2 for t1 in p for t2 in p])
                     return Basic.Mul(base, Pow(base, m-1).expand()).expand()
+        elif isinstance(exponent, Basic.Add) and isinstance(base, Basic.Number):
+            # n**(a+b) --> n**a * n**b with n and a Numbers
+            exp = 0
+            coeff = 1
+            for term in exponent:
+                if isinstance(term, Basic.Number):
+                    coeff *= base**term
+                else:
+                    exp += term
+            result = coeff * base**exp
+
         return result
 
     def _eval_derivative(self, s):

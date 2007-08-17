@@ -144,24 +144,26 @@ def separate(expr, deep=False):
     """
     expr = Basic.sympify(expr)
 
-    if isinstance(expr, Pow):
+    if isinstance(expr, Basic.Pow):
         terms, expo = [], separate(expr.exp, deep)
 
         if isinstance(expr.base, Mul):
-            return Mul(*[ separate(t**expo, deep) for t in expr.base ])
+            t = [ separate(Basic.Pow(t,expo), deep) for t in expr.base ]
+            return Basic.Mul(*t)
         elif isinstance(expr.base, Basic.Exp):
             if deep == True:
                 return Basic.Exp()(separate(expr.base._args, deep)*expo)
             else:
                 return Basic.Exp()(expr.base._args*expo)
         else:
-            return Pow(separate(expr.base, deep), expo)
-    elif isinstance(expr, (Add, Mul)):
+            return Basic.Pow(separate(expr.base, deep), expo)
+    elif isinstance(expr, (Basic.Add, Basic.Mul)):
         return type(expr)(*[ separate(t, deep) for t in expr ])
     elif isinstance(expr, Apply) and deep:
         return expr.func(*[ separate(t) for t in expr.args ])
     else:
         return expr
+
 
 def together(expr, deep=False):
     """Combine together and denest rational functions into a single
@@ -229,6 +231,7 @@ def together(expr, deep=False):
                 for term in make_list(q.expand(), Mul):
                     expo = Integer(1)
                     coeff = Integer(1)
+
 
                     if isinstance(term, Pow):
                         if isinstance(term.exp, Rational):
@@ -480,11 +483,10 @@ def collect(expr, syms, evaluate=True, exact=False):
             if isinstance(expr.exp, Rational):
                 rat_expo = expr.exp
             elif isinstance(expr.exp, Mul):
-                coeff, tail = term.exp[0], Mul(*term.exp[1:])#term.exp.getab()
-                #coeff, tail = expr.exp.getab()
+                coeff, tail = term.exp.as_coeff_terms()
 
                 if isinstance(coeff, Rational):
-                    rat_expo, sym_expo = coeff, tail
+                    rat_expo, sym_expo = coeff, Basic.Mul(*tail)
                 else:
                     sym_expo = expr.exp
             else:
@@ -493,11 +495,10 @@ def collect(expr, syms, evaluate=True, exact=False):
             if isinstance(expr.args, Rational):
                 sexpr, rat_expo = Basic.Exp()(Rational(1)), expr.args
             elif isinstance(expr.args, Mul):
-                coeff, tail = term.args[0], Mul(*term.args[1:])#term.exp.getab()
-                #coeff, tail = expr.args.getab()
+                coeff, tail = expr.args[0].as_coeff_terms()
 
                 if isinstance(coeff, Rational):
-                    sexpr, rat_expo = Basic.Exp()(tail), coeff
+                    sexpr, rat_expo = Basic.Exp()(Basic.Mul(*tail)), coeff
         elif isinstance(expr, Derivative):
             sexpr, deriv = parse_derivative(expr)
 
@@ -669,78 +670,177 @@ def ratsimp(expr):
         return e/(denum/denum[0])
     return num/denum
 
-#def trigsimp(expr):
-#    """
-#    Usage
-#    =====
-#        trig(expr) -> reduces expression by using known trig identities
-#
-#    Notes
-#    =====
-#
-#
-#    Examples
-#    ========
-#        >>> from sympy import *
-#        >>> x = Symbol('x')
-#        >>> y = Symbol('y')
-#        >>> trigsimp(2*sin(x)**2 + 2*cos(x)**2)
-#        2
-#    """
-#    from trigonometric import sin, cos, tan, sec, csc, cot
-#    if isinstance(expr, Function):
-#        return type(expr)( trigsimp(expr[0]) )
-#    elif isinstance(expr, Mul):
-#        ret = Rational(1)
-#        for x in expr:
-#            ret *= trigsimp(x)
-#        return ret
-#    elif isinstance(expr, Pow):
-#        return Pow(trigsimp(expr.base), trigsimp(expr.exp))
-#    elif isinstance(expr, Add) and len(expr[:]) > 1:
-#        # The type of functions we're interested in
-#        a,b = map(Wild, 'ab')
-#        matchers = {"sin": a*sin(b)**2, "tan": a*tan(b)**2, "cot": a*cot(b)**2}#
+def trigsimp(expr, deep=False):
+    """
+    Usage
+    =====
+        trig(expr) -> reduces expression by using known trig identities
+
+    Notes
+    =====
+
+
+    Examples
+    ========
+        >>> from sympy import *
+        >>> x = Symbol('x')
+        >>> y = Symbol('y')
+        >>> e = 2*sin(x)**2 + 2*cos(x)**2
+        >>> trigsimp(e)
+        2
+        >>> trigsimp(log(e))
+        log(2*sin(x)**2 + 2*cos(x)**2)
+        >>> trigsimp(log(e), deep=True)
+        log(2)
+    """
+    from sympy.core.basic import S
+    sin, cos, tan, cot = S.Sin, S.Cos, S.Tan, S.Cot
+    sec, csc = 1/cos, 1/sin
+
+    if isinstance(expr, Apply):
+        if deep:
+            return expr.func( trigsimp(expr.args[0], deep) )
+    elif isinstance(expr, Mul):
+        ret = Rational(1)
+        for x in expr:
+            ret *= trigsimp(x, deep)
+        return ret
+    elif isinstance(expr, Pow):
+        return Pow(trigsimp(expr.base, deep), trigsimp(expr.exp, deep))
+    elif isinstance(expr, Add) and len(expr[:]) > 1:
+        # The type of functions we're interested in
+        a,b = map(Wild, 'ab')
+        matchers = {"sin": a*sin(b)**2, "tan": a*tan(b)**2, "cot": a*cot(b)**2}
 
         # The matches we find
-#        matches = {"sin": [], "tan": [], "cot": []}
+        matches = {"sin": [], "tan": [], "cot": []}
 
         # Scan for the terms we need
-#        ret = Rational(0)
-#        for x in expr:
-#            x = trigsimp(x)
-#            res = None
-#            ex = [atom for atom in expr.atoms() if isinstance(atom, Symbol)]
-#            for mname in matchers:
-#                res = x.match(matchers[mname])
-#                if res is not None:
-#                    if a in res and b in res:
-#                        matches[mname].append( (res[a], res[b]) )
-#                        break
-#                    else:
-#                        res = None
-
-#            if res is not None:
-#                continue
-#            ret += x
+        ret = Rational(0)
+        for x in expr:
+            x = trigsimp(x, deep)
+            res = None
+            #ex = [atom for atom in expr.atoms() if isinstance(atom, Symbol)]
+            for mname in matchers:
+                res = x.match(matchers[mname])
+                if res is not None:
+                    matches[mname].append( (res[a], res[b]) )
+                    break
+            if res is None:
+                ret += x
 
         # Expand matches
-#        for match in matches["sin"]:
-#            ret += match[0] - match[0]*cos(match[1])**2
-#        for match in matches["tan"]:
-#            ret += match[0]*sec(match[1])**2 - match[0]
-#        for match in matches["cot"]:
-#            ret += match[0]*csc(match[1])**2 - match[0]
+        for match in matches["sin"]:
+            ret += match[0] - match[0]*cos(match[1])**2
+        for match in matches["tan"]:
+            ret += match[0]*sec(match[1])**2 - match[0]
+        for match in matches["cot"]:
+            ret += match[0]*csc(match[1])**2 - match[0]
+        return ret
+    return expr
 
-#        return ret
+def powsimp(expr, deep=False):
+    """
+    Usage
+    =====
+        powsimp(expr, deep) -> reduces expression by combining powers with
+            similar bases and exponents.
 
-#    return expr
+    Notes
+    =====
+        If deep is True then powsimp() will also simplify arguments of
+        functions. By default deep is set to False.
+
+
+    Examples
+    ========
+        >>> from sympy import *
+        >>> x,n = map(Symbol, 'xn')
+        >>> e = x**n * (x*n)**(-n) * n
+        >>> powsimp(e)
+        n**(1 - n)
+
+        >>> powsimp(log(e))
+        log(n*x**n*(n*x)**(-n))
+
+        >>> powsimp(log(e), deep=True)
+        log(n**(1 - n))
+    """
+    def _powsimp(expr):
+        if isinstance(expr, Basic.Pow):
+            if deep:
+                return Basic.Pow(powsimp(expr.base), powsimp(expr.exp))
+            return expr
+        elif isinstance(expr, Basic.Apply) and deep:
+            return expr.func(*[powsimp(t) for t in expr.args])
+        elif isinstance(expr, Basic.Add):
+            return Basic.Add(*[powsimp(t) for t in expr])
+        elif isinstance(expr, Basic.Mul):
+            # Collect base/exp data, while maintaining order in the
+            # non-commutative parts of the product
+            c_powers = {}
+            nc_part = []
+            for term in expr:
+                if term.is_commutative:
+                    b,e = term.as_base_exp()
+                    c_powers[b] = c_powers.get(b, 0) + e
+                else:
+                    nc_part.append(term)
+
+            # Pull out numerical coefficients from exponent
+            for b,e in c_powers.items():
+                exp_c, exp_t = e.as_coeff_terms()
+                if not isinstance(exp_c, Basic.One) and exp_t:
+                    del c_powers[b]
+                    new_base = Basic.Pow(b, exp_c)
+                    if new_base in c_powers:
+                        c_powers[new_base] += Basic.Mul(*exp_t)
+                    else:
+                        c_powers[new_base] = Basic.Mul(*exp_t)
+
+            # Combine bases whenever they have the same exponent which is
+            # not numeric
+            c_exp = {}
+            for b, e in c_powers.items():
+                if e in c_exp:
+                    c_exp[e].append(b)
+                else:
+                    c_exp[e] = [b]
+
+            # Merge back in the results of the above to form a new product
+            for e in c_exp:
+                bases = c_exp[e]
+                if len(bases) > 1:
+                    for b in bases:
+                        del c_powers[b]
+                    new_base = Mul(*bases)
+                    if new_base in c_powers:
+                        c_powers[new_base] += e
+                    else:
+                        c_powers[new_base] = e
+
+            c_part = [ Basic.Pow(b,e) for b,e in c_powers.items() ]
+            return Basic.Mul(*(c_part + nc_part))
+        return expr
+
+    return _powsimp(separate(expr, deep=deep))
+
+def combsimp(expr):
+    return expr
 
 def simplify(expr):
     #from sympy.specfun.factorials import factorial, factorial_simplify
     #if expr.has_class(factorial):
     #    expr = factorial_simplify(expr)
-    return ratsimp(expr.expand())
+    a,b = [ t.expand() for t in fraction(powsimp(expr)) ]
+    ret = together(ratsimp(a/b))
+    n,d = fraction(ret)
+    if n.is_polynomial() and d.is_polynomial():
+        from sympy.polynomials import div, factor
+        q,r = div(n, d)
+        if r == 0:
+            return q
+        else:
+            return q + factor(r) / factor(d)
+    return ret
 
-def combsimp(expr):
-    return expr

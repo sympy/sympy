@@ -1,2 +1,2 @@
 
-from simplify import collect, separate, together, ratsimp, fraction, simplify, combsimp
+from simplify import collect, separate, together, ratsimp, fraction, simplify, trigsimp, combsimp, powsimp

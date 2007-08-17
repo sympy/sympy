@@ -160,9 +160,9 @@ def test_ellipse():
     assert c1.area == e1.area
     assert c1.circumference == 2*pi
 
-    #assert e2.arbitrary_point() in e2
-    #for ind in xrange(0, 5):
-    #    assert e3.random_point() in e3
+    assert e2.arbitrary_point() in e2
+    for ind in xrange(0, 5):
+        assert e3.random_point() in e3
 
     # Foci
     f1,f2 = g.Point(sqrt(12), 0), g.Point(-sqrt(12), 0)

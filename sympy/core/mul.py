@@ -152,8 +152,8 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         if e.is_even and isinstance(c, Basic.Number) and c < 0:
             return (-c * Basic.Mul(*t)) ** e
 
-        if e.atoms(Basic.Wild):
-            return Mul(*[t**e for t in b])
+        #if e.atoms(Basic.Wild):
+        #    return Mul(*[t**e for t in b])
 
     @property
     def precedence(self):
