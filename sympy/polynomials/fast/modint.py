@@ -139,3 +139,31 @@ def crt(m, v, symmetric=False):
             return result - mm
     else:
         return result
+
+def crt1(m):
+    """First part of chines remainder theorem, for multiple application."""
+    mm = 1
+    e = []
+    s = []
+    for m_i in m:
+        mm *= m_i
+    for m_i in m:
+        e.append(mm/m_i)
+        s.append(xgcd(e[-1], m_i)[1])
+    return mm, e, s
+
+def crt2(m, v, mm, e, s, symmetric=False):
+    """Second part of chines remainder theorem, for multiple application."""
+    result = 0
+    for m_i, v_i, e_i, s_i in zip(m, v, e, s):
+        c = v_i*s_i % m_i
+        result += c*e_i
+    result %= mm
+    if symmetric:
+        if result <= mm/2:
+            return result
+        else:
+            return result - mm
+    else:
+        return result
+    

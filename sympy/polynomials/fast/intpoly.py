@@ -103,17 +103,20 @@ def gcd_small_primes(f, g):
             ggg[p], r = gfpoly.div(gg[p], v[p])
             assert not r
         w_dict, fff_dict, ggg_dict = {}, {}, {}
+        crt_mm, crt_e, crt_s = modint.crt1(S)
         for i in xrange(0, e+1):
             C = [int(v[p][i]*v[p].__class__.coeff_type(b)) for p in S]
-            c = modint.crt(S, C, True)
+            c = modint.crt2(S, C, crt_mm, crt_e, crt_s, True)
             if c:
                 w_dict[i] = c
         for i in xrange(0, f.degree - e + 1):
-            c = modint.crt(S, [int(fff[p][i]) for p in S], True)
+            c = modint.crt2(S, [int(fff[p][i]) for p in S], crt_mm,
+                            crt_e, crt_s, True)
             if c:
                 fff_dict[i] = c
         for i in xrange(0, g.degree - e + 1):
-            c = modint.crt(S, [int(ggg[p][i]) for p in S], True)
+            c = modint.crt2(S, [int(ggg[p][i]) for p in S], crt_mm,
+                            crt_e, crt_s, True)
             if c:
                 ggg_dict[i] = c
         w_norm = sum([abs(c) for c in w_dict.itervalues()])
