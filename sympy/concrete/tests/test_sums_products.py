@@ -49,7 +49,7 @@ def test_composite_sums():
 def test_finite_sums():
     assert Sum(cos(n), (n, -2, 1)) == cos(-2)+cos(-1)+cos(0)+cos(1)
 
-def test_euler_maclaurin():
+def _test_euler_maclaurin():
     z = Sum(1/n**3, (n, 1, oo))
     A, B = getab(z.split(50))
     apery = (A + B.euler_maclaurin(8)).evalf(25)

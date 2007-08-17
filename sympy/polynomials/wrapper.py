@@ -14,12 +14,17 @@ def div(f, g, var=None, order=None, coeff=None):
     """
 
     q, r = div_.div(f, g, var, order, coeff)
-    
+
     if isinstance(q, list):
         return map(lambda x: x.sympy_expr, q), r.sympy_expr
     else:
         return q.sympy_expr, r.sympy_expr
 
+def quo(*args, **kwargs):
+    return div(*args, **kwargs)[0]
+
+def rem(*args, **kwargs):
+    return div(*args, **kwargs)[1]
 
 def factor(f, var=None, order=None):
     """Factorization of polynomials over the rationals.
@@ -53,14 +58,14 @@ def gcd(f, g, var=None, order=None, coeff=None):
             if [v for v in f.atoms(type=Symbol).union(g.atoms(type=Symbol))
                 if v not in var]:
                 coeff = 'sym'
-    
+
     return div_.gcd(f, g, var, order, coeff).sympy_expr
 
 def groebner(f, var=None, order=None, reduced=True):
     """Computes the (reduced) Groebner base of given polynomials.
 
     Thin wrapper returning SymPy expressions from L{groebner_.groebner}.
-    
+
     """
 
     g = groebner_.groebner(f, var, order, reduced)
@@ -85,7 +90,7 @@ def lcm(f, g, var=None, order=None, coeff=None):
             if [v for v in f.atoms(type=Symbol).union(g.atoms(type=Symbol))
                 if v not in var]:
                 coeff = 'sym'
-    
+
     return div_.lcm(f, g, var, order, coeff).sympy_expr
 
 def resultant(f, g, x, method='bezout'):
@@ -167,7 +172,7 @@ def sqf(f, var=None, order=None, coeff=None):
 
     Thin wrapper that multiplies the factors of L{factor_.sqf} as
     SymPy expressions.
-    
+
     """
 
     a = factor_.sqf(f, var, order, coeff)

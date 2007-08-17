@@ -11,11 +11,16 @@
 
 from sympy import *
 
-from sympy.utilities import any
-from sympy.matrices import zeronm
-from sympy.polynomials import roots
-from sympy.simplify import simplify, collect
+from sympy.core.basic import Basic, S
 
+from sympy.core.integer_sequences import Binomial
+from sympy.core.defined_functions import FallingFactorial
+
+from sympy.utilities import any
+
+from sympy.polynomials import roots, resultant, gcd, div, quo, Polynomial
+from sympy.simplify import simplify, collect
+from sympy.matrices import Matrix, zeronm
 
 def solve(eq, syms, simplified=True):
     """Solves univariate polynomial equations and linear systems with
@@ -57,7 +62,6 @@ def solve(eq, syms, simplified=True):
        {y: 1, x: -3}
 
     """
-
     if isinstance(syms, Basic):
         syms = [syms]
 
@@ -81,36 +85,39 @@ def solve(eq, syms, simplified=True):
         else:
             return solutions
     else:
-        # augmented matrix
-        n, m = len(eq), len(syms)
-        matrix = zeronm(n, m+1)
-
-        index = {}
-
-        for i in range(0, m):
-            index[syms[i]] = i
-
-        for i in range(0, n):
-            if isinstance(eq[i], Equality):
-                # got equation, so move all the
-                # terms to the left hand side
-                equ = eq[i].lhs - eq[i].rhs
-            else:
-                equ = Basic.sympify(eq[i])
-
-            content = collect(equ, syms, evaluate=False)
-
-            for var, expr in content.iteritems():
-                if isinstance(var, Symbol) and not expr.has(*syms):
-                    matrix[i, index[var]] = expr
-                elif isinstance(var, Basic.One) and not expr.has(*syms):
-                    matrix[i, m] = -expr
-                else:
-                    raise "Not a linear system. Can't solve it, yet."
+        if eq == []:
+            return {}
         else:
-            return solve_linear_system(matrix, syms, simplified)
+            # augmented matrix
+            n, m = len(eq), len(syms)
+            matrix = zeronm(n, m+1)
 
-def solve_linear_system(system, syms, simplified=True):
+            index = {}
+
+            for i in range(0, m):
+                index[syms[i]] = i
+
+            for i in range(0, n):
+                if isinstance(eq[i], Equality):
+                    # got equation, so move all the
+                    # terms to the left hand side
+                    equ = eq[i].lhs - eq[i].rhs
+                else:
+                    equ = Basic.sympify(eq[i])
+
+                content = collect(equ.expand(), syms, evaluate=False)
+
+                for var, expr in content.iteritems():
+                    if isinstance(var, Symbol) and not expr.has(*syms):
+                        matrix[i, index[var]] = expr
+                    elif isinstance(var, Basic.One) and not expr.has(*syms):
+                        matrix[i, m] = -expr
+                    else:
+                        raise "Not a linear system. Can't solve it, yet."
+            else:
+                return solve_linear_system(matrix, syms, simplified)
+
+def solve_linear_system(system, symbols, simplified=True):
     """Solve system of N linear equations with M variables, which means
        both Cramer and over defined systems are supported. The possible
        number of solutions is zero, one or infinite. Respectively this
@@ -143,7 +150,9 @@ def solve_linear_system(system, syms, simplified=True):
        {y: 2, x: -6}
 
     """
-    matrix = system[:,:]     # we would like to be persistent
+    matrix = system[:,:]
+    syms = symbols[:]
+
     i, m = 0, matrix.cols-1  # don't count augmentation
 
     while i < matrix.lines:
@@ -258,7 +267,7 @@ def solve_undetermined_coeffs(equ, coeffs, sym, simplified=True):
         # terms to the left hand side
         equ = equ.lhs - equ.rhs
 
-    system = collect(equ, sym, evaluate=False).values()
+    system = collect(equ.expand(), sym, evaluate=False).values()
 
     if not any([ equ.has(sym) for equ in system ]):
         # consecutive powers in the input expressions have

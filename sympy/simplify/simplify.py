@@ -741,3 +741,6 @@ def simplify(expr):
     #if expr.has_class(factorial):
     #    expr = factorial_simplify(expr)
     return ratsimp(expr.expand())
+
+def combsimp(expr):
+    return expr

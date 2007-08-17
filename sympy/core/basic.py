@@ -260,6 +260,10 @@ class Basic(BasicMeths):
 
         return self._eval_is_polynomial(syms)
 
+    def as_polynomial(self, *syms, **kwargs):
+        from sympy.polynomials import Polynomial
+        return Polynomial(self, var=syms, **kwargs)
+
     def _eval_subs(self, old, new):
         if self==old:
             return new

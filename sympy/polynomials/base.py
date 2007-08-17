@@ -16,7 +16,7 @@ coeff_rings = ['int', 'rat', 'real', 'cplx', 'sym']
 
 
 # Global default, probably the most efficient for division?
-default_order = 'grevlex' 
+default_order = 'grevlex'
 
 
 # Local exception type.
@@ -36,7 +36,7 @@ class Polynomial(Basic):
         list of variables (in order), so that he can view 2*x + x*y as
         a polynomial in x only, for example. If not given, the
         occuring symbols are extracted automatically and sorted
-        alphabetically. 
+        alphabetically.
 
         The (optional) argument 'order' defines the monomial order,
         which is of importance to division algorithms and Groebner
@@ -65,11 +65,11 @@ class Polynomial(Basic):
         representation for faster arithmetic and leading terms etc.
         Tries to be compatible with other SymPy expressions, for
         example, by forwarding most attributes like assumptions to the
-        underlying SymPy expression. 
+        underlying SymPy expression.
 
     Examples:
     =========
-        >>> x, y = symbols('xy')                  
+        >>> x, y = symbols('xy')
         >>> f = Polynomial(x + 1)
         >>> f.sympy_expr
         1 + x
@@ -83,9 +83,9 @@ class Polynomial(Basic):
         1 + x
         >>> f
         Polynomial(1 + x, ((1, 1), (1, 0)), [x], 'grevlex')
-        >>> g = Polynomial(y**2 - x*y)       
-        >>> s = f + g                          
-        >>> s.var == [x, y]                  
+        >>> g = Polynomial(y**2 - x*y)
+        >>> s = f + g
+        >>> s.var == [x, y]
         True
         >>> bool(s == y**2 - x*y + x + 1)
         True
@@ -98,7 +98,7 @@ class Polynomial(Basic):
     Also see L{sympy2coefficients}, L{coefficients2sympy}.
 
     """
-    
+
     def __new__(cls, sympy_expr=None, coeffs=None, var=None, order=None,
                 **assumptions):
         obj = Basic.__new__(cls)
@@ -114,6 +114,8 @@ class Polynomial(Basic):
                 var.sort()
             if isinstance(var, Symbol):
                 var = [var]
+            elif isinstance(var, tuple):
+                var = list(var)
             obj.var = var
             if var and not sympy_expr.is_polynomial(*var):
                 raise PolynomialException("%s is not a polynomial!"
@@ -187,6 +189,7 @@ class Polynomial(Basic):
                         "nth_coeff",
                         "coeffs",
                         "order",
+                        "degree",
                         "sympy_expr",
                         "var"):
             try:
@@ -205,7 +208,7 @@ class Polynomial(Basic):
     def __str__(self):
         """Return only the SymPy expression to be human-readable."""
         return str(self.sympy_expr)
-    
+
 
     def __repr__(self):
         """Returns a string that could be used to reconstruct this object."""
@@ -276,7 +279,7 @@ class Polynomial(Basic):
             return other
         if other.sympy_expr is S.Zero:
             return self
-        
+
         # Now we are going to do the addition using the coeffs.
         # Merge the terms of self and other:
         result_list = []
@@ -304,7 +307,7 @@ class Polynomial(Basic):
 
         return Polynomial(coeffs=tuple(result_list), var=self.var,
                           order=self.order)
-        
+
 
     def __radd__(self, other):
         """Also see L{__add__}."""
@@ -354,7 +357,7 @@ class Polynomial(Basic):
             return other
         if other.sympy_expr is S.One:
             return self
-        
+
         # Now we are going to do the multiplication using the coefficients.
         result_dict = {}
         for self_term in self.coeffs:
@@ -371,7 +374,7 @@ class Polynomial(Basic):
         return Polynomial(coeffs=tuple(result_list),
                           var=self.var,
                           order=self.order)
-    
+
 
     def __rmul__(self, other):
         """Also see L{__mul__}."""
@@ -411,9 +414,9 @@ class Polynomial(Basic):
             -5
             >>> f(3*x, x)
             5*x
-            
+
         """
-        
+
         if len(point) != len(self.var):
             raise PolynomialException('No proper input for evaluation.')
         result = self.sympy_expr
@@ -451,7 +454,7 @@ class Polynomial(Basic):
         Also see L{as_monic}, L{as_primitive}.
 
         """
-        
+
         denom = S.One
         for term in self.coeffs:
             if not isinstance(term[0], Rational):
@@ -656,7 +659,7 @@ class Polynomial(Basic):
 
         return Polynomial(coeffs=(self.coeffs[0],), var=self.var,
                           order=self.order)
-        
+
 
     def nth_coeff(self, *exponent):
         """Return a specific coefficient of a Polynomial.
@@ -687,6 +690,8 @@ class Polynomial(Basic):
         else: # No term with matching exponent found.
             return S.Zero
 
+    def degree(self):
+        return sum(self.coeffs[0][1:])
 
 def sympy2coefficients(sympy_expr, var, order):
     """Return the tuple of coefficients and exponents.
@@ -826,7 +831,7 @@ def term_mult(a, b):
 
     a and b are assumed to be tuples of some Polynomial's coeffs of
     same length.
-    
+
     """
 
     return ((a[0]*b[0]).expand(),) \
@@ -837,7 +842,7 @@ def term_div(a, b):
 
     a and b are assumed to be tuples of some Polynomial's coeffs of
     same length.
-    
+
     """
 
     return ((a[0]/b[0]).expand(),) \
