@@ -258,11 +258,10 @@ class Basic(BasicMeths):
         else:
             syms = list(self.atoms(type=Basic.Symbol))
 
-        if not syms:
-            # No symbols so it can be considered "constant" and
-            # hence is a polynomial
+        if not syms: # constant polynomial
             return True
-        return self._eval_is_polynomial(syms)
+        else:
+            return self._eval_is_polynomial(syms)
 
     def as_polynomial(self, *syms, **kwargs):
         from sympy.polynomials import Polynomial
@@ -548,36 +547,23 @@ class Basic(BasicMeths):
             obj = obj._eval_expand_basic()
         return obj
 
-    def _eval_rewrite(self, classes, rule, **hints):
+    def _eval_rewrite(self, pattern, rule, **hints):
         if isinstance(self, Atom):
             return self
         else:
-            terms = [ t._eval_rewrite(classes, rule, **hints) for t in self ]
-
-            for cls in classes:
-                if issubclass(self.__class__, cls):
-                    method = '_eval_rewrite_as_' + rule
-
-                    if hasattr(self, method):
-                        rewritten = getattr(self, method)(*args)
-
-                        if rewritten is not None:
-                            return rewritten
-
-                    break
-
+            terms = [ t._eval_rewrite(pattern, rule, **hints) for t in self ]
             return self.__class__(*terms, **self._assumptions)
 
     def rewrite(self, pattern, rule, **hints):
-        """Rewrites one or several expressions in terms of expressions
-           of different kind. For example it is possible to rewrite
-           trigonometric or hyperbolic functions as combinations of
-           complex exponential functions.
+        """Rewrites expression containing applications of functions
+           of one kind in terms of functions of different kind. For
+           example you can rewrite trigonometric functions as complex
+           exponentials or combinatorial functions as gamma function.
 
-           As a pattern to rewrite this functions accepts a singleton
-           class or an instance of DefinedFunction, or a list of such
-           species. As a revrite rule it accepts a string or arbitray
-           object with tostr() method.
+           As a pattern this function accepts a list of functions to
+           to rewrite (instances of DefinedFunction class). As rule
+           you can use string or a destinaton function instance (in
+           this cas rewrite() will use tostr() method).
 
            There is also possibility to pass hints on how to rewrite
            the given expressions. For now there is only one such hint
@@ -591,25 +577,23 @@ class Basic(BasicMeths):
            -1/2*I*(-1/exp(I*x) + exp(I*x))
 
         """
-        if not isinstance(rule, str):
-            rule = rule.tostr()
-
-        if not isinstance(pattern, list):
-            pattern = [pattern]
-
-        classes = []
-
-        for item in pattern:
-            if self.has(item):
-                if not hasattr(item, '__name__'):
-                    classes.append(item.__class__)
-                else:
-                    classes.append(item)
-
-        if classes:
-            return self._eval_rewrite(classes, rule, **hints)
-        else:
+        if isinstance(self, Atom):
             return self
+        else:
+            if not isinstance(rule, str):
+                rule = rule.tostr()
+
+            rule = '_eval_rewrite_as_' + rule
+
+            if not isinstance(pattern, list):
+                pattern = [pattern]
+
+            pattern = [ p.__class__ for p in pattern if self.has(p) ]
+
+            if pattern:
+                return self._eval_rewrite(tuple(pattern), rule, **hints)
+            else:
+                return self
 
     def as_coefficient(self, expr):
         """Extracts symbolic coefficient at the given expression. In

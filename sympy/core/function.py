@@ -214,29 +214,22 @@ class Apply(Basic, ArithMeths, RelMeths):
         return True
 
     def _eval_expand_complex(self):
-        func = self.func(*[ term._eval_expand_complex() for term in self.args ])
+        func = self.func(*[ a._eval_expand_complex() for a in self.args ])
         return Basic.Re()(func) + S.ImaginaryUnit * Basic.Im()(func)
 
-    def _eval_rewrite(self, classes, rule, **hints):
-
-        if (not 'deep' in hints) or (not hints['deep']):
-            args = [ t._eval_rewrite(classes, rule, **hints) for t in self.args ]
+    def _eval_rewrite(self, pattern, rule, **hints):
+        if hints.get('deep', False):
+            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self.args ]
         else:
-            args = self.args
+            args = self.args[:]
 
-        for cls in classes:
-            if issubclass(self.func.__class__, cls):
-                method = '_eval_rewrite_as_' + rule
+        if isinstance(self.func, pattern) and hasattr(self, rule):
+            rewritten = getattr(self, rule)(*args)
 
-                if hasattr(self, method):
-                    rewritten = getattr(self, method)(*args)
-
-                    if rewritten is not None:
-                        return rewritten
-
-                break
-
-        return self.func(*args, **self._assumptions)
+            if rewritten is not None:
+                return rewritten
+        else:
+            return self.func(*args, **self._assumptions)
 
 class Function(Basic, ArithMeths, NoRelMeths):
     """ Base class for function objects, represents also undefined functions.

@@ -211,20 +211,27 @@ class Pow(Basic, ArithMeths, RelMeths):
         return S.Conjugate(self.base)**self.exp
 
     def _eval_expand_complex(self):
-        # XXX This is not totally correct since for x**(p/q) with x being
-        #     imaginary there are actually q roots, but only a single one
-        #     is returned from here
-        if not self.exp.is_integer:
-            re,im = self.base.as_real_imag()
+        if isinstance(self.exp, Basic.Integer):
+            re, im = self.base.as_real_imag()
+            base = re + S.ImaginaryUnit * im
+            return (base**self.exp).expand()
+        elif isinstance(self.exp, Basic.Rational):
+            # NOTE: This is not totally correct since for x**(p/q) with
+            #       x being imaginary there are actually q roots, but
+            #       only a single one is returned from here.
+            re, im = self.base.as_real_imag()
+
             r = S.Sqrt(re**2 + im**2)
             t = S.ATan(im / re)
+
             if im == 0 and re == -1:
                 t = S.Pi
 
-            rp = r**self.exp
-            tp = t*self.exp
+            rp, tp = r**self.exp, t*self.exp
+
             return rp*S.Cos(tp) + rp*S.Sin(tp)*S.ImaginaryUnit
-        return self
+        else:
+            return S.Re(self) + S.ImaginaryUnit*S.Im(self)
 
     def _eval_expand_basic(self):
         """

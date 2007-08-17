@@ -80,8 +80,7 @@ class Exp(DefinedFunction):
             p = previous_terms[-1]
             if p is not None:
                 return p * x / n
-        from sympy.specfun.factorials import factorial
-        return x**n/factorial(n)
+        return x**n/Basic.Factorial()(n)
 
 class ApplyExp(Apply):
 
@@ -280,7 +279,6 @@ class Log(DefinedFunction):
         if x.is_positive and x.is_unbounded: return True
 
     def _calc_apply_unbounded(self, x):
-        #import pdb; pdb.set_trace()
         return x.is_unbounded
 
     @cache_it_immutable
@@ -787,6 +785,9 @@ class RisingFactorial(DefinedFunction):
 
 class ApplyRisingFactorial(Apply):
 
+    def _eval_rewrite_as_gamma(self, x, k):
+        return Basic.Gamma()(x+k)/Basic.Gamma()(x)
+
     def tostr(self, level=0):
         r = 'rf(%s)' % ', '.join([a.tostr() for a in self.args])
 
@@ -856,6 +857,9 @@ class FallingFactorial(DefinedFunction):
 
 class ApplyFallingFactorial(Apply):
 
+    def _eval_rewrite_as_gamma(self, x, k):
+        return (-1)**k*Basic.Gamma()(-x+k)/Basic.Gamma()(-x)
+
     def tostr(self, level=0):
         r = 'ff(%s)' % ', '.join([a.tostr() for a in self.args])
 
@@ -863,8 +867,6 @@ class ApplyFallingFactorial(Apply):
             return '(%s)' % (r)
         else:
             return r
-
-Basic.singleton['pochhammer'] = RisingFactorial
 
 Basic.singleton['rf'] = RisingFactorial
 Basic.singleton['ff'] = FallingFactorial
@@ -892,9 +894,6 @@ class Re(DefinedFunction):
 
        >>> re(2*I)
        0
-
-       #>>> re(x*I)
-       #-im(x)
 
        >>> re(im(x) + x*I + 2)
        2
@@ -1005,6 +1004,7 @@ class Im(DefinedFunction):
                 return self(a) + S.Re(b) + c
 
 class ApplyIm(Apply):
+
     def _eval_conjugate(self):
         return self
 
@@ -1128,10 +1128,10 @@ class Sin(DefinedFunction):
                 p = previous_terms[-2]
                 return -p * x**2 / (n*(n-1))
             else:
-                from sympy.specfun.factorials import factorial
-                return (-1)**(n//2) * x**(n)/factorial(n)
+                return (-1)**(n//2) * x**(n)/Basic.Factorial()(n)
 
 class ApplySin(Apply):
+
     def _eval_rewrite_as_exp(self, arg):
         exp, I = S.Exp, S.ImaginaryUnit
         return (exp(arg*I) - exp(-arg*I)) / (2*I)
@@ -1172,6 +1172,7 @@ class ApplySin(Apply):
 
     def _eval_is_real(self):
         return self.args[0].is_real
+
     def _eval_is_bounded(self):
         arg = self.args[0]
         if arg.is_real:
@@ -1250,8 +1251,7 @@ class Cos(DefinedFunction):
                 p = previous_terms[-2]
                 return -p * x**2 / (n*(n-1))
             else:
-                from sympy.specfun.factorials import factorial
-                return (-1)**(n//2)*x**(n)/factorial(n)
+                return (-1)**(n//2)*x**(n)/Basic.Factorial()(n)
 
 class ApplyCos(Apply):
 
@@ -1335,6 +1335,7 @@ class Tan(DefinedFunction):
                         return S.Zero
                     elif isinstance(pi_coeff, Basic.Rational):
                         cst_table = {
+                           #2 : S.ComplexInfinity,
                             3 : S.Sqrt(3),
                             4 : S.One,
                             6 : 1 / S.Sqrt(3),
@@ -1370,10 +1371,8 @@ class Tan(DefinedFunction):
 
             a, b = ((n-1)//2), 2**(n+1)
 
-            from sympy.specfun.combinatorial import bernoulli
-            from sympy.specfun.factorials import factorial
-            B = bernoulli(n+1)
-            F = factorial(n+1)
+            B = Basic.Bernoulli()(n+1)
+            F = Basic.Factorial()(n+1)
 
             return (-1)**a * b*(b-1) * B/F * x**n
 
@@ -1432,6 +1431,8 @@ class Cot(DefinedFunction):
         if isinstance(arg, Basic.Number):
             if isinstance(arg, Basic.NaN):
                 return S.NaN
+            #elif isinstance(arg, Basic.Zero):
+            #    return S.ComplexInfinity
             elif arg.is_negative:
                 return -self(-arg)
         else:
@@ -1443,6 +1444,8 @@ class Cot(DefinedFunction):
                 pi_coeff = arg.as_coefficient(S.Pi)
 
                 if pi_coeff is not None:
+                    #if pi_coeff.is_integer:
+                    #    return S.ComplexInfinity
                     if isinstance(pi_coeff, Basic.Rational):
                         cst_table = {
                             2 : S.Zero,
@@ -1481,9 +1484,8 @@ class Cot(DefinedFunction):
         else:
             x = Basic.sympify(x)
 
-            from sympy.specfun.combinatorial import bernoulli
-            B = bernoulli(n+1)
-            F = factorial(n+1)
+            B = Basic.Bernoulli()(n+1)
+            F = Basic.Factorial()(n+1)
 
             return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
 
@@ -1578,8 +1580,7 @@ class Sinh(DefinedFunction):
                 p = previous_terms[-2]
                 return p * x**2 / (n*(n-1))
             else:
-                from sympy.specfun.factorials import factorial
-                return x**(n) / factorial(n)
+                return x**(n) / Basic.Factorial()(n)
 
 class ApplySinh(Apply):
 
@@ -1665,8 +1666,7 @@ class Cosh(DefinedFunction):
                 p = previous_terms[-2]
                 return p * x**2 / (n*(n-1))
             else:
-                from sympy.specfun.factorials import factorial
-                return x**(n)/factorial(n)
+                return x**(n)/Basic.Factorial()(n)
 
 class ApplyCosh(Apply):
     def _eval_conjugate(self):
@@ -1749,10 +1749,8 @@ class Tanh(DefinedFunction):
 
             a = 2**(n+1)
 
-            from sympy.specfun.combinatorial import bernoulli
-            from sympy.specfun.factorials import factorial
-            B = bernoulli(n+1)
-            F = factorial(n+1)
+            B = Basic.Bernoulli()(n+1)
+            F = Basic.Factorial()(n+1)
 
             return a*(a-1) * B/F * x**n
 
@@ -1841,10 +1839,8 @@ class Coth(DefinedFunction):
         else:
             x = Basic.sympify(x)
 
-            from sympy.specfun.combinatorial import bernoulli
-            from sympy.specfun.factorials import factorial
-            B = bernoulli(n+1)
-            F = factorial(n+1)
+            B = Basic.Bernoulli()(n+1)
+            F = Basic.Factorial()(n+1)
 
             return 2**(n+1) * B/F * x**n
 
@@ -1955,9 +1951,8 @@ class ASin(DefinedFunction):
             else:
                 k = (n - 1) // 2
 
-                R = S.RisingFactorial(S.Half, k)
-                from sympy.specfun.factorials import factorial
-                F = factorial(k)
+                R = RisingFactorial()(S.Half, k)
+                F = Basic.Factorial()(k)
 
                 return R / F * x**n / n
 
@@ -2034,9 +2029,8 @@ class ACos(DefinedFunction):
             else:
                 k = (n - 1) // 2
 
-                R = S.RisingFactorial(S.Half, k)
-                from sympy.specfun.factorials import factorial
-                F = factorial(k)
+                R = RisingFactorial()(S.Half, k)
+                F = Basic.Factorial()(k)
 
                 return -R / F * x**n / n
 
@@ -2272,9 +2266,8 @@ class ASinh(DefinedFunction):
             else:
                 k = (n - 1) // 2
 
-                R = S.RisingFactorial(S.Half, k)
-                from sympy.specfun.factorials import factorial
-                F = factorial(k)
+                R = RisingFactorial()(S.Half, k)
+                F = Basic.Factorial()(k)
 
                 return (-1)**k * R / F * x**n / n
 
@@ -2351,9 +2344,8 @@ class ACosh(DefinedFunction):
             else:
                 k = (n - 1) // 2
 
-                R = S.RisingFactorial(S.Half, k)
-                from sympy.specfun.factorials import factorial
-                F = factorial(k)
+                R = RisingFactorial()(S.Half, k)
+                F = Basic.Factorial()(k)
 
                 return -R / F * S.ImaginaryUnit * x**n / n
 
