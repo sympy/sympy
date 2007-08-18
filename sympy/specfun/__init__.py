@@ -4,9 +4,10 @@ as trigonometric functions, orthogonal polynomials, the gamma function,
 and so on.
 """
 
+from gamma_functions import gamma, lowergamma, uppergamma
+
 from factorials import factorial, binomial2, rising_factorial, \
-    falling_factorial, gamma, lower_gamma, upper_gamma, \
-    factorial_simplify
+    falling_factorial, factorial_simplify
 
 from orthogonal_polynomials import legendre, \
     chebyshev_zero

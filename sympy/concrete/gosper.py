@@ -10,6 +10,8 @@ from sympy.core.mul import Mul
 from sympy.polynomials import gcd, quo, roots, resultant
 from sympy.simplify import ratsimp, combsimp
 
+from sympy.concrete.utilities import nni_roots
+
 def normal(f, g, n):
     """Given relatively prime univariate polynomials 'f' and 'g',
        rewrite their quotient to a normal form defined as follows:
@@ -65,22 +67,24 @@ def normal(f, g, n):
     res = resultant(A, B.subs(n, n+h), n)
 
     if not res.is_polynomial(h):
-        p, q = res.as_numer_denom()
-        res = quo(p, q, h)
+        res = quo(*res.as_numer_denom())
 
-    nni_roots = [ int(r) for r in set(roots(res, h)) if r.is_integer ]
+    _nni_roots = nni_roots(res, h)
 
-    nni_roots.sort()
+    if _nni_roots == []:
+        return (f, g, S.One)
+    else:
+        _nni_roots.sort()
 
-    for i in nni_roots:
-        d = gcd(A, B.subs(n, n+i), n)
+        for i in _nni_roots:
+            d = gcd(A, B.subs(n, n+i), n)
 
-        A = quo(A, d, n)
-        B = quo(B, d.subs(n, n-i), n)
+            A = quo(A, d, n)
+            B = quo(B, d.subs(n, n-i), n)
 
-        C *= Mul(*[ d.subs(n, n-j) for j in xrange(1, i+1) ])
+            C *= Mul(*[ d.subs(n, n-j) for j in xrange(1, i+1) ])
 
-    return (Z*A, B, C)
+        return (Z*A, B, C)
 
 def gosper(term, k, lower, upper):
     pass

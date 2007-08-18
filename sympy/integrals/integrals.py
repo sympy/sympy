@@ -90,7 +90,7 @@ class Integral(Basic, ArithMeths, RelMeths):
         Use heuristics and an integral table.
         """
         from sympy import exp, cos, sin, log
-        from sympy.specfun.factorials import upper_gamma
+        from sympy.specfun import uppergamma
 
         if not f.has(x): return f*x
         if f == x: return x**2/2
@@ -137,7 +137,7 @@ class Integral(Basic, ArithMeths, RelMeths):
             ( sin(a*x), -1/a * cos(a*x) ),
             ( cos(a*x), 1/a * sin(a*x) ),
             ( log(a*x+b), (x+b/a)*log(a*x+b)-x ),
-            ( x**a * exp(b*x), (-1)*x**(a+1)*(-b*x)**(-a-1)*upper_gamma(a+1,-b*x) )
+            ( x**a * exp(b*x), (-1)*x**(a+1)*(-b*x)**(-a-1)*uppergamma(a+1,-b*x) )
         )
 
         for k,v in integral_table:

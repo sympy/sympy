@@ -1,5 +1,4 @@
 from combinatorial import bernoulli
-from factorials import factorial, binomial2
 from sympy.core import *
 
 

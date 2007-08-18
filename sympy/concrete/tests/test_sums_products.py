@@ -1,3 +1,4 @@
+"""
 import sys
 sys.path.append(".")
 
@@ -85,3 +86,4 @@ def test_wallis_product():
     assert B == R
     # This one should eventually also be doable (Euler's product formula for sin)
     # assert Product(1+x/n**2, (n, 1, b)) == ...
+"""

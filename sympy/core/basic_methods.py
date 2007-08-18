@@ -27,10 +27,12 @@ ordering_of_classes = [
     'ApplySinh','ApplyCosh','ApplyTanh','ApplyCoth',
     'ApplyASinh','ApplyACosh','ApplyATanh','ApplyACoth',
     'ApplyRisingFactorial','ApplyFallingFactorial',
+    'ApplyFactorial','ApplyBinomial',
     'ApplyFloor', 'ApplyCeiling',
     'ApplyRe','ApplyIm', 'ApplyArg',
     'ApplySqrt','ApplySign',
     'ApplyMrvLog',
+    'ApplyGamma','ApplyLowerGamma','ApplyUpperGamma',
     'ApplyChebyshev','ApplyChebyshev2',
     'Derivative','Integral',
     # defined singleton functions
@@ -42,6 +44,7 @@ ordering_of_classes = [
     'Sin','Cos','Tan','Cot','ASin','ACos','ATan','ACot',
     'Sinh','Cosh','Tanh','Coth','ASinh','ACosh','ATanh','ACoth',
     'RisingFactorial','FallingFactorial',
+    'Gamma','LowerGamma','UpperGamma',
     # special polynomials
     'Chebyshev','Chebyshev2','UnevaluatedFactorial',
     # undefined functions
