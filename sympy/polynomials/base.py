@@ -190,6 +190,7 @@ class Polynomial(Basic):
                         "coeffs",
                         "order",
                         "degree",
+                        "as_basic",
                         "sympy_expr",
                         "var"):
             try:
@@ -535,13 +536,13 @@ class Polynomial(Basic):
         Also see L{as_integer}, L{as_monic}, L{content}.
 
         """
-    
+
         c = self.content()
         if self.coeffs[0][0] < 0:
             sign = -1
         else:
             sign = 1
-            
+
         if c is S.Zero:
             return S.Zero, self
         if c is S.One and sign == 1:
@@ -698,6 +699,9 @@ class Polynomial(Basic):
 
     def degree(self):
         return sum(self.coeffs[0][1:])
+
+    def as_basic(self):
+        return self.sympy_expr
 
 def sympy2coefficients(sympy_expr, var, order):
     """Return the tuple of coefficients and exponents.

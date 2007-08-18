@@ -3,6 +3,7 @@ __version__ = "0.5.1"
 
 from sympy.core import *
 
+from concrete import *
 from series import *
 from simplify import *
 from solvers import *

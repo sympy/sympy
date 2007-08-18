@@ -825,8 +825,83 @@ def powsimp(expr, deep=False):
 
     return _powsimp(separate(expr, deep=deep))
 
-def combsimp(expr):
-    return expr
+def combsimp(expr, symbol, form=False, verify=False):
+    """Simplify expresions containing factorials, binomials, rising
+       and falling factorials, gamma functions and other species
+       which can be expressed for all arguments in terms of gamma.
+
+       The main goal of this procedure is to simplify expressions
+       of the form a(n + k)/a(n) where 'k' is a constant integer.
+       This proves very useful, especially in case when k = 1, in
+       verification if a(n) is hypergeometric or not, in definite
+       and indefinite summation and also in difference equations
+       solving.
+
+       The algorithm performs three basic steps:
+
+           (1) Rewrite all functions in terms of gamma, if possible.
+
+           (2) Rewrite all occurences of gamma in terms of produtcs
+               of gamma and rising factorial with integer, absolute
+               constant exponents. After this step all instances of
+               gamma will not have constant term or it will be 1/2.
+
+           (3) Perform simplification of nested fractions, powers
+               and if the resulting expression is a quotient of
+               polynomials, reduce their total degree.
+
+       In hypergeometric case the result of this procedure is a
+       quotient of polynomials of minimal degree. If you set the
+       'verify' flag, then tuple will be returned with information
+       in second position if the result is hypergeometric, or not.
+
+       This algorithm, due to Wolfram Koepf, is very simple but
+       powerful and is supposed to out perform simplification
+       routines of this kind in other algebra systems. However
+       because of ill desing of together() this is not the case
+       (this will change soon).
+
+       For more information on the implemented algorithm refer to:
+
+       [1] W. Koepf, Algorithms for m-fold Hypergeometric Summation,
+           Journal of Symbolic Computation (1995) 20, 399-417
+    """
+    expr = Basic.sympify(expr)
+
+    if form == True:
+        expr = expr.subs(symbol, symbol+1)/expr
+
+    expr = expr.rewrite(S.Gamma).rewrite(S.Gamma, 'rf')
+
+    result = powsimp(together(expr))
+    p, q = result.as_numer_denom()
+
+    if p.is_polynomial(symbol) and q.is_polynomial(symbol):
+        from sympy.polynomials import gcd, quo
+
+        g, hyper = gcd(p, q, symbol), True
+
+        if not isinstance(g, Basic.One):
+            p = quo(p, g, symbol)
+            q = quo(q, g, symbol)
+
+            p = p.as_polynomial(symbol)
+            q = q.as_polynomial(symbol)
+
+            a, p = p.as_integer()
+            b, q = q.as_integer()
+
+            p = p.as_basic()
+            q = q.as_basic()
+
+            result = (b/a) * (p/q)
+    else:
+        hyper = False
+
+    if verify:
+        return (result, hyper)
+    else:
+        return result
 
 def simplify(expr):
     #from sympy.specfun.factorials import factorial, factorial_simplify

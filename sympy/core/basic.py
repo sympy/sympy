@@ -249,6 +249,12 @@ class Basic(BasicMeths):
                 result = result.union(obj.atoms(type=type))
         return result
 
+    def is_hypergeometric(self, arg):
+        from sympy.simplify import combsimp
+
+        expr = self.subs(arg, arg + 1) / self
+        return combsimp(expr, arg, verify=True)[1]
+
     def _eval_is_polynomial(self, syms):
         return
 
@@ -554,7 +560,7 @@ class Basic(BasicMeths):
             terms = [ t._eval_rewrite(pattern, rule, **hints) for t in self ]
             return self.__class__(*terms, **self._assumptions)
 
-    def rewrite(self, pattern, rule, **hints):
+    def rewrite(self, *args, **hints):
         """Rewrites expression containing applications of functions
            of one kind in terms of functions of different kind. For
            example you can rewrite trigonometric functions as complex
@@ -577,23 +583,25 @@ class Basic(BasicMeths):
            -1/2*I*(-1/exp(I*x) + exp(I*x))
 
         """
-        if isinstance(self, Atom):
+        if isinstance(self, Atom) or not args:
             return self
         else:
+            pattern, rule = args[:-1], args[-1]
+
             if not isinstance(rule, str):
                 rule = rule.tostr()
 
             rule = '_eval_rewrite_as_' + rule
 
-            if not isinstance(pattern, list):
-                pattern = [pattern]
-
-            pattern = [ p.__class__ for p in pattern if self.has(p) ]
-
-            if pattern:
-                return self._eval_rewrite(tuple(pattern), rule, **hints)
+            if not pattern:
+                return self._eval_rewrite(None, rule, **hints)
             else:
-                return self
+                pattern = [ p.__class__ for p in pattern if self.has(p) ]
+
+                if pattern:
+                    return self._eval_rewrite(tuple(pattern), rule, **hints)
+                else:
+                    return self
 
     def as_coefficient(self, expr):
         """Extracts symbolic coefficient at the given expression. In

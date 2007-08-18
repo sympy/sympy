@@ -223,13 +223,14 @@ class Apply(Basic, ArithMeths, RelMeths):
         else:
             args = self.args[:]
 
-        if isinstance(self.func, pattern) and hasattr(self, rule):
-            rewritten = getattr(self, rule)(*args)
+        if pattern is None or isinstance(self.func, pattern):
+            if hasattr(self, rule):
+                rewritten = getattr(self, rule)(*args)
 
-            if rewritten is not None:
-                return rewritten
-        else:
-            return self.func(*args, **self._assumptions)
+                if rewritten is not None:
+                    return rewritten
+
+        return self.func(*args, **self._assumptions)
 
 class Function(Basic, ArithMeths, NoRelMeths):
     """ Base class for function objects, represents also undefined functions.

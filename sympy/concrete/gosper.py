@@ -36,7 +36,7 @@ def normal(f, g, n):
        of this factorization in the form (Z*A, B, C). For example:
 
        >>> from sympy import Symbol
-       >>> n = Symbol('n')
+       >>> n = Symbol('n', integer=True)
 
        >>> normal(4*n+5, 2*(4*n+1)*(2*n+3), n)
        (1/4, 3/2 + n, 1/4 + n)
@@ -86,5 +86,34 @@ def normal(f, g, n):
 
         return (Z*A, B, C)
 
-def gosper(term, k, lower, upper):
-    pass
+def gosper(term, k, a, n):
+    from sympy.solvers import rsolve_poly
+    import pdb; pdb.set_trace()
+    expr, hyper = combsimp(term.subs(k, k+1)/term, k, verify=True)
+
+    if not hyper:
+        return None
+    else:
+        p, q = expr.as_numer_denom()
+        A, B, C = normal(p, q, k)
+
+        B = B.subs(k, k-1)
+
+        R = rsolve_poly([-B, A], C, k)
+        symbol = []
+
+        if not (R is None or isinstance(R, Basic.Zero)):
+            if symbol != []:
+                symbol = symbol[0]
+
+                W = R.subs(symbol, S.Zero)
+
+                if isinstance(W, Basic.Zero):
+                    R = R.subs(symbol, S.One)
+                else:
+                    R = W
+
+            Z = B*R*term/C
+            return simplify(Z.subs(k, n+1) - Z.subs(k, a))
+        else:
+            return None

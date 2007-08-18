@@ -44,6 +44,7 @@ ordering_of_classes = [
     'Sin','Cos','Tan','Cot','ASin','ACos','ATan','ACot',
     'Sinh','Cosh','Tanh','Coth','ASinh','ACosh','ATanh','ACoth',
     'RisingFactorial','FallingFactorial',
+    'Factorial','Binomial',
     'Gamma','LowerGamma','UpperGamma',
     # special polynomials
     'Chebyshev','Chebyshev2','UnevaluatedFactorial',

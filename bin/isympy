@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 """
-Python shell for sympy. Imports sympy and defines the symbols x, y, z. 
+Python shell for sympy. Imports sympy and defines the symbols x, y, z.
 
-command line options: 
-  -c : permits to specify a python interactive interpreter, currently only 
-       python or ipython. Example usage: 
+command line options:
+  -c : permits to specify a python interactive interpreter, currently only
+       python or ipython. Example usage:
            isympy -c python
        default is set to ipython
-       
+
   -h : prints this help message
 
   --version: prints version number
@@ -18,7 +18,7 @@ __author__ = "Fabian Seoane <fabian@fseoane.net>"
 #from sympy import __version__ as sympy_version
 #__version__ = sympy_version
 __version__ = "0.5.0"
-    
+
 import sys
 sys.path.append('..')
 sys.path.append('.')
@@ -33,7 +33,7 @@ basic_modules = """
 
 welcome_msg = """Python console for sympy."""
 
-#Imported modules (from module import *): 
+#Imported modules (from module import *):
 #""" + basic_modules + """
 #Symbols defined: x, y, z
 #"""
@@ -49,13 +49,12 @@ from sympy import *
 """
 
 init_code = """
-x = Symbol('x')
-y = Symbol('y')
-z = Symbol('z')
+x, y, z = symbols('xyz')
+k, m, n = symbols('kmn', integer=True)
 """
 
 def run_ipython_interpreter():
-	
+
     from IPython.Shell import IPShellEmbed
 
     args = ['-nopprint']
@@ -63,12 +62,12 @@ def run_ipython_interpreter():
     api = ipshell.IP.getapi()
     api.ex(basic_import_code)
     api.ex(init_code)
-    
+
     ### create some magic commands
-    
+
     #def pretty_print(self, arg):
     #    self.api.ex("print str((%s).__pretty__())" % arg)
-        
+
     #api.expose_magic("pprint", pretty_print)
 
     # Now start an embedded ipython.
@@ -77,10 +76,10 @@ def run_ipython_interpreter():
 
 def run_python_interpreter():
     print """
-Couldn't locate IPython. Having IPython installed is greatly recomended.	
+Couldn't locate IPython. Having IPython installed is greatly recomended.
 See http://ipython.scipy.org for more details. If you use Debian, just install
 the "ipython" package and start isympy again.\n"""
-	
+
     import code
     import readline
     import atexit
@@ -92,7 +91,7 @@ the "ipython" package and start isympy again.\n"""
 	                 histfile=os.path.expanduser("~/.sympy-history")):
 	        code.InteractiveConsole.__init__(self)
 	        self.init_history(histfile)
-	
+
         def init_history(self, histfile):
 	        readline.parse_and_bind("tab: complete")
 	        if hasattr(readline, "read_history_file"):
@@ -101,10 +100,10 @@ the "ipython" package and start isympy again.\n"""
 	            except IOError:
 	                pass
                 atexit.register(self.save_history, histfile)
-	
+
         def save_history(self, histfile):
             readline.write_history_file(histfile)
-	
+
     sh = HistoryConsole()
     sh.runcode(basic_import_code)
     sh.runcode("x = Symbol('x')")
@@ -129,7 +128,7 @@ def main():
     else:
 	    try:
 	        run_ipython_interpreter()
-	
+
 	    except ImportError:
 	        run_python_interpreter()
 

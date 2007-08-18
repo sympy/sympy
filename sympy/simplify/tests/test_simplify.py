@@ -50,11 +50,11 @@ def test_simplify():
 
     e = (-4*x*y**2-2*y**3-2*x**2*y)/(x+y)**2
     assert simplify(e) == -2*y
-    
+
     e = (x+y)**2/(-4*x*y**2-2*y**3-2*x**2*y)
     assert simplify(e) == 1 / (-2*y)
 
-    e = -x-y-(x+y)**(-1)*y**2+(x+y)**(-1)*x**2 
+    e = -x-y-(x+y)**(-1)*y**2+(x+y)**(-1)*x**2
     assert simplify(e) == -2*y
 
 def test_fraction():
@@ -128,3 +128,9 @@ def test_collect():
     x,y,n = symbols('xyn')
     assert collect(2*x**2 + y*x**2 + 3*x*y, [x]) == x**2*(2+y) + 3*x*y
     assert collect(2*x**2 + y*x**2 + 3*x*y, [y]) == 2*x**2 + y*(x**2+3*x)
+
+def test_combsimp():
+    n, k = symbols('nk', integer=True)
+
+    term = (4*k+1)*factorial(k)/factorial(2*k+1)
+    assert combsimp(term, k, form=True) == (4*k + 5)/(6 + 16*k**2 + 28*k)
