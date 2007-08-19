@@ -3,6 +3,8 @@ Plotting Examples
 
 Note: In Python < 2.5, you will need the ctypes library
 to use plotting. It is included with Python 2.5 and later.
+
+Suggested Usage:    python -i plotting.py
 """
 import sys
 sys.path.append("..")
@@ -21,7 +23,7 @@ if __name__ == "__main__":
     axes_options = 'visible=false; colored=true; label_ticks=true; label_axes=true; overlay=true; stride=0.5'
     #axes_options = 'colored=false; overlay=false; stride=(1.0, 0.5, 0.5)'
 
-    p = Plot(width=600, height=600, ortho=False, invert_mouse_zoom=False, axes=axes_options)
+    p = Plot(width=600, height=500, ortho=False, invert_mouse_zoom=False, axes=axes_options, antialiasing=True)
 
     examples = []
     def example_wrapper(f):
@@ -89,8 +91,8 @@ if __name__ == "__main__":
 
     @example_wrapper
     def multistep_gradient():
-        #p[1] = 1, 'mode=spherical'
-        p[1] = exp(-x**2-y**2+(x*y)/4), [-1.7,1.7,100], [-1.7,1.7,100], 'style=solid'
+        p[1] = 1, 'mode=spherical', 'style=both'
+        #p[1] = exp(-x**2-y**2+(x*y)/4), [-1.7,1.7,100], [-1.7,1.7,100], 'style=solid'
         #p[1] = 5*x*y*exp(-x**2-y**2), [-2,2,100], [-2,2,100]
         gradient = [ 0.0,  (0.3, 0.3, 1.0),
                      0.30, (0.3, 1.0, 0.3),
@@ -116,8 +118,8 @@ if __name__ == "__main__":
 
     def help_str():
         s =  ("\nPlot p has been created. Useful commands: \n"
-              "    p[1] = x**2, print p, p.clear(), help(p) \n\n"
-              "You can also run an example (source in plotting.py):\n\n")
+              "    help(p), p[1] = x**2, print p, p.clear() \n\n"
+              "Available examples (see source in plotting.py):\n\n")
         for i in xrange(len(examples)):
             s += "(%i) %s\n" % (i, examples[i].__name__)
         s += "\n"

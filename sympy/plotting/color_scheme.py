@@ -44,7 +44,9 @@ class ColorScheme(object):
         self.args = args
         self.f, self.gradient = None, ColorGradient()
 
-        if len(args) == 1 and isinstance(args[0], str):
+        if len(args) == 1 and not isinstance(args[0],Basic) and callable(args[0]):
+            self.f = args[0]
+        elif len(args) == 1 and isinstance(args[0], str):
             if args[0] in default_color_schemes:
                 cs = default_color_schemes[args[0]]
                 self.f, self.gradient = cs.f, cs.gradient.copy()

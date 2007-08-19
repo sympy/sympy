@@ -9,12 +9,22 @@ from time import clock
 class PlotWindow(ManagedWindow):
 
     def __init__(self, plot, **kwargs):
+        """
+        Named Arguments
+        ===============
+
+        antialiasing = True
+            True OR False
+        ortho = False
+            True OR False
+        invert_mouse_zoom = False
+            True OR False
+        """
         self.plot = plot
 
         self.camera = None
         self._calculating = False
 
-        self.wireframe          = kwargs.pop('wireframe', False)
         self.antialiasing       = kwargs.pop('antialiasing', True)
         self.ortho              = kwargs.pop('ortho', False)
         self.invert_mouse_zoom  = kwargs.pop('invert_mouse_zoom', False)
@@ -31,21 +41,25 @@ class PlotWindow(ManagedWindow):
                 invert_mouse_zoom=self.invert_mouse_zoom)
         self.push_handlers(self.controller)
 
-        #glClearColor(1.0, 1.0, 1.0, 0.0)
-        glClearColor(0.95, 0.95, 0.95, 0.0)
+        glClearColor(1.0, 1.0, 1.0, 0.0)
+        #glClearColor(0.95, 0.95, 0.95, 0.0)
         glClearDepth(1.0)
 
         glDepthFunc(GL_LESS)
         glEnable(GL_DEPTH_TEST)
 
+        glEnable(GL_LINE_SMOOTH)
         glShadeModel(GL_SMOOTH)
+        glLineWidth(1.25)
 
-        # now done at the function level
-        # glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         if self.antialiasing:
             glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
             glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST)
+            #glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
+            #glHint(GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE)
 
         self.camera.setup_projection()
 
