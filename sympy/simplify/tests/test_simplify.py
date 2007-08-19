@@ -129,8 +129,22 @@ def test_collect():
     assert collect(2*x**2 + y*x**2 + 3*x*y, [x]) == x**2*(2+y) + 3*x*y
     assert collect(2*x**2 + y*x**2 + 3*x*y, [y]) == 2*x**2 + y*(x**2+3*x)
 
-def test_combsimp():
+def test_hypersimp():
     n, k = symbols('nk', integer=True)
 
+    assert hypersimp(factorial(k), k) == k + 1
+    assert hypersimp(factorial(k**2), k) is None
+
+    assert hypersimp(2**k/factorial(k)**2, k) == 2/(k+1)**2
+
+    assert hypersimp(binomial(n, k), k) == (n-k)/(k+1)
+    assert hypersimp(binomial(n+1, k), k) == (n-k+1)/(k+1)
+
     term = (4*k+1)*factorial(k)/factorial(2*k+1)
-    assert combsimp(term, k, form=True) == (4*k + 5)/(6 + 16*k**2 + 28*k)
+    assert hypersimp(term, k) == (4*k + 5)/(6 + 16*k**2 + 28*k)
+
+    term = 1/((2*k-1)*factorial(2*k+1))
+    assert hypersimp(term, k) == (2*k-1)/(2*k+1)/(2*k+2)/(2*k+3)
+
+    term = binomial(n, k)*(-1)**k/factorial(k)
+    assert hypersimp(term, k) == (k - n)/(k+1)**2

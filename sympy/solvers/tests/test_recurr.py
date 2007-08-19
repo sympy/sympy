@@ -15,4 +15,5 @@ def test_rsolve_ratio():
     pass
 
 def test_rsolve_hyper():
-    pass
+    assert rsolve_hyper([2*n*(n+1), -n**2-3*n+2, n-1], 0, n) \
+        == C0*factorial(n) + C1*2**n

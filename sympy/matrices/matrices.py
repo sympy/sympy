@@ -989,6 +989,43 @@ def wronskian(functions, var):
     W = Matrix(n, n, lambda i,j: functions[i].diff(var, j) )
     return W.det()
 
+def casoratian(s, n, zero=True):
+    """Given linear difference operator L of order 'k' and homogeneous
+       equation Ly = 0 we want to compute kernel of L, which is a set
+       of 'k' sequences: a(n), b(n), ... z(n).
+
+       Solutions of L are lineary independent iff their Casoratian,
+       denoted as C(a, b, ..., z), do not vanish for n = 0.
+
+       Casoratian is defined by k x k determinant:
+
+                  +  a(n)     b(n)     . . . z(n)     +
+                  |  a(n+1)   b(n+1)   . . . z(n+1)   |
+                  |    .         .     .        .     |
+                  |    .         .       .      .     |
+                  |    .         .         .    .     |
+                  +  a(n+k-1) b(n+k-1) . . . z(n+k-1) +
+
+       It proves very useful in rsolve_hyper() where it is applied
+       to a generating set of a recurrence to factor out lineary
+       dependent solutions and return a basis.
+
+       >>> from sympy import *
+       >>> n = Symbol('n', integer=True)
+
+       Exponential and factorial are lineary independent:
+
+       >>> casoratian([2**n, factorial(n)], n) != 0
+       True
+
+    """
+    if not zero:
+        f = lambda i, j: s[j].subs(n, n+i)
+    else:
+        f = lambda i, j: s[j].subs(n, i)
+
+    return Matrix(len(s), len(s), f).det()
+
 class SMatrix(Matrix):
     def __init__(self, *args):
         if len(args) == 3 and callable(args[2]):

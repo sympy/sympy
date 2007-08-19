@@ -88,8 +88,8 @@ def normal(f, g, n):
 
 def gosper(term, k, a, n):
     from sympy.solvers import rsolve_poly
-    import pdb; pdb.set_trace()
-    expr, hyper = combsimp(term.subs(k, k+1)/term, k, verify=True)
+
+    #expr, hyper = combsimp(term.subs(k, k+1)/term, k, verify=True)
 
     if not hyper:
         return None

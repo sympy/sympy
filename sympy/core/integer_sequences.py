@@ -253,13 +253,12 @@ class Binomial(IntegerSequence):
             if k.is_negative:
                 return S.Zero
         else:
-            return (-1)**k*S.Gamma(-r+k) * \
-                (S.Gamma(-r)*S.Gamma(k+1))**(-1)
+            return S.Gamma(r+1)/(S.Gamma(r-k+1)*S.Gamma(k+1))
 
 class ApplyBinomial(Apply):
 
     def _eval_rewrite_as_gamma(self, r, k):
-        return (-1)**k*S.Gamma(-r+k)/S.Gamma(-r)/S.Gamma(k+1)
+        return S.Gamma(r+1)/(S.Gamma(r-k+1)*S.Gamma(k+1))
 
     def _eval_is_integer(self):
         return self.args[0].is_integer and self.args[1].is_integer

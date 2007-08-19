@@ -4,17 +4,15 @@
 
 from sympy.core.basic import Basic, S
 from sympy.core.symbol import Symbol
+from sympy.core.numbers import Rational
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Rational
-from sympy.core.defined_functions import FallingFactorial
-from sympy.core.integer_sequences import Binomial
 
-from sympy.concrete import nni_roots, normal, gosper, Product
+from sympy.simplify import simplify, hypersimp, hypersimilar, collect
 from sympy.solvers import solve, solve_undetermined_coeffs
 from sympy.polynomials import quo, gcd, roots, resultant
-from sympy.simplify import simplify, combsimp, collect
-from sympy.matrices import Matrix
+from sympy.concrete import nni_roots, product
+from sympy.matrices import Matrix, casoratian
 
 def rsolve_poly(coeffs, f, n):
     """Find polynomial solutions to inhomogeneous linear difference
@@ -99,7 +97,7 @@ def rsolve_poly(coeffs, f, n):
 
     for i in xrange(0, r+1):
         for j in xrange(i, r+1):
-            polys[i] += Binomial()(j, i)*coeffs[j]
+            polys[i] += S.Binomial(j, i)*coeffs[j]
 
         polys[i] = polys[i].expand()
 
@@ -123,7 +121,7 @@ def rsolve_poly(coeffs, f, n):
 
     for i in xrange(0, r+1):
         if terms[i][1] - i == b:
-            degree_poly += terms[i][0]*FallingFactorial()(x, i)
+            degree_poly += terms[i][0]*S.FallingFactorial(x, i)
 
     _nni_roots = nni_roots(degree_poly, x)
 
@@ -193,7 +191,7 @@ def rsolve_poly(coeffs, f, n):
 
             for j in xrange(0, A+1):
                 for k in xrange(0, d+1):
-                    B = Binomial()(k, i+j)
+                    B = S.Binomial(k, i+j)
                     D = delta(polys[j], k)
 
                     alpha[i] += I[k]*B*D
@@ -242,20 +240,20 @@ def rsolve_poly(coeffs, f, n):
 
                 G[i] = (delta(f, i-A) - g) / denom
 
-        P, S = one_vector(U), zero_vector(A)
+        P, Q = one_vector(U), zero_vector(A)
 
         for i in xrange(1, U):
             P[i] = (P[i-1] * (n-a-i+1)/i).expand()
 
         for i in xrange(0, A):
-            S[i] = Add(*[ (v*p).expand() for v, p in zip(V[:,i], P) ])
+            Q[i] = Add(*[ (v*p).expand() for v, p in zip(V[:,i], P) ])
 
         if not homogeneous:
             h = Add(*[ (g*p).expand() for g, p in zip(G, P) ])
 
         C = [ Symbol('C'+str(i)) for i in xrange(0, A) ]
 
-        g = lambda i: Add(*[ c*delta(s, i) for c, s in zip(C, S) ])
+        g = lambda i: Add(*[ c*delta(q, i) for c, q in zip(C, Q) ])
 
         if homogeneous:
             E = [ g(i) for i in xrange(N+1, U) ]
@@ -269,9 +267,9 @@ def rsolve_poly(coeffs, f, n):
 
         result = []
 
-        for c, s in zip(C, S):
+        for c, s in zip(C, Q):
             if c in solutions:
-                result.append((solutions[c] * s).expand())
+                result.append((solutions[c] * q).expand())
             else:
                 result.append((c * s).expand())
 
@@ -339,7 +337,7 @@ def rsolve_ratio(coeffs, f, n):
     _nni_roots = nni_roots(res, h)
 
     if _nni_roots == []:
-        return rsolve_poly(coeffs, f, n)
+        return rsolve_poly(coeffs, f, n, **hints)
     else:
         C, numers = S.One, [S.Zero]*(r+1)
 
@@ -362,25 +360,29 @@ def rsolve_ratio(coeffs, f, n):
         for i in xrange(0, r+1):
             numers[i] *= Mul(*(denoms[:i] + denoms[i+1:]))
 
-        poly = rsolve_poly(numers, f * Mul(*denoms), n)
+        result = rsolve_poly(numers, f * Mul(*denoms), n, **hints)
 
-        if poly is not None:
-            return simplify(poly / C)
+        if result is not None:
+            if hints.get('symbols', False):
+                return (simplify(result[0] / C), result[1])
+            else:
+                return simplify(result / C)
         else:
             return None
 
-def rsolve_hyper(coeffs, f, n):
-    """Find hypergeometric or, at most, D'Alembertian solutions to
-       inhomogeneous linear difference equation of finite order with
-       polynomial coefficients and hypergeometric inhomogeneous part.
+def rsolve_hyper(coeffs, f, n, **hints):
+    """Find hypergeometric solutions to inhomogeneous linear
+       difference equation of finite order with polynomial
+       coefficients.
 
        Formally, given a linear difference equation Ly = f where
 
-          L = p_r * E^k + ... + p_1 * E + p_0  ;  E^k y = y(n+k)
+         L = p_r * E^k + ... + p_1 * E + p_0  ;  E^k y = y(n+k)
 
-       with p_i : i=0..r being polynomialsin 'n' and where 'f' is
-       a combination of pairwise dissimilar hypergeometric terms,
-       we seek for all hypergeometric and D'Alembertian solutions.
+       with p_i : i=0..r being polynomials in 'n' and where the
+       inhomogeneous part is hypergeometric or is a combination
+       of pairwise dissimilar hypergeometric terms, we seek for
+       all hypergeometric.
 
        Hypergeometric terms are integer sequences anihilated by
        first order linear difference equations with polynomial
@@ -409,77 +411,41 @@ def rsolve_hyper(coeffs, f, n):
        [2] M. Petkovsek, H. S. Wilf, D. Zeilberger, A = B, 1996.
 
     """
-
-    def hyper_solution(coeffs, r):
-        Z = Symbol('Z', dummy=True)
-
-        p, q = coeffs[0], coeffs[r].subs(n, n-r+1)
-
-        p_factors = [ z for z in set(roots(p, n)) if z.is_real ]
-        q_factors = [ z for z in set(roots(q, n)) if z.is_real ]
-
-        factors = [ (S.One, S.One) ]
-
-        for p in p_factors:
-            for q in q_factors:
-                if p.is_integer and q.is_integer and p <= q:
-                    continue
-                else:
-                    factors += [(n-p, n-q)]
-
-        p = [ (n-p, S.One) for p in p_factors ]
-        q = [ (S.One, n-q) for q in q_factors ]
-
-        factors = p + factors + q
-
-        for A, B in factors:
-            polys, degrees = [], []
-            D = A*B.subs(n, n+r-1)
-
-            for i in range(0, r+1):
-                a = Mul(*[ A.subs(n, n+j) for j in range(0, i) ])
-                b = Mul(*[ B.subs(n, n+j) for j in range(i, r) ])
-
-                poly = (quo(coeffs[i]*a*b, D, n)).as_polynomial(n)
-
-                if not isinstance(poly, Basic.Zero):
-                    degrees.append(poly.degree())
-
-                polys.append(poly.expand())
-
-            d, poly = max(degrees), S.Zero
-
-            for i in range(0, r+1):
-                coeff = polys[i].nth_coeff(d)
-
-                if not isinstance(coeff, Basic.Zero):
-                    poly += coeff * Z**i
-
-            for z in set(roots(poly, Z)):
-                if not z.is_real or z.is_zero:
-                    continue
-
-                C = rsolve_poly([ polys[i]*z**i for i in range(r+1) ], 0, n)
-
-                if C is not None and not isinstance(C, Basic.Zero):
-                    return simplify(z*(A*C.subs(n, n+1))/(B*C))
-
-        return S.Zero
-
     coeffs = map(Basic.sympify, coeffs)
+
     f = Basic.sympify(f)
 
-    r = len(coeffs)-1
+    r, kernel = len(coeffs)-1, []
 
     if not isinstance(f, Basic.Zero):
+        if f.is_hypergeometric(n):
+            inhomogeneous = [f]
+        else:
+            if isinstance(f, Basic.Add):
+                similar = {}
 
+                for g in f.expand():
+                    if not g.is_hypergeometric(n):
+                        return None
 
-        inhomogeneous = [ ]
+                    for h in similar.iterkeys():
+                        if hypersimilar(g, h, n):
+                            similar[h] += g
+                            break
+                    else:
+                        similar[g] = S.Zero
 
-        for i in range(0, k):
-            s = combsimp(u.subs(n, n+1)/u)
+                inhomogeneous = []
 
+                for g, h in similar.iteritems():
+                    inhomogeneous.append(g+h)
+            else:
+                return None
+
+        for i, g in enumerate(inhomogeneous):
             coeff, polys = S.One, coeffs[:]
+
+            s = hypersimp(g, n)
 
             for j in range(1, r+1):
                 coeff *= s.subs(n, n+j-1)
@@ -488,15 +454,81 @@ def rsolve_hyper(coeffs, f, n):
             R = rsolve_ratio(polys, S.One, n)
 
             if not (R is None or isinstance(R, Basic.Zero)):
-                inhomogeneous[k] *= R
+                inhomogeneous[i] *= R
             else:
                 return None
+
+            result = Add(*inhomogeneous)
     else:
-        inhomogeneous = []
+        result = S.Zero
 
-    kernel = []
+    Z = Symbol('Z', dummy=True)
 
-    return Add(*kernel) + Add(*inhomogeneous)
+    p, q = coeffs[0], coeffs[r].subs(n, n-r+1)
 
-def rsolve():
+    p_factors = [ z for z in set(roots(p, n)) if z.is_real ]
+    q_factors = [ z for z in set(roots(q, n)) if z.is_real ]
+
+    factors = [ (S.One, S.One) ]
+
+    for p in p_factors:
+        for q in q_factors:
+            if p.is_integer and q.is_integer and p <= q:
+                continue
+            else:
+                factors += [(n-p, n-q)]
+
+    p = [ (n-p, S.One) for p in p_factors ]
+    q = [ (S.One, n-q) for q in q_factors ]
+
+    factors = p + factors + q
+
+    for A, B in factors:
+        polys, degrees = [], []
+        D = A*B.subs(n, n+r-1)
+
+        for i in range(0, r+1):
+            a = Mul(*[ A.subs(n, n+j) for j in range(0, i) ])
+            b = Mul(*[ B.subs(n, n+j) for j in range(i, r) ])
+
+            poly = (quo(coeffs[i]*a*b, D, n))
+            polys.append(poly.as_polynomial(n))
+
+            if not isinstance(poly, Basic.Zero):
+                degrees.append(polys[i].degree())
+
+        d, poly = max(degrees), S.Zero
+
+        for i in range(0, r+1):
+            coeff = polys[i].nth_coeff(d)
+
+            if not isinstance(coeff, Basic.Zero):
+                poly += coeff * Z**i
+
+        for z in set(roots(poly, Z)):
+            if not z.is_real or z.is_zero:
+                continue
+
+            C = rsolve_poly([ polys[i]*z**i for i in range(r+1) ], 0, n)
+
+            if C is not None and not isinstance(C, Basic.Zero):
+                K = simplify(z*(A*C.subs(n, n+1))/(B*C))
+
+                if casoratian(kernel+[K], n) != 0:
+                    kernel.append(K)
+
+    symbols = [ Symbol('C'+str(i)) for i in xrange(len(kernel)) ]
+
+    for C, ker in zip(symbols, kernel):
+        result += C * product(ker, (n, 0, n-1))
+
+    if hints.get('symbols', False):
+        return (result, symbols)
+    else:
+        return result
+
+def rsolve(eq, seq):
+    """
+
+    """
     pass

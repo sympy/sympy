@@ -106,7 +106,7 @@ class Sum(_BigOperator):
     def euler_maclaurin(self, n=0):
         """
         Return n-th order Euler-Maclaurin approximation of self.
-        
+
         The 0-th order approximation is simply the corresponding
         integral
         """
@@ -120,13 +120,13 @@ class Sum(_BigOperator):
             s += bernoulli(2*k)/factorial(2*k)*(g.subs(i,b)-g.subs(i,a))
         return s
 
-
+"""
 class Product(_BigOperator):
-    """
+
     Symbolic product with a variable number of factors
 
     Product(f, (i, a, b)) represents \prod_{i=a}^b f(i)
-    """
+
 
     def __repr__(self):
         return "Product(%r, (%r, %r, %r))" % (self.f, self.i, self.a, self.b)
@@ -201,3 +201,4 @@ class Product(_BigOperator):
             return p
 
         return self
+"""

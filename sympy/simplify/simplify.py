@@ -855,17 +855,12 @@ def powsimp(expr, deep=False):
 
     return _powsimp(separate(expr, deep=deep))
 
-def combsimp(expr, symbol, form=False, verify=False):
-    """Simplify expresions containing factorials, binomials, rising
-       and falling factorials, gamma functions and other species
-       which can be expressed for all arguments in terms of gamma.
-
-       The main goal of this procedure is to simplify expressions
-       of the form a(n + k)/a(n) where 'k' is a constant integer.
-       This proves very useful, especially in case when k = 1, in
-       verification if a(n) is hypergeometric or not, in definite
-       and indefinite summation and also in difference equations
-       solving.
+def hypersimp(term, n, consecutive=True, simplify=True):
+    """Given combinatorial term a(n) simplify its consecutive term
+       ratio ie. a(n+1)/a(n). The term can be composed of functions
+       and integer sequences which have equivalent represenation
+       in terms of gamma special function. Currently ths includes
+       factorials (falling, rising), binomials and gamma it self.
 
        The algorithm performs three basic steps:
 
@@ -880,58 +875,64 @@ def combsimp(expr, symbol, form=False, verify=False):
                and if the resulting expression is a quotient of
                polynomials, reduce their total degree.
 
-       In hypergeometric case the result of this procedure is a
-       quotient of polynomials of minimal degree. If you set the
-       'verify' flag, then tuple will be returned with information
-       in second position if the result is hypergeometric, or not.
+       If the term given is hypergeometric then the result of this
+       procudure is a quotient of polynomials of minimal degree.
+       Sequence is hypergeometric if it is anihilated by linear,
+       homogeneous difference equation of first order, so in
+       other words when a(n+1)/a(n) is a rational function.
+
+       When the status of being hypergeometric or not, is required
+       then you can avoid additional simplification by unsetting
+       'simplify' flag.
 
        This algorithm, due to Wolfram Koepf, is very simple but
-       powerful and is supposed to out perform simplification
-       routines of this kind in other algebra systems. However
-       because of ill desing of together() this is not the case
-       (this will change soon).
+       powerful, however its full potential will be visible when
+       simplification in general will improve.
 
        For more information on the implemented algorithm refer to:
 
        [1] W. Koepf, Algorithms for m-fold Hypergeometric Summation,
            Journal of Symbolic Computation (1995) 20, 399-417
     """
-    expr = Basic.sympify(expr)
 
-    if form == True:
-        expr = expr.subs(symbol, symbol+1)/expr
+    term = Basic.sympify(term)
 
-    expr = expr.rewrite(S.Gamma).rewrite(S.Gamma, 'rf')
+    if consecutive == True:
+        term = term.subs(n, n+1)/term
 
-    result = powsimp(together(expr))
-    p, q = result.as_numer_denom()
+    expr = term.rewrite(S.Gamma).rewrite(S.Gamma, 'rf')
+    p, q = together(expr.subs(S.Gamma, S.Gamma)).as_numer_denom()
 
-    if p.is_polynomial(symbol) and q.is_polynomial(symbol):
-        from sympy.polynomials import gcd, quo
+    if p.is_polynomial(n) and q.is_polynomial(n):
+        if simplify == True:
+            from sympy.polynomials import gcd, quo
 
-        g, hyper = gcd(p, q, symbol), True
+            G = gcd(p, q, n)
 
-        if not isinstance(g, Basic.One):
-            p = quo(p, g, symbol)
-            q = quo(q, g, symbol)
+            if not isinstance(G, Basic.One):
+                p = quo(p, G, n)
+                q = quo(q, G, n)
 
-            p = p.as_polynomial(symbol)
-            q = q.as_polynomial(symbol)
+                p = p.as_polynomial(n)
+                q = q.as_polynomial(n)
 
-            a, p = p.as_integer()
-            b, q = q.as_integer()
+                a, p = p.as_integer()
+                b, q = q.as_integer()
 
-            p = p.as_basic()
-            q = q.as_basic()
+                p = p.as_basic()
+                q = q.as_basic()
 
-            result = (b/a) * (p/q)
+                return (b/a) * (p/q)
+
+        return p/q
     else:
-        hyper = False
+        return None
 
-    if verify:
-        return (result, hyper)
-    else:
-        return result
+def hypersimilar(f, g, n):
+    return hypersimp(f/g, n, consecutive=False, simplify=False) is not None
+
+def combsimp(expr):
+    return expr
 
 def simplify(expr):
     #from sympy.specfun.factorials import factorial, factorial_simplify

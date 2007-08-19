@@ -57,21 +57,23 @@ class ApplyGamma(Apply):
         arg = arg.expand(basic=True)
 
         if isinstance(arg, Basic.Add):
-            coeff, factors = arg.as_coeff_factors()
+            coeff = terms = S.Zero
 
-            if isinstance(coeff, Basic.Zero):
-                return
-            elif isinstance(coeff, Basic.Integer):
+            for term in arg:
+                if isinstance(term, Basic.Number):
+                    coeff += term
+                else:
+                    terms += term
+
+            if isinstance(coeff, Basic.Integer):
                 expo = coeff
             elif isinstance(coeff, Basic.Rational):
                 expo = coeff.p / coeff.q
-                factors.append(S.Half)
+                terms += Rational(coeff.q)
             else:
                 return
 
-            base = Add(*factors)
-
-            return S.RisingFactorial(base, expo)*S.Gamma(base)
+            return S.Gamma(terms)*S.RisingFactorial(terms, expo)
 
     def _eval_is_real(self):
         return self.args[0].is_real

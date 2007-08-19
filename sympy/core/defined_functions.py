@@ -759,6 +759,8 @@ class RisingFactorial(DefinedFunction):
 
         if isinstance(x, Basic.NaN):
             return S.NaN
+        elif isinstance(x, Basic.One):
+            return S.Factorial(k)
         elif isinstance(k, Basic.Integer):
             if isinstance(k, Basic.NaN):
                 return S.NaN
