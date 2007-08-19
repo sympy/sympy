@@ -913,7 +913,7 @@ def simplify(expr):
     if isinstance(d, Basic.One) or isinstance(d, Basic.NegativeOne):
         return d*n
     n_var = n.atoms(type=Symbol)
-    d_var = n.atoms(type=Symbol)
+    d_var = d.atoms(type=Symbol)
     if n_var and d_var and n.is_polynomial(*n_var) and d.is_polynomial(*d_var):
         from sympy.polynomials import div, factor
         q,r = div(n, d)
