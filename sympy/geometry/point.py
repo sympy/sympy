@@ -65,7 +65,7 @@ class Point(GeometryEntity):
             p3 = points[ind]
             v2 = p1 - p3
             test = simplify(v1[0]*v2[1] - v1[1]*v2[0])
-            if test != 0:
+            if simplify(test) != 0:
                 return False
         return True
 

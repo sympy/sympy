@@ -212,7 +212,7 @@ class Line(LinearEntity):
             y = Basic.Symbol('y', real=True)
             r = self.equation().subs_dict({x: o[0], y: o[1]})
             x = simplify(r)
-            return bool(x == 0)
+            return simplify(x) == 0
         else:
             return False
 
@@ -361,8 +361,8 @@ class Segment(LinearEntity):
         elif isinstance(o, Point):
             if Point.is_collinear(self._p1, self._p2, o):
                 x1,x2 = self._p1[0], self._p2[0]
-                if (not x1.atoms(type=Basic.Symbol)) and (not x2.atoms(type=Basic.Symbol)):
-                    return (min(x1,x2) <= o[0] <= max(x1,x2))
+                if not (x1.atoms(type=Basic.Symbol)) or (x2.atoms(type=Basic.Symbol)):
+                    return (min(x1,x2) <= o[0]) and (o[0] <= max(x1,x2))
                 else:
                     return True
             else:

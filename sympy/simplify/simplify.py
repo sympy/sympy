@@ -739,6 +739,36 @@ def trigsimp(expr, deep=False):
         return ret
     return expr
 
+def radsimp(expr):
+    """
+    Rationalize the denominator.
+
+    Examples:
+    =========
+        >>> from sympy import *
+        >>> radsimp(1/(2+sqrt(2)))
+        1 - 1/2*2**(1/2)
+        >>> x,y = map(Symbol, 'xy')
+        >>> e = ( (2+2*sqrt(2))*x+(2+sqrt(8))*y )/( 2+sqrt(2) )
+        >>> radsimp(e)
+        x*2**(1/2) + y*2**(1/2)
+    """
+    n,d = fraction(expr)
+    a,b,c = map(Wild, 'abc')
+    r = d.match(a+b*sqrt(c))
+    if r is not None:
+        a = r[a]
+        if r[b] == 0:
+            b,c = 0,0
+        else:
+            b,c = r[b],r[c]
+
+        syms = list(n.atoms(type=Basic.Symbol))
+        n = collect( (n*(a-b*sqrt(c))).expand(), syms )
+        d = a**2 - c*b**2
+
+    return n/d
+
 def powsimp(expr, deep=False):
     """
     Usage
@@ -908,9 +938,9 @@ def simplify(expr):
     #if expr.has_class(factorial):
     #    expr = factorial_simplify(expr)
     a,b = [ t.expand() for t in fraction(powsimp(expr)) ]
-    ret = together(ratsimp(a/b))
+    ret = together(radsimp(ratsimp(a/b)))
     n,d = fraction(ret)
-    if isinstance(d, Basic.One) or isinstance(d, Basic.NegativeOne):
+    if isinstance(d, (Basic.One, Basic.NegativeOne)):
         return d*n
     n_var = n.atoms(type=Symbol)
     d_var = d.atoms(type=Symbol)
@@ -922,4 +952,3 @@ def simplify(expr):
         else:
             return q + factor(r) / factor(d)
     return ret
-

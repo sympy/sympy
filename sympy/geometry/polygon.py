@@ -412,8 +412,8 @@ class Triangle(Polygon):
             >>> p1,p2,p3 = Point(0,0), Point(1,0), Point(0,1)
             >>> t = Triangle(p1, p2, p3)
 
-            #>>> t.bisectors[p1]
-            #Segment(Point(0, 0), Point(1/2, 1/2))
+            >>> t.bisectors[p2]
+            Segment(Point(1, 0), Point(0, (-1) + 2**(1/2)))
         """
         s = self.sides
         v = self._vertices

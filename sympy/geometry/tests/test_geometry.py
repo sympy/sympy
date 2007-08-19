@@ -291,10 +291,9 @@ def test_polygon():
     assert g.are_similar(t2, t3) == False
 
     # Bisectors
-    #XXX Requires proper simplification of radicals
-    #bisectors = t1.bisectors
-    #assert bisectors[p1] == g.Segment(p1, g.Point(Rational(5,2), Rational(5,2)))
-    ic = Rational(25) / (Rational(10) + sqrt(50))
+    bisectors = t1.bisectors
+    assert bisectors[p1] == g.Segment(p1, g.Point(Rational(5,2), Rational(5,2)))
+    ic = (250 - 125*sqrt(2)) / 50
     assert t1.incenter == g.Point(ic, ic)
 
     # Medians + Centroid
@@ -310,13 +309,10 @@ def test_polygon():
     assert altitudes[p2] == s1[0]
     assert altitudes[p3] == s1[2]
 
-    #
-    # Combinations of things
-    #
-    #XXX Requires proper simplification of radicals
-    #assert len(g.intersection(t1.bisectors[p1], t1.bisectors[p2])) == 1
-    assert len(g.intersection(t1.altitudes[p1], t1.altitudes[p2])) == 1
-    assert len(g.intersection(t1.medians[p1], t1.medians[p2])) == 1
+    # Ensure 
+    assert len(g.intersection(*bisectors.items())) == 1
+    assert len(g.intersection(*altitudes.items())) == 1
+    assert len(g.intersection(*m.items())) == 1
 
 def test_util():
     p = [g.Point(-5,-1), g.Point(-2,1), g.Point(-2,-1), g.Point(-1,-3), g.Point(0,0),
