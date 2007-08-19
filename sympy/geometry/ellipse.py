@@ -5,45 +5,59 @@ from point import Point
 from line import LinearEntity, Line
 
 class Ellipse(GeometryEntity):
-    """An ellipse in space."""
+    """
+    An ellipse in space. Constructed from a center and two radii, the
+    first being the horizontal radius (along the x-axis) and the second
+    being the vertical radius (along the y-axis).
 
-    def __init__(self, center, h_radius, v_radius, **kwargs):
-        GeometryEntity.__init__(self, [center, h_radius, v_radius], **kwargs)
+    Example:
+    ========
+        >>> e = Ellipse(Point(0, 0), 5, 1)
+        >>> e.horizontal_radius, e.vertical_radius
+        (5, 1)
+    """
+
+    def __new__(self, center, h_radius, v_radius, **kwargs):
+        h_radius = Basic.sympify(h_radius)
+        v_radius = Basic.sympify(v_radius)
         if not isinstance(center, Point):
             raise TypeError("center must be be a Point")
-        self._c = center
-        self._hr = Basic.sympify(h_radius)
-        self._vr = Basic.sympify(v_radius)
+
+        obj = GeometryEntity.__new__(self, center, h_radius, v_radius, **kwargs)
+        obj._c = center
+        obj._hr = h_radius
+        obj._vr = v_radius
+        return obj
 
     @property
     def horizontal_radius(self):
-        """Returns the horizontal radius of the ellipse."""
+        """The horizontal radius of the ellipse."""
         return self._hr
 
     @property
     def vertical_radius(self):
-        """Returns the vertical radius of the ellipse."""
+        """The vertical radius of the ellipse."""
         return self._vr
 
     @property
     def center(self):
-        """Returns the center of the ellipse."""
+        """The center of the ellipse."""
         return self._c
 
     @property
     def area(self):
-        """Returns the area of the ellipse."""
+        """The area of the ellipse."""
         return simplify(S.Pi * self._hr * self._vr)
 
     @property
     def circumference(self):
-        """Returns the circumference of the ellipse."""
+        """The circumference of the ellipse."""
         # TODO It's fairly complicated, but we could use Ramanujan's approximation.
         raise NotImplementedError
 
     @property
     def foci(self):
-        """Returns the foci of the ellipse, if the radii are numerical."""
+        """The foci of the ellipse, if the radii are numerical."""
         c = self._c
         if self._hr == self._vr:
             return c
@@ -111,7 +125,11 @@ class Ellipse(GeometryEntity):
         return Point(p[0].subs(t, subs_val), p[1].subs(t, subs_val))
 
     def equation(self, xaxis_name='x', yaxis_name='y'):
-        """Returns the equation of the ellipse."""
+        """
+        Returns the equation of the ellipse. Optional parameters xaxis_name
+        and yaxis_name can be used to specify the names of the symbols used
+        for the equation.
+        """
         x = Basic.Symbol(xaxis_name, real=True)
         y = Basic.Symbol(yaxis_name, real=True)
         t1 = ((x - self._c[0]) / self._hr)**2
@@ -164,10 +182,6 @@ class Ellipse(GeometryEntity):
         return result
 
     def _intersection(self, o):
-        """
-        Returns the intersection of the ellipse and another entity, or None if
-        there is no intersection.
-        """
         if isinstance(o, Point):
             if o in self:
                 return [o]
@@ -208,16 +222,31 @@ class Ellipse(GeometryEntity):
             return False
 
     def __str__(self):
+        return "Ellipse(%s, %s, %s)" % (str(self._c), str(self._hr), str(self._vr))
+
+    def __repr__(self):
         return "Ellipse(%s, %s, %s)" % (repr(self._c), repr(self._hr), repr(self._vr))
 
 
 class Circle(Ellipse):
-    """A circle in space."""
+    """
+    A circle in space. Consturcted simply from a center and a radius, or
+    from three non-collinear points.
 
-    def __init__(self, *args, **kwargs):
+    Example:
+    ========
+        >>> c1 = Circle(Point(0, 0), 5)
+        >>> c1.horizontal_radius, c1.vertical_radius, c1.radius
+        (5, 5, 5)
+        >>> c2 = Circle(Point(0, 0), Point(1, 1), Point(1, 0))
+        >>> c2.horizontal_radius, c2.vertical_radius, c2.radius, c2.center
+        ((1/2)*2**(1/2), (1/2)*2**(1/2), (1/2)*2**(1/2), Point(1/2, 1/2))
+    """
+
+    def __new__(self, *args, **kwargs):
         if len(args) == 2:
             # Assume (center, radius) pair
-            Ellipse.__init__(self, args[0], args[1], args[1], **kwargs)
+            return Ellipse.__new__(self, args[0], args[1], args[1], **kwargs)
         elif len(args) == 3 and isinstance(args[0], Point):
             from polygon import Triangle
             t = Triangle(args[0], args[1], args[2])
@@ -225,20 +254,26 @@ class Circle(Ellipse):
                 raise Exception("Given points are not concyclic")
             c = t.circumcenter
             r = t.circumradius
-            Ellipse.__init__(self, c, r, r, **kwargs)
+            return Ellipse.__new__(self, c, r, r, **kwargs)
         else:
             raise Exception("Unknown set of arguments")
 
     @property
     def radius(self):
+        """The radius of the circle."""
         return self._hr
 
     @property
     def circumference(self):
+        """The circumference of the circle."""
         return 2 * Basic.Pi() * self.radius
 
     def equation(self, xaxis_name='x', yaxis_name='y'):
-        """Returns the equation of the circle."""
+        """
+        Returns the equation of the circle. Optional parameters xaxis_name
+        and yaxis_name can be used to specify the names of the symbols used
+        for the equation.
+        """
         x = Basic.Symbol(xaxis_name, real=True)
         y = Basic.Symbol(yaxis_name, real=True)
         t1 = (x - self._c[0])**2
@@ -276,4 +311,7 @@ class Circle(Ellipse):
         return Ellipse._intersection(self, o)
 
     def __str__(self):
+        return "Circle(%s, %s)" % (str(self._c), str(self._hr))
+
+    def __repr__(self):
         return "Circle(%s, %s)" % (repr(self._c), repr(self._hr))

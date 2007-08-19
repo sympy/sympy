@@ -1,11 +1,33 @@
-#
-#
-#
+
 def intersection(*args):
     """
     Finds the intersection between a list GeometryEntity instances. Returns a
     list of all the intersections, Will raise a NotImplementedError exception
     if unable to calculate the intersection.
+
+    Examples:
+    =========
+        >>> from sympy.geometry import *
+        >>> p1,p2,p3 = Point(0,0), Point(1,1), Point(-1, 5)
+        >>> l1, l2 = Line(p1, p2), Line(p3, p2)
+        >>> c = Circle(p2, 1)
+        >>> intersection(l1, p2)
+        [Point(1, 1)]
+        >>> intersection(l1, l2)
+        [Point(1, 1)]
+        >>> intersection(c, p2)
+        []
+        >>> intersection(c, Point(1, 0))
+        [Point(1, 0)]
+        >>> intersection(c, l2)
+        [Point(1 - 1/5*5**(1/2), 1 + (2/5)*5**(1/2)), Point(1 + (1/5)*5**(1/2), 1 - 2/5*5**(1/2))]
+
+    Notes:
+    ======
+        - The intersection of any geometrical entity with itself should return
+          a list with one item: the entity in question.
+        - It is possible for intersection() miss intersections that one knows
+          exists because the proper quantities were not fully simplified.
     """
     from entity import GeometryEntity
 
@@ -24,20 +46,28 @@ def intersection(*args):
         res = newres
     return res
 
-#
-#
-#
+
 def convex_hull(*args):
     """
     Returns a Polygon representing the convex hull of a set of 2D points.
-    Can only be performed on a set of non-symbolic points.
+
+    Notes:
+    ======
+        This can only be performed on a set of non-symbolic points.
+
+    Example:
+    ========
+        >>> from sympy.geometry import Point
+        >>> points = [ Point(x) for x in [(1,1), (1,2), (3,1), (-5,2), (15,4)] ]
+        >>> convex_hull(points)
+        Polygon(Point(3, 1), Point(15, 4), Point(-5, 2), Point(1, 1))
     """
     from point import Point
     from line import Segment
     from polygon import Polygon
 
     p = args[0]
-    if isinstance(args[0], Point):
+    if isinstance(p, Point):
         p = args
 
     # Basic checks
@@ -56,7 +86,7 @@ def convex_hull(*args):
     def tarea(a, b, c):
         return (b[0] - a[0])*(c[1] - a[1]) - (c[0] - a[0])*(b[1] - a[1])
 
-    # Sort points
+    # Radial sort of points with respect to p[0]
     destroy = {}
     p0 = p[0]
     def pcompare(p1, p2):
@@ -102,14 +132,17 @@ def convex_hull(*args):
             top.pop()
     return Polygon(top)
 
-#
-#
-#
 def are_similar(e1, e2):
     """
     Returns True if e1 and e2 are similar (one can be uniformly scaled to
     the other) or False otherwise.
+
+    Notes:
+    ======
+        - If the two objects are equal then they are always similar.
     """
+    if e1 == e2: return True
+
     try:
         return e1._is_similar(e2)
     except AttributeError:

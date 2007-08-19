@@ -7,18 +7,20 @@ from point import Point
 class LinearEntity(GeometryEntity):
     """A linear entity (line, ray, segment, etc) in space."""
 
-    def __init__(self, p1, p2, **kwargs):
-        GeometryEntity.__init__(self, [p1, p2], **kwargs)
+    def __new__(cls, p1, p2, **kwargs):
         if not isinstance(p1, Point) or not isinstance(p2, Point):
             raise TypeError("__init__ requires Point instances")
         if p1 == p2:
             raise RuntimeError("__init__ requires two distinct points")
-        self._p1 = p1
-        self._p2 = p2
+
+        obj = GeometryEntity.__new__(cls, [p1, p2], **kwargs)
+        obj._p1 = p1
+        obj._p2 = p2
+        return obj
 
     @property
     def coefficients(self):
-        """Returns the coefficients (a,b,c) for equation ax+by+c=0"""
+        """The coefficients (a,b,c) for equation ax+by+c=0"""
         return (self._p1[1]-self._p2[1],
                 self._p2[0]-self._p1[0],
                 self._p1[0]*self._p2[1] - self._p1[1]*self._p2[0])
@@ -132,7 +134,7 @@ class LinearEntity(GeometryEntity):
 
     @property
     def slope(self):
-        """Returns the slope of this line, or sympy.oo (infinity) if vertical."""
+        """The slope of this line, or sympy.oo (infinity) if vertical."""
         d1 = Basic.sympify(self._p1[0] - self._p2[0])
         d2 = Basic.sympify(self._p1[1] - self._p2[1])
         if d1 == 0:
@@ -141,7 +143,7 @@ class LinearEntity(GeometryEntity):
 
     @property
     def points(self):
-        """Get the two points used to define this linear entity."""
+        """The two points used to define this linear entity."""
         return (self._p1, self._p2)
 
     def _intersection(self, o):
@@ -165,8 +167,7 @@ class LinearEntity(GeometryEntity):
             if inter in self and inter in o:
                 return [inter]
             return []
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     def __str__(self):
         n = type(self).__name__
@@ -193,7 +194,11 @@ class Line(LinearEntity):
         return Point(p[0].subs(t, subs_val), p[1].subs(t, subs_val))
 
     def equation(self, xaxis_name='x', yaxis_name='y'):
-        """Returns the equation for this line"""
+        """
+        Returns the equation for this line. Optional parameters xaxis_name
+        and yaxis_name can be used to specify the names of the symbols used
+        for the equation.
+        """
         x = Basic.Symbol(xaxis_name, real=True)
         y = Basic.Symbol(yaxis_name, real=True)
         a,b,c = self.coefficients
@@ -251,6 +256,7 @@ class Ray(LinearEntity):
 
     @property
     def source(self):
+        """The point from which the ray eminates."""
         return self._p1
 
     def __eq__(self, o):
@@ -329,12 +335,12 @@ class Segment(LinearEntity):
 
     @property
     def length(self):
-        """Returns the length of this segment."""
+        """The length of the segment."""
         return Point.distance(self._p1, self._p2)
 
     @property
     def midpoint(self):
-        """Returns the midpoint of this segment."""
+        """The midpoint of the segment."""
         return Point.midpoint(self._p1, self._p2)
 
     def __getitem__(self, ind):

@@ -910,6 +910,8 @@ def simplify(expr):
     a,b = [ t.expand() for t in fraction(powsimp(expr)) ]
     ret = together(ratsimp(a/b))
     n,d = fraction(ret)
+    if isinstance(d, Basic.One) or isinstance(d, Basic.NegativeOne):
+        return d*n
     if n.is_polynomial() and d.is_polynomial():
         from sympy.polynomials import div, factor
         q,r = div(n, d)

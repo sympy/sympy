@@ -32,7 +32,6 @@ def test_point():
     assert g.Point.midpoint(p2, p2) == p2
 
     assert g.Point.distance(p3, p4) == sqrt(2)
-    assert g.Point.distance(p1, p2) == simplify(sqrt((x1-y1)**2 + (x2-y2)**2))
     assert g.Point.distance(p1, p1) == 0
     assert g.Point.distance(p3, p2) == abs(p2)
 

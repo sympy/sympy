@@ -1,8 +1,10 @@
 class GeometryEntity(object):
     """The base class for any geometrical entity."""
 
-    def __init__(self, *args, **kwargs):
-        self._args = tuple(args)
+    def __new__(cls, *args, **kwargs):
+        obj = object.__new__(cls)
+        obj._args = tuple(args)
+        return obj
 
     @staticmethod
     def do_intersection(e1, e2):
@@ -23,7 +25,7 @@ class GeometryEntity(object):
 
     @staticmethod
     def _normalize_args(args):
-        """Removes duplicates of points."""
+        """Removes duplicates of arguments."""
         try:
             if not isinstance(args[0], GeometryEntity):
                 args = args[0]

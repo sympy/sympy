@@ -55,13 +55,6 @@ def test_leadterm():
     x = Symbol("x")
     assert (3+2*x**(log(3)/log(2)-1)).leadterm(x)==(3,0)
 
-def _test_print_tree():
-    # XXX print_tree no longer exists
-    x = Symbol("x")
-    y = Symbol("y")
-    e = (2*x-(7*x**2 - 2) + 3*y)
-    e.print_tree()
-
 def test_atoms():
    x = Symbol('x')
    y = Symbol('y')
