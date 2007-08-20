@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 '''Functions for loading dynamic libraries.
 
 These extend and correct ctypes functions.
