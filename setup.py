@@ -200,12 +200,6 @@ class test_sympy_doc(Command):
         files.remove('sympy/plotting/plot_axes.py')
         files.remove('sympy/plotting/plot.py')
 
-        try:
-            #testing for optional libraries
-            import libxslt
-        except ImportError:
-            pass
-
         modules = []
 
         for x in files:
