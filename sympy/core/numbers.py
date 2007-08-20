@@ -980,6 +980,9 @@ class GoldenRatio(NumberSymbol):
     def _eval_evalf(self):
         return Real(decimal_math.golden_ratio())
 
+    def _eval_expand_func(self, *args):
+        return S.Half + S.Half*S.Sqrt(5)
+
     def approximation_interval(self, number_cls):
         if issubclass(number_cls, Integer):
             return (S.One, Rational(2))

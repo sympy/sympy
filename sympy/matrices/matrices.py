@@ -989,7 +989,7 @@ def wronskian(functions, var):
     W = Matrix(n, n, lambda i,j: functions[i].diff(var, j) )
     return W.det()
 
-def casoratian(s, n, zero=True):
+def casoratian(seqs, n, zero=True):
     """Given linear difference operator L of order 'k' and homogeneous
        equation Ly = 0 we want to compute kernel of L, which is a set
        of 'k' sequences: a(n), b(n), ... z(n).
@@ -1019,12 +1019,16 @@ def casoratian(s, n, zero=True):
        True
 
     """
-    if not zero:
-        f = lambda i, j: s[j].subs(n, n+i)
-    else:
-        f = lambda i, j: s[j].subs(n, i)
+    seqs = map(Basic.sympify, seqs)
 
-    return Matrix(len(s), len(s), f).det()
+    if not zero:
+        f = lambda i, j: seqs[j].subs(n, n+i)
+    else:
+        f = lambda i, j: seqs[j].subs(n, i)
+
+    k = len(seqs)
+
+    return Matrix(k, k, f).det()
 
 class SMatrix(Matrix):
     def __init__(self, *args):

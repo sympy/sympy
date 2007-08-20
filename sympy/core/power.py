@@ -210,11 +210,11 @@ class Pow(Basic, ArithMeths, RelMeths):
     def _eval_conjugate(self):
         return S.Conjugate(self.base)**self.exp
 
-    def _eval_expand_complex(self):
+    def _eval_expand_complex(self, *args):
         if isinstance(self.exp, Basic.Integer):
             re, im = self.base.as_real_imag()
             base = re + S.ImaginaryUnit * im
-            return (base**self.exp).expand()
+            return (base**self.exp)._eval_expand_basic(*args)
         elif isinstance(self.exp, Basic.Rational):
             # NOTE: This is not totally correct since for x**(p/q) with
             #       x being imaginary there are actually q roots, but
@@ -233,7 +233,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         else:
             return S.Re(self) + S.ImaginaryUnit*S.Im(self)
 
-    def _eval_expand_basic(self):
+    def _eval_expand_basic(self, *args):
         """
         (a*b)**n -> a**n * b**n
         (a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is positive integer

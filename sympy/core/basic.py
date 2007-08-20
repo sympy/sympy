@@ -517,38 +517,52 @@ class Basic(BasicMeths):
     ################# EXPRESSION REPRESENTATION METHODS #######################
     ###########################################################################
 
-    def _eval_expand_complex(self):
+    def _eval_expand_basic(self, *args):
         if isinstance(self, Atom):
             return self
-        terms = [ term._eval_expand_complex() for term in self ]
+        terms = [ term._eval_expand_basic(*args) for term in self ]
         return self.__class__(*terms, **self._assumptions)
 
-    def _eval_expand_trig(self):
+    def _eval_expand_power(self, *args):
         if isinstance(self, Atom):
             return self
-        terms = [ term._eval_expand_trig() for term in self ]
+        terms = [ term._eval_expand_power(*args) for term in self ]
         return self.__class__(*terms, **self._assumptions)
 
-    def _eval_expand_basic(self):
+    def _eval_expand_complex(self, *args):
         if isinstance(self, Atom):
             return self
-        terms = [ term._eval_expand_basic() for term in self ]
+        terms = [ term._eval_expand_complex(*args) for term in self ]
         return self.__class__(*terms, **self._assumptions)
 
-    def expand(self, **hints):
-        """
-        Expand an expression based on different hints. The known hints
-        are basic, complex, and trig.
+    def _eval_expand_trig(self, *args):
+        if isinstance(self, Atom):
+            return self
+        terms = [ term._eval_expand_trig(*args) for term in self ]
+        return self.__class__(*terms, **self._assumptions)
+
+    def _eval_expand_func(self, *args):
+        if isinstance(self, Atom):
+            return self
+        terms = [ term._eval_expand_func(*args) for term in self ]
+        return self.__class__(*terms, **self._assumptions)
+
+    def expand(self, *args, **hints):
+        """Expand an expression based on different hints. Currently
+           supported hints are basic, power, complex, trig and func.
         """
         obj = self
-        for hint in hints:
-            func = getattr(obj, '_eval_expand_'+hint, None)
-            if func is not None:
-                obj = func()
 
-        # Perform basic expansion again, if needed
+        for hint in hints:
+            if hints[hint] == True:
+                func = getattr(obj, '_eval_expand_'+hint, None)
+
+                if func is not None:
+                    obj = func(*args)
+
         if hints.get('basic', True):
             obj = obj._eval_expand_basic()
+
         return obj
 
     def _eval_rewrite(self, pattern, rule, **hints):

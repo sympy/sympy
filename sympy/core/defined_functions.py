@@ -84,7 +84,7 @@ class Exp(DefinedFunction):
 
 class ApplyExp(Apply):
 
-    def _eval_expand_complex(self):
+    def _eval_expand_complex(self, *args):
         re, im = self.args[0].as_real_imag()
         exp, cos, sin = S.Exp(re), S.Cos(im), S.Sin(im)
         return exp * cos + S.ImaginaryUnit * exp * sin
@@ -195,7 +195,7 @@ class ApplyExp(Apply):
             return S.One
         return S.Exp(arg)
 
-    def _eval_expand_basic(self):
+    def _eval_expand_basic(self, *args):
         arg = self.args[0].expand()
         if isinstance(arg, Basic.Add):
             expr = 1
@@ -293,7 +293,7 @@ class Log(DefinedFunction):
         return (1-2*(n%2)) * x**(n+1)/(n+1)
 
 class ApplyLog(Apply):
-    def _eval_expand_complex(self):
+    def _eval_expand_complex(self, *args):
         re, im = self.args[0].as_real_imag()
         return S.Log(S.Sqrt(re) + S.Sqrt(im)) + \
                S.ImaginaryUnit * S.Arg(self.args[0])
@@ -348,7 +348,7 @@ class ApplyLog(Apply):
             return (self.args[0] - 1).as_leading_term(x)
         return self.func(arg)
 
-    def _eval_expand_basic(self):
+    def _eval_expand_basic(self, *args):
         arg = self.args[0]
         if isinstance(arg, Basic.Mul) and arg.is_real:
             expr = 0
@@ -943,7 +943,7 @@ class ApplyRe(Apply):
     def _eval_is_real(self):
         return True
 
-    def _eval_expand_complex(self):
+    def _eval_expand_complex(self, *args):
         return self.func(self.args[0].as_real_imag()[0])
 
 class Im(DefinedFunction):
@@ -1013,7 +1013,7 @@ class ApplyIm(Apply):
     def _eval_is_real(self):
         return True
 
-    def _eval_expand_complex(self):
+    def _eval_expand_complex(self, *args):
         return self.func(self.args[0].as_real_imag()[1])
 
 class Arg(DefinedFunction):
@@ -1141,14 +1141,14 @@ class ApplySin(Apply):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_expand_complex(self):
+    def _eval_expand_complex(self, *args):
         if self.args[0].is_real:
             return self
         re, im = self.args[0].as_real_imag()
         return S.Sin(re)*S.Cosh(im) + \
             S.ImaginaryUnit*S.Cos(re)*S.Sinh(im)
 
-    def _eval_expand_trig(self):
+    def _eval_expand_trig(self, *args):
         arg = self.args[0].expand()
         cos, sin = S.Cos, S.Sin
         x = None
@@ -1264,14 +1264,14 @@ class ApplyCos(Apply):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_expand_complex(self):
+    def _eval_expand_complex(self, *args):
         if self.args[0].is_real:
             return self
         re, im = self.args[0].as_real_imag()
         return S.Cos(re)*S.Cosh(im) - \
             S.ImaginaryUnit*S.Sin(re)*S.Sinh(im)
 
-    def _eval_expand_trig(self):
+    def _eval_expand_trig(self, *args):
         arg = self.args[0].expand()
         cos = S.Cos
         sin = S.Sin
@@ -1383,7 +1383,7 @@ class ApplyTan(Apply):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_expand_complex(self):
+    def _eval_expand_complex(self, *args):
         if self.args[0].is_real:
             return self
         re, im = self.args[0].as_real_imag()
@@ -1391,7 +1391,7 @@ class ApplyTan(Apply):
         return (S.Sin(re)*S.Cos(re) + \
             S.ImaginaryUnit*S.Sinh(im)*S.Cosh(im))/denom
 
-    def _eval_expand_trig(self):
+    def _eval_expand_trig(self, *args):
         return self
 
     def _eval_rewrite_as_exp(self, arg):
@@ -1496,7 +1496,7 @@ class ApplyCot(Apply):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_expand_complex(self):
+    def _eval_expand_complex(self, *args):
         if self.args[0].is_real:
             return self
         re, im = self.args[0].as_real_imag()
@@ -1589,7 +1589,7 @@ class ApplySinh(Apply):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_expand_complex(self):
+    def _eval_expand_complex(self, *args):
         if self.args[0].is_real:
             return self
         re, im = self.args[0].as_real_imag()
@@ -1674,7 +1674,7 @@ class ApplyCosh(Apply):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_expand_complex(self):
+    def _eval_expand_complex(self, *args):
         if self.args[0].is_real:
             return self
         re, im = self.args[0].as_real_imag()
@@ -1761,7 +1761,7 @@ class ApplyTanh(Apply):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_expand_complex(self):
+    def _eval_expand_complex(self, *args):
         if self.args[0].is_real:
             return self
         re, im = self.args[0].as_real_imag()
@@ -1851,7 +1851,7 @@ class ApplyCoth(Apply):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def _eval_expand_complex(self):
+    def _eval_expand_complex(self, *args):
         if self.args[0].is_real:
             return self
         re, im = self.args[0].as_real_imag()

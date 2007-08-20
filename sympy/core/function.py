@@ -123,7 +123,7 @@ class Apply(Basic, ArithMeths, RelMeths):
             return obj
         return Basic._seq_subs(self, old, new)
 
-    def _eval_expand_basic(self):
+    def _eval_expand_basic(self, *args):
         return self
 
     def _eval_evalf(self):
@@ -213,8 +213,8 @@ class Apply(Basic, ArithMeths, RelMeths):
                 return False
         return True
 
-    def _eval_expand_complex(self):
-        func = self.func(*[ a._eval_expand_complex() for a in self.args ])
+    def _eval_expand_complex(self, *args):
+        func = self.func(*[ a._eval_expand_complex(*args) for a in self.args ])
         return Basic.Re()(func) + S.ImaginaryUnit * Basic.Im()(func)
 
     def _eval_rewrite(self, pattern, rule, **hints):
@@ -496,9 +496,8 @@ class Lambda(Function):
             expr = expr.subs(a, na)
         return expr, args
 
-    #@cache_it
-    def _eval_expand(self):
-        return Lambda(self.body.expand(), *self.args)
+    def _eval_expand_basic(self, *args):
+        return Lambda(self.body._eval_expand_basic(*args), *self.args)
 
     def diff(self, *symbols):
         return Lambda(self.body.diff(*symbols), *self.args)
