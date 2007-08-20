@@ -250,8 +250,8 @@ class Basic(BasicMeths):
         return result
 
     def is_hypergeometric(self, arg):
-        from sympy.simplify import hyperterm
-        return hyperterm(self, arg, simplify=False) is not None
+        from sympy.simplify import hypersimp
+        return hypersimp(self, arg, simplify=False) is not None
 
     def _eval_is_polynomial(self, syms):
         return

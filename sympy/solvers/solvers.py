@@ -45,7 +45,7 @@ def solve(eq, syms, simplified=True):
        wrappers combining set of problem specific methods.
 
        >>> from sympy import *
-       >>> x, y, a = symbols('x', 'y', 'a')
+       >>> x, y, a = symbols('xya')
 
        >>> r = solve(x**2 - 3*x + 2, x)
        >>> r.sort()
@@ -55,8 +55,8 @@ def solve(eq, syms, simplified=True):
        >>> solve(x**2 == a, x)
        [-a**(1/2), a**(1/2)]
 
-       #>>> solve(x**4 == 1, x) # use evalc() in polys
-       #[-I, -1, 1, I]
+       >>> solve(x**4 == 1, x)
+       [I, 1, -1, -I]
 
        >>> solve([x + 5*y == 2, -3*x + 6*y == 15], [x, y])
        {y: 1, x: -3}
@@ -121,10 +121,10 @@ def solve_linear_system(system, symbols, simplified=True):
     """Solve system of N linear equations with M variables, which means
        both Cramer and over defined systems are supported. The possible
        number of solutions is zero, one or infinite. Respectively this
-       functions will return empty dictionary or dictionary containing
-       the same or less number of items as the number of variables. If
-       there is infinite number of solutions, it will skip variables
-       with can be assigned with arbitrary values.
+       procedure will return None or dictionary with solutions. In the
+       case of over definend system all arbitrary parameters are skiped.
+       This may cause situation in with empty dictionary is returned.
+       In this case it means all symbols can be assigne arbitray values.
 
        Input to this functions is a Nx(M+1) matrix, which means it has
        to be in augmented form. If you are unhappy with such setting
@@ -138,7 +138,7 @@ def solve_linear_system(system, symbols, simplified=True):
        is more efficient and compact than the Gauss-Jordan method.
 
        >>> from sympy import *
-       >>> x, y = symbols('x', 'y')
+       >>> x, y = symbols('xy')
 
        Solve the following system:
 
@@ -164,7 +164,7 @@ def solve_linear_system(system, symbols, simplified=True):
                     break
             else:
                 if matrix[i, m] != 0:
-                    return {}   # no solutions
+                    return None   # no solutions
                 else:
                     # zero row or was a linear combination of
                     # other rows so now we can safely skip it
@@ -240,7 +240,7 @@ def solve_linear_system(system, symbols, simplified=True):
 
         return solutions
     else:
-        return {}   # no solutions
+        return None   # no solutions
 
 def solve_undetermined_coeffs(equ, coeffs, sym, simplified=True):
     """Solve equation of a type p(x; a_1, ..., a_k) == q(x) where both
@@ -275,7 +275,7 @@ def solve_undetermined_coeffs(equ, coeffs, sym, simplified=True):
         # system using Gaussian ellimination algorithm
         return solve(system, coeffs, simplified)
     else:
-        return {} # no solutions
+        return None # no solutions
 
 def solve_linear_system_LU(matrix, syms):
     """ LU function works for invertible only """

@@ -1,5 +1,10 @@
-"""
+"""This module is intended for solving recurrences or, in other words,
+   difference equations. Currently supported are linear, inhomogeneous
+   equantions with polynomial or rational coefficients.
 
+   The solutions are obtained among polynomials, rational functions,
+   hypergeometric terms, or combinations of hypergeometric term which
+   are pairwise dissimilar.
 """
 
 from sympy.core.basic import Basic, S
@@ -14,18 +19,11 @@ from sympy.polynomials import quo, gcd, roots, resultant
 from sympy.concrete import nni_roots, product
 from sympy.matrices import Matrix, casoratian
 
-def rsolve_poly(coeffs, f, n):
-    """Find polynomial solutions to inhomogeneous linear difference
-       equation of finite order with polynomial coefficients and
-       polynomial inhomogeneous part.
-
-       Formally, given a linear difference equation Ly = f where
-
-          L = p_r * E^k + ... + p_1 * E + p_0  ;  E^k y = y(n+k)
-
-       with p_i : i=0..r and 'f' being polynomialsin 'n' we seek for
-       solutions y(n) in K[n] where 'K' is a field of characteristic
-       zero. In this implementation we have K = C.
+def rsolve_poly(coeffs, f, n, **hints):
+    """Given linear difference operator L of order 'k' with polynomial
+       coefficients and inhomogeneous equation Ly = f, where 'f' is a
+       polynomial, we seek for all polynomial solutions over field K
+       of characteristic zero.
 
        The algorithm performs two basic steps:
 
@@ -33,7 +31,7 @@ def rsolve_poly(coeffs, f, n):
            (2) Find all polynomials of degree N or less of Ly = f.
 
        There are two methods for computing the polynomial solutions.
-       If the degree bound is relatively small, ie. it is smaller than
+       If the degree bound is relatively small, ie. it's smaller than
        or equal to the order of the recurrence, then naive method of
        undetermined coefficients is being used. This gives system
        of algebraic equations with N+1 unknowns.
@@ -47,14 +45,6 @@ def rsolve_poly(coeffs, f, n):
        It is possible to generalize the algorithm implemented here to
        the case of linear q-difference and differential equations.
 
-       Note the fact that this procedure is highly specific and does
-       not perform any analysis of the arguments given. If not sure
-       use rsolve() instead, which will run appropriate algorithm
-       for the given problem.
-
-       If there is need to run this procedure directly then the list of
-       coefficients must be in the following form: [ p_0, p_1, ..., p_r ].
-
        Lets say that we would like to compute m-th Bernoulli polynomial
        up to a constant. For this we can use b(n+1) - b(n) == m*n**(m-1)
        recurrence, which has solution b(n) = B_m + C. For example:
@@ -65,7 +55,7 @@ def rsolve_poly(coeffs, f, n):
        >>> rsolve_poly([-1, 1], 4*n**3, n)
        C0 + n**2 + n**4 - 2*n**3
 
-       For more information on the implemented algorithm refer to:
+       For more information on implemented algorithms refer to:
 
        [1] S. A. Abramov, M. Bronstein and M. Petkovsek, On polynomial
            solutions of linear operator equations, in: T. Levelt, ed.,
@@ -138,7 +128,13 @@ def rsolve_poly(coeffs, f, n):
     N = int(max(N))
 
     if N < 0:
-        return None
+        if homogeneous:
+            if hints.get('symbols', False):
+                return (S.Zero, [])
+            else:
+                return S.Zero
+        else:
+            return None
 
     if N <= r:
         C = []
@@ -151,7 +147,13 @@ def rsolve_poly(coeffs, f, n):
         for i in xrange(0, r+1):
             E += coeffs[i]*y.subs(n, n+i)
 
-        return y.subs_dict(solve_undetermined_coeffs(E-f, C, n))
+        solutions = solve_undetermined_coeffs(E-f, C, n)
+
+        if solutions is not None:
+            C = [ c for c in C if (c not in solutions) ]
+            result = y.subs_dict(solutions)
+        else:
+            return None # TBD
     else:
         A = r
         U = N+A+b+1
@@ -262,35 +264,47 @@ def rsolve_poly(coeffs, f, n):
 
         if E != []:
             solutions = solve(E, C)
+
+            if solutions is None:
+                if homogeneous:
+                    if hints.get('symbols', False):
+                        return (S.Zero, [])
+                    else:
+                        return S.Zero
+                else:
+                    return None
         else:
             solutions = {}
 
-        result = []
-
-        for c, s in zip(C, Q):
-            if c in solutions:
-                result.append((solutions[c] * q).expand())
-            else:
-                result.append((c * s).expand())
-
         if homogeneous:
-            return Add(*result)
+            result = S.Zero
         else:
-            return Add(*result) + h
+            result = h
 
-def rsolve_ratio(coeffs, f, n):
-    """Find rational solutions to inhomogeneous linear difference
-       equation of finite order with polynomial coefficients and
-       polynomial inhomogeneous part.
+        for c, q in zip(C, Q):
+            if c in solutions:
+                s = solutions[c]*q
+                del C[c]
+            else:
+                s = c*q
 
-       Formally, given a linear difference equation Ly = f where
+            result += s.expand()
 
-          L = p_r * E^k + ... + p_1 * E + p_0  ;  E^k y = y(n+k)
+    if hints.get('symbols', False):
+        return (result, C)
+    else:
+        return result
 
-       with p_i : i=0..r and 'f' being polynomialsin 'n', we seek
-       for solutions y(n) of the form u(n)/v(n). Of course both
-       u and v are polynomials over a field of characteristic
-       zero. In this implementation we have K = C.
+def rsolve_ratio(coeffs, f, n, **hints):
+    """Given linear difference operator L of order 'k' with polynomial
+       coefficients and inhomogeneous equation Ly = f, where 'f' is a
+       polynomial, we seek for all rational solutions over field K of
+       characteristic zero.
+
+       This procedure accepts only polynomials, however if you are
+       interested in solving recurrence with ratinal coefficients
+       then use rsolve() with will preprocess equation given and
+       run this procedure with polynomial arguments.
 
        The algorithm performs two basic steps:
 
@@ -305,6 +319,10 @@ def rsolve_ratio(coeffs, f, n):
        Abramov's algorithm, developed in 1989. The new approach is much
        simpler to implement and has better overall efficiency. This
        method can be easily adapted to q-difference equations case.
+
+       Besides finding rational solutions alone, this functions is
+       an important part of Hyper algorithm were it is used to find
+       particular solution of ingomogeneous part of a recurrence.
 
        For more information on the implemented algorithm refer to:
 
@@ -371,36 +389,54 @@ def rsolve_ratio(coeffs, f, n):
             return None
 
 def rsolve_hyper(coeffs, f, n, **hints):
-    """Find hypergeometric solutions to inhomogeneous linear
-       difference equation of finite order with polynomial
-       coefficients.
+    """Given linear difference operator L of order 'k' with polynomial
+       coefficients and inhomogeneous equation Ly = f we seek for all
+       hypergeometric solutions over field K of characteristic zero.
 
-       Formally, given a linear difference equation Ly = f where
+       The inhomogeneous part can be either hypergeometric or a sum
+       of a fixed number of pairwise dissimilar hypergeometric terms.
 
-         L = p_r * E^k + ... + p_1 * E + p_0  ;  E^k y = y(n+k)
+       The algorithm performs three basic steps:
 
-       with p_i : i=0..r being polynomials in 'n' and where the
-       inhomogeneous part is hypergeometric or is a combination
-       of pairwise dissimilar hypergeometric terms, we seek for
-       all hypergeometric.
+           (1) Group together similar hypergeometric terms in the
+               inhomogeneous part of Ly = f, and find particular
+               solution using Abramov's algorithm.
 
-       Hypergeometric terms are integer sequences anihilated by
-       first order linear difference equations with polynomial
-       coefficients or, in simpler words, if consecutive term
-       ratio is quotient of polynomials. This gives us notion
-       of closed form.
+           (2) Compute generating set of L and find basis in it,
+               so that all solutions are lineary independent.
 
-       Class of D'Alembertian terms is much richer and contains
-       also sequences which are products of hypergeometric and
-       not definitely summable. ie. not Gosper summable terms.
-       Classical example of usage of this generalisation is
-       formula for number of derangements (permutations in
-       which none of the elements is in proper position).
+           (3) Form final solution with the number of arbitrary
+               constants equal to dimension of basis of L.
 
-       For efficiency reason all computations are done in field
-       of real numbers. However if complex solutions of equations
-       with constant coefficients are needed then use method of
-       characteristic polynomials instead.
+       Term a(n) is hypergeometric if it is anihilated by first order
+       linear difference equations with polynomial coefficients or, in
+       simpler words, if consecutive term ratio is a rational function.
+
+       The output of this procedure is a linear combination of fixed
+       number of hypergeometric terms. However the underlying method
+       can generate larger class of solutions - D'Alembertian terms.
+
+       Note also that this method not only computes the kernel of the
+       inhomogeneous equation, but also reduces in to a basis so that
+       solutions generated by this procedure are lineary independent
+
+       Suppose we would like to find solutions to a famous recurrence
+       of order two with constant coefficients a[n] == a[n-1] + a[n-2]
+       which generates n-th Fibonacci number:
+
+       >>> from sympy.core import Symbol
+       >>> n = Symbol('n', integer=True)
+
+       >>> rsolve_hyper([-1, -1, 1], 0, n)
+       C0*(1/2 + (1/2)*5**(1/2))**n + C1*(1/2 - 1/2*5**(1/2))**n
+
+       The result of this example, although correct, could have been
+       returned in a more pretty form if GoldenRatio were used. This
+       is of course a need to improve simplification routines.
+
+       Note that recurrences with constant coefficients can be solved
+       in a much more efficient way using characteristic polynomials
+       or matrix powers.
 
        For more information on the implemented algorithm refer to:
 
@@ -418,40 +454,47 @@ def rsolve_hyper(coeffs, f, n, **hints):
     r, kernel = len(coeffs)-1, []
 
     if not isinstance(f, Basic.Zero):
-        if f.is_hypergeometric(n):
+        if isinstance(f, Basic.Add):
+            similar = {}
+
+            for g in f.expand():
+                if not g.is_hypergeometric(n):
+                    return None
+
+                for h in similar.iterkeys():
+                    if hypersimilar(g, h, n):
+                        similar[h] += g
+                        break
+                else:
+                    similar[g] = S.Zero
+
+            inhomogeneous = []
+
+            for g, h in similar.iteritems():
+                inhomogeneous.append(g+h)
+        elif f.is_hypergeometric(n):
             inhomogeneous = [f]
         else:
-            if isinstance(f, Basic.Add):
-                similar = {}
-
-                for g in f.expand():
-                    if not g.is_hypergeometric(n):
-                        return None
-
-                    for h in similar.iterkeys():
-                        if hypersimilar(g, h, n):
-                            similar[h] += g
-                            break
-                    else:
-                        similar[g] = S.Zero
-
-                inhomogeneous = []
-
-                for g, h in similar.iteritems():
-                    inhomogeneous.append(g+h)
-            else:
-                return None
+            return None
 
         for i, g in enumerate(inhomogeneous):
             coeff, polys = S.One, coeffs[:]
+            denoms = [ S.One ] * (r+1)
 
             s = hypersimp(g, n)
 
-            for j in range(1, r+1):
+            for j in xrange(1, r+1):
                 coeff *= s.subs(n, n+j-1)
-                polys[j] *= coeff
 
-            R = rsolve_ratio(polys, S.One, n)
+                p, q = coeff.as_numer_denom()
+
+                polys[j] *= p
+                denoms[j] = q
+
+            for j in xrange(0, r+1):
+                polys[j] *= Mul(*(denoms[:j] + denoms[j+1:]))
+
+            R = rsolve_poly(polys, Mul(*denoms), n)
 
             if not (R is None or isinstance(R, Basic.Zero)):
                 inhomogeneous[i] *= R
@@ -466,8 +509,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     p, q = coeffs[0], coeffs[r].subs(n, n-r+1)
 
-    p_factors = [ z for z in set(roots(p, n)) if z.is_real ]
-    q_factors = [ z for z in set(roots(q, n)) if z.is_real ]
+    p_factors = [ z for z in set(roots(p, n)) ]
+    q_factors = [ z for z in set(roots(q, n)) ]
 
     factors = [ (S.One, S.One) ]
 
@@ -487,9 +530,9 @@ def rsolve_hyper(coeffs, f, n, **hints):
         polys, degrees = [], []
         D = A*B.subs(n, n+r-1)
 
-        for i in range(0, r+1):
-            a = Mul(*[ A.subs(n, n+j) for j in range(0, i) ])
-            b = Mul(*[ B.subs(n, n+j) for j in range(i, r) ])
+        for i in xrange(0, r+1):
+            a = Mul(*[ A.subs(n, n+j) for j in xrange(0, i) ])
+            b = Mul(*[ B.subs(n, n+j) for j in xrange(i, r) ])
 
             poly = (quo(coeffs[i]*a*b, D, n))
             polys.append(poly.as_polynomial(n))
@@ -499,7 +542,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
         d, poly = max(degrees), S.Zero
 
-        for i in range(0, r+1):
+        for i in xrange(0, r+1):
             coeff = polys[i].nth_coeff(d)
 
             if not isinstance(coeff, Basic.Zero):
@@ -509,10 +552,11 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if not z.is_real or z.is_zero:
                 continue
 
-            C = rsolve_poly([ polys[i]*z**i for i in range(r+1) ], 0, n)
+            C = rsolve_poly([ polys[i]*z**i for i in xrange(r+1) ], 0, n)
 
             if C is not None and not isinstance(C, Basic.Zero):
-                K = simplify(z*(A*C.subs(n, n+1))/(B*C))
+                ratio = z * A * C.subs(n, n + 1) / B / C
+                K = product(simplify(ratio), (n, 0, n-1))
 
                 if casoratian(kernel+[K], n) != 0:
                     kernel.append(K)
@@ -520,7 +564,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
     symbols = [ Symbol('C'+str(i)) for i in xrange(len(kernel)) ]
 
     for C, ker in zip(symbols, kernel):
-        result += C * product(ker, (n, 0, n-1))
+        result += C * ker
 
     if hints.get('symbols', False):
         return (result, symbols)
