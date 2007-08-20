@@ -260,6 +260,7 @@ setup(
                     'sympy.ntheory', 
                     'sympy.physics', 
                     'sympy.polynomials', 
+                    'sympy.polynomials.fast', 
                     'sympy.printing', 
                     'sympy.series', 
                     'sympy.simplify', 
