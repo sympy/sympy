@@ -56,27 +56,25 @@ class Gamma(DefinedFunction):
 
 class ApplyGamma(Apply):
 
-    def _eval_rewrite_as_rf(self, arg):
-        arg = arg.expand(basic=True)
-
+    def _eval_expand_func(self, *args):
+        arg = self.args[0]._eval_expand_basic()
+        #import pdb; pdb.set_trace()
         if isinstance(arg, Basic.Add):
-            coeff = terms = S.Zero
+            for i, coeff in enumerate(arg[:]):
+                if isinstance(arg[i], Basic.Number):
+                    terms = Basic.Add(*(arg[:i] + arg[i+1:]))
 
-            for term in arg:
-                if isinstance(term, Basic.Number):
-                    coeff += term
-                else:
-                    terms += term
+                    if isinstance(coeff, Basic.Integer):
+                        exponent = coeff
+                    elif isinstance(coeff, Basic.Rational):
+                        exponent = Basic.Integer(coeff.p / coeff.q)
+                        terms += Basic.Rational(1, coeff.q)
+                    else:
+                        continue
 
-            if isinstance(coeff, Basic.Integer):
-                expo = coeff
-            elif isinstance(coeff, Basic.Rational):
-                expo = coeff.p / coeff.q
-                terms += Rational(coeff.q)
-            else:
-                return
+                    return S.Gamma(terms)*S.RisingFactorial(terms, exponent)
 
-            return S.Gamma(terms)*S.RisingFactorial(terms, expo)
+        return self.func(*self.args)
 
     def _eval_is_real(self):
         return self.args[0].is_real

@@ -900,8 +900,10 @@ def hypersimp(term, n, consecutive=True, simplify=True):
     if consecutive == True:
         term = term.subs(n, n+1)/term
 
-    expr = term.rewrite(S.Gamma).rewrite(S.Gamma, 'rf')
-    p, q = together(expr.subs(S.Gamma, S.Gamma)).as_numer_denom()
+    expr = term.expand(func=True, basic=False) # expand n!, C(n, k), rf, ff
+    expr = expr.expand(func=True, basic=False) # expand gamma()
+
+    p, q = together(expr).as_numer_denom()
 
     if p.is_polynomial(n) and q.is_polynomial(n):
         if simplify == True:

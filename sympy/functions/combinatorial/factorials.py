@@ -133,8 +133,8 @@ class Factorial(DefinedFunction):
 
 class ApplyFactorial(Apply):
 
-    def _eval_rewrite_as_gamma(self, k):
-        return S.Gamma(k+1)
+    def _eval_expand_func(self, *args):
+        return S.Gamma(1 + self.args[0])
 
     def tostr(self, level=0):
         return '%s!' % self.args[0].tostr(self.precedence)
@@ -209,8 +209,9 @@ class RisingFactorial(DefinedFunction):
 
 class ApplyRisingFactorial(Apply):
 
-    def _eval_rewrite_as_gamma(self, x, k):
-        return Basic.Gamma()(x+k)/Basic.Gamma()(x)
+    def _eval_expand_func(self, *args):
+        x, k = self.args[0], self.args[1]
+        return S.Gamma(x+k)/S.Gamma(x)
 
     def tostr(self, level=0):
         r = 'rf(%s)' % ', '.join([a.tostr() for a in self.args])
@@ -281,8 +282,9 @@ class FallingFactorial(DefinedFunction):
 
 class ApplyFallingFactorial(Apply):
 
-    def _eval_rewrite_as_gamma(self, x, k):
-        return (-1)**k*Basic.Gamma()(-x+k)/Basic.Gamma()(-x)
+    def _eval_expand_func(self, *args):
+        x, k = self.args[0], self.args[1]
+        return (-1)**k*S.Gamma(-x+k)/S.Gamma(-x)
 
     def tostr(self, level=0):
         r = 'ff(%s)' % ', '.join([a.tostr() for a in self.args])
@@ -403,11 +405,11 @@ class Binomial(DefinedFunction):
 
 class ApplyBinomial(Apply):
 
-    def _eval_rewrite_as_gamma(self, r, k):
+    def _eval_expand_func(self, *args):
+        r, k = self.args[0], self.args[1]
         return S.Gamma(r+1)/(S.Gamma(r-k+1)*S.Gamma(k+1))
 
     def _eval_is_integer(self):
         return self.args[0].is_integer and self.args[1].is_integer
-
 
 Basic.singleton['binomial'] = Binomial
