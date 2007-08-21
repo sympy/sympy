@@ -1,7 +1,6 @@
 import sys
 sys.path.append("..")
 from sympy import *
-from sympy.modules.polynomials import coeff
 
 def T(x):
     return x+x**2+2*x**3 + 4*x**4 + 9*x**5 + 20*x**6 + 48 * x**7 + \
@@ -12,8 +11,8 @@ def A(x):
 
 
 x=Symbol("x")
-s = A(x).expand()
-num = [coeff(s, x, n) for n in range(11)]
+s = Polynomial(A(x))
+num = [s.nth_coeff(n) for n in range(11)]
 
 print s
 print num

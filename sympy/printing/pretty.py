@@ -1,59 +1,81 @@
 from sympy.core import Basic
+from printer import Printer
 from stringpict import *
 
-# The different printing functions
-class PrettyPrinter:
+
+class PrettyPrinter(Printer):
+    """
+    A class that prints a prettified expression, one that is not limited
+    to one dimension like casting the expression to a string would return.
+    """
     def __init__(self, use_unicode=False):
-        self._depth = 0
+        Printer.__init__(self)
         self._use_unicode = use_unicode
         if self._use_unicode:
             self._str = unicode
-        else:
-            self._str = str
+        self.emptyPrinter = lambda x : prettyForm(self._str(x), prettyForm.ATOM)
 
-    def pretty(self, expr):
-        """Returns the pretty representation for expr (as a string)"""
-        return self._str(self._pretty(expr))
+    # TODO Add things for factorial, gamma, and other functions like these
 
-    def _pretty(self, expr):
-        self._depth += 1
+    def _print_Symbol(self, e):
+        if self._use_unicode:
+            # letter: (uppercase, lowercase)
+            greek = {
+                'alpha': (u'\u0391', u'\u03b1'),
+                'beta': (u'\u0392', u'\u03b2'),
+                'gamma': (u'\u0393', u'\u03b3'),
+                'delta': (u'\u0394', u'\u03b4'),
+                'epsilon': (u'\u0395', u'\u03b5'),
+                'zeta': (u'\u0396', u'\u03b6'),
+                'eta': (u'\u0397', u'\u03b7'),
+                'theta': (u'\u0398', u'\u03b8'),
+                'iota': (u'\u0399', u'\u03b9'),
+                'kappa': (u'\u039a', u'\u03ba'),
+                'lambda': (u'\u039b', u'\u03bb'),
+                'mu': (u'\u039c', u'\u03bc'),
+                'nu': (u'\u039d', u'\u03bd'),
+                'xi': (u'\u039e', u'\u03be'),
+                'omicron': (u'\u039f', u'\u03bf'),
+                'pi': (u'\u03a0', u'\u03c0'),
+                'rho': (u'\u03a1', u'\u03c1'),
+                'sigma': (u'\u03a3', u'\u03c3'),
+                'tau': (u'\u03a4', u'\u03c4'),
+                'upsilon': (u'\u03a5', u'\u03c5'),
+                'phi': (u'\u03a6', u'\u03c6'),
+                'chi': (u'\u03a7', u'\u03c7'),
+                'psi': (u'\u03a8', u'\u03c8'),
+                'omega': (u'\u03a9', u'\u03c9')
+            }
 
-        # See if the class of expr is known, or if one of its super
-        # classes is known, and use that pretty function
-        res = None
-        for cls in expr.__class__.__mro__:
-            if hasattr(self, '_pretty_'+cls.__name__):
-                res = getattr(self, '_pretty_'+cls.__name__)(expr)
-                break
+            name = e.name.lower()
+            if name in greek:
+                # If first character lowercase, use lowercase greek letter
+                if name[0] == e.name[0]:
+                    return prettyForm(greek[name][1], binding=prettyForm.ATOM)
+                else:
+                    return prettyForm(greek[name][0], binding=prettyForm.ATOM)
 
-        # Unknown object, just use its string representation
-        if res is None:
-            res = prettyForm(self._str(expr), prettyForm.ATOM)
-
-        self._depth -= 1
-        return res
-
-    def _pretty_Exp1(self, e):
+    def _print_Exp1(self, e):
         if self._use_unicode:
             return prettyForm(u'\u212f', binding=prettyForm.ATOM)
 
-    def _pretty_Pi(self, e):
+    def _print_Pi(self, e):
         if self._use_unicode:
             return prettyForm(u'\u03c0', binding=prettyForm.ATOM)
 
-    def _pretty_Infinity(self, e):
+    def _print_Infinity(self, e):
         if self._use_unicode:
             return prettyForm(u'\u221e', binding=prettyForm.ATOM)
 
-    def _pretty_NegativeInfinity(self, e):
+    def _print_NegativeInfinity(self, e):
         if self._use_unicode:
             return prettyForm(u'-\u221e', binding=prettyForm.ATOM)
 
-    def _pretty_ImaginaryUnit(self, e):
+    def _print_ImaginaryUnit(self, e):
         if self._use_unicode:
             return prettyForm(u'\u03b9', binding=prettyForm.ATOM)
 
-    def _pretty_Relational(self, e):
+    def _print_Relational(self, e):
         charmap = {
             '==': ('=', '='),
             '<':  ('<', '<'),
@@ -66,25 +88,25 @@ class PrettyPrinter:
             op = charmap[e.rel_op][0]
         op = prettyForm(' ' + op + ' ')
 
-        l = self._pretty(e.lhs)
-        r = self._pretty(e.rhs)
+        l = self._print(e.lhs)
+        r = self._print(e.rhs)
         pform = prettyForm(*stringPict.next(l, op))
         pform = prettyForm(*stringPict.next(pform, r))
         return pform
 
-    def _pretty_ApplyConjugate(self, e):
-        pform = self._pretty(e.args[0])
+    def _print_ApplyConjugate(self, e):
+        pform = self._print(e.args[0])
         return prettyForm(*stringPict.top(pform, '_'*pform.width()))
 
-    def _pretty_ApplyAbs(self, e):
-        pform = self._pretty(e.args[0])
+    def _print_ApplyAbs(self, e):
+        pform = self._print(e.args[0])
         pform.baseline = 0
         bars = '|' + ('\n|' * (pform.height()-1))
         pform = prettyForm(*stringPict.next(bars, pform))
         pform = prettyForm(*stringPict.next(pform, bars))
         return pform
 
-    def _pretty_Derivative(self, deriv):
+    def _print_Derivative(self, deriv):
         syms = list(deriv.symbols)
         syms.reverse()
         x = None
@@ -94,7 +116,7 @@ class PrettyPrinter:
             else:
                 x = prettyForm(*stringPict.next(x, ' d' + str(sym)))
 
-        f = prettyForm(binding=prettyForm.FUNC, *self._pretty(deriv.expr).parens())
+        f = prettyForm(binding=prettyForm.FUNC, *self._print(deriv.expr).parens())
 
         pform = prettyForm('d')
         if len(syms) > 1:
@@ -105,22 +127,22 @@ class PrettyPrinter:
         pform = prettyForm(*stringPict.next(pform, f))
         return pform
 
-    def _pretty_Integral(self, integral):
+    def _print_Integral(self, integral):
         f,x = integral.f, integral.x
         a,b = integral.a, integral.b
 
         # Add parentheses if a sum and create pretty form for argument
-        prettyF = self._pretty(f)
+        prettyF = self._print(f)
         if isinstance(f, Basic.Add):
             prettyF = prettyForm(*prettyF.parens())
 
-        arg = prettyForm( *stringPict.next(prettyF, " d" , self._pretty(x)) )
+        arg = prettyForm( *stringPict.next(prettyF, " d" , self._print(x)) )
         arg.baseline = 0
 
         # Create pretty forms for endpoints, if definite integral
         if a is not None:
-            prettyA = self._pretty(a)
-            prettyB = self._pretty(b)
+            prettyA = self._print(a)
+            prettyB = self._print(b)
 
         # Create bar based on the height of the argument
         bar = '  |   ' + ('\r  |   ' * (arg.height()+1))
@@ -137,22 +159,22 @@ class PrettyPrinter:
         pform = prettyForm(*stringPict.right(pform, arg))
         return pform
 
-    def _pretty_ApplyExp(self, e):
+    def _print_ApplyExp(self, e):
         if self._use_unicode:
             base = prettyForm(u'\u212f', binding=prettyForm.ATOM)
         else:
             base = prettyForm('e', binding=prettyForm.ATOM)
-        return base ** self._pretty(e.args[0])
+        return base ** self._print(e.args[0])
 
-    def _pretty_Apply(self, e):
+    def _print_Apply(self, e):
         func = e.func
         args = e.args
         n = len(args)
 
-        prettyFunc = self._pretty(func);
-        prettyArgs = self._pretty(args[0])
+        prettyFunc = self._print(Basic.Symbol(func.name));
+        prettyArgs = self._print(args[0])
         for i in xrange(1, n):
-            pform = self._pretty(args[i])
+            pform = self._print(args[i])
             prettyArgs = prettyForm(*stringPict.next(prettyArgs, ', '))
             prettyArgs = prettyForm(*stringPict.next(prettyArgs, pform))
 
@@ -161,13 +183,13 @@ class PrettyPrinter:
         pform = stringPict.next(pform, ')')
         return prettyForm(binding=prettyForm.FUNC, *pform)
 
-    def _pretty_Add(self, sum):
+    def _print_Add(self, sum):
         pforms = []
         for x in sum:
             # Check for negative "things" so that this information can be enforce upon
             # the pretty form so that it can be made of use (such as in a sum).
             if isinstance(x, Basic.Mul) and x.as_coeff_terms()[0] < 0:
-                pform1 = self._pretty(-x)
+                pform1 = self._print(-x)
                 if len(pforms) == 0:
                     if pform1.height() > 1:
                         pform2 = '- '
@@ -178,7 +200,7 @@ class PrettyPrinter:
                 pform = stringPict.next(pform2, pform1)
                 pforms.append(prettyForm(binding=prettyForm.NEG, *pform))
             elif isinstance(x, Basic.Number) and x < 0:
-                pform1 = self._pretty(-x)
+                pform1 = self._print(-x)
                 if len(pforms) == 0:
                     if pform1.height() > 1:
                         pform2 = '- '
@@ -189,10 +211,10 @@ class PrettyPrinter:
                     pform = stringPict.next(' - ', pform1)
                 pforms.append(prettyForm(binding=prettyForm.NEG, *pform))
             else:
-                pforms.append(self._pretty(x))
+                pforms.append(self._print(x))
         return prettyForm.__add__(*pforms)
 
-    def _pretty_Mul(self, product):
+    def _print_Mul(self, product):
         a = [] # items in the numerator
         b = [] # items that are in the denominator (if any)
 
@@ -212,28 +234,28 @@ class PrettyPrinter:
         # is more than one term in the numer/denom
         for i in xrange(0, len(a)):
             if isinstance(a[i], Basic.Add) and len(a) > 1:
-                a[i] = prettyForm(*self._pretty(a[i]).parens())
+                a[i] = prettyForm(*self._print(a[i]).parens())
             else:
-                a[i] = self._pretty(a[i])
+                a[i] = self._print(a[i])
 
         for i in xrange(0, len(b)):
             if isinstance(b[i], Basic.Add) and len(b) > 1:
-                b[i] = prettyForm(*self._pretty(b[i]).parens())
+                b[i] = prettyForm(*self._print(b[i]).parens())
             else:
-                b[i] = self._pretty(b[i])
+                b[i] = self._print(b[i])
 
         # Construct a pretty form
         if len(b) == 0:
             return prettyForm.__mul__(*a)
         else:
             if len(a) == 0:
-                a.append( self._pretty(Basic.One()) )
+                a.append( self._print(Basic.One()) )
             return prettyForm.__mul__(*a) / prettyForm.__mul__(*b)
 
-    def _pretty_Pow(self, power):
+    def _print_Pow(self, power):
         if isinstance(power.exp, Basic.Half):
             # If it's a square root
-            bpretty = self._pretty(power.base)
+            bpretty = self._print(power.base)
             bl = int((bpretty.height() / 2.0) + 0.5)
 
             s2 = stringPict("\\/")
@@ -249,13 +271,13 @@ class PrettyPrinter:
             return s
         elif power.exp == -1:
             # Things like 1/x
-            return prettyForm("1") / self._pretty(power.base)
+            return prettyForm("1") / self._print(power.base)
 
         # None of the above special forms, do a standard power
         b,e = power.as_base_exp()
-        return self._pretty(b)**self._pretty(e)
+        return self._print(b)**self._print(e)
 
-    def _pretty_Rational(self, r):
+    def _print_Rational(self, r):
         if r.q == 1:
             return prettyForm(str(r.p), prettyForm.ATOM)
         elif abs(r.p) > 10 and abs(r.q) > 10:
@@ -273,7 +295,7 @@ def pretty(expr, use_unicode=False):
     such as the greek letter pi for Basic.Pi instances.
     """
     pp = PrettyPrinter(use_unicode)
-    return pp.pretty(expr)
+    return pp.doprint(expr)
 
 def pretty_print(expr, use_unicode=False):
     """

@@ -10,6 +10,11 @@ class Gamma(DefinedFunction):
 
     nofargs = 1
 
+    def __new__(cls, **assumptions):
+        obj = DefinedFunction.__new__(cls, **assumptions)
+        obj.name = "Gamma" # use capital 'G'
+        return obj
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             x = Basic.Symbol('x', dummy=True)

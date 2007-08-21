@@ -19,9 +19,6 @@ def test_factorial1():
     assert fac(Rational(-3,2)) == -2*sqrt(pi)
     assert fac(Rational(-5,2)) == Rational(4,3)*sqrt(pi)
     assert fac(Rational(-17,2)) == Rational(256,2027025)*sqrt(pi)
-    #assert latex(fac(x, evaluate=False)) == "$x!$"
-    #assert latex(fac(-4, evaluate=False)) == "$(-4)!$"
-    #assert latex(fac(-x, evaluate=False)) == "$(- x)!$"
 
 def test_factorial_evalf():
     def relcmp(a,b):

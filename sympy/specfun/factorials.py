@@ -138,7 +138,7 @@ class _Factorial(DefinedFunction):
             Real(y.real) + I*Real(y.imag)
 
 
-class UnevaluatedFactorial(Factorial):
+class UnevaluatedFactorial(_Factorial):
     def _eval_apply(self, x, m=1):
         return None
 
@@ -231,11 +231,11 @@ def factorial_simplify(expr):
     and removes as many of them as possible by combining
     products and quotients of factorials into polynomials
     or other simpler expressions.
-    
+
     TODO: handle reflection formula, duplication formula
     double factorials
     """
-    
+
     if isinstance(expr, Add):
         return Add(*(factorial_simplify(x) for x in expr))
 
@@ -280,11 +280,6 @@ class Rising_factorial(DefinedFunction):
     def _eval_apply(self, x, n):
         return factorial_simplify(unfac(x+n-1) / unfac(x-1))
 
-    def __latex__(self):
-        x, n = self._args
-        return "{(%s)}^{(%s)}" % (x.__latex__(), n.__latex__())
-
-
 class Falling_factorial(DefinedFunction):
     """
     Usage
@@ -302,11 +297,6 @@ class Falling_factorial(DefinedFunction):
 
     def _eval_apply(self, x, n):
         return factorial_simplify(unfac(x) / unfac(x-n))
-
-    def __latex__(self):
-        x, n = self._args
-        return "{(%s)}_{(%s)}" % (x.__latex__(), n.__latex__())
-
 
 class Binomial2(DefinedFunction):
     """
@@ -352,8 +342,4 @@ class Binomial2(DefinedFunction):
             return sin(pi*k)/(pi*k)
 
         return factorial_simplify(unfac(n) / unfac(k) / unfac(n-k))
-
-    def __latex__(self):
-        n, k = self._args
-        return r"{{%s}\choose{%s}}" % (n.__latex__(), k.__latex__())
 

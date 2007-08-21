@@ -69,10 +69,6 @@ class Symbol(Atom, RelMeths, ArithMeths):
         assumptions = self._assumptions
         return Basic.Function(self.name, nofargs=len(args))(*args, **assumptions)
 
-    #def __mathml__(self): ..
-    #def __latex__(self): ..
-    #def __pretty__(self): ..
-
     def _eval_integral(self, s):
         if self==s:
             return self**2/2

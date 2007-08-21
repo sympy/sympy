@@ -200,6 +200,13 @@ class stringPict:
         root.baseline = result.baseline-result.height()+root.height()
         return result.left(root)
 
+    def __eq__(self, o):
+        if isinstance(o, str):
+            return '\n'.join(self.picture) == o
+        elif isinstace(o, stringPict):
+            return o.picture == self.picture
+        return False
+
     def __str__(self):
         return '\n'.join(self.picture)
 
@@ -224,13 +231,16 @@ class prettyForm(stringPict):
         """Initialize from stringPict and binding power."""
         stringPict.__init__(self, s, baseline)
         self.binding = binding
-        if unicode is not None:
-            self.unicode = unicode
-        else:
-            self.unicode = s
+        self.unicode = unicode or s
 
     def __unicode__(self):
-        return self.unicode
+        return unicode.join(u'\n', self.picture)
+
+    def __getitem__(self, index):
+        return self.picture[index]
+
+    def __len__(self):
+        return len(self.s)
 
     def __add__(self, *others):
         """Make a pretty addition.
@@ -276,12 +286,12 @@ class prettyForm(stringPict):
             result.append(arg)
         len_res = len(result)
         for i in xrange(len_res):
-            if i < len_res-1 and str(result[i]) == '-1' and result[i+1] == "*":
+            if i < len_res-1 and result[i] == '-1' and result[i+1] == "*":
                 # substitute -1 by -, like in -1*x -> -x
                 result.pop(i)
                 result.pop(i)
                 result.insert(i, '-')
-        if str(result[0])[0] == '-':
+        if result[0][0] == '-':
             # if there is a - sign in front of all
             bin = prettyForm.NEG
         else:

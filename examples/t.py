@@ -6,18 +6,17 @@ sys.path.append("..")
 sys.path.append(".")
 
 from sympy import exp,log,Symbol,oo,Rational,sin,cos,limit,I,pi,Mul
-from sympy import hashing, Integral, limitinf
-from sympy.modules import limits
+from sympy import Integral
+from sympy import limits
 from sympy.core import basic
 limits.debug=True
-basic.outputType="pretty"
 
 x=Symbol("x") 
 y=Symbol("y") 
 w=Symbol("w") 
 
 #import pdb
-#pdb.run('print limitinf(sin(x)/x,x)')
+#pdb.run('print limit(sin(x)/x,x,oo)')
 print x**x
 print x+y+x
 print sin(x)**x

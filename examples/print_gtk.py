@@ -4,7 +4,7 @@ import sys
 sys.path.append("..")
 
 from sympy import *
-from sympy.modules.printing import print_gtk
+from sympy.printing import print_gtk
 
 x = Symbol('x')
 

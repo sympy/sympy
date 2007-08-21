@@ -12,7 +12,7 @@ sys.path.append("..")
 from sympy import exp, Symbol, sin, Rational, Derivative, dsolve
 
 from sympy.core import Basic, Function
-from sympy.modules.matrices import Matrix
+from sympy.matrices import Matrix
 
 class Indexed(Basic):
     def __init__(self, A, idxlist):
@@ -27,7 +27,7 @@ class Indexed(Basic):
 class Idx(Symbol):
     def __init__(self, name, dim = 4, up = True):
         Symbol.__init__(self, name)
-        self._args.extend([dim,up])
+        #self._args.extend([dim,up])
         self._name = name
         self._dim = dim
         self._up = up

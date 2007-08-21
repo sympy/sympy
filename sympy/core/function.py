@@ -82,11 +82,7 @@ class Apply(Basic, ArithMeths, RelMeths):
                     n += 1
                 return f(*new_args) + dfa * o0**n
 
-        # Prevent evaluation if evaluate=False in kwargs
-        obj = None
-        if kwargs.get('evaluate', True):
-            obj = func._eval_apply(*func_args)
-
+        obj = func._eval_apply(*func_args)
         if obj is None:
             assert isinstance(func, Function),`args`
             cls = getattr(Basic,'Apply'+func.__class__.__name__, cls)
@@ -820,4 +816,4 @@ def diff(f, x, times = 1, evaluate=True):
             f = f.diff(x)
         return f
     else:
-        return Derivative(f, x)
+        return Derivative(f, x, evaluate=evaluate)

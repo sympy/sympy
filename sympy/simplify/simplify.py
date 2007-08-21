@@ -367,7 +367,7 @@ def collect(expr, syms, evaluate=True, exact=False):
        {1: c, x**2: a + b, x: a - b}
 
        You can also work with multi-variate polynomials. However
-       remeber that this function is greedy so it will care only
+       remember that this function is greedy so it will care only
        about a single symbol at time, in specification order:
 
        >>> collect(x**2 + y*x**2 + x*y + y + a*y, [x, y])
@@ -556,6 +556,16 @@ def collect(expr, syms, evaluate=True, exact=False):
                     return None
 
             return terms, elems, common_expo, has_deriv
+
+    if evaluate:
+        if isinstance(expr, Basic.Mul):
+            ret = 1
+            for term in expr:
+                ret *= collect(term, syms, True, exact)
+            return ret
+        elif isinstance(expr, Basic.Pow):
+            b = collect(expr.base, syms, True, exact)
+            return Basic.Pow(b, expr.exp)
 
     summa = [ separate(i) for i in make_list(Basic.sympify(expr), Add) ]
 
