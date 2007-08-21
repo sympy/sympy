@@ -2,29 +2,32 @@ import sys
 sys.path.append("..")
 sys.path.append(".")
 
-from sympy import exp,log,Symbol,oo,Rational,sin,cos,limit,I,pi,Mul
+from sympy import sqrt,exp,log,Symbol,oo,Rational,sin,cos,limit,I,pi,Mul
 from sympy.core import basic
+from sympy.printing import print_pygame, pprint
 
 x=Symbol("x") 
 y=Symbol("y") 
 
-def p():
-    print x**x
-    print x+y+x
-    print sin(x)**x
-    print sin(x)**cos(x)
-    print sin(x)/(cos(x)**2 * x**x +(2*y))
+expressions = (
+    x**x,
+    x+y+x,
+    sin(x)**x,
+    sin(x)**cos(x),
+    sin(x)/(cos(x)**2 * x**x +(2*y)),
 
-    print sin(x**2+exp(x))
-    print sqrt(exp(x))
-    print sqrt(exp(x))
+    sin(x**2+exp(x)),
+    sqrt(exp(x)),
 
     #print (1/cos(x)).series(x,10)
+)
 
 print "sympy print:"
-p()
-#basic.outputType="tex"
-basic.outputType="pygame"
-print "_"*70
-print "pretty print:"
-p()
+for expr in expressions:
+    print expr
+print ''
+
+print "pygame print:"
+for expr in expressions:
+    pprint(expr)
+    print_pygame(expr)

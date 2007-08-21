@@ -3,7 +3,7 @@ class Printer(object):
     """
     """
     def __init__(self):
-        self._depth = 0
+        self._depth = -1
         self._str = str
         self.emptyPrinter = str
 

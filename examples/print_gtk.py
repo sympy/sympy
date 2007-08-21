@@ -8,8 +8,8 @@ from sympy.printing import print_gtk
 
 x = Symbol('x')
 
-l1 = limit(sin(x)/x, x, 0, evaluate=False)
-print_gtk(l1)
+#l1 = limit(sin(x)/x, x, 0, evaluate=False)
+#print_gtk(l1)
 
 l2 = integrate(exp(x), (x,0,1), evaluate=False)
 print_gtk(l2)

@@ -206,6 +206,8 @@ class test_sympy_doc(Command):
         files.remove('sympy/core/add.py')
         files.remove('sympy/core/relational.py')
         files.remove('sympy/core/interval.py')
+        files.remove('sympy/printing/gtk.py')
+        files.remove('sympy/printing/pygame_.py')
 
         #files.remove('sympy/functions/elementary/hyperbolic.py')
         #files.remove('sympy/functions/elementary/trigonometric.py')

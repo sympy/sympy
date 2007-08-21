@@ -14,13 +14,14 @@ class LatexPrinter(Printer):
         coeff, a = e.as_coeff_terms()
         if isinstance(coeff, Basic.NegativeOne):
             f = ["-"]
+        elif not isinstance(coeff, Basic.One):
+            f.append(self._print(coeff))
 
         multsymb = r"\cdot"
         for x in a:
             xs = self._print(x)
             if isinstance(x, Basic.AssocOp):
                 f.append("(%s)" % xs)
-
             # Insert explicit multiplication sign in some cases
             elif (isinstance(x, Basic.Symbol) and "mathrm" in xs) or \
                  (isinstance(x, Basic.Pow) and "mathrm" in self._print(x.base)):
@@ -82,6 +83,10 @@ class LatexPrinter(Printer):
         else:
             s += self._print(e.expr)
         return s
+
+    def _print_Rational(self, e):
+        if e.q != 1:
+            return r"\frac{%d}{%d}" % (e.p, e.q)
 
     def _print_Factorial(self, e):
         x = e.args[0]
