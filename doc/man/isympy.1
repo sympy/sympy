@@ -34,17 +34,28 @@ isympy \- interactive shell for SymPy
 .ad b
 'hy
 .SH DESCRIPTION
-isympy is a Python shell for SymPy. It is just a normal python shell (ipython shell if you have the ipython package installed) that imports
-all the stuff SymPy needs so you don't have to. It imports the modules sympy, sympy.core, sympy.modules and tries to import the module 
-sympy.modules.graphing if you have matplotlib installed. It also defines the symbols x, y, z. 
+isympy is a Python shell for SymPy. It is just a normal python shell
+(ipython shell if you have the ipython package installed) that executes
+the following commands so that you don't have to:
+.PP
+.nf
+\*(T<
+from sympy import *
+x, y, z = symbols('xyz')
+k, m, n = symbols('kmn', integer=True)
+    \*(T>
+.fi
 .SH OPTIONS
 .TP 
 \*(T<\fB\-c \fR\*(T>\fIshell\fR, \*(T<\fB\-\-console=\fR\*(T>\fIshell\fR
-Use the specified shell (python or ipython) as console backend instead of the default one (ipython if present or python in other case).
+Use the specified shell (python or ipython) as
+console backend instead of the default one (ipython
+if present or python otherwise).
 .SH FILES
 .TP 
 \*(T<\fI${HOME}/.sympy\-history\fR\*(T>
-Saves the history of commands when using the python shell as backed.
+Saves the history of commands when using the python
+shell as backend.
 .SH BUGS
 The upstreams BTS can be found at \(lahttp://code.google.com/p/sympy/issues/list\(ra
 .SH "SEE ALSO"

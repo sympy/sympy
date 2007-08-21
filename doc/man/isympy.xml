@@ -122,14 +122,14 @@ this will generate isympy.1 in the current directory. -->
 		<title>DESCRIPTION</title>
     <para>isympy is a Python shell for SymPy. It is just a normal python shell
         (ipython shell if you have the ipython package installed) that executes
-        these commands so that you don't have to:
+        the following commands so that you don't have to:
     </para>
 
-    <code>
+    <programlisting>
 from sympy import *
 x, y, z = symbols('xyz')
 k, m, n = symbols('kmn', integer=True)
-    </code>
+    </programlisting>
 
 	</refsect1>
 	<refsect1 id="options">
@@ -155,7 +155,8 @@ k, m, n = symbols('kmn', integer=True)
 			<varlistentry>
 				<term><filename>${HOME}/.sympy-history</filename></term>
 				<listitem>
-					<para>Saves the history of commands when using the python shell as backed.</para>
+					<para>Saves the history of commands when using the python
+                        shell as backend.</para>
 				</listitem>
 			</varlistentry>
 		</variablelist>
