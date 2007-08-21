@@ -1,5 +1,4 @@
-from sympy.core import *
-from sympy import limit
+from sympy import *
 from sympy.series.limits import mrv_compare, mrv2
 
 x = Symbol('x', real=True, unbounded=True)

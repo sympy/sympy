@@ -1,3 +1,4 @@
+"""
 from sympy import *
 from sympy.specfun.factorials import *
 
@@ -107,7 +108,7 @@ def test_binomial2():
     assert binomial2(10**20, 10**20 - 2) == \
         4999999999999999999950000000000000000000
     #assert latex(binomial(8,3,evaluate=False)) == r"${{8}\choose{3}}$"
-
+"""
 #def test_gamma():
 #    assert gamma(0) == oo
 #    assert gamma(1) == 1

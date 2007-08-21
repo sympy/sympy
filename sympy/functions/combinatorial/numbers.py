@@ -10,8 +10,6 @@ the separate 'factorials' module.
 from sympy.core import *
 from sympy.core.function import DefinedFunction
 from sympy.core.basic import S
-from factorials import binomial2
-
 
 def _product(a, b):
     p = 1
@@ -43,6 +41,8 @@ class Fibonacci(DefinedFunction):
 
     Examples
     ========
+        >>> from sympy import *
+
         >>> [fibonacci(x) for x in range(11)]
         [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
         >>> fibonacci(5, Symbol('t'))
@@ -78,7 +78,7 @@ class Fibonacci(DefinedFunction):
         if isinstance(n, Integer):
             n = int(n)
             if n < 0:
-                return Integer(-1)**(n+1) * fibonacci(-n)
+                return Integer(-1)**(n+1) * S.Fibonacci(-n)
             if sym is None:
                 return Integer(self._fib(n))
             else:
@@ -87,8 +87,7 @@ class Fibonacci(DefinedFunction):
                        "only for positive integer indices.")
                 return self._fibpoly(n).subs(_sym, sym)
 
-fibonacci = Fibonacci()
-
+Basic.singleton['fibonacci'] = Fibonacci
 
 class Lucas(DefinedFunction):
     """
@@ -100,6 +99,8 @@ class Lucas(DefinedFunction):
 
     Examples
     ========
+        >>> from sympy import *
+
         >>> [lucas(x) for x in range(11)]
         [2, 1, 3, 4, 7, 11, 18, 29, 47, 76, 123]
 
@@ -117,10 +118,9 @@ class Lucas(DefinedFunction):
     """
     def _eval_apply(self, n):
         if isinstance(n, Integer):
-            return fibonacci(n+1) + fibonacci(n-1)
+            return S.Fibonacci(n+1) + S.Fibonacci(n-1)
 
-lucas = Lucas()
-
+Basic.singleton['lucas'] = Lucas
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -139,6 +139,8 @@ class Bernoulli(DefinedFunction):
 
     Examples
     ========
+        >>> from sympy import *
+
         >>> [bernoulli(n) for n in range(11)]
         [1, -1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66]
         >>> bernoulli(1000001)
@@ -203,9 +205,9 @@ class Bernoulli(DefinedFunction):
     @staticmethod
     def _calc_bernoulli(n):
         s = 0
-        a = int(binomial2(n+3, n-6))
+        a = int(S.Binomial(n+3, n-6))
         for j in xrange(1, n//6+1):
-            s += a * bernoulli(n - 6*j)
+            s += a * S.Bernoulli(n - 6*j)
             # Avoid computing each binomial coefficient from scratch
             a *= _product(n-6 - 6*j + 1, n-6*j)
             a //= _product(6*j+4, 6*j+9)
@@ -213,7 +215,7 @@ class Bernoulli(DefinedFunction):
             s = -Rational(n+3, 6) - s
         else:
             s = Rational(n+3, 3) - s
-        return s / binomial2(n+3, n)
+        return s / S.Binomial(n+3, n)
 
     # We implement a specialized memoization scheme to handle each
     # case modulo 6 separately
@@ -249,13 +251,13 @@ class Bernoulli(DefinedFunction):
                 else:
                     n, result = int(n), []
                     for k in xrange(n + 1):
-                        result.append(binomial2(n, k)*self(k)*sym**(n-k))
+                        result.append(S.Binomial(n, k)*self(k)*sym**(n-k))
                     return Basic.Add(*result)
             else:
                 raise ValueError("Bernoulli numbers are defined only"
                                  " for nonnegative integer indices.")
 
-bernoulli = Bernoulli()
+Basic.singleton['bernoulli'] = Bernoulli
 
 
 #----------------------------------------------------------------------------#
@@ -278,6 +280,8 @@ class Bell(DefinedFunction):
 
     Examples
     ========
+        >>> from sympy import *
+
         >>> [bell(n) for n in range(11)]
         [1, 1, 2, 5, 15, 52, 203, 877, 4140, 21147, 115975]
         >>> bell(30)
@@ -346,8 +350,7 @@ class Bell(DefinedFunction):
             else:
                 return self._bell_poly(int(n)).subs(_sym, sym)
 
-bell = Bell()
-
+Basic.singleton['bell'] = Bell
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -368,6 +371,8 @@ class Harmonic(DefinedFunction):
 
     Examples
     ========
+        >>> from sympy import *
+
         >>> [harmonic(n) for n in range(6)]
         [0, 1, 3/2, 11/6, 25/12, 137/60]
         >>> [harmonic(n, 2) for n in range(6)]
@@ -383,7 +388,7 @@ class Harmonic(DefinedFunction):
                   ___
                  \       -m
           H    =  )     k   .
-           n,m   /___ 
+           n,m   /___
                  k = 1
 
         As n -> oo, H_{n,m} -> zeta(m) (the Riemann zeta function)
@@ -402,8 +407,7 @@ class Harmonic(DefinedFunction):
         if m is None:
             m = Integer(1)
         if n == oo:
-            from zeta_functions import zeta
-            return zeta(m)
+            return S.Zeta(m)
         if isinstance(n, Integer) and n.is_nonnegative and \
             isinstance(m, Integer):
             if n == 0:
@@ -415,4 +419,4 @@ class Harmonic(DefinedFunction):
                 self._functions[m] = f
             return self._functions[m](int(n))
 
-harmonic = Harmonic()
+Basic.singleton['harmonic'] = Harmonic

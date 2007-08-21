@@ -39,6 +39,38 @@ if sys.version_info[1] < 4:
           sys.version_info[:2]
     sys.exit(-1)
 
+modules = [
+    ( True, 'sympy.core' ),
+    ( True, 'sympy.concrete' ),
+    ( True, 'sympy.functions' ),
+    ( True, 'sympy.functions.combinatorial' ),
+    ( False, 'sympy.functions.elementary' ),
+    ( False, 'sympy.functions.special' ),
+    ( True, 'sympy.geometry' ),
+    ( True, 'sympy.integrals' ),
+    ( True, 'sympy.matrices' ),
+    ( True, 'sympy.ntheory' ),
+    ( True, 'sympy.numerics' ),
+    ( True, 'sympy.physics' ),
+    ( True, 'sympy.polynomials' ),
+    ( True, 'sympy.printing' ),
+    ( True, 'sympy.series' ),
+    ( True, 'sympy.simplify' ),
+    ( True, 'sympy.solvers' ),
+    ( True, 'sympy.utilities' ),
+    ( False, 'sympy.plotting' ),
+    ( False, 'sympy.plotting.pyglet' ),
+    ( False, 'sympy.plotting.pyglet.ext' ),
+    ( False, 'sympy.plotting.pyglet.font' ),
+    ( False, 'sympy.plotting.pyglet.gl' ),
+    ( False, 'sympy.plotting.pyglet.image' ),
+    ( False, 'sympy.plotting.pyglet.image.codecs' ),
+    ( False, 'sympy.plotting.pyglet.media' ),
+    ( False, 'sympy.plotting.pyglet.window' ),
+    ( False, 'sympy.plotting.pyglet.window.carbon' ),
+    ( False, 'sympy.plotting.pyglet.window.win32' ),
+    ( False, 'sympy.plotting.pyglet.window.xlib' ),
+    ]
 
 class clean(Command):
     """Cleans *.pyc and debian trashs, so you should get the same copy as
@@ -161,46 +193,23 @@ class test_sympy_doc(Command):
 
         print "Testing docstrings."
 
-        files = glob.glob('sympy/*/*.py')# + glob.glob('sympy/modules/*/*.py')
-        files = [ f.replace("\\","/") for f in files ]  # make it work on Windows too
+        files = []
 
-        # files without doctests or that don't work
+        for module in modules:
+            if module[0] == True:
+                path = module[1].replace('.', '/')
+                files += glob.glob(path + '/[a-z][a-z0-9_]*.py')
+
+        files = [ f.replace('\\', '/') for f in files ]
+
         files.remove('sympy/core/add.py')
         files.remove('sympy/core/relational.py')
         files.remove('sympy/core/interval.py')
 
-        files.remove('sympy/concrete/__init__.py')
-        files.remove('sympy/integrals/__init__.py')
-        files.remove('sympy/matrices/__init__.py')
-        files.remove('sympy/physics/__init__.py')
-        files.remove('sympy/printing/__init__.py')
-        files.remove('sympy/series/__init__.py')
-        files.remove('sympy/simplify/__init__.py')
-        files.remove('sympy/solvers/__init__.py')
-        files.remove('sympy/utilities/__init__.py')
+        #files.remove('sympy/functions/elementary/hyperbolic.py')
+        #files.remove('sympy/functions/elementary/trigonometric.py')
 
-        files.remove('sympy/specfun/zeta_functions.py')
-        files.remove('sympy/specfun/orthogonal_polynomials.py')
-        files.remove('sympy/specfun/factorials.py')
-
-        # fix line 164 above
-
-        files.remove('sympy/plotting/__init__.py')
-        files.remove('sympy/plotting/plot_camera.py')
-        files.remove('sympy/plotting/plot_curve.py')
-        files.remove('sympy/plotting/plot_surface.py')
-        files.remove('sympy/plotting/color_scheme.py')
-        files.remove('sympy/plotting/managed_window.py')
-        files.remove('sympy/plotting/plot_controller.py')
-        files.remove('sympy/plotting/plot_rotation.py')
-        files.remove('sympy/plotting/plot_window.py')
-        files.remove('sympy/plotting/plot_mode.py')
-        files.remove('sympy/plotting/plot_modes.py')
-        files.remove('sympy/plotting/plot_mode_base.py')
-        files.remove('sympy/plotting/plot_axes.py')
-        files.remove('sympy/plotting/plot.py')
-
-        modules = []
+        mods = []
 
         for x in files:
             if len(x) > 12 and x[-11:] == '__init__.py':
@@ -208,11 +217,11 @@ class test_sympy_doc(Command):
                 print x
 
             #put . as separator and strip the extension (.py)
-            modules.append(x.replace('/', '.')[:-3])
+            mods.append(x.replace('/', '.')[:-3])
 
         suite = unittest.TestSuite()
 
-        for mod in modules:
+        for mod in mods:
             suite.addTest(doctest.DocTestSuite(mod))
 
         runner = unittest.TextTestRunner()
@@ -223,6 +232,7 @@ import sympy
 tests = [
     'sympy.core.tests',
     'sympy.concrete.tests',
+    'sympy.functions.tests',
     'sympy.geometry.tests',
     'sympy.integrals.tests',
     'sympy.matrices.tests',
@@ -233,7 +243,6 @@ tests = [
     'sympy.series.tests',
     'sympy.simplify.tests',
     'sympy.solvers.tests',
-    'sympy.specfun.tests',
     'sympy.utilities.tests',
     'sympy.plotting.tests',
         ]
@@ -244,37 +253,7 @@ setup(
       description = 'Computer algebra system (CAS) in Python',
       license = 'BSD',
       url = 'http://code.google.com/p/sympy',
-      packages = ['sympy',
-                    'sympy.core', 
-                    'sympy.concrete', 
-                    'sympy.geometry', 
-                    'sympy.integrals', 
-                    'sympy.matrices', 
-                    'sympy.numerics', 
-                    'sympy.ntheory', 
-                    'sympy.physics', 
-                    'sympy.polynomials', 
-                    'sympy.polynomials.fast', 
-                    'sympy.printing', 
-                    'sympy.series', 
-                    'sympy.simplify', 
-                    'sympy.solvers', 
-                    'sympy.specfun', 
-                    'sympy.utilities', 
-
-                    'sympy.plotting', 
-                    'sympy.plotting.pyglet',
-                    'sympy.plotting.pyglet.ext',
-                    'sympy.plotting.pyglet.font',
-                    'sympy.plotting.pyglet.gl',
-                    'sympy.plotting.pyglet.image',
-                    'sympy.plotting.pyglet.image.codecs',
-                    'sympy.plotting.pyglet.media',
-                    'sympy.plotting.pyglet.window',
-                    'sympy.plotting.pyglet.window.carbon',
-                    'sympy.plotting.pyglet.window.win32',
-                    'sympy.plotting.pyglet.window.xlib',
-                  ]+tests,
+      packages = ['sympy'] + [ m[1] for m in modules ] + tests,
       scripts = ['bin/isympy'],
       ext_modules = [],
       data_files = [('share/man/man1', ['doc/man/isympy.1'])],

@@ -1,5 +1,5 @@
 from pyglet.gl import *
-from sympy import oo
+from sympy.core.basic import S
 
 def get_model_matrix(array_type=c_float, glGetMethod=glGetFloatv):
     """
@@ -77,7 +77,7 @@ def billboard_matrix():
     glLoadMatrixf(m)
 
 def create_bounds():
-    return [ [oo,-oo,0],[oo,-oo,0],[oo,-oo,0] ]
+    return [ [S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0] ]
 
 def update_bounds(b, v):
     if v is None: return

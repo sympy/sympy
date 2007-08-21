@@ -2,7 +2,7 @@
 Routines for arbitrary-precision numerical quadrature
 """
 
-from sympy import oo
+from sympy import S, oo
 
 #----------------------------------------------------------------------------#
 #                        General classes / utilities                         #
@@ -142,8 +142,7 @@ class GaussLegendre(Quadrature):
         self.x = [None] * n
         self.w = [None] * n
 
-        from sympy.specfun import legendre
-        pf = polyfunc(legendre(n, 'x'), True)
+        pf = polyfunc(S.Legendre(n, 'x'), True)
 
         for k in xrange(n//2 + 1):
             if verbose and k % 4 == 0:

@@ -15,12 +15,12 @@ def cubic(f):
     References:
     ===========
         http://en.wikipedia.org/wiki/Cubic_equation#Cardano.27s_method
-        
+
     """
 
     # Get monic polynomial.
     f = f.as_monic()[1]
-    
+
     a = f.nth_coeff(2)
     b = f.nth_coeff(1)
     c = f.nth_coeff(0)
@@ -34,11 +34,11 @@ def cubic(f):
             return [-a/3]
         else:
             u1 = q**Rational(1, 3)
-    else: 
-        u1 = (q/2 + sqrt(q**2/4 + p**3/27))**Rational(1, 3)
+    else:
+        u1 = (q/2 + S.Sqrt(q**2/4 + p**3/27))**Rational(1, 3)
 
-    u2 = u1*(Rational(-1, 2) + I*sqrt(3)/2)
-    u3 = u1*(Rational(-1, 2) - I*sqrt(3)/2)
+    u2 = u1*(Rational(-1, 2) + S.ImaginaryUnit*S.Sqrt(3)/2)
+    u3 = u1*(Rational(-1, 2) - S.ImaginaryUnit*S.Sqrt(3)/2)
 
     return map(lambda u: (p/(u*3) - u - a/3).expand(), [u1, u2, u3])
 
@@ -57,14 +57,14 @@ def n_poly(f):
     ===========
         http://en.wikipedia.org/wiki/Root_of_unity
         http://en.wikipedia.org/wiki/Radical_root#Positive_real_numbers
-    
+
     """
 
     def roots_of_unity(n):
         """Computes the list of the n-th roots of unity."""
         result = []
         for i in range(0,n):
-            result.append(exp(2*i*pi*I/n))
+            result.append(S.Exp(2*i*S.Pi*S.ImaginaryUnit/n))
         return result
 
     exponents = map(lambda t:int(t[1]), f.coeffs)
@@ -80,7 +80,7 @@ def n_poly(f):
 
     return [(zeta*s**Rational(1,g)).expand(complex=True)
             for s in roots(ff) for zeta in roots_of_unity(g)]
-        
+
 
 def quadratic(f):
     """Computes the roots of a quadratic polynomial.
@@ -109,21 +109,21 @@ def quadratic(f):
         else: # No linear term
             q = -(f.coeffs[1][0])
             if q > 0:
-                return [-sqrt(q), sqrt(q)]
+                return [-S.Sqrt(q), S.Sqrt(q)]
             else:
-                return [-sqrt(q), sqrt(q)]
-                
+                return [-S.Sqrt(q), S.Sqrt(q)]
+
     p = f.coeffs[1][0]
     q = f.coeffs[2][0]
     discr = p**2 - 4*q
     if (not discr.is_complex) or discr > 0:
-        return [-p/2 + sqrt(discr)/2,
-                -p/2 - sqrt(discr)/2]
+        return [-p/2 + S.Sqrt(discr)/2,
+                -p/2 - S.Sqrt(discr)/2]
     elif discr == 0:
         return [-p/2]
     else: # discr < 0
-        return [-p/2 + I*sqrt(-discr)/2,
-                -p/2 - I*sqrt(-discr)/2]
+        return [-p/2 + S.ImaginaryUnit*S.Sqrt(-discr)/2,
+                -p/2 - S.ImaginaryUnit*S.Sqrt(-discr)/2]
 
 
 # TODO: Implement function to find roots of quartic polynomials?
@@ -168,7 +168,7 @@ def count_real_roots(s, a=None, b=None):
         The input can be a square-free and univariate polynomial, or a
         precomputed Sturm sequence, if you want to check one specific
         polynomial with several intervals. See L{sturm}.
-        
+
         The boundaries a and b can be omitted to check the whole real
         line or one ray.
 
@@ -205,7 +205,7 @@ def count_real_roots(s, a=None, b=None):
         a = sympify(a)
     if b is not None:
         b = sympify(b)
-    
+
     if a is None: # a = -oo
         sa = sign_changes(map(
             lambda p:p.coeffs[0][0]*(-1)**p.coeffs[0][1], s))
@@ -267,12 +267,12 @@ def roots(f, var=None):
         [1, -1]
         >>> roots(x - y, x)
         [y]
-        
+
     Also see L{factor_.factor}, L{quadratic}, L{cubic}. L{n-poly},
     L{count_real_roots}.
-    
+
     """
-    
+
     from sympy.polynomials import factor_
 
     if not isinstance(f, Polynomial):
@@ -289,7 +289,7 @@ def roots(f, var=None):
         coeff = 'sym'
     else:
         coeff = coeff_ring(get_numbers(f.sympy_expr))
-        
+
     if coeff == 'rat':
         denom, f = f.as_integer()
         coeff = 'int'
@@ -302,7 +302,7 @@ def roots(f, var=None):
         factors = factor_.factor(f)
     else: # It's not possible to factorize.
         factors = [f]
-        
+
     # Now check for roots in each factor.
     result = []
     for p in factors:
@@ -326,7 +326,7 @@ def roots(f, var=None):
     # With symbols, __nonzero__ returns a StrictInequality, Exception.
     try: result.sort()
     except: pass
-        
+
     return result
 
 
@@ -349,8 +349,8 @@ def solve_system(eqs, var=None, order=None):
     Examples:
     =========
         >>> x, y = symbols('xy')
-        >>> f = y - x           
-        >>> g = x**2 + y**2 - 1 
+        >>> f = y - x
+        >>> g = x**2 + y**2 - 1
         >>> solve_system([f, g])
         [(-(1/2)**(1/2), -(1/2)**(1/2)), ((1/2)**(1/2), (1/2)**(1/2))]
 
@@ -377,7 +377,7 @@ def solve_system(eqs, var=None, order=None):
         eqs = [Polynomial(f, var=var, order='lex') for f in eqs]
     else:
         eqs = [Polynomial(f.sympy_expr, var=f.var, order='lex') for f in eqs]
-    
+
     # First compute a Groebner base with the polynomials,
     # with lexicographic ordering, so that the last polynomial is
     # univariate and can be solved.
@@ -419,5 +419,5 @@ def solve_system(eqs, var=None, order=None):
     # With symbols, __nonzero__ returns a StrictInequality, Exception.
     try: result.sort()
     except: pass
-    
+
     return result

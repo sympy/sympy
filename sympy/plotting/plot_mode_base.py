@@ -2,7 +2,7 @@ from pyglet.gl import *
 from plot_mode import PlotMode
 from threading import Thread, Event, RLock
 from color_scheme import ColorScheme
-from sympy import oo
+from sympy.core.basic import S
 from time import sleep
 
 class PlotModeBase(PlotMode):
@@ -129,8 +129,8 @@ class PlotModeBase(PlotMode):
     def __init__(self, *args, **kwargs):
         self.verts = []
         self.cverts = []
-        self.bounds  = [ [oo,-oo,0],[oo,-oo,0],[oo,-oo,0] ]
-        self.cbounds = [ [oo,-oo,0],[oo,-oo,0],[oo,-oo,0] ]
+        self.bounds  = [ [S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0] ]
+        self.cbounds = [ [S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0] ]
 
         self._draw_lock = RLock()
 

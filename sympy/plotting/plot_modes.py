@@ -2,7 +2,8 @@ from plot_curve import PlotCurve
 from plot_surface import PlotSurface
 from util import scale_value
 
-from sympy import lambdify, sin, cos, Pi
+from sympy import pi, lambdify
+from sympy.functions import sin, cos
 from math import sin as p_sin
 from math import cos as p_cos
 
@@ -54,7 +55,7 @@ class Cartesian3D(PlotSurface):
 
 class ParametricCurve2D(PlotCurve):
     i_vars, d_vars = 't', 'xy'
-    intervals = [[0,2*Pi,100]]
+    intervals = [[0,2*pi,100]]
     aliases = ['parametric']
     is_default = True
 
@@ -75,7 +76,7 @@ class ParametricCurve2D(PlotCurve):
 
 class ParametricCurve3D(PlotCurve):
     i_vars, d_vars = 't', 'xyz'
-    intervals = [[0,2*Pi,100]]
+    intervals = [[0,2*pi,100]]
     aliases = ['parametric']
     is_default = True
 
@@ -119,7 +120,7 @@ class ParametricSurface(PlotSurface):
 
 class Polar(PlotCurve):
     i_vars, d_vars = 't', 'r'
-    intervals = [[0,2*Pi,100]]
+    intervals = [[0,2*pi,100]]
     aliases = ['polar']
     is_default = False
 
@@ -139,7 +140,7 @@ class Polar(PlotCurve):
 
 class Cylindrical(PlotSurface):
     i_vars, d_vars = 'th', 'r'
-    intervals = [[0,2*Pi,40], [-1,1,20]]
+    intervals = [[0,2*pi,40], [-1,1,20]]
     aliases = ['cylindrical', 'polar']
     is_default = False
 
@@ -161,7 +162,7 @@ class Cylindrical(PlotSurface):
 
 class Spherical(PlotSurface):
     i_vars, d_vars = 'tp', 'r'
-    intervals = [[0,2*Pi,40], [0,Pi,20]]
+    intervals = [[0,2*pi,40], [0,pi,20]]
     aliases = ['spherical']
     is_default = False
 

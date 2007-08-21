@@ -1,7 +1,6 @@
 import py
 import sympy as g
-from sympy import Symbol, Rational, sin, log, exp, O, sqrt
-
+from sympy import *
 
 def testseries1():
     x = Symbol("x")
@@ -187,7 +186,7 @@ def test_order():
     assert O(x)+1 != O(x)
 
     assert (2+O(x)) != 2
-    # XXX These two fail because removeO is not a method 
+    # XXX These two fail because removeO is not a method
     #assert (2+O(x)).removeO() == 2
     #assert (2+x+O(x**2)).removeO() == x+2
 

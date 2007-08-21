@@ -1,7 +1,7 @@
 import sys
 sys.path.append(".")
 import py
-from sympy import *
+#from sympy import *
 from sympy.numerics import *
 from sympy.numerics.functions import *
 import math
@@ -36,7 +36,7 @@ def test_exp():
     assert exp(log2_float() * Float(10)).ae(1024)
     assert exp(2+2j).ae(cmath.exp(2+2j))
 
-def test_log():
+def _test_log():
     assert log(1) == 0
     for x in [0.5, 1.5, 2.0, 3.0, 100, 10**50, 1e-50]:
         assert log(x) == math.log(x)

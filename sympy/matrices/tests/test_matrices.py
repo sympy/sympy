@@ -1,6 +1,5 @@
 
-from sympy.core import *
-from sympy.matrices import *
+from sympy import *
 
 def test_multiplication():
     a=Matrix((

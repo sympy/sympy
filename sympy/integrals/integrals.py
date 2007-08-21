@@ -89,8 +89,7 @@ class Integral(Basic, ArithMeths, RelMeths):
 
         Use heuristics and an integral table.
         """
-        from sympy import exp, cos, sin, log
-        from sympy.specfun import uppergamma
+        from sympy import exp, cos, sin, log, atan, atanh, sqrt, uppergamma
 
         if not f.has(x): return f*x
         if f == x: return x**2/2
@@ -156,8 +155,8 @@ def integrate(f, *args, **kargs):
       --------------------
       integrate(f, x) -> Returns the indefinite integral S{int} f(x) dx
 
-      integrate(f, x, y) -> Return the indefinite double integral 
-      S{int} S{int} f(x, y) dy dx 
+      integrate(f, x, y) -> Return the indefinite double integral
+      S{int} S{int} f(x, y) dy dx
 
       integrate(f, x, y, z, ...) -> Return the indefinite multiple integral
       (arbitrary number of variables) S{int} S{int} ... S{int} f(x, y, z, ...) dx ... dy dz
@@ -165,18 +164,18 @@ def integrate(f, *args, **kargs):
 
       Definite Integrals
       ------------------
-      integrate(f, (x, a, b)) -> Returns the definite integral with integration 
+      integrate(f, (x, a, b)) -> Returns the definite integral with integration
       limits a, b
 
       integrate(f, (x, a, b), (y, c, d)) -> Returns the definite double integral
 
     Notes
     =====
-      Currently only very simple integrals are computed.The general algorithm 
+      Currently only very simple integrals are computed.The general algorithm
       for calculating integrals is described U{here<http://sympy.googlecode.com/svn/trunk/doc/issac98.pdf>}
       Someone just needs to implement it. :)
 
-      Has an optional parameter evaluate, which can have value True or False. 
+      Has an optional parameter evaluate, which can have value True or False.
       If set to False, the integral will not be evaluated. Default is set to True.
 
     Further examples

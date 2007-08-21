@@ -1,6 +1,6 @@
 from pyglet.gl import *
 from plot_mode_base import PlotModeBase
-from sympy import oo
+from sympy.core.basic import S
 from util import scale_value, scale_value_list
 #from time import sleep
 
@@ -11,7 +11,7 @@ class PlotCurve(PlotModeBase):
     def _on_calculate_verts(self):
         self.t_interval = self.intervals[0]
         self.t_set = list(self.t_interval.frange())
-        self.bounds = [ [oo,-oo,0],[oo,-oo,0],[oo,-oo,0] ]
+        self.bounds = [ [S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0] ]
         evaluate = self._get_evaluator()
 
         self._calculating_verts_pos = 0.0

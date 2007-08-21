@@ -5,7 +5,7 @@ from plot_object import PlotObject
 from util import strided_range, billboard_matrix
 from util import get_direction_vectors
 from util import dot_product, vec_sub, vec_mag
-from sympy import oo
+from sympy.core.basic import S
 
 class PlotAxes(PlotObject):
 
@@ -83,7 +83,7 @@ class PlotAxes(PlotObject):
         b = self._bounding_box
         c = child_bounds
         for i in [0,1,2]:
-            if abs(c[i][0]) == oo or abs(c[i][1]) == oo: continue
+            if abs(c[i][0]) == S.Infinity or abs(c[i][1]) == S.Infinity: continue
             b[i][0] = [ min([b[i][0], c[i][0]]), c[i][0] ][ b[i][0] is None ]
             b[i][1] = [ max([b[i][1], c[i][1]]), c[i][1] ][ b[i][1] is None ]
             self._recalculate_axis_ticks(i)

@@ -4,7 +4,6 @@ sys.path.append(".")
 import py
 
 from sympy import *
-from sympy.specfun.zeta_functions import *
 
 def test_zeta():
     assert zeta(0) == Rational(-1,2)

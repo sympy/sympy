@@ -19,7 +19,7 @@ def _lanczos(z):
         logw = 0.91893853320467267+(z+0.5)*log(z+7.5)+log(x)-z-7.5
         return exp(logw)
 
-class Factorial(DefinedFunction):
+class _Factorial(DefinedFunction):
     """
     Factorials and multiple factorials
 
@@ -136,8 +136,6 @@ class Factorial(DefinedFunction):
             return Real(y.real)
         else:
             Real(y.real) + I*Real(y.imag)
-
-factorial = Factorial()
 
 
 class UnevaluatedFactorial(Factorial):
@@ -359,8 +357,3 @@ class Binomial2(DefinedFunction):
         n, k = self._args
         return r"{{%s}\choose{%s}}" % (n.__latex__(), k.__latex__())
 
-factorial_ = factorial
-
-rising_factorial = Rising_factorial()
-falling_factorial = Falling_factorial()
-binomial2 = Binomial2()

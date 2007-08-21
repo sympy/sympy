@@ -28,4 +28,4 @@ def test_expand():
 
 def test_issue153():
     #test that is runs:
-    a = sqrt(2*(1+sqrt(2)))
+    a = S.Sqrt(2*(1+S.Sqrt(2)))

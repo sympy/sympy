@@ -9,18 +9,12 @@
 
 """
 
-from sympy import *
+from sympy.core import *
 
-from sympy.core.basic import Basic, S
-
-from sympy.core.integer_sequences import Binomial
-from sympy.core.defined_functions import FallingFactorial
-
-from sympy.utilities import any
-
-from sympy.polynomials import roots, resultant, gcd, div, quo, Polynomial
 from sympy.simplify import simplify, collect
 from sympy.matrices import Matrix, zeronm
+from sympy.polynomials import roots
+from sympy.utilities import any
 
 def solve(eq, syms, simplified=True):
     """Solves univariate polynomial equations and linear systems with
@@ -346,7 +340,7 @@ def dsolve(eq, funcs):
         if r: return solve_ODE_second_order(r[a], 0, r[b], f(x), x)
 
         #special equations, that we know how to solve
-        t = x*exp(-f(x))
+        t = x*S.Exp(-f(x))
         tt = a*Derivative(t,x,x)/t
         r = eq.match(tt.expand())
         if r:
@@ -354,7 +348,7 @@ def dsolve(eq, funcs):
             #assert ( r[a]*t.diff(x,2)/t ) == eq.subs(f, t)
             return solve_ODE_1(f(x), x)
 
-        neq = eq*exp(f(x))/exp(-f(x))
+        neq = eq*S.Exp(f(x))/S.Exp(-f(x))
         r = neq.match(tt.expand())
         if r:
             #check, that we've rewritten the equation correctly:
@@ -370,10 +364,10 @@ def solve_ODE_first_order(a, b, f, x):
 def solve_ODE_second_order(a, b, c, f, x):
     """ a*f''(x) + b*f'(x) + c = 0 """
     #a very special case, for b=0 and a,c not depending on x:
-    return Symbol("C1")*sin(sqrt(c/a)*x)+Symbol("C2")*cos(sqrt(c/a)*x)
+    return Symbol("C1")*S.Sin(S.Sqrt(c/a)*x)+Symbol("C2")*S.Cos(S.Sqrt(c/a)*x)
 
 def solve_ODE_1(f, x):
     """ (x*exp(-f(x)))'' = 0 """
     C1 = Symbol("C1")
     C2 = Symbol("C2")
-    return -log(C1+C2/x)
+    return -S.Log(C1+C2/x)

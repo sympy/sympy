@@ -1,6 +1,6 @@
 from pyglet.gl import *
 from plot_mode_base import PlotModeBase
-from sympy import oo
+from sympy.core.basic import S
 from util import scale_value, scale_value_list
 #from time import sleep
 
@@ -13,7 +13,7 @@ class PlotSurface(PlotModeBase):
         self.u_set = list(self.u_interval.frange())
         self.v_interval = self.intervals[1]
         self.v_set = list(self.v_interval.frange())
-        self.bounds = [ [oo,-oo,0],[oo,-oo,0],[oo,-oo,0] ]
+        self.bounds = [ [S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0],[S.Infinity,-S.Infinity,0] ]
         evaluate = self._get_evaluator()
 
         self._calculating_verts_pos = 0.0

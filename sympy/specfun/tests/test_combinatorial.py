@@ -4,7 +4,6 @@ sys.path.append(".")
 import py
 
 from sympy import *
-from sympy.specfun.combinatorial import *
 
 def test_bernoulli():
     assert bernoulli(0) == 1

@@ -1,6 +1,5 @@
 
-from sympy.core import *
-from sympy.specfun import gamma, lowergamma, uppergamma
+from sympy import *
 
 def test_gamma():
     

@@ -1,5 +1,5 @@
 import py
-from sympy.core import *
+from sympy import *
 from sympy.integrals import integrate, IntegralError
 
 x = Symbol("x")

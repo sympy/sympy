@@ -1,21 +1,14 @@
-from basic import Basic, S, Memoizer
-from numbers import Integer, Rational
-from function import DefinedFunction, Lambda, Function, Apply
 
+from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
+from sympy.core.function import DefinedFunction, Apply, Lambda
+from sympy.ntheory import sieve
 from math import sqrt
 
-class IntegerSequence(DefinedFunction):
-    """
-    http://en.wikipedia.org/wiki/Category:Integer_sequences
-    """
-
-    pass
-
 ###############################################################################
-########################### FACTORIALS and BINOMIAL ###########################
+######################## FACTORIAL and MULTI-FACTORIAL ########################
 ###############################################################################
 
-class Factorial(IntegerSequence):
+class Factorial(DefinedFunction):
     """Implementation of factorial function over nonnegative integers.
        For the sake of convenience and simplicity of procedures using
        this function it is defined for negative integers and returns
@@ -67,8 +60,6 @@ class Factorial(IntegerSequence):
         if n < 33:
             return self._small_swing[n]
         else:
-            from sympy.ntheory import sieve
-
             N, primes = int(sqrt(n)), []
 
             for prime in sieve.primerange(3, N+1):
@@ -132,7 +123,7 @@ class Factorial(IntegerSequence):
 
                         result = self._recursive(n)*2**(n-bits)
 
-                    return Integer(result)
+                    return Basic.Integer(result)
 
         if n.is_integer:
             if n.is_negative:
@@ -151,7 +142,164 @@ class ApplyFactorial(Apply):
     def _eval_is_integer(self):
         return self.args[0].is_integer
 
-class Binomial(IntegerSequence):
+Basic.singleton['factorial'] = Factorial
+
+###############################################################################
+######################## RISING and FALLING FACTORIALS ########################
+###############################################################################
+
+class RisingFactorial(DefinedFunction):
+    """Rising factorial (also called Pochhammer symbol) is a double valued
+       function arising in concrete mathematics, hypergeometric functions
+       and series expanansions. It is defined by
+
+                   rf(x, k) = x * (x+1) * ... * (x + k-1)
+
+       where 'x' can be arbitrary expression and 'k' is an integer. For
+       more information check "Concrete mathematics" by Graham, pp. 66
+       or visit http://mathworld.wolfram.com/RisingFactorial.html page.
+
+       >>> from sympy import *
+       >>> x = Symbol('x')
+
+       >>> rf(x, 0)
+       1
+
+       >>> rf(1, 5)
+       120
+
+       >>> rf(x, 5)
+       x*(1 + x)*(2 + x)*(3 + x)*(4 + x)
+
+    """
+
+    nofargs = 2
+
+    def _eval_apply(self, x, k):
+        x = Basic.sympify(x)
+        k = Basic.sympify(k)
+
+        if isinstance(x, Basic.NaN):
+            return S.NaN
+        elif isinstance(x, Basic.One):
+            return S.Factorial(k)
+        elif isinstance(k, Basic.Integer):
+            if isinstance(k, Basic.NaN):
+                return S.NaN
+            if isinstance(k, Basic.Zero):
+                return S.One
+            else:
+                if k.is_positive:
+                    if isinstance(x, Basic.Infinity):
+                        return S.Infinity
+                    elif isinstance(x, Basic.NegativeInfinity):
+                        if k.is_odd:
+                            return S.NegativeInfinity
+                        else:
+                            return S.Infinity
+                    else:
+                        return reduce(lambda r, i: r*(x+i), xrange(0, int(k)), 1)
+                else:
+                    if isinstance(x, Basic.Infinity):
+                        return S.Infinity
+                    elif isinstance(x, Basic.NegativeInfinity):
+                        return S.Infinity
+                    else:
+                        return 1/reduce(lambda r, i: r*(x-i), xrange(1, abs(int(k))+1), 1)
+
+class ApplyRisingFactorial(Apply):
+
+    def _eval_rewrite_as_gamma(self, x, k):
+        return Basic.Gamma()(x+k)/Basic.Gamma()(x)
+
+    def tostr(self, level=0):
+        r = 'rf(%s)' % ', '.join([a.tostr() for a in self.args])
+
+        if self.precedence <= level:
+            return '(%s)' % (r)
+        else:
+            return r
+
+class FallingFactorial(DefinedFunction):
+    """Falling factorial (related to rising factorial) is a double valued
+       function arising in concrete mathematics, hypergeometric functions
+       and series expanansions. It is defined by
+
+                   ff(x, k) = x * (x-1) * ... * (x - k+1)
+
+       where 'x' can be arbitrary expression and 'k' is an integer. For
+       more information check "Concrete mathematics" by Graham, pp. 66
+       or visit http://mathworld.wolfram.com/FallingFactorial.html page.
+
+       >>> from sympy import *
+       >>> x = Symbol('x')
+
+       >>> ff(x, 0)
+       1
+
+       >>> ff(5, 5)
+       120
+
+       >>> ff(x, 5)
+       x*(1 - x)*(2 - x)*(3 - x)*(4 - x)
+
+    """
+
+    nofargs = 2
+
+    def _eval_apply(self, x, k):
+        x = Basic.sympify(x)
+        k = Basic.sympify(k)
+
+        if isinstance(x, Basic.NaN):
+            return S.NaN
+        elif isinstance(k, Basic.Integer):
+            if isinstance(k, Basic.NaN):
+                return S.NaN
+            if isinstance(k, Basic.Zero):
+                return S.One
+            else:
+                result = S.One
+
+                if k.is_positive:
+                    if isinstance(x, Basic.Infinity):
+                        return S.Infinity
+                    elif isinstance(x, Basic.NegativeInfinity):
+                        if k.is_odd:
+                            return S.NegativeInfinity
+                        else:
+                            return S.Infinity
+                    else:
+                        return reduce(lambda r, i: r*(x-i), xrange(0, int(k)), 1)
+                else:
+                    if isinstance(x, Basic.Infinity):
+                        return S.Infinity
+                    elif isinstance(x, Basic.NegativeInfinity):
+                        return S.Infinity
+                    else:
+                        return 1/reduce(lambda r, i: r*(x+i), xrange(1, abs(int(k))+1), 1)
+
+class ApplyFallingFactorial(Apply):
+
+    def _eval_rewrite_as_gamma(self, x, k):
+        return (-1)**k*Basic.Gamma()(-x+k)/Basic.Gamma()(-x)
+
+    def tostr(self, level=0):
+        r = 'ff(%s)' % ', '.join([a.tostr() for a in self.args])
+
+        if self.precedence <= level:
+            return '(%s)' % (r)
+        else:
+            return r
+
+Basic.singleton['rf'] = RisingFactorial
+Basic.singleton['ff'] = FallingFactorial
+
+###############################################################################
+########################### BINOMIAL COEFFICIENTS #############################
+###############################################################################
+
+class Binomial(DefinedFunction):
     """Implementation of the binomial coefficient. It can be defined
        in two ways depending on its desired interpretation:
 
@@ -216,8 +364,6 @@ class Binomial(IntegerSequence):
                         elif k > r / 2:
                             k = r - k
 
-                        from sympy.ntheory import sieve
-
                         M, result = int(sqrt(r)), 1
 
                         for prime in sieve.primerange(2, r+1):
@@ -239,7 +385,7 @@ class Binomial(IntegerSequence):
                                 if exp > 0:
                                     result *= prime**exp
 
-                        return Integer(result)
+                        return Basic.Integer(result)
                     else:
                         result = r - k + 1
 
@@ -263,5 +409,5 @@ class ApplyBinomial(Apply):
     def _eval_is_integer(self):
         return self.args[0].is_integer and self.args[1].is_integer
 
-Basic.singleton['factorial'] = Factorial
+
 Basic.singleton['binomial'] = Binomial

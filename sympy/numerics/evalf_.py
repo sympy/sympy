@@ -1,5 +1,4 @@
 from sympy import *
-from sympy.core.defined_functions import ApplyExp
 from float_ import Float, ComplexFloat
 import functions
 import constants
@@ -92,7 +91,7 @@ def evalf(expr):
             y = functions.exp(functions.log(base) * expt)
         Float.revert()
 
-    elif isinstance(expr, ApplyExp):
+    elif isinstance(expr, Basic.ApplyExp):
         Float.store()
         Float.setprec(Float.getprec() + 3)
         x = evalf(expr[1])
@@ -100,7 +99,7 @@ def evalf(expr):
         Float.revert()
 
     elif isinstance(expr, Add):
-        # TODO: this doesn't yet work as it should. 
+        # TODO: this doesn't yet work as it should.
         # We need some way to handle sums whose results are
         # very close to 0, and when necessary, repeat the
         # summation with higher precision

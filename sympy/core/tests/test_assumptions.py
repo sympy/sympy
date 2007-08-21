@@ -1,7 +1,6 @@
 import py
 from sympy.core import *
 
-
 def test_symbol_unset():
     x = Symbol('x',real=True, integer=True)
     assert x.is_real == True
@@ -151,7 +150,7 @@ def test_neg_rational():
     assert r.is_nonpositive == True
 
 def test_pi():
-    z = Pi
+    z = S.Pi
     assert z.is_commutative == True
     assert z.is_integer == None
     assert z.is_rational == False
@@ -176,7 +175,7 @@ def test_pi():
     assert z.is_composite == None
 
 def test_E():
-    z = E
+    z = S.Exp1
     assert z.is_commutative == True
     assert z.is_integer == None
     assert z.is_rational == False
@@ -201,7 +200,7 @@ def test_E():
     assert z.is_composite == None
 
 def test_I():
-    z = I
+    z = S.ImaginaryUnit
     assert z.is_commutative == True
     assert z.is_integer == None
     assert z.is_rational == None

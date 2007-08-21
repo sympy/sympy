@@ -1,7 +1,5 @@
 
-from sympy.core import *
-
-from sympy.simplify import *
+from sympy import *
 
 def test_ratsimp():
     x = Symbol("x")

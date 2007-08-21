@@ -1,7 +1,5 @@
 
-from sympy.core import *
-
-from sympy.concrete import product, Product
+from sympy import *
 
 a, k, n = symbols('akn', integer=True)
 

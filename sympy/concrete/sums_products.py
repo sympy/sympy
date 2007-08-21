@@ -1,3 +1,4 @@
+"""
 from sympy import *
 from sympy.specfun import rising_factorial, factorial, factorial_simplify
 from sympy.specfun.factorials import unfac
@@ -31,11 +32,11 @@ class _BigOperator(Basic):
 
 
 class Sum(_BigOperator):
-    """
+
     Symbolic summation with a variable number of terms
 
     Sum(f, (i, a, b)) represents \sum_{i=a}^b f(i)
-    """
+
 
     def __repr__(self):
         return "Sum(%r, (%r, %r, %r))" % (self.f, self.i, self.a, self.b)
@@ -43,14 +44,14 @@ class Sum(_BigOperator):
     __str__ = __repr__
 
     def reindex(self, a):
-        """Reindex the sum to start at a new lower index a."""
+        Reindex the sum to start at a new lower index a.
         diff = self.a - a
         b = self.b - diff
         f = self.f.subs(self.i, self.i + diff)
         return Sum(f, (self.i, a, b))
 
     def split(self, n):
-        """Split into two sums, the first with n terms."""
+        Split into two sums, the first with n terms.
         f, i, a, b = self.f, self.i, self.a, self.b
         return Sum(f, (i, a, a+n-1)) + Sum(f, (i, a+n, b))
 
@@ -104,12 +105,12 @@ class Sum(_BigOperator):
         return self
 
     def euler_maclaurin(self, n=0):
-        """
+
         Return n-th order Euler-Maclaurin approximation of self.
 
         The 0-th order approximation is simply the corresponding
         integral
-        """
+
         f, i, a, b = self.f, self.i, self.a, self.b
         x = Symbol('x')
         s = integrate(f.subs(i, x), x==[a,b])
@@ -120,7 +121,7 @@ class Sum(_BigOperator):
             s += bernoulli(2*k)/factorial(2*k)*(g.subs(i,b)-g.subs(i,a))
         return s
 
-"""
+
 class Product(_BigOperator):
 
     Symbolic product with a variable number of factors

@@ -1,7 +1,10 @@
 
-from sympy.core import *
+from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
+from sympy.core.function import DefinedFunction, Apply, Lambda
 
-from zeta_functions import polygamma
+###############################################################################
+############################ COMPLETE GAMMA FUNCTION ##########################
+###############################################################################
 
 class Gamma(DefinedFunction):
 
@@ -10,7 +13,7 @@ class Gamma(DefinedFunction):
     def fdiff(self, argindex=1):
         if argindex == 1:
             x = Basic.Symbol('x', dummy=True)
-            return Lambda(S.Gamma(x)*S.PolyGamma(0, x), x)
+            return Lambda(self(x)*S.PolyGamma(0, x), x)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -78,6 +81,12 @@ class ApplyGamma(Apply):
     def _eval_is_real(self):
         return self.args[0].is_real
 
+Basic.singleton['gamma'] = Gamma
+
+###############################################################################
+################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
+###############################################################################
+
 class LowerGamma(DefinedFunction):
     """Lower incomplete gamma function"""
 
@@ -91,7 +100,7 @@ class LowerGamma(DefinedFunction):
                 b = a - 1
 
                 if b.is_positive:
-                    return b*LowerGamma()(b, x) - x**b * S.Exp(-x)
+                    return b*self(b, x) - x**b * S.Exp(-x)
 
 class ApplyLowerGamma(Apply):
     pass
@@ -114,7 +123,7 @@ class UpperGamma(DefinedFunction):
             elif isinstance(x, Basic.Infinity):
                 return S.Zero
             elif isinstance(x, Basic.Zero):
-                return Gamma()(a)
+                return S.Gamma(a)
 
         if isinstance(a, Basic.Number):
             if isinstance(a, Basic.One):
@@ -123,7 +132,7 @@ class UpperGamma(DefinedFunction):
                 b = a - 1
 
                 if b.is_positive:
-                    return b*UpperGamma()(b, x) + x**b * S.Exp(-x)
+                    return b*self(b, x) + x**b * S.Exp(-x)
 
 class ApplyUpperGamma(Apply):
     pass
@@ -134,7 +143,5 @@ class ApplyUpperGamma(Apply):
     #    if isinstance(a, Basic.Integer) and b.is_positive:
     #        return (b*UpperGamma(b, x) + x**b * exp(-x)).expand(func=True)
 
-gamma = Gamma()
-
-lowergamma = LowerGamma()
-uppergamma = UpperGamma()
+Basic.singleton['lowergamma'] = LowerGamma
+Basic.singleton['uppergamma'] = UpperGamma

@@ -7,7 +7,7 @@ try:
 except:
     disabled = True
 
-from sympy import symbols, log, sin, cos
+from sympy import *
 x,y = symbols('xy')
 
 class TestPlotting:
@@ -22,12 +22,12 @@ class TestPlotting:
         from sympy import Plot
         p=Plot(x, [x, -5, 5, 4], visible=False)
         p.wait_for_calculations()
-        
+
     def test_plot_2d_discontinuous(self):
         from sympy import Plot
         p=Plot(1/x, [x, -1, 1, 2], visible=False)
         p.wait_for_calculations()
-    
+
     def test_plot_3d(self):
         from sympy import Plot
         p=Plot(x*y, [x, -5, 5, 5], [y, -5, 5, 5], visible=False)
