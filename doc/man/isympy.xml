@@ -4,13 +4,11 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
 	"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd" [
 
-<!-- Process this file with an XSLT processor, e.g. xsltproc:    -->
-<!-- `xsltproc \
-      -''-nonet \
-      -''-param man.charmap.use.subset "0" \
-      -''-param make.year.ranges "1" \
-      -''-param make.single.year.ranges "1" \
-      manpage.xml'                                               -->
+<!-- Process this file docbook2x-man:
+
+docbook2x-man isympy.xml
+
+this will generate isympy.1 in the current directory. --> 
 
   <!-- Fill in your name for FIRSTNAME and SURNAME.              -->
   <!ENTITY dhfirstname "Fabian">
@@ -122,10 +120,17 @@
 	</refsynopsisdiv>
 	<refsect1 id="description">
 		<title>DESCRIPTION</title>
-    <para>isympy is a Python shell for SymPy. It is just a normal python shell (ipython shell if you have the ipython package installed) that imports
-          all the stuff SymPy needs so you don't have to. It imports the modules sympy, sympy.core, sympy.modules and tries to import the module 
-          sympy.modules.graphing if you have matplotlib installed. It also defines the symbols x, y, z. 
+    <para>isympy is a Python shell for SymPy. It is just a normal python shell
+        (ipython shell if you have the ipython package installed) that executes
+        these commands so that you don't have to:
     </para>
+
+    <code>
+from sympy import *
+x, y, z = symbols('xyz')
+k, m, n = symbols('kmn', integer=True)
+    </code>
+
 	</refsect1>
 	<refsect1 id="options">
 		<title>OPTIONS</title>
@@ -137,7 +142,9 @@
 				<term><option>-c <replaceable class="parameter">shell</replaceable></option></term>
 				<term><option>--console=<replaceable class="parameter">shell</replaceable></option></term>
 				<listitem>
-					<para>Use the specified shell (python or ipython) as console backend instead of the default one (ipython                                        if present or python in other case).</para>
+					<para>Use the specified shell (python or ipython) as
+                        console backend instead of the default one (ipython
+                        if present or python otherwise).</para>
 				</listitem>
 			</varlistentry>
 		</variablelist>

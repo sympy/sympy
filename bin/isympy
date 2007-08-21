@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 """
-Python shell for sympy. Imports sympy and defines the symbols x, y, z.
+Python shell for SymPy. Executes the commands in the "init_code" variable
+before giving you a shell.
 
 command line options:
   -c : permits to specify a python interactive interpreter, currently only
@@ -13,54 +14,27 @@ command line options:
   --version: prints version number
 """
 
-__author__ = "Fabian Seoane <fabian@fseoane.net>"
-#doesn't always work:
-#from sympy import __version__ as sympy_version
-#__version__ = sympy_version
-__version__ = "0.5.0"
+init_code = """
+from sympy import *
+x, y, z = symbols('xyz')
+k, m, n = symbols('kmn', integer=True)
+"""
 
 import sys
 sys.path.append('..')
 sys.path.append('.')
 
-basic_modules = """
-    sympy
-    sympy.core
-    sympy.modules
-    sympy.modules.polynomials
-    sympy.modules.integrate
-"""
-
-welcome_msg = """Python console for sympy."""
-
-#Imported modules (from module import *):
-#""" + basic_modules + """
-#Symbols defined: x, y, z
-#"""
-
-welcome_msg_ipython = welcome_msg + """
-?       -> Introduction to IPython's features.
-%magic  -> Information about IPython's 'magic' % functions.
-help    -> Python's own help system.
-object? -> Details about 'object'. ?object also works, ?? prints more."""
-
-basic_import_code = """
-from sympy import *
-"""
-
-init_code = """
-x, y, z = symbols('xyz')
-k, m, n = symbols('kmn', integer=True)
-"""
+welcome_msg = "Python console for SymPy."
 
 def run_ipython_interpreter():
 
     from IPython.Shell import IPShellEmbed
 
-    args = ['-nopprint']
+    #is the -nopprint necessary?
+    #args = ['-nopprint']
+    args = []
     ipshell = IPShellEmbed(args)
     api = ipshell.IP.getapi()
-    api.ex(basic_import_code)
     api.ex(init_code)
 
     ### create some magic commands
@@ -71,7 +45,7 @@ def run_ipython_interpreter():
     #api.expose_magic("pprint", pretty_print)
 
     # Now start an embedded ipython.
-    ipshell(welcome_msg_ipython)
+    ipshell(welcome_msg)
     sys.exit("Exiting ...")
 
 def run_python_interpreter():
@@ -105,10 +79,7 @@ the "ipython" package and start isympy again.\n"""
             readline.write_history_file(histfile)
 
     sh = HistoryConsole()
-    sh.runcode(basic_import_code)
-    sh.runcode("x = Symbol('x')")
-    sh.runcode("y = Symbol('y')")
-    sh.runcode("z = Symbol('z')")
+    sh.runcode(init_code)
     sh.interact(welcome_msg)
     sys.exit("Exiting ...")
 
@@ -116,7 +87,8 @@ the "ipython" package and start isympy again.\n"""
 from optparse import OptionParser
 
 def main():
-    parser = OptionParser("usage: isympy [options]", version=__version__ )
+    from sympy import __version__ as sympy_version
+    parser = OptionParser("usage: isympy [options]", version=sympy_version )
     parser.add_option("-c", "--console", dest="console",
                       help="specify a python interactive interpreter, python or ipython")
     (options, args) = parser.parse_args()
