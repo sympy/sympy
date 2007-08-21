@@ -53,6 +53,7 @@ modules = [
     ( True, 'sympy.numerics' ),
     ( True, 'sympy.physics' ),
     ( True, 'sympy.polynomials' ),
+    ( True, 'sympy.polynomials.fast' ),
     ( True, 'sympy.printing' ),
     ( True, 'sympy.series' ),
     ( True, 'sympy.simplify' ),
@@ -232,7 +233,7 @@ import sympy
 tests = [
     'sympy.core.tests',
     'sympy.concrete.tests',
-    'sympy.functions.tests',
+    #'sympy.functions.tests',
     'sympy.geometry.tests',
     'sympy.integrals.tests',
     'sympy.matrices.tests',
