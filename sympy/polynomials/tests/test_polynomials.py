@@ -89,8 +89,6 @@ def test_Polynomial():
     assert p.leading_coeff() == Rational(8)
     assert p.leading_term() == Polynomial(8*x**2)
 
-## sympy/modules/polynomials/common.py
-
 def test_coeff_ring():
     from sympy.polynomials.base import coeff_ring
     x = Symbol("x")
@@ -100,6 +98,7 @@ def test_coeff_ring():
     assert coeff_ring([Pi]) == 'real'
     assert coeff_ring([Real(2.1), Rational(-1)**Rational(1,2)]) == 'cplx'
     assert coeff_ring([I, x]) == 'sym'
+
 
 ## sympy/modules/polynomials/wrapper.py
 

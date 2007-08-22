@@ -70,6 +70,12 @@ def test_GFPoly():
 
     assert gfpoly.gcd(f, g) == IntMod5Poly.from_int_dict({1:1, 0:3})
     assert gfpoly.gcd(f**3, f**4) == f**3
+
+    h, s, t = gfpoly.xgcd(f, g)
+    assert h == IntMod5Poly.from_int_dict({1:1, 0:3})
+    assert s == IntMod5Poly.from_int_dict({1:2})
+    assert t == IntMod5Poly.from_int_dict({0:4})
+    assert h == (s*f + t*g)
     
     assert gfpoly.truncate(f, 5) == f
     assert gfpoly.truncate(f, 1) == IntMod5Poly.from_int_dict({0:1})
@@ -159,3 +165,30 @@ def test_IntPoly():
     g = intpoly.IntPoly({1:10, 0:15})
     assert intpoly.gcd_small_primes(f, g) == intpoly.IntPoly({1:2, 0:3})
     assert intpoly.gcd_heuristic(f, g) == intpoly.IntPoly({1:2, 0:3})
+
+    assert intpoly.squarefree_part(f).coeffs == {2:2, 1:3}
+
+    f = intpoly.IntPoly({4:1, 0:-1})
+    g = intpoly.IntPoly({3:1, 2:2, 1:-1, 0:-2})
+    h = intpoly.IntPoly({1:1, 0:-2})
+    s = intpoly.IntPoly({0:-2})
+    t = intpoly.IntPoly({2:2, 1:-2, 0:-1})
+    gg, hh, ss, tt = intpoly.hensel_step(5, f, g, h, s, t)
+    assert gg == intpoly.IntPoly({3:1, 2:7, 1:-1, 0:-7})
+    assert hh == intpoly.IntPoly({1:1, 0:-7})
+    assert ss == intpoly.IntPoly({0:8})
+    assert tt == intpoly.IntPoly({2:-8, 1:-12, 0:-1})
+
+    f1 = intpoly.IntPoly({1:1, 0:-1})
+    f2 = intpoly.IntPoly({1:1, 0:-2})
+    f3 = intpoly.IntPoly({1:1, 0:2})
+    f4 = intpoly.IntPoly({1:1, 0:1})
+    ff_list = intpoly.multi_hensel_lift(5, f, [f1, f2, f3, f4], 4)
+    assert [ff.coeffs for ff in ff_list] \
+           == [{0: -1, 1: 1}, {0: -182, 1: 1}, {0: 182, 1: 1}, {0: 1, 1: 1}]
+
+    f = intpoly.IntPoly({4:6, 3:5, 2:15, 1:5, 0:4})
+    factors = [ff.coeffs for ff in intpoly.zassenhaus(f)]
+    assert {2:2, 1:1, 0:4} in factors
+    assert {2:3, 1:1, 0:1} in factors
+    

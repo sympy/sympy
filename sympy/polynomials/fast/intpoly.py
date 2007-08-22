@@ -13,6 +13,16 @@ class IntPoly(sparse_poly.SparsePolynomial):
             result_dict[e] = c/content
         return content, IntPoly(result_dict)
 
+    def mod_int(self, m, symmetric=False):
+        result_dict = {}
+        for e, c in self.coeffs.iteritems():
+            cc = c % m
+            if cc:
+                if symmetric and cc > m/2:
+                    result_dict[e] = cc - m
+                else:
+                    result_dict[e] = cc
+        return IntPoly(result_dict)
 
 # Division algorithms:
 
@@ -126,7 +136,6 @@ def gcd_small_primes(f, g):
             break
 
     content, result =  IntPoly(w_dict).primitive()
-    print content
     return result
 
 def gcd_heuristic(f, g):
@@ -161,3 +170,194 @@ def gcd_heuristic(f, g):
                 return h
         u *= 2
     
+gcd = gcd_small_primes
+
+def hensel_step(m, f, g, h, s, t):
+    """One step in Hensel lifting.
+
+    Takes an integer m and integer polynomials f, g, h, s and t as
+    input, such that:
+        f == g*h mod m
+        s*g + t*h == 1 mod m
+        lc(f) not a zero divisor mod m, h is monic
+        deg(f) == deg(g) + deg(h)
+        deg(s) < deg(h) and deg(t) < deg(g)
+
+    Outputs integer polynomials gg, hh, ss and tt, such that:
+        f == gg*hh mod m**2
+        ss*gg + tt**hh == 1 mod m**2
+    
+    """
+    
+    mm = m**2
+
+    e = (f - g*h).mod_int(mm, symmetric=True)
+    q, r = div(s*e, h)
+    q, r = q.mod_int(mm, symmetric=True), r.mod_int(mm, symmetric=True)
+    gg = (g + t*e + q*g).mod_int(mm, symmetric=True)
+    hh = (h + r).mod_int(mm, symmetric=True)
+
+    b = (s*gg + t*hh - IntPoly({0: 1})).mod_int(mm, symmetric=True)
+    c, d = div(s*b, hh)
+    c, d = c.mod_int(mm, symmetric=True), d.mod_int(mm, symmetric=True)
+    ss = (s - d).mod_int(mm, symmetric=True)
+    tt = (t - t*b - c*gg).mod_int(mm, symmetric=True)
+    
+    return gg, hh, ss, tt
+
+def multi_hensel_lift(p, f, f_list, l):
+    """Multifactor Hensel lifting.
+
+    Input: an integer p, an univariate integer polynomial f such that
+    f's leading coefficient lc(f) is a unit mod p. Monic polynomials
+    f_i that are pair-wise coprime mod p satisfying
+        f = lc(f)*f_1*...*f_r mod p
+    and an integer l.
+
+    Output: monic polynomials ff_1, ..., ff_r satisfying
+        f = lc(f)*ff_1*...*ff_r mod p**l
+        ff_i = f_i mod p
+
+    """
+    r = len(f_list)
+    lc = f[f.degree]
+
+    if r == 1:
+        lc_g, lc_s, lc_t = modint.xgcd(lc, p**l)
+        return [f.scale(lc_s).mod_int(p**l, symmetric=True)]
+    k = int(r/2)
+    d = int(math.ceil(math.log(l, 2)))
+
+    # Divide and conquer the factors. 
+    IntModpPoly = gfpoly.GFPolyFactory(p)
+    g = IntModpPoly.from_int_dict({0:lc})
+    for f_i in f_list[0:k]:
+        g *= IntModpPoly.from_int_dict(f_i.coeffs)
+    h = IntModpPoly.from_int_dict(f_list[k].coeffs)
+    for f_i in f_list[k+1:]:
+        h *= IntModpPoly.from_int_dict(f_i.coeffs)
+    x, s, t = gfpoly.xgcd(g, h)
+    g = IntPoly(g.to_sym_int_dict())
+    h = IntPoly(h.to_sym_int_dict())
+    s = IntPoly(s.to_sym_int_dict())
+    t = IntPoly(t.to_sym_int_dict())
+
+    # Lift the two coprime parts.
+    m = p
+    for j in range(1, d+1):
+        g, h, s, t = hensel_step(m, f, g, h, s, t)
+        m *= m
+
+    # Call recursively.
+    return multi_hensel_lift(p, g, f_list[0:k], l) \
+           + multi_hensel_lift(p, h, f_list[k:], l)
+
+def zassenhaus(f):
+    """Factors a square-free primitive polynomial.
+
+    Returns a list of the unique factors.
+    """
+
+    def subsets(M, k):
+        """Generates all k-subsets of M."""
+        def recursion(result, M, k):
+            if k == 0:
+                 yield result
+            else:
+                for i, result2 in enumerate(M[0 : len(M) + 1 - k]):
+                    for el in recursion(result + [result2], M[i + 1:], k - 1):
+                        yield el
+
+        for i, result in enumerate(M[0 : len(M) + 1 - k]):
+            for el in recursion([result], M[i + 1:], k - 1):
+                yield el
+
+    n = f.degree
+    if n == 1:
+        return [f]
+    A = max([abs(c) for c in f.coeffs.itervalues()])
+    b = f[n]
+    B = int(math.sqrt(n+1)*2**n*A*b)
+    C = (n+1)**(2*n)*A**(2*n-1)
+    gamma = int(math.ceil(2*math.log(C, 2)))
+    prime_border = int(2*gamma*math.log(gamma)) + 1
+
+    # Choose a prime.
+    while True:
+        p = ntheory.generate.randprime(2, prime_border)
+        if b % p:
+            poly_type = gfpoly.GFPolyFactory(p)
+            ff = poly_type.from_int_dict(f.coeffs)
+            gg = gfpoly.gcd(ff, ff.diff())
+            if gg.degree == 0:
+                break
+    l = int(math.ceil(math.log(2*B + 1, p)))
+
+    # Modular factorization.
+    mod_factors = gfpoly.factor_sqf(ff)
+    bb = mod_factors[0] # Leading coefficient mod p.
+    h = [IntPoly(hh.to_sym_int_dict()) for hh in mod_factors[1:]]
+
+    # Hensel lifting.
+    g = multi_hensel_lift(p, f, h, l)
+
+    # Factor combination and trial division.
+    G = []
+    T = range(len(g))
+    s = 1
+    while 2*s <= len(T):
+        for S in subsets(T, s):
+            gg = IntPoly({0:b})
+            for i in S:
+                gg *= g[i]
+            gg = gg.mod_int(p**l, symmetric=True)
+            hh = IntPoly({0:b})
+            for i in [i for i in T if i not in S]: # T \ S
+                hh *= g[i]
+            hh = hh.mod_int(p**l, symmetric=True)
+
+            gg_norm = sum([abs(c) for c in gg.coeffs.itervalues()])
+            hh_norm = sum([abs(c) for c in hh.coeffs.itervalues()])
+            if gg_norm*hh_norm <= B: # Found divisor
+                T = [i for i in T if i not in S] # T \ S
+                G.append(gg.primitive()[1])
+                f = hh.primitive()[1]
+                b = f[f.degree]
+                break
+        else: # No factors of degree s
+            s += 1
+    G.append(f)
+    return G
+
+def squarefree_part(f):
+    """Computes the primitive squarefree part of a polynomial."""
+    g = gcd(f, f.diff())
+    q, r = div(f, g)
+    assert not r
+    return q.primitive()[1]
+
+def factor(f):
+    """Factorization of univariate integer polynomials.
+
+    Outputs a list of factors with their multiplicities, the first
+    being constant. 
+    """
+    
+    content, pp = f.primitive()
+    sqf_part = squarefree_part(pp)
+    factors = zassenhaus(sqf_part)
+
+    result = [(IntPoly({0:content}), 1)]
+    # Determine multiplicities of factors.
+    for ff in factors:
+        mult = 0
+        while True:
+            q, r = div(f, ff)
+            if r: # Not divisible.
+                break
+            else:
+                mult += 1
+                f = q
+        result.append((ff, mult))
+    
+    return result

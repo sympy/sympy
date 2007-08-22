@@ -88,6 +88,36 @@ def lcm(f, g):
     assert not r
     return q.monic()[1]
 
+def xgcd(f, g):
+    """Extended euclidean algorithm.
+
+    Outputs the gcd, s and t, such that:
+        h == s*f + t*g
+    
+    """
+    one = f.coeff_type(1)
+    p, q, r, s, t  = [], [], [], [], []
+    pp, rr = f.monic()
+    p.append(pp)
+    r.append(rr)
+    pp, rr = g.monic()
+    p.append(pp)
+    r.append(rr)
+    s.append(f.__class__({0:(one/p[0])}))
+    s.append(f.__class__())
+    t.append(f.__class__())
+    t.append(f.__class__({0:(one/p[1])}))
+            
+    while True:
+        q.append(div(r[-2], r[-1])[0])
+        pp, rr = (r[-2] - q[-1]*r[-1]).monic()
+        if not rr:
+            return r[-1], s[-1], t[-1]
+        p.append(pp)
+        r.append(rr)
+        pp = one/pp
+        s.append((s[-2] - q[-1]*s[-1]).scale(pp))
+        t.append((t[-2] - q[-1]*t[-1]).scale(pp))
 
 # Arithmetic modular a polynomial p:
 

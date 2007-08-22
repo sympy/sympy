@@ -9,6 +9,7 @@ from sympy.core import numbers
 from sympy.core.numbers import NumberSymbol, ImaginaryUnit
 from sympy.utilities import *
 
+from sympy.polynomials import fast
 
 # This is the list of possible rings the coefficients could lie in,
 # ordered by inclusion.
@@ -953,3 +954,35 @@ def integer_divisors(n):
             r.append(i)
     r.append(n)
     return r
+
+
+# Cooperation with the submodule of faster arithmetic.
+
+def Polynomial2IntPoly(f):
+    """Converts an instance of Polynomial to one of IntPoly.
+
+    Nothing is checked.
+    """
+    
+    result_dict = {}
+    for t in f.coeffs:
+        if t[0] is not S.Zero:
+            assert isinstance(t[0], Integer)
+            result_dict[int(t[1])] = int(t[0])
+    return fast.intpoly.IntPoly(result_dict)
+
+
+def IntPoly2Polynomial(f, var, order):
+    """Converts an instance of IntPoly to one of Polynomial.
+
+    Nothing is checked.
+    """
+    
+    coeffs = []
+    exponents = f.coeffs.keys()
+    exponents.sort(reverse=True)
+    for exp in exponents:
+        coeffs.append((sympify(f[exp]), sympify(exp)))
+    return Polynomial(coeffs=tuple(coeffs), var=var, order=order)
+
+                      
