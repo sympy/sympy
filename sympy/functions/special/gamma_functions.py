@@ -10,11 +10,6 @@ class Gamma(DefinedFunction):
 
     nofargs = 1
 
-    def __new__(cls, **assumptions):
-        obj = DefinedFunction.__new__(cls, **assumptions)
-        obj.name = "Gamma" # use capital 'G'
-        return obj
-
     def fdiff(self, argindex=1):
         if argindex == 1:
             x = Basic.Symbol('x', dummy=True)
@@ -37,7 +32,7 @@ class Gamma(DefinedFunction):
                 return S.Infinity
             elif isinstance(arg, Basic.Rational):
                 if arg.q == 2:
-                    n = abs(arg.p) // arg.q
+                    n = abs(arg.p) / arg.q
 
                     if arg.is_positive:
                         coeff = S.One
@@ -53,17 +48,15 @@ class Gamma(DefinedFunction):
                         coeff *= i
 
                     if arg.is_positive:
-                        return coeff*S.Sqrt(S.Pi)/2**n
+                        return coeff*S.Sqrt(S.Pi) / 2**n
                     else:
-                        return 2**n*S.Sqrt(S.Pi)/coeff
-            elif isinstance(arg, Basic.Real):
-                return
+                        return 2**n*S.Sqrt(S.Pi) / coeff
 
 class ApplyGamma(Apply):
 
     def _eval_expand_func(self, *args):
         arg = self.args[0]._eval_expand_basic()
-        #import pdb; pdb.set_trace()
+
         if isinstance(arg, Basic.Add):
             for i, coeff in enumerate(arg[:]):
                 if isinstance(arg[i], Basic.Number):

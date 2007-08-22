@@ -20,8 +20,7 @@ def test_latex_symbols():
     assert latex(mass**3 * volume**3) == r"${\mathrm{mass}}^{3} \cdot {\mathrm{volume}}^{3}$"
 
 def test_latex_functions():
-    assert latex(exp(x)) == "${e}^{x}$"
-    assert latex(exp(I*pi)) == "${e}^{\pi \mathrm{i}}$"
+    assert latex(exp(x)) == "${e}^{x}$"   
 
     f = Function('f')
     beta = Function('beta')

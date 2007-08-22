@@ -17,53 +17,68 @@ class Exp(DefinedFunction):
 
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
+
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.Zero):
-                return S.One
-            if isinstance(arg, Basic.One):
-                return S.Exp1
-            if isinstance(arg, Basic.Infinity):
-                return S.Infinity
-            if isinstance(arg, Basic.NegativeInfinity):
-                return S.Zero
             if isinstance(arg, Basic.NaN):
                 return S.NaN
-        elif isinstance(arg, ApplyLog):
+            elif isinstance(arg, Basic.Zero):
+                return S.One
+            elif isinstance(arg, Basic.One):
+                return S.Exp1
+            elif isinstance(arg, Basic.Infinity):
+                return S.Infinity
+            elif isinstance(arg, Basic.NegativeInfinity):
+                return S.Zero
+        elif isinstance(arg, Basic.ApplyLog):
             return arg.args[0]
-        elif isinstance(arg, (Basic.Add, Basic.Mul)):
-            if isinstance(arg, Basic.Add):
-                args = arg[:]
+        elif isinstance(arg, Basic.Mul):
+            coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
+
+            if coeff is not None:
+                if isinstance(2*coeff, Basic.Integer):
+                    cst_table = {
+                        0 : S.One,
+                        1 : S.ImaginaryUnit,
+                        2 : S.NegativeOne,
+                        3 : -S.ImaginaryUnit,
+                    }
+
+                    return cst_table[int(2*coeff) % 4]
+
+        if isinstance(arg, Basic.Add):
+            args = arg[:]
+        else:
+            args = [arg]
+
+        included, excluded = [], []
+
+        for arg in args:
+            coeff, terms = arg.as_coeff_terms()
+
+            if isinstance(coeff, Basic.Infinity):
+                excluded.append(coeff**Basic.Mul(*terms))
             else:
-                args = [arg]
-            l = []
-            al = []
-            for f in args:
-                coeff, terms = f.as_coeff_terms()
-                if isinstance(coeff, Basic.Infinity):
-                    l.append(coeff**Basic.Mul(*terms))
-                elif len(terms)==1 and isinstance(terms[0], Basic.ApplyLog):
-                    l.append(terms[0].args[0]**coeff)
-                else:
-                    lt = None
-                    cl = [coeff]
-                    for t in terms:
-                        if isinstance(t, Basic.ApplyLog):
-                            if lt is None:
-                                lt = t
-                            else:
-                                lt = None
-                                break
-                        elif t.is_comparable:
-                            cl.append(t)
+                coeffs, log_term = [coeff], None
+
+                for term in terms:
+                    if isinstance(term, Basic.ApplyLog):
+                        if log_term is None:
+                            log_term = term.args[0]
                         else:
-                            lt = None
+                            log_term = None
                             break
-                    if lt is not None:
-                        l.append(lt.args[0] ** Basic.Mul(*cl))
+                    elif term.is_comparable:
+                        coeffs.append(term)
                     else:
-                        al.append(f)
-            if l:
-                return Basic.Mul(*(l+[self(Basic.Add(*al))]))
+                        break
+
+                if log_term is not None:
+                    excluded.append(log_term**Basic.Mul(*coeffs))
+                else:
+                    included.append(arg)
+
+        if excluded:
+            return Basic.Mul(*(excluded+[self(Basic.Add(*included))]))
 
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()

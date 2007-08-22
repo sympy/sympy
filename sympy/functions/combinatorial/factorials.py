@@ -142,6 +142,12 @@ class ApplyFactorial(Apply):
     def _eval_is_integer(self):
         return self.args[0].is_integer
 
+class MultiFactorial(DefinedFunction):
+    pass
+
+class ApplyMultiFactorial(Apply):
+    pass
+
 Basic.singleton['factorial'] = Factorial
 
 ###############################################################################
@@ -175,6 +181,11 @@ class RisingFactorial(DefinedFunction):
 
     nofargs = 2
 
+    def __new__(cls, **assumptions):
+        obj = DefinedFunction.__new__(cls, **assumptions)
+        obj.name = "rf"
+        return obj
+
     def _eval_apply(self, x, k):
         x = Basic.sympify(x)
         k = Basic.sympify(k)
@@ -186,7 +197,7 @@ class RisingFactorial(DefinedFunction):
         elif isinstance(k, Basic.Integer):
             if isinstance(k, Basic.NaN):
                 return S.NaN
-            if isinstance(k, Basic.Zero):
+            elif isinstance(k, Basic.Zero):
                 return S.One
             else:
                 if k.is_positive:
@@ -212,14 +223,6 @@ class ApplyRisingFactorial(Apply):
     def _eval_expand_func(self, *args):
         x, k = self.args[0], self.args[1]
         return S.Gamma(x+k)/S.Gamma(x)
-
-    def tostr(self, level=0):
-        r = 'rf(%s)' % ', '.join([a.tostr() for a in self.args])
-
-        if self.precedence <= level:
-            return '(%s)' % (r)
-        else:
-            return r
 
 class FallingFactorial(DefinedFunction):
     """Falling factorial (related to rising factorial) is a double valued
@@ -248,6 +251,11 @@ class FallingFactorial(DefinedFunction):
 
     nofargs = 2
 
+    def __new__(cls, **assumptions):
+        obj = DefinedFunction.__new__(cls, **assumptions)
+        obj.name = "ff"
+        return obj
+
     def _eval_apply(self, x, k):
         x = Basic.sympify(x)
         k = Basic.sympify(k)
@@ -257,7 +265,7 @@ class FallingFactorial(DefinedFunction):
         elif isinstance(k, Basic.Integer):
             if isinstance(k, Basic.NaN):
                 return S.NaN
-            if isinstance(k, Basic.Zero):
+            elif isinstance(k, Basic.Zero):
                 return S.One
             else:
                 result = S.One
@@ -286,14 +294,6 @@ class ApplyFallingFactorial(Apply):
         x, k = self.args[0], self.args[1]
         return (-1)**k*S.Gamma(-x+k)/S.Gamma(-x)
 
-    def tostr(self, level=0):
-        r = 'ff(%s)' % ', '.join([a.tostr() for a in self.args])
-
-        if self.precedence <= level:
-            return '(%s)' % (r)
-        else:
-            return r
-
 Basic.singleton['rf'] = RisingFactorial
 Basic.singleton['ff'] = FallingFactorial
 
@@ -315,7 +315,7 @@ class Binomial(DefinedFunction):
 
        The other definition is generalisation for arbitaty 'n',
        however 'k' must be also nonnegative. This case is very
-       useful in case of evaluating summations.
+       useful in case for evaluating summations.
 
        For the sake of convenience for negative 'k' this function
        will return zero no matter what valued is the other argument.
@@ -337,6 +337,8 @@ class Binomial(DefinedFunction):
        [1, 2, 1]
        >>> [ binomial(3, i) for i in range(4)]
        [1, 3, 3, 1]
+       >>> [ binomial(4, i) for i in range(5)]
+       [1, 4, 6, 4, 1]
 
        >>> binomial(Rational(5,4), 3)
        -5/128
@@ -382,7 +384,8 @@ class Binomial(DefinedFunction):
 
                                 while R > 0:
                                     a = int((R % prime) < (K % prime + a))
-                                    R, K, exp = R / prime, K / prime, exp + a
+                                    R, K = R / prime, K / prime
+                                    exp = a + exp
 
                                 if exp > 0:
                                     result *= prime**exp

@@ -629,22 +629,34 @@ class Basic(BasicMeths):
            >>> (2*E).as_coefficient(E)
            2
 
-           >>> (2*E).as_coefficient(x)
-           >>> (2*E + x).as_coefficient(x)
-           >>> (2*sin(E)*E).as_coefficient(x)
+           >>> (2*E + x).as_coefficient(E)
+           >>> (2*sin(E)*E).as_coefficient(E)
+
+           >>> (2*pi*I).as_coefficient(pi*I)
+           2
+
+           >>> (2*I).as_coefficient(pi*I)
 
         """
-        w = Basic.Wild('w')
-
-        coeff = self.match(w * expr)
-
-        if coeff is not None:
-            if coeff[w].has(expr):
-                return None
-            else:
-                return coeff[w]
-        else:
+        if isinstance(expr, Basic.Add):
             return None
+        else:
+            w = Basic.Wild('w')
+
+            coeff = self.match(w * expr)
+
+            if coeff is not None:
+                if isinstance(expr, Basic.Mul):
+                    expr = expr[:]
+                else:
+                    expr = [expr]
+
+                if coeff[w].has(*expr):
+                    return None
+                else:
+                    return coeff[w]
+            else:
+                return None
 
     def as_real_imag(self):
         """Performs complex expansion on 'self' and returns a tuple
