@@ -21,5 +21,7 @@ from float_ import *
 #from constants import *
 #from functions import *
 #from functions2 import *
+from optimize import polyroots, bisect, secant
 from quad import nintegrate
-from evalf_ import evalf
+from evalf_ import evalf, polyfunc
+from fit import cheb
