@@ -24,4 +24,3 @@ from float_ import *
 from optimize import polyroots, bisect, secant
 from quad import nintegrate
 from evalf_ import evalf, polyfunc
-from fit import cheb
