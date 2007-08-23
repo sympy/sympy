@@ -13,7 +13,7 @@ from sympy.core import *
 
 from sympy.simplify import simplify, collect
 from sympy.matrices import Matrix, zeronm
-from sympy.polynomials import roots
+from sympy.polynomials import roots, PolynomialException
 from sympy.utilities import any
 
 def solve(eq, syms, simplified=True):

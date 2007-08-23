@@ -12,7 +12,9 @@ try:
     except:
         pass
 
-    from plot import Plot
+    def Plot(*args, **kwargs):
+        import plot
+        return plot.Plot(*args, **kwargs)
 
 except Exception, e:
     def Plot(*args, **kwargs):

@@ -13,7 +13,7 @@ from polynomials import *
 from utilities import *
 from integrals import *
 from plotting import Plot
-from printing import *
+from printing import pretty, pretty_print, pprint
 
 #for _n, _cls in Basic.singleton.items():
 #    exec '%s = _cls()' % (_n)

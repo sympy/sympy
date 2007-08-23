@@ -83,7 +83,7 @@ def tex2png(eq, pygame):
 
     # compile LaTeX document. A DVI file is created
     cwd = os.getcwd()
-    os.chdir("/tmp")
+    os.chdir(tempfile.gettempdir())
     pexpect.run('latex %s' % tmp1)
 
     # Run dvipng on the generated DVI file. Use tight bounding box. 
@@ -103,13 +103,11 @@ def tex2png(eq, pygame):
 
     return image
 
-def view(eq, psviewer = "evince"):
-    """Launches a *.ps viewer (default: evince) with the equation.
+def view(eq, psviewer="evince"):
+    """Launches a PostScript viewer (default: evince) with the equation.
     """
     import os
     import pexpect
-
-    tex_preamble = "\\nopagenumbers\n"
 
     x = tempfile.mktemp()
     tmp1 = '%s.tex'%x
@@ -121,7 +119,7 @@ def view(eq, psviewer = "evince"):
 
     # compile LaTeX document. A DVI file is created
     cwd = os.getcwd()
-    os.chdir("/tmp")
+    os.chdir(tempfile.gettempdir())
     pexpect.run('latex %s' % tmp1)
 
     cmd = "dvips %s.dvi" % (x)
