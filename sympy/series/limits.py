@@ -80,6 +80,10 @@ def create_limits_table():
     tbl[(exp(exponent * ln(base)), Basic.Zero())] = exp(1)
     tbl[(base ** exponent, Basic.Zero())] = exp(1)
 
+    tbl[(x-ln(1+exp(x)), oo)] = 0
+    tbl[(x-ln(a+exp(x)), oo)] = 0
+    tbl[(exp(x)/(a+exp(x)), oo)] = 1
+
     return x, tbl
 _x, limits_table = None, None
 

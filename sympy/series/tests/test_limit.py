@@ -434,3 +434,10 @@ def test_loglogloglimit():
     #from Gruntz somewhere
     e=(log(log(x)+log(log(x)))-log(log(x)))/log(log(x)+log(log(log(x))))*log(x)
     assert limit(e,x,oo) == 1
+
+def test_logexplimit():
+    a = Symbol('a')
+    assert limit(x-ln(1+exp(x)), x, oo) == 0
+    assert limit(x-ln(a+exp(x)), x, oo) == 0
+    assert limit(exp(x)/(1+exp(x)), x, oo) == 1
+    assert limit(exp(x)/(a+exp(x)), x, oo) == 1
