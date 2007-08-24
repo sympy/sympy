@@ -2,9 +2,9 @@ __version__ = "0.5.2"
 
 from sympy.core import *
 
+from series import *
 from concrete import *
 from functions import *
-from series import *
 from simplify import *
 from solvers import *
 from matrices import *

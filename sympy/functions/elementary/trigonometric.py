@@ -234,7 +234,7 @@ class ApplyCos(Apply):
             coeff, terms = arg.as_coeff_terms()
             if not isinstance(coeff, Basic.One) and isinstance(coeff, Basic.Integer) and terms:
                 x = Basic.Mul(*terms)
-                return Basic.Chebyshev(coeff)(cos(x))
+                return Basic.ChebyshevT()(coeff, cos(x))
         return cos(arg)
 
     def _eval_as_leading_term(self, x):
