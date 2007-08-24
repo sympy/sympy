@@ -40,7 +40,7 @@ def test_latex_derivatives():
 
 def test_latex_integrals():
     assert latex(integrate(log(x), x, evaluate=False)) == r"$\int \mathrm{log}\left(x\right)\,dx$"
-    assert latex(integrate(x**2, x==(0,1), evaluate=False)) == r"$\int^0_1 {x}^{2}\,dx$"
+    assert latex(integrate(x**2, (x,0,1), evaluate=False)) == r"$\int^0_1 {x}^{2}\,dx$"
 
 #def test_latex_limits():
 #    assert latex(limit(x, x, oo, evaluate=False)) == r"$\lim_{x \to \infty}x$"

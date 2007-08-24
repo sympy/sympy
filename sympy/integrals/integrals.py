@@ -21,6 +21,13 @@ class Integral(Basic, ArithMeths, RelMeths):
 
     def __new__(cls, expr, *symbols, **assumptions):
         expr = Basic.sympify(expr)
+        symbols_ = []
+        for s in symbols:
+            if isinstance(s, tuple):
+                symbols_.append(tuple(map(Basic.sympify, s)))
+            else:
+                symbols_.append(s)
+        symbols = tuple(symbols_)
         evaluate = assumptions.get("evaluate", True)
         if not evaluate:
             r = super(Integral, cls).__new__(cls, **assumptions)
@@ -28,23 +35,21 @@ class Integral(Basic, ArithMeths, RelMeths):
             #this is so that diff() works correctly, obviously
             #it will only work for 1D integrals
             r.f = expr
-            if isinstance(symbols[0], Basic.Equality):
-                r.x = symbols[0].lhs
-                r.a = symbols[0].rhs.start
-                r.b = symbols[0].rhs.end
+            if isinstance(symbols[0], (tuple, list)):
+                r.x, r.a, r.b = symbols[0]
             else:
                 r.x = symbols[0]
                 r.a = r.b = None
             return r
         for s in symbols:
-            if isinstance(s, Basic.Equality):
-                expr = cls.doit(cls, expr, s.lhs, s.rhs.start, s.rhs.end)
+            if isinstance(s, (tuple, list)):
+                expr = cls.doit(cls, expr, *s)
             else:
                 expr = cls.doit(cls, expr, s, None, None)
         return expr
 
     def tostr(self, level=0):
-        r = 'Int%s'%repr(tuple(self))
+        r = 'Integral%s'%repr(tuple(self))
         if self.precedence <= level:
             r = '(%s)' % (r)
         return r
@@ -189,13 +194,12 @@ def integrate(f, *args, **kargs):
       >>> integrate(y*x, x, y)
       (1/4)*x**2*y**2
 
-      #python2.4 doctest is missing a really important directive SKIP
-      #>>> integrate(2*x*y, (x,0,1), (y,-1,2)) # doctest: +SKIP
-      #3/2
-      #>>> integrate(x*y**2 , (x,1,2), y) # doctest: +SKIP
-      #(1/2)*y**3
-      #>>> integrate(x , (x,1,2), evaluate=False) # doctest: +SKIP
-      #integrate(x, (x, 1, 2))
+      >>> integrate(2*x*y, (x,0,1), (y,-1,2))
+      3/2
+      >>> integrate(x*y**2 , (x,1,2), y)
+      (1/2)*y**3
+      >>> integrate(x , (x,1,2), evaluate=False)
+      Integral(x, (x, 1, 2))
 
     See also
     ========

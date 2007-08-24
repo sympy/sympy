@@ -93,10 +93,10 @@ def test_pretty_integrals():
     assert pretty(f_3) == '   /          \n  |           \n  |           \n  |    / x\\   \n  |    \\2 /   \n  |   x     dx\n /            '
 
     # Definite integrals
-    f_4 = integrate(x**2, x==[1,2], evaluate=False)
+    f_4 = integrate(x**2, (x,1,2), evaluate=False)
     assert pretty(f_4) == '  2        \n   /       \n  |        \n  |    2   \n  |   x  dx\n  |        \n /         \n  1        '
 
-    f_5 = integrate(x**2, x==[Rational(1,2),10], evaluate=False)
+    f_5 = integrate(x**2, (x,Rational(1,2),10), evaluate=False)
     assert pretty(f_5) == '  10       \n   /       \n  |        \n  |    2   \n  |   x  dx\n  |        \n /         \n 1/2       '
 
 def _test_pretty_limits():
