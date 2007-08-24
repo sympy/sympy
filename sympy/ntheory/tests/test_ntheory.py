@@ -91,3 +91,4 @@ def test_factor():
     assert factorint(-16) == [(-1, 1), (2, 4)]
     assert factorint(2**(2**6) + 1) == [(274177, 1), (67280421310721, 1)]
     assert factorint(5951757) == [(3, 1), (7, 1), (29, 2), (337, 1)]
+    assert factorint(64015937) == [(7993, 1), (8009, 1)]

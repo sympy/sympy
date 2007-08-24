@@ -222,14 +222,15 @@ def factorint(n, limit=None, verbose=False):
         limit = int(n**0.5) + 1
 
     factors = []
-    low, high = 2, 10
+    low, high = 2, 50
 
     while 1:
         # Trial divide for small factors first
-        tfactors = trial(n, sieve.primerange(low, high))
+        tfactors = trial(n, sieve.primerange(low, min(high, limit)))
 
         if verbose:
-            print "trial division from", low, "to", high-1, "gave", tfactors
+            print "trial division from", low, "to", \
+                min(high,limit)-1, "gave", tfactors
 
         # If all were primes, we're done
         if isprime(tfactors[-1][0]):
@@ -263,11 +264,11 @@ def factorint(n, limit=None, verbose=False):
             factors += [(int(n), 1)]
             break
 
-        low, high = high, high*5
-
         if high > limit:
             factors += [(int(n), 1)]
             break
+
+        low, high = high, high*5
 
     return sorted(factors)
 
