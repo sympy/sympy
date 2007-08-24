@@ -92,3 +92,16 @@ def test_factor():
     assert factorint(2**(2**6) + 1) == [(274177, 1), (67280421310721, 1)]
     assert factorint(5951757) == [(3, 1), (7, 1), (29, 2), (337, 1)]
     assert factorint(64015937) == [(7993, 1), (8009, 1)]
+    assert divisors(1) == [1]
+    assert divisors(2) == [1, 2]
+    assert divisors(3) == [1, 3]
+    assert divisors(10) == [1, 2, 5, 10]
+    assert divisors(100) == [1, 2, 4, 5, 10, 20, 25, 50, 100]
+    assert divisors(101) == [1, 101]
+
+def test_totient():
+    assert [totient(k) for k in range(1, 12)] == \
+        [1, 1, 2, 2, 4, 2, 6, 4, 6, 4, 10]
+    assert totient(5005) == 2880
+    assert totient(5006) == 2502
+    assert totient(5009) == 5008

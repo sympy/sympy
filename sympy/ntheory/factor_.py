@@ -309,3 +309,40 @@ def primefactors(n, limit=None, verbose=False):
     if isprime(factors[-1][0]):
         s += [factors[-1][0]]
     return s
+
+
+# TODO: speed up by using prime factorization
+
+def divisors(n):
+    """
+    Return a list of all positive integer divisors of n.
+
+    >>> divisors(24)
+    [1, 2, 3, 4, 6, 8, 12, 24]
+    """
+    n = abs(n)
+    if isprime(n):
+        return [1, n]
+    s = []
+    for i in xrange(1, n+1):
+        if n % i == 0:
+            s += [i]
+    return s
+
+
+def totient(n):
+    """Calculate the Euler totient function phi(n)
+
+    >>> totient(1)
+    1
+    >>> totient(25)
+    20
+
+    """
+    if n < 1:
+        raise ValueError, "n must be a positive integer"
+    factors = factorint(n)
+    t = 1
+    for p, k in factors:
+        t *= (p-1) * p**(k-1)
+    return t
