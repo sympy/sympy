@@ -801,7 +801,7 @@ class Matrix(object):
 
             det = sign * M[n-1, n-1]
 
-        return det
+        return det.expand()
 
     def inverse_LU(self):
         return self.LUsolve(self.eye(self.lines))
