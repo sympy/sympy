@@ -59,7 +59,7 @@ def test_creation():
     assert a == b
 
 def test_determinant():
-    x, y = Symbol('x'), Symbol('y')
+    x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
 
     assert Matrix([ [1] ]).det() == 1
 
@@ -106,6 +106,8 @@ def test_determinant():
                     (-2,  0,  7, 0, 2),
                     (-3, -2,  4, 5, 3),
                     ( 1,  0,  0, 0, 1) )).det() == 123
+                    
+    assert Matrix([ [x,y,z],[1,0,0],[y,z,x]] ).det() == z**2 - x*y
 
 def test_submatrix():
     m0 = eye(4)
@@ -319,8 +321,8 @@ def test_eigen():
     x = Symbol('x')
     y = Symbol('y')
     eye3 = eye(3)
-    assert eye3.charpoly(x) == (1-x)**3
-    assert eye3.charpoly(y) == (1-y)**3
+    assert eye3.charpoly(x) == ((1-x)**3).expand()
+    assert eye3.charpoly(y) == ((1-y)**3).expand()
     # test values
     M = Matrix([(0,1,-1),
                 (1,1,0),
