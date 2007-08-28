@@ -1,6 +1,6 @@
 from sympy.core.basic import Basic, S
 from sympy.simplify import simplify
-
+from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity
 from point import Point
 from ellipse import Circle
@@ -11,6 +11,12 @@ class Polygon(GeometryEntity):
     """
     A simple polygon in space. Can be constructed from a sequence or list
     of points.
+
+    Notes:
+    ======
+        - Polygons are treated as closed paths rather than 2D areas so
+          some calculations can be be negative or positive (e.g., area)
+          based on the orientation of the points.
     """
 
     def __new__(cls, *args, **kwargs):
@@ -34,9 +40,8 @@ class Polygon(GeometryEntity):
 
         Notes:
         ======
-            - The area calculation is a general one and hence can return
-              positive or negative values depending on the orientation of
-              the points.
+            - The area calculation can be positive or negative based on
+              the orientation of the points.
         """
         area = 0
         for ind in xrange(-1, len(self._vertices)-1):
@@ -121,8 +126,6 @@ class Polygon(GeometryEntity):
 
     def is_convex(self):
         """Returns True if this polygon is convex, False otherwise."""
-        # XXX Should we override this in RegularPoygon and Triangle since they
-        #     are always convex (if the tiny performance boost is important)
         def tarea(a, b, c):
             return (b[0] - a[0])*(c[1] - a[1]) - (c[0] - a[0])*(b[1] - a[1])
 
@@ -144,7 +147,7 @@ class Polygon(GeometryEntity):
                     return False
         return True
 
-    def _intersection(self, o):
+    def intersection(self, o):
         res = []
         for side in self.sides:
             inter = GeometryEntity.do_intersection(side, o)
@@ -159,8 +162,6 @@ class Polygon(GeometryEntity):
         return self._vertices[ind]
 
     def __eq__(self, o):
-        # XXX Should a polygon and the same polygon in the opposite
-        #     orientation be considered equal?
         if not isinstance(o, Polygon):
             return False
 
@@ -213,14 +214,6 @@ class Polygon(GeometryEntity):
             return False
         else:
             return False
-
-    def __str__(self):
-        p = str.join(', ', [str(x) for x in self._vertices])
-        return "Polygon(" + p + ")"
-
-    def __repr__(self):
-        p = str.join(', ', [repr(x) for x in self._vertices])
-        return "Polygon(" + p + ")"
 
 
 class RegularPolygon(Polygon):
@@ -311,12 +304,12 @@ class RegularPolygon(Polygon):
         return ret
 
     def __str__(self):
-        p = str.join(', ', [str(self._c), str(self._r), str(len(self._vertices))])
-        return "RegularPolygon(" + p + ")"
+        p = ( str(self._c), str(self._r), len(self._vertices) )
+        return "RegularPolygon(%s, %s, %d)" % p
 
     def __repr__(self):
-        p = str.join(', ', [repr(self._c), repr(self._r), repr(len(self._vertices))])
-        return "RegularPolygon(" + p + ")"
+        p = ( repr(self._c), repr(self._r), len(self._vertices) )
+        return "RegularPolygon(%s, %s, %d)" % p
 
 class Triangle(Polygon):
     """Any 3-sided polygon."""
@@ -324,11 +317,11 @@ class Triangle(Polygon):
     def __new__(cls, *args, **kwargs):
         obj = Polygon.__new__(cls, *args, **kwargs)
         if len(obj._vertices) != 3:
-            raise RuntimeError("Triangle requires three vertices!")
+            raise GeometryError("Triangle requires three vertices!")
         return obj
 
-    def _is_similar(t1, t2):
-        """Returns True if triangles t1 and t2 are similar, False otherwise."""
+    def is_similar(t1, t2):
+        GeometryEntity.is_similar.__doc__
         if not isinstance(t2, Polygon) or len(t2) != 3:
             return False
 
@@ -413,7 +406,7 @@ class Triangle(Polygon):
             >>> t = Triangle(p1, p2, p3)
 
             >>> t.bisectors[p2]
-            Segment(Point(1, 0), Point(0, (-1) + 2**(1/2)))
+            Segment(Point(0, (-1) + 2**(1/2)), Point(1, 0))
         """
         s = self.sides
         v = self._vertices
@@ -455,7 +448,7 @@ class Triangle(Polygon):
             >>> p1,p2,p3 = Point(0,0), Point(1,0), Point(0,1)
             >>> t = Triangle(p1, p2, p3)
             >>> t.medians[p1]
-            Segment(Point(1/2, 1/2), Point(0, 0))
+            Segment(Point(0, 0), Point(1/2, 1/2))
         """
         s = self.sides
         v = self._vertices
@@ -476,11 +469,3 @@ class Triangle(Polygon):
     #def excircles(self):
     #    """Returns a list of the three excircles for this triangle."""
     #    pass
-
-    def __str__(self):
-        p = str.join(', ', [str(x) for x in self._vertices])
-        return "Triangle(" + p + ")"
-
-    def __repr__(self):
-        p = str.join(', ', [str(x) for x in self._vertices])
-        return "Triangle(" + p + ")"

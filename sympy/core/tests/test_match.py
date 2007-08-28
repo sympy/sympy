@@ -241,3 +241,10 @@ def test_exclude():
     assert e.match(r) == None
     assert e.match(cos(y) + r) == None
     assert e.match(r + p*sin(q)) == {r: cos(x), p: 5, q: y}
+
+def test_floats():
+    a,b = map(Wild, 'ab')
+
+    e = cos(0.12345)**2
+    r = e.match(a*cos(b)**2)
+    assert r == {a: 1, b: Real(0.12345)}

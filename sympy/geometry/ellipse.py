@@ -1,5 +1,6 @@
 from sympy.core.basic import S, Basic
 from sympy.simplify import simplify, trigsimp
+from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity
 from point import Point
 from line import LinearEntity, Line
@@ -52,7 +53,8 @@ class Ellipse(GeometryEntity):
     @property
     def circumference(self):
         """The circumference of the ellipse."""
-        # TODO It's fairly complicated, but we could use Ramanujan's approximation.
+        # TODO It's fairly complicated, but we could use Ramanujan's
+        #      approximation.
         raise NotImplementedError
 
     @property
@@ -63,12 +65,12 @@ class Ellipse(GeometryEntity):
             return c
 
         if self._hr.atoms(type=Basic.Symbol) or self._vr.atoms(type=Basic.Symbol):
-            raise Exception("foci can only be determined on numerical radii")
-        elif self._hr < self._vr:
-            v = S.Sqrt(self._vr**2 - self._hr**2)
+            raise Exception("foci can only be determined on non-symbolic radii")
+
+        v = S.Sqrt(abs(self._vr**2 - self._hr**2))
+        if self._hr < self._vr:
             return (c+Point(0, -v), c+Point(0, v))
         else:
-            v = S.Sqrt(self._hr**2 - self._vr**2)
             return (c+Point(-v, 0), c+Point(v, 0))
 
     def tangent_line(self, p):
@@ -103,9 +105,8 @@ class Ellipse(GeometryEntity):
         elif isinstance(o, Polygon):
             c = 0
             for seg in o.sides:
-                inter = self._do_line_intersection(o)
-                if (inter is not None and inter[0] in o):
-                    c += len(inter)
+                inter = self._do_line_intersection(seg)
+                c += len([True for point in inter if point in seg])
             return (c == 1)
         else:
             raise NotImplementedError("Unknown argument type")
@@ -117,11 +118,12 @@ class Ellipse(GeometryEntity):
 
     def random_point(self):
         """Returns a random point on the ellipse."""
-        from random import randint
+        from random import random
         from sys import maxint
         t = Basic.Symbol('t', real=True)
         p = self.arbitrary_point('t')
-        subs_val = randint(-maxint-1, maxint)
+        # get a random value in [-pi, pi)
+        subs_val = float(S.Pi)*(2*random() - 1)
         return Point(p[0].subs(t, subs_val), p[1].subs(t, subs_val))
 
     def equation(self, xaxis_name='x', yaxis_name='y'):
@@ -138,9 +140,10 @@ class Ellipse(GeometryEntity):
 
     def _do_line_intersection(self, o):
         """
-        Find the intersection of a LinearEntity and the ellipse. Makes no regards
-        to what the LinearEntity is because it assumes a Line. To ensure correct
-        intersection results one must invoke intersection() to remove bad results.
+        Find the intersection of a LinearEntity and the ellipse. Makes no
+        regards to what the LinearEntity is because it assumes a Line. To
+        ensure correct intersection results one must invoke intersection()
+        to remove bad results.
         """
         def dot(p1, p2):
             sum = 0
@@ -181,7 +184,7 @@ class Ellipse(GeometryEntity):
                 result.append( lp[0] + (lp[1] - lp[0]) * t_b )
         return result
 
-    def _intersection(self, o):
+    def intersection(self, o):
         if isinstance(o, Point):
             if o in self:
                 return [o]
@@ -214,18 +217,12 @@ class Ellipse(GeometryEntity):
             x = Basic.Symbol('x', real=True)
             y = Basic.Symbol('y', real=True)
             res = self.equation('x', 'y').subs_dict({x: o[0], y: o[1]})
-            res = trigsimp(simplify(res)) 
-            return bool(res == 0)
+            res = trigsimp(simplify(res))
+            return res == 0
         elif isinstance(o, Ellipse):
             return (self == o)
         else:
             return False
-
-    def __str__(self):
-        return "Ellipse(%s, %s, %s)" % (str(self._c), str(self._hr), str(self._vr))
-
-    def __repr__(self):
-        return "Ellipse(%s, %s, %s)" % (repr(self._c), repr(self._hr), repr(self._vr))
 
 
 class Circle(Ellipse):
@@ -244,19 +241,23 @@ class Circle(Ellipse):
     """
 
     def __new__(self, *args, **kwargs):
-        if len(args) == 2:
-            # Assume (center, radius) pair
-            return Ellipse.__new__(self, args[0], args[1], args[1], **kwargs)
-        elif len(args) == 3 and isinstance(args[0], Point):
+        c, r = None, None
+        if len(args) == 3 and isinstance(args[0], Point):
             from polygon import Triangle
             t = Triangle(args[0], args[1], args[2])
             if t.area == 0:
-                raise Exception("Given points are not concyclic")
+                raise GeometryError("Cannot construct a circle from three collinear points")
             c = t.circumcenter
             r = t.circumradius
+        elif len(args) == 2:
+            # Assume (center, radius) pair
+            c = args[0]
+            r = Basic.sympify(args[1])
+
+        if not (c is None or r is None):
             return Ellipse.__new__(self, c, r, r, **kwargs)
-        else:
-            raise Exception("Unknown set of arguments")
+
+        raise GeometryError("Unknown arguments for Circle.__new__")
 
     @property
     def radius(self):
@@ -280,7 +281,7 @@ class Circle(Ellipse):
         t2 = (y - self._c[1])**2
         return t1 + t2 - self._hr**2
 
-    def _intersection(self, o):
+    def intersection(self, o):
         if isinstance(o, Circle):
             dx,dy = o._c - self._c
             d = S.Sqrt( simplify(dy**2 + dx**2) )
@@ -308,7 +309,7 @@ class Circle(Ellipse):
             y = b*S.Sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
             return list(set([Point(x,y), Point(x,-y), Point(-x,y), Point(-x,-y)]))
 
-        return Ellipse._intersection(self, o)
+        return Ellipse.intersection(self, o)
 
     def __str__(self):
         return "Circle(%s, %s)" % (str(self._c), str(self._hr))

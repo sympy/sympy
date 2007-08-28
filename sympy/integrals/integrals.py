@@ -21,13 +21,6 @@ class Integral(Basic, ArithMeths, RelMeths):
 
     def __new__(cls, expr, *symbols, **assumptions):
         expr = Basic.sympify(expr)
-        symbols_ = []
-        for s in symbols:
-            if isinstance(s, tuple):
-                symbols_.append(tuple(map(Basic.sympify, s)))
-            else:
-                symbols_.append(s)
-        symbols = tuple(symbols_)
         evaluate = assumptions.get("evaluate", True)
         if not evaluate:
             r = super(Integral, cls).__new__(cls, **assumptions)
@@ -36,16 +29,17 @@ class Integral(Basic, ArithMeths, RelMeths):
             #it will only work for 1D integrals
             r.f = expr
             if isinstance(symbols[0], (tuple, list)):
-                r.x, r.a, r.b = symbols[0]
+                r.x, r.a, r.b = map(Basic.sympify, symbols[0])
             else:
                 r.x = symbols[0]
                 r.a = r.b = None
             return r
+
         for s in symbols:
-            if isinstance(s, (tuple, list)):
-                expr = cls.doit(cls, expr, *s)
-            else:
-                expr = cls.doit(cls, expr, s, None, None)
+            x,a,b = s, None, None
+            if isinstance(s, tuple):
+                x,a,b = map(Basic.sympify, s)
+            expr = cls.doit(cls, expr, x, a, b)
         return expr
 
     def tostr(self, level=0):

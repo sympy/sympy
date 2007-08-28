@@ -69,7 +69,7 @@ def create_limits_table():
     tbl[(((x-1)/(x+1))**x, oo)] = exp(-2)
     tbl[((sqrt(cos(x))-(cos(x))**Basic.Rational(1,3))/(sin(x)**2), Basic.Zero())] = -Basic.Rational(1,12)
     tbl[(asin(a*x)/x, Basic.Zero())] = a
-    #tbl[(ln(1+exp(x))/x,oo)] = 1
+    tbl[(ln(1+exp(x))/x,oo)] = 1
 
     #
     # From issues
@@ -114,6 +114,7 @@ class Limit(Basic, RelMeths, ArithMeths):
         if key in limits_table:
             return Basic.sympify(limits_table[key]).subs(_x, x)
 
+        # Not in the look-up table, revert to standard algorithm
         if isinstance(xlim, Basic.NegativeInfinity):
             xoo = InfLimit.limit_process_symbol()
             if expr.has(xoo): 
@@ -132,6 +133,7 @@ class Limit(Basic, RelMeths, ArithMeths):
             else:
                 raise ValueError("Limit direction must be < or > (got %s)" % (direction))
 
+        # XXX This code is currently unreachable
         obj = Basic.__new__(cls, expr, x, xlim, **assumptions)
         obj.direction = direction
         return obj

@@ -1,5 +1,5 @@
 
-def intersection(*args):
+def intersection(*entities):
     """
     Finds the intersection between a list GeometryEntity instances. Returns a
     list of all the intersections, Will raise a NotImplementedError exception
@@ -26,18 +26,17 @@ def intersection(*args):
     ======
         - The intersection of any geometrical entity with itself should return
           a list with one item: the entity in question.
-        - It is possible for intersection() miss intersections that one knows
-          exists because the proper quantities were not fully simplified.
+        - An intersection requires two or more entities. If only a single
+          entity is given then one will receive an empty intersection list.
+        - It is possible for intersection() to miss intersections that one
+          knows exists because the required quantities were not fully
+          simplified internally.
     """
     from entity import GeometryEntity
 
-    entities = []
-    if isinstance(args[0], GeometryEntity):
-        entities = args
-    else:
-        entities = args[0]
-
+    entities = GeometryEntity.extract_entities(entities, False)
     if len(entities) <= 1: return []
+
     res = GeometryEntity.do_intersection(entities[0], entities[1])
     for entity in entities[2:]:
         newres = []
@@ -61,6 +60,10 @@ def convex_hull(*args):
         >>> points = [ Point(x) for x in [(1,1), (1,2), (3,1), (-5,2), (15,4)] ]
         >>> convex_hull(points)
         Polygon(Point(3, 1), Point(15, 4), Point(-5, 2), Point(1, 1))
+
+    Description of method used:
+    ===========================
+        See http://en.wikipedia.org/wiki/Graham_scan.
     """
     from point import Point
     from line import Segment
@@ -86,7 +89,7 @@ def convex_hull(*args):
     def tarea(a, b, c):
         return (b[0] - a[0])*(c[1] - a[1]) - (c[0] - a[0])*(b[1] - a[1])
 
-    # Radial sort of points with respect to p[0]
+    # Radial sort of points with respect to p[0] (our pivot)
     destroy = {}
     p0 = p[0]
     def pcompare(p1, p2):
@@ -142,8 +145,12 @@ def are_similar(e1, e2):
         - If the two objects are equal then they are always similar.
     """
     if e1 == e2: return True
-
     try:
-        return e1._is_similar(e2)
+        return e1.is_similar(e2)
     except AttributeError:
-        return e2._is_similar(e1)
+        try:
+            return e2.is_similar(e1)
+        except AttributeError:
+            n1 = e1.__class__.__name__
+            n2 = e2.__class__.__name__
+            raise GeometryError("Cannot test similarity between %s and %s" % (n1, n2))

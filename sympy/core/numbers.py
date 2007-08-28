@@ -158,11 +158,11 @@ decimal_to_Number_cls = {
     }
 
 def convert_to_Decimal(num):
-    if isinstance(num, (str, int, long)):
+    if isinstance(num, str):
         num = decimal.Decimal(num)
     elif isinstance(num, float):
         num = Real.float_to_decimal(num)
-    return num
+    return +num
 
 class Real(Number):
     """
@@ -170,8 +170,13 @@ class Real(Number):
     arbitrary-precision floating-point numbers
 
     Usage:
+    ======
         Real(3.5)   .... 3.5 (the 3.5 was converted from a python float)
         Real("3.0000000000000005")
+
+    Notes:
+    ======
+        - Real(x) with x being a Python int/long will return Integer(x)
     """
     is_real = True
     is_irrational = False
@@ -179,6 +184,9 @@ class Real(Number):
 
     @Memoizer(type, MemoizerArg((str, int, long, float, decimal.Decimal), convert_to_Decimal))
     def __new__(cls, num):
+        if isinstance(num, (int, long)):
+            return Integer(num)
+
         singleton_cls_name = decimal_to_Number_cls.get(num.as_tuple(), None)
         if singleton_cls_name is not None:
             return getattr(Basic, singleton_cls_name)()

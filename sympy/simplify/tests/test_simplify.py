@@ -27,6 +27,7 @@ def test_trigsimp():
     assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) == 2 + 3*cos(x/2)**2
     assert trigsimp(1 + tan(x)**2) == 1/cos(x)**2
     assert trigsimp(1 + cot(x)**2) == 1/sin(x)**2
+    assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1
 
 #def test_factorial_simplify():
     # There are more tests in test_factorials.py. These are just to
