@@ -36,6 +36,7 @@ def run_ipython_interpreter():
     ipshell = IPShellEmbed(args)
     api = ipshell.IP.getapi()
     api.ex(init_code)
+    api.ex('__IP.compile("from __future__ import division", "<input>", "single") in __IP.user_ns')
 
     ### create some magic commands
 
