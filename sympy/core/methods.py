@@ -35,6 +35,8 @@ class ArithMeths(object):
         return Basic.sympify(other).__pow__(self)
     def __div__(self, other):
         return self * (Basic.sympify(other) ** Basic.Integer(-1))
+    def __truediv__(self, other):
+        return self.__div__(other)
     def __rdiv__(self, other):
         return Basic.sympify(other).__div__(self)
     def _eval_power(self, other):
