@@ -1,5 +1,7 @@
 from threading import RLock
 
+from pyglet.gl import *
+
 from plot_object import PlotObject
 from plot_axes import PlotAxes
 from plot_window import PlotWindow
@@ -205,6 +207,7 @@ class Plot(object):
 
         self._functions = {}
         self._pobjects = []
+        self._screenshot = ScreenShot(self)
 
         axe_options = parse_option_string(win_args.pop('axes', ''))
         self.axes = PlotAxes(**axe_options)
@@ -235,12 +238,15 @@ class Plot(object):
         if self._window:
             self._window.close()
 
-    def saveimage(self, filepath, **kwargs):
+    def saveimage(self, outfile, format=''):
         """
         Saves a screen capture of the plot window to an
-        image file. Not implemented yet.
+        image file. Outfile can either be a path or a file
+        object. If format is omitted, it is determined from
+        the filename extension. This is of course only
+        possible if outfile is a path.
         """
-        raise NotImplementedError()
+        self._screenshot.save(outfile, format)
 
     ## Function List Interfaces
 
@@ -359,3 +365,38 @@ class Plot(object):
             b = self._functions[f]._get_calculating_cverts
             while a() or b(): sleep(0)
         self._render_lock.release()
+        
+        
+class ScreenShot:
+    def __init__(self, plot):
+        self._plot = plot
+        self.screenshot_requested = False
+        self.outfile = None
+        self.format = ''
+        
+    def __nonzero__(self):
+        if self.screenshot_requested:
+            return 1
+        return 0
+        
+    def _execute_saving(self):
+        size_x, size_y = self._plot._window.get_size()
+        size = size_x*size_y*4*sizeof(c_ubyte)
+        image = create_string_buffer(size)
+        glReadPixels(0,0,size_x,size_y, GL_RGBA, GL_UNSIGNED_BYTE, image)
+        from PIL import Image
+        im = Image.frombuffer('RGBA',(size_x,size_y),image.raw, 'raw', 'RGBA', 0, 1)
+        if type(self.outfile) in (str, unicode):
+            im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile)
+        elif type(self.outfile)==file:
+            im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile, self.format)
+        self.screenshot_requested = False
+        
+    def save(self, outfile=None, format=''):
+        self.outfile = outfile
+        self.format = format
+        if self.outfile:
+            if type(self.outfile) in (str, unicode):
+                self.screenshot_requested = True
+            if type(self.outfile)==file and self.format:
+                self.screenshot_requested = True

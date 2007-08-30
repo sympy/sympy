@@ -116,7 +116,10 @@ class PlotWindow(ManagedWindow):
         if should_update_caption:
             self.update_caption(calc_verts_pos, calc_verts_len, calc_cverts_pos, calc_cverts_len)
             self.last_caption_update = clock()
-
+        
+        if self.plot._screenshot:
+            self.plot._screenshot._execute_saving()
+        
         self.plot._render_lock.release()
 
     def update_caption(self, calc_verts_pos, calc_verts_len, calc_cverts_pos, calc_cverts_len):

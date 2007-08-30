@@ -36,6 +36,17 @@ if __name__ == "__main__":
         p[6] = y**2-x**2, [20], [20]
 
     @example_wrapper
+    def mirrored_saddles_saveimage():
+        p[5] = x**2-y**2, [20], [20]
+        p[6] = y**2-x**2, [20], [20]
+        p.wait_for_calculations()
+        # although the calculation is complete,
+        # we still need to wait for it to be
+        # rendered, so we'll sleep to be sure.
+        sleep(1)
+        p.saveimage("plot_example.png")
+
+    @example_wrapper
     def mirrored_ellipsoids():
         p[2] =  x**2+y**2, [40], [40], 'color=zfade'
         p[3] = -x**2-y**2, [40], [40], 'color=zfade'
@@ -116,6 +127,60 @@ if __name__ == "__main__":
         p.wait_for_calculations()
         print "sympy substitution-based calculation took %s seconds." % (clock()-start)
 
+    @example_wrapper
+    def gradient_vectors():
+        def gradient_vectors_inner(f, i):
+            from sympy import lambdify
+            from sympy.plotting.plot_interval import PlotInterval
+            from pyglet.gl import glBegin, glColor3f
+            from pyglet.gl import glVertex3f, glEnd, GL_LINES
+            
+            def draw_gradient_vectors(f, iu, iv):
+                """
+                Create a function which draws vectors
+                representing the gradient of f.
+                """
+                dx, dy, dz = f.diff(x), f.diff(y), 0
+                FF = lambdify( [x,y,f],    [x,y] )
+                FG = lambdify( [dx,dy,dz], [x,y] )
+                iu.v_steps /= 5
+                iv.v_steps /= 5
+                Gvl = list(list([FF(u, v), FG(u, v)]
+                        for v in iv.frange())
+                        for u in iu.frange())
+
+                def draw_arrow(p1, p2):
+                    """
+                    Draw a single vector.
+                    """
+                    glColor3f(0.4, 0.4, 0.9)
+                    glVertex3f(*p1)
+
+                    glColor3f(0.9, 0.4, 0.4)
+                    glVertex3f(*p2)
+
+                def draw():
+                    """
+                    Iterate through the calculated
+                    vectors and draw them.
+                    """
+                    glBegin(GL_LINES)
+                    for u in Gvl:
+                        for v in u:
+                            point = [ [v[0][0], v[0][1], v[0][2]],
+                                      [v[0][0] + v[1][0], v[0][1] + v[1][1], v[0][2] + v[1][2]] ]
+                            draw_arrow(point[0], point[1])
+                    glEnd()
+
+                return draw
+            p[i] = f, [-0.5,0.5,25], [-0.5,0.5,25], 'style=solid'
+            iu = PlotInterval(p[i].intervals[0])
+            iv = PlotInterval(p[i].intervals[1])
+            p[i].postdraw.append(draw_gradient_vectors(f, iu, iv))
+
+        gradient_vectors_inner( x**2 + y**2, 1)
+        gradient_vectors_inner(-x**2 - y**2, 2)
+
     def help_str():
         s =  ("\nPlot p has been created. Useful commands: \n"
               "    help(p), p[1] = x**2, print p, p.clear() \n\n"
@@ -138,9 +203,10 @@ if __name__ == "__main__":
         print p
 
     #ding_dong_surface()
-    #mirrored_saddles()
+    mirrored_saddles()
     #parametric_spiral()
-    multistep_gradient()
+    #multistep_gradient()
+    #gradient_vectors()
     #example(0)
     print help_str()
 

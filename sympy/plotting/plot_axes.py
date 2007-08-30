@@ -37,7 +37,7 @@ class PlotAxes(PlotObject):
             self._stride = stride
         else:
             self._stride = [stride, stride, stride]
-        self._tick_length = kwargs.pop('tick_length', 0.1)
+        self._tick_length = float(kwargs.pop('tick_length', 0.1))
 
         # setup bounding box and ticks
         self._origin = [0,0,0]
