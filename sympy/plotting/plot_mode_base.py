@@ -148,6 +148,9 @@ class PlotModeBase(PlotMode):
         self._style = None
         self._color = None
 
+        self.predraw = []
+        self.postdraw = []
+
         self.use_lambda_eval = self.options.pop('use_sympy_eval', None) is None
         self.style = self.options.pop('style', '')
         self.color = self.options.pop('color', 'rainbow')
@@ -227,6 +230,8 @@ class PlotModeBase(PlotMode):
 
     @synchronized
     def draw(self):
+        for f in self.predraw:
+            if callable(f): f()
         if self.style_override:
             style = self.styles[self.style_override]
         else:
@@ -241,6 +246,8 @@ class PlotModeBase(PlotMode):
             dl = self._render_stack_top(self._draw_wireframe)
             if dl > 0 and GL_TRUE == glIsList(dl):
                 self._draw_wireframe_display_list(dl)
+        for f in self.postdraw:
+            if callable(f): f()
 
     def _on_change_color(self, color):
         Thread(target=self._calculate_cverts).start()
