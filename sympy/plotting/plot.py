@@ -238,7 +238,7 @@ class Plot(object):
         if self._window:
             self._window.close()
 
-    def saveimage(self, outfile, format=''):
+    def saveimage(self, outfile, format='', size=(600, 500)):
         """
         Saves a screen capture of the plot window to an
         image file. Outfile can either be a path or a file
@@ -246,7 +246,7 @@ class Plot(object):
         the filename extension. This is of course only
         possible if outfile is a path.
         """
-        self._screenshot.save(outfile, format)
+        self._screenshot.save(outfile, format, size)
 
     ## Function List Interfaces
 
@@ -373,6 +373,8 @@ class ScreenShot:
         self.screenshot_requested = False
         self.outfile = None
         self.format = ''
+        self.invisibleMode = False
+        self.flag = 0
         
     def __nonzero__(self):
         if self.screenshot_requested:
@@ -380,6 +382,10 @@ class ScreenShot:
         return 0
         
     def _execute_saving(self):
+        if self.flag <3:
+            self.flag += 1
+            return
+        
         size_x, size_y = self._plot._window.get_size()
         size = size_x*size_y*4*sizeof(c_ubyte)
         image = create_string_buffer(size)
@@ -390,11 +396,26 @@ class ScreenShot:
             im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile)
         elif type(self.outfile)==file:
             im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile, self.format)
+        self.flag = 0
         self.screenshot_requested = False
+        if self.invisibleMode:
+            self._plot._window.close()
+            
         
-    def save(self, outfile=None, format=''):
+    def save(self, outfile=None, format='', size=(600, 500)):
         self.outfile = outfile
         self.format = format
+        self.size = size
+        if not self._plot._window or self._plot._window.has_exit:
+            self._plot._win_args['visible'] = False
+
+            self._plot._win_args['width'] = size[0]
+            self._plot._win_args['height'] = size[1]
+
+            self._plot.axes.reset_resources()
+            self._plot._window = PlotWindow(self._plot, **self._plot._win_args)
+            self.invisibleMode = True
+            
         if self.outfile:
             if type(self.outfile) in (str, unicode):
                 self.screenshot_requested = True
