@@ -717,36 +717,55 @@ def trigsimp(expr, deep=False):
         return ret
     elif isinstance(expr, Pow):
         return Pow(trigsimp(expr.base, deep), trigsimp(expr.exp, deep))
-    elif isinstance(expr, Add) and len(expr[:]) > 1:
-        # The type of functions we're interested in
-        a,b = map(Wild, 'ab')
-        matchers = {"sin": a*sin(b)**2, "tan": a*tan(b)**2, "cot": a*cot(b)**2}
+    elif isinstance(expr, Add):
+        # TODO this needs to be faster
 
-        # The matches we find
-        matches = {"sin": [], "tan": [], "cot": []}
+        # The types of trig functions we are looking for
+        a,b,c = map(Wild, 'abc')
+        matchers = (
+            (a*sin(b)**2, a - a*cos(b)**2),
+            (a*tan(b)**2, a*sec(b)**2 - a),
+            (a*cot(b)**2, a*csc(b)**2 - a)
+        )
 
         # Scan for the terms we need
-        ret = Rational(0)
-        for x in expr:
-            x = trigsimp(x, deep)
+        ret = Integer(0)
+        for term in expr:
+            term = trigsimp(term, deep)
             res = None
-            #ex = [atom for atom in expr.atoms() if isinstance(atom, Symbol)]
-            for mname in matchers:
-                res = x.match(matchers[mname])
+            for pattern, result in matchers:
+                res = term.match(pattern)
                 if res is not None:
-                    matches[mname].append( (res[a], res[b]) )
+                    ret += result.subs_dict(res)
                     break
             if res is None:
-                ret += x
+                ret += term
 
-        # Expand matches
-        for match in matches["sin"]:
-            ret += match[0] - match[0]*cos(match[1])**2
-        for match in matches["tan"]:
-            ret += match[0]*sec(match[1])**2 - match[0]
-        for match in matches["cot"]:
-            ret += match[0]*csc(match[1])**2 - match[0]
-        return ret
+        # Reduce any lingering artifacts, such as sin(x)**2 changing
+        # to 1-cos(x)**2 when sin(x)**2 was "simpler"
+        artifacts = (
+            (a - a*cos(b)**2 + c, a*sin(b)**2 + c, cos),
+            (a - a*sec(b)**2 + c, -a*tan(b)**2 + c, cos),
+            (a - a*csc(b)**2 + c, -a*cot(b)**2 + c, sin)
+        )
+
+        expr = ret
+        for pattern, result, ex in artifacts:
+            # Substitute a new wild that excludes some function(s)
+            # to help influence a better match. This is because
+            # sometimes, for example, 'a' would match sec(x)**2
+            a_t = Wild('a', exclude=[ex])
+            pattern = pattern.subs(a, a_t)
+            result = result.subs(a, a_t)
+
+            m = expr.match(pattern)
+            while m is not None:
+                if m[a_t] == 0 or -m[a_t] in m[c][:] or m[a_t] + m[c] == 0:
+                    break
+                expr = result.subs_dict(m)
+                m = expr.match(pattern)
+
+        return expr
     return expr
 
 def radsimp(expr):

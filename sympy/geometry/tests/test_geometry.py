@@ -156,6 +156,15 @@ def test_line():
     assert r1.projection(s2) == Segment(Point(1, 1), Point(2, 2))
     assert s3.projection(r1) == Segment(Point(0, 4), Point(-1, 3))
 
+    l1 = Line(Point(0, 0), Point(3, 4))
+    r1 = Ray(Point(0, 0), Point(3, 4))
+    s1 = Segment(Point(0, 0), Point(3, 4))
+    assert intersection(l1, l1) == [l1]
+    assert intersection(l1, r1) == [r1]
+    assert intersection(l1, s1) == [s1]
+    assert intersection(r1, l1) == [r1]
+    assert intersection(s1, l1) == [s1]
+
 def test_ellipse():
     p1 = Point(0, 0)
     p2 = Point(1, 1)

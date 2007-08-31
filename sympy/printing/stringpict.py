@@ -2,6 +2,10 @@
 (I hate spammers: mail me at pietjepuk314 at the reverse of ku.oc.oohay).
 All objects have a method that create a "stringPict",
 that can be used in the str method for pretty printing.
+
+Updates by Jason gedge (email <my last name> at cs mun ca)
+    - terminal_string() method
+    - minor fixes and changes (mostly to prettyForm)
 """
 
 class stringPict:
@@ -200,6 +204,27 @@ class stringPict:
         root.baseline = result.baseline-result.height()+root.height()
         return result.left(root)
 
+    def terminal_string(self):
+        """Return the string form of self such that it can be printed
+           on the terminal without being broken up.
+        """
+        import curses
+        curses.setupterm()
+        ncols = curses.tigetnum('cols') - 2
+
+        # If smaller than the terminal width, no need to correct
+        if self.width() <= ncols:
+            return type(self.picture[0])(self)
+
+        i = 0
+        svals = []
+        while i < self.width():
+            svals.extend([ sval[i:i+ncols] for sval in self.picture ])
+            svals.append("") # a vertical spacer
+            i += ncols
+        del svals[-1] #  Get rid of the last spacer
+        return type(self.picture[0]).join("\n", svals)
+
     def __eq__(self, o):
         if isinstance(o, str):
             return '\n'.join(self.picture) == o
@@ -208,10 +233,19 @@ class stringPict:
         return False
 
     def __str__(self):
-        return '\n'.join(self.picture)
+        return str.join('\n', self.picture)
+
+    def __unicode__(self):
+        return unicode.join(u'\n', self.picture)
 
     def __repr__(self):
         return "stringPict(%r,%d)"%('\n'.join(self.picture), self.baseline)
+
+    def __getitem__(self, index):
+        return self.picture[index]
+
+    def __len__(self):
+        return len(self.s)
 
 class prettyForm(stringPict):
     """Extension of the stringPict class that knows about
@@ -232,15 +266,6 @@ class prettyForm(stringPict):
         stringPict.__init__(self, s, baseline)
         self.binding = binding
         self.unicode = unicode or s
-
-    def __unicode__(self):
-        return unicode.join(u'\n', self.picture)
-
-    def __getitem__(self, index):
-        return self.picture[index]
-
-    def __len__(self):
-        return len(self.s)
 
     def __add__(self, *others):
         """Make a pretty addition.

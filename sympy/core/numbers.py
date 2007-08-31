@@ -976,7 +976,7 @@ class Pi(NumberSymbol):
             return (Rational(223,71), Rational(22,7))
 
     def tostr(self, level=0):
-        return 'Pi'
+        return 'pi'
 
 class GoldenRatio(NumberSymbol):
 

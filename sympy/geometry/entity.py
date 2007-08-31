@@ -12,13 +12,11 @@ ordering_of_classes = [
     "Ellipse"
 ]
 
-class GeometryEntity(object):
+class GeometryEntity(tuple):
     """The base class for any geometrical entity."""
 
     def __new__(cls, *args, **kwargs):
-        obj = object.__new__(cls)
-        obj._args = tuple(args)
-        return obj
+        return tuple.__new__(cls, args)
 
     @staticmethod
     def do_intersection(e1, e2):
@@ -45,7 +43,7 @@ class GeometryEntity(object):
 
         Notes:
         ======
-            - This method is not intended to be used explicity but rather
+            - This method is not intended to be used directly but rather
               through the are_similar() method found in util.py.
             - An entity is not required to implement this method.
             - If two different types of entities can be similar, it is only
@@ -60,7 +58,7 @@ class GeometryEntity(object):
 
         Notes:
         ======
-            - This method is not intended to be used explicity but rather
+            - This method is not intended to be used directly but rather
               through the intersection() method found in util.py.
             - An entity is not required to implement this method.
             - If two different types of entities can intersect, it is only
@@ -83,6 +81,8 @@ class GeometryEntity(object):
               The default is True.
             - Anything that is not a GeometryEntity instance is simply
               ignored.
+            - Ordering of arguments is always maintained. If duplicates
+              are removed then the entry with the lowest index is kept.
         """
         ret = list()
         for arg in args:
@@ -91,14 +91,19 @@ class GeometryEntity(object):
             elif isinstance(arg, (list, tuple, set)):
                 ret.extend(GeometryEntity.extract_entities(arg))
         if remove_duplicates:
-            ret = set(ret)
+            temp = set(ret)
+            ind, n = 0, len(ret)
+            for counter in xrange(0, n):
+                x = ret[ind]
+                if x in temp:
+                    temp.remove(x)
+                    ind += 1
+                else:
+                    del ret[ind]
         return tuple(ret)
 
     def __ne__(self, o):
         return not self.__eq__(o)
-
-    def __hash__(self):
-        return hash(self._args)
 
     def __radd__(self, a):
         return a.__add__(self)
@@ -113,12 +118,10 @@ class GeometryEntity(object):
         return a.__div__(self)
 
     def __str__(self):
-        c_str = str.join(', ', [str(x) for x in self._args])
-        return self.__class__.__name__ + "(" + c_str + ")"
+        return self.__class__.__name__ + tuple.__str__(self)
 
     def __repr__(self):
-        c_str = str.join(', ', [repr(x) for x in self._args])
-        return self.__class__.__name__ + "(" + c_str + ")"
+        return self.__class__.__name__ + tuple.__repr__(self)
 
     def __cmp__(self, other):
         n1 = self.__class__.__name__

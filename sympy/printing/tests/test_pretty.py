@@ -47,7 +47,7 @@ def test_pretty_functions():
     # Simple
     assert pretty( (2*x + exp(x)) ) in [' x      \ne  + 2*x', '       x\n2*x + e ']
     assert pretty( sqrt(2) ) == '  ___\n\\/ 2 '
-    assert pretty( sqrt(2+pi) ) == '  ________\n\\/ 2 + Pi '
+    assert pretty( sqrt(2+pi) ) == '  ________\n\\/ 2 + pi '
     assert pretty(abs(x)) == '|x|'
     assert pretty(abs(x/(x**2+1))) == '|  x   |\n|------|\n|     2|\n|1 + x |'
 

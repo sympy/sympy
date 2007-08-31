@@ -23,10 +23,21 @@ def test_ratsimp():
 
 def test_trigsimp():
     x,y = map(Symbol, 'xy')
-    assert trigsimp(5*cos(x)**2 + 5*sin(x)**2) == 5
-    assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) == 2 + 3*cos(x/2)**2
+
+    assert trigsimp(1 - sin(x)**2) == cos(x)**2
+    assert trigsimp(1 - cos(x)**2) == sin(x)**2
+    assert trigsimp(sin(x)**2 + cos(x)**2) == 1
     assert trigsimp(1 + tan(x)**2) == 1/cos(x)**2
+    assert trigsimp(1/cos(x)**2 - 1) == tan(x)**2
+    assert trigsimp(1/cos(x)**2 - tan(x)**2) == 1
     assert trigsimp(1 + cot(x)**2) == 1/sin(x)**2
+    assert trigsimp(1/sin(x)**2 - 1) == cot(x)**2
+    assert trigsimp(1/sin(x)**2 - cot(x)**2) == 1
+
+    assert trigsimp(5*cos(x)**2 + 5*sin(x)**2) == 5
+    assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) in \
+                [2 + 3*cos(x/2)**2, 5 - 3*sin(x/2)**2]
+
     assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1
 
 #def test_factorial_simplify():

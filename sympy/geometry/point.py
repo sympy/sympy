@@ -4,7 +4,7 @@ from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity
 
 
-class Point(GeometryEntity, tuple):
+class Point(GeometryEntity):
     """
     A point in Euclidean N-space defined by a sequence of values. Can be
     constructed from a sequence of points or a list of points.
@@ -20,7 +20,6 @@ class Point(GeometryEntity, tuple):
     ======
         - Currently only 2-dimensional points are supported.
     """
-
     def __new__(cls, *args, **kwargs):
         if isinstance(args[0], (tuple, list, set)):
             coords = tuple([Basic.sympify(x) for x in args[0]])
@@ -30,9 +29,7 @@ class Point(GeometryEntity, tuple):
         if len(coords) != 2:
             raise NotImplementedError("Only two dimensional points currently supported")
 
-        obj = tuple.__new__(cls, coords)
-        obj._args = coords
-        return obj
+        return GeometryEntity.__new__(cls, *coords)
 
     def is_collinear(*points):
         """
@@ -74,8 +71,7 @@ class Point(GeometryEntity, tuple):
 
         # XXX Cross product is used now, but that only extends to three
         #     dimensions. If the concept needs to extend to greater
-        #     dimensions then one of the other methods (as listed below)
-        #     would have to be used.
+        #     dimensions then another method would have to be used
         p1 = points[0]
         p2 = points[1]
         v1 = p2 - p1
@@ -124,7 +120,7 @@ class Point(GeometryEntity, tuple):
                 if point not in c:
                     return False
             return True
-        except GeometryError:
+        except GeometryError,e:
             # Circle could not be created, because of collinearity of the
             # three points passed in, hence they are not concyclic.
             return False

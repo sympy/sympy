@@ -11,44 +11,46 @@ class Ellipse(GeometryEntity):
     first being the horizontal radius (along the x-axis) and the second
     being the vertical radius (along the y-axis).
 
+    Notes:
+    ======
+        - Rotation is currently not supported since an ellipse is defined
+          on horizontal/vertical radii
+
     Example:
     ========
         >>> e = Ellipse(Point(0, 0), 5, 1)
-        >>> e.horizontal_radius, e.vertical_radius
+        >>> e.hradius, e.vradius
         (5, 1)
     """
-
-    def __new__(self, center, h_radius, v_radius, **kwargs):
-        h_radius = Basic.sympify(h_radius)
-        v_radius = Basic.sympify(v_radius)
+    def __new__(cls, center, hradius, vradius, **kwargs):
+        hradius = Basic.sympify(hradius)
+        vradius = Basic.sympify(vradius)
         if not isinstance(center, Point):
             raise TypeError("center must be be a Point")
 
-        obj = GeometryEntity.__new__(self, center, h_radius, v_radius, **kwargs)
-        obj._c = center
-        obj._hr = h_radius
-        obj._vr = v_radius
-        return obj
-
-    @property
-    def horizontal_radius(self):
-        """The horizontal radius of the ellipse."""
-        return self._hr
-
-    @property
-    def vertical_radius(self):
-        """The vertical radius of the ellipse."""
-        return self._vr
+        if hradius == vradius:
+            return Circle(center, hradius, **kwargs)
+        return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
 
     @property
     def center(self):
         """The center of the ellipse."""
-        return self._c
+        return self.__getitem__(0)
+
+    @property
+    def hradius(self):
+        """The horizontal radius of the ellipse."""
+        return self.__getitem__(1)
+
+    @property
+    def vradius(self):
+        """The vertical radius of the ellipse."""
+        return self.__getitem__(2)
 
     @property
     def area(self):
         """The area of the ellipse."""
-        return simplify(S.Pi * self._hr * self._vr)
+        return simplify(S.Pi * self.hradius * self.vradius)
 
     @property
     def circumference(self):
@@ -60,15 +62,16 @@ class Ellipse(GeometryEntity):
     @property
     def foci(self):
         """The foci of the ellipse, if the radii are numerical."""
-        c = self._c
-        if self._hr == self._vr:
+        c = self.center
+        if self.hradius == self.vradius:
             return c
 
-        if self._hr.atoms(type=Basic.Symbol) or self._vr.atoms(type=Basic.Symbol):
+        hr, vr = self.hradius, self.vradius
+        if hr.atoms(type=Basic.Symbol) or vr.atoms(type=Basic.Symbol):
             raise Exception("foci can only be determined on non-symbolic radii")
 
-        v = S.Sqrt(abs(self._vr**2 - self._hr**2))
-        if self._hr < self._vr:
+        v = S.Sqrt(abs(vr**2 - hr**2))
+        if hr < vr:
             return (c+Point(0, -v), c+Point(0, v))
         else:
             return (c+Point(-v, 0), c+Point(v, 0))
@@ -80,8 +83,8 @@ class Ellipse(GeometryEntity):
         None if no tangent line is possible (e.g., p inside ellipse).
         """
         if p in self:
-            rise = (self._hr ** 2)*(self._c[0] - p[0])
-            run = (self._vr ** 2)*(p[1] - self._c[1])
+            rise = (self.hradius ** 2)*(self.center[0] - p[0])
+            run = (self.vradius ** 2)*(p[1] - self.center[1])
             p2 = Point(simplify(p[0] + run),
                        simplify(p[1] + rise))
             return Line(p, p2)
@@ -114,7 +117,9 @@ class Ellipse(GeometryEntity):
     def arbitrary_point(self, parameter_name='t'):
         """Returns a symbolic point that is on the ellipse."""
         t = Basic.Symbol(parameter_name, real=True)
-        return Point(self._c[0] + self._hr*S.Cos(t), self._c[1] + self._vr*S.Sin(t))
+        return Point(
+                self.center[0] + self.hradius*S.Cos(t),
+                self.center[1] + self.vradius*S.Sin(t))
 
     def random_point(self):
         """Returns a random point on the ellipse."""
@@ -134,8 +139,8 @@ class Ellipse(GeometryEntity):
         """
         x = Basic.Symbol(xaxis_name, real=True)
         y = Basic.Symbol(yaxis_name, real=True)
-        t1 = ((x - self._c[0]) / self._hr)**2
-        t2 = ((y - self._c[1]) / self._vr)**2
+        t1 = ((x - self.center[0]) / self.hradius)**2
+        t2 = ((y - self.center[1]) / self.vradius)**2
         return t1 + t2 - 1
 
     def _do_line_intersection(self, o):
@@ -151,12 +156,12 @@ class Ellipse(GeometryEntity):
                 sum += p1[ind] * p2[ind]
             return simplify(sum)
 
-        hr_sq = self._hr ** 2
-        vr_sq = self._vr ** 2
+        hr_sq = self.hradius ** 2
+        vr_sq = self.vradius ** 2
         lp = o.points
 
         ldir = lp[1] - lp[0]
-        diff = lp[0] - self._c
+        diff = lp[0] - self.center
         mdir = (ldir[0] / hr_sq, ldir[1] / vr_sq)
         mdiff = (diff[0] / hr_sq, diff[1] / vr_sq)
 
@@ -209,8 +214,9 @@ class Ellipse(GeometryEntity):
         raise NotImplementedError()
 
     def __eq__(self, o):
-        return ((self._c == o._c) and
-                (self._hr == o._hr) and (self._vr == o._vr))
+        return ((self.center == o.center) \
+                    and (self.hradius == o.hradius) \
+                    and (self.vradius == o.vradius))
 
     def __contains__(self, o):
         if isinstance(o, Point):
@@ -221,8 +227,7 @@ class Ellipse(GeometryEntity):
             return res == 0
         elif isinstance(o, Ellipse):
             return (self == o)
-        else:
-            return False
+        return False
 
 
 class Circle(Ellipse):
@@ -233,14 +238,13 @@ class Circle(Ellipse):
     Example:
     ========
         >>> c1 = Circle(Point(0, 0), 5)
-        >>> c1.horizontal_radius, c1.vertical_radius, c1.radius
+        >>> c1.hradius, c1.vradius, c1.radius
         (5, 5, 5)
         >>> c2 = Circle(Point(0, 0), Point(1, 1), Point(1, 0))
-        >>> c2.horizontal_radius, c2.vertical_radius, c2.radius, c2.center
+        >>> c2.hradius, c2.vradius, c2.radius, c2.center
         ((1/2)*2**(1/2), (1/2)*2**(1/2), (1/2)*2**(1/2), Point(1/2, 1/2))
     """
-
-    def __new__(self, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):
         c, r = None, None
         if len(args) == 3 and isinstance(args[0], Point):
             from polygon import Triangle
@@ -255,14 +259,24 @@ class Circle(Ellipse):
             r = Basic.sympify(args[1])
 
         if not (c is None or r is None):
-            return Ellipse.__new__(self, c, r, r, **kwargs)
+            return GeometryEntity.__new__(cls, c, r, **kwargs)
 
-        raise GeometryError("Unknown arguments for Circle.__new__")
+        raise GeometryError("Circle.__new__ received unknown arguments")
+
+    @property
+    def hradius(self):
+        """The horizontal radius of the ellipse."""
+        return self.__getitem__(1)
+
+    @property
+    def vradius(self):
+        """The vertical radius of the ellipse."""
+        return self.__getitem__(1)
 
     @property
     def radius(self):
         """The radius of the circle."""
-        return self._hr
+        return self.__getitem__(1)
 
     @property
     def circumference(self):
@@ -277,20 +291,20 @@ class Circle(Ellipse):
         """
         x = Basic.Symbol(xaxis_name, real=True)
         y = Basic.Symbol(yaxis_name, real=True)
-        t1 = (x - self._c[0])**2
-        t2 = (y - self._c[1])**2
-        return t1 + t2 - self._hr**2
+        t1 = (x - self.center[0])**2
+        t2 = (y - self.center[1])**2
+        return t1 + t2 - self.hradius**2
 
     def intersection(self, o):
         if isinstance(o, Circle):
-            dx,dy = o._c - self._c
+            dx,dy = o._c - self.center
             d = S.Sqrt( simplify(dy**2 + dx**2) )
-            a = simplify((self._hr**2 - o._hr**2 + d**2) / (2*d))
+            a = simplify((self.radius**2 - o.radius**2 + d**2) / (2*d))
 
-            x2 = self._c[0] + (dx * a/d)
-            y2 = self._c[1] + (dy * a/d)
+            x2 = self.center[0] + (dx * a/d)
+            y2 = self.center[1] + (dy * a/d)
 
-            h = S.Sqrt( simplify(self._hr**2 - a**2) )
+            h = S.Sqrt( simplify(self.radius**2 - a**2) )
             rx = -dy * (h/d)
             ry =  dx * (h/d)
 
@@ -304,15 +318,9 @@ class Circle(Ellipse):
                 ret.append(Point(xi_2, yi_2))
             return ret
         elif isinstance(o, Ellipse):
-            a,b,r = o.horizontal_radius,o.vertical_radius,self._hr
+            a, b, r = o.hradius, o.vradius, self.radius
             x = a*S.Sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
             y = b*S.Sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
             return list(set([Point(x,y), Point(x,-y), Point(-x,y), Point(-x,-y)]))
 
         return Ellipse.intersection(self, o)
-
-    def __str__(self):
-        return "Circle(%s, %s)" % (str(self._c), str(self._hr))
-
-    def __repr__(self):
-        return "Circle(%s, %s)" % (repr(self._c), repr(self._hr))

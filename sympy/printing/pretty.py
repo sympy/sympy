@@ -15,7 +15,9 @@ class PrettyPrinter(Printer):
             self._str = unicode
         self.emptyPrinter = lambda x : prettyForm(self._str(x), prettyForm.ATOM)
 
-    # TODO Add things for factorial, gamma, and other functions like these
+    def doprint(self, expr):
+        Printer.doprint.__doc__
+        return self._print(expr).terminal_string()
 
     def _print_Symbol(self, e):
         if self._use_unicode:
@@ -54,6 +56,15 @@ class PrettyPrinter(Printer):
                     return prettyForm(greek[name][1], binding=prettyForm.ATOM)
                 else:
                     return prettyForm(greek[name][0], binding=prettyForm.ATOM)
+
+    def _print_Factorial(self, e):
+        x = e.args[0]
+        if (isinstance(x, Basic.Integer) and x.is_nonnegative) or \
+            isinstance(x, Basic.Symbol):
+            s = self._print(x)
+        else:
+            s = "(" + self._print(x) + ")"
+        return s + "!"
 
     def _print_Exp1(self, e):
         if self._use_unicode:
