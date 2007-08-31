@@ -7,6 +7,10 @@ def create_limits_table():
     oo,I,pi = Basic.Infinity(), Basic.ImaginaryUnit(), Basic.Pi()
     exp,sqrt,ln,cos,sin,asin,atan = S.Exp, S.Sqrt, S.Log, S.Cos, S.Sin, S.ASin, S.ATan
 
+    #This is an ugly hack, just to satisfy all the tests, because the current
+    #implementation of limits is very, very weak. See the Issue
+    #http://code.google.com/p/sympy/issues/detail?id=298
+    #for more details.
     #
     # From tests/test_limits.py
     #
