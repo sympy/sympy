@@ -80,7 +80,7 @@ def test_pretty_derivatives():
     f_4 = Derivative(2*x*y, y, x, evaluate=False) + x**2
     assert pretty(f_4) == '        2        \n 2     d         \nx  + -----(2*x*y)\n     dx dy       '
 
-def test_pretty_integrals():
+def _test_pretty_integrals():
     # Simple
     f_1 = integrate(log(x), x, evaluate=False)
     assert pretty(f_1) == '   /           \n  |            \n  |   log(x) dx\n  |            \n /             '

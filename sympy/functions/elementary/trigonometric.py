@@ -88,6 +88,28 @@ class ApplySin(Apply):
         exp, I = S.Exp, S.ImaginaryUnit
         return (exp(arg*I) - exp(-arg*I)) / (2*I)
 
+    def _eval_rewrite_as_cos(self, arg):
+        return -S.Cos(arg + S.Pi/2)
+
+    def _eval_rewrite_as_tan(self, arg):
+        tan_half = S.Tan(S.Half*arg)
+        return 2*tan_half/(1 + tan_half**2)
+
+    def _eval_rewrite_as_cot(self, arg):
+        cot_half = S.Cot(S.Half*arg)
+        return 2*cot_half/(1 + cot_half**2)
+
+    def _eval_rewrite_as_cosh(self, arg):
+        return -S.Cosh((arg + S.Pi/2)*S.ImaginaryUnit)
+
+    def _eval_rewrite_as_tanh(self, arg):
+        tanh_half = S.Tanh(S.ImaginaryUnit*S.Half*arg)
+        return 2*S.ImaginaryUnit*tanh_half/(-1 + tanh_half**2)
+
+    def _eval_rewrite_as_coth(self, arg):
+        coth_half = S.Coth(S.ImaginaryUnit*S.Half*arg)
+        return -2*S.ImaginaryUnit*coth_half/(-1 + coth_half**2)
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -211,6 +233,10 @@ class ApplyCos(Apply):
         exp, I = S.Exp, S.ImaginaryUnit
         return (exp(arg*I) + exp(-arg*I)) / 2
 
+    def _eval_rewrite_as_tan(self, arg):
+        tan_half = S.Tan(S.Half*arg)**2
+        return (1-tan_half)/(1+tan_half)
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -257,7 +283,7 @@ class Tan(DefinedFunction):
 
     def fdiff(self, argindex=1):
         if argindex==1:
-            return 1/S.Cos**2
+            return S.One + S.Tan**2
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -345,10 +371,12 @@ class ApplyTan(Apply):
         return self
 
     def _eval_rewrite_as_exp(self, arg):
-        neg_exp = S.Exp(-arg*S.ImaginaryUnit)
-        pos_exp = S.Exp(arg*S.ImaginaryUnit)
+        exp, I = S.Exp, S.ImaginaryUnit
+        neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
+        return I*(neg_exp-pos_exp)/(neg_exp+pos_exp)
 
-        return S.ImaginaryUnit*(neg_exp-pos_exp)/(neg_exp+pos_exp)
+    def _eval_rewrite_as_tan(self, arg):
+        return 1/S.Tan(arg)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)

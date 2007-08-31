@@ -183,7 +183,7 @@ class Tanh(DefinedFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return 1/S.Cosh**2
+            return S.One - S.Tanh**2
         else:
             raise ArgumentIndexError(self, argindex)
 

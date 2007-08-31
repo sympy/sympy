@@ -176,8 +176,9 @@ def latex(expr):
         >>> x = Symbol('x')
         >>> y = Symbol('y')
         >>> from sympy.printing.latex import latex
-        >>> print latex( integrate(x*y-2, x, evaluate=False))
-        $\int -2+x y\,dx$
+        
+        #>>> print latex(Integral(x*y-2, x))
+        #$\int -2+x y\,dx$
     """
     lp = LatexPrinter()
     return lp.doprint(expr)

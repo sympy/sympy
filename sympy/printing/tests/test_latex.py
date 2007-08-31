@@ -38,7 +38,7 @@ def test_latex_derivatives():
     assert latex(diff(sin(x)+x**2, x, evaluate=False)) == \
         r"$\frac{\partial}{\partial x} \left({x}^{2}+\mathrm{sin}\left(x\right)\right)$"
 
-def test_latex_integrals():
+def _test_latex_integrals():
     assert latex(integrate(log(x), x, evaluate=False)) == r"$\int \mathrm{log}\left(x\right)\,dx$"
     assert latex(integrate(x**2, (x,0,1), evaluate=False)) == r"$\int^0_1 {x}^{2}\,dx$"
 

@@ -20,7 +20,7 @@ from sympy.concrete import nni_roots, product
 from sympy.matrices import Matrix, casoratian
 
 def rsolve_poly(coeffs, f, n, **hints):
-    """Given linear difference operator L of order 'k' with polynomial
+    """Given linear recurrence operator L of order 'k' with polynomial
        coefficients and inhomogeneous equation Ly = f, where 'f' is a
        polynomial, we seek for all polynomial solutions over field K
        of characteristic zero.
@@ -296,7 +296,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         return result
 
 def rsolve_ratio(coeffs, f, n, **hints):
-    """Given linear difference operator L of order 'k' with polynomial
+    """Given linear recurrence operator L of order 'k' with polynomial
        coefficients and inhomogeneous equation Ly = f, where 'f' is a
        polynomial, we seek for all rational solutions over field K of
        characteristic zero.
@@ -389,7 +389,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
             return None
 
 def rsolve_hyper(coeffs, f, n, **hints):
-    """Given linear difference operator L of order 'k' with polynomial
+    """Given linear recurrence operator L of order 'k' with polynomial
        coefficients and inhomogeneous equation Ly = f we seek for all
        hypergeometric solutions over field K of characteristic zero.
 

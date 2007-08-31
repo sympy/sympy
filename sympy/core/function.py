@@ -345,7 +345,11 @@ class Function(Basic, ArithMeths, NoRelMeths):
     def count_ops(self, symbolic):
         if symbolic:
             return Basic.Symbol(self.__class__.__name__.upper())
-        return Basic.Integer(self.nofargs or 1)
+
+        if isinstance(self.nofargs, (tuple, list)):
+            return Basic.Integer(self.nofargs[0])
+        else:
+            return Basic.Integer(self.nofargs)
 
     def taylor_term(self, n, x, *previous_terms):
         raise NotImplementedError('%s.taylor_term(..)' % (self))

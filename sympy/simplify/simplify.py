@@ -865,6 +865,20 @@ def powsimp(expr, deep=False):
 
     return _powsimp(separate(expr, deep=deep))
 
+def normal(expr):
+    p, q = together(expr).as_numer_denom()
+
+    if p.is_polynomial() and q.is_polynomial():
+        from sympy.polynomials import gcd, quo
+
+        G = gcd(p, q)
+
+        if not isinstance(G, Basic.One):
+            p = quo(p, G)
+            q = quo(q, G)
+
+    return p / q
+
 def hypersimp(term, n, consecutive=True, simplify=True):
     """Given combinatorial term a(n) simplify its consecutive term
        ratio ie. a(n+1)/a(n). The term can be composed of functions
@@ -878,8 +892,7 @@ def hypersimp(term, n, consecutive=True, simplify=True):
 
            (2) Rewrite all occurences of gamma in terms of produtcs
                of gamma and rising factorial with integer, absolute
-               constant exponents. After this step all instances of
-               gamma will not have constant term or it will be 1/2.
+               constant exponents.
 
            (3) Perform simplification of nested fractions, powers
                and if the resulting expression is a quotient of
@@ -904,7 +917,6 @@ def hypersimp(term, n, consecutive=True, simplify=True):
        [1] W. Koepf, Algorithms for m-fold Hypergeometric Summation,
            Journal of Symbolic Computation (1995) 20, 399-417
     """
-
     term = Basic.sympify(term)
 
     if consecutive == True:

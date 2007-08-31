@@ -268,8 +268,7 @@ class Basic(BasicMeths):
             return self._eval_is_polynomial(syms)
 
     def as_polynomial(self, *syms, **kwargs):
-        from sympy.polynomials import Polynomial
-        return Polynomial(self, var=syms, **kwargs)
+        return Basic.Polynomial(self, var=(syms or None), **kwargs)
 
     def _eval_subs(self, old, new):
         if self==old:
@@ -568,9 +567,8 @@ class Basic(BasicMeths):
     def _eval_rewrite(self, pattern, rule, **hints):
         if isinstance(self, Atom):
             return self
-        else:
-            terms = [ t._eval_rewrite(pattern, rule, **hints) for t in self ]
-            return self.__class__(*terms, **self._assumptions)
+        terms = [ t._eval_rewrite(pattern, rule, **hints) for t in self ]
+        return self.__class__(*terms, **self._assumptions)
 
     def rewrite(self, *args, **hints):
         """Rewrites expression containing applications of functions
@@ -608,6 +606,9 @@ class Basic(BasicMeths):
             if not pattern:
                 return self._eval_rewrite(None, rule, **hints)
             else:
+                if isinstance(pattern[0], (tuple, list)):
+                    pattern = pattern[0]
+
                 pattern = [ p.__class__ for p in pattern if self.has(p) ]
 
                 if pattern:
@@ -657,6 +658,22 @@ class Basic(BasicMeths):
                     return coeff[w]
             else:
                 return None
+
+    def as_independent(self, *deps):
+        indeps, depend = [], []
+
+        if isinstance(self, (Basic.Add, Basic.Mul)):
+            terms = self[:]
+        else:
+            terms = [ self ]
+
+        for term in terms:
+            if term.has(*deps):
+                depend.append(term)
+            else:
+                indeps.append(term)
+
+        return Basic.Mul(*indeps), Basic.Mul(*depend)
 
     def as_real_imag(self):
         """Performs complex expansion on 'self' and returns a tuple

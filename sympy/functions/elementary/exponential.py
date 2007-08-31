@@ -221,7 +221,7 @@ class ApplyExp(Apply):
 
 class Log(DefinedFunction):
 
-    nofargs = 1,2
+    nofargs = (1,2)
     is_comparable = True
 
     def fdiff(self, argindex=1):
