@@ -33,6 +33,7 @@ ordering_of_classes = [
     'ApplySqrt','ApplySign',
     'ApplyMrvLog',
     'ApplyGamma','ApplyLowerGamma','ApplyUpperGamma',
+    'ApplyErf',
     'ApplyChebyshev','ApplyChebyshev2',
     'Derivative','Integral',
     # defined singleton functions
@@ -46,6 +47,7 @@ ordering_of_classes = [
     'RisingFactorial','FallingFactorial',
     'Factorial','Binomial',
     'Gamma','LowerGamma','UpperGamma',
+    'Erf',
     # special polynomials
     'Chebyshev','Chebyshev2','UnevaluatedFactorial',
     # undefined functions

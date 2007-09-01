@@ -49,3 +49,7 @@ def test_risch_norman_hyperbolic():
 
 def test_risch_norman_mixed():
     assert risch_norman(sin(x)*exp(x), x) == exp(x)*sin(x)/2 - exp(x)*cos(x)/2
+
+def test_risch_norman_special():
+    assert risch_norman(erf(x), x) == x*erf(x) + exp(-x**2)/sqrt(pi)
+    assert risch_norman(exp(-x**2)*erf(x), x) == sqrt(pi)*erf(x)**2 / 4

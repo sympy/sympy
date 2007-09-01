@@ -660,6 +660,18 @@ class Basic(BasicMeths):
                 return None
 
     def as_independent(self, *deps):
+        """Returns a pair with separated parts of a given expression
+           independent of specified symbols in the first place and
+           dependend on them in the other. Both parts are valid
+           SymPy expressions.
+
+           >>> from sympy import *
+           >>> x, y = symbols('xy')
+
+           >>> (x*sin(x)*cos(y)).as_independent(x)
+           (cos(y), x*sin(x))
+
+        """
         indeps, depend = [], []
 
         if isinstance(self, (Basic.Add, Basic.Mul)):
