@@ -213,7 +213,7 @@ class Plot(object):
         self.axes = PlotAxes(**axe_options)
         self._pobjects.append(self.axes)
 
-        self[1] = fargs
+        self[0] = fargs
         if win_args.get('visible', True):
             self.show()
 
@@ -271,9 +271,9 @@ class Plot(object):
         Parses and adds a PlotMode to the function
         list.
         """
-        if not (isinstance(i, int) and i > 0):
+        if not (isinstance(i, int) and i >= 0):
             raise ValueError("Function index must "
-                             "be a positive integer.")
+                             "be an integer >= 0.")
 
         if isinstance(args, PlotObject):
             f = args
@@ -307,7 +307,7 @@ class Plot(object):
         """
         Returns the first unused index in the function list.
         """
-        i = 1
+        i = 0
         self._render_lock.acquire()
         while i in self._functions: i += 1
         self._render_lock.release()
