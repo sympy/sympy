@@ -105,12 +105,17 @@ class Apply(Basic, ArithMeths, RelMeths):
         return r
 
     def _eval_subs(self, old, new):
-        if self==old: return new
-        if isinstance(old, Apply) and old.args==self.args:
-            newfunc = Lambda(new, *old.args)
-            func = self.func.subs(old.func, newfunc)
-            if func!=self.func:
-                return func(*self.args)
+        if self == old:
+            return new
+        elif isinstance(old, Apply) and old.args == self.args:
+            try:
+                newfunc = Lambda(new, *old.args)
+                func = self.func.subs(old.func, newfunc)
+
+                if func != self.func:
+                    return func(*self.args)
+            except TypeError:
+                pass
         elif isinstance(old, Function) and isinstance(new, Function):
             if old == self.func and old.nofargs == new.nofargs:
                 return new(*self.args)

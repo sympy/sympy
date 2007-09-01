@@ -7,17 +7,10 @@ def test_proper_integral():
     pass
 
 def test_improper_integral():
-    assert integrate(ln(x), (x,0,1)) == -1
-    assert integrate(x**(-2), (x,1,oo)) == 1
+    assert integrate(log(x), (x, 0, 1)) == -1
+    assert integrate(x**(-2), (x, 1, oo)) == 1
 
 '''
-import py
-from sympy import *
-from sympy.integrals import integrate, IntegralError
-
-x = Symbol("x")
-t = Symbol("t")
-a = Symbol("a")
 
 def diff(expr, sym):
     from sympy.core import Derivative
@@ -65,32 +58,4 @@ def test_multiple_integration():
     assert integrate((x**2)*(y**2), (x,0,1), (y,-1,2)) == Rational(1)
     assert integrate((y**2)*(x**2), x, y) == Rational(1,9)*(x**3)*(y**3)
 
-def test_integration_table():
-    assert integrate(log(x), x) == x*log(x) - x
-    assert integrate(log(3*x), x) == x*log(3*x) - x
-    assert integrate(log(x+1), x) == (x+1)*log(x+1)-x
-    assert integrate(1/(x+1), x) == log(abs(x+1))
-    assert integrate(5*x**5/(2*x**6+5), x) == 5*log(abs(2*x**6+5))/12
-
-    # XXX Equality testing fails
-    #assert integrate((3*x+2)**a, x) == (3*x+2)**(a+1) / (3*a+3)
-    assert integrate((3*x+2)**a, x) == (3*x+2)**(a+1) / (1+a) / 3
-    assert integrate(x/(2*x+1), x) == (2*x-log(abs(2*x+1)))/4
-    assert integrate(2*x/(4*x+a)**2, x) == a/(a+4*x)/8 + log(abs(a+4*x))/8
-
-    assert integrate(-4*sin(4*x), x) == cos(4*x)
-    assert integrate(3*cos(4*x), x) == 3*sin(4*x)/4
-    assert integrate(3*t*cos(4*x) + 4*sin(x), x) == 3*t*sin(4*x)/4 - 4*cos(x)
-
-    # This test is to ensure that the integral table does not look
-    # up the *wrong* answer.
-    py.test.raises(IntegralError, "integrate(exp(x**x) / (x+1), x)")
-
-    assert integrate(exp(x), x) == exp(x)
-    assert integrate(2*exp(3*x), x) == 2*exp(3*x)/3
-    assert diff(integrate(x**3 * exp(4*x), x), x) == x**3 * exp(4*x)
-
-def test_improper_integral():
-    assert integrate(ln(x), (x,0,1)) == -1
-    assert integrate(x**(-2), (x,1,oo)) == 1
 '''

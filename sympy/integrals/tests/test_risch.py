@@ -10,13 +10,16 @@ def test_risch_norman_polynomials():
 
 def test_risch_norman_fractions():
     assert risch_norman(1/x, x) == log(x)
-    assert risch_norman(1/(2+x), x) == log(x + 2)
+    assert risch_norman(1/(2 + x), x) == log(x + 2)
+
+    assert risch_norman(5*x**5/(2*x**6 + 5), x) == 5*log(5 + 2*x**6) / 12
 
     assert risch_norman(1/x**2, x) == -1/x
     assert risch_norman(-1/x**5, x) == 1/(4*x**4)
 
 def test_risch_norman_log():
     assert risch_norman(log(x), x) == x*log(x) - x
+    assert risch_norman(log(3*x), x) == x*log(3*x) - x
     assert risch_norman(log(x**2), x) == x*log(x**2) - 2*x
 
 def test_risch_norman_exp():
@@ -26,4 +29,23 @@ def test_risch_norman_exp():
     assert risch_norman(x*exp(x), x) == x*exp(x) - exp(x)
     assert risch_norman(x*exp(x**2), x) == exp(x**2) / 2
 
-    # here will come trigs
+    assert risch_norman(exp(-x**2), x) is None
+
+def test_risch_norman_trigonometric():
+    assert risch_norman(sin(x), x) == -cos(x)
+    assert risch_norman(cos(x), x) == sin(x)
+
+    assert risch_norman(sin(x)*cos(x), x) == sin(x)**2 / 2
+
+    assert risch_norman(x*sin(7*x), x) == sin(7*x) / 49 - x*cos(7*x) / 7
+    assert risch_norman(x**2*cos(x), x) == x**2*sin(x) - 2*sin(x) + 2*x*cos(x)
+
+def test_risch_norman_hyperbolic():
+    assert risch_norman(sinh(x), x) == cosh(x)
+    assert risch_norman(cosh(x), x) == sinh(x)
+
+    assert risch_norman(x*sinh(x), x) == x*cosh(x) - sinh(x)
+    assert risch_norman(x*cosh(x), x) == x*sinh(x) - cosh(x)
+
+def test_risch_norman_mixed():
+    assert risch_norman(sin(x)*exp(x), x) == exp(x)*sin(x)/2 - exp(x)*cos(x)/2

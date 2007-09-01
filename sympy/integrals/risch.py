@@ -79,7 +79,55 @@ def monomials(variables, degree):
 
         return monoms
 
-def risch_norman(f, x):
+def factorization(poly, linear=False):
+    """Returns a list with polynomial factors over rationals or, if
+       'linear' flag is set over Q(i). This simple handler should
+       be merged with original factor() method.
+
+       >>> from sympy import *
+       >>> x, y = symbols('xy')
+
+       >>> factorization(x**2 - y**2)
+       set([1, x - y, x + y])
+
+       >>> factorization(x**2 + 1)
+       set([1, 1 + x**2])
+
+       >>> factorization(x**2 + 1, linear=True)
+       set([1, x - I, I + x])
+
+    """
+    factored = set([ q.as_basic() for q in factor_.factor(poly) ])
+
+    if not linear:
+        return factored
+    else:
+        factors = []
+
+        for factor in factored:
+            symbols = factor.atoms(Symbol)
+
+            if len(symbols) == 1:
+                x = symbols.pop()
+            else:
+                factors += [ factor ]
+                continue
+
+            linearities = [ x - r for r in roots(factor, x) ]
+
+            if not linearities:
+                factors += [ factor ]
+            else:
+                unfactorable = quo(factor, Basic.Mul(*linearities))
+
+                if not isinstance(unfactorable, Basic.Number):
+                    factors += [ unfactorable ]
+
+                factors += linearities
+
+        return set(factors)
+
+def risch_norman(f, x, rewrite=False):
     """Computes indefinite integral using extended Risch-Norman algorithm,
        also known as parallel Risch. This is a simplified version of full
        recursive Risch algorithm. It is designed for integrating various
@@ -136,8 +184,15 @@ def risch_norman(f, x):
         (S.Sinh, S.Cosh, S.Coth) : S.Tanh,
     }
 
-    for candidates, rule in rewritables.iteritems():
-        f = f.rewrite(candidates, rule)
+    if rewrite:
+        for candidates, rule in rewritables.iteritems():
+            f = f.rewrite(candidates, rule)
+    else:
+        for candidates in rewritables.iterkeys():
+            if f.has(*candidates):
+                break
+        else:
+            rewrite = True
 
     terms = components(f)
 
@@ -217,9 +272,9 @@ def risch_norman(f, x):
         #elif isinstance(term, Basic.ApplyLambertW):
         #    special += [ (substitute(term), True) ]
 
-    f = substitute(f)
+    ff = substitute(f)
 
-    P, Q = f.as_numer_denom()
+    P, Q = ff.as_numer_denom()
 
     u_split = splitter(denom)
     v_split = splitter(Q)
@@ -227,51 +282,56 @@ def risch_norman(f, x):
     s = u_split[0] * Basic.Mul(*[ g for g, a in special if a ])
     a, b, c = [ p.as_polynomial().degree() for p in [s, P, Q] ]
 
-    coeff = s * v_split[0] * deflation(v_split[1])
-
+    candidate_denom = s * v_split[0] * deflation(v_split[1])
     monoms = monomials(symbols, 1 + a + max(b, c))
-    coeffs, candidate = [], S.Zero
 
-    for i, monomial in enumerate(monoms):
-        coeffs += [ Symbol('A%s' % i) ]
-        candidate += coeffs[-1] * monomial
+    linear = False
 
-    candidate /= coeff
+    while True:
+        coeffs, candidate, factors = [], S.Zero, set()
 
-    def factor(poly):
-        if isinstance(poly, tuple):
-            poly = poly[0]
+        for i, monomial in enumerate(monoms):
+            coeffs += [ Symbol('A%s' % i) ]
+            candidate += coeffs[-1] * monomial
 
-        return set([ q.as_basic() for q in factor_.factor(poly) ])
+        candidate /= candidate_denom
 
-    factors, polys = set(), [v_split[0], v_split[1], u_split[0]] + special
+        polys = [v_split[0], v_split[1], u_split[0]] + [ s[0] for s in special ]
 
-    for irreducibles in [ factor(p) for p in polys ]:
-        factors |= irreducibles
+        for irreducibles in [ factorization(p, linear) for p in polys ]:
+            factors |= irreducibles
 
-    for i, irreducible in enumerate(factors):
-        if not isinstance(irreducible, Basic.Number):
-            coeffs += [ Symbol('B%s' % i) ]
-            candidate += coeffs[-1] * S.Log(irreducible)
+        for i, irreducible in enumerate(factors):
+            if not isinstance(irreducible, Basic.Number):
+                coeffs += [ Symbol('B%s' % i) ]
+                candidate += coeffs[-1] * S.Log(irreducible)
 
-    h = together(f - derivation(candidate) / denom)
+        h = together(ff - derivation(candidate) / denom)
 
-    numerator = h.as_numer_denom()[0].expand()
+        numerator = h.as_numer_denom()[0].expand()
 
-    if not isinstance(numerator, Basic.Add):
-        numerator = [numerator]
+        if not isinstance(numerator, Basic.Add):
+            numerator = [numerator]
 
-    collected = {}
+        collected = {}
 
-    for term in numerator:
-        coeff, depend = term.as_independent(*symbols)
+        for term in numerator:
+            coeff, depend = term.as_independent(*symbols)
 
-        if depend in collected:
-            collected[depend] += coeff
+            if depend in collected:
+                collected[depend] += coeff
+            else:
+                collected[depend] = coeff
+
+        solutions = solve(collected.values(), coeffs)
+
+        if solutions is None:
+            if linear:
+                break
+            else:
+                linear = True
         else:
-            collected[depend] = coeff
-
-    solutions = solve(collected.values(), coeffs)
+            break
 
     if solutions is not None:
         antideriv = candidate.subs_dict(solutions)
@@ -287,4 +347,7 @@ def risch_norman(f, x):
         else:
             return antideriv
     else:
-        return None
+        if not rewrite:
+            return rish_norman(f, x, rewrite=True)
+        else:
+            return None

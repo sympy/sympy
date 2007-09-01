@@ -77,6 +77,17 @@ class ApplySinh(Apply):
     def _eval_rewrite_as_exp(self, arg):
         return (S.Exp(arg) - S.Exp(-arg)) / 2
 
+    def _eval_rewrite_as_cosh(self, arg):
+        return -S.ImaginaryUnit*S.Cosh(arg + S.Pi*S.ImaginaryUnit/2)
+
+    def _eval_rewrite_as_tanh(self, arg):
+        tanh_half = S.Tanh(S.Half*arg)
+        return 2*tanh_half/(1 - tanh_half**2)
+
+    def _eval_rewrite_as_coth(self, arg):
+        coth_half = S.Coth(S.Half*arg)
+        return 2*coth_half/(coth_half**2 - 1)
+
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
@@ -161,6 +172,17 @@ class ApplyCosh(Apply):
 
     def _eval_rewrite_as_exp(self, arg):
         return (S.Exp(arg) + S.Exp(-arg)) / 2
+
+    def _eval_rewrite_as_sinh(self, arg):
+        return -S.ImaginaryUnit*S.Sinh(arg + S.Pi*S.ImaginaryUnit/2)
+
+    def _eval_rewrite_as_tanh(self, arg):
+        tanh_half = S.Tanh(S.Half*arg)**2
+        return (1+tanh_half)/(1-tanh_half)
+
+    def _eval_rewrite_as_coth(self, arg):
+        coth_half = S.Coth(S.Half*arg)**2
+        return (coth_half+1)/(coth_half-1)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
@@ -252,6 +274,15 @@ class ApplyTanh(Apply):
         neg_exp, pos_exp = S.Exp(-arg), S.Exp(arg)
         return (pos_exp-neg_exp)/(pos_exp+neg_exp)
 
+    def _eval_rewrite_as_sinh(self, arg):
+        return S.ImaginaryUnit*S.Sinh(arg)/S.Sinh(S.Pi*S.ImaginaryUnit/2 - arg)
+
+    def _eval_rewrite_as_cosh(self, arg):
+        return S.ImaginaryUnit*S.Cosh(S.Pi*S.ImaginaryUnit/2 - arg)/S.Cosh(arg)
+
+    def _eval_rewrite_as_coth(self, arg):
+        return 1/S.Coth(arg)
+
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
@@ -341,6 +372,15 @@ class ApplyCoth(Apply):
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = S.Exp(-arg), S.Exp(arg)
         return (pos_exp+neg_exp)/(pos_exp-neg_exp)
+
+    def _eval_rewrite_as_sinh(self, arg):
+        return -S.ImaginaryUnit*S.Sinh(S.Pi*S.ImaginaryUnit/2 - arg)/S.Sinh(arg)
+
+    def _eval_rewrite_as_cosh(self, arg):
+        return -S.ImaginaryUnit*S.Cosh(arg)/S.Cosh(S.Pi*S.ImaginaryUnit/2 - arg)
+
+    def _eval_rewrite_as_tanh(self, arg):
+        return 1/S.Tanh(arg)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
