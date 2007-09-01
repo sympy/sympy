@@ -1,0 +1,24 @@
+# This script is for testig SymPy in pure Python environment
+# 
+# Usage
+# -----
+# In this directory execute:
+#
+# $ sudo cowbuilder --update
+# $ sudo cowbuilder --execute test_pure
+#
+# This will first update the base system and then execute this script in that
+# environment.
+#
+# In order for this to work, you need to have the cowbuilder environment setup,
+# which you can do in this way:
+#
+# $ sudo apt-get install cowdancer
+# $ sudo cowbuilder --create --mirror http://ftp.cz.debian.org/debian
+#
+
+apt-get install subversion python python-codespeak-lib
+cd /tmp
+svn checkout http://sympy.googlecode.com/svn/trunk/ sympy
+cd sympy
+./setup.py test
