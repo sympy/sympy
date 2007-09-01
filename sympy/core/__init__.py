@@ -12,7 +12,7 @@ from function import Lambda, Function, Apply, FApply, Composition, FPow, WildFun
 from interval import Interval
 
 # set repr output to pretty output:
-Basic.set_interactive(True)
+Basic.set_repr_level(1)
 
 # expose singletons like exp, log, oo, I, etc.
 for _n, _cls in Basic.singleton.items():

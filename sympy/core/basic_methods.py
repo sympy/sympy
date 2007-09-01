@@ -66,11 +66,11 @@ ordering_of_classes = [
 
 #
 
-def interactive(flag = None, _cache=[False]):
+def repr_level(flag=None, _cache=[1]):
     if flag is None:
         return _cache[0]
     old_flag = _cache[0]
-    _cache[0] = bool(flag)
+    _cache[0] = max(0, min(2, int(flag))) # restrict to 0,1,2
     return old_flag
 
 def mycopy(obj, level=0):
@@ -142,14 +142,14 @@ def cache_it_debug(func):
             cache_flag = True
         if cache_flag:
             func_cache_it_cache[k] = r
-            f = interactive(False)
+            f = repr_level(0)
             func_cache_it_cache_repr[k] = repr(r)
-            interactive(f)
+            repr_level(f)
         else:
             s = func_cache_it_cache_repr[k]
-            f = interactive(False)
+            f = repr_level(0)
             new_s = repr(r)
-            interactive(f)
+            repr_level(f)
             # check that cache values have not changed
             assert new_s==s,`func,s,r, args[0].__class__`
         return mycopy(r)
@@ -185,7 +185,7 @@ def cache_it_nondummy(func):
 class MetaBasicMeths(type):
 
     classnamespace = {}
-    interactive = False        # defines the output of repr()
+    repr_level = 0        # defines the output of repr()
     singleton = {}
 
     def __init__(cls,*args,**kws):
@@ -222,13 +222,15 @@ class MetaBasicMeths(type):
         try:
             i1 = ordering_of_classes.index(n1)
         except ValueError:
-            print 'Add',n1,'to basic_methods.ordering_of_classes list'
-            return c
+            #print 'Add',n1,'to basic_methods.ordering_of_classes list'
+            #return c
+            i1 = len(ordering_of_classes)+1
         try:
             i2 = ordering_of_classes.index(n2)
         except ValueError:
-            print 'Add',n2,'to basic_methods.ordering_of_classes list'
-            return c
+            #print 'Add',n2,'to basic_methods.ordering_of_classes list'
+            #return c
+            i2 = len(ordering_of_classes)+1
         return cmp(i1,i2)
 
 
@@ -297,12 +299,16 @@ class BasicMeths(AssumeMeths):
         return self.tostr()
 
     @staticmethod
-    def set_interactive(flag = None):
-        return interactive(flag)
+    def set_repr_level(flag = None):
+        return repr_level(flag)
 
     def __repr__(self):
-        if interactive():
+        plevel = repr_level()
+        if plevel == 1:
             return self.tostr()
+        elif plevel == 2:
+            from sympy.printing.pretty import pretty
+            return pretty(self)
         return self.torepr()
 
     def __getitem__(self, iter):
