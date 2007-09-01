@@ -170,6 +170,15 @@ def test_expand():
     e=s.series(x,5)/x**2
     assert e.expand() ==  1+x**2/2+O(x**3)
 
+    # Check that this isn't too slow
+    x = Symbol('x')
+    W = 1
+    for i in range(1, 21):
+        W = W * (x-i)
+    W = W.expand()
+    assert W.has(-1672280820*x**15)
+
+
 def test_power_expand():
     """Test for Pow.expand()"""
     a = Symbol('a')

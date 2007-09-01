@@ -214,18 +214,39 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             return coeff, list(self[1:])
         return Basic.One(), list(self[:])
 
-    def _eval_expand_basic(self, *args):
-        """
-        (a + b + ..) * c -> a * c + b * c + ..
-        """
-        seq = [S.One]
-        for t in self:
-            t = t._eval_expand_basic(*args)
-            if isinstance(t, Basic.Add):
-                seq = [f1*f2 for f1 in seq for f2 in t]
+    @staticmethod
+    def _expandsums(sums):
+        L = len(sums)
+        if len(sums) == 1:
+            return sums[0]
+        terms = []
+        left = Mul._expandsums(sums[:L//2])
+        right = Mul._expandsums(sums[L//2:])
+        terms = []
+        for a in left:
+            for b in right:
+                terms.append(Mul(a,b)._eval_expand_basic())
+            added = Basic.Add(*terms)
+            if isinstance(added, Basic.Add):
+                terms = list(added)
             else:
-                seq = [f*t for f in seq]
-        return Basic.Add(*seq, **self._assumptions)
+                terms = [added]
+        return terms
+
+    def _eval_expand_basic(self, *args):
+        plain = Basic.Rational(1)
+        sums = []
+        for factor in self:
+            factor = factor._eval_expand_basic(*args)
+            if isinstance(factor, Basic.Add):
+                sums.append(factor)
+            else:
+                plain = Mul(plain, factor)
+        if sums:
+            terms = Mul._expandsums(sums)
+            return Basic.Add(*(Mul(plain, term) for term in terms), **self._assumptions)
+        else:
+            return Mul(plain, **self._assumptions)
 
     def _eval_derivative(self, s):
         terms = list(self)
