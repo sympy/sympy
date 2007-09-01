@@ -74,4 +74,4 @@ def test_im():
     assert im(x + y*I) == im(x) + re(y)
     assert im(x + r*I) == im(x) + r
 
-    assert im(log(2*I)) == Pi/2
+    assert im(log(2*I)) == pi/2

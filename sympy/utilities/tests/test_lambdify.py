@@ -1,4 +1,4 @@
-from sympy import symbols, lambdify, sqrt, sin, cos, Pi
+from sympy import symbols, lambdify, sqrt, sin, cos, pi
 
 x,y,z = symbols('xyz')
 
@@ -54,7 +54,7 @@ def test_vector_discontinuous():
 
 def test_trig_symbolic():
     f = lambdify([cos(x),sin(x)], [x])
-    d = f(Pi)
+    d = f(pi)
     assert abs(d[0]+1) < 0.0001
     assert abs(d[1]-0) < 0.0001
 

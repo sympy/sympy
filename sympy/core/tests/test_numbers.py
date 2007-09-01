@@ -169,6 +169,7 @@ def test_real_bug():
 def test_bug_sqrt():
     assert ((sqrt(Rational(2))+1)*(sqrt(Rational(2))-1)).expand() == 1
 
-
-
-
+def test_pi_Pi():
+    "Test, that pi (instance) is imported, but Pi (class) is not"
+    from sympy import pi
+    py.test.raises(ImportError, "from sympy import Pi")

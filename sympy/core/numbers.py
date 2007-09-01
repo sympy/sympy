@@ -1085,7 +1085,6 @@ class ImaginaryUnit(Singleton, Atom, RelMeths, ArithMeths):
 
 Basic.singleton['E'] = Exp1
 Basic.singleton['pi'] = Pi
-Basic.singleton['Pi'] = Pi
 Basic.singleton['I'] = ImaginaryUnit
 Basic.singleton['oo'] = Infinity
 Basic.singleton['nan'] = NaN
