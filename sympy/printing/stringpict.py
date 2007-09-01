@@ -208,9 +208,19 @@ class stringPict:
         """Return the string form of self such that it can be printed
            on the terminal without being broken up.
         """
-        import curses
-        curses.setupterm()
-        ncols = curses.tigetnum('cols') - 2
+
+        # Attempt to get a terminal width
+        ncols = 0
+        try:
+            import curses
+            curses.setupterm()
+            ncols = curses.tigetnum('cols')
+        except ImportError:
+            pass
+
+        ncols -= 2
+        if ncols <= 0:
+            ncols = 78
 
         # If smaller than the terminal width, no need to correct
         if self.width() <= ncols:
