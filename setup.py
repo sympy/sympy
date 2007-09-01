@@ -35,42 +35,46 @@ import sympy
 
 # Make sure I have the right Python version.
 if sys.version_info[1] < 4:
-    print "Sympy requires Python 2.4 or newer.  Python %d.%d detected" % \
+    print "Sympy requires Python 2.4 or newer. Python %d.%d detected" % \
           sys.version_info[:2]
     sys.exit(-1)
 
 modules = [
-    ( True, 'sympy.core' ),
-    ( True, 'sympy.concrete' ),
-    ( True, 'sympy.functions' ),
-    ( True, 'sympy.functions.combinatorial' ),
-    ( False, 'sympy.functions.elementary' ),
-    ( False, 'sympy.functions.special' ),
-    ( True, 'sympy.geometry' ),
-    ( True, 'sympy.integrals' ),
-    ( True, 'sympy.matrices' ),
-    ( True, 'sympy.ntheory' ),
-    ( True, 'sympy.numerics' ),
-    ( True, 'sympy.physics' ),
-    ( True, 'sympy.polynomials' ),
-    ( True, 'sympy.polynomials.fast' ),
-    ( True, 'sympy.printing' ),
-    ( True, 'sympy.series' ),
-    ( True, 'sympy.simplify' ),
-    ( True, 'sympy.solvers' ),
-    ( True, 'sympy.utilities' ),
-    ( False, 'sympy.plotting' ),
-    ( False, 'sympy.plotting.pyglet' ),
-    ( False, 'sympy.plotting.pyglet.ext' ),
-    ( False, 'sympy.plotting.pyglet.font' ),
-    ( False, 'sympy.plotting.pyglet.gl' ),
-    ( False, 'sympy.plotting.pyglet.image' ),
-    ( False, 'sympy.plotting.pyglet.image.codecs' ),
-    ( False, 'sympy.plotting.pyglet.media' ),
-    ( False, 'sympy.plotting.pyglet.window' ),
-    ( False, 'sympy.plotting.pyglet.window.carbon' ),
-    ( False, 'sympy.plotting.pyglet.window.win32' ),
-    ( False, 'sympy.plotting.pyglet.window.xlib' ),
+    # do docstring # module name # do not test if first field is True
+    ( True, 'sympy.core',
+        ['add', 'mul', 'relational', 'interval'] ),
+    ( True, 'sympy.concrete', [] ),
+    ( True, 'sympy.functions', [] ),
+    ( True, 'sympy.functions.combinatorial', [] ),
+    ( True, 'sympy.functions.elementary',
+        ['miscellaneous', 'trigonometric', 'hyperbolic', 'exponential'] ),
+    ( False, 'sympy.functions.special', [] ),
+    ( True, 'sympy.geometry', [] ),
+    ( True, 'sympy.integrals', [] ),
+    ( True, 'sympy.matrices', [] ),
+    ( True, 'sympy.ntheory', [] ),
+    ( True, 'sympy.numerics', [] ),
+    ( True, 'sympy.physics', [] ),
+    ( True, 'sympy.polynomials', [] ),
+    ( True, 'sympy.polynomials.fast', [] ),
+    ( True, 'sympy.printing',
+        ['gtk', 'pygame_'] ),
+    ( True, 'sympy.series', [] ),
+    ( True, 'sympy.simplify', [] ),
+    ( True, 'sympy.solvers', [] ),
+    ( True, 'sympy.utilities', [] ),
+    ( False, 'sympy.plotting', [] ),
+    ( False, 'sympy.plotting.pyglet', [] ),
+    ( False, 'sympy.plotting.pyglet.ext', [] ),
+    ( False, 'sympy.plotting.pyglet.font', [] ),
+    ( False, 'sympy.plotting.pyglet.gl', [] ),
+    ( False, 'sympy.plotting.pyglet.image', [] ),
+    ( False, 'sympy.plotting.pyglet.image.codecs', [] ),
+    ( False, 'sympy.plotting.pyglet.media', [] ),
+    ( False, 'sympy.plotting.pyglet.window', [] ),
+    ( False, 'sympy.plotting.pyglet.window.carbon', [] ),
+    ( False, 'sympy.plotting.pyglet.window.win32', [] ),
+    ( False, 'sympy.plotting.pyglet.window.xlib', [] ),
     ]
 
 class clean(Command):
@@ -186,7 +190,6 @@ class test_sympy_doc(Command):
         pass
 
     def run(self):
-
         import unittest
         import doctest
 
@@ -194,49 +197,31 @@ class test_sympy_doc(Command):
 
         print "Testing docstrings."
 
-        files = []
-
-        for module in modules:
-            if module[0] == True:
-                path = module[1].replace('.', '/')
-                files += glob.glob(path + '/[a-z][a-z0-9_]*.py')
-
-        files = [ f.replace('\\', '/') for f in files ]
-
-        files.remove('sympy/core/add.py')
-        files.remove('sympy/core/mul.py')
-        files.remove('sympy/core/relational.py')
-        files.remove('sympy/core/interval.py')
-        files.remove('sympy/printing/gtk.py')
-        files.remove('sympy/printing/pygame_.py')
-
-        #files.remove('sympy/functions/elementary/hyperbolic.py')
-        #files.remove('sympy/functions/elementary/trigonometric.py')
-
-        mods = []
-
-        for x in files:
-            if len(x) > 12 and x[-11:] == '__init__.py':
-                x = x.replace('/__init__', '')
-                print x
-
-            #put . as separator and strip the extension (.py)
-            mods.append(x.replace('/', '.')[:-3])
-
         suite = unittest.TestSuite()
 
-        for mod in mods:
-            suite.addTest(doctest.DocTestSuite(mod))
+        for perform, module, specific in modules:
+            if perform == True:
+                path = module.replace('.', '/')
+
+                items = glob.glob(path + '/[a-z][a-z0-9_]*.py')
+                items = [ i.replace('\\', '/') for i in items ]
+
+                for omit in specific:
+                    items.remove(path + '/' + omit + '.py')
+
+                for item in items:
+                    module = item.replace('/', '.')[:-3]
+                    suite.addTest(doctest.DocTestSuite(module))
 
         runner = unittest.TextTestRunner()
         runner.run(suite)
 
-import sympy
-
 tests = [
     'sympy.core.tests',
     'sympy.concrete.tests',
-    #'sympy.functions.tests',
+    'sympy.functions.combinatorial.tests',
+    'sympy.functions.elementary.tests',
+    'sympy.functions.special.tests',
     'sympy.geometry.tests',
     'sympy.integrals.tests',
     'sympy.matrices.tests',
@@ -249,7 +234,7 @@ tests = [
     'sympy.solvers.tests',
     'sympy.utilities.tests',
     'sympy.plotting.tests',
-        ]
+    ]
 
 setup(
       name = 'sympy',

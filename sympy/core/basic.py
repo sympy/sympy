@@ -590,7 +590,7 @@ class Basic(BasicMeths):
            >>> x, y = symbols('xy')
 
            >>> sin(x).rewrite(sin, exp)
-           -1/2*I*(-1/exp(I*x) + exp(I*x))
+           -1/2*I*(-exp(-I*x) + exp(I*x))
 
         """
         if isinstance(self, Atom) or not args:

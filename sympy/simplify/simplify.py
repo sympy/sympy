@@ -49,7 +49,7 @@ def fraction(expr, exact=False):
        #(1, exp(x))
 
        >>> fraction(exp(-x), exact=True)
-       (1/exp(x), 1)
+       (exp(-x), 1)
 
     """
     expr = Basic.sympify(expr)

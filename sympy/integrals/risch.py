@@ -145,7 +145,7 @@ def risch_norman(f, x, rewrite=False):
        antiderivatives are being found in a more familliar form.
 
        Risch-Norman algorithm can also handle special functions very
-       easily with out any additional effort. Just differentiation
+       easily without any additional effort. Just differentiation
        method must be known for a given function.
 
        Note that this algorithm is not a decision procedure. If it
@@ -175,7 +175,7 @@ def risch_norman(f, x, rewrite=False):
 
     """
     f = Basic.sympify(f)
-    #import pdb; pdb.set_trace()
+
     if not f.has(x):
         return f * x
 
