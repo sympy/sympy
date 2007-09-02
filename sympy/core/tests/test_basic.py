@@ -1,4 +1,5 @@
-from sympy import Basic, Symbol, Real, Rational, cos, exp, log, oo, sqrt
+from sympy import Basic, Symbol, Real, Rational, cos, exp, log, oo, sqrt, \
+    symbols
 
 
 def dotest(s):
@@ -134,3 +135,10 @@ def test_ordering():
     assert str(cc2*Rational(2)) == '2*CustomClass2()'
     assert str(cc2*Rational(2)*cc1) == '2*CustomClass1()*CustomClass2()'
     assert str(cc1*Rational(2)*cc2) == '2*CustomClass1()*CustomClass2()'
+
+def test_len():
+    x, y, z = symbols("xyz")
+    e = x*y
+    assert len(e) == 2
+    e = x+y+z
+    assert len(e) == 3

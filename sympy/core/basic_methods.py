@@ -333,6 +333,9 @@ class BasicMeths(AssumeMeths):
             return pretty(self)
         return self.torepr()
 
+    def __len__(self):
+        return len(self._args)
+
     def __getitem__(self, iter):
         return self._args[iter]
 
