@@ -199,6 +199,12 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         return r
 
     @cache_it
+    def as_two_terms(self):
+        if len(self) == 1:
+            return Basic.One(), self
+        return self[0], Mul(*self[1:])
+
+    @cache_it
     def as_coeff_terms(self, x=None):
         if x is not None:
             l1 = []

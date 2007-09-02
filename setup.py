@@ -40,7 +40,7 @@ if sys.version_info[1] < 4:
     sys.exit(-1)
 
 modules = [
-    # do docstring # module name # do not test if first field is True
+    # do docstring # module name # omit those even if the first field is True
     ( True, 'sympy.core',
         ['add', 'mul', 'relational', 'interval'] ),
     ( True, 'sympy.concrete', [] ),
@@ -59,7 +59,7 @@ modules = [
     ( True, 'sympy.polynomials.fast', [] ),
     ( True, 'sympy.printing',
         ['gtk', 'pygame_'] ),
-    ( True, 'sympy.series', [] ),
+    ( True, 'sympy.series', ["limits_oldcore", "limits"] ),
     ( True, 'sympy.simplify', [] ),
     ( True, 'sympy.solvers', [] ),
     ( True, 'sympy.utilities', [] ),

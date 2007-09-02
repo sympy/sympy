@@ -1,19 +1,7 @@
-# This is the actual limits.py file in the new core. As you can see,
-# it just imports the limits_newcore, which works, but has many bugs in there
+# This file is the original (unmodified) limits.py from the oldcore
+# please don't modify it, it's here for the reference
+# see limits.py for more info
 
-# Problem: in order to get rid of those bugs, either the limits_newcore needs
-# to be fixed, which is quite hard. The other option is to port the limit code
-# from the old core, which is in the file limits_oldcore.py for reference. 
-
-# In this file, in the string comment ''' ''', there is the old core code,
-# but adapted for the new core. It doesn't even parse yet though, so it's a
-# work in progress and thus whenever you want to work on it, just uncomment it,
-# fix more bugs and then comment it again, so that we always have at least
-# something working (the limits_newcore).
-
-from limits_newcore import *
-
-'''
 """
 Limits
 ======
@@ -100,11 +88,10 @@ which is the most difficult part of the algorithm.
 """
 
 import sympy as s
-from sympy import Basic, Add, Mul, Pow, Function, oo, Rational
-from sympy.core.basic import S
-#from sympy.core.stringPict import stringPict, prettyForm
+from sympy import Basic, mhash, Add, Mul, Pow, Function, log, oo, Rational
+from sympy.core.stringPict import stringPict, prettyForm
 
-#from decorator import decorator
+from decorator import decorator
 
 #Debugging:
 #import the limits.py in your code and set limits.debug=True. 
@@ -164,7 +151,7 @@ def getattr_(obj, name, default_thunk):
         setattr(obj, name, default)
         return default
 
-#@decorator
+@decorator
 def memoize(func, *args):
     dic = getattr_(func, "memoize_dic", dict)
     # memoize_dic is created at the first call
@@ -194,7 +181,7 @@ def union(a,b):
     return z
 
 #@decorator(maketree)
-#@memoize
+@memoize
 def limitinf(e,x):
     """Limit e(x) for x-> oo"""
     if not e.has(x): return e #e is a constant
@@ -207,7 +194,7 @@ def limitinf(e,x):
         return sign(c0, x) * s.oo 
     elif sig==0: return limitinf(c0,x) #e0=0: lim f = lim c0
 
-#@memoize
+@memoize
 def sign(e,x):
     """Returns a sign of an expression at x->oo.
     
@@ -226,7 +213,7 @@ def sign(e,x):
     elif e == x: 
         return 1
     elif isinstance(e,s.Mul): 
-        a,b = e.as_two_terms()
+        a,b = e.getab()
         return sign(a,x)*sign(b,x)
 #    elif isinstance(e,s.add): 
 #        a,b=e.getab()
@@ -256,7 +243,7 @@ def rewrite(e,Omega,x,wsym):
 
     returns the rewritten e in terms of w. and log(w)
     """
-    for t in Omega: assert isinstance(t,e.ApplyExp)
+    for t in Omega: assert isinstance(t,s.exp)
     assert len(Omega)!=0
     def cmpfunc(a,b):
         #FIXME: this is really, really slow...
@@ -265,14 +252,14 @@ def rewrite(e,Omega,x,wsym):
     #the complexity of "a" from Omega: the length of the mrv set of "a"
     Omega.sort(cmp=cmpfunc)
     g=Omega[-1] #g is going to be the "w" - the simplest one in the mrv set
-    assert isinstance(g,e.ApplyExp) #all items in Omega should be exponencials
-    sig= (sign(g.args[0],x)==1) 
+    assert isinstance(g,s.exp) #all items in Omega should be exponencials
+    sig= (sign(g._args,x)==1) 
     if sig: wsym=1/wsym #if g goes to oo, substitute 1/w
     #O2 is a list, which results by rewriting each item in Omega using "w"
     O2=[]
     for f in Omega: 
-        assert isinstance(f,e.ApplyExp) #all items in Omega should be exponencials
-        c=mrv_leadterm(f.args[0]/g.args[0],x)
+        assert isinstance(f,s.exp) #all items in Omega should be exponencials
+        c=mrv_leadterm(f._args/g._args,x)
         #the c is a constant, because both f and g are from Omega:
         assert c[1]==0
         O2.append(s.exp(tryexpand(f._args-c[0]*g._args))*wsym**c[0])
@@ -285,7 +272,7 @@ def rewrite(e,Omega,x,wsym):
     #tmp.append("Omega=%s; O2=%s; w=%s; wsym=%s\n"%(Omega,O2,g,wsym))
 
     #finally compute the logarithm of w (logw). 
-    logw=g[0]
+    logw=g._args
     if sig: logw=-logw     #log(w)->log(1/w)=-log(w)
     return f,logw
 
@@ -331,31 +318,31 @@ def mrv_leadterm(e,x,Omega=[]):
     return series.leadterm(wsym)
 
 #@decorator(maketree)
-#@memoize
+@memoize
 def mrv(e,x):
     "Returns the list of most rapidly varying (mrv) subexpressions of 'e'"
     if not e.has(x): return []
     elif e == x: return [x]
-    elif isinstance(e, e.Mul): 
-        a,b = e.as_two_terms()
+    elif isinstance(e, s.Mul): 
+        a,b = e.getab()
         return max(mrv(a,x),mrv(b,x),x)
-    elif isinstance(e, e.Add): 
-        a,b = e.as_two_terms()
+    elif isinstance(e, s.Add): 
+        a,b = e.getab()
         return max(mrv(a,x),mrv(b,x),x)
-    elif isinstance(e, e.Pow):
+    elif isinstance(e, s.Pow):
         if e.exp.has(x):
             return mrv(s.exp(e.exp * s.log(e.base)),x)
         else:
             return mrv(e.base,x)
-    elif isinstance(e, e.ApplyLog): 
+    elif isinstance(e, s.log): 
         return mrv(e._args, x)
-    elif isinstance(e, e.ApplyExp): 
+    elif isinstance(e, s.exp): 
         if limitinf(e._args,x) in [oo,-oo]:
             return max([e],mrv(e._args, x), x)
         else:
             return mrv(e._args,x)
-    elif isinstance(e, e.Apply): 
-        return mrv(e[0],x)
+    elif isinstance(e, Function): 
+        return mrv(e._args,x)
     raise "unimplemented in mrv: %s"%e
 
 def max(f,g,x):
@@ -472,4 +459,3 @@ def limit(e,z,z0, evaluate=True, left=False):
         else:
             e0=e.subs(z,z0+1/x)
         return limitinf(e0,x)
-'''

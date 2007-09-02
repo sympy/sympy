@@ -138,6 +138,12 @@ class Add(AssocOp, RelMeths, ArithMeths):
     def _combine_inverse(lhs, rhs):
         return lhs - rhs
 
+    @cache_it
+    def as_two_terms(self):
+        if len(self) == 1:
+            return Basic.Zero(), self
+        return self[0], Add(*self[1:])
+
     def as_numer_denom(self):
         numers, denoms = [],[]
         for n,d in [f.as_numer_denom() for f in self]:
