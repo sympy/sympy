@@ -219,18 +219,22 @@ class MetaBasicMeths(type):
         n2 = other.__name__
         c = cmp(n1,n2)
         if not c: return 0
+
+        UNKNOWN = len(ordering_of_classes)+1
         try:
             i1 = ordering_of_classes.index(n1)
         except ValueError:
             #print 'Add',n1,'to basic_methods.ordering_of_classes list'
             #return c
-            i1 = len(ordering_of_classes)+1
+            i1 = UNKNOWN
         try:
             i2 = ordering_of_classes.index(n2)
         except ValueError:
             #print 'Add',n2,'to basic_methods.ordering_of_classes list'
             #return c
-            i2 = len(ordering_of_classes)+1
+            i2 = UNKNOWN
+        if i1 == UNKNOWN and i2 == UNKNOWN:
+            return c
         return cmp(i1,i2)
 
 
@@ -300,6 +304,24 @@ class BasicMeths(AssumeMeths):
 
     @staticmethod
     def set_repr_level(flag = None):
+        """
+        Set the representation level used for repr() printing,
+        returning the current level. The available levels are:
+            0: Lowest level printing. Expressions printing should be
+               be able to be evaluated through Python's eval()
+               function
+            1: Higher level printing. Expressions are printed in a
+               one-dimensional fashion, are easier to read than
+               level 1, but cannot be parsed through eval()
+            2: Highest level printing. Expressions are simply
+               two-dimensional, "pretty" versions of the expressions
+               that are only useful for readability purposes.
+
+        Notes:
+        ======
+            - Level 2 printing is done through the printing module in
+              smpy.printing.pretty.
+        """
         return repr_level(flag)
 
     def __repr__(self):
