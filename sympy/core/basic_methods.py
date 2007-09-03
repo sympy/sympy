@@ -32,7 +32,7 @@ ordering_of_classes = [
     'ApplyRe','ApplyIm', 'ApplyArg',
     'ApplySqrt','ApplySign',
     'ApplyMrvLog',
-    'ApplyGamma','ApplyLowerGamma','ApplyUpperGamma',
+    'ApplyGamma','ApplyLowerGamma','ApplyUpperGamma','ApplyPolyGamma',
     'ApplyErf',
     'ApplyChebyshev','ApplyChebyshev2',
     'Derivative','Integral',
@@ -46,10 +46,10 @@ ordering_of_classes = [
     'Sinh','Cosh','Tanh','Coth','ASinh','ACosh','ATanh','ACoth',
     'RisingFactorial','FallingFactorial',
     'Factorial','Binomial',
-    'Gamma','LowerGamma','UpperGamma',
+    'Gamma','LowerGamma','UpperGamma','PolyGamma',
     'Erf',
     # special polynomials
-    'Chebyshev','Chebyshev2','UnevaluatedFactorial',
+    'Chebyshev','Chebyshev2',
     # undefined functions
     'Function','WildFunction',
     # anonymous functions

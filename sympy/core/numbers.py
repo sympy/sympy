@@ -2,9 +2,8 @@ import math
 import decimal
 import decimal_math
 from basic import Basic, Atom, Singleton, S, Memoizer, MemoizerArg
-from methods import RelMeths, ArithMeths
+from methods import NoRelMeths, RelMeths, ArithMeths
 from power import integer_nthroot
-
 
 @Memoizer((int, long), (int, long))
 def gcd(a, b):
@@ -885,6 +884,29 @@ class NaN(Singleton, Rational):
             return S.One
         return b
 
+class ComplexInfinity(Singleton, Atom, NoRelMeths, ArithMeths):
+
+    is_commutative = True
+    is_comparable = None
+    is_bounded = False
+    is_real = None
+
+    def tostr(self, level=0):
+        return 'ComplexInfinity'
+
+    def _eval_power(b, e):
+        if isinstance(e, Basic.ComplexInfinity):
+            return S.NaN
+
+        if isinstance(e, Basic.Number):
+            if isinstance(e, Basic.Zero):
+                return S.NaN
+            else:
+                if e.is_positive:
+                    return S.ComplexInfinity
+                else:
+                    return S.Zero
+
 class NumberSymbol(Singleton, Atom, RelMeths, ArithMeths):
 
     is_commutative = True
@@ -1088,6 +1110,8 @@ Basic.singleton['pi'] = Pi
 Basic.singleton['I'] = ImaginaryUnit
 Basic.singleton['oo'] = Infinity
 Basic.singleton['nan'] = NaN
+
+Basic.singleton['ComplexInfinity'] = ComplexInfinity
 
 Basic.singleton['GoldenRatio'] = GoldenRatio
 Basic.singleton['EulerGamma'] = EulerGamma

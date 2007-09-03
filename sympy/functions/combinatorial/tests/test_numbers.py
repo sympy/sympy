@@ -1,9 +1,7 @@
-import sys
-sys.path.append(".")
-
-import py
 
 from sympy import *
+
+x = Symbol('x')
 
 def test_bernoulli():
     assert bernoulli(0) == 1
@@ -17,7 +15,7 @@ def test_bernoulli():
     assert bernoulli(8) == Rational(-1,30)
     assert bernoulli(10) == Rational(5,66)
     assert bernoulli(1000001) == 0
-    x = Symbol('x')
+
     assert bernoulli(0, x) == 1
     assert bernoulli(1, x) == x-Rational(1,2)
     assert bernoulli(2, x) == x**2-x+Rational(1,6)
@@ -28,7 +26,7 @@ def test_fibonacci():
     assert fibonacci(100) == 354224848179261915075
     assert [lucas(n) for n in range(-3, 5)] == [-4, 3, -1, 2, 1, 3, 4, 7]
     assert lucas(100) == 792070839848372253127
-    x = Symbol('x')
+
     assert fibonacci(1, x) == 1
     assert fibonacci(2, x) == x
     assert fibonacci(3, x) == x**2 + 1
@@ -36,7 +34,7 @@ def test_fibonacci():
 
 def test_bell():
     assert [bell(n) for n in range(8)] == [1, 1, 2, 5, 15, 52, 203, 877]
-    x = Symbol('x')
+
     assert bell(0, x) == 1
     assert bell(1, x) == x
     assert bell(2, x) == x**2 + x
@@ -50,5 +48,5 @@ def test_harmonic():
     # assert harmonic(3,1) == harmonic(3)
     assert harmonic(3,5) == 1 + Rational(1,2**5) + Rational(1,3**5)
     assert harmonic(10,0) == 10
-    assert harmonic(oo,1) == oo
+    assert harmonic(oo,1) == ComplexInfinity
     assert harmonic(oo,2) == (pi**2)/6

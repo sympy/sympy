@@ -1,43 +1,56 @@
 
 from sympy.core import *
 
+###############################################################################
+###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
+###############################################################################
+
 class Zeta(DefinedFunction):
-    """
-    Usage
-    =====
-        zeta(s) -> Riemann zeta function of s
 
-    Notes
-    =====
-        * The zeta function has a pole at s = 1
-        * For even positive integers n, zeta(n) is a rational number
-          times a power of pi
-        * For nonpositive integers n, zeta(n) is a rational number
+    nofargs = (1, 2)
 
-    Examples
-    ========
-        >>> from sympy.specfun.zeta_functions import *
-        >>> zeta(4)
-        1/90*pi**4
-        >>> zeta(5)  # no closed form known
-        zeta(5)
+    def _eval_apply(self, z, a=S.One):
+        z, a = map(Basic.sympify, (z, a))
 
-    """
-    nofargs = 1
+        if isinstance(a, Basic.Number):
+            if isinstance(a, Basic.NaN):
+                return S.NaN
+            elif isinstance(a, Basic.Zero):
+                return self(z)
 
-    def _eval_apply(self, s):
-        if s.is_integer:
-            if s == 0:
-                return Rational(-1,2)
-            if s == 1:
-                return oo
-            if s > 1 and int(s) % 2 == 0:
-                return abs(S.Bernoulli(s)) * 2**(s-1) / S.Factorial(s) * pi**s
-            if s < 1:
-                return -S.Bernoulli(-s+1)/(-s+1)
+        if isinstance(z, Basic.Number):
+            if isinstance(z, Basic.NaN):
+                return S.NaN
+            elif isinstance(z, Basic.Infinity):
+                return S.One
+            elif isinstance(z, Basic.Zero):
+                if a.is_negative:
+                    return S.Half - a - 1
+                else:
+                    return S.Half - a
+            elif isinstance(z, Basic.One):
+                return S.ComplexInfinity
+            elif isinstance(z, Basic.Integer):
+                if isinstance(a, Basic.Integer):
+                    if z.is_negative:
+                        zeta = (-1)**z * S.Bernoulli(-z+1)/(-z+1)
+                    elif z.is_even:
+                        B, F = S.Bernoulli(z), S.Factorial(z)
+                        zeta = 2**(z-1) * abs(B) * pi**z / F
 
+                    if a.is_negative:
+                        return zeta + S.Harmonic(abs(a), z)
+                    else:
+                        return zeta - S.Harmonic(a-1, z)
 
-class DirichletEta(DefinedFunction):
+class ApplyZeta(Apply):
+    pass
+
+Basic.singleton['zeta'] = Zeta
+
+#####
+
+class DirichletEta(DefinedFunction): # TBD
     """
     Dirichlet eta function
     """
@@ -50,54 +63,5 @@ class DirichletEta(DefinedFunction):
             return (1-2**(1-s)) * S.Zeta(s)
 
 
-
-
-class PolyGamma(DefinedFunction):
-    """
-    polygamma(m, z) -- mth order polygamma function of z
-    """
-    nofargs = 2
-
-    #def __repr__(self):
-    #    return "polygamma(%r, %r)" % self._args
-
-    def _eval_apply(self, m, z):
-        # TODO: rational arguments, reflection formula
-        if m.is_integer and m >= 0 and z == 0:
-            return S.Infinity
-        if m == 0:
-            if isinstance(z, Rational):
-                #if z < 0:
-                #    return polygamma(0, 1-z) - pi/tan(pi*z)
-                if z.is_integer and z > 0:
-                    return -S.EulerGamma + S.Harmonic(z-1, 1)
-        # if m == 1:
-        #    if isinstance(z, Rational) and z < 0:
-        #        return -polygamma(1, 1-z) + pi**2 / sin(pi*z)**2
-        if m.is_integer and m > 0 and z.is_integer and z > 0:
-            return (-1)**(m+1)*S.Factorial(m)*(S.Zeta(m+1)-S.Harmonic(z-1, m+1))
-        if m.is_integer and z == Rational(1,2):
-            return (-1)**(m+1)*S.Factorial(m)*(2**(m+1)-1)*S.Zeta(m+1)
-
-    def fdiff(self, argindex=2):
-        if argindex == 2:
-            m = Basic.Symbol('m', dummy=True)
-            z = Basic.Symbol('z', dummy=True)
-            return Lambda(S.PolyGamma(m+1, z), m, z)
-        else:
-            raise NotImplementedError
-
-
-def digamma(z):
-    return polygamma(0, z)
-
-def trigamma(z):
-    return polygamma(1, z)
-
-def tetragamma(z):
-    return polygamma(2, z)
-
-
-Basic.singleton['zeta'] = Zeta
 Basic.singleton['dirichlet_eta'] = DirichletEta
-Basic.singleton['polygamma'] = PolyGamma
+

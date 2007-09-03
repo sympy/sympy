@@ -104,27 +104,10 @@ class ApplyExp(Apply):
         exp, cos, sin = S.Exp(re), S.Cos(im), S.Sin(im)
         return exp * cos + S.ImaginaryUnit * exp * sin
 
-    #def precedence(self):
-    #    b, e = self.as_base_exp()
-    #    if e.is_negative: return 50 # same as default Mul
-    #    return 70
-
-    #def tostr(self, level=0):
-    #    p = self.precedence
-    #    b, e = self.as_base_exp()
-    #    if e.is_negative:
-    #        r = '1/%s(%s)' % (self.func, -self.args[0])
-    #    else:
-    #        r = '%s(%s)' % (self.func, self.args[0])
-    #    if p <= level:
-    #        return '(%s)' % (r)
-    #    return r
-
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
     def as_base_exp(self):
-        #return Basic.Exp1(), self.args[0]
         coeff, terms = self.args[0].as_coeff_terms()
         return self.func(Basic.Mul(*terms)), coeff
 

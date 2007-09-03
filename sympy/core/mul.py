@@ -285,11 +285,8 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         return lhs / rhs
 
     def as_numer_denom(self):
-        numers,denoms = [],[]
+        numers, denoms = [],[]
         for t in self:
-            if isinstance(t, Basic.Number):
-                numers.append(t)
-                continue
             n,d = t.as_numer_denom()
             numers.append(n)
             denoms.append(d)

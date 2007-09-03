@@ -133,8 +133,8 @@ class Factorial(DefinedFunction):
 
 class ApplyFactorial(Apply):
 
-    def _eval_expand_func(self, *args):
-        return S.Gamma(1 + self.args[0])
+    def _eval_rewrite_as_gamma(self, arg):
+        return S.Gamma(1 + arg)
 
     def tostr(self, level=0):
         return '%s!' % self.args[0].tostr(self.precedence)
@@ -220,9 +220,8 @@ class RisingFactorial(DefinedFunction):
 
 class ApplyRisingFactorial(Apply):
 
-    def _eval_expand_func(self, *args):
-        x, k = self.args[0], self.args[1]
-        return S.Gamma(x+k)/S.Gamma(x)
+    def _eval_rewrite_as_gamma(self, x, k):
+        return S.Gamma(x + k) / S.Gamma(x)
 
 class FallingFactorial(DefinedFunction):
     """Falling factorial (related to rising factorial) is a double valued
@@ -290,9 +289,8 @@ class FallingFactorial(DefinedFunction):
 
 class ApplyFallingFactorial(Apply):
 
-    def _eval_expand_func(self, *args):
-        x, k = self.args[0], self.args[1]
-        return (-1)**k*S.Gamma(-x+k)/S.Gamma(-x)
+    def _eval_rewrite_as_gamma(self, x, k):
+        return (-1)**k * S.Gamma(-x + k) / S.Gamma(-x)
 
 Basic.singleton['rf'] = RisingFactorial
 Basic.singleton['ff'] = FallingFactorial
@@ -408,9 +406,8 @@ class Binomial(DefinedFunction):
 
 class ApplyBinomial(Apply):
 
-    def _eval_expand_func(self, *args):
-        r, k = self.args[0], self.args[1]
-        return S.Gamma(r+1)/(S.Gamma(r-k+1)*S.Gamma(k+1))
+    def _eval_rewrite_as_gamma(self, r, k):
+        return S.Gamma(r+1) / (S.Gamma(r-k+1)*S.Gamma(k+1))
 
     def _eval_is_integer(self):
         return self.args[0].is_integer and self.args[1].is_integer

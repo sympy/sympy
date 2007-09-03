@@ -911,7 +911,7 @@ def hypersimp(term, n, consecutive=True, simplify=True):
 
            (2) Rewrite all occurences of gamma in terms of produtcs
                of gamma and rising factorial with integer, absolute
-               constant exponents.
+               constant exponent.
 
            (3) Perform simplification of nested fractions, powers
                and if the resulting expression is a quotient of
@@ -920,7 +920,7 @@ def hypersimp(term, n, consecutive=True, simplify=True):
        If the term given is hypergeometric then the result of this
        procudure is a quotient of polynomials of minimal degree.
        Sequence is hypergeometric if it is anihilated by linear,
-       homogeneous difference equation of first order, so in
+       homogeneous recurrence operator of first order, so in
        other words when a(n+1)/a(n) is a rational function.
 
        When the status of being hypergeometric or not, is required
@@ -941,8 +941,7 @@ def hypersimp(term, n, consecutive=True, simplify=True):
     if consecutive == True:
         term = term.subs(n, n+1)/term
 
-    expr = term.expand(func=True, basic=False) # expand n!, C(n, k), rf, ff
-    expr = expr.expand(func=True, basic=False) # expand gamma()
+    expr = term.rewrite(S.Gamma).expand(func=True, basic=False)
 
     p, q = together(expr).as_numer_denom()
 
