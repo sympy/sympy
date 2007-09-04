@@ -24,7 +24,7 @@ def dotest(s):
         for y in l:
             s(x,y)
 
-def xtest_basic():
+def test_basic():
     def s(a,b):
         x = a
         x = +a
@@ -36,7 +36,7 @@ def xtest_basic():
         x = a**b
     dotest(s)
 
-def xtest_ibasic():
+def test_ibasic():
     def s(a,b):
         x = a
         x += b
