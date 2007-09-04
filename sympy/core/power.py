@@ -202,6 +202,9 @@ class Pow(Basic, ArithMeths, RelMeths):
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(exp(3*y*log(x)),z) -> z**(2/3*y)
         return self.base.subs(old, new) ** self.exp.subs(old, new)
 
+    def as_powers_dict(self):
+        return { self.base : self.exp }
+
     def as_base_exp(self):
         if isinstance(self.base, Basic.Rational) and self.base.p==1:
             return 1/self.base, -self.exp

@@ -1,5 +1,5 @@
 from sympy import Basic, Symbol, Real, Rational, cos, exp, log, oo, sqrt, \
-    symbols
+    symbols, Integral
 
 
 def dotest(s):
@@ -142,3 +142,14 @@ def test_len():
     assert len(e) == 2
     e = x+y+z
     assert len(e) == 3
+
+def test_doit():
+    x = Symbol('x')
+    a = Integral(x**2, x)
+
+    assert isinstance(a.doit(), Integral) == False
+
+    assert isinstance(a.doit(integrals=True), Integral) == False
+    assert isinstance(a.doit(integrals=False), Integral) == True
+
+    assert (2*Integral(x, x)).doit() == x**2

@@ -512,6 +512,24 @@ class Basic(BasicMeths):
         """
         return Basic.Integer(len(self[:])-1) + sum([t.count_ops(symbolic=symbolic) for t in self])
 
+    def doit(self, **hints):
+        """Evaluate objects that are not evaluated by default like limits,
+           integrals, sums and products. All objects of this kind will be
+           evaluated unless some species were excluded via 'hints'.
+
+           >>> from sympy import *
+           >>> x, y = symbols('xy')
+
+           >>> 2*Integral(x, x)
+           2*Integral(x, x)
+
+           >>> (2*Integral(x, x)).doit()
+           x**2
+
+        """
+        terms = [ term.doit(**hints) for term in self ]
+        return self.__class__(*terms, **self._assumptions)
+
     ###########################################################################
     ################# EXPRESSION REPRESENTATION METHODS #######################
     ###########################################################################
@@ -726,6 +744,9 @@ class Basic(BasicMeths):
                 im_part.append(coeff)
 
         return (Basic.Add(*re_part), Basic.Add(*im_part))
+
+    def as_powers_dict(self):
+        return { self : S.One }
 
     def as_base_exp(self):
         # a -> b ** e
@@ -1029,6 +1050,9 @@ class Atom(Basic):
 
     def count_ops(self, symbolic=True):
         return Basic.Zero()
+
+    def doit(self, **hints):
+        return self
 
     def _eval_integral(self, s):
         if s==self:

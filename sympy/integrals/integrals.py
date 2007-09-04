@@ -10,36 +10,42 @@ class Integral(Basic, NoRelMeths, ArithMeths):
 
     precedence = Basic.Apply_precedence
 
-    def __new__(cls, func, *symbols, **assumptions):
-        func = Basic.sympify(func)
+    def __new__(cls, function, *symbols, **assumptions):
+        function = Basic.sympify(function)
 
-        if isinstance(func, Basic.Number):
-            if isinstance(func, Basic.NaN):
+        if isinstance(function, Basic.Number):
+            if isinstance(function, Basic.NaN):
                 return S.NaN
-            elif isinstance(func, Basic.Infinity):
+            elif isinstance(function, Basic.Infinity):
                 return S.Infinity
-            elif isinstance(func, Basic.NegativeInfinity):
+            elif isinstance(function, Basic.NegativeInfinity):
                 return S.NegativeInfinity
 
-        variables, limits = [], {}
-
         if symbols:
-            for var in symbols:
-                if isinstance(var, Symbol):
-                    variables.append(var)
-                elif isinstance(var, (tuple, list)) and len(var) == 3:
-                    variables.append(var[0])
-                    limits[var[0]] = var[1:]
-                else:
-                    raise ValueError("Invalid arguments")
-        else:
-            variables = list(func.atoms(Symbol))
+            limits = []
 
-        if not variables:
-            return func
+            for V in symbols:
+                if isinstance(V, Symbol):
+                    limits.append(V)
+                    continue
+                elif isinstance(V, (tuple, list)):
+                    if len(V) == 3:
+                        limits.append(tuple(V))
+                        continue
+                    elif len(V) == 1:
+                        if isinstance(V[0], Symbol):
+                            limits.append(V[0])
+                            continue
+
+                raise ValueError("Invalid integration variable or limits")
+        else:
+            limits = func.atoms(Symbol)
+
+            if not limits:
+                return function
 
         obj = Basic.__new__(cls, **assumptions)
-        obj._args = (func, variables, limits)
+        obj._args = (function, tuple(limits))
 
         return obj
 
@@ -48,68 +54,62 @@ class Integral(Basic, NoRelMeths, ArithMeths):
         return self._args[0]
 
     @property
-    def variables(self):
+    def limits(self):
         return self._args[1]
 
     @property
-    def limits(self):
-        return self._args[2]
+    def variables(self):
+        variables = []
 
-    @property
-    def is_definite(self):
-        return not self.is_indefinite
+        for L in self.limits:
+            if isinstance(L, tuple):
+                variables.append(L[0])
+            else:
+                variables.append(L)
 
-    @property
-    def is_indefinite(self):
-        return not self.limits
+        return variables
 
     def tostr(self, level=0):
-        elems = []
+        L = ', '.join([ str(l) for l in self.limits ])
+        return 'Integral(%s, %s)' % (self.function.tostr(), L)
 
-        for var in self.variables:
-            try:
-                a, b = self.limits[var]
-                elems.append(repr((var, a, b)))
-            except KeyError:
-                elems.append(var.tostr())
+    def doit(self, **hints):
+        if not hints.get('integrals', True):
+            return self
 
-        r = 'Integral(%s)' % ', '.join([self.function.tostr()] + elems)
+        function = self.function
 
-        if self.precedence <= level:
-            return '(%s)' % (r)
-        else:
-            return r
+        for L in self.limits:
+            if isinstance(L, tuple):
+                x, a, b = L
+            else:
+                x = L
 
-    def doit(self):
-        func = self.function
-
-        for i, var in enumerate(self.variables):
-            antideriv = self._eval_integral(func, var)
+            antideriv = self._eval_integral(function, x)
 
             if antideriv is None:
                 return self
             else:
-                try:
-                    a, b = self.limits[var]
+                if not isinstance(L, tuple):
+                    function = antideriv
+                else:
+                    A = antideriv.subs(x, a)
 
-                    # TODO: find singularities
-
-                    Fb = limit(antideriv, var, b)
-                    Fa = limit(antideriv, var, a)
-
-                    if isinstance(Fb, Basic.NaN):
-                        return self
-                    if isinstance(Fa, Basic.NaN):
+                    if isinstance(A, Basic.NaN):
+                        A = limit(antideriv, x, a)
+                    if isinstance(A, Basic.NaN):
                         return self
 
-                    func = Fb - Fa
-                except KeyError:
-                    func = antideriv
+                    B = antideriv.subs(x, b)
 
-        if self.is_indefinite:
-            return func# + Symbol('C')
-        else:
-            return func
+                    if isinstance(B, Basic.NaN):
+                        B = limit(antideriv, x, b)
+                    if isinstance(B, Basic.NaN):
+                        return self
+
+                    function = B - A
+
+        return function
 
     def _eval_integral(self, f, x):
         # TODO : add table lookup for logarithmic and sine/cosine integrals
@@ -126,11 +126,8 @@ def integrate(*args, **kwargs):
        >>> from sympy import *
        >>> x, y = symbols('xy')
 
-       #>>> integrate(log(x), x)
-       #C - x + x*log(x)
-
-       #>>> integrate(tan(x), x)
-       #-log(cos(x)) + C
+       >>> integrate(log(x), x)
+       -x + x*log(x)
 
     """
     integral = Integral(*args, **kwargs)

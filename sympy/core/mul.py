@@ -284,6 +284,9 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             return Basic.One()
         return lhs / rhs
 
+    def as_powers_dict(self):
+        return dict([ term.as_base_exp() for term in self ])
+
     def as_numer_denom(self):
         numers, denoms = [],[]
         for t in self:
