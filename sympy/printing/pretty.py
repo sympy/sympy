@@ -139,42 +139,56 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Integral(self, integral):
-        # XXX works for 1D case only
         f   = integral.function
-        xab = integral.limits[0]
-        if isinstance(xab, tuple):
-            x  = xab[0]
-            ab = xab[1:]
-        else:
-            x  = xab
-            ab = None
 
         # Add parentheses if a sum and create pretty form for argument
         prettyF = self._print(f)
         if isinstance(f, Basic.Add):
             prettyF = prettyForm(*prettyF.parens())
 
-        arg = prettyForm( *stringPict.next(prettyF, " d" , self._print(x)) )
+        # dx dy dz ...
+        arg = prettyF
+        for x,ab in integral.limits:
+            arg = prettyForm(*arg.right(' d', self._print(x)))
+
         arg.baseline = 0
 
-        # Create pretty forms for endpoints, if definite integral
-        if ab is not None:
-            prettyA = self._print(ab[0])
-            prettyB = self._print(ab[1])
+        # \int \int \int ...
+        firstterm = True
+        S = None
+        for x,ab in integral.limits:
+            # Create pretty forms for endpoints, if definite integral
+            if ab is not None:
+                prettyA = self._print(ab[0])
+                prettyB = self._print(ab[1])
 
-        # Create bar based on the height of the argument
-        bar = '  |   ' + ('\r  |   ' * (arg.height()+1))
+            # Create bar based on the height of the argument
+            if firstterm:
+                spc = 2
+            else:
+                spc = 1
+            bar = ' |'+' '*spc + (('\r |'+' '*spc) * (arg.height()+1))
 
-        # Construct the pretty form with the integral sign and the argument
-        pform = prettyForm(bar)
-        pform = prettyForm(*pform.below('/  '))
-        pform = prettyForm(*pform.top(' /'))
-        pform.baseline = (arg.height() + 3)/2
+            # Construct the pretty form with the integral sign and the argument
+            pform = prettyForm(bar)
+            pform = prettyForm(*pform.below('/'+' '*(1+spc)))
+            pform = prettyForm(*pform.top('  /'+' '*(spc-1)))
+            pform.baseline = (arg.height() + 3)/2
 
-        if ab is not None:
-            pform = prettyForm(*stringPict.top(pform, prettyB))
-            pform = prettyForm(*stringPict.below(pform, prettyA))
-        pform = prettyForm(*stringPict.right(pform, arg))
+            if ab is not None:
+                pform = prettyForm(*stringPict.top(pform, prettyB))
+                pform = prettyForm(*stringPict.below(pform, prettyA))
+
+            if firstterm:
+                S = pform   # first term
+            else:
+                S = prettyForm(*stringPict.left(S, pform))
+
+            firstterm = False
+
+        # XXX cosmetics: remove extra space after S ?
+        # (originally placed here to pass all tests)
+        pform = prettyForm(*stringPict.right(stringPict(' '),S,' ', arg))
         return pform
 
     def _print_ApplyExp(self, e):

@@ -99,6 +99,14 @@ def test_pretty_integrals():
     f_5 = Integral(x**2, (x,Rational(1,2),10))
     assert pretty(f_5) == '  10       \n   /       \n  |        \n  |    2   \n  |   x  dx\n  |        \n /         \n 1/2       '
 
+    # Nested integrals
+    f_6 = Integral(x**2*y**2, x,y)
+    assert pretty(f_6) == '   /  /             \n  |  |              \n  |  |    2  2      \n  |  |   x *y  dx dy\n  |  |              \n /  /               '
+
+    # Nested integrals with limits
+    f_7 = Integral(x**2*sin(y), (x,0,1), (y,0,pi))
+    assert pretty(f_7) == '  pi 1                    \n   /  /                   \n  |  |                    \n  |  |    2               \n  |  |   x *(sin(y)) dx dy\n  |  |                    \n /  /                     \n  0  0                    '
+
 def _test_pretty_limits():
     assert pretty( limit(x, x, oo, evaluate=False) ) == ' lim x\nx->oo '
     assert pretty( limit(x**2, x, 0, evaluate=False) ) == '     2\nlim x \nx->0  '  
