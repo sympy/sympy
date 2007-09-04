@@ -3,7 +3,7 @@ import py
 from sympy import *
 from sympy.printing.latex import latex
 
-x = Symbol('x')
+x,y = symbols('xy')
 
 def test_latex_basic():
     assert latex(1+x) == "$1+x$"
@@ -38,9 +38,11 @@ def test_latex_derivatives():
     assert latex(diff(sin(x)+x**2, x, evaluate=False)) == \
         r"$\frac{\partial}{\partial x} \left({x}^{2}+\mathrm{sin}\left(x\right)\right)$"
 
-def _test_latex_integrals():
-    assert latex(integrate(log(x), x, evaluate=False)) == r"$\int \mathrm{log}\left(x\right)\,dx$"
-    assert latex(integrate(x**2, (x,0,1), evaluate=False)) == r"$\int^0_1 {x}^{2}\,dx$"
+def test_latex_integrals():
+    assert latex(Integral(log(x), x)) == r"$\int \mathrm{log}\left(x\right)\,dx$"
+    assert latex(Integral(x**2, (x,0,1))) == r"$\int_{0}^{1} {x}^{2}\,dx$"
+    assert latex(Integral(x**2, (x,10,20))) == r"$\int_{10}^{20} {x}^{2}\,dx$"
+    assert latex(Integral(y*x**2, (x,0,1), y)) == r"$\int \int_{0}^{1} y {x}^{2}\,dx\,dy$"
 
 #def test_latex_limits():
 #    assert latex(limit(x, x, oo, evaluate=False)) == r"$\lim_{x \to \infty}x$"

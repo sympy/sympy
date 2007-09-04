@@ -80,23 +80,23 @@ def test_pretty_derivatives():
     f_4 = Derivative(2*x*y, y, x, evaluate=False) + x**2
     assert pretty(f_4) == '        2        \n 2     d         \nx  + -----(2*x*y)\n     dx dy       '
 
-def _test_pretty_integrals():
+def test_pretty_integrals():
     # Simple
-    f_1 = integrate(log(x), x, evaluate=False)
+    f_1 = Integral(log(x), x)
     assert pretty(f_1) == '   /           \n  |            \n  |   log(x) dx\n  |            \n /             '
 
-    f_2 = integrate(x**2, x, evaluate=False)
+    f_2 = Integral(x**2, x)
     assert pretty(f_2) == '   /       \n  |        \n  |    2   \n  |   x  dx\n  |        \n /         '
 
     # Double nesting of pow
-    f_3 = integrate(x**(2**x), x, evaluate=False)
+    f_3 = Integral(x**(2**x), x)
     assert pretty(f_3) == '   /          \n  |           \n  |           \n  |    / x\\   \n  |    \\2 /   \n  |   x     dx\n /            '
 
     # Definite integrals
-    f_4 = integrate(x**2, (x,1,2), evaluate=False)
+    f_4 = Integral(x**2, (x,1,2))
     assert pretty(f_4) == '  2        \n   /       \n  |        \n  |    2   \n  |   x  dx\n  |        \n /         \n  1        '
 
-    f_5 = integrate(x**2, (x,Rational(1,2),10), evaluate=False)
+    f_5 = Integral(x**2, (x,Rational(1,2),10))
     assert pretty(f_5) == '  10       \n   /       \n  |        \n  |    2   \n  |   x  dx\n  |        \n /         \n 1/2       '
 
 def _test_pretty_limits():

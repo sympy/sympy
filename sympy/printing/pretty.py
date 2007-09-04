@@ -139,8 +139,15 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Integral(self, integral):
-        f,x = integral.f, integral.x
-        a,b = integral.a, integral.b
+        # XXX works for 1D case only
+        f   = integral.function
+        xab = integral.limits[0]
+        if isinstance(xab, tuple):
+            x  = xab[0]
+            ab = xab[1:]
+        else:
+            x  = xab
+            ab = None
 
         # Add parentheses if a sum and create pretty form for argument
         prettyF = self._print(f)
@@ -151,9 +158,9 @@ class PrettyPrinter(Printer):
         arg.baseline = 0
 
         # Create pretty forms for endpoints, if definite integral
-        if a is not None:
-            prettyA = self._print(a)
-            prettyB = self._print(b)
+        if ab is not None:
+            prettyA = self._print(ab[0])
+            prettyB = self._print(ab[1])
 
         # Create bar based on the height of the argument
         bar = '  |   ' + ('\r  |   ' * (arg.height()+1))
@@ -164,7 +171,7 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.top(' /'))
         pform.baseline = (arg.height() + 3)/2
 
-        if a is not None:
+        if ab is not None:
             pform = prettyForm(*stringPict.top(pform, prettyB))
             pform = prettyForm(*stringPict.below(pform, prettyA))
         pform = prettyForm(*stringPict.right(pform, arg))

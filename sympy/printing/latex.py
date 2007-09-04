@@ -49,12 +49,25 @@ class LatexPrinter(Printer):
         return f
 
     def _print_Integral(self, e):
-        if e.a is None:
-            # if this is an indefinite integral
-            return "\int %s\,d%s" % (self._print(e.f), self._print(e.x))
-        else:
-            return "\int^%s_%s %s\,d%s" % (self._print(e.a), self._print(e.b),
-                                           self._print(e.f), self._print(e.x))
+        res = ""
+        for vab in reversed(e.limits):
+            if isinstance(vab, tuple):
+                v  = vab[0]
+                ab = vab[1:]
+            else:
+                v  = vab
+                ab = None
+
+            res += '\int'
+            if ab is not None:
+                res += '_{%s}^{%s}' % (self._print(ab[0]), self._print(ab[1]))
+
+            res += ' '
+
+        res += '%s\,' % self._print(e.function)
+        res += '\,'.join('d%s' % self._print(x)  for x in e.variables)
+
+        return res
 
     def _print_Apply(self, e):
         # Check to see if there is something here for this func first

@@ -60,6 +60,7 @@ class MathMLPrinter(Printer):
         return x
 
     def _print_Integral(self, e):
+        # FIXME doesn't work -- needs to be updated to the new Integral class
         x = self.dom.createElement('apply')
         x.appendChild(self.dom.createElement(self.mathml_tag(e)))
 
