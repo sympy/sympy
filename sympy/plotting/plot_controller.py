@@ -58,7 +58,9 @@ class PlotController(object):
                 key.F4:'rot_preset_perspective',
                 
                 key.F5:'toggle_axes',
-                key.F6:'toggle_axe_colors'
+                key.F6:'toggle_axe_colors',
+    
+                key.F8:'save_image'
              }
 
     def __init__(self, window, **kwargs):
@@ -92,7 +94,9 @@ class PlotController(object):
                 'rot_preset_perspective':False,
                 # axes
                 'toggle_axes':False,
-                'toggle_axe_colors':False
+                'toggle_axe_colors':False,
+                # screenshot
+                'save_image':False
             }
         
     def update(self, dt):
@@ -141,6 +145,10 @@ class PlotController(object):
         if self.action['toggle_axe_colors']:
             self.action['toggle_axe_colors'] = False
             self.camera.axes.toggle_colors()
+            
+        if self.action['save_image']:
+            self.action['save_image'] = False
+            self.window.plot.saveimage()
 
         return True
 

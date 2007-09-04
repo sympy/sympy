@@ -1,3 +1,5 @@
+from sympy import Integer
+
 from threading import RLock
 
 from pyglet.gl import *
@@ -9,6 +11,7 @@ from plot_mode import PlotMode
 import plot_modes
 
 from time import sleep
+from os import getcwd, listdir
 from util import parse_option_string
 
 class Plot(object):
@@ -238,13 +241,16 @@ class Plot(object):
         if self._window:
             self._window.close()
 
-    def saveimage(self, outfile, format='', size=(600, 500)):
+    def saveimage(self, outfile=None, format='', size=(600, 500)):
         """
         Saves a screen capture of the plot window to an
-        image file. Outfile can either be a path or a file
-        object. If format is omitted, it is determined from
-        the filename extension. This is of course only
-        possible if outfile is a path.
+        image file.
+        
+        If outfile is given, it can either be a path
+        or a file object. Otherwise a png image will
+        be saved to the current working directory.
+        If the format is omitted, it is determined from
+        the filename extension.
         """
         self._screenshot.save(outfile, format, size)
 
@@ -271,7 +277,7 @@ class Plot(object):
         Parses and adds a PlotMode to the function
         list.
         """
-        if not (isinstance(i, int) and i >= 0):
+        if not (isinstance(i, (int, Integer)) and i >= 0):
             raise ValueError("Function index must "
                              "be an integer >= 0.")
 
@@ -415,9 +421,24 @@ class ScreenShot:
             self._plot.axes.reset_resources()
             self._plot._window = PlotWindow(self._plot, **self._plot._win_args)
             self.invisibleMode = True
-            
-        if self.outfile:
-            if type(self.outfile) in (str, unicode):
-                self.screenshot_requested = True
-            if type(self.outfile)==file and self.format:
-                self.screenshot_requested = True
+        
+        if type(self.outfile) in (str, unicode):
+            self.screenshot_requested = True
+        elif type(self.outfile)==file and self.format:
+            self.screenshot_requested = True
+        elif self.outfile==None:
+            self.outfile=self._create_unique_path()
+            self.screenshot_requested = True
+            print self.outfile
+                
+    def _create_unique_path(self):
+        cwd = getcwd()
+        l = listdir(cwd)
+        path = ''
+        i=0
+        while True:
+            if not 'plot_%s.png'%i in l:
+                path = cwd+'/plot_%s.png'%i
+                break
+            i+=1
+        return path
