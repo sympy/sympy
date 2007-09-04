@@ -26,15 +26,15 @@ class Integral(Basic, NoRelMeths, ArithMeths):
 
             for V in symbols:
                 if isinstance(V, Symbol):
-                    limits.append(V)
+                    limits.append((V,None))
                     continue
                 elif isinstance(V, (tuple, list)):
                     if len(V) == 3:
-                        limits.append(tuple(V))
+                        limits.append( (V[0],tuple(V[1:])) )
                         continue
                     elif len(V) == 1:
                         if isinstance(V[0], Symbol):
-                            limits.append(V[0])
+                            limits.append((V[0],None))
                             continue
 
                 raise ValueError("Invalid integration variable or limits")
@@ -61,16 +61,23 @@ class Integral(Basic, NoRelMeths, ArithMeths):
     def variables(self):
         variables = []
 
-        for L in self.limits:
-            if isinstance(L, tuple):
-                variables.append(L[0])
-            else:
-                variables.append(L)
+        for x,ab in self.limits:
+            variables.append(x)
 
         return variables
 
+    @staticmethod
+    def _xab_tostr(xab):
+        """str representation of integration variable with optional limits"""
+        x,ab = xab
+        if ab is None:
+            return str(x)
+        else:
+            return str(xab)
+
+
     def tostr(self, level=0):
-        L = ', '.join([ str(l) for l in self.limits ])
+        L = ', '.join([ self._xab_tostr(l) for l in self.limits ])
         return 'Integral(%s, %s)' % (self.function.tostr(), L)
 
     def doit(self, **hints):
@@ -79,20 +86,16 @@ class Integral(Basic, NoRelMeths, ArithMeths):
 
         function = self.function
 
-        for L in self.limits:
-            if isinstance(L, tuple):
-                x, a, b = L
-            else:
-                x = L
-
+        for x,ab in self.limits:
             antideriv = self._eval_integral(function, x)
 
             if antideriv is None:
                 return self
             else:
-                if not isinstance(L, tuple):
+                if ab is None:
                     function = antideriv
                 else:
+                    a,b = ab
                     A = antideriv.subs(x, a)
 
                     if isinstance(A, Basic.NaN):

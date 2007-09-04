@@ -50,14 +50,7 @@ class LatexPrinter(Printer):
 
     def _print_Integral(self, e):
         res = ""
-        for vab in reversed(e.limits):
-            if isinstance(vab, tuple):
-                v  = vab[0]
-                ab = vab[1:]
-            else:
-                v  = vab
-                ab = None
-
+        for v,ab in reversed(e.limits):
             res += '\int'
             if ab is not None:
                 res += '_{%s}^{%s}' % (self._print(ab[0]), self._print(ab[1]))
