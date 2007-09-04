@@ -3,7 +3,11 @@ sys.path.append(".")
 
 disabled = False
 try:
-    from ctypes import *
+    # pyglet requires ctypes > 1.0.0
+    import ctypes
+    ctypes_major = int(ctypes.__version__.split('.')[0])
+    if ctypes_major < 1:
+        disabled = True
 except:
     disabled = True
 
