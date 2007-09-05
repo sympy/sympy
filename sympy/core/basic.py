@@ -155,7 +155,7 @@ class Basic(BasicMeths):
         return obj
 
     @staticmethod
-    def sympify(a):
+    def sympify(a, sympify_lists=False):
         """Converts an arbitrary expression to a type that can be used
            inside sympy. For example, it will convert python int's into
            instance of sympy.Rational, floats into intances of sympy.Real,
@@ -166,6 +166,10 @@ class Basic(BasicMeths):
                - any object defined in sympy (except maybe matrices [TODO])
                - standard numeric python types: int, long, float, Decimal
                - strings (like "0.09" or "2e-19")
+
+           If sympify_lists is set to True then sympify will also accept
+           lists, tuples and sets. It will return the same type but with
+           all of the entries sympified.
 
            If the argument is already a type that sympy understands, it will do
            nothing but return that value. This can be used at the begining of a
@@ -200,13 +204,14 @@ class Basic(BasicMeths):
 
             if ireal + iimag*1j == a:
                 return ireal + iimag*Basic.ImaginaryUnit()
-            else:
-                return real + Basic.ImaginaryUnit() * imag
-        elif isinstance(a, (list,tuple)) and len(a)==2:
+            return real + Basic.ImaginaryUnit() * imag
+        elif isinstance(a, (list,tuple)) and len(a) == 2:
             return Basic.Interval(*a)
+        elif isinstance(a, (list,tuple,set)) and sympify_lists:
+            return type(a)([Basic.sympify(x, True) for x in a])
         else:
             if not isinstance(a, str):
-                # At this point we were given arbitray expression
+                # At this point we were given an arbitrary expression
                 # which does not inherit after Basic. This may be
                 # SAGE's expression (or something alike) so take
                 # its normal form via str() and try to parse it.
@@ -215,7 +220,8 @@ class Basic(BasicMeths):
             try:
                 return parser.Expr(a).tosymbolic()
             except:
-                raise ValueError("%r is NOT a valid SymPy expression" % a)
+                pass
+        raise ValueError("%r is NOT a valid SymPy expression" % a)
 
     @Memoizer('Basic', MemoizerArg((type, type(None), tuple), name='type'), return_value_converter = lambda obj: obj.copy())
     def atoms(self, type=None):

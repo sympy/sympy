@@ -107,7 +107,7 @@ class PrettyPrinter(Printer):
 
     def _print_ApplyConjugate(self, e):
         pform = self._print(e.args[0])
-        return prettyForm(*stringPict.top(pform, '_'*pform.width()))
+        return prettyForm(*stringPict.above(pform, '_'*pform.width()))
 
     def _print_ApplyAbs(self, e):
         pform = self._print(e.args[0])
@@ -149,7 +149,11 @@ class PrettyPrinter(Printer):
         # dx dy dz ...
         arg = prettyF
         for x,ab in integral.limits:
-            arg = prettyForm(*arg.right(' d', self._print(x)))
+            prettyArg = self._print(x)
+            if prettyArg.width() > 1:
+                arg = prettyForm(*arg.right(' d(', prettyArg, ')'))
+            else:
+                arg = prettyForm(*arg.right(' d', prettyArg))
 
         arg.baseline = 0
 
@@ -157,38 +161,36 @@ class PrettyPrinter(Printer):
         firstterm = True
         S = None
         for x,ab in integral.limits:
-            # Create pretty forms for endpoints, if definite integral
-            if ab is not None:
-                prettyA = self._print(ab[0])
-                prettyB = self._print(ab[1])
-
             # Create bar based on the height of the argument
-            if firstterm:
-                spc = 2
-            else:
-                spc = 1
-            bar = ' |'+' '*spc + (('\r |'+' '*spc) * (arg.height()+1))
+            bar = ' |' + ('\r |' * (arg.height()+1))
 
             # Construct the pretty form with the integral sign and the argument
             pform = prettyForm(bar)
-            pform = prettyForm(*pform.below('/'+' '*(1+spc)))
-            pform = prettyForm(*pform.top('  /'+' '*(spc-1)))
+            pform = prettyForm(*pform.below(' /  '))
+            pform = prettyForm(*pform.above('   /'))
             pform.baseline = (arg.height() + 3)/2
 
             if ab is not None:
-                pform = prettyForm(*stringPict.top(pform, prettyB))
-                pform = prettyForm(*stringPict.below(pform, prettyA))
+                # Create pretty forms for endpoints, if definite integral
+                prettyA = self._print(ab[0])
+                prettyB = self._print(ab[1])
+
+                # Add spacing so that endpoint can more easily be
+                # identified with the correct integral sign
+                spc = max(1, 4 - prettyB.width())
+                prettyB = prettyForm(*prettyB.left(' ' * spc))
+
+                pform = prettyForm(*pform.above(prettyB))
+                pform = prettyForm(*pform.below(prettyA))
+                pform = prettyForm(*pform.right(' '))
 
             if firstterm:
                 S = pform   # first term
+                firstterm = False
             else:
-                S = prettyForm(*stringPict.left(S, pform))
+                S = prettyForm(*S.left(pform))
 
-            firstterm = False
-
-        # XXX cosmetics: remove extra space after S ?
-        # (originally placed here to pass all tests)
-        pform = prettyForm(*stringPict.right(stringPict(' '),S,' ', arg))
+        pform = prettyForm(*arg.left(S))
         return pform
 
     def _print_ApplyExp(self, e):
@@ -213,7 +215,7 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*stringPict.next(prettyFunc, '('))
         pform = prettyForm(*stringPict.next(pform, prettyArgs))
         pform = stringPict.next(pform, ')')
-        return prettyForm(binding=prettyForm.FUNC, *pform)
+        return prettyForm(binding=prettyForm.ATOM, *pform)
 
     def _print_Add(self, sum):
         pforms = []
@@ -293,7 +295,7 @@ class PrettyPrinter(Printer):
             s2 = stringPict("\\/")
             for x in xrange(1, bpretty.height()):
                 s3 = stringPict(" " * (2*x+1) + "/")
-                s2 = stringPict(*s2.top(s3))
+                s2 = stringPict(*s2.above(s3))
             s2.baseline = -1
 
             s = prettyForm("__" + "_" * bpretty.width())

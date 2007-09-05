@@ -6,6 +6,10 @@ that can be used in the str method for pretty printing.
 Updates by Jason gedge (email <my last name> at cs mun ca)
     - terminal_string() method
     - minor fixes and changes (mostly to prettyForm)
+
+TODO:
+    - Allow left/center/right alignment options for above/below and
+      top/center/bottom alignment options for left/right
 """
 
 class stringPict:
@@ -74,10 +78,10 @@ class stringPict:
         """Put pictures next to this one.
         Returns string, baseline arguments for stringPict.
         (Multiline) strings are allowed, and are given a baseline of 0.
-        >>> print stringPict("10").right("+",stringPict("1\r-\r2",1))[0]
-           1
-        10+-
-           2
+        >>> print stringPict("10").right(" + ",stringPict("1\r-\r2",1))[0]
+             1
+        10 + -
+             2
         """
         return stringPict.next(self, *args)
 
@@ -138,8 +142,8 @@ class stringPict:
          s, baseline = stringPict.stack(self, *args)
          return s, self.baseline
 
-    def top(self, *args):
-        """Put pictures (top to bottom) at top.
+    def above(self, *args):
+        """Put pictures above this picture.
         Returns string, baseline arguments for stringPict.
         Baseline is baseline of bottom picture.
         """
@@ -177,7 +181,7 @@ class stringPict:
         Produces ugly results for big n inserts.
         """
         #put line over expression
-        result = self.top('_'*self.width())
+        result = self.above('_'*self.width())
         #construct right half of root symbol
         height = self.height()
         slash = '\n'.join(
@@ -193,7 +197,7 @@ class stringPict:
         #put n on top, as low as possible
         if n is not None and n.width()>downline.width():
             downline = downline.left(' '*(n.width()-downline.width()))
-            downline = downline.top(n)
+            downline = downline.above(n)
         #build root symbol
         root = downline.right(slash)
         #glue it on at the proper height
@@ -232,8 +236,10 @@ class stringPict:
             svals.extend([ sval[i:i+ncols] for sval in self.picture ])
             svals.append("") # a vertical spacer
             i += ncols
+
         del svals[-1] #  Get rid of the last spacer
-        return type(self.picture[0]).join("\n", svals)
+        _str = type(self.picture[0])
+        return _str.join(_str("\n"), svals)
 
     def __eq__(self, o):
         if isinstance(o, str):
@@ -347,7 +353,7 @@ class prettyForm(stringPict):
         if b.binding == prettyForm.POW: b = stringPict(*b.parens())
         top = stringPict(*b.left(' '*a.width()))
         bottom = stringPict(*a.right(' '*b.width()))
-        return prettyForm(binding=prettyForm.POW, *bottom.top(top))
+        return prettyForm(binding=prettyForm.POW, *bottom.above(top))
 
     simpleFunctions = ["sin", "cos", "tan"]
     @staticmethod
