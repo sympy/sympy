@@ -884,17 +884,17 @@ def powsimp(expr, deep=False):
 
     return _powsimp(separate(expr, deep=deep))
 
-def normal(expr):
+def normal(expr, *syms):
     p, q = together(expr).as_numer_denom()
 
-    if p.is_polynomial() and q.is_polynomial():
+    if p.is_polynomial(*syms) and q.is_polynomial(*syms):
         from sympy.polynomials import gcd, quo
 
-        G = gcd(p, q)
+        G = gcd(p, q, *syms)
 
         if not isinstance(G, Basic.One):
-            p = quo(p, G)
-            q = quo(q, G)
+            p = quo(p, G, *syms)
+            q = quo(q, G, *syms)
 
     return p / q
 

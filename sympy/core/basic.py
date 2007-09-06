@@ -259,6 +259,15 @@ class Basic(BasicMeths):
         from sympy.simplify import hypersimp
         return hypersimp(self, arg, simplify=False) is not None
 
+    def is_fraction(self, syms):
+        p, q = self.as_numer_denom()
+
+        if p.is_polynomial(*syms):
+            if q.is_polynomial(*syms):
+                return True
+
+        return False
+
     def _eval_is_polynomial(self, syms):
         return
 
@@ -1101,6 +1110,7 @@ class SingletonFactory:
     A map between singleton classes and the corresponding instances.
     E.g. S.Exp == Basic.Exp()
     """
+
     def __getattr__(self, clsname):
         obj = Singleton.__dict__.get(clsname)
         if obj is None:
