@@ -207,14 +207,19 @@ class Matrix(object):
         return out
 
     def __pow__(self, num):
-        if isinstance(num, int) or (isinstance(num, Rational) and num.isinteger()):
-            if num < 0:
-                a = self.inv() # A**-2 = (A**-1)**2
-                num = -num
-            else:
-                a = self
-            for i in range(1, num):
-                a *= self
+        if not self.is_square:
+            raise NonSquareMatrixException()
+        if isinstance(num, int) or isinstance(num, Integer):
+            n = int(num)
+            if n < 0:
+                return self.inv() ** -n   # A**-2 = (A**-1)**2
+            a = eye(self.cols)
+            while n:
+                if n % 2:
+                    a = a * self
+                    n -= 1
+                self = self * self
+                n = n // 2
             return a
         raise NotImplementedError('Can only rise to the power of an integer for now')
 
@@ -234,10 +239,7 @@ class Matrix(object):
                 r+=a[i,x]*b[x,j]
             return r.expand() # .expand() is a test
 
-        r = Matrix(self.lines,b.cols, lambda i,j: dotprod(self,b,i,j))
-        if r.lines == 1 and r.cols ==1:
-            return r[0,0]
-        return r
+        return Matrix(self.lines,b.cols, lambda i,j: dotprod(self,b,i,j))
 
     def add(self,b):
         """Returns self+b """

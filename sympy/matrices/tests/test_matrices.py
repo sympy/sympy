@@ -42,6 +42,10 @@ def test_power():
     assert (A**5)[:] == [6140, 8097, 10796, 14237]
     A = Matrix([[2, 1, 3],[4,2, 4], [6,12, 1]])
     assert (A**3)[:] == [290, 262, 251, 448, 440, 368, 702, 954, 433]
+    assert A**0 == eye(3)
+    assert A**1 == A
+    assert (Matrix([[2]]) ** 100)[0,0] == 2**100
+    assert eye(2)**10000000 == eye(2)
 
 def test_creation():
     x = Symbol("x")
