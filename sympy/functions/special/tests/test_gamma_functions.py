@@ -9,8 +9,8 @@ def test_gamma():
     assert gamma(nan) == nan
     assert gamma(oo) == oo
 
-    assert gamma(-100) == ComplexInfinity
-    assert gamma(0) == ComplexInfinity
+    assert gamma(-100) == zoo
+    assert gamma(0) == zoo
 
     assert gamma(1) == 1
     assert gamma(2) == 1
@@ -52,12 +52,12 @@ def test_polygamma():
     assert polygamma(1, oo) == 0
     assert polygamma(5, oo) == 0
 
-    assert polygamma(0, -9) == ComplexInfinity
+    assert polygamma(0, -9) == zoo
 
-    assert polygamma(0, -9) == ComplexInfinity
-    assert polygamma(0, -1) == ComplexInfinity
+    assert polygamma(0, -9) == zoo
+    assert polygamma(0, -1) == zoo
 
-    assert polygamma(0, 0) == ComplexInfinity
+    assert polygamma(0, 0) == zoo
 
     assert polygamma(0, 1) == -EulerGamma
     assert polygamma(0, 7) == Rational(49, 20) - EulerGamma

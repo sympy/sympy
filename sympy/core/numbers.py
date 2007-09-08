@@ -892,7 +892,7 @@ class ComplexInfinity(Singleton, Atom, NoRelMeths, ArithMeths):
     is_real = None
 
     def tostr(self, level=0):
-        return 'ComplexInfinity'
+        return 'zoo'
 
     def _eval_power(b, e):
         if isinstance(e, Basic.ComplexInfinity):
@@ -1111,7 +1111,7 @@ Basic.singleton['I'] = ImaginaryUnit
 Basic.singleton['oo'] = Infinity
 Basic.singleton['nan'] = NaN
 
-Basic.singleton['ComplexInfinity'] = ComplexInfinity
+Basic.singleton['zoo'] = ComplexInfinity
 
 Basic.singleton['GoldenRatio'] = GoldenRatio
 Basic.singleton['EulerGamma'] = EulerGamma

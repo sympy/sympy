@@ -11,10 +11,10 @@ def test_zeta():
     assert zeta(0) == Rational(-1,2)
     assert zeta(0, x) == Rational(1,2) - x
 
-    assert zeta(1) == ComplexInfinity
-    assert zeta(1, 2) == ComplexInfinity
-    assert zeta(1, -7) == ComplexInfinity
-    assert zeta(1, x) == ComplexInfinity
+    assert zeta(1) == zoo
+    assert zeta(1, 2) == zoo
+    assert zeta(1, -7) == zoo
+    assert zeta(1, x) == zoo
 
     assert zeta(2, 0) == pi**2/6
     assert zeta(2, 1) == pi**2/6
