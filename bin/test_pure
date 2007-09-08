@@ -17,7 +17,7 @@
 # $ sudo cowbuilder --create --mirror http://ftp.cz.debian.org/debian
 #
 
-apt-get install subversion python python-codespeak-lib
+apt-get -y install subversion python python-codespeak-lib
 cd /tmp
 svn checkout http://sympy.googlecode.com/svn/trunk/ sympy
 cd sympy
