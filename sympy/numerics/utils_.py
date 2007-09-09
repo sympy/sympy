@@ -4,7 +4,7 @@ _bc_table = [0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4]
 
 def bitcount(n):
     """Give position of the highest set bit in an integer"""
-    if n == 0: return 0
+    if not n: return 0
     if n < 0: n = -n
     # math.log gives a good estimate, and never overflows, but
     # is not always exact. Subtract 2 to underestimate, then
@@ -15,7 +15,7 @@ def bitcount(n):
 def trailing_zeros(n):
     """Count trailing zero bits in an integer."""
     if n & 1: return 0
-    if n == 0: return 0
+    if not n: return 0
     if n < 0: n = -n
     t = 0
     while not n & 0xffffffffffffffff: n >>= 64; t += 64

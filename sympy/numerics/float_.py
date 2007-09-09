@@ -83,12 +83,13 @@ def normalize(man, exp, prec, mode):
     according to the specified rounding mode if necessary.
     Return a tuple containing the new (man, exp).
     """
-    if man == 0:
-        return man, 0
+    if not man:
+        return 0, 0, 0
     bc = bitcount(man)
     if bc > prec:
         man = rshift(man, bc-prec, mode)
         exp += (bc - prec)
+        bc = prec
     # It is not necessary to strip trailing zeros, but this
     # standardization permits faster equality testing of numbers
     # with the same exponent
@@ -96,9 +97,20 @@ def normalize(man, exp, prec, mode):
     if tr:
         man >>= tr
         exp += tr
-    if man == 0:
-        exp = 0
-    return man, exp
+        bc -= tr
+    if not man:
+        return 0, 0, 0
+    return man, exp, bc
+
+def makefloat(man, exp):
+    a = object.__new__(Float)
+    a.man, a.exp, a.bc = normalize(man, exp, Float._prec, Float._mode)
+    return a
+
+def makefloat_verbatim(*args):
+    a = object.__new__(Float)
+    a.man, a.exp, a.bc = args
+    return a
 
 #----------------------------------------------------------------------
 # Other helper functions
@@ -268,7 +280,7 @@ class Float(object):
     # Core object functionality
     #
 
-    __slots__ = ["man", "exp"]
+    __slots__ = ["man", "exp", "bc"]
 
     def __init__(s, x=0, prec=None, mode=None):
         """
@@ -302,20 +314,20 @@ class Float(object):
         """
         prec = prec or s._prec
         mode = mode or s._mode
-        if isinstance(x, tuple):
-            s.man, s.exp = normalize(x[0], x[1], prec, mode)
+        if isinstance(x, tuple): 
+            s.man, s.exp, s.bc = normalize(x[0], x[1], prec, mode)
         elif isinstance(x, Float):
-            s.man, s.exp = normalize(x.man, x.exp, prec, mode)
+            s.man, s.exp, s.bc = normalize(x.man, x.exp, prec, mode)
         elif isinstance(x, (int, long)):
-            s.man, s.exp = normalize(x, 0, prec, mode)
+            s.man, s.exp, s.bc = normalize(x, 0, prec, mode)
         elif isinstance(x, float):
             m, e = math.frexp(x)
-            s.man, s.exp = normalize(int(m*2**53), e-53, prec, mode)
+            s.man, s.exp, s.bc = normalize(int(m*2**53), e-53, prec, mode)
         elif isinstance(x, (str, Rational)):
             if isinstance(x, str):
                 x = Rational(x)
             n = prec + bitcount(x.q) + 2
-            s.man, s.exp = normalize((x.p<<n)//x.q, -n, prec, mode)
+            s.man, s.exp, s.bc = normalize((x.p<<n)//x.q, -n, prec, mode)
         else:
             raise TypeError
 
@@ -351,7 +363,7 @@ class Float(object):
         # Handle case when mantissa has too many bits (will still
         # overflow if exp is large)
         except OverflowError:
-            n = bitcount(s.man) - 64
+            n = s.bc - 64
             m = s.man >> n
             return math.ldexp(m, s.exp + n)
 
@@ -374,8 +386,8 @@ class Float(object):
         if sm > 0 and tm < 0: return 1
         if sm < 0 and tm > 0: return -1
         if se == te: return cmp(sm, tm)
-        a = bitcount(sm) + se
-        b = bitcount(tm) + te
+        a = s.bc + se
+        b = t.bc + te
         if sm > 0:
             if a < b: return -1
             if a > b: return 1
@@ -421,7 +433,7 @@ class Float(object):
 
     def almost_zero(s, prec):
         """Quick check if |s| < 2**-prec"""
-        return bitcount(s.man) + s.exp < prec
+        return s.bc + s.exp < prec
 
     def __nonzero__(s):
         return bool(s.man)
@@ -442,11 +454,11 @@ class Float(object):
             if t.exp > s.exp:
                 s, t = t, s
             if s.exp - t.exp > 100:
-                bitdelta = (bitcount(s.man)+s.exp)-(bitcount(t.man)+t.exp)
+                bitdelta = (s.bc+s.exp)-(t.bc+t.exp)
                 if bitdelta > s._prec+5:
                     # XXX: handle rounding
                     return +s
-            return Float((t.man+(s.man<<(s.exp-t.exp)), t.exp))
+            return makefloat(t.man+(s.man<<(s.exp-t.exp)), t.exp)
         if isinstance(t, (int, long)):
             # XXX: cancellation is possible here
             return s + Float(t)
@@ -457,19 +469,22 @@ class Float(object):
     __radd__ = __add__
 
     def __neg__(s):
-        return Float((-s.man, s.exp))
+        return makefloat(-s.man, s.exp)
 
     def __sub__(s, t):
-        return s + (-t)
+        if isinstance(t, Float):
+            return s + makefloat_verbatim(-t.man, t.exp, t.bc)
+        else:
+            return s + (-t)
 
     def __rsub__(s, t):
         return (-s) + t
 
     def __mul__(s, t):
         if isinstance(t, Float):
-            return Float((s.man*t.man, s.exp+t.exp))
-        #if isinstance(t, (int, long)):
-        #    return 
+            return makefloat(s.man*t.man, s.exp+t.exp)
+        if isinstance(t, (int, long)):
+            return makefloat(s.man*t, s.exp)
         if isinstance(t, (ComplexFloat, complex)):
             return ComplexFloat(s) * t
         return s * Float(t)
@@ -480,11 +495,11 @@ class Float(object):
         if t == 0:
             raise ZeroDivisionError
         if isinstance(t, Float):
-            extra = max(0, s._prec - bitcount(s.man) + bitcount(t.man) + 4)
-            return Float(((s.man<<extra)//t.man, s.exp-t.exp-extra))
+            extra = max(0, s._prec - s.bc + t.bc + 4)
+            return makefloat((s.man<<extra)//t.man, s.exp-t.exp-extra)
         if isinstance(t, (int, long)):
-            extra = s._prec - bitcount(s.man) + bitcount(t) + 4
-            return Float(((s.man<<extra)//t, s.exp-extra))
+            extra = s._prec - s.bc + bitcount(t) + 4
+            return makefloat((s.man<<extra)//t, s.exp-extra)
         if isinstance(t, (ComplexFloat, complex)):
             return ComplexFloat(s) / t
         return s / Float(t)
@@ -508,15 +523,16 @@ class Float(object):
                 return +r
             else:
                 prec2 = Float._prec + int(4*_clog(n, 2) + 4)
-                man, exp = normalize(s.man, s.exp, prec2, ROUND_FLOOR)
-                pm, pe = 1, 0
+                man, exp, bc = normalize(s.man, s.exp, prec2, ROUND_FLOOR)
+                pm, pe, bc = 1, 0, 1
                 while n:
                     if n & 1:
-                        pm, pe = normalize(pm*man, pe+exp, prec2, ROUND_FLOOR)
+                        pm, pe, bc = normalize(pm*man, pe+exp, prec2, ROUND_FLOOR)
                         n -= 1
-                    man, exp = normalize(man*man, exp+exp, prec2, ROUND_FLOOR)
+                    man, exp, _ = normalize(man*man, exp+exp, prec2, ROUND_FLOOR)
                     n = n // 2
-                return Float((pm, pe))
+                #return Float((pm, pe))
+                return makefloat(pm, pe)
         # TODO: support arbitrary powers through exp
         if n == 0.5:
             from functions import sqrt
