@@ -498,7 +498,7 @@ def _atan_series_2(x):
 def atan(x):
     """Compute atan(x) for a real number x"""
     if not isinstance(x, Float): x = Float(x)
-    if x < -0.6: return _with_extraprec(2, -atan(-x))
+    if x < -0.6: return _with_extraprec(2, lambda: -atan(-x))
     if x < 0.6: return _atan_series_1(x)
     if x < 1.5: return _atan_series_2(x)
     # For large x, use atan(x) = pi/2 - atan(1/x)

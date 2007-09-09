@@ -62,6 +62,7 @@ def test_trig_hard():
 
 def test_atan():
     import math
+    assert atan(-2.3).ae(math.atan(-2.3))
     assert atan2(1,1).ae(math.atan2(1,1))
     assert atan2(1,-1).ae(math.atan2(1,-1))
     assert atan2(-1,-1).ae(math.atan2(-1,-1))
