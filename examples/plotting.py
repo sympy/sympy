@@ -11,7 +11,7 @@ sys.path.append("..")
 
 from sympy import symbols
 from sympy import Plot
-from sympy import sin, cos, Pi, sqrt, exp
+from sympy import sin, cos, pi, sqrt, exp
 
 from time import sleep, clock
 
