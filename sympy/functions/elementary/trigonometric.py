@@ -400,7 +400,7 @@ class Cot(DefinedFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return -1/S.Sin**2
+            return -S.One - S.Cot**2
         else:
             raise ArgumentIndexError(self, argindex)
 

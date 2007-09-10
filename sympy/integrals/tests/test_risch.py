@@ -36,6 +36,7 @@ def test_risch_norman_trigonometric():
     assert risch_norman(cos(x), x) == sin(x)
 
     assert risch_norman(sin(x)*cos(x), x) == sin(x)**2 / 2
+    assert risch_norman(cos(x)/sin(x), x) == log(sin(x))
 
     assert risch_norman(x*sin(7*x), x) == sin(7*x) / 49 - x*cos(7*x) / 7
     assert risch_norman(x**2*cos(x), x) == x**2*sin(x) - 2*sin(x) + 2*x*cos(x)

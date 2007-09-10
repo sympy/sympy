@@ -264,13 +264,14 @@ def risch_norman(f, x, rewrite=False):
     special = []
 
     for term in terms:
-        if isinstance(term, Basic.ApplyTan):
-            special += [ (1 + substitute(term)**2, False) ]
-        elif isinstance(term, Basic.ApplyTanh):
-            special += [ (1 + substitute(term), False),
-                         (1 - substitute(term), False) ]
-        #elif isinstance(term, Basic.ApplyLambertW):
-        #    special += [ (substitute(term), True) ]
+        if isinstance(term, Basic.Apply):
+            if isinstance(term.func, Basic.Tan):
+                special += [ (1 + substitute(term)**2, False) ]
+            elif isinstance(term.func, Basic.Tanh):
+                special += [ (1 + substitute(term), False),
+                             (1 - substitute(term), False) ]
+            #elif isinstance(term.func, Basic.LambertW):
+            #    special += [ (substitute(term), True) ]
 
     ff = substitute(f)
 
@@ -296,7 +297,7 @@ def risch_norman(f, x, rewrite=False):
 
         candidate /= candidate_denom
 
-        polys = [v_split[0], v_split[1], u_split[0]] + [ s[0] for s in special ]
+        polys = [ v_split[0], v_split[1], u_split[0]] + [ s[0] for s in special ]
 
         for irreducibles in [ factorization(p, linear) for p in polys ]:
             factors |= irreducibles
@@ -348,6 +349,6 @@ def risch_norman(f, x, rewrite=False):
             return antideriv
     else:
         if not rewrite:
-            return rish_norman(f, x, rewrite=True)
+            return risch_norman(f, x, rewrite=True)
         else:
             return None
