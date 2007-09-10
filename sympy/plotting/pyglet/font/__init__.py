@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -68,7 +69,7 @@ by this package.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 968 2007-06-28 03:44:10Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1233 2007-09-06 00:47:42Z r1chardj0n3s $'
 
 import sys
 import os
@@ -573,6 +574,6 @@ def add_directory(dir):
     '''
     import os
     for file in os.listdir(dir):
-        if file[:-4].lower() == '.ttf':
-            add_file(file)
+        if file[-4:].lower() == '.ttf':
+            add_file(os.path.join(dir, file))
 

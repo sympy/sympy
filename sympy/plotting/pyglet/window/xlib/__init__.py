@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -33,7 +34,7 @@
 # ----------------------------------------------------------------------------
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1112 2007-08-06 13:20:30Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1194 2007-08-24 07:55:11Z Alex.Holkner $'
 
 from ctypes import *
 import unicodedata
@@ -45,6 +46,7 @@ from pyglet.window import WindowException, NoSuchDisplayException, \
 from pyglet.window import event
 from pyglet.window import key
 from pyglet.window import mouse
+from pyglet.event import EventDispatcher
 
 from pyglet import gl
 from pyglet.gl import gl_info
@@ -300,6 +302,7 @@ class XlibGLConfig10(XlibGLConfig):
 class XlibGLConfig10ATI(XlibGLConfig10):
     attribute_ids = XlibGLConfig.attribute_ids.copy()
     del attribute_ids['stereo']
+    stereo = False
 
 class XlibGLConfig13(XlibGLConfig):
     attribute_ids = XlibGLConfig.attribute_ids.copy()
@@ -562,10 +565,9 @@ class XlibWindow(BaseWindow):
         if self._fullscreen:
             self.activate()
 
-        self._event_queue.append((event.EVENT_RESIZE, 
-                                  self._width, self._height))
-        self._event_queue.append((event.EVENT_SHOW,))
-        self._event_queue.append((event.EVENT_EXPOSE,))
+        self.dispatch_event('on_resize', self._width, self._height)
+        self.dispatch_event('on_show')
+        self.dispatch_event('on_expose')
 
     def _unmap(self):
         if not self._mapped:
@@ -670,7 +672,7 @@ class XlibWindow(BaseWindow):
             self.set_minimum_size(width, height)
             self.set_maximum_size(width, height)
         xlib.XResizeWindow(self._x_display, self._window, width, height)
-        self._event_queue.append((event.EVENT_RESIZE, width, height))
+        self.dispatch_event('on_resize', width, height)
 
     def get_size(self):
         # XGetGeometry and XWindowAttributes seem to always return the
@@ -958,15 +960,17 @@ class XlibWindow(BaseWindow):
 
     def dispatch_events(self):
         while self._event_queue:
-            self.dispatch_event(*self._event_queue.pop(0))
+            EventDispatcher.dispatch_event(self, *self._event_queue.pop(0))
 
         # Dispatch any context-related events
         if self._lost_context:
             self._lost_context = False
-            self.dispatch_event(event.EVENT_CONTEXT_LOST)
+            EventDispatcher.dispatch_event(self, 'on_context_lost')
         if self._lost_context_state:
             self._lost_context_state = False
-            self.dispatch_event(event.EVENT_CONTEXT_STATE_LOST)
+            EventDispatcher.dispatch_event(self, 'on_context_state_lost')
+
+        self._allow_dispatch_event = True
 
         e = xlib.XEvent()
 
@@ -997,6 +1001,8 @@ class XlibWindow(BaseWindow):
                     event_handler(e)
         for e in push_back:
             xlib.XPutBackEvent(_x_display, byref(e))
+
+        self._allow_dispatch_event = False
 
     @staticmethod
     def _translate_modifiers(state):
@@ -1072,11 +1078,11 @@ class XlibWindow(BaseWindow):
                     if motion:
                         if modifiers & key.MOD_SHIFT:
                             self.dispatch_event(
-                                event.EVENT_TEXT_MOTION_SELECT, motion)
+                                'on_text_motion_select', motion)
                         else:
-                            self.dispatch_event(event.EVENT_TEXT_MOTION, motion)
+                            self.dispatch_event('on_text_motion', motion)
                     elif text:
-                        self.dispatch_event(event.EVENT_TEXT, text)
+                        self.dispatch_event('on_text', text)
 
                     ditched = saved.pop()
                     for auto_event in reversed(saved):
@@ -1092,16 +1098,16 @@ class XlibWindow(BaseWindow):
         motion = self._event_text_motion(symbol, modifiers)
 
         if ev.type == xlib.KeyPress:
-            self.dispatch_event(event.EVENT_KEY_PRESS, symbol, modifiers)
+            self.dispatch_event('on_key_press', symbol, modifiers)
             if motion:
                 if modifiers & key.MOD_SHIFT:
-                    self.dispatch_event(event.EVENT_TEXT_MOTION_SELECT, motion)
+                    self.dispatch_event('on_text_motion_select', motion)
                 else:
-                    self.dispatch_event(event.EVENT_TEXT_MOTION, motion)
+                    self.dispatch_event('on_text_motion', motion)
             elif text:
-                self.dispatch_event(event.EVENT_TEXT, text)
+                self.dispatch_event('on_text', text)
         elif ev.type == xlib.KeyRelease:
-            self.dispatch_event(event.EVENT_KEY_RELEASE, symbol, modifiers)
+            self.dispatch_event('on_key_release', symbol, modifiers)
 
     @XlibEventHandler(xlib.MotionNotify)
     def _event_motionnotify(self, ev):
@@ -1143,18 +1149,18 @@ class XlibWindow(BaseWindow):
         if buttons:
             # Drag event
             modifiers = self._translate_modifiers(ev.xmotion.state)
-            self.dispatch_event(event.EVENT_MOUSE_DRAG,
+            self.dispatch_event('on_mouse_drag',
                 x, y, dx, dy, buttons, modifiers)
         else:
             # Motion event
-            self.dispatch_event(event.EVENT_MOUSE_MOTION, x, y, dx, dy)
+            self.dispatch_event('on_mouse_motion', x, y, dx, dy)
 
     @XlibEventHandler(xlib.ClientMessage)
     def _event_clientmessage(self, ev):
         wm_delete_window = xlib.XInternAtom(ev.xclient.display,
             'WM_DELETE_WINDOW', False)
         if ev.xclient.data.l[0] == wm_delete_window:
-            self.dispatch_event(event.EVENT_CLOSE)
+            self.dispatch_event('on_close')
 
     @XlibEventHandler(xlib.ButtonPress)
     @XlibEventHandler(xlib.ButtonRelease)
@@ -1165,17 +1171,17 @@ class XlibWindow(BaseWindow):
         modifiers = self._translate_modifiers(ev.xbutton.state)
         if ev.type == xlib.ButtonPress:
             if ev.xbutton.button == 4:
-                self.dispatch_event(event.EVENT_MOUSE_SCROLL, x, y, 0, 1)
+                self.dispatch_event('on_mouse_scroll', x, y, 0, 1)
             elif ev.xbutton.button == 5:
-                self.dispatch_event(event.EVENT_MOUSE_SCROLL, x, y, 0, -1)
+                self.dispatch_event('on_mouse_scroll', x, y, 0, -1)
             else:
                 self._mouse_buttons[ev.xbutton.button] = True
-                self.dispatch_event(event.EVENT_MOUSE_PRESS, 
+                self.dispatch_event('on_mouse_press', 
                     x, y, button, modifiers)
         else:
             if ev.xbutton.button < 4:
                 self._mouse_buttons[ev.xbutton.button] = False
-                self.dispatch_event(event.EVENT_MOUSE_RELEASE, 
+                self.dispatch_event('on_mouse_release', 
                     x, y, button, modifiers)
 
     @XlibEventHandler(xlib.Expose)
@@ -1184,7 +1190,7 @@ class XlibWindow(BaseWindow):
         # about exposure rects - but I don't see the point since we're
         # working with OpenGL and we'll just redraw the whole scene.
         if ev.xexpose.count > 0: return
-        self.dispatch_event(event.EVENT_EXPOSE)
+        self.dispatch_event('on_expose')
 
     @XlibEventHandler(xlib.EnterNotify)
     def _event_enternotify(self, ev):
@@ -1203,14 +1209,14 @@ class XlibWindow(BaseWindow):
         self._mouse_in_window = True
 
         # XXX there may be more we could do here
-        self.dispatch_event(event.EVENT_MOUSE_ENTER, x, y)
+        self.dispatch_event('on_mouse_enter', x, y)
 
     @XlibEventHandler(xlib.LeaveNotify)
     def _event_leavenotify(self, ev):
         x = self._mouse_x = ev.xcrossing.x
         y = self._mouse_y = self.height - ev.xcrossing.y
         self._mouse_in_window = False
-        self.dispatch_event(event.EVENT_MOUSE_LEAVE, x, y)
+        self.dispatch_event('on_mouse_leave', x, y)
 
     @XlibEventHandler(xlib.ConfigureNotify)
     def _event_configurenotify(self, ev):
@@ -1219,10 +1225,10 @@ class XlibWindow(BaseWindow):
         if self._width != w or self._height != h:
             self._width = w
             self._height = h
-            self.dispatch_event(event.EVENT_RESIZE, w, h)
-            self.dispatch_event(event.EVENT_EXPOSE)
+            self.dispatch_event('on_resize', w, h)
+            self.dispatch_event('on_expose')
         if self._x != x or self._y != y:
-            self.dispatch_event(event.EVENT_MOVE, x, y)
+            self.dispatch_event('on_move', x, y)
             self._x = x
             self._y = y
 
@@ -1230,20 +1236,20 @@ class XlibWindow(BaseWindow):
     def _event_focusin(self, ev):
         self._active = True
         self._update_exclusivity()
-        self.dispatch_event(event.EVENT_ACTIVATE)
+        self.dispatch_event('on_activate')
 
     @XlibEventHandler(xlib.FocusOut)
     def _event_focusout(self, ev):
         self._active = False
         self._update_exclusivity()
-        self.dispatch_event(event.EVENT_DEACTIVATE)
+        self.dispatch_event('on_deactivate')
 
     @XlibEventHandler(xlib.MapNotify)
     def _event_mapnotify(self, ev):
         self._mapped = True
-        self.dispatch_event(event.EVENT_SHOW)
+        self.dispatch_event('on_show')
 
     @XlibEventHandler(xlib.UnmapNotify)
     def _event_unmapnotify(self, ev):
         self._mapped = False
-        self.dispatch_event(event.EVENT_HIDE)
+        self.dispatch_event('on_hide')

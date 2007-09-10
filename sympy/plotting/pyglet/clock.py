@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -135,7 +136,7 @@ of the system clock.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: clock.py 1025 2007-07-11 13:52:09Z Alex.Holkner $'
+__version__ = '$Id: clock.py 1237 2007-09-09 02:04:54Z Alex.Holkner $'
 
 import time
 import sys
@@ -629,7 +630,8 @@ class ClockDisplay(object):
         '''
 
         if clock is None:
-            self.clock = _default
+            clock = _default
+        self.clock = clock
         self.clock.schedule_interval(self.update_text, interval)
 
         if not font:

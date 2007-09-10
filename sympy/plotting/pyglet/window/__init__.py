@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -144,14 +145,15 @@ above, "Working with multiple screens")::
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1110 2007-08-06 13:11:47Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1195 2007-08-24 09:38:40Z Alex.Holkner $'
 
 import pprint
 import sys
 
 from pyglet import gl
 from pyglet.gl import gl_info
-from pyglet.window.event import WindowEventDispatcher, WindowExitHandler
+from pyglet.event import EventDispatcher
+from pyglet.window.event import WindowExitHandler
 import pyglet.window.key
 
 class WindowException(Exception):
@@ -384,7 +386,7 @@ class ImageMouseCursor(MouseCursor):
         self.texture.blit(x - self.hot_x, y - self.hot_y, 0)
         gl.glPopAttrib()
 
-class BaseWindow(WindowEventDispatcher, WindowExitHandler):
+class BaseWindow(EventDispatcher, WindowExitHandler):
     '''Platform-independent application window.
 
     A window is a "heavyweight" object occupying operating system resources.
@@ -489,6 +491,7 @@ class BaseWindow(WindowEventDispatcher, WindowExitHandler):
     _mouse_in_window = True
 
     _event_queue = None
+    _allow_dispatch_event = False # controlled by dispatch_events stack frame
 
     def __init__(self, 
                  width=640,
@@ -559,7 +562,7 @@ class BaseWindow(WindowEventDispatcher, WindowExitHandler):
                 not already be attached to another window.
 
         '''
-        WindowEventDispatcher.__init__(self)
+        EventDispatcher.__init__(self)
         self._event_queue = []
 
         if not display:
@@ -569,8 +572,16 @@ class BaseWindow(WindowEventDispatcher, WindowExitHandler):
             screen = display.get_default_screen()
 
         if not config:
-            config = gl.Config(double_buffer=True,
-                               depth_size=24)
+            for template_config in [
+                gl.Config(double_buffer=True, depth_size=24),
+                gl.Config(double_buffer=True, depth_size=16)]:
+                try:
+                    config = screen.get_best_config(template_config)
+                    break
+                except NoSuchConfigException:
+                    pass
+            if not config:
+                raise NoSuchConfigException('No standard config is available.')
 
         if not config.is_complete():
             config = screen.get_best_config(config)
@@ -623,7 +634,7 @@ class BaseWindow(WindowEventDispatcher, WindowExitHandler):
         '''
         raise NotImplementedError('abstract')
 
-    def set_fullscreen(self, fullscreen=True):
+    def set_fullscreen(self, fullscreen=True, screen=None):
         '''Toggle to or from fullscreen.
 
         After toggling fullscreen, the GL context should have retained its
@@ -634,15 +645,23 @@ class BaseWindow(WindowEventDispatcher, WindowExitHandler):
             `fullscreen` : bool
                 True if the window should be made fullscreen, False if it
                 should be windowed.
+            `screen` : Screen
+                If not None and fullscreen is True, the window is moved to the
+                given screen.  The screen must belong to the same display as
+                the window.
 
         '''
-        if fullscreen == self._fullscreen:
+        if fullscreen == self._fullscreen and screen is None:
             return
 
         if not self._fullscreen:
             # Save windowed size
             self._windowed_size = self.get_size()
             self._windowed_location = self.get_location()
+
+        if fullscreen and screen is not None:
+            assert screen.display is self.display
+            self._screen = screen
 
         self._fullscreen = fullscreen
         if self._fullscreen:
@@ -1085,12 +1104,398 @@ class BaseWindow(WindowEventDispatcher, WindowExitHandler):
         buffer.  The window must be the active context (see `switch_to`).
         '''
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
+    
+    def dispatch_event(self, *args):
+        if self._allow_dispatch_event:
+            EventDispatcher.dispatch_event(self, *args)
+        else:
+            self._event_queue.append(args)
 
     def dispatch_events(self):
         '''Process the operating system event queue and call attached
         event handlers.
         '''
         raise NotImplementedError('abstract')
+
+    # If documenting, show the event methods.  Otherwise, leave them out
+    # as they are not really methods.
+    if hasattr(sys, 'is_epydoc') and sys.is_epydoc:
+        def on_key_press(symbol, modifiers):
+            '''A key on the keyboard was pressed (and held down).
+
+            :Parameters:
+                `symbol` : int
+                    The key symbol pressed.
+                `modifiers` : int
+                    Bitwise combination of the key modifiers active.
+            
+            :event:
+            '''
+
+        def on_key_release(symbol, modifiers):
+            '''A key on the keyboard was released.
+
+            :Parameters:
+                `symbol` : int
+                    The key symbol pressed.
+                `modifiers` : int
+                    Bitwise combination of the key modifiers active.
+
+            :event:
+            '''
+
+        def on_text(text):
+            '''The user input some text.
+
+            Typically this is called after `on_key_press` and before
+            `on_key_release`, but may also be called multiple times if the key
+            is held down (key repeating); or called without key presses if
+            another input method was used (e.g., a pen input).
+
+            You should always use this method for interpreting text, as the
+            key symbols often have complex mappings to their unicode
+            representation which this event takes care of.
+
+            :Parameters:
+                `text` : unicode
+                    The text entered by the user.
+
+            :event:
+            '''
+
+        def on_text_motion(motion):
+            '''The user moved the text input cursor.
+
+            Typically this is called after `on_key_press` and before
+            `on_key_release`, but may also be called multiple times if the key
+            is help down (key repeating).
+
+            You should always use this method for moving the text input cursor
+            (caret), as different platforms have different default keyboard
+            mappings, and key repeats are handled correctly.
+
+            The values that `motion` can take are defined in
+            `pyglet.window.key`:
+
+            * MOTION_UP
+            * MOTION_RIGHT
+            * MOTION_DOWN
+            * MOTION_LEFT
+            * MOTION_NEXT_WORD
+            * MOTION_PREVIOUS_WORD
+            * MOTION_BEGINNING_OF_LINE
+            * MOTION_END_OF_LINE
+            * MOTION_NEXT_PAGE
+            * MOTION_PREVIOUS_PAGE
+            * MOTION_BEGINNING_OF_FILE
+            * MOTION_END_OF_FILE
+            * MOTION_BACKSPACE
+            * MOTION_DELETE
+
+            :Parameters:
+                `motion` : int
+                    The direction of motion; see remarks.
+
+            :event:
+            '''
+
+        def on_text_motion_select(motion):
+            '''The user moved the text input cursor while extending the
+            selection.
+
+            Typically this is called after `on_key_press` and before
+            `on_key_release`, but may also be called multiple times if the key
+            is help down (key repeating).
+
+            You should always use this method for responding to text selection
+            events rather than the raw `on_key_press`, as different platforms
+            have different default keyboard mappings, and key repeats are
+            handled correctly.
+
+            The values that `motion` can take are defined in `pyglet.window.key`:
+
+            * MOTION_UP
+            * MOTION_RIGHT
+            * MOTION_DOWN
+            * MOTION_LEFT
+            * MOTION_NEXT_WORD
+            * MOTION_PREVIOUS_WORD
+            * MOTION_BEGINNING_OF_LINE
+            * MOTION_END_OF_LINE
+            * MOTION_NEXT_PAGE
+            * MOTION_PREVIOUS_PAGE
+            * MOTION_BEGINNING_OF_FILE
+            * MOTION_END_OF_FILE
+
+            :Parameters:
+                `motion` : int
+                    The direction of selection motion; see remarks.
+
+            :event:
+            '''
+
+        def on_mouse_motion(x, y, dx, dy):
+            '''The mouse was moved with no buttons held down.
+
+            :Parameters:
+                `x` : float
+                    Distance in pixels from the left edge of the window.
+                `y` : float
+                    Distance in pixels from the bottom edge of the window.
+                `dx` : float
+                    Relative X position from the previous mouse position.
+                `dy` : float
+                    Relative Y position from the previous mouse position.
+
+            :event:
+            '''
+
+        def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
+            '''The mouse was moved with one or more mouse buttons pressed.
+
+            This event will continue to be fired even if the mouse leaves
+            the window, so long as the drag buttons are continuously held down.
+
+            :Parameters:
+                `x` : float
+                    Distance in pixels from the left edge of the window.
+                `y` : float
+                    Distance in pixels from the bottom edge of the window.
+                `dx` : float
+                    Relative X position from the previous mouse position.
+                `dy` : float
+                    Relative Y position from the previous mouse position.
+                `buttons` : int
+                    Bitwise combination of the mouse buttons currently pressed.
+                `modifiers` : int
+                    Bitwise combination of any keyboard modifiers currently
+                    active.
+
+            :event:
+            '''
+
+        def on_mouse_press(x, y, button, modifiers):
+            '''A mouse button was pressed (and held down).
+
+            :Parameters:
+                `x` : float
+                    Distance in pixels from the left edge of the window.
+                `y` : float
+                    Distance in pixels from the bottom edge of the window.
+                `button` : int
+                    The mouse button that was pressed.
+                `modifiers` : int
+                    Bitwise combination of any keyboard modifiers currently
+                    active.
+                
+            :event:
+            '''
+
+        def on_mouse_release(x, y, button, modifiers):
+            '''A mouse button was released.
+
+            :Parameters:
+                `x` : float
+                    Distance in pixels from the left edge of the window.
+                `y` : float
+                    Distance in pixels from the bottom edge of the window.
+                `button` : int
+                    The mouse button that was released.
+                `modifiers` : int
+                    Bitwise combination of any keyboard modifiers currently
+                    active.
+
+            :event:
+            '''
+                
+        def on_mouse_scroll(x, y, scroll_x, scroll_y):
+            '''The mouse wheel was scrolled.
+
+            Note that most mice have only a vertical scroll wheel, so
+            `scroll_x` is usually 0.  An exception to this is the Apple Mighty
+            Mouse, which has a mouse ball in place of the wheel which allows
+            both `scroll_x` and `scroll_y` movement.
+
+            :Parameters:
+                `x` : float
+                    Distance in pixels from the left edge of the window.
+                `y` : float
+                    Distance in pixels from the bottom edge of the window.
+                `scroll_x` : int
+                    Number of "clicks" towards the right (left if negative).
+                `scroll_y` : int
+                    Number of "clicks" upwards (downards if negative).
+
+            :event:
+            '''
+
+        def on_close():
+            '''The user attempted to close the window.
+
+            This event can be triggered by clicking on the "X" control box in
+            the window title bar, or by some other platform-dependent manner.
+
+            :event:
+            '''
+
+        def on_mouse_enter(x, y):
+            '''The mouse was moved into the window.
+
+            This event will not be trigged if the mouse is currently being
+            dragged.
+
+            :Parameters:
+                `x` : float
+                    Distance in pixels from the left edge of the window.
+                `y` : float
+                    Distance in pixels from the bottom edge of the window.
+
+            :event:
+            '''
+
+        def on_mouse_leave(x, y):
+            '''The mouse was moved outside of the window.
+
+            This event will not be trigged if the mouse is currently being
+            dragged.  Note that the coordinates of the mouse pointer will be
+            outside of the window rectangle.
+
+            :Parameters:
+                `x` : float
+                    Distance in pixels from the left edge of the window.
+                `y` : float
+                    Distance in pixels from the bottom edge of the window.
+
+            :event:
+            '''
+
+        def on_expose():
+            '''A portion of the window needs to be redrawn.
+
+            This event is triggered when the window first appears, and any time
+            the contents of the window is invalidated due to another window
+            obscuring it.
+
+            There is no way to determine which portion of the window needs
+            redrawing.  Note that the use of this method is becoming
+            increasingly uncommon, as newer window managers composite windows
+            automatically and keep a backing store of the window contents.
+
+            :event:
+            '''
+
+        def on_resize(width, height):
+            '''The window was resized.
+
+            :Parameters:
+                `width` : int
+                    The new width of the window, in pixels.
+                `height` : int
+                    The new height of the window, in pixels.
+
+            :event:
+            '''
+
+        def on_move(x, y):
+            '''The window was moved.
+
+            :Parameters:
+                `x` : int
+                    Distance from the left edge of the screen to the left edge
+                    of the window.
+                `y` : int
+                    Distance from the top edge of the screen to the top edge of
+                    the window.  Note that this is one of few methods in pyglet
+                    which use a Y-down coordinate system.
+
+            :event:
+            '''
+
+        def on_activate():
+            '''The window was activated.
+
+            This event can be triggered by clicking on the title bar, bringing
+            it to the foreground; or by some platform-specific method.
+
+            When a window is "active" it has the keyboard focus.
+
+            :event:
+            '''
+
+        def on_deactivate():
+            '''The window was deactivated.
+
+            This event can be triggered by clicking on another application
+            window.  When a window is deactivated it no longer has the
+            keyboard focus.
+
+            :event:
+            '''
+
+        def on_show():
+            '''The window was shown.
+
+            This event is triggered when a window is restored after being
+            minimised, or after being displayed for the first time.
+
+            :event:
+            '''
+
+        def on_hide():
+            '''The window was hidden.
+
+            This event is triggered when a window is minimised or (on Mac OS X)
+            hidden by the user.
+
+            :event:
+            '''
+
+        def on_context_lost():
+            '''The window's GL context was lost.
+            
+            When the context is lost no more GL methods can be called until it
+            is recreated.  This is a rare event, triggered perhaps by the user
+            switching to an incompatible video mode.  When it occurs, an
+            application will need to reload all objects (display lists, texture
+            objects, shaders) as well as restore the GL state.
+
+            :event:
+            '''
+
+        def on_context_state_lost():
+            '''The state of the window's GL context was lost.
+
+            pyglet may sometimes need to recreate the window's GL context if
+            the window is moved to another video device, or between fullscreen
+            or windowed mode.  In this case it will try to share the objects
+            (display lists, texture objects, shaders) between the old and new
+            contexts.  If this is possible, only the current state of the GL
+            context is lost, and the application should simply restore state.
+
+            :event:
+            '''
+BaseWindow.register_event_type('on_key_press')
+BaseWindow.register_event_type('on_key_release')
+BaseWindow.register_event_type('on_text')
+BaseWindow.register_event_type('on_text_motion')
+BaseWindow.register_event_type('on_text_motion_select')
+BaseWindow.register_event_type('on_mouse_motion')
+BaseWindow.register_event_type('on_mouse_drag')
+BaseWindow.register_event_type('on_mouse_press')
+BaseWindow.register_event_type('on_mouse_release')
+BaseWindow.register_event_type('on_mouse_scroll')
+BaseWindow.register_event_type('on_mouse_enter')
+BaseWindow.register_event_type('on_mouse_leave')
+BaseWindow.register_event_type('on_close')
+BaseWindow.register_event_type('on_expose')
+BaseWindow.register_event_type('on_resize')
+BaseWindow.register_event_type('on_move')
+BaseWindow.register_event_type('on_activate')
+BaseWindow.register_event_type('on_deactivate')
+BaseWindow.register_event_type('on_show')
+BaseWindow.register_event_type('on_hide')
+BaseWindow.register_event_type('on_context_lost')
+BaseWindow.register_event_type('on_context_state_lost')
 
 def get_platform():
     '''Get an instance of the Platform most appropriate for this

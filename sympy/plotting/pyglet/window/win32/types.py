@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -75,7 +76,7 @@ class WNDCLASS(Structure):
         ('hCursor', c_int),
         ('hbrBackground', c_int),
         ('lpszMenuName', c_char_p),
-        ('lpszClassName', c_char_p)
+        ('lpszClassName', c_wchar_p)
     ]
 
 class POINT(Structure):

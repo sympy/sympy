@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -137,7 +138,7 @@ the particular class documentation.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: event.py 1109 2007-08-06 13:06:13Z Alex.Holkner $'
+__version__ = '$Id: event.py 1230 2007-09-04 14:57:31Z Alex.Holkner $'
 
 import inspect
 
@@ -261,7 +262,7 @@ class EventDispatcher(object):
         assert event_type in self.event_types
 
         # Search handler stack for matching event handlers
-        for frame in self._event_stack:
+        for frame in self._event_stack[:]:
             handler = frame.get(event_type, None)
             if handler:
                 ret = handler(*args)

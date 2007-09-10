@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -38,7 +39,7 @@ Detailed documentation is available at http://www.pyglet.org
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1025 2007-07-11 13:52:09Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1204 2007-08-27 12:53:49Z Alex.Holkner $'
 
 import sys
 
@@ -54,7 +55,7 @@ import sys
 #:    >>> parse_version(pyglet.version) >= parse_version('1.0')
 #:    False
 #:
-version = '1.0alpha1'
+version = '1.0alpha2'
 
 def _require_ctypes_version(version):
     # Check ctypes version
@@ -84,8 +85,18 @@ if getattr(sys, 'frozen', None):
 #:     this option is enabled if ``__debug__`` is (i.e., if Python was not run
 #:     with the -O option).  It is disabled by default when pyglet is "frozen"
 #:     within a py2exe or py2app library archive.
+#: audio_driver
+#:     A sequence of the names of audio drivers to attempt to load, in
+#:     order of preference.  The default is to prefer OpenAL, then any
+#:     platform-specific drivers such as ALSA, and finally falling back
+#:     to the "silent" driver.  Valid driver names are:
+#:
+#:     * alsa, the ALSA audio driver (Linux only) 
+#:     * openal, the OpenAL audio driver
+#:     * silent, no audio
 #:
 options = {
     'gl_error_check': not _enable_optimisations,
+    'audio_driver': ('openal', 'silent'),
 }
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -126,7 +127,7 @@ will be presented the next time it is read or written to::
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1056 2007-07-20 01:49:05Z r1chardj0n3s $'
+__version__ = '$Id: __init__.py 1187 2007-08-22 04:11:02Z r1chardj0n3s $'
 
 import sys
 import re
@@ -704,8 +705,8 @@ class ImageData(AbstractImage):
         '''
         return ImageDataRegion(x, y, width, height, self)
 
-    def blit(self, x, y, z=0):
-        self.texture.blit(x, y, z)
+    def blit(self, x, y, z=0, width=None, height=None):
+        self.texture.blit(x, y, z, width, height)
 
     def blit_to_texture(self, target, level, x, y, z, internalformat=None):
         '''Draw this image to to the currently bound texture at `target`.
@@ -1189,15 +1190,20 @@ class Texture(AbstractImage):
         super(Texture, self).__init__(width, height)
         self.target = target
         self.id = id
+        self._context = get_current_context()
 
     def delete(self):
-        id = GLuint(self.id)
-        glDeleteTextures(1, byref(id))
+        warnings.warn(
+            'Texture.delete() is deprecated; textures are '
+            'released through GC now')
+        self._context.delete_texture(self.id)
+        self.id = 0
 
     def __del__(self):
-        # TODO
-        # self.delete()
-        pass
+        try:
+            self._context.delete_texture(self.id)
+        except AttributeError:
+            pass
 
     @classmethod
     def create_for_size(cls, target, min_width, min_height,
@@ -1224,6 +1230,14 @@ class Texture(AbstractImage):
         if target not in (GL_TEXTURE_RECTANGLE_NV, GL_TEXTURE_RECTANGLE_ARB):
             width = _nearest_pow2(min_width)
             height = _nearest_pow2(min_height)
+            tex_coords = cls.tex_coords
+        else:
+            width = min_width
+            height = min_height
+            tex_coords = ((0, 0, 0), 
+                          (width, 0, 0), 
+                          (width, height, 0), 
+                          (0, height, 0))
         id = GLuint()
         glGenTextures(1, byref(id))
 
@@ -1238,7 +1252,9 @@ class Texture(AbstractImage):
                          GL_RGBA, GL_UNSIGNED_BYTE,
                          blank)
                          
-        return cls(width, height, target, id.value)
+        texture = cls(width, height, target, id.value)
+        texture.tex_coords = tex_coords
+        return texture
 
     def get_image_data(self, z=0):
         '''Get the image data of this texture.
@@ -1275,10 +1291,11 @@ class Texture(AbstractImage):
 
     # no implementation of blit_to_texture yet (could use aux buffer)
 
-    def blit(self, x, y, z=0):
+    def blit(self, x, y, z=0, width=None, height=None):
         # Create interleaved array in T4F_V4F format
         t = self.tex_coords
-        w, h = self.width, self.height
+        w = width is None and self.width or width
+        h = height is None and self.height or height
         array = (GLfloat * 32)(
              t[0][0], t[0][1], t[0][2], 1.,
              x,       y,       z,       1.,
@@ -1340,6 +1357,10 @@ class TextureRegion(Texture):
 
     def blit_into(self, source, x, y, z):
         self.owner.blit_into(source, x + self.x, y + self.y, z + self.z)
+
+    def __del__(self):
+        # only the owner Texture should handle deletion
+        pass
 
 Texture.region_class = TextureRegion
 

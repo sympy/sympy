@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -42,16 +43,16 @@ __version__ = '$Id: $'
 # independence?
 
 from ctypes import *
+import string
+import math
 from sys import byteorder
 
 from pyglet.font import base
 import pyglet.image
 from pyglet.window.carbon import carbon, _oscheck
 from pyglet.window.carbon import _create_cfstring
-from pyglet.window.carbon.types import Rect, CGRect
+from pyglet.window.carbon.types import *
 
-
-Fixed = c_int32
 
 class FixedPoint(Structure):
     _fields_ = [
@@ -114,7 +115,6 @@ kATSURGBAlphaColorTag         = 288
 
 kATSULineWidthTag             = 1
 
-
 kFontFullName                 = 4
 kFontNoPlatformCode           = c_ulong(-1)
 kFontNoScriptCode             = c_ulong(-1)
@@ -127,6 +127,9 @@ kATSFontContextLocal          = 2
 
 carbon.CGColorSpaceCreateWithName.restype = c_void_p
 carbon.CGBitmapContextCreate.restype = POINTER(c_void_p)
+
+UniCharArrayOffset  = c_uint32
+UniCharCount = c_uint32
 
 def fixed(value):
     # This is a guess... could easily be wrong
@@ -344,30 +347,26 @@ class CarbonFont(base.Font):
         # It seems the only way to get the font's ascent and descent is to lay
         # out some glyphs and measure them.
 
-        # This is a (pretend) UCS2 string
+        # fake ucs2 string
         text = '\0a'
 
         layout = c_void_p()
         carbon.ATSUCreateTextLayout(byref(layout))
-        carbon.ATSUSetTextPointerLocation(layout,
-            text,
-            kATSUFromTextBeginning,
-            kATSUToTextEnd,
-            1)
+        carbon.ATSUSetTextPointerLocation(layout, text,
+            kATSUFromTextBeginning, kATSUToTextEnd, 1)
         carbon.ATSUSetRunStyle(layout, self.atsu_style, 
             kATSUFromTextBeginning, kATSUToTextEnd)
 
         # determine the metrics for this font only
         carbon.ATSUSetTransientFontMatching(layout, False)
 
-        # determine the ascent / descent
         value = ATSUTextMeasurement()
         carbon.ATSUGetLineControl(layout, 0, kATSULineAscentTag, 
             sizeof(value), byref(value), None)
-        self.ascent = fix2float(value)
+        self.ascent = math.ceil(fix2float(value))
         carbon.ATSUGetLineControl(layout, 0, kATSULineDescentTag,
             sizeof(value), byref(value), None)
-        self.descent = -fix2float(value)
+        self.descent = -math.ceil(fix2float(value))
 
     @classmethod
     def add_font_data(cls, data):
