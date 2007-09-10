@@ -9,7 +9,7 @@ import math
 _clog = math.log
 _csqrt = math.sqrt
 
-from sympy import Rational
+from sympy import Basic, Rational
 from utils_ import bitcount, trailing_zeros
 
 #----------------------------------------------------------------------
@@ -81,7 +81,9 @@ def normalize(man, exp, prec, mode):
     Normalize the binary floating-point number represented by
     man * 2**exp to the specified precision level, rounding
     according to the specified rounding mode if necessary.
-    Return a tuple containing the new (man, exp).
+    The mantissa is also stripped of trailing zero bits, and
+    its bits are counted. The returned value is a tuple
+    (man, exp, bc).
     """
     if not man:
         return 0, 0, 0
@@ -90,27 +92,22 @@ def normalize(man, exp, prec, mode):
         man = rshift(man, bc-prec, mode)
         exp += (bc - prec)
         bc = prec
-    # It is not necessary to strip trailing zeros, but this
-    # standardization permits faster equality testing of numbers
-    # with the same exponent
-    tr = trailing_zeros(man)
-    if tr:
-        man >>= tr
-        exp += tr
-        bc -= tr
+    # Stripping trailing zeros permits faster equality testing
+    if not man & 1:
+        tr = trailing_zeros(man)
+        if tr:
+            man >>= tr
+            exp += tr
+            bc -= tr
     if not man:
         return 0, 0, 0
     return man, exp, bc
 
+# Shortcut for constructing a Float from given mantissa and exponent, used by
+# some of the arithmetic operators in the Float class
 def makefloat(man, exp):
-    a = object.__new__(Float)
-    a.man, a.exp, a.bc = normalize(man, exp, Float._prec, Float._mode)
-    return a
+    return tuple.__new__(Float, normalize(man, exp, Float._prec, Float._mode))
 
-def makefloat_verbatim(*args):
-    a = object.__new__(Float)
-    a.man, a.exp, a.bc = args
-    return a
 
 #----------------------------------------------------------------------
 # Other helper functions
@@ -134,7 +131,7 @@ _convratio = _clog(10,2) # 3.3219...
 #                              Float class                                  #
 #---------------------------------------------------------------------------#
 
-class Float(object):
+class Float(tuple):
     """
     A Float is a rational number of the form
 
@@ -144,6 +141,21 @@ class Float(object):
     and exp are integers, possibly negative, and may be arbitrarily large.
     Essentially, a larger mantissa corresponds to a higher precision
     and a larger exponent corresponds to larger magnitude.
+
+    A Float instance is represented by a tuple
+
+        (man, exp, bc)
+
+    where bc is the bitcount of the mantissa. The elements can be
+    accessed as named properties:
+
+        >>> x = Float(3)
+        >>> x.man
+        3
+        >>> x.exp
+        0
+        >>> x.bc
+        2
 
     When performing an arithmetic operation on two Floats, or creating a
     new Float from an existing numerical value, the result gets rounded
@@ -280,9 +292,11 @@ class Float(object):
     # Core object functionality
     #
 
-    __slots__ = ["man", "exp", "bc"]
+    man = property(lambda self: self[0])
+    exp = property(lambda self: self[1])
+    bc = property(lambda self: self[2])
 
-    def __init__(s, x=0, prec=None, mode=None):
+    def __new__(cls, x=0, prec=None, mode=None):
         """
         Float(x) creates a new Float instance with value x. The usual
         types are supported for x:
@@ -312,29 +326,32 @@ class Float(object):
             Float('0.625')
 
         """
-        prec = prec or s._prec
-        mode = mode or s._mode
-        if isinstance(x, tuple): 
-            s.man, s.exp, s.bc = normalize(x[0], x[1], prec, mode)
-        elif isinstance(x, Float):
-            s.man, s.exp, s.bc = normalize(x.man, x.exp, prec, mode)
+        prec = prec or cls._prec
+        mode = mode or cls._mode
+        if isinstance(x, tuple):
+            return tuple.__new__(cls, normalize(x[0], x[1], prec, mode))
         elif isinstance(x, (int, long)):
-            s.man, s.exp, s.bc = normalize(x, 0, prec, mode)
+            return tuple.__new__(cls, normalize(x, 0, prec, mode))
         elif isinstance(x, float):
+            # We assume that a float mantissa has 53 bits
             m, e = math.frexp(x)
-            s.man, s.exp, s.bc = normalize(int(m*2**53), e-53, prec, mode)
+            return tuple.__new__(cls, normalize(int(m*(1<<53)), e-53, prec, mode))
         elif isinstance(x, (str, Rational)):
             if isinstance(x, str):
                 x = Rational(x)
             n = prec + bitcount(x.q) + 2
-            s.man, s.exp, s.bc = normalize((x.p<<n)//x.q, -n, prec, mode)
+            return tuple.__new__(cls, normalize((x.p<<n)//x.q, -n, prec, mode))
         else:
             raise TypeError
 
     def __hash__(s):
         try:
+            # Try to be compatible with hash values for floats and ints
             return hash(float(s))
         except OverflowError:
+            # We must unfortunately sacrifice compatibility with ints here. We
+            # could do hash(man << exp) when the exponent is positive, but
+            # this would cause unreasonable inefficiency for large numbers.
             return hash(self.man) + hash(self.exp)
 
     def __pos__(s):
@@ -343,6 +360,29 @@ class Float(object):
         Normalize s to the current working precision, rounding according
         to the current rounding mode."""
         return Float(s)
+
+    def __float__(s):
+        """Convert s to a Python float. OverflowError will be raised
+        if the magnitude of s is too large."""
+        try:
+            return math.ldexp(s.man, s.exp)
+        # Handle case when mantissa has too many bits (will still
+        # overflow if exp is too large)
+        except OverflowError:
+            n = s.bc - 64
+            m = s.man >> n
+            return math.ldexp(m, s.exp + n)
+
+    def __int__(s):
+        """Convert to a Python int, using floor rounding"""
+        return rshift(s.man, -s.exp, 0)
+
+    def rational(s):
+        """Convert to a SymPy Rational"""
+        if s.exp > 0:
+            return Rational(s.man * 2**s.exp, 1)
+        else:
+            return Rational(s.man, 2**(-s.exp))
 
     def __repr__(s):
         """Represent s as a decimal string, with sufficiently many
@@ -355,56 +395,109 @@ class Float(object):
         """Print slightly more prettily than __repr__"""
         return binary_to_decimal(s.man, s.exp, Float._dps)
 
-    def __float__(s):
-        """Convert s to a Python float. OverflowError will be raised
-        if the magnitude of s is too large."""
-        try:
-            return math.ldexp(s.man, s.exp)
-        # Handle case when mantissa has too many bits (will still
-        # overflow if exp is large)
-        except OverflowError:
-            n = s.bc - 64
-            m = s.man >> n
-            return math.ldexp(m, s.exp + n)
-
-    def __int__(s):
-        return rshift(s.man, -s.exp, 0)
 
     #------------------------------------------------------------------
-    # Comparison
+    # Comparisons
     #
 
     def __cmp__(s, t):
-        """__cmp__(s, t) <==> cmp(s, t)
+        """s.__cmp__(t) <==> cmp(s, t)
 
-        Returns -1 if s < t, 0 if s == t, and 1 if s > t"""
+        If t is a Float, int or float, this returns -1 if s < t, 0 if
+        s == t, and 1 if s > t. The comparison operators >, >=, <, <=
+        are defined in terms of this function. If t is a SymPy Basic
+        instance, s is converted into a Rational and Rational.__cmp__
+        is called.
+
+        Warning: in extreme cases, the truncation error resulting from
+        calling Float(t) will result in an erroneous comparison: for
+        example, Float(2**80) will compare as equal to 2**80+1. This
+        problem can be circumvented by manually increasing the working
+        precision or by converting numbers into Rationals for
+        comparisons.
+        """
+
         if not isinstance(t, Float):
+            if isinstance(t, Basic):
+                return s.rational().__cmp__(t)
             t = Float(t)
-        sm, se, tm, te = s.man, s.exp, t.man, t.exp
-        if tm == 0: return cmp(sm, 0)
-        if sm == 0: return cmp(0, tm)
+
+        # Note: the reason we call cmp(x,y) below instead of directly forming
+        # the integer x-y is that the output from __cmp__ must be a machine
+        # size integer in Python.
+
+        # An inequality between two numbers s and t is determined by looking
+        # at the value of s-t. A full floating-point subtraction is relatively
+        # slow, so we first try to look at the exponents and signs of s and t.
+        sm, se, sbc = s
+        tm, te, tbc = t
+
+        # Very easy cases: check for 0's and opposite signs
+        if not tm: return cmp(sm, 0)
+        if not sm: return cmp(0, tm)
         if sm > 0 and tm < 0: return 1
         if sm < 0 and tm > 0: return -1
+
+        # In this case, the numbers likely have the same magnitude
         if se == te: return cmp(sm, tm)
-        a = s.bc + se
-        b = t.bc + te
+
+        # The numbers have the same sign but different exponents. In this
+        # case we try to determine if they are of different magnitude by
+        # checking the position of the highest set bit in each number.
+        a = sbc + se
+        b = tbc + te
         if sm > 0:
             if a < b: return -1
             if a > b: return 1
         else:
             if a < b: return 1
             if a < b: return -1
-        return cmp((s-t).man, 0)
+
+        # The numbers have similar magnitude but different exponents.
+        # So we subtract and check the sign of resulting mantissa.
+        return cmp((s-t)[0], 0)
+
+
+    # Since Float inherits from tuple, these functions must be defined
+    # in addition to __cmp__ to override the tuple methods.
+    __lt__ = lambda s, t: s.__cmp__(t) < 0
+    __gt__ = lambda s, t: s.__cmp__(t) > 0
+    __le__ = lambda s, t: s.__cmp__(t) <= 0
+    __ge__ = lambda s, t: s.__cmp__(t) >= 0
+
+
+    """
+    We implement __eq__ separately from __cmp__. One reason for doing this
+    performance: due to the way Floats are normalized, two Floats are
+    mathematically equal iff all three parts (man, exp, bc) are equal. So we
+    can do a direct tuple comparison and avoid the machinery in __cmp__.
+
+    Another reason is to support == and != between Floats and ComplexFloat.
+    ComplexFloats are not supported by __cmp__, since complex numbers are
+    unordered.
+    """
+    def __eq__(s, t):
+        """s.__eq__(t) <==> s == Float(t)
+
+        Determine whether s and Float(t) are equal (see warning for
+        __cmp__ about conversion between different types.)"""
+        if isinstance(t, Basic):
+            return s.rational() == t
+        if isinstance(t, Float):
+            return s[:] == t[:]
+        if isinstance(t, ComplexFloat):
+            return ComplexFloat(s) == t
+        return not s.__cmp__(t)
+
+    __ne__ = lambda s, t: not s.__eq__(t)
 
     def ae(s, t, rel_eps=None, abs_eps=None):
         """
-        "ae" is short for "almost equal"
-
         Determine whether the difference between s and t is smaller
-        than a given epsilon.
+        than a given epsilon ("ae" is short for "almost equal").
 
         Both a maximum relative difference and a maximum difference
-        (or 'epsilons') may be specified. The absolute difference is
+        ('epsilons') may be specified. The absolute difference is
         defined as |s-t| and the relative difference is defined
         as |s-t|/max(|s|, |t|).
 
@@ -415,6 +508,7 @@ class Float(object):
         if not isinstance(t, Float):
             t = Float(t)
         if abs_eps is None and rel_eps is None:
+            rel_eps = tuple.__new__(Float, (1, -s._prec+4, 1))
             rel_eps = Float((1, -s._prec+4))
         if abs_eps is None:
             abs_eps = rel_eps
@@ -432,33 +526,36 @@ class Float(object):
         return err <= rel_eps
 
     def almost_zero(s, prec):
-        """Quick check if |s| < 2**-prec"""
+        """Quick check if |s| < 2**-prec. May return a false negative
+        if s is very close to the threshold."""
         return s.bc + s.exp < prec
 
     def __nonzero__(s):
-        return bool(s.man)
+        return bool(s[0])
 
     #------------------------------------------------------------------
     # Arithmetic
     #
 
     def __abs__(s):
-        if s.man < 0:
+        if s[0] < 0:
             return -s
         return s
 
     def __add__(s, t):
         if isinstance(t, Float):
-            if t.man == 0:
-                return +s
-            if t.exp > s.exp:
+            if t[1] > s[1]:
                 s, t = t, s
-            if s.exp - t.exp > 100:
-                bitdelta = (s.bc+s.exp)-(t.bc+t.exp)
+            sman, sexp, sbc = s
+            tman, texp, tbc = t
+            if not tman: return +s
+            if not sman: return +t
+            if sexp - texp > 100:
+                bitdelta = (sbc+sexp)-(tbc+texp)
                 if bitdelta > s._prec+5:
                     # XXX: handle rounding
                     return +s
-            return makefloat(t.man+(s.man<<(s.exp-t.exp)), t.exp)
+            return makefloat(tman+(sman<<(sexp-texp)), texp)
         if isinstance(t, (int, long)):
             # XXX: cancellation is possible here
             return s + Float(t)
@@ -469,11 +566,11 @@ class Float(object):
     __radd__ = __add__
 
     def __neg__(s):
-        return makefloat(-s.man, s.exp)
+        return makefloat(-s[0], s[1])
 
     def __sub__(s, t):
         if isinstance(t, Float):
-            return s + makefloat_verbatim(-t.man, t.exp, t.bc)
+            return s + tuple.__new__(Float, (-t[0],) + t[1:])
         else:
             return s + (-t)
 
@@ -482,9 +579,11 @@ class Float(object):
 
     def __mul__(s, t):
         if isinstance(t, Float):
-            return makefloat(s.man*t.man, s.exp+t.exp)
+            sman, sexp, sbc = s
+            tman, texp, tbc = t
+            return makefloat(sman*tman, sexp+texp)
         if isinstance(t, (int, long)):
-            return makefloat(s.man*t, s.exp)
+            return makefloat(s[0]*t, s[1])
         if isinstance(t, (ComplexFloat, complex)):
             return ComplexFloat(s) * t
         return s * Float(t)
@@ -495,11 +594,14 @@ class Float(object):
         if t == 0:
             raise ZeroDivisionError
         if isinstance(t, Float):
-            extra = max(0, s._prec - s.bc + t.bc + 4)
-            return makefloat((s.man<<extra)//t.man, s.exp-t.exp-extra)
+            sman, sexp, sbc = s
+            tman, texp, tbc = t
+            extra = max(0, s._prec - sbc + tbc + 4)
+            return makefloat((sman<<extra)//tman, sexp-texp-extra)
         if isinstance(t, (int, long)):
-            extra = s._prec - s.bc + bitcount(t) + 4
-            return makefloat((s.man<<extra)//t, s.exp-extra)
+            sman, sexp, sbc = s
+            extra = s._prec - sbc + bitcount(t) + 4
+            return makefloat((sman<<extra)//t, sexp-extra)
         if isinstance(t, (ComplexFloat, complex)):
             return ComplexFloat(s) / t
         return s / Float(t)

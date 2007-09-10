@@ -27,7 +27,7 @@ def polyroots(poly, maxsteps=20):
         >>> x = Symbol('x')
         >>> r, e = polyroots((x-3)*(x-2))
         >>> r[0]
-        ComplexFloat(real='1.9999999999999993', imag='5.1698788284564230E-26')
+        ComplexFloat(real='1.9999999999999993', imag='-4.5917748078995606E-41')
         >>> r[1]
         ComplexFloat(real='3', imag='-4.6222318665293660E-33')
         >>> e
@@ -56,23 +56,15 @@ def polyroots(poly, maxsteps=20):
         >>> e
         Float('5.4076851354766810E-8')
 
-    Increasting 'maxsteps' does not help:
-
-        >>> r, e = polyroots((x-2)**2, maxsteps=30)
-        >>> r[0].real
-        Float('1.9999999995097915')
-        >>> e
-        Float('5.2076271636139687E-10')
-
     An effective cure is to multiply the working precision n times (in
     the case of a double root, doubling it):
 
         >>> Float.setdps(30)
         >>> r, e = polyroots((x-2)**2, 40)
         >>> r[0].real
-        Float('1.9999999999999997562825649058053')
+        Float('1.9999999999999999075008441778756')
         >>> e
-        Float('1.9134951728346688825145639061887E-16')
+        Float('1.9055980809840526328094566161453E-16')
 
     The result is good to 15 decimals as expected.
     """

@@ -120,10 +120,12 @@ def test_almost_equal():
     assert not Float(1.2).ae(Float(1.20000001), 1e-9)
     assert not Float(-0.7818314824680298).ae(Float(-0.774695868667929))
 
-def test_int():
+def test_convert():
     for i in range(-100, 100):
         assert int(Float(i)) == i
     assert int(Float(2**500 + 23)) == 2**500
+    assert Float(0.5).rational() == Rational(1,2)
+    assert Float(-3).rational() == Rational(-3)
 
 def test_add():
     assert Float(4) + Float(-70) == -66
@@ -135,6 +137,7 @@ def test_add():
     assert Float(1) + 1e-15 != 1
     assert Float(1) + 1e-20 == 1
     assert Float(1.07e-22) + 0 == Float(1.07e-22)
+    assert Float(0) + Float(1.07e-22) == Float(1.07e-22)
 
 def test_contexts():
     Float.store()
