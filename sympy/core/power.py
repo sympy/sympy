@@ -71,9 +71,11 @@ class Pow(Basic, ArithMeths, RelMeths):
 
     def _eval_power(self, other):
         if isinstance(other, Basic.Number):
-            if isinstance(self.exp, Basic.Number):
-                # (a ** 2) ** 3 -> a ** (2 * 3)
-                return Pow(self.base, self.exp * other)
+            if self.base.is_real:
+                print self, 'real'
+                if isinstance(self.exp, Basic.Number):
+                    # (a ** 2) ** 3 -> a ** (2 * 3)
+                    return Pow(self.base, self.exp * other)                
             if isinstance(other, Basic.Integer):
                 # (a ** b) ** 3 -> a ** (3 * b)
                 return Pow(self.base, self.exp * other)

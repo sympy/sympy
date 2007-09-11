@@ -29,3 +29,17 @@ def test_expand():
 def test_issue153():
     #test that is runs:
     a = S.Sqrt(2*(1+S.Sqrt(2)))
+
+def test_issue350():
+    #test if powers are simplified correctly
+    a = Symbol('a')
+    assert ((a**Rational(1,3))**Rational(2)) == a**Rational(2,3)
+    assert ((a**Rational(3))**Rational(2,5)) != a**Rational(6,5)
+
+    a = Symbol('a', real = True)
+    assert (a**Rational(3))**Rational(2,5) == a**Rational(6,5)
+    
+    #assert Number(5)**Rational(2,3)==Number(25)**Rational(1,3)
+
+    
+test_issue350()
