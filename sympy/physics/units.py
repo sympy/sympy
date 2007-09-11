@@ -95,7 +95,7 @@ defunit(kilo*m, 'km', 'kilometer', 'kilometers')
 defunit(deci*m, 'dm', 'decimeter', 'decimeters')
 defunit(centi*m, 'cm', 'centimeter', 'centimeters')
 defunit(milli*m, 'mm', 'millimeter', 'millimeters')
-defunit(micro*m, 'um', 'micrometer', 'kilometers', 'micron', 'microns')
+defunit(micro*m, 'um', 'micrometer', 'micrometers', 'micron', 'microns')
 defunit(nano*m, 'nm', 'nanometer', 'nanometers')
 defunit(pico*m, 'pm', 'picometer', 'picometers')
 
@@ -123,7 +123,13 @@ defunit(pico*s, 'ps', 'picosecond', 'picoseconds')
 defunit(60*s, 'minute', 'minutes')
 defunit(60*minute, 'h', 'hour', 'hours')
 defunit(24*hour, 'day', 'days')
-defunit(365*day, 'year', 'years')
+
+defunit(Rational('31558149.540')*s, 'sidereal_year', 'sidereal_years')
+defunit(Rational('365.24219')*day, 'tropical_year', 'tropical_years')
+defunit(Rational('365')*day, 'common_year', 'common_years')
+defunit(Rational('365.25')*day, 'julian_year', 'julian_years')
+
+year = years = tropical_year
 
 
 # Common mass units
@@ -153,3 +159,8 @@ boltzmann = Rational('1.3806505') * ten**-23 * J / K
 gee = gees = Rational('9.80665') * m/s**2
 atmosphere = atmospheres = atm = 101325 * pascal
 
+
+# Other convenient units and magnitudes
+
+defunit(c*julian_year, 'ly', 'lightyear', 'lightyears')
+defunit(149597870691*m, 'au', 'astronomical_unit', 'astronomical_units')
