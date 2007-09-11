@@ -227,6 +227,7 @@ tests = [
     'sympy.matrices.tests',
     'sympy.numerics.tests',
     'sympy.ntheory.tests',
+    'sympy.physics.tests',
     'sympy.polynomials.tests',
     'sympy.printing.tests',
     'sympy.series.tests',

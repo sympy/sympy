@@ -1,5 +1,7 @@
 
 from sympy import *
+from sympy.matrices.matrices import ShapeError
+import py
 
 def test_multiplication():
     a=Matrix((
@@ -657,3 +659,35 @@ def test_sparse_matrix():
 def test_subs():
     x = Symbol('x')
     assert Matrix([[1,x],[x,4]]).subs(x, 5) == Matrix([[1,5],[5,4]])
+
+
+def test_conjugate():
+    M = Matrix([ [0,I,5],
+                 [1,2,0]])
+
+    assert M.T == Matrix([ [0,1],
+                           [I,2],
+                           [5,0]])
+
+    assert M.C == Matrix([ [0,-I,5],
+                           [1,2,0]])
+
+    assert M.H == M.T.C
+    assert M.H == Matrix([ [0,1],
+                           [-I,2],
+                           [5,0]])
+
+def test_conj_dirac():
+    py.test.raises(ShapeError, "eye(3).D")
+
+    M = Matrix([ [1,I,I,I],
+                 [0,1,I,I],
+                 [0,0,1,I],
+                 [0,0,0,1] ])
+
+    assert M.D == Matrix([
+                 [1,0,0,0],
+                 [-I,1,0,0],
+                 [-I,-I,-1,0],
+                 [-I,-I,I,-1] ])
+

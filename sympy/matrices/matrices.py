@@ -87,26 +87,23 @@ class Matrix(object):
         2 - I 4
 
         """
-        out = self[:,:]
         if name == "T":
             #transposition
-            out = out.reshape(self.cols, self.lines)
-            out[:,:] = Matrix(self.cols,self.lines, lambda i,j: self[j,i])
+            out = Matrix(self.cols,self.lines, lambda i,j: self[j,i])
             return out
         if name == "C":
-            #conjugation
-            out[:,:] = Matrix(self.lines,self.cols,
+            #by-element conjugation
+            out = Matrix(self.lines,self.cols,
                     lambda i,j: self[i,j].conjugate())
             return out
         if name == "H":
             #hermite conjugation
-            out.reshape(self.cols, self.lines)
-            out[:,:] = self.T.C
+            out = self.T.C
             return out
         if name == "D":
             #dirac conjugation
-            out.reshape(self.cols, self.lines)
-            out = self.H * gamma(0)
+            from sympy.physics.matrices import mgamma
+            out = self.H * mgamma(0)
             return out
         raise AttributeError("'%s' object has no attribute '%s'"%
                 (self.__class__.__name__, name))
