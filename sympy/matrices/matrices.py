@@ -7,6 +7,10 @@ import random
 class NonSquareMatrixException(Exception):
     pass
 
+class ShapeError(ValueError):
+    """Wrong matrix shape"""
+    pass
+
 class Matrix(object):
 
     def __init__(self, *args):
@@ -233,7 +237,9 @@ class Matrix(object):
         """Returns self*b """
 
         def dotprod(a,b,i,j):
-            assert a.cols == b.lines
+            if a.cols != b.lines:
+                raise ShapeError()
+
             r=0
             for x in range(a.cols):
                 r+=a[i,x]*b[x,j]
