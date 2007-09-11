@@ -64,4 +64,12 @@ class ApplyErf(Apply):
     def _eval_is_real(self):
         return self.args[0].is_real
 
+    def evalf(self):
+        # Temporary hack
+        from sympy.core.numbers import Real
+        from sympy.numerics.functions2 import erf
+        from sympy.numerics import evalf
+        e = erf(evalf(self.args[0]))
+        return Real(str(e))
+
 Basic.singleton['erf'] = Erf
