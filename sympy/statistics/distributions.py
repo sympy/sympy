@@ -2,6 +2,31 @@ from sympy.core import *
 from sympy.functions import sqrt, exp, erf
 import random
 
+
+class Sample(tuple):
+    """
+    Sample([x1, x2, x3, ...]) represents a collection of samples.
+    Sample parameters like mean, variance and stddev can be accessed as
+    properties.
+    """
+    def __new__(cls, sample):
+        s = tuple.__new__(cls, sample)
+        s.mean = mean = sum(s) / len(s)
+        s.variance = sum([(x-mean)**2 for x in s]) / Integer(len(s))
+        s.stddev = sqrt(s.variance)
+        return s
+
+    @property
+    def median(self):
+        raise NotImplementedError
+
+    def __repr__(self):
+        return "Sample([" + ", ".join([str(x) for x in self]) + "])"
+
+    __str__ = __repr__
+
+
+
 class ContinuousProbability:
     """Base class for continuous probability distributions"""
 
@@ -9,6 +34,16 @@ class ContinuousProbability:
         """Calculate the probability that a random number x generated
         from the distribution satisfies a <= x <= b """
         return s.cdf(b) - s.cdf(a)
+
+    def random(s, n=None):
+        """
+        random() -- generate a random number from the distribution.
+        random(n) -- generate a Sample of n random numbers.
+        """
+        if n is None:
+            return s._random()
+        else:
+            return Sample([s._random() for i in xrange(n)])
 
 
 class Normal(ContinuousProbability):
@@ -39,6 +74,11 @@ class Normal(ContinuousProbability):
         self.mu = Basic.sympify(mu)
         self.sigma = Basic.sympify(sigma)
 
+    def __repr__(self):
+        return "Normal(%s, %s)" % (self.mu, self.sigma)
+
+    __str__ = __repr__
+
     mean = property(lambda s: s.mu)
     median = property(lambda s: s.mu)
     mode = property(lambda s: s.mu)
@@ -55,9 +95,8 @@ class Normal(ContinuousProbability):
         x = Basic.sympify(x)
         return (1+erf((x-s.mu)/(s.sigma*sqrt(2))))/2
 
-    def random(s):
-        """Generate a random number from the distribution."""
-        return Real(random.gauss(float(s.mu), float(s.sigma)))
+    def _random(s):
+        return random.gauss(float(s.mu), float(s.sigma))
 
     def confidence(s, p):
         """Return a symmetric (p*100)% confidence interval. For example,
@@ -98,6 +137,14 @@ class Normal(ContinuousProbability):
         mu = s.mu.evalf()
         return (mu-t, mu+t)
 
+    @staticmethod
+    def fit(sample):
+        """Create a normal distribution fit to the mean and standard
+        deviation of the given distribution or sample."""
+        if not hasattr(sample, "stddev"):
+            sample = Sample(sample)
+        return Normal(sample.mean, sample.stddev)
+
 
 class Uniform(ContinuousProbability):
     """
@@ -108,6 +155,11 @@ class Uniform(ContinuousProbability):
     def __init__(self, a, b):
         self.a = Basic.sympify(a)
         self.b = Basic.sympify(b)
+
+    def __repr__(self):
+        return "Uniform(%s, %s)" % (self.a, self.b)
+
+    __str__ = __repr__
 
     mean = property(lambda s: (s.a+s.b)/2)
     median = property(lambda s: (s.a+s.b)/2)
@@ -137,8 +189,7 @@ class Uniform(ContinuousProbability):
             return Rational(1)
         return (x-s.a)/(s.b-s.a)
 
-    def random(s):
-        """Generate a random number from the distribution."""
+    def _random(s):
         return Real(random.uniform(float(s.a), float(s.b)))
 
     def confidence(s, p):
@@ -156,3 +207,12 @@ class Uniform(ContinuousProbability):
         d = (s.b-s.a)*p / 2
         return (s.mean - d, s.mean + d)
 
+    @staticmethod
+    def fit(sample):
+        """Create a uniform distribution fit to the mean and standard
+        deviation of the given distribution or sample."""
+        if not hasattr(sample, "stddev"):
+            sample = Sample(sample)
+        m = sample.mean
+        d = sqrt(12*sample.variance)/2
+        return Uniform(m-d, m+d)

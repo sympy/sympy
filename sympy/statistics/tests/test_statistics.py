@@ -21,3 +21,12 @@ def test_uniform():
     assert U.cdf(-4) == 0
     assert U.cdf(-Rational(3,2)) == Rational(3,4)
     assert U.cdf(0) == 1
+
+def test_fit():
+    import random
+    random.seed(1234)
+    n = Normal.fit(Uniform.fit(Normal(2, 1.5).random(1000)))
+    print n.mean
+    print n.stddev
+    assert abs(n.mean - 2) < 0.3
+    assert abs(n.stddev - 1.5) < 0.3
