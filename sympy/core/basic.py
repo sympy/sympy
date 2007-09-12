@@ -1112,6 +1112,8 @@ class SingletonFactory:
     """
 
     def __getattr__(self, clsname):
+        if clsname == "__repr__":
+            return lambda: "S"
         obj = Singleton.__dict__.get(clsname)
         if obj is None:
             cls = getattr(Basic, clsname)
