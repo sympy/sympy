@@ -219,9 +219,9 @@ class stringPict:
             import curses
             curses.setupterm()
             ncols = curses.tigetnum('cols')
-        except ImportError:
+        except (ImportError, TypeError):
             pass
-
+        
         ncols -= 2
         if ncols <= 0:
             ncols = 78
