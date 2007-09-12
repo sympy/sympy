@@ -12,7 +12,7 @@ from geometry import *
 from polynomials import *
 from utilities import *
 from integrals import *
-from plotting import Plot
+from plotting import Plot, textplot
 from printing import pretty, pretty_print, pprint
 
 #for _n, _cls in Basic.singleton.items():

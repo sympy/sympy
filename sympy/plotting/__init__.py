@@ -19,3 +19,5 @@ try:
 except Exception, e:
     def Plot(*args, **kwargs):
         raise e
+
+from textplot import textplot
