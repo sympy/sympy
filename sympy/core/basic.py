@@ -210,6 +210,12 @@ class Basic(BasicMeths):
         elif isinstance(a, (list,tuple,set)) and sympify_lists:
             return type(a)([Basic.sympify(x, True) for x in a])
         else:
+            # XXX this is here because of cyclic-import issues
+            from sympy.matrices import Matrix
+
+            if isinstance(a, Matrix):
+                raise NotImplementedError('matrix support')
+
             if not isinstance(a, str):
                 # At this point we were given an arbitrary expression
                 # which does not inherit after Basic. This may be

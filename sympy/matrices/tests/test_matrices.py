@@ -32,6 +32,9 @@ def test_multiplication():
     assert c[1,0] == 3*x
     assert c[1,1] == 0
 
+    c2 = x * b
+    assert c == c2
+
     c = 5 * b
     assert isinstance(c,Matrix)
     assert c[0,0] == 5

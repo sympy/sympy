@@ -26,6 +26,9 @@ class ArithMeths(object):
     def __rsub__(self, other):
         return Basic.sympify(other).__sub__(self)
     def __mul__(self, other):
+        # FIXME this is a dirty hack. matrix should be ordinary SymPy object
+        from sympy.matrices import Matrix
+        if isinstance(other, Matrix): return NotImplemented
         return Basic.Mul(self, other)
     def __rmul__(self, other):
         return Basic.sympify(other).__mul__(self)
