@@ -1,17 +1,5 @@
 
-class Symbolic(object):
-    """
-    Defines
-    """
-
-    _new = object.__new__
-
-    def __repr__(self):
-        if isinstance(self, type):
-            return self.__class__.torepr(self)
-        return self.torepr()
-
-class Basic(Symbolic):
+class Basic(object):
 
     def __new__(cls, *args, **kwds):
         r = cls.canonize(*args, **kwds)
@@ -23,6 +11,11 @@ class Basic(Symbolic):
     @classmethod
     def canonize(cls, *args, **kwds):
         return args, kwds
+
+    def __repr__(self):
+        if isinstance(self, type):
+            return self.__class__.torepr(self)
+        return self.torepr()
 
 class FunctionSignature:
 
@@ -60,9 +53,6 @@ class FunctionClass(Basic, type):
 
     def torepr(cls):
         return cls.__name__
-        if cls.nofargs is not None:
-            return 'Function(%r, %r)' % (cls.__name__, cls.nofargs)
-        return 'Function(%r)' % (cls.__name__)
 
     @classmethod
     def canonize(cls, *args, **kwds):
@@ -73,13 +63,13 @@ class FunctionClass(Basic, type):
                 d = basecls.__dict__.copy()
                 assert isinstance(name, str),`name`
                 return (name, (basecls,), d), {}
-            elif len(args)==2:
+            elif len(args)==3 and isinstance(args[0], type):
                 basecls = args[0]
                 name = args[1]
+                assert isinstance(name, str),`name`
                 signature = args[2]
                 d = basecls.__dict__.copy()
                 d['signature'] = signature
-                assert isinstance(name, str),`name`
                 return (name, (basecls,), d), {}
         return args, kwds
 
@@ -110,23 +100,12 @@ class Function(Composite):
     __metaclass__ = FunctionClass
     
     signature = FunctionSignature(None, None)
-    def __new__(cls, *args, **kwds):
-        if cls is Function or cls is Functional:
-            r = cls.canonize(*args, **kwds)
-            if isinstance(r, Basic):
-                return r
-            raise NotImplementedError('%s.__new__(%r,%r)' % (cls, args, kwds))
-        else:
-            r = cls.canonize(*args, **kwds)
-            if isinstance(r, Basic): return r
-            args, kwds = r
-            cls.signature.validate(*args)
-            return Composite._new(cls, *args, **kwds)
 
     @classmethod
     def canonize(cls, *args, **kwds):
         if cls is Function or cls is Functional:
             return FunctionClass(cls, *args, **kwds)
+        cls.signature.validate(args)
         return ((args,), kwds)
 
 class Functional(Function):
