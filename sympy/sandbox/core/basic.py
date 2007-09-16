@@ -1,5 +1,36 @@
 
+class BasicType(type):
+
+    classnamespace = dict()
+    def __init__(cls,*args,**kws):
+        # todo: save only classes that are defined in core.
+        n = cls.__name__
+        c = BasicType.classnamespace.get(n)
+        if c is None:
+            BasicType.classnamespace[n] = cls
+        else:
+            print 'Ignoring redefinition of %s: %s defined earlier than %s' % (n, c, cls)
+        type.__init__(cls, *args, **kws)
+
+    def __getattr__(cls, name):
+        try: return BasicType.classnamespace[name]
+        except KeyError: pass
+        raise AttributeError("'%s' object has no attribute '%s'"%
+                             (cls.__name__, name))
+
 class Basic(object):
+
+    __metaclass__ = BasicType
+
+    @staticmethod
+    def sympify(a):
+        if isinstance(a, Basic):
+            return a
+        elif isinstance(a, bool):
+            raise NotImplementedError("bool support")
+        elif isinstance(a, (int, long)):
+            return Basic.Integer(a)
+        raise ValueError("%r is NOT a valid SymPy expression" % a)
 
     def __new__(cls, *args, **kwds):
         r = cls.canonize(*args, **kwds)
@@ -7,6 +38,13 @@ class Basic(object):
         if r is not None:
             args, kwds = r
         return cls._new(cls, *args, **kwds)
+
+    @staticmethod
+    def _new(cls, *args, **kwds):
+        assert not args,`args`
+        obj = object.__new__(cls)
+        obj.__dict__.update(kwds)
+        return obj
 
     @classmethod
     def canonize(cls, *args, **kwds):
@@ -17,107 +55,30 @@ class Basic(object):
             return self.__class__.torepr(self)
         return self.torepr()
 
-class FunctionSignature:
-
-    def __init__(self, argument_classes = (Basic,), value_classes = (Basic,)):
-        self.argument_classes = argument_classes
-        self.value_classes = value_classes
-        if argument_classes is None:
-            # unspecified number of arguments
-            self.nof_arguments = None
-        else:
-            self.nof_arguments = len(argument_classes)
-        if value_classes is None:
-            # unspecified number of arguments
-            self.nof_values = None
-        else:
-            self.nof_values = len(value_classes)
-
-    def validate(self, args):
-        if self.nof_arguments is not None:
-            if self.nof_arguments!=len(args):
-                # todo: improve exception messages
-                raise TypeError('wrong number of arguments')
-            for a,cls in zip(args, self.argument_classes):
-                if not isinstance(a, cls):
-                    raise TypeError('wrong argument type %r, expected %s' % (a, cls))
-
-    def __repr__(self):
-        return '%s(%r, %r)' % (self.__class__.__name__,
-                               self.argument_classes,
-                               self.value_classes)
-
-class FunctionClass(Basic, type):
-
-    _new = type.__new__
-
-    def torepr(cls):
-        return cls.__name__
-
-    @classmethod
-    def canonize(cls, *args, **kwds):
-        if not kwds:
-            if len(args)==2:
-                basecls = args[0]
-                name = args[1]
-                d = basecls.__dict__.copy()
-                assert isinstance(name, str),`name`
-                return (name, (basecls,), d), {}
-            elif len(args)==3 and isinstance(args[0], type):
-                basecls = args[0]
-                name = args[1]
-                assert isinstance(name, str),`name`
-                signature = args[2]
-                d = basecls.__dict__.copy()
-                d['signature'] = signature
-                return (name, (basecls,), d), {}
-        return args, kwds
 
 class Atom(Basic):
-    pass
+
+    def torepr(self):
+        return '%s()' % (self.__class__.__name__)
+
 
 class Composite(Basic, tuple):
 
     _new = tuple.__new__
 
+    @classmethod
+    def canonize(cls, *args, **kwds):
+        args = tuple(map(Basic.sympify, args))
+        return args, kwds
+
     def torepr(self):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(map(repr, self)))
 
-class Symbol(Atom, str):
+    def __hash__(self):
+        try:
+            return self._hash
+        except AttributeError:
+            h = hash((self.__class__.__name__,)+tuple(self))
+            self._hash = h
+            return h
 
-    _new = str.__new__
-
-    def __new__(cls, name):
-        assert isinstance(name, str), `name`
-        return cls._new(cls, name)
-
-    def torepr(self):
-        return '%s(%r)' % (self.__class__.__name__, self[:])
-
-
-class Function(Composite):
-
-    __metaclass__ = FunctionClass
-    
-    signature = FunctionSignature(None, None)
-
-    @classmethod
-    def canonize(cls, *args, **kwds):
-        if cls is Function or cls is Functional:
-            return FunctionClass(cls, *args, **kwds)
-        cls.signature.validate(args)
-        return ((args,), kwds)
-
-class Functional(Function):
-    """
-    Scalar-valued functions.
-    """
-    signature = FunctionSignature(None, (Basic,))
-
-class sin(Functional):
-
-    signature = FunctionSignature((Basic,), (Basic,))
-
-class Add(Composite):
-
-    pass
