@@ -9,7 +9,7 @@ from sympy.core.methods import ArithMeths, RelMeths
 
 
 class Unit(Atom, RelMeths, ArithMeths):
-
+    is_positive = True    # make (m**2)**Rational(1,2) --> m
     is_commutative = True
 
     def __init__(self, name, abbrev):

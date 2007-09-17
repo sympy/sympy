@@ -1,16 +1,18 @@
 from math import log as _clog
 
-_bc_table = [0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4]
+_bc_table = (0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4)
 
-def bitcount(n):
+def bitcount(n, log=_clog, bctable=_bc_table):
     """Give position of the highest set bit in an integer"""
     if not n: return 0
     if n < 0: n = -n
     # math.log gives a good estimate, and never overflows, but
     # is not always exact. Subtract 2 to underestimate, then
     # count remaining bits by table lookup
-    bc = max(0, int(_clog(n, 2)) - 2)
-    return bc + _bc_table[n >> bc]
+    bc = int(log(n, 2)) - 2
+    if bc < 0:
+        bc = 0
+    return bc + bctable[n >> bc]
 
 def trailing_zeros(n):
     """Count trailing zero bits in an integer."""
