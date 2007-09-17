@@ -65,18 +65,18 @@ class Function(CompositeTuple):
 
     @classmethod
     def canonize(cls, *args, **kwds):
-        if cls is Function or cls is Functional:
+        if cls is Function or cls is ScalarFunction:
             return FunctionClass(cls, *args, **kwds)
         args = tuple(map(cls.sympify, args))
         cls.signature.validate(args)
         return ((args,), kwds)
 
-class Functional(ArithMeths, Function):
+class ScalarFunction(ArithMeths, Function):
     """
     Scalar-valued functions.
     """
     signature = FunctionSignature(None, (Basic,))
 
-class sin(Functional):
+class sin(ScalarFunction):
 
     signature = FunctionSignature((Basic,), (Basic,))
