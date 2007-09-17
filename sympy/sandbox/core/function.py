@@ -1,5 +1,5 @@
 
-from basic import Atom, Composite, Basic, BasicType
+from basic import Atom, CompositeTuple, Basic, BasicType
 from methods import ArithMeths
 
 class FunctionSignature:
@@ -46,24 +46,18 @@ class FunctionClass(ArithMeths, Atom, BasicType):
 
     @classmethod
     def canonize(cls, *args, **kwds):
-        if not kwds:
-            if len(args)==2:
-                basecls = args[0]
-                name = args[1]
-                d = basecls.__dict__.copy()
-                assert isinstance(name, str),`name`
-                return (name, (basecls,), d), {}
-            elif len(args)==3 and isinstance(args[0], type):
-                basecls = args[0]
-                name = args[1]
-                assert isinstance(name, str),`name`
+        if not kwds and isinstance(args[0], type):
+            basecls = args[0]
+            name = args[1]
+            d = basecls.__dict__.copy()
+            d['undefined_Function'] = True
+            if len(args)==3:
                 signature = args[2]
-                d = basecls.__dict__.copy()
                 d['signature'] = signature
-                return (name, (basecls,), d), {}
+            return (name, (basecls,), d), {}
         return args, kwds
 
-class Function(Composite):
+class Function(CompositeTuple):
 
     __metaclass__ = FunctionClass
     

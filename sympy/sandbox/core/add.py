@@ -1,10 +1,7 @@
 
-from basic import Composite
+from basic import Basic, CompositeDict
 from methods import ArithMeths
 
-class Add(ArithMeths, Composite):
+class Add(ArithMeths, CompositeDict):
 
-    @classmethod
-    def canonize(cls, *args, **kwds):
-        args = tuple(map(cls.sympify, args))
-        return (args,), kwds
+    pass
