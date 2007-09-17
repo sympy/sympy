@@ -1,5 +1,6 @@
 
-from sympy.core import *
+from sympy.core import Basic, S, Apply, Add, Mul, Pow, Rational, Integer, \
+        Derivative, Wild, Symbol
 
 from sympy.utilities import make_list, all
 
