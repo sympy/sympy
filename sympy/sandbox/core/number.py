@@ -3,17 +3,21 @@ from basic import Basic, Atom
 from methods import ArithMeths
 
 class Number(ArithMeths, Atom):
-
+    """A Number is an atomic object with a definite numerical value.
+    Examples include rational numbers (-25, 2/3, ...) via the Rational
+    class, floating-point numbers via the Real class, the imaginary
+    unit I, and some special constants like pi."""
     def __new__(cls, x, **options):
         if isinstance(x, Basic): return x
         if isinstance(x, (int, long)): return Integer(x, **options)
         return Basic.__new__(cls, x, **options)
-        
+
 class Real(Number):
 
     pass
 
 class Rational(Number):
+
 
     def __new__(cls, p, q=1):
         return Fraction(p, q)

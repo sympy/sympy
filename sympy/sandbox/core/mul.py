@@ -4,10 +4,8 @@ from basic import Basic, Composite
 from methods import ArithMeths, ImmutableMeths
 
 class MutableMul(ArithMeths, Composite, dict):
-    """ Represents a product.
-
-    3 * a * b**2 is Mul({1:3, a:1, b:2})
-    """
+    """Mutable base class for Mul. This class is used temporarily
+    during construction of Mul objects."""
 
     # constructor methods
     def __new__(cls, *args, **options):
@@ -101,7 +99,14 @@ class MutableMul(ArithMeths, Composite, dict):
         return obj
 
 class Mul(ImmutableMeths, MutableMul):
+    """Represents a product, with repeated factors collected into
+    powers using a dict representation. The product a**m * b**n
+    (where m and n may be arbitrary expressions and not just
+    integers) is represented as Mul({a:m, b:n}).
 
+    Note that purely rational multiples are counted using the Add
+    class, so 3*x*y**2 --> Add({Mul({x:1, y:2}):3}).
+    """
     # constructor methods
     @memoizer_immutable_args
     def __new__(cls, *args, **options):
