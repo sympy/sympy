@@ -30,6 +30,7 @@ class Fraction(Rational, tuple):
 
     @property
     def p(self): return self[0]
+    
     @property
     def q(self): return self[1]
 
@@ -45,13 +46,27 @@ class Integer(Rational, int):
 
     @property
     def p(self): return int(self)
+
     @property
     def q(self): return 1
 
     def torepr(self):
         return '%s(%r)' % (self.__class__.__name__, self.p)
 
+    def __neg__(self):
+        return Integer(-int(self))
+
     def __add__(self, other):
         if isinstance(other, int):
             return Integer(int(self) + int(other))
         return Basic.Add(self, other)
+
+    def __mul__(self, other):
+        if isinstance(other, int):
+            return Integer(int(self) * int(other))
+        return Basic.Mul(self, other)
+
+    def __pow__(self, other):
+        if isinstance(other, int) and other>0:
+            return Integer(int(self) ** int(other))
+        return Basic.Pow(self, other)
