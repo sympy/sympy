@@ -15,6 +15,8 @@ class MutableMul(ArithMeths, Composite, dict):
         To make MutableAdd immutable, execute
           obj.__class__ = Add
         """
+        if 0 in args:
+            return Basic.Integer(0)
         obj = dict.__new__(cls)
         [obj.update(a) for a in args]
         return obj.canonical()

@@ -12,11 +12,15 @@ class ArithMeths:
     def __add__(self, other):
         return Basic.Add(self, other)
 
+    __radd__ = __add__
+
     def __sub__(self, other):
         return self + (-Basic.sympify(other))
 
     def __mul__(self, other):
         return Basic.Mul(self, other)
+
+    __rmul__ = __mul__
 
     def __div__(self, other):
         return self * (Basic.sympify(other) ** (-1))
