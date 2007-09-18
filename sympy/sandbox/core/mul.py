@@ -67,17 +67,18 @@ class Mul(ImmutableMeths, MutableMul):
             if v==0:
                 # Mul({a:0}) -> 1
                 del obj[k]
-        if len(obj)==0: return Basic.Integer(1)
+        c = obj.pop(1, Basic.Integer(1))
+        if len(obj)==0:
+            return c
+        obj.__class__ = cls
         if len(obj)==1:
-            try:
-                # Mul({1:3}) -> 3
-                return obj[1]
-            except KeyError:
-                pass
             # Mul({a:1}) -> a
             k,v = obj.items()[0]
-            if v==1: return k
-        obj.__class__ = cls
+            if v==1:
+                obj = k
+        if c is not None:
+            obj = Basic.MutableAdd({obj:c})
+            obj.__class__ = Basic.Add
         return obj
 
     # arithmetics methods
