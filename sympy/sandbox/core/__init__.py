@@ -6,7 +6,7 @@ from symbol import Symbol #, Wild, symbols
 from number import Number, Real, Rational, Integer
 #from power import Pow
 #from mul import Mul
-from add import Add
+from add import Add, MutableAdd
 #from relational import Equality, Inequality, Unequality, StrictInequality
 #from new_function import NewFunction, sin_
 #from function import Lambda, Function, Apply, FApply, Composition, FPow, WildFunction, Derivative, DefinedFunction, diff
