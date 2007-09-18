@@ -12,7 +12,6 @@ class MutableAdd(ArithMeths, Composite, dict):
         """
         obj = dict.__new__(MutableAdd)
         [obj.update(a) for a in args]
-        obj.__class__ = cls
         return obj
 
     def __init__(self, *args, **options):
@@ -52,8 +51,7 @@ class Add(MutableAdd):
 
     @memoizer_immutable_args
     def __new__(cls, *args, **options):
-        obj = dict.__new__(MutableAdd)
-        [obj.update(a) for a in args]
+        obj = MutableAdd(*args, **options)
         obj.__class__ = cls
         return obj    
 
@@ -68,3 +66,10 @@ class Add(MutableAdd):
 
     def __iadd__(self, other):
         return Add(self, other)
+
+    def __hash__(self):
+        try:
+            return self.__dict__['_cached_hash']
+        except KeyError:
+            h = self._cached_hash = sum(map(hash, self.items()))
+        return h
