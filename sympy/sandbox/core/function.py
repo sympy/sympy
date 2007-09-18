@@ -1,11 +1,27 @@
 
-from basic import Atom, CompositeTuple, Basic, BasicType
+from basic import Atom, Composite, Basic, BasicType
 from methods import ArithMeths
 
 class FunctionSignature:
     """
     Function signature defines valid function arguments
     and its expected return values.
+
+    Examples:
+
+    A function with undefined number of arguments and return values:
+    >>> f = Function('f', FunctionSignature(None, None))
+
+    A function with undefined number of arguments and one return value:
+    >>> f = Function('f', FunctionSignature(None, (Basic,)))
+
+    A function with 2 arguments and a pair in as a return value,
+    the second argument must be Python integer:
+    >>> f = Function('f', FunctionSignature((Basic, int), (Basic, Basic)))
+
+    A function with one argument and one return value, the argument
+    must be float or int instance:
+    >>> f = Function('f', FunctionSignature(((float, int), ), (Basic,)))
     """
 
     def __init__(self, argument_classes = (Basic,), value_classes = (Basic,)):
@@ -38,45 +54,74 @@ class FunctionSignature:
 
 
 class FunctionClass(ArithMeths, Atom, BasicType):
+    """
+    Base class for function classes. FunctionClass is a subclass of type.
+
+    Use Function('<function name>' [ , signature ]) to create
+    undefined function classes.
+    """
 
     _new = type.__new__
+
+    def __new__(cls, arg1, arg2, arg3=None, **options):
+        assert not options,`options`
+        if isinstance(arg1, type):
+            ftype, name, signature = arg1, arg2, arg3
+            assert ftype.__name__.endswith('Function'),`ftype`
+            attrdict = ftype.__dict__.copy()
+            attrdict['undefined_Function'] = True
+            if signature is not None:
+                attrdict['signature'] = signature
+            bases = (ftype,)
+            return type.__new__(cls, name, bases, attrdict)
+        else:
+            name, bases, attrdict = arg1, arg2, arg3
+            return type.__new__(cls, name, bases, attrdict)
 
     def torepr(cls):
         return cls.__name__
 
-    @classmethod
-    def canonize(cls, *args, **kwds):
-        if not kwds and isinstance(args[0], type):
-            basecls = args[0]
-            name = args[1]
-            d = basecls.__dict__.copy()
-            d['undefined_Function'] = True
-            if len(args)==3:
-                signature = args[2]
-                d['signature'] = signature
-            return (name, (basecls,), d), {}
-        return args, kwds
 
-class Function(CompositeTuple):
+class Function(Composite, tuple):
+    """
+    Base class for applied functions.
+    Constructor of undefined classes.
+    """
 
     __metaclass__ = FunctionClass
     
     signature = FunctionSignature(None, None)
 
-    @classmethod
-    def canonize(cls, *args, **kwds):
-        if cls is Function or cls is ScalarFunction:
-            return FunctionClass(cls, *args, **kwds)
-        args = tuple(map(cls.sympify, args))
+    def __new__(cls, *args, **options):
+        if cls.__name__.endswith('Function'):
+            return FunctionClass(cls, *args, **options)
+        args = map(Basic.sympify, args)
         cls.signature.validate(args)
-        return ((args,), kwds)
+        r = cls.canonize(args, **options)
+        if isinstance(r, Basic): return r
+        elif r is None:
+            pass
+        elif not isinstance(r, tuple):
+            args = (r,)
+        return tuple.__new__(cls, args)
+        
+    @classmethod
+    def canonize(cls, args, **options):
+        return
 
-class ScalarFunction(ArithMeths, Function):
+
+class SingleValuedFunction(ArithMeths, Function):
     """
-    Scalar-valued functions.
+    Single-valued functions.
     """
     signature = FunctionSignature(None, (Basic,))
 
-class sin(ScalarFunction):
+
+class sin(SingleValuedFunction):
 
     signature = FunctionSignature((Basic,), (Basic,))
+
+    @classmethod
+    def canonize(cls, (x,), **options):
+        if x==0: return x
+        return

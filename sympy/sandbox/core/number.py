@@ -11,11 +11,16 @@ class Real(Number):
 
 class Rational(Number):
 
-    @classmethod
-    def canonize(cls, p, q=1):
+    def __new__(cls, p, q=1, **options):
+        assert not options,`options`
         if q==1:
             return Integer(p)
-        return (), dict(p=p,q=q)
+        assert isinstance(p, int),`p`
+        assert isinstance(q, int),`q`
+        obj = object.__new__(cls)
+        obj.p = int(p)
+        obj.q = int(q)
+        return obj
 
     def __hash__(self):
         try:
@@ -30,18 +35,12 @@ class Rational(Number):
 
 class Integer(Rational, int):
 
-    _new = int.__new__
-    
-    @classmethod
-    def canonize(cls, p):
-        p = int(p)
-        return (p,), {}
-
-    @property
-    def p(self): return int(self)
-
-    @property
-    def q(self): return 1
+    def __new__(cls, p, **options):
+        assert not options,`options`
+        obj = int.__new__(cls, p)
+        obj.p = int(obj)
+        obj.q = 1
+        return obj
 
     def torepr(self):
         return '%s(%r)' % (self.__class__.__name__, self.p)

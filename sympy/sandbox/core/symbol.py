@@ -1,21 +1,13 @@
 
 from basic import Atom
+from methods import ArithMeths
 
-class Symbol(Atom, str):
+class Symbol(ArithMeths, Atom, str):
 
-    _new = str.__new__
-
-    def __new__(cls, name):
+    def __new__(cls, name, **options):
         assert isinstance(name, str), `name`
-        return cls._new(cls, name)
+        assert not options, `options`
+        return str.__new__(cls, name)
 
     def torepr(self):
         return '%s(%r)' % (self.__class__.__name__, str(self))
-
-    def __hash__(self):
-        try:
-            return self._hash
-        except AttributeError:
-            h = hash((self.__class__.__name__, str(self)))
-            self._hash = h
-            return h
