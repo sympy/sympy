@@ -17,7 +17,7 @@ class MutableMul(ArithMeths, Composite, dict):
         """
         obj = dict.__new__(cls)
         [obj.update(a) for a in args]
-        return obj
+        return obj.canonical()
 
     def __init__(self, *args, **options):
         pass
@@ -25,17 +25,24 @@ class MutableMul(ArithMeths, Composite, dict):
     def update(self, a):
         if isinstance(a, MutableMul):
             for k,v in a.items():
+                if k.is_Add and len(k)==1:
+                    # Add({x:3})**2 -> Mul({x:1*2,1:3**2})
+                    k1,v1 = k.items()[0]
+                    self.update(v1**v)
+                    k = k1
+                assert not k.is_Mul and not k.is_Add,`k`
                 try:
                     self[k] += v
                 except KeyError:
                     self[k] = v
             return
         if isinstance(a, dict) and not isinstance(a, Basic):
+            # construct Mul instance from a canonical dictionary
             assert len(self)==0,`len(self)`
             super(MutableMul, self).update(a)
             return
         a = Basic.sympify(a)
-        if isinstance(a, Basic.Number):
+        if a.is_Number:
             k, v = Basic.Integer(1), a
             try:
                 self[k] *= v
@@ -43,6 +50,20 @@ class MutableMul(ArithMeths, Composite, dict):
                 self[k] = v
         else:
             k, v = a, Basic.Integer(1)
+            if k.is_Add and len(k)==1:
+                # Add({x:3}) -> Mul({x:1,1:3})
+                k1,v1 = k.items()[0]
+                self.update(v1)
+                k = k1
+            if k.is_Mul:
+                for k1,v1 in k.items():
+                    assert not k1.is_Mul and not k1.is_Add,`k1`
+                    try:
+                        self[k1] += v1
+                    except KeyError:
+                        self[k1] = v1
+                return
+            assert not k.is_Mul and not k.is_Add,`k`
             try:
                 self[k] += v
             except KeyError:
@@ -57,29 +78,32 @@ class MutableMul(ArithMeths, Composite, dict):
         self.update(other)
         return self
 
-class Mul(ImmutableMeths, MutableMul):
-
-    # constructor methods
-    @memoizer_immutable_args
-    def __new__(cls, *args, **options):
-        obj = MutableMul(*args, **options)
+    # canonize methods
+    def canonical(self):
+        obj = self
         for k,v in obj.items():
             if v==0:
                 # Mul({a:0}) -> 1
                 del obj[k]
         c = obj.pop(1, Basic.Integer(1))
+        obj.__class__ = Mul
         if len(obj)==0:
             return c
-        obj.__class__ = cls
         if len(obj)==1:
             # Mul({a:1}) -> a
             k,v = obj.items()[0]
             if v==1:
                 obj = k
         if c is not None:
-            obj = Basic.MutableAdd({obj:c})
-            obj.__class__ = Basic.Add
+            obj = Basic.MutableAdd({obj:c}).canonical()
         return obj
+
+class Mul(ImmutableMeths, MutableMul):
+
+    # constructor methods
+    @memoizer_immutable_args
+    def __new__(cls, *args, **options):
+        return MutableMul(*args, **options).canonical()
 
     # arithmetics methods
     def __imul__(self, other):

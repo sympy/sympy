@@ -53,17 +53,14 @@ class MutableAdd(ArithMeths, Composite, dict):
         self.update(other)
         return self
 
-
-class Add(ImmutableMeths, MutableAdd):
-
-    # constructor methods
-    @memoizer_immutable_args
-    def __new__(cls, *args, **options):
-        obj = MutableAdd(*args, **options)
+    # canonize methods
+    def canonical(self):
+        obj = self
         for k,v in obj.items():
             if v==0:
                 # Add({a:0}) -> 0
                 del obj[k]
+        obj.__class__ = Add
         if len(obj)==0:
             return Basic.Integer(0)
         if len(obj)==1:
@@ -75,8 +72,14 @@ class Add(ImmutableMeths, MutableAdd):
             # Add({a:1}) -> a
             k,v = obj.items()[0]
             if v==1: return k
-        obj.__class__ = cls
         return obj
+
+class Add(ImmutableMeths, MutableAdd):
+
+    # constructor methods
+    @memoizer_immutable_args
+    def __new__(cls, *args, **options):
+        return MutableAdd(*args, **options).canonical()
 
     # arithmetics methods
     def __iadd__(self, other):
