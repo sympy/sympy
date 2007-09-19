@@ -1,8 +1,8 @@
 
 from basic import Atom
-from methods import ArithMeths
+from methods import ArithMeths, RelationalMeths
 
-class Symbol(ArithMeths, Atom, str):
+class Symbol(ArithMeths, RelationalMeths, Atom, str):
 
     def __new__(cls, name, **options):
         assert isinstance(name, str), `name`

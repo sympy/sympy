@@ -8,7 +8,7 @@ from number import Number, Real, Rational, Integer
 #from mul import Mul
 from add import Add, MutableAdd
 from mul import Mul, MutableMul, Pow
-#from relational import Equality, Inequality, Unequality, StrictInequality
+from relational import Equality, Inequality, Unequality, StrictInequality
 #from new_function import NewFunction, sin_
 #from function import Lambda, Function, Apply, FApply, Composition, FPow, WildFunction, Derivative, DefinedFunction, diff
 from function import Function, sin

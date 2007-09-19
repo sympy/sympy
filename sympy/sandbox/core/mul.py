@@ -1,9 +1,9 @@
 
 from utils import memoizer_immutable_args
 from basic import Basic, MutableCompositeDict
-from methods import ArithMeths, ImmutableMeths
+from methods import ArithMeths, ImmutableMeths, RelationalMeths
 
-class MutableMul(ArithMeths, MutableCompositeDict):
+class MutableMul(ArithMeths, RelationalMeths, MutableCompositeDict):
     """Mutable base class for Mul. This class is used temporarily
     during construction of Mul objects."""
 
@@ -115,6 +115,4 @@ class Pow(Basic):
         if b==1: return b
         p = a._eval_power(b)
         if p is not None: return p
-        m = MutableMul({a:b})
-        m.__class__ = Mul
-        return m
+        return Mul({a:b})

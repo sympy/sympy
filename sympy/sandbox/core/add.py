@@ -1,9 +1,9 @@
 
 from utils import memoizer_immutable_args
 from basic import Basic, MutableCompositeDict
-from methods import ArithMeths, ImmutableMeths
+from methods import ArithMeths, ImmutableMeths, RelationalMeths
 
-class MutableAdd(ArithMeths, MutableCompositeDict):
+class MutableAdd(ArithMeths, RelationalMeths, MutableCompositeDict):
     """ Represents a sum.
 
     3 + a + 2*b is Add({1:3, a:1, b:2})
@@ -67,6 +67,7 @@ class MutableAdd(ArithMeths, MutableCompositeDict):
         self.update(other)
         return self
 
+
 class Add(ImmutableMeths, MutableAdd):
 
     # constructor methods
@@ -89,5 +90,3 @@ class Add(ImmutableMeths, MutableAdd):
         except KeyError:
             h = self._cached_hash = sum(map(hash, self.items()))
         return h
-
-

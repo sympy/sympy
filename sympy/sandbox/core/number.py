@@ -1,4 +1,5 @@
 
+from utils import memoizer_immutable_args
 from basic import Basic, Atom
 from methods import ArithMeths
 
@@ -24,8 +25,8 @@ class Rational(Number):
 
 class Fraction(Rational, tuple):
 
-    def __new__(cls, p, q, **options):
-        assert not options,`options`
+    @memoizer_immutable_args('Fraction.__new__')
+    def __new__(cls, p, q):
         if q==1:
             return Integer(p)
         assert isinstance(p, int),`p`
@@ -41,10 +42,18 @@ class Fraction(Rational, tuple):
     def torepr(self):
         return '%s(%r, %r)' % (self.__class__.__name__, self.p, self.q)
 
+    def compare(self, other):
+        if self is other: return 0
+        c = cmp(self.__class__, other.__class__)
+        if c: return c
+        #
+        return cmp(self.p*other.q, self.q*other.p)
+
+
 class Integer(Rational, int):
 
-    def __new__(cls, p, **options):
-        assert not options,`options`
+    @memoizer_immutable_args('Integer.__new__')
+    def __new__(cls, p):
         obj = int.__new__(cls, p)
         return obj
 
@@ -56,6 +65,13 @@ class Integer(Rational, int):
 
     def torepr(self):
         return '%s(%r)' % (self.__class__.__name__, self.p)
+
+    def compare(self, other):
+        if self is other: return 0
+        c = cmp(self.__class__, other.__class__)
+        if c: return c
+        #
+        return int.__cmp__(self, int(other))
 
     def __neg__(self):
         return Integer(-int(self))

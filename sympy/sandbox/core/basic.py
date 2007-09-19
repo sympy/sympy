@@ -1,4 +1,13 @@
 
+ordering_of_classes = [
+    'Integer','Fraction','Real',
+    'Symbol',
+    'Mul','Add',
+    'Function',
+    'sin','cos',
+    'Equality','StrictInequality','Inequality',
+    ]
+
 class BasicType(type):
 
     classnamespace = dict()
@@ -23,6 +32,23 @@ class BasicType(type):
         raise AttributeError("'%s' object has no attribute '%s'"%
                              (cls.__name__, name))
 
+    def __cmp__(cls, other):
+        if cls is other: return 0
+        n1 = cls.__name__
+        n2 = other.__name__
+        unknown = len(ordering_of_classes)+1
+        try:
+            i1 = ordering_of_classes.index(n1)
+        except ValueError:
+            i1 = unknown
+        try:
+            i2 = ordering_of_classes.index(n2)
+        except ValueError:
+            i2 = unknown
+        if i1 == unknown and i2 == unknown:
+            return cmp(n1, n2)
+        return cmp(i1,i2)
+
 
 class Basic(object):
 
@@ -43,6 +69,27 @@ class Basic(object):
         if isinstance(self, type):
             return self.__class__.torepr(self)
         return self.torepr()
+
+    def compare(self, other):
+        """
+        Return -1,0,1 if the object is smaller, equal, or greater than other
+        (not always in mathematical sense).
+        If the object is of different type from other then their classes
+        are ordered according to sorted_classes list.
+        """
+        # all redefinitions of compare method should start with the
+        # following three lines:
+        if self is other: return 0
+        c = cmp(self.__class__, other.__class__)
+        if c: return c
+        #
+        return cmp(id(self), id(other))
+
+    def __nonzero__(self):
+        # prevent using constructs like:
+        #   a = Symbol('a')
+        #   if a: ..
+        raise AssertionError("only Equality|Unequality can define __nonzero__ method, %r" % (self.__class__))
 
 
 class Atom(Basic):
@@ -75,3 +122,10 @@ class MutableCompositeDict(Composite, dict):
     # representation methods
     def torepr(self):
         return '%s(%s)' % (self.__class__.__name__, dict(self))
+
+
+    def compare(self, other):
+        if self is other: return 0
+        c = cmp(self.__class__, other.__class__)
+        if c: return c
+        return dict.__cmp__(self, other)

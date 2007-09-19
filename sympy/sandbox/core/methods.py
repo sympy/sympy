@@ -1,6 +1,27 @@
 
 from basic import Basic
 
+class RelationalMeths:
+
+    def __eq__(self, other):
+        return Basic.Equality(self, other)
+
+    def __ne__(self, other):
+        return Basic.Unequality(self, other)
+
+    def __lt__(self, other):
+        return Basic.StrictInequality(self, other)
+
+    def __gt__(self, other):
+        return Basic.StrictInequality(other, self)
+
+    def __le__(self, other):
+        return Basic.Inequality(self, other)
+
+    def __ge__(self, other):
+        return Basic.Inequality(other, self)
+
+
 class ArithMeths:
 
     def __pos__(self):
