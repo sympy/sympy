@@ -59,6 +59,7 @@ class MutableAdd(ArithMeths, RelationalMeths, MutableCompositeDict):
             k,v = obj.items()[0]
             if v==1:
                 return k
+        # turn obj to an immutable instance
         obj.__class__ = Add
         return obj
 

@@ -90,3 +90,5 @@ class Integer(Rational, int):
         if isinstance(other, int) and other>0:
             return Integer(int(self) ** int(other))
         return Basic.Pow(self, other)
+
+    __iadd__ = __add__

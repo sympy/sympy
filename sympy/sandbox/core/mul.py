@@ -59,6 +59,7 @@ class MutableMul(ArithMeths, RelationalMeths, MutableCompositeDict):
             return c
         if len(obj)==0:
             return c
+        # turn obj into an immutable instance:
         obj.__class__ = Mul
         if len(obj)==1:
             # Mul({a:1}) -> a
@@ -86,6 +87,7 @@ class Mul(ImmutableMeths, MutableMul):
     Note that purely rational multiples are counted using the Add
     class, so 3*x*y**2 --> Add({Mul({x:1, y:2}):3}).
     """
+
     # constructor methods
     @memoizer_immutable_args("Mul.__new__")
     def __new__(cls, *args, **options):
@@ -111,7 +113,7 @@ class Pow(Basic):
     def __new__(cls, a, b):
         a = Basic.sympify(a)
         b = Basic.sympify(b)
-        if b==0: return Integer(1)
+        if b==0: return Basic.Integer(1)
         if b==1: return b
         p = a._eval_power(b)
         if p is not None: return p
