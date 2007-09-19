@@ -2,6 +2,8 @@ from sympy.core import Basic
 from printer import Printer
 from stringpict import *
 
+import re
+
 _use_unicode = False
 
 def pprint_use_unicode(flag = None):
@@ -63,12 +65,24 @@ class PrettyPrinter(Printer):
             }
 
             name = e.name.lower()
+
+            # let's split name into symbol + index
+            # UC: beta1
+            m = re.match('(\D+)(\d*)$', name)
+            if m is None:
+                return
+
+            name = m.expand(r'\1')
+            idx  = m.expand(r'\2')
+
             if name in greek:
                 # If first character lowercase, use lowercase greek letter
                 if name[0] == e.name[0]:
-                    return prettyForm(greek[name][1], binding=prettyForm.ATOM)
+                    greek_name = greek[name][1]
                 else:
-                    return prettyForm(greek[name][0], binding=prettyForm.ATOM)
+                    greek_name = greek[name][0]
+
+                return prettyForm(greek_name+idx, binding=prettyForm.ATOM)
 
     def _print_Factorial(self, e):
         x = e.args[0]

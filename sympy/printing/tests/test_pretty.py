@@ -42,6 +42,8 @@ def test_pretty_unicode():
     assert pretty( pi+2*x, True ) == u'\u03c0 + 2*x'
     assert pretty( pi**2+exp(x), True ) == u' 2    x\n\u03c0  + \u212f '
     assert pretty( x != y, True ) == u'x \u2260 y'
+    assert pretty( Symbol('beta'), True ) == u'\u03b2'
+    assert pretty( Symbol('beta12'), True ) == u'\u03b212'
 
 def test_pretty_unicode_defaults():
     use_unicode = pprint_use_unicode(True)
