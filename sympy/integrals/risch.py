@@ -56,14 +56,10 @@ def monomials(variables, degree):
        >>> from sympy import *
        >>> x, y = symbols('xy')
 
-       >>> monoms = list(monomials([x, y], 2))
-       >>> monoms.sort()
-       >>> print monoms
+       >>> sorted(monomials([x, y], 2))
        [1, x, y, x**2, y**2, x*y]
 
-       >>> monoms = list(monomials([x, y], 3))
-       >>> monoms.sort()
-       >>> print monoms
+       >>> sorted(monomials([x, y], 3))
        [1, x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, y*x**2]
 
     """
@@ -202,17 +198,17 @@ def risch_norman(f, x, rewrite=False):
         if not isinstance(h, Basic.Zero):
             terms |= components(h)
 
-    terms = [ g for g in terms if not isinstance(g.diff(x), Basic.Zero) ]
+    terms = [ g for g in terms if g.has(x) ]
 
-    symbols, in_terms, out_terms = [], [], {}
+    V, in_terms, out_terms = [], [], {}
 
     for i, term in enumerate(terms):
-        symbols += [ Symbol('x%s' % i) ]
+        V += [ Symbol('x%s' % i) ]
 
         N = term.count_ops(symbolic=False)
+        in_terms += [ (N, term, V[-1]) ]
 
-        in_terms.append((N, term, symbols[-1]))
-        out_terms[symbols[-1]] = term
+        out_terms[V[-1]] = term
 
     in_terms.sort(lambda u, v: int(v[0] - u[0]))
 
@@ -225,37 +221,37 @@ def risch_norman(f, x, rewrite=False):
     diffs = [ substitute(g.diff(x)) for g in terms ]
 
     denoms = [ g.as_numer_denom()[1] for g in diffs ]
-    denom = reduce(lambda p, q: lcm(p, q), denoms)
+    denom = reduce(lambda p, q: lcm(p, q, V), denoms)
 
-    numers = [ normal(denom * g) for g in diffs ]
+    numers = [ normal(denom * g, *V) for g in diffs ]
 
     def derivation(h):
-        return Basic.Add(*[ d * h.diff(v) for d, v in zip(numers, symbols) ])
+        return Basic.Add(*[ d * h.diff(v) for d, v in zip(numers, V) ])
 
     def deflation(p):
-        for x in p.atoms(Basic.Symbol):
+        for y in p.atoms(Basic.Symbol):
             if not isinstance(derivation(p), Basic.Zero):
-                c, q = p.as_polynomial(x).as_primitive()
-                return deflation(c) * gcd(q, q.diff(x))
+                c, q = p.as_polynomial(y).as_primitive()
+                return deflation(c) * gcd(q, q.diff(y))
         else:
             return p
 
     def splitter(p):
-        for x in p.atoms(Basic.Symbol):
-            if not isinstance(derivation(x), Basic.Zero):
-                c, q = p.as_polynomial(x).as_primitive()
+        for y in p.atoms(Basic.Symbol):
+            if not isinstance(derivation(y), Basic.Zero):
+                c, q = p.as_polynomial(y).as_primitive()
 
                 q = q.as_basic()
 
-                h = normal(gcd(q, derivation(q)))
-                s = quo(h, gcd(q, q.diff(x)))
+                h = gcd(q, derivation(q), y)
+                s = quo(h, gcd(q, q.diff(y), y), y)
 
                 c_split = splitter(c)
 
-                if s.as_polynomial().degree() == 0:
+                if s.as_polynomial(y).degree() == 0:
                     return (c_split[0], q * c_split[1])
 
-                q_split = splitter(normal(q / s))
+                q_split = splitter(normal(q / s, *V))
 
                 return (c_split[0]*q_split[0]*s, c_split[1]*q_split[1])
         else:
@@ -281,10 +277,10 @@ def risch_norman(f, x, rewrite=False):
     v_split = splitter(Q)
 
     s = u_split[0] * Basic.Mul(*[ g for g, a in special if a ])
-    a, b, c = [ p.as_polynomial().degree() for p in [s, P, Q] ]
+    a, b, c = [ p.as_polynomial(*V).degree() for p in [s, P, Q] ]
 
     candidate_denom = s * v_split[0] * deflation(v_split[1])
-    monoms = monomials(symbols, 1 + a + max(b, c))
+    monoms = monomials(V, 1 + a + max(b, c))
 
     linear = False
 
@@ -317,7 +313,7 @@ def risch_norman(f, x, rewrite=False):
         collected = {}
 
         for term in numerator:
-            coeff, depend = term.as_independent(*symbols)
+            coeff, depend = term.as_independent(*V)
 
             if depend in collected:
                 collected[depend] += coeff

@@ -1,7 +1,7 @@
 
 from sympy import *
 
-x = Symbol('x')
+x, y = symbols('xy')
 
 def test_risch_norman_polynomials():
     assert risch_norman(1, x) == x
@@ -34,6 +34,8 @@ def test_risch_norman_exp():
 def test_risch_norman_trigonometric():
     assert risch_norman(sin(x), x) == -cos(x)
     assert risch_norman(cos(x), x) == sin(x)
+
+    assert risch_norman(sin(x)*cos(y), x) == -cos(x)*cos(y)
 
     assert risch_norman(sin(x)*cos(x), x) == sin(x)**2 / 2
     assert risch_norman(cos(x)/sin(x), x) == log(sin(x))

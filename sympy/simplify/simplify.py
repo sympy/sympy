@@ -891,11 +891,11 @@ def normal(expr, *syms):
     if p.is_polynomial(*syms) and q.is_polynomial(*syms):
         from sympy.polynomials import gcd, quo
 
-        G = gcd(p, q, *syms)
+        G = gcd(p, q, syms)
 
         if not isinstance(G, Basic.One):
-            p = quo(p, G, *syms)
-            q = quo(q, G, *syms)
+            p = quo(p, G, syms)
+            q = quo(q, G, syms)
 
     return p / q
 
