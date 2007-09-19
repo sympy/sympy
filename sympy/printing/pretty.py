@@ -242,7 +242,7 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*stringPict.next(prettyFunc, '('))
         pform = prettyForm(*stringPict.next(pform, prettyArgs))
         pform = stringPict.next(pform, ')')
-        return prettyForm(binding=prettyForm.ATOM, *pform)
+        return prettyForm(binding=prettyForm.FUNC, *pform)
 
     def _print_Add(self, sum):
         pforms = []

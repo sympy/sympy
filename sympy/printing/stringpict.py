@@ -271,14 +271,14 @@ class prettyForm(stringPict):
     basic math applications, optimizing double minus signs.
     "Binding" is interpreted as follows:
     ATOM this is an atom: never needs to be parenthesised
+    FUNC this is a function application: parenthesise if powered, or added (?)
     DIV  this is a division: make wider division if divided 
     POW  this is a power: only parenthesise if exponent
     MUL  this is a multiplication: parenthesise if powered
     ADD  this is an addition: parenthesise if multiplied or powered
     NEG  this is a negative number: optimise if added, parenthesise if multiplied or powered
-    FUNC this is a function application: parenthesise if multiplied, powered, or added
     """
-    ATOM, DIV, POW, MUL, ADD, NEG, FUNC = range(7)
+    ATOM, FUNC, DIV, POW, MUL, ADD, NEG = range(7)
 
     def __init__(self, s, baseline=0, binding=0, unicode=None):
         """Initialize from stringPict and binding power."""
