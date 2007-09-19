@@ -70,7 +70,7 @@ class MutableAdd(ArithMeths, MutableCompositeDict):
 class Add(ImmutableMeths, MutableAdd):
 
     # constructor methods
-    @memoizer_immutable_args
+    @memoizer_immutable_args("Add.__new__")
     def __new__(cls, *args, **options):
         return MutableAdd(*args, **options).canonical()
 

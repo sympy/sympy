@@ -1,5 +1,7 @@
+all_caches = {}
 
-def memoizer_immutable_args(func):
+def memoizer_immutable_args(name):
+  def make_memoized(func):
     func._cache_it_cache = func_cache_it_cache = {}
     def wrapper(*args):
         try:
@@ -12,4 +14,11 @@ def memoizer_immutable_args(func):
             raise
         func_cache_it_cache[args] = r = func(*args)
         return r
+    all_caches[name] = func_cache_it_cache
     return wrapper
+  return make_memoized
+
+def clear_cache():
+    """Clear all cached objects."""
+    for cache in all_caches.values():
+        cache.clear()

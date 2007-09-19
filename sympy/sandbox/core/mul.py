@@ -87,7 +87,7 @@ class Mul(ImmutableMeths, MutableMul):
     class, so 3*x*y**2 --> Add({Mul({x:1, y:2}):3}).
     """
     # constructor methods
-    @memoizer_immutable_args
+    @memoizer_immutable_args("Mul.__new__")
     def __new__(cls, *args, **options):
         return MutableMul(*args, **options).canonical()
 
