@@ -54,8 +54,7 @@ class Integer(Rational, int):
 
     @memoizer_immutable_args('Integer.__new__')
     def __new__(cls, p):
-        obj = int.__new__(cls, p)
-        return obj
+        return int.__new__(cls, p)
 
     @property
     def p(self): return int(self)

@@ -4,9 +4,11 @@ from basic import Basic
 class RelationalMeths:
 
     def __eq__(self, other):
+        if self is other: return True
         return Basic.Equality(self, other)
 
     def __ne__(self, other):
+        if self is other: return False
         return Basic.Unequality(self, other)
 
     def __lt__(self, other):
