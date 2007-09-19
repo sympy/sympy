@@ -7,6 +7,8 @@ class MutableMul(ArithMeths, MutableCompositeDict):
     """Mutable base class for Mul. This class is used temporarily
     during construction of Mul objects."""
 
+    # canonize methods
+
     def update(self, a, p=1):
         """
         Mul({}).update(a,p) -> Mul({a:p})
@@ -43,7 +45,6 @@ class MutableMul(ArithMeths, MutableCompositeDict):
             except KeyError:
                 self[a] = p
 
-    # canonize methods
     def canonical(self):
         # self will be modified in-place,
         # always return an immutable object
