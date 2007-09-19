@@ -1,24 +1,11 @@
 
 from utils import memoizer_immutable_args
-from basic import Basic, Composite
+from basic import Basic, MutableCompositeDict
 from methods import ArithMeths, ImmutableMeths
 
-class MutableMul(ArithMeths, Composite, dict):
+class MutableMul(ArithMeths, MutableCompositeDict):
     """Mutable base class for Mul. This class is used temporarily
     during construction of Mul objects."""
-
-    # constructor methods
-    def __new__(cls, *args, **options):
-        """
-        To make MutableAdd immutable, execute
-          obj.__class__ = Add
-        """
-        obj = dict.__new__(cls)
-        [obj.update(a) for a in args]
-        return obj
-
-    def __init__(self, *args, **options):
-        pass
 
     def update(self, a, p=1):
         """
@@ -32,7 +19,7 @@ class MutableMul(ArithMeths, Composite, dict):
             return
         a = Basic.sympify(a)
         if a.is_Number:
-            if p is 1: v = a
+            if p==1: v = a
             else: v = a ** p
             try:
                 self[1] *= v
@@ -58,8 +45,8 @@ class MutableMul(ArithMeths, Composite, dict):
 
     # canonize methods
     def canonical(self):
-        # self will be modified in-place
-        # canonical always returns immutable object
+        # self will be modified in-place,
+        # always return an immutable object
         obj = self
         c = obj.pop(1, Basic.Integer(1))
         for k,v in obj.items():
@@ -79,12 +66,8 @@ class MutableMul(ArithMeths, Composite, dict):
                 obj = k
         if c!=1:
             # Mul({1:c,rest:power}) -> Add({Mul({rest:power}):c})
-            obj = Basic.MutableAdd({obj:c}).canonical()
+            obj = Basic.Add({obj:c})
         return obj
-
-    # representation methods
-    def torepr(self):
-        return '%s(%s)' % (self.__class__.__name__, dict(self))
 
     # arithmetics methods
     def __imul__(self, other):

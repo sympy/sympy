@@ -6,6 +6,10 @@ def memoizer_immutable_args(func):
             return func_cache_it_cache[args]
         except KeyError:
             pass
+        except TypeError, msg:
+            if 'dict objects are unhashable'==str(msg):
+                return func(*args)
+            raise
         func_cache_it_cache[args] = r = func(*args)
         return r
     return wrapper

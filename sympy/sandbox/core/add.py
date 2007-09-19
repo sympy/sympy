@@ -1,27 +1,14 @@
 
 from utils import memoizer_immutable_args
-from basic import Basic, Composite
+from basic import Basic, MutableCompositeDict
 from methods import ArithMeths, ImmutableMeths
 
-class MutableAdd(ArithMeths, Composite, dict):
+class MutableAdd(ArithMeths, MutableCompositeDict):
     """ Represents a sum.
 
     3 + a + 2*b is Add({1:3, a:1, b:2})
     """
-
-    # constructor methods
-    def __new__(cls, *args, **options):
-        """
-        To make MutableAdd immutable, execute
-          obj.__class__ = Add
-        """
-        obj = dict.__new__(cls)
-        [obj.update(a) for a in args]
-        return obj
-
-    def __init__(self, *args, **options):
-        pass
-
+    
     def update(self, a):
         if isinstance(a, MutableAdd):
             for k,v in a.items():
@@ -44,15 +31,6 @@ class MutableAdd(ArithMeths, Composite, dict):
         except KeyError:
             self[k] = v
 
-    # representation methods
-    def torepr(self):
-        return '%s(%s)' % (self.__class__.__name__, dict(self))
-
-    # arithmetics methods
-    def __iadd__(self, other):
-        self.update(other)
-        return self
-
     # canonize methods
     def canonical(self):
         obj = self
@@ -73,6 +51,13 @@ class MutableAdd(ArithMeths, Composite, dict):
             k,v = obj.items()[0]
             if v==1: return k
         return obj
+
+    # arithmetics methods
+    def __iadd__(self, other):
+        self.update(other)
+        return self
+
+
 
 class Add(ImmutableMeths, MutableAdd):
 

@@ -57,3 +57,21 @@ class Composite(Basic):
     def torepr(self):
         return '%s(%s)' % (self.__class__.__name__,', '.join(map(repr, self)))
 
+class MutableCompositeDict(Composite, dict):
+
+    # constructor methods
+    def __new__(cls, *args, **options):
+        """
+        To make MutableClass immutable, execute
+          obj.__class__ = Class
+        """
+        obj = dict.__new__(cls)
+        [obj.update(a) for a in args]
+        return obj
+
+    def __init__(self, *args, **options):
+        pass
+
+    # representation methods
+    def torepr(self):
+        return '%s(%s)' % (self.__class__.__name__, dict(self))
