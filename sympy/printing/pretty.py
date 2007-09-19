@@ -2,14 +2,27 @@ from sympy.core import Basic
 from printer import Printer
 from stringpict import *
 
+_use_unicode = False
+
+def pprint_use_unicode(flag = None):
+    """Set whether pretty-printer should use unicode by default"""
+    global _use_unicode
+    if flag is None:
+        return _use_unicode
+
+    use_unicode_prev = _use_unicode
+    _use_unicode = flag
+    return use_unicode_prev
 
 class PrettyPrinter(Printer):
     """
     A class that prints a prettified expression, one that is not limited
     to one dimension like casting the expression to a string would return.
     """
-    def __init__(self, use_unicode=False):
+    def __init__(self, use_unicode=None):
         Printer.__init__(self)
+        if use_unicode is None:
+            use_unicode = _use_unicode
         self._use_unicode = use_unicode
         if self._use_unicode:
             self._str = unicode
@@ -322,7 +335,7 @@ class PrettyPrinter(Printer):
             else:
                 return prettyForm(str(r.p))/prettyForm(str(r.q))
 
-def pretty(expr, use_unicode=False):
+def pretty(expr, use_unicode=None):
     """
     Returns a string containing the prettified form of expr. If use_unicode
     is set to True then certain expressions will use unicode characters,
@@ -331,7 +344,7 @@ def pretty(expr, use_unicode=False):
     pp = PrettyPrinter(use_unicode)
     return pp.doprint(expr)
 
-def pretty_print(expr, use_unicode=False):
+def pretty_print(expr, use_unicode=None):
     """
     Prints expr in pretty form.
 

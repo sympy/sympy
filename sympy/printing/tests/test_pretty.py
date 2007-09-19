@@ -43,6 +43,15 @@ def test_pretty_unicode():
     assert pretty( pi**2+exp(x), True ) == u' 2    x\n\u03c0  + \u212f '
     assert pretty( x != y, True ) == u'x \u2260 y'
 
+def test_pretty_unicode_defaults():
+    use_unicode = pprint_use_unicode(True)
+    assert pretty(Symbol('alpha')) == u'\u03b1'
+    pprint_use_unicode(False)
+    assert pretty(Symbol('alpha')) == 'alpha'
+
+    pprint_use_unicode(use_unicode)
+
+
 def test_pretty_functions():
     # Simple
     assert pretty( (2*x + exp(x)) ) in [' x      \ne  + 2*x', '       x\n2*x + e ']
