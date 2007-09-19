@@ -7,6 +7,32 @@ class MutableAdd(ArithMeths, RelationalMeths, MutableCompositeDict):
     """ Represents a sum.
 
     3 + a + 2*b is Add({1:3, a:1, b:2})
+
+    MutableAdd returns a mutable object. To make it immutable, call
+    canonical() method.
+
+    MutableAdd is useful in computing sums efficiently. For example,
+    iteration like
+
+      s = Integer(0)
+      x = Symbol('x')
+      i = 1000
+      while i:
+        i -= 1
+        s += x**i
+
+    can be made about 20 times faster by using
+
+      s = MutableAdd()
+      x = Symbol('x')
+      i = 1000
+      while i:
+        i -= 1
+        s += x**i
+      s = s.canonical()
+
+    See MutableCompositeDict.__doc__ for how to deal with mutable
+    instances.
     """
 
     # canonize methods
@@ -70,6 +96,11 @@ class MutableAdd(ArithMeths, RelationalMeths, MutableCompositeDict):
 
 
 class Add(ImmutableMeths, MutableAdd):
+    """ Represents a sum.
+
+    Add returns an immutable object. See MutableAdd for
+    a more efficient way to compute sums.
+    """
 
     # constructor methods
     @memoizer_immutable_args("Add.__new__")

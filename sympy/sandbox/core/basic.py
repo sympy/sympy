@@ -105,9 +105,46 @@ class Composite(Basic):
         return '%s(%s)' % (self.__class__.__name__,', '.join(map(repr, self)))
 
 class MutableCompositeDict(Composite, dict):
+    """ Base class for MutableAdd, MutableMul, Add, Mul.
+
+    Notes:
+
+    - In the following comments `Cls` represents `Add` or `Mul`.
+
+    - MutableCls instances may be uncanonical, e.g.
+
+        MutableMul(0,x) -> 0*x
+        MutableMul() -> .
+    
+      The purpose of this is to be able to create an empty instance
+      that can be filled up with update method. When done then one can
+      return a canonical and immutable instance by calling
+      .canonical() method.
+
+    - Cls instances are cached only when they are created via Cls
+      classes.  MutableCls instances are not cached.  Nor are cached
+      their instances that are turned to immutable objects via the
+      note below.
+
+    - <MutableCls instance>.canonical() returns always an immutable
+      object, MutableCls instance is turned into immutable object by
+      the following code:
+
+        <MutableCls instance>.__class__ = Cls
+
+    - One should NOT do the reverse:
+
+        <Cls instance>.__class__ = MutableCls
+
+    - One cannot use mutable objects as components of some composite
+      object, e.g.
+
+        Add(MutableMul(2),3) -> raises TypeError
+        Add(MutableMul(2).canonical(),3) -> Integer(5)
+    """
 
     # constructor methods
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args):
         """
         To make MutableClass immutable, execute
           obj.__class__ = Class
@@ -116,14 +153,15 @@ class MutableCompositeDict(Composite, dict):
         [obj.update(a) for a in args]
         return obj
 
-    def __init__(self, *args, **options):
+    def __init__(self, *args):
+        # avoid calling default dict.__init__.
         pass
 
     # representation methods
     def torepr(self):
         return '%s(%s)' % (self.__class__.__name__, dict(self))
 
-
+    # comparison methods
     def compare(self, other):
         if self is other: return 0
         c = cmp(self.__class__, other.__class__)

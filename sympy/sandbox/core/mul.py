@@ -5,7 +5,11 @@ from methods import ArithMeths, ImmutableMeths, RelationalMeths
 
 class MutableMul(ArithMeths, RelationalMeths, MutableCompositeDict):
     """Mutable base class for Mul. This class is used temporarily
-    during construction of Mul objects."""
+    during construction of Mul objects.
+
+    See MutableCompositeDict.__doc__ for how to deal with mutable
+    instances.
+    """
 
     # canonize methods
 
@@ -75,7 +79,6 @@ class MutableMul(ArithMeths, RelationalMeths, MutableCompositeDict):
     def __imul__(self, other):
         self.update(other)
         return self
-
 
 
 class Mul(ImmutableMeths, MutableMul):
