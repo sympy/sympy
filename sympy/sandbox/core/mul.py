@@ -13,61 +13,74 @@ class MutableMul(ArithMeths, Composite, dict):
         To make MutableAdd immutable, execute
           obj.__class__ = Add
         """
-        if 0 in args:
-            return Basic.Integer(0)
         obj = dict.__new__(cls)
         [obj.update(a) for a in args]
-        return obj.canonical()
+        return obj
 
     def __init__(self, *args, **options):
         pass
 
-    def update(self, a):
-        if isinstance(a, MutableMul):
-            for k,v in a.items():
-                if k.is_Add and len(k)==1:
-                    # Add({x:3})**2 -> Mul({x:1*2,1:3**2})
-                    k1,v1 = k.items()[0]
-                    self.update(v1**v)
-                    k = k1
-                assert not k.is_Mul and not k.is_Add,`k`
-                try:
-                    self[k] += v
-                except KeyError:
-                    self[k] = v
-            return
-        if isinstance(a, dict) and not isinstance(a, Basic):
+    def update(self, a, p=1):
+        """
+        Mul({}).update(a,p) -> Mul({a:p})
+        """
+        if a.__class__ is dict:
             # construct Mul instance from a canonical dictionary
-            assert len(self)==0,`len(self)`
+            assert len(self)==0,`len(self)` # make sure no data is overwritten
+            assert p is 1,`p`
             super(MutableMul, self).update(a)
             return
         a = Basic.sympify(a)
         if a.is_Number:
-            k, v = Basic.Integer(1), a
+            if p is 1: v = a
+            else: v = a ** p
             try:
-                self[k] *= v
+                self[1] *= v
             except KeyError:
-                self[k] = v
+                self[1] = v
+        elif a.is_Add and len(a)==1:
+            # Mul({x:3,1:4}).update(Add({x:2})) -> Mul({x:3+1,1:4*2})
+            k, v = a.items()[0]
+            self.update(k, p)
+            self.update(v, p)
+            return
+        elif a.is_MutableMul:
+            # Mul({x:3}).update(Mul({x:2}), 4) -> Mul({x:3}).update(x,2*4)
+            for k,v in a.items():
+                # todo?: make it noncommutative product for (a**2)**(1/2)
+                #        (a**z)**w where z,w are complex numbers
+                self.update(k, v * p) 
         else:
-            k, v = a, Basic.Integer(1)
-            if k.is_Add and len(k)==1:
-                # Add({x:3}) -> Mul({x:1,1:3})
-                k1,v1 = k.items()[0]
-                self.update(v1)
-                k = k1
-            if k.is_Mul:
-                for k1,v1 in k.items():
-                    assert not k1.is_Mul and not k1.is_Add,`k1`
-                    try:
-                        self[k1] += v1
-                    except KeyError:
-                        self[k1] = v1
-                return
-            assert not k.is_Mul and not k.is_Add,`k`
             try:
-                self[k] += v
+                self[a] += p
             except KeyError:
-                self[k] = v
+                self[a] = p
+
+    # canonize methods
+    def canonical(self):
+        # self will be modified in-place
+        # canonical always returns immutable object
+        obj = self
+        c = obj.pop(1, Basic.Integer(1))
+        for k,v in obj.items():
+            if v==0:
+                # Mul({a:0}) -> 1
+                del obj[k]
+        if c==0:
+            # todo: handle 0*oo->nan, either here or in Number
+            return c
+        if len(obj)==0:
+            return c
+        obj.__class__ = Mul
+        if len(obj)==1:
+            # Mul({a:1}) -> a
+            k,v = obj.items()[0]
+            if v==1:
+                obj = k
+        if c!=1:
+            # Mul({1:c,rest:power}) -> Add({Mul({rest:power}):c})
+            obj = Basic.MutableAdd({obj:c}).canonical()
+        return obj
 
     # representation methods
     def torepr(self):
@@ -78,25 +91,7 @@ class MutableMul(ArithMeths, Composite, dict):
         self.update(other)
         return self
 
-    # canonize methods
-    def canonical(self):
-        obj = self
-        for k,v in obj.items():
-            if v==0:
-                # Mul({a:0}) -> 1
-                del obj[k]
-        c = obj.pop(1, Basic.Integer(1))
-        obj.__class__ = Mul
-        if len(obj)==0:
-            return c
-        if len(obj)==1:
-            # Mul({a:1}) -> a
-            k,v = obj.items()[0]
-            if v==1:
-                obj = k
-        if c is not None:
-            obj = Basic.MutableAdd({obj:c}).canonical()
-        return obj
+
 
 class Mul(ImmutableMeths, MutableMul):
     """Represents a product, with repeated factors collected into
@@ -123,6 +118,9 @@ class Mul(ImmutableMeths, MutableMul):
         except KeyError:
             h = self._cached_hash = sum(map(hash, self.items()))
         return h
+
+    def canonical(self):
+        return self
 
 class Pow(Basic):
 
