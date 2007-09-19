@@ -271,7 +271,7 @@ class prettyForm(stringPict):
     basic math applications, optimizing double minus signs.
     "Binding" is interpreted as follows:
     ATOM this is an atom: never needs to be parenthesised
-    FUNC this is a function application: parenthesise if powered, or added (?)
+    FUNC this is a function application: parenthesise if added (?)
     DIV  this is a division: make wider division if divided 
     POW  this is a power: only parenthesise if exponent
     MUL  this is a multiplication: parenthesise if powered
@@ -352,11 +352,23 @@ class prettyForm(stringPict):
         """Make a pretty power.
         """
         a = self
-        if a.binding > prettyForm.ATOM: a = stringPict(*a.parens())
+        if a.binding > prettyForm.FUNC: a = stringPict(*a.parens())
         if b.binding == prettyForm.POW: b = stringPict(*b.parens())
-        top = stringPict(*b.left(' '*a.width()))
-        bottom = stringPict(*a.right(' '*b.width()))
-        return prettyForm(binding=prettyForm.POW, *bottom.above(top))
+
+        if a.binding == prettyForm.FUNC:
+            #     2     <-- top
+            #  sin (x)  <-- bot
+            top = stringPict(*b.left(' '*a.prettyFunc.width()))
+            top = stringPict(*top.right(' '*a.prettyArgs.width()))
+            bot = stringPict(*a.prettyFunc.right(' '*b.width()))
+            bot = stringPict(*bot.right(a.prettyArgs))
+        else:
+            #      2    <-- top
+            # (x+y)     <-- bot
+            top = stringPict(*b.left(' '*a.width()))
+            bot = stringPict(*a.right(' '*b.width()))
+
+        return prettyForm(binding=prettyForm.POW, *bot.above(top))
 
     simpleFunctions = ["sin", "cos", "tan"]
     @staticmethod

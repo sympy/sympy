@@ -70,6 +70,8 @@ def test_pretty_functions():
 
     # Nesting of square roots
     assert pretty( sqrt((sqrt(x+1))+1) ) == '    _______________\n   /       _______ \n \\/  1 + \\/ 1 + x  '
+    # Function powers
+    assert pretty( sin(x)**2 ) == '   2   \nsin (x)'
 
     # Conjugates
     a,b = map(Symbol, 'ab')

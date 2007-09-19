@@ -239,10 +239,16 @@ class PrettyPrinter(Printer):
             prettyArgs = prettyForm(*stringPict.next(prettyArgs, ', '))
             prettyArgs = prettyForm(*stringPict.next(prettyArgs, pform))
 
-        pform = prettyForm(*stringPict.next(prettyFunc, '('))
-        pform = prettyForm(*stringPict.next(pform, prettyArgs))
-        pform = stringPict.next(pform, ')')
-        return prettyForm(binding=prettyForm.FUNC, *pform)
+        prettyArgs = prettyForm(*prettyArgs.left('('))
+        prettyArgs = prettyForm(*prettyArgs.right(')'))
+
+        pform = prettyForm(binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
+
+        # store pform parts so it can be reassembled e.g. when powered
+        pform.prettyFunc = prettyFunc
+        pform.prettyArgs = prettyArgs
+
+        return pform
 
     def _print_Add(self, sum):
         pforms = []
