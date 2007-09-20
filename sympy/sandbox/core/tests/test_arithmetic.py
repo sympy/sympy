@@ -11,94 +11,147 @@ def test_arithmetic():
     assert 1*x == x
     assert 2*x - x == x
 
-def test_mul_performance():
+def test_integer_arithmetic():
+    i = Integer(2)
+    assert i is Integer(2)
+    j = Integer(-5)
+    assert +i==2
+    assert -i==-2
+    assert i+j==-3
+    assert i-j==7
+    assert i*j==-10
+    assert i/j==Fraction(-2,5)
+    assert j**i==25
+    assert i**j==Fraction(1,32)
+
+    i = Integer(2)
+    j = -5
+    assert i+j==-3
+    assert i-j==7
+    assert i*j==-10
+    assert i/j==Fraction(-2,5)
+    assert j**i==25
+    assert i**j==Fraction(1,32)
+
+    i = 2
+    j = Integer(-5)
+    assert i+j==-3
+    assert i-j==7
+    assert i*j==-10
+    assert i/j==Fraction(-2,5)
+    assert j**i==25
+    assert i**j==Fraction(1,32)
+
+def test_fraction_arithmetic():
+
+    i = Fraction(2,3)
+    assert i is Fraction(2,3)
+    j = Fraction(-5,4)
+    assert +i==Fraction(2,3)
+    assert -i==Fraction(-2,3)
+    assert i+j==Fraction(-7,12)
+    assert i-j==Fraction(23,12)
+    assert i*j==Fraction(-5,6)
+    assert i/j==Fraction(-8,15)
+
+    i = Fraction(2,3)
+    j = Integer(5)
+    assert i+j==Fraction(17,3)
+    assert i-j==Fraction(-13,3)
+    assert i*j==Fraction(10,3)
+    assert i/j==Fraction(2,15)
+    assert i**j==Fraction(32,243)
+
+    j = Fraction(2,3)
+    i = Integer(5)
+    assert i+j==Fraction(17,3)
+    assert i-j==Fraction(13,3)
+    assert i*j==Fraction(10,3)
+    assert i/j==Fraction(15,2)
+
+    i = Fraction(2,3)
+    j = 5
+    assert i+j==Fraction(17,3)
+    assert i-j==Fraction(-13,3)
+    assert i*j==Fraction(10,3)
+    assert i/j==Fraction(2,15)
+    assert i**j==Fraction(32,243)
+
+    j = Fraction(2,3)
+    i = 5
+    assert i+j==Fraction(17,3)
+    assert i-j==Fraction(13,3)
+    assert i*j==Fraction(10,3)
+    assert i/j==Fraction(15,2)
+
+def test_float_arithmetic():
+    i = Float(1.2)
+    assert i is Float(1.2)
+    j = Float(-3.4)
+    assert +i==1.2
+    assert -i==-1.2
+    assert i+j==-2.2
+    assert i-j==4.6
+    assert i*j==-4.08
+    assert float(i/j)==1.2/(-3.4)
+    assert float(i**j)==1.2**(-3.4)
+
+    i = Float(1.2)
+    j = -3.4
+    assert i+j==-2.2
+    assert i-j==4.6
+    assert i*j==-4.08
+    assert float(i/j)==1.2/(-3.4)
+    assert float(i**j)==1.2**(-3.4)
+
+    i = 1.2
+    j = Float(-3.4)
+    assert i+j==-2.2
+    assert i-j==4.6
+    assert i*j==-4.08
+    assert float(i/j)==1.2/(-3.4)
+    assert float(i**j)==1.2**(-3.4)
+
+    i = Float(1.2)
+    j = Integer(2)
+    assert i+j==3.2
+    assert i-j==-0.8
+    assert i*j==2.4
+    assert float(i/j)==1.2/2
+    assert float(i**j)==1.2**2
+
+    j = Float(1.2)
+    i = Integer(2)
+    assert i+j==3.2
+    assert i-j==0.8
+    assert i*j==2.4
+    assert float(i/j)==2/1.2
+    assert float(i**j)==2**1.2
+
+    i = Float(1.2)
+    j = Fraction(-17,5)
+    assert i+j==-2.2
+    assert i-j==4.6
+    assert i*j==-4.08
+    assert float(i/j)==1.2/(-3.4)
+    assert float(i**j)==1.2**(-3.4)
+
+    i = Fraction(6,5)
+    j = Float(-3.4)
+    assert i+j==-2.2
+    assert i-j==4.6
+    assert i*j==-4.08
+    assert float(i/j)==(6.0/5)/(-3.4)
+    assert float(i**j)==1.2**(-3.4)
+
+def timedtest():
     from time import clock
-    from random import randint
-    from sympy.sandbox.core import Symbol, Mul, Add
-    x = Symbol('x')
-    y = Symbol('y')
-    i = 1000
     t1 = clock()
-    while i:
-        i -= 1
-        Mul(x,randint(0,1000000),y)
+    test_integer_arithmetic()
+    test_fraction_arithmetic()
+    test_float_arithmetic()
     t2 = clock()
-    d1 = t2-t1
+    return t2-t1
 
-    from sympy.core import Symbol, Mul, Add
-    x = Symbol('x')
-    y = Symbol('y')
-    i = 1000
-    t1 = clock()
-    while i:
-        i -= 1
-        Mul(x,randint(0,1000000),y)
-    t2 = clock()
-    d2 = t2-t1
-    print '\ntiming Mul(x, <random int>, y): sandbox.core %s secs, sympy.core %s secs' % (d1,d2)
-
-def test_add_performance():
-    from time import clock
-    from random import randint
-    from sympy.sandbox.core import Symbol, Mul, Add
-    x = Symbol('x')
-    y = Symbol('y')
-    i = 1000
-    t1 = clock()
-    while i:
-        i -= 1
-        Add(x,randint(0,1000000),y)
-    t2 = clock()
-    d1 = t2-t1
-
-    from sympy.core import Symbol, Mul, Add
-    x = Symbol('x')
-    y = Symbol('y')
-    i = 1000
-    t1 = clock()
-    while i:
-        i -= 1
-        Add(x,randint(0,1000000),y)
-    t2 = clock()
-    d2 = t2-t1
-    print '\ntiming Add(x, <random int>, y): sandbox.core %s secs, sympy.core %s secs' % (d1,d2)
-
-def test_sum_performance():
-    from time import clock
-    from sympy.sandbox.core import Symbol, MutableAdd, Integer
-    x = Symbol('x')
-    n = 200
-
-    i = n
-    s = Integer(0)    
-    t1 = clock()
-    while i:
-        i -= 1
-        s += x**i
-    assert len(s)==n-1
-    t2 = clock()
-    d1 = t2-t1
-    
-    i = n
-    s = MutableAdd()
-    t1 = clock()
-    while i:
-        i -= 1
-        s += x**i
-    t2 = clock()
-    s = s.canonical()
-    assert len(s)==n-1
-    d2 = t2-t1
-
-    from sympy.core import Symbol, Add
-    i = n
-    x = Symbol('x')
-    s = Add()
-    t1 = clock()
-    while i:
-        i -= 1
-        s += x**i
-    t2 = clock()
-    assert len(s)==n
-    d3 = t2-t1
-    print '\ntiming summation: sandbox.core(direct/MutableAdd) %s/%s secs, sympy.core %s secs' % (d1,d2,d3)
+if __name__=='__main__':
+    print timedtest()

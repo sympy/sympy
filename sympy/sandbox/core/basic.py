@@ -63,6 +63,8 @@ class Basic(object):
             raise NotImplementedError("bool support")
         elif isinstance(a, (int, long)):
             return Basic.Integer(a)
+        elif isinstance(a, float):
+            return Basic.Float(a)
         raise ValueError("%s is NOT a valid SymPy expression" % `a`)
 
     def __repr__(self):
@@ -167,3 +169,5 @@ class MutableCompositeDict(Composite, dict):
         c = cmp(self.__class__, other.__class__)
         if c: return c
         return dict.__cmp__(self, other)
+
+sympify = Basic.sympify

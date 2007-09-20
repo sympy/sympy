@@ -3,7 +3,7 @@
 
 from basic import Basic #, S
 from symbol import Symbol #, Wild, symbols
-from number import Number, Real, Rational, Integer
+from number import Number, Real, Rational, Integer, Fraction, Float
 #from power import Pow
 #from mul import Mul
 from add import Add, MutableAdd

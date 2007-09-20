@@ -1,12 +1,11 @@
 
 from utils import memoizer_immutable_args
-from basic import Composite
+from basic import Composite, sympify
 
 class Relational(Composite, tuple):
 
     @memoizer_immutable_args('Relational.__new__')
     def __new__(cls, lhs, rhs):
-        sympify = cls.sympify
         lhs, rhs = sympify(lhs), sympify(rhs)
         return tuple.__new__(cls, (lhs, rhs))
 
