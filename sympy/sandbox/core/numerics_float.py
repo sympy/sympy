@@ -562,6 +562,7 @@ class Float(tuple, Real):
 
     def __add__(s, t):
         if isinstance(t, Float):
+
             if t[1] > s[1]:
                 s, t = t, s
             sman, sexp, sbc = s
@@ -644,7 +645,7 @@ class Float(tuple, Real):
                 Float._prec -= 2
                 return +r
             else:
-                prec2 = Float._prec + int(4*_clog(n, 2) + 4)
+                prec2 = Float._prec + int(4*math.log(n, 2) + 4)
                 man, exp, bc = normalize(s.man, s.exp, prec2, ROUND_FLOOR)
                 pm, pe, bc = 1, 0, 1
                 while n:
