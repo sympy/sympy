@@ -92,80 +92,80 @@ def test_float_arithmetic():
     assert i is Float(1.2)
     j = Float(-3.4)
     assert +i==1.2
-    assert -i==-1.2
-    assert i+j==-2.2
-    assert i-j==4.6
-    assert i*j==-4.08
+    assert float(-i)==-1.2
+    assert tofloat(i+j)==tofloat(-2.2)
+    assert float(i-j)==4.6
+    assert float(i*j)==-4.08
     assert float(i/j)==1.2/(-3.4)
-    assert float(i**j)==1.2**(-3.4)
+    assert tofloat(i**j)==tofloat(1.2**(-3.4))
 
     i = Float(1.2)
     j = -3.4
-    assert i+j==-2.2
-    assert i-j==4.6
-    assert i*j==-4.08
+    assert tofloat(i+j)==tofloat(-2.2)
+    assert tofloat(i-j)==tofloat(4.6)
+    assert tofloat(i*j)==tofloat(-4.08)
     assert float(i/j)==1.2/(-3.4)
-    assert float(i**j)==1.2**(-3.4)
+    assert tofloat(i**j)==tofloat(1.2**(-3.4))
 
     i = 1.2
     j = Float(-3.4)
-    assert i+j==-2.2
-    assert i-j==4.6
-    assert i*j==-4.08
+    assert tofloat(i+j)==tofloat(-2.2)
+    assert tofloat(i-j)==tofloat(4.6)
+    assert tofloat(i*j)==tofloat(-4.08)
     assert float(i/j)==1.2/(-3.4)
-    assert float(i**j)==1.2**(-3.4)
+    assert tofloat(i**j)==tofloat(1.2**(-3.4))
 
     i = Float(1.2)
     j = Integer(2)
-    assert i+j==3.2
-    assert i-j==-0.8
-    assert i*j==2.4
+    assert tofloat(i+j)==tofloat(3.2)
+    assert tofloat(i-j)==tofloat(-0.8)
+    assert tofloat(i*j)==tofloat(2.4)
     assert float(i/j)==1.2/2
     assert float(i**j)==1.2**2
 
     j = Float(1.2)
     i = Integer(2)
-    assert i+j==3.2
-    assert i-j==0.8
-    assert i*j==2.4
+    assert tofloat(i+j)==tofloat(3.2)
+    assert tofloat(i-j)==tofloat(0.8)
+    assert tofloat(i*j)==tofloat(2.4)
     assert float(i/j)==2/1.2
     assert tofloat(i**j)==tofloat(2/1.2)
 
     i = Float(1.2)
     j = 2
-    assert i+j==3.2
-    assert i-j==-0.8
-    assert i*j==2.4
+    assert tofloat(i+j)==tofloat(3.2)
+    assert tofloat(i-j)==tofloat(-0.8)
+    assert tofloat(i*j)==tofloat(2.4)
     assert float(i/j)==1.2/2
     assert float(i**j)==1.2**2
 
     j = Float(1.2)
     i = 2
-    assert i+j==3.2
-    assert i-j==0.8
-    assert i*j==2.4
+    assert tofloat(i+j)==tofloat(3.2)
+    assert tofloat(i-j)==tofloat(0.8)
+    assert tofloat(i*j)==tofloat(2.4)
     assert float(i/j)==2/1.2
     assert tofloat(i**j)==tofloat(2**1.2)
 
     i = Float(1.2)
     j = Fraction(-17,5)
-    assert i+j==-2.2
-    assert i-j==4.6
-    assert i*j==-4.08
-    assert float(i/j)==1.2/(-3.4)
+    assert tofloat(i+j)==tofloat(-2.2)
+    assert tofloat(i-j)==tofloat(4.6)
+    assert tofloat(i*j)==tofloat(-4.08)
+    assert tofloat(i/j)==tofloat(1.2/(-3.4))
     assert tofloat(i**j)==tofloat(1.2**(-3.4))
 
     i = Fraction(6,5)
     j = Float(-3.4)
-    assert i+j==-2.2
-    assert i-j==4.6
-    assert i*j==-4.08
+    assert tofloat(i+j)==tofloat(-2.2)
+    assert tofloat(i-j)==tofloat(4.6)
+    assert tofloat(i*j)==tofloat(-4.08)
     assert float(i/j)==(6.0/5)/(-3.4)
     assert tofloat(i**j)==tofloat(1.2**(-3.4))
 
 def timedtest():
     from time import clock
-    i = 500
+    i = 20
     t1 = clock()
     while i:
         i -= 1

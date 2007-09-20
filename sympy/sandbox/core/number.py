@@ -57,6 +57,8 @@ class Real(Number):
     class Float(Real, <floating point implementation class>):
 
         def __new__(cls, f):
+            if isinstance(f, Basic):
+                return f.evalf()
             # f can be python int/long, float, str and
             # any other object that the implementation
             # can handle.
@@ -208,3 +210,4 @@ from py_integer import Integer
 from py_fraction import Fraction
 #from py_float import Float
 from numerics_float import Float
+#from decimal_float import Float
