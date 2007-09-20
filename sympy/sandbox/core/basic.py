@@ -96,7 +96,7 @@ class Basic(object):
 
 class Atom(Basic):
 
-    canonical = lambda self: self
+    canonical = evalf = lambda self: self
 
     def torepr(self):
         return '%s()' % (self.__class__.__name__)

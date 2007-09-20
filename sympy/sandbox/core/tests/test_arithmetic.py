@@ -85,6 +85,9 @@ def test_fraction_arithmetic():
     assert i/j==Fraction(15,2)
 
 def test_float_arithmetic():
+
+    tofloat = lambda n: repr(float())[:12]
+    
     i = Float(1.2)
     assert i is Float(1.2)
     j = Float(-3.4)
@@ -126,7 +129,23 @@ def test_float_arithmetic():
     assert i-j==0.8
     assert i*j==2.4
     assert float(i/j)==2/1.2
-    assert float(i**j)==2**1.2
+    assert tofloat(i**j)==tofloat(2/1.2)
+
+    i = Float(1.2)
+    j = 2
+    assert i+j==3.2
+    assert i-j==-0.8
+    assert i*j==2.4
+    assert float(i/j)==1.2/2
+    assert float(i**j)==1.2**2
+
+    j = Float(1.2)
+    i = 2
+    assert i+j==3.2
+    assert i-j==0.8
+    assert i*j==2.4
+    assert float(i/j)==2/1.2
+    assert tofloat(i**j)==tofloat(2**1.2)
 
     i = Float(1.2)
     j = Fraction(-17,5)
@@ -134,7 +153,7 @@ def test_float_arithmetic():
     assert i-j==4.6
     assert i*j==-4.08
     assert float(i/j)==1.2/(-3.4)
-    assert float(i**j)==1.2**(-3.4)
+    assert tofloat(i**j)==tofloat(1.2**(-3.4))
 
     i = Fraction(6,5)
     j = Float(-3.4)
@@ -142,14 +161,17 @@ def test_float_arithmetic():
     assert i-j==4.6
     assert i*j==-4.08
     assert float(i/j)==(6.0/5)/(-3.4)
-    assert float(i**j)==1.2**(-3.4)
+    assert tofloat(i**j)==tofloat(1.2**(-3.4))
 
 def timedtest():
     from time import clock
+    i = 500
     t1 = clock()
-    test_integer_arithmetic()
-    test_fraction_arithmetic()
-    test_float_arithmetic()
+    while i:
+        i -= 1
+        test_integer_arithmetic()
+        test_fraction_arithmetic()
+        test_float_arithmetic()
     t2 = clock()
     return t2-t1
 
