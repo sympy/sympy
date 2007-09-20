@@ -9,9 +9,19 @@ class Fraction(Rational, tuple):
         p, q = sympify(p), sympify(q)
         if q==1: return p
         if p.is_Integer and q.is_Integer:
-            if q.is_negative:
-                p,q = -p,-q
-            return tuple.__new__(cls, (p,q))
+            # TODO: avoid creating so many temporary Integers
+            # Should only use ints for gcd part
+            p, q = int(p), int(q)
+            a, b = p, q
+            while b:
+                a, b = b, a % b
+            p //= a
+            q //= a
+            if q == 1:
+                return Basic.Integer(p)
+            p = Basic.Integer(p)
+            q = Basic.Integer(q)
+            return tuple.__new__(cls, (p, q))
         if q.is_Fraction:
             iq = Fraction(q.q, q.p)
             return p * iq
