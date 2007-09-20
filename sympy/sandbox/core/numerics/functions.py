@@ -4,7 +4,11 @@ This module implements standard mathematical functions
 be provied in a complementary file cfunctions.py.
 """
 
-from float_ import Float, ComplexFloat
+#from float_ import Float, ComplexFloat
+from sympy.sandbox.core import Float
+from float_ import ComplexFloat
+
+
 from constants import pi_float, log2_fixed, log2_float, log10_float
 from utils_ import bitcount, make_fixed
 from math import log as _clog

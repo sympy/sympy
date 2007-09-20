@@ -89,7 +89,7 @@ def test_float_arithmetic():
     tofloat = lambda n: repr(float())[:12]
     
     i = Float(1.2)
-    assert i is Float(1.2)
+    assert i == Float(1.2)
     j = Float(-3.4)
     assert +i==1.2
     assert float(-i)==-1.2
