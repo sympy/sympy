@@ -353,7 +353,7 @@ class Matrix(object):
         trace = 0
         for i in range(self.cols):
             trace += self[i,i]
-        return self
+        return trace
 
     def submatrix(self, keys):
         """

@@ -694,3 +694,9 @@ def test_conj_dirac():
                  [-I,-I,-1,0],
                  [-I,-I,I,-1] ])
 
+
+def test_trace():
+    M = Matrix([[1,0,0],
+                [0,5,0],
+                [0,0,8]])
+    assert M.trace() == 14
