@@ -36,19 +36,19 @@ class ArithMeths:
         return Basic.Add(self, other)
 
     def __radd__(self, other):
-        return sympify(other) + self
+        return Basic.Add(other, self)
 
     def __sub__(self, other):
         return self + (-sympify(other))
 
     def __rsub__(self, other):
-        return sympify(other) - self
+        return sympify(other) + (-self)
 
     def __mul__(self, other):
         return Basic.Mul(self, other)
 
     def __rmul__(self, other):
-        return sympify(other) * self
+        return Basic.Mul(other, self)
 
     def __div__(self, other):
         return self * (sympify(other) ** (-1))
@@ -60,11 +60,35 @@ class ArithMeths:
         return Basic.Pow(self, other)
 
     def __rpow__(self, other):
-        return sympify(other) ** self
+        return Basic.Pow(sympify(other), self)
 
     def _eval_power(self, exponent):
         return
 
+    def __radd__(self, other):
+        if isinstance(other, Basic):
+            return Basic.Add(other, self)
+        return sympify(other) + self
+
+    def __rsub__(self, other):
+        if isinstance(other, Basic):
+            return Basic.Add(other, -self)            
+        return sympify(other) - self
+
+    def __rmul__(self, other):
+        if isinstance(other, Basic):
+            return Basic.Mul(other, self)            
+        return sympify(other) * self
+
+    def __rdiv__(self, other):
+        if isinstance(other, Basic):
+            return Basic.Mul(other, 1/self)            
+        return sympify(other) / self
+
+    def __rpow__(self, other):
+        if isinstance(other, Basic):
+            return Basic.Pow(other, self)            
+        return sympify(other) ** self
 
 
 class ImmutableMeths:

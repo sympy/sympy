@@ -2,14 +2,16 @@ from utils import memoizer_immutable_args
 from basic import Basic, sympify
 from number import Rational
 
+pyint = long
+makeinteger = lambda p: pyint.__new__(Integer, p)
 
-class Integer(Rational, long):
+class Integer(Rational, pyint):
 
     is_integer = True
 
     @memoizer_immutable_args('Integer.__new__')
     def __new__(cls, p):
-        obj = long.__new__(cls, p)
+        obj = pyint.__new__(cls, p)
         if p==0:
             obj.is_zero = True            
         elif p==1:
@@ -18,8 +20,10 @@ class Integer(Rational, long):
             obj.is_two = True
         return obj
 
+    make = staticmethod(makeinteger)
+
     @property
-    def p(self): return long(self)
+    def p(self): return pyint(self)
 
     @property
     def q(self): return 1
@@ -30,34 +34,34 @@ class Integer(Rational, long):
         if self is other: return 0
         c = cmp(self.__class__, other.__class__)
         if c: return c
-        return long.__cmp__(self, long(other))
+        return pyint.__cmp__(self, pyint(other))
 
     # converter methods
 
-    __int__ = long.__int__
-    __long__ = long.__long__
-    __float__ = long.__float__
+    __int__ = pyint.__int__
+    __long__ = pyint.__long__
+    __float__ = pyint.__float__
 
     def evalf(self):
-        return Basic.Float(long(self))
+        return Basic.Float(pyint(self))
 
     # mathematical properties
 
     @property
     def is_even(self):
-        return long.__mod__(self,2)==0
+        return pyint.__mod__(self,2)==0
 
     @property
     def is_odd(self):
-        return long.__mod__(self,2)==1
+        return pyint.__mod__(self,2)==1
 
     @property
     def is_positive(self):
-        return long(self)>0
+        return pyint.__cmp__(self, 0L)==1
 
     @property
     def is_negative(self):
-        return long(self)<0
+        return pyint.__cmp__(self, 0L)==-1
 
     # algorithms
 
@@ -108,3 +112,43 @@ class Integer(Rational, long):
             except KeyError:
                 factors[n] = 1
         return factors
+
+    def __pos__(self):
+        return self
+
+    def __neg__(self):
+        return Integer(pyint.__neg__(self))
+
+    def __add__(self, other):
+        other = sympify(other)
+        if other.is_Integer:
+            return Integer(pyint.__add__(self, other))
+        return NotImplemented
+
+    def __sub__(self, other):
+        other = sympify(other)
+        if other.is_Integer:
+            return Integer(pyint.__sub__(self, other))
+        return NotImplemented
+
+    def __mul__(self, other):
+        other = sympify(other)
+        if other.is_Integer:
+            return Integer(pyint.__mul__(self, other))
+        return NotImplemented
+
+    def __div__(self, other):
+        other = sympify(other)
+        if other.is_Integer:
+            return Basic.Fraction(self.p, other.p)
+        return NotImplemented
+
+    def __pow__(self, other):
+        other = sympify(other)
+        if other.is_Integer:
+            if other.is_negative:
+                return Basic.Fraction(1, pyint.__pow__(self, -other.p))
+            return Integer(pyint.__pow__(self, other))
+        return NotImplemented
+
+    # __r*__ methods are defined in methods.py

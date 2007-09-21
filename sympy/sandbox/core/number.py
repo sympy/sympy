@@ -37,7 +37,42 @@ class Number(NumberMeths, Atom):
         if isinstance(x, (int, long)): return Integer(x, **options)
         return Basic.__new__(cls, x, **options)
 
+    @property
+    def as_Interval(self):
+        if self.is_Interval: return self
+        return Interval.make(self, self)
 
+    @property
+    def as_Float(self):
+        if self.is_Float: return self
+        if self.is_Interval: return self.mid.as_Float
+        if self.is_Rational: return Float.make_from_fraction(self.p, self.q)
+        raise NotImplementedError(`self`)
+
+    @property
+    def as_Fraction(self):
+        if self.is_Fraction: return self
+        if self.is_Integer: return Fraction.make(self.p, self.q)
+        if self.is_Float: return Fraction.make_from_man_exp(self.man, self.exp)
+        if self.is_Interval: return self.mid.as_Fraction
+        raise NotImplementedError(`self`)
+
+    @property
+    def as_Integer(self):
+        if self.is_Integer: return self
+        raise NotImplementedError(`self`)
+
+    def as_native(self):
+        """
+        Return internal representation of number implementation.
+        """
+        raise NotImplementedError(`self`)
+
+    def compare(self, other):
+        if self is other: return 0
+        c = cmp(self.__class__, other.__class__)
+        if c: return c
+        return cmp(self.as_native(), other.as_native())
 
 class Real(Number):
 
@@ -71,9 +106,6 @@ class Real(Number):
     def __new__(cls, f):
         return Float(f)
 
-    def as_native(self):
-        raise NotImplementedError
-
     def torepr(self):
         return '%s(%r)' % (self.__class__.__name__, self.as_native())
 
@@ -92,35 +124,6 @@ class Real(Number):
             return self.compare(other.evalf())==0
         return super(Number, self).__eq__(other)
 
-    def compare(self, other):
-        if self is other: return 0
-        c = cmp(self.__class__, other.__class__)
-        if c: return c
-        return cmp(self.as_native(), other.as_native())
-
-    def __add__(self, other):
-        other = sympify(other).evalf()
-        if other.is_Float:
-            return Float(self.as_native() + other.as_native())
-        return Basic.Add(self, other)
-
-    def __mul__(self, other):
-        other = sympify(other).evalf()
-        if other.is_Float:
-            return Float(self.as_native() * other.as_native())
-        return Basic.Mul(self, other)
-
-    def __div__(self, other):
-        other = sympify(other).evalf()
-        if other.is_Float:
-            return Float(self.as_native() / other.as_native())
-        return super(Real, self).__div__(other)
-
-    def __pow__(self, other):
-        other = sympify(other).evalf()
-        if other.is_Float:
-            return Float(self.as_native() ** other.as_native())
-        return Basic.Pow(self, other)
 
 class Rational(Real):
 
@@ -182,48 +185,9 @@ class Rational(Real):
             return self.compare(other)==0
         return super(Real, self).__eq__(other)
 
-    # note: implementing +,*,/,** in Integer, Rational gives about 30% speed up.
-    def __add__(self, other):
-        other = Basic.sympify(other)
-        if other.is_Number:
-            if other.is_Float:
-                return self.evalf() + other
-            return Fraction(self.p * other.q + self.q * other.p,
-                            self.q * other.q)
-        return Basic.Add(self, other)
-
-    def __mul__(self, other):
-        other = Basic.sympify(other)
-        if other.is_Number:
-            if other.is_Float:
-                return self.evalf() * other
-            return Fraction(self.p * other.p, self.q * other.q)
-        return Basic.Mul(self, other)
-
-    def __div__(self, other):
-        other = Basic.sympify(other)
-        if other.is_Number:
-            if other.is_Float:
-                return self.evalf() / other
-            return Fraction(self.p * other.q, self.q * other.p)
-        return super(Real, self).__div__(other)
-
-    def __pow__(self, other):
-        other = Basic.sympify(other)
-        if other.is_Number:
-            if other.is_Float:
-                return self.evalf() ** other
-            elif other.is_Integer:
-                if other.is_negative:
-                    p = -other.p
-                    return Fraction(self.q ** p, self.p ** p)
-                p = other.p
-                return Fraction(self.p ** p, self.q ** p)
-        return Basic.Pow(self, other)
-
-
 from py_integer import Integer
 from py_fraction import Fraction
 #from py_float import Float
 from numerics_float import Float
 #from decimal_float import Float
+from interval import Interval

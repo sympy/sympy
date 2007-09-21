@@ -117,7 +117,8 @@ class Pow(Basic):
         a = Basic.sympify(a)
         b = Basic.sympify(b)
         if b==0: return Basic.Integer(1)
-        if b==1: return b
+        if b==1: return a
+        if a==1: return a
         p = a._eval_power(b)
         if p is not None: return p
         return Mul({a:b})

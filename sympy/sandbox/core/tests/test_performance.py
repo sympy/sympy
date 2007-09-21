@@ -54,7 +54,7 @@ def test_sum_performance():
     from time import clock
     from sympy.sandbox.core import Symbol, MutableAdd, Integer
     x = Symbol('x')
-    n = 200
+    n = 500
 
     i = n
     s = Integer(0)    
@@ -62,7 +62,7 @@ def test_sum_performance():
     while i:
         i -= 1
         s += x**i
-    assert len(s)==n-1
+    assert len(s)==n
     t2 = clock()
     d1 = t2-t1
     
@@ -74,7 +74,7 @@ def test_sum_performance():
         s += x**i
     t2 = clock()
     s = s.canonical()
-    assert len(s)==n-1
+    assert len(s)==n
     d2 = t2-t1
 
     from sympy.core import Symbol, Add

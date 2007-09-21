@@ -133,6 +133,12 @@ def normalize(man, exp, prec, mode):
 def makefloat(man, exp, newtuple=tuple.__new__):
     return newtuple(Float, normalize(man, exp, Float._prec, Float._mode))
 
+def makefloat_from_fraction(p, q):
+    prec = Float._prec
+    mode = Float._mode
+    n = prec + bitcount(q) + 2
+    return tuple.__new__(Float, normalize((p<<n)//q, -n, prec, mode))
+
 
 #----------------------------------------------------------------------
 # Float class
@@ -245,6 +251,9 @@ class Float(Real, tuple):
     _dps = 15
     _mode = ROUND_HALF_EVEN
     _stack = []
+
+    make = staticmethod(makefloat)
+    make_from_fraction = staticmethod(makefloat_from_fraction)
 
     @staticmethod
     def store():
@@ -558,9 +567,14 @@ class Float(Real, tuple):
             return -s
         return s
 
-    def __add__(s, t):
-        if isinstance(t, Float):
+    def __neg__(s):
+        return makefloat(-s[0], s[1])
 
+    def __add__(s, t):
+        t = sympify(t)
+        if t.is_Rational:
+            t = t.as_Float
+        if t.is_Float:
             if t[1] > s[1]:
                 s, t = t, s
             sman, sexp, sbc = s
@@ -573,70 +587,89 @@ class Float(Real, tuple):
                     # TODO: handle rounding
                     return +s
             return makefloat(tman+(sman<<(sexp-texp)), texp)
-        t = sympify(t).evalf()
-        if t.is_Float:
-            return s + t
-        return Basic.Add(s, t)
+        return NotImplemented
 
-    __radd__ = __add__
-
-    def __neg__(s):
-        return makefloat(-s[0], s[1])
+    def __radd__(self, other):
+        if isinstance(other, Basic):
+            if other.is_Rational:
+                other = other.as_Float
+            if other.is_Float:
+                return other + self
+            return Basic.Add(other, self)
+        return sympify(other) + self
 
     def __sub__(s, t):
-        if isinstance(t, Float):
+        t = sympify(t)
+        if t.is_Rational:
+            t = t.as_Float
+        if t.is_Float:
             return s + tuple.__new__(Float, (-t[0],) + t[1:])
-        else:
-            return s + (-t)
+        return NotImplemented
 
-    def __rsub__(s, t):
-        return (-s) + t
+    def __rsub__(self, other):
+        if isinstance(other, Basic):
+            if other.is_Rational:
+                other = other.as_Float
+            if other.is_Float:
+                return other - self
+            return Basic.Add(other, -self)
+        return sympify(other) - self
 
     def __mul__(s, t):
-        if isinstance(t, Float):
+        if isinstance(t, (int, long, Basic.Integer)):
+            return makefloat(s[0]*int(t), s[1])
+        t = sympify(t)
+        if t.is_Rational:
+            t = t.as_Float
+        if t.is_Float:
             sman, sexp, sbc = s
             tman, texp, tbc = t
             return makefloat(sman*tman, sexp+texp)
-        if isinstance(t, (int, long)):
-            return makefloat(s[0]*int(t), s[1])
-        t = sympify(t).evalf()
-        if t.is_Float:
-            return s * t
-        return Basic.Mul(s, t)
+        return NotImplemented
 
-    __rmul__ = __mul__
+    def __rmul__(self, other):
+        if isinstance(other, Basic):
+            if other.is_Rational:
+                other = other.as_Float
+            if other.is_Float:
+                return other * self
+            return Basic.Mul(other, self)
+        return sympify(other) * self
 
     def __div__(s, t):
-        if isinstance(t, Float):
+        if isinstance(t, (int, long, Basic.Integer)):
+            t = int(t)
+            sman, sexp, sbc = s
+            extra = s._prec - sbc + bitcount(t) + 4
+            return makefloat((sman<<extra)//t, sexp-extra)
+        t = sympify(t)
+        if t.is_Rational:
+            t = t.as_Float
+        if t.is_Float:
             sman, sexp, sbc = s
             tman, texp, tbc = t
             extra = s._prec - sbc + tbc + 4
             if extra < 0:
                 extra = 0
             return makefloat((sman<<extra)//tman, sexp-texp-extra)
-        if isinstance(t, (int, long)):
-            t = int(t)
-            sman, sexp, sbc = s
-            extra = s._prec - sbc + bitcount(t) + 4
-            return makefloat((sman<<extra)//t, sexp-extra)
-        t = sympify(t).evalf()
-        if t.is_Float:
-            return s / t
-        return Basic.Mul(s, 1/t)
+        return NotImplemented
 
-    def __rdiv__(s, t):
-        t = sympify(t).evalf()
-        if t.is_Float:
-            return t / s
-        return Basic.Mul(Float(1)/s, t)
+    def __rdiv__(self, other):
+        if isinstance(other, Basic):
+            if other.is_Rational:
+                other = other.as_Float
+            if other.is_Float:
+                return other / self                
+            return Basic.Mul(other, makefloat_from_fraction(1,1) / self)
+        return sympify(other) / self
 
     def __pow__(s, n):
-        if isinstance(n, (int, long)):
+        if isinstance(n, (int, long, Basic.Integer)):
             n = int(n)
-            if n == 0: return Float(1)
+            if n == 0: return makefloat_from_fraction(1,1)
             if n == 1: return +s
             if n == 2: return s * s
-            if n == -1: return Float(1) / s
+            if n == -1: return makefloat_from_fraction(1,1) / s
             if n < 0:
                 Float._prec += 2
                 r = Float(1) / (s ** -n)
@@ -653,17 +686,22 @@ class Float(Real, tuple):
                     man, exp, _ = normalize(man*man, exp+exp, prec2, ROUND_FLOOR)
                     n = n // 2
                 return makefloat(pm, pe)
-        n = sympify(n).evalf()
-        if isinstance(n, Float):
+        n = sympify(n)
+        if n.is_Rational:
+            n = n.as_Float
+        if n.is_Float:
             if n == 0.5:
                 from numerics.functions import sqrt
                 return sqrt(s)
             from numerics.functions import exp, log
             return exp(n * log(s))
-        return Basic.Pow(s, n)
+        return NotImplemented
 
-    def __rpow__(s, t):
-        t = sympify(t).evalf()
-        if isinstance(t, Float):
-            return t ** s
-        return Basic.Pow(t, s)
+    def __rpow__(self, other):
+        if isinstance(other, Basic):
+            if other.is_Float:
+                other = other.as_Float
+            if other.is_Float:
+                return other ** self
+            return Basic.Pow(other, self)
+        return sympify(other) ** self

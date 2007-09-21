@@ -18,6 +18,7 @@ class _Rounding:
 
 rounding = _Rounding()
 
+makeinterval = lambda a, b: tuple.__new__(Interval, (a,b))
 
 class Interval(Number, tuple):
     """
@@ -43,6 +44,8 @@ class Interval(Number, tuple):
             b = sympify(b)
             assert a <= b, "endpoints must be properly ordered"
         return tuple.__new__(Interval, (a,b))
+
+    make = staticmethod(makeinterval)
 
     @property
     def a(self):
@@ -84,49 +87,103 @@ class Interval(Number, tuple):
         return Interval(-self.b, -self.a)
 
     def __add__(l, r):
-        r = Interval(r)
-        rounding.begin()
-        rounding.down()
-        a = l.a + r.a
-        rounding.up()
-        b = l.b + r.b
-        rounding.end()
-        return Interval(a, b)
+        r = sympify(r)
+        if r.is_Real:
+            r = r.as_Interval
+        if r.is_Interval:
+            rounding.begin()
+            rounding.down()
+            a = l.a + r.a
+            rounding.up()
+            b = l.b + r.b
+            rounding.end()
+            return Interval(a, b)
+        return NotImplemented
 
-    __radd__ = __add__
+    def __radd__(self, other):
+        if isinstance(other, Basic):
+            if other.is_Real:
+                other = other.as_Interval
+            if other.is_Interval:
+                return other + self
+            return Basic.Add(other, self)
+        return sympify(other) + self
 
     def __sub__(l, r):
-        return l + (-r)
+        r = sympify(r)
+        if r.is_Real:
+            r = r.as_Interval
+        if r.is_Interval:
+            r = -r
+            rounding.begin()
+            rounding.down()
+            a = l.a + r.a
+            rounding.up()
+            b = l.b + r.b
+            rounding.end()
+            return Interval(a, b)
+        return NotImplemented
 
-    def __rsub__(r, l):
-        return -(r - l)
+    def __rsub__(self, other):
+        if isinstance(other, Basic):
+            if other.is_Real:
+                other = other.as_Interval
+            if other.is_Interval:
+                return other - self
+            return Basic.Add(other, -self)
+        return sympify(other) - self
 
     def __mul__(l, r):
-        r = Interval(r)
-        rounding.begin()
-        rounding.down()
-        xd, yd, zd, wd = l.a*r.a, l.a*r.b, l.b*r.a, l.b*r.b
-        rounding.up()
-        xu, yu, zu, wu = l.a*r.a, l.a*r.b, l.b*r.a, l.b*r.b
-        rounding.end()
-        return Interval(min(xd,yd,zd,wd), max(xu,yu,zu,wu))
+        r = sympify(r)
+        if r.is_Real:
+            r = r.as_Interval
+        if r.is_Interval:
+            rounding.begin()
+            rounding.down()
+            xd, yd, zd, wd = l.a*r.a, l.a*r.b, l.b*r.a, l.b*r.b
+            a = min(xd,yd,zd,wd)
+            rounding.up()
+            xu, yu, zu, wu = l.a*r.a, l.a*r.b, l.b*r.a, l.b*r.b
+            b = max(xu,yu,zu,wu)
+            rounding.end()
+            return Interval(a,b)
+        return NotImplemented
 
-    __rmul__ = __mul__
+    def __rmul__(self, other):
+        if isinstance(other, Basic):
+            if other.is_Real:
+                other = other.as_Interval
+            if other.is_Interval:
+                return other * self
+            return Basic.Mul(other, self)
+        return sympify(other) * self
 
     def __div__(l, r):
-        r = Interval(r)
-        if 0 in r:
-            raise ZeroDivisionError, "cannot divide by interval containing 0"
-        rounding.begin()
-        rounding.down()
-        xd, yd, zd, wd = l.a/r.a, l.a/r.b, l.b/r.a, l.b/r.b
-        rounding.up()
-        xu, yu, zu, wu = l.a/r.a, l.a/r.b, l.b/r.a, l.b/r.b
-        rounding.end()
-        return Interval(min(xd,yd,zd,wd), max(xu,yu,zu,wu))
+        r = sympify(r)
+        if r.is_Real:
+            r = r.as_Interval
+        if r.is_Interval:
+            if 0 in r:
+                raise ZeroDivisionError, "cannot divide by interval containing 0"
+            rounding.begin()
+            rounding.down()
+            xd, yd, zd, wd = l.a/r.a, l.a/r.b, l.b/r.a, l.b/r.b
+            a = min(xd,yd,zd,wd)
+            rounding.up()
+            xu, yu, zu, wu = l.a/r.a, l.a/r.b, l.b/r.a, l.b/r.b
+            b = max(xu,yu,zu,wu)
+            rounding.end()
+            return Interval(a,b)
+        return NotImplemented
 
-    def __rdiv__(r, l):
-        return Interval(l) / r
+    def __rdiv__(self, other):
+        if isinstance(other, Basic):
+            if other.is_Real:
+                other = other.as_Interval
+            if other.is_Interval:
+                return other / self
+            return Basic.Mul(other, 1/self)
+        return sympify(other) / self
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
