@@ -3,8 +3,11 @@ Interval arithmetic with correct rounding.
 
 """
 
-from numerics_float import *
+from utils import memoizer_Interval_new
 from basic import sympify
+from number import Number
+from numerics_float import *
+
 
 
 class _Rounding:
@@ -16,7 +19,7 @@ class _Rounding:
 rounding = _Rounding()
 
 
-class Interval(Real):
+class Interval(Number, tuple):
     """
     An Interval represents the set of all real numbers between two
     endpoints a and b. If the interval is closed (which is what is
@@ -25,6 +28,7 @@ class Interval(Real):
     by [a, b], is the set of points x satisfying a <= x <= b.
     """
 
+    @memoizer_Interval_new
     def __new__(cls, a, b=None):
         """
         Interval(a) creates an exact interval (width 0)
@@ -34,14 +38,18 @@ class Interval(Real):
         if b is None:
             if isinstance(a, Interval):
                 return a
-            else:
-                return Interval(a, a)
+            b = a
         else:
             b = sympify(b)
             assert a <= b, "endpoints must be properly ordered"
-            self = object.__new__(cls)
-            self.a, self.b = a, b
-            return self
+        return tuple.__new__(Interval, (a,b))
+
+    @property
+    def a(self):
+        return self[0]
+    @property
+    def b(self):
+        return self[1]
 
     def __repr__(self):
         return "Interval(%r, %r)" % (self.a, self.b)
@@ -49,13 +57,23 @@ class Interval(Real):
     def __str__(self):
         return '[%s, %s]' % (self.a, self.b)
 
+    def compare(self, other):
+        if self is other: return 0
+        c = cmp(self.__class__, other.__class__)
+        if c: return c
+        return tuple.__cmp__(self, other)
+
     def __hash__(self):
-        return hash((self.a, self.b))
+        return tuple.__hash__(self)
 
     def __eq__(self, other):
         """Two intervals are considered equal if all endpoints are equal"""
-        other = Interval(other)
-        return (self.a, self.b) == (other.a, other.b)
+        other = sympify(other)
+        if other.is_Real:
+            other = Interval(other)
+        if self is other: return True
+        if other.is_Interval: return False
+        return super(Number, self).__eq__(other)
 
     def __contains__(self, x):
         """Return True if x is contained in the interval, otherwise False."""

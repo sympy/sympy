@@ -28,7 +28,6 @@ class Number(NumberMeths, Atom):
 
     is_negative = None
     is_positive = None
-    is_real = True
     is_finite = True
     is_bounded = True
     is_commutative = True
@@ -38,13 +37,6 @@ class Number(NumberMeths, Atom):
         if isinstance(x, (int, long)): return Integer(x, **options)
         return Basic.__new__(cls, x, **options)
 
-    @property
-    def is_nonpositive(self):
-        return self.is_negative or self.is_zero
-
-    @property
-    def is_nonnegative(self):
-        return self.is_positive or self.is_zero
 
 
 class Real(Number):
@@ -74,6 +66,7 @@ class Real(Number):
         def __int__(self):
             return <python int instance>
     """
+    is_real = True
 
     def __new__(cls, f):
         return Float(f)
@@ -83,6 +76,14 @@ class Real(Number):
 
     def torepr(self):
         return '%s(%r)' % (self.__class__.__name__, self.as_native())
+
+    @property
+    def is_nonpositive(self):
+        return self.is_negative or self.is_zero
+
+    @property
+    def is_nonnegative(self):
+        return self.is_positive or self.is_zero
 
     def __eq__(self, other):
         other = sympify(other)
@@ -131,6 +132,9 @@ class Rational(Real):
     The type of p and q must support arithmetics and comparsions
     with python integer types and they should return instances
     of integer implementation classes.
+
+    Integer must define staticmethod gcd(a,b) and probably
+    also redefine __int__,__long__,__float__ methods.
     """
 
     is_rational = True
@@ -159,6 +163,12 @@ class Rational(Real):
 
     def evalf(self):
         return Basic.Float(self.p) / Basic.Float(self.q)
+
+    def __int__(self):
+        return int(self.p // self.q)
+
+    def __long__(self):
+        return long(self.p // self.q)
 
     def __float__(self):
         return float(self.evalf())

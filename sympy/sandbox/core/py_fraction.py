@@ -3,6 +3,12 @@ from basic import Basic, sympify
 from number import Rational
 
 class Fraction(Rational, tuple):
+    """
+    Represents a ratio p/q of two integers.
+
+    This implementation relies completely on the implementation
+    of Integer.
+    """
 
     @memoizer_immutable_args('Fraction.__new__')
     def __new__(cls, p, q):
@@ -22,5 +28,3 @@ class Fraction(Rational, tuple):
     @property
     def q(self): return self[1]
 
-    def __int__(self):
-        return int(self.p // self.q)

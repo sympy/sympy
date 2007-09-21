@@ -138,7 +138,7 @@ def makefloat(man, exp, newtuple=tuple.__new__):
 # Float class
 #
 
-class Float(tuple, Real):
+class Float(Real, tuple):
     """
     A Float is a rational number of the form
 
@@ -227,8 +227,6 @@ class Float(tuple, Real):
     mode is ROUND_HALF_EVEN. In this mode, Floats should round exactly
     like regular Python floats (in the absence of bugs!).
     """
-
-    is_Float = True
 
     #------------------------------------------------------------------
     # Static methods for context management
@@ -398,9 +396,6 @@ class Float(tuple, Real):
             return Basic.Rational(s.man * 2**s.exp, 1)
         else:
             return Basic.Rational(s.man, 2**(-s.exp))
-
-    def evalf(s):
-        return s
 
     def __repr__(s):
         """Represent s as a decimal string, with sufficiently many

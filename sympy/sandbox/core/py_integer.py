@@ -19,7 +19,7 @@ class Integer(Rational, long):
         return obj
 
     @property
-    def p(self): return int(self)
+    def p(self): return long(self)
 
     @property
     def q(self): return 1
@@ -34,10 +34,12 @@ class Integer(Rational, long):
 
     # converter methods
 
-    # int has __int__, __float__
+    __int__ = long.__int__
+    __long__ = long.__long__
+    __float__ = long.__float__
 
     def evalf(self):
-        return Basic.Float(int(self))
+        return Basic.Float(long(self))
 
     # mathematical properties
 
@@ -51,11 +53,11 @@ class Integer(Rational, long):
 
     @property
     def is_positive(self):
-        return int(self)>0
+        return long(self)>0
 
     @property
     def is_negative(self):
-        return int(self)<0
+        return long(self)<0
 
     # algorithms
 
