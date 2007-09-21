@@ -123,8 +123,14 @@ class Real(Number):
 
 class Rational(Real):
 
-    """
-    Rational class must define p and q properties.
+    """ Base class for Integer and Fraction.
+    
+    Rational subclasses must define attributes p and q that
+    hold integer instances of numerator and denominator.
+
+    The type of p and q must support arithmetics and comparsions
+    with python integer types and they should return instances
+    of integer implementation classes.
     """
 
     is_rational = True
@@ -152,7 +158,7 @@ class Rational(Real):
         return cmp(self.p*other.q, self.q*other.p)
 
     def evalf(self):
-        return self.p.evalf() / self.q.evalf()
+        return Basic.Float(self.p) / Basic.Float(self.q)
 
     def __float__(self):
         return float(self.evalf())

@@ -89,3 +89,8 @@ def test_sum_performance():
     assert len(s)==n
     d3 = t2-t1
     print '\ntiming summation: sandbox.core(direct/MutableAdd) %s/%s secs, sympy.core %s secs' % (d1,d2,d3)
+
+if __name__=='__main__':
+    test_mul_performance()
+    test_add_performance()
+    test_sum_performance()

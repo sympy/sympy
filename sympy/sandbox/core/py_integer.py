@@ -56,3 +56,53 @@ class Integer(Rational, long):
     @property
     def is_negative(self):
         return int(self)<0
+
+    # algorithms
+
+    @staticmethod
+    def gcd(a, b):
+        """
+        Returns the Greatest Common Divisor, implementing Euclid's algorithm.
+        """
+        while a:
+            a, b = b%a, a
+        return b
+
+    @staticmethod
+    def factor_trial_division(n):
+        """
+        Factor any integer into a product of primes, 0, 1, and -1.
+        Returns a dictionary {<prime: exponent>}.
+        """
+        if not n:
+            return {0:1}
+        factors = {}
+        if n < 0:
+            factors[-1] = 1
+            n = -n
+        if n==1:
+            factors[1] = 1
+            return factors
+        d = 2
+        while n % d == 0:
+            try:
+                factors[d] += 1
+            except KeyError:
+                factors[d] = 1
+            n //= d
+        d = 3
+        while n > 1 and d*d <= n:
+            if n % d:
+                d += 2
+            else:
+                try:
+                    factors[d] += 1
+                except KeyError:
+                    factors[d] = 1
+                n //= d
+        if n>1:
+            try:
+                factors[n] += 1
+            except KeyError:
+                factors[n] = 1
+        return factors
