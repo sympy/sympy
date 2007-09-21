@@ -49,6 +49,21 @@ def memoizer_Interval_new(func):
     all_caches['Interval.__new__'] = func_cache_it_cache
     return wrapper
 
+def memoizer_Float_new(func):
+    func._cache_it_cache = func_cache_it_cache = {}
+    def wrapper(cls, x=0, prec=None, mode=None, **options):
+        if prec is None: prec = cls._prec
+        if mode is None: mode = cls._mode
+        args = (x, prec, mode)
+        try:
+            return func_cache_it_cache[args]
+        except KeyError:
+            pass
+        func_cache_it_cache[args] = r = func(cls, *args, **options)
+        return r
+    all_caches['Interval.__new__'] = func_cache_it_cache
+    return wrapper
+
 def clear_cache():
     """Clear all cached objects."""
     for cache in all_caches.values():

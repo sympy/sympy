@@ -5,7 +5,7 @@ Decimals. For details on usage, refer to the docstrings in the Float
 class.
 """
 
-from utils import memoizer_immutable_args
+from utils import memoizer_immutable_args, memoizer_Float_new
 from basic import Basic, sympify
 from number import Real
 
@@ -307,7 +307,9 @@ class Float(Real, tuple):
     def makefloat(cls, man, exp, newtuple=tuple.__new__):
         return newtuple(cls, normalize(man, exp, cls._prec, cls._mode))
 
+    @memoizer_Float_new
     def __new__(cls, x=0, prec=None, mode=None):
+        # when changing __new__ signature, update memoizer_Float_new accordingly
         """
         Float(x) creates a new Float instance with value x. The usual
         types are supported for x:
@@ -360,6 +362,7 @@ class Float(Real, tuple):
 
         if isinstance(x, Basic):
             return x.evalf()
+        raise TypeError(`x`)
 
     def __hash__(s):
         try:

@@ -72,7 +72,8 @@ class Interval(Number, tuple):
         if other.is_Real:
             other = Interval(other)
         if self is other: return True
-        if other.is_Interval: return False
+        if other.is_Interval:
+            return tuple.__eq__(self, other)
         return super(Number, self).__eq__(other)
 
     def __contains__(self, x):
