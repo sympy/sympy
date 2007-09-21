@@ -14,7 +14,7 @@ class Fraction(Rational, tuple):
     def __new__(cls, p, q):
         if q<0:
             p, q = -p, -q
-        r = Basic.Integer.gcd(p, q)
+        r = Basic.Integer.gcd(abs(p), q)
         if r>1:
             p //= r
             q //= r

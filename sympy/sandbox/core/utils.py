@@ -61,7 +61,7 @@ def memoizer_Float_new(func):
             pass
         func_cache_it_cache[args] = r = func(cls, *args, **options)
         return r
-    all_caches['Interval.__new__'] = func_cache_it_cache
+    all_caches['Float.__new__'] = func_cache_it_cache
     return wrapper
 
 def clear_cache():
