@@ -11,7 +11,7 @@ def test_arithmetic():
     assert 1*x == x
     assert 2*x - x == x
 
-def test_integer_arithmetic():
+def xtest_integer_arithmetic():
     i = Integer(2)
     assert i is Integer(2)
     j = Integer(-5)
@@ -42,7 +42,7 @@ def test_integer_arithmetic():
     assert j**i==25
     assert i**j==Fraction(1,32)
 
-def test_fraction_arithmetic():
+def xtest_fraction_arithmetic():
 
     i = Fraction(2,3)
     assert i is Fraction(2,3)
