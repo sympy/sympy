@@ -1,5 +1,8 @@
 """Core module. Provides the basic operations needed in sympy.
 """
+# make output from recursion errors more pleasant
+import sys
+sys.setrecursionlimit(30)
 
 from basic import Basic #, S
 from symbol import Symbol #, Wild, symbols

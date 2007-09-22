@@ -26,23 +26,27 @@ class MutableMul(ArithMeths, RelationalMeths, MutableCompositeDict):
         a = Basic.sympify(a)
         if a.is_Number:
             if p==1: v = a
-            else: v = a ** p
-            try:
-                self[1] *= v
-            except KeyError:
-                self[1] = v
-        elif a.is_Add and len(a)==1:
+            elif p.is_Integer:
+                v = a ** p
+            else:
+                v = None
+            if v is not None:
+                try:
+                    self[1] *= v
+                except KeyError:
+                    self[1] = v
+                return
+        if a.is_Add and len(a)==1:
             # Mul({x:3,1:4}).update(Add({x:2})) -> Mul({x:3+1,1:4*2})
             k, v = a.items()[0]
             self.update(k, p)
             self.update(v, p)
-            return
         elif a.is_MutableMul:
             # Mul({x:3}).update(Mul({x:2}), 4) -> Mul({x:3}).update(x,2*4)
             for k,v in a.items():
                 # todo?: make it noncommutative product for (a**2)**(1/2)
                 #        (a**z)**w where z,w are complex numbers
-                self.update(k, v * p) 
+                self.update(k, v * p)
         else:
             try:
                 self[a] += p
@@ -63,13 +67,18 @@ class MutableMul(ArithMeths, RelationalMeths, MutableCompositeDict):
             return c
         if len(obj)==0:
             return c
-        # turn obj into an immutable instance:
-        obj.__class__ = Mul
         if len(obj)==1:
             # Mul({a:1}) -> a
             k,v = obj.items()[0]
             if v==1:
                 obj = k
+            elif k.is_Mul:
+                del obj[k]
+                for k1,v1 in k.items():
+                    obj[k1] = v1 * v
+        if obj.is_MutableMul:
+            # turn obj into an immutable instance:
+            obj.__class__ = Mul
         if c!=1:
             # Mul({1:c,rest:power}) -> Add({Mul({rest:power}):c})
             obj = Basic.Add({obj:c})
@@ -119,6 +128,9 @@ class Pow(Basic):
         if b==0: return Basic.Integer(1)
         if b==1: return a
         if a==1: return a
-        p = a._eval_power(b)
-        if p is not None: return p
+        #p = a._eval_power(b)
+        #if p is not None: return p
+        m = MutableMul()
+        m.update(a,b)
+        return m.canonical()
         return Mul({a:b})

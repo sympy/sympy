@@ -34,7 +34,8 @@ class Symbol(ArithMeths, RelationalMeths, Atom, str):
         if self is other: return 0
         c = cmp(self.__class__, other.__class__)
         if c: return c
-        #
         if self.is_dummy or other.is_dummy:
             return cmp(id(self), id(other))
-        return str.__cmp__(self, other)
+        return cmp(str(self), str(other))
+
+    

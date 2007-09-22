@@ -30,37 +30,22 @@ class ArithMeths:
         return self
 
     def __neg__(self):
-        return self * (-1)
+        return Basic.Mul(Basic.Integer(-1), self)
 
     def __add__(self, other):
         return Basic.Add(self, other)
 
-    def __radd__(self, other):
-        return Basic.Add(other, self)
-
     def __sub__(self, other):
-        return self + (-sympify(other))
-
-    def __rsub__(self, other):
-        return sympify(other) + (-self)
+        return Basic.Add(self, (-sympify(other)))
 
     def __mul__(self, other):
         return Basic.Mul(self, other)
 
-    def __rmul__(self, other):
-        return Basic.Mul(other, self)
-
     def __div__(self, other):
-        return self * (sympify(other) ** (-1))
-
-    def __rdiv__(self, other):
-        return sympify(other) / self
+        return Basic.Mul(self, (sympify(other) ** (-1)))
 
     def __pow__(self, other):
         return Basic.Pow(self, other)
-
-    def __rpow__(self, other):
-        return Basic.Pow(sympify(other), self)
 
     def _eval_power(self, exponent):
         return
@@ -82,7 +67,7 @@ class ArithMeths:
 
     def __rdiv__(self, other):
         if isinstance(other, Basic):
-            return Basic.Mul(other, 1/self)            
+            return Basic.Mul(other, self ** (-1))
         return sympify(other) / self
 
     def __rpow__(self, other):
