@@ -1,4 +1,4 @@
-def test_mul_performance():
+def xtest_mul_performance():
     from time import clock
     from random import randint
     from sympy.sandbox.core import Symbol, Mul, Add
