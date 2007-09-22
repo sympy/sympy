@@ -77,18 +77,18 @@ def test_sum_performance():
     assert len(s)==n
     d2 = t2-t1
 
-    from sympy.core import Symbol, Add
-    i = n
-    x = Symbol('x')
-    s = Add()
-    t1 = clock()
-    while i:
-        i -= 1
-        s += x**i
-    t2 = clock()
-    assert len(s)==n
-    d3 = t2-t1
-    print '\ntiming summation: sandbox.core(direct/MutableAdd) %s/%s secs, sympy.core %s secs' % (d1,d2,d3)
+    #from sympy.core import Symbol, Add
+    #i = n
+    #x = Symbol('x')
+    #s = Add()
+    #t1 = clock()
+    #while i:
+    #    i -= 1
+    #    s += x**i
+    #t2 = clock()
+    #assert len(s)==n
+    #d3 = t2-t1
+    #print '\ntiming summation: sandbox.core(direct/MutableAdd) %s/%s secs, sympy.core %s secs' % (d1,d2,d3)
 
 if __name__=='__main__':
     test_mul_performance()

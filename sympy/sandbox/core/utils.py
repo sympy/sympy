@@ -2,6 +2,7 @@ all_caches = {}
 
 def memoizer_immutable_args(name):
     def make_memoized(func):
+        return func
         func._cache_it_cache = func_cache_it_cache = {}
         def wrapper(*args):
             try:
