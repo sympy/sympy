@@ -120,6 +120,14 @@ class Mul(ImmutableMeths, MutableMul):
     def canonical(self):
         return self
 
+    def split(self, op, *args, **kwargs):
+        if op == '*':
+            return sorted([x**c for x, c in self.items()])
+        if op == '**' and len(self) == 1:
+            return list(self.items()[0])
+        return [self]
+
+
 class Pow(Basic):
 
     def __new__(cls, a, b):

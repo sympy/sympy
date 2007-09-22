@@ -1,9 +1,5 @@
 from sympy.sandbox.core import Symbol, Rational
 
-# make output from recursion errors more pleasant
-import sys
-sys.setrecursionlimit(30)
-
 a = Symbol("a")
 b = Symbol("b")
 c = Symbol("c")
@@ -201,6 +197,9 @@ def test_powerbug():
     assert (2*x)**2 == (-2*x)**2
 
 if __name__ == "__main__":
+    # make output from recursion errors more pleasant
+    #import sys
+    #sys.setrecursionlimit(30)
     test_Symbol()
     test_arit()
     testdiv()

@@ -75,6 +75,13 @@ class ArithMeths:
             return Basic.Pow(other, self)            
         return sympify(other) ** self
 
+    def expand(self, *args, **kwargs):
+        return self
+
+    def split(self, op, *args, **kwargs):
+        if op == '**':
+            return [self, Basic.Number(1)]
+        return [self]
 
 class ImmutableMeths:
 

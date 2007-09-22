@@ -127,3 +127,13 @@ class Add(ImmutableMeths, MutableAdd):
         except KeyError:
             h = self._cached_hash = sum(map(hash, self.items()))
         return h
+
+    def split(self, op, *args, **kwargs):
+        if op == "+" and len(self) > 1:
+            return sorted([c*x for x, c in self.items()])
+        if op == "*" and len(self) == 1:
+            x, c = self.items()[0]
+            return [c] + x.split(op, *args, **kwargs)
+        if op == "**":
+            return [self, Basic.Number(1)]
+        return [self]
