@@ -927,17 +927,6 @@ class Function2(Basic, RelMeths):
     def func(self):
         return self.__class__
 
-    #@property
-    #def args(self):
-    #    return self._args[1:]
-
-    #def tostr(self, level=0):
-    #    p = self.precedence
-    #    r = '%s(%s)' % (self.func.tostr(p), ', '.join([a.tostr() for a in self.args]))
-    #    if p <= level:
-    #        return '(%s)' % (r)
-    #    return r
-
     def _eval_subs(self, old, new):
         if self == old:
             return new
