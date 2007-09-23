@@ -104,7 +104,7 @@ class Apply(Basic, ArithMeths, RelMeths):
 
     def tostr(self, level=0):
         p = self.precedence
-        r = '%s(%s)' % (self.func.tostr(p), ', '.join([a.tostr() for a in self.args]))
+        r = '%s(%s)' % (self.func.tostr(p), ', '.join([a.tostr() for a in self]))
         if p <= level:
             return '(%s)' % (r)
         return r
@@ -112,19 +112,19 @@ class Apply(Basic, ArithMeths, RelMeths):
     def _eval_subs(self, old, new):
         if self == old:
             return new
-        elif isinstance(old, Apply) and old.args == self.args:
+        elif isinstance(old, Apply) and old[:] == self[:]:
             try:
-                newfunc = Lambda(new, *old.args)
+                newfunc = Lambda(new, *old[:])
                 func = self.func.subs(old.func, newfunc)
 
                 if func != self.func:
-                    return func(*self.args)
+                    return func(*self[:])
             except TypeError:
                 pass
         elif isinstance(old, Function) and isinstance(new, Function):
             if old == self.func and old.nofargs == new.nofargs:
-                return new(*self.args)
-        obj = self.func._eval_apply_subs(*(self.args + (old,) + (new,)))
+                return new(*self[:])
+        obj = self.func._eval_apply_subs(*(self[:] + (old,) + (new,)))
         if obj is not None:
             return obj
         return Basic._seq_subs(self, old, new)
@@ -133,7 +133,7 @@ class Apply(Basic, ArithMeths, RelMeths):
         return self
 
     def _eval_evalf(self):
-        obj = self.func._eval_apply_evalf(*self.args)
+        obj = self.func._eval_apply_evalf(*self[:])
         if obj is None:
             return self
         return obj
@@ -141,7 +141,7 @@ class Apply(Basic, ArithMeths, RelMeths):
     def _eval_is_comparable(self):
         if isinstance(self.func, DefinedFunction):
             r = True
-            for s in self.args:
+            for s in self:
                 c = s.is_comparable
                 if c is None: return
                 if not c: r = False
@@ -153,18 +153,18 @@ class Apply(Basic, ArithMeths, RelMeths):
         i = 0
         l = []
         r = Basic.Zero()
-        for a in self.args:
+        for a in self:
             i += 1
             da = a.diff(s)
             if isinstance(da, Basic.Zero):
                 continue
             df = self.func.fdiff(i)
-            l.append(Apply(df,*self.args) * da)
+            l.append(Apply(df,*self[:]) * da)
         return Basic.Add(*l)
 
     def _eval_power(b, e):
-        if len(b.args)==1:
-            return b.func._eval_apply_power(b.args[0], e)
+        if len(b)==1:
+            return b.func._eval_apply_power(b[0], e)
         return
 
     def _eval_is_commutative(self):
@@ -176,17 +176,17 @@ class Apply(Basic, ArithMeths, RelMeths):
         return r
 
     def _calc_positive(self):
-        return self.func._calc_apply_positive(*self.args)
+        return self.func._calc_apply_positive(*self[:])
 
     def _calc_real(self):
-        return self.func._calc_apply_real(*self.args)
+        return self.func._calc_apply_real(*self[:])
 
     def _calc_unbounded(self):
-        return self.func._calc_apply_unbounded(*self.args)
+        return self.func._calc_apply_unbounded(*self[:])
 
     def _eval_eq_nonzero(self, other):
-        if isinstance(other.func, self.func.__class__) and len(self.args)==len(other.args):
-            for a1,a2 in zip(self.args,other.args):
+        if isinstance(other.func, self.func.__class__) and len(self[:])==len(other[:]):
+            for a1,a2 in zip(self,other):
                 if not (a1==a2):
                     return False
             return True
@@ -199,7 +199,7 @@ class Apply(Basic, ArithMeths, RelMeths):
 
     def _eval_oseries(self, order):
         assert self.func.nofargs==1,`self.func`
-        arg = self.args[0]
+        arg = self[0]
         x = order.symbols[0]
         if not Basic.Order(1,x).contains(arg):
             return self.func(arg)
@@ -214,20 +214,20 @@ class Apply(Basic, ArithMeths, RelMeths):
         return self._compute_oseries(arg, order, self.func.taylor_term, self.func)
 
     def _eval_is_polynomial(self, syms):
-        for arg in self.args:
+        for arg in self:
             if arg.has(*syms):
                 return False
         return True
 
     def _eval_expand_complex(self, *args):
-        func = self.func(*[ a._eval_expand_complex(*args) for a in self.args ])
+        func = self.func(*[ a._eval_expand_complex(*args) for a in self])
         return Basic.Re()(func) + S.ImaginaryUnit * Basic.Im()(func)
 
     def _eval_rewrite(self, pattern, rule, **hints):
         if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self.args ]
+            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self]
         else:
-            args = self.args[:]
+            args = self[:]
 
         if pattern is None or isinstance(self.func, pattern):
             if hasattr(self, rule):
@@ -436,7 +436,7 @@ class Lambda(Function):
         expr = Basic.sympify(expr)
         args = tuple(map(Basic.sympify, args))
         if isinstance(expr, Apply):
-            if expr.args==args:
+            if expr[:]==args:
                 return expr.func
         dummy_args = []
         for a in args:
