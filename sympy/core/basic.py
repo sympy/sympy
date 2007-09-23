@@ -365,12 +365,15 @@ class Basic(BasicMeths):
         if isinstance(p, Basic.Symbol) and not isinstance(p, Basic.Wild): # speeds up
             return p in self.atoms(p.__class__)
         if isinstance(p, BasicType):
-            #XXX
-            #hack, needs to check, if "self" contains "p".
-            return False
+            #XXX hack, this is very fragile:
+            if str(self).find(str(p.__name__)) == -1:
+                #didn't find p in self
+                return False
+            else:
+                return True
         if p.matches(self) is not None:
             return True
-        for e in self:
+        for e in self._args:
             if e.has(p):
                 return True
         return False
@@ -641,7 +644,7 @@ class Basic(BasicMeths):
     def _eval_rewrite(self, pattern, rule, **hints):
         if isinstance(self, Atom):
             return self
-        terms = [ t._eval_rewrite(pattern, rule, **hints) for t in self ]
+        terms = [ t._eval_rewrite(pattern, rule, **hints) for t in self._args ]
         return self.__class__(*terms, **self._assumptions)
 
     def rewrite(self, *args, **hints):
