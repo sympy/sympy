@@ -35,7 +35,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 if isinstance(o, Basic.ApplyExp):
                     # exp(x) / exp(y) -> exp(x-y)
                     b = Basic.Exp1()
-                    e = o.args[0]
+                    e = o[0]
                 else:
                     b, e = o.as_base_exp()
                 if isinstance(b, Basic.Add) and isinstance(e, Basic.Number):

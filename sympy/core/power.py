@@ -198,7 +198,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             coeff2,terms2 = old.exp.as_coeff_terms()
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3*y)
         if isinstance(old, Basic.ApplyExp):
-            coeff1,terms1 = old.args[0].as_coeff_terms()
+            coeff1,terms1 = old[0].as_coeff_terms()
             coeff2,terms2 = (self.exp * S.Log(self.base)).as_coeff_terms()
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(exp(3*y*log(x)),z) -> z**(2/3*y)
         return self.base.subs(old, new) ** self.exp.subs(old, new)
