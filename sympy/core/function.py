@@ -97,7 +97,7 @@ class Apply(Basic, ArithMeths, RelMeths):
 
     @property
     def args(self):
-        return self._args[1:]
+        return self[:]
 
     def __getitem__(self, iter):
         return self._args[1:][iter]
