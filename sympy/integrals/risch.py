@@ -176,7 +176,7 @@ def risch_norman(f, x, rewrite=False):
         return f * x
 
     rewritables = {
-        (S.Sin, S.Cos, S.Cot)    : S.Tan,
+        (S.Sin, S.Cos, Basic.cot)    : S.Tan,
         (S.Sinh, S.Cosh, S.Coth) : S.Tanh,
     }
 

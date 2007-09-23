@@ -1,6 +1,6 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import DefinedFunction, Apply, Lambda
+from sympy.core.function import DefinedFunction, Apply, Lambda, SingleValuedFunction
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -394,7 +394,7 @@ class ApplyTan(Apply):
         if arg.is_imaginary:
             return True
 
-class Cot(DefinedFunction):
+class cot(SingleValuedFunction):
 
     nofargs = 1
 
@@ -407,6 +407,11 @@ class Cot(DefinedFunction):
     def inverse(self, argindex=1):
         return S.ACot
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -471,10 +476,12 @@ class Cot(DefinedFunction):
 
             return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
 
-class ApplyCot(Apply):
-
     def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
+        args = self[1:] #empty!?
+        args = self._args
+        print type(self), self.func, self.func(Basic.Symbol("x"))
+        assert len(args) == 1
+        return self.func(args[0].conjugate())
 
     def _eval_expand_complex(self, *args):
         if self.args[0].is_real:
@@ -509,7 +516,6 @@ class ApplyCot(Apply):
 Basic.singleton['sin'] = Sin
 Basic.singleton['cos'] = Cos
 Basic.singleton['tan'] = Tan
-Basic.singleton['cot'] = Cot
 
 ###############################################################################
 ########################### TRIGONOMETRIC INVERSES ############################
@@ -757,7 +763,7 @@ class ApplyATan(Apply):
         else:
             return self.func(arg)
 
-class ACot(DefinedFunction):
+class acot(SingleValuedFunction):
 
     nofargs = 1
 
@@ -825,8 +831,6 @@ class ACot(DefinedFunction):
             x = Basic.sympify(x)
             return (-1)**((n+1)//2) * x**n / n
 
-class ApplyACot(Apply):
-
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
@@ -838,4 +842,3 @@ class ApplyACot(Apply):
 Basic.singleton['asin'] = ASin
 Basic.singleton['acos'] = ACos
 Basic.singleton['atan'] = ATan
-Basic.singleton['acot'] = ACot

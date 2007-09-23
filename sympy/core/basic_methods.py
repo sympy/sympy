@@ -182,7 +182,10 @@ def cache_it_nondummy(func):
         return r
     return wrapper
 
-class MetaBasicMeths(type):
+class BasicType(type):
+    pass
+
+class MetaBasicMeths(BasicType):
 
     classnamespace = {}
     repr_level = 0        # defines the output of repr()

@@ -48,6 +48,7 @@ have attributes .func and .args.
 """
 
 from basic import Basic, Singleton, Atom, cache_it, S
+from basic_methods import BasicType, MetaBasicMeths
 from methods import ArithMeths, NoRelMeths, RelMeths
 from operations import AssocOp
 
@@ -826,3 +827,263 @@ def diff(f, x, times = 1, evaluate=True):
         return f
     else:
         return Derivative(f, x, evaluate=evaluate)
+
+class FunctionClass(MetaBasicMeths):
+    """
+    Base class for function classes. FunctionClass is a subclass of type.
+
+    Use Function('<function name>' [ , signature ]) to create
+    undefined function classes.
+    """
+
+    _new = type.__new__
+
+    def __new__(cls, arg1, arg2, arg3=None, **options):
+        assert not options,`options`
+        if isinstance(arg1, type):
+            ftype, name, signature = arg1, arg2, arg3
+            assert ftype.__name__.endswith('Function'),`ftype`
+            attrdict = ftype.__dict__.copy()
+            attrdict['undefined_Function'] = True
+            if signature is not None:
+                attrdict['signature'] = signature
+            bases = (ftype,)
+            return type.__new__(cls, name, bases, attrdict)
+        else:
+            name, bases, attrdict = arg1, arg2, arg3
+            return type.__new__(cls, name, bases, attrdict)
+
+    def torepr(cls):
+        return cls.__name__
+
+class Function2(Basic, RelMeths):
+    """
+    Base class for applied functions.
+    Constructor of undefined classes.
+
+    We are moving to this more simple scheme. When all functions are moved, we
+    simply delete Function and rename Function2 -> Function
+    """
+
+    __metaclass__ = FunctionClass
+
+    #signature = FunctionSignature(None, None)
+    precedence = Basic.Apply_precedence
+
+    def __new__(cls, *args, **options):
+        args = map(Basic.sympify, args)
+        #cls.signature.validate(args)
+        r = cls._eval_apply(*args, **options)
+        if isinstance(r, Basic): 
+            if isinstance(r, Function2):
+                r.args = args
+            return r
+        elif r is None:
+            pass
+        elif not isinstance(r, tuple):
+            args = (r,)
+        return Basic.__new__(cls, *args, **options)
+
+    @property
+    def is_comparable(self):
+        return True
+        
+    @classmethod
+    def canonize(cls, args, **options):
+        return
+
+    #@cache_it
+    def x__new__(cls, *args, **kwargs):
+        args = map(Basic.sympify, args)
+        func = args[0]
+        func_args = args[1:]
+
+        # f(g+O(h)) -> f(g) + O(f'(g)*h) if f'!=0, otherwise f(g) + O(f''(g)*h**2), etc.
+        i = -1
+        for a in func_args:
+            i += 1
+            a0,o0 = a.as_expr_orders()
+            if not isinstance(o0, Basic.Zero):
+                new_args = func_args[:i] + [a0,] + func_args[i+1:]
+                f = func
+                df = f
+                dfa = Basic.Zero()
+                n = 0
+                while isinstance(dfa, Basic.Zero) and not (isinstance(df, Lambda) and isinstance(df.body, Basic.Zero)):
+                    df = df.fdiff(i+1)
+                    dfa = df(*new_args)
+                    n += 1
+                return f(*new_args) + dfa * o0**n
+
+        obj = func._eval_apply(*func_args)
+        if obj is None:
+            assert isinstance(func, Function),`args`
+            cls = getattr(Basic,'Apply'+func.__class__.__name__, cls)
+            obj = Basic.__new__(cls, *args, **kwargs)
+        return obj
+
+    @property
+    def func(self):
+        return self.__class__
+
+    @property
+    def args(self):
+        return self._args[1:]
+
+    #def tostr(self, level=0):
+    #    p = self.precedence
+    #    r = '%s(%s)' % (self.func.tostr(p), ', '.join([a.tostr() for a in self.args]))
+    #    if p <= level:
+    #        return '(%s)' % (r)
+    #    return r
+
+    def _eval_subs(self, old, new):
+        if self == old:
+            return new
+        elif isinstance(old, Apply) and old.args == self.args:
+            try:
+                newfunc = Lambda(new, *old.args)
+                func = self.func.subs(old.func, newfunc)
+
+                if func != self.func:
+                    return func(*self.args)
+            except TypeError:
+                pass
+        elif isinstance(old, Function) and isinstance(new, Function):
+            if old == self.func and old.nofargs == new.nofargs:
+                return new(*self.args)
+        obj = self.func._eval_apply_subs(*(self.args + (old,) + (new,)))
+        if obj is not None:
+            return obj
+        return Basic._seq_subs(self, old, new)
+
+    def _eval_expand_basic(self, *args):
+        return self
+
+    def _eval_evalf(self):
+        obj = self.func._eval_apply_evalf(*self.args)
+        if obj is None:
+            return self
+        return obj
+
+    def _eval_is_comparable(self):
+        if isinstance(self.func, DefinedFunction):
+            r = True
+            for s in self.args:
+                c = s.is_comparable
+                if c is None: return
+                if not c: r = False
+            return r
+        return
+
+    def _eval_derivative(self, s):
+        # Apply(f(x), x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
+        i = 0
+        l = []
+        r = Basic.Zero()
+        for a in self.args:
+            i += 1
+            da = a.diff(s)
+            if isinstance(da, Basic.Zero):
+                continue
+            df = self.func.fdiff(i)
+            l.append(Apply(df,*self.args) * da)
+        return Basic.Add(*l)
+
+    def _eval_power(b, e):
+        if len(b.args)==1:
+            return b.func._eval_apply_power(b.args[0], e)
+        return
+
+    def _eval_is_commutative(self):
+        r = True
+        for a in self._args:
+            c = a.is_commutative
+            if c is None: return None
+            if not c: r = False
+        return r
+
+    def _calc_positive(self):
+        return self.func._calc_apply_positive(*self.args)
+
+    def _calc_real(self):
+        return self.func._calc_apply_real(*self.args)
+
+    def _calc_unbounded(self):
+        return self.func._calc_apply_unbounded(*self.args)
+
+    def _eval_eq_nonzero(self, other):
+        if isinstance(other.func, self.func.__class__) and len(self.args)==len(other.args):
+            for a1,a2 in zip(self.args,other.args):
+                if not (a1==a2):
+                    return False
+            return True
+
+    def as_base_exp(self):
+        return self, Basic.One()
+
+    def count_ops(self, symbolic=True):
+        return Basic.Add(*[t.count_ops(symbolic) for t in self])
+
+    def _eval_oseries(self, order):
+        assert self.func.nofargs==1,`self.func`
+        arg = self.args[0]
+        x = order.symbols[0]
+        if not Basic.Order(1,x).contains(arg):
+            return self.func(arg)
+        arg0 = arg.limit(x, 0)
+        if not isinstance(arg0, Basic.Zero):
+            e = self.func(arg)
+            e1 = e.expand()
+            if e==e1:
+                print '%s(%s).oseries(%s) is unevaluated' % (self.func,arg,order)
+                return
+            return e1.oseries(order)
+        return self._compute_oseries(arg, order, self.func.taylor_term, self.func)
+
+    def _eval_is_polynomial(self, syms):
+        for arg in self.args:
+            if arg.has(*syms):
+                return False
+        return True
+
+    def _eval_expand_complex(self, *args):
+        func = self.func(*[ a._eval_expand_complex(*args) for a in self.args ])
+        return Basic.Re()(func) + S.ImaginaryUnit * Basic.Im()(func)
+
+    def _eval_rewrite(self, pattern, rule, **hints):
+        if hints.get('deep', False):
+            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self.args ]
+        else:
+            args = self.args[:]
+
+        if pattern is None or isinstance(self.func, pattern):
+            if hasattr(self, rule):
+                rewritten = getattr(self, rule)(*args)
+
+                if rewritten is not None:
+                    return rewritten
+
+        return self.func(*args, **self._assumptions)
+
+    def fdiff(self, argindex=1):
+        if self.nofargs is not None:
+            if isinstance(self.nofargs, tuple):
+                nofargs = self.nofargs[-1]
+            else:
+                nofargs = self.nofargs
+            if not (1<=argindex<=nofargs):
+                raise TypeError("argument index %r is out of range [1,%s]" % (i,nofargs))
+        return FDerivative(argindex)(self)
+
+class SingleValuedFunction(ArithMeths, Function2):
+    """
+    Single-valued functions.
+    """
+    #signature = FunctionSignature(None, (Basic,))
+
+    def series(self, x, n):
+        s = Basic.Rational(0)
+        for i in range(n+1):
+            s += diff(self, x, i).subs(x, 0) * x**i / Basic.Factorial()(i)
+        return s

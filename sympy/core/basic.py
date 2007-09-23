@@ -3,7 +3,7 @@
 type_class = type
 
 import decimal
-from basic_methods import BasicMeths, cache_it, cache_it_immutable
+from basic_methods import BasicMeths, cache_it, cache_it_immutable, BasicType
 
 class MemoizerArg:
     """ See Memoizer.
@@ -190,6 +190,8 @@ class Basic(BasicMeths):
            True
 
         """
+        if isinstance(a, BasicType):
+            return a
         if isinstance(a, Basic):
             return a
         elif isinstance(a, bool):
@@ -334,6 +336,10 @@ class Basic(BasicMeths):
         p = Basic.sympify(patterns[0])
         if isinstance(p, Basic.Symbol) and not isinstance(p, Basic.Wild): # speeds up
             return p in self.atoms(p.__class__)
+        if isinstance(p, BasicType):
+            #XXX
+            #hack, needs to check, if "self" contains "p".
+            return False
         if p.matches(self) is not None:
             return True
         for e in self:
@@ -390,6 +396,7 @@ class Basic(BasicMeths):
             r = r.subs(old,new)
         return r
 
+    #@classmethod
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         """
         Helper method for match() - switches the pattern and expr.

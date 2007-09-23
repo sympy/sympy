@@ -158,8 +158,17 @@ class Order(Basic, ArithMeths, RelMeths):
             assume_dict = {}
             if not s.is_infinitesimal:
                 assume_dict['infinitesimal'] = True
+            #XXX This causes problems, that it changes the assumption in the
+            #   symbol, outside the scope of Order and breaks code. Don't know
+            #   why
+            #   But sometimes it's necessary for simplifications...
+            #   well, how to solve that? I don't know...
+            #   ok - so the problem is in caching - in core/function.py:63
+            # see the issue 369
             if s.is_positive is None:
                 assume_dict['positive'] = True
+
+            #
             if assume_dict:
                 s.assume(**assume_dict)
 

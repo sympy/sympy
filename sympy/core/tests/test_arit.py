@@ -1,9 +1,14 @@
-from sympy import Symbol, sin, cos, exp, O, sqrt, Rational
+from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, re
+
+def test_bug1():
+    x=Symbol("x")
+    assert re(x) != x
+    x.series(x,1)
+    assert re(x) != x
 
 a = Symbol("a")
 b = Symbol("b", positive=True)
 c = Symbol("c")
-
 
 def test_Symbol():
     assert str(a)=="a"
