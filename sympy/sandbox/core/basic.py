@@ -67,9 +67,18 @@ class Basic(object):
             return Basic.Float(a)
         raise ValueError("%s is NOT a valid SymPy expression" % `a`)
 
+    repr_level = 1
+
     def __repr__(self):
         if isinstance(self, type):
             return self.__class__.torepr(self)
+        if Basic.repr_level == 0:
+            return self.torepr()
+        if Basic.repr_level == 1:
+            return self.tostr()
+        raise ValueError, "bad value for Basic.repr_level"
+
+    def tostr(self):
         return self.torepr()
 
     def compare(self, other):

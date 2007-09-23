@@ -30,6 +30,9 @@ class Symbol(ArithMeths, RelationalMeths, Atom, str):
             return '%s(%r, dummy=True)' % (self.__class__.__name__, str(self))
         return '%s(%r)' % (self.__class__.__name__, str(self))
 
+    def tostr(self):
+        return str(self)
+
     def compare(self, other):
         if self is other: return 0
         c = cmp(self.__class__, other.__class__)

@@ -127,6 +127,26 @@ class Mul(ImmutableMeths, MutableMul):
             return list(self.items()[0])
         return [self]
 
+    def tostr(self):
+        seq = []
+        items = sorted(self.items())
+        for base, exp in items:
+            # XXX: needed because ints are present in Mul
+            base = Basic.sympify(base)
+            exp = Basic.sympify(exp)
+
+            basestr = base.tostr()
+            if not (base.is_Symbol or (base.is_Integer and base > 0)):
+                basestr = "(" + basestr + ")"
+            if exp.is_Integer and exp == 1:
+                seq.append(basestr)
+            else:
+                expstr = exp.tostr()
+                if not (exp.is_Integer or exp.is_Symbol):
+                    expstr = "(" + expstr + ")"
+                seq.append(basestr + "**" + expstr)
+        return "*".join(seq)
+
 
 class Pow(Basic):
 
@@ -142,3 +162,8 @@ class Pow(Basic):
         m.update(a,b)
         return m.canonical()
         return Mul({a:b})
+
+
+def sqrt(x):
+    return Pow(x, Basic.Rational(1,2))
+

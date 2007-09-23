@@ -137,3 +137,27 @@ class Add(ImmutableMeths, MutableAdd):
         if op == "**":
             return [self, Basic.Number(1)]
         return [self]
+
+    def tostr(self):
+        seq = []
+        items = sorted(self.items())
+        for term, coef in items:
+            # XXX: needed because ints are present in Add
+            term = Basic.sympify(term)
+            coef = Basic.sympify(coef)
+
+            if coef > 0:
+                if seq: seq.append(" + ")
+            else:
+                if seq: seq.append(" - ")
+                else:   seq.append("-")
+                coef = -coef
+            if term == 1:
+                seq.append(coef.tostr())
+            elif coef.is_Integer and coef == 1:
+                seq.append(term.tostr())
+            elif coef.is_Fraction:
+                seq.append("(" + coef.tostr() + ")" + "*" + term.tostr())
+            else:
+                seq.append(coef.tostr() + "*" + term.tostr())
+        return "".join(seq)

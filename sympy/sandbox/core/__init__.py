@@ -10,7 +10,7 @@ from number import Number, Real, Rational, Integer, Fraction, Float
 #from power import Pow
 #from mul import Mul
 from add import Add, MutableAdd
-from mul import Mul, MutableMul, Pow
+from mul import Mul, MutableMul, Pow, sqrt
 from relational import Equality, Inequality, Unequality, StrictInequality
 #from new_function import NewFunction, sin_
 #from function import Lambda, Function, Apply, FApply, Composition, FPow, WildFunction, Derivative, DefinedFunction, diff

@@ -21,10 +21,10 @@ Basic.is_commutative = None
 Basic.is_prime = None
 
 class Number(NumberMeths, Atom):
-    """A Number is an atomic object with a definite numerical value.
+    """A Number is an atomic object with a definite numerical value
+    that gives a Number when added or multiplied to another Number.
     Examples include rational numbers (-25, 2/3, ...) via the Rational
-    class, floating-point numbers via the Real class, the imaginary
-    unit I, and some special constants like pi."""
+    class and floating-point numbers via the Float class."""
 
     is_negative = None
     is_positive = None
@@ -149,6 +149,11 @@ class Rational(Real):
         if self.q==1:
             return '%s(%r)' % (self.__class__.__name__, self.p)
         return '%s(%r, %r)' % (self.__class__.__name__, self.p, self.q)
+
+    def tostr(self):
+        if self.q==1:
+            return str(self.p)
+        return '%s/%s' % (self.p, self.q)
 
     @property
     def is_positive(self):

@@ -1,11 +1,8 @@
-from sympy.sandbox.core import Symbol, Rational
+from sympy.sandbox.core import Symbol, Rational, sqrt
 
 a = Symbol("a")
 b = Symbol("b")
 c = Symbol("c")
-
-def sqrt(x):
-    return x ** Rational(1,2)
 
 def test_Symbol():
     assert str(a)=="a"
