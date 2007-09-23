@@ -36,6 +36,14 @@ class Integer(Rational, pyint):
         if c: return c
         return pyint.__cmp__(self, pyint(other))
 
+    # XXX: Integer(3) == Symbol('x') fails without this
+    def __eq__(self, other):
+        other = Basic.sympify(other)
+        if isinstance(other, Rational):
+            if Rational.__eq__(self, other):
+                return True
+        return Basic.Equality(self, other)
+
     # converter methods
 
     __int__ = pyint.__int__

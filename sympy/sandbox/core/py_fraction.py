@@ -41,6 +41,14 @@ class Fraction(Rational, tuple):
     @property
     def q(self): return self[1]
 
+    # XXX: Rational(3,2) == Symbol('x') fails without this
+    def __eq__(self, other):
+        other = Basic.sympify(other)
+        if isinstance(other, Rational):
+            if Rational.__eq__(self, other):
+                return True
+        return Basic.Equality(self, other)
+
     def __pos__(self):
         return self
 

@@ -117,6 +117,7 @@ class SingleValuedFunction(ArithMeths, Function):
     signature = FunctionSignature(None, (Basic,))
 
 
+'''
 class sin(SingleValuedFunction):
 
     signature = FunctionSignature((Basic,), (Basic,))
@@ -125,3 +126,4 @@ class sin(SingleValuedFunction):
     def canonize(cls, (x,), **options):
         if x==0: return x
         return
+'''

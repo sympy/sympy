@@ -5,23 +5,28 @@ from methods import ArithMeths, RelationalMeths
 
 class NumberSymbol(ArithMeths, RelationalMeths, Atom):
 
-    @memoizer_immutable_args
+    #@memoizer_immutable_args
     def __new__(cls):
         return object.__new__(cls)
 
 class ImaginaryUnit(ArithMeths, RelationalMeths, Atom):
 
-    @memoizer_immutable_args
+    #@memoizer_immutable_args
     def __new__(cls):
         return object.__new__(cls)
+
+I = ImaginaryUnit()
+
 
 class Exp1(NumberSymbol):
 
     pass
 
 class Pi(NumberSymbol):
+    def tostr(self):
+        return "pi"
 
-    pass
+pi = Pi()
 
 class GoldenRatio(NumberSymbol):
 

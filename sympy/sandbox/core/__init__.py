@@ -14,8 +14,9 @@ from mul import Mul, MutableMul, Pow, sqrt
 from relational import Equality, Inequality, Unequality, StrictInequality
 #from new_function import NewFunction, sin_
 #from function import Lambda, Function, Apply, FApply, Composition, FPow, WildFunction, Derivative, DefinedFunction, diff
-from function import Function, sin
+from function import Function
 from interval import Interval
+from singleton import pi, I
 
 # set repr output to pretty output:
 #Basic.set_repr_level(1)
