@@ -506,7 +506,7 @@ class Lambda(Function):
 
     def with_dummy_arguments(self, args = None):
         if args is None:
-            args = tuple([a.as_dummy() for a in self.args[:]])
+            args = tuple([a.as_dummy() for a in self])
         if len(args) != len(self):
             raise TypeError("different number of arguments in Lambda functions: %s, %s" % (len(args), len(self)))
         expr = self.body
