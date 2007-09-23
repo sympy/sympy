@@ -30,7 +30,7 @@ class Exp(DefinedFunction):
             elif isinstance(arg, Basic.NegativeInfinity):
                 return S.Zero
         elif isinstance(arg, Basic.ApplyLog):
-            return arg.args[0]
+            return arg[0]
         elif isinstance(arg, Basic.Mul):
             coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
 
@@ -63,7 +63,7 @@ class Exp(DefinedFunction):
                 for term in terms:
                     if isinstance(term, Basic.ApplyLog):
                         if log_term is None:
-                            log_term = term.args[0]
+                            log_term = term[0]
                         else:
                             log_term = None
                             break
@@ -100,19 +100,19 @@ class Exp(DefinedFunction):
 class ApplyExp(Apply):
 
     def _eval_expand_complex(self, *args):
-        re, im = self.args[0].as_real_imag()
+        re, im = self[0].as_real_imag()
         exp, cos, sin = S.Exp(re), S.Cos(im), S.Sin(im)
         return exp * cos + S.ImaginaryUnit * exp * sin
 
     def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
+        return self.func(self[0].conjugate())
 
     def as_base_exp(self):
-        coeff, terms = self.args[0].as_coeff_terms()
+        coeff, terms = self[0].as_coeff_terms()
         return self.func(Basic.Mul(*terms)), coeff
 
     def as_coeff_terms(self, x=None):
-        arg = self.args[0]
+        arg = self[0]
         if x is not None:
             c,f = arg.as_coeff_factors(x)
             return self.func(c), [self.func(a) for a in f]
@@ -122,7 +122,7 @@ class ApplyExp(Apply):
 
     def _eval_subs(self, old, new):
         if self==old: return new
-        arg = self.args[0]
+        arg = self[0]
         o = old
         if isinstance(old, Basic.Pow): # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
             old = S.Exp(old.exp * S.Log(old.base))
@@ -133,7 +133,7 @@ class ApplyExp(Apply):
                 return new ** (e/eo) # exp(2/3*x*3).subs(exp(3*x),y) -> y**(2/3)
             if isinstance(arg, Basic.Add): # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
                 # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
-                oarg = old.args[0]
+                oarg = old[0]
                 new_l = []
                 old_al = []
                 coeff2,terms2 = oarg.as_coeff_terms()
@@ -152,12 +152,12 @@ class ApplyExp(Apply):
         return Apply._eval_subs(self, old, new)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        return self[0].is_real
     def _eval_is_positive(self):
-        if self.args[0].is_real:
+        if self[0].is_real:
             return True
     def _eval_is_bounded(self):
-        arg = self.args[0]
+        arg = self[0]
         if arg.is_unbounded:
             if arg.is_negative: return True
             if arg.is_positive: return False
@@ -166,13 +166,13 @@ class ApplyExp(Apply):
         if arg.is_real:
             return False
     def _eval_is_zero(self):
-        return isinstance(self.args[0], Basic.NegativeInfinity)
+        return isinstance(self[0], Basic.NegativeInfinity)
 
     def _eval_power(b, e):
-        return b.func(b.args[0] * e)
+        return b.func(b[0] * e)
 
     def _eval_oseries(self, order):
-        arg = self.args[0]
+        arg = self[0]
         x = order.symbols[0]
         if not Basic.Order(1,x).contains(arg): # singularity
             arg0 = arg.as_leading_term(x)
@@ -185,16 +185,16 @@ class ApplyExp(Apply):
         return self._compute_oseries(arg-arg0, o, S.Exp.taylor_term, S.Exp) * S.Exp(arg0)
 
     def _eval_as_leading_term(self, x):
-        arg = self.args[0]
+        arg = self[0]
         if isinstance(arg, Basic.Add):
             return Basic.Mul(*[S.Exp(f).as_leading_term(x) for f in arg])
-        arg = self.args[0].as_leading_term(x)
+        arg = self[0].as_leading_term(x)
         if Basic.Order(1,x).contains(arg):
             return S.One
         return S.Exp(arg)
 
     def _eval_expand_basic(self, *args):
-        arg = self.args[0].expand()
+        arg = self[0].expand()
         if isinstance(arg, Basic.Add):
             expr = 1
             for x in arg:
@@ -241,8 +241,8 @@ class Log(DefinedFunction):
                 return S.Pi * S.ImaginaryUnit + self(-arg)
         elif isinstance(arg, Basic.Exp1):
             return S.One
-        elif isinstance(arg, ApplyExp) and arg.args[0].is_real:
-            return arg.args[0]
+        elif isinstance(arg, ApplyExp) and arg[0].is_real:
+            return arg[0]
         elif isinstance(arg, Basic.Pow):
             if isinstance(arg.exp, Basic.Number) or \
                isinstance(arg.exp, Basic.NumberSymbol):
@@ -292,21 +292,21 @@ class Log(DefinedFunction):
 class ApplyLog(Apply):
 
     def _eval_expand_complex(self, *args):
-        re, im = self.args[0].as_real_imag()
+        re, im = self[0].as_real_imag()
         return S.Log(S.Sqrt(re) + S.Sqrt(im)) + \
-               S.ImaginaryUnit * S.Arg(self.args[0])
+               S.ImaginaryUnit * S.Arg(self[0])
 
     def _eval_is_real(self):
-        return self.args[0].is_positive
+        return self[0].is_positive
 
     def _eval_is_bounded(self):
-        arg = self.args[0]
+        arg = self[0]
         if arg.is_infinitesimal:
             return False
         return arg.is_bounded
 
     def _eval_is_positive(self):
-        arg = self.args[0]
+        arg = self[0]
         if arg.is_positive:
             if arg.is_unbounded: return True
             if arg.is_infinitesimal: return False
@@ -316,10 +316,10 @@ class ApplyLog(Apply):
     def _eval_is_zero(self):
         # XXX This is not quite useless. Try evaluating log(0.5).is_negative
         #     without it. There's probably a nicer way though.
-        return isinstance(self.args[0], Basic.One)
+        return isinstance(self[0], Basic.One)
 
     def as_numer_denom(self):
-        n, d = self.args[0].as_numer_denom()
+        n, d = self[0].as_numer_denom()
         if isinstance(d, Basic.One):
             return self.func(n), d
         return (self.func(n) - self.func(d)).as_numer_denom()
@@ -327,7 +327,7 @@ class ApplyLog(Apply):
     # similar code must be added to other functions with have singularites
     # in their domains eg. cot(), tan() ...
     def _eval_oseries(self, order):
-        arg = self.args[0]
+        arg = self[0]
         x = order.symbols[0]
         ln = S.Log
         use_lt = not Basic.Order(1,x).contains(arg)
@@ -344,13 +344,13 @@ class ApplyLog(Apply):
         return self._compute_oseries(z, order, ln.taylor_term, lambda z: ln(1+z)) + ln(arg0)
 
     def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
+        arg = self[0].as_leading_term(x)
         if isinstance(arg, Basic.One):
-            return (self.args[0] - 1).as_leading_term(x)
+            return (self[0] - 1).as_leading_term(x)
         return self.func(arg)
 
     def _eval_expand_basic(self, *args):
-        arg = self.args[0]
+        arg = self[0]
         if isinstance(arg, Basic.Mul) and arg.is_real:
             expr = 0
             for x in arg:
@@ -371,7 +371,7 @@ class ApplyMrvLog(ApplyLog):
     def subs(self, old, new):
         old = Basic.sympify(old)
         if old==self.func:
-            arg = self.args[0]
+            arg = self[0]
             new = Basic.sympify(new)
             return new(arg.subs(old, new))
         return self
