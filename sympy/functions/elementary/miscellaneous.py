@@ -68,10 +68,10 @@ class Sqrt(DefinedFunction):
 
 class ApplySqrt(Apply):
     def _eval_is_zero(self):
-        return isinstance(self.args, Basic.Zero)
+        return isinstance(self[0], Basic.Zero)
 
     def as_base_exp(self):
-        return self.args[0], S.Half
+        return self[0], S.Half
 
 Basic.singleton['sqrt'] = Sqrt
 

@@ -66,12 +66,12 @@ class Sinh(DefinedFunction):
 class ApplySinh(Apply):
 
     def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
+        return self.func(self[0].conjugate())
 
     def _eval_expand_complex(self, *args):
-        if self.args[0].is_real:
+        if self[0].is_real:
             return self
-        re, im = self.args[0].as_real_imag()
+        re, im = self[0].as_real_imag()
         return S.Sinh(re)*S.Cos(im) + S.Cosh(re)*S.Sin(im)*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
@@ -89,7 +89,7 @@ class ApplySinh(Apply):
         return 2*coth_half/(coth_half**2 - 1)
 
     def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
+        arg = self[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return S.One
@@ -97,9 +97,9 @@ class ApplySinh(Apply):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        return self[0].is_real
     def _eval_is_bounded(self):
-        arg = self.args[0]
+        arg = self[0]
         if arg.is_imaginary:
             return True
 
@@ -162,12 +162,12 @@ class Cosh(DefinedFunction):
 
 class ApplyCosh(Apply):
     def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
+        return self.func(self[0].conjugate())
 
     def _eval_expand_complex(self, *args):
-        if self.args[0].is_real:
+        if self[0].is_real:
             return self
-        re, im = self.args[0].as_real_imag()
+        re, im = self[0].as_real_imag()
         return S.Cosh(re)*S.Cos(im) + S.Sinh(re)*S.Sin(im)*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
@@ -185,7 +185,7 @@ class ApplyCosh(Apply):
         return (coth_half+1)/(coth_half-1)
 
     def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
+        arg = self[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return S.One
@@ -193,9 +193,9 @@ class ApplyCosh(Apply):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        return self[0].is_real
     def _eval_is_bounded(self):
-        arg = self.args[0]
+        arg = self[0]
         if arg.is_imaginary:
             return True
 
@@ -260,12 +260,12 @@ class Tanh(DefinedFunction):
 class ApplyTanh(Apply):
 
     def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
+        return self.func(self[0].conjugate())
 
     def _eval_expand_complex(self, *args):
-        if self.args[0].is_real:
+        if self[0].is_real:
             return self
-        re, im = self.args[0].as_real_imag()
+        re, im = self[0].as_real_imag()
         denom = S.Sinh(re)**2 + S.Cos(im)**2
         return (S.Sinh(re)*S.Cosh(re) + \
             S.ImaginaryUnit*S.Sin(im)*S.Cos(im))/denom
@@ -284,7 +284,7 @@ class ApplyTanh(Apply):
         return 1/S.Coth(arg)
 
     def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
+        arg = self[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return S.One
@@ -292,9 +292,9 @@ class ApplyTanh(Apply):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        return self[0].is_real
     def _eval_is_bounded(self):
-        arg = self.args[0]
+        arg = self[0]
         if arg.is_real:
             return True
 
@@ -359,12 +359,12 @@ class Coth(DefinedFunction):
 class ApplyCoth(Apply):
 
     def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
+        return self.func(self[0].conjugate())
 
     def _eval_expand_complex(self, *args):
-        if self.args[0].is_real:
+        if self[0].is_real:
             return self
-        re, im = self.args[0].as_real_imag()
+        re, im = self[0].as_real_imag()
         denom = S.Sinh(re)**2 + S.Sin(im)**2
         return (S.Sinh(re)*S.Cosh(re) - \
             S.ImaginaryUnit*S.Sin(im)*S.Cos(im))/denom
@@ -383,7 +383,7 @@ class ApplyCoth(Apply):
         return 1/S.Tanh(arg)
 
     def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
+        arg = self[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return S.One
@@ -466,7 +466,7 @@ class ASinh(DefinedFunction):
 class ApplyASinh(Apply):
 
     def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
+        arg = self[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return arg
@@ -544,7 +544,7 @@ class ACosh(DefinedFunction):
 class ApplyACosh(Apply):
 
     def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
+        arg = self[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return arg
@@ -604,7 +604,7 @@ class ATanh(DefinedFunction):
 class ApplyATanh(Apply):
 
     def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
+        arg = self[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return arg
@@ -670,7 +670,7 @@ class ACoth(DefinedFunction):
 class ApplyACoth(Apply):
 
     def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
+        arg = self[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return arg
