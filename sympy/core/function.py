@@ -42,9 +42,9 @@ object:
   f = Symbol('f')
   fx = f(x)
   fx.func -> Function('f')
-  fx.args -> (Symbol('x'),)
+  fx[:] -> (Symbol('x'),)
 As seen above, function values are Apply instances and
-have attributes .func and .args.
+have attributes .func and [:].
 """
 
 from basic import Basic, Singleton, Atom, cache_it, S
@@ -101,6 +101,9 @@ class Apply(Basic, ArithMeths, RelMeths):
 
     def __getitem__(self, iter):
         return self._args[1:][iter]
+
+    def __len__(self):
+        return len(self[:])
 
     def tostr(self, level=0):
         p = self.precedence
@@ -458,7 +461,13 @@ class Lambda(Function):
 
     @property
     def args(self):
-        return self._args[1:]
+        return self[:]
+
+    def __getitem__(self, iter):
+        return self._args[1:][iter]
+
+    def __len__(self):
+        return len(self[:])
 
     @property
     def body(self):
@@ -466,7 +475,7 @@ class Lambda(Function):
 
     def tostr(self, level=0):
         precedence = self.precedence
-        r = 'lambda %s: %s' % (', '.join([a.tostr() for a in self.args]),
+        r = 'lambda %s: %s' % (', '.join([a.tostr() for a in self]),
                                self.body.tostr(precedence))
         if precedence <= level:
             return '(%s)' % r
@@ -477,48 +486,47 @@ class Lambda(Function):
 
     def as_coeff_terms(self, x=None):
         c,t = self.body.as_coeff_terms(x)
-        return c, [Lambda(Basic.Mul(*t),*self.args)]
+        return c, [Lambda(Basic.Mul(*t),*self[:])]
 
     def _eval_power(b, e):
         """
         (lambda x:f(x))**e -> (lambda x:f(x)**e)
         """
-        return Lambda(b.body**e, *b.args)
+        return Lambda(b.body**e, *b[:])
 
     def _eval_fpower(b, e):
         """
         FPow(lambda x:f(x), 2) -> lambda x:f(f(x)))
         """
-        if isinstance(e, Basic.Integer) and e.is_positive and e.p < 10 and len(b.args)==1:
+        if isinstance(e, Basic.Integer) and e.is_positive and e.p < 10 and len(b)==1:
             r = b.body
             for i in xrange(e.p-1):
                 r = b(r)
-            return Lambda(r, *b.args)
+            return Lambda(r, *b[:])
 
     def with_dummy_arguments(self, args = None):
         if args is None:
-            args = tuple([a.as_dummy() for a in self.args])
-        if len(args) != len(self.args):
-            raise TypeError("different number of arguments in Lambda functions: %s, %s"\
-                            (len(args), len(self.args)))
+            args = tuple([a.as_dummy() for a in self.args[:]])
+        if len(args) != len(self):
+            raise TypeError("different number of arguments in Lambda functions: %s, %s" % (len(args), len(self)))
         expr = self.body
-        for a,na in zip(self.args, args):
+        for a,na in zip(self, args):
             expr = expr.subs(a, na)
         return expr, args
 
     def _eval_expand_basic(self, *args):
-        return Lambda(self.body._eval_expand_basic(*args), *self.args)
+        return Lambda(self.body._eval_expand_basic(*args), *self[:])
 
     def diff(self, *symbols):
-        return Lambda(self.body.diff(*symbols), *self.args)
+        return Lambda(self.body.diff(*symbols), *self[:])
 
     def fdiff(self, argindex=1):
-        if not (1<=argindex<=len(self.args)):
+        if not (1<=argindex<=len(self)):
             raise TypeError("%s.fderivative() argindex %r not in the range [1,%s]"\
-                            % (self.__class__, argindex, len(self.args)))
-        s = self.args[argindex-1]
+                            % (self.__class__, argindex, len(self)))
+        s = self[argindex-1]
         expr = self.body.diff(s)
-        return Lambda(expr, *self.args)
+        return Lambda(expr, *self[:])
 
     _eval_subs = Basic._seq_subs
 
@@ -528,7 +536,7 @@ class Lambda(Function):
             raise TypeError('%s takes exactly %s arguments (got %s)'\
                             % (self, n, len(args)))
         expr = self.body
-        for da,a in zip(self.args, args):
+        for da,a in zip(self, args):
             expr = expr.subs(da,a)
         return expr
 
@@ -630,7 +638,7 @@ class Composition(AssocOp, Function):
             elif isinstance(o1, Basic.Number) and isinstance(o, Basic.Number):
                 nc_part.append(o1 * o)
             elif isinstance(o1, Basic.Lambda) and isinstance(o, Basic.Lambda):
-                nc_part.append(Lambda(o1(o.body),*o.args))
+                nc_part.append(Lambda(o1(o.body),*o[:]))
             else:
                 nc_part.append(o1)
                 nc_part.append(o)
@@ -686,7 +694,7 @@ class FDerivative(Function):
                 unevaluated_indices = []
                 for i in self.indices:
                     if isinstance(i, Basic.Integer):
-                        a = func.args[int(i)-1]
+                        a = func[int(i)-1]
                         obj = expr.diff(a)
                         if isinstance(obj, Derivative):
                             unevaluated_indices.append(i)
@@ -695,8 +703,8 @@ class FDerivative(Function):
                 if len(self.indices)==len(unevaluated_indices):
                     return
                 if not unevaluated_indices:
-                    return Lambda(expr, *func.args)
-                return FApply(FDerivative(*unevaluated_indices), Lambda(expr, *func.args))
+                    return Lambda(expr, *func[:])
+                return FApply(FDerivative(*unevaluated_indices), Lambda(expr, *func))
             if isinstance(func, DefinedFunction):
                 for i in range(len(self.indices)):
                     di = self.indices[i]
@@ -880,7 +888,7 @@ class Function2(Basic, RelMeths):
         r = cls._eval_apply(*args, **options)
         if isinstance(r, Basic): 
             if isinstance(r, Function2):
-                r.args = args
+                r[:] = args
             return r
         elif r is None:
             pass
@@ -933,18 +941,18 @@ class Function2(Basic, RelMeths):
     def _eval_subs(self, old, new):
         if self == old:
             return new
-        elif isinstance(old, Apply) and old.args == self.args:
+        elif isinstance(old, Apply) and old[:] == self[:]:
             try:
-                newfunc = Lambda(new, *old.args)
+                newfunc = Lambda(new, *old[:])
                 func = self.func.subs(old.func, newfunc)
 
                 if func != self.func:
-                    return func(*self.args)
+                    return func(*self[:])
             except TypeError:
                 pass
         elif isinstance(old, Function) and isinstance(new, Function):
             if old == self.func and old.nofargs == new.nofargs:
-                return new(*self.args)
+                return new(*self[:])
         obj = self.func._eval_apply_subs(*(self[:] + (old,) + (new,)))
         if obj is not None:
             return obj
@@ -954,7 +962,7 @@ class Function2(Basic, RelMeths):
         return self
 
     def _eval_evalf(self):
-        obj = self.func._eval_apply_evalf(*self.args)
+        obj = self.func._eval_apply_evalf(*self[:])
         if obj is None:
             return self
         return obj
@@ -962,7 +970,7 @@ class Function2(Basic, RelMeths):
     def _eval_is_comparable(self):
         if isinstance(self.func, DefinedFunction):
             r = True
-            for s in self.args:
+            for s in self:
                 c = s.is_comparable
                 if c is None: return
                 if not c: r = False
@@ -974,18 +982,18 @@ class Function2(Basic, RelMeths):
         i = 0
         l = []
         r = Basic.Zero()
-        for a in self.args:
+        for a in self:
             i += 1
             da = a.diff(s)
             if isinstance(da, Basic.Zero):
                 continue
             df = self.func.fdiff(i)
-            l.append(Apply(df,*self.args) * da)
+            l.append(Apply(df,*self[:]) * da)
         return Basic.Add(*l)
 
     def _eval_power(b, e):
-        if len(b.args)==1:
-            return b.func._eval_apply_power(b.args[0], e)
+        if len(b[:])==1:
+            return b.func._eval_apply_power(b[0], e)
         return
 
     def _eval_is_commutative(self):
@@ -997,17 +1005,17 @@ class Function2(Basic, RelMeths):
         return r
 
     def _calc_positive(self):
-        return self.func._calc_apply_positive(*self.args)
+        return self.func._calc_apply_positive(*self[:])
 
     def _calc_real(self):
-        return self.func._calc_apply_real(*self.args)
+        return self.func._calc_apply_real(*self[:])
 
     def _calc_unbounded(self):
-        return self.func._calc_apply_unbounded(*self.args)
+        return self.func._calc_apply_unbounded(*self[:])
 
     def _eval_eq_nonzero(self, other):
-        if isinstance(other.func, self.func.__class__) and len(self.args)==len(other.args):
-            for a1,a2 in zip(self.args,other.args):
+        if isinstance(other.func, self.func.__class__) and len(self)==len(other):
+            for a1,a2 in zip(self,other):
                 if not (a1==a2):
                     return False
             return True
@@ -1020,7 +1028,7 @@ class Function2(Basic, RelMeths):
 
     def _eval_oseries(self, order):
         assert self.func.nofargs==1,`self.func`
-        arg = self.args[0]
+        arg = self[0]
         x = order.symbols[0]
         if not Basic.Order(1,x).contains(arg):
             return self.func(arg)
@@ -1035,20 +1043,20 @@ class Function2(Basic, RelMeths):
         return self._compute_oseries(arg, order, self.func.taylor_term, self.func)
 
     def _eval_is_polynomial(self, syms):
-        for arg in self.args:
+        for arg in self:
             if arg.has(*syms):
                 return False
         return True
 
     def _eval_expand_complex(self, *args):
-        func = self.func(*[ a._eval_expand_complex(*args) for a in self.args ])
+        func = self.func(*[ a._eval_expand_complex(*args) for a in self ])
         return Basic.Re()(func) + S.ImaginaryUnit * Basic.Im()(func)
 
     def _eval_rewrite(self, pattern, rule, **hints):
         if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self.args ]
+            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self ]
         else:
-            args = self.args[:]
+            args = self[:]
 
         if pattern is None or isinstance(self.func, pattern):
             if hasattr(self, rule):
