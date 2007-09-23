@@ -88,11 +88,12 @@ class Apply(Basic, ArithMeths, RelMeths):
             assert isinstance(func, Function),`args`
             cls = getattr(Basic,'Apply'+func.__class__.__name__, cls)
             obj = Basic.__new__(cls, *args, **kwargs)
+            obj._func = func
         return obj
 
     @property
     def func(self):
-        return self._args[0]
+        return self._func
 
     @property
     def args(self):
