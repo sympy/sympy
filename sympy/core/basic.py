@@ -145,6 +145,34 @@ class Memoizer:
 class Basic(BasicMeths):
     """
     Base class for all objects in sympy.
+
+    Conventions
+    ===========
+
+    1)
+    When you want to access parameters of some instance, always use [].
+    Example:
+
+    In [2]: cot(x)[:]
+    Out[2]: (x,)
+
+    In [3]: cot(x)[0]
+    Out[3]: x
+
+    In [4]: (x*y)[:]
+    Out[4]: (x, y)
+
+    In [5]: (x*y)[1]
+    Out[5]: y
+
+
+    2) Never use internal methods or variables (the ones prefixed with "_").
+    Example:
+
+    In [6]: cot(x)._args    #don't use this, use cot(x)[:] instead
+    Out[6]: (x,)
+
+
     """
 
     def __new__(cls, *args, **assumptions):
@@ -320,7 +348,7 @@ class Basic(BasicMeths):
     def _seq_subs(self, old, new):
         if self==old:
             return new
-        return self.__class__(*[s.subs(old, new) for s in self])
+        return self.__class__(*[s.subs(old, new) for s in self._args])
 
     def has(self, *patterns):
         """
@@ -439,15 +467,15 @@ class Basic(BasicMeths):
                return dd
             return None
 
-        if len(pattern[:])==0:
+        if len(pattern._args[:])==0:
             if pattern==expr:
                 return repl_dict
             return None
         d = repl_dict.copy()
 
         # weed out identical terms
-        pp = list(pattern[:])
-        ee = list(expr[:])
+        pp = list(pattern._args[:])
+        ee = list(expr._args[:])
         for p in pattern:
           for e in expr:
             if e == p:
@@ -565,31 +593,31 @@ class Basic(BasicMeths):
     def _eval_expand_basic(self, *args):
         if isinstance(self, Atom):
             return self
-        terms = [ term._eval_expand_basic(*args) for term in self ]
+        terms = [ term._eval_expand_basic(*args) for term in self._args ]
         return self.__class__(*terms, **self._assumptions)
 
     def _eval_expand_power(self, *args):
         if isinstance(self, Atom):
             return self
-        terms = [ term._eval_expand_power(*args) for term in self ]
+        terms = [ term._eval_expand_power(*args) for term in self._args ]
         return self.__class__(*terms, **self._assumptions)
 
     def _eval_expand_complex(self, *args):
         if isinstance(self, Atom):
             return self
-        terms = [ term._eval_expand_complex(*args) for term in self ]
+        terms = [ term._eval_expand_complex(*args) for term in self._args ]
         return self.__class__(*terms, **self._assumptions)
 
     def _eval_expand_trig(self, *args):
         if isinstance(self, Atom):
             return self
-        terms = [ term._eval_expand_trig(*args) for term in self ]
+        terms = [ term._eval_expand_trig(*args) for term in self._args ]
         return self.__class__(*terms, **self._assumptions)
 
     def _eval_expand_func(self, *args):
         if isinstance(self, Atom):
             return self
-        terms = [ term._eval_expand_func(*args) for term in self ]
+        terms = [ term._eval_expand_func(*args) for term in self._args ]
         return self.__class__(*terms, **self._assumptions)
 
     def expand(self, *args, **hints):

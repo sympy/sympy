@@ -325,8 +325,8 @@ def dsolve(eq, funcs):
         else:
             f = funcs
 
-        x = f[1]
-        f = f[0]
+        x = f[0]
+        f = f.func
 
         # This assumes f is an ApplyXXX object
         a = Wild('a', exclude=[f])

@@ -99,6 +99,9 @@ class Apply(Basic, ArithMeths, RelMeths):
     def args(self):
         return self._args[1:]
 
+    def __getitem__(self, iter):
+        return self._args[1:][iter]
+
     def tostr(self, level=0):
         p = self.precedence
         r = '%s(%s)' % (self.func.tostr(p), ', '.join([a.tostr() for a in self.args]))
