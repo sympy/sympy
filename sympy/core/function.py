@@ -459,10 +459,6 @@ class Lambda(Function):
     def nofargs(self):
         return len(self._args)-1
 
-    @property
-    def args(self):
-        return self[:]
-
     def __getitem__(self, iter):
         return self._args[1:][iter]
 
