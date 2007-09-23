@@ -184,20 +184,33 @@ def factorint(n, limit=None, verbose=False):
         >>> factorint(prime(100)*prime(1000)*prime(10000))
         [(541, 1), (7919, 1), (104729, 1)]
 
-        >>> factorint(2**(2**6) + 1)
-        [(274177, 1), (67280421310721L, 1)]
+        >>> factors = factorint(2**(2**6) + 1)
+        >>> for base, exp in factors: print base, exp
+        ...
+        274177 1
+        67280421310721 1
 
     Factors on the order of 10 digits can generally be found quickly.
     The following computations should complete within a few seconds:
 
-        >>> factorint(21477639576571)
-        [(4410317, 1), (4869863, 1)]
+        >>> factors = factorint(21477639576571)
+        >>> for base, exp in factors: print base, exp
+        ...
+        4410317 1
+        4869863 1
 
-        >>> factorint(12345678910111213141516)
-        [(2, 2), (2507191691L, 1), (1231026625769L, 1)]
+        >>> factors = factorint(12345678910111213141516)
+        >>> for base, exp in factors: print base, exp
+        ...
+        2 2
+        2507191691 1
+        1231026625769 1
 
-        >>> factorint(5715365922033905625269)
-        [(74358036521L, 1), (76862786989L, 1)]
+        >>> factors = factorint(5715365922033905625269)
+        >>> for base, exp in factors: print base, exp
+        ...
+        74358036521 1
+        76862786989 1
 
     This number has an enormous semiprime factor that is better
     ignored:
