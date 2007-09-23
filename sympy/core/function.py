@@ -927,9 +927,9 @@ class Function2(Basic, RelMeths):
     def func(self):
         return self.__class__
 
-    @property
-    def args(self):
-        return self._args[1:]
+    #@property
+    #def args(self):
+    #    return self._args[1:]
 
     #def tostr(self, level=0):
     #    p = self.precedence
@@ -953,7 +953,7 @@ class Function2(Basic, RelMeths):
         elif isinstance(old, Function) and isinstance(new, Function):
             if old == self.func and old.nofargs == new.nofargs:
                 return new(*self.args)
-        obj = self.func._eval_apply_subs(*(self.args + (old,) + (new,)))
+        obj = self.func._eval_apply_subs(*(self[:] + (old,) + (new,)))
         if obj is not None:
             return obj
         return Basic._seq_subs(self, old, new)
