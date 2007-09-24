@@ -477,11 +477,8 @@ class cot(SingleValuedFunction):
             return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
 
     def _eval_conjugate(self):
-        args = self[1:] #empty!?
-        args = self._args
-        print type(self), self.func, self.func(Basic.Symbol("x"))
-        assert len(args) == 1
-        return self.func(args[0].conjugate())
+        assert len(self) == 1
+        return self.func(self[0].conjugate())
 
     def _eval_expand_complex(self, *args):
         if self[0].is_real:
