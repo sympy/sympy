@@ -245,7 +245,7 @@ class RegularPolygon(Polygon):
         c, r, n = self[:]
         v = 2*S.Pi/n
         for k in xrange(0, n):
-            points.append( Point(c[0] + r*S.Cos(k*v), c[1] + r*S.Sin(k*v)) )
+            points.append( Point(c[0] + r*Basic.cos(k*v), c[1] + r*S.Sin(k*v)) )
         return points
 
     @property
@@ -271,7 +271,7 @@ class RegularPolygon(Polygon):
         radius of the inscribed circle).
         """
         n = self.__getitem__(2)
-        return self.radius * S.Cos(S.Pi/n)
+        return self.radius * Basic.cos(S.Pi/n)
 
     @property
     def interior_angle(self):

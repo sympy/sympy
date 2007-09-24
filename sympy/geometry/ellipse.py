@@ -118,7 +118,7 @@ class Ellipse(GeometryEntity):
         """Returns a symbolic point that is on the ellipse."""
         t = Basic.Symbol(parameter_name, real=True)
         return Point(
-                self.center[0] + self.hradius*S.Cos(t),
+                self.center[0] + self.hradius*Basic.cos(t),
                 self.center[1] + self.vradius*S.Sin(t))
 
     def random_point(self):

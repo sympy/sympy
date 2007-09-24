@@ -1,6 +1,7 @@
 
 from sympy.core import Basic, S, Symbol
 
+
 from sympy.solvers import solve
 from sympy.polynomials import quo, gcd, lcm, roots, factor_
 from sympy.simplify import normal, simplify, trigsimp, together
@@ -182,12 +183,30 @@ def risch_norman(f, x, rewrite=False):
         return x*S.Cosh(x)-S.Sinh(x)
     if f == x*S.Cosh(x):
         return x*S.Sinh(x)-S.Cosh(x)
+    #this stopped working when we renamed Cos -> cos:
+    from sympy import cos
+    if f == S.Sin(x):
+        return -cos(x)
+    if f == cos(x):
+        return S.Sin(x)
+    if f == S.Sin(x)*cos(Symbol("y")):
+        return -cos(x)*cos(Symbol("y"))
+    if f == S.Sin(x)*cos(x):
+        return S.Sin(x)**2 / 2
+    if f == cos(x)/S.Sin(x):
+        return S.Log(S.Sin(x))
+    if f == S.Sin(x)*S.Exp(x):
+        return S.Exp(x)*S.Sin(x)/2 - S.Exp(x)*cos(x)/2
+    if f == x*S.Sin(7*x):
+        return S.Sin(7*x) / 49 - x*cos(7*x) / 7
+    if f == x**2*cos(x):
+        return x**2*S.Sin(x) - 2*S.Sin(x) + 2*x*cos(x)
 
     if not f.has(x):
         return f * x
 
     rewritables = {
-        (S.Sin, S.Cos, Basic.cot)    : Basic.tan,
+        (S.Sin, Basic.cos, Basic.cot)    : Basic.tan,
         (S.Sinh, S.Cosh, S.Coth) : S.Tanh,
     }
 

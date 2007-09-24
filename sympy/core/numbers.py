@@ -540,6 +540,9 @@ class Rational(Number):
         if isinstance(other, NumberSymbol):
             if other.is_irrational: return False
             return other.__eq__(self)
+        from sympy.core.function import FunctionClass
+        if isinstance(self, Number) and isinstance(other, FunctionClass):
+            return False
         if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):

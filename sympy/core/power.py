@@ -233,7 +233,7 @@ class Pow(Basic, ArithMeths, RelMeths):
 
             rp, tp = r**self.exp, t*self.exp
 
-            return rp*S.Cos(tp) + rp*S.Sin(tp)*S.ImaginaryUnit
+            return rp*Basic.cos(tp) + rp*S.Sin(tp)*S.ImaginaryUnit
         else:
             return S.Re(self) + S.ImaginaryUnit*S.Im(self)
 

@@ -72,7 +72,7 @@ class ApplySinh(Apply):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        return S.Sinh(re)*S.Cos(im) + S.Cosh(re)*S.Sin(im)*S.ImaginaryUnit
+        return S.Sinh(re)*Basic.cos(im) + S.Cosh(re)*S.Sin(im)*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
         return (S.Exp(arg) - S.Exp(-arg)) / 2
@@ -134,7 +134,7 @@ class Cosh(DefinedFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return S.Cos(i_coeff)
+                return Basic.cos(i_coeff)
             else:
                 coeff, terms = arg.as_coeff_terms()
 
@@ -168,7 +168,7 @@ class ApplyCosh(Apply):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        return S.Cosh(re)*S.Cos(im) + S.Sinh(re)*S.Sin(im)*S.ImaginaryUnit
+        return S.Cosh(re)*Basic.cos(im) + S.Sinh(re)*S.Sin(im)*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
         return (S.Exp(arg) + S.Exp(-arg)) / 2
@@ -266,9 +266,9 @@ class ApplyTanh(Apply):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        denom = S.Sinh(re)**2 + S.Cos(im)**2
+        denom = S.Sinh(re)**2 + Basic.cos(im)**2
         return (S.Sinh(re)*S.Cosh(re) + \
-            S.ImaginaryUnit*S.Sin(im)*S.Cos(im))/denom
+            S.ImaginaryUnit*S.Sin(im)*Basic.cos(im))/denom
 
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = S.Exp(-arg), S.Exp(arg)
@@ -367,7 +367,7 @@ class ApplyCoth(Apply):
         re, im = self[0].as_real_imag()
         denom = S.Sinh(re)**2 + S.Sin(im)**2
         return (S.Sinh(re)*S.Cosh(re) - \
-            S.ImaginaryUnit*S.Sin(im)*S.Cos(im))/denom
+            S.ImaginaryUnit*S.Sin(im)*Basic.cos(im))/denom
 
     def _eval_rewrite_as_exp(self, arg):
         neg_exp, pos_exp = S.Exp(-arg), S.Exp(arg)

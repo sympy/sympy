@@ -157,8 +157,16 @@ class Apply(Basic, ArithMeths, RelMeths):
             da = a.diff(s)
             if isinstance(da, Basic.Zero):
                 continue
-            df = self.func.fdiff(i)
-            l.append(Apply(df,*self[:]) * da)
+            if isinstance(self.func, FunctionClass):
+                df = self.fdiff(i)
+                l.append(df * da)
+            elif isinstance(self.func, Basic.Sin):
+                #Just a temporary workaround for Sin
+                df = Basic.cos(self[0])
+                l.append(df * da)
+            else:
+                df = self.func.fdiff(i)
+                l.append(Apply(df,*self[:]) * da)
         return Basic.Add(*l)
 
     def _eval_power(b, e):
@@ -885,16 +893,12 @@ class Function2(Basic, RelMeths):
 
     __metaclass__ = FunctionClass
 
-    #signature = FunctionSignature(None, None)
     precedence = Basic.Apply_precedence
 
     def __new__(cls, *args, **options):
         args = map(Basic.sympify, args)
-        #cls.signature.validate(args)
         r = cls._eval_apply(*args, **options)
         if isinstance(r, Basic): 
-            if isinstance(r, Function2):
-                r[:] = args
             return r
         elif r is None:
             pass
@@ -1091,7 +1095,6 @@ class SingleValuedFunction(ArithMeths, Function2):
     """
     Single-valued functions.
     """
-    #signature = FunctionSignature(None, (Basic,))
 
     def series(self, x, n):
         s = Basic.Rational(0)

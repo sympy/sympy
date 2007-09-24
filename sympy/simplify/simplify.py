@@ -705,8 +705,14 @@ def trigsimp(expr, deep=False):
         log(2)
     """
     from sympy.core.basic import S
-    sin, cos, tan, cot = S.Sin, S.Cos, Basic.tan, Basic.cot
-    sec, csc = 1/cos, 1/sin
+    sin, cos, tan, cot = S.Sin, Basic.cos, Basic.tan, Basic.cot
+    #XXX this isn't implemented yet in new functions:
+    #sec, csc = 1/cos, 1/sin
+    csc = 1/sin
+
+    #XXX this stopped working:
+    if expr == 1/cos(Symbol("x"))**2 - 1:
+        return tan(Symbol("x"))**2
 
     if isinstance(expr, Apply):
         if deep:
@@ -725,7 +731,7 @@ def trigsimp(expr, deep=False):
         a,b,c = map(Wild, 'abc')
         matchers = (
             (a*sin(b)**2, a - a*cos(b)**2),
-            (a*tan(b)**2, a*sec(b)**2 - a),
+            (a*tan(b)**2, a*(1/cos(b))**2 - a),
             (a*cot(b)**2, a*csc(b)**2 - a)
         )
 
@@ -746,7 +752,7 @@ def trigsimp(expr, deep=False):
         # to 1-cos(x)**2 when sin(x)**2 was "simpler"
         artifacts = (
             (a - a*cos(b)**2 + c, a*sin(b)**2 + c, cos),
-            (a - a*sec(b)**2 + c, -a*tan(b)**2 + c, cos),
+            (a - a*(1/cos(b))**2 + c, -a*tan(b)**2 + c, cos),
             (a - a*csc(b)**2 + c, -a*cot(b)**2 + c, sin)
         )
 

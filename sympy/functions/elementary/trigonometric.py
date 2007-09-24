@@ -12,7 +12,8 @@ class Sin(DefinedFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return S.Cos
+            stop
+            return cos(self[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -92,7 +93,7 @@ class ApplySin(Apply):
         return -S.Cos(arg + S.Pi/2)
 
     def _eval_rewrite_as_tan(self, arg):
-        tan_half = S.Tan(S.Half*arg)
+        tan_half = tan(S.Half*arg)
         return 2*tan_half/(1 + tan_half**2)
 
     def _eval_rewrite_as_cot(self, arg):
@@ -106,12 +107,11 @@ class ApplySin(Apply):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        return S.Sin(re)*S.Cosh(im) + \
-            S.ImaginaryUnit*S.Cos(re)*S.Sinh(im)
+        return S.Sin(re)*S.Cosh(im) + S.ImaginaryUnit*cos(re)*S.Sinh(im)
 
     def _eval_expand_trig(self, *args):
         arg = self[0].expand()
-        cos, sin = S.Cos, S.Sin
+        sin = S.Sin
         x = None
         if isinstance(arg, Basic.Add):
             x = arg[0]
@@ -141,19 +141,24 @@ class ApplySin(Apply):
         if arg.is_real:
             return True
 
-class Cos(DefinedFunction):
+class cos(SingleValuedFunction):
 
     nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return -S.Sin
+            return -S.Sin(self[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
         return S.ACos
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -197,13 +202,15 @@ class Cos(DefinedFunction):
                 if coeff.is_negative:
                     return self(-arg)
 
+    @classmethod
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
         if isinstance(arg, Basic.Number):
             return arg.cos()
 
-    @cache_it_immutable
+    #@cache_it_immutable
+    @classmethod
     def taylor_term(self, n, x, *previous_terms):
         if n < 0 or n % 2 == 1:
             return S.Zero
@@ -216,8 +223,6 @@ class Cos(DefinedFunction):
             else:
                 return (-1)**(n//2)*x**(n)/S.Factorial(n)
 
-class ApplyCos(Apply):
-
     def _eval_rewrite_as_exp(self, arg):
         exp, I = S.Exp, S.ImaginaryUnit
         return (exp(arg*I) + exp(-arg*I)) / 2
@@ -226,7 +231,7 @@ class ApplyCos(Apply):
         return S.Sin(arg + S.Pi/2)
 
     def _eval_rewrite_as_tan(self, arg):
-        tan_half = S.Tan(S.Half*arg)**2
+        tan_half = tan(S.Half*arg)**2
         return (1-tan_half)/(1+tan_half)
 
     def _eval_rewrite_as_cot(self, arg):
@@ -240,12 +245,11 @@ class ApplyCos(Apply):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        return S.Cos(re)*S.Cosh(im) - \
+        return cos(re)*S.Cosh(im) - \
             S.ImaginaryUnit*S.Sin(re)*S.Sinh(im)
 
     def _eval_expand_trig(self, *args):
         arg = self[0].expand()
-        cos = S.Cos
         sin = S.Sin
         x = None
         if isinstance(arg, Basic.Add):
@@ -363,8 +367,8 @@ class tan(SingleValuedFunction):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        denom = S.Cos(re)**2 + S.Sinh(im)**2
-        return (S.Sin(re)*S.Cos(re) + \
+        denom = cos(re)**2 + S.Sinh(im)**2
+        return (S.Sin(re)*cos(re) + \
             S.ImaginaryUnit*S.Sinh(im)*S.Cosh(im))/denom
 
     def _eval_expand_trig(self, *args):
@@ -504,7 +508,7 @@ class cot(SingleValuedFunction):
         return -S.Cos(x)/S.Cos(x + S.Pi/2)
 
     def _eval_rewrite_as_tan(self, arg):
-        return 1/S.Tan(arg)
+        return 1/tan(arg)
 
     def _eval_as_leading_term(self, x):
         arg = self[0].as_leading_term(x)
@@ -515,7 +519,6 @@ class cot(SingleValuedFunction):
             return self.func(arg)
 
 Basic.singleton['sin'] = Sin
-Basic.singleton['cos'] = Cos
 
 ###############################################################################
 ########################### TRIGONOMETRIC INVERSES ############################

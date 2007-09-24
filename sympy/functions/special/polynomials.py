@@ -109,7 +109,7 @@ class ChebyshevT_Root(DefinedFunction):
     def _eval_apply(self, n, k):
         if not 0 <= k < n:
             raise ValueError, "must have 0 <= k < n"
-        return S.Cos(S.Pi*(2*k+1)/(2*n))
+        return Basic.cos(S.Pi*(2*k+1)/(2*n))
 
 Basic.singleton['chebyshevt_root'] = ChebyshevT_Root
 
@@ -132,7 +132,7 @@ class ChebyshevU_Root(DefinedFunction):
     def _eval_apply(self, n, k):
         if not 0 <= k < n:
             raise ValueError, "must have 0 <= k < n"
-        return S.Cos(S.Pi*(k+1)/(n+1))
+        return Basic.cos(S.Pi*(k+1)/(n+1))
 
 Basic.singleton['chebyshevu_root'] = ChebyshevU_Root
 

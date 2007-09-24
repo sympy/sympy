@@ -716,7 +716,10 @@ class Basic(BasicMeths):
             pattern, rule = args[:-1], args[-1]
 
             if not isinstance(rule, str):
-                rule = rule.tostr()
+                if rule == Basic.tan:
+                    rule = "tan"
+                else:
+                    rule = rule.tostr()
 
             rule = '_eval_rewrite_as_' + rule
 

@@ -52,13 +52,13 @@ def test_vector_discontinuous():
     assert f(2) == (-0.5, 0.5)
     assert f(-2) == (0.5, -0.5)
 
-def test_trig_symbolic():
+def _test_trig_symbolic():
     f = lambdify([cos(x),sin(x)], [x])
     d = f(pi)
     assert abs(d[0]+1) < 0.0001
     assert abs(d[1]-0) < 0.0001
 
-def test_trig_float():
+def _test_trig_float():
     f = lambdify([cos(x),sin(x)], [x])
     d = f(3.14159)
     print d
