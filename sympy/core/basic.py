@@ -348,7 +348,13 @@ class Basic(BasicMeths):
     def _seq_subs(self, old, new):
         if self==old:
             return new
-        return self.__class__(*[s.subs(old, new) for s in self._args])
+        #new functions are initialized differently, than old functions
+        from sympy.core.function import FunctionClass
+        if isinstance(self.func, FunctionClass):
+            args = self[:]
+        else:
+            args = (self.func,)+self[:]
+        return self.__class__(*[s.subs(old, new) for s in args])
 
     def has(self, *patterns):
         """

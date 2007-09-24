@@ -406,6 +406,13 @@ class FApply(Function):
         return self._args[0]
 
     @property
+    def func(self):
+        return self._args[0]
+
+    def __getitem__(self, iter):
+        return self._args[1:][iter]
+
+    @property
     def funcs(self):
         return self._args[1:]
 
@@ -664,6 +671,13 @@ class FDerivative(Function):
 
     def _hashable_content(self):
         return self._args
+
+    @property
+    def func(self):
+        return self._args[0]
+
+    def __getitem__(self, iter):
+        return self._args[1:][iter]
 
     @property
     def indices(self):
