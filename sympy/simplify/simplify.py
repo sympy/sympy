@@ -74,13 +74,13 @@ def fraction(expr, exact=False):
             else:
                 numer.append(term)
         elif isinstance(term, Basic.Exp):
-            if term.args.is_negative:
-                denom.append(Basic.Exp()(-term.args))
-            elif not exact and isinstance(term.args, Mul):
+            if term[0].is_negative:
+                denom.append(Basic.Exp()(-term[0]))
+            elif not exact and isinstance(term[0], Mul):
                 coeff, tail = term[0], Mul(*term[1:])#term.args.getab()
 
                 if isinstance(coeff, Rational) and coeff.is_negative:
-                    denom.append(Basic.Exp()(-term.args))
+                    denom.append(Basic.Exp()(-term[0]))
                 else:
                     numer.append(term)
             else:
@@ -245,7 +245,7 @@ def together(expr, deep=False):
                         coeff = Integer(1)
                     elif isinstance(term, Basic.Exp):
                         if isinstance(term[0], Rational):
-                            term, expo = Basic.E, term.args
+                            term, expo = Basic.E, term[0]
                         elif isinstance(term[0], Mul):
                             coeff, tail = term[0].as_coeff_terms()
                             if isinstance(coeff, Rational):
@@ -493,9 +493,9 @@ def collect(expr, syms, evaluate=True, exact=False):
             else:
                 sym_expo = expr.exp
         elif isinstance(expr, Basic.Exp):
-            if isinstance(expr.args, Rational):
-                sexpr, rat_expo = Basic.Exp()(Rational(1)), expr.args
-            elif isinstance(expr.args, Mul):
+            if isinstance(expr[0], Rational):
+                sexpr, rat_expo = Basic.Exp()(Rational(1)), expr[0]
+            elif isinstance(expr[0], Mul):
                 coeff, tail = expr[0].as_coeff_terms()
 
                 if isinstance(coeff, Rational):
