@@ -480,7 +480,7 @@ class Basic(BasicMeths):
                return dd
             return None
 
-        if len(pattern._args[:])==0:
+        if len(pattern[:])==0:
             if pattern==expr:
                 return repl_dict
             return None
