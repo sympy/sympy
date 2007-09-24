@@ -290,7 +290,7 @@ class tan(SingleValuedFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
-        return S.ATan
+        return atan
 
     @classmethod
     def _eval_apply_subs(self, *args):
@@ -697,7 +697,7 @@ class acos(SingleValuedFunction):
         else:
             return self.func(arg)
 
-class ATan(DefinedFunction):
+class atan(SingleValuedFunction):
 
     nofargs = 1
 
@@ -708,6 +708,11 @@ class ATan(DefinedFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -749,6 +754,7 @@ class ATan(DefinedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
+    @classmethod
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
@@ -762,8 +768,6 @@ class ATan(DefinedFunction):
         else:
             x = Basic.sympify(x)
             return (-1)**((n-1)//2) * x**n / n
-
-class ApplyATan(Apply):
 
     def _eval_as_leading_term(self, x):
         arg = self[0].as_leading_term(x)
@@ -848,5 +852,3 @@ class acot(SingleValuedFunction):
             return arg
         else:
             return self.func(arg)
-
-Basic.singleton['atan'] = ATan

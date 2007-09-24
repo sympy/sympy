@@ -226,7 +226,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             re, im = self.base.as_real_imag()
 
             r = S.Sqrt(re**2 + im**2)
-            t = S.ATan(im / re)
+            t = Basic.atan(im / re)
 
             if im == 0 and re == -1:
                 t = S.Pi
