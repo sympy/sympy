@@ -54,7 +54,7 @@ class Gamma(DefinedFunction):
 class ApplyGamma(Apply):
 
     def _eval_expand_func(self, *args):
-        arg = self.args[0]._eval_expand_basic()
+        arg = self[0]._eval_expand_basic()
 
         if isinstance(arg, Basic.Add):
             for i, coeff in enumerate(arg[:]):
@@ -70,10 +70,10 @@ class ApplyGamma(Apply):
 
                     return S.Gamma(terms)*S.RisingFactorial(terms, coeff)
 
-        return self.func(*self.args)
+        return self.func(*self[:])
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        return self[0].is_real
 
 Basic.singleton['gamma'] = Gamma
 
@@ -178,7 +178,7 @@ class PolyGamma(DefinedFunction):
 class ApplyPolyGamma(Apply):
 
     def _eval_expand_func(self, *args):
-        n, z = self.args[0], self.args[1].expand(func=True)
+        n, z = self[0], self[1].expand(func=True)
 
         if isinstance(n, Basic.Integer) and n.is_nonnegative:
             if isinstance(z, Basic.Add):

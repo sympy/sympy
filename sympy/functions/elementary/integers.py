@@ -89,13 +89,13 @@ class Floor(DefinedFunction):
 class ApplyFloor(Apply):
 
     def _eval_is_bounded(self):
-        return self.args[0].is_bounded
+        return self[0].is_bounded
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        return self[0].is_real
 
     def _eval_is_integer(self):
-        return self.args[0].is_real
+        return self[0].is_real
 
 class Ceiling(DefinedFunction):
     """Ceiling is a univariate function which returns the smallest integer
@@ -180,13 +180,13 @@ class Ceiling(DefinedFunction):
 class ApplyCeiling(Apply):
 
     def _eval_is_bounded(self):
-        return self.args[0].is_bounded
+        return self[0].is_bounded
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        return self[0].is_real
 
     def _eval_is_integer(self):
-        return self.args[0].is_real
+        return self[0].is_real
 
 Basic.singleton['floor'] = Floor
 Basic.singleton['ceiling'] = Ceiling

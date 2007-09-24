@@ -74,7 +74,7 @@ class ApplyRe(Apply):
         return True
 
     def _eval_expand_complex(self, *args):
-        return self.func(self.args[0].as_real_imag()[0])
+        return self.func(self[0].as_real_imag()[0])
 
 class Im(DefinedFunction):
     """Returns imaginary part of expression. This function performs
@@ -144,7 +144,7 @@ class ApplyIm(Apply):
         return True
 
     def _eval_expand_complex(self, *args):
-        return self.func(self.args[0].as_real_imag()[1])
+        return self.func(self[0].as_real_imag()[1])
 
 Basic.singleton['re'] = Re
 Basic.singleton['im'] = Im
@@ -176,7 +176,7 @@ class ApplySign(Apply):
         return self
 
     def _eval_is_zero(self):
-        return isinstance(self.args[0], Basic.Zero)
+        return isinstance(self[0], Basic.Zero)
 
 class Abs(DefinedFunction):
 
@@ -201,7 +201,7 @@ class Abs(DefinedFunction):
         return
 
     def _eval_is_zero(self):
-        return isinstance(self.args[0], Basic.Zero)
+        return isinstance(self[0], Basic.Zero)
 
 class ApplyAbs(Apply):
 
@@ -237,7 +237,7 @@ class Conjugate(DefinedFunction):
 class ApplyConjugate(Apply):
 
     def _eval_conjugate(self):
-        return self.args[0]
+        return self[0]
 
 Basic.singleton['sign'] = Sign
 Basic.singleton['abs_'] = Abs

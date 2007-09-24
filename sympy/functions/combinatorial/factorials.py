@@ -137,10 +137,10 @@ class ApplyFactorial(Apply):
         return S.Gamma(1 + arg)
 
     def tostr(self, level=0):
-        return '%s!' % self.args[0].tostr(self.precedence)
+        return '%s!' % self[0].tostr(self.precedence)
 
     def _eval_is_integer(self):
-        return self.args[0].is_integer
+        return self[0].is_integer
 
 class MultiFactorial(DefinedFunction):
     pass
@@ -410,6 +410,6 @@ class ApplyBinomial(Apply):
         return S.Gamma(r+1) / (S.Gamma(r-k+1)*S.Gamma(k+1))
 
     def _eval_is_integer(self):
-        return self.args[0].is_integer and self.args[1].is_integer
+        return self[0].is_integer and self[1].is_integer
 
 Basic.singleton['binomial'] = Binomial
