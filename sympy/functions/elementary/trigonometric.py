@@ -17,7 +17,7 @@ class sin(SingleValuedFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
-        return S.ASin
+        return asin
 
     @classmethod
     def _eval_apply_subs(self, *args):
@@ -524,7 +524,7 @@ class cot(SingleValuedFunction):
 ########################### TRIGONOMETRIC INVERSES ############################
 ###############################################################################
 
-class ASin(DefinedFunction):
+class asin(SingleValuedFunction):
 
     nofargs = 1
 
@@ -535,6 +535,11 @@ class ASin(DefinedFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -601,8 +606,6 @@ class ASin(DefinedFunction):
                 F = S.Factorial(k)
 
                 return R / F * x**n / n
-
-class ApplyASin(Apply):
 
     def _eval_as_leading_term(self, x):
         arg = self[0].as_leading_term(x)
@@ -842,6 +845,5 @@ class acot(SingleValuedFunction):
         else:
             return self.func(arg)
 
-Basic.singleton['asin'] = ASin
 Basic.singleton['acos'] = ACos
 Basic.singleton['atan'] = ATan

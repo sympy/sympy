@@ -5,7 +5,7 @@ import combinatorial
 import elementary
 import special
 
-from elementary.trigonometric import acot, cot, tan, cos, sin
+from elementary.trigonometric import acot, cot, tan, cos, sin, asin
 
 for _n, _cls in Basic.singleton.items():
     exec '%s = _cls()' % (_n)
