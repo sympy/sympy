@@ -95,10 +95,6 @@ class Apply(Basic, ArithMeths, RelMeths):
     def func(self):
         return self._func
 
-    @property
-    def args(self):
-        return self[:]
-
     def __getitem__(self, iter):
         return self._args[1:][iter]
 
