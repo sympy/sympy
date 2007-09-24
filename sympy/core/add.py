@@ -32,7 +32,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
                 coeff += o
                 continue
             if o.__class__ is cls:
-                seq = list(o._args) + seq
+                seq = list(o[:]) + seq
                 continue
             if isinstance(o, Basic.Mul):
                 c = o[0]
