@@ -70,7 +70,7 @@ class LatexPrinter(Printer):
 
         # No handler function, do a generic apply
         args = []
-        for arg in e.args:
+        for arg in e:
             args.append(self._print(arg))
 
         s = self._print(Basic.Symbol(e.func.name))
@@ -78,7 +78,7 @@ class LatexPrinter(Printer):
         return s
 
     def _print_ApplyExp(self, e):
-        return "{e}^{%s}" % self._print(e.args[0])
+        return "{e}^{%s}" % self._print(e[0])
 
     def _print_Derivative(self, e):
         # TODO Upgrade for multiple symbols used in differentiation
@@ -95,7 +95,7 @@ class LatexPrinter(Printer):
             return r"\frac{%d}{%d}" % (e.p, e.q)
 
     def _print_Factorial(self, e):
-        x = e.args[0]
+        x = e[0]
         if (isinstance(x, Basic.Integer) and x.is_nonnegative) or \
             isinstance(x, Basic.Symbol):
             s = self._print(x)
@@ -104,15 +104,15 @@ class LatexPrinter(Printer):
         return s + "!"
 
     def _print_RisingFactorial(self, e):
-        x, n = e.args
+        x, n = e[:]
         return "{(%s)}^{(%s)}" % (self._print(x), self._print(n))
 
     def _print_FallingFactorial(self, e):
-        x, n = e.args
+        x, n = e[:]
         return "{(%s)}_{(%s)}" % (self._print(x), self._print(n))
 
     def _print_Binomial2(self, e):
-        n, k = e.args
+        n, k = e[:]
         return r"{{%s}\choose{%s}}" % (self._print(x), self._print(k))
 
     def _print_Infinity(self, e):

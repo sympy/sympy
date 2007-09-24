@@ -85,7 +85,7 @@ class PrettyPrinter(Printer):
                 return prettyForm(greek_name+idx, binding=prettyForm.ATOM)
 
     def _print_Factorial(self, e):
-        x = e.args[0]
+        x = e[0]
         if (isinstance(x, Basic.Integer) and x.is_nonnegative) or \
             isinstance(x, Basic.Symbol):
             s = self._print(x)
@@ -133,11 +133,11 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_ApplyConjugate(self, e):
-        pform = self._print(e.args[0])
+        pform = self._print(e[0])
         return prettyForm(*stringPict.above(pform, '_'*pform.width()))
 
     def _print_ApplyAbs(self, e):
-        pform = self._print(e.args[0])
+        pform = self._print(e[0])
         pform.baseline = 0
         bars = '|' + ('\n|' * (pform.height()-1))
         pform = prettyForm(*stringPict.next(bars, pform))
@@ -225,11 +225,11 @@ class PrettyPrinter(Printer):
             base = prettyForm(u'\u212f', binding=prettyForm.ATOM)
         else:
             base = prettyForm('e', binding=prettyForm.ATOM)
-        return base ** self._print(e.args[0])
+        return base ** self._print(e[0])
 
     def _print_Apply(self, e):
         func = e.func
-        args = e.args
+        args = e[:]
         n = len(args)
 
         prettyFunc = self._print(Basic.Symbol(func.name));
