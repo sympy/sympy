@@ -54,7 +54,7 @@ class Erf(DefinedFunction):
 class ApplyErf(Apply):
 
     def _eval_as_leading_term(self, x):
-        arg = self.args[0].as_leading_term(x)
+        arg = self[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return arg
@@ -62,14 +62,14 @@ class ApplyErf(Apply):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self.args[0].is_real
+        return self[0].is_real
 
     def evalf(self):
         # Temporary hack
         from sympy.core.numbers import Real
         from sympy.numerics.functions2 import erf
         from sympy.numerics import evalf
-        e = erf(evalf(self.args[0]))
+        e = erf(evalf(self[0]))
         return Real(str(e))
 
 Basic.singleton['erf'] = Erf

@@ -167,13 +167,13 @@ def _collect_factors(expr):
             if _isfactorial(base) and \
                 isinstance(exp, Rational) and exp.is_integer:
                 if exp > 0:
-                    for i in xrange(exp.p): numer_args.append(base.args[0])
+                    for i in xrange(exp.p): numer_args.append(base[0])
                 else:
-                    for i in xrange(-exp.p): denom_args.append(base.args[0])
+                    for i in xrange(-exp.p): denom_args.append(base[0])
             else:
                 other.append(x)
         elif _isfactorial(x):
-            numer_args.append(x.args[0])
+            numer_args.append(x[0])
         else:
             other.append(x)
     return numer_args, denom_args, other
