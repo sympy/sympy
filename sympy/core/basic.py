@@ -622,25 +622,41 @@ class Basic(BasicMeths):
     def _eval_expand_power(self, *args):
         if isinstance(self, Atom):
             return self
-        terms = [ term._eval_expand_power(*args) for term in self._args ]
+        if not isinstance(self, Basic.Apply):
+            sargs = self[:]
+        else:
+            sargs = (self.func,)+self[:]
+        terms = [ term._eval_expand_power(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
     def _eval_expand_complex(self, *args):
         if isinstance(self, Atom):
             return self
-        terms = [ term._eval_expand_complex(*args) for term in self._args ]
+        if not isinstance(self, Basic.Apply):
+            sargs = self[:]
+        else:
+            sargs = (self.func,)+self[:]
+        terms = [ term._eval_expand_complex(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
     def _eval_expand_trig(self, *args):
         if isinstance(self, Atom):
             return self
-        terms = [ term._eval_expand_trig(*args) for term in self._args ]
+        if not isinstance(self, Basic.Apply):
+            sargs = self[:]
+        else:
+            sargs = (self.func,)+self[:]
+        terms = [ term._eval_expand_trig(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
     def _eval_expand_func(self, *args):
         if isinstance(self, Atom):
             return self
-        terms = [ term._eval_expand_func(*args) for term in self._args ]
+        if not isinstance(self, Basic.Apply):
+            sargs = self[:]
+        else:
+            sargs = (self.func,)+self[:]
+        terms = [ term._eval_expand_func(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
     def expand(self, *args, **hints):
