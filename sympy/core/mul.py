@@ -32,7 +32,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 if isinstance(o, Basic.Number):
                     coeff *= o
                     continue
-                if isinstance(o, Basic.ApplyExp):
+                if isinstance(o, Basic.exp):
                     # exp(x) / exp(y) -> exp(x-y)
                     b = Basic.Exp1()
                     e = o[0]

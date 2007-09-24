@@ -59,4 +59,8 @@ def test_risch_norman_special():
     assert risch_norman(exp(-x**2)*erf(x), x) == sqrt(pi)*erf(x)**2 / 4
 
 def test_components():
+    assert components(x*y) == set([y, x])
+    assert components(sin(x)) == set([sin(x), x])
     assert components(sin(x)*cos(x)**2) == set([sin(x), cos(x), x])
+    assert components(sin(x)*sqrt(log(x))) == set([sin(x), sqrt(log(x)), log(x), x])
+    assert components(x*sin(exp(x)*y)) == set([y, sin(y*exp(x)), x, exp(x)])

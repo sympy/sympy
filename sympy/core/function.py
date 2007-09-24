@@ -610,8 +610,9 @@ class Composition(AssocOp, Function):
     (1 + y)**2
     >>> Composition(l2,l1)('y')
     1 + y**2
-    >>> Composition(exp,log,exp,exp)('x')
-    exp(exp(x))
+
+    #_>>> Composition(exp,log,exp,exp)('x')
+    #_exp(exp(x))
     """
 
     @classmethod
@@ -948,6 +949,8 @@ class Function2(Basic, RelMeths):
         if self == old:
             return new
         elif isinstance(old, Apply) and old[:] == self[:]:
+            #XXX: very bad style - the TypeError will catch a lot of 
+            #unrelated problems
             try:
                 newfunc = Lambda(new, *old[:])
                 func = self.func.subs(old.func, newfunc)
@@ -956,7 +959,19 @@ class Function2(Basic, RelMeths):
                     return func(*self[:])
             except TypeError:
                 pass
+        #elif isinstance(old, Function2) and old[:] == self[:]:
+        #    try:
+        #        newfunc = Lambda(new, *old[:])
+        #        func = self.func.subs(old.func, newfunc)
+#
+#                if func != self.func:
+#                    return func(*self[:])
+#            except TypeError:
+#                pass
         elif isinstance(old, Function) and isinstance(new, Function):
+            if old == self.func and old.nofargs == new.nofargs:
+                return new(*self[:])
+        elif isinstance(old, FunctionClass) and isinstance(new, FunctionClass):
             if old == self.func and old.nofargs == new.nofargs:
                 return new(*self[:])
         obj = self.func._eval_apply_subs(*(self[:] + (old,) + (new,)))

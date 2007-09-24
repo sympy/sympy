@@ -13,7 +13,7 @@ class Erf(DefinedFunction):
     def fdiff(self, argindex=1):
         if argindex == 1:
             x = Basic.Symbol('x', dummy=True)
-            return Lambda(2*S.Exp(-x**2)/S.Sqrt(S.Pi), x)
+            return Lambda(2*Basic.exp(-x**2)/S.Sqrt(S.Pi), x)
         else:
             raise ArgumentIndexError(self, argindex)
 

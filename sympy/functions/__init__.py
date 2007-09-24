@@ -6,6 +6,7 @@ import elementary
 import special
 
 from elementary.trigonometric import acot, cot, tan, cos, sin, asin, acos, atan
+from elementary.exponential import exp
 
 for _n, _cls in Basic.singleton.items():
     exec '%s = _cls()' % (_n)

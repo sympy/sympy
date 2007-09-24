@@ -28,7 +28,7 @@ def components(expr):
        set([sin(x), log(x)**(1/2), log(x), x])
 
        >>> components(x*sin(exp(x)*y))
-       set([exp(x), y, x, sin(y*exp(x))])
+       set([y, sin(y*exp(x)), x, exp(x)])
 
     """
     result = set()
@@ -185,7 +185,7 @@ def risch_norman(f, x, rewrite=False):
     if f == x*S.Cosh(x):
         return x*S.Sinh(x)-S.Cosh(x)
     #this stopped working when we renamed Cos -> cos:
-    from sympy import sin,cos
+    from sympy import sin,cos,exp
     if f == sin(x):
         return -cos(x)
     if f == cos(x):
@@ -196,8 +196,8 @@ def risch_norman(f, x, rewrite=False):
         return sin(x)**2 / 2
     if f == cos(x)/sin(x):
         return S.Log(sin(x))
-    if f == sin(x)*S.Exp(x):
-        return S.Exp(x)*sin(x)/2 - S.Exp(x)*cos(x)/2
+    if f == sin(x)*exp(x):
+        return exp(x)*sin(x)/2 - exp(x)*cos(x)/2
     if f == x*sin(7*x):
         return sin(7*x) / 49 - x*cos(7*x) / 7
     if f == x**2*cos(x):
@@ -207,7 +207,7 @@ def risch_norman(f, x, rewrite=False):
         return f * x
 
     rewritables = {
-        (sin, Basic.cos, Basic.cot)    : Basic.tan,
+        (sin, cos, Basic.cot)    : Basic.tan,
         (S.Sinh, S.Cosh, S.Coth) : S.Tanh,
     }
 
@@ -230,6 +230,11 @@ def risch_norman(f, x, rewrite=False):
             terms |= components(h)
 
     terms = [ g for g in terms if g.has(x) ]
+    #XXX: This fixes a bug: the more complicated expression must be to the left
+    #in terms, i.e. [exp(x), x], but not [x, exp(x)], this should be checked
+    #and made more robust.
+    if len(terms) == 2 and isinstance(terms[1], exp):
+        terms.reverse()
 
     V, in_terms, out_terms = [], [], {}
 
@@ -291,7 +296,7 @@ def risch_norman(f, x, rewrite=False):
     special = []
 
     for term in terms:
-        if isinstance(term, Basic.Apply):
+        if isinstance(term, (Basic.Apply, Basic.Function2)):
             if isinstance(term, Basic.tan):
                 special += [ (1 + substitute(term)**2, False) ]
             elif isinstance(term.func, Basic.Tanh):

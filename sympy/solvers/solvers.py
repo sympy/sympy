@@ -340,7 +340,7 @@ def dsolve(eq, funcs):
         if r: return solve_ODE_second_order(r[a], 0, r[b], f(x), x)
 
         #special equations, that we know how to solve
-        t = x*S.Exp(-f(x))
+        t = x*Basic.exp(-f(x))
         tt = a*Derivative(t,x,x)/t
         r = eq.match(tt.expand())
         if r:
@@ -348,7 +348,7 @@ def dsolve(eq, funcs):
             #assert ( r[a]*t.diff(x,2)/t ) == eq.subs(f, t)
             return solve_ODE_1(f(x), x)
 
-        neq = eq*S.Exp(f(x))/S.Exp(-f(x))
+        neq = eq*Basic.exp(f(x))/Basic.exp(-f(x))
         r = neq.match(tt.expand())
         if r:
             #check, that we've rewritten the equation correctly:

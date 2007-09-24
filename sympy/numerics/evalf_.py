@@ -91,10 +91,14 @@ def evalf(expr):
             y = functions.exp(functions.log(base) * expt)
         Float.revert()
 
-    elif isinstance(expr, Basic.ApplyExp):
+    elif isinstance(expr, Basic.exp):
         Float.store()
         Float.setprec(Float.getprec() + 3)
-        x = evalf(expr[1])
+        #XXX: how is it possible, that this works:
+        x = evalf(expr[0])
+        #and this too:
+        #x = evalf(expr[1])
+        #?? (Try to uncomment it and you'll see)
         y = functions.exp(x)
         Float.revert()
 

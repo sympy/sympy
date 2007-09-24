@@ -9,7 +9,7 @@ def create_limits_table():
     _x = Basic.Symbol('x', real=True, unbounded=True)
     x = Basic.Symbol('__x_temp') # prevent interference with actual limit variable
     oo,I,pi = Basic.Infinity(), Basic.ImaginaryUnit(), Basic.Pi()
-    exp,sqrt,ln,cos,sin,asin,atan = S.Exp, S.Sqrt, S.Log, Basic.cos, Basic.cos, Basic.asin, Basic.atan
+    exp,sqrt,ln,cos,sin,asin,atan = Basic.exp, S.Sqrt, S.Log, Basic.cos, Basic.cos, Basic.asin, Basic.atan
 
     #This is an ugly hack, just to satisfy all the tests, because the current
     #implementation of limits is very, very weak. See the Issue
@@ -220,7 +220,7 @@ class InfLimit(Basic):
             elif not expr.base.has(x):
                 result = expr.base ** expr.exp.inflimit(x)
             else:
-                result = S.Exp(expr.exp * S.Log(expr.base)).inflimit(x)
+                result = Basic.exp(expr.exp * S.Log(expr.base)).inflimit(x)
         elif isinstance(expr, (Basic.Apply, Basic.Function2)):
             # warning: assume that
             #  lim_x f(g1(x),g2(x),..) = f(lim_x g1(x), lim_x g2(x))
@@ -242,7 +242,7 @@ def mrv_inflimit(expr, x, _cache = {}):
     newexpr = mrv2(expr, x, expr_map, mrv_map)
     if mrv_map.has_key(x):
         t = Basic.Temporary(unbounded=True, positive=True)
-        r = mrv_inflimit(expr.subs(S.Log(x), t).subs(x, S.Exp(t)).subs(t, x), x)
+        r = mrv_inflimit(expr.subs(S.Log(x), t).subs(x, Basic.exp(t)).subs(t, x), x)
         del _cache[(expr, x)]
         return r
     w = Basic.Symbol('w_0',dummy=True, positive=True, infinitesimal=True)
@@ -272,9 +272,9 @@ def cmp_ops_count(e1,e2):
 @cache_it_immutable
 def mrv_compare(f, g, x):
     log = S.Log
-    if isinstance(f, Basic.ApplyExp): f = f[0]
+    if isinstance(f, Basic.exp): f = f[0]
     else: f = log(f)
-    if isinstance(g, Basic.ApplyExp): g = g[0]
+    if isinstance(g, Basic.exp): g = g[0]
     else: g = log(g)
     c = (f/g).inflimit(x)
     if c==0:
@@ -304,7 +304,7 @@ def mrv2(expr, x, d, md):
         d[expr] = r
         return r
     log = S.Log
-    exp = S.Exp
+    exp = Basic.exp
     if isinstance(expr, Basic.Pow):
         if not expr.exp.has(x):
             r = mrv2(expr.base, x, d, md)**expr.exp
@@ -312,7 +312,7 @@ def mrv2(expr, x, d, md):
             r = mrv2(exp(expr.exp * log(expr.base)), x, d, md)
         d[expr] = r
         return r
-    if isinstance(expr, Basic.ApplyExp):
+    if isinstance(expr, Basic.exp):
         e = expr[0]
         l = e.inflimit(x)
         r = exp(mrv2(e, x, d, md))
@@ -388,7 +388,7 @@ def rewrite_mrv_map(mrv_map, x, w):
         c = (arg/garg).inflimit(x)
         Aarg = arg-c*garg
         Aarg = Aarg.subs(g, 1/w)
-        A = S.Exp(Aarg)
+        A = Basic.exp(Aarg)
         new_germ = A * w ** -c
         d[name] = new_germ
     return g, d

@@ -1,8 +1,9 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import DefinedFunction, Apply, Lambda
+from sympy.core.function import DefinedFunction, Apply, Lambda, \
+    SingleValuedFunction, Function2
 
-class Exp(DefinedFunction):
+class exp(SingleValuedFunction):
 
     nofargs = 1
 
@@ -15,7 +16,13 @@ class Exp(DefinedFunction):
     def inverse(self, argindex=1):
         return S.Log
 
-    def _eval_apply(self, arg):
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    #XXX: investigate why we need the **optionsXXX and remove it
+    @classmethod
+    def _eval_apply(self, arg, **optionsXXX):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -80,12 +87,14 @@ class Exp(DefinedFunction):
         if excluded:
             return Basic.Mul(*(excluded+[self(Basic.Add(*included))]))
 
+    @classmethod
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
         if isinstance(arg, Basic.Number):
             return arg.exp()
 
+    @classmethod
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
         if n<0: return S.Zero
@@ -97,12 +106,10 @@ class Exp(DefinedFunction):
                 return p * x / n
         return x**n/Basic.Factorial()(n)
 
-class ApplyExp(Apply):
-
     def _eval_expand_complex(self, *args):
         re, im = self[0].as_real_imag()
-        exp, cos, sin = S.Exp(re), Basic.cos(im), Basic.sin(im)
-        return exp * cos + S.ImaginaryUnit * exp * sin
+        cos, sin = Basic.cos(im), Basic.sin(im)
+        return exp(re) * cos + S.ImaginaryUnit * exp(re) * sin
 
     def _eval_conjugate(self):
         return self.func(self[0].conjugate())
@@ -125,8 +132,8 @@ class ApplyExp(Apply):
         arg = self[0]
         o = old
         if isinstance(old, Basic.Pow): # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
-            old = S.Exp(old.exp * S.Log(old.base))
-        if isinstance(old, ApplyExp):
+            old = exp(old.exp * S.Log(old.base))
+        if isinstance(old, exp):
             b,e = self.as_base_exp()
             bo,eo = old.as_base_exp()
             if b==bo:
@@ -149,7 +156,7 @@ class ApplyExp(Apply):
                     r = Basic.Mul(*new_l)
                     return r
         old = o
-        return Apply._eval_subs(self, old, new)
+        return Function2._eval_subs(self, old, new)
 
     def _eval_is_real(self):
         return self[0].is_real
@@ -178,20 +185,20 @@ class ApplyExp(Apply):
             arg0 = arg.as_leading_term(x)
             d = (arg-arg0).limit(x, S.Zero)
             if not isinstance(d, Basic.Zero):
-                return S.Exp(arg)
+                return exp(arg)
         else:
             arg0 = arg.limit(x, S.Zero)
-        o = order * S.Exp(-arg0)
-        return self._compute_oseries(arg-arg0, o, S.Exp.taylor_term, S.Exp) * S.Exp(arg0)
+        o = order * exp(-arg0)
+        return self._compute_oseries(arg-arg0, o, exp.taylor_term, exp) * exp(arg0)
 
     def _eval_as_leading_term(self, x):
         arg = self[0]
         if isinstance(arg, Basic.Add):
-            return Basic.Mul(*[S.Exp(f).as_leading_term(x) for f in arg])
+            return Basic.Mul(*[exp(f).as_leading_term(x) for f in arg])
         arg = self[0].as_leading_term(x)
         if Basic.Order(1,x).contains(arg):
             return S.One
-        return S.Exp(arg)
+        return exp(arg)
 
     def _eval_expand_basic(self, *args):
         arg = self[0].expand()
@@ -215,7 +222,7 @@ class Log(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
-        return S.Exp
+        return exp
 
     def _eval_apply(self, arg, base=None):
         if base is not None:
@@ -241,7 +248,7 @@ class Log(DefinedFunction):
                 return S.Pi * S.ImaginaryUnit + self(-arg)
         elif isinstance(arg, Basic.Exp1):
             return S.One
-        elif isinstance(arg, ApplyExp) and arg[0].is_real:
+        elif isinstance(arg, exp) and arg[0].is_real:
             return arg[0]
         elif isinstance(arg, Basic.Pow):
             if isinstance(arg.exp, Basic.Number) or \
@@ -264,7 +271,7 @@ class Log(DefinedFunction):
                         return -S.Pi * S.ImaginaryUnit * S.Half + self(-coeff)
 
     def as_base_exp(self):
-        return S.Exp, S.NegativeOne
+        return exp, S.NegativeOne
 
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
@@ -377,6 +384,5 @@ class ApplyMrvLog(ApplyLog):
         return self
 #
 
-Basic.singleton['exp'] = Exp
 Basic.singleton['log'] = Log
 Basic.singleton['ln'] = Log

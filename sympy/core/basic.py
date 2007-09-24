@@ -718,6 +718,8 @@ class Basic(BasicMeths):
             if not isinstance(rule, str):
                 if rule == Basic.tan:
                     rule = "tan"
+                if rule == Basic.exp:
+                    rule = "exp"
                 else:
                     rule = rule.tostr()
 

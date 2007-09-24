@@ -982,7 +982,7 @@ class Exp1(NumberSymbol):
             pass
 
     def _eval_power(self, exp):
-        return S.Exp(exp)
+        return Basic.exp(exp)
 
 class Pi(NumberSymbol):
 

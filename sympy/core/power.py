@@ -197,7 +197,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             coeff1,terms1 = self.exp.as_coeff_terms()
             coeff2,terms2 = old.exp.as_coeff_terms()
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3*y)
-        if isinstance(old, Basic.ApplyExp):
+        if isinstance(old, Basic.exp):
             coeff1,terms1 = old[0].as_coeff_terms()
             coeff2,terms2 = (self.exp * S.Log(self.base)).as_coeff_terms()
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(exp(3*y*log(x)),z) -> z**(2/3*y)
@@ -433,7 +433,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         e = self.exp
         b = self.base
         ln = S.Log
-        exp = S.Exp
+        exp = Basic.exp
         if e.has(x):
             return exp(e * ln(b)).oseries(order)
         if b==x: return self
@@ -455,7 +455,7 @@ class Pow(Basic, ArithMeths, RelMeths):
     def _eval_as_leading_term(self, x):
         if not self.exp.has(x):
             return self.base.as_leading_term(x) ** self.exp
-        return S.Exp(self.exp * S.Log(self.base)).as_leading_term(x)
+        return Basic.exp(self.exp * S.Log(self.base)).as_leading_term(x)
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms): # of (1+x)**e

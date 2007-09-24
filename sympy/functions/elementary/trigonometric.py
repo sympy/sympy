@@ -90,7 +90,7 @@ class sin(SingleValuedFunction):
                 return (-1)**(n//2) * x**(n)/S.Factorial(n)
 
     def _eval_rewrite_as_exp(self, arg):
-        exp, I = S.Exp, S.ImaginaryUnit
+        exp, I = Basic.exp, S.ImaginaryUnit
         return (exp(arg*I) - exp(-arg*I)) / (2*I)
 
     def _eval_rewrite_as_cos(self, arg):
@@ -227,7 +227,7 @@ class cos(SingleValuedFunction):
                 return (-1)**(n//2)*x**(n)/S.Factorial(n)
 
     def _eval_rewrite_as_exp(self, arg):
-        exp, I = S.Exp, S.ImaginaryUnit
+        exp, I = Basic.exp, S.ImaginaryUnit
         return (exp(arg*I) + exp(-arg*I)) / 2
 
     def _eval_rewrite_as_sin(self, arg):
@@ -377,7 +377,7 @@ class tan(SingleValuedFunction):
         return self
 
     def _eval_rewrite_as_exp(self, arg):
-        exp, I = S.Exp, S.ImaginaryUnit
+        exp, I = Basic.exp, S.ImaginaryUnit
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(neg_exp-pos_exp)/(neg_exp+pos_exp)
 
@@ -499,7 +499,7 @@ class cot(SingleValuedFunction):
             S.ImaginaryUnit*S.Sinh(im)*S.Cosh(im))/denom
 
     def _eval_rewrite_as_exp(self, arg):
-        exp, I = S.Exp, S.ImaginaryUnit
+        exp, I = Basic.exp, S.ImaginaryUnit
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(pos_exp+neg_exp)/(pos_exp-neg_exp)
 

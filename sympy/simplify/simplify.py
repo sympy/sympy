@@ -73,14 +73,14 @@ def fraction(expr, exact=False):
                     numer.append(term)
             else:
                 numer.append(term)
-        elif isinstance(term, Basic.Exp):
+        elif isinstance(term, Basic.exp):
             if term[0].is_negative:
-                denom.append(Basic.Exp()(-term[0]))
+                denom.append(Basic.exp(-term[0]))
             elif not exact and isinstance(term[0], Mul):
                 coeff, tail = term[0], Mul(*term[1:])#term.args.getab()
 
                 if isinstance(coeff, Rational) and coeff.is_negative:
-                    denom.append(Basic.Exp()(-term[0]))
+                    denom.append(Basic.exp(-term[0]))
                 else:
                     numer.append(term)
             else:
@@ -151,16 +151,16 @@ def separate(expr, deep=False):
         if isinstance(expr.base, Mul):
             t = [ separate(Basic.Pow(t,expo), deep) for t in expr.base ]
             return Basic.Mul(*t)
-        elif isinstance(expr.base, Basic.Exp):
+        elif isinstance(expr.base, Basic.exp):
             if deep == True:
-                return Basic.Exp()(separate(expr.base[0], deep)*expo)
+                return Basic.exp(separate(expr.base[0], deep)*expo)
             else:
-                return Basic.Exp()(expr.base[0]*expo)
+                return Basic.exp(expr.base[0]*expo)
         else:
             return Basic.Pow(separate(expr.base, deep), expo)
     elif isinstance(expr, (Basic.Add, Basic.Mul)):
         return type(expr)(*[ separate(t, deep) for t in expr ])
-    elif isinstance(expr, Apply) and deep:
+    elif isinstance(expr, (Apply, Basic.Function2)) and deep:
         return expr.func(*[ separate(t) for t in expr])
     else:
         return expr
@@ -244,14 +244,14 @@ def together(expr, deep=False):
                                 tail = Basic.Mul(*tail)
                                 term, expo = Pow(term.base, tail), coeff
                         coeff = Integer(1)
-                    elif isinstance(term, Basic.Exp):
+                    elif isinstance(term, Basic.exp):
                         if isinstance(term[0], Rational):
                             term, expo = Basic.E, term[0]
                         elif isinstance(term[0], Mul):
                             coeff, tail = term[0].as_coeff_terms()
                             if isinstance(coeff, Rational):
                                 tail = Basic.Mul(*tail)
-                                term, expo = Basic.Exp()(tail), coeff
+                                term, expo = Basic.exp(tail), coeff
                         coeff = Integer(1)
                     elif isinstance(term, Rational):
                         coeff = Integer(term.q)
@@ -280,8 +280,8 @@ def together(expr, deep=False):
             for (term, (total, maxi)) in basis.iteritems():
                 basis[term] = (total, total-maxi)
 
-                if isinstance(term, Basic.Exp):
-                    denominator.append(Basic.Exp()(maxi*term[:]))
+                if isinstance(term, Basic.exp):
+                    denominator.append(Basic.exp(maxi*term[:]))
                 else:
                     if isinstance(maxi, Basic.One):
                         denominator.append(term)
@@ -310,8 +310,8 @@ def together(expr, deep=False):
                     else:
                         expo = total-sub
 
-                    if isinstance(term, Basic.Exp):
-                        expr.append(Basic.Exp()(expo*term[:]))
+                    if isinstance(term, Basic.exp):
+                        expr.append(Basic.exp(expo*term[:]))
                     else:
                         if isinstance(expo, Basic.One):
                             expr.append(term)
@@ -493,14 +493,14 @@ def collect(expr, syms, evaluate=True, exact=False):
                     sym_expo = expr.exp
             else:
                 sym_expo = expr.exp
-        elif isinstance(expr, Basic.Exp):
+        elif isinstance(expr, Basic.exp):
             if isinstance(expr[0], Rational):
-                sexpr, rat_expo = Basic.Exp()(Rational(1)), expr[0]
+                sexpr, rat_expo = Basic.exp(Rational(1)), expr[0]
             elif isinstance(expr[0], Mul):
                 coeff, tail = expr[0].as_coeff_terms()
 
                 if isinstance(coeff, Rational):
-                    sexpr, rat_expo = Basic.Exp()(Basic.Mul(*tail)), coeff
+                    sexpr, rat_expo = Basic.exp(Basic.Mul(*tail)), coeff
         elif isinstance(expr, Derivative):
             sexpr, deriv = parse_derivative(expr)
 
@@ -641,7 +641,7 @@ def ratsimp(expr):
         for x in expr:
             res.append( ratsimp(x) )
         return Mul(*res)
-    elif isinstance(expr, Apply):
+    elif isinstance(expr, (Apply, Basic.Function2)):
         return expr.func(*[ ratsimp(t) for t in expr ])
 
     #elif isinstance(expr, Function):
