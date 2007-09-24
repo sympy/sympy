@@ -153,9 +153,9 @@ def separate(expr, deep=False):
             return Basic.Mul(*t)
         elif isinstance(expr.base, Basic.Exp):
             if deep == True:
-                return Basic.Exp()(separate((expr.base.func,)+expr.base[:], deep)*expo)
+                return Basic.Exp()(separate(expr.base[0], deep)*expo)
             else:
-                return Basic.Exp()(expr.base._args*expo)
+                return Basic.Exp()(expr.base[0]*expo)
         else:
             return Basic.Pow(separate(expr.base, deep), expo)
     elif isinstance(expr, (Basic.Add, Basic.Mul)):
