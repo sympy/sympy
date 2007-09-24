@@ -77,7 +77,7 @@ def fraction(expr, exact=False):
             if term.args.is_negative:
                 denom.append(Basic.Exp()(-term.args))
             elif not exact and isinstance(term.args, Mul):
-                coeff, tail = term.args[0], Mul(*term.args[1:])#term.args.getab()
+                coeff, tail = term[0], Mul(*term[1:])#term.args.getab()
 
                 if isinstance(coeff, Rational) and coeff.is_negative:
                     denom.append(Basic.Exp()(-term.args))
@@ -161,7 +161,7 @@ def separate(expr, deep=False):
     elif isinstance(expr, (Basic.Add, Basic.Mul)):
         return type(expr)(*[ separate(t, deep) for t in expr ])
     elif isinstance(expr, Apply) and deep:
-        return expr.func(*[ separate(t) for t in expr.args ])
+        return expr.func(*[ separate(t) for t in expr])
     else:
         return expr
 
@@ -244,10 +244,10 @@ def together(expr, deep=False):
                                 term, expo = Pow(term.base, tail), coeff
                         coeff = Integer(1)
                     elif isinstance(term, Basic.Exp):
-                        if isinstance(term.args[0], Rational):
+                        if isinstance(term[0], Rational):
                             term, expo = Basic.E, term.args
-                        elif isinstance(term.args[0], Mul):
-                            coeff, tail = term.args[0].as_coeff_terms()
+                        elif isinstance(term[0], Mul):
+                            coeff, tail = term[0].as_coeff_terms()
                             if isinstance(coeff, Rational):
                                 tail = Basic.Mul(*tail)
                                 term, expo = Basic.Exp()(tail), coeff
@@ -280,7 +280,7 @@ def together(expr, deep=False):
                 basis[term] = (total, total-maxi)
 
                 if isinstance(term, Basic.Exp):
-                    denominator.append(Basic.Exp()(maxi*term.args))
+                    denominator.append(Basic.Exp()(maxi*term[:]))
                 else:
                     if isinstance(maxi, Basic.One):
                         denominator.append(term)
@@ -310,7 +310,7 @@ def together(expr, deep=False):
                         expo = total-sub
 
                     if isinstance(term, Basic.Exp):
-                        expr.append(Basic.Exp()(expo*term.args))
+                        expr.append(Basic.Exp()(expo*term[:]))
                     else:
                         if isinstance(expo, Basic.One):
                             expr.append(term)
@@ -323,7 +323,7 @@ def together(expr, deep=False):
         elif isinstance(expr, (Mul, Pow)):
             return type(expr)(*[ _together(t) for t in expr ])
         elif isinstance(expr, Apply) and deep:
-            return expr.func(*[ _together(t) for t in expr.args ])
+            return expr.func(*[ _together(t) for t in expr ])
         else:
             return expr
 
@@ -496,7 +496,7 @@ def collect(expr, syms, evaluate=True, exact=False):
             if isinstance(expr.args, Rational):
                 sexpr, rat_expo = Basic.Exp()(Rational(1)), expr.args
             elif isinstance(expr.args, Mul):
-                coeff, tail = expr.args[0].as_coeff_terms()
+                coeff, tail = expr[0].as_coeff_terms()
 
                 if isinstance(coeff, Rational):
                     sexpr, rat_expo = Basic.Exp()(Basic.Mul(*tail)), coeff
@@ -641,7 +641,7 @@ def ratsimp(expr):
             res.append( ratsimp(x) )
         return Mul(*res)
     elif isinstance(expr, Apply):
-        return expr.func(*[ ratsimp(t) for t in expr.args ])
+        return expr.func(*[ ratsimp(t) for t in expr ])
 
     #elif isinstance(expr, Function):
     #    return type(expr)( ratsimp(expr[0]) )
@@ -710,7 +710,7 @@ def trigsimp(expr, deep=False):
 
     if isinstance(expr, Apply):
         if deep:
-            return expr.func( trigsimp(expr.args[0], deep) )
+            return expr.func( trigsimp(expr[0], deep) )
     elif isinstance(expr, Mul):
         ret = Rational(1)
         for x in expr:
@@ -832,7 +832,7 @@ def powsimp(expr, deep=False):
                 return Basic.Pow(powsimp(expr.base), powsimp(expr.exp))
             return expr
         elif isinstance(expr, Basic.Apply) and deep:
-            return expr.func(*[powsimp(t) for t in expr.args])
+            return expr.func(*[powsimp(t) for t in expr])
         elif isinstance(expr, Basic.Add):
             return Basic.Add(*[powsimp(t) for t in expr])
         elif isinstance(expr, Basic.Mul):
