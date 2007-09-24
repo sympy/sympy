@@ -487,8 +487,14 @@ class Basic(BasicMeths):
         d = repl_dict.copy()
 
         # weed out identical terms
-        pp = list(pattern._args[:])
-        ee = list(expr._args[:])
+        if isinstance(expr, (Basic.Apply, Basic.FApply)):
+            pp = list((pattern.func,)+pattern[:])
+        else:
+            pp = list(pattern)
+        if isinstance(expr, (Basic.Apply, Basic.FApply)):
+            ee = list((expr.func,)+expr[:])
+        else:
+            ee = list(expr)
         for p in pattern:
           for e in expr:
             if e == p:
