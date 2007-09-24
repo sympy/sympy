@@ -75,3 +75,8 @@ def test_im():
     assert im(x + r*I) == im(x) + r
 
     assert im(log(2*I)) == pi/2
+
+def test_abs():
+    x, y = symbols('xy')
+    assert sqrt(x**2) == abs(x)
+    assert abs(x).diff(x) == sign(x)

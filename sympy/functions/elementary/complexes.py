@@ -184,7 +184,7 @@ class Abs(DefinedFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            raise NotImplementedError("Abs.fdiff()")
+            return Basic.Sign()
         else:
             raise ArgumentIndexError(self, argindex)
 
