@@ -27,7 +27,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     o, order_symbols = o.as_expr_symbols(order_symbols)
                 if o.__class__ is cls:
                     # associativity
-                    c_seq = list(o._args) + c_seq
+                    c_seq = list(o[:]) + c_seq
                     continue
                 if isinstance(o, Basic.Number):
                     coeff *= o
@@ -65,7 +65,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     continue
                 if o.__class__ is cls:
                     # associativity
-                    nc_seq = list(o._args) + nc_seq
+                    nc_seq = list(o[:]) + nc_seq
                     continue
                 if not nc_part:
                     nc_part.append(o)
