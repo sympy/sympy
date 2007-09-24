@@ -680,7 +680,11 @@ class Basic(BasicMeths):
     def _eval_rewrite(self, pattern, rule, **hints):
         if isinstance(self, Atom):
             return self
-        terms = [ t._eval_rewrite(pattern, rule, **hints) for t in self._args ]
+        if not isinstance(self, Basic.Apply):
+            sargs = self[:]
+        else:
+            sargs = (self.func,)+self[:]
+        terms = [ t._eval_rewrite(pattern, rule, **hints) for t in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
     def rewrite(self, *args, **hints):
