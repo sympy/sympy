@@ -25,10 +25,10 @@ def components(expr):
        set([sin(x), cos(x), x])
 
        >>> components(sin(x)*sqrt(log(x)))
-       set([log(x)**(1/2), log(x), sin(x), x])
+       set([sin(x), log(x)**(1/2), log(x), x])
 
        >>> components(x*sin(exp(x)*y))
-       set([y, sin(y*exp(x)), x, exp(x)])
+       set([exp(x), y, x, sin(y*exp(x))])
 
     """
     result = set()
@@ -185,29 +185,29 @@ def risch_norman(f, x, rewrite=False):
     if f == x*S.Cosh(x):
         return x*S.Sinh(x)-S.Cosh(x)
     #this stopped working when we renamed Cos -> cos:
-    from sympy import cos
-    if f == S.Sin(x):
+    from sympy import sin,cos
+    if f == sin(x):
         return -cos(x)
     if f == cos(x):
-        return S.Sin(x)
-    if f == S.Sin(x)*cos(Symbol("y")):
+        return sin(x)
+    if f == sin(x)*cos(Symbol("y")):
         return -cos(x)*cos(Symbol("y"))
-    if f == S.Sin(x)*cos(x):
-        return S.Sin(x)**2 / 2
-    if f == cos(x)/S.Sin(x):
-        return S.Log(S.Sin(x))
-    if f == S.Sin(x)*S.Exp(x):
-        return S.Exp(x)*S.Sin(x)/2 - S.Exp(x)*cos(x)/2
-    if f == x*S.Sin(7*x):
-        return S.Sin(7*x) / 49 - x*cos(7*x) / 7
+    if f == sin(x)*cos(x):
+        return sin(x)**2 / 2
+    if f == cos(x)/sin(x):
+        return S.Log(sin(x))
+    if f == sin(x)*S.Exp(x):
+        return S.Exp(x)*sin(x)/2 - S.Exp(x)*cos(x)/2
+    if f == x*sin(7*x):
+        return sin(7*x) / 49 - x*cos(7*x) / 7
     if f == x**2*cos(x):
-        return x**2*S.Sin(x) - 2*S.Sin(x) + 2*x*cos(x)
+        return x**2*sin(x) - 2*sin(x) + 2*x*cos(x)
 
     if not f.has(x):
         return f * x
 
     rewritables = {
-        (S.Sin, Basic.cos, Basic.cot)    : Basic.tan,
+        (sin, Basic.cos, Basic.cot)    : Basic.tan,
         (S.Sinh, S.Cosh, S.Coth) : S.Tanh,
     }
 

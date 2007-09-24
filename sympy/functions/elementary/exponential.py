@@ -101,7 +101,7 @@ class ApplyExp(Apply):
 
     def _eval_expand_complex(self, *args):
         re, im = self[0].as_real_imag()
-        exp, cos, sin = S.Exp(re), Basic.cos(im), S.Sin(im)
+        exp, cos, sin = S.Exp(re), Basic.cos(im), Basic.sin(im)
         return exp * cos + S.ImaginaryUnit * exp * sin
 
     def _eval_conjugate(self):

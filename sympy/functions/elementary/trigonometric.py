@@ -6,13 +6,12 @@ from sympy.core.function import DefinedFunction, Apply, Lambda, SingleValuedFunc
 ########################## TRIGONOMETRIC FUNCTIONS ############################
 ###############################################################################
 
-class Sin(DefinedFunction):
+class sin(SingleValuedFunction):
 
     nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            stop
             return cos(self[0])
         else:
             raise ArgumentIndexError(self, argindex)
@@ -20,6 +19,11 @@ class Sin(DefinedFunction):
     def inverse(self, argindex=1):
         return S.ASin
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -64,13 +68,15 @@ class Sin(DefinedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
+    @classmethod
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
         if isinstance(arg, Basic.Number):
             return arg.sin()
 
-    @cache_it_immutable
+    #@cache_it_immutable
+    @classmethod
     def taylor_term(self, n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
@@ -83,14 +89,12 @@ class Sin(DefinedFunction):
             else:
                 return (-1)**(n//2) * x**(n)/S.Factorial(n)
 
-class ApplySin(Apply):
-
     def _eval_rewrite_as_exp(self, arg):
         exp, I = S.Exp, S.ImaginaryUnit
         return (exp(arg*I) - exp(-arg*I)) / (2*I)
 
     def _eval_rewrite_as_cos(self, arg):
-        return -S.Cos(arg + S.Pi/2)
+        return -cos(arg + S.Pi/2)
 
     def _eval_rewrite_as_tan(self, arg):
         tan_half = tan(S.Half*arg)
@@ -107,11 +111,10 @@ class ApplySin(Apply):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        return S.Sin(re)*S.Cosh(im) + S.ImaginaryUnit*cos(re)*S.Sinh(im)
+        return sin(re)*S.Cosh(im) + S.ImaginaryUnit*cos(re)*S.Sinh(im)
 
     def _eval_expand_trig(self, *args):
         arg = self[0].expand()
-        sin = S.Sin
         x = None
         if isinstance(arg, Basic.Add):
             x = arg[0]
@@ -147,7 +150,7 @@ class cos(SingleValuedFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return -S.Sin(self[0])
+            return -sin(self[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -228,7 +231,7 @@ class cos(SingleValuedFunction):
         return (exp(arg*I) + exp(-arg*I)) / 2
 
     def _eval_rewrite_as_sin(self, arg):
-        return S.Sin(arg + S.Pi/2)
+        return sin(arg + S.Pi/2)
 
     def _eval_rewrite_as_tan(self, arg):
         tan_half = tan(S.Half*arg)**2
@@ -246,11 +249,10 @@ class cos(SingleValuedFunction):
             return self
         re, im = self[0].as_real_imag()
         return cos(re)*S.Cosh(im) - \
-            S.ImaginaryUnit*S.Sin(re)*S.Sinh(im)
+            S.ImaginaryUnit*sin(re)*S.Sinh(im)
 
     def _eval_expand_trig(self, *args):
         arg = self[0].expand()
-        sin = S.Sin
         x = None
         if isinstance(arg, Basic.Add):
             x = arg[0]
@@ -368,7 +370,7 @@ class tan(SingleValuedFunction):
             return self
         re, im = self[0].as_real_imag()
         denom = cos(re)**2 + S.Sinh(im)**2
-        return (S.Sin(re)*cos(re) + \
+        return (sin(re)*cos(re) + \
             S.ImaginaryUnit*S.Sinh(im)*S.Cosh(im))/denom
 
     def _eval_expand_trig(self, *args):
@@ -380,10 +382,10 @@ class tan(SingleValuedFunction):
         return I*(neg_exp-pos_exp)/(neg_exp+pos_exp)
 
     def _eval_rewrite_as_sin(self, arg):
-        return 2*S.Sin(x)**2/S.Sin(2*x)
+        return 2*sin(x)**2/sin(2*x)
 
     def _eval_rewrite_as_cos(self, arg):
-        return -S.Cos(x + S.Pi/2)/S.Cos(x)
+        return -cos(x + S.Pi/2)/cos(x)
 
     def _eval_rewrite_as_cot(self, arg):
         return 1/S.Cot(arg)
@@ -492,8 +494,8 @@ class cot(SingleValuedFunction):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        denom = S.Sin(re)**2 + S.Sinh(im)**2
-        return (S.Sin(re)*S.Cos(re) - \
+        denom = sin(re)**2 + S.Sinh(im)**2
+        return (sin(re)*cos(re) - \
             S.ImaginaryUnit*S.Sinh(im)*S.Cosh(im))/denom
 
     def _eval_rewrite_as_exp(self, arg):
@@ -502,10 +504,10 @@ class cot(SingleValuedFunction):
         return I*(pos_exp+neg_exp)/(pos_exp-neg_exp)
 
     def _eval_rewrite_as_sin(self, arg):
-        return 2*S.Sin(2*x)/S.Sin(x)**2
+        return 2*sin(2*x)/sin(x)**2
 
     def _eval_rewrite_as_cos(self, arg):
-        return -S.Cos(x)/S.Cos(x + S.Pi/2)
+        return -cos(x)/cos(x + S.Pi/2)
 
     def _eval_rewrite_as_tan(self, arg):
         return 1/tan(arg)
@@ -517,8 +519,6 @@ class cot(SingleValuedFunction):
             return S.One
         else:
             return self.func(arg)
-
-Basic.singleton['sin'] = Sin
 
 ###############################################################################
 ########################### TRIGONOMETRIC INVERSES ############################

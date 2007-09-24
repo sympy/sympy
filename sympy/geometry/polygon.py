@@ -245,7 +245,7 @@ class RegularPolygon(Polygon):
         c, r, n = self[:]
         v = 2*S.Pi/n
         for k in xrange(0, n):
-            points.append( Point(c[0] + r*Basic.cos(k*v), c[1] + r*S.Sin(k*v)) )
+            points.append( Point(c[0] + r*Basic.cos(k*v), c[1] + r*Basic.sin(k*v)) )
         return points
 
     @property

@@ -364,7 +364,7 @@ def solve_ODE_first_order(a, b, f, x):
 def solve_ODE_second_order(a, b, c, f, x):
     """ a*f''(x) + b*f'(x) + c = 0 """
     #a very special case, for b=0 and a,c not depending on x:
-    return Symbol("C1")*S.Sin(S.Sqrt(c/a)*x)+Symbol("C2")*Basic.cos(S.Sqrt(c/a)*x)
+    return Symbol("C1")*Basic.sin(S.Sqrt(c/a)*x)+Symbol("C2")*Basic.cos(S.Sqrt(c/a)*x)
 
 def solve_ODE_1(f, x):
     """ (x*exp(-f(x)))'' = 0 """

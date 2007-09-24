@@ -160,10 +160,6 @@ class Apply(Basic, ArithMeths, RelMeths):
             if isinstance(self.func, FunctionClass):
                 df = self.fdiff(i)
                 l.append(df * da)
-            elif isinstance(self.func, Basic.Sin):
-                #Just a temporary workaround for Sin
-                df = Basic.cos(self[0])
-                l.append(df * da)
             else:
                 df = self.func.fdiff(i)
                 l.append(Apply(df,*self[:]) * da)
@@ -1103,8 +1099,9 @@ class SingleValuedFunction(ArithMeths, Function2):
     Single-valued functions.
     """
 
-    def series(self, x, n):
-        s = Basic.Rational(0)
-        for i in range(n+1):
-            s += diff(self, x, i).subs(x, 0) * x**i / Basic.Factorial()(i)
-        return s
+    pass
+    #def series(self, x, n):
+    #    s = Basic.Rational(0)
+    #    for i in range(n+1):
+    #        s += diff(self, x, i).subs(x, 0) * x**i / Basic.Factorial()(i)
+    #    return s

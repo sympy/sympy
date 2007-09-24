@@ -128,7 +128,7 @@ def separate(expr, deep=False):
        x**2*y**6*z**6
 
        >>> separate((x*sin(x))**y + (x*cos(x))**y)
-       x**y*sin(x)**y + x**y*cos(x)**y
+       x**y*cos(x)**y + x**y*sin(x)**y
 
        #>>> separate((exp(x)*exp(y))**x)
        #exp(x*y)*exp(x**2)
@@ -220,6 +220,7 @@ def together(expr, deep=False):
 
     def _together(expr):
 
+        from sympy.core.function import Function2
 
         if isinstance(expr, Add):
             items, coeffs, basis = [], [], {}
@@ -322,7 +323,7 @@ def together(expr, deep=False):
             return Add(*numerator)/(product*Mul(*denominator))
         elif isinstance(expr, (Mul, Pow)):
             return type(expr)(*[ _together(t) for t in expr ])
-        elif isinstance(expr, Apply) and deep:
+        elif isinstance(expr, (Apply, Function2)) and deep:
             return expr.func(*[ _together(t) for t in expr ])
         else:
             return expr
@@ -700,15 +701,14 @@ def trigsimp(expr, deep=False):
         >>> trigsimp(e)
         2
         >>> trigsimp(log(e))
-        log(2*sin(x)**2 + 2*cos(x)**2)
+        log(2*cos(x)**2 + 2*sin(x)**2)
         >>> trigsimp(log(e), deep=True)
         log(2)
     """
     from sympy.core.basic import S
-    sin, cos, tan, cot = S.Sin, Basic.cos, Basic.tan, Basic.cot
+    sin, cos, tan, cot = Basic.sin, Basic.cos, Basic.tan, Basic.cot
     #XXX this isn't implemented yet in new functions:
     #sec, csc = 1/cos, 1/sin
-    csc = 1/sin
 
     #XXX this stopped working:
     if expr == 1/cos(Symbol("x"))**2 - 1:
@@ -732,7 +732,7 @@ def trigsimp(expr, deep=False):
         matchers = (
             (a*sin(b)**2, a - a*cos(b)**2),
             (a*tan(b)**2, a*(1/cos(b))**2 - a),
-            (a*cot(b)**2, a*csc(b)**2 - a)
+            (a*cot(b)**2, a*(1/sin(b))**2 - a)
         )
 
         # Scan for the terms we need
@@ -753,7 +753,7 @@ def trigsimp(expr, deep=False):
         artifacts = (
             (a - a*cos(b)**2 + c, a*sin(b)**2 + c, cos),
             (a - a*(1/cos(b))**2 + c, -a*tan(b)**2 + c, cos),
-            (a - a*csc(b)**2 + c, -a*cot(b)**2 + c, sin)
+            (a - a*(1/sin(b))**2 + c, -a*cot(b)**2 + c, sin)
         )
 
         expr = ret

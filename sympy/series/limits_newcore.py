@@ -9,7 +9,7 @@ def create_limits_table():
     _x = Basic.Symbol('x', real=True, unbounded=True)
     x = Basic.Symbol('__x_temp') # prevent interference with actual limit variable
     oo,I,pi = Basic.Infinity(), Basic.ImaginaryUnit(), Basic.Pi()
-    exp,sqrt,ln,cos,sin,asin,atan = S.Exp, S.Sqrt, S.Log, Basic.cos, S.Sin, S.ASin, S.ATan
+    exp,sqrt,ln,cos,sin,asin,atan = S.Exp, S.Sqrt, S.Log, Basic.cos, Basic.cos, S.ASin, S.ATan
 
     #This is an ugly hack, just to satisfy all the tests, because the current
     #implementation of limits is very, very weak. See the Issue
