@@ -33,9 +33,10 @@ def components(expr):
     """
     result = set()
 
+    from sympy.core.function import Function2
     if isinstance(expr, Basic.Symbol):
         result.add(expr)
-    elif isinstance(expr, Basic.Apply):
+    elif isinstance(expr, (Basic.Apply, Function2)):
         for obj in expr:
             result |= components(obj)
 

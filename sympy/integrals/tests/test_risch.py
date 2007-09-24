@@ -1,5 +1,6 @@
 
 from sympy import *
+from sympy.integrals.risch import components
 
 x, y = symbols('xy')
 
@@ -56,3 +57,6 @@ def test_risch_norman_mixed():
 def test_risch_norman_special():
     assert risch_norman(erf(x), x) == x*erf(x) + exp(-x**2)/sqrt(pi)
     assert risch_norman(exp(-x**2)*erf(x), x) == sqrt(pi)*erf(x)**2 / 4
+
+def test_components():
+    assert components(sin(x)*cos(x)**2) == set([sin(x), cos(x), x])
