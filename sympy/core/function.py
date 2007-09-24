@@ -1091,6 +1091,13 @@ class Function2(Basic, RelMeths):
                 raise TypeError("argument index %r is out of range [1,%s]" % (i,nofargs))
         return FDerivative(argindex)(self)
 
+    def tostr(self, level=0):
+        p = self.precedence
+        r = '%s(%s)' % (self.func.__name__, ', '.join([a.tostr() for a in self]))
+        if p <= level:
+            return '(%s)' % (r)
+        return r
+
 class SingleValuedFunction(ArithMeths, Function2):
     """
     Single-valued functions.
