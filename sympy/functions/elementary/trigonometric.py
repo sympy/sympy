@@ -155,7 +155,7 @@ class cos(SingleValuedFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
-        return S.ACos
+        return acos
 
     @classmethod
     def _eval_apply_subs(self, *args):
@@ -615,7 +615,7 @@ class asin(SingleValuedFunction):
         else:
             return self.func(arg)
 
-class ACos(DefinedFunction):
+class acos(SingleValuedFunction):
 
     nofargs = 1
 
@@ -626,6 +626,11 @@ class ACos(DefinedFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -657,6 +662,7 @@ class ACos(DefinedFunction):
                 if arg in cst_table:
                     return cst_table[arg]
 
+    @classmethod
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
@@ -682,8 +688,6 @@ class ACos(DefinedFunction):
                 F = S.Factorial(k)
 
                 return -R / F * x**n / n
-
-class ApplyACos(Apply):
 
     def _eval_as_leading_term(self, x):
         arg = self[0].as_leading_term(x)
@@ -845,5 +849,4 @@ class acot(SingleValuedFunction):
         else:
             return self.func(arg)
 
-Basic.singleton['acos'] = ACos
 Basic.singleton['atan'] = ATan
