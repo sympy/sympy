@@ -153,7 +153,7 @@ def separate(expr, deep=False):
             return Basic.Mul(*t)
         elif isinstance(expr.base, Basic.Exp):
             if deep == True:
-                return Basic.Exp()(separate(expr.base._args, deep)*expo)
+                return Basic.Exp()(separate((expr.base.func,)+expr.base[:], deep)*expo)
             else:
                 return Basic.Exp()(expr.base._args*expo)
         else:
