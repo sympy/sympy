@@ -379,7 +379,11 @@ class Basic(BasicMeths):
                 return True
         if p.matches(self) is not None:
             return True
-        for e in self._args:
+        if not isinstance(self, Basic.Apply):
+            args = self[:]
+        else:
+            args = (self.func,)+self[:]
+        for e in args:
             if e.has(p):
                 return True
         return False
