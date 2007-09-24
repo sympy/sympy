@@ -35,7 +35,7 @@ def components(expr):
     if isinstance(expr, Basic.Symbol):
         result.add(expr)
     elif isinstance(expr, Basic.Apply):
-        for obj in expr.args:
+        for obj in expr:
             result |= components(obj)
 
         result.add(expr)
