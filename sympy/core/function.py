@@ -993,8 +993,12 @@ class Function2(Basic, RelMeths):
             da = a.diff(s)
             if isinstance(da, Basic.Zero):
                 continue
-            df = self.func.fdiff(i)
-            l.append(Apply(df,*self[:]) * da)
+            if isinstance(self.func, FunctionClass):
+                df = self.fdiff(i)
+                l.append(df * da)
+            else:
+                df = self.func.fdiff(i)
+                l.append(Apply(df,*self[:]) * da)
         return Basic.Add(*l)
 
     def _eval_power(b, e):

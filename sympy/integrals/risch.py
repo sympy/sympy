@@ -187,7 +187,7 @@ def risch_norman(f, x, rewrite=False):
         return f * x
 
     rewritables = {
-        (S.Sin, S.Cos, Basic.cot)    : S.Tan,
+        (S.Sin, S.Cos, Basic.cot)    : Basic.tan,
         (S.Sinh, S.Cosh, S.Coth) : S.Tanh,
     }
 
@@ -272,7 +272,7 @@ def risch_norman(f, x, rewrite=False):
 
     for term in terms:
         if isinstance(term, Basic.Apply):
-            if isinstance(term.func, Basic.Tan):
+            if isinstance(term, Basic.tan):
                 special += [ (1 + substitute(term)**2, False) ]
             elif isinstance(term.func, Basic.Tanh):
                 special += [ (1 + substitute(term), False),

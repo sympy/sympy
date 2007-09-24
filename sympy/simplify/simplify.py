@@ -705,7 +705,7 @@ def trigsimp(expr, deep=False):
         log(2)
     """
     from sympy.core.basic import S
-    sin, cos, tan, cot = S.Sin, S.Cos, S.Tan, Basic.cot
+    sin, cos, tan, cot = S.Sin, S.Cos, Basic.tan, Basic.cot
     sec, csc = 1/cos, 1/sin
 
     if isinstance(expr, Apply):

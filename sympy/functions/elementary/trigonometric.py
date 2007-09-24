@@ -273,19 +273,24 @@ class ApplyCos(Apply):
         if arg.is_real:
             return True
 
-class Tan(DefinedFunction):
+class tan(SingleValuedFunction):
 
     nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex==1:
-            return S.One + S.Tan**2
+            return S.One + self**2
         else:
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
         return S.ATan
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -336,7 +341,8 @@ class Tan(DefinedFunction):
         if isinstance(arg, Basic.Number):
             return arg.tan()
 
-    @cache_it_immutable
+    #@cache_it_immutable
+    @classmethod
     def taylor_term(self, n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
@@ -349,8 +355,6 @@ class Tan(DefinedFunction):
             F = S.Factorial(n+1)
 
             return (-1)**a * b*(b-1) * B/F * x**n
-
-class ApplyTan(Apply):
 
     def _eval_conjugate(self):
         return self.func(self[0].conjugate())
@@ -512,7 +516,6 @@ class cot(SingleValuedFunction):
 
 Basic.singleton['sin'] = Sin
 Basic.singleton['cos'] = Cos
-Basic.singleton['tan'] = Tan
 
 ###############################################################################
 ########################### TRIGONOMETRIC INVERSES ############################
