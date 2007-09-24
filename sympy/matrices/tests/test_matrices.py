@@ -1,5 +1,6 @@
 
 from sympy import *
+from sympy import symbols
 from sympy.matrices.matrices import ShapeError
 import py
 
@@ -700,3 +701,9 @@ def test_trace():
                 [0,5,0],
                 [0,0,8]])
     assert M.trace() == 14
+
+def test_shape():
+    x, y = symbols("xy")
+    M = Matrix([[x,0,0],
+                [0,y,0]])
+    assert M.shape == (2, 3)

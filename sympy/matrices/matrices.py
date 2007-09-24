@@ -174,6 +174,10 @@ class Matrix(object):
         could change."""
         return hash(self.__str__() )
 
+    @property
+    def shape(self):
+        return (self.lines, self.cols)
+
     def __rmul__(self,a):
         assert not isinstance(a,Matrix)
         r=self.zeronm(self.lines,self.cols)
