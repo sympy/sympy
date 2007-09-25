@@ -1,7 +1,6 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import DefinedFunction, Apply, Lambda, \
-    SingleValuedFunction, Function2
+from sympy.core.function import Lambda, SingleValuedFunction, Function2
 
 class exp(SingleValuedFunction):
 
