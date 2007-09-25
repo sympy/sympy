@@ -69,7 +69,7 @@ class re(SingleValuedFunction):
                 a, b, c = map(lambda xs: Basic.Add(*xs),
                     [included, reverted, excluded])
 
-                return self(a) - S.Im(b) + c
+                return self(a) - im(b) + c
 
     def _eval_conjugate(self):
         return self
@@ -80,7 +80,7 @@ class re(SingleValuedFunction):
     def _eval_expand_complex(self, *args):
         return self.func(self[0].as_real_imag()[0])
 
-class Im(DefinedFunction):
+class im(SingleValuedFunction):
     """Returns imaginary part of expression. This function performs
        only elementary analysis and so it will fail to decompose
        properly more complicated expressions. If completely simplified
@@ -109,6 +109,11 @@ class Im(DefinedFunction):
 
     is_real = True
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -139,8 +144,6 @@ class Im(DefinedFunction):
 
                 return self(a) + re(b) + c
 
-class ApplyIm(Apply):
-
     def _eval_conjugate(self):
         return self
 
@@ -149,8 +152,6 @@ class ApplyIm(Apply):
 
     def _eval_expand_complex(self, *args):
         return self.func(self[0].as_real_imag()[1])
-
-Basic.singleton['im'] = Im
 
 ###############################################################################
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################

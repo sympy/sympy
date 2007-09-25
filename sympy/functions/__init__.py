@@ -5,7 +5,7 @@ import combinatorial
 import elementary
 import special
 
-from elementary.complexes import re
+from elementary.complexes import re, im
 from elementary.trigonometric import acot, cot, tan, cos, sin, asin, acos, atan
 from elementary.exponential import exp, log
 

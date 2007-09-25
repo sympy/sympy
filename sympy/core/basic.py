@@ -633,7 +633,7 @@ class Basic(BasicMeths):
     def _eval_expand_complex(self, *args):
         if isinstance(self, Atom):
             return self
-        if not isinstance(self, Basic.Apply):
+        if not isinstance(self, (Basic.Apply, Basic.Function2)):
             sargs = self[:]
         else:
             sargs = (self.func,)+self[:]

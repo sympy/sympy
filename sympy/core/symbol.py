@@ -80,7 +80,7 @@ class Symbol(Atom, RelMeths, ArithMeths):
         return self*(b-a)
 
     def _eval_expand_complex(self, *args):
-        return Basic.re(self) + S.Im(self)*S.ImaginaryUnit
+        return Basic.re(self) + Basic.im(self)*S.ImaginaryUnit
 
 class Wild(Symbol):
     """
