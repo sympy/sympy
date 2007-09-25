@@ -177,15 +177,16 @@ def risch_norman(f, x, rewrite=False):
     #XXX These stopped working after moving functions to new scheme, 
     # so I created this fix to pass all tests, but it should be investigated
     # what went wrong.
-    from sympy import sin, cos, exp, cot, tan, log
-    if f == S.Sinh(x):
-        return S.Cosh(x)
-    if f == x*S.Sinh(x):
-        return x*S.Cosh(x)-S.Sinh(x)
+    from sympy import sin, cos, exp, cot, tan, log, \
+                      sinh, cosh, tanh, coth
+    if f == sinh(x):
+        return cosh(x)
+    if f == x*sinh(x):
+        return x*cosh(x)-sinh(x)
     if f == sin(x)*exp(x):
         return exp(x)*sin(x)/2 - exp(x)*cos(x)/2
-    if f == x*S.Cosh(x):
-        return x*S.Sinh(x)-S.Cosh(x)
+    if f == x*cosh(x):
+        return x*sinh(x)-cosh(x)
     if f == sin(x):
         return -cos(x)
     if f == cos(x):
@@ -208,8 +209,8 @@ def risch_norman(f, x, rewrite=False):
         return f * x
 
     rewritables = {
-        (sin, cos, cot)          : tan,
-        (S.Sinh, S.Cosh, S.Coth) : S.Tanh,
+        (sin, cos, cot)     : tan,
+        (sinh, cosh, coth)  : tanh,
     }
 
     if rewrite:
@@ -300,7 +301,7 @@ def risch_norman(f, x, rewrite=False):
         if isinstance(term, (Basic.Apply, Basic.Function2)):
             if isinstance(term, Basic.tan):
                 special += [ (1 + substitute(term)**2, False) ]
-            elif isinstance(term.func, Basic.Tanh):
+            elif isinstance(term.func, tanh):
                 special += [ (1 + substitute(term), False),
                              (1 - substitute(term), False) ]
             #elif isinstance(term.func, Basic.LambertW):

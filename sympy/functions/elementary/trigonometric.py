@@ -38,7 +38,7 @@ class sin(SingleValuedFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return S.ImaginaryUnit * S.Sinh(i_coeff)
+                return S.ImaginaryUnit * Basic.sinh(i_coeff)
             else:
                 pi_coeff = arg.as_coefficient(S.Pi)
 
@@ -111,7 +111,7 @@ class sin(SingleValuedFunction):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        return sin(re)*S.Cosh(im) + S.ImaginaryUnit*cos(re)*S.Sinh(im)
+        return sin(re)*Basic.cosh(im) + S.ImaginaryUnit*cos(re)*Basic.sinh(im)
 
     def _eval_expand_trig(self, *args):
         arg = self[0].expand()
@@ -176,7 +176,7 @@ class cos(SingleValuedFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return S.Cosh(i_coeff)
+                return Basic.cosh(i_coeff)
             else:
                 pi_coeff = arg.as_coefficient(S.Pi)
 
@@ -248,8 +248,8 @@ class cos(SingleValuedFunction):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        return cos(re)*S.Cosh(im) - \
-            S.ImaginaryUnit*sin(re)*S.Sinh(im)
+        return cos(re)*Basic.cosh(im) - \
+            S.ImaginaryUnit*sin(re)*Basic.sinh(im)
 
     def _eval_expand_trig(self, *args):
         arg = self[0].expand()
@@ -311,7 +311,7 @@ class tan(SingleValuedFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return S.ImaginaryUnit * S.Tanh(i_coeff)
+                return S.ImaginaryUnit * Basic.tanh(i_coeff)
             else:
                 pi_coeff = arg.as_coefficient(S.Pi)
 
@@ -369,9 +369,9 @@ class tan(SingleValuedFunction):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        denom = cos(re)**2 + S.Sinh(im)**2
+        denom = cos(re)**2 + Basic.sinh(im)**2
         return (sin(re)*cos(re) + \
-            S.ImaginaryUnit*S.Sinh(im)*S.Cosh(im))/denom
+            S.ImaginaryUnit*Basic.sinh(im)*Basic.cosh(im))/denom
 
     def _eval_expand_trig(self, *args):
         return self
@@ -436,7 +436,7 @@ class cot(SingleValuedFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return -S.ImaginaryUnit * S.Coth(i_coeff)
+                return -S.ImaginaryUnit * Basic.coth(i_coeff)
             else:
                 pi_coeff = arg.as_coefficient(S.Pi)
 
@@ -494,9 +494,9 @@ class cot(SingleValuedFunction):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        denom = sin(re)**2 + S.Sinh(im)**2
+        denom = sin(re)**2 + Basic.sinh(im)**2
         return (sin(re)*cos(re) - \
-            S.ImaginaryUnit*S.Sinh(im)*S.Cosh(im))/denom
+            S.ImaginaryUnit*Basic.sinh(im)*Basic.cosh(im))/denom
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = Basic.exp, S.ImaginaryUnit
@@ -576,7 +576,7 @@ class asin(SingleValuedFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return S.ImaginaryUnit * S.ASinh(i_coeff)
+                return S.ImaginaryUnit * Basic.asinh(i_coeff)
             else:
                 coeff, terms = arg.as_coeff_terms()
 
@@ -747,7 +747,7 @@ class atan(SingleValuedFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return S.ImaginaryUnit * S.ATanh(i_coeff)
+                return S.ImaginaryUnit * Basic.atanh(i_coeff)
             else:
                 coeff, terms = arg.as_coeff_terms()
 
@@ -822,7 +822,7 @@ class acot(SingleValuedFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return -S.ImaginaryUnit * S.ACoth(i_coeff)
+                return -S.ImaginaryUnit * Basic.acoth(i_coeff)
             else:
                 coeff, terms = arg.as_coeff_terms()
 
