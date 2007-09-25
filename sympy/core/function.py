@@ -892,6 +892,7 @@ class Function2(Basic, RelMeths):
 
     precedence = Basic.Apply_precedence
 
+    @cache_it
     def __new__(cls, *args, **options):
         args = map(Basic.sympify, args)
         r = cls._eval_apply(*args, **options)

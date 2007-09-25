@@ -1,12 +1,13 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import DefinedFunction, Apply, Lambda
+from sympy.core.function import DefinedFunction, Apply, Lambda, \
+    SingleValuedFunction
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
 ###############################################################################
 
-class Re(DefinedFunction):
+class re(SingleValuedFunction):
     """Returns real part of expression. This function performs only
        elementary analysis and so it will fail to decompose properly
        more complicated expressions. If completely simplified result
@@ -35,6 +36,11 @@ class Re(DefinedFunction):
 
     is_real = True
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -64,8 +70,6 @@ class Re(DefinedFunction):
                     [included, reverted, excluded])
 
                 return self(a) - S.Im(b) + c
-
-class ApplyRe(Apply):
 
     def _eval_conjugate(self):
         return self
@@ -133,7 +137,7 @@ class Im(DefinedFunction):
                 a, b, c = map(lambda xs: Basic.Add(*xs),
                     [included, reverted, excluded])
 
-                return self(a) + S.Re(b) + c
+                return self(a) + re(b) + c
 
 class ApplyIm(Apply):
 
@@ -146,7 +150,6 @@ class ApplyIm(Apply):
     def _eval_expand_complex(self, *args):
         return self.func(self[0].as_real_imag()[1])
 
-Basic.singleton['re'] = Re
 Basic.singleton['im'] = Im
 
 ###############################################################################

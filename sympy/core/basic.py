@@ -830,7 +830,7 @@ class Basic(BasicMeths):
            >>> z, w = symbols('zw')
 
            >>> (z + w*I).as_real_imag()
-           (-im(w) + re(z), re(w) + im(z))
+           (-im(w) + re(z), im(z) + re(w))
 
         """
         expr = self.expand(complex=True)

@@ -88,6 +88,8 @@ def test_fraction():
     assert fraction((x**2+1)/y) == (x**2+1, y)
     assert fraction(x*(y+1)/y**7) == (x*(y+1), y**7)
 
+    assert fraction(exp(-x), exact=True) == (exp(-x), 1)
+
 def test_together():
     x, y, z = map(Symbol, 'xyz')
 
