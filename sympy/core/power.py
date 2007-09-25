@@ -212,7 +212,8 @@ class Pow(Basic, ArithMeths, RelMeths):
         return self.base, self.exp
 
     def _eval_conjugate(self):
-        return S.Conjugate(self.base)**self.exp
+        from sympy.functions.elementary.complexes import conjugate as c
+        return c(self.base)**self.exp
 
     def _eval_expand_complex(self, *args):
         if isinstance(self.exp, Basic.Integer):

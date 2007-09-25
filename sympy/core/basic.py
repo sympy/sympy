@@ -430,7 +430,8 @@ class Basic(BasicMeths):
             return self
 
     def conjugate(self):
-        return S.Conjugate(self)
+        from sympy.functions.elementary.complexes import conjugate as c
+        return c(self)
 
     def subs_dict(self, old_new_dict):
         r = self

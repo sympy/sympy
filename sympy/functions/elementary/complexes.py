@@ -231,19 +231,17 @@ class ApplyArg(Apply):
     def _eval_is_real(self):
         return True
 
-class Conjugate(DefinedFunction):
+class conjugate(SingleValuedFunction):
 
     nofargs = 1
 
+    @classmethod
     def _eval_apply(self, arg):
         obj = arg._eval_conjugate()
         if obj is not None:
             return obj
 
-class ApplyConjugate(Apply):
-
     def _eval_conjugate(self):
         return self[0]
 
 Basic.singleton['arg'] = Arg
-Basic.singleton['conjugate'] = Conjugate
