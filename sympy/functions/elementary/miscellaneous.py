@@ -1,6 +1,6 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import DefinedFunction, Apply, Lambda, SingleValuedFunction
+from sympy.core.function import Lambda, SingleValuedFunction
 
 ###############################################################################
 ############################# SQUARE ROOT FUNCTION ############################
@@ -77,7 +77,7 @@ class sqrt(SingleValuedFunction):
 ############################# MINIMUM and MAXIMUM #############################
 ###############################################################################
 
-class Max(DefinedFunction):
+class max_(SingleValuedFunction):
 
     nofargs = 2
 
@@ -99,13 +99,10 @@ class Max(DefinedFunction):
                         return
                     return x
 
-class Min(DefinedFunction):
+class min_(SingleValuedFunction):
 
     nofargs = 2
 
     def _eval_apply(self, x, y):
         if isinstance(x, Basic.Number) and isinstance(y, Basic.Number):
             return min(x, y)
-
-Basic.singleton['max_'] = Max
-Basic.singleton['min_'] = Min
