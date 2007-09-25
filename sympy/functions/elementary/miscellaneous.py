@@ -57,11 +57,6 @@ class sqrt(SingleValuedFunction):
         if isinstance(exp, Basic.Number):
             return arg ** (exp/2)
 
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-        if isinstance(arg, Basic.Number):
-            return arg.sqrt()
-
     def _eval_apply_subs(self, x, old, new):
         base, exp = old.as_base_exp()
         if base==x:

@@ -49,13 +49,6 @@ class sinh(SingleValuedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
-    @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.sinh()
-
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
@@ -150,13 +143,6 @@ class cosh(SingleValuedFunction):
                 if coeff.is_negative:
                     return self(-arg)
 
-    @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.cosh()
-
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
         if n < 0 or n % 2 == 1:
@@ -250,13 +236,6 @@ class tanh(SingleValuedFunction):
 
                 if coeff.is_negative:
                     return -self(-arg)
-
-    @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.tanh()
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
@@ -354,13 +333,6 @@ class coth(SingleValuedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
-    @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.coth()
-
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
         if n == 0:
@@ -456,13 +428,6 @@ class asinh(SingleValuedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
-    @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.asinh()
-
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
@@ -535,13 +500,6 @@ class acosh(SingleValuedFunction):
                 if arg in cst_table:
                     return cst_table[arg]*S.ImaginaryUnit
 
-    @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.acosh()
-
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
         if n == 0:
@@ -610,13 +568,6 @@ class atanh(SingleValuedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
-    @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.atanh()
-
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
@@ -676,13 +627,6 @@ class acoth(SingleValuedFunction):
 
                 if coeff.is_negative:
                     return -self(-arg)
-
-    @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.acoth()
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):

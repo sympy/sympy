@@ -1115,7 +1115,16 @@ class SingleValuedFunction(ArithMeths, Function2):
     Single-valued functions.
     """
 
-    pass
+    @classmethod
+    def _eval_apply_evalf(cls, arg):
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            func_evalf = getattr(arg, cls.__name__)
+            return func_evalf()
+
+
+
     #def series(self, x, n):
     #    s = Basic.Rational(0)
     #    for i in range(n+1):

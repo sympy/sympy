@@ -87,13 +87,6 @@ class exp(SingleValuedFunction):
             return Basic.Mul(*(excluded+[self(Basic.Add(*included))]))
 
     @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.exp()
-
-    @classmethod
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
         if n<0: return S.Zero
@@ -306,13 +299,6 @@ class log(SingleValuedFunction):
         return self, S.One
         #why is this here:?
         return exp, S.NegativeOne
-
-    @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.log()
 
     def _calc_apply_positive(self, x):
         if x.is_positive and x.is_unbounded: return True

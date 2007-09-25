@@ -207,6 +207,16 @@ class abs(SingleValuedFunction):
             return Basic.sqrt( (arg * arg.conjugate()).expand() )
         return
 
+    @classmethod
+    def _eval_apply_evalf(cls, arg):
+        # XXX this is weird!!!
+        # XXX remove me when 'abs -> abs_' is done
+        arg = arg.evalf()
+
+        if isinstance(arg, Basic.Number):
+            import operator
+            return operator.abs(float(arg))
+
     def _eval_is_zero(self):
         return isinstance(self[0], Basic.Zero)
 

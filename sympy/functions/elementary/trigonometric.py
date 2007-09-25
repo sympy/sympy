@@ -68,12 +68,6 @@ class sin(SingleValuedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
-    @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.sin()
 
     #@cache_it_immutable
     @classmethod
@@ -205,12 +199,6 @@ class cos(SingleValuedFunction):
                 if coeff.is_negative:
                     return self(-arg)
 
-    @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.cos()
 
     #@cache_it_immutable
     @classmethod
@@ -341,11 +329,6 @@ class tan(SingleValuedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.tan()
 
     #@cache_it_immutable
     @classmethod
@@ -466,11 +449,6 @@ class cot(SingleValuedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.cot()
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
@@ -583,11 +561,6 @@ class asin(SingleValuedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.asin()
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
@@ -662,12 +635,6 @@ class acos(SingleValuedFunction):
                 if arg in cst_table:
                     return cst_table[arg]
 
-    @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.acos()
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
@@ -754,12 +721,6 @@ class atan(SingleValuedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
-    @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.atan()
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
@@ -829,11 +790,6 @@ class acot(SingleValuedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if isinstance(arg, Basic.Number):
-            return arg.acot()
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
