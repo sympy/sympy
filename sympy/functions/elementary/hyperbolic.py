@@ -1,24 +1,29 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import DefinedFunction, Apply, Lambda
+from sympy.core.function import SingleValuedFunction, Lambda
 
 ###############################################################################
 ########################### HYPERBOLIC FUNCTIONS ##############################
 ###############################################################################
 
-class Sinh(DefinedFunction):
+class sinh(SingleValuedFunction):
 
     nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return S.Cosh
+            return cosh(self[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
-        return S.ASinh
+        return asinh
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -44,6 +49,7 @@ class Sinh(DefinedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
+    @classmethod
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
@@ -63,8 +69,6 @@ class Sinh(DefinedFunction):
             else:
                 return x**(n) / S.Factorial(n)
 
-class ApplySinh(Apply):
-
     def _eval_conjugate(self):
         return self.func(self[0].conjugate())
 
@@ -72,20 +76,20 @@ class ApplySinh(Apply):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        return S.Sinh(re)*Basic.cos(im) + S.Cosh(re)*Basic.sin(im)*S.ImaginaryUnit
+        return sinh(re)*Basic.cos(im) + cosh(re)*Basic.sin(im)*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
         return (S.Exp(arg) - S.Exp(-arg)) / 2
 
     def _eval_rewrite_as_cosh(self, arg):
-        return -S.ImaginaryUnit*S.Cosh(arg + S.Pi*S.ImaginaryUnit/2)
+        return -S.ImaginaryUnit*cosh(arg + S.Pi*S.ImaginaryUnit/2)
 
     def _eval_rewrite_as_tanh(self, arg):
-        tanh_half = S.Tanh(S.Half*arg)
+        tanh_half = tanh(S.Half*arg)
         return 2*tanh_half/(1 - tanh_half**2)
 
     def _eval_rewrite_as_coth(self, arg):
-        coth_half = S.Coth(S.Half*arg)
+        coth_half = coth(S.Half*arg)
         return 2*coth_half/(coth_half**2 - 1)
 
     def _eval_as_leading_term(self, x):
@@ -103,19 +107,24 @@ class ApplySinh(Apply):
         if arg.is_imaginary:
             return True
 
-class Cosh(DefinedFunction):
+class cosh(SingleValuedFunction):
 
     nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return S.Sinh
+            return sinh(self[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
-        return S.ACosh
+        return acosh
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -141,6 +150,7 @@ class Cosh(DefinedFunction):
                 if coeff.is_negative:
                     return self(-arg)
 
+    @classmethod
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
@@ -160,7 +170,6 @@ class Cosh(DefinedFunction):
             else:
                 return x**(n)/S.Factorial(n)
 
-class ApplyCosh(Apply):
     def _eval_conjugate(self):
         return self.func(self[0].conjugate())
 
@@ -168,20 +177,20 @@ class ApplyCosh(Apply):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        return S.Cosh(re)*Basic.cos(im) + S.Sinh(re)*Basic.sin(im)*S.ImaginaryUnit
+        return cosh(re)*Basic.cos(im) + sinh(re)*Basic.sin(im)*S.ImaginaryUnit
 
     def _eval_rewrite_as_exp(self, arg):
         return (S.Exp(arg) + S.Exp(-arg)) / 2
 
     def _eval_rewrite_as_sinh(self, arg):
-        return -S.ImaginaryUnit*S.Sinh(arg + S.Pi*S.ImaginaryUnit/2)
+        return -S.ImaginaryUnit*sinh(arg + S.Pi*S.ImaginaryUnit/2)
 
     def _eval_rewrite_as_tanh(self, arg):
-        tanh_half = S.Tanh(S.Half*arg)**2
+        tanh_half = tanh(S.Half*arg)**2
         return (1+tanh_half)/(1-tanh_half)
 
     def _eval_rewrite_as_coth(self, arg):
-        coth_half = S.Coth(S.Half*arg)**2
+        coth_half = coth(S.Half*arg)**2
         return (coth_half+1)/(coth_half-1)
 
     def _eval_as_leading_term(self, x):
@@ -199,19 +208,24 @@ class ApplyCosh(Apply):
         if arg.is_imaginary:
             return True
 
-class Tanh(DefinedFunction):
+class tanh(SingleValuedFunction):
 
     nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return S.One - S.Tanh**2
+            return S.One - tanh(self[0])**2
         else:
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
-        return S.ATanh
+        return atanh
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -237,6 +251,7 @@ class Tanh(DefinedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
+    @classmethod
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
@@ -257,8 +272,6 @@ class Tanh(DefinedFunction):
 
             return a*(a-1) * B/F * x**n
 
-class ApplyTanh(Apply):
-
     def _eval_conjugate(self):
         return self.func(self[0].conjugate())
 
@@ -266,8 +279,8 @@ class ApplyTanh(Apply):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        denom = S.Sinh(re)**2 + Basic.cos(im)**2
-        return (S.Sinh(re)*S.Cosh(re) + \
+        denom = sinh(re)**2 + Basic.cos(im)**2
+        return (sinh(re)*cosh(re) + \
             S.ImaginaryUnit*Basic.sin(im)*Basic.cos(im))/denom
 
     def _eval_rewrite_as_exp(self, arg):
@@ -275,13 +288,13 @@ class ApplyTanh(Apply):
         return (pos_exp-neg_exp)/(pos_exp+neg_exp)
 
     def _eval_rewrite_as_sinh(self, arg):
-        return S.ImaginaryUnit*S.Sinh(arg)/S.Sinh(S.Pi*S.ImaginaryUnit/2 - arg)
+        return S.ImaginaryUnit*sinh(arg)/sinh(S.Pi*S.ImaginaryUnit/2 - arg)
 
     def _eval_rewrite_as_cosh(self, arg):
-        return S.ImaginaryUnit*S.Cosh(S.Pi*S.ImaginaryUnit/2 - arg)/S.Cosh(arg)
+        return S.ImaginaryUnit*cosh(S.Pi*S.ImaginaryUnit/2 - arg)/cosh(arg)
 
     def _eval_rewrite_as_coth(self, arg):
-        return 1/S.Coth(arg)
+        return 1/coth(arg)
 
     def _eval_as_leading_term(self, x):
         arg = self[0].as_leading_term(x)
@@ -298,19 +311,24 @@ class ApplyTanh(Apply):
         if arg.is_real:
             return True
 
-class Coth(DefinedFunction):
+class coth(SingleValuedFunction):
 
     nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return 1/S.Sinh**2
+            return 1/sinh(self[0])**2
         else:
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
-        return S.ACoth
+        return acoth
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -336,6 +354,7 @@ class Coth(DefinedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
+    @classmethod
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
@@ -356,8 +375,6 @@ class Coth(DefinedFunction):
 
             return 2**(n+1) * B/F * x**n
 
-class ApplyCoth(Apply):
-
     def _eval_conjugate(self):
         return self.func(self[0].conjugate())
 
@@ -365,8 +382,8 @@ class ApplyCoth(Apply):
         if self[0].is_real:
             return self
         re, im = self[0].as_real_imag()
-        denom = S.Sinh(re)**2 + Basic.sin(im)**2
-        return (S.Sinh(re)*S.Cosh(re) - \
+        denom = sinh(re)**2 + Basic.sin(im)**2
+        return (sinh(re)*cosh(re) - \
             S.ImaginaryUnit*Basic.sin(im)*Basic.cos(im))/denom
 
     def _eval_rewrite_as_exp(self, arg):
@@ -374,13 +391,13 @@ class ApplyCoth(Apply):
         return (pos_exp+neg_exp)/(pos_exp-neg_exp)
 
     def _eval_rewrite_as_sinh(self, arg):
-        return -S.ImaginaryUnit*S.Sinh(S.Pi*S.ImaginaryUnit/2 - arg)/S.Sinh(arg)
+        return -S.ImaginaryUnit*sinh(S.Pi*S.ImaginaryUnit/2 - arg)/sinh(arg)
 
     def _eval_rewrite_as_cosh(self, arg):
-        return -S.ImaginaryUnit*S.Cosh(arg)/S.Cosh(S.Pi*S.ImaginaryUnit/2 - arg)
+        return -S.ImaginaryUnit*cosh(arg)/cosh(S.Pi*S.ImaginaryUnit/2 - arg)
 
     def _eval_rewrite_as_tanh(self, arg):
-        return 1/S.Tanh(arg)
+        return 1/tanh(arg)
 
     def _eval_as_leading_term(self, x):
         arg = self[0].as_leading_term(x)
@@ -390,26 +407,26 @@ class ApplyCoth(Apply):
         else:
             return self.func(arg)
 
-Basic.singleton['sinh'] = Sinh
-Basic.singleton['cosh'] = Cosh
-Basic.singleton['tanh'] = Tanh
-Basic.singleton['coth'] = Coth
 
 ###############################################################################
 ############################# HYPERBOLIC INVERSES #############################
 ###############################################################################
 
-class ASinh(DefinedFunction):
+class asinh(SingleValuedFunction):
 
     nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            z = Basic.Symbol('z', dummy=True)
-            return Lambda((1 + z**2)**(-S.Half), z)
+            return (self[0]**2 + 1)**(-S.Half)
         else:
             raise ArgumentIndexError(self, argindex)
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -439,6 +456,7 @@ class ASinh(DefinedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
+    @classmethod
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
@@ -463,8 +481,6 @@ class ASinh(DefinedFunction):
 
                 return (-1)**k * R / F * x**n / n
 
-class ApplyASinh(Apply):
-
     def _eval_as_leading_term(self, x):
         arg = self[0].as_leading_term(x)
 
@@ -473,17 +489,21 @@ class ApplyASinh(Apply):
         else:
             return self.func(arg)
 
-class ACosh(DefinedFunction):
+class acosh(SingleValuedFunction):
 
     nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            z = Basic.Symbol('z', dummy=True)
-            return Lambda(((z-1)*(z+1))**(-1), z)
+            return (self[0]**2 - 1)**(-S.Half)
         else:
             raise ArgumentIndexError(self, argindex)
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -515,6 +535,7 @@ class ACosh(DefinedFunction):
                 if arg in cst_table:
                     return cst_table[arg]*S.ImaginaryUnit
 
+    @classmethod
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
@@ -541,8 +562,6 @@ class ACosh(DefinedFunction):
 
                 return -R / F * S.ImaginaryUnit * x**n / n
 
-class ApplyACosh(Apply):
-
     def _eval_as_leading_term(self, x):
         arg = self[0].as_leading_term(x)
 
@@ -551,17 +570,21 @@ class ApplyACosh(Apply):
         else:
             return self.func(arg)
 
-class ATanh(DefinedFunction):
+class atanh(SingleValuedFunction):
 
     nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            z = Basic.Symbol('z', dummy=True)
-            return Lambda((z-1)**2, z)
+            return 1/(1-self[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -587,6 +610,7 @@ class ATanh(DefinedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
+    @classmethod
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
@@ -601,8 +625,6 @@ class ATanh(DefinedFunction):
             x = Basic.sympify(x)
             return x**n / n
 
-class ApplyATanh(Apply):
-
     def _eval_as_leading_term(self, x):
         arg = self[0].as_leading_term(x)
 
@@ -611,17 +633,21 @@ class ApplyATanh(Apply):
         else:
             return self.func(arg)
 
-class ACoth(DefinedFunction):
+class acoth(SingleValuedFunction):
 
     nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            z = Basic.Symbol('z', dummy=True)
-            return Lambda((z-1)**2, z)
+            return 1/(1-self[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -651,6 +677,7 @@ class ACoth(DefinedFunction):
                 if coeff.is_negative:
                     return -self(-arg)
 
+    @classmethod
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
@@ -667,8 +694,6 @@ class ACoth(DefinedFunction):
             x = Basic.sympify(x)
             return x**n / n
 
-class ApplyACoth(Apply):
-
     def _eval_as_leading_term(self, x):
         arg = self[0].as_leading_term(x)
 
@@ -677,7 +702,3 @@ class ApplyACoth(Apply):
         else:
             return self.func(arg)
 
-Basic.singleton['asinh'] = ASinh
-Basic.singleton['acosh'] = ACosh
-Basic.singleton['atanh'] = ATanh
-Basic.singleton['acoth'] = ACoth
