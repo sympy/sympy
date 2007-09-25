@@ -1,6 +1,6 @@
 """py.test hacks to support XFAIL/XPASS"""
 
-# XXX this should be integrated into py.tes
+# XXX this should be integrated into py.test
 # XXX but we can't force everyone to install py-lib trunk
 
 # tested with py-lib 0.9.0
