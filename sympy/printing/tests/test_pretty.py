@@ -1,5 +1,6 @@
 from sympy import *
 from sympy.printing.pretty import pretty
+from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
 y = Symbol('y')
@@ -119,6 +120,7 @@ def test_pretty_integrals():
     f_7 = Integral(x**2*sin(y), (x,0,1), (y,0,pi))
     assert pretty(f_7, use_unicode=True) == u'   \u03c0    1                \n   /    /                \n  |    |                 \n  |    |   2             \n  |    |  x *sin(y) dx dy\n  |    |                 \n /    /                  \n 0    0                  '
 
-def _test_pretty_limits():
+@XFAIL
+def test_pretty_limits():
     assert pretty( limit(x, x, oo, evaluate=False) ) == ' lim x\nx->oo '
     assert pretty( limit(x**2, x, 0, evaluate=False) ) == '     2\nlim x \nx->0  '  

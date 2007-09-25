@@ -1,5 +1,6 @@
 import py
 from sympy.core import *
+from sympy.utilities.pytest import XFAIL
 
 def test_symbol_unset():
     x = Symbol('x',real=True, integer=True)
@@ -269,7 +270,8 @@ def test_prime_symbol():
     assert x.is_nonpositive == None
     assert x.is_nonnegative == None
 
-def _test_other_symbol():
+@XFAIL
+def test_other_symbol():
     x = Basic.Symbol('x', integer=True)
     assert x.is_integer == True
     assert x.is_real == True

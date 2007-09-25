@@ -1,6 +1,7 @@
 from sympy import *
 from sympy.printing.mathml import mathml, MathMLPrinter
 from xml.dom.minidom import parseString
+from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
 mp = MathMLPrinter()
@@ -42,7 +43,8 @@ def test_mathml_functions():
     assert mml_2.childNodes[1].nodeName == 'bvar'
     assert mml_2.childNodes[1].childNodes[0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
 
-def _test_mathml_limits():
+@XFAIL
+def test_mathml_limits():
     # XXX No unevaluated limits
     mml_1 = mp._print(limit(sin(x)/x, x, 0, evaluate=False))
     assert mml_1.childNodes[0].nodeName == 'limit'

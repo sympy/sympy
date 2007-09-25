@@ -5,8 +5,10 @@ from sympy import *
 from sympy.numerics import *
 from sympy.numerics.functions import *
 from sympy.numerics.quad import *
+from sympy.utilities.pytest import XFAIL
 
-def _test_nintegrate():
+@XFAIL
+def test_nintegrate():
     Float.store()
     Float.setdps(20)
     pi_ = pi_float()

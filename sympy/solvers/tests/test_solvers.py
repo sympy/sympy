@@ -1,5 +1,6 @@
 
 from sympy import *
+from sympy.utilities.pytest import XFAIL
 
 from sympy.matrices import Matrix
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve
@@ -13,7 +14,8 @@ def test_solve():
     assert solve(x**2-1, x) in [[-1, 1], [1, -1]]
     assert solve(x**2 == 1, x) in [[-1, 1], [1, -1]]
 
-def _test_linear_system(): # needs simplify()
+@XFAIL
+def test_linear_system(): # needs simplify()
     x, y, z, t, n = map(Symbol, 'xyztn')
 
     assert solve([x+5*y-2, -3*x+6*y-15], [x, y]) == {x: -3, y: 1}

@@ -1,3 +1,4 @@
+from sympy.utilities.pytest import XFAIL
 from sympy import Symbol, Rational, exp
 
 def testequal():
@@ -34,7 +35,8 @@ def testequal():
     assert e5 != 3+x
     assert 3+x != e5
 
-def _test_expevalbug():
+@XFAIL
+def test_expevalbug():
     x = Symbol("x")
     e1 = exp(1*x)
     e3 = exp(x)

@@ -6,6 +6,7 @@ from sympy.numerics import *
 from sympy.numerics.functions import *
 import math
 import cmath
+from sympy.utilities.pytest import XFAIL
 
 def test_sqrt():
     for i in range(1000):
@@ -36,7 +37,8 @@ def test_exp():
     assert exp(log2_float() * Float(10)).ae(1024)
     assert exp(2+2j).ae(cmath.exp(2+2j))
 
-def _test_log():
+@XFAIL
+def test_log():
     assert log(1) == 0
     for x in [0.5, 1.5, 2.0, 3.0, 100, 10**50, 1e-50]:
         assert log(x) == math.log(x)
@@ -45,7 +47,8 @@ def _test_log():
     assert log(10**1234, 10) == 1234
     assert log(2+2j).ae(cmath.log(2+2j))
 
-def _test_trig_basic():
+@XFAIL
+def test_trig_basic():
     for x in (range(100) + range(-100,0)):
         t = x / 4.1
         assert cos(Float(t)).ae(math.cos(t))

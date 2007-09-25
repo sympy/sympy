@@ -1,6 +1,7 @@
 import py
 import sympy as g
 from sympy import *
+from sympy.utilities.pytest import XFAIL
 
 def testseries1():
     x = Symbol("x")
@@ -42,7 +43,8 @@ def testseries2():
     assert (1/(1+1/x)).series(x,4) == x-x**2+x**3-O(x**4, x)
     assert (1/(1+1/x**2)).series(x,6) == x**2-x**4+O(x**6, x)
 
-def _testfind():
+@XFAIL
+def testfind():
     # XXX find() doesn't exist
     a = Symbol("a")
     b = Symbol("b")
@@ -59,7 +61,8 @@ def xtest_log():
     e = (log(1/x+ec)-ec) / (x*log(1/x+1))
     d = e.diff(x)
 
-def _test_bug2(): ### 1/log(0) * log(0) problem
+@XFAIL
+def test_bug2(): ### 1/log(0) * log(0) problem
     w = Symbol("w")
     e = (w**(-1)+w**(-log(3)*log(2)**(-1)))**(-1)*(3*w**(-log(3)*log(2)**(-1))+2*w**(-1))
     e = e.expand()
@@ -71,7 +74,8 @@ def test_exp():
     e = (1+x)**(1/x)
     assert e.series(x,2) == exp(1) - x*exp(1)/2 + O(x**2, x)
 
-def _test_exp2():
+@XFAIL
+def test_exp2():
     # XXX Fails only when py.test is executed at top level, but passes
     #     when executed within directory (probably caching error)
     x = Symbol("x")
@@ -103,7 +107,8 @@ def test_generalexponent():
     assert e.series(x,2) == \
                 1+x-x**Rational(1,2)-x**Rational(3,2)+O(x**2, x)
 
-def _test_subsbug1():
+@XFAIL
+def test_subsbug1():
     # XXX pole_error doesn't exist
     x = Symbol("x")
     e = 1 + x**Rational(1,2)
@@ -127,7 +132,8 @@ def test_seriesbug2():
     assert e.series(w,3) == 2-Rational(4,3)*w**2+w**2*log(2)**2+2*w*log(2)+O(w**3, w)
     assert e.series(w,2).subs(w,0) == 2
 
-def _test_seriesbug3():
+@XFAIL
+def test_seriesbug3():
     # XXX Fails with infinte recursion
     x = Symbol("x")
     w = Symbol("w")
@@ -213,7 +219,8 @@ def test_order_expand_bug():
     e = (2/x+3*x**(-2))*(O(x**3)+x**2)
     assert e.expand() == 3 + O(x)
 
-def _test_expbug4():
+@XFAIL
+def test_expbug4():
     # XXX O(x).series not implemented
     x = Symbol("x")
     assert (log(sin(2*x)/x)*(1+x)).series(x,2) == log(2) + x*log(2) + O(x**2, x)
@@ -221,12 +228,14 @@ def _test_expbug4():
     assert exp(log(sin(2*x)/x)*(1+x)).series(x,2) == 2 + O(x**2, x)
     assert ((2+O(x))**(1+x)).series(x,2) == 2 + O(x**2, x)
 
-def _test_logbug4():
+@XFAIL
+def test_logbug4():
     # XXX O(x).series not implemented
     x = Symbol("x")
     assert log(2+O(x)).series(x,2) == log(2) + O(x, x)
 
-def _test_expbug5():
+@XFAIL
+def test_expbug5():
     # XXX O(x).series not implemented
     x = Symbol("x")
     assert exp(O(x)).series(x,2) == 1 + O(x**2, x)

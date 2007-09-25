@@ -1,4 +1,5 @@
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, re
+from sympy.utilities.pytest import XFAIL
 
 def test_bug1():
     x=Symbol("x")
@@ -76,7 +77,8 @@ def testdiv():
     e=(1-b)/(b-1)
     assert e == (1+-b)*((-1)+b)**(-1)
 
-def _testpow():
+@XFAIL
+def testpow():
     n1 = Rational(1)
     n2 = Rational(2)
     n5 = Rational(5)
@@ -747,7 +749,8 @@ def test_Pow_is_integer():
     assert (k**(n*m)).is_integer == True
     assert (k**(-n*m)).is_integer == None
 
-def _test_Pow_is_bounded():
+@XFAIL
+def test_Pow_is_bounded():
     x = Symbol('x', real=True)
 
     assert (x**2).is_bounded == None

@@ -3,8 +3,10 @@ sys.path.append(".")
 import py
 from sympy import *
 from sympy.numerics.evalf_ import evalf, polyfunc
+from sympy.utilities.pytest import XFAIL
 
-def _test_simple_evalf():
+@XFAIL
+def test_simple_evalf():
     assert evalf(2) == 2
     assert evalf(Rational(1,2)) == 0.5
     assert evalf(exp(pi*I)).ae(-1)

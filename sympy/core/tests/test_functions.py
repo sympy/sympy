@@ -1,4 +1,5 @@
 from sympy import *
+from sympy.utilities.pytest import XFAIL
 
 
 def test_log():
@@ -71,7 +72,8 @@ def test_bug1():
     e = sqrt(-5*log(w))
     assert e.subs(log(w),-x) == sqrt(5*x)
 
-def _test_invtrig(): # XXX No inverse trig yet
+@XFAIL
+def test_invtrig(): # XXX No inverse trig yet
     x = Symbol("x")
     assert atan(0) == 0
     assert atan(x).diff(x) == 1/(1+x**2)
@@ -114,7 +116,8 @@ def test_derivative_linearity():
     assert Derivative(8*n(x)*x, x) == 8*n(x) + 8*x*Derivative(n(x), x)
     assert Derivative(8*n(x)*y*x, x) == 8*y*n(x) + 8*y*x*Derivative(n(x), x)
 
-def _test_combine():
+@XFAIL
+def test_combine():
     # XXX combine no longer exists
     x = Symbol("x")
     y = Symbol("y")
