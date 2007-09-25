@@ -790,7 +790,7 @@ def radsimp(expr):
     """
     n,d = fraction(expr)
     a,b,c = map(Wild, 'abc')
-    r = d.match(a+b*S.Sqrt(c))
+    r = d.match(a+b*Basic.sqrt(c))
     if r is not None:
         a = r[a]
         if r[b] == 0:
@@ -799,7 +799,7 @@ def radsimp(expr):
             b,c = r[b],r[c]
 
         syms = list(n.atoms(type=Basic.Symbol))
-        n = collect( (n*(a-b*S.Sqrt(c))).expand(), syms )
+        n = collect( (n*(a-b*Basic.sqrt(c))).expand(), syms )
         d = a**2 - c*b**2
 
     return n/d

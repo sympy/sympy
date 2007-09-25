@@ -28,7 +28,7 @@ def test_expand():
 
 def test_issue153():
     #test that is runs:
-    a = S.Sqrt(2*(1+S.Sqrt(2)))
+    a = Basic.sqrt(2*(1+Basic.sqrt(2)))
 
 def test_issue350():
     #test if powers are simplified correctly

@@ -158,7 +158,7 @@ class Point(GeometryEntity):
             >>> Point.distance(p1, p2)
             5
         """
-        return S.Sqrt( sum([(a-b)**2 for a,b in zip(p1,p2)]) )
+        return Basic.sqrt( sum([(a-b)**2 for a,b in zip(p1,p2)]) )
 
     @staticmethod
     def midpoint(p1, p2):

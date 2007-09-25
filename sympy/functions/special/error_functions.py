@@ -13,7 +13,7 @@ class Erf(DefinedFunction):
     def fdiff(self, argindex=1):
         if argindex == 1:
             x = Basic.Symbol('x', dummy=True)
-            return Lambda(2*Basic.exp(-x**2)/S.Sqrt(S.Pi), x)
+            return Lambda(2*Basic.exp(-x**2)/Basic.sqrt(S.Pi), x)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -49,7 +49,7 @@ class Erf(DefinedFunction):
             if len(previous_terms) > 2:
                 return -previous_terms[-2] * x**2 * (n-2)/(n*k)
             else:
-                return 2*(-1)**k * x**n/(n*S.Factorial(k)*S.Sqrt(S.Pi))
+                return 2*(-1)**k * x**n/(n*S.Factorial(k)*Basic.sqrt(S.Pi))
 
 class ApplyErf(Apply):
 

@@ -204,7 +204,7 @@ class abs(SingleValuedFunction):
         if not isinstance(coeff, Basic.One):
             return self(coeff) * self(Basic.Mul(*terms))
         if arg.is_real is False:
-            return S.Sqrt( (arg * arg.conjugate()).expand() )
+            return Basic.sqrt( (arg * arg.conjugate()).expand() )
         return
 
     def _eval_is_zero(self):

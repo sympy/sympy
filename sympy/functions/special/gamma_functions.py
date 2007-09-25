@@ -47,9 +47,9 @@ class Gamma(DefinedFunction):
                         coeff *= i
 
                     if arg.is_positive:
-                        return coeff*S.Sqrt(S.Pi) / 2**n
+                        return coeff*Basic.sqrt(S.Pi) / 2**n
                     else:
-                        return 2**n*S.Sqrt(S.Pi) / coeff
+                        return 2**n*Basic.sqrt(S.Pi) / coeff
 
 class ApplyGamma(Apply):
 

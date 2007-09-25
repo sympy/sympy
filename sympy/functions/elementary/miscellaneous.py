@@ -1,12 +1,12 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import DefinedFunction, Apply, Lambda
+from sympy.core.function import DefinedFunction, Apply, Lambda, SingleValuedFunction
 
 ###############################################################################
 ############################# SQUARE ROOT FUNCTION ############################
 ###############################################################################
 
-class Sqrt(DefinedFunction):
+class sqrt(SingleValuedFunction):
 
     nofargs = 1
 
@@ -21,6 +21,7 @@ class Sqrt(DefinedFunction):
         s = Basic.Symbol('x', dummy=True)
         return Lambda(s**2, s)
 
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -66,14 +67,11 @@ class Sqrt(DefinedFunction):
         if base==x:
             return new ** (exp/2)
 
-class ApplySqrt(Apply):
     def _eval_is_zero(self):
         return isinstance(self[0], Basic.Zero)
 
     def as_base_exp(self):
         return self[0], S.Half
-
-Basic.singleton['sqrt'] = Sqrt
 
 ###############################################################################
 ############################# MINIMUM and MAXIMUM #############################

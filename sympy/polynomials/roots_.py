@@ -35,10 +35,10 @@ def cubic(f):
         else:
             u1 = q**Rational(1, 3)
     else:
-        u1 = (q/2 + S.Sqrt(q**2/4 + p**3/27))**Rational(1, 3)
+        u1 = (q/2 + Basic.sqrt(q**2/4 + p**3/27))**Rational(1, 3)
 
-    u2 = u1*(Rational(-1, 2) + S.ImaginaryUnit*S.Sqrt(3)/2)
-    u3 = u1*(Rational(-1, 2) - S.ImaginaryUnit*S.Sqrt(3)/2)
+    u2 = u1*(Rational(-1, 2) + S.ImaginaryUnit*Basic.sqrt(3)/2)
+    u3 = u1*(Rational(-1, 2) - S.ImaginaryUnit*Basic.sqrt(3)/2)
 
     return map(lambda u: (p/(u*3) - u - a/3).expand(), [u1, u2, u3])
 
@@ -109,21 +109,21 @@ def quadratic(f):
         else: # No linear term
             q = -(f.coeffs[1][0])
             if q > 0:
-                return [-S.Sqrt(q), S.Sqrt(q)]
+                return [-Basic.sqrt(q), Basic.sqrt(q)]
             else:
-                return [-S.Sqrt(q), S.Sqrt(q)]
+                return [-Basic.sqrt(q), Basic.sqrt(q)]
 
     p = f.coeffs[1][0]
     q = f.coeffs[2][0]
     discr = p**2 - 4*q
     if (not discr.is_complex) or discr > 0:
-        return [-p/2 + S.Sqrt(discr)/2,
-                -p/2 - S.Sqrt(discr)/2]
+        return [-p/2 + Basic.sqrt(discr)/2,
+                -p/2 - Basic.sqrt(discr)/2]
     elif discr == 0:
         return [-p/2]
     else: # discr < 0
-        return [-p/2 + S.ImaginaryUnit*S.Sqrt(-discr)/2,
-                -p/2 - S.ImaginaryUnit*S.Sqrt(-discr)/2]
+        return [-p/2 + S.ImaginaryUnit*Basic.sqrt(-discr)/2,
+                -p/2 - S.ImaginaryUnit*Basic.sqrt(-discr)/2]
 
 
 # TODO: Implement function to find roots of quartic polynomials?

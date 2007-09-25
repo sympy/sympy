@@ -70,7 +70,7 @@ class Ellipse(GeometryEntity):
         if hr.atoms(type=Basic.Symbol) or vr.atoms(type=Basic.Symbol):
             raise Exception("foci can only be determined on non-symbolic radii")
 
-        v = S.Sqrt(abs(vr**2 - hr**2))
+        v = Basic.sqrt(abs(vr**2 - hr**2))
         if hr < vr:
             return (c+Point(0, -v), c+Point(0, v))
         else:
@@ -182,7 +182,7 @@ class Ellipse(GeometryEntity):
                 is_good = True
 
             if is_good:
-                root = S.Sqrt(det)
+                root = Basic.sqrt(det)
                 t_a = (-b - root) / a
                 t_b = (-b + root) / a
                 result.append( lp[0] + (lp[1] - lp[0]) * t_a )
@@ -298,13 +298,13 @@ class Circle(Ellipse):
     def intersection(self, o):
         if isinstance(o, Circle):
             dx,dy = o._c - self.center
-            d = S.Sqrt( simplify(dy**2 + dx**2) )
+            d = Basic.sqrt( simplify(dy**2 + dx**2) )
             a = simplify((self.radius**2 - o.radius**2 + d**2) / (2*d))
 
             x2 = self.center[0] + (dx * a/d)
             y2 = self.center[1] + (dy * a/d)
 
-            h = S.Sqrt( simplify(self.radius**2 - a**2) )
+            h = Basic.sqrt( simplify(self.radius**2 - a**2) )
             rx = -dy * (h/d)
             ry =  dx * (h/d)
 
@@ -319,8 +319,8 @@ class Circle(Ellipse):
             return ret
         elif isinstance(o, Ellipse):
             a, b, r = o.hradius, o.vradius, self.radius
-            x = a*S.Sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
-            y = b*S.Sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
+            x = a*Basic.sqrt(simplify((r**2 - b**2)/(a**2 - b**2)))
+            y = b*Basic.sqrt(simplify((a**2 - r**2)/(a**2 - b**2)))
             return list(set([Point(x,y), Point(x,-y), Point(-x,y), Point(-x,-y)]))
 
         return Ellipse.intersection(self, o)
