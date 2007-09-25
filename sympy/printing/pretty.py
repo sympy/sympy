@@ -1,4 +1,4 @@
-from sympy.core import Basic
+from sympy.core import Basic, Function  # XXX remove Function from here
 from printer import Printer
 from stringpict import *
 
@@ -136,7 +136,7 @@ class PrettyPrinter(Printer):
         pform = self._print(e[0])
         return prettyForm(*stringPict.above(pform, '_'*pform.width()))
 
-    def _print_ApplyAbs(self, e):
+    def _print_abs(self, e):
         pform = self._print(e[0])
         pform.baseline = 0
         bars = '|' + ('\n|' * (pform.height()-1))
@@ -220,19 +220,30 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*arg.left(S))
         return pform
 
-    def _print_ApplyExp(self, e):
+    def _print_exp(self, e):
         if self._use_unicode:
             base = prettyForm(u'\u212f', binding=prettyForm.ATOM)
         else:
             base = prettyForm('e', binding=prettyForm.ATOM)
         return base ** self._print(e[0])
 
+    # TODO: rename to _print_Function
+    #       after 'Function2 -> Function' transition is done
+    def _print_Function2(self, e):
+        return self._print_Apply(e) # XXX this is temporary
+
     def _print_Apply(self, e):
         func = e.func
         args = e[:]
         n = len(args)
 
-        prettyFunc = self._print(Basic.Symbol(func.name));
+        # XXX temp. hack -- remove when 'Function2 -> Function' is done
+        if isinstance(func, Function):
+            func_name = func.name
+        else:
+            func_name = func.__name__
+
+        prettyFunc = self._print(Basic.Symbol(func_name));
         prettyArgs = self._print(args[0])
         for i in xrange(1, n):
             pform = self._print(args[i])

@@ -41,7 +41,7 @@ def test_pretty_unicode():
     assert pretty( oo, True ) == u'\u221e'
     assert pretty( pi, True ) == u'\u03c0'
     assert pretty( pi+2*x, True ) == u'\u03c0 + 2*x'
-    #assert pretty( pi**2+exp(x), True ) == u' 2    x\n\u03c0  + \u212f '
+    assert pretty( pi**2+exp(x), True ) == u' 2    x\n\u03c0  + \u212f '
     assert pretty( x != y, True ) == u'x \u2260 y'
     assert pretty( Symbol('beta'), True ) == u'\u03b2'
     assert pretty( Symbol('beta12'), True ) == u'\u03b212'
@@ -57,11 +57,11 @@ def test_pretty_unicode_defaults():
 
 def test_pretty_functions():
     # Simple
-    #assert pretty( (2*x + exp(x)) ) in [' x      \ne  + 2*x', '       x\n2*x + e ']
+    assert pretty( (2*x + exp(x)) ) in [' x      \ne  + 2*x', '       x\n2*x + e ']
     assert pretty( sqrt(2) ) == '  ___\n\\/ 2 '
     assert pretty( sqrt(2+pi) ) == '  ________\n\\/ 2 + pi '
-    #assert pretty(abs(x)) == '|x|'
-    #assert pretty(abs(x/(x**2+1))) == '|  x   |\n|------|\n|     2|\n|1 + x |'
+    assert pretty(abs(x)) == '|x|'
+    assert pretty(abs(x/(x**2+1))) == '|  x   |\n|------|\n|     2|\n|1 + x |'
 
     # Univariate/Multivariate functions
     f = Function('f')
@@ -72,7 +72,7 @@ def test_pretty_functions():
     # Nesting of square roots
     assert pretty( sqrt((sqrt(x+1))+1) ) == '    _______________\n   /       _______ \n \\/  1 + \\/ 1 + x  '
     # Function powers
-    #assert pretty( sin(x)**2 ) == '   2   \nsin (x)'
+    assert pretty( sin(x)**2 ) == '   2   \nsin (x)'
 
     # Conjugates
     a,b = map(Symbol, 'ab')
