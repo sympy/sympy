@@ -1,7 +1,6 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import DefinedFunction, Apply, Lambda, \
-    SingleValuedFunction
+from sympy.core.function import SingleValuedFunction
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -214,16 +213,15 @@ class abs(SingleValuedFunction):
     def _eval_conjugate(self):
         return self
 
-class Arg(DefinedFunction):
+class arg(SingleValuedFunction):
 
     nofargs = 1
 
     is_real = True
 
+    @classmethod
     def _eval_apply(self, arg):
         return
-
-class ApplyArg(Apply):
 
     def _eval_conjugate(self):
         return self
@@ -243,5 +241,3 @@ class conjugate(SingleValuedFunction):
 
     def _eval_conjugate(self):
         return self[0]
-
-Basic.singleton['arg'] = Arg
