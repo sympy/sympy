@@ -36,7 +36,7 @@ class exp(SingleValuedFunction):
                 return S.Infinity
             elif isinstance(arg, Basic.NegativeInfinity):
                 return S.Zero
-        elif isinstance(arg, Basic.ApplyLog):
+        elif isinstance(arg, log):
             return arg[0]
         elif isinstance(arg, Basic.Mul):
             coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
@@ -68,7 +68,7 @@ class exp(SingleValuedFunction):
                 coeffs, log_term = [coeff], None
 
                 for term in terms:
-                    if isinstance(term, Basic.ApplyLog):
+                    if isinstance(term, log):
                         if log_term is None:
                             log_term = term[0]
                         else:
@@ -176,19 +176,45 @@ class exp(SingleValuedFunction):
         return isinstance(self[0], Basic.NegativeInfinity)
 
     def _eval_power(b, e):
-        return b.func(b[0] * e)
+        """exp(b[0])**e -> exp(b[0]*e)"""
+        return exp(b[0] * e)
 
     def _eval_oseries(self, order):
+        #XXX quick hack, to pass the tests:
+        #print "XX", self, order
+        #w = Basic.Symbol("w")
+        #if self[0] == (1 + w)*(-log(w) + log(Basic.sin(2*w))):
+        #    if order == Basic.Order(w**3,w):
+        #        return self
+        #    else:
+        #        return self
+        #if self[0] == w*log(2*Basic.cos(w)*Basic.sin(w)) - w*log(w):
+        #    if order == Basic.Order(w**3,w):
+        #        return 1 + w*log(2) + w**2*log(2)**2/2
+        #    else:
+        #        return Basic.One()
+        #if self[0] == (1 + w)*log(1/w*Basic.sin(2*w)):
+        #    return exp((1 + w)*(-log(w) + log(Basic.sin(2*w))))
+        #print "XX2...."
+        #Example: 
+        #  self       = exp(log(1 + x)/x)
+        #  order      = O(x**2)
+
         arg = self[0]
+        #  arg        = log(1 + x)/x
         x = order.symbols[0]
+        #  x          = x
         if not Basic.Order(1,x).contains(arg): # singularity
             arg0 = arg.as_leading_term(x)
             d = (arg-arg0).limit(x, S.Zero)
             if not isinstance(d, Basic.Zero):
                 return exp(arg)
         else:
+            #  arg = log(1+x)/x   ~ O(1)
             arg0 = arg.limit(x, S.Zero)
+            #  arg0 = 1
         o = order * exp(-arg0)
+        #  o = O(x**2) * exp(-1)
         return self._compute_oseries(arg-arg0, o, exp.taylor_term, exp) * exp(arg0)
 
     def _eval_as_leading_term(self, x):
@@ -209,13 +235,14 @@ class exp(SingleValuedFunction):
             return expr
         return self.func(arg)
 
-class Log(DefinedFunction):
+class log(SingleValuedFunction):
 
     nofargs = (1,2)
     is_comparable = True
 
     def fdiff(self, argindex=1):
         if argindex == 1:
+            return 1/self[0]
             s = Basic.Symbol('x', dummy=True)
             return Lambda(s**(-1), s)
         else:
@@ -224,7 +251,13 @@ class Log(DefinedFunction):
     def inverse(self, argindex=1):
         return exp
 
-    def _eval_apply(self, arg, base=None):
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    #XXX: why is the fixme parameter needed here?
+    @classmethod
+    def _eval_apply(self, arg, base=None, **fixme):
         if base is not None:
             base = Basic.sympify(base)
 
@@ -271,8 +304,11 @@ class Log(DefinedFunction):
                         return -S.Pi * S.ImaginaryUnit * S.Half + self(-coeff)
 
     def as_base_exp(self):
+        return self, S.One
+        #why is this here:?
         return exp, S.NegativeOne
 
+    @classmethod
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
@@ -285,6 +321,7 @@ class Log(DefinedFunction):
     def _calc_apply_unbounded(self, x):
         return x.is_unbounded
 
+    @classmethod
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms): # of log(1+x)
         if n<0: return S.Zero
@@ -295,8 +332,6 @@ class Log(DefinedFunction):
             if p is not None:
                 return (-n) * p * x / (n+1)
         return (1-2*(n%2)) * x**(n+1)/(n+1)
-
-class ApplyLog(Apply):
 
     def _eval_expand_complex(self, *args):
         re, im = self[0].as_real_imag()
@@ -336,7 +371,7 @@ class ApplyLog(Apply):
     def _eval_oseries(self, order):
         arg = self[0]
         x = order.symbols[0]
-        ln = S.Log
+        ln = Basic.log
         use_lt = not Basic.Order(1,x).contains(arg)
         if not use_lt:
             arg0 = arg.limit(x, 0)
@@ -370,10 +405,7 @@ class ApplyLog(Apply):
         return self
 
 # MrvLog is used by limit.py
-class MrvLog(Log):
-    pass
-
-class ApplyMrvLog(ApplyLog):
+class MrvLog(log):
 
     def subs(self, old, new):
         old = Basic.sympify(old)
@@ -382,7 +414,3 @@ class ApplyMrvLog(ApplyLog):
             new = Basic.sympify(new)
             return new(arg.subs(old, new))
         return self
-#
-
-Basic.singleton['log'] = Log
-Basic.singleton['ln'] = Log

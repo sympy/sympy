@@ -370,4 +370,4 @@ def solve_ODE_1(f, x):
     """ (x*exp(-f(x)))'' = 0 """
     C1 = Symbol("C1")
     C2 = Symbol("C2")
-    return -S.Log(C1+C2/x)
+    return -Basic.log(C1+C2/x)

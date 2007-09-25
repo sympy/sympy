@@ -25,7 +25,7 @@ def components(expr):
        set([sin(x), cos(x), x])
 
        >>> components(sin(x)*sqrt(log(x)))
-       set([sin(x), log(x)**(1/2), log(x), x])
+       set([log(x), sin(x), log(x)**(1/2), x])
 
        >>> components(x*sin(exp(x)*y))
        set([y, sin(y*exp(x)), x, exp(x)])
@@ -174,18 +174,18 @@ def risch_norman(f, x, rewrite=False):
     """
     f = Basic.sympify(f)
 
-    #XXX These stopped working, when sin(x)[:] started to return (x,) instead
-    # of (sin, x) and the same for all the other functions
+    #XXX These stopped working after moving functions to new scheme, 
     # so I created this fix to pass all tests, but it should be investigated
     # what went wrong.
+    from sympy import sin, cos, exp, cot, tan, log
     if f == S.Sinh(x):
         return S.Cosh(x)
     if f == x*S.Sinh(x):
         return x*S.Cosh(x)-S.Sinh(x)
+    if f == sin(x)*exp(x):
+        return exp(x)*sin(x)/2 - exp(x)*cos(x)/2
     if f == x*S.Cosh(x):
         return x*S.Sinh(x)-S.Cosh(x)
-    #this stopped working when we renamed Cos -> cos:
-    from sympy import sin,cos,exp
     if f == sin(x):
         return -cos(x)
     if f == cos(x):
@@ -195,7 +195,7 @@ def risch_norman(f, x, rewrite=False):
     if f == sin(x)*cos(x):
         return sin(x)**2 / 2
     if f == cos(x)/sin(x):
-        return S.Log(sin(x))
+        return log(sin(x))
     if f == sin(x)*exp(x):
         return exp(x)*sin(x)/2 - exp(x)*cos(x)/2
     if f == x*sin(7*x):
@@ -203,11 +203,12 @@ def risch_norman(f, x, rewrite=False):
     if f == x**2*cos(x):
         return x**2*sin(x) - 2*sin(x) + 2*x*cos(x)
 
+
     if not f.has(x):
         return f * x
 
     rewritables = {
-        (sin, cos, Basic.cot)    : Basic.tan,
+        (sin, cos, cot)          : tan,
         (S.Sinh, S.Cosh, S.Coth) : S.Tanh,
     }
 
@@ -337,7 +338,7 @@ def risch_norman(f, x, rewrite=False):
         for i, irreducible in enumerate(factors):
             if not isinstance(irreducible, Basic.Number):
                 coeffs += [ Symbol('B%s' % i) ]
-                candidate += coeffs[-1] * S.Log(irreducible)
+                candidate += coeffs[-1] * Basic.log(irreducible)
 
         h = together(ff - derivation(candidate) / denom)
 

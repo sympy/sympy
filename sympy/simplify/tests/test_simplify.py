@@ -39,6 +39,8 @@ def test_trigsimp():
                 [2 + 3*cos(x/2)**2, 5 - 3*sin(x/2)**2]
 
     assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1
+    e = 2*sin(x)**2 + 2*cos(x)**2
+    assert trigsimp(log(e), deep=True) == log(2)
 
 #def test_factorial_simplify():
     # There are more tests in test_factorials.py. These are just to

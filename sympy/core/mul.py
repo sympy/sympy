@@ -7,6 +7,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
 
     @classmethod
     def flatten(cls, seq):
+        from function import FunctionClass
         # apply associativity, separate commutative part of seq
         c_part = []
         nc_part = []
@@ -20,7 +21,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             if c_seq:
                 # first process commutative objects
                 o = c_seq.pop(0)
-                if isinstance(o, Basic.Function):
+                if isinstance(o, (Basic.Function, FunctionClass)):
                     if o.nofargs is not None:
                         o, lambda_args = o.with_dummy_arguments(lambda_args)
                 if isinstance(o, Basic.Order):
@@ -53,7 +54,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 o = nc_seq.pop(0)
                 if isinstance(o, Basic.WildFunction):
                     pass
-                elif isinstance(o, Basic.Function):
+                elif isinstance(o, (Basic.Function, FunctionClass)):
                     if o.nofargs is not None:
                         o, lambda_args = o.with_dummy_arguments(lambda_args)
                 elif isinstance(o, Basic.Order):
@@ -403,6 +404,9 @@ class Mul(AssocOp, RelMeths, ArithMeths):
     def _eval_subs(self, old, new):
         if self==old:
             return new
+        from function import FunctionClass
+        if isinstance(old, FunctionClass):
+            return self.__class__(*[s.subs(old, new) for s in self])
         coeff1,terms1 = self.as_coeff_terms()
         coeff2,terms2 = old.as_coeff_terms()
         if terms1==terms2: # (2*a).subs(3*a,y) -> 2/3*y

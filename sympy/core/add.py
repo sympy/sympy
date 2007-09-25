@@ -255,6 +255,9 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
     def _eval_subs(self, old, new):
         if self==old: return new
+        from function import FunctionClass
+        if isinstance(old, FunctionClass):
+            return self.__class__(*[s.subs(old, new) for s in self])
         coeff1,factors1 = self.as_coeff_factors()
         coeff2,factors2 = old.as_coeff_factors()
         if factors1==factors2: # (2+a).subs(3+a,y) -> 2-3+y

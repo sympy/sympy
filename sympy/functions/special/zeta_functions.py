@@ -58,7 +58,7 @@ class DirichletEta(DefinedFunction): # TBD
 
     def _eval_apply(self, s):
         if s == 1:
-            return S.Log(2)
+            return Basic.log(2)
         else:
             return (1-2**(1-s)) * S.Zeta(s)
 

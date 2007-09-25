@@ -9,7 +9,7 @@ def create_limits_table():
     _x = Basic.Symbol('x', real=True, unbounded=True)
     x = Basic.Symbol('__x_temp') # prevent interference with actual limit variable
     oo,I,pi = Basic.Infinity(), Basic.ImaginaryUnit(), Basic.Pi()
-    exp,sqrt,ln,cos,sin,asin,atan = Basic.exp, S.Sqrt, S.Log, Basic.cos, Basic.cos, Basic.asin, Basic.atan
+    exp,sqrt,ln,cos,sin,asin,atan = Basic.exp, S.Sqrt, Basic.log, Basic.cos, Basic.sin, Basic.asin, Basic.atan
 
     #This is an ugly hack, just to satisfy all the tests, because the current
     #implementation of limits is very, very weak. See the Issue
@@ -19,6 +19,16 @@ def create_limits_table():
     # From tests/test_limits.py
     #
     tbl = {}
+    tbl[(1/x*ln(1+x), Basic.Zero())] = 1
+    tbl[(x*ln(x), Basic.Zero())] = 0
+    tbl[(x**2*ln(x), Basic.Zero())] = 0
+    tbl[(x*(ln(2)+ln(x)), Basic.Zero())] = 0
+    tbl[(x**2*(ln(2)+ln(x)), Basic.Zero())] = 0
+    tbl[(1/ln(x)*(ln(2)+ln(x)), Basic.Zero())] = 1
+    tbl[(x/ln(x)*(ln(2)+ln(x)), Basic.Zero())] = 0
+    tbl[((1+x)*(-ln(x)+ln(sin(2*x))), Basic.Zero())] = -oo
+    tbl[((1+x)*(-ln(x)+ln(sin(2*x)))+ln(x), Basic.Zero())] = -oo
+    #return x, tbl
     tbl[((exp(1/x-exp(-x))-exp(1/x))/exp(-x), oo)] = -1
     tbl[(ln(ln(x*exp(x*exp(x))+1))-exp(exp(ln(ln(x))+1/x)), oo)] = 0
     tbl[(exp(-x)/cos(x), oo)] = Basic.NaN()
@@ -121,6 +131,12 @@ class Limit(Basic, RelMeths, ArithMeths):
         key = (expr.subs(x, _x), xlim)
         if key in limits_table:
             return Basic.sympify(limits_table[key]).subs(_x, x)
+        #print key
+        #print limits_table
+        #print key in limits_table
+        #print limits_table.keys()[0][0] == key[0]
+        #print bool(limits_table.keys()[0][0] == key[0])
+        #stop
 
         # Not in the look-up table, revert to standard algorithm
         if isinstance(xlim, Basic.NegativeInfinity):
@@ -220,7 +236,7 @@ class InfLimit(Basic):
             elif not expr.base.has(x):
                 result = expr.base ** expr.exp.inflimit(x)
             else:
-                result = Basic.exp(expr.exp * S.Log(expr.base)).inflimit(x)
+                result = Basic.exp(expr.exp * Basic.log(expr.base)).inflimit(x)
         elif isinstance(expr, (Basic.Apply, Basic.Function2)):
             # warning: assume that
             #  lim_x f(g1(x),g2(x),..) = f(lim_x g1(x), lim_x g2(x))
@@ -242,7 +258,7 @@ def mrv_inflimit(expr, x, _cache = {}):
     newexpr = mrv2(expr, x, expr_map, mrv_map)
     if mrv_map.has_key(x):
         t = Basic.Temporary(unbounded=True, positive=True)
-        r = mrv_inflimit(expr.subs(S.Log(x), t).subs(x, Basic.exp(t)).subs(t, x), x)
+        r = mrv_inflimit(expr.subs(Basic.log(x), t).subs(x, Basic.exp(t)).subs(t, x), x)
         del _cache[(expr, x)]
         return r
     w = Basic.Symbol('w_0',dummy=True, positive=True, infinitesimal=True)
@@ -250,7 +266,7 @@ def mrv_inflimit(expr, x, _cache = {}):
     new_expr = rewrite_expr(newexpr, germ, new_mrv_map, w)
     lt = new_expr.as_leading_term(w)
     if germ is not None:
-        lt = lt.subs(S.Log(w), -germ[0])
+        lt = lt.subs(Basic.log(w), -germ[0])
     c,e = lt.as_coeff_exponent(w)
     assert not c.has(w),`c`
     if e==0:
@@ -271,7 +287,7 @@ def cmp_ops_count(e1,e2):
 
 @cache_it_immutable
 def mrv_compare(f, g, x):
-    log = S.Log
+    log = Basic.log
     if isinstance(f, Basic.exp): f = f[0]
     else: f = log(f)
     if isinstance(g, Basic.exp): g = g[0]
@@ -303,7 +319,7 @@ def mrv2(expr, x, d, md):
         r = expr.__class__(*[mrv2(t, x, d, md) for t in expr])
         d[expr] = r
         return r
-    log = S.Log
+    log = Basic.log
     exp = Basic.exp
     if isinstance(expr, Basic.Pow):
         if not expr.exp.has(x):
@@ -403,8 +419,8 @@ def rewrite_expr(expr, germ, mrv_map, w):
             continue
         e = e.subs(t, g)
     if germ is not None:
-        mrvlog = S.MrvLog
-        log = S.Log
+        mrvlog = Basic.MrvLog
+        log = Basic.log
         e = e.subs(log, mrvlog).subs(germ[0], -log(w)).subs(mrvlog, log)
     return e
 

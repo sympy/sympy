@@ -343,6 +343,7 @@ class Basic(BasicMeths):
         #        if old_val is not None and old_val != getattr(new, 'is_' + x):
         #            raise ValueError("Cannot substitute '%s' for '%s' because assumptions do not match" % (str(new), str(old)))
 
+        #print self, old, new
         return self._eval_subs(old, new)
 
     def _seq_subs(self, old, new):
@@ -1051,7 +1052,7 @@ class Basic(BasicMeths):
         that order.contains(taylor_term(n, arg)). Assumes that arg->0 as x->0.
         """
         x = order.symbols[0]
-        ln = Basic.Log()
+        ln = Basic.log
         o = Basic.Order(arg, x)
         if isinstance(o, Basic.Zero):
             return unevaluated_func(arg)

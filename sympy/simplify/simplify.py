@@ -147,6 +147,7 @@ def separate(expr, deep=False):
 
     if isinstance(expr, Basic.Pow):
         terms, expo = [], separate(expr.exp, deep)
+        #print expr, terms, expo, expr.base
 
         if isinstance(expr.base, Mul):
             t = [ separate(Basic.Pow(t,expo), deep) for t in expr.base ]
@@ -707,14 +708,12 @@ def trigsimp(expr, deep=False):
     """
     from sympy.core.basic import S
     sin, cos, tan, cot = Basic.sin, Basic.cos, Basic.tan, Basic.cot
-    #XXX this isn't implemented yet in new functions:
-    #sec, csc = 1/cos, 1/sin
 
     #XXX this stopped working:
     if expr == 1/cos(Symbol("x"))**2 - 1:
         return tan(Symbol("x"))**2
 
-    if isinstance(expr, Apply):
+    if isinstance(expr, (Apply, Basic.Function2)):
         if deep:
             return expr.func( trigsimp(expr[0], deep) )
     elif isinstance(expr, Mul):

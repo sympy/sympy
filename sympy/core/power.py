@@ -199,7 +199,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3*y)
         if isinstance(old, Basic.exp):
             coeff1,terms1 = old[0].as_coeff_terms()
-            coeff2,terms2 = (self.exp * S.Log(self.base)).as_coeff_terms()
+            coeff2,terms2 = (self.exp * Basic.log(self.base)).as_coeff_terms()
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(exp(3*y*log(x)),z) -> z**(2/3*y)
         return self.base.subs(old, new) ** self.exp.subs(old, new)
 
@@ -314,7 +314,7 @@ class Pow(Basic, ArithMeths, RelMeths):
     def _eval_derivative(self, s):
         dbase = self.base.diff(s)
         dexp = self.exp.diff(s)
-        return self * (dexp * S.Log(self.base) + dbase * self.exp/self.base)
+        return self * (dexp * Basic.log(self.base) + dbase * self.exp/self.base)
 
     _eval_evalf = Basic._seq_eval_evalf
 
@@ -432,7 +432,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         x = order.symbols[0]
         e = self.exp
         b = self.base
-        ln = S.Log
+        ln = Basic.log
         exp = Basic.exp
         if e.has(x):
             return exp(e * ln(b)).oseries(order)
@@ -455,7 +455,7 @@ class Pow(Basic, ArithMeths, RelMeths):
     def _eval_as_leading_term(self, x):
         if not self.exp.has(x):
             return self.base.as_leading_term(x) ** self.exp
-        return Basic.exp(self.exp * S.Log(self.base)).as_leading_term(x)
+        return Basic.exp(self.exp * Basic.log(self.base)).as_leading_term(x)
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms): # of (1+x)**e
