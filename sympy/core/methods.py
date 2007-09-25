@@ -16,7 +16,7 @@ class ArithMeths(object):
     def __neg__(self):
         return Basic.Integer(-1) * self
     def __abs__(self):
-        return Basic.Abs()(self)
+        return Basic.abs(self)
     def __add__(self, other):
         return Basic.Add(self, other)
     def __radd__(self, other):

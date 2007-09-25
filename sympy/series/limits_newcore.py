@@ -278,7 +278,7 @@ def mrv_inflimit(expr, x, _cache = {}):
         return S.Zero
     if e.is_negative:
         del _cache[(expr, x)]
-        return S.Sign(c) * S.Infinity
+        return Basic.sign(c) * S.Infinity
     raise RuntimeError('Failed to compute mrv_inflimit(%s, %s), got lt=%s' % (self, x, lt))
 
 @cache_it_immutable
@@ -356,7 +356,7 @@ def mrv2(expr, x, d, md):
                 continue
             new_terms.append(t)
         terms = new_terms
-        coeff = Basic.Sign()(coeff)
+        coeff = Basic.sign(coeff)
         if not isinstance(coeff, Basic.One):
             terms.insert(0,coeff)
         en = Basic.Mul(*terms)

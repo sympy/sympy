@@ -115,7 +115,7 @@ def test_cmp():
     assert Float(4.4408920985006262E-16) < Float(1.7763568394002505E-15)
     assert Float(-4.4408920985006262E-16) > Float(-1.7763568394002505E-15)
 
-def test_almost_equal():
+def _test_almost_equal():
     assert Float(1.2).ae(Float(1.20000001), 1e-7)
     assert not Float(1.2).ae(Float(1.20000001), 1e-9)
     assert not Float(-0.7818314824680298).ae(Float(-0.774695868667929))
@@ -127,7 +127,7 @@ def test_convert():
     assert Float(0.5).rational() == Rational(1,2)
     assert Float(-3).rational() == Rational(-3)
 
-def test_add():
+def _test_add():
     assert Float(4) + Float(-70) == -66
     assert Float(1) + Float(1.1)/80 == 1 + 1.1/80
     assert Float((1, 10000000000)) + Float(3) == Float((1, 10000000000))
@@ -139,7 +139,7 @@ def test_add():
     assert Float(1.07e-22) + 0 == Float(1.07e-22)
     assert Float(0) + Float(1.07e-22) == Float(1.07e-22)
 
-def test_contexts():
+def _test_contexts():
     Float.store()
     Float.setprec(100)
     Float.store()
@@ -152,7 +152,7 @@ def test_contexts():
     Float.revert()
     assert Float.getprec() == 53
 
-def test_complex():
+def _test_complex():
     # many more tests needed
     assert 1 + ComplexFloat(2) == 3
     assert not ComplexFloat(2).ae(2+1e-13)

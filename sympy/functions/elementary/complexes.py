@@ -157,10 +157,11 @@ class im(SingleValuedFunction):
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################
 ###############################################################################
 
-class Sign(DefinedFunction):
+class sign(SingleValuedFunction):
 
     nofargs = 1
 
+    @classmethod
     def _eval_apply(self, arg):
         if isinstance(arg, Basic.NaN):
             return S.NaN
@@ -172,8 +173,6 @@ class Sign(DefinedFunction):
             if not isinstance(coeff, Basic.One):
                 return self(coeff) * self(Basic.Mul(*terms))
 
-class ApplySign(Apply):
-
     is_bounded = True
 
     def _eval_conjugate(self):
@@ -182,16 +181,21 @@ class ApplySign(Apply):
     def _eval_is_zero(self):
         return isinstance(self[0], Basic.Zero)
 
-class Abs(DefinedFunction):
+class abs(SingleValuedFunction):
 
     nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return Basic.Sign()
+            return sign(self[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
+    @classmethod
+    def _eval_apply_subs(self, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         if isinstance(arg, Basic.NaN):
             return S.NaN
@@ -206,8 +210,6 @@ class Abs(DefinedFunction):
 
     def _eval_is_zero(self):
         return isinstance(self[0], Basic.Zero)
-
-class ApplyAbs(Apply):
 
     def _eval_conjugate(self):
         return self
@@ -243,7 +245,5 @@ class ApplyConjugate(Apply):
     def _eval_conjugate(self):
         return self[0]
 
-Basic.singleton['sign'] = Sign
-Basic.singleton['abs_'] = Abs
 Basic.singleton['arg'] = Arg
 Basic.singleton['conjugate'] = Conjugate

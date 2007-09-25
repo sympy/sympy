@@ -45,7 +45,7 @@ def _test_log():
     assert log(10**1234, 10) == 1234
     assert log(2+2j).ae(cmath.log(2+2j))
 
-def test_trig_basic():
+def _test_trig_basic():
     for x in (range(100) + range(-100,0)):
         t = x / 4.1
         assert cos(Float(t)).ae(math.cos(t))

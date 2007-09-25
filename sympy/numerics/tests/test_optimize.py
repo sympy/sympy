@@ -5,7 +5,7 @@ from sympy import *
 from sympy.numerics import *
 from sympy.numerics.optimize import *
 
-def test_polyroots():
+def _test_polyroots():
     x = Symbol('x')
     rs = polyroots(4*(x-3)*(x+I)*(x-4-5*I))
     assert rs[0][0].ae(ComplexFloat(0, -1))

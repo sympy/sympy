@@ -49,7 +49,7 @@ class Sqrt(DefinedFunction):
         base, exp = arg.as_base_exp()
         if isinstance(exp, Basic.Number):
             if exp == 2:
-                return S.Abs(base)
+                return Basic.abs(base)
             return base ** (exp/2)
 
     def _eval_apply_power(self, arg, exp):

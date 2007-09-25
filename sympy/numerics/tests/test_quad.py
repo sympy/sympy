@@ -6,7 +6,7 @@ from sympy.numerics import *
 from sympy.numerics.functions import *
 from sympy.numerics.quad import *
 
-def test_nintegrate():
+def _test_nintegrate():
     Float.store()
     Float.setdps(20)
     pi_ = pi_float()
