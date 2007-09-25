@@ -34,6 +34,7 @@ def footer(self, colitems):
 
 
 def xpasses(self):
+    """report unexpectedly passed tests"""
     texts = {}
     for colitem, outcome in self.getitemoutcomepairs(XPass):
         raisingtb = self.getlastvisible(outcome.excinfo.traceback) 
@@ -65,6 +66,10 @@ def summaryline(self):
     status = "%s" % ", ".join(outlist)
     self.out.sep('=', 'tests finished: %s in %4.2f seconds' %
                      (status, elapsed))
+
+    # SymPy specific
+    if self.getitemoutcomepairs(Failed):
+        self.out.line('DO *NOT* COMMIT!')
 
 TerminalSession.footer  = footer
 TerminalSession.xpasses = xpasses
