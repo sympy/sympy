@@ -11,6 +11,8 @@ from elementary.trigonometric import acot, cot, tan, cos, sin, asin, acos, atan
 from elementary.exponential import exp, log
 from elementary.hyperbolic import sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth
 
+from special.error_functions import erf
+
 ln = log
 
 for _n, _cls in Basic.singleton.items():

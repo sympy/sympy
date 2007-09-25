@@ -1,22 +1,26 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import DefinedFunction, Apply, Lambda
+from sympy.core.function import SingleValuedFunction
 
 ###############################################################################
 ################################ ERROR FUNCTION ###############################
 ###############################################################################
 
-class Erf(DefinedFunction):
+class erf(SingleValuedFunction):
 
     nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            x = Basic.Symbol('x', dummy=True)
-            return Lambda(2*Basic.exp(-x**2)/Basic.sqrt(S.Pi), x)
+            return 2*Basic.exp(-self[0]**2)/Basic.sqrt(S.Pi)
         else:
             raise ArgumentIndexError(self, argindex)
 
+    @classmethod
+    def _eval_apply_subs(cls, *args):
+        return
+
+    @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
 
@@ -37,6 +41,7 @@ class Erf(DefinedFunction):
             if coeff.is_negative:
                 return -self(-arg)
 
+    @classmethod
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
@@ -51,8 +56,6 @@ class Erf(DefinedFunction):
             else:
                 return 2*(-1)**k * x**n/(n*S.Factorial(k)*Basic.sqrt(S.Pi))
 
-class ApplyErf(Apply):
-
     def _eval_as_leading_term(self, x):
         arg = self[0].as_leading_term(x)
 
@@ -64,12 +67,15 @@ class ApplyErf(Apply):
     def _eval_is_real(self):
         return self[0].is_real
 
-    def evalf(self):
-        # Temporary hack
-        from sympy.core.numbers import Real
-        from sympy.numerics.functions2 import erf
-        from sympy.numerics import evalf
-        e = erf(evalf(self[0]))
-        return Real(str(e))
+    @classmethod
+    def _eval_apply_evalf(self, arg):
+        arg = arg.evalf()
 
-Basic.singleton['erf'] = Erf
+        if isinstance(arg, Basic.Number):
+            # Temporary hack
+            from sympy.core.numbers import Real
+            from sympy.numerics import evalf
+            from sympy.numerics.functions2 import erf
+            e = erf(evalf(arg))
+            return Real(str(e))
+
