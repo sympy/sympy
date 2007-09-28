@@ -24,7 +24,20 @@ import sys
 sys.path.append('..')
 sys.path.append('.')
 
-welcome_msg = "Python console for SymPy."
+from sympy import __version__ as sympy_version
+python_version = "%d.%d.%d" % tuple(sys.version_info[:3])
+
+def indent(s):
+    """Puts ">>> " in front of each line."""
+    r = ""
+    for l in s.split("\n"):
+        if l != "":
+            r+=">>> "+l+"\n"
+    return r
+
+welcome_msg = \
+    "Python %s console for SymPy %s. These commands were executed:\n%s" % \
+            (python_version, sympy_version, indent(init_code))
 
 def run_ipython_interpreter():
 
@@ -50,10 +63,10 @@ def run_ipython_interpreter():
     sys.exit("Exiting ...")
 
 def run_python_interpreter():
-    print """
-Couldn't locate IPython. Having IPython installed is greatly recomended.
-See http://ipython.scipy.org for more details. If you use Debian, just install
-the "ipython" package and start isympy again.\n"""
+    print """\
+Couldn't locate IPython. Having IPython installed is greatly recommended.  See
+http://ipython.scipy.org for more details. If you use Debian/Ubuntu, just
+install the "ipython" package and start isympy again.\n"""
 
     import code
     import readline
