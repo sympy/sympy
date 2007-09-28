@@ -115,6 +115,10 @@ class Function2(Basic, RelMeths):
     def canonize(cls, args, **options):
         return
 
+    @classmethod
+    def _eval_apply(self, *args):
+        return
+
     #@cache_it
     def x__new__(cls, *args, **kwargs):
         args = map(Basic.sympify, args)
@@ -697,7 +701,9 @@ class Function(Basic, ArithMeths, NoRelMeths):
     def taylor_term(self, n, x, *previous_terms):
         raise NotImplementedError('%s.taylor_term(..)' % (self))
 
-class WildFunction(Function, Atom):
+class WildFunction(Function2, Atom):
+
+    nofargs = 1
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         for p,v in repl_dict.items():
@@ -716,6 +722,10 @@ class WildFunction(Function, Atom):
 
     def tostr(self, level=0):
         return self.name + '_'
+
+    @classmethod
+    def _eval_apply_evalf(cls, arg):
+        return
 
 class FApply(Function):
     """
