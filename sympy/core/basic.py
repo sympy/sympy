@@ -718,10 +718,17 @@ class Basic(BasicMeths):
             pattern, rule = args[:-1], args[-1]
 
             if not isinstance(rule, str):
+                # XXX move me out of here (cyclic imports)
+                from function import FunctionClass
+
                 if rule == Basic.tan:
                     rule = "tan"
-                if rule == Basic.exp:
+                elif rule == Basic.exp:
                     rule = "exp"
+                elif isinstance(rule, FunctionClass):   # new-style functions
+                    print rule
+                    rule = rule.__name__  # XXX proper attribute for name?
+                    print rule
                 else:
                     rule = rule.tostr()
 
