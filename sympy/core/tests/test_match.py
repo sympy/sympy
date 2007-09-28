@@ -138,7 +138,7 @@ def test_derivative():
     x,y = map(Symbol, 'xy')
     p,q = map(Wild, 'pq')
 
-    f = Function('f',nofargs=1)
+    f = Function2('f',nofargs=1)
     fd = Derivative(f(x), x)
 
     assert fd.match(p) == {p: fd}
@@ -148,7 +148,7 @@ def test_derivative():
     assert (3*fd-1).match(p*fd + q) == {p: 3, q: -1}
 
 def test_match_deriv_bug1():
-    n = Function('n',nofargs=1)
+    n = Function2('n',nofargs=1)
     l = Function('l',nofargs=1)
 
     x = Symbol('x')
