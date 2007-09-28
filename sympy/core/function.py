@@ -665,74 +665,6 @@ class Composition(AssocOp, Function):
         return
 
 
-class FDerivative(Function):
-
-    is_homogeneous = True
-
-    def __new__(cls, *indices, **assumptions):
-        indices = map(Basic.sympify, indices)
-        indices.sort(Basic.compare)
-        return Basic.__new__(cls, *indices, **assumptions)
-
-    def _hashable_content(self):
-        return self._args
-
-    @property
-    def func(self):
-        return self._args[0]
-
-    def __getitem__(self, iter):
-        return self._args[1:][iter]
-
-    @property
-    def indices(self):
-        return self._args
-
-    def tostr(self, level=0):
-        return 'FD%s' % (repr(tuple(self.indices)))
-
-    def _eval_fapply(self, *funcs):
-        if len(funcs)==1:
-            func = funcs[0]
-            if not self.indices:
-                return func
-            if isinstance(func, FApply) and isinstance(func.operator, FDerivative):
-                # FApply(FD(1),FApply(FD(2),f)) -> FApply(FD(1,2), f)
-                return FApply(FDerivative(*(self.indices+func.operator.indices)), *func.funcs)
-            if isinstance(func, Lambda):
-                # FApply(FD(1),Lambda _x: f(_x)) -> FApply(Lambda _x: f(_x).diff(_x))
-                expr = func.body
-                unevaluated_indices = []
-                for i in self.indices:
-                    if isinstance(i, Basic.Integer):
-                        a = func[int(i)-1]
-                        obj = expr.diff(a)
-                        if isinstance(obj, Derivative):
-                            unevaluated_indices.append(i)
-                        else:
-                            expr = obj
-                if len(self.indices)==len(unevaluated_indices):
-                    return
-                if not unevaluated_indices:
-                    return Lambda(expr, *func[:])
-                return FApply(FDerivative(*unevaluated_indices), Lambda(expr, *func))
-            if isinstance(func, DefinedFunction):
-                for i in range(len(self.indices)):
-                    di = self.indices[i]
-                    if isinstance(di, Basic.Integer):
-                        dfunc = func.fdiff(int(di))
-                        new_indices = self.indices[:i] + self.indices[i+1:]
-                        return FDerivative(*new_indices)(dfunc)
-        return
-
-    def _eval_power(b, e):
-        if isinstance(e, Basic.Integer) and e.is_positive:
-            return FDerivative(*(int(e)*b.indices))
-
-    _eval_subs = Basic._seq_subs
-
-    def __call__(self, func):
-        return FApply(self, func)
 
 
 class Derivative(Basic, ArithMeths, RelMeths):
@@ -818,18 +750,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
 
 
 class DefinedFunction(Function, Singleton, Atom):
-    """ Base class for defined functions.
-    """
-
-    is_commutative = True # the values of functions are commutative
-
-    def __new__(cls, **assumptions):
-        obj = Basic.__new__(cls,**assumptions)
-        obj.name = obj.__class__.__name__.lower()
-        return obj
-
-    def torepr(self):
-        return '%s()' % (self.__class__.__name__)
+    pass
 
 Basic.singleton['D'] = lambda : Derivative
 Basic.singleton['FD'] = lambda : FDerivative
@@ -1109,6 +1030,75 @@ class Function2(Basic, RelMeths):
         if p <= level:
             return '(%s)' % (r)
         return r
+
+class FDerivative(Function2):
+
+    is_homogeneous = True
+
+    def __new__(cls, *indices, **assumptions):
+        indices = map(Basic.sympify, indices)
+        indices.sort(Basic.compare)
+        return Basic.__new__(cls, *indices, **assumptions)
+
+    def _hashable_content(self):
+        return self._args
+
+    @property
+    def func(self):
+        return self._args[0]
+
+    def __getitem__(self, iter):
+        return self._args[1:][iter]
+
+    @property
+    def indices(self):
+        return self._args
+
+    def tostr(self, level=0):
+        return 'FD%s' % (repr(tuple(self.indices)))
+
+    def _eval_fapply(self, *funcs):
+        if len(funcs)==1:
+            func = funcs[0]
+            if not self.indices:
+                return func
+            if isinstance(func, FApply) and isinstance(func.operator, FDerivative):
+                # FApply(FD(1),FApply(FD(2),f)) -> FApply(FD(1,2), f)
+                return FApply(FDerivative(*(self.indices+func.operator.indices)), *func.funcs)
+            if isinstance(func, Lambda):
+                # FApply(FD(1),Lambda _x: f(_x)) -> FApply(Lambda _x: f(_x).diff(_x))
+                expr = func.body
+                unevaluated_indices = []
+                for i in self.indices:
+                    if isinstance(i, Basic.Integer):
+                        a = func[int(i)-1]
+                        obj = expr.diff(a)
+                        if isinstance(obj, Derivative):
+                            unevaluated_indices.append(i)
+                        else:
+                            expr = obj
+                if len(self.indices)==len(unevaluated_indices):
+                    return
+                if not unevaluated_indices:
+                    return Lambda(expr, *func[:])
+                return FApply(FDerivative(*unevaluated_indices), Lambda(expr, *func))
+            if isinstance(func, DefinedFunction):
+                for i in range(len(self.indices)):
+                    di = self.indices[i]
+                    if isinstance(di, Basic.Integer):
+                        dfunc = func.fdiff(int(di))
+                        new_indices = self.indices[:i] + self.indices[i+1:]
+                        return FDerivative(*new_indices)(dfunc)
+        return
+
+    def _eval_power(b, e):
+        if isinstance(e, Basic.Integer) and e.is_positive:
+            return FDerivative(*(int(e)*b.indices))
+
+    _eval_subs = Basic._seq_subs
+
+    def __call__(self, func):
+        return FApply(self, func)
 
 # TODO rename me to something more appropriate? e.g. ArithFunction (or just
 # Function?) This will be done when we move everything to the new function
