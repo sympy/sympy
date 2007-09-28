@@ -416,7 +416,8 @@ class Basic(BasicMeths):
     def _eval_eq_nonzero(self, other):
         return
 
-    def _eval_apply_subs(self, *args):
+    @classmethod
+    def _eval_apply_subs(cls, *args):
         return
 
     def _calc_apply_positive(self, *args):
