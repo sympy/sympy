@@ -462,4 +462,4 @@ class Pow(Basic, ArithMeths, RelMeths):
     def taylor_term(self, n, x, *previous_terms): # of (1+x)**e
         if n<0: return S.Zero
         x = Basic.sympify(x)
-        return S.Binomial(self.exp, n) * x**n
+        return Basic.Binomial(self.exp, n) * x**n

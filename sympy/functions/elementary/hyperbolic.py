@@ -60,7 +60,7 @@ class sinh(SingleValuedFunction):
                 p = previous_terms[-2]
                 return p * x**2 / (n*(n-1))
             else:
-                return x**(n) / S.Factorial(n)
+                return x**(n) / Basic.Factorial(n)
 
     def _eval_conjugate(self):
         return self.func(self[0].conjugate())
@@ -154,7 +154,7 @@ class cosh(SingleValuedFunction):
                 p = previous_terms[-2]
                 return p * x**2 / (n*(n-1))
             else:
-                return x**(n)/S.Factorial(n)
+                return x**(n)/Basic.Factorial(n)
 
     def _eval_conjugate(self):
         return self.func(self[0].conjugate())
@@ -247,7 +247,7 @@ class tanh(SingleValuedFunction):
             a = 2**(n+1)
 
             B = S.Bernoulli(n+1)
-            F = S.Factorial(n+1)
+            F = Basic.Factorial(n+1)
 
             return a*(a-1) * B/F * x**n
 
@@ -343,7 +343,7 @@ class coth(SingleValuedFunction):
             x = Basic.sympify(x)
 
             B = S.Bernoulli(n+1)
-            F = S.Factorial(n+1)
+            F = Basic.Factorial(n+1)
 
             return 2**(n+1) * B/F * x**n
 
@@ -441,8 +441,8 @@ class asinh(SingleValuedFunction):
             else:
                 k = (n - 1) // 2
 
-                R = S.RisingFactorial(S.Half, k)
-                F = S.Factorial(k)
+                R = Basic.RisingFactorial(S.Half, k)
+                F = Basic.Factorial(k)
 
                 return (-1)**k * R / F * x**n / n
 
@@ -515,8 +515,8 @@ class acosh(SingleValuedFunction):
             else:
                 k = (n - 1) // 2
 
-                R = S.RisingFactorial(S.Half, k)
-                F = S.Factorial(k)
+                R = Basic.RisingFactorial(S.Half, k)
+                F = Basic.Factorial(k)
 
                 return -R / F * S.ImaginaryUnit * x**n / n
 

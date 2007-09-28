@@ -102,7 +102,7 @@ class Product(Basic, NoRelMeths, ArithMeths):
             all_roots = roots(poly)
 
             for r in all_roots:
-                A *= S.RisingFactorial(a-r, n-a+1)
+                A *= Basic.RisingFactorial(a-r, n-a+1)
                 Q *= n - r
 
             if len(all_roots) < poly.degree():

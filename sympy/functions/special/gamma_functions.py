@@ -27,7 +27,7 @@ class gamma(SingleValuedFunction):
                 return S.Infinity
             elif isinstance(arg, Basic.Integer):
                 if arg.is_positive:
-                    return S.Factorial(arg-1)
+                    return Basic.Factorial(arg-1)
                 else:
                     return S.ComplexInfinity
             elif isinstance(arg, Basic.Rational):
@@ -68,7 +68,7 @@ class gamma(SingleValuedFunction):
                     else:
                         continue
 
-                    return gamma(terms)*S.RisingFactorial(terms, coeff)
+                    return gamma(terms)*Basic.RisingFactorial(terms, coeff)
 
         return self.func(*self[:])
 
@@ -169,7 +169,7 @@ class polygamma(SingleValuedFunction):
                             if isinstance(n, Basic.Zero):
                                 return -S.EulerGamma + S.Harmonic(z-1, 1)
                             elif n.is_odd:
-                                return (-1)**(n+1)*S.Factorial(n)*S.Zeta(n+1, z)
+                                return (-1)**(n+1)*Basic.Factorial(n)*S.Zeta(n+1, z)
 
 
     def _eval_expand_func(self, *args):
@@ -181,7 +181,7 @@ class polygamma(SingleValuedFunction):
 
                 if isinstance(coeff, Basic.Integer):
                     tail = Add(*[ z + i for i in xrange(0, int(coeff)) ])
-                    return self(n, z-coeff) + (-1)**n*S.Factorial(n)*tail
+                    return self(n, z-coeff) + (-1)**n*Basic.Factorial(n)*tail
             elif isinstance(z, Basic.Mul):
                 coeff, terms = z.as_coeff_terms()
 
@@ -196,7 +196,7 @@ class polygamma(SingleValuedFunction):
         return self(n, z)
 
     def _eval_rewrite_as_zeta(self, n, z):
-        return (-1)**(n+1)*S.Factorial(n)*S.Zeta(n+1, z-1)
+        return (-1)**(n+1)*Basic.Factorial(n)*S.Zeta(n+1, z-1)
 
 class loggamma(SingleValuedFunction):
 

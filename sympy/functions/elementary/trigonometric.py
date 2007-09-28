@@ -81,7 +81,7 @@ class sin(SingleValuedFunction):
                 p = previous_terms[-2]
                 return -p * x**2 / (n*(n-1))
             else:
-                return (-1)**(n//2) * x**(n)/S.Factorial(n)
+                return (-1)**(n//2) * x**(n)/Basic.Factorial(n)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = Basic.exp, S.ImaginaryUnit
@@ -212,7 +212,7 @@ class cos(SingleValuedFunction):
                 p = previous_terms[-2]
                 return -p * x**2 / (n*(n-1))
             else:
-                return (-1)**(n//2)*x**(n)/S.Factorial(n)
+                return (-1)**(n//2)*x**(n)/Basic.Factorial(n)
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = Basic.exp, S.ImaginaryUnit
@@ -341,7 +341,7 @@ class tan(SingleValuedFunction):
             a, b = ((n-1)//2), 2**(n+1)
 
             B = S.Bernoulli(n+1)
-            F = S.Factorial(n+1)
+            F = Basic.Factorial(n+1)
 
             return (-1)**a * b*(b-1) * B/F * x**n
 
@@ -460,7 +460,7 @@ class cot(SingleValuedFunction):
             x = Basic.sympify(x)
 
             B = S.Bernoulli(n+1)
-            F = S.Factorial(n+1)
+            F = Basic.Factorial(n+1)
 
             return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
 
@@ -575,8 +575,8 @@ class asin(SingleValuedFunction):
             else:
                 k = (n - 1) // 2
 
-                R = S.RisingFactorial(S.Half, k)
-                F = S.Factorial(k)
+                R = Basic.RisingFactorial(S.Half, k)
+                F = Basic.Factorial(k)
 
                 return R / F * x**n / n
 
@@ -651,8 +651,8 @@ class acos(SingleValuedFunction):
             else:
                 k = (n - 1) // 2
 
-                R = S.RisingFactorial(S.Half, k)
-                F = S.Factorial(k)
+                R = Basic.RisingFactorial(S.Half, k)
+                F = Basic.Factorial(k)
 
                 return -R / F * x**n / n
 

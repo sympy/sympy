@@ -87,7 +87,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     for i in xrange(0, r+1):
         for j in xrange(i, r+1):
-            polys[i] += S.Binomial(j, i)*coeffs[j]
+            polys[i] += Basic.Binomial(j, i)*coeffs[j]
 
         polys[i] = polys[i].expand()
 
@@ -111,7 +111,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     for i in xrange(0, r+1):
         if terms[i][1] - i == b:
-            degree_poly += terms[i][0]*S.FallingFactorial(x, i)
+            degree_poly += terms[i][0]*Basic.FallingFactorial(x, i)
 
     _nni_roots = nni_roots(degree_poly, x)
 
@@ -193,7 +193,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
             for j in xrange(0, A+1):
                 for k in xrange(0, d+1):
-                    B = S.Binomial(k, i+j)
+                    B = Basic.Binomial(k, i+j)
                     D = delta(polys[j], k)
 
                     alpha[i] += I[k]*B*D

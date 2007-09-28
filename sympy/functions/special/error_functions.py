@@ -54,7 +54,7 @@ class erf(SingleValuedFunction):
             if len(previous_terms) > 2:
                 return -previous_terms[-2] * x**2 * (n-2)/(n*k)
             else:
-                return 2*(-1)**k * x**n/(n*S.Factorial(k)*Basic.sqrt(S.Pi))
+                return 2*(-1)**k * x**n/(n*Basic.Factorial(k)*Basic.sqrt(S.Pi))
 
     def _eval_as_leading_term(self, x):
         arg = self[0].as_leading_term(x)
