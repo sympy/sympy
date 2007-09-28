@@ -12,6 +12,7 @@ from float_ import Float
 from constants import *
 from functions import *
 from evalf_ import polyfunc
+from sympy import legendre
 
 import math
 
@@ -142,7 +143,7 @@ class GaussLegendre(Quadrature):
         self.x = [None] * n
         self.w = [None] * n
 
-        pf = polyfunc(S.Legendre(n, 'x'), True)
+        pf = polyfunc(legendre(n, 'x'), True)
 
         for k in xrange(n//2 + 1):
             if verbose and k % 4 == 0:

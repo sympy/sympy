@@ -250,7 +250,7 @@ class cos(SingleValuedFunction):
             coeff, terms = arg.as_coeff_terms()
             if not isinstance(coeff, Basic.One) and isinstance(coeff, Basic.Integer) and terms:
                 x = Basic.Mul(*terms)
-                return Basic.ChebyshevT()(coeff, cos(x))
+                return Basic.chebyshevt(coeff, cos(x))
         return cos(arg)
 
     def _eval_as_leading_term(self, x):

@@ -8,29 +8,31 @@ combinatorial polynomials.
 
 from sympy.core.basic import Basic, S
 from sympy.core import Rational, Symbol
-from sympy.core.function import Function, DefinedFunction, Apply, Lambda
+from sympy.core.function import SingleValuedFunction
 from sympy.utilities.memoization import recurrence_memo
 
 
 _x = Basic.Symbol('x', dummy=True)
 
-class PolynomialSequence(DefinedFunction):
+class PolynomialSequence(SingleValuedFunction):
 
     nofargs = 2
     precedence = Basic.Apply_precedence
 
-    def _eval_apply(self, n, x):
+    @classmethod
+    def _eval_apply(cls, n, x):
         if n.is_integer and n >= 0:
-            return self.calc(int(n)).subs(_x, x)
+            return cls.calc(int(n)).subs(_x, x)
         if n.is_negative:
             raise ValueError("%s index must be nonnegative integer (got %r)" % (self, i))
+
 
 
 #----------------------------------------------------------------------------
 # Chebyshev polynomials of first and second kind
 #
 
-class ChebyshevT(PolynomialSequence):
+class chebyshevt(PolynomialSequence):
     """
     chebyshevt(n, x) gives the nth Chebyshev polynomial (of the first
     kind) of x, T_n(x)
@@ -61,10 +63,8 @@ class ChebyshevT(PolynomialSequence):
     def calc(n, prev):
         return (2*_x*prev[n-1] - prev[n-2]).expand()
 
-Basic.singleton['chebyshevt'] = ChebyshevT
 
-
-class ChebyshevU(PolynomialSequence):
+class chebyshevu(PolynomialSequence):
     """
     chebyshevu(n, x) gives the nth Chebyshev polynomial of the second
     kind of x, U_n(x)
@@ -88,10 +88,7 @@ class ChebyshevU(PolynomialSequence):
         return (2*_x*prev[n-1] - prev[n-2]).expand()
 
 
-Basic.singleton['chebyshevu'] = ChebyshevU
-
-
-class ChebyshevT_Root(DefinedFunction):
+class chebyshevt_root(SingleValuedFunction):
     """
     chebyshev_root(n, k) returns the kth root (indexed from zero) of
     the nth Chebyshev polynomial of the first kind; that is, if
@@ -106,15 +103,14 @@ class ChebyshevT_Root(DefinedFunction):
     0
     """
     nofargs = 2
-    def _eval_apply(self, n, k):
+
+    @classmethod
+    def _eval_apply(cls, n, k):
         if not 0 <= k < n:
             raise ValueError, "must have 0 <= k < n"
         return Basic.cos(S.Pi*(2*k+1)/(2*n))
 
-Basic.singleton['chebyshevt_root'] = ChebyshevT_Root
-
-
-class ChebyshevU_Root(DefinedFunction):
+class chebyshevu_root(SingleValuedFunction):
     """
     chebyshevu_root(n, k) returns the kth root (indexed from zero) of the
     nth Chebyshev polynomial of the second kind; that is, if 0 <= k < n,
@@ -129,19 +125,19 @@ class ChebyshevU_Root(DefinedFunction):
         0
     """
     nofargs = 2
-    def _eval_apply(self, n, k):
+
+    @classmethod
+    def _eval_apply(cls, n, k):
         if not 0 <= k < n:
             raise ValueError, "must have 0 <= k < n"
         return Basic.cos(S.Pi*(k+1)/(n+1))
-
-Basic.singleton['chebyshevu_root'] = ChebyshevU_Root
 
 
 #----------------------------------------------------------------------------
 # Legendre polynomials
 #
 
-class Legendre(PolynomialSequence):
+class legendre(PolynomialSequence):
     """
     legendre(n, x) gives the nth Legendre polynomial of x, P_n(x)
 
@@ -169,14 +165,11 @@ class Legendre(PolynomialSequence):
         return (((2*n-1)*_x*prev[n-1] - (n-1)*prev[n-2])/n).expand()
 
 
-Basic.singleton['legendre'] = Legendre
-
-
 #----------------------------------------------------------------------------
 # Hermite polynomials
 #
 
-class Hermite(PolynomialSequence):
+class hermite(PolynomialSequence):
     """
     hermite(n, x) gives the nth Hermite polynomial in x, H_n(x)
 
@@ -201,5 +194,3 @@ class Hermite(PolynomialSequence):
     @recurrence_memo([Basic.One(), 2*_x])
     def calc(n, prev):
         return (2*_x*prev[n-1]-2*(n-1)*prev[n-2]).expand()
-
-Basic.singleton['hermite'] = Hermite

@@ -37,7 +37,6 @@ def test_exp():
     assert exp(log2_float() * Float(10)).ae(1024)
     assert exp(2+2j).ae(cmath.exp(2+2j))
 
-@XFAIL
 def test_log():
     assert log(1) == 0
     for x in [0.5, 1.5, 2.0, 3.0, 100, 10**50, 1e-50]:

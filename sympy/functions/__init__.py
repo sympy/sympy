@@ -5,6 +5,9 @@ import combinatorial
 import elementary
 import special
 
+from special.polynomials import legendre, hermite, chebyshevt, chebyshevu, \
+        chebyshevu_root, chebyshevt_root
+
 # see #391
 from combinatorial.factorials import factorial, rf, ff, binomial
 from combinatorial.factorials import Factorial, RisingFactorial, FallingFactorial, Binomial

@@ -1110,7 +1110,9 @@ class Function2(Basic, RelMeths):
             return '(%s)' % (r)
         return r
 
-# TODO rename me to something more appropriate? e.g. ArithFunction (or just Function?)
+# TODO rename me to something more appropriate? e.g. ArithFunction (or just
+# Function?) This will be done when we move everything to the new function
+# scheme and get rid of the current Function, DefinedFunction, Apply, ...
 class SingleValuedFunction(ArithMeths, Function2):
     """
     Single-valued functions.
