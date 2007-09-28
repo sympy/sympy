@@ -1,5 +1,4 @@
 from sympy import symbols, lambdify, sqrt, sin, cos, pi
-from sympy.utilities.pytest import XFAIL
 
 x,y,z = symbols('xyz')
 
@@ -53,14 +52,12 @@ def test_vector_discontinuous():
     assert f(2) == (-0.5, 0.5)
     assert f(-2) == (0.5, -0.5)
 
-@XFAIL
 def test_trig_symbolic():
     f = lambdify([cos(x),sin(x)], [x])
     d = f(pi)
     assert abs(d[0]+1) < 0.0001
     assert abs(d[1]-0) < 0.0001
 
-@XFAIL
 def test_trig_float():
     f = lambdify([cos(x),sin(x)], [x])
     d = f(3.14159)

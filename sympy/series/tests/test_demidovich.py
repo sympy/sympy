@@ -41,7 +41,6 @@ def test_Limits_simple_2():
     assert limit(sqrt3(x**2+1)/(x+1),x,oo)==0  #189
     assert limit(sqrt(x)/sqrt(x+sqrt(x+sqrt(x))),x,oo)==1  #190
 
-@XFAIL
 def test_Limits_simple_3():
     # XXX Wrong limit
     assert limit((x**2-(a+1)*x+a)/(x**3-a**3),x,a)==(a-1)/(3*a**2)  #196
@@ -65,7 +64,6 @@ def test_Limits_simple_4():
     assert limit(log(1+exp(x))/x,x,-oo)==0  #267a
     assert limit(log(1+exp(x))/x,x,oo)==1  #267b
 
-@XFAIL
 def test_f1():
     m = Symbol("m")
     n = Symbol("n")
