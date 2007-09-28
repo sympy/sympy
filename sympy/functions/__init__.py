@@ -20,6 +20,7 @@ from elementary.hyperbolic import sinh, cosh, tanh, coth, asinh, acosh, atanh, a
 
 from special.error_functions import erf
 from special.gamma_functions import gamma, lowergamma, uppergamma, polygamma, loggamma
+from special.zeta_functions import dirichlet_eta, zeta
 
 ln = log
 

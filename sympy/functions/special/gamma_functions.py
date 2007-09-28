@@ -1,6 +1,7 @@
 
 from sympy.core import Basic, S
 from sympy.core.function import SingleValuedFunction
+from zeta_functions import zeta
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -169,7 +170,7 @@ class polygamma(SingleValuedFunction):
                             if isinstance(n, Basic.Zero):
                                 return -S.EulerGamma + S.Harmonic(z-1, 1)
                             elif n.is_odd:
-                                return (-1)**(n+1)*Basic.Factorial(n)*S.Zeta(n+1, z)
+                                return (-1)**(n+1)*Basic.Factorial(n)*zeta(n+1, z)
 
 
     def _eval_expand_func(self, *args):
@@ -196,7 +197,7 @@ class polygamma(SingleValuedFunction):
         return self(n, z)
 
     def _eval_rewrite_as_zeta(self, n, z):
-        return (-1)**(n+1)*Basic.Factorial(n)*S.Zeta(n+1, z-1)
+        return (-1)**(n+1)*Basic.Factorial(n)*zeta(n+1, z-1)
 
 class loggamma(SingleValuedFunction):
 

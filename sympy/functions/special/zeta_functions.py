@@ -1,14 +1,15 @@
 
-from sympy.core import *
+from sympy.core import SingleValuedFunction, S, Basic, pi
 
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
 ###############################################################################
 
-class Zeta(DefinedFunction):
+class zeta(SingleValuedFunction):
 
     nofargs = (1, 2)
 
+    @classmethod
     def _eval_apply(self, z, a=S.One):
         z, a = map(Basic.sympify, (z, a))
 
@@ -43,25 +44,16 @@ class Zeta(DefinedFunction):
                     else:
                         return zeta - S.Harmonic(a-1, z)
 
-class ApplyZeta(Apply):
-    pass
 
-Basic.singleton['zeta'] = Zeta
-
-#####
-
-class DirichletEta(DefinedFunction): # TBD
+class dirichlet_eta(SingleValuedFunction):
     """
     Dirichlet eta function
     """
     nofargs = 1
 
-    def _eval_apply(self, s):
+    @classmethod
+    def _eval_apply(cls, s):
         if s == 1:
             return Basic.log(2)
         else:
-            return (1-2**(1-s)) * S.Zeta(s)
-
-
-Basic.singleton['dirichlet_eta'] = DirichletEta
-
+            return (1-2**(1-s)) * zeta(s)

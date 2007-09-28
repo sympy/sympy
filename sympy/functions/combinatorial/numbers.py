@@ -407,7 +407,8 @@ class Harmonic(DefinedFunction):
         if m is None:
             m = Integer(1)
         if n == oo:
-            return S.Zeta(m)
+            from sympy.functions.special.zeta_functions import zeta
+            return zeta(m)
         if isinstance(n, Integer) and n.is_nonnegative and \
             isinstance(m, Integer):
             if n == 0:

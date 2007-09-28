@@ -8,7 +8,9 @@ from power import Pow
 from mul import Mul
 from add import Add
 from relational import Equality, Inequality, Unequality, StrictInequality
-from function import Lambda, Function, Apply, FApply, Composition, FPow, WildFunction, Derivative, DefinedFunction, diff, FunctionClass, Function2
+from function import Lambda, Function, Apply, FApply, Composition, FPow, \
+    WildFunction, Derivative, DefinedFunction, diff, FunctionClass, Function2, \
+    SingleValuedFunction
 from interval import Interval
 
 # set repr output to pretty output:
