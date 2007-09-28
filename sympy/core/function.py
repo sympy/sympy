@@ -119,36 +119,6 @@ class Function2(Basic, RelMeths):
     def _eval_apply(self, *args):
         return
 
-    #@cache_it
-    def x__new__(cls, *args, **kwargs):
-        args = map(Basic.sympify, args)
-        func = args[0]
-        func_args = args[1:]
-
-        # f(g+O(h)) -> f(g) + O(f'(g)*h) if f'!=0, otherwise f(g) + O(f''(g)*h**2), etc.
-        i = -1
-        for a in func_args:
-            i += 1
-            a0,o0 = a.as_expr_orders()
-            if not isinstance(o0, Basic.Zero):
-                new_args = func_args[:i] + [a0,] + func_args[i+1:]
-                f = func
-                df = f
-                dfa = Basic.Zero()
-                n = 0
-                while isinstance(dfa, Basic.Zero) and not (isinstance(df, Lambda) and isinstance(df.body, Basic.Zero)):
-                    df = df.fdiff(i+1)
-                    dfa = df(*new_args)
-                    n += 1
-                return f(*new_args) + dfa * o0**n
-
-        obj = func._eval_apply(*func_args)
-        if obj is None:
-            assert isinstance(func, Function),`args`
-            cls = getattr(Basic,'Apply'+func.__class__.__name__, cls)
-            obj = Basic.__new__(cls, *args, **kwargs)
-        return obj
-
     @property
     def func(self):
         return self.__class__
@@ -167,18 +137,6 @@ class Function2(Basic, RelMeths):
                     return func(*self[:])
             except TypeError:
                 pass
-        #elif isinstance(old, Function2) and old[:] == self[:]:
-        #    try:
-        #        newfunc = Lambda(new, *old[:])
-        #        func = self.func.subs(old.func, newfunc)
-#
-#                if func != self.func:
-#                    return func(*self[:])
-#            except TypeError:
-#                pass
-        elif isinstance(old, Function) and isinstance(new, Function):
-            if old == self.func and old.nofargs == new.nofargs:
-                return new(*self[:])
         elif isinstance(old, FunctionClass) and isinstance(new, FunctionClass):
             if old == self.func and old.nofargs == new.nofargs:
                 return new(*self[:])
@@ -454,9 +412,9 @@ class Apply(Basic, ArithMeths, RelMeths):
                     return func(*self[:])
             except TypeError:
                 pass
-        elif isinstance(old, Function) and isinstance(new, Function):
-            if old == self.func and old.nofargs == new.nofargs:
-                return new(*self[:])
+        #elif isinstance(old, Function) and isinstance(new, Function):
+        #    if old == self.func and old.nofargs == new.nofargs:
+        #        return new(*self[:])
         obj = self.func._eval_apply_subs(*(self[:] + (old,) + (new,)))
         if obj is not None:
             return obj
