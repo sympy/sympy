@@ -335,7 +335,8 @@ class FDerivative(Function2):
                 if not unevaluated_indices:
                     return Lambda(expr, *func[:])
                 return FApply(FDerivative(*unevaluated_indices), Lambda(expr, *func))
-            if isinstance(func, DefinedFunction):
+            #if isinstance(func, DefinedFunction):
+            if isinstance(func, SingleValuedFunction):
                 for i in range(len(self.indices)):
                     di = self.indices[i]
                     if isinstance(di, Basic.Integer):
@@ -436,7 +437,7 @@ class Apply(Basic, ArithMeths, RelMeths):
         return obj
 
     def _eval_is_comparable(self):
-        if isinstance(self.func, DefinedFunction):
+        if isinstance(self.func, SingleValuedFunction):
             r = True
             for s in self:
                 c = s.is_comparable
@@ -539,8 +540,6 @@ class Apply(Basic, ArithMeths, RelMeths):
 
         return self.func(*args, **self._assumptions)
 
-class Function(Basic, ArithMeths, NoRelMeths):
-    pass
 
 class WildFunction(Function2, Atom):
 
@@ -933,10 +932,6 @@ class Derivative(Basic, ArithMeths, RelMeths):
         return self.__class__(*[s.subs(old, new) for s in self], **{'evaluate': False})
 
 
-class DefinedFunction(Function, Singleton, Atom):
-    pass
-
-Basic.singleton['D'] = lambda : Derivative
 
 def diff(f, x, times = 1, evaluate=True):
     """Derivate f with respect to x

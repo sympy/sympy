@@ -8,8 +8,8 @@ from power import Pow
 from mul import Mul
 from add import Add
 from relational import Equality, Inequality, Unequality, StrictInequality
-from function import Lambda, Function, Apply, FApply, Composition, FPow, \
-    WildFunction, Derivative, DefinedFunction, diff, FunctionClass, Function2, \
+from function import Lambda, Apply, FApply, Composition, FPow, \
+    WildFunction, Derivative, diff, FunctionClass, Function2, \
     SingleValuedFunction
 from interval import Interval
 
@@ -21,3 +21,8 @@ for _n, _cls in Basic.singleton.items():
     exec '%s = _cls()' % (_n)
 
 sympify = Basic.sympify
+
+class Function(Basic):
+    pass
+class DefinedFunction(Function):
+    pass

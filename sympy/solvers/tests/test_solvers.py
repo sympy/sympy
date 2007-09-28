@@ -43,7 +43,7 @@ def test_ODE_first_order():
     #assert dsolve(x*f(x).diff(x) -1, f(x)) == log(abs(x)) + Symbol("C1")
 
 def test_ODE_second_order():
-    f = Function('f')
+    f = Function2('f')
     x, C1, C2 = map(Symbol, ['x', 'C1', 'C2'])
     assert dsolve(Derivative(f(x),x,x) + 9*f(x), [f(x)]) in \
         [sin(3*x)*C1 + cos(3*x)*C2, sin(3*x)*C2 + cos(3*x)*C1]
