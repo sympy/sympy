@@ -3,6 +3,7 @@ from sympy.core import Basic, S, Apply, Add, Mul, Pow, Rational, Integer, \
         Derivative, Wild, Symbol
 
 from sympy.utilities import make_list, all
+from sympy.functions import gamma
 
 from sys import maxint
 
@@ -947,7 +948,7 @@ def hypersimp(term, n, consecutive=True, simplify=True):
     if consecutive == True:
         term = term.subs(n, n+1)/term
 
-    expr = term.rewrite(S.Gamma).expand(func=True, basic=False)
+    expr = term.rewrite(gamma).expand(func=True, basic=False)
 
     p, q = together(expr).as_numer_denom()
 
