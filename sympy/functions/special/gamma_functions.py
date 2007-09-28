@@ -168,7 +168,7 @@ class polygamma(SingleValuedFunction):
                             return S.ComplexInfinity
                         else:
                             if isinstance(n, Basic.Zero):
-                                return -S.EulerGamma + S.Harmonic(z-1, 1)
+                                return -S.EulerGamma + Basic.harmonic(z-1, 1)
                             elif n.is_odd:
                                 return (-1)**(n+1)*Basic.Factorial(n)*zeta(n+1, z)
 

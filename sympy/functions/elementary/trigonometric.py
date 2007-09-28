@@ -69,8 +69,8 @@ class sin(SingleValuedFunction):
                     return -self(-arg)
 
 
-    #@cache_it_immutable
     @classmethod
+    @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
@@ -200,8 +200,8 @@ class cos(SingleValuedFunction):
                     return self(-arg)
 
 
-    #@cache_it_immutable
     @classmethod
+    @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
         if n < 0 or n % 2 == 1:
             return S.Zero
@@ -330,8 +330,8 @@ class tan(SingleValuedFunction):
                     return -self(-arg)
 
 
-    #@cache_it_immutable
     @classmethod
+    @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
@@ -340,7 +340,7 @@ class tan(SingleValuedFunction):
 
             a, b = ((n-1)//2), 2**(n+1)
 
-            B = S.Bernoulli(n+1)
+            B = Basic.bernoulli(n+1)
             F = Basic.Factorial(n+1)
 
             return (-1)**a * b*(b-1) * B/F * x**n

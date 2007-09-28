@@ -34,15 +34,15 @@ class zeta(SingleValuedFunction):
             elif isinstance(z, Basic.Integer):
                 if isinstance(a, Basic.Integer):
                     if z.is_negative:
-                        zeta = (-1)**z * S.Bernoulli(-z+1)/(-z+1)
+                        zeta = (-1)**z * Basic.bernoulli(-z+1)/(-z+1)
                     elif z.is_even:
-                        B, F = S.Bernoulli(z), Basic.Factorial(z)
+                        B, F = Basic.bernoulli(z), Basic.Factorial(z)
                         zeta = 2**(z-1) * abs(B) * pi**z / F
 
                     if a.is_negative:
-                        return zeta + S.Harmonic(abs(a), z)
+                        return zeta + Basic.harmonic(abs(a), z)
                     else:
-                        return zeta - S.Harmonic(a-1, z)
+                        return zeta - Basic.harmonic(a-1, z)
 
 
 class dirichlet_eta(SingleValuedFunction):

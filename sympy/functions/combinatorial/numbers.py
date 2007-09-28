@@ -8,7 +8,7 @@ the separate 'factorials' module.
 """
 
 from sympy.core import *
-from sympy.core.function import DefinedFunction
+from sympy.core.function import SingleValuedFunction
 from sympy.core.basic import S
 
 def _product(a, b):
@@ -30,7 +30,7 @@ _sym = Symbol('x')
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-class Fibonacci(DefinedFunction):
+class fibonacci(SingleValuedFunction):
     """
     Fibonacci numbers / Fibonacci polynomials
 
@@ -74,22 +74,21 @@ class Fibonacci(DefinedFunction):
     def _fibpoly(n, prev):
         return (prev[-2] + _sym*prev[-1]).expand()
 
-    def _eval_apply(self, n, sym=None):
+    @classmethod
+    def _eval_apply(cls, n, sym=None):
         if isinstance(n, Integer):
             n = int(n)
             if n < 0:
-                return Integer(-1)**(n+1) * S.Fibonacci(-n)
+                return Integer(-1)**(n+1) * fibonacci(-n)
             if sym is None:
-                return Integer(self._fib(n))
+                return Integer(cls._fib(n))
             else:
                 if n < 1:
                     raise ValueError("Fibonacci polynomials are defined "
                        "only for positive integer indices.")
-                return self._fibpoly(n).subs(_sym, sym)
+                return cls._fibpoly(n).subs(_sym, sym)
 
-Basic.singleton['fibonacci'] = Fibonacci
-
-class Lucas(DefinedFunction):
+class lucas(SingleValuedFunction):
     """
     Lucas numbers
 
@@ -116,11 +115,12 @@ class Lucas(DefinedFunction):
         * http://en.wikipedia.org/wiki/Lucas_number
 
     """
-    def _eval_apply(self, n):
-        if isinstance(n, Integer):
-            return S.Fibonacci(n+1) + S.Fibonacci(n-1)
 
-Basic.singleton['lucas'] = Lucas
+    @classmethod
+    def _eval_apply(cls, n):
+        if isinstance(n, Integer):
+            return fibonacci(n+1) + fibonacci(n-1)
+
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -128,7 +128,7 @@ Basic.singleton['lucas'] = Lucas
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-class Bernoulli(DefinedFunction):
+class bernoulli(SingleValuedFunction):
     r"""
     Bernoulli numbers / Bernoulli polynomials
 
@@ -207,7 +207,7 @@ class Bernoulli(DefinedFunction):
         s = 0
         a = int(Basic.Binomial(n+3, n-6))
         for j in xrange(1, n//6+1):
-            s += a * S.Bernoulli(n - 6*j)
+            s += a * bernoulli(n - 6*j)
             # Avoid computing each binomial coefficient from scratch
             a *= _product(n-6 - 6*j + 1, n-6*j)
             a //= _product(6*j+4, 6*j+9)
@@ -222,7 +222,8 @@ class Bernoulli(DefinedFunction):
     _cache = {0: S.One, 2:Rational(1,6), 4:Rational(-1,30)}
     _highest = {0:0, 2:2, 4:4}
 
-    def _eval_apply(self, n, sym=None):
+    @classmethod
+    def _eval_apply(cls, n, sym=None):
         if isinstance(n, Basic.Number):
             if isinstance(n, Integer) and n.is_nonnegative:
                 if n is S.Zero:
@@ -236,28 +237,26 @@ class Bernoulli(DefinedFunction):
                         return S.Zero
                     n = int(n)
                     case = n % 6
-                    highest_cached = self._highest[case]
+                    highest_cached = cls._highest[case]
                     if n <= highest_cached:
-                        return self._cache[n]
+                        return cls._cache[n]
                     # To avoid excessive recursion when, say, bernoulli(1000) is
                     # requested, calculate and cache the entire sequence ... B_988,
                     # B_994, B_1000 in increasing order
                     for i in xrange(highest_cached+6, n+6, 6):
-                        b = self._calc_bernoulli(i)
-                        self._cache[i] = b
-                        self._highest[case] = i
+                        b = cls._calc_bernoulli(i)
+                        cls._cache[i] = b
+                        cls._highest[case] = i
                     return b
                 # Bernoulli polynomials
                 else:
                     n, result = int(n), []
                     for k in xrange(n + 1):
-                        result.append(Basic.Binomial(n, k)*self(k)*sym**(n-k))
+                        result.append(Basic.Binomial(n, k)*cls(k)*sym**(n-k))
                     return Basic.Add(*result)
             else:
                 raise ValueError("Bernoulli numbers are defined only"
                                  " for nonnegative integer indices.")
-
-Basic.singleton['bernoulli'] = Bernoulli
 
 
 #----------------------------------------------------------------------------#
@@ -266,7 +265,7 @@ Basic.singleton['bernoulli'] = Bernoulli
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-class Bell(DefinedFunction):
+class bell(SingleValuedFunction):
     r"""
     Bell numbers / Bell polynomials
 
@@ -343,14 +342,13 @@ class Bell(DefinedFunction):
             s += a * prev[k-1]
         return (_sym * s).expand()
 
-    def _eval_apply(self, n, sym=None):
+    @classmethod
+    def _eval_apply(cls, n, sym=None):
         if isinstance(n, Integer) and n.is_nonnegative:
             if sym is None:
-                return Integer(self._bell(int(n)))
+                return Integer(cls._bell(int(n)))
             else:
-                return self._bell_poly(int(n)).subs(_sym, sym)
-
-Basic.singleton['bell'] = Bell
+                return cls._bell_poly(int(n)).subs(_sym, sym)
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -358,7 +356,7 @@ Basic.singleton['bell'] = Bell
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-class Harmonic(DefinedFunction):
+class harmonic(SingleValuedFunction):
     r"""
     Harmonic numbers
 
@@ -403,7 +401,8 @@ class Harmonic(DefinedFunction):
     # order and store it in a dictionary
     _functions = {}
 
-    def _eval_apply(self, n, m=None):
+    @classmethod
+    def _eval_apply(cls, n, m=None):
         if m is None:
             m = Integer(1)
         if n == oo:
@@ -413,11 +412,9 @@ class Harmonic(DefinedFunction):
             isinstance(m, Integer):
             if n == 0:
                 return S.Zero
-            if not m in self._functions:
+            if not m in cls._functions:
                 @recurrence_memo([0])
                 def f(n, prev):
                     return prev[-1] + S.One / n**m
-                self._functions[m] = f
-            return self._functions[m](int(n))
-
-Basic.singleton['harmonic'] = Harmonic
+                cls._functions[m] = f
+            return cls._functions[m](int(n))
