@@ -1,22 +1,23 @@
 
-from sympy.core import Basic, S, DefinedFunction, Apply, Lambda, symbols
+from sympy.core import Basic, S
+from sympy.core.function import SingleValuedFunction
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
 ###############################################################################
 
-class Gamma(DefinedFunction):
+class gamma(SingleValuedFunction):
 
     nofargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            x = Basic.Symbol('x', dummy=True)
-            return Lambda(self(x)*S.PolyGamma(0, x), x)
+            return gamma(self[0])*polygamma(0, self[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_apply(self, arg):
+    @classmethod
+    def _eval_apply(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -51,7 +52,6 @@ class Gamma(DefinedFunction):
                     else:
                         return 2**n*Basic.sqrt(S.Pi) / coeff
 
-class ApplyGamma(Apply):
 
     def _eval_expand_func(self, *args):
         arg = self[0]._eval_expand_basic()
@@ -68,25 +68,25 @@ class ApplyGamma(Apply):
                     else:
                         continue
 
-                    return S.Gamma(terms)*S.RisingFactorial(terms, coeff)
+                    return gamma(terms)*S.RisingFactorial(terms, coeff)
 
         return self.func(*self[:])
 
     def _eval_is_real(self):
         return self[0].is_real
 
-Basic.singleton['gamma'] = Gamma
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
 ###############################################################################
 
-class LowerGamma(DefinedFunction):
+class lowergamma(SingleValuedFunction):
     """Lower incomplete gamma function"""
 
     nofargs = 2
 
-    def _eval_apply(self, a, x):
+    @classmethod
+    def _eval_apply(cls, a, x):
         if isinstance(a, Basic.Number):
             if isinstance(a, Basic.One):
                 return S.One - S.Exp(-x)
@@ -94,31 +94,30 @@ class LowerGamma(DefinedFunction):
                 b = a - 1
 
                 if b.is_positive:
-                    return b*self(b, x) - x**b * S.Exp(-x)
+                    return b*cls(b, x) - x**b * S.Exp(-x)
 
-class ApplyLowerGamma(Apply):
-    pass
 
-class UpperGamma(DefinedFunction):
+class uppergamma(SingleValuedFunction):
     """Upper incomplete gamma function"""
 
     nofargs = 2
 
     def fdiff(self, argindex=2):
         if argindex == 2:
-            a, z = symbols('az', dummy=True)
-            return Lambda(-S.Exp(-z)*z**(a-1), a, z)
+            a, z = self[0:2]
+            return -S.Exp(-z)*z**(a-1)
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_apply(self, a, z):
+    @classmethod
+    def _eval_apply(cls, a, z):
         if isinstance(z, Basic.Number):
             if isinstance(z, Basic.NaN):
                 return S.NaN
             elif isinstance(z, Basic.Infinity):
                 return S.Zero
             elif isinstance(z, Basic.Zero):
-                return S.Gamma(a)
+                return gamma(a)
 
         if isinstance(a, Basic.Number):
             if isinstance(a, Basic.One):
@@ -129,33 +128,30 @@ class UpperGamma(DefinedFunction):
                 if b.is_positive:
                     return b*self(b, z) + z**b * S.Exp(-z)
 
-class ApplyUpperGamma(Apply):
-    pass
 
-Basic.singleton['lowergamma'] = LowerGamma
-Basic.singleton['uppergamma'] = UpperGamma
 
 ###############################################################################
 ########################### GAMMA RELATED FUNCTIONS ###########################
 ###############################################################################
 
-class PolyGamma(DefinedFunction):
+class polygamma(SingleValuedFunction):
 
     nofargs = 2
 
     def fdiff(self, argindex=2):
         if argindex == 2:
-            n, z = symbols('nz', dummy=True)
-            return Lambda(S.PolyGamma(n+1, z), n, z)
+            n, z = self[0:2]
+            return polygamma(n+1, z)
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_apply(self, n, z):
+    @classmethod
+    def _eval_apply(cls, n, z):
         n, z = map(Basic.sympify, (n, z))
 
         if n.is_integer:
             if n.is_negative:
-                return S.LogGamma(z)
+                return loggamma(z)
             else:
                 if isinstance(z, Basic.Number):
                     if isinstance(z, Basic.NaN):
@@ -175,7 +171,6 @@ class PolyGamma(DefinedFunction):
                             elif n.is_odd:
                                 return (-1)**(n+1)*S.Factorial(n)*S.Zeta(n+1, z)
 
-class ApplyPolyGamma(Apply):
 
     def _eval_expand_func(self, *args):
         n, z = self[0], self[1].expand(func=True)
@@ -203,15 +198,10 @@ class ApplyPolyGamma(Apply):
     def _eval_rewrite_as_zeta(self, n, z):
         return (-1)**(n+1)*S.Factorial(n)*S.Zeta(n+1, z-1)
 
-class LogGamma(DefinedFunction):
+class loggamma(SingleValuedFunction):
 
     nofargs = 1
 
     def _eval_apply(self, z):
         return
 
-class ApplyLogGamma(Apply):
-    pass
-
-Basic.singleton['polygamma'] = PolyGamma
-Basic.singleton['loggamma'] = LogGamma

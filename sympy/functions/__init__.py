@@ -12,6 +12,7 @@ from elementary.exponential import exp, log
 from elementary.hyperbolic import sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth
 
 from special.error_functions import erf
+from special.gamma_functions import gamma, lowergamma, uppergamma, polygamma, loggamma
 
 ln = log
 
