@@ -96,9 +96,13 @@ class Function2(Basic, RelMeths):
 
     precedence = Basic.Apply_precedence
 
+    nofargs = None
+
     @cache_it
     def __new__(cls, *args, **options):
         args = map(Basic.sympify, args)
+        if "nofargs" in options:
+            del options["nofargs"]
         r = cls._eval_apply(*args, **options)
         if isinstance(r, Basic): 
             return r
@@ -275,6 +279,10 @@ class Function2(Basic, RelMeths):
         if p <= level:
             return '(%s)' % (r)
         return r
+
+    @classmethod
+    def _eval_apply_evalf(cls, arg):
+        return
 
 class FDerivative(Function2):
 
