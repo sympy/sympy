@@ -419,7 +419,7 @@ class Apply(Basic, ArithMeths, RelMeths):
 
         obj = func._eval_apply(*func_args)
         if obj is None:
-            assert isinstance(func, Function),`args`
+            #assert isinstance(func, Function),`args`
             cls = getattr(Basic,'Apply'+func.__class__.__name__, cls)
             obj = Basic.__new__(cls, *args, **kwargs)
             obj._func = func
@@ -727,13 +727,16 @@ class WildFunction(Function2, Atom):
     def _eval_apply_evalf(cls, arg):
         return
 
-class FApply(Function):
+class FApply(Function2):
     """
     Defines n-ary operator that acts on symbolic functions.
 
     DF(1)(f) -> FApply(DF(1), f)
     DF(2)(FApply(DF(1), f)) -> FApply(DF(2), FApply(DF(1),f)) -> FApply(DF(1,2), f)
     """
+
+    nofargs = 1
+
     def __new__(cls, operator, *funcs, **assumptions):
         operator = Basic.sympify(operator)
         funcs = map(Basic.sympify, funcs)
