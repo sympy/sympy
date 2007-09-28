@@ -1,6 +1,6 @@
 
-from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import DefinedFunction, Apply, Lambda
+from sympy.core.basic import Basic, S
+from sympy.core.function import SingleValuedFunction
 from sympy.ntheory import sieve
 from math import sqrt
 
@@ -8,7 +8,7 @@ from math import sqrt
 ######################## FACTORIAL and MULTI-FACTORIAL ########################
 ###############################################################################
 
-class Factorial(DefinedFunction):
+class Factorial(SingleValuedFunction):
     """Implementation of factorial function over nonnegative integers.
        For the sake of convenience and simplicity of procedures using
        this function it is defined for negative integers and returns
@@ -56,9 +56,10 @@ class Factorial(DefinedFunction):
         35102025,5014575,145422675,9694845,300540195,300540195
     ]
 
-    def _swing(self, n):
+    @classmethod
+    def _swing(cls, n):
         if n < 33:
-            return self._small_swing[n]
+            return cls._small_swing[n]
         else:
             N, primes = int(sqrt(n)), []
 
@@ -91,13 +92,15 @@ class Factorial(DefinedFunction):
 
             return L_product*R_product
 
-    def _recursive(self, n):
+    @classmethod
+    def _recursive(cls, n):
         if n < 2:
             return 1
         else:
-            return (self._recursive(n/2)**2)*self._swing(n)
+            return (cls._recursive(n/2)**2)*cls._swing(n)
 
-    def _eval_apply(self, n):
+    @classmethod
+    def _eval_apply(cls, n):
         n = Basic.sympify(n)
 
         if isinstance(n, Basic.Number):
@@ -121,7 +124,7 @@ class Factorial(DefinedFunction):
 
                             N = N >> 1
 
-                        result = self._recursive(n)*2**(n-bits)
+                        result = cls._recursive(n)*2**(n-bits)
 
                     return Basic.Integer(result)
 
@@ -131,8 +134,8 @@ class Factorial(DefinedFunction):
         else:
             return Basic.gamma(n+1)
 
-class ApplyFactorial(Apply):
 
+    @classmethod    # ?
     def _eval_rewrite_as_gamma(self, arg):
         return Basic.gamma(1 + arg)
 
@@ -142,19 +145,17 @@ class ApplyFactorial(Apply):
     def _eval_is_integer(self):
         return self[0].is_integer
 
-class MultiFactorial(DefinedFunction):
+class MultiFactorial(SingleValuedFunction):
     pass
 
-class ApplyMultiFactorial(Apply):
-    pass
 
-Basic.singleton['factorial'] = Factorial
+factorial   = Factorial
 
 ###############################################################################
 ######################## RISING and FALLING FACTORIALS ########################
 ###############################################################################
 
-class RisingFactorial(DefinedFunction):
+class RisingFactorial(SingleValuedFunction):
     """Rising factorial (also called Pochhammer symbol) is a double valued
        function arising in concrete mathematics, hypergeometric functions
        and series expanansions. It is defined by
@@ -181,19 +182,15 @@ class RisingFactorial(DefinedFunction):
 
     nofargs = 2
 
-    def __new__(cls, **assumptions):
-        obj = DefinedFunction.__new__(cls, **assumptions)
-        obj.name = "rf"
-        return obj
-
-    def _eval_apply(self, x, k):
+    @classmethod
+    def _eval_apply(cls, x, k):
         x = Basic.sympify(x)
         k = Basic.sympify(k)
 
         if isinstance(x, Basic.NaN):
             return S.NaN
         elif isinstance(x, Basic.One):
-            return S.Factorial(k)
+            return factorial(k)
         elif isinstance(k, Basic.Integer):
             if isinstance(k, Basic.NaN):
                 return S.NaN
@@ -218,12 +215,10 @@ class RisingFactorial(DefinedFunction):
                     else:
                         return 1/reduce(lambda r, i: r*(x-i), xrange(1, abs(int(k))+1), 1)
 
-class ApplyRisingFactorial(Apply):
-
     def _eval_rewrite_as_gamma(self, x, k):
         return Basic.gamma(x + k) / Basic.gamma(x)
 
-class FallingFactorial(DefinedFunction):
+class FallingFactorial(SingleValuedFunction):
     """Falling factorial (related to rising factorial) is a double valued
        function arising in concrete mathematics, hypergeometric functions
        and series expanansions. It is defined by
@@ -250,12 +245,8 @@ class FallingFactorial(DefinedFunction):
 
     nofargs = 2
 
-    def __new__(cls, **assumptions):
-        obj = DefinedFunction.__new__(cls, **assumptions)
-        obj.name = "ff"
-        return obj
-
-    def _eval_apply(self, x, k):
+    @classmethod
+    def _eval_apply(cls, x, k):
         x = Basic.sympify(x)
         k = Basic.sympify(k)
 
@@ -287,19 +278,18 @@ class FallingFactorial(DefinedFunction):
                     else:
                         return 1/reduce(lambda r, i: r*(x+i), xrange(1, abs(int(k))+1), 1)
 
-class ApplyFallingFactorial(Apply):
 
     def _eval_rewrite_as_gamma(self, x, k):
         return (-1)**k * Basic.gamma(-x + k) / Basic.gamma(-x)
 
-Basic.singleton['rf'] = RisingFactorial
-Basic.singleton['ff'] = FallingFactorial
+rf = RisingFactorial
+ff = FallingFactorial
 
 ###############################################################################
 ########################### BINOMIAL COEFFICIENTS #############################
 ###############################################################################
 
-class Binomial(DefinedFunction):
+class Binomial(SingleValuedFunction):
     """Implementation of the binomial coefficient. It can be defined
        in two ways depending on its desired interpretation:
 
@@ -348,7 +338,8 @@ class Binomial(DefinedFunction):
 
     nofargs = 2
 
-    def _eval_apply(self, r, k):
+    @classmethod
+    def _eval_apply(cls, r, k):
         r, k = map(Basic.sympify, (r, k))
 
         if isinstance(k, Basic.Number):
@@ -404,7 +395,6 @@ class Binomial(DefinedFunction):
         else:
             return Basic.gamma(r+1)/(Basic.gamma(r-k+1)*Basic.gamma(k+1))
 
-class ApplyBinomial(Apply):
 
     def _eval_rewrite_as_gamma(self, r, k):
         return Basic.gamma(r+1) / (Basic.gamma(r-k+1)*Basic.gamma(k+1))
@@ -412,4 +402,5 @@ class ApplyBinomial(Apply):
     def _eval_is_integer(self):
         return self[0].is_integer and self[1].is_integer
 
-Basic.singleton['binomial'] = Binomial
+
+binomial = Binomial

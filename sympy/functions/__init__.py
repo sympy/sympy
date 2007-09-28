@@ -5,6 +5,10 @@ import combinatorial
 import elementary
 import special
 
+# see #391
+from combinatorial.factorials import factorial, rf, ff, binomial
+from combinatorial.factorials import Factorial, RisingFactorial, FallingFactorial, Binomial
+
 from elementary.miscellaneous import sqrt, min_, max_
 from elementary.complexes import re, im, sign, abs, conjugate, arg
 from elementary.trigonometric import acot, cot, tan, cos, sin, asin, acos, atan
