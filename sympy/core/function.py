@@ -1110,6 +1110,7 @@ class Function2(Basic, RelMeths):
             return '(%s)' % (r)
         return r
 
+# TODO rename me to something more appropriate? e.g. ArithFunction (or just Function?)
 class SingleValuedFunction(ArithMeths, Function2):
     """
     Single-valued functions.
@@ -1119,6 +1120,8 @@ class SingleValuedFunction(ArithMeths, Function2):
     def _eval_apply_evalf(cls, arg):
         arg = arg.evalf()
 
+        #if cls.nofargs == 1:
+        # common case for functions with 1 argument
         if isinstance(arg, Basic.Number):
             func_evalf = getattr(arg, cls.__name__)
             return func_evalf()
