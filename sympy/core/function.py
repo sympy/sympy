@@ -68,6 +68,7 @@ class FunctionClass(MetaBasicMeths):
         assert not options,`options`
         if isinstance(arg1, type):
             ftype, name, signature = arg1, arg2, arg3
+            #XXX this probably needs some fixing:
             assert ftype.__name__.endswith('Function'),`ftype`
             attrdict = ftype.__dict__.copy()
             attrdict['undefined_Function'] = True
@@ -412,9 +413,6 @@ class Apply(Basic, ArithMeths, RelMeths):
                     return func(*self[:])
             except TypeError:
                 pass
-        #elif isinstance(old, Function) and isinstance(new, Function):
-        #    if old == self.func and old.nofargs == new.nofargs:
-        #        return new(*self[:])
         obj = self.func._eval_apply_subs(*(self[:] + (old,) + (new,)))
         if obj is not None:
             return obj
@@ -534,39 +532,6 @@ class Apply(Basic, ArithMeths, RelMeths):
         return self.func(*args, **self._assumptions)
 
 class Function(Basic, ArithMeths, NoRelMeths):
-    """ Base class for function objects, represents also undefined functions.
-
-    Undefined functions:
-      f = Function('f', nofargs=1)
-      f.fdiff(1) -> FApply(DF(1), f)
-      f(x).diff(x) -> Apply(f,x).diff(x) -> Apply(FApply(DF(1),f),x)
-
-    Defined functions:
-      exp = Exp()
-      f.fdiff(1) -> exp
-      log = Log()
-      log.fdiff(1) -> Lambda(1/_x, _x)
-
-    Anonymous/lambda functions:
-      f = Lambda(_x**2 + 1, _x)
-      f.fdiff(1) -> Lambda((_x**2+1).diff(_x), _x) -> Lambda(2*_x, _x)
-      f = Lambda(g(_x), _x) -> Lambda(Apply(g,_x),_x) -> g
-      f = Lambda(g(2*_x), _x) -> Lambda(Apply(g,2*_x),_x)
-      f.fdiff(1) -> Lambda(Apply(FApply(DF(1), g), 2*_x) * (2*_x).diff(_x), _x)
-
-    Function derivatives (applying operators to functions):
-      df = DF(1)(f) == FApply(DF(1), f)
-      df.fdiff(1) -> FApply(DF(1), FApply(DF(1), f)) -> FApply(DF(1,1), f)
-
-    Composition of functions:
-      e2 = Composition(exp, sin)
-      e2(x) -> exp(sin(x)) -> Apply(exp, Apply(sin, x))
-      e2.fdiff(1) -> Lambda(exp(sin(_x)).diff(_x), _x) -> Lambda(Apply(exp, Apply(sin, _x)).diff(_x), _x)
-                  -> Lambda(Apply(Compostion(exp, sin), _x).diff(_x), _x)
-                  -> Lambda(Apply(FApply(DF(1),exp), Apply(sin, _x)) * Apply(FApply(DF(1), sin),_x), _x)
-
-    """
-
     nofargs = None
     args = None
     body = None
@@ -604,10 +569,6 @@ class Function(Basic, ArithMeths, NoRelMeths):
                 raise TypeError('%s takes %s to %s arguments (got %s)'\
                             % (self, n1,n2, len(args)))
         return Apply(self, *args, **assumptions)
-
-    def as_lambda(self):
-        body, args = self.with_dummy_arguments()
-        return Lambda(body, *args)
 
     def with_dummy_arguments(self, args = None):
         """ Return a function value with dummy arguments.
