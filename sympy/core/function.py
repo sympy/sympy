@@ -182,9 +182,9 @@ class Function2(Basic, RelMeths):
             if isinstance(self.func, FunctionClass):
                 df = self.fdiff(i)
                 l.append(df * da)
-            else:
-                df = self.func.fdiff(i)
-                l.append(Apply(df,*self[:]) * da)
+            #else:
+            #    df = self.func.fdiff(i)
+            #    l.append(Apply(df,*self[:]) * da)
         return Basic.Add(*l)
 
     def _eval_power(b, e):
@@ -434,10 +434,7 @@ class WildFunction(Function2, Atom):
                 if v==expr: return repl_dict
                 return None
         if pattern.nofargs is not None:
-            if isinstance(expr, Apply):
-                if pattern.nofargs != expr.func.nofargs:
-                    return None
-            elif pattern.nofargs != expr.nofargs:
+            if pattern.nofargs != expr.nofargs:
                 return None
         repl_dict = repl_dict.copy()
         repl_dict[pattern] = expr
@@ -502,7 +499,6 @@ class Lambda(Function2):
 
     Lambda instance has the same assumptions as its body.
 
-    Lambda(Apply(g,x),x) -> g
     """
     precedence = Basic.Lambda_precedence
     name = None
@@ -511,9 +507,9 @@ class Lambda(Function2):
     def __new__(cls, expr, *args):
         expr = Basic.sympify(expr)
         args = tuple(map(Basic.sympify, args))
-        if isinstance(expr, Apply):
-            if expr[:]==args:
-                return expr.func
+        #if isinstance(expr, Apply):
+        #    if expr[:]==args:
+        #        return expr.func
         dummy_args = []
         for a in args:
             if not isinstance(a, Basic.Symbol):
@@ -780,6 +776,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
                 indices.append(len(symbols))
             else:
                 indices.append(symbols.index(s)+1)
+        stop
         return Apply(FApply(FDerivative(*indices), Lambda(self.expr, *symbols)), *symbols)
 
     def _eval_derivative(self, s):
@@ -835,8 +832,7 @@ def diff(f, x, times = 1, evaluate=True):
 
 
 # TODO rename me to something more appropriate? e.g. ArithFunction (or just
-# Function?) This will be done when we move everything to the new function
-# scheme and get rid of the current Function, DefinedFunction, Apply, ...
+# Function?) 
 class SingleValuedFunction(ArithMeths, Function2):
     """
     Single-valued functions.
