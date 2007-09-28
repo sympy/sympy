@@ -26,6 +26,8 @@ class sqrt(SingleValuedFunction):
 
     @classmethod
     def _eval_apply(self, arg):
+        #XXX this doesn't work, but it should (see #390):
+        #return arg**S.Half
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
