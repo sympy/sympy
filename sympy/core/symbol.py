@@ -67,7 +67,7 @@ class Symbol(Atom, RelMeths, ArithMeths):
 
     def __call__(self, *args):
         assumptions = self._assumptions
-        return Basic.Function(self.name, nofargs=len(args))(*args, **assumptions)
+        return Basic.Function2(self.name, nofargs=len(args))(*args, **assumptions)
 
     def _eval_integral(self, s):
         if self==s:

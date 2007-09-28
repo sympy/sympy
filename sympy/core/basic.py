@@ -959,7 +959,8 @@ class Basic(BasicMeths):
                 raise TypeError(".integral() argument must be Symbol|Integer|Equality instance (got %s)" % (s.__class__.__name__))
         return Basic.Integral(self, *new_symbols, **assumptions)
 
-    def __call__(self, *args):
+    #XXX fix the removeme
+    def __call__(self, *args, **removeme):
         return Basic.Apply(self, *args)
 
     def _eval_evalf(self):

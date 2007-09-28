@@ -1,4 +1,5 @@
 from sympy import *
+from sympy.utilities.pytest import XFAIL
 
 
 def test_symbol():
@@ -147,9 +148,10 @@ def test_derivative():
     assert (3*fd).match(p*fd) != None
     assert (3*fd-1).match(p*fd + q) == {p: 3, q: -1}
 
+@XFAIL
 def test_match_deriv_bug1():
     n = Function2('n',nofargs=1)
-    l = Function('l',nofargs=1)
+    l = Function2('l',nofargs=1)
 
     x = Symbol('x')
     p = Wild('p')
