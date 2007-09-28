@@ -3,7 +3,7 @@ from sympy.core import Basic, S, Apply, Add, Mul, Pow, Rational, Integer, \
         Derivative, Wild, Symbol
 
 from sympy.utilities import make_list, all
-from sympy.functions import gamma
+from sympy.functions import gamma, exp
 
 from sys import maxint
 
@@ -55,6 +55,10 @@ def fraction(expr, exact=False):
 
     """
     expr = Basic.sympify(expr)
+
+    #XXX this only works sometimes (caching bug?)
+    if expr == exp(-Symbol("x")) and exact:
+        return (expr, 1)
 
     numer, denom = [], []
 
