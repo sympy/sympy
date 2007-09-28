@@ -1,12 +1,12 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import DefinedFunction, Apply, Lambda
+from sympy.core.function import Apply, Lambda, SingleValuedFunction
 
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################
 ###############################################################################
 
-class Floor(DefinedFunction):
+class floor(SingleValuedFunction):
     """Floor is a univariate function which returns the largest integer
        value not greater than its argument. However this implementaion
        generalizes floor to complex numbers.
@@ -35,7 +35,8 @@ class Floor(DefinedFunction):
 
     nofargs = 1
 
-    def _eval_apply(self, arg):
+    @classmethod
+    def _eval_apply(cls, arg):
         arg = Basic.sympify(arg)
 
         if arg.is_integer:
@@ -64,7 +65,7 @@ class Floor(DefinedFunction):
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
                 if coeff is not None and coeff.is_real:
-                    excluded.append(self(coeff)*S.ImaginaryUnit)
+                    excluded.append(cls(coeff)*S.ImaginaryUnit)
                 elif term.is_real:
                     if term.is_integer:
                         excluded.append(term)
@@ -74,19 +75,17 @@ class Floor(DefinedFunction):
                     return
 
             if excluded:
-                return self(Basic.Add(*included)) + Basic.Add(*excluded)
+                return cls(Basic.Add(*included)) + Basic.Add(*excluded)
         else:
             coeff, terms = arg.as_coeff_terms(S.ImaginaryUnit)
 
             if not terms and not arg.atoms(type=Basic.Symbol):
                 if arg.is_negative:
-                    return -S.Ceiling(-arg)
+                    return -ceiling(-arg)
                 else:
-                    return self(arg.evalf())
+                    return cls(arg.evalf())
             elif terms == [ S.ImaginaryUnit ] and coeff.is_real:
-                return self(coeff)*S.ImaginaryUnit
-
-class ApplyFloor(Apply):
+                return cls(coeff)*S.ImaginaryUnit
 
     def _eval_is_bounded(self):
         return self[0].is_bounded
@@ -97,7 +96,7 @@ class ApplyFloor(Apply):
     def _eval_is_integer(self):
         return self[0].is_real
 
-class Ceiling(DefinedFunction):
+class ceiling(SingleValuedFunction):
     """Ceiling is a univariate function which returns the smallest integer
        value not less than its argument. Ceiling function is generalized
        in this implementation to complex numbers.
@@ -126,7 +125,8 @@ class Ceiling(DefinedFunction):
 
     nofargs = 1
 
-    def _eval_apply(self, arg):
+    @classmethod
+    def _eval_apply(cls, arg):
         arg = Basic.sympify(arg)
 
         if arg.is_integer:
@@ -155,7 +155,7 @@ class Ceiling(DefinedFunction):
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
                 if coeff is not None and coeff.is_real:
-                    excluded.append(self(coeff)*S.ImaginaryUnit)
+                    excluded.append(cls(coeff)*S.ImaginaryUnit)
                 elif term.is_real:
                     if term.is_integer:
                         excluded.append(term)
@@ -165,19 +165,17 @@ class Ceiling(DefinedFunction):
                     return
 
             if excluded:
-                return self(Basic.Add(*included)) + Basic.Add(*excluded)
+                return cls(Basic.Add(*included)) + Basic.Add(*excluded)
         else:
             coeff, terms = arg.as_coeff_terms(S.ImaginaryUnit)
 
             if not terms and not arg.atoms(type=Basic.Symbol):
                 if arg.is_negative:
-                    return -S.Floor(-arg)
+                    return -floor(-arg)
                 else:
-                    return self(arg.evalf())
+                    return cls(arg.evalf())
             elif terms == [ S.ImaginaryUnit ] and coeff.is_real:
-                return self(coeff)*S.ImaginaryUnit
-
-class ApplyCeiling(Apply):
+                return cls(coeff)*S.ImaginaryUnit
 
     def _eval_is_bounded(self):
         return self[0].is_bounded
@@ -187,6 +185,3 @@ class ApplyCeiling(Apply):
 
     def _eval_is_integer(self):
         return self[0].is_real
-
-Basic.singleton['floor'] = Floor
-Basic.singleton['ceiling'] = Ceiling

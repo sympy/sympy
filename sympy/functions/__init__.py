@@ -18,6 +18,7 @@ from elementary.complexes import re, im, sign, abs, conjugate, arg
 from elementary.trigonometric import acot, cot, tan, cos, sin, asin, acos, atan
 from elementary.exponential import exp, log
 from elementary.hyperbolic import sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth
+from elementary.integers import floor, ceiling
 
 from special.error_functions import erf
 from special.gamma_functions import gamma, lowergamma, uppergamma, polygamma, loggamma
