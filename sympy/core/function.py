@@ -753,8 +753,6 @@ class DefinedFunction(Function, Singleton, Atom):
     pass
 
 Basic.singleton['D'] = lambda : Derivative
-Basic.singleton['FD'] = lambda : FDerivative
-#Basic.singleton['Int'] = lambda : Integral
 
 def diff(f, x, times = 1, evaluate=True):
     """Derivate f with respect to x
