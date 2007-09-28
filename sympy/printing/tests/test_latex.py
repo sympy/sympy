@@ -2,6 +2,7 @@ import py
 
 from sympy import *
 from sympy.printing.latex import latex
+from sympy.utilities.pytest import XFAIL
 
 x,y = symbols('xy')
 
@@ -19,6 +20,7 @@ def test_latex_symbols():
     assert latex(volume / mass * rho == 1) == r"$\rho \cdot \mathrm{volume} \cdot {\mathrm{mass}}^{(-1)} = 1$"
     assert latex(mass**3 * volume**3) == r"${\mathrm{mass}}^{3} \cdot {\mathrm{volume}}^{3}$"
 
+@XFAIL
 def test_latex_functions():
     #assert latex(exp(x)) == "${e}^{x}$"   
 
