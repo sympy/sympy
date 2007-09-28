@@ -21,6 +21,9 @@ class sqrt(SingleValuedFunction):
         s = Basic.Symbol('x', dummy=True)
         return Lambda(s**2, s)
 
+    def tostr(self, p=None):
+        return "sqrt(%s)" % self[0]
+
     @classmethod
     def _eval_apply(self, arg):
         arg = Basic.sympify(arg)
@@ -36,7 +39,7 @@ class sqrt(SingleValuedFunction):
                 factors = arg.factors()
                 sqrt_factors = {}
                 eval_factors = {}
-                n = 1
+                n = Basic.Integer(1)
                 for k,v in factors.items():
                     n *= Basic.Integer(k) ** (v//2)
                     if v % 2:
