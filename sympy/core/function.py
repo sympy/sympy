@@ -131,17 +131,6 @@ class Function2(Basic, RelMeths):
     def _eval_subs(self, old, new):
         if self == old:
             return new
-        elif isinstance(old, Apply) and old[:] == self[:]:
-            #XXX: very bad style - the TypeError will catch a lot of 
-            #unrelated problems
-            try:
-                newfunc = Lambda(new, *old[:])
-                func = self.func.subs(old.func, newfunc)
-
-                if func != self.func:
-                    return func(*self[:])
-            except TypeError:
-                pass
         elif isinstance(old, FunctionClass) and isinstance(new, FunctionClass):
             if old == self.func and old.nofargs == new.nofargs:
                 return new(*self[:])
@@ -766,7 +755,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
             return expr
         return Basic.__new__(cls, expr, *unevaluated_symbols)
 
-    def as_apply(self):
+    def xas_apply(self):
         # Derivative(f(x),x) -> Apply(Lambda(f(_x),_x), x)
         symbols = []
         indices = []
