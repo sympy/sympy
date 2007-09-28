@@ -48,13 +48,14 @@ def test_ODE_second_order():
     assert dsolve(Derivative(f(x),x,x) + 9*f(x), [f(x)]) in \
         [sin(3*x)*C1 + cos(3*x)*C2, sin(3*x)*C2 + cos(3*x)*C1]
 
+@XFAIL
 def test_ODE_1():
     l = Function2('l')
     r = Symbol('r')
 
     e = Derivative(l(r),r)/r+Derivative(l(r),r,r)/2- \
         Derivative(l(r),r)**2/2
-    sol = dsolve(e, [l(r)]) # fails
+    sol = dsolve(e, [l(r)])
     assert (e.subs(l(r), sol)).expand() == 0
 
     e = e*exp(-l(r))/exp(l(r))

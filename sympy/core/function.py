@@ -354,10 +354,6 @@ class FDerivative(Function2):
         return FApply(self, func)
 
 class Apply(Basic, ArithMeths, RelMeths):
-    """ Represents unevaluated function value.
-
-    Apply(func, arg1, arg2, ..., **assumptions) <-> func(arg1, arg2, .., **assumptions)
-    """
 
     precedence = Basic.Apply_precedence
 
@@ -402,13 +398,6 @@ class Apply(Basic, ArithMeths, RelMeths):
     def __len__(self):
         return len(self[:])
 
-    def tostr(self, level=0):
-        p = self.precedence
-        r = '%s(%s)' % (self.func.tostr(p), ', '.join([a.tostr() for a in self]))
-        if p <= level:
-            return '(%s)' % (r)
-        return r
-
     def _eval_subs(self, old, new):
         if self == old:
             return new
@@ -426,48 +415,6 @@ class Apply(Basic, ArithMeths, RelMeths):
             return obj
         return Basic._seq_subs(self, old, new)
 
-    def _eval_expand_basic(self, *args):
-        return self
-
-    def _eval_evalf(self):
-        obj = self.func._eval_apply_evalf(*self[:])
-        if obj is None:
-            return self
-        return obj
-
-    def _eval_is_comparable(self):
-        if isinstance(self.func, SingleValuedFunction):
-            r = True
-            for s in self:
-                c = s.is_comparable
-                if c is None: return
-                if not c: r = False
-            return r
-        return
-
-    def _eval_derivative(self, s):
-        # Apply(f(x), x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
-        i = 0
-        l = []
-        r = Basic.Zero()
-        for a in self:
-            i += 1
-            da = a.diff(s)
-            if isinstance(da, Basic.Zero):
-                continue
-            if isinstance(self.func, FunctionClass):
-                df = self.fdiff(i)
-                l.append(df * da)
-            else:
-                df = self.func.fdiff(i)
-                l.append(Apply(df,*self[:]) * da)
-        return Basic.Add(*l)
-
-    def _eval_power(b, e):
-        if len(b)==1:
-            return b.func._eval_apply_power(b[0], e)
-        return
-
     def _eval_is_commutative(self):
         r = True
         for a in self._args:
@@ -475,69 +422,6 @@ class Apply(Basic, ArithMeths, RelMeths):
             if c is None: return None
             if not c: r = False
         return r
-
-    def _calc_positive(self):
-        return self.func._calc_apply_positive(*self[:])
-
-    def _calc_real(self):
-        return self.func._calc_apply_real(*self[:])
-
-    def _calc_unbounded(self):
-        return self.func._calc_apply_unbounded(*self[:])
-
-    def _eval_eq_nonzero(self, other):
-        if isinstance(other.func, self.func.__class__) and len(self[:])==len(other[:]):
-            for a1,a2 in zip(self,other):
-                if not (a1==a2):
-                    return False
-            return True
-
-    def as_base_exp(self):
-        return self, Basic.One()
-
-    def count_ops(self, symbolic=True):
-        return Basic.Add(*[t.count_ops(symbolic) for t in self])
-
-    def _eval_oseries(self, order):
-        assert self.func.nofargs==1,`self.func`
-        arg = self[0]
-        x = order.symbols[0]
-        if not Basic.Order(1,x).contains(arg):
-            return self.func(arg)
-        arg0 = arg.limit(x, 0)
-        if not isinstance(arg0, Basic.Zero):
-            e = self.func(arg)
-            e1 = e.expand()
-            if e==e1:
-                print '%s(%s).oseries(%s) is unevaluated' % (self.func,arg,order)
-                return
-            return e1.oseries(order)
-        return self._compute_oseries(arg, order, self.func.taylor_term, self.func)
-
-    def _eval_is_polynomial(self, syms):
-        for arg in self:
-            if arg.has(*syms):
-                return False
-        return True
-
-    def _eval_expand_complex(self, *args):
-        func = self.func(*[ a._eval_expand_complex(*args) for a in self])
-        return Basic.Re()(func) + S.ImaginaryUnit * Basic.Im()(func)
-
-    def _eval_rewrite(self, pattern, rule, **hints):
-        if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self]
-        else:
-            args = self[:]
-
-        if pattern is None or isinstance(self.func, pattern):
-            if hasattr(self, rule):
-                rewritten = getattr(self, rule)(*args)
-
-                if rewritten is not None:
-                    return rewritten
-
-        return self.func(*args, **self._assumptions)
 
 
 class WildFunction(Function2, Atom):
