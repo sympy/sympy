@@ -21,7 +21,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             if c_seq:
                 # first process commutative objects
                 o = c_seq.pop(0)
-                if isinstance(o, (Basic.Function, FunctionClass)):
+                if isinstance(o, FunctionClass):
                     if o.nofargs is not None:
                         o, lambda_args = o.with_dummy_arguments(lambda_args)
                 if isinstance(o, Basic.Order):
@@ -54,7 +54,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 o = nc_seq.pop(0)
                 if isinstance(o, Basic.WildFunction):
                     pass
-                elif isinstance(o, (Basic.Function, FunctionClass)):
+                elif isinstance(o, FunctionClass):
                     if o.nofargs is not None:
                         o, lambda_args = o.with_dummy_arguments(lambda_args)
                 elif isinstance(o, Basic.Order):

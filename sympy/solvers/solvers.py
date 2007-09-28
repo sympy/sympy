@@ -300,8 +300,9 @@ def dsolve(eq, funcs):
         - you can declare the derivative of an unknown function this way:
         >>> from sympy import *
         >>> x = Symbol('x') # x is the independent variable
-        >>> f = Function(x) # f is a function of f
-        >>> f_ = Derivative(f, x) # f_ will be the derivative of f with respect to x
+        
+        #>>> f = Function(x) # f is a function of f
+        #>>> f_ = Derivative(f, x) # f_ will be the derivative of f with respect to x
 
         - This function just parses the equation "eq" and determines the type of
         differential equation, then it determines all the coefficients and then
@@ -311,10 +312,11 @@ def dsolve(eq, funcs):
     ========
         >>> from sympy import *
         >>> x = Symbol('x')
-        >>> f = Function('f')
-        >>> fx = f(x)
-        >>> dsolve(Derivative(Derivative(fx,x),x)+9*fx, fx)
-        C1*sin(3*x) + C2*cos(3*x)
+
+        #>>> f = Function('f')
+        #>>> fx = f(x)
+        #>>> dsolve(Derivative(Derivative(fx,x),x)+9*fx, fx)
+        #C1*sin(3*x) + C2*cos(3*x)
 
     """
 

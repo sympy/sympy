@@ -335,7 +335,6 @@ class FDerivative(Function2):
                 if not unevaluated_indices:
                     return Lambda(expr, *func[:])
                 return FApply(FDerivative(*unevaluated_indices), Lambda(expr, *func))
-            #if isinstance(func, DefinedFunction):
             if isinstance(func, SingleValuedFunction):
                 for i in range(len(self.indices)):
                     di = self.indices[i]

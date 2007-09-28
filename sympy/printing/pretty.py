@@ -1,4 +1,4 @@
-from sympy.core import Basic, Function  # XXX remove Function from here
+from sympy.core import Basic, Function2  # XXX remove Function from here
 from printer import Printer
 from stringpict import *
 
@@ -238,10 +238,10 @@ class PrettyPrinter(Printer):
         n = len(args)
 
         # XXX temp. hack -- remove when 'Function2 -> Function' is done
-        if isinstance(func, Function):
-            func_name = func.name
-        else:
-            func_name = func.__name__
+        #if isinstance(func, Function):
+        #    func_name = func.name
+        #else:
+        func_name = func.__name__
 
         prettyFunc = self._print(Basic.Symbol(func_name));
         prettyArgs = self._print(args[0])

@@ -22,7 +22,7 @@ for _n, _cls in Basic.singleton.items():
 
 sympify = Basic.sympify
 
-class Function(Basic):
-    pass
-class DefinedFunction(Function):
-    pass
+#class Function(Basic):
+#    pass
+#class DefinedFunction(Function):
+#    pass

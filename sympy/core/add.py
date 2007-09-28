@@ -16,9 +16,9 @@ class Add(AssocOp, RelMeths, ArithMeths):
         order_factors = []
         while seq:
             o = seq.pop(0)
-            if isinstance(o, Basic.Function):
-                if o.nofargs is not None:
-                    o, lambda_args = o.with_dummy_arguments(lambda_args)
+            #if isinstance(o, Basic.Function):
+            #    if o.nofargs is not None:
+            #        o, lambda_args = o.with_dummy_arguments(lambda_args)
             if isinstance(o, Basic.Order):
                 for o1 in order_factors:
                     if o1.contains(o):
