@@ -44,12 +44,31 @@ def test_compare1():
 
     assert compare(exp(x**2), 1/exp(x**2), x) == "="
 
+@XFAIL
+def test_compare2():
+    assert compare(exp(x),x**5,x) == ">"
+    assert compare(exp(x**2),exp(x)**2,x) == ">"
+    assert compare(exp(x),exp(x+exp(-x)),x) == "="
+    assert compare(exp(x+exp(-x)),exp(x),x) == "="
+    assert compare(exp(x+exp(-x)),exp(-x),x) == "="
+    assert compare(exp(exp(x)),exp(x+exp(-exp(x))),x) == ">"
+    assert compare(exp(-x),x,x) ==  ">"
+    assert compare(x,exp(-x),x) ==  "<"
+    assert compare(exp(x+1/x),x,x) == ">"
+    assert compare(exp(exp(x)),exp(x+exp(-exp(x))),x) == ">"
+    assert compare(exp(-exp(x)),exp(x),x) == ">"
+    assert compare(exp(exp(-exp(x))+x),exp(-exp(x)),x) == "<"
+
+
 def test_mrv1():
+    assert mrv(x, x) == set([x])
     assert mrv(x+1/x, x) == set([x])
     assert mrv(x**2, x) == set([x])
     assert mrv(log(x), x) == set([x])
     assert mrv(exp(x), x) == set([exp(x)])
+    assert mrv(exp(-x), x) == set([exp(-x)])
     assert mrv(exp(x**2), x) == set([exp(x**2)])
+    assert mrv(-exp(1/x), x) == set([x])
     assert mrv(exp(x+1/x), x) == set([exp(x+1/x)])
     assert mrv(exp(-x+1/x**2)-exp(x+1/x), x) == set([exp(x+1/x), exp(1/x**2-x)])
 
@@ -110,12 +129,29 @@ def test_mrv_leadterm3():
 def test_limit1():
     assert limit(x, x, oo) == oo
     assert limit(x, x, -oo) == -oo
+    assert limit(-x, x, oo) == -oo
     assert limit(x**2, x, -oo) == oo
+    assert limit(-x**2, x, oo) == -oo
+    assert limit(x*log(x), x, 0, dir="+") == 0
+    assert limit(1/x,x,oo) == 0
+    assert limit(exp(x),x,oo) == oo
+    assert limit(-exp(x),x,oo) == -oo
+    assert limit(exp(x)/x,x,oo) == oo
+    assert limit(1/x-exp(-x),x,oo) == 0
+    assert limit(x+1/x,x,oo) == oo
 
-#1st limit returns 0, should be 1:
+
+#1st and 2nd limit return 0, should be 1:
 @XFAIL
 def test_limit2():
+    assert limit(x**x, x, 0, dir="+") == 1
     assert limit((exp(x)-1)/x, x, 0) == 1
+    assert limit(1+1/x,x,oo) == 1
+    assert limit(-exp(1/x),x,oo) == -1
+    assert limit(x+exp(-x),x,oo) == oo
+    assert limit(x+exp(-x**2),x,oo) == oo
+    assert limit(x+exp(-exp(x)),x,oo) == oo
+    assert limit(13+1/x-exp(-x),x,oo) == 13
 
 #3rd limit returns 0, should be 1:
 @XFAIL
