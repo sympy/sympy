@@ -54,17 +54,6 @@ from basic_methods import BasicType, MetaBasicMeths
 from methods import ArithMeths, NoRelMeths, RelMeths
 from operations import AssocOp
 
-class Apply(Basic):
-    pass
-class FApply(Basic):
-    pass
-class Composition(Basic):
-    pass
-class FPow(Basic):
-    pass
-class FDerivative(Basic):
-    pass
-
 class FunctionClass(MetaBasicMeths):
     """
     Base class for function classes. FunctionClass is a subclass of type.

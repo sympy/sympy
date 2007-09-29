@@ -380,7 +380,7 @@ class Basic(BasicMeths):
                 return True
         if p.matches(self) is not None:
             return True
-        if not isinstance(self, Basic.Apply):
+        if not False:
             args = self[:]
         else:
             args = (self.func,)+self[:]
@@ -490,14 +490,8 @@ class Basic(BasicMeths):
         d = repl_dict.copy()
 
         # weed out identical terms
-        if isinstance(expr, (Basic.Apply, Basic.FApply)):
-            pp = list((pattern.func,)+pattern[:])
-        else:
-            pp = list(pattern)
-        if isinstance(expr, (Basic.Apply, Basic.FApply)):
-            ee = list((expr.func,)+expr[:])
-        else:
-            ee = list(expr)
+        pp = list(pattern)
+        ee = list(expr)
         for p in pattern:
           for e in expr:
             if e == p:
@@ -615,10 +609,7 @@ class Basic(BasicMeths):
     def _eval_expand_basic(self, *args):
         if isinstance(self, Atom):
             return self
-        if not isinstance(self, Basic.Apply):
-            sargs = self[:]
-        else:
-            sargs = (self.func,)+self[:]
+        sargs = self[:]
         terms = [ term._eval_expand_basic(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
@@ -635,30 +626,21 @@ class Basic(BasicMeths):
     def _eval_expand_complex(self, *args):
         if isinstance(self, Atom):
             return self
-        if not isinstance(self, (Basic.Apply, Basic.Function2)):
-            sargs = self[:]
-        else:
-            sargs = (self.func,)+self[:]
+        sargs = self[:]
         terms = [ term._eval_expand_complex(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
     def _eval_expand_trig(self, *args):
         if isinstance(self, Atom):
             return self
-        if not isinstance(self, Basic.Apply):
-            sargs = self[:]
-        else:
-            sargs = (self.func,)+self[:]
+        sargs = self[:]
         terms = [ term._eval_expand_trig(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
     def _eval_expand_func(self, *args):
         if isinstance(self, Atom):
             return self
-        if not isinstance(self, Basic.Apply):
-            sargs = self[:]
-        else:
-            sargs = (self.func,)+self[:]
+        sargs = self[:]
         terms = [ term._eval_expand_func(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
@@ -683,10 +665,7 @@ class Basic(BasicMeths):
     def _eval_rewrite(self, pattern, rule, **hints):
         if isinstance(self, Atom):
             return self
-        if not isinstance(self, Basic.Apply):
-            sargs = self[:]
-        else:
-            sargs = (self.func,)+self[:]
+        sargs = self[:]
         terms = [ t._eval_rewrite(pattern, rule, **hints) for t in sargs ]
         return self.__class__(*terms, **self._assumptions)
 

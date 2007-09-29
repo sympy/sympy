@@ -1,6 +1,6 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import Apply, Lambda, SingleValuedFunction
+from sympy.core.function import Lambda, SingleValuedFunction
 
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################

@@ -1,5 +1,5 @@
 
-from sympy.core import Basic, S, Apply, Add, Mul, Pow, Rational, Integer, \
+from sympy.core import Basic, S, Add, Mul, Pow, Rational, Integer, \
         Derivative, Wild, Symbol
 
 from sympy.utilities import make_list, all
@@ -166,7 +166,7 @@ def separate(expr, deep=False):
             return Basic.Pow(separate(expr.base, deep), expo)
     elif isinstance(expr, (Basic.Add, Basic.Mul)):
         return type(expr)(*[ separate(t, deep) for t in expr ])
-    elif isinstance(expr, (Apply, Basic.Function2)) and deep:
+    elif isinstance(expr, Basic.Function2) and deep:
         return expr.func(*[ separate(t) for t in expr])
     else:
         return expr
@@ -329,7 +329,7 @@ def together(expr, deep=False):
             return Add(*numerator)/(product*Mul(*denominator))
         elif isinstance(expr, (Mul, Pow)):
             return type(expr)(*[ _together(t) for t in expr ])
-        elif isinstance(expr, (Apply, Function2)) and deep:
+        elif isinstance(expr, Function2) and deep:
             return expr.func(*[ _together(t) for t in expr ])
         else:
             return expr
@@ -647,7 +647,7 @@ def ratsimp(expr):
         for x in expr:
             res.append( ratsimp(x) )
         return Mul(*res)
-    elif isinstance(expr, (Apply, Basic.Function2)):
+    elif isinstance(expr, Basic.Function2):
         return expr.func(*[ ratsimp(t) for t in expr ])
 
     #elif isinstance(expr, Function):
@@ -718,7 +718,7 @@ def trigsimp(expr, deep=False):
     if expr == 1/cos(Symbol("x"))**2 - 1:
         return tan(Symbol("x"))**2
 
-    if isinstance(expr, (Apply, Basic.Function2)):
+    if isinstance(expr, Basic.Function2):
         if deep:
             return expr.func( trigsimp(expr[0], deep) )
     elif isinstance(expr, Mul):
@@ -841,8 +841,8 @@ def powsimp(expr, deep=False):
             if deep:
                 return Basic.Pow(powsimp(expr.base), powsimp(expr.exp))
             return expr
-        elif isinstance(expr, Basic.Apply) and deep:
-            return expr.func(*[powsimp(t) for t in expr])
+        #elif isinstance(expr, Basic.Apply) and deep:
+        #    return expr.func(*[powsimp(t) for t in expr])
         elif isinstance(expr, Basic.Add):
             return Basic.Add(*[powsimp(t) for t in expr])
         elif isinstance(expr, Basic.Mul):
