@@ -98,6 +98,58 @@ from sympy import Basic, Add, Mul, Pow, Function, log, oo, Rational, exp, \
         Real, Order, Symbol
 O = Order
 
+def debug(func):
+    def decorated(*args, **kwargs):
+        #r = func(*args, **kwargs)
+        r = maketree(func, *args, **kwargs)
+        #print "%s = %s(%s, %s)" % (r, func.__name__, args, kwargs)
+        return r
+    if 1:
+        #normal mode
+        return lambda *args, **kwargs: func(*args, **kwargs)
+    else:
+        #debug mode
+        return decorated
+
+def tree(subtrees):
+    def indent(s,type=1):
+        x = s.split("\n")
+        r = "+-%s\n"%x[0]
+        for a in x[1:]:
+            if a=="": continue
+            if type==1:
+                r += "| %s\n"%a
+            else:
+                r += "  %s\n"%a
+        return r
+    if len(subtrees)==0: return ""
+    f="";
+    for a in subtrees[:-1]:
+        f += indent(a)
+    f += indent(subtrees[-1],2)
+    return f
+
+tmp=[]
+iter=0
+def maketree(f,*args,**kw):
+    global tmp
+    global iter
+    oldtmp=tmp
+    tmp=[]
+    iter+=1
+
+    r = f(*args,**kw)
+
+    iter-=1
+    s = "%s%s = %s\n" % (f.func_name,args,r)
+    if tmp!=[]: s += tree(tmp)
+    tmp=oldtmp
+    tmp.append(s)
+    if iter == 0: 
+        print tmp[0]
+        tmp=[]
+    return r
+
 def compare(a,b,x):
     """Returns "<" if a<b, "=" for a==b, ">" for a>b"""
     #use the sympy's broken limit as the starting point (bootstrapping) :)
@@ -110,6 +162,7 @@ def compare(a,b,x):
     else: 
         return "="
 
+@debug
 def mrv(e, x):
     "Returns a python set of  most rapidly varying (mrv) subexpressions of 'e'"
     assert isinstance(e, Basic)
@@ -163,6 +216,7 @@ def mrv_max(f, g, x):
         assert c == "="
         return f.union(g)
 
+@debug
 def rewrite(e,Omega,x,wsym):
     """e(x) ... the function
     Omega ... the mrv set
@@ -205,6 +259,7 @@ def rewrite(e,Omega,x,wsym):
     if sig: logw=-logw     #log(w)->log(1/w)=-log(w)
     return f, logw
 
+@debug
 def sign(e, x):
     """Returns a sign of an expression e(x) for x->oo.
     
@@ -212,8 +267,14 @@ def sign(e, x):
         e == 0 ...  0
         e <  0 ... -1
     """
+    assert isinstance(e, Basic)
     if isinstance(e, (Rational, Real)):
-        return sympy.sign(e)
+        if e == 0:
+            return 0
+        elif e.evalf() > 0:
+            return 1
+        else:
+            return -1
     elif not e.has(x):
         f= e.evalf()
         if f > 0:
@@ -236,19 +297,19 @@ def sign(e, x):
         return sign(e.inflimit(x), x)
     raise "cannot determine the sign of %s"%e
 
-def limitinf(e,x):
+@debug
+def limitinf(e, x):
     """Limit e(x) for x-> oo"""
     if not e.has(x): return e #e is a constant
-    c0,e0 = mrv_leadterm(e,x) 
+    c0, e0 = mrv_leadterm(e,x) 
     sig=sign(e0,x)
     if sig==1: return Rational(0) # e0>0: lim f = 0
     elif sig==-1: #e0<0: lim f = +-oo   (the sign depends on the sign of c0)
+        s = sign(c0, x)
         #the leading term shouldn't be 0:
-        assert sign(c0,x) != 0
-        return sign(c0, x) * oo 
-    elif sig==0: return limitinf(c0,x) #e0=0: lim f = lim c0
-
-#@decorator(maketree)
+        assert s != 0
+        return s * oo 
+    elif sig==0: return limitinf(c0, x) #e0=0: lim f = lim c0
 
 def moveup(l, x):
     return [e.subs(x,exp(x)) for e in l]
@@ -263,6 +324,7 @@ def subexp(e,sub):
     #is yes.
     return e.subs(sub, Symbol("x", dummy=True)) != e
 
+@debug
 def mrv_leadterm(e, x, Omega=[]):
     """Returns (c0, e0) for e."""
     if not e.has(x): return (e, 0)
@@ -288,9 +350,6 @@ def mrv_leadterm(e, x, Omega=[]):
     series=series.subs(log(wsym), logw)
     #print "sss3",series,type(series)
     return series.leadterm(wsym)
-
-#@decorator(maketree)
-
 
 
 class Limit2(Basic):

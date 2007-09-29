@@ -1,5 +1,6 @@
-from sympy import Symbol, exp, log, oo
-from sympy.series.limits2 import compare, mrv, rewrite, mrv_leadterm, limit
+from sympy import Symbol, exp, log, oo, Rational
+from sympy.series.limits2 import compare, mrv, rewrite, mrv_leadterm, limit, \
+    sign
 from sympy.utilities.pytest import XFAIL
 
 """
@@ -12,6 +13,7 @@ return the result.
 
 x = Symbol('x')
 m = Symbol('m')
+
 
 def test_compare1():
     assert compare(2, x, x) == "<"
@@ -59,6 +61,16 @@ def test_compare2():
     assert compare(exp(-exp(x)),exp(x),x) == ">"
     assert compare(exp(exp(-exp(x))+x),exp(-exp(x)),x) == "<"
 
+def test_sign1():
+    assert sign(Rational(0), x) == 0
+    assert sign(Rational(3), x) == 1
+    assert sign(Rational(-5), x) == -1
+    assert sign(log(x), x) == 1
+    assert sign(exp(-x), x) == 1
+    assert sign(exp(x), x) == 1
+    assert sign(-exp(x), x) == -1
+    assert sign(3-1/x, x) == 1
+    assert sign(-3-1/x, x) == -1
 
 def test_mrv1():
     assert mrv(x, x) == set([x])
@@ -141,8 +153,6 @@ def test_limit1():
     assert limit(x+1/x,x,oo) == oo
 
 
-#1st and 2nd limit return 0, should be 1:
-@XFAIL
 def test_limit2():
     assert limit(x**x, x, 0, dir="+") == 1
     assert limit((exp(x)-1)/x, x, 0) == 1
