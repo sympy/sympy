@@ -174,36 +174,8 @@ def risch_norman(f, x, rewrite=False):
     """
     f = Basic.sympify(f)
 
-    #XXX These stopped working after moving functions to new scheme, 
-    # so I created this fix to pass all tests, but it should be investigated
-    # what went wrong.
-    from sympy import sin, cos, exp, cot, tan, log, \
+    from sympy import sin, cos, cot, tan, \
                       sinh, cosh, tanh, coth
-    if f == sinh(x):
-        return cosh(x)
-    if f == x*sinh(x):
-        return x*cosh(x)-sinh(x)
-    if f == sin(x)*exp(x):
-        return exp(x)*sin(x)/2 - exp(x)*cos(x)/2
-    if f == x*cosh(x):
-        return x*sinh(x)-cosh(x)
-    if f == sin(x):
-        return -cos(x)
-    if f == cos(x):
-        return sin(x)
-    if f == sin(x)*cos(Symbol("y")):
-        return -cos(x)*cos(Symbol("y"))
-    if f == sin(x)*cos(x):
-        return sin(x)**2 / 2
-    if f == cos(x)/sin(x):
-        return log(sin(x))
-    if f == sin(x)*exp(x):
-        return exp(x)*sin(x)/2 - exp(x)*cos(x)/2
-    if f == x*sin(7*x):
-        return sin(7*x) / 49 - x*cos(7*x) / 7
-    if f == x**2*cos(x):
-        return x**2*sin(x) - 2*sin(x) + 2*x*cos(x)
-
 
     if not f.has(x):
         return f * x
@@ -232,11 +204,13 @@ def risch_norman(f, x, rewrite=False):
             terms |= components(h)
 
     terms = [ g for g in terms if g.has(x) ]
-    #XXX: This fixes a bug: the more complicated expression must be to the left
-    #in terms, i.e. [exp(x), x], but not [x, exp(x)], this should be checked
+    #XXX: This fixes bugs: it seems integration variable must be to the right
+    #i.e. in terms [exp(x), x], but not [x, exp(x)], this should be checked
     #and made more robust.
-    if len(terms) == 2 and isinstance(terms[1], exp):
-        terms.reverse()
+    # simply move integration variable to the end of terms
+    # FIXME: this is probably incorrect! (--kirr)
+    terms.remove(x)
+    terms.append(x)
 
     V, in_terms, out_terms = [], [], {}
 
