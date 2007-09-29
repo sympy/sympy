@@ -55,7 +55,6 @@ def test_pretty_unicode_defaults():
     pprint_use_unicode(use_unicode)
 
 
-@XFAIL
 def test_pretty_functions():
     # Simple
     assert pretty( (2*x + exp(x)) ) in [' x      \ne  + 2*x', '       x\n2*x + e ']

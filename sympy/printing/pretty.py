@@ -227,20 +227,11 @@ class PrettyPrinter(Printer):
             base = prettyForm('e', binding=prettyForm.ATOM)
         return base ** self._print(e[0])
 
-    # TODO: rename to _print_Function
-    #       after 'Function -> Function' transition is done
     def _print_Function(self, e):
-        return self._print_Apply(e) # XXX this is temporary
-
-    def _print_Apply(self, e):
         func = e.func
         args = e[:]
         n = len(args)
 
-        # XXX temp. hack -- remove when 'Function -> Function' is done
-        #if isinstance(func, Function):
-        #    func_name = func.name
-        #else:
         func_name = func.__name__
 
         prettyFunc = self._print(Basic.Symbol(func_name));
