@@ -91,7 +91,10 @@ the bugs are usually in the series expansion (i.e. in SymPy) and in rewrite.
 
 """
 
-from sympy import Basic, Add, Mul, Pow, Function, log, oo, Rational, exp
+import sympy
+from sympy import Basic, Add, Mul, Pow, Function, log, oo, Rational, exp, \
+        Real, Order, Symbol
+O = Order
 
 def compare(a,b,x):
     """Returns "<" if a<b, "=" for a==b, ">" for a>b"""
@@ -108,7 +111,6 @@ def compare(a,b,x):
 def mrv(e, x):
     "Returns a python set of  most rapidly varying (mrv) subexpressions of 'e'"
     assert isinstance(e, Basic)
-    #print "mrv:", e
     if not e.has(x): 
         return set([])
     elif e == x: 
@@ -159,6 +161,79 @@ def mrv_max(f, g, x):
         assert c == "="
         return f.union(g)
 
+def rewrite(e,Omega,x,wsym):
+    """e(x) ... the function
+    Omega ... the mrv set
+    wsym ... the symbol which is going to be used for w
+
+    Returns the rewritten e in terms of w and log(w). See test_rewrite1()
+    for examples and correct results.
+    """
+    assert isinstance(Omega, set)
+    assert len(Omega)!=0
+    #all items in Omega must be exponentials
+    for t in Omega: assert isinstance(t, exp)
+    def cmpfunc(a,b):
+        #FIXME: this is really, really slow...
+        return -cmp(len(mrv(a,x)), len(mrv(b,x)))
+    #sort Omega (mrv set) from the most complicated to the simplest ones
+    #the complexity of "a" from Omega: the length of the mrv set of "a"
+    Omega = list(Omega)
+    Omega.sort(cmp=cmpfunc)
+    g=Omega[-1] #g is going to be the "w" - the simplest one in the mrv set
+    sig = (sign(g[0], x) == 1) 
+    if sig: wsym=1/wsym #if g goes to oo, substitute 1/w
+    #O2 is a list, which results by rewriting each item in Omega using "w"
+    O2=[]
+    for f in Omega: 
+        c=mrv_leadterm(f[0]/g[0], x)
+        #the c is a constant, because both f and g are from Omega:
+        assert c[1] == 0
+        O2.append(exp((f[0]-c[0]*g[0]).expand())*wsym**c[0])
+    #Remember that Omega contains subexpressions of "e". So now we find
+    #them in "e" and substitute them for our rewriting, stored in O2
+    f=e 
+    for a,b in zip(Omega,O2):
+        f=f.subs(a,b)
+
+    #tmp.append("Omega=%s; O2=%s; w=%s; wsym=%s\n"%(Omega,O2,g,wsym))
+
+    #finally compute the logarithm of w (logw). 
+    logw=g[0]
+    if sig: logw=-logw     #log(w)->log(1/w)=-log(w)
+    return f, logw
+
+def sign(e, x):
+    """Returns a sign of an expression e(x) for x->oo.
+    
+        e >  0 ...  1
+        e == 0 ...  0
+        e <  0 ... -1
+    """
+    if isinstance(e, (Rational, Real)):
+        return sympy.sign(e)
+    elif not e.has(x):
+        f= e.evalf()
+        if f > 0:
+            return 1
+        else:
+            return -1
+    elif e == x: 
+        return 1
+    elif isinstance(e, Mul): 
+        a,b = e.as_two_terms()
+        return sign(a, x) * sign(b, x)
+    elif isinstance(e, exp): 
+        return 1 
+    elif isinstance(e, Pow):
+        if sign(e.base, x) == 1: 
+            return 1
+    elif isinstance(e, log): 
+        return sign(e[0] -1, x)
+    elif isinstance(e, Add):
+        return sign(e.inflimit(x), x)
+    raise "cannot determine the sign of %s"%e
+
 def limitinf(e,x):
     """Limit e(x) for x-> oo"""
     if not e.has(x): return e #e is a constant
@@ -171,125 +246,44 @@ def limitinf(e,x):
         return sign(c0, x) * s.oo 
     elif sig==0: return limitinf(c0,x) #e0=0: lim f = lim c0
 
-def sign(e,x):
-    """Returns a sign of an expression at x->oo.
-    
-        e>0 ... 1
-        e==0 .. 0
-        e<0 ... -1
-    """
-    if isinstance(e, (s.Rational, s.Real)):
-        return s.sign(e)
-    elif not e.has(x):
-        f= e.evalf()
-        if f > 0:
-            return 1
-        else:
-            return -1
-    elif e == x: 
-        return 1
-    elif isinstance(e,s.Mul): 
-        a,b = e.getab()
-        return sign(a,x)*sign(b,x)
-#    elif isinstance(e,s.add): 
-#        a,b=e.getab()
-#        return sign(a,x)*sign(b,x)
-    elif isinstance(e,s.exp): 
-        return 1 
-    elif isinstance(e, Pow):
-        if sign(e.base,x) == 1: 
-            return 1
-    elif isinstance(e, s.log): 
-        return sign(e._args -1, x)
-    elif isinstance(e, Add):
-        return sign(limitinf(e,x),x)
-    raise "cannot determine the sign of %s"%e
-
-def tryexpand(a):
-    if isinstance(a,Mul) or isinstance(a,Pow) or isinstance(a,Add):
-        return a.expand()
-    else:
-        return a
-
 #@decorator(maketree)
-def rewrite(e,Omega,x,wsym):
-    """e(x) ... the function
-    Omega ... the mrv set
-    wsym ... the symbol which is going to be used for w
 
-    returns the rewritten e in terms of w. and log(w)
-    """
-    for t in Omega: assert isinstance(t,s.exp)
-    assert len(Omega)!=0
-    def cmpfunc(a,b):
-        #FIXME: this is really, really slow...
-        return -cmp(len(mrv(a,x)), len(mrv(b,x)))
-    #sort Omega (mrv set) from the most complicated to the simplest ones
-    #the complexity of "a" from Omega: the length of the mrv set of "a"
-    Omega.sort(cmp=cmpfunc)
-    g=Omega[-1] #g is going to be the "w" - the simplest one in the mrv set
-    assert isinstance(g,s.exp) #all items in Omega should be exponencials
-    sig= (sign(g._args,x)==1) 
-    if sig: wsym=1/wsym #if g goes to oo, substitute 1/w
-    #O2 is a list, which results by rewriting each item in Omega using "w"
-    O2=[]
-    for f in Omega: 
-        assert isinstance(f,s.exp) #all items in Omega should be exponencials
-        c=mrv_leadterm(f._args/g._args,x)
-        #the c is a constant, because both f and g are from Omega:
-        assert c[1]==0
-        O2.append(s.exp(tryexpand(f._args-c[0]*g._args))*wsym**c[0])
-    #Remember that Omega contains subexpressions of "e". So now we find
-    #them in "e" and substitute them for our rewriting, stored in O2
-    f=e 
-    for a,b in zip(Omega,O2):
-        f=f.subs(a,b)
+def moveup(l, x):
+    return [e.subs(x,exp(x)) for e in l]
 
-    #tmp.append("Omega=%s; O2=%s; w=%s; wsym=%s\n"%(Omega,O2,g,wsym))
-
-    #finally compute the logarithm of w (logw). 
-    logw=g._args
-    if sig: logw=-logw     #log(w)->log(1/w)=-log(w)
-    return f,logw
-
-def moveup(l,x):
-    return [e.subs(x,s.exp(x)) for e in l]
-
-def movedown(l,x):
-    return [e.subs(x,s.log(x)) for e in l]
+def movedown(l, x):
+    return [e.subs(x,log(x)) for e in l]
 
 def subexp(e,sub):
     """Is "sub" a subexpression of "e"? """
-    n = s.Symbol("x", dummy=True)
     #we substitute some symbol for the "sub", and if the 
     #expression changes, the substitution was successful, thus the answer
     #is yes.
-    return e.subs(sub,n) != e
+    return e.subs(sub, Symbol("x", dummy=True)) != e
 
-#@decorator(maketree)
-def mrv_leadterm(e,x,Omega=[]):
+def mrv_leadterm(e, x, Omega=[]):
     """Returns (c0, e0) for e."""
-    if not e.has(x): return (e,s.Rational(0))
+    if not e.has(x): return (e, 0)
     Omega = [t for t in Omega if subexp(e,t)]
     if Omega == []:
         Omega = mrv(e,x)
-    if member(x,Omega):
-        return movedown(mrv_leadterm(moveup([e],x)[0],x,moveup(Omega,x)),x)
-    wsym = s.Symbol("w", dummy=True)
-    f,logw=rewrite(e,Omega,x,wsym)
-    series=f.expand().series(wsym,2)
-    n = 3
-    from sympy import O,Add
-    while series==0 or isinstance(series,O) and n<10:
-        series = f.expand().series(wsym,n)
-        n += 1
+    if x in set(Omega):
+        #move the whole omega up (exponentiate each term):
+        Omega_up = set(moveup(Omega,x))
+        e_up = moveup([e],x)[0]
+        #calculate the lead term
+        mrv_leadterm_up = mrv_leadterm(e_up, x, Omega_up)
+        #move the result (c0, e0) down
+        return movedown(mrv_leadterm_up, x)
+    wsym = Symbol("w", dummy=True)
+    f, logw=rewrite(e, set(Omega), x, wsym)
+    series=f.expand().oseries(O(wsym**2, wsym))
     assert series!=0
     assert not isinstance(series,O)
     #print "sss1",series,type(series),f,n
-    if isinstance(series,Add):
-        series = series.removeO()
+    #series = series.removeO()
     #print "sss2",series,type(series)
-    series=series.subs(s.log(wsym),logw)
+    series=series.subs(log(wsym), logw)
     #print "sss3",series,type(series)
     return series.leadterm(wsym)
 

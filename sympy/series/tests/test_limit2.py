@@ -1,5 +1,5 @@
 from sympy import Symbol, exp, log
-from sympy.series.limits2 import compare, mrv
+from sympy.series.limits2 import compare, mrv, rewrite
 from sympy.utilities.pytest import XFAIL
 
 """
@@ -75,6 +75,16 @@ def test_mrv4():
             x) == set([x])
     assert mrv(log(log(x*exp(x*exp(x))+1)) - exp(exp(log(log(x)+1/x))), x) == \
         set([exp(x*exp(x))])
+
+def test_rewrite1():
+    e = exp(x)
+    assert rewrite(e, mrv(e, x), x, m) == (1/m, -x)
+    e = exp(x**2)
+    assert rewrite(e, mrv(e, x), x, m) == (1/m, -x**2)
+    e = exp(x+1/x)
+    assert rewrite(e, mrv(e, x), x, m) == (1/m, -x-1/x)
+    e = exp(-x+1/x**2)-exp(x+1/x)
+    assert rewrite(e, mrv(e, x), x, m) == (-1/m + m*exp(1/x+1/x**2), -x-1/x)
 
 #@XFAIL
 #def test_MrvTestCase_page56_ex3_27():
