@@ -1,4 +1,3 @@
-"""
 import sys
 sys.path.append(".")
 
@@ -6,15 +5,17 @@ import py
 
 from sympy import *
 from sympy.concrete.sums_products import *
-from sympy.specfun import factorial
+#from sympy.specfun import factorial
 from sympy.utilities.pytest import XFAIL
 
 n = Symbol('n')
 a = Symbol('a')
 b = Symbol('b')
 
+Sum = Sum2
+
 def test_str():
-    assert str(Sum(cos(3*n), (n, a, b))) == "Sum(cos(3*n), (n, a, b))"
+    assert str(Sum(cos(3*n), (n, a, b))) == "Sum2(cos(3*n), (n, a, b))"
 
 def test_arithmetic_sums():
     assert Sum(1, (n, a, b)) == b-a+1
@@ -51,13 +52,13 @@ def test_composite_sums():
 def test_finite_sums():
     assert Sum(cos(n), (n, -2, 1)) == cos(-2)+cos(-1)+cos(0)+cos(1)
 
-@XFAIL
 def test_euler_maclaurin():
     z = Sum(1/n**3, (n, 1, oo))
     A, B = getab(z.split(50))
     apery = (A + B.euler_maclaurin(8)).evalf(25)
     assert abs(apery - Real("1.202056903159594285399738162")) < Real("1e-20")
 
+"""
 def test_simple_products():
     assert Product(2, (n, a, b)) == 2**(b-a+1)
     assert Product(n, (n, 1, b)) == factorial(b)

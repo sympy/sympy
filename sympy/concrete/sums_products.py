@@ -1,10 +1,10 @@
-"""
-from sympy import *
-from sympy.specfun import rising_factorial, factorial, factorial_simplify
-from sympy.specfun.factorials import unfac
-from sympy.specfun import bernoulli
-from sympy.polynomials import factor, PolynomialException
-from sympy.simplify import powsimp
+from sympy.core import Basic, Rational, Add, Mul, Pow, Symbol, Wild, oo
+from sympy.functions import factorial
+#from sympy.specfun import rising_factorial, factorial, factorial_simplify
+#from sympy.specfun.factorials import unfac
+#from sympy.specfun import bernoulli
+#from sympy.polynomials import factor, PolynomialException
+#from sympy.simplify import powsimp
 
 def ispoly(expr, var):
     return False
@@ -31,29 +31,29 @@ class _BigOperator(Basic):
         return self.eval()
 
 
-class Sum(_BigOperator):
-
+class Sum2(_BigOperator):
+    """
     Symbolic summation with a variable number of terms
 
-    Sum(f, (i, a, b)) represents \sum_{i=a}^b f(i)
-
+    Sum2(f, (i, a, b)) represents \sum_{i=a}^b f(i)
+    """
 
     def __repr__(self):
-        return "Sum(%r, (%r, %r, %r))" % (self.f, self.i, self.a, self.b)
+        return "Sum2(%r, (%r, %r, %r))" % (self.f, self.i, self.a, self.b)
 
     __str__ = __repr__
 
     def reindex(self, a):
-        Reindex the sum to start at a new lower index a.
+        """Reindex the sum to start at a new lower index a."""
         diff = self.a - a
         b = self.b - diff
         f = self.f.subs(self.i, self.i + diff)
-        return Sum(f, (self.i, a, b))
+        return Sum2(f, (self.i, a, b))
 
     def split(self, n):
-        Split into two sums, the first with n terms.
+        """Split into two sums, the first with n terms."""
         f, i, a, b = self.f, self.i, self.a, self.b
-        return Sum(f, (i, a, a+n-1)) + Sum(f, (i, a+n, b))
+        return Sum2(f, (i, a, a+n-1)) + Sum2(f, (i, a+n, b))
 
     def eval(self):
         f, i, a, b = self.f, self.i, self.a, self.b
@@ -63,13 +63,13 @@ class Sum(_BigOperator):
             return f*(b-a+1)
         if isinstance(f, Mul):
             L, R = getab(f)
-            if not L.has(i): return L*Sum(R, (i, a, b))
-            if not R.has(i): return R*Sum(L, (i, a, b))
+            if not L.has(i): return L*Sum2(R, (i, a, b))
+            if not R.has(i): return R*Sum2(L, (i, a, b))
         if isinstance(f, Add):
             L, R = getab(f)
-            lsum = Sum(L, (i,a,b))
-            rsum = Sum(R, (i,a,b))
-            if not isinstance(lsum, Sum) and not isinstance(rsum, Sum):
+            lsum = Sum2(L, (i,a,b))
+            rsum = Sum2(R, (i,a,b))
+            if not isinstance(lsum, Sum2) and not isinstance(rsum, Sum2):
                 return lsum + rsum
 
         # Polynomial terms with Faulhaber's formula
@@ -79,8 +79,9 @@ class Sum(_BigOperator):
         e = f.match(i**p)
         if e != None:
             c = p.subs_dict(e)
+            B = Basic.bernoulli
             if c.is_integer and c >= 0:
-                s = (bernoulli(c+1, b+1)-bernoulli(c+1, a))/(c+1)
+                s = (B(c+1, b+1) - B(c+1, a))/(c+1)
                 return s.expand()
 
         # Geometric terms
@@ -105,29 +106,30 @@ class Sum(_BigOperator):
         return self
 
     def euler_maclaurin(self, n=0):
-
+        """
         Return n-th order Euler-Maclaurin approximation of self.
 
         The 0-th order approximation is simply the corresponding
         integral
-
+        """
         f, i, a, b = self.f, self.i, self.a, self.b
-        x = Symbol('x')
-        s = integrate(f.subs(i, x), x==[a,b])
+        x = Symbol('x', dummy=True)
+        s = Basic.Integral(f.subs(i, x), (x, a, b)).doit()
         if n > 0:
             s += (f.subs(i, a) + f.subs(i, b))/2
         for k in range(1, n):
             g = f.diff(i, 2*k-1)
-            s += bernoulli(2*k)/factorial(2*k)*(g.subs(i,b)-g.subs(i,a))
+            B = Basic.bernoulli
+            s += B(2*k)/factorial(2*k)*(g.subs(i,b)-g.subs(i,a))
         return s
 
-
+'''
 class Product(_BigOperator):
-
+    """
     Symbolic product with a variable number of factors
 
     Product(f, (i, a, b)) represents \prod_{i=a}^b f(i)
-
+    """
 
     def __repr__(self):
         return "Product(%r, (%r, %r, %r))" % (self.f, self.i, self.a, self.b)
@@ -202,4 +204,4 @@ class Product(_BigOperator):
             return p
 
         return self
-"""
+'''
