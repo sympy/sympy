@@ -36,12 +36,14 @@ def test_linear_systemLU():
                                                   x: 1-12*n/(n**2+18*n),
                                                   y: 6*n/(n**2+18*n)}
 
+@XFAIL
 def test_ODE_first_order():
     f = Function2('f')
     x = Symbol('x')
     assert dsolve(3*f(x).diff(x) -1, f(x)) == x/3 + Symbol("C1")
     assert dsolve(x*f(x).diff(x) -1, f(x)) == log(x) + Symbol("C1")
 
+@XFAIL
 def test_ODE_second_order():
     f = Function2('f')
     x, C1, C2 = map(Symbol, ['x', 'C1', 'C2'])

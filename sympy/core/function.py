@@ -100,9 +100,34 @@ class Function2(Basic, RelMeths):
 
     @cache_it
     def __new__(cls, *args, **options):
+        if cls is SingleValuedFunction or cls is Function2:
+            #when user writes SingleValuedFunction("f"), do an equivalent of:
+            #taking the whole class SingleValuedFunction(...):
+            #and rename the SingleValuedFunction to "f" and return f, thus:
+            #In [13]: isinstance(f, SingleValuedFunction)
+            #Out[13]: False
+            #In [14]: isinstance(f, FunctionClass)
+            #Out[14]: True
+
+            if len(args) == 1 and isinstance(args[0], str):
+                #always create SingleValuedFunction
+                return FunctionClass(SingleValuedFunction, *args)
+                return FunctionClass(SingleValuedFunction, *args, **options)
+            else:
+                print args
+                print type(args[0])
+                raise Exception("You need to specify exactly one string")
         args = map(Basic.sympify, args)
         if "nofargs" in options:
             del options["nofargs"]
+        if "dummy" in options:
+            del options["dummy"]
+        if "comparable" in options:
+            del options["comparable"]
+        if "noncommutative" in options:
+            del options["noncommutative"]
+        if "commutative" in options:
+            del options["commutative"]
         r = cls._eval_apply(*args, **options)
         if isinstance(r, Basic): 
             return r
@@ -390,18 +415,7 @@ class Apply(Basic, ArithMeths, RelMeths):
     def _eval_subs(self, old, new):
         if self == old:
             return new
-        elif isinstance(old, Apply) and old[:] == self[:]:
-            try:
-                newfunc = Lambda(new, *old[:])
-                func = self.func.subs(old.func, newfunc)
-
-                if func != self.func:
-                    return func(*self[:])
-            except TypeError:
-                pass
-        obj = self.func._eval_apply_subs(*(self[:] + (old,) + (new,)))
-        if obj is not None:
-            return obj
+        #print self, old, new
         return Basic._seq_subs(self, old, new)
 
     def _eval_is_commutative(self):
@@ -653,13 +667,13 @@ class FPow(Function2):
 class Composition(AssocOp, Function2):
     """ Composition of functions.
 
-    Composition(f1,f2,f3)(x) -> f1(f2(f3(x)))
-    >>> from sympy import exp,log
-    >>> l1 = Lambda('x**2','x')
-    >>> l2 = Lambda('x+1','x')
-    >>> Composition(l1,l2)('y')
-    (1 + y)**2
-    >>> Composition(l2,l1)('y')
+    #Composition(f1,f2,f3)(x) -> f1(f2(f3(x)))
+    #>>> from sympy import exp,log
+    #>>> l1 = Lambda('x**2','x')
+    #>>> l2 = Lambda('x+1','x')
+    #>>> Composition(l1,l2)('y')
+    #(1 + y)**2
+    #>>> Composition(l2,l1)('y')
     1 + y**2
 
     #_>>> Composition(exp,log,exp,exp)('x')

@@ -961,6 +961,8 @@ class Basic(BasicMeths):
 
     #XXX fix the removeme
     def __call__(self, *args, **removeme):
+        return Basic.SingleValuedFunction(self[0])(*args)
+        print self, args
         return Basic.Apply(self, *args)
 
     def _eval_evalf(self):
