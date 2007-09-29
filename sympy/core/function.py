@@ -54,6 +54,17 @@ from basic_methods import BasicType, MetaBasicMeths
 from methods import ArithMeths, NoRelMeths, RelMeths
 from operations import AssocOp
 
+class Apply(Basic):
+    pass
+class FApply(Basic):
+    pass
+class Composition(Basic):
+    pass
+class FPow(Basic):
+    pass
+class FDerivative(Basic):
+    pass
+
 class FunctionClass(MetaBasicMeths):
     """
     Base class for function classes. FunctionClass is a subclass of type.
@@ -298,135 +309,6 @@ class Function2(Basic, RelMeths):
     def _eval_apply_evalf(cls, arg):
         return
 
-class FDerivative(Function2):
-
-    is_homogeneous = True
-
-    def __new__(cls, *indices, **assumptions):
-        indices = map(Basic.sympify, indices)
-        indices.sort(Basic.compare)
-        return Basic.__new__(cls, *indices, **assumptions)
-
-    def _hashable_content(self):
-        return self._args
-
-    @property
-    def func(self):
-        return self._args[0]
-
-    def __getitem__(self, iter):
-        return self._args[1:][iter]
-
-    @property
-    def indices(self):
-        return self._args
-
-    def tostr(self, level=0):
-        return 'FD%s' % (repr(tuple(self.indices)))
-
-    def _eval_fapply(self, *funcs):
-        if len(funcs)==1:
-            func = funcs[0]
-            if not self.indices:
-                return func
-            if isinstance(func, FApply) and isinstance(func.operator, FDerivative):
-                # FApply(FD(1),FApply(FD(2),f)) -> FApply(FD(1,2), f)
-                return FApply(FDerivative(*(self.indices+func.operator.indices)), *func.funcs)
-            if isinstance(func, Lambda):
-                # FApply(FD(1),Lambda _x: f(_x)) -> FApply(Lambda _x: f(_x).diff(_x))
-                expr = func.body
-                unevaluated_indices = []
-                for i in self.indices:
-                    if isinstance(i, Basic.Integer):
-                        a = func[int(i)-1]
-                        obj = expr.diff(a)
-                        if isinstance(obj, Derivative):
-                            unevaluated_indices.append(i)
-                        else:
-                            expr = obj
-                if len(self.indices)==len(unevaluated_indices):
-                    return
-                if not unevaluated_indices:
-                    return Lambda(expr, *func[:])
-                return FApply(FDerivative(*unevaluated_indices), Lambda(expr, *func))
-            if isinstance(func, SingleValuedFunction):
-                for i in range(len(self.indices)):
-                    di = self.indices[i]
-                    if isinstance(di, Basic.Integer):
-                        dfunc = func.fdiff(int(di))
-                        new_indices = self.indices[:i] + self.indices[i+1:]
-                        return FDerivative(*new_indices)(dfunc)
-        return
-
-    def _eval_power(b, e):
-        if isinstance(e, Basic.Integer) and e.is_positive:
-            return FDerivative(*(int(e)*b.indices))
-
-    _eval_subs = Basic._seq_subs
-
-    def __call__(self, func):
-        return FApply(self, func)
-
-class Apply(Basic, ArithMeths, RelMeths):
-
-    precedence = Basic.Apply_precedence
-
-    @cache_it
-    def __new__(cls, *args, **kwargs):
-        args = map(Basic.sympify, args)
-        func = args[0]
-        func_args = args[1:]
-
-        # f(g+O(h)) -> f(g) + O(f'(g)*h) if f'!=0, otherwise f(g) + O(f''(g)*h**2), etc.
-        i = -1
-        for a in func_args:
-            i += 1
-            a0,o0 = a.as_expr_orders()
-            if not isinstance(o0, Basic.Zero):
-                new_args = func_args[:i] + [a0,] + func_args[i+1:]
-                f = func
-                df = f
-                dfa = Basic.Zero()
-                n = 0
-                while isinstance(dfa, Basic.Zero) and not (isinstance(df, Lambda) and isinstance(df.body, Basic.Zero)):
-                    df = df.fdiff(i+1)
-                    dfa = df(*new_args)
-                    n += 1
-                return f(*new_args) + dfa * o0**n
-
-        obj = func._eval_apply(*func_args)
-        if obj is None:
-            #assert isinstance(func, Function),`args`
-            cls = getattr(Basic,'Apply'+func.__class__.__name__, cls)
-            obj = Basic.__new__(cls, *args, **kwargs)
-            obj._func = func
-        return obj
-
-    @property
-    def func(self):
-        return self._func
-
-    def __getitem__(self, iter):
-        return self._args[1:][iter]
-
-    def __len__(self):
-        return len(self[:])
-
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        #print self, old, new
-        return Basic._seq_subs(self, old, new)
-
-    def _eval_is_commutative(self):
-        r = True
-        for a in self._args:
-            c = a.is_commutative
-            if c is None: return None
-            if not c: r = False
-        return r
-
-
 class WildFunction(Function2, Atom):
 
     nofargs = 1
@@ -449,52 +331,6 @@ class WildFunction(Function2, Atom):
     @classmethod
     def _eval_apply_evalf(cls, arg):
         return
-
-class FApply(Function2):
-    """
-    Defines n-ary operator that acts on symbolic functions.
-
-    DF(1)(f) -> FApply(DF(1), f)
-    DF(2)(FApply(DF(1), f)) -> FApply(DF(2), FApply(DF(1),f)) -> FApply(DF(1,2), f)
-    """
-
-    nofargs = 1
-
-    def __new__(cls, operator, *funcs, **assumptions):
-        operator = Basic.sympify(operator)
-        funcs = map(Basic.sympify, funcs)
-        obj = operator._eval_fapply(*funcs, **assumptions)
-        if obj is not None:
-            return obj
-        return Basic.__new__(cls, operator, *funcs, **assumptions)
-
-    def _hashable_content(self):
-        return self._args
-
-    @property
-    def operator(self):
-        return self._args[0]
-
-    @property
-    def func(self):
-        return self._args[0]
-
-    def __getitem__(self, iter):
-        return self._args[1:][iter]
-
-    @property
-    def funcs(self):
-        return self._args[1:]
-
-    def tostr(self, level=0):
-        p = self.precedence
-        r = '%s(%s)' % (self.operator.tostr(p), ', '.join([a.tostr() for a in self.funcs]))
-        if p <= level:
-            return '(%s)' % (r)
-        return r
-
-    _eval_subs = Basic._seq_subs
-
 
 class Lambda(Function2):
     """
@@ -608,130 +444,6 @@ class Lambda(Function2):
             expr = expr.subs(da,a)
         return expr
 
-
-class FPow(Function2):
-    precedence = Basic.Apply_precedence
-
-    def __new__(cls, a, b, **assumptions):
-        a = Basic.sympify(a)
-        b = Basic.sympify(b)
-        if isinstance(b, Basic.Zero):
-            return Basic.One()
-        if isinstance(b, Basic.One):
-            return a
-        obj = a._eval_fpower(b)
-        if obj is None:
-            obj = Basic.__new__(cls, a, b, **assumptions)
-        return obj
-
-    def _hashable_content(self):
-        return self._args
-
-    @property
-    def base(self):
-        return self._args[0]
-
-    @property
-    def exp(self):
-        return self._args[1]
-
-    def _eval_fpower(self, other):
-        if isinstance(other, Basic.Number):
-            if isinstance(self.exp, Basic.Number):
-                # (a ** 2) ** 3 -> a ** (2 * 3)
-                return FPow(self.base, self.exp * other)
-        return
-
-    def _eval_apply(self, *args):
-        if isinstance(self.exp, Basic.Integer) and self.exp.is_positive and self.exp.p < 10:
-            r = self.base(*args)
-            for i in xrange(self.exp.p-1):
-                r = self.base(r)
-            return r
-
-    def tostr(self, level=0):
-        r = '%s(%s, %s)' % (self.__class__.__name__, self.base.tostr(), self.exp.tostr())
-        if self.precedence<=level:
-            return '(%s)' % (r)
-        return r
-
-    def _eval_subs(self, old, new):
-        if self==old: return new
-        #elif exp(self.exp * log(self.base)) == old: return new
-        return self.base.subs(old, new) ** self.exp.subs(old, new)
-
-    def as_base_exp(self):
-        return self.base, self.exp
-
-
-class Composition(AssocOp, Function2):
-    """ Composition of functions.
-
-    #Composition(f1,f2,f3)(x) -> f1(f2(f3(x)))
-    #>>> from sympy import exp,log
-    #>>> l1 = Lambda('x**2','x')
-    #>>> l2 = Lambda('x+1','x')
-    #>>> Composition(l1,l2)('y')
-    #(1 + y)**2
-    #>>> Composition(l2,l1)('y')
-    1 + y**2
-
-    #_>>> Composition(exp,log,exp,exp)('x')
-    #_exp(exp(x))
-    """
-
-    @classmethod
-    def flatten(cls, seq):
-        c_part = []
-        nc_part = []
-        while seq:
-            o = seq.pop(0)
-            if isinstance(o, Basic.One):
-                continue
-            if o.__class__ is cls:
-                # associativity
-                seq = list(o._args) + seq
-                continue
-            if not nc_part:
-                nc_part.append(o)
-                continue
-            # try to combine last terms: a**b * a ** c -> a ** (b+c)
-            o1 = nc_part.pop()
-            b1,e1 = o1.as_base_exp()
-            b2,e2 = o.as_base_exp()
-            if b1==b2:
-                seq.insert(0, Basic.FPow(b1,e1 + e2))
-            elif o1.is_homogeneous and isinstance(o, Basic.Number):
-                seq.insert(0,o1)
-                seq.insert(0,o)
-            elif isinstance(o1, Basic.Number) and isinstance(o, Basic.Number):
-                nc_part.append(o1 * o)
-            elif isinstance(o1, Basic.Lambda) and isinstance(o, Basic.Lambda):
-                nc_part.append(Lambda(o1(o.body),*o[:]))
-            else:
-                nc_part.append(o1)
-                nc_part.append(o)
-        return [], nc_part, None, None
-
-    def tostr(self, level=0):
-        return '%s(%s)' % (self.__class__.__name__,', '.join([f.tostr() for f in self]))
-
-    def _eval_apply(self, *args):
-        l = list(self)
-        r = l.pop()(*args)
-        while l:
-            r = l.pop()(r)
-        return r
-
-    def _hashable_content(self):
-        return self._args
-
-    def _matches_simple(pattern, expr, repl_dict):
-        return
-
-
-
-
 class Derivative(Basic, ArithMeths, RelMeths):
     """
     Carries out differentation of the given expression with respect to symbols.
@@ -817,7 +529,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
 
 
 def diff(f, x, times = 1, evaluate=True):
-    """Derivate f with respect to x
+    """Differentiate f with respect to x
 
     It's just a wrapper to unify .diff() and the Derivative class,
     it's interface is similar to that of integrate()
@@ -850,11 +562,3 @@ class SingleValuedFunction(ArithMeths, Function2):
         if isinstance(arg, Basic.Number):
             func_evalf = getattr(arg, cls.__name__)
             return func_evalf()
-
-
-
-    #def series(self, x, n):
-    #    s = Basic.Rational(0)
-    #    for i in range(n+1):
-    #        s += diff(self, x, i).subs(x, 0) * x**i / Basic.Factorial()(i)
-    #    return s
