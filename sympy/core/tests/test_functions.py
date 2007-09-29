@@ -79,7 +79,7 @@ def test_invtrig(): # XXX No inverse trig yet
     assert atan(x).diff(x) == 1/(1+x**2)
 
 def test_general_function():
-    nu = Function2('nu', nofargs=1)
+    nu = Function('nu', nofargs=1)
     x = Symbol("x")
     y = Symbol("y")
 
@@ -98,8 +98,8 @@ def test_general_function():
 @XFAIL
 def test_derivative_subs_bug():
     x = Symbol("x")
-    l = Function2('l', nofargs=1)
-    n = Function2('n', nofargs=1)
+    l = Function('l', nofargs=1)
+    n = Function('n', nofargs=1)
 
     e = Derivative(n(x), x)
     assert e.subs(n, l) != e
@@ -109,7 +109,7 @@ def test_derivative_subs_bug():
 def test_derivative_linearity():
     x = Symbol("x")
     y = Symbol("y")
-    n = Function2('n', nofargs=1)
+    n = Function('n', nofargs=1)
 
     assert Derivative(-n(x), x) == -Derivative(n(x), x)
     assert Derivative(8*n(x), x) == 8*Derivative(n(x), x)

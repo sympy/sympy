@@ -1,4 +1,4 @@
-from sympy.core import Basic, Function2  # XXX remove Function from here
+from sympy.core import Basic, Function  # XXX remove Function from here
 from printer import Printer
 from stringpict import *
 
@@ -228,8 +228,8 @@ class PrettyPrinter(Printer):
         return base ** self._print(e[0])
 
     # TODO: rename to _print_Function
-    #       after 'Function2 -> Function' transition is done
-    def _print_Function2(self, e):
+    #       after 'Function -> Function' transition is done
+    def _print_Function(self, e):
         return self._print_Apply(e) # XXX this is temporary
 
     def _print_Apply(self, e):
@@ -237,7 +237,7 @@ class PrettyPrinter(Printer):
         args = e[:]
         n = len(args)
 
-        # XXX temp. hack -- remove when 'Function2 -> Function' is done
+        # XXX temp. hack -- remove when 'Function -> Function' is done
         #if isinstance(func, Function):
         #    func_name = func.name
         #else:

@@ -37,21 +37,21 @@ def test_linear_systemLU():
                                                   y: 6*n/(n**2+18*n)}
 
 def test_ODE_first_order():
-    f = Function2('f')
+    f = Function('f')
     x = Symbol('x')
     assert dsolve(3*f(x).diff(x) -1, f(x)) == x/3 + Symbol("C1")
     assert dsolve(x*f(x).diff(x) -1, f(x)) == log(x) + Symbol("C1")
 
 @XFAIL
 def test_ODE_second_order():
-    f = Function2('f')
+    f = Function('f')
     x, C1, C2 = map(Symbol, ['x', 'C1', 'C2'])
     assert dsolve(Derivative(f(x),x,x) + 9*f(x), [f(x)]) in \
         [sin(3*x)*C1 + cos(3*x)*C2, sin(3*x)*C2 + cos(3*x)*C1]
 
 @XFAIL
 def test_ODE_1():
-    l = Function2('l')
+    l = Function('l')
     r = Symbol('r')
 
     e = Derivative(l(r),r)/r+Derivative(l(r),r,r)/2- \

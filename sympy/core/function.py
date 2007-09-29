@@ -83,13 +83,11 @@ class FunctionClass(MetaBasicMeths):
     def torepr(cls):
         return cls.__name__
 
-class Function2(Basic, RelMeths):
+class Function(Basic, RelMeths):
     """
     Base class for applied functions.
     Constructor of undefined classes.
 
-    We are moving to this more simple scheme. When all functions are moved, we
-    simply delete Function and rename Function2 -> Function
     """
 
     __metaclass__ = FunctionClass
@@ -100,7 +98,7 @@ class Function2(Basic, RelMeths):
 
     @cache_it
     def __new__(cls, *args, **options):
-        if cls is SingleValuedFunction or cls is Function2:
+        if cls is SingleValuedFunction or cls is Function:
             #when user writes SingleValuedFunction("f"), do an equivalent of:
             #taking the whole class SingleValuedFunction(...):
             #and rename the SingleValuedFunction to "f" and return f, thus:
@@ -298,7 +296,7 @@ class Function2(Basic, RelMeths):
     def _eval_apply_evalf(cls, arg):
         return
 
-class WildFunction(Function2, Atom):
+class WildFunction(Function, Atom):
 
     nofargs = 1
 
@@ -321,7 +319,7 @@ class WildFunction(Function2, Atom):
     def _eval_apply_evalf(cls, arg):
         return
 
-class Lambda(Function2):
+class Lambda(Function):
     """
     Lambda(expr, arg1, arg2, ...) -> lambda arg1, arg2,... : expr
 
@@ -537,7 +535,7 @@ def diff(f, x, times = 1, evaluate=True):
 
 # TODO rename me to something more appropriate? e.g. ArithFunction (or just
 # Function?) 
-class SingleValuedFunction(ArithMeths, Function2):
+class SingleValuedFunction(ArithMeths, Function):
     """
     Single-valued functions.
     """

@@ -33,10 +33,10 @@ def components(expr):
     """
     result = set()
 
-    from sympy.core.function import Function2
+    from sympy.core.function import Function
     if isinstance(expr, Basic.Symbol):
         result.add(expr)
-    elif isinstance(expr, Function2):
+    elif isinstance(expr, Function):
         for obj in expr:
             result |= components(obj)
 
@@ -298,7 +298,7 @@ def risch_norman(f, x, rewrite=False):
     special = []
 
     for term in terms:
-        if isinstance(term, Basic.Function2):
+        if isinstance(term, Basic.Function):
             if isinstance(term, Basic.tan):
                 special += [ (1 + substitute(term)**2, False) ]
             elif isinstance(term.func, tanh):

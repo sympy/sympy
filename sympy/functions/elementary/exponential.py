@@ -1,6 +1,6 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import Lambda, SingleValuedFunction, Function2
+from sympy.core.function import Lambda, SingleValuedFunction, Function
 
 class exp(SingleValuedFunction):
 
@@ -148,7 +148,7 @@ class exp(SingleValuedFunction):
                     r = Basic.Mul(*new_l)
                     return r
         old = o
-        return Function2._eval_subs(self, old, new)
+        return Function._eval_subs(self, old, new)
 
     def _eval_is_real(self):
         return self[0].is_real

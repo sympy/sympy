@@ -2,7 +2,7 @@
    partial fraction decomposition, combinig together and collecting terms.
 """
 
-from sympy.core import Basic, S, Symbol, Add, Function2
+from sympy.core import Basic, S, Symbol, Add, Function
 from sympy.core.methods import NoRelMeths, ArithMeths
 
 from sympy.polynomials import div, quo, rem, gcd
@@ -104,7 +104,7 @@ def apart(f, z, domain=None, index=None):
         if not Q.has(z):
             return f
 
-        u = Function2('u')(z)
+        u = Function('u')(z)
 
         if index is None:
             A = Symbol('a', dummy=True)
