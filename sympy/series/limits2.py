@@ -294,7 +294,7 @@ def sign(e, x):
     elif isinstance(e, log): 
         return sign(e[0] -1, x)
     elif isinstance(e, Add):
-        return sign(e.inflimit(x), x)
+        return sign(limitinf(e, x), x)
     raise "cannot determine the sign of %s"%e
 
 @debug
