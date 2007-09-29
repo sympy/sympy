@@ -706,9 +706,9 @@ class Basic(BasicMeths):
                 elif rule == Basic.exp:
                     rule = "exp"
                 elif isinstance(rule, FunctionClass):   # new-style functions
-                    print rule
+                    #print rule
                     rule = rule.__name__  # XXX proper attribute for name?
-                    print rule
+                    #print rule
                 else:
                     rule = rule.tostr()
 
