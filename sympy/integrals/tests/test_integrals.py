@@ -42,6 +42,7 @@ def test_integration():
     assert integrate(t, (t,0,x)) == x**2/2
     assert integrate(3*t, (t,0,x))== 3*x**2/2
     assert integrate(3*t**2, (t,0,x)) == x**3
+    assert integrate(1/t, (t,1,x)) == log(x)
     assert integrate(-1/t**2, (t,1,x)) == 1/x-1
     assert integrate(t**2+5*t-8, (t,0,x)) == x**3/3+5*x**2/2-8*x
     assert integrate(x**2, x) == x**3/3
@@ -52,10 +53,6 @@ def test_integration():
     assert integrate(a*t, (t,0,x))==a*x**2/2
     assert integrate(a*t**4, (t,0,x))==a*x**5/5
     assert integrate(a*t**2+b*t+c, (t,0,x))==a*x**3/3+b*x**2/2+c*x
-
-@XFAIL
-def test_integration_xfail():
-    assert integrate(1/t, (t,1,x)) == log(abs(x))  # gives log(x)
 
 def test_multiple_integration():
     y = Symbol('y')
