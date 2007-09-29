@@ -14,9 +14,6 @@ x = Symbol('x')
 m = Symbol('m')
 
 def test_compare1():
-    """test_compare1, test_compare2, ... test compare, from easy cases to the
-    most difficult"""
-
     assert compare(2, x, x) == "<"
     assert compare(x, exp(x), x) == "<"
     assert compare(exp(x), exp(x**2), x) == "<"
@@ -47,11 +44,51 @@ def test_compare1():
 
     assert compare(exp(x**2), 1/exp(x**2), x) == "="
 
-def test_mrv():
+def test_mrv1():
     assert mrv(x+1/x, x) == set([x])
     assert mrv(x**2, x) == set([x])
     assert mrv(log(x), x) == set([x])
     assert mrv(exp(x), x) == set([exp(x)])
     assert mrv(exp(x**2), x) == set([exp(x**2)])
     assert mrv(exp(x+1/x), x) == set([exp(x+1/x)])
-    assert mrv(exp(x+exp(-exp(x))),x) == set([exp(-exp(x))])
+    assert mrv(exp(-x+1/x**2)-exp(x+1/x), x) == set([exp(x+1/x), exp(1/x**2-x)])
+
+def test_mrv2():
+    assert mrv(exp(x+exp(-exp(x))), x) == set([exp(-exp(x))])
+    assert mrv(exp(x+exp(-x)), x) == set([exp(x+exp(-x)), exp(-x)])
+    assert mrv(exp(x+exp(-x**2)), x) == set([exp(-x**2)])
+    assert mrv(exp(1/x+exp(-x)), x) == set([exp(-x)])
+
+def test_mrv3():
+    assert mrv(exp(x**2)+x*exp(x)+log(x)**x/x, x) == set([exp(x**2)])
+    assert mrv(exp(x)*(exp(1/x+exp(-x))-exp(1/x)), x) == set([exp(x), exp(-x)])
+    assert mrv(log(x**2+2*exp(exp(3*x**3*log(x)))), x) == set([exp(exp(3*x**3*log(x)))])
+    assert mrv(log(x-log(x))/log(x), x) == set([x])
+    assert mrv((exp(1/x-exp(-x))-exp(1/x))*exp(x), x) == set([exp(x), exp(-x)])
+    assert mrv(1/exp(-x+exp(-x))-exp(x), x) == set([exp(x), exp(-x), exp(x-exp(-x))])
+    assert mrv(log(log(x*exp(x*exp(x))+1)), x) == set([exp(x*exp(x))])
+    assert mrv(exp(exp(log(log(x)+1/x))), x) == set([x])
+
+def test_mrv4():
+    ln = log
+    assert mrv((ln(ln(x)+ln(ln(x)))-ln(ln(x)))/ln(ln(x)+ln(ln(ln(x))))*ln(x),
+            x) == set([x])
+    assert mrv(log(log(x*exp(x*exp(x))+1)) - exp(exp(log(log(x)+1/x))), x) == \
+        set([exp(x*exp(x))])
+
+#@XFAIL
+#def test_MrvTestCase_page56_ex3_27():
+#    # XXX Fails due to infinite recursion
+#    expr = exp(-x+exp(-x)*exp(-x*ln(x)))
+#    assert mrv(expr,x) == set([exp(x*log(x))])
+#    d,md = {},{}
+#    r = mrv2(expr,x,d,md)
+#    assert set(md.keys()) == set([exp(x*log(x))])
+
+#@XFAIL
+#def test_MrvTestCase_page47_ex3_21():
+#    h = exp(-x/(1+exp(-x)))
+#    expr = exp(h)*exp(-x/(1+h))*exp(exp(-x+h))/h**2-exp(x)+x
+#    expected = set([1/h,exp(x),exp(x-h),exp(x/(1+h))])
+#    # XXX Incorrect result
+#    assert mrv(expr,x).difference(expected) == set()

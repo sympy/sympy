@@ -106,28 +106,29 @@ def compare(a,b,x):
         return "="
 
 def mrv(e, x):
-    "Returns the list of most rapidly varying (mrv) subexpressions of 'e'"
+    "Returns a python set of  most rapidly varying (mrv) subexpressions of 'e'"
     assert isinstance(e, Basic)
+    #print "mrv:", e
     if not e.has(x): 
         return set([])
     elif e == x: 
         return set([x])
     elif isinstance(e, Mul): 
         a, b = e.as_two_terms()
-        return max(mrv(a,x), mrv(b,x), x)
+        return mrv_max(mrv(a,x), mrv(b,x), x)
     elif isinstance(e, Add): 
         a, b = e.as_two_terms()
-        return max(mrv(a,x), mrv(b,x), x)
+        return mrv_max(mrv(a,x), mrv(b,x), x)
     elif isinstance(e, Pow):
         if e.exp.has(x):
-            return mrv(s.exp(e.exp * s.log(e.base)), x)
+            return mrv(exp(e.exp * log(e.base)), x)
         else:
             return mrv(e.base, x)
     elif isinstance(e, log): 
         return mrv(e[0], x)
     elif isinstance(e, exp): 
         if e[0].inflimit(x) in [oo,-oo]:
-            return max(set([e]), mrv(e[0], x), x)
+            return mrv_max(set([e]), mrv(e[0], x), x)
         else:
             return mrv(e[0], x)
     elif isinstance(e, Function): 
@@ -137,7 +138,7 @@ def mrv(e, x):
         raise NotImplementedError("Functions with more arguments: '%s'" % e)
     raise NotImplementedError("Don't know how to calculate the mrv of '%s'" % e)
 
-def max(f, g, x):
+def mrv_max(f, g, x):
     """Computes the maximum of two sets of expressions f and g, which 
     are in the same comparability class, i.e. max() compares (two elements of)
     f and g and returns the set, which is in the higher comparability class
@@ -147,39 +148,16 @@ def max(f, g, x):
     assert isinstance(g, set)
     if f==set([]): return g
     elif g==set([]): return f
-    elif intersect(f, g): return union(f, g)
-    elif member(x, f): return g
-    elif member(x, g): return f
+    elif f.intersection(g) != set([]): return f.union(g)
+    elif x in f: return g
+    elif x in g: return f
 
     c=compare(list(f)[0], list(g)[0], x)
-    if c==">": return f
-    elif c=="<": return g
-    else: return union(f, g)
-
-def intersect(a,b):
-    assert isinstance(a, set)
-    assert isinstance(b, set)
-    return a.intersection(b) != set([])
-    #for x in a:
-    #   if member(x,b): return True
-    #eturn False
-
-def member(x,a):
-    assert isinstance(a, set)
-    return x in a
-    #for y in a:
-    #    if x == y: return True
-    #return False
-
-def union(a,b):
-    assert isinstance(a, set)
-    assert isinstance(b, set)
-    return a.union(b)
-    #z=a[:]
-    #for x in b:
-    #    if not member(x,a):
-    #        z.append(x)
-    #return z
+    if c == ">": return f
+    elif c == "<": return g
+    else: 
+        assert c == "="
+        return f.union(g)
 
 def limitinf(e,x):
     """Limit e(x) for x-> oo"""
@@ -319,7 +297,7 @@ def mrv_leadterm(e,x,Omega=[]):
 
 
 
-class Limit(Basic):
+class Limit2(Basic):
     
     mathml_tag = 'limit'
 
