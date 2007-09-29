@@ -107,7 +107,6 @@ def test_derivative_subs_bug():
     assert e.subs(n, l) == Derivative(l(x), x)
     assert e.subs(n, -l) == Derivative(-l(x), x)
 
-@XFAIL
 def test_derivative_linearity():
     x = Symbol("x")
     y = Symbol("y")

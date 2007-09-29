@@ -285,7 +285,7 @@ class Function2(Basic, RelMeths):
                 nofargs = self.nofargs
             if not (1<=argindex<=nofargs):
                 raise TypeError("argument index %r is out of range [1,%s]" % (i,nofargs))
-        return FDerivative(argindex)(self)
+        return Derivative(self,self[argindex-1],evaluate=False)
 
     def tostr(self, level=0):
         p = self.precedence

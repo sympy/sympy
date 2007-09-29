@@ -36,7 +36,6 @@ def test_linear_systemLU():
                                                   x: 1-12*n/(n**2+18*n),
                                                   y: 6*n/(n**2+18*n)}
 
-@XFAIL
 def test_ODE_first_order():
     f = Function2('f')
     x = Symbol('x')
