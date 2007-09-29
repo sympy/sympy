@@ -81,13 +81,15 @@ compare(a,b,x) compares "a" and "b" by computing the limit L.
 mrv(e,x) returns the list of most rapidly varying (mrv) subexpressions of "e"
 rewrite(e,Omega,x,wsym) rewrites "e" in terms of w
 leadterm(f,x) returns the lowest power term in the series of f
-mrvleadterm(e,x) returns the lead term (c0,e0) for e
+mrv_leadterm(e,x) returns the lead term (c0,e0) for e
 limitinf(e,x) computes lim e  (for x->oo)
 limit(e,z,z0) computes any limit by converting it to the case x->oo
 
-all the functions are really simple and straightforward except rewrite(), which
+All the functions are really simple and straightforward except rewrite(), which
 is the most difficult/complex part of the algorithm. When the algorithm fails,
-the bugs are usually in the series expansion (i.e. in SymPy) and in rewrite.
+the bugs are usually in the series expansion (i.e. in SymPy) or in rewrite.
+
+This code is almost exact rewrite of the Maple code inside the Gruntz thesis.
 
 """
 
@@ -239,11 +241,11 @@ def limitinf(e,x):
     if not e.has(x): return e #e is a constant
     c0,e0 = mrv_leadterm(e,x) 
     sig=sign(e0,x)
-    if sig==1: return s.Rational(0) # e0>0: lim f = 0
+    if sig==1: return Rational(0) # e0>0: lim f = 0
     elif sig==-1: #e0<0: lim f = +-oo   (the sign depends on the sign of c0)
         #the leading term shouldn't be 0:
         assert sign(c0,x) != 0
-        return sign(c0, x) * s.oo 
+        return sign(c0, x) * oo 
     elif sig==0: return limitinf(c0,x) #e0=0: lim f = lim c0
 
 #@decorator(maketree)
@@ -274,7 +276,7 @@ def mrv_leadterm(e, x, Omega=[]):
         #calculate the lead term
         mrv_leadterm_up = mrv_leadterm(e_up, x, Omega_up)
         #move the result (c0, e0) down
-        return movedown(mrv_leadterm_up, x)
+        return tuple(movedown(mrv_leadterm_up, x))
     wsym = Symbol("w", dummy=True)
     f, logw=rewrite(e, set(Omega), x, wsym)
     series=f.expand().oseries(O(wsym**2, wsym))
@@ -351,29 +353,30 @@ class Limit2(Basic):
         
         return self._mathml
             
-def limit(e,z,z0, evaluate=True, left=False):
+def limit(e, z, z0, dir="+"):
     """
     Compute the limit of e(z) at the point z0. 
 
     z0 can be any expression, including oo and -oo.
 
-    For finite z0 it calculates the limit from the right (z->z0+) for
-    left=False (default) and the limit from the left (z->z0-) for left=True.
+    For dir="+" (default) it calculates the limit from the right
+    (z->z0+) and for dir="-" the limit from the left (z->z0-). For infinite z0
+    (oo or -oo), the dir argument doesn't matter.
     """
-    if not isinstance(z, s.Symbol):
+    if not isinstance(z, Symbol):
         raise NotImplementedError("Second argument must be a Symbol")
-    elif not evaluate:
-        return Limit(e, z, z0)
 
     #convert all limits to the limit z->oo
-    elif z0 == s.oo:
+    elif z0 == oo:
         return limitinf(e, z)
-    elif z0 == -s.oo:
+    elif z0 == -oo:
         return limitinf(e.subs(z,-z), z)
     else:
-        x=s.Symbol("x", dummy=True)
-        if left:
-            e0=e.subs(z,z0-1/x)
+        x = Symbol("x", dummy=True)
+        if dir == "-":
+            e0 = e.subs(z,z0-1/x)
+        elif dir == "+":
+            e0 = e.subs(z,z0+1/x)
         else:
-            e0=e.subs(z,z0+1/x)
-        return limitinf(e0,x)
+            raise NotImplementedError("dir must be '+' or '-'")
+        return limitinf(e0, x)

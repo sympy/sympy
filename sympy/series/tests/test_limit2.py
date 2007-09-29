@@ -1,5 +1,5 @@
-from sympy import Symbol, exp, log
-from sympy.series.limits2 import compare, mrv, rewrite
+from sympy import Symbol, exp, log, oo
+from sympy.series.limits2 import compare, mrv, rewrite, mrv_leadterm, limit
 from sympy.utilities.pytest import XFAIL
 
 """
@@ -88,14 +88,43 @@ def test_rewrite1():
     e = 1/exp(-x+exp(-x))-exp(x)
     assert rewrite(e, mrv(e, x), x, m) == (1/(m*exp(m))-1/m, -x)
 
-#@XFAIL
-#def test_MrvTestCase_page56_ex3_27():
-#    # XXX Fails due to infinite recursion
-#    expr = exp(-x+exp(-x)*exp(-x*ln(x)))
-#    assert mrv(expr,x) == set([exp(x*log(x))])
-#    d,md = {},{}
-#    r = mrv2(expr,x,d,md)
-#    assert set(md.keys()) == set([exp(x*log(x))])
+def test_mrv_leadterm1():
+    assert mrv_leadterm(-exp(1/x), x) == (-1, 0)
+    assert mrv_leadterm(1/exp(-x+exp(-x))-exp(x), x) == (-1, 0)
+    assert mrv_leadterm((exp(1/x-exp(-x))-exp(1/x))*exp(x), x) == (-exp(1/x), 0)
+
+#problem in SymPy series expansion
+@XFAIL
+def test_mrv_leadterm2():
+    #Gruntz: p51, 3.25
+    assert mrv_leadterm((log(exp(x)+x)-x)/log(exp(x)+log(x))*exp(x), x) == \
+            (1, 0)
+
+#problem in the current SymPy's limits
+@XFAIL
+def test_mrv_leadterm3():
+    #Gruntz: p56, 3.27
+    assert mrv(exp(-x+exp(-x)*exp(-x*log(x))), x) == set([exp(x*log(x))])
+    assert mrv_leadterm(exp(-x+exp(-x)*exp(-x*log(x))), x) == (exp(-x), 0)
+
+def test_limit1():
+    assert limit(x, x, oo) == oo
+    assert limit(x, x, -oo) == -oo
+    assert limit(x**2, x, -oo) == oo
+
+#1st limit returns 0, should be 1:
+@XFAIL
+def test_limit2():
+    assert limit((exp(x)-1)/x, x, 0) == 1
+
+#3rd limit returns 0, should be 1:
+@XFAIL
+def test_limit3():
+    a = Symbol('a')
+    assert limit(x-log(1+exp(x)), x, oo) == 0
+    assert limit(x-log(a+exp(x)), x, oo) == 0
+    assert limit(exp(x)/(1+exp(x)), x, oo) == 1
+    assert limit(exp(x)/(a+exp(x)), x, oo) == 1
 
 #@XFAIL
 #def test_MrvTestCase_page47_ex3_21():
