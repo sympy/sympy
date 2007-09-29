@@ -489,7 +489,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
             if isinstance(obj, Derivative):
                 return Derivative(obj.expr, *(obj.symbols+self.symbols))
             return Derivative(obj, *self.symbols)
-        return Derivative(self.expr, *((s,)+self.symbols))
+        return Derivative(self.expr, *((s,)+self.symbols), **{'evaluate': False})
 
     def doit(self):
         return Derivative(self.expr, *self.symbols)

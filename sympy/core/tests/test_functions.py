@@ -78,7 +78,6 @@ def test_invtrig(): # XXX No inverse trig yet
     assert atan(0) == 0
     assert atan(x).diff(x) == 1/(1+x**2)
 
-@XFAIL
 def test_general_function():
     nu = Function2('nu', nofargs=1)
     x = Symbol("x")
