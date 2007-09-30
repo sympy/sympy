@@ -1,6 +1,9 @@
 
 from sympy.core import Basic, S, Symbol
+from sympy.core.function import Function
 
+from sympy import sin, cos, cot, tan
+from sympy import sinh, cosh, tanh, coth
 
 from sympy.solvers import solve
 from sympy.polynomials import quo, gcd, lcm, roots, factor_
@@ -33,7 +36,6 @@ def components(expr):
     """
     result = set()
 
-    from sympy.core.function import Function
     if isinstance(expr, Basic.Symbol):
         result.add(expr)
     elif isinstance(expr, Function):
@@ -174,9 +176,6 @@ def risch_norman(f, x, rewrite=False):
     """
     f = Basic.sympify(f)
 
-    from sympy import sin, cos, cot, tan, \
-                      sinh, cosh, tanh, coth
-
     if not f.has(x):
         return f * x
 
@@ -204,13 +203,6 @@ def risch_norman(f, x, rewrite=False):
             terms |= components(h)
 
     terms = [ g for g in terms if g.has(x) ]
-    #XXX: This fixes bugs: it seems integration variable must be to the right
-    #i.e. in terms [exp(x), x], but not [x, exp(x)], this should be checked
-    #and made more robust.
-    # simply move integration variable to the end of terms
-    # FIXME: this is probably incorrect! (--kirr)
-    terms.remove(x)
-    terms.append(x)
 
     V, in_terms, out_terms = [], [], {}
 
@@ -300,7 +292,7 @@ def risch_norman(f, x, rewrite=False):
         coeffs, candidate, factors = [], S.Zero, set()
 
         for i, monomial in enumerate(monoms):
-            coeffs += [ Symbol('A%s' % i) ]
+            coeffs += [ Symbol('A%s' % i, dummy=True) ]
             candidate += coeffs[-1] * monomial
 
         candidate /= candidate_denom
@@ -312,7 +304,7 @@ def risch_norman(f, x, rewrite=False):
 
         for i, irreducible in enumerate(factors):
             if not isinstance(irreducible, Basic.Number):
-                coeffs += [ Symbol('B%s' % i) ]
+                coeffs += [ Symbol('B%s' % i, dummy=True) ]
                 candidate += coeffs[-1] * Basic.log(irreducible)
 
         h = together(ff - derivation(candidate) / denom)

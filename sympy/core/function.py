@@ -127,7 +127,7 @@ class Function(Basic, RelMeths):
         if "commutative" in options:
             del options["commutative"]
         r = cls._eval_apply(*args, **options)
-        if isinstance(r, Basic): 
+        if isinstance(r, Basic):
             return r
         elif r is None:
             pass
@@ -138,7 +138,7 @@ class Function(Basic, RelMeths):
     @property
     def is_comparable(self):
         return True
-        
+
     @classmethod
     def canonize(cls, args, **options):
         return
@@ -232,7 +232,7 @@ class Function(Basic, RelMeths):
         return self, Basic.One()
 
     def count_ops(self, symbolic=True):
-        return Basic.Add(*[t.count_ops(symbolic) for t in self])
+        return 10 + Basic.Add(*[t.count_ops(symbolic) for t in self])
 
     def _eval_oseries(self, order):
         assert self.func.nofargs==1,`self.func`
@@ -534,7 +534,7 @@ def diff(f, x, times = 1, evaluate=True):
 
 
 # TODO rename me to something more appropriate? e.g. ArithFunction (or just
-# Function?) 
+# Function?)
 class SingleValuedFunction(ArithMeths, Function):
     """
     Single-valued functions.

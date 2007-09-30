@@ -1,6 +1,5 @@
 
 from sympy import *
-from sympy.integrals.risch import components
 
 x, y = symbols('xy')
 
@@ -36,7 +35,8 @@ def test_risch_norman_trigonometric():
     assert risch_norman(sin(x), x) == -cos(x)
     assert risch_norman(cos(x), x) == sin(x)
 
-    assert risch_norman(sin(x)*cos(y), x) == -cos(x)*cos(y)
+    assert risch_norman(sin(x)*sin(y), x) == -cos(x)*sin(y)
+    assert risch_norman(sin(x)*sin(y), y) == -cos(y)*sin(x)
 
     assert risch_norman(sin(x)*cos(x), x) == sin(x)**2 / 2
     assert risch_norman(cos(x)/sin(x), x) == log(sin(x))
@@ -57,10 +57,3 @@ def test_risch_norman_mixed():
 def test_risch_norman_special():
     assert risch_norman(erf(x), x) == x*erf(x) + exp(-x**2)/sqrt(pi)
     assert risch_norman(exp(-x**2)*erf(x), x) == sqrt(pi)*erf(x)**2 / 4
-
-def test_components():
-    assert components(x*y) == set([y, x])
-    assert components(sin(x)) == set([sin(x), x])
-    assert components(sin(x)*cos(x)**2) == set([sin(x), cos(x), x])
-    assert components(sin(x)*sqrt(log(x))) == set([sin(x), sqrt(log(x)), log(x), x])
-    assert components(x*sin(exp(x)*y)) == set([y, sin(y*exp(x)), x, exp(x)])
