@@ -99,7 +99,11 @@ from sympy import Basic, Add, Mul, Pow, Function, log, oo, Rational, exp, \
 O = Order
 
 def debug(func):
-    "Only debugging purposes: prints a tree"
+    """Only for debugging purposes: prints a tree
+    
+    It will print a nice execution tree with arguments and results
+    of all decorated functions.
+    """
     def decorated(*args, **kwargs):
         #r = func(*args, **kwargs)
         r = maketree(func, *args, **kwargs)
@@ -325,6 +329,42 @@ def subexp(e,sub):
     #is yes.
     return e.subs(sub, Symbol("x", dummy=True)) != e
 
+def calculate_series(e, x):
+    """ Calculates at least one term of the series of "e" in "x".
+
+    This is a place that fails most often, so it is made robust so that
+    meaningful errors are printed out in case of problems.
+    """
+    def report(f, x):
+        print "The limit algorithm needs to calculate the series of"
+        print "series:", f
+        print "expansion variable (expanding around 0+):", x
+        print """\
+But the series expansion failed. Check that this series is meaningful and make
+it work, then run this again. If the series cannot be mathematically calculated, the bug is in the limit algorithm."""
+        raise NotImplementedError("The underlying series facility failed (read the messages printed to stdout for more information)")
+
+    #First do some simplification (the oseries can fail otherwise). Better
+    #solution is to fix oseries, so that it works for any expression.
+    f = e.expand().normal()
+    try:
+        series=f.oseries(O(x**2, x))
+        if series == 0:
+            #we need to calculate more terms, let's try 4:
+            series=f.oseries(O(x**4, x))
+        if series == 0:
+            #we need to calculate more terms, let's try 10:
+            series=f.oseries(O(x**10, x))
+        if series == 0:
+            #we need to calculate more terms, let's try 30:
+            series=f.oseries(O(x**30, x))
+    except:
+        report(f, x)
+    if series == 0:
+        report(f, x)
+    assert not isinstance(series, O)
+    return series
+
 @debug
 def mrv_leadterm(e, x, Omega=[]):
     """Returns (c0, e0) for e."""
@@ -342,27 +382,7 @@ def mrv_leadterm(e, x, Omega=[]):
         return tuple(movedown(mrv_leadterm_up, x))
     wsym = Symbol("w", dummy=True)
     f, logw=rewrite(e, set(Omega), x, wsym)
-    f = f.expand()
-    try:
-        series=f.oseries(O(wsym**2, wsym))
-        if series == 0:
-            #we need to calculate more terms, let's try 4:
-            series=f.oseries(O(wsym**4, wsym))
-        if series == 0:
-            #we need to calculate more terms, let's try 10:
-            series=f.oseries(O(wsym**10, wsym))
-        if series == 0:
-            #we need to calculate more terms, let's try 30:
-            series=f.oseries(O(wsym**30, wsym))
-    except:
-        print "Don't know how to make a series of:", f
-        print "The underlying series facility failed (raised an exception)"
-        print "reraising..."
-        raise
-    if series == 0:
-        print "Don't know how to make a series of:", f
-        raise NotImplementedError("The underlying series facility failed")
-    assert not isinstance(series,O)
+    series = calculate_series(f, wsym)
     series=series.subs(log(wsym), logw)
     return series.leadterm(wsym)
 

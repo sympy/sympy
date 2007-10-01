@@ -143,18 +143,14 @@ def test_mrv_leadterm1():
     assert mrv_leadterm(1/exp(-x+exp(-x))-exp(x), x) == (-1, 0)
     assert mrv_leadterm((exp(1/x-exp(-x))-exp(1/x))*exp(x), x) == (-exp(1/x), 0)
 
-#problem in SymPy series expansion
-@XFAIL
 def test_mrv_leadterm2():
     #Gruntz: p51, 3.25
     assert mrv_leadterm((log(exp(x)+x)-x)/log(exp(x)+log(x))*exp(x), x) == \
             (1, 0)
 
-#"'NaN' object has no attribute 'contains'"
-@XFAIL
 def test_mrv_leadterm3():
     #Gruntz: p56, 3.27
-    assert mrv(exp(-x+exp(-x)*exp(-x*log(x))), x) == set([exp(x*log(x))])
+    assert mrv(exp(-x+exp(-x)*exp(-x*log(x))), x) == set([exp(-x-x*log(x))])
     assert mrv_leadterm(exp(-x+exp(-x)*exp(-x*log(x))), x) == (exp(-x), 0)
 
 def test_limit1():
@@ -188,8 +184,6 @@ def test_limit3():
     assert limit(x-log(a+exp(x)), x, oo) == 0
     assert limit(exp(x)/(1+exp(x)), x, oo) == 1
 
-#returns infinity - could be a problem in the algorithm implementation
-@XFAIL
 def test_limit4():
     a = Symbol('a')
     assert limit(exp(x)/(a+exp(x)), x, oo) == 1
