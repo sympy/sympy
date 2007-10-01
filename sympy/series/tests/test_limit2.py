@@ -188,7 +188,7 @@ def test_limit3():
     assert limit(x-log(a+exp(x)), x, oo) == 0
     assert limit(exp(x)/(1+exp(x)), x, oo) == 1
 
-#returns infinity
+#returns infinity - could be a problem in the algorithm implementation
 @XFAIL
 def test_limit4():
     a = Symbol('a')
