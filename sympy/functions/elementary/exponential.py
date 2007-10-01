@@ -273,7 +273,10 @@ class log(SingleValuedFunction):
                 return S.Pi * S.ImaginaryUnit + self(-arg)
         elif isinstance(arg, Basic.Exp1):
             return S.One
-        elif isinstance(arg, exp) and arg[0].is_real:
+        #this doesn't work due to caching: :(
+        #elif isinstance(arg, exp) and arg[0].is_real:
+        #using this one instead:
+        elif isinstance(arg, exp):
             return arg[0]
         elif isinstance(arg, Basic.Pow):
             if isinstance(arg.exp, Basic.Number) or \

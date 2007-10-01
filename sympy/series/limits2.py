@@ -153,8 +153,8 @@ def maketree(f,*args,**kw):
 def compare(a,b,x):
     """Returns "<" if a<b, "=" for a==b, ">" for a>b"""
     #use the sympy's broken limit as the starting point (bootstrapping) :)
-    #c = limitinf(log(a)/log(b), x)
-    c = (log(a)/log(b)).inflimit(x)
+    c = limitinf(log(a)/log(b), x)
+    #c = (log(a)/log(b)).inflimit(x)
     if c == 0: 
         return "<"
     elif c in [oo,-oo]: 
@@ -311,6 +311,9 @@ def sign(e, x):
 def limitinf(e, x):
     """Limit e(x) for x-> oo"""
     if not e.has(x): return e #e is a constant
+    #this is needed to simplify 1/log(exp(-x**2))*log(exp(x**2)) to 1
+    if e.has(log):
+        e = e.normal()
     c0, e0 = mrv_leadterm(e,x) 
     sig=sign(e0,x)
     if sig==1: return Rational(0) # e0>0: lim f = 0
@@ -337,7 +340,7 @@ def subexp(e,sub):
 @debug
 def mrv_leadterm(e, x, Omega=[]):
     """Returns (c0, e0) for e."""
-    if not e.has(x): return (e, 0)
+    if not e.has(x): return (e, Rational(0))
     Omega = [t for t in Omega if subexp(e,t)]
     if Omega == []:
         Omega = mrv(e,x)

@@ -9,6 +9,9 @@ See the documentation in limits2.py. The algorithm itself is highly recursive
 by nature, so "compare" is logically the lowest part of the algorithm, yet in
 some sense it's the most complex part, because it needs to calculate a limit to
 return the result. 
+
+Nevertheless the rest of the algorithm depends on compare that it works
+correctly.
 """
 
 x = Symbol('x', real=True)
@@ -58,8 +61,6 @@ def test_compare2():
     assert compare(exp(-exp(x)),exp(x),x) == ">"
     assert compare(exp(exp(-exp(x))+x),exp(-exp(x)),x) == "<"
 
-#this fails due to a bug in the old limits
-@XFAIL
 def test_compare3():
     assert compare(exp(exp(x)),exp(x+exp(-exp(x))),x) == ">"
 
@@ -84,14 +85,21 @@ def test_mrv1():
     assert mrv(exp(x**2), x) == set([exp(x**2)])
     assert mrv(-exp(1/x), x) == set([x])
     assert mrv(exp(x+1/x), x) == set([exp(x+1/x)])
-    assert mrv(exp(-x+1/x**2)-exp(x+1/x), x) == set([exp(x+1/x), exp(1/x**2-x)])
 
-def test_mrv2():
+def test_mrv2a():
     assert mrv(exp(x+exp(-exp(x))), x) == set([exp(-exp(x))])
     assert mrv(exp(x+exp(-x)), x) == set([exp(x+exp(-x)), exp(-x)])
-    assert mrv(exp(x+exp(-x**2)), x) == set([exp(-x**2)])
     assert mrv(exp(1/x+exp(-x)), x) == set([exp(-x)])
 
+#sometimes infinite recursion due to log(exp(x**2)) not simplifying
+def test_mrv2b():
+    assert mrv(exp(x+exp(-x**2)), x) == set([exp(-x**2)])
+
+#sometimes infinite recursion due to log(exp(x**2)) not simplifying
+def test_mrv2c():
+    assert mrv(exp(-x+1/x**2)-exp(x+1/x), x) == set([exp(x+1/x), exp(1/x**2-x)])
+
+#sometimes infinite recursion due to log(exp(x**2)) not simplifying
 def test_mrv3():
     assert mrv(exp(x**2)+x*exp(x)+log(x)**x/x, x) == set([exp(x**2)])
     assert mrv(exp(x)*(exp(1/x+exp(-x))-exp(1/x)), x) == set([exp(x), exp(-x)])
@@ -116,9 +124,6 @@ def test_rewrite1():
     assert rewrite(e, mrv(e, x), x, m) == (1/m, -x**2)
     e = exp(x+1/x)
     assert rewrite(e, mrv(e, x), x, m) == (1/m, -x-1/x)
-    e = exp(-x+1/x**2)-exp(x+1/x)
-    #both of these are correct and should be equivalent:
-    assert rewrite(e, mrv(e, x), x, m) in [(-1/m + m*exp(1/x+1/x**2), -x-1/x), (m - 1/m*exp(1/x + x**(-2)), x**(-2) - x)]
     e = 1/exp(-x+exp(-x))-exp(x)
     assert rewrite(e, mrv(e, x), x, m) == (1/(m*exp(m))-1/m, -x)
 
@@ -126,6 +131,12 @@ def test_rewrite2():
     e = exp(x)*log(log(exp(x)))
     assert mrv(e, x) == set([exp(x)])
     assert rewrite(e, mrv(e, x), x, m) == (1/m*log(x), -x)
+
+#sometimes infinite recursion due to log(exp(x**2)) not simplifying
+def test_rewrite3():
+    e = exp(-x+1/x**2)-exp(x+1/x)
+    #both of these are correct and should be equivalent:
+    assert rewrite(e, mrv(e, x), x, m) in [(-1/m + m*exp(1/x+1/x**2), -x-1/x), (m - 1/m*exp(1/x + x**(-2)), x**(-2) - x)]
 
 def test_mrv_leadterm1():
     assert mrv_leadterm(-exp(1/x), x) == (-1, 0)
@@ -139,7 +150,7 @@ def test_mrv_leadterm2():
     assert mrv_leadterm((log(exp(x)+x)-x)/log(exp(x)+log(x))*exp(x), x) == \
             (1, 0)
 
-#problem in the current SymPy's limits
+#"'NaN' object has no attribute 'contains'"
 @XFAIL
 def test_mrv_leadterm3():
     #Gruntz: p56, 3.27
@@ -171,13 +182,16 @@ def test_limit2():
     assert limit(x+exp(-exp(x)),x,oo) == oo
     assert limit(13+1/x-exp(-x),x,oo) == 13
 
-#3rd limit returns 0, should be 1:
-@XFAIL
 def test_limit3():
     a = Symbol('a')
     assert limit(x-log(1+exp(x)), x, oo) == 0
     assert limit(x-log(a+exp(x)), x, oo) == 0
     assert limit(exp(x)/(1+exp(x)), x, oo) == 1
+
+#returns infinity
+@XFAIL
+def test_limit4():
+    a = Symbol('a')
     assert limit(exp(x)/(a+exp(x)), x, oo) == 1
 
 #@XFAIL
