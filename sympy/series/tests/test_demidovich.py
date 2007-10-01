@@ -1,4 +1,5 @@
-from sympy import limit, Symbol, oo, sqrt, Rational, log, exp, cos, sin, tan
+from sympy import limit, Symbol, oo, sqrt, Rational, log, exp, cos, sin, tan, \
+    pi
 from sympy.utilities.pytest import XFAIL
 
 """
@@ -41,6 +42,7 @@ def test_Limits_simple_2():
 @XFAIL
 def test_Limits_simple_3a():
     a = Symbol('a', real=True)
+    #returns a wrong limit, needs fixing in limits:
     assert limit((x**2-(a+1)*x+a)/(x**3-a**3),x,a)==(a-1)/(3*a**2)  #196
 
 def test_Limits_simple_3b():
@@ -63,6 +65,7 @@ def test_Limits_simple_4a():
 
 @XFAIL
 def test_Limits_simple_4b():
+    #returns a wrong limit, needs fixing in limits:
     assert limit(x-sqrt3(x**3-1),x,oo)==0  #215
 
 def test_Limits_simple_4c():
@@ -72,10 +75,15 @@ def test_Limits_simple_4c():
 @XFAIL
 def test_f1a():
     h = Symbol("h")
+    # issue 404:
     assert limit(sin(x)/x,x,2) == sin(2)/2 #216a
+
+    #needs a special logic for deciding that sin(x) is bounded:
     assert limit(sin(x)/x,x,oo) == 0 #216b
+    # issue 403:
     assert limit(sin(5*x)/sin(2*x),x,0) == Rational(5)/2 #218
-    assert limit(sin(pi*x)/sin(3*pi*x),x,0) == Rational(1)/3 #219
+
+    #unknown problems:
     assert limit(x*sin(pi/x),x,oo) == pi #220
     assert limit((sin(x)-sin(a))/(x-a),x,a) == cos(a) #222, *176
     assert limit((cos(x)-cos(a))/(x-a),x,a) == -sin(a) #223
@@ -91,6 +99,7 @@ def test_f1b():
     n = Symbol("n")
     h = Symbol("h")
     assert limit(sin(3*x)/x,x,0) == 3 #217
+    assert limit(sin(pi*x)/sin(3*pi*x),x,0) == Rational(1)/3 #219
     assert limit((1-cos(x))/x**2,x,0) == Rational(1,2) #221
     assert limit(x*sin(1/x),x,oo) == 1 #227b
     assert limit((cos(m*x)-cos(n*x))/x**2,x,0) == ((n**2-m**2)/2) #232
@@ -102,9 +111,11 @@ def test_f1b():
 
 @XFAIL
 def test_f2():
+    #unknown problem:
     assert limit((sqrt(cos(x))-sqrt3(cos(x)))/(sin(x)**2),x,0) == -Rational(1,12) #*184
 
 @XFAIL
 def test_f3():
     a = Symbol('a', real=True)
-    assert Limit(asin(a*x)/x, x, 0) == a
+    #unknown problem:
+    assert limit(asin(a*x)/x, x, 0) == a
