@@ -183,10 +183,14 @@ def test_limit3():
     assert limit(x-log(1+exp(x)), x, oo) == 0
     assert limit(x-log(a+exp(x)), x, oo) == 0
     assert limit(exp(x)/(1+exp(x)), x, oo) == 1
-
-def test_limit4():
-    a = Symbol('a')
     assert limit(exp(x)/(a+exp(x)), x, oo) == 1
+
+@XFAIL
+def test_limit4():
+    #issue 364
+    assert limit((3**x+5**x)**(1/x), x, oo) == 5
+    #issue 364
+    assert limit((3**(1/x)+5**(1/x))**x, x, 0) == 5
 
 #@XFAIL
 #def test_MrvTestCase_page47_ex3_21():
