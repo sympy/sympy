@@ -6,106 +6,6 @@
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
 from sympy.core.methods import RelMeths, ArithMeths
 
-def create_limits_table():
-    _x = Basic.Symbol('x', real=True, unbounded=True)
-    x = Basic.Symbol('__x_temp') # prevent interference with actual limit variable
-    oo,I,pi = Basic.Infinity(), Basic.ImaginaryUnit(), Basic.Pi()
-    exp,sqrt,ln,cos,sin,asin,atan = Basic.exp, Basic.sqrt, Basic.log, Basic.cos, Basic.sin, Basic.asin, Basic.atan
-
-    #This is an ugly hack, just to satisfy all the tests, because the current
-    #implementation of limits is very, very weak. See the Issue
-    #http://code.google.com/p/sympy/issues/detail?id=298
-    #for more details.
-    #
-    # From tests/test_limits.py
-    #
-    tbl = {}
-    tbl[(1/x*ln(1+x), Basic.Zero())] = 1
-    tbl[(x*ln(x), Basic.Zero())] = 0
-    tbl[(x**2*ln(x), Basic.Zero())] = 0
-    tbl[(x*(ln(2)+ln(x)), Basic.Zero())] = 0
-    tbl[(x**2*(ln(2)+ln(x)), Basic.Zero())] = 0
-    tbl[(1/ln(x)*(ln(2)+ln(x)), Basic.Zero())] = 1
-    tbl[(x/ln(x)*(ln(2)+ln(x)), Basic.Zero())] = 0
-    tbl[((1+x)*(-ln(x)+ln(sin(2*x))), Basic.Zero())] = -oo
-    tbl[((1+x)*(-ln(x)+ln(sin(2*x)))+ln(x), Basic.Zero())] = -oo
-    #return x, tbl
-    tbl[((exp(1/x-exp(-x))-exp(1/x))/exp(-x), oo)] = -1
-    tbl[(ln(ln(x*exp(x*exp(x))+1))-exp(exp(ln(ln(x))+1/x)), oo)] = 0
-    tbl[(exp(-x)/cos(x), oo)] = Basic.NaN()
-    tbl[((3**x+5**x)**(1/x), oo)] = 5
-    tbl[(ln(1-(ln(exp(x)/x-1)+ln(x))/x)/x, oo)] = -1
-    tbl[(ln(-1-x*I), Basic.Zero())] = -pi*I
-    tbl[(1/(x*(1+(1/x-1)**(1/x-1))), oo)] = -1/(I*pi+1)
-    tbl[(ln(x*(x+1)/ln(exp(x)+exp(ln(x)**2)*exp(x**2))+1/ln(x)), oo)] = 0
-    tbl[(exp(x)*(exp(1/x+exp(-x)+exp(-x**2))-exp(1/x-exp(-exp(x)))), oo)] = 1
-    tbl[(exp(exp(x-exp(-x))/(1-1/x))-exp(exp(x)), oo)] = oo
-    tbl[(exp(exp(exp(x)/(1-1/x)))-exp(exp(exp(x)/(1-1/x-ln(x)**(-ln(x))))), oo)] = -oo
-    tbl[(exp(exp(exp(x+exp(-x))))/exp(exp(exp(x))), oo)] = oo
-    tbl[(exp(exp(exp(x)))/exp(exp(exp(x-exp(-exp(x))))), oo)] = oo
-    tbl[(exp(exp(exp(x)))/exp(exp(exp(x-exp(-exp(exp(x)))))), oo)] = 1
-    tbl[(exp(exp(x))/exp(exp(x-exp(-exp(exp(x))))), oo)] = 1
-    tbl[(ln(x)**2 * exp(sqrt(ln(x))*(ln(ln(x)))**2*exp(sqrt(ln(ln(x)))*ln(ln(ln(x)))**3)) / sqrt(x), oo)] = 0
-    tbl[((x*ln(x)*(ln(x*exp(x)-x**2))**2)/ln(ln(x**2+2*exp(exp(3*x**3*ln(x))))), oo)] = Basic.Rational(1,3)
-    tbl[((exp(x*exp(-x)/(exp(-x)+exp(-2*x**2/(1+x))))-exp(x))/x, oo)] = -exp(2)
-    tbl[(exp(exp(2*ln(x**5+x)*ln(ln(x))))/exp(exp(10*ln(x)*ln(ln(x)))), oo)] = oo
-    tbl[((exp(4*x*exp(-x)/(1/exp(x)+1/exp(2*x**2/(x+1))))-exp(x))/exp(x)**4, oo)] = 1
-    tbl[(exp(x)*(sin(1/x+exp(-x))-sin(1/x+exp(-x**2))), oo)] = 1
-    tbl[(exp(ln(ln(x+exp(ln(x)*ln(ln(x)))))/ln(ln(ln(exp(x)+x+ln(x))))), oo)] = exp(1)
-    tbl[(exp(x*exp(-x)/(exp(-x)+exp(-2*x**2/(x+1))))/exp(x), oo)] = 1
-    #tbl[(sqrt(ln(x+1))-sqrt(ln(x)), oo)] = 0
-
-    h = exp(-x/(1+exp(-x)))
-    tbl[(exp(h)*exp(-x/(1+h))*exp(exp(-x+h))/h**2-exp(x)+x, oo)] = 2
-
-    r = Basic.Symbol('r',positive=True, bounded=True)
-    R = sqrt(sqrt(x**4+2*x**2*(r**2+1)+(r**2-1)**2)+x**2+r**2-1)
-    tbl[(x/R, Basic.Zero())] = sqrt((1-r**2)/2)
-
-    expr = x/(sqrt(1+x)*sin(_x)**2+sqrt(1-x)*cos(_x)**2-1)
-    tbl[(expr.subs(x, x), Basic.Zero())] = 2/(1-2*cos(_x)**2)
-
-    h = exp(-x)
-    tbl[(h/(sqrt(1+h)*sin(1/x)**2+sqrt(1-h)*cos(1/x)**2-1), oo)] = -2
-
-    #expr = 4 * exp(exp(5*x**(-Basic.Rational(5,7))/2+21*x**(Basic.Rational(6,11))/8+2*x**-8+54*x**(Basic.Rational(49,45))/17))**8 \
-    #            / ln(ln(-ln(4*x**(-Basic.Rational(5,14))/3)))**Basic.Rational(7,6) / 9
-    #tbl[(expr, oo)] = oo
-
-    #
-    # From tests/test_demidovich.py
-    #
-    a,m,n = map(Basic.Symbol, 'amn')
-
-    tbl[((2**(x+1)+3**(x+1))/(2**x+3**x), oo)] = 3
-    tbl[((x**2-(a+1)*x+a)/(x**3-a**3), a)] = (a-1)/(3*a**2)
-    tbl[(1/(1-x)-3/(1-x**3), Basic.One())] = -1
-    tbl[(x-(x**3-1)**Basic.Rational(1,3), oo)] = 0
-    tbl[(sin(5*x)/sin(2*x), Basic.Zero())] = Basic.Rational(5,2)
-    tbl[(((cos(x)-cos(a))/(x-a)).subs(x,x), a)] = -sin(a) # XXX subs is required...
-    tbl[((cos(m*x)-cos(n*x))/x**2, Basic.Zero())] = ((n**2-m**2)/2)
-    tbl[((1-sqrt(cos(x)))/x**2, Basic.Zero())] = Basic.Rational(1,4)
-    tbl[(((x-1)/(x+1))**x, oo)] = exp(-2)
-    tbl[((sqrt(cos(x))-(cos(x))**Basic.Rational(1,3))/(sin(x)**2), Basic.Zero())] = -Basic.Rational(1,12)
-    tbl[(asin(a*x)/x, Basic.Zero())] = a
-    tbl[(ln(1+exp(x))/x,oo)] = 1
-
-    #
-    # From issues
-    #
-    base = 2*exp((1-cos(x))/sin(x))-1
-    exponent = (-exp(-x)+exp(x))/(2*atan(x)**2)
-    tbl[(exponent * ln(base), Basic.Zero())] = 1
-    tbl[(exp(exponent * ln(base)), Basic.Zero())] = exp(1)
-    tbl[(base ** exponent, Basic.Zero())] = exp(1)
-
-    tbl[(x-ln(1+exp(x)), oo)] = 0
-    tbl[(x-ln(a+exp(x)), oo)] = 0
-    tbl[(exp(x)/(a+exp(x)), oo)] = 1
-
-    return x, tbl
-_x, limits_table = None, None
-
 class Limit(Basic, RelMeths, ArithMeths):
     """ Find the limit of the expression under process x->xlim.
 
@@ -123,23 +23,6 @@ class Limit(Basic, RelMeths, ArithMeths):
         if not expr.has(x):
             return expr
 
-        # Try to create the look-up table and use it before falling back on
-        # the proper algorithm
-        global _x, limits_table
-        if _x is None or limits_table is None:
-            _x, limits_table = create_limits_table()
-
-        key = (expr.subs(x, _x), xlim)
-        if key in limits_table:
-            return Basic.sympify(limits_table[key]).subs(_x, x)
-        #print key
-        #print limits_table
-        #print key in limits_table
-        #print limits_table.keys()[0][0] == key[0]
-        #print bool(limits_table.keys()[0][0] == key[0])
-        #stop
-
-        # Not in the look-up table, revert to standard algorithm
         if isinstance(xlim, Basic.NegativeInfinity):
             xoo = InfLimit.limit_process_symbol()
             if expr.has(xoo): 
