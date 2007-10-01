@@ -1,3 +1,7 @@
+# The basic tests, that are needed in the series facility work, but the more
+# complicated don't, they are commented out. Use the general limit algorithm
+# for those, see limits.py. Ideally, we'll get rid of limits_series completely.
+
 from sympy import *
 from sympy.series.limits_series import mrv_compare, mrv2
 from sympy.utilities.pytest import XFAIL
@@ -14,7 +18,6 @@ def mrv(expr, var):
     return set(md.keys())
 ###
 
-"""
 def test_MrvCompareLeadTerm_simple_1():
     assert mrv_compare(x,x,x) == '='
 
@@ -120,12 +123,12 @@ def test_MrvTestCase_page41_8():
     r = mrv2(expr,x,d,md)
     assert set(md.keys()) == set([x])
 
-def test_MrvTestCase_page43_ex3_15():
-    expr = (exp(1/x-exp(-x))-exp(1/x))/exp(-x)
-    assert mrv(expr,x) == set([exp(x)])
-    d,md = {},{}
-    r = mrv2(expr,x,d,md)
-    assert set(md.keys()) == set([exp(x)])
+#def test_MrvTestCase_page43_ex3_15():
+#    expr = (exp(1/x-exp(-x))-exp(1/x))/exp(-x)
+#    assert mrv(expr,x) == set([exp(x)])
+#    d,md = {},{}
+#    r = mrv2(expr,x,d,md)
+#    assert set(md.keys()) == set([exp(x)])
 
 def test_MrvTestCase_page44_ex3_17():
     expr = 1/exp(-x+exp(-x))-exp(x)
@@ -134,13 +137,13 @@ def test_MrvTestCase_page44_ex3_17():
     r = mrv2(expr,x,d,md)
     assert set(md.keys()) == set([exp(x), exp(x-exp(-x))])
 
-@XFAIL
-def test_MrvTestCase_page47_ex3_21():
-    h = exp(-x/(1+exp(-x)))
-    expr = exp(h)*exp(-x/(1+h))*exp(exp(-x+h))/h**2-exp(x)+x
-    expected = set([1/h,exp(x),exp(x-h),exp(x/(1+h))])
-    # XXX Incorrect result
-    assert mrv(expr,x).difference(expected) == set()
+#@XFAIL
+#def test_MrvTestCase_page47_ex3_21():
+#    h = exp(-x/(1+exp(-x)))
+#    expr = exp(h)*exp(-x/(1+h))*exp(exp(-x+h))/h**2-exp(x)+x
+#    expected = set([1/h,exp(x),exp(x-h),exp(x/(1+h))])
+#    # XXX Incorrect result
+#    assert mrv(expr,x).difference(expected) == set()
 
 def test_MrvTestCase_page51_ex3_25():
     expr = (ln(ln(x)+ln(ln(x)))-ln(ln(x)))/ln(ln(x)+ln(ln(ln(x))))*ln(x)
@@ -149,14 +152,14 @@ def test_MrvTestCase_page51_ex3_25():
     r = mrv2(expr,x,d,md)
     assert set(md.keys()) == set([x])
 
-@XFAIL
-def test_MrvTestCase_page56_ex3_27():
-    # XXX Fails due to infinite recursion
-    expr = exp(-x+exp(-x)*exp(-x*ln(x)))
-    assert mrv(expr,x) == set([exp(x*log(x))])
-    d,md = {},{}
-    r = mrv2(expr,x,d,md)
-    assert set(md.keys()) == set([exp(x*log(x))])
+#@XFAIL
+#def test_MrvTestCase_page56_ex3_27():
+#    # XXX Fails due to infinite recursion
+#    expr = exp(-x+exp(-x)*exp(-x*ln(x)))
+#    assert mrv(expr,x) == set([exp(x*log(x))])
+#    d,md = {},{}
+#    r = mrv2(expr,x,d,md)
+#    assert set(md.keys()) == set([exp(x*log(x))])
 
 def test_MrvTestCase_page60_sec3_5_1():
     expr1 = log(log(x*exp(x*exp(x))+1))
@@ -192,10 +195,11 @@ def test_MrvLimitTestCase_simple_inf():
 def test_MrvLimitTestCase_page2():
     assert (x**7/exp(x)).limit(x,oo) == 0
 
-@XFAIL
-def test_MrvLimitTestCase_page4():
-    expr = 1/(x**(log(log(log(log(1/x))))-1))
-    assert expr.limit(x,0) == oo
+#
+#@XFAIL
+#def test_MrvLimitTestCase_page4():
+#    expr = 1/(x**(log(log(log(log(1/x))))-1))
+#    assert expr.limit(x,0) == oo
 
 def test_MrvLimitTestCase_page4_1():
     expr = (log(log(log(log(x))))-1)*log(x)
@@ -205,9 +209,9 @@ def test_MrvLimitTestCase_page4_2():
     expr = (log(log(log(x)))-1)*x
     assert expr.limit(x,oo) == oo
 
-def test_MrvLimitTestCase_page12_ex2_5():
-    expr = sqrt(ln(x+1))-sqrt(ln(x))
-    assert expr.limit(x,oo) == 0
+#def test_MrvLimitTestCase_page12_ex2_5():
+#    expr = sqrt(ln(x+1))-sqrt(ln(x))
+#    assert expr.limit(x,oo) == 0
 
 def test_MrvLimitTestCase_page12_ex2_6():
     s = Symbol('s')
@@ -240,10 +244,12 @@ def test_MrvLimitTestCase_page16_ex2_13():
     expr = sin(x)/x
     assert expr.limit(x,0) == 1
 
-@XFAIL
-def test_MrvLimitTestCase_page16_ex2_14():  # enable it after defining phi
-    expr = exp(exp(phi(phi(x))))/x
-    assert expr.limit(x,oo) == exp(-Rational(1,2))
+#
+
+#@XFAIL
+#def test_MrvLimitTestCase_page16_ex2_14():  # enable it after defining phi
+#    expr = exp(exp(phi(phi(x))))/x
+#    assert expr.limit(x,oo) == exp(-Rational(1,2))
 
 def test_MrvLimitTestCase_page18_ex2_15():
     expr = exp(exp(exp(exp(x-1/exp(x)))))/exp(exp(exp(exp(x))))
@@ -253,18 +259,18 @@ def test_MrvLimitTestCase_page27_ex2_17():
     expr = exp(x)*(sin(1/x+exp(-x))-sin(1/x))
     assert expr.limit(x,oo) == 1
 
-def test_MrvLimitTestCase_page43_ex3_15():
-    expr = (exp(1/x-exp(-x))-exp(1/x))/exp(-x)
-    assert expr.limit(x,oo) == -1
+#def test_MrvLimitTestCase_page43_ex3_15():
+#    expr = (exp(1/x-exp(-x))-exp(1/x))/exp(-x)
+#    assert expr.limit(x,oo) == -1
 
 def test_MrvLimitTestCase_page44_ex3_17():
     expr = 1/exp(-x+exp(-x))-exp(x)
     assert expr.limit(x,oo) == -1
 
-def test_MrvLimitTestCase_page47_ex3_21():
-    h = exp(-x/(1+exp(-x)))
-    expr = exp(h)*exp(-x/(1+h))*exp(exp(-x+h))/h**2-exp(x)+x
-    assert expr.limit(x,oo) == 2
+#def test_MrvLimitTestCase_page47_ex3_21():
+#    h = exp(-x/(1+exp(-x)))
+#    expr = exp(h)*exp(-x/(1+h))*exp(exp(-x+h))/h**2-exp(x)+x
+#    assert expr.limit(x,oo) == 2
 
 def test_MrvLimitTestCase_page47_ex3_21_1():
     expr = exp((-x) / (1 + exp(-x)))
@@ -282,6 +288,7 @@ def test_MrvLimitTestCase_page77_ex5_2():
     expr = exp(sin(1/x+exp(-x))-sin(1/x))
     assert expr.limit(x,oo) == 1
 
+"""
 @XFAIL
 def test_MrvLimitTestCaseWorkInProgress_page7(): # enable it after defining erf
     expr = (erf(x-exp(x-exp(-exp(x))))-erf(x))*exp(exp(x))*exp(x**2)
