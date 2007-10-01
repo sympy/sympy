@@ -46,20 +46,22 @@ def test_compare1():
 
     assert compare(exp(x**2), 1/exp(x**2), x) == "="
 
-@XFAIL
 def test_compare2():
     assert compare(exp(x),x**5,x) == ">"
     assert compare(exp(x**2),exp(x)**2,x) == ">"
     assert compare(exp(x),exp(x+exp(-x)),x) == "="
     assert compare(exp(x+exp(-x)),exp(x),x) == "="
     assert compare(exp(x+exp(-x)),exp(-x),x) == "="
-    assert compare(exp(exp(x)),exp(x+exp(-exp(x))),x) == ">"
     assert compare(exp(-x),x,x) ==  ">"
     assert compare(x,exp(-x),x) ==  "<"
     assert compare(exp(x+1/x),x,x) == ">"
-    assert compare(exp(exp(x)),exp(x+exp(-exp(x))),x) == ">"
     assert compare(exp(-exp(x)),exp(x),x) == ">"
     assert compare(exp(exp(-exp(x))+x),exp(-exp(x)),x) == "<"
+
+#this fails due to a bug in the old limits
+@XFAIL
+def test_compare3():
+    assert compare(exp(exp(x)),exp(x+exp(-exp(x))),x) == ">"
 
 def test_sign1():
     assert sign(Rational(0), x) == 0
