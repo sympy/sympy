@@ -65,7 +65,7 @@ def test_Limits_simple_4a():
 
 @XFAIL
 def test_Limits_simple_4b():
-    #returns a wrong limit, needs fixing in limits:
+    #issue 412
     assert limit(x-sqrt3(x**3-1),x,oo)==0  #215
 
 def test_Limits_simple_4c():
