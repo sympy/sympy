@@ -184,8 +184,7 @@ def mrv(e, x):
     elif isinstance(e, log): 
         return mrv(e[0], x)
     elif isinstance(e, exp): 
-        #if limitinf(e[0], x) in [oo,-oo]:
-        if e[0].inflimit(x) in [oo,-oo]:
+        if limitinf(e[0], x) in [oo,-oo]:
             return mrv_max(set([e]), mrv(e[0], x), x)
         else:
             return mrv(e[0], x)
