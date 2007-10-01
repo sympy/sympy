@@ -1056,7 +1056,11 @@ class Basic(BasicMeths):
             # requested accuracy gives infinite series,
             # order is probably nonpolynomial e.g. O(exp(-1/x), x).
             return unevaluated_func(arg)
-        n = int(n)
+        try:
+            n = int(n)
+        except TypeError:
+            #well, the n is something more complicated (like 1+log(2))
+            n = int(n.evalf()) + 1
         assert n>=0,`n`
         l = []
         g = None

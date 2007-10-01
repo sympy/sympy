@@ -200,6 +200,14 @@ class Order(Basic, ArithMeths, RelMeths):
         i = -1
         for o in cache:
             i += 1
+            #if you want to try the new limit algorithm, uncomment this:
+            #from limits2 import limit as limit2
+            #from sympy import log
+            #print obj.expr, o.expr
+            #if obj.expr.has(log):
+            #    l = limit2(obj.expr/o.expr, symbol, 0, dir="+")
+            #else:
+            #    l = (obj.expr/o.expr).limit(symbol, 0, direction='<')
             l = (obj.expr/o.expr).limit(symbol, 0, direction='<')
             if l.is_unbounded:
                 cache.insert(i,obj)

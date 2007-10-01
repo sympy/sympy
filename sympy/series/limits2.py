@@ -354,14 +354,22 @@ def mrv_leadterm(e, x, Omega=[]):
         return tuple(movedown(mrv_leadterm_up, x))
     wsym = Symbol("w", dummy=True)
     f, logw=rewrite(e, set(Omega), x, wsym)
-    series=f.expand().oseries(O(wsym**2, wsym))
-    assert series!=0
+    f = f.expand()
+    series=f.oseries(O(wsym**2, wsym))
+    if series == 0:
+        #we need to calculate more terms, let's try 4:
+        series=f.oseries(O(wsym**4, wsym))
+    if series == 0:
+        #we need to calculate more terms, let's try 10:
+        series=f.oseries(O(wsym**10, wsym))
+    if series == 0:
+        #we need to calculate more terms, let's try 30:
+        series=f.oseries(O(wsym**30, wsym))
+    if series == 0:
+        print "Don't know how to make a series of:",f
+        raise NotImplementedError("The underlying series facility failed")
     assert not isinstance(series,O)
-    #print "sss1",series,type(series),f,n
-    #series = series.removeO()
-    #print "sss2",series,type(series)
     series=series.subs(log(wsym), logw)
-    #print "sss3",series,type(series)
     return series.leadterm(wsym)
 
 
