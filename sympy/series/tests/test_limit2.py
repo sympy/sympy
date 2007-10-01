@@ -1,5 +1,5 @@
 from sympy import Symbol, exp, log, oo, Rational
-from sympy.series.limits2 import compare, mrv, rewrite, mrv_leadterm, limit, \
+from sympy.series.limits import compare, mrv, rewrite, mrv_leadterm, limit, \
     sign
 from sympy.utilities.pytest import XFAIL
 

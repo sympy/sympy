@@ -1073,11 +1073,13 @@ class Basic(BasicMeths):
     def limit(self, x, xlim, direction='<'):
         """ Compute limit x->xlim.
         """
-        return Basic.Limit(self, x, xlim, direction)
+        from sympy.series.limits_series import Limit
+        return Limit(self, x, xlim, direction)
 
     def inflimit(self, x): # inflimit has its own cache
         x = Basic.sympify(x)
-        return Basic.InfLimit(self, x)
+        from sympy.series.limits_series import InfLimit
+        return InfLimit(self, x)
 
     @cache_it_immutable
     def as_leading_term(self, *symbols):

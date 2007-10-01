@@ -1,6 +1,7 @@
-# This file is the new limits.py from the newcore
-# modify it as you wish in order to get rid of the ugly limit table
-# see limits.py for more info
+# This is a very simplified (and not that reliable) version of the limit
+# algorithm that is only used for series expansion. Use this file only in the
+# series expansion code. Everywere else, use the general and robust limit
+# algorithm in limits.py.
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
 from sympy.core.methods import RelMeths, ArithMeths

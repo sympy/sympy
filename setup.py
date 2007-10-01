@@ -59,7 +59,7 @@ modules = [
     ( True, 'sympy.polynomials.fast', [] ),
     ( True, 'sympy.printing',
         ['gtk', 'pygame_'] ),
-    ( True, 'sympy.series', ["limits_oldcore", "limits"] ),
+    ( True, 'sympy.series', ["limits"] ),
     ( True, 'sympy.simplify', [] ),
     ( True, 'sympy.solvers', [] ),
     ( True, 'sympy.utilities', [] ),

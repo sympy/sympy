@@ -1,5 +1,5 @@
 from sympy import *
-from sympy.series.limits import mrv_compare, mrv2
+from sympy.series.limits_series import mrv_compare, mrv2
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x', real=True, unbounded=True)
