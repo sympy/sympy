@@ -111,11 +111,11 @@ def test_f1b():
 
 @XFAIL
 def test_f2():
-    #unknown problem:
+    #issue 406
     assert limit((sqrt(cos(x))-sqrt3(cos(x)))/(sin(x)**2),x,0) == -Rational(1,12) #*184
 
 @XFAIL
 def test_f3():
     a = Symbol('a', real=True)
-    #unknown problem:
+    #issue 405
     assert limit(asin(a*x)/x, x, 0) == a
