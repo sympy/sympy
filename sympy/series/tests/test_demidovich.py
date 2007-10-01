@@ -42,7 +42,7 @@ def test_Limits_simple_2():
 @XFAIL
 def test_Limits_simple_3a():
     a = Symbol('a', real=True)
-    #returns a wrong limit, needs fixing in limits:
+    #issue 414
     assert limit((x**2-(a+1)*x+a)/(x**3-a**3),x,a)==(a-1)/(3*a**2)  #196
 
 def test_Limits_simple_3b():
