@@ -99,19 +99,21 @@ from sympy import Basic, Add, Mul, Pow, Function, log, oo, Rational, exp, \
 O = Order
 
 def debug(func):
+    "Only debugging purposes: prints a tree"
     def decorated(*args, **kwargs):
         #r = func(*args, **kwargs)
         r = maketree(func, *args, **kwargs)
         #print "%s = %s(%s, %s)" % (r, func.__name__, args, kwargs)
         return r
     if 1:
-        #normal mode
+        #normal mode - do nothing
         return lambda *args, **kwargs: func(*args, **kwargs)
     else:
         #debug mode
         return decorated
 
 def tree(subtrees):
+    "Only debugging purposes: prints a tree"
     def indent(s,type=1):
         x = s.split("\n")
         r = "+-%s\n"%x[0]
@@ -132,6 +134,7 @@ def tree(subtrees):
 tmp=[]
 iter=0
 def maketree(f,*args,**kw):
+    "Only debugging purposes: prints a tree"
     global tmp
     global iter
     oldtmp=tmp
@@ -152,9 +155,7 @@ def maketree(f,*args,**kw):
 
 def compare(a,b,x):
     """Returns "<" if a<b, "=" for a==b, ">" for a>b"""
-    #use the sympy's broken limit as the starting point (bootstrapping) :)
     c = limitinf(log(a)/log(b), x)
-    #c = (log(a)/log(b)).inflimit(x)
     if c == 0: 
         return "<"
     elif c in [oo,-oo]: 
@@ -230,18 +231,7 @@ def rewrite(e,Omega,x,wsym):
     #all items in Omega must be exponentials
     for t in Omega: assert isinstance(t, exp)
     def cmpfunc(a,b):
-        #FIXME: this is really, really slow...
         return -cmp(len(mrv(a,x)), len(mrv(b,x)))
-        #this is just a sandbox, not really needed:
-        #m_a = list(mrv(a,x))
-        #m_b = list(mrv(b,x))
-        #c = -cmp(len(m_a), len(m_b))
-        #if c == 0:
-            #This is so that Omega[-1] is always the same term, 
-            #no matter what. Unfortunately, this is not 100% robust.
-        #    return cmp(hash(str(m_a)), hash(str(m_b)))
-        #else:
-        #    return c
     #sort Omega (mrv set) from the most complicated to the simplest ones
     #the complexity of "a" from Omega: the length of the mrv set of "a"
     Omega = list(Omega)
@@ -261,8 +251,6 @@ def rewrite(e,Omega,x,wsym):
     f=e 
     for a,b in zip(Omega,O2):
         f=f.subs(a,b)
-
-    #tmp.append("Omega=%s; O2=%s; w=%s; wsym=%s\n"%(Omega,O2,g,wsym))
 
     #finally compute the logarithm of w (logw). 
     logw=g[0]
@@ -373,6 +361,7 @@ def mrv_leadterm(e, x, Omega=[]):
     return series.leadterm(wsym)
 
 
+#this class is not yet adapted for the new core.
 class Limit2(Basic):
     
     mathml_tag = 'limit'
