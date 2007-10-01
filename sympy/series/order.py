@@ -156,8 +156,8 @@ class Order(Basic, ArithMeths, RelMeths):
         # Order symbols are assumed to be close to 0 from right:
         for s in symbols:
             assume_dict = {}
-            if not s.is_infinitesimal:
-                assume_dict['infinitesimal'] = True
+            #if not s.is_infinitesimal:
+            assume_dict['infinitesimal'] = True
             #XXX This causes problems, that it changes the assumption in the
             #   symbol, outside the scope of Order and breaks code. Don't know
             #   why
@@ -165,8 +165,9 @@ class Order(Basic, ArithMeths, RelMeths):
             #   well, how to solve that? I don't know...
             #   ok - so the problem is in caching - in core/function.py:63
             # see the issue 369
-            if s.is_positive is None:
-                assume_dict['positive'] = True
+            #if s.is_positive is None:
+            #    assume_dict['positive'] = True
+            assume_dict['positive'] = True
 
             #
             if assume_dict:

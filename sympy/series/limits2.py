@@ -233,6 +233,16 @@ def rewrite(e,Omega,x,wsym):
     def cmpfunc(a,b):
         #FIXME: this is really, really slow...
         return -cmp(len(mrv(a,x)), len(mrv(b,x)))
+        #this is just a sandbox, not really needed:
+        #m_a = list(mrv(a,x))
+        #m_b = list(mrv(b,x))
+        #c = -cmp(len(m_a), len(m_b))
+        #if c == 0:
+            #This is so that Omega[-1] is always the same term, 
+            #no matter what. Unfortunately, this is not 100% robust.
+        #    return cmp(hash(str(m_a)), hash(str(m_b)))
+        #else:
+        #    return c
     #sort Omega (mrv set) from the most complicated to the simplest ones
     #the complexity of "a" from Omega: the length of the mrv set of "a"
     Omega = list(Omega)

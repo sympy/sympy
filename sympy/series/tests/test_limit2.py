@@ -107,8 +107,6 @@ def test_mrv4():
     assert mrv(log(log(x*exp(x*exp(x))+1)) - exp(exp(log(log(x)+1/x))), x) == \
         set([exp(x*exp(x))])
 
-#problem with caching assumptions... :(
-@XFAIL
 def test_rewrite1():
     e = exp(x)
     assert rewrite(e, mrv(e, x), x, m) == (1/m, -x)
@@ -117,7 +115,8 @@ def test_rewrite1():
     e = exp(x+1/x)
     assert rewrite(e, mrv(e, x), x, m) == (1/m, -x-1/x)
     e = exp(-x+1/x**2)-exp(x+1/x)
-    assert rewrite(e, mrv(e, x), x, m) == (-1/m + m*exp(1/x+1/x**2), -x-1/x)
+    #both of these are correct and should be equivalent:
+    assert rewrite(e, mrv(e, x), x, m) in [(-1/m + m*exp(1/x+1/x**2), -x-1/x), (m - 1/m*exp(1/x + x**(-2)), x**(-2) - x)]
     e = 1/exp(-x+exp(-x))-exp(x)
     assert rewrite(e, mrv(e, x), x, m) == (1/(m*exp(m))-1/m, -x)
 
