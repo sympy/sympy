@@ -70,7 +70,7 @@ def test_pretty_functions():
     assert pretty(f(x/(y+1), y)) == '    x      \nf(-----, y)\n  1 + y    '
 
     # Nesting of square roots
-    assert pretty( sqrt((sqrt(x+1))+1) ) == '    _______________\n   /       _______ \n \\/  1 + \\/ 1 + x  '
+    assert pretty( sqrt((sqrt(x+1))+1) ) == '   _______________\n  /       _______ \n\\/  1 + \\/ 1 + x  '
     # Function powers
     assert pretty( sin(x)**2 ) == '   2   \nsin (x)'
 
@@ -97,28 +97,24 @@ def test_pretty_derivatives():
 def test_pretty_integrals():
     # Simple
     f_1 = Integral(log(x), x)
-    assert pretty(f_1) == '   /         \n  |          \n  | log(x) dx\n  |          \n /           '
+    assert pretty(f_1) == '  /         \n |          \n | log(x) dx\n |          \n/           '
 
     f_2 = Integral(x**2, x)
-    assert pretty(f_2) == '   /     \n  |      \n  |  2   \n  | x  dx\n  |      \n /       '
+    assert pretty(f_2) == '  /     \n |      \n |  2   \n | x  dx\n |      \n/       '
     # Double nesting of pow
     f_3 = Integral(x**(2**x), x)
-    assert pretty(f_3) == '   /        \n  |         \n  |         \n  |  / x\\   \n  |  \\2 /   \n  | x     dx\n /          '
+    assert pretty(f_3) == '  /        \n |         \n |  / x\\   \n |  \\2 /   \n | x     dx\n |         \n/          '
 
     # Definite integrals
     f_4 = Integral(x**2, (x,1,2))
-    assert pretty(f_4) == '   2      \n   /      \n  |       \n  |   2   \n  |  x  dx\n  |       \n /        \n 1        '
+    assert pretty(f_4) == '  2      \n  /      \n |       \n |   2   \n |  x  dx\n |       \n/        \n1        '
 
     f_5 = Integral(x**2, (x,Rational(1,2),10))
-    assert pretty(f_5) == '  10      \n   /      \n  |       \n  |   2   \n  |  x  dx\n  |       \n /        \n1/2       '
+    assert pretty(f_5) == ' 10      \n  /      \n |       \n |   2   \n |  x  dx\n |       \n/        \n1/2      '
 
     # Nested integrals
     f_6 = Integral(x**2*y**2, x,y)
-    assert pretty(f_6) == '   /   /           \n  |   |            \n  |   |  2  2      \n  |   | x *y  dx dy\n  |   |            \n /   /             '
-
-    # Nested integrals with limits+unicode
-    f_7 = Integral(x**2*sin(y), (x,0,1), (y,0,pi))
-    assert pretty(f_7, use_unicode=True) == u'   \u03c0    1                \n   /    /                \n  |    |                 \n  |    |   2             \n  |    |  x *sin(y) dx dy\n  |    |                 \n /    /                  \n 0    0                  '
+    assert pretty(f_6) == '  /  /           \n |  |            \n |  |  2  2      \n |  | x *y  dx dy\n |  |            \n/  /             '
 
 @XFAIL
 def test_pretty_limits():

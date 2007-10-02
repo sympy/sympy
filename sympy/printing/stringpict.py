@@ -12,6 +12,8 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
+from pretty_symbology import hobj, vobj, pretty_use_unicode
+
 class stringPict:
     """A ASCII picture.
     The pictures are represented as a list of equal length strings.
@@ -51,7 +53,7 @@ class stringPict:
         #convert everything to stringPicts
         objects = []
         for arg in args:
-            if isinstance(arg, str): arg = stringPict(arg)
+            if isinstance(arg, basestring): arg = stringPict(arg)
             objects.append(arg)
 
         #make a list of pictures, with equal height and baseline
@@ -105,7 +107,7 @@ class stringPict:
         #convert everything to stringPicts; keep LINE
         objects = []
         for arg in args:
-            if arg is not stringPict.LINE and isinstance(arg, str):
+            if arg is not stringPict.LINE and isinstance(arg, basestring):
                 arg = stringPict(arg)
             objects.append(arg)
 
@@ -115,7 +117,7 @@ class stringPict:
             for obj in objects
             if obj is not stringPict.LINE)
 
-        lineObj = stringPict('-'*newWidth)
+        lineObj = stringPict(hobj('-', newWidth))
 
         #replace LINE with proper lines
         for i, obj in enumerate(objects):
@@ -151,27 +153,32 @@ class stringPict:
         baseline = len(string.splitlines())-self.height()+self.baseline
         return string, baseline
 
-    def parens(self):
+    def parens(self, left='(', right=')', ifascii_nougly=False):
         """Put parentheses around self.
         Returns string, baseline arguments for stringPict.
         """
-        height = self.height()
-        if height==1:
-            return stringPict('(').right(self, ')')
-        else:
-            verticalBar = '\n' + '|\n' * (self.height()-2)
-            lparen = stringPict('/'+verticalBar+'\\',self.baseline)
-            rparen = stringPict('\\'+verticalBar+'/',self.baseline)
-            return lparen.right(self, rparen)
+        h = self.height()
+        b = self.baseline
+
+        # XXX this is a hack -- ascii parens are ugly!
+        if ifascii_nougly and not pretty_use_unicode():
+            h = 1
+            b = 0
+
+        lparen = stringPict(vobj(left,  h), baseline=b)
+        rparen = stringPict(vobj(right, h), baseline=b)
+
+        return lparen.right(self, rparen)
 
     def leftslash(self):
         """Precede object by a slash of the proper size.
         """
+        # XXX not used anywhere ?
         height = max(
             self.baseline,
             self.height()-1-self.baseline)*2 + 1
         slash = '\n'.join(
-            ' '*(height-i-1)+'/'+' '*i
+            ' '*(height-i-1)+xobj('/',1)+' '*i
             for i in range(height)
             )
         return self.left(stringPict(slash, height//2))
@@ -180,6 +187,8 @@ class stringPict:
         """Produce a nice root symbol.
         Produces ugly results for big n inserts.
         """
+        # XXX not used anywhere
+        # XXX duplicate of root drawing in pretty.py
         #put line over expression
         result = self.above('_'*self.width())
         #construct right half of root symbol
