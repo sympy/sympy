@@ -14,7 +14,6 @@ def test_solve():
     assert solve(x**2-1, x) in [[-1, 1], [1, -1]]
     assert solve(x**2 == 1, x) in [[-1, 1], [1, -1]]
 
-@XFAIL
 def test_linear_system(): # needs simplify()
     x, y, z, t, n = map(Symbol, 'xyztn')
 
@@ -25,7 +24,7 @@ def test_linear_system(): # needs simplify()
                 [-1, 0, 1, 0, 0] )
 
     assert solve_linear_system(M, [x, y, z, t]) == \
-           {y: 0, z: (-t-t*n)/n, x: (-t-t*n)/n}
+           {y: 0, z: ((-t-t*n)/n).expand(), x: ((-t-t*n)/n).expand()}
 
 def test_linear_systemLU():
     x, y, z, n = map(Symbol, 'xyzn')
