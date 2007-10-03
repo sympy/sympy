@@ -75,96 +75,98 @@ symb_2txt = {
     'int':  'INTEGRAL',
 }
 
-# SUBSCRIPT & SUPERSCRIPT
-LSUB = lambda letter: U('LATIN SUBSCRIPT SMALL LETTER %s' % letter.upper())
-GSUB = lambda letter: U('GREEK SUBSCRIPT SMALL LETTER %s' % letter.upper())
-DSUB = lambda digit:  U('SUBSCRIPT %s' % digit_2txt[digit])
-SSUB = lambda symb:   U('SUBSCRIPT %s' % symb_2txt[symb])
+def initialize_things():
 
-LSUP = lambda letter: U('SUPERSCRIPT LATIN SMALL LETTER %s' % letter.upper())
-DSUP = lambda digit:  U('SUPERSCRIPT %s' % digit_2txt[digit])
-SSUP = lambda symb:   U('SUPERSCRIPT %s' % symb_2txt[symb])
+    # SUBSCRIPT & SUPERSCRIPT
+    LSUB = lambda letter: U('LATIN SUBSCRIPT SMALL LETTER %s' % letter.upper())
+    GSUB = lambda letter: U('GREEK SUBSCRIPT SMALL LETTER %s' % letter.upper())
+    DSUB = lambda digit:  U('SUBSCRIPT %s' % digit_2txt[digit])
+    SSUB = lambda symb:   U('SUBSCRIPT %s' % symb_2txt[symb])
 
-sub = {}    # symb -> subscript symbol
-sup = {}    # symb -> superscript symbol
+    LSUP = lambda letter: U('SUPERSCRIPT LATIN SMALL LETTER %s' % letter.upper())
+    DSUP = lambda digit:  U('SUPERSCRIPT %s' % digit_2txt[digit])
+    SSUP = lambda symb:   U('SUPERSCRIPT %s' % symb_2txt[symb])
 
-# latin subscripts
-for l in 'aeioruvx':
-    sub[l] = LSUB(l)
+    sub = {}    # symb -> subscript symbol
+    sup = {}    # symb -> superscript symbol
 
-for l in 'in':
-    sup[l] = LSUP(l)
+    # latin subscripts
+    for l in 'aeioruvx':
+        sub[l] = LSUB(l)
 
-for g in ['beta', 'gamma', 'rho', 'phi', 'chi']:
-    sub[g] = GSUB(g)
+    for l in 'in':
+        sup[l] = LSUP(l)
 
-for d in [str(i) for i in range(10)]:
-    sub[d] = DSUB(d)
-    sup[d] = DSUP(d)
+    for g in ['beta', 'gamma', 'rho', 'phi', 'chi']:
+        sub[g] = GSUB(g)
 
-for s in '+-=()':
-    sub[s] = SSUB(s)
-    sup[s] = SSUP(s)
+    for d in [str(i) for i in range(10)]:
+        sub[d] = DSUB(d)
+        sup[d] = DSUP(d)
 
-
-# VERTICAL OBJECTS
-HUP = lambda symb: U('%s UPPER HOOK'    % symb_2txt[symb])
-CUP = lambda symb: U('%s UPPER CORNER'  % symb_2txt[symb])
-MID = lambda symb: U('%s MIDDLE PIECE'  % symb_2txt[symb])
-EXT = lambda symb: U('%s EXTENSION'     % symb_2txt[symb])
-HLO = lambda symb: U('%s LOWER HOOK'    % symb_2txt[symb])
-CLO = lambda symb: U('%s LOWER CORNER'  % symb_2txt[symb])
-TOP = lambda symb: U('%s TOP'           % symb_2txt[symb])
-BOT = lambda symb: U('%s BOTTOM'        % symb_2txt[symb])
-
-# {} '('  ->  (extension, start, end, middle) 1-character
-_xobj_unicode = {
-
-    # vertical symbols
-    #          ext       top       bot        mid           c1
-    '(' :   (( EXT('('), HUP('('), HLO('(') ),              '('),
-    ')' :   (( EXT(')'), HUP(')'), HLO(')') ),              ')'),
-    '[' :   (( EXT('['), CUP('['), CLO('[') ),              '['),
-    ']' :   (( EXT(']'), CUP(']'), CLO(']') ),              ']'),
-    '{' :   (( EXT('('), HUP('{'), HLO('{'),  MID('{')  ),  '{'),   # XXX EXT is wrong
-    '}' :   (( EXT(')'), HUP('}'), HLO('}'),  MID('}')  ),  '}'),   # XXX EXT is wrong
-    '|' :   U('BOX DRAWINGS LIGHT VERTICAL'),
-
-    'int':  (( EXT('int'), U('TOP HALF INTEGRAL'), U('BOTTOM HALF INTEGRAL') ), U('INTEGRAL')),
-   #'sum':  ( U('N-ARY SUMMATION'), TOP('sum'), None, None, BOT('sum')     ),
+    for s in '+-=()':
+        sub[s] = SSUB(s)
+        sup[s] = SSUP(s)
 
 
-    # horizontal objects
-    #'-' :  '-',
-    '-' :   U('BOX DRAWINGS LIGHT HORIZONTAL'),
-    '_' :   U('HORIZONTAL SCAN LINE-9'),        # XXX symbol ok?
+    # VERTICAL OBJECTS
+    HUP = lambda symb: U('%s UPPER HOOK'    % symb_2txt[symb])
+    CUP = lambda symb: U('%s UPPER CORNER'  % symb_2txt[symb])
+    MID = lambda symb: U('%s MIDDLE PIECE'  % symb_2txt[symb])
+    EXT = lambda symb: U('%s EXTENSION'     % symb_2txt[symb])
+    HLO = lambda symb: U('%s LOWER HOOK'    % symb_2txt[symb])
+    CLO = lambda symb: U('%s LOWER CORNER'  % symb_2txt[symb])
+    TOP = lambda symb: U('%s TOP'           % symb_2txt[symb])
+    BOT = lambda symb: U('%s BOTTOM'        % symb_2txt[symb])
 
-    # diagonal objects '\' & '/' ?
-    '/' :   U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
-    '\\':   U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'),
-}
+    # {} '('  ->  (extension, start, end, middle) 1-character
+    _xobj_unicode = {
 
-_xobj_ascii = {
-    # vertical symbols
-    #          ext  top   bot   mid         c1
-    '(' :   (( '|', '/',  '\\'  ),          '('),
-    ')' :   (( '|', '\\', '/'   ),          ')'),
-    '[' :   (( '|', '-',  '-'   ),          '['),
-    ']' :   (( '|', '-',  '-'   ),          ']'),
-    '{' :   (( '|', '/',  '\\', '<' ),      '{'),
-    '}' :   (( '|', '\\', '/',  '>' ),      '}'),
-    '|' :   '|',
+        # vertical symbols
+        #          ext       top       bot        mid           c1
+        '(' :   (( EXT('('), HUP('('), HLO('(') ),              '('),
+        ')' :   (( EXT(')'), HUP(')'), HLO(')') ),              ')'),
+        '[' :   (( EXT('['), CUP('['), CLO('[') ),              '['),
+        ']' :   (( EXT(']'), CUP(']'), CLO(']') ),              ']'),
+        '{' :   (( EXT('('), HUP('{'), HLO('{'),  MID('{')  ),  '{'),   # XXX EXT is wrong
+        '}' :   (( EXT(')'), HUP('}'), HLO('}'),  MID('}')  ),  '}'),   # XXX EXT is wrong
+        '|' :   U('BOX DRAWINGS LIGHT VERTICAL'),
 
-    'int':  ( ' | ', '  /', '/  ' ),
+        'int':  (( EXT('int'), U('TOP HALF INTEGRAL'), U('BOTTOM HALF INTEGRAL') ), U('INTEGRAL')),
+       #'sum':  ( U('N-ARY SUMMATION'), TOP('sum'), None, None, BOT('sum')     ),
 
-    # horizontal objects
-    '-' :   '-',
-    '_' :   '_',
 
-    # diagonal objects '\' & '/' ?
-    '/' :   '/',
-    '\\':   '\\',
-}
+        # horizontal objects
+        #'-' :  '-',
+        '-' :   U('BOX DRAWINGS LIGHT HORIZONTAL'),
+        '_' :   U('HORIZONTAL SCAN LINE-9'),        # XXX symbol ok?
+
+        # diagonal objects '\' & '/' ?
+        '/' :   U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
+        '\\':   U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'),
+    }
+
+    _xobj_ascii = {
+        # vertical symbols
+        #          ext  top   bot   mid         c1
+        '(' :   (( '|', '/',  '\\'  ),          '('),
+        ')' :   (( '|', '\\', '/'   ),          ')'),
+        '[' :   (( '|', '-',  '-'   ),          '['),
+        ']' :   (( '|', '-',  '-'   ),          ']'),
+        '{' :   (( '|', '/',  '\\', '<' ),      '{'),
+        '}' :   (( '|', '\\', '/',  '>' ),      '}'),
+        '|' :   '|',
+
+        'int':  ( ' | ', '  /', '/  ' ),
+
+        # horizontal objects
+        '-' :   '-',
+        '_' :   '_',
+
+        # diagonal objects '\' & '/' ?
+        '/' :   '/',
+        '\\':   '\\',
+    }
 
 
 def xobj(symb, length):
