@@ -508,8 +508,7 @@ class asin(SingleValuedFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            s = Basic.Symbol('x', dummy=True)
-            return Lambda((1 - s**2)**(-S.Half), s)
+            return (1 - self[0]**2)**(-S.Half)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -594,8 +593,7 @@ class acos(SingleValuedFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            s = Basic.Symbol('x', dummy=True)
-            return Lambda(-(1 - s**2)**(-S.Half), s)
+            return -(1 - self[0]**2)**(-S.Half)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -670,8 +668,7 @@ class atan(SingleValuedFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            s = Basic.Symbol('x', dummy=True)
-            return Lambda(1 / (1 + s**2), s)
+            return 1/(1+self[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -744,12 +741,12 @@ class acot(SingleValuedFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            s = Basic.Symbol('x', dummy=True)
-            return Lambda(-1 / (1 + s**2), s)
+            return -1 / (1+self[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_apply(self, arg):
+    @classmethod
+    def _eval_apply(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -778,7 +775,7 @@ class acot(SingleValuedFunction):
                 if arg in cst_table:
                     return S.Pi / cst_table[arg]
                 elif arg.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -788,7 +785,7 @@ class acot(SingleValuedFunction):
                 coeff, terms = arg.as_coeff_terms()
 
                 if coeff.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
 
 
     @cache_it_immutable

@@ -15,8 +15,11 @@ def test_exp_log():
 def test_log_expansion():
     x = Symbol("x", real=True)
     y = Symbol("y", real=True)
-    ##assert log(x*y) != log(x)+log(y)
+
+    # ok in interactive, fails in py.test
+    #assert log(x*y) != log(x)+log(y)
     #assert log(x**2) != 2*log(x)
+
     assert log(x*y).expand() == log(x)+log(y)
     assert log(x**2).expand() == 2*log(x)
     assert (log(x**-5)**-1).expand() == -1/log(x)/5
@@ -72,11 +75,13 @@ def test_bug1():
     e = sqrt(-5*log(w))
     assert e.subs(log(w),-x) == sqrt(5*x)
 
-@XFAIL
-def test_invtrig(): # XXX No inverse trig yet
+def test_invtrig():
     x = Symbol("x")
     assert atan(0) == 0
-    assert atan(x).diff(x) == 1/(1+x**2)
+    assert atan(x).diff(x) ==  1/(1+x**2)
+    assert acot(x).diff(x) == -1/(1+x**2)
+    assert asin(x).diff(x) ==  1/sqrt(1-x**2)
+    assert acos(x).diff(x) == -1/sqrt(1-x**2)
 
 def test_general_function():
     nu = Function('nu', nofargs=1)
