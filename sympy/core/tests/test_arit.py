@@ -77,7 +77,6 @@ def testdiv():
     e=(1-b)/(b-1)
     assert e == (1+-b)*((-1)+b)**(-1)
 
-@XFAIL
 def testpow():
     n1 = Rational(1)
     n2 = Rational(2)
@@ -145,6 +144,8 @@ def testpow():
     assert (-2)**k == 2**k
     assert (-1)**k == 1
 
+@XFAIL
+def test_pow2():
     # XXX These fail
     assert ((-x)**2)**Rational(1,3) == ((-x)**Rational(1,3))**2
     assert (-x)**Rational(2,3) == x**Rational(2,3)
