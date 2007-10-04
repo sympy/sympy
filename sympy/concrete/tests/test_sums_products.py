@@ -1,8 +1,3 @@
-import sys
-sys.path.append(".")
-
-import py
-
 from sympy import *
 from sympy.concrete.sums_products import *
 #from sympy.specfun import factorial
@@ -58,7 +53,7 @@ def test_euler_maclaurin():
     apery = (A + B.euler_maclaurin(8)).evalf(25)
     assert abs(apery - Real("1.202056903159594285399738162")) < Real("1e-20")
 
-"""
+@XFAIL
 def test_simple_products():
     assert Product(2, (n, a, b)) == 2**(b-a+1)
     assert Product(n, (n, 1, b)) == factorial(b)
@@ -69,6 +64,7 @@ def test_simple_products():
     # If Product managed to evaluate this one, it most likely got it wrong!
     assert isinstance(Product(n**n, (n, 1, b)), Product)
 
+@XFAIL
 def test_rational_products():
     assert Product(1+1/n, (n, a, b)) == (1+b)/a
     assert Product(n+1, (n, a, b)) == factorial(1+b)/factorial(a)
@@ -78,6 +74,7 @@ def test_rational_products():
     assert Product(n*(n+1)/(n-1)/(n-2), (n, a, b)) \
            == b**2*(b-1)*(1+b)/(a-1)**2/(a*(a-2))
 
+@XFAIL
 def test_wallis_product():
     # Wallis product, given in two different forms to ensure that Product
     # can factor simple rational expressions
@@ -89,4 +86,3 @@ def test_wallis_product():
     assert B == R
     # This one should eventually also be doable (Euler's product formula for sin)
     # assert Product(1+x/n**2, (n, 1, b)) == ...
-"""
