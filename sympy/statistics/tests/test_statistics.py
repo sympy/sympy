@@ -1,8 +1,11 @@
 from sympy import *
+from sympy.numerics import Float
 from sympy.statistics import *
 import operator # XXX weird abs/sympy.abs conflict
 
 def test_normal():
+    Float.store()
+    Float.setdps(20)
     N = Normal(2, 4)
     assert N.mean == 2
     assert N.variance == 16
@@ -10,6 +13,7 @@ def test_normal():
     for p in [0.1, 0.3, 0.7, 0.9, 0.995]:
         a, b = N.confidence(p)
         assert operator.abs(float(N.probability(a, b).evalf()) - p) < 1e-10
+    Float.revert()
 
 def test_uniform():
     U = Uniform(-3, -1)
