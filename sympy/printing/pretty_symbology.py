@@ -1,3 +1,5 @@
+warnings = ''
+
 try:
     import unicodedata
 
@@ -7,12 +9,14 @@ try:
             u = unicodedata.lookup(name)
         except KeyError:
             u = None
-            print 'W: no \'%s\' in unocodedata' % name
+
+            global warnings
+            warnings += 'W: no \'%s\' in unocodedata\n' % name
 
         return u
 
 except ImportError:
-    print 'W: no unicodedata available'
+    warnings += 'W: no unicodedata available\n'
     U = lambda name: None
 
 import re
@@ -33,8 +37,14 @@ _use_unicode = False
 def pretty_use_unicode(flag = None):
     """Set whether pretty-printer should use unicode by default"""
     global _use_unicode
+    global warnings
     if flag is None:
         return _use_unicode
+
+    if flag and warnings:
+        # print warnings (if any) on first unicode usage
+        print warnings
+        warnings = ''
 
     use_unicode_prev = _use_unicode
     _use_unicode = flag
