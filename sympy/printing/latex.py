@@ -62,9 +62,9 @@ class LatexPrinter(Printer):
 
         return res
 
-    def _print_Apply(self, e):
+    def _print_Function(self, e):
         # Check to see if there is something here for this func first
-        func = e.func.__class__.__name__
+        func = e.func.__name__
         if hasattr(self, '_print_'+func):
             return getattr(self, '_print_'+func)(e)
 
@@ -73,11 +73,11 @@ class LatexPrinter(Printer):
         for arg in e:
             args.append(self._print(arg))
 
-        s = self._print(Basic.Symbol(e.func.name))
+        s = self._print(Basic.Symbol(e.func.__name__))
         s += r"\left(%s\right)" % str.join(',', args)
         return s
 
-    def _print_ApplyExp(self, e):
+    def _print_exp(self, e):
         return "{e}^{%s}" % self._print(e[0])
 
     def _print_Derivative(self, e):
