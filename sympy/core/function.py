@@ -517,7 +517,33 @@ class Derivative(Basic, ArithMeths, RelMeths):
         return r
 
     def _eval_subs(self, old, new):
-        return Derivative(self[0].subs(old, new), self[1])
+        return Derivative(self[0].subs(old, new), *self[1:])
+
+    def matches(pattern, expr, repl_dict={}, evaluate=False):
+        # this method needs a cleanup.
+
+        #print "?   :",pattern, expr, repl_dict, evaluate
+        #if repl_dict:
+        #    return repl_dict
+        for p,v in repl_dict.items():
+            if p==pattern:
+                if v==expr: return repl_dict
+                return None
+        assert isinstance(pattern, Derivative)
+        if isinstance(expr, Derivative):
+            if len(expr.symbols) == len(pattern.symbols):
+                    #print "MAYBE:",pattern, expr, repl_dict, evaluate
+                    return Basic.matches(pattern, expr, repl_dict, evaluate)
+        #print "NONE:",pattern, expr, repl_dict, evaluate
+        return None
+        #print pattern, expr, repl_dict, evaluate
+        stop
+        if pattern.nofargs is not None:
+            if pattern.nofargs != expr.nofargs:
+                return None
+        repl_dict = repl_dict.copy()
+        repl_dict[pattern] = expr
+        return repl_dict
 
 
 def diff(f, x, times = 1, evaluate=True):

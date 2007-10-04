@@ -135,7 +135,7 @@ def test_interface():
     assert (x+y).match(p+q) in [{p:x, q:y}, {p:y, q:x}]
     assert (x*y+1).match(p*q) in [{p:1, q:1+x*y}, {p:1+x*y, q:1}]
 
-def test_derivative():
+def test_derivative1():
     x,y = map(Symbol, 'xy')
     p,q = map(Wild, 'pq')
 
@@ -147,6 +147,35 @@ def test_derivative():
     assert (fd).match(fd) == {}
     assert (3*fd).match(p*fd) != None
     assert (3*fd-1).match(p*fd + q) == {p: 3, q: -1}
+
+def test_derivative_bug1():
+    f = Function("f")
+    x = Symbol("x")
+    a = Wild("a", exclude=[f])
+    b = Wild("b", exclude=[f])
+    pattern = a * Derivative(f(x), x, x) + b
+    expr = Derivative(f(x), x)+x**2
+    d1 = {b: x**2}
+    d2 = pattern.matches(expr, d1, evaluate=True)
+    assert d2 == None
+
+def test_derivative2():
+    f = Function("f")
+    x = Symbol("x")
+    a = Wild("a", exclude=[f])
+    b = Wild("b", exclude=[f])
+    e = Derivative(f(x), x)
+    assert e.match(Derivative(f(x), x)) == {}
+    assert e.match(Derivative(f(x), x, x)) == None
+    e = Derivative(f(x), x, x)
+    assert e.match(Derivative(f(x), x)) == None
+    assert e.match(Derivative(f(x), x, x)) == {}
+    e = Derivative(f(x), x)+x**2
+    assert e.match(a*Derivative(f(x), x) + b) == {a: 1, b: x**2}
+    assert e.match(a*Derivative(f(x), x, x) + b) == None
+    e = Derivative(f(x), x, x)+x**2
+    assert e.match(a*Derivative(f(x), x) + b) == None
+    assert e.match(a*Derivative(f(x), x, x) + b) == {a: 1, b: x**2}
 
 def test_match_deriv_bug1():
     n = Function('n')

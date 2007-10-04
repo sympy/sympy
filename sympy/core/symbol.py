@@ -107,6 +107,8 @@ class Wild(Symbol):
             for x in pattern.exclude:
                 if x in expr:
                     return None
+                #else:
+                #    print x, expr, pattern, expr, pattern.exclude
         repl_dict = repl_dict.copy()
         repl_dict[pattern] = expr
         return repl_dict

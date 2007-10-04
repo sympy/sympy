@@ -4,7 +4,8 @@ sys.path.append(".")
 import py
 
 import sympy as g
-from sympy import Symbol, Wild, sin, cos, exp, pi
+from sympy import Symbol, Wild, sin, cos, exp, pi, Function, Derivative
+from sympy.utilities.pytest import XFAIL
 
 def test_subs():
     n3=g.Rational(3)
@@ -68,3 +69,11 @@ def test_dict():
     e =  a/b * sin(b*x)
     assert e.subs_dict(r) == r[a]/r[b] * sin(r[b]*x)
     assert e.subs_dict(r) == 3 * sin(4*x) / 4
+
+def test_deriv_sub_bug3():
+    x = Symbol("x")
+    y = Symbol("y")
+    f = Function("f")
+    pat = Derivative(f(x), x, x)
+    assert pat.subs(y, y**2) == Derivative(f(x), x, x)
+    assert pat.subs(y, y**2) != Derivative(f(x), x)
