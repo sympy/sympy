@@ -1,4 +1,5 @@
 from sympy import *
+from sympy.utilities.pytest import XFAIL
 
 
 def test_add_eval():
@@ -35,7 +36,6 @@ def test_pow_eval():
     #     to their complex equivalent
 
     assert (-1)**Rational(1,2) == I
-    #assert (-1)**Rational(1,3) == Rational(1,2)+Rational(1,2)*I*3**Rational(1,2)
 
     assert sqrt(-4) == 2*I
     assert sqrt( 4) == 2
@@ -47,6 +47,10 @@ def test_pow_eval():
     assert (-2)**Rational(1,4) != (2)**Rational(1,4)
 
     assert (cos(2) / tan(2))**2 == (cos(2) / tan(2))**2
+
+@XFAIL
+def test_pow_eval_X1():
+    assert (-1)**Rational(1,3) == Rational(1,2)+Rational(1,2)*I*3**Rational(1,2)
 
 def test_mulpow_eval():
     x = Symbol('x')
