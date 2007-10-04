@@ -148,20 +148,18 @@ def test_derivative():
     assert (3*fd).match(p*fd) != None
     assert (3*fd-1).match(p*fd + q) == {p: 3, q: -1}
 
-@XFAIL
 def test_match_deriv_bug1():
-    n = Function('n',nofargs=1)
-    l = Function('l',nofargs=1)
+    n = Function('n')
+    l = Function('l')
 
     x = Symbol('x')
     p = Wild('p')
 
     e = Derivative(l(x), x)/x - Derivative(Derivative(n(x), x), x)/2 - \
         Derivative(n(x), x)**2/4 + Derivative(n(x), x)*Derivative(l(x), x)/4
-    e = e.subs(n, Rational(-1)*l)
+    e = e.subs(n(x), -l(x))
     t = x*exp(-l(x))
     t2 = Derivative(t, x, x)/t
-    print e, (p*t2).expand()
     assert e.match( (p*t2).expand() ) == {p: -Rational(1)/2}
 
 def test_match_bug2():

@@ -95,16 +95,15 @@ def test_general_function():
     assert edxdx == Derivative(Derivative(nu(x), x), x)
     assert edxdy == 0
 
-@XFAIL
 def test_derivative_subs_bug():
     x = Symbol("x")
     l = Function('l', nofargs=1)
     n = Function('n', nofargs=1)
 
     e = Derivative(n(x), x)
-    assert e.subs(n, l) != e
-    assert e.subs(n, l) == Derivative(l(x), x)
-    assert e.subs(n, -l) == Derivative(-l(x), x)
+    assert e.subs(n(x), l(x)) != e
+    assert e.subs(n(x), l(x)) == Derivative(l(x), x)
+    assert e.subs(n(x), -l(x)) == Derivative(-l(x), x)
 
 def test_derivative_linearity():
     x = Symbol("x")

@@ -116,6 +116,7 @@ class Function(Basic, RelMeths):
                 print type(args[0])
                 raise Exception("You need to specify exactly one string")
         args = map(Basic.sympify, args)
+        # these lines should be refactored
         if "nofargs" in options:
             del options["nofargs"]
         if "dummy" in options:
@@ -126,6 +127,7 @@ class Function(Basic, RelMeths):
             del options["noncommutative"]
         if "commutative" in options:
             del options["commutative"]
+        # up to here.
         r = cls._eval_apply(*args, **options)
         if isinstance(r, Basic):
             return r
@@ -137,6 +139,10 @@ class Function(Basic, RelMeths):
 
     @property
     def is_comparable(self):
+        return True
+
+    @property
+    def is_commutative(self):
         return True
 
     @classmethod
@@ -482,6 +488,10 @@ class Derivative(Basic, ArithMeths, RelMeths):
         return Apply(FApply(FDerivative(*indices), Lambda(self.expr, *symbols)), *symbols)
 
     def _eval_derivative(self, s):
+        #print
+        #print self
+        #print s
+        #stop
         if s not in self.symbols:
             obj = self.expr.diff(s)
             if isinstance(obj, Derivative):
@@ -507,12 +517,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
         return r
 
     def _eval_subs(self, old, new):
-        # XXX Is this required?
-        #for a in list(old.atoms(Basic.Symbol)):
-        #    if a in self.symbols:
-        #        return self.as_apply().subs(old, new)
-        return self.__class__(*[s.subs(old, new) for s in self], **{'evaluate': False})
-
+        return Derivative(self[0].subs(old, new), self[1])
 
 
 def diff(f, x, times = 1, evaluate=True):
