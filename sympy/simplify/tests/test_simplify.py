@@ -1,5 +1,6 @@
 
 from sympy import *
+from sympy.utilities.pytest import XFAIL
 
 def test_ratsimp():
     x = Symbol("x")
@@ -8,18 +9,24 @@ def test_ratsimp():
     assert e != (x+y)/(x*y)
     assert ratsimp(e) == (x+y)/(x*y)
 
-    #e = -x-y-(x+y)**(-1)*y**2+(x+y)**(-1)*x**2
-    #assert e != -2*y
-    #assert ratsimp(e) == -2*y
-
-    #e = x/(x+y)+y/(x+y)
-    #assert e != 1
-    #assert ratsimp(e) == 1
-
     e = 1/(1+1/x)
     assert ratsimp(e) == x/(x+1)
     assert (x+1)*ratsimp(e)/x == 1
     assert ratsimp(exp(e)) == exp(x/(x+1))
+
+@XFAIL
+def test_ratsimp_X1():
+    e = -x-y-(x+y)**(-1)*y**2+(x+y)**(-1)*x**2
+    assert e != -2*y
+    assert ratsimp(e) == -2*y
+
+@XFAIL
+def test_ratsimp_X2():
+    e = x/(x+y)+y/(x+y)
+    assert e != 1
+    assert ratsimp(e) == 1
+
+
 
 def test_trigsimp():
     x,y = map(Symbol, 'xy')
@@ -42,13 +49,14 @@ def test_trigsimp():
     e = 2*sin(x)**2 + 2*cos(x)**2
     assert trigsimp(log(e), deep=True) == log(2)
 
-#def test_factorial_simplify():
+@XFAIL
+def test_factorial_simplify():
     # There are more tests in test_factorials.py. These are just to
     # ensure that simplify() calls factorial_simplify correctly
-#    from sympy.specfun.factorials import factorial
-#    x = Symbol('x')
-#    assert simplify(factorial(x)/x) == factorial(x-1)
-#    assert simplify(factorial(factorial(x))) == factorial(factorial(x))
+    from sympy.specfun.factorials import factorial
+    x = Symbol('x')
+    assert simplify(factorial(x)/x) == factorial(x-1)
+    assert simplify(factorial(factorial(x))) == factorial(factorial(x))
 
 def test_simplify():
     x = Symbol('x')
@@ -127,10 +135,13 @@ def test_separate():
 
     assert separate(exp(x)**2) == exp(2*x)
     assert separate((exp(x)*exp(y))**2) == exp(2*x)*exp(2*y)
-    #assert separate((exp(x)*exp(y))**z) == exp(x*z)*exp(y*z)
 
     assert separate((exp((x*y)**z)*exp(y))**2) == exp(2*(x*y)**z)*exp(2*y)
     assert separate((exp((x*y)**z)*exp(y))**2, deep=True) == exp(2*x**z*y**z)*exp(2*y)
+
+@XFAIL
+def test_separate_X1():
+    assert separate((exp(x)*exp(y))**z) == exp(x*z)*exp(y*z)
 
 def test_powsimp():
     x,y,n = symbols('xyn')
