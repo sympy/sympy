@@ -1,4 +1,20 @@
-from unicodedata import lookup as U
+try:
+    import unicodedata
+
+    def U(name):
+        """unicode character by name or None if not found"""
+        try:
+            u = unicodedata.lookup(name)
+        except KeyError:
+            u = None
+            print 'W: no \'%s\' in unocodedata' % name
+
+        return u
+
+except ImportError:
+    print 'W: no unicodedata available'
+    U = lambda name: None
+
 import re
 
 
@@ -31,6 +47,16 @@ def xstr(*args):
         return unicode(*args)
     else:
         return str(*args)
+
+# COMPATIBILITY TWEAKS
+def fixup_tables():
+    # python2.4 unicodedata lacks some definitions
+
+    for d in sub, sup:
+        for k in d.keys():
+            if d[k] is None:
+                del d[k]
+
 
 # GREEK
 g   = lambda l: U('GREEK SMALL LETTER %s' % l.upper())
@@ -75,98 +101,96 @@ symb_2txt = {
     'int':  'INTEGRAL',
 }
 
-def initialize_things():
+# SUBSCRIPT & SUPERSCRIPT
+LSUB = lambda letter: U('LATIN SUBSCRIPT SMALL LETTER %s' % letter.upper())
+GSUB = lambda letter: U('GREEK SUBSCRIPT SMALL LETTER %s' % letter.upper())
+DSUB = lambda digit:  U('SUBSCRIPT %s' % digit_2txt[digit])
+SSUB = lambda symb:   U('SUBSCRIPT %s' % symb_2txt[symb])
 
-    # SUBSCRIPT & SUPERSCRIPT
-    LSUB = lambda letter: U('LATIN SUBSCRIPT SMALL LETTER %s' % letter.upper())
-    GSUB = lambda letter: U('GREEK SUBSCRIPT SMALL LETTER %s' % letter.upper())
-    DSUB = lambda digit:  U('SUBSCRIPT %s' % digit_2txt[digit])
-    SSUB = lambda symb:   U('SUBSCRIPT %s' % symb_2txt[symb])
+LSUP = lambda letter: U('SUPERSCRIPT LATIN SMALL LETTER %s' % letter.upper())
+DSUP = lambda digit:  U('SUPERSCRIPT %s' % digit_2txt[digit])
+SSUP = lambda symb:   U('SUPERSCRIPT %s' % symb_2txt[symb])
 
-    LSUP = lambda letter: U('SUPERSCRIPT LATIN SMALL LETTER %s' % letter.upper())
-    DSUP = lambda digit:  U('SUPERSCRIPT %s' % digit_2txt[digit])
-    SSUP = lambda symb:   U('SUPERSCRIPT %s' % symb_2txt[symb])
+sub = {}    # symb -> subscript symbol
+sup = {}    # symb -> superscript symbol
 
-    sub = {}    # symb -> subscript symbol
-    sup = {}    # symb -> superscript symbol
+# latin subscripts
+for l in 'aeioruvx':
+    sub[l] = LSUB(l)
 
-    # latin subscripts
-    for l in 'aeioruvx':
-        sub[l] = LSUB(l)
+for l in 'in':
+    sup[l] = LSUP(l)
 
-    for l in 'in':
-        sup[l] = LSUP(l)
+for g in ['beta', 'gamma', 'rho', 'phi', 'chi']:
+    sub[g] = GSUB(g)
 
-    for g in ['beta', 'gamma', 'rho', 'phi', 'chi']:
-        sub[g] = GSUB(g)
+for d in [str(i) for i in range(10)]:
+    sub[d] = DSUB(d)
+    sup[d] = DSUP(d)
 
-    for d in [str(i) for i in range(10)]:
-        sub[d] = DSUB(d)
-        sup[d] = DSUP(d)
-
-    for s in '+-=()':
-        sub[s] = SSUB(s)
-        sup[s] = SSUP(s)
+for s in '+-=()':
+    sub[s] = SSUB(s)
+    sup[s] = SSUP(s)
 
 
-    # VERTICAL OBJECTS
-    HUP = lambda symb: U('%s UPPER HOOK'    % symb_2txt[symb])
-    CUP = lambda symb: U('%s UPPER CORNER'  % symb_2txt[symb])
-    MID = lambda symb: U('%s MIDDLE PIECE'  % symb_2txt[symb])
-    EXT = lambda symb: U('%s EXTENSION'     % symb_2txt[symb])
-    HLO = lambda symb: U('%s LOWER HOOK'    % symb_2txt[symb])
-    CLO = lambda symb: U('%s LOWER CORNER'  % symb_2txt[symb])
-    TOP = lambda symb: U('%s TOP'           % symb_2txt[symb])
-    BOT = lambda symb: U('%s BOTTOM'        % symb_2txt[symb])
+# VERTICAL OBJECTS
+HUP = lambda symb: U('%s UPPER HOOK'    % symb_2txt[symb])
+CUP = lambda symb: U('%s UPPER CORNER'  % symb_2txt[symb])
+MID = lambda symb: U('%s MIDDLE PIECE'  % symb_2txt[symb])
+EXT = lambda symb: U('%s EXTENSION'     % symb_2txt[symb])
+HLO = lambda symb: U('%s LOWER HOOK'    % symb_2txt[symb])
+CLO = lambda symb: U('%s LOWER CORNER'  % symb_2txt[symb])
+TOP = lambda symb: U('%s TOP'           % symb_2txt[symb])
+BOT = lambda symb: U('%s BOTTOM'        % symb_2txt[symb])
 
-    # {} '('  ->  (extension, start, end, middle) 1-character
-    _xobj_unicode = {
+# {} '('  ->  (extension, start, end, middle) 1-character
+_xobj_unicode = {
 
-        # vertical symbols
-        #          ext       top       bot        mid           c1
-        '(' :   (( EXT('('), HUP('('), HLO('(') ),              '('),
-        ')' :   (( EXT(')'), HUP(')'), HLO(')') ),              ')'),
-        '[' :   (( EXT('['), CUP('['), CLO('[') ),              '['),
-        ']' :   (( EXT(']'), CUP(']'), CLO(']') ),              ']'),
-        '{' :   (( EXT('('), HUP('{'), HLO('{'),  MID('{')  ),  '{'),   # XXX EXT is wrong
-        '}' :   (( EXT(')'), HUP('}'), HLO('}'),  MID('}')  ),  '}'),   # XXX EXT is wrong
-        '|' :   U('BOX DRAWINGS LIGHT VERTICAL'),
+    # vertical symbols
+    #          ext       top       bot        mid           c1
+    '(' :   (( EXT('('), HUP('('), HLO('(') ),              '('),
+    ')' :   (( EXT(')'), HUP(')'), HLO(')') ),              ')'),
+    '[' :   (( EXT('['), CUP('['), CLO('[') ),              '['),
+    ']' :   (( EXT(']'), CUP(']'), CLO(']') ),              ']'),
+    '{' :   (( EXT('('), HUP('{'), HLO('{'),  MID('{')  ),  '{'),   # XXX EXT is wrong
+    '}' :   (( EXT(')'), HUP('}'), HLO('}'),  MID('}')  ),  '}'),   # XXX EXT is wrong
+    '|' :   U('BOX DRAWINGS LIGHT VERTICAL'),
 
-        'int':  (( EXT('int'), U('TOP HALF INTEGRAL'), U('BOTTOM HALF INTEGRAL') ), U('INTEGRAL')),
-       #'sum':  ( U('N-ARY SUMMATION'), TOP('sum'), None, None, BOT('sum')     ),
+    'int':  (( EXT('int'), U('TOP HALF INTEGRAL'), U('BOTTOM HALF INTEGRAL') ), U('INTEGRAL')),
+   #'sum':  ( U('N-ARY SUMMATION'), TOP('sum'), None, None, BOT('sum')     ),
 
 
-        # horizontal objects
-        #'-' :  '-',
-        '-' :   U('BOX DRAWINGS LIGHT HORIZONTAL'),
-        '_' :   U('HORIZONTAL SCAN LINE-9'),        # XXX symbol ok?
+    # horizontal objects
+    #'-' :  '-',
+    '-' :   U('BOX DRAWINGS LIGHT HORIZONTAL'),
+    '_' :   U('HORIZONTAL SCAN LINE-9'),        # XXX symbol ok?
 
-        # diagonal objects '\' & '/' ?
-        '/' :   U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
-        '\\':   U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'),
-    }
+    # diagonal objects '\' & '/' ?
+    '/' :   U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
+    '\\':   U('BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT'),
+}
 
-    _xobj_ascii = {
-        # vertical symbols
-        #          ext  top   bot   mid         c1
-        '(' :   (( '|', '/',  '\\'  ),          '('),
-        ')' :   (( '|', '\\', '/'   ),          ')'),
-        '[' :   (( '|', '-',  '-'   ),          '['),
-        ']' :   (( '|', '-',  '-'   ),          ']'),
-        '{' :   (( '|', '/',  '\\', '<' ),      '{'),
-        '}' :   (( '|', '\\', '/',  '>' ),      '}'),
-        '|' :   '|',
+_xobj_ascii = {
+    # vertical symbols
+    #          ext  top   bot   mid         c1
+    '(' :   (( '|', '/',  '\\'  ),          '('),
+    ')' :   (( '|', '\\', '/'   ),          ')'),
+    '[' :   (( '|', '-',  '-'   ),          '['),
+    ']' :   (( '|', '-',  '-'   ),          ']'),
+    '{' :   (( '|', '/',  '\\', '<' ),      '{'),
+    '}' :   (( '|', '\\', '/',  '>' ),      '}'),
+    '|' :   '|',
 
-        'int':  ( ' | ', '  /', '/  ' ),
+    'int':  ( ' | ', '  /', '/  ' ),
 
-        # horizontal objects
-        '-' :   '-',
-        '_' :   '_',
+    # horizontal objects
+    '-' :   '-',
+    '_' :   '_',
 
-        # diagonal objects '\' & '/' ?
-        '/' :   '/',
-        '\\':   '\\',
-    }
+    # diagonal objects '\' & '/' ?
+    '/' :   '/',
+    '\\':   '\\',
+}
 
 
 def xobj(symb, length):
@@ -177,6 +201,7 @@ def xobj(symb, length):
 
     assert length > 0
 
+    # TODO robustify when no unicodedat available
     if _use_unicode:
         _xobj = _xobj_unicode
     else:
@@ -294,7 +319,7 @@ atoms_table = {
     'Exp1'              :   U('SCRIPT SMALL E'),
     'Pi'                :   U('GREEK SMALL LETTER PI'),
     'Infinity'          :   U('INFINITY'),
-    'NegativeInfinity'  :   '-'+U('INFINITY'),
+    'NegativeInfinity'  :   U('INFINITY') and ('-'+U('INFINITY')),  # XXX what to do here
     'ImaginaryUnit'     :   U('GREEK SMALL LETTER IOTA'),
     #'ImaginaryUnit'     :   U('MATHEMATICAL ITALIC SMALL I'),
     #'ImaginaryUnit'     :   U('DOUBLE-STRUCK ITALIC SMALL I'),
@@ -331,7 +356,11 @@ def pretty_symbol(symb_name):
     # let's prettify name
     gG = greek.get(name.lower())
     if gG is not None:
-        name = name.islower() and gG[0] or gG[1]
+        greek_name = name.islower() and gG[0] or gG[1]
+
+        # some lettrs may not be available
+        if greek_name is not None:
+            name = greek_name
 
     # let's pretty sup/sub
     psup = sup.get(isup)
@@ -349,3 +378,9 @@ def pretty_symbol(symb_name):
         res += '%s%s' % (ssub, isub)
 
     return res
+
+
+
+
+# final fixup
+fixup_tables()

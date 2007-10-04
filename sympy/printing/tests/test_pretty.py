@@ -5,7 +5,6 @@ from sympy.utilities.pytest import XFAIL
 x = Symbol('x')
 y = Symbol('y')
 
-@XFAIL
 def test_pretty_basic():
     # Simple numbers/symbols
     assert pretty( -Rational(1)/2 ) == '-1/2'
@@ -32,14 +31,12 @@ def test_pretty_basic():
     assert pretty( -5*x/(x+10) ) == ' -5*x \n------\n10 + x'
     assert pretty( 1 - Rational(3,2)*(x+1) ) == '       3*x\n-1/2 - ---\n        2 '
 
-@XFAIL
 def test_pretty_relational():
     assert pretty(x == y) == 'x = y'
     assert pretty(x <= y) == 'x <= y'
     assert pretty(x > y) == 'y < x'
     assert pretty(x/(y+1) != y**2) == '  x       2\n----- != y \n1 + y      '
 
-@XFAIL
 def test_pretty_unicode():
     assert pretty( oo, True ) == u'\u221e'
     assert pretty( pi, True ) == u'\u03c0'
@@ -49,7 +46,6 @@ def test_pretty_unicode():
     assert pretty( Symbol('beta'), True ) == u'\u03b2'
     assert pretty( Symbol('beta12'), True ) == u'\u03b212'
 
-@XFAIL
 def test_pretty_unicode_defaults():
     use_unicode = pprint_use_unicode(True)
     assert pretty(Symbol('alpha')) == u'\u03b1'
@@ -59,7 +55,6 @@ def test_pretty_unicode_defaults():
     pprint_use_unicode(use_unicode)
 
 
-@XFAIL
 def test_pretty_functions():
     # Simple
     assert pretty( (2*x + exp(x)) ) in [' x      \ne  + 2*x', '       x\n2*x + e ']
@@ -84,7 +79,6 @@ def test_pretty_functions():
     #assert pretty( conjugate(a+b*I) ) == '_     _\na - I*b'
     #assert pretty( conjugate(exp(a+b*I)) ) == ' _     _\n a - I*b\ne       '
 
-@XFAIL
 def test_pretty_derivatives():
     # Simple
     f_1 = Derivative(log(x), x, evaluate=False)
@@ -100,7 +94,6 @@ def test_pretty_derivatives():
     f_4 = Derivative(2*x*y, y, x, evaluate=False) + x**2
     assert pretty(f_4) == '        2        \n 2     d         \nx  + -----(2*x*y)\n     dx dy       '
 
-@XFAIL
 def test_pretty_integrals():
     # Simple
     f_1 = Integral(log(x), x)
