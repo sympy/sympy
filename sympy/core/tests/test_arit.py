@@ -146,7 +146,8 @@ def testpow():
 
 @XFAIL
 def test_pow2():
-    # XXX These fail
+    # XXX These fail - the first three are maybe discutable, 
+    # let's see SAGE and similar. The last one is a bug 417
     assert ((-x)**2)**Rational(1,3) == ((-x)**Rational(1,3))**2
     assert (-x)**Rational(2,3) == x**Rational(2,3)
     assert (-x)**Rational(5,7) == -x**Rational(5,7)
