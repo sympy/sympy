@@ -59,11 +59,6 @@ def test_exp_expand():
     #assert exp(x+y) != exp(x)*exp(y)
     assert exp(x+y).expand() == exp(x)*exp(y)
 
-def test_pi():
-    assert cos(pi)==-1
-    assert cos(2*pi)==1
-    assert sin(pi)==0
-    assert sin(2*pi)==0
 
 def test_bug1():
     x = Symbol("x")
@@ -74,14 +69,6 @@ def test_bug1():
 
     e = sqrt(-5*log(w))
     assert e.subs(log(w),-x) == sqrt(5*x)
-
-def test_invtrig():
-    x = Symbol("x")
-    assert atan(0) == 0
-    assert atan(x).diff(x) ==  1/(1+x**2)
-    assert acot(x).diff(x) == -1/(1+x**2)
-    assert asin(x).diff(x) ==  1/sqrt(1-x**2)
-    assert acos(x).diff(x) == -1/sqrt(1-x**2)
 
 def test_general_function():
     nu = Function('nu', nofargs=1)

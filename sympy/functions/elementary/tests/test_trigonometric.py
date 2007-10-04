@@ -95,6 +95,7 @@ def test_cos():
 
     assert cos(pi) == -1
     assert cos(-pi) == -1
+    assert cos(2*pi)==1
     assert cos(5*pi) == -1
     assert cos(8*pi) == 1
 
@@ -245,10 +246,44 @@ def test_cot():
 
     assert cot(k*pi*I) == -coth(k*pi)*I
 
-#def test_asin():
-#def test_acos():
-#def test_atan():
-#def test_acot():
+
+# TODO write me
+def test_asin():
+    x = Symbol('x')
+
+    assert asin(0)  == 0
+    assert asin(Rational(1,2)) == pi/6
+    assert asin(1)  == pi/2
+
+    assert asin(x).diff(x) ==  1/sqrt(1-x**2)
+
+
+# TODO write me
+def test_acos():
+    x = Symbol('x')
+
+    assert acos(0)  == pi/2
+    assert acos(Rational(1,2)) == pi/3
+    assert acos(1)  == 0
+    assert acos(x).diff(x) == -1/sqrt(1-x**2)
+
+
+# TODO write me
+def test_atan():
+    x = Symbol('x')
+    assert atan(0)  == 0
+    assert atan(1)  == pi/4
+    assert atan(oo) == pi/2
+    assert atan(x).diff(x) ==  1/(1+x**2)
+
+
+# TODO write me
+def test_acot():
+    x = Symbol('x')
+    assert acot(oo) == 0
+    assert acot(1)  == pi/4
+    assert acot(0)  == pi/2
+    assert acot(x).diff(x) == -1/(1+x**2)
 
 
 
