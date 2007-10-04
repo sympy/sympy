@@ -19,7 +19,7 @@ def _lanczos(z):
         logw = 0.91893853320467267+(z+0.5)*log(z+7.5)+log(x)-z-7.5
         return exp(logw)
 
-class _Factorial(DefinedFunction):
+class _Factorial(SingleValuedFunction):
     """
     Factorials and multiple factorials
 
@@ -63,7 +63,8 @@ class _Factorial(DefinedFunction):
     # generators for multifactorials
     _generators = {}
 
-    def _eval_apply(self, x, m=1):
+    @classmethod
+    def _eval_apply(cls, x, m=1):
 
         # the usual case
         if m == 1 and x.is_integer:
@@ -71,14 +72,14 @@ class _Factorial(DefinedFunction):
             if x.is_negative:
                 return oo
             if isinstance(x, Integer):
-                return Integer(self._fac1(int(x)))
+                return Integer(cls._fac1(int(x)))
 
         # half-integer case of the ordinary factorial
         if m == 1 and isinstance(x, Rational) and x.q == 2:
             n = (x.p + 1) / 2
             if n < 0:
                 return (-1)**(-n+1) * pi * x / factorial(-x)
-            return sqrt(pi) * Rational(1, 2**n) * factorial(2*n-1, 2)
+            return Basic.sqrt(pi) * Rational(1, 2**n) * factorial(2*n-1, 2)
 
         # multifactorials are only defined for integers
         if (not isinstance(m, Integer) and m > 0) or not \
@@ -105,13 +106,13 @@ class _Factorial(DefinedFunction):
             return factorial(x+m, m) / (x+m)
 
         # positive case
-        if not (m, start_value) in self._generators:
+        if not (m, start_value) in cls._generators:
             @recurrence_memo([start_value])
             def _f(k, prev):
                 return (k*m + start_value) * prev[-1]
-            self._generators[m, start_value] = _f
+            cls._generators[m, start_value] = _f
 
-        return Integer(self._generators[m, start_value]((x-start_value) // m))
+        return Integer(cls._generators[m, start_value]((x-start_value) // m))
 
     # This should give a series expansion around x = oo. Needs fixing
     # def series(self, x, n):
@@ -121,13 +122,13 @@ class _Factorial(DefinedFunction):
     # (XXX: only for order m = 1)
     def fdiff(self, argindex=1):
         if argindex == 1:
-            from zeta_functions import polygamma
-            x = Basic.Symbol('x', dummy=True)
-            return Lambda(gamma(x+1)*polygamma(0, x+1), x)
+            from sympy.functions import gamma, polygamma
+            return gamma(self[0]+1)*polygamma(0,self[0]+1)
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_apply_evalf(self, x, m=1):
+    @classmethod
+    def _eval_apply_evalf(cls, x, m=1):
         """Return a low-precision numerical approximation."""
         assert m == 1
         a, b = x.as_real_imag()
@@ -137,19 +138,23 @@ class _Factorial(DefinedFunction):
         else:
             Real(y.real) + I*Real(y.imag)
 
+factorial = _Factorial
 
 class UnevaluatedFactorial(_Factorial):
-    def _eval_apply(self, x, m=1):
+
+    @classmethod
+    def _eval_apply(cls, x, m=1):
         return None
 
-unfac = UnevaluatedFactorial()
+unfac = UnevaluatedFactorial
 
 
 
 # factorial_simplify helpers; could use refactoring
 
 def _isfactorial(expr):
-    return isinstance(expr, Apply) and isinstance(expr[0], Factorial)
+    #return isinstance(expr, Apply) and isinstance(expr[0], Factorial)
+    return isinstance(expr, _Factorial)
 
 def _collect_factors(expr):
     assert isinstance(expr, Mul)
@@ -236,12 +241,9 @@ def factorial_simplify(expr):
     double factorials
     """
 
+
     if isinstance(expr, Add):
         return Add(*(factorial_simplify(x) for x in expr))
-
-    if isinstance(expr, Factorial):
-        #return expr.eval()
-        return expr
 
     if isinstance(expr, Pow):
         return Pow(factorial_simplify(expr[0]), expr[1])
@@ -262,7 +264,7 @@ def factorial_simplify(expr):
 
     return expr
 
-class Rising_factorial(DefinedFunction):
+class Rising_factorial(SingleValuedFunction):
     """
     Usage
     =====
@@ -277,10 +279,15 @@ class Rising_factorial(DefinedFunction):
     """
     nofargs = 2
 
-    def _eval_apply(self, x, n):
+    @classmethod
+    def _eval_apply(cls, x, n):
         return factorial_simplify(unfac(x+n-1) / unfac(x-1))
 
-class Falling_factorial(DefinedFunction):
+
+rising_factorial = Rising_factorial
+
+
+class Falling_factorial(SingleValuedFunction):
     """
     Usage
     =====
@@ -295,10 +302,15 @@ class Falling_factorial(DefinedFunction):
     """
     nofargs = 2
 
-    def _eval_apply(self, x, n):
+    @classmethod
+    def _eval_apply(cls, x, n):
         return factorial_simplify(unfac(x) / unfac(x-n))
 
-class Binomial2(DefinedFunction):
+
+falling_factorial = Falling_factorial
+
+
+class Binomial2(SingleValuedFunction):
     """
     Usage
     =====
@@ -335,11 +347,13 @@ class Binomial2(DefinedFunction):
     """
     nofargs = 2
 
-    def _eval_apply(self, n, k):
+    @classmethod
+    def _eval_apply(cls, n, k):
 
         # TODO: move these two cases to factorial_simplify as well
         if n == 0 and k != 0:
-            return sin(pi*k)/(pi*k)
+            return Basic.sin(pi*k)/(pi*k)
 
         return factorial_simplify(unfac(n) / unfac(k) / unfac(n-k))
 
+binomial2 = Binomial2

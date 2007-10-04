@@ -1,4 +1,3 @@
-"""
 from sympy import *
 from sympy.specfun.factorials import *
 
@@ -22,6 +21,7 @@ def test_factorial1():
 
 def test_factorial_evalf():
     def relcmp(a,b):
+        from operator import abs    # workaround for abs vs sympy.abs conflict
         return abs(a-b)/abs(a)
     for i in range(20):
         assert relcmp(unfac(i).evalf(), fac(i)) < Real(1e-10)
@@ -105,24 +105,24 @@ def test_binomial2():
     assert binomial2(10**20, 10**20 - 2) == \
         4999999999999999999950000000000000000000
     #assert latex(binomial(8,3,evaluate=False)) == r"${{8}\choose{3}}$"
-"""
-#def test_gamma():
-#    assert gamma(0) == oo
-#    assert gamma(1) == 1
-#    assert gamma(2) == 1
-#    assert gamma(3) == 2
-#    assert gamma(Rational(1,2)) == sqrt(pi)
-#    #assert latex(gamma(3+x)) == "$\Gamma(3+x)$"
-#    assert upper_gamma(4,0) == 6
-#    assert upper_gamma(3,oo) == 0
-#    assert lower_gamma(1,x) + upper_gamma(1,x) == gamma(1)
-#    assert lower_gamma(5,x) + upper_gamma(5,x) == gamma(5)
 
-#def test_derivatives():
-#    x = Symbol('x')
-#    from sympy.specfun.zeta_functions import polygamma
-#    assert gamma(4*x).diff(x) == 4*gamma(4*x)*polygamma(0, 4*x)
-#    assert fac(4*x).diff(x) == 4*gamma(1+4*x)*polygamma(0, 1+4*x)
-#    assert log(gamma(x)).diff(x, 5) == polygamma(4, x)
-#    assert fac(x).diff(x).subs(x, 0) == -EulerGamma
-#    assert fac(x).diff(x).subs(x, 4) == 24*(Rational(25, 12)-EulerGamma)
+def test_gamma():
+    assert gamma(0) == zoo
+    assert gamma(1) == 1
+    assert gamma(2) == 1
+    assert gamma(3) == 2
+    assert gamma(Rational(1,2)) == sqrt(pi)
+    #assert latex(gamma(3+x)) == "$\Gamma(3+x)$"
+    assert uppergamma(4,0) == 6
+    assert uppergamma(3,oo) == 0
+    assert lowergamma(1,x) + uppergamma(1,x) == gamma(1)
+    assert lowergamma(5,x) + uppergamma(5,x) == gamma(5)
+
+def test_derivatives():
+    x = Symbol('x')
+    from sympy.functions import polygamma
+    assert gamma(4*x).diff(x) == 4*gamma(4*x)*polygamma(0, 4*x)
+    assert fac(4*x).diff(x) == 4*gamma(1+4*x)*polygamma(0, 1+4*x)
+    assert log(gamma(x)).diff(x, 5) == polygamma(4, x)
+    assert fac(x).diff(x).subs(x, 0) == -EulerGamma
+    assert fac(x).diff(x).subs(x, 4) == 24*(Rational(25, 12)-EulerGamma)

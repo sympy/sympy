@@ -90,12 +90,12 @@ class lowergamma(SingleValuedFunction):
     def _eval_apply(cls, a, x):
         if isinstance(a, Basic.Number):
             if isinstance(a, Basic.One):
-                return S.One - S.Exp(-x)
+                return S.One - Basic.exp(-x)
             elif isinstance(a, Basic.Integer):
                 b = a - 1
 
                 if b.is_positive:
-                    return b*cls(b, x) - x**b * S.Exp(-x)
+                    return b*cls(b, x) - x**b * Basic.exp(-x)
 
 
 class uppergamma(SingleValuedFunction):
@@ -106,7 +106,7 @@ class uppergamma(SingleValuedFunction):
     def fdiff(self, argindex=2):
         if argindex == 2:
             a, z = self[0:2]
-            return -S.Exp(-z)*z**(a-1)
+            return -Basic.exp(-z)*z**(a-1)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -122,12 +122,12 @@ class uppergamma(SingleValuedFunction):
 
         if isinstance(a, Basic.Number):
             if isinstance(a, Basic.One):
-                return S.Exp(-z)
+                return Basic.exp(-z)
             elif isinstance(a, Basic.Integer):
                 b = a - 1
 
                 if b.is_positive:
-                    return b*self(b, z) + z**b * S.Exp(-z)
+                    return b*cls(b, z) + z**b * Basic.exp(-z)
 
 
 
