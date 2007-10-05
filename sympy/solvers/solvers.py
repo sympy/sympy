@@ -331,9 +331,9 @@ def dsolve(eq, funcs):
         f = f.func
 
         # This assumes f is an ApplyXXX object
-        a = Wild('a', exclude=[f])
-        b = Wild('b', exclude=[f])
-        c = Wild('c', exclude=[f])
+        a = Wild('a', exclude=[f(x)])
+        b = Wild('b', exclude=[f(x)])
+        c = Wild('c', exclude=[f(x)])
 
         r = eq.match(a*Derivative(f(x),x) + b)
         if r: return solve_ODE_first_order(r[a], r[b], f(x), x)

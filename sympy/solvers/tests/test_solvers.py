@@ -47,7 +47,6 @@ def test_ODE_second_order():
     assert dsolve(Derivative(f(x),x,x) + 9*f(x), [f(x)]) in \
         [sin(3*x)*C1 + cos(3*x)*C2, sin(3*x)*C2 + cos(3*x)*C1]
 
-@XFAIL
 def test_ODE_1():
     l = Function('l')
     r = Symbol('r')
