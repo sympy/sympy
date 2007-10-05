@@ -15,5 +15,7 @@ from integrals import *
 from plotting import Plot, textplot
 from printing import pretty, pretty_print, pprint, pprint_use_unicode
 
+import abc
+
 #for _n, _cls in Basic.singleton.items():
 #    exec '%s = _cls()' % (_n)
