@@ -13,6 +13,13 @@ def upretty(expr):
 def test_upretty_greek():
     assert upretty( oo ) == u'∞'
     assert upretty( Symbol('alpha^+_1') )   ==  u'α⁺₁'
+    assert upretty( Symbol('beta') )    == u'β'
+
+def test_upretty_multiindex():
+    assert upretty( Symbol('beta12') )  == u'β₁₂'
+    assert upretty( Symbol('Y00') )     == u'Y₀₀'
+    assert upretty( Symbol('Y_00') )    == u'Y₀₀'
+    assert upretty( Symbol('F^+-') )    == u'F⁺⁻'
 
 def test_upretty_funcbraces():
     f = Function('f')

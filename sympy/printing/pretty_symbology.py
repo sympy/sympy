@@ -373,8 +373,19 @@ def pretty_symbol(symb_name):
             name = greek_name
 
     # let's pretty sup/sub
-    psup = sup.get(isup)
+    psup = sup.get(isup)    # exact match
+    if psup is None:
+        try:                # match by separate characters
+            psup = ''.join( [sup[c] for c in isup] )
+        except KeyError:
+            pass
+
     psub = sub.get(isub)
+    if psub is None:
+        try:
+            psub = ''.join( [sub[c] for c in isub] )
+        except KeyError:
+            pass
 
     res = name
     if psup is not None:
