@@ -75,7 +75,7 @@ modules = [
     ( True, 'sympy.simplify', [] ),
     ( True, 'sympy.solvers', [] ),
     ( True, 'sympy.specfun', [] ),
-    ( False, 'sympy.statistics', [] ),
+    ( True, 'sympy.statistics', [] ),
     ( True, 'sympy.utilities', [] ),
     ( True, 'sympy.utilities.mathml', [] ),
     ]

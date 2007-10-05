@@ -64,7 +64,7 @@ class Normal(ContinuousProbability):
         1/2
         >>> N.probability(-oo, oo)
         1
-        >>> N.probability(-2, 2)
+        >>> N.probability(-1, 3)
         erf((1/2)**(1/2))
         >>> _.evalf()
         0.682689492137086
@@ -107,7 +107,7 @@ class Normal(ContinuousProbability):
             # One standard deviation
             >>> N = Normal(0, 1)
             >>> N.confidence(0.68)
-            (-1.95996398454005, 1.95996398454005)
+            (-0.994457883209753, 0.994457883209753)
             >>> N.probability(*_).evalf()
             0.68
 
