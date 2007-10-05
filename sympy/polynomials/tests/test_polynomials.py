@@ -5,6 +5,7 @@ import py
 
 from sympy import *
 from sympy.core.basic import S # Use Singleton comparisons.
+Pi = pi
 
 ## sympy/modules/polynomials/base.py
 

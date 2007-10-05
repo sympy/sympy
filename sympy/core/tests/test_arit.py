@@ -146,14 +146,18 @@ def testpow():
 
 @XFAIL
 def test_pow2():
-    # XXX These fail - the first three are maybe discutable, 
-    # let's see SAGE and similar. The last one is a bug 417
+    # XXX These fail - they are maybe discutable, 
+    # let's see SAGE and similar.
     assert ((-x)**2)**Rational(1,3) == ((-x)**Rational(1,3))**2
     assert (-x)**Rational(2,3) == x**Rational(2,3)
     assert (-x)**Rational(5,7) == -x**Rational(5,7)
 
 def test_pow_issue417():
     assert 4**Rational(1, 4) == 2**Rational(1, 2)
+
+def test_pow3():
+    assert 2**(Rational(3)/2) == 2 * 2**Rational(1, 2)
+    assert 2**(Rational(3)/2) == sqrt(8)
 
 def test_expand():
     p = Rational(5)
