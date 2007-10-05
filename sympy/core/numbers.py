@@ -681,8 +681,9 @@ class Integer(Rational):
                         if e.q % i == 0:
                             x, xexact = integer_nthroot(b.p, i)
                             if xexact:
-                                return Integer(x)**Integer(b.p * i)
+                                return Integer(x)**(e * i)
                     else:
+                        #TODO: check this, what is the else: doing here?
                         # Try to get some part of the base out, if exp > 1
                         if e.p > e.q:
                             i = e.p / e.q

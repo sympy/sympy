@@ -151,6 +151,8 @@ def test_pow2():
     assert ((-x)**2)**Rational(1,3) == ((-x)**Rational(1,3))**2
     assert (-x)**Rational(2,3) == x**Rational(2,3)
     assert (-x)**Rational(5,7) == -x**Rational(5,7)
+
+def test_pow_issue417():
     assert 4**Rational(1, 4) == 2**Rational(1, 2)
 
 def test_expand():
