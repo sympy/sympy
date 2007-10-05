@@ -39,11 +39,12 @@ if sys.version_info[1] < 4:
           sys.version_info[:2]
     sys.exit(-1)
 
+#Check that this list is uptodate against the result of the command:
+#$ find * -name __init__.py |sort
 modules = [
     # do docstring # module name # omit those even if the first field is True
-    ( True, 'sympy.core',
-        ['add', 'mul', 'relational', 'interval'] ),
     ( True, 'sympy.concrete', [] ),
+    ( True, 'sympy.core', ['add', 'mul', 'relational', 'interval'] ),
     ( True, 'sympy.functions', [] ),
     ( True, 'sympy.functions.combinatorial', [] ),
     ( True, 'sympy.functions.elementary',
@@ -55,14 +56,6 @@ modules = [
     ( True, 'sympy.ntheory', [] ),
     ( True, 'sympy.numerics', [] ),
     ( True, 'sympy.physics', [] ),
-    ( True, 'sympy.polynomials', [] ),
-    ( True, 'sympy.polynomials.fast', [] ),
-    ( True, 'sympy.printing',
-        ['gtk', 'pygame_'] ),
-    ( True, 'sympy.series', ["limits"] ),
-    ( True, 'sympy.simplify', [] ),
-    ( True, 'sympy.solvers', [] ),
-    ( True, 'sympy.utilities', [] ),
     ( False, 'sympy.plotting', [] ),
     ( False, 'sympy.plotting.pyglet', [] ),
     ( False, 'sympy.plotting.pyglet.ext', [] ),
@@ -75,6 +68,16 @@ modules = [
     ( False, 'sympy.plotting.pyglet.window.carbon', [] ),
     ( False, 'sympy.plotting.pyglet.window.win32', [] ),
     ( False, 'sympy.plotting.pyglet.window.xlib', [] ),
+    ( True, 'sympy.polynomials', [] ),
+    ( True, 'sympy.polynomials.fast', [] ),
+    ( True, 'sympy.printing', ['gtk', 'pygame_'] ),
+    ( True, 'sympy.series', ["limits"] ),
+    ( True, 'sympy.simplify', [] ),
+    ( True, 'sympy.solvers', [] ),
+    ( True, 'sympy.specfun', [] ),
+    ( False, 'sympy.statistics', [] ),
+    ( True, 'sympy.utilities', [] ),
+    ( True, 'sympy.utilities.mathml', [] ),
     ]
 
 class clean(Command):
@@ -216,25 +219,29 @@ class test_sympy_doc(Command):
         runner = unittest.TextTestRunner()
         runner.run(suite)
 
+#Check that this list is uptodate against the result of the command:
+#$ find * -name tests |sort
 tests = [
-    'sympy.core.tests',
     'sympy.concrete.tests',
+    'sympy.core.tests',
     'sympy.functions.combinatorial.tests',
     'sympy.functions.elementary.tests',
     'sympy.functions.special.tests',
     'sympy.geometry.tests',
     'sympy.integrals.tests',
     'sympy.matrices.tests',
-    'sympy.numerics.tests',
     'sympy.ntheory.tests',
+    'sympy.numerics.tests',
     'sympy.physics.tests',
+    'sympy.plotting.tests',
     'sympy.polynomials.tests',
     'sympy.printing.tests',
     'sympy.series.tests',
     'sympy.simplify.tests',
     'sympy.solvers.tests',
+    'sympy.specfun.tests',
+    'sympy.statistics.tests',
     'sympy.utilities.tests',
-    'sympy.plotting.tests',
     ]
 
 setup(

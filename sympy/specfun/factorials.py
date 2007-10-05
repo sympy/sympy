@@ -46,7 +46,7 @@ class _Factorial(SingleValuedFunction):
         >>> factorial(0)
         1
         >>> factorial(Rational(5,2))
-        (15/8)*Pi**(1/2)
+        (15/8)*pi**(1/2)
 
         >>> factorial(5, 2)
         15
@@ -342,7 +342,7 @@ class Binomial2(SingleValuedFunction):
         -5/128
         >>> x = Symbol('x')
         >>> binomial2(x, 3)
-        1/6*x*(-2+x)*(-1+x)
+        (1/6)*x*(1 - x)*(2 - x)
 
     """
     nofargs = 2
