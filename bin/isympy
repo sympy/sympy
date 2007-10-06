@@ -15,6 +15,7 @@ command line options:
 """
 
 init_code = """
+from __future__ import division
 from sympy import *
 x, y, z = symbols('xyz')
 k, m, n = symbols('kmn', integer=True)
@@ -77,8 +78,11 @@ install the "ipython" package and start isympy again.\n"""
     class HistoryConsole(code.InteractiveConsole):
         def __init__(self, locals=None, filename="<console>",
 	                 histfile=os.path.expanduser("~/.sympy-history")):
-	        code.InteractiveConsole.__init__(self)
-	        self.init_history(histfile)
+            code.InteractiveConsole.__init__(self)
+            self.init_history(histfile)
+            s = "from __future__ import division" 
+            c = self.compile(s, "<input>", "single")
+            self.runcode(c)
 
         def init_history(self, histfile):
 	        readline.parse_and_bind("tab: complete")
