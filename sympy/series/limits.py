@@ -368,6 +368,28 @@ it work, then run this again. If the series cannot be mathematically calculated,
     assert not isinstance(series, O)
     return series
 
+def calculate_leadterm(e, x):
+    """ Calculates the leadterm of "e" in "x".
+
+    Make a nice report if it fails, that signals a bug either in limits or
+    series expansion.
+    """
+
+    def report(f, x):
+        print "The limit algorithm needs to calculate the leadterm of"
+        print "series:", f
+        print "expansion variable (expanding around 0+):", x
+        print """\
+But the leadterm() method failed. Check that this series is meaningful and make
+it work, then run this again. If the leadterm() cannot be mathematically
+calculated, the bug is in the limit algorithm."""
+        raise NotImplementedError("The underlying series facility failed (read the messages printed to stdout for more information)")
+
+    try:
+        return e.leadterm(x)
+    except:
+        report(e, x)
+
 @debug
 def mrv_leadterm(e, x, Omega=[]):
     """Returns (c0, e0) for e."""
@@ -387,7 +409,7 @@ def mrv_leadterm(e, x, Omega=[]):
     f, logw=rewrite(e, set(Omega), x, wsym)
     series = calculate_series(f, wsym)
     series=series.subs(log(wsym), logw)
-    return series.leadterm(wsym)
+    return calculate_leadterm(series, wsym)
 
 
 #this class is not yet adapted for the new core.
