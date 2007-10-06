@@ -153,3 +153,11 @@ def test_doit():
     assert isinstance(a.doit(integrals=False), Integral) == True
 
     assert (2*Integral(x, x)).doit() == x**2
+
+def test_is_number():
+    x = Symbol("x")
+    assert Rational(8).is_number
+    assert not x.is_number
+    assert (8+log(2)).is_number
+    assert not (8+log(2)+x).is_number
+    assert (1+x**2/x-x).is_number

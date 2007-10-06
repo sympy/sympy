@@ -214,6 +214,10 @@ class Order(Basic, ArithMeths, RelMeths):
                 break
             if l.is_bounded:
                 continue
+            # If l.is_number is True, then l.is_bounded above should also be
+            # True, imho. It's probably a bug in assumptions.
+            if l.is_number:
+                continue
             print obj.expr/o.expr,l
             raise NotImplementedError("failed to determine the inclusion relation between %s and %s (got lim=%s)" % (o, obj, l))
         else:

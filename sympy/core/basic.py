@@ -295,6 +295,12 @@ class Basic(BasicMeths):
         from sympy.simplify import hypersimp
         return hypersimp(self, arg, simplify=False) is not None
 
+    @property
+    def is_number(self):
+        """Returns True if self is a number (like 1, or 1+log(2)), and False
+        otherwise (e.g. 1+x).""" 
+        return len(self.atoms(Basic.Symbol)) == 0
+
     def is_fraction(self, syms):
         p, q = self.as_numer_denom()
 

@@ -2,6 +2,7 @@ import py
 import sympy as g
 from sympy import *
 from sympy.utilities.pytest import XFAIL
+from sympy import O
 
 def testseries1():
     x = Symbol("x")
@@ -261,3 +262,11 @@ def test_issue125():
     y = Symbol("y")
     f=(1-y**(Rational(1)/2))**(Rational(1)/2)
     assert f.series(y,2) == 1 - sqrt(y)/2-y/8-y**Rational(3,2)/16+O(y**2)
+
+#sometimes fails, sometimes not...
+@XFAIL
+def test_issue364():
+    w = Symbol("w")
+    x = Symbol("x")
+    e = 1/x*(-log(w**(1 + 1/log(3)*log(5))) + log(w + w**(1/log(3)*log(5)))) 
+    assert e.series(w, 0) == log(w)/x - log(w**(1 + log(5)/log(3)))/x + O(1,w)
