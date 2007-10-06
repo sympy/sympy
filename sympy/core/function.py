@@ -238,7 +238,8 @@ class Function(Basic, RelMeths):
         return self, Basic.One()
 
     def count_ops(self, symbolic=True):
-        return 10 + Basic.Add(*[t.count_ops(symbolic) for t in self])
+        #      f()             args
+        return 1   + Basic.Add(*[t.count_ops(symbolic) for t in self])
 
     def _eval_oseries(self, order):
         assert self.func.nofargs==1,`self.func`
