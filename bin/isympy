@@ -80,9 +80,8 @@ install the "ipython" package and start isympy again.\n"""
 	                 histfile=os.path.expanduser("~/.sympy-history")):
             code.InteractiveConsole.__init__(self)
             self.init_history(histfile)
-            s = "from __future__ import division" 
-            c = self.compile(s, "<input>", "single")
-            self.runcode(c)
+            self.runcode(self.compile("from __future__ import division", 
+                "<input>", "single"))
 
         def init_history(self, histfile):
 	        readline.parse_and_bind("tab: complete")
