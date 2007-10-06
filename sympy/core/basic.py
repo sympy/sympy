@@ -1001,7 +1001,14 @@ class Basic(BasicMeths):
     def oseries(self, order, _cache={}):
         """
         Return the series of an expression upto given Order symbol.
+
+        The _cache parameter is not meant to be used by a user. It is here only
+        to detect an infinite recursion.
         """
+        #is the _cache mechanism really necessary? I think it could be removed
+        #completely, it's only slowing things down (well, probably negligibly).
+        #python can also detect an infinite recursion, so I am for removing
+        #_cache. --Ondrej
         if _cache.has_key((self, order)):
             raise RuntimeError('Detected recursion while computing oseries(%s, %s)' % (self, order))
         order = Basic.Order(order)

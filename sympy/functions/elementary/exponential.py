@@ -280,7 +280,7 @@ class log(SingleValuedFunction):
             return arg[0]
         elif isinstance(arg, Basic.Pow):
             if isinstance(arg.exp, Basic.Number) or \
-               isinstance(arg.exp, Basic.NumberSymbol):
+               isinstance(arg.exp, Basic.NumberSymbol) or arg.exp.is_number:
                 return arg.exp * self(arg.base)
         elif isinstance(arg, Basic.Mul) and arg.is_real:
             return Basic.Add(*[self(a) for a in arg])

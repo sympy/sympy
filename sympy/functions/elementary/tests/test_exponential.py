@@ -99,3 +99,8 @@ def test_log_apply_evalf():
     value = (log(3)/log(2)-1).evalf()
 
     assert value.epsilon_eq(Real("0.58496250072115618145373"))
+
+def test_log_simplify():
+    x = Symbol("x")
+    assert log(x**2) == 2*log(x)
+    assert log(x**(2+log(2))) == (2+log(2))*log(x)

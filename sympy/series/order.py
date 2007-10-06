@@ -200,14 +200,6 @@ class Order(Basic, ArithMeths, RelMeths):
         i = -1
         for o in cache:
             i += 1
-            #if you want to try the new limit algorithm, uncomment this:
-            #from limits2 import limit as limit2
-            #from sympy import log
-            #print obj.expr, o.expr
-            #if obj.expr.has(log):
-            #    l = limit2(obj.expr/o.expr, symbol, 0, dir="+")
-            #else:
-            #    l = (obj.expr/o.expr).limit(symbol, 0, direction='<')
             l = (obj.expr/o.expr).limit(symbol, 0, direction='<')
             if l.is_unbounded:
                 cache.insert(i,obj)
@@ -218,6 +210,14 @@ class Order(Basic, ArithMeths, RelMeths):
             # True, imho. It's probably a bug in assumptions.
             if l.is_number:
                 continue
+            #try the new limit algorithm:
+            #from sympy import limit
+            #l = limit(obj.expr/o.expr, symbol, 0)
+            #if l.is_unbounded:
+            #    cache.insert(i,obj)
+            #    break
+            #if l.is_number:
+            #    continue
             print obj.expr/o.expr,l
             raise NotImplementedError("failed to determine the inclusion relation between %s and %s (got lim=%s)" % (o, obj, l))
         else:
