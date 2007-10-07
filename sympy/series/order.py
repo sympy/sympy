@@ -1,4 +1,3 @@
-
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
 from sympy.core.methods import ArithMeths, RelMeths
 
@@ -12,7 +11,7 @@ class Order(Basic, ArithMeths, RelMeths):
     g(x) = O(f(x)) as x->0  if and only if
     |g(x)|<=M|f(x)| near x=0                     (1)
 
-    An equivalent way of saying (1) is:
+    for some positive but finite M. An equivalent way of saying (1) is:
 
     lim_{x->0}  |g(x)/f(x)|  < oo
     
@@ -27,14 +26,14 @@ class Order(Basic, ArithMeths, RelMeths):
 
     or equivalently:
 
-    lim_{x->0} |x**5/5! - x**7/7! + .... / x**5| < oo
+    lim_{x->0} | (x**5/5! - x**7/7! + ....) / x**5| < oo
 
     which surely is true, because 
     
-    lim_{x->0} |x**5/5! - x**7/7! + .... / x**5| = 1/5!
+    lim_{x->0} | (x**5/5! - x**7/7! + ....) / x**5| = 1/5!
 
 
-    So intuitively O(x**3) means (in our case): all terms x**3, x**4 and
+    So intuitively O(x**3) means: all terms x**3, x**4 and
     higher. But not x**2, x or 1.
 
     Examples:
@@ -58,7 +57,7 @@ class Order(Basic, ArithMeths, RelMeths):
 
       g(x) = O(f(x)) as x->0  <->  |g(x)|<=M|f(x)| near x=0  <->  lim_{x->0}  |g(x)/f(x)|  < oo
 
-      g(x,y) = O(f(x,y))  <->  lim_{x,y->0}  |g(x,y)/f(x,y)|  < oo, will assume that limits commute.
+      g(x,y) = O(f(x,y))  <->  lim_{x,y->0}  |g(x,y)/f(x,y)|  < oo, we'll assume that limits commute.
 
     Notes:
     ======
