@@ -18,7 +18,8 @@ this will generate isympy.1 in the current directory. -->
   <!ENTITY dhusername  "&dhfirstname; &dhsurname;">
 
   <!-- Please adjust the date whenever revising the manpage.     -->
-  <!ENTITY dhdate      "2007-04-12">
+  <!ENTITY dhdate      "2007-10-8">
+  <!ENTITY dhrelease   "unused">
 
   <!-- TITLE should be something like "User commands",           -->
   <!-- "&dhpackage; command-line reference" or similar (see e.g. -->
@@ -32,7 +33,6 @@ this will generate isympy.1 in the current directory. -->
   <!-- If the application e.g. belongs to a package like X.org,  -->
   <!-- this should be set to the its name instead.               -->
   <!ENTITY dhproduct   "python-sympy">
-  <!ENTITY dhrelease   "0.4">
 
   <!-- SECTION should be 1-8, maybe w/ subsection other          -->
   <!-- parameters are allowed: see man(7), man(1) and            -->
@@ -126,10 +126,17 @@ this will generate isympy.1 in the current directory. -->
     </para>
 
     <programlisting>
-from sympy import *
-x, y, z = symbols('xyz')
-k, m, n = symbols('kmn', integer=True)
+>>> from __future__ import division
+>>> from sympy import *
+>>> x, y, z = symbols("xyz")
+>>> k, m, n = symbols("kmn", integer=True)
     </programlisting>
+
+    <para>So starting isympy is equivalent to starting python (or ipython) and
+    executing the above commands by hand. It is intended for easy and quick
+    experimentation with SymPy. For more complicated programs, it is recommended
+    to write a script and import things explicitly (using the "from sympy
+        import sin, log, Symbol, ..." idiom).</para>
 
 	</refsect1>
 	<refsect1 id="options">
@@ -145,6 +152,7 @@ k, m, n = symbols('kmn', integer=True)
 					<para>Use the specified shell (python or ipython) as
                         console backend instead of the default one (ipython
                         if present or python otherwise).</para>
+					<para>Example: isympy -c python</para>
 				</listitem>
 			</varlistentry>
 		</variablelist>
@@ -165,7 +173,10 @@ k, m, n = symbols('kmn', integer=True)
 	<refsect1 id="bugs">
 		<!-- Or use this section to tell about upstream BTS. -->
 		<title>BUGS</title>
-		<para>The upstreams <acronym>BTS</acronym> can be found at <ulink url="http://code.google.com/p/sympy/issues/list">http://code.google.com/p/sympy/issues/list</ulink></para>
+		<para>The upstreams <acronym>BTS</acronym> can be found at <ulink
+                url="http://code.google.com/p/sympy/issues/list">http://code.google.com/p/sympy/issues/list</ulink>
+        Please report all bugs that you find in there, this will help improve
+        the overall quality of SymPy.</para>
 	</refsect1>
 	<refsect1 id="see_also">
 		<title>SEE ALSO</title>

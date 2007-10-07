@@ -5,7 +5,7 @@
 \\$2 \(la\\$1\(ra\\$3
 ..
 .if \n(.g .mso www.tmac
-.TH isympy 1 2007-04-12 "" ""
+.TH isympy 1 2007-10-8 "" ""
 .SH NAME
 isympy \- interactive shell for SymPy
 .SH SYNOPSIS
@@ -40,17 +40,26 @@ the following commands so that you don't have to:
 .PP
 .nf
 \*(T<
-from sympy import *
-x, y, z = symbols('xyz')
-k, m, n = symbols('kmn', integer=True)
+>>> from __future__ import division
+>>> from sympy import *
+>>> x, y, z = symbols("xyz")
+>>> k, m, n = symbols("kmn", integer=True)
     \*(T>
 .fi
+.PP
+So starting isympy is equivalent to starting python (or ipython) and
+executing the above commands by hand. It is intended for easy and quick
+experimentation with SymPy. For more complicated programs, it is recommended
+to write a script and import things explicitly (using the "from sympy
+import sin, log, Symbol, ..." idiom).
 .SH OPTIONS
 .TP 
 \*(T<\fB\-c \fR\*(T>\fIshell\fR, \*(T<\fB\-\-console=\fR\*(T>\fIshell\fR
 Use the specified shell (python or ipython) as
 console backend instead of the default one (ipython
 if present or python otherwise).
+
+Example: isympy -c python
 .SH FILES
 .TP 
 \*(T<\fI${HOME}/.sympy\-history\fR\*(T>
@@ -58,5 +67,7 @@ Saves the history of commands when using the python
 shell as backend.
 .SH BUGS
 The upstreams BTS can be found at \(lahttp://code.google.com/p/sympy/issues/list\(ra
+Please report all bugs that you find in there, this will help improve
+the overall quality of SymPy.
 .SH "SEE ALSO"
 \fBipython\fR(1), \fBpython\fR(1)
