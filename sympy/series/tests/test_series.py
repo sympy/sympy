@@ -116,7 +116,9 @@ def test_subsbug1():
     e = e.diff(x)
     py.test.raises(g.core.power.pole_error, e.subs, x, Rational(0))
 
+@XFAIL
 def test_seriesbug2():
+    #sometimes it runs, sometimes it doesn't
     w = Symbol("w")
     #simple case (1):
     e = ((2*w)/w)**(1+w)

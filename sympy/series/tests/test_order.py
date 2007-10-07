@@ -1,13 +1,18 @@
-from sympy import *
+from sympy import Rational, Order, Basic, exp, ln, log, O
+from sympy.utilities.pytest import XFAIL
+from sympy.abc import w, x, y, z
 
-x = Symbol('x')
-y = Symbol('y')
-z = Symbol('z')
-zero = Basic.Zero()
-o = Basic.One()
+@XFAIL
+def test_caching_bug():
+    #needs to be a first test, so that all caches are clean
+    #cache it
+    e = O(w)
+    #and test that this won't raise an exception
+    f = O(w**(-1/x/log(3)*log(5)), w)
 
 
 def test_simple_1():
+    o = Rational(0)
     assert Order(2*x) == Order(x)
     assert Order(x)*3 == Order(x)
     assert -28*Order(x) == Order(x)
@@ -89,8 +94,9 @@ def test_add_1():
     assert Order(exp(1/x)+x) == Order(exp(1/x))
     assert Order(exp(1/x)+1/x**20) == Order(exp(1/x))
 
-def xtest_ln_args():
-    #fails sometimes:
+@XFAIL
+def test_ln_args():
+    #sometimes runs, sometimes fails, probably a caching bug:
     assert Order(ln(2*x)).expr == ln(x) # ln(2*x) -> ln(2)+ln(x
     assert Order(ln(y*x)).expr == ln(x)+ln(y) # ln(x*y) -> ln(x)+ln(y
     assert Order(ln(x**3)).expr == ln(x) # ln(x**3) -> 3*ln(x
