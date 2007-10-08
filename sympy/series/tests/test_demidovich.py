@@ -114,9 +114,7 @@ def test_f1b():
     assert limit(((x+1)/(2*x+1))**(x**2),x,oo) == 0 #Primer 8
     assert limit((1+h/x)**x,x,oo) == exp(h) #Primer 9
 
-@XFAIL
 def test_f2():
-    #issue 406
     assert limit((sqrt(cos(x))-sqrt3(cos(x)))/(sin(x)**2),x,0) == -Rational(1,12) #*184
 
 @XFAIL
