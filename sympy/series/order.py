@@ -237,15 +237,11 @@ class Order(Basic, ArithMeths, RelMeths):
         that's why find_limit() is defined here.
         """
 
-        return f.limit(x, 0, direction='<')
         if isinstance(f, Pow):
-            if f[0] == x and f[1].is_number:
-                l = f[1].evalf()
-                if l > 0.0001:
-                    assert f.limit(x, 0, direction='<') == 0
+            if isinstance(f[1], Rational) and f[0] == x:
+                if f[1] > 0:
                     return Rational(0)
-                elif l < -0.0001:
-                    assert f.limit(x, 0, direction='<') == oo
+                else:
                     return oo
         return f.limit(x, 0, direction='<')
         from sympy import limit
