@@ -75,8 +75,6 @@ def test_Limits_simple_4c():
 @XFAIL
 def test_f1a():
     h = Symbol("h")
-    # issue 404:
-    assert limit(sin(x)/x,x,2) == sin(2)/2 #216a
     #needs a special logic for deciding that sin(x) is bounded:
     assert limit(sin(x)/x,x,oo) == 0 #216b
     #issue 403:
@@ -97,6 +95,7 @@ def test_f1b():
     n = Symbol("n")
     h = Symbol("h")
     a = Symbol("a")
+    assert limit(sin(x)/x,x,2) == sin(2)/2 #216a
     assert limit(sin(3*x)/x,x,0) == 3 #217
     assert limit(sin(pi*x)/sin(3*pi*x),x,0) == Rational(1)/3 #219
     assert limit(x*sin(pi/x),x,oo) == pi #220
