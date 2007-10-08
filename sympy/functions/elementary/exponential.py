@@ -392,6 +392,15 @@ class log(SingleValuedFunction):
                 return arg.exp * self.func(arg.base).expand()
         return self
 
+    #this is a lot faster:
+    @classmethod
+    def _eval_apply_evalf(cls, arg):
+        arg = arg.evalf()
+        if arg.is_number:
+            import math
+            from sympy import Real
+            return Real(math.log(arg))
+
 # MrvLog is used by limit.py
 class MrvLog(log):
 

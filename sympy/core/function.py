@@ -578,6 +578,7 @@ class SingleValuedFunction(ArithMeths, Function):
 
         #if cls.nofargs == 1:
         # common case for functions with 1 argument
-        if isinstance(arg, Basic.Number):
+        #if isinstance(arg, Basic.Number):
+        if arg.is_number:
             func_evalf = getattr(arg, cls.__name__)
             return func_evalf()
