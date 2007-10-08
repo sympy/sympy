@@ -79,8 +79,6 @@ def test_f1a():
     assert limit(sin(x)/x,x,oo) == 0 #216b
     #needs a special logic for deciding that sin(x) is bounded:
     assert limit(x*sin(1/x),x,0) == 0 #227a
-    #issue 408:
-    assert limit((1-sqrt(cos(x)))/x**2,x,0) == Rational(1,4) #239
     #issue 409:
     assert limit((sin(2*x)/x)**(1+x),x,0) == 2 #Primer 7
     #issue 410:
@@ -101,6 +99,7 @@ def test_f1b():
     assert limit((cos(m*x)-cos(n*x))/x**2,x,0) == ((n**2-m**2)/2) #232
     assert limit((tan(x)-sin(x))/x**3,x,0) == Rational(1,2) #233
     assert limit((x-sin(2*x))/(x+sin(3*x)),x,0) == -Rational(1,4) #237
+    assert limit((1-sqrt(cos(x)))/x**2,x,0) == Rational(1,4) #239
     assert limit((sqrt(1+sin(x))-sqrt(1-sin(x)))/x,x,0) == 1 #240
 
     assert limit(((x+1)/(2*x+1))**(x**2),x,oo) == 0 #Primer 8

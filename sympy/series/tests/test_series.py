@@ -319,3 +319,8 @@ def test_issue407():
     x = Symbol("x")
     e = (x + sin(3*x))**(-2)*(x*(x + sin(3*x)) - (x + sin(3*x))*sin(2*x))
     assert e.series(x, 5) == -Rational(1,4) + 5*x**2/96 + 91*x**4/768 + O(x**5)
+
+def test_issue408():
+    x = Symbol("x")
+    e = x**(-4)*(x**2 - x**2*cos(x)**Rational(1,2))
+    assert e.series(x, 5) == Rational(1,4) + x**2/96 + 19*x**4/5760 + O(x**5)
