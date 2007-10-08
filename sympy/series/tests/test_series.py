@@ -287,3 +287,10 @@ def test_issue416():
     x = Symbol("x")
     e = sin(8*x)/x
     assert e.series(x, 5) == 8 - 256*x**2/3 + 4096*x**4/15 + O(x**5)
+
+def test_issue406():
+    x = Symbol("x")
+    e=sin(x)**(-4)*(cos(x)**Rational(1,2)*sin(x)**2 - \
+            cos(x)**Rational(1,3)*sin(x)**2)
+    assert e.series(x, 5) == -Rational(1)/12 - 7*x**2/288 - \
+            43*x**4/10368 + O(x**5)
