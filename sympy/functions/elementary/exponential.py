@@ -356,6 +356,8 @@ class log(SingleValuedFunction):
 
     # similar code must be added to other functions with have singularites
     # in their domains eg. cot(), tan() ...
+    # the trick is to factor out the singularity and leave it as is, and expand
+    # the rest, that can be expanded.
     def _eval_oseries(self, order):
         arg = self[0]
         x = order.symbols[0]
