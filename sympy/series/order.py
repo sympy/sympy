@@ -1,4 +1,5 @@
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
+from sympy.core import oo, Rational, Pow
 from sympy.core.methods import ArithMeths, RelMeths
 
 class Order(Basic, ArithMeths, RelMeths):
@@ -199,7 +200,7 @@ class Order(Basic, ArithMeths, RelMeths):
         i = -1
         for o in cache:
             i += 1
-            l = (obj.expr/o.expr).limit(symbol, 0, direction='<')
+            l = Order.find_limit(obj.expr/o.expr, symbol)
             if l.is_unbounded:
                 cache.insert(i,obj)
                 break
@@ -223,6 +224,32 @@ class Order(Basic, ArithMeths, RelMeths):
             cache.append(obj)
         Order._cache[symbol] = cache
         return cache.index(obj)
+
+    @classmethod
+    def find_limit(cls, f, x):
+        """Basically identical to:
+
+        return limit(f, x, 0, dir="+")
+
+        but first trying some easy cases (like x**2) using heuristics, to avoid
+        infinite recursion. This is only needed in the Order class and series
+        expansion (that shouldn't rely on the Gruntz algorithm too much),
+        that's why find_limit() is defined here.
+        """
+
+        return f.limit(x, 0, direction='<')
+        if isinstance(f, Pow):
+            if f[0] == x and f[1].is_number:
+                l = f[1].evalf()
+                if l > 0.0001:
+                    assert f.limit(x, 0, direction='<') == 0
+                    return Rational(0)
+                elif l < -0.0001:
+                    assert f.limit(x, 0, direction='<') == oo
+                    return oo
+        return f.limit(x, 0, direction='<')
+        from sympy import limit
+        return limit(f, x, 0, dir="+")
 
     @property
     def expr(self):
