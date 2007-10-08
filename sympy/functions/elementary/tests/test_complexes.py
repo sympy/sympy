@@ -1,4 +1,3 @@
-
 from sympy import *
 
 def test_re():

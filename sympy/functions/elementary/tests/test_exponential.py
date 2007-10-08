@@ -1,5 +1,5 @@
-
 from sympy import *
+from sympy.utilities.pytest import XFAIL
 
 def test_exp():
 
@@ -100,6 +100,8 @@ def test_log_apply_evalf():
 
     assert value.epsilon_eq(Real("0.58496250072115618145373"))
 
+#commenting this out, see the issue 252
+@XFAIL
 def test_log_simplify():
     x = Symbol("x")
     assert log(x**2) == 2*log(x)

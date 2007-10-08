@@ -20,7 +20,7 @@ def test_risch_norman_fractions():
 def test_risch_norman_log():
     assert risch_norman(log(x), x) == x*log(x) - x
     assert risch_norman(log(3*x), x) == x*log(3*x) - x
-    assert risch_norman(log(x**2), x) == x*log(x**2) - 2*x
+    assert risch_norman(log(x**2), x) in [x*log(x**2) - 2*x, 2*x*log(x) - 2*x]
 
 def test_risch_norman_exp():
     assert risch_norman(exp(x), x) == exp(x)

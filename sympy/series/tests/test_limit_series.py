@@ -255,6 +255,9 @@ def test_MrvLimitTestCase_page18_ex2_15():
     expr = exp(exp(exp(exp(x-1/exp(x)))))/exp(exp(exp(exp(x))))
     assert expr.limit(x,oo) == 0
 
+#commenting this out, because it fails due to log(x**2) not returning
+#2*log(x), see the issue 252
+@XFAIL
 def test_MrvLimitTestCase_page27_ex2_17():
     expr = exp(x)*(sin(1/x+exp(-x))-sin(1/x))
     assert expr.limit(x,oo) == 1
