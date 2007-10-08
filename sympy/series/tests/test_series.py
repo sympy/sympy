@@ -304,3 +304,8 @@ def test_issue402():
     e = x**(-2)*(x*cos(a + x) - x*cos(a))
     assert e.series(x, 4) == -sin(a) - cos(a)*x/2 + sin(a)*x**2/6 + \
             cos(a)*x**3/24 + O(x**4)
+
+def test_issue404():
+    x = Symbol("x")
+    e = sin(2 + x)/(2 + x)
+    assert e.series(x, 2) == sin(2)/2 + x*cos(2)/2 - x*sin(2)/4 + O(x**2)
