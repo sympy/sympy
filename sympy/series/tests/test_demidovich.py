@@ -81,12 +81,6 @@ def test_f1a():
     assert limit(sin(x)/x,x,oo) == 0 #216b
     #issue 403:
     assert limit(sin(5*x)/sin(2*x),x,0) == Rational(5)/2 #218
-    #issue 402:
-    assert limit((sin(x)-sin(a))/(x-a),x,a) == cos(a) #222, *176
-    #issue 402:
-    assert limit((cos(x)-cos(a))/(x-a),x,a) == -sin(a) #223
-    #issue 402:
-    assert limit((sin(x+h)-sin(x))/h,h,0) == cos(x) #225
     #needs a special logic for deciding that sin(x) is bounded:
     assert limit(x*sin(1/x),x,0) == 0 #227a
     #issue 407:
@@ -102,6 +96,7 @@ def test_f1b():
     m = Symbol("m")
     n = Symbol("n")
     h = Symbol("h")
+    a = Symbol("a")
     assert limit(sin(3*x)/x,x,0) == 3 #217
     assert limit(sin(pi*x)/sin(3*pi*x),x,0) == Rational(1)/3 #219
     assert limit(x*sin(pi/x),x,oo) == pi #220
@@ -113,6 +108,9 @@ def test_f1b():
 
     assert limit(((x+1)/(2*x+1))**(x**2),x,oo) == 0 #Primer 8
     assert limit((1+h/x)**x,x,oo) == exp(h) #Primer 9
+    assert limit((sin(x)-sin(a))/(x-a),x,a) == cos(a) #222, *176
+    assert limit((cos(x)-cos(a))/(x-a),x,a) == -sin(a) #223
+    assert limit((sin(x+h)-sin(x))/h,h,0) == cos(x) #225
 
 def test_f2():
     assert limit((sqrt(cos(x))-sqrt3(cos(x)))/(sin(x)**2),x,0) == -Rational(1,12) #*184
