@@ -77,8 +77,6 @@ def test_f1a():
     h = Symbol("h")
     #needs a special logic for deciding that sin(x) is bounded:
     assert limit(sin(x)/x,x,oo) == 0 #216b
-    #issue 403:
-    assert limit(sin(5*x)/sin(2*x),x,0) == Rational(5)/2 #218
     #needs a special logic for deciding that sin(x) is bounded:
     assert limit(x*sin(1/x),x,0) == 0 #227a
     #issue 407:
@@ -97,6 +95,7 @@ def test_f1b():
     a = Symbol("a")
     assert limit(sin(x)/x,x,2) == sin(2)/2 #216a
     assert limit(sin(3*x)/x,x,0) == 3 #217
+    assert limit(sin(5*x)/sin(2*x),x,0) == Rational(5)/2 #218
     assert limit(sin(pi*x)/sin(3*pi*x),x,0) == Rational(1)/3 #219
     assert limit(x*sin(pi/x),x,oo) == pi #220
     assert limit((1-cos(x))/x**2,x,0) == Rational(1,2) #221
