@@ -430,12 +430,12 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 l.append(t)
                 continue
             r.append(t)
-            lt.append(t.as_leading_term(x))
         if not r:
             if order.contains(1,x): return S.Zero
             return Mul(*l)
         if len(r)==1:
             return Mul(*(l + [r[0].oseries(order)]))
+        lt = [t.as_leading_term(x) for t in r]
         for i in xrange(len(r)):
             m = Mul(*(lt[:i]+lt[i+1:]))
             o = order/m
