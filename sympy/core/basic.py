@@ -988,7 +988,12 @@ class Basic(BasicMeths):
 
         Notes
         =====
-            For computing power series, use oseries() method.
+            This method is the most high level method and it returns the 
+            series including the O(x**n) term.
+
+            Internally, it executes a method oseries(), which takes an
+            O instance as the only parameter and it is responsible for
+            returning a series (without the O term) up to the given order.
         """
         x = Basic.sympify(x)
         o = Basic.Order(x**n,x)
@@ -1000,7 +1005,13 @@ class Basic(BasicMeths):
     @cache_it_immutable
     def oseries(self, order, _cache={}):
         """
-        Return the series of an expression upto given Order symbol.
+        Return the series of an expression upto given Order symbol (without the
+        actual O term).
+
+        The general philosophy is this: simply start with the most simple
+        taylor (laurent) term and calculate one be one and use
+        order.contains(term) method to determine if your term is still
+        significant and should be added to the series, or we should stop.
 
         The _cache parameter is not meant to be used by a user. It is here only
         to detect an infinite recursion.

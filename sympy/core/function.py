@@ -252,8 +252,21 @@ class Function(Basic, RelMeths):
             e = self.func(arg)
             e1 = e.expand()
             if e==e1:
-                print '%s(%s).oseries(%s) is unevaluated' % (self.func,arg,order)
-                return
+                #one example is e = sin(x+1)
+                #let's try the general algorithm
+                term = e.subs(x, Basic.Rational(0))
+                series = Basic.Rational(0)
+                fact = Basic.Rational(1)
+                i = 0
+                while not order.contains(term):
+                    series += term
+                    i += 1
+                    fact *= Basic.Rational(i)
+                    e = e.diff(x)
+                    term = e.subs(x, Basic.Rational(0))*(x**i)/fact
+                return series
+
+                #print '%s(%s).oseries(%s) is unevaluated' % (self.func,arg,order)
             return e1.oseries(order)
         return self._compute_oseries(arg, order, self.func.taylor_term, self.func)
 
