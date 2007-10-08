@@ -1016,11 +1016,6 @@ class Basic(BasicMeths):
         if isinstance(order, Basic.Zero):
             del _cache[(self, order)]
             return self
-        o = self.is_order
-        if o is not None:
-            if o.contains(order):
-                del _cache[(self, order)]
-                return self
         if order.contains(self):
             del _cache[(self, order)]
             return Basic.Zero()
