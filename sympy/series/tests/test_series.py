@@ -273,3 +273,18 @@ def test_issue364():
     x = Symbol("x")
     e = 1/x*(-log(w**(1 + 1/log(3)*log(5))) + log(w + w**(1/log(3)*log(5)))) 
     assert e.series(w, 0) == log(w)/x - log(w**(1 + log(5)/log(3)))/x + O(1,w)
+
+def test_sin():
+    x = Symbol("x")
+    y = Symbol("y")
+    assert sin(8*x).series(x, 4) == 8*x - 256*x**3/3 + O(x**4)
+    assert sin(x+y).series(x, 1) == sin(y) + O(x)
+    assert sin(x+y).series(x, 2) == sin(y) + cos(y)*x + O(x**2)
+    assert sin(x+y).series(x, 5) == sin(y) + cos(y)*x - sin(y)*x**2/2 - \
+        cos(y)*x**3/6 + sin(y)*x**4/24 + O(x**5)
+
+@XFAIL
+def test_issue416():
+    x = Symbol("x")
+    e = sin(8*x)/x
+    assert e.series(x, 5) == 8 - 256*x**2/3 + 4096*x**4/15 + O(x**5)
