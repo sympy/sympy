@@ -290,7 +290,14 @@ def test_issue416():
 
 def test_issue406():
     x = Symbol("x")
-    e=sin(x)**(-4)*(cos(x)**Rational(1,2)*sin(x)**2 - \
+    e = sin(x)**(-4)*(cos(x)**Rational(1,2)*sin(x)**2 - \
             cos(x)**Rational(1,3)*sin(x)**2)
     assert e.series(x, 5) == -Rational(1)/12 - 7*x**2/288 - \
             43*x**4/10368 + O(x**5)
+
+def test_issue402():
+    x = Symbol("x")
+    a = Symbol("a")
+    e = x**(-2)*(x*sin(a + x) - x*sin(a))
+    assert e.series(x, 4) == cos(a) - sin(a)*x/2 - cos(a)*x**2/6 + \
+            sin(a)*x**3/24 + O(x**4)
