@@ -283,8 +283,8 @@ class log(SingleValuedFunction):
         #    if isinstance(arg.exp, Basic.Number) or \
         #       isinstance(arg.exp, Basic.NumberSymbol) or arg.exp.is_number:
         #        return arg.exp * self(arg.base)
-        elif isinstance(arg, Basic.Mul) and arg.is_real:
-            return Basic.Add(*[self(a) for a in arg])
+        #elif isinstance(arg, Basic.Mul) and arg.is_real:
+        #    return Basic.Add(*[self(a) for a in arg])
         elif not isinstance(arg, Basic.Add):
             coeff = arg.as_coefficient(S.ImaginaryUnit)
 
