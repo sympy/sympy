@@ -283,7 +283,6 @@ def test_sin():
     assert sin(x+y).series(x, 5) == sin(y) + cos(y)*x - sin(y)*x**2/2 - \
         cos(y)*x**3/6 + sin(y)*x**4/24 + O(x**5)
 
-@XFAIL
 def test_issue416():
     x = Symbol("x")
     e = sin(8*x)/x

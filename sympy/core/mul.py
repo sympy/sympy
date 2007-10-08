@@ -425,21 +425,31 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         l = []
         r = []
         lt = []
+        #separate terms containing "x" (r) and the rest (l)
         for t in self:
             if not t.has(x):
                 l.append(t)
                 continue
             r.append(t)
+        #if r is empty or just one term, it's easy:
         if not r:
             if order.contains(1,x): return S.Zero
             return Mul(*l)
         if len(r)==1:
             return Mul(*(l + [r[0].oseries(order)]))
+        #otherwise, we need to calculate how many orders we need to calculate
+        #in each term. Currently this is done using as_leading_term, but this
+        #is fragile and slow, because this involves limits. Let's find some
+        #more clever approach.
         lt = [t.as_leading_term(x) for t in r]
         for i in xrange(len(r)):
             m = Mul(*(lt[:i]+lt[i+1:]))
+            #calculate how many orders we want
             o = order/m
+            #expand each term and multiply things together
             l.append(r[i].oseries(o))
+        #shouldn't we rather expand everything? This seems to me to leave
+        #things as (x+x**2+...)*(x-x**2+...) etc.:
         return Mul(*l)
 
     def _eval_as_leading_term(self, x):
