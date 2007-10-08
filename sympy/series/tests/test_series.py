@@ -320,6 +320,12 @@ def test_issue407():
     e = (x + sin(3*x))**(-2)*(x*(x + sin(3*x)) - (x + sin(3*x))*sin(2*x))
     assert e.series(x, 5) == -Rational(1,4) + 5*x**2/96 + 91*x**4/768 + O(x**5)
 
+def test_issue409():
+    x = Symbol("x")
+    assert log(sin(x)).series(x, 5) == log(x) - x**2/6 - x**4/180 + O(x**5)
+    e = -log(x) + x*(-log(x) + log(sin(2*x))) + log(sin(2*x))
+    assert e.series(x, 5) == log(2)+log(2)*x-2*x**2/3-2*x**3/3-4*x**4/45+O(x**5)
+
 def test_issue408():
     x = Symbol("x")
     e = x**(-4)*(x**2 - x**2*cos(x)**Rational(1,2))
