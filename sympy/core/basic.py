@@ -1043,13 +1043,14 @@ class Basic(BasicMeths):
             return self
         obj = self._eval_oseries(order)
         if obj is not None:
-            obj2 = obj.expand(trig=True)
+            #obj2 = obj.expand(trig=True)
+            obj2 = obj.expand()
             if obj2 != obj:
                 r = obj2.oseries(order)
                 del _cache[(self, order)]
                 return r
             del _cache[(self, order)]
-            return obj2
+            return obj
         del _cache[(self, order)]
         raise NotImplementedError('(%s).oseries(%s)' % (self, order))
 
