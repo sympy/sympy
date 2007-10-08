@@ -364,10 +364,13 @@ class log(SingleValuedFunction):
         if not use_lt:
             arg0 = arg.limit(x, 0)
             use_lt = isinstance(arg0, Basic.Zero)
-        if use_lt: # singularity
-            # arg = (arg / lt) * lt
-            lt = arg.as_leading_term(x)
-            a = (arg/lt).expand()
+        if use_lt: # singularity, #example: self = log(sin(x))
+            # arg = (arg / lt) * lt    
+            lt = arg.as_leading_term(x) # arg = sin(x); lt = x
+            a = (arg/lt).expand() # a = sin(x)/x 
+            #the idea is to recursively call ln(a).series(), but the problem
+            #is, that ln(sin(x)/x) gets "simplified" to -log(x)+ln(sin(x)) and
+            #an infinite recursion occurs, see also the issue 252. 
             return ln(lt) + ln(a).oseries(order)
         # arg -> arg0 + (arg - arg0) -> arg0 * (1 + (arg/arg0 - 1))
         z = (arg/arg0 - 1)
