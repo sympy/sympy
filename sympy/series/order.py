@@ -238,14 +238,23 @@ class Order(Basic, ArithMeths, RelMeths):
         """
 
         if isinstance(f, Pow):
-            if isinstance(f[1], Rational) and f[0] == x:
-                if f[1] > 0:
-                    return Rational(0)
-                else:
-                    return oo
+            if f[0] == x:
+                if isinstance(f[1], Rational):
+                    if f[1] > 0:
+                        return Rational(0)
+                    else:
+                        return oo
+                if f[1].is_number:
+                    if f[1].evalf() > 0:
+                        return Rational(0)
+                    else:
+                        return oo
+        # you can use both limits here - the first is a lot faster, the second
+        # one is a lot slower, but more correct. We need to speed it up, before
+        # we can switch to the second one.
         return f.limit(x, 0, direction='<')
-        from sympy import limit
-        return limit(f, x, 0, dir="+")
+        #from sympy import limit
+        #return limit(f, x, 0, dir="+")
 
     @property
     def expr(self):
