@@ -6,8 +6,7 @@
 # The idea is to use the general and robust algorithm in limits.py even in the
 # series expansion, but currently the limits.py is slower and there were some
 # other bugs (mainly recursion), if it were used in the series expansion. So
-# the currently we use limits_series, until we will move to limits.py
-# completely.
+# currently we use limits_series, until we will move to limits.py completely.
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
 from sympy.core.methods import RelMeths, ArithMeths
