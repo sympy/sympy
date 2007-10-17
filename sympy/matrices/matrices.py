@@ -309,7 +309,7 @@ class Matrix(object):
     def col(self, j, f):
         """Elementary column operation using functor"""
         for i in range(0, self.lines):
-            self[i, j] = f(self[i, j], j)
+            self[i, j] = f(self[i, j], i)
 
     def row_swap(self, i, j):
         for k in range(0, self.cols):

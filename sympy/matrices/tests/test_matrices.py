@@ -707,3 +707,14 @@ def test_shape():
     M = Matrix([[x,0,0],
                 [0,y,0]])
     assert M.shape == (2, 3)
+
+def test_col_row():
+    x, y = symbols("xy")
+    M = Matrix([[x,0,0],
+                [0,y,0]])
+    M.row(1,lambda x,i: x+i+1)
+    assert M == Matrix([[x,0,0],
+                        [1,y+2,3]])
+    M.col(0,lambda x,i: x+y**i)
+    assert M == Matrix([[x+1,0,0],
+                        [1+y,y+2,3]])
