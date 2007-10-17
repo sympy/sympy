@@ -1,11 +1,8 @@
-from sympy import *
+from sympy import symbols, integrate, exp, oo, Symbol, Rational, log
 from sympy.utilities.pytest import XFAIL
 import py
 
 x,a,t = symbols('xat')
-
-def test_proper_integral():
-    pass
 
 def test_improper_integral():
     assert integrate(log(x), (x, 0, 1)) == -1
