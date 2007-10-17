@@ -1,6 +1,6 @@
-
 from sympy import *
 from sympy.utilities.pytest import XFAIL
+import py
 
 x,a,t = symbols('xat')
 
@@ -20,20 +20,21 @@ def diff(expr, sym):
         return Derivative(expr, sym[0]==[sym[1], sym[2]])
 
 
-@XFAIL  # ok, but (1+x)**2 == 1+2*x+x**2  fails
 def test_basics():
     e=(t+1)**2
-    assert integrate(e, (t,0,x), evaluate=False).diff(x)==(1+x)**2
+    assert integrate(e, (t,0,x), evaluate=False).diff(x)==((1+x)**2).expand()
     assert integrate(e, (t,0,x), evaluate=False).diff(a)==0
 
+    assert integrate(e, (t,a,x), evaluate=False).diff(x)==((1+x)**2).expand()
+    assert integrate(e, (t,x,a), evaluate=False).diff(x)==(-(1+x)**2).expand()
+
+    assert integrate(t**2, (t,x,2*x), evaluate=False).diff(x)==7*x**2
+
+@XFAIL
+def test_unevaluated():
     py.test.raises(IntegralError,"integrate(e, (t,0,x), evaluate=False).diff(t)")
     py.test.raises(IntegralError,"integrate(e, t, evaluate=False).diff(x)")
 
-    assert integrate(e, (t,a,x), evaluate=False).diff(x)==(1+x)**2
-    assert integrate(e, (t,a,x), evaluate=False).diff(x)!=-(1+x)**2
-    assert integrate(e, (t,x,a), evaluate=False).diff(x)==-(1+x)**2
-
-    assert integrate(t**2, (t,x,2*x), evaluate=False).diff(x)==7*x**2
 
 
 def test_integration():
