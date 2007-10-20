@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # $Id:$
 
 from pyglet.media import Source, AudioFormat, AudioData
