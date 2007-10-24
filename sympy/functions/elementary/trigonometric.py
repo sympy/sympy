@@ -138,6 +138,10 @@ class sin(SingleValuedFunction):
         if arg.is_real:
             return True
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.sin(self[0]._sage_())
+
 class cos(SingleValuedFunction):
 
     nofargs = 1
@@ -266,6 +270,10 @@ class cos(SingleValuedFunction):
 
         if arg.is_real:
             return True
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.cos(self[0]._sage_())
 
 class tan(SingleValuedFunction):
 

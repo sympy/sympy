@@ -457,3 +457,9 @@ class Mul(AssocOp, RelMeths, ArithMeths):
 
     def _eval_conjugate(self):
         return Mul(*[t.conjugate() for t in self])
+
+    def _sage_(self):
+        s = 1
+        for x in self:
+            s *= x._sage_()
+        return s 

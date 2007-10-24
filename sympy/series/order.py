@@ -334,4 +334,8 @@ class Order(Basic, ArithMeths, RelMeths):
     def _calc_splitter(self, d):
         return Basic.Zero()
 
+    def _sage_(self):
+        #XXX: SAGE doesn't have Order yet. Let's return 0 instead.
+        return Rational(0)._sage_()
+
 Basic.singleton['O'] = lambda : Order

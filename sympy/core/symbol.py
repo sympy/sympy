@@ -82,6 +82,10 @@ class Symbol(Atom, RelMeths, ArithMeths):
     def _eval_expand_complex(self, *args):
         return Basic.re(self) + Basic.im(self)*S.ImaginaryUnit
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.var(self.name)
+
 class Wild(Symbol):
     """
     Wild() matches any expression but another Wild().

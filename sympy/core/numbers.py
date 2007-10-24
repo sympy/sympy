@@ -413,6 +413,7 @@ class Rational(Number):
         obj = Basic.__new__(cls)
         obj.p = p
         obj.q = q
+        #obj._args = [p, q]
         return obj
 
     def _hashable_content(self):
@@ -601,6 +602,12 @@ class Rational(Number):
 
     def as_numer_denom(self):
         return Integer(self.p), Integer(self.q)
+
+    def _sage_(self):
+        import sage.all as sage
+        #XXX: fixme, this should work:
+        #return sage.Integer(self[0])/sage.Integer(self[1])
+        return sage.Integer(self.p)/sage.Integer(self.q)
 
 class Integer(Rational):
 

@@ -463,3 +463,6 @@ class Pow(Basic, ArithMeths, RelMeths):
         if n<0: return S.Zero
         x = Basic.sympify(x)
         return Basic.Binomial(self.exp, n) * x**n
+
+    def _sage_(self):
+        return self[0]._sage_() ** self[1]._sage_()

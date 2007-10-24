@@ -322,3 +322,9 @@ class Add(AssocOp, RelMeths, ArithMeths):
             if not isinstance(c, Basic.One):
                 assert len(t)==1,`t`
                 return c**e * t[0]**e
+
+    def _sage_(self):
+        s = 0
+        for x in self:
+            s += x._sage_()
+        return s 
