@@ -651,12 +651,9 @@ class Identifier(StringBase):
         if obj is not None:
             return obj()
         import sympy
-        try:
-            #is self some kind of SymPy function?
-            return eval(self.string, sympy.__dict__)
-        except:
-            #no, it isn't...
-            pass
+        obj = getattr(sympy, self.string, None)
+        if obj is not None:
+            return obj
         return Basic.Symbol(self.string)
 
 
