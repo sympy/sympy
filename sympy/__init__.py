@@ -10,7 +10,7 @@ See the webpage for more information and documentation:
     http://code.google.com/p/sympy/
 """
 
-__version__ = "0.5.6"
+__version__ = "0.5.6-hg"
 
 from sympy.core import *
 
