@@ -2,3 +2,4 @@ syntax: glob
 
 *.pyc
 *.pyo
+tags
