@@ -67,12 +67,39 @@ def pretty_use_unicode(flag = None):
 
     if flag and warnings:
         # print warnings (if any) on first unicode usage
+        print "I: pprint -- we are going to use unicode, but there are following problems:"
         print warnings
         warnings = ''
 
     use_unicode_prev = _use_unicode
     _use_unicode = flag
     return use_unicode_prev
+
+def pretty_try_use_unicode():
+    """See if unicode output is available and leverage it if possible"""
+
+    try:
+        symbols = []
+
+        # see, if we can represent greek alphabet
+        for g,G in greek.itervalues():
+            symbols.append(g)
+            symbols.append(G)
+
+        # and atoms
+        symbols += atoms_table.values()
+
+        for s in symbols:
+            if s is None:
+                raise UnicodeEncodeError()  # common symbols not present!
+
+            # try to encode
+            s.encode(sys.stdout.encoding)
+
+    except UnicodeEncodeError:
+        pass
+    else:
+        pretty_use_unicode(True)
 
 
 def xstr(*args):

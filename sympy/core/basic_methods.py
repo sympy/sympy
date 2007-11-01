@@ -333,7 +333,35 @@ class BasicMeths(AssumeMeths):
             return self.tostr()
         elif plevel == 2:
             from sympy.printing.pretty import pretty
-            return pretty(self)
+            # in fact, we should just return pretty(self) -- it would be right,
+            # in the real world, the situation is somewhat complicated:
+            # - there is a bug in python2.4 -- unicode result from __repr__ is
+            #   wrongly handled: http://bugs.python.org/issue1459029
+            # - interactive interpreter will try to encode unicode strings with
+            #   sys.getdefaultencoding() encoding. site.py just deletes
+            #   sys.setdefaultencoding and thus, we are out of chance to change
+            #   it from 'ascii' to something unicode-aware.
+            #
+            #   So, by default, python is unable to handle unicode repr's in
+            #   interactive sessions.
+            #
+            #   we could change default site.py to set default encoding based
+            #   on locale, but it is not convenient to force users to change
+            #   system-wide python setup.
+            #
+            #   It's ugly, but we are going to workaround this.
+            #   See #425 for motivation.
+            pstr = pretty(self)
+            if isinstance(pstr, unicode):
+                import sys
+                try:
+                    pstr = pstr.encode(sys.stdout.encoding)
+                except UnicodeEncodeError:
+                    print 'W: unicode problem in __repr__, will use ascii as fallback'
+                    pstr = pretty(self, use_unicode=False)
+
+            return pstr
+
         return self.torepr()
 
     def __len__(self):

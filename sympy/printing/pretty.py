@@ -2,9 +2,10 @@ from sympy.core import Basic
 from printer import Printer
 from stringpict import *
 
-from pretty_symbology import xstr, hobj, vobj, xobj, xrel, pretty_symbol, pretty_atom, pretty_use_unicode 
+from pretty_symbology import xstr, hobj, vobj, xobj, xrel, pretty_symbol, pretty_atom, pretty_use_unicode, pretty_try_use_unicode
 
 pprint_use_unicode = pretty_use_unicode
+pprint_try_use_unicode = pretty_try_use_unicode
 
 
 def prettyAtom(s):
