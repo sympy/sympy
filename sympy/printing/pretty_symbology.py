@@ -1,17 +1,41 @@
+import sys
 warnings = ''
 
 try:
     import unicodedata
+
+    # Python2.4 unicodedata misses some symbols, like subscript 'i', etc,
+    # and we still want SymPy to be fully functional under Python2.4
+    if sys.hexversion < 0x02050000:
+        unicodedata_missing = {
+            'GREEK SUBSCRIPT SMALL LETTER BETA' : u'\u1d66',
+            'GREEK SUBSCRIPT SMALL LETTER GAMMA': u'\u1d67',
+            'GREEK SUBSCRIPT SMALL LETTER RHO'  : u'\u1d68',
+            'GREEK SUBSCRIPT SMALL LETTER PHI'  : u'\u1d69',
+            'GREEK SUBSCRIPT SMALL LETTER CHI'  : u'\u1d6a',
+
+            'LATIN SUBSCRIPT SMALL LETTER A'    : u'\u2090',
+            'LATIN SUBSCRIPT SMALL LETTER E'    : u'\u2091',
+            'LATIN SUBSCRIPT SMALL LETTER I'    : u'\u1d62',
+            'LATIN SUBSCRIPT SMALL LETTER O'    : u'\u2092',
+            'LATIN SUBSCRIPT SMALL LETTER R'    : u'\u1d63',
+            'LATIN SUBSCRIPT SMALL LETTER U'    : u'\u1d64',
+            'LATIN SUBSCRIPT SMALL LETTER V'    : u'\u1d65',
+            'LATIN SUBSCRIPT SMALL LETTER X'    : u'\u2093',
+        }
+    else:
+        unicodedata_missing = {}
 
     def U(name):
         """unicode character by name or None if not found"""
         try:
             u = unicodedata.lookup(name)
         except KeyError:
-            u = None
+            u = unicodedata_missing.get(name)
 
-            global warnings
-            warnings += 'W: no \'%s\' in unocodedata\n' % name
+            if u is None:
+                global warnings
+                warnings += 'W: no \'%s\' in unocodedata\n' % name
 
         return u
 
