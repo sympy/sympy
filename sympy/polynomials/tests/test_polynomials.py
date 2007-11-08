@@ -2,6 +2,7 @@ import sys
 sys.path.append(".")
 
 import py
+from sympy.utilities.pytest import XFAIL
 
 from sympy import *
 from sympy.core.basic import S # Use Singleton comparisons.
@@ -370,3 +371,18 @@ def test_sturm():
            [Polynomial(-5-2*x**2+x**3+3*x), Polynomial(3+3*x**2-4*x),
             Polynomial(Rational(13,3)-Rational(10,9)*x),
             Polynomial(Rational(-3303,100), var=x)]
+
+
+## Issues
+
+def test_poly_content():
+    assert Polynomial(y**2*x + y, var=x).content()  == y
+    assert Polynomial(y**2*x + 2, var=x).content()  == 1
+
+@XFAIL  # see #442
+def test_poly_content_0():
+    assert Polynomial(sin(y)*x, var=x).content()    == sin(y)
+
+@XFAIL  # see #442
+def test_poly_content_1():
+    assert Polynomial(sqrt(2)*x, var=x).content()   == sqrt(2)

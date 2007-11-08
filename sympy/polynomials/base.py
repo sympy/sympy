@@ -10,6 +10,7 @@ from sympy.core.numbers import NumberSymbol, ImaginaryUnit
 from sympy.utilities import *
 
 from sympy.polynomials import fast
+import sympy.polynomials    # for sympy.polynomials.wrapper  (cyclic)
 
 # This is the list of possible rings the coefficients could lie in,
 # ordered by inclusion.
@@ -460,8 +461,7 @@ class Polynomial(Basic):
         denom = S.One
         for term in self.coeffs:
             if not isinstance(term[0], Rational):
-                print "%s is no rational coefficient!" % term[0]
-                return S.Zero, self
+                raise PolynomialException("%s is no rational coefficient!" % term[0])
             else:
                 # Compute the least common multiple of the denominators:
                 denom = term[0].q*denom/numbers.gcd(int(denom), int(term[0].q))
@@ -522,7 +522,7 @@ class Polynomial(Basic):
         ======
             Starting with any instance of Polynomial, this returns the
             content, that is, the greatest common divisor of the
-            (integer) coefficients, and a new Polynomial which is
+            (integer-or-symbolic) coefficients, and a new Polynomial which is
             primitive, that is, of content 1. Only works for integer
             coefficients.
 
@@ -568,7 +568,7 @@ class Polynomial(Basic):
         Usage:
         ======
             Returns the content, that is, the positive greatest common
-            divisor of the (integer) coefficients.
+            divisor of the (integer-or-symbolic) coefficients.
 
         Examples:
         =========
@@ -576,18 +576,30 @@ class Polynomial(Basic):
             >>> f = Polynomial(6*x + 20*y + 4*x*y)
             >>> f.content()
             2
+            >>> f = Polynomial(y**2*x**2 + y, var=x)
+            >>> f.content()
+            y
 
         Also see L{as_primitive}, L{leading_coeff}.
 
         """
 
-        result = 0
+        result_int = 0  # part result for integer coeffs
+        result_sym = 0  # part result for symbolic coeffs
         for term in self.coeffs:
-            if not isinstance(term[0], Integer):
-                print "%s is no integer coefficient!" % term[0]
-                return S.Zero
-            result = abs(numbers.gcd(result, abs(int(term[0]))))
-        return Integer(result)
+            if isinstance(term[0], Integer):
+                result_int = abs(numbers.gcd(result_int, abs(int(term[0]))))
+            elif isinstance(term[0], Number):
+                raise PolynomialException("%s is no integer coefficient!" % term[0])
+            else:
+                # XXX this will not work for sin(x), sqrt(2), etc...
+                result_sym = sympy.polynomials.wrapper.gcd(result_sym, term[0])
+
+        if result_sym == 0:
+            # only int coeffs -- return Integer
+            return Integer(result_int)
+        else:
+            return sympy.polynomials.wrapper.gcd(result_sym, result_int)
 
 
     def diff(self, variable):
