@@ -12,13 +12,16 @@ from sympy.simplify import normal, simplify, trigsimp, together
 def components(expr):
     """Returns a set of all functional components of the given expression
        with symbols, functions applications and compositions. All integer
-       powers are being skipped however fractional and functional powers
+       powers are being skipped, however fractional and functional powers
        are collected as well.
 
        >>> from sympy import *
        >>> x, y = symbols('xy')
 
        >>> components(x*y)
+       set([y, x])
+
+       >>> components(1/(x+y))
        set([y, x])
 
        >>> components(sin(x))
@@ -217,6 +220,7 @@ def risch_norman(f, x, rewrite=False):
     in_terms.sort(lambda u, v: int(v[0] - u[0]))
 
     def substitute(expr):
+        """substitute in_terms in expr"""
         for _, g, symbol in in_terms:
             expr = expr.subs(g, symbol)
 
