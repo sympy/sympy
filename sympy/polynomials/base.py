@@ -58,7 +58,7 @@ class Polynomial(Basic):
 
         The SymPy expression of a Polynomial f can be accessed through
         f.sympy_expr. The coefficients and exponents are held in
-        f.coeffs and f.var and f.order hold the respective arguments.
+        f.coeffs , f.var and f.order hold the respective arguments.
 
     Notes:
     ======
@@ -498,6 +498,13 @@ class Polynomial(Basic):
             >>> print f
             (3/2)*x + (3/4)*y + x*y
 
+            >>> f = Polynomial(y*x, var=x)
+            >>> leadcoeff, f = f.as_monic()
+            >>> print leadcoeff
+            y
+            >>> print f
+            x
+
         Also see L{as_integer}, L{as_primitive}, L{leading_coeff}.
 
         """
@@ -509,7 +516,7 @@ class Polynomial(Basic):
 
 
     def as_primitive(self):
-        """Return the content and a primitive Pxolynomial.
+        """Return the content and a primitive Polynomial.
 
         Usage:
         ======
