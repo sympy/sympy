@@ -218,6 +218,11 @@ class MetaBasicMeths(BasicType):
                              (cls.__name__, name))
 
     def __cmp__(cls, other):
+        try:
+            other = cls.sympify(other)
+        except ValueError:
+            #if we cannot sympify it, other is definitely not equal to cls
+            return -1
         n1 = cls.__name__
         n2 = other.__name__
         c = cmp(n1,n2)
@@ -259,11 +264,8 @@ class BasicMeths(AssumeMeths):
         except AttributeError:
             pass
 
-        if BasicMeths.classnamespace.has_key(name):
-            return BasicMeths.classnamespace[name]
-        else:
-            raise AttributeError("'%s' object has no attribute '%s'"%
-                                 (self.__class__.__name__, name))
+        raise AttributeError("'%s' object has no attribute '%s'"%
+                        (self.__class__.__name__, name))
 
     def __setattr__(self, name, val):
         if name.startswith('is_'):

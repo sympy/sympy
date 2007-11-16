@@ -239,6 +239,10 @@ class Basic(BasicMeths):
             return Basic.Interval(*a)
         elif isinstance(a, (list,tuple,set)) and sympify_lists:
             return type(a)([Basic.sympify(x, True) for x in a])
+        elif hasattr(a, "_sympy_"):
+            # the "a" implements _sympy_() method, that returns a SymPy
+            # expression (by definition), so we just use it
+            return a._sympy_()
         else:
             # XXX this is here because of cyclic-import issues
             from sympy.matrices import Matrix
@@ -248,15 +252,21 @@ class Basic(BasicMeths):
 
             if not isinstance(a, str):
                 # At this point we were given an arbitrary expression
-                # which does not inherit after Basic. This may be
-                # SAGE's expression (or something alike) so take
-                # its normal form via str() and try to parse it.
+                # which does not inherit from Basic and doesn't implement
+                # _sympy_ (which is a canonical and robust way to convert
+                # anything to SymPy expression). 
+                # 
+                # As a last chance, we try to take "a"'s  normal form via str()
+                # and try to parse it. If it fails, then we have no luck and
+                # return an exception
                 a = str(a)
 
             try:
                 return parser.Expr(a).tosymbolic()
             except:
                 pass
+        if a.strip() != a:
+            return Basic.sympify(a.strip())
         raise ValueError("%r is NOT a valid SymPy expression" % a)
 
     @Memoizer('Basic', MemoizerArg((type, type(None), tuple), name='type'), return_value_converter = lambda obj: obj.copy())

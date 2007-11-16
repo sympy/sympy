@@ -131,11 +131,3 @@ def test_combine():
 
     assert (2*exp(x)*exp(-x)).combine() == 2
     assert (x/exp(x)*exp(-x)).combine() == x*exp(-2*x)
-
-
-def test_439():
-    v = sympify("exp(x)")
-    x = Symbol("x")
-    assert v == exp(x)
-    assert type(v) == type(exp(x))
-    assert str(type(v)) == str(type(exp(x)))

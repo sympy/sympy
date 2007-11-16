@@ -227,6 +227,10 @@ class exp(SingleValuedFunction):
             return expr
         return self.func(arg)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.exp(self[0]._sage_())
+
 class log(SingleValuedFunction):
 
     nofargs = (1,2)
@@ -406,6 +410,10 @@ class log(SingleValuedFunction):
             import math
             from sympy import Real
             return Real(math.log(arg))
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.log(self[0]._sage_())
 
 # MrvLog is used by limit.py
 class MrvLog(log):

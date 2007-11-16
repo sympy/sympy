@@ -84,13 +84,20 @@ class RelMeths(object):
     
     def __eq__(self, other):
         try:
+            other = Basic.sympify(other)
+        except ValueError:
+            return False
+        try:
             r = Basic.Equality(self, other)
         except ValueError, msg:
-            # temporary workaround:
-            print 'Failed to create Equality instance: %s, using repr equality test instead' % msg
-            r = repr(self)==repr(other)
+            raise ValueError('Failed to create Equality instance: %s, using repr equality test instead' % msg)
+            #r = repr(self)==repr(other)
         return r
     def __ne__(self, other):
+        try:
+            other = Basic.sympify(other)
+        except ValueError:
+            return True
         return Basic.Unequality(self, other)
     def __lt__(self, other):
         #return Basic.sympify(other) > self
