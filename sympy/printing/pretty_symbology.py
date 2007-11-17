@@ -381,9 +381,9 @@ atoms_table = {
     'Pi'                :   U('GREEK SMALL LETTER PI'),
     'Infinity'          :   U('INFINITY'),
     'NegativeInfinity'  :   U('INFINITY') and ('-'+U('INFINITY')),  # XXX what to do here
-    'ImaginaryUnit'     :   U('GREEK SMALL LETTER IOTA'),
+    #'ImaginaryUnit'     :   U('GREEK SMALL LETTER IOTA'),
     #'ImaginaryUnit'     :   U('MATHEMATICAL ITALIC SMALL I'),
-    #'ImaginaryUnit'     :   U('DOUBLE-STRUCK ITALIC SMALL I'),
+    'ImaginaryUnit'     :   U('DOUBLE-STRUCK ITALIC SMALL I'),
 }
 
 def pretty_atom(atom_name, default=None):
