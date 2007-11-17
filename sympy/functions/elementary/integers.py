@@ -36,7 +36,7 @@ class floor(SingleValuedFunction):
     nofargs = 1
 
     @classmethod
-    def _eval_apply(cls, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if arg.is_integer:
@@ -126,7 +126,7 @@ class ceiling(SingleValuedFunction):
     nofargs = 1
 
     @classmethod
-    def _eval_apply(cls, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if arg.is_integer:

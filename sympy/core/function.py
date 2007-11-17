@@ -128,7 +128,7 @@ class Function(Basic, RelMeths):
         if "commutative" in options:
             del options["commutative"]
         # up to here.
-        r = cls._eval_apply(*args, **options)
+        r = cls.canonize(*args, **options)
         if isinstance(r, Basic):
             return r
         elif r is None:
@@ -146,11 +146,7 @@ class Function(Basic, RelMeths):
         return True
 
     @classmethod
-    def canonize(cls, args, **options):
-        return
-
-    @classmethod
-    def _eval_apply(self, *args):
+    def canonize(cls, *args, **options):
         return
 
     @property
@@ -441,13 +437,13 @@ class Lambda(Function):
 
     _eval_subs = Basic._seq_subs
 
-    def _eval_apply(self, *args):
-        n = self.nofargs
+    def canonize(cls, *args):
+        n = cls.nofargs
         if n!=len(args):
             raise TypeError('%s takes exactly %s arguments (got %s)'\
-                            % (self, n, len(args)))
-        expr = self.body
-        for da,a in zip(self, args):
+                            % (cls, n, len(args)))
+        expr = cls.body
+        for da,a in zip(cls, args):
             expr = expr.subs(da,a)
         return expr
 

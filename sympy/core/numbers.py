@@ -99,9 +99,6 @@ class Number(Atom, RelMeths, ArithMeths):
     def _eval_conjugate(self):
         return self
 
-    def _eval_apply(self, a):
-        return self*a
-
     def _eval_order(self, *symbols):
         # Order(5, x, y) -> Order(1,x,y)
         return Basic.Order(S.One, *symbols)

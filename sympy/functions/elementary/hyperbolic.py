@@ -24,7 +24,7 @@ class sinh(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -37,7 +37,7 @@ class sinh(SingleValuedFunction):
             elif isinstance(arg, Basic.Zero):
                 return S.Zero
             elif arg.is_negative:
-                return -self(-arg)
+                return -cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -47,7 +47,7 @@ class sinh(SingleValuedFunction):
                 coeff, terms = arg.as_coeff_terms()
 
                 if coeff.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
@@ -118,7 +118,7 @@ class cosh(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -131,7 +131,7 @@ class cosh(SingleValuedFunction):
             elif isinstance(arg, Basic.Zero):
                 return S.One
             elif arg.is_negative:
-                return self(-arg)
+                return cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -141,7 +141,7 @@ class cosh(SingleValuedFunction):
                 coeff, terms = arg.as_coeff_terms()
 
                 if coeff.is_negative:
-                    return self(-arg)
+                    return cls(-arg)
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
@@ -212,7 +212,7 @@ class tanh(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -225,7 +225,7 @@ class tanh(SingleValuedFunction):
             elif isinstance(arg, Basic.Zero):
                 return S.Zero
             elif arg.is_negative:
-                return -self(-arg)
+                return -cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -235,7 +235,7 @@ class tanh(SingleValuedFunction):
                 coeff, terms = arg.as_coeff_terms()
 
                 if coeff.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
@@ -308,7 +308,7 @@ class coth(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -321,7 +321,7 @@ class coth(SingleValuedFunction):
             elif isinstance(arg, Basic.Zero):
                 return S.Zero
             elif arg.is_negative:
-                return -self(-arg)
+                return -cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -331,7 +331,7 @@ class coth(SingleValuedFunction):
                 coeff, terms = arg.as_coeff_terms()
 
                 if coeff.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
@@ -399,7 +399,7 @@ class asinh(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -416,7 +416,7 @@ class asinh(SingleValuedFunction):
             elif isinstance(arg, Basic.NegativeOne):
                 return S.Log(S.Sqrt(2) - 2)
             elif arg.is_negative:
-                return -self(-arg)
+                return -cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -426,7 +426,7 @@ class asinh(SingleValuedFunction):
                 coeff, terms = arg.as_coeff_terms()
 
                 if coeff.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
@@ -469,7 +469,7 @@ class acosh(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -543,7 +543,7 @@ class atanh(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -556,7 +556,7 @@ class atanh(SingleValuedFunction):
             elif isinstance(arg, Basic.NegativeOne):
                 return S.NegativeInfinity
             elif arg.is_negative:
-                return -self(-arg)
+                return -cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -566,7 +566,7 @@ class atanh(SingleValuedFunction):
                 coeff, terms = arg.as_coeff_terms()
 
                 if coeff.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):
@@ -599,7 +599,7 @@ class acoth(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -616,7 +616,7 @@ class acoth(SingleValuedFunction):
             elif isinstance(arg, Basic.NegativeOne):
                 return S.NegativeInfinity
             elif arg.is_negative:
-                return -self(-arg)
+                return -cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -626,7 +626,7 @@ class acoth(SingleValuedFunction):
                 coeff, terms = arg.as_coeff_terms()
 
                 if coeff.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
 
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms):

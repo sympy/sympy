@@ -18,7 +18,7 @@ class gamma(SingleValuedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def _eval_apply(cls, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -87,7 +87,7 @@ class lowergamma(SingleValuedFunction):
     nofargs = 2
 
     @classmethod
-    def _eval_apply(cls, a, x):
+    def canonize(cls, a, x):
         if isinstance(a, Basic.Number):
             if isinstance(a, Basic.One):
                 return S.One - Basic.exp(-x)
@@ -111,7 +111,7 @@ class uppergamma(SingleValuedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def _eval_apply(cls, a, z):
+    def canonize(cls, a, z):
         if isinstance(z, Basic.Number):
             if isinstance(z, Basic.NaN):
                 return S.NaN
@@ -147,7 +147,7 @@ class polygamma(SingleValuedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def _eval_apply(cls, n, z):
+    def canonize(cls, n, z):
         n, z = map(Basic.sympify, (n, z))
 
         if n.is_integer:
@@ -202,7 +202,3 @@ class polygamma(SingleValuedFunction):
 class loggamma(SingleValuedFunction):
 
     nofargs = 1
-
-    def _eval_apply(self, z):
-        return
-

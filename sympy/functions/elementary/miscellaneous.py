@@ -25,7 +25,7 @@ class sqrt(SingleValuedFunction):
         return "sqrt(%s)" % self[0]
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         #XXX this doesn't work, but it should (see #390):
         #return arg**S.Half
         arg = Basic.sympify(arg)
@@ -51,7 +51,7 @@ class sqrt(SingleValuedFunction):
         if arg.is_nonnegative:
             coeff, terms = arg.as_coeff_terms()
             if not isinstance(coeff, Basic.One):
-                return self(coeff) * self(Basic.Mul(*terms))
+                return cls(coeff) * cls(Basic.Mul(*terms))
         base, exp = arg.as_base_exp()
         if isinstance(exp, Basic.Number):
             if exp == 2:
@@ -81,7 +81,7 @@ class max_(SingleValuedFunction):
 
     nofargs = 2
 
-    def _eval_apply(self, x, y):
+    def canonize(cls, x, y):
         if isinstance(x, Basic.Number) and isinstance(y, Basic.Number):
             return max(x, y)
         if x.is_positive:
@@ -103,6 +103,6 @@ class min_(SingleValuedFunction):
 
     nofargs = 2
 
-    def _eval_apply(self, x, y):
+    def canonize(cls, x, y):
         if isinstance(x, Basic.Number) and isinstance(y, Basic.Number):
             return min(x, y)

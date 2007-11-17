@@ -40,7 +40,7 @@ class re(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.NaN):
@@ -68,7 +68,7 @@ class re(SingleValuedFunction):
                 a, b, c = map(lambda xs: Basic.Add(*xs),
                     [included, reverted, excluded])
 
-                return self(a) - im(b) + c
+                return cls(a) - im(b) + c
 
     def _eval_conjugate(self):
         return self
@@ -113,7 +113,7 @@ class im(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.NaN):
@@ -141,7 +141,7 @@ class im(SingleValuedFunction):
                 a, b, c = map(lambda xs: Basic.Add(*xs),
                     [included, reverted, excluded])
 
-                return self(a) + re(b) + c
+                return cls(a) + re(b) + c
 
     def _eval_conjugate(self):
         return self
@@ -161,7 +161,7 @@ class sign(SingleValuedFunction):
     nofargs = 1
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         if isinstance(arg, Basic.NaN):
             return S.NaN
         if isinstance(arg, Basic.Zero): return S.One
@@ -170,7 +170,7 @@ class sign(SingleValuedFunction):
         if isinstance(arg, Basic.Mul):
             coeff, terms = arg.as_coeff_terms()
             if not isinstance(coeff, Basic.One):
-                return self(coeff) * self(Basic.Mul(*terms))
+                return cls(coeff) * cls(Basic.Mul(*terms))
 
     is_bounded = True
 
@@ -195,14 +195,14 @@ class abs(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         if isinstance(arg, Basic.NaN):
             return S.NaN
         if arg.is_positive: return arg
         if arg.is_negative: return -arg
         coeff, terms = arg.as_coeff_terms()
         if not isinstance(coeff, Basic.One):
-            return self(coeff) * self(Basic.Mul(*terms))
+            return cls(coeff) * cls(Basic.Mul(*terms))
         if arg.is_real is False:
             return Basic.sqrt( (arg * arg.conjugate()).expand() )
         return
@@ -229,10 +229,6 @@ class arg(SingleValuedFunction):
 
     is_real = True
 
-    @classmethod
-    def _eval_apply(self, arg):
-        return
-
     def _eval_conjugate(self):
         return self
 
@@ -244,7 +240,7 @@ class conjugate(SingleValuedFunction):
     nofargs = 1
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         obj = arg._eval_conjugate()
         if obj is not None:
             return obj

@@ -414,9 +414,6 @@ class Basic(BasicMeths):
     def _eval_defined_integral(self, s, a, b):
         return
 
-    def _eval_apply(self, *args, **assumptions):
-        return
-
     def _eval_fapply(self, *args, **assumptions):
         return
 

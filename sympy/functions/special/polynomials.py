@@ -20,7 +20,7 @@ class PolynomialSequence(SingleValuedFunction):
     precedence = Basic.Apply_precedence
 
     @classmethod
-    def _eval_apply(cls, n, x):
+    def canonize(cls, n, x):
         if n.is_integer and n >= 0:
             return cls.calc(int(n)).subs(_x, x)
         if n.is_negative:
@@ -105,7 +105,7 @@ class chebyshevt_root(SingleValuedFunction):
     nofargs = 2
 
     @classmethod
-    def _eval_apply(cls, n, k):
+    def canonize(cls, n, k):
         if not 0 <= k < n:
             raise ValueError, "must have 0 <= k < n"
         return Basic.cos(S.Pi*(2*k+1)/(2*n))
@@ -127,7 +127,7 @@ class chebyshevu_root(SingleValuedFunction):
     nofargs = 2
 
     @classmethod
-    def _eval_apply(cls, n, k):
+    def canonize(cls, n, k):
         if not 0 <= k < n:
             raise ValueError, "must have 0 <= k < n"
         return Basic.cos(S.Pi*(k+1)/(n+1))
