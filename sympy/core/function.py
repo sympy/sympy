@@ -615,3 +615,22 @@ class SingleValuedFunction(ArithMeths, Function):
         if arg.is_number:
             func_evalf = getattr(arg, cls.__name__)
             return func_evalf()
+
+    def _eval_as_leading_term(self, x):
+        """General method for the leading term"""
+        arg = self[0].as_leading_term(x)
+
+        if Basic.Order(1,x).contains(arg):
+            return arg
+        else:
+            return self.func(arg)
+
+    @classmethod
+    def taylor_term(cls, n, x, *previous_terms):
+        """General method for the taylor term.
+        
+        This method is slow, because it differentiates n-times.  Subclasses can
+        redefine it to make it faster by using the "previous_terms". 
+        """
+        x = Basic.sympify(x)
+        return cls(x).diff(x, n).subs(x, 0) * x**n / Basic.Factorial(n)
