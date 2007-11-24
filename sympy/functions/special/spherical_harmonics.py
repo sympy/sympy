@@ -1,17 +1,9 @@
-from sympy import SingleValuedFunction, Basic, Rational, pi, I, diff
-from sympy.functions import legendre
+from sympy import SingleValuedFunction, Basic, Rational, pi, I
+from sympy.functions import legendre, assoc_legendre
 
 Pl = legendre
+Plm= assoc_legendre
 
-def Plm(l, m, x):
-    l = Basic.sympify(l)
-    m = Basic.sympify(m)
-    if m >= 0:
-        return (-1)**m * (1-x**2)**(m/2) * diff(Pl(l, x), x, m)
-    else:
-        factorial = Basic.Factorial
-        m = -m
-        return (-1)**m *factorial(l-m)/factorial(l+m) * Plm(l, m, x)
 
 def Plmcos(l, m, th):
     l = Basic.sympify(l)
