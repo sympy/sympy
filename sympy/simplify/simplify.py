@@ -988,6 +988,16 @@ def combsimp(expr):
     return expr
 
 def simplify(expr):
+    """
+    Simplifies the expression 'expr'. 
+
+    Simplification is not a well defined term and the exact strategies this
+    function tries can change in the future versions of SymPy. If your
+    algorithm relies on "simplification" (whatever it is), try to determine
+    what you need exactly - is it powsimp(), or radsimp(), or together(), or
+    something else? And use this particular function directly, because those
+    are well defined and thus your algorithm will be robust.
+    """
     #from sympy.specfun.factorials import factorial, factorial_simplify
     #if expr.has_class(factorial):
     #    expr = factorial_simplify(expr)
