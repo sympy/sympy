@@ -5,7 +5,7 @@ import combinatorial
 import elementary
 import special
 
-from special.polynomials import legendre, hermite, chebyshevt, chebyshevu, \
+from special.polynomials import legendre, assoc_legendre, hermite, chebyshevt, chebyshevu, \
         chebyshevu_root, chebyshevt_root
 
 # see #391

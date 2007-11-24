@@ -9,12 +9,16 @@ combinatorial polynomials.
 from sympy.core.basic import Basic, S
 from sympy.core import Rational, Symbol
 from sympy.core.function import SingleValuedFunction
-from sympy.utilities.memoization import recurrence_memo
+from sympy.utilities.memoization import recurrence_memo, assoc_recurrence_memo
 
 
 _x = Basic.Symbol('x', dummy=True)
 
 class PolynomialSequence(SingleValuedFunction):
+    """Polynomial sequence with 1 index
+
+       n >= 0
+    """
 
     nofargs = 2
     precedence = Basic.Apply_precedence
@@ -24,7 +28,28 @@ class PolynomialSequence(SingleValuedFunction):
         if n.is_integer and n >= 0:
             return cls.calc(int(n)).subs(_x, x)
         if n.is_negative:
-            raise ValueError("%s index must be nonnegative integer (got %r)" % (self, i))
+            raise ValueError("%s index must be nonnegative integer (got %r)" % (cls, n))
+
+
+class PolynomialSequence2(SingleValuedFunction):
+    """Polynomial sequence with 2 indexes
+
+       n >= 0
+       abs(m) <= n
+    """
+
+    nofargs = 3
+
+    @classmethod
+    def canonize(cls, n, m, x):
+        if n.is_integer and n >= 0 and m.is_integer and abs(m) <= n:
+            return cls.calc2(int(n), int(m)).subs(_x, x)
+
+        if n.is_negative:
+            raise ValueError("%s : 1st index must be nonnegative integer (got %r)" % (cls, n))
+
+        if abs(m) > n:
+            raise ValueError("%s : abs('2nd index') must be <= '1st index' (got %r, %r)" % (cls, n, m))
 
 
 
@@ -134,7 +159,7 @@ class chebyshevu_root(SingleValuedFunction):
 
 
 #----------------------------------------------------------------------------
-# Legendre polynomials
+# Legendre polynomials  and  Associated Legendre polynomials
 #
 
 class legendre(PolynomialSequence):
@@ -156,13 +181,75 @@ class legendre(PolynomialSequence):
         (-1/2) + (3/2)*x**2
 
     References
-    ========
+    ==========
     * http://en.wikipedia.org/wiki/Legendre_polynomial
     """
     @staticmethod
     @recurrence_memo([Basic.One(), _x])
     def calc(n, prev):
         return (((2*n-1)*_x*prev[n-1] - (n-1)*prev[n-2])/n).expand()
+
+
+class assoc_legendre(PolynomialSequence2):
+    """
+    assoc_legendre(n,m, x) gives P_nm(x) = mth association to Legendre polynomial P_n(x)
+
+    Associated Legende polynomial are orthogonal on [-1, 1] with:
+    
+    - weight = 1            for the same m, and different n.
+    - weight = 1/(1-x**2)   for the same n, and different m.
+
+    Examples
+    ========
+        >>> x = Symbol('x')
+        >>> assoc_legendre(0,0, x)
+        1
+        >>> assoc_legendre(1,0, x)
+        x
+        >>> assoc_legendre(1,1, x)
+        -(1-x**2)**(1/2)
+
+    References
+    ==========
+    * http://en.wikipedia.org/wiki/Associated_Legendre_polynomials
+    """
+
+    @staticmethod
+    @assoc_recurrence_memo(legendre.calc)
+    def _calc2(n, m, prev):
+        P=prev
+
+        # this is explicit (not reccurence) formula
+        #
+        # the result is pretty and we still benefit from memoization
+        Pnm = (-1)**m * (1-_x**2)**Rational(m,2) * P[n][0].diff(_x, m)
+        return Pnm
+
+
+        # this is reccurence formula, but the cost to keep it pretty (simplify)
+        # is too high
+        Pnm = (n-(m-1))*_x*P[n][m-1] - (n+(m-1))*P[n-1][m-1]
+
+        # hack to simplify the expression
+        # FIXME something more lightweight?
+        from sympy.simplify import simplify
+
+        Pnm = Pnm / (1-_x**2)**Rational(m+1,2)
+        Pnm = simplify(Pnm)
+
+        Pnm*= (1-_x**2)**Rational(m+1-1,2)
+
+        return Pnm
+
+    @staticmethod
+    def calc2(n,m):
+        if m >= 0:
+            return assoc_legendre._calc2(n,m)
+        else:
+            factorial = Basic.Factorial
+            m = -m
+            return (-1)**m *factorial(n-m)/factorial(n+m) * assoc_legendre._calc2(n, m)
+
 
 
 #----------------------------------------------------------------------------
