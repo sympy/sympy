@@ -131,14 +131,15 @@ class Ellipse(GeometryEntity):
         subs_val = float(S.Pi)*(2*random() - 1)
         return Point(p[0].subs(t, subs_val), p[1].subs(t, subs_val))
 
-    def equation(self, xaxis_name='x', yaxis_name='y'):
+    def equation(self, x='x', y='y'):
         """
-        Returns the equation of the ellipse. Optional parameters xaxis_name
-        and yaxis_name can be used to specify the names of the symbols used
-        for the equation.
+        Returns the equation of the ellipse.
+        
+        Optional parameters x and y can be used to specify symbols, or the
+        names of the symbols used in the equation.
         """
-        x = Basic.Symbol(xaxis_name, real=True)
-        y = Basic.Symbol(yaxis_name, real=True)
+        if isinstance(x, basestring):   x = Basic.Symbol(x, real=True)
+        if isinstance(y, basestring):   y = Basic.Symbol(y, real=True)
         t1 = ((x - self.center[0]) / self.hradius)**2
         t2 = ((y - self.center[1]) / self.vradius)**2
         return t1 + t2 - 1
@@ -220,9 +221,10 @@ class Ellipse(GeometryEntity):
 
     def __contains__(self, o):
         if isinstance(o, Point):
-            x = Basic.Symbol('x', real=True)
-            y = Basic.Symbol('y', real=True)
-            res = self.equation('x', 'y').subs_dict({x: o[0], y: o[1]})
+            x = Basic.Symbol('x', real=True, dummy=True)
+            y = Basic.Symbol('y', real=True, dummy=True)
+
+            res = self.equation(x, y).subs_dict({x: o[0], y: o[1]})
             res = trigsimp(simplify(res))
             return res == 0
         elif isinstance(o, Ellipse):
@@ -283,14 +285,15 @@ class Circle(Ellipse):
         """The circumference of the circle."""
         return 2 * Basic.Pi() * self.radius
 
-    def equation(self, xaxis_name='x', yaxis_name='y'):
+    def equation(self, x='x', y='y'):
         """
-        Returns the equation of the circle. Optional parameters xaxis_name
-        and yaxis_name can be used to specify the names of the symbols used
-        for the equation.
+        Returns the equation of the circle.
+        
+        Optional parameters x and y can be used to specify symbols, or the
+        names of the symbols used in the equation.
         """
-        x = Basic.Symbol(xaxis_name, real=True)
-        y = Basic.Symbol(yaxis_name, real=True)
+        if isinstance(x, basestring):   x = Basic.Symbol(x, real=True)
+        if isinstance(y, basestring):   y = Basic.Symbol(y, real=True)
         t1 = (x - self.center[0])**2
         t2 = (y - self.center[1])**2
         return t1 + t2 - self.hradius**2
