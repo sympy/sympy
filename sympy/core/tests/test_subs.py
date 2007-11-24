@@ -70,6 +70,26 @@ def test_dict():
     assert e.subs_dict(r) == r[a]/r[b] * sin(r[b]*x)
     assert e.subs_dict(r) == 3 * sin(4*x) / 4
 
+
+def test_dict_ambigous():   # see #467
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+
+    f = x*exp(x)
+    g = z*exp(z)
+
+    df= {x:y, exp(x): y}
+    dg= {z:y, exp(z): y}
+
+    assert f.subs_dict(df) == y**2
+    assert g.subs_dict(dg) == y**2
+
+    # and this is how order can affect the result
+    assert f .subs(x,y) .subs(exp(x),y)  == y*exp(y)
+    assert f .subs(exp(x),y) .subs(x,y)  == y**2
+
+
 def test_deriv_sub_bug3():
     x = Symbol("x")
     y = Symbol("y")

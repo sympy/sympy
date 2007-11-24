@@ -448,8 +448,47 @@ class Basic(BasicMeths):
         return c(self)
 
     def subs_dict(self, old_new_dict):
+        """Substitutes "self" using the keys and values from the "old_new_dict".
+
+           This correctly handles "overlapping" keys,
+           e.g. when doing substituion like:
+
+             e.subs_dict(x: y, exp(x): y)
+
+           exp(x) is always substituted before x
+        """
         r = self
-        for old,new in old_new_dict.items():
+
+        oldnew = [(o,n) for (o,n) in old_new_dict.items()]
+
+
+        # Care needs to be taken for cases like these:
+        # 
+        # consider
+        #     e = x*exp(x)
+        # 
+        # when we do
+        #     e.subs_dict(x: y, exp(x): y)
+        # 
+        # the result depends in which order elementary substitutions are done.
+        # 
+        # So we *have* to proceess 'exp(x)' first. This is achieved by topologically
+        # sorting substitutes by 'in' criteria - if "exp(x)" contains "x", it
+        # gets substituted first.
+
+
+        # let's topologically sort oldnew, so we have more general terms in the
+        # beginning     (e.g. [exp(x), x] is not the same as [x, exp(x)] when
+        #                doing substitution)
+        def in_cmp(a,b):
+            if a[0] in b[0]:
+                return 1
+            else:
+                return -1
+
+        oldnew.sort(cmp=in_cmp)
+
+        for old,new in oldnew:
             r = r.subs(old,new)
         return r
 
