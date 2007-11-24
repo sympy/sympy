@@ -27,7 +27,7 @@ import sys
 
 # hook in-tree sympy into python path if running in-tree version of isympy
 import os.path
-isympy_dir  = os.path.dirname(__file__)         # bin/isympy.py
+isympy_dir  = os.path.dirname(__file__)         # bin/isympy
 sympy_top   = os.path.split(isympy_dir)[0]      # ../
 sympy_dir   = os.path.join(sympy_top, 'sympy')  # ../sympy/
 if os.path.isdir(sympy_dir):

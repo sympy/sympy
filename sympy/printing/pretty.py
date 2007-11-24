@@ -237,8 +237,8 @@ class PrettyPrinter(Printer):
 
         # Gather terms for numerator/denominator
         for item in product:
-            if isinstance(item, Basic.Pow) and item.exp == -1:
-                b.append(item.base)
+            if isinstance(item, Basic.Pow) and isinstance(item.exp, Basic.Rational) and item.exp.is_negative:
+                b.append(Basic.Pow(item.base, -item.exp))
             elif isinstance(item, Basic.Rational):
                 if item.p != 1:
                     a.append( Basic.Rational(item.p) )
@@ -287,9 +287,9 @@ class PrettyPrinter(Printer):
             s = prettyForm(*bpretty.above(s))
             s = prettyForm(*s.left(s2))
             return s
-        elif power.exp == -1:
+        elif isinstance(power.exp, Basic.Rational) and power.exp.is_negative:
             # Things like 1/x
-            return prettyForm("1") / self._print(power.base)
+            return prettyForm("1") / self._print(Basic.Pow(power.base, -power.exp))
 
         # None of the above special forms, do a standard power
         b,e = power.as_base_exp()
