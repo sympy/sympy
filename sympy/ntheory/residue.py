@@ -62,15 +62,7 @@ def legendre_symbol(a,p):
     if is_quad_residue(a,p)==True: return 1
     else : return -1
 
-def quad_residue(a,p):
-    """
-    given a and an odd prime p, this returns the solution to
-    x^2 congruent to a modulo p.
-    """
-    assert isprime(p) and p!=2,"p should be an odd prime"
-    assert gcd(a,p)==1,"The two numbers should be relatively prime"
-    if a>p:
-        a=a%p
+
 
 
 
