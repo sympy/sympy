@@ -75,7 +75,7 @@ class fibonacci(SingleValuedFunction):
         return (prev[-2] + _sym*prev[-1]).expand()
 
     @classmethod
-    def _eval_apply(cls, n, sym=None):
+    def canonize(cls, n, sym=None):
         if isinstance(n, Integer):
             n = int(n)
             if n < 0:
@@ -117,7 +117,7 @@ class lucas(SingleValuedFunction):
     """
 
     @classmethod
-    def _eval_apply(cls, n):
+    def canonize(cls, n):
         if isinstance(n, Integer):
             return fibonacci(n+1) + fibonacci(n-1)
 
@@ -223,7 +223,7 @@ class bernoulli(SingleValuedFunction):
     _highest = {0:0, 2:2, 4:4}
 
     @classmethod
-    def _eval_apply(cls, n, sym=None):
+    def canonize(cls, n, sym=None):
         if isinstance(n, Basic.Number):
             if isinstance(n, Integer) and n.is_nonnegative:
                 if n is S.Zero:
@@ -343,7 +343,7 @@ class bell(SingleValuedFunction):
         return (_sym * s).expand()
 
     @classmethod
-    def _eval_apply(cls, n, sym=None):
+    def canonize(cls, n, sym=None):
         if isinstance(n, Integer) and n.is_nonnegative:
             if sym is None:
                 return Integer(cls._bell(int(n)))
@@ -402,7 +402,7 @@ class harmonic(SingleValuedFunction):
     _functions = {}
 
     @classmethod
-    def _eval_apply(cls, n, m=None):
+    def canonize(cls, n, m=None):
         if m is None:
             m = Integer(1)
         if n == oo:

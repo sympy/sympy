@@ -1,5 +1,6 @@
 
 from sympy import *
+from sympy.utilities.pytest import XFAIL
 
 x, y = symbols('xy')
 
@@ -57,3 +58,16 @@ def test_risch_norman_mixed():
 def test_risch_norman_special():
     assert risch_norman(erf(x), x) == x*erf(x) + exp(-x**2)/sqrt(pi)
     assert risch_norman(exp(-x**2)*erf(x), x) == sqrt(pi)*erf(x)**2 / 4
+
+def test_risch_norman_issue442():
+    assert risch_norman(1/(x+y), x)         == log(x+y)
+#   assert risch_norman(1/(x**2+y), x)      == ?
+
+
+@XFAIL
+def test_risch_norman_issue442_0():
+    assert risch_norman(1/(x+sqrt(2)), x)   == log(x+sqrt(2))
+
+@XFAIL
+def test_resch_norman_issue442_1():
+    assert risch_norman(1/(x+sin(y)), x)    == log(x+sin(y))

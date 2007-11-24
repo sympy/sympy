@@ -1,17 +1,41 @@
+import sys
 warnings = ''
 
 try:
     import unicodedata
+
+    # Python2.4 unicodedata misses some symbols, like subscript 'i', etc,
+    # and we still want SymPy to be fully functional under Python2.4
+    if sys.hexversion < 0x02050000:
+        unicodedata_missing = {
+            'GREEK SUBSCRIPT SMALL LETTER BETA' : u'\u1d66',
+            'GREEK SUBSCRIPT SMALL LETTER GAMMA': u'\u1d67',
+            'GREEK SUBSCRIPT SMALL LETTER RHO'  : u'\u1d68',
+            'GREEK SUBSCRIPT SMALL LETTER PHI'  : u'\u1d69',
+            'GREEK SUBSCRIPT SMALL LETTER CHI'  : u'\u1d6a',
+
+            'LATIN SUBSCRIPT SMALL LETTER A'    : u'\u2090',
+            'LATIN SUBSCRIPT SMALL LETTER E'    : u'\u2091',
+            'LATIN SUBSCRIPT SMALL LETTER I'    : u'\u1d62',
+            'LATIN SUBSCRIPT SMALL LETTER O'    : u'\u2092',
+            'LATIN SUBSCRIPT SMALL LETTER R'    : u'\u1d63',
+            'LATIN SUBSCRIPT SMALL LETTER U'    : u'\u1d64',
+            'LATIN SUBSCRIPT SMALL LETTER V'    : u'\u1d65',
+            'LATIN SUBSCRIPT SMALL LETTER X'    : u'\u2093',
+        }
+    else:
+        unicodedata_missing = {}
 
     def U(name):
         """unicode character by name or None if not found"""
         try:
             u = unicodedata.lookup(name)
         except KeyError:
-            u = None
+            u = unicodedata_missing.get(name)
 
-            global warnings
-            warnings += 'W: no \'%s\' in unocodedata\n' % name
+            if u is None:
+                global warnings
+                warnings += 'W: no \'%s\' in unocodedata\n' % name
 
         return u
 
@@ -43,12 +67,39 @@ def pretty_use_unicode(flag = None):
 
     if flag and warnings:
         # print warnings (if any) on first unicode usage
+        print "I: pprint -- we are going to use unicode, but there are following problems:"
         print warnings
         warnings = ''
 
     use_unicode_prev = _use_unicode
     _use_unicode = flag
     return use_unicode_prev
+
+def pretty_try_use_unicode():
+    """See if unicode output is available and leverage it if possible"""
+
+    try:
+        symbols = []
+
+        # see, if we can represent greek alphabet
+        for g,G in greek.itervalues():
+            symbols.append(g)
+            symbols.append(G)
+
+        # and atoms
+        symbols += atoms_table.values()
+
+        for s in symbols:
+            if s is None:
+                raise UnicodeEncodeError()  # common symbols not present!
+
+            # try to encode
+            s.encode(sys.stdout.encoding)
+
+    except UnicodeEncodeError:
+        pass
+    else:
+        pretty_use_unicode(True)
 
 
 def xstr(*args):
@@ -330,9 +381,9 @@ atoms_table = {
     'Pi'                :   U('GREEK SMALL LETTER PI'),
     'Infinity'          :   U('INFINITY'),
     'NegativeInfinity'  :   U('INFINITY') and ('-'+U('INFINITY')),  # XXX what to do here
-    'ImaginaryUnit'     :   U('GREEK SMALL LETTER IOTA'),
+    #'ImaginaryUnit'     :   U('GREEK SMALL LETTER IOTA'),
     #'ImaginaryUnit'     :   U('MATHEMATICAL ITALIC SMALL I'),
-    #'ImaginaryUnit'     :   U('DOUBLE-STRUCK ITALIC SMALL I'),
+    'ImaginaryUnit'     :   U('DOUBLE-STRUCK ITALIC SMALL I'),
 }
 
 def pretty_atom(atom_name, default=None):

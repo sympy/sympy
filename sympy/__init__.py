@@ -10,11 +10,12 @@ See the webpage for more information and documentation:
     http://code.google.com/p/sympy/
 """
 
-__version__ = "0.5.5-svn"
+__version__ = "0.5.7-hg"
 
 from sympy.core import *
 
 from series import *
+from ntheory import *
 from concrete import *
 from functions import *
 from simplify import *
@@ -25,7 +26,7 @@ from polynomials import *
 from utilities import *
 from integrals import *
 from plotting import Plot, textplot
-from printing import pretty, pretty_print, pprint, pprint_use_unicode
+from printing import pretty, pretty_print, pprint, pprint_use_unicode, pprint_try_use_unicode
 
 import abc
 

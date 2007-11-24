@@ -64,7 +64,7 @@ class _Factorial(SingleValuedFunction):
     _generators = {}
 
     @classmethod
-    def _eval_apply(cls, x, m=1):
+    def canonize(cls, x, m=1):
 
         # the usual case
         if m == 1 and x.is_integer:
@@ -143,7 +143,7 @@ factorial = _Factorial
 class UnevaluatedFactorial(_Factorial):
 
     @classmethod
-    def _eval_apply(cls, x, m=1):
+    def canonize(cls, x, m=1):
         return None
 
 unfac = UnevaluatedFactorial
@@ -280,7 +280,7 @@ class Rising_factorial(SingleValuedFunction):
     nofargs = 2
 
     @classmethod
-    def _eval_apply(cls, x, n):
+    def canonize(cls, x, n):
         return factorial_simplify(unfac(x+n-1) / unfac(x-1))
 
 
@@ -303,7 +303,7 @@ class Falling_factorial(SingleValuedFunction):
     nofargs = 2
 
     @classmethod
-    def _eval_apply(cls, x, n):
+    def canonize(cls, x, n):
         return factorial_simplify(unfac(x) / unfac(x-n))
 
 
@@ -348,7 +348,7 @@ class Binomial2(SingleValuedFunction):
     nofargs = 2
 
     @classmethod
-    def _eval_apply(cls, n, k):
+    def canonize(cls, n, k):
 
         # TODO: move these two cases to factorial_simplify as well
         if n == 0 and k != 0:

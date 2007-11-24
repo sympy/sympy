@@ -650,6 +650,10 @@ class Identifier(StringBase):
         obj = Basic.singleton.get(self.string)
         if obj is not None:
             return obj()
+        import sympy
+        obj = getattr(sympy, self.string, None)
+        if obj is not None:
+            return obj
         return Basic.Symbol(self.string)
 
 

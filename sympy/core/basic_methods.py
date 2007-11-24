@@ -218,6 +218,11 @@ class MetaBasicMeths(BasicType):
                              (cls.__name__, name))
 
     def __cmp__(cls, other):
+        try:
+            other = cls.sympify(other)
+        except ValueError:
+            #if we cannot sympify it, other is definitely not equal to cls
+            return -1
         n1 = cls.__name__
         n2 = other.__name__
         c = cmp(n1,n2)
@@ -259,11 +264,8 @@ class BasicMeths(AssumeMeths):
         except AttributeError:
             pass
 
-        if BasicMeths.classnamespace.has_key(name):
-            return BasicMeths.classnamespace[name]
-        else:
-            raise AttributeError("'%s' object has no attribute '%s'"%
-                                 (self.__class__.__name__, name))
+        raise AttributeError("'%s' object has no attribute '%s'"%
+                        (self.__class__.__name__, name))
 
     def __setattr__(self, name, val):
         if name.startswith('is_'):
@@ -333,7 +335,35 @@ class BasicMeths(AssumeMeths):
             return self.tostr()
         elif plevel == 2:
             from sympy.printing.pretty import pretty
-            return pretty(self)
+            # in fact, we should just return pretty(self) -- it would be right,
+            # in the real world, the situation is somewhat complicated:
+            # - there is a bug in python2.4 -- unicode result from __repr__ is
+            #   wrongly handled: http://bugs.python.org/issue1459029
+            # - interactive interpreter will try to encode unicode strings with
+            #   sys.getdefaultencoding() encoding. site.py just deletes
+            #   sys.setdefaultencoding and thus, we are out of chance to change
+            #   it from 'ascii' to something unicode-aware.
+            #
+            #   So, by default, python is unable to handle unicode repr's in
+            #   interactive sessions.
+            #
+            #   we could change default site.py to set default encoding based
+            #   on locale, but it is not convenient to force users to change
+            #   system-wide python setup.
+            #
+            #   It's ugly, but we are going to workaround this.
+            #   See #425 for motivation.
+            pstr = pretty(self)
+            if isinstance(pstr, unicode):
+                import sys
+                try:
+                    pstr = pstr.encode(sys.stdout.encoding)
+                except UnicodeEncodeError:
+                    print 'W: unicode problem in __repr__, will use ascii as fallback'
+                    pstr = pretty(self, use_unicode=False)
+
+            return pstr
+
         return self.torepr()
 
     def __len__(self):

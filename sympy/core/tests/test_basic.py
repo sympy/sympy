@@ -1,5 +1,6 @@
 from sympy import Basic, Symbol, Real, Rational, cos, exp, log, oo, sqrt, \
     symbols, Integral
+import py
 
 
 def dotest(s):
@@ -161,3 +162,9 @@ def test_is_number():
     assert (8+log(2)).is_number
     assert not (8+log(2)+x).is_number
     assert (1+x**2/x-x).is_number
+
+def test_attribute_error():
+    x = Symbol("x")
+    py.test.raises(AttributeError, "x.cos()")
+    py.test.raises(AttributeError, "x.sin()")
+    py.test.raises(AttributeError, "x.exp()")

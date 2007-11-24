@@ -39,3 +39,22 @@ def test_expevalbug():
     e1 = exp(1*x)
     e3 = exp(x)
     assert e1 == e3
+
+def test_cmp_bug1():
+    class T(object):
+        pass
+
+    t = T()
+    x = Symbol("x")
+
+    assert not (x == t)
+    assert (x != t)
+
+def test_cmp_bug2():
+    class T(object):
+        pass
+
+    t = T()
+
+    assert not (Symbol == t)
+    assert (Symbol != t)

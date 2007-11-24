@@ -10,14 +10,14 @@ class zeta(SingleValuedFunction):
     nofargs = (1, 2)
 
     @classmethod
-    def _eval_apply(self, z, a=S.One):
+    def canonize(cls, z, a=S.One):
         z, a = map(Basic.sympify, (z, a))
 
         if isinstance(a, Basic.Number):
             if isinstance(a, Basic.NaN):
                 return S.NaN
             elif isinstance(a, Basic.Zero):
-                return self(z)
+                return cls(z)
 
         if isinstance(z, Basic.Number):
             if isinstance(z, Basic.NaN):
@@ -52,7 +52,7 @@ class dirichlet_eta(SingleValuedFunction):
     nofargs = 1
 
     @classmethod
-    def _eval_apply(cls, s):
+    def canonize(cls, s):
         if s == 1:
             return Basic.log(2)
         else:

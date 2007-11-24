@@ -128,7 +128,7 @@ class Function(Basic, RelMeths):
         if "commutative" in options:
             del options["commutative"]
         # up to here.
-        r = cls._eval_apply(*args, **options)
+        r = cls.canonize(*args, **options)
         if isinstance(r, Basic):
             return r
         elif r is None:
@@ -146,11 +146,31 @@ class Function(Basic, RelMeths):
         return True
 
     @classmethod
-    def canonize(cls, args, **options):
-        return
+    def canonize(cls, *args, **options):
+        """
+        Returns a canonical form of cls applied to arguments args.
 
-    @classmethod
-    def _eval_apply(self, *args):
+        The canonize() method is called when the class cls is about to be
+        instantiated and it should return either some simplified instance
+        (possible of some other class), or if the class cls should be
+        unmodified, return None.
+
+        Example of canonize() for the function "sign"
+        ---------------------------------------------
+
+        @classmethod
+        def canonize(cls, arg):
+            if isinstance(arg, Basic.NaN):
+                return S.NaN
+            if isinstance(arg, Basic.Zero): return S.One
+            if arg.is_positive: return S.One
+            if arg.is_negative: return S.NegativeOne
+            if isinstance(arg, Basic.Mul):
+                coeff, terms = arg.as_coeff_terms()
+                if not isinstance(coeff, Basic.One):
+                    return cls(coeff) * cls(Basic.Mul(*terms))
+
+        """
         return
 
     @property
@@ -441,13 +461,13 @@ class Lambda(Function):
 
     _eval_subs = Basic._seq_subs
 
-    def _eval_apply(self, *args):
-        n = self.nofargs
+    def canonize(cls, *args):
+        n = cls.nofargs
         if n!=len(args):
             raise TypeError('%s takes exactly %s arguments (got %s)'\
-                            % (self, n, len(args)))
-        expr = self.body
-        for da,a in zip(self, args):
+                            % (cls, n, len(args)))
+        expr = cls.body
+        for da,a in zip(cls, args):
             expr = expr.subs(da,a)
         return expr
 

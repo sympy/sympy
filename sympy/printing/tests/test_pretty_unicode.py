@@ -21,6 +21,22 @@ def test_upretty_multiindex():
     assert upretty( Symbol('Y_00') )    == u'Y₀₀'
     assert upretty( Symbol('F^+-') )    == u'F⁺⁻'
 
+def test_upretty_subs_missingin_24():
+    assert upretty( Symbol('F_beta') )  == u'Fᵦ'
+    assert upretty( Symbol('F_gamma') ) == u'Fᵧ'
+    assert upretty( Symbol('F_rho') )   == u'Fᵨ'
+    assert upretty( Symbol('F_phi') )   == u'Fᵩ'
+    assert upretty( Symbol('F_chi') )   == u'Fᵪ'
+
+    assert upretty( Symbol('F_a') )     == u'Fₐ'
+    assert upretty( Symbol('F_e') )     == u'Fₑ'
+    assert upretty( Symbol('F_i') )     == u'Fᵢ'
+    assert upretty( Symbol('F_o') )     == u'Fₒ'
+    assert upretty( Symbol('F_r') )     == u'Fᵣ'
+    assert upretty( Symbol('F_u') )     == u'Fᵤ'
+    assert upretty( Symbol('F_v') )     == u'Fᵥ'
+    assert upretty( Symbol('F_x') )     == u'Fₓ'
+
 def test_upretty_funcbraces():
     f = Function('f')
     u = upretty(f(x/(y+1), y))

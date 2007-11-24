@@ -21,7 +21,7 @@ class erf(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -34,12 +34,12 @@ class erf(SingleValuedFunction):
             elif isinstance(arg, Basic.Zero):
                 return S.Zero
             elif arg.is_negative:
-                return -self(-arg)
+                return -cls(-arg)
         elif isinstance(arg, Basic.Mul):
             coeff, terms = arg.as_coeff_terms()
 
             if coeff.is_negative:
-                return -self(-arg)
+                return -cls(-arg)
 
     @classmethod
     @cache_it_immutable

@@ -21,7 +21,7 @@ class exp(SingleValuedFunction):
 
     #XXX: investigate why we need the **optionsXXX and remove it
     @classmethod
-    def _eval_apply(self, arg, **optionsXXX):
+    def canonize(cls, arg, **optionsXXX):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -84,7 +84,7 @@ class exp(SingleValuedFunction):
                     included.append(arg)
 
         if excluded:
-            return Basic.Mul(*(excluded+[self(Basic.Add(*included))]))
+            return Basic.Mul(*(excluded+[cls(Basic.Add(*included))]))
 
     @classmethod
     @cache_it_immutable
@@ -227,6 +227,10 @@ class exp(SingleValuedFunction):
             return expr
         return self.func(arg)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.exp(self[0]._sage_())
+
 class log(SingleValuedFunction):
 
     nofargs = (1,2)
@@ -249,12 +253,12 @@ class log(SingleValuedFunction):
 
     #XXX: why is the fixme parameter needed here?
     @classmethod
-    def _eval_apply(self, arg, base=None, **fixme):
+    def canonize(cls, arg, base=None, **fixme):
         if base is not None:
             base = Basic.sympify(base)
 
             if not isinstance(base, Basic.Exp1):
-                return self(arg)/self(base)
+                return cls(arg)/cls(base)
 
         arg = Basic.sympify(arg)
 
@@ -270,7 +274,7 @@ class log(SingleValuedFunction):
             elif isinstance(arg, Basic.NaN):
                 return S.NaN
             elif arg.is_negative:
-                return S.Pi * S.ImaginaryUnit + self(-arg)
+                return S.Pi * S.ImaginaryUnit + cls(-arg)
         elif isinstance(arg, Basic.Exp1):
             return S.One
         #this doesn't work due to caching: :(
@@ -295,9 +299,9 @@ class log(SingleValuedFunction):
                     return S.Infinity
                 elif isinstance(coeff, Basic.Rational):
                     if coeff.is_nonnegative:
-                        return S.Pi * S.ImaginaryUnit * S.Half + self(coeff)
+                        return S.Pi * S.ImaginaryUnit * S.Half + cls(coeff)
                     else:
-                        return -S.Pi * S.ImaginaryUnit * S.Half + self(-coeff)
+                        return -S.Pi * S.ImaginaryUnit * S.Half + cls(-coeff)
 
     def as_base_exp(self):
         return self, S.One
@@ -406,6 +410,10 @@ class log(SingleValuedFunction):
             import math
             from sympy import Real
             return Real(math.log(arg))
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.log(self[0]._sage_())
 
 # MrvLog is used by limit.py
 class MrvLog(log):

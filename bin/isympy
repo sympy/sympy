@@ -19,6 +19,8 @@ from __future__ import division
 from sympy import *
 x, y, z = symbols('xyz')
 k, m, n = symbols('kmn', integer=True)
+Basic.set_repr_level(2)     # 2D output
+pprint_try_use_unicode()    # try to setup unicode pprint
 """
 
 import sys

@@ -24,7 +24,7 @@ class sin(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -33,7 +33,7 @@ class sin(SingleValuedFunction):
             elif isinstance(arg, Basic.Zero):
                 return S.Zero
             elif arg.is_negative:
-                return -self(-arg)
+                return -cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -66,7 +66,7 @@ class sin(SingleValuedFunction):
                 coeff, terms = arg.as_coeff_terms()
 
                 if coeff.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
 
 
     @classmethod
@@ -160,7 +160,7 @@ class cos(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -169,7 +169,7 @@ class cos(SingleValuedFunction):
             elif isinstance(arg, Basic.Zero):
                 return S.One
             elif arg.is_negative:
-                return self(-arg)
+                return cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -201,7 +201,7 @@ class cos(SingleValuedFunction):
                 coeff, terms = arg.as_coeff_terms()
 
                 if coeff.is_negative:
-                    return self(-arg)
+                    return cls(-arg)
 
 
     @classmethod
@@ -293,7 +293,7 @@ class tan(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -302,7 +302,7 @@ class tan(SingleValuedFunction):
             elif isinstance(arg, Basic.Zero):
                 return S.Zero
             elif arg.is_negative:
-                return -self(-arg)
+                return -cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -335,7 +335,7 @@ class tan(SingleValuedFunction):
                 coeff, terms = arg.as_coeff_terms()
 
                 if coeff.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
 
 
     @classmethod
@@ -413,7 +413,7 @@ class cot(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -422,7 +422,7 @@ class cot(SingleValuedFunction):
             #elif isinstance(arg, Basic.Zero):
             #    return S.ComplexInfinity
             elif arg.is_negative:
-                return -self(-arg)
+                return -cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -455,7 +455,7 @@ class cot(SingleValuedFunction):
                 coeff, terms = arg.as_coeff_terms()
 
                 if coeff.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
 
 
     @cache_it_immutable
@@ -525,7 +525,7 @@ class asin(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -556,7 +556,7 @@ class asin(SingleValuedFunction):
                 if arg in cst_table:
                     return S.Pi / cst_table[arg]
                 elif arg.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -566,7 +566,7 @@ class asin(SingleValuedFunction):
                 coeff, terms = arg.as_coeff_terms()
 
                 if coeff.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
 
 
     @cache_it_immutable
@@ -610,7 +610,7 @@ class acos(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -685,7 +685,7 @@ class atan(SingleValuedFunction):
         return
 
     @classmethod
-    def _eval_apply(self, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
@@ -714,7 +714,7 @@ class atan(SingleValuedFunction):
                 if arg in cst_table:
                     return S.Pi / cst_table[arg]
                 elif arg.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -724,7 +724,7 @@ class atan(SingleValuedFunction):
                 coeff, terms = arg.as_coeff_terms()
 
                 if coeff.is_negative:
-                    return -self(-arg)
+                    return -cls(-arg)
 
 
     @cache_it_immutable
@@ -754,7 +754,7 @@ class acot(SingleValuedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def _eval_apply(cls, arg):
+    def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):

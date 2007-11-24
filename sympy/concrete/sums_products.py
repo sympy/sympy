@@ -123,6 +123,11 @@ class Sum2(_BigOperator):
             s += B(2*k)/factorial(2*k)*(g.subs(i,b)-g.subs(i,a))
         return s
 
+    def subs(self, x, y):
+        if x == self.b:
+            return Sum2(self.f, (self.i, self.a, y))
+        return self
+
 '''
 class Product(_BigOperator):
     """

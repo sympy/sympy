@@ -100,7 +100,7 @@ class Factorial(SingleValuedFunction):
             return (cls._recursive(n/2)**2)*cls._swing(n)
 
     @classmethod
-    def _eval_apply(cls, n):
+    def canonize(cls, n):
         n = Basic.sympify(n)
 
         if isinstance(n, Basic.Number):
@@ -183,7 +183,7 @@ class RisingFactorial(SingleValuedFunction):
     nofargs = 2
 
     @classmethod
-    def _eval_apply(cls, x, k):
+    def canonize(cls, x, k):
         x = Basic.sympify(x)
         k = Basic.sympify(k)
 
@@ -246,7 +246,7 @@ class FallingFactorial(SingleValuedFunction):
     nofargs = 2
 
     @classmethod
-    def _eval_apply(cls, x, k):
+    def canonize(cls, x, k):
         x = Basic.sympify(x)
         k = Basic.sympify(k)
 
@@ -339,7 +339,7 @@ class Binomial(SingleValuedFunction):
     nofargs = 2
 
     @classmethod
-    def _eval_apply(cls, r, k):
+    def canonize(cls, r, k):
         r, k = map(Basic.sympify, (r, k))
 
         if isinstance(k, Basic.Number):
