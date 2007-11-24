@@ -15,6 +15,7 @@ __version__ = "0.5.7-hg"
 from sympy.core import *
 
 from series import *
+from ntheory import *
 from concrete import *
 from functions import *
 from simplify import *

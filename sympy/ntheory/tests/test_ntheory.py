@@ -113,3 +113,32 @@ def test_partitions():
     assert npartitions(200) == 3972999029388
     assert npartitions(1000) == 24061467864032622473692149727991
     assert npartitions(2000) == 4720819175619413888601432406799959512200344166
+
+def test_residue():
+    assert n_order(2,13)==12
+    assert [n_order(a,7) for a in range(1,7)]==\
+           [1,3,6,3,6,2]
+    assert n_order(5,17)==16
+    assert n_order(17,11)==n_order(6,11)
+    assert n_order(101,119)==6
+
+    assert is_primitive_root(2,7)==False
+    assert is_primitive_root(3,8)==False
+    assert is_primitive_root(11,14)==False
+    assert is_primitive_root(12,17)==is_primitive_root(29,17)
+
+    assert is_quad_residue(3,7)==False
+    assert is_quad_residue(10,13)==True
+    assert is_quad_residue(12364,139)==is_quad_residue(132,139)
+    assert is_quad_residue(207,251)==True
+
+    assert legendre_symbol(5,11)==1
+    assert legendre_symbol(25,41)==1
+    assert legendre_symbol(67,101)==-1
+      
+    
+
+
+
+
+    

@@ -23,6 +23,7 @@ from elementary.integers import floor, ceiling
 from special.error_functions import erf
 from special.gamma_functions import gamma, lowergamma, uppergamma, polygamma, loggamma
 from special.zeta_functions import dirichlet_eta, zeta
+from special.spherical_harmonics import Ylm, Zlm
 
 ln = log
 
