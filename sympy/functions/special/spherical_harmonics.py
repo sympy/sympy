@@ -1,12 +1,7 @@
 from sympy import SingleValuedFunction, Basic, Rational, pi, I, diff
+from sympy.functions import legendre
 
-# I know Pl and Plm should be defined elsewhere (Pl is legendre, but it is
-# buggy).  These two simple functions just work.
-
-def Pl(l, x):
-    l = Basic.sympify(l)
-    p = 1/(2**l * Basic.Factorial(l)) * diff((x**2-1)**l, x, l)
-    return p.expand()
+Pl = legendre
 
 def Plm(l, m, x):
     l = Basic.sympify(l)
