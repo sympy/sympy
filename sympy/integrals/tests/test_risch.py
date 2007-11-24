@@ -71,3 +71,51 @@ def test_risch_norman_issue442_0():
 @XFAIL
 def test_resch_norman_issue442_1():
     assert risch_norman(1/(x+sin(y)), x)    == log(x+sin(y))
+
+
+
+### These are examples from the Poor Man's Integrator
+### http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/examples/
+#
+# NB: correctness assured as ratsimp(diff(g,x) - f) == 0 in maxima
+# SymPy is unable to do it :(
+
+@XFAIL
+def test_pmint_rat():
+    f = (x**7-24*x**4-4*x**2+8*x-8) / (x**8+6*x**6+12*x**4+8*x**2)
+    g = (4 + 8*x**2 + 6*x + 3*x**3) / (x*(x**4 + 4*x**2 + 4))  +  log(x)
+
+    assert risch_norman(f, x) == g
+
+
+@XFAIL
+def test_pmint_trig():
+    f = (x-tan(x)) / tan(x)**2  +  tan(x)
+    g = (-x - tan(x)*x**2 / 2) / tan(x)  +  log(1+tan(x)**2) / 2
+
+    assert risch_norman(f, x) == g
+
+
+@XFAIL
+def test_pmint_logexp():
+    f = (1+x+x*exp(x))*(x+log(x)+exp(x)-1)/(x+log(x)+exp(x))**2/x
+    g = 1/(x+log(x)+exp(x)) + log(x + log(x) + exp(x))
+
+    assert risch_norman(f, x) == g
+
+
+@XFAIL
+def test_pmint_erf():
+    f = exp(-x**2)*erf(x)/(erf(x)**3-erf(x)**2-erf(x)+1)
+    g = sqrt(pi)/4 * (-1/(erf(x)-1) - log(erf(x)+1)/2 + log(erf(x)-1)/2)
+
+    assert risch_norman(f, x) == g
+
+
+# TODO: convert the rest of PMINT tests:
+# - Airy
+# - Bessel
+# - Whittaker
+# - LambertW
+# - Wright omega
+

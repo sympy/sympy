@@ -176,6 +176,10 @@ def risch_norman(f, x, rewrite=False):
            Algorithm (II), ACM Transactions on Mathematical
            Software 11 (1985), 356-362.
 
+       See also Manuel Bronstein  Poor Man's Integrator
+
+       [5] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
+
     """
     f = Basic.sympify(f)
 
