@@ -37,6 +37,39 @@ def test_upretty_subs_missingin_24():
     assert upretty( Symbol('F_v') )     == u'Fᵥ'
     assert upretty( Symbol('F_x') )     == u'Fₓ'
 
+
+def test_upretty_nicerat():
+    u = upretty(y*x**-2)
+    s = \
+u"""\
+y 
+──
+ 2
+x \
+"""
+    assert u == s
+
+    u = upretty(y**Rational(3,2) * x**Rational(-5,2))
+    s = \
+u"""\
+ 3/2
+y   
+────
+ 5/2
+x   \
+"""
+    assert u == s
+
+    u = upretty(sin(x)**3/tan(x)**2)
+    s = \
+u"""\
+   3   
+sin (x)
+───────
+   2   
+tan (x)\
+"""
+
 def test_upretty_funcbraces():
     f = Function('f')
     u = upretty(f(x/(y+1), y))

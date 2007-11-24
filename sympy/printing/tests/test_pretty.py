@@ -14,6 +14,8 @@ def test_pretty_basic():
     # Powers
     assert pretty( (x**2) ) == ' 2\nx '
     assert pretty( 1/x ) == '1\n-\nx'
+    assert pretty( y*x**-2 ) == 'y \n--\n 2\nx '
+    assert pretty( x**Rational(-5,2) ) == ' 1  \n----\n 5/2\nx   '
 
     # Sums of terms
     assert pretty( (x**2 + x + 1))  == '         2\n1 + x + x '
