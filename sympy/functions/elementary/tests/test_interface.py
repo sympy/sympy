@@ -1,7 +1,7 @@
 # This test file tests the SymPy function interface, that people use to create
 # their own new functions. It should be as easy as possible.
 
-from sympy import Function, sympify, sin, cos
+from sympy import Function, sympify, sin, cos, limit
 from sympy.abc import x
 
 def test_function_series1():
@@ -21,6 +21,7 @@ def test_function_series1():
 
     #Test that the taylor series is correct
     assert my_function(x).series(x, 10) == sin(x).series(x, 10)
+    assert limit(my_function(x)/x, x, 0) == 1
 
 def test_function_series2():
     """Create our new "cos" function."""
