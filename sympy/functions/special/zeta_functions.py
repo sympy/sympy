@@ -1,11 +1,11 @@
 
-from sympy.core import SingleValuedFunction, S, Basic, pi
+from sympy.core import Function, S, Basic, pi
 
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
 ###############################################################################
 
-class zeta(SingleValuedFunction):
+class zeta(Function):
 
     nofargs = (1, 2)
 
@@ -45,7 +45,7 @@ class zeta(SingleValuedFunction):
                         return zeta - Basic.harmonic(a-1, z)
 
 
-class dirichlet_eta(SingleValuedFunction):
+class dirichlet_eta(Function):
     """
     Dirichlet eta function
     """

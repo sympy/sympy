@@ -1,6 +1,6 @@
 
 from sympy.core.basic import Basic, S
-from sympy.core.function import SingleValuedFunction
+from sympy.core.function import Function
 from sympy.ntheory import sieve
 from math import sqrt
 
@@ -8,7 +8,7 @@ from math import sqrt
 ######################## FACTORIAL and MULTI-FACTORIAL ########################
 ###############################################################################
 
-class Factorial(SingleValuedFunction):
+class Factorial(Function):
     """Implementation of factorial function over nonnegative integers.
        For the sake of convenience and simplicity of procedures using
        this function it is defined for negative integers and returns
@@ -145,7 +145,7 @@ class Factorial(SingleValuedFunction):
     def _eval_is_integer(self):
         return self[0].is_integer
 
-class MultiFactorial(SingleValuedFunction):
+class MultiFactorial(Function):
     pass
 
 
@@ -155,7 +155,7 @@ factorial   = Factorial
 ######################## RISING and FALLING FACTORIALS ########################
 ###############################################################################
 
-class RisingFactorial(SingleValuedFunction):
+class RisingFactorial(Function):
     """Rising factorial (also called Pochhammer symbol) is a double valued
        function arising in concrete mathematics, hypergeometric functions
        and series expanansions. It is defined by
@@ -218,7 +218,7 @@ class RisingFactorial(SingleValuedFunction):
     def _eval_rewrite_as_gamma(self, x, k):
         return Basic.gamma(x + k) / Basic.gamma(x)
 
-class FallingFactorial(SingleValuedFunction):
+class FallingFactorial(Function):
     """Falling factorial (related to rising factorial) is a double valued
        function arising in concrete mathematics, hypergeometric functions
        and series expanansions. It is defined by
@@ -289,7 +289,7 @@ ff = FallingFactorial
 ########################### BINOMIAL COEFFICIENTS #############################
 ###############################################################################
 
-class Binomial(SingleValuedFunction):
+class Binomial(Function):
     """Implementation of the binomial coefficient. It can be defined
        in two ways depending on its desired interpretation:
 

@@ -1,4 +1,4 @@
-from sympy import SingleValuedFunction, Basic, Rational, pi, I
+from sympy import Function, Basic, Rational, pi, I
 from sympy.functions import legendre, assoc_legendre
 
 Pl = legendre

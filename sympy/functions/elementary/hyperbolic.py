@@ -1,12 +1,12 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import SingleValuedFunction, Lambda
+from sympy.core.function import Function, Lambda
 
 ###############################################################################
 ########################### HYPERBOLIC FUNCTIONS ##############################
 ###############################################################################
 
-class sinh(SingleValuedFunction):
+class sinh(Function):
 
     nofargs = 1
 
@@ -100,7 +100,7 @@ class sinh(SingleValuedFunction):
         if arg.is_imaginary:
             return True
 
-class cosh(SingleValuedFunction):
+class cosh(Function):
 
     nofargs = 1
 
@@ -194,7 +194,7 @@ class cosh(SingleValuedFunction):
         if arg.is_imaginary:
             return True
 
-class tanh(SingleValuedFunction):
+class tanh(Function):
 
     nofargs = 1
 
@@ -290,7 +290,7 @@ class tanh(SingleValuedFunction):
         if arg.is_real:
             return True
 
-class coth(SingleValuedFunction):
+class coth(Function):
 
     nofargs = 1
 
@@ -384,7 +384,7 @@ class coth(SingleValuedFunction):
 ############################# HYPERBOLIC INVERSES #############################
 ###############################################################################
 
-class asinh(SingleValuedFunction):
+class asinh(Function):
 
     nofargs = 1
 
@@ -454,7 +454,7 @@ class asinh(SingleValuedFunction):
         else:
             return self.func(arg)
 
-class acosh(SingleValuedFunction):
+class acosh(Function):
 
     nofargs = 1
 
@@ -528,7 +528,7 @@ class acosh(SingleValuedFunction):
         else:
             return self.func(arg)
 
-class atanh(SingleValuedFunction):
+class atanh(Function):
 
     nofargs = 1
 
@@ -584,7 +584,7 @@ class atanh(SingleValuedFunction):
         else:
             return self.func(arg)
 
-class acoth(SingleValuedFunction):
+class acoth(Function):
 
     nofargs = 1
 

@@ -1,13 +1,13 @@
 # This test file tests the SymPy function interface, that people use to create
 # their own new functions. It should be as easy as possible.
 
-from sympy import SingleValuedFunction, sympify, sin, cos
+from sympy import Function, sympify, sin, cos
 from sympy.abc import x
 
 def test_function_series1():
     """Create our new "sin" function."""
 
-    class my_function(SingleValuedFunction):
+    class my_function(Function):
         nofargs = 1
 
         def fdiff(self, argindex = 1):
@@ -25,7 +25,7 @@ def test_function_series1():
 def test_function_series2():
     """Create our new "cos" function."""
 
-    class my_function2(SingleValuedFunction):
+    class my_function2(Function):
         nofargs = 1
 
         def fdiff(self, argindex = 1):

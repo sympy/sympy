@@ -1,12 +1,12 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import Lambda, SingleValuedFunction
+from sympy.core.function import Lambda, Function
 
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################
 ###############################################################################
 
-class floor(SingleValuedFunction):
+class floor(Function):
     """Floor is a univariate function which returns the largest integer
        value not greater than its argument. However this implementaion
        generalizes floor to complex numbers.
@@ -96,7 +96,7 @@ class floor(SingleValuedFunction):
     def _eval_is_integer(self):
         return self[0].is_real
 
-class ceiling(SingleValuedFunction):
+class ceiling(Function):
     """Ceiling is a univariate function which returns the smallest integer
        value not less than its argument. Ceiling function is generalized
        in this implementation to complex numbers.

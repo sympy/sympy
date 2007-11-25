@@ -9,7 +9,7 @@ from mul import Mul
 from add import Add
 from relational import Equality, Inequality, Unequality, StrictInequality
 from function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
-    Function, SingleValuedFunction
+    Function
 from interval import Interval
 
 # set repr output to pretty output:

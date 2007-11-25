@@ -405,6 +405,9 @@ class Basic(BasicMeths):
                 return True
         return False
 
+    def _eval_power(self, other):
+        return None
+
     def _eval_derivative(self, s):
         return
 
@@ -418,9 +421,6 @@ class Basic(BasicMeths):
         return
 
     def _eval_fpower(b, e):
-        return
-
-    def _eval_apply_power(self,b,e):
         return
 
     def _eval_apply_evalf(self,*args):
@@ -992,7 +992,7 @@ class Basic(BasicMeths):
 
     #XXX fix the removeme
     def __call__(self, *args, **removeme):
-        return Basic.SingleValuedFunction(self[0])(*args)
+        return Basic.Function(self[0])(*args)
         print self, args
         return Basic.Apply(self, *args)
 

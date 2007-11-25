@@ -1,12 +1,12 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import SingleValuedFunction
+from sympy.core.function import Function
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
 ###############################################################################
 
-class re(SingleValuedFunction):
+class re(Function):
     """Returns real part of expression. This function performs only
        elementary analysis and so it will fail to decompose properly
        more complicated expressions. If completely simplified result
@@ -79,7 +79,7 @@ class re(SingleValuedFunction):
     def _eval_expand_complex(self, *args):
         return self.func(self[0].as_real_imag()[0])
 
-class im(SingleValuedFunction):
+class im(Function):
     """Returns imaginary part of expression. This function performs
        only elementary analysis and so it will fail to decompose
        properly more complicated expressions. If completely simplified
@@ -156,7 +156,7 @@ class im(SingleValuedFunction):
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################
 ###############################################################################
 
-class sign(SingleValuedFunction):
+class sign(Function):
 
     nofargs = 1
 
@@ -180,7 +180,7 @@ class sign(SingleValuedFunction):
     def _eval_is_zero(self):
         return isinstance(self[0], Basic.Zero)
 
-class abs(SingleValuedFunction):
+class abs(Function):
 
     nofargs = 1
 
@@ -223,7 +223,7 @@ class abs(SingleValuedFunction):
     def _eval_conjugate(self):
         return self
 
-class arg(SingleValuedFunction):
+class arg(Function):
 
     nofargs = 1
 
@@ -235,7 +235,7 @@ class arg(SingleValuedFunction):
     def _eval_is_real(self):
         return True
 
-class conjugate(SingleValuedFunction):
+class conjugate(Function):
 
     nofargs = 1
 

@@ -1,12 +1,12 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import Lambda, SingleValuedFunction
+from sympy.core.function import Lambda, Function
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
 ###############################################################################
 
-class sin(SingleValuedFunction):
+class sin(Function):
 
     nofargs = 1
 
@@ -142,7 +142,7 @@ class sin(SingleValuedFunction):
         import sage.all as sage
         return sage.sin(self[0]._sage_())
 
-class cos(SingleValuedFunction):
+class cos(Function):
 
     nofargs = 1
 
@@ -275,7 +275,7 @@ class cos(SingleValuedFunction):
         import sage.all as sage
         return sage.cos(self[0]._sage_())
 
-class tan(SingleValuedFunction):
+class tan(Function):
 
     nofargs = 1
 
@@ -395,7 +395,7 @@ class tan(SingleValuedFunction):
         if arg.is_imaginary:
             return True
 
-class cot(SingleValuedFunction):
+class cot(Function):
 
     nofargs = 1
 
@@ -510,7 +510,7 @@ class cot(SingleValuedFunction):
 ########################### TRIGONOMETRIC INVERSES ############################
 ###############################################################################
 
-class asin(SingleValuedFunction):
+class asin(Function):
 
     nofargs = 1
 
@@ -595,7 +595,7 @@ class asin(SingleValuedFunction):
         else:
             return self.func(arg)
 
-class acos(SingleValuedFunction):
+class acos(Function):
 
     nofargs = 1
 
@@ -670,7 +670,7 @@ class acos(SingleValuedFunction):
         else:
             return self.func(arg)
 
-class atan(SingleValuedFunction):
+class atan(Function):
 
     nofargs = 1
 
@@ -743,7 +743,7 @@ class atan(SingleValuedFunction):
         else:
             return self.func(arg)
 
-class acot(SingleValuedFunction):
+class acot(Function):
 
     nofargs = 1
 

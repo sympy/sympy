@@ -83,7 +83,7 @@ class FunctionClass(MetaBasicMeths):
     def torepr(cls):
         return cls.__name__
 
-class Function(Basic, RelMeths):
+class Function(Basic, ArithMeths, RelMeths):
     """
     Base class for applied functions.
     Constructor of undefined classes.
@@ -98,19 +98,19 @@ class Function(Basic, RelMeths):
 
     @cache_it
     def __new__(cls, *args, **options):
-        if cls is SingleValuedFunction or cls is Function:
-            #when user writes SingleValuedFunction("f"), do an equivalent of:
-            #taking the whole class SingleValuedFunction(...):
-            #and rename the SingleValuedFunction to "f" and return f, thus:
-            #In [13]: isinstance(f, SingleValuedFunction)
+        if cls is Function or cls is Function:
+            #when user writes Function("f"), do an equivalent of:
+            #taking the whole class Function(...):
+            #and rename the Function to "f" and return f, thus:
+            #In [13]: isinstance(f, Function)
             #Out[13]: False
             #In [14]: isinstance(f, FunctionClass)
             #Out[14]: True
 
             if len(args) == 1 and isinstance(args[0], str):
-                #always create SingleValuedFunction
-                return FunctionClass(SingleValuedFunction, *args)
-                return FunctionClass(SingleValuedFunction, *args, **options)
+                #always create Function
+                return FunctionClass(Function, *args)
+                return FunctionClass(Function, *args, **options)
             else:
                 print args
                 print type(args[0])
@@ -224,11 +224,6 @@ class Function(Basic, RelMeths):
             #    df = self.func.fdiff(i)
             #    l.append(Apply(df,*self[:]) * da)
         return Basic.Add(*l)
-
-    def _eval_power(b, e):
-        if len(b[:])==1:
-            return b.func._eval_apply_power(b[0], e)
-        return
 
     def _eval_is_commutative(self):
         r = True
@@ -621,13 +616,3 @@ def diff(f, x, times = 1, evaluate=True):
         return f
     else:
         return Derivative(f, x, evaluate=evaluate)
-
-
-
-# TODO rename me to something more appropriate? e.g. ArithFunction (or just
-# Function?)
-class SingleValuedFunction(ArithMeths, Function):
-    """
-    Single-valued functions.
-    """
-    pass

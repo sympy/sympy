@@ -8,13 +8,13 @@ combinatorial polynomials.
 
 from sympy.core.basic import Basic, S
 from sympy.core import Rational, Symbol
-from sympy.core.function import SingleValuedFunction
+from sympy.core.function import Function
 from sympy.utilities.memoization import recurrence_memo, assoc_recurrence_memo
 
 
 _x = Basic.Symbol('x', dummy=True)
 
-class PolynomialSequence(SingleValuedFunction):
+class PolynomialSequence(Function):
     """Polynomial sequence with 1 index
 
        n >= 0
@@ -31,7 +31,7 @@ class PolynomialSequence(SingleValuedFunction):
             raise ValueError("%s index must be nonnegative integer (got %r)" % (cls, n))
 
 
-class PolynomialSequence2(SingleValuedFunction):
+class PolynomialSequence2(Function):
     """Polynomial sequence with 2 indexes
 
        n >= 0
@@ -113,7 +113,7 @@ class chebyshevu(PolynomialSequence):
         return (2*_x*prev[n-1] - prev[n-2]).expand()
 
 
-class chebyshevt_root(SingleValuedFunction):
+class chebyshevt_root(Function):
     """
     chebyshev_root(n, k) returns the kth root (indexed from zero) of
     the nth Chebyshev polynomial of the first kind; that is, if
@@ -135,7 +135,7 @@ class chebyshevt_root(SingleValuedFunction):
             raise ValueError, "must have 0 <= k < n"
         return Basic.cos(S.Pi*(2*k+1)/(2*n))
 
-class chebyshevu_root(SingleValuedFunction):
+class chebyshevu_root(Function):
     """
     chebyshevu_root(n, k) returns the kth root (indexed from zero) of the
     nth Chebyshev polynomial of the second kind; that is, if 0 <= k < n,

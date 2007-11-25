@@ -19,7 +19,7 @@ def _lanczos(z):
         logw = 0.91893853320467267+(z+0.5)*log(z+7.5)+log(x)-z-7.5
         return exp(logw)
 
-class _Factorial(SingleValuedFunction):
+class _Factorial(Function):
     """
     Factorials and multiple factorials
 
@@ -264,7 +264,7 @@ def factorial_simplify(expr):
 
     return expr
 
-class Rising_factorial(SingleValuedFunction):
+class Rising_factorial(Function):
     """
     Usage
     =====
@@ -287,7 +287,7 @@ class Rising_factorial(SingleValuedFunction):
 rising_factorial = Rising_factorial
 
 
-class Falling_factorial(SingleValuedFunction):
+class Falling_factorial(Function):
     """
     Usage
     =====
@@ -310,7 +310,7 @@ class Falling_factorial(SingleValuedFunction):
 falling_factorial = Falling_factorial
 
 
-class Binomial2(SingleValuedFunction):
+class Binomial2(Function):
     """
     Usage
     =====

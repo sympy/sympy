@@ -1,8 +1,8 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
-from sympy.core.function import Lambda, SingleValuedFunction, Function
+from sympy.core.function import Lambda, Function, Function
 
-class exp(SingleValuedFunction):
+class exp(Function):
 
     nofargs = 1
 
@@ -231,7 +231,7 @@ class exp(SingleValuedFunction):
         import sage.all as sage
         return sage.exp(self[0]._sage_())
 
-class log(SingleValuedFunction):
+class log(Function):
 
     nofargs = (1,2)
     is_comparable = True

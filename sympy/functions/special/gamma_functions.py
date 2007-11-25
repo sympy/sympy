@@ -1,13 +1,13 @@
 
 from sympy.core import Basic, S
-from sympy.core.function import SingleValuedFunction
+from sympy.core.function import Function
 from zeta_functions import zeta
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
 ###############################################################################
 
-class gamma(SingleValuedFunction):
+class gamma(Function):
 
     nofargs = 1
 
@@ -81,7 +81,7 @@ class gamma(SingleValuedFunction):
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
 ###############################################################################
 
-class lowergamma(SingleValuedFunction):
+class lowergamma(Function):
     """Lower incomplete gamma function"""
 
     nofargs = 2
@@ -98,7 +98,7 @@ class lowergamma(SingleValuedFunction):
                     return b*cls(b, x) - x**b * Basic.exp(-x)
 
 
-class uppergamma(SingleValuedFunction):
+class uppergamma(Function):
     """Upper incomplete gamma function"""
 
     nofargs = 2
@@ -135,7 +135,7 @@ class uppergamma(SingleValuedFunction):
 ########################### GAMMA RELATED FUNCTIONS ###########################
 ###############################################################################
 
-class polygamma(SingleValuedFunction):
+class polygamma(Function):
 
     nofargs = 2
 
@@ -199,6 +199,6 @@ class polygamma(SingleValuedFunction):
     def _eval_rewrite_as_zeta(self, n, z):
         return (-1)**(n+1)*Basic.Factorial(n)*zeta(n+1, z-1)
 
-class loggamma(SingleValuedFunction):
+class loggamma(Function):
 
     nofargs = 1

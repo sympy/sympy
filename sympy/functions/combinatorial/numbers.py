@@ -8,7 +8,7 @@ the separate 'factorials' module.
 """
 
 from sympy.core import *
-from sympy.core.function import SingleValuedFunction
+from sympy.core.function import Function
 from sympy.core.basic import S
 
 def _product(a, b):
@@ -30,7 +30,7 @@ _sym = Symbol('x')
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-class fibonacci(SingleValuedFunction):
+class fibonacci(Function):
     """
     Fibonacci numbers / Fibonacci polynomials
 
@@ -88,7 +88,7 @@ class fibonacci(SingleValuedFunction):
                        "only for positive integer indices.")
                 return cls._fibpoly(n).subs(_sym, sym)
 
-class lucas(SingleValuedFunction):
+class lucas(Function):
     """
     Lucas numbers
 
@@ -128,7 +128,7 @@ class lucas(SingleValuedFunction):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-class bernoulli(SingleValuedFunction):
+class bernoulli(Function):
     r"""
     Bernoulli numbers / Bernoulli polynomials
 
@@ -265,7 +265,7 @@ class bernoulli(SingleValuedFunction):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-class bell(SingleValuedFunction):
+class bell(Function):
     r"""
     Bell numbers / Bell polynomials
 
@@ -356,7 +356,7 @@ class bell(SingleValuedFunction):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-class harmonic(SingleValuedFunction):
+class harmonic(Function):
     r"""
     Harmonic numbers
 

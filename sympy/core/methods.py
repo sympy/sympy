@@ -44,12 +44,6 @@ class ArithMeths(object):
         return Basic.sympify(other).__div__(self)
     def __rtruediv__(self, other):
         return self.__rdiv__(other)
-    def _eval_power(self, other):
-        """ Evaluate Pow(self, other), return new object or None if
-        no evaluation can be carried out. This method can be called
-        only from Pow.__new__.
-        """
-        return None
 
 class NoArithMeths(object):
     
