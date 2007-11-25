@@ -8,7 +8,7 @@ from sympy.core.function import Lambda, Function
 
 class sqrt(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -75,7 +75,7 @@ class sqrt(Function):
 
 class max_(Function):
 
-    nofargs = 2
+    nargs = 2
 
     def canonize(cls, x, y):
         if isinstance(x, Basic.Number) and isinstance(y, Basic.Number):
@@ -97,7 +97,7 @@ class max_(Function):
 
 class min_(Function):
 
-    nofargs = 2
+    nargs = 2
 
     def canonize(cls, x, y):
         if isinstance(x, Basic.Number) and isinstance(y, Basic.Number):

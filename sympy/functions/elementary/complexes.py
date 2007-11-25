@@ -31,7 +31,7 @@ class re(Function):
 
     """
 
-    nofargs = 1
+    nargs = 1
 
     is_real = True
 
@@ -104,7 +104,7 @@ class im(Function):
 
     """
 
-    nofargs = 1
+    nargs = 1
 
     is_real = True
 
@@ -158,7 +158,7 @@ class im(Function):
 
 class sign(Function):
 
-    nofargs = 1
+    nargs = 1
 
     @classmethod
     def canonize(cls, arg):
@@ -182,7 +182,7 @@ class sign(Function):
 
 class abs(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -225,7 +225,7 @@ class abs(Function):
 
 class arg(Function):
 
-    nofargs = 1
+    nargs = 1
 
     is_real = True
 
@@ -237,7 +237,7 @@ class arg(Function):
 
 class conjugate(Function):
 
-    nofargs = 1
+    nargs = 1
 
     @classmethod
     def canonize(cls, arg):

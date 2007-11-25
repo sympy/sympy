@@ -8,7 +8,7 @@ def test_function_series1():
     """Create our new "sin" function."""
 
     class my_function(Function):
-        nofargs = 1
+        nargs = 1
 
         def fdiff(self, argindex = 1):
             return cos(self[0])
@@ -26,7 +26,7 @@ def test_function_series2():
     """Create our new "cos" function."""
 
     class my_function2(Function):
-        nofargs = 1
+        nargs = 1
 
         def fdiff(self, argindex = 1):
             return -sin(self[0])

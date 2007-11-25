@@ -94,7 +94,7 @@ class Function(Basic, ArithMeths, RelMeths):
 
     precedence = Basic.Apply_precedence
 
-    nofargs = None
+    nargs = None
 
     @cache_it
     def __new__(cls, *args, **options):
@@ -117,8 +117,8 @@ class Function(Basic, ArithMeths, RelMeths):
                 raise Exception("You need to specify exactly one string")
         args = map(Basic.sympify, args)
         # these lines should be refactored
-        if "nofargs" in options:
-            del options["nofargs"]
+        if "nargs" in options:
+            del options["nargs"]
         if "dummy" in options:
             del options["dummy"]
         if "comparable" in options:
@@ -181,7 +181,7 @@ class Function(Basic, ArithMeths, RelMeths):
         if self == old:
             return new
         elif isinstance(old, FunctionClass) and isinstance(new, FunctionClass):
-            if old == self.func and old.nofargs == new.nofargs:
+            if old == self.func and old.nargs == new.nargs:
                 return new(*self[:])
         obj = self.func._eval_apply_subs(*(self[:] + (old,) + (new,)))
         if obj is not None:
@@ -257,7 +257,7 @@ class Function(Basic, ArithMeths, RelMeths):
         return 1   + Basic.Add(*[t.count_ops(symbolic) for t in self])
 
     def _eval_oseries(self, order):
-        assert self.func.nofargs==1,`self.func`
+        assert self.func.nargs==1,`self.func`
         arg = self[0]
         x = order.symbols[0]
         if not Basic.Order(1,x).contains(arg):
@@ -311,13 +311,13 @@ class Function(Basic, ArithMeths, RelMeths):
         return self.func(*args, **self._assumptions)
 
     def fdiff(self, argindex=1):
-        if self.nofargs is not None:
-            if isinstance(self.nofargs, tuple):
-                nofargs = self.nofargs[-1]
+        if self.nargs is not None:
+            if isinstance(self.nargs, tuple):
+                nargs = self.nargs[-1]
             else:
-                nofargs = self.nofargs
-            if not (1<=argindex<=nofargs):
-                raise TypeError("argument index %r is out of range [1,%s]" % (i,nofargs))
+                nargs = self.nargs
+            if not (1<=argindex<=nargs):
+                raise TypeError("argument index %r is out of range [1,%s]" % (i,nargs))
         return Derivative(self,self[argindex-1],evaluate=False)
 
     def tostr(self, level=0):
@@ -331,7 +331,7 @@ class Function(Basic, ArithMeths, RelMeths):
     def _eval_apply_evalf(cls, arg):
         arg = arg.evalf()
 
-        #if cls.nofargs == 1:
+        #if cls.nargs == 1:
         # common case for functions with 1 argument
         #if isinstance(arg, Basic.Number):
         if arg.is_number:
@@ -359,15 +359,15 @@ class Function(Basic, ArithMeths, RelMeths):
 
 class WildFunction(Function, Atom):
 
-    nofargs = 1
+    nargs = 1
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         for p,v in repl_dict.items():
             if p==pattern:
                 if v==expr: return repl_dict
                 return None
-        if pattern.nofargs is not None:
-            if pattern.nofargs != expr.nofargs:
+        if pattern.nargs is not None:
+            if pattern.nargs != expr.nargs:
                 return None
         repl_dict = repl_dict.copy()
         repl_dict[pattern] = expr
@@ -412,7 +412,7 @@ class Lambda(Function):
         return self._args
 
     @property
-    def nofargs(self):
+    def nargs(self):
         return len(self._args)-1
 
     def __getitem__(self, iter):
@@ -483,7 +483,7 @@ class Lambda(Function):
     _eval_subs = Basic._seq_subs
 
     def canonize(cls, *args):
-        n = cls.nofargs
+        n = cls.nargs
         if n!=len(args):
             raise TypeError('%s takes exactly %s arguments (got %s)'\
                             % (cls, n, len(args)))
@@ -593,8 +593,8 @@ class Derivative(Basic, ArithMeths, RelMeths):
         return None
         #print pattern, expr, repl_dict, evaluate
         stop
-        if pattern.nofargs is not None:
-            if pattern.nofargs != expr.nofargs:
+        if pattern.nargs is not None:
+            if pattern.nargs != expr.nargs:
                 return None
         repl_dict = repl_dict.copy()
         repl_dict[pattern] = expr

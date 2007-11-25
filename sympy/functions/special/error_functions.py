@@ -8,7 +8,7 @@ from sympy.core.function import Function
 
 class erf(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:

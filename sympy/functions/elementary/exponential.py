@@ -4,7 +4,7 @@ from sympy.core.function import Lambda, Function, Function
 
 class exp(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -233,7 +233,7 @@ class exp(Function):
 
 class log(Function):
 
-    nofargs = (1,2)
+    nargs = (1,2)
     is_comparable = True
 
     def fdiff(self, argindex=1):

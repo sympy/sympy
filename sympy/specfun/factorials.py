@@ -277,7 +277,7 @@ class Rising_factorial(Function):
         12
 
     """
-    nofargs = 2
+    nargs = 2
 
     @classmethod
     def canonize(cls, x, n):
@@ -300,7 +300,7 @@ class Falling_factorial(Function):
         60
 
     """
-    nofargs = 2
+    nargs = 2
 
     @classmethod
     def canonize(cls, x, n):
@@ -345,7 +345,7 @@ class Binomial2(Function):
         (1/6)*x*(1 - x)*(2 - x)
 
     """
-    nofargs = 2
+    nargs = 2
 
     @classmethod
     def canonize(cls, n, k):

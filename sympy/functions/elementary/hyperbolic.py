@@ -8,7 +8,7 @@ from sympy.core.function import Function, Lambda
 
 class sinh(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -102,7 +102,7 @@ class sinh(Function):
 
 class cosh(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -196,7 +196,7 @@ class cosh(Function):
 
 class tanh(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -292,7 +292,7 @@ class tanh(Function):
 
 class coth(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -386,7 +386,7 @@ class coth(Function):
 
 class asinh(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -456,7 +456,7 @@ class asinh(Function):
 
 class acosh(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -530,7 +530,7 @@ class acosh(Function):
 
 class atanh(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -586,7 +586,7 @@ class atanh(Function):
 
 class acoth(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:

@@ -67,7 +67,7 @@ class Symbol(Atom, RelMeths, ArithMeths):
 
     def __call__(self, *args):
         assumptions = self._assumptions
-        return Basic.Function(self.name, nofargs=len(args))(*args, **assumptions)
+        return Basic.Function(self.name, nargs=len(args))(*args, **assumptions)
 
     def _eval_integral(self, s):
         if self==s:
@@ -118,7 +118,7 @@ class Wild(Symbol):
         return repl_dict
 
     def __call__(self, *args, **assumptions):
-        return Basic.WildFunction(self.name, nofargs=len(args))(*args, **assumptions)
+        return Basic.WildFunction(self.name, nargs=len(args))(*args, **assumptions)
 
     def tostr(self, level=0):
         return self.name + '_'

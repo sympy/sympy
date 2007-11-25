@@ -48,7 +48,7 @@ class Factorial(Function):
 
     """
 
-    nofargs = 1
+    nargs = 1
 
     _small_swing = [
         1,1,1,3,3,15,5,35,35,315,63,693,231,3003,429,6435,6435,109395,
@@ -180,7 +180,7 @@ class RisingFactorial(Function):
 
     """
 
-    nofargs = 2
+    nargs = 2
 
     @classmethod
     def canonize(cls, x, k):
@@ -243,7 +243,7 @@ class FallingFactorial(Function):
 
     """
 
-    nofargs = 2
+    nargs = 2
 
     @classmethod
     def canonize(cls, x, k):
@@ -336,7 +336,7 @@ class Binomial(Function):
 
     """
 
-    nofargs = 2
+    nargs = 2
 
     @classmethod
     def canonize(cls, r, k):

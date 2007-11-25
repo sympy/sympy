@@ -8,7 +8,7 @@ from sympy.core.function import Lambda, Function
 
 class sin(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -144,7 +144,7 @@ class sin(Function):
 
 class cos(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -277,7 +277,7 @@ class cos(Function):
 
 class tan(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex==1:
@@ -397,7 +397,7 @@ class tan(Function):
 
 class cot(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -512,7 +512,7 @@ class cot(Function):
 
 class asin(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -597,7 +597,7 @@ class asin(Function):
 
 class acos(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -672,7 +672,7 @@ class acos(Function):
 
 class atan(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -745,7 +745,7 @@ class atan(Function):
 
 class acot(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:

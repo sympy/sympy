@@ -9,7 +9,7 @@ from zeta_functions import zeta
 
 class gamma(Function):
 
-    nofargs = 1
+    nargs = 1
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -84,7 +84,7 @@ class gamma(Function):
 class lowergamma(Function):
     """Lower incomplete gamma function"""
 
-    nofargs = 2
+    nargs = 2
 
     @classmethod
     def canonize(cls, a, x):
@@ -101,7 +101,7 @@ class lowergamma(Function):
 class uppergamma(Function):
     """Upper incomplete gamma function"""
 
-    nofargs = 2
+    nargs = 2
 
     def fdiff(self, argindex=2):
         if argindex == 2:
@@ -137,7 +137,7 @@ class uppergamma(Function):
 
 class polygamma(Function):
 
-    nofargs = 2
+    nargs = 2
 
     def fdiff(self, argindex=2):
         if argindex == 2:
@@ -201,4 +201,4 @@ class polygamma(Function):
 
 class loggamma(Function):
 
-    nofargs = 1
+    nargs = 1

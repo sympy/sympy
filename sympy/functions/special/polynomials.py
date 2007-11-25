@@ -20,7 +20,7 @@ class PolynomialSequence(Function):
        n >= 0
     """
 
-    nofargs = 2
+    nargs = 2
     precedence = Basic.Apply_precedence
 
     @classmethod
@@ -38,7 +38,7 @@ class PolynomialSequence2(Function):
        abs(m) <= n
     """
 
-    nofargs = 3
+    nargs = 3
 
     @classmethod
     def canonize(cls, n, m, x):
@@ -127,7 +127,7 @@ class chebyshevt_root(Function):
     >>> chebyshevt(3, chebyshevt_root(3, 2))
     0
     """
-    nofargs = 2
+    nargs = 2
 
     @classmethod
     def canonize(cls, n, k):
@@ -149,7 +149,7 @@ class chebyshevu_root(Function):
         >>> chebyshevu(3, chebyshevu_root(3, 2))
         0
     """
-    nofargs = 2
+    nargs = 2
 
     @classmethod
     def canonize(cls, n, k):

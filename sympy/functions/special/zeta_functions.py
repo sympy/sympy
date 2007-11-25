@@ -7,7 +7,7 @@ from sympy.core import Function, S, Basic, pi
 
 class zeta(Function):
 
-    nofargs = (1, 2)
+    nargs = (1, 2)
 
     @classmethod
     def canonize(cls, z, a=S.One):
@@ -49,7 +49,7 @@ class dirichlet_eta(Function):
     """
     Dirichlet eta function
     """
-    nofargs = 1
+    nargs = 1
 
     @classmethod
     def canonize(cls, s):

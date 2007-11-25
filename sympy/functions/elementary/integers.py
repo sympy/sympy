@@ -33,7 +33,7 @@ class floor(Function):
 
     """
 
-    nofargs = 1
+    nargs = 1
 
     @classmethod
     def canonize(cls, arg):
@@ -123,7 +123,7 @@ class ceiling(Function):
 
     """
 
-    nofargs = 1
+    nargs = 1
 
     @classmethod
     def canonize(cls, arg):
