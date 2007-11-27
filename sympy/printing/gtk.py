@@ -3,7 +3,7 @@ from sympy.printing.mathml import mathml
 import tempfile
 import os
 
-def print_gtk(x):
+def print_gtk(x, start_viewer=True):
     """Print to Gtkmathview, a gtk widget capable of rendering MathML.
     Needs libgtkmathview-bin"""
     from sympy.utilities.mathml import c2p
@@ -13,4 +13,5 @@ def print_gtk(x):
     file.write( c2p(mathml(x), simple=True) )
     file.close()
 
-    os.system("mathmlviewer " + tmp)
+    if start_viewer:
+        os.system("mathmlviewer " + tmp)
