@@ -1,14 +1,10 @@
-import sys
-sys.path.append(".")
-
 import py
 from sympy.utilities.pytest import XFAIL
 
-from sympy import *
-from sympy.core.basic import S # Use Singleton comparisons.
-Pi = pi
-
-## sympy/modules/polynomials/base.py
+from sympy import Polynomial, pi, symbols, Symbol, Rational, S, sqf_part, sqf,\
+        solve_system, Integer, I, roots, cos, sin, resultant, \
+        count_real_roots, lcm, groebner, gcd, factor, div, Real, \
+        PolynomialException, sqrt
 
 def test_Polynomial():
     x = Symbol("x")
@@ -82,6 +78,9 @@ def test_Polynomial():
 
     assert sqrt(y)*x == Polynomial(coeffs=((sqrt(y), Integer(1)),),
                                    var=[x]).sympy_expr
+
+def Polynomial1():
+    x, y = symbols()
     p = Polynomial(x/3 + 12*y + x**2/8)
     assert p.as_integer() == (24, Polynomial(3*x**2 + 8*x + 288*y))
     assert p.as_monic() == (Rational(1,8), Polynomial(x**2 + 96*y + 8*x/3))
@@ -97,7 +96,7 @@ def test_coeff_ring():
     assert coeff_ring([Rational(2)]) == 'int'
     assert coeff_ring([Rational(2), Rational(1,2)]) == 'rat'
     assert coeff_ring([Rational(2)**Rational(1,2)]) == 'real'
-    assert coeff_ring([Pi]) == 'real'
+    assert coeff_ring([pi]) == 'real'
     assert coeff_ring([Real(2.1), Rational(-1)**Rational(1,2)]) == 'cplx'
     assert coeff_ring([I, x]) == 'sym'
 
@@ -301,14 +300,14 @@ def test_roots():
                                -I, 2**Rational(1,2)/2 - I*2**Rational(1,2)/2]
     assert roots(x**5 - Rational(3,2)) == \
            [Rational(1,2)**Rational(1,5)*3**Rational(1,5),
-            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*cos(2*Pi/5)
-            + I*Rational(1,2)**Rational(1,5)*3**Rational(1,5)*sin(2*Pi/5),
-            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*cos(4*Pi/5)
-            + I*Rational(1,2)**Rational(1,5)*3**Rational(1,5)*sin(4*Pi/5),
-            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*cos(6*Pi/5)
-            + I*Rational(1,2)**Rational(1,5)*3**Rational(1,5)*sin(6*Pi/5),
-            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*cos(8*Pi/5)
-            + I*Rational(1,2)**Rational(1,5)*3**Rational(1,5)*sin(8*Pi/5)]
+            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*cos(2*pi/5)
+            + I*Rational(1,2)**Rational(1,5)*3**Rational(1,5)*sin(2*pi/5),
+            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*cos(4*pi/5)
+            + I*Rational(1,2)**Rational(1,5)*3**Rational(1,5)*sin(4*pi/5),
+            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*cos(6*pi/5)
+            + I*Rational(1,2)**Rational(1,5)*3**Rational(1,5)*sin(6*pi/5),
+            Rational(1,2)**Rational(1,5)*3**Rational(1,5)*cos(8*pi/5)
+            + I*Rational(1,2)**Rational(1,5)*3**Rational(1,5)*sin(8*pi/5)]
 
 def test_solve_system():
     x = Symbol("x")
@@ -376,6 +375,7 @@ def test_sturm():
 ## Issues
 
 def test_poly_content():
+    x, y = symbols("xy")
     assert Polynomial(y**2*x + y, var=x).content()  == y
     assert Polynomial(y**2*x + 2, var=x).content()  == 1
 
