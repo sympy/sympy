@@ -2,7 +2,7 @@
 """
 
 from basic import Basic, S
-from symbol import Symbol, Wild, symbols
+from symbol import Symbol, Wild, symbols, var
 from numbers import Number, Real, Rational, Integer
 from power import Pow
 from mul import Mul
