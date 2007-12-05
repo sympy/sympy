@@ -137,7 +137,7 @@ the particular class documentation.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: event.py 1230 2007-09-04 14:57:31Z Alex.Holkner $'
+__version__ = '$Id: event.py 1338 2007-10-27 01:21:02Z Alex.Holkner $'
 
 import inspect
 
@@ -249,7 +249,7 @@ class EventDispatcher(object):
         The event is propogated to all handlers from from the top of the stack
         until one returns `EVENT_HANDLED`.  This method should be used only by
         `EventDispatcher` implementors; applications should call
-        `dispatch_events`.
+        the ``dispatch_events`` method.
 
         :Parameters:
             `event_type` : str

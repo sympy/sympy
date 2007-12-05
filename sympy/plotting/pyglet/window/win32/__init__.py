@@ -46,8 +46,9 @@ import sys
 if sys.platform not in ('cygwin', 'win32'):
     raise ImportError('Not a win32 platform.')
 
+import pyglet
 from pyglet.window import Platform, Display, Screen, BaseWindow, \
-    WindowException, MouseCursor, DefaultMouseCursor
+    WindowException, MouseCursor, DefaultMouseCursor, _PlatformEventHandler
 from pyglet.window import event
 from pyglet.event import EventDispatcher
 from pyglet.window import key
@@ -63,9 +64,50 @@ from pyglet.gl import wgl
 from pyglet.gl import wglext_arb
 from pyglet.gl import wgl_info
 
-_gdi32 = windll.gdi32
-_kernel32 = windll.kernel32
-_user32 = windll.user32
+_debug_win32 = pyglet.options['debug_win32']
+
+if _debug_win32:
+    import traceback
+    _GetLastError = windll.kernel32.GetLastError
+    _SetLastError = windll.kernel32.SetLastError
+    _FormatMessageA = windll.kernel32.FormatMessageA
+
+    _log_win32 = open('debug_win32.log', 'w')
+    
+    def format_error(err):
+        msg = create_string_buffer(256)
+        _FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM,
+                          c_void_p(),
+                          err,
+                          0,
+                          msg,
+                          len(msg),
+                          c_void_p())
+        return msg.value
+    
+    class DebugLibrary(object):
+        def __init__(self, lib):
+            self.lib = lib
+
+        def __getattr__(self, name):
+            fn = getattr(self.lib, name)
+            def f(*args):
+                _SetLastError(0)
+                result = fn(*args)
+                err = _GetLastError()
+                if err != 0:
+                    map(_log_win32.write,
+                        traceback.format_list(traceback.extract_stack()[:-1]))
+                    print >> _log_win32, format_error(err)
+                return result
+            return f
+else:
+    DebugLibrary = lambda lib: lib
+            
+_gdi32 = DebugLibrary(windll.gdi32)
+_kernel32 = DebugLibrary(windll.kernel32)
+_user32 = DebugLibrary(windll.user32)
+
 
 _user32.GetKeyState.restype = c_short
 _gdi32.CreateDIBitmap.argtypes = [HDC, POINTER(BITMAPINFOHEADER), DWORD,
@@ -332,17 +374,6 @@ class Win32ContextARB(Win32Context):
         if self._share:
             assert self._share._context is not None
             wgl.wglShareLists(self._share._context, self._context)
-       
-_win32_event_handler_names = set()
-
-def Win32EventHandler(message):
-    def handler_wrapper(f):
-        _win32_event_handler_names.add(f.__name__)
-        if not hasattr(f, '_win32_handler'):
-            f._win32_handler = []
-        f._win32_handler.append(message)
-        return f
-    return handler_wrapper
 
 class Win32MouseCursor(MouseCursor):
     drawable = False
@@ -352,6 +383,8 @@ class Win32MouseCursor(MouseCursor):
 # This is global state, we have to be careful not to set the same state twice,
 # which will throw off the ShowCursor counter.
 _win32_cursor_visible = True
+
+Win32EventHandler = _PlatformEventHandler
 
 class Win32Window(BaseWindow):
     _window_class = None
@@ -378,11 +411,11 @@ class Win32Window(BaseWindow):
     def __init__(self, *args, **kwargs):
         # Bind event handlers
         self._event_handlers = {}
-        for func_name in _win32_event_handler_names:
+        for func_name in self._platform_event_names:
             if not hasattr(self, func_name):
                 continue
             func = getattr(self, func_name)
-            for message in func._win32_handler:
+            for message in func._platform_event_data:
                 self._event_handlers[message] = func
 
         super(Win32Window, self).__init__(*args, **kwargs)
@@ -425,13 +458,11 @@ class Win32Window(BaseWindow):
             self._window_class.style = CS_VREDRAW | CS_HREDRAW
             self._window_class.hInstance = 0
             self._window_class.hIcon = _user32.LoadIconW(module, 1)
-            self._window_class.hCursor = _user32.LoadCursorW(0, IDC_ARROW)
             self._window_class.hbrBackground = white
             self._window_class.lpszMenuName = None
             self._window_class.cbClsExtra = 0
             self._window_class.cbWndExtra = 0
-            if not _user32.RegisterClassW(byref(self._window_class)):
-                _check()
+            _user32.RegisterClassW(byref(self._window_class))
         
         if not self._hwnd:
             self._hwnd = _user32.CreateWindowExW(
@@ -447,7 +478,6 @@ class Win32Window(BaseWindow):
                 0,
                 self._window_class.hInstance,
                 0)
-            _check()
 
             self._dc = _user32.GetDC(self._hwnd)
         else:
@@ -516,8 +546,8 @@ class Win32Window(BaseWindow):
             warnings.warn('Could not set vsync; unsupported extension.')
 
     def switch_to(self):
-        self._context.set_current()
         wgl.wglMakeCurrent(self._dc, self._wgl_context)
+        self._context.set_current()
         gl_info.set_active_context()
         glu_info.set_active_context()
 
@@ -796,7 +826,7 @@ class Win32Window(BaseWindow):
                 event[0](*event[1:])
 
         msg = MSG()
-        while _user32.PeekMessageW(byref(msg), self._hwnd, 0, 0, PM_REMOVE):
+        while _user32.PeekMessageW(byref(msg), 0, 0, 0, PM_REMOVE):
             _user32.TranslateMessage(byref(msg))
             _user32.DispatchMessageW(byref(msg))
         self._allow_dispatch_event = False
@@ -810,7 +840,7 @@ class Win32Window(BaseWindow):
             else:
                 self._event_queue.append((event_handler, msg, wParam, lParam))
                 result = 0
-        if not result:
+        if not result and msg != WM_CLOSE:
             result = _user32.DefWindowProcW(c_int(hwnd), c_int(msg),
                 c_int(wParam), c_int(lParam)) 
         return result
@@ -829,6 +859,8 @@ class Win32Window(BaseWindow):
             modifiers |= key.MOD_CAPSLOCK
         if _user32.GetKeyState(VK_NUMLOCK) & 0x00ff:    # toggle
             modifiers |= key.MOD_NUMLOCK
+        if _user32.GetKeyState(VK_SCROLL) & 0x00ff:    # toggle
+            modifiers |= key.MOD_SCROLLLOCK
         if key_lParam:
             if key_lParam & (1 << 29):
                 modifiers |= key.MOD_ALT
@@ -857,6 +889,10 @@ class Win32Window(BaseWindow):
 
         symbol = keymap.get(wParam, None)
         if symbol is None:
+            ch = _user32.MapVirtualKeyW(wParam, MAPVK_VK_TO_CHAR)
+            symbol = chmap.get(ch)
+
+        if symbol is None:
             symbol = key.user_key(wParam)
         elif symbol == key.LCTRL and lParam & (1 << 24):
             symbol = key.RCTRL
@@ -872,7 +908,7 @@ class Win32Window(BaseWindow):
             self.dispatch_event(ev, symbol, modifiers)
 
         ctrl = modifiers & key.MOD_CTRL != 0
-        if (symbol, ctrl) in _motion_map:
+        if (symbol, ctrl) in _motion_map and msg not in (WM_KEYUP, WM_SYSKEYUP):
             motion = _motion_map[symbol, ctrl]
             if modifiers & key.MOD_SHIFT:
                 self.dispatch_event('on_text_motion_select', motion)
@@ -1004,7 +1040,7 @@ class Win32Window(BaseWindow):
     def _event_mousewheel(self, msg, wParam, lParam):
         delta = c_short(wParam >> 16).value
         self.dispatch_event('on_mouse_scroll', 
-            self._mouse_x, self._mouse_y, 0, float(delta) / WHEEL_DELTA)
+            self._mouse_x, self._mouse_y, 0, delta / WHEEL_DELTA)
         return 0
 
     @Win32EventHandler(WM_CLOSE)
@@ -1093,16 +1129,3 @@ class Win32Window(BaseWindow):
     def _event_erasebkgnd(self, msg, wParam, lParam):
         # Prevent flicker during resize.
         return 0
-
-def _check():
-    dw = _kernel32.GetLastError()
-    if dw != 0:
-        msg = create_string_buffer(256)
-        _kernel32.FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM,
-                              c_void_p(),
-                              dw,
-                              0,
-                              msg,
-                              len(msg),
-                              c_void_p())
-        raise Win32Exception(msg.value)

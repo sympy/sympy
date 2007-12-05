@@ -36,7 +36,7 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: lib_glx.py 1033 2007-07-13 03:38:16Z Alex.Holkner $'
+__version__ = '$Id: lib_glx.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
 
 from ctypes import *
 

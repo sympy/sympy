@@ -36,7 +36,7 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: pil.py 878 2007-06-09 04:58:51Z Alex.Holkner $'
+__version__ = '$Id: pil.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
 
 import os.path
 

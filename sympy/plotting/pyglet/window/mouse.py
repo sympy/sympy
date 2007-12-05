@@ -36,7 +36,7 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: mouse.py 980 2007-06-29 13:09:50Z Alex.Holkner $'
+__version__ = '$Id: mouse.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
 
 def buttons_string(buttons):
     '''Return a string describing a set of active mouse buttons.

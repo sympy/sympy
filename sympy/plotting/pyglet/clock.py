@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -135,7 +136,7 @@ of the system clock.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: clock.py 1237 2007-09-09 02:04:54Z Alex.Holkner $'
+__version__ = '$Id: clock.py 1352 2007-11-04 03:35:06Z Alex.Holkner $'
 
 import time
 import sys
@@ -206,6 +207,9 @@ class Clock(_ClockBase):
     # Dict mapping function to schedule item for fast removal 
     _schedule_functions = None
 
+    # If True, a sleep(0) is inserted on every tick.   
+    _force_sleep = False
+
     def __init__(self, fps_limit=None, time_function=time.time):
         '''Initialise a Clock, with optional framerate limit and custom
         time function.
@@ -245,6 +249,9 @@ class Clock(_ClockBase):
         '''
         if self.period_limit:
             self._limit()
+
+        if self._force_sleep:
+            self.sleep(0)
 
         ts = self.time()
         if self.last_ts is None: 
@@ -397,8 +404,9 @@ class Clock(_ClockBase):
         for i, other in enumerate(self._schedule_interval_items):
             if other.next_ts > next_ts:
                 self._schedule_interval_items.insert(i, item)
-                return
-        self._schedule_interval_items.append(item)
+                break
+        else:
+            self._schedule_interval_items.append(item)
 
         # add item to func mapping
         if func in self._schedule_functions:

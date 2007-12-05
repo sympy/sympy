@@ -144,7 +144,7 @@ above, "Working with multiple screens")::
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1195 2007-08-24 09:38:40Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1359 2007-11-04 12:29:50Z Alex.Holkner $'
 
 import pprint
 import sys
@@ -367,7 +367,7 @@ class ImageMouseCursor(MouseCursor):
         :Parameters:
             `image` : `pyglet.image.AbstractImage`
                 Image to use for the mouse cursor.  It must have a
-                valid `texture` attribute.
+                valid ``texture`` attribute.
             `hot_x` : int
                 X coordinate of the "hot" spot in the image.
             `hot_y` : int
@@ -384,6 +384,44 @@ class ImageMouseCursor(MouseCursor):
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         self.texture.blit(x - self.hot_x, y - self.hot_y, 0)
         gl.glPopAttrib()
+
+def _PlatformEventHandler(data):
+    '''Decorator for platform event handlers.  
+    
+    Apply giving the platform-specific data needed by the window to associate
+    the method with an event.  See platform-specific subclasses of this
+    decorator for examples.
+
+    The following attributes are set on the function, which is returned
+    otherwise unchanged:
+
+    _platform_event
+        True
+    _platform_event_data
+        List of data applied to the function (permitting multiple decorators
+        on the same method).
+    '''
+    def _event_wrapper(f):
+        f._platform_event = True
+        if not hasattr(f, '_platform_event_data'):
+            f._platform_event_data = []
+        f._platform_event_data.append(data)
+        return f
+    return _event_wrapper
+
+class _WindowMetaclass(type):
+    '''Sets the _platform_event_names class variable on the window
+    subclass.
+    '''
+    def __init__(cls, name, bases, dict):
+        cls._platform_event_names = set()
+        for base in bases:
+            if hasattr(base, '_platform_event_names'):
+                cls._platform_event_names.update(base._platform_event_names)
+        for name, func in dict.items():
+            if hasattr(func, '_platform_event'):
+                cls._platform_event_names.add(name)
+        super(_WindowMetaclass, cls).__init__(name, bases, dict)
 
 class BaseWindow(EventDispatcher, WindowExitHandler):
     '''Platform-independent application window.
@@ -407,6 +445,12 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     it the current OpenGL context.  If you use only one window in the
     application, there is no need to do this.
     '''
+    __metaclass__ = _WindowMetaclass
+
+    # Filled in by metaclass with the names of all methods on this (sub)class
+    # that are platform event handlers.
+    _platform_event_names = set()
+
     #: The default window style.
     WINDOW_STYLE_DEFAULT = None
     #: The window style for pop-up dialogs.
@@ -630,6 +674,27 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
                 List of attribute names that were changed since the last
                 `_create` or `_recreate`.  For example, ``['fullscreen']``
                 is given if the window is to be toggled to or from fullscreen. 
+        '''
+        raise NotImplementedError('abstract')
+
+    def flip(self):
+        '''Swap the OpenGL front and back buffers.
+
+        Call this method on a double-buffered window to update the
+        visible display with the back buffer.  The contents of the back buffer
+        is undefined after this operation.
+
+        Windows are double-buffered by default.
+        '''
+        raise NotImplementedError('abstract')
+
+    def switch_to(self):
+        '''Make this window the current OpenGL rendering context.
+
+        Only one OpenGL context can be active at a time.  This method sets
+        the current window's context to be current.  You should use this
+        method in preference to `pyglet.gl.Context.set_current`, as it may
+        perform additional initialisation functions.
         '''
         raise NotImplementedError('abstract')
 
@@ -1237,13 +1302,13 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
             '''The mouse was moved with no buttons held down.
 
             :Parameters:
-                `x` : float
+                `x` : int
                     Distance in pixels from the left edge of the window.
-                `y` : float
+                `y` : int
                     Distance in pixels from the bottom edge of the window.
-                `dx` : float
+                `dx` : int
                     Relative X position from the previous mouse position.
-                `dy` : float
+                `dy` : int
                     Relative Y position from the previous mouse position.
 
             :event:
@@ -1256,13 +1321,13 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
             the window, so long as the drag buttons are continuously held down.
 
             :Parameters:
-                `x` : float
+                `x` : int
                     Distance in pixels from the left edge of the window.
-                `y` : float
+                `y` : int
                     Distance in pixels from the bottom edge of the window.
-                `dx` : float
+                `dx` : int
                     Relative X position from the previous mouse position.
-                `dy` : float
+                `dy` : int
                     Relative Y position from the previous mouse position.
                 `buttons` : int
                     Bitwise combination of the mouse buttons currently pressed.
@@ -1277,9 +1342,9 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
             '''A mouse button was pressed (and held down).
 
             :Parameters:
-                `x` : float
+                `x` : int
                     Distance in pixels from the left edge of the window.
-                `y` : float
+                `y` : int
                     Distance in pixels from the bottom edge of the window.
                 `button` : int
                     The mouse button that was pressed.
@@ -1294,9 +1359,9 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
             '''A mouse button was released.
 
             :Parameters:
-                `x` : float
+                `x` : int
                     Distance in pixels from the left edge of the window.
-                `y` : float
+                `y` : int
                     Distance in pixels from the bottom edge of the window.
                 `button` : int
                     The mouse button that was released.
@@ -1316,9 +1381,9 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
             both `scroll_x` and `scroll_y` movement.
 
             :Parameters:
-                `x` : float
+                `x` : int
                     Distance in pixels from the left edge of the window.
-                `y` : float
+                `y` : int
                     Distance in pixels from the bottom edge of the window.
                 `scroll_x` : int
                     Number of "clicks" towards the right (left if negative).
@@ -1344,9 +1409,9 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
             dragged.
 
             :Parameters:
-                `x` : float
+                `x` : int
                     Distance in pixels from the left edge of the window.
-                `y` : float
+                `y` : int
                     Distance in pixels from the bottom edge of the window.
 
             :event:
@@ -1360,9 +1425,9 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
             outside of the window rectangle.
 
             :Parameters:
-                `x` : float
+                `x` : int
                     Distance in pixels from the left edge of the window.
-                `y` : float
+                `y` : int
                     Distance in pixels from the bottom edge of the window.
 
             :event:

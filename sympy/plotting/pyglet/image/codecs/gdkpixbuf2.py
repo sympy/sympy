@@ -36,7 +36,7 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: gdkpixbuf2.py 1053 2007-07-18 13:32:00Z Alex.Holkner $'
+__version__ = '$Id: gdkpixbuf2.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
 
 from ctypes import *
 

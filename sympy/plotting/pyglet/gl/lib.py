@@ -36,7 +36,7 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: lib.py 887 2007-06-11 08:35:43Z Alex.Holkner $'
+__version__ = '$Id: lib.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
 
 import sys
 import ctypes
@@ -107,7 +107,7 @@ def errcheck_glend(result, func, arguments):
 
 def decorate_function(func, name):
     from pyglet import options
-    if options['gl_error_check']:
+    if options['debug_gl']:
         if name == 'glBegin':
             func.errcheck = errcheck_glbegin
         elif name == 'glEnd':

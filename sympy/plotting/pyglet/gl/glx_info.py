@@ -52,7 +52,7 @@ Or, if using more than one display::
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: glx_info.py 1070 2007-07-29 02:08:32Z Alex.Holkner $'
+__version__ = '$Id: glx_info.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
 
 from ctypes import *
 

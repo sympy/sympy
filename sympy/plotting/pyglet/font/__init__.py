@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -68,7 +69,7 @@ by this package.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1233 2007-09-06 00:47:42Z r1chardj0n3s $'
+__version__ = '$Id: __init__.py 1371 2007-11-06 04:46:38Z Alex.Holkner $'
 
 import sys
 import os
@@ -169,12 +170,12 @@ class GlyphString(object):
         for i, (c, w) in enumerate(
                 zip(self.text[from_index:], 
                     self.cumulative_advance[from_index:])):
-            if w > width:
-                return to_index 
+            if c in u'\u0020\u200b':
+                to_index = i + from_index + 1
             if c == '\n':
                 return i + from_index + 1
-            elif c in u'\u0020\u200b':
-                to_index = i + from_index + 1
+            if w > width:
+                return to_index 
         return to_index
 
     def get_subwidth(self, from_index, to_index):
@@ -188,6 +189,8 @@ class GlyphString(object):
 
         :rtype: float
         '''
+        if to_index <= from_index:
+            return 0
         width = self.cumulative_advance[to_index-1] 
         if from_index:
             width -= self.cumulative_advance[from_index-1]
@@ -248,6 +251,13 @@ class Text(object):
 
     Text can be word-wrapped by specifying a `width` to wrap into.  If the
     width is not specified, it gives the width of the text as laid out.
+
+    :Ivariables:
+        `x` : int
+            X coordinate of the text
+        `y` : int
+            Y coordinate of the text
+
     '''
 
     _layout_width = None  # Width to layout text to
@@ -319,6 +329,10 @@ class Text(object):
 
     def _clean(self):
         '''Resolve changed layout'''
+        # Adding a space to the end of the text simplifies the inner loop
+        # of the wrapping layout.  It ensures there is a breakpoint returned at
+        # the end of the string (GlyphString cannot guarantee this otherwise
+        # it would not be useable with styled layout algorithms). 
         text = self._text + ' '
         glyphs = self.font.get_glyphs(text)
         self._glyph_string = GlyphString(text, glyphs)
@@ -333,6 +347,7 @@ class Text(object):
                 self._text_width = max(self._text_width, 
                                        self._glyph_string.get_subwidth(i, end))
                 i = end + 1
+            # Discard the artifical appended space.
             end = len(text) - 1
             if i < end:
                 self.lines.append((i, end))
@@ -479,7 +494,7 @@ if not getattr(sys, 'is_epydoc', False):
     if sys.platform == 'darwin':
         from pyglet.font.carbon import CarbonFont
         _font_class = CarbonFont
-    elif sys.platform == 'win32':
+    elif sys.platform in ('win32', 'cygwin'):
         from pyglet.font.win32 import Win32Font
         _font_class = Win32Font
     else:

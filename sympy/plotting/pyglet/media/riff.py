@@ -36,7 +36,7 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: riff.py 1137 2007-08-14 10:52:25Z Alex.Holkner $'
+__version__ = '$Id: riff.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
 
 # RIFF reference:
 # http://www.saettler.com/RIFFMCI/riffmci.html
@@ -48,8 +48,6 @@ __version__ = '$Id: riff.py 1137 2007-08-14 10:52:25Z Alex.Holkner $'
 
 from pyglet.media import StreamingSource, AudioData, AudioFormat
 from pyglet.media import MediaFormatException
-from pyglet.media.openal import buffer_pool
-from pyglet.media import lib_openal as al
 
 import ctypes
 import struct
@@ -224,13 +222,8 @@ class WaveSource(StreamingSource):
 
         timestamp = float(self._offset) / self.audio_format.bytes_per_second
         duration = float(bytes) / self.audio_format.bytes_per_second
-        is_eos = self._offset >= self._max_offset
 
-        return AudioData(data,
-                         len(data),
-                         timestamp,
-                         duration,
-                         is_eos)
+        return AudioData(data, len(data), timestamp, duration)
 
     def seek(self, timestamp):
         offset = int(timestamp * self.audio_format.bytes_per_second)

@@ -40,7 +40,7 @@ classes as a documented interface to the concrete classes.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: base.py 987 2007-07-01 15:22:51Z Alex.Holkner $'
+__version__ = '$Id: base.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
 
 
 from pyglet.gl import *

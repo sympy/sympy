@@ -48,7 +48,7 @@ Unnumbered extensions in the registry are not included.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: glext_missing.py 935 2007-06-25 08:22:58Z Alex.Holkner $'
+__version__ = '$Id: glext_missing.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
 
 from ctypes import *
 from pyglet.gl.lib import link_GL as _link_function

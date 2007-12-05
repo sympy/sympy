@@ -38,8 +38,9 @@ Detailed documentation is available at http://www.pyglet.org
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1204 2007-08-27 12:53:49Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1404 2007-11-12 10:58:57Z Alex.Holkner $'
 
+import os
 import sys
 
 #: The release version of this pyglet installation.  
@@ -54,7 +55,7 @@ import sys
 #:    >>> parse_version(pyglet.version) >= parse_version('1.0')
 #:    False
 #:
-version = '1.0alpha2'
+version = '1.0beta2'
 
 def _require_ctypes_version(version):
     # Check ctypes version
@@ -70,32 +71,73 @@ if getattr(sys, 'frozen', None):
     _enable_optimisations = True
 
 #: Global dict of pyglet options.  To change an option from its default, you
-#: must import `pyglet` before any sub-packages.  For example::
+#: must import ``pyglet`` before any sub-packages.  For example::
 #:
 #:      import pyglet
-#:      pyglet.options['gl_error_check'] = False
+#:      pyglet.options['debug_gl'] = False
 #:
-#: The options are:
+#: The default options can be overridden from the OS environment.  The
+#: corresponding environment variable for each option key is prefaced by
+#: ``PYGLET_``.  For example, in Bash you can set the ``debug_gl`` option with::
 #:
-#: gl_error_check
+#:      PYGLET_DEBUG_GL=True; export PYGLET_DEBUG_GL
+#: 
+#: For options requiring a tuple of values, separate each value with a comma.
+#:
+#: The non-development options are:
+#:
+#: audio
+#:     A sequence of the names of audio modules to attempt to load, in
+#:     order of preference.  Valid driver names are:
+#:
+#:     * directsound, the Windows DirectSound audio module (Windows only)
+#:     * alsa, the ALSA audio module (Linux only) 
+#:     * openal, the OpenAL audio module
+#:     * silent, no audio
+#: debug_gl
 #:     If True, all calls to OpenGL functions are checked afterwards for
 #:     errors using ``glGetError``.  This will severely impact performance,
 #:     but provides useful exceptions at the point of failure.  By default,
 #:     this option is enabled if ``__debug__`` is (i.e., if Python was not run
 #:     with the -O option).  It is disabled by default when pyglet is "frozen"
 #:     within a py2exe or py2app library archive.
-#: audio_driver
-#:     A sequence of the names of audio drivers to attempt to load, in
-#:     order of preference.  The default is to prefer OpenAL, then any
-#:     platform-specific drivers such as ALSA, and finally falling back
-#:     to the "silent" driver.  Valid driver names are:
-#:
-#:     * alsa, the ALSA audio driver (Linux only) 
-#:     * openal, the OpenAL audio driver
-#:     * silent, no audio
 #:
 options = {
-    'gl_error_check': not _enable_optimisations,
-    'audio_driver': ('openal', 'silent'),
+    'audio': ('directsound', 'openal', 'alsa', 'silent'),
+    'debug_font': False,
+    'debug_gl': not _enable_optimisations,
+    'debug_media': False,
+    'debug_win32': False,
 }
 
+_option_types = {
+    'audio': tuple,
+    'debug_font': bool,
+    'debug_gl': bool,
+    'debug_media': bool,
+    'debug_win32': bool,
+}
+
+def _read_environment():
+    '''Read defaults for options from environment'''
+    for key in options:
+        env = 'PYGLET_%s' % key.upper()
+        try:
+            value = os.environ['PYGLET_%s' % key.upper()]
+            if _option_types[key] is tuple:
+                options[key] = value.split(',')
+            elif _option_types[key] is bool:
+                options[key] = value in ('true', 'TRUE', 'True', '1')
+        except KeyError:
+            pass
+_read_environment()
+
+if sys.platform == 'cygwin':
+    # This hack pretends that the posix-like ctypes provides windows
+    # functionality.  COM does not work with this hack, so there is no
+    # DirectSound support.
+    import ctypes
+    ctypes.windll = ctypes.cdll
+    ctypes.oledll = ctypes.cdll
+    ctypes.WINFUNCTYPE = ctypes.CFUNCTYPE
+    ctypes.HRESULT = ctypes.c_long

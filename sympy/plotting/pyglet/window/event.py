@@ -34,11 +34,11 @@
 
 '''Events for `pyglet.window`.
 
-See `WindowEventHandler` for a description of the window event types.
+See `Window` for a description of the window event types.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: event.py 1118 2007-08-07 22:25:59Z Alex.Holkner $'
+__version__ = '$Id: event.py 1338 2007-10-27 01:21:02Z Alex.Holkner $'
 
 import sys
 

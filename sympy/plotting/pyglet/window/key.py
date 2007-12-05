@@ -61,7 +61,7 @@ Usage::
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: key.py 934 2007-06-25 06:42:58Z Alex.Holkner $'
+__version__ = '$Id: key.py 1325 2007-10-23 15:24:37Z Alex.Holkner $'
 
 class KeyStateHandler(dict):
     '''Simple handler that tracks the state of keys on the keyboard. If a
@@ -113,6 +113,8 @@ def modifiers_string(modifiers):
         mod_names.append('MOD_CAPSLOCK')
     if modifiers & MOD_NUMLOCK:
         mod_names.append('MOD_NUMLOCK')
+    if modifiers & MOD_SCROLLLOCK:
+        mod_names.append('MOD_SCROLLLOCK')
     if modifiers & MOD_COMMAND:
         mod_names.append('MOD_COMMAND')
     if modifiers & MOD_OPTION:
@@ -176,6 +178,7 @@ MOD_NUMLOCK     = 1 << 4
 MOD_WINDOWS     = 1 << 5
 MOD_COMMAND     = 1 << 6
 MOD_OPTION      = 1 << 7
+MOD_SCROLLLOCK  = 1 << 8
 
 
 
@@ -385,108 +388,6 @@ BRACELEFT     = 0x07b
 BAR           = 0x07c
 BRACERIGHT    = 0x07d
 ASCIITILDE    = 0x07e
-
-# The rest of Latin-1, from X11/keysymdef.h... what to keep?
-NOBREAKSPACE = 0x0a0
-EXCLAMDOWN = 0x0a1
-CENT = 0x0a2
-STERLING = 0x0a3
-CURRENCY = 0x0a4
-YEN = 0x0a5
-BROKENBAR = 0x0a6
-SECTION = 0x0a7
-DIAERESIS = 0x0a8
-COPYRIGHT = 0x0a9
-ORDFEMININE = 0x0aa
-GUILLEMOTLEFT = 0x0ab
-NOTSIGN = 0x0ac
-HYPHEN = 0x0ad
-REGISTERED = 0x0ae
-MACRON = 0x0af
-DEGREE = 0x0b0
-PLUSMINUS = 0x0b1
-TWOSUPERIOR = 0x0b2
-THREESUPERIOR = 0x0b3
-ACUTE = 0x0b4
-MU = 0x0b5
-PARAGRAPH = 0x0b6
-PERIODCENTERED = 0x0b7
-CEDILLA = 0x0b8
-ONESUPERIOR = 0x0b9
-MASCULINE = 0x0ba
-GUILLEMOTRIGHT = 0x0bb
-ONEQUARTER = 0x0bc
-ONEHALF = 0x0bd
-THREEQUARTERS = 0x0be
-QUESTIONDOWN = 0x0bf
-AGRAVE = 0x0c0
-AACUTE = 0x0c1
-ACIRCUMFLEX = 0x0c2
-ATILDE = 0x0c3
-ADIAERESIS = 0x0c4
-ARING = 0x0c5
-AE = 0x0c6
-CCEDILLA = 0x0c7
-EGRAVE = 0x0c8
-EACUTE = 0x0c9
-ECIRCUMFLEX = 0x0ca
-EDIAERESIS = 0x0cb
-IGRAVE = 0x0cc
-IACUTE = 0x0cd
-ICIRCUMFLEX = 0x0ce
-IDIAERESIS = 0x0cf
-ETH = 0x0d0
-ETH = 0x0d0
-NTILDE = 0x0d1
-OGRAVE = 0x0d2
-OACUTE = 0x0d3
-OCIRCUMFLEX = 0x0d4
-OTILDE = 0x0d5
-ODIAERESIS = 0x0d6
-MULTIPLY = 0x0d7
-OOBLIQUE = 0x0d8
-OSLASH = OOBLIQUE
-UGRAVE = 0x0d9
-UACUTE = 0x0da
-UCIRCUMFLEX = 0x0db
-UDIAERESIS = 0x0dc
-YACUTE = 0x0dd
-THORN = 0x0de
-THORN = 0x0de
-SSHARP = 0x0df
-AGRAVE = 0x0e0
-AACUTE = 0x0e1
-ACIRCUMFLEX = 0x0e2
-ATILDE = 0x0e3
-ADIAERESIS = 0x0e4
-ARING = 0x0e5
-AE = 0x0e6
-CCEDILLA = 0x0e7
-EGRAVE = 0x0e8
-EACUTE = 0x0e9
-ECIRCUMFLEX = 0x0ea
-EDIAERESIS = 0x0eb
-IGRAVE = 0x0ec
-IACUTE = 0x0ed
-ICIRCUMFLEX = 0x0ee
-IDIAERESIS = 0x0ef
-ETH = 0x0f0
-NTILDE = 0x0f1
-OGRAVE = 0x0f2
-OACUTE = 0x0f3
-OCIRCUMFLEX = 0x0f4
-OTILDE = 0x0f5
-ODIAERESIS = 0x0f6
-DIVISION = 0x0f7
-OSLASH = 0x0f8
-OOBLIQUE = OSLASH
-UGRAVE = 0x0f9
-UACUTE = 0x0fa
-UCIRCUMFLEX = 0x0fb
-UDIAERESIS = 0x0fc
-YACUTE = 0x0fd
-THORN = 0x0fe
-YDIAERESIS = 0x0ff
 
 _key_names = {}
 _motion_names = {}

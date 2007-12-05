@@ -38,7 +38,7 @@ Reference: http://msdn2.microsoft.com/en-us/library/bb172993.aspx
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: dds.py 878 2007-06-09 04:58:51Z Alex.Holkner $'
+__version__ = '$Id: dds.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
 
 from ctypes import *
 import struct

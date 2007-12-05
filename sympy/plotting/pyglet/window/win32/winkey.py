@@ -80,19 +80,6 @@ keymap = {
     ord('9'): key._9,
     ord('\b'): key.BACKSPACE,
 
-    # Assume US-ASCII layout
-    VK_OEM_7: key.APOSTROPHE, 
-    VK_OEM_2: key.SLASH, 
-    VK_OEM_1: key.SEMICOLON, 
-    VK_OEM_4: key.BRACKETLEFT, 
-    VK_OEM_5: key.BACKSLASH, 
-    VK_OEM_6: key.BRACKETRIGHT, 
-    VK_OEM_3: key.QUOTELEFT, 
-    VK_OEM_PLUS: key.EQUAL, 
-    VK_OEM_COMMA: key.COMMA, 
-    VK_OEM_PERIOD: key.PERIOD, 
-    VK_OEM_MINUS: key.MINUS,
-
     # By experiment:
     0x14: key.CAPSLOCK,
     0x5d: key.MENU,
@@ -209,4 +196,42 @@ keymap = {
 #    VK_MEDIA_PLAY_PAUSE: , 
 #    VK_BROWSER_BACK: , 
 #    VK_BROWSER_FORWARD: , 
+}
+
+# Keys that must be translated via MapVirtualKey, as the virtual key code
+# is language and keyboard dependent.
+chmap = {
+    ord('!'): key.EXCLAMATION,
+    ord('"'): key.DOUBLEQUOTE,
+    ord('#'): key.HASH,
+    ord('$'): key.DOLLAR,
+    ord('%'): key.PERCENT,
+    ord('&'): key.AMPERSAND,
+    ord("'"): key.APOSTROPHE,
+    ord('('): key.PARENLEFT,
+    ord(')'): key.PARENRIGHT,
+    ord('*'): key.ASTERISK,
+    ord('+'): key.PLUS,
+    ord(','): key.COMMA,
+    ord('-'): key.MINUS,
+    ord('.'): key.PERIOD,
+    ord('/'): key.SLASH,
+    ord(':'): key.COLON,
+    ord(';'): key.SEMICOLON,
+    ord('<'): key.LESS,
+    ord('='): key.EQUAL,
+    ord('>'): key.GREATER,
+    ord('?'): key.QUESTION,
+    ord('@'): key.AT,
+    ord('['): key.BRACKETLEFT,
+    ord('\\'): key.BACKSLASH,
+    ord(']'): key.BRACKETRIGHT,
+    ord('\x5e'): key.ASCIICIRCUM,
+    ord('_'): key.UNDERSCORE,
+    ord('\x60'): key.GRAVE,
+    ord('`'): key.QUOTELEFT,
+    ord('{'): key.BRACELEFT,
+    ord('|'): key.BAR,
+    ord('}'): key.BRACERIGHT,
+    ord('~'): key.ASCIITILDE,
 }

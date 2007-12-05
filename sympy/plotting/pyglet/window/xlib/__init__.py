@@ -33,7 +33,7 @@
 # ----------------------------------------------------------------------------
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1194 2007-08-24 07:55:11Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1389 2007-11-08 23:18:45Z Alex.Holkner $'
 
 from ctypes import *
 import unicodedata
@@ -41,7 +41,7 @@ import warnings
 
 from pyglet.window import WindowException, NoSuchDisplayException, \
     MouseCursorException, Platform, Display, Screen, MouseCursor, \
-    DefaultMouseCursor, ImageMouseCursor, BaseWindow
+    DefaultMouseCursor, ImageMouseCursor, BaseWindow, _PlatformEventHandler
 from pyglet.window import event
 from pyglet.window import key
 from pyglet.window import mouse
@@ -221,7 +221,10 @@ class XlibScreen(Screen):
 
             return result
         else:
-            return [config_class(self, attrib_list)]
+            try:
+                return [config_class(self, attrib_list)]
+            except gl.ContextException:
+                return []
 
     def __repr__(self):
         return 'XlibScreen(screen=%d, x=%d, y=%d, ' \
@@ -361,16 +364,8 @@ class XlibGLContext(gl.Context):
     def is_direct(self):
         return glx.glXIsDirect(self._x_display, self._context)
 
-_xlib_event_handler_names = set()
-
-def XlibEventHandler(ev):
-    def handler_wrapper(f):
-        _xlib_event_handler_names.add(f.__name__)
-        if not hasattr(f, '_xlib_handler'):
-            f._xlib_handler = []
-        f._xlib_handler.append(ev)
-        return f
-    return handler_wrapper
+# Platform event data is single item, so use platform event handler directly.
+XlibEventHandler = _PlatformEventHandler
 
 class XlibWindow(BaseWindow):
     _x_display = None       # X display connection
@@ -398,6 +393,18 @@ class XlibWindow(BaseWindow):
     _default_event_mask = (0x1ffffff 
         & ~xlib.PointerMotionHintMask
         & ~xlib.ResizeRedirectMask)
+
+    def __init__(self, *args, **kwargs):
+        # Bind event handlers
+        self._event_handlers = {}
+        for name in self._platform_event_names:
+            if not hasattr(self, name):
+                continue
+            func = getattr(self, name)
+            for message in func._platform_event_data:
+                self._event_handlers[message] = func 
+
+        super(XlibWindow, self).__init__(*args, **kwargs)
         
     def _recreate(self, changes):
         # If flipping to/from fullscreen and using override_redirect (we
@@ -428,15 +435,6 @@ class XlibWindow(BaseWindow):
         self._create()
 
     def _create(self):
-        # Bind event handlers
-        self._event_handlers = {}
-        for func_name in _xlib_event_handler_names:
-            if not hasattr(self, func_name):
-                continue
-            func = getattr(self, func_name)
-            for message in func._xlib_handler:
-                self._event_handlers[message] = func
-
         # Unmap existing window if necessary while we fiddle with it.
         if self._window and self._mapped:
             self._unmap()
@@ -525,12 +523,21 @@ class XlibWindow(BaseWindow):
             self.WINDOW_STYLE_DEFAULT: '_NET_WM_WINDOW_TYPE_NORMAL',
             self.WINDOW_STYLE_DIALOG: '_NET_WM_WINDOW_TYPE_DIALOG',
             self.WINDOW_STYLE_TOOL: '_NET_WM_WINDOW_TYPE_UTILITY',
-            self.WINDOW_STYLE_BORDERLESS: '_NET_WM_WINDOW_TYPE_SPLASH', 
-            # XXX BORDERLESS is inhibiting task-bar entry (Gnome)
         }
         if self._style in styles:
             self._set_atoms_property('_NET_WM_WINDOW_TYPE', 
                                      (styles[self._style],))
+        elif self._style == self.WINDOW_STYLE_BORDERLESS:
+            MWM_HINTS_DECORATIONS = 1 << 1
+            PROP_MWM_HINTS_ELEMENTS = 5
+            mwmhints = mwmhints_t()
+            mwmhints.flags = MWM_HINTS_DECORATIONS
+            mwmhints.decorations = 0
+            name = xlib.XInternAtom(self._x_display, '_MOTIF_WM_HINTS', False)
+            xlib.XChangeProperty(self._x_display, self._window,
+                name, name, 32, xlib.PropModeReplace, 
+                cast(pointer(mwmhints), POINTER(c_ubyte)),
+                PROP_MWM_HINTS_ELEMENTS)
 
         # Set resizeable
         if not self._resizable:
@@ -543,6 +550,16 @@ class XlibWindow(BaseWindow):
         self.switch_to()
         if self._visible:
             self.set_visible(True)
+
+        # Create input context.  A good but very outdated reference for this
+        # is http://www.sbin.org/doc/Xlib/chapt_11.html
+        if _have_utf8:
+            self._x_im = xlib.XOpenIM(self._x_display, None, None, None)
+            # TODO select best input style.
+            self._x_ic = xlib.XCreateIC(self._x_im, 
+                'inputStyle', xlib.XIMPreeditNothing|xlib.XIMStatusNothing,
+                None)
+            xlib.XSetICFocus(self._x_ic)
 
     def _map(self):
         if self._mapped:
@@ -562,6 +579,7 @@ class XlibWindow(BaseWindow):
         self._mapped = True
 
         if self._fullscreen:
+            # Possibly an override_redirect issue.
             self.activate()
 
         self.dispatch_event('on_resize', self._width, self._height)
@@ -608,6 +626,10 @@ class XlibWindow(BaseWindow):
 
         self._window = None
         self._glx_window = None
+
+        if _have_utf8:
+            xlib.XDestroyIC(self._x_ic)
+            xlib.XCloseIM(self._x_im)
 
     def switch_to(self):
         if self._glx_1_3:
@@ -980,27 +1002,19 @@ class XlibWindow(BaseWindow):
         # Check for the events specific to this window
         while xlib.XCheckWindowEvent(_x_display, _window,
                 0x1ffffff, byref(e)):
+            if xlib.XFilterEvent(e, 0):
+                continue
             event_handler = self._event_handlers.get(e.type)
             if event_handler:
                 event_handler(e)
 
-        # Now check generic events for this display and manually filter
-        # them to see whether they're for this window. sigh.
-        # Store off the events we need to push back so we don't confuse
-        # XCheckTypedEvent
-        push_back = []
-        while xlib.XCheckTypedEvent(_x_display, 
-                                    xlib.ClientMessage, byref(e)):
-            if e.xclient.window != _window:
-                push_back.append(e)
-                e = xlib.XEvent()
-            else:
-                event_handler = self._event_handlers.get(e.type)
-                if event_handler:
-                    event_handler(e)
-        for e in push_back:
-            xlib.XPutBackEvent(_x_display, byref(e))
-
+        # Generic events for this window (the window close event).
+        while xlib.XCheckTypedWindowEvent(_x_display, _window, 
+                xlib.ClientMessage, byref(e)):
+            event_handler = self._event_handlers.get(e.type)
+            if event_handler:
+                event_handler(e)
+        
         self._allow_dispatch_event = False
 
     @staticmethod
@@ -1018,6 +1032,8 @@ class XlibWindow(BaseWindow):
             modifiers |= key.MOD_NUMLOCK
         if state & xlib.Mod4Mask:
             modifiers |= key.MOD_WINDOWS
+        if state & xlib.Mod5Mask:
+            modifiers |= key.MOD_SCROLLLOCK
         return modifiers
 
     # Event handlers
@@ -1032,16 +1048,22 @@ class XlibWindow(BaseWindow):
     def _event_text(self, event):
         if event.type == xlib.KeyPress:
             buffer = create_string_buffer(16)
-            # TODO lookup UTF8
-            count = xlib.XLookupString(event.xkey,
-                                       buffer,
-                                       len(buffer),
-                                       None,
-                                       None)
-            if count:
-                text = unicode(buffer.value[:count])
-                if unicodedata.category(text) != 'Cc' or text == '\r':
-                    return text
+            text = None
+            if _have_utf8:
+                count = xlib.Xutf8LookupString(self._x_ic,
+                                               event.xkey,
+                                               buffer, len(buffer),
+                                               None, None)
+                if count > 0:
+                    text = buffer.value[:count].decode('utf8')
+            else:
+                count = xlib.XLookupString(event.xkey,
+                                           buffer, len(buffer),
+                                           None, None)
+                if count > 0:
+                    text = buffer.value[:count].decode('ascii', 'ignore')
+            if text and unicodedata.category(text) != 'Cc' or text == '\r':
+                return text
         return None
 
     def _event_text_motion(self, symbol, modifiers):
@@ -1087,6 +1109,10 @@ class XlibWindow(BaseWindow):
                     for auto_event in reversed(saved):
                         xlib.XPutBackEvent(self._x_display, byref(auto_event))
                     return
+                else:
+                    # Key code of press did not match, therefore no repeating
+                    # is going on, stop searching.
+                    break
             # Whoops, put the events back, it's for real.
             for auto_event in reversed(saved):
                 xlib.XPutBackEvent(self._x_display, byref(auto_event))
@@ -1169,6 +1195,11 @@ class XlibWindow(BaseWindow):
         button = 1 << (ev.xbutton.button - 1)  # 1, 2, 3 -> 1, 2, 4
         modifiers = self._translate_modifiers(ev.xbutton.state)
         if ev.type == xlib.ButtonPress:
+            # override_redirect issue: manually activate this window if
+            # fullscreen.
+            if self._fullscreen and not self._active:
+                self.activate()
+
             if ev.xbutton.button == 4:
                 self.dispatch_event('on_mouse_scroll', x, y, 0, 1)
             elif ev.xbutton.button == 5:

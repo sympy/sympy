@@ -40,13 +40,15 @@
 
 from ctypes import *
 
+import pyglet
 from pyglet.font import base
 import pyglet.image
 from pyglet.window.win32.constants import *
 from pyglet.window.win32.types import *
 from pyglet.window.win32 import _gdi32 as gdi32, _user32 as user32
 from pyglet.window.win32 import _kernel32 as kernel32
-from pyglet.window.win32 import _check
+
+_debug_font = pyglet.options['debug_font']
 
 HFONT = HANDLE
 HBITMAP = HANDLE
@@ -154,6 +156,29 @@ def str_ucs2(text):
         text = text.encode('utf_16_le')   # explicit endian avoids BOM
     return create_string_buffer(text + '\0')
 
+_debug_dir = 'debug_font'
+def _debug_filename(base, extension):
+    import os
+    if not os.path.exists(_debug_dir):
+        os.makedirs(_debug_dir)
+    name = '%s-%%d.%%s' % os.path.join(_debug_dir, base)
+    num = 1
+    while os.path.exists(name % (num, extension)):
+        num += 1
+    return name % (num, extension)
+
+def _debug_image(image, name):
+    filename = _debug_filename(name, 'png')
+    image.save(filename)
+    _debug('Saved image %r to %s' % (image, filename))
+
+_debug_logfile = None
+def _debug(msg):
+    global _debug_logfile
+    if not _debug_logfile:
+        _debug_logfile = open(_debug_filename('log', 'txt'), 'wt')
+    _debug_logfile.write(msg + '\n')
+
 class Win32GlyphRenderer(base.GlyphRenderer):
     _bitmap = None
     _bitmap_dc = None
@@ -194,7 +219,7 @@ class Win32GlyphRenderer(base.GlyphRenderer):
             advance = abc.abcA + abc.abcB + abc.abcC
         else:
             width_buf = c_int()
-            gdi32.GetCharWidth32(self._bitmap_dc, 
+            gdi32.GetCharWidth32W(self._bitmap_dc, 
                 ord(text), ord(text), byref(width_buf))
             width = width_buf.value
             lsb = 0
@@ -212,12 +237,29 @@ class Win32GlyphRenderer(base.GlyphRenderer):
         # Create glyph object and copy bitmap data to texture
         image = pyglet.image.ImageData(width, height, 
             'RGBA', self._bitmap_data, self._bitmap_rect.right * 4)
+
         glyph = self.font.create_glyph(image)
         glyph.set_bearings(-self.font.descent, lsb, advance)
+
+        if _debug_font:
+            _debug('%r.render(%s)' % (self, text))
+            _debug('abc.abcA = %r' % abc.abcA)
+            _debug('abc.abcB = %r' % abc.abcB)
+            _debug('abc.abcC = %r' % abc.abcC)
+            _debug('width = %r' % width)
+            _debug('height = %r' % height)
+            _debug('lsb = %r' % lsb)
+            _debug('advance = %r' % advance)
+            _debug_image(image, 'glyph_%s' % text)
+            _debug_image(self.font.textures[0], 'tex_%s' % text)
 
         return glyph
         
     def _create_bitmap_dc(self, width, height):
+        # Pessimistically round up width and height to 4 byte alignment
+        width = (width | 0x3) + 1
+        height = (height | 0x3) + 1
+        
         if self._bitmap_dc:
             gdi32.ReleaseDC(self._bitmap_dc)
         if self._bitmap:
@@ -249,6 +291,13 @@ class Win32GlyphRenderer(base.GlyphRenderer):
         self._bitmap_rect.right = width
         self._bitmap_rect.top = 0
         self._bitmap_rect.bottom = height
+
+        if _debug_font:
+            _debug('%r._create_bitmap_dc(%d, %d)' % (self, width, height))
+            _debug('_bitmap_dc = %r' % self._bitmap_dc)
+            _debug('_bitmap = %r' % self._bitmap)
+            _debug('pitch = %r' % pitch)
+            _debug('info.bmiHeader.biSize = %r' % info.bmiHeader.biSize)
 
 class Win32Font(base.Font):
     glyph_renderer_class = Win32GlyphRenderer

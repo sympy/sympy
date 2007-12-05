@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -126,7 +127,7 @@ will be presented the next time it is read or written to::
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1187 2007-08-22 04:11:02Z r1chardj0n3s $'
+__version__ = '$Id: __init__.py 1402 2007-11-12 08:38:34Z Alex.Holkner $'
 
 import sys
 import re
@@ -753,6 +754,10 @@ class ImageData(AbstractImage):
                     4: 'RGBA'}.get(len(data_format))
                 format, type = self._get_gl_format_and_type(data_format)
 
+        # Workaround: don't use GL_UNPACK_ROW_LENGTH
+        if gl._current_context._workaround_unpack_row_length:
+            data_pitch = self.width * len(data_format)
+
         # Get data in required format (hopefully will be the same format it's
         # already in, unless that's an obscure format, upside-down or the
         # driver is old).
@@ -803,13 +808,13 @@ class ImageData(AbstractImage):
         '''Return data in the desired format; does not alter this instance's
         current format or pitch.
         '''
-
         if format == self._current_format and pitch == self._current_pitch:
             return self._current_data
 
         self._ensure_string_data()
         data = self._current_data
         current_pitch = self._current_pitch
+        current_format = self._current_format
         sign_pitch = current_pitch / abs(current_pitch)
         if format != self._current_format:
             # Create replacement string, e.g. r'\4\1\2\3' to convert RGBA to
@@ -817,36 +822,36 @@ class ImageData(AbstractImage):
             repl = ''
             for c in format:
                 try:
-                    idx = self._current_format.index(c) + 1
+                    idx = current_format.index(c) + 1
                 except ValueError:
                     idx = 1
                 repl += r'\%d' % idx
 
-            if len(self._current_format) == 1:
+            if len(current_format) == 1:
                 swap_pattern = self._swap1_pattern
-            elif len(self._current_format) == 2:
+            elif len(current_format) == 2:
                 swap_pattern = self._swap2_pattern
-            elif len(self._current_format) == 3:
+            elif len(current_format) == 3:
                 swap_pattern = self._swap3_pattern
-            elif len(self._current_format) == 4:
+            elif len(current_format) == 4:
                 swap_pattern = self._swap4_pattern
             else:
                 raise ImageException(
                     'Current image format is wider than 32 bits.')
 
-            packed_pitch = self.width * len(self._current_format)
+            packed_pitch = self.width * len(current_format)
             if abs(self._current_pitch) != packed_pitch:
                 # Pitch is wider than pixel data, need to go row-by-row.
                 rows = re.findall(
                     '.' * abs(self._current_pitch), data, re.DOTALL)
-                rows = [swap_pattern.sub(repl, r) for r in rows]
+                rows = [swap_pattern.sub(repl, r[:packed_pitch]) for r in rows]
                 data = ''.join(rows)
             else:
                 # Rows are tightly packed, apply regex over whole image.
                 data = swap_pattern.sub(repl, data)
 
             # After conversion, rows will always be tightly packed
-            current_pitch = len(format) * self.width
+            current_pitch = sign_pitch * (len(format) * self.width)
 
         if pitch != current_pitch:
             diff = abs(current_pitch) - abs(pitch)
@@ -1284,7 +1289,16 @@ class Texture(AbstractImage):
             data = data.get_region(0, z * self.height, self.width, self.height)
         return data
 
-    image_data = property(get_image_data)
+    image_data = property(get_image_data,
+        doc='''An ImageData view of this texture.  
+        
+        Changes to the returned instance will not be reflected in this
+        texture.  If the texture is a 3D texture, the first image will be 
+        returned.  See also `get_image_data`.  Read-only.
+        
+        :type: `ImageData`
+        ''')
+
 
     texture = property(lambda self: self)
 

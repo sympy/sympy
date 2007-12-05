@@ -4976,3 +4976,10 @@ GRADIENT_FILL_RECT_V = 1
 GRADIENT_FILL_TRIANGLE = 2
 GRADIENT_FILL_OP_FLAG = 255
 
+# Bizarrely missing from any platform header.  Ref:
+# http://www.codeguru.com/forum/archive/index.php/t-426785.html
+MAPVK_VK_TO_VSC = 0
+MAPVK_VSC_TO_VK = 1
+MAPVK_VK_TO_CHAR = 2
+MAPVK_VSC_TO_VK_EX = 3
+

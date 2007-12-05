@@ -94,7 +94,7 @@ below.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1148 2007-08-15 22:21:05Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1391 2007-11-09 14:05:43Z Alex.Holkner $'
 
 from pyglet.gl.lib import GLException
 from pyglet.gl.gl import *
@@ -111,7 +111,7 @@ _current_context = None
 def get_current_context():
     '''Return the active OpenGL context.
 
-    You can change the current context by calling `Context.switch_to`.
+    You can change the current context by calling `Context.set_current`.
 
     :rtype: `Context`
     :return: the context to which OpenGL commands are directed, or None
@@ -129,8 +129,8 @@ class Config(object):
     Different platforms support a different set of attributes, so these
     are set with a string key and a value which is integer or boolean.
 
-    Use `WindowFactory.get_matching_configs` or `BasePlatform.create_configs`
-    to obtain an instance of this class.
+    See also `pyglet.window.Screen.get_best_config` and 
+    `pyglet.window.Screen.get_matching_configs`.
 
     :Ivariables:
         `double_buffer` : bool
@@ -280,6 +280,19 @@ class Context(object):
     # Ignored if error checking is disabled.
     _gl_begin = False
 
+    # gl_info.GLInfo instance, filled in on first set_current
+    _info = None
+
+    # List of (attr, check) for each driver/device-specific workaround that is
+    # implemented.  The `attr` attribute on this context is set to the result
+    # of evaluating `check(gl_info)` the first time this context is used.
+    _workaround_checks = [
+        # GDI Generic renderer on Windows does not implement
+        # GL_UNPACK_ROW_LENGTH correctly.
+        ('_workaround_unpack_row_length',
+             lambda info: info.get_renderer() == 'GDI Generic'),
+    ]
+
     def __init__(self, context_share=None):
         self.window = None
         _contexts.append(self)
@@ -296,6 +309,13 @@ class Context(object):
         global _current_context
         assert self in _contexts
         _current_context = self
+
+        # Implement workarounds
+        if not self._info:
+            self._info = gl_info.GLInfo()
+            self._info.set_active_context()
+            for attr, check in self._workaround_checks:
+                setattr(self, attr, check(self._info))
 
         # Release textures on this context scheduled for deletion
         if self.object_space._doomed_textures:
