@@ -186,6 +186,7 @@ class Polynomial(Basic):
                         "as_primitive",
                         "content",
                         "diff",
+                        "integrate",
                         "leading_coeff",
                         "leading_term",
                         "nth_coeff",
@@ -640,6 +641,39 @@ class Polynomial(Basic):
                              reverse=True)
             return Polynomial(coeffs=tuple(result_list), var=self.var,
                               order=self.order)
+
+    def integrate(self, variable):
+        """Primitive function of a Polynomial.
+
+        Usage:
+        ======
+            Returns a new instance of Polynomial which is the primitive
+            function (antiderivative) of "self" with respect to the given
+            variable.
+
+        Examples:
+        =========
+            >>> x, y, z = symbols('xyz')
+            >>> f = Polynomial(6*x + 20*y + 4*x*y)
+            >>> fx = f.integrate(x)
+            >>> print fx
+            3*x**2 + 2*y*x**2 + 20*x*y
+            >>> fz = f.integrate(z)
+            >>> print fz
+            6*x*z + 20*y*z + 4*x*y*z
+
+        """
+
+        if not variable in self.var:
+            return (variable * self).expand()
+        nvar = self.var.index(variable) 
+        int = []
+        for term in self.coeffs:
+            t = list(term)
+            t[nvar+1] += 1
+            t[0] /= t[nvar+1]
+            int.append(tuple(t))
+        return coefficients2sympy(int, self.var) 
 
 
     def leading_coeff(self):

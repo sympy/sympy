@@ -115,9 +115,70 @@ class Integral(Basic, NoRelMeths, ArithMeths):
         return function
 
     def _eval_integral(self, f, x):
-        # TODO : add table lookup for logarithmic and sine/cosine integrals
-        # and for some elementary special cases for speed improvement.
-        return risch_norman(f, x)
+        """Calculate the antiderivative to the function f(x).
+
+        This is a powerful function that should in theory be able to integrate
+        everything that can be integrated. If you find something, that it
+        doesn't, it is easy to implement it.
+
+        (1) Simple heuristics (based on pattern matching and integral table):
+
+         - most frequently used functions (eg. polynomials)
+         - functions non-integrable by any of the following algorithms (eg.
+           exp(-x**2))
+
+        (2) Integration of rational functions:
+
+         (a) using apart() - apart() is full partial fraction decomposition
+         procedure based on Bronstein-Salvy algorithm. It gives formal
+         decomposition with no polynomial factorization at all (so it's fast
+         and gives the most general results). However it needs much better
+         implementation of RootsOf class (if fact any implementation).
+         (b) using Trager's algorithm - possibly faster than (a) but needs
+         implementation :)
+
+        (3) Whichever implementation of pmInt (Mateusz, Kirill's or a
+        combination of both).
+
+          - this way we can handle efficiently huge class of elementary and
+            special functions
+
+        (4) Recursive Risch algorithm as described in Bronstein's integration
+        tutorial.
+
+          - this way we can handle those integrable functions for which (3)
+            fails
+
+        (5) Powerful heuristics based mostly on user defined rules.
+
+         - handle complicated, rarely used cases
+        """
+
+        # Let's first try some simple functions, that we know fast how to
+        # integrate.
+
+        # simple powers:
+        from sympy import Pow, log
+        if isinstance(f, Pow) and isinstance(f[0], Symbol) and f[1].is_number:
+            if f[1] == -1:
+                return log(f[0])
+            else:
+                return f[0]**(f[1]+1)/(f[1]+1) 
+
+        # polynomials:
+        from sympy import Polynomial, PolynomialException
+        p = None
+        try:
+            p = Polynomial(f)
+        except PolynomialException:
+            pass
+        if p != None:
+            return p.integrate(x)
+
+        # f is not a simple function, let's try the risch norman (that can
+        # btw. integrate all the functions above, but slower):
+        r = risch_norman(f, x)
+        return r
 
 def integrate(*args, **kwargs):
     """Compute definite or indefinite integral of one or more variables
@@ -131,6 +192,9 @@ def integrate(*args, **kwargs):
 
        >>> integrate(log(x), x)
        -x + x*log(x)
+
+       See also the doctest of Integral._eval_integral(), which explains
+       thoroughly the strategy that SymPy uses for integration.
 
     """
     integral = Integral(*args, **kwargs)

@@ -60,3 +60,9 @@ def test_multiple_integration():
 
 def test_issue433():
     assert integrate(exp(-x), (x,0,oo)) == 1
+
+def test_issue461():
+    assert integrate(x**Rational(3,2), x) == 2*x**Rational(5,2)/5
+    assert integrate(x**Rational(1,2), x) == 2*x**Rational(3,2)/3
+    assert integrate(x**Rational(-3,2), x) == -2*x**Rational(-1,2)
+
