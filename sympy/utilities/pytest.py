@@ -80,6 +80,8 @@ def XFAIL(func):
     def func_wrapper():
         try:
             func()
+        except Outcome:
+            raise   # pass-through test outcome
         except:
             raise XFail('XFAIL: %s' % func.func_name)
         else:
