@@ -1,52 +1,32 @@
 """
-NOTE: this doctest is for now obsoleted interface.
-
-There are different types of functions:
+There are two types of functions:
 1) defined function like exp or sin that has a name and body
    (in the sense that function can be evaluated).
     e = exp
 2) undefined function with a name but no body. Undefined
-  functions can be defined using Symbol class as follows:
-    f = Symbol('f', function=True)
-  (the result will be Function instance)
-  or
+  functions can be defined using a Function class as follows:
     f = Function('f')
-3) anonymous function or lambda function that has no name
-   but has body with dummy variables. An anonymous function
+  (the result will be Function instance)
+3) this isn't implemented yet: anonymous function or lambda function that has
+no name but has body with dummy variables. An anonymous function
    object creation examples:
     f = Lambda(x, exp(x)*x)
     f = Lambda(exp(x)*x)  # free symbols in the expression define the number of arguments
     f = exp * Lambda(x,x)
-4) composition of functions, inverse functions
+4) isn't implemented yet: composition of functions, like (sin+cos)(x), this
+works in sympycore, but needs to be ported back to SymPy.
 
-One can perform certain operations with functions, the
-result will be a lambda function. Allowed operations are
-addition and multiplication. Function multiplication is
-elementise ie (f*g)(x) is equivalent to f(x) * g(x).
-Multiplication by a number is equivalent to multiplication
-by a constant function.
-Composition of functions is achived via Composition class@
-Eg
 
-  f+Composition(2,exp,sin) -> lambda _x: f(x)+2*exp(sin(x))
-
-In the above functions did not have arguments, then
-it is said that functions are in unevaluated form.
-When calling a function with arguments, then we get
-an instance of the function value. Eg
-
-  exp(1) -> 1
-  (2*f)(x)  -> 2 * f(x)
-  Lambda(x, exp(x)*x)(y) -> exp(y)*y
-
-One can construct undefined function values from Symbol
-object:
-  f = Symbol('f')
-  fx = f(x)
-  fx.func -> Function('f')
-  fx[:] -> (Symbol('x'),)
-As seen above, function values are Apply instances and
-have attributes .func and [:].
+Example:
+    >>> from sympy import *
+    >>> f = Function("f")
+    >>> x = Symbol("x")
+    >>> f(x)
+    f(x)
+    >>> f(x).func
+    <class 'sympy.core.function.f'>
+    >>> f(x)[:]
+    (x,)
 """
 
 from basic import Basic, Singleton, Atom, cache_it, S
