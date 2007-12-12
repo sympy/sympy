@@ -44,6 +44,9 @@ class Relational(Basic, NoRelMeths):
             return '(%s)' % r
         return r
 
+    def subs(self, old, new):
+        return self.lhs.subs(old, new) == self.rhs.subs(old, new)
+
 class Equality(Relational):
 
     rel_op = '=='

@@ -4,7 +4,8 @@ sys.path.append(".")
 import py
 
 import sympy as g
-from sympy import Symbol, Wild, sin, cos, exp, pi, Function, Derivative
+from sympy import Symbol, Wild, sin, cos, exp, pi, Function, Derivative, abc, \
+        Integer
 from sympy.utilities.pytest import XFAIL
 
 def test_subs():
@@ -97,3 +98,17 @@ def test_deriv_sub_bug3():
     pat = Derivative(f(x), x, x)
     assert pat.subs(y, y**2) == Derivative(f(x), x, x)
     assert pat.subs(y, y**2) != Derivative(f(x), x)
+
+def test_equality_subs1():
+    f = Function("f")
+    x = abc.x
+    eq = f(x)**2 == x
+    res = Integer(16) == x
+    assert eq.subs(f(x), 4) == res
+
+def test_equality_subs2():
+    f = Function("f")
+    x = abc.x
+    eq = f(x)**2 == 16
+    assert eq.subs(f(x), 3) == False
+    assert eq.subs(f(x), 4) == True
