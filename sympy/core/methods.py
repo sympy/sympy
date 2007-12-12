@@ -81,12 +81,7 @@ class RelMeths(object):
             other = Basic.sympify(other)
         except ValueError:
             return False
-        try:
-            r = Basic.Equality(self, other)
-        except ValueError, msg:
-            raise ValueError('Failed to create Equality instance: %s, using repr equality test instead' % msg)
-            #r = repr(self)==repr(other)
-        return r
+        return Basic.Equality(self, other)
     def __ne__(self, other):
         try:
             other = Basic.sympify(other)
