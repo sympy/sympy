@@ -293,7 +293,8 @@ def dsolve(eq, funcs):
 
     Details
     =======
-        @param f: ordinary differential equation
+        @param f: ordinary differential equation (either just the left hand
+            side, or the Equality class)
 
         @param y: indeterminate function of one variable
 
@@ -301,24 +302,34 @@ def dsolve(eq, funcs):
         >>> from sympy import *
         >>> x = Symbol('x') # x is the independent variable
         
-        #>>> f = Function(x) # f is a function of f
-        #>>> f_ = Derivative(f, x) # f_ will be the derivative of f with respect to x
+        >>> f = Function("f")(x) # f is a function of x
+        >>> f_ = Derivative(f, x) # f_ will be the derivative of f with respect to x
 
         - This function just parses the equation "eq" and determines the type of
         differential equation, then it determines all the coefficients and then
         calls the particular solver, which just accepts the coefficients.
+        - "eq" can be either an Equality, or just the left hand side (in which
+          case the right hand side is assumed to be 0)
+        - see test_ode.py for many tests, that serve also as a set of examples
+          how to use dsolve
 
     Examples
     ========
         >>> from sympy import *
         >>> x = Symbol('x')
 
-        #>>> f = Function('f')
-        #>>> fx = f(x)
-        #>>> dsolve(Derivative(Derivative(fx,x),x)+9*fx, fx)
-        #C1*sin(3*x) + C2*cos(3*x)
+        >>> f = Function('f')
+        >>> dsolve(Derivative(f(x),x,x)+9*f(x), f(x))
+        C1*sin(3*x) + C2*cos(3*x)
+        >>> dsolve(Derivative(f(x),x,x)+9*f(x)+1==1, f(x))
+        C1*sin(3*x) + C2*cos(3*x)
 
     """
+
+    if isinstance(eq, Equality):
+        if eq.rhs != 0:
+            return dsolve(eq.lhs-eq.rhs, funcs)
+        eq = eq.lhs
 
     #currently only solve for one function
     if isinstance(funcs, Basic) or len(funcs) == 1:
@@ -330,7 +341,6 @@ def dsolve(eq, funcs):
         x = f[0]
         f = f.func
 
-        # This assumes f is an ApplyXXX object
         a = Wild('a', exclude=[f(x)])
         b = Wild('b', exclude=[f(x)])
         c = Wild('c', exclude=[f(x)])
@@ -342,6 +352,12 @@ def dsolve(eq, funcs):
         if r: return solve_ODE_second_order(r[a], 0, r[b], f(x), x)
 
         #special equations, that we know how to solve
+        t = x*Basic.exp(f(x))
+        tt = a*Derivative(t,x,x)/t
+        r = eq.match(tt.expand())
+        if r:
+            return -solve_ODE_1(f(x), x)
+
         t = x*Basic.exp(-f(x))
         tt = a*Derivative(t,x,x)/t
         r = eq.match(tt.expand())
@@ -364,8 +380,10 @@ def solve_ODE_first_order(a, b, f, x):
     return integrate(-b/a, x) + Symbol("C1")
 
 def solve_ODE_second_order(a, b, c, f, x):
-    """ a*f''(x) + b*f'(x) + c = 0 """
+    """ a*f''(x) + b*f'(x) + c*f(x) = 0 """
     #a very special case, for b=0 and a,c not depending on x:
+    if b != 0:
+        raise NotImplementedError("cannot solve this")
     return Symbol("C1")*Basic.sin(Basic.sqrt(c/a)*x)+Symbol("C2")*Basic.cos(Basic.sqrt(c/a)*x)
 
 def solve_ODE_1(f, x):
