@@ -78,7 +78,19 @@ class Function(Basic, ArithMeths, RelMeths):
 
     @cache_it
     def __new__(cls, *args, **options):
-        if cls is Function or cls is Function:
+        # NOTE: this __new__ is twofold:
+        #
+        # 1 -- it can create another *class*, which can then be instantiated by
+        #      itself e.g. Function('f') creates a new class f(Function)
+        #
+        # 2 -- on the other hand, we instantiate -- that is we create an
+        #      *instance* of a class created earlier in 1.
+        #
+        # So please keep, both (1) and (2) in mind.
+
+        # (1) create new function class
+        #     UC: Function('f')
+        if cls is Function:
             #when user writes Function("f"), do an equivalent of:
             #taking the whole class Function(...):
             #and rename the Function to "f" and return f, thus:
@@ -95,18 +107,15 @@ class Function(Basic, ArithMeths, RelMeths):
                 print args
                 print type(args[0])
                 raise Exception("You need to specify exactly one string")
+
+        # (2) create new instance of a class created in (1)
+        #     UC: Function('f')(x)
+        #     UC: sin(x)
         args = map(Basic.sympify, args)
         # these lines should be refactored
-        if "nargs" in options:
-            del options["nargs"]
-        if "dummy" in options:
-            del options["dummy"]
-        if "comparable" in options:
-            del options["comparable"]
-        if "noncommutative" in options:
-            del options["noncommutative"]
-        if "commutative" in options:
-            del options["commutative"]
+        for opt in ["nargs", "dummy", "comparable", "noncommutative", "commutative"]:
+            if opt in options:
+                del options[opt]
         # up to here.
         r = cls.canonize(*args, **options)
         if isinstance(r, Basic):
