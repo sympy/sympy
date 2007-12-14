@@ -300,6 +300,11 @@ class Function(Basic, ArithMeths, RelMeths):
                 raise TypeError("argument index %r is out of range [1,%s]" % (i,nargs))
         return Derivative(self,self[argindex-1],evaluate=False)
 
+    def torepr(self):
+        r = '%s(%r)' % (self.func.__base__.__name__, self.func.__name__)
+        r+= '(%s)' % ', '.join([a.torepr() for a in self])
+        return r
+
     def tostr(self, level=0):
         p = self.precedence
         r = '%s(%s)' % (self.func.__name__, ', '.join([a.tostr() for a in self]))
@@ -338,8 +343,20 @@ class Function(Basic, ArithMeths, RelMeths):
         return cls(x).diff(x, n).subs(x, 0) * x**n / Basic.Factorial(n)
 
 class WildFunction(Function, Atom):
+    """
+    WildFunction() matches any expression but another WildFunction()
+    XXX is this as intended, does it work ?
+    """
 
     nargs = 1
+
+    def __new__(cls, name=None, **assumptions):
+        if name is None:
+            name = 'Wf%s' % (Basic.Symbol.dummycount + 1) # XXX refactor dummy counting
+            Basic.Symbol.dummycount += 1
+        obj = Function.__new__(cls, name, **assumptions)
+        obj.name = name
+        return obj
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         for p,v in repl_dict.items():
@@ -352,6 +369,9 @@ class WildFunction(Function, Atom):
         repl_dict = repl_dict.copy()
         repl_dict[pattern] = expr
         return repl_dict
+
+    def torepr(self):
+        return '%s(%r)' % (self.__class__.__name__, self.name)
 
     def tostr(self, level=0):
         return self.name + '_'

@@ -131,3 +131,26 @@ def test_combine():
 
     assert (2*exp(x)*exp(-x)).combine() == 2
     assert (x/exp(x)*exp(-x)).combine() == x*exp(-2*x)
+
+
+def test_function_str():
+    x = Symbol('x')
+    f = Function('f')
+    fx= f(x)
+    w = WildFunction('w')
+
+    # XXX we are not using repr(...) str(...) here, becuase Basic.__repr__ and __str__
+    #     are doing some tricks, and repr(...) is not always a repr.
+    assert fx.torepr() == "Function('f')(Symbol('x'))"
+    assert w.torepr()  == "WildFunction('w')"
+
+    assert fx.tostr()  == "f(x)"
+    assert w.tostr()   == "w_"
+
+
+@XFAIL
+def test_unapplied_function_str():
+    f = Function('f')
+
+    assert repr(f)     == "Function('f')"   # this does not work
+    assert str(f)      == "f"               # this does not work
