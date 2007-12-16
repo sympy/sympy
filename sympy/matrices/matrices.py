@@ -965,20 +965,24 @@ class Matrix(object):
         return out
 
 def zero(n):
+    """Create square zero matrix n x n"""
     return zeronm(n,n)
 
 def zeronm(n,m):
+    """Create zero matrix n x m"""
     assert n>0
     assert m>0
     return Matrix(n,m, lambda i,j: 0)
 
 def one(n):
+    """Create square all-one matrix n x n"""
     m = zero(n)
     for i in range(n):
         m[i,i]=1
     return m
 
 def eye(n):
+    """Create square identity matrix n x n"""
     assert n>0
     out = zeronm(n,n)
     for i in range(n):
@@ -986,6 +990,7 @@ def eye(n):
     return out
 
 def randMatrix(r,c,min=0,max=99,seed=[]):
+    """Create random matrix r x c"""
     if seed == []:
         random.seed()
     else:
@@ -993,6 +998,10 @@ def randMatrix(r,c,min=0,max=99,seed=[]):
     return Matrix(r,c,lambda i,j: random.randint(min,max))
 
 def hessian(f, varlist):
+    """Compute Hessian matrix for a function f
+
+    see: http://en.wikipedia.org/wiki/Hessian_matrix
+    """
     # f is the expression representing a function f, return regular matrix
     if isinstance(varlist, (list, tuple)):
         m = len(varlist)
@@ -1031,6 +1040,19 @@ def GramSchmidt(vlist, orthog=False):
     return out
 
 def wronskian(functions, var):
+    """Compute wronskian for [] of functions
+
+                   | f1    f2     ...   fn  |
+                   | f1'   f2'    ...   fn' |
+                   |  .     .     .      .  |
+    W(f1,...,fn) = |  .     .      .     .  |
+                   |  .     .       .    .  |
+                   |  n     n           n   |
+                   | D(f1) D(f2)  ...  D(fn)|
+
+    see: http://en.wikipedia.org/wiki/Wronskian
+    """
+
     for index in xrange(0, len(functions)):
         functions[index] = Basic.sympify(functions[index])
     n = len(functions)
@@ -1079,6 +1101,8 @@ def casoratian(seqs, n, zero=True):
     return Matrix(k, k, f).det()
 
 class SMatrix(Matrix):
+    """Sparse matrix"""
+
     def __init__(self, *args):
         if len(args) == 3 and callable(args[2]):
             op = args[2]
