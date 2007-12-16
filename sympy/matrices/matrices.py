@@ -35,11 +35,11 @@ class Matrix(object):
 
         >>> from sympy import *
         >>> Matrix( (1,2+I), (3,4) ) #doctest:+NORMALIZE_WHITESPACE
-        1 2 + I
-        3 4
+        [1, 2 + I]
+        [3,     4]
         >>> Matrix(2, 2, lambda i,j: (i+1)*j ) #doctest:+NORMALIZE_WHITESPACE
-        0 1
-        0 2
+        [0, 1]
+        [0, 2]
 
         Note: in SymPy we count indices from 0. The rule however counts from 1.
         """
@@ -93,14 +93,14 @@ class Matrix(object):
         >>> from sympy import *
         >>> m=Matrix(((1,2+I),(3,4)))
         >>> m  #doctest: +NORMALIZE_WHITESPACE
-        1 2 + I
-        3 4
+        [1, 2 + I]
+        [3,     4]
         >>> m.T #doctest: +NORMALIZE_WHITESPACE
-        1 3
-        2 + I 4
+        [    1, 3]
+        [2 + I, 4]
         >>> m.H #doctest: +NORMALIZE_WHITESPACE
-        1 3
-        2 - I 4
+        [    1, 3]
+        [2 - I, 4]
 
         """
         if name == "T":
@@ -129,8 +129,8 @@ class Matrix(object):
         >>> from sympy import *
         >>> m=Matrix(((1,2+I),(3,4)))
         >>> m  #doctest: +NORMALIZE_WHITESPACE
-        1 2 + I
-        3 4
+        [1, 2 + I]
+        [3,     4]
         >>> m[1,0]
         3
         >>> m.H[1,0]
@@ -155,12 +155,12 @@ class Matrix(object):
         >>> from sympy import *
         >>> m=Matrix(((1,2+I),(3,4)))
         >>> m  #doctest: +NORMALIZE_WHITESPACE
-        1 2 + I
-        3 4
+        [1, 2 + I]
+        [3,     4]
         >>> m[1,0]=9
         >>> m  #doctest: +NORMALIZE_WHITESPACE
-        1 2 + I
-        9 4
+        [1, 2 + I]
+        [9,     4]
 
         """
         assert len(key) == 2
@@ -368,9 +368,9 @@ class Matrix(object):
         >>> M = sympy.matrices.eye(3)
         >>> M.col_del(1)
         >>> M   #doctest: +NORMALIZE_WHITESPACE
-        1 0
-        0 0
-        0 1
+        [1, 0]
+        [0, 0]
+        [0, 1]
         """
         for j in range(self.lines-1, -1, -1):
             del self.mat[i+j*self.cols]
@@ -403,18 +403,18 @@ class Matrix(object):
         >>> from sympy import *
         >>> m = Matrix(4,4,lambda i,j: i+j)
         >>> m   #doctest: +NORMALIZE_WHITESPACE
-        0 1 2 3
-        1 2 3 4
-        2 3 4 5
-        3 4 5 6
+        [0, 1, 2, 3]
+        [1, 2, 3, 4]
+        [2, 3, 4, 5]
+        [3, 4, 5, 6]
         >>> m[0:1, 1]   #doctest: +NORMALIZE_WHITESPACE
-        1
+        [1]
         >>> m[0:2, 0:1] #doctest: +NORMALIZE_WHITESPACE
-        0
-        1
+        [0]
+        [1]
         >>> m[2:4, 2:4] #doctest: +NORMALIZE_WHITESPACE
-        4 5
-        5 6
+        [4, 5]
+        [5, 6]
         """
         assert isinstance(keys[0], slice) or isinstance(keys[1], slice)
         rlo, rhi = self.slice2bounds(keys[0], self.lines)
@@ -454,11 +454,11 @@ class Matrix(object):
         >>> from sympy import *
         >>> m = Matrix(2,2,lambda i,j: i*2+j)
         >>> m   #doctest: +NORMALIZE_WHITESPACE
-        0 1
-        2 3
+        [0, 1]
+        [2, 3]
         >>> m.applyfunc(lambda i: 2*i)  #doctest: +NORMALIZE_WHITESPACE
-        0 2
-        4 6
+        [0, 2]
+        [4, 6]
         """
         assert callable(f)
         out = self[:,:]
@@ -472,14 +472,14 @@ class Matrix(object):
         >>> from sympy import *
         >>> m = Matrix(2,3,lambda i,j: 1)
         >>> m   #doctest: +NORMALIZE_WHITESPACE
-        1 1 1
-        1 1 1
+        [1, 1, 1]
+        [1, 1, 1]
         >>> m.reshape(1,6)  #doctest: +NORMALIZE_WHITESPACE
-        1 1 1 1 1 1
+        [1, 1, 1, 1, 1, 1]
         >>> m.reshape(3,2)  #doctest: +NORMALIZE_WHITESPACE
-        1 1
-        1 1
-        1 1
+        [1, 1]
+        [1, 1]
+        [1, 1]
         """
         if self.lines*self.cols != _rows*_cols:
             print "Invalid reshape parameters %d %d" % (_rows, _cols)
@@ -491,8 +491,8 @@ class Matrix(object):
         >>> from sympy import *
         >>> m = Matrix(2,3,lambda i,j: i*3+j)
         >>> m           #doctest: +NORMALIZE_WHITESPACE
-        0 1 2
-        3 4 5
+        [0, 1, 2]
+        [3, 4, 5]
         >>> m.print_nonzero()   #doctest: +NORMALIZE_WHITESPACE
         [ XX]
         [XXX]
