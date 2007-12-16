@@ -2,6 +2,7 @@
 from sympy import *
 from sympy import symbols
 from sympy.matrices.matrices import ShapeError
+from sympy.utilities.test import REPR0
 import py
 
 def test_multiplication():
@@ -718,3 +719,24 @@ def test_col_row():
     M.col(0,lambda x,i: x+y**i)
     assert M == Matrix([[x+1,0,0],
                         [1+y,y+2,3]])
+
+
+@REPR0
+def test_str():
+    x, y = symbols("xy")
+    M = Matrix([[x**+1, 1], [y, x+y]])
+
+    assert repr(M) == \
+"""\
+Matrix([
+  [Symbol('x'),                        One(1)],
+  [Symbol('y'), Add(Symbol('x'), Symbol('y'))],
+])\
+"""
+
+    assert str(M) == \
+"""\
+[x,     1]
+[y, x + y]\
+"""
+

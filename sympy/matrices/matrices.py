@@ -11,6 +11,22 @@ class ShapeError(ValueError):
     """Wrong matrix shape"""
     pass
 
+class _MatrixAsBasic(Basic):
+    """Proxy between Matrix & Basic
+
+    The reason, this class is here, is that Matrix does not inherit from Basic.
+    So for common functionality implemented in Basic, we have to provide this
+    proxy.
+    
+    see #420
+"""
+    def __init__(self, m):
+        self.m = m
+    def torepr(self):
+        return self.m.torepr()
+    def tostr(self):
+        return self.m.tostr()
+
 class Matrix(object):
 
     def __init__(self, *args):
@@ -270,8 +286,39 @@ class Matrix(object):
             a = Basic.sympify(a)
         return self.hash() != a.hash()
 
+    # hook Basic.__repr__ & Basic.__str__
     def __repr__(self):
-        return str(self)
+        return _MatrixAsBasic(self).__repr__()
+
+    def __str__(self):
+        return _MatrixAsBasic(self).__str__()
+
+    def _format_str(self, strfunc, rowsep='\n'):
+        # Build table of string representations of the elements
+        res = []
+        # Track per-column max lengths for pretty alignment
+        maxlen = [0] * self.cols
+        for i in range(self.lines):
+            res.append([])
+            for j in range(self.cols):
+                string = strfunc(self[i,j])
+                res[-1].append(string)
+                maxlen[j] = max(len(string), maxlen[j])
+        # Patch strings together
+        for i, row in enumerate(res):
+            for j, elem in enumerate(row):
+                # Pad each element up to maxlen so the columns line up
+                row[j] = elem.rjust(maxlen[j])
+            res[i] = "[" + ", ".join(row) + "]"
+        return rowsep.join(res)
+
+    def torepr(self):
+        s = self._format_str(lambda elem: repr(elem), ',\n  ')
+
+        return '%s([\n  %s,\n])' % (self.__class__.__name__, s)
+
+    def tostr(self):
+        return self._format_str(lambda elem: str(elem))
 
     def inv(self, method="GE"):
         assert self.cols==self.lines
@@ -283,14 +330,6 @@ class Matrix(object):
         else:
             raise "Inversion method unrecognized"
 
-    def __str__(self):
-        s="";
-        for i in range(self.lines):
-            for j in range(self.cols):
-                s+="%s "%repr(self[i,j]);
-            if i != self.lines - 1:
-                s+="\n"
-        return s
 
     def __mathml__(self):
         mml = ""
