@@ -171,6 +171,62 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*arg.left(S))
         return pform
 
+    # Matrix is special:
+    #
+    # it can exist in SymPy in two forms:
+    # - as Matrix
+    # - as _MatrixAsBasic
+    #
+    # see _MatrixAsBasic docstring, and #420
+    def _print__MatrixAsBasic(self, e):
+        return self._print_Matrix(e.m)
+
+    def _print_Matrix(self, e):
+        M = e   # matrix
+        S = {}  # i,j -> pretty(M[i,j])
+        for i in range(M.lines):
+            for j in range(M.cols):
+                S[i,j] = self._print(M[i,j])
+
+        # max w/h for elements
+        maxw = max([s.width()  for s in S.values()])
+        maxh = max([s.height() for s in S.values()])
+
+        # drawing result
+        D = None
+
+        # XXX at present, we reshape each cell to be of the same size,
+        # XXX and it is ugly most of the time!
+        for i in range(M.lines):
+
+            D_row = None
+            for j in range(M.cols):
+                s = S[i,j]
+
+                # reshape s to maxw/maxh
+                # XXX this should be generalized, and go to stringPict.reshape ?
+                while s.width() < maxw:
+                    s = prettyForm(*s.left(' '))    # right align
+                while s.height() < maxh:
+                    s = prettyForm(*s.above(' '))   # down align
+
+                if D_row is None:
+                    D_row = s   # first box in a row
+                    continue
+
+                D_row = prettyForm(*D_row.right(' '))
+                D_row = prettyForm(*D_row.right(s))
+
+            if D is None:
+                D = D_row       # first row in a picture
+                continue
+
+            D = prettyForm(*D.below(D_row))
+
+        D = prettyForm(*D.parens('[',']'))
+        return D
+
+
     def _print_exp(self, e):
         base = prettyAtom(pretty_atom('Exp1', 'e'))
         return base ** self._print(e[0])

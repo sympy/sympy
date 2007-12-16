@@ -116,6 +116,19 @@ def test_pretty_integrals():
     f_6 = Integral(x**2*y**2, x,y)
     assert pretty(f_6) == '  /  /           \n |  |            \n |  |  2  2      \n |  | x *y  dx dy\n |  |            \n/  /             '
 
+
+def test_pretty_matrix():
+    p = pretty( Matrix([[x**2+1, 1], [y, x+y]]) )
+    s = \
+"""\
+[     2       ]
+[1 + x       1]
+[             ]
+[     y  x + y]\
+"""
+    assert p == s
+
+
 @XFAIL
 def test_pretty_limits():
     assert pretty( limit(x, x, oo, evaluate=False) ) == ' lim x\nx->oo '

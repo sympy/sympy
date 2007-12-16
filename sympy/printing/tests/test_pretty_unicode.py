@@ -116,3 +116,15 @@ u"""\
 0 0                \
 """
     assert u == s
+
+
+def test_upretty_matrix():
+    u = upretty( Matrix([[x**2+1, 1], [y, x+y]]) )
+    s = \
+u"""\
+⎡     2       ⎤
+⎢1 + x       1⎥
+⎢             ⎥
+⎣     y  x + y⎦\
+"""
+    assert u == s
