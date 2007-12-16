@@ -1,5 +1,6 @@
 from sympy import *
 from sympy.utilities.pytest import XFAIL
+from sympy.utilities.test import REPR0
 
 
 def test_log():
@@ -133,6 +134,7 @@ def test_combine():
     assert (x/exp(x)*exp(-x)).combine() == x*exp(-2*x)
 
 
+@REPR0
 def test_function_str():
     x = Symbol('x')
     f = Function('f')
@@ -141,14 +143,15 @@ def test_function_str():
 
     # XXX we are not using repr(...) str(...) here, becuase Basic.__repr__ and __str__
     #     are doing some tricks, and repr(...) is not always a repr.
-    assert fx.torepr() == "Function('f')(Symbol('x'))"
-    assert w.torepr()  == "WildFunction('w')"
+    assert repr(fx) == "Function('f')(Symbol('x'))"
+    assert repr(w)  == "WildFunction('w')"
 
-    assert fx.tostr()  == "f(x)"
-    assert w.tostr()   == "w_"
+    assert str(fx)  == "f(x)"
+    assert str(w)   == "w_"
 
 
 @XFAIL
+@REPR0
 def test_unapplied_function_str():
     f = Function('f')
 
