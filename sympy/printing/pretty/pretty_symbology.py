@@ -1,6 +1,9 @@
+"""Symbolic primitives + unicode/ascii abstraction  for pretty.py"""
+
 import sys
 warnings = ''
 
+# first, setup unicodedate environment
 try:
     import unicodedata
 
@@ -323,9 +326,17 @@ def xobj(symb, length):
 
 
 def vobj(symb, height):
+    """Construct vertical object of a given height
+
+       see: xobj
+    """
     return '\n'.join( xobj(symb, height) )
 
 def hobj(symb, width):
+    """Construct horizontal object of a given width
+
+       see: xobj
+    """
     return ''.join( xobj(symb, width) )
 
 # RADICAL
@@ -371,6 +382,7 @@ relations = {
 
 
 def xrel(rel_name):
+    """get symbology for a relation"""
     op = relations[rel_name]
 
     if _use_unicode:

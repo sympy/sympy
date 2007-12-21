@@ -4,18 +4,18 @@ from stringpict import *
 
 from pretty_symbology import xstr, hobj, vobj, xobj, xrel, pretty_symbol, pretty_atom, pretty_use_unicode, pretty_try_use_unicode
 
+# rename for usage from outside
 pprint_use_unicode = pretty_use_unicode
 pprint_try_use_unicode = pretty_try_use_unicode
 
 
+# syntatic sugar
 def prettyAtom(s):
     return prettyForm(s, binding=prettyForm.ATOM)
 
 class PrettyPrinter(Printer):
-    """
-    A class that prints a prettified expression, one that is not limited
-    to one dimension like casting the expression to a string would return.
-    """
+    """Printer, which converts an expression into 2D ascii-art figure."""
+
     def __init__(self, use_unicode=None):
         Printer.__init__(self)
         self.emptyPrinter = lambda x : prettyAtom(xstr(x))
