@@ -21,4 +21,8 @@ apt-get -y install mercurial python python-codespeak-lib
 cd /tmp
 hg clone http://hg.sympy.org/sympy/
 cd sympy
+./setup.py sdist
+cd dist
+tar xzf *.tar.gz
+cd sympy*
 ./setup.py test
