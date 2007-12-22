@@ -56,7 +56,7 @@ from pattern_tools import Pattern
 ############################### PATTERNS ######################################
 ###############################################################################
 
-name = Pattern('<name>', r'[A-Z]\w*',flags=re.I)
+name = Pattern('<name>', r'[A-Z_]\w*',flags=re.I)
 digit_string = Pattern('<digit-string>',r'\d+')
 significand = digit_string + '.' + ~digit_string | '.' + digit_string
 exponent_letter = Pattern('<exponent-letter>',r'[E]',flags=re.I)

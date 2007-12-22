@@ -40,3 +40,7 @@ def test_sage():
     assert hasattr(x+y, "_sage_")
     assert hasattr(exp(x), "_sage_")
     assert hasattr(log(x), "_sage_")
+
+def test_bug496():
+    a_ = sympify("a_")
+    _a = sympify("_a")
