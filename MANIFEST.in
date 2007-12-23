@@ -3,5 +3,6 @@ include doc/logo/logo.txt
 include doc/logo/sympy-160px.png
 include doc/man/*
 include examples/*
+include sympy/utilities/mathml/data/*.xsl
 include LICENSE
 include TODO

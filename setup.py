@@ -257,6 +257,7 @@ setup(
       packages = ['sympy'] + [ m[1] for m in modules ] + tests,
       scripts = ['bin/isympy'],
       ext_modules = [],
+      package_data = { 'sympy.utilities.mathml' : ['data/*.xsl'] },
       data_files = [('share/man/man1', ['doc/man/isympy.1'])],
       cmdclass    = {'test': test_sympy,
                      'test_core' : test_sympy_core,
