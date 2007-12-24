@@ -86,12 +86,12 @@ def tex2png(eq, pygame):
     os.chdir(tempfile.gettempdir())
     pexpect.run('latex %s' % tmp1)
 
-    # Run dvipng on the generated DVI file. Use tight bounding box. 
+    # Run dvipng on the generated DVI file. Use tight bounding box.
     # Magnification is set to 1200
     # currently, the dvipng is broken on debian.....
     cmd = "dvipng -T tight -x 1728 -z 9 -bg transparent " \
     + "-o %s.png %s.dvi" % (x,x)
-    pexpect.run(cmd) 
+    pexpect.run(cmd)
     image = pygame.image.load("%s.png" % x)
 
     #remove temporary files
@@ -103,32 +103,71 @@ def tex2png(eq, pygame):
 
     return image
 
-def view(eq, psviewer="evince"):
-    """Launches a PostScript viewer (default: evince) with the equation.
+def preview(expr, output='ps', viewer='gv', euler=True):
+    """Preview expression in DVI, PostScript or PDF form.
+
+       This will generate .dvi, .ps or .pdf file respetively in system
+       temporary directory using available latex distribution. It will
+       make the document using Euler fonts (they were used to typeset
+       the well known "Concrete Mathematics" book).
+
+       You can also select the tool, which will be used to preview
+       the generated file. By default 'gv' is the tool of choice
+       as it is the most lighweight software for this purpose.
+
     """
+
+    if not euler:
+        format = r"""\documentclass[12pt]{article}
+                     \begin{document}
+                     \begin{equation*}
+                     %s
+                     \end{equation*}
+                     \vfill
+                     \end{document}
+                 """
+    else:
+        format = r"""\documentclass[12pt]{article}
+                     \usepackage{amsmath}
+                     \usepackage{eulervm}
+                     \begin{document}
+                     \begin{equation*}
+                     %s
+                     \end{equation*}
+                     \vfill
+                     \end{document}
+                 """
+
     import os
     import pexpect
 
-    x = tempfile.mktemp()
-    tmp1 = '%s.tex'%x
+    tmp = tempfile.mktemp()
 
-    # create a LaTeX document and insert equations
-    f = open(tmp1,'w')
-    f.write(tex_str % eq)
-    f.close()
+    tex = open(tmp + ".tex", "w")
+    tex.write(format % latex(expr)[1:-1])
+    tex.close()
 
-    # compile LaTeX document. A DVI file is created
     cwd = os.getcwd()
     os.chdir(tempfile.gettempdir())
-    pexpect.run('latex %s' % tmp1)
 
-    cmd = "dvips %s.dvi" % (x)
-    pexpect.run(cmd) 
+    pexpect.run("latex -halt-on-error %s.tex" % tmp)
 
-    #remove temporary files
-    os.remove("%s.tex" % x)
-    os.remove("%s.dvi" % x)
-    os.remove("%s.log" % x)
+    os.remove(tmp + ".tex")
+    os.remove(tmp + ".aux")
+    os.remove(tmp + ".log")
+
+    if output != "dvi":
+        command = {
+            "ps"  : "dvips -o %s.ps %s.dvi",
+            "pdf" : "dvipdf %s.dvi %s.pdf",
+        }
+
+        try:
+            pexpect.run(command[output] % (tmp, tmp))
+            os.remove(tmp + ".dvi")
+        except KeyError:
+            raise "Invalid output format: %s" % output
+
+    os.system("%s %s.%s &" % (viewer, tmp, output))
+
     os.chdir(cwd)
-
-    os.system("%s %s.ps &" % (psviewer, x))
