@@ -28,6 +28,7 @@ class PlotWindow(ManagedWindow):
         self.antialiasing       = kwargs.pop('antialiasing', True)
         self.ortho              = kwargs.pop('ortho', False)
         self.invert_mouse_zoom  = kwargs.pop('invert_mouse_zoom', False)
+        self.linewidth          = kwargs.pop('linewidth', 1.5)
         self.title  =  kwargs.setdefault('caption', "SymPy Plot")
         self.last_caption_update = 0
         self.caption_update_interval = 0.2
@@ -50,7 +51,7 @@ class PlotWindow(ManagedWindow):
 
         glEnable(GL_LINE_SMOOTH)
         glShadeModel(GL_SMOOTH)
-        glLineWidth(1.25)
+        glLineWidth(self.linewidth)
 
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
