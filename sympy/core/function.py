@@ -197,7 +197,7 @@ class Function(Basic, ArithMeths, RelMeths):
         return
 
     def _eval_derivative(self, s):
-        # Apply(f(x), x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
+        # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
         i = 0
         l = []
         r = Basic.Zero()
@@ -209,9 +209,6 @@ class Function(Basic, ArithMeths, RelMeths):
             if isinstance(self.func, FunctionClass):
                 df = self.fdiff(i)
                 l.append(df * da)
-            #else:
-            #    df = self.func.fdiff(i)
-            #    l.append(Apply(df,*self[:]) * da)
         return Basic.Add(*l)
 
     def _eval_is_commutative(self):
@@ -403,6 +400,7 @@ class Lambda(Function):
     def __new__(cls, expr, *args):
         expr = Basic.sympify(expr)
         args = tuple(map(Basic.sympify, args))
+        # XXX
         #if isinstance(expr, Apply):
         #    if expr[:]==args:
         #        return expr.func
@@ -538,6 +536,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
             return expr
         return Basic.__new__(cls, expr, *unevaluated_symbols)
 
+    # FIXME is this needed
     def xas_apply(self):
         # Derivative(f(x),x) -> Apply(Lambda(f(_x),_x), x)
         symbols = []

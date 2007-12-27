@@ -153,7 +153,6 @@ unfac = UnevaluatedFactorial
 # factorial_simplify helpers; could use refactoring
 
 def _isfactorial(expr):
-    #return isinstance(expr, Apply) and isinstance(expr[0], Factorial)
     return isinstance(expr, _Factorial)
 
 def _collect_factors(expr):

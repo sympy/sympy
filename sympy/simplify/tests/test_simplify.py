@@ -145,9 +145,13 @@ def test_separate_X1():
 
 def test_powsimp():
     x,y,n = symbols('xyn')
+    f = Function('f')
     assert powsimp( y**n * (y/x)**(-n) ) == x**n
     assert powsimp( 4**x * 2**(-x) * 2**(-x) ) == 1
     assert powsimp( (-4)**x * (-2)**(-x) * 2**(-x) ) == 1
+
+    assert powsimp( f(4**x * 2**(-x) * 2**(-x)) )   == f(4**x * 2**(-x) * 2**(-x))
+    assert powsimp( f(4**x * 2**(-x) * 2**(-x)), deep = True )  == f(1)
 
 def test_collect():
     x,y,n = symbols('xyn')

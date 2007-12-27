@@ -668,7 +668,7 @@ class Basic(BasicMeths):
     def _eval_expand_power(self, *args):
         if isinstance(self, Atom):
             return self
-        if not isinstance(self, Basic.Apply):
+        if not isinstance(self, Basic.Apply):   # FIXME Apply -> Function
             sargs = self[:]
         else:
             sargs = (self.func,)+self[:]
@@ -974,6 +974,7 @@ class Basic(BasicMeths):
         return ret
 
     def fdiff(self, *indices):
+        # FIXME FApply -> ?
         return Basic.FApply(Basic.FDerivative(*indices), self)
 
     def integral(self, *symbols, **assumptions):
@@ -993,8 +994,6 @@ class Basic(BasicMeths):
     #XXX fix the removeme
     def __call__(self, *args, **removeme):
         return Basic.Function(self[0])(*args)
-        print self, args
-        return Basic.Apply(self, *args)
 
     def _eval_evalf(self):
         return

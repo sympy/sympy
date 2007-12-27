@@ -6,6 +6,7 @@ from assumptions import AssumeMeths
 
 # used for canonical ordering of symbolic sequences
 # via __cmp__ method:
+# FIXME this is *so* irrelevant and outdated!
 ordering_of_classes = [
     # singleton numbers
     'Zero', 'One','Half','Infinity','NaN','NegativeOne','NegativeInfinity',

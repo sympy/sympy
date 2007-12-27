@@ -135,8 +135,12 @@ def separate(expr, deep=False):
        >>> separate((x*sin(x))**y + (x*cos(x))**y)
        x**y*cos(x)**y + x**y*sin(x)**y
 
+       #this does not work because of exp combining
        #>>> separate((exp(x)*exp(y))**x)
        #exp(x*y)*exp(x**2)
+
+       >>> separate((sin(x)*cos(x))**y)
+       cos(x)**y*sin(x)**y
 
        Notice that summations are left un touched. If this is not the
        requested behaviour, apply 'expand' to input expression before:
@@ -841,8 +845,8 @@ def powsimp(expr, deep=False):
             if deep:
                 return Basic.Pow(powsimp(expr.base), powsimp(expr.exp))
             return expr
-        #elif isinstance(expr, Basic.Apply) and deep:
-        #    return expr.func(*[powsimp(t) for t in expr])
+        elif isinstance(expr, Basic.Function) and deep:
+            return expr.func(*[powsimp(t) for t in expr])
         elif isinstance(expr, Basic.Add):
             return Basic.Add(*[powsimp(t) for t in expr])
         elif isinstance(expr, Basic.Mul):

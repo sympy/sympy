@@ -31,8 +31,6 @@ class MathMLPrinter(Printer):
 
         # Not found in the MRO set
         n = e.__class__.__name__
-        if n.startswith('Apply'):
-            n = n[5:]
         return n.lower()
 
     def _print_Matrix(self, m):
