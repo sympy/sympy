@@ -74,7 +74,7 @@ modules = [
     ( False, 'sympy.plotting.pyglet.window.xlib', [] ),
     ( True, 'sympy.polynomials', [] ),
     ( True, 'sympy.polynomials.fast', [] ),
-    ( True, 'sympy.printing', ['gtk', 'pygame_'] ),
+    ( True, 'sympy.printing', ['gtk'] ),
     ( True, 'sympy.printing.pretty', [] ),
     ( True, 'sympy.series', ["limits"] ),
     ( True, 'sympy.simplify', [] ),

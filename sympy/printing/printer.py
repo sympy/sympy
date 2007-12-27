@@ -46,7 +46,7 @@ class Printer(object):
         """Returns printer's representation for expr (as a string)"""
         return self._str(self._print(expr))
 
-    def _print(self, expr):
+    def _print(self, expr, *args):
         """internal dispatcher
 
            It's job is to loop through expr classes (class + it's bases), and
@@ -92,7 +92,7 @@ class Printer(object):
         res = None
         for cls in expr.__class__.__mro__:
             if hasattr(self, '_print_'+cls.__name__):
-                res = getattr(self, '_print_'+cls.__name__)(expr)
+                res = getattr(self, '_print_'+cls.__name__)(expr, *args)
                 break
 
         # Unknown object, just use its string representation

@@ -1,198 +1,411 @@
 from sympy.core import Basic
 from printer import Printer
-
+from sympy.simplify import fraction
 
 class LatexPrinter(Printer):
     """A printer which converts an expression into its LaTeX equivalent."""
-    def doprint(self, e):
-        return "$%s$" % Printer.doprint(self, e)
 
-    def _print_Mul(self, e):
-        # TODO Improve this to collect numerator/denominator and possibly
-        #      use \frac{num}{den}?
-        f = []
-        coeff, a = e.as_coeff_terms()
-        if isinstance(coeff, Basic.NegativeOne):
-            f = ["-"]
-        elif not isinstance(coeff, Basic.One):
-            f.append(self._print(coeff))
+    def __init__(self, inline=True):
+        Printer.__init__(self)
+        self._inline = inline
 
-        multsymb = r"\cdot"
-        for x in a:
-            xs = self._print(x)
-            if isinstance(x, Basic.AssocOp):
-                f.append("(%s)" % xs)
-            # Insert explicit multiplication sign in some cases
-            elif (isinstance(x, Basic.Symbol) and "mathrm" in xs) or \
-                 (isinstance(x, Basic.Pow) and "mathrm" in self._print(x.base)):
-                f.extend([multsymb, xs, multsymb])
-            else:
-                f.append(xs)
+    def doprint(self, expr):
+        tex = Printer.doprint(self, expr)
 
-        # Remove extra multiplication signs
-        for i in range(len(f)-1):
-            if f[i] == f[i+1] == multsymb:
-                f[i] = ""
-        f = [x for x in f if x]
-        if f[0] == multsymb: f = f[1:]
-        if f[-1] == multsymb: f = f[:-1]
-        return str.join(" ", f)
-
-    def _print_Add(self, e):
-        f = "%s" % self._print(e[0])
-        for term in e[1:]:
-            num_part,other = term.as_coeff_terms()
-            if num_part < 0:
-              f += "%s" % self._print(term)
-            else:
-              f += "+%s" % self._print(term)
-        return f
-
-    def _print_Integral(self, e):
-        res = ""
-        for v,ab in reversed(e.limits):
-            res += '\int'
-            if ab is not None:
-                res += '_{%s}^{%s}' % (self._print(ab[0]), self._print(ab[1]))
-
-            res += ' '
-
-        res += '%s\,' % self._print(e.function)
-        res += '\,'.join('d%s' % self._print(x)  for x in e.variables)
-
-        return res
-
-    def _print_Function(self, e):
-        # Check to see if there is something here for this func first
-        func = e.func.__name__
-        if hasattr(self, '_print_'+func):
-            return getattr(self, '_print_'+func)(e)
-
-        # No handler function, do a generic apply
-        args = []
-        for arg in e:
-            args.append(self._print(arg))
-
-        s = self._print(Basic.Symbol(e.func.__name__))
-        s += r"\left(%s\right)" % str.join(',', args)
-        return s
-
-    def _print_exp(self, e):
-        return "{e}^{%s}" % self._print(e[0])
-
-    def _print_Derivative(self, e):
-        # TODO Upgrade for multiple symbols used in differentiation
-        x = e.symbols[0]
-        s = r"\frac{\partial}{\partial %s} " % self._print(x)
-        if isinstance(e.expr, Basic.Add):
-            s += r"\left(" + self._print(e.expr) + r"\right)"
+        if self._inline:
+            return r"$%s$" % tex
         else:
-            s += self._print(e.expr)
-        return s
+            return r"\begin{equation*}%s\end{equation*}" % tex
 
-    def _print_Rational(self, e):
-        if e.q != 1:
-            return r"\frac{%d}{%d}" % (e.p, e.q)
+    def _needs_brackets(self, expr):
+        return not ((isinstance(expr, Basic.Integer) and \
+            expr.is_nonnegative) or isinstance(expr, Basic.Atom))
 
-    def _print_Factorial(self, e):
-        x = e[0]
-        if (isinstance(x, Basic.Integer) and x.is_nonnegative) or \
-            isinstance(x, Basic.Symbol):
-            s = self._print(x)
+    def _do_exponent(self, expr, exp):
+        if exp is not None:
+            return r"\left(%s\right)^{%s}" % (expr, exp)
         else:
-            s = "(" + self._print(x) + ")"
-        return s + "!"
+            return expr
 
-    def _print_RisingFactorial(self, e):
-        x, n = e[:]
-        return "{(%s)}^{(%s)}" % (self._print(x), self._print(n))
+    def _print_Add(self, expr):
+        tex = str(self._print(expr[0]))
 
-    def _print_FallingFactorial(self, e):
-        x, n = e[:]
-        return "{(%s)}_{(%s)}" % (self._print(x), self._print(n))
+        for term in expr[1:]:
+            coeff = term.as_coeff_terms()[0]
 
-    def _print_Binomial2(self, e):
-        n, k = e[:]
-        return r"{{%s}\choose{%s}}" % (self._print(x), self._print(k))
+            if coeff.is_negative:
+                tex += r" %s" % self._print(term)
+            else:
+                tex += r" + %s" % self._print(term)
 
-    def _print_Infinity(self, e):
+        return tex
+
+    def _print_Mul(self, expr):
+        coeff, terms = expr.as_coeff_terms()
+
+        if not coeff.is_negative:
+            tex = ""
+        else:
+            coeff = -coeff
+            tex = "- "
+
+        numer, denom = fraction(Basic.Mul(*terms))
+
+        def convert(terms):
+            product = []
+
+            if not isinstance(terms, Basic.Mul):
+                return str(self._print(terms))
+            else:
+                for term in terms:
+                    pretty = self._print(term)
+
+                    if isinstance(term, Basic.Add):
+                        product.append(r"\left(%s\right)" % pretty)
+                    else:
+                        product.append(str(pretty))
+
+                return r" ".join(product)
+
+        if isinstance(denom, Basic.One):
+            if not isinstance(coeff, Basic.One):
+                tex += str(self._print(coeff)) + " "
+
+            if isinstance(numer, Basic.Add):
+                tex += r"\left(%s\right)" % convert(numer)
+            else:
+                tex += r"%s" % convert(numer)
+        else:
+            if isinstance(numer, Basic.One):
+                if isinstance(coeff, Basic.Integer):
+                    numer *= coeff.p
+                elif isinstance(coeff, Basic.Rational):
+                    if coeff.p != 1:
+                        numer *= coeff.p
+
+                    denom *= coeff.q
+                elif not isinstance(coeff, Basic.One):
+                    tex += str(self._print(coeff)) + " "
+            else:
+                if isinstance(coeff, Basic.Rational) and coeff.p == 1:
+                    denom *= coeff.q
+                elif not isinstance(coeff, Basic.One):
+                    tex += str(self._print(coeff)) + " "
+
+            tex += r"\frac{%s}{%s}" % \
+                (convert(numer), convert(denom))
+
+        return tex
+
+    def _print_Pow(self, expr):
+        if isinstance(expr.exp, Basic.Rational) and expr.exp.q == 2:
+            base, exp = self._print(expr.base), abs(expr.exp.p)
+
+            if exp == 1:
+                tex = r"\sqrt{%s}" % base
+            else:
+                tex = r"\sqrt[%s]{%s}" % (exp, base)
+
+            if expr.exp.is_negative:
+                return r"\frac{1}{%s}" % tex
+            else:
+                return tex
+        else:
+            if isinstance(expr.base, Basic.Function):
+                return self._print(expr.base, self._print(expr.exp))
+            else:
+                if self._needs_brackets(expr.base):
+                    tex = r"\left(%s\right)^{%s}"
+                else:
+                    tex = r"{%s}^{%s}"
+
+                return tex % (self._print(expr.base),
+                              self._print(expr.exp))
+
+    def _print_Derivative(self, expr):
+        dim = len(expr.symbols)
+
+        if dim == 1:
+            tex = r"\frac{\partial}{\partial %s}" % \
+                self._print(expr.symbols[0])
+        else:
+            multiplicity, i, tex = [], 1, ""
+            current = expr.symbols[0]
+
+            for symbol in expr.symbols[1:]:
+                if symbol == current:
+                    i = i + 1
+                else:
+                    multiplicity.append((current, i))
+                    current, i = symbol, 1
+            else:
+                multiplicity.append((current, i))
+
+            for x, i in multiplicity:
+                if i == 1:
+                    tex += r"\partial %s" % self._print(x)
+                else:
+                    tex += r"\partial^{%s} %s" % (i, self._print(x))
+
+            tex = r"\frac{\partial^{%s}}{%s} " % (dim, tex)
+
+        if isinstance(expr.expr, Basic.AssocOp):
+            return r"%s\left(%s\right)" % (tex, self._print(expr.expr))
+        else:
+            return r"%s %s" % (tex, self._print(expr.expr))
+
+    def _print_Integral(self, expr):
+        tex, symbols = "", []
+
+        for symbol, limits in reversed(expr.limits):
+            tex += r"\int"
+
+            if limits is not None:
+                if not self._inline:
+                    tex += r"\limits"
+
+                tex += "_{%s}^{%s}" % (self._print(limits[0]),
+                                       self._print(limits[1]))
+
+            symbols.insert(0, "d%s" % self._print(symbol))
+
+        return r"%s %s\,%s" % (tex,
+            str(self._print(expr.function)), " ".join(symbols))
+
+    def _print_Limit(self, expr):
+        tex = r"\lim_{%s \to %s}" % (self._print(expr.var),
+                                     self._print(expr.varlim))
+
+        if isinstance(expr.expr, Basic.AssocOp):
+            return r"%s\left(%s\right)" % (tex, self._print(expr.expr))
+        else:
+            return r"%s %s" % (tex, self._print(expr.expr))
+
+    def _print_Function(self, expr, exp=None):
+        func = expr.func.__name__
+
+        if hasattr(self, '_print_' + func):
+            return getattr(self, '_print_' + func)(expr, exp)
+        else:
+            args = [ str(self._print(arg)) for arg in expr ]
+
+            if exp is not None:
+                name = r"\operatorname{%s}^{%s}" % (func, exp)
+            else:
+                name = r"\operatorname{%s}" % func
+
+            return name + r"\left(%s\right)" % ",".join(args)
+
+    def _print_floor(self, expr, exp=None):
+        tex = r"\lfloor{%s}\rfloor" % self._print(expr[0])
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
+
+    def _print_ceiling(self, expr, exp=None):
+        tex = r"\lceil{%s}\rceil" % self._print(expr[0])
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
+
+    def _print_abs(self, expr, exp=None):
+        tex = r"\lvert{%s}\rvert" % self._print(expr[0])
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
+
+    def _print_re(self, expr, exp=None):
+        if self._needs_brackets(expr[0]):
+            tex = r"\Re\left(%s\right)" % self._print(expr[0])
+        else:
+            tex = r"\Re{%s}" % self._print(expr[0])
+
+        return self._do_exponent(tex, exp)
+
+    def _print_im(self, expr, exp=None):
+        if self._needs_brackets(expr[0]):
+            tex = r"\Im\left(%s\right)" % self._print(expr[0])
+        else:
+            tex = r"\Im{%s}" % self._print(expr[0])
+
+        return self._do_exponent(tex, exp)
+
+    def _print_conjugate(self, expr, exp=None):
+        tex = r"\overline{%s}" % self._print(expr[0])
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
+
+    def _print_exp(self, expr, exp=None):
+        tex = r"{e}^{%s}" % self._print(expr[0])
+        return self._do_exponent(tex, exp)
+
+    def _print_gamma(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr[0])
+
+        if exp is not None:
+            return r"\operatorname{\Gamma}^{%s}%s" % (exp, tex)
+        else:
+            return r"\operatorname{\Gamma}%s" % tex
+
+    def _print_Factorial(self, expr, exp=None):
+        x = expr[0]
+
+        if self._needs_brackets(x):
+            tex = r"\left(%s\right)!" % self._print(x)
+        else:
+            tex = self._print(x) + "!"
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
+
+    def _print_Binomial(self, expr, exp=None):
+        tex = r"{{%s}\choose{%s}}" % (self._print(expr[0]),
+                                      self._print(expr[1]))
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
+
+    def _print_RisingFactorial(self, expr, exp=None):
+        tex = r"{\left(%s\right)}^{\left(%s\right)}" % \
+            (self._print(expr[0]), self._print(expr[1]))
+
+        return self._do_exponent(tex, exp)
+
+    def _print_FallingFactorial(self, expr, exp=None):
+        tex = r"{\left(%s\right)}_{\left(%s\right)}" % \
+            (self._print(expr[0]), self._print(expr[1]))
+
+        return self._do_exponent(tex, exp)
+
+    def _print_Rational(self, expr):
+        if expr.q != 1:
+            return r"\frac{%d}{%d}" % (expr.p, expr.q)
+
+    def _print_Infinity(self, expr):
         return r"\infty"
 
-    def _print_NegativeInfinity(self, e):
+    def _print_NegativeInfinity(self, expr):
         return r"-\infty"
 
-    def _print_ImaginaryUnit(self, e):
-        return r"\mathrm{i}"
+    def _print_ComplexInfinity(self, expr):
+        return r"\tilde{\infty}"
 
-    def _print_Pi(self, e):
+    def _print_ImaginaryUnit(self, expr):
+        return r"\mathbf{\imath}"
+
+    def _print_NaN(self, expr):
+        return r"\bot"
+
+    def _print_Pi(self, expr):
         return r"\pi"
 
-    def _print_Pow(self, e):
-        f = ""
-        if isinstance(e.base, Basic.AssocOp) or isinstance(e.base, Basic.Pow):
-            f += "{(%s)}"
-        else:
-            f += "{%s}"
-        f += "^"
-        if isinstance(e.exp, Basic.AssocOp) or isinstance(e.exp, Basic.Pow) \
-            or (isinstance(e.exp, Basic.Rational) and \
-            (not e.exp.is_integer or (e.exp.is_integer and \
-            int(e.exp) < 0)) ):
-            f += "{(%s)}"
-        else:
-            f += "{%s}"
-        return f % (self._print(e.base), self._print(e.exp))
+    def _print_EulerGamma(self, expr):
+        return r"\gamma"
 
-    def _print_Symbol(self, e):
-        if len(e.name) == 1:
-            return e.name
-        greek = set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
-          'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi',
-          'omicron', 'pi', 'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi',
-          'psi', 'omega'])
-        if e.name.lower() in greek:
-            return "\\" + e.name
-        return r"\mathrm{%s}" % e.name
+    def _print_Order(self, expr):
+        return r"\operatorname{\mathcal{O}}\left(%s\right)" % \
+            self._print(expr[0])
 
-    def _print_Relational(self, e):
+    def _print_Symbol(self, expr):
+        if len(expr.name) == 1:
+            return expr.name
+
+        greek = set([ 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
+                      'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu',
+                      'xi', 'omicron', 'pi', 'rho', 'sigma', 'tau', 'upsilon',
+                      'phi', 'chi', 'psi', 'omega' ])
+
+        other = set( ['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth',
+                      'hbar', 'hslash', 'mho' ])
+
+        if expr.name.lower() in greek:
+            return "\\" + expr.name
+        elif expr.name in other:
+            return "\\" + expr.name
+        else:
+            return expr.name
+
+    def _print_Relational(self, expr):
         charmap = {
-            '==': '=',
-            '<':  '<',
-            '<=': '\leq',
-            '!=': '\neq'
+            "==" : "=",
+            "<"  : "<",
+            "<=" : r"\leq",
+            "!=" : r"\neq",
         }
 
-        rsym = charmap[e.rel_op]
-        return "%s %s %s" % (self._print(e.lhs), rsym, self._print(e.rhs))
+        return "%s %s %s" % (self._print(expr.lhs),
+            charmap[expr.rel_op], self._print(expr.rhs))
 
-def latex(expr):
-    """
-    Usage
-    =====
-        Returns the latex code representing the current object.
+    def _print_Matrix(self, expr):
+        lines = []
 
-    Notes
-    =====
-        @param x: a sympy object. It can be any expression as long 
-            as it inherits from basic
-        @return: a string with TeX code (something like $\int \left( 1 +yx\right)dx$)
-    Examples
-    ========
+        for line in range(expr.lines): # horrible, should be 'rows'
+            lines.append(" & ".join([ self._print(i) for i in expr[line,:] ]))
+
+        if self._inline:
+            tex = r"\left(\begin{smallmatrix}%s\end{smallmatrix}\right)"
+        else:
+            tex = r"\begin{pmatrix}%s\end{pmatrix}"
+
+        return tex % r"\\".join(lines)
+
+    def _print_tuple(self, expr):
+        return r"\begin{pmatrix}%s\end{pmatrix}" % \
+            r", & ".join([ self._print(i) for i in expr ])
+
+    def _print_list(self, expr):
+        return r"\begin{bmatrix}%s\end{bmatrix}" % \
+            r", & ".join([ self._print(i) for i in expr ])
+
+    def _print_dict(self, expr):
+        items = []
+
+        for key, val in expr.iteritems():
+            items.append("%s : %s" % (self._print(key), self._print(val)))
+
+        return r"\begin{Bmatrix}%s\end{Bmatrix}" % r", & ".join(items)
+
+def latex(expr, inline=True):
+    r"""Convert the given expression to LaTeX representation.
+
+        You can specify how the generated code will be delimited.
+        If the 'inline' keyword is set then inline LaTeX $ $ will
+        be used. Otherwise the resulting code will be enclosed in
+        'equation*' environment (remember to import 'amsmath').
+
         >>> from sympy import *
-        >>> x = Symbol('x')
-        >>> y = Symbol('y')
-        >>> from sympy.printing.latex import latex
-        
-        >>> print latex(Integral(x*y-2, x))
-        $\int -2+x y\,dx$
+        >>> from sympy.abc import *
+
+        >>> latex((2*tau)**Rational(7,2))
+        '$\\sqrt[7]{2 \\tau}$'
+
+        >>> latex((2*mu)**Rational(7,2), inline=False)
+        '\\begin{equation*}\\sqrt[7]{2 \\mu}\\end{equation*}'
+
+        Besides all Basic based expressions, you can recursively
+        convert Pyhon containers (lists, tuples and dicts) and
+        also SymPy matrices:
+
+        >>> latex([2/x, y])
+        '$\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}$'
+
     """
-    lp = LatexPrinter()
-    return lp.doprint(expr)
+
+    return LatexPrinter(inline).doprint(expr)
 
 def print_latex(expr):
-    """
-    Prints expr in pretty form.
-
-    pprint is just a shortcut for this function
-    """
+    """Prints LaTeX representation of the given expression."""
     print latex(expr)
