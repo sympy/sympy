@@ -50,3 +50,12 @@ def test_latex_integrals():
 @XFAIL
 def test_latex_limits():
     assert latex(limit(x, x, oo, evaluate=False)) == r"$\lim_{x \to \infty}x$"
+
+def test_issue469():
+    beta = Symbol(r'\beta')
+    y = beta+x
+    assert latex(y) == r'$\beta + x$'
+
+    beta = Symbol(r'beta')
+    y = beta+x
+    assert latex(y) == r'$\beta + x$'
