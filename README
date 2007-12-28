@@ -31,7 +31,7 @@ covers all files in the sympy repository unless stated otherwise.
 0. Download
 -----------
 
-svn checkout http://sympy.googlecode.com/svn/trunk/ sympy
+$ hg clone http://hg.sympy.org/sympy/
 
 For other options (tarballs, debs, etc.), see the web page of SymPy.
 
@@ -54,9 +54,9 @@ From this directory, start python and:
 
 SymPy also comes with a console that is a simple wrapper around the
 classic python console (or ipython when available) that loads the
-sympy namespace and defines three symbols: x, y, z.
+sympy namespace and executes some common commands for you.
 
-To start it issue:
+To start it, issue:
 
   ./bin/isympy
 
