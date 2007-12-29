@@ -23,7 +23,9 @@ the order of the date of their first contribution):
     Goutham Lakshminarayan <dl.goutham@gmail.com>
     David Lawrence <dmlawrence@gmail.com>
 
-And many more people helped on the mailinglist, reported bugs etc.
+And many more people helped on the SymPy mailinglist, reported bugs, helped
+organize SymPy's participation in the Google Summer of Code, the Google Highly
+Open Participation Contest, wrote and blogged about SymPy...
 
 License: New BSD License (see the LICENSE file for details)
 covers all files in the sympy repository unless stated otherwise.
@@ -107,8 +109,12 @@ To clean everything (thus getting the same tree as in the svn):
 SymPy was started by Ondrej Certik in 2005, he wrote some code during the
 summer, then he wrote some more code during the summer 2006. In February 2007,
 Fabian Seoane joined the project and helped fixed many things, contributed
-documentation and made it alive again. 5 students improved SymPy incredibly
+documentation and made it alive again. 5 students (Mateusz Paprocki, Brian
+Jorgensen, Jason Gedge, Robert Schwarz and Chris Wu) improved SymPy incredibly
 during the summer 2007 as part of the Google Summer of Code. Pearu Peterson
 joined the development during the summer 2007 and he has made SymPy much more
 competitive by rewriting the core from scratch, that has made it from 10x to
-100x faster. 
+100x faster. Jurjen N.E. Bos has contributed pretty printing and other patches.
+Fredrik Johansson has wrote mpmath and contributed a lot of patches. Kirill
+Smelkov has joined the development in autumn 2007 and has improved the overall
+quality of SymPy a lot and is currently one of the most active developers.

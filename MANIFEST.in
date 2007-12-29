@@ -4,5 +4,6 @@ include doc/logo/sympy-160px.png
 include doc/man/*
 include examples/*
 include sympy/utilities/mathml/data/*.xsl
+include data/*
 include LICENSE
 include TODO
