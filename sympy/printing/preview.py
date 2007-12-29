@@ -4,13 +4,7 @@ import time
 import pexpect
 import tempfile
 
-import sympy.plotting.pyglet
-
-from pyglet import window, image, gl
-from pyglet.window import key
-from pyglet.image.codecs.png import PNGImageDecoder
-
-from sympy.printing.latex import latex
+from latex import latex
 
 def preview(expr, output='ps', viewer=None, euler=True):
     """View expression in PNG, DVI, PostScript or PDF form.
@@ -142,7 +136,11 @@ def preview(expr, output='ps', viewer=None, euler=True):
     src = "%s.%s" % (tmp, output)
 
     if viewer == "pyglet":
+        from pyglet import window, image, gl
+        from pyglet.window import key
+
         if output == "png":
+            from pyglet.image.codecs.png import PNGImageDecoder
             img = image.load(src, decoder=PNGImageDecoder())
         else:
             raise SystemError("pyglet preview works only for 'png' files.")
