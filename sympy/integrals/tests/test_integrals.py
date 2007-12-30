@@ -66,3 +66,9 @@ def test_issue461():
     assert integrate(x**Rational(1,2), x) == 2*x**Rational(3,2)/3
     assert integrate(x**Rational(-3,2), x) == -2*x**Rational(-1,2)
 
+
+def test_integrate_varommited():
+    y = Symbol('y')
+    assert integrate(2)     == 2
+    assert integrate(x)     == x**2/2
+    assert integrate(x*y)   == x**2*y**2/4

@@ -39,7 +39,8 @@ class Integral(Basic, NoRelMeths, ArithMeths):
 
                 raise ValueError("Invalid integration variable or limits")
         else:
-            limits = func.atoms(Symbol)
+            # no symbols provided -- let's compute full antiderivative
+            limits = [(symb,None) for symb in function.atoms(Symbol)]
 
             if not limits:
                 return function
@@ -181,17 +182,42 @@ class Integral(Basic, NoRelMeths, ArithMeths):
         return r
 
 def integrate(*args, **kwargs):
-    """Compute definite or indefinite integral of one or more variables
+    """integrate(f, var, ...)
+
+       Compute definite or indefinite integral of one or more variables
        using Risch-Norman algorithm and table lookup. This procedure is
        able to handle elementary algebraic and transcendental functions
        and also a huge class of special functions, including Airy,
        Bessel, Whittaker and Lambert.
 
+       var can be:
+
+       - a symbol                   -- indefinite integration
+       - a tuple (symbol, a, b)     -- definite integration
+
+       Several variables can be specified, in which case the result is multiple
+       integration.
+
+       Also, if no var is specified at all, then full-antiderivative of f is
+       returned. This is equivalent of integrating f over all it's variables.
+
+       Examples
+       --------
+
        >>> from sympy import *
        >>> x, y = symbols('xy')
 
+       >>> integrate(x*y, x)
+       (1/2)*y*x**2
+
        >>> integrate(log(x), x)
        -x + x*log(x)
+
+       >>> integrate(x)
+       (1/2)*x**2
+
+       >>> integrate(x*y)
+       (1/4)*x**2*y**2
 
        See also the doctest of Integral._eval_integral(), which explains
        thoroughly the strategy that SymPy uses for integration.
