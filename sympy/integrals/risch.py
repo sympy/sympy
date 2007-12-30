@@ -186,6 +186,8 @@ def risch_norman(f, x, rewrite=False):
     if not f.has(x):
         return f * x
 
+    indep, f = f.as_independent(x)
+
     rewritables = {
         (sin, cos, cot)     : tan,
         (sinh, cosh, coth)  : tanh,
@@ -352,11 +354,11 @@ def risch_norman(f, x, rewrite=False):
         antideriv = simplify(antideriv.subs_dict(out_terms)).expand()
 
         if isinstance(antideriv, Basic.Add):
-            return Basic.Add(*antideriv.as_coeff_factors()[1])
-        else:
-            return antideriv
+            antideriv = Basic.Add(*antideriv.as_coeff_factors()[1])
+
+        return indep * antideriv
     else:
         if not rewrite:
-            return risch_norman(f, x, rewrite=True)
+            return indep * risch_norman(f, x, rewrite=True)
         else:
             return None

@@ -44,7 +44,7 @@ def test_risch_norman_trigonometric():
     assert risch_norman(cos(x)/sin(x), x) == log(sin(x))
 
     assert risch_norman(x*sin(7*x), x) == sin(7*x) / 49 - x*cos(7*x) / 7
-    assert risch_norman(x**2*cos(x), x) == x**2*sin(x) - 2*sin(x) + 2*x*cos(x)
+    assert risch_norman(1/pi/4 * x**2*cos(x), x) == 1/pi/4*(x**2*sin(x) - 2*sin(x) + 2*x*cos(x))
 
 def test_risch_norman_hyperbolic():
     assert risch_norman(sinh(x), x) == cosh(x)
