@@ -1,5 +1,3 @@
-import sys
-sys.path.append(".")
 import py
 #from sympy import *
 from sympy.numerics import *

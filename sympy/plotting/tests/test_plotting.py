@@ -1,6 +1,3 @@
-import sys
-sys.path.append(".")
-
 disabled = False
 try:
     # pyglet requires ctypes > 1.0.0

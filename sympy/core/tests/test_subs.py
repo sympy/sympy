@@ -1,6 +1,3 @@
-import sys
-sys.path.append(".")
-
 import py
 
 import sympy as g
