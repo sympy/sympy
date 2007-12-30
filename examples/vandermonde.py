@@ -1,5 +1,6 @@
-import sys
-sys.path.append("..")
+#!/usr/bin/env python
+import iam_sympy_example
+
 from sympy import sqrt, symbols, eye
 
 w, x, y, z = symbols("wxyz")

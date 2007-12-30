@@ -1,5 +1,5 @@
-import sys
-sys.path.append("..")
+#!/usr/bin/env python
+import iam_sympy_example
 
 import sympy
 a=sympy.Symbol('a')

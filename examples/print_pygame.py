@@ -1,6 +1,5 @@
-import sys
-sys.path.append("..")
-sys.path.append(".")
+#!/usr/bin/env python
+import iam_sympy_example
 
 from sympy import sqrt,exp,log,Symbol,oo,Rational,sin,cos,limit,I,pi,Mul
 from sympy.core import basic

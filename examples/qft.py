@@ -1,6 +1,5 @@
-import sys
-sys.path.append(".")
-sys.path.append("..")
+#!/usr/bin/env python
+import iam_sympy_example
 
 from sympy import Basic,exp,Symbol,sin,Rational,I,Mul,NCSymbol, Matrix, \
     gamma, sigma, one, Pauli

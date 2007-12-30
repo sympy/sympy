@@ -1,7 +1,7 @@
-"""examples for print_gtk. It prints in gtkmathview using mathml"""
+#!/usr/bin/env python
+import iam_sympy_example
 
-import sys
-sys.path.append("..")
+"""examples for print_gtk. It prints in gtkmathview using mathml"""
 
 from sympy import *
 from sympy.printing import print_gtk

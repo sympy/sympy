@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+import iam_sympy_example
+
 """
 Plotting Examples
 
@@ -6,8 +9,7 @@ to use plotting. It is included with Python 2.5 and later.
 
 Suggested Usage:    python -i plotting.py
 """
-import sys
-sys.path.append("..")
+
 
 from sympy import symbols
 from sympy import Plot

@@ -1,9 +1,7 @@
+#!/usr/bin/env python
+import iam_sympy_example
+
 #a sandbox, for playing with new ideas and algorithms
-
-
-import sys
-sys.path.append("..")
-sys.path.append(".")
 
 from sympy import exp,log,Symbol,oo,Rational,sin,cos,limit,I,pi,Mul
 from sympy import Integral

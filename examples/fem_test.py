@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+import iam_sympy_example
+
 """
 Go to the sympy root directory and execute:
 

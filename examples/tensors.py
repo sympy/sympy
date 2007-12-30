@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+import iam_sympy_example
+
 """
 http://www.lncc.br/~portugal/Canon.html
 http://www.lncc.br/~portugal/Invar.html
@@ -5,9 +8,6 @@ http://www.ginac.de/tutorial/Indexed-objects.html
 http://grtensor.phy.queensu.ca/
 
 """
-import sys
-sys.path.append(".")
-sys.path.append("..")
 
 from sympy import exp, Symbol, sin, Rational, Derivative, dsolve
 
