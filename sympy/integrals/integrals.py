@@ -168,13 +168,17 @@ class Integral(Basic, NoRelMeths, ArithMeths):
 
         # polynomials:
         from sympy import Polynomial, PolynomialException
-        p = None
+
+        # -- 1. if it is a poly(x) then let the polynomial integrate itself
+        if isinstance(f, Polynomial) and x in f.var:
+            return f.integrate(x)
+
+        # -- 2. try to convert to poly(x) and then integrate if successful
         try:
-            p = Polynomial(f)
+            p = Polynomial(f, var=x)
+            return p.integrate(x)
         except PolynomialException:
             pass
-        if p != None:
-            return p.integrate(x)
 
         # f is not a simple function, let's try the risch norman (that can
         # btw. integrate all the functions above, but slower):
