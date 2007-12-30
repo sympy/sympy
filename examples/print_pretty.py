@@ -7,6 +7,9 @@ x=Symbol("x")
 y=Symbol("y") 
 
 
+# try to enable unicode pprint
+pprint_try_use_unicode()
+
 pprint( x**x )
 print '\n'# separate with two blank likes
 
