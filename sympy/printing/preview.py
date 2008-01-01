@@ -1,7 +1,6 @@
 
 import os
 import time
-import pexpect
 import tempfile
 
 from latex import latex
@@ -50,6 +49,10 @@ def preview(expr, output='ps', viewer=None, euler=True):
        your system it will gracefully raise an exception.
 
     """
+
+    # we don't want to depend on anything not in the
+    # standard library with SymPy by default
+    import pexpect
 
     special = [ 'pyglet' ]
 
