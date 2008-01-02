@@ -12,6 +12,10 @@ See the webpage for more information and documentation:
 
 __version__ = "0.5.9-hg"
 
+import os.path
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__),"thirdparty"))
+
 from sympy.core import *
 
 from series import *
