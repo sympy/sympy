@@ -2,6 +2,8 @@ recursive-include data *
 recursive-include doc *
 recursive-include examples *
 
+recursive-include sympy/thirdparty/pyglet *
+
 include sympy/utilities/mathml/data/*.xsl
 
 include LICENSE
