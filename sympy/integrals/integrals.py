@@ -161,10 +161,13 @@ class Integral(Basic, NoRelMeths, ArithMeths):
         # simple powers:
         from sympy import Pow, log
         if isinstance(f, Pow) and isinstance(f[0], Symbol) and f[1].is_number:
-            if f[1] == -1:
-                return log(f[0])
+            if f[0] == x:
+                if f[1] == -1:
+                    return log(f[0])
+                else:
+                    return f[0]**(f[1]+1)/(f[1]+1) 
             else:
-                return f[0]**(f[1]+1)/(f[1]+1) 
+                return f*x
 
         # polynomials:
         from sympy import Polynomial, PolynomialException

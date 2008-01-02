@@ -81,3 +81,8 @@ def test_integrate_poly_accurately():
     # when passed to risch_norman, this will be a CPU hog, so this really
     # checks, that integrated function is recognized as polynomial
     assert integrate(x**1000*sin(y), x) == x**1001*sin(y)/1001
+
+def test_issue536():
+    y = Symbol('y')
+    assert integrate(x**2, y) == x**2*y
+    assert integrate(x**2, (y, -1, 1)) == 2*x**2
