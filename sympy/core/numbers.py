@@ -90,6 +90,9 @@ class Number(Atom, RelMeths, ArithMeths):
     def __float__(self):
         return float(self._as_decimal())
 
+    def __len__(self):
+        return 1
+
     def _as_decimal(self):
         raise NotImplementedError('%s needs ._as_decimal() method' % (self.__class__.__name__))
 

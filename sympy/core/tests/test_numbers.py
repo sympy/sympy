@@ -1,4 +1,4 @@
-from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi
+from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, Integer
 from sympy.core.power import integer_nthroot
 import py
 
@@ -173,3 +173,10 @@ def test_pi_Pi():
     "Test, that pi (instance) is imported, but Pi (class) is not"
     from sympy import pi
     py.test.raises(ImportError, "from sympy import Pi")
+
+def test_len():
+    #this is needed, so that Rational can be used in numpy arrays, like:
+    #array(Rational(2))
+    assert len(Rational(2)) == 1
+    assert len(Rational(2,3)) == 1
+    assert len(Integer(2)) == 1
