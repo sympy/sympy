@@ -31,7 +31,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-# $Id: __init__.py 1355 2007-11-04 08:29:25Z Alex.Holkner $
+# $Id: __init__.py 1512 2007-12-11 06:46:10Z Alex.Holkner $
 
 '''Audio and video playback.
 
@@ -75,7 +75,7 @@ of players, and so played many times simultaneously.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1355 2007-11-04 08:29:25Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1512 2007-12-11 06:46:10Z Alex.Holkner $'
 
 import ctypes
 import sys
@@ -124,6 +124,14 @@ class AudioFormat(object):
         return (self.channels == other.channels and 
                 self.sample_size == other.sample_size and
                 self.sample_rate == other.sample_rate)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __repr__(self):
+        return '%s(channels=%d, sample_size=%d, sample_rate=%d)' % (
+            self.__class__.__name__, self.channels, self.sample_size,
+            self.sample_rate)
 
 class VideoFormat(object):
     '''Video details.
@@ -196,6 +204,15 @@ class AudioData(object):
         self.length -= bytes
         self.duration -= bytes / float(audio_format.bytes_per_second)
         self.timestamp += bytes / float(audio_format.bytes_per_second)
+
+    def get_string_data(self):
+        '''Return data as a string.'''
+        if type(self.data) is str:
+            return self.data
+
+        buf = ctypes.create_string_buffer(self.length)
+        ctypes.memmove(buf, self.data, self.length)
+        return buf.raw
 
 class AudioPlayer(object):
     '''Abstract low-level interface for playing audio.
@@ -465,6 +482,7 @@ class StaticSource(Source):
                 The source to read and decode audio and video data from.
 
         '''
+        source = source._get_queue_source()
         if source.video_format:
             raise NotImplementedException(
                 'Static sources not supported for video yet.')
@@ -486,7 +504,7 @@ class StaticSource(Source):
             audio_data = source._get_audio_data(buffer_size)
             if not audio_data:
                 break
-            data.write(audio_data.data)
+            data.write(audio_data.get_string_data())
         self._data = data.getvalue()
 
     def _get_queue_source(self):
@@ -631,6 +649,8 @@ class Player(event.EventDispatcher):
                 self._audio_finished = True
                 return
             if audio_format != self._audio.audio_format:
+                # TODO This seems like it will miss packets.  should save
+                # audio data for when _audio is reconstructed?
                 return
             length = audio_data.length
             self._audio.write(audio_data)
@@ -1082,6 +1102,9 @@ class ManagedSoundPlayer(Player):
     finished, even if the application discards the player early.
     There is no need to call `Player.dispatch_events` on this player,
     though you must call `pyglet.media.dispatch_events`.
+
+    Only one source can be queued on the player; the player will be 
+    discarded when the source finishes.
     '''
 
     #: The only possible end of stream action for a managed player.

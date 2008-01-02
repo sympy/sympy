@@ -36,7 +36,7 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: avbin.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
+__version__ = '$Id: avbin.py 1493 2007-12-08 09:20:38Z Alex.Holkner $'
 
 from pyglet.media import (MediaFormatException, StreamingSource, 
                           VideoFormat, AudioFormat, AudioData)
@@ -378,8 +378,8 @@ class AVbinSource(StreamingSource):
         player._texture = texture
 
         # Flip texture coords (good enough for simple apps).
-        bl, br, tr, tl = player._texture.tex_coords
-        player._texture.tex_coords = tl, tr, br, bl
+        t = list(player._texture.tex_coords)
+        player._texture.tex_coords = t[9:12] + t[6:9] + t[3:6] + t[:3]
 
     def _decode_video_packet(self, packet):
         timestamp = timestamp_from_avbin(packet.timestamp)

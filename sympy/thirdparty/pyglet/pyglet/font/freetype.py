@@ -36,7 +36,7 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: freetype.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
+__version__ = '$Id: freetype.py 1564 2007-12-31 23:57:48Z Alex.Holkner $'
 
 import ctypes
 from ctypes import *
@@ -162,7 +162,7 @@ class FreeTypeGlyphRenderer(base.GlyphRenderer):
         height = glyph_slot.bitmap.rows
         baseline = height - glyph_slot.bitmap_top
         lsb = glyph_slot.bitmap_left
-        advance = f26p6_to_float(glyph_slot.advance.x)
+        advance = int(f26p6_to_float(glyph_slot.advance.x))
         mode = glyph_slot.bitmap.pixel_mode
         pitch = glyph_slot.bitmap.pitch
         
@@ -195,10 +195,8 @@ class FreeTypeGlyphRenderer(base.GlyphRenderer):
         img = image.ImageData(width, height, 'A', data, pitch)
         glyph = self.font.create_glyph(img) 
         glyph.set_bearings(baseline, lsb, advance)
-        glyph.tex_coords = (glyph.tex_coords[3],
-                            glyph.tex_coords[2],
-                            glyph.tex_coords[1],
-                            glyph.tex_coords[0])
+        t = list(glyph.tex_coords)
+        glyph.tex_coords = t[9:12] + t[6:9] + t[3:6] + t[:3]
 
         return glyph
 
@@ -237,7 +235,7 @@ class FreeTypeFont(base.Font):
             dpi = 0  # Select default DPI of 72 by specifying 0.
 
         # Check if font name/style matches a font loaded into memory by user
-        lname = name.lower()
+        lname = name and name.lower() or ''
         if (lname, bold, italic) in self._memory_fonts:
             font = self._memory_fonts[lname, bold, italic]
             self._set_face(font.face, size, dpi)
@@ -273,8 +271,8 @@ class FreeTypeFont(base.Font):
 
         FT_Set_Char_Size(self.face, 0, float_to_f26p6(size), dpi, dpi)
         metrics = self.face.size.contents.metrics
-        self.ascent = f26p6_to_float(metrics.ascender)
-        self.descent = f26p6_to_float(metrics.descender)
+        self.ascent = int(f26p6_to_float(metrics.ascender))
+        self.descent = int(f26p6_to_float(metrics.descender))
 
     @staticmethod
     def get_fontconfig_match(name, size, bold, italic):

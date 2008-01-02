@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -69,12 +68,13 @@ by this package.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1371 2007-11-06 04:46:38Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1493 2007-12-08 09:20:38Z Alex.Holkner $'
 
 import sys
 import os
 import math
 
+import pyglet
 from pyglet.gl import *
 from pyglet import window
 from pyglet import image
@@ -126,14 +126,15 @@ class GlyphString(object):
                 state_from = i
                 state_length = 0
             state_length += 1
-            lst += [glyph.tex_coords[0][0], glyph.tex_coords[0][1],
-                    x + glyph.vertices[0], y + glyph.vertices[1], 0.,
-                    glyph.tex_coords[1][0], glyph.tex_coords[1][1],
-                    x + glyph.vertices[2], y + glyph.vertices[1], 0.,
-                    glyph.tex_coords[2][0], glyph.tex_coords[2][1],
-                    x + glyph.vertices[2], y + glyph.vertices[3], 0.,
-                    glyph.tex_coords[3][0], glyph.tex_coords[3][1],
-                    x + glyph.vertices[0], y + glyph.vertices[3], 0.]
+            t = glyph.tex_coords
+            lst += [t[0], t[1], t[2], 1.,
+                    x + glyph.vertices[0], y + glyph.vertices[1], 0., 1.,
+                    t[3], t[4], t[5], 1.,
+                    x + glyph.vertices[2], y + glyph.vertices[1], 0., 1.,
+                    t[6], t[7], t[8], 1.,
+                    x + glyph.vertices[2], y + glyph.vertices[3], 0., 1.,
+                    t[9], t[10], t[11], 1.,
+                    x + glyph.vertices[0], y + glyph.vertices[3], 0., 1.]
             x += glyph.advance
             self.cumulative_advance.append(x)
         self.states.append((state_from, state_length, texture))
@@ -227,7 +228,7 @@ class GlyphString(object):
             to_index = len(self.text)
 
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
-        glInterleavedArrays(GL_T2F_V3F, 0, self.array)
+        glInterleavedArrays(GL_T4F_V4F, 0, self.array)
         for state_from, state_length, texture in self.states:
             if state_from + state_length < from_index:
                 continue
@@ -495,8 +496,14 @@ if not getattr(sys, 'is_epydoc', False):
         from pyglet.font.carbon import CarbonFont
         _font_class = CarbonFont
     elif sys.platform in ('win32', 'cygwin'):
-        from pyglet.font.win32 import Win32Font
-        _font_class = Win32Font
+        if pyglet.options['font'][0] == 'win32':
+            from pyglet.font.win32 import Win32Font
+            _font_class = Win32Font
+        elif pyglet.options['font'][0] == 'gdiplus':
+            from pyglet.font.win32 import GDIPlusFont
+            _font_class = GDIPlusFont
+        else:
+            assert False, 'Unknown font driver'
     else:
         from pyglet.font.freetype import FreeTypeFont
         _font_class = FreeTypeFont

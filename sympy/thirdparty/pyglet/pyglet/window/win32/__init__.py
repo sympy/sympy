@@ -540,6 +540,8 @@ class Win32Window(BaseWindow):
     vsync = property(_get_vsync) # overrides BaseWindow property
 
     def set_vsync(self, vsync):
+        if pyglet.options['vsync'] is not None:
+            vsync = pyglet.options['vsync']
         if wgl_info.have_extension('WGL_EXT_swap_control'):
             wglext_arb.wglSwapIntervalEXT(int(vsync))
         else:

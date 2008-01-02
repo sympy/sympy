@@ -43,6 +43,7 @@ import os.path
 import unicodedata
 import warnings
 
+import pyglet
 from pyglet.window import WindowException, Platform, Display, Screen, \
     BaseWindow, MouseCursor, DefaultMouseCursor, _PlatformEventHandler
 from pyglet.window import key
@@ -65,7 +66,7 @@ class CarbonException(WindowException):
 carbon = pyglet.lib.load_library(
     framework='/System/Library/Frameworks/Carbon.framework')
 quicktime = pyglet.lib.load_library(
-    framework='/System/Library/Frameworks/Quicktime.framework')
+    framework='/System/Library/Frameworks/QuickTime.framework')
 
 carbon.GetEventDispatcherTarget.restype = EventTargetRef
 carbon.ReceiveNextEvent.argtypes = \
@@ -469,6 +470,7 @@ class CarbonWindow(BaseWindow):
             #self._height = self.screen.height
             agl.aglSetFullScreen(self._agl_context, 
                                  self._width, self._height, 0, 0)
+            self._mouse_in_window = True
             self.dispatch_event('on_resize', self._width, self._height)
             self.dispatch_event('on_show')
             self.dispatch_event('on_expose')
@@ -574,8 +576,8 @@ class CarbonWindow(BaseWindow):
         self._window = None
 
     def switch_to(self):
-        self._context.set_current()
         agl.aglSetCurrentContext(self._agl_context)
+        self._context.set_current()
         _aglcheck()
         gl_info.set_active_context()
         glu_info.set_active_context()
@@ -592,6 +594,8 @@ class CarbonWindow(BaseWindow):
     vsync = property(_get_vsync) # overrides BaseWindow property
 
     def set_vsync(self, vsync):
+        if pyglet.options['vsync'] is not None:
+            vsync = pyglet.options['vsync']
         self._vsync = vsync # _recreate depends on this
         swap = c_long(int(vsync))
         agl.aglSetInteger(self._agl_context, agl.AGL_SWAP_INTERVAL, byref(swap))
@@ -615,7 +619,14 @@ class CarbonWindow(BaseWindow):
             result = carbon.ReceiveNextEvent(0, c_void_p(), 0, True, byref(e))
 
         self._allow_dispatch_event = False
-        if result != eventLoopTimedOutErr:
+
+        # Return value from ReceiveNextEvent can be ignored if not
+        # noErr; we check here only to look for new bugs.
+        # eventLoopQuitErr: the inner event loop was quit, see
+        # http://lists.apple.com/archives/Carbon-dev/2006/Jun/msg00850.html
+        # Can occur when mixing with other toolkits, e.g. Tk.
+        # Fixes issue 180.
+        if result not in (eventLoopTimedOutErr, eventLoopQuitErr):
             raise 'Error %d' % result
 
     def set_caption(self, caption):
@@ -653,6 +664,8 @@ class CarbonWindow(BaseWindow):
         self.dispatch_event('on_expose')
 
     def get_size(self):
+        if self._fullscreen:
+            return self._width, self._height
         rect = Rect()
         carbon.GetWindowBounds(self._window, kWindowContentRgn, byref(rect))
         return rect.right - rect.left, rect.bottom - rect.top
@@ -1029,15 +1042,15 @@ class CarbonWindow(BaseWindow):
 
     @staticmethod
     def _get_mouse_in_content(ev):
-       position = Point()
-       carbon.GetEventParameter(ev, kEventParamMouseLocation,
+        position = Point()
+        carbon.GetEventParameter(ev, kEventParamMouseLocation,
             typeQDPoint, c_void_p(), sizeof(position), c_void_p(),
             byref(position)) 
-       return carbon.FindWindow(position, None) == inContent 
+        return carbon.FindWindow(position, None) == inContent 
 
     @CarbonEventHandler(kEventClassMouse, kEventMouseDown)
     def _on_mouse_down(self, next_handler, ev, data):
-        if self._get_mouse_in_content(ev):
+        if self._fullscreen or self._get_mouse_in_content(ev):
             button, modifiers = self._get_mouse_button_and_modifiers(ev)
             x, y = self._get_mouse_position(ev)
             y = self.height - y
@@ -1060,7 +1073,7 @@ class CarbonWindow(BaseWindow):
 
     @CarbonEventHandler(kEventClassMouse, kEventMouseMoved)
     def _on_mouse_moved(self, next_handler, ev, data):
-        if self._get_mouse_in_content(ev):
+        if self._fullscreen or self._get_mouse_in_content(ev):
             x, y = self._get_mouse_position(ev)
             y = self.height - y
 
@@ -1117,13 +1130,14 @@ class CarbonWindow(BaseWindow):
 
     @CarbonEventHandler(kEventClassMouse, kEventMouseExited)
     def _on_mouse_exited(self, next_handler, ev, data):
-        x, y = self._get_mouse_position(ev)
-        y = self.height - y
+        if not self._fullscreen:
+            x, y = self._get_mouse_position(ev)
+            y = self.height - y
 
-        self._mouse_in_window = False
-        self.set_mouse_platform_visible()
+            self._mouse_in_window = False
+            self.set_mouse_platform_visible()
 
-        self.dispatch_event('on_mouse_leave', x, y)
+            self.dispatch_event('on_mouse_leave', x, y)
 
         carbon.CallNextEventHandler(next_handler, ev)
         return noErr

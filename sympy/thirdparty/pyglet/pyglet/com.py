@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # $Id:$
 
 '''Minimal Windows COM interface.

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -127,7 +126,7 @@ will be presented the next time it is read or written to::
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1402 2007-11-12 08:38:34Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1502 2007-12-09 00:03:55Z Alex.Holkner $'
 
 import sys
 import re
@@ -1174,9 +1173,10 @@ class Texture(AbstractImage):
         `region_class` : class (subclass of TextureRegion)
             Class to use when constructing regions of this texture.
         `tex_coords` : tuple
-            4-tuple of 3-tuple of float, giving four 3D texture coordinates
-            of the bottom-left, bottom-right, top-right and top-left corners
-            of the texture.
+            12-tuple of float, named (u1, v1, r1, u2, v2, r2, ...).  u, v, r
+            give the 3D texture coordinates for vertices 1-4.  The vertices
+            are specified in the order bottom-left, bottom-right, top-right
+            and top-left.
         `target` : int
             The GL texture target (e.g., ``GL_TEXTURE_2D``).
         `level` : int
@@ -1185,7 +1185,7 @@ class Texture(AbstractImage):
     '''
 
     region_class = None # Set to TextureRegion after it's defined
-    tex_coords = ((0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0))
+    tex_coords = (0., 0., 0., 1., 0., 0., 1., 1., 0., 0., 1., 0.)
     level = 0
     images = 1
     x = y = z = 0
@@ -1213,6 +1213,7 @@ class Texture(AbstractImage):
     def create_for_size(cls, target, min_width, min_height,
                         internalformat=None):
         '''Create a Texture with dimensions at least min_width, min_height.
+        On return, the texture will be bound.
 
         :Parameters:
             `target` : int
@@ -1238,17 +1239,17 @@ class Texture(AbstractImage):
         else:
             width = min_width
             height = min_height
-            tex_coords = ((0, 0, 0), 
-                          (width, 0, 0), 
-                          (width, height, 0), 
-                          (0, height, 0))
+            tex_coords = (0., 0., 0., 
+                          width, 0., 0., 
+                          width, height, 0., 
+                          0., height, 0.)
         id = GLuint()
         glGenTextures(1, byref(id))
+        glBindTexture(target, id.value)
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 
         if internalformat is not None:
             blank = (GLubyte * (width * height * 4))()
-            glBindTexture(target, id.value)
-            glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
             glTexImage2D(target, 0,
                          internalformat,
                          width, height,
@@ -1310,14 +1311,14 @@ class Texture(AbstractImage):
         w = width is None and self.width or width
         h = height is None and self.height or height
         array = (GLfloat * 32)(
-             t[0][0], t[0][1], t[0][2], 1.,
-             x,       y,       z,       1.,
-             t[1][0], t[1][1], t[1][2], 1., 
-             x + w,   y,       z,       1.,
-             t[2][0], t[2][1], t[2][2], 1., 
-             x + w,   y + h,   z,       1.,
-             t[3][0], t[3][1], t[3][2], 1., 
-             x,       y + h,   z,       1.)
+             t[0],  t[1],  t[2],  1.,
+             x,     y,     z,     1.,
+             t[3],  t[4],  t[5],  1., 
+             x + w, y,     z,     1.,
+             t[6],  t[7],  t[8],  1., 
+             x + w, y + h, z,     1.,
+             t[9],  t[10], t[11], 1., 
+             x,     y + h, z,     1.)
 
         glPushAttrib(GL_ENABLE_BIT)
         glEnable(self.target)
@@ -1354,7 +1355,7 @@ class TextureRegion(Texture):
         u2 = (x + width) / float(owner.width)
         v2 = (y + height) / float(owner.height)
         r = z / float(owner.images)
-        self.tex_coords = ((u1, v1, r), (u2, v1, r), (u2, v2, r), (u1, v2, r))
+        self.tex_coords = (u1, v1, r, u2, v1, r, u2, v2, r, u1, v2, r)
 
 
     def _get_image_data(self):
@@ -1460,14 +1461,14 @@ class TileableTexture(Texture):
         w, h = width, height
         t = self.tex_coords
         array = (GLfloat * 32)(
-             u1,      v1,      t[0][2], 1.,
-             x,       y,       z,       1.,
-             u2,      v1,      t[1][2], 1., 
-             x + w,   y,       z,       1.,
-             u2,      v2,      t[2][2], 1., 
-             x + w,   y + h,   z,       1.,
-             u1,      v2,      t[3][2], 1., 
-             x,       y + h,   z,       1.)
+             u1,      v1,      t[2],  1.,
+             x,       y,       z,     1.,
+             u2,      v1,      t[5],  1., 
+             x + w,   y,       z,     1.,
+             u2,      v2,      t[8],  1., 
+             x + w,   y + h,   z,     1.,
+             u1,      v2,      t[11], 1., 
+             x,       y + h,   z,     1.)
 
         glPushAttrib(GL_ENABLE_BIT)
         glEnable(self.target)
@@ -1681,7 +1682,6 @@ class ColorBufferImage(BufferImage):
     def _get_texture(self):
         texture = Texture.create_for_size(GL_TEXTURE_2D, 
             self.width, self.height)
-        glBindTexture(texture.target, texture.id)
 
         if texture.width != self.width or texture.height != self.height:
             texture = texture.get_region(0, 0, self.width, self.height)
@@ -1697,10 +1697,11 @@ class ColorBufferImage(BufferImage):
             self.blit_to_texture(texture.target, texture.level, 0, 0, 0)
         else:
             glReadBuffer(self.gl_buffer)
-            glCopyTexImage2D(texture.target, 0,
+            glCopyTexImage2D(texture.target, texture.level,
                              GL_RGBA,
                              self.x, self.y, self.width, self.height,
                              0)
+        return texture
 
     texture = property(_get_texture)
 
@@ -1723,7 +1724,6 @@ class DepthBufferImage(BufferImage):
         
         texture = DepthTexture.create_for_size(GL_TEXTURE_2D,
             self.width, self.height)
-        glBindTexture(texture.target, texture.id)
         glReadBuffer(self.gl_buffer)
         glCopyTexImage2D(texture.target, 0,
                          GL_DEPTH_COMPONENT,

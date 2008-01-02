@@ -259,11 +259,9 @@ class CarbonGlyphRenderer(base.GlyphRenderer):
         skip_rows = int(self._bitmap_rect.size.height - image_height)
         image = image.get_region(0, skip_rows, image.width, image_height)
         glyph = self.font.create_glyph(image)
-        glyph.set_bearings(baseline, lsb - 1, advance)
-        glyph.tex_coords = (glyph.tex_coords[3], 
-                            glyph.tex_coords[2],
-                            glyph.tex_coords[1],
-                            glyph.tex_coords[0])
+        glyph.set_bearings(baseline, lsb - 1, int(advance))
+        t = list(glyph.tex_coords)
+        glyph.tex_coords = t[9:12] + t[6:9] + t[3:6] + t[:3]
         
         return glyph
 
@@ -362,10 +360,10 @@ class CarbonFont(base.Font):
         value = ATSUTextMeasurement()
         carbon.ATSUGetLineControl(layout, 0, kATSULineAscentTag, 
             sizeof(value), byref(value), None)
-        self.ascent = math.ceil(fix2float(value))
+        self.ascent = int(math.ceil(fix2float(value)))
         carbon.ATSUGetLineControl(layout, 0, kATSULineDescentTag,
             sizeof(value), byref(value), None)
-        self.descent = -math.ceil(fix2float(value))
+        self.descent = -int(math.ceil(fix2float(value)))
 
     @classmethod
     def add_font_data(cls, data):

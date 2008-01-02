@@ -1,4 +1,3 @@
-#!/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -32,7 +31,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-# $Id: ttf.py 878 2007-06-09 04:58:51Z Alex.Holkner $
+# $Id: ttf.py 1484 2007-12-06 22:51:23Z Alex.Holkner $
 
 """
 Implementation of the Truetype file format.
@@ -46,7 +45,7 @@ References:
 """
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: ttf.py 878 2007-06-09 04:58:51Z Alex.Holkner $'  
+__version__ = '$Id: ttf.py 1484 2007-12-06 22:51:23Z Alex.Holkner $'  
 
 import codecs
 import os

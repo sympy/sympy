@@ -53,6 +53,7 @@ noErr = 0
 
 # CarbonEventsCore.h
 eventLoopTimedOutErr = -9875
+eventLoopQuitErr = -9876
 
 # MacApplication.h
 kUIModeNormal                 = 0

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -37,7 +36,7 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1330 2007-10-26 02:16:28Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1484 2007-12-06 22:51:23Z Alex.Holkner $'
 
 import ctypes
 

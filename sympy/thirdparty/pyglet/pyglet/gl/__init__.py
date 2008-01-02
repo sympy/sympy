@@ -94,13 +94,14 @@ below.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1391 2007-11-09 14:05:43Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1518 2007-12-14 12:02:36Z Alex.Holkner $'
 
 from pyglet.gl.lib import GLException
 from pyglet.gl.gl import *
 from pyglet.gl.glu import *
 from pyglet.gl.glext_arb import *
 from pyglet.gl.glext_missing import *
+from pyglet.gl import gl_info
 
 # List of contexts currently in use, so we can create new contexts that
 # share objects with.  Remember to remove from this list when context is

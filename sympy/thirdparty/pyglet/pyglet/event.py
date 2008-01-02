@@ -137,7 +137,7 @@ the particular class documentation.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: event.py 1338 2007-10-27 01:21:02Z Alex.Holkner $'
+__version__ = '$Id: event.py 1550 2007-12-25 06:16:59Z Alex.Holkner $'
 
 import inspect
 
@@ -211,9 +211,9 @@ class EventDispatcher(object):
                 self.set_handler(name, object)
             else:
                 # Single instance with magically named methods
-                for name, handler in inspect.getmembers(object):
+                for name in dir(object):
                     if name in self.event_types:
-                        self.set_handler(name, handler)
+                        self.set_handler(name, getattr(object, name))
         for name, handler in kwargs.items():
             # Function for handling given event (no magic)
             if name not in self.event_types:
@@ -264,15 +264,67 @@ class EventDispatcher(object):
         for frame in self._event_stack[:]:
             handler = frame.get(event_type, None)
             if handler:
-                ret = handler(*args)
-                if ret != EVENT_UNHANDLED:
-                    return
+                try:
+                    if handler(*args):
+                        return
+                except TypeError:
+                    self._raise_dispatch_exception(event_type, args, handler)
+
 
         # Check instance for an event handler
         if hasattr(self, event_type):
-            getattr(self, event_type)(*args)
+            try:
+                getattr(self, event_type)(*args)
+            except TypeError:
+                self._raise_dispatch_exception(
+                    event_type, args, getattr(self, event_type))
 
+    def _raise_dispatch_exception(self, event_type, args, handler):
+        # A common problem in applications is having the wrong number of
+        # arguments in an event handler.  This is caught as a TypeError in
+        # dispatch_event but the error message is obfuscated.
+        # 
+        # Here we check if there is indeed a mismatch in argument count,
+        # and construct a more useful exception message if so.  If this method
+        # doesn't find a problem with the number of arguments, the error
+        # is re-raised as if we weren't here.
 
+        n_args = len(args)
+
+        # Inspect the handler
+        handler_args, handler_varargs, _, handler_defaults = \
+            inspect.getargspec(handler)
+        n_handler_args = len(handler_args)
+
+        # Remove "self" arg from handler if it's a bound method
+        if inspect.ismethod(handler) and handler.im_self:
+            n_handler_args -= 1
+
+        # Allow *args varargs to overspecify arguments
+        if handler_varargs:
+            n_handler_args = max(n_handler_args, n_args)
+
+        # Allow default values to overspecify arguments
+        if (n_handler_args > n_args and 
+            handler_defaults and
+            n_handler_args - len(handler_defaults) <= n_args):
+            n_handler_args = n_args
+
+        if n_handler_args != n_args:
+            if inspect.isfunction(handler) or inspect.ismethod(handler):
+                descr = '%s at %s:%d' % (
+                    handler.func_name,
+                    handler.func_code.co_filename,
+                    handler.func_code.co_firstlineno)
+            else:
+                descr = repr(handler)
+            
+            raise TypeError(
+                '%s event was dispatched with %d arguments, but '
+                'handler %s has an incompatible function signature' % 
+                (event_type, len(args), descr))
+        else:
+            raise
 
     def event(self, *args):
         '''Function decorator for an event handler.  

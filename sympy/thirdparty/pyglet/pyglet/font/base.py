@@ -40,7 +40,7 @@ classes as a documented interface to the concrete classes.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: base.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
+__version__ = '$Id: base.py 1493 2007-12-08 09:20:38Z Alex.Holkner $'
 
 
 from pyglet.gl import *
@@ -99,13 +99,13 @@ class Glyph(image.TextureRegion):
 
         Use the higher level APIs for performance and kerning.
         '''
-        glTexCoord2f(self.tex_coords[0][0], self.tex_coords[0][1])
+        glTexCoord3f(*self.tex_coords[:3])
         glVertex2f(self.vertices[0], self.vertices[1])
-        glTexCoord2f(self.tex_coords[1][0], self.tex_coords[1][1])
+        glTexCoord3f(*self.tex_coords[3:6])
         glVertex2f(self.vertices[2], self.vertices[1])
-        glTexCoord2f(self.tex_coords[2][0], self.tex_coords[2][1])
+        glTexCoord3f(*self.tex_coords[6:9])
         glVertex2f(self.vertices[2], self.vertices[3])
-        glTexCoord2f(self.tex_coords[3][0], self.tex_coords[3][1])
+        glTexCoord3f(*self.tex_coords[9:12])
         glVertex2f(self.vertices[0], self.vertices[3])
 
     def get_kerning_pair(self, right_glyph):

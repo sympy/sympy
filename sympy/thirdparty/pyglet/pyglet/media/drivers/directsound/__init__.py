@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -132,10 +131,16 @@ class DirectSoundAudioPlayer(AudioPlayer):
         self._buffer.GetCurrentPosition(play_cursor, None)
         play_cursor = play_cursor.value
         if self._write_cursor == play_cursor and self._buffer_playing:
+            # Polling too fast, no play cursor movement
+            return 0
+        elif self._write_cursor == play_cursor and not self._playing:
+            # Paused and up-to-date
             return 0
         elif self._write_cursor < play_cursor:
+            # Play cursor ahead of write cursor
             write_size = play_cursor - self._write_cursor
         else:
+            # Play cursor behind write cursor, wraps around
             write_size = self._buffer_size - self._write_cursor + play_cursor
 
         if write_size < self._update_buffer_size:

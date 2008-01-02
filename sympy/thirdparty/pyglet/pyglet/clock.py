@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
@@ -136,7 +135,7 @@ of the system clock.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: clock.py 1352 2007-11-04 03:35:06Z Alex.Holkner $'
+__version__ = '$Id: clock.py 1484 2007-12-06 22:51:23Z Alex.Holkner $'
 
 import time
 import sys

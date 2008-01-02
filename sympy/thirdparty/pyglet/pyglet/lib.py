@@ -7,6 +7,7 @@ __docformat__ = 'restructuredtext'
 __version__ = '$Id: $'
 
 import os
+import re
 import sys
 
 import ctypes
@@ -114,7 +115,7 @@ class MachOLibraryLoader(LibraryLoader):
         # return '/System/Library/Frameworks/OpenGL.framework/OpenGL'
         name = os.path.splitext(os.path.split(path)[1])[0]
 
-        realpath = os.path.join(path, name)
+        realpath = os.path.join(path, name) 
         if os.path.exists(realpath):
             return realpath
 
@@ -133,8 +134,72 @@ class MachOLibraryLoader(LibraryLoader):
 
         raise ImportError("Can't find framework %s." % path)
 
+class LinuxLibraryLoader(LibraryLoader):
+    _ld_so_cache = None
+
+    def _create_ld_so_cache(self):
+        # Recreate search path followed by ld.so.  This is going to be
+        # slow to build, and incorrect (ld.so uses ld.so.cache, which may
+        # not be up-to-date).  Used only as fallback for distros without
+        # /sbin/ldconfig.
+        #
+        # We assume the DT_RPATH and DT_RUNPATH binary sections are omitted.
+
+        directories = []
+        try:
+            directories.extend(os.environ['LD_LIBRARY_PATH'].split(':'))
+        except KeyError:
+            pass
+
+        try:
+            directories.extend([dir.strip() for dir in open('/etc/ld.so.conf')])
+        except IOError:
+            pass
+
+        directories.extend(['/lib', '/usr/lib'])
+
+        cache = {}
+        lib_re = re.compile('lib(.*)\.so')
+        for dir in directories:
+            try:
+                for file in os.listdir(dir):
+                    if '.so' not in file:
+                        continue
+
+                    # Index by filename
+                    path = os.path.join(dir, file)
+                    if file not in cache:
+                        cache[file] = path
+
+                    # Index by library name
+                    match = lib_re.match(file)
+                    if match:
+                        library = match.group(1)
+                        if library not in cache:
+                            cache[library] = path
+            except OSError:
+                pass
+
+        self._ld_so_cache = cache
+
+    def find_library(self, path):
+        # ctypes tries ldconfig, gcc and objdump.  If none of these are
+        # present, we implement the ld-linux.so search path as described in
+        # the man page.
+
+        result = ctypes.util.find_library(path)
+        if result and False:
+            return result
+
+        if self._ld_so_cache is None:
+            self._create_ld_so_cache()
+
+        return self._ld_so_cache.get(path)
+
 if sys.platform == 'darwin':
     loader = MachOLibraryLoader()
+elif sys.platform == 'linux2':
+    loader = LinuxLibraryLoader()
 else:
     loader = LibraryLoader()
 load_library = loader.load_library
