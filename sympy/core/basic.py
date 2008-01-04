@@ -1028,8 +1028,8 @@ class Basic(BasicMeths):
         """
         Usage
         =====
-            Return the Taylor series around 0 of self with respect to x until
-            the n-th term (default n is 6).
+            Return the Taylor (Laurent or generalized) series around 0 of self
+            with respect to x until the n-th term (default n is 6).
 
         Notes
         =====
