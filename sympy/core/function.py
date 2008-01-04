@@ -253,13 +253,13 @@ class Function(Basic, ArithMeths, RelMeths):
             e = self.func(arg)
             e1 = e.expand()
             if e==e1:
-                #one example is e = sin(x+1)
+                #for example when e = sin(x+1) or e = sin(cos(x))
                 #let's try the general algorithm
                 term = e.subs(x, Basic.Rational(0))
                 series = Basic.Rational(0)
                 fact = Basic.Rational(1)
                 i = 0
-                while not order.contains(term):
+                while not order.contains(term) or term == 0:
                     series += term
                     i += 1
                     fact *= Basic.Rational(i)

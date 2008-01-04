@@ -332,3 +332,7 @@ def test_issue408():
     x = Symbol("x")
     e = x**(-4)*(x**2 - x**2*cos(x)**Rational(1,2))
     assert e.series(x, 5) == Rational(1,4) + x**2/96 + 19*x**4/5760 + O(x**5)
+
+def test_issue540():
+    x = Symbol("x")
+    assert sin(cos(x)).series(x, 5) == sin(1) -x**2*cos(1)/2 - x**4*sin(1)/8 + x**4*cos(1)/24 + O(x**5)
