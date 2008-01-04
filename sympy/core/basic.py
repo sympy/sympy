@@ -262,7 +262,7 @@ class Basic(BasicMeths):
                 a = str(a)
 
             try:
-                return parser.Expr(a).tosymbolic()
+                return ast_parser.SymPyParser().parse_expr(a)
             except:
                 pass
         if a.strip() != a:
@@ -1276,4 +1276,4 @@ class SingletonFactory:
 
 S = SingletonFactory()
 
-import parser
+import ast_parser
