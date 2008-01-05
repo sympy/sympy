@@ -182,6 +182,8 @@ def var(s):
 
         EXAMPLES:
         We define some symbolic variables:
+            >>> var('m')
+            m
             >>> var('n xx yy zz')
             (n, xx, yy, zz)
             >>> n
@@ -198,11 +200,20 @@ def var(s):
         res = []
 
         for t in s:
+            # skip empty strings
+            if not t:
+                continue
             sym = Symbol(t)
             frame.f_globals[t] = sym
             res.append(sym)
 
-        return tuple(res)
+        res = tuple(res)
+        if len(res) == 0:   # var('')
+            res = None
+        elif len(res) == 1: # var('x')
+            res = res[0]
+                            # otherwise var('a b ...')
+        return res
 
     finally:
         # we should explicitly break cyclic dependencies as stated in inspect
