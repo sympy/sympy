@@ -33,7 +33,7 @@
 # ----------------------------------------------------------------------------
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1558 2007-12-29 00:54:05Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 1571 2008-01-05 00:20:12Z Alex.Holkner $'
 
 from ctypes import *
 import unicodedata
@@ -915,7 +915,7 @@ class XlibWindow(BaseWindow):
         xlib.XSetWMNormalHints(self._x_display, self._window, byref(hints))
 
     def _set_text_property(self, name, value, allow_utf8=True):
-        atom = xlib.XInternAtom(self._x_display, name, True)
+        atom = xlib.XInternAtom(self._x_display, name, False)
         if not atom:
             raise XlibException('Undefined atom "%s"' % name)
         assert type(value) in (str, unicode)
