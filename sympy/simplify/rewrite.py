@@ -24,37 +24,6 @@ def ext_gcd(p, q, x):
         if isinstance(V[0], Basic.Zero):
             return U
 
-class RootOf(Basic):
-
-    precedence = Basic.Apply_precedence
-
-    def __new__(cls, f, z, **assumptions):
-        f = Basic.sympify(f)
-
-        if not f.is_polynomial(z):
-            return f
-
-        obj = Basic.__new__(cls, **assumptions)
-        obj._args = (f.as_polynomial(z), z)
-
-        return obj
-
-    def tostr(self, level=0):
-        return 'RootOf%s' % str( (self._args[0].as_basic(), self._args[1]) )
-
-    def doit(self, **hints):
-        return self
-
-        #if not hints.get('roots', True):
-        #    return self
-        #else:
-        #    domain = hints.get('domain', None)
-        #
-        #    if domain is None:
-        #        domain = self.domain
-        #
-        #    return {} # TBD
-
 
 ###############################################################################
 
