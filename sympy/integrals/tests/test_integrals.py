@@ -56,7 +56,8 @@ def test_multiple_integration():
     y = Symbol('y')
     assert integrate((x**2)*(y**2), (x,0,1), (y,-1,2)) == Rational(1)
     assert integrate((y**2)*(x**2), x, y) == Rational(1,9)*(x**3)*(y**3)
-
+    assert integrate(1/(x+3)/(1+x)**3, x) == \
+        -(1 + x)**(-2)/4 - log(3 + x)/8 + 1/(1 + x)/4 + log(1 + x)/8
 
 def test_issue433():
     assert integrate(exp(-x), (x,0,oo)) == 1

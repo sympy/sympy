@@ -1,8 +1,10 @@
 
-from sympy.core import Basic, S, Symbol
+from sympy.core import Basic, S, Symbol, Wild, Pow
 from sympy.core.methods import NoRelMeths, ArithMeths
 
 from sympy.integrals.risch import risch_norman
+from sympy.polynomials import Polynomial, PolynomialException
+from sympy.simplify import apart
 from sympy.series import limit
 
 class Integral(Basic, NoRelMeths, ArithMeths):
@@ -155,38 +157,75 @@ class Integral(Basic, NoRelMeths, ArithMeths):
          - handle complicated, rarely used cases
         """
 
-        # Let's first try some simple functions, that we know fast how to
-        # integrate.
-
-        # simple powers:
-        from sympy import Pow, log
-        if isinstance(f, Pow) and isinstance(f[0], Symbol) and f[1].is_number:
-            if f[0] == x:
-                if f[1] == -1:
-                    return log(f[0])
-                else:
-                    return f[0]**(f[1]+1)/(f[1]+1) 
-            else:
-                return f*x
-
-        # polynomials:
-        from sympy import Polynomial, PolynomialException
-
-        # -- 1. if it is a poly(x) then let the polynomial integrate itself
-        if isinstance(f, Polynomial) and x in f.var:
+        # if it is a poly(x) then let the polynomial integrate itself (fast)
+        #
+        # it is important to make this check first, or other way we'll force a
+        # polynomial conversion to sympy_expr.
+        #
+        # see Polynomial for details.
+        if isinstance(f, Basic.Polynomial):
             return f.integrate(x)
 
-        # -- 2. try to convert to poly(x) and then integrate if successful
+        # let's cut short if `f` does not depend on `x`
+        if not f.has(x):
+            return f*x
+
+        # try to convert to poly(x) and then integrate if successful (fast)
         try:
-            p = Polynomial(f, var=x)
+            p = f.as_polynomial(x)
             return p.integrate(x)
         except PolynomialException:
             pass
 
-        # f is not a simple function, let's try the risch norman (that can
-        # btw. integrate all the functions above, but slower):
-        r = risch_norman(f, x)
-        return r
+        # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
+        # we are going to handle Add terms separately,
+        # if `f` is not Add -- we have only one term
+        if not isinstance(f, Basic.Add):
+            f = [f]
+
+        parts = []
+
+        for g in f:
+            coeff, g = g.as_independent(x)
+
+            # g(x) = const
+            if isinstance(g, Basic.One):
+                parts.append(coeff * x)
+                continue
+
+            #               n
+            # g(x) = (a*x+b)
+            if isinstance(g, Pow) and g.exp.is_number:
+                a, b = Wild('a'), Wild('b')
+
+                M = g.base.match(a*x + b)
+
+                if not (M is None or M[a].has(x)):
+                    if g.exp == -1:
+                        h = Basic.log(g.base)
+                    else:
+                        h = g.base**(g.exp+1) / (g.exp+1)
+
+                    parts.append(coeff * h / M[a])
+                    continue
+
+            #        poly(x)
+            # g(x) = -------
+            #        poly(x)
+            if g.is_fraction(x):
+                h = self._eval_integral(apart(g, x), x)
+                parts.append(coeff * h)
+                continue
+
+            # fall back to the most general algorithm
+            h = risch_norman(g, x)
+
+            if h is not None:
+                parts.append(coeff * h)
+            else:
+                return None
+
+        return Basic.Add(*parts)
 
 def integrate(*args, **kwargs):
     """integrate(f, var, ...)
