@@ -9,6 +9,59 @@ from sympy.polynomials import div, quo, rem, gcd, egcd
 from sympy.simplify import normal, together
 from sympy.polynomials.factor_ import sqf
 
+def cancel(f, *syms):
+    """Cancel common factors in the given rational function.
+
+       Given a quotient of polynomials, performing only gcd and quo
+       operations in polynomial algebra, return rational function
+       with numerator and denominator of minimal total degree.
+
+       For all other kinds of expressions the input is returned in
+       an unchanged form. Note however, that 'cancel' function can
+       thread over sums and relational operators.
+
+       Additionally you can specify a list of variables to perform
+       cancelation more efficiently using only those symbols.
+
+       >>> from sympy import *
+       >>> x,y = symbols('xy')
+
+       >>> cancel((x**2-1)/(x-1))
+       1 + x
+
+       >>> cancel((x**2-y**2)/(x-y), x)
+       x + y
+
+       >>> cancel((x**2-2)/(x+sqrt(2)))
+       x - 2**(1/2)
+
+    """
+    f = Basic.sympify(f)
+
+    if syms and not f.has(*syms):
+        return f
+    elif isinstance(f, Basic.Add):
+        return Basic.Add(*[ cancel(g, *syms) for g in f ])
+    elif isinstance(f, Basic.Relational):
+        return Basic.Relational(cancel(f.lhs, *syms),
+            cancel(f.rhs, *syms), f.rel_op)
+    else:
+        g = together(f)
+
+        if not g.is_fraction(*syms):
+            return f
+        else:
+            p, q = g.as_numer_denom()
+
+            syms = syms or None
+
+            g = gcd(p, q, syms)
+
+            if not isinstance(g, Basic.One):
+                p = quo(p, g, syms)
+                q = quo(q, g, syms)
+
+            return p / q
 
 def apart(f, z, domain=None, index=None):
     """Computes full partial fraction decomposition of a univariate
