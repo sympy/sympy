@@ -1,0 +1,38 @@
+# This script is for testig SymPy plotting in pure Python environment
+# 
+# Usage
+# -----
+# In this directory execute:
+#
+# $ sudo cowbuilder --update
+# $ sudo cowbuilder --execute test_pure_plotting
+#
+# This will first update the base system and then execute this script in that
+# environment.
+#
+# In order for this to work, you need to have the cowbuilder environment setup,
+# which you can do in this way:
+#
+# $ sudo apt-get install cowdancer
+# $ sudo cowbuilder --create --mirror http://ftp.cz.debian.org/debian
+#
+
+apt-get -y install mercurial python python-codespeak-lib python-ctypes
+cd /tmp
+hg clone http://hg.sympy.org/sympy/
+cd sympy
+./setup.py sdist
+cd dist
+tar xzf *.tar.gz
+cd sympy*
+./setup.py install
+cd /
+cat > plotting.py << EOF
+from sympy import Symbol, cos, sin, Plot, log, tan
+from sympy.abc import x, y
+Plot(cos(x)*sin(y), sin(x)*sin(y), cos(y)+log(tan(y/2))+0.2*x, [x, -0.00,
+    12.4, 40], [y, 0.1, 2, 40])
+EOF
+python plotting.py
+echo "Was the plot successful? If not, fix it and do 'python plotting.py'."
+bash
