@@ -5,27 +5,10 @@
 from sympy.core import Basic, S, Symbol, Add, Function
 from sympy.core.methods import NoRelMeths, ArithMeths
 
-from sympy.polynomials import div, quo, rem, gcd
+from sympy.polynomials import div, quo, rem, gcd, egcd
 from sympy.simplify import normal, together
 from sympy.polynomials.factor_ import sqf
 
-###############################################################################
-### THIS HAS TO BE MOVED TO APPROPRIATE MODULE
-
-def ext_gcd(p, q, x):
-    U = (p, S.One, S.Zero)
-    V = (q, S.Zero, S.One)
-
-    while True:
-        q = quo(U[0], V[0], x)
-
-        U, V = V, [ (a - q*b).expand() for a, b in zip(U, V) ]
-
-        if isinstance(V[0], Basic.Zero):
-            return U
-
-
-###############################################################################
 
 def apart(f, z, domain=None, index=None):
     """Computes full partial fraction decomposition of a univariate
@@ -108,7 +91,7 @@ def apart(f, z, domain=None, index=None):
                 G = gcd(P, d, z)
                 D = quo(d, G, z)
 
-                g, B, _ = ext_gcd(Q, D, z)
+                g, B, _ = egcd(Q, D, z)
                 b = rem(P * B / g, D, z)
 
                 term = b.subs(z, A) / (z - A)**(n-j)

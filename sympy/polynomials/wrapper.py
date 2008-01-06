@@ -191,3 +191,17 @@ def sqf_part(f, var=None, order=None):
     """
 
     return factor_.sqf_part(f, var=var, order=order).sympy_expr
+
+
+def egcd(p, q, x):
+    U = (p, S.One, S.Zero)
+    V = (q, S.Zero, S.One)
+
+    while True:
+        q = quo(U[0], V[0], x)
+
+        U, V = V, [ (a - q*b).expand() for a, b in zip(U, V) ]
+
+        if isinstance(V[0], Basic.Zero):
+            return U
+
