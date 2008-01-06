@@ -311,7 +311,7 @@ class Basic(BasicMeths):
         otherwise (e.g. 1+x).""" 
         return len(self.atoms(Basic.Symbol)) == 0
 
-    def is_fraction(self, syms):
+    def is_fraction(self, *syms):
         p, q = self.as_numer_denom()
 
         if p.is_polynomial(*syms):

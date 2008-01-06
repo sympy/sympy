@@ -1,5 +1,5 @@
-from sympy import Basic, Symbol, Real, Rational, cos, exp, log, oo, sqrt, \
-    symbols, Integral
+from sympy import Basic, Symbol, Real, Integer, Rational, \
+    sin, cos, exp, log, oo, sqrt, symbols, Integral
 import py
 
 
@@ -113,6 +113,31 @@ def test_is_polynomial():
 
     assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(2)).is_polynomial(x, y) == True
     assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) == False
+
+def test_is_fraction():
+    x,y = symbols('xy')
+
+    assert Integer(1).is_fraction() == True
+    assert Integer(1).is_fraction(x) == True
+
+    assert Rational(17,54).is_fraction() == True
+    assert Rational(17,54).is_fraction(x) == True
+
+    assert (12/x).is_fraction() == True
+    assert (12/x).is_fraction(x) == True
+
+    assert (x/y).is_fraction() == True
+    assert (x/y).is_fraction(x) == True
+    assert (x/y).is_fraction(x, y) == True
+
+    assert (x**2+1/x/y).is_fraction() == True
+    assert (x**2+1/x/y).is_fraction(x) == True
+    assert (x**2+1/x/y).is_fraction(x, y) == True
+
+    assert (sin(y)/x).is_fraction() == False
+    assert (sin(y)/x).is_fraction(y) == False
+    assert (sin(y)/x).is_fraction(x) == True
+    assert (sin(y)/x).is_fraction(x, y) == False
 
 def test_SAGE():
     #see http://code.google.com/p/sympy/issues/detail?id=247
