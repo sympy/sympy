@@ -970,6 +970,8 @@ class Basic(BasicMeths):
                 new_symbols.append(s)
             else:
                 raise TypeError(".diff() argument must be Symbol|Integer instance (got %s)" % (s.__class__.__name__))
+        if not assumptions.has_key("evaluate"):
+            assumptions["evaluate"] = True
         ret = Basic.Derivative(self, *new_symbols, **assumptions)
         return ret
 

@@ -1,5 +1,5 @@
 from sympy import abc, Function, Symbol, Wild, Derivative, sin, cos, Real, \
-        Rational, exp, I, Integer
+        Rational, exp, I, Integer, diff
 from sympy.utilities.pytest import XFAIL
 
 
@@ -188,11 +188,11 @@ def test_match_deriv_bug1():
     x = Symbol('x')
     p = Wild('p')
 
-    e = Derivative(l(x), x)/x - Derivative(Derivative(n(x), x), x)/2 - \
-        Derivative(n(x), x)**2/4 + Derivative(n(x), x)*Derivative(l(x), x)/4
+    e = diff(l(x), x)/x - diff(diff(n(x), x), x)/2 - \
+        diff(n(x), x)**2/4 + diff(n(x), x)*diff(l(x), x)/4
     e = e.subs(n(x), -l(x))
     t = x*exp(-l(x))
-    t2 = Derivative(t, x, x)/t
+    t2 = t.diff(x, x)/t
     assert e.match( (p*t2).expand() ) == {p: -Rational(1)/2}
 
 def test_match_bug2():

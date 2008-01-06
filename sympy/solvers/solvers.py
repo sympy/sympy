@@ -345,21 +345,21 @@ def dsolve(eq, funcs):
         b = Wild('b', exclude=[f(x)])
         c = Wild('c', exclude=[f(x)])
 
-        r = eq.match(a*Derivative(f(x),x) + b)
+        r = eq.match(a*diff(f(x),x) + b)
         if r: return solve_ODE_first_order(r[a], r[b], f(x), x)
 
-        r = eq.match(a*Derivative(f(x),x,x) + b*f(x))
+        r = eq.match(a*f(x).diff(x, x) + b*f(x))
         if r: return solve_ODE_second_order(r[a], 0, r[b], f(x), x)
 
         #special equations, that we know how to solve
         t = x*Basic.exp(f(x))
-        tt = a*Derivative(t,x,x)/t
+        tt = a*t.diff(x, x)/t
         r = eq.match(tt.expand())
         if r:
             return -solve_ODE_1(f(x), x)
 
         t = x*Basic.exp(-f(x))
-        tt = a*Derivative(t,x,x)/t
+        tt = a*t.diff(x, x)/t
         r = eq.match(tt.expand())
         if r:
             #check, that we've rewritten the equation correctly:

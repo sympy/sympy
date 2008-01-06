@@ -1,5 +1,5 @@
 from sympy import Lambda, Symbol, Function, WildFunction, Derivative, sqrt, \
-        log, exp, Rational, sign, Basic
+        log, exp, Rational, sign, Basic, sin, diff
 from sympy.utilities.pytest import XFAIL
 from sympy.utilities.test import REPR0
 from sympy.abc import x, y
@@ -85,9 +85,9 @@ def test_general_function():
     edxdy = e.diff(x).diff(y)
     assert e == nu(x)
     assert edx != nu(x)
-    assert edx == Derivative(nu(x), x)
+    assert edx == diff(nu(x), x)
     assert edy == 0
-    assert edxdx == Derivative(Derivative(nu(x), x), x)
+    assert edxdx == diff(diff(nu(x), x), x)
     assert edxdy == 0
 
 def test_derivative_subs_bug():
@@ -95,21 +95,27 @@ def test_derivative_subs_bug():
     l = Function('l', nargs=1)
     n = Function('n', nargs=1)
 
-    e = Derivative(n(x), x)
+    e = diff(n(x), x)
     assert e.subs(n(x), l(x)) != e
-    assert e.subs(n(x), l(x)) == Derivative(l(x), x)
-    assert e.subs(n(x), -l(x)) == Derivative(-l(x), x)
+    assert e.subs(n(x), l(x)) == diff(l(x), x)
+    assert e.subs(n(x), -l(x)) == diff(-l(x), x)
 
 def test_derivative_linearity():
     x = Symbol("x")
     y = Symbol("y")
     n = Function('n', nargs=1)
 
-    assert Derivative(-n(x), x) == -Derivative(n(x), x)
-    assert Derivative(8*n(x), x) == 8*Derivative(n(x), x)
-    assert Derivative(8*n(x), x) != 7*Derivative(n(x), x)
-    assert Derivative(8*n(x)*x, x) == 8*n(x) + 8*x*Derivative(n(x), x)
-    assert Derivative(8*n(x)*y*x, x) == 8*y*n(x) + 8*y*x*Derivative(n(x), x)
+    assert diff(-n(x), x) == -diff(n(x), x)
+    assert diff(8*n(x), x) == 8*diff(n(x), x)
+    assert diff(8*n(x), x) != 7*diff(n(x), x)
+    assert diff(8*n(x)*x, x) == 8*n(x) + 8*x*diff(n(x), x)
+    assert diff(8*n(x)*y*x, x) == 8*y*n(x) + 8*y*x*diff(n(x), x)
+
+def test_derivative_evaluate():
+    x = Symbol('x')
+
+    assert Derivative(sin(x), x) != diff(sin(x), x)
+    assert Derivative(sin(x), x).doit() == diff(sin(x), x)
 
 @XFAIL
 def test_combine():

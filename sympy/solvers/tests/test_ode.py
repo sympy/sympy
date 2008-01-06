@@ -41,26 +41,26 @@ def test_ode3():
 
 def test_ode4():
     f = Function("f")
-    eq = 9*f(x).diff(x).diff(x) + f(x) == 0
+    eq = 9*f(x).diff(x, x) + f(x) == 0
     assert dsolve(eq, f(x)) == Symbol("C1")*sin(x/3) + Symbol("C2")*cos(x/3)
     checksol(eq, f(x), dsolve(eq, f(x)))
 
 def test_ode5():
     f = Function("f")
-    eq = 9*f(x).diff(x).diff(x) == f(x)
+    eq = 9*f(x).diff(x, x) == f(x)
     assert dsolve(eq, f(x)) == I*Symbol("C1")*sinh(x/3) + Symbol("C2")*cosh(x/3)
     checksol(eq, f(x), dsolve(eq, f(x)))
 
 def test_ode6():
     f = Function("f")
     # type: (x*exp(-f(x)))'' == 0
-    eq = (x*exp(-f(x))).diff(x).diff(x) == 0
+    eq = (x*exp(-f(x))).diff(x, x) == 0
     assert dsolve(eq, f(x)) == -log(Symbol("C1")+Symbol("C2")/x)
     checksol(eq, f(x), dsolve(eq, f(x)))
 
 def test_ode7():
     f = Function("f")
     # type: (x*exp(f(x)))'' == 0
-    eq = (x*exp(f(x))).diff(x).diff(x) == 0
+    eq = (x*exp(f(x))).diff(x, x) == 0
     assert dsolve(eq, f(x)) == log(Symbol("C1")+Symbol("C2")/x)
     checksol(eq, f(x), dsolve(eq, f(x)))

@@ -402,7 +402,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
         if not symbols: return expr
         symbols = map(Basic.sympify, symbols)
 
-        if not assumptions.get("evaluate", True):
+        if not assumptions.get("evaluate", False):
             obj = Basic.__new__(cls, expr, *symbols)
             return obj
 
@@ -436,7 +436,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
         return Derivative(self.expr, *((s,)+self.symbols), **{'evaluate': False})
 
     def doit(self):
-        return Derivative(self.expr, *self.symbols)
+        return Derivative(self.expr, *self.symbols,**{'evaluate': True})
 
     @property
     def expr(self):
@@ -453,7 +453,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
         return r
 
     def _eval_subs(self, old, new):
-        return Derivative(self[0].subs(old, new), *self[1:])
+        return Derivative(self[0].subs(old, new), *self[1:], **{'evaluate': True})
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         # this method needs a cleanup.
