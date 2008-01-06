@@ -2,12 +2,10 @@
    partial fraction decomposition, combinig together and collecting terms.
 """
 
-from sympy.core import Basic, S, Symbol, Add, Function
-from sympy.core.methods import NoRelMeths, ArithMeths
+from sympy.core import Basic, Symbol
 
-from sympy.polynomials import div, quo, rem, gcd, egcd
-from sympy.simplify import normal, together
-from sympy.polynomials.factor_ import sqf
+from sympy.polynomials import factor_, div, quo, rem, gcd, egcd
+from sympy.simplify import together
 
 def cancel(f, *syms):
     """Cancel common factors in the given rational function.
@@ -63,29 +61,34 @@ def cancel(f, *syms):
 
             return p / q
 
-def apart(f, z, domain=None, index=None):
-    """Computes full partial fraction decomposition of a univariate
-       rational function over the algebraic closure of its field of
-       definition. Although only gcd operations over the initial
-       field are required, the expansion is returned in a formal
-       form with linear denominators.
+def apart(f, z, **flags):
+    """Compute partial fraction decomposition of a rational function.
 
-       However it is possible to force expansion of the resulting
-       formal summations, and so factorization over a specified
-       domain is performed.
+       Given an rational function, performing only gcd operations over
+       the algebraic closue of its field of definition, compute full
+       partial fraction decomposition with fractions having linear
+       denominators.
 
-       To specify the desired behavior of the algorithm use the
-       'domain' keyword. Setting it to None, which is done be
-       default, will result in no factorization at all.
+       For all other kinds of expressions the input is returned in an
+       unchanged form. Note however, that 'apart' function can thread
+       over sums and relational operators.
 
-       Otherwise it can be assigned with one of Z, Q, R, C domain
-       specifiers and the formal partial fraction expansion will
-       be rewritten using all possible roots over this domain.
+       Note that no factorization of the initial denominator is needed,
+       howevert at some point root finding algorithms are executed but
+       for polynomials of much lower degree than the denominator.
 
-       If the resulting expansion contains formal summations, then
-       for all those a single dummy index variable named 'a' will
-       be generated. To change this default behavior issue new
-       name via 'index' keyword.
+       If given an additional flag 'formal', then even root finding
+       algorithms are avoided and the result is formed as a combination
+       of formal summations over implicit roots of some polynomials.
+
+       >>> from sympy import *
+       >>> x,y = symbols('xy')
+
+       >>> apart(1/(x+2)/(x+1), x)
+       1/(1 + x) - 1/(2 + x)
+
+       >>> apart((x+1)/(x-1) == E/x, x)
+       1 - 2/(1 - x) == E/x
 
        For more information on the implemented algorithm refer to:
 
@@ -97,10 +100,16 @@ def apart(f, z, domain=None, index=None):
     f = Basic.sympify(f)
 
     if isinstance(f, Basic.Add):
-        return Add(*[ apart(g) for g in f ])
+        return Basic.Add(*[ apart(g, z, **flags) for g in f ])
+    elif isinstance(f, Basic.Relational):
+        return Basic.Relational(apart(f.lhs, z, **flags),
+            apart(f.rhs, z, **flags), f.rel_op)
     else:
+        if not f.has(z):
+            return f
+
         if f.is_fraction(z):
-            f = normal(f, z)
+            f = cancel(f, z)
         else:
             return f
 
@@ -109,21 +118,19 @@ def apart(f, z, domain=None, index=None):
         if not Q.has(z):
             return f
 
-        u = Function('u')(z)
-
-        if index is None:
-            A = Symbol('a', dummy=True)
-        else:
-            A = Symbol(index)
-
         partial, r = div(P, Q, z)
         f, q, U = r / Q, Q, []
 
-        for k, d in enumerate(sqf(q, z)):
+        u = Basic.Function('u')(z)
+        A = Symbol('a', dummy=True)
+
+        formal = flags.get('formal', False)
+
+        for k, d in enumerate(factor_.sqf(q, z)):
             n, d = k + 1, d.as_basic()
             U += [ u.diff(z, k) ]
 
-            h = normal(f * d**n, z) / u**n
+            h = together(cancel(f * d**n, z) / u**n)
 
             H, subs = [h], []
 
@@ -147,16 +154,15 @@ def apart(f, z, domain=None, index=None):
                 g, B, _ = egcd(Q, D, z)
                 b = rem(P * B / g, D, z)
 
-                term = b.subs(z, A) / (z - A)**(n-j)
+                denom = (z - A)**(n-j)
 
-                if domain is None:
-                    a = D.diff(z)
+                rootof = Basic.RootOf(D, z)
 
-                    if not a.has(z):
-                        partial += term.subs(A, -D.subs(z, 0) / a)
-                    else:
-                        partial += Basic.Sum(term, (A, Basic.RootOf(D, z)))
+                if not formal:
+                    for root in rootof.roots():
+                        partial += cancel(b.subs(z, root)) \
+                            / denom.subs(A, root)
                 else:
-                    raise NotImplementedError
+                    partial += Basic.Sum(b.subs(z, A) / denom, (A, rootof))
 
         return partial

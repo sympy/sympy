@@ -1,5 +1,5 @@
 from sympy import sin, exp, cot, sqrt, I, E, pi, symbols
-from sympy.simplify import cancel
+from sympy.simplify import cancel, apart
 
 x,y = symbols('xy')
 
@@ -26,3 +26,10 @@ def test_cancel():
     assert cancel((x**2-1)/(x-1) == (x**2+1)/(x-I), x) == (1 + x == I + x)
     assert cancel((x**2-1)/(x-1) + (x**2+1)/(x-I), x) == 1 + I + 2*x
     assert cancel((x**2-1)/(x-1) + (x**2+1)/(x-I), y) == 1/(1 - x)*(1 - x**2) + 1/(x - I)*(1 + x**2)
+
+def test_apart():
+    assert apart(1/(x+2)/(x+1), x) == 1/(1 + x) - 1/(2 + x)
+    assert apart(1/(x+1)/(x+5), x) == -1/(5 + x)/4 + 1/(1 + x)/4
+    assert apart((x**2+1)/(x+1) == sin(x), x) == (x - 1 + 2/(x+1) == sin(x))
+    assert apart((E*x+2)/(x-pi)*(x-1), x) == 2 - E + E*pi + E*x - 1/(x - pi)*(2 - 2*pi + E*pi - E*pi**2)
+
