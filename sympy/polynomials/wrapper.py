@@ -197,11 +197,20 @@ def egcd(p, q, x):
     U = (p, S.One, S.Zero)
     V = (q, S.Zero, S.One)
 
-    while True:
-        q = quo(U[0], V[0], x)
+    while not isinstance(V[0], Basic.Zero):
+        u, v = U[0], V[0]
+
+        if u.has(x):
+            if v.has(x):
+                q = quo(u, v, x)
+            else:
+                q = u / v
+        else:
+            if v.has(x):
+                q = S.Zero
+            else:
+                q = u / v
 
         U, V = V, [ (a - q*b).expand() for a, b in zip(U, V) ]
 
-        if isinstance(V[0], Basic.Zero):
-            return U
-
+    return U
