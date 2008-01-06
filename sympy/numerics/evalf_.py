@@ -1,4 +1,5 @@
 from sympy import *
+from sympy.polynomials import Polynomial
 from float_ import Float, ComplexFloat
 import functions
 import constants

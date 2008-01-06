@@ -1,4 +1,5 @@
-from sympy import Polynomial, Symbol
+from sympy.core.symbol import Symbol
+from sympy.polynomials import Polynomial
 from float_ import Float, ComplexFloat
 from evalf_ import polyfunc
 from utils_ import bitcount
