@@ -22,9 +22,9 @@ import symbol as stdlib_symbol
 from sympy.core import *
 
 from series import *
+from functions import *
 from ntheory import *
 from concrete import *
-from functions import *
 from simplify import *
 from solvers import *
 from matrices import *
