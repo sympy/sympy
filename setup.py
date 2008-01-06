@@ -238,13 +238,32 @@ tests = [
     'sympy.utilities.tests',
     ]
 
+pyglet_packages=[
+    'pyglet', 
+    'pyglet.gl', 
+    'pyglet.font', 
+    'pyglet.image', 
+    'pyglet.image.codecs',
+    'pyglet.media', 
+    'pyglet.media.drivers', 
+    'pyglet.media.drivers.alsa', 
+    'pyglet.media.drivers.directsound', 
+    'pyglet.media.drivers.openal', 
+    'pyglet.window', 
+    'pyglet.window.carbon',
+    'pyglet.window.win32', 
+    'pyglet.window.xlib',
+]
+pyglet_packages = ["sympy.thirdparty.pyglet." + s for s in pyglet_packages]
+
 setup(
       name = 'sympy',
       version = sympy.__version__,
       description = 'Computer algebra system (CAS) in Python',
       license = 'BSD',
       url = 'http://code.google.com/p/sympy',
-      packages = ['sympy'] + [ m[1] for m in modules ] + tests,
+      packages = ['sympy'] + [ m[1] for m in modules ] + tests + \
+        pyglet_packages,
       scripts = ['bin/isympy'],
       ext_modules = [],
       package_data = { 'sympy.utilities.mathml' : ['data/*.xsl'] },
