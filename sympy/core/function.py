@@ -386,119 +386,6 @@ class WildFunction(Function, Atom):
     def _eval_apply_evalf(cls, arg):
         return
 
-class Lambda(Function):
-    """
-    Lambda(expr, arg1, arg2, ...) -> lambda arg1, arg2,... : expr
-
-    Lambda instance has the same assumptions as its body.
-
-    """
-    precedence = Basic.Lambda_precedence
-    name = None
-    has_derivative = True
-
-    def __new__(cls, expr, *args):
-        expr = Basic.sympify(expr)
-        args = tuple(map(Basic.sympify, args))
-        # XXX
-        #if isinstance(expr, Apply):
-        #    if expr[:]==args:
-        #        return expr.func
-        dummy_args = []
-        for a in args:
-            if not isinstance(a, Basic.Symbol):
-                raise TypeError("%s %s-th argument must be Symbol instance (got %r)" \
-                                % (cls.__name__, len(dummy_args)+1,a))
-            d = a.as_dummy()
-            expr = expr.subs(a, d)
-            dummy_args.append(d)
-        obj = Basic.__new__(cls, expr, *dummy_args, **expr._assumptions)
-        return obj
-
-    def _hashable_content(self):
-        return self._args
-
-    @property
-    def nargs(self):
-        return len(self._args)-1
-
-    def __getitem__(self, iter):
-        return self._args[1:][iter]
-
-    def __len__(self):
-        return len(self[:])
-
-    @property
-    def body(self):
-        return self._args[0]
-
-    def tostr(self, level=0):
-        precedence = self.precedence
-        r = 'lambda %s: %s' % (', '.join([a.tostr() for a in self]),
-                               self.body.tostr(precedence))
-        if precedence <= level:
-            return '(%s)' % r
-        return r
-
-    def torepr(self):
-        return '%s(%s)' % (self.__class__.__name__, ', '.join([a.torepr() for a in self]))
-
-    def as_coeff_terms(self, x=None):
-        c,t = self.body.as_coeff_terms(x)
-        return c, [Lambda(Basic.Mul(*t),*self[:])]
-
-    def _eval_power(b, e):
-        """
-        (lambda x:f(x))**e -> (lambda x:f(x)**e)
-        """
-        return Lambda(b.body**e, *b[:])
-
-    def _eval_fpower(b, e):
-        """
-        FPow(lambda x:f(x), 2) -> lambda x:f(f(x)))
-        """
-        if isinstance(e, Basic.Integer) and e.is_positive and e.p < 10 and len(b)==1:
-            r = b.body
-            for i in xrange(e.p-1):
-                r = b(r)
-            return Lambda(r, *b[:])
-
-    def with_dummy_arguments(self, args = None):
-        if args is None:
-            args = tuple([a.as_dummy() for a in self])
-        if len(args) != len(self):
-            raise TypeError("different number of arguments in Lambda functions: %s, %s" % (len(args), len(self)))
-        expr = self.body
-        for a,na in zip(self, args):
-            expr = expr.subs(a, na)
-        return expr, args
-
-    def _eval_expand_basic(self, *args):
-        return Lambda(self.body._eval_expand_basic(*args), *self[:])
-
-    def diff(self, *symbols):
-        return Lambda(self.body.diff(*symbols), *self[:])
-
-    def fdiff(self, argindex=1):
-        if not (1<=argindex<=len(self)):
-            raise TypeError("%s.fderivative() argindex %r not in the range [1,%s]"\
-                            % (self.__class__, argindex, len(self)))
-        s = self[argindex-1]
-        expr = self.body.diff(s)
-        return Lambda(expr, *self[:])
-
-    _eval_subs = Basic._seq_subs
-
-    def canonize(cls, *args):
-        n = cls.nargs
-        if n!=len(args):
-            raise TypeError('%s takes exactly %s arguments (got %s)'\
-                            % (cls, n, len(args)))
-        expr = cls.body
-        for da,a in zip(cls, args):
-            expr = expr.subs(da,a)
-        return expr
-
 class Derivative(Basic, ArithMeths, RelMeths):
     """
     Carries out differentation of the given expression with respect to symbols.
@@ -535,20 +422,6 @@ class Derivative(Basic, ArithMeths, RelMeths):
         if not unevaluated_symbols:
             return expr
         return Basic.__new__(cls, expr, *unevaluated_symbols)
-
-    # FIXME is this needed
-    def xas_apply(self):
-        # Derivative(f(x),x) -> Apply(Lambda(f(_x),_x), x)
-        symbols = []
-        indices = []
-        for s in self.symbols:
-            if s not in symbols:
-                symbols.append(s)
-                indices.append(len(symbols))
-            else:
-                indices.append(symbols.index(s)+1)
-        stop
-        return Apply(FApply(FDerivative(*indices), Lambda(self.expr, *symbols)), *symbols)
 
     def _eval_derivative(self, s):
         #print
@@ -607,6 +480,55 @@ class Derivative(Basic, ArithMeths, RelMeths):
         repl_dict = repl_dict.copy()
         repl_dict[pattern] = expr
         return repl_dict
+
+class Lambda(Function):
+    """
+    Lambda(x, expr) represents a lambda function similar to Python's
+    'lambda x: expr'. A function of several variables is written as
+    Lambda((x, y, ...), expr).
+
+    A simple example:
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> f = Lambda(x, x**2)
+        >>> f(4)
+        16
+    """
+
+    #XXX currently only one argument Lambda is supported
+
+    nargs = 2
+
+    @classmethod
+    def canonize(cls, x, expr):
+        obj = Basic.__new__(cls, x, expr)
+        #use dummy variables internally, just to be sure
+        tmp = Basic.Symbol("x", dummy=True)
+        obj._args = (tmp, expr.subs(x, tmp))
+        return obj
+
+    def apply(self, x):
+        """Applies the Lambda function "self" to the "x"
+
+        Example:
+            >>> from sympy import Symbol
+            >>> x = Symbol('x')
+            >>> f = Lambda(x, x**2)
+            >>> f.apply(4)
+            16
+        
+        """
+        return self[1].subs(self[0], x)
+
+    def __call__(self, *args):
+        return self.apply(*args)
+
+    def __eq__(self, other):
+        if isinstance(other, Lambda):
+            if self[1] == other[1].subs(other[0], self[0]):
+                return True
+        return False
+        
 
 
 def diff(f, x, times = 1, evaluate=True):

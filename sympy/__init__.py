@@ -18,6 +18,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "thirdparty", \
         "pyglet"))
 
+import symbol as stdlib_symbol
 from sympy.core import *
 
 from series import *

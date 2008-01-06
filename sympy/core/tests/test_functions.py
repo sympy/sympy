@@ -1,6 +1,8 @@
-from sympy import *
+from sympy import Lambda, Symbol, Function, WildFunction, Derivative, sqrt, \
+        log, exp, Rational, sign, Basic
 from sympy.utilities.pytest import XFAIL
 from sympy.utilities.test import REPR0
+from sympy.abc import x, y
 
 
 def test_log():
@@ -157,3 +159,18 @@ def test_unapplied_function_str():
 
     assert repr(f)     == "Function('f')"   # this does not work
     assert str(f)      == "f"               # this does not work
+
+def test_Lambda():
+    e = Lambda(x, x**2)
+    assert e(4) == 16
+    assert e(x) == x**2
+    assert e(y) == y**2
+
+    assert Lambda(x, x**2) == Lambda(x, x**2)
+    assert Lambda(x, x**2) == Lambda(y, y**2)
+    assert Lambda(x, x**2) != Lambda(y, y**2+1)
+
+    #doesn't work yet:
+    #class F(Function):
+    #    pass
+    #assert Lambda(x, F(x)) == F

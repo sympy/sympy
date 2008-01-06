@@ -44,3 +44,8 @@ def test_sage():
 def test_bug496():
     a_ = sympify("a_")
     _a = sympify("_a")
+
+#def test_lambda():
+#    x = Symbol('x')
+#    assert sympify('lambda : 1')==Lambda(x, 1)
+#    assert sympify('lambda x: 2*x')==Lambda(x, 2*x)
