@@ -1301,3 +1301,11 @@ class SMatrix(Matrix):
             tmp[i,i] = 1
         return tmp
 
+
+def list2numpy(l):
+    """Converts python list of SymPy expressions to NumPy array."""
+    from numpy import empty
+    a = empty(len(l), dtype=object)
+    for i, s in enumerate(l):
+        a[i] = s
+    return a
