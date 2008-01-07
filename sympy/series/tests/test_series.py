@@ -336,3 +336,14 @@ def test_issue408():
 def test_issue540():
     x = Symbol("x")
     assert sin(cos(x)).series(x, 5) == sin(1) -x**2*cos(1)/2 - x**4*sin(1)/8 + x**4*cos(1)/24 + O(x**5)
+
+def test_hyperbolic():
+    x = Symbol("x")
+    assert sinh(x).series(x, 6) == x + x**3/6 + x**5/120 + O(x**6)
+    assert cosh(x).series(x, 5) == 1 + x**2/2 + x**4/24 + O(x**5)
+    assert tanh(x).series(x, 6) == x - x**3/3 + 2*x**5/15 + O(x**6)
+    assert coth(x).series(x, 6) == 1/x - x**3/45 + x/3 + 2*x**5/945 + O(x**6)
+    assert asinh(x).series(x, 6) == x - x**3/6 + 3*x**5/40 + O(x**6)
+    assert acosh(x).series(x, 6) == pi*I/2 - I*x - 3*I*x**5/40 - I*x**3/6 + O(x**6)
+    assert atanh(x).series(x, 6) == x + x**3/3 + x**5/5 + O(x**6)
+    assert acoth(x).series(x, 6) == x + x**3/3 + x**5/5 + pi*I/2 + O(x**6)
