@@ -47,7 +47,7 @@ def indent(s):
     return r
 
 welcome_msg = \
-    "Python %s console for SymPy %s. These commands were executed:\n%s" % \
+    "Python %s console for SymPy %s. These commands were executed:\n%s\nDocumentation can be found at http://sympy.org/\n" % \
             (python_version, sympy_version, indent(init_code))
 
 def run_ipython_interpreter():
