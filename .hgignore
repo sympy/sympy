@@ -4,3 +4,6 @@ syntax: glob
 *.pyo
 *.swp
 tags
+
+dist/
+build/
