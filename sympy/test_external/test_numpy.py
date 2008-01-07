@@ -12,8 +12,6 @@ except ImportError:
     disabled = True
 
 
-import sys
-sys.path.append("..")
 from sympy import Rational, Symbol, list2numpy
 
 def test_basics():
