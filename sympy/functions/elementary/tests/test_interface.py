@@ -1,7 +1,7 @@
 # This test file tests the SymPy function interface, that people use to create
 # their own new functions. It should be as easy as possible.
 
-from sympy import Function, sympify, sin, cos, limit
+from sympy import Function, sympify, sin, cos, limit, tanh
 from sympy.abc import x
 
 def test_function_series1():
@@ -40,3 +40,30 @@ def test_function_series2():
 
     #Test that the taylor series is correct
     assert my_function2(x).series(x, 10) == cos(x).series(x, 10)
+
+def test_function_series3():
+    """
+    Test our easy "tanh" function.
+
+    This test tests two things:
+      * that the Function interface works as expected and it's easy to use
+      * that the general algorithm for the series expansion works even when the
+        derivative is defined recursively in terms of the original function,
+        since tanh(x).diff(x) == 1-tanh(x)**2
+    """
+
+    class mytanh(Function):
+        nargs = 1
+
+        def fdiff(self, argindex = 1):
+            return 1-mytanh(self[0])**2
+
+        @classmethod
+        def canonize(cls, arg):
+            arg = sympify(arg)
+            if arg == 0:
+                return sympify(0)
+
+    e = tanh(x)
+    f = mytanh(x)
+    assert tanh(x).series(x, 6) == mytanh(x).series(x, 6)
