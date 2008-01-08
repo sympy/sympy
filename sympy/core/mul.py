@@ -117,6 +117,11 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             c_part.insert(0, coeff)
         elif isinstance(coeff, (Basic.Zero, Basic.NaN)):
             c_part, nc_part = [coeff], []
+        elif isinstance(coeff, Basic.Real):
+            if coeff == Basic.Real(0):
+                c_part, nc_part = [coeff], []
+            elif coeff != Basic.Real(1):
+                c_part.insert(0, coeff)
         elif not isinstance(coeff, Basic.One):
             c_part.insert(0, coeff)
 

@@ -1,8 +1,9 @@
-from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, re
+from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Real, re, pi
 from sympy.utilities.pytest import XFAIL
 
+x = Symbol("x")
+
 def test_bug1():
-    x=Symbol("x")
     assert re(x) != x
     x.series(x,1)
     assert re(x) != x
@@ -203,6 +204,11 @@ def test_power_expand():
 
     p = (1+2*(1+a))**2
     assert p.expand() == 9 + 4*(a**2) + 12*a
+
+def test_real_mul():
+    Real(0) * pi * x == Real(0)
+    Real(1) * pi * x == pi * x
+    len(Real(2) * pi * x) == 3
 
 def test_ncmul():
     A = Symbol("A", commutative=False)
