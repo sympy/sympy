@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import compiler
 import parser
 from compiler.transformer import Transformer
