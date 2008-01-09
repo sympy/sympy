@@ -1,4 +1,4 @@
-from sympy import sympify, Symbol, exp, Integer, sin, cos, log
+from sympy import sympify, Symbol, exp, Integer, sin, cos, log, Polynomial
 from sympy.abc import x, y
 #from sympy.utilities.pytest import XFAIL
 
@@ -28,6 +28,12 @@ def test_sympify2():
 def test_sympify3():
     assert sympify("x**3") == x**3
     assert sympify("1/2") == Integer(1)/2
+
+
+def test_sympify_poly():
+    p = Polynomial(1+x+x**2)
+
+    assert sympify(p) is p
 
 def test_sage():
     # how to effectivelly test for the _sage_() method without having SAGE
