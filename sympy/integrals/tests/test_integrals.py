@@ -1,8 +1,9 @@
-from sympy import symbols, integrate, exp, oo, Symbol, Rational, log, sin
+from sympy import symbols, integrate, exp, oo, Symbol, Rational, log, sin, cos, pi, E
 from sympy.utilities.pytest import XFAIL
 import py
 
 x,a,t = symbols('xat')
+n = Symbol('n', integer=True)
 
 def test_improper_integral():
     assert integrate(log(x), (x, 0, 1)) == -1
@@ -93,3 +94,22 @@ def test_integrate_linearterm_pow():
     y = Symbol('y')
     assert integrate(x**y, x) == x**(y+1)/(y+1)
     assert integrate((exp(y)*x + 1/y)**(1+sin(y)), x)   == exp(-y)*(exp(y)*x + 1/y)**(2+sin(y)) / (2+sin(y))
+
+def test_issue519():
+    assert integrate(pi*x**Rational(1,2),x) == 2*pi*x**Rational(3,2)/3
+    assert integrate(pi*x**Rational(1,2) + E*x**Rational(3,2),x) == \
+                                               2*pi*x**Rational(3,2)/3  + \
+                                               2*E *x**Rational(5,2)/5
+def test_issue524():
+    assert integrate(cos((n+1) * x), x)   == sin(x*(n+1)) / (n+1)
+    assert integrate(cos((n-1) * x), x)   == sin(x*(n-1)) / (n-1)
+
+    assert integrate(cos((n+1) * x) + cos((n-1) * x), x) == \
+                                             sin(x*(n+1)) / (n+1)  + \
+                                             sin(x*(n-1)) / (n-1)
+
+def test_issue565():
+    assert integrate(-1./2 * x * sin(n * pi * x/2), [x, -2, 0])  == 2*cos(pi*n)/(pi*n)
+    assert integrate(-Rational(1)/2 * x * sin(n * pi * x/2), [x, -2, 0]) \
+                                                                 == 2*cos(pi*n)/(pi*n)
+
