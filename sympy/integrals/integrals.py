@@ -193,9 +193,9 @@ class Integral(Basic, NoRelMeths, ArithMeths):
                 parts.append(coeff * x)
                 continue
 
-            #               n
+            #               c
             # g(x) = (a*x+b)
-            if isinstance(g, Pow) and g.exp.is_number:
+            if isinstance(g, Pow) and not g.exp.has(x):
                 a, b = Wild('a'), Wild('b')
 
                 M = g.base.match(a*x + b)

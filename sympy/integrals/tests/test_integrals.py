@@ -87,3 +87,9 @@ def test_issue536():
     y = Symbol('y')
     assert integrate(x**2, y) == x**2*y
     assert integrate(x**2, (y, -1, 1)) == 2*x**2
+
+def test_integrate_linearterm_pow():
+    # check integrate((a*x+b)^c, x)  --  #400
+    y = Symbol('y')
+    assert integrate(x**y, x) == x**(y+1)/(y+1)
+    assert integrate((exp(y)*x + 1/y)**(1+sin(y)), x)   == exp(-y)*(exp(y)*x + 1/y)**(2+sin(y)) / (2+sin(y))
