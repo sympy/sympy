@@ -239,7 +239,7 @@ def heurisch(f, x, rewrite=False):
 
     polys = list(v_split) + [ u_split[0] ] + special.keys()
 
-    s = u_split[0] * Basic.Mul(*[ g for k, v in special if v ])
+    s = u_split[0] * Basic.Mul(*[ g for k, v in special if v is not None ])
     a, b, c = [ p.as_polynomial(*V).degree() for p in [s, P, Q] ]
 
     poly_denom = s * v_split[0] * deflation(v_split[1])
@@ -360,6 +360,9 @@ def heurisch(f, x, rewrite=False):
         return indep * antideriv
     else:
         if not rewrite:
-            return indep * heurisch(f, x, rewrite=True)
-        else:
-            return None
+            result = heurisch(f, x, rewrite=True)
+
+            if result is not None:
+                return indep * result
+
+        return None
