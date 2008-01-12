@@ -201,3 +201,8 @@ def test_issue324():
     x = Symbol("x")
     assert sqrt(x-1) == (x-1)**Rational(1,2)
     assert sqrt(x-1) != I*(1-x)**Rational(1,2)
+
+def test_issue350():
+    x = Symbol("x")
+    assert sqrt(x**2) == abs(x)
+    assert sqrt(x-1).subs(x,5) == 2
