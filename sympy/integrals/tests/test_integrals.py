@@ -1,4 +1,4 @@
-from sympy import symbols, integrate, exp, oo, Symbol, Rational, log, sin, cos, pi, E
+from sympy import symbols, integrate, exp, oo, Symbol, Rational, log, sin, cos, pi, E, I
 from sympy.utilities.pytest import XFAIL
 import py
 from py.test import skip
@@ -90,6 +90,7 @@ def test_issue536():
     assert integrate(x**2, y) == x**2*y
     assert integrate(x**2, (y, -1, 1)) == 2*x**2
 
+# works in sympy and py.test but hangs in `setup.py test`
 def test_integrate_linearterm_pow():
     # check integrate((a*x+b)^c, x)  --  #400
     y = Symbol('y')
@@ -116,3 +117,8 @@ def test_issue565():
     assert integrate(-Rational(1)/2 * x * sin(n * pi * x/2), [x, -2, 0]) \
                                                                  == 2*cos(pi*n)/(pi*n)
 
+
+def test_rational_functions():
+    half = Rational(1,2)
+    integrate(1/(x**2+x+1), x) == -I*3**half*log(half + x - half*I*3**half)/3 +\
+                                   I*3**half*log(half + x + half*I*3**half)/3

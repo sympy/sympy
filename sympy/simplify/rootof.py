@@ -1,15 +1,15 @@
 
-from sympy import Basic, Symbol, I, pi, exp, sqrt
+from sympy import Basic, S, Symbol, Mul, I, pi, exp, sqrt
 from sympy.core.numbers import Rational, Integer, gcd
 from sympy.core.methods import NoRelMeths, ArithMeths
-from sympy.polynomials import factor_, PolynomialException
+from sympy.polynomials import quo, factor_, PolynomialException
 from sympy.numerics.optimize import polyroots
 
 def linear(a, b):
     return [-b/a]
 
 def quadratic(a, b, c):
-    d = sqrt(b**2 - 4*a*c)
+    d = (b**2 - 4*a*c)**S.Half
 
     R = [(-b + d) / (2*a),
          (-b - d) / (2*a)]
@@ -20,7 +20,7 @@ def cubic(a, b, c, d):
     p = (3*c/a - (b/a)**2) / 9
     q = (9*b*c/a**2 - 27*d/a - 2*(b/a)**3) / 54
 
-    d = sqrt(p**3 + q**2)
+    d = (p**3 + q**2)**S.Half
 
     s = (q - d)**Rational(1,3)
     t = (q - d)**Rational(1,3)
@@ -43,17 +43,17 @@ def quartic(a, b, c, d, e):
     r = cubic(1, p, q, r)
 
     u = r[1] + r[2] - r[0]
-    v = sqrt(u**2 - 16*d)
+    v = (u**2 - 16*d)**S.Half
 
-    w = sqrt(a**2 - 4*r[0])
+    w = (a**2 - 4*r[0])**S.Half
 
     A = (u + v) / 4
     B = (u - v) / 4
     C = (-a + w) / 2
     D = (-a - w) / 2
 
-    E = sqrt(C**2 - 4*A)
-    F = sqrt(D**2 - 4*B)
+    E = (C**2 - 4*A)**S.Half
+    F = (D**2 - 4*B)**S.Half
 
     R = [(C + E) / 2, (C - E) / 2,
          (D + F) / 2, (D - F) / 2]
@@ -113,13 +113,13 @@ def roots(poly, x=None, domain=None, **kwargs):
     roots = arbitrary(poly)
 
     if roots == []:
-        factors, skip = [ poly ], False
+        factors = [ poly ]
 
-        if n == 3 or kwargs.get("factor", False):
+        if n < 5 or kwargs.get('factor', False):
             try:
                 factors = factor_.factor(poly)
             except PolynomialException:
-                skip = True
+                pass
 
         handlers = {
             1 : linear,
@@ -137,7 +137,7 @@ def roots(poly, x=None, domain=None, **kwargs):
             if n in handlers:
                 coeffs = [ factor.nth_coeff(i) for i in range(n+1) ]
                 roots += handlers[n](*reversed(coeffs))
-            elif not skip:
+            else:
                 roots += arbitrary(factor)
 
     Zr, Qr, Rr, Ir, Cr = [], [], [], [], []
@@ -174,17 +174,34 @@ def roots(poly, x=None, domain=None, **kwargs):
 
     return roots
 
+def factors(poly, x=None, domain=None, **kwargs):
+    _roots = roots(poly, x, domain, **kwargs)
+
+    if isinstance(poly, Basic.Polynomial):
+        poly = poly.as_basic()
+
+    if not _roots:
+        return [ poly ]
+    else:
+        factored = [ x-r for r in _roots ]
+        f = quo(poly, Mul(*factored), x)
+
+        if f.has(x):
+            return factored + [ f ]
+        else:
+            return factored
+
 _exact_roots_cache = {}
 _float_roots_cache = {}
 
 def _exact_roots(poly):
-        try:
-            exact = _exact_roots_cache[poly]
-        except KeyError:
-            exact = roots(poly, domain='C')
-            _exact_roots_cache[poly] = exact
+    try:
+        exact = _exact_roots_cache[poly]
+    except KeyError:
+        exact = roots(poly, domain='C')
+        _exact_roots_cache[poly] = exact
 
-        return exact
+    return exact
 
 def _float_roots(poly):
     try:
@@ -219,16 +236,16 @@ class RootOf(Basic, NoRelMeths, ArithMeths):
        >>> list(RootOf(2 + x**2, x).roots())
        [I*2**(1/2), -I*2**(1/2)]
 
-       >>> roots = list(RootOf(1 + x + x**5, x).roots())
+       >>> roots = list(RootOf(1 + x + x**7, x).roots())
        >>> print roots[0]
-       RootOf(1 + x + x**5, x, 0)
+       RootOf(1 + x + x**7, x, 0)
        >>> print roots[1]
-       RootOf(1 + x + x**5, x, 1)
+       RootOf(1 + x + x**7, x, 1)
 
        and so on ...
 
-       >>> RootOf(1 + x + x**5, x, 4).evalf()
-       0.877439 + 0.744862*I
+       >>> RootOf(1 + x + x**7, x, 1).evalf()
+       -0.705298 - 0.637624*I
 
        >>> _ = Basic.set_precision(prec)
 
@@ -316,3 +333,6 @@ class RootOf(Basic, NoRelMeths, ArithMeths):
 
             for root in approx:
                 yield root
+
+    def atoms(self, *args, **kwargs):
+        return self.poly.atoms(*args, **kwargs)

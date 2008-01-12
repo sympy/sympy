@@ -2,7 +2,7 @@
 from sympy.core import Basic, S, Symbol, Wild, Pow
 from sympy.core.methods import NoRelMeths, ArithMeths
 
-from sympy.integrals.risch import risch_norman
+from sympy.integrals.risch import heurisch
 from sympy.polynomials import Polynomial, PolynomialException
 from sympy.simplify import apart
 from sympy.series import limit
@@ -196,11 +196,12 @@ class Integral(Basic, NoRelMeths, ArithMeths):
             #               c
             # g(x) = (a*x+b)
             if isinstance(g, Pow) and not g.exp.has(x):
-                a, b = Wild('a'), Wild('b')
+                a = Wild('a', exclude=[x])
+                b = Wild('b', exclude=[x])
 
                 M = g.base.match(a*x + b)
 
-                if not (M is None or M[a].has(x)):
+                if M is not None:
                     if g.exp == -1:
                         h = Basic.log(g.base)
                     else:
@@ -217,8 +218,8 @@ class Integral(Basic, NoRelMeths, ArithMeths):
                 parts.append(coeff * h)
                 continue
 
-            # fall back to the most general algorithm
-            h = risch_norman(g, x)
+            # fall back to the more general algorithm
+            h = heurisch(g, x)
 
             if h is not None:
                 parts.append(coeff * h)
