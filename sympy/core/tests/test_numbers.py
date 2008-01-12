@@ -196,3 +196,8 @@ def test_issue593():
     assert ((-5)**Rational(1,6)).expand(complex=True) == \
             5**Rational(1,6)*I/2 + 5**Rational(1,6)*sqrt(3)/2
     assert ((-64)**Rational(1,6)).expand(complex=True) == I + sqrt(3)
+
+def test_issue324():
+    x = Symbol("x")
+    assert sqrt(x-1) == (x-1)**Rational(1,2)
+    assert sqrt(x-1) != I*(1-x)**Rational(1,2)
