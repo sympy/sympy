@@ -77,6 +77,10 @@ def test_heurisch_symbolic_coeffs():
     assert heurisch(1/(x**2+y), x)      == I*y**(-S.Half)*log(x + (-y)**S.Half)/2 - \
                                            I*y**(-S.Half)*log(x - (-y)**S.Half)/2
 
+def test_issue510():
+    assert integrate(1/(x * (1 + log(x)**2))) == I*log(I+log(x))/2 - \
+            I*log(-I+log(x))/2
+
     # Following won't work as long as polynomials have functionality like:
     # "XXX this will not work for sin(x), sqrt(2), etc..."
 
@@ -132,4 +136,3 @@ def test_pmint_erf():
 # - Whittaker
 # - LambertW
 # - Wright omega
-
