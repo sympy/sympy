@@ -75,6 +75,10 @@ class Pow(Basic, ArithMeths, RelMeths):
                 if isinstance(self.exp, Basic.Number):
                     # (a ** 2) ** 3 -> a ** (2 * 3)
                     return Pow(self.base, self.exp * other)                
+            if isinstance(other, Basic.Rational):
+                if self.exp.is_even and Basic.Integer(other.q).is_even:
+                    return abs( Pow(self.base, self.exp * other))
+                return Pow(self.base, self.exp * other)
             if isinstance(other, Basic.Integer):
                 # (a ** b) ** 3 -> a ** (3 * b)
                 return Pow(self.base, self.exp * other)

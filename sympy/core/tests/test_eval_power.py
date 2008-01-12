@@ -34,7 +34,7 @@ def test_issue350():
     #test if powers are simplified correctly
     a = Symbol('a')
     assert ((a**Rational(1,3))**Rational(2)) == a**Rational(2,3)
-    assert ((a**Rational(3))**Rational(2,5)) != a**Rational(6,5)
+    assert ((a**Rational(3))**Rational(2,5)) == a**Rational(6,5)
 
     a = Symbol('a', real = True)
     assert (a**Rational(3))**Rational(2,5) == a**Rational(6,5)

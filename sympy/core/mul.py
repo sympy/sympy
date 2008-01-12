@@ -17,6 +17,10 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         c_powers = {}
         lambda_args = None
         order_symbols = None
+
+        exp_dict = {}
+        inv_exp_dict = {}
+
         while c_seq or nc_seq:
             if c_seq:
                 # first process commutative objects
@@ -33,6 +37,15 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 if isinstance(o, Basic.Number):
                     coeff *= o
                     continue
+                if isinstance(o, Basic.Pow):
+                    base, exponent = o.as_base_exp()
+                    if isinstance(base, Basic.Number):
+                        if base in exp_dict:
+                            exp_dict[base] += exponent
+                        else:
+                            exp_dict[base] = exponent
+                        continue
+                    
                 if isinstance(o, Basic.exp):
                     # exp(x) / exp(y) -> exp(x-y)
                     b = Basic.Exp1()
@@ -95,6 +108,31 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             else:
                 c_part.append(Basic.Pow(b, e))
 
+        for b,e in exp_dict.items():
+            if e in inv_exp_dict:
+                inv_exp_dict[e] *= b
+            else:
+                inv_exp_dict[e] = b
+
+        for e,b in inv_exp_dict.items():
+            if isinstance(e, Basic.Zero):
+                continue
+
+            if isinstance(e, Basic.One):
+                if isinstance(b, Basic.Number):
+                    coeff *= b
+                else:
+                    c_part.append(b)
+            elif isinstance(e, Basic.Integer) and isinstance(b, Basic.Number):
+                coeff *= b ** e
+            else:
+                obj = b**e
+                if isinstance(obj, Basic.Number):
+                    coeff *= obj
+                else:
+                    c_part.append(obj)
+
+
         if isinstance(coeff, (Basic.Infinity, Basic.NegativeInfinity)):
             new_c_part = []
             for t in c_part:
@@ -139,9 +177,15 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     # (a*b)**2 -> a**2 * b**2
                     return Mul(*[s**e for s in b])
 
-                if e.is_rational and not b.is_nonnegative:
-                    if not isinstance(b, (Basic.Pow, Basic.Number)):
-                        return
+                if e.is_rational:
+                    coeff, rest = b.as_coeff_terms()
+                    if coeff == -1:
+                        return None
+                    elif coeff < 0:
+                        return (-coeff)**e * Mul(*([Basic.Integer(-1)] +rest))**e
+                    else:
+                        return coeff**e * Mul(*[s**e for s in rest])
+
 
                 coeff, rest = b.as_coeff_terms()
                 if not isinstance(coeff, Basic.One):

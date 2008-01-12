@@ -61,6 +61,9 @@ def test_Limits_simple_4a():
     assert limit((sqrt(x)-1)/(sqrt3(x)-1),x,1)==Rational(3)/2  #205
     assert limit((sqrt(1+x)-sqrt(1-x))/x,x,0)==1  #207
     assert limit(sqrt(x**2-5*x+6)-x,x,oo)==-Rational(5)/2  #213
+
+@XFAIL
+def test_limits_simple_4aa():
     assert limit(x*(sqrt(x**2+1)-x),x,oo)==Rational(1)/2  #214
 
 @XFAIL

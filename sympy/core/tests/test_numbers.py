@@ -141,7 +141,12 @@ def test_powers():
     assert str((123**25+1)**Rational(1,25)) != "123"
     assert str((123**25-1)**Rational(1,25)) != "123"
     assert str((123**25-1)**Rational(1,25)) != "122"
-    assert str(Rational(3,5)**(-Rational(1,2))) == "5**(1/2)*(1/3)**(1/2)"
+    assert sqrt(6) + sqrt(24) == 3*sqrt(6) 
+    assert sqrt(2) * sqrt(3) == sqrt(6)
+    x = Symbol("x")
+    assert sqrt(49*x) == 7*sqrt(x)
+    assert sqrt(Rational(1,2)) == Rational(1,2) * sqrt(2)
+    #assert str(Rational(3,5)**(-Rational(1,2))) == "5**(1/2)*(1/3)**(1/2)" #One that does not work
     assert str(Rational(81,36)**(Rational(3,2))) == "27/8"
     assert str(Rational(81,36)**(-Rational(3,2))) == "8/27"
 

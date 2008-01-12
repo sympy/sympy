@@ -496,28 +496,7 @@ class Rational(Number):
                     # (4/3)**(5/6) -> 4**(5/6) * 3**(-5/6)
                     return Integer(b.p) ** e * Integer(b.q) ** (-e)
                 if b >= 0:
-                    x, xexact = integer_nthroot(b.p, e.q)
-                    y, yexact = integer_nthroot(b.q, e.q)
-                    if xexact and yexact:
-                        res = Rational(x ** abs(e.p), y ** abs(e.p))
-                        if e >= 0:
-                            return res
-                        else:
-                            return 1/res
-                    # Now check also devisors of the exponents denominator
-                    # TODO: Check if this slows down to much.
-                    for i in xrange(2, e.q/2 + 1):
-                        if e.q % i == 0:
-                            x, xexact = integer_nthroot(b.p, i)
-                            y, yexact = integer_nthroot(b.q, i)
-                            if xexact and yexact:
-                                return Rational(x, y)**Rational(e.p, e.q/i)
-                    else:
-                        # Try to get some part of the base out, if exp > 1
-                        if e.p > e.q:
-                            i = e.p / e.q
-                            r = e.p % e.q
-                            return b**i * b**Rational(r, e.q)
+                    return Integer(b.q)**Rational(e.p * (e.q-1), e.q) / ( Integer(b.q) ** Integer(e.p))
                 else:
                     return (-1)**e * (-b)**e
 
@@ -682,21 +661,57 @@ class Integer(Rational):
                             return res
                         else:
                             return 1/res
-                    # Now check also devisors of the exponents denominator
-                    # TODO: Check if this slows down to much.
-                    for i in xrange(2, e.q/2 + 1):
-                        if e.q % i == 0:
-                            x, xexact = integer_nthroot(b.p, i)
-                            if xexact:
-                                return Integer(x)**(e * i)
-                    # Try to get some part of the base out, if exponent > 1
-                    if e.p > e.q:
-                        i = e.p / e.q
-                        r = e.p % e.q
-                        return b**i * b**Rational(r, e.q)
+                    else:
+                        if b > 2**32: #Prevent from factorizing too big integers:
+                            for i in xrange(2, e.q/2 + 1): #OLD CODE
+                                if e.q % i == 0:
+                                    x, xexact = integer_nthroot(b.p, i)
+                                    if xexact:
+                                        return Integer(x)**(e * i)
+                            # Try to get some part of the base out, if exponent > 1
+                            if e.p > e.q:
+                                i = e.p / e.q
+                                r = e.p % e.q
+                                return b**i * b**Rational(r, e.q)
+                            return
 
+
+                        dict = b.factors()
+
+                        out_int = 1
+                        sqr_int = 1
+                        sqr_gcd = 0
+
+                        sqr_dict = {}
+
+                        for prime,exponent in dict.iteritems():
+                            exponent *= e.p
+                            div_e = exponent / e.q
+                            div_m = exponent % e.q
+
+                            if div_e > 0:
+                                out_int *= prime**div_e
+                            if div_m > 0:
+                                sqr_dict[prime] = div_m
+
+                        for p,ex in sqr_dict.iteritems():
+                            if sqr_gcd == 0:
+                                sqr_gcd = ex
+                            else:
+                                sqr_gcd = gcd(sqr_gcd, ex)
+
+                        for k,v in sqr_dict.iteritems():
+                            sqr_int *= k**(v/sqr_gcd)
+
+                        if sqr_int == b.p and out_int == 1:
+                            return None
+
+                        return out_int * Basic.Pow(sqr_int , Rational(sqr_gcd, e.q))
                 else:
-                    return (-1)**e * (-b)**e
+                    if e.q == 2:
+                        return S.ImaginaryUnit ** e.p * (-b)**e
+                    else:
+                        return None
 
         c,t = b.as_coeff_terms()
         if e.is_even and isinstance(c, Basic.Number) and c < 0:

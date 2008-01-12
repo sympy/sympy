@@ -205,6 +205,11 @@ class abs(Function):
             return cls(coeff) * cls(Basic.Mul(*terms))
         if arg.is_real is False:
             return Basic.sqrt( (arg * arg.conjugate()).expand() )
+        if isinstance(arg, Basic.Pow):
+            base, exponent = arg.as_base_exp()
+            if isinstance(exponent, Basic.Number):
+                if exponent.is_even:
+                    return arg
         return
 
     @classmethod

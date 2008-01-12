@@ -26,37 +26,8 @@ class sqrt(Function):
 
     @classmethod
     def canonize(cls, arg):
-        #XXX this doesn't work, but it should (see #390):
-        #return arg**S.Half
         arg = Basic.sympify(arg)
-
-        if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
-                return S.NaN
-            if isinstance(arg, Basic.Infinity):
-                return S.Infinity
-            if isinstance(arg, Basic.NegativeInfinity):
-                return S.ImaginaryUnit * S.Infinity
-            if isinstance(arg, Basic.Rational):
-                factors = arg.factors()
-                sqrt_factors = {}
-                eval_factors = {}
-                n = Basic.Integer(1)
-                for k,v in factors.items():
-                    n *= Basic.Integer(k) ** (v//2)
-                    if v % 2:
-                        n *= Basic.Integer(k) ** S.Half
-                return n
-            return arg ** S.Half
-        if arg.is_nonnegative:
-            coeff, terms = arg.as_coeff_terms()
-            if not isinstance(coeff, Basic.One):
-                return cls(coeff) * cls(Basic.Mul(*terms))
-        base, exp = arg.as_base_exp()
-        if isinstance(exp, Basic.Number):
-            if exp == 2:
-                return Basic.abs(base)
-            return base ** (exp/2)
+        return arg**S.Half
 
     def _eval_apply_subs(self, x, old, new):
         base, exp = old.as_base_exp()
