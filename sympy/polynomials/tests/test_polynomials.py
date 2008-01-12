@@ -402,3 +402,10 @@ def test_solve_system2():
     S = sympify
     assert solve_system([f, g]) == [(-(S(1)/2)**(S(1)/2), -(S(1)/2)**(S(1)/2)),
             ((S(1)/2)**(S(1)/2), (S(1)/2)**(S(1)/2))]
+
+def test_roots_issue593():
+    x = Symbol("x")
+    p = 2*x**6+5
+    r = roots(p, x)
+    for i in range(6):
+        assert p.subs(x, r[i]).expand() == 0
