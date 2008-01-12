@@ -159,14 +159,14 @@ class Integral(Basic, NoRelMeths, ArithMeths):
 
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
-        # it is important to make this check first, or other way we'll force a
-        # polynomial conversion to sympy_expr.
+        # It is important to make this check first, otherwise the other code
+        # will return a sympy expression instead of a Polynomial.
         #
         # see Polynomial for details.
         if isinstance(f, Basic.Polynomial):
             return f.integrate(x)
 
-        # let's cut short if `f` does not depend on `x`
+        # let's cut it short if `f` does not depend on `x`
         if not f.has(x):
             return f*x
 
@@ -180,7 +180,7 @@ class Integral(Basic, NoRelMeths, ArithMeths):
 
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,
-        # if `f` is not Add -- we have only one term
+        # if `f` is not Add -- we only have one term
         if not isinstance(f, Basic.Add):
             f = [f]
 
