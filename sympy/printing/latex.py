@@ -390,10 +390,10 @@ def latex(expr, inline=True):
         >>> from sympy.abc import *
 
         >>> latex((2*tau)**Rational(7,2))
-        '$\\sqrt[7]{2 \\tau}$'
+        '$8 \\sqrt{2} \\sqrt[7]{\\tau}$'
 
         >>> latex((2*mu)**Rational(7,2), inline=False)
-        '\\begin{equation*}\\sqrt[7]{2 \\mu}\\end{equation*}'
+        '\\begin{equation*}8 \\sqrt{2} \\sqrt[7]{\\mu}\\end{equation*}'
 
         Besides all Basic based expressions, you can recursively
         convert Pyhon containers (lists, tuples and dicts) and

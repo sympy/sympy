@@ -4,7 +4,7 @@ from sympy.utilities.pytest import XFAIL
 from sympy import Polynomial, pi, symbols, Symbol, Rational, S, sqf_part, sqf,\
         solve_system, Integer, I, roots, cos, sin, resultant, \
         count_real_roots, lcm, groebner, gcd, factor, div, Real, \
-        PolynomialException, sqrt
+        PolynomialException, sqrt, sympify
 
 def test_Polynomial():
     x = Symbol("x")
@@ -134,7 +134,7 @@ def test_factor():
            == Rational(3, 8)*((x + 2)*(x - 2))
     assert factor(x**3-1) == (x-1)*(x**2+x+1)
     assert factor(x**2+2*x+1) == (x+1)**2
-    assert factor(x**3-3*x**2+3*x-1) == (x-1)**3
+    assert factor(x**3-3*x**2+3*x-1) in [(x-1)**3, -(1 - x)**3]
     assert factor(x**2+x-2) == (x-1)*(x+2)
     assert factor(x**3-x) == x*(x-1)*(x+1)
     assert factor(x**6-1) == (1+x**2-x)*(1+x)*(1+x+x**2)*(-1+x)
@@ -394,3 +394,11 @@ def test_poly_integrate():
     assert Polynomial(x**2+x).integrate(y) == x**2*y + y*x
     assert Polynomial(x*(y+x+z)).integrate(x) == x**2*y/2 + x**3/3 + x**2*z/2
     assert Polynomial(x*(y+x+z)).integrate(z) == x*y*z + x**2*z + x*z**2/2
+
+def test_solve_system2():
+    x, y = symbols('xy')
+    f = y - x
+    g = x**2 + y**2 - 1
+    S = sympify
+    assert solve_system([f, g]) == [(-(S(1)/2)**(S(1)/2), -(S(1)/2)**(S(1)/2)),
+            ((S(1)/2)**(S(1)/2), (S(1)/2)**(S(1)/2))]

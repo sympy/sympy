@@ -1,6 +1,7 @@
 import py
 
 from sympy import *
+from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL
 
@@ -59,3 +60,9 @@ def test_issue469():
     beta = Symbol(r'beta')
     y = beta+x
     assert latex(y) == r'$\beta + x$'
+
+def test_latex():
+    assert latex((2*tau)**Rational(7,2)) == "$8 \\sqrt{2} \\sqrt[7]{\\tau}$"
+    assert latex((2*mu)**Rational(7,2), inline=False) == \
+            "\\begin{equation*}8 \\sqrt{2} \\sqrt[7]{\\mu}\\end{equation*}"
+    assert latex([2/x, y]) =="$\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}$"
