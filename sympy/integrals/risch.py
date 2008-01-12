@@ -24,26 +24,8 @@ def components(f, x):
        >>> from sympy import *
        >>> x, y = symbols('xy')
 
-       >>> components(x*y, x)
-       set([x])
-
-       >>> components(1/(x+y), x)
-       set([x])
-
-       >>> components(sin(x), x)
-       set([sin(x), x])
-
        >>> components(sin(x)*cos(x)**2, x)
        set([sin(x), cos(x), x])
-
-       >>> components(sin(x)*sqrt(log(x)), x)
-       set([log(x), sin(x), log(x)**(1/2), x])
-
-       >>> components(x*sin(exp(x)*y), x)
-       set([sin(y*exp(x)), x, exp(x)])
-
-       >>> components(x**Rational(17,54)/sqrt(sin(x)), x)
-       set([sin(x), x**(1/54), sin(x)**(1/2), x])
 
     """
     result = set()
@@ -239,8 +221,7 @@ def heurisch(f, x, rewrite=False):
 
     polys = list(v_split) + [ u_split[0] ] + special.keys()
 
-    s = u_split[0] * Basic.Mul(*[ g for k, v in special.iteritems() \
-            if v is not None ])
+    s = u_split[0] * Basic.Mul(*[ k for k, v in special.iteritems() if v ])
     a, b, c = [ p.as_polynomial(*V).degree() for p in [s, P, Q] ]
 
     poly_denom = s * v_split[0] * deflation(v_split[1])
@@ -334,10 +315,10 @@ def heurisch(f, x, rewrite=False):
             return None
 
     if not (F.atoms(Symbol) - set(V)):
-        result = integrate('R')
+        result = integrate('Q')
 
         if result is None:
-            result = integrate('C')
+            result = integrate()
     else:
         result = integrate()
 
@@ -346,9 +327,9 @@ def heurisch(f, x, rewrite=False):
 
         antideriv = candidate.subs_dict(solution)
 
-        for C in coeffs:
-            if C not in solution:
-                antideriv = antideriv.subs(C, S.Zero)
+        for coeff in coeffs:
+            if coeff not in solution:
+                antideriv = antideriv.subs(coeff, S.Zero)
 
         antideriv = simplify(antideriv.subs_dict(rev_mapping)).expand()
 

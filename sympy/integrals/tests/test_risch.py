@@ -1,10 +1,21 @@
 
 from sympy import *
-from sympy.integrals.risch import heurisch
+from sympy.integrals.risch import heurisch, components
 from sympy.utilities.pytest import XFAIL
 from py.test import skip
 
 x, y = symbols('xy')
+
+def test_components():
+    assert components(x*y, x) == set([x])
+    assert components(1/(x+y), x) == set([x])
+    assert components(sin(x), x) == set([sin(x), x])
+    assert components(sin(x)*sqrt(log(x)), x) == \
+       set([log(x), sin(x), sqrt(log(x)), x])
+    assert components(x*sin(exp(x)*y), x) == \
+       set([sin(y*exp(x)), x, exp(x)])
+    assert components(x**Rational(17,54)/sqrt(sin(x)), x) == \
+       set([sin(x), x**Rational(1,54), sqrt(sin(x)), x])
 
 def test_heurisch_polynomials():
     assert heurisch(1, x) == x
@@ -15,6 +26,10 @@ def test_heurisch_fractions():
     assert heurisch(1/x, x) == log(x)
     assert heurisch(1/(2 + x), x) == log(x + 2)
 
+    # Up to a constant, where C = 5*pi*I/12, Matematica gives identical
+    # result in the first case. The difference is because sympy changes
+    # signs of expressions without any care.
+    assert heurisch(5*x**5/(2*x**6 - 5), x) == 5*log(5 - 2*x**6) / 12
     assert heurisch(5*x**5/(2*x**6 + 5), x) == 5*log(5 + 2*x**6) / 12
 
     assert heurisch(1/x**2, x) == -1/x
@@ -41,7 +56,7 @@ def test_heurisch_trigonometric():
     assert heurisch(sin(x)*sin(y), x) == -cos(x)*sin(y)
     assert heurisch(sin(x)*sin(y), y) == -cos(y)*sin(x)
 
-    # gives sin(x) in answer when run via setup.py and cos(x) when via py.test
+    # gives sin(x) in answer when run via setup.py and cos(x) when run via py.test
     assert heurisch(sin(x)*cos(x), x) in [sin(x)**2 / 2, -cos(x)**2 / 2]
     assert heurisch(cos(x)/sin(x), x) == log(sin(x))
 
@@ -78,8 +93,8 @@ def test_heurisch_symbolic_coeffs():
                                            I*y**(-S.Half)*log(x - (-y)**S.Half)/2
 
 def test_issue510():
-    assert integrate(1/(x * (1 + log(x)**2))) == I*log(I+log(x))/2 - \
-            I*log(-I+log(x))/2
+    assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \
+                                                   I*log(log(x) - I)/2
 
     # Following won't work as long as polynomials have functionality like:
     # "XXX this will not work for sin(x), sqrt(2), etc..."

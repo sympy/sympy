@@ -123,5 +123,5 @@ def test_rational_functions():
     integrate(1/(x**2+x+1), x) == -I*3**half*log(half + x - half*I*3**half)/3 +\
                                    I*3**half*log(half + x + half*I*3**half)/3
 
-def test_issue587(): # remove this when fresnel itegrals are be implemented
+def test_issue587(): # remove this when fresnel itegrals are implemented
     assert integrate(sin(x**2), x) == Integral(sin(x**2), x)
