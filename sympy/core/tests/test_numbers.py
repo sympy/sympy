@@ -1,4 +1,5 @@
-from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, Integer
+from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, Integer, \
+        Basic
 from sympy.core.power import integer_nthroot
 import py
 
@@ -185,3 +186,7 @@ def test_len():
     assert len(Rational(2)) == 1
     assert len(Rational(2,3)) == 1
     assert len(Integer(2)) == 1
+
+def test_issue222():
+    assert sqrt(Rational(1, 5)) == Rational(1, 5)**Basic.Half()
+    assert 5 * Rational(1,5)**Rational(1,2) == 5 * sqrt(Rational(1,5))
