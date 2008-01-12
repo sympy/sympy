@@ -239,21 +239,19 @@ def heurisch(f, x, rewrite=False):
 
     polys = list(v_split) + [ u_split[0] ] + special.keys()
 
-    s = u_split[0] * Basic.Mul(*[ g for k, v in special if v is not None ])
+    s = u_split[0] * Basic.Mul(*[ g for k, v in special.iteritems() \
+            if v is not None ])
     a, b, c = [ p.as_polynomial(*V).degree() for p in [s, P, Q] ]
 
     poly_denom = s * v_split[0] * deflation(v_split[1])
 
     def exponent(g):
         if isinstance(g, Pow):
-            if isinstance(g.exp, Rational):
-                if g.exp.p + g.exp.q == 0:
-                    return 1
+            if isinstance(g.exp, Rational) and g.exp.q != 1:
+                if g.exp.p > 0:
+                    return g.exp.p + g.exp.q - 1
                 else:
-                    if g.exp.p > 0:
-                        return g.exp.p + g.exp.q - 1
-                    else:
-                        return abs(g.exp.p + g.exp.q)
+                    return abs(g.exp.p + g.exp.q)
             else:
                 return 1
         elif not isinstance(g, Atom):

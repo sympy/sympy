@@ -64,6 +64,8 @@ def test_heurisch_radicals():
     assert heurisch(x**Rational(3,2), x) == 2*x**Rational(5,2) / 5
 
     assert heurisch(sin(x)*sqrt(cos(x)), x) == -2*cos(x)**Rational(3,2) / 3
+    assert heurisch(sin(y*sqrt(x)), x) == 2*y**(-2)*sin(y*x**S.Half) - \
+                                          2*x**S.Half*cos(y*x**S.Half)/y
 
 def test_heurisch_special():
     assert heurisch(erf(x), x) == x*erf(x) + exp(-x**2)/sqrt(pi)
