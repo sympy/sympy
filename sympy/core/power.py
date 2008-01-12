@@ -233,7 +233,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             r = Basic.sqrt(re**2 + im**2)
             t = Basic.atan(im / re)
 
-            if im == 0 and re == -1:
+            if im == 0 and re < 0:
                 t = S.Pi
 
             rp, tp = r**self.exp, t*self.exp
