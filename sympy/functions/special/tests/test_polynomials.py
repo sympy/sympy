@@ -18,6 +18,13 @@ def test_legendre():
     assert legendre(10, 0) != 0
     assert legendre(11, 0) == 0
 
+    assert roots(legendre(4,x),x) == \
+            [sympify("(3/7 - 2/35*30**(1/2))**(1/2)"), \
+            sympify("-(3/7 - 2/35*30**(1/2))**(1/2)"), \
+            sympify("(3/7 + (2/35)*30**(1/2))**(1/2)"), \
+            sympify("-(3/7 + (2/35)*30**(1/2))**(1/2)")] 
+
+
 
 def test_assoc_legendre():
     Plm=assoc_legendre

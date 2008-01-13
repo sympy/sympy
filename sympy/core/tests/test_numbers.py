@@ -146,6 +146,7 @@ def test_powers():
     assert sqrt(2) * sqrt(3) == sqrt(6)
     x = Symbol("x")
     assert sqrt(49*x) == 7*sqrt(x)
+    assert sqrt((3-sqrt(pi))**2) == 3 - sqrt(pi)
     assert sqrt(Rational(1,2)) == Rational(1,2) * sqrt(2)
     #assert str(Rational(3,5)**(-Rational(1,2))) == "5**(1/2)*(1/3)**(1/2)" #One that does not work
     assert str(Rational(81,36)**(Rational(3,2))) == "27/8"
