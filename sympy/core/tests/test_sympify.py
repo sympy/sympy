@@ -1,5 +1,7 @@
 from sympy import sympify, Symbol, exp, Integer, sin, cos, log, Polynomial, Lambda
 from sympy.abc import x, y
+from sympy.core.basic import SympifyError
+import py
 #from sympy.utilities.pytest import XFAIL
 
 
@@ -55,3 +57,6 @@ def test_lambda():
     x = Symbol('x')
     assert sympify('lambda : 1')==Lambda(x, 1)
     assert sympify('lambda x: 2*x')==Lambda(x, 2*x)
+
+def test_sympify_raises():
+    py.test.raises(SympifyError, sympify, "fx)")
