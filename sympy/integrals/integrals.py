@@ -173,9 +173,10 @@ class Integral(Basic, NoRelMeths, ArithMeths):
         # try to convert to poly(x) and then integrate if successful (fast)
         try:
             p = f.as_polynomial(x)
-            return p.integrate(x)
         except PolynomialException:
-            pass
+            p = None
+        if p is not None:
+            return p.integrate(x)
 
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,
