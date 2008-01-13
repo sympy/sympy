@@ -1,4 +1,4 @@
-from sympy import sympify, Symbol, exp, Integer, sin, cos, log, Polynomial
+from sympy import sympify, Symbol, exp, Integer, sin, cos, log, Polynomial, Lambda
 from sympy.abc import x, y
 #from sympy.utilities.pytest import XFAIL
 
@@ -51,7 +51,7 @@ def test_bug496():
     a_ = sympify("a_")
     _a = sympify("_a")
 
-#def test_lambda():
-#    x = Symbol('x')
-#    assert sympify('lambda : 1')==Lambda(x, 1)
-#    assert sympify('lambda x: 2*x')==Lambda(x, 2*x)
+def test_lambda():
+    x = Symbol('x')
+    assert sympify('lambda : 1')==Lambda(x, 1)
+    assert sympify('lambda x: 2*x')==Lambda(x, 2*x)

@@ -70,12 +70,14 @@ class SymPyTransformer(Transformer):
         code = self.com_node(nodelist[-1])
 
         assert not defaults,`defaults` # sympy.Lambda does not support optional arguments
+        assert len(names) <= 1
 
-        arguments = []
-        for name in names:
-            arguments.append(CallFunc(Name('Symbol'),[Const(name, lineno=lineno)]))
+        if len(names) > 0:
+            argument = CallFunc( Name('Symbol'), [Const(names[0], lineno=lineno)])
+        else:
+            argument = CallFunc( Name('Symbol'), [Const('x')])
 
-        return CallFunc(Name('Lambda'),[code]+arguments)
+        return CallFunc(Name('Lambda'),[argument, code])
 
 
 class SymPyParser:
