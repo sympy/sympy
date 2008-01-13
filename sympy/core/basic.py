@@ -320,6 +320,31 @@ class Basic(BasicMeths):
         otherwise (e.g. 1+x).""" 
         return len(self.atoms(Basic.Symbol)) == 0
 
+    @property
+    def args(self):
+        """Returns a tuple of arguments of "self".
+
+        Example
+        -------
+        In [2]: cot(x).args[:]
+        Out[2]: (x,)
+
+        In [3]: cot(x).args[0]
+        Out[3]: x
+
+        In [4]: (x*y).args[:]
+        Out[4]: (x, y)
+
+        In [5]: (x*y).args[1]
+        Out[5]: y
+
+        Note for developers: Never use self._args, always use self.args.
+        Only when you are creating your own new function, use _args
+        in the __new__. Don't override .args() from Basic (so that it's
+        easy to change the interface in the future if needed).
+        """
+        return self._args[:]
+
     def is_fraction(self, *syms):
         p, q = self.as_numer_denom()
 

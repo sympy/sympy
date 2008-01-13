@@ -193,3 +193,15 @@ def test_attribute_error():
     py.test.raises(AttributeError, "x.cos()")
     py.test.raises(AttributeError, "x.sin()")
     py.test.raises(AttributeError, "x.exp()")
+
+def test_args():
+    x = Symbol("x")
+    y = Symbol("y")
+    assert (x*y).args[:] in ((x, y), (y, x))
+    assert (x+y).args[:] in ((x, y), (y, x))
+    assert (x*y+1).args[:] in ((x*y, 1), (1, x*y))
+    assert sin(x*y).args[:] == (x*y,)
+    assert sin(x*y).args[0] == x*y
+    assert (x**y).args[:] == (x,y)
+    assert (x**y).args[0] == x
+    assert (x**y).args[1] == y
