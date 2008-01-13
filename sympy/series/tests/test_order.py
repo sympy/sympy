@@ -128,9 +128,9 @@ def test_multivar_mul_1():
     assert Order(x+y)*x == Order(x**2+y*x,x,y)
 
 def test_multivar_3():
-    assert (Order(x)+Order(y))[:],(Order(x) == Order(y))
+    assert (Order(x)+Order(y)).args == (Order(x), Order(y))
     assert Order(x)+Order(y)+Order(x+y) == Order(x+y)
-    assert (Order(x**2*y)+Order(y**2*x))[:] == (Order(x*y**2), Order(y*x**2))
+    assert (Order(x**2*y)+Order(y**2*x)).args == (Order(x*y**2), Order(y*x**2))
     assert (Order(x**2*y)+Order(y*x)) == Order(x*y)
     
 def test_w():

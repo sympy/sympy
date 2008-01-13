@@ -338,7 +338,7 @@ def dsolve(eq, funcs):
         else:
             f = funcs
 
-        x = f[0]
+        x = f.args[0]
         f = f.func
 
         a = Wild('a', exclude=[f(x)])

@@ -11,7 +11,7 @@ def test_function_series1():
         nargs = 1
 
         def fdiff(self, argindex = 1):
-            return cos(self[0])
+            return cos(self.args[0])
 
         @classmethod
         def canonize(cls, arg):
@@ -30,7 +30,7 @@ def test_function_series2():
         nargs = 1
 
         def fdiff(self, argindex = 1):
-            return -sin(self[0])
+            return -sin(self.args[0])
 
         @classmethod
         def canonize(cls, arg):
@@ -56,7 +56,7 @@ def test_function_series3():
         nargs = 1
 
         def fdiff(self, argindex = 1):
-            return 1-mytanh(self[0])**2
+            return 1-mytanh(self.args[0])**2
 
         @classmethod
         def canonize(cls, arg):

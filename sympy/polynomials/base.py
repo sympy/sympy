@@ -787,12 +787,12 @@ def sympy2coefficients(sympy_expr, var, order):
 
     result_dict = {}
     if isinstance(sympy_expr, Add):
-        terms = sympy_expr[:]
+        terms = sympy_expr.args[:]
     else:
         terms = [sympy_expr]
     for term in terms:
         if isinstance(term, Mul):
-            factors = term[:]
+            factors = term.args[:]
         else:
             factors = [term]
         c = S.One
@@ -951,7 +951,7 @@ def coeff_ring(atom):
     if isinstance(atom, (Number, NumberSymbol, ImaginaryUnit)) \
         or (isinstance(atom, (Add, Mul))
             and all(map(lambda a:isinstance(a, (Number, NumberSymbol,
-                                                ImaginaryUnit)), atom[:]))) \
+                                                ImaginaryUnit)), atom.args))) \
         or (isinstance(atom, Pow) and isinstance(atom.base, (Number,
                                                              NumberSymbol,
                                                              ImaginaryUnit))
@@ -986,14 +986,14 @@ def get_numbers(atom):
             and all(map(lambda a:isinstance(a, (Number,
                                                 NumberSymbol,
                                                 ImaginaryUnit)),
-                        atom[:]))) \
+                        atom.args[:]))) \
         or (isinstance(atom, Pow) and isinstance(atom.base, (Number,
                                                              NumberSymbol,
                                                              ImaginaryUnit))
             and isinstance(atom.exp, (Number, NumberSymbol, ImaginaryUnit))):
         return [atom]
     elif isinstance(atom, (Add, Mul)):
-        for a in atom:
+        for a in atom.args:
             result.append(get_numbers(a))
     return result
 

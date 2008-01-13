@@ -61,7 +61,7 @@ class floor(Function):
         elif isinstance(arg, Basic.Add):
             included, excluded = [], []
 
-            for term in arg:
+            for term in arg.args:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
                 if coeff is not None and coeff.is_real:
@@ -88,13 +88,13 @@ class floor(Function):
                 return cls(coeff)*S.ImaginaryUnit
 
     def _eval_is_bounded(self):
-        return self[0].is_bounded
+        return self.args[0].is_bounded
 
     def _eval_is_real(self):
-        return self[0].is_real
+        return self.args[0].is_real
 
     def _eval_is_integer(self):
-        return self[0].is_real
+        return self.args[0].is_real
 
 class ceiling(Function):
     """Ceiling is a univariate function which returns the smallest integer
@@ -151,7 +151,7 @@ class ceiling(Function):
         elif isinstance(arg, Basic.Add):
             included, excluded = [], []
 
-            for term in arg:
+            for term in arg.args:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
                 if coeff is not None and coeff.is_real:
@@ -178,10 +178,10 @@ class ceiling(Function):
                 return cls(coeff)*S.ImaginaryUnit
 
     def _eval_is_bounded(self):
-        return self[0].is_bounded
+        return self.args[0].is_bounded
 
     def _eval_is_real(self):
-        return self[0].is_real
+        return self.args[0].is_real
 
     def _eval_is_integer(self):
-        return self[0].is_real
+        return self.args[0].is_real

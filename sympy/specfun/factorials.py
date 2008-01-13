@@ -160,24 +160,24 @@ def _collect_factors(expr):
     numer_args = []
     denom_args = []
     other = []
-    for x in expr:
+    for x in expr.args:
         if isinstance(x, Mul):
             n, d, o = _collect_factors(x)
             numer_args += n
             denom_args += d
             other += o
         elif isinstance(x, Pow):
-            base, exp = x[:]
+            base, exp = x.args
             if _isfactorial(base) and \
                 isinstance(exp, Rational) and exp.is_integer:
                 if exp > 0:
                     for i in xrange(exp.p): numer_args.append(base[0])
                 else:
-                    for i in xrange(-exp.p): denom_args.append(base[0])
+                    for i in xrange(-exp.p): denom_args.append(base.args[0])
             else:
                 other.append(x)
         elif _isfactorial(x):
-            numer_args.append(x[0])
+            numer_args.append(x.args[0])
         else:
             other.append(x)
     return numer_args, denom_args, other
@@ -245,7 +245,7 @@ def factorial_simplify(expr):
         return Add(*(factorial_simplify(x) for x in expr))
 
     if isinstance(expr, Pow):
-        return Pow(factorial_simplify(expr[0]), expr[1])
+        return Pow(factorial_simplify(expr.args[0]), expr.args[1])
 
     if isinstance(expr, Mul):
         na, da, other = _collect_factors(expr)

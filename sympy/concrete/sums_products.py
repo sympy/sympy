@@ -11,7 +11,7 @@ def ispoly(expr, var):
 
 def getab(expr):
     cls = expr.__class__
-    return cls(expr[0]), cls(*expr[1:])
+    return cls(expr.args[0]), cls(*expr.args[1:])
 
 def indexsymbol(a):
     if isinstance(a, Symbol):
@@ -86,7 +86,7 @@ class Sum2(_BigOperator):
 
         # Geometric terms
         if isinstance(f, Pow):
-            r, k = f[:]
+            r, k = f.args[:]
             if not r.has(i) and k == i:
                 # TODO: Pow should be able to simplify x**oo depending
                 # on whether |x| < 1 or |x| > 1 for non-rational x

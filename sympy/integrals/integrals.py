@@ -186,6 +186,8 @@ class Integral(Basic, NoRelMeths, ArithMeths):
 
         parts = []
 
+        if isinstance(f, Basic):
+            f = f.args
         for g in f:
             coeff, g = g.as_independent(x)
 

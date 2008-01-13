@@ -190,15 +190,15 @@ def mrv(e, x):
         else:
             return mrv(e.base, x)
     elif isinstance(e, log): 
-        return mrv(e[0], x)
+        return mrv(e.args[0], x)
     elif isinstance(e, exp): 
-        if limitinf(e[0], x) in [oo,-oo]:
-            return mrv_max(set([e]), mrv(e[0], x), x)
+        if limitinf(e.args[0], x) in [oo,-oo]:
+            return mrv_max(set([e]), mrv(e.args[0], x), x)
         else:
-            return mrv(e[0], x)
+            return mrv(e.args[0], x)
     elif isinstance(e, Function): 
-        if len(e) == 1:
-            return mrv(e[0], x)
+        if len(e.args) == 1:
+            return mrv(e.args[0], x)
         #only functions of 1 argument currently implemented
         raise NotImplementedError("Functions with more arguments: '%s'" % e)
     raise NotImplementedError("Don't know how to calculate the mrv of '%s'" % e)
@@ -244,15 +244,15 @@ def rewrite(e,Omega,x,wsym):
     Omega = list(Omega)
     Omega.sort(cmp=cmpfunc)
     g=Omega[-1] #g is going to be the "w" - the simplest one in the mrv set
-    sig = (sign(g[0], x) == 1) 
+    sig = (sign(g.args[0], x) == 1) 
     if sig: wsym=1/wsym #if g goes to oo, substitute 1/w
     #O2 is a list, which results by rewriting each item in Omega using "w"
     O2=[]
     for f in Omega: 
-        c=mrv_leadterm(f[0]/g[0], x)
+        c=mrv_leadterm(f.args[0]/g.args[0], x)
         #the c is a constant, because both f and g are from Omega:
         assert c[1] == 0
-        O2.append(exp((f[0]-c[0]*g[0]).expand())*wsym**c[0])
+        O2.append(exp((f.args[0]-c[0]*g.args[0]).expand())*wsym**c[0])
     #Remember that Omega contains subexpressions of "e". So now we find
     #them in "e" and substitute them for our rewriting, stored in O2
     f=e 
@@ -260,7 +260,7 @@ def rewrite(e,Omega,x,wsym):
         f=f.subs(a,b)
 
     #finally compute the logarithm of w (logw). 
-    logw=g[0]
+    logw=g.args[0]
     if sig: logw=-logw     #log(w)->log(1/w)=-log(w)
     return f, logw
 
@@ -297,7 +297,7 @@ def sign(e, x):
         if sign(e.base, x) == 1: 
             return 1
     elif isinstance(e, log): 
-        return sign(e[0] -1, x)
+        return sign(e.args[0] -1, x)
     elif isinstance(e, Add):
         return sign(limitinf(e, x), x)
     raise "cannot determine the sign of %s"%e

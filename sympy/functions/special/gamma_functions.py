@@ -13,7 +13,7 @@ class gamma(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return gamma(self[0])*polygamma(0, self[0])
+            return gamma(self.args[0])*polygamma(0, self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -55,12 +55,12 @@ class gamma(Function):
 
 
     def _eval_expand_func(self, *args):
-        arg = self[0]._eval_expand_basic()
+        arg = self.args[0]._eval_expand_basic()
 
         if isinstance(arg, Basic.Add):
-            for i, coeff in enumerate(arg[:]):
-                if isinstance(arg[i], Basic.Number):
-                    terms = Basic.Add(*(arg[:i] + arg[i+1:]))
+            for i, coeff in enumerate(arg.args[:]):
+                if isinstance(arg.args[i], Basic.Number):
+                    terms = Basic.Add(*(arg.args[:i] + arg.args[i+1:]))
 
                     if isinstance(coeff, Basic.Rational):
                         if coeff.q != 1:
@@ -71,10 +71,10 @@ class gamma(Function):
 
                     return gamma(terms)*Basic.RisingFactorial(terms, coeff)
 
-        return self.func(*self[:])
+        return self.func(*self.args)
 
     def _eval_is_real(self):
-        return self[0].is_real
+        return self.args[0].is_real
 
 
 ###############################################################################
@@ -141,7 +141,7 @@ class polygamma(Function):
 
     def fdiff(self, argindex=2):
         if argindex == 2:
-            n, z = self[0:2]
+            n, z = self.args[0:2]
             return polygamma(n+1, z)
         else:
             raise ArgumentIndexError(self, argindex)

@@ -140,7 +140,7 @@ class Factorial(Function):
         return Basic.gamma(1 + arg)
 
     def tostr(self, level=0):
-        return '%s!' % self[0].tostr(self.precedence)
+        return '%s!' % self.args[0].tostr(self.precedence)
 
     def _eval_is_integer(self):
         return self[0].is_integer

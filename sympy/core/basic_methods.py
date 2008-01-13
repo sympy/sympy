@@ -298,7 +298,7 @@ class BasicMeths(AssumeMeths):
 
     def torepr(self):
         l = []
-        for o in self:
+        for o in self.args:
             try:
                 l.append(o.torepr())
             except AttributeError:
@@ -369,9 +369,6 @@ class BasicMeths(AssumeMeths):
 
     def __len__(self):
         return len(self._args)
-
-    def __getitem__(self, iter):
-        return self._args[iter]
 
     def __contains__(self, what):
         if self == what: return True

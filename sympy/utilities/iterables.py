@@ -60,7 +60,7 @@ def make_list(expr, kind):
 
     """
     if isinstance(expr, kind):
-        return list(expr[:])
+        return list(expr.args[:])
     else:
         return [expr]
 

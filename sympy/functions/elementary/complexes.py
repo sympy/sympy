@@ -53,6 +53,8 @@ class re(Function):
 
             included, reverted, excluded = [], [], []
 
+            if isinstance(arg, Basic):
+                arg = arg.args
             for term in arg:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
@@ -126,6 +128,8 @@ class im(Function):
 
             included, reverted, excluded = [], [], []
 
+            if isinstance(arg, Basic):
+                arg = arg.args
             for term in arg:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
@@ -186,7 +190,7 @@ class abs(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return sign(self[0])
+            return sign(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
 

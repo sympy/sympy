@@ -25,7 +25,7 @@ Example:
     f(x)
     >>> f(x).func
     <class 'sympy.core.function.f'>
-    >>> f(x)[:]
+    >>> f(x).args
     (x,)
 """
 
@@ -171,8 +171,8 @@ class Function(Basic, ArithMeths, RelMeths):
             return new
         elif isinstance(old, FunctionClass) and isinstance(new, FunctionClass):
             if old == self.func and old.nargs == new.nargs:
-                return new(*self[:])
-        obj = self.func._eval_apply_subs(*(self[:] + (old,) + (new,)))
+                return new(*self.args[:])
+        obj = self.func._eval_apply_subs(*(self.args[:] + (old,) + (new,)))
         if obj is not None:
             return obj
         return Basic._seq_subs(self, old, new)
@@ -181,7 +181,7 @@ class Function(Basic, ArithMeths, RelMeths):
         return self
 
     def _eval_evalf(self):
-        obj = self.func._eval_apply_evalf(*self[:])
+        obj = self.func._eval_apply_evalf(*self.args[:])
         if obj is None:
             return self
         return obj
@@ -201,7 +201,7 @@ class Function(Basic, ArithMeths, RelMeths):
         i = 0
         l = []
         r = Basic.Zero()
-        for a in self:
+        for a in self.args:
             i += 1
             da = a.diff(s)
             if isinstance(da, Basic.Zero):
@@ -240,11 +240,11 @@ class Function(Basic, ArithMeths, RelMeths):
 
     def count_ops(self, symbolic=True):
         #      f()             args
-        return 1   + Basic.Add(*[t.count_ops(symbolic) for t in self])
+        return 1   + Basic.Add(*[t.count_ops(symbolic) for t in self.args])
 
     def _eval_oseries(self, order):
         assert self.func.nargs==1,`self.func`
-        arg = self[0]
+        arg = self.args[0]
         x = order.symbols[0]
         if not Basic.Order(1,x).contains(arg):
             return self.func(arg)
@@ -272,7 +272,7 @@ class Function(Basic, ArithMeths, RelMeths):
         return self._compute_oseries(arg, order, self.func.taylor_term, self.func)
 
     def _eval_is_polynomial(self, syms):
-        for arg in self:
+        for arg in self.args:
             if arg.has(*syms):
                 return False
         return True
@@ -285,7 +285,7 @@ class Function(Basic, ArithMeths, RelMeths):
         if hints.get('deep', False):
             args = [ a._eval_rewrite(pattern, rule, **hints) for a in self ]
         else:
-            args = self[:]
+            args = self.args[:]
 
         if pattern is None or isinstance(self.func, pattern):
             if hasattr(self, rule):
@@ -304,16 +304,17 @@ class Function(Basic, ArithMeths, RelMeths):
                 nargs = self.nargs
             if not (1<=argindex<=nargs):
                 raise TypeError("argument index %r is out of range [1,%s]" % (i,nargs))
-        return Derivative(self,self[argindex-1],evaluate=False)
+        return Derivative(self,self.args[argindex-1],evaluate=False)
 
     def torepr(self):
         r = '%s(%r)' % (self.func.__base__.__name__, self.func.__name__)
-        r+= '(%s)' % ', '.join([a.torepr() for a in self])
+        r+= '(%s)' % ', '.join([a.torepr() for a in self.args])
         return r
 
     def tostr(self, level=0):
         p = self.precedence
-        r = '%s(%s)' % (self.func.__name__, ', '.join([a.tostr() for a in self]))
+        r = '%s(%s)' % (self.func.__name__, ', '.join([a.tostr() for a in
+            self.args]))
         if p <= level:
             return '(%s)' % (r)
         return r
@@ -331,7 +332,7 @@ class Function(Basic, ArithMeths, RelMeths):
 
     def _eval_as_leading_term(self, x):
         """General method for the leading term"""
-        arg = self[0].as_leading_term(x)
+        arg = self.args[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return arg
@@ -447,13 +448,13 @@ class Derivative(Basic, ArithMeths, RelMeths):
         return self._args[1:]
 
     def tostr(self, level=0):
-        r = 'D' + `tuple(self)`
+        r = 'D' + `tuple(self.args)`
         if self.precedence <= level:
             r = '(%s)' % (r)
         return r
 
     def _eval_subs(self, old, new):
-        return Derivative(self[0].subs(old, new), *self[1:], **{'evaluate': True})
+        return Derivative(self.args[0].subs(old, new), *self.args[1:], **{'evaluate': True})
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         # this method needs a cleanup.
@@ -518,14 +519,14 @@ class Lambda(Function):
             16
         
         """
-        return self[1].subs(self[0], x)
+        return self.args[1].subs(self.args[0], x)
 
     def __call__(self, *args):
         return self.apply(*args)
 
     def __eq__(self, other):
         if isinstance(other, Lambda):
-            if self[1] == other[1].subs(other[0], self[0]):
+            if self.args[1] == other.args[1].subs(other.args[0], self.args[0]):
                 return True
         return False
         

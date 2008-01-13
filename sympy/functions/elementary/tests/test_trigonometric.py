@@ -289,6 +289,6 @@ def test_acot():
 
 def test_attributes():
     x = Symbol('x')
-    assert sin(x)[:] == (x,)
-    assert sin(x)[0] != sin
-    assert sin(x)[0] == x
+    assert sin(x).args[:] == (x,)
+    assert sin(x).args[0] != sin
+    assert sin(x).args[0] == x

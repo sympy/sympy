@@ -32,15 +32,15 @@ class Add(AssocOp, RelMeths, ArithMeths):
                 coeff += o
                 continue
             if o.__class__ is cls:
-                seq = list(o[:]) + seq
+                seq = list(o.args[:]) + seq
                 continue
             if isinstance(o, Basic.Mul):
-                c = o[0]
+                c = o.args[0]
                 if isinstance(c, Basic.Number):
                     if isinstance(c, Basic.One):
                         s = o
                     else:
-                        s = Basic.Mul(*o[1:])
+                        s = Basic.Mul(*o.args[1:])
                 else:
                     c = Basic.One()
                     s = o
@@ -111,19 +111,19 @@ class Add(AssocOp, RelMeths, ArithMeths):
         if x is not None:
             l1 = []
             l2 = []
-            for f in self:
+            for f in self.args:
                 if f.has(x):
                     l2.append(f)
                 else:
                     l1.append(f)
             return Add(*l1), l2
-        coeff = self[0]
+        coeff = self.args[0]
         if isinstance(coeff, Basic.Number):
-            return coeff, list(self[1:])
-        return Basic.Zero(), list(self[:])
+            return coeff, list(self.args[1:])
+        return Basic.Zero(), list(self.args[:])
 
     def _eval_derivative(self, s):
-        return Add(*[f.diff(s) for f in self])
+        return Add(*[f.diff(s) for f in self.args])
 
     def _matches_simple(pattern, expr, repl_dict):
         # handle (w+3).matches('x+5') -> {w: x+2}
@@ -140,13 +140,13 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
     @cache_it
     def as_two_terms(self):
-        if len(self) == 1:
+        if len(self.args) == 1:
             return Basic.Zero(), self
-        return self[0], Add(*self[1:])
+        return self.args[0], Add(*self.args[1:])
 
     def as_numer_denom(self):
         numers, denoms = [],[]
-        for n,d in [f.as_numer_denom() for f in self]:
+        for n,d in [f.as_numer_denom() for f in self.args]:
             numers.append(n)
             denoms.append(d)
         r = xrange(len(numers))
@@ -172,7 +172,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
     def count_ops(self, symbolic=True):
         if symbolic:
             return Add(*[t.count_ops(symbolic) for t in self[:]]) + Basic.Symbol('ADD') * (len(self[:])-1)
-        return Add(*[t.count_ops(symbolic) for t in self[:]]) + (len(self[:])-1)
+        return Add(*[t.count_ops(symbolic) for t in self.args[:]]) + (len(self.args[:])-1)
 
     def _eval_integral(self, s):
         return Add(*[f.integral(s) for f in self])
@@ -181,7 +181,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         return Add(*[f.integral(s==[a,b]) for f in self])
 
     def _eval_is_polynomial(self, syms):
-        for term in self:
+        for term in self.args:
             if not term._eval_is_polynomial(syms):
                 return False
         return True
@@ -194,7 +194,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
     _eval_is_comparable = lambda self: self._eval_template_is_attr('is_comparable')
 
     def _eval_is_odd(self):
-        l = [f for f in self if not (f.is_even==True)]
+        l = [f for f in self.args if not (f.is_even==True)]
         if not l:
             return False
         if l[0].is_odd:
@@ -208,8 +208,8 @@ class Add(AssocOp, RelMeths, ArithMeths):
         return False
 
     def _eval_is_positive(self):
-        c = self[0]
-        r = Add(*self[1:])
+        c = self.args[0]
+        r = Add(*self.args[1:])
         if c.is_positive and r.is_positive:
             return True
         if c.is_unbounded:
@@ -228,8 +228,8 @@ class Add(AssocOp, RelMeths, ArithMeths):
             return False
 
     def _eval_is_negative(self):
-        c = self[0]
-        r = Add(*self[1:])
+        c = self.args[0]
+        r = Add(*self.args[1:])
         if c.is_negative and r.is_negative:
             return True
         if c.is_unbounded:
@@ -249,7 +249,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
     def as_coeff_terms(self, x=None):
         # -2 + 2 * a -> -1, 2-2*a
-        if isinstance(self[0], Basic.Number) and self[0].is_negative:
+        if isinstance(self.args[0], Basic.Number) and self.args[0].is_negative:
             return -Basic.One(),[-self]
         return Basic.One(),[self]
 
@@ -257,7 +257,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         if self==old: return new
         from function import FunctionClass
         if isinstance(old, FunctionClass):
-            return self.__class__(*[s.subs(old, new) for s in self])
+            return self.__class__(*[s.subs(old, new) for s in self.args ])
         coeff1,factors1 = self.as_coeff_factors()
         coeff2,factors2 = old.as_coeff_factors()
         if factors1==factors2: # (2+a).subs(3+a,y) -> 2-3+y
@@ -268,15 +268,15 @@ class Add(AssocOp, RelMeths, ArithMeths):
                 for i in xrange(l1-l2+1):
                     if factors2==factors1[i:i+l2]:
                         return Add(*([coeff1-coeff2]+factors1[:i]+[new]+factors1[i+l2:]))
-        return self.__class__(*[s.subs(old, new) for s in self])
+        return self.__class__(*[s.subs(old, new) for s in self.args])
 
     def _eval_oseries(self, order):
-        return Add(*[f.oseries(order) for f in self])
+        return Add(*[f.oseries(order) for f in self.args])
 
     @cache_it
     def extract_leading_order(self, *symbols):
         lst = []
-        seq = [(f, Basic.Order(f, *symbols)) for f in self]
+        seq = [(f, Basic.Order(f, *symbols)) for f in self.args]
         for ef,of in seq:
             for e,o in lst:
                 if o.contains(of):
@@ -294,8 +294,10 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
     def _eval_as_leading_term(self, x):
         coeff, factors = self.as_coeff_factors(x)
-        has_unbounded = bool([f for f in self if f.is_unbounded])
+        has_unbounded = bool([f for f in self.args if f.is_unbounded])
         if has_unbounded:
+            if isinstance(factors, Basic):
+                factors = factors.args
             factors = [f for f in factors if not f.is_bounded]
         if not isinstance(coeff, Basic.Zero):
             o = Basic.Order(x)
@@ -311,10 +313,10 @@ class Add(AssocOp, RelMeths, ArithMeths):
         return s.as_leading_term(x)
 
     def _eval_conjugate(self):
-        return Add(*[t.conjugate() for t in self])
+        return Add(*[t.conjugate() for t in self.args])
 
     def __neg__(self):
-        return Add(*[-t for t in self])
+        return Add(*[-t for t in self.args])
 
     def _sage_(self):
         s = 0

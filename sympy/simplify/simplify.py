@@ -70,7 +70,7 @@ def fraction(expr, exact=False):
                 else:
                     denom.append(Pow(term.base, -term.exp))
             elif not exact and isinstance(term.exp, Mul):
-                coeff, tail = term.exp[0], Mul(*term.exp[1:])#term.exp.getab()
+                coeff, tail = term.exp.args[0], Mul(*term.exp.args[1:])#term.exp.getab()
 
                 if isinstance(coeff, Rational) and coeff.is_negative:
                     denom.append(Pow(term.base, -term.exp))
@@ -79,13 +79,13 @@ def fraction(expr, exact=False):
             else:
                 numer.append(term)
         elif isinstance(term, Basic.exp):
-            if term[0].is_negative:
-                denom.append(Basic.exp(-term[0]))
-            elif not exact and isinstance(term[0], Mul):
-                coeff, tail = term[0], Mul(*term[1:])#term.args.getab()
+            if term.args[0].is_negative:
+                denom.append(Basic.exp(-term.args[0]))
+            elif not exact and isinstance(term.args[0], Mul):
+                coeff, tail = term.args[0], Mul(*term.args[1:])#term.args.getab()
 
                 if isinstance(coeff, Rational) and coeff.is_negative:
-                    denom.append(Basic.exp(-term[0]))
+                    denom.append(Basic.exp(-term.args[0]))
                 else:
                     numer.append(term)
             else:
@@ -159,7 +159,7 @@ def separate(expr, deep=False):
         #print expr, terms, expo, expr.base
 
         if isinstance(expr.base, Mul):
-            t = [ separate(Basic.Pow(t,expo), deep) for t in expr.base ]
+            t = [ separate(Basic.Pow(t,expo), deep) for t in expr.base.args ]
             return Basic.Mul(*t)
         elif isinstance(expr.base, Basic.exp):
             if deep == True:
@@ -169,9 +169,9 @@ def separate(expr, deep=False):
         else:
             return Basic.Pow(separate(expr.base, deep), expo)
     elif isinstance(expr, (Basic.Add, Basic.Mul)):
-        return type(expr)(*[ separate(t, deep) for t in expr ])
+        return type(expr)(*[ separate(t, deep) for t in expr.args ])
     elif isinstance(expr, Basic.Function) and deep:
-        return expr.func(*[ separate(t) for t in expr])
+        return expr.func(*[ separate(t) for t in expr.args])
     else:
         return expr
 
@@ -235,7 +235,7 @@ def together(expr, deep=False):
         if isinstance(expr, Add):
             items, coeffs, basis = [], [], {}
 
-            for elem in expr:
+            for elem in expr.args:
                 numer, q = fraction(_together(elem))
 
                 denom = {}
@@ -332,9 +332,9 @@ def together(expr, deep=False):
 
             return Add(*numerator)/(product*Mul(*denominator))
         elif isinstance(expr, (Mul, Pow)):
-            return type(expr)(*[ _together(t) for t in expr ])
+            return type(expr)(*[ _together(t) for t in expr.args ])
         elif isinstance(expr, Function) and deep:
-            return expr.func(*[ _together(t) for t in expr ])
+            return expr.func(*[ _together(t) for t in expr.args ])
         else:
             return expr
 
@@ -504,10 +504,10 @@ def collect(expr, syms, evaluate=True, exact=False):
             else:
                 sym_expo = expr.exp
         elif isinstance(expr, Basic.exp):
-            if isinstance(expr[0], Rational):
+            if isinstance(expr.args[0], Rational):
                 sexpr, rat_expo = Basic.exp(Rational(1)), expr[0]
-            elif isinstance(expr[0], Mul):
-                coeff, tail = expr[0].as_coeff_terms()
+            elif isinstance(expr.args[0], Mul):
+                coeff, tail = expr.args[0].as_coeff_terms()
 
                 if isinstance(coeff, Rational):
                     sexpr, rat_expo = Basic.exp(Basic.Mul(*tail)), coeff
@@ -572,7 +572,7 @@ def collect(expr, syms, evaluate=True, exact=False):
     if evaluate:
         if isinstance(expr, Basic.Mul):
             ret = 1
-            for term in expr:
+            for term in expr.args:
                 ret *= collect(term, syms, True, exact)
             return ret
         elif isinstance(expr, Basic.Pow):
@@ -648,11 +648,11 @@ def ratsimp(expr):
         return Pow(ratsimp(expr.base), ratsimp(expr.exp))
     elif isinstance(expr, Mul):
         res = []
-        for x in expr:
+        for x in expr.args:
             res.append( ratsimp(x) )
         return Mul(*res)
     elif isinstance(expr, Basic.Function):
-        return expr.func(*[ ratsimp(t) for t in expr ])
+        return expr.func(*[ ratsimp(t) for t in expr.args ])
 
     #elif isinstance(expr, Function):
     #    return type(expr)( ratsimp(expr[0]) )
@@ -667,8 +667,8 @@ def ratsimp(expr):
             return r[a],r[b]
         return x, 1
 
-    x = expr[0]
-    y = Add(*expr[1:])
+    x = expr.args[0]
+    y = Add(*expr.args[1:])
 
     a,b = get_num_denum(ratsimp(x))
     c,d = get_num_denum(ratsimp(y))
@@ -685,11 +685,11 @@ def ratsimp(expr):
     #so until we have it, we are just returning the correct results here
     #to pass all tests...
     if isinstance(denum,Pow):
-        e = (num/denum[0]).expand()
+        e = (num/denum.args[0]).expand()
         f = (e/(-2*Symbol("y"))).expand()
-        if f == denum/denum[0]:
+        if f == denum/denum.args[0]:
             return -2*Symbol("y")
-        return e/(denum/denum[0])
+        return e/(denum/denum.args[0])
     return num/denum
 
 def trigsimp(expr, deep=False):
@@ -724,10 +724,10 @@ def trigsimp(expr, deep=False):
 
     if isinstance(expr, Basic.Function):
         if deep:
-            return expr.func( trigsimp(expr[0], deep) )
+            return expr.func( trigsimp(expr.args[0], deep) )
     elif isinstance(expr, Mul):
         ret = Rational(1)
-        for x in expr:
+        for x in expr.args:
             ret *= trigsimp(x, deep)
         return ret
     elif isinstance(expr, Pow):
@@ -745,7 +745,7 @@ def trigsimp(expr, deep=False):
 
         # Scan for the terms we need
         ret = Integer(0)
-        for term in expr:
+        for term in expr.args:
             term = trigsimp(term, deep)
             res = None
             for pattern, result in matchers:
@@ -775,7 +775,7 @@ def trigsimp(expr, deep=False):
 
             m = expr.match(pattern)
             while m is not None:
-                if m[a_t] == 0 or -m[a_t] in m[c][:] or m[a_t] + m[c] == 0:
+                if m[a_t] == 0 or -m[a_t] in m[c].args or m[a_t] + m[c] == 0:
                     break
                 expr = result.subs_dict(m)
                 m = expr.match(pattern)
@@ -846,15 +846,15 @@ def powsimp(expr, deep=False):
                 return Basic.Pow(powsimp(expr.base), powsimp(expr.exp))
             return expr
         elif isinstance(expr, Basic.Function) and deep:
-            return expr.func(*[powsimp(t) for t in expr])
+            return expr.func(*[powsimp(t) for t in expr.args])
         elif isinstance(expr, Basic.Add):
-            return Basic.Add(*[powsimp(t) for t in expr])
+            return Basic.Add(*[powsimp(t) for t in expr.args])
         elif isinstance(expr, Basic.Mul):
             # Collect base/exp data, while maintaining order in the
             # non-commutative parts of the product
             c_powers = {}
             nc_part = []
-            for term in expr:
+            for term in expr.args:
                 if term.is_commutative:
                     b,e = term.as_base_exp()
                     c_powers[b] = c_powers.get(b, 0) + e

@@ -70,7 +70,7 @@ class AssocOp(Basic):
         # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
         wild_part = []
         exact_part = []
-        for p in pattern:
+        for p in pattern.args:
             if p.atoms(type=(Basic.Wild, Basic.WildFunction)):
                 wild_part.append(p)
             else:
@@ -82,7 +82,7 @@ class AssocOp(Basic):
 
         # now to real work ;)
         if isinstance(expr, pattern.__class__):
-            expr_list = list(expr)
+            expr_list = list(expr.args)
         else:
             expr_list = [expr]
 
@@ -101,7 +101,7 @@ class AssocOp(Basic):
     def _eval_template_is_attr(self, is_attr):
         # return True if all elements have the property
         r = True
-        for t in self:
+        for t in self.args:
             a = getattr(t, is_attr)
             if a is None: return
             if r and not a: r = False

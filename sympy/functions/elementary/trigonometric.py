@@ -12,7 +12,7 @@ class sin(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return cos(self[0])
+            return cos(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -99,20 +99,20 @@ class sin(Function):
         return 2*cot_half/(1 + cot_half**2)
 
     def _eval_conjugate(self):
-        return self.func(self[0].conjugate())
+        return self.func(self.args[0].conjugate())
 
     def _eval_expand_complex(self, *args):
-        if self[0].is_real:
+        if self.args[0].is_real:
             return self
-        re, im = self[0].as_real_imag()
+        re, im = self.args[0].as_real_imag()
         return sin(re)*Basic.cosh(im) + S.ImaginaryUnit*cos(re)*Basic.sinh(im)
 
     def _eval_expand_trig(self, *args):
-        arg = self[0].expand()
+        arg = self.args[0].expand()
         x = None
         if isinstance(arg, Basic.Add):
-            x = arg[0]
-            y = Basic.Add(*arg[1:])
+            x = arg.args[0]
+            y = Basic.Add(*arg.args[1:])
         else:
             coeff, terms = arg.as_coeff_terms()
             if not isinstance(coeff, Basic.One) and isinstance(coeff, Basic.Integer) and terms:
@@ -123,7 +123,7 @@ class sin(Function):
         return sin(arg)
 
     def _eval_as_leading_term(self, x):
-        arg = self[0].as_leading_term(x)
+        arg = self.args[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return arg
@@ -131,16 +131,16 @@ class sin(Function):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self[0].is_real
+        return self.args[0].is_real
 
     def _eval_is_bounded(self):
-        arg = self[0]
+        arg = self.args[0]
         if arg.is_real:
             return True
 
     def _sage_(self):
         import sage.all as sage
-        return sage.sin(self[0]._sage_())
+        return sage.sin(self.args[0]._sage_())
 
 class cos(Function):
 
@@ -148,7 +148,7 @@ class cos(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return -sin(self[0])
+            return -sin(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -234,21 +234,21 @@ class cos(Function):
         return (cot_half-1)/(cot_half+1)
 
     def _eval_conjugate(self):
-        return self.func(self[0].conjugate())
+        return self.func(self.args[0].conjugate())
 
     def _eval_expand_complex(self, *args):
-        if self[0].is_real:
+        if self.args[0].is_real:
             return self
-        re, im = self[0].as_real_imag()
+        re, im = self.args[0].as_real_imag()
         return cos(re)*Basic.cosh(im) - \
             S.ImaginaryUnit*sin(re)*Basic.sinh(im)
 
     def _eval_expand_trig(self, *args):
-        arg = self[0].expand()
+        arg = self.args[0].expand()
         x = None
         if isinstance(arg, Basic.Add):
-            x = arg[0]
-            y = Basic.Add(*arg[1:])
+            x = arg.args[0]
+            y = Basic.Add(*arg.args[1:])
             return (cos(x)*cos(y) - sin(y)*sin(x)).expand(trig=True)
         else:
             coeff, terms = arg.as_coeff_terms()
@@ -258,7 +258,7 @@ class cos(Function):
         return cos(arg)
 
     def _eval_as_leading_term(self, x):
-        arg = self[0].as_leading_term(x)
+        arg = self.args[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return S.One
@@ -266,14 +266,14 @@ class cos(Function):
             return self.func(arg)
 
     def _eval_is_bounded(self):
-        arg = self[0]
+        arg = self.args[0]
 
         if arg.is_real:
             return True
 
     def _sage_(self):
         import sage.all as sage
-        return sage.cos(self[0]._sage_())
+        return sage.cos(self.args[0]._sage_())
 
 class tan(Function):
 
@@ -354,12 +354,12 @@ class tan(Function):
             return (-1)**a * b*(b-1) * B/F * x**n
 
     def _eval_conjugate(self):
-        return self.func(self[0].conjugate())
+        return self.func(self.args[0].conjugate())
 
     def _eval_expand_complex(self, *args):
-        if self[0].is_real:
+        if self.args[0].is_real:
             return self
-        re, im = self[0].as_real_imag()
+        re, im = self.args[0].as_real_imag()
         denom = cos(re)**2 + Basic.sinh(im)**2
         return (sin(re)*cos(re) + \
             S.ImaginaryUnit*Basic.sinh(im)*Basic.cosh(im))/denom
@@ -382,7 +382,7 @@ class tan(Function):
         return 1/S.Cot(arg)
 
     def _eval_as_leading_term(self, x):
-        arg = self[0].as_leading_term(x)
+        arg = self.args[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return S.One
@@ -390,7 +390,7 @@ class tan(Function):
             return self.func(arg)
 
     def _eval_is_bounded(self):
-        arg = self[0]
+        arg = self.args[0]
 
         if arg.is_imaginary:
             return True
@@ -474,12 +474,12 @@ class cot(Function):
 
     def _eval_conjugate(self):
         assert len(self) == 1
-        return self.func(self[0].conjugate())
+        return self.func(self.args[0].conjugate())
 
     def _eval_expand_complex(self, *args):
-        if self[0].is_real:
+        if self.args[0].is_real:
             return self
-        re, im = self[0].as_real_imag()
+        re, im = self.args[0].as_real_imag()
         denom = sin(re)**2 + Basic.sinh(im)**2
         return (sin(re)*cos(re) - \
             S.ImaginaryUnit*Basic.sinh(im)*Basic.cosh(im))/denom
@@ -499,7 +499,7 @@ class cot(Function):
         return 1/tan(arg)
 
     def _eval_as_leading_term(self, x):
-        arg = self[0].as_leading_term(x)
+        arg = self.args[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return S.One
@@ -516,7 +516,7 @@ class asin(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return (1 - self[0]**2)**(-S.Half)
+            return (1 - self.args[0]**2)**(-S.Half)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -588,7 +588,7 @@ class asin(Function):
                 return R / F * x**n / n
 
     def _eval_as_leading_term(self, x):
-        arg = self[0].as_leading_term(x)
+        arg = self.args[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return arg
@@ -601,7 +601,7 @@ class acos(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return -(1 - self[0]**2)**(-S.Half)
+            return -(1 - self.args[0]**2)**(-S.Half)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -663,7 +663,7 @@ class acos(Function):
                 return -R / F * x**n / n
 
     def _eval_as_leading_term(self, x):
-        arg = self[0].as_leading_term(x)
+        arg = self.args[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return arg
@@ -676,7 +676,7 @@ class atan(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return 1/(1+self[0]**2)
+            return 1/(1+self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -736,7 +736,7 @@ class atan(Function):
             return (-1)**((n-1)//2) * x**n / n
 
     def _eval_as_leading_term(self, x):
-        arg = self[0].as_leading_term(x)
+        arg = self.args[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return arg
@@ -749,7 +749,7 @@ class acot(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return -1 / (1+self[0]**2)
+            return -1 / (1+self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -807,7 +807,7 @@ class acot(Function):
             return (-1)**((n+1)//2) * x**n / n
 
     def _eval_as_leading_term(self, x):
-        arg = self[0].as_leading_term(x)
+        arg = self.args[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return arg

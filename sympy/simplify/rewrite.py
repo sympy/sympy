@@ -39,7 +39,7 @@ def cancel(f, *syms):
     if syms and not f.has(*syms):
         return f
     elif isinstance(f, Basic.Add):
-        return Basic.Add(*[ cancel(g, *syms) for g in f ])
+        return Basic.Add(*[ cancel(g, *syms) for g in f.args ])
     elif isinstance(f, Basic.Relational):
         return Basic.Relational(cancel(f.lhs, *syms),
             cancel(f.rhs, *syms), f.rel_op)

@@ -202,7 +202,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             coeff2,terms2 = old.exp.as_coeff_terms()
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3*y)
         if isinstance(old, Basic.exp):
-            coeff1,terms1 = old[0].as_coeff_terms()
+            coeff1,terms1 = old.args[0].as_coeff_terms()
             coeff2,terms2 = (self.exp * Basic.log(self.base)).as_coeff_terms()
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(exp(3*y*log(x)),z) -> z**(2/3*y)
         return self.base.subs(old, new) ** self.exp.subs(old, new)
@@ -263,7 +263,7 @@ class Pow(Basic, ArithMeths, RelMeths):
                 if base.is_commutative:
                     p = []
                     order_terms = []
-                    for o in base:
+                    for o in base.args:
                         if isinstance(o, Basic.Order):
                             order_terms.append(o)
                         else:
@@ -300,14 +300,14 @@ class Pow(Basic, ArithMeths, RelMeths):
                     return Basic.Add(*l)
                 else:
                     if m==2:
-                        p = base[:]
+                        p = base.args[:]
                         return Basic.Add(*[t1*t2 for t1 in p for t2 in p])
                     return Basic.Mul(base, Pow(base, m-1).expand()).expand()
         elif isinstance(exponent, Basic.Add) and isinstance(base, Basic.Number):
             # n**(a+b) --> n**a * n**b with n and a Numbers
             exp = 0
             coeff = 1
-            for term in exponent:
+            for term in exponent.args:
                 if isinstance(term, Basic.Number):
                     coeff *= base**term
                 else:
@@ -353,7 +353,7 @@ class Pow(Basic, ArithMeths, RelMeths):
     def count_ops(self, symbolic=True):
         if symbolic:
             return Basic.Add(*[t.count_ops(symbolic) for t in self[:]]) + Basic.Symbol('POW')
-        return Basic.Add(*[t.count_ops(symbolic) for t in self[:]]) + 1
+        return Basic.Add(*[t.count_ops(symbolic) for t in self.args[:]]) + 1
 
     def _eval_integral(self, s):
         if not self.exp.has(s):

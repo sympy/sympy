@@ -177,3 +177,9 @@ def test_hypersimp():
 
     term = binomial(n, k)*(-1)**k/factorial(k)
     assert hypersimp(term, k) == (k - n)/(k+1)**2
+
+def test_together2():
+    x, y, z = symbols("xyz")
+    assert together(1/(x*y) + 1/y**2) == 1/x*y**(-2)*(x + y)
+    assert together(1/(1 + 1/x)) == x/(1 + x)
+    assert together(1/x**y + 1/x**(y-1)) == x**(-y)*(1 + x)

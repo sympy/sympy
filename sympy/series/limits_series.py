@@ -6,7 +6,7 @@
 # The idea is to use the general and robust algorithm in limits.py even in the
 # series expansion, but currently the limits.py is slower and there were some
 # other bugs (mainly recursion), if it were used in the series expansion. So
-# currently we use limits_series, until we will move to limits.py completely.
+# currently we use limits_series, until we move to limits.py completely.
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
 from sympy.core.methods import RelMeths, ArithMeths
@@ -130,7 +130,7 @@ class InfLimit(Basic):
             # warning: assume that
             #  lim_x f(g1(x),g2(x),..) = f(lim_x g1(x), lim_x g2(x))
             # if this is incorrect, one must define f._eval_inflimit(x) method
-            result = expr.func(*[a.inflimit(x) for a in expr])
+            result = expr.func(*[a.inflimit(x) for a in expr.args])
 
         if result is None:
             result = mrv_inflimit(expr, x)
@@ -155,7 +155,7 @@ def mrv_inflimit(expr, x, _cache = {}):
     new_expr = rewrite_expr(newexpr, germ, new_mrv_map, w)
     lt = new_expr.as_leading_term(w)
     if germ is not None:
-        lt = lt.subs(Basic.log(w), -germ[0])
+        lt = lt.subs(Basic.log(w), -germ.args[0])
     c,e = lt.as_coeff_exponent(w)
     assert not c.has(w),`c`
     if e==0:
@@ -177,9 +177,9 @@ def cmp_ops_count(e1,e2):
 @cache_it_immutable
 def mrv_compare(f, g, x):
     log = Basic.log
-    if isinstance(f, Basic.exp): f = f[0]
+    if isinstance(f, Basic.exp): f = f.args[0]
     else: f = log(f)
-    if isinstance(g, Basic.exp): g = g[0]
+    if isinstance(g, Basic.exp): g = g.args[0]
     else: g = log(g)
     c = (f/g).inflimit(x)
     if c==0:
@@ -205,7 +205,7 @@ def mrv2(expr, x, d, md):
         if not md: md[x] = x
         return x
     if isinstance(expr, (Basic.Add, Basic.Mul)):
-        r = expr.__class__(*[mrv2(t, x, d, md) for t in expr])
+        r = expr.__class__(*[mrv2(t, x, d, md) for t in expr.args])
         d[expr] = r
         return r
     log = Basic.log
@@ -218,7 +218,7 @@ def mrv2(expr, x, d, md):
         d[expr] = r
         return r
     if isinstance(expr, Basic.exp):
-        e = expr[0]
+        e = expr.args[0]
         l = e.inflimit(x)
         r = exp(mrv2(e, x, d, md))
         if isinstance(l, Basic.Infinity):
@@ -269,7 +269,7 @@ def mrv2(expr, x, d, md):
         d[expr] = r
         return r
     if isinstance(expr, Basic.Function):
-        r = expr.func(*[mrv2(a, x, d, md) for a in expr])
+        r = expr.func(*[mrv2(a, x, d, md) for a in expr.args])
         d[expr] = r
         return r
     raise NotImplementedError("don't know how to find mrv2(%s,%s)" % (expr,x))
@@ -280,7 +280,7 @@ def rewrite_mrv_map(mrv_map, x, w):
     if germs:
         g = germs[0]
         gname = mrv_map[g]
-        garg = g[0]
+        garg = g.args[0]
     else:
         g = None
     d = {}
@@ -289,7 +289,7 @@ def rewrite_mrv_map(mrv_map, x, w):
         if name==gname:
             d[name] = 1/w
             continue
-        arg = germ[0]
+        arg = germ.args[0]
         c = (arg/garg).inflimit(x)
         Aarg = arg-c*garg
         Aarg = Aarg.subs(g, 1/w)
@@ -310,7 +310,7 @@ def rewrite_expr(expr, germ, mrv_map, w):
     if germ is not None:
         mrvlog = Basic.MrvLog
         log = Basic.log
-        e = e.subs(log, mrvlog).subs(germ[0], -log(w)).subs(mrvlog, log)
+        e = e.subs(log, mrvlog).subs(germ.args[0], -log(w)).subs(mrvlog, log)
     return e
 
 Basic.singleton['limit'] = lambda : Limit

@@ -347,3 +347,19 @@ def test_hyperbolic():
     assert acosh(x).series(x, 6) == pi*I/2 - I*x - 3*I*x**5/40 - I*x**3/6 + O(x**6)
     assert atanh(x).series(x, 6) == x + x**3/3 + x**5/5 + O(x**6)
     assert acoth(x).series(x, 6) == x + x**3/3 + x**5/5 + pi*I/2 + O(x**6)
+
+#this only works sometimes (caching problems)
+@XFAIL
+def test_series2():
+    w = Symbol("w")
+    x = Symbol("x")
+    e =  w**(-2)*(w*exp(1/x - w) - w*exp(1/x))
+    assert e.series(w, 2) == -exp(1/x) + w * exp(1/x) / 2  + O(w**2)
+
+#this only works sometimes (caching problems)
+@XFAIL
+def test_series3():
+    w = Symbol("w")
+    x = Symbol("x")
+    e = w**(-6)*(w**3*tan(w) - w**3*sin(w))
+    assert e.series(w, 2) == Integer(1)/2 + O(w**2)

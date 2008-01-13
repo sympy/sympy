@@ -119,7 +119,7 @@ class Product(Basic, NoRelMeths, ArithMeths):
         elif isinstance(term, Basic.Mul):
             exclude, include = [], []
 
-            for t in term:
+            for t in term.args:
                 p = self._eval_product(t)
 
                 if p is not None:

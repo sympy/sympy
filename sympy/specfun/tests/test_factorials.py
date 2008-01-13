@@ -126,3 +126,13 @@ def test_derivatives():
     assert log(gamma(x)).diff(x, 5) == polygamma(4, x)
     assert fac(x).diff(x).subs(x, 0) == -EulerGamma
     assert fac(x).diff(x).subs(x, 4) == 24*(Rational(25, 12)-EulerGamma)
+
+def test_binomial3():
+    assert binomial2(15,8) == 6435
+    assert [binomial2(0,k) for k in range(1)] == [1]
+    assert [binomial2(1,k) for k in range(2)] == [1, 1]
+    assert [binomial2(2,k) for k in range(3)] == [1, 2, 1]
+    assert [binomial2(3,k) for k in range(4)] == [1, 3, 3, 1]
+    assert binomial2(Rational(5,4), 3) == -Integer(5)/128
+    x = Symbol('x')
+    assert binomial2(x, 3) == x*(1 - x)*(2 - x)/6

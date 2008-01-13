@@ -28,9 +28,9 @@ class LatexPrinter(Printer):
             return expr
 
     def _print_Add(self, expr):
-        tex = str(self._print(expr[0]))
+        tex = str(self._print(expr.args[0]))
 
-        for term in expr[1:]:
+        for term in expr.args[1:]:
             coeff = term.as_coeff_terms()[0]
 
             if coeff.is_negative:
@@ -57,7 +57,7 @@ class LatexPrinter(Printer):
             if not isinstance(terms, Basic.Mul):
                 return str(self._print(terms))
             else:
-                for term in terms:
+                for term in terms.args:
                     pretty = self._print(term)
 
                     if isinstance(term, Basic.Add):
@@ -187,7 +187,7 @@ class LatexPrinter(Printer):
         if hasattr(self, '_print_' + func):
             return getattr(self, '_print_' + func)(expr, exp)
         else:
-            args = [ str(self._print(arg)) for arg in expr ]
+            args = [ str(self._print(arg)) for arg in expr.args ]
 
             if exp is not None:
                 name = r"\operatorname{%s}^{%s}" % (func, exp)
@@ -245,7 +245,7 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_exp(self, expr, exp=None):
-        tex = r"{e}^{%s}" % self._print(expr[0])
+        tex = r"{e}^{%s}" % self._print(expr.args[0])
         return self._do_exponent(tex, exp)
 
     def _print_gamma(self, expr, exp=None):
@@ -257,8 +257,7 @@ class LatexPrinter(Printer):
             return r"\operatorname{\Gamma}%s" % tex
 
     def _print_Factorial(self, expr, exp=None):
-        x = expr[0]
-
+        x = expr.args[0] 
         if self._needs_brackets(x):
             tex = r"\left(%s\right)!" % self._print(x)
         else:

@@ -34,7 +34,7 @@ def components(f, x):
         if isinstance(f, Symbol):
             result.add(f)
         elif isinstance(f, Function):
-            for g in f:
+            for g in f.args:
                 result |= components(g, x)
 
             result.add(f)
@@ -47,7 +47,7 @@ def components(f, x):
                 else:
                     result |= components(f.exp, x) | set([f])
         else:
-            for g in f:
+            for g in f.args:
                 result |= components(g, x)
 
     return result
@@ -236,7 +236,7 @@ def heurisch(f, x, rewrite=False):
             else:
                 return 1
         elif not isinstance(g, Atom):
-            return max([ exponent(h) for h in g ])
+            return max([ exponent(h) for h in g.args ])
         else:
             return 1
 
@@ -299,7 +299,7 @@ def heurisch(f, x, rewrite=False):
 
         equations = {}
 
-        for term in numer:
+        for term in numer.args:
             coeff, dependent = term.as_independent(*V)
 
             if dependent in equations:

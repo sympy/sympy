@@ -12,7 +12,7 @@ class erf(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return 2*Basic.exp(-self[0]**2)/Basic.sqrt(S.Pi)
+            return 2*Basic.exp(-self.args[0]**2)/Basic.sqrt(S.Pi)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -57,7 +57,7 @@ class erf(Function):
                 return 2*(-1)**k * x**n/(n*Basic.Factorial(k)*Basic.sqrt(S.Pi))
 
     def _eval_as_leading_term(self, x):
-        arg = self[0].as_leading_term(x)
+        arg = self.args[0].as_leading_term(x)
 
         if Basic.Order(1,x).contains(arg):
             return arg
@@ -65,7 +65,7 @@ class erf(Function):
             return self.func(arg)
 
     def _eval_is_real(self):
-        return self[0].is_real
+        return self.args[0].is_real
 
     @classmethod
     def _eval_apply_evalf(self, arg):

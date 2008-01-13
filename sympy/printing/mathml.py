@@ -110,7 +110,7 @@ class MathMLPrinter(Printer):
     def _print_Function(self, e):
         x = self.dom.createElement("apply")
         x.appendChild(self.dom.createElement(self.mathml_tag(e)))
-        for arg in e:
+        for arg in e.args:
             x.appendChild(self._print(arg))
         return x
 
@@ -124,7 +124,7 @@ class MathMLPrinter(Printer):
         x = self.dom.createElement('apply')
         x_1 = self.dom.createElement(self.mathml_tag(e))
         x.appendChild(x_1)
-        for arg in e:
+        for arg in e.args:
             x.appendChild(self._print(arg))
         return x
 

@@ -64,7 +64,7 @@ class PrettyPrinter(Printer):
         return prettyForm( *pform.above( hobj('_',pform.width())) )
 
     def _print_abs(self, e):
-        pform = self._print(e[0])
+        pform = self._print(e.args[0])
 
         vbar = vobj('|', pform.height())
         vbar = stringPict(vbar, baseline=pform.baseline)
@@ -229,12 +229,12 @@ class PrettyPrinter(Printer):
 
     def _print_exp(self, e):
         base = prettyAtom(pretty_atom('Exp1', 'e'))
-        return base ** self._print(e[0])
+        return base ** self._print(e.args[0])
 
     def _print_Function(self, e):
         # XXX works only for applied functions
         func = e.func
-        args = e[:]
+        args = e.args
         n = len(args)
 
         func_name = func.__name__
@@ -258,7 +258,7 @@ class PrettyPrinter(Printer):
 
     def _print_Add(self, sum):
         pforms = []
-        for x in sum:
+        for x in sum.args:
             # Check for negative "things" so that this information can be enforce upon
             # the pretty form so that it can be made of use (such as in a sum).
             if isinstance(x, Basic.Mul) and x.as_coeff_terms()[0] < 0:
@@ -292,7 +292,7 @@ class PrettyPrinter(Printer):
         b = [] # items that are in the denominator (if any)
 
         # Gather terms for numerator/denominator
-        for item in product:
+        for item in product.args:
             if isinstance(item, Basic.Pow) and isinstance(item.exp, Basic.Rational) and item.exp.is_negative:
                 b.append(Basic.Pow(item.base, -item.exp))
             elif isinstance(item, Basic.Rational):

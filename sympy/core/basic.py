@@ -306,7 +306,7 @@ class Basic(BasicMeths):
             if type is None or isinstance(self, type):
                 result.add(self)
         else:
-            for obj in self:
+            for obj in self.args:
                 result = result.union(obj.atoms(type=type))
         return result
 
@@ -402,7 +402,7 @@ class Basic(BasicMeths):
         #new functions are initialized differently, than old functions
         from sympy.core.function import FunctionClass
         if isinstance(self.func, FunctionClass):
-            args = self[:]
+            args = self.args[:]
         else:
             args = (self.func,)+self[:]
         return self.__class__(*[s.subs(old, new) for s in args])
@@ -431,9 +431,9 @@ class Basic(BasicMeths):
         if p.matches(self) is not None:
             return True
         if not False:
-            args = self[:]
+            args = self.args[:]
         else:
-            args = (self.func,)+self[:]
+            args = (self.func,)+self.args[:]
         for e in args:
             if e.has(p):
                 return True
@@ -544,9 +544,9 @@ class Basic(BasicMeths):
 
         # weed out negative one prefixes
         sign = 1
-        if isinstance(pattern,Mul) and pattern[0] == -1:
+        if isinstance(pattern,Mul) and pattern.args[0] == -1:
           pattern = -pattern; sign = -sign
-        if isinstance(expr, Mul) and expr[0] == -1:
+        if isinstance(expr, Mul) and expr.args[0] == -1:
           expr = -expr; sign = -sign
 
         if evaluate:
@@ -559,27 +559,27 @@ class Basic(BasicMeths):
         if not isinstance(expr, pattern.__class__):
             from sympy.core.numbers import Rational
             # if we can omit the first factor, we can match it to sign * one
-            if isinstance(pattern, Mul) and Mul(*pattern[1:]) == expr:
-               return pattern[0].matches(Rational(sign), repl_dict, evaluate)
+            if isinstance(pattern, Mul) and Mul(*pattern.args[1:]) == expr:
+               return pattern.args[0].matches(Rational(sign), repl_dict, evaluate)
             # two-factor product: if the 2nd factor matches, the first part must be sign * one
-            if isinstance(pattern, Mul) and len(pattern[:]) == 2:
-               dd = pattern[1].matches(expr, repl_dict, evaluate)
+            if isinstance(pattern, Mul) and len(pattern.args[:]) == 2:
+               dd = pattern.args[1].matches(expr, repl_dict, evaluate)
                if dd == None: return None
-               dd = pattern[0].matches(Rational(sign), dd, evaluate)
+               dd = pattern.args[0].matches(Rational(sign), dd, evaluate)
                return dd
             return None
 
-        if len(pattern[:])==0:
+        if len(pattern.args[:])==0:
             if pattern==expr:
                 return repl_dict
             return None
         d = repl_dict.copy()
 
         # weed out identical terms
-        pp = list(pattern)
-        ee = list(expr)
-        for p in pattern:
-          for e in expr:
+        pp = list(pattern.args)
+        ee = list(expr.args)
+        for p in pattern.args:
+          for e in expr.args:
             if e == p:
               if e in ee: ee.remove(e)
               if p in pp: pp.remove(p)
@@ -685,7 +685,7 @@ class Basic(BasicMeths):
            x**2
 
         """
-        terms = [ term.doit(**hints) for term in self ]
+        terms = [ term.doit(**hints) for term in self.args ]
         return self.__class__(*terms, **self._assumptions)
 
     ###########################################################################
@@ -695,7 +695,7 @@ class Basic(BasicMeths):
     def _eval_expand_basic(self, *args):
         if isinstance(self, Atom):
             return self
-        sargs = self[:]
+        sargs = self.args[:]
         terms = [ term._eval_expand_basic(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
@@ -712,21 +712,21 @@ class Basic(BasicMeths):
     def _eval_expand_complex(self, *args):
         if isinstance(self, Atom):
             return self
-        sargs = self[:]
+        sargs = self.args[:]
         terms = [ term._eval_expand_complex(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
     def _eval_expand_trig(self, *args):
         if isinstance(self, Atom):
             return self
-        sargs = self[:]
+        sargs = self.args[:]
         terms = [ term._eval_expand_trig(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
     def _eval_expand_func(self, *args):
         if isinstance(self, Atom):
             return self
-        sargs = self[:]
+        sargs = self.args
         terms = [ term._eval_expand_func(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
@@ -751,7 +751,7 @@ class Basic(BasicMeths):
     def _eval_rewrite(self, pattern, rule, **hints):
         if isinstance(self, Atom):
             return self
-        sargs = self[:]
+        sargs = self.args
         terms = [ t._eval_rewrite(pattern, rule, **hints) for t in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
@@ -845,7 +845,7 @@ class Basic(BasicMeths):
 
             if coeff is not None:
                 if isinstance(expr, Basic.Mul):
-                    expr = expr[:]
+                    expr = expr.args
                 else:
                     expr = [expr]
 
@@ -872,7 +872,7 @@ class Basic(BasicMeths):
         indeps, depend = [], []
 
         if isinstance(self, (Basic.Add, Basic.Mul)):
-            terms = self[:]
+            terms = self.args[:]
         else:
             terms = [ self ]
 
@@ -913,6 +913,8 @@ class Basic(BasicMeths):
             expr = [expr]
 
         re_part, im_part = [], []
+        if isinstance(expr, Basic):
+            expr = expr.args
 
         for term in expr:
             coeff = term.as_coefficient(S.ImaginaryUnit)
@@ -1035,7 +1037,7 @@ class Basic(BasicMeths):
         return
 
     def _seq_eval_evalf(self):
-        return self.__class__(*[s.evalf() for s in self])
+        return self.__class__(*[s.evalf() for s in self.args])
 
     def __float__(self):
         result = self.evalf(precision=16)
