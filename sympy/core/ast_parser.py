@@ -57,7 +57,6 @@ class SymPyTransformer(Transformer):
         return Const(proper_obj, lineno=lineno)
 
     def lambdef(self, nodelist):
-        #this is never executed
         #this is python stdlib symbol, not SymPy symbol:
         from sympy import stdlib_symbol
         if nodelist[2][0] == stdlib_symbol.varargslist:
