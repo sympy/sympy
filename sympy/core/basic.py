@@ -5,6 +5,14 @@ type_class = type
 import decimal
 from basic_methods import BasicMeths, cache_it, cache_it_immutable, BasicType
 
+class SympifyError(ValueError):
+    def __init__(self, expr, base_exc):
+        self.expr = expr
+        self.base_exc = base_exc
+    def __str__(self):
+        return "Sympify of expression '%s' failed, because of exception being raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__, str(self.base_exc))
+
+
 class MemoizerArg:
     """ See Memoizer.
     """
@@ -266,10 +274,8 @@ class Basic(BasicMeths):
 
             try:
                 return ast_parser.SymPyParser().parse_expr(a)
-            except:
-                pass
-        if a.strip() != a:
-            return Basic.sympify(a.strip())
+            except Exception, exc:
+                raise SympifyError(a, exc)
         raise ValueError("%r is NOT a valid SymPy expression" % a)
 
     @Memoizer('Basic', MemoizerArg((type, type(None), tuple), name='type'), return_value_converter = lambda obj: obj.copy())
