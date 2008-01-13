@@ -367,9 +367,6 @@ class BasicMeths(AssumeMeths):
 
         return self.torepr()
 
-    def __len__(self):
-        return len(self._args)
-
     def __contains__(self, what):
         if self == what: return True
         for x in self._args:

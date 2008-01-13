@@ -473,7 +473,7 @@ class cot(Function):
             return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
 
     def _eval_conjugate(self):
-        assert len(self) == 1
+        assert len(self.args) == 1
         return self.func(self.args[0].conjugate())
 
     def _eval_expand_complex(self, *args):

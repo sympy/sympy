@@ -165,9 +165,9 @@ def test_ordering():
 def test_len():
     x, y, z = symbols("xyz")
     e = x*y
-    assert len(e) == 2
+    assert len(e.args) == 2
     e = x+y+z
-    assert len(e) == 3
+    assert len(e.args) == 3
 
 def test_doit():
     x = Symbol('x')

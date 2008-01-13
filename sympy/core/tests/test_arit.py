@@ -208,7 +208,7 @@ def test_power_expand():
 def test_real_mul():
     Real(0) * pi * x == Real(0)
     Real(1) * pi * x == pi * x
-    len(Real(2) * pi * x) == 3
+    len((Real(2) * pi * x).args) == 3
 
 def test_ncmul():
     A = Symbol("A", commutative=False)

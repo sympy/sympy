@@ -252,7 +252,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
 
     @cache_it
     def as_two_terms(self):
-        if len(self) == 1:
+        if len(self.args) == 1:
             return Basic.One(), self
         return self.args[0], Mul(*self.args[1:])
 

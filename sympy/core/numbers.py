@@ -1,7 +1,8 @@
 import math
 import decimal
 import decimal_math
-from basic import Basic, Atom, Singleton, S, Memoizer, MemoizerArg
+from basic import Basic, Atom, Singleton, S, Memoizer, MemoizerArg, \
+    SympifyError
 from methods import NoRelMeths, RelMeths, ArithMeths
 from power import integer_nthroot
 
@@ -250,13 +251,19 @@ class Real(Number):
         return Real(-self.num)
 
     def __mul__(self, other):
-        other = Basic.sympify(other)
+        try:
+            other = Basic.sympify(other)
+        except SympifyError:
+            return NotImplementedError
         if isinstance(other, Number):
             return Real(self.num * other._as_decimal())
         return Number.__mul__(self, other)
 
     def __add__(self, other):
-        other = Basic.sympify(other)
+        try:
+            other = Basic.sympify(other)
+        except SympifyError:
+            return NotImplementedError
         if isinstance(other, NaN) or isinstance(self, NaN):
             return S.NaN
         if isinstance(other, Number):
@@ -442,7 +449,10 @@ class Rational(Number):
     def __neg__(self): return Rational(-self.p, self.q)
 
     def __mul__(self, other):
-        other = Basic.sympify(other)
+        try:
+            other = Basic.sympify(other)
+        except SympifyError:
+            return NotImplementedError
         if isinstance(other, NaN) or isinstance(self, NaN):
             return S.NaN
         if isinstance(other, Real):
@@ -452,7 +462,10 @@ class Rational(Number):
         return Number.__mul__(self, other)
 
     def __add__(self, other):
-        other = Basic.sympify(other)
+        try:
+            other = Basic.sympify(other)
+        except SympifyError:
+            return NotImplemented
         if isinstance(other, NaN) or isinstance(self, NaN):
             return S.NaN
         if isinstance(other, Real):
