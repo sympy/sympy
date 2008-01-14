@@ -316,14 +316,6 @@ class Add(AssocOp, RelMeths, ArithMeths):
     def __neg__(self):
         return Add(*[-t for t in self])
 
-    def _eval_power(b, e):
-        return
-        #if isinstance(e, Basic.Number):
-        #    c, t = b.as_coeff_terms()
-        #    if not isinstance(c, Basic.One):
-        #        assert len(t)==1,`t`
-        #        return c**e * t[0]**e
-
     def _sage_(self):
         s = 0
         for x in self:
