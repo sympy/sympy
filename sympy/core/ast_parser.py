@@ -49,8 +49,8 @@ class SymPyTransformer(Transformer):
         name, lineno = nodelist[0][1:]
         if name in self.name_dict:
             name_obj = self.name_dict[name]
-            if isinstance(name_obj, (Basic,bool,FunctionClass)) or hasattr():
-                return Const(name_obj, lineno=lineno)
+            #if isinstance(name_obj, (Basic,bool,FunctionClass)) or hasattr(name_obj, '__call__'):
+            return Const(name_obj, lineno=lineno)
 	
 	proper_obj = Symbol(name)
 	self.local_dict[name] = proper_obj

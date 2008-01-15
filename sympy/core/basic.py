@@ -191,7 +191,7 @@ class Basic(BasicMeths):
         return obj
 
     @staticmethod
-    def sympify(a, sympify_lists=False):
+    def sympify(a, sympify_lists=False, locals= {}):
         """Converts an arbitrary expression to a type that can be used
            inside sympy. For example, it will convert python int's into
            instance of sympy.Rational, floats into intances of sympy.Real,
@@ -273,7 +273,7 @@ class Basic(BasicMeths):
                 a = str(a)
 
             try:
-                return ast_parser.SymPyParser().parse_expr(a)
+                return ast_parser.SymPyParser(local_dict=locals).parse_expr(a)
             except Exception, exc:
                 raise SympifyError(a, exc)
         raise ValueError("%r is NOT a valid SymPy expression" % a)
