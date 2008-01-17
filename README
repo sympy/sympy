@@ -122,3 +122,26 @@ competitive by rewriting the core from scratch, that has made it from 10x to
 Fredrik Johansson has wrote mpmath and contributed a lot of patches. Kirill
 Smelkov has joined the development in autumn 2007 and has improved the overall
 quality of SymPy a lot and is currently one of the most active developers.
+
+
+7. Citation
+-----------
+
+To cite SymPy in publications use::
+
+  SymPy Development Team (2008). SymPy: Python library for symbolic mathematics
+  URL http://www.sympy.org.
+
+A BibTeX entry for LaTeX users is::
+
+  @Manual{,
+    title = {SymPy: Python library for symbolic mathematics},
+    author = {{SymPy Development Team}},
+    year = {2008},
+    url = {http://www.sympy.org},
+  }
+
+We have invested a lot of time and effort in creating SymPy. Although not
+required by SymPy license, if it is convenient for you, we ask to please cite
+SymPy when using it in your work.
+
