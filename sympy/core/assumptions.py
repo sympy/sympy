@@ -87,9 +87,13 @@ class AssumeMeths(object):
     # implications (property -> super property)
     _assume_impl = (('zero','infinitesimal'),
                     ('negative', 'nonpositive'),
+                    ('negative', 'nonzero'),
                     ('positive', 'nonnegative'),
+                    ('positive', 'nonzero'),
                     ('finite', 'nonzero'),
                     ('zero', 'even'),
+                    ('zero', 'nonpositive'),
+                    ('zero', 'nonnegative'),
                     ('complex', 'commutative'),
                     ('prime', 'positive'),
                     ('prime', 'integer'),
