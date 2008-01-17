@@ -66,7 +66,12 @@ class Matrix(object):
                 mat = args[0]
             else:
                 mat = args
-            if not isinstance(mat[0], (list, tuple)):
+            if hasattr(mat, "__array__"):
+                # NumPy array or matrix or some other object that implements
+                # __array__ (like SymPy Matrix). So let's first use this method
+                # to get a numpy.array() and then make a python list out of it.
+                mat = list(mat.__array__())
+            elif not isinstance(mat[0], (list, tuple)):
                 # make each element a singleton
                 mat = [ [element] for element in mat ]
             self.lines=len(mat)
@@ -172,6 +177,10 @@ class Matrix(object):
         else:
             i,j=self.key2ij(key)
             self.mat[i*self.cols + j] = Basic.sympify(value)
+
+    def __array__(self):
+        return matrix2numpy(self)
+
 
     def copyin_matrix(self, key, value):
         rlo, rhi = self.slice2bounds(key[0], self.lines)
@@ -1303,9 +1312,18 @@ class SMatrix(Matrix):
 
 
 def list2numpy(l):
-    """Converts python list of SymPy expressions to NumPy array."""
+    """Converts python list of SymPy expressions to a NumPy array."""
     from numpy import empty
     a = empty(len(l), dtype=object)
     for i, s in enumerate(l):
         a[i] = s
+    return a
+
+def matrix2numpy(m):
+    """Converts SymPy's matrix to a NumPy array."""
+    from numpy import empty
+    a = empty(m.shape, dtype=object)
+    for i in range(m.lines):
+        for j in range(m.cols):
+            a[i, j] = m[i, j]
     return a

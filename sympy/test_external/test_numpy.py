@@ -6,13 +6,13 @@
 # using SymPy with NumPy
 
 try:
-    from numpy import array, ndarray
+    from numpy import array, matrix, ndarray
 except ImportError:
     #py.test will not execute any tests now
     disabled = True
 
 
-from sympy import Rational, Symbol, list2numpy, sin, Real
+from sympy import Rational, Symbol, list2numpy, sin, Real, Matrix
 
 # first, systematically check, that all operations are implemented and don't
 # raise and exception
@@ -112,6 +112,38 @@ def test_conversion2():
 def test_list2numpy():
     x = Symbol("x")
     assert (array([x**2, x]) == list2numpy([x**2, x])).all()
+
+def test_Matrix1():
+    x = Symbol("x")
+    m = Matrix([[x, x**2], [5, 2/x]])
+    assert (array(m.subs(x, 2)) == array([[2, 4],[5, 1]])).all()
+    m = Matrix([[sin(x), x**2], [5, 2/x]])
+    assert (array(m.subs(x, 2)) == array([[sin(2), 4],[5, 1]])).all()
+
+def test_Matrix2():
+    x = Symbol("x")
+    m = Matrix([[x, x**2], [5, 2/x]])
+    assert (matrix(m.subs(x, 2)) == matrix([[2, 4],[5, 1]])).all()
+    m = Matrix([[sin(x), x**2], [5, 2/x]])
+    assert (matrix(m.subs(x, 2)) == matrix([[sin(2), 4],[5, 1]])).all()
+
+def test_Matrix3():
+    x = Symbol("x")
+    a = array([[2, 4],[5, 1]])
+    assert Matrix(a) == Matrix([[2, 4], [5, 1]])
+    assert Matrix(a) != Matrix([[2, 4], [5, 2]])
+    a = array([[sin(2), 4], [5, 1]])
+    assert Matrix(a) == Matrix([[sin(2), 4],[5, 1]])
+    assert Matrix(a) != Matrix([[sin(0), 4],[5, 1]])
+
+def test_Matrix4():
+    x = Symbol("x")
+    a = matrix([[2, 4],[5, 1]])
+    assert Matrix(a) == Matrix([[2, 4], [5, 1]])
+    assert Matrix(a) != Matrix([[2, 4], [5, 2]])
+    a = matrix([[sin(2), 4], [5, 1]])
+    assert Matrix(a) == Matrix([[sin(2), 4],[5, 1]])
+    assert Matrix(a) != Matrix([[sin(0), 4],[5, 1]])
 
 def test_issue629():
     x = Symbol("x")
