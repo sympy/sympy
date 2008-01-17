@@ -240,7 +240,7 @@ class Pow(Basic, ArithMeths, RelMeths):
 
             return rp*Basic.cos(tp) + rp*Basic.sin(tp)*S.ImaginaryUnit
         else:
-            return S.Re(self) + S.ImaginaryUnit*S.Im(self)
+            return Basic.re(self) + S.ImaginaryUnit*Basic.im(self)
 
     def _eval_expand_basic(self, *args):
         """

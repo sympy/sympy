@@ -278,8 +278,8 @@ class Function(Basic, ArithMeths, RelMeths):
         return True
 
     def _eval_expand_complex(self, *args):
-        func = self.func(*[ a._eval_expand_complex(*args) for a in self ])
-        return Basic.Re()(func) + S.ImaginaryUnit * Basic.Im()(func)
+        func = self.func(*[ a._eval_expand_complex(*args) for a in self.args ])
+        return Basic.re(func) + S.ImaginaryUnit * Basic.im(func)
 
     def _eval_rewrite(self, pattern, rule, **hints):
         if hints.get('deep', False):

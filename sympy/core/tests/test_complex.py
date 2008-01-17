@@ -47,7 +47,9 @@ def test_abs2():
 def test_evalc():
     x=Symbol("x", real=True)
     y=Symbol("y", real=True)
+    z=Symbol("z")
     assert ((x+I*y)**2).expand(complex=True) == x**2+2*I*x*y - y**2
+    assert (z**(2*I)).expand(complex=True) == I*im(z**(2*I)) + re(z**(2*I))
 
     assert exp(I*x) != cos(x)+I*sin(x)
     assert exp(I*x).expand(complex=True) == cos(x)+I*sin(x)

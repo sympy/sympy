@@ -1,5 +1,5 @@
 from sympy import Lambda, Symbol, Function, WildFunction, Derivative, sqrt, \
-        log, exp, Rational, sign, Basic, sin, diff
+        log, exp, Rational, sign, Basic, sin, cos, diff, I, re, im
 from sympy.utilities.pytest import XFAIL
 from sympy.utilities.test import REPR0
 from sympy.abc import x, y
@@ -62,6 +62,17 @@ def test_exp_expand():
     #assert exp(x+y) != exp(x)*exp(y)
     assert exp(x+y).expand() == exp(x)*exp(y)
 
+
+def test_f_expand_complex():
+    f = Function('f')
+    x = Symbol('x', real=True)
+    z = Symbol('z')
+
+    assert f(x).expand(complex=True)        == I*im(f(x)) + re(f(x))
+    assert exp(x).expand(complex=True)      == exp(x)
+    assert exp(I*x).expand(complex=True)    == cos(x) + I*sin(x)
+    assert exp(z).expand(complex=True)      == cos(im(z))*exp(re(z)) + \
+                                             I*sin(im(z))*exp(re(z))
 
 def test_bug1():
     x = Symbol("x")
