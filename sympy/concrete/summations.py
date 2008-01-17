@@ -1,5 +1,5 @@
 
-from sympy.core import Basic, S, Add, Mul, Symbol, Equality, Interval
+from sympy.core import Basic, S, Add, Mul, Symbol, Equality, Interval, sympify
 from sympy.core.methods import NoRelMeths, ArithMeths
 
 class Sum(Basic, NoRelMeths, ArithMeths):
@@ -43,7 +43,7 @@ class Sum(Basic, NoRelMeths, ArithMeths):
                             continue
                     elif len(V) in (2, 3):
                         if isinstance(V[0], Symbol):
-                            limits.append(tuple(V))
+                            limits.append(tuple(map(sympify, V)))
                             continue
 
                 raise ValueError("Invalid summation variable or limits")
@@ -66,8 +66,14 @@ class Sum(Basic, NoRelMeths, ArithMeths):
         return 'Sum(%s, %s)' % (self.function.tostr(), L)
 
     def doit(self, **hints):
-        if not hints.get('sums', True):
-            return self
+        #if not hints.get('sums', True):
+        #    return self
+        f = self.function
+        for i, a, b in self.limits:
+            f = eval_sum(f, (i, a, b))
+            if f is None:
+                return self
+        return f
 
     def _eval_summation(self, f, x):
         return
@@ -79,3 +85,69 @@ def sum(*args, **kwargs):
         return summation.doit()
     else:
         return summation
+
+
+def getab(expr):
+    cls = expr.__class__
+    return cls(expr.args[0]), cls(*expr.args[1:])
+
+def eval_sum(f, (i, a, b)):
+    if not f.has(i):
+        return f*(b-a+1)
+    definite = isinstance(a, Basic.Integer) and isinstance(b, Basic.Integer)
+    # Doing it directly may be faster if there are very few terms.
+    if definite and (b-a < 100):
+        return eval_sum_direct(f, (i, a, b))
+    # Try to do it symbolically. Even when the number of terms is known,
+    # this can save time when b-a is big.
+    value = eval_sum_symbolic(f.expand(), (i, a, b))
+    if value is not None:
+        return value
+    # Do it directly
+    if definite:
+        return eval_sum_direct(f, (i, a, b))
+
+def eval_sum_symbolic(f, (i, a, b)):
+    if not f.has(i):
+        return f*(b-a+1)
+    # Linearity
+    if isinstance(f, Basic.Mul):
+        L, R = getab(f)
+        if not L.has(i): return L*eval_sum_symbolic(R, (i, a, b))
+        if not R.has(i): return R*eval_sum_symbolic(L, (i, a, b))
+    if isinstance(f, Basic.Add):
+        L, R = getab(f)
+        lsum = eval_sum_symbolic(L, (i, a, b))
+        rsum = eval_sum_symbolic(R, (i, a, b))
+        if None not in (lsum, rsum):
+            return lsum + rsum
+    # Polynomial terms with Faulhaber's formula
+    p = Basic.Wild('p')
+    e = f.match(i**p)
+    if e != None:
+        c = p.subs_dict(e)
+        B = Basic.bernoulli
+        if c.is_integer and c >= 0:
+            s = (B(c+1, b+1) - B(c+1, a))/(c+1)
+            return s.expand()
+    # Geometric terms
+    if isinstance(f, Basic.Pow):
+        r, k = f.args[:]
+        if not r.has(i) and k == i:
+            # TODO: Pow should be able to simplify x**oo depending
+            # on whether |x| < 1 or |x| > 1 for non-rational x
+            if isinstance(b, Basic.Infinity) and abs(r.evalf()) < 1:
+                return r**a / (1-r)
+            else:
+                return (r**a - r**(b+1)) / (1-r)
+    return None
+
+def eval_sum_direct(expr, (i, a, b)):
+    s = Basic.Integer(0)
+    if expr.has(i):
+        for j in xrange(a, b+1):
+            s += expr.subs(i, j)
+    else:
+        for j in xrange(a, b+1):
+            s += expr
+    return s

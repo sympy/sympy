@@ -1,42 +1,40 @@
-from sympy import *
-from sympy.concrete.sums_products import *
-#from sympy.specfun import factorial
+from sympy import Symbol, Sum2, oo, Real, Rational, sum, Sum, pi, cos
+from sympy.concrete.summations import getab
 from sympy.utilities.pytest import XFAIL
 
-n = Symbol('n')
-a = Symbol('a')
-b = Symbol('b')
-
-Sum = Sum2
+a, b, c, d, m, n = map(Symbol, 'abcdmn')
 
 def test_str():
-    assert str(Sum(cos(3*n), (n, a, b))) == "Sum2(cos(3*n), (n, a, b))"
+    assert str(sum(cos(3*n), (n, a, b))) == "Sum(cos(3*n), (n, a, b))"
 
 def test_arithmetic_sums():
-    assert Sum(1, (n, a, b)) == b-a+1
-    assert Sum(1, (n, 1, 10)) == 10
-    assert Sum(2*n, (n, 0, 10**10)) == 100000000010000000000
+    assert sum(1, (n, a, b)) == b-a+1
+    assert sum(1, (n, 1, 10)) == 10
+    assert sum(2*n, (n, 0, 10**10)) == 100000000010000000000
+    assert sum(4*n*m, (n, a, 1), (m, 1, d)).expand() == \
+        2*d + 2*d**2 + a*d + a*d**2 - d*a**2 - a**2*d**2
+    assert sum(cos(n), (n, -2, 1)) == cos(-2)+cos(-1)+cos(0)+cos(1)
 
 def test_polynomial_sums():
-    assert Sum(n**2, (n, 3, 8)) == 199
-    assert Sum(n, (n, a, b)) == \
+    assert sum(n**2, (n, 3, 8)) == 199
+    assert sum(n, (n, a, b)) == \
         ((a+b)*(b-a+1)/2).expand()
-    assert Sum(n**2, (n, 1, b)) == \
+    assert sum(n**2, (n, 1, b)) == \
         ((2*b**3+3*b**2+b)/6).expand()
-    assert Sum(n**3, (n, 1, b)) == \
+    assert sum(n**3, (n, 1, b)) == \
         ((b**4+2*b**3+b**2)/4).expand()
-    assert Sum(n**6, (n, 1, b)) == \
+    assert sum(n**6, (n, 1, b)) == \
         ((6*b**7+21*b**6+21*b**5-7*b**3+b)/42).expand()
 
 def test_geometric_sums():
-    assert Sum(pi**n, (n, 0, b)) == (1-pi**(b+1)) / (1-pi)
-    assert Sum(2 * 3**n, (n, 0, b)) == 3**(b+1) - 1
-    assert Sum(Rational(1,2)**n, (n, 1, oo)) == 1
-    assert Sum(2**n, (n, 0, b)) == 2**(b+1) - 1
+    assert sum(pi**n, (n, 0, b)) == (1-pi**(b+1)) / (1-pi)
+    assert sum(2 * 3**n, (n, 0, b)) == 3**(b+1) - 1
+    assert sum(Rational(1,2)**n, (n, 1, oo)) == 1
+    assert sum(2**n, (n, 0, b)) == 2**(b+1) - 1
 
 def test_composite_sums():
     f = Rational(1,2)*(7 - 6*n + Rational(1,7)*n**3)
-    s = Sum(f, (n, a, b))
+    s = sum(f, (n, a, b))
     assert not isinstance(s, Sum)
     A = 0
     for i in range(-3, 5):
@@ -44,11 +42,9 @@ def test_composite_sums():
     B = s.subs(a,-3).subs(b,4)
     assert A == B
 
-def test_finite_sums():
-    assert Sum(cos(n), (n, -2, 1)) == cos(-2)+cos(-1)+cos(0)+cos(1)
 
 def test_euler_maclaurin():
-    z = Sum(1/n**3, (n, 1, oo))
+    z = Sum2(1/n**3, (n, 1, oo))
     A, B = getab(z.split(50))
     apery = (A + B.euler_maclaurin(8)).evalf(25)
     assert abs(apery - Real("1.202056903159594285399738162")) < Real("1e-20")
