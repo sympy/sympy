@@ -1,6 +1,7 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
 from sympy.core.function import Function
+from sympy.functions.elementary.miscellaneous import sqrt
 
 ###############################################################################
 ################################ ERROR FUNCTION ###############################
@@ -12,7 +13,7 @@ class erf(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return 2*Basic.exp(-self.args[0]**2)/Basic.sqrt(S.Pi)
+            return 2*Basic.exp(-self.args[0]**2)/sqrt(S.Pi)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -54,7 +55,7 @@ class erf(Function):
             if len(previous_terms) > 2:
                 return -previous_terms[-2] * x**2 * (n-2)/(n*k)
             else:
-                return 2*(-1)**k * x**n/(n*Basic.Factorial(k)*Basic.sqrt(S.Pi))
+                return 2*(-1)**k * x**n/(n*Basic.Factorial(k)*sqrt(S.Pi))
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)

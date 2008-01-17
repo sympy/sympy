@@ -2,6 +2,7 @@
 from sympy.core import Basic, S
 from sympy.core.function import Function
 from zeta_functions import zeta
+from sympy.functions.elementary.miscellaneous import sqrt
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -49,9 +50,9 @@ class gamma(Function):
                         coeff *= i
 
                     if arg.is_positive:
-                        return coeff*Basic.sqrt(S.Pi) / 2**n
+                        return coeff*sqrt(S.Pi) / 2**n
                     else:
-                        return 2**n*Basic.sqrt(S.Pi) / coeff
+                        return 2**n*sqrt(S.Pi) / coeff
 
 
     def _eval_expand_func(self, *args):

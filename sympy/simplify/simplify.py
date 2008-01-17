@@ -3,7 +3,7 @@ from sympy.core import Basic, S, Add, Mul, Pow, Rational, Integer, \
         Derivative, Wild, Symbol
 
 from sympy.utilities import make_list, all
-from sympy.functions import gamma, exp
+from sympy.functions import gamma, exp, sqrt
 
 from sys import maxint
 
@@ -799,7 +799,7 @@ def radsimp(expr):
     """
     n,d = fraction(expr)
     a,b,c = map(Wild, 'abc')
-    r = d.match(a+b*Basic.sqrt(c))
+    r = d.match(a+b*sqrt(c))
     if r is not None:
         a = r[a]
         if r[b] == 0:
@@ -808,7 +808,7 @@ def radsimp(expr):
             b,c = r[b],r[c]
 
         syms = list(n.atoms(type=Basic.Symbol))
-        n = collect( (n*(a-b*Basic.sqrt(c))).expand(), syms )
+        n = collect( (n*(a-b*sqrt(c))).expand(), syms )
         d = a**2 - c*b**2
 
     return n/d

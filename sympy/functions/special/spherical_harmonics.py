@@ -1,5 +1,6 @@
 from sympy import Function, Basic, Rational, pi, I
 from sympy.functions import legendre, assoc_legendre
+from sympy.functions.elementary.miscellaneous import sqrt
 
 Pl = legendre
 Plm= assoc_legendre
@@ -18,7 +19,7 @@ def Plmcos(l, m, th):
 def Ylm(l, m, theta, phi):
     l, m, theta, phi = [Basic.sympify(x) for x in (l, m, theta, phi)]
     factorial = Basic.Factorial
-    return Basic.sqrt((2*l+1)/(4*pi) * factorial(l-m)/factorial(l+m)) * \
+    return sqrt((2*l+1)/(4*pi) * factorial(l-m)/factorial(l+m)) * \
             Plmcos(l, m, theta) * Basic.exp(I*m*phi)
 
 def Ylm_c(l, m, theta, phi):
@@ -27,7 +28,6 @@ def Ylm_c(l, m, theta, phi):
 
 def Zlm(l, m, th, ph):
     from sympy import simplify
-    sqrt = Basic.sqrt
     if m > 0:
         zz = (-1)**m*(Ylm(l, m, th, ph) + Ylm_c(l, m, th, ph))/sqrt(2)
     elif  m == 0:

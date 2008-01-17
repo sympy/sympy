@@ -1,6 +1,8 @@
-from sympy.core import *
+from sympy.core import Function, Add, Pow, Mul, Rational, Integer, Basic, pi, \
+        oo, Real, Symbol
 from sympy.core.basic import S
 
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.memoization import recurrence_memo
 
 # Lanczos approximation for low-precision numerical factorial
@@ -79,7 +81,7 @@ class _Factorial(Function):
             n = (x.p + 1) / 2
             if n < 0:
                 return (-1)**(-n+1) * pi * x / factorial(-x)
-            return Basic.sqrt(pi) * Rational(1, 2**n) * factorial(2*n-1, 2)
+            return sqrt(pi) * Rational(1, 2**n) * factorial(2*n-1, 2)
 
         # multifactorials are only defined for integers
         if (not isinstance(m, Integer) and m > 0) or not \
@@ -123,7 +125,7 @@ class _Factorial(Function):
     def fdiff(self, argindex=1):
         if argindex == 1:
             from sympy.functions import gamma, polygamma
-            return gamma(self[0]+1)*polygamma(0,self[0]+1)
+            return gamma(self.args[0]+1)*polygamma(0,self.args[0]+1)
         else:
             raise ArgumentIndexError(self, argindex)
 

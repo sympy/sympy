@@ -15,6 +15,7 @@ from sympy.simplify import simplify, collect
 from sympy.matrices import Matrix, zeronm
 from sympy.polynomials import roots, PolynomialException
 from sympy.utilities import any
+from sympy.functions.elementary.miscellaneous import sqrt
 
 def solve(eq, syms, simplified=True):
     """Solves univariate polynomial equations and linear systems with
@@ -384,7 +385,7 @@ def solve_ODE_second_order(a, b, c, f, x):
     #a very special case, for b=0 and a,c not depending on x:
     if b != 0:
         raise NotImplementedError("cannot solve this")
-    return Symbol("C1")*Basic.sin(Basic.sqrt(c/a)*x)+Symbol("C2")*Basic.cos(Basic.sqrt(c/a)*x)
+    return Symbol("C1")*Basic.sin(sqrt(c/a)*x)+Symbol("C2")*Basic.cos(sqrt(c/a)*x)
 
 def solve_ODE_1(f, x):
     """ (x*exp(-f(x)))'' = 0 """

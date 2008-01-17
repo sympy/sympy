@@ -230,7 +230,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             #       only a single one is returned from here.
             re, im = self.base.as_real_imag()
 
-            r = Basic.sqrt(re**2 + im**2)
+            r = (re**2 + im**2)**Basic.Rational(1,2)
             t = Basic.atan(im / re)
 
             if im == 0 and re < 0:

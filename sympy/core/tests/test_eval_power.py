@@ -1,4 +1,5 @@
-from sympy.core import *
+from sympy.core import Rational, Symbol, Basic, Real, Integer
+from sympy.functions.elementary.miscellaneous import sqrt
 
 def test_rational():
     a = Rational(1, 5)
@@ -28,7 +29,7 @@ def test_expand():
 
 def test_issue153():
     #test that is runs:
-    a = Basic.sqrt(2*(1+Basic.sqrt(2)))
+    a = sqrt(2*(1+sqrt(2)))
 
 def test_issue350():
     #test if powers are simplified correctly

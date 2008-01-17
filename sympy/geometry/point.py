@@ -1,6 +1,7 @@
 from sympy.core.basic import Basic, S
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
+from sympy.functions.elementary.miscellaneous import sqrt
 from entity import GeometryEntity
 
 
@@ -158,7 +159,7 @@ class Point(GeometryEntity):
             >>> Point.distance(p1, p2)
             5
         """
-        return Basic.sqrt( sum([(a-b)**2 for a,b in zip(p1,p2)]) )
+        return sqrt( sum([(a-b)**2 for a,b in zip(p1,p2)]) )
 
     @staticmethod
     def midpoint(p1, p2):

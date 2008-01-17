@@ -1,6 +1,7 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
 from sympy.core.function import Function
+from sympy.functions.elementary.miscellaneous import sqrt
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -208,7 +209,7 @@ class abs(Function):
         if not isinstance(coeff, Basic.One):
             return cls(coeff) * cls(Basic.Mul(*terms))
         if arg.is_real is False:
-            return Basic.sqrt( (arg * arg.conjugate()).expand() )
+            return sqrt( (arg * arg.conjugate()).expand() )
         if isinstance(arg, Basic.Pow):
             base, exponent = arg.as_base_exp()
             if isinstance(exponent, Basic.Number):

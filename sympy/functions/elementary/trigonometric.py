@@ -1,6 +1,7 @@
 
 from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
 from sympy.core.function import Lambda, Function
+from miscellaneous import sqrt
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -48,8 +49,8 @@ class sin(Function):
                     elif isinstance(pi_coeff, Basic.Rational):
                         cst_table = {
                             2 : S.One,
-                            3 : S.Half*Basic.sqrt(3),
-                            4 : S.Half*Basic.sqrt(2),
+                            3 : S.Half*sqrt(3),
+                            4 : S.Half*sqrt(2),
                             6 : S.Half,
                         }
 
@@ -184,8 +185,8 @@ class cos(Function):
                             1 : S.One,
                             2 : S.Zero,
                             3 : S.Half,
-                            4 : S.Half*Basic.sqrt(2),
-                            6 : S.Half*Basic.sqrt(3),
+                            4 : S.Half*sqrt(2),
+                            6 : S.Half*sqrt(3),
                         }
 
                         try:
@@ -317,9 +318,9 @@ class tan(Function):
                     elif isinstance(pi_coeff, Basic.Rational):
                         cst_table = {
                            #2 : S.ComplexInfinity,
-                            3 : Basic.sqrt(3),
+                            3 : sqrt(3),
                             4 : S.One,
-                            6 : 1 / Basic.sqrt(3),
+                            6 : 1 / sqrt(3),
                         }
 
                         try:
@@ -437,9 +438,9 @@ class cot(Function):
                     if isinstance(pi_coeff, Basic.Rational):
                         cst_table = {
                             2 : S.Zero,
-                            3 : 1 / Basic.sqrt(3),
+                            3 : 1 / sqrt(3),
                             4 : S.One,
-                            6 : Basic.sqrt(3)
+                            6 : sqrt(3)
                         }
 
                         try:
@@ -545,12 +546,12 @@ class asin(Function):
                 cst_table = {
                     S.Half       : 6,
                     -S.Half      : -6,
-                    Basic.sqrt(2)/2  : 4,
-                    -Basic.sqrt(2)/2 : -4,
-                    1/Basic.sqrt(2)  : 4,
-                    -1/Basic.sqrt(2) : -4,
-                    Basic.sqrt(3)/2  : 3,
-                    -Basic.sqrt(3)/2 : -3,
+                    sqrt(2)/2  : 4,
+                    -sqrt(2)/2 : -4,
+                    1/sqrt(2)  : 4,
+                    -1/sqrt(2) : -4,
+                    sqrt(3)/2  : 3,
+                    -sqrt(3)/2 : -3,
                 }
 
                 if arg in cst_table:
@@ -630,12 +631,12 @@ class acos(Function):
                 cst_table = {
                     S.Half       : S.Pi/3,
                     -S.Half      : 2*S.Pi/3,
-                    Basic.sqrt(2)/2  : S.Pi/4,
-                    -Basic.sqrt(2)/2 : 3*S.Pi/4,
-                    1/Basic.sqrt(2)  : S.Pi/4,
-                    -1/Basic.sqrt(2) : 3*S.Pi/4,
-                    Basic.sqrt(3)/2  : S.Pi/6,
-                    -Basic.sqrt(3)/2 : 5*S.Pi/6,
+                    sqrt(2)/2  : S.Pi/4,
+                    -sqrt(2)/2 : 3*S.Pi/4,
+                    1/sqrt(2)  : S.Pi/4,
+                    -1/sqrt(2) : 3*S.Pi/4,
+                    sqrt(3)/2  : S.Pi/6,
+                    -sqrt(3)/2 : 5*S.Pi/6,
                 }
 
                 if arg in cst_table:
@@ -703,12 +704,12 @@ class atan(Function):
                 return -S.Pi / 4
             else:
                 cst_table = {
-                    Basic.sqrt(3)/3  : 6,
-                    -Basic.sqrt(3)/3 : -6,
-                    1/Basic.sqrt(3)  : 6,
-                    -1/Basic.sqrt(3) : -6,
-                    Basic.sqrt(3)    : 3,
-                    -Basic.sqrt(3)   : -3,
+                    sqrt(3)/3  : 6,
+                    -sqrt(3)/3 : -6,
+                    1/sqrt(3)  : 6,
+                    -1/sqrt(3) : -6,
+                    sqrt(3)    : 3,
+                    -sqrt(3)   : -3,
                 }
 
                 if arg in cst_table:
@@ -772,12 +773,12 @@ class acot(Function):
                 return -S.Pi / 4
             else:
                 cst_table = {
-                    Basic.sqrt(3)/3  : 3,
-                    -Basic.sqrt(3)/3 : -3,
-                    1/Basic.sqrt(3)  : 3,
-                    -1/Basic.sqrt(3) : -3,
-                    Basic.sqrt(3)    : 6,
-                    -Basic.sqrt(3)   : -6,
+                    sqrt(3)/3  : 3,
+                    -sqrt(3)/3 : -3,
+                    1/sqrt(3)  : 3,
+                    -1/sqrt(3) : -3,
+                    sqrt(3)    : 6,
+                    -sqrt(3)   : -6,
                 }
 
                 if arg in cst_table:
