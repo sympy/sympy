@@ -1,9 +1,9 @@
-from sympy import symbols, integrate, Integral, exp, oo, Symbol, Rational, log, sin, cos, pi, E, I
+from sympy import symbols, integrate, Integral, exp, oo, Symbol, Rational, log, sin, cos, pi, E, I, Polynomial
 from sympy.utilities.pytest import XFAIL
 import py
 from py.test import skip
 
-x,a,t = symbols('xat')
+x,y,a,t = symbols('xyat')
 n = Symbol('n', integer=True)
 
 def test_improper_integral():
@@ -55,7 +55,6 @@ def test_integration():
     assert integrate(a*t**2+b*t+c, (t,0,x))==a*x**3/3+b*x**2/2+c*x
 
 def test_multiple_integration():
-    y = Symbol('y')
     assert integrate((x**2)*(y**2), (x,0,1), (y,-1,2)) == Rational(1)
     assert integrate((y**2)*(x**2), x, y) == Rational(1,9)*(x**3)*(y**3)
     assert integrate(1/(x+3)/(1+x)**3, x) == \
@@ -68,6 +67,36 @@ def test_issue461():
     assert integrate(x**Rational(3,2), x) == 2*x**Rational(5,2)/5
     assert integrate(x**Rational(1,2), x) == 2*x**Rational(3,2)/3
     assert integrate(x**Rational(-3,2), x) == -2*x**Rational(-1,2)
+
+def test_integrate_poly():
+    p = Polynomial(x + x**2*y + y**3, var=[x,y])
+    qx= integrate(p, x)
+    qy= integrate(p, y)
+
+    assert isinstance(qx, Polynomial) == True
+    assert isinstance(qy, Polynomial) == True
+
+    assert qx.var == [x,y]
+    assert qy.var == [x,y]
+
+    assert qx == x**2/2 + x**3*y/3 + x*y**3
+    assert qy == x*y + x**2*y**2/2 + y**4/4
+
+
+@XFAIL #depends on poly.subs -> poly
+def test_integrate_poly_defined():
+    p = Polynomial(x + x**2*y + y**3, var=[x,y])
+    Qx= integrate(p, (x,0,1))
+    Qy= integrate(p, (y,0,pi))
+
+    assert isinstance(Qx, Polynomial) == True
+    assert isinstance(Qy, Polynomial) == True
+
+    assert Qx.var == [y]
+    assert Qy.var == [x]
+
+    assert Qx == Rational(1,2) + y/3 + y**3
+    assert Qy == pi**4/4 + pi*x + pi**2*x**2/2
 
 
 def test_integrate_varommited():

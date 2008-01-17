@@ -395,6 +395,25 @@ def test_poly_integrate():
     assert Polynomial(x*(y+x+z)).integrate(x) == x**2*y/2 + x**3/3 + x**2*z/2
     assert Polynomial(x*(y+x+z)).integrate(z) == x*y*z + x**2*z + x*z**2/2
 
+    # verify that Polynomial.integrate() always gives a Polynomial
+    q = Polynomial(x).integrate(x)
+    assert isinstance(q, Polynomial) == True
+
+    q = Polynomial(x).integrate(y)
+    assert isinstance(q, Polynomial) == True
+
+
+@XFAIL
+def test_poly_integrate_symbolic_coeff():
+    x, y, z = symbols("xyz")
+
+    p = Polynomial(z*x**2, var=x)
+    assert p.integrate(x) == z*x**3/3
+    assert p.integrate(y) == z*y*x**2
+    assert p.integrate(z) == z**2*x**2/2
+    assert p.integrate(z) == z**2*x**2/2    # FIXME this fails
+
+
 def test_solve_system2():
     x, y = symbols('xy')
     f = y - x

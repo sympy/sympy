@@ -176,7 +176,10 @@ class Integral(Basic, NoRelMeths, ArithMeths):
         except PolynomialException:
             p = None
         if p is not None:
-            return p.integrate(x)
+            # it wasn't a poly, so let's integrate it, and convert back to
+            # sympy expression
+            i = p.integrate(x)
+            return i.sympy_expr
 
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,

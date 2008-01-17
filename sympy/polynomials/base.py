@@ -665,15 +665,19 @@ class Polynomial(Basic):
         """
 
         if not variable in self.var:
-            return (variable * self).expand()
+            # FIXME we have to ensure first that either:
+            # - coeff_ring != 'sym'
+            # - coefficients do not contain `variable`
+            return Polynomial(variable, order=self.order) * self
         nvar = self.var.index(variable) 
-        int = []
+        cint = []
         for term in self.coeffs:
             t = list(term)
             t[nvar+1] += 1
             t[0] /= t[nvar+1]
-            int.append(tuple(t))
-        return coefficients2sympy(int, self.var) 
+            cint.append(tuple(t))
+
+        return Polynomial(coeffs=cint, var=self.var, order=self.order)
 
 
     def leading_coeff(self):
