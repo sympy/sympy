@@ -20,7 +20,7 @@ def test_function_series1():
                 return sympify(0)
 
     #Test that the taylor series is correct
-    assert my_function(x).series(x, 10) == sin(x).series(x, 10)
+    assert my_function(x).series(x, 0, 10) == sin(x).series(x, 0, 10)
     assert limit(my_function(x)/x, x, 0) == 1
 
 def test_function_series2():
@@ -39,7 +39,7 @@ def test_function_series2():
                 return sympify(1)
 
     #Test that the taylor series is correct
-    assert my_function2(x).series(x, 10) == cos(x).series(x, 10)
+    assert my_function2(x).series(x, 0, 10) == cos(x).series(x, 0, 10)
 
 def test_function_series3():
     """
@@ -66,4 +66,4 @@ def test_function_series3():
 
     e = tanh(x)
     f = mytanh(x)
-    assert tanh(x).series(x, 6) == mytanh(x).series(x, 6)
+    assert tanh(x).series(x, 0, 6) == mytanh(x).series(x, 0, 6)

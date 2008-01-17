@@ -1062,12 +1062,13 @@ class Basic(BasicMeths):
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
     ###################################################################################
 
-    def series(self, x, n = 6):
+    def series(self, x, point=0, n=6):
         """
         Usage
         =====
-            Return the Taylor (Laurent or generalized) series around 0 of self
-            with respect to x until the n-th term (default n is 6).
+            Returns the Taylor (Laurent or generalized) series of "self" around
+            the point "point" (default 0) with respect to "x" until the n-th
+            term (default n is 6).
 
         Notes
         =====
@@ -1079,6 +1080,10 @@ class Basic(BasicMeths):
             returning a series (without the O term) up to the given order.
         """
         x = Basic.sympify(x)
+        point = Basic.sympify(point)
+        if point != 0:
+            raise NotImplementedError("series expansion around arbitrary point")
+            #self = self.subs(x, x + point)
         o = Basic.Order(x**n,x)
         r = self.oseries(o)
         if r==self:

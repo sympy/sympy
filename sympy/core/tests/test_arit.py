@@ -5,7 +5,7 @@ x = Symbol("x")
 
 def test_bug1():
     assert re(x) != x
-    x.series(x,1)
+    x.series(x,0,1)
     assert re(x) != x
 
 a = Symbol("a")
@@ -183,7 +183,7 @@ def test_expand():
     assert e.expand() == 5*a+5*b+5*c+2*a*c+b*c+a*b+a**2+c**2
     x=Symbol("x")
     s=exp(x*x)-1
-    e=s.series(x,5)/x**2
+    e=s.series(x,0,5)/x**2
     assert e.expand() ==  1+x**2/2+O(x**3)
 
     # Check that this isn't too slow

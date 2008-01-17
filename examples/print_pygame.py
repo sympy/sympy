@@ -18,7 +18,7 @@ expressions = (
     sin(x**2+exp(x)),
     sqrt(exp(x)),
 
-    #print (1/cos(x)).series(x,10)
+    #print (1/cos(x)).series(x,0,10)
 )
 
 print "sympy print:"

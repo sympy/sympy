@@ -34,6 +34,6 @@ print '\n'
 pprint( sqrt(sqrt(exp(x))) )
 print '\n'
 
-pprint( (1/cos(x)).series(x,10) )
+pprint( (1/cos(x)).series(x,0,10) )
 print '\n'
 
