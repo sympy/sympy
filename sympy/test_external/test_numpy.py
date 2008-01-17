@@ -112,3 +112,10 @@ def test_conversion2():
 def test_list2numpy():
     x = Symbol("x")
     assert (array([x**2, x]) == list2numpy([x**2, x])).all()
+
+def test_issue629():
+    x = Symbol("x")
+    assert (Rational(1,2)*array([2*x, 0]) == array([x, 0])).all()
+    assert (Rational(1,2)+array([2*x, 0]) == array([2*x+Rational(1,2), Rational(1,2)])).all()
+    assert (Real("0.5")*array([2*x, 0]) == array([Real("1.0")*x, 0])).all()
+    assert (Real("0.5")+array([2*x, 0]) == array([2*x+Real("0.5"), Real("0.5")])).all()

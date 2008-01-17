@@ -254,7 +254,7 @@ class Real(Number):
         try:
             other = Basic.sympify(other)
         except SympifyError:
-            return NotImplementedError
+            return NotImplemented
         if isinstance(other, Number):
             return Real(self.num * other._as_decimal())
         return Number.__mul__(self, other)
@@ -263,7 +263,7 @@ class Real(Number):
         try:
             other = Basic.sympify(other)
         except SympifyError:
-            return NotImplementedError
+            return NotImplemented
         if isinstance(other, NaN) or isinstance(self, NaN):
             return S.NaN
         if isinstance(other, Number):
@@ -452,7 +452,7 @@ class Rational(Number):
         try:
             other = Basic.sympify(other)
         except SympifyError:
-            return NotImplementedError
+            return NotImplemented
         if isinstance(other, NaN) or isinstance(self, NaN):
             return S.NaN
         if isinstance(other, Real):
