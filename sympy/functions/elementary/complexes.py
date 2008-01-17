@@ -76,9 +76,6 @@ class re(Function):
     def _eval_conjugate(self):
         return self
 
-    def _eval_is_real(self):
-        return True
-
     def _eval_expand_complex(self, *args):
         return self.func(self[0].as_real_imag()[0])
 
@@ -150,9 +147,6 @@ class im(Function):
 
     def _eval_conjugate(self):
         return self
-
-    def _eval_is_real(self):
-        return True
 
     def _eval_expand_complex(self, *args):
         return self.func(self[0].as_real_imag()[1])
@@ -248,9 +242,6 @@ class arg(Function):
 
     def _eval_conjugate(self):
         return self
-
-    def _eval_is_real(self):
-        return True
 
 class conjugate(Function):
 
