@@ -203,6 +203,7 @@ class abs(Function):
     def canonize(cls, arg):
         if isinstance(arg, Basic.NaN):
             return S.NaN
+        if arg.is_zero:     return arg
         if arg.is_positive: return arg
         if arg.is_negative: return -arg
         coeff, terms = arg.as_coeff_terms()
@@ -226,9 +227,6 @@ class abs(Function):
         if isinstance(arg, Basic.Number):
             import operator
             return operator.abs(float(arg))
-
-    def _eval_is_zero(self):
-        return isinstance(self[0], Basic.Zero)
 
     def _eval_conjugate(self):
         return self

@@ -77,5 +77,8 @@ def test_im():
 
 def test_abs():
     x, y = symbols('xy')
+    assert abs(0) == 0
+    assert abs(1) == 1
+    assert abs(-1)== 1
     assert sqrt(x**2) == abs(x)
     assert abs(x).diff(x) == sign(x)
