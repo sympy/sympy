@@ -82,3 +82,20 @@ def test_abs():
     assert abs(-1)== 1
     assert sqrt(x**2) == abs(x)
     assert abs(x).diff(x) == sign(x)
+
+def test_abs_properties():
+    x = Symbol('x')
+
+    assert abs(x).is_real == True
+    assert abs(x).is_positive == None
+    assert abs(x).is_nonnegative == True
+
+    w = Symbol('w', complex=True, zero=False)
+    assert abs(w).is_real == True
+    assert abs(w).is_positive == True
+    assert abs(w).is_zero == False
+
+    q = Symbol('q', positive=True)
+    assert abs(q).is_real == True
+    assert abs(q).is_positive == True
+    assert abs(q).is_zero == False

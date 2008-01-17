@@ -189,6 +189,9 @@ class abs(Function):
 
     nargs = 1
 
+    is_real = True
+    is_negative = False
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return sign(self.args[0])
@@ -227,6 +230,12 @@ class abs(Function):
         if isinstance(arg, Basic.Number):
             import operator
             return operator.abs(float(arg))
+
+    def _eval_is_nonzero(self):
+        return self._args[0].is_nonzero
+
+    def _eval_is_positive(self):
+        return self.is_nonzero
 
     def _eval_conjugate(self):
         return self
