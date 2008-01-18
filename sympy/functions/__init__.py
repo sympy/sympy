@@ -1,4 +1,9 @@
+"""A functions module, inculdes all the standart functions.
 
+Combinatorial - factorial, fibonacci, harmonic, bernoulli...
+Elementary - hyperbolic, trigonometric, exponential, floor and ceiling, sqrt...
+Special - gamma, zeta,spherical harmonics...
+"""
 from sympy.core.basic import Basic
 
 import combinatorial

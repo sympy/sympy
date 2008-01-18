@@ -1,4 +1,5 @@
-
+"""Some utilities that may help.
+"""
 import sys
 
 from iterables import make_list, flatten
