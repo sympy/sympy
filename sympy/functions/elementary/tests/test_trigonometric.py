@@ -4,6 +4,8 @@ from sympy import *
 def test_sin():
     x, y = symbols('xy')
 
+    r = Symbol('r', real=True)
+
     k = Symbol('k', integer=True)
 
     assert sin(nan) == nan
@@ -62,8 +64,12 @@ def test_sin():
 
     assert sin(k*pi*I) == sinh(k*pi)*I
 
+    assert sin(r).is_real == True
+
 def test_cos():
     x, y = symbols('xy')
+
+    r = Symbol('r', real=True)
 
     k = Symbol('k', integer=True)
 
@@ -124,8 +130,12 @@ def test_cos():
 
     assert cos(k*pi*I) == cosh(k*pi)
 
+    assert cos(r).is_real == True
+
 def test_tan():
     x, y = symbols('xy')
+
+    r = Symbol('r', real=True)
 
     k = Symbol('k', integer=True)
 
@@ -185,8 +195,12 @@ def test_tan():
 
     assert tan(k*pi*I) == tanh(k*pi)*I
 
+    assert tan(r).is_real == True
+
 def test_cot():
     x, y = symbols('xy')
+
+    r = Symbol('r', real=True)
 
     k = Symbol('k', integer=True)
 
@@ -246,6 +260,7 @@ def test_cot():
 
     assert cot(k*pi*I) == -coth(k*pi)*I
 
+    assert cot(r).is_real == True
 
 # TODO write me
 def test_asin():
@@ -257,33 +272,50 @@ def test_asin():
 
     assert asin(x).diff(x) ==  1/sqrt(1-x**2)
 
+    assert asin(0.2).is_real == True
+    assert asin(-2).is_real == False
 
 # TODO write me
 def test_acos():
     x = Symbol('x')
+
+    r = Symbol('r', real=True)
 
     assert acos(0)  == pi/2
     assert acos(Rational(1,2)) == pi/3
     assert acos(1)  == 0
     assert acos(x).diff(x) == -1/sqrt(1-x**2)
 
+    assert acos(0.2).is_real == True
+    assert acos(-2).is_real == False
+
 
 # TODO write me
 def test_atan():
     x = Symbol('x')
+
+    r = Symbol('r', real=True)
+
     assert atan(0)  == 0
     assert atan(1)  == pi/4
     assert atan(oo) == pi/2
     assert atan(x).diff(x) ==  1/(1+x**2)
 
+    assert atan(r).is_real == True
+
 
 # TODO write me
 def test_acot():
     x = Symbol('x')
+
+    r = Symbol('r', real=True)
+
     assert acot(oo) == 0
     assert acot(1)  == pi/4
     assert acot(0)  == pi/2
     assert acot(x).diff(x) == -1/(1+x**2)
+
+    assert acot(r).is_real == True
 
 
 

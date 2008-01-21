@@ -266,6 +266,9 @@ class cos(Function):
         else:
             return self.func(arg)
 
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
     def _eval_is_bounded(self):
         arg = self.args[0]
 
@@ -390,6 +393,9 @@ class tan(Function):
         else:
             return self.func(arg)
 
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
     def _eval_is_bounded(self):
         arg = self.args[0]
 
@@ -507,6 +513,9 @@ class cot(Function):
         else:
             return self.func(arg)
 
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
 ###############################################################################
 ########################### TRIGONOMETRIC INVERSES ############################
 ###############################################################################
@@ -596,6 +605,9 @@ class asin(Function):
         else:
             return self.func(arg)
 
+    def _eval_is_real(self):
+	return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
+
 class acos(Function):
 
     nargs = 1
@@ -671,6 +683,9 @@ class acos(Function):
         else:
             return self.func(arg)
 
+    def _eval_is_real(self):
+	return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
+
 class atan(Function):
 
     nargs = 1
@@ -744,6 +759,9 @@ class atan(Function):
         else:
             return self.func(arg)
 
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
 class acot(Function):
 
     nargs = 1
@@ -814,3 +832,6 @@ class acot(Function):
             return arg
         else:
             return self.func(arg)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
