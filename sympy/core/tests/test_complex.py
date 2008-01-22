@@ -89,3 +89,8 @@ def test_pythoncomplex():
 def test_rootcomplex():
     assert ((1+I)**Rational(1,2)).expand(complex=True) == 2**Rational(1,4)*cos(Rational(1,2)*atan(1))+2**(Rational(1,4))*sin(Rational(1,2)*atan(1))*I
     assert (sqrt(-10)*I).as_real_imag() == (-sqrt(10), 0)
+
+def test_expand_inverse():
+    assert (1/(1+I)).expand(complex=True) == (1-I)/2
+    assert ((1+2*I)**(-2)).expand(complex=True) == (-3-4*I)/25
+    assert ((1+I)**(-8)).expand(complex=True) == Rational(1,16)

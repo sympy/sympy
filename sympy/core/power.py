@@ -221,9 +221,15 @@ class Pow(Basic, ArithMeths, RelMeths):
 
     def _eval_expand_complex(self, *args):
         if isinstance(self.exp, Basic.Integer):
+            exp = self.exp
             re, im = self.base.as_real_imag()
-            base = re + S.ImaginaryUnit * im
-            return (base**self.exp)._eval_expand_basic(*args)
+            if exp >= 0:
+                base = re + S.ImaginaryUnit*im
+            else:
+                mag = re**2 + im**2
+                base = re/mag - S.ImaginaryUnit*(im/mag)
+                exp = -exp
+            return (base**exp)._eval_expand_basic(*args)
         elif isinstance(self.exp, Basic.Rational):
             # NOTE: This is not totally correct since for x**(p/q) with
             #       x being imaginary there are actually q roots, but
