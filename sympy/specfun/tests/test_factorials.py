@@ -1,5 +1,7 @@
-from sympy import *
-from sympy.specfun.factorials import *
+from sympy import oo, Symbol, Rational, Integer, gamma, log, \
+        EulerGamma, zoo, sqrt, pi, uppergamma, lowergamma, sin, Real
+from sympy.specfun.factorials import factorial_simplify, binomial2, \
+        rising_factorial, falling_factorial, unfac, factorial
 
 x = Symbol('x')
 y = Symbol('y')
