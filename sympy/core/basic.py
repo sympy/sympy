@@ -243,7 +243,7 @@ class Basic(BasicMeths):
             if ireal + iimag*1j == a:
                 return ireal + iimag*Basic.ImaginaryUnit()
             return real + Basic.ImaginaryUnit() * imag
-        elif isinstance(a, (list,tuple)) and len(a) == 2:
+        elif (a.__class__ in [list,tuple]) and len(a) == 2:
             return Basic.Interval(*a)
         elif isinstance(a, (list,tuple,set)) and sympify_lists:
             return type(a)([Basic.sympify(x, True) for x in a])

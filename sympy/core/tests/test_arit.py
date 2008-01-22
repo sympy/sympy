@@ -1,4 +1,5 @@
-from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Real, re, pi
+from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Real, re, pi, \
+        sympify
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol("x")
@@ -869,3 +870,9 @@ def test_Pow_is_nonpositive_nonnegative():
     assert ((-k)**x).is_nonpositive == None
     assert ((-k)**n).is_nonpositive == None
     assert ((-k)**m).is_nonpositive == True
+
+def test_issue432():
+    class MightyNumeric(tuple):
+        def __rdiv__(self, other):
+            return "something"
+    assert sympify(1)/MightyNumeric((1,2)) == "something"
