@@ -113,16 +113,21 @@ class PlotController(object):
         if self.action['down']: dy += 1
         if self.action['spin_left']: dz += 1
         if self.action['spin_right']: dz -= 1
-        if dx != 0:
-            self.camera.euler_rotate(dx*dt*self.get_key_sensitivity(), *(get_direction_vectors()[1]))
-        if dy != 0:
-            self.camera.euler_rotate(dy*dt*self.get_key_sensitivity(), *(get_direction_vectors()[0]))
-        if dz != 0:
-            self.camera.euler_rotate(dz*dt*self.get_key_sensitivity(), *(get_direction_vectors()[2]))
+
+        if not self.is_2D():
+            if dx != 0:
+                self.camera.euler_rotate(dx*dt*self.get_key_sensitivity(), *(get_direction_vectors()[1]))
+            if dy != 0:
+                self.camera.euler_rotate(dy*dt*self.get_key_sensitivity(), *(get_direction_vectors()[0]))
+            if dz != 0:
+                self.camera.euler_rotate(dz*dt*self.get_key_sensitivity(), *(get_direction_vectors()[2]))
+        else:
+            self.camera.mouse_translate(0, 0, dx*dt*self.get_key_sensitivity(), -dy*dt*self.get_key_sensitivity())
 
         rz = 0
-        if self.action['rotate_z_neg']: rz -= 1
-        if self.action['rotate_z_pos']: rz += 1
+        if self.action['rotate_z_neg'] and not self.is_2D(): rz -= 1
+        if self.action['rotate_z_pos'] and not self.is_2D(): rz += 1
+
         if rz != 0:
             self.camera.euler_rotate(rz*dt*self.get_key_sensitivity(), *(get_basis_vectors()[2]))
 
@@ -174,7 +179,10 @@ class PlotController(object):
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         if buttons & LEFT:
-            self.camera.spherical_rotate((x-dx,y-dy),(x,y), self.get_mouse_sensitivity())
+            if self.is_2D():
+                self.camera.mouse_translate(x, y, dx, dy)
+            else:
+                self.camera.spherical_rotate((x-dx,y-dy),(x,y), self.get_mouse_sensitivity())
         if buttons & MIDDLE:
             self.camera.zoom_relative([1,-1][self.invert_mouse_zoom]*dy, self.get_mouse_sensitivity()/20.0)
         if buttons & RIGHT:
@@ -182,3 +190,10 @@ class PlotController(object):
 
     def on_mouse_scroll(self, x, y, dx, dy):
         self.camera.zoom_relative([1,-1][self.invert_mouse_zoom]*dy, self.get_mouse_sensitivity())
+
+    def is_2D(self):
+        functions = self.window.plot._functions
+        for i in functions:
+            if len(functions[i].i_vars)>1 or len(functions[i].d_vars)>2:
+                return False
+        return True
