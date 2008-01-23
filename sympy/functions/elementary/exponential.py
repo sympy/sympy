@@ -329,9 +329,9 @@ class log(Function):
         return (1-2*(n%2)) * x**(n+1)/(n+1)
 
     def _eval_expand_complex(self, *args):
-        re, im = self[0].as_real_imag()
-        return S.Log(S.Sqrt(re) + S.Sqrt(im)) + \
-               S.ImaginaryUnit * S.Arg(self[0])
+        re, im = self.args[0].as_real_imag()
+        return log(re**S.Half + im**S.Half) + \
+               S.ImaginaryUnit * Basic.arg(self.args[0])
 
     def _eval_is_real(self):
         return self.args[0].is_positive
