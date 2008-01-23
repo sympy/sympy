@@ -13,7 +13,7 @@ class exp(Function):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
-        return S.Log
+        return log
 
     @classmethod
     def _eval_apply_subs(self, *args):
@@ -124,7 +124,7 @@ class exp(Function):
         arg = self.args[0]
         o = old
         if isinstance(old, Basic.Pow): # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
-            old = exp(old.exp * S.Log(old.base))
+            old = exp(old.exp * log(old.base))
         if isinstance(old, exp):
             b,e = self.as_base_exp()
             bo,eo = old.as_base_exp()
