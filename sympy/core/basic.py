@@ -244,6 +244,7 @@ class Basic(BasicMeths):
                 return ireal + iimag*Basic.ImaginaryUnit()
             return real + Basic.ImaginaryUnit() * imag
         elif (a.__class__ in [list,tuple]) and len(a) == 2:
+            # isinstance causes problems in the issue #432, so we use .__class__
             return Basic.Interval(*a)
         elif isinstance(a, (list,tuple,set)) and sympify_lists:
             return type(a)([Basic.sympify(x, True) for x in a])
