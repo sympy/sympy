@@ -1,7 +1,8 @@
 
-from sympy.core import Basic, S
+from sympy.core import Basic, Add, S
 from sympy.core.function import Function
 from zeta_functions import zeta
+from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.miscellaneous import sqrt
 
 ###############################################################################
@@ -175,7 +176,7 @@ class polygamma(Function):
 
 
     def _eval_expand_func(self, *args):
-        n, z = self[0], self[1].expand(func=True)
+        n, z = self.args[0], self.args[1].expand(func=True)
 
         if isinstance(n, Basic.Integer) and n.is_nonnegative:
             if isinstance(z, Basic.Add):
@@ -183,19 +184,19 @@ class polygamma(Function):
 
                 if isinstance(coeff, Basic.Integer):
                     tail = Add(*[ z + i for i in xrange(0, int(coeff)) ])
-                    return self(n, z-coeff) + (-1)**n*Basic.Factorial(n)*tail
+                    return polygamma(n, z-coeff) + (-1)**n*Basic.Factorial(n)*tail
             elif isinstance(z, Basic.Mul):
                 coeff, terms = z.as_coeff_terms()
 
                 if isinstance(coeff, Basic.Integer) and coeff.is_positive:
-                    tail = [ self(n, z + i/coeff) for i in xrange(0, int(coeff)) ]
+                    tail = [ polygamma(n, z + i/coeff) for i in xrange(0, int(coeff)) ]
 
                     if isinstance(n, Basic.Zero):
-                        return S.Log(coeff) + Add(*tail)/coeff**(n+1)
+                        return log(coeff) + Add(*tail)/coeff**(n+1)
                     else:
                         return Add(*tail)/coeff**(n+1)
 
-        return self(n, z)
+        return polygamma(n, z)
 
     def _eval_rewrite_as_zeta(self, n, z):
         return (-1)**(n+1)*Basic.Factorial(n)*zeta(n+1, z-1)

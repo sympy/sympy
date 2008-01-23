@@ -71,5 +71,10 @@ def test_polygamma():
 
     assert polygamma(3, 7*x).diff(x) == 7*polygamma(4, 7*x)
 
+def test_polygamma_expand_func():
+    assert polygamma(0, x).expand(func=True) == polygamma(0, x)
+
+    # TODO please write more tests -- #653
+
 def test_loggamma():
     pass
