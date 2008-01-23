@@ -419,9 +419,9 @@ class asinh(Function):
             elif isinstance(arg, Basic.Zero):
                 return S.Zero
             elif isinstance(arg, Basic.One):
-                return S.Log(S.Sqrt(2) + 2)
+                return Basic.log(2**S.Half + 1)
             elif isinstance(arg, Basic.NegativeOne):
-                return S.Log(S.Sqrt(2) - 2)
+                return Basic.log(2**S.Half - 1)
             elif arg.is_negative:
                 return -cls(-arg)
         else:

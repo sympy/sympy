@@ -245,7 +245,13 @@ def test_coth():
 
     assert coth(k*pi*I) == -cot(k*pi)*I
 
-#def test_asinh():
+def test_asinh():
+    # TODO please write more tests  -- see #652
+    assert asinh( 0) == 0
+    assert asinh(+1) == log(sqrt(2)+1)
+    assert asinh(-1) == log(sqrt(2)-1)
+
+# TODO please write tests -- see #652
 #def test_acosh():
 #def test_atanh():
 #def test_acoth():
