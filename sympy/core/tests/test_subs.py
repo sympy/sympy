@@ -1,7 +1,7 @@
 import py
 
 import sympy as g
-from sympy import Symbol, Wild, sin, cos, exp, pi, Function, Derivative, abc, \
+from sympy import Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative, abc, \
         Integer
 from sympy.utilities.pytest import XFAIL
 
@@ -109,3 +109,10 @@ def test_equality_subs2():
     eq = f(x)**2 == 16
     assert eq.subs(f(x), 3) == False
     assert eq.subs(f(x), 4) == True
+
+def test_issue643():
+    x = Symbol('x')
+    y = Symbol('y')
+
+    e = sqrt(x)*exp(y)
+    assert e.subs(sqrt(x), 1)   == exp(y)
