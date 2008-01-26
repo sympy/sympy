@@ -128,3 +128,28 @@ u"""\
 ⎣     y  x + y⎦\
 """
     assert u == s
+
+
+def test_upretty_seq():
+    e = [x**2, 1/x, x, y, sin(th)**2/cos(ph)**2]
+    u = upretty(e)
+    s = \
+u"""\
+⎡                2   ⎤
+⎢ 2  1        sin (θ)⎥
+⎢x , ─, x, y, ───────⎥
+⎢    x           2   ⎥
+⎣             cos (φ)⎦\
+"""
+    assert u == s
+
+    e = tuple(e)
+    u = upretty(e)
+    s = \
+u"""\
+⎛                2   ⎞
+⎜ 2  1        sin (θ)⎟
+⎜x , ─, x, y, ───────⎟
+⎜    x           2   ⎟
+⎝             cos (φ)⎠\
+"""

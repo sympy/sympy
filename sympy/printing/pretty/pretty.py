@@ -240,13 +240,7 @@ class PrettyPrinter(Printer):
         func_name = func.__name__
 
         prettyFunc = self._print(Basic.Symbol(func_name));
-        prettyArgs = self._print(args[0])
-        for i in xrange(1, n):
-            pform = self._print(args[i])
-            prettyArgs = prettyForm(*stringPict.next(prettyArgs, ', '))
-            prettyArgs = prettyForm(*stringPict.next(prettyArgs, pform))
-
-        prettyArgs = prettyForm(*prettyArgs.parens(ifascii_nougly=True))
+        prettyArgs = self._print_seq(args, '(', ')', ifascii_nougly=True)
 
         pform = prettyForm(binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
 
@@ -361,6 +355,33 @@ class PrettyPrinter(Printer):
                 return prettyForm(binding=prettyForm.NEG, *pform.left('- '))
             else:
                 return prettyForm(str(r.p))/prettyForm(str(r.q))
+
+
+    def _print_seq(self, seq, left=None, right=None, **kw):
+        S = None
+
+        for item in seq:
+            pform = self._print(item)
+
+            if S is None:
+                # first element
+                S = pform
+            else:
+                S = prettyForm(*stringPict.next(S, ', '))
+                S = prettyForm(*stringPict.next(S, pform))
+
+        if S is None:
+            S = stringPict('')
+
+        S = prettyForm(*S.parens(left, right, **kw))
+        return S
+
+    def _print_list(self, l):
+        return self._print_seq(l, '[', ']')
+
+    def _print_tuple(self, t):
+        return self._print_seq(t, '(', ')')
+
 
 def pretty(expr, use_unicode=None):
     """

@@ -156,6 +156,9 @@ class stringPict:
     def parens(self, left='(', right=')', ifascii_nougly=False):
         """Put parentheses around self.
         Returns string, baseline arguments for stringPict.
+
+        left or right can be None or empty string which means 'no paren from
+        that side'
         """
         h = self.height()
         b = self.baseline
@@ -165,10 +168,16 @@ class stringPict:
             h = 1
             b = 0
 
-        lparen = stringPict(vobj(left,  h), baseline=b)
-        rparen = stringPict(vobj(right, h), baseline=b)
+        res = self
 
-        return lparen.right(self, rparen)
+        if left:
+            lparen = stringPict(vobj(left,  h), baseline=b)
+            res    = stringPict(*lparen.right(self))
+        if right:
+            rparen = stringPict(vobj(right, h), baseline=b)
+            res    = stringPict(*res.right(rparen))
+
+        return ('\n'.join(res.picture), res.baseline)
 
     def leftslash(self):
         """Precede object by a slash of the proper size.
