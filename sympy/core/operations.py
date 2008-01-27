@@ -1,5 +1,6 @@
 
-from basic import Basic, cache_it, cache_it_immutable
+from basic import Basic
+from cache import cache_it, cache_it_immutable
 
 class AssocOp(Basic):
     """ Associative operations, can separate noncommutative and

@@ -1,6 +1,7 @@
 
-from basic import Basic, S, cache_it, cache_it_immutable
+from basic import Basic, S
 from methods import ArithMeths, RelMeths, NoRelMeths
+from cache import cache_it, cache_it_immutable
 
 
 def integer_nthroot(y, n):

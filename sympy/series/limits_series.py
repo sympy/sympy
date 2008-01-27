@@ -8,8 +8,9 @@
 # other bugs (mainly recursion), if it were used in the series expansion. So
 # currently we use limits_series, until we move to limits.py completely.
 
-from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
+from sympy.core.basic import Basic, S
 from sympy.core.methods import RelMeths, ArithMeths
+from sympy.core.cache import cache_it, cache_it_immutable
 
 class Limit(Basic, RelMeths, ArithMeths):
     """ Find the limit of the expression under process x->xlim.

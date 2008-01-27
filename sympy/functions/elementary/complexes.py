@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
+from sympy.core.basic import Basic, S
 from sympy.core.function import Function
 from sympy.functions.elementary.miscellaneous import sqrt
 

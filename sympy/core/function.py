@@ -29,10 +29,11 @@ Example:
     (x,)
 """
 
-from basic import Basic, Singleton, Atom, cache_it, S
+from basic import Basic, Singleton, Atom, S
 from basic_methods import BasicType, MetaBasicMeths
 from methods import ArithMeths, NoRelMeths, RelMeths
 from operations import AssocOp
+from cache import cache_it
 
 class FunctionClass(MetaBasicMeths):
     """

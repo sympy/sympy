@@ -1,7 +1,7 @@
 """ Defines default methods for unary and binary operations.
 """
 
-from basic import Basic, cache_it, SympifyError
+from basic import Basic, SympifyError
 
 def _no_unary_operation(op, obj):
     return 'unary operation `%s` not defined for %s' % (op, obj.__class__.__name__)

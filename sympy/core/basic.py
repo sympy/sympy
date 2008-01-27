@@ -3,7 +3,8 @@
 type_class = type
 
 import decimal
-from basic_methods import BasicMeths, cache_it, cache_it_immutable, BasicType
+from basic_methods import BasicMeths, BasicType
+from cache import cache_it, cache_it_immutable, Memoizer, MemoizerArg
 
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc):

@@ -1,7 +1,8 @@
 
-from basic import Basic, S, cache_it, cache_it_immutable
+from basic import Basic, S
 from operations import AssocOp
 from methods import RelMeths, ArithMeths
+from cache import cache_it, cache_it_immutable
 
 class Add(AssocOp, RelMeths, ArithMeths):
 

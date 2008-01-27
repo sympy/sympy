@@ -1,7 +1,7 @@
 
-from basic import Basic, Atom, S, cache_it
-from basic_methods import cache_it_nondummy
+from basic import Basic, Atom, S
 from methods import RelMeths, ArithMeths
+from cache import cache_it, cache_it_nondummy
 
 class Symbol(Atom, RelMeths, ArithMeths):
     """

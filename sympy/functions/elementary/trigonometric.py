@@ -1,7 +1,8 @@
 
-from sympy.core.basic import Basic, S, cache_it, cache_it_immutable
+from sympy.core.basic import Basic, S
 from sympy.core.function import Lambda, Function
 from miscellaneous import sqrt
+from sympy.core.cache import cache_it, cache_it_immutable
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
