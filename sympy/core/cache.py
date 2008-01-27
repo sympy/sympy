@@ -11,8 +11,17 @@ def mycopy(obj, level=0):
     return obj
 
 
+# TODO: refactor CACHE & friends into class?
+
+# global cache registry:
+CACHE = []  # [] of
+            #    (item, {} or tuple of {})
+
+
 def cache_it_fast(func):
     func._cache_it_cache = func_cache_it_cache = {}
+    CACHE.append((func, func_cache_it_cache))
+
     def wrapper(*args, **kw_args):
         if kw_args:
             keys = kw_args.keys()
@@ -34,6 +43,8 @@ def cache_it_fast(func):
 
 def cache_it_immutable(func):
     func._cache_it_cache = func_cache_it_cache = {}
+    CACHE.append((func, func_cache_it_cache))
+
     def wrapper(*args, **kw_args):
         if kw_args:
             keys = kw_args.keys()
@@ -53,6 +64,8 @@ def cache_it_immutable(func):
 def cache_it_debug(func):
     func._cache_it_cache = func_cache_it_cache = {}
     func._cache_it_cache_repr = func_cache_it_cache_repr = {}
+    CACHE.append((func, (func_cache_it_cache, func_cache_it_cache_repr)))
+
     def wrapper(*args, **kw_args):
         if kw_args:
             keys = kw_args.keys()
@@ -89,6 +102,8 @@ cache_it = cache_it_fast
 
 def cache_it_nondummy(func):
     func._cache_it_cache = func_cache_it_cache = {}
+    CACHE.append((func, func_cache_it_cache))
+
     def wrapper(*args, **kw_args):
         if kw_args:
             try:
@@ -217,6 +232,8 @@ class Memoizer:
     def __call__(self, func):
         cache = {}
         value_cache = {}
+        CACHE.append((func, (cache, value_cache)))
+
         def wrapper(*args, **kw_args):
             kw_items = tuple(kw_args.items())
             try:
