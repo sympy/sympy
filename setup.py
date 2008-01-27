@@ -212,8 +212,8 @@ class test_sympy_doc(Command):
         runner = unittest.TextTestRunner()
         runner.run(suite)
 
-#Check that this list is uptodate against the result of the command:
-#$ find * -name tests |sort
+# Check that this list is uptodate against the result of the command:
+# $ python bin/generate_test_list.py 
 tests = [
     'sympy.concrete.tests',
     'sympy.core.tests',
@@ -235,9 +235,13 @@ tests = [
     'sympy.solvers.tests',
     'sympy.specfun.tests',
     'sympy.statistics.tests',
+    'sympy.test_external',
     'sympy.utilities.tests',
     ]
 
+# update the following list from:
+# http://pyglet.googlecode.com/svn/trunk/setup.py
+# (whenever we update pyglet in sympy)
 pyglet_packages=[
     'pyglet', 
     'pyglet.gl', 
