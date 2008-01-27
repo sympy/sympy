@@ -101,40 +101,19 @@ def cache_it_immutable(func):
         return r
     return wrapper
 
+
 def cache_it_debug(func):
-    func._cache_it_cache = func_cache_it_cache = {}
-    func._cache_it_cache_repr = func_cache_it_cache_repr = {}
-    CACHE.append((func, (func_cache_it_cache, func_cache_it_cache_repr)))
+    """cache_it_fast + code to check cache consitency"""
+    cfunc = cache_it_fast(func)
 
     def wrapper(*args, **kw_args):
-        if kw_args:
-            keys = kw_args.keys()
-            keys.sort()
-            items = [(k+'=',kw_args[k]) for k in keys]
-            k = args + tuple(items)
-        else:
-            k = args
-        cache_flag = False
-        try:
-            r = func_cache_it_cache[k]
-        except KeyError:
-            r = func(*args, **kw_args)
-            cache_flag = True
-        if cache_flag:
-            func_cache_it_cache[k] = r
-            # XXX just use repr(r) here
-            f = Basic.set_repr_level(0)
-            func_cache_it_cache_repr[k] = repr(r)
-            Basic.set_repr_level(f)
-        else:
-            s = func_cache_it_cache_repr[k]
-            # XXX just use repr(r) here
-            f = Basic.set_repr_level(0)
-            new_s = repr(r)
-            Basic.set_repr_level(f)
-            # check that cache values have not changed
-            assert new_s==s,`func,s,r, args[0].__class__`
-        return mycopy(r)
+        # always call function itself and compare it with cached version
+        r1 = func (*args, **kw_args)
+        r2 = cfunc(*args, **kw_args)
+
+        assert r1 == r2
+        return r1
+
     return wrapper
 
 
