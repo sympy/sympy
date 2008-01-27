@@ -1,0 +1,247 @@
+""" Caching facility for SymPy """
+
+def mycopy(obj, level=0):
+    if isinstance(obj, (list, tuple)):
+        return obj.__class__(map(mycopy, obj))
+    elif isinstance(obj, dict):
+        d = obj.__class__()
+        for k,v in obj.items():
+            d[mycopy(k)] = mycopy(v)
+        return d
+    return obj
+
+
+def cache_it_fast(func):
+    func._cache_it_cache = func_cache_it_cache = {}
+    def wrapper(*args, **kw_args):
+        if kw_args:
+            keys = kw_args.keys()
+            keys.sort()
+            items = [(k+'=',kw_args[k]) for k in keys]
+            k = args + tuple(items)
+        else:
+            k = args
+        cache_flag = False
+        try:
+            r = func_cache_it_cache[k]
+        except KeyError:
+            r = func(*args, **kw_args)
+            cache_flag = True
+        if cache_flag:
+            func_cache_it_cache[k] = r
+        return mycopy(r)
+    return wrapper
+
+def cache_it_immutable(func):
+    func._cache_it_cache = func_cache_it_cache = {}
+    def wrapper(*args, **kw_args):
+        if kw_args:
+            keys = kw_args.keys()
+            keys.sort()
+            items = [(k+'=',kw_args[k]) for k in keys]
+            k = args + tuple(items)
+        else:
+            k = args
+        try:
+            return func_cache_it_cache[k]
+        except KeyError:
+            pass
+        func_cache_it_cache[k] = r = func(*args, **kw_args)
+        return r
+    return wrapper
+
+def cache_it_debug(func):
+    func._cache_it_cache = func_cache_it_cache = {}
+    func._cache_it_cache_repr = func_cache_it_cache_repr = {}
+    def wrapper(*args, **kw_args):
+        if kw_args:
+            keys = kw_args.keys()
+            keys.sort()
+            items = [(k+'=',kw_args[k]) for k in keys]
+            k = args + tuple(items)
+        else:
+            k = args
+        cache_flag = False
+        try:
+            r = func_cache_it_cache[k]
+        except KeyError:
+            r = func(*args, **kw_args)
+            cache_flag = True
+        if cache_flag:
+            func_cache_it_cache[k] = r
+            f = repr_level(0)
+            func_cache_it_cache_repr[k] = repr(r)
+            repr_level(f)
+        else:
+            s = func_cache_it_cache_repr[k]
+            f = repr_level(0)
+            new_s = repr(r)
+            repr_level(f)
+            # check that cache values have not changed
+            assert new_s==s,`func,s,r, args[0].__class__`
+        return mycopy(r)
+    return wrapper
+
+cache_it = cache_it_fast
+#cache_it = cache_it_debug # twice slower
+
+def cache_it_nondummy(func):
+    func._cache_it_cache = func_cache_it_cache = {}
+    def wrapper(*args, **kw_args):
+        if kw_args:
+            try:
+                dummy = kw_args['dummy']
+            except KeyError:
+                dummy = None
+            if dummy:
+                return func(*args, **kw_args)
+            keys = kw_args.keys()
+            keys.sort()
+            items = [(k+'=',kw_args[k]) for k in keys]
+            k = args + tuple(items)
+        else:
+            k = args
+        try:
+            return func_cache_it_cache[k]
+        except KeyError:
+            pass
+        func_cache_it_cache[k] = r = func(*args, **kw_args)
+        return r
+    return wrapper
+
+
+class MemoizerArg:
+    """ See Memoizer.
+    """
+
+    def __init__(self, allowed_types, converter = None, name = None):
+        self._allowed_types = allowed_types
+        self.converter = converter
+        self.name = name
+
+    def fix_allowed_types(self, have_been_here={}):
+        i = id(self)
+        if have_been_here.get(i): return
+        allowed_types = self._allowed_types
+        if isinstance(allowed_types, str):
+            self.allowed_types = getattr(Basic, allowed_types)
+        elif isinstance(allowed_types, (tuple, list)):
+            new_allowed_types = []
+            for t in allowed_types:
+                if isinstance(t, str):
+                    t = getattr(Basic, t)
+                new_allowed_types.append(t)
+            self.allowed_types = tuple(new_allowed_types)
+        else:
+            self.allowed_types = allowed_types
+        have_been_here[i] = True
+        return
+
+    def process(self, obj, func, index = None):
+        if isinstance(obj, self.allowed_types):
+            if self.converter is not None:
+                obj = self.converter(obj)
+            return obj
+        func_src = '%s:%s:function %s' % (func.func_code.co_filename, func.func_code.co_firstlineno, func.func_name)
+        if index is None:
+            raise ValueError('%s return value must be of type %r but got %r' % (func_src, self.allowed_types, obj))
+        if isinstance(index, (int,long)):
+            raise ValueError('%s %s-th argument must be of type %r but got %r' % (func_src, index, self.allowed_types, obj))
+        if isinstance(index, str):
+            raise ValueError('%s %r keyword argument must be of type %r but got %r' % (func_src, index, self.allowed_types, obj))
+        raise NotImplementedError(`index,type(index)`)
+
+class Memoizer:
+    """ Memoizer function decorator generator.
+
+    Features:
+      - checks that function arguments have allowed types
+      - optionally apply converters to arguments
+      - cache the results of function calls
+      - optionally apply converter to function values
+
+    Usage:
+
+      @Memoizer(<allowed types for argument 0>,
+                MemoizerArg(<allowed types for argument 1>),
+                MemoizerArg(<allowed types for argument 2>, <convert argument before function call>),
+                MemoizerArg(<allowed types for argument 3>, <convert argument before function call>, name=<kw argument name>),
+                ...
+                return_value_converter = <None or converter function, usually makes a copy>
+                )
+      def function(<arguments>, <kw_argumnets>):
+          ...
+
+    Details:
+      - if allowed type is string object then there Basic must have attribute
+        with the string name that is used as the allowed type --- this is needed
+        for applying Memoizer decorator to Basic methods when Basic definition
+        is not defined.
+
+    Restrictions:
+      - arguments must be immutable
+      - when function values are mutable then one must use return_value_converter to
+        deep copy the returned values
+
+    Ref: http://en.wikipedia.org/wiki/Memoization
+    """
+
+    def __init__(self, *arg_templates, **kw_arg_templates):
+        new_arg_templates = []
+        for t in arg_templates:
+            if not isinstance(t, MemoizerArg):
+                t = MemoizerArg(t)
+            new_arg_templates.append(t)
+        self.arg_templates = tuple(new_arg_templates)
+        return_value_converter = kw_arg_templates.pop('return_value_converter', None)
+        self.kw_arg_templates = kw_arg_templates.copy()
+        for template in self.arg_templates:
+            if template.name is not None:
+                self.kw_arg_templates[template.name] = template
+        if return_value_converter is None:
+            self.return_value_converter = lambda obj: obj
+        else:
+            self.return_value_converter = return_value_converter
+
+    def fix_allowed_types(self, have_been_here={}):
+        i = id(self)
+        if have_been_here.get(i): return
+        for t in self.arg_templates:
+            t.fix_allowed_types()
+        for k,t in self.kw_arg_templates.items():
+            t.fix_allowed_types()
+        have_been_here[i] = True
+
+    def __call__(self, func):
+        cache = {}
+        value_cache = {}
+        def wrapper(*args, **kw_args):
+            kw_items = tuple(kw_args.items())
+            try:
+                return self.return_value_converter(cache[args,kw_items])
+            except KeyError:
+                pass
+            self.fix_allowed_types()
+            new_args = tuple([template.process(a,func,i) for (a, template, i) in zip(args, self.arg_templates, range(len(args)))])
+            assert len(args)==len(new_args)
+            new_kw_args = {}
+            for k, v in kw_items:
+                template = self.kw_arg_templates[k]
+                v = template.process(v, func, k)
+                new_kw_args[k] = v
+            new_kw_items = tuple(new_kw_args.items())
+            try:
+                return self.return_value_converter(cache[new_args, new_kw_items])
+            except KeyError:
+                r = func(*new_args, **new_kw_args)
+                try:
+                    try:
+                        r = value_cache[r]
+                    except KeyError:
+                        value_cache[r] = r
+                except TypeError:
+                    pass
+                cache[new_args, new_kw_items] = cache[args, kw_items] = r
+                return self.return_value_converter(r)
+        return wrapper
+
