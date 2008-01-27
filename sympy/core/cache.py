@@ -53,6 +53,10 @@ def clear_cache():
             kv.clear()
 
 
+########################################
+
+def cache_it_nocache(func):
+    return func
 
 def cache_it_fast(func):
     func._cache_it_cache = func_cache_it_cache = {}
@@ -133,8 +137,6 @@ def cache_it_debug(func):
         return mycopy(r)
     return wrapper
 
-cache_it = cache_it_fast
-#cache_it = cache_it_debug # twice slower
 
 def cache_it_nondummy(func):
     func._cache_it_cache = func_cache_it_cache = {}
@@ -300,3 +302,44 @@ class Memoizer:
                 return self.return_value_converter(r)
         return wrapper
 
+
+class Memoizer_nocache(Memoizer):
+
+    def __call__(self, func):
+        # XXX I would be happy just to return func, but we need to provide
+        # argument convertion, and it is really needed for e.g. Real("0.5")
+        def wrapper(*args, **kw_args):
+            kw_items = tuple(kw_args.items())
+            self.fix_allowed_types()
+            new_args = tuple([template.process(a,func,i) for (a, template, i) in zip(args, self.arg_templates, range(len(args)))])
+            assert len(args)==len(new_args)
+            new_kw_args = {}
+            for k, v in kw_items:
+                template = self.kw_arg_templates[k]
+                v = template.process(v, func, k)
+                new_kw_args[k] = v
+
+            r = func(*new_args, **new_kw_args)
+            return self.return_value_converter(r)
+
+        return wrapper
+
+
+
+# SYMPY_USE_CACHE=yes/no/debug
+import os
+usecache = os.getenv('SYMPY_USE_CACHE', 'yes').lower()
+
+if usecache=='no':
+    cache_it_fast       = cache_it_nocache
+    cache_it_immutable  = cache_it_nocache
+    cache_it_debug      = cache_it_nocache
+    cache_it_nondummy   = cache_it_nocache
+    Memoizer            = Memoizer_nocache
+    cache_it            = cache_it_nocache
+elif usecache=='yes':
+    cache_it = cache_it_fast
+elif usecache=='debug':
+    cache_it = cache_it_debug # twice slower
+else:
+    raise RuntimeError('unknown argument in SYMPY_USE_CACHE: %s' % usecache)
