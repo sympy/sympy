@@ -87,9 +87,9 @@ class exp(Function):
         if excluded:
             return Basic.Mul(*(excluded+[cls(Basic.Add(*included))]))
 
-    @classmethod
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n<0: return S.Zero
         if n==0: return S.One
         x = Basic.sympify(x)
@@ -317,9 +317,9 @@ class log(Function):
     def _calc_apply_unbounded(self, x):
         return x.is_unbounded
 
-    @classmethod
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms): # of log(1+x)
+    def taylor_term(n, x, *previous_terms): # of log(1+x)
         if n<0: return S.Zero
         x = Basic.sympify(x)
         if n==0: return x

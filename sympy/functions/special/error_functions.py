@@ -43,9 +43,9 @@ class erf(Function):
             if coeff.is_negative:
                 return -cls(-arg)
 
-    @classmethod
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:

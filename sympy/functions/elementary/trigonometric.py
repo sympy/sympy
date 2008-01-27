@@ -71,9 +71,9 @@ class sin(Function):
                     return -cls(-arg)
 
 
-    @classmethod
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -206,9 +206,9 @@ class cos(Function):
                     return cls(-arg)
 
 
-    @classmethod
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 1:
             return S.Zero
         else:
@@ -343,9 +343,9 @@ class tan(Function):
                     return -cls(-arg)
 
 
-    @classmethod
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -466,8 +466,9 @@ class cot(Function):
                     return -cls(-arg)
 
 
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n == 0:
             return 1 / Basic.sympify(x)
         elif n < 0 or n % 2 == 0:
@@ -580,8 +581,9 @@ class asin(Function):
                     return -cls(-arg)
 
 
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -656,8 +658,9 @@ class acos(Function):
                     return cst_table[arg]
 
 
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n == 0:
             return S.Pi / 2
         elif n < 0 or n % 2 == 0:
@@ -744,8 +747,9 @@ class atan(Function):
                     return -cls(-arg)
 
 
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -816,8 +820,9 @@ class acot(Function):
                     return -cls(-arg)
 
 
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n == 0:
             return S.Pi / 2 # FIX THIS
         elif n < 0 or n % 2 == 0:

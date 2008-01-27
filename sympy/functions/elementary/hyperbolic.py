@@ -50,9 +50,9 @@ class sinh(Function):
                 if coeff.is_negative:
                     return -cls(-arg)
 
-    @classmethod
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -146,9 +146,9 @@ class cosh(Function):
                 if coeff.is_negative:
                     return cls(-arg)
 
-    @classmethod
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 1:
             return S.Zero
         else:
@@ -242,9 +242,9 @@ class tanh(Function):
                 if coeff.is_negative:
                     return -cls(-arg)
 
-    @classmethod
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -340,9 +340,9 @@ class coth(Function):
                 if coeff.is_negative:
                     return -cls(-arg)
 
-    @classmethod
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n == 0:
             return 1 / Basic.sympify(x)
         elif n < 0 or n % 2 == 0:
@@ -436,9 +436,9 @@ class asinh(Function):
                 if coeff.is_negative:
                     return -cls(-arg)
 
-    @classmethod
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -509,9 +509,9 @@ class acosh(Function):
                 if arg in cst_table:
                     return cst_table[arg]*S.ImaginaryUnit
 
-    @classmethod
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n == 0:
             return S.Pi*S.ImaginaryUnit / 2
         elif n < 0 or n % 2 == 0:
@@ -578,9 +578,9 @@ class atanh(Function):
                 if coeff.is_negative:
                     return -cls(-arg)
 
-    @classmethod
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -639,9 +639,9 @@ class acoth(Function):
                 if coeff.is_negative:
                     return -cls(-arg)
 
-    @classmethod
+    @staticmethod
     @cache_it_immutable
-    def taylor_term(self, n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n == 0:
             return S.Pi*S.ImaginaryUnit / 2
         elif n < 0 or n % 2 == 0:
