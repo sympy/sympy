@@ -3,6 +3,7 @@ from sympy.core import Basic, S, Symbol, Wild, Pow
 from sympy.core.methods import NoRelMeths, ArithMeths
 
 from sympy.integrals.risch import heurisch
+from sympy.integrals.trigonometry import trigintegrate
 from sympy.polynomials import Polynomial, PolynomialException
 from sympy.simplify import apart
 from sympy.series import limit
@@ -221,6 +222,12 @@ class Integral(Basic, NoRelMeths, ArithMeths):
             #        poly(x)
             if g.is_fraction(x):
                 h = self._eval_integral(apart(g, x), x)
+                parts.append(coeff * h)
+                continue
+
+            # g(x) = Mul(trig)
+            h = trigintegrate(g, x)
+            if h is not None:
                 parts.append(coeff * h)
                 continue
 
