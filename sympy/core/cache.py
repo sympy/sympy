@@ -17,6 +17,42 @@ def mycopy(obj, level=0):
 CACHE = []  # [] of
             #    (item, {} or tuple of {})
 
+def print_cache():
+    """print cache content"""
+
+    for item, cache in CACHE:
+        item = str(item)
+        head = '='*len(item)
+
+        print head
+        print item
+        print head
+
+
+        if not isinstance(cache, tuple):
+            cache = (cache,)
+            shown = False
+        else:
+            shown = True
+
+        for i, kv in enumerate(cache):
+            if shown:
+                print '\n*** %i ***\n' % i
+
+            for k, v in kv.iteritems():
+                print '  %s :\t%s' % (k, v)
+
+
+def clear_cache():
+    """clear cache content"""
+    for item, cache in CACHE:
+        if not isinstance(cache, tuple):
+            cache = (cache,)
+
+        for kv in cache:
+            kv.clear()
+
+
 
 def cache_it_fast(func):
     func._cache_it_cache = func_cache_it_cache = {}
