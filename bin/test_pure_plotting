@@ -18,6 +18,7 @@
 #
 
 apt-get -y install mercurial python python-codespeak-lib python-ctypes
+apt-get -y install libgl1-mesa-dev libglu1-mesa-dev libfreetype6-dev libfontconfig1-dev
 cd /tmp
 hg clone http://hg.sympy.org/sympy/
 cd sympy
