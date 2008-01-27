@@ -69,14 +69,16 @@ def cache_it_debug(func):
             cache_flag = True
         if cache_flag:
             func_cache_it_cache[k] = r
-            f = repr_level(0)
+            # XXX just use repr(r) here
+            f = Basic.set_repr_level(0)
             func_cache_it_cache_repr[k] = repr(r)
-            repr_level(f)
+            Basic.set_repr_level(f)
         else:
             s = func_cache_it_cache_repr[k]
-            f = repr_level(0)
+            # XXX just use repr(r) here
+            f = Basic.set_repr_level(0)
             new_s = repr(r)
-            repr_level(f)
+            Basic.set_repr_level(f)
             # check that cache values have not changed
             assert new_s==s,`func,s,r, args[0].__class__`
         return mycopy(r)
