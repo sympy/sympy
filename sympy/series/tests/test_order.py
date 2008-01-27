@@ -1,4 +1,4 @@
-from sympy import Rational, Order, Basic, exp, ln, log, O
+from sympy import Symbol, Rational, Order, Basic, exp, ln, log, O
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import w, x, y, z
 
@@ -138,3 +138,22 @@ def test_w():
     for k,v in Order._cache.items():
         if isinstance(k, Basic.Symbol):
             print k,v
+
+
+def test_issue369():
+    x = Symbol('x')
+    y = Symbol('y', negative=True)
+    z = Symbol('z', complex=True)
+
+    # check that Order does not modify assumptions about symbols
+    Order(x)
+    Order(y)
+    Order(z)
+
+    assert x.is_positive == None
+    assert y.is_positive == False
+    assert z.is_positive == None
+
+    assert x.is_infinitesimal == None
+    assert y.is_infinitesimal == None
+    assert z.is_infinitesimal == None
