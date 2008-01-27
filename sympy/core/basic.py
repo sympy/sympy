@@ -1100,6 +1100,12 @@ class Basic(BasicMeths):
             return c,e
         raise ValueError("cannot compute ldegree(%s, %s), got c=%s" % (self, x, c))
 
+
+# XXX this is ugly, but needed for Memoizer('str', ...) to work
+import cache
+cache.Basic = Basic
+del cache
+
     ##########################################################################
     ##################### END OF BASIC CLASS #################################
     ##########################################################################
