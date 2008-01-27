@@ -956,7 +956,7 @@ class Basic(BasicMeths):
         return r + o
 
     @cache_it_immutable
-    def oseries(self, order, _cache={}):
+    def oseries(self, order):
         """
         Return the series of an expression upto given Order symbol (without the
         actual O term).
@@ -965,34 +965,20 @@ class Basic(BasicMeths):
         taylor (laurent) term and calculate one be one and use
         order.contains(term) method to determine if your term is still
         significant and should be added to the series, or we should stop.
-
-        The _cache parameter is not meant to be used by a user. It is here only
-        to detect an infinite recursion.
         """
-        #is the _cache mechanism really necessary? I think it could be removed
-        #completely, it's only slowing things down (well, probably negligibly).
-        #python can also detect an infinite recursion, so I am for removing
-        #_cache. --Ondrej
-        if _cache.has_key((self, order)):
-            raise RuntimeError('Detected recursion while computing oseries(%s, %s)' % (self, order))
         order = Basic.Order(order)
-        _cache[(self, order)] = 1
         if isinstance(order, Basic.Zero):
-            del _cache[(self, order)]
             return self
         if order.contains(self):
-            del _cache[(self, order)]
             return Basic.Zero()
         if len(order.symbols)>1:
             r = self
             for s in order.symbols:
                 o = Basic.Order(order.expr, s)
                 r = r.oseries(o)
-            del _cache[(self, order)]
             return r
         x = order.symbols[0]
         if not self.has(x):
-            del _cache[(self, order)]
             return self
         obj = self._eval_oseries(order)
         if obj is not None:
@@ -1000,11 +986,8 @@ class Basic(BasicMeths):
             obj2 = obj.expand()
             if obj2 != obj:
                 r = obj2.oseries(order)
-                del _cache[(self, order)]
                 return r
-            del _cache[(self, order)]
             return obj
-        del _cache[(self, order)]
         raise NotImplementedError('(%s).oseries(%s)' % (self, order))
 
     def _eval_oseries(self, order):
