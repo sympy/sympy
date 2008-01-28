@@ -285,6 +285,11 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             right = right.args
         if isinstance(left, Basic):
             left = left.args
+
+        if len(left) == 1 and len(right) == 1:
+            # no expansion needed, bail out now to avoid infinite recursion
+            return [Mul(left[0], right[0])]
+        
         terms = []
         for a in left:
             for b in right:
@@ -303,8 +308,10 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             factor = factor._eval_expand_basic(*args)
             if isinstance(factor, Basic.Add):
                 sums.append(factor)
-            else:
+            elif factor.is_commutative:
                 plain = Mul(plain, factor)
+            else:
+                sums.append([factor])
         if sums:
             terms = Mul._expandsums(sums)
             if isinstance(terms, Basic):
