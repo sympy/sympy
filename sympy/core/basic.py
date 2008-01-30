@@ -3,7 +3,7 @@
 type_class = type
 
 import decimal
-from basic_methods import BasicMeths, BasicType
+from basic_methods import BasicMeths, BasicType, MetaBasicMeths
 from cache import cache_it, cache_it_immutable, Memoizer, MemoizerArg
 
 class SympifyError(ValueError):
@@ -1175,5 +1175,30 @@ class SingletonFactory:
         return obj
 
 S = SingletonFactory()
+
+class ClassesRegistry:
+    """Namespace for SymPy classes
+
+       This is needed to avoid problems with cyclic imports.
+       To get a SymPy class you do this:
+
+         C.<class_name>
+
+       e.g.
+
+         C.Rational
+         C.Add
+    """
+
+    def __getattr__(self, name):
+        try:
+            cls = MetaBasicMeths.classnamespace[name]
+        except KeyError:
+            raise AttributeError("No SymPy class '%s'" % name)
+
+        setattr(self, name, cls)
+        return cls
+
+C = ClassesRegistry()
 
 import ast_parser

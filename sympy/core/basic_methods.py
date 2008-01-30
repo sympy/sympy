@@ -103,12 +103,6 @@ class MetaBasicMeths(BasicType):
                 default_assumptions[k] = bool(v)
         cls.default_assumptions = default_assumptions
 
-    def __getattr__(cls, name):
-        try: return MetaBasicMeths.classnamespace[name]
-        except KeyError: pass
-        raise AttributeError("'%s' object has no attribute '%s'"%
-                             (cls.__name__, name))
-
     def __cmp__(cls, other):
         try:
             other = cls.sympify(other)
