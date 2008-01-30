@@ -151,13 +151,17 @@ class BasicMeths(AssumeMeths):
     Atom_precedence = 1000
 
     def __getattr__(self, name):
-        try:
-            return self._get_assumption(name)
-        except AttributeError:
-            pass
+        # if it's not an assumption -- we don't have it
+        if not name.startswith('is_'):
+            # it is important to return shortly for speed reasons:
+            # we have *lots* of non-'is_' attribute access, e.g.
+            # '_eval_<smth>', and a lot of them does *not* exits.
+            #
+            # if we are here -- it surely does not exist,
+            # so let's get out of here as fast as possible.
+            raise AttributeError(name)
 
-        raise AttributeError("'%s' object has no attribute '%s'"%
-                        (self.__class__.__name__, name))
+        return self._get_assumption(name)
 
     def __setattr__(self, name, val):
         if name.startswith('is_'):
