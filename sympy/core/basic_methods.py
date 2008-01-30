@@ -297,7 +297,6 @@ class BasicMeths(AssumeMeths):
         ot = other._hashable_content()
         c = cmp(len(st),len(ot))
         if c: return c
-        Basic = self.__class__.Basic
         for l,r in zip(st,ot):
             if isinstance(l, Basic):
                 c = l.compare(r)

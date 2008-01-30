@@ -189,7 +189,7 @@ class Real(Number):
 
         singleton_cls_name = decimal_to_Number_cls.get(num.as_tuple(), None)
         if singleton_cls_name is not None:
-            return getattr(Basic, singleton_cls_name)()
+            return getattr(C, singleton_cls_name)()
         obj = Basic.__new__(cls)
         obj.num = num
         return obj

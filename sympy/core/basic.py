@@ -1084,10 +1084,10 @@ class Basic(BasicMeths):
         raise ValueError("cannot compute ldegree(%s, %s), got c=%s" % (self, x, c))
 
 
-# XXX this is ugly, but needed for Memoizer('str', ...) to work
-import cache
-cache.Basic = Basic
-del cache
+# XXX BasicMeths.compare needs Basic
+import basic_methods
+basic_methods.Basic = Basic
+del basic_methods
 
     ##########################################################################
     ##################### END OF BASIC CLASS #################################
@@ -1165,7 +1165,7 @@ class SingletonFactory:
             return lambda: "S"
         obj = Singleton.__dict__.get(clsname)
         if obj is None:
-            cls = getattr(Basic, clsname)
+            cls = getattr(C, clsname)
             assert issubclass(cls, Singleton),`cls`
             obj = cls()
 
@@ -1200,5 +1200,11 @@ class ClassesRegistry:
         return cls
 
 C = ClassesRegistry()
+
+# XXX this is ugly, but needed for Memoizer('str', ...) to work
+import cache
+cache.C = C
+del cache
+
 
 import ast_parser

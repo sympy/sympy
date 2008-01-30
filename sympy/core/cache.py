@@ -158,12 +158,12 @@ class MemoizerArg:
         if have_been_here.get(i): return
         allowed_types = self._allowed_types
         if isinstance(allowed_types, str):
-            self.allowed_types = getattr(Basic, allowed_types)
+            self.allowed_types = getattr(C, allowed_types)
         elif isinstance(allowed_types, (tuple, list)):
             new_allowed_types = []
             for t in allowed_types:
                 if isinstance(t, str):
-                    t = getattr(Basic, t)
+                    t = getattr(C, t)
                 new_allowed_types.append(t)
             self.allowed_types = tuple(new_allowed_types)
         else:
@@ -207,7 +207,7 @@ class Memoizer:
           ...
 
     Details:
-      - if allowed type is string object then there Basic must have attribute
+      - if allowed type is string object then there `C` must have attribute
         with the string name that is used as the allowed type --- this is needed
         for applying Memoizer decorator to Basic methods when Basic definition
         is not defined.
