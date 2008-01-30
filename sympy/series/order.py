@@ -222,12 +222,12 @@ class Order(Basic, ArithMeths, RelMeths):
             if f.args[0] == x:
                 if isinstance(f.args[1], Rational):
                     if f.args[1] > 0:
-                        return Rational(0)
+                        return S.Zero
                     else:
                         return oo
                 if f.args[1].is_number:
                     if f.args[1].evalf() > 0:
-                        return Rational(0)
+                        return S.Zero
                     else:
                         return oo
         # you can use both limits here - the first is a lot faster, the second

@@ -183,7 +183,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     if coeff == -1:
                         return None
                     elif coeff < 0:
-                        return (-coeff)**e * Mul(*([Basic.Integer(-1)] +rest))**e
+                        return (-coeff)**e * Mul(*([S.NegativeOne] +rest))**e
                     else:
                         return coeff**e * Mul(*[s**e for s in rest])
 
@@ -302,7 +302,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         return terms
 
     def _eval_expand_basic(self, *args):
-        plain = Basic.Rational(1)
+        plain = S.One
         sums = []
         for factor in self.args:
             factor = factor._eval_expand_basic(*args)

@@ -70,7 +70,7 @@ class fibonacci(Function):
         return prev[-1] + prev[-2]
 
     @staticmethod
-    @recurrence_memo([None, Integer(1), _sym])
+    @recurrence_memo([None, S.One, _sym])
     def _fibpoly(n, prev):
         return (prev[-2] + _sym*prev[-1]).expand()
 
@@ -79,7 +79,7 @@ class fibonacci(Function):
         if isinstance(n, Integer):
             n = int(n)
             if n < 0:
-                return Integer(-1)**(n+1) * fibonacci(-n)
+                return S.NegativeOne**(n+1) * fibonacci(-n)
             if sym is None:
                 return Integer(cls._fib(n))
             else:
@@ -333,7 +333,7 @@ class bell(Function):
         return s
 
     @staticmethod
-    @recurrence_memo([Integer(1), _sym])
+    @recurrence_memo([S.One, _sym])
     def _bell_poly(n, prev):
         s = 1
         a = 1
@@ -404,7 +404,7 @@ class harmonic(Function):
     @classmethod
     def canonize(cls, n, m=None):
         if m is None:
-            m = Integer(1)
+            m = S.One
         if n == oo:
             from sympy.functions.special.zeta_functions import zeta
             return zeta(m)

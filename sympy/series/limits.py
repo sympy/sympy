@@ -311,7 +311,7 @@ def limitinf(e, x):
         e = e.normal()
     c0, e0 = mrv_leadterm(e,x) 
     sig=sign(e0,x)
-    if sig==1: return Rational(0) # e0>0: lim f = 0
+    if sig==1: return S.Zero # e0>0: lim f = 0
     elif sig==-1: #e0<0: lim f = +-oo   (the sign depends on the sign of c0)
         s = sign(c0, x)
         #the leading term shouldn't be 0:
@@ -393,7 +393,7 @@ calculated, the bug is in the limit algorithm."""
 @debug
 def mrv_leadterm(e, x, Omega=[]):
     """Returns (c0, e0) for e."""
-    if not e.has(x): return (e, Rational(0))
+    if not e.has(x): return (e, S.Zero)
     Omega = [t for t in Omega if subexp(e,t)]
     if Omega == []:
         Omega = mrv(e,x)

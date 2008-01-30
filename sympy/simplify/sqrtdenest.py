@@ -72,7 +72,7 @@ def prod(n):
     """
     Returns the product of all elements of n, as a Rational.
     """
-    product = Rational(1)
+    product = S.One
     for i in n:
         product = product * i
     return product

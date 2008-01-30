@@ -1,7 +1,7 @@
 """ Defines default methods for unary and binary operations.
 """
 
-from basic import Basic, SympifyError
+from basic import Basic, S, C, SympifyError
 
 def _no_unary_operation(op, obj):
     return 'unary operation `%s` not defined for %s' % (op, obj.__class__.__name__)
@@ -14,7 +14,7 @@ class ArithMeths(object):
     def __pos__(self):
         return self
     def __neg__(self):
-        return Basic.Integer(-1) * self
+        return S.NegativeOne * self
     def __abs__(self):
         return Basic.abs(self)
     def __add__(self, other):
@@ -73,7 +73,7 @@ class ArithMeths(object):
             return NotImplemented
         if not isinstance(other, Basic):
             return NotImplemented
-        return self * (other ** Basic.Integer(-1))
+        return self * (other ** S.NegativeOne)
     def __truediv__(self, other):
         return self.__div__(other)
     def __rdiv__(self, other):

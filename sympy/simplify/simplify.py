@@ -65,7 +65,7 @@ def fraction(expr, exact=False):
     for term in make_list(expr, Mul):
         if isinstance(term, Pow):
             if term.exp.is_negative:
-                if term.exp == Integer(-1):
+                if term.exp is S.NegativeOne:
                     denom.append(term.base)
                 else:
                     denom.append(Pow(term.base, -term.exp))
@@ -241,8 +241,8 @@ def together(expr, deep=False):
                 denom = {}
 
                 for term in make_list(q.expand(), Mul):
-                    expo = Integer(1)
-                    coeff = Integer(1)
+                    expo = S.One
+                    coeff = S.One
 
 
                     if isinstance(term, Pow):
@@ -253,7 +253,7 @@ def together(expr, deep=False):
                             if isinstance(coeff, Rational):
                                 tail = Basic.Mul(*tail)
                                 term, expo = Pow(term.base, tail), coeff
-                        coeff = Integer(1)
+                        coeff = S.One
                     elif isinstance(term, Basic.exp):
                         if isinstance(term[0], Rational):
                             term, expo = Basic.E, term[0]
@@ -262,7 +262,7 @@ def together(expr, deep=False):
                             if isinstance(coeff, Rational):
                                 tail = Basic.Mul(*tail)
                                 term, expo = Basic.exp(tail), coeff
-                        coeff = Integer(1)
+                        coeff = S.One
                     elif isinstance(term, Rational):
                         coeff = Integer(term.q)
                         term = Integer(term.p)
@@ -304,7 +304,7 @@ def together(expr, deep=False):
                 gcds = lambda x, y: int_gcd(int(x), int(y))
                 common = Rational(reduce(gcds, coeffs))
             else:
-                common = Rational(1)
+                common = S.One
 
             product = reduce(lambda x, y: x*y, coeffs) / common
 
@@ -483,7 +483,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         return expr, (sym, Rational(order))
 
     def parse_term(expr):
-        rat_expo, sym_expo = Rational(1), None
+        rat_expo, sym_expo = S.One, None
         sexpr, deriv = expr, None
 
         if isinstance(expr, Pow):
@@ -505,7 +505,7 @@ def collect(expr, syms, evaluate=True, exact=False):
                 sym_expo = expr.exp
         elif isinstance(expr, Basic.exp):
             if isinstance(expr.args[0], Rational):
-                sexpr, rat_expo = Basic.exp(Rational(1)), expr[0]
+                sexpr, rat_expo = S.Exp1, expr[0]
             elif isinstance(expr.args[0], Mul):
                 coeff, tail = expr.args[0].as_coeff_terms()
 
@@ -526,7 +526,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         else:
             pattern = [ parse_term(elem) for elem in pattern ]
 
-            elems, common_expo, has_deriv = [], Rational(1), False
+            elems, common_expo, has_deriv = [], S.One, False
 
             for elem, e_rat, e_sym, e_ord in pattern:
                 if e_ord is not None:
@@ -586,7 +586,7 @@ def collect(expr, syms, evaluate=True, exact=False):
     else:
         syms = [ separate(syms) ]
 
-    collected, disliked = {}, Rational(0)
+    collected, disliked = {}, S.Zero
 
     for product in summa:
         terms = [ parse_term(i) for i in make_list(product, Mul) ]
@@ -617,8 +617,8 @@ def collect(expr, syms, evaluate=True, exact=False):
             # none of the patterns matched
             disliked += product
 
-    if disliked != Rational(0):
-        collected[Rational(1)] = disliked
+    if disliked is not S.Zero:
+        collected[S.One] = disliked
 
     if evaluate:
         return Add(*[ a*b for a, b in collected.iteritems() ])
@@ -726,7 +726,7 @@ def trigsimp(expr, deep=False):
         if deep:
             return expr.func( trigsimp(expr.args[0], deep) )
     elif isinstance(expr, Mul):
-        ret = Rational(1)
+        ret = S.One
         for x in expr.args:
             ret *= trigsimp(x, deep)
         return ret
@@ -744,7 +744,7 @@ def trigsimp(expr, deep=False):
         )
 
         # Scan for the terms we need
-        ret = Integer(0)
+        ret = S.Zero
         for term in expr.args:
             term = trigsimp(term, deep)
             res = None

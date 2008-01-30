@@ -237,7 +237,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             #       only a single one is returned from here.
             re, im = self.base.as_real_imag()
 
-            r = (re**2 + im**2)**Basic.Rational(1,2)
+            r = (re**2 + im**2)**S.Half
             t = Basic.atan(im / re)
 
             if im == 0 and re < 0:
@@ -422,7 +422,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         # special case, pattern = 1 and expr.exp can match to 0
         if expr is S.One:
             d = repl_dict.copy()
-            d = pattern.exp.matches(Basic.Integer(0), d, evaluate=False)
+            d = pattern.exp.matches(S.Zero, d, evaluate=False)
             if d is not None:
                 return d
 

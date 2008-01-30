@@ -257,7 +257,7 @@ class Matrix(object):
         return self.add(a)
 
     def __div__(self,a):
-        return self * (Rational(1)/a)
+        return self * (S.One/a)
 
     def multiply(self,b):
         """Returns self*b """
@@ -843,7 +843,7 @@ class Matrix(object):
                             sign *= -1
                             break
                     else:
-                        return Rational(0)
+                        return S.Zero
 
                 # proceed with Bareis' fraction-free (FF)
                 # form of Gaussian elimination algorithm

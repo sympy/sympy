@@ -92,7 +92,7 @@ class _Factorial(Function):
         m = int(m)
 
         if x == 0:
-            return Integer(1)
+            return S.One
 
         # e.g., for double factorials, the start value is 1 for odd x
         # and 2 for even x
@@ -201,7 +201,7 @@ def _simplify_quotient(na, da, other):
             delta, i, j = candidates[0]
             p = na[i]
             q = da[j]
-            t = Rational(1)
+            t = S.One
             if delta > 0:
                 for k in xrange(1, int(delta)+1):
                     t *= (q+k)
@@ -255,7 +255,7 @@ def factorial_simplify(expr):
         _simplify_recurrence(na, other)
         _simplify_recurrence(da, other, reciprocal=True)
 
-        result = Rational(1)
+        result = S.One
         for n in na: result *= factorial(n)
         for d in da: result /= factorial(d)
         for o in other: result *= o
