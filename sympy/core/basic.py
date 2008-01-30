@@ -1168,7 +1168,10 @@ class SingletonFactory:
             cls = getattr(Basic, clsname)
             assert issubclass(cls, Singleton),`cls`
             obj = cls()
-            setattr(self, clsname, obj)
+
+        # store found object in own __dict__, so the next lookups will be
+        # serviced without entering __getattr__, and so will be fast 
+        setattr(self, clsname, obj)
         return obj
 
 S = SingletonFactory()
