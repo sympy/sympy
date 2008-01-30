@@ -14,6 +14,7 @@ $ python examples/fem_test.py
 """
 
 from fem import *
+pprint_try_use_unicode()
 
 t = ReferenceSimplex(2)
 fe = Lagrange(2,2)
@@ -36,4 +37,4 @@ for i in range(0, fe.nbf()):
        J[j,i] = t.integrate(integrands)
 
 
-print J
+pprint(J)
