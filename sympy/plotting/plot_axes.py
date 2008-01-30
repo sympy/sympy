@@ -83,7 +83,7 @@ class PlotAxes(PlotObject):
         b = self._bounding_box
         c = child_bounds
         for i in [0,1,2]:
-            if abs(c[i][0]) == S.Infinity or abs(c[i][1]) == S.Infinity: continue
+            if abs(c[i][0]) is S.Infinity or abs(c[i][1]) is S.Infinity: continue
             b[i][0] = [ min([b[i][0], c[i][0]]), c[i][0] ][ b[i][0] is None ]
             b[i][1] = [ max([b[i][1], c[i][1]]), c[i][1] ][ b[i][1] is None ]
             self._recalculate_axis_ticks(i)

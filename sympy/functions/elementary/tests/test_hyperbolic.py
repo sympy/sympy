@@ -37,18 +37,18 @@ def test_sinh():
     assert sinh(5*pi*I/2) == I
     assert sinh(7*pi*I/2) == -I
 
-    assert sinh(pi*I/3) == Basic.Half()*sqrt(3)*I
-    assert sinh(-2*pi*I/3) == -Basic.Half()*sqrt(3)*I
+    assert sinh(pi*I/3) == S.Half*sqrt(3)*I
+    assert sinh(-2*pi*I/3) == -S.Half*sqrt(3)*I
 
-    assert sinh(pi*I/4) == Basic.Half()*sqrt(2)*I
-    assert sinh(-pi*I/4) == -Basic.Half()*sqrt(2)*I
-    assert sinh(17*pi*I/4) == Basic.Half()*sqrt(2)*I
-    assert sinh(-3*pi*I/4) == -Basic.Half()*sqrt(2)*I
+    assert sinh(pi*I/4) == S.Half*sqrt(2)*I
+    assert sinh(-pi*I/4) == -S.Half*sqrt(2)*I
+    assert sinh(17*pi*I/4) == S.Half*sqrt(2)*I
+    assert sinh(-3*pi*I/4) == -S.Half*sqrt(2)*I
 
-    assert sinh(pi*I/6) == Basic.Half()*I
-    assert sinh(-pi*I/6) == -Basic.Half()*I
-    assert sinh(7*pi*I/6) == -Basic.Half()*I
-    assert sinh(-5*pi*I/6) == -Basic.Half()*I
+    assert sinh(pi*I/6) == S.Half*I
+    assert sinh(-pi*I/6) == -S.Half*I
+    assert sinh(7*pi*I/6) == -S.Half*I
+    assert sinh(-5*pi*I/6) == -S.Half*I
 
     assert sinh(pi*I/105) == sin(pi/105)*I
     assert sinh(-pi*I/105) == -sin(pi/105)*I
@@ -98,18 +98,18 @@ def test_cosh():
     assert cosh(5*pi*I) == -1
     assert cosh(8*pi*I) == 1
 
-    assert cosh(pi*I/3) == Basic.Half()
-    assert cosh(-2*pi*I/3) == -Basic.Half()
+    assert cosh(pi*I/3) == S.Half
+    assert cosh(-2*pi*I/3) == -S.Half
 
-    assert cosh(pi*I/4) == Basic.Half()*sqrt(2)
-    assert cosh(-pi*I/4) == Basic.Half()*sqrt(2)
-    assert cosh(11*pi*I/4) == -Basic.Half()*sqrt(2)
-    assert cosh(-3*pi*I/4) == -Basic.Half()*sqrt(2)
+    assert cosh(pi*I/4) == S.Half*sqrt(2)
+    assert cosh(-pi*I/4) == S.Half*sqrt(2)
+    assert cosh(11*pi*I/4) == -S.Half*sqrt(2)
+    assert cosh(-3*pi*I/4) == -S.Half*sqrt(2)
 
-    assert cosh(pi*I/6) == Basic.Half()*sqrt(3)
-    assert cosh(-pi*I/6) == Basic.Half()*sqrt(3)
-    assert cosh(7*pi*I/6) == -Basic.Half()*sqrt(3)
-    assert cosh(-5*pi*I/6) == -Basic.Half()*sqrt(3)
+    assert cosh(pi*I/6) == S.Half*sqrt(3)
+    assert cosh(-pi*I/6) == S.Half*sqrt(3)
+    assert cosh(7*pi*I/6) == -S.Half*sqrt(3)
+    assert cosh(-5*pi*I/6) == -S.Half*sqrt(3)
 
     assert cosh(pi*I/105) == cos(pi/105)
     assert cosh(-pi*I/105) == cos(pi/105)

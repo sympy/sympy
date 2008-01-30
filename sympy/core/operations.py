@@ -1,5 +1,5 @@
 
-from basic import Basic
+from basic import Basic, S
 from cache import cache_it, cache_it_immutable
 
 class AssocOp(Basic):
@@ -33,8 +33,8 @@ class AssocOp(Basic):
 
     @classmethod
     def identity(cls):
-        if cls is Basic.Mul: return Basic.One()
-        if cls is Basic.Add: return Basic.Zero()
+        if cls is Basic.Mul: return S.One
+        if cls is Basic.Add: return S.Zero
         if cls is Basic.Composition:
             s = Basic.Symbol('x',dummy=True)
             return Basic.Lambda(s,s)

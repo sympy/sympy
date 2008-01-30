@@ -1,4 +1,4 @@
-from sympy.core import Basic
+from sympy.core import Basic, S
 from sympy.printing.printer import Printer
 from stringpict import *
 
@@ -316,11 +316,11 @@ class PrettyPrinter(Printer):
             return prettyForm.__mul__(*a)
         else:
             if len(a) == 0:
-                a.append( self._print(Basic.One()) )
+                a.append( self._print(S.One) )
             return prettyForm.__mul__(*a) / prettyForm.__mul__(*b)
 
     def _print_Pow(self, power):
-        if isinstance(power.exp, Basic.Half):
+        if power.exp is S.Half:
             # If it's a square root
             bpretty = self._print(power.base)
             H = bpretty.height()
@@ -387,7 +387,7 @@ def pretty(expr, use_unicode=None):
     """
     Returns a string containing the prettified form of expr. If use_unicode
     is set to True then certain expressions will use unicode characters,
-    such as the greek letter pi for Basic.Pi instances.
+    such as the greek letter pi for Pi instances.
     """
     uflag = pretty_use_unicode(use_unicode)
     try:

@@ -1,4 +1,4 @@
-from sympy.core import Basic
+from sympy.core import Basic, S
 from printer import Printer
 from sympy.simplify import fraction
 
@@ -67,8 +67,8 @@ class LatexPrinter(Printer):
 
                 return r" ".join(product)
 
-        if isinstance(denom, Basic.One):
-            if not isinstance(coeff, Basic.One):
+        if denom is S.One:
+            if coeff is not S.One:
                 tex += str(self._print(coeff)) + " "
 
             if isinstance(numer, Basic.Add):
@@ -76,7 +76,7 @@ class LatexPrinter(Printer):
             else:
                 tex += r"%s" % convert(numer)
         else:
-            if isinstance(numer, Basic.One):
+            if numer is S.One:
                 if isinstance(coeff, Basic.Integer):
                     numer *= coeff.p
                 elif isinstance(coeff, Basic.Rational):
@@ -84,12 +84,12 @@ class LatexPrinter(Printer):
                         numer *= coeff.p
 
                     denom *= coeff.q
-                elif not isinstance(coeff, Basic.One):
+                elif coeff is not S.One:
                     tex += str(self._print(coeff)) + " "
             else:
                 if isinstance(coeff, Basic.Rational) and coeff.p == 1:
                     denom *= coeff.q
-                elif not isinstance(coeff, Basic.One):
+                elif coeff is not S.One:
                     tex += str(self._print(coeff)) + " "
 
             tex += r"\frac{%s}{%s}" % \

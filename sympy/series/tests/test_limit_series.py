@@ -7,8 +7,8 @@ from sympy.series.limits_series import mrv_compare, mrv2
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x', real=True, unbounded=True)
-z = Basic.Zero()
-o = Basic.One()
+z = S.Zero
+o = S.One
 
 
 ###

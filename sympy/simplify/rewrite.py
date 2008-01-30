@@ -2,7 +2,7 @@
    partial fraction decomposition, combinig together and collecting terms.
 """
 
-from sympy.core import Basic, Symbol
+from sympy.core import Basic, S, Symbol
 
 from sympy.polynomials import factor_, div, quo, rem, gcd, egcd
 from sympy.simplify import together
@@ -55,7 +55,7 @@ def cancel(f, *syms):
 
             g = gcd(p, q, syms)
 
-            if not isinstance(g, Basic.One):
+            if g is not S.One:
                 p = quo(p, g, syms)
                 q = quo(q, g, syms)
 

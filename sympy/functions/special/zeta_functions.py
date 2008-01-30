@@ -14,22 +14,22 @@ class zeta(Function):
         z, a = map(Basic.sympify, (z, a))
 
         if isinstance(a, Basic.Number):
-            if isinstance(a, Basic.NaN):
+            if a is S.NaN:
                 return S.NaN
-            elif isinstance(a, Basic.Zero):
+            elif a is S.Zero:
                 return cls(z)
 
         if isinstance(z, Basic.Number):
-            if isinstance(z, Basic.NaN):
+            if z is S.NaN:
                 return S.NaN
-            elif isinstance(z, Basic.Infinity):
+            elif z is S.Infinity:
                 return S.One
-            elif isinstance(z, Basic.Zero):
+            elif z is S.Zero:
                 if a.is_negative:
                     return S.Half - a - 1
                 else:
                     return S.Half - a
-            elif isinstance(z, Basic.One):
+            elif z is S.One:
                 return S.ComplexInfinity
             elif isinstance(z, Basic.Integer):
                 if isinstance(a, Basic.Integer):

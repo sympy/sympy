@@ -17,11 +17,11 @@ class Integral(Basic, NoRelMeths, ArithMeths):
         function = Basic.sympify(function)
 
         if isinstance(function, Basic.Number):
-            if isinstance(function, Basic.NaN):
+            if function is S.NaN:
                 return S.NaN
-            elif isinstance(function, Basic.Infinity):
+            elif function is S.Infinity:
                 return S.Infinity
-            elif isinstance(function, Basic.NegativeInfinity):
+            elif function is S.NegativeInfinity:
                 return S.NegativeInfinity
 
         if symbols:
@@ -102,16 +102,16 @@ class Integral(Basic, NoRelMeths, ArithMeths):
                     a,b = ab
                     A = antideriv.subs(x, a)
 
-                    if isinstance(A, Basic.NaN):
+                    if A is S.NaN:
                         A = limit(antideriv, x, a)
-                    if isinstance(A, Basic.NaN):
+                    if A is S.NaN:
                         return self
 
                     B = antideriv.subs(x, b)
 
-                    if isinstance(B, Basic.NaN):
+                    if B is S.NaN:
                         B = limit(antideriv, x, b)
-                    if isinstance(B, Basic.NaN):
+                    if B is S.NaN:
                         return self
 
                     function = B - A
@@ -196,7 +196,7 @@ class Integral(Basic, NoRelMeths, ArithMeths):
             coeff, g = g.as_independent(x)
 
             # g(x) = const
-            if isinstance(g, Basic.One):
+            if g is S.One:
                 parts.append(coeff * x)
                 continue
 

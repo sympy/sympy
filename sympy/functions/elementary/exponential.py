@@ -26,15 +26,15 @@ class exp(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.One
-            elif isinstance(arg, Basic.One):
+            elif arg is S.One:
                 return S.Exp1
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.Infinity
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.Zero
         elif isinstance(arg, log):
             return arg.args[0]
@@ -62,7 +62,7 @@ class exp(Function):
         for arg in args:
             coeff, terms = arg.as_coeff_terms()
 
-            if isinstance(coeff, Basic.Infinity):
+            if coeff is S.Infinity:
                 excluded.append(coeff**Basic.Mul(*terms))
             else:
                 coeffs, log_term = [coeff], None
@@ -168,7 +168,7 @@ class exp(Function):
         if arg.is_real:
             return False
     def _eval_is_zero(self):
-        return isinstance(self.args[0], Basic.NegativeInfinity)
+        return (self.args[0] is S.NegativeInfinity)
 
     def _eval_power(b, e):
         """exp(b[0])**e -> exp(b[0]*e)"""
@@ -202,7 +202,7 @@ class exp(Function):
         if not Basic.Order(1,x).contains(arg): # singularity
             arg0 = arg.as_leading_term(x)
             d = (arg-arg0).limit(x, S.Zero)
-            if not isinstance(d, Basic.Zero):
+            if d is not S.Zero:
                 return exp(arg)
         else:
             #  arg = log(1+x)/x   ~ O(1)
@@ -260,7 +260,7 @@ class log(Function):
         if base is not None:
             base = Basic.sympify(base)
 
-            if not isinstance(base, Basic.Exp1):
+            if base is not S.Exp1:
                 return cls(arg)/cls(base)
 
         arg = Basic.sympify(arg)
@@ -268,17 +268,17 @@ class log(Function):
         if isinstance(arg, Basic.Number):
             if isinstance(arg, Basic.Zero):
                 return S.NegativeInfinity
-            elif isinstance(arg, Basic.One):
+            elif arg is S.One:
                 return S.Zero
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.Infinity
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.Infinity
-            elif isinstance(arg, Basic.NaN):
+            elif arg is S.NaN:
                 return S.NaN
             elif arg.is_negative:
                 return S.Pi * S.ImaginaryUnit + cls(-arg)
-        elif isinstance(arg, Basic.Exp1):
+        elif arg is S.Exp1:
             return S.One
         #this doesn't work due to caching: :(
         #elif isinstance(arg, exp) and arg[0].is_real:
@@ -296,9 +296,9 @@ class log(Function):
             coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if coeff is not None:
-                if isinstance(coeff, Basic.Infinity):
+                if coeff is S.Infinity:
                     return S.Infinity
-                elif isinstance(coeff, Basic.NegativeInfinity):
+                elif coeff is S.NegativeInfinity:
                     return S.Infinity
                 elif isinstance(coeff, Basic.Rational):
                     if coeff.is_nonnegative:
@@ -354,11 +354,11 @@ class log(Function):
     def _eval_is_zero(self):
         # XXX This is not quite useless. Try evaluating log(0.5).is_negative
         #     without it. There's probably a nicer way though.
-        return isinstance(self.args[0], Basic.One)
+        return (self.args[0] is S.One)
 
     def as_numer_denom(self):
         n, d = self.args[0].as_numer_denom()
-        if isinstance(d, Basic.One):
+        if d is S.One:
             return self.func(n), d
         return (self.func(n) - self.func(d)).as_numer_denom()
 
@@ -373,7 +373,7 @@ class log(Function):
         use_lt = not Basic.Order(1,x).contains(arg)
         if not use_lt:
             arg0 = arg.limit(x, 0)
-            use_lt = isinstance(arg0, Basic.Zero)
+            use_lt = (arg0 is S.Zero)
         if use_lt: # singularity, #example: self = log(sin(x))
             # arg = (arg / lt) * lt    
             lt = arg.as_leading_term(x) # arg = sin(x); lt = x
@@ -388,7 +388,7 @@ class log(Function):
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
-        if isinstance(arg, Basic.One):
+        if arg is S.One:
             return (self.args[0] - 1).as_leading_term(x)
         return self.func(arg)
 

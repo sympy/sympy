@@ -11,9 +11,9 @@ class Sum(Basic, NoRelMeths, ArithMeths):
         f = Basic.sympify(f)
 
         if isinstance(f, Basic.Number):
-            if isinstance(f, Basic.NaN):
+            if f is S.NaN:
                 return S.NaN
-            elif isinstance(f, Basic.Zero):
+            elif f is S.Zero:
                 return S.Zero
 
         if not symbols:
@@ -136,14 +136,14 @@ def eval_sum_symbolic(f, (i, a, b)):
         if not r.has(i) and k == i:
             # TODO: Pow should be able to simplify x**oo depending
             # on whether |x| < 1 or |x| > 1 for non-rational x
-            if isinstance(b, Basic.Infinity) and abs(r.evalf()) < 1:
+            if (b is S.Infinity) and abs(r.evalf()) < 1:
                 return r**a / (1-r)
             else:
                 return (r**a - r**(b+1)) / (1-r)
     return None
 
 def eval_sum_direct(expr, (i, a, b)):
-    s = Basic.Integer(0)
+    s = S.Zero
     if expr.has(i):
         for j in xrange(a, b+1):
             s += expr.subs(i, j)

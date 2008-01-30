@@ -42,11 +42,11 @@ class floor(Function):
         if arg.is_integer:
             return arg
         elif isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.Infinity):
+            if arg is S.Infinity:
                 return S.Infinity
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.NegativeInfinity
-            elif isinstance(arg, Basic.NaN):
+            elif arg is S.NaN:
                 return S.NaN
             elif isinstance(arg, Basic.Integer):
                 return arg
@@ -56,7 +56,7 @@ class floor(Function):
                 return Basic.Integer(int(arg.floor()))
         elif isinstance(arg, Basic.NumberSymbol):
             return arg.approximation_interval(Basic.Integer)[0]
-        elif isinstance(arg, Basic.ImaginaryUnit):
+        elif arg is S.ImaginaryUnit:
             return S.ImaginaryUnit
         elif isinstance(arg, Basic.Add):
             included, excluded = [], []
@@ -132,11 +132,11 @@ class ceiling(Function):
         if arg.is_integer:
             return arg
         elif isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.Infinity):
+            if arg is S.Infinity:
                 return S.Infinity
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.NegativeInfinity
-            elif isinstance(arg, Basic.NaN):
+            elif arg is S.NaN:
                 return S.NaN
             elif isinstance(arg, Basic.Integer):
                 return arg
@@ -146,7 +146,7 @@ class ceiling(Function):
                 return Basic.Integer(int(arg.ceiling()))
         elif isinstance(arg, Basic.NumberSymbol):
             return arg.approximation_interval(Basic.Integer)[1]
-        elif isinstance(arg, Basic.ImaginaryUnit):
+        elif arg is S.ImaginaryUnit:
             return S.ImaginaryUnit
         elif isinstance(arg, Basic.Add):
             included, excluded = [], []

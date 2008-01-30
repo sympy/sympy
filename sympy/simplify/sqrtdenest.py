@@ -7,7 +7,7 @@ def sqrtdenest (expr):
     Denests an expression that contains nested square roots.
     This algorithm is based on <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
     """
-    if isinstance(expr, Pow) and expr.exp == S.Half: #If expr is a square root
+    if isinstance(expr, Pow) and expr.exp is S.Half: #If expr is a square root
         return denester([expr])[0]
     return expr
 

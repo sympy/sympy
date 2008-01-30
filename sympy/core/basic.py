@@ -105,8 +105,8 @@ class Basic(BasicMeths):
             ireal, iimag = int(real), int(imag)
 
             if ireal + iimag*1j == a:
-                return ireal + iimag*Basic.ImaginaryUnit()
-            return real + Basic.ImaginaryUnit() * imag
+                return ireal + iimag*S.ImaginaryUnit
+            return real + S.ImaginaryUnit * imag
         elif (a.__class__ in [list,tuple]) and len(a) == 2:
             # isinstance causes problems in the issue #432, so we use .__class__
             return Basic.Interval(*a)
@@ -501,7 +501,7 @@ class Basic(BasicMeths):
             # find  symbol
             for s in symbols:
                 deqn = eqn.diff(s)
-                if isinstance(deqn.diff(s), Basic.Zero):
+                if deqn.diff(s) is S.Zero:
                     # eqn = a + b*c, a=eqn(c=0),b=deqn(c=0)
                     return s, (rhs - eqn.subs(s,0))/deqn.subs(s,0)
         # no linear symbol, return trivial solution
@@ -796,14 +796,14 @@ class Basic(BasicMeths):
 
     def as_base_exp(self):
         # a -> b ** e
-        return self, Basic.One()
+        return self, S.One
 
     def as_coeff_terms(self, x=None):
         # a -> c * t
         if x is not None:
             if not self.has(x):
                 return self, []
-        return Basic.One(), [self]
+        return S.One, [self]
 
     def as_indep_terms(self, x):
         coeff, terms = self.as_coeff_terms()
@@ -821,7 +821,7 @@ class Basic(BasicMeths):
         if x is not None:
             if not self.has(x):
                 return self, []
-        return Basic.Zero(), [self]
+        return S.Zero, [self]
 
     def as_numer_denom(self):
         # a/b -> a,b
@@ -829,8 +829,8 @@ class Basic(BasicMeths):
         coeff, terms = exp.as_coeff_terms()
         if coeff.is_negative:
             # b**-e -> 1, b**e
-            return Basic.One(), base ** (-exp)
-        return self, Basic.One()
+            return S.One, base ** (-exp)
+        return self, S.One
 
     def as_expr_orders(self):
         """ Split expr + Order(..) to (expr, Order(..)).
@@ -851,7 +851,7 @@ class Basic(BasicMeths):
 
     def normal(self):
         n, d = self.as_numer_denom()
-        if isinstance(d, Basic.One):
+        if d is S.One:
             return n
         return n/d
 
@@ -967,10 +967,10 @@ class Basic(BasicMeths):
         significant and should be added to the series, or we should stop.
         """
         order = Basic.Order(order)
-        if isinstance(order, Basic.Zero):
+        if order is S.Zero:
             return self
         if order.contains(self):
-            return Basic.Zero()
+            return S.Zero
         if len(order.symbols)>1:
             r = self
             for s in order.symbols:
@@ -1001,7 +1001,7 @@ class Basic(BasicMeths):
         x = order.symbols[0]
         ln = Basic.log
         o = Basic.Order(arg, x)
-        if isinstance(o, Basic.Zero):
+        if o is S.Zero:
             return unevaluated_func(arg)
         if o.expr==1:
             e = ln(order.expr*x)/ln(x)
@@ -1067,7 +1067,7 @@ class Basic(BasicMeths):
         d = self.match(p)
         if d is not None:
             return d[wc], d[we]
-        return self, Basic.Zero()
+        return self, S.Zero
 
     def ldegree(self, x):
         x = Basic.sympify(x)
@@ -1098,8 +1098,8 @@ class Atom(Basic):
     precedence = Basic.Atom_precedence
 
     def _eval_derivative(self, s):
-        if self==s: return Basic.One()
-        return Basic.Zero()
+        if self==s: return S.One
+        return S.Zero
 
     def pattern_match(pattern, expr, repl_dict):
         if pattern==expr:
@@ -1107,13 +1107,13 @@ class Atom(Basic):
         return None
 
     def as_numer_denom(self):
-        return self, Basic.One()
+        return self, S.One
 
     def _calc_splitter(self, d):
         return self
 
     def count_ops(self, symbolic=True):
-        return Basic.Zero()
+        return S.Zero
 
     def doit(self, **hints):
         return self

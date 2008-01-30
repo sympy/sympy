@@ -27,13 +27,13 @@ class erf(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.One
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.NegativeOne
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)

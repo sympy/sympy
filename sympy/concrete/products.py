@@ -16,15 +16,15 @@ class Product(Basic, NoRelMeths, ArithMeths):
         term = Basic.sympify(term)
 
         if isinstance(term, Basic.Number):
-            if isinstance(term, Basic.NaN):
+            if term is S.NaN:
                 return S.NaN
-            elif isinstance(term, Basic.Infinity):
+            elif term is S.Infinity:
                 return S.NaN
-            elif isinstance(term, Basic.NegativeInfinity):
+            elif term is S.NegativeInfinity:
                 return S.NaN
-            elif isinstance(term, Basic.Zero):
+            elif term is S.Zero:
                 return S.Zero
-            elif isinstance(term, Basic.One):
+            elif term is S.One:
                 return S.One
 
         if len(symbols) == 1:

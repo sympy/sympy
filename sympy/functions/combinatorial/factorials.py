@@ -104,7 +104,7 @@ class Factorial(Function):
         n = Basic.sympify(n)
 
         if isinstance(n, Basic.Number):
-            if isinstance(n, Basic.Zero):
+            if n is S.Zero:
                 return S.One
             elif isinstance(n, Basic.Integer):
                 if n.is_negative:
@@ -187,20 +187,20 @@ class RisingFactorial(Function):
         x = Basic.sympify(x)
         k = Basic.sympify(k)
 
-        if isinstance(x, Basic.NaN):
+        if x is S.NaN:
             return S.NaN
-        elif isinstance(x, Basic.One):
+        elif x is S.One:
             return factorial(k)
         elif isinstance(k, Basic.Integer):
-            if isinstance(k, Basic.NaN):
+            if k is S.NaN:
                 return S.NaN
-            elif isinstance(k, Basic.Zero):
+            elif k is S.Zero:
                 return S.One
             else:
                 if k.is_positive:
-                    if isinstance(x, Basic.Infinity):
+                    if x is S.Infinity:
                         return S.Infinity
-                    elif isinstance(x, Basic.NegativeInfinity):
+                    elif x is S.NegativeInfinity:
                         if k.is_odd:
                             return S.NegativeInfinity
                         else:
@@ -208,9 +208,9 @@ class RisingFactorial(Function):
                     else:
                         return reduce(lambda r, i: r*(x+i), xrange(0, int(k)), 1)
                 else:
-                    if isinstance(x, Basic.Infinity):
+                    if x is S.Infinity:
                         return S.Infinity
-                    elif isinstance(x, Basic.NegativeInfinity):
+                    elif x is S.NegativeInfinity:
                         return S.Infinity
                     else:
                         return 1/reduce(lambda r, i: r*(x-i), xrange(1, abs(int(k))+1), 1)
@@ -250,20 +250,20 @@ class FallingFactorial(Function):
         x = Basic.sympify(x)
         k = Basic.sympify(k)
 
-        if isinstance(x, Basic.NaN):
+        if x is S.NaN:
             return S.NaN
         elif isinstance(k, Basic.Integer):
-            if isinstance(k, Basic.NaN):
+            if k is S.NaN:
                 return S.NaN
-            elif isinstance(k, Basic.Zero):
+            elif k is S.Zero:
                 return S.One
             else:
                 result = S.One
 
                 if k.is_positive:
-                    if isinstance(x, Basic.Infinity):
+                    if x is S.Infinity:
                         return S.Infinity
-                    elif isinstance(x, Basic.NegativeInfinity):
+                    elif x is S.NegativeInfinity:
                         if k.is_odd:
                             return S.NegativeInfinity
                         else:
@@ -271,9 +271,9 @@ class FallingFactorial(Function):
                     else:
                         return reduce(lambda r, i: r*(x-i), xrange(0, int(k)), 1)
                 else:
-                    if isinstance(x, Basic.Infinity):
+                    if x is S.Infinity:
                         return S.Infinity
-                    elif isinstance(x, Basic.NegativeInfinity):
+                    elif x is S.NegativeInfinity:
                         return S.Infinity
                     else:
                         return 1/reduce(lambda r, i: r*(x+i), xrange(1, abs(int(k))+1), 1)
@@ -343,7 +343,7 @@ class Binomial(Function):
         r, k = map(Basic.sympify, (r, k))
 
         if isinstance(k, Basic.Number):
-            if isinstance(k, Basic.Zero):
+            if k is S.Zero:
                 return S.One
             elif isinstance(k, Basic.Integer):
                 if k.is_negative:

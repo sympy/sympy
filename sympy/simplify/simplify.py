@@ -293,7 +293,7 @@ def together(expr, deep=False):
                 if isinstance(term, Basic.exp):
                     denominator.append(Basic.exp(maxi*term[:]))
                 else:
-                    if isinstance(maxi, Basic.One):
+                    if maxi is S.One:
                         denominator.append(term)
                     else:
                         denominator.append(Pow(term, maxi))
@@ -323,7 +323,7 @@ def together(expr, deep=False):
                     if isinstance(term, Basic.exp):
                         expr.append(Basic.exp(expo*term[:]))
                     else:
-                        if isinstance(expo, Basic.One):
+                        if expo is S.One:
                             expr.append(term)
                         else:
                             expr.append(Pow(term, expo))
@@ -463,7 +463,7 @@ def collect(expr, syms, evaluate=True, exact=False):
                     term, order = Derivative(term, var), order-1
 
             if sym is None:
-                if isinstance(rat, Basic.One):
+                if rat is S.One:
                     product.append(term)
                 else:
                     product.append(Pow(term, rat))
@@ -543,7 +543,7 @@ def collect(expr, syms, evaluate=True, exact=False):
                             # for both expression's term and pattern's element
                             expo = t_rat / e_rat
 
-                            if isinstance(common_expo, Basic.One):
+                            if common_expo is S.One:
                                 common_expo = expo
                             else:
                                 # common exponent was negotiated before so
@@ -864,7 +864,7 @@ def powsimp(expr, deep=False):
             # Pull out numerical coefficients from exponent
             for b,e in c_powers.items():
                 exp_c, exp_t = e.as_coeff_terms()
-                if not isinstance(exp_c, Basic.One) and exp_t:
+                if not (exp_c is S.One) and exp_t:
                     del c_powers[b]
                     new_base = Basic.Pow(b, exp_c)
                     if new_base in c_powers:
@@ -907,7 +907,7 @@ def normal(expr, *syms):
 
         G = gcd(p, q, syms)
 
-        if not isinstance(G, Basic.One):
+        if G is not S.One:
             p = quo(p, G, syms)
             q = quo(q, G, syms)
 
@@ -966,7 +966,7 @@ def hypersimp(term, n, consecutive=True, simplify=True):
 
             G = gcd(p, q, n)
 
-            if not isinstance(G, Basic.One):
+            if G is not S.One:
                 p = quo(p, G, n)
                 q = quo(q, G, n)
 
@@ -1008,7 +1008,7 @@ def simplify(expr):
     a,b = [ t.expand() for t in fraction(powsimp(expr)) ]
     ret = together(radsimp(ratsimp(a/b)))
     n,d = fraction(ret)
-    if isinstance(d, (Basic.One, Basic.NegativeOne)):
+    if (d is S.One) or (d is S.NegativeOne):
         return d*n
     n_var = n.atoms(type=Symbol)
     d_var = d.atoms(type=Symbol)

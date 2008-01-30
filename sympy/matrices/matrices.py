@@ -737,7 +737,7 @@ class Matrix(object):
         out = Basic.sympify(0)
         for i in range(self.lines * self.cols):
             out += self[i]*self[i]
-        return out**Basic.Half()
+        return out**S.Half
 
     def normalized(self):
         assert self.lines == 1 or self.cols == 1

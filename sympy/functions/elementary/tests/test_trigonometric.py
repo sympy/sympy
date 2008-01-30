@@ -39,18 +39,18 @@ def test_sin():
     assert sin(5*pi/2) == 1
     assert sin(7*pi/2) == -1
 
-    assert sin(pi/3) == Basic.Half()*sqrt(3)
-    assert sin(-2*pi/3) == -Basic.Half()*sqrt(3)
+    assert sin(pi/3) == S.Half*sqrt(3)
+    assert sin(-2*pi/3) == -S.Half*sqrt(3)
 
-    assert sin(pi/4) == Basic.Half()*sqrt(2)
-    assert sin(-pi/4) == -Basic.Half()*sqrt(2)
-    assert sin(17*pi/4) == Basic.Half()*sqrt(2)
-    assert sin(-3*pi/4) == -Basic.Half()*sqrt(2)
+    assert sin(pi/4) == S.Half*sqrt(2)
+    assert sin(-pi/4) == -S.Half*sqrt(2)
+    assert sin(17*pi/4) == S.Half*sqrt(2)
+    assert sin(-3*pi/4) == -S.Half*sqrt(2)
 
-    assert sin(pi/6) == Basic.Half()
-    assert sin(-pi/6) == -Basic.Half()
-    assert sin(7*pi/6) == -Basic.Half()
-    assert sin(-5*pi/6) == -Basic.Half()
+    assert sin(pi/6) == S.Half
+    assert sin(-pi/6) == -S.Half
+    assert sin(7*pi/6) == -S.Half
+    assert sin(-5*pi/6) == -S.Half
 
     assert sin(pi/105) == sin(pi/105)
     assert sin(-pi/105) == -sin(pi/105)
@@ -105,18 +105,18 @@ def test_cos():
     assert cos(5*pi) == -1
     assert cos(8*pi) == 1
 
-    assert cos(pi/3) == Basic.Half()
-    assert cos(-2*pi/3) == -Basic.Half()
+    assert cos(pi/3) == S.Half
+    assert cos(-2*pi/3) == -S.Half
 
-    assert cos(pi/4) == Basic.Half()*sqrt(2)
-    assert cos(-pi/4) == Basic.Half()*sqrt(2)
-    assert cos(11*pi/4) == -Basic.Half()*sqrt(2)
-    assert cos(-3*pi/4) == -Basic.Half()*sqrt(2)
+    assert cos(pi/4) == S.Half*sqrt(2)
+    assert cos(-pi/4) == S.Half*sqrt(2)
+    assert cos(11*pi/4) == -S.Half*sqrt(2)
+    assert cos(-3*pi/4) == -S.Half*sqrt(2)
 
-    assert cos(pi/6) == Basic.Half()*sqrt(3)
-    assert cos(-pi/6) == Basic.Half()*sqrt(3)
-    assert cos(7*pi/6) == -Basic.Half()*sqrt(3)
-    assert cos(-5*pi/6) == -Basic.Half()*sqrt(3)
+    assert cos(pi/6) == S.Half*sqrt(3)
+    assert cos(-pi/6) == S.Half*sqrt(3)
+    assert cos(7*pi/6) == -S.Half*sqrt(3)
+    assert cos(-5*pi/6) == -S.Half*sqrt(3)
 
     assert cos(pi/105) == cos(pi/105)
     assert cos(-pi/105) == cos(pi/105)
@@ -173,10 +173,10 @@ def test_tan():
     assert tan(pi/3) == sqrt(3)
     assert tan(-2*pi/3) == sqrt(3)
 
-    assert tan(pi/4) == Basic.One()
-    assert tan(-pi/4) == -Basic.One()
-    assert tan(17*pi/4) == Basic.One()
-    assert tan(-3*pi/4) == Basic.One()
+    assert tan(pi/4) == S.One
+    assert tan(-pi/4) == -S.One
+    assert tan(17*pi/4) == S.One
+    assert tan(-3*pi/4) == S.One
 
     assert tan(pi/6) == 1/sqrt(3)
     assert tan(-pi/6) == -1/sqrt(3)
@@ -238,10 +238,10 @@ def test_cot():
     assert cot(pi/3) == 1/sqrt(3)
     assert cot(-2*pi/3) == 1/sqrt(3)
 
-    assert cot(pi/4) == Basic.One()
-    assert cot(-pi/4) == -Basic.One()
-    assert cot(17*pi/4) == Basic.One()
-    assert cot(-3*pi/4) == Basic.One()
+    assert cot(pi/4) == S.One
+    assert cot(-pi/4) == -S.One
+    assert cot(17*pi/4) == S.One
+    assert cot(-3*pi/4) == S.One
 
     assert cot(pi/6) == sqrt(3)
     assert cot(-pi/6) == -sqrt(3)

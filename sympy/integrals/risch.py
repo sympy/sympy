@@ -173,7 +173,7 @@ def heurisch(f, x, rewrite=False):
 
     def deflation(p):
         for y in p.atoms(Basic.Symbol):
-            if not isinstance(derivation(p), Basic.Zero):
+            if derivation(p) is not S.Zero:
                 c, q = p.as_polynomial(y).as_primitive()
                 return deflation(c) * gcd(q, q.diff(y))
         else:
@@ -181,7 +181,7 @@ def heurisch(f, x, rewrite=False):
 
     def splitter(p):
         for y in p.atoms(Basic.Symbol):
-            if not isinstance(derivation(y), Basic.Zero):
+            if derivation(y) is not S.Zero:
                 c, q = p.as_polynomial(y).as_primitive()
 
                 q = q.as_basic()

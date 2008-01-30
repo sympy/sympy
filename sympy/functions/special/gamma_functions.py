@@ -24,9 +24,9 @@ class gamma(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.Infinity
             elif isinstance(arg, Basic.Integer):
                 if arg.is_positive:
@@ -91,7 +91,7 @@ class lowergamma(Function):
     @classmethod
     def canonize(cls, a, x):
         if isinstance(a, Basic.Number):
-            if isinstance(a, Basic.One):
+            if a is S.One:
                 return S.One - Basic.exp(-x)
             elif isinstance(a, Basic.Integer):
                 b = a - 1
@@ -115,15 +115,15 @@ class uppergamma(Function):
     @classmethod
     def canonize(cls, a, z):
         if isinstance(z, Basic.Number):
-            if isinstance(z, Basic.NaN):
+            if z is S.NaN:
                 return S.NaN
-            elif isinstance(z, Basic.Infinity):
+            elif z is S.Infinity:
                 return S.Zero
-            elif isinstance(z, Basic.Zero):
+            elif z is S.Zero:
                 return gamma(a)
 
         if isinstance(a, Basic.Number):
-            if isinstance(a, Basic.One):
+            if a is S.One:
                 return Basic.exp(-z)
             elif isinstance(a, Basic.Integer):
                 b = a - 1
@@ -157,11 +157,11 @@ class polygamma(Function):
                 return loggamma(z)
             else:
                 if isinstance(z, Basic.Number):
-                    if isinstance(z, Basic.NaN):
+                    if z is S.NaN:
                         return S.NaN
-                    elif isinstance(z, Basic.Infinity):
+                    elif z is S.Infinity:
                         if isinstance(n, Basic.Number):
-                            if isinstance(n, Basic.Zero):
+                            if n is S.Zero:
                                 return S.Infinity
                             else:
                                 return S.Zero
@@ -169,7 +169,7 @@ class polygamma(Function):
                         if z.is_nonpositive:
                             return S.ComplexInfinity
                         else:
-                            if isinstance(n, Basic.Zero):
+                            if n is S.Zero:
                                 return -S.EulerGamma + Basic.harmonic(z-1, 1)
                             elif n.is_odd:
                                 return (-1)**(n+1)*Basic.Factorial(n)*zeta(n+1, z)
@@ -191,7 +191,7 @@ class polygamma(Function):
                 if isinstance(coeff, Basic.Integer) and coeff.is_positive:
                     tail = [ polygamma(n, z + i/coeff) for i in xrange(0, int(coeff)) ]
 
-                    if isinstance(n, Basic.Zero):
+                    if n is S.Zero:
                         return log(coeff) + Add(*tail)/coeff**(n+1)
                     else:
                         return Add(*tail)/coeff**(n+1)

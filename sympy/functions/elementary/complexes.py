@@ -44,7 +44,7 @@ class re(Function):
     def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.NaN):
+        if arg is S.NaN:
             return S.NaN
         elif arg.is_real:
             return arg
@@ -116,7 +116,7 @@ class im(Function):
     def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.NaN):
+        if arg is S.NaN:
             return S.NaN
         elif arg.is_real:
             return S.Zero
@@ -161,14 +161,14 @@ class sign(Function):
 
     @classmethod
     def canonize(cls, arg):
-        if isinstance(arg, Basic.NaN):
+        if arg is S.NaN:
             return S.NaN
-        if isinstance(arg, Basic.Zero): return S.One
+        if arg is S.Zero: return S.One
         if arg.is_positive: return S.One
         if arg.is_negative: return S.NegativeOne
         if isinstance(arg, Basic.Mul):
             coeff, terms = arg.as_coeff_terms()
-            if not isinstance(coeff, Basic.One):
+            if coeff is not S.One:
                 return cls(coeff) * cls(Basic.Mul(*terms))
 
     is_bounded = True
@@ -177,7 +177,7 @@ class sign(Function):
         return self
 
     def _eval_is_zero(self):
-        return isinstance(self[0], Basic.Zero)
+        return (self[0] is S.Zero)
 
 class abs(Function):
 
@@ -198,13 +198,13 @@ class abs(Function):
 
     @classmethod
     def canonize(cls, arg):
-        if isinstance(arg, Basic.NaN):
+        if arg is S.NaN:
             return S.NaN
         if arg.is_zero:     return arg
         if arg.is_positive: return arg
         if arg.is_negative: return -arg
         coeff, terms = arg.as_coeff_terms()
-        if not isinstance(coeff, Basic.One):
+        if coeff is not S.One:
             return cls(coeff) * cls(Basic.Mul(*terms))
         if arg.is_real is False:
             return sqrt( (arg * arg.conjugate()).expand() )

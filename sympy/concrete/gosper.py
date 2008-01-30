@@ -102,13 +102,13 @@ def gosper(term, k, a, n):
         R = rsolve_poly([-B, A], C, k)
         symbol = []
 
-        if not (R is None or isinstance(R, Basic.Zero)):
+        if not (R is None  or  R is S.Zero):
             if symbol != []:
                 symbol = symbol[0]
 
                 W = R.subs(symbol, S.Zero)
 
-                if isinstance(W, Basic.Zero):
+                if W is S.Zero:
                     R = R.subs(symbol, S.One)
                 else:
                     R = W

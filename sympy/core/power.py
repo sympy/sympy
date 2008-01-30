@@ -53,9 +53,9 @@ class Pow(Basic, ArithMeths, RelMeths):
     def __new__(cls, a, b, **assumptions):
         a = Basic.sympify(a)
         b = Basic.sympify(b)
-        if isinstance(b, Basic.Zero):
+        if b is S.Zero:
             return S.One
-        if isinstance(b, Basic.One):
+        if b is S.One:
             return a
         obj = a._eval_power(b)
         if obj is None:
@@ -188,7 +188,7 @@ class Pow(Basic, ArithMeths, RelMeths):
     def tostr(self, level=0):
         precedence = self.precedence
         b = self.base.tostr(precedence)
-        if isinstance(self.exp, Basic.NegativeOne):
+        if self.exp is S.NegativeOne:
             r = '1/%s' % (b)
         else:
             r = '%s**%s' % (b,self.exp.tostr(precedence))
@@ -420,7 +420,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         b, e = expr.as_base_exp()
 
         # special case, pattern = 1 and expr.exp can match to 0
-        if isinstance(expr, Basic.One):
+        if expr is S.One:
             d = repl_dict.copy()
             d = pattern.exp.matches(Basic.Integer(0), d, evaluate=False)
             if d is not None:
@@ -450,7 +450,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             return exp(e * ln(b)).oseries(order)
         if b==x: return self
         b0 = b.limit(x,0)
-        if isinstance(b0, Basic.Zero) or b0.is_unbounded:
+        if b0 is S.Zero or b0.is_unbounded:
             lt = b.as_leading_term(x)
             o = order * lt**(1-e)
             bs = b.oseries(o)

@@ -136,8 +136,8 @@ def resultant(f, g, x, method='bezout'):
         else:
             s = m
 
-        p = [Basic.Zero()] * (s+1)
-        q = [Basic.Zero()] * (s+1)
+        p = [S.Zero] * (s+1)
+        q = [S.Zero] * (s+1)
 
         for coeff, j in fp:
             p[int(j)] = coeff
@@ -150,7 +150,7 @@ def resultant(f, g, x, method='bezout'):
         for i in range(s):
             for j in range(i, s):
                 z = 1 + min(i, s-1-j)
-                terms = [Basic.Zero()] * z
+                terms = [S.Zero] * z
 
                 for k in range(z):
                     terms[k] = p[j+k+1]*q[i-k] - p[i-k]*q[j+k+1]
@@ -197,7 +197,7 @@ def egcd(p, q, x):
     U = (p, S.One, S.Zero)
     V = (q, S.Zero, S.One)
 
-    while not isinstance(V[0], Basic.Zero):
+    while V[0] is not S.Zero:
         u, v = U[0], V[0]
 
         if u.has(x):

@@ -284,7 +284,7 @@ class Circle(Ellipse):
     @property
     def circumference(self):
         """The circumference of the circle."""
-        return 2 * Basic.Pi() * self.radius
+        return 2 * S.Pi * self.radius
 
     def equation(self, x='x', y='y'):
         """

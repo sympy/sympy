@@ -105,7 +105,7 @@ def solve(eq, syms, simplified=True):
                 for var, expr in content.iteritems():
                     if isinstance(var, Symbol) and not expr.has(*syms):
                         matrix[i, index[var]] = expr
-                    elif isinstance(var, Basic.One) and not expr.has(*syms):
+                    elif (var is S.One) and not expr.has(*syms):
                         matrix[i, m] = -expr
                     else:
                         raise "Not a linear system. Can't solve it, yet."

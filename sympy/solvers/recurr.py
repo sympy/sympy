@@ -73,7 +73,7 @@ def rsolve_poly(coeffs, f, n, **hints):
     if not f.is_polynomial(n):
         return None
 
-    homogeneous = isinstance(f, Basic.Zero)
+    homogeneous = (f is S.Zero)
 
     if not homogeneous:
         df = f.as_polynomial(n).degree()
@@ -82,8 +82,8 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     r = len(coeffs)-1
 
-    polys = [Basic.Zero()]*(r+1)
-    terms = [ (Basic.Zero(), Basic.NegativeInfinity()) ]*(r+1)
+    polys = [S.Zero]*(r+1)
+    terms = [ (S.Zero, S.NegativeInfinity) ]*(r+1)
 
     for i in xrange(0, r+1):
         for j in xrange(i, r+1):
@@ -91,7 +91,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
         polys[i] = polys[i].expand()
 
-        if not isinstance(polys[i], Basic.Zero):
+        if polys[i] is not S.Zero:
             terms[i] = polys[i].as_polynomial(n).coeffs[0]
 
     d = b = terms[0][1]
@@ -107,7 +107,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     x = Symbol('x', dummy=True)
 
-    degree_poly = Basic.Zero()
+    degree_poly = S.Zero
 
     for i in xrange(0, r+1):
         if terms[i][1] - i == b:
@@ -138,7 +138,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     if N <= r:
         C = []
-        y = E = Basic.Zero()
+        y = E = S.Zero
 
         for i in xrange(0, N+1):
             C.append(Symbol('C'+str(i)))
@@ -163,16 +163,16 @@ def rsolve_poly(coeffs, f, n, **hints):
         if _nni_roots != []:
             a = max(_nni_roots) + 1
         else:
-            a = Basic.Zero()
+            a = S.Zero
 
         def zero_vector(k):
-            return [Basic.Zero()] * k
+            return [S.Zero] * k
 
         def one_vector(k):
-            return [Basic.One()] * k
+            return [S.One] * k
 
         def delta(p, k):
-            B = Basic.One()
+            B = S.One
             D = p.subs(n, a+k)
 
             for i in xrange(1, k+1):
@@ -189,7 +189,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             for k in xrange(1, d+1):
                 I[k] = I[k-1] * (x+i-k+1)/k
 
-            alpha[i] = Basic.Zero()
+            alpha[i] = S.Zero
 
             for j in xrange(0, A+1):
                 for k in xrange(0, d+1):
@@ -222,7 +222,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
             for i in xrange(A, U):
                 v = zero_vector(A)
-                g = Basic.Zero()
+                g = S.Zero
 
                 for k in xrange(1, A+b+1):
                     if i - k < 0:
@@ -435,7 +435,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     r, kernel = len(coeffs)-1, []
 
-    if not isinstance(f, Basic.Zero):
+    if f is not S.Zero:
         if isinstance(f, Basic.Add):
             similar = {}
 
@@ -478,7 +478,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
             R = rsolve_poly(polys, Mul(*denoms), n)
 
-            if not (R is None or isinstance(R, Basic.Zero)):
+            if not (R is None  or  R is S.Zero):
                 inhomogeneous[i] *= R
             else:
                 return None
@@ -519,7 +519,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
             poly = (quo(coeffs[i]*a*b, D, n))
             polys.append(poly.as_polynomial(n))
 
-            if not isinstance(poly, Basic.Zero):
+            if poly is not S.Zero:
                 degrees.append(polys[i].degree())
 
         d, poly = max(degrees), S.Zero
@@ -527,7 +527,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
         for i in xrange(0, r+1):
             coeff = polys[i].nth_coeff(d)
 
-            if not isinstance(coeff, Basic.Zero):
+            if coeff is not S.Zero:
                 poly += coeff * Z**i
 
         for z in set(roots(poly, Z)):
@@ -536,7 +536,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
             C = rsolve_poly([ polys[i]*z**i for i in xrange(r+1) ], 0, n)
 
-            if C is not None and not isinstance(C, Basic.Zero):
+            if C is not None  and  C is not S.Zero:
                 ratio = z * A * C.subs(n, n + 1) / B / C
                 K = product(simplify(ratio), (n, 0, n-1))
 

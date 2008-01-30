@@ -84,7 +84,7 @@ class chebyshevt(PolynomialSequence):
     Chebyshev polynomial of the first kind, T_n(x)
     """
     @staticmethod
-    @recurrence_memo([Basic.One(), _x])
+    @recurrence_memo([S.One, _x])
     def calc(n, prev):
         return (2*_x*prev[n-1] - prev[n-2]).expand()
 
@@ -108,7 +108,7 @@ class chebyshevu(PolynomialSequence):
         (-1) + 4*x**2
     """
     @staticmethod
-    @recurrence_memo([Basic.One(), 2*_x])
+    @recurrence_memo([S.One, 2*_x])
     def calc(n, prev):
         return (2*_x*prev[n-1] - prev[n-2]).expand()
 
@@ -185,7 +185,7 @@ class legendre(PolynomialSequence):
     * http://en.wikipedia.org/wiki/Legendre_polynomial
     """
     @staticmethod
-    @recurrence_memo([Basic.One(), _x])
+    @recurrence_memo([S.One, _x])
     def calc(n, prev):
         return (((2*n-1)*_x*prev[n-1] - (n-1)*prev[n-2])/n).expand()
 
@@ -278,6 +278,6 @@ class hermite(PolynomialSequence):
     * http://mathworld.wolfram.com/HermitePolynomial.html    
     """
     @staticmethod
-    @recurrence_memo([Basic.One(), 2*_x])
+    @recurrence_memo([S.One, 2*_x])
     def calc(n, prev):
         return (2*_x*prev[n-1]-2*(n-1)*prev[n-2]).expand()

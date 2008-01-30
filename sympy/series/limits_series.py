@@ -29,12 +29,12 @@ class Limit(Basic, RelMeths, ArithMeths):
         if not expr.has(x):
             return expr
 
-        if isinstance(xlim, Basic.NegativeInfinity):
+        if xlim is S.NegativeInfinity:
             xoo = InfLimit.limit_process_symbol()
             if expr.has(xoo): 
                 xoo = Basic.Symbol(x.name + '_oo',dummy=True,positive=True,unbounded=True)
             return InfLimit(expr.subs(x,-xoo), xoo)
-        if isinstance(xlim, Basic.Infinity):
+        if xlim is S.Infinity:
             return InfLimit(expr, x)
         else:
             xoo = InfLimit.limit_process_symbol()
@@ -68,7 +68,7 @@ class Limit(Basic, RelMeths, ArithMeths):
         return self._args[2]
 
     def tostr(self, level=0):
-        if isinstance(self.varlim,(Basic.Infinity, Basic.NegativeInfinity)): s = ''
+        if (self.varlim is S.Infinity) or (self.varlim is S.NegativeInfinity): s = ''
         elif self.direction=='<': s = '+'
         else: s = '-'    
         r = 'lim[%s->%s%s](%s)' % (self.var.tostr(), self.varlim.tostr(),s,self.expr.tostr())
@@ -110,14 +110,14 @@ class InfLimit(Basic):
             result, factors = expr.as_coeff_factors(x)
             for f in factors:
                 result += f.inflimit(x)
-                if isinstance(result, Basic.NaN):
+                if result is S.NaN:
                     result = None
                     break
         elif isinstance(expr, Basic.Mul):
             result, terms = expr.as_coeff_terms(x)
             for t in terms:
                 result *= t.inflimit(x)
-                if isinstance(result, Basic.NaN):
+                if result is S.NaN:
                     result = None
                     break
         elif isinstance(expr, Basic.Pow):
@@ -185,7 +185,7 @@ def mrv_compare(f, g, x):
     c = (f/g).inflimit(x)
     if c==0:
         return '<'
-    if isinstance(abs(c), Basic.Infinity):
+    if abs(c) is S.Infinity:
         return '>'
     if not c.is_comparable:
         raise ValueError("non-comparable result: %s" % (c))
@@ -222,10 +222,10 @@ def mrv2(expr, x, d, md):
         e = expr.args[0]
         l = e.inflimit(x)
         r = exp(mrv2(e, x, d, md))
-        if isinstance(l, Basic.Infinity):
+        if l is S.Infinity:
             # e -> oo as x->oo
             en = e
-        elif isinstance(l, Basic.NegativeInfinity):
+        elif l is S.NegativeInfinity:
             # e -> -oo as x->oo
             # rewrite to ensure that exp(e) -> oo
             en = -e
@@ -247,7 +247,7 @@ def mrv2(expr, x, d, md):
             new_terms.append(t)
         terms = new_terms
         coeff = Basic.sign(coeff)
-        if not isinstance(coeff, Basic.One):
+        if coeff is not S.One:
             terms.insert(0,coeff)
         en = Basic.Mul(*terms)
         nexpr = exp(en)

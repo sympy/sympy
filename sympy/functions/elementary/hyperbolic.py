@@ -31,11 +31,11 @@ class sinh(Function):
         if isinstance(arg, Basic.Number):
             if isinstance(arg, Basic.NaN):
                 return S.NaN
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.Infinity
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.NegativeInfinity
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
@@ -125,13 +125,13 @@ class cosh(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.Infinity
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.Infinity
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.One
             elif arg.is_negative:
                 return cls(-arg)
@@ -221,13 +221,13 @@ class tanh(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.One
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.NegativeOne
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
@@ -319,13 +319,13 @@ class coth(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.One
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.NegativeOne
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
@@ -411,17 +411,17 @@ class asinh(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.Infinity
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.NegativeInfinity
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.Zero
-            elif isinstance(arg, Basic.One):
+            elif arg is S.One:
                 return Basic.log(2**S.Half + 1)
-            elif isinstance(arg, Basic.NegativeOne):
+            elif arg is S.NegativeOne:
                 return Basic.log(2**S.Half - 1)
             elif arg.is_negative:
                 return -cls(-arg)
@@ -484,15 +484,15 @@ class acosh(Function):
         if isinstance(arg, Basic.Number):
             if isinstance(arg, Basic.NaN):
                 return S.NaN
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.Infinity * S.ImaginaryUnit
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.NegativeInfinity * S.ImaginaryUnit
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.Pi*S.ImaginaryUnit / 2
-            elif isinstance(arg, Basic.One):
+            elif arg is S.One:
                 return S.Zero
-            elif isinstance(arg, Basic.NegativeOne):
+            elif arg is S.NegativeOne:
                 return S.Pi*S.ImaginaryUnit
             else:
                 cst_table = {
@@ -557,13 +557,13 @@ class atanh(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.Zero
-            elif isinstance(arg, Basic.One):
+            elif arg is S.One:
                 return S.Infinity
-            elif isinstance(arg, Basic.NegativeOne):
+            elif arg is S.NegativeOne:
                 return S.NegativeInfinity
             elif arg.is_negative:
                 return -cls(-arg)
@@ -613,18 +613,18 @@ class acoth(Function):
     def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+        if isinstance(arg, C.Number):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.Zero
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.Zero
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.Pi*S.ImaginaryUnit / 2
-            elif isinstance(arg, Basic.One):
+            elif arg is S.One:
                 return S.Infinity
-            elif isinstance(arg, Basic.NegativeOne):
+            elif arg is S.NegativeOne:
                 return S.NegativeInfinity
             elif arg.is_negative:
                 return -cls(-arg)

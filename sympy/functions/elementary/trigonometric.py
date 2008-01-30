@@ -30,9 +30,9 @@ class sin(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
@@ -117,7 +117,7 @@ class sin(Function):
             y = Basic.Add(*arg.args[1:])
         else:
             coeff, terms = arg.as_coeff_terms()
-            if not isinstance(coeff, Basic.One) and isinstance(coeff, Basic.Integer) and terms:
+            if not (coeff is S.One) and isinstance(coeff, Basic.Integer) and terms:
                 x = Basic.Mul(*terms)
                 y = (coeff-1)*x
         if x is not None:
@@ -166,9 +166,9 @@ class cos(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.One
             elif arg.is_negative:
                 return cls(-arg)
@@ -254,7 +254,7 @@ class cos(Function):
             return (cos(x)*cos(y) - sin(y)*sin(x)).expand(trig=True)
         else:
             coeff, terms = arg.as_coeff_terms()
-            if not isinstance(coeff, Basic.One) and isinstance(coeff, Basic.Integer) and terms:
+            if not (coeff is S.One) and isinstance(coeff, Basic.Integer) and terms:
                 x = Basic.Mul(*terms)
                 return Basic.chebyshevt(coeff, cos(x))
         return cos(arg)
@@ -304,7 +304,7 @@ class tan(Function):
         if isinstance(arg, Basic.Number):
             if isinstance(arg, Basic.NaN):
                 return S.NaN
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
@@ -425,9 +425,9 @@ class cot(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            #elif isinstance(arg, Basic.Zero):
+            #elif arg is S.Zero:
             #    return S.ComplexInfinity
             elif arg.is_negative:
                 return -cls(-arg)
@@ -541,17 +541,17 @@ class asin(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.NegativeInfinity * S.ImaginaryUnit
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.Infinity * S.ImaginaryUnit
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.Zero
-            elif isinstance(arg, Basic.One):
+            elif arg is S.One:
                 return S.Pi / 2
-            elif isinstance(arg, Basic.NegativeOne):
+            elif arg is S.NegativeOne:
                 return -S.Pi / 2
             else:
                 cst_table = {
@@ -630,17 +630,17 @@ class acos(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.Infinity * S.ImaginaryUnit
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.NegativeInfinity * S.ImaginaryUnit
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.Pi / 2
-            elif isinstance(arg, Basic.One):
+            elif arg is S.One:
                 return S.Zero
-            elif isinstance(arg, Basic.NegativeOne):
+            elif arg is S.NegativeOne:
                 return S.Pi
             else:
                 cst_table = {
@@ -709,17 +709,17 @@ class atan(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.Pi / 2
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return -S.Pi / 2
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.Zero
-            elif isinstance(arg, Basic.One):
+            elif arg is S.One:
                 return S.Pi / 4
-            elif isinstance(arg, Basic.NegativeOne):
+            elif arg is S.NegativeOne:
                 return -S.Pi / 4
             else:
                 cst_table = {
@@ -782,17 +782,17 @@ class acot(Function):
         arg = Basic.sympify(arg)
 
         if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Infinity):
+            elif arg is S.Infinity:
                 return S.Zero
-            elif isinstance(arg, Basic.NegativeInfinity):
+            elif arg is S.NegativeInfinity:
                 return S.Zero
-            elif isinstance(arg, Basic.Zero):
+            elif arg is S.Zero:
                 return S.Pi/ 2
-            elif isinstance(arg, Basic.One):
+            elif arg is S.One:
                 return S.Pi / 4
-            elif isinstance(arg, Basic.NegativeOne):
+            elif arg is S.NegativeOne:
                 return -S.Pi / 4
             else:
                 cst_table = {

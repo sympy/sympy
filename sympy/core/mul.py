@@ -12,7 +12,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         # apply associativity, separate commutative part of seq
         c_part = []
         nc_part = []
-        coeff = Basic.One()
+        coeff = S.One
         c_seq = []
         nc_seq = seq
         c_powers = {}
@@ -49,13 +49,13 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     
                 if isinstance(o, Basic.exp):
                     # exp(x) / exp(y) -> exp(x-y)
-                    b = Basic.Exp1()
+                    b = S.Exp1
                     e = o.args[0]
                 else:
                     b, e = o.as_base_exp()
                 if isinstance(b, Basic.Add) and isinstance(e, Basic.Number):
                     c, t = b.as_coeff_terms()
-                    if not isinstance(c, Basic.One):
+                    if c is not S.One:
                         coeff *= c ** e
                         assert len(t)==1,`t`
                         b = t[0]
@@ -96,10 +96,10 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     nc_part.append(o)
 
         for b, e in c_powers.items():
-            if isinstance(e, Basic.Zero):
+            if e is S.Zero:
                 continue
 
-            if isinstance(e, Basic.One):
+            if e is S.One:
                 if isinstance(b, Basic.Number):
                     coeff *= b
                 else:
@@ -116,7 +116,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 inv_exp_dict[e] = b
 
         for e,b in inv_exp_dict.items():
-            if isinstance(e, Basic.Zero):
+            if e is S.Zero:
                 continue
 
             if isinstance(e, Basic.One):
@@ -134,7 +134,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     c_part.append(obj)
 
 
-        if isinstance(coeff, (Basic.Infinity, Basic.NegativeInfinity)):
+        if (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
             new_c_part = []
             for t in c_part:
                 if t.is_positive:
@@ -154,14 +154,14 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 new_nc_part.append(t)
             nc_part = new_nc_part
             c_part.insert(0, coeff)
-        elif isinstance(coeff, (Basic.Zero, Basic.NaN)):
+        elif (coeff is S.Zero) or (coeff is S.NaN):
             c_part, nc_part = [coeff], []
         elif isinstance(coeff, Basic.Real):
             if coeff == Basic.Real(0):
                 c_part, nc_part = [coeff], []
             elif coeff != Basic.Real(1):
                 c_part.insert(0, coeff)
-        elif not isinstance(coeff, Basic.One):
+        elif coeff is not S.One:
             c_part.insert(0, coeff)
 
         c_part.sort(Basic.compare)
@@ -189,7 +189,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
 
 
                 coeff, rest = b.as_coeff_terms()
-                if not isinstance(coeff, Basic.One):
+                if coeff is not S.One:
                     # (2*a)**3 -> 2**3 * a**3
                     return coeff**e * Mul(*[s**e for s in rest])
             elif isinstance(e, Basic.Integer):
@@ -217,7 +217,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         coeff, terms = self.as_coeff_terms()
         if coeff.is_negative:
             coeff = -coeff
-            if not isinstance(coeff, Basic.One):
+            if coeff is not S.One:
                 terms.insert(0, coeff)
             if isinstance(terms, Basic):
                 terms = terms.args
@@ -230,13 +230,13 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         return r
 
         numer,denom = self.as_numer_denom()
-        if isinstance(denom, Basic.One):
+        if denom is S.One:
             delim = '*'
             coeff, rest = self.as_coeff_terms()
             r = delim.join([s.tostr(precedence) for s in rest.args])
-            if isinstance(coeff, Basic.One):
+            if coeff is S.One:
                 pass
-            elif isinstance(-coeff, Basic.One):
+            elif -coeff is S.One:
                 r = '-' + r
             elif coeff.is_negative:
                 r = '-' + (-coeff).tostr() + delim + r
@@ -254,7 +254,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
     @cache_it
     def as_two_terms(self):
         if len(self.args) == 1:
-            return Basic.One(), self
+            return S.One, self
         return self.args[0], Mul(*self.args[1:])
 
     @cache_it
@@ -271,7 +271,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         coeff = self.args[0]
         if isinstance(coeff, Basic.Number):
             return coeff, list(self.args[1:])
-        return Basic.One(), list(self.args[:])
+        return S.One, list(self.args[:])
 
     @staticmethod
     def _expandsums(sums):
@@ -325,7 +325,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         factors = []
         for i in xrange(len(terms)):
             t = terms[i].diff(s)
-            if isinstance(t, Basic.Zero):
+            if t is S.Zero:
                 continue
             factors.append(Mul(*(terms[:i]+[t]+terms[i+1:])))
         return Basic.Add(*factors)
@@ -347,7 +347,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
     @staticmethod
     def _combine_inverse(lhs, rhs):
         if lhs == rhs:
-            return Basic.One()
+            return S.One
         return lhs / rhs
 
     def as_powers_dict(self):

@@ -298,9 +298,9 @@ class LinearEntity(GeometryEntity):
         # The lower and upper
         lower, upper = -maxint-1, maxint
 
-        if self.slope == S.Infinity:
+        if self.slope is S.Infinity:
             if isinstance(self, Ray):
-                if isinstance(self.ydirection, Basic.Infinity):
+                if self.ydirection is S.Infinity:
                     lower = self.p1[1]
                 else:
                     upper = self.p1[1]
@@ -312,7 +312,7 @@ class LinearEntity(GeometryEntity):
             y = randint(lower, upper)
         else:
             if isinstance(self, Ray):
-                if isinstance(self.xdirection, Basic.Infinity):
+                if self.xdirection is S.Infinity:
                     lower = self.p1[0]
                 else:
                     upper = self.p1[0]
@@ -427,11 +427,11 @@ class Ray(LinearEntity):
             if Point.is_collinear(self.p1, self.p2, o):
                 if (not self.p1[0].atoms(type=Basic.Symbol)) and (not self.p1[1].atoms(type=Basic.Symbol)) \
                         and (not self.p2[0].atoms(type=Basic.Symbol)) and (not self.p2[1].atoms(type=Basic.Symbol)):
-                    if isinstance(self.xdirection, Basic.Infinity):
+                    if self.xdirection is S.Infinity:
                         return o[0] >= self.source[0]
-                    elif isinstance(self.xdirection, Basic.NegativeInfinity):
+                    elif self.xdirection is S.NegativeInfinity:
                         return o[0] <= self.source[0]
-                    elif isinstance(self.ydirection, Basic.Infinity):
+                    elif self.ydirection is S.Infinity:
                         return o[1] >= self.source[1]
                     return o[1] <= self.source[1]
                 else:

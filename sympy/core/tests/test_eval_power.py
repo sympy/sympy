@@ -1,4 +1,4 @@
-from sympy.core import Rational, Symbol, Basic, Real, Integer
+from sympy.core import Rational, Symbol, Basic, S, Real, Integer
 from sympy.functions.elementary.miscellaneous import sqrt
 
 def test_rational():
@@ -21,7 +21,7 @@ def test_negative_real():
     def feq(a,b):
         return abs(a - b) < 1E-10
 
-    assert feq(Basic.One() / Real(-0.5), -Integer(2))
+    assert feq(S.One / Real(-0.5), -Integer(2))
 
 def test_expand():
     x = Symbol('x')

@@ -12,7 +12,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
     def flatten(cls, seq):
         # apply associativity, all terms are commutable with respect to addition
         terms = {}
-        coeff = Basic.Zero()
+        coeff = S.Zero
         lambda_args = None
         order_factors = []
         while seq:
@@ -38,15 +38,15 @@ class Add(AssocOp, RelMeths, ArithMeths):
             if isinstance(o, Basic.Mul):
                 c = o.args[0]
                 if isinstance(c, Basic.Number):
-                    if isinstance(c, Basic.One):
+                    if c is S.One:
                         s = o
                     else:
                         s = Basic.Mul(*o.args[1:])
                 else:
-                    c = Basic.One()
+                    c = S.One
                     s = o
             else:
-                c = Basic.One()
+                c = S.One
                 s = o
             if terms.has_key(s):
                 terms[s] += c
@@ -55,19 +55,19 @@ class Add(AssocOp, RelMeths, ArithMeths):
         newseq = []
         noncommutative = False
         for s,c in terms.items():
-            if isinstance(c, Basic.Zero):
+            if c is S.Zero:
                 continue
-            elif isinstance(c, Basic.One):
+            elif c is S.One:
                 newseq.append(s)
             else:
                 newseq.append(Basic.Mul(c,s))
             noncommutative = noncommutative or not s.is_commutative
 
-        if isinstance(coeff, Basic.NaN):
+        if coeff is S.NaN:
             newseq = [coeff]
-        elif isinstance(coeff, (Basic.Infinity, Basic.NegativeInfinity)):
+        elif (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
             newseq = [coeff] + [f for f in newseq if not f.is_real]
-        elif not isinstance(coeff, Basic.Zero):
+        elif coeff is not S.Zero:
             newseq.insert(0, coeff)
 
         if order_factors:
@@ -90,7 +90,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         coeff, rest = self.as_coeff_factors()
         l = []
         precedence = self.precedence
-        if not isinstance(coeff, Basic.Zero):
+        if coeff is not S.Zero:
             l.append(coeff.tostr(precedence))
         for factor in rest:
             f = factor.tostr()
@@ -121,7 +121,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         coeff = self.args[0]
         if isinstance(coeff, Basic.Number):
             return coeff, list(self.args[1:])
-        return Basic.Zero(), list(self.args[:])
+        return S.Zero, list(self.args[:])
 
     def _eval_derivative(self, s):
         return Add(*[f.diff(s) for f in self.args])
@@ -142,7 +142,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
     @cache_it
     def as_two_terms(self):
         if len(self.args) == 1:
-            return Basic.Zero(), self
+            return S.Zero, self
         return self.args[0], Add(*self.args[1:])
 
     def as_numer_denom(self):
@@ -251,8 +251,8 @@ class Add(AssocOp, RelMeths, ArithMeths):
     def as_coeff_terms(self, x=None):
         # -2 + 2 * a -> -1, 2-2*a
         if isinstance(self.args[0], Basic.Number) and self.args[0].is_negative:
-            return -Basic.One(),[-self]
-        return Basic.One(),[self]
+            return -S.One,[-self]
+        return S.One,[self]
 
     def _eval_subs(self, old, new):
         if self==old: return new
@@ -300,12 +300,12 @@ class Add(AssocOp, RelMeths, ArithMeths):
             if isinstance(factors, Basic):
                 factors = factors.args
             factors = [f for f in factors if not f.is_bounded]
-        if not isinstance(coeff, Basic.Zero):
+        if coeff is not S.Zero:
             o = Basic.Order(x)
         else:
             o = Basic.Order(factors[0]*x,x)
         s = self.oseries(o)
-        while isinstance(s, Basic.Zero):
+        while s is S.Zero:
             o *= x
             s = self.oseries(o)
         if isinstance(s, Basic.Add):

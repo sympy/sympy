@@ -264,7 +264,7 @@ class Real(Number):
             other = Basic.sympify(other)
         except SympifyError:
             return NotImplemented
-        if isinstance(other, NaN) or isinstance(self, NaN):
+        if (other is S.NaN) or (self is NaN):
             return S.NaN
         if isinstance(other, Number):
             return Real(self.num + other._as_decimal())
@@ -453,7 +453,7 @@ class Rational(Number):
             other = Basic.sympify(other)
         except SympifyError:
             return NotImplemented
-        if isinstance(other, NaN) or isinstance(self, NaN):
+        if (other is S.NaN) or (self is S.NaN):
             return S.NaN
         if isinstance(other, Real):
             return Real(self._as_decimal() * other.num)
@@ -466,7 +466,7 @@ class Rational(Number):
             other = Basic.sympify(other)
         except SympifyError:
             return NotImplemented
-        if isinstance(other, NaN) or isinstance(self, NaN):
+        if (other is S.NaN) or (self is S.NaN):
             return S.NaN
         if isinstance(other, Real):
             return Real(self._as_decimal() + other.num)
@@ -484,16 +484,16 @@ class Rational(Number):
 
     def _eval_power(b, e):
         if isinstance(e, Number):
-            if isinstance(e, NaN): return S.NaN
+            if (e is S.NaN): return S.NaN
             if isinstance(e, Real):
                 return Real(decimal_math.pow(b._as_decimal(), e.num))
             if e.is_negative:
                 # (3/4)**-2 -> (4/3)**2
                 ne = -e
-                if isinstance(ne, One):
+                if (ne is S.One):
                     return Rational(b.q, b.p)
                 return Rational(b.q, b.p) ** ne
-            if isinstance(e, Infinity):
+            if (e is S.Infinity):
                 if b.p > b.q:
                     # (3/2)**oo -> oo
                     return S.Infinity
@@ -639,16 +639,16 @@ class Integer(Rational):
 
     def _eval_power(b, e):
         if isinstance(e, Number):
-            if isinstance(e, NaN): return S.NaN
+            if e is S.NaN: return S.NaN
             if isinstance(e, Real):
                 return Real(decimal_math.pow(b._as_decimal(), e.num))
             if e.is_negative:
                 # (3/4)**-2 -> (4/3)**2
                 ne = -e
-                if isinstance(ne, One):
+                if ne is S.One:
                     return Rational(1, b.p)
                 return Rational(1, b.p) ** ne
-            if isinstance(e, Infinity):
+            if e is S.Infinity:
                 if b.p > 1:
                     # (3)**oo -> oo
                     return S.Infinity
@@ -769,7 +769,7 @@ class Zero(Singleton, Integer):
         coeff, terms = e.as_coeff_terms()
         if coeff.is_negative:
             return S.Infinity ** Basic.Mul(*terms)
-        if not isinstance(coeff, Basic.One):
+        if coeff is not S.One:
             return b ** Basic.Mul(*terms)
 
     def _eval_order(self, *symbols):
@@ -803,11 +803,11 @@ class NegativeOne(Singleton, Integer):
                 s = decimal_math.sin(a)
                 c = decimal_math.cos(a)
                 return Real(s) + Real(c) * S.ImaginaryUnit
-            if isinstance(e, NaN):
+            if e is S.NaN:
                 return S.NaN
-            if isinstance(e, (Infinity, NegativeInfinity)):
+            if e is S.Infinity  or  e is S.NegativeInfinity:
                 return S.NaN
-            if isinstance(e, Half):
+            if e is S.Half:
                 return S.ImaginaryUnit
             if isinstance(e, Rational):
                 if e.q == 2:
@@ -849,7 +849,7 @@ class Infinity(Singleton, Rational):
         if e.is_negative:
             return S.Zero
         if isinstance(e, Number):
-            if isinstance(e, NaN):
+            if e is S.NaN:
                 return S.NaN
         d = e.evalf()
         if isinstance(d, Number):
@@ -887,7 +887,7 @@ class NegativeInfinity(Singleton, Rational):
 
         """
         if isinstance(e, Number):
-            if isinstance(e, (NaN, Infinity, NegativeInfinity)):
+            if (e is S.NaN)  or  (e is S.Infinity)  or  (e is S.NegativeInfinity):
                 return S.NaN
             if isinstance(e, Integer):
                 if e.is_positive:
@@ -918,7 +918,7 @@ class NaN(Singleton, Rational):
         return decimal.Decimal('NaN')
 
     def _eval_power(b, e):
-        if isinstance(e, Basic.Zero):
+        if e is S.Zero:
             return S.One
         return b
 
@@ -933,11 +933,11 @@ class ComplexInfinity(Singleton, Atom, NoRelMeths, ArithMeths):
         return 'zoo'
 
     def _eval_power(b, e):
-        if isinstance(e, Basic.ComplexInfinity):
+        if e is S.ComplexInfinity:
             return S.NaN
 
         if isinstance(e, Basic.Number):
-            if isinstance(e, Basic.Zero):
+            if e is S.Zero:
                 return S.NaN
             else:
                 if e.is_positive:

@@ -1,4 +1,4 @@
-from sympy import Basic, Symbol, Real, Integer, Rational, \
+from sympy import Basic, S, Symbol, Real, Integer, Rational, \
     sin, cos, exp, log, oo, sqrt, symbols, Integral
 import py
 
@@ -73,7 +73,7 @@ def test_is_polynomial():
     k = Symbol('k', nonnegative=True, integer=True)
 
     assert Rational(2).is_polynomial(x, y, z) == True
-    assert (Basic.Pi()).is_polynomial(x, y, z) == True
+    assert (S.Pi).is_polynomial(x, y, z) == True
 
     assert x.is_polynomial(x) == True
     assert x.is_polynomial(y) == True
@@ -102,7 +102,7 @@ def test_is_polynomial():
     assert (x**2 + 3*x - 8).is_polynomial() == True
 
     assert sqrt(x).is_polynomial(x) == False
-    assert (x**Basic.Half()).is_polynomial(x) == False
+    assert (x**S.Half).is_polynomial(x) == False
     assert (x**Rational(3,2)).is_polynomial(x) == False
 
     assert (x**2 + 3*x*sqrt(y) - 8).is_polynomial(x) == True

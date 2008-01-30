@@ -150,9 +150,9 @@ class Function(Basic, ArithMeths, RelMeths):
 
         @classmethod
         def canonize(cls, arg):
-            if isinstance(arg, Basic.NaN):
+            if arg is S.NaN:
                 return S.NaN
-            if isinstance(arg, Basic.Zero): return S.One
+            if arg is S.Zero: return S.One
             if arg.is_positive: return S.One
             if arg.is_negative: return S.NegativeOne
             if isinstance(arg, Basic.Mul):
@@ -201,11 +201,11 @@ class Function(Basic, ArithMeths, RelMeths):
         # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
         i = 0
         l = []
-        r = Basic.Zero()
+        r = S.Zero
         for a in self.args:
             i += 1
             da = a.diff(s)
-            if isinstance(da, Basic.Zero):
+            if da is S.Zero:
                 continue
             if isinstance(self.func, FunctionClass):
                 df = self.fdiff(i)
@@ -237,7 +237,7 @@ class Function(Basic, ArithMeths, RelMeths):
             return True
 
     def as_base_exp(self):
-        return self, Basic.One()
+        return self, S.One
 
     def count_ops(self, symbolic=True):
         #      f()             args
@@ -250,22 +250,22 @@ class Function(Basic, ArithMeths, RelMeths):
         if not Basic.Order(1,x).contains(arg):
             return self.func(arg)
         arg0 = arg.limit(x, 0)
-        if not isinstance(arg0, Basic.Zero):
+        if arg0 is not S.Zero:
             e = self.func(arg)
             e1 = e.expand()
             if e==e1:
                 #for example when e = sin(x+1) or e = sin(cos(x))
                 #let's try the general algorithm
-                term = e.subs(x, Basic.Rational(0))
-                series = Basic.Rational(0)
-                fact = Basic.Rational(1)
+                term = e.subs(x, S.Zero)
+                series = S.Zero
+                fact = S.One
                 i = 0
                 while not order.contains(term) or term == 0:
                     series += term
                     i += 1
                     fact *= Basic.Rational(i)
                     e = e.diff(x)
-                    term = e.subs(x, Basic.Rational(0))*(x**i)/fact
+                    term = e.subs(x, S.Zero)*(x**i)/fact
                 return series
 
                 #print '%s(%s).oseries(%s) is unevaluated' % (self.func,arg,order)
@@ -411,7 +411,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
         for s in symbols:
             assert isinstance(s, Basic.Symbol),`s`
             if not expr.has(s):
-                return Basic.Zero()
+                return S.Zero
 
         unevaluated_symbols = []
         for s in symbols:

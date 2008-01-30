@@ -84,7 +84,7 @@ class Order(Basic, ArithMeths, RelMeths):
     @cache_it_immutable
     def __new__(cls, expr, *symbols, **assumptions):
         expr = Basic.sympify(expr).expand(trig=True)
-        if isinstance(expr, Basic.NaN):
+        if expr is S.NaN:
             return S.NaN
         
         if symbols:
@@ -134,14 +134,14 @@ class Order(Basic, ArithMeths, RelMeths):
                 else:
                     expr = expr.as_leading_term(*symbols)
                     coeff, terms = expr.as_coeff_terms()
-                    if isinstance(coeff, Basic.Zero):
+                    if coeff is S.Zero:
                         return coeff
                     expr = Basic.Mul(*[t for t in terms if t.has(*symbols)]) 
 
-        elif not isinstance(expr, Basic.Zero):
-            expr = Basic.One()
+        elif expr is not S.Zero:
+            expr = S.One
 
-        if isinstance(expr, Basic.Zero):
+        if expr is S.Zero:
             return expr
 
         # remove unused symbols
@@ -276,7 +276,7 @@ class Order(Basic, ArithMeths, RelMeths):
         Return None if the inclusion relation cannot be determined (e.g. when self and
         expr have different symbols).
         """
-        if isinstance(expr, Basic.Zero):
+        if expr is S.Zero:
             return True
         if isinstance(expr, Order):
             if self.symbols and expr.symbols:
@@ -313,7 +313,7 @@ class Order(Basic, ArithMeths, RelMeths):
         return Order(self.expr.subs(old, new), *self.symbols)
 
     def _calc_splitter(self, d):
-        return Basic.Zero()
+        return S.Zero
 
     def _sage_(self):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.
