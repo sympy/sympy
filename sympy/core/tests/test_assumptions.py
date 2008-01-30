@@ -226,7 +226,7 @@ def test_I():
     assert z.is_composite == None
 
 def test_symbol_zero():
-    x = Basic.Symbol('x',zero=True)
+    x = Symbol('x',zero=True)
     assert x.is_positive == False
     assert x.is_nonpositive == True
     assert x.is_negative == False
@@ -235,7 +235,7 @@ def test_symbol_zero():
     assert x.is_nonzero == False
 
 def test_symbol_positive():
-    x = Basic.Symbol('x',positive=True)
+    x = Symbol('x',positive=True)
     assert x.is_positive == True
     assert x.is_nonpositive == False
     assert x.is_negative == False
@@ -244,7 +244,7 @@ def test_symbol_positive():
     assert x.is_nonzero == True
 
 def test_neg_symbol_positive():
-    x = -Basic.Symbol('x',positive=True)
+    x = -Symbol('x',positive=True)
     assert x.is_positive == False
     assert x.is_nonpositive == True
     assert x.is_negative == True
@@ -253,7 +253,7 @@ def test_neg_symbol_positive():
     assert x.is_nonzero == True
 
 def test_symbol_nonpositive():
-    x = Basic.Symbol('x',nonpositive=True)
+    x = Symbol('x',nonpositive=True)
     assert x.is_positive == False
     assert x.is_nonpositive == True
     assert x.is_negative == None
@@ -262,7 +262,7 @@ def test_symbol_nonpositive():
     assert x.is_nonzero == None
 
 def test_neg_symbol_nonpositive():
-    x = -Basic.Symbol('x',nonpositive=True)
+    x = -Symbol('x',nonpositive=True)
     assert x.is_positive == None
     assert x.is_nonpositive == None
     assert x.is_negative == False
@@ -271,7 +271,7 @@ def test_neg_symbol_nonpositive():
     assert x.is_nonzero == None
 
 def test_prime_symbol():
-    x = Basic.Symbol('x', prime=True)
+    x = Symbol('x', prime=True)
     assert x.is_prime == True
     assert x.is_integer == True
     assert x.is_positive == True
@@ -279,7 +279,7 @@ def test_prime_symbol():
     assert x.is_nonpositive == False
     assert x.is_nonnegative == True
 
-    x = Basic.Symbol('x', prime=False)
+    x = Symbol('x', prime=False)
     assert x.is_prime == False
     assert x.is_integer == None
     assert x.is_positive == None
@@ -289,47 +289,47 @@ def test_prime_symbol():
 
 @XFAIL
 def test_other_symbol():
-    x = Basic.Symbol('x', integer=True)
+    x = Symbol('x', integer=True)
     assert x.is_integer == True
     assert x.is_real == True
 
-    x = Basic.Symbol('x', integer=True, nonnegative=True)
+    x = Symbol('x', integer=True, nonnegative=True)
     assert x.is_nni == True
     assert x.is_ni == False
     assert x.is_pi == None
 
-    x = Basic.Symbol('x', integer=True, nonpositive=True)
+    x = Symbol('x', integer=True, nonpositive=True)
     assert x.is_npi == True
     assert x.is_pi == False
     assert x.is_ni == None
 
-    x = Basic.Symbol('x', odd=True)
+    x = Symbol('x', odd=True)
     assert x.is_odd == True
     assert x.is_even == False
     assert x.is_integer == True
 
     # XXX x.is_even currently will be True
-    x = Basic.Symbol('x', odd=False)
+    x = Symbol('x', odd=False)
     assert x.is_odd == False
     assert x.is_even == None
     assert x.is_integer == None
 
-    x = Basic.Symbol('x', even=True)
+    x = Symbol('x', even=True)
     assert x.is_even == True
     assert x.is_odd == False
     assert x.is_integer == True
 
     # XXX x.is_odd currently will be True
-    x = Basic.Symbol('x', even=False)
+    x = Symbol('x', even=False)
     assert x.is_even == False
     assert x.is_odd == None
     assert x.is_integer == None
 
-    x = Basic.Symbol('x', nni=True)
+    x = Symbol('x', nni=True)
     assert x.is_integer == True
     assert x.is_nonnegative == True
 
-    x = Basic.Symbol('x', npi=True)
+    x = Symbol('x', npi=True)
     assert x.is_integer == True
     assert x.is_nonpositive == True
 

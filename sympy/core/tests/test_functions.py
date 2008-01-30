@@ -34,14 +34,14 @@ def test_log_hashing_bug():
     assert log(x) != log(log(log(x)))
 
     e = 1/log(log(x)+log(log(x)))
-    assert isinstance(e.base, Basic.log)
+    assert isinstance(e.base, log)
     e = 1/log(log(x)+log(log(log(x))))
-    assert isinstance(e.base, Basic.log)
+    assert isinstance(e.base, log)
 
     x = Symbol("x")
     e = log(log(x))
-    assert isinstance(e, Basic.log)
-    assert not isinstance(x, Basic.log)
+    assert isinstance(e, log)
+    assert not isinstance(x, log)
     assert hash(log(log(x))) != hash(x)
     assert e != x
 
