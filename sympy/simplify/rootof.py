@@ -1,5 +1,5 @@
 
-from sympy import Basic, S, Symbol, Mul, I, pi, exp, sqrt
+from sympy import Basic, S, C, Symbol, Mul, I, pi, exp, sqrt
 from sympy.core.numbers import Rational, Integer, gcd
 from sympy.core.methods import NoRelMeths, ArithMeths
 from sympy.polynomials import quo, factor_, PolynomialException
@@ -71,7 +71,7 @@ def arbitrary(poly):
     if n not in [1, 2, 3]:
         return []
 
-    poly = Basic.Polynomial(coeffs=[ (c, e/g) for c, e in poly.coeffs ],
+    poly = C.Polynomial(coeffs=[ (c, e/g) for c, e in poly.coeffs ],
         var=poly.var, order=poly.order)
 
     roots_of_unity = [ exp(2*i*pi*I/g) for i in range(g) ]
@@ -92,7 +92,7 @@ def arbitrary(poly):
     return solutions
 
 def roots(poly, x=None, domain=None, **kwargs):
-    if not isinstance(poly, Basic.Polynomial):
+    if not isinstance(poly, C.Polynomial):
         try:
             poly = poly.as_polynomial(x)
         except PolynomialException:
@@ -177,7 +177,7 @@ def roots(poly, x=None, domain=None, **kwargs):
 def factors(poly, x=None, domain=None, **kwargs):
     _roots = roots(poly, x, domain, **kwargs)
 
-    if isinstance(poly, Basic.Polynomial):
+    if isinstance(poly, C.Polynomial):
         poly = poly.as_basic()
 
     if not _roots:

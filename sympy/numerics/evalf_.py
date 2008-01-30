@@ -92,7 +92,7 @@ def evalf(expr):
             y = functions.exp(functions.log(base) * expt)
         Float.revert()
 
-    elif isinstance(expr, Basic.exp):
+    elif isinstance(expr, C.exp):
         Float.store()
         Float.setprec(Float.getprec() + 3)
         #XXX: how is it possible, that this works:

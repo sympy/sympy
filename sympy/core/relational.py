@@ -1,5 +1,5 @@
 
-from basic import Basic
+from basic import Basic, C
 from methods import NoRelMeths
 
 class Relational(Basic, NoRelMeths):
@@ -67,7 +67,7 @@ class StrictInequality(Relational):
 
     def __nonzero__(self):
         if self.lhs.is_comparable and self.rhs.is_comparable:
-            if isinstance(self.lhs, Basic.Number) and isinstance(self.rhs, Basic.Number):
+            if isinstance(self.lhs, C.Number) and isinstance(self.rhs, C.Number):
                 return self.lhs < self.rhs
             return self.lhs.evalf()<self.rhs.evalf()
         return self.lhs.compare(self.rhs)==-1
@@ -78,7 +78,7 @@ class Inequality(Relational):
 
     def __nonzero__(self):
         if self.lhs.is_comparable and self.rhs.is_comparable:
-            if isinstance(self.lhs, Basic.Number) and isinstance(self.rhs, Basic.Number):
+            if isinstance(self.lhs, C.Number) and isinstance(self.rhs, C.Number):
                 return self.lhs <= self.rhs
             return self.lhs.evalf()<=self.rhs.evalf()
         return self.lhs.compare(self.rhs)<=0

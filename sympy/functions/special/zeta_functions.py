@@ -1,5 +1,5 @@
 
-from sympy.core import Function, S, Basic, pi
+from sympy.core import Function, S, C, Basic, pi
 
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
@@ -13,13 +13,13 @@ class zeta(Function):
     def canonize(cls, z, a=S.One):
         z, a = map(Basic.sympify, (z, a))
 
-        if isinstance(a, Basic.Number):
+        if isinstance(a, C.Number):
             if a is S.NaN:
                 return S.NaN
             elif a is S.Zero:
                 return cls(z)
 
-        if isinstance(z, Basic.Number):
+        if isinstance(z, C.Number):
             if z is S.NaN:
                 return S.NaN
             elif z is S.Infinity:
@@ -31,18 +31,18 @@ class zeta(Function):
                     return S.Half - a
             elif z is S.One:
                 return S.ComplexInfinity
-            elif isinstance(z, Basic.Integer):
-                if isinstance(a, Basic.Integer):
+            elif isinstance(z, C.Integer):
+                if isinstance(a, C.Integer):
                     if z.is_negative:
-                        zeta = (-1)**z * Basic.bernoulli(-z+1)/(-z+1)
+                        zeta = (-1)**z * C.bernoulli(-z+1)/(-z+1)
                     elif z.is_even:
-                        B, F = Basic.bernoulli(z), Basic.Factorial(z)
+                        B, F = C.bernoulli(z), C.Factorial(z)
                         zeta = 2**(z-1) * abs(B) * pi**z / F
 
                     if a.is_negative:
-                        return zeta + Basic.harmonic(abs(a), z)
+                        return zeta + C.harmonic(abs(a), z)
                     else:
-                        return zeta - Basic.harmonic(a-1, z)
+                        return zeta - C.harmonic(a-1, z)
 
 
 class dirichlet_eta(Function):
@@ -54,6 +54,6 @@ class dirichlet_eta(Function):
     @classmethod
     def canonize(cls, s):
         if s == 1:
-            return Basic.log(2)
+            return C.log(2)
         else:
             return (1-2**(1-s)) * zeta(s)

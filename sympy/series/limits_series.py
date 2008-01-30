@@ -8,7 +8,7 @@
 # other bugs (mainly recursion), if it were used in the series expansion. So
 # currently we use limits_series, until we move to limits.py completely.
 
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Basic, S, C
 from sympy.core.methods import RelMeths, ArithMeths
 from sympy.core.cache import cache_it, cache_it_immutable
 
@@ -22,9 +22,9 @@ class Limit(Basic, RelMeths, ArithMeths):
         expr = Basic.sympify(expr)
         x = Basic.sympify(x)
         xlim = Basic.sympify(xlim)
-        if not isinstance(x, Basic.Symbol):
+        if not isinstance(x, C.Symbol):
             raise ValueError("Limit 2nd argument must be Symbol instance (got %s)" % (x))
-        assert isinstance(x, Basic.Symbol),`x`
+        assert isinstance(x, C.Symbol),`x`
 
         if not expr.has(x):
             return expr
@@ -32,14 +32,14 @@ class Limit(Basic, RelMeths, ArithMeths):
         if xlim is S.NegativeInfinity:
             xoo = InfLimit.limit_process_symbol()
             if expr.has(xoo): 
-                xoo = Basic.Symbol(x.name + '_oo',dummy=True,positive=True,unbounded=True)
+                xoo = C.Symbol(x.name + '_oo',dummy=True,positive=True,unbounded=True)
             return InfLimit(expr.subs(x,-xoo), xoo)
         if xlim is S.Infinity:
             return InfLimit(expr, x)
         else:
             xoo = InfLimit.limit_process_symbol()
             if expr.has(xoo): 
-                xoo = Basic.Symbol(x.name + '_oo',dummy=True,positive=True,unbounded=True)
+                xoo = C.Symbol(x.name + '_oo',dummy=True,positive=True,unbounded=True)
             if direction=='<':
                 return InfLimit(expr.subs(x, xlim+1/xoo), xoo)
             elif direction=='>':
@@ -79,13 +79,13 @@ class InfLimit(Basic):
     @staticmethod
     @cache_it_immutable
     def limit_process_symbol():
-        return Basic.Symbol('xoo', dummy=True, unbounded=True, positive=True)
+        return C.Symbol('xoo', dummy=True, unbounded=True, positive=True)
 
     @cache_it_immutable
     def __new__(cls, expr, x):
         expr = orig_expr = Basic.sympify(expr)
         orig_x = Basic.sympify(x)
-        assert isinstance(orig_x,Basic.Symbol),`orig_x`
+        assert isinstance(orig_x,C.Symbol),`orig_x`
 
         # handle trivial results
         if orig_expr==orig_x:
@@ -99,35 +99,35 @@ class InfLimit(Basic):
         elif orig_x==x:
             expr = orig_expr
         else:
-            x = Basic.Symbol(orig_x.name + '_oo', dummy=True, unbounded=True, positive=True)
+            x = C.Symbol(orig_x.name + '_oo', dummy=True, unbounded=True, positive=True)
             expr = orig_expr.subs(orig_x, x)
 
         result = None
         if hasattr(expr,'_eval_inflimit'):
             # support for callbacks
             result = getattr(expr,'_eval_inflimit')(x)
-        elif isinstance(expr, Basic.Add):
+        elif isinstance(expr, C.Add):
             result, factors = expr.as_coeff_factors(x)
             for f in factors:
                 result += f.inflimit(x)
                 if result is S.NaN:
                     result = None
                     break
-        elif isinstance(expr, Basic.Mul):
+        elif isinstance(expr, C.Mul):
             result, terms = expr.as_coeff_terms(x)
             for t in terms:
                 result *= t.inflimit(x)
                 if result is S.NaN:
                     result = None
                     break
-        elif isinstance(expr, Basic.Pow):
+        elif isinstance(expr, C.Pow):
             if not expr.exp.has(x):
                 result = expr.base.inflimit(x) ** expr.exp
             elif not expr.base.has(x):
                 result = expr.base ** expr.exp.inflimit(x)
             else:
-                result = Basic.exp(expr.exp * Basic.log(expr.base)).inflimit(x)
-        elif isinstance(expr, Basic.Function):
+                result = C.exp(expr.exp * C.log(expr.base)).inflimit(x)
+        elif isinstance(expr, C.Function):
             # warning: assume that
             #  lim_x f(g1(x),g2(x),..) = f(lim_x g1(x), lim_x g2(x))
             # if this is incorrect, one must define f._eval_inflimit(x) method
@@ -147,16 +147,16 @@ def mrv_inflimit(expr, x, _cache = {}):
     mrv_map = {}
     newexpr = mrv2(expr, x, expr_map, mrv_map)
     if mrv_map.has_key(x):
-        t = Basic.Temporary(unbounded=True, positive=True)
-        r = mrv_inflimit(expr.subs(Basic.log(x), t).subs(x, Basic.exp(t)).subs(t, x), x)
+        t = C.Temporary(unbounded=True, positive=True)
+        r = mrv_inflimit(expr.subs(C.log(x), t).subs(x, C.exp(t)).subs(t, x), x)
         del _cache[(expr, x)]
         return r
-    w = Basic.Symbol('w_0',dummy=True, positive=True, infinitesimal=True)
+    w = C.Symbol('w_0',dummy=True, positive=True, infinitesimal=True)
     germ, new_mrv_map = rewrite_mrv_map(mrv_map, x, w)
     new_expr = rewrite_expr(newexpr, germ, new_mrv_map, w)
     lt = new_expr.as_leading_term(w)
     if germ is not None:
-        lt = lt.subs(Basic.log(w), -germ.args[0])
+        lt = lt.subs(C.log(w), -germ.args[0])
     c,e = lt.as_coeff_exponent(w)
     assert not c.has(w),`c`
     if e==0:
@@ -168,7 +168,7 @@ def mrv_inflimit(expr, x, _cache = {}):
         return S.Zero
     if e.is_negative:
         del _cache[(expr, x)]
-        return Basic.sign(c) * S.Infinity
+        return C.sign(c) * S.Infinity
     raise RuntimeError('Failed to compute mrv_inflimit(%s, %s), got lt=%s' % (self, x, lt))
 
 @cache_it_immutable
@@ -177,10 +177,10 @@ def cmp_ops_count(e1,e2):
 
 @cache_it_immutable
 def mrv_compare(f, g, x):
-    log = Basic.log
-    if isinstance(f, Basic.exp): f = f.args[0]
+    log = C.log
+    if isinstance(f, C.exp): f = f.args[0]
     else: f = log(f)
-    if isinstance(g, Basic.exp): g = g.args[0]
+    if isinstance(g, C.exp): g = g.args[0]
     else: g = log(g)
     c = (f/g).inflimit(x)
     if c==0:
@@ -205,20 +205,20 @@ def mrv2(expr, x, d, md):
     if expr==x:
         if not md: md[x] = x
         return x
-    if isinstance(expr, (Basic.Add, Basic.Mul)):
+    if isinstance(expr, (C.Add, C.Mul)):
         r = expr.__class__(*[mrv2(t, x, d, md) for t in expr.args])
         d[expr] = r
         return r
-    log = Basic.log
-    exp = Basic.exp
-    if isinstance(expr, Basic.Pow):
+    log = C.log
+    exp = C.exp
+    if isinstance(expr, C.Pow):
         if not expr.exp.has(x):
             r = mrv2(expr.base, x, d, md)**expr.exp
         else:
             r = mrv2(exp(expr.exp * log(expr.base)), x, d, md)
         d[expr] = r
         return r
-    if isinstance(expr, Basic.exp):
+    if isinstance(expr, C.exp):
         e = expr.args[0]
         l = e.inflimit(x)
         r = exp(mrv2(e, x, d, md))
@@ -246,10 +246,10 @@ def mrv2(expr, x, d, md):
                 continue
             new_terms.append(t)
         terms = new_terms
-        coeff = Basic.sign(coeff)
+        coeff = C.sign(coeff)
         if coeff is not S.One:
             terms.insert(0,coeff)
-        en = Basic.Mul(*terms)
+        en = C.Mul(*terms)
         nexpr = exp(en)
         #print coeff,terms,nexpr
         if md.has_key(x):
@@ -264,12 +264,12 @@ def mrv2(expr, x, d, md):
             if md.has_key(nexpr):
                 tmp = md[nexpr]
             else:
-                tmp = Basic.Temporary()
+                tmp = C.Temporary()
                 md[nexpr] = tmp
             r = expr.subs(nexpr, tmp)
         d[expr] = r
         return r
-    if isinstance(expr, Basic.Function):
+    if isinstance(expr, C.Function):
         r = expr.func(*[mrv2(a, x, d, md) for a in expr.args])
         d[expr] = r
         return r
@@ -294,13 +294,13 @@ def rewrite_mrv_map(mrv_map, x, w):
         c = (arg/garg).inflimit(x)
         Aarg = arg-c*garg
         Aarg = Aarg.subs(g, 1/w)
-        A = Basic.exp(Aarg)
+        A = C.exp(Aarg)
         new_germ = A * w ** -c
         d[name] = new_germ
     return g, d
 
 def rewrite_expr(expr, germ, mrv_map, w):
-    tmps = expr.atoms(Basic.Temporary)
+    tmps = expr.atoms(C.Temporary)
     e = expr
     for t in tmps:
         try:
@@ -309,8 +309,8 @@ def rewrite_expr(expr, germ, mrv_map, w):
             continue
         e = e.subs(t, g)
     if germ is not None:
-        mrvlog = Basic.MrvLog
-        log = Basic.log
+        mrvlog = C.MrvLog
+        log = C.log
         e = e.subs(log, mrvlog).subs(germ.args[0], -log(w)).subs(mrvlog, log)
     return e
 

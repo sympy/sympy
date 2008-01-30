@@ -1,4 +1,4 @@
-from sympy.core.basic import S, Basic
+from sympy.core.basic import S, C, Basic
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry.exceptions import GeometryError
@@ -68,7 +68,7 @@ class Ellipse(GeometryEntity):
             return c
 
         hr, vr = self.hradius, self.vradius
-        if hr.atoms(type=Basic.Symbol) or vr.atoms(type=Basic.Symbol):
+        if hr.atoms(type=C.Symbol) or vr.atoms(type=C.Symbol):
             raise Exception("foci can only be determined on non-symbolic radii")
 
         v = sqrt(abs(vr**2 - hr**2))
@@ -117,16 +117,16 @@ class Ellipse(GeometryEntity):
 
     def arbitrary_point(self, parameter_name='t'):
         """Returns a symbolic point that is on the ellipse."""
-        t = Basic.Symbol(parameter_name, real=True)
+        t = C.Symbol(parameter_name, real=True)
         return Point(
-                self.center[0] + self.hradius*Basic.cos(t),
-                self.center[1] + self.vradius*Basic.sin(t))
+                self.center[0] + self.hradius*C.cos(t),
+                self.center[1] + self.vradius*C.sin(t))
 
     def random_point(self):
         """Returns a random point on the ellipse."""
         from random import random
         from sys import maxint
-        t = Basic.Symbol('t', real=True)
+        t = C.Symbol('t', real=True)
         p = self.arbitrary_point('t')
         # get a random value in [-pi, pi)
         subs_val = float(S.Pi)*(2*random() - 1)
@@ -139,8 +139,8 @@ class Ellipse(GeometryEntity):
         Optional parameters x and y can be used to specify symbols, or the
         names of the symbols used in the equation.
         """
-        if isinstance(x, basestring):   x = Basic.Symbol(x, real=True)
-        if isinstance(y, basestring):   y = Basic.Symbol(y, real=True)
+        if isinstance(x, basestring):   x = C.Symbol(x, real=True)
+        if isinstance(y, basestring):   y = C.Symbol(y, real=True)
         t1 = ((x - self.center[0]) / self.hradius)**2
         t2 = ((y - self.center[1]) / self.vradius)**2
         return t1 + t2 - 1
@@ -222,8 +222,8 @@ class Ellipse(GeometryEntity):
 
     def __contains__(self, o):
         if isinstance(o, Point):
-            x = Basic.Symbol('x', real=True, dummy=True)
-            y = Basic.Symbol('y', real=True, dummy=True)
+            x = C.Symbol('x', real=True, dummy=True)
+            y = C.Symbol('y', real=True, dummy=True)
 
             res = self.equation(x, y).subs_dict({x: o[0], y: o[1]})
             res = trigsimp(simplify(res))
@@ -293,8 +293,8 @@ class Circle(Ellipse):
         Optional parameters x and y can be used to specify symbols, or the
         names of the symbols used in the equation.
         """
-        if isinstance(x, basestring):   x = Basic.Symbol(x, real=True)
-        if isinstance(y, basestring):   y = Basic.Symbol(y, real=True)
+        if isinstance(x, basestring):   x = C.Symbol(x, real=True)
+        if isinstance(y, basestring):   y = C.Symbol(y, real=True)
         t1 = (x - self.center[0])**2
         t2 = (y - self.center[1])**2
         return t1 + t2 - self.hradius**2

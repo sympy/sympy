@@ -1,4 +1,4 @@
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Basic, S, C
 from sympy.core import oo, Rational, Pow
 from sympy.core.methods import ArithMeths, RelMeths
 from sympy.core.cache import cache_it, cache_it_immutable
@@ -90,7 +90,7 @@ class Order(Basic, ArithMeths, RelMeths):
         if symbols:
             symbols = map(Basic.sympify, symbols)
         else:
-            symbols = list(expr.atoms(Basic.Symbol))
+            symbols = list(expr.atoms(C.Symbol))
 
         symbols.sort(Basic.compare)
 
@@ -109,10 +109,10 @@ class Order(Basic, ArithMeths, RelMeths):
             symbol_map = {}
             new_symbols = []
             for s in symbols:
-                if isinstance(s, Basic.Symbol):
+                if isinstance(s, C.Symbol):
                     new_symbols.append(s)
                     continue
-                z = Basic.Symbol('z',dummy=True)
+                z = C.Symbol('z',dummy=True)
                 x1,s1 = s.solve4linearsymbol(z)
                 expr = expr.subs(x1,s1)
                 symbol_map[z] = s
@@ -128,15 +128,15 @@ class Order(Basic, ArithMeths, RelMeths):
                     else:
                         symbols.append(s)
             else:
-                if isinstance(expr, Basic.Add):
+                if isinstance(expr, C.Add):
                     lst = expr.extract_leading_order(*symbols)
-                    expr = Basic.Add(*[f.expr for (e,f) in lst])
+                    expr = C.Add(*[f.expr for (e,f) in lst])
                 else:
                     expr = expr.as_leading_term(*symbols)
                     coeff, terms = expr.as_coeff_terms()
                     if coeff is S.Zero:
                         return coeff
-                    expr = Basic.Mul(*[t for t in terms if t.has(*symbols)]) 
+                    expr = C.Mul(*[t for t in terms if t.has(*symbols)]) 
 
         elif expr is not S.Zero:
             expr = S.One
@@ -255,7 +255,7 @@ class Order(Basic, ArithMeths, RelMeths):
         return r
 
     def _eval_power(b, e):
-        if isinstance(e, Basic.Number):
+        if isinstance(e, C.Number):
             return Order(b.expr ** e, *b.symbols)
         return
 
@@ -305,9 +305,9 @@ class Order(Basic, ArithMeths, RelMeths):
     def _eval_subs(self, old, new):
         if self==old:
             return new
-        if isinstance(old, Basic.Symbol) and old in self.symbols:
+        if isinstance(old, C.Symbol) and old in self.symbols:
             i = list(self.symbols).index(old)
-            if isinstance(new, Basic.Symbol):
+            if isinstance(new, C.Symbol):
                 return Order(self.expr.subs(old, new), *(self.symbols[:i]+(new,)+self.symbols[i+1:]))
             return Order(self.expr.subs(old, new), *(self.symbols[:i]+self.symbols[i+1:]))
         return Order(self.expr.subs(old, new), *self.symbols)

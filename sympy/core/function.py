@@ -29,7 +29,7 @@ Example:
     (x,)
 """
 
-from basic import Basic, Singleton, Atom, S
+from basic import Basic, Singleton, Atom, S, C
 from basic_methods import BasicType, MetaBasicMeths
 from methods import ArithMeths, NoRelMeths, RelMeths
 from operations import AssocOp
@@ -155,10 +155,10 @@ class Function(Basic, ArithMeths, RelMeths):
             if arg is S.Zero: return S.One
             if arg.is_positive: return S.One
             if arg.is_negative: return S.NegativeOne
-            if isinstance(arg, Basic.Mul):
+            if isinstance(arg, C.Mul):
                 coeff, terms = arg.as_coeff_terms()
-                if not isinstance(coeff, Basic.One):
-                    return cls(coeff) * cls(Basic.Mul(*terms))
+                if coeff is not S.One:
+                    return cls(coeff) * cls(C.Mul(*terms))
 
         """
         return
@@ -210,7 +210,7 @@ class Function(Basic, ArithMeths, RelMeths):
             if isinstance(self.func, FunctionClass):
                 df = self.fdiff(i)
                 l.append(df * da)
-        return Basic.Add(*l)
+        return C.Add(*l)
 
     def _eval_is_commutative(self):
         r = True
@@ -241,13 +241,13 @@ class Function(Basic, ArithMeths, RelMeths):
 
     def count_ops(self, symbolic=True):
         #      f()             args
-        return 1   + Basic.Add(*[t.count_ops(symbolic) for t in self.args])
+        return 1   + C.Add(*[t.count_ops(symbolic) for t in self.args])
 
     def _eval_oseries(self, order):
         assert self.func.nargs==1,`self.func`
         arg = self.args[0]
         x = order.symbols[0]
-        if not Basic.Order(1,x).contains(arg):
+        if not C.Order(1,x).contains(arg):
             return self.func(arg)
         arg0 = arg.limit(x, 0)
         if arg0 is not S.Zero:
@@ -263,7 +263,7 @@ class Function(Basic, ArithMeths, RelMeths):
                 while not order.contains(term) or term == 0:
                     series += term
                     i += 1
-                    fact *= Basic.Rational(i)
+                    fact *= C.Rational(i)
                     e = e.diff(x)
                     term = e.subs(x, S.Zero)*(x**i)/fact
                 return series
@@ -280,7 +280,7 @@ class Function(Basic, ArithMeths, RelMeths):
 
     def _eval_expand_complex(self, *args):
         func = self.func(*[ a._eval_expand_complex(*args) for a in self.args ])
-        return Basic.re(func) + S.ImaginaryUnit * Basic.im(func)
+        return C.re(func) + S.ImaginaryUnit * C.im(func)
 
     def _eval_rewrite(self, pattern, rule, **hints):
         if hints.get('deep', False):
@@ -326,7 +326,7 @@ class Function(Basic, ArithMeths, RelMeths):
 
         #if cls.nargs == 1:
         # common case for functions with 1 argument
-        #if isinstance(arg, Basic.Number):
+        #if isinstance(arg, C.Number):
         if arg.is_number:
             func_evalf = getattr(arg, cls.__name__)
             return func_evalf()
@@ -335,7 +335,7 @@ class Function(Basic, ArithMeths, RelMeths):
         """General method for the leading term"""
         arg = self.args[0].as_leading_term(x)
 
-        if Basic.Order(1,x).contains(arg):
+        if C.Order(1,x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -348,7 +348,7 @@ class Function(Basic, ArithMeths, RelMeths):
         redefine it to make it faster by using the "previous_terms". 
         """
         x = Basic.sympify(x)
-        return cls(x).diff(x, n).subs(x, 0) * x**n / Basic.Factorial(n)
+        return cls(x).diff(x, n).subs(x, 0) * x**n / C.Factorial(n)
 
 class WildFunction(Function, Atom):
     """
@@ -360,8 +360,8 @@ class WildFunction(Function, Atom):
 
     def __new__(cls, name=None, **assumptions):
         if name is None:
-            name = 'Wf%s' % (Basic.Symbol.dummycount + 1) # XXX refactor dummy counting
-            Basic.Symbol.dummycount += 1
+            name = 'Wf%s' % (C.Symbol.dummycount + 1) # XXX refactor dummy counting
+            C.Symbol.dummycount += 1
         obj = Function.__new__(cls, name, **assumptions)
         obj.name = name
         return obj
@@ -409,7 +409,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
             return obj
 
         for s in symbols:
-            assert isinstance(s, Basic.Symbol),`s`
+            assert isinstance(s, C.Symbol),`s`
             if not expr.has(s):
                 return S.Zero
 
@@ -505,7 +505,7 @@ class Lambda(Function):
     def canonize(cls, x, expr):
         obj = Basic.__new__(cls, x, expr)
         #use dummy variables internally, just to be sure
-        tmp = Basic.Symbol("x", dummy=True)
+        tmp = C.Symbol("x", dummy=True)
         obj._args = (tmp, expr.subs(x, tmp))
         return obj
 

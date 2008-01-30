@@ -95,7 +95,7 @@ This code is almost exact rewrite of the Maple code inside the Gruntz thesis.
 
 """
 
-from sympy.core import Basic, Add, Mul, Pow, Function, oo, Symbol, Rational, \
+from sympy.core import Basic, S, Add, Mul, Pow, Function, oo, Symbol, Rational, \
         Real
 from sympy.functions import log, exp
 from sympy.series.order import Order

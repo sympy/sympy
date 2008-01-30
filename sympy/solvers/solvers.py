@@ -353,13 +353,13 @@ def dsolve(eq, funcs):
         if r: return solve_ODE_second_order(r[a], 0, r[b], f(x), x)
 
         #special equations, that we know how to solve
-        t = x*Basic.exp(f(x))
+        t = x*C.exp(f(x))
         tt = a*t.diff(x, x)/t
         r = eq.match(tt.expand())
         if r:
             return -solve_ODE_1(f(x), x)
 
-        t = x*Basic.exp(-f(x))
+        t = x*C.exp(-f(x))
         tt = a*t.diff(x, x)/t
         r = eq.match(tt.expand())
         if r:
@@ -367,7 +367,7 @@ def dsolve(eq, funcs):
             #assert ( r[a]*t.diff(x,2)/t ) == eq.subs(f, t)
             return solve_ODE_1(f(x), x)
 
-        neq = eq*Basic.exp(f(x))/Basic.exp(-f(x))
+        neq = eq*C.exp(f(x))/C.exp(-f(x))
         r = neq.match(tt.expand())
         if r:
             #check, that we've rewritten the equation correctly:
@@ -385,10 +385,10 @@ def solve_ODE_second_order(a, b, c, f, x):
     #a very special case, for b=0 and a,c not depending on x:
     if b != 0:
         raise NotImplementedError("cannot solve this")
-    return Symbol("C1")*Basic.sin(sqrt(c/a)*x)+Symbol("C2")*Basic.cos(sqrt(c/a)*x)
+    return Symbol("C1")*C.sin(sqrt(c/a)*x)+Symbol("C2")*C.cos(sqrt(c/a)*x)
 
 def solve_ODE_1(f, x):
     """ (x*exp(-f(x)))'' = 0 """
     C1 = Symbol("C1")
     C2 = Symbol("C2")
-    return -Basic.log(C1+C2/x)
+    return -C.log(C1+C2/x)

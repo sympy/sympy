@@ -1,4 +1,4 @@
-from sympy import Symbol, Rational, Order, Basic, exp, ln, log, O
+from sympy import Symbol, Rational, Order, C, exp, ln, log, O
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import w, x, y, z
 
@@ -136,7 +136,7 @@ def test_multivar_3():
 def test_w():
     print
     for k,v in Order._cache.items():
-        if isinstance(k, Basic.Symbol):
+        if isinstance(k, C.Symbol):
             print k,v
 
 

@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Basic, S, C
 from sympy.core.function import Function
 from sympy.functions.elementary.miscellaneous import sqrt
 
@@ -49,7 +49,7 @@ class re(Function):
         elif arg.is_real:
             return arg
         else:
-            if not isinstance(arg, Basic.Add):
+            if not isinstance(arg, C.Add):
                 arg = [arg]
 
             included, reverted, excluded = [], [], []
@@ -68,7 +68,7 @@ class re(Function):
                     included.append(term)
 
             if len(arg[:]) != len(included):
-                a, b, c = map(lambda xs: Basic.Add(*xs),
+                a, b, c = map(lambda xs: C.Add(*xs),
                     [included, reverted, excluded])
 
                 return cls(a) - im(b) + c
@@ -121,7 +121,7 @@ class im(Function):
         elif arg.is_real:
             return S.Zero
         else:
-            if not isinstance(arg, Basic.Add):
+            if not isinstance(arg, C.Add):
                 arg = [arg]
 
             included, reverted, excluded = [], [], []
@@ -140,7 +140,7 @@ class im(Function):
                     included.append(term)
 
             if len(arg[:]) != len(included):
-                a, b, c = map(lambda xs: Basic.Add(*xs),
+                a, b, c = map(lambda xs: C.Add(*xs),
                     [included, reverted, excluded])
 
                 return cls(a) + re(b) + c
@@ -166,10 +166,10 @@ class sign(Function):
         if arg is S.Zero: return S.One
         if arg.is_positive: return S.One
         if arg.is_negative: return S.NegativeOne
-        if isinstance(arg, Basic.Mul):
+        if isinstance(arg, C.Mul):
             coeff, terms = arg.as_coeff_terms()
             if coeff is not S.One:
-                return cls(coeff) * cls(Basic.Mul(*terms))
+                return cls(coeff) * cls(C.Mul(*terms))
 
     is_bounded = True
 
@@ -205,12 +205,12 @@ class abs(Function):
         if arg.is_negative: return -arg
         coeff, terms = arg.as_coeff_terms()
         if coeff is not S.One:
-            return cls(coeff) * cls(Basic.Mul(*terms))
+            return cls(coeff) * cls(C.Mul(*terms))
         if arg.is_real is False:
             return sqrt( (arg * arg.conjugate()).expand() )
-        if isinstance(arg, Basic.Pow):
+        if isinstance(arg, C.Pow):
             base, exponent = arg.as_base_exp()
-            if isinstance(exponent, Basic.Number):
+            if isinstance(exponent, C.Number):
                 if exponent.is_even:
                     return arg
         return
@@ -221,7 +221,7 @@ class abs(Function):
         # XXX remove me when 'abs -> abs_' is done
         arg = arg.evalf()
 
-        if isinstance(arg, Basic.Number):
+        if isinstance(arg, C.Number):
             import operator
             return operator.abs(float(arg))
 

@@ -4,7 +4,7 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol
 from sympy.core.function import Function
-from sympy.core.basic import Basic, S, Atom
+from sympy.core.basic import Basic, S, C, Atom
 from sympy.core.numbers import Integer, Rational, Zero
 
 from sympy.functions.elementary.trigonometric import sin, cos, cot, tan
@@ -169,10 +169,10 @@ def heurisch(f, x, rewrite=False):
     numers = [ cancel(denom * g, *V) for g in diffs ]
 
     def derivation(h):
-        return Basic.Add(*[ d * h.diff(v) for d, v in zip(numers, V) ])
+        return C.Add(*[ d * h.diff(v) for d, v in zip(numers, V) ])
 
     def deflation(p):
-        for y in p.atoms(Basic.Symbol):
+        for y in p.atoms(C.Symbol):
             if derivation(p) is not S.Zero:
                 c, q = p.as_polynomial(y).as_primitive()
                 return deflation(c) * gcd(q, q.diff(y))
@@ -180,7 +180,7 @@ def heurisch(f, x, rewrite=False):
             return p
 
     def splitter(p):
-        for y in p.atoms(Basic.Symbol):
+        for y in p.atoms(C.Symbol):
             if derivation(y) is not S.Zero:
                 c, q = p.as_polynomial(y).as_primitive()
 
@@ -203,13 +203,13 @@ def heurisch(f, x, rewrite=False):
     special = {}
 
     for term in terms:
-        if isinstance(term, Basic.Function):
-            if isinstance(term, Basic.tan):
+        if isinstance(term, C.Function):
+            if isinstance(term, C.tan):
                 special[1 + substitute(term)**2] = False
             elif isinstance(term.func, tanh):
                 special[1 + substitute(term)] = False
                 special[1 - substitute(term)] = False
-            #elif isinstance(term.func, Basic.LambertW):
+            #elif isinstance(term.func, C.LambertW):
             #    special[substitute(term)] = True
 
     F = substitute(f)
@@ -221,7 +221,7 @@ def heurisch(f, x, rewrite=False):
 
     polys = list(v_split) + [ u_split[0] ] + special.keys()
 
-    s = u_split[0] * Basic.Mul(*[ k for k, v in special.iteritems() if v ])
+    s = u_split[0] * C.Mul(*[ k for k, v in special.iteritems() if v ])
     a, b, c = [ p.as_polynomial(*V).degree() for p in [s, P, Q] ]
 
     poly_denom = s * v_split[0] * deflation(v_split[1])
@@ -284,7 +284,7 @@ def heurisch(f, x, rewrite=False):
         for i, poly in enumerate(irreducibles):
             if poly.has(*V):
                 log_coeffs.append(Symbol('B%s' % i, dummy=True))
-                log_part.append(log_coeffs[-1] * Basic.log(poly))
+                log_part.append(log_coeffs[-1] * C.log(poly))
 
         coeffs = poly_coeffs + log_coeffs
 
@@ -333,8 +333,8 @@ def heurisch(f, x, rewrite=False):
 
         antideriv = simplify(antideriv.subs_dict(rev_mapping)).expand()
 
-        if isinstance(antideriv, Basic.Add):
-            antideriv = Basic.Add(*antideriv.as_coeff_factors()[1])
+        if isinstance(antideriv, C.Add):
+            antideriv = C.Add(*antideriv.as_coeff_factors()[1])
 
         return indep * antideriv
     else:

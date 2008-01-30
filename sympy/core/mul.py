@@ -1,5 +1,5 @@
 
-from basic import Basic, S
+from basic import Basic, S, C
 from operations import AssocOp
 from methods import RelMeths, ArithMeths
 from cache import cache_it, cache_it_immutable
@@ -29,31 +29,31 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 if isinstance(o, FunctionClass):
                     if o.nargs is not None:
                         o, lambda_args = o.with_dummy_arguments(lambda_args)
-                if isinstance(o, Basic.Order):
+                if isinstance(o, C.Order):
                     o, order_symbols = o.as_expr_symbols(order_symbols)
                 if o.__class__ is cls:
                     # associativity
                     c_seq = list(o.args[:]) + c_seq
                     continue
-                if isinstance(o, Basic.Number):
+                if isinstance(o, C.Number):
                     coeff *= o
                     continue
-                if isinstance(o, Basic.Pow):
+                if isinstance(o, C.Pow):
                     base, exponent = o.as_base_exp()
-                    if isinstance(base, Basic.Number):
+                    if isinstance(base, C.Number):
                         if base in exp_dict:
                             exp_dict[base] += exponent
                         else:
                             exp_dict[base] = exponent
                         continue
                     
-                if isinstance(o, Basic.exp):
+                if isinstance(o, C.exp):
                     # exp(x) / exp(y) -> exp(x-y)
                     b = S.Exp1
                     e = o.args[0]
                 else:
                     b, e = o.as_base_exp()
-                if isinstance(b, Basic.Add) and isinstance(e, Basic.Number):
+                if isinstance(b, C.Add) and isinstance(e, C.Number):
                     c, t = b.as_coeff_terms()
                     if c is not S.One:
                         coeff *= c ** e
@@ -66,12 +66,12 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     c_powers[b] = e
             else:
                 o = nc_seq.pop(0)
-                if isinstance(o, Basic.WildFunction):
+                if isinstance(o, C.WildFunction):
                     pass
                 elif isinstance(o, FunctionClass):
                     if o.nargs is not None:
                         o, lambda_args = o.with_dummy_arguments(lambda_args)
-                elif isinstance(o, Basic.Order):
+                elif isinstance(o, C.Order):
                     o, order_symbols = o.as_expr_symbols(order_symbols)
 
                 if o.is_commutative:
@@ -100,14 +100,14 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 continue
 
             if e is S.One:
-                if isinstance(b, Basic.Number):
+                if isinstance(b, C.Number):
                     coeff *= b
                 else:
                     c_part.append(b)
-            elif isinstance(e, Basic.Integer) and isinstance(b, Basic.Number):
+            elif isinstance(e, C.Integer) and isinstance(b, C.Number):
                 coeff *= b ** e
             else:
-                c_part.append(Basic.Pow(b, e))
+                c_part.append(C.Pow(b, e))
 
         for b,e in exp_dict.items():
             if e in inv_exp_dict:
@@ -119,16 +119,16 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             if e is S.Zero:
                 continue
 
-            if isinstance(e, Basic.One):
-                if isinstance(b, Basic.Number):
+            if e is S.One:
+                if isinstance(b, C.Number):
                     coeff *= b
                 else:
                     c_part.append(b)
-            elif isinstance(e, Basic.Integer) and isinstance(b, Basic.Number):
+            elif isinstance(e, C.Integer) and isinstance(b, C.Number):
                 coeff *= b ** e
             else:
                 obj = b**e
-                if isinstance(obj, Basic.Number):
+                if isinstance(obj, C.Number):
                     coeff *= obj
                 else:
                     c_part.append(obj)
@@ -156,25 +156,25 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             c_part.insert(0, coeff)
         elif (coeff is S.Zero) or (coeff is S.NaN):
             c_part, nc_part = [coeff], []
-        elif isinstance(coeff, Basic.Real):
-            if coeff == Basic.Real(0):
+        elif isinstance(coeff, C.Real):
+            if coeff == C.Real(0):
                 c_part, nc_part = [coeff], []
-            elif coeff != Basic.Real(1):
+            elif coeff != C.Real(1):
                 c_part.insert(0, coeff)
         elif coeff is not S.One:
             c_part.insert(0, coeff)
 
         c_part.sort(Basic.compare)
-        if len(c_part)==2 and isinstance(c_part[0], Basic.Number) and isinstance(c_part[1], Basic.Add):
+        if len(c_part)==2 and isinstance(c_part[0], C.Number) and isinstance(c_part[1], C.Add):
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
-            c_part = [Basic.Add(*[coeff*f for f in c_part[1].args])]
+            c_part = [C.Add(*[coeff*f for f in c_part[1].args])]
         return c_part, nc_part, lambda_args, order_symbols
 
     def _eval_power(b, e):
-        if isinstance(e, Basic.Number):
+        if isinstance(e, C.Number):
             if b.is_commutative:
-                if isinstance(e, Basic.Integer):
+                if isinstance(e, C.Integer):
                     # (a*b)**2 -> a**2 * b**2
                     return Mul(*[s**e for s in b.args])
 
@@ -192,7 +192,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 if coeff is not S.One:
                     # (2*a)**3 -> 2**3 * a**3
                     return coeff**e * Mul(*[s**e for s in rest])
-            elif isinstance(e, Basic.Integer):
+            elif isinstance(e, C.Integer):
                 coeff, rest = b.as_coeff_terms()
                 l = [s**e for s in rest]
                 if e.is_negative:
@@ -200,10 +200,10 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 return coeff**e * Mul(*l)
 
         c,t = b.as_coeff_terms()
-        if e.is_even and isinstance(c, Basic.Number) and c < 0:
-            return (-c * Basic.Mul(*t)) ** e
+        if e.is_even and isinstance(c, C.Number) and c < 0:
+            return (-c * C.Mul(*t)) ** e
 
-        #if e.atoms(Basic.Wild):
+        #if e.atoms(C.Wild):
         #    return Mul(*[t**e for t in b])
 
     @property
@@ -269,7 +269,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     l1.append(f)
             return Mul(*l1), l2
         coeff = self.args[0]
-        if isinstance(coeff, Basic.Number):
+        if isinstance(coeff, C.Number):
             return coeff, list(self.args[1:])
         return S.One, list(self.args[:])
 
@@ -294,8 +294,8 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         for a in left:
             for b in right:
                 terms.append(Mul(a,b)._eval_expand_basic())
-            added = Basic.Add(*terms)
-            if isinstance(added, Basic.Add):
+            added = C.Add(*terms)
+            if isinstance(added, C.Add):
                 terms = list(added.args)
             else:
                 terms = [added]
@@ -306,7 +306,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         sums = []
         for factor in self.args:
             factor = factor._eval_expand_basic(*args)
-            if isinstance(factor, Basic.Add):
+            if isinstance(factor, C.Add):
                 sums.append(factor)
             elif factor.is_commutative:
                 plain = Mul(plain, factor)
@@ -316,7 +316,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             terms = Mul._expandsums(sums)
             if isinstance(terms, Basic):
                 terms = terms.args
-            return Basic.Add(*(Mul(plain, term) for term in terms), **self._assumptions)
+            return C.Add(*(Mul(plain, term) for term in terms), **self._assumptions)
         else:
             return Mul(plain, **self._assumptions)
 
@@ -328,7 +328,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             if t is S.Zero:
                 continue
             factors.append(Mul(*(terms[:i]+[t]+terms[i+1:])))
-        return Basic.Add(*factors)
+        return C.Add(*factors)
 
     def _matches_simple(pattern, expr, repl_dict):
         # handle (w*3).matches('x*5') -> {w: x*5/3}
@@ -364,8 +364,8 @@ class Mul(AssocOp, RelMeths, ArithMeths):
     @cache_it_immutable
     def count_ops(self, symbolic=True):
         if symbolic:
-            return Basic.Add(*[t.count_ops(symbolic) for t in self[:]]) + Basic.Symbol('MUL') * (len(self[:])-1)
-        return Basic.Add(*[t.count_ops(symbolic) for t in self.args[:]]) + (len(self.args)-1)
+            return C.Add(*[t.count_ops(symbolic) for t in self[:]]) + C.Symbol('MUL') * (len(self[:])-1)
+        return C.Add(*[t.count_ops(symbolic) for t in self.args[:]]) + (len(self.args)-1)
 
     def _eval_integral(self, s):
         coeffs = []

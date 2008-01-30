@@ -1,5 +1,5 @@
 
-from sympy.core import Basic, S, Add, Mul, Symbol, Equality, Interval, sympify
+from sympy.core import Basic, S, C, Add, Mul, Symbol, Equality, Interval, sympify
 from sympy.core.methods import NoRelMeths, ArithMeths
 
 class Sum(Basic, NoRelMeths, ArithMeths):
@@ -10,7 +10,7 @@ class Sum(Basic, NoRelMeths, ArithMeths):
     def __new__(cls, f, *symbols, **assumptions):
         f = Basic.sympify(f)
 
-        if isinstance(f, Basic.Number):
+        if isinstance(f, C.Number):
             if f is S.NaN:
                 return S.NaN
             elif f is S.Zero:
@@ -94,7 +94,7 @@ def getab(expr):
 def eval_sum(f, (i, a, b)):
     if not f.has(i):
         return f*(b-a+1)
-    definite = isinstance(a, Basic.Integer) and isinstance(b, Basic.Integer)
+    definite = isinstance(a, C.Integer) and isinstance(b, C.Integer)
     # Doing it directly may be faster if there are very few terms.
     if definite and (b-a < 100):
         return eval_sum_direct(f, (i, a, b))
@@ -111,27 +111,27 @@ def eval_sum_symbolic(f, (i, a, b)):
     if not f.has(i):
         return f*(b-a+1)
     # Linearity
-    if isinstance(f, Basic.Mul):
+    if isinstance(f, C.Mul):
         L, R = getab(f)
         if not L.has(i): return L*eval_sum_symbolic(R, (i, a, b))
         if not R.has(i): return R*eval_sum_symbolic(L, (i, a, b))
-    if isinstance(f, Basic.Add):
+    if isinstance(f, C.Add):
         L, R = getab(f)
         lsum = eval_sum_symbolic(L, (i, a, b))
         rsum = eval_sum_symbolic(R, (i, a, b))
         if None not in (lsum, rsum):
             return lsum + rsum
     # Polynomial terms with Faulhaber's formula
-    p = Basic.Wild('p')
+    p = C.Wild('p')
     e = f.match(i**p)
     if e != None:
         c = p.subs_dict(e)
-        B = Basic.bernoulli
+        B = C.bernoulli
         if c.is_integer and c >= 0:
             s = (B(c+1, b+1) - B(c+1, a))/(c+1)
             return s.expand()
     # Geometric terms
-    if isinstance(f, Basic.Pow):
+    if isinstance(f, C.Pow):
         r, k = f.args[:]
         if not r.has(i) and k == i:
             # TODO: Pow should be able to simplify x**oo depending

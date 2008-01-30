@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Basic, S, C
 from sympy.core.function import Lambda, Function
 from miscellaneous import sqrt
 from sympy.core.cache import cache_it, cache_it_immutable
@@ -29,7 +29,7 @@ class sin(Function):
     def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.Number):
+        if isinstance(arg, C.Number):
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Zero:
@@ -40,14 +40,14 @@ class sin(Function):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return S.ImaginaryUnit * Basic.sinh(i_coeff)
+                return S.ImaginaryUnit * C.sinh(i_coeff)
             else:
                 pi_coeff = arg.as_coefficient(S.Pi)
 
                 if pi_coeff is not None:
                     if pi_coeff.is_integer:
                         return S.Zero
-                    elif isinstance(pi_coeff, Basic.Rational):
+                    elif isinstance(pi_coeff, C.Rational):
                         cst_table = {
                             2 : S.One,
                             3 : S.Half*sqrt(3),
@@ -83,10 +83,10 @@ class sin(Function):
                 p = previous_terms[-2]
                 return -p * x**2 / (n*(n-1))
             else:
-                return (-1)**(n//2) * x**(n)/Basic.Factorial(n)
+                return (-1)**(n//2) * x**(n)/C.Factorial(n)
 
     def _eval_rewrite_as_exp(self, arg):
-        exp, I = Basic.exp, S.ImaginaryUnit
+        exp, I = C.exp, S.ImaginaryUnit
         return (exp(arg*I) - exp(-arg*I)) / (2*I)
 
     def _eval_rewrite_as_cos(self, arg):
@@ -107,18 +107,18 @@ class sin(Function):
         if self.args[0].is_real:
             return self
         re, im = self.args[0].as_real_imag()
-        return sin(re)*Basic.cosh(im) + S.ImaginaryUnit*cos(re)*Basic.sinh(im)
+        return sin(re)*C.cosh(im) + S.ImaginaryUnit*cos(re)*C.sinh(im)
 
     def _eval_expand_trig(self, *args):
         arg = self.args[0].expand()
         x = None
-        if isinstance(arg, Basic.Add):
+        if isinstance(arg, C.Add):
             x = arg.args[0]
-            y = Basic.Add(*arg.args[1:])
+            y = C.Add(*arg.args[1:])
         else:
             coeff, terms = arg.as_coeff_terms()
-            if not (coeff is S.One) and isinstance(coeff, Basic.Integer) and terms:
-                x = Basic.Mul(*terms)
+            if not (coeff is S.One) and isinstance(coeff, C.Integer) and terms:
+                x = C.Mul(*terms)
                 y = (coeff-1)*x
         if x is not None:
             return (sin(x)*cos(y) + sin(y)*cos(x)).expand(trig=True)
@@ -127,7 +127,7 @@ class sin(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if Basic.Order(1,x).contains(arg):
+        if C.Order(1,x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -165,7 +165,7 @@ class cos(Function):
     def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.Number):
+        if isinstance(arg, C.Number):
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Zero:
@@ -176,12 +176,12 @@ class cos(Function):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return Basic.cosh(i_coeff)
+                return C.cosh(i_coeff)
             else:
                 pi_coeff = arg.as_coefficient(S.Pi)
 
                 if pi_coeff is not None:
-                    if isinstance(pi_coeff, Basic.Rational):
+                    if isinstance(pi_coeff, C.Rational):
                         cst_table = {
                             1 : S.One,
                             2 : S.Zero,
@@ -218,10 +218,10 @@ class cos(Function):
                 p = previous_terms[-2]
                 return -p * x**2 / (n*(n-1))
             else:
-                return (-1)**(n//2)*x**(n)/Basic.Factorial(n)
+                return (-1)**(n//2)*x**(n)/C.Factorial(n)
 
     def _eval_rewrite_as_exp(self, arg):
-        exp, I = Basic.exp, S.ImaginaryUnit
+        exp, I = C.exp, S.ImaginaryUnit
         return (exp(arg*I) + exp(-arg*I)) / 2
 
     def _eval_rewrite_as_sin(self, arg):
@@ -242,27 +242,27 @@ class cos(Function):
         if self.args[0].is_real:
             return self
         re, im = self.args[0].as_real_imag()
-        return cos(re)*Basic.cosh(im) - \
-            S.ImaginaryUnit*sin(re)*Basic.sinh(im)
+        return cos(re)*C.cosh(im) - \
+            S.ImaginaryUnit*sin(re)*C.sinh(im)
 
     def _eval_expand_trig(self, *args):
         arg = self.args[0].expand()
         x = None
-        if isinstance(arg, Basic.Add):
+        if isinstance(arg, C.Add):
             x = arg.args[0]
-            y = Basic.Add(*arg.args[1:])
+            y = C.Add(*arg.args[1:])
             return (cos(x)*cos(y) - sin(y)*sin(x)).expand(trig=True)
         else:
             coeff, terms = arg.as_coeff_terms()
-            if not (coeff is S.One) and isinstance(coeff, Basic.Integer) and terms:
-                x = Basic.Mul(*terms)
-                return Basic.chebyshevt(coeff, cos(x))
+            if not (coeff is S.One) and isinstance(coeff, C.Integer) and terms:
+                x = C.Mul(*terms)
+                return C.chebyshevt(coeff, cos(x))
         return cos(arg)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if Basic.Order(1,x).contains(arg):
+        if C.Order(1,x).contains(arg):
             return S.One
         else:
             return self.func(arg)
@@ -301,8 +301,8 @@ class tan(Function):
     def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.NaN):
+        if isinstance(arg, C.Number):
+            if arg is S.NaN:
                 return S.NaN
             elif arg is S.Zero:
                 return S.Zero
@@ -312,14 +312,14 @@ class tan(Function):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return S.ImaginaryUnit * Basic.tanh(i_coeff)
+                return S.ImaginaryUnit * C.tanh(i_coeff)
             else:
                 pi_coeff = arg.as_coefficient(S.Pi)
 
                 if pi_coeff is not None:
                     if pi_coeff.is_integer:
                         return S.Zero
-                    elif isinstance(pi_coeff, Basic.Rational):
+                    elif isinstance(pi_coeff, C.Rational):
                         cst_table = {
                            #2 : S.ComplexInfinity,
                             3 : sqrt(3),
@@ -353,8 +353,8 @@ class tan(Function):
 
             a, b = ((n-1)//2), 2**(n+1)
 
-            B = Basic.bernoulli(n+1)
-            F = Basic.Factorial(n+1)
+            B = C.bernoulli(n+1)
+            F = C.Factorial(n+1)
 
             return (-1)**a * b*(b-1) * B/F * x**n
 
@@ -365,15 +365,15 @@ class tan(Function):
         if self.args[0].is_real:
             return self
         re, im = self.args[0].as_real_imag()
-        denom = cos(re)**2 + Basic.sinh(im)**2
+        denom = cos(re)**2 + C.sinh(im)**2
         return (sin(re)*cos(re) + \
-            S.ImaginaryUnit*Basic.sinh(im)*Basic.cosh(im))/denom
+            S.ImaginaryUnit*C.sinh(im)*C.cosh(im))/denom
 
     def _eval_expand_trig(self, *args):
         return self
 
     def _eval_rewrite_as_exp(self, arg):
-        exp, I = Basic.exp, S.ImaginaryUnit
+        exp, I = C.exp, S.ImaginaryUnit
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(neg_exp-pos_exp)/(neg_exp+pos_exp)
 
@@ -389,7 +389,7 @@ class tan(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if Basic.Order(1,x).contains(arg):
+        if C.Order(1,x).contains(arg):
             return S.One
         else:
             return self.func(arg)
@@ -424,7 +424,7 @@ class cot(Function):
     def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.Number):
+        if isinstance(arg, C.Number):
             if arg is S.NaN:
                 return S.NaN
             #elif arg is S.Zero:
@@ -435,14 +435,14 @@ class cot(Function):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return -S.ImaginaryUnit * Basic.coth(i_coeff)
+                return -S.ImaginaryUnit * C.coth(i_coeff)
             else:
                 pi_coeff = arg.as_coefficient(S.Pi)
 
                 if pi_coeff is not None:
                     #if pi_coeff.is_integer:
                     #    return S.ComplexInfinity
-                    if isinstance(pi_coeff, Basic.Rational):
+                    if isinstance(pi_coeff, C.Rational):
                         cst_table = {
                             2 : S.Zero,
                             3 : 1 / sqrt(3),
@@ -477,7 +477,7 @@ class cot(Function):
             x = Basic.sympify(x)
 
             B = S.Bernoulli(n+1)
-            F = Basic.Factorial(n+1)
+            F = C.Factorial(n+1)
 
             return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
 
@@ -489,12 +489,12 @@ class cot(Function):
         if self.args[0].is_real:
             return self
         re, im = self.args[0].as_real_imag()
-        denom = sin(re)**2 + Basic.sinh(im)**2
+        denom = sin(re)**2 + C.sinh(im)**2
         return (sin(re)*cos(re) - \
-            S.ImaginaryUnit*Basic.sinh(im)*Basic.cosh(im))/denom
+            S.ImaginaryUnit*C.sinh(im)*C.cosh(im))/denom
 
     def _eval_rewrite_as_exp(self, arg):
-        exp, I = Basic.exp, S.ImaginaryUnit
+        exp, I = C.exp, S.ImaginaryUnit
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(pos_exp+neg_exp)/(pos_exp-neg_exp)
 
@@ -510,7 +510,7 @@ class cot(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if Basic.Order(1,x).contains(arg):
+        if C.Order(1,x).contains(arg):
             return S.One
         else:
             return self.func(arg)
@@ -540,7 +540,7 @@ class asin(Function):
     def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.Number):
+        if isinstance(arg, C.Number):
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -573,7 +573,7 @@ class asin(Function):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return S.ImaginaryUnit * Basic.asinh(i_coeff)
+                return S.ImaginaryUnit * C.asinh(i_coeff)
             else:
                 coeff, terms = arg.as_coeff_terms()
 
@@ -595,15 +595,15 @@ class asin(Function):
             else:
                 k = (n - 1) // 2
 
-                R = Basic.RisingFactorial(S.Half, k)
-                F = Basic.Factorial(k)
+                R = C.RisingFactorial(S.Half, k)
+                F = C.Factorial(k)
 
                 return R / F * x**n / n
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if Basic.Order(1,x).contains(arg):
+        if C.Order(1,x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -629,7 +629,7 @@ class acos(Function):
     def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.Number):
+        if isinstance(arg, C.Number):
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -674,15 +674,15 @@ class acos(Function):
             else:
                 k = (n - 1) // 2
 
-                R = Basic.RisingFactorial(S.Half, k)
-                F = Basic.Factorial(k)
+                R = C.RisingFactorial(S.Half, k)
+                F = C.Factorial(k)
 
                 return -R / F * x**n / n
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if Basic.Order(1,x).contains(arg):
+        if C.Order(1,x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -708,7 +708,7 @@ class atan(Function):
     def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.Number):
+        if isinstance(arg, C.Number):
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -739,7 +739,7 @@ class atan(Function):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return S.ImaginaryUnit * Basic.atanh(i_coeff)
+                return S.ImaginaryUnit * C.atanh(i_coeff)
             else:
                 coeff, terms = arg.as_coeff_terms()
 
@@ -759,7 +759,7 @@ class atan(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if Basic.Order(1,x).contains(arg):
+        if C.Order(1,x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -781,7 +781,7 @@ class acot(Function):
     def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.Number):
+        if isinstance(arg, C.Number):
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -812,7 +812,7 @@ class acot(Function):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return -S.ImaginaryUnit * Basic.acoth(i_coeff)
+                return -S.ImaginaryUnit * C.acoth(i_coeff)
             else:
                 coeff, terms = arg.as_coeff_terms()
 
@@ -834,7 +834,7 @@ class acot(Function):
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if Basic.Order(1,x).contains(arg):
+        if C.Order(1,x).contains(arg):
             return arg
         else:
             return self.func(arg)

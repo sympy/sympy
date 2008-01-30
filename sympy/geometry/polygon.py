@@ -1,4 +1,4 @@
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Basic, S, C
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity
@@ -245,7 +245,7 @@ class RegularPolygon(Polygon):
         c, r, n = self[:]
         v = 2*S.Pi/n
         for k in xrange(0, n):
-            points.append( Point(c[0] + r*Basic.cos(k*v), c[1] + r*Basic.sin(k*v)) )
+            points.append( Point(c[0] + r*C.cos(k*v), c[1] + r*C.sin(k*v)) )
         return points
 
     @property
@@ -271,7 +271,7 @@ class RegularPolygon(Polygon):
         radius of the inscribed circle).
         """
         n = self.__getitem__(2)
-        return self.radius * Basic.cos(S.Pi/n)
+        return self.radius * C.cos(S.Pi/n)
 
     @property
     def interior_angle(self):

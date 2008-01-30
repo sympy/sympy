@@ -1,7 +1,7 @@
 import math
 import decimal
 import decimal_math
-from basic import Basic, Atom, Singleton, S, Memoizer, MemoizerArg, \
+from basic import Basic, Atom, Singleton, S, C, Memoizer, MemoizerArg, \
     SympifyError
 from methods import NoRelMeths, RelMeths, ArithMeths
 from power import integer_nthroot
@@ -105,7 +105,7 @@ class Number(Atom, RelMeths, ArithMeths):
 
     def _eval_order(self, *symbols):
         # Order(5, x, y) -> Order(1,x,y)
-        return Basic.Order(S.One, *symbols)
+        return C.Order(S.One, *symbols)
 
     def sqrt(self): return Real(decimal_math.sqrt(self._as_decimal()))
     def exp(self): return Real(decimal_math.exp(self._as_decimal()))
@@ -338,7 +338,7 @@ class Real(Number):
         return RelMeths.__le__(self, other)
 
     def epsilon_eq(self, other, epsilon="10e-16"):
-        return abs(self - other) < Basic.Real(epsilon)
+        return abs(self - other) < C.Real(epsilon)
 
 def _parse_rational(s):
     """Parse rational number from string representation"""
@@ -514,8 +514,8 @@ class Rational(Number):
                     return (-1)**e * (-b)**e
 
         c,t = b.as_coeff_terms()
-        if e.is_even and isinstance(c, Basic.Number) and c < 0:
-            return (-c * Basic.Mul(*t)) ** e
+        if e.is_even and isinstance(c, C.Number) and c < 0:
+            return (-c * C.Mul(*t)) ** e
 
         return
 
@@ -719,7 +719,7 @@ class Integer(Rational):
                         if sqr_int == b.p and out_int == 1:
                             return None
 
-                        return out_int * Basic.Pow(sqr_int , Rational(sqr_gcd, e.q))
+                        return out_int * C.Pow(sqr_int , Rational(sqr_gcd, e.q))
                 else:
                     if e.q == 2:
                         return S.ImaginaryUnit ** e.p * (-b)**e
@@ -727,8 +727,8 @@ class Integer(Rational):
                         return None
 
         c,t = b.as_coeff_terms()
-        if e.is_even and isinstance(c, Basic.Number) and c < 0:
-            return (-c * Basic.Mul(*t)) ** e
+        if e.is_even and isinstance(c, C.Number) and c < 0:
+            return (-c * C.Mul(*t)) ** e
 
         return
 
@@ -768,9 +768,9 @@ class Zero(Singleton, Integer):
             return b
         coeff, terms = e.as_coeff_terms()
         if coeff.is_negative:
-            return S.Infinity ** Basic.Mul(*terms)
+            return S.Infinity ** C.Mul(*terms)
         if coeff is not S.One:
-            return b ** Basic.Mul(*terms)
+            return b ** C.Mul(*terms)
 
     def _eval_order(self, *symbols):
         # Order(0,x) -> 0
@@ -936,7 +936,7 @@ class ComplexInfinity(Singleton, Atom, NoRelMeths, ArithMeths):
         if e is S.ComplexInfinity:
             return S.NaN
 
-        if isinstance(e, Basic.Number):
+        if isinstance(e, C.Number):
             if e is S.Zero:
                 return S.NaN
             else:
@@ -1017,7 +1017,7 @@ class Exp1(NumberSymbol):
             pass
 
     def _eval_power(self, exp):
-        return Basic.exp(exp)
+        return C.exp(exp)
 
 class Pi(NumberSymbol):
 

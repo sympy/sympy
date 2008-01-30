@@ -1,4 +1,4 @@
-from sympy.core import Basic, S
+from sympy.core import S, C
 from printer import Printer
 from sympy.simplify import fraction
 
@@ -18,8 +18,8 @@ class LatexPrinter(Printer):
             return r"\begin{equation*}%s\end{equation*}" % tex
 
     def _needs_brackets(self, expr):
-        return not ((isinstance(expr, Basic.Integer) and \
-            expr.is_nonnegative) or isinstance(expr, Basic.Atom))
+        return not ((isinstance(expr, C.Integer) and \
+            expr.is_nonnegative) or isinstance(expr, C.Atom))
 
     def _do_exponent(self, expr, exp):
         if exp is not None:
@@ -49,18 +49,18 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
-        numer, denom = fraction(Basic.Mul(*terms))
+        numer, denom = fraction(C.Mul(*terms))
 
         def convert(terms):
             product = []
 
-            if not isinstance(terms, Basic.Mul):
+            if not isinstance(terms, C.Mul):
                 return str(self._print(terms))
             else:
                 for term in terms.args:
                     pretty = self._print(term)
 
-                    if isinstance(term, Basic.Add):
+                    if isinstance(term, C.Add):
                         product.append(r"\left(%s\right)" % pretty)
                     else:
                         product.append(str(pretty))
@@ -71,15 +71,15 @@ class LatexPrinter(Printer):
             if coeff is not S.One:
                 tex += str(self._print(coeff)) + " "
 
-            if isinstance(numer, Basic.Add):
+            if isinstance(numer, C.Add):
                 tex += r"\left(%s\right)" % convert(numer)
             else:
                 tex += r"%s" % convert(numer)
         else:
             if numer is S.One:
-                if isinstance(coeff, Basic.Integer):
+                if isinstance(coeff, C.Integer):
                     numer *= coeff.p
-                elif isinstance(coeff, Basic.Rational):
+                elif isinstance(coeff, C.Rational):
                     if coeff.p != 1:
                         numer *= coeff.p
 
@@ -87,7 +87,7 @@ class LatexPrinter(Printer):
                 elif coeff is not S.One:
                     tex += str(self._print(coeff)) + " "
             else:
-                if isinstance(coeff, Basic.Rational) and coeff.p == 1:
+                if isinstance(coeff, C.Rational) and coeff.p == 1:
                     denom *= coeff.q
                 elif coeff is not S.One:
                     tex += str(self._print(coeff)) + " "
@@ -98,7 +98,7 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Pow(self, expr):
-        if isinstance(expr.exp, Basic.Rational) and expr.exp.q == 2:
+        if isinstance(expr.exp, C.Rational) and expr.exp.q == 2:
             base, exp = self._print(expr.base), abs(expr.exp.p)
 
             if exp == 1:
@@ -111,7 +111,7 @@ class LatexPrinter(Printer):
             else:
                 return tex
         else:
-            if isinstance(expr.base, Basic.Function):
+            if isinstance(expr.base, C.Function):
                 return self._print(expr.base, self._print(expr.exp))
             else:
                 if self._needs_brackets(expr.base):
@@ -149,7 +149,7 @@ class LatexPrinter(Printer):
 
             tex = r"\frac{\partial^{%s}}{%s} " % (dim, tex)
 
-        if isinstance(expr.expr, Basic.AssocOp):
+        if isinstance(expr.expr, C.AssocOp):
             return r"%s\left(%s\right)" % (tex, self._print(expr.expr))
         else:
             return r"%s %s" % (tex, self._print(expr.expr))
@@ -176,7 +176,7 @@ class LatexPrinter(Printer):
         tex = r"\lim_{%s \to %s}" % (self._print(expr.var),
                                      self._print(expr.varlim))
 
-        if isinstance(expr.expr, Basic.AssocOp):
+        if isinstance(expr.expr, C.AssocOp):
             return r"%s\left(%s\right)" % (tex, self._print(expr.expr))
         else:
             return r"%s %s" % (tex, self._print(expr.expr))

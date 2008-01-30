@@ -1,5 +1,5 @@
 
-from basic import Basic, S
+from basic import Basic, S, C
 from cache import cache_it, cache_it_immutable
 
 class AssocOp(Basic):
@@ -26,18 +26,18 @@ class AssocOp(Basic):
             assumptions['commutative'] = not nc_part
             obj = Basic.__new__(cls, *(c_part + nc_part), **assumptions)
         if order_symbols is not None:
-            obj = Basic.Order(obj, *order_symbols)
+            obj = C.Order(obj, *order_symbols)
         if lambda_args is not None:
-            obj = Basic.Lambda(obj, *lambda_args)
+            obj = C.Lambda(obj, *lambda_args)
         return obj
 
     @classmethod
     def identity(cls):
-        if cls is Basic.Mul: return S.One
-        if cls is Basic.Add: return S.Zero
-        if cls is Basic.Composition:
-            s = Basic.Symbol('x',dummy=True)
-            return Basic.Lambda(s,s)
+        if cls is C.Mul: return S.One
+        if cls is C.Add: return S.Zero
+        if cls is C.Composition:
+            s = C.Symbol('x',dummy=True)
+            return C.Lambda(s,s)
         raise NotImplementedError,"identity not defined for class %r" % (cls.__name__)
 
     @classmethod
@@ -72,7 +72,7 @@ class AssocOp(Basic):
         wild_part = []
         exact_part = []
         for p in pattern.args:
-            if p.atoms(type=(Basic.Wild, Basic.WildFunction)):
+            if p.atoms(type=(C.Wild, C.WildFunction)):
                 wild_part.append(p)
             else:
                 exact_part.append(p)

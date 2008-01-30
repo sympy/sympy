@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Basic, S, C
 from sympy.core.function import Function
 from sympy.ntheory import sieve
 from math import sqrt
@@ -103,10 +103,10 @@ class Factorial(Function):
     def canonize(cls, n):
         n = Basic.sympify(n)
 
-        if isinstance(n, Basic.Number):
+        if isinstance(n, C.Number):
             if n is S.Zero:
                 return S.One
-            elif isinstance(n, Basic.Integer):
+            elif isinstance(n, C.Integer):
                 if n.is_negative:
                     return S.Zero
                 else:
@@ -126,18 +126,18 @@ class Factorial(Function):
 
                         result = cls._recursive(n)*2**(n-bits)
 
-                    return Basic.Integer(result)
+                    return C.Integer(result)
 
         if n.is_integer:
             if n.is_negative:
                 return S.Zero
         else:
-            return Basic.gamma(n+1)
+            return C.gamma(n+1)
 
 
     @classmethod    # ?
     def _eval_rewrite_as_gamma(self, arg):
-        return Basic.gamma(1 + arg)
+        return C.gamma(1 + arg)
 
     def tostr(self, level=0):
         return '%s!' % self.args[0].tostr(self.precedence)
@@ -191,7 +191,7 @@ class RisingFactorial(Function):
             return S.NaN
         elif x is S.One:
             return factorial(k)
-        elif isinstance(k, Basic.Integer):
+        elif isinstance(k, C.Integer):
             if k is S.NaN:
                 return S.NaN
             elif k is S.Zero:
@@ -216,7 +216,7 @@ class RisingFactorial(Function):
                         return 1/reduce(lambda r, i: r*(x-i), xrange(1, abs(int(k))+1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
-        return Basic.gamma(x + k) / Basic.gamma(x)
+        return C.gamma(x + k) / C.gamma(x)
 
 class FallingFactorial(Function):
     """Falling factorial (related to rising factorial) is a double valued
@@ -252,7 +252,7 @@ class FallingFactorial(Function):
 
         if x is S.NaN:
             return S.NaN
-        elif isinstance(k, Basic.Integer):
+        elif isinstance(k, C.Integer):
             if k is S.NaN:
                 return S.NaN
             elif k is S.Zero:
@@ -280,7 +280,7 @@ class FallingFactorial(Function):
 
 
     def _eval_rewrite_as_gamma(self, x, k):
-        return (-1)**k * Basic.gamma(-x + k) / Basic.gamma(-x)
+        return (-1)**k * C.gamma(-x + k) / C.gamma(-x)
 
 rf = RisingFactorial
 ff = FallingFactorial
@@ -342,14 +342,14 @@ class Binomial(Function):
     def canonize(cls, r, k):
         r, k = map(Basic.sympify, (r, k))
 
-        if isinstance(k, Basic.Number):
+        if isinstance(k, C.Number):
             if k is S.Zero:
                 return S.One
-            elif isinstance(k, Basic.Integer):
+            elif isinstance(k, C.Integer):
                 if k.is_negative:
                     return S.Zero
                 else:
-                    if isinstance(r, Basic.Integer) and r.is_nonnegative:
+                    if isinstance(r, C.Integer) and r.is_nonnegative:
                         r, k = int(r), int(k)
 
                         if k > r:
@@ -379,7 +379,7 @@ class Binomial(Function):
                                 if exp > 0:
                                     result *= prime**exp
 
-                        return Basic.Integer(result)
+                        return C.Integer(result)
                     else:
                         result = r - k + 1
 
@@ -393,11 +393,11 @@ class Binomial(Function):
             if k.is_negative:
                 return S.Zero
         else:
-            return Basic.gamma(r+1)/(Basic.gamma(r-k+1)*Basic.gamma(k+1))
+            return C.gamma(r+1)/(C.gamma(r-k+1)*C.gamma(k+1))
 
 
     def _eval_rewrite_as_gamma(self, r, k):
-        return Basic.gamma(r+1) / (Basic.gamma(r-k+1)*Basic.gamma(k+1))
+        return C.gamma(r+1) / (C.gamma(r-k+1)*C.gamma(k+1))
 
     def _eval_is_integer(self):
         return self[0].is_integer and self[1].is_integer

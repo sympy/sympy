@@ -1,5 +1,5 @@
 
-from basic import Basic, Atom, S
+from basic import Basic, Atom, S, C
 from methods import RelMeths, ArithMeths
 from cache import cache_it, cache_it_nondummy
 
@@ -70,7 +70,7 @@ class Symbol(Atom, RelMeths, ArithMeths):
 
     def __call__(self, *args):
         assumptions = self._assumptions
-        return Basic.Function(self.name, nargs=len(args))(*args, **assumptions)
+        return C.Function(self.name, nargs=len(args))(*args, **assumptions)
 
     def _eval_integral(self, s):
         if self==s:
@@ -83,7 +83,7 @@ class Symbol(Atom, RelMeths, ArithMeths):
         return self*(b-a)
 
     def _eval_expand_complex(self, *args):
-        return Basic.re(self) + Basic.im(self)*S.ImaginaryUnit
+        return C.re(self) + C.im(self)*S.ImaginaryUnit
 
     def _sage_(self):
         import sage.all as sage
@@ -121,7 +121,7 @@ class Wild(Symbol):
         return repl_dict
 
     def __call__(self, *args, **assumptions):
-        return Basic.WildFunction(self.name, nargs=len(args))(*args, **assumptions)
+        return C.WildFunction(self.name, nargs=len(args))(*args, **assumptions)
 
     def tostr(self, level=0):
         return self.name + '_'

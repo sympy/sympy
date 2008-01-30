@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Basic, S, C
 from sympy.core.function import Lambda, Function
 
 ###############################################################################
@@ -19,7 +19,7 @@ class max_(Function):
     nargs = 2
 
     def canonize(cls, x, y):
-        if isinstance(x, Basic.Number) and isinstance(y, Basic.Number):
+        if isinstance(x, C.Number) and isinstance(y, C.Number):
             return max(x, y)
         if x.is_positive:
             if y.is_negative:
@@ -41,5 +41,5 @@ class min_(Function):
     nargs = 2
 
     def canonize(cls, x, y):
-        if isinstance(x, Basic.Number) and isinstance(y, Basic.Number):
+        if isinstance(x, C.Number) and isinstance(y, C.Number):
             return min(x, y)

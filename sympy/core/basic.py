@@ -97,9 +97,9 @@ class Basic(BasicMeths):
         elif isinstance(a, bool):
             raise NotImplementedError("bool support")
         elif isinstance(a, (int, long)):
-            return Basic.Integer(a)
+            return C.Integer(a)
         elif isinstance(a, (float, decimal.Decimal)):
-            return Basic.Real(a)
+            return C.Real(a)
         elif isinstance(a, complex):
             real, imag = map(Basic.sympify, (a.real, a.imag))
             ireal, iimag = int(real), int(imag)
@@ -109,7 +109,7 @@ class Basic(BasicMeths):
             return real + S.ImaginaryUnit * imag
         elif (a.__class__ in [list,tuple]) and len(a) == 2:
             # isinstance causes problems in the issue #432, so we use .__class__
-            return Basic.Interval(*a)
+            return C.Interval(*a)
         elif isinstance(a, (list,tuple,set)) and sympify_lists:
             return type(a)([Basic.sympify(x, True) for x in a])
         elif hasattr(a, "_sympy_"):
@@ -183,7 +183,7 @@ class Basic(BasicMeths):
     def is_number(self):
         """Returns True if self is a number (like 1, or 1+log(2)), and False
         otherwise (e.g. 1+x).""" 
-        return len(self.atoms(Basic.Symbol)) == 0
+        return len(self.atoms(C.Symbol)) == 0
 
     @property
     def args(self):
@@ -226,7 +226,7 @@ class Basic(BasicMeths):
         if syms:
             syms = map(Basic.sympify, syms)
         else:
-            syms = list(self.atoms(type=Basic.Symbol))
+            syms = list(self.atoms(type=C.Symbol))
 
         if not syms: # constant polynomial
             return True
@@ -234,7 +234,7 @@ class Basic(BasicMeths):
             return self._eval_is_polynomial(syms)
 
     def as_polynomial(self, *syms, **kwargs):
-        return Basic.Polynomial(self, var=(syms or None), **kwargs)
+        return C.Polynomial(self, var=(syms or None), **kwargs)
 
     def _eval_subs(self, old, new):
         if self==old:
@@ -284,7 +284,7 @@ class Basic(BasicMeths):
         elif not patterns:
             raise TypeError("has() requires at least 1 argument (got none)")
         p = Basic.sympify(patterns[0])
-        if isinstance(p, Basic.Symbol) and not isinstance(p, Basic.Wild): # speeds up
+        if isinstance(p, C.Symbol) and not isinstance(p, C.Wild): # speeds up
             return p in self.atoms(p.__class__)
         if isinstance(p, BasicType):
             #XXX hack, this is very fragile:
@@ -493,10 +493,10 @@ class Basic(BasicMeths):
         with respect to all symbols, then return
         trivial solution (eqn, rhs).
         """
-        if isinstance(eqn, Basic.Symbol):
+        if isinstance(eqn, C.Symbol):
             return (eqn, rhs)
         if symbols is None:
-            symbols = eqn.atoms(type=Basic.Symbol)
+            symbols = eqn.atoms(type=C.Symbol)
         if symbols:
             # find  symbol
             for s in symbols:
@@ -513,7 +513,7 @@ class Basic(BasicMeths):
         r = self.__class__(*[t._calc_splitter(d) for t in self])
         if d.has_key(r):
             return d[r]
-        s = d[r] = Basic.Temporary()
+        s = d[r] = C.Temporary()
         return s
 
     def splitter(self):
@@ -533,7 +533,7 @@ class Basic(BasicMeths):
         >>> (sin(x)*x+sin(x)**2).count_ops()
         ADD + MUL + POW + 2 * SIN
         """
-        return Basic.Integer(len(self[:])-1) + sum([t.count_ops(symbolic=symbolic) for t in self])
+        return C.Integer(len(self[:])-1) + sum([t.count_ops(symbolic=symbolic) for t in self])
 
     def doit(self, **hints):
         """Evaluate objects that are not evaluated by default like limits,
@@ -567,7 +567,7 @@ class Basic(BasicMeths):
     def _eval_expand_power(self, *args):
         if isinstance(self, Atom):
             return self
-        if not isinstance(self, Basic.Apply):   # FIXME Apply -> Function
+        if not isinstance(self, C.Apply):   # FIXME Apply -> Function
             sargs = self[:]
         else:
             sargs = (self.func,)+self[:]
@@ -652,9 +652,9 @@ class Basic(BasicMeths):
                 # XXX move me out of here (cyclic imports)
                 from function import FunctionClass
 
-                if rule == Basic.tan:
+                if rule == C.tan:
                     rule = "tan"
-                elif rule == Basic.exp:
+                elif rule == C.exp:
                     rule = "exp"
                 elif isinstance(rule, FunctionClass):   # new-style functions
                     #print rule
@@ -701,15 +701,15 @@ class Basic(BasicMeths):
            >>> (2*I).as_coefficient(pi*I)
 
         """
-        if isinstance(expr, Basic.Add):
+        if isinstance(expr, C.Add):
             return None
         else:
-            w = Basic.Wild('w')
+            w = C.Wild('w')
 
             coeff = self.match(w * expr)
 
             if coeff is not None:
-                if isinstance(expr, Basic.Mul):
+                if isinstance(expr, C.Mul):
                     expr = expr.args
                 else:
                     expr = [expr]
@@ -736,7 +736,7 @@ class Basic(BasicMeths):
         """
         indeps, depend = [], []
 
-        if isinstance(self, (Basic.Add, Basic.Mul)):
+        if isinstance(self, (C.Add, C.Mul)):
             terms = self.args[:]
         else:
             terms = [ self ]
@@ -747,7 +747,7 @@ class Basic(BasicMeths):
             else:
                 indeps.append(term)
 
-        return Basic.Mul(*indeps), Basic.Mul(*depend)
+        return C.Mul(*indeps), C.Mul(*depend)
 
     def as_real_imag(self):
         """Performs complex expansion on 'self' and returns a tuple
@@ -774,7 +774,7 @@ class Basic(BasicMeths):
         """
         expr = self.expand(complex=True)
 
-        if not isinstance(expr, Basic.Add):
+        if not isinstance(expr, C.Add):
             expr = [expr]
 
         re_part, im_part = [], []
@@ -789,7 +789,7 @@ class Basic(BasicMeths):
             else:
                 im_part.append(coeff)
 
-        return (Basic.Add(*re_part), Basic.Add(*im_part))
+        return (C.Add(*re_part), C.Add(*im_part))
 
     def as_powers_dict(self):
         return { self : S.One }
@@ -814,7 +814,7 @@ class Basic(BasicMeths):
                 new_terms.append(x)
             else:
                 indeps.append(x)
-        return Basic.Mul(*indeps), Basic.Mul(*new_terms)
+        return C.Mul(*indeps), C.Mul(*new_terms)
 
     def as_coeff_factors(self, x=None):
         # a -> c + f
@@ -837,17 +837,17 @@ class Basic(BasicMeths):
         """
         l1 = []
         l2 = []
-        if isinstance(self, Basic.Add):
+        if isinstance(self, C.Add):
             for f in self:
-                if isinstance(f, Basic.Order):
+                if isinstance(f, C.Order):
                     l2.append(f)
                 else:
                     l1.append(f)
-        elif isinstance(self, Basic.Order):
+        elif isinstance(self, C.Order):
             l2.append(self)
         else:
             l1.append(self)
-        return Basic.Add(*l1), Basic.Add(*l2)
+        return C.Add(*l1), C.Add(*l2)
 
     def normal(self):
         n, d = self.as_numer_denom()
@@ -863,40 +863,40 @@ class Basic(BasicMeths):
         new_symbols = []
         for s in symbols:
             s = Basic.sympify(s)
-            if isinstance(s, Basic.Integer) and new_symbols:
+            if isinstance(s, C.Integer) and new_symbols:
                 last_s = new_symbols.pop()
                 i = int(s)
                 new_symbols += [last_s] * i
-            elif isinstance(s, Basic.Symbol):
+            elif isinstance(s, C.Symbol):
                 new_symbols.append(s)
             else:
                 raise TypeError(".diff() argument must be Symbol|Integer instance (got %s)" % (s.__class__.__name__))
         if not assumptions.has_key("evaluate"):
             assumptions["evaluate"] = True
-        ret = Basic.Derivative(self, *new_symbols, **assumptions)
+        ret = C.Derivative(self, *new_symbols, **assumptions)
         return ret
 
     def fdiff(self, *indices):
         # FIXME FApply -> ?
-        return Basic.FApply(Basic.FDerivative(*indices), self)
+        return C.FApply(C.FDerivative(*indices), self)
 
     def integral(self, *symbols, **assumptions):
         new_symbols = []
         for s in symbols:
             s = Basic.sympify(s)
-            if isinstance(s, Basic.Integer) and new_symbols:
+            if isinstance(s, C.Integer) and new_symbols:
                 last_s = new_symbols[-1]
                 i = int(s)
                 new_symbols += [last_s] * (i-1)
-            elif isinstance(s, (Basic.Symbol, Basic.Equality)):
+            elif isinstance(s, (C.Symbol, C.Equality)):
                 new_symbols.append(s)
             else:
                 raise TypeError(".integral() argument must be Symbol|Integer|Equality instance (got %s)" % (s.__class__.__name__))
-        return Basic.Integral(self, *new_symbols, **assumptions)
+        return C.Integral(self, *new_symbols, **assumptions)
 
     #XXX fix the removeme
     def __call__(self, *args, **removeme):
-        return Basic.Function(self[0])(*args)
+        return C.Function(self[0])(*args)
 
     def _eval_evalf(self):
         return
@@ -907,7 +907,7 @@ class Basic(BasicMeths):
     def __float__(self):
         result = self.evalf(precision=16)
 
-        if isinstance(result, Basic.Number):
+        if isinstance(result, C.Number):
             return float(result)
         else:
             raise ValueError("Symbolic value, can't compute")
@@ -949,7 +949,7 @@ class Basic(BasicMeths):
         if point != 0:
             raise NotImplementedError("series expansion around arbitrary point")
             #self = self.subs(x, x + point)
-        o = Basic.Order(x**n,x)
+        o = C.Order(x**n,x)
         r = self.oseries(o)
         if r==self:
             return self
@@ -966,7 +966,7 @@ class Basic(BasicMeths):
         order.contains(term) method to determine if your term is still
         significant and should be added to the series, or we should stop.
         """
-        order = Basic.Order(order)
+        order = C.Order(order)
         if order is S.Zero:
             return self
         if order.contains(self):
@@ -974,7 +974,7 @@ class Basic(BasicMeths):
         if len(order.symbols)>1:
             r = self
             for s in order.symbols:
-                o = Basic.Order(order.expr, s)
+                o = C.Order(order.expr, s)
                 r = r.oseries(o)
             return r
         x = order.symbols[0]
@@ -999,8 +999,8 @@ class Basic(BasicMeths):
         that order.contains(taylor_term(n, arg)). Assumes that arg->0 as x->0.
         """
         x = order.symbols[0]
-        ln = Basic.log
-        o = Basic.Order(arg, x)
+        ln = C.log
+        o = C.Order(arg, x)
         if o is S.Zero:
             return unevaluated_func(arg)
         if o.expr==1:
@@ -1024,7 +1024,7 @@ class Basic(BasicMeths):
             g = taylor_term(i, arg, g)
             g = g.oseries(order)
             l.append(g)
-        return Basic.Add(*l)
+        return C.Add(*l)
 
     def limit(self, x, xlim, direction='<'):
         """ Compute limit x->xlim.
@@ -1047,7 +1047,7 @@ class Basic(BasicMeths):
         elif not symbols:
             return self
         x = Basic.sympify(symbols[0])
-        assert isinstance(x, Basic.Symbol),`x`
+        assert isinstance(x, C.Symbol),`x`
         if not self.has(x):
             return self
         expr = self.expand(trig=True)
@@ -1060,8 +1060,8 @@ class Basic(BasicMeths):
         """ c*x**e -> c,e where x can be any symbolic expression.
         """
         x = Basic.sympify(x)
-        wc = Basic.Wild()
-        we = Basic.Wild()
+        wc = C.Wild()
+        we = C.Wild()
         c, terms = self.as_coeff_terms()
         p  = wc*x**we
         d = self.match(p)
@@ -1157,7 +1157,7 @@ class Singleton(Basic):
 class SingletonFactory:
     """
     A map between singleton classes and the corresponding instances.
-    E.g. S.Exp == Basic.Exp()
+    E.g. S.Exp == C.Exp()
     """
 
     def __getattr__(self, clsname):

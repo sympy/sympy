@@ -1,5 +1,5 @@
 
-from basic import Basic, S
+from basic import Basic, S, C
 from operations import AssocOp
 from methods import RelMeths, ArithMeths
 from cache import cache_it, cache_it_immutable
@@ -17,10 +17,10 @@ class Add(AssocOp, RelMeths, ArithMeths):
         order_factors = []
         while seq:
             o = seq.pop(0)
-            #if isinstance(o, Basic.Function):
+            #if isinstance(o, C.Function):
             #    if o.nargs is not None:
             #        o, lambda_args = o.with_dummy_arguments(lambda_args)
-            if isinstance(o, Basic.Order):
+            if isinstance(o, C.Order):
                 for o1 in order_factors:
                     if o1.contains(o):
                         o = None
@@ -29,19 +29,19 @@ class Add(AssocOp, RelMeths, ArithMeths):
                     continue
                 order_factors = [o]+[o1 for o1 in order_factors if not o.contains(o1)]
                 continue
-            if isinstance(o, Basic.Number):
+            if isinstance(o, C.Number):
                 coeff += o
                 continue
             if o.__class__ is cls:
                 seq = list(o.args[:]) + seq
                 continue
-            if isinstance(o, Basic.Mul):
+            if isinstance(o, C.Mul):
                 c = o.args[0]
-                if isinstance(c, Basic.Number):
+                if isinstance(c, C.Number):
                     if c is S.One:
                         s = o
                     else:
-                        s = Basic.Mul(*o.args[1:])
+                        s = C.Mul(*o.args[1:])
                 else:
                     c = S.One
                     s = o
@@ -60,7 +60,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
             elif c is S.One:
                 newseq.append(s)
             else:
-                newseq.append(Basic.Mul(c,s))
+                newseq.append(C.Mul(c,s))
             noncommutative = noncommutative or not s.is_commutative
 
         if coeff is S.NaN:
@@ -119,7 +119,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
                     l1.append(f)
             return Add(*l1), l2
         coeff = self.args[0]
-        if isinstance(coeff, Basic.Number):
+        if isinstance(coeff, C.Number):
             return coeff, list(self.args[1:])
         return S.Zero, list(self.args[:])
 
@@ -151,7 +151,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
             numers.append(n)
             denoms.append(d)
         r = xrange(len(numers))
-        return Add(*[Basic.Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:])) for i in r]),Basic.Mul(*denoms)
+        return Add(*[C.Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:])) for i in r]),C.Mul(*denoms)
 
     def _calc_splitter(self, d):
         if d.has_key(self):
@@ -160,19 +160,19 @@ class Add(AssocOp, RelMeths, ArithMeths):
         r = self.__class__(*[t._calc_splitter(d) for t in factors])
         if isinstance(r,Add) and 0:
             for e,t in d.items():
-                w = Basic.Wild()
+                w = C.Wild()
                 d1 = r.match(e+w)
                 if d1 is not None:
                     r1 = t + d1[w]
                     break
         if d.has_key(r):
             return coeff + d[r]
-        s = d[r] = Basic.Temporary()
+        s = d[r] = C.Temporary()
         return s + coeff
 
     def count_ops(self, symbolic=True):
         if symbolic:
-            return Add(*[t.count_ops(symbolic) for t in self[:]]) + Basic.Symbol('ADD') * (len(self[:])-1)
+            return Add(*[t.count_ops(symbolic) for t in self[:]]) + C.Symbol('ADD') * (len(self[:])-1)
         return Add(*[t.count_ops(symbolic) for t in self.args[:]]) + (len(self.args[:])-1)
 
     def _eval_integral(self, s):
@@ -199,7 +199,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         if not l:
             return False
         if l[0].is_odd:
-            return Basic.Add(*l[1:]).is_even
+            return C.Add(*l[1:]).is_even
 
     def _eval_is_irrational(self):
         for t in self:
@@ -250,7 +250,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
     def as_coeff_terms(self, x=None):
         # -2 + 2 * a -> -1, 2-2*a
-        if isinstance(self.args[0], Basic.Number) and self.args[0].is_negative:
+        if isinstance(self.args[0], C.Number) and self.args[0].is_negative:
             return -S.One,[-self]
         return S.One,[self]
 
@@ -277,7 +277,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
     @cache_it
     def extract_leading_order(self, *symbols):
         lst = []
-        seq = [(f, Basic.Order(f, *symbols)) for f in self.args]
+        seq = [(f, C.Order(f, *symbols)) for f in self.args]
         for ef,of in seq:
             for e,o in lst:
                 if o.contains(of):
@@ -301,16 +301,16 @@ class Add(AssocOp, RelMeths, ArithMeths):
                 factors = factors.args
             factors = [f for f in factors if not f.is_bounded]
         if coeff is not S.Zero:
-            o = Basic.Order(x)
+            o = C.Order(x)
         else:
-            o = Basic.Order(factors[0]*x,x)
+            o = C.Order(factors[0]*x,x)
         s = self.oseries(o)
         while s is S.Zero:
             o *= x
             s = self.oseries(o)
-        if isinstance(s, Basic.Add):
+        if isinstance(s, C.Add):
             lst = s.extract_leading_order(x)
-            return Basic.Add(*[e for (e,f) in lst])
+            return C.Add(*[e for (e,f) in lst])
         return s.as_leading_term(x)
 
     def _eval_conjugate(self):

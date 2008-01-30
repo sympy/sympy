@@ -1,5 +1,5 @@
 
-from sympy.core import Basic, Add, S
+from sympy.core import Basic, Add, S, C
 from sympy.core.function import Function
 from zeta_functions import zeta
 from sympy.functions.elementary.exponential import log
@@ -23,17 +23,17 @@ class gamma(Function):
     def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.Number):
+        if isinstance(arg, C.Number):
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
                 return S.Infinity
-            elif isinstance(arg, Basic.Integer):
+            elif isinstance(arg, C.Integer):
                 if arg.is_positive:
-                    return Basic.Factorial(arg-1)
+                    return C.Factorial(arg-1)
                 else:
                     return S.ComplexInfinity
-            elif isinstance(arg, Basic.Rational):
+            elif isinstance(arg, C.Rational):
                 if arg.q == 2:
                     n = abs(arg.p) / arg.q
 
@@ -59,19 +59,19 @@ class gamma(Function):
     def _eval_expand_func(self, *args):
         arg = self.args[0]._eval_expand_basic()
 
-        if isinstance(arg, Basic.Add):
+        if isinstance(arg, C.Add):
             for i, coeff in enumerate(arg.args[:]):
-                if isinstance(arg.args[i], Basic.Number):
-                    terms = Basic.Add(*(arg.args[:i] + arg.args[i+1:]))
+                if isinstance(arg.args[i], C.Number):
+                    terms = C.Add(*(arg.args[:i] + arg.args[i+1:]))
 
-                    if isinstance(coeff, Basic.Rational):
+                    if isinstance(coeff, C.Rational):
                         if coeff.q != 1:
-                            terms += Basic.Rational(1, coeff.q)
-                            coeff = Basic.Integer(int(coeff))
+                            terms += C.Rational(1, coeff.q)
+                            coeff = C.Integer(int(coeff))
                     else:
                         continue
 
-                    return gamma(terms)*Basic.RisingFactorial(terms, coeff)
+                    return gamma(terms)*C.RisingFactorial(terms, coeff)
 
         return self.func(*self.args)
 
@@ -90,14 +90,14 @@ class lowergamma(Function):
 
     @classmethod
     def canonize(cls, a, x):
-        if isinstance(a, Basic.Number):
+        if isinstance(a, C.Number):
             if a is S.One:
-                return S.One - Basic.exp(-x)
-            elif isinstance(a, Basic.Integer):
+                return S.One - C.exp(-x)
+            elif isinstance(a, C.Integer):
                 b = a - 1
 
                 if b.is_positive:
-                    return b*cls(b, x) - x**b * Basic.exp(-x)
+                    return b*cls(b, x) - x**b * C.exp(-x)
 
 
 class uppergamma(Function):
@@ -108,13 +108,13 @@ class uppergamma(Function):
     def fdiff(self, argindex=2):
         if argindex == 2:
             a, z = self[0:2]
-            return -Basic.exp(-z)*z**(a-1)
+            return -C.exp(-z)*z**(a-1)
         else:
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def canonize(cls, a, z):
-        if isinstance(z, Basic.Number):
+        if isinstance(z, C.Number):
             if z is S.NaN:
                 return S.NaN
             elif z is S.Infinity:
@@ -122,14 +122,14 @@ class uppergamma(Function):
             elif z is S.Zero:
                 return gamma(a)
 
-        if isinstance(a, Basic.Number):
+        if isinstance(a, C.Number):
             if a is S.One:
-                return Basic.exp(-z)
-            elif isinstance(a, Basic.Integer):
+                return C.exp(-z)
+            elif isinstance(a, C.Integer):
                 b = a - 1
 
                 if b.is_positive:
-                    return b*cls(b, z) + z**b * Basic.exp(-z)
+                    return b*cls(b, z) + z**b * C.exp(-z)
 
 
 
@@ -156,39 +156,39 @@ class polygamma(Function):
             if n.is_negative:
                 return loggamma(z)
             else:
-                if isinstance(z, Basic.Number):
+                if isinstance(z, C.Number):
                     if z is S.NaN:
                         return S.NaN
                     elif z is S.Infinity:
-                        if isinstance(n, Basic.Number):
+                        if isinstance(n, C.Number):
                             if n is S.Zero:
                                 return S.Infinity
                             else:
                                 return S.Zero
-                    elif isinstance(z, Basic.Integer):
+                    elif isinstance(z, C.Integer):
                         if z.is_nonpositive:
                             return S.ComplexInfinity
                         else:
                             if n is S.Zero:
-                                return -S.EulerGamma + Basic.harmonic(z-1, 1)
+                                return -S.EulerGamma + C.harmonic(z-1, 1)
                             elif n.is_odd:
-                                return (-1)**(n+1)*Basic.Factorial(n)*zeta(n+1, z)
+                                return (-1)**(n+1)*C.Factorial(n)*zeta(n+1, z)
 
 
     def _eval_expand_func(self, *args):
         n, z = self.args[0], self.args[1].expand(func=True)
 
-        if isinstance(n, Basic.Integer) and n.is_nonnegative:
-            if isinstance(z, Basic.Add):
+        if isinstance(n, C.Integer) and n.is_nonnegative:
+            if isinstance(z, C.Add):
                 coeff, factors = z.as_coeff_factors()
 
-                if isinstance(coeff, Basic.Integer):
+                if isinstance(coeff, C.Integer):
                     tail = Add(*[ z + i for i in xrange(0, int(coeff)) ])
-                    return polygamma(n, z-coeff) + (-1)**n*Basic.Factorial(n)*tail
-            elif isinstance(z, Basic.Mul):
+                    return polygamma(n, z-coeff) + (-1)**n*C.Factorial(n)*tail
+            elif isinstance(z, C.Mul):
                 coeff, terms = z.as_coeff_terms()
 
-                if isinstance(coeff, Basic.Integer) and coeff.is_positive:
+                if isinstance(coeff, C.Integer) and coeff.is_positive:
                     tail = [ polygamma(n, z + i/coeff) for i in xrange(0, int(coeff)) ]
 
                     if n is S.Zero:
@@ -199,7 +199,7 @@ class polygamma(Function):
         return polygamma(n, z)
 
     def _eval_rewrite_as_zeta(self, n, z):
-        return (-1)**(n+1)*Basic.Factorial(n)*zeta(n+1, z-1)
+        return (-1)**(n+1)*C.Factorial(n)*zeta(n+1, z-1)
 
 class loggamma(Function):
 

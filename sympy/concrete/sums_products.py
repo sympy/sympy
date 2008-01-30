@@ -1,4 +1,4 @@
-from sympy.core import Basic, Rational, Add, Mul, Pow, Symbol, Wild, oo
+from sympy.core import Basic, C, Rational, Add, Mul, Pow, Symbol, Wild, oo
 from sympy.functions import factorial
 #from sympy.specfun import rising_factorial, factorial, factorial_simplify
 #from sympy.specfun.factorials import unfac
@@ -79,7 +79,7 @@ class Sum2(_BigOperator):
         e = f.match(i**p)
         if e != None:
             c = p.subs_dict(e)
-            B = Basic.bernoulli
+            B = C.bernoulli
             if c.is_integer and c >= 0:
                 s = (B(c+1, b+1) - B(c+1, a))/(c+1)
                 return s.expand()
@@ -114,12 +114,12 @@ class Sum2(_BigOperator):
         """
         f, i, a, b = self.f, self.i, self.a, self.b
         x = Symbol('x', dummy=True)
-        s = Basic.Integral(f.subs(i, x), (x, a, b)).doit()
+        s = C.Integral(f.subs(i, x), (x, a, b)).doit()
         if n > 0:
             s += (f.subs(i, a) + f.subs(i, b))/2
         for k in range(1, n):
             g = f.diff(i, 2*k-1)
-            B = Basic.bernoulli
+            B = C.bernoulli
             s += B(2*k)/factorial(2*k)*(g.subs(i,b)-g.subs(i,a))
         return s
 

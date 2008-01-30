@@ -1,5 +1,5 @@
 
-from sympy.core import Basic, S, Symbol, Wild, Pow
+from sympy.core import Basic, S, C, Symbol, Wild, Pow
 from sympy.core.methods import NoRelMeths, ArithMeths
 
 from sympy.integrals.risch import heurisch
@@ -16,7 +16,7 @@ class Integral(Basic, NoRelMeths, ArithMeths):
     def __new__(cls, function, *symbols, **assumptions):
         function = Basic.sympify(function)
 
-        if isinstance(function, Basic.Number):
+        if isinstance(function, C.Number):
             if function is S.NaN:
                 return S.NaN
             elif function is S.Infinity:
@@ -164,7 +164,7 @@ class Integral(Basic, NoRelMeths, ArithMeths):
         # will return a sympy expression instead of a Polynomial.
         #
         # see Polynomial for details.
-        if isinstance(f, Basic.Polynomial):
+        if isinstance(f, C.Polynomial):
             return f.integrate(x)
 
         # let's cut it short if `f` does not depend on `x`
@@ -185,7 +185,7 @@ class Integral(Basic, NoRelMeths, ArithMeths):
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,
         # if `f` is not Add -- we only have one term
-        if not isinstance(f, Basic.Add):
+        if not isinstance(f, C.Add):
             f = [f]
 
         parts = []
@@ -210,7 +210,7 @@ class Integral(Basic, NoRelMeths, ArithMeths):
 
                 if M is not None:
                     if g.exp == -1:
-                        h = Basic.log(g.base)
+                        h = C.log(g.base)
                     else:
                         h = g.base**(g.exp+1) / (g.exp+1)
 
@@ -239,7 +239,7 @@ class Integral(Basic, NoRelMeths, ArithMeths):
             else:
                 return None
 
-        return Basic.Add(*parts)
+        return C.Add(*parts)
 
 def integrate(*args, **kwargs):
     """integrate(f, var, ...)

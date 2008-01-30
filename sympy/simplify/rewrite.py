@@ -2,7 +2,7 @@
    partial fraction decomposition, combinig together and collecting terms.
 """
 
-from sympy.core import Basic, S, Symbol
+from sympy.core import Basic, S, C, Symbol
 
 from sympy.polynomials import factor_, div, quo, rem, gcd, egcd
 from sympy.simplify import together
@@ -38,10 +38,10 @@ def cancel(f, *syms):
 
     if syms and not f.has(*syms):
         return f
-    elif isinstance(f, Basic.Add):
-        return Basic.Add(*[ cancel(g, *syms) for g in f.args ])
-    elif isinstance(f, Basic.Relational):
-        return Basic.Relational(cancel(f.lhs, *syms),
+    elif isinstance(f, C.Add):
+        return C.Add(*[ cancel(g, *syms) for g in f.args ])
+    elif isinstance(f, C.Relational):
+        return C.Relational(cancel(f.lhs, *syms),
             cancel(f.rhs, *syms), f.rel_op)
     else:
         g = together(f)
@@ -99,10 +99,10 @@ def apart(f, z, **flags):
     """
     f = Basic.sympify(f)
 
-    if isinstance(f, Basic.Add):
-        return Basic.Add(*[ apart(g, z, **flags) for g in f ])
-    elif isinstance(f, Basic.Relational):
-        return Basic.Relational(apart(f.lhs, z, **flags),
+    if isinstance(f, C.Add):
+        return C.Add(*[ apart(g, z, **flags) for g in f ])
+    elif isinstance(f, C.Relational):
+        return C.Relational(apart(f.lhs, z, **flags),
             apart(f.rhs, z, **flags), f.rel_op)
     else:
         if not f.has(z):
@@ -121,7 +121,7 @@ def apart(f, z, **flags):
         partial, r = div(P, Q, z)
         f, q, U = r / Q, Q, []
 
-        u = Basic.Function('u')(z)
+        u = C.Function('u')(z)
         A = Symbol('a', dummy=True)
 
         formal = flags.get('formal', False)
@@ -156,13 +156,13 @@ def apart(f, z, **flags):
 
                 denom = (z - A)**(n-j)
 
-                rootof = Basic.RootOf(D, z)
+                rootof = C.RootOf(D, z)
 
                 if not formal:
                     for root in rootof.roots():
                         partial += cancel(b.subs(z, root)) \
                             / denom.subs(A, root)
                 else:
-                    partial += Basic.Sum(b.subs(z, A) / denom, (A, rootof))
+                    partial += C.Sum(b.subs(z, A) / denom, (A, rootof))
 
         return partial

@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Basic, S, C
 from sympy.core.function import Lambda, Function
 
 ###############################################################################
@@ -41,24 +41,24 @@ class floor(Function):
 
         if arg.is_integer:
             return arg
-        elif isinstance(arg, Basic.Number):
+        elif isinstance(arg, C.Number):
             if arg is S.Infinity:
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.NegativeInfinity
             elif arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Integer):
+            elif isinstance(arg, C.Integer):
                 return arg
-            elif isinstance(arg, Basic.Rational):
-                return Basic.Integer(arg.p // arg.q)
-            elif isinstance(arg, Basic.Real):
-                return Basic.Integer(int(arg.floor()))
-        elif isinstance(arg, Basic.NumberSymbol):
-            return arg.approximation_interval(Basic.Integer)[0]
+            elif isinstance(arg, C.Rational):
+                return C.Integer(arg.p // arg.q)
+            elif isinstance(arg, C.Real):
+                return C.Integer(int(arg.floor()))
+        elif isinstance(arg, C.NumberSymbol):
+            return arg.approximation_interval(C.Integer)[0]
         elif arg is S.ImaginaryUnit:
             return S.ImaginaryUnit
-        elif isinstance(arg, Basic.Add):
+        elif isinstance(arg, C.Add):
             included, excluded = [], []
 
             for term in arg.args:
@@ -75,11 +75,11 @@ class floor(Function):
                     return
 
             if excluded:
-                return cls(Basic.Add(*included)) + Basic.Add(*excluded)
+                return cls(C.Add(*included)) + C.Add(*excluded)
         else:
             coeff, terms = arg.as_coeff_terms(S.ImaginaryUnit)
 
-            if not terms and not arg.atoms(type=Basic.Symbol):
+            if not terms and not arg.atoms(type=C.Symbol):
                 if arg.is_negative:
                     return -ceiling(-arg)
                 else:
@@ -131,24 +131,24 @@ class ceiling(Function):
 
         if arg.is_integer:
             return arg
-        elif isinstance(arg, Basic.Number):
+        elif isinstance(arg, C.Number):
             if arg is S.Infinity:
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.NegativeInfinity
             elif arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, Basic.Integer):
+            elif isinstance(arg, C.Integer):
                 return arg
-            elif isinstance(arg, Basic.Rational):
-                return Basic.Integer(arg.p // arg.q + 1)
-            elif isinstance(arg, Basic.Real):
-                return Basic.Integer(int(arg.ceiling()))
-        elif isinstance(arg, Basic.NumberSymbol):
-            return arg.approximation_interval(Basic.Integer)[1]
+            elif isinstance(arg, C.Rational):
+                return C.Integer(arg.p // arg.q + 1)
+            elif isinstance(arg, C.Real):
+                return C.Integer(int(arg.ceiling()))
+        elif isinstance(arg, C.NumberSymbol):
+            return arg.approximation_interval(C.Integer)[1]
         elif arg is S.ImaginaryUnit:
             return S.ImaginaryUnit
-        elif isinstance(arg, Basic.Add):
+        elif isinstance(arg, C.Add):
             included, excluded = [], []
 
             for term in arg.args:
@@ -165,11 +165,11 @@ class ceiling(Function):
                     return
 
             if excluded:
-                return cls(Basic.Add(*included)) + Basic.Add(*excluded)
+                return cls(C.Add(*included)) + C.Add(*excluded)
         else:
             coeff, terms = arg.as_coeff_terms(S.ImaginaryUnit)
 
-            if not terms and not arg.atoms(type=Basic.Symbol):
+            if not terms and not arg.atoms(type=C.Symbol):
                 if arg.is_negative:
                     return -floor(-arg)
                 else:

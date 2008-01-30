@@ -6,13 +6,13 @@ combinatorial polynomials.
 
 """
 
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Basic, S, C
 from sympy.core import Rational, Symbol
 from sympy.core.function import Function
 from sympy.utilities.memoization import recurrence_memo, assoc_recurrence_memo
 
 
-_x = Basic.Symbol('x', dummy=True)
+_x = C.Symbol('x', dummy=True)
 
 class PolynomialSequence(Function):
     """Polynomial sequence with 1 index
@@ -133,7 +133,7 @@ class chebyshevt_root(Function):
     def canonize(cls, n, k):
         if not 0 <= k < n:
             raise ValueError, "must have 0 <= k < n"
-        return Basic.cos(S.Pi*(2*k+1)/(2*n))
+        return C.cos(S.Pi*(2*k+1)/(2*n))
 
 class chebyshevu_root(Function):
     """
@@ -155,7 +155,7 @@ class chebyshevu_root(Function):
     def canonize(cls, n, k):
         if not 0 <= k < n:
             raise ValueError, "must have 0 <= k < n"
-        return Basic.cos(S.Pi*(k+1)/(n+1))
+        return C.cos(S.Pi*(k+1)/(n+1))
 
 
 #----------------------------------------------------------------------------
@@ -246,7 +246,7 @@ class assoc_legendre(PolynomialSequence2):
         if m >= 0:
             return assoc_legendre._calc2(n,m)
         else:
-            factorial = Basic.Factorial
+            factorial = C.Factorial
             m = -m
             return (-1)**m *factorial(n-m)/factorial(n+m) * assoc_legendre._calc2(n, m)
 

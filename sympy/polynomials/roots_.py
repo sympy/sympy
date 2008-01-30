@@ -65,7 +65,7 @@ def n_poly(f):
         """Computes the list of the n-th roots of unity."""
         result = []
         for i in range(0,n):
-            result.append(Basic.exp(2*i*S.Pi*S.ImaginaryUnit/n))
+            result.append(C.exp(2*i*S.Pi*S.ImaginaryUnit/n))
         return result
 
     exponents = map(lambda t:int(t[1]), f.coeffs)

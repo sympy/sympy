@@ -1,4 +1,4 @@
-from sympy import Function, Basic, Rational, pi, I
+from sympy import Function, Basic, C, Rational, pi, I
 from sympy.functions import legendre, assoc_legendre
 from sympy.functions.elementary.miscellaneous import sqrt
 
@@ -9,18 +9,18 @@ Plm= assoc_legendre
 def Plmcos(l, m, th):
     l = Basic.sympify(l)
     m = Basic.sympify(m)
-    x = Basic.Symbol("x", dummy = True)
-    sin = Basic.sin
-    cos = Basic.cos
+    x = C.Symbol("x", dummy = True)
+    sin = C.sin
+    cos = C.cos
     P = Plm(l, m, x).subs(x, cos(th))
     P = P.subs(1-cos(th)**2, sin(th)**2)
     return P
 
 def Ylm(l, m, theta, phi):
     l, m, theta, phi = [Basic.sympify(x) for x in (l, m, theta, phi)]
-    factorial = Basic.Factorial
+    factorial = C.Factorial
     return sqrt((2*l+1)/(4*pi) * factorial(l-m)/factorial(l+m)) * \
-            Plmcos(l, m, theta) * Basic.exp(I*m*phi)
+            Plmcos(l, m, theta) * C.exp(I*m*phi)
 
 def Ylm_c(l, m, theta, phi):
     """Conjugate spherical harmonics."""

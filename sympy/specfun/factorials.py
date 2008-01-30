@@ -1,6 +1,6 @@
-from sympy.core import Function, Add, Pow, Mul, Rational, Integer, Basic, pi, \
+from sympy.core import Function, Add, Pow, Mul, Rational, Integer, pi, \
         oo, Real, Symbol
-from sympy.core.basic import S
+from sympy.core.basic import S, C
 
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.memoization import recurrence_memo
@@ -353,7 +353,7 @@ class Binomial2(Function):
 
         # TODO: move these two cases to factorial_simplify as well
         if n == 0 and k != 0:
-            return Basic.sin(pi*k)/(pi*k)
+            return C.sin(pi*k)/(pi*k)
 
         return factorial_simplify(unfac(n) / unfac(k) / unfac(n-k))
 

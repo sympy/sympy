@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Basic, S, C
 from sympy.core.function import Lambda, Function, Function
 from sympy.core.cache import cache_it, cache_it_immutable
 
@@ -25,7 +25,7 @@ class exp(Function):
     def canonize(cls, arg, **optionsXXX):
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.Number):
+        if isinstance(arg, C.Number):
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Zero:
@@ -38,11 +38,11 @@ class exp(Function):
                 return S.Zero
         elif isinstance(arg, log):
             return arg.args[0]
-        elif isinstance(arg, Basic.Mul):
+        elif isinstance(arg, C.Mul):
             coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
 
             if coeff is not None:
-                if isinstance(2*coeff, Basic.Integer):
+                if isinstance(2*coeff, C.Integer):
                     cst_table = {
                         0 : S.One,
                         1 : S.ImaginaryUnit,
@@ -52,7 +52,7 @@ class exp(Function):
 
                     return cst_table[int(2*coeff) % 4]
 
-        if isinstance(arg, Basic.Add):
+        if isinstance(arg, C.Add):
             args = arg.args[:]
         else:
             args = [arg]
@@ -63,7 +63,7 @@ class exp(Function):
             coeff, terms = arg.as_coeff_terms()
 
             if coeff is S.Infinity:
-                excluded.append(coeff**Basic.Mul(*terms))
+                excluded.append(coeff**C.Mul(*terms))
             else:
                 coeffs, log_term = [coeff], None
 
@@ -80,12 +80,12 @@ class exp(Function):
                         break
 
                 if log_term is not None:
-                    excluded.append(log_term**Basic.Mul(*coeffs))
+                    excluded.append(log_term**C.Mul(*coeffs))
                 else:
                     included.append(arg)
 
         if excluded:
-            return Basic.Mul(*(excluded+[cls(Basic.Add(*included))]))
+            return C.Mul(*(excluded+[cls(C.Add(*included))]))
 
     @staticmethod
     @cache_it_immutable
@@ -97,11 +97,11 @@ class exp(Function):
             p = previous_terms[-1]
             if p is not None:
                 return p * x / n
-        return x**n/Basic.Factorial()(n)
+        return x**n/C.Factorial()(n)
 
     def _eval_expand_complex(self, *args):
         re, im = self.args[0].as_real_imag()
-        cos, sin = Basic.cos(im), Basic.sin(im)
+        cos, sin = C.cos(im), C.sin(im)
         return exp(re) * cos + S.ImaginaryUnit * exp(re) * sin
 
     def _eval_conjugate(self):
@@ -109,14 +109,14 @@ class exp(Function):
 
     def as_base_exp(self):
         coeff, terms = self.args[0].as_coeff_terms()
-        return self.func(Basic.Mul(*terms)), coeff
+        return self.func(C.Mul(*terms)), coeff
 
     def as_coeff_terms(self, x=None):
         arg = self.args[0]
         if x is not None:
             c,f = arg.as_coeff_factors(x)
             return self.func(c), [self.func(a) for a in f.args]
-        if isinstance(arg, Basic.Add):
+        if isinstance(arg, C.Add):
             return S.One, [self.func(a) for a in arg.args]
         return S.One,[self]
 
@@ -124,14 +124,14 @@ class exp(Function):
         if self==old: return new
         arg = self.args[0]
         o = old
-        if isinstance(old, Basic.Pow): # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
+        if isinstance(old, C.Pow): # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
             old = exp(old.exp * log(old.base))
         if isinstance(old, exp):
             b,e = self.as_base_exp()
             bo,eo = old.as_base_exp()
             if b==bo:
                 return new ** (e/eo) # exp(2/3*x*3).subs(exp(3*x),y) -> y**(2/3)
-            if isinstance(arg, Basic.Add): # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
+            if isinstance(arg, C.Add): # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
                 # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
                 oarg = old.args[0]
                 new_l = []
@@ -145,8 +145,8 @@ class exp(Function):
                     else:
                         old_al.append(a.subs(old, new))
                 if new_l:
-                    new_l.append(self.func(Basic.Add(*old_al)))
-                    r = Basic.Mul(*new_l)
+                    new_l.append(self.func(C.Add(*old_al)))
+                    r = C.Mul(*new_l)
                     return r
         old = o
         return Function._eval_subs(self, old, new)
@@ -177,19 +177,19 @@ class exp(Function):
     def _eval_oseries(self, order):
         #XXX quick hack, to pass the tests:
         #print "XX", self, order
-        #w = Basic.Symbol("w")
-        #if self[0] == (1 + w)*(-log(w) + log(Basic.sin(2*w))):
-        #    if order == Basic.Order(w**3,w):
+        #w = C.Symbol("w")
+        #if self[0] == (1 + w)*(-log(w) + log(C.sin(2*w))):
+        #    if order == C.Order(w**3,w):
         #        return self
         #    else:
         #        return self
-        #if self[0] == w*log(2*Basic.cos(w)*Basic.sin(w)) - w*log(w):
-        #    if order == Basic.Order(w**3,w):
+        #if self[0] == w*log(2*C.cos(w)*C.sin(w)) - w*log(w):
+        #    if order == C.Order(w**3,w):
         #        return 1 + w*log(2) + w**2*log(2)**2/2
         #    else:
-        #        return Basic.One()
-        #if self[0] == (1 + w)*log(1/w*Basic.sin(2*w)):
-        #    return exp((1 + w)*(-log(w) + log(Basic.sin(2*w))))
+        #        return S.One
+        #if self[0] == (1 + w)*log(1/w*C.sin(2*w)):
+        #    return exp((1 + w)*(-log(w) + log(C.sin(2*w))))
         #print "XX2...."
         #Example: 
         #  self       = exp(log(1 + x)/x)
@@ -199,7 +199,7 @@ class exp(Function):
         #  arg        = log(1 + x)/x
         x = order.symbols[0]
         #  x          = x
-        if not Basic.Order(1,x).contains(arg): # singularity
+        if not C.Order(1,x).contains(arg): # singularity
             arg0 = arg.as_leading_term(x)
             d = (arg-arg0).limit(x, S.Zero)
             if d is not S.Zero:
@@ -214,16 +214,16 @@ class exp(Function):
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0]
-        if isinstance(arg, Basic.Add):
-            return Basic.Mul(*[exp(f).as_leading_term(x) for f in arg.args])
+        if isinstance(arg, C.Add):
+            return C.Mul(*[exp(f).as_leading_term(x) for f in arg.args])
         arg = self.args[0].as_leading_term(x)
-        if Basic.Order(1,x).contains(arg):
+        if C.Order(1,x).contains(arg):
             return S.One
         return exp(arg)
 
     def _eval_expand_basic(self, *args):
         arg = self.args[0].expand()
-        if isinstance(arg, Basic.Add):
+        if isinstance(arg, C.Add):
             expr = 1
             for x in arg.args:
                 expr *= self.func(x).expand()
@@ -242,7 +242,7 @@ class log(Function):
     def fdiff(self, argindex=1):
         if argindex == 1:
             return 1/self.args[0]
-            s = Basic.Symbol('x', dummy=True)
+            s = C.Symbol('x', dummy=True)
             return Lambda(s**(-1), s)
         else:
             raise ArgumentIndexError(self, argindex)
@@ -265,8 +265,8 @@ class log(Function):
 
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.Number):
-            if isinstance(arg, Basic.Zero):
+        if isinstance(arg, C.Number):
+            if arg is S.Zero:
                 return S.NegativeInfinity
             elif arg is S.One:
                 return S.Zero
@@ -286,13 +286,13 @@ class log(Function):
         elif isinstance(arg, exp):
             return arg.args[0]
         #this shouldn't happen automatically (see the issue 252):
-        #elif isinstance(arg, Basic.Pow):
-        #    if isinstance(arg.exp, Basic.Number) or \
-        #       isinstance(arg.exp, Basic.NumberSymbol) or arg.exp.is_number:
+        #elif isinstance(arg, C.Pow):
+        #    if isinstance(arg.exp, C.Number) or \
+        #       isinstance(arg.exp, C.NumberSymbol) or arg.exp.is_number:
         #        return arg.exp * self(arg.base)
-        #elif isinstance(arg, Basic.Mul) and arg.is_real:
-        #    return Basic.Add(*[self(a) for a in arg])
-        elif not isinstance(arg, Basic.Add):
+        #elif isinstance(arg, C.Mul) and arg.is_real:
+        #    return C.Add(*[self(a) for a in arg])
+        elif not isinstance(arg, C.Add):
             coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if coeff is not None:
@@ -300,7 +300,7 @@ class log(Function):
                     return S.Infinity
                 elif coeff is S.NegativeInfinity:
                     return S.Infinity
-                elif isinstance(coeff, Basic.Rational):
+                elif isinstance(coeff, C.Rational):
                     if coeff.is_nonnegative:
                         return S.Pi * S.ImaginaryUnit * S.Half + cls(coeff)
                     else:
@@ -332,7 +332,7 @@ class log(Function):
     def _eval_expand_complex(self, *args):
         re, im = self.args[0].as_real_imag()
         return log(re**S.Half + im**S.Half) + \
-               S.ImaginaryUnit * Basic.arg(self.args[0])
+               S.ImaginaryUnit * C.arg(self.args[0])
 
     def _eval_is_real(self):
         return self.args[0].is_positive
@@ -348,7 +348,7 @@ class log(Function):
         if arg.is_positive:
             if arg.is_unbounded: return True
             if arg.is_infinitesimal: return False
-            if isinstance(arg, Basic.Number):
+            if isinstance(arg, C.Number):
                 return arg>1
 
     def _eval_is_zero(self):
@@ -369,8 +369,8 @@ class log(Function):
     def _eval_oseries(self, order):
         arg = self.args[0]
         x = order.symbols[0]
-        ln = Basic.log
-        use_lt = not Basic.Order(1,x).contains(arg)
+        ln = C.log
+        use_lt = not C.Order(1,x).contains(arg)
         if not use_lt:
             arg0 = arg.limit(x, 0)
             use_lt = (arg0 is S.Zero)
@@ -394,14 +394,14 @@ class log(Function):
 
     def _eval_expand_basic(self, *args):
         arg = self.args[0]
-        if isinstance(arg, Basic.Mul) and arg.is_real:
+        if isinstance(arg, C.Mul) and arg.is_real:
             expr = 0
             for x in arg.args:
                 expr += self.func(x).expand()
             return expr
-        elif isinstance(arg, Basic.Pow):
-            if isinstance(arg.exp, Basic.Number) or \
-               isinstance(arg.exp, Basic.NumberSymbol):
+        elif isinstance(arg, C.Pow):
+            if isinstance(arg.exp, C.Number) or \
+               isinstance(arg.exp, C.NumberSymbol):
                 return arg.exp * self.func(arg.base).expand()
         return self
 

@@ -16,7 +16,7 @@ class ArithMeths(object):
     def __neg__(self):
         return S.NegativeOne * self
     def __abs__(self):
-        return Basic.abs(self)
+        return C.abs(self)
     def __add__(self, other):
         try:
             other = Basic.sympify(other)
@@ -24,7 +24,7 @@ class ArithMeths(object):
             return NotImplemented
         if not isinstance(other, Basic):
             return NotImplemented
-        return Basic.Add(self, other)
+        return C.Add(self, other)
     def __radd__(self, other):
         return Basic.sympify(other).__add__(self)
     def __sub__(self, other):
@@ -47,7 +47,7 @@ class ArithMeths(object):
             return NotImplemented
         if not isinstance(other, Basic):
             return NotImplemented
-        return Basic.Mul(self, other)
+        return C.Mul(self, other)
     def __rmul__(self, other):
         return Basic.sympify(other).__mul__(self)
     def __pow__(self, other):
@@ -57,7 +57,7 @@ class ArithMeths(object):
             return NotImplemented
         if not isinstance(other, Basic):
             return NotImplemented
-        return Basic.Pow(self, other)
+        return C.Pow(self, other)
     def __rpow__(self, other):
         try:
             other = Basic.sympify(other)
@@ -117,30 +117,30 @@ class RelMeths(object):
             other = Basic.sympify(other)
         except ValueError:
             return False
-        return Basic.Equality(self, other)
+        return C.Equality(self, other)
     def __ne__(self, other):
         try:
             other = Basic.sympify(other)
         except ValueError:
             return True
-        return Basic.Unequality(self, other)
+        return C.Unequality(self, other)
     def __lt__(self, other):
         #return Basic.sympify(other) > self
-        return Basic.StrictInequality(self, other)
+        return C.StrictInequality(self, other)
     def __gt__(self, other):
-        return Basic.StrictInequality(other, self)
+        return C.StrictInequality(other, self)
         #return Basic.sympify(other) < self
     def __le__(self, other):
-        return Basic.Inequality(self, other)
+        return C.Inequality(self, other)
     def __ge__(self, other):
         return Basic.sympify(other) <= self
 
 class NoRelMeths(object):
 
     def __eq__(self, other):
-        return Basic.Equality(self, other)
+        return C.Equality(self, other)
     def __ne__(self, other):
-        return Basic.Unequality(self, other)
+        return C.Unequality(self, other)
     def __lt__(self, other):
         return hash(self) < hash(other)
         raise TypeError, _no_binary_operation('<', self, other)

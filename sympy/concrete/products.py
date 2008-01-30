@@ -1,5 +1,5 @@
 
-from sympy.core import Basic, S, Add, Mul, Symbol
+from sympy.core import Basic, S, C, Add, Mul, Symbol
 from sympy.core.methods import NoRelMeths, ArithMeths
 
 from sympy.polynomials import quo, roots
@@ -15,7 +15,7 @@ class Product(Basic, NoRelMeths, ArithMeths):
     def __new__(cls, term, *symbols, **assumptions):
         term = Basic.sympify(term)
 
-        if isinstance(term, Basic.Number):
+        if isinstance(term, C.Number):
             if term is S.NaN:
                 return S.NaN
             elif term is S.Infinity:
@@ -30,7 +30,7 @@ class Product(Basic, NoRelMeths, ArithMeths):
         if len(symbols) == 1:
             symbol = symbols[0]
 
-            if isinstance(symbol, Basic.Equality):
+            if isinstance(symbol, C.Equality):
                 k = symbol.lhs
                 a = symbol.rhs.start
                 n = symbol.rhs.end
@@ -41,7 +41,7 @@ class Product(Basic, NoRelMeths, ArithMeths):
 
             k, a, n = map(Basic.sympify, (k, a, n))
 
-            if isinstance(a, Basic.Number) and isinstance(n, Basic.Number):
+            if isinstance(a, C.Number) and isinstance(n, C.Number):
                 return Mul(*[term.subs(k, i) for i in xrange(int(a), int(n)+1)])
         else:
             raise NotImplementedError
@@ -97,26 +97,26 @@ class Product(Basic, NoRelMeths, ArithMeths):
             poly = term.as_polynomial(k)
 
             A = B = Q = S.One
-            C = poly.leading_coeff()
+            C_= poly.leading_coeff()
 
             all_roots = roots(poly)
 
             for r in all_roots:
-                A *= Basic.RisingFactorial(a-r, n-a+1)
+                A *= C.RisingFactorial(a-r, n-a+1)
                 Q *= n - r
 
             if len(all_roots) < poly.degree():
                 B = Product(quo(poly, Q, k), (k, a, n))
 
-            return C**(n-a+1) * A * B
-        elif isinstance(term, Basic.Add):
+            return C_**(n-a+1) * A * B
+        elif isinstance(term, C.Add):
             p, q = term.as_numer_denom()
 
             p = self._eval_product(p)
             q = self._eval_product(q)
 
             return p / q
-        elif isinstance(term, Basic.Mul):
+        elif isinstance(term, C.Mul):
             exclude, include = [], []
 
             for t in term.args:
@@ -132,7 +132,7 @@ class Product(Basic, NoRelMeths, ArithMeths):
             else:
                 A, B = Mul(*exclude), Mul(*include)
                 return A * Product(B, (k, a, n))
-        elif isinstance(term, Basic.Pow):
+        elif isinstance(term, C.Pow):
             if not term.base.has(k):
                 s = sum(term.exp, (k, a, n))
 

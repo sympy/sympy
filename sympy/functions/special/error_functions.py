@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Basic, S, C
 from sympy.core.function import Function
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.cache import cache_it, cache_it_immutable
@@ -14,7 +14,7 @@ class erf(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return 2*Basic.exp(-self.args[0]**2)/sqrt(S.Pi)
+            return 2*C.exp(-self.args[0]**2)/sqrt(S.Pi)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -26,7 +26,7 @@ class erf(Function):
     def canonize(cls, arg):
         arg = Basic.sympify(arg)
 
-        if isinstance(arg, Basic.Number):
+        if isinstance(arg, C.Number):
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -37,7 +37,7 @@ class erf(Function):
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
-        elif isinstance(arg, Basic.Mul):
+        elif isinstance(arg, C.Mul):
             coeff, terms = arg.as_coeff_terms()
 
             if coeff.is_negative:
@@ -56,12 +56,12 @@ class erf(Function):
             if len(previous_terms) > 2:
                 return -previous_terms[-2] * x**2 * (n-2)/(n*k)
             else:
-                return 2*(-1)**k * x**n/(n*Basic.Factorial(k)*sqrt(S.Pi))
+                return 2*(-1)**k * x**n/(n*C.Factorial(k)*sqrt(S.Pi))
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
-        if Basic.Order(1,x).contains(arg):
+        if C.Order(1,x).contains(arg):
             return arg
         else:
             return self.func(arg)
@@ -73,7 +73,7 @@ class erf(Function):
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
-        if isinstance(arg, Basic.Number):
+        if isinstance(arg, C.Number):
             # Temporary hack
             from sympy.core.numbers import Real
             from sympy.numerics import evalf

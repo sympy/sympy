@@ -7,7 +7,7 @@
    are pairwise dissimilar.
 """
 
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Basic, S, C as CC
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Rational
 from sympy.core.add import Add
@@ -87,7 +87,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     for i in xrange(0, r+1):
         for j in xrange(i, r+1):
-            polys[i] += Basic.Binomial(j, i)*coeffs[j]
+            polys[i] += CC.Binomial(j, i)*coeffs[j]
 
         polys[i] = polys[i].expand()
 
@@ -111,7 +111,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     for i in xrange(0, r+1):
         if terms[i][1] - i == b:
-            degree_poly += terms[i][0]*Basic.FallingFactorial(x, i)
+            degree_poly += terms[i][0]*CC.FallingFactorial(x, i)
 
     _nni_roots = nni_roots(degree_poly, x)
 
@@ -193,7 +193,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
             for j in xrange(0, A+1):
                 for k in xrange(0, d+1):
-                    B = Basic.Binomial(k, i+j)
+                    B = CC.Binomial(k, i+j)
                     D = delta(polys[j], k)
 
                     alpha[i] += I[k]*B*D
@@ -436,7 +436,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
     r, kernel = len(coeffs)-1, []
 
     if f is not S.Zero:
-        if isinstance(f, Basic.Add):
+        if isinstance(f, CC.Add):
             similar = {}
 
             for g in f.expand():

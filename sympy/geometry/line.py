@@ -1,4 +1,4 @@
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Basic, S, C
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity
@@ -106,7 +106,7 @@ class LinearEntity(GeometryEntity):
         """
         v1 = l1.p2 - l1.p1
         v2 = l2.p2 - l2.p1
-        return Basic.acos( (v1[0]*v2[0]+v1[1]*v2[1]) / (abs(v1)*abs(v2)) )
+        return C.acos( (v1[0]*v2[0]+v1[1]*v2[1]) / (abs(v1)*abs(v2)) )
 
     def parallel_line(self, p):
         """
@@ -337,7 +337,7 @@ class Line(LinearEntity):
 
     def arbitrary_point(self, parameter_name='t'):
         """Returns a symbolic point that is on this line."""
-        t = Basic.Symbol(parameter_name, real=True)
+        t = C.Symbol(parameter_name, real=True)
         x = simplify(self.p1[0] + t*(self.p2[0] - self.p1[0]))
         y = simplify(self.p1[1] + t*(self.p2[1] - self.p1[1]))
         return Point(x, y)
@@ -348,8 +348,8 @@ class Line(LinearEntity):
         and yaxis_name can be used to specify the names of the symbols used
         for the equation.
         """
-        x = Basic.Symbol(xaxis_name, real=True)
-        y = Basic.Symbol(yaxis_name, real=True)
+        x = C.Symbol(xaxis_name, real=True)
+        y = C.Symbol(yaxis_name, real=True)
         a,b,c = self.coefficients
         return simplify(a*x + b*y + c)
 
@@ -358,8 +358,8 @@ class Line(LinearEntity):
         if isinstance(o, Line):
             return self.__eq__(o)
         elif isinstance(o, Point):
-            x = Basic.Symbol('x', real=True)
-            y = Basic.Symbol('y', real=True)
+            x = C.Symbol('x', real=True)
+            y = C.Symbol('y', real=True)
             r = self.equation().subs_dict({x: o[0], y: o[1]})
             x = simplify(r)
             return simplify(x) == 0
@@ -425,8 +425,8 @@ class Ray(LinearEntity):
             return ((o.p1 in self) and (o.p2 in self))
         elif isinstance(o, Point):
             if Point.is_collinear(self.p1, self.p2, o):
-                if (not self.p1[0].atoms(type=Basic.Symbol)) and (not self.p1[1].atoms(type=Basic.Symbol)) \
-                        and (not self.p2[0].atoms(type=Basic.Symbol)) and (not self.p2[1].atoms(type=Basic.Symbol)):
+                if (not self.p1[0].atoms(type=C.Symbol)) and (not self.p1[1].atoms(type=C.Symbol)) \
+                        and (not self.p2[0].atoms(type=C.Symbol)) and (not self.p2[1].atoms(type=C.Symbol)):
                     if self.xdirection is S.Infinity:
                         return o[0] >= self.source[0]
                     elif self.xdirection is S.NegativeInfinity:
@@ -497,7 +497,7 @@ class Segment(LinearEntity):
         elif isinstance(o, Point):
             if Point.is_collinear(self.p1, self.p2, o):
                 x1,x2 = self.p1[0], self.p2[0]
-                if not (x1.atoms(type=Basic.Symbol)) or (x2.atoms(type=Basic.Symbol)):
+                if not (x1.atoms(type=C.Symbol)) or (x2.atoms(type=C.Symbol)):
                     return (min(x1,x2) <= o[0]) and (o[0] <= max(x1,x2))
                 else:
                     return True

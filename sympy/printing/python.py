@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from sympy.core import Basic
+from sympy.core import C
 from sympy import oo
 from printer import Printer
 
@@ -39,14 +39,14 @@ class PythonPrinter(Printer):
             self._print(term)
 
     def _print_Pow(self, expr):
-        if isinstance(expr.exp, Basic.Rational) and expr.exp.q == 2:
+        if isinstance(expr.exp, C.Rational) and expr.exp.q == 2:
             self._print(expr.base)
         else:
-            if isinstance(expr.base, Basic.Function) \
-              or isinstance(expr.base, Basic.Symbol):
+            if isinstance(expr.base, C.Function) \
+              or isinstance(expr.base, C.Symbol):
                 self._print(expr.base)
-            if isinstance(expr.base, Basic.Function) \
-              or isinstance(expr.base, Basic.Symbol):
+            if isinstance(expr.base, C.Function) \
+              or isinstance(expr.base, C.Symbol):
                 self._print(expr.exp)
 
     def _print_Rational(self, expr):
