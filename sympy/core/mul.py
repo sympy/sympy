@@ -211,6 +211,9 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         #if e.atoms(Wild):
         #    return Mul(*[t**e for t in b])
 
+    def _eval_evalf(self):
+        return self.__class__(*[s.evalf() for s in self.args]).expand()
+
     @property
     def precedence(self):
         coeff, rest = self.as_coeff_terms()

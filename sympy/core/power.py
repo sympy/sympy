@@ -393,7 +393,17 @@ class Pow(Basic, ArithMeths, RelMeths):
         dexp = self.exp.diff(s)
         return self * (dexp * C.log(self.base) + dbase * self.exp/self.base)
 
-    _eval_evalf = Basic._seq_eval_evalf
+    def _eval_evalf(self):
+        base, exp = self.as_base_exp()
+
+        base = base.evalf()
+        exp = exp.evalf()
+
+        if exp < 0 and base.has(S.ImaginaryUnit):
+            base = base.conjugate() / (base * base.conjugate()).evalf().evalf()
+            exp = -exp
+
+        return (base ** exp).expand()
 
     def _calc_splitter(self, d):
         if d.has_key(self):
