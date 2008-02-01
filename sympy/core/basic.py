@@ -3,7 +3,7 @@
 type_class = type
 
 import decimal
-from basic_methods import BasicMeths, BasicType, MetaBasicMeths
+from basic_methods import BasicType, MetaBasicMeths
 from assumptions import AssumeMeths
 from cache import cache_it, cache_it_immutable, Memoizer, MemoizerArg
 
@@ -24,7 +24,7 @@ def repr_level(flag=None, _cache=[1]):
 
 
 
-class Basic(BasicMeths):
+class Basic(AssumeMeths):
     """
     Base class for all objects in sympy.
 
@@ -56,6 +56,8 @@ class Basic(BasicMeths):
 
 
     """
+
+    __metaclass__ = MetaBasicMeths
 
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)

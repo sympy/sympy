@@ -2,7 +2,6 @@
 """
 
 import decimal
-from assumptions import AssumeMeths
 
 # used for canonical ordering of symbolic sequences
 # via __cmp__ method:
@@ -125,8 +124,5 @@ class MetaBasicMeths(BasicType):
         return cmp(i1,i2)
 
 
-class BasicMeths(AssumeMeths):
-
-    __metaclass__ = MetaBasicMeths
 
 
