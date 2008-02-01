@@ -130,33 +130,3 @@ class BasicMeths(AssumeMeths):
     __metaclass__ = MetaBasicMeths
 
 
-    def __nonzero__(self):
-        # prevent using constructs like:
-        #   a = Symbol('a')
-        #   if a: ..
-        raise AssertionError("only Equality|Unequality can define __nonzero__ method, %r" % (self.__class__))
-
-    def compare(self, other):
-        """
-        Return -1,0,1 if the object is smaller, equal, or greater than other
-        (not always in mathematical sense).
-        If the object is of different type from other then their classes
-        are ordered according to sorted_classes list.
-        """
-        # all redefinitions of __cmp__ method should start with the
-        # following three lines:
-        if self is other: return 0
-        c = cmp(self.__class__, other.__class__)
-        if c: return c
-        #
-        st = self._hashable_content()
-        ot = other._hashable_content()
-        c = cmp(len(st),len(ot))
-        if c: return c
-        for l,r in zip(st,ot):
-            if isinstance(l, Basic):
-                c = l.compare(r)
-            else:
-                c = cmp(l, r)
-            if c: return c
-        return 0
