@@ -428,6 +428,14 @@ def test_roots_issue593():
     r = roots(p, x)
     for i in range(6):
         assert p.subs(x, r[i]).expand() == 0
+
+def test_roots_issue604():
+    x = Symbol('x')
+    p = x**3+2*x**2+8
+    r = roots(p, x)
+    assert abs(p.subs(x, r[0]).evalf()) < 1E-20
+    assert abs(p.subs(x, r[1]).evalf()) < 1E-20
+    assert abs(p.subs(x, r[2]).evalf()) < 1E-20
         
 
 def test_coeff1():
