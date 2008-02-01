@@ -30,7 +30,7 @@ Example:
 """
 
 from basic import Basic, Singleton, Atom, S, C
-from basic_methods import BasicType, MetaBasicMeths
+from basic import BasicType, MetaBasicMeths
 from methods import ArithMeths, NoRelMeths, RelMeths
 from operations import AssocOp
 from cache import cache_it
