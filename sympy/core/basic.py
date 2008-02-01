@@ -272,6 +272,13 @@ class Basic(BasicMeths):
             args = (self.func,)+self[:]
         return self.__class__(*[s.subs(old, new) for s in args])
 
+    def __contains__(self, what):
+        if self == what: return True
+        for x in self._args:
+            if what in x:
+                return True
+        return False
+
     def has(self, *patterns):
         """
         Return True if self has any of the patterns.

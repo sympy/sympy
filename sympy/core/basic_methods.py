@@ -256,13 +256,6 @@ class BasicMeths(AssumeMeths):
 
         return self.torepr()
 
-    def __contains__(self, what):
-        if self == what: return True
-        for x in self._args:
-            if what in x:
-                return True
-        return False
-
     def __nonzero__(self):
         # prevent using constructs like:
         #   a = Symbol('a')
