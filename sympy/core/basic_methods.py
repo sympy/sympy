@@ -263,17 +263,6 @@ class BasicMeths(AssumeMeths):
                 return True
         return False
 
-    @staticmethod
-    def set_precision(prec = None):
-        """
-        Set precision for Decimal number operations and return previous precision value.
-        """
-        context = decimal.getcontext()
-        oldprec = context.prec
-        if prec is not None:
-            context.prec = prec
-        return oldprec
-
     def __nonzero__(self):
         # prevent using constructs like:
         #   a = Symbol('a')

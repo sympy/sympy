@@ -923,6 +923,18 @@ class Basic(BasicMeths):
             r = self
         return r
 
+    @staticmethod
+    def set_precision(prec = None):
+        """
+        Set precision for Decimal number operations and return previous precision value.
+        """
+        context = decimal.getcontext()
+        oldprec = context.prec
+        if prec is not None:
+            context.prec = prec
+        return oldprec
+
+
     ###################################################################################
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
     ###################################################################################
