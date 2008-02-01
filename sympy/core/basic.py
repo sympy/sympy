@@ -88,7 +88,7 @@ ordering_of_classes = [
 class BasicType(type):
     pass
 
-class MetaBasicMeths(BasicType):
+class BasicMeta(BasicType):
 
     classnamespace = {}
     repr_level = 0        # defines the output of repr()
@@ -96,9 +96,9 @@ class MetaBasicMeths(BasicType):
 
     def __init__(cls,*args,**kws):
         n = cls.__name__
-        c = MetaBasicMeths.classnamespace.get(n)
+        c = BasicMeta.classnamespace.get(n)
         if c is None:
-            MetaBasicMeths.classnamespace[n] = cls
+            BasicMeta.classnamespace[n] = cls
         else:
             print 'Ignoring redefinition of %s: %s defined earlier than %s' % (n, c, cls)
         type.__init__(cls, *args, **kws)
@@ -177,7 +177,7 @@ class Basic(AssumeMeths):
 
     """
 
-    __metaclass__ = MetaBasicMeths
+    __metaclass__ = BasicMeta
 
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)
@@ -1497,7 +1497,7 @@ class ClassesRegistry:
 
     def __getattr__(self, name):
         try:
-            cls = MetaBasicMeths.classnamespace[name]
+            cls = BasicMeta.classnamespace[name]
         except KeyError:
             raise AttributeError("No SymPy class '%s'" % name)
 

@@ -30,12 +30,12 @@ Example:
 """
 
 from basic import Basic, Singleton, Atom, S, C
-from basic import BasicType, MetaBasicMeths
+from basic import BasicType, BasicMeta
 from methods import ArithMeths, NoRelMeths, RelMeths
 from operations import AssocOp
 from cache import cache_it
 
-class FunctionClass(MetaBasicMeths):
+class FunctionClass(BasicMeta):
     """
     Base class for function classes. FunctionClass is a subclass of type.
 
