@@ -90,9 +90,9 @@ class Basic(BasicMeths):
            True
 
         """
-        if isinstance(a, BasicType):
-            return a
         if isinstance(a, Basic):
+            return a
+        if isinstance(a, BasicType):
             return a
         elif isinstance(a, bool):
             raise NotImplementedError("bool support")
