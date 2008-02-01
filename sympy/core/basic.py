@@ -4,6 +4,7 @@ type_class = type
 
 import decimal
 from basic_methods import BasicMeths, BasicType, MetaBasicMeths
+from assumptions import AssumeMeths
 from cache import cache_it, cache_it_immutable, Memoizer, MemoizerArg
 
 class SympifyError(ValueError):
@@ -50,9 +51,43 @@ class Basic(BasicMeths):
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)
         obj.assume(**assumptions)
-        obj._mhash = None # will be set by BasicMeths.__hash__ method.
+        obj._mhash = None # will be set by __hash__ method.
         obj._args = args  # all items in args must be Basic objects
         return obj
+
+    def __getattr__(self, name):
+        # if it's not an assumption -- we don't have it
+        if not name.startswith('is_'):
+            # it is important to return shortly for speed reasons:
+            # we have *lots* of non-'is_' attribute access, e.g.
+            # '_eval_<smth>', and a lot of them does *not* exits.
+            #
+            # if we are here -- it surely does not exist,
+            # so let's get out of here as fast as possible.
+            raise AttributeError(name)
+
+        return self._get_assumption(name)
+
+    def __setattr__(self, name, val):
+        if name.startswith('is_'):
+            raise AttributeError("Modification of assumptions is not allowed")
+        else:
+            AssumeMeths.__setattr__(self, name, val)
+
+    def __hash__(self):
+        # hash cannot be cached using cache_it because infinite recurrence
+        # occurs as hash is needed for setting cache dictionary keys
+        h = self._mhash
+        if h is None:
+            a = self._assume_hashable_content()
+            self._mhash = h = hash((self.__class__.__name__,) + self._hashable_content() + a)
+        return h
+
+    def _hashable_content(self):
+        # If class defines additional attributes, like name in Symbol,
+        # then this method should be updated accordingly to return
+        # relevant attributes as tuple.
+        return self._args
 
     @staticmethod
     def sympify(a, sympify_lists=False, locals= {}):
