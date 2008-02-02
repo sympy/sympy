@@ -1,4 +1,4 @@
-from sympy.core.basic import Basic, S
+from sympy.core.basic import Basic, S, sympify
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -23,9 +23,9 @@ class Point(GeometryEntity):
     """
     def __new__(cls, *args, **kwargs):
         if isinstance(args[0], (tuple, list, set)):
-            coords = tuple([Basic.sympify(x) for x in args[0]])
+            coords = tuple([sympify(x) for x in args[0]])
         else:
-            coords = tuple([Basic.sympify(x) for x in args])
+            coords = tuple([sympify(x) for x in args])
 
         if len(coords) != 2:
             raise NotImplementedError("Only two dimensional points currently supported")
@@ -206,7 +206,7 @@ class Point(GeometryEntity):
             else:
                 raise Exception("Points must have the same number of dimensions")
         else:
-            other = Basic.sympify(other)
+            other = sympify(other)
             return Point( [simplify(a+other) for a in self] )
 
     def __sub__(self, other):
@@ -221,7 +221,7 @@ class Point(GeometryEntity):
         Create a new point where each coordinate in this point is
         multiplied by factor.
         """
-        factor = Basic.sympify(factor)
+        factor = sympify(factor)
         return Point( [x*factor for x in self] )
 
     def __div__(self, divisor):
@@ -229,7 +229,7 @@ class Point(GeometryEntity):
         Create a new point where each coordinate in this point is
         divided by factor.
         """
-        divisor = Basic.sympify(divisor)
+        divisor = sympify(divisor)
         return Point( [x/divisor for x in self] )
 
     def __neg__(self):

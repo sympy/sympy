@@ -1,4 +1,5 @@
 from sympy import *
+from sympy.core import sympify
 from sympy.polynomials import Polynomial
 from float_ import Float, ComplexFloat
 import functions
@@ -53,7 +54,7 @@ def evalf(expr):
     elif isinstance(expr, complex):
         return ComplexFloat(expr)
 
-    expr = Basic.sympify(expr)
+    expr = sympify(expr)
 
     if isinstance(expr, (Rational)):
         y = Float(expr)

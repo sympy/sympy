@@ -1,5 +1,6 @@
 
 from sympy import Basic, S, C, Symbol, Mul, I, pi, exp, sqrt
+from sympy.core import sympify
 from sympy.core.numbers import Rational, Integer, gcd
 from sympy.core.methods import NoRelMeths, ArithMeths
 from sympy.polynomials import quo, factor_, PolynomialException
@@ -105,7 +106,7 @@ def roots(poly, x=None, domain=None, **kwargs):
 
     if domain == 'F':
         if len(poly.atoms(Symbol)) == 1:
-            return sorted([ Basic.sympify(complex(r)) \
+            return sorted([ sympify(complex(r)) \
                 for r in polyroots(poly.as_basic())[0] ])
         else:
             raise ValueError("'F' domain requires numeric coefficients")

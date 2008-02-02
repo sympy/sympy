@@ -1,4 +1,4 @@
-from sympy import Basic, Symbol, symbols
+from sympy import Basic, Symbol, symbols, sympify
 from plot_interval import PlotInterval
 from plot_object import PlotObject
 from color_scheme import ColorScheme
@@ -368,7 +368,7 @@ class PlotMode(PlotObject):
                 if isinstance(a, (str, list, tuple)):
                     raise ValueError(interpret_error % (str(a)))
                 try:
-                    f = Basic.sympify(a)
+                    f = sympify(a)
                     functions.append(f)
                 except:
                     raise ValueError(interpret_error % str(a))

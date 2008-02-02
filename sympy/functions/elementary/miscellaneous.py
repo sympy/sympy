@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S, C
+from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Lambda, Function
 
 ###############################################################################
@@ -7,7 +7,7 @@ from sympy.core.function import Lambda, Function
 ###############################################################################
 
 def sqrt(arg):
-    arg = Basic.sympify(arg)
+    arg = sympify(arg)
     return arg**S.Half
 
 ###############################################################################

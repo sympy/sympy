@@ -8,7 +8,7 @@
 # other bugs (mainly recursion), if it were used in the series expansion. So
 # currently we use limits_series, until we move to limits.py completely.
 
-from sympy.core.basic import Basic, S, C
+from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.methods import RelMeths, ArithMeths
 from sympy.core.cache import cache_it, cache_it_immutable
 
@@ -19,9 +19,9 @@ class Limit(Basic, RelMeths, ArithMeths):
     """
     @cache_it_immutable
     def __new__(cls, expr, x, xlim, direction='<', **assumptions):
-        expr = Basic.sympify(expr)
-        x = Basic.sympify(x)
-        xlim = Basic.sympify(xlim)
+        expr = sympify(expr)
+        x = sympify(x)
+        xlim = sympify(xlim)
         if not isinstance(x, C.Symbol):
             raise ValueError("Limit 2nd argument must be Symbol instance (got %s)" % (x))
         assert isinstance(x, C.Symbol),`x`
@@ -83,8 +83,8 @@ class InfLimit(Basic):
 
     @cache_it_immutable
     def __new__(cls, expr, x):
-        expr = orig_expr = Basic.sympify(expr)
-        orig_x = Basic.sympify(x)
+        expr = orig_expr = sympify(expr)
+        orig_x = sympify(x)
         assert isinstance(orig_x,C.Symbol),`orig_x`
 
         # handle trivial results

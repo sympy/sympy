@@ -1,11 +1,11 @@
 
-from basic import Basic
+from basic import Basic, sympify
 
 class Interval(Basic):
 
     def __new__(cls, start, end, **assumptions):
-        start = Basic.sympify(start)
-        end = Basic.sympify(end)
+        start = sympify(start)
+        end = sympify(end)
         return Basic.__new__(cls, start, end, **assumptions)
 
     @property

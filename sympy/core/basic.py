@@ -116,7 +116,7 @@ class BasicMeta(BasicType):
 
     def __cmp__(cls, other):
         try:
-            other = cls.sympify(other)
+            other = sympify(other)
         except ValueError:
             #if we cannot sympify it, other is definitely not equal to cls
             return -1
@@ -255,8 +255,9 @@ class Basic(AssumeMeths):
         return 0
 
 
+    # XXX NB: we'll eventually move sympify out of Basic completly (#667)
     @staticmethod
-    def sympify(a, sympify_lists=False, locals= {}):
+    def xsympify(a, sympify_lists=False, locals= {}):
         """Converts an arbitrary expression to a type that can be used
            inside sympy. For example, it will convert python int's into
            instance of sympy.Rational, floats into intances of sympy.Real,
@@ -302,7 +303,7 @@ class Basic(AssumeMeths):
         elif isinstance(a, (float, decimal.Decimal)):
             return C.Real(a)
         elif isinstance(a, complex):
-            real, imag = map(Basic.sympify, (a.real, a.imag))
+            real, imag = map(sympify, (a.real, a.imag))
             ireal, iimag = int(real), int(imag)
 
             if ireal + iimag*1j == a:
@@ -312,7 +313,7 @@ class Basic(AssumeMeths):
             # isinstance causes problems in the issue #432, so we use .__class__
             return C.Interval(*a)
         elif isinstance(a, (list,tuple,set)) and sympify_lists:
-            return type(a)([Basic.sympify(x, True) for x in a])
+            return type(a)([sympify(x, True) for x in a])
         elif hasattr(a, "_sympy_"):
             # the "a" implements _sympy_() method, that returns a SymPy
             # expression (by definition), so we just use it
@@ -460,7 +461,7 @@ class Basic(AssumeMeths):
         """
         result = set()
         if type is not None and not isinstance(type, (type_class, tuple)):
-            type = Basic.sympify(type).__class__
+            type = sympify(type).__class__
         if isinstance(self, Atom):
             if type is None or isinstance(self, type):
                 result.add(self)
@@ -522,7 +523,7 @@ class Basic(AssumeMeths):
 
     def is_polynomial(self, *syms):
         if syms:
-            syms = map(Basic.sympify, syms)
+            syms = map(sympify, syms)
         else:
             syms = list(self.atoms(type=C.Symbol))
 
@@ -542,8 +543,8 @@ class Basic(AssumeMeths):
     @cache_it_immutable
     def subs(self, old, new):
         """Substitutes an expression old -> new."""
-        old = Basic.sympify(old)
-        new = Basic.sympify(new)
+        old = sympify(old)
+        new = sympify(new)
 
         # TODO This code is a start for issue 264. Currently, uncommenting
         #      this code will break A LOT of tests!
@@ -588,7 +589,7 @@ class Basic(AssumeMeths):
             return False
         elif not patterns:
             raise TypeError("has() requires at least 1 argument (got none)")
-        p = Basic.sympify(patterns[0])
+        p = sympify(patterns[0])
         if isinstance(p, C.Symbol) and not isinstance(p, C.Wild): # speeds up
             return p in self.atoms(p.__class__)
         if isinstance(p, BasicType):
@@ -725,7 +726,7 @@ class Basic(AssumeMeths):
                 pat = pat.subs(old, new)
             if pat!=pattern:
                 return pat.matches(expr, repl_dict)
-        expr = Basic.sympify(expr)
+        expr = sympify(expr)
         if not isinstance(expr, pattern.__class__):
             from sympy.core.numbers import Rational
             # if we can omit the first factor, we can match it to sign * one
@@ -787,7 +788,7 @@ class Basic(AssumeMeths):
           pattern.subs_dict(self.match(pattern)) == self
 
         """
-        pattern = Basic.sympify(pattern)
+        pattern = sympify(pattern)
         return pattern.matches(self, {})
 
     def solve4linearsymbol(eqn, rhs, symbols = None):
@@ -1167,7 +1168,7 @@ class Basic(AssumeMeths):
     def diff(self, *symbols, **assumptions):
         new_symbols = []
         for s in symbols:
-            s = Basic.sympify(s)
+            s = sympify(s)
             if isinstance(s, C.Integer) and new_symbols:
                 last_s = new_symbols.pop()
                 i = int(s)
@@ -1188,7 +1189,7 @@ class Basic(AssumeMeths):
     def integral(self, *symbols, **assumptions):
         new_symbols = []
         for s in symbols:
-            s = Basic.sympify(s)
+            s = sympify(s)
             if isinstance(s, C.Integer) and new_symbols:
                 last_s = new_symbols[-1]
                 i = int(s)
@@ -1261,8 +1262,8 @@ class Basic(AssumeMeths):
             O instance as the only parameter and it is responsible for
             returning a series (without the O term) up to the given order.
         """
-        x = Basic.sympify(x)
-        point = Basic.sympify(point)
+        x = sympify(x)
+        point = sympify(point)
         if point != 0:
             raise NotImplementedError("series expansion around arbitrary point")
             #self = self.subs(x, x + point)
@@ -1350,7 +1351,7 @@ class Basic(AssumeMeths):
         return Limit(self, x, xlim, direction)
 
     def inflimit(self, x): # inflimit has its own cache
-        x = Basic.sympify(x)
+        x = sympify(x)
         from sympy.series.limits_series import InfLimit
         return InfLimit(self, x)
 
@@ -1363,7 +1364,7 @@ class Basic(AssumeMeths):
             return c
         elif not symbols:
             return self
-        x = Basic.sympify(symbols[0])
+        x = sympify(symbols[0])
         assert isinstance(x, C.Symbol),`x`
         if not self.has(x):
             return self
@@ -1376,7 +1377,7 @@ class Basic(AssumeMeths):
     def as_coeff_exponent(self, x):
         """ c*x**e -> c,e where x can be any symbolic expression.
         """
-        x = Basic.sympify(x)
+        x = sympify(x)
         wc = C.Wild()
         we = C.Wild()
         c, terms = self.as_coeff_terms()
@@ -1387,14 +1388,14 @@ class Basic(AssumeMeths):
         return self, S.Zero
 
     def ldegree(self, x):
-        x = Basic.sympify(x)
+        x = sympify(x)
         c,e = self.as_leading_term(x).as_coeff_exponent(x)
         if not c.has(x):
             return e
         raise ValueError("cannot compute ldegree(%s, %s), got c=%s" % (self, x, c))
 
     def leadterm(self, x):
-        x = Basic.sympify(x)
+        x = sympify(x)
         c,e = self.as_leading_term(x).as_coeff_exponent(x)
         if not c.has(x):
             return c,e
@@ -1518,5 +1519,10 @@ import cache
 cache.C = C
 del cache
 
+
+# XXX this is transitional stuff -- we'll eventually move sympify out of Basic
+# completly (#667)
+sympify = Basic.xsympify
+del Basic.xsympify
 
 import ast_parser

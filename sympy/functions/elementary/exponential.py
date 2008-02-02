@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S, C
+from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Lambda, Function, Function
 from sympy.core.cache import cache_it, cache_it_immutable
 
@@ -23,7 +23,7 @@ class exp(Function):
     #XXX: investigate why we need the **optionsXXX and remove it
     @classmethod
     def canonize(cls, arg, **optionsXXX):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if isinstance(arg, C.Number):
             if arg is S.NaN:
@@ -92,7 +92,7 @@ class exp(Function):
     def taylor_term(n, x, *previous_terms):
         if n<0: return S.Zero
         if n==0: return S.One
-        x = Basic.sympify(x)
+        x = sympify(x)
         if previous_terms:
             p = previous_terms[-1]
             if p is not None:
@@ -258,12 +258,12 @@ class log(Function):
     @classmethod
     def canonize(cls, arg, base=None, **fixme):
         if base is not None:
-            base = Basic.sympify(base)
+            base = sympify(base)
 
             if base is not S.Exp1:
                 return cls(arg)/cls(base)
 
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if isinstance(arg, C.Number):
             if arg is S.Zero:
@@ -321,7 +321,7 @@ class log(Function):
     @cache_it_immutable
     def taylor_term(n, x, *previous_terms): # of log(1+x)
         if n<0: return S.Zero
-        x = Basic.sympify(x)
+        x = sympify(x)
         if n==0: return x
         if previous_terms:
             p = previous_terms[-1]
@@ -422,9 +422,9 @@ class log(Function):
 class MrvLog(log):
 
     def subs(self, old, new):
-        old = Basic.sympify(old)
+        old = sympify(old)
         if old==self.func:
             arg = self.args[0]
-            new = Basic.sympify(new)
+            new = sympify(new)
             return new(arg.subs(old, new))
         return self

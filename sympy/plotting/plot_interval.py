@@ -1,4 +1,4 @@
-from sympy import Symbol, Basic, Integer
+from sympy import Symbol, Basic, Integer, sympify
 
 class PlotInterval(object):
     """
@@ -57,7 +57,7 @@ class PlotInterval(object):
             self._v_min = None
             return
         try:
-            self._v_min = Basic.sympify(v_min)
+            self._v_min = sympify(v_min)
             float(self._v_min.evalf())
         except:
             raise ValueError("v_min could not be interpreted as a number.")
@@ -68,7 +68,7 @@ class PlotInterval(object):
             self._v_max = None
             return
         try:
-            self._v_max = Basic.sympify(v_max)
+            self._v_max = sympify(v_max)
             float(self._v_max.evalf())
         except:
             raise ValueError("v_max could not be interpreted as a number.")

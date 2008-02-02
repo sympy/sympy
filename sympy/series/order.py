@@ -1,4 +1,4 @@
-from sympy.core.basic import Basic, S, C
+from sympy.core.basic import Basic, S, C, sympify
 from sympy.core import oo, Rational, Pow
 from sympy.core.methods import ArithMeths, RelMeths
 from sympy.core.cache import cache_it, cache_it_immutable
@@ -83,12 +83,12 @@ class Order(Basic, ArithMeths, RelMeths):
 
     @cache_it_immutable
     def __new__(cls, expr, *symbols, **assumptions):
-        expr = Basic.sympify(expr).expand(trig=True)
+        expr = sympify(expr).expand(trig=True)
         if expr is S.NaN:
             return S.NaN
         
         if symbols:
-            symbols = map(Basic.sympify, symbols)
+            symbols = map(sympify, symbols)
         else:
             symbols = list(expr.atoms(C.Symbol))
 

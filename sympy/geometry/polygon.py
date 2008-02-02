@@ -1,4 +1,4 @@
-from sympy.core.basic import Basic, S, C
+from sympy.core.basic import Basic, S, C, sympify
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity
@@ -227,7 +227,7 @@ class RegularPolygon(Polygon):
     """
 
     def __new__(self, c, r, n, **kwargs):
-        r = Basic.sympify(r)
+        r = sympify(r)
         if not isinstance(c, Point):
             raise GeometryError("RegularPolygon.__new__ requires c to be a Point instance")
         if not isinstance(r, Basic):

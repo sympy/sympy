@@ -1,4 +1,5 @@
 from sympy.core import *
+from sympy.core import sympify
 from sympy.functions import sqrt, exp, erf
 import random
 
@@ -71,8 +72,8 @@ class Normal(ContinuousProbability):
 
     """
     def __init__(self, mu, sigma):
-        self.mu = Basic.sympify(mu)
-        self.sigma = Basic.sympify(sigma)
+        self.mu = sympify(mu)
+        self.sigma = sympify(sigma)
 
     def __repr__(self):
         return "Normal(%s, %s)" % (self.mu, self.sigma)
@@ -87,12 +88,12 @@ class Normal(ContinuousProbability):
 
     def pdf(s, x):
         """Return the probability density function as an expression in x"""
-        x = Basic.sympify(x)
+        x = sympify(x)
         return 1/(s.sigma*sqrt(2*pi)) * exp(-(x-s.mu)**2 / (2*s.sigma**2))
 
     def cdf(s, x):
         """Return the cumulative density function as an expression in x"""
-        x = Basic.sympify(x)
+        x = sympify(x)
         return (1+erf((x-s.mu)/(s.sigma*sqrt(2))))/2
 
     def _random(s):
@@ -153,8 +154,8 @@ class Uniform(ContinuousProbability):
     everywhere else.
     """
     def __init__(self, a, b):
-        self.a = Basic.sympify(a)
-        self.b = Basic.sympify(b)
+        self.a = sympify(a)
+        self.b = sympify(b)
 
     def __repr__(self):
         return "Uniform(%s, %s)" % (self.a, self.b)
@@ -169,7 +170,7 @@ class Uniform(ContinuousProbability):
 
     def pdf(s, x):
         """Return the probability density function as an expression in x"""
-        x = Basic.sympify(x)
+        x = sympify(x)
         if not isinstance(x, Number):
             raise NotImplementedError("SymPy does not yet support"
                 "piecewise functions")
@@ -179,7 +180,7 @@ class Uniform(ContinuousProbability):
 
     def cdf(s, x):
         """Return the cumulative density function as an expression in x"""
-        x = Basic.sympify(x)
+        x = sympify(x)
         if not isinstance(x, Number):
             raise NotImplementedError("SymPy does not yet support"
                 "piecewise functions")
@@ -201,7 +202,7 @@ class Uniform(ContinuousProbability):
         >>> U.confidence(Rational(1,2))
         (5/4, 7/4)
         """
-        p = Basic.sympify(p)
+        p = sympify(p)
         assert p <= 1
 
         d = (s.b-s.a)*p / 2

@@ -1,5 +1,5 @@
 
-from sympy.core import Basic, S, C, Symbol, Wild, Pow
+from sympy.core import Basic, S, C, Symbol, Wild, Pow, sympify
 from sympy.core.methods import NoRelMeths, ArithMeths
 
 from sympy.integrals.risch import heurisch
@@ -14,7 +14,7 @@ class Integral(Basic, NoRelMeths, ArithMeths):
     precedence = Basic.Apply_precedence
 
     def __new__(cls, function, *symbols, **assumptions):
-        function = Basic.sympify(function)
+        function = sympify(function)
 
         if isinstance(function, C.Number):
             if function is S.NaN:

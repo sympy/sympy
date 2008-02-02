@@ -8,6 +8,7 @@ from sympy.core import numbers
 # To determine coefficient type:
 from sympy.core.numbers import NumberSymbol, ImaginaryUnit
 from sympy.utilities import *
+from sympy.core import sympify
 
 from sympy.polynomials import fast
 import sympy.polynomials    # for sympy.polynomials.wrapper  (cyclic)

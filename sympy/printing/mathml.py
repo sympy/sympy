@@ -1,4 +1,4 @@
-from sympy import Basic
+from sympy import Basic, sympify
 from printer import Printer
 
 
@@ -131,7 +131,7 @@ class MathMLPrinter(Printer):
 def mathml(expr):
     """Returns the MathML representation of expr"""
     s = MathMLPrinter()
-    return s.doprint(Basic.sympify(expr))
+    return s.doprint(sympify(expr))
 
 def print_mathml(expr):
     """

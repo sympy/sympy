@@ -1,5 +1,5 @@
 
-from basic import Basic, S, C
+from basic import Basic, S, C, sympify
 from methods import ArithMeths, RelMeths, NoRelMeths
 from cache import cache_it, cache_it_immutable
 
@@ -51,8 +51,8 @@ class Pow(Basic, ArithMeths, RelMeths):
 
     @cache_it_immutable
     def __new__(cls, a, b, **assumptions):
-        a = Basic.sympify(a)
-        b = Basic.sympify(b)
+        a = sympify(a)
+        b = sympify(b)
         if b is S.Zero:
             return S.One
         if b is S.One:
@@ -448,7 +448,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             if pat!=pattern:
                 return pat.matches(expr, repl_dict)
 
-        expr = Basic.sympify(expr)
+        expr = sympify(expr)
         b, e = expr.as_base_exp()
 
         # special case, pattern = 1 and expr.exp can match to 0
@@ -504,7 +504,7 @@ class Pow(Basic, ArithMeths, RelMeths):
     @cache_it_immutable
     def taylor_term(self, n, x, *previous_terms): # of (1+x)**e
         if n<0: return S.Zero
-        x = Basic.sympify(x)
+        x = sympify(x)
         return C.Binomial(self.exp, n) * x**n
 
     def _sage_(self):

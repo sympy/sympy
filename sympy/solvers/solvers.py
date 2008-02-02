@@ -10,6 +10,7 @@
 """
 
 from sympy.core import *
+from sympy.core import sympify
 
 from sympy.simplify import simplify, collect
 from sympy.matrices import Matrix, zeronm
@@ -66,7 +67,7 @@ def solve(eq, syms, simplified=True):
             # terms to the left hand side
             equ = eq.lhs - eq.rhs
         else:
-            equ = Basic.sympify(eq)
+            equ = sympify(eq)
 
         try:
             # 'roots' method will return all possible complex
@@ -98,7 +99,7 @@ def solve(eq, syms, simplified=True):
                     # terms to the left hand side
                     equ = eq[i].lhs - eq[i].rhs
                 else:
-                    equ = Basic.sympify(eq[i])
+                    equ = sympify(eq[i])
 
                 content = collect(equ.expand(), syms, evaluate=False)
 

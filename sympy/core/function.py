@@ -29,7 +29,7 @@ Example:
     (x,)
 """
 
-from basic import Basic, Singleton, Atom, S, C
+from basic import Basic, Singleton, Atom, S, C, sympify
 from basic import BasicType, BasicMeta
 from methods import ArithMeths, NoRelMeths, RelMeths
 from operations import AssocOp
@@ -112,7 +112,7 @@ class Function(Basic, ArithMeths, RelMeths):
         # (2) create new instance of a class created in (1)
         #     UC: Function('f')(x)
         #     UC: sin(x)
-        args = map(Basic.sympify, args)
+        args = map(sympify, args)
         # these lines should be refactored
         for opt in ["nargs", "dummy", "comparable", "noncommutative", "commutative"]:
             if opt in options:
@@ -347,7 +347,7 @@ class Function(Basic, ArithMeths, RelMeths):
         This method is slow, because it differentiates n-times.  Subclasses can
         redefine it to make it faster by using the "previous_terms". 
         """
-        x = Basic.sympify(x)
+        x = sympify(x)
         return cls(x).diff(x, n).subs(x, 0) * x**n / C.Factorial(n)
 
 class WildFunction(Function, Atom):
@@ -400,9 +400,9 @@ class Derivative(Basic, ArithMeths, RelMeths):
     precedence = Basic.Apply_precedence
 
     def __new__(cls, expr, *symbols, **assumptions):
-        expr = Basic.sympify(expr)
+        expr = sympify(expr)
         if not symbols: return expr
-        symbols = map(Basic.sympify, symbols)
+        symbols = map(sympify, symbols)
 
         if not assumptions.get("evaluate", False):
             obj = Basic.__new__(cls, expr, *symbols)
@@ -541,7 +541,7 @@ def diff(f, x, times = 1, evaluate=True):
 
     see http://documents.wolfram.com/v5/Built-inFunctions/AlgebraicComputation/Calculus/D.html
     """
-    f = Basic.sympify(f)
+    f = sympify(f)
     if evaluate == True:
         for i in range(0,times):
             f = f.diff(x)

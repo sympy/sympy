@@ -1,5 +1,5 @@
 
-from sympy.core import Basic, S, C, Add, Mul, Symbol
+from sympy.core import Basic, S, C, Add, Mul, Symbol, sympify
 from sympy.core.methods import NoRelMeths, ArithMeths
 
 from sympy.polynomials import quo, roots
@@ -13,7 +13,7 @@ class Product(Basic, NoRelMeths, ArithMeths):
     precedence = Basic.Apply_precedence
 
     def __new__(cls, term, *symbols, **assumptions):
-        term = Basic.sympify(term)
+        term = sympify(term)
 
         if isinstance(term, C.Number):
             if term is S.NaN:
@@ -39,7 +39,7 @@ class Product(Basic, NoRelMeths, ArithMeths):
             else:
                 raise ValueError("Invalid arguments")
 
-            k, a, n = map(Basic.sympify, (k, a, n))
+            k, a, n = map(sympify, (k, a, n))
 
             if isinstance(a, C.Number) and isinstance(n, C.Number):
                 return Mul(*[term.subs(k, i) for i in xrange(int(a), int(n)+1)])

@@ -1,7 +1,7 @@
 """Core module. Provides the basic operations needed in sympy.
 """
 
-from basic import Basic, S, C
+from basic import Basic, S, C, sympify
 from symbol import Symbol, Wild, symbols, var
 from numbers import Number, Real, Rational, Integer
 from power import Pow
@@ -19,4 +19,3 @@ Basic.set_repr_level(1)
 for _n, _cls in Basic.singleton.items():
     exec '%s = _cls()' % (_n)
 
-sympify = Basic.sympify

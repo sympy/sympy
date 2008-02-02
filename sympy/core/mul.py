@@ -1,5 +1,5 @@
 
-from basic import Basic, S, C
+from basic import Basic, S, C, sympify
 from operations import AssocOp
 from methods import RelMeths, ArithMeths
 from cache import cache_it, cache_it_immutable
@@ -338,7 +338,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         return
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
-        expr = Basic.sympify(expr)
+        expr = sympify(expr)
         if pattern.is_commutative and expr.is_commutative:
             return AssocOp._matches_commutative(pattern, expr, repl_dict, evaluate)
         # todo for commutative parts, until then use the default matches method for non-commutative products

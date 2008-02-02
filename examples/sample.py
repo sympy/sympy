@@ -6,7 +6,7 @@ graphing functions using matplotlib.
 """
 
 from numpy import repeat, arange, empty, ndarray, array
-from sympy import Symbol, Basic, Real, Rational, I
+from sympy import Symbol, Basic, Real, Rational, I, sympify
 
 def sample2d(f, x_args):
     """
@@ -18,7 +18,7 @@ def sample2d(f, x_args):
     x_args is an interval given in the form (var, min, max, n)
     """
     try:
-        f = Basic.sympify(f)
+        f = sympify(f)
     except:
         raise ValueError("f could not be interpretted as a SymPy function")
     try:
@@ -50,7 +50,7 @@ def sample3d(f, x_args, y_args):
     x, x_min, x_max, x_n = None, None, None, None
     y, y_min, y_max, y_n = None, None, None, None
     try:
-        f = Basic.sympify(f)
+        f = sympify(f)
     except:
         raise ValueError("f could not be interpretted as a SymPy function")
     try:

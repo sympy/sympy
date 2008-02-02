@@ -1,4 +1,4 @@
-from sympy.core.basic import S, C, Basic
+from sympy.core.basic import S, C, Basic, sympify
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry.exceptions import GeometryError
@@ -24,8 +24,8 @@ class Ellipse(GeometryEntity):
         (5, 1)
     """
     def __new__(cls, center, hradius, vradius, **kwargs):
-        hradius = Basic.sympify(hradius)
-        vradius = Basic.sympify(vradius)
+        hradius = sympify(hradius)
+        vradius = sympify(vradius)
         if not isinstance(center, Point):
             raise TypeError("center must be be a Point")
 
@@ -259,7 +259,7 @@ class Circle(Ellipse):
         elif len(args) == 2:
             # Assume (center, radius) pair
             c = args[0]
-            r = Basic.sympify(args[1])
+            r = sympify(args[1])
 
         if not (c is None or r is None):
             return GeometryEntity.__new__(cls, c, r, **kwargs)

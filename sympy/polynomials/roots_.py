@@ -3,6 +3,7 @@
 from sympy.polynomials.base import *
 from sympy.polynomials import div_, groebner_
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.core import sympify
 
 def cubic(f):
     """Computes the roots of a cubic polynomial.

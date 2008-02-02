@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S, C
+from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Function
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.cache import cache_it, cache_it_immutable
@@ -24,7 +24,7 @@ class erf(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if isinstance(arg, C.Number):
             if arg is S.NaN:
@@ -49,7 +49,7 @@ class erf(Function):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
-            x = Basic.sympify(x)
+            x = sympify(x)
 
             k = (n - 1)/2
 

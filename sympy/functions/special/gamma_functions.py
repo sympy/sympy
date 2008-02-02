@@ -1,5 +1,5 @@
 
-from sympy.core import Basic, Add, S, C
+from sympy.core import Basic, Add, S, C, sympify
 from sympy.core.function import Function
 from zeta_functions import zeta
 from sympy.functions.elementary.exponential import log
@@ -21,7 +21,7 @@ class gamma(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if isinstance(arg, C.Number):
             if arg is S.NaN:
@@ -150,7 +150,7 @@ class polygamma(Function):
 
     @classmethod
     def canonize(cls, n, z):
-        n, z = map(Basic.sympify, (n, z))
+        n, z = map(sympify, (n, z))
 
         if n.is_integer:
             if n.is_negative:

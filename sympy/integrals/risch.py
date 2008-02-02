@@ -4,7 +4,7 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol
 from sympy.core.function import Function
-from sympy.core.basic import Basic, S, C, Atom
+from sympy.core.basic import Basic, S, C, Atom, sympify
 from sympy.core.numbers import Integer, Rational, Zero
 
 from sympy.functions.elementary.trigonometric import sin, cos, cot, tan
@@ -122,7 +122,7 @@ def heurisch(f, x, rewrite=False):
            Software 11 (1985), 356-362.
 
     """
-    f = Basic.sympify(f)
+    f = sympify(f)
 
     indep, f = f.as_independent(x)
 

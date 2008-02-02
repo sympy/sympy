@@ -1,6 +1,6 @@
 
 from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
-        Derivative, Wild, Symbol
+        Derivative, Wild, Symbol, sympify
 
 from sympy.utilities import make_list, all
 from sympy.functions import gamma, exp, sqrt
@@ -54,7 +54,7 @@ def fraction(expr, exact=False):
        (exp(-x), 1)
 
     """
-    expr = Basic.sympify(expr)
+    expr = sympify(expr)
 
     #XXX this only works sometimes (caching bug?)
     if expr == exp(-Symbol("x")) and exact:
@@ -152,7 +152,7 @@ def separate(expr, deep=False):
        x**(1 + z)*y**(1 + z)
 
     """
-    expr = Basic.sympify(expr)
+    expr = sympify(expr)
 
     if isinstance(expr, C.Pow):
         terms, expo = [], separate(expr.exp, deep)
@@ -579,7 +579,7 @@ def collect(expr, syms, evaluate=True, exact=False):
             b = collect(expr.base, syms, True, exact)
             return C.Pow(b, expr.exp)
 
-    summa = [ separate(i) for i in make_list(Basic.sympify(expr), Add) ]
+    summa = [ separate(i) for i in make_list(sympify(expr), Add) ]
 
     if isinstance(syms, list):
         syms = [ separate(s) for s in syms ]
@@ -951,7 +951,7 @@ def hypersimp(term, n, consecutive=True, simplify=True):
        [1] W. Koepf, Algorithms for m-fold Hypergeometric Summation,
            Journal of Symbolic Computation (1995) 20, 399-417
     """
-    term = Basic.sympify(term)
+    term = sympify(term)
 
     if consecutive == True:
         term = term.subs(n, n+1)/term

@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S, C
+from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Function
 from sympy.functions.elementary.miscellaneous import sqrt
 
@@ -42,7 +42,7 @@ class re(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if arg is S.NaN:
             return S.NaN
@@ -114,7 +114,7 @@ class im(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if arg is S.NaN:
             return S.NaN

@@ -96,7 +96,7 @@ This code is almost exact rewrite of the Maple code inside the Gruntz thesis.
 """
 
 from sympy.core import Basic, S, Add, Mul, Pow, Function, oo, Symbol, Rational, \
-        Real
+        Real, sympify
 from sympy.functions import log, exp
 from sympy.series.order import Order
 O = Order
@@ -420,9 +420,9 @@ class Limit2(Basic):
     def __init__(self,e,x,x0):
         Basic.__init__(self)
         self._args = list()
-        self._args.append(self.sympify(e))
-        self._args.append(self.sympify(x))
-        self._args.append(self.sympify(x0))
+        self._args.append(sympify(e))
+        self._args.append(sympify(x))
+        self._args.append(sympify(x0))
         
 
     def __pretty__(self):

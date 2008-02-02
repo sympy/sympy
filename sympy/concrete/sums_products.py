@@ -1,4 +1,5 @@
 from sympy.core import Basic, C, Rational, Add, Mul, Pow, Symbol, Wild, oo
+from sympy.core import sympify
 from sympy.functions import factorial
 #from sympy.specfun import rising_factorial, factorial, factorial_simplify
 #from sympy.specfun.factorials import unfac
@@ -17,7 +18,7 @@ def indexsymbol(a):
     if isinstance(a, Symbol):
         return Symbol(a.name, integer=True)
     else:
-        return Basic.sympify(a)
+        return sympify(a)
 
 class _BigOperator(Basic):
 
@@ -25,7 +26,7 @@ class _BigOperator(Basic):
         self = Basic.__new__(cls)
         assert isinstance(i, Symbol)
         self.i = i
-        self.f = self.sympify(f)
+        self.f = sympify(f)
         self.a = indexsymbol(a)
         self.b = indexsymbol(b)
         return self.eval()

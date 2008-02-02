@@ -1,6 +1,7 @@
 """Polynomial division algorithms for use with class Polynomial"""
 
 from sympy.polynomials.base import *
+from sympy.core import sympify
 
 def div(f, g, var=None, order=None, coeff=None):
     """Division with remainder.

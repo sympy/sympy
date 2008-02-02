@@ -2,7 +2,7 @@
    partial fraction decomposition, combinig together and collecting terms.
 """
 
-from sympy.core import Basic, S, C, Symbol
+from sympy.core import Basic, S, C, Symbol, sympify
 
 from sympy.polynomials import factor_, div, quo, rem, gcd, egcd
 from sympy.simplify import together
@@ -34,7 +34,7 @@ def cancel(f, *syms):
        x - 2**(1/2)
 
     """
-    f = Basic.sympify(f)
+    f = sympify(f)
 
     if syms and not f.has(*syms):
         return f
@@ -97,7 +97,7 @@ def apart(f, z, **flags):
            ISSAC '93, ACM Press, Kiev, Ukraine, 1993, pp. 157-160.
 
     """
-    f = Basic.sympify(f)
+    f = sympify(f)
 
     if isinstance(f, C.Add):
         return C.Add(*[ apart(g, z, **flags) for g in f ])

@@ -1,5 +1,6 @@
 
 from sympy import *
+from sympy.core import sympify
 
 import sympy.polynomials
 import random
@@ -51,7 +52,7 @@ class Matrix(object):
             self.mat = []
             for i in range(self.lines):
                 for j in range(self.cols):
-                    self.mat.append(Basic.sympify(operation(i, j)))
+                    self.mat.append(sympify(operation(i, j)))
         elif len(args)==3 and isinstance(args[0],int) and \
                 isinstance(args[1],int) and isinstance(args[2], (list, tuple)):
             self.lines=args[0]
@@ -60,7 +61,7 @@ class Matrix(object):
             self.mat=[]
             for j in range(self.lines):
                 for i in range(self.cols):
-                    self.mat.append(Basic.sympify(mat[j*self.cols+i]))
+                    self.mat.append(sympify(mat[j*self.cols+i]))
         else:
             if len(args) == 1:
                 mat = args[0]
@@ -80,7 +81,7 @@ class Matrix(object):
             for j in range(self.lines):
                 assert len(mat[j])==self.cols
                 for i in range(self.cols):
-                    self.mat.append(Basic.sympify(mat[j][i]))
+                    self.mat.append(sympify(mat[j][i]))
 
     def key2ij(self,key):
         """Converts key=(4,6) to 4,6 and ensures the key is correct."""
@@ -176,7 +177,7 @@ class Matrix(object):
                 self.copyin_list(key, value)
         else:
             i,j=self.key2ij(key)
-            self.mat[i*self.cols + j] = Basic.sympify(value)
+            self.mat[i*self.cols + j] = sympify(value)
 
     def __array__(self):
         return matrix2numpy(self)
@@ -188,7 +189,7 @@ class Matrix(object):
         assert value.lines == rhi - rlo and value.cols == chi - clo
         for i in range(value.lines):
             for j in range(value.cols):
-                self[i+rlo, j+clo] = Basic.sympify(value[i,j])
+                self[i+rlo, j+clo] = sympify(value[i,j])
 
     def copyin_list(self, key, value):
         assert isinstance(value, (list, tuple))
@@ -287,12 +288,12 @@ class Matrix(object):
 
     def __eq__(self,a):
         if not isinstance(a, (Matrix, Basic)):
-            a = Basic.sympify(a)
+            a = sympify(a)
         return self.hash() == a.hash()
 
     def __ne__(self,a):
         if not isinstance(a, (Matrix, Basic)):
-            a = Basic.sympify(a)
+            a = sympify(a)
         return self.hash() != a.hash()
 
     # hook Basic.__repr__ & Basic.__str__
@@ -734,7 +735,7 @@ class Matrix(object):
 
     def norm(self):
         assert self.lines == 1 or self.cols == 1
-        out = Basic.sympify(0)
+        out = sympify(0)
         for i in range(self.lines * self.cols):
             out += self[i]*self[i]
         return out**S.Half
@@ -1063,7 +1064,7 @@ def wronskian(functions, var):
     """
 
     for index in xrange(0, len(functions)):
-        functions[index] = Basic.sympify(functions[index])
+        functions[index] = sympify(functions[index])
     n = len(functions)
     W = Matrix(n, n, lambda i,j: functions[i].diff(var, j) )
     return W.det()
@@ -1098,7 +1099,7 @@ def casoratian(seqs, n, zero=True):
        True
 
     """
-    seqs = map(Basic.sympify, seqs)
+    seqs = map(sympify, seqs)
 
     if not zero:
         f = lambda i, j: seqs[j].subs(n, n+i)
@@ -1121,7 +1122,7 @@ class SMatrix(Matrix):
             self.mat = {}
             for i in range(self.lines):
                 for j in range(self.cols):
-                    value = Basic.sympify(op(i,j))
+                    value = sympify(op(i,j))
                     if value != 0:
                         self.mat[(i,j)] = value
         elif len(args)==3 and isinstance(args[0],int) and \
@@ -1132,7 +1133,7 @@ class SMatrix(Matrix):
             self.mat = {}
             for i in range(self.lines):
                 for j in range(self.cols):
-                    value = Basic.sympify(mat[i*self.cols+j])
+                    value = sympify(mat[i*self.cols+j])
                     if value != 0:
                         self.mat[(i,j)] = value
         elif len(args)==3 and isinstance(args[0],int) and \
@@ -1156,7 +1157,7 @@ class SMatrix(Matrix):
             for i in range(self.lines):
                 assert len(mat[i]) == self.cols
                 for j in range(self.cols):
-                    value = Basic.sympify(mat[i][j])
+                    value = sympify(mat[i][j])
                     if value != 0:
                         self.mat[(i,j)] = value
 
@@ -1205,7 +1206,7 @@ class SMatrix(Matrix):
                 self.copyin_list(key, value)
         else:
             i,j=self.key2ij(key)
-            testval = Basic.sympify(value)
+            testval = sympify(value)
             if testval != 0:
                 self.mat[(i,j)] = testval
             elif self.mat.has_key((i,j)):

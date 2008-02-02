@@ -12,6 +12,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.numbers import Rational
 from sympy.core.add import Add
 from sympy.core.mul import Mul
+from sympy.core import sympify
 
 from sympy.simplify import simplify, hypersimp, hypersimilar, collect
 from sympy.solvers import solve, solve_undetermined_coeffs
@@ -68,7 +69,7 @@ def rsolve_poly(coeffs, f, n, **hints):
        [3] M. Petkovsek, H. S. Wilf, D. Zeilberger, A = B, 1996.
 
     """
-    f = Basic.sympify(f)
+    f = sympify(f)
 
     if not f.is_polynomial(n):
         return None
@@ -78,7 +79,7 @@ def rsolve_poly(coeffs, f, n, **hints):
     if not homogeneous:
         df = f.as_polynomial(n).degree()
 
-    coeffs = map(Basic.sympify, coeffs)
+    coeffs = map(sympify, coeffs)
 
     r = len(coeffs)-1
 
@@ -332,12 +333,12 @@ def rsolve_ratio(coeffs, f, n, **hints):
            1995, 285-289
 
     """
-    f = Basic.sympify(f)
+    f = sympify(f)
 
     if not f.is_polynomial(n):
         return None
 
-    coeffs = map(Basic.sympify, coeffs)
+    coeffs = map(sympify, coeffs)
 
     r = len(coeffs)-1
 
@@ -429,9 +430,9 @@ def rsolve_hyper(coeffs, f, n, **hints):
        [2] M. Petkovsek, H. S. Wilf, D. Zeilberger, A = B, 1996.
 
     """
-    coeffs = map(Basic.sympify, coeffs)
+    coeffs = map(sympify, coeffs)
 
-    f = Basic.sympify(f)
+    f = sympify(f)
 
     r, kernel = len(coeffs)-1, []
 

@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S, C
+from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Lambda, Function
 
 ###############################################################################
@@ -37,7 +37,7 @@ class floor(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if arg.is_integer:
             return arg
@@ -127,7 +127,7 @@ class ceiling(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if arg.is_integer:
             return arg

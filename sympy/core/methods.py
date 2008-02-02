@@ -1,7 +1,7 @@
 """ Defines default methods for unary and binary operations.
 """
 
-from basic import Basic, S, C, SympifyError
+from basic import Basic, S, C, SympifyError, sympify
 
 def _no_unary_operation(op, obj):
     return 'unary operation `%s` not defined for %s' % (op, obj.__class__.__name__)
@@ -19,40 +19,40 @@ class ArithMeths(object):
         return C.abs(self)
     def __add__(self, other):
         try:
-            other = Basic.sympify(other)
+            other = sympify(other)
         except SympifyError:
             return NotImplemented
         if not isinstance(other, Basic):
             return NotImplemented
         return C.Add(self, other)
     def __radd__(self, other):
-        return Basic.sympify(other).__add__(self)
+        return sympify(other).__add__(self)
     def __sub__(self, other):
         try:
-            other = Basic.sympify(other)
+            other = sympify(other)
         except SympifyError:
             return NotImplemented
         if not isinstance(other, Basic):
             return NotImplemented
         return self + (-other)
     def __rsub__(self, other):
-        return Basic.sympify(other).__sub__(self)
+        return sympify(other).__sub__(self)
     def __mul__(self, other):
         # FIXME this is a dirty hack. matrix should be ordinary SymPy object
         from sympy.matrices import Matrix
         if isinstance(other, Matrix): return NotImplemented
         try:
-            other = Basic.sympify(other)
+            other = sympify(other)
         except SympifyError:
             return NotImplemented
         if not isinstance(other, Basic):
             return NotImplemented
         return C.Mul(self, other)
     def __rmul__(self, other):
-        return Basic.sympify(other).__mul__(self)
+        return sympify(other).__mul__(self)
     def __pow__(self, other):
         try:
-            other = Basic.sympify(other)
+            other = sympify(other)
         except SympifyError:
             return NotImplemented
         if not isinstance(other, Basic):
@@ -60,7 +60,7 @@ class ArithMeths(object):
         return C.Pow(self, other)
     def __rpow__(self, other):
         try:
-            other = Basic.sympify(other)
+            other = sympify(other)
         except SympifyError:
             return NotImplemented
         if not isinstance(other, Basic):
@@ -68,7 +68,7 @@ class ArithMeths(object):
         return other.__pow__(self)
     def __div__(self, other):
         try:
-            other = Basic.sympify(other)
+            other = sympify(other)
         except SympifyError:
             return NotImplemented
         if not isinstance(other, Basic):
@@ -77,7 +77,7 @@ class ArithMeths(object):
     def __truediv__(self, other):
         return self.__div__(other)
     def __rdiv__(self, other):
-        return Basic.sympify(other).__div__(self)
+        return sympify(other).__div__(self)
     def __rtruediv__(self, other):
         return self.__rdiv__(other)
 
@@ -114,26 +114,26 @@ class RelMeths(object):
     
     def __eq__(self, other):
         try:
-            other = Basic.sympify(other)
+            other = sympify(other)
         except ValueError:
             return False
         return C.Equality(self, other)
     def __ne__(self, other):
         try:
-            other = Basic.sympify(other)
+            other = sympify(other)
         except ValueError:
             return True
         return C.Unequality(self, other)
     def __lt__(self, other):
-        #return Basic.sympify(other) > self
+        #return sympify(other) > self
         return C.StrictInequality(self, other)
     def __gt__(self, other):
         return C.StrictInequality(other, self)
-        #return Basic.sympify(other) < self
+        #return sympify(other) < self
     def __le__(self, other):
         return C.Inequality(self, other)
     def __ge__(self, other):
-        return Basic.sympify(other) <= self
+        return sympify(other) <= self
 
 class NoRelMeths(object):
 

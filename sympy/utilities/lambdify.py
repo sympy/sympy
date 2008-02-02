@@ -1,6 +1,7 @@
 from __future__ import division
 
 from sympy import Basic, Symbol
+from sympy.core import sympify
 from math import sin, cos, tan, asin, acos, atan, log, pi, exp
 Pi = pi
 E = exp(1)
@@ -48,7 +49,7 @@ def lambdastr(*args):
         else: exprs = [args[0]]
 
         for e in xrange(len(exprs)):
-            exprs[e] = Basic.sympify(exprs[e])
+            exprs[e] = sympify(exprs[e])
             for a in exprs[e].atoms(type=Symbol):
                 assert a in vargs
 

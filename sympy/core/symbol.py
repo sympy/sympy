@@ -1,5 +1,5 @@
 
-from basic import Basic, Atom, S, C
+from basic import Basic, Atom, S, C, sympify
 from methods import RelMeths, ArithMeths
 from cache import cache_it, cache_it_nondummy
 
@@ -99,7 +99,7 @@ class Wild(Symbol):
         if exclude is None:
             obj.exclude = None
         else:
-            obj.exclude = [Basic.sympify(x) for x in exclude]
+            obj.exclude = [sympify(x) for x in exclude]
         return obj
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):

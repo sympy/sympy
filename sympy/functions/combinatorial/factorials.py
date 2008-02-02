@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S, C
+from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Function
 from sympy.ntheory import sieve
 from math import sqrt
@@ -101,7 +101,7 @@ class Factorial(Function):
 
     @classmethod
     def canonize(cls, n):
-        n = Basic.sympify(n)
+        n = sympify(n)
 
         if isinstance(n, C.Number):
             if n is S.Zero:
@@ -184,8 +184,8 @@ class RisingFactorial(Function):
 
     @classmethod
     def canonize(cls, x, k):
-        x = Basic.sympify(x)
-        k = Basic.sympify(k)
+        x = sympify(x)
+        k = sympify(k)
 
         if x is S.NaN:
             return S.NaN
@@ -247,8 +247,8 @@ class FallingFactorial(Function):
 
     @classmethod
     def canonize(cls, x, k):
-        x = Basic.sympify(x)
-        k = Basic.sympify(k)
+        x = sympify(x)
+        k = sympify(k)
 
         if x is S.NaN:
             return S.NaN
@@ -340,7 +340,7 @@ class Binomial(Function):
 
     @classmethod
     def canonize(cls, r, k):
-        r, k = map(Basic.sympify, (r, k))
+        r, k = map(sympify, (r, k))
 
         if isinstance(k, C.Number):
             if k is S.Zero:

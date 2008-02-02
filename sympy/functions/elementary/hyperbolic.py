@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S, C
+from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Function, Lambda
 from sympy.core.cache import cache_it, cache_it_immutable
 
@@ -26,7 +26,7 @@ class sinh(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if isinstance(arg, C.Number):
             if arg is S.NaN:
@@ -56,7 +56,7 @@ class sinh(Function):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
-            x = Basic.sympify(x)
+            x = sympify(x)
 
             if len(previous_terms) > 2:
                 p = previous_terms[-2]
@@ -122,7 +122,7 @@ class cosh(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if isinstance(arg, C.Number):
             if arg is S.NaN:
@@ -152,7 +152,7 @@ class cosh(Function):
         if n < 0 or n % 2 == 1:
             return S.Zero
         else:
-            x = Basic.sympify(x)
+            x = sympify(x)
 
             if len(previous_terms) > 2:
                 p = previous_terms[-2]
@@ -218,7 +218,7 @@ class tanh(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if isinstance(arg, C.Number):
             if arg is S.NaN:
@@ -248,7 +248,7 @@ class tanh(Function):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
-            x = Basic.sympify(x)
+            x = sympify(x)
 
             a = 2**(n+1)
 
@@ -316,7 +316,7 @@ class coth(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if isinstance(arg, C.Number):
             if arg is S.NaN:
@@ -344,11 +344,11 @@ class coth(Function):
     @cache_it_immutable
     def taylor_term(n, x, *previous_terms):
         if n == 0:
-            return 1 / Basic.sympify(x)
+            return 1 / sympify(x)
         elif n < 0 or n % 2 == 0:
             return S.Zero
         else:
-            x = Basic.sympify(x)
+            x = sympify(x)
 
             B = C.bernoulli(n+1)
             F = C.Factorial(n+1)
@@ -408,7 +408,7 @@ class asinh(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if isinstance(arg, C.Number):
             if arg is S.NaN:
@@ -442,7 +442,7 @@ class asinh(Function):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
-            x = Basic.sympify(x)
+            x = sympify(x)
 
             if len(previous_terms) > 2:
                 p = previous_terms[-2]
@@ -479,7 +479,7 @@ class acosh(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if isinstance(arg, C.Number):
             if arg is S.NaN:
@@ -517,7 +517,7 @@ class acosh(Function):
         elif n < 0 or n % 2 == 0:
             return S.Zero
         else:
-            x = Basic.sympify(x)
+            x = sympify(x)
 
             if len(previous_terms) > 2:
                 p = previous_terms[-2]
@@ -554,7 +554,7 @@ class atanh(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if isinstance(arg, C.Number):
             if arg is S.NaN:
@@ -584,7 +584,7 @@ class atanh(Function):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
-            x = Basic.sympify(x)
+            x = sympify(x)
             return x**n / n
 
     def _eval_as_leading_term(self, x):
@@ -611,7 +611,7 @@ class acoth(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = Basic.sympify(arg)
+        arg = sympify(arg)
 
         if isinstance(arg, C.Number):
             if arg is S.NaN:
@@ -647,7 +647,7 @@ class acoth(Function):
         elif n < 0 or n % 2 == 0:
             return S.Zero
         else:
-            x = Basic.sympify(x)
+            x = sympify(x)
             return x**n / n
 
     def _eval_as_leading_term(self, x):

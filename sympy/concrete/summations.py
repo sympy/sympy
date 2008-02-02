@@ -8,7 +8,7 @@ class Sum(Basic, NoRelMeths, ArithMeths):
     precedence = Basic.Apply_precedence
 
     def __new__(cls, f, *symbols, **assumptions):
-        f = Basic.sympify(f)
+        f = sympify(f)
 
         if isinstance(f, C.Number):
             if f is S.NaN:

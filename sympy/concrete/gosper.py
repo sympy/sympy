@@ -6,6 +6,7 @@ from sympy.core.basic import Basic, S
 from sympy.core.symbol import Symbol
 from sympy.core.add import Add
 from sympy.core.mul import Mul
+from sympy.core import sympify
 
 from sympy.polynomials import gcd, quo, roots, resultant
 from sympy.simplify import ratsimp, combsimp
@@ -42,7 +43,7 @@ def normal(f, g, n):
        (1/4, 3/2 + n, 1/4 + n)
 
     """
-    f, g = map(Basic.sympify, (f, g))
+    f, g = map(sympify, (f, g))
 
     if f.is_polynomial:
         p = f.as_polynomial(n)

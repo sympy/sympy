@@ -1,5 +1,5 @@
 
-from sympy.core import Function, S, C, Basic, pi
+from sympy.core import Function, S, C, Basic, sympify, pi
 
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
@@ -11,7 +11,7 @@ class zeta(Function):
 
     @classmethod
     def canonize(cls, z, a=S.One):
-        z, a = map(Basic.sympify, (z, a))
+        z, a = map(sympify, (z, a))
 
         if isinstance(a, C.Number):
             if a is S.NaN:
