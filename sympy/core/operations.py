@@ -2,6 +2,11 @@
 from basic import Basic, S, C, sympify
 from cache import cache_it, cache_it_immutable
 
+# from add import Add   /cyclic/
+# from mul import Mul   /cyclic/
+# from function import Lambda, WildFunction /cyclic/
+from symbol import Symbol, Wild
+
 class AssocOp(Basic):
     """ Associative operations, can separate noncommutative and
     commutative parts.
@@ -28,16 +33,16 @@ class AssocOp(Basic):
         if order_symbols is not None:
             obj = C.Order(obj, *order_symbols)
         if lambda_args is not None:
-            obj = C.Lambda(obj, *lambda_args)
+            obj = Lambda(obj, *lambda_args)
         return obj
 
     @classmethod
     def identity(cls):
-        if cls is C.Mul: return S.One
-        if cls is C.Add: return S.Zero
+        if cls is Mul: return S.One
+        if cls is Add: return S.Zero
         if cls is C.Composition:
-            s = C.Symbol('x',dummy=True)
-            return C.Lambda(s,s)
+            s = Symbol('x',dummy=True)
+            return Lambda(s,s)
         raise NotImplementedError,"identity not defined for class %r" % (cls.__name__)
 
     @classmethod
@@ -72,7 +77,7 @@ class AssocOp(Basic):
         wild_part = []
         exact_part = []
         for p in pattern.args:
-            if p.atoms(type=(C.Wild, C.WildFunction)):
+            if p.atoms(type=(Wild, WildFunction)):
                 wild_part.append(p)
             else:
                 exact_part.append(p)

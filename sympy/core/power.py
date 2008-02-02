@@ -3,6 +3,10 @@ from basic import Basic, S, C, sympify
 from methods import ArithMeths, RelMeths, NoRelMeths
 from cache import cache_it, cache_it_immutable
 
+from symbol import Symbol, Wild, Temporary
+# from numbers import Number, Rational, Integer     /cyclic/
+# from add import Add   /cyclic/
+# from mul import Mul   /cyclic/
 
 def integer_nthroot(y, n):
     """
@@ -71,23 +75,23 @@ class Pow(Basic, ArithMeths, RelMeths):
         return self._args[1]
 
     def _eval_power(self, other):
-        if isinstance(other, C.Number):
+        if isinstance(other, Number):
             if self.base.is_real:
-                if isinstance(self.exp, C.Number):
+                if isinstance(self.exp, Number):
                     # (a ** 2) ** 3 -> a ** (2 * 3)
                     return Pow(self.base, self.exp * other)                
-            if isinstance(other, C.Rational):
-                if self.exp.is_even and C.Integer(other.q).is_even:
+            if isinstance(other, Rational):
+                if self.exp.is_even and Integer(other.q).is_even:
                     return abs( Pow(self.base, self.exp * other))
                 return Pow(self.base, self.exp * other)
-            if isinstance(other, C.Integer):
+            if isinstance(other, Integer):
                 # (a ** b) ** 3 -> a ** (3 * b)
                 return Pow(self.base, self.exp * other)
-        elif isinstance(other, (C.Add, C.Mul)):
+        elif isinstance(other, (Add, Mul)):
             # (a**b)**c = a**(b*c)
             return Pow(self.base, self.exp * other)
 
-        if other.atoms(C.Wild):
+        if other.atoms(Wild):
             return Pow(self.base, self.exp * other)
         return
 
@@ -212,7 +216,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         return { self.base : self.exp }
 
     def as_base_exp(self):
-        if isinstance(self.base, C.Rational) and self.base.p==1:
+        if isinstance(self.base, Rational) and self.base.p==1:
             return 1/self.base, -self.exp
         return self.base, self.exp
 
@@ -221,7 +225,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         return c(self.base)**self.exp
 
     def _eval_expand_complex(self, *args):
-        if isinstance(self.exp, C.Integer):
+        if isinstance(self.exp, Integer):
             exp = self.exp
             re, im = self.base.as_real_imag()
             if exp >= 0:
@@ -231,7 +235,7 @@ class Pow(Basic, ArithMeths, RelMeths):
                 base = re/mag - S.ImaginaryUnit*(im/mag)
                 exp = -exp
             return (base**exp)._eval_expand_basic(*args)
-        elif isinstance(self.exp, C.Rational):
+        elif isinstance(self.exp, Rational):
             # NOTE: This is not totally correct since for x**(p/q) with
             #       x being imaginary there are actually q roots, but
             #       only a single one is returned from here.
@@ -262,10 +266,10 @@ class Pow(Basic, ArithMeths, RelMeths):
             exponent = result.exp
         else:
             return result
-        if isinstance(exponent, C.Integer):
-            if isinstance(base, C.Mul):
-                return C.Mul(*[t**exponent for t in base])
-            if exponent.is_positive and isinstance(base, C.Add):
+        if isinstance(exponent, Integer):
+            if isinstance(base, Mul):
+                return Mul(*[t**exponent for t in base])
+            if exponent.is_positive and isinstance(base, Add):
                 m = int(exponent)
                 if base.is_commutative:
                     p = []
@@ -277,9 +281,9 @@ class Pow(Basic, ArithMeths, RelMeths):
                             p.append(o)
                     if order_terms:
                         # (f(x) + O(x^n))^m -> f(x)^m + m*f(x)^{m-1} *O(x^n)
-                        f = C.Add(*p)
+                        f = Add(*p)
                         fm1 = (f**(m-1)).expand()
-                        return (f*fm1).expand() + m*fm1*C.Add(*order_terms)
+                        return (f*fm1).expand() + m*fm1*Add(*order_terms)
                     if base.is_number:
                         # C**m, where C is a complex number and "m" a positive
                         # integer (for example (2+3*I)**1000), which can be
@@ -287,16 +291,16 @@ class Pow(Basic, ArithMeths, RelMeths):
                         assert m > 0
                         n = 1
                         a, b = base.as_real_imag()
-                        if isinstance(a, C.Rational) and  \
-                                isinstance(b, C.Rational):
-                            if not isinstance(a, C.Integer):
-                                if not isinstance(b, C.Integer):
+                        if isinstance(a, Rational) and  \
+                                isinstance(b, Rational):
+                            if not isinstance(a, Integer):
+                                if not isinstance(b, Integer):
                                     n = (a.q * b.q) ** m
                                     a, b = a.p*b.q, a.q*b.p
                                 else:
                                     n = a.q ** m
                                     a, b = a.p, a.q*b
-                            elif not isinstance(b, C.Integer):
+                            elif not isinstance(b, Integer):
                                 n = b.q ** m
                                 a, b = a*b.q, b.p
                             a = int(a); b = int(b);
@@ -311,7 +315,7 @@ class Pow(Basic, ArithMeths, RelMeths):
                             if n == 1:
                                 return c+I*d
                             else:
-                                return C.Integer(c)/n + I*d/n
+                                return Integer(c)/n + I*d/n
                 ## Consider polynomial
                 ##   P(x) = sum_{i=0}^n p_i x^k
                 ## and its m-th exponent
@@ -326,28 +330,26 @@ class Pow(Basic, ArithMeths, RelMeths):
                     cache = {0: p[0] ** m}
                     p0 = [t/p[0] for t in p]
                     l = [cache[0]]
-                    Mul = C.Mul
-                    Rational = C.Rational
                     for k in xrange(1, m * n + 1):
                         a = []
                         for i in xrange(1,n+1):
                             if i<=k:
                                 a.append(Mul(Rational((m+1)*i-k,k), p0[i], cache[k-i]).expand())
-                        a = C.Add(*a)
+                        a = Add(*a)
                         cache[k] = a
                         l.append(a)
-                    return C.Add(*l)
+                    return Add(*l)
                 else:
                     if m==2:
                         p = base.args[:]
-                        return C.Add(*[t1*t2 for t1 in p for t2 in p])
-                    return C.Mul(base, Pow(base, m-1).expand()).expand()
-        elif isinstance(exponent, C.Add) and isinstance(base, C.Number):
+                        return Add(*[t1*t2 for t1 in p for t2 in p])
+                    return Mul(base, Pow(base, m-1).expand()).expand()
+        elif isinstance(exponent, Add) and isinstance(base, Number):
             # n**(a+b) --> n**a * n**b with n and a Numbers
             exp = 0
             coeff = 1
             for term in exponent.args:
-                if isinstance(term, C.Number):
+                if isinstance(term, Number):
                     coeff *= base**term
                 else:
                     exp += term
@@ -367,7 +369,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             return d[self]
         base = self.base._calc_splitter(d)
         exp = self.exp._calc_splitter(d)
-        if isinstance(exp, C.Integer):
+        if isinstance(exp, Integer):
             if abs(exp.p)>2:
                 n = exp.p//2
                 r = exp.p - n
@@ -385,23 +387,23 @@ class Pow(Basic, ArithMeths, RelMeths):
             r = base ** exp
         if d.has_key(r):
             return d[r]
-        s = d[r] = C.Temporary()
+        s = d[r] = Temporary()
         return s
 
     @cache_it_immutable
     def count_ops(self, symbolic=True):
         if symbolic:
-            return C.Add(*[t.count_ops(symbolic) for t in self[:]]) + C.Symbol('POW')
-        return C.Add(*[t.count_ops(symbolic) for t in self.args[:]]) + 1
+            return Add(*[t.count_ops(symbolic) for t in self[:]]) + Symbol('POW')
+        return Add(*[t.count_ops(symbolic) for t in self.args[:]]) + 1
 
     def _eval_integral(self, s):
         if not self.exp.has(s):
             if self.base==s:
                 n = self.exp+1
                 return self.base ** n/n
-            y = C.Symbol('y',dummy=True)
+            y = Symbol('y',dummy=True)
             x,ix = self.base.solve4linearsymbol(y,symbols=set([s]))
-            if isinstance(x, C.Symbol):
+            if isinstance(x, Symbol):
                 dx = 1/self.base.diff(x)
                 if not dx.has(s):
                     return (y**self.exp*dx).integral(y).subs(y, self.base)
@@ -412,10 +414,10 @@ class Pow(Basic, ArithMeths, RelMeths):
                 n = self.exp+1
                 return (b**n-a**n)/n
             x,ix = self.base.solve4linearsymbol(s)
-            if isinstance(x, C.Symbol):
+            if isinstance(x, Symbol):
                 dx = ix.diff(x)
-                if isinstance(dx, C.Number):
-                    y = C.Symbol('y',dummy=True)
+                if isinstance(dx, Number):
+                    y = Symbol('y',dummy=True)
                     return (y**self.exp*dx).integral(y==[self.base.subs(s,a), self.base.subs(s,b)])
 
     def _eval_is_polynomial(self, syms):
@@ -486,7 +488,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             lt = b.as_leading_term(x)
             o = order * lt**(1-e)
             bs = b.oseries(o)
-            if isinstance(bs, C.Add):
+            if isinstance(bs, Add):
                 # bs -> lt + rest -> lt * (1 + (bs/lt - 1))
                 return lt**e * ((bs/lt).expand()**e).oseries(order * lt**(-e))
             return bs**e
@@ -509,3 +511,17 @@ class Pow(Basic, ArithMeths, RelMeths):
 
     def _sage_(self):
         return self[0]._sage_() ** self[1]._sage_()
+
+
+# /cyclic/
+import methods as _
+_.Pow =     Pow
+del _
+
+import mul as _
+_.Pow =     Pow
+del _
+
+import numbers as _
+_.Pow =     Pow
+del _

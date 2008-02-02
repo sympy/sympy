@@ -2,6 +2,8 @@
 from basic import Basic, C, sympify
 from methods import NoRelMeths
 
+from numbers import Number
+
 class Relational(Basic, NoRelMeths):
 
     @staticmethod
@@ -67,7 +69,7 @@ class StrictInequality(Relational):
 
     def __nonzero__(self):
         if self.lhs.is_comparable and self.rhs.is_comparable:
-            if isinstance(self.lhs, C.Number) and isinstance(self.rhs, C.Number):
+            if isinstance(self.lhs, Number) and isinstance(self.rhs, Number):
                 return self.lhs < self.rhs
             return self.lhs.evalf()<self.rhs.evalf()
         return self.lhs.compare(self.rhs)==-1
@@ -78,7 +80,16 @@ class Inequality(Relational):
 
     def __nonzero__(self):
         if self.lhs.is_comparable and self.rhs.is_comparable:
-            if isinstance(self.lhs, C.Number) and isinstance(self.rhs, C.Number):
+            if isinstance(self.lhs, Number) and isinstance(self.rhs, Number):
                 return self.lhs <= self.rhs
             return self.lhs.evalf()<=self.rhs.evalf()
         return self.lhs.compare(self.rhs)<=0
+
+
+# /cyclic/
+import methods
+methods.Equality    = Equality
+methods.Unequality  = Unequality
+methods.Inequality  = Inequality
+methods.StrictInequality = StrictInequality
+del methods

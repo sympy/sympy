@@ -3,6 +3,8 @@ from basic import Basic, Atom, S, C, sympify
 from methods import RelMeths, ArithMeths
 from cache import cache_it, cache_it_nondummy
 
+# from function import Function, WildFunction   /cyclic/
+
 class Symbol(Atom, RelMeths, ArithMeths):
     """
     Assumptions::
@@ -67,7 +69,7 @@ class Symbol(Atom, RelMeths, ArithMeths):
 
     def __call__(self, *args):
         assumptions = self._assumptions
-        return C.Function(self.name, nargs=len(args))(*args, **assumptions)
+        return Function(self.name, nargs=len(args))(*args, **assumptions)
 
     def _eval_integral(self, s):
         if self==s:
@@ -118,7 +120,7 @@ class Wild(Symbol):
         return repl_dict
 
     def __call__(self, *args, **assumptions):
-        return C.WildFunction(self.name, nargs=len(args))(*args, **assumptions)
+        return WildFunction(self.name, nargs=len(args))(*args, **assumptions)
 
     def tostr(self, level=0):
         return self.name + '_'
@@ -216,3 +218,10 @@ def var(s):
         # we should explicitly break cyclic dependencies as stated in inspect
         # doc
         del frame
+
+# /cyclic/
+import basic as _
+_.Symbol    = Symbol
+_.Wild      = Wild
+_.Temporary = Temporary
+del _

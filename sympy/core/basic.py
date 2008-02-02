@@ -6,6 +6,13 @@ import decimal
 from assumptions import AssumeMeths
 from cache import cache_it, cache_it_immutable, Memoizer, MemoizerArg
 
+# from numbers  import Number, Integer, Real /cyclic/
+# from interval import Interval /cyclic/
+# from symbol   import Symbol, Wild, Temporary /cyclic/
+# from add      import Add  /cyclic/
+# from mul      import Mul  /cyclic/
+# from function import Derivative   /cyclic/
+
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc):
         self.expr = expr
@@ -299,9 +306,9 @@ class Basic(AssumeMeths):
         elif isinstance(a, bool):
             raise NotImplementedError("bool support")
         elif isinstance(a, (int, long)):
-            return C.Integer(a)
+            return Integer(a)
         elif isinstance(a, (float, decimal.Decimal)):
-            return C.Real(a)
+            return Real(a)
         elif isinstance(a, complex):
             real, imag = map(sympify, (a.real, a.imag))
             ireal, iimag = int(real), int(imag)
@@ -311,7 +318,7 @@ class Basic(AssumeMeths):
             return real + S.ImaginaryUnit * imag
         elif (a.__class__ in [list,tuple]) and len(a) == 2:
             # isinstance causes problems in the issue #432, so we use .__class__
-            return C.Interval(*a)
+            return Interval(*a)
         elif isinstance(a, (list,tuple,set)) and sympify_lists:
             return type(a)([sympify(x, True) for x in a])
         elif hasattr(a, "_sympy_"):
@@ -478,7 +485,7 @@ class Basic(AssumeMeths):
     def is_number(self):
         """Returns True if self is a number (like 1, or 1+log(2)), and False
         otherwise (e.g. 1+x).""" 
-        return len(self.atoms(C.Symbol)) == 0
+        return len(self.atoms(Symbol)) == 0
 
     @property
     def args(self):
@@ -525,7 +532,7 @@ class Basic(AssumeMeths):
         if syms:
             syms = map(sympify, syms)
         else:
-            syms = list(self.atoms(type=C.Symbol))
+            syms = list(self.atoms(type=Symbol))
 
         if not syms: # constant polynomial
             return True
@@ -590,7 +597,7 @@ class Basic(AssumeMeths):
         elif not patterns:
             raise TypeError("has() requires at least 1 argument (got none)")
         p = sympify(patterns[0])
-        if isinstance(p, C.Symbol) and not isinstance(p, C.Wild): # speeds up
+        if isinstance(p, Symbol) and not isinstance(p, Wild): # speeds up
             return p in self.atoms(p.__class__)
         if isinstance(p, BasicType):
             #XXX hack, this is very fragile:
@@ -799,10 +806,10 @@ class Basic(AssumeMeths):
         with respect to all symbols, then return
         trivial solution (eqn, rhs).
         """
-        if isinstance(eqn, C.Symbol):
+        if isinstance(eqn, Symbol):
             return (eqn, rhs)
         if symbols is None:
-            symbols = eqn.atoms(type=C.Symbol)
+            symbols = eqn.atoms(type=Symbol)
         if symbols:
             # find  symbol
             for s in symbols:
@@ -819,7 +826,7 @@ class Basic(AssumeMeths):
         r = self.__class__(*[t._calc_splitter(d) for t in self])
         if d.has_key(r):
             return d[r]
-        s = d[r] = C.Temporary()
+        s = d[r] = Temporary()
         return s
 
     def splitter(self):
@@ -839,7 +846,7 @@ class Basic(AssumeMeths):
         >>> (sin(x)*x+sin(x)**2).count_ops()
         ADD + MUL + POW + 2 * SIN
         """
-        return C.Integer(len(self[:])-1) + sum([t.count_ops(symbolic=symbolic) for t in self])
+        return Integer(len(self[:])-1) + sum([t.count_ops(symbolic=symbolic) for t in self])
 
     def doit(self, **hints):
         """Evaluate objects that are not evaluated by default like limits,
@@ -1007,15 +1014,15 @@ class Basic(AssumeMeths):
            >>> (2*I).as_coefficient(pi*I)
 
         """
-        if isinstance(expr, C.Add):
+        if isinstance(expr, Add):
             return None
         else:
-            w = C.Wild('w')
+            w = Wild('w')
 
             coeff = self.match(w * expr)
 
             if coeff is not None:
-                if isinstance(expr, C.Mul):
+                if isinstance(expr, Mul):
                     expr = expr.args
                 else:
                     expr = [expr]
@@ -1042,7 +1049,7 @@ class Basic(AssumeMeths):
         """
         indeps, depend = [], []
 
-        if isinstance(self, (C.Add, C.Mul)):
+        if isinstance(self, (Add, Mul)):
             terms = self.args[:]
         else:
             terms = [ self ]
@@ -1053,7 +1060,7 @@ class Basic(AssumeMeths):
             else:
                 indeps.append(term)
 
-        return C.Mul(*indeps), C.Mul(*depend)
+        return Mul(*indeps), Mul(*depend)
 
     def as_real_imag(self):
         """Performs complex expansion on 'self' and returns a tuple
@@ -1080,7 +1087,7 @@ class Basic(AssumeMeths):
         """
         expr = self.expand(complex=True)
 
-        if not isinstance(expr, C.Add):
+        if not isinstance(expr, Add):
             expr = [expr]
 
         re_part, im_part = [], []
@@ -1095,7 +1102,7 @@ class Basic(AssumeMeths):
             else:
                 im_part.append(coeff)
 
-        return (C.Add(*re_part), C.Add(*im_part))
+        return (Add(*re_part), Add(*im_part))
 
     def as_powers_dict(self):
         return { self : S.One }
@@ -1120,7 +1127,7 @@ class Basic(AssumeMeths):
                 new_terms.append(x)
             else:
                 indeps.append(x)
-        return C.Mul(*indeps), C.Mul(*new_terms)
+        return Mul(*indeps), Mul(*new_terms)
 
     def as_coeff_factors(self, x=None):
         # a -> c + f
@@ -1143,7 +1150,7 @@ class Basic(AssumeMeths):
         """
         l1 = []
         l2 = []
-        if isinstance(self, C.Add):
+        if isinstance(self, Add):
             for f in self:
                 if isinstance(f, C.Order):
                     l2.append(f)
@@ -1153,7 +1160,7 @@ class Basic(AssumeMeths):
             l2.append(self)
         else:
             l1.append(self)
-        return C.Add(*l1), C.Add(*l2)
+        return Add(*l1), Add(*l2)
 
     def normal(self):
         n, d = self.as_numer_denom()
@@ -1169,17 +1176,17 @@ class Basic(AssumeMeths):
         new_symbols = []
         for s in symbols:
             s = sympify(s)
-            if isinstance(s, C.Integer) and new_symbols:
+            if isinstance(s, Integer) and new_symbols:
                 last_s = new_symbols.pop()
                 i = int(s)
                 new_symbols += [last_s] * i
-            elif isinstance(s, C.Symbol):
+            elif isinstance(s, Symbol):
                 new_symbols.append(s)
             else:
                 raise TypeError(".diff() argument must be Symbol|Integer instance (got %s)" % (s.__class__.__name__))
         if not assumptions.has_key("evaluate"):
             assumptions["evaluate"] = True
-        ret = C.Derivative(self, *new_symbols, **assumptions)
+        ret = Derivative(self, *new_symbols, **assumptions)
         return ret
 
     def fdiff(self, *indices):
@@ -1190,11 +1197,11 @@ class Basic(AssumeMeths):
         new_symbols = []
         for s in symbols:
             s = sympify(s)
-            if isinstance(s, C.Integer) and new_symbols:
+            if isinstance(s, Integer) and new_symbols:
                 last_s = new_symbols[-1]
                 i = int(s)
                 new_symbols += [last_s] * (i-1)
-            elif isinstance(s, (C.Symbol, C.Equality)):
+            elif isinstance(s, (Symbol, Equality)):
                 new_symbols.append(s)
             else:
                 raise TypeError(".integral() argument must be Symbol|Integer|Equality instance (got %s)" % (s.__class__.__name__))
@@ -1202,7 +1209,7 @@ class Basic(AssumeMeths):
 
     #XXX fix the removeme
     def __call__(self, *args, **removeme):
-        return C.Function(self[0])(*args)
+        return Function(self[0])(*args)
 
     def _eval_evalf(self):
         return
@@ -1213,7 +1220,7 @@ class Basic(AssumeMeths):
     def __float__(self):
         result = self.evalf(precision=16)
 
-        if isinstance(result, C.Number):
+        if isinstance(result, Number):
             return float(result)
         else:
             raise ValueError("Symbolic value, can't compute")
@@ -1342,7 +1349,7 @@ class Basic(AssumeMeths):
             g = taylor_term(i, arg, g)
             g = g.oseries(order)
             l.append(g)
-        return C.Add(*l)
+        return Add(*l)
 
     def limit(self, x, xlim, direction='<'):
         """ Compute limit x->xlim.
@@ -1365,7 +1372,7 @@ class Basic(AssumeMeths):
         elif not symbols:
             return self
         x = sympify(symbols[0])
-        assert isinstance(x, C.Symbol),`x`
+        assert isinstance(x, Symbol),`x`
         if not self.has(x):
             return self
         expr = self.expand(trig=True)
@@ -1378,8 +1385,8 @@ class Basic(AssumeMeths):
         """ c*x**e -> c,e where x can be any symbolic expression.
         """
         x = sympify(x)
-        wc = C.Wild()
-        we = C.Wild()
+        wc = Wild()
+        we = Wild()
         c, terms = self.as_coeff_terms()
         p  = wc*x**we
         d = self.match(p)

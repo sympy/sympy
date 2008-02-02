@@ -255,3 +255,9 @@ class conjugate(Function):
 
     def _eval_conjugate(self):
         return self[0]
+
+
+# /cyclic/
+from sympy.core import methods
+methods.abs_ = abs
+del methods

@@ -35,6 +35,10 @@ from methods import ArithMeths, NoRelMeths, RelMeths
 from operations import AssocOp
 from cache import cache_it
 
+from numbers import Rational
+from symbol import Symbol
+from add    import Add
+
 class FunctionClass(BasicMeta):
     """
     Base class for function classes. FunctionClass is a subclass of type.
@@ -210,7 +214,7 @@ class Function(Basic, ArithMeths, RelMeths):
             if isinstance(self.func, FunctionClass):
                 df = self.fdiff(i)
                 l.append(df * da)
-        return C.Add(*l)
+        return Add(*l)
 
     def _eval_is_commutative(self):
         r = True
@@ -241,7 +245,7 @@ class Function(Basic, ArithMeths, RelMeths):
 
     def count_ops(self, symbolic=True):
         #      f()             args
-        return 1   + C.Add(*[t.count_ops(symbolic) for t in self.args])
+        return 1   + Add(*[t.count_ops(symbolic) for t in self.args])
 
     def _eval_oseries(self, order):
         assert self.func.nargs==1,`self.func`
@@ -263,7 +267,7 @@ class Function(Basic, ArithMeths, RelMeths):
                 while not order.contains(term) or term == 0:
                     series += term
                     i += 1
-                    fact *= C.Rational(i)
+                    fact *= Rational(i)
                     e = e.diff(x)
                     term = e.subs(x, S.Zero)*(x**i)/fact
                 return series
@@ -326,7 +330,7 @@ class Function(Basic, ArithMeths, RelMeths):
 
         #if cls.nargs == 1:
         # common case for functions with 1 argument
-        #if isinstance(arg, C.Number):
+        #if isinstance(arg, Number):
         if arg.is_number:
             func_evalf = getattr(arg, cls.__name__)
             return func_evalf()
@@ -360,8 +364,8 @@ class WildFunction(Function, Atom):
 
     def __new__(cls, name=None, **assumptions):
         if name is None:
-            name = 'Wf%s' % (C.Symbol.dummycount + 1) # XXX refactor dummy counting
-            C.Symbol.dummycount += 1
+            name = 'Wf%s' % (Symbol.dummycount + 1) # XXX refactor dummy counting
+            Symbol.dummycount += 1
         obj = Function.__new__(cls, name, **assumptions)
         obj.name = name
         return obj
@@ -409,7 +413,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
             return obj
 
         for s in symbols:
-            assert isinstance(s, C.Symbol),`s`
+            assert isinstance(s, Symbol),`s`
             if not expr.has(s):
                 return S.Zero
 
@@ -505,7 +509,7 @@ class Lambda(Function):
     def canonize(cls, x, expr):
         obj = Basic.__new__(cls, x, expr)
         #use dummy variables internally, just to be sure
-        tmp = C.Symbol("x", dummy=True)
+        tmp = Symbol("x", dummy=True)
         obj._args = (tmp, expr.subs(x, tmp))
         return obj
 
@@ -548,3 +552,23 @@ def diff(f, x, times = 1, evaluate=True):
         return f
     else:
         return Derivative(f, x, evaluate=evaluate)
+
+
+# /cyclic/
+import basic as _
+_.Derivative    = Derivative
+del _
+
+import mul as _
+_.WildFunction  = WildFunction
+del _
+
+import operations as _
+_.Lambda        = Lambda
+_.WildFunction  = WildFunction
+del _
+
+import symbol as _
+_.Function      = Function
+_.WildFunction  = WildFunction
+del _
