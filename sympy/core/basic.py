@@ -152,27 +152,30 @@ class Basic(AssumeMeths):
     ===========
 
     1)
-    When you want to access parameters of some instance, always use [].
+    When you want to access parameters of some instance, always use .args:
     Example:
 
-    In [2]: cot(x).args
-    Out[2]: (x,)
+    >>> from sympy import symbols, cot
+    >>> x, y = symbols('xy')
 
-    In [3]: cot(x).args[0]
-    Out[3]: x
+    >>> cot(x).args
+    (x,)
 
-    In [4]: (x*y).args
-    Out[4]: (x, y)
+    >>> cot(x).args[0]
+    x
 
-    In [5]: (x*y).args[1]
-    Out[5]: y
+    >>> (x*y).args
+    (x, y)
+
+    >>> (x*y).args[1]
+    y
 
 
     2) Never use internal methods or variables (the ones prefixed with "_").
     Example:
 
-    In [6]: cot(x)._args    #don't use this, use cot(x).args instead
-    Out[6]: (x,)
+    >>> cot(x)._args    #don't use this, use cot(x).args instead
+    (x,)
 
 
     """
@@ -482,17 +485,21 @@ class Basic(AssumeMeths):
 
         Example
         -------
-        In [2]: cot(x).args[:]
-        Out[2]: (x,)
 
-        In [3]: cot(x).args[0]
-        Out[3]: x
+        >>> from sympy import symbols, cot
+        >>> x, y = symbols('xy')
 
-        In [4]: (x*y).args[:]
-        Out[4]: (x, y)
+        >>> cot(x).args
+        (x,)
 
-        In [5]: (x*y).args[1]
-        Out[5]: y
+        >>> cot(x).args[0]
+        x
+
+        >>> (x*y).args
+        (x, y)
+
+        >>> (x*y).args[1]
+        y
 
         Note for developers: Never use self._args, always use self.args.
         Only when you are creating your own new function, use _args
