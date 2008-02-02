@@ -45,9 +45,6 @@ class Symbol(Atom, RelMeths, ArithMeths):
         obj.name = name
         return obj
 
-    def __len__(self):
-        return len(self.name)
-
     def _hashable_content(self):
         if self.is_dummy:
             return (self.name, self.dummy_index)

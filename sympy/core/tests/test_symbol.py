@@ -34,10 +34,9 @@ def test_lt_gt():
 
     assert (x**2+4*x+1 > 0) == StrictInequality(0, x**2+4*x+1)
 
-def test_len():
-    #this is needed, so that Symbol can be used in numpy arrays, like:
-    #array(Symbol('x'))
+def test_no_len():
+    # there should be no len for numbers
     x = Symbol('x')
     xxl = Symbol('xxl')
-    assert len(x) == 1
-    assert len(xxl) == 3
+    py.test.raises(TypeError, "len(x)")
+    py.test.raises(TypeError, "len(xxl)")
