@@ -280,6 +280,38 @@ class Pow(Basic, ArithMeths, RelMeths):
                         f = C.Add(*p)
                         fm1 = (f**(m-1)).expand()
                         return (f*fm1).expand() + m*fm1*C.Add(*order_terms)
+                    if base.is_number:
+                        # C**m, where C is a complex number and "m" a positive
+                        # integer (for example (2+3*I)**1000), which can be
+                        # handled very efficiently
+                        assert m > 0
+                        n = 1
+                        a, b = base.as_real_imag()
+                        if isinstance(a, C.Rational) and  \
+                                isinstance(b, C.Rational):
+                            if not isinstance(a, C.Integer):
+                                if not isinstance(b, C.Integer):
+                                    n = (a.q * b.q) ** m
+                                    a, b = a.p*b.q, a.q*b.p
+                                else:
+                                    n = a.q ** m
+                                    a, b = a.p, a.q*b
+                            elif not isinstance(b, C.Integer):
+                                n = b.q ** m
+                                a, b = a*b.q, b.p
+                            a = int(a); b = int(b);
+                            c, d = 1, 0
+                            while m:
+                                if m & 1:
+                                    c, d = a*c-b*d, b*c+a*d
+                                    m -= 1
+                                a, b = a*a-b*b, 2*a*b
+                                m //= 2
+                            I = S.ImaginaryUnit
+                            if n == 1:
+                                return c+I*d
+                            else:
+                                return C.Integer(c)/n + I*d/n
                 ## Consider polynomial
                 ##   P(x) = sum_{i=0}^n p_i x^k
                 ## and its m-th exponent
