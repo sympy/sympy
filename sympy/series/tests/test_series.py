@@ -117,9 +117,7 @@ def test_subsbug1():
     e = e.diff(x)
     py.test.raises(g.core.power.pole_error, e.subs, x, Rational(0))
 
-@XFAIL
 def test_seriesbug2():
-    #sometimes it runs, sometimes it doesn't
     w = Symbol("w")
     #simple case (1):
     e = ((2*w)/w)**(1+w)
@@ -254,8 +252,6 @@ def test_issue159():
     a=x/(exp(x)-1)
     assert a.series(x,0,5) == 1 - x/2 - x**4/720 + x**2/12 + O(x**5)
 
-#sometimes fails, sometimes not...
-@XFAIL
 def test_issue105():
     x = Symbol("x")
     f = sin(x**3)**Rational(1,3)
