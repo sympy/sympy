@@ -1,6 +1,6 @@
 import py
 from sympy import Symbol, sin, cos, Rational, sqrt, exp, sinh, cosh, tanh, \
-        coth, asinh, acosh, atanh, acoth, pi, I
+        coth, asinh, acosh, atanh, acoth, pi, I, log
 from sympy.utilities.pytest import XFAIL
 from sympy import O
 #from sympy.core.power import pole_error
