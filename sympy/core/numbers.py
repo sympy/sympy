@@ -392,6 +392,19 @@ class Rational(Number):
         1193/990
         >>> float(Rational(1193,990))
         1.2050505050505051
+
+
+    Low-level
+    ---------
+
+    Access nominator and denominator as .p and .q:
+        >>> r = Rational(3,4)
+        >>> r
+        3/4
+        >>> r.p
+        3
+        >>> r.q
+        4
     """
     is_real = True
     is_integer = False
