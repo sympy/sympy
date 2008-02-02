@@ -1,5 +1,5 @@
-
-from sympy import *
+from sympy import Symbol, floor, nan, oo, E, symbols, ceiling, pi, Rational, \
+        Real, I, sin
 
 def test_floor():
 

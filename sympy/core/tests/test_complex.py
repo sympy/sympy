@@ -1,4 +1,5 @@
-from sympy import *
+from sympy import Symbol, sqrt, I, Integer, Rational, cos, atan, sin, im, re, \
+        exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth
 
 
 def test_complex():

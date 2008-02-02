@@ -1,5 +1,4 @@
-
-from sympy import *
+from sympy import Symbol, zeta, nan, Rational, pi, dirichlet_eta, log, zoo
 
 x = Symbol('x')
 

@@ -1,4 +1,5 @@
-from sympy import *
+from sympy import Symbol, Matrix, Integral, log, Rational, Derivative, exp, \
+        sqrt, pi, Function, sin, pprint_use_unicode, oo
 from sympy.printing.pretty import pretty
 from sympy.utilities.pytest import XFAIL
 

@@ -1,8 +1,9 @@
 import py
-import sympy as g
-from sympy import *
+from sympy import Symbol, sin, cos, Rational, sqrt, exp, sinh, cosh, tanh, \
+        coth, asinh, acosh, atanh, acoth, pi, I
 from sympy.utilities.pytest import XFAIL
 from sympy import O
+#from sympy.core.power import pole_error
 
 def testseries1():
     x = Symbol("x")

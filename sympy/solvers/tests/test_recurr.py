@@ -1,5 +1,5 @@
-
-from sympy import *
+from sympy import symbols, rsolve_hyper, rsolve_poly, rsolve_ratio, S, sqrt, \
+        rf, factorial
 
 n, k = symbols('nk', integer=True)
 C0, C1, C2 = symbols('C0', 'C1', 'C2')

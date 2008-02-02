@@ -1,6 +1,5 @@
-
-from sympy import *
-from sympy import symbols
+from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
+        sin, exp, hessian, sqrt, zero, randMatrix
 from sympy.matrices.matrices import ShapeError
 from sympy.utilities.test import REPR0
 import py

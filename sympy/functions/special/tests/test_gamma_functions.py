@@ -1,5 +1,5 @@
-
-from sympy import *
+from sympy import Symbol, gamma, oo, nan, zoo, factorial, sqrt, Rational, \
+        polygamma, EulerGamma, pi, uppergamma
 
 x = Symbol('x')
 n = Symbol('n', integer=True)

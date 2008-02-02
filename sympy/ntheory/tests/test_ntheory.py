@@ -1,6 +1,9 @@
 import py
-from sympy import *
-from sympy.ntheory import *
+from sympy import Sieve
+from sympy.ntheory import isprime, n_order, is_primitive_root, \
+    is_quad_residue, legendre_symbol, npartitions, totient, trial, \
+    factorint, primefactors, divisors, randprime, nextprime, prevprime, \
+    primerange, primepi, prime
 
 def test_isprime():
     s = Sieve()

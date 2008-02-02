@@ -1,5 +1,5 @@
-
-from sympy import *
+from sympy import solve, Function, Symbol, Derivative, exp, sin, cos, log, \
+        Rational
 from sympy.utilities.pytest import XFAIL
 
 from sympy.matrices import Matrix

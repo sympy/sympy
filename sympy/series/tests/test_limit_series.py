@@ -2,7 +2,7 @@
 # complicated don't, they are commented out. Use the general limit algorithm
 # for those, see limits.py. Ideally, we'll get rid of limits_series completely.
 
-from sympy import *
+from sympy import Symbol, S, exp, ln, sin, oo, Rational, log
 from sympy.series.limits_series import mrv_compare, mrv2
 from sympy.utilities.pytest import XFAIL
 

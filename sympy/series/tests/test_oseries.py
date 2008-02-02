@@ -1,4 +1,4 @@
-from sympy import *
+from sympy import Symbol, S, Rational, ln, exp, log, sqrt, E
 
 x = Symbol('x')
 y = Symbol('y')

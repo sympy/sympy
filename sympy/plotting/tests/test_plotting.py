@@ -8,7 +8,7 @@ try:
 except:
     disabled = True
 
-from sympy import *
+from sympy import symbols, sin, cos
 x,y = symbols('xy')
 
 class TestPlotting:

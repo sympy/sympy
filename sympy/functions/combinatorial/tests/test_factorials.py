@@ -1,5 +1,4 @@
-
-from sympy import *
+from sympy import symbols, rf, Symbol, factorial, Factorial, ff, nan, oo
 
 def test_rf_eval_apply():
 

@@ -1,5 +1,4 @@
-
-from sympy import *
+from sympy import symbols, product, factorial, rf, Rational, sqrt, cos, Product
 
 a, k, n = symbols('akn', integer=True)
 

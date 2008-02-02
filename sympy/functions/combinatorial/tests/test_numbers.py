@@ -1,5 +1,5 @@
-
-from sympy import *
+from sympy import bernoulli, Symbol, harmonic, Rational, oo, zoo, pi, bell, \
+        fibonacci, lucas
 
 x = Symbol('x')
 

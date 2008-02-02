@@ -1,4 +1,4 @@
-from sympy import *
+from sympy import Rational
 from sympy.physics.units import *
 
 def test_units():

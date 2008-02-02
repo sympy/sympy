@@ -1,5 +1,6 @@
-
-from sympy import *
+from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
+        collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
+        simplify, trigsimp, cos, tan, cot, log, ratsimp
 from sympy.utilities.pytest import XFAIL
 
 def test_ratsimp():

@@ -1,5 +1,5 @@
-
-from sympy import *
+from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
+        I, S, erf
 from sympy.integrals.risch import heurisch, components
 from sympy.utilities.pytest import XFAIL
 from py.test import skip

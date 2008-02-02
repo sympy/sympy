@@ -1,5 +1,4 @@
-
-from sympy import *
+from sympy import Rational, symbols, I, sin, cos, pi
 from sympy.simplify.rootof import roots, RootOf
 
 def test_roots():

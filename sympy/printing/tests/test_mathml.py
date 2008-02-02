@@ -1,4 +1,4 @@
-from sympy import *
+from sympy import Symbol, sin, diff
 from sympy.printing.mathml import mathml, MathMLPrinter
 from xml.dom.minidom import parseString
 from sympy.utilities.pytest import XFAIL

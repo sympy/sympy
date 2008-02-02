@@ -1,6 +1,7 @@
 import py
 
-from sympy import *
+from sympy import symbols, Rational, Symbol, Integral, log, diff, sin, exp, \
+        Function, factorial
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL

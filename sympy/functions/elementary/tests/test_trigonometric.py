@@ -1,5 +1,6 @@
-
-from sympy import *
+from sympy import symbols, Symbol, nan, oo, I, sinh, sin, acot, pi, atan, \
+        acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos, \
+        cosh
 
 def test_sin():
     x, y = symbols('xy')

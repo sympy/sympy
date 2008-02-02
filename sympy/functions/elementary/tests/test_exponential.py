@@ -1,4 +1,4 @@
-from sympy import *
+from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol
 from sympy.utilities.pytest import XFAIL
 
 def test_exp():

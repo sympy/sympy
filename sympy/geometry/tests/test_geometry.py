@@ -1,6 +1,8 @@
 import py
-from sympy import *
-from sympy.geometry import *
+from sympy import Symbol, Rational, sqrt, pi, cos, oo, simplify, Real
+from sympy.geometry import Point, Polygon, convex_hull, Segment, \
+        RegularPolygon, Circle, Ellipse, GeometryError, Line, intersection, \
+        Ray, Triangle, are_similar
 
 x = Symbol('x', real=True)
 y = Symbol('y', real=True)

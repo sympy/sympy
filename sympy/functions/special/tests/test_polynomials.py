@@ -1,4 +1,6 @@
-from sympy import *
+from sympy import legendre, Symbol, hermite, chebyshevu, chebyshevt, \
+        chebyshevt_root, chebyshevu_root, assoc_legendre, Rational, roots, \
+        sympify
 
 x = Symbol('x')
 

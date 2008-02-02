@@ -1,5 +1,4 @@
-
-from sympy import *
+from sympy import symbols, erf, nan, oo, Real, sqrt, pi, O
 
 x, y = symbols('xy')
 

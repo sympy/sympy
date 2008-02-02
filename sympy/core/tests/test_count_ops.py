@@ -1,5 +1,4 @@
-
-from sympy import *
+from sympy import symbols, sin, exp, cos
 
 x, y, z = symbols('xyz')
 

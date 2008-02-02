@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from sympy import *
+from sympy import symbols, Symbol, sin, cos, Matrix, Integral, pi, sqrt, \
+        Function, Rational, tan, oo
 from sympy.printing.pretty import pretty
 
 x,y = symbols('xy')

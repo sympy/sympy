@@ -1,7 +1,7 @@
-from sympy import *
+from sympy import sqrt, Rational, oo
 from sympy.numerics import Float
 from sympy.functions import erf
-from sympy.statistics import *
+from sympy.statistics import Normal, Uniform
 import operator # XXX weird abs/sympy.abs conflict
 
 def test_normal():

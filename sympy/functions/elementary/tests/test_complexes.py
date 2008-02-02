@@ -1,4 +1,4 @@
-from sympy import *
+from sympy import symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log, pi
 
 def test_re():
 
