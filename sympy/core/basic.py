@@ -155,23 +155,23 @@ class Basic(AssumeMeths):
     When you want to access parameters of some instance, always use [].
     Example:
 
-    In [2]: cot(x)[:]
+    In [2]: cot(x).args
     Out[2]: (x,)
 
-    In [3]: cot(x)[0]
+    In [3]: cot(x).args[0]
     Out[3]: x
 
-    In [4]: (x*y)[:]
+    In [4]: (x*y).args
     Out[4]: (x, y)
 
-    In [5]: (x*y)[1]
+    In [5]: (x*y).args[1]
     Out[5]: y
 
 
     2) Never use internal methods or variables (the ones prefixed with "_").
     Example:
 
-    In [6]: cot(x)._args    #don't use this, use cot(x)[:] instead
+    In [6]: cot(x)._args    #don't use this, use cot(x).args instead
     Out[6]: (x,)
 
 
