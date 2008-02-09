@@ -54,8 +54,6 @@ def sympify(a, sympify_lists=False, locals= {}):
         return a
     if isinstance(a, BasicType):
         return a
-    elif isinstance(a, bool):
-        raise NotImplementedError("bool support")
     elif isinstance(a, (int, long)):
         return Integer(a)
     elif isinstance(a, (float, decimal.Decimal)):
@@ -67,6 +65,8 @@ def sympify(a, sympify_lists=False, locals= {}):
         if ireal + iimag*1j == a:
             return ireal + iimag*S.ImaginaryUnit
         return real + S.ImaginaryUnit * imag
+    elif isinstance(a, bool):
+        raise NotImplementedError("bool support")
     elif (a.__class__ in [list,tuple]) and len(a) == 2:
         # isinstance causes problems in the issue #432, so we use .__class__
         return Interval(*a)
