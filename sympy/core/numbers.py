@@ -9,14 +9,23 @@ from power import integer_nthroot
 # from mul import Mul   /cyclic/
 # from power import Pow /cyclic/
 
-@Memoizer((int, long), (int, long))
+# (a,b) -> gcd(a,b)
+_gcdcache = {}
+
+# TODO caching with decorator, but not to degrade performance
 def gcd(a, b):
     """
     Returns the Greatest Common Divisor, implementing Euclid's algorithm.
     """
-    while a:
-        a, b = b%a, a
-    return b
+    try:
+        return _gcdcache[(a,b)]
+    except KeyError:
+        key = (a,b)
+        while a:
+            a, b = b%a, a
+
+        _gcdcache[key] = b
+        return b
 
 @Memoizer((int, long), return_value_converter = lambda d: d.copy())
 def factor_trial_division(n):
