@@ -1,7 +1,8 @@
 """ Defines default methods for unary and binary operations.
 """
 
-from basic import Basic, S, SympifyError, sympify
+from basic import Basic, S
+from sympify import sympify, SympifyError, _sympifyit
 #from add import Add    /cyclic/
 #from mul import Mul    /cyclic/
 #from pow import Pow    /cyclic/
@@ -22,69 +23,47 @@ class ArithMeths(object):
         return S.NegativeOne * self
     def __abs__(self):
         return abs_(self)
+
+    @_sympifyit('other', NotImplemented)
     def __add__(self, other):
-        try:
-            other = sympify(other)
-        except SympifyError:
-            return NotImplemented
-        if not isinstance(other, Basic):
-            return NotImplemented
         return Add(self, other)
+    @_sympifyit('other', NotImplemented)
     def __radd__(self, other):
-        return sympify(other).__add__(self)
+        return Add(other, self)
+
+    @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
-        try:
-            other = sympify(other)
-        except SympifyError:
-            return NotImplemented
-        if not isinstance(other, Basic):
-            return NotImplemented
-        return self + (-other)
+        return Add(self, -other)
+    @_sympifyit('other', NotImplemented)
     def __rsub__(self, other):
-        return sympify(other).__sub__(self)
+        return Add(other, -self)
+
+    @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         # FIXME this is a dirty hack. matrix should be ordinary SymPy object
         from sympy.matrices import Matrix
         if isinstance(other, Matrix): return NotImplemented
-        try:
-            other = sympify(other)
-        except SympifyError:
-            return NotImplemented
-        if not isinstance(other, Basic):
-            return NotImplemented
         return Mul(self, other)
+    @_sympifyit('other', NotImplemented)
     def __rmul__(self, other):
-        return sympify(other).__mul__(self)
+        return Mul(other, self)
+
+    @_sympifyit('other', NotImplemented)
     def __pow__(self, other):
-        try:
-            other = sympify(other)
-        except SympifyError:
-            return NotImplemented
-        if not isinstance(other, Basic):
-            return NotImplemented
         return Pow(self, other)
+    @_sympifyit('other', NotImplemented)
     def __rpow__(self, other):
-        try:
-            other = sympify(other)
-        except SympifyError:
-            return NotImplemented
-        if not isinstance(other, Basic):
-            return NotImplemented
-        return other.__pow__(self)
+        return Pow(other, self)
+
+    @_sympifyit('other', NotImplemented)
     def __div__(self, other):
-        try:
-            other = sympify(other)
-        except SympifyError:
-            return NotImplemented
-        if not isinstance(other, Basic):
-            return NotImplemented
         return self * (other ** S.NegativeOne)
-    def __truediv__(self, other):
-        return self.__div__(other)
+    @_sympifyit('other', NotImplemented)
     def __rdiv__(self, other):
-        return sympify(other).__div__(self)
-    def __rtruediv__(self, other):
-        return self.__rdiv__(other)
+        return other * (self ** S.NegativeOne)
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
 
 class NoArithMeths(object):
     
