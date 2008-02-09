@@ -2,7 +2,7 @@ import math
 import decimal
 import decimal_math
 from basic import Basic, Atom, Singleton, S, C, Memoizer, MemoizerArg
-from sympify import sympify, SympifyError
+from sympify import _sympify, SympifyError, _sympifyit
 from methods import NoRelMeths, RelMeths, ArithMeths
 from power import integer_nthroot
 
@@ -139,9 +139,9 @@ class Number(Atom, RelMeths, ArithMeths):
         raise NotImplementedError,'%s needs .__le__() method' % (self.__class__.__name__)
 
     def __gt__(self, other):
-        return sympify(other).__lt__(self)
+        return _sympify(other).__lt__(self)
     def __ge__(self, other):
-        return sympify(other).__le__(self)
+        return _sympify(other).__le__(self)
 
     def as_coeff_terms(self, x=None):
         # a -> c * t
@@ -252,7 +252,7 @@ class Real(Number):
 
     def __mul__(self, other):
         try:
-            other = sympify(other)
+            other = _sympify(other)
         except SympifyError:
             return NotImplemented
         if isinstance(other, Number):
@@ -261,7 +261,7 @@ class Real(Number):
 
     def __add__(self, other):
         try:
-            other = sympify(other)
+            other = _sympify(other)
         except SympifyError:
             return NotImplemented
         if (other is S.NaN) or (self is NaN):
@@ -303,7 +303,10 @@ class Real(Number):
         return float(self.num)
 
     def __eq__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False    # sympy != other  -->  not ==
         if isinstance(other, NumberSymbol):
             if other.is_irrational: return False
             return other.__eq__(self)
@@ -312,7 +315,10 @@ class Real(Number):
             return bool(self._as_decimal()==other._as_decimal())
         return RelMeths.__eq__(self, other)
     def __ne__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return True     # sympy != other
         if isinstance(other, NumberSymbol):
             if other.is_irrational: return True
             return other.__ne__(self)
@@ -321,7 +327,10 @@ class Real(Number):
             return bool(self._as_decimal()!=other._as_decimal())
         return RelMeths.__ne__(self, other)
     def __lt__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False    # sympy > other
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
         if other.is_comparable: other = other.evalf()
@@ -329,7 +338,10 @@ class Real(Number):
             return bool(self._as_decimal() < other._as_decimal())
         return RelMeths.__lt__(self, other)
     def __le__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False    # sympy > other  -->  ! <=
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
         if other.is_comparable: other = other.evalf()
@@ -461,11 +473,8 @@ class Rational(Number):
 
     def __neg__(self): return Rational(-self.p, self.q)
 
+    @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        try:
-            other = sympify(other)
-        except SympifyError:
-            return NotImplemented
         if (other is S.NaN) or (self is S.NaN):
             return S.NaN
         if isinstance(other, Real):
@@ -474,11 +483,9 @@ class Rational(Number):
             return Rational(self.p * other.p, self.q * other.q)
         return Number.__mul__(self, other)
 
+    # TODO reorder
+    @_sympifyit('other', NotImplemented)
     def __add__(self, other):
-        try:
-            other = sympify(other)
-        except SympifyError:
-            return NotImplemented
         if (other is S.NaN) or (self is S.NaN):
             return S.NaN
         if isinstance(other, Real):
@@ -542,7 +549,10 @@ class Rational(Number):
         return int(self.p//self.q)
 
     def __eq__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False    # sympy != other  -->  not ==
         if isinstance(other, NumberSymbol):
             if other.is_irrational: return False
             return other.__eq__(self)
@@ -556,7 +566,10 @@ class Rational(Number):
             return bool(self.p==other.p and self.q==other.q)
         return RelMeths.__eq__(self, other)
     def __ne__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return True     # sympy != other
         if isinstance(other, NumberSymbol):
             if other.is_irrational: return True
             return other.__ne__(self)
@@ -567,7 +580,10 @@ class Rational(Number):
             return bool(self.p!=other.p or self.q!=other.q)
         return RelMeths.__ne__(self, other)
     def __lt__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False    # sympy > other  --> not <
         if isinstance(other, NumberSymbol):
             return other.__ge__(self)
         if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
@@ -577,7 +593,10 @@ class Rational(Number):
             return bool(self.p * other.q < self.q * other.p)
         return RelMeths.__lt__(self, other)
     def __le__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False    # sympy > other  -->  not <=
         if isinstance(other, NumberSymbol):
             return other.__gt__(self)
         if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
@@ -974,17 +993,26 @@ class NumberSymbol(Singleton, Atom, RelMeths, ArithMeths):
     def _eval_derivative(self, s):
         return S.Zero
     def __eq__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False    # sympy != other  -->  not ==
         if self is other: return True
         if isinstance(other, Number) and self.is_irrational: return False
         return RelMeths.__eq__(self, other)
     def __ne__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return True     # sympy != other
         if self is other: return False
         if isinstance(other, Number) and self.is_irrational: return True
         return RelMeths.__ne__(self, other)
     def __lt__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False    # sympy > other  --> not <
         if self is other: return False
         if isinstance(other, Number):
             approx = self.approximation_interval(other.__class__)
@@ -998,7 +1026,10 @@ class NumberSymbol(Singleton, Atom, RelMeths, ArithMeths):
             return self.evalf()<other
         return RelMeths.__lt__(self, other)
     def __le__(self, other):
-        other = sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False    # sympy > other  --> not <=
         if self is other: return True
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
