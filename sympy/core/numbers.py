@@ -662,6 +662,85 @@ class Integer(Rational):
             _intcache[i] = obj
             return obj
 
+    # Arithmetic operations are here for efficiency
+
+    # TODO make it decorator + bytecodehacks?
+    def __add__(a, b):
+        if type(b) is int:
+            return Integer(a.p + b)
+        elif isinstance(b, Integer):
+            return Integer(a.p + b.p)
+        return Rational.__add__(a, b)   # a,b -not- b,a
+
+    def __radd__(a, b):
+        if type(b) is int:
+            return Integer(b + a.p)
+        elif isinstance(b, Integer):
+            return Integer(b.p + a.p)
+        return Rational.__add__(a, b)
+
+    def __mul__(a, b):
+        if type(b) is int:
+            return Integer(a.p * b)
+        elif isinstance(b, Integer):
+            return Integer(a.p * b.p)
+        return Rational.__mul__(a, b)
+
+    def __rmul__(a, b):
+        if type(b) is int:
+            return Integer(b * a.p)
+        elif isinstance(b, Integer):
+            return Integer(b.p * a.p)
+        return Rational.__mul__(a, b)
+
+    # XXX __pow__ ?
+
+    # XXX do we need to define __cmp__ ?
+#   def __cmp__(a, b):
+
+    def __eq__(a, b):
+        if type(b) is int:
+            return (a.p == b)
+        elif isinstance(b, Integer):
+            return (a.p == b.p)
+        return Rational.__eq__(a, b)
+
+    def __ne__(a, b):
+        if type(b) is int:
+            return (a.p != b)
+        elif isinstance(b, Integer):
+            return (a.p != b.p)
+        return Rational.__ne__(a, b)
+
+    def __gt__(a, b):
+        if type(b) is int:
+            return (a.p >  b)
+        elif isinstance(b, Integer):
+            return (a.p >  b.p)
+        return Rational.__gt__(a, b)
+
+    def __lt__(a, b):
+        if type(b) is int:
+            return (a.p <  b)
+        elif isinstance(b, Integer):
+            return (a.p <  b.p)
+        return Rational.__lt__(a, b)
+
+    def __ge__(a, b):
+        if type(b) is int:
+            return (a.p >= b)
+        elif isinstance(b, Integer):
+            return (a.p >= b.p)
+        return Rational.__ge__(a, b)
+
+    def __le__(a, b):
+        if type(b) is int:
+            return (a.p <= b)
+        elif isinstance(b, Integer):
+            return (a.p <= b.p)
+        return Rational.__le__(a, b)
+
+    ########################################
 
     def _eval_is_odd(self):
         return bool(self.p % 2)
