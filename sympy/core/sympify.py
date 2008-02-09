@@ -5,10 +5,13 @@
 import decimal
 
 class SympifyError(ValueError):
-    def __init__(self, expr, base_exc):
+    def __init__(self, expr, base_exc=None):
         self.expr = expr
         self.base_exc = base_exc
     def __str__(self):
+        if self.base_exc is None:
+            return "SympifyError: %s" % (self.expr,)
+
         return "Sympify of expression '%s' failed, because of exception being raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__, str(self.base_exc))
 
 
@@ -99,5 +102,5 @@ def sympify(a, sympify_lists=False, locals= {}):
             return ast_parser.SymPyParser(local_dict=locals).parse_expr(a)
         except Exception, exc:
             raise SympifyError(a, exc)
-    raise ValueError("%r is NOT a valid SymPy expression" % a)
+    raise SympifyError("%r is NOT a valid SymPy expression" % a)
 
