@@ -57,10 +57,10 @@ class ArithMeths(object):
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
-        return self * (other ** S.NegativeOne)
+        return Mul(self, Pow(other, S.NegativeOne))
     @_sympifyit('other', NotImplemented)
     def __rdiv__(self, other):
-        return other * (self ** S.NegativeOne)
+        return Mul(other, Pow(self, S.NegativeOne))
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
