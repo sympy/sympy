@@ -232,7 +232,7 @@ class Integral(Basic, NoRelMeths, ArithMeths):
                 continue
 
             # fall back to the more general algorithm
-            h = heurisch(g, x)
+            h = heurisch(g, x, hints=[])
 
             if h is not None:
                 parts.append(coeff * h)

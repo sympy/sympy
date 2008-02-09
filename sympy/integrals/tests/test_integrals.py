@@ -1,5 +1,6 @@
 from sympy import symbols, integrate, Integral, exp, oo, Symbol, Rational, log, sin, cos, pi, E, I, Polynomial
 from sympy.utilities.pytest import XFAIL
+from sympy.physics.units import m, s
 import py
 from py.test import skip
 
@@ -131,9 +132,7 @@ def test_issue519():
     assert integrate(pi*x**Rational(1,2) + E*x**Rational(3,2),x) == \
                                                2*pi*x**Rational(3,2)/3  + \
                                                2*E *x**Rational(5,2)/5
-@XFAIL
 def test_issue524():
-    skip("hangs")
     assert integrate(cos((n+1) * x), x)   == sin(x*(n+1)) / (n+1)
     assert integrate(cos((n-1) * x), x)   == sin(x*(n-1)) / (n-1)
 
@@ -152,5 +151,12 @@ def test_rational_functions():
     integrate(1/(x**2+x+1), x) == -I*3**half*log(half + x - half*I*3**half)/3 +\
                                    I*3**half*log(half + x + half*I*3**half)/3
 
+    integrate(1/(x**3+1), x) == log(1 + x)/3 - \
+        (Rational(1,6) - I*3**half/6)*log(half - x - I*3**half/2) - \
+        (Rational(1,6) + I*3**half/6)*log(half - x + I*3**half/2)
+
 def test_issue587(): # remove this when fresnel itegrals are implemented
     assert integrate(sin(x**2), x) == Integral(sin(x**2), x)
+
+def test_integrate_units():
+    assert integrate(x * m/s, (x, 1*s, 5*s)) == 12*m*s

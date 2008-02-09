@@ -1,5 +1,5 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
-        I, S, erf
+        I, S, erf, tan, asin, asinh
 from sympy.integrals.risch import heurisch, components
 from sympy.utilities.pytest import XFAIL
 from py.test import skip
@@ -51,7 +51,10 @@ def test_heurisch_exp():
 
 def test_heurisch_trigonometric():
     assert heurisch(sin(x), x) == -cos(x)
+    assert heurisch(pi*sin(x)+1, x) == x-pi*cos(x)
+
     assert heurisch(cos(x), x) == sin(x)
+    assert heurisch(tan(x), x) == log(1 + tan(x)**2)/2
 
     assert heurisch(sin(x)*sin(y), x) == -cos(x)*sin(y)
     assert heurisch(sin(x)*sin(y), y) == -cos(y)*sin(x)
@@ -91,6 +94,20 @@ def test_heurisch_symbolic_coeffs():
     assert heurisch(1/(x+sqrt(2)), x)   == log(x+sqrt(2))
     assert heurisch(1/(x**2+y), x)      == I*y**(-S.Half)*log(x + (-y)**S.Half)/2 - \
                                            I*y**(-S.Half)*log(x - (-y)**S.Half)/2
+
+def test_heurisch_hacking():
+    assert heurisch(sqrt(1 + 7*x**2), x, hints=[]) == \
+        x*sqrt(1+7*x**2)/2 + sqrt(7)*asinh(sqrt(7)*x)/14
+    assert heurisch(sqrt(1 - 7*x**2), x, hints=[]) == \
+        x*sqrt(1-7*x**2)/2 + sqrt(7)*asin(sqrt(7)*x)/14
+
+    assert heurisch(1/sqrt(1 + 7*x**2), x, hints=[]) == \
+        sqrt(7)*asinh(sqrt(7)*x)/7
+    assert heurisch(1/sqrt(1 - 7*x**2), x, hints=[]) == \
+        sqrt(7)*asin(sqrt(7)*x)/7
+
+    assert heurisch(exp(-7*x**2),x,hints=[]) == \
+        sqrt(7*pi)*erf(sqrt(7)*x)/14
 
 def test_issue510():
     assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \

@@ -2,13 +2,15 @@
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.symbol import Symbol
 from sympy.core.function import Function
-from sympy.core.basic import Basic, S, C, Atom, sympify
-from sympy.core.numbers import Integer, Rational, Zero
+from sympy.core.symbol import Symbol, Wild
+from sympy.core.basic import S, Atom, sympify
+from sympy.core.numbers import Integer, Rational
 
-from sympy.functions.elementary.trigonometric import sin, cos, cot, tan
-from sympy.functions.elementary.hyperbolic import sinh, cosh, tanh, coth
+from sympy.functions import exp, sin , cos , tan , cot , asin
+from sympy.functions import log, sinh, cosh, tanh, coth, asinh
+
+from sympy.functions import sqrt, erf
 
 from sympy.solvers import solve
 from sympy.simplify.rootof import factors
@@ -80,7 +82,7 @@ def monomials(variables, degree):
 def symbols(name, n, **kwargs):
     return [ Symbol(name + str(i), **kwargs) for i in range(0, n) ]
 
-def heurisch(f, x, rewrite=False):
+def heurisch(f, x, **kwargs):
     """Compute indefinite integral using heuristic Risch algorithm.
 
        This is a huristic approach to indefinite integration in finite
@@ -93,13 +95,38 @@ def heurisch(f, x, rewrite=False):
 
        Note that this algorithm is not a decision procedure. If it isn't
        able to compute antiderivative for a given function, then this is
-       not a proof that such a functions does not exist. One should use
-       recursive Risch algorithm in such case. It's an open question if
+       not a proof that such a functions does not exist.  One should use
+       recursive Risch algorithm in such case.  It's an open question if
        this algorithm can be made a full decision procedure.
 
        This is an internal integrator procedure. You should use toplevel
-       'integrate' function in most cases, as this procedure needs some
+       'integrate' function in most cases,  as this procedure needs some
        preprocessing steps and otherwise may fail.
+
+       Specificaion
+       ============
+
+         heurisch(f, x, rewrite=False, hints=None)
+
+           where
+             f : expression
+             x : symbol
+
+             rewrite -> force rewrite 'f' in terms of 'tan' and 'tanh'
+             hints   -> a list of functions that may appear in antiderivate
+
+              - hints = None          --> no suggestions at all
+              - hints = [ ]           --> try to figure out
+              - hints = [f1, ..., fn] --> we know better
+
+       Examples
+       ========
+
+       >>> from sympy import *
+       >>> x,y = symbols('xy')
+
+       >>> heurisch(y*tan(x), x)
+       (1/2)*y*log(1 + tan(x)**2)
 
        See Manuel Bronstein's "Poor Man's Integrator":
 
@@ -124,15 +151,20 @@ def heurisch(f, x, rewrite=False):
     """
     f = sympify(f)
 
-    indep, f = f.as_independent(x)
+    if not isinstance(f, Add):
+        indep, f = f.as_independent(x)
+    else:
+        indep = S.One
 
     if not f.has(x):
-        return indep*f*x
+        return indep * f * x
 
     rewritables = {
         (sin, cos, cot)     : tan,
         (sinh, cosh, coth)  : tanh,
     }
+
+    rewrite = kwargs.pop('rewrite', False)
 
     if rewrite:
         for candidates, rule in rewritables.iteritems():
@@ -145,6 +177,32 @@ def heurisch(f, x, rewrite=False):
             rewrite = True
 
     terms = components(f, x)
+
+    hints = kwargs.get('hints', None)
+
+    if hints is not None:
+        if not hints:
+            a = Wild('a', exclude=[x])
+            b = Wild('b', exclude=[x])
+
+            for g in set(terms):
+                if isinstance(g, Function):
+                    if isinstance(g, exp):
+                        M = g.args[0].match(a*x**2)
+
+                        if M is not None:
+                            terms.add(erf(sqrt(-M[a])*x))
+                elif isinstance(g, Pow):
+                    if isinstance(g.exp, Rational) and g.exp.q == 2:
+                        M = g.base.match(a*x**2 + b)
+
+                        if M is not None and M[b].is_positive:
+                            if M[a].is_positive:
+                                terms.add(asinh(sqrt(M[a]/M[b])*x))
+                            elif M[a].is_negative:
+                                terms.add(asin(sqrt(-M[a]/M[b])*x))
+        else:
+            terms |= set(hints)
 
     for g in set(terms):
         terms |= components(g.diff(x), x)
@@ -169,10 +227,10 @@ def heurisch(f, x, rewrite=False):
     numers = [ cancel(denom * g, *V) for g in diffs ]
 
     def derivation(h):
-        return C.Add(*[ d * h.diff(v) for d, v in zip(numers, V) ])
+        return Add(*[ d * h.diff(v) for d, v in zip(numers, V) ])
 
     def deflation(p):
-        for y in p.atoms(C.Symbol):
+        for y in p.atoms(Symbol):
             if derivation(p) is not S.Zero:
                 c, q = p.as_polynomial(y).as_primitive()
                 return deflation(c) * gcd(q, q.diff(y))
@@ -180,7 +238,7 @@ def heurisch(f, x, rewrite=False):
             return p
 
     def splitter(p):
-        for y in p.atoms(C.Symbol):
+        for y in p.atoms(Symbol):
             if derivation(y) is not S.Zero:
                 c, q = p.as_polynomial(y).as_primitive()
 
@@ -203,13 +261,13 @@ def heurisch(f, x, rewrite=False):
     special = {}
 
     for term in terms:
-        if isinstance(term, C.Function):
-            if isinstance(term, C.tan):
+        if isinstance(term, Function):
+            if isinstance(term, tan):
                 special[1 + substitute(term)**2] = False
-            elif isinstance(term.func, tanh):
+            elif isinstance(term, tanh):
                 special[1 + substitute(term)] = False
                 special[1 - substitute(term)] = False
-            #elif isinstance(term.func, C.LambertW):
+            #elif isinstance(term, LambertW):
             #    special[substitute(term)] = True
 
     F = substitute(f)
@@ -221,7 +279,7 @@ def heurisch(f, x, rewrite=False):
 
     polys = list(v_split) + [ u_split[0] ] + special.keys()
 
-    s = u_split[0] * C.Mul(*[ k for k, v in special.iteritems() if v ])
+    s = u_split[0] * Mul(*[ k for k, v in special.iteritems() if v ])
     a, b, c = [ p.as_polynomial(*V).degree() for p in [s, P, Q] ]
 
     poly_denom = s * v_split[0] * deflation(v_split[1])
@@ -284,7 +342,7 @@ def heurisch(f, x, rewrite=False):
         for i, poly in enumerate(irreducibles):
             if poly.has(*V):
                 log_coeffs.append(Symbol('B%s' % i, dummy=True))
-                log_part.append(log_coeffs[-1] * C.log(poly))
+                log_part.append(log_coeffs[-1] * log(poly))
 
         coeffs = poly_coeffs + log_coeffs
 
@@ -331,15 +389,16 @@ def heurisch(f, x, rewrite=False):
             if coeff not in solution:
                 antideriv = antideriv.subs(coeff, S.Zero)
 
-        antideriv = simplify(antideriv.subs_dict(rev_mapping)).expand()
+        antideriv = antideriv.subs_dict(rev_mapping)
+        antideriv = simplify(antideriv).expand()
 
-        if isinstance(antideriv, C.Add):
-            antideriv = C.Add(*antideriv.as_coeff_factors()[1])
+        if isinstance(antideriv, Add):
+            antideriv = antideriv.as_independent(x)[1]
 
         return indep * antideriv
     else:
         if not rewrite:
-            result = heurisch(f, x, rewrite=True)
+            result = heurisch(f, x, rewrite=True, **kwargs)
 
             if result is not None:
                 return indep * result
