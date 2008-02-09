@@ -1,6 +1,6 @@
 
 from basic import Basic, S, C, sympify
-from methods import ArithMeths, RelMeths, NoRelMeths
+from methods import ArithMeths, RelMeths
 from cache import cache_it, cache_it_immutable
 
 from symbol import Symbol, Wild, Temporary

@@ -31,7 +31,7 @@ Example:
 
 from basic import Basic, Singleton, Atom, S, C, sympify
 from basic import BasicType, BasicMeta
-from methods import ArithMeths, NoRelMeths, RelMeths
+from methods import ArithMeths, RelMeths
 from operations import AssocOp
 from cache import cache_it
 
