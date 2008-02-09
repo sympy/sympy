@@ -96,26 +96,31 @@ class NoArithMeths(object):
 
 class RelMeths(object):
     
+    # TODO rewrte to directly return True/False
+
+    @_sympifyit('other', False) # sympy != other
     def __eq__(self, other):
-        try:
-            other = sympify(other)
-        except ValueError:
-            return False
         return Equality(self, other)
+
+    @_sympifyit('other', True)  # sympy != other
     def __ne__(self, other):
-        try:
-            other = sympify(other)
-        except ValueError:
-            return True
         return Unequality(self, other)
+
+    @_sympifyit('other', False) # sympy >  other
     def __lt__(self, other):
         #return sympify(other) > self
         return StrictInequality(self, other)
+
+    @_sympifyit('other', True)  # sympy >  other
     def __gt__(self, other):
         return StrictInequality(other, self)
         #return sympify(other) < self
+
+    @_sympifyit('other', False) # sympy >  other
     def __le__(self, other):
         return Inequality(self, other)
+
+    @_sympifyit('other', True)  # sympy >  other
     def __ge__(self, other):
         return sympify(other) <= self
 
