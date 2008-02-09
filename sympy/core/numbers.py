@@ -1,8 +1,8 @@
 import math
 import decimal
 import decimal_math
-from basic import Basic, Atom, Singleton, S, C, Memoizer, MemoizerArg, \
-    sympify, SympifyError
+from basic import Basic, Atom, Singleton, S, C, Memoizer, MemoizerArg
+from sympify import sympify, SympifyError
 from methods import NoRelMeths, RelMeths, ArithMeths
 from power import integer_nthroot
 
@@ -1177,6 +1177,11 @@ import power as _
 _.Number    = Number
 _.Rational  = Rational
 _.Integer   = Integer
+del _
+
+import sympify as _
+_.Integer   = Integer
+_.Real      = Real
 del _
 
 # ----

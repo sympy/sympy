@@ -23,3 +23,8 @@ class Interval(Basic):
         return r
 
     
+# /cyclic/
+import sympify as _
+_.Interval  = Interval
+del _
+
