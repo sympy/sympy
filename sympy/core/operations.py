@@ -1,5 +1,6 @@
 
-from basic import Basic, S, C, sympify
+from basic import Basic, S, C
+from sympify import _sympify
 from cache import cache_it, cache_it_immutable
 
 # from add import Add   /cyclic/
@@ -21,8 +22,8 @@ class AssocOp(Basic):
         if len(args)==0:
             return cls.identity()
         if len(args)==1:
-            return sympify(args[0])
-        c_part, nc_part, lambda_args, order_symbols = cls.flatten(map(sympify, args))
+            return _sympify(args[0])
+        c_part, nc_part, lambda_args, order_symbols = cls.flatten(map(_sympify, args))
         if len(c_part) + len(nc_part) <= 1:
             if c_part: obj = c_part[0]
             elif nc_part: obj = nc_part[0]

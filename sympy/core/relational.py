@@ -1,5 +1,6 @@
 
-from basic import Basic, C, sympify
+from basic import Basic, C
+from sympify import _sympify
 from methods import NoRelMeths
 
 from numbers import Number
@@ -17,8 +18,8 @@ class Relational(Basic, NoRelMeths):
         raise ValueError("Invalid relational operator symbol: %r" % (rop))
 
     def __new__(cls, lhs, rhs, rop=None, **assumptions):
-        lhs = sympify(lhs)
-        rhs = sympify(rhs)
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
         if cls is not Relational:
             rop_cls = cls
         else:

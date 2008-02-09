@@ -2,21 +2,27 @@ from sympy import Basic, S, Symbol, Real, Integer, Rational, \
     sin, cos, exp, log, oo, sqrt, symbols, Integral
 import py
 
+x = Symbol("x")
+y = Symbol("y")
 
-def dotest(s):
-    x = Symbol("x")
-    y = Symbol("y")
-    l = [
+# basic sympy objects
+basic_objs = [
     Rational(2),
     Real("1.3"),
     x,
     y,
     pow(x,y)*y,
+]
+
+# all supported objects
+all_objs = basic_objs + [
     5,
-    5.5
-    ]
-    for x in l:
-        for y in l:
+    5.5,
+]
+
+def dotest(s):
+    for x in all_objs:
+        for y in all_objs:
             s(x,y)
 
 def test_basic():
@@ -43,8 +49,12 @@ def test_ibasic():
         x /= b
     dotest(s)
 
+def test_basic_nostr():
+    for obj in basic_objs:
+        for op in ['+','-','*','/','**']:
+            py.test.raises(TypeError, "obj %s '1'" % op)
+
 def test_ldegree():
-    x = Symbol("x")
     assert (1/x**2+1+x+x**2).ldegree(x)==-2
     assert (1/x+1+x+x**2).ldegree(x)==-1
     assert (x**2+1/x).ldegree(x)==-1
@@ -54,12 +64,9 @@ def test_ldegree():
     assert (x**2).ldegree(x)==2
 
 def test_leadterm():
-    x = Symbol("x")
     assert (3+2*x**(log(3)/log(2)-1)).leadterm(x)==(3,0)
 
 def test_atoms():
-   x = Symbol('x')
-   y = Symbol('y')
    assert list((1+x).atoms()) == [1,x]
    assert list(x.atoms()) == [x]
    assert list((1+2*cos(x)).atoms(type=Symbol)) == [x]
@@ -68,7 +75,7 @@ def test_atoms():
    assert list(Rational(1,2).atoms(type=type(oo))) == []
 
 def test_is_polynomial():
-    x, y, z = map(Symbol, 'xyz')
+    z = Symbol('z')
 
     k = Symbol('k', nonnegative=True, integer=True)
 
@@ -170,7 +177,6 @@ def test_len():
     assert len(e.args) == 3
 
 def test_doit():
-    x = Symbol('x')
     a = Integral(x**2, x)
 
     assert isinstance(a.doit(), Integral) == False
@@ -181,7 +187,6 @@ def test_doit():
     assert (2*Integral(x, x)).doit() == x**2
 
 def test_is_number():
-    x = Symbol("x")
     assert Rational(8).is_number
     assert not x.is_number
     assert (8+log(2)).is_number
@@ -189,14 +194,11 @@ def test_is_number():
     assert (1+x**2/x-x).is_number
 
 def test_attribute_error():
-    x = Symbol("x")
     py.test.raises(AttributeError, "x.cos()")
     py.test.raises(AttributeError, "x.sin()")
     py.test.raises(AttributeError, "x.exp()")
 
 def test_args():
-    x = Symbol("x")
-    y = Symbol("y")
     assert (x*y).args[:] in ((x, y), (y, x))
     assert (x+y).args[:] in ((x, y), (y, x))
     assert (x*y+1).args[:] in ((x*y, 1), (1, x*y))
