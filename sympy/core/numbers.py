@@ -881,6 +881,14 @@ class Zero(Singleton, Integer):
     is_prime = False
     is_composite = True
 
+    @staticmethod
+    def __abs__():
+        return S.Zero
+
+    @staticmethod
+    def __neg__():
+        return S.Zero
+
     def _eval_power(b, e):
         if e.is_negative:
             return S.Infinity
@@ -908,6 +916,14 @@ class One(Singleton, Integer):
 
     is_prime = True
 
+    @staticmethod
+    def __abs__():
+        return S.One
+
+    @staticmethod
+    def __neg__():
+        return S.NegativeOne
+
     def _eval_power(b, e):
         return b
 
@@ -918,6 +934,14 @@ class NegativeOne(Singleton, Integer):
 
     p = -1
     q = 1
+
+    @staticmethod
+    def __abs__():
+        return S.One
+
+    @staticmethod
+    def __neg__():
+        return S.One
 
     def _eval_power(b, e):
         if e.is_odd: return S.NegativeOne
@@ -948,6 +972,11 @@ class Half(Singleton, Rational):
     p = 1
     q = 2
 
+    @staticmethod
+    def __abs__():
+        return S.Half
+
+
 class Infinity(Singleton, Rational):
 
     p = 1
@@ -958,6 +987,14 @@ class Infinity(Singleton, Rational):
     is_bounded = False
     is_finite = None
     is_odd = None
+
+    @staticmethod
+    def __abs__():
+        return S.Infinity
+
+    @staticmethod
+    def __neg__():
+        return S.NegativeInfinity
 
     def tostr(self, level=0):
         return 'oo'
@@ -996,6 +1033,14 @@ class NegativeInfinity(Singleton, Rational):
     is_finite = False
 
     precedence = 40 # same as Add
+
+    @staticmethod
+    def __abs__():
+        return S.Infinity
+
+    @staticmethod
+    def __neg__():
+        return S.Infinity
 
     def tostr(self, level=0):
         return '-oo'
@@ -1053,6 +1098,14 @@ class ComplexInfinity(Singleton, Atom, NoRelMeths, ArithMeths):
     is_comparable = None
     is_bounded = False
     is_real = None
+
+    @staticmethod
+    def __abs__():
+        return S.Infinity
+
+    @staticmethod
+    def __neg__():
+        return S.ComplexInfinity
 
     def tostr(self, level=0):
         return 'zoo'
@@ -1141,6 +1194,10 @@ class Exp1(NumberSymbol):
     is_negative = False # XXX Forces is_negative/is_nonnegative
     is_irrational = True
 
+    @staticmethod
+    def __abs__():
+        return S.Exp1
+
     def tostr(self, level=0):
         return 'E'
 
@@ -1162,6 +1219,10 @@ class Pi(NumberSymbol):
     is_positive = True
     is_negative = False
     is_irrational = True
+
+    @staticmethod
+    def __abs__():
+        return S.Pi
 
     def _eval_evalf(self):
         return Real(decimal_math.pi())
@@ -1241,6 +1302,10 @@ class ImaginaryUnit(Singleton, Atom, RelMeths, ArithMeths):
     is_imaginary = True
     is_bounded = True
     is_finite = True
+
+    @staticmethod
+    def __abs__():
+        return S.One
 
     def tostr(self, level=0):
         return 'I'
