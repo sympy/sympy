@@ -40,9 +40,6 @@ class ArithMeths(object):
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        # FIXME this is a dirty hack. matrix should be ordinary SymPy object
-        from sympy.matrices import Matrix
-        if isinstance(other, Matrix): return NotImplemented
         return Mul(self, other)
     @_sympifyit('other', NotImplemented)
     def __rmul__(self, other):
