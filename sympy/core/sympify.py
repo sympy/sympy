@@ -50,6 +50,12 @@ def sympify(a, sympify_lists=False, locals= {}):
        True
 
     """
+    # XXX instead of duplicating _sympify it would be better to call _sympify
+    # directly from here, but a lot of SymPy still calls sympify (no '_') and
+    # this will add unneccesary overhead.
+    #
+    # When everything settles, let's refactor this.
+    #                                      -- kirr
     if isinstance(a, Basic):
         return a
     if isinstance(a, BasicType):
@@ -103,4 +109,157 @@ def sympify(a, sympify_lists=False, locals= {}):
         except Exception, exc:
             raise SympifyError(a, exc)
     raise SympifyError("%r is NOT a valid SymPy expression" % a)
+
+
+def _sympify(a):
+    """short version of sympify for internal usage
+
+       When adding and comparing symbolic expressions, it is unwise to allow
+       e.g. strings to mixin. On the other hand Python integers and floats are
+       allowed.
+
+       So we don't use full-featured sympify in __add__ and __eq__ methods, but
+       instead use this small-crafted function there instead.
+
+       >>> Integer(1) == 1
+       True
+
+       >>> Integer(1) == '1'
+       False
+
+       >>> from sympy import Symbol
+       >>> x = Symbol('x')
+       >>> x + 1
+       1 + x
+
+       >>> x + '1'
+       Traceback (most recent call last):
+           ...
+       TypeError: unsupported operand type(s) for +: 'Symbol' and 'str'
+
+       see: sympify
+    """
+    if isinstance(a, Basic):
+        return a
+    if isinstance(a, BasicType):
+        return a
+    elif isinstance(a, (int, long)):
+        return Integer(a)
+    elif isinstance(a, (float, decimal.Decimal)):
+        return Real(a)
+    elif isinstance(a, complex):
+        real, imag = map(sympify, (a.real, a.imag))
+        ireal, iimag = int(real), int(imag)
+
+        if ireal + iimag*1j == a:
+            return ireal + iimag*S.ImaginaryUnit
+        return real + S.ImaginaryUnit * imag
+    elif hasattr(a, "_sympy_"):
+        # the "a" implements _sympy_() method, that returns a SymPy
+        # expression (by definition), so we just use it
+        return a._sympy_()
+
+    raise SympifyError("%r is NOT a valid SymPy expression" % (a,))
+
+
+def __sympifyit(func, arg, retval=None):
+    """decorator to _sympify `arg` argument for function `func`
+
+       don't use directly -- use _sympifyit instead
+    """
+
+    # we support f(a,b) only
+    assert func.func_code.co_argcount
+    # only b is _sympified
+    assert func.func_code.co_varnames[1] == arg
+
+    def __sympifyit_wrapper(a, b):
+        # our task is to call `func` with `b` _sympified.
+        #
+        # if we _sympify from the beginning, we'll get unneccesary overhead,
+        # because _sympify has far non-zero cost even for Basic instances.
+        #
+        # the idea is to first run `func` with `b` as is, catch any error, and
+        # try to rerun with b _sympified.
+        #
+        # so for Basic instances we'll get almost no overhead, and for other
+        # objects we agree to take additional overhead because `func` has to be
+        # run first, and only when it raises we can proceed with the second
+        # phase.
+        #
+        # however there is one important exception -- python ints.
+        # ints are used heavily, e.g. in sum([x**i for i in range(n)]) and
+        # other places, so it is important to sympify ints as fast as possible
+        # too.
+
+
+        # python ints are used frequently -- it is important to convert them as
+        # fast as possible
+        #
+        # %timeit type(1) is int            ->  1.43 us
+        # %timeit type('abc') is int        ->  1.48 us
+        # %timeit isinstance(1, int)        ->  1.29 us
+        # %timeit isinstance('abc', int)    ->  2.23 us
+        # %timeit isinstance(x, int)        ->  4.28 us
+        # z = S.Half
+        # %timeit isinstance(z, int)        ->  5.2 us
+        #
+        # so we use:
+        if type(b) is int:
+            b = Integer(b)
+
+        try:
+            # fast-path: let's hope b is already SymPy object
+            return func(a, b)
+
+        except Exception, e:
+
+            # we've got an exception.
+            # maybe it's from nested __sympifyit? then we have to quit.
+            if isinstance(e, SympifyError):
+                #print 'double deep sympify'
+                if retval is not None:
+                    return retval
+                else:
+                    raise
+
+            # slow-path: b seems to be not SymPy object -- let's _sympify it
+            try:
+                b = _sympify(b)
+                #print 'deep sympify'
+            except SympifyError:
+                # sympify failed, let's return requested value
+                if retval is not None:
+                    return retval
+                else:
+                    # or pass exception through
+                    raise
+
+            # b successfully _sympified, lets call func again.
+            # if it raises here -- exception goes to caller
+            return func(a, b)
+
+    return __sympifyit_wrapper
+
+
+def _sympifyit(arg, retval=None):
+    """decorator to smartly _sympify function arguments
+
+       @_sympifyit('other', NotImplemented)
+       def add(self, other):
+           ...
+
+       In add, other can be though as being SymPy object already.
+
+       If it is not, the code is likely to catch an exception, then other will
+       be explicitly _sympified, and the whole code restarted.
+
+       if _sympify(arg) fails, NotImplemented will be returned
+
+       see: __sympifyit
+    """
+    def deco(func):
+        return __sympifyit(func, arg, retval)
+
+    return deco
 
