@@ -841,3 +841,37 @@ class acot(Function):
 
     def _eval_is_real(self):
         return self.args[0].is_real
+
+class atan2(Function):
+    """
+    Returns the atan(y/x) taking two arguments y and x. Signs of
+    both y and x are considered to determine the appropriate 
+    quadrant of atan(y/x). The range is (-pi, pi].
+    """
+    
+    nargs = 2
+    
+    @classmethod
+    def canonize(cls, y, x):
+        x, y = sympify(x), sympify(y)
+        
+        if isinstance(x, C.Number) and isinstance(y, C.Number):
+            phi = atan(C.abs(y/x))
+            if y == 0:
+                if x > 0:
+                    return S.Zero
+                elif x == 0:
+                    return S.NaN
+                else:
+                    return S.Pi
+            elif x == 0:
+                return C.sign(y) * S.Pi/2
+            else:
+                phi = C.atan(C.abs(y/x))
+                if x > 0:
+                    return C.sign(y) * phi
+                else:
+                    return C.sign(y) * (S.Pi - phi)
+
+    def _eval_is_real(self):
+        return self.args[0].is_real and self.args[1].is_real

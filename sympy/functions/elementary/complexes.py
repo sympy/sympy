@@ -239,6 +239,12 @@ class arg(Function):
     nargs = 1
 
     is_real = True
+    is_bounded = True
+    
+    @classmethod
+    def canonize(cls, arg):
+        x, y = re(arg), im(arg)
+        return C.atan2(y, x)
 
     def _eval_conjugate(self):
         return self

@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, nan, oo, I, sinh, sin, acot, pi, atan, \
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos, \
-        cosh
+        cosh, atan2
 
 def test_sin():
     x, y = symbols('xy')
@@ -304,6 +304,13 @@ def test_atan():
 
     assert atan(r).is_real == True
 
+def test_atan2():
+    assert atan2(0, 0) == S.NaN
+    assert atan2(0, 1) == 0
+    assert atan2(1, 0) == pi/2
+    assert atan2(1, -1) == 3*pi/4
+    assert atan2(-1, 1) == -pi/4
+    assert atan2(0, -1) == pi
 
 # TODO write me
 def test_acot():
