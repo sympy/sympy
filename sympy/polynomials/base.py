@@ -185,6 +185,7 @@ class Polynomial(Basic):
                         "as_integer",
                         "as_monic",
                         "as_primitive",
+                        "coeff",
                         "content",
                         "diff",
                         "integrate",
@@ -679,6 +680,18 @@ class Polynomial(Basic):
             cint.append(tuple(t))
 
         return Polynomial(coeffs=cint, var=self.var, order=self.order)
+
+    def coeff(self, x, n):
+        """Returns the coefficient at x**n
+
+        Example:
+        >>> a, x = symbols("ax")
+        >>> f = (a+1)*x + (a+2)*x**2 + a
+        >>> Polynomial(f, var=[x]).coeff(x, 2)
+        2 + a
+        """
+        f = Polynomial(self, var=[x])
+        return f.nth_coeff(n)
 
 
     def leading_coeff(self):

@@ -428,3 +428,13 @@ def test_roots_issue593():
     r = roots(p, x)
     for i in range(6):
         assert p.subs(x, r[i]).expand() == 0
+        
+
+def test_coeff1():
+    a, x = symbols("ax")
+    f = (a+1)*x + (a+2)*x**2 + a
+    f = Polynomial(f, var=[x])
+    assert f.coeff(x, 0) == a
+    assert f.coeff(x, 1) == a + 1
+    assert f.coeff(x, 2) == a + 2
+    assert f.coeff(x, 3) == 0
