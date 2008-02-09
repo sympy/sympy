@@ -387,7 +387,7 @@ class Basic(AssumeMeths):
     @property
     def is_number(self):
         """Returns True if self is a number (like 1, or 1+log(2)), and False
-        otherwise (e.g. 1+x).""" 
+        otherwise (e.g. 1+x)."""
         return len(self.atoms(Symbol)) == 0
 
     @property
@@ -578,15 +578,15 @@ class Basic(AssumeMeths):
 
 
         # Care needs to be taken for cases like these:
-        # 
+        #
         # consider
         #     e = x*exp(x)
-        # 
+        #
         # when we do
         #     e.subs_dict(x: y, exp(x): y)
-        # 
+        #
         # the result depends in which order elementary substitutions are done.
-        # 
+        #
         # So we *have* to proceess 'exp(x)' first. This is achieved by topologically
         # sorting substitutes by 'in' criteria - if "exp(x)" contains "x", it
         # gets substituted first.
@@ -946,24 +946,37 @@ class Basic(AssumeMeths):
            >>> from sympy import *
            >>> x, y = symbols('xy')
 
+           >>> (2*x*sin(x)+y+x).as_independent(x)
+           (y, x + 2*x*sin(x))
+
            >>> (x*sin(x)*cos(y)).as_independent(x)
            (cos(y), x*sin(x))
+
+           All other expressions are multiplicative:
+
+           >>> (sin(x)).as_independent(x)
+           (1, sin(x))
+
+           >>> (sin(x)).as_independent(y)
+           (sin(x), 1)
 
         """
         indeps, depend = [], []
 
         if isinstance(self, (Add, Mul)):
-            terms = self.args[:]
+            for term in self.args[:]:
+                if term.has(*deps):
+                    depend.append(term)
+                else:
+                    indeps.append(term)
+
+            return (self.__class__(*indeps),
+                    self.__class__(*depend))
         else:
-            terms = [ self ]
-
-        for term in terms:
-            if term.has(*deps):
-                depend.append(term)
+            if self.has(*deps):
+                return (S.One, self)
             else:
-                indeps.append(term)
-
-        return Mul(*indeps), Mul(*depend)
+                return (self, S.One)
 
     def as_real_imag(self):
         """Performs complex expansion on 'self' and returns a tuple
@@ -1165,7 +1178,7 @@ class Basic(AssumeMeths):
 
         Notes
         =====
-            This method is the most high level method and it returns the 
+            This method is the most high level method and it returns the
             series including the O(x**n) term.
 
             Internally, it executes a method oseries(), which takes an
@@ -1393,7 +1406,7 @@ class SingletonFactory:
             obj = cls()
 
         # store found object in own __dict__, so the next lookups will be
-        # serviced without entering __getattr__, and so will be fast 
+        # serviced without entering __getattr__, and so will be fast
         setattr(self, clsname, obj)
         return obj
 

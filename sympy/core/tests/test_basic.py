@@ -214,3 +214,19 @@ def test_noncommutative_expand_issue658():
     assert (A*(A+B)*B).expand() == A**2*B + A*B**2
     assert (A*(A+B+C)*B).expand() == A**2*B + A*B**2 + A*C*B
 
+def test_as_independent():
+    assert (2*x*sin(x)+y+x).as_independent(x) == (y, x + 2*x*sin(x))
+    assert (2*x*sin(x)+y+x).as_independent(y) == (x + 2*x*sin(x), y)
+
+    assert (2*x*sin(x)+y+x).as_independent(x, y) == (0, y + x + 2*x*sin(x))
+
+    assert (x*sin(x)*cos(y)).as_independent(x) == (cos(y), x*sin(x))
+    assert (x*sin(x)*cos(y)).as_independent(y) == (x*sin(x), cos(y))
+
+    assert (x*sin(x)*cos(y)).as_independent(x, y) == (1, x*sin(x)*cos(y))
+
+    assert (sin(x)).as_independent(x) == (1, sin(x))
+    assert (sin(x)).as_independent(y) == (sin(x), 1)
+
+    assert (2*sin(x)).as_independent(x) == (2, sin(x))
+    assert (2*sin(x)).as_independent(y) == (2*sin(x), 1)
