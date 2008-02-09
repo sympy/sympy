@@ -642,21 +642,26 @@ class Rational(Number):
         #return sage.Integer(self[0])/sage.Integer(self[1])
         return sage.Integer(self.p)/sage.Integer(self.q)
 
+# int -> Integer
+_intcache = {}
+
 class Integer(Rational):
 
     q = 1
     is_integer = True
 
-    @Memoizer(type, (int, long))
+    # TODO caching with decorator, but not to degrade performance
     def __new__(cls, i):
-        if isinstance(i, Integer):
-            return i
-        if i==0: return S.Zero
-        if i==1: return S.One
-        if i==-1: return S.NegativeOne
-        obj = Basic.__new__(cls)
-        obj.p = i
-        return obj
+        try:
+            return _intcache[i]
+        except KeyError:
+            if not isinstance(i, (int, long)):
+                raise ValueError('invalid argument for Integer: %r' % (i,))
+            obj = Basic.__new__(cls)
+            obj.p = i
+            _intcache[i] = obj
+            return obj
+
 
     def _eval_is_odd(self):
         return bool(self.p % 2)
@@ -1225,6 +1230,10 @@ _.Real      = Real
 del _
 
 # ----
+
+_intcache[0] = S.Zero
+_intcache[1] = S.One
+_intcache[-1]= S.NegativeOne
 
 Basic.singleton['E'] = Exp1
 Basic.singleton['pi'] = Pi
