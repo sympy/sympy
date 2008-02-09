@@ -161,8 +161,9 @@ def test_abs1():
 def test_accept_int():
     assert Real(4) == 4
 
-def test_accept_str():
-    assert Real("0.2") == "0.2"
+def test_dont_accept_str():
+    assert      Real("0.2") != "0.2"
+    assert not (Real("0.2") == "0.2")
 
 def test_int():
     a = Rational(5)
