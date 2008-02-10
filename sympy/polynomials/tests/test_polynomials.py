@@ -438,3 +438,19 @@ def test_coeff1():
     assert f.coeff(x, 1) == a + 1
     assert f.coeff(x, 2) == a + 2
     assert f.coeff(x, 3) == 0
+
+def test_coeff2():
+    x, y = symbols("xy")
+    f = x*y + x**2*y**3 + x**3*y
+    f = Polynomial(f)
+    assert f.coeff(x, 0) == 0
+    assert f.coeff(x, 1) == y
+    assert f.coeff(x, 2) == y**3
+    assert f.coeff(x, 3) == y
+    assert f.coeff(x, 4) == 0
+
+    assert f.coeff(y, 0) == 0
+    assert f.coeff(y, 1) == x + x**3
+    assert f.coeff(y, 2) == 0
+    assert f.coeff(y, 3) == x**2
+    assert f.coeff(y, 4) == 0
