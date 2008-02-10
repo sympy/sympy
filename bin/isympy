@@ -20,7 +20,6 @@ from sympy import *
 x, y, z = symbols('xyz')
 k, m, n = symbols('kmn', integer=True)
 f = Function("f")
-Basic.set_repr_level(2)     # pretty print output; Use "1" for python output
 pprint_try_use_unicode()    # use unicode pretty print when available
 """
 
@@ -60,6 +59,19 @@ def run_ipython_interpreter():
     ipshell = IPShellEmbed(args)
     api = ipshell.IP.getapi()
     api.ex(init_code)
+    def myhook(self, value):
+        # adapted from ipython/IPython/hooks.py:155
+        # respect ~/.ipython/ipythonrc
+        if self.rc.pprint:
+            from sympy import pretty
+            out = pretty(value)
+            if '\n' in out:
+                print
+            print out
+        else:
+            print repr(value)
+
+    ipshell.IP.set_hook("result_display", myhook)
     api.ex('__IP.compile("from __future__ import division", "<input>", "single") in __IP.user_ns')
 
     ### create some magic commands
@@ -105,6 +117,8 @@ install the "ipython" package and start isympy again.\n"""
         def save_history(self, histfile):
             readline.write_history_file(histfile)
 
+    from sympy import pprint
+    sys.displayhook = lambda value: pprint(value)
     sh = HistoryConsole()
     sh.runcode(init_code)
     sh.interact(welcome_msg)
