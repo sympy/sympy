@@ -20,7 +20,6 @@ from sympy import *
 x, y, z = symbols('xyz')
 k, m, n = symbols('kmn', integer=True)
 f = Function("f")
-pprint_try_use_unicode()    # use unicode pretty print when available
 """
 
 import sys

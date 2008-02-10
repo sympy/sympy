@@ -1,10 +1,14 @@
 from sympy import Symbol, Matrix, Integral, log, Rational, Derivative, exp, \
         sqrt, pi, Function, sin, pprint_use_unicode, oo
-from sympy.printing.pretty import pretty
+from sympy.printing.pretty import pretty as xpretty
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
 y = Symbol('y')
+
+def pretty(expr):
+    # ascii-pretty by default
+    return xpretty(expr, False)
 
 def test_pretty_basic():
     # Simple numbers/symbols
@@ -41,17 +45,17 @@ def test_pretty_relational():
     assert pretty(x/(y+1) != y**2) == '  x       2\n----- != y \n1 + y      '
 
 def test_pretty_unicode():
-    assert pretty( oo, True ) == u'\u221e'
-    assert pretty( pi, True ) == u'\u03c0'
-    assert pretty( pi+2*x, True ) == u'\u03c0 + 2*x'
-    assert pretty( pi**2+exp(x), True ) == u' 2    x\n\u03c0  + \u212f '
-    assert pretty( x != y, True ) == u'x \u2260 y'
+    assert xpretty( oo, True ) == u'\u221e'
+    assert xpretty( pi, True ) == u'\u03c0'
+    assert xpretty( pi+2*x, True ) == u'\u03c0 + 2*x'
+    assert xpretty( pi**2+exp(x), True ) == u' 2    x\n\u03c0  + \u212f '
+    assert xpretty( x != y, True ) == u'x \u2260 y'
 
 def test_pretty_unicode_defaults():
     use_unicode = pprint_use_unicode(True)
-    assert pretty(Symbol('alpha')) == u'\u03b1'
+    assert xpretty(Symbol('alpha')) == u'\u03b1'
     pprint_use_unicode(False)
-    assert pretty(Symbol('alpha')) == 'alpha'
+    assert xpretty(Symbol('alpha')) == 'alpha'
 
     pprint_use_unicode(use_unicode)
 
