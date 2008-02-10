@@ -122,6 +122,11 @@ class Ellipse(GeometryEntity):
                 self.center[0] + self.hradius*C.cos(t),
                 self.center[1] + self.vradius*C.sin(t))
 
+    def plot_interval(self, parameter_name='t'):
+        """Returns a typical plot interval used by the plotting module."""
+        t = C.Symbol(parameter_name, real=True)
+        return [t, -S.Pi, S.Pi]
+
     def random_point(self):
         """Returns a random point on the ellipse."""
         from random import random

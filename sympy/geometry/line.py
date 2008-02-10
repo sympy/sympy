@@ -342,6 +342,11 @@ class Line(LinearEntity):
         y = simplify(self.p1[1] + t*(self.p2[1] - self.p1[1]))
         return Point(x, y)
 
+    def plot_interval(self, parameter_name='t'):
+        """Returns the plot interval for the default geometric plot of line"""
+        t = C.Symbol(parameter_name, real=True)
+        return [t, -5, 5]
+
     def equation(self, xaxis_name='x', yaxis_name='y'):
         """
         Returns the equation for this line. Optional parameters xaxis_name
@@ -459,6 +464,17 @@ class Segment(LinearEntity):
         elif p1[0] == p2[0] and p1[1] > p2[0]:
             p1, p2 = p2, p1
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
+
+    def arbitrary_point(self, parameter_name='t'):
+        """Returns a symbolic point that is on this line segment."""
+        t = C.Symbol(parameter_name, real=True)
+        x = simplify(self.p1[0] + t*(self.p2[0] - self.p1[0]))
+        y = simplify(self.p1[1] + t*(self.p2[1] - self.p1[1]))
+        return Point(x, y)
+
+    def plot_interval(self, parameter_name='t'):
+        t = C.Symbol(parameter_name, real=True)
+        return [t, 0, 1]
 
     def perpendicular_bisector(self, p=None):
         """

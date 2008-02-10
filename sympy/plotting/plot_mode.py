@@ -3,6 +3,7 @@ from plot_interval import PlotInterval
 from plot_object import PlotObject
 from color_scheme import ColorScheme
 from util import parse_option_string
+from sympy.geometry.entity import GeometryEntity
 
 class PlotMode(PlotObject):
     """
@@ -60,6 +61,7 @@ class PlotMode(PlotObject):
         Plot.__setattr__. Returns an initialized
         instance of the appropriate child class.
         """
+
         nargs, nkwargs = PlotMode._extract_options(args, kwargs)
         mode_arg = nkwargs.get('mode', '')
 
@@ -357,22 +359,27 @@ class PlotMode(PlotObject):
         interpret_error = "Could not interpret %s as a function or interval."
     
         functions, intervals = [], []
-        for a in args:
-            i = PlotInterval.try_parse(a)
-            if i is not None:
-                if len(functions) == 0:
-                    raise ValueError(interval_wrong_order % (str(i)))
+        if isinstance(args[0], GeometryEntity):
+            for coords in list(args[0].arbitrary_point()):
+                functions.append(coords)
+            intervals.append(PlotInterval.try_parse(args[0].plot_interval()))
+        else:
+            for a in args:
+                i = PlotInterval.try_parse(a)
+                if i is not None:
+                    if len(functions) == 0:
+                        raise ValueError(interval_wrong_order % (str(i)))
+                    else:
+                        intervals.append(i)
                 else:
-                    intervals.append(i)
-            else:
-                if isinstance(a, (str, list, tuple)):
-                    raise ValueError(interpret_error % (str(a)))
-                try:
-                    f = sympify(a)
-                    functions.append(f)
-                except:
-                    raise ValueError(interpret_error % str(a))
-
+                    if isinstance(a, (str, list, tuple)):
+                        raise ValueError(interpret_error % (str(a)))
+                    try:
+                        f = sympify(a)
+                        functions.append(f)
+                    except:
+                        raise ValueError(interpret_error % str(a))
+    
         return functions, intervals
 
     @staticmethod

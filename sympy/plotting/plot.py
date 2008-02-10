@@ -14,6 +14,8 @@ from time import sleep
 from os import getcwd, listdir
 from util import parse_option_string
 
+from sympy.geometry.entity import GeometryEntity
+
 class Plot(object):
     """
     Plot Examples
@@ -284,7 +286,7 @@ class Plot(object):
         if isinstance(args, PlotObject):
             f = args
         else:
-            if not isinstance(args, (list, tuple)):
+            if (not isinstance(args, (list, tuple))) or isinstance(args, GeometryEntity):
                 args = [args]
             if len(args) == 0:
                 return # no arguments given
