@@ -562,50 +562,54 @@ class Basic(AssumeMeths):
         from sympy.functions.elementary.complexes import conjugate as c
         return c(self)
 
-    def subs_dict(self, old_new_dict):
-        """Substitutes "self" using the keys and values from the "old_new_dict".
+    def subs_dict(self, sequence):
+        """Performs sequential substitution.
 
-           This correctly handles "overlapping" keys,
-           e.g. when doing substituion like:
+           Given a collection of key, value pairs, which correspond to
+           old and new expressions respectively,  substitute all given
+           pairs handling properly all overlapping keys  (according to
+           'in' relation).
 
-             e.subs_dict(x: y, exp(x): y)
+           We have to use naive O(n**2) sorting algorithm, as 'in'
+           gives only partial order and all asymptotically faster
+           fail (depending on the initial order).
 
-           exp(x) is always substituted before x
+           >>> from sympy import *
+           >>> x, y = symbols('xy')
+
+           >>> a,b,c,d,e = symbols('abcde')
+
+           >>> A = (sqrt(sin(2*x)), a)
+           >>> B = (sin(2*x), b)
+           >>> C = (cos(2*x), c)
+           >>> D = (x, d)
+           >>> E = (exp(x), e)
+
+           >>> expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
+
+           >>> expr.subs_dict([A,B,C,D,E])
+           b + a*c*sin(d*e)
+
         """
-        r = self
+        if isinstance(sequence, dict):
+            sequence = sequence.items()
+        elif not isinstance(sequence, (list, tuple)):
+            raise TypeError("Not an iterable container")
 
-        oldnew = [(o,n) for (o,n) in old_new_dict.items()]
+        subst, result = [], self
 
-
-        # Care needs to be taken for cases like these:
-        #
-        # consider
-        #     e = x*exp(x)
-        #
-        # when we do
-        #     e.subs_dict(x: y, exp(x): y)
-        #
-        # the result depends in which order elementary substitutions are done.
-        #
-        # So we *have* to proceess 'exp(x)' first. This is achieved by topologically
-        # sorting substitutes by 'in' criteria - if "exp(x)" contains "x", it
-        # gets substituted first.
-
-
-        # let's topologically sort oldnew, so we have more general terms in the
-        # beginning     (e.g. [exp(x), x] is not the same as [x, exp(x)] when
-        #                doing substitution)
-        def in_cmp(a,b):
-            if a[0] in b[0]:
-                return 1
+        for pattern in sequence:
+            for i, (expr, _) in enumerate(subst):
+                if pattern[0] in expr:
+                    subst.insert(i, pattern)
+                    break
             else:
-                return -1
+                subst.append(pattern)
 
-        oldnew.sort(cmp=in_cmp)
+        for old, new in reversed(subst):
+            result = result.subs(old, new)
 
-        for old,new in oldnew:
-            r = r.subs(old,new)
-        return r
+        return result
 
     #@classmethod
     def matches(pattern, expr, repl_dict={}, evaluate=False):
