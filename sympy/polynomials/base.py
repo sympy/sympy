@@ -687,8 +687,10 @@ class Polynomial(Basic):
         Example:
         >>> a, x = symbols("ax")
         >>> f = (a+1)*x + (a+2)*x**2 + a
-        >>> Polynomial(f, var=[x]).coeff(x, 2)
+        >>> Polynomial(f).coeff(x, 2)
         2 + a
+        >>> Polynomial(f).coeff(a, 1)
+        1 + x + x**2
         """
         f = Polynomial(self, var=[x])
         return f.nth_coeff(n)
