@@ -13,6 +13,7 @@ from sympy.core.basic import Basic, S, C, Atom, sympify
 
 from sympy.polynomials import factor_, div, quo, rem, gcd, egcd
 from sympy.simplify import together
+from sympy.matrices import Matrix
 from sympy.functions import exp
 
 def cancel(f, *syms, **flags):
@@ -84,9 +85,10 @@ def trim(f, *syms, **flags):
        all functional components, then this procedure is equivalent
        to cancel().
 
-       Note that this procedure can thread over sums and relational
-       operators. It can be also called recursively (to change this
-       behaviour unset 'recursive' flag).
+       Note that this procedure can thread over composite objects
+       like big operators, matrices, relational operators etc. It
+       can be also called recursively (to change this behaviour
+       unset 'recursive' flag).
 
        >>> from sympy import *
 
@@ -105,13 +107,11 @@ def trim(f, *syms, **flags):
        sin(1 + f(x))
 
     """
-    f = sympify(f)
-
-    if isinstance(f, Add):
-        return Add(*[ trim(g, *syms, **flags) for g in f.args ])
-    elif isinstance(f, Relational):
+    if isinstance(f, Relational):
         return Relational(trim(f.lhs, *syms, **flags),
             trim(f.rhs, *syms, **flags), f.rel_op)
+    elif isinstance(f, Matrix):
+        return f.applyfunc(lambda g: trim(g, *syms, **flags))
     else:
         recursive = flags.get('recursive', True)
 
@@ -170,33 +170,57 @@ def trim(f, *syms, **flags):
 
             return g, result
 
-        if f.is_fraction(*syms):
+        f = sympify(f)
+
+        if f.is_number or (syms and not f.has(*syms)):
+            return f
+
+        f = together(f.expand())
+        f, terms = components(f)
+
+        if not terms:
             return cancel(f, *syms)
         else:
-            f = together(f.expand())
+            mapping, reverse = {}, {}
+
+            for g in terms:
+                mapping[g] = Temporary()
+                reverse[mapping[g]] = g
 
             p, q = f.as_numer_denom()
+            f = p.expand()/q.expand()
 
-            p = p.expand()
-            q = q.expand()
+            H = cancel(f.subs_dict(mapping), *syms)
 
-            f, terms = components(p/q)
-
-            if not terms:
-                return cancel(f, *syms)
+            if not flags.get('extract', True):
+                return H.subs_dict(reverse)
             else:
-                mapping, reverse = {}, {}
+                syms = syms or None
 
-                for g in terms:
-                    mapping[g] = Temporary()
-                    reverse[mapping[g]] = g
+                def extract(f):
+                    p = f.args[0]
 
-                F = cancel(f.subs_dict(mapping), *syms)
+                    for q in f.args[1:]:
+                        p = gcd(p, q, syms)
 
-                if F != f:
-                    return F.subs_dict(reverse)
+                        if p.is_number:
+                            return S.One, f
+
+                    return p, Add(*[quo(g, p, syms) for g in f.args])
+
+                P, Q = H.as_numer_denom()
+
+                if isinstance(P, Add):
+                    GP, P = extract(P)
                 else:
-                    return f
+                    GP = S.One
+
+                if isinstance(Q, Add):
+                    GQ, Q = extract(Q)
+                else:
+                    GQ = S.One
+
+                return ((GP*P)/(GQ*Q)).subs_dict(reverse)
 
 def apart(f, z, **flags):
     """Compute partial fraction decomposition of a rational function.

@@ -53,6 +53,9 @@ def test_trim():
 
     assert trim(sin((f(x)**2+f(x))/f(x))) == sin(1 + f(x))
 
+    assert trim(exp(x)*sin(x)/2 + cos(x)*exp(x)) == \
+        exp(x)*(sin(x) + 2*cos(x))/2
+
 def test_apart():
     assert apart(1/(x+2)/(x+1), x) == 1/(1 + x) - 1/(2 + x)
     assert apart(1/(x+1)/(x+5), x) == -1/(5 + x)/4 + 1/(1 + x)/4
