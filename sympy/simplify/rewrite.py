@@ -2,17 +2,26 @@
    partial fraction decomposition, combinig together and collecting terms.
 """
 
-from sympy.core import Basic, S, C, Symbol, sympify
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.function import Function
+from sympy.core.relational import Relational
+from sympy.core.symbol import Symbol, Temporary
+from sympy.core.numbers import Integer, Rational
+from sympy.core.basic import Basic, S, C, Atom, sympify
 
 from sympy.polynomials import factor_, div, quo, rem, gcd, egcd
 from sympy.simplify import together
+from sympy.functions import exp
 
-def cancel(f, *syms):
-    """Cancel common factors in the given rational function.
+def cancel(f, *syms, **flags):
+    """Cancel common factors in a given rational function.
 
        Given a quotient of polynomials, performing only gcd and quo
-       operations in polynomial algebra, return rational function
-       with numerator and denominator of minimal total degree.
+       operations in polynomial algebra,  return rational function
+       with numerator and denominator of minimal total degree in
+       an expanded form.
 
        For all other kinds of expressions the input is returned in
        an unchanged form. Note however, that 'cancel' function can
@@ -38,11 +47,11 @@ def cancel(f, *syms):
 
     if syms and not f.has(*syms):
         return f
-    elif isinstance(f, C.Add):
-        return C.Add(*[ cancel(g, *syms) for g in f.args ])
-    elif isinstance(f, C.Relational):
-        return C.Relational(cancel(f.lhs, *syms),
-            cancel(f.rhs, *syms), f.rel_op)
+    elif isinstance(f, Add):
+        return Add(*[ cancel(g, *syms, **flags) for g in f.args ])
+    elif isinstance(f, Relational):
+        return Relational(cancel(f.lhs, *syms, **flags),
+            cancel(f.rhs, *syms, **flags), f.rel_op)
     else:
         g = together(f)
 
@@ -50,6 +59,9 @@ def cancel(f, *syms):
             return f
         else:
             p, q = g.as_numer_denom()
+
+            p = p.expand()
+            q = q.expand()
 
             syms = syms or None
 
@@ -60,6 +72,131 @@ def cancel(f, *syms):
                 q = quo(q, g, syms)
 
             return p / q
+
+def trim(f, *syms, **flags):
+    """Cancel common factors in a given formal rational expression.
+
+       Given an arbitrary expression, map all functional components
+       to temporary symbols, rewriting this expression to rational
+       function form and perform cancelation of common factors.
+
+       When given a rational function or a list of symbols discards
+       all functional components, then this procedure is equivalent
+       to cancel().
+
+       Note that this procedure can thread over sums and relational
+       operators. It can be also called recursively (to change this
+       behaviour unset 'recursive' flag).
+
+       >>> from sympy import *
+
+       >>> x,y = symbols('xy')
+       >>> f = Function('f')
+
+       >>> trim((f(x)**2+f(x))/f(x))
+       1 + f(x)
+
+       >>> trim((x**2+x)/x)
+       1 + x
+
+       Recursively simplify expressions:
+
+       >>> trim(sin((f(x)**2+f(x))/f(x)))
+       sin(1 + f(x))
+
+    """
+    f = sympify(f)
+
+    if isinstance(f, Add):
+        return Add(*[ trim(g, *syms, **flags) for g in f.args ])
+    elif isinstance(f, Relational):
+        return Relational(trim(f.lhs, *syms, **flags),
+            trim(f.rhs, *syms, **flags), f.rel_op)
+    else:
+        recursive = flags.get('recursive', True)
+
+        def is_functional(g):
+            return not (isinstance(g, Atom) or g.is_number) \
+                and (not syms or g.has(*syms))
+
+        def components(g):
+            result = set()
+
+            if is_functional(g):
+                if isinstance(g, (Add, Mul)):
+                    args = []
+
+                    for h in g.args:
+                        h, terms = components(h)
+
+                        result |= terms
+                        args.append(h)
+
+                    g = g.__class__(*args)
+                elif isinstance(g, Pow):
+                    if recursive:
+                        base = trim(g.base, *syms, **flags)
+                    else:
+                        base = g.base
+
+                    if isinstance(g.exp, Rational):
+                        if isinstance(g.exp, Integer):
+                            if g.exp is S.NegativeOne:
+                                h, terms = components(base)
+                                return h**S.NegativeOne, terms
+                            else:
+                                h = base
+                        else:
+                            h = base**Rational(1, g.exp.q)
+
+                        g = base**g.exp
+                    else:
+                        if recursive:
+                            h = g = base**trim(g.exp, *syms, **flags)
+                        else:
+                            h = g = base**g.exp
+
+                    if is_functional(h):
+                        result.add(h)
+                else:
+                    if not recursive:
+                        result.add(g)
+                    else:
+                        g = g.__class__(*[trim(h, *syms,
+                            **flags) for h in g.args])
+
+                        if is_functional(g):
+                            result.add(g)
+
+            return g, result
+
+        if f.is_fraction(*syms):
+            return cancel(f, *syms)
+        else:
+            f = together(f.expand())
+
+            p, q = f.as_numer_denom()
+
+            p = p.expand()
+            q = q.expand()
+
+            f, terms = components(p/q)
+
+            if not terms:
+                return cancel(f, *syms)
+            else:
+                mapping, reverse = {}, {}
+
+                for g in terms:
+                    mapping[g] = Temporary()
+                    reverse[mapping[g]] = g
+
+                F = cancel(f.subs_dict(mapping), *syms)
+
+                if F != f:
+                    return F.subs_dict(reverse)
+                else:
+                    return f
 
 def apart(f, z, **flags):
     """Compute partial fraction decomposition of a rational function.
@@ -99,10 +236,10 @@ def apart(f, z, **flags):
     """
     f = sympify(f)
 
-    if isinstance(f, C.Add):
-        return C.Add(*[ apart(g, z, **flags) for g in f ])
-    elif isinstance(f, C.Relational):
-        return C.Relational(apart(f.lhs, z, **flags),
+    if isinstance(f, Add):
+        return Add(*[ apart(g, z, **flags) for g in f ])
+    elif isinstance(f, Relational):
+        return Relational(apart(f.lhs, z, **flags),
             apart(f.rhs, z, **flags), f.rel_op)
     else:
         if not f.has(z):
@@ -121,7 +258,7 @@ def apart(f, z, **flags):
         partial, r = div(P, Q, z)
         f, q, U = r / Q, Q, []
 
-        u = C.Function('u')(z)
+        u = Function('u')(z)
         A = Symbol('a', dummy=True)
 
         formal = flags.get('formal', False)

@@ -320,7 +320,7 @@ def heurisch(f, x, **kwargs):
                 factorization = poly
 
             if isinstance(factorization, Mul):
-                reducibles |= set(factorization[:])
+                reducibles |= set(factorization.args)
             else:
                 reducibles.add(factorization)
 
