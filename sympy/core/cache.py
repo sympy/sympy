@@ -44,12 +44,34 @@ def clear_cache():
 
 ########################################
 
-def cache_it_nocache(func):
+def __cacheit_nocache(func):
     return func
 
 
 
-def cache_it_immutable(func):
+def __cacheit(func):
+    """caching decorator.
+    
+       important: the result of cached function must be *immutable*
+
+
+       Example
+       -------
+
+       @cacheit
+       def f(a,b):
+           return a+b
+
+
+       @cacheit
+       def f(a,b):
+           return [a,b] # <-- WRONG, returns mutable object
+
+
+       to force cacheit to check returned results mutability and consistency,
+       set environment variable SYMPY_USE_CACHE to 'debug'
+    """
+
     func._cache_it_cache = func_cache_it_cache = {}
     CACHE.append((func, func_cache_it_cache))
 
@@ -70,9 +92,9 @@ def cache_it_immutable(func):
     return wrapper
 
 
-def cache_it_debug(func):
-    """cache_it_fast + code to check cache consitency"""
-    cfunc = __cache_it_immutable(func)
+def __cacheit_debug(func):
+    """cacheit + code to check cache consitency"""
+    cfunc = __cacheit(func)
 
     def wrapper(*args, **kw_args):
         # always call function itself and compare it with cached version
@@ -98,7 +120,7 @@ def cache_it_debug(func):
     return wrapper
 
 
-def cache_it_nondummy(func):
+def __cacheit_nondummy(func):
     func._cache_it_cache = func_cache_it_cache = {}
     CACHE.append((func, func_cache_it_cache))
 
@@ -291,16 +313,11 @@ import os
 usecache = os.getenv('SYMPY_USE_CACHE', 'yes').lower()
 
 if usecache=='no':
-    cache_it_immutable  = cache_it_nocache
-    cache_it_debug      = cache_it_nocache
-    cache_it_nondummy   = cache_it_nocache
     Memoizer            = Memoizer_nocache
-    cache_it            = cache_it_nocache
+    cacheit             = __cacheit_nocache
 elif usecache=='yes':
-    cache_it = cache_it_immutable
+    cacheit = __cacheit
 elif usecache=='debug':
-    cache_it = cache_it_debug # twice slower
-    __cache_it_immutable = cache_it_immutable
-    cache_it_immutable = cache_it_debug
+    cacheit = __cacheit_debug   # a lot slower
 else:
     raise RuntimeError('unknown argument in SYMPY_USE_CACHE: %s' % usecache)
