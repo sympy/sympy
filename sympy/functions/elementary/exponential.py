@@ -1,7 +1,7 @@
 
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Lambda, Function, Function
-from sympy.core.cache import cache_it, cache_it_immutable
+from sympy.core.cache import cache_it_immutable
 
 class exp(Function):
 
@@ -115,10 +115,10 @@ class exp(Function):
         arg = self.args[0]
         if x is not None:
             c,f = arg.as_coeff_factors(x)
-            return self.func(c), [self.func(a) for a in f.args]
+            return self.func(c), tuple( self.func(a) for a in f.args )
         if isinstance(arg, C.Add):
-            return S.One, [self.func(a) for a in arg.args]
-        return S.One,[self]
+            return S.One, tuple( self.func(a) for a in arg.args )
+        return S.One,(self,)
 
     def _eval_subs(self, old, new):
         if self==old: return new

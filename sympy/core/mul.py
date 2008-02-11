@@ -2,7 +2,7 @@
 from basic import Basic, S, C, sympify
 from operations import AssocOp
 from methods import RelMeths, ArithMeths
-from cache import cache_it, cache_it_immutable
+from cache import cache_it_immutable
 
 from symbol import Symbol, Wild
 # from function import WildFunction /cyclic/
@@ -189,7 +189,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     if coeff == -1:
                         return None
                     elif coeff < 0:
-                        return (-coeff)**e * Mul(*([S.NegativeOne] +rest))**e
+                        return (-coeff)**e * Mul(*((S.NegativeOne,) +rest))**e
                     else:
                         return coeff**e * Mul(*[s**e for s in rest])
 
@@ -224,7 +224,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         if coeff.is_negative:
             coeff = -coeff
             if coeff is not S.One:
-                terms.insert(0, coeff)
+                terms = (coeff,) + terms
             if isinstance(terms, Basic):
                 terms = terms.args
             r = '-' + '*'.join([t.tostr(precedence) for t in terms])
@@ -257,13 +257,13 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             return '(%s)' % r
         return r
 
-    @cache_it
+    @cache_it_immutable
     def as_two_terms(self):
         if len(self.args) == 1:
             return S.One, self
         return self.args[0], Mul(*self.args[1:])
 
-    @cache_it
+    @cache_it_immutable
     def as_coeff_terms(self, x=None):
         if x is not None:
             l1 = []
@@ -273,11 +273,11 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     l2.append(f)
                 else:
                     l1.append(f)
-            return Mul(*l1), l2
+            return Mul(*l1), tuple(l2)
         coeff = self.args[0]
         if isinstance(coeff, Number):
-            return coeff, list(self.args[1:])
-        return S.One, list(self.args[:])
+            return coeff, self.args[1:]
+        return S.One, self.args
 
     @staticmethod
     def _expandsums(sums):

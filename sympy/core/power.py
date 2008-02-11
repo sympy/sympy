@@ -2,7 +2,7 @@
 from basic import Basic, S, C
 from sympify import _sympify
 from methods import ArithMeths, RelMeths
-from cache import cache_it, cache_it_immutable
+from cache import cache_it_immutable
 
 from symbol import Symbol, Wild, Temporary
 # from numbers import Number, Rational, Integer     /cyclic/

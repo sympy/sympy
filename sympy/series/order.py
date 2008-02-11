@@ -1,7 +1,7 @@
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core import oo, Rational, Pow
 from sympy.core.methods import ArithMeths, RelMeths
-from sympy.core.cache import cache_it, cache_it_immutable
+from sympy.core.cache import cache_it_immutable
 
 class Order(Basic, ArithMeths, RelMeths):
     """

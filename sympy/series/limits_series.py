@@ -10,7 +10,7 @@
 
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.methods import RelMeths, ArithMeths
-from sympy.core.cache import cache_it, cache_it_immutable
+from sympy.core.cache import cache_it_immutable
 
 class Limit(Basic, RelMeths, ArithMeths):
     """ Find the limit of the expression under process x->xlim.
@@ -76,10 +76,11 @@ class Limit(Basic, RelMeths, ArithMeths):
         return r
 
 class InfLimit(Basic):
+    _xoo = C.Symbol('xoo', dummy=True, unbounded=True, positive=True)
+
     @staticmethod
-    @cache_it_immutable
     def limit_process_symbol():
-        return C.Symbol('xoo', dummy=True, unbounded=True, positive=True)
+        return InfLimit._xoo
 
     @cache_it_immutable
     def __new__(cls, expr, x):

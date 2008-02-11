@@ -2,7 +2,7 @@
 from basic import Basic, S, C
 from operations import AssocOp
 from methods import RelMeths, ArithMeths
-from cache import cache_it, cache_it_immutable
+from cache import cache_it_immutable
 
 from symbol import Symbol, Wild, Temporary
 # from numbers import Number    /cyclic/
@@ -111,7 +111,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
             return '(%s)' % r
         return r
 
-    @cache_it
+    @cache_it_immutable
     def as_coeff_factors(self, x=None):
         if x is not None:
             l1 = []
@@ -121,11 +121,11 @@ class Add(AssocOp, RelMeths, ArithMeths):
                     l2.append(f)
                 else:
                     l1.append(f)
-            return Add(*l1), l2
+            return Add(*l1), tuple(l2)
         coeff = self.args[0]
         if isinstance(coeff, Number):
-            return coeff, list(self.args[1:])
-        return S.Zero, list(self.args[:])
+            return coeff, self.args[1:]
+        return S.Zero, self.args
 
     def _eval_derivative(self, s):
         return Add(*[f.diff(s) for f in self.args])
@@ -143,7 +143,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
     def _combine_inverse(lhs, rhs):
         return lhs - rhs
 
-    @cache_it
+    @cache_it_immutable
     def as_two_terms(self):
         if len(self.args) == 1:
             return S.Zero, self
@@ -255,8 +255,8 @@ class Add(AssocOp, RelMeths, ArithMeths):
     def as_coeff_terms(self, x=None):
         # -2 + 2 * a -> -1, 2-2*a
         if isinstance(self.args[0], Number) and self.args[0].is_negative:
-            return -S.One,[-self]
-        return S.One,[self]
+            return -S.One,(-self,)
+        return S.One,(self,)
 
     def _eval_subs(self, old, new):
         if self==old: return new
@@ -278,7 +278,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
     def _eval_oseries(self, order):
         return Add(*[f.oseries(order) for f in self.args])
 
-    @cache_it
+    @cache_it_immutable
     def extract_leading_order(self, *symbols):
         lst = []
         seq = [(f, C.Order(f, *symbols)) for f in self.args]
@@ -295,7 +295,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
                     continue
                 new_lst.append((e,o))
             lst = new_lst
-        return lst
+        return tuple(lst)
 
     def _eval_as_leading_term(self, x):
         coeff, factors = self.as_coeff_factors(x)

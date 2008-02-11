@@ -1,7 +1,7 @@
 
 from basic import Basic, S, C
 from sympify import _sympify
-from cache import cache_it, cache_it_immutable
+from cache import cache_it_immutable
 
 # from add import Add   /cyclic/
 # from mul import Mul   /cyclic/

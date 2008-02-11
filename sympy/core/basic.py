@@ -5,7 +5,7 @@ type_class = type
 import decimal
 from assumptions import AssumeMeths
 from sympify import sympify, SympifyError
-from cache import cache_it, cache_it_immutable, Memoizer, MemoizerArg
+from cache import cache_it_immutable, Memoizer, MemoizerArg
 
 # from numbers  import Number, Integer, Real /cyclic/
 # from interval import Interval /cyclic/
@@ -1035,8 +1035,8 @@ class Basic(AssumeMeths):
         # a -> c * t
         if x is not None:
             if not self.has(x):
-                return self, []
-        return S.One, [self]
+                return self, tuple()
+        return S.One, (self,)
 
     def as_indep_terms(self, x):
         coeff, terms = self.as_coeff_terms()
@@ -1053,8 +1053,8 @@ class Basic(AssumeMeths):
         # a -> c + f
         if x is not None:
             if not self.has(x):
-                return self, []
-        return S.Zero, [self]
+                return self, tuple()
+        return S.Zero, (self,)
 
     def as_numer_denom(self):
         # a/b -> a,b

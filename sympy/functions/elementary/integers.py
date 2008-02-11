@@ -84,7 +84,7 @@ class floor(Function):
                     return -ceiling(-arg)
                 else:
                     return cls(arg.evalf())
-            elif terms == [ S.ImaginaryUnit ] and coeff.is_real:
+            elif terms == ( S.ImaginaryUnit, ) and coeff.is_real:
                 return cls(coeff)*S.ImaginaryUnit
 
     def _eval_is_bounded(self):
@@ -174,7 +174,7 @@ class ceiling(Function):
                     return -floor(-arg)
                 else:
                     return cls(arg.evalf())
-            elif terms == [ S.ImaginaryUnit ] and coeff.is_real:
+            elif terms == ( S.ImaginaryUnit, ) and coeff.is_real:
                 return cls(coeff)*S.ImaginaryUnit
 
     def _eval_is_bounded(self):

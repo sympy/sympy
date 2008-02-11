@@ -154,7 +154,7 @@ class Number(Atom, RelMeths, ArithMeths):
 
     def as_coeff_terms(self, x=None):
         # a -> c * t
-        return self, []
+        return self, tuple()
 
 decimal_to_Number_cls = {
     decimal.Decimal('0').as_tuple():'Zero',
@@ -454,7 +454,7 @@ class Rational(Number):
         obj = Basic.__new__(cls)
         obj.p = p
         obj.q = q
-        #obj._args = [p, q]
+        #obj._args = (p, q)
         return obj
 
     def _hashable_content(self):

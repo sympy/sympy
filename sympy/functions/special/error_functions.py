@@ -2,7 +2,7 @@
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Function
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.core.cache import cache_it, cache_it_immutable
+from sympy.core.cache import cache_it_immutable
 
 ###############################################################################
 ################################ ERROR FUNCTION ###############################
