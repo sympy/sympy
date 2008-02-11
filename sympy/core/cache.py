@@ -1,16 +1,5 @@
 """ Caching facility for SymPy """
 
-def mycopy(obj, level=0):
-    if isinstance(obj, (list, tuple)):
-        return obj.__class__(map(mycopy, obj))
-    elif isinstance(obj, dict):
-        d = obj.__class__()
-        for k,v in obj.items():
-            d[mycopy(k)] = mycopy(v)
-        return d
-    return obj
-
-
 # TODO: refactor CACHE & friends into class?
 
 # global cache registry:
@@ -58,28 +47,7 @@ def clear_cache():
 def cache_it_nocache(func):
     return func
 
-def cache_it_fast(func):
-    func._cache_it_cache = func_cache_it_cache = {}
-    CACHE.append((func, func_cache_it_cache))
 
-    def wrapper(*args, **kw_args):
-        if kw_args:
-            keys = kw_args.keys()
-            keys.sort()
-            items = [(k+'=',kw_args[k]) for k in keys]
-            k = args + tuple(items)
-        else:
-            k = args
-        cache_flag = False
-        try:
-            r = func_cache_it_cache[k]
-        except KeyError:
-            r = func(*args, **kw_args)
-            cache_flag = True
-        if cache_flag:
-            func_cache_it_cache[k] = r
-        return mycopy(r)
-    return wrapper
 
 def cache_it_immutable(func):
     func._cache_it_cache = func_cache_it_cache = {}
@@ -104,14 +72,27 @@ def cache_it_immutable(func):
 
 def cache_it_debug(func):
     """cache_it_fast + code to check cache consitency"""
-    cfunc = cache_it_fast(func)
+    cfunc = __cache_it_immutable(func)
 
     def wrapper(*args, **kw_args):
         # always call function itself and compare it with cached version
         r1 = func (*args, **kw_args)
         r2 = cfunc(*args, **kw_args)
 
+        # try to see if the result is immutable
+        #
+        # this works because:
+        #
+        # hash([1,2,3])         -> raise TypeError
+        # hash({'a':1, 'b':2})  -> raise TypeError
+        # hash((1,[2,3]))       -> raise TypeError
+        #
+        # hash((1,2,3))         -> just computes the hash
+        hash(r1), hash(r2)
+
+        # also see if returned values are the same
         assert r1 == r2
+
         return r1
 
     return wrapper
@@ -310,15 +291,16 @@ import os
 usecache = os.getenv('SYMPY_USE_CACHE', 'yes').lower()
 
 if usecache=='no':
-    cache_it_fast       = cache_it_nocache
     cache_it_immutable  = cache_it_nocache
     cache_it_debug      = cache_it_nocache
     cache_it_nondummy   = cache_it_nocache
     Memoizer            = Memoizer_nocache
     cache_it            = cache_it_nocache
 elif usecache=='yes':
-    cache_it = cache_it_fast
+    cache_it = cache_it_immutable
 elif usecache=='debug':
     cache_it = cache_it_debug # twice slower
+    __cache_it_immutable = cache_it_immutable
+    cache_it_immutable = cache_it_debug
 else:
     raise RuntimeError('unknown argument in SYMPY_USE_CACHE: %s' % usecache)
