@@ -1,7 +1,7 @@
 
 from basic import Basic, Atom, S, C, sympify
 from methods import RelMeths, ArithMeths
-from cache import cache_it_nondummy
+#from cache import cache_it_nondummy
 
 # from function import Function, WildFunction   /cyclic/
 
