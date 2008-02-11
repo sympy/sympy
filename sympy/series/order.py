@@ -1,7 +1,7 @@
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core import oo, Rational, Pow
 from sympy.core.methods import ArithMeths, RelMeths
-from sympy.core.cache import cache_it_immutable
+from sympy.core.cache import cacheit
 
 class Order(Basic, ArithMeths, RelMeths):
     """
@@ -81,7 +81,7 @@ class Order(Basic, ArithMeths, RelMeths):
 
     _cache = {}
 
-    @cache_it_immutable
+    @cacheit
     def __new__(cls, expr, *symbols, **assumptions):
         expr = sympify(expr).expand(trig=True)
         if expr is S.NaN:
@@ -268,7 +268,7 @@ class Order(Basic, ArithMeths, RelMeths):
                     order_symbols = order_symbols + (s,)
         return self.expr, order_symbols
 
-    @cache_it_immutable
+    @cacheit
     def contains(self, expr):
         """
         Return True if expr belongs to Order(self.expr, *self.symbols).

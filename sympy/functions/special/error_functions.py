@@ -2,7 +2,7 @@
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Function
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.core.cache import cache_it_immutable
+from sympy.core.cache import cacheit
 
 ###############################################################################
 ################################ ERROR FUNCTION ###############################
@@ -44,7 +44,7 @@ class erf(Function):
                 return -cls(-arg)
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero

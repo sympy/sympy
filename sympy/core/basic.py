@@ -5,7 +5,7 @@ type_class = type
 import decimal
 from assumptions import AssumeMeths
 from sympify import sympify, SympifyError
-from cache import cache_it_immutable, Memoizer, MemoizerArg
+from cache import cacheit, Memoizer, MemoizerArg
 
 # from numbers  import Number, Integer, Real /cyclic/
 # from interval import Interval /cyclic/
@@ -450,7 +450,7 @@ class Basic(AssumeMeths):
             return new
         return self
 
-    @cache_it_immutable
+    @cacheit
     def subs(self, old, new):
         """Substitutes an expression old -> new."""
         old = sympify(old)
@@ -743,7 +743,7 @@ class Basic(AssumeMeths):
         l.sort()
         return [(s,e) for i,s,e in l]
 
-    @cache_it_immutable
+    @cacheit
     def count_ops(self, symbolic=True):
         """ Return the number of operations in expressions.
 
@@ -1200,7 +1200,7 @@ class Basic(AssumeMeths):
             return self
         return r + o
 
-    @cache_it_immutable
+    @cacheit
     def oseries(self, order):
         """
         Return the series of an expression upto given Order symbol (without the
@@ -1282,7 +1282,7 @@ class Basic(AssumeMeths):
         from sympy.series.limits_series import InfLimit
         return InfLimit(self, x)
 
-    @cache_it_immutable
+    @cacheit
     def as_leading_term(self, *symbols):
         if len(symbols)>1:
             c = self

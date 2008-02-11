@@ -2,7 +2,7 @@
 from basic import Basic, S, C
 from operations import AssocOp
 from methods import RelMeths, ArithMeths
-from cache import cache_it_immutable
+from cache import cacheit
 
 from symbol import Symbol, Wild, Temporary
 # from numbers import Number    /cyclic/
@@ -111,7 +111,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
             return '(%s)' % r
         return r
 
-    @cache_it_immutable
+    @cacheit
     def as_coeff_factors(self, x=None):
         if x is not None:
             l1 = []
@@ -143,7 +143,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
     def _combine_inverse(lhs, rhs):
         return lhs - rhs
 
-    @cache_it_immutable
+    @cacheit
     def as_two_terms(self):
         if len(self.args) == 1:
             return S.Zero, self
@@ -278,7 +278,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
     def _eval_oseries(self, order):
         return Add(*[f.oseries(order) for f in self.args])
 
-    @cache_it_immutable
+    @cacheit
     def extract_leading_order(self, *symbols):
         lst = []
         seq = [(f, C.Order(f, *symbols)) for f in self.args]

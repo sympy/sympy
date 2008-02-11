@@ -2,7 +2,7 @@
 from basic import Basic, S, C
 from sympify import _sympify
 from methods import ArithMeths, RelMeths
-from cache import cache_it_immutable
+from cache import cacheit
 
 from symbol import Symbol, Wild, Temporary
 # from numbers import Number, Rational, Integer     /cyclic/
@@ -54,7 +54,7 @@ class Pow(Basic, ArithMeths, RelMeths):
 
     precedence = Basic.Pow_precedence
 
-    @cache_it_immutable
+    @cacheit
     def __new__(cls, a, b, **assumptions):
         a = _sympify(a)
         b = _sympify(b)
@@ -391,7 +391,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         s = d[r] = Temporary()
         return s
 
-    @cache_it_immutable
+    @cacheit
     def count_ops(self, symbolic=True):
         if symbolic:
             return Add(*[t.count_ops(symbolic) for t in self[:]]) + Symbol('POW')
@@ -504,7 +504,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             return self.base.as_leading_term(x) ** self.exp
         return C.exp(self.exp * C.log(self.base)).as_leading_term(x)
 
-    @cache_it_immutable
+    @cacheit
     def taylor_term(self, n, x, *previous_terms): # of (1+x)**e
         if n<0: return S.Zero
         x = _sympify(x)

@@ -1,7 +1,7 @@
 
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Function, Lambda
-from sympy.core.cache import cache_it_immutable
+from sympy.core.cache import cacheit
 
 ###############################################################################
 ########################### HYPERBOLIC FUNCTIONS ##############################
@@ -51,7 +51,7 @@ class sinh(Function):
                     return -cls(-arg)
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
@@ -147,7 +147,7 @@ class cosh(Function):
                     return cls(-arg)
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 1:
             return S.Zero
@@ -243,7 +243,7 @@ class tanh(Function):
                     return -cls(-arg)
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
@@ -341,7 +341,7 @@ class coth(Function):
                     return -cls(-arg)
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n == 0:
             return 1 / sympify(x)
@@ -437,7 +437,7 @@ class asinh(Function):
                     return -cls(-arg)
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
@@ -510,7 +510,7 @@ class acosh(Function):
                     return cst_table[arg]*S.ImaginaryUnit
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n == 0:
             return S.Pi*S.ImaginaryUnit / 2
@@ -579,7 +579,7 @@ class atanh(Function):
                     return -cls(-arg)
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
@@ -640,7 +640,7 @@ class acoth(Function):
                     return -cls(-arg)
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n == 0:
             return S.Pi*S.ImaginaryUnit / 2

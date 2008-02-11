@@ -2,7 +2,7 @@
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Lambda, Function
 from miscellaneous import sqrt
-from sympy.core.cache import cache_it_immutable
+from sympy.core.cache import cacheit
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -72,7 +72,7 @@ class sin(Function):
 
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
@@ -207,7 +207,7 @@ class cos(Function):
 
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 1:
             return S.Zero
@@ -344,7 +344,7 @@ class tan(Function):
 
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
@@ -467,7 +467,7 @@ class cot(Function):
 
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n == 0:
             return 1 / sympify(x)
@@ -582,7 +582,7 @@ class asin(Function):
 
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
@@ -659,7 +659,7 @@ class acos(Function):
 
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n == 0:
             return S.Pi / 2
@@ -748,7 +748,7 @@ class atan(Function):
 
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
@@ -821,7 +821,7 @@ class acot(Function):
 
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n == 0:
             return S.Pi / 2 # FIX THIS

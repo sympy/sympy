@@ -10,14 +10,14 @@
 
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.methods import RelMeths, ArithMeths
-from sympy.core.cache import cache_it_immutable
+from sympy.core.cache import cacheit
 
 class Limit(Basic, RelMeths, ArithMeths):
     """ Find the limit of the expression under process x->xlim.
 
     Limit(expr, x, xlim)
     """
-    @cache_it_immutable
+    @cacheit
     def __new__(cls, expr, x, xlim, direction='<', **assumptions):
         expr = sympify(expr)
         x = sympify(x)
@@ -82,7 +82,7 @@ class InfLimit(Basic):
     def limit_process_symbol():
         return InfLimit._xoo
 
-    @cache_it_immutable
+    @cacheit
     def __new__(cls, expr, x):
         expr = orig_expr = sympify(expr)
         orig_x = sympify(x)
@@ -139,7 +139,7 @@ class InfLimit(Basic):
 
         return result
 
-@cache_it_immutable
+@cacheit
 def mrv_inflimit(expr, x, _cache = {}):
     if _cache.has_key((expr, x)):
         raise RuntimeError('Detected recursion while computing mrv_inflimit(%s, %s)' % (expr, x))
@@ -172,11 +172,11 @@ def mrv_inflimit(expr, x, _cache = {}):
         return C.sign(c) * S.Infinity
     raise RuntimeError('Failed to compute mrv_inflimit(%s, %s), got lt=%s' % (self, x, lt))
 
-@cache_it_immutable
+@cacheit
 def cmp_ops_count(e1,e2):
     return cmp(e1.count_ops(symbolic=False), e2.count_ops(symbolic=False))
 
-@cache_it_immutable
+@cacheit
 def mrv_compare(f, g, x):
     log = C.log
     if isinstance(f, C.exp): f = f.args[0]

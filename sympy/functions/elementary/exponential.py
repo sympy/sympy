@@ -1,7 +1,7 @@
 
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Lambda, Function, Function
-from sympy.core.cache import cache_it_immutable
+from sympy.core.cache import cacheit
 
 class exp(Function):
 
@@ -88,7 +88,7 @@ class exp(Function):
             return C.Mul(*(excluded+[cls(C.Add(*included))]))
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms):
         if n<0: return S.Zero
         if n==0: return S.One
@@ -318,7 +318,7 @@ class log(Function):
         return x.is_unbounded
 
     @staticmethod
-    @cache_it_immutable
+    @cacheit
     def taylor_term(n, x, *previous_terms): # of log(1+x)
         if n<0: return S.Zero
         x = sympify(x)

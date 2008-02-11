@@ -33,7 +33,7 @@ from basic import Basic, Singleton, Atom, S, C, sympify
 from basic import BasicType, BasicMeta
 from methods import ArithMeths, RelMeths
 from operations import AssocOp
-from cache import cache_it_immutable
+from cache import cacheit
 
 from numbers import Rational
 from symbol import Symbol
@@ -81,7 +81,7 @@ class Function(Basic, ArithMeths, RelMeths):
 
     nargs = None
 
-    @cache_it_immutable
+    @cacheit
     def __new__(cls, *args, **options):
         # NOTE: this __new__ is twofold:
         #

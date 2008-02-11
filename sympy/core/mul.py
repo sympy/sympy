@@ -2,7 +2,7 @@
 from basic import Basic, S, C, sympify
 from operations import AssocOp
 from methods import RelMeths, ArithMeths
-from cache import cache_it_immutable
+from cache import cacheit
 
 from symbol import Symbol, Wild
 # from function import WildFunction /cyclic/
@@ -257,13 +257,13 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             return '(%s)' % r
         return r
 
-    @cache_it_immutable
+    @cacheit
     def as_two_terms(self):
         if len(self.args) == 1:
             return S.One, self
         return self.args[0], Mul(*self.args[1:])
 
-    @cache_it_immutable
+    @cacheit
     def as_coeff_terms(self, x=None):
         if x is not None:
             l1 = []
@@ -367,7 +367,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             denoms.append(d)
         return Mul(*numers), Mul(*denoms)
 
-    @cache_it_immutable
+    @cacheit
     def count_ops(self, symbolic=True):
         if symbolic:
             return Add(*[t.count_ops(symbolic) for t in self[:]]) + Symbol('MUL') * (len(self[:])-1)

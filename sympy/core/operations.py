@@ -1,7 +1,7 @@
 
 from basic import Basic, S, C
 from sympify import _sympify
-from cache import cache_it_immutable
+from cache import cacheit
 
 # from add import Add   /cyclic/
 # from mul import Mul   /cyclic/
@@ -17,7 +17,7 @@ class AssocOp(Basic):
     Base class for Add and Mul.
     """
 
-    @cache_it_immutable
+    @cacheit
     def __new__(cls, *args, **assumptions):
         if len(args)==0:
             return cls.identity()
