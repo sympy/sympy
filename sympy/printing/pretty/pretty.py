@@ -24,6 +24,10 @@ class PrettyPrinter(Printer):
         Printer.doprint.__doc__
         return self._print(expr).terminal_string()
 
+    # empty op so _print(stringPict) returns the same
+    def _print_stringPict(self, e):
+        return e
+
     def _print_Symbol(self, e):
         symb = pretty_symbol(e.name)
         return prettyAtom(symb)
@@ -240,7 +244,7 @@ class PrettyPrinter(Printer):
         func_name = func.__name__
 
         prettyFunc = self._print(C.Symbol(func_name));
-        prettyArgs = self._print_seq(args, '(', ')', ifascii_nougly=True)
+        prettyArgs = self._print_seq(args, '(', ')')
 
         pform = prettyForm(binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
 
@@ -357,7 +361,7 @@ class PrettyPrinter(Printer):
                 return prettyForm(str(r.p))/prettyForm(str(r.q))
 
 
-    def _print_seq(self, seq, left=None, right=None, **kw):
+    def _print_seq(self, seq, left=None, right=None):
         S = None
 
         for item in seq:
@@ -373,7 +377,7 @@ class PrettyPrinter(Printer):
         if S is None:
             S = stringPict('')
 
-        S = prettyForm(*S.parens(left, right, **kw))
+        S = prettyForm(*S.parens(left, right, ifascii_nougly=True))
         return S
 
     def _print_list(self, l):
@@ -381,6 +385,17 @@ class PrettyPrinter(Printer):
 
     def _print_tuple(self, t):
         return self._print_seq(t, '(', ')')
+
+    def _print_dict(self, d):
+        items = []
+        for k,v in d.items():
+            K = self._print(k)
+            V = self._print(v)
+            S = prettyForm(*stringPict.next(K, ': ', V))
+
+            items.append(S)
+
+        return self._print_seq(items, '{', '}')
 
 
 def pretty(expr, use_unicode=None):

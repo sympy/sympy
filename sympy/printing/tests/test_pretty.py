@@ -1,10 +1,12 @@
 from sympy import Symbol, Matrix, Integral, log, Rational, Derivative, exp, \
-        sqrt, pi, Function, sin, pprint_use_unicode, oo
+        sqrt, pi, Function, sin, cos, pprint_use_unicode, oo
 from sympy.printing.pretty import pretty as xpretty
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
 y = Symbol('y')
+th  = Symbol('theta')
+ph  = Symbol('phi')
 
 def pretty(expr):
     # ascii-pretty by default
@@ -132,6 +134,54 @@ def test_pretty_matrix():
 [     y  x + y]\
 """
     assert p == s
+
+def test_pretty_seq():
+    assert pretty([]) == '[]'
+    assert pretty(()) == '()'
+    assert pretty({}) == '{}'
+
+    e = [x**2, 1/x, x, y, sin(th)**2/cos(ph)**2]
+    p = pretty(e)
+    s = \
+"""\
+                 2        
+  2  1        sin (theta) 
+[x , -, x, y, -----------]
+     x            2       
+               cos (phi)  \
+"""
+    assert p == s
+
+    e = tuple(e)
+    p = pretty(e)
+    s = \
+"""\
+                 2        
+  2  1        sin (theta) 
+(x , -, x, y, -----------)
+     x            2       
+               cos (phi)  \
+"""
+    assert p == s
+
+    e = {x: sin(x)}
+    p = pretty(e)
+    s = \
+"""\
+{x: sin(x)}\
+"""
+    assert p == s
+
+    e = {1/x: 1/y, x: sin(x)**2}
+    p = pretty(e)
+    s = \
+"""\
+ 1  1        2    
+{-: -, x: sin (x)}
+ x  y             \
+"""
+    assert p == s
+
 
 
 @XFAIL

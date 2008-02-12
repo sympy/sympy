@@ -134,6 +134,7 @@ u"""\
 def test_upretty_seq():
     assert upretty([]) == '[]'
     assert upretty(()) == '()'
+    assert upretty({}) == '{}'
 
     e = [x**2, 1/x, x, y, sin(th)**2/cos(ph)**2]
     u = upretty(e)
@@ -157,3 +158,24 @@ u"""\
 ⎜    x           2   ⎟
 ⎝             cos (φ)⎠\
 """
+    assert u == s
+
+    e = {x: sin(x)}
+    u = upretty(e)
+    s = \
+u"""\
+{x: sin(x)}\
+"""
+    assert u == s
+
+    e = {1/x: 1/y, x: sin(x)**2}
+    u = upretty(e)
+    s = \
+u"""\
+⎧1  1        2   ⎫
+⎨─: ─, x: sin (x)⎬
+⎩x  y            ⎭\
+"""
+    assert u == s
+
+

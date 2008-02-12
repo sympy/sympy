@@ -14,7 +14,7 @@ TODO:
 
 from pretty_symbology import hobj, vobj, pretty_use_unicode
 
-class stringPict:
+class stringPict(object):
     """A ASCII picture.
     The pictures are represented as a list of equal length strings.
     """
