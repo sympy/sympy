@@ -36,6 +36,10 @@ class stringPict:
 
     @staticmethod
     def equalLengths(lines):
+        # empty lines
+        if not lines:
+            return ['']
+
         width = max(len(line) for line in lines)
         return [line.center(width) for line in lines]
 
