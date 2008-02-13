@@ -23,8 +23,11 @@ class Add(AssocOp, RelMeths, ArithMeths):
         Applies associativity, all terms are commutable with respect to
         addition.
         """
-        terms = {}
-        coeff = S.Zero
+        terms = {}      # term -> coeff
+                        # e.g. x**2 -> 5   for ... + 5*x**2 + ...
+
+        coeff = S.Zero  # standalone term
+                        # e.g. 3 + ...
         lambda_args = None
         order_factors = []
         while seq:
@@ -32,6 +35,8 @@ class Add(AssocOp, RelMeths, ArithMeths):
             #if isinstance(o, Function):
             #    if o.nargs is not None:
             #        o, lambda_args = o.with_dummy_arguments(lambda_args)
+
+            # O(x)
             if isinstance(o, C.Order):
                 for o1 in order_factors:
                     if o1.contains(o):
@@ -41,14 +46,22 @@ class Add(AssocOp, RelMeths, ArithMeths):
                     continue
                 order_factors = [o]+[o1 for o1 in order_factors if not o.contains(o1)]
                 continue
+
+            # 3
             if isinstance(o, Number):
                 coeff += o
                 continue
+
+            # Add([...])
             if o.__class__ is cls:
                 seq = list(o.args) + seq
                 continue
+
+            # Mul([...])
             if isinstance(o, Mul):
                 c = o.args[0]
+
+                # 3*...
                 if isinstance(c, Number):
                     if c is S.One:
                         s = o
@@ -57,24 +70,44 @@ class Add(AssocOp, RelMeths, ArithMeths):
                 else:
                     c = S.One
                     s = o
+
+            # everything else
             else:
                 c = S.One
                 s = o
+
+
+            # now we have:
+            # o = c*s, where
+            #
+            # c is a Number
+            # s is an expression with number factor extracted
+
+            # let's collect terms with the same s, so e.g.
+            # 2*x**2 + 3*x**2  ->  5*x**2
             if terms.has_key(s):
                 terms[s] += c
             else:
                 terms[s] = c
+
+
+        # now let's construct new args:
+        # [2*x**2, x**3, 7*x**4, pi, ...]
         newseq = []
         noncommutative = False
         for s,c in terms.items():
+            # 0*s
             if c is S.Zero:
                 continue
+            # 1*s
             elif c is S.One:
                 newseq.append(s)
+            # c*s
             else:
                 newseq.append(Mul(c,s))
             noncommutative = noncommutative or not s.is_commutative
 
+        # deal with nan, oo, -oo, etc...
         if coeff is S.NaN:
             newseq = [coeff]
         elif (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
@@ -82,6 +115,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         elif coeff is not S.Zero:
             newseq.insert(0, coeff)
 
+        # process O(x)
         if order_factors:
             newseq2 = []
             for t in newseq:
@@ -93,10 +127,14 @@ class Add(AssocOp, RelMeths, ArithMeths):
                     newseq2.append(t)
             newseq = newseq2 + order_factors
 
+        # order args canonically
         newseq.sort(Basic.compare)
+
+        # we are done
         if noncommutative:
             return [],newseq,lambda_args,None
-        return newseq,[],lambda_args,None
+        else:
+            return newseq,[],lambda_args,None
 
     def tostr(self, level=0):
         coeff, rest = self.as_coeff_factors()
