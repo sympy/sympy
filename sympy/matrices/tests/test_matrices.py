@@ -725,17 +725,26 @@ def test_str():
     x, y = symbols("xy")
     M = Matrix([[x**+1, 1], [y, x+y]])
 
-    assert repr(M) == \
+    assert repr(M) in [ 
 """\
 Matrix([
   [Symbol('x'),                        One(1)],
   [Symbol('y'), Add(Symbol('x'), Symbol('y'))],
 ])\
-"""
+""",
+"""\
+Matrix([
+  [Symbol('x'),                        One(1)],
+  [Symbol('y'), Add(Symbol('y'), Symbol('x'))],
+])\
+""" ]
 
-    assert str(M) == \
+    assert str(M) in [
 """\
 [x,     1]
 [y, x + y]\
-"""
-
+""",
+"""\
+[x,     1]
+[y, y + x]\
+""" ]

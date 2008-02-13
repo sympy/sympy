@@ -10,14 +10,14 @@ x,y = symbols('xy')
 k,n = symbols('kn', integer=True)
 
 def test_latex_basic():
-    assert latex(1+x) == "$1 + x$"
+    assert latex(1+x) in ["$1 + x$", '$x + 1$']
     assert latex(x**2) == "${x}^{2}$"
-    assert latex(x**(1+x)) == "${x}^{1 + x}$"
+    assert latex(x**(1+x)) in ["${x}^{1 + x}$", '${x}^{x + 1}$']
 
 def test_latex_symbols():
     Gamma, lmbda, rho = map(Symbol, ('Gamma', 'lambda', 'rho'))
     mass, volume = map(Symbol, ('mass', 'volume'))
-    assert latex(Gamma + lmbda) == r"$\Gamma + \lambda$"
+    assert latex(Gamma + lmbda) in [r"$\Gamma + \lambda$", '$\lambda + \Gamma$']
     assert latex(Gamma * lmbda) == r"$\Gamma \lambda$"
     #assert latex(volume * rho == mass) == r"$\rho \mathrm{volume} = \mathrm{mass}$"
     #assert latex(volume / mass * rho == 1) == r"$\rho \mathrm{volume} {\mathrm{mass}}^{(-1)} = 1$"
@@ -40,8 +40,9 @@ def test_latex_functions():
 def test_latex_derivatives():
     assert latex(diff(x**3, x, evaluate=False)) == \
     r"$\frac{\partial}{\partial x} {x}^{3}$"
-    assert latex(diff(sin(x)+x**2, x, evaluate=False)) == \
-        r"$\frac{\partial}{\partial x}\left({x}^{2} + \operatorname{sin}\left(x\right)\right)$"
+    assert latex(diff(sin(x)+x**2, x, evaluate=False)) in [
+        r"$\frac{\partial}{\partial x}\left({x}^{2} + \operatorname{sin}\left(x\right)\right)$",
+        r'$\frac{\partial}{\partial x}\left(\operatorname{sin}\left(x\right) + {x}^{2}\right)$']
 
 def test_latex_integrals():
     assert latex(Integral(log(x), x)) == r"$\int \operatorname{log}\left(x\right)\,dx$"
@@ -56,11 +57,11 @@ def test_latex_limits():
 def test_issue469():
     beta = Symbol(r'\beta')
     y = beta+x
-    assert latex(y) == r'$\beta + x$'
+    assert latex(y) in [r'$\beta + x$', r'$x + \beta$']
 
     beta = Symbol(r'beta')
     y = beta+x
-    assert latex(y) == r'$\beta + x$'
+    assert latex(y) in [r'$\beta + x$', r'$x + \beta$']
 
 def test_latex():
     assert latex((2*tau)**Rational(7,2)) == "$8 \\sqrt{2} \\sqrt[7]{\\tau}$"

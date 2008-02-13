@@ -46,6 +46,8 @@ def test_composite_sums():
 def test_euler_maclaurin():
     z = Sum2(1/n**3, (n, 1, oo))
     A, B = getab(z.split(50))
+    if not isinstance(A, Rational):
+        A, B = B, A
     apery = (A + B.euler_maclaurin(8)).evalf(25)
     assert abs(apery - Real("1.202056903159594285399738162")) < Real("1e-20")
 

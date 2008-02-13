@@ -74,23 +74,35 @@ tan (x)\
 def test_upretty_funcbraces():
     f = Function('f')
     u = upretty(f(x/(y+1), y))
-    s = \
+    s1 = \
 u"""\
  ⎛  x     ⎞
 f⎜─────, y⎟
  ⎝1 + y   ⎠\
 """
-    assert u == s
+    s2 = \
+u"""\
+ ⎛  x     ⎞
+f⎜─────, y⎟
+ ⎝y + 1   ⎠\
+"""
+    assert u in [s1, s2]
 
 def test_upretty_sqrt():
     u = upretty( sqrt((sqrt(x+1))+1) )
-    s = \
+    s1 = \
 u"""\
    ⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽
   ╱       ⎽⎽⎽⎽⎽⎽⎽ 
 ╲╱  1 + ╲╱ 1 + x  \
 """
-    assert u == s
+    s2 = \
+u"""\
+   ⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽
+  ╱   ⎽⎽⎽⎽⎽⎽⎽     
+╲╱  ╲╱ x + 1  + 1 \
+"""
+    assert u in [s1, s2]
 
 def test_upretty_integral():
     u = upretty( Integral(sin(th)/cos(ph), (th,0,pi), (ph, 0, 2*pi)) )
@@ -121,14 +133,21 @@ u"""\
 
 def test_upretty_matrix():
     u = upretty( Matrix([[x**2+1, 1], [y, x+y]]) )
-    s = \
+    s1 = \
 u"""\
 ⎡     2       ⎤
 ⎢1 + x       1⎥
 ⎢             ⎥
 ⎣     y  x + y⎦\
 """
-    assert u == s
+    s2 = \
+u"""\
+⎡ 2           ⎤
+⎢x  + 1      1⎥
+⎢             ⎥
+⎣     y  y + x⎦\
+"""
+    assert u in [s1, s2]
 
 
 def test_upretty_seq():

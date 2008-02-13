@@ -22,16 +22,29 @@ def test_python_basic():
     assert python(x**Rational(-5, 2)) == "x = Symbol('x')\ne = x**(-5/2)"
 
     # Sums of terms
-    assert python((x**2 + x + 1)) == "x = Symbol('x')\ne = 1 + x + x**2" 
-    assert python(1-x) == "x = Symbol('x')\ne = 1 - x"
-    assert python(1-2*x) == "x = Symbol('x')\ne = 1 - 2*x"
-    assert python(1-Rational(3,2)*y/x) == "y = Symbol('y')\nx = Symbol('x')\ne = 1 - 3/2*y/x"
+    assert python((x**2 + x + 1)) in [
+            "x = Symbol('x')\ne = 1 + x + x**2",
+            "x = Symbol('x')\ne = x + x**2 + 1",
+            "x = Symbol('x')\ne = x**2 + x + 1",]
+    assert python(1-x) in [
+            "x = Symbol('x')\ne = 1 - x",
+            "x = Symbol('x')\ne = -x + 1"]
+    assert python(1-2*x) in [
+            "x = Symbol('x')\ne = 1 - 2*x",
+            "x = Symbol('x')\ne = -2*x + 1"]
+    assert python(1-Rational(3,2)*y/x) in [
+            "y = Symbol('y')\nx = Symbol('x')\ne = 1 - 3/2*y/x",
+            "y = Symbol('y')\nx = Symbol('x')\ne = -3/2*y/x + 1"]
 
     # Multiplication
     assert python(x/y) == "x = Symbol('x')\ny = Symbol('y')\ne = x/y"
     assert python(-x/y) == "x = Symbol('x')\ny = Symbol('y')\ne = -x/y"
-    assert python((x+2)/y) == "y = Symbol('y')\nx = Symbol('x')\ne = 1/y*(2 + x)"
-    assert python((1+x)*y) == "y = Symbol('y')\nx = Symbol('x')\ne = y*(1 + x)"
+    assert python((x+2)/y) in [
+            "y = Symbol('y')\nx = Symbol('x')\ne = 1/y*(2 + x)",
+            "y = Symbol('y')\nx = Symbol('x')\ne = 1/y*(x + 2)"]
+    assert python((1+x)*y) in [
+            "y = Symbol('y')\nx = Symbol('x')\ne = y*(1 + x)",
+            "y = Symbol('y')\nx = Symbol('x')\ne = y*(x + 1)"]
 
     # Check for proper placement of negative sign
     assert python(-5*x/(x+10)) == "x = Symbol('x')\ne = -5*x/(10 + x)"
@@ -41,7 +54,9 @@ def test_python_relational():
     assert python(x == y) == "x = Symbol('x')\ny = Symbol('y')\ne = x == y"
     assert python(x <= y) == "x = Symbol('x')\ny = Symbol('y')\ne = x <= y"
     assert python(x > y) == "y = Symbol('y')\nx = Symbol('x')\ne = y < x"
-    assert python(x/(y+1) != y**2) == "x = Symbol('x')\ny = Symbol('y')\ne = x/(1 + y) != y**2"
+    assert python(x/(y+1) != y**2) in [
+            "x = Symbol('x')\ny = Symbol('y')\ne = x/(1 + y) != y**2",
+            "x = Symbol('x')\ny = Symbol('y')\ne = x/(y + 1) != y**2"]
 
 def test_python_functions():
     # Simple
@@ -49,16 +64,21 @@ def test_python_functions():
     assert python(sqrt(2)) == 'e = 2**(1/2)'
     assert python(sqrt(2+pi)) == 'e = (2 + pi)**(1/2)'
     assert python(abs(x)) == "x = Symbol('x')\ne = abs(x)"
-    assert python(abs(x/(x**2+1))) == "x = Symbol('x')\ne = abs(x/(1 + x**2))"
+    assert python(abs(x/(x**2+1))) in ["x = Symbol('x')\ne = abs(x/(1 + x**2))",
+            "x = Symbol('x')\ne = abs(x/(x**2 + 1))"]
 
     # Univariate/Multivariate functions
     f = Function('f')
     assert python(f(x)) == "x = Symbol('x')\nf = Function('f')\ne = f(x)"
     assert python(f(x, y)) == "x = Symbol('x')\ny = Symbol('y')\nf = Function('f')\ne = f(x, y)"
-    assert python(f(x/(y+1), y)) == "x = Symbol('x')\ny = Symbol('y')\nf = Function('f')\ne = f(x/(1 + y), y)"
+    assert python(f(x/(y+1), y)) in [
+        "x = Symbol('x')\ny = Symbol('y')\nf = Function('f')\ne = f(x/(1 + y), y)",
+        "x = Symbol('x')\ny = Symbol('y')\nf = Function('f')\ne = f(x/(y + 1), y)"]
 
     # Nesting of square roots
-    assert python(sqrt((sqrt(x+1))+1)) == "x = Symbol('x')\ne = (1 + (1 + x)**(1/2))**(1/2)"
+    assert python(sqrt((sqrt(x+1))+1)) in [
+            "x = Symbol('x')\ne = (1 + (1 + x)**(1/2))**(1/2)",
+            "x = Symbol('x')\ne = ((x + 1)**(1/2) + 1)**(1/2)"]
     # Function powers
     assert python(sin(x)**2) == "x = Symbol('x')\ne = sin(x)**2"
 
@@ -80,7 +100,9 @@ def test_python_derivatives():
     #assert python(f_3) == 
 
     f_4 = Derivative(2*x*y, y, x, evaluate=False) + x**2
-    assert python(f_4) == "x = Symbol('x')\ny = Symbol('y')\ne = x**2 + D(2*x*y, y, x)"
+    assert python(f_4) in [
+            "x = Symbol('x')\ny = Symbol('y')\ne = x**2 + D(2*x*y, y, x)", 
+            "x = Symbol('x')\ny = Symbol('y')\ne = D(2*x*y, y, x) + x**2"]
 
 def test_python_integrals():
     # Simple

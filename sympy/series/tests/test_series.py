@@ -98,16 +98,23 @@ def test_generalexponent():
     p = Rational(1,2)
     e = (2/x+3/x**p)/(1/x+1/x**p)
     assert e.series(x,0,1).leadterm(x) == (2,0)
-    p = Rational(3,2)
-    e = (2/x+3/x**p)/(1/x+1/x**p)
-    assert e.series(x,0,1).leadterm(x) == (3,0)
 
     e=1+x**Rational(1,2)
     assert e.series(x,0,4) == 1+x**Rational(1,2)
 
+# more complicated example
+def test_genexp_x():
+    x = Symbol("x")
     e=1/(1+x**Rational(1,2))
     assert e.series(x,0,2) == \
                 1+x-x**Rational(1,2)-x**Rational(3,2)+O(x**2, x)
+
+# more complicated example
+def test_genexp_x2():
+    x = Symbol("x")
+    p = Rational(3,2)
+    e = (2/x+3/x**p)/(1/x+1/x**p)
+    assert e.series(x,0,1).leadterm(x) == (3,0)
 
 @XFAIL
 def test_subsbug1():

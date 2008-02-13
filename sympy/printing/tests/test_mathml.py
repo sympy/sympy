@@ -14,9 +14,13 @@ def test_mathml_core():
     assert nodes[0].nodeName == 'plus'
     assert nodes[0].hasChildNodes() == False
     assert nodes[0].nodeValue is None
-    assert nodes[1].nodeName == 'cn'
-    assert nodes[1].childNodes[0].nodeValue == '1'
-    assert nodes[2].childNodes[0].nodeValue == 'x'
+    assert nodes[1].nodeName in ['cn', 'ci']
+    if nodes[1].nodeName == 'cn':
+        assert nodes[1].childNodes[0].nodeValue == '1'
+        assert nodes[2].childNodes[0].nodeValue == 'x'
+    else:
+        assert nodes[1].childNodes[0].nodeValue == 'x'
+        assert nodes[2].childNodes[0].nodeValue == '1'
 
     mml_2 = mp._print(x**2)
     assert mml_2.nodeName == 'apply'

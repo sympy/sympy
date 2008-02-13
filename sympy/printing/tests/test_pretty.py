@@ -25,16 +25,21 @@ def test_pretty_basic():
     assert pretty( x**Rational(-5,2) ) == ' 1  \n----\n 5/2\nx   '
 
     # Sums of terms
-    assert pretty( (x**2 + x + 1))  == '         2\n1 + x + x '
-    assert pretty( 1-x ) == '1 - x'
-    assert pretty( 1-2*x ) == '1 - 2*x'
-    assert pretty( 1-Rational(3,2)*y/x ) == '    3*y\n1 - ---\n    2*x'
+    assert pretty( (x**2 + x + 1))  in [
+                '         2\n1 + x + x ',
+                '     2    \nx + x  + 1',
+                ' 2        \nx  + x + 1']
+    assert pretty( 1-x ) in ['1 - x', '-x + 1']
+    assert pretty( 1-2*x ) in ['1 - 2*x', '-2*x + 1']
+    assert pretty( 1-Rational(3,2)*y/x ) in [
+            '    3*y\n1 - ---\n    2*x',
+            '  3*y    \n- --- + 1\n  2*x    ']
 
     # Multiplication
     assert pretty( x/y ) == 'x\n-\ny'
     assert pretty( -x/y ) == '-x\n--\ny '
-    assert pretty( (x+2)/y ) == '2 + x\n-----\n  y  '
-    assert pretty( (1+x)*y ) in ['(1 + x)*y', 'y*(1 + x)']
+    assert pretty( (x+2)/y ) in ['2 + x\n-----\n  y  ', 'x + 2\n-----\n  y  ']
+    assert pretty( (1+x)*y ) in ['(1 + x)*y', 'y*(1 + x)', 'y*(x + 1)']
 
     # Check for proper placement of negative sign
     assert pretty( -5*x/(x+10) ) == ' -5*x \n------\n10 + x'
@@ -44,12 +49,15 @@ def test_pretty_relational():
     assert pretty(x == y) == 'x = y'
     assert pretty(x <= y) == 'x <= y'
     assert pretty(x > y) == 'y < x'
-    assert pretty(x/(y+1) != y**2) == '  x       2\n----- != y \n1 + y      '
+    assert pretty(x/(y+1) != y**2) in [
+            '  x       2\n----- != y \n1 + y      ',
+            '  x       2\n----- != y \ny + 1      ']
+
 
 def test_pretty_unicode():
     assert xpretty( oo, True ) == u'\u221e'
     assert xpretty( pi, True ) == u'\u03c0'
-    assert xpretty( pi+2*x, True ) == u'\u03c0 + 2*x'
+    assert xpretty( pi+2*x, True ) in [u'\u03c0 + 2*x', u'2*x + \u03c0']
     assert xpretty( pi**2+exp(x), True ) == u' 2    x\n\u03c0  + \u212f '
     assert xpretty( x != y, True ) == u'x \u2260 y'
 
@@ -68,16 +76,22 @@ def test_pretty_functions():
     assert pretty( sqrt(2) ) == '  ___\n\\/ 2 '
     assert pretty( sqrt(2+pi) ) == '  ________\n\\/ 2 + pi '
     assert pretty(abs(x)) == '|x|'
-    assert pretty(abs(x/(x**2+1))) == '|  x   |\n|------|\n|     2|\n|1 + x |'
+    assert pretty(abs(x/(x**2+1))) in [
+            '|  x   |\n|------|\n|     2|\n|1 + x |',
+            '|  x   |\n|------|\n| 2    |\n|x  + 1|']
 
     # Univariate/Multivariate functions
     f = Function('f')
     assert pretty(f(x)) == 'f(x)'
     assert pretty(f(x, y)) == 'f(x, y)'
-    assert pretty(f(x/(y+1), y)) == '    x      \nf(-----, y)\n  1 + y    '
+    assert pretty(f(x/(y+1), y)) in [
+            '    x      \nf(-----, y)\n  1 + y    ',
+            '    x      \nf(-----, y)\n  y + 1    ']
 
     # Nesting of square roots
-    assert pretty( sqrt((sqrt(x+1))+1) ) == '   _______________\n  /       _______ \n\\/  1 + \\/ 1 + x  '
+    assert pretty( sqrt((sqrt(x+1))+1) ) in [
+            '   _______________\n  /       _______ \n\\/  1 + \\/ 1 + x  ',
+            '   _______________\n  /   _______     \n\\/  \\/ x + 1  + 1 ']
     # Function powers
     assert pretty( sin(x)**2 ) == '   2   \nsin (x)'
 
@@ -96,10 +110,14 @@ def test_pretty_derivatives():
 
     # Multiple symbols
     f_3 = Derivative(log(x) + x**2, x, y, evaluate=False)
-    assert pretty(f_3) == '   2              \n  d  / 2         \\\n-----\\x  + log(x)/\ndy dx             '
+    assert pretty(f_3) in [
+            '   2              \n  d  / 2         \\\n-----\\x  + log(x)/\ndy dx             ',
+            '   2              \n  d  /          2\\\n-----\\log(x) + x /\ndy dx             ']
 
     f_4 = Derivative(2*x*y, y, x, evaluate=False) + x**2
-    assert pretty(f_4) == '        2        \n 2     d         \nx  + -----(2*x*y)\n     dx dy       '
+    assert pretty(f_4) in [
+            '        2        \n 2     d         \nx  + -----(2*x*y)\n     dx dy       ',
+            '   2             \n  d             2\n-----(2*x*y) + x \ndx dy            ']
 
 def test_pretty_integrals():
     # Simple
@@ -126,14 +144,21 @@ def test_pretty_integrals():
 
 def test_pretty_matrix():
     p = pretty( Matrix([[x**2+1, 1], [y, x+y]]) )
-    s = \
+    s1 = \
 """\
 [     2       ]
 [1 + x       1]
 [             ]
 [     y  x + y]\
 """
-    assert p == s
+    s2 = \
+"""\
+[ 2           ]
+[x  + 1      1]
+[             ]
+[     y  y + x]\
+"""
+    assert p in [s1, s2]
 
 def test_pretty_seq():
     assert pretty([]) == '[]'
