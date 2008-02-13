@@ -22,7 +22,7 @@ def test_Symbol():
     assert a*b*b+c==c+a*b**2
     assert a*b*b-c==-c+a*b**2
 
-def test_arit():
+def test_arit0():
     p = Rational(5)
     e=a*b
     assert e == a*b
@@ -888,3 +888,10 @@ def test_issue432b():
     f = Foo()
     x = Symbol("x")
     assert f*x == x*f
+
+def test_bug3():
+    a = Symbol("a")
+    b = Symbol("b", positive=True)
+    e = 2*a + b
+    f = b + 2*a
+    assert e == f

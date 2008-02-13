@@ -43,10 +43,7 @@ def test_add():
     assert e.match(4*x+p) == {p: 5}
     assert e.match(3*x+p) == {p: x+5}
     assert e.match(p*x+5) == {p: 4}
-    assert e.match(p*x+q) == {p: 4, q: 5}
 
-    e = 4*x+5*y+6
-    assert e.match(p*x+q*y+r) == {p: 4, q: 5, r: 6}
 
 def test_power():
     x,y,a,b,c = map(Symbol, 'xyabc')
@@ -60,6 +57,20 @@ def test_power():
     assert e.match(p**p) == {p: x+y}
     assert e.match(p**q) == {p: x+y, q: x+y}
 
+    e = (2*x)**2
+    assert e.match(p*q**r) == {p: 4, q: x, r: 2}
+
+    e = Integer(1)
+    assert e.match(x**p) == {p: 0}
+
+def test_match_exclude():
+
+    x = Symbol('x')
+    y = Symbol('y')
+    p = Wild("p", exclude=[x, y])
+    q = Wild("q", exclude=[x, y])
+    r = Wild("r", exclude=[x, y])
+
     e = 3/(4*x+5)
     assert e.match(3/(p*x+q)) == {p: 4, q: 5}
 
@@ -72,11 +83,11 @@ def test_power():
     e = 1/(x+1)
     assert e.match(p/(q*x+r)) == {p: 1, q: 1, r: 1}
 
-    e = (2*x)**2
-    assert e.match(p*q**r) == {p: 4, q: x, r: 2}
+    e = 4*x+5
+    assert e.match(p*x+q) == {p: 4, q: 5}
 
-    e = Integer(1)
-    assert e.match(x**p) == {p: 0}
+    e = 4*x+5*y+6
+    assert e.match(p*x+q*y+r) == {p: 4, q: 5, r: 6}
 
 def test_mul():
     x,y,a,b,c = map(Symbol, 'xyabc')
