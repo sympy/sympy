@@ -14,7 +14,15 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
     @classmethod
     def flatten(cls, seq):
-        # apply associativity, all terms are commutable with respect to addition
+        """ 
+        Takes the sequence "seq" of nested Adds and returns a flatten list.
+        
+        Returns: (commutative_part, noncommutative_part, lambda_args,
+            order_symbols)
+
+        Applies associativity, all terms are commutable with respect to
+        addition.
+        """
         terms = {}
         coeff = S.Zero
         lambda_args = None
@@ -37,7 +45,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
                 coeff += o
                 continue
             if o.__class__ is cls:
-                seq = list(o.args[:]) + seq
+                seq = list(o.args) + seq
                 continue
             if isinstance(o, Mul):
                 c = o.args[0]
