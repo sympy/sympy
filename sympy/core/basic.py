@@ -488,6 +488,74 @@ class Basic(AssumeMeths):
                 return True
         return False
 
+    @cacheit
+    def has_any_symbols(self, *syms):
+        """Return True if 'self' has any of the symbols.
+
+           >>> from sympy import *
+           >>> x,y,z = symbols('xyz')
+
+           >>> (x**2 + sin(x*y)).has_any_symbols(z)
+           False
+
+           >>> (x**2 + sin(x*y)).has_any_symbols(x, y)
+           True
+
+           >>> (x**2 + sin(x*y)).has_any_symbols(x, y, z)
+           True
+
+        """
+        syms = set(syms)
+
+        if not syms:
+            return True
+        else:
+            def search(expr):
+                if isinstance(expr, Symbol):
+                    return expr in syms
+                else:
+                    for term in expr.args:
+                        if search(term):
+                            return True
+                    else:
+                        return False
+
+            return search(self)
+
+    @cacheit
+    def has_all_symbols(self, *syms):
+        """Return True if 'self' has all of the symbols.
+
+           >>> from sympy import *
+           >>> x,y,z = symbols('xyz')
+
+           >>> (x**2 + sin(x*y)).has_all_symbols(x, y)
+           True
+
+           >>> (x**2 + sin(x*y)).has_all_symbols(x, y, z)
+           False
+
+        """
+        syms = set(syms)
+
+        if not syms:
+            return True
+        else:
+            def search(expr):
+                if isinstance(expr, Symbol):
+                    if expr in syms:
+                        syms.remove(expr)
+                else:
+                    for term in expr.args:
+                        if not syms:
+                            break
+                        else:
+                            search(term)
+
+            search(self)
+
+            return not syms
+
     def has(self, *patterns):
         """
         Return True if self has any of the patterns.

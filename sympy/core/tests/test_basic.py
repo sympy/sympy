@@ -244,3 +244,50 @@ def test_subs_dict():
 
     seq = [ (sqrt(sin(2*x)),a), (sin(2*x),c), (cos(2*x),b), (x,d), (exp(x),e) ]
     assert expr.subs_dict(seq) == c + a*b*sin(d*e)
+
+def test_has_any_symbols():
+    x,y,z,t,u = symbols('xyztu')
+
+    i = Integer(4400)
+
+    assert i.has_any_symbols(x) == False
+
+    assert (i*x**i).has_any_symbols(x) == True
+    assert (i*y**i).has_any_symbols(x) == False
+    assert (i*y**i).has_any_symbols(x, y) == True
+
+    expr = x**2*y + sin(2**t + log(z))
+
+    assert expr.has_any_symbols(u) == False
+
+    assert expr.has_any_symbols(x) == True
+    assert expr.has_any_symbols(y) == True
+    assert expr.has_any_symbols(z) == True
+    assert expr.has_any_symbols(t) == True
+
+    assert expr.has_any_symbols(x, y, z, t) == True
+    assert expr.has_any_symbols(x, y, z, t, u)  == True
+
+def test_has_all_symbols():
+    x,y,z,t,u = symbols('xyztu')
+
+    i = Integer(4400)
+
+    assert i.has_all_symbols(x) == False
+
+    assert (i*x**i).has_all_symbols(x) == True
+    assert (i*y**i).has_all_symbols(x) == False
+
+    expr = x**2*y + sin(2**t + log(z))
+
+    assert expr.has_all_symbols(y, z, t) == True
+    assert expr.has_all_symbols(x, z, t) == True
+    assert expr.has_all_symbols(x, y, t) == True
+    assert expr.has_all_symbols(x, y, z) == True
+
+    assert expr.has_all_symbols(y, u, t) == False
+    assert expr.has_all_symbols(x, z, u) == False
+    assert expr.has_all_symbols(u, y, z) == False
+
+    assert expr.has_all_symbols(x, y, z, t) == True
+    assert expr.has_all_symbols(x, y, z, t, u) == False
