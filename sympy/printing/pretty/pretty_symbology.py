@@ -94,10 +94,16 @@ def pretty_try_use_unicode():
 
         for s in symbols:
             if s is None:
-                raise UnicodeEncodeError()  # common symbols not present!
+                return  # common symbols not present!
+
+            encoding = sys.stdout.encoding
+
+            # this happens when e.g. stdout is redirected through a pipe 
+            if encoding is None:
+                return  # sys.stdout has no encoding
 
             # try to encode
-            s.encode(sys.stdout.encoding)
+            s.encode(encoding)
 
     except UnicodeEncodeError:
         pass
