@@ -183,7 +183,7 @@ class Function(Basic, ArithMeths, RelMeths):
         return Basic._seq_subs(self, old, new)
 
     def _eval_expand_basic(self, *args):
-        return self
+        return None
 
     def _eval_evalf(self):
         obj = self.func._eval_apply_evalf(*self.args[:])
@@ -347,9 +347,9 @@ class Function(Basic, ArithMeths, RelMeths):
     @classmethod
     def taylor_term(cls, n, x, *previous_terms):
         """General method for the taylor term.
-        
+
         This method is slow, because it differentiates n-times.  Subclasses can
-        redefine it to make it faster by using the "previous_terms". 
+        redefine it to make it faster by using the "previous_terms".
         """
         x = sympify(x)
         return cls(x).diff(x, n).subs(x, 0) * x**n / C.Factorial(n)
@@ -522,7 +522,7 @@ class Lambda(Function):
             >>> f = Lambda(x, x**2)
             >>> f.apply(4)
             16
-        
+
         """
         return self.args[1].subs(self.args[0], x)
 
@@ -534,7 +534,7 @@ class Lambda(Function):
             if self.args[1] == other.args[1].subs(other.args[0], self.args[0]):
                 return True
         return False
-        
+
 
 
 def diff(f, x, times = 1, evaluate=True):

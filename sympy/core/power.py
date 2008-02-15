@@ -80,7 +80,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             if self.base.is_real:
                 if isinstance(self.exp, Number):
                     # (a ** 2) ** 3 -> a ** (2 * 3)
-                    return Pow(self.base, self.exp * other)                
+                    return Pow(self.base, self.exp * other)
             if isinstance(other, Rational):
                 if self.exp.is_even and Integer(other.q).is_even:
                     return abs( Pow(self.base, self.exp * other))
@@ -235,7 +235,7 @@ class Pow(Basic, ArithMeths, RelMeths):
                 mag = re**2 + im**2
                 base = re/mag - S.ImaginaryUnit*(im/mag)
                 exp = -exp
-            return (base**exp)._eval_expand_basic(*args)
+            return (base**exp).expand()
         elif isinstance(self.exp, Rational):
             # NOTE: This is not totally correct since for x**(p/q) with
             #       x being imaginary there are actually q roots, but
@@ -254,109 +254,143 @@ class Pow(Basic, ArithMeths, RelMeths):
         else:
             return C.re(self) + S.ImaginaryUnit*C.im(self)
 
-    def _eval_expand_basic(self, *args):
+    def _eval_expand_basic(self):
         """
         (a*b)**n -> a**n * b**n
         (a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is positive integer
         """
-        base = self.base.expand()
-        exponent = self.exp.expand()
-        result = base ** exponent
-        if isinstance(result, Pow):
-            base = result.base
-            exponent = result.exp
+        b = self.base._eval_expand_basic()
+        e = self.exp._eval_expand_basic()
+
+        if b is None:
+            base = self.base
         else:
-            return result
-        if isinstance(exponent, Integer):
-            if isinstance(base, Mul):
-                return Mul(*[t**exponent for t in base])
-            if exponent.is_positive and isinstance(base, Add):
-                m = int(exponent)
-                if base.is_commutative:
-                    p = []
-                    order_terms = []
-                    for o in base.args:
-                        if isinstance(o, C.Order):
-                            order_terms.append(o)
-                        else:
-                            p.append(o)
-                    if order_terms:
-                        # (f(x) + O(x^n))^m -> f(x)^m + m*f(x)^{m-1} *O(x^n)
-                        f = Add(*p)
-                        fm1 = (f**(m-1)).expand()
-                        return (f*fm1).expand() + m*fm1*Add(*order_terms)
-                    if base.is_number:
-                        # C**m, where C is a complex number and "m" a positive
-                        # integer (for example (2+3*I)**1000), which can be
-                        # handled very efficiently
-                        assert m > 0
-                        n = 1
-                        a, b = base.as_real_imag()
-                        if isinstance(a, Rational) and  \
-                                isinstance(b, Rational):
-                            if not isinstance(a, Integer):
-                                if not isinstance(b, Integer):
-                                    n = (a.q * b.q) ** m
-                                    a, b = a.p*b.q, a.q*b.p
-                                else:
-                                    n = a.q ** m
-                                    a, b = a.p, a.q*b
-                            elif not isinstance(b, Integer):
-                                n = b.q ** m
-                                a, b = a*b.q, b.p
-                            a = int(a); b = int(b);
-                            c, d = 1, 0
-                            while m:
-                                if m & 1:
-                                    c, d = a*c-b*d, b*c+a*d
-                                    m -= 1
-                                a, b = a*a-b*b, 2*a*b
-                                m //= 2
-                            I = S.ImaginaryUnit
-                            if n == 1:
-                                return c+I*d
+            base = b
+
+        if e is None:
+            exp = self.exp
+        else:
+            exp = e
+
+        if e is not None or b is not None:
+            result = base**exp
+
+            if isinstance(result, Pow):
+                base, exp = result.base, result.exp
+            else:
+                return result
+        else:
+            result = None
+
+        if isinstance(exp, Integer) and exp.p > 0 and isinstance(base, Add):
+            n = int(exp)
+
+            if base.is_commutative:
+                order_terms, other_terms = [], []
+
+                for order in base.args:
+                    if isinstance(order, C.Order):
+                        order_terms.append(order)
+                    else:
+                        other_terms.append(order)
+
+                if order_terms:
+                    # (f(x) + O(x^n))^m -> f(x)^m + m*f(x)^{m-1} *O(x^n)
+                    f = Add(*other_terms)
+                    g = (f**(n-1)).expand()
+
+                    return (f*g).expand() + n*g*Add(*order_terms)
+
+                if base.is_number:
+                    # Efficiently expand expressions of the form (a + b*I)**n
+                    # where 'a' and 'b' are real numbers and 'n' is integer.
+                    a, b = base.as_real_imag()
+
+                    if isinstance(a, Rational) and isinstance(b, Rational):
+                        if not isinstance(a, Integer):
+                            if not isinstance(b, Integer):
+                                k = (a.q * b.q) ** n
+                                a, b = a.p*b.q, a.q*b.p
                             else:
-                                return Integer(c)/n + I*d/n
-                ## Consider polynomial
-                ##   P(x) = sum_{i=0}^n p_i x^k
-                ## and its m-th exponent
-                ##   P(x)^m = sum_{k=0}^{m n} a(m,k) x^k
-                ## The coefficients a(m,k) can be computed using the
-                ## J.C.P. Miller Pure Recurrence [see D.E.Knuth,
-                ## Seminumerical Algorithms, The art of Computer
-                ## Programming v.2, Addison Wesley, Reading, 1981;]:
-                ##  a(m,k) = 1/(k p_0) sum_{i=1}^n p_i ((m+1)i-k) a(m,k-i),
-                ## where a(m,0) = p_0^m.
-                    n = len(p)-1
-                    cache = {0: p[0] ** m}
-                    p0 = [t/p[0] for t in p]
-                    l = [cache[0]]
-                    for k in xrange(1, m * n + 1):
-                        a = []
-                        for i in xrange(1,n+1):
-                            if i<=k:
-                                a.append(Mul(Rational((m+1)*i-k,k), p0[i], cache[k-i]).expand())
-                        a = Add(*a)
-                        cache[k] = a
-                        l.append(a)
-                    return Add(*l)
+                                k = a.q ** n
+                                a, b = a.p, a.q*b
+                        elif not isinstance(b, Integer):
+                            k = b.q ** n
+                            a, b = a*b.q, b.p
+                        else:
+                            k = 1
+
+                        a, b, c, d = int(a), int(b), 1, 0
+
+                        while n:
+                            if n & 1:
+                                c, d = a*c-b*d, b*c+a*d
+                                n -= 1
+                            a, b = a*a-b*b, 2*a*b
+                            n //= 2
+
+                        I = S.ImaginaryUnit
+
+                        if k == 1:
+                            return c + I*d
+                        else:
+                            return Integer(c)/k + I*d/k
+
+                # Consider polynomial:
+                #
+                #   P(x) = sum_{i=0}^n p_i x^k
+                #
+                # and its m-th exponent:
+                #
+                #   P(x)^m = sum_{k=0}^{m n} a(m,k) x^k
+                #
+                # The coefficients a(m,k) can be computed using
+                # the J.C.P. Miller Pure Recurrence:
+                #
+                #  a(m,k) = 1/(k p_0) sum_{i=1}^n p_i ((m+1)i-k) a(m,k-i)
+                #
+                # where a(m,0) = p_0^m.
+                #
+                # For more information refer to:
+                #
+                # [1] D.E.Knuth, The Art of Computer Programming:
+                #     Seminumerical Algorithms, v.2, Addison
+                #     Wesley, Reading, 1981, pp. 751
+
+                p = other_terms
+                m = len(p)-1
+                cache = {0: p[0] ** n}
+                p0 = [t/p[0] for t in p]
+                l = [cache[0]]
+                for k in xrange(1, n * m + 1):
+                    a = []
+                    for i in xrange(1,m+1):
+                        if i<=k:
+                            a.append(Mul(Rational((n+1)*i-k,k), p0[i], cache[k-i]).expand())
+                    a = Add(*a)
+                    cache[k] = a
+                    l.append(a)
+                return Add(*l)
+            else:
+                if n == 2:
+                    return Add(*[f*g for f in base.args for g in base.args])
                 else:
-                    if m==2:
-                        p = base.args[:]
-                        return Add(*[t1*t2 for t1 in p for t2 in p])
-                    return Mul(base, Pow(base, m-1).expand()).expand()
-        elif isinstance(exponent, Add) and isinstance(base, Number):
-            # n**(a+b) --> n**a * n**b with n and a Numbers
-            exp = 0
-            coeff = 1
-            for term in exponent.args:
+                    return Mul(base, Pow(base, n-1).expand()).expand()
+        elif isinstance(exp, Add) and isinstance(base, Number):
+            #  a + b      a  b
+            # n      --> n  n  , where n, a, b are Numbers
+
+            coeff, tail = S.One, S.Zero
+
+            for term in exp.args:
                 if isinstance(term, Number):
                     coeff *= base**term
                 else:
-                    exp += term
-            result = coeff * base**exp
+                    tail += term
 
-        return result
+            return coeff * base**tail
+        else:
+            return result
 
     def _eval_derivative(self, s):
         dbase = self.base.diff(s)

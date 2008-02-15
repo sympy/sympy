@@ -57,7 +57,7 @@ class gamma(Function):
 
 
     def _eval_expand_func(self, *args):
-        arg = self.args[0]._eval_expand_basic()
+        arg = self.args[0].expand()
 
         if isinstance(arg, C.Add):
             for i, coeff in enumerate(arg.args[:]):

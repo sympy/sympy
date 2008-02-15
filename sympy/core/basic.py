@@ -845,12 +845,26 @@ class Basic(AssumeMeths):
     ################# EXPRESSION REPRESENTATION METHODS #######################
     ###########################################################################
 
-    def _eval_expand_basic(self, *args):
-        if isinstance(self, Atom):
-            return self
-        sargs = self.args[:]
-        terms = [ term._eval_expand_basic(*args) for term in sargs ]
-        return self.__class__(*terms, **self._assumptions)
+    def _eval_expand_basic(self):
+        terms, rewrite = [], False
+
+        for term in self.args:
+            if not isinstance(term, Basic) or \
+                   isinstance(term, Atom):
+                terms.append(term)
+            else:
+                T = term._eval_expand_basic()
+
+                if T is None:
+                    terms.append(term)
+                else:
+                    terms.append(T)
+                    rewrite = True
+
+        if rewrite:
+            return self.__class__(*terms, **self._assumptions)
+        else:
+            return None
 
     def _eval_expand_power(self, *args):
         if isinstance(self, Atom):
@@ -883,23 +897,42 @@ class Basic(AssumeMeths):
         terms = [ term._eval_expand_func(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
-    def expand(self, *args, **hints):
-        """Expand an expression based on different hints. Currently
-           supported hints are basic, power, complex, trig and func.
+    def expand(self, **hints):
+        """Expand an expression using hints.
+
+           Currently supported hints are basic, power, complex, trig
+           and func. Hints are applied with arbitrary order so your
+           code shoudn't depend on the way hints are passed to this
+           method. Expand 'basic' is the default and run always,
+           provided that it isn't turned of by the user.
+
+           >>> from sympy import *
+           >>> x,y = symbols('xy')
+
+           >>> (y*(x + y)**2).expand()
+           y**3 + y*x**2 + 2*x*y**2
+
+           >>> (x+y).expand(complex=True)
+           I*im(x) + I*im(y) + re(x) + re(y)
+
         """
-        obj = self
+        expr = self
 
         for hint in hints:
             if hints[hint] == True:
-                func = getattr(obj, '_eval_expand_'+hint, None)
+                func = getattr(expr, '_eval_expand_'+hint, None)
 
                 if func is not None:
-                    obj = func(*args)
+                    expr = func()
 
-        if hints.get('basic', True):
-            obj = obj._eval_expand_basic()
+        if not hints.has_key('basic'):
+            if not isinstance(expr, Atom):
+                result = expr._eval_expand_basic()
 
-        return obj
+                if result is not None:
+                    expr = result
+
+        return expr
 
     def _eval_rewrite(self, pattern, rule, **hints):
         if isinstance(self, Atom):

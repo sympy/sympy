@@ -52,7 +52,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                         else:
                             exp_dict[base] = exponent
                         continue
-                    
+
                 if isinstance(o, C.exp):
                     # exp(x) / exp(y) -> exp(x-y)
                     b = S.Exp1
@@ -295,11 +295,11 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         if len(left) == 1 and len(right) == 1:
             # no expansion needed, bail out now to avoid infinite recursion
             return [Mul(left[0], right[0])]
-        
+
         terms = []
         for a in left:
             for b in right:
-                terms.append(Mul(a,b)._eval_expand_basic())
+                terms.append(Mul(a,b).expand())
             added = Add(*terms)
             if isinstance(added, Add):
                 terms = list(added.args)
@@ -307,24 +307,41 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 terms = [added]
         return terms
 
-    def _eval_expand_basic(self, *args):
-        plain = S.One
-        sums = []
+    def _eval_expand_basic(self):
+        plain, sums, rewrite = [], [], False
+
         for factor in self.args:
-            factor = factor._eval_expand_basic(*args)
+            terms = factor._eval_expand_basic()
+
+            if terms is not None:
+                factor = terms
+
             if isinstance(factor, Add):
                 sums.append(factor)
-            elif factor.is_commutative:
-                plain = Mul(plain, factor)
+                rewrite = True
             else:
-                sums.append([factor])
-        if sums:
-            terms = Mul._expandsums(sums)
-            if isinstance(terms, Basic):
-                terms = terms.args
-            return Add(*(Mul(plain, term) for term in terms), **self._assumptions)
+                if factor.is_commutative:
+                    plain.append(factor)
+                else:
+                    sums.append([factor])
+
+                if terms is not None:
+                    rewrite = True
+
+        if not rewrite:
+            return None
         else:
-            return Mul(plain, **self._assumptions)
+            if sums:
+                terms = Mul._expandsums(sums)
+
+                if isinstance(terms, Basic):
+                    terms = terms.args
+
+                plain = Mul(*plain)
+
+                return Add(*(Mul(plain, term) for term in terms), **self._assumptions)
+            else:
+                return Mul(*plain, **self._assumptions)
 
     def _eval_derivative(self, s):
         terms = list(self.args)
@@ -533,7 +550,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         s = 1
         for x in self:
             s *= x._sage_()
-        return s 
+        return s
 
 
 # /cyclic/
