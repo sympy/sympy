@@ -31,6 +31,11 @@ def test_geometric_sums():
     assert sum(2 * 3**n, (n, 0, b)) == 3**(b+1) - 1
     assert sum(Rational(1,2)**n, (n, 1, oo)) == 1
     assert sum(2**n, (n, 0, b)) == 2**(b+1) - 1
+    assert sum(2**n, (n, 1, oo)) == oo
+    assert sum(2**(-n), (n, 1, oo)) == 1
+    assert sum(3**(-n), (n, 4, oo)) == Rational(1,54)
+    assert sum(2**(-4*n+3), (n, 1, oo)) == Rational(8,15)
+    assert sum(2**(n+1), (n, 1, b)).expand() == 4*(2**b-1)
 
 def test_composite_sums():
     f = Rational(1,2)*(7 - 6*n + Rational(1,7)*n**3)
@@ -41,7 +46,6 @@ def test_composite_sums():
         A += f.subs(n, i)
     B = s.subs(a,-3).subs(b,4)
     assert A == B
-
 
 def test_euler_maclaurin():
     z = Sum2(1/n**3, (n, 1, oo))
