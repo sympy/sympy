@@ -193,6 +193,11 @@ class test_sympy_doc(Command):
 
         print "Testing docstrings."
 
+        def setup_pprint(doctest):
+            from sympy import pprint_use_unicode
+            # use ascii pprint in doctests
+            pprint_use_unicode(False)
+
         suite = unittest.TestSuite()
 
         for perform, module, specific in modules:
@@ -207,7 +212,7 @@ class test_sympy_doc(Command):
 
                 for item in items:
                     module = item.replace('/', '.')[:-3]
-                    suite.addTest(doctest.DocTestSuite(module))
+                    suite.addTest(doctest.DocTestSuite(module, setUp=setup_pprint))
 
         runner = unittest.TextTestRunner()
         runner.run(suite)
