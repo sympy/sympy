@@ -1,19 +1,19 @@
 from sympy import Function, Basic, C, Rational, pi, I
-from sympy.core import sympify
+from sympy.core import Symbol, sympify
 from sympy.functions import legendre, assoc_legendre
 from sympy.functions.elementary.miscellaneous import sqrt
 
 Pl = legendre
 Plm= assoc_legendre
 
+_x = Symbol("x", dummy = True)
 
 def Plmcos(l, m, th):
     l = sympify(l)
     m = sympify(m)
-    x = C.Symbol("x", dummy = True)
     sin = C.sin
     cos = C.cos
-    P = Plm(l, m, x).subs(x, cos(th))
+    P = Plm(l, m, _x).subs(_x, cos(th))
     P = P.subs(1-cos(th)**2, sin(th)**2)
     return P
 
