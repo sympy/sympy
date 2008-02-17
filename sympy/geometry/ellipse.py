@@ -84,8 +84,8 @@ class Ellipse(GeometryEntity):
         None if no tangent line is possible (e.g., p inside ellipse).
         """
         if p in self:
-            rise = (self.hradius ** 2)*(self.center[0] - p[0])
-            run = (self.vradius ** 2)*(p[1] - self.center[1])
+            rise = (self.vradius ** 2)*(self.center[0] - p[0])
+            run = (self.hradius ** 2)*(p[1] - self.center[1])
             p2 = Point(simplify(p[0] + run),
                        simplify(p[1] + rise))
             return Line(p, p2)
