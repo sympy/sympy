@@ -82,6 +82,20 @@ class Ellipse(GeometryEntity):
         If p is on the ellipse, returns the tangent line through point p.
         Otherwise, returns the tangent line(s) from p to the ellipse, or
         None if no tangent line is possible (e.g., p inside ellipse).
+
+        Example:
+
+        In [1]: e = Ellipse(Point(0,0), 3, 2)
+
+        In [2]: t = e.tangent_line(e.random_point())
+
+        In [3]: p = Plot()
+
+        In [4]: p[0] = e
+
+        In [5]: p[1] = t
+
+        The above will plot an ellipse together with a tangent line.
         """
         if p in self:
             rise = (self.vradius ** 2)*(self.center[0] - p[0])
