@@ -325,12 +325,13 @@ def moveup(l, x):
 def movedown(l, x):
     return [e.subs(x,log(x)) for e in l]
 
+_x = Symbol("x", dummy=True)
 def subexp(e,sub):
     """Is "sub" a subexpression of "e"? """
     #we substitute some symbol for the "sub", and if the 
     #expression changes, the substitution was successful, thus the answer
     #is yes.
-    return e.subs(sub, Symbol("x", dummy=True)) != e
+    return e.subs(sub, _x) != e
 
 def calculate_series(e, x):
     """ Calculates at least one term of the series of "e" in "x".
