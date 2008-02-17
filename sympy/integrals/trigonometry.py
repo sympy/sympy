@@ -3,9 +3,26 @@
 import sympy
 from sympy.core import Symbol, Wild, S
 from sympy.functions import sin, cos, binomial
+from sympy.core.cache import cacheit
 
 # TODO add support for tan^m(x) * sec^n(x)
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
+
+# creating each time Wild's and sin/cos/Mul is expensive. Also, our match &
+# subs are very slow when not cached, and if we create Wild each time, we
+# effectively block caching.
+#
+# so we cache the pattern
+@cacheit
+def _pat_sincos(x):
+    a, n, m = [Wild(s, exclude=[x]) for s in 'anm']
+    pat = sin(a*x)**n * cos(a*x)**m
+
+    return pat, a,n,m
+
+_u = Symbol('u', dummy=True)
+
+
 
 def trigintegrate(f, x):
     """Integrate f = Mul(trig) over x
@@ -23,8 +40,7 @@ def trigintegrate(f, x):
        http://en.wikibooks.org/wiki/Calculus/Further_integration_techniques
     """
 
-    a, n, m = [Wild(s, exclude=[x]) for s in 'anm']
-    pat = sin(a*x)**n * cos(a*x)**m
+    pat, a,n,m = _pat_sincos(x)
 
     M = f.match(pat)
     if M is None:
@@ -39,8 +55,7 @@ def trigintegrate(f, x):
     if n.is_integer and n.is_integer:
         
         if n.is_odd or m.is_odd:
-            u = Symbol('u', dummy=True)
-
+            u = _u
             n_, m_ = n.is_odd, m.is_odd
 
             # take smallest n or m -- to choose simplest substitution
