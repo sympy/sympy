@@ -244,8 +244,10 @@ class arg(Function):
     @classmethod
     def canonize(cls, arg):
         x, y = re(arg), im(arg)
-        return C.atan2(y, x)
-
+        arg = C.atan2(y, x)
+        if arg.is_number:
+            return arg
+    
     def _eval_conjugate(self):
         return self
 

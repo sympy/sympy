@@ -854,24 +854,26 @@ class atan2(Function):
     @classmethod
     def canonize(cls, y, x):
         x, y = sympify(x), sympify(y)
-        
-        if isinstance(x, C.Number) and isinstance(y, C.Number):
-            phi = atan(C.abs(y/x))
-            if y == 0:
-                if x > 0:
-                    return S.Zero
-                elif x == 0:
-                    return S.NaN
+        sign_y = C.sign(y)
+
+        if y.is_zero:
+            if x.is_positive:
+                return S.Zero
+            elif x.is_zero:
+                return S.NaN
+            elif x.is_negative:
+                return S.Pi
+        elif x.is_zero:
+            if isinstance(sign_y, C.Number):
+                return sign_y * S.Pi/2
+        else:
+            abs_yx = C.abs(y/x)
+            if isinstance(sign_y, C.Number) and abs_yx.is_number: 
+                phi = C.atan(abs_yx)
+                if x.is_positive:
+                    return sign_y * phi
                 else:
-                    return S.Pi
-            elif x == 0:
-                return C.sign(y) * S.Pi/2
-            else:
-                phi = C.atan(C.abs(y/x))
-                if x > 0:
-                    return C.sign(y) * phi
-                else:
-                    return C.sign(y) * (S.Pi - phi)
+                    return sign_y * (S.Pi - phi)
 
     def _eval_is_real(self):
         return self.args[0].is_real and self.args[1].is_real

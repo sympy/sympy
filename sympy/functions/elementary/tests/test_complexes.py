@@ -1,4 +1,6 @@
-from sympy import symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log, pi
+from sympy import symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log, \
+        pi, arg
+
 
 def test_re():
 
@@ -99,3 +101,21 @@ def test_abs_properties():
     assert abs(q).is_real == True
     assert abs(q).is_positive == True
     assert abs(q).is_zero == False
+
+def test_arg():
+    assert arg(0) == nan
+    assert arg(1) == 0
+    assert arg(-1) == pi
+    assert arg(I) == pi/2
+    assert arg(-I) == -pi/2
+    assert arg(1+I) == pi/4
+    assert arg(-1+I) == 3*pi/4
+    assert arg(1-I) == -pi/4
+    
+    p = Symbol('p', positive=True)
+    assert arg(p) == 0
+
+    n = Symbol('n', negative=True)
+    assert arg(n) == pi
+
+
