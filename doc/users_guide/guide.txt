@@ -1,0 +1,213 @@
+==================
+SymPy User's Guide
+==================
+
+:Author:    Ondřej Čertík   <ondrej@certik.cz>
+:Version:   0.5.12
+:Date:      February 2008
+:Copyright: SymPy Development Team
+
+
+.. role:: input(strong)
+
+.. section-numbering::
+
+.. sidebar:: Table of contents
+
+    .. contents::
+        :depth: 1
+        :local:
+
+
+Getting Started
+===============
+
+Introduction
+------------
+
+SymPy is a Python library for symbolic mathematics. It aims to become a
+full-featured computer algebra system (CAS) while keeping the code as simple as
+possible in order to be comprehensible and easily extensible.  SymPy is written
+entirely in Python and does not require any external libraries.
+
+First Steps with SymPy
+----------------------
+
+The easiest way to download it is to go to
+http://code.google.com/p/sympy/ and
+download the latest tarball from the Featured Downloads:
+
+.. figure:: figures/featured-downloads.png
+    :alt: A page being displayed in a browser window.
+
+    Download part of the SymPy's webpage
+
+Unpack it:
+
+.. parsed-literal::
+
+    $ :input:`tar xzf sympy-0.5.12.tar.gz`
+    
+and try it from a Python intepreter:
+
+.. parsed-literal::
+
+    $ :input:`cd sympy-0.5.12`
+    $ :input:`python`
+    Python 2.4.4 (#2, Jan  3 2008, 13:36:28) 
+    [GCC 4.2.3 20071123 (prerelease) (Debian 4.2.2-4)] on linux2
+    Type "help", "copyright", "credits" or "license" for more information.
+    >>> :input:`from sympy import Symbol, cos`
+    >>> :input:`x = Symbol("x")`
+    >>> :input:`(1/cos(x)).series(x, 0, 10)`
+    1 + (1/2)*x**2 + (5/24)*x**4 + (61/720)*x**6 + (277/8064)*x**8 + O(x**10)
+
+You can use SymPy as shown above and this is indeed the recommended way if you
+use it in your program. You can also install it using `./setup.py install` as
+any other Python module, or just install a package in your favourite Linux
+distribution (see e.g. `Installing SymPy in Debian`_).
+
+
+.. Installing SymPy in Debian
+.. ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. XXX admonition ok?
+.. .. admonition:: Installing SymPy in Debian
+
+.. _Installing SymPy in Debian:
+.. topic:: Installing SymPy in Debian
+
+  .. parsed-literal::
+
+    $ :input:`sudo apt-get install python-sympy`
+    Reading package lists... Done
+    Building dependency tree       
+    Reading state information... Done
+    The following NEW packages will be installed:
+      python-sympy
+    0 upgraded, 1 newly installed, 0 to remove and 18 not upgraded.
+    Need to get 991kB of archives.
+    After this operation, 5976kB of additional disk space will be used.
+    Get:1 http://ftp.cz.debian.org unstable/main python-sympy 0.5.12-1 [991kB]
+    Fetched 991kB in 2s (361kB/s)        
+    Selecting previously deselected package python-sympy.
+    (Reading database ... 232619 files and directories currently installed.)
+    Unpacking python-sympy (from .../python-sympy_0.5.12-1_all.deb) ...
+    Setting up python-sympy (0.5.12-1) ...
+
+
+For other means how to install SymPy, consult the  Downloads_ section on the
+SymPy's webpage.
+
+.. _Downloads: http://code.google.com/p/sympy/wiki/DownloadInstallation?tm=2
+
+
+`isympy` Console
+----------------
+
+For experimenting with new features, or when figuring out how to do things, you
+can use our special wrapper around IPython
+
+.. parsed-literal::
+
+    $ :input:`cd sympy-0.5.12`
+    $ :input:`./bin/isympy`
+    Python 2.4.4 console for SymPy 0.5.12-hg. These commands were executed:
+    >>> from __future__ import division
+    >>> from sympy import *
+    >>> x, y, z = symbols('xyz')
+    >>> k, m, n = symbols('kmn', integer=True)
+    >>> f = Function("f")
+    
+    Documentation can be found at http://sympy.org/
+    
+    
+    In [1]: :input:`(1/cos(x)).series(x, 0, 10)`
+    Out[1]: 
+         2      4       6        8           
+        x    5*x    61*x    277*x            
+    1 + ── + ──── + ───── + ────── + O(x**10)
+        2     24     720     8064            
+
+.. note::
+    .. image:: figures/admon-note.png
+        :align: left
+
+    Commands entered by you are bold. Thus what we did in 3 lines in a regular
+    Python interpeter can be done in 1 line in isympy.
+
+
+Learning SymPy
+==============
+
+Documentation
+-------------
+
+Recommended way of learning SymPy is to go to the main Documentation_ page on
+SymPy's webpage and go through tutorial. Then browse other links and the wiki.
+It's also very useful to look into tests, that are located in the ``tests/``
+directories.
+
+.. _Documenation: http://code.google.com/p/sympy/wiki/Documentation
+
+Contributing
+============
+
+Program
+-------
+
+Go to issues_ that are sorted by priority and simply find something that you
+would like to get fixed and fix it.  Feel free to consult with us on the
+mailinglist_.  Then send your patch either to the issues or the malinglist. See
+the SympyDevelopment_ wiki, but don't worry about it too much if you find it
+too formal - simply get in touch with us on the mailinglist and we'll help you
+get your patch accepted.
+
+.. _issues:             http://code.google.com/p/sympy/issues/list
+.. _mailinglist:        http://groups.google.com/group/sympy
+.. _SympyDevelopment:   http://code.google.com/p/sympy/wiki/SympyDevelopment
+
+
+User's Guide
+------------
+
+To edit this User's Guide, edit the file ``guide.txt`` and then execute:
+
+.. parsed-literal::
+
+    $ :input:`make`
+    ...
+
+
+This will generate html files in the same directory.
+
+To learn how to write the ReST syntax consult the ReStructuredText_ web page.
+
+
+.. _ReStructuredText: http://docutils.sourceforge.net/rst.html
+
+
+About
+=====
+
+Credits
+-------
+
+SymPy was written by the SymPy Development Team,  to find more information
+about who wrote what, please visit the `Contributors wiki page`_.
+
+This manual was written by Ondřej Čertík (ondrej@certik.cz). 
+
+
+.. _Contributors wiki page: http://wiki.sympy.org/wiki/Contributors
+
+
+License
+-------
+
+Unless stated otherwise, all files in the SymPy project, SymPy's webpage (and
+wiki), all images and all documentation including this User's Guide is licensed
+using the new BSD license:
+
+.. include:: ../../LICENSE
+    :literal:
