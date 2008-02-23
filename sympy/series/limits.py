@@ -107,17 +107,18 @@ def debug(func):
     It will print a nice execution tree with arguments and results
     of all decorated functions.
     """
+    if 1:
+        #normal mode - do nothing
+        return func
+
+    #debug mode
     def decorated(*args, **kwargs):
         #r = func(*args, **kwargs)
         r = maketree(func, *args, **kwargs)
         #print "%s = %s(%s, %s)" % (r, func.__name__, args, kwargs)
         return r
-    if 1:
-        #normal mode - do nothing
-        return lambda *args, **kwargs: func(*args, **kwargs)
-    else:
-        #debug mode
-        return decorated
+
+    return decorated
 
 def tree(subtrees):
     "Only debugging purposes: prints a tree"
