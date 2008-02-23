@@ -20,7 +20,7 @@ class ArithMeths(object):
     def __pos__(self):
         return self
     def __neg__(self):
-        return S.NegativeOne * self
+        return Mul(S.NegativeOne, self)
     def __abs__(self):
         return abs_(self)
 
