@@ -9,47 +9,44 @@ from symbol import Symbol, Wild, Temporary
 # from add import Add   /cyclic/
 # from mul import Mul   /cyclic/
 
+from math import exp as _exp
 from math import log as _log
 
 def integer_nthroot(y, n):
     """
-    Usage
-    =====
-        Return a tuple containing x = floor(y**(1/n))
-        and a boolean indicating whether the result is exact (that is,
-        whether x**n == y).
+    Return a tuple containing x = floor(y**(1/n))
+    and a boolean indicating whether the result is exact (that is,
+    whether x**n == y).
 
-    Examples
-    ========
-
-        >>> integer_nthroot(16,2)
-        (4, True)
-        >>> integer_nthroot(26,2)
-        (5, False)
-        >>> integer_nthroot(1234567**7, 7)
-        (1234567L, True)
-        >>> integer_nthroot(1234567**7+1, 7)
-        (1234567L, False)
+    >>> integer_nthroot(16,2)
+    (4, True)
+    >>> integer_nthroot(26,2)
+    (5, False)
     """
-
-    y = int(y); n = int(n)
     if y < 0: raise ValueError, "y must not be negative"
     if n < 1: raise ValueError, "n must be positive"
     if y in (0, 1): return y, True
     if n == 1: return y, True
-
-    # Search with Newton's method, starting from floating-point
-    # approximation. Care must be taken to avoid overflow.
-    guess = 2**int(_log(y, 2)/n)
+    # Get initial estimate for Newton's method. Care must be taken to
+    # avoid overflow
+    try:
+        guess = int(y ** (1./n)+0.5)
+    except OverflowError:
+        try:
+            guess = int(_exp(_log(y)/n)+0.5)
+        except OverflowError:
+            guess = 1 << int(_log(y, 2)/n)
+    # Newton iteration
     xprev, x = -1, guess
     while abs(x - xprev) > 1:
         t = x**(n-1)
         xprev, x = x, x - (t*x-y)//(n*t)
     # Compensate
-    while x**n > y:
+    t = x**n
+    while t > y:
         x -= 1
-    return x, x**n == y
-
+        t = x**n
+    return x, t == y
 
 class Pow(Basic, ArithMeths, RelMeths):
 
