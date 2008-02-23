@@ -90,7 +90,7 @@ class Symbol(Atom, RelMeths, ArithMeths):
 class Dummy(Symbol):
     """Dummy Symbol
     
-       use this through Symol:
+       use this through Symbol:
 
        >>> x1 = Symbol('x', dummy=True)
        >>> x2 = Symbol('x', dummy=True)
