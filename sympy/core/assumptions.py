@@ -24,7 +24,6 @@ class AssumeMeths(object):
         - integer       - object can have only values from the set
                           of integers
         - bounded       - object absolute value is bounded
-        - dummy         - used for marking dummy symbols
         - positive      - object can have only positive values
         - negative      - object can have only negative values
         - nonpositive      - object can have only nonpositive values
@@ -71,7 +70,7 @@ class AssumeMeths(object):
     _assume_aliases['pi'] = ('integer','positive')
     _assume_aliases['ni'] = ('integer','negative')
 
-    _properties = ['dummy','order'] # todo: rm is_order
+    _properties = ['order'] # todo: rm is_order
 
     # inclusion relations (subset, superset)
     _assume_rels = (#('prime', 'integer'),
@@ -126,7 +125,7 @@ class AssumeMeths(object):
                        'commutative','noncommutative',
                        'homogeneous','inhomogeneous',
                        'comparable',
-                       'dummy','order',
+                       'order',
                        'nni','pi',
                        'evaluate')
 

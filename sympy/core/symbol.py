@@ -20,7 +20,6 @@ class Symbol(Atom, RelMeths, ArithMeths):
     """
 
     is_comparable = False
-    is_dummy = False
 
     #@cache_it_nondummy
     def __new__(cls, name, commutative=True, dummy=False,
@@ -94,7 +93,6 @@ class Dummy(Symbol):
        False
     """
 
-    is_dummy = True
     dummycount = 0
 
     def __new__(cls, name, commutative=True, **assumptions):
