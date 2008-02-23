@@ -1,7 +1,7 @@
 
 from basic import Basic, Atom, S, C, sympify
 from methods import RelMeths, ArithMeths
-#from cache import cache_it_nondummy
+from cache import cacheit
 
 # from function import Function, WildFunction   /cyclic/
 
@@ -21,7 +21,6 @@ class Symbol(Atom, RelMeths, ArithMeths):
 
     is_comparable = False
 
-    #@cache_it_nondummy
     def __new__(cls, name, commutative=True, dummy=False,
                 **assumptions):
         """if dummy == True, then this Symbol is totally unique, i.e.::
@@ -39,13 +38,19 @@ class Symbol(Atom, RelMeths, ArithMeths):
         # XXX compatibility stuff
         if dummy==True:
             return Dummy(name, commutative=commutative, **assumptions)
+        else:
+            return Symbol.__xnew_cached_(cls, name, commutative, **assumptions)
 
+    def __new_stage2__(cls, name, commutative=True, **assumptions):
         obj = Basic.__new__(cls,
                             commutative=commutative,
                             **assumptions)
         assert isinstance(name, str),`type(name)`
         obj.name = name
         return obj
+
+    __xnew__       = staticmethod(__new_stage2__)            # never cached (e.g. dummy)
+    __xnew_cached_ = staticmethod(cacheit(__new_stage2__))   # symbols are always cached
 
     def _hashable_content(self):
         return (self.name,)
@@ -96,7 +101,7 @@ class Dummy(Symbol):
     dummycount = 0
 
     def __new__(cls, name, commutative=True, **assumptions):
-        obj = Symbol.__new__(cls, name, commutative=commutative, **assumptions)
+        obj = Symbol.__xnew__(cls, name, commutative=commutative, **assumptions)
 
         Dummy.dummycount += 1
         obj.dummy_index = Dummy.dummycount
