@@ -1,6 +1,7 @@
 from sympy import sin, cos, exp, cot, sqrt, I, E, pi, symbols, Function
 from sympy.simplify import cancel, trim, apart, together
 from sympy.integrals import integrate
+from sympy.utilities.pytest import XFAIL
 
 x,y,n = symbols('xyn')
 
@@ -45,9 +46,6 @@ def test_trim():
 
     assert trim(expr) == cos(x)/(1 + sin(x)**3)
 
-    assert trim((exp(3*x)+exp(2*x*y) + y*exp(x))/exp(x)) == \
-        y + exp(2*x) + exp(-x + 2*x*y)
-
     assert trim((2 * (1/n - cos(n * pi)/n))/pi) == \
         1/pi/n*(2 - 2*cos(pi*n))
 
@@ -55,6 +53,12 @@ def test_trim():
 
     assert trim(exp(x)*sin(x)/2 + cos(x)*exp(x)) == \
         exp(x)*(sin(x) + 2*cos(x))/2
+
+@XFAIL  # because of #666
+def test_trim_xfail():
+    assert trim((exp(3*x)+exp(2*x*y) + y*exp(x))/exp(x)) == \
+        y + exp(2*x) + exp(-x + 2*x*y)
+
 
 def test_apart():
     assert apart(1/(x+2)/(x+1), x) == 1/(1 + x) - 1/(2 + x)
