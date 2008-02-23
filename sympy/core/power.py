@@ -549,6 +549,10 @@ class Pow(Basic, ArithMeths, RelMeths):
 
 
 # /cyclic/
+import basic as _
+_.Pow =     Pow
+del _
+
 import methods as _
 _.Pow =     Pow
 del _

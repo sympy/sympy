@@ -557,9 +557,15 @@ def diff(f, x, times = 1, evaluate=True):
 # /cyclic/
 import basic as _
 _.Derivative    = Derivative
+_.FunctionClass = FunctionClass
+del _
+
+import add as _
+_.FunctionClass = FunctionClass
 del _
 
 import mul as _
+_.FunctionClass = FunctionClass
 _.WildFunction  = WildFunction
 del _
 
@@ -571,4 +577,8 @@ del _
 import symbol as _
 _.Function      = Function
 _.WildFunction  = WildFunction
+del _
+
+import numbers as _
+_.FunctionClass = FunctionClass
 del _

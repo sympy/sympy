@@ -7,6 +7,7 @@ from cache import cacheit
 from symbol import Symbol, Wild, Temporary
 # from numbers import Number    /cyclic/
 # from mul import Mul    /cyclic/
+# from function import FunctionClass    /cyclic/
 
 class Add(AssocOp, RelMeths, ArithMeths):
 
@@ -306,7 +307,6 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
     def _eval_subs(self, old, new):
         if self==old: return new
-        from function import FunctionClass
         if isinstance(old, FunctionClass):
             return self.__class__(*[s.subs(old, new) for s in self.args ])
         coeff1,factors1 = self.as_coeff_factors()

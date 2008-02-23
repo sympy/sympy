@@ -8,6 +8,7 @@ from power import integer_nthroot
 
 # from mul import Mul   /cyclic/
 # from power import Pow /cyclic/
+# from function import FunctionClass    /cyclic/
 
 # (a,b) -> gcd(a,b)
 _gcdcache = {}
@@ -565,7 +566,6 @@ class Rational(Number):
         if isinstance(other, NumberSymbol):
             if other.is_irrational: return False
             return other.__eq__(self)
-        from sympy.core.function import FunctionClass
         if isinstance(self, Number) and isinstance(other, FunctionClass):
             return False
         if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
@@ -1349,6 +1349,7 @@ class ImaginaryUnit(Singleton, Atom, RelMeths, ArithMeths):
 import basic as _
 _.Number    = Number
 _.Integer   = Integer
+_.Rational  = Rational
 _.Real      = Real
 del _
 

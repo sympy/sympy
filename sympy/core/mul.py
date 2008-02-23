@@ -5,7 +5,7 @@ from methods import RelMeths, ArithMeths
 from cache import cacheit
 
 from symbol import Symbol, Wild
-# from function import WildFunction /cyclic/
+# from function import FunctionClass, WildFunction /cyclic/
 # from numbers import Number, Integer, Real /cyclic/
 # from add   import Add /cyclic/
 # from power import Pow /cyclic/
@@ -14,7 +14,6 @@ class Mul(AssocOp, RelMeths, ArithMeths):
 
     @classmethod
     def flatten(cls, seq):
-        from function import FunctionClass
         # apply associativity, separate commutative part of seq
         c_part = []
         nc_part = []
@@ -492,7 +491,6 @@ class Mul(AssocOp, RelMeths, ArithMeths):
     def _eval_subs(self, old, new):
         if self==old:
             return new
-        from function import FunctionClass
         if isinstance(old, FunctionClass):
             return self.__class__(*[s.subs(old, new) for s in self.args ])
         coeff1,terms1 = self.as_coeff_terms()

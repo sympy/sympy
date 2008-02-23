@@ -7,12 +7,13 @@ from assumptions import AssumeMeths
 from sympify import sympify, SympifyError
 from cache import cacheit, Memoizer, MemoizerArg
 
-# from numbers  import Number, Integer, Real /cyclic/
+# from numbers  import Number, Integer, Rational, Real /cyclic/
 # from interval import Interval /cyclic/
 # from symbol   import Symbol, Wild, Temporary /cyclic/
 # from add      import Add  /cyclic/
 # from mul      import Mul  /cyclic/
-# from function import Derivative   /cyclic/
+# from power    import Pow  /cyclic/
+# from function import Derivative, FunctionClass   /cyclic/
 
 def repr_level(flag=None, _cache=[1]):
     if flag is None:
@@ -474,7 +475,6 @@ class Basic(AssumeMeths):
         if self==old:
             return new
         #new functions are initialized differently, than old functions
-        from sympy.core.function import FunctionClass
         if isinstance(self.func, FunctionClass):
             args = self.args[:]
         else:
@@ -692,8 +692,6 @@ class Basic(AssumeMeths):
           {x_: -a/b}
 
         """
-        from sympy.core.mul import Mul
-        from sympy.core.power import Pow
 
         # weed out negative one prefixes
         sign = 1
@@ -710,7 +708,6 @@ class Basic(AssumeMeths):
                 return pat.matches(expr, repl_dict)
         expr = sympify(expr)
         if not isinstance(expr, pattern.__class__):
-            from sympy.core.numbers import Rational
             # if we can omit the first factor, we can match it to sign * one
             if isinstance(pattern, Mul) and Mul(*pattern.args[1:]) == expr:
                return pattern.args[0].matches(Rational(sign), repl_dict, evaluate)
@@ -738,7 +735,6 @@ class Basic(AssumeMeths):
               if p in pp: pp.remove(p)
 
         # only one symbol left in pattern -> match the remaining expression
-        from sympy.core.symbol import Wild
         if len(pp) == 1 and isinstance(pp[0], Wild):
           if len(ee) == 1: d[pp[0]] = sign * ee[0]
           else: d[pp[0]] = sign * (type(expr)(*ee))
@@ -970,8 +966,6 @@ class Basic(AssumeMeths):
             pattern, rule = args[:-1], args[-1]
 
             if not isinstance(rule, str):
-                # XXX move me out of here (cyclic imports)
-                from function import FunctionClass
 
                 if rule == C.tan:
                     rule = "tan"
