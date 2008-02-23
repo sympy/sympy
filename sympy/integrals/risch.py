@@ -79,8 +79,23 @@ def monomials(variables, degree):
 
         return monoms
 
-def symbols(name, n, **kwargs):
-    return [ Symbol(name + str(i), **kwargs) for i in range(0, n) ]
+# name -> [] of symbols
+_symbols_cache = {}
+
+# NB @cacheit is not convenient here
+def _symbols(name, n):
+    """get vector of symbols local to this module"""
+    try:
+        lsyms = _symbols_cache[name]
+    except KeyError:
+        lsyms = []
+        _symbols_cache[name] = lsyms
+
+    while len(lsyms) < n:
+        lsyms.append( Symbol('%s%i' % (name, len(lsyms)), dummy=True) )
+
+    return lsyms[:n]
+
 
 def heurisch(f, x, **kwargs):
     """Compute indefinite integral using heuristic Risch algorithm.
@@ -207,7 +222,7 @@ def heurisch(f, x, **kwargs):
     for g in set(terms):
         terms |= components(g.diff(x), x)
 
-    V = symbols('x', len(terms), dummy=True)
+    V = _symbols('x', len(terms))
 
     mapping = dict(zip(terms, V))
 
@@ -305,7 +320,7 @@ def heurisch(f, x, **kwargs):
     else:
         monoms = monomials(V, A + B)
 
-    poly_coeffs = symbols('A', len(monoms), dummy=True)
+    poly_coeffs = _symbols('A', len(monoms))
 
     poly_part = Add(*[ poly_coeffs[i]*monomial
         for i, monomial in enumerate(monoms) ])
@@ -338,10 +353,11 @@ def heurisch(f, x, **kwargs):
                 z, field, factor=False))
 
         log_coeffs, log_part = [], []
+        B = _symbols('B', len(irreducibles))
 
         for i, poly in enumerate(irreducibles):
             if poly.has(*V):
-                log_coeffs.append(Symbol('B%s' % i, dummy=True))
+                log_coeffs.append(B[i])
                 log_part.append(log_coeffs[-1] * log(poly))
 
         coeffs = poly_coeffs + log_coeffs
