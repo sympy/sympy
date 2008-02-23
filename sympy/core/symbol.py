@@ -123,21 +123,32 @@ class Temporary(Dummy):
         return obj
 
 
-class Wild(Dummy):
+class Wild(Symbol):
     """
     Wild() matches any expression but another Wild().
     """
 
-    def __new__(cls, name=None, exclude=None, **assumptions):
-        if name is None:
-            name = 'W%s' % (Dummy.dummycount+1)
-        obj = Dummy.__new__(cls, name, **assumptions)
+    def __new__(cls, name, exclude=None, **assumptions):
+        if type(exclude) is list:
+            exclude = tuple(exclude)
+
+        return Wild.__xnew__(cls, name, exclude, **assumptions)
+
+    @staticmethod
+    @cacheit
+    def __xnew__(cls, name, exclude, **assumptions):
+        obj = Symbol.__xnew__(cls, name, **assumptions)
+
         if exclude is None:
             obj.exclude = None
         else:
-            obj.exclude = [sympify(x) for x in exclude]
+            obj.exclude = tuple([sympify(x) for x in exclude])
         return obj
 
+    def _hashable_content(self):
+        return (self.name, self.exclude)
+
+    # TODO add check against another Wild
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         for p,v in repl_dict.items():
             if p==pattern:
