@@ -663,6 +663,14 @@ class Integer(Rational):
             return obj
 
     # Arithmetic operations are here for efficiency
+    def __neg__(self):
+        return Integer(-self.p)
+
+    def __abs__(self):
+        if self.p >= 0:
+            return self
+        else:
+            return Integer(-self.p)
 
     # TODO make it decorator + bytecodehacks?
     def __add__(a, b):
