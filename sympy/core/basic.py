@@ -1400,8 +1400,8 @@ class Basic(AssumeMeths):
         """ c*x**e -> c,e where x can be any symbolic expression.
         """
         x = sympify(x)
-        wc = Wild()
-        we = Wild()
+        wc = Wild('wc')
+        we = Wild('we')
         c, terms = self.as_coeff_terms()
         p  = wc*x**we
         d = self.match(p)

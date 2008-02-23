@@ -211,7 +211,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         r = self.__class__(*[t._calc_splitter(d) for t in factors])
         if isinstance(r,Add) and 0:
             for e,t in d.items():
-                w = Wild()
+                w = Wild('w')
                 d1 = r.match(e+w)
                 if d1 is not None:
                     r1 = t + d1[w]
