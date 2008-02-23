@@ -20,7 +20,7 @@ class Symbol(Atom, RelMeths, ArithMeths):
     """
 
     is_comparable = False
-    dummycount = 0
+    is_dummy = False
 
     #@cache_it_nondummy
     def __new__(cls, name, commutative=True, dummy=False,
@@ -36,36 +36,30 @@ class Symbol(Atom, RelMeths, ArithMeths):
         False
 
         """
+
+        # XXX compatibility stuff
+        if dummy==True:
+            return Dummy(name, commutative=commutative, **assumptions)
+
         obj = Basic.__new__(cls,
                             commutative=commutative,
-                            dummy=dummy,
                             **assumptions)
-        if dummy:
-            Symbol.dummycount += 1
-            obj.dummy_index = Symbol.dummycount
         assert isinstance(name, str),`type(name)`
         obj.name = name
         return obj
 
     def _hashable_content(self):
-        if self.is_dummy:
-            return (self.name, self.dummy_index)
         return (self.name,)
 
     def tostr(self, level=0):
-        if self.is_dummy:
-            return '_' + self.name
         return self.name
 
     def torepr(self):
-        if self.is_dummy:
-            return '%s(%r, dummy=True)' % (self.__class__.__name__, self.name)
         return '%s(%r)' % (self.__class__.__name__, self.name)
 
     def as_dummy(self):
         assumptions = self._assumptions.copy()
-        assumptions['dummy'] = True
-        return self.__class__(self.name, **assumptions)
+        return Dummy(self.name, **assumptions)
 
     def __call__(self, *args):
         assumptions = self._assumptions
@@ -88,16 +82,53 @@ class Symbol(Atom, RelMeths, ArithMeths):
         import sage.all as sage
         return sage.var(self.name)
 
-class Wild(Symbol):
+
+class Dummy(Symbol):
+    """Dummy Symbol
+    
+       use this through Symol:
+
+       >>> x1 = Symbol('x', dummy=True)
+       >>> x2 = Symbol('x', dummy=True)
+       >>> bool(x1 == x2)
+       False
+    """
+
+    is_dummy = True
+    dummycount = 0
+
+    def __new__(cls, name, commutative=True, **assumptions):
+        obj = Symbol.__new__(cls, name, commutative=commutative, **assumptions)
+
+        Dummy.dummycount += 1
+        obj.dummy_index = Dummy.dummycount
+        return obj
+
+    def _hashable_content(self):
+        return (self.name, self.dummy_index)
+
+    def tostr(self, level=0):
+        return '_' + self.name
+
+
+class Temporary(Dummy):
+    """
+    Indexed dummy symbol.
+    """
+    def __new__(cls, **assumptions):
+        obj = Dummy.__new__(cls, 'T%i' % Dummy.dummycount, **assumptions)
+        return obj
+
+
+class Wild(Dummy):
     """
     Wild() matches any expression but another Wild().
     """
 
     def __new__(cls, name=None, exclude=None, **assumptions):
-        assumptions['dummy'] = True
         if name is None:
-            name = 'W%s' % (Symbol.dummycount+1)
-        obj = Symbol.__new__(cls, name, **assumptions)
+            name = 'W%s' % (Dummy.dummycount+1)
+        obj = Dummy.__new__(cls, name, **assumptions)
         if exclude is None:
             obj.exclude = None
         else:
@@ -125,14 +156,6 @@ class Wild(Symbol):
     def tostr(self, level=0):
         return self.name + '_'
 
-class Temporary(Symbol):
-    """
-    Indexed dummy symbol.
-    """
-    def __new__(cls, **assumptions):
-        assumptions['dummy'] = True
-        name = 'T%s' % (Symbol.dummycount+1)
-        return Symbol.__new__(cls, name, **assumptions)
 
 def symbols(*names, **kwargs):
     """Returns a list of symbols with names taken from 'names'
