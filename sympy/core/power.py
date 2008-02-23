@@ -9,6 +9,8 @@ from symbol import Symbol, Wild, Temporary
 # from add import Add   /cyclic/
 # from mul import Mul   /cyclic/
 
+from math import log as _log
+
 def integer_nthroot(y, n):
     """
     Usage
@@ -38,7 +40,6 @@ def integer_nthroot(y, n):
 
     # Search with Newton's method, starting from floating-point
     # approximation. Care must be taken to avoid overflow.
-    from math import log as _log
     guess = 2**int(_log(y, 2)/n)
     xprev, x = -1, guess
     while abs(x - xprev) > 1:
