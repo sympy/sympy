@@ -376,7 +376,7 @@ def collect(expr, syms, evaluate=True, exact=False):
        The same result can achieved in dictionary form:
 
        >>> collect(a*x**2 + b*x**2 + a*x - b*x + c, x, evaluate=False)
-       {1: c, x**2: a + b, x: a - b}
+       {x**2: a + b, x: a - b, 1: c}
 
        You can also work with multi-variate polynomials. However
        remember that this function is greedy so it will care only

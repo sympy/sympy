@@ -252,10 +252,10 @@ def solve_undetermined_coeffs(equ, coeffs, sym, simplified=True):
        >>> a, b, c, x = symbols('a', 'b', 'c', 'x')
 
        >>> solve_undetermined_coeffs(2*a*x + a+b == x, [a, b], x)
-       {a: 1/2, b: -1/2}
+       {b: -1/2, a: 1/2}
 
        >>> solve_undetermined_coeffs(a*c*x + a+b == x, [a, b], x)
-       {a: 1/c, b: -1/c}
+       {b: -1/c, a: 1/c}
 
     """
     if isinstance(equ, Equality):
