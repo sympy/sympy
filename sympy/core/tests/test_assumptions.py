@@ -287,7 +287,6 @@ def test_prime_symbol():
     assert x.is_nonpositive == None
     assert x.is_nonnegative == None
 
-@XFAIL
 def test_other_symbol():
     x = Symbol('x', integer=True)
     assert x.is_integer == True
@@ -308,22 +307,10 @@ def test_other_symbol():
     assert x.is_even == False
     assert x.is_integer == True
 
-    # XXX x.is_even currently will be True
-    x = Symbol('x', odd=False)
-    assert x.is_odd == False
-    assert x.is_even == None
-    assert x.is_integer == None
-
     x = Symbol('x', even=True)
     assert x.is_even == True
     assert x.is_odd == False
     assert x.is_integer == True
-
-    # XXX x.is_odd currently will be True
-    x = Symbol('x', even=False)
-    assert x.is_even == False
-    assert x.is_odd == None
-    assert x.is_integer == None
 
     x = Symbol('x', nni=True)
     assert x.is_integer == True
@@ -334,3 +321,22 @@ def test_other_symbol():
     assert x.is_nonpositive == True
 
     py.test.raises(AttributeError, "x.is_real = False")
+
+
+@XFAIL
+def test_other_symbol_fail1():
+    # XXX x.is_even currently will be True
+    x = Symbol('x', odd=False)
+    assert x.is_odd == False
+    assert x.is_even == None
+    assert x.is_integer == None
+
+@XFAIL
+def test_other_symbol_fail2():
+    # XXX x.is_odd currently will be True
+    x = Symbol('x', even=False)
+    assert x.is_even == False
+    assert x.is_odd == None
+    assert x.is_integer == None
+
+

@@ -126,7 +126,6 @@ class AssumeMeths(object):
                        'homogeneous','inhomogeneous',
                        'comparable',
                        'order',
-                       'nni','pi',
                        'evaluate')
 
     def _get_assumption(self, name):
