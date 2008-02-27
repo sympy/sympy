@@ -166,7 +166,8 @@ class Pow(Basic, ArithMeths, RelMeths):
         if c1 and c2:
             if self.base.is_positive:
                 return True
-            if self.base.is_negative:
+
+            else:   # negative or zero (or positive)
                 if self.exp.is_integer:
                     return True
 

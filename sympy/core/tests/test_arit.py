@@ -765,6 +765,19 @@ def test_Pow_is_integer():
     assert (k**(n*m)).is_integer == True
     assert (k**(-n*m)).is_integer == None
 
+
+def test_Pow_is_real():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True, positive=True)
+
+    assert (x**2).is_real   == True
+    assert (x**3).is_real   == True
+    assert (x**x).is_real   == None
+    assert (y**x).is_real   == True
+
+    assert (x**Rational(1,3)).is_real   == None
+    assert (y**Rational(1,3)).is_real   == True
+
 @XFAIL
 def test_Pow_is_bounded():
     x = Symbol('x', real=True)
