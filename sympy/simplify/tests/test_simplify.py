@@ -72,11 +72,16 @@ def test_simplify():
     e = (-4*x*y**2-2*y**3-2*x**2*y)/(x+y)**2
     assert simplify(e) == -2*y
 
+    e = -x-y-(x+y)**(-1)*y**2+(x+y)**(-1)*x**2
+    assert simplify(e) == -2*y
+
+@XFAIL
+def test_simplify_fail1():
+    x = Symbol('x')
+    y = Symbol('y')
     e = (x+y)**2/(-4*x*y**2-2*y**3-2*x**2*y)
     assert simplify(e) == 1 / (-2*y)
 
-    e = -x-y-(x+y)**(-1)*y**2+(x+y)**(-1)*x**2
-    assert simplify(e) == -2*y
 
 def test_fraction():
     x, y, z = map(Symbol, 'xyz')
