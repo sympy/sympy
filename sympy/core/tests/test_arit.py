@@ -1,8 +1,9 @@
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Real, re, pi, \
-        sympify
+        sympify, sqrt
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol("x")
+y = Symbol('y')
 
 def test_bug1():
     assert re(x) != x
@@ -875,6 +876,23 @@ def test_Pow_is_nonpositive_nonnegative():
     assert ((-k)**x).is_nonpositive == None
     assert ((-k)**n).is_nonpositive == None
     assert ((-k)**m).is_nonpositive == True
+
+def test_Add_is_comparable():
+    assert (x+y).is_comparable  == False
+    assert (x+1).is_comparable  == False
+    assert (Rational(1,3) - sqrt(8)).is_comparable == True
+
+def test_Mul_is_comparable():
+    assert (x*y).is_comparable  == False
+    assert (x*2).is_comparable  == False
+    assert (sqrt(2)*Rational(1,3)).is_comparable == True
+
+
+def test_Pow_is_comparable():
+    assert (x**y).is_comparable == False
+    assert (x**2).is_comparable == False
+    assert (Rational(1,3)**Rational(1,2)).is_comparable == True
+
 
 def test_issue432():
     class MightyNumeric(tuple):
