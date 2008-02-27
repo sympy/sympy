@@ -1,5 +1,6 @@
 from sympy import Lambda, Symbol, Function, WildFunction, Derivative, sqrt, \
-        log, exp, Rational, sign, Basic, sin, cos, diff, I, re, im
+        log, exp, Rational, Real, sign, Basic, sin, cos, diff, I, re, im, \
+        oo, zoo, nan, E
 from sympy.utilities.pytest import XFAIL
 from sympy.utilities.test import REPR0
 from sympy.abc import x, y
@@ -191,3 +192,29 @@ def test_Lambda():
     #class F(Function):
     #    pass
     #assert Lambda(x, F(x)) == F
+
+
+def test_function_comparable():
+    x = Symbol('x')
+
+    assert sin(x).is_comparable == False
+    assert cos(x).is_comparable == False
+
+    assert sin(Real('0.1')).is_comparable   == True
+    assert cos(Real('0.1')).is_comparable   == True
+
+    assert sin(E).is_comparable     == True
+    assert cos(E).is_comparable     == True
+
+    assert sin(Rational(1,3)).is_comparable == True
+    assert cos(Rational(1,3)).is_comparable == True
+
+@XFAIL
+def test_function_comparable_fail():
+    x = Symbol('x')
+
+    assert sin(oo).is_comparable    == False
+    assert sin(-oo).is_comparable   == False
+    assert sin(zoo).is_comparable   == False
+    assert sin(nan).is_comparable   == False
+

@@ -132,10 +132,6 @@ class Function(Basic, ArithMeths, RelMeths):
         return Basic.__new__(cls, *args, **options)
 
     @property
-    def is_comparable(self):
-        return True
-
-    @property
     def is_commutative(self):
         return True
 
@@ -192,9 +188,9 @@ class Function(Basic, ArithMeths, RelMeths):
         return obj
 
     def _eval_is_comparable(self):
-        if isinstance(self.func, DefinedFunction):
+        if isinstance(self, Function):
             r = True
-            for s in self:
+            for s in self.args:
                 c = s.is_comparable
                 if c is None: return
                 if not c: r = False

@@ -237,7 +237,6 @@ class exp(Function):
 class log(Function):
 
     nargs = (1,2)
-    is_comparable = True
 
     def fdiff(self, argindex=1):
         if argindex == 1:
