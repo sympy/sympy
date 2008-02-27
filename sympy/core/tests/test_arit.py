@@ -907,6 +907,16 @@ def test_Pow_is_comparable():
     assert (Rational(1,3)**Rational(1,2)).is_comparable == True
 
 
+def test_Add_is_positive_2():
+    e = Rational(1,3) - sqrt(8)
+    assert e.is_positive    == False
+    assert e.is_negative    == True
+
+    e = pi - 1
+    assert e.is_positive    == True
+    assert e.is_negative    == False
+
+
 def test_issue432():
     class MightyNumeric(tuple):
         def __rdiv__(self, other):

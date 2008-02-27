@@ -128,6 +128,23 @@ class AssumeMeths(object):
                        'order',
                        'evaluate')
 
+
+    # properties that indicate ordering on real axis
+    _real_ordering = set(['negative', 'nonnegative', 'positive', 'nonpositive'])
+
+    # what can be said from cmp(x.evalf(),0)
+    # NOTE: if x.evalf() is zero we can say nothing
+    _real_cmp0_table= {
+            'positive': {1: True,  -1: False, 0: None},
+            'negative': {1: False, -1: True,  0: None},
+            }
+
+    # because we can say nothing if x.evalf() is zero, nonpositive is the same
+    # as negative
+    _real_cmp0_table['nonpositive'] = _real_cmp0_table['negative']
+    _real_cmp0_table['nonnegative'] = _real_cmp0_table['positive']
+
+
     def _get_assumption(self, name):
         k = name[3:]
         if k in self._assume_defined:
@@ -153,6 +170,18 @@ class AssumeMeths(object):
                 if a is not None:
                     self.assume(**{ik:a})
                     return getattr(self, name)
+
+            # For positive/negative try to ask evalf
+            if k in self._real_ordering:
+                if self.is_comparable:
+                    v = self.evalf()
+
+                    c = cmp(v, 0)
+                    a = self._real_cmp0_table[k][c]
+
+                    if a is not None:
+                        self.assume(**{k:a})
+                        return getattr(self, name)
 
             # No result, return None
             return None
