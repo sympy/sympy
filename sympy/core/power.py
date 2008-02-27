@@ -104,7 +104,7 @@ class Pow(Basic, ArithMeths, RelMeths):
     def _eval_is_comparable(self):
         c1 = self.base.is_comparable
         if c1 is None: return
-        c2 = self.base.is_comparable
+        c2 = self.exp.is_comparable
         if c2 is None: return
         return c1 and c2
 

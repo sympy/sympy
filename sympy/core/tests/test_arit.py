@@ -812,6 +812,8 @@ def test_Pow_is_negative_positive():
     n = Symbol('n', even=True)
     m = Symbol('m', odd=True)
 
+    z = Symbol('z')
+
     assert (2**x).is_positive == True
     assert ((-2)**x).is_positive == None
     assert ((-2)**n).is_positive == True
@@ -837,6 +839,9 @@ def test_Pow_is_negative_positive():
     assert ((-k)**x).is_negative == None
     assert ((-k)**n).is_negative == False
     assert ((-k)**m).is_negative == True
+
+    assert (2**z).is_positive   == None
+    assert (2**z).is_negative   == None
 
 def test_Pow_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
