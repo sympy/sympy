@@ -242,10 +242,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             re, im = self.base.as_real_imag()
 
             r = (re**2 + im**2)**S.Half
-            t = C.atan(im / re)
-
-            if im == 0 and re < 0:
-                t = S.Pi
+            t = C.atan2(im, re)
 
             rp, tp = r**self.exp, t*self.exp
 

@@ -1,5 +1,5 @@
 from sympy import Symbol, sqrt, I, Integer, Rational, cos, atan, sin, im, re, \
-        exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth
+        exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi
 
 
 def test_complex():
@@ -88,7 +88,9 @@ def test_pythoncomplex():
     assert 4.1j*x != 4*x*I
 
 def test_rootcomplex():
-    assert ((1+I)**Rational(1,2)).expand(complex=True) == 2**Rational(1,4)*cos(Rational(1,2)*atan(1))+2**(Rational(1,4))*sin(Rational(1,2)*atan(1))*I
+    R = Rational
+    assert ((+1+I)**R(1,2)).expand(complex=True) == 2**R(1,4)*cos(  pi/8) + 2**R(1,4)*sin(  pi/8)*I
+    assert ((-1-I)**R(1,2)).expand(complex=True) == 2**R(1,4)*cos(3*pi/8) - 2**R(1,4)*sin(3*pi/8)*I
     assert (sqrt(-10)*I).as_real_imag() == (-sqrt(10), 0)
 
 def test_expand_inverse():
