@@ -100,6 +100,16 @@ def test_Infinity():
     assert 1/(-oo)  == 0
     assert 8/oo  == 0
 
+def test_Infinity_2():
+    x = Symbol('x')
+    assert oo*x != oo
+    assert oo*(pi-1) == oo
+    assert oo*(1-pi) == -oo
+
+    assert (-oo)*x != -oo
+    assert (-oo)*(pi-1) == -oo
+    assert (-oo)*(1-pi) == oo
+
 def test_NaN():
     assert nan == nan
     assert nan != 1
