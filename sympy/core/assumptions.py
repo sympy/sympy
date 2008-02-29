@@ -147,10 +147,16 @@ class AssumeMeths(object):
 
     def _get_assumption(self, name):
         k = name[3:]
+        assumptions = self._assumptions
+
+        # see if it already cached
+        try:
+            return assumptions[k]
+        except KeyError:
+            pass
+
+        # 'defined' assumption
         if k in self._assume_defined:
-            assumptions = self._assumptions
-            try: return assumptions[k]
-            except KeyError: pass
 
             # First try the assumption evaluation function if it exists
             if hasattr(self, '_eval_is_'+k):
@@ -183,8 +189,12 @@ class AssumeMeths(object):
                         self.assume(**{k:a})
                         return getattr(self, name)
 
-            # No result, return None
+            # No result -- unknown
+            # we can modify assumptions directly -- None has no implications
+            assumptions[k] = None
             return None
+
+        # assumption alias
         elif k in self._assume_aliases:
             for p in self._assume_aliases[k]:
                 v = getattr(self, 'is_' + p)
@@ -193,6 +203,7 @@ class AssumeMeths(object):
                 elif v is False:
                     return False
             return True
+
         raise AttributeError('undefined assumption %r' % (k))
 
     def _change_assumption(self, d, name, value, extra_msg = ''):
