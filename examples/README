@@ -2,4 +2,5 @@ This directory contains examples of usage of SymPy.
 
 Some of them were created for older versions of SymPy and may need a slight
 adjustment to run with the current version of SymPy, but most of them should
-work just fine.
+work just fine. Those that are known to be running fine are uncommented in the
+"./all" script.
