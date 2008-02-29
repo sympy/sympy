@@ -1,5 +1,5 @@
 from sympy import Basic, S, Symbol, Real, Integer, Rational, \
-    sin, cos, exp, log, oo, sqrt, symbols, Integral
+    sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify
 import py
 
 x = Symbol("x")
@@ -146,7 +146,7 @@ def test_is_fraction():
     assert (sin(y)/x).is_fraction(x) == True
     assert (sin(y)/x).is_fraction(x, y) == False
 
-def test_SAGE():
+def test_SAGE1():
     #see http://code.google.com/p/sympy/issues/detail?id=247
     class MyInt:
         def _sympy_(self):
@@ -154,6 +154,18 @@ def test_SAGE():
     m = MyInt()
     e = Rational(2)*m
     assert e == 10
+
+    py.test.raises(TypeError, "Rational(2)*MyInt")
+
+def test_SAGE2():
+    class MyInt(object):
+        def __int__(self):
+            return 5
+    assert sympify(MyInt()) == 5
+    e = Rational(2)*MyInt()
+    assert e == 10
+
+    py.test.raises(TypeError, "Rational(2)*MyInt")
 
 def test_ordering():
     from sympy.core.methods import ArithMeths

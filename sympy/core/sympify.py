@@ -78,10 +78,27 @@ def sympify(a, sympify_lists=False, locals= {}):
         return Interval(*a)
     elif isinstance(a, (list,tuple,set)) and sympify_lists:
         return type(a)([sympify(x, True) for x in a])
-    elif hasattr(a, "_sympy_"):
-        # the "a" implements _sympy_() method, that returns a SymPy
-        # expression (by definition), so we just use it
-        return a._sympy_()
+
+    # let's see if 'a' implements conversion methods such as '_sympy_' or
+    # '__int__', that returns a SymPy (by definition) or SymPy compatible
+    # expression, so we just use it
+    for methname, conv in [('_sympy_',None), ('__int__', Integer)]:
+        meth = getattr(a, methname, None)
+        if meth is None:
+            continue
+
+        # we have to be careful -- calling Class.__int__() almost always is not
+        # a good idea
+        try:
+            v = meth()
+        except TypeError:
+            continue
+
+        if conv is not None:
+            v = conv(v)
+
+        return v
+
     else:
         # XXX this is here because of cyclic-import issues
         from sympy.matrices import Matrix
@@ -154,10 +171,26 @@ def _sympify(a):
         if ireal + iimag*1j == a:
             return ireal + iimag*S.ImaginaryUnit
         return real + S.ImaginaryUnit * imag
-    elif hasattr(a, "_sympy_"):
-        # the "a" implements _sympy_() method, that returns a SymPy
-        # expression (by definition), so we just use it
-        return a._sympy_()
+
+    # let's see if 'a' implements conversion methods such as '_sympy_' or
+    # '__int__', that returns a SymPy (by definition) or SymPy compatible
+    # expression, so we just use it
+    for methname, conv in [('_sympy_',None), ('__int__', Integer)]:
+        meth = getattr(a, methname, None)
+        if meth is None:
+            continue
+
+        # we have to be careful -- calling Class.__int__() almost always is not
+        # a good idea
+        try:
+            v = meth()
+        except TypeError:
+            continue
+
+        if conv is not None:
+            v = conv(v)
+
+        return v
 
     raise SympifyError("%r is NOT a valid SymPy expression" % (a,))
 
