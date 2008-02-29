@@ -1,6 +1,6 @@
 from sympy import Lambda, Symbol, Function, WildFunction, Derivative, sqrt, \
         log, exp, Rational, Real, sign, Basic, sin, cos, diff, I, re, im, \
-        oo, zoo, nan, E
+        oo, zoo, nan, E, expand
 from sympy.utilities.pytest import XFAIL
 from sympy.utilities.test import REPR0
 from sympy.abc import x, y
@@ -192,6 +192,10 @@ def test_Lambda():
     #class F(Function):
     #    pass
     #assert Lambda(x, F(x)) == F
+
+def test_expand_function():
+    assert expand(x+y) == x + y
+    assert expand(x+y, complex=True) == I*im(x) + I*im(y) + re(x) + re(y)
 
 
 def test_function_comparable():

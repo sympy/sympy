@@ -549,6 +549,16 @@ def diff(f, x, times = 1, evaluate=True):
     else:
         return Derivative(f, x, evaluate=evaluate)
 
+def expand(e, **hints):
+    """
+    Expand an expression using hints.
+
+    This is just a wrapper around Basic.expand(), see it's docstring of for a
+    thourough docstring for this function. In isympy you can just type
+    Basic.expand? and enter.
+    """
+    return sympify(e).expand(**hints)
+
 
 # /cyclic/
 import basic as _
