@@ -22,7 +22,29 @@ class Ellipse(GeometryEntity):
         >>> e = Ellipse(Point(0, 0), 5, 1)
         >>> e.hradius, e.vradius
         (5, 1)
+
+    Plotting example
+    ----------------
+    In [1]: c1 = Circle(Point(0,0), 1)
+
+    In [2]: Plot(c1)
+    Out[2]: [0]: cos(t), sin(t), 'mode=parametric'
+
+    In [3]: p = Plot()
+
+    In [4]: p[0] = c1
+
+    In [5]: radius = Segment(c1.center, c1.random_point())
+
+    In [6]: p[1] = radius
+
+    In [7]: p
+    Out[7]:
+    [0]: cos(t), sin(t), 'mode=parametric'
+    [1]: t*cos(1.546086215036205357975518382),
+    t*sin(1.546086215036205357975518382), 'mode=parametric' 
     """
+
     def __new__(cls, center, hradius, vradius, **kwargs):
         hradius = sympify(hradius)
         vradius = sympify(vradius)
