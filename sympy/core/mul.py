@@ -546,7 +546,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
 
     def _sage_(self):
         s = 1
-        for x in self:
+        for x in self.args:
             s *= x._sage_()
         return s
 

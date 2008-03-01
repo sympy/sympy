@@ -541,7 +541,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         return C.Binomial(self.exp, n) * x**n
 
     def _sage_(self):
-        return self[0]._sage_() ** self[1]._sage_()
+        return self.args[0]._sage_() ** self.args[1]._sage_()
 
 
 # /cyclic/

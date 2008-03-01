@@ -371,7 +371,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
     def _sage_(self):
         s = 0
-        for x in self:
+        for x in self.args:
             s += x._sage_()
         return s 
 
