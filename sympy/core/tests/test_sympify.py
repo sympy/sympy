@@ -35,6 +35,17 @@ def test_sympify3():
     py.test.raises(SympifyError, "_sympify('x**3')")
     py.test.raises(SympifyError, "_sympify('1/2')")
 
+def test_sympify4():
+    class A:
+        def _sympy_(self):
+            return Symbol("x")
+
+    a = A()
+
+    assert _sympify(a)**3== x**3
+    assert sympify(a)**3 == x**3
+    assert a == x
+
 
 def test_sympify_poly():
     p = Polynomial(1+x+x**2)
