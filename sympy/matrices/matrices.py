@@ -1002,10 +1002,10 @@ def eye(n):
 def randMatrix(r,c,min=0,max=99,seed=[]):
     """Create random matrix r x c"""
     if seed == []:
-        random.seed()
+        prng = random.Random()  # use system time
     else:
-        random.seed(seed)       # use system time
-    return Matrix(r,c,lambda i,j: random.randint(min,max))
+        prng = random.Random(seed)
+    return Matrix(r,c,lambda i,j: prng.randint(min,max))
 
 def hessian(f, varlist):
     """Compute Hessian matrix for a function f

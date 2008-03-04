@@ -49,10 +49,10 @@ def pollard_rho(n, max_iters=5, seed=1234):
     A Computational Perspective", Springer, 2nd edition, 229-231
 
     """
-    random.seed(seed + max_iters)
+    prng = random.Random(seed + max_iters)
     for i in range(max_iters):
-        a = random.randint(1, n-3)
-        s = random.randint(0, n-1)
+        a = prng.randint(1, n-3)
+        s = prng.randint(0, n-1)
         U = V = s
         F = lambda x: (x**2 + a) % a
         while 1:
@@ -92,8 +92,8 @@ def pollard_pm1(n, B=10, seed=1234):
 
     """
     from math import log
-    random.seed(seed + B)
-    a = random.randint(2, n-1)
+    prng = random.Random(seed + B)
+    a = prng.randint(2, n-1)
     for p in sieve.primerange(2, B):
         e = int(log(B, p))
         a = pow(a, p**e, n)
