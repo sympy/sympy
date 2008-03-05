@@ -553,22 +553,23 @@ class asin(Function):
                 return S.Pi / 2
             elif arg is S.NegativeOne:
                 return -S.Pi / 2
-            else:
-                cst_table = {
-                    S.Half       : 6,
-                    -S.Half      : -6,
-                    sqrt(2)/2  : 4,
-                    -sqrt(2)/2 : -4,
-                    1/sqrt(2)  : 4,
-                    -1/sqrt(2) : -4,
-                    sqrt(3)/2  : 3,
-                    -sqrt(3)/2 : -3,
+
+        if arg.is_number:
+            cst_table = {
+                S.Half     : 6,
+                -S.Half    : -6,
+                sqrt(2)/2  : 4,
+                -sqrt(2)/2 : -4,
+                1/sqrt(2)  : 4,
+                -1/sqrt(2) : -4,
+                sqrt(3)/2  : 3,
+                -sqrt(3)/2 : -3,
                 }
 
-                if arg in cst_table:
-                    return S.Pi / cst_table[arg]
-                elif arg.is_negative:
-                    return -cls(-arg)
+            if arg in cst_table:
+                return S.Pi / cst_table[arg]
+            elif arg.is_negative:
+                return -cls(-arg)
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -642,20 +643,21 @@ class acos(Function):
                 return S.Zero
             elif arg is S.NegativeOne:
                 return S.Pi
-            else:
-                cst_table = {
-                    S.Half       : S.Pi/3,
-                    -S.Half      : 2*S.Pi/3,
-                    sqrt(2)/2  : S.Pi/4,
-                    -sqrt(2)/2 : 3*S.Pi/4,
-                    1/sqrt(2)  : S.Pi/4,
-                    -1/sqrt(2) : 3*S.Pi/4,
-                    sqrt(3)/2  : S.Pi/6,
-                    -sqrt(3)/2 : 5*S.Pi/6,
+
+        if arg.is_number:
+            cst_table = {
+                S.Half     : S.Pi/3,
+                -S.Half    : 2*S.Pi/3,
+                sqrt(2)/2  : S.Pi/4,
+                -sqrt(2)/2 : 3*S.Pi/4,
+                1/sqrt(2)  : S.Pi/4,
+                -1/sqrt(2) : 3*S.Pi/4,
+                sqrt(3)/2  : S.Pi/6,
+                -sqrt(3)/2 : 5*S.Pi/6,
                 }
 
-                if arg in cst_table:
-                    return cst_table[arg]
+            if arg in cst_table:
+                return cst_table[arg]
 
 
     @staticmethod
@@ -721,20 +723,22 @@ class atan(Function):
                 return S.Pi / 4
             elif arg is S.NegativeOne:
                 return -S.Pi / 4
-            else:
-                cst_table = {
-                    sqrt(3)/3  : 6,
-                    -sqrt(3)/3 : -6,
-                    1/sqrt(3)  : 6,
-                    -1/sqrt(3) : -6,
-                    sqrt(3)    : 3,
-                    -sqrt(3)   : -3,
+
+        if arg.is_number:
+            cst_table = {
+                sqrt(3)/3  : 6,
+                -sqrt(3)/3 : -6,
+                1/sqrt(3)  : 6,
+                -1/sqrt(3) : -6,
+                sqrt(3)    : 3,
+                -sqrt(3)   : -3,
                 }
 
-                if arg in cst_table:
-                    return S.Pi / cst_table[arg]
-                elif arg.is_negative:
-                    return -cls(-arg)
+            if arg in cst_table:
+                return S.Pi / cst_table[arg]
+            elif arg.is_negative:
+                return -cls(-arg)
+
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -794,20 +798,22 @@ class acot(Function):
                 return S.Pi / 4
             elif arg is S.NegativeOne:
                 return -S.Pi / 4
-            else:
-                cst_table = {
-                    sqrt(3)/3  : 3,
-                    -sqrt(3)/3 : -3,
-                    1/sqrt(3)  : 3,
-                    -1/sqrt(3) : -3,
-                    sqrt(3)    : 6,
-                    -sqrt(3)   : -6,
+
+        if arg.is_number:
+            cst_table = {
+                sqrt(3)/3  : 3,
+                -sqrt(3)/3 : -3,
+                1/sqrt(3)  : 3,
+                -1/sqrt(3) : -3,
+                sqrt(3)    : 6,
+                -sqrt(3)   : -6,
                 }
 
-                if arg in cst_table:
-                    return S.Pi / cst_table[arg]
-                elif arg.is_negative:
-                    return -cls(-arg)
+            if arg in cst_table:
+                return S.Pi / cst_table[arg]
+            elif arg.is_negative:
+                return -cls(-arg)
+
         else:
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
