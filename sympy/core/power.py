@@ -399,8 +399,8 @@ class Pow(Basic, ArithMeths, RelMeths):
         base = base.evalf()
         exp = exp.evalf()
 
-        if exp < 0 and base.has(S.ImaginaryUnit):
-            base = base.conjugate() / (base * base.conjugate()).evalf().evalf()
+        if exp < 0 and not base.is_real:
+            base = base.conjugate() / (base * base.conjugate()).evalf()
             exp = -exp
 
         return (base ** exp).expand()
