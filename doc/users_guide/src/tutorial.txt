@@ -1,0 +1,35 @@
+Tutorial
+========
+
+Our `tutorial`_ is currently maintained on our wiki.
+
+You'll find there detailed instructions with examples how to start with SymPy.
+
+.. _tutorial: http://code.google.com/p/sympy/wiki/Tutorial
+
+Simple example
+--------------
+
+Nevertheless, let's put here a simple example:
+
+.. sourcecode:: python
+
+    from sympy import Integral, Symbol, pprint
+
+    x = Symbol("x")
+    y = Symbol("y")
+
+    e = 1/(x + y)
+    s = e.series(x, 0, 5)
+
+    print(s)
+    pprint(s)
+
+This example should print the following after the execution::
+
+    1/y + x**2*y**(-3) + x**4*y**(-5) - x*y**(-2) - x**3*y**(-4) + O(x**5)
+         2    4         3          
+    1   x    x    x    x           
+    ─ + ── + ── - ── - ── + O(x**5)
+    y    3    5    2    4          
+        y    y    y    y           

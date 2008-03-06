@@ -1,0 +1,17 @@
+======================
+Documentation Overview
+======================
+
+Welcome to the SymPy documentation.
+
+- `Installing SymPy <install.txt>`_
+
+- **Main documentation**:
+
+  - `User's Guide <guide.txt>`_ - getting started with SymPy
+
+  - `Tutorial <tutorial.txt>`_ - tutorial
+
+- **Other**
+ 
+  - `SymPy in the news <sympy_in_the_news.txt>`_ - SymPy in the news and blogs

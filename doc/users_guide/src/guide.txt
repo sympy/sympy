@@ -37,7 +37,7 @@ The easiest way to download it is to go to
 http://code.google.com/p/sympy/ and
 download the latest tarball from the Featured Downloads:
 
-.. figure:: figures/featured-downloads.png
+.. figure:: ../figures/featured-downloads.png
     :alt: A page being displayed in a browser window.
 
     Download part of the SymPy's webpage

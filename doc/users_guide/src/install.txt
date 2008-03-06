@@ -1,0 +1,9 @@
+Installation
+------------
+
+Go to the `Downloads`_ tab on SymPy's webpage for thourough instructions.
+
+You'll find there detailed explanation how to install SymPy using source,
+Mercurial repository, Debian, Ubuntu, Gentoo, Windows and Sage.
+
+.. _Downloads: http://code.google.com/p/sympy/wiki/DownloadInstallation?tm=2
