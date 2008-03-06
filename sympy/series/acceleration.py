@@ -24,16 +24,16 @@ def richardson(A, k, n, N):
 
         >>> n = Symbol('n')
         >>> e = (1 + 1/n)**n
-        >>> e.subs(n, 100).evalf()
-        2.704813829421526093267194711
+        >>> print round(e.subs(n, 100).evalf(), 10)
+        2.7048138294
 
     Richardson extrapolation with 11 appropriately chosen terms gives
     a value that is accurate to the indicated precision:
 
-        >>> richardson(e, n, 10, 20).evalf()
-        2.718281828459045235360287471
-        >>> E.evalf()
-        2.718281828459045235360287471
+        >>> print round(richardson(e, n, 10, 20).evalf(), 10)
+        2.7182818285
+        >>> print round(E.evalf(), 10)
+        2.7182818285
 
     Another useful application is to speed up convergence of series.
     Computing 100 terms of the zeta(2) series 1/k**2 yields only
@@ -41,15 +41,15 @@ def richardson(A, k, n, N):
 
         >>> k = Symbol('k'); n = Symbol('n')
         >>> A = Sum2(k**-2, (k, 1, n))
-        >>> A.subs(n, 100).evalf()
-        1.634983900184892865077169498
+        >>> print round(A.subs(n, 100).evalf(), 10)
+        1.6349839002
 
     Richardson extrapolation performs much better:
 
-        >>> richardson(A, n, 10, 20).evalf()
-        1.644934066848226436472414853
-        >>> ((pi**2)/6).evalf()     # Exact value
-        1.644934066848226436472415167
+        >>> print round(richardson(A, n, 10, 20).evalf(), 10)
+        1.6449340668
+        >>> print round(((pi**2)/6).evalf(), 10)     # Exact value
+        1.6449340668
 
     """
     s = Integer(0)
@@ -71,12 +71,12 @@ def shanks(A, k, n, m=1):
         >>> n = Symbol('n')
         >>> k = Symbol('k')
         >>> A = Sum2(Integer(-1)**(k+1) / k, (k, 1, n))
-        >>> A.subs(n, 100).evalf()
-        0.6881721793101952032446458827
-        >>> shanks(A, n, 25).evalf()
-        0.6931396564055737564958186845
-        >>> shanks(A, n, 25, 5).evalf()
-        0.6931471805599451716132607039
+        >>> print round(A.subs(n, 100).evalf(), 10)
+        0.6881721793
+        >>> print round(shanks(A, n, 25).evalf(), 10)
+        0.6931396564
+        >>> print round(shanks(A, n, 25, 5).evalf(), 10)
+        0.6931471806
 
     The correct value is 0.6931471805599453094172321215.
     """
