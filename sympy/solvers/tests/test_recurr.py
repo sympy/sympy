@@ -36,3 +36,25 @@ def test_rsolve_hyper():
     assert rsolve_hyper([-1, 1], 1+n, n).expand() == C0 + n**2/2 + n/2
 
     assert rsolve_hyper([-1, 1], 3*(n+n**2), n).expand() == C0 + n**3 - n
+
+def recurrence_term(c, f):
+    """Compute RHS of recurrence in f(n) with coefficients in c."""
+    return sum(c[i]*f.subs(n, n+i) for i in range(len(c)))
+
+def rsolve_bulk_checker(solver, c, q, p):
+    """Used by test_rsolve_bulk."""
+    pp = solver(c, q, n)
+    assert pp == p
+
+def test_rsolve_bulk():
+    """Some bulk-generated tests."""
+    funcs = [ n, n+1, n**2, n**3, n**4, n+n**2, 27*n + 52*n**2 - 3*n**3 + 12*n**4 - 52*n**5 ]
+    coeffs = [ [-2, 1], [-2, -1, 1], [-1, 1, 1, -1, 1], [-n, 1], [n**2-n+12, 1] ]
+    for p in funcs:
+        # compute difference
+        for c in coeffs:
+            q = recurrence_term(c, p)
+            if p.is_polynomial(n): 
+                yield rsolve_bulk_checker, rsolve_poly, c, q, p
+            #if p.is_hypergeometric(n): 
+            #    yield rsolve_bulk_checker, rsolve_hyper, c, q, p

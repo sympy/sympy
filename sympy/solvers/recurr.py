@@ -285,7 +285,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         for c, q in zip(C, Q):
             if c in solutions:
                 s = solutions[c]*q
-                del C[c]
+                C.remove(c)
             else:
                 s = c*q
 
