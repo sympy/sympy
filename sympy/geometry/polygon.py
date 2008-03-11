@@ -240,7 +240,6 @@ class RegularPolygon(Polygon):
 
     @property
     def vertices(self):
-        Polygon.vertices.__doc__
         points = []
         c, r, n = self[:]
         v = 2*S.Pi/n
@@ -318,11 +317,9 @@ class Triangle(Polygon):
 
     @property
     def vertices(self):
-        Polygon.vertices.__doc__
         return self[:]
 
     def is_similar(t1, t2):
-        GeometryEntity.is_similar.__doc__
         if not isinstance(t2, Polygon) or len(t2) != 3:
             return False
 

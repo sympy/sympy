@@ -204,7 +204,6 @@ class LinearEntity(GeometryEntity):
         return GeometryEntity.do_intersection(self, projected)[0]
 
     def intersection(self, o):
-        GeometryEntity.intersection.__doc__
         if isinstance(o, Point):
             if o in self:
                 return [o]

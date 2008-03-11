@@ -21,7 +21,6 @@ class PrettyPrinter(Printer):
         self.emptyPrinter = lambda x : prettyAtom(xstr(x))
 
     def doprint(self, expr):
-        Printer.doprint.__doc__
         return self._print(expr).terminal_string()
 
     # empty op so _print(stringPict) returns the same

@@ -188,7 +188,6 @@ class Point(GeometryEntity):
         return Point([x.evalf() for x in self])
 
     def intersection(self, o):
-        GeometryEntity.intersection.__doc__
         if isinstance(o, Point):
             if self == o:
                 return [self]

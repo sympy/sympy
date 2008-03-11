@@ -483,7 +483,6 @@ class Pow(Basic, ArithMeths, RelMeths):
         return n ** exp, d ** exp
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
-        Basic.matches.__doc__
         if evaluate:
             pat = pattern
             for old,new in repl_dict.items():
