@@ -440,7 +440,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
         if isinstance(f, CC.Add):
             similar = {}
 
-            for g in f.expand():
+            for g in f.expand().args:
                 if not g.is_hypergeometric(n):
                     return None
 
