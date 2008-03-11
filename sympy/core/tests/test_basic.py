@@ -167,6 +167,16 @@ def test_SAGE2():
 
     py.test.raises(TypeError, "Rational(2)*MyInt")
 
+def test_SAGE3():
+    class MySymbol:
+        def __rmul__(self, other):
+            return ('mys', other, self)
+
+    o = MySymbol()
+    e = x*o
+
+    assert e == ('mys', x, o)
+
 def test_ordering():
     from sympy.core.methods import ArithMeths
     class CustomClass1(Basic, ArithMeths): pass
