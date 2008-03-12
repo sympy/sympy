@@ -323,7 +323,9 @@ class Real(Number):
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
             return bool(self._as_decimal()==other._as_decimal())
-        return RelMeths.__eq__(self, other)
+
+        return False    # Real != non-Number
+
     def __ne__(self, other):
         try:
             other = _sympify(other)
@@ -335,7 +337,9 @@ class Real(Number):
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
             return bool(self._as_decimal()!=other._as_decimal())
-        return RelMeths.__ne__(self, other)
+
+        return True     # Real != non-Number
+
     def __lt__(self, other):
         try:
             other = _sympify(other)
@@ -573,7 +577,9 @@ class Rational(Number):
             if isinstance(other, Real):
                 return bool(self._as_decimal()==other._as_decimal())
             return bool(self.p==other.p and self.q==other.q)
-        return RelMeths.__eq__(self, other)
+
+        return False    # Rational != non-Number
+
     def __ne__(self, other):
         try:
             other = _sympify(other)
@@ -587,7 +593,9 @@ class Rational(Number):
             if isinstance(other, Real):
                 return bool(self._as_decimal()!=other._as_decimal())
             return bool(self.p!=other.p or self.q!=other.q)
-        return RelMeths.__ne__(self, other)
+
+        return True     # Rational != non-Number
+
     def __lt__(self, other):
         try:
             other = _sympify(other)
@@ -1153,7 +1161,9 @@ class NumberSymbol(Singleton, Atom, RelMeths, ArithMeths):
             return False    # sympy != other  -->  not ==
         if self is other: return True
         if isinstance(other, Number) and self.is_irrational: return False
-        return RelMeths.__eq__(self, other)
+
+        return False    # NumberSymbol != non-(Number|self)
+
     def __ne__(self, other):
         try:
             other = _sympify(other)
@@ -1161,7 +1171,9 @@ class NumberSymbol(Singleton, Atom, RelMeths, ArithMeths):
             return True     # sympy != other
         if self is other: return False
         if isinstance(other, Number) and self.is_irrational: return True
-        return RelMeths.__ne__(self, other)
+
+        return True     # NumberSymbol != non(Number|self)
+
     def __lt__(self, other):
         try:
             other = _sympify(other)
