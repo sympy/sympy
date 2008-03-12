@@ -1,5 +1,5 @@
 from sympy import Symbol, Matrix, Integral, log, Rational, Derivative, exp, \
-        sqrt, pi, Function, sin, cos, pprint_use_unicode, oo
+        sqrt, pi, Function, sin, cos, pprint_use_unicode, oo, Eq
 from sympy.printing.pretty import pretty as xpretty
 from sympy.utilities.pytest import XFAIL
 
@@ -46,10 +46,10 @@ def test_pretty_basic():
     assert pretty( 1 - Rational(3,2)*(x+1) ) == '       3*x\n-1/2 - ---\n        2 '
 
 def test_pretty_relational():
-    assert pretty(x == y) == 'x = y'
-    assert pretty(x <= y) == 'x <= y'
-    assert pretty(x > y) == 'y < x'
-    assert pretty(x/(y+1) != y**2) in [
+    assert pretty(Eq(x, '==', y)) == 'x = y'
+    assert pretty(Eq(x, '<=', y)) == 'x <= y'
+    assert pretty(Eq(x, '>',  y)) == 'y < x'
+    assert pretty(Eq(x/(y+1), '!=', y**2)) in [
             '  x       2\n----- != y \n1 + y      ',
             '  x       2\n----- != y \ny + 1      ']
 
@@ -59,7 +59,7 @@ def test_pretty_unicode():
     assert xpretty( pi, True ) == u'\u03c0'
     assert xpretty( pi+2*x, True ) in [u'\u03c0 + 2*x', u'2*x + \u03c0']
     assert xpretty( pi**2+exp(x), True ) == u' 2    x\n\u03c0  + \u212f '
-    assert xpretty( x != y, True ) == u'x \u2260 y'
+    assert xpretty( Eq(x, '!=', y), True ) == u'x \u2260 y'
 
 def test_pretty_unicode_defaults():
     use_unicode = pprint_use_unicode(True)

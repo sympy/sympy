@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sympy import Symbol, symbols, oo, limit, Rational, Integral, Derivative
-from sympy import log, exp, sqrt, pi, Function, sin
+from sympy import log, exp, sqrt, pi, Function, sin, Eq
 
 from sympy.printing.python import python
 
@@ -51,10 +51,10 @@ def test_python_basic():
     assert python(1 - Rational(3,2)*(x+1)) == "x = Symbol('x')\ne = (-1/2) - 3/2*x"
 
 def test_python_relational():
-    assert python(x == y) == "x = Symbol('x')\ny = Symbol('y')\ne = x == y"
-    assert python(x <= y) == "x = Symbol('x')\ny = Symbol('y')\ne = x <= y"
-    assert python(x > y) == "y = Symbol('y')\nx = Symbol('x')\ne = y < x"
-    assert python(x/(y+1) != y**2) in [
+    assert python(Eq(x, '==', y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x == y"
+    assert python(Eq(x, '<=', y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x <= y"
+    assert python(Eq(x, '>',  y)) == "y = Symbol('y')\nx = Symbol('x')\ne = y < x"
+    assert python(Eq(x/(y+1), '!=', y**2)) in [
             "x = Symbol('x')\ny = Symbol('y')\ne = x/(1 + y) != y**2",
             "x = Symbol('x')\ny = Symbol('y')\ne = x/(y + 1) != y**2"]
 

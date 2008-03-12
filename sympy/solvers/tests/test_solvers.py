@@ -1,5 +1,5 @@
 from sympy import solve, Function, Symbol, Derivative, exp, sin, cos, log, \
-        Rational
+        Rational, Eq
 from sympy.utilities.pytest import XFAIL
 
 from sympy.matrices import Matrix
@@ -9,10 +9,10 @@ def test_solve():
     x, y = map(Symbol, 'xy')
 
     assert solve(3*x-2, x) == [Rational(2,3)]
-    assert solve(3*x == 2, x) == [Rational(2,3)]
+    assert solve(Eq(3*x,'==',2), x) == [Rational(2,3)]
 
     assert solve(x**2-1, x) in [[-1, 1], [1, -1]]
-    assert solve(x**2 == 1, x) in [[-1, 1], [1, -1]]
+    assert solve(Eq(x**2,'==',1), x) in [[-1, 1], [1, -1]]
 
 def test_linear_system():
     x, y, z, t, n = map(Symbol, 'xyztn')

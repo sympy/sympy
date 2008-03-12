@@ -2,7 +2,7 @@ import py
 
 import sympy as g
 from sympy import Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative, abc, \
-        Integer
+        Integer, Eq
 from sympy.utilities.pytest import XFAIL
 
 def test_subs():
@@ -99,16 +99,16 @@ def test_deriv_sub_bug3():
 def test_equality_subs1():
     f = Function("f")
     x = abc.x
-    eq = f(x)**2 == x
-    res = Integer(16) == x
+    eq = Eq(f(x)**2, '==', x)
+    res = Eq(Integer(16), '==', x)
     assert eq.subs(f(x), 4) == res
 
 def test_equality_subs2():
     f = Function("f")
     x = abc.x
-    eq = f(x)**2 == 16
-    assert eq.subs(f(x), 3) == False
-    assert eq.subs(f(x), 4) == True
+    eq = Eq(f(x)**2, '==', 16)
+    assert bool(eq.subs(f(x), 3)) == False
+    assert bool(eq.subs(f(x), 4)) == True
 
 def test_issue643():
     x = Symbol('x')
