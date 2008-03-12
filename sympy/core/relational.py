@@ -10,7 +10,7 @@ class Relational(Basic, NoRelMeths):
     @staticmethod
     def get_relational_class(rop):
         if rop is None or rop in ['==','eq']: return Equality, False
-        if rop in ['!=','<>','ne']: return UnEquality, False
+        if rop in ['!=','<>','ne']: return Unequality, False
         if rop in ['<','lt']: return StrictInequality, False
         if rop in ['>','gt']: return StrictInequality, True
         if rop in ['<=','le']: return Inequality, False
@@ -48,7 +48,7 @@ class Relational(Basic, NoRelMeths):
         return r
 
     def subs(self, old, new):
-        return self.lhs.subs(old, new) == self.rhs.subs(old, new)
+        return self.__class__(self.lhs.subs(old, new), self.rhs.subs(old, new))
 
 class Equality(Relational):
 
