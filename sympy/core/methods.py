@@ -93,15 +93,8 @@ class NoArithMeths(object):
 
 class RelMeths(object):
     
-    # TODO rewrte to directly return True/False
-
-    @_sympifyit('other', False) # sympy != other
-    def __eq__(self, other):
-        return Equality(self, other)
-
-    @_sympifyit('other', True)  # sympy != other
-    def __ne__(self, other):
-        return Unequality(self, other)
+    # TODO all comparison methods should return True/False directly
+    # see #153
 
     @_sympifyit('other', False) # sympy >  other
     def __lt__(self, other):
@@ -123,10 +116,6 @@ class RelMeths(object):
 
 class NoRelMeths(object):
 
-    def __eq__(self, other):
-        return Equality(self, other)
-    def __ne__(self, other):
-        return Unequality(self, other)
     def __lt__(self, other):
         return hash(self) < hash(other)
         raise TypeError, _no_binary_operation('<', self, other)

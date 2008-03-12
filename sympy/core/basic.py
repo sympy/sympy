@@ -4,7 +4,7 @@ type_class = type
 
 import decimal
 from assumptions import AssumeMeths
-from sympify import sympify, SympifyError
+from sympify import _sympify, sympify, SympifyError
 from cache import cacheit, Memoizer, MemoizerArg
 
 # from numbers  import Number, Integer, Rational, Real /cyclic/
@@ -254,6 +254,57 @@ class Basic(AssumeMeths):
                 c = cmp(l, r)
             if c: return c
         return 0
+
+
+    def __eq__(self, other):
+        """a == b  -> Compare two symbolic trees and see whether they are equal
+
+           this is the same as:
+
+             a.compare(b) == 0
+
+           but faster
+        """
+
+        if type(self) is not type(other):
+            try:
+                other = _sympify(other)
+            except SympifyError:
+                return False    # sympy != other
+
+            if type(self) is not type(other):
+                return False
+
+        # type(self) == type(other)
+        st = self._hashable_content()
+        ot = other._hashable_content()
+
+        return (st == ot)
+
+    def __ne__(self, other):
+        """a != b  -> Compare two symbolic trees and see whether they are different
+
+           this is the same as:
+
+             a.compare(b) != 0
+
+           but faster
+        """
+
+        if type(self) is not type(other):
+            try:
+                other = _sympify(other)
+            except SympifyError:
+                return True     # sympy != other
+
+            if type(self) is not type(other):
+                return True
+
+        # type(self) == type(other)
+        st = self._hashable_content()
+        ot = other._hashable_content()
+
+        return (st != ot)
 
 
 
