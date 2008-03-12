@@ -96,9 +96,10 @@ def pretty_try_use_unicode():
             if s is None:
                 return  # common symbols not present!
 
-            encoding = sys.stdout.encoding
+            encoding = getattr(sys.stdout, 'encoding', None)
 
-            # this happens when e.g. stdout is redirected through a pipe 
+            # this happens when e.g. stdout is redirected through a pipe, or is
+            # e.g. a cStringIO.StringO
             if encoding is None:
                 return  # sys.stdout has no encoding
 
