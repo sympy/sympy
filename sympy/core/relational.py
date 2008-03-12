@@ -5,6 +5,12 @@ from methods import NoRelMeths
 
 from numbers import Number
 
+# handy wrapper around Relational
+def Eq(a, op, b):
+    """Eq(a,'==',b)"""
+    return Relational(a,b,op)
+
+
 class Relational(Basic, NoRelMeths):
 
     @staticmethod
