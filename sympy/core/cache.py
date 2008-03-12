@@ -17,7 +17,6 @@ def print_cache():
         print item
         print head
 
-
         if not isinstance(cache, tuple):
             cache = (cache,)
             shown = False
@@ -31,7 +30,6 @@ def print_cache():
             for k, v in kv.iteritems():
                 print '  %s :\t%s' % (k, v)
 
-
 def clear_cache():
     """clear cache content"""
     for item, cache in CACHE:
@@ -41,17 +39,14 @@ def clear_cache():
         for kv in cache:
             kv.clear()
 
-
 ########################################
 
 def __cacheit_nocache(func):
     return func
 
-
-
 def __cacheit(func):
     """caching decorator.
-    
+
        important: the result of cached function must be *immutable*
 
 
@@ -89,8 +84,11 @@ def __cacheit(func):
             pass
         func_cache_it_cache[k] = r = func(*args, **kw_args)
         return r
-    return wrapper
 
+    wrapper.__doc__ = func.__doc__
+    wrapper.__name__ = func.__name__
+
+    return wrapper
 
 def __cacheit_debug(func):
     """cacheit + code to check cache consitency"""
@@ -117,8 +115,10 @@ def __cacheit_debug(func):
 
         return r1
 
-    return wrapper
+    wrapper.__doc__ = func.__doc__
+    wrapper.__name__ = func.__name__
 
+    return wrapper
 
 def __cacheit_nondummy(func):
     func._cache_it_cache = func_cache_it_cache = {}
@@ -144,8 +144,11 @@ def __cacheit_nondummy(func):
             pass
         func_cache_it_cache[k] = r = func(*args, **kw_args)
         return r
-    return wrapper
 
+    wrapper.__doc__ = func.__doc__
+    wrapper.__name__ = func.__name__
+
+    return wrapper
 
 class MemoizerArg:
     """ See Memoizer.
