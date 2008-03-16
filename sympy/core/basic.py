@@ -225,10 +225,38 @@ class Basic(AssumeMeths):
         return self._args
 
     def __nonzero__(self):
-        # prevent using constructs like:
-        #   a = Symbol('a')
-        #   if a: ..
-        raise AssertionError("only Equality|Unequality can define __nonzero__ method, %r" % (self.__class__))
+        """Tests if 'self' is an instance of Zero class.
+
+           This should be understand as an idiom:
+
+               [1] bool(x) <=> bool(x is not S.Zero)
+
+               [2] bool(not x) <=> bool(x is S.Zero)
+
+           Allowing definition of __nonzero__ method is important in
+           algorithms where uniform handling of int, long values and
+           and sympy expressions is required.
+
+           >>> from sympy import *
+           >>> x,y = symbols('xy')
+
+           >>> bool(0)
+           False
+           >>> bool(1)
+           True
+
+           >>> bool(S.Zero)
+           False
+           >>> bool(S.One)
+           True
+
+           >>> bool(x*y)
+           True
+           >>> bool(x + y)
+           True
+
+        """
+        return self is not S.Zero
 
     def compare(self, other):
         """

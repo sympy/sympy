@@ -313,3 +313,13 @@ def test_has_all_symbols():
 
     assert expr.has_all_symbols(x, y, z, t) == True
     assert expr.has_all_symbols(x, y, z, t, u) == False
+
+def test_nonzero():
+    assert bool(S.Zero) == False
+    assert bool(S.One)  == True
+    assert bool(x)      == True
+    assert bool(x+y)    == True
+    assert bool(x-x)    == False
+    assert bool(x*y)    == True
+    assert bool(x*1)    == True
+    assert bool(x*0)    == False
