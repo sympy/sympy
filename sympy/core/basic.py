@@ -948,10 +948,10 @@ class Basic(AssumeMeths):
         """Expand an expression using hints.
 
            Currently supported hints are basic, power, complex, trig
-           and func. Hints are applied with arbitrary order so your
-           code shoudn't depend on the way hints are passed to this
+           and func.  Hints are applied with arbitrary order so your
+           code shouldn't depend on the way hints are passed to this
            method. Expand 'basic' is the default and run always,
-           provided that it isn't turned of by the user.
+           provided that it isn't turned off by the user.
 
            >>> from sympy import *
            >>> x,y = symbols('xy')
@@ -996,7 +996,7 @@ class Basic(AssumeMeths):
 
            As a pattern this function accepts a list of functions to
            to rewrite (instances of DefinedFunction class). As rule
-           you can use string or a destinaton function instance (in
+           you can use string or a destination function instance (in
            this cas rewrite() will use tostr() method).
 
            There is also possibility to pass hints on how to rewrite
@@ -1090,7 +1090,7 @@ class Basic(AssumeMeths):
     def as_independent(self, *deps):
         """Returns a pair with separated parts of a given expression
            independent of specified symbols in the first place and
-           dependend on them in the other. Both parts are valid
+           dependent on them in the other. Both parts are valid
            SymPy expressions.
 
            >>> from sympy import *
@@ -1349,11 +1349,11 @@ class Basic(AssumeMeths):
     @cacheit
     def oseries(self, order):
         """
-        Return the series of an expression upto given Order symbol (without the
+        Return the series of an expression up to given Order symbol (without the
         actual O term).
 
         The general philosophy is this: simply start with the most simple
-        taylor (laurent) term and calculate one be one and use
+        Taylor (Laurent) term and calculate one be one and use
         order.contains(term) method to determine if your term is still
         significant and should be added to the series, or we should stop.
         """

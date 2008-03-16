@@ -176,7 +176,7 @@ def symbols(*names, **kwargs):
        argument, which can be a string, then each character
        forms a separate symbol, or a sequence of strings.
 
-       All newly created symbols have assumptions set acordingly
+       All newly created symbols have assumptions set accordingly
        to 'kwargs'. Main intention behind this function is to
        simplify and shorten examples code in doc-strings.
 
