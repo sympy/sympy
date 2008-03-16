@@ -314,6 +314,14 @@ def test_has_all_symbols():
     assert expr.has_all_symbols(x, y, z, t) == True
     assert expr.has_all_symbols(x, y, z, t, u) == False
 
+def test_as_poly_basic():
+    x, y = symbols('xy')
+
+    f = x**2 + 2*x*y
+
+    assert f.as_poly(x, y).as_basic() == f
+    assert (f + sin(x)).as_poly(x, y) is None
+
 def test_nonzero():
     assert bool(S.Zero) == False
     assert bool(S.One)  == True

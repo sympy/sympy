@@ -522,8 +522,52 @@ class Basic(AssumeMeths):
         else:
             return self._eval_is_polynomial(syms)
 
-    def as_polynomial(self, *syms, **kwargs):
+    def as_polynomial(self, *syms, **kwargs): # remove
         return C.Polynomial(self, var=(syms or None), **kwargs)
+
+    def as_poly(self, *symbols, **flags):
+        """Converts 'self' to a polynomial or returns None.
+
+           When constructing a polynomial an exception will be raised in
+           case the input expression is not convertible to a polynomial.
+           There are situations when it is easier (simpler or prettier)
+           to receive None on failure.
+
+           >>> from sympy import *
+           >>> x,y = symbols('xy')
+
+           >>> print (x**2 + x*y).as_poly(x, y)
+           Poly((1, 1), ((2, 0), (1, 1)), (x, y), 'grlex')
+
+           >>> print (x**2 + sin(y)).as_poly(x, y)
+           None
+
+        """
+        from sympy.polys import Poly, PolynomialError
+
+        try:
+            return Poly(self, *symbols, **flags)
+        except PolynomialError:
+            return None
+
+    def as_basic(self):
+        """Converts polynomial to a valid sympy expression.
+
+           >>> from sympy import *
+           >>> x,y = symbols('xy')
+
+           >>> p = (x**2 + x*y).as_poly(x, y)
+
+           >>> p.as_basic()
+           x**2 + x*y
+
+           >>> f = sin(x)
+
+           >>> f.as_basic()
+           sin(x)
+
+        """
+        return self
 
     def _eval_subs(self, old, new):
         if self==old:
