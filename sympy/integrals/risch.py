@@ -17,6 +17,8 @@ from sympy.simplify.rootof import factors
 from sympy.simplify import cancel, simplify, together
 from sympy.polynomials import quo, gcd, lcm, factor, PolynomialException
 
+from sympy.polys import monomials
+
 def components(f, x):
     """Returns a set of all functional components of the given expression
        which includes symbols, function applications and compositions and
@@ -53,31 +55,6 @@ def components(f, x):
                 result |= components(g, x)
 
     return result
-
-def monomials(variables, degree):
-    """Generate monomial set of the given total degree or less.
-
-       >>> from sympy import *
-       >>> x, y = symbols('xy')
-
-       >>> sorted(monomials([x, y], 2))
-       [1, x, y, x**2, y**2, x*y]
-
-       >>> sorted(monomials([x, y], 3))
-       [1, x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, y*x**2]
-
-    """
-    if not variables:
-        return set([S.One])
-    else:
-        x, tail = variables[0], variables[1:]
-
-        monoms = monomials(tail, degree)
-
-        for i in range(1, degree+1):
-            monoms |= set([ x**i * m for m in monomials(tail, degree-i) ])
-
-        return monoms
 
 # name -> [] of symbols
 _symbols_cache = {}

@@ -9,9 +9,6 @@ from sympy.core.basic import Basic, S, C, Atom
 from sympy.core.methods import RelMeths, ArithMeths
 
 from sympy.utilities import all, any
-from sympy.integrals import integrate
-
-from sympy.simplify.rewrite import cancel
 
 from sympy.polys.monomial import monomial_cmp, \
     monomial_mul, monomial_max, monomial_as_basic
@@ -33,6 +30,9 @@ class PolynomialError(Exception):
 ##  [5] Improve coefficients analysis.
 ##  [6] Implement FactoredPoly.
 ##  [7] Concept of Monomial.
+##  [8] Generalize some polynomial functions, like factor(),
+##      to rational expressions. Move at least cancel() and
+##      maybe apart() to polys.fraction (or similar).
 ##
 
 class Poly(Basic, RelMeths, ArithMeths):
@@ -984,7 +984,7 @@ class Poly(Basic, RelMeths, ArithMeths):
         if LC.is_number:
             coeffs = [ coeff / LC for coeff in self.coeffs ]
         else:
-            # cancel() should be enough fast and general solution
+            from sympy.simplify import cancel # avoid recursive import
             coeffs = [ cancel(coeff / LC) for coeff in self.coeffs ]
 
         return LC, self.__class__((coeffs, self.monoms),
@@ -1019,7 +1019,7 @@ class Poly(Basic, RelMeths, ArithMeths):
             if content.is_number:
                 coeffs = [ coeff / content for coeff in self.coeffs ]
             else:
-                # cancel() should be enough fast and general solution
+                from sympy.simplify import cancel # avoid recursive import
                 coeffs = [ cancel(coeff / content) for coeff in self.coeffs ]
 
             return content, self.__class__((coeffs,
@@ -1250,7 +1250,7 @@ class Poly(Basic, RelMeths, ArithMeths):
                     new_poly[monom] = coeff
             else:
                 for M, coeff in poly.iteritems():
-                    new_poly[M] = integrate(coeff, *([s]*k))
+                    new_poly[M] = C.Integral(coeff, *([s]*k)).doit()
 
             if not new_poly:
                 break

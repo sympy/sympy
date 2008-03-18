@@ -10,8 +10,6 @@ from sympy.core.basic import Basic, S, C, Atom
 from sympy.polys.polynomial import Poly, PolynomialError
 from sympy.polys.monomial import monomial_div
 
-from sympy.simplify.rewrite import cancel
-
 def poly_div(f, g, *symbols):
     """Generalized polynomial division with remainder.
 
@@ -32,6 +30,8 @@ def poly_div(f, g, *symbols):
            http://citeseer.ist.psu.edu/ajwa95grbner.html, 1995
 
     """
+    from sympy.simplify import cancel
+
     f = sympify(f)
 
     if not isinstance(f, Poly):
