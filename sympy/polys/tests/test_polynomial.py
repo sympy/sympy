@@ -7,7 +7,7 @@ from sympy.polys.algorithms import *
 
 import py
 
-x,y,z,u,v = symbols('xyzuv')
+x,y,z,u,v,t = symbols('xyzuvt')
 
 def test_monomial_cmp():
     assert monomial_lex_cmp((3,2,1), (1,2,4)) == 1
@@ -117,6 +117,7 @@ def test_poly_characteristics():
 
     p = Poly(f, x, y, z, order='lex')
 
+    assert p.total_degree == 10
     assert p.degree == 10
     assert p.length == 4
     assert p.norm == 3
@@ -130,6 +131,7 @@ def test_poly_characteristics():
 
     q = Poly(f, x, y, z, order='grlex')
 
+    assert q.total_degree == 10
     assert q.degree == 10
     assert q.length == 4
     assert q.norm == 3
@@ -143,6 +145,7 @@ def test_poly_characteristics():
 
     r = Poly(f, x, y, z, order='grevlex')
 
+    assert r.total_degree == 10
     assert r.degree == 10
     assert r.length == 4
     assert r.norm == 3
@@ -307,7 +310,30 @@ def test_kill_term():
     pass
 
 def test_call():
-    pass
+    assert Poly(0, x)(2) == 0
+    assert Poly(0, x, y, z)(1, 2, 3) == 0
+
+    assert Poly(1, x)(2) == 1
+    assert Poly(1, x, y, z)(1, 2, 3) == 1
+
+    assert Poly(x, x)(2) == 2
+    assert Poly(x, x, y, z)(1, 2, 3) == 1
+
+    assert Poly(x, x)(t) == t
+    assert Poly(x, x, y, z)(t, 2, 3) == t
+
+    assert Poly(x*y, x)(2) == 2*y
+    assert Poly(x*y, x, y, z)(1, 2, 3) == 2
+
+    f = 2*x**17 + 3*x**15 + x**10 + 17*x**3 + 1
+
+    assert Poly(f, x)(2) == f.subs(x, 2)
+    assert Poly(f, x)(y) == 1 + y**3*(17 + y**7*(1 + y**5*(3 + 2*y**2)))
+
+    f = x**3*y + x**2*z + x**2*y*z
+
+    assert Poly(f, x, y, z)(1, 2, 3) == f.subs_dict({x: 1, y: 2, z: 3})
+    assert Poly(f, x, y, z)(u, v, t) == u**2*(v*(u + t) + t)
 
 def test_subs():
     pass

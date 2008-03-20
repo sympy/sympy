@@ -120,9 +120,10 @@ class Poly(Basic, RelMeths, ArithMeths):
 
        [3] General characteristics:
 
-          [3.1] [UP] length  --> returns the number of terms
-          [3.2] [UP] degree  --> returns the total degree
-          [3.3] [UP] norm    --> returns oo-norm of coefficients
+          [3.1] [UP] norm         --> computes oo-norm of coefficients
+          [3.2] [UP] length       --> counts the total number of terms
+          [3.3] [UP] degree       --> returns degree of the leading monomial
+          [3.4] [UP] total_degree --> returns true total degree of a polynomial
 
        [4] Items generators:
 
@@ -575,7 +576,13 @@ class Poly(Basic, RelMeths, ArithMeths):
 
     @property
     def degree(self):
+        """Returns degree of the leading term. """
         return sum(self.monoms[0])
+
+    @property
+    def total_degree(self):
+        """Returns true total degree of a polynomial. """
+        return max([ sum(monom) for monom in self.monoms ])
 
     @property
     def norm(self):
@@ -1408,26 +1415,92 @@ class Poly(Basic, RelMeths, ArithMeths):
         return self.__class__(terms, *self.symbols, **self.flags)
 
     def __call__(self, *point):
-        if self.is_univariate:
-            if len(point) == 1:
-                point = point[0]
-            else:
-                raise TypeError
+        """Efficiently evaluate polynomial at a given point.
 
+           Evaluation is always done using Horner scheme.  In multivariate
+           case a greedy algorithm is used to obtain a sequence of partial
+           evaluations which minimizes the total number of multiplications
+           required to perform this evaluation. This strategy is efficient
+           for most of multivariate polynomials.
+
+           >>> from sympy import *
+           >>> x,y = symbols('xy')
+
+           >>> p = Poly(x**2 + 2*x + 1, x)
+
+           >>> p(2)
+           9
+           >>> p(y)
+           1 + y*(2 + y)
+
+           For more information on the implemented algorithm refer to:
+
+           [1] M. Ceberio, V. Kreinovich, Greedy Algorithms for Optimizing
+               Multivariate Horner Schemes, ACM SIGSAM Bulletin, Volume 38,
+               Issue 1, 2004, pp. 8-15
+
+        """
+        N = len(self.symbols)
+
+        if len(point) != N:
+            raise ValueError
+
+        if self.is_univariate:
             terms = self.as_uv_dict()
 
-            N = self.degree
-            evaluation = 0
+            point, result = point[0], 0
 
-            for k in xrange(N, -1, -1):
-                evaluation *= point
+            for k in xrange(self.degree, -1, -1):
+                result *= point
 
                 if terms.has_key(k):
-                    evaluation += terms[k]
+                    result += terms[k]
 
-            return evaluation
+            return result
         else:
-            raise NotImplementedError # TBD
+            def evaluate(terms):
+                count = [0] * N
+
+                for monom in terms.iterkeys():
+                    for i, M in enumerate(monom):
+                        if M != 0:
+                            count[i] += 1
+
+                K = max(count)
+
+                if K <= 1:
+                    result = 0
+
+                    for monom, coeff in terms.iteritems():
+                        for base, exp in zip(point, monom):
+                            if exp != 0:
+                                if exp == 1:
+                                    coeff *= base
+                                else:
+                                    coeff *= base**exp
+
+                        result += coeff
+
+                    return result
+                else:
+                    k, indeps, depend = count.index(K), {}, {}
+
+                    n = min([ M[k] for M in terms.iterkeys() if M[k] ])
+
+                    for M, coeff in terms.iteritems():
+                        if M[k] != 0:
+                            depend[M[:k]+(M[k]-n,)+M[k+1:]] = coeff
+                        else:
+                            indeps[M] = coeff
+
+                    result = point[k]**n * evaluate(depend)
+
+                    if indeps:
+                        return result + evaluate(indeps)
+                    else:
+                        return result
+
+            return evaluate(self.as_dict())
 
     def _eval_subs(self, old, new):
         symbols = list(self.symbols)
