@@ -29,8 +29,47 @@ def test_poly_basics():
     assert Poly(((), ()), x, y, z).as_basic() == 0
     assert Poly(([], []), x, y, z).as_basic() == 0
 
-    assert Poly((Integer(17), (2,5,4)), x, y, z).as_basic() == 17*x**2*y**5*z**4
-    assert Poly(((Integer(17),), ((2,5,4),)), x, y, z).as_basic() == 17*x**2*y**5*z**4
+    assert Poly((Integer(17), (2,5,4)),
+        x, y, z).as_basic() == 17*x**2*y**5*z**4
+    assert Poly(((Integer(17),), ((2,5,4),)),
+        x, y, z).as_basic() == 17*x**2*y**5*z**4
+
+    p = Poly(x**2 + x + 1, x)
+
+    assert Poly(p, y) == \
+        Poly(((1 + x + x**2,), ((0,),)), y, order='grlex')
+
+    assert Poly(p, x, y) == \
+        Poly(((1, 1, 1), ((2, 0), (1, 0), (0, 0))), x, y, order='grlex')
+
+    assert Poly(p, y, x) == \
+        Poly(((1, 1, 1), ((0, 2), (0, 1), (0, 0))), y, x, order='grlex')
+
+    assert Poly(p, z, x, y) == \
+        Poly(((1, 1, 1), ((0, 2, 0), (0, 1, 0), (0, 0, 0))), z, x, y, order='grlex')
+
+    p = Poly(x*y**3 + x**2*y + 1, x)
+
+    assert Poly(p, y) == \
+        Poly(((x, x**2, 1), ((3,), (1,), (0,))), y, order='grlex')
+
+    assert Poly(p, x, y) == \
+        Poly(((1, 1, 1), ((1, 3), (2, 1), (0, 0))), x, y, order='grlex')
+
+    assert Poly(p, y, x) == \
+        Poly(((1, 1, 1), ((3, 1), (1, 2), (0, 0))), y, x, order='grlex')
+
+    assert Poly(p, x, z) == \
+        Poly(((y, y**3, 1), ((2, 0), (1, 0), (0, 0))), x, z, order='grlex')
+
+    assert Poly(p, z, x) == \
+        Poly(((y, y**3, 1), ((0, 2), (0, 1), (0, 0))), z, x, order='grlex')
+
+    assert Poly(p, z, x, y) == \
+        Poly(((1, 1, 1), ((0, 1, 3), (0, 2, 1), (0, 0, 0))), z, x, y, order='grlex')
+
+    assert Poly(p, x, z, y) == \
+        Poly(((1, 1, 1), ((1, 0, 3), (2, 0, 1), (0, 0, 0))), x, z, y, order='grlex')
 
 def test_poly_internals():
     p = Poly(x**2*y*z + x*y*z**3 + x*y + y*z, x, y, z)
@@ -115,15 +154,6 @@ def test_poly_characteristics():
     assert r.coeffs == (2,-3,-1,1)
     assert r.monoms == ((2,8,0), (5,1,4), (1,4,0), (1,1,3))
 
-def test_poly_arithmetics():
-    f = Poly(x**3-12*x**2-42, x)
-    g = Poly(x**2+x-3, x)
-
-    assert f / g == Poly(x-13, x)
-    assert f % g == Poly(16*x-81, x)
-
-    assert divmod(f, g) == (Poly(x-13, x), Poly(16*x-81, x))
-
 def test_poly_properties():
     f = Poly(0, x)
 
@@ -197,6 +227,19 @@ def test_poly_properties():
     assert f.is_inhomogeneous == True
     assert f.is_monic == False
 
+def test_poly_mul():
+    f = x**3-12*x**2-42
+    g = x**2+x-3
+
+    assert Poly(f, x)*Poly(g, x) == f*g
+    assert Poly(f, x)*g == f*g
+
+    f = x**3*y-2*x*y**2-3*z+1
+    g = x**2*y*z+x*y**3-3
+
+    assert Poly(f, x, y, z)*Poly(g, x, y, z) == f*g
+    assert Poly(f, x, y, z)*g == f*g
+
 def test_poly_div():
     f = Poly(x**3-12*x**2-42, x)
     g = Poly(x**2+x-3, x)
@@ -208,6 +251,11 @@ def test_poly_div():
 
     assert h[0].as_basic() == x-13
     assert h[1].as_basic() == 16*x-81
+
+    assert f / g == Poly(x-13, x)
+    assert f % g == Poly(16*x-81, x)
+
+    assert divmod(f, g) == (Poly(x-13, x), Poly(16*x-81, x))
 
     assert poly_div(x**3-12*x**2-42, x-3, x) == \
            (Poly(x**2-9*x-27, x), Poly(-123, x))
@@ -263,6 +311,16 @@ def test_call():
 
 def test_subs():
     pass
+
+def test_unify():
+    p = Poly(x**2+x*y, x, y)
+    q = Poly(x**2+x*y+1, x)
+
+    assert p.unify(q) == \
+        (Poly(x**2+x*y, x, y), Poly(x**2+x*y+1, x, y))
+
+    assert p.unify(x**2+x*y+1) == \
+        (Poly(x**2+x*y, x, y), Poly(x**2+x*y+1, x, y))
 
 def test_eq_ne():
     p = Poly(x**2+x*y, x, y)

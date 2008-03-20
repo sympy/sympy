@@ -3,8 +3,8 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol
-from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify
+from sympy.core.numbers import Integer, Number
 from sympy.core.basic import Basic, S, C, Atom
 from sympy.core.methods import RelMeths, ArithMeths
 
@@ -181,8 +181,10 @@ class Poly(Basic, RelMeths, ArithMeths):
           [9.4] [--] map_coeffs   --> applies a function to all coefficients
           [9.5] [UP] coeff        --> returns coefficient of the given monomial
 
-          [9.6] [U-] diff         --> efficient polynomial differentiation
-          [9.7] [U-] integrate    --> efficient polynomial integration
+          [9.6] [U-] unify        --> returns polys with common sets of symbols
+
+          [9.7] [U-] diff         --> efficient polynomial differentiation
+          [9.8] [U-] integrate    --> efficient polynomial integration
 
        [10] Operations on terms:
 
@@ -299,15 +301,28 @@ class Poly(Basic, RelMeths, ArithMeths):
                     coeffs = (S.Zero,)
                     monoms = ((0,) * N,)
         elif isinstance(poly, Poly):
-            if symbols == poly.symbols:
-                if N > 1 and order != poly.order:
-                    terms = poly.as_dict()
+            if stamp <= poly.stamp:
+                if symbols == poly.symbols:
+                    if N > 1 and order != poly.order:
+                        terms = poly.as_dict()
+                    else:
+                        return poly
                 else:
-                    return poly
-            elif stamp.issubset(poly.stamp):
-                terms = Poly._permute(poly, *symbols)
+                    terms = Poly._permute(poly, *symbols)
             else:
-                terms = Poly._decompose(poly.as_basic(), *symbols)
+                if any(coeff.has_any_symbols(*symbols) for coeff in poly.coeffs):
+                    terms = Poly._decompose(poly.as_basic(), *symbols)
+                else:
+                    K = len(poly.symbols)
+
+                    if symbols[:K] == poly.symbols:
+                        coeffs, T = poly.coeffs, (0,) * (N - K)
+                        monoms = tuple(M + T for M in poly.monoms)
+
+                        if order != poly.order:
+                            terms = dict(zip(monoms, coeffs))
+                    else:
+                        terms = Poly._permute(poly, *symbols)
         else:
             terms = Poly._decompose(poly, *symbols)
 
@@ -413,7 +428,10 @@ class Poly(Basic, RelMeths, ArithMeths):
         if isinstance(poly, Add):
             terms = poly.args
         else:
-            terms = [ poly ]
+            if isinstance(poly, Number):
+                return { (0,) * N : poly }
+            else:
+                terms = [ poly ]
 
         for term in terms:
             if not term.has_any_symbols(*symbols):
@@ -455,7 +473,7 @@ class Poly(Basic, RelMeths, ArithMeths):
             result[monom] = coeff
 
         if not result:
-            return { ((0,) * N,) : (S.One,) }
+            return { (0,) * N : S.One }
         else:
             return result
 
@@ -598,7 +616,7 @@ class Poly(Basic, RelMeths, ArithMeths):
 
     def __add__(self, other):
         try:
-            poly = self.__class__(other, *self.symbols, **self.flags)
+            self, poly = self.unify(other)
         except PolynomialError:
             return self.as_basic() + other
 
@@ -630,7 +648,7 @@ class Poly(Basic, RelMeths, ArithMeths):
 
     def __sub__(self, other):
         try:
-            poly = self.__class__(other, *self.symbols, **self.flags)
+            self, poly = self.unify(other)
         except PolynomialError:
             return self.as_basic() - other
 
@@ -679,7 +697,7 @@ class Poly(Basic, RelMeths, ArithMeths):
                New York, USA, 1976, pp. 136-148
         """
         try:
-            poly = self.__class__(other, *self.symbols, **self.flags)
+            self, poly = self.unify(other)
         except PolynomialError:
             return self.as_basic() * other
 
@@ -1077,6 +1095,16 @@ class Poly(Basic, RelMeths, ArithMeths):
                 return self.coeffs[i]
         else:
             return S.Zero
+
+    def unify(self, other):
+        """Returns two polynomials with common sets of symbols. """
+        symbols, flags = self.symbols, self.flags
+
+        if isinstance(other, Poly) and not (other.stamp <= self.stamp):
+            symbols = tuple(sorted(self.stamp | other.stamp))
+            self = self.__class__(self, *symbols, **flags)
+
+        return self, self.__class__(other, *symbols, **flags)
 
     def diff(self, *symbols):
         """Efficiently differentiate polynomials.
