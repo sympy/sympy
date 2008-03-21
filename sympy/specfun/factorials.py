@@ -1,5 +1,5 @@
 from sympy.core import Function, Add, Pow, Mul, Rational, Integer, pi, \
-        oo, Real, Symbol
+        oo, Real, Symbol, sympify
 from sympy.core.basic import S, C
 
 from sympy.functions.elementary.miscellaneous import sqrt

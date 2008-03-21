@@ -64,7 +64,7 @@ class Polygon(GeometryEntity):
             >>> poly.angles[p1]
             (1/2)*pi
             >>> poly.angles[p2]
-            acos(-4*(1/17)**(1/2))
+            acos(-4/17*17**(1/2))
         """
         def tarea(a, b, c):
             return (b[0] - a[0])*(c[1] - a[1]) - (c[0] - a[0])*(b[1] - a[1])
