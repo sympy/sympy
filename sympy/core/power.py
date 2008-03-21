@@ -50,6 +50,8 @@ def integer_nthroot(y, n):
 
 class Pow(Basic, ArithMeths, RelMeths):
 
+    is_Pow = True
+
     precedence = Basic.Pow_precedence
 
     @cacheit
@@ -74,19 +76,19 @@ class Pow(Basic, ArithMeths, RelMeths):
         return self._args[1]
 
     def _eval_power(self, other):
-        if isinstance(other, Number):
+        if other.is_Number:
             if self.base.is_real:
-                if isinstance(self.exp, Number):
+                if self.exp.is_Number:
                     # (a ** 2) ** 3 -> a ** (2 * 3)
                     return Pow(self.base, self.exp * other)
-            if isinstance(other, Rational):
+            if other.is_Rational:
                 if self.exp.is_even and Integer(other.q).is_even:
                     return abs( Pow(self.base, self.exp * other))
                 return Pow(self.base, self.exp * other)
-            if isinstance(other, Integer):
+            if other.is_Integer:
                 # (a ** b) ** 3 -> a ** (3 * b)
                 return Pow(self.base, self.exp * other)
-        elif isinstance(other, (Add, Mul)):
+        elif other.is_Add or other.is_Mul:
             # (a**b)**c = a**(b*c)
             return Pow(self.base, self.exp * other)
 
@@ -206,7 +208,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             coeff1,terms1 = self.exp.as_coeff_terms()
             coeff2,terms2 = old.exp.as_coeff_terms()
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3*y)
-        if isinstance(old, C.exp):
+        if old.func is C.exp:
             coeff1,terms1 = old.args[0].as_coeff_terms()
             coeff2,terms2 = (self.exp * C.log(self.base)).as_coeff_terms()
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(exp(3*y*log(x)),z) -> z**(2/3*y)
@@ -216,7 +218,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         return { self.base : self.exp }
 
     def as_base_exp(self):
-        if isinstance(self.base, Rational) and self.base.p==1:
+        if self.base.is_Rational and self.base.p==1:
             return 1/self.base, -self.exp
         return self.base, self.exp
 
@@ -225,7 +227,7 @@ class Pow(Basic, ArithMeths, RelMeths):
         return c(self.base)**self.exp
 
     def _eval_expand_complex(self, *args):
-        if isinstance(self.exp, Integer):
+        if self.exp.is_Integer:
             exp = self.exp
             re, im = self.base.as_real_imag()
             if exp >= 0:
@@ -235,7 +237,7 @@ class Pow(Basic, ArithMeths, RelMeths):
                 base = re/mag - S.ImaginaryUnit*(im/mag)
                 exp = -exp
             return (base**exp).expand()
-        elif isinstance(self.exp, Rational):
+        elif self.exp.is_Rational:
             # NOTE: This is not totally correct since for x**(p/q) with
             #       x being imaginary there are actually q roots, but
             #       only a single one is returned from here.
@@ -271,21 +273,21 @@ class Pow(Basic, ArithMeths, RelMeths):
         if e is not None or b is not None:
             result = base**exp
 
-            if isinstance(result, Pow):
+            if result.is_Pow:
                 base, exp = result.base, result.exp
             else:
                 return result
         else:
             result = None
 
-        if isinstance(exp, Integer) and exp.p > 0 and isinstance(base, Add):
+        if exp.is_Integer and exp.p > 0 and base.is_Add:
             n = int(exp)
 
             if base.is_commutative:
                 order_terms, other_terms = [], []
 
                 for order in base.args:
-                    if isinstance(order, C.Order):
+                    if order.is_Order:
                         order_terms.append(order)
                     else:
                         other_terms.append(order)
@@ -302,15 +304,15 @@ class Pow(Basic, ArithMeths, RelMeths):
                     # where 'a' and 'b' are real numbers and 'n' is integer.
                     a, b = base.as_real_imag()
 
-                    if isinstance(a, Rational) and isinstance(b, Rational):
-                        if not isinstance(a, Integer):
-                            if not isinstance(b, Integer):
+                    if a.is_Rational and b.is_Rational:
+                        if not a.is_Integer:
+                            if not b.is_Integer:
                                 k = (a.q * b.q) ** n
                                 a, b = a.p*b.q, a.q*b.p
                             else:
                                 k = a.q ** n
                                 a, b = a.p, a.q*b
-                        elif not isinstance(b, Integer):
+                        elif not b.is_Integer:
                             k = b.q ** n
                             a, b = a*b.q, b.p
                         else:
@@ -372,14 +374,14 @@ class Pow(Basic, ArithMeths, RelMeths):
                     return Add(*[f*g for f in base.args for g in base.args])
                 else:
                     return Mul(base, Pow(base, n-1).expand()).expand()
-        elif isinstance(exp, Add) and isinstance(base, Number):
+        elif exp.is_Add and base.is_Number:
             #  a + b      a  b
             # n      --> n  n  , where n, a, b are Numbers
 
             coeff, tail = S.One, S.Zero
 
             for term in exp.args:
-                if isinstance(term, Number):
+                if term.is_Number:
                     coeff *= base**term
                 else:
                     tail += term
@@ -410,7 +412,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             return d[self]
         base = self.base._calc_splitter(d)
         exp = self.exp._calc_splitter(d)
-        if isinstance(exp, Integer):
+        if exp.is_Integer:
             if abs(exp.p)>2:
                 n = exp.p//2
                 r = exp.p - n
@@ -444,7 +446,7 @@ class Pow(Basic, ArithMeths, RelMeths):
                 return self.base ** n/n
             y = Symbol('y',dummy=True)
             x,ix = self.base.solve4linearsymbol(y,symbols=set([s]))
-            if isinstance(x, Symbol):
+            if x.is_Symbol:
                 dx = 1/self.base.diff(x)
                 if not dx.has(s):
                     return (y**self.exp*dx).integral(y).subs(y, self.base)
@@ -455,9 +457,9 @@ class Pow(Basic, ArithMeths, RelMeths):
                 n = self.exp+1
                 return (b**n-a**n)/n
             x,ix = self.base.solve4linearsymbol(s)
-            if isinstance(x, Symbol):
+            if x.is_Symbol:
                 dx = ix.diff(x)
-                if isinstance(dx, Number):
+                if dx.is_Number:
                     y = Symbol('y',dummy=True)
                     return (y**self.exp*dx).integral(y==[self.base.subs(s,a), self.base.subs(s,b)])
 
@@ -528,7 +530,7 @@ class Pow(Basic, ArithMeths, RelMeths):
             lt = b.as_leading_term(x)
             o = order * lt**(1-e)
             bs = b.oseries(o)
-            if isinstance(bs, Add):
+            if bs.is_Add:
                 # bs -> lt + rest -> lt * (1 + (bs/lt - 1))
                 return lt**e * ((bs/lt).expand()**e).oseries(order * lt**(-e))
             return bs**e

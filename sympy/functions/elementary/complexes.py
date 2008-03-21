@@ -42,14 +42,12 @@ class re(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = sympify(arg)
-
         if arg is S.NaN:
             return S.NaN
         elif arg.is_real:
             return arg
         else:
-            if not isinstance(arg, C.Add):
+            if not arg.is_Add:
                 arg = [arg]
 
             included, reverted, excluded = [], [], []
@@ -114,14 +112,12 @@ class im(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = sympify(arg)
-
         if arg is S.NaN:
             return S.NaN
         elif arg.is_real:
             return S.Zero
         else:
-            if not isinstance(arg, C.Add):
+            if not arg.is_Add:
                 arg = [arg]
 
             included, reverted, excluded = [], [], []
@@ -166,7 +162,7 @@ class sign(Function):
         if arg is S.Zero: return S.One
         if arg.is_positive: return S.One
         if arg.is_negative: return S.NegativeOne
-        if isinstance(arg, C.Mul):
+        if arg.is_Mul:
             coeff, terms = arg.as_coeff_terms()
             if coeff is not S.One:
                 return cls(coeff) * cls(C.Mul(*terms))
@@ -208,9 +204,9 @@ class abs(Function):
             return cls(coeff) * cls(C.Mul(*terms))
         if arg.is_real is False:
             return sqrt( (arg * arg.conjugate()).expand() )
-        if isinstance(arg, C.Pow):
+        if arg.is_Pow:
             base, exponent = arg.as_base_exp()
-            if isinstance(exponent, C.Number):
+            if exponent.is_Number:
                 if exponent.is_even:
                     return arg
         return
@@ -221,7 +217,7 @@ class abs(Function):
         # XXX remove me when 'abs -> abs_' is done
         arg = arg.evalf()
 
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             import operator
             return operator.abs(float(arg))
 

@@ -77,6 +77,8 @@ class Function(Basic, ArithMeths, RelMeths):
 
     __metaclass__ = FunctionClass
 
+    is_Function = True
+
     precedence = Basic.Apply_precedence
 
     nargs = None
@@ -188,7 +190,7 @@ class Function(Basic, ArithMeths, RelMeths):
         return obj
 
     def _eval_is_comparable(self):
-        if isinstance(self, Function):
+        if self.is_Function:
             r = True
             for s in self.args:
                 c = s.is_comparable
@@ -326,7 +328,7 @@ class Function(Basic, ArithMeths, RelMeths):
 
         #if cls.nargs == 1:
         # common case for functions with 1 argument
-        #if isinstance(arg, Number):
+        #if arg.is_Number:
         if arg.is_number:
             func_evalf = getattr(arg, cls.__name__)
             return func_evalf()

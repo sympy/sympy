@@ -437,7 +437,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
     r, kernel = len(coeffs)-1, []
 
     if f is not S.Zero:
-        if isinstance(f, CC.Add):
+        if f.is_Add:
             similar = {}
 
             for g in f.expand().args:

@@ -35,18 +35,18 @@ def components(f, x):
     result = set()
 
     if f.has(x):
-        if isinstance(f, Symbol):
+        if f.is_Symbol:
             result.add(f)
-        elif isinstance(f, Function):
+        elif f.is_Function:
             for g in f.args:
                 result |= components(g, x)
 
             result.add(f)
-        elif isinstance(f, Pow):
+        elif f.is_Pow:
             result |= components(f.base, x)
 
-            if not isinstance(f.exp, Integer):
-                if isinstance(f.exp, Rational):
+            if not f.exp.is_Integer:
+                if f.exp.is_Rational:
                     result.add(f.base**Rational(1, f.exp.q))
                 else:
                     result |= components(f.exp, x) | set([f])
@@ -143,7 +143,7 @@ def heurisch(f, x, **kwargs):
     """
     f = sympify(f)
 
-    if not isinstance(f, Add):
+    if not f.is_Add:
         indep, f = f.as_independent(x)
     else:
         indep = S.One
@@ -178,14 +178,14 @@ def heurisch(f, x, **kwargs):
             b = Wild('b', exclude=[x])
 
             for g in set(terms):
-                if isinstance(g, Function):
-                    if isinstance(g, exp):
+                if g.is_Function:
+                    if g.func is exp:
                         M = g.args[0].match(a*x**2)
 
                         if M is not None:
                             terms.add(erf(sqrt(-M[a])*x))
-                elif isinstance(g, Pow):
-                    if isinstance(g.exp, Rational) and g.exp.q == 2:
+                elif g.is_Pow:
+                    if g.exp.is_Rational and g.exp.q == 2:
                         M = g.base.match(a*x**2 + b)
 
                         if M is not None and M[b].is_positive:
@@ -253,13 +253,13 @@ def heurisch(f, x, **kwargs):
     special = {}
 
     for term in terms:
-        if isinstance(term, Function):
-            if isinstance(term, tan):
+        if term.is_Function:
+            if term.func is tan:
                 special[1 + substitute(term)**2] = False
-            elif isinstance(term, tanh):
+            elif term.func is tanh:
                 special[1 + substitute(term)] = False
                 special[1 - substitute(term)] = False
-            #elif isinstance(term, LambertW):
+            #elif term.func is LambertW:
             #    special[substitute(term)] = True
 
     F = substitute(f)
@@ -277,15 +277,15 @@ def heurisch(f, x, **kwargs):
     poly_denom = s * v_split[0] * deflation(v_split[1])
 
     def exponent(g):
-        if isinstance(g, Pow):
-            if isinstance(g.exp, Rational) and g.exp.q != 1:
+        if g.is_Pow:
+            if g.exp.is_Rational and g.exp.q != 1:
                 if g.exp.p > 0:
                     return g.exp.p + g.exp.q - 1
                 else:
                     return abs(g.exp.p + g.exp.q)
             else:
                 return 1
-        elif not isinstance(g, Atom):
+        elif not g.is_Atom:
             return max([ exponent(h) for h in g.args ])
         else:
             return 1
@@ -311,7 +311,7 @@ def heurisch(f, x, **kwargs):
             except PolynomialException:
                 factorization = poly
 
-            if isinstance(factorization, Mul):
+            if factorization.is_Mul:
                 reducibles |= set(factorization.args)
             else:
                 reducibles.add(factorization)
@@ -345,7 +345,7 @@ def heurisch(f, x, **kwargs):
 
         numer = h.as_numer_denom()[0].expand()
 
-        if not isinstance(numer, Add):
+        if not numer.is_Add:
             numer = [numer]
 
         equations = {}
@@ -385,7 +385,7 @@ def heurisch(f, x, **kwargs):
         antideriv = antideriv.subs_dict(rev_mapping)
         antideriv = simplify(antideriv).expand()
 
-        if isinstance(antideriv, Add):
+        if antideriv.is_Add:
             antideriv = antideriv.as_independent(x)[1]
 
         return indep * antideriv

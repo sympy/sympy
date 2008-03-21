@@ -10,7 +10,7 @@ class Sum(Basic, NoRelMeths, ArithMeths):
     def __new__(cls, f, *symbols, **assumptions):
         f = sympify(f)
 
-        if isinstance(f, C.Number):
+        if f.is_Number:
             if f is S.NaN:
                 return S.NaN
             elif f is S.Zero:
@@ -94,7 +94,7 @@ def getab(expr):
 def eval_sum(f, (i, a, b)):
     if not f.has(i):
         return f*(b-a+1)
-    definite = isinstance(a, C.Integer) and isinstance(b, C.Integer)
+    definite = a.is_Integer and b.is_Integer
     # Doing it directly may be faster if there are very few terms.
     if definite and (b-a < 100):
         return eval_sum_direct(f, (i, a, b))
@@ -111,11 +111,11 @@ def eval_sum_symbolic(f, (i, a, b)):
     if not f.has(i):
         return f*(b-a+1)
     # Linearity
-    if isinstance(f, C.Mul):
+    if f.is_Mul:
         L, R = getab(f)
         if not L.has(i): return L*eval_sum_symbolic(R, (i, a, b))
         if not R.has(i): return R*eval_sum_symbolic(L, (i, a, b))
-    if isinstance(f, C.Add):
+    if f.is_Add:
         L, R = getab(f)
         lsum = eval_sum_symbolic(L, (i, a, b))
         rsum = eval_sum_symbolic(R, (i, a, b))

@@ -22,9 +22,8 @@ class Limit(Basic, RelMeths, ArithMeths):
         expr = sympify(expr)
         x = sympify(x)
         xlim = sympify(xlim)
-        if not isinstance(x, C.Symbol):
+        if not x.is_Symbol:
             raise ValueError("Limit 2nd argument must be Symbol instance (got %s)" % (x))
-        assert isinstance(x, C.Symbol),`x`
 
         if not expr.has(x):
             return expr
@@ -86,7 +85,7 @@ class InfLimit(Basic):
     def __new__(cls, expr, x):
         expr = orig_expr = sympify(expr)
         orig_x = sympify(x)
-        assert isinstance(orig_x,C.Symbol),`orig_x`
+        assert orig_x.is_Symbol, `orig_x`
 
         # handle trivial results
         if orig_expr==orig_x:
@@ -107,28 +106,28 @@ class InfLimit(Basic):
         if hasattr(expr,'_eval_inflimit'):
             # support for callbacks
             result = getattr(expr,'_eval_inflimit')(x)
-        elif isinstance(expr, C.Add):
+        elif expr.is_Add:
             result, factors = expr.as_coeff_factors(x)
             for f in factors:
                 result += f.inflimit(x)
                 if result is S.NaN:
                     result = None
                     break
-        elif isinstance(expr, C.Mul):
+        elif expr.is_Mul:
             result, terms = expr.as_coeff_terms(x)
             for t in terms:
                 result *= t.inflimit(x)
                 if result is S.NaN:
                     result = None
                     break
-        elif isinstance(expr, C.Pow):
+        elif expr.is_Pow:
             if not expr.exp.has(x):
                 result = expr.base.inflimit(x) ** expr.exp
             elif not expr.base.has(x):
                 result = expr.base ** expr.exp.inflimit(x)
             else:
                 result = C.exp(expr.exp * C.log(expr.base)).inflimit(x)
-        elif isinstance(expr, C.Function):
+        elif expr.is_Function:
             # warning: assume that
             #  lim_x f(g1(x),g2(x),..) = f(lim_x g1(x), lim_x g2(x))
             # if this is incorrect, one must define f._eval_inflimit(x) method
@@ -179,9 +178,9 @@ def cmp_ops_count(e1,e2):
 @cacheit
 def mrv_compare(f, g, x):
     log = C.log
-    if isinstance(f, C.exp): f = f.args[0]
+    if f.func is C.exp: f = f.args[0]
     else: f = log(f)
-    if isinstance(g, C.exp): g = g.args[0]
+    if g.func is C.exp: g = g.args[0]
     else: g = log(g)
     c = (f/g).inflimit(x)
     if c==0:
@@ -206,20 +205,20 @@ def mrv2(expr, x, d, md):
     if expr==x:
         if not md: md[x] = x
         return x
-    if isinstance(expr, (C.Add, C.Mul)):
+    if expr.is_Add or expr.is_Mul:
         r = expr.__class__(*[mrv2(t, x, d, md) for t in expr.args])
         d[expr] = r
         return r
     log = C.log
     exp = C.exp
-    if isinstance(expr, C.Pow):
+    if expr.is_Pow:
         if not expr.exp.has(x):
             r = mrv2(expr.base, x, d, md)**expr.exp
         else:
             r = mrv2(exp(expr.exp * log(expr.base)), x, d, md)
         d[expr] = r
         return r
-    if isinstance(expr, C.exp):
+    if expr.func is C.exp:
         e = expr.args[0]
         l = e.inflimit(x)
         r = exp(mrv2(e, x, d, md))
@@ -270,7 +269,7 @@ def mrv2(expr, x, d, md):
             r = expr.subs(nexpr, tmp)
         d[expr] = r
         return r
-    if isinstance(expr, C.Function):
+    if expr.is_Function:
         r = expr.func(*[mrv2(a, x, d, md) for a in expr.args])
         d[expr] = r
         return r

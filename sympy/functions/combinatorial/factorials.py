@@ -103,10 +103,10 @@ class Factorial(Function):
     def canonize(cls, n):
         n = sympify(n)
 
-        if isinstance(n, C.Number):
+        if n.is_Number:
             if n is S.Zero:
                 return S.One
-            elif isinstance(n, C.Integer):
+            elif n.is_Integer:
                 if n.is_negative:
                     return S.Zero
                 else:
@@ -191,7 +191,7 @@ class RisingFactorial(Function):
             return S.NaN
         elif x is S.One:
             return factorial(k)
-        elif isinstance(k, C.Integer):
+        elif k.is_Integer:
             if k is S.NaN:
                 return S.NaN
             elif k is S.Zero:
@@ -252,7 +252,7 @@ class FallingFactorial(Function):
 
         if x is S.NaN:
             return S.NaN
-        elif isinstance(k, C.Integer):
+        elif k.is_Integer:
             if k is S.NaN:
                 return S.NaN
             elif k is S.Zero:
@@ -342,14 +342,14 @@ class Binomial(Function):
     def canonize(cls, r, k):
         r, k = map(sympify, (r, k))
 
-        if isinstance(k, C.Number):
+        if k.is_Number:
             if k is S.Zero:
                 return S.One
-            elif isinstance(k, C.Integer):
+            elif k.is_Integer:
                 if k.is_negative:
                     return S.Zero
                 else:
-                    if isinstance(r, C.Integer) and r.is_nonnegative:
+                    if r.is_Integer and r.is_nonnegative:
                         r, k = int(r), int(k)
 
                         if k > r:

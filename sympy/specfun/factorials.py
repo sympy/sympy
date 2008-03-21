@@ -73,19 +73,18 @@ class _Factorial(Function):
             # handle factorial poles, also for symbols with assumptions
             if x.is_negative:
                 return oo
-            if isinstance(x, Integer):
+            if x.is_Integer:
                 return Integer(cls._fac1(int(x)))
 
         # half-integer case of the ordinary factorial
-        if m == 1 and isinstance(x, Rational) and x.q == 2:
+        if m == 1 and x.is_Rational and x.q == 2:
             n = (x.p + 1) / 2
             if n < 0:
                 return (-1)**(-n+1) * pi * x / factorial(-x)
             return sqrt(pi) * Rational(1, 2**n) * factorial(2*n-1, 2)
 
         # multifactorials are only defined for integers
-        if (not isinstance(m, Integer) and m > 0) or not \
-            isinstance(x, Integer):
+        if (not m.is_Integer and m > 0) or not x.is_Integer:
             return
 
         x = int(x)
@@ -163,12 +162,12 @@ def _collect_factors(expr):
     denom_args = []
     other = []
     for x in expr.args:
-        if isinstance(x, Mul):
+        if x.is_Mul:
             n, d, o = _collect_factors(x)
             numer_args += n
             denom_args += d
             other += o
-        elif isinstance(x, Pow):
+        elif x.is_Pow:
             base, exp = x.args
             if _isfactorial(base) and \
                 isinstance(exp, Rational) and exp.is_integer:
@@ -192,7 +191,7 @@ def _simplify_quotient(na, da, other):
             for j, x in enumerate(da):
                 #delta = simplify(y - x)
                 delta = y - x
-                if isinstance(delta, Rational) and delta.is_integer:
+                if delta.is_Integer:
                     candidates.append((delta, i, j))
         if candidates:
             # There may be multiple candidates. Choose the quotient pair
@@ -241,15 +240,15 @@ def factorial_simplify(expr):
     TODO: handle reflection formula, duplication formula
     double factorials
     """
+    expr = sympify(expr)
 
-
-    if isinstance(expr, Add):
+    if expr.is_Add:
         return Add(*(factorial_simplify(x) for x in expr))
 
-    if isinstance(expr, Pow):
+    if expr.is_Pow:
         return Pow(factorial_simplify(expr.args[0]), expr.args[1])
 
-    if isinstance(expr, Mul):
+    if expr.is_Mul:
         na, da, other = _collect_factors(expr)
         _simplify_quotient(na, da, other)
         _simplify_recurrence(na, other)

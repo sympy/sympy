@@ -21,6 +21,8 @@ class Symbol(Atom, RelMeths, ArithMeths):
 
     is_comparable = False
 
+    is_Symbol = True
+
     def __new__(cls, name, commutative=True, dummy=False,
                 **assumptions):
         """if dummy == True, then this Symbol is totally unique, i.e.::

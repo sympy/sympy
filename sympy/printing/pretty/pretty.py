@@ -45,8 +45,7 @@ class PrettyPrinter(Printer):
 
     def _print_Factorial(self, e):
         x = e[0]
-        if (isinstance(x, C.Integer) and x.is_nonnegative) or \
-            isinstance(x, C.Symbol):
+        if (x.is_Integer and x.is_nonnegative) or x.is_Symbol:
             s = self._print(x)
         else:
             # XXX parens
@@ -105,7 +104,7 @@ class PrettyPrinter(Printer):
         # Add parentheses if a sum and create pretty form for argument
         prettyF = self._print(f)
         # XXX generalize parents
-        if isinstance(f, C.Add):
+        if f.is_Add:
             prettyF = prettyForm(*prettyF.parens())
 
         # dx dy dz ...
@@ -258,7 +257,7 @@ class PrettyPrinter(Printer):
         for x in sum.args:
             # Check for negative "things" so that this information can be enforce upon
             # the pretty form so that it can be made of use (such as in a sum).
-            if isinstance(x, C.Mul) and x.as_coeff_terms()[0] < 0:
+            if x.is_Mul and x.as_coeff_terms()[0] < 0:
                 pform1 = self._print(-x)
                 if len(pforms) == 0:
                     if pform1.height() > 1:
@@ -269,7 +268,7 @@ class PrettyPrinter(Printer):
                     pform2 = ' - '
                 pform = stringPict.next(pform2, pform1)
                 pforms.append(prettyForm(binding=prettyForm.NEG, *pform))
-            elif isinstance(x, C.Number) and x < 0:
+            elif x.is_Number and x < 0:
                 pform1 = self._print(-x)
                 if len(pforms) == 0:
                     if pform1.height() > 1:
@@ -290,9 +289,9 @@ class PrettyPrinter(Printer):
 
         # Gather terms for numerator/denominator
         for item in product.args:
-            if isinstance(item, C.Pow) and isinstance(item.exp, C.Rational) and item.exp.is_negative:
+            if item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
                 b.append(C.Pow(item.base, -item.exp))
-            elif isinstance(item, C.Rational):
+            elif item.is_Rational:
                 if item.p != 1:
                     a.append( C.Rational(item.p) )
                 if item.q != 1:
@@ -303,13 +302,13 @@ class PrettyPrinter(Printer):
         # Convert to pretty forms. Add parens to Add instances if there
         # is more than one term in the numer/denom
         for i in xrange(0, len(a)):
-            if isinstance(a[i], C.Add) and len(a) > 1:
+            if a[i].is_Add and len(a) > 1:
                 a[i] = prettyForm(*self._print(a[i]).parens())
             else:
                 a[i] = self._print(a[i])
 
         for i in xrange(0, len(b)):
-            if isinstance(b[i], C.Add) and len(b) > 1:
+            if b[i].is_Add and len(b) > 1:
                 b[i] = prettyForm(*self._print(b[i]).parens())
             else:
                 b[i] = self._print(b[i])
@@ -340,7 +339,7 @@ class PrettyPrinter(Printer):
             s = prettyForm(*bpretty.above(s))
             s = prettyForm(*s.left(s2))
             return s
-        elif isinstance(power.exp, C.Rational) and power.exp.is_negative:
+        elif power.exp.is_Rational and power.exp.is_negative:
             # Things like 1/x
             return prettyForm("1") / self._print(C.Pow(power.base, -power.exp))
 

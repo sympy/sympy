@@ -62,11 +62,11 @@ class Sum2(_BigOperator):
         # Exploit the linearity of the sum
         if not f.has(i):
             return f*(b-a+1)
-        if isinstance(f, Mul):
+        if f.is_Mul:
             L, R = getab(f)
             if not L.has(i): return L*Sum2(R, (i, a, b))
             if not R.has(i): return R*Sum2(L, (i, a, b))
-        if isinstance(f, Add):
+        if f.is_Add:
             L, R = getab(f)
             lsum = Sum2(L, (i,a,b))
             rsum = Sum2(R, (i,a,b))
@@ -86,7 +86,7 @@ class Sum2(_BigOperator):
                 return s.expand()
 
         # Geometric terms
-        if isinstance(f, Pow):
+        if f.is_Pow:
             r, k = f.args[:]
             if not r.has(i) and k == i:
                 # TODO: Pow should be able to simplify x**oo depending
@@ -97,8 +97,7 @@ class Sum2(_BigOperator):
                     return (r**a - r**(b+1)) / (1-r)
 
         # Should nothing else works, use brute force if possible
-        if isinstance(a, Rational) and a.is_integer and \
-           isinstance(b, Rational) and b.is_integer:
+        if a.is_Integer and b.is_Integer:
             s = 0
             for j in range(a, b+1):
                 s += f.subs(i, j)
@@ -157,14 +156,14 @@ class Product(_BigOperator):
         if not f.has(i):
             return f**(b-a+1)
 
-        if isinstance(f, Mul):
+        if f.is_Mul:
             L, R = getab(f)
             lp = Product(L, (i, a, b))
             rp = Product(R, (i, a, b))
             if not (isinstance(lp, Product) and isinstance(rp, Product)):
                 return lp * rp
 
-        if isinstance(f, Pow):
+        if f.is_Pow:
             base, exp = f[:]
             if not base.has(i):
                 s = Sum(exp, (i, a, b))
@@ -191,7 +190,7 @@ class Product(_BigOperator):
 
         # Given a more complicated rational expression, try to factor
         # it into linear functions
-        if isinstance(f, Add):
+        if f.is_Add:
             try:
                 num, den = fraction(together(f))
                 g = factor(num) / factor(den)
@@ -202,8 +201,7 @@ class Product(_BigOperator):
                 pass
 
         # Brute force
-        if isinstance(a, Rational) and a.is_integer and \
-           isinstance(b, Rational) and b.is_integer:
+        if a.is_Integer and b.is_Integer:
             p = 1
             for j in range(a, b+1):
                 p *= f.subs(i, j)

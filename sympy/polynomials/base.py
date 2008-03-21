@@ -806,12 +806,12 @@ def sympy2coefficients(sympy_expr, var, order):
     """
 
     result_dict = {}
-    if isinstance(sympy_expr, Add):
+    if sympy_expr.is_Add:
         terms = sympy_expr.args[:]
     else:
         terms = [sympy_expr]
     for term in terms:
-        if isinstance(term, Mul):
+        if term.is_Mul:
             factors = term.args[:]
         else:
             factors = [term]

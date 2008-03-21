@@ -76,7 +76,7 @@ class fibonacci(Function):
 
     @classmethod
     def canonize(cls, n, sym=None):
-        if isinstance(n, Integer):
+        if n.is_Integer:
             n = int(n)
             if n < 0:
                 return S.NegativeOne**(n+1) * fibonacci(-n)
@@ -118,7 +118,7 @@ class lucas(Function):
 
     @classmethod
     def canonize(cls, n):
-        if isinstance(n, Integer):
+        if n.is_Integer:
             return fibonacci(n+1) + fibonacci(n-1)
 
 
@@ -224,8 +224,8 @@ class bernoulli(Function):
 
     @classmethod
     def canonize(cls, n, sym=None):
-        if isinstance(n, C.Number):
-            if isinstance(n, Integer) and n.is_nonnegative:
+        if n.is_Number:
+            if n.is_Integer and n.is_nonnegative:
                 if n is S.Zero:
                     return S.One
                 elif n is S.One:
@@ -344,7 +344,7 @@ class bell(Function):
 
     @classmethod
     def canonize(cls, n, sym=None):
-        if isinstance(n, Integer) and n.is_nonnegative:
+        if n.is_Integer and n.is_nonnegative:
             if sym is None:
                 return Integer(cls._bell(int(n)))
             else:
@@ -408,8 +408,7 @@ class harmonic(Function):
         if n == oo:
             from sympy.functions.special.zeta_functions import zeta
             return zeta(m)
-        if isinstance(n, Integer) and n.is_nonnegative and \
-            isinstance(m, Integer):
+        if n.is_Integer and n.is_nonnegative and m.is_Integer:
             if n == 0:
                 return S.Zero
             if not m in cls._functions:

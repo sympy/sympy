@@ -144,9 +144,9 @@ def roots(poly, x=None, domain=None, **kwargs):
     Zr, Qr, Rr, Ir, Cr = [], [], [], [], []
 
     for root in roots:
-        if isinstance(root, Integer):
+        if root.is_Integer:
             Zr.append(root)
-        elif isinstance(root, Rational):
+        elif root.is_Rational:
             Qr.append(root)
         elif root.is_real:
             Rr.append(root)

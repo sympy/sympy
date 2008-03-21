@@ -183,6 +183,20 @@ class Basic(AssumeMeths):
 
     __metaclass__ = BasicMeta
 
+    # To be overridden with True in the appropriate subclasses
+    is_Atom = False
+    is_Symbol = False
+    is_Function = False
+    is_Add = False
+    is_Mul = False
+    is_Pow = False
+    is_Number = False
+    is_Real = False
+    is_Rational = False
+    is_Integer = False
+    is_NumberSymbol = False
+    is_Order = False
+
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)
         obj.assume(**assumptions)
@@ -452,7 +466,7 @@ class Basic(AssumeMeths):
         result = set()
         if type is not None and not isinstance(type, (type_class, tuple)):
             type = sympify(type).__class__
-        if isinstance(self, Atom):
+        if self.is_Atom:
             if type is None or isinstance(self, type):
                 result.add(self)
         else:
@@ -469,6 +483,18 @@ class Basic(AssumeMeths):
         """Returns True if self is a number (like 1, or 1+log(2)), and False
         otherwise (e.g. 1+x)."""
         return len(self.atoms(Symbol)) == 0
+
+    @property
+    def func(self):
+        """
+        The top-level function in an expression.
+
+        The following should hold for all objects:
+
+            x = x.func(*x.args)
+
+        """
+        return self.__class__
 
     @property
     def args(self):
@@ -634,7 +660,7 @@ class Basic(AssumeMeths):
             return True
         else:
             def search(expr):
-                if isinstance(expr, Symbol):
+                if expr.is_Symbol:
                     return expr in syms
                 else:
                     for term in expr.args:
@@ -665,7 +691,7 @@ class Basic(AssumeMeths):
             return True
         else:
             def search(expr):
-                if isinstance(expr, Symbol):
+                if expr.is_Symbol:
                     if expr in syms:
                         syms.remove(expr)
                 else:
@@ -691,7 +717,7 @@ class Basic(AssumeMeths):
         elif not patterns:
             raise TypeError("has() requires at least 1 argument (got none)")
         p = sympify(patterns[0])
-        if isinstance(p, Symbol) and not isinstance(p, Wild): # speeds up
+        if p.is_Symbol and not isinstance(p, Wild): # speeds up
             return p in self.atoms(p.__class__)
         if isinstance(p, BasicType):
             #XXX hack, this is very fragile:
@@ -818,9 +844,9 @@ class Basic(AssumeMeths):
 
         # weed out negative one prefixes
         sign = 1
-        if isinstance(pattern,Mul) and pattern.args[0] == -1:
+        if pattern.is_Mul and pattern.args[0] == -1:
           pattern = -pattern; sign = -sign
-        if isinstance(expr, Mul) and expr.args[0] == -1:
+        if expr.is_Mul and expr.args[0] == -1:
           expr = -expr; sign = -sign
 
         if evaluate:
@@ -832,10 +858,10 @@ class Basic(AssumeMeths):
         expr = sympify(expr)
         if not isinstance(expr, pattern.__class__):
             # if we can omit the first factor, we can match it to sign * one
-            if isinstance(pattern, Mul) and Mul(*pattern.args[1:]) == expr:
+            if pattern.is_Mul and Mul(*pattern.args[1:]) == expr:
                return pattern.args[0].matches(Rational(sign), repl_dict, evaluate)
             # two-factor product: if the 2nd factor matches, the first part must be sign * one
-            if isinstance(pattern, Mul) and len(pattern.args[:]) == 2:
+            if pattern.is_Mul and len(pattern.args[:]) == 2:
                dd = pattern.args[1].matches(expr, repl_dict, evaluate)
                if dd == None: return None
                dd = pattern.args[0].matches(Rational(sign), dd, evaluate)
@@ -900,7 +926,7 @@ class Basic(AssumeMeths):
         with respect to all symbols, then return
         trivial solution (eqn, rhs).
         """
-        if isinstance(eqn, Symbol):
+        if eqn.is_Symbol:
             return (eqn, rhs)
         if symbols is None:
             symbols = eqn.atoms(type=Symbol)
@@ -986,7 +1012,7 @@ class Basic(AssumeMeths):
             return None
 
     def _eval_expand_power(self, *args):
-        if isinstance(self, Atom):
+        if self.is_Atom:
             return self
         if not isinstance(self, C.Apply):   # FIXME Apply -> Function
             sargs = self[:]
@@ -996,21 +1022,21 @@ class Basic(AssumeMeths):
         return self.__class__(*terms, **self._assumptions)
 
     def _eval_expand_complex(self, *args):
-        if isinstance(self, Atom):
+        if self.is_Atom:
             return self
         sargs = self.args[:]
         terms = [ term._eval_expand_complex(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
     def _eval_expand_trig(self, *args):
-        if isinstance(self, Atom):
+        if self.is_Atom:
             return self
         sargs = self.args[:]
         terms = [ term._eval_expand_trig(*args) for term in sargs ]
         return self.__class__(*terms, **self._assumptions)
 
     def _eval_expand_func(self, *args):
-        if isinstance(self, Atom):
+        if self.is_Atom:
             return self
         sargs = self.args
         terms = [ term._eval_expand_func(*args) for term in sargs ]
@@ -1045,7 +1071,7 @@ class Basic(AssumeMeths):
                     expr = func()
 
         if not hints.has_key('basic'):
-            if not isinstance(expr, Atom):
+            if not expr.is_Atom:
                 result = expr._eval_expand_basic()
 
                 if result is not None:
@@ -1054,7 +1080,7 @@ class Basic(AssumeMeths):
         return expr
 
     def _eval_rewrite(self, pattern, rule, **hints):
-        if isinstance(self, Atom):
+        if self.is_Atom:
             return self
         sargs = self.args
         terms = [ t._eval_rewrite(pattern, rule, **hints) for t in sargs ]
@@ -1083,7 +1109,7 @@ class Basic(AssumeMeths):
            -1/2*I*(-exp(-I*x) + exp(I*x))
 
         """
-        if isinstance(self, Atom) or not args:
+        if self.is_Atom or not args:
             return self
         else:
             pattern, rule = args[:-1], args[-1]
@@ -1139,7 +1165,7 @@ class Basic(AssumeMeths):
            >>> (2*I).as_coefficient(pi*I)
 
         """
-        if isinstance(expr, Add):
+        if expr.is_Add:
             return None
         else:
             w = Wild('w')
@@ -1147,7 +1173,7 @@ class Basic(AssumeMeths):
             coeff = self.match(w * expr)
 
             if coeff is not None:
-                if isinstance(expr, Mul):
+                if expr.is_Mul:
                     expr = expr.args
                 else:
                     expr = [expr]
@@ -1185,7 +1211,7 @@ class Basic(AssumeMeths):
         """
         indeps, depend = [], []
 
-        if isinstance(self, (Add, Mul)):
+        if self.is_Add or self.is_Mul:
             for term in self.args[:]:
                 if term.has(*deps):
                     depend.append(term)
@@ -1225,7 +1251,7 @@ class Basic(AssumeMeths):
         """
         expr = self.expand(complex=True)
 
-        if not isinstance(expr, Add):
+        if not expr.is_Add:
             expr = [expr]
 
         re_part, im_part = [], []
@@ -1288,13 +1314,13 @@ class Basic(AssumeMeths):
         """
         l1 = []
         l2 = []
-        if isinstance(self, Add):
+        if self.is_Add:
             for f in self:
                 if isinstance(f, C.Order):
                     l2.append(f)
                 else:
                     l1.append(f)
-        elif isinstance(self, C.Order):
+        elif self.is_Order:
             l2.append(self)
         else:
             l1.append(self)
@@ -1314,11 +1340,11 @@ class Basic(AssumeMeths):
         new_symbols = []
         for s in symbols:
             s = sympify(s)
-            if isinstance(s, Integer) and new_symbols:
+            if s.is_Integer and new_symbols:
                 last_s = new_symbols.pop()
                 i = int(s)
                 new_symbols += [last_s] * i
-            elif isinstance(s, Symbol):
+            elif s.is_Symbol:
                 new_symbols.append(s)
             else:
                 raise TypeError(".diff() argument must be Symbol|Integer instance (got %s)" % (s.__class__.__name__))
@@ -1335,11 +1361,11 @@ class Basic(AssumeMeths):
         new_symbols = []
         for s in symbols:
             s = sympify(s)
-            if isinstance(s, Integer) and new_symbols:
+            if s.is_Integer and new_symbols:
                 last_s = new_symbols[-1]
                 i = int(s)
                 new_symbols += [last_s] * (i-1)
-            elif isinstance(s, (Symbol, Equality)):
+            elif s.is_Symbol or isinstance(s, Equality):
                 new_symbols.append(s)
             else:
                 raise TypeError(".integral() argument must be Symbol|Integer|Equality instance (got %s)" % (s.__class__.__name__))
@@ -1358,7 +1384,7 @@ class Basic(AssumeMeths):
     def __float__(self):
         result = self.evalf(precision=16)
 
-        if isinstance(result, Number):
+        if result.is_Number:
             return float(result)
         else:
             raise ValueError("Symbolic value, can't compute")
@@ -1510,7 +1536,7 @@ class Basic(AssumeMeths):
         elif not symbols:
             return self
         x = sympify(symbols[0])
-        assert isinstance(x, Symbol),`x`
+        assert x.is_Symbol, `x`
         if not self.has(x):
             return self
         expr = self.expand(trig=True)
@@ -1552,6 +1578,8 @@ class Basic(AssumeMeths):
     ##########################################################################
 
 class Atom(Basic):
+
+    is_Atom = True
 
     precedence = Basic.Atom_precedence
 

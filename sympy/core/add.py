@@ -13,6 +13,8 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
     precedence = Basic.Add_precedence
 
+    is_Add = True
+
     @classmethod
     def flatten(cls, seq):
         """ 
@@ -33,12 +35,12 @@ class Add(AssocOp, RelMeths, ArithMeths):
         order_factors = []
         while seq:
             o = seq.pop(0)
-            #if isinstance(o, Function):
+            #if o.is_Function:
             #    if o.nargs is not None:
             #        o, lambda_args = o.with_dummy_arguments(lambda_args)
 
             # O(x)
-            if isinstance(o, C.Order):
+            if o.is_Order:
                 for o1 in order_factors:
                     if o1.contains(o):
                         o = None
@@ -49,21 +51,21 @@ class Add(AssocOp, RelMeths, ArithMeths):
                 continue
 
             # 3
-            if isinstance(o, Number):
+            if o.is_Number:
                 coeff += o
                 continue
 
             # Add([...])
-            if o.__class__ is cls:
+            if o.is_Add:
                 seq = list(o.args) + seq
                 continue
 
             # Mul([...])
-            if isinstance(o, Mul):
+            if o.is_Mul:
                 c = o.args[0]
 
                 # 3*...
-                if isinstance(c, Number):
+                if c.is_Number:
                     if c is S.One:
                         s = o
                     else:
@@ -170,7 +172,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
                     l1.append(f)
             return Add(*l1), tuple(l2)
         coeff = self.args[0]
-        if isinstance(coeff, Number):
+        if coeff.is_Number:
             return coeff, self.args[1:]
         return S.Zero, self.args
 
@@ -209,7 +211,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
             return d[self]
         coeff, factors = self.as_coeff_factors()
         r = self.__class__(*[t._calc_splitter(d) for t in factors])
-        if isinstance(r,Add) and 0:
+        if r.is_Add and 0:
             for e,t in d.items():
                 w = Wild('w')
                 d1 = r.match(e+w)
@@ -301,7 +303,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
     def as_coeff_terms(self, x=None):
         # -2 + 2 * a -> -1, 2-2*a
-        if isinstance(self.args[0], Number) and self.args[0].is_negative:
+        if self.args[0].is_Number and self.args[0].is_negative:
             return -S.One,(-self,)
         return S.One,(self,)
 
@@ -313,7 +315,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         coeff2,factors2 = old.as_coeff_factors()
         if factors1==factors2: # (2+a).subs(3+a,y) -> 2-3+y
             return new + coeff1 - coeff2
-        if isinstance(old, Add):
+        if old.is_Add:
             l1,l2 = len(factors1),len(factors2)
             if l2<l1: # (a+b+c+d).subs(b+c,x) -> a+x+d
                 for i in xrange(l1-l2+1):
@@ -358,7 +360,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         while s is S.Zero:
             o *= x
             s = self.oseries(o)
-        if isinstance(s, Add):
+        if s.is_Add:
             lst = s.extract_leading_order(x)
             return Add(*[e for (e,f) in lst])
         return s.as_leading_term(x)

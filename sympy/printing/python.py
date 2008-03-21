@@ -39,14 +39,11 @@ class PythonPrinter(Printer):
             self._print(term)
 
     def _print_Pow(self, expr):
-        if isinstance(expr.exp, C.Rational) and expr.exp.q == 2:
+        if expr.exp.is_Rational and expr.exp.q == 2:
             self._print(expr.base)
         else:
-            if isinstance(expr.base, C.Function) \
-              or isinstance(expr.base, C.Symbol):
+            if expr.base.is_Function or expr.base.is_Symbol:
                 self._print(expr.base)
-            if isinstance(expr.base, C.Function) \
-              or isinstance(expr.base, C.Symbol):
                 self._print(expr.exp)
 
     def _print_Rational(self, expr):

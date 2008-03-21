@@ -12,6 +12,8 @@ from symbol import Symbol, Wild
 
 class Mul(AssocOp, RelMeths, ArithMeths):
 
+    is_Mul = True
+
     @classmethod
     def flatten(cls, seq):
         # apply associativity, separate commutative part of seq
@@ -34,31 +36,31 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 if isinstance(o, FunctionClass):
                     if o.nargs is not None:
                         o, lambda_args = o.with_dummy_arguments(lambda_args)
-                if isinstance(o, C.Order):
+                if o.is_Order:
                     o, order_symbols = o.as_expr_symbols(order_symbols)
-                if o.__class__ is cls:
+                if o.is_Mul:
                     # associativity
                     c_seq = list(o.args[:]) + c_seq
                     continue
-                if isinstance(o, Number):
+                if o.is_Number:
                     coeff *= o
                     continue
-                if isinstance(o, Pow):
+                if o.is_Pow:
                     base, exponent = o.as_base_exp()
-                    if isinstance(base, Number):
+                    if base.is_Number:
                         if base in exp_dict:
                             exp_dict[base] += exponent
                         else:
                             exp_dict[base] = exponent
                         continue
 
-                if isinstance(o, C.exp):
+                if o.func is C.exp:
                     # exp(x) / exp(y) -> exp(x-y)
                     b = S.Exp1
                     e = o.args[0]
                 else:
                     b, e = o.as_base_exp()
-                if isinstance(b, Add) and isinstance(e, Number):
+                if b.is_Add and e.is_Number:
                     c, t = b.as_coeff_terms()
                     if c is not S.One:
                         coeff *= c ** e
@@ -76,7 +78,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 elif isinstance(o, FunctionClass):
                     if o.nargs is not None:
                         o, lambda_args = o.with_dummy_arguments(lambda_args)
-                elif isinstance(o, C.Order):
+                elif o.is_Order:
                     o, order_symbols = o.as_expr_symbols(order_symbols)
 
                 if o.is_commutative:
@@ -105,11 +107,11 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 continue
 
             if e is S.One:
-                if isinstance(b, Number):
+                if b.is_Number:
                     coeff *= b
                 else:
                     c_part.append(b)
-            elif isinstance(e, Integer) and isinstance(b, Number):
+            elif e.is_Integer and b.is_Number:
                 coeff *= b ** e
             else:
                 c_part.append(Pow(b, e))
@@ -125,15 +127,15 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 continue
 
             if e is S.One:
-                if isinstance(b, Number):
+                if b.is_Number:
                     coeff *= b
                 else:
                     c_part.append(b)
-            elif isinstance(e, Integer) and isinstance(b, Number):
+            elif e.is_Integer and b.is_Number:
                 coeff *= b ** e
             else:
                 obj = b**e
-                if isinstance(obj, Number):
+                if obj.is_Number:
                     coeff *= obj
                 else:
                     c_part.append(obj)
@@ -161,7 +163,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             c_part.insert(0, coeff)
         elif (coeff is S.Zero) or (coeff is S.NaN):
             c_part, nc_part = [coeff], []
-        elif isinstance(coeff, Real):
+        elif coeff.is_Real:
             if coeff == Real(0):
                 c_part, nc_part = [coeff], []
             elif coeff != Real(1):
@@ -170,16 +172,16 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             c_part.insert(0, coeff)
 
         c_part.sort(Basic.compare)
-        if len(c_part)==2 and isinstance(c_part[0], Number) and isinstance(c_part[1], Add):
+        if len(c_part)==2 and c_part[0].is_Number and c_part[1].is_Add:
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
         return c_part, nc_part, lambda_args, order_symbols
 
     def _eval_power(b, e):
-        if isinstance(e, Number):
+        if e.is_Number:
             if b.is_commutative:
-                if isinstance(e, Integer):
+                if e.is_Integer:
                     # (a*b)**2 -> a**2 * b**2
                     return Mul(*[s**e for s in b.args])
 
@@ -197,7 +199,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 if coeff is not S.One:
                     # (2*a)**3 -> 2**3 * a**3
                     return coeff**e * Mul(*[s**e for s in rest])
-            elif isinstance(e, Integer):
+            elif e.is_Integer:
                 coeff, rest = b.as_coeff_terms()
                 l = [s**e for s in rest]
                 if e.is_negative:
@@ -205,7 +207,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 return coeff**e * Mul(*l)
 
         c,t = b.as_coeff_terms()
-        if e.is_even and isinstance(c, Number) and c < 0:
+        if e.is_even and c.is_Number and c < 0:
             return (-c * Mul(*t)) ** e
 
         #if e.atoms(Wild):
@@ -277,7 +279,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     l1.append(f)
             return Mul(*l1), tuple(l2)
         coeff = self.args[0]
-        if isinstance(coeff, Number):
+        if coeff.is_Number:
             return coeff, self.args[1:]
         return S.One, self.args
 
@@ -303,7 +305,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             for b in right:
                 terms.append(Mul(a,b).expand())
             added = Add(*terms)
-            if isinstance(added, Add):
+            if added.is_Add:
                 terms = list(added.args)
             else:
                 terms = [added]
@@ -318,7 +320,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             if terms is not None:
                 factor = terms
 
-            if isinstance(factor, Add):
+            if factor.is_Add:
                 sums.append(factor)
                 rewrite = True
             else:

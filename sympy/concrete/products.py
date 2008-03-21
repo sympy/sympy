@@ -15,7 +15,7 @@ class Product(Basic, NoRelMeths, ArithMeths):
     def __new__(cls, term, *symbols, **assumptions):
         term = sympify(term)
 
-        if isinstance(term, C.Number):
+        if term.is_Number:
             if term is S.NaN:
                 return S.NaN
             elif term is S.Infinity:
@@ -109,14 +109,14 @@ class Product(Basic, NoRelMeths, ArithMeths):
                 B = Product(quo(poly, Q, k), (k, a, n))
 
             return C_**(n-a+1) * A * B
-        elif isinstance(term, C.Add):
+        elif term.is_Add:
             p, q = term.as_numer_denom()
 
             p = self._eval_product(p)
             q = self._eval_product(q)
 
             return p / q
-        elif isinstance(term, C.Mul):
+        elif term.is_Mul:
             exclude, include = [], []
 
             for t in term.args:
@@ -132,7 +132,7 @@ class Product(Basic, NoRelMeths, ArithMeths):
             else:
                 A, B = Mul(*exclude), Mul(*include)
                 return A * Product(B, (k, a, n))
-        elif isinstance(term, C.Pow):
+        elif term.is_Pow:
             if not term.base.has(k):
                 s = sum(term.exp, (k, a, n))
 

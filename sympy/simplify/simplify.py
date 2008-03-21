@@ -63,34 +63,34 @@ def fraction(expr, exact=False):
     numer, denom = [], []
 
     for term in make_list(expr, Mul):
-        if isinstance(term, Pow):
+        if term.is_Pow:
             if term.exp.is_negative:
                 if term.exp is S.NegativeOne:
                     denom.append(term.base)
                 else:
                     denom.append(Pow(term.base, -term.exp))
-            elif not exact and isinstance(term.exp, Mul):
+            elif not exact and term.exp.is_Mul:
                 coeff, tail = term.exp.args[0], Mul(*term.exp.args[1:])#term.exp.getab()
 
-                if isinstance(coeff, Rational) and coeff.is_negative:
+                if coeff.is_Rational and coeff.is_negative:
                     denom.append(Pow(term.base, -term.exp))
                 else:
                     numer.append(term)
             else:
                 numer.append(term)
-        elif isinstance(term, C.exp):
+        elif term.func is C.exp:
             if term.args[0].is_negative:
                 denom.append(C.exp(-term.args[0]))
-            elif not exact and isinstance(term.args[0], Mul):
+            elif not exact and term.args[0].is_Mul:
                 coeff, tail = term.args[0], Mul(*term.args[1:])#term.args.getab()
 
-                if isinstance(coeff, Rational) and coeff.is_negative:
+                if coeff.is_Rational and coeff.is_negative:
                     denom.append(C.exp(-term.args[0]))
                 else:
                     numer.append(term)
             else:
                 numer.append(term)
-        elif isinstance(term, Rational):
+        elif term.is_Rational:
             if term.is_integer:
                 numer.append(term)
             else:
@@ -154,23 +154,23 @@ def separate(expr, deep=False):
     """
     expr = sympify(expr)
 
-    if isinstance(expr, C.Pow):
+    if expr.is_Pow:
         terms, expo = [], separate(expr.exp, deep)
         #print expr, terms, expo, expr.base
 
-        if isinstance(expr.base, Mul):
+        if expr.base.is_Mul:
             t = [ separate(C.Pow(t,expo), deep) for t in expr.base.args ]
             return C.Mul(*t)
-        elif isinstance(expr.base, C.exp):
+        elif expr.base.func is C.exp:
             if deep == True:
                 return C.exp(separate(expr.base[0], deep)*expo)
             else:
                 return C.exp(expr.base[0]*expo)
         else:
             return C.Pow(separate(expr.base, deep), expo)
-    elif isinstance(expr, (C.Add, C.Mul)):
+    elif expr.is_Add or expr.is_Mul:
         return type(expr)(*[ separate(t, deep) for t in expr.args ])
-    elif isinstance(expr, C.Function) and deep:
+    elif expr.is_Function and deep:
         return expr.func(*[ separate(t) for t in expr.args])
     else:
         return expr
@@ -232,7 +232,7 @@ def together(expr, deep=False):
 
         from sympy.core.function import Function
 
-        if isinstance(expr, Add):
+        if expr.is_Add:
             items, coeffs, basis = [], [], {}
 
             for elem in expr.args:
@@ -245,25 +245,25 @@ def together(expr, deep=False):
                     coeff = S.One
 
 
-                    if isinstance(term, Pow):
-                        if isinstance(term.exp, Rational):
+                    if term.is_Pow:
+                        if term.exp.is_Rational:
                             term, expo = term.base, term.exp
-                        elif isinstance(term.exp, Mul):
+                        elif term.exp.is_Mul:
                             coeff, tail = term.exp.as_coeff_terms()
-                            if isinstance(coeff, Rational):
+                            if coeff.is_Rational:
                                 tail = C.Mul(*tail)
                                 term, expo = Pow(term.base, tail), coeff
                         coeff = S.One
-                    elif isinstance(term, C.exp):
-                        if isinstance(term[0], Rational):
+                    elif term.func is C.exp:
+                        if term[0].is_Rational:
                             term, expo = C.E, term[0]
-                        elif isinstance(term[0], Mul):
+                        elif term[0].is_Mul:
                             coeff, tail = term[0].as_coeff_terms()
-                            if isinstance(coeff, Rational):
+                            if coeff.is_Rational:
                                 tail = C.Mul(*tail)
                                 term, expo = C.exp(tail), coeff
                         coeff = S.One
-                    elif isinstance(term, Rational):
+                    elif term.is_Rational:
                         coeff = Integer(term.q)
                         term = Integer(term.p)
 
@@ -290,7 +290,7 @@ def together(expr, deep=False):
             for (term, (total, maxi)) in basis.iteritems():
                 basis[term] = (total, total-maxi)
 
-                if isinstance(term, C.exp):
+                if term.func is C.exp:
                     denominator.append(C.exp(maxi*term[:]))
                 else:
                     if maxi is S.One:
@@ -320,7 +320,7 @@ def together(expr, deep=False):
                     else:
                         expo = total-sub
 
-                    if isinstance(term, C.exp):
+                    if term.func is C.exp:
                         expr.append(C.exp(expo*term[:]))
                     else:
                         if expo is S.One:
@@ -331,9 +331,9 @@ def together(expr, deep=False):
                 numerator.append(coeff*Mul(*([numer] + expr)))
 
             return Add(*numerator)/(product*Mul(*denominator))
-        elif isinstance(expr, (Mul, Pow)):
+        elif expr.is_Mul or expr.is_Pow:
             return type(expr)(*[ _together(t) for t in expr.args ])
-        elif isinstance(expr, Function) and deep:
+        elif expr.is_Function and deep:
             return expr.func(*[ _together(t) for t in expr.args ])
         else:
             return expr
@@ -491,30 +491,30 @@ def collect(expr, syms, evaluate=True, exact=False):
         rat_expo, sym_expo = S.One, None
         sexpr, deriv = expr, None
 
-        if isinstance(expr, Pow):
+        if expr.is_Pow:
             if isinstance(expr.base, Derivative):
                 sexpr, deriv = parse_derivative(expr.base)
             else:
                 sexpr = expr.base
 
-            if isinstance(expr.exp, Rational):
+            if expr.exp.is_Rational:
                 rat_expo = expr.exp
-            elif isinstance(expr.exp, Mul):
+            elif expr.exp.is_Mul:
                 coeff, tail = term.exp.as_coeff_terms()
 
-                if isinstance(coeff, Rational):
+                if coeff.is_Rational:
                     rat_expo, sym_expo = coeff, C.Mul(*tail)
                 else:
                     sym_expo = expr.exp
             else:
                 sym_expo = expr.exp
-        elif isinstance(expr, C.exp):
-            if isinstance(expr.args[0], Rational):
+        elif expr.func is C.exp:
+            if expr.args[0].is_Rational:
                 sexpr, rat_expo = S.Exp1, expr[0]
-            elif isinstance(expr.args[0], Mul):
+            elif expr.args[0].is_Mul:
                 coeff, tail = expr.args[0].as_coeff_terms()
 
-                if isinstance(coeff, Rational):
+                if coeff.is_Rational:
                     sexpr, rat_expo = C.exp(C.Mul(*tail)), coeff
         elif isinstance(expr, Derivative):
             sexpr, deriv = parse_derivative(expr)
@@ -575,12 +575,12 @@ def collect(expr, syms, evaluate=True, exact=False):
             return terms, elems, common_expo, has_deriv
 
     if evaluate:
-        if isinstance(expr, C.Mul):
+        if expr.is_Mul:
             ret = 1
             for term in expr.args:
                 ret *= collect(term, syms, True, exact)
             return ret
-        elif isinstance(expr, C.Pow):
+        elif expr.is_Pow:
             b = collect(expr.base, syms, True, exact)
             return C.Pow(b, expr.exp)
 
@@ -648,20 +648,20 @@ def ratsimp(expr):
         >>> y = Symbol('y')
         >>> e = ratsimp(1/x + 1/y)
     """
-
-    if isinstance(expr, Pow):
+    expr = sympify(expr)
+    if expr.is_Pow:
         return Pow(ratsimp(expr.base), ratsimp(expr.exp))
-    elif isinstance(expr, Mul):
+    elif expr.is_Mul:
         res = []
         for x in expr.args:
             res.append( ratsimp(x) )
         return Mul(*res)
-    elif isinstance(expr, C.Function):
+    elif expr.is_Function:
         return expr.func(*[ ratsimp(t) for t in expr.args ])
 
-    #elif isinstance(expr, Function):
+    #elif expr.is_Function:
     #    return type(expr)( ratsimp(expr[0]) )
-    elif not isinstance(expr, Add):
+    elif not expr.is_Add:
         return expr
 
     def get_num_denum(x):
@@ -670,7 +670,7 @@ def ratsimp(expr):
         r = x.match(a/b)
         if r is not None and len(r) == 2:
             return r[a],r[b]
-        return x, 1
+        return x, S.One
 
     x = expr.args[0]
     y = Add(*expr.args[1:])
@@ -689,7 +689,7 @@ def ratsimp(expr):
     #but SymPy doesn't yet have a multivariate polynomial factorisation
     #so until we have it, we are just returning the correct results here
     #to pass all tests...
-    if isinstance(denum,Pow):
+    if denum.is_Pow:
         e = (num/denum.args[0]).expand()
         f = (e/(-2*Symbol("y"))).expand()
         if f == denum/denum.args[0]:
@@ -727,17 +727,17 @@ def trigsimp(expr, deep=False):
     if expr == 1/cos(Symbol("x"))**2 - 1:
         return tan(Symbol("x"))**2
 
-    if isinstance(expr, C.Function):
+    if expr.is_Function:
         if deep:
             return expr.func( trigsimp(expr.args[0], deep) )
-    elif isinstance(expr, Mul):
+    elif expr.is_Mul:
         ret = S.One
         for x in expr.args:
             ret *= trigsimp(x, deep)
         return ret
-    elif isinstance(expr, Pow):
+    elif expr.is_Pow:
         return Pow(trigsimp(expr.base, deep), trigsimp(expr.exp, deep))
-    elif isinstance(expr, Add):
+    elif expr.is_Add:
         # TODO this needs to be faster
 
         # The types of trig functions we are looking for
@@ -846,15 +846,15 @@ def powsimp(expr, deep=False):
         log(n**(1 - n))
     """
     def _powsimp(expr):
-        if isinstance(expr, C.Pow):
+        if expr.is_Pow:
             if deep:
                 return C.Pow(powsimp(expr.base), powsimp(expr.exp))
             return expr
-        elif isinstance(expr, C.Function) and deep:
+        elif expr.is_Function and deep:
             return expr.func(*[powsimp(t) for t in expr.args])
-        elif isinstance(expr, C.Add):
+        elif expr.is_Add:
             return C.Add(*[powsimp(t) for t in expr.args])
-        elif isinstance(expr, C.Mul):
+        elif expr.is_Mul:
             # Collect base/exp data, while maintaining order in the
             # non-commutative parts of the product
             c_powers = {}

@@ -37,28 +37,26 @@ class floor(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_integer:
             return arg
-        elif isinstance(arg, C.Number):
+        elif arg.is_Number:
             if arg is S.Infinity:
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.NegativeInfinity
             elif arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, C.Integer):
+            elif arg.is_Integer:
                 return arg
-            elif isinstance(arg, C.Rational):
+            elif arg.is_Rational:
                 return C.Integer(arg.p // arg.q)
-            elif isinstance(arg, C.Real):
+            elif arg.is_Real:
                 return C.Integer(int(arg.floor()))
-        elif isinstance(arg, C.NumberSymbol):
+        elif arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[0]
         elif arg is S.ImaginaryUnit:
             return S.ImaginaryUnit
-        elif isinstance(arg, C.Add):
+        elif arg.is_Add:
             included, excluded = [], []
 
             for term in arg.args:
@@ -127,28 +125,26 @@ class ceiling(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_integer:
             return arg
-        elif isinstance(arg, C.Number):
+        elif arg.is_Number:
             if arg is S.Infinity:
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.NegativeInfinity
             elif arg is S.NaN:
                 return S.NaN
-            elif isinstance(arg, C.Integer):
+            elif arg.is_Integer:
                 return arg
-            elif isinstance(arg, C.Rational):
+            elif arg.is_Rational:
                 return C.Integer(arg.p // arg.q + 1)
-            elif isinstance(arg, C.Real):
+            elif arg.is_Real:
                 return C.Integer(int(arg.ceiling()))
-        elif isinstance(arg, C.NumberSymbol):
+        elif arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[1]
         elif arg is S.ImaginaryUnit:
             return S.ImaginaryUnit
-        elif isinstance(arg, C.Add):
+        elif arg.is_Add:
             included, excluded = [], []
 
             for term in arg.args:

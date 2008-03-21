@@ -27,9 +27,7 @@ class sin(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = sympify(arg)
-
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Zero:
@@ -47,7 +45,7 @@ class sin(Function):
                 if pi_coeff is not None:
                     if pi_coeff.is_integer:
                         return S.Zero
-                    elif isinstance(pi_coeff, C.Rational):
+                    elif pi_coeff.is_Rational:
                         cst_table = {
                             2 : S.One,
                             3 : S.Half*sqrt(3),
@@ -112,12 +110,12 @@ class sin(Function):
     def _eval_expand_trig(self, *args):
         arg = self.args[0].expand()
         x = None
-        if isinstance(arg, C.Add):
+        if arg.is_Add:
             x = arg.args[0]
             y = C.Add(*arg.args[1:])
         else:
             coeff, terms = arg.as_coeff_terms()
-            if not (coeff is S.One) and isinstance(coeff, C.Integer) and terms:
+            if not (coeff is S.One) and coeff.is_Integer and terms:
                 x = C.Mul(*terms)
                 y = (coeff-1)*x
         if x is not None:
@@ -163,9 +161,7 @@ class cos(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = sympify(arg)
-
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Zero:
@@ -181,7 +177,7 @@ class cos(Function):
                 pi_coeff = arg.as_coefficient(S.Pi)
 
                 if pi_coeff is not None:
-                    if isinstance(pi_coeff, C.Rational):
+                    if pi_coeff.is_Rational:
                         cst_table = {
                             1 : S.One,
                             2 : S.Zero,
@@ -248,13 +244,13 @@ class cos(Function):
     def _eval_expand_trig(self, *args):
         arg = self.args[0].expand()
         x = None
-        if isinstance(arg, C.Add):
+        if arg.is_Add:
             x = arg.args[0]
             y = C.Add(*arg.args[1:])
             return (cos(x)*cos(y) - sin(y)*sin(x)).expand(trig=True)
         else:
             coeff, terms = arg.as_coeff_terms()
-            if not (coeff is S.One) and isinstance(coeff, C.Integer) and terms:
+            if not (coeff is S.One) and coeff.is_Integer and terms:
                 x = C.Mul(*terms)
                 return C.chebyshevt(coeff, cos(x))
         return cos(arg)
@@ -299,9 +295,7 @@ class tan(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = sympify(arg)
-
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Zero:
@@ -319,7 +313,7 @@ class tan(Function):
                 if pi_coeff is not None:
                     if pi_coeff.is_integer:
                         return S.Zero
-                    elif isinstance(pi_coeff, C.Rational):
+                    elif pi_coeff.is_Rational:
                         cst_table = {
                            #2 : S.ComplexInfinity,
                             3 : sqrt(3),
@@ -422,9 +416,7 @@ class cot(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = sympify(arg)
-
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             #elif arg is S.Zero:
@@ -442,7 +434,7 @@ class cot(Function):
                 if pi_coeff is not None:
                     #if pi_coeff.is_integer:
                     #    return S.ComplexInfinity
-                    if isinstance(pi_coeff, C.Rational):
+                    if pi_coeff.is_Rational:
                         cst_table = {
                             2 : S.Zero,
                             3 : 1 / sqrt(3),
@@ -538,9 +530,7 @@ class asin(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = sympify(arg)
-
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -610,7 +600,7 @@ class asin(Function):
             return self.func(arg)
 
     def _eval_is_real(self):
-	return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
+        return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
 
 class acos(Function):
 
@@ -628,9 +618,7 @@ class acos(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = sympify(arg)
-
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -690,7 +678,7 @@ class acos(Function):
             return self.func(arg)
 
     def _eval_is_real(self):
-	return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
+        return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
 
 class atan(Function):
 
@@ -708,9 +696,7 @@ class atan(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = sympify(arg)
-
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -783,9 +769,7 @@ class acot(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = sympify(arg)
-
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -859,7 +843,6 @@ class atan2(Function):
     
     @classmethod
     def canonize(cls, y, x):
-        x, y = sympify(x), sympify(y)
         sign_y = C.sign(y)
 
         if y.is_zero:
@@ -870,11 +853,11 @@ class atan2(Function):
             elif x.is_negative:
                 return S.Pi
         elif x.is_zero:
-            if isinstance(sign_y, C.Number):
+            if sign_y.is_Number:
                 return sign_y * S.Pi/2
         else:
             abs_yx = C.abs(y/x)
-            if isinstance(sign_y, C.Number) and abs_yx.is_number: 
+            if sign_y.is_Number and abs_yx.is_number: 
                 phi = C.atan(abs_yx)
                 if x.is_positive:
                     return sign_y * phi

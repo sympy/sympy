@@ -80,7 +80,7 @@ def test_Real():
 
 def test_Real_eval():
     a = Real(3.2)
-    assert isinstance(a**2, Real)
+    assert (a**2).is_Real
 
 def test_Infinity():
     assert oo == oo

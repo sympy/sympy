@@ -48,7 +48,7 @@ def cancel(f, *syms, **flags):
 
     if syms and not f.has(*syms):
         return f
-    elif isinstance(f, Add):
+    elif f.is_Add:
         return Add(*[ cancel(g, *syms, **flags) for g in f.args ])
     elif isinstance(f, Relational):
         return Relational(cancel(f.lhs, *syms, **flags),
@@ -116,14 +116,14 @@ def trim(f, *syms, **flags):
         recursive = flags.get('recursive', True)
 
         def is_functional(g):
-            return not (isinstance(g, Atom) or g.is_number) \
+            return not (g.is_Atom or g.is_number) \
                 and (not syms or g.has(*syms))
 
         def components(g):
             result = set()
 
             if is_functional(g):
-                if isinstance(g, (Add, Mul)):
+                if g.is_Add or g.is_Mul:
                     args = []
 
                     for h in g.args:
@@ -133,14 +133,14 @@ def trim(f, *syms, **flags):
                         args.append(h)
 
                     g = g.__class__(*args)
-                elif isinstance(g, Pow):
+                elif g.is_Pow:
                     if recursive:
                         base = trim(g.base, *syms, **flags)
                     else:
                         base = g.base
 
-                    if isinstance(g.exp, Rational):
-                        if isinstance(g.exp, Integer):
+                    if g.exp.is_Rational:
+                        if g.exp.is_Integer:
                             if g.exp is S.NegativeOne:
                                 h, terms = components(base)
                                 return h**S.NegativeOne, terms
@@ -210,12 +210,12 @@ def trim(f, *syms, **flags):
 
                 P, Q = H.as_numer_denom()
 
-                if isinstance(P, Add):
+                if P.is_Add:
                     GP, P = extract(P)
                 else:
                     GP = S.One
 
-                if isinstance(Q, Add):
+                if Q.is_Add:
                     GQ, Q = extract(Q)
                 else:
                     GQ = S.One
@@ -260,7 +260,7 @@ def apart(f, z, **flags):
     """
     f = sympify(f)
 
-    if isinstance(f, Add):
+    if f.is_Add:
         return Add(*[ apart(g, z, **flags) for g in f ])
     elif isinstance(f, Relational):
         return Relational(apart(f.lhs, z, **flags),

@@ -171,7 +171,7 @@ class Uniform(ContinuousProbability):
     def pdf(s, x):
         """Return the probability density function as an expression in x"""
         x = sympify(x)
-        if not isinstance(x, Number):
+        if not x.is_Number:
             raise NotImplementedError("SymPy does not yet support"
                 "piecewise functions")
         if x < s.a or x > s.b:
@@ -181,7 +181,7 @@ class Uniform(ContinuousProbability):
     def cdf(s, x):
         """Return the cumulative density function as an expression in x"""
         x = sympify(x)
-        if not isinstance(x, Number):
+        if not x.is_Number:
             raise NotImplementedError("SymPy does not yet support"
                 "piecewise functions")
         if x <= s.a:

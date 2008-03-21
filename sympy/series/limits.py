@@ -179,25 +179,25 @@ def mrv(e, x):
         return set([])
     elif e == x: 
         return set([x])
-    elif isinstance(e, Mul): 
+    elif e.is_Mul:
         a, b = e.as_two_terms()
         return mrv_max(mrv(a,x), mrv(b,x), x)
-    elif isinstance(e, Add): 
+    elif e.is_Add: 
         a, b = e.as_two_terms()
         return mrv_max(mrv(a,x), mrv(b,x), x)
-    elif isinstance(e, Pow):
+    elif e.is_Pow:
         if e.exp.has(x):
             return mrv(exp(e.exp * log(e.base)), x)
         else:
             return mrv(e.base, x)
-    elif isinstance(e, log): 
+    elif e.func is log: 
         return mrv(e.args[0], x)
-    elif isinstance(e, exp): 
+    elif e.func is exp:
         if limitinf(e.args[0], x) in [oo,-oo]:
             return mrv_max(set([e]), mrv(e.args[0], x), x)
         else:
             return mrv(e.args[0], x)
-    elif isinstance(e, Function): 
+    elif e.is_Function: 
         if len(e.args) == 1:
             return mrv(e.args[0], x)
         #only functions of 1 argument currently implemented
@@ -237,7 +237,7 @@ def rewrite(e,Omega,x,wsym):
     assert isinstance(Omega, set)
     assert len(Omega)!=0
     #all items in Omega must be exponentials
-    for t in Omega: assert isinstance(t, exp)
+    for t in Omega: assert t.func is exp
     def cmpfunc(a,b):
         return -cmp(len(mrv(a,x)), len(mrv(b,x)))
     #sort Omega (mrv set) from the most complicated to the simplest ones
@@ -274,7 +274,7 @@ def sign(e, x):
         e <  0 ... -1
     """
     assert isinstance(e, Basic)
-    if isinstance(e, (Rational, Real)):
+    if e.is_Rational or e.is_Real:
         if e == 0:
             return 0
         elif e.evalf() > 0:
@@ -289,17 +289,17 @@ def sign(e, x):
             return -1
     elif e == x: 
         return 1
-    elif isinstance(e, Mul): 
+    elif e.is_Mul:
         a,b = e.as_two_terms()
         return sign(a, x) * sign(b, x)
-    elif isinstance(e, exp): 
+    elif e.func is exp:
         return 1 
-    elif isinstance(e, Pow):
+    elif e.is_Pow:
         if sign(e.base, x) == 1: 
             return 1
-    elif isinstance(e, log): 
+    elif e.func is log:
         return sign(e.args[0] -1, x)
-    elif isinstance(e, Add):
+    elif e.is_Add:
         return sign(limitinf(e, x), x)
     raise "cannot determine the sign of %s"%e
 

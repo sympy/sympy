@@ -16,7 +16,7 @@ class Integral(Basic, NoRelMeths, ArithMeths):
     def __new__(cls, function, *symbols, **assumptions):
         function = sympify(function)
 
-        if isinstance(function, C.Number):
+        if function.is_Number:
             if function is S.NaN:
                 return S.NaN
             elif function is S.Infinity:
@@ -185,7 +185,7 @@ class Integral(Basic, NoRelMeths, ArithMeths):
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,
         # if `f` is not Add -- we only have one term
-        if not isinstance(f, C.Add):
+        if not f.is_Add:
             f = [f]
 
         parts = []
@@ -202,7 +202,7 @@ class Integral(Basic, NoRelMeths, ArithMeths):
 
             #               c
             # g(x) = (a*x+b)
-            if isinstance(g, Pow) and not g.exp.has(x):
+            if g.is_Pow and not g.exp.has(x):
                 a = Wild('a', exclude=[x])
                 b = Wild('b', exclude=[x])
 

@@ -85,6 +85,8 @@ class Number(Atom, RelMeths, ArithMeths):
     is_bounded = True
     is_finite = True
 
+    is_Number = True
+
     def __new__(cls, *obj):
         if len(obj)==1: obj=obj[0]
         if isinstance(obj, (int, long)):
@@ -191,6 +193,8 @@ class Real(Number):
     is_real = True
     is_irrational = False
     is_integer = False
+
+    is_Real = True
 
     @Memoizer(type, MemoizerArg((str, int, long, float, decimal.Decimal), convert_to_Decimal))
     def __new__(cls, num):
@@ -436,6 +440,8 @@ class Rational(Number):
     is_integer = False
     is_rational = True
 
+    is_Rational = True
+
     @Memoizer(type, (int, long, str), MemoizerArg((int, long, type(None)), name="q"))
     def __new__(cls, p, q = None):
         if q is None:
@@ -657,6 +663,8 @@ class Integer(Rational):
 
     q = 1
     is_integer = True
+
+    is_Integer = True
 
     # TODO caching with decorator, but not to degrade performance
     def __new__(cls, i):
@@ -1145,6 +1153,8 @@ class NumberSymbol(Singleton, Atom, RelMeths, ArithMeths):
     is_comparable = True
     is_bounded = True
     is_finite = True
+
+    is_NumberSymbol = True
 
     def approximation(self, number_cls):
         """ Return an interval with number_cls endpoints

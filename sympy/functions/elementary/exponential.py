@@ -23,9 +23,7 @@ class exp(Function):
     #XXX: investigate why we need the **optionsXXX and remove it
     @classmethod
     def canonize(cls, arg, **optionsXXX):
-        arg = sympify(arg)
-
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Zero:
@@ -36,13 +34,13 @@ class exp(Function):
                 return S.Infinity
             elif arg is S.NegativeInfinity:
                 return S.Zero
-        elif isinstance(arg, log):
+        elif arg.func is log:
             return arg.args[0]
-        elif isinstance(arg, C.Mul):
+        elif arg.is_Mul:
             coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
 
             if coeff is not None:
-                if isinstance(2*coeff, C.Integer):
+                if (2*coeff).is_Integer:
                     cst_table = {
                         0 : S.One,
                         1 : S.ImaginaryUnit,
@@ -52,7 +50,7 @@ class exp(Function):
 
                     return cst_table[int(2*coeff) % 4]
 
-        if isinstance(arg, C.Add):
+        if arg.is_Add:
             args = arg.args[:]
         else:
             args = [arg]
@@ -68,7 +66,7 @@ class exp(Function):
                 coeffs, log_term = [coeff], None
 
                 for term in terms:
-                    if isinstance(term, log):
+                    if term.func is log:
                         if log_term is None:
                             log_term = term.args[0]
                         else:
@@ -116,7 +114,7 @@ class exp(Function):
         if x is not None:
             c,f = arg.as_coeff_factors(x)
             return self.func(c), tuple( self.func(a) for a in f.args )
-        if isinstance(arg, C.Add):
+        if arg.is_Add:
             return S.One, tuple( self.func(a) for a in arg.args )
         return S.One,(self,)
 
@@ -124,14 +122,14 @@ class exp(Function):
         if self==old: return new
         arg = self.args[0]
         o = old
-        if isinstance(old, C.Pow): # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
+        if old.is_Pow: # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
             old = exp(old.exp * log(old.base))
-        if isinstance(old, exp):
+        if old.func is exp:
             b,e = self.as_base_exp()
             bo,eo = old.as_base_exp()
             if b==bo:
                 return new ** (e/eo) # exp(2/3*x*3).subs(exp(3*x),y) -> y**(2/3)
-            if isinstance(arg, C.Add): # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
+            if arg.is_Add: # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
                 # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
                 oarg = old.args[0]
                 new_l = []
@@ -214,7 +212,7 @@ class exp(Function):
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0]
-        if isinstance(arg, C.Add):
+        if arg.is_Add:
             return C.Mul(*[exp(f).as_leading_term(x) for f in arg.args])
         arg = self.args[0].as_leading_term(x)
         if C.Order(1,x).contains(arg):
@@ -223,7 +221,7 @@ class exp(Function):
 
     def _eval_expand_basic(self, *args):
         arg = self.args[0].expand()
-        if isinstance(arg, C.Add):
+        if arg.is_Add:
             expr = 1
             for x in arg.args:
                 expr *= self.func(x).expand()
@@ -264,7 +262,7 @@ class log(Function):
 
         arg = sympify(arg)
 
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.Zero:
                 return S.NegativeInfinity
             elif arg is S.One:
@@ -280,18 +278,18 @@ class log(Function):
         elif arg is S.Exp1:
             return S.One
         #this doesn't work due to caching: :(
-        #elif isinstance(arg, exp) and arg[0].is_real:
+        #elif arg.func is exp and arg[0].is_real:
         #using this one instead:
-        elif isinstance(arg, exp):
+        elif arg.func is exp:
             return arg.args[0]
         #this shouldn't happen automatically (see the issue 252):
-        #elif isinstance(arg, C.Pow):
-        #    if isinstance(arg.exp, C.Number) or \
-        #       isinstance(arg.exp, C.NumberSymbol) or arg.exp.is_number:
+        #elif arg.is_Pow:
+        #    if arg.exp.is_Number or arg.exp.is_NumberSymbol or \
+        #        arg.exp.is_number:
         #        return arg.exp * self(arg.base)
-        #elif isinstance(arg, C.Mul) and arg.is_real:
+        #elif arg.is_Mul and arg.is_real:
         #    return C.Add(*[self(a) for a in arg])
-        elif not isinstance(arg, C.Add):
+        elif not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if coeff is not None:
@@ -299,7 +297,7 @@ class log(Function):
                     return S.Infinity
                 elif coeff is S.NegativeInfinity:
                     return S.Infinity
-                elif isinstance(coeff, C.Rational):
+                elif coeff.is_Rational:
                     if coeff.is_nonnegative:
                         return S.Pi * S.ImaginaryUnit * S.Half + cls(coeff)
                     else:
@@ -347,7 +345,7 @@ class log(Function):
         if arg.is_positive:
             if arg.is_unbounded: return True
             if arg.is_infinitesimal: return False
-            if isinstance(arg, C.Number):
+            if arg.is_Number:
                 return arg>1
 
     def _eval_is_zero(self):
@@ -393,14 +391,13 @@ class log(Function):
 
     def _eval_expand_basic(self, *args):
         arg = self.args[0]
-        if isinstance(arg, C.Mul) and arg.is_real:
+        if arg.is_Mul and arg.is_real:
             expr = 0
             for x in arg.args:
                 expr += self.func(x).expand()
             return expr
-        elif isinstance(arg, C.Pow):
-            if isinstance(arg.exp, C.Number) or \
-               isinstance(arg.exp, C.NumberSymbol):
+        elif arg.is_Pow:
+            if arg.exp.is_Number or arg.exp.is_NumberSymbol:
                 return arg.exp * self.func(arg.base).expand()
         return self
 

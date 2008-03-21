@@ -24,9 +24,7 @@ class erf(Function):
 
     @classmethod
     def canonize(cls, arg):
-        arg = sympify(arg)
-
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -37,7 +35,7 @@ class erf(Function):
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
-        elif isinstance(arg, C.Mul):
+        elif arg.is_Mul:
             coeff, terms = arg.as_coeff_terms()
 
             if coeff.is_negative:
@@ -73,7 +71,7 @@ class erf(Function):
     def _eval_apply_evalf(self, arg):
         arg = arg.evalf()
 
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             # Temporary hack
             from sympy.core.numbers import Real
             from sympy.numerics import evalf

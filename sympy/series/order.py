@@ -79,6 +79,8 @@ class Order(Basic, ArithMeths, RelMeths):
 
     precedence = Basic.Apply_precedence
 
+    is_Order = True
+
     _cache = {}
 
     @cacheit
@@ -94,7 +96,7 @@ class Order(Basic, ArithMeths, RelMeths):
 
         symbols.sort(Basic.compare)
 
-        if isinstance(expr, Order):
+        if expr.is_Order:
 
             new_symbols = list(expr.symbols)
             for s in symbols:
@@ -128,7 +130,7 @@ class Order(Basic, ArithMeths, RelMeths):
                     else:
                         symbols.append(s)
             else:
-                if isinstance(expr, C.Add):
+                if expr.is_Add:
                     lst = expr.extract_leading_order(*symbols)
                     expr = C.Add(*[f.expr for (e,f) in lst])
                 else:
@@ -218,9 +220,9 @@ class Order(Basic, ArithMeths, RelMeths):
         that's why find_limit() is defined here.
         """
 
-        if isinstance(f, Pow):
+        if f.is_Pow:
             if f.args[0] == x:
-                if isinstance(f.args[1], Rational):
+                if f.args[1].is_Rational:
                     if f.args[1] > 0:
                         return S.Zero
                     else:
@@ -255,7 +257,7 @@ class Order(Basic, ArithMeths, RelMeths):
         return r
 
     def _eval_power(b, e):
-        if isinstance(e, C.Number):
+        if e.is_Number:
             return Order(b.expr ** e, *b.symbols)
         return
 
@@ -278,7 +280,7 @@ class Order(Basic, ArithMeths, RelMeths):
         """
         if expr is S.Zero:
             return True
-        if isinstance(expr, Order):
+        if expr.is_Order:
             if self.symbols and expr.symbols:
                 common_symbols = tuple([s for s in self.symbols if s in expr.symbols])
             elif self.symbols:

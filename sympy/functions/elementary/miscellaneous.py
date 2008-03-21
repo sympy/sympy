@@ -20,7 +20,7 @@ class max_(Function):
 
     @classmethod
     def canonize(cls, x, y):
-        if isinstance(x, C.Number) and isinstance(y, C.Number):
+        if x.is_Number and y.is_Number:
             return max(x, y)
         if x.is_positive:
             if y.is_negative:
@@ -43,5 +43,5 @@ class min_(Function):
 
     @classmethod
     def canonize(cls, x, y):
-        if isinstance(x, C.Number) and isinstance(y, C.Number):
+        if x.is_Number and y.is_Number:
             return min(x, y)

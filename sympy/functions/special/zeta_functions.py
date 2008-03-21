@@ -13,13 +13,13 @@ class zeta(Function):
     def canonize(cls, z, a=S.One):
         z, a = map(sympify, (z, a))
 
-        if isinstance(a, C.Number):
+        if a.is_Number:
             if a is S.NaN:
                 return S.NaN
             elif a is S.Zero:
                 return cls(z)
 
-        if isinstance(z, C.Number):
+        if z.is_Number:
             if z is S.NaN:
                 return S.NaN
             elif z is S.Infinity:
@@ -31,8 +31,8 @@ class zeta(Function):
                     return S.Half - a
             elif z is S.One:
                 return S.ComplexInfinity
-            elif isinstance(z, C.Integer):
-                if isinstance(a, C.Integer):
+            elif z.is_Integer:
+                if a.is_Integer:
                     if z.is_negative:
                         zeta = (-1)**z * C.bernoulli(-z+1)/(-z+1)
                     elif z.is_even:

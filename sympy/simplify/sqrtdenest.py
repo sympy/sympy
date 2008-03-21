@@ -1,13 +1,14 @@
 from sympy.utilities import all, any
 from sympy.functions import sqrt, sign
-from sympy.core import Pow, S, Number, Wild, Rational
+from sympy.core import Pow, S, Number, Wild, Rational, sympify
 
 def sqrtdenest (expr):
     """
     Denests an expression that contains nested square roots.
     This algorithm is based on <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
     """
-    if isinstance(expr, Pow) and expr.exp is S.Half: #If expr is a square root
+    expr = sympify(expr)
+    if expr.is_Pow and expr.exp is S.Half: #If expr is a square root
         return denester([expr])[0]
     return expr
 
@@ -32,11 +33,11 @@ def denester (nested):
     
     This is discussed in the paper in the middle paragraph of page 179.
     """
-    if all(isinstance(n**2, Number) for n in nested): #If none of the arguments are nested
+    if all((n**2).is_Number for n in nested): #If none of the arguments are nested
         for f in subsets(len(nested)): #Test subset 'f' of nested
             p = prod(nested[i]**2 for i in range(len(f)) if f[i]).expand()
             if 1 in f and f.count(1) > 1 and f[-1]: p = -p
-            if isinstance(sqrt(p), Number): return sqrt(p), f #If we got a perfect square, return its square root.
+            if sqrt(p).is_Number: return sqrt(p), f #If we got a perfect square, return its square root.
         return nested[-1], [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
     else:
         a, b, r, R = Wild('a'), Wild('b'), Wild('r'), None

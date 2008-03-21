@@ -28,7 +28,7 @@ class sinh(Function):
     def canonize(cls, arg):
         arg = sympify(arg)
 
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -124,7 +124,7 @@ class cosh(Function):
     def canonize(cls, arg):
         arg = sympify(arg)
 
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -220,7 +220,7 @@ class tanh(Function):
     def canonize(cls, arg):
         arg = sympify(arg)
 
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -318,7 +318,7 @@ class coth(Function):
     def canonize(cls, arg):
         arg = sympify(arg)
 
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -410,7 +410,7 @@ class asinh(Function):
     def canonize(cls, arg):
         arg = sympify(arg)
 
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -481,7 +481,7 @@ class acosh(Function):
     def canonize(cls, arg):
         arg = sympify(arg)
 
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
@@ -556,7 +556,7 @@ class atanh(Function):
     def canonize(cls, arg):
         arg = sympify(arg)
 
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Zero:
@@ -613,7 +613,7 @@ class acoth(Function):
     def canonize(cls, arg):
         arg = sympify(arg)
 
-        if isinstance(arg, C.Number):
+        if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
