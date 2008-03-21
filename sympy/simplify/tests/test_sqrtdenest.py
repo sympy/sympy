@@ -4,7 +4,6 @@ from sympy.utilities.pytest import XFAIL
 def test_sqrtdenest():
     d = {sqrt(5 + 2 * sqrt(6)): sqrt(2) + sqrt(3),
         sqrt(sqrt(2)): sqrt(sqrt(2)),
-        'RandomString': 'RandomString',
         sqrt(5+sqrt(7)): sqrt(5+sqrt(7)),
         sqrt(3+sqrt(5+2*sqrt(7))):
             sqrt(6+3*sqrt(7))/(sqrt(2)*(5+2*sqrt(7))**Rational(1,4)) +
