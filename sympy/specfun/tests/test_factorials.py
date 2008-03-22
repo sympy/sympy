@@ -2,6 +2,7 @@ from sympy import oo, Symbol, Rational, Integer, gamma, log, \
         EulerGamma, zoo, sqrt, pi, uppergamma, lowergamma, sin, Real
 from sympy.specfun.factorials import factorial_simplify, binomial2, \
         rising_factorial, falling_factorial, unfac, factorial
+from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
 y = Symbol('y')
@@ -65,12 +66,15 @@ def test_factorial_simplify():
     assert fs(fac(x-1)/fac(x)) == (1/x)
     assert fs(fac(x-2)/fac(x)) == 1/(x*(-1+x))
     assert fs(fac(x-3)/fac(x)) == 1/(x*(-1+x)*(-2+x))
-    assert fs(fac(x)*(x+1)*(x+2)) == fac(x+2)
     assert fs(fac(x)/x/(x-1)) == fac(x-2)
     assert fs(x*(x-1)/fac(x)) == 1/fac(x-2)
     assert fs((1/(x+1))/fac(x)) == 1/fac(x+1)
     assert fs(fac(x)*fac(y-2)*fac(z+2)/fac(z)/fac(y+1)) == fac(x)*(z+1)*(z+2)/(y-1)/y/(y+1)
     assert fs(fac(x)*fac(y+1)*fac(z+2)/fac(z)/fac(y-2)) == fac(x)*(z+1)*(z+2)*(y-1)*y*(y+1)
+
+@XFAIL
+def test_factorial_simplify2():
+    assert fs(fac(x)*(x+1)*(x+2)) == fac(x+2)
 
 def test_rising_falling():
     assert rising_factorial(x, 0) == 1

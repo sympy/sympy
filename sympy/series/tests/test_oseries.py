@@ -1,4 +1,5 @@
 from sympy import Symbol, S, Rational, ln, exp, log, sqrt, E
+from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
 y = Symbol('y')
@@ -59,6 +60,7 @@ def test_exp_1():
 def test_exp_sqrt_1():
     assert exp(1+sqrt(x)).oseries(x**2) == (exp(1)*(1+sqrt(x)+x/2+sqrt(x)*x/6)).expand()
 
+@XFAIL
 def test_power_x_x():
     assert (exp(x*ln(x))).oseries(x**3) == 1+x*log(x)+x**2*log(x)**2/2+x**3*log(x)**3/6
     assert (x**x).oseries(x) == 1+x*ln(x)

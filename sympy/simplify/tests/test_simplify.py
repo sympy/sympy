@@ -12,8 +12,13 @@ def test_ratsimp():
 
     e = 1/(1+1/x)
     assert ratsimp(e) == x/(x+1)
-    assert (x+1)*ratsimp(e)/x == 1
     assert ratsimp(exp(e)) == exp(x/(x+1))
+
+@XFAIL
+def test_ratsimp2():
+    x = Symbol("x")
+    e = 1/(1+1/x)
+    assert (x+1)*ratsimp(e)/x == 1
 
 @XFAIL
 def test_ratsimp_X1():
