@@ -1,4 +1,4 @@
-from sympy import Symbol, Rational, Derivative, I, log, sqrt, exp
+from sympy import Symbol, Rational, Derivative, I, log, sqrt, exp, sin
 
 x = Symbol('x')
 y = Symbol('y')
@@ -16,7 +16,7 @@ def test_poly_str():
     #correct results.
     assert str((2*x-(7*x**2 - 2) + 3*y)) in ["2 - 7*x**2 + 2*x + 3*y", 
             "2 + 3*y + 2*x - 7*x**2", "2 + 3*y - 7*x**2 + 2*x",
-            "3*y + 2*x + 2 - 7*x**2"]
+            "3*y + 2*x + 2 - 7*x**2", "2 + 2*x + 3*y - 7*x**2"]
     assert str(x-y) in ["x - y", "-y + x"]
     assert str(2+-x) in ["2 - x", "-x + 2"]
     assert str(x-2) in ["x - 2", "(-2) + x", "-2 + x"]
@@ -70,3 +70,7 @@ def test_x_div_y():
     y = Symbol("y")
     assert str(x/y) == "x/y"
     assert str(y/x) == "y/x"
+
+def test_ordering():
+    x = Symbol("x")
+    assert str(sin(x).series(x, 0, 15)) == "x - 1/6*x**3 + (1/120)*x**5 - 1/5040*x**7 + (1/362880)*x**9 - 1/39916800*x**11 + (1/6227020800)*x**13 + O(x**15)"

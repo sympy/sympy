@@ -1060,7 +1060,7 @@ class Poly(Basic, RelMeths, ArithMeths):
            >>> q = p.map_coeffs(lambda c: 2*c)
 
            >>> q.as_basic()
-           2*x**2 + 4*x*y
+           4*x*y + 2*x**2
 
            >>> p = Poly(u*x**2 + v*x*y, x, y)
            >>> q = p.map_coeffs(expand, complex=True)

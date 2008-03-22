@@ -58,7 +58,9 @@ def test_pretty_unicode():
     assert xpretty( oo, True ) == u'\u221e'
     assert xpretty( pi, True ) == u'\u03c0'
     assert xpretty( pi+2*x, True ) in [u'\u03c0 + 2*x', u'2*x + \u03c0']
-    assert xpretty( pi**2+exp(x), True ) == u' 2    x\n\u03c0  + \u212f '
+    assert xpretty( pi**2+exp(x), True ) in [
+            u' 2    x\n\u03c0  + \u212f ',
+            u' x    2\n\u212f  + \u03c0 ']
     assert xpretty( Eq(x, '!=', y), True ) == u'x \u2260 y'
 
 def test_pretty_unicode_defaults():

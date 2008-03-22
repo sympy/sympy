@@ -253,8 +253,10 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Add(self, sum):
+        args = list(sum.args)
+        args.sort(sum.compare_terms)
         pforms = []
-        for x in sum.args:
+        for x in args:
             # Check for negative "things" so that this information can be enforce upon
             # the pretty form so that it can be made of use (such as in a sum).
             if x.is_Mul and x.as_coeff_terms()[0] < 0:

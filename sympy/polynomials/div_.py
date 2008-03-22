@@ -57,7 +57,7 @@ def div(f, g, var=None, order=None, coeff=None):
         3 + x**2
         >>> q, r = div(2*x**3*y**2 - x*y + y**3, [x-y, y**2], [x,y], 'lex')
         >>> print q[0]
-        -y + 2*y**4 + 2*x*y**3 + 2*x**2*y**2
+        -y + 2*x**2*y**2 + 2*x*y**3 + 2*y**4
         >>> print q[1]
         -1 + y + 2*y**3
         >>> print r

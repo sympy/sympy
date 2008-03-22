@@ -142,6 +142,38 @@ class Add(AssocOp, RelMeths, ArithMeths):
         else:
             return newseq,[],lambda_args,None
 
+    @staticmethod
+    def compare_terms(a, b):
+        """
+        Is a>b in the sense of ordering in printing? 
+
+        yes ..... return 1
+        no ...... return -1
+        equal ... return 0
+
+        Strategy:
+
+        It uses Basic.compare as a fallback, but improves it in many cases,
+        like x**3, x**4, O(x**3) etc. In those simple cases, it just parses the
+        expression and returns the "sane" ordering such as:
+
+        1 < x < x**2 < x**3 < O(x**4) etc.
+        
+        """
+        from sympy.series.order import Order
+        if isinstance(a, Order) and not isinstance(b, Order):
+            return 1
+        if not isinstance(a, Order) and isinstance(b, Order):
+            return -1
+        p1, p2, p3 = Wild("p1"), Wild("p2"), Wild("p3")
+        r_a = a.match(p1 * p2**p3)
+        r_b = b.match(p1 * p2**p3)
+        if r_a is not None and r_b is not None:
+            c = Basic.compare(r_a[p3], r_b[p3])
+            if c!=0:
+                return c
+        return Basic.compare(a,b)
+
     def tostr(self, level=0):
         coeff, rest = self.as_coeff_factors()
 
@@ -151,7 +183,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         # This particular solution is slow, but it ensures a sane ordering. It
         # can of course be improved:
         rest = list(rest)
-        rest.sort(Basic.compare)
+        rest.sort(self.compare_terms)
 
         l = []
         precedence = self.precedence

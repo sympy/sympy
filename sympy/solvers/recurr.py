@@ -54,7 +54,7 @@ def rsolve_poly(coeffs, f, n, **hints):
        >>> n = Symbol('n', integer=True)
 
        >>> rsolve_poly([-1, 1], 4*n**3, n)
-       C0 + n**2 + n**4 - 2*n**3
+       C0 + n**2 - 2*n**3 + n**4
 
        For more information on implemented algorithms refer to:
 

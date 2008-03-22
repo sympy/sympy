@@ -585,7 +585,7 @@ class Basic(AssumeMeths):
            >>> p = (x**2 + x*y).as_poly(x, y)
 
            >>> p.as_basic()
-           x**2 + x*y
+           x*y + x**2
 
            >>> f = sin(x)
 
@@ -1067,7 +1067,7 @@ class Basic(AssumeMeths):
            >>> x,y = symbols('xy')
 
            >>> (y*(x + y)**2).expand()
-           y**3 + y*x**2 + 2*x*y**2
+           y*x**2 + 2*x*y**2 + y**3
 
            >>> (x+y).expand(complex=True)
            I*im(x) + I*im(y) + re(x) + re(y)
@@ -1118,7 +1118,7 @@ class Basic(AssumeMeths):
            >>> x, y = symbols('xy')
 
            >>> sin(x).rewrite(sin, exp)
-           -1/2*I*(-exp(-I*x) + exp(I*x))
+           -1/2*I*(exp(I*x) - exp(-I*x))
 
         """
         if self.is_Atom or not args:

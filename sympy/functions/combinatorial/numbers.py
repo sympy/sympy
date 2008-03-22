@@ -46,7 +46,7 @@ class fibonacci(Function):
         >>> [fibonacci(x) for x in range(11)]
         [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
         >>> fibonacci(5, Symbol('t'))
-        1 + t**4 + 3*t**2
+        1 + 3*t**2 + t**4
 
     Mathematical description
     ========================
@@ -286,7 +286,7 @@ class bell(Function):
         >>> bell(30)
         846749014511809332450147
         >>> bell(4, Symbol('t'))
-        t + t**4 + 6*t**3 + 7*t**2
+        t + 7*t**2 + 6*t**3 + t**4
 
     Mathematical description
     ========================

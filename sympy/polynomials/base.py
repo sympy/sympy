@@ -659,7 +659,7 @@ class Polynomial(Basic):
             >>> f = Polynomial(6*x + 20*y + 4*x*y)
             >>> fx = f.integrate(x)
             >>> print fx
-            3*x**2 + 2*y*x**2 + 20*x*y
+            20*x*y + 3*x**2 + 2*y*x**2
             >>> fz = f.integrate(z)
             >>> print fz
             6*x*z + 20*y*z + 4*x*y*z

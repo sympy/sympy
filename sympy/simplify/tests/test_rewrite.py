@@ -64,8 +64,11 @@ def test_trim_xfail():
         y + exp(2*x) + exp(-x + 2*x*y)
 
 
-def test_apart():
+@XFAIL
+def test_apart1():
     assert apart(1/(x+2)/(x+1), x) == 1/(1 + x) - 1/(2 + x)
+
+def test_apart2():
     assert apart(1/(x+1)/(x+5), x) == -1/(5 + x)/4 + 1/(1 + x)/4
     assert apart((x**2+1)/(x+1) == sin(x), x) == (x - 1 + 2/(x+1) == sin(x))
     assert apart((E*x+2)/(x-pi)*(x-1), x) in [
