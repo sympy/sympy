@@ -131,7 +131,10 @@ class Add(AssocOp, RelMeths, ArithMeths):
             newseq = newseq2 + order_factors
 
         # order args canonically
-        newseq.sort(Basic.compare)
+        # Currently we sort things using hashes, as it is quite fast. A better
+        # solution is not to sort things at all - but this needs some more
+        # fixing.
+        newseq.sort(key=hash)
 
         # we are done
         if noncommutative:
