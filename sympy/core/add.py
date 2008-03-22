@@ -141,6 +141,15 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
     def tostr(self, level=0):
         coeff, rest = self.as_coeff_factors()
+
+        # Now we need to sort the factors in Add, which are in "rest". Any
+        # ordering is fine, but some ordering looks better and some looks bad.
+
+        # This particular solution is slow, but it ensures a sane ordering. It
+        # can of course be improved:
+        rest = list(rest)
+        rest.sort(Basic.compare)
+
         l = []
         precedence = self.precedence
         if coeff is not S.Zero:
