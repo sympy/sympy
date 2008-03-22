@@ -36,7 +36,7 @@ def sqf(f, var=None, order=None, coeff=None):
         >>> b = sqf(3 - 12*x - 4*x**3 + 4*x**4 + 13*x**2, coeff='int')
         >>> for i, f in enumerate(b): print (i + 1), f
         1 3 + x**2
-        2 (-1) + 2*x
+        2 -1 + 2*x
         
     References:
     ===========

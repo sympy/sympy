@@ -59,7 +59,7 @@ def div(f, g, var=None, order=None, coeff=None):
         >>> print q[0]
         -y + 2*y**4 + 2*x*y**3 + 2*x**2*y**2
         >>> print q[1]
-        (-1) + y + 2*y**3
+        -1 + y + 2*y**3
         >>> print r
         0
 
