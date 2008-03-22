@@ -147,7 +147,7 @@ def test_factor():
 
     assert factor(-2) == -2
     assert factor(-x) == -x
-    assert factor(-2*x**2+x) == x*(1 - 2*x)
+    assert factor(-2*x**2+x) in [x*(1 - 2*x), -x*(2*x-1)]
     
 def test_gcd():
     x = Symbol("x")

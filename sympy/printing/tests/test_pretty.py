@@ -106,7 +106,9 @@ def test_pretty_derivatives():
     assert pretty(f_1) == 'd         \n--(log(x))\ndx        '
 
     f_2 = Derivative(log(x), x, evaluate=False) + x
-    assert pretty(f_2) == '    d         \nx + --(log(x))\n    dx        '
+    assert pretty(f_2) in [
+            '    d         \nx + --(log(x))\n    dx        ',
+            'd             \n--(log(x)) + x\ndx            ']
 
     # Multiple symbols
     f_3 = Derivative(log(x) + x**2, x, y, evaluate=False)

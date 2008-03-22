@@ -27,7 +27,8 @@ def test_Plm():
     assert Plm(3, -2, x) == Plm(3, 2, x)/120
     assert Plm(3, -1, x) == -Plm(3, 1, x)/12
     assert Plm(3, 0, x) == (5*x**3-3*x)/2
-    assert Plm(3, 1, x) == ( 3*(1-5*x**2)/2 ).expand() *(1-x**2)**(sympify(1)/2)
+    assert Plm(3, 1, x).expand() == (( 3*(1-5*x**2)/2 ).expand() \
+            *(1-x**2)**(sympify(1)/2)).expand()
     assert Plm(3, 2, x) == 15*x*(1-x**2)
     assert Plm(3, 3, x) == -15*(1-x**2)**(sympify(3)/2)
 
