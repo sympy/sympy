@@ -601,7 +601,7 @@ class Basic(AssumeMeths):
         return self
 
     @cacheit
-    def subs_old_new(self, old, new):
+    def _subs_old_new(self, old, new):
         """Substitutes an expression old -> new."""
         old = sympify(old)
         new = sympify(new)
@@ -611,7 +611,7 @@ class Basic(AssumeMeths):
         """
         Substitutes an expression. 
         
-        Calls either subs_dict or subs_old_new depending if you give it
+        Calls either _subs_dict or _subs_old_new depending if you give it
         a dictionary or two arguments (old, new).
 
         Examples:
@@ -625,10 +625,10 @@ class Basic(AssumeMeths):
 
         """
         if len(args) == 1:
-            return self.subs_dict(args[0])
+            return self._subs_dict(args[0])
         elif len(args) == 2:
             old, new = args
-            return self.subs_old_new(old, new)
+            return self._subs_old_new(old, new)
         else:
             raise Exception("subs accept either 1 or 2 arguments")
 
@@ -791,7 +791,7 @@ class Basic(AssumeMeths):
         from sympy.functions.elementary.complexes import conjugate as c
         return c(self)
 
-    def subs_dict(self, sequence):
+    def _subs_dict(self, sequence):
         """Performs sequential substitution.
 
            Given a collection of key, value pairs, which correspond to
@@ -816,7 +816,7 @@ class Basic(AssumeMeths):
 
            >>> expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
 
-           >>> expr.subs_dict([A,B,C,D,E])
+           >>> expr._subs_dict([A,B,C,D,E])
            b + a*c*sin(d*e)
 
         """
@@ -924,7 +924,7 @@ class Basic(AssumeMeths):
         Return None when expression (self) does not match
         with pattern. Otherwise return a dictionary such that
 
-          pattern.subs_dict(self.match(pattern)) == self
+          pattern.subs(self.match(pattern)) == self
 
         """
         pattern = sympify(pattern)

@@ -332,7 +332,7 @@ def test_call():
 
     f = x**3*y + x**2*z + x**2*y*z
 
-    assert Poly(f, x, y, z)(1, 2, 3) == f.subs_dict({x: 1, y: 2, z: 3})
+    assert Poly(f, x, y, z)(1, 2, 3) == f.subs({x: 1, y: 2, z: 3})
     assert Poly(f, x, y, z)(u, v, t) == u**2*(v*(u + t) + t)
 
 def test_subs():

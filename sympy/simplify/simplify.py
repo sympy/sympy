@@ -756,7 +756,7 @@ def trigsimp(expr, deep=False):
             for pattern, result in matchers:
                 res = term.match(pattern)
                 if res is not None:
-                    ret += result.subs_dict(res)
+                    ret += result.subs(res)
                     break
             if res is None:
                 ret += term
@@ -782,7 +782,7 @@ def trigsimp(expr, deep=False):
             while m is not None:
                 if m[a_t] == 0 or -m[a_t] in m[c].args or m[a_t] + m[c] == 0:
                     break
-                expr = result.subs_dict(m)
+                expr = result.subs(m)
                 m = expr.match(pattern)
 
         return expr

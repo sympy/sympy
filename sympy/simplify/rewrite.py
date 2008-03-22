@@ -190,10 +190,10 @@ def trim(f, *syms, **flags):
             p, q = f.as_numer_denom()
             f = p.expand()/q.expand()
 
-            H = cancel(f.subs_dict(mapping), *syms)
+            H = cancel(f.subs(mapping), *syms)
 
             if not flags.get('extract', True):
-                return H.subs_dict(reverse)
+                return H.subs(reverse)
             else:
                 syms = syms or None
 
@@ -220,7 +220,7 @@ def trim(f, *syms, **flags):
                 else:
                     GQ = S.One
 
-                return ((GP*P)/(GQ*Q)).subs_dict(reverse)
+                return ((GP*P)/(GQ*Q)).subs(reverse)
 
 def apart(f, z, **flags):
     """Compute partial fraction decomposition of a rational function.

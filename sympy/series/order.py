@@ -122,7 +122,7 @@ class Order(Basic, ArithMeths, RelMeths):
                 
             if symbol_map:
                 r = Order(expr, *new_symbols, **assumptions)
-                expr = r.expr.subs_dict(symbol_map)
+                expr = r.expr.subs(symbol_map)
                 symbols = []
                 for s in r.symbols:
                     if symbol_map.has_key(s):

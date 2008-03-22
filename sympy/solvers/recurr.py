@@ -152,7 +152,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
         if solutions is not None:
             C = [ c for c in C if (c not in solutions) ]
-            result = y.subs_dict(solutions)
+            result = y.subs(solutions)
         else:
             return None # TBD
     else:

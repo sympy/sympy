@@ -125,7 +125,7 @@ def eval_sum_symbolic(f, (i, a, b)):
     p = C.Wild('p')
     e = f.match(i**p)
     if e != None:
-        c = p.subs_dict(e)
+        c = p.subs(e)
         B = C.bernoulli
         if c.is_integer and c >= 0:
             s = (B(c+1, b+1) - B(c+1, a))/(c+1)
@@ -136,9 +136,9 @@ def eval_sum_symbolic(f, (i, a, b)):
     c3 = C.Wild('c3', exclude=[i])
     e = f.match(c1**(c2*i+c3))
     if e is not None:
-        c1 = c1.subs_dict(e)
-        c2 = c2.subs_dict(e)
-        c3 = c3.subs_dict(e)
+        c1 = c1.subs(e)
+        c2 = c2.subs(e)
+        c3 = c3.subs(e)
         # TODO: more general limit handling
         return c1**c3 * (c1**(a*c2) - c1**(c2+b*c2)) / (1 - c1**c2)
     return None

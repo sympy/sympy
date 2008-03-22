@@ -79,7 +79,7 @@ class Sum2(_BigOperator):
         p = Wild('p')
         e = f.match(i**p)
         if e != None:
-            c = p.subs_dict(e)
+            c = p.subs(e)
             B = C.bernoulli
             if c.is_integer and c >= 0:
                 s = (B(c+1, b+1) - B(c+1, a))/(c+1)
@@ -182,8 +182,8 @@ class Product(_BigOperator):
         q = Wild('q')
         e = f.match(p+q*i)
         if e != None:
-            pp = p.subs_dict(e)
-            qq = q.subs_dict(e)
+            pp = p.subs(e)
+            qq = q.subs(e)
             if not pp.has(i) and not qq.has(i):
                 r = qq**(b-a+1) * unfac(b+pp/qq) / unfac(a+pp/qq-1)
                 return r

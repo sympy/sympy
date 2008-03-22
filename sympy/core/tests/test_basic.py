@@ -256,16 +256,16 @@ def test_as_independent():
 def test_subs_dict():
     a,b,c,d,e = symbols('abcde')
 
-    assert (sin(x)).subs_dict({ x : 1, sin(x) : 2}) == 2
-    assert (sin(x)).subs_dict([(x, 1), (sin(x), 2)]) == 2
+    assert (sin(x))._subs_dict({ x : 1, sin(x) : 2}) == 2
+    assert (sin(x))._subs_dict([(x, 1), (sin(x), 2)]) == 2
 
     expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
 
     seq = [ (sqrt(sin(2*x)),a), (cos(2*x),b), (sin(2*x),c), (x,d), (exp(x),e) ]
-    assert expr.subs_dict(seq) == c + a*b*sin(d*e)
+    assert expr._subs_dict(seq) == c + a*b*sin(d*e)
 
     seq = [ (sqrt(sin(2*x)),a), (sin(2*x),c), (cos(2*x),b), (x,d), (exp(x),e) ]
-    assert expr.subs_dict(seq) == c + a*b*sin(d*e)
+    assert expr._subs_dict(seq) == c + a*b*sin(d*e)
 
 def test_has_any_symbols():
     x,y,z,t,u = symbols('xyztu')

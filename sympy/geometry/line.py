@@ -364,7 +364,7 @@ class Line(LinearEntity):
         elif isinstance(o, Point):
             x = C.Symbol('x', real=True)
             y = C.Symbol('y', real=True)
-            r = self.equation().subs_dict({x: o[0], y: o[1]})
+            r = self.equation().subs({x: o[0], y: o[1]})
             x = simplify(r)
             return simplify(x) == 0
         else:

@@ -266,7 +266,7 @@ class Ellipse(GeometryEntity):
             x = C.Symbol('x', real=True, dummy=True)
             y = C.Symbol('y', real=True, dummy=True)
 
-            res = self.equation(x, y).subs_dict({x: o[0], y: o[1]})
+            res = self.equation(x, y).subs({x: o[0], y: o[1]})
             res = trigsimp(simplify(res))
             return res == 0
         elif isinstance(o, Ellipse):

@@ -209,7 +209,7 @@ def heurisch(f, x, **kwargs):
         rev_mapping[v] = k
 
     def substitute(expr):
-        return expr.subs_dict(mapping)
+        return expr.subs(mapping)
 
     diffs = [ substitute(g.diff(x)) for g in terms ]
 
@@ -376,13 +376,13 @@ def heurisch(f, x, **kwargs):
     if result is not None:
         (solution, candidate, coeffs) = result
 
-        antideriv = candidate.subs_dict(solution)
+        antideriv = candidate.subs(solution)
 
         for coeff in coeffs:
             if coeff not in solution:
                 antideriv = antideriv.subs(coeff, S.Zero)
 
-        antideriv = antideriv.subs_dict(rev_mapping)
+        antideriv = antideriv.subs(rev_mapping)
         antideriv = simplify(antideriv).expand()
 
         if antideriv.is_Add:
