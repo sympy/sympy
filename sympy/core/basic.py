@@ -601,24 +601,36 @@ class Basic(AssumeMeths):
         return self
 
     @cacheit
-    def subs(self, old, new):
+    def subs_old_new(self, old, new):
         """Substitutes an expression old -> new."""
         old = sympify(old)
         new = sympify(new)
-
-        # TODO This code is a start for issue 264. Currently, uncommenting
-        #      this code will break A LOT of tests!
-        #
-        #if not old.is_dummy:
-        #    exclude = ['dummy', 'comparable']
-        #    for x in self._assume_defined:
-        #        if x in exclude: continue
-        #        old_val = getattr(old, 'is_' + x)
-        #        if old_val is not None and old_val != getattr(new, 'is_' + x):
-        #            raise ValueError("Cannot substitute '%s' for '%s' because assumptions do not match" % (str(new), str(old)))
-
-        #print self, old, new
         return self._eval_subs(old, new)
+
+    def subs(self, *args):
+        """
+        Substitutes an expression. 
+        
+        Calls either subs_dict or subs_old_new depending if you give it
+        a dictionary or two arguments (old, new).
+
+        Examples:
+
+        >>> from sympy import *
+        >>> x,y = symbols('xy')
+        >>> (1+x*y).subs(x, pi)
+        1 + pi*y
+        >>> (1+x*y).subs({x:pi, y:2})
+        1 + 2*pi
+
+        """
+        if len(args) == 1:
+            return self.subs_dict(args[0])
+        elif len(args) == 2:
+            old, new = args
+            return self.subs_old_new(old, new)
+        else:
+            raise Exception("subs accept either 1 or 2 arguments")
 
     def _seq_subs(self, old, new):
         if self==old:

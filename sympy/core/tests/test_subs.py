@@ -1,8 +1,8 @@
 import py
 
 import sympy as g
-from sympy import Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative, abc, \
-        Integer, Eq
+from sympy import Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,\
+        abc, Integer, Eq, symbols
 from sympy.utilities.pytest import XFAIL
 
 def test_subs():
@@ -116,3 +116,19 @@ def test_issue643():
 
     e = sqrt(x)*exp(y)
     assert e.subs(sqrt(x), 1)   == exp(y)
+
+def test_subs_dict1():
+    x, y = symbols('xy')
+    assert (1+x*y).subs(x, pi) == 1 + pi*y
+    assert (1+x*y).subs({x:pi, y:2}) == 1 + 2*pi
+
+def test_subs_dict2():
+    x = Symbol('x')
+    a,b,c = map(Wild, 'abc')
+
+    f = 3*cos(4*x)
+    r = f.match(a*cos(b*x))
+    assert r == {a: 3, b: 4}
+    e =  a/b * sin(b*x)
+    assert e.subs(r) == r[a]/r[b] * sin(r[b]*x)
+    assert e.subs(r) == 3 * sin(4*x) / 4
