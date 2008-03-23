@@ -54,6 +54,8 @@ class Pow(Basic, ArithMeths, RelMeths):
 
     precedence = Basic.Pow_precedence
 
+    __slots__ = []
+
     @cacheit
     def __new__(cls, a, b, **assumptions):
         a = _sympify(a)

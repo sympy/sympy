@@ -85,6 +85,8 @@ class Number(Atom, RelMeths, ArithMeths):
     is_bounded = True
     is_finite = True
 
+    __slots__ = []
+
     is_Number = True
 
     def __new__(cls, *obj):
@@ -193,6 +195,8 @@ class Real(Number):
     is_real = True
     is_irrational = False
     is_integer = False
+
+    __slots__ = ['num']
 
     is_Real = True
 
@@ -440,6 +444,8 @@ class Rational(Number):
     is_integer = False
     is_rational = True
 
+    __slots__ = ['p', 'q']
+
     is_Rational = True
 
     @Memoizer(type, (int, long, str), MemoizerArg((int, long, type(None)), name="q"))
@@ -665,6 +671,8 @@ class Integer(Rational):
     is_integer = True
 
     is_Integer = True
+
+    __slots__ = ['p']
 
     # TODO caching with decorator, but not to degrade performance
     def __new__(cls, i):
@@ -905,6 +913,8 @@ class Zero(Singleton, Integer):
     is_prime = False
     is_composite = True
 
+    __slots__ = []
+
     @staticmethod
     def __abs__():
         return S.Zero
@@ -940,6 +950,8 @@ class One(Singleton, Integer):
 
     is_prime = True
 
+    __slots__ = []
+
     @staticmethod
     def __abs__():
         return S.One
@@ -958,6 +970,8 @@ class NegativeOne(Singleton, Integer):
 
     p = -1
     q = 1
+
+    __slots__ = []
 
     @staticmethod
     def __abs__():
@@ -996,6 +1010,8 @@ class Half(Singleton, Rational):
     p = 1
     q = 2
 
+    __slots__ = []
+
     @staticmethod
     def __abs__():
         return S.Half
@@ -1005,6 +1021,8 @@ class Infinity(Singleton, Rational):
 
     p = 1
     q = 0
+
+    __slots__ = []
 
     is_commutative = True
     is_positive = True
@@ -1049,6 +1067,8 @@ class NegativeInfinity(Singleton, Rational):
 
     p = -1
     q = 0
+
+    __slots__ = []
 
     is_commutative = True
     is_real = True
@@ -1105,6 +1125,8 @@ class NaN(Singleton, Rational):
     is_bounded = None
     #is_unbounded = False
 
+    __slots__ = []
+
     def tostr(self, level=0):
         return 'nan'
 
@@ -1122,6 +1144,8 @@ class ComplexInfinity(Singleton, Atom, NoRelMeths, ArithMeths):
     is_comparable = None
     is_bounded = False
     is_real = None
+
+    __slots__ = []
 
     @staticmethod
     def __abs__():
@@ -1153,6 +1177,8 @@ class NumberSymbol(Singleton, Atom, RelMeths, ArithMeths):
     is_comparable = True
     is_bounded = True
     is_finite = True
+
+    __slots__ = []
 
     is_NumberSymbol = True
 
@@ -1224,6 +1250,8 @@ class Exp1(NumberSymbol):
     is_negative = False # XXX Forces is_negative/is_nonnegative
     is_irrational = True
 
+    __slots__ = []
+
     @staticmethod
     def __abs__():
         return S.Exp1
@@ -1250,6 +1278,8 @@ class Pi(NumberSymbol):
     is_negative = False
     is_irrational = True
 
+    __slots__ = []
+
     @staticmethod
     def __abs__():
         return S.Pi
@@ -1273,6 +1303,8 @@ class GoldenRatio(NumberSymbol):
     is_negative = False
     is_irrational = True
 
+    __slots__ = []
+
     def _eval_evalf(self):
         return Real(decimal_math.golden_ratio())
 
@@ -1295,6 +1327,8 @@ class EulerGamma(NumberSymbol):
     is_negative = False
     is_irrational = None
 
+    __slots__ = []
+
     def _eval_evalf(self):
         return
 
@@ -1314,6 +1348,8 @@ class Catalan(NumberSymbol):
     is_negative = False
     is_irrational = None
 
+    __slots__ = []
+
     def _eval_evalf(self):
         return
 
@@ -1332,6 +1368,8 @@ class ImaginaryUnit(Singleton, Atom, RelMeths, ArithMeths):
     is_imaginary = True
     is_bounded = True
     is_finite = True
+
+    __slots__ = []
 
     @staticmethod
     def __abs__():

@@ -12,6 +12,8 @@ from symbol import Symbol, Wild
 
 class Mul(AssocOp, RelMeths, ArithMeths):
 
+    __slots__ = []
+
     is_Mul = True
 
     @classmethod

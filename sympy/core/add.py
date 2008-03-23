@@ -13,6 +13,8 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
     precedence = Basic.Add_precedence
 
+    __slots__ = []
+
     is_Add = True
 
     @classmethod

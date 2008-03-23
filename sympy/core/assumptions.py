@@ -64,6 +64,8 @@ class AssumeMeths(object):
 
     """
 
+    __slots__ = ['_assumptions']
+
     _assume_aliases = {} # aliases, "a key means values"
     _assume_aliases['nni'] = ('integer','nonnegative')
     _assume_aliases['npi'] = ('integer','nonpositive')

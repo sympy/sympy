@@ -21,6 +21,8 @@ class Symbol(Atom, RelMeths, ArithMeths):
 
     is_comparable = False
 
+    __slots__ = ['name']
+
     is_Symbol = True
 
     def __new__(cls, name, commutative=True, dummy=False,
@@ -102,6 +104,8 @@ class Dummy(Symbol):
 
     dummycount = 0
 
+    __slots__ = ['dummy_index']
+
     def __new__(cls, name, commutative=True, **assumptions):
         obj = Symbol.__xnew__(cls, name, commutative=commutative, **assumptions)
 
@@ -120,6 +124,9 @@ class Temporary(Dummy):
     """
     Indexed dummy symbol.
     """
+
+    __slots__ = []
+
     def __new__(cls, **assumptions):
         obj = Dummy.__new__(cls, 'T%i' % Dummy.dummycount, **assumptions)
         return obj
@@ -129,6 +136,8 @@ class Wild(Symbol):
     """
     Wild() matches any expression but another Wild().
     """
+
+    __slots__ = ['exclude']
 
     def __new__(cls, name, exclude=None, **assumptions):
         if type(exclude) is list:

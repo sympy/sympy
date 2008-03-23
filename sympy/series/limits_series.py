@@ -17,6 +17,9 @@ class Limit(Basic, RelMeths, ArithMeths):
 
     Limit(expr, x, xlim)
     """
+
+    __slots__ = []
+
     @cacheit
     def __new__(cls, expr, x, xlim, direction='<', **assumptions):
         expr = sympify(expr)
@@ -76,6 +79,8 @@ class Limit(Basic, RelMeths, ArithMeths):
 
 class InfLimit(Basic):
     _xoo = C.Symbol('xoo', dummy=True, unbounded=True, positive=True)
+
+    __slots__ = []
 
     @staticmethod
     def limit_process_symbol():

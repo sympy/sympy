@@ -183,6 +183,8 @@ class Basic(AssumeMeths):
 
     __metaclass__ = BasicMeta
 
+    __slots__ = ['_mhash', '_args']
+
     # To be overridden with True in the appropriate subclasses
     is_Atom = False
     is_Symbol = False
@@ -1595,6 +1597,8 @@ class Atom(Basic):
 
     precedence = Basic.Atom_precedence
 
+    __slots__ = []
+
     def _eval_derivative(self, s):
         if self==s: return S.One
         return S.Zero
@@ -1640,6 +1644,8 @@ class Atom(Basic):
 class Singleton(Basic):
     """ Singleton object.
     """
+
+    __slots__ = []
 
     def __new__(cls, *args, **assumptions):
         # if you need to overload __new__, then

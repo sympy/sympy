@@ -83,6 +83,8 @@ class Order(Basic, ArithMeths, RelMeths):
 
     _cache = {}
 
+    __slots__ = []
+
     @cacheit
     def __new__(cls, expr, *symbols, **assumptions):
         expr = sympify(expr).expand(trig=True)

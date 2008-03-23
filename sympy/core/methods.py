@@ -17,6 +17,8 @@ def _no_binary_operation(op, obj1, obj2):
 
 class ArithMeths(object):
 
+    __slots__ = []
+
     def __pos__(self):
         return self
     def __neg__(self):
@@ -63,6 +65,8 @@ class ArithMeths(object):
     __rtruediv__ = __rdiv__
 
 class NoArithMeths(object):
+
+    __slots__ = []
     
     def __pos__(self):
         raise TypeError, _no_unary_operation('+', self)
@@ -92,6 +96,8 @@ class NoArithMeths(object):
         return None
 
 class RelMeths(object):
+
+    __slots__ = []
     
     # TODO all comparison methods should return True/False directly
     # see #153
@@ -115,6 +121,8 @@ class RelMeths(object):
         return sympify(other) <= self
 
 class NoRelMeths(object):
+
+    __slots__ = []
 
     def __lt__(self, other):
         return hash(self) < hash(other)

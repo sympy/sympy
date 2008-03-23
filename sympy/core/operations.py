@@ -17,6 +17,8 @@ class AssocOp(Basic):
     Base class for Add and Mul.
     """
 
+    __slots__ = []
+
     @cacheit
     def __new__(cls, *args, **assumptions):
         if len(args)==0:

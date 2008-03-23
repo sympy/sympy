@@ -13,6 +13,8 @@ def Eq(a, op, b):
 
 class Relational(Basic, NoRelMeths):
 
+    __slots__ = []
+
     @staticmethod
     def get_relational_class(rop):
         if rop is None or rop in ['==','eq']: return Equality, False
@@ -60,6 +62,8 @@ class Equality(Relational):
 
     rel_op = '=='
 
+    __slots__ = []
+
     def __nonzero__(self):
         return self.lhs.compare(self.rhs)==0
 
@@ -67,12 +71,16 @@ class Unequality(Relational):
 
     rel_op = '!='
 
+    __slots__ = []
+
     def __nonzero__(self):
         return self.lhs.compare(self.rhs)!=0
 
 class StrictInequality(Relational):
 
     rel_op = '<'
+
+    __slots__ = []
 
     def __nonzero__(self):
         if self.lhs.is_comparable and self.rhs.is_comparable:
@@ -84,6 +92,8 @@ class StrictInequality(Relational):
 class Inequality(Relational):
 
     rel_op = '<='
+
+    __slots__ = []
 
     def __nonzero__(self):
         if self.lhs.is_comparable and self.rhs.is_comparable:
