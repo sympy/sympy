@@ -208,7 +208,7 @@ class Basic(AssumeMeths):
 
     def __getattr__(self, name):
         # if it's not an assumption -- we don't have it
-        if not name.startswith('is_'):
+        if name[:3] != 'is_':
             # it is important to return shortly for speed reasons:
             # we have *lots* of non-'is_' attribute access, e.g.
             # '_eval_<smth>', and a lot of them does *not* exits.
@@ -217,7 +217,8 @@ class Basic(AssumeMeths):
             # so let's get out of here as fast as possible.
             raise AttributeError(name)
 
-        return self._get_assumption(name)
+        else:
+            return self._get_assumption(name)
 
     # NB: there is no need in protective __setattr__
 
