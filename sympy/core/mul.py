@@ -21,47 +21,82 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         # apply associativity, separate commutative part of seq
         c_part = []
         nc_part = []
-        coeff = S.One
+
         c_seq = []
         nc_seq = seq
-        c_powers = {}
+
+        coeff = S.One       # standalone term
+                            # e.g. 3 * ...
+
+        c_powers = {}       # base -> exp                      z
+                            # e.g. (x+y) -> z  for  ... * (x+y)  * ...
+
+        exp_dict = {}       # num-base -> exp           y
+                            # e.g.  3 -> y  for  ... * 3  * ...
+
+        inv_exp_dict = {}   # exp -> Mul(num-bases)     x    x
+                            # e.g.  x -> 6  for  ... * 2  * 3  * ...
+
         lambda_args = None
         order_symbols = None
 
-        exp_dict = {}
-        inv_exp_dict = {}
 
         while c_seq or nc_seq:
+
+            # COMMUTATIVE
             if c_seq:
                 # first process commutative objects
                 o = c_seq.pop(0)
                 if isinstance(o, FunctionClass):
                     if o.nargs is not None:
                         o, lambda_args = o.with_dummy_arguments(lambda_args)
+
+                # O(x)
                 if o.is_Order:
                     o, order_symbols = o.as_expr_symbols(order_symbols)
+
+                # Mul([...])
                 if o.is_Mul:
                     # associativity
                     c_seq = list(o.args[:]) + c_seq
                     continue
+
+                # 3
                 if o.is_Number:
                     coeff *= o
                     continue
+
+                #  y
+                # x
                 if o.is_Pow:
                     base, exponent = o.as_base_exp()
+
+                    #  y
+                    # 3
                     if base.is_Number:
+
+                        # let's collect factors with numeric base
                         if base in exp_dict:
                             exp_dict[base] += exponent
                         else:
                             exp_dict[base] = exponent
                         continue
 
+                # exp(x)
                 if o.func is C.exp:
                     # exp(x) / exp(y) -> exp(x-y)
                     b = S.Exp1
                     e = o.args[0]
+
+                # everything else
                 else:
                     b, e = o.as_base_exp()
+
+                # now we have
+                # o = b**e
+
+                #         n          n          n
+                # (-3 + y)   ->  (-1)  * (3 - y)
                 if b.is_Add and e.is_Number:
                     c, t = b.as_coeff_terms()
                     if c is not S.One:
@@ -69,10 +104,16 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                         assert len(t)==1,`t`
                         b = t[0]
 
+                # let's collect factors with the same base, so e.g.
+                #  y    z     y+z
+                # x  * x  -> x
                 if b in c_powers:
                     c_powers[b] += e
                 else:
                     c_powers[b] = e
+
+
+            # NON-COMMUTATIVE
             else:
                 o = nc_seq.pop(0)
                 if isinstance(o, WildFunction):
@@ -83,18 +124,23 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 elif o.is_Order:
                     o, order_symbols = o.as_expr_symbols(order_symbols)
 
+                # -> commutative
                 if o.is_commutative:
                     # separate commutative symbols
                     c_seq.append(o)
                     continue
+
+                # Mul([...])
                 if o.__class__ is cls:
                     # associativity
-                    nc_seq = list(o.args[:]) + nc_seq
+                    nc_seq = list(o.args) + nc_seq
                     continue
                 if not nc_part:
                     nc_part.append(o)
                     continue
-                # try to combine last terms: a**b * a ** c -> a ** (b+c)
+
+                #                             b    c       b+c
+                # try to combine last terms: a  * a   ->  a
                 o1 = nc_part.pop()
                 b1,e1 = o1.as_base_exp()
                 b2,e2 = o.as_base_exp()
@@ -104,6 +150,14 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     nc_part.append(o1)
                     nc_part.append(o)
 
+
+        # ................................
+        # now we have:
+        # - coeff:
+        # - c_powers:   b -> e
+        # - exp_dict:   3 -> e
+
+        # XXX
         for b, e in c_powers.items():
             if e is S.Zero:
                 continue
@@ -118,6 +172,8 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             else:
                 c_part.append(Pow(b, e))
 
+        #  x    x     x
+        # 2  * 3  -> 6
         for b,e in exp_dict.items():
             if e in inv_exp_dict:
                 inv_exp_dict[e] *= b
@@ -143,6 +199,8 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                     c_part.append(obj)
 
 
+        # deal with
+        # (oo|nan|zero) * ...
         if (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
             new_c_part = []
             for t in c_part:
@@ -173,12 +231,17 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         elif coeff is not S.One:
             c_part.insert(0, coeff)
 
+        # order commutative part canonically
         c_part.sort(Basic.compare)
+
+        # we are done
         if len(c_part)==2 and c_part[0].is_Number and c_part[1].is_Add:
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
+
         return c_part, nc_part, lambda_args, order_symbols
+
 
     def _eval_power(b, e):
         if e.is_Number:
