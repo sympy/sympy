@@ -219,11 +219,7 @@ class Basic(AssumeMeths):
 
         return self._get_assumption(name)
 
-    def __setattr__(self, name, val):
-        if name.startswith('is_'):
-            raise AttributeError("Modification of assumptions is not allowed")
-        else:
-            AssumeMeths.__setattr__(self, name, val)
+    # NB: there is no need in protective __setattr__
 
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
