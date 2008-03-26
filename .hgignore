@@ -7,3 +7,6 @@ tags
 
 dist/
 build/
+
+doc/_build/
+doc/sphinx/
