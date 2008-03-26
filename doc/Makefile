@@ -45,6 +45,7 @@ html: $(SPHINXBUILDpy) spt-printable
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
 	cp -r src/pics _build/html/
 	cp -r src/figures _build/html/
+	cp -r src/spt-patches _build/html/
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
 
