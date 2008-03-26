@@ -4,6 +4,10 @@
 SymPy Patches Tutorial
 ======================
 
+(`printable version`_)
+
+.. _printable version: spt-printable.html
+
 .. sidebar:: Talk is cheap. Show me the code.
     
     -- Linus Torvalds [1]_

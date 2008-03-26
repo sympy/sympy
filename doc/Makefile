@@ -1,5 +1,6 @@
 # Makefile for Sphinx documentation
 #
+RST2HTML     = rst2html
 
 # You can set these variables from the command line.
 SPHINXOPTS   =
@@ -37,7 +38,7 @@ $(SPHINXBUILDpy):
 	cd sphinx; wget http://pypi.python.org/packages/source/S/Sphinx/Sphinx-$(SPHINXVER).tar.gz; 
 	cd sphinx; tar xzf Sphinx-$(SPHINXVER).tar.gz
 
-html: $(SPHINXBUILDpy)
+html: $(SPHINXBUILDpy) spt-printable
 	mkdir -p src/.static
 	mkdir -p _build/html _build/doctrees
 	mkdir -p src/modules
@@ -46,6 +47,10 @@ html: $(SPHINXBUILDpy)
 	cp -r src/figures _build/html/
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
+
+spt-printable:
+	mkdir -p _build/html/
+	$(RST2HTML) src/sympy-patches-tutorial.txt > _build/html/spt-printable.html
 
 htmlapi: $(SPHINXBUILDpy)
 	mkdir -p api/.static
