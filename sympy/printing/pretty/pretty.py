@@ -342,22 +342,44 @@ class PrettyPrinter(Printer):
             return prettyForm.__mul__(*a) / prettyForm.__mul__(*b)
 
     def _print_Pow(self, power):
-        if power.exp is S.Half:
-            # If it's a square root
+        # square roots, other roots or n-th roots
+        #test for fraction 1/n or power x**-1
+        if (isinstance(power.exp, C.Rational) and power.exp.p==1) or \
+           (   isinstance(power.exp, C.Pow) and
+               isinstance(power.exp.args[0], C.Symbol) and
+               power.exp.args[1]==S.NegativeOne):
             bpretty = self._print(power.base)
-            H = bpretty.height()
 
+            #construct root sign, start with the \/ shape
             _zZ= xobj('/',1)
-            s2 = stringPict(xobj('\\',1)+_zZ+' '*(H-1))
-            for x in xrange(1, H):
-                s3 = stringPict(' '*(x+1) + _zZ + ' '*(H-(x+1)))
-                s2 = stringPict(*s2.above(s3))
-
-            s2.baseline = bpretty.baseline  # vertical: each-to-each
-
+            rootsign = xobj('\\',1)+_zZ
+            #make exponent number to put above it
+            if isinstance(power.exp, C.Rational):
+                exp = str(power.exp.q)
+                if exp=='2': exp = ''
+            else: exp = str(power.exp.args[0])
+            exp = exp.ljust(2)
+            if len(exp)>2: rootsign = ' '*(len(exp)-2)+rootsign
+            #stack the exponent
+            rootsign = stringPict(exp+'\n'+rootsign)
+            rootsign.baseline = 0
+            #diagonal: length is one less than height of base
+            linelength = bpretty.height()-1
+            diagonal = stringPict('\n'.join(
+                ' '*(linelength-i-1)+_zZ+' '*i
+                for i in range(linelength)
+                ))
+            #put baseline just below lowest line: next to exp
+            diagonal.baseline = linelength-1
+            #make the root symbol
+            rootsign = prettyForm(*rootsign.right(diagonal))
+            #set the baseline to match contents to fix the height
+            #but if the height of bpretty is one, the rootsign must be one higher
+            rootsign.baseline = max(1, bpretty.baseline)
+            #build result
             s = prettyForm(hobj('_', 2+ bpretty.width()))
             s = prettyForm(*bpretty.above(s))
-            s = prettyForm(*s.left(s2))
+            s = prettyForm(*s.left(rootsign))
             return s
         elif power.exp.is_Rational and power.exp.is_negative:
             # Things like 1/x

@@ -75,8 +75,6 @@ def test_pretty_unicode_defaults():
 def test_pretty_functions():
     # Simple
     assert pretty( (2*x + exp(x)) ) in [' x      \ne  + 2*x', '       x\n2*x + e ']
-    assert pretty( sqrt(2) ) == '  ___\n\\/ 2 '
-    assert pretty( sqrt(2+pi) ) == '  ________\n\\/ 2 + pi '
     assert pretty(abs(x)) == '|x|'
     assert pretty(abs(x/(x**2+1))) in [
             '|  x   |\n|------|\n|     2|\n|1 + x |',
@@ -103,6 +101,27 @@ def test_pretty_functions():
     #assert pretty( conjugate(a+b*I) ) == '_     _\na - I*b'
     #assert pretty( conjugate(exp(a+b*I)) ) == ' _     _\n a - I*b\ne       '
 
+def test_pretty_sqrt():
+    assert pretty( sqrt(2) ) == '  ___\n\\/ 2 '
+    assert pretty( 2**Rational(1,3) ) == '3 ___\n\\/ 2 '
+    assert pretty( sqrt(x**2+1) ) == '   ________\n  /      2 \n\\/  1 + x  '
+    assert pretty( 2**Rational(1,100) ) == '100___\n \\/ 2 '
+    assert pretty( (1+sqrt(5))**Rational(1,3) ) == \
+        '   ___________\n3 /       ___ \n\\/  1 + \\/ 5  '
+    assert pretty( 2**(1/x) ) == 'x ___\n\\/ 2 '
+    assert pretty( sqrt(2+pi) ) == '  ________\n\\/ 2 + pi '
+    #and now everything together...
+    assert pretty( (2+(1+x**2)/(2+x))**Rational(1,4)+
+        (1+x**Rational(1,1000))/sqrt(3+x**2) ) == '''\
+                   ____________
+    1000___       /          2 
+1 +   \/ x       /      1 + x  
+----------- + 4 /   2 + ------ 
+   ________   \/        2 + x  
+  /      2                     
+\/  3 + x                      \
+'''
+                         
 def test_pretty_derivatives():
     # Simple
     f_1 = Derivative(log(x), x, evaluate=False)
