@@ -40,8 +40,9 @@ And I try if it works
     $ :input:`python t.py`
     y + 2*x
 
-Now I start `winpdb <somwhere>`_ on it (if you've never used winpdb -- it's an
-excellent multiplatform debugger, works on Linux, Windows and Mac OS X):
+Now I start `winpdb <http://winpdb.org/>`_ on it (if you've never used winpdb
+-- it's an excellent multiplatform debugger, works on Linux, Windows and Mac OS
+X):
 
 .. parsed-literal::
 
