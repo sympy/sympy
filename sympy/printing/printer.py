@@ -90,7 +90,7 @@ class Printer(object):
         # See if the class of expr is known, or if one of its super
         # classes is known, and use that print function
         res = None
-        for cls in expr.__class__.__mro__:
+        for cls in type(expr).__mro__:
             if hasattr(self, '_print_'+cls.__name__):
                 res = getattr(self, '_print_'+cls.__name__)(expr, *args)
                 break

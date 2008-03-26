@@ -217,3 +217,12 @@ def test_pretty_seq():
 def test_pretty_limits():
     assert pretty( limit(x, x, oo, evaluate=False) ) == ' lim x\nx->oo '
     assert pretty( limit(x**2, x, 0, evaluate=False) ) == '     2\nlim x \nx->0  '  
+
+def test_pretty_class():
+    """test that printer dispatcher correctly handles classes"""
+    class C: pass   # C has no .__class__ and this was causing problems
+    class D(object): pass
+
+    assert pretty( C ) == "test_pretty.C"
+    assert pretty( D ) == "<class 'test_pretty.D'>"
+
