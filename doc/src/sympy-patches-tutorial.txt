@@ -8,7 +8,10 @@ SymPy Patches Tutorial
 
 .. _printable version: spt-printable.html
 
-.. sidebar:: Talk is cheap. Show me the code.
+.. TODO reenable it when we fix sidebar handling in sphinx
+.. .. sidebar:: Talk is cheap. Show me the code.
+
+.. epigraph:: Talk is cheap. Show me the code.
     
     -- Linus Torvalds [1]_
 
