@@ -45,7 +45,7 @@ the game -- without the code there is nothing to bring in, and having the code
 outside is a nowin for anyone.
 
 As already said above, we review changes. This idea was borrowed from
-successful projects like Linux, Python, SAGE (?) and a lot more. In short each
+successful projects like Linux, Python, SAGE and a lot more. In short each
 change is first reviewed by other developers and only when it is approved the
 code is pushed in.
 
