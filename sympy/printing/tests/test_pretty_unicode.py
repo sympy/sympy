@@ -198,3 +198,30 @@ u"""\
     assert u == s
 
 
+def test_upretty_seq_even():
+    """there used to be a bug when pprinting sequences with even height"""
+    u = upretty([x**2])
+    s = \
+u"""\
+⎡ 2⎤
+⎣x ⎦\
+"""
+    assert u == s
+
+    u = upretty((x**2,))
+    s = \
+u"""\
+⎛ 2⎞
+⎝x ⎠\
+"""
+    assert u == s
+
+    u = upretty({x**2: 1})
+    s = \
+u"""\
+⎧ 2   ⎫
+⎨x : 1⎬
+⎩     ⎭\
+"""
+    assert u == s
+

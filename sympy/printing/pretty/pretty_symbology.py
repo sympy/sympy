@@ -311,7 +311,10 @@ def xobj(symb, length):
     if bot is None:  bot = ext
     if mid is not None:
         if (length % 2) == 0:
-            raise ValueError('xobj: expect length = 2*k+1')
+            # even height, but we have to print it somehow anyway...
+            # XXX is it ok?
+            length += 1
+
     else:
         mid = ext
 
