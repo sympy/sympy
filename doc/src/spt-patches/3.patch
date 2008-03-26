@@ -1,0 +1,95 @@
+diff --git a/sympy/printing/pretty/pretty_symbology.py b/sympy/printing/pretty/pretty_symbology.py
+--- a/sympy/printing/pretty/pretty_symbology.py
++++ b/sympy/printing/pretty/pretty_symbology.py
+@@ -311,7 +311,10 @@ def xobj(symb, length):
+     if bot is None:  bot = ext
+     if mid is not None:
+         if (length % 2) == 0:
+-            raise ValueError('xobj: expect length = 2*k+1')
++            # even height, but we have to print it somehow anyway...
++            # XXX is it ok?
++            length += 1
++
+     else:
+         mid = ext
+ 
+diff --git a/sympy/printing/printer.py b/sympy/printing/printer.py
+--- a/sympy/printing/printer.py
++++ b/sympy/printing/printer.py
+@@ -22,7 +22,7 @@ class Printer(object):
+ 
+        Also, if BAR is a subclass of FOO, _print_FOO(bar) will be called for
+        instance of BAR, if no _print_BAR is provided.  Thus, usually, we don't
+-       need to provide prining routines for every class we want to support --
++       need to provide printing routines for every class we want to support --
+        only generic routine has to be provided for a set of classes. 
+ 
+        A good example for this are functions - for example PrettyPrinter only
+@@ -52,7 +52,7 @@ class Printer(object):
+            It's job is to loop through expr classes (class + it's bases), and
+            try to dispatch the work to _print_<EXPR_CLASS>
+ 
+-           e.g., suppose we have the following class hierarcy::
++           e.g., suppose we have the following class hierarchy::
+ 
+                  Basic
+                    |
+@@ -90,7 +90,7 @@ class Printer(object):
+         # See if the class of expr is known, or if one of its super
+         # classes is known, and use that print function
+         res = None
+-        for cls in expr.__class__.__mro__:
++        for cls in type(expr).__mro__:
+             if hasattr(self, '_print_'+cls.__name__):
+                 res = getattr(self, '_print_'+cls.__name__)(expr, *args)
+                 break
+diff --git a/sympy/printing/tests/test_pretty.py b/sympy/printing/tests/test_pretty.py
+--- a/sympy/printing/tests/test_pretty.py
++++ b/sympy/printing/tests/test_pretty.py
+@@ -215,3 +215,12 @@ def test_pretty_limits():
+ def test_pretty_limits():
+     assert pretty( limit(x, x, oo, evaluate=False) ) == ' lim x\nx->oo '
+     assert pretty( limit(x**2, x, 0, evaluate=False) ) == '     2\nlim x \nx->0  '  
++
++def test_pretty_class():
++    """test that printer dispatcher correctly handles classes"""
++    class C: pass   # C has no .__class__ and this was causing problems
++    class D(object): pass
++
++    assert pretty( C ) == "test_pretty.C"
++    assert pretty( D ) == "<class 'test_pretty.D'>"
++
+diff --git a/sympy/printing/tests/test_pretty_unicode.py b/sympy/printing/tests/test_pretty_unicode.py
+--- a/sympy/printing/tests/test_pretty_unicode.py
++++ b/sympy/printing/tests/test_pretty_unicode.py
+@@ -198,3 +198,30 @@ u"""\
+     assert u == s
+ 
+ 
++def test_upretty_seq_even():
++    """there used to be a bug when pprinting sequences with even height"""
++    u = upretty([x**2])
++    s = \
++u"""\
++⎡ 2⎤
++⎣x ⎦\
++"""
++    assert u == s
++
++    u = upretty((x**2,))
++    s = \
++u"""\
++⎛ 2⎞
++⎝x ⎠\
++"""
++    assert u == s
++
++    u = upretty({x**2: 1})
++    s = \
++u"""\
++⎧ 2   ⎫
++⎨x : 1⎬
++⎩     ⎭\
++"""
++    assert u == s
++

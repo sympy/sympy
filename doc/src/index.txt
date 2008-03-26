@@ -1,0 +1,27 @@
+.. SymPy documentation master file, created by sphinx-quickstart.py on Sat Mar 22 19:34:32 2008.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to SymPy's documentation!
+=================================
+
+This is the central page for all SymPy's documentation. 
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   install.txt
+   tutorial.txt
+   guide.txt
+   wiki.txt
+   modules.txt
+   sympy-patches-tutorial.txt
+   outreach.txt
+   aboutus.txt
+
+If something cannot be easily accesible from this page, it's a bug (`please
+report it`_).
+
+.. _please report it: http://code.google.com/p/sympy/issues/list

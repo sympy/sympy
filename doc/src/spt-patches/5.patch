@@ -1,0 +1,21 @@
+diff --git a/sympy/printing/printer.py b/sympy/printing/printer.py
+--- a/sympy/printing/printer.py
++++ b/sympy/printing/printer.py
+@@ -22,7 +22,7 @@ class Printer(object):
+ 
+        Also, if BAR is a subclass of FOO, _print_FOO(bar) will be called for
+        instance of BAR, if no _print_BAR is provided.  Thus, usually, we don't
+-       need to provide prining routines for every class we want to support --
++       need to provide printing routines for every class we want to support --
+        only generic routine has to be provided for a set of classes. 
+ 
+        A good example for this are functions - for example PrettyPrinter only
+@@ -52,7 +52,7 @@ class Printer(object):
+            It's job is to loop through expr classes (class + it's bases), and
+            try to dispatch the work to _print_<EXPR_CLASS>
+ 
+-           e.g., suppose we have the following class hierarcy::
++           e.g., suppose we have the following class hierarchy::
+ 
+                  Basic
+                    |

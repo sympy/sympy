@@ -1,0 +1,76 @@
+pretty: fix xobj for even height
+
+Previously pprint({x**2: 1}) was failing with cryptic exception
+
+    ValueError: xobj: expect length = 2*k+1
+
+And this is a wrong approach.
+
+Things need to just work, so I've modified xobj to tweak evenly heighted
+objects somewhat. After all it looks good, so why not?
+
+In [1]: [x**2]
+Out[1]:
+⎡ 2⎤
+⎣x ⎦
+
+In [2]: (x**2,)
+Out[2]:
+⎛ 2⎞
+⎝x ⎠
+
+In [3]: {x**2: 1}
+Out[3]:
+⎧ 2   ⎫
+⎨x : 1⎬
+⎩     ⎭
+
+diff --git a/sympy/printing/pretty/pretty_symbology.py b/sympy/printing/pretty/pretty_symbology.py
+--- a/sympy/printing/pretty/pretty_symbology.py
++++ b/sympy/printing/pretty/pretty_symbology.py
+@@ -311,7 +311,10 @@ def xobj(symb, length):
+     if bot is None:  bot = ext
+     if mid is not None:
+         if (length % 2) == 0:
+-            raise ValueError('xobj: expect length = 2*k+1')
++            # even height, but we have to print it somehow anyway...
++            # XXX is it ok?
++            length += 1
++
+     else:
+         mid = ext
+ 
+diff --git a/sympy/printing/tests/test_pretty_unicode.py b/sympy/printing/tests/test_pretty_unicode.py
+--- a/sympy/printing/tests/test_pretty_unicode.py
++++ b/sympy/printing/tests/test_pretty_unicode.py
+@@ -198,3 +198,30 @@ u"""\
+     assert u == s
+ 
+ 
++def test_upretty_seq_even():
++    """there used to be a bug when pprinting sequences with even height"""
++    u = upretty([x**2])
++    s = \
++u"""\
++⎡ 2⎤
++⎣x ⎦\
++"""
++    assert u == s
++
++    u = upretty((x**2,))
++    s = \
++u"""\
++⎛ 2⎞
++⎝x ⎠\
++"""
++    assert u == s
++
++    u = upretty({x**2: 1})
++    s = \
++u"""\
++⎧ 2   ⎫
++⎨x : 1⎬
++⎩     ⎭\
++"""
++    assert u == s
++

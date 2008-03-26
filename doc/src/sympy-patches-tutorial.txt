@@ -1,0 +1,1010 @@
+.. _patches-tutorial:
+
+======================
+SymPy Patches Tutorial
+======================
+
+.. sidebar:: Talk is cheap. Show me the code.
+    
+    -- Linus Torvalds [1]_
+
+
+
+.. role:: input(strong)
+
+Introduction
+============
+
+In SymPy_ we encourage collaborative work.
+
+Everyone is welcome to join and to implement new feature, fix some bug, give
+general advice, etc... Also, we try to discuss everything and to review each
+other's work so that many eyes can see more thus raising the quality.
+
+General discussion takes place on `sympy@googlecode.com`_ mailing list and in
+the issues_, and the code is discussed in `sympy-patches@googlecode.com`_
+mailing list.
+
+As someone of you already know, software development is not just coding. A lot
+of non-coding tasks have to be done in order to produce *good* code. Just to
+mention a few: setting up infrastructure, designing, testing, documenting,
+assisting new developers (we are doing it here), and of course programming.
+
+But even programming is not all about writing the code, it is about writing the
+code *and* preparing it so that the code can be included into the project.
+
+Both producing the code and bringing it to the project are important parts of
+the game -- without the code there is nothing to bring in, and having the code
+outside is a nowin for anyone.
+
+As already said above, we review changes. This idea was borrowed from
+successful projects like Linux, Python, SAGE (?) and a lot more. In short each
+change is first reviewed by other developers and only when it is approved the
+code is pushed in.
+
+Like it takes effort to write good and clear code, reviewing other's work needs
+effort too. There are good practices how to do things so that reviewing is fun
+for both the author and the reviewer. We try to follow them, and we'll try to
+show you how to follow too.
+
+This tutorial will guide you how to do SymPy development with Mercurial and
+patches.
+
+.. .. sidebar:: By the way
+.. admonition:: By the way
+
+    when reviewing other's patches you *learn* a lot, so why not to join as a
+    reviewer too?
+
+.. _SymPy:  http://sympy.org/
+.. _issues: http://code.google.com/p/sympy/issues/list
+.. _sympy@googlecode.com:   http://groups.google.com/group/sympy
+.. _sympy-patches@googlecode.com:   http://groups.google.com/group/sympy-patches
+
+
+Workflow
+========
+
+Here we'll describe the workflow using real world example where we fix some bug.
+
+
+Hacking
+-------
+
+Suppose I want to fix issue `#755`
+
+.. image:: pics/1b.png
+
+I go there
+
+.. image:: pics/2.png
+
+Look at the problem description
+
+.. image:: pics/3b.png
+
+...
+
+.. image:: pics/4b.png
+
+
+Aah, it looks like printing code in `sympy/printing/printer.py` tries to treat
+`expr` as an instance of a new-style class. I think I know how to fix this!
+
+.. image:: pics/5b.png
+
+
+Ok, going to dive into the problem.
+
+First of all there exist two approaches to work:
+
+1. doing all the work in one repository, and
+2. creating new repository for each task
+
+In practice both of them have pros and cons, but we'll consider the second one
+as it does the job and is simpler.
+
+So, let's clone main repo, and go hacking
+
+.. admonition:: By the way
+
+    if you haven't already done so, do
+
+    .. parsed-literal::
+
+        $ :input:`hg clone http://hg.sympy.org/sympy`
+
+.. parsed-literal::
+
+    $ :input:`hg clone sympy sympy-fix755`
+    updating working directory
+    386 files updated, 0 files merged, 0 files removed, 0 files unresolved
+    $ :input:`cd sympy-fix755`
+
+.. note::
+
+    This is a real-life example. If you want to repeat the exact steps, update
+    your working directory to 4962f6641827 revision now:
+
+    .. parsed-literal::
+
+        $ :input:`hg up 4962f6641827`
+
+I use vim_ editor, and usually it is very handy to navigate by tags, so I build
+tags database first, then invoke my editor [2]_
+
+.. parsed-literal::
+
+    $ :input:`ctags -R`
+    $ :input:`vim`
+
+It was in `_print` function, so I locate it using tags
+
+.. image:: pics/6.png
+
+here it is
+
+.. image:: pics/7.png
+
+and here is the failing code
+
+.. image:: pics/8.png
+
+
+Aah, it seems old classes do not have the attribute `__class__`. Let's see if
+this is the gist of the problem.
+
+.. parsed-literal::
+
+    $ :input:`./bin/isympy`
+
+    In [1]: :input:`class C: pass`
+       ...:
+
+    In [2]: :input:`C`
+    ---------------------------------------------------------------------------
+    exceptions.AttributeError                 Traceback (most recent call last)
+    ...
+
+    AttributeError: class C has no attribute '__class__'
+
+
+
+Yes, it is. So I change it to what would always work. Then I invoke `hq` [3]_
+to see what I've changed:
+
+.. parsed-literal::
+
+    $ :input:`hq`
+
+.. image:: pics/9.png
+
+and its time to see whether this fixes the problem
+
+.. parsed-literal::
+
+    In [1]: :input:`import sympy`
+    In [2]: :input:`sympy.__dict__`
+
+oops, another bug seems to be sitting there:
+
+.. image:: pics/10.png
+
+after some examination it turned out to be a problem related to pretty-printing
+of sequences with even height
+
+.. parsed-literal::
+
+    In [3] :input:`{x**2: 1}`
+    ---------------------------------------------------------------------------
+    exceptions.ValueError                     Traceback (most recent call last)
+    ...
+
+    ValueError: xobj: expect length = 2*k+1
+
+I decided to add another row for this case
+
+.. parsed-literal::
+
+    $ :input:`hqq`      # `full diff at this stage`_
+
+.. _full diff at this stage: spt-patches/1.patch
+
+
+.. image:: pics/11.png
+
+since after all it looks good:
+
+.. parsed-literal::
+
+    In [1]: :input:`[x**2]`
+    Out[1]:
+    ⎡ 2⎤
+    ⎣x ⎦
+
+    In [2]: :input:`(x**2,)`
+    Out[2]:
+    ⎛ 2⎞
+    ⎝x ⎠
+
+    In [3]: :input:`{x**2: 1}`
+    Out[3]:
+    ⎧ 2   ⎫
+    ⎨x : 1⎬
+    ⎩     ⎭
+
+so why not?
+
+Now let's verify that printing tests pass
+
+.. parsed-literal::
+
+    $ :input:`py.test sympy/printing/`
+    ============================= test process starts ==============================
+    executable:   /usr/bin/python2.5  (2.5.0-final-0)
+    using py lib: /home/kirr/src/tools/py/py-0.9.0/py <rev unknown>
+
+    sympy/printing/tests/test_gtk.py[1] f
+    sympy/printing/tests/test_latex.py[8] .......f
+    sympy/printing/tests/test_mathml.py[6] .....f
+    sympy/printing/tests/test_pretty.py[10] .........f
+    sympy/printing/tests/test_pretty_unicode.py[10] ..........
+    sympy/printing/tests/test_python.py[6] ......
+
+    ============== tests finished: 37 passed, 4 xfail in 0.30 seconds =============
+
+Everything seems to be ok with pprinting evenly heighted sequences. Let's
+get back to original problem:
+
+.. parsed-literal::
+
+    In [1]: :input:`class C: pass`
+       ...:
+
+    In [2]: :input:`C`
+    Out[2]: __main__.C
+
+    In [3]: :input:`import sympy`
+    In [4]: :input:`sympy.__dict__`
+    (a lot is printed)
+
+ok, it works.
+
+Let's write tests (this is important)
+
+
+.. parsed-literal::
+
+    $ :input:`hqq`      # 2.patch_
+
+
+.. image:: pics/12.png
+
+.. _2.patch: spt-patches/2.patch
+
+
+Also, when looking at `_print` function again, I've noticed there are typos in
+`printer.py` so I've spellchecked the whole file
+
+.. parsed-literal::
+
+    $ :input:`hqq`      # 3.patch_
+
+.. image:: pics/13.png
+
+.. _3.patch: spt-patches/3.patch
+
+It seems we have done the job now.
+
+To ensure everything stays in shape, let's see if all tests pass
+
+.. parsed-literal::
+
+    $ :input:`./setup.py test`
+    running test
+    ============================= test process starts ==============================
+    executable:   /usr/bin/python2.5  (2.5.0-final-0)
+    using py lib: /home/kirr/src/tools/py/py-0.9.0/py <rev unknown>
+
+    sympy/concrete/tests/test_gosper.py[2] ..
+    sympy/concrete/tests/test_products.py[3] ...
+    sympy/concrete/tests/test_sums_products.py[9] ......fff
+    sympy/core/tests/test_arit.py[35] .................................ff
+    sympy/core/tests/test_assumptions.py[18] ................ff
+    sympy/core/tests/test_basic.py[24] ........................
+    sympy/core/tests/test_complex.py[10] ..........
+    sympy/core/tests/test_count_ops.py[1] .
+    sympy/core/tests/test_diff.py[3] ...
+    sympy/core/tests/test_equal.py[4] ....
+    sympy/core/tests/test_eval.py[8] .......f
+    sympy/core/tests/test_eval_power.py[6] ......
+    sympy/core/tests/test_functions.py[20] ................fff.
+    sympy/core/tests/test_match.py[24] .......................f
+    sympy/core/tests/test_numbers.py[20] ....................
+    sympy/core/tests/test_relational.py[2] ..
+    sympy/core/tests/test_str.py[8] ........
+    sympy/core/tests/test_subs.py[13] .............
+    ...
+
+    == tests finished: 712 passed, 1 xpass, 60 xfail, 4 skipped in 125.20 seconds ==
+    Testing docstrings.
+
+
+Good.
+
+Back to version control
+-----------------------
+
+We've finished hacking, and it's time to remember about version control. The
+goal is to prepare our work for inclusion into the project.
+
+First, there are three semantically independent changes made:
+
+1. `_print` dispatcher was fixed to handle old-style classes correctly
+2. we fixed pretty-printing to handle vertical objects of even height
+3. typos in `sympy/printing/printer.py` were fixed
+
+It is good to structure changes, and as said in the Introduction_ we try to
+make the whole process fun for all, so let's prepare three separate patches for
+each change. This way it would be easier to review them.
+
+For this we are going to use `Mercurial Queues`_ and `Record`_ extensions.
+
+.. admonition:: By the way
+
+    if you haven't already done so, include the following lines into your `~/.hgrc`::
+
+        [extensions]
+        hgext.mq        =
+        hgext.record    =
+
+
+I'm going to record fix for `#755` first
+
+.. parsed-literal::
+
+    $ :input:`hg qrecord --edit pprint-fix-old-classes.patch`
+    diff --git a/sympy/printing/pretty/pretty_symbology.py b/sympy/printing/pretty/pretty_symbology.py
+    1 hunks, 5 lines changed
+    examine changes to 'sympy/printing/pretty/pretty_symbology.py'? [Ynsfdaq?]  :input:`n`
+    diff --git a/sympy/printing/printer.py b/sympy/printing/printer.py
+    3 hunks, 6 lines changed
+    examine changes to 'sympy/printing/printer.py'? [Ynsfdaq?]  :input:`y`
+    @@ -22,7 +22,7 @@
+
+            Also, if BAR is a subclass of FOO, _print_FOO(bar) will be called for
+            instance of BAR, if no _print_BAR is provided.  Thus, usually, we don't
+    -       need to provide prining routines for every class we want to support --
+    +       need to provide printing routines for every class we want to support --
+            only generic routine has to be provided for a set of classes.
+
+            A good example for this are functions - for example PrettyPrinter only
+    record this change to 'sympy/printing/printer.py'? [Ynsfdaq?]  :input:`n`
+    @@ -52,7 +52,7 @@
+                It's job is to loop through expr classes (class + it's bases), and
+                try to dispatch the work to _print_<EXPR_CLASS>
+
+    -           e.g., suppose we have the following class hierarcy::
+    +           e.g., suppose we have the following class hierarchy::
+
+                      Basic
+                        |
+    record this change to 'sympy/printing/printer.py'? [Ynsfdaq?]  :input:`n`
+    @@ -90,7 +90,7 @@
+             # See if the class of expr is known, or if one of its super
+             # classes is known, and use that print function
+             res = None
+    -        for cls in expr.__class__.__mro__:
+    +        for cls in type(expr).__mro__:
+                 if hasattr(self, '_print_'+cls.__name__):
+                     res = getattr(self, '_print_'+cls.__name__)(expr, \*args)
+                     break
+    record this change to 'sympy/printing/printer.py'? [Ynsfdaq?]  :input:`y`
+    diff --git a/sympy/printing/tests/test_pretty.py b/sympy/printing/tests/test_pretty.py
+    1 hunks, 9 lines changed
+    examine changes to 'sympy/printing/tests/test_pretty.py'? [Ynsfdaq?]  :input:`y`
+    @@ -215,3 +215,12 @@
+     def test_pretty_limits():
+         assert pretty( limit(x, x, oo, evaluate=False) ) == ' lim x\\nx->oo '
+         assert pretty( limit(x**2, x, 0, evaluate=False) ) == '     2\\nlim x \\nx->0  '
+    +
+    +def test_pretty_class():
+    +    """test that printer dispatcher correctly handles classes"""
+    +    class C: pass   # C has no .__class__ and this was causing problems
+    +    class D(object): pass
+    +
+    +    assert pretty( C ) == "test_pretty.C"
+    +    assert pretty( D ) == "<class 'test_pretty.D'>"
+    +
+    record this change to 'sympy/printing/tests/test_pretty.py'? [Ynsfdaq?]  :input:`y`
+    diff --git a/sympy/printing/tests/test_pretty_unicode.py b/sympy/printing/tests/test_pretty_unicode.py
+    1 hunks, 27 lines changed
+    examine changes to 'sympy/printing/tests/test_pretty_unicode.py'? [Ynsfdaq?]  :input:`n`
+
+Pay attention to how I carefully choose which hunks go into this patch and
+which do not. Especially note how **some** changes made to `printer.py` were
+recorded and other changes (spelling fixes) were left intact in the work dir.
+
+Then an editor is popped up and asks about commit message:
+
+.. parsed-literal::
+
+    :input:`pprint: fix handling of old-style classes  (#755)`
+
+    :input:`We used to dispatch based on expr.__class__.__mro__, but when expr is an`
+    :input:`old-style class we failed, because old-style classes do not have __class__`
+    :input:`attribute.`
+
+    :input:`Let's just use type(expr).__mro__ which works in all cases.`
+    HG: Enter commit message.  Lines beginning with 'HG:' are removed.
+    HG: --
+    HG: user: Kirill Smelkov <kirr@landau.phys.spbu.ru>
+    HG: branch 'default'
+    HG: changed sympy/printing/printer.py
+    HG: changed sympy/printing/tests/test_pretty.py
+
+Now you have one patch applied
+
+.. parsed-literal::
+
+    $ :input:`hg qapplied`
+    pprint-fix-old-classes.patch_
+
+.. _pprint-fix-old-classes.patch: spt-patches/pprint-fix-old-classes.patch
+
+and work-dir changes shrinked somewhat
+
+.. parsed-literal::
+
+    $ :input:`hqq`  # 4.patch_
+
+.. image:: pics/14.png
+
+.. _4.patch: spt-patches/4.patch
+
+note, how there is no more `expr.__class__` -> `type(expr)` change in `hqq` output.
+
+Congratulations, you've recorded your first patch!
+
+Let's proceed with pprint
+
+.. parsed-literal::
+
+    $ :input:`hg qrecord -e xobj-fix-even-height.patch`
+    diff --git a/sympy/printing/pretty/pretty_symbology.py b/sympy/printing/pretty/pretty_symbology.py
+    1 hunks, 5 lines changed
+    examine changes to 'sympy/printing/pretty/pretty_symbology.py'? [Ynsfdaq?]  :input:`y`
+    @@ -311,7 +311,10 @@
+         if bot is None:  bot = ext
+         if mid is not None:
+             if (length % 2) == 0:
+    -            raise ValueError('xobj: expect length = 2*k+1')
+    +            # even height, but we have to print it somehow anyway...
+    +            # XXX is it ok?
+    +            length += 1
+    +
+         else:
+             mid = ext
+
+    record this change to 'sympy/printing/pretty/pretty_symbology.py'? [Ynsfdaq?]  :input:`y`
+    diff --git a/sympy/printing/printer.py b/sympy/printing/printer.py
+    2 hunks, 4 lines changed
+    examine changes to 'sympy/printing/printer.py'? [Ynsfdaq?]  :input:`n`
+    diff --git a/sympy/printing/tests/test_pretty_unicode.py b/sympy/printing/tests/test_pretty_unicode.py
+    1 hunks, 27 lines changed
+    examine changes to 'sympy/printing/tests/test_pretty_unicode.py'? [Ynsfdaq?]  :input:`y`
+    @@ -198,3 +198,30 @@
+         assert u == s
+
+
+    +def test_upretty_seq_even():
+    +    """there used to be a bug when pprinting sequences with even height"""
+    +    u = upretty([x**2])
+    +    s = \\
+    +u"""\\
+    +⎡ 2⎤
+    +⎣x ⎦\\
+    +"""
+    +    assert u == s
+    +
+    +    u = upretty((x**2,))
+    +    s = \\
+    +u"""\\
+    +⎛ 2⎞
+    +⎝x ⎠\\
+    +"""
+    +    assert u == s
+    +
+    +    u = upretty({x**2: 1})
+    +    s = \\
+    +u"""\\
+    +⎧ 2   ⎫
+    +⎨x : 1⎬
+    +⎩     ⎭\\
+    +"""
+    +    assert u == s
+    +
+    record this change to 'sympy/printing/tests/test_pretty_unicode.py'? [Ynsfdaq?]  :input:`y`
+
+entering patch description...
+
+.. parsed-literal::
+
+    :input:`pretty: fix xobj for even height`
+
+    :input:`Previously pprint({x**2: 1}) was failing with cryptic exception`
+
+        :input:`ValueError: xobj: expect length = 2*k+1`
+
+    :input:`And this is a wrong approach.`
+
+    :input:`Things need to just work, so I've modified xobj to tweak evenly heighted`
+    :input:`objects somewhat. After all it looks good, so why not?`
+
+    :input:`In [1]: [x**2]`
+    :input:`Out[1]:`
+    :input:`⎡ 2⎤`
+    :input:`⎣x ⎦`
+
+    :input:`In [2]: (x**2,)`
+    :input:`Out[2]:`
+    :input:`⎛ 2⎞`
+    :input:`⎝x ⎠`
+
+    :input:`In [3]: {x**2: 1}`
+    :input:`Out[3]:`
+    :input:`⎧ 2   ⎫`
+    :input:`⎨x : 1⎬`
+    :input:`⎩     ⎭`
+    HG: Enter commit message.  Lines beginning with 'HG:' are removed.
+    HG: --
+    HG: user: Kirill Smelkov <kirr@landau.phys.spbu.ru>
+    HG: branch 'default'
+    HG: changed sympy/printing/pretty/pretty_symbology.py
+    HG: changed sympy/printing/tests/test_pretty_unicode.py
+
+
+Congrats, now we have two patches recorded:
+
+.. parsed-literal::
+
+    $ :input:`hg qapplied`
+    pprint-fix-old-classes.patch_
+    xobj-fix-even-height.patch_
+
+.. _xobj-fix-even-height.patch: spt-patches/xobj-fix-even-height.patch
+
+and workdir is left with only spelling fixes:
+
+.. parsed-literal::
+
+    $ :input:`hqq`      # 5.patch_
+
+
+.. image:: pics/15.png
+
+.. _5.patch: spt-patches/5.patch
+
+Let's finish it
+
+.. parsed-literal::
+
+    $ :input:`hg qrecord -e printer-fix-typos.patch`
+    diff --git a/sympy/printing/printer.py b/sympy/printing/printer.py
+    2 hunks, 4 lines changed
+    examine changes to 'sympy/printing/printer.py'? [Ynsfdaq?]  :input:`y`
+    @@ -22,7 +22,7 @@
+
+            Also, if BAR is a subclass of FOO, _print_FOO(bar) will be called for
+            instance of BAR, if no _print_BAR is provided.  Thus, usually, we don't
+    -       need to provide prining routines for every class we want to support --
+    +       need to provide printing routines for every class we want to support --
+            only generic routine has to be provided for a set of classes.
+
+            A good example for this are functions - for example PrettyPrinter only
+    record this change to 'sympy/printing/printer.py'? [Ynsfdaq?]  :input:`y`
+    @@ -52,7 +52,7 @@
+                It's job is to loop through expr classes (class + it's bases), and
+                try to dispatch the work to _print_<EXPR_CLASS>
+
+    -           e.g., suppose we have the following class hierarcy::
+    +           e.g., suppose we have the following class hierarchy::
+
+                  Basic
+                    |
+    record this change to 'sympy/printing/printer.py'? [Ynsfdaq?]  :input:`y`
+
+.. parsed-literal::
+
+    :input:`printer.py: fix typos`
+    HG: Enter commit message.  Lines beginning with 'HG:' are removed.
+    HG: --
+    HG: user: Kirill Smelkov <kirr@landau.phys.spbu.ru>
+    HG: branch 'default'
+    HG: changed sympy/printing/printer.py
+
+Now we have three patches applied
+
+.. parsed-literal::
+
+    $ :input:`hg qapplied`
+    pprint-fix-old-classes.patch_
+    xobj-fix-even-height.patch_
+    printer-fix-typos.patch_
+
+.. _printer-fix-typos.patch: spt-patches/printer-fix-typos.patch
+
+and clean workdir
+
+.. parsed-literal::
+
+    $ :input:`hg st`
+    $ :input:`hg diff`
+    $ 
+
+
+Here is a bit of history:
+
+.. parsed-literal::
+
+    $ :input:`hg glog -l4`
+    @  changeset:   1902:dff9895d1d23
+    |  tag:         qtip
+    |  tag:         printer-fix-typos.patch
+    |  tag:         tip
+    |  user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
+    |  date:        Mon Mar 24 22:44:05 2008 +0300
+    |  summary:     printer.py: fix typos
+    |
+    o  changeset:   1901:787707e1a28c
+    |  tag:         xobj-fix-even-height.patch
+    |  user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
+    |  date:        Mon Mar 24 22:44:04 2008 +0300
+    |  summary:     pretty: fix xobj for even height
+    |
+    o  changeset:   1900:b2321483936b
+    |  tag:         pprint-fix-old-classes.patch
+    |  tag:         qbase
+    |  user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
+    |  date:        Mon Mar 24 22:44:04 2008 +0300
+    |  summary:     pprint: fix handling of old-style classes  (#755)
+    |
+    o  changeset:   1899:4962f6641827
+    |  tag:         qparent
+    |  user:        Ondrej Certik <ondrej@certik.cz>
+    |  date:        Sat Mar 22 13:35:55 2008 +0100
+    |  summary:     Failing doctests were fixed. This was triggered by a different ordering.
+    |
+
+and a nice graphical history browser is handy
+
+.. parsed-literal::
+
+    $ :input:`hg view`
+
+.. image:: pics/16.png
+
+Yep!
+
+
+Patches are ready, lets send them for review
+--------------------------------------------
+
+At this stage we are done with preparing our patches, and it is time to send
+them for review.
+
+First, let's rebase them to the latest tip.
+
+For this we go to `sympy` mirroring repository, see whats new, and pull updates:
+
+.. parsed-literal::
+
+    $ :input:`cd ../sympy/`
+    $ :input:`hg in`
+    comparing with http://hg.sympy.org/sympy
+    searching for changes
+    changeset:   1900:0bc73e367102
+    user:        Ondrej Certik <ondrej@certik.cz>
+    date:        Sat Mar 22 16:06:47 2008 +0100
+    summary:     The print ordering of Add has been improved.
+    
+    changeset:   1901:7cd8948a664a
+    user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
+    date:        Mon Mar 24 00:17:12 2008 +0300
+    summary:     [1/2] let's use __slots__
+    
+    changeset:   1902:529ba5e4a7c6
+    user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
+    date:        Mon Mar 24 00:17:13 2008 +0300
+    summary:     [2/2] let's use __slots__
+    
+    changeset:   1903:115df7b1ee75
+    user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
+    date:        Mon Mar 24 00:17:14 2008 +0300
+    summary:     add comments to Mul.flatten
+    
+    changeset:   1904:75544c92be1d
+    tag:         tip
+    user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
+    date:        Mon Mar 24 01:19:27 2008 +0300
+    summary:     slightly speedup Basic.__getattr__
+
+    $ :input:`hg pull --update`
+    pulling from http://hg.sympy.org/sympy
+    searching for changes
+    adding changesets
+    adding manifests
+    adding file changes
+    added 5 changesets with 26 changes to 21 files
+    21 files updated, 0 files merged, 0 files removed, 0 files unresolved
+
+Now let's get back to `sympy-fix755`
+
+.. parsed-literal::
+
+    $ :input:`cd ../sympy-fix755/`
+
+We have three patches applied
+
+.. parsed-literal::
+
+    $ :input:`hg qapplied`
+    pprint-fix-old-classes.patch_
+    xobj-fix-even-height.patch_
+    printer-fix-typos.patch_
+
+Let's rebase them.
+
+First we *unapply* all patches
+
+.. parsed-literal::
+
+    $ :input:`hg qpop -a`
+    Patch queue now empty
+
+Then pull recent changes in from our mirror repo
+
+.. parsed-literal::
+
+    $ :input:`hg pull -u`
+    pulling from /home/kirr/src/sympy/spt-work/sympy
+    searching for changes
+    adding changesets
+    adding manifests
+    adding file changes
+    added 5 changesets with 26 changes to 21 files
+    21 files updated, 0 files merged, 0 files removed, 0 files unresolved
+
+Then apply patches back
+
+.. parsed-literal::
+
+    $ :input:`hg qpush --all`
+    applying pprint-fix-old-classes.patch
+    applying xobj-fix-even-height.patch
+    applying printer-fix-typos.patch
+    Now at: printer-fix-typos.patch
+
+
+Now we have our patches applied on top of the latest tip.
+
+.. note::
+
+    We were lucky.
+
+    Sometimes changes we've made *overlap* with the changes made by other
+    developers. This situation is called conflict_ and has to be resolved using
+    automated merge programs or by hands.
+    
+    This topic is out of scope of this tutorial, but an interested reader is
+    encouraged to read `chapter 3`_ in hgbook_ and TutorialConflict_ HG wiki
+    page.
+
+
+.. _chapter 3:  http://hgbook.red-bean.com/hgbookch3.html
+
+
+Ok, it time to send patches for review!
+
+Ensure last time on outgoing changes
+
+.. parsed-literal::
+
+    $ :input:`hg out`
+    comparing with /home/kirr/src/sympy/spt-work/sympy
+    searching for changes
+    changeset:   1905:95b5af645143
+    tag:         pprint-fix-old-classes.patch
+    tag:         qbase
+    user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
+    date:        Wed Mar 26 15:18:09 2008 +0300
+    summary:     pprint: fix handling of old-style classes  (#755)
+    
+    changeset:   1906:316070047993
+    tag:         xobj-fix-even-height.patch
+    user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
+    date:        Wed Mar 26 15:18:09 2008 +0300
+    summary:     pretty: fix xobj for even height
+    
+    changeset:   1907:63eb63c9f098
+    tag:         qtip
+    tag:         printer-fix-typos.patch
+    tag:         tip
+    user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
+    date:        Wed Mar 26 15:18:09 2008 +0300
+    summary:     printer.py: fix typos
+
+And let's finally send them:
+
+.. parsed-literal::
+
+    $ :input:`hg email --outgoing`
+    comparing with /home/kirr/src/sympy/spt-work/sympy
+    searching for changes
+    This patch series consists of 3 patches.
+    
+    Subject: [PATCH 0 of 3]  :input:`Fix for #755 + two more`
+    
+    Write the introductory message for the patch series.
+
+    :input:`While working on #755  (pprint fails on old style classes) I've spot a couple`
+    :input:`of other inconveniences.`
+
+    :input:`Please review.`
+    
+    To:  :input:`sympy-patches@googlegroups.com` TODO put this into .hgrc
+    Cc:  
+    
+    Sending [PATCH 0 of 3] Fix for #755 + two more ...
+    Sending [PATCH 1 of 3] pprint: fix handling of old-style classes  (#755) ...
+    Sending [PATCH 2 of 3] pretty: fix xobj for even height ...
+    Sending [PATCH 3 of 3] printer.py: fix typos ...
+
+
+Ok, patches sent.
+
+Usually I use Mutt_, but I'm having temporary problems with mail delivery
+today, so this is sympy-patches as viewed from Google web interface:
+
+.. image:: pics/19.png
+
+
+Ondrej already reviewed them, and all patches were approved. Good.
+
+Two possibilities exist here:
+
+1. patches may be applied by reviewer, and
+2. patches may be pushed in by the author
+
+Generally when you just begin contributing to SymPy, your patches will be
+applied by someone else, but as your experience matures, you'll be granted
+priviledges to push in yourself.
+
+
+Anyway, let's see how pushing is done:
+
+Let's first push to local `sympy` mirror
+
+.. parsed-literal::
+
+    $ :input:`hg push --force`
+    pushing to /home/kirr/src/sympy/spt-work/sympy
+    searching for changes
+    adding changesets
+    adding manifests
+    adding file changes
+    added 3 changesets with 5 changes to 4 files
+
+.. note::
+
+    ``--force`` is used here because otherwise ``hg push`` complains that
+    ``source has mq patches applied``. As we still push to local repository we
+    know what we do.
+
+Now let's go to `sympy` mirror and push into main repo!
+
+.. parsed-literal::
+
+    $ :input:`cd ../sympy`
+    $ :input:`hg push ssh://hg@hg.sympy.org/sympy`
+    pushing to ssh://hg@hg.sympy.org/sympy
+    searching for changes
+    remote: adding changesets
+    remote: adding manifests
+    remote: adding file changes
+    remote: added 3 changesets with 5 changes to 4 files
+    remote: notify: sending 1 subscribers 1 changes
+    remote: notify: sending 1 subscribers 1 changes
+    remote: notify: sending 1 subscribers 1 changes
+
+
+Ok, patches are pushed. Here is what `http://hg.sympy.org/sympy/` says:
+
+.. image:: pics/17.png
+
+Now, let's close `#755`
+
+.. image:: pics/18.png
+
+And we are done!
+
+Epilogue
+--------
+
+Let's summarize the approach:
+
+1. First relax, and hack on the problem as you see fit
+2. When you think you've reached the point when something is done, start
+   recording patches
+3. After your patches are prepared, send them for review
+4. If everything is ok, patches go to the main repository.
+
+Interested readers are suggested to read additional literature:
+
+1. `Mercurial Book`_, and
+2. its chapters about mercurial queues: (I_, II_)
+3. Mercurial wiki pages: Tutorial_, `Mq Tutorial`_, `Mercurial Queues`_,
+
+.. _I:  `hgbook on MQ part1`_
+.. _II: `hgbook on MQ part2`_
+
+
+And of course
+
+.. admonition:: *Patches Welcome!*
+
+    We've reached the end of this tutorial, now it's time to practice on the
+    SymPy_ project: http://www.sympy.org/
+
+    We encourage you to join us. Feel free to improve SymPy_ and this tutorial
+    as well.
+
+    .. rubric:: *Have Fun!*
+
+    | *See You, and*
+    | *Patches Welcome!*
+
+
+
+
+----------
+
+.. .. rubric:: Footnotes
+
+.. [1] http://lkml.org/lkml/2000/8/25/132
+
+.. [2] If you use some other editor, just figure out how to make your life as
+       easy as I did for vim (hint Emacs has this for sure too)
+
+.. [3] I have these aliases in my `~/.bashrc`
+
+    ::
+
+      alias hq='hg diff . | vim -R -'
+      alias hqq='hg diff . | gvim -geometry 80x40+600+0 -R "+set nowrap" -'
+
+
+.. 1: When working on something, let's use MQ from the beginning.
+.. Split the change into logical chunks and let them live in their own patches.
+.. 2: when working on patches, qrefresh them as many times as you see fit.
+.. 3: In the end of the day, use qcommit to save your work in MQ, and allow others to clone your patches, and contribute to patches through usual pull/push/whatever
+.. 4: When patches are 'done' (i.e. reviewed, enhanced, etc) -- include them into the trunk, and qdel from MQ
+
+
+.. _vim:    http://www.vim.org/
+.. _mutt:   http://www.mutt.org/
+
+.. _Mercurial Book:     hgbook_
+.. _hgbook:             http://hgbook.red-bean.com/
+.. _hgbook on MQ part1: http://hgbook.red-bean.com/hgbookch12.html
+.. _hgbook on MQ part2: http://hgbook.red-bean.com/hgbookch13.html
+
+.. _Tutorial:           http://www.selenic.com/mercurial/wiki/index.cgi/Tutorial
+.. _Mercurial Queues:   http://www.selenic.com/mercurial/wiki/index.cgi/MqExtension
+.. _Mq Tutorial:        http://www.selenic.com/mercurial/wiki/index.cgi/MqTutorial
+.. _Merging Patches:    http://www.selenic.com/mercurial/wiki/index.cgi/MqMerge
+
+.. _Record:             http://www.selenic.com/mercurial/wiki/index.cgi/RecordExtension
+
+.. _conflict:           http://www.selenic.com/mercurial/wiki/index.cgi/Conflict
+.. _TutorialConflict:   http://www.selenic.com/mercurial/wiki/index.cgi/TutorialConflict

@@ -1,0 +1,36 @@
+.. _module-docs:
+
+SymPy Reference
+===============
+
+Because every feature of SymPy must have a test case, when you are not sure how
+to use something, just look into the ``tests/`` directories, find that feature
+and read the tests for it, that will tell you everything you need to know.
+
+API documentation
+-----------------
+
+This documents all SymPy modules and it is automatically generated from SymPy
+sources. 
+
+Click the  "modules" (:ref:`modindex`) link in the top right corner for
+automatically generated documentation.
+
+There is also the `API <http://sympy.googlecode.com/svn/api/sympy.html>`_
+documentation generated using pydoctor.
+
+Modules User's Guide
+--------------------
+
+Besides the automatically generated documentation, we also have hand written
+user's guide and show cases for a lot of modules in SymPy:
+
+.. include:: modules-list.txt
+
+Contributions to docs
+---------------------
+
+All contributions are welcome. If you'd like to improve something, look into
+the sources if they contain the information you need (if not, please fix them),
+otherwise the conversion tool needs to be improved (look in the ``doc/``
+directory) to properly extract all interesting information from the sources.

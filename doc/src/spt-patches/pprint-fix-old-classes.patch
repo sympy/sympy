@@ -1,0 +1,36 @@
+pprint: fix handling of old-style classes  (#755)
+
+We used to dispatch based on expr.__class__.__mro__, but when expr is an
+old-style class we failed, because old-style classes do not have __class__
+attribute.
+
+Let's just use type(expr).__mro__ which works in all cases.
+
+diff --git a/sympy/printing/printer.py b/sympy/printing/printer.py
+--- a/sympy/printing/printer.py
++++ b/sympy/printing/printer.py
+@@ -90,7 +90,7 @@ class Printer(object):
+         # See if the class of expr is known, or if one of its super
+         # classes is known, and use that print function
+         res = None
+-        for cls in expr.__class__.__mro__:
++        for cls in type(expr).__mro__:
+             if hasattr(self, '_print_'+cls.__name__):
+                 res = getattr(self, '_print_'+cls.__name__)(expr, *args)
+                 break
+diff --git a/sympy/printing/tests/test_pretty.py b/sympy/printing/tests/test_pretty.py
+--- a/sympy/printing/tests/test_pretty.py
++++ b/sympy/printing/tests/test_pretty.py
+@@ -215,3 +215,12 @@ def test_pretty_limits():
+ def test_pretty_limits():
+     assert pretty( limit(x, x, oo, evaluate=False) ) == ' lim x\nx->oo '
+     assert pretty( limit(x**2, x, 0, evaluate=False) ) == '     2\nlim x \nx->0  '  
++
++def test_pretty_class():
++    """test that printer dispatcher correctly handles classes"""
++    class C: pass   # C has no .__class__ and this was causing problems
++    class D(object): pass
++
++    assert pretty( C ) == "test_pretty.C"
++    assert pretty( D ) == "<class 'test_pretty.D'>"
++
