@@ -9,6 +9,7 @@ from sympy.core.basic import Basic, S, C, Atom
 from sympy.core.methods import RelMeths, ArithMeths
 
 from sympy.utilities import all, any
+from sympy.simplify import cancel # TBD : move cancel() to algorithms.py
 
 from sympy.polys.monomial import monomial_cmp, \
     monomial_mul, monomial_max, monomial_as_basic
@@ -139,15 +140,16 @@ class Poly(Basic, RelMeths, ArithMeths):
 
        [6] Arithmetic operators:
 
-          [6.1] [U-] __neg__     --> polynomial negation
-          [6.2] [U-] __add__     --> polynomial addition
-          [6.3] [U-] __sub__     --> polynomial subtraction
-          [6.4] [U-] __mul__     --> polynomial multiplication
-          [6.5] [U-] __pow__     --> polynomial exponentiation
-          [6.6] [U-] __div__     --> polynomial quotient
-          [6.7] [U-] __mod__     --> polynomial remainder
-          [6.8] [U-] __divmod__  --> both 'div' and 'mod'
-          [6.9] [U-] __truediv__ --> the same as 'div'
+          [6.1]  [U-] __abs__     --> for all i, abs(c_i)
+          [6.2]  [U-] __neg__     --> polynomial negation
+          [6.3]  [U-] __add__     --> polynomial addition
+          [6.4]  [U-] __sub__     --> polynomial subtraction
+          [6.5]  [--] __mul__     --> polynomial multiplication
+          [6.6]  [U-] __pow__     --> polynomial exponentiation
+          [6.7]  [U-] __div__     --> polynomial quotient
+          [6.8]  [U-] __mod__     --> polynomial remainder
+          [6.9]  [U-] __divmod__  --> both 'div' and 'mod'
+          [6.10] [U-] __truediv__ --> the same as 'div'
 
        [7] Polynomial properties:
 
@@ -429,10 +431,10 @@ class Poly(Basic, RelMeths, ArithMeths):
 
         poly = sympify(poly).expand()
 
-        if isinstance(poly, Add):
+        if poly.is_Add:
             terms = poly.args
         else:
-            if isinstance(poly, Number):
+            if poly.is_Number:
                 return { (0,) * N : poly }
             else:
                 terms = [ poly ]
@@ -441,7 +443,7 @@ class Poly(Basic, RelMeths, ArithMeths):
             if not term.has_any_symbols(*symbols):
                 coeff, monom = term, (0,) * N
             else:
-                if isinstance(term, Mul):
+                if term.is_Mul:
                     factors = term.args
                 else:
                     factors = [ term ]
@@ -450,14 +452,14 @@ class Poly(Basic, RelMeths, ArithMeths):
 
                 for factor in factors:
                     if factor.has_any_symbols(*symbols):
-                        if isinstance(factor, Pow):
-                            if isinstance(factor.exp, Integer):
+                        if factor.is_Pow:
+                            if factor.exp.is_Integer:
                                 b, e = factor.base, factor.exp.p
 
-                                if isinstance(b, Symbol) and e > 0:
+                                if b.is_Symbol and e > 0:
                                     monom[indices[b]] += e
                                     continue
-                        elif isinstance(factor, Symbol):
+                        elif factor.is_Symbol:
                             monom[indices[factor]] += 1
                             continue
 
@@ -623,15 +625,19 @@ class Poly(Basic, RelMeths, ArithMeths):
     LM = lead_monom
     LT = lead_term
 
+    def __abs__(self):
+        return self.__class__(([ abs(coeff) for coeff in self.coeffs ],
+            self.monoms), *self.symbols, **self.flags)
+
     def __neg__(self):
         return self.__class__(([ -coeff for coeff in self.coeffs ],
             self.monoms), *self.symbols, **self.flags)
 
     def __add__(self, other):
         try:
-            self, poly = self.unify(other)
+            self, poly = self.unify_with(other)
         except PolynomialError:
-            return self.as_basic() + other
+            return self.as_basic() + other.as_basic()
 
         if poly.is_zero:
             return self
@@ -661,9 +667,9 @@ class Poly(Basic, RelMeths, ArithMeths):
 
     def __sub__(self, other):
         try:
-            self, poly = self.unify(other)
+            self, poly = self.unify_with(other)
         except PolynomialError:
-            return self.as_basic() - other
+            return self.as_basic() - other.as_basic()
 
         if poly.is_zero:
             return self
@@ -675,7 +681,7 @@ class Poly(Basic, RelMeths, ArithMeths):
             return self.sub_term(*poly.LT)
 
         if self.is_monomial:
-            return -poly.sub_term(*self.LT)
+            return (-poly).add_term(*self.LT)
 
         terms = self.as_dict()
 
@@ -710,9 +716,9 @@ class Poly(Basic, RelMeths, ArithMeths):
                New York, USA, 1976, pp. 136-148
         """
         try:
-            self, poly = self.unify(other)
+            self, poly = self.unify_with(other)
         except PolynomialError:
-            return self.as_basic() * other
+            return self.as_basic() * other.as_basic()
 
         if self.is_constant:
             if self.is_zero:
@@ -722,8 +728,14 @@ class Poly(Basic, RelMeths, ArithMeths):
             else:
                 LC = self.lead_coeff
 
-                return poly.__class__(([ LC*coeff for coeff in poly.coeffs ],
-                    poly.monoms), *poly.symbols, **poly.flags)
+                coeffs = [ LC * coeff for coeff in poly.coeffs ]
+
+                for i, coeff in enumerate(coeffs):
+                    if not coeff.is_Atom:
+                        coeffs[i] = cancel(coeff)
+
+                return poly.__class__((coeffs, poly.monoms),
+                    *poly.symbols, **poly.flags)
 
         if poly.is_constant:
             if poly.is_zero:
@@ -733,14 +745,24 @@ class Poly(Basic, RelMeths, ArithMeths):
             else:
                 LC = poly.lead_coeff
 
-                return self.__class__(([ coeff*LC for coeff in self.coeffs ],
-                    self.monoms), *self.symbols, **self.flags)
+                coeffs = [ coeff * LC for coeff in self.coeffs ]
+
+                for i, coeff in enumerate(coeffs):
+                    if not coeff.is_Atom:
+                        coeffs[i] = cancel(coeff)
+
+                return self.__class__((coeffs, self.monoms),
+                    *self.symbols, **self.flags)
 
         if self.is_monomial:
             LC, LM = self.lead_term
 
             coeffs = [ LC * coeff for coeff in poly.coeffs ]
             monoms = [ monomial_mul(LM, monom) for monom in poly.monoms ]
+
+            for i, coeff in enumerate(coeffs):
+                if not coeff.is_Atom:
+                    coeffs[i] = cancel(coeff)
 
             return poly.__class__((coeffs, monoms), *poly.symbols, **poly.flags)
 
@@ -749,6 +771,10 @@ class Poly(Basic, RelMeths, ArithMeths):
 
             coeffs = [ coeff * LC for coeff in self.coeffs ]
             monoms = [ monomial_mul(monom, LM) for monom in self.monoms ]
+
+            for i, coeff in enumerate(coeffs):
+                if not coeff.is_Atom:
+                    coeffs[i] = cancel(coeff)
 
             return self.__class__((coeffs, monoms), *self.symbols, **self.flags)
 
@@ -781,7 +807,12 @@ class Poly(Basic, RelMeths, ArithMeths):
 
                 for i in xrange(k+1):
                     if p.has_key(i) and q.has_key(k-i):
-                        coeff += p[i] * q[k-i]
+                        product = p[i] * q[k-i]
+
+                        if product.is_Atom:
+                            coeff += product
+                        else:
+                            coeff += cancel(product)
 
                 if coeff:
                     coeffs.append(coeff)
@@ -809,6 +840,9 @@ class Poly(Basic, RelMeths, ArithMeths):
 
                     coeff = coeff_p * coeff_q
 
+                    if not coeff.is_Atom:
+                        coeff = cancel(coeff)
+
                     if terms.has_key(monom):
                         coeff += terms[monom]
 
@@ -832,16 +866,17 @@ class Poly(Basic, RelMeths, ArithMeths):
 
            [1] D. E. Knuth, The Art of Computer Programming: Seminumerical
                Algorithms, v.2, Addison-Wesley Professional, 1997, pp. 461
+
         """
+        other = sympify(other)
+
         if isinstance(other, Poly):
             if other.is_constant:
                 other = sympify(other.lead_coeff)
             else:
                 return self.as_basic()**other.as_basic()
-        else:
-            other = sympify(other)
 
-        if isinstance(other, Integer):
+        if other.is_Integer:
             if other is S.One:
                 return self
 
@@ -872,27 +907,21 @@ class Poly(Basic, RelMeths, ArithMeths):
 
     def __div__(self, other):
         try:
-            poly = self.__class__(other, *self.symbols, **self.flags)
+            return sympy.polys.algorithms.poly_div(self, other)[0]
         except PolynomialError:
-            return self.as_basic() / other
-
-        return sympy.polys.algorithms.poly_div(self, other)[0]
+            return self.as_basic() / other.as_basic()
 
     def __mod__(self, other):
         try:
-            poly = self.__class__(other, *self.symbols, **self.flags)
+            return sympy.polys.algorithms.poly_div(self, other)[1]
         except PolynomialError:
             return S.Zero
 
-        return sympy.polys.algorithms.poly_div(self, other)[1]
-
     def __divmod__(self, other):
         try:
-            poly = self.__class__(other, *self.symbols, **self.flags)
+            return sympy.polys.algorithms.poly_div(self, other)
         except PolynomialError:
-            return (self.as_basic() / other, S.Zero)
-
-        return sympy.polys.algorithms.poly_div(self, other)
+            return (self.as_basic() / other.as_basic(), S.Zero)
 
     __truediv__ = __div__
 
@@ -1109,15 +1138,50 @@ class Poly(Basic, RelMeths, ArithMeths):
         else:
             return S.Zero
 
-    def unify(self, other):
-        """Returns two polynomials with common sets of symbols. """
-        symbols, flags = self.symbols, self.flags
+    def unify_with(self, other):
+        """Unify 'self' with a polynomial or a set of polynomials.
 
-        if isinstance(other, Poly) and not (other.stamp <= self.stamp):
-            symbols = tuple(sorted(self.stamp | other.stamp))
-            self = self.__class__(self, *symbols, **flags)
+           This method will return polynomials of the same type,  dominated
+           by 'self', with a common set of symbols (which is a union of all
+           symbols from all polynomials) and with common monomial ordering.
 
-        return self, self.__class__(other, *symbols, **flags)
+           You can pass a polynomial  or an expression to this method, or
+           a list or a tuple of polynomials or expressions. If any of the
+           inputs would be an expression then it will be converted to a
+           polynomial.
+
+        """
+        symbols, stamp = self.symbols, self.stamp
+        flags, cls = self.flags, self.__class__
+
+        if isinstance(other, (tuple, list)):
+            for poly in other:
+                if isinstance(poly, Poly):
+                    stamp |= poly.stamp
+                #elif atoms:
+                #    stamp |= poly.atoms(Symbol)
+
+            if not (stamp <= self.stamp):
+                symbols = tuple(sorted(stamp))
+                self = cls(self, *symbols, **flags)
+
+            other = other.__class__( cls(poly,
+                *symbols, **flags) for poly in other )
+        else:
+            other = sympify(other)
+
+            if isinstance(other, Poly):
+                stamp |= other.stamp
+            #elif atoms:
+            #    stamp |= other.atoms(Symbol)
+
+            if not (stamp <= self.stamp):
+                symbols = tuple(sorted(stamp))
+                self = cls(self, *symbols, **flags)
+
+            other = cls(other, *symbols, **flags)
+
+        return self, other
 
     def diff(self, *symbols):
         """Efficiently differentiate polynomials.
@@ -1159,9 +1223,9 @@ class Poly(Basic, RelMeths, ArithMeths):
         for s in symbols:
             s = sympify(s)
 
-            if isinstance(s, Symbol):
+            if s.is_Symbol:
                 new_symbols.append((s, 1))
-            elif isinstance(s, Integer):
+            elif s.is_Integer:
                 sym, _ = new_symbols.pop()
                 new_symbols.append((sym, int(s)))
             else:
@@ -1252,9 +1316,9 @@ class Poly(Basic, RelMeths, ArithMeths):
         for s in symbols:
             s = sympify(s)
 
-            if isinstance(s, Symbol):
+            if s.is_Symbol:
                 new_symbols.append((s, 1))
-            elif isinstance(s, Integer):
+            elif s.is_Integer:
                 sym, _ = new_symbols.pop()
                 new_symbols.append((sym, int(s)))
             else:
@@ -1312,7 +1376,7 @@ class Poly(Basic, RelMeths, ArithMeths):
            For more information on the implemented algorithm refer to:
 
            [1] D. E. Knuth, The Art of Computer Programming: Sorting
-               and Searching, v.2, Addison-Wesley Professional, 1998
+               and Searching, v.1, Addison-Wesley Professional, 1998
 
         """
         compare = monomial_cmp(self.order)

@@ -230,6 +230,18 @@ def test_poly_properties():
     assert f.is_inhomogeneous == True
     assert f.is_monic == False
 
+def test_poly_add():
+    f = -Rational(1,6)*x**2-Rational(5,36)+Rational(17,18)
+    g = -Rational(1,6)*x**2-Rational(5,36)+Rational(35,18)
+
+    assert Poly(1, x) + Poly(f, x) == Poly(g, x)
+
+def test_poly_sub():
+    f = -Rational(1,6)*x**2-Rational(5,36)+Rational(17,18)
+    g = Rational(1,6)*x**2+Rational(5,36)+Rational(1,18)
+
+    assert Poly(1, x) - Poly(f, x) == Poly(g, x)
+
 def test_poly_mul():
     f = x**3-12*x**2-42
     g = x**2+x-3
@@ -242,6 +254,10 @@ def test_poly_mul():
 
     assert Poly(f, x, y, z)*Poly(g, x, y, z) == f*g
     assert Poly(f, x, y, z)*g == f*g
+
+    p = Poly(f, x, z)*Poly(g, y, z)
+
+    assert p.symbols == (x, y, z)
 
 def test_poly_div():
     f = Poly(x**3-12*x**2-42, x)
@@ -385,13 +401,17 @@ def test_subs():
 
 def test_unify():
     p = Poly(x**2+x*y, x, y)
-    q = Poly(x**2+x*y+1, x)
+    q = Poly(x**2+2*x*y+1, x)
+    r = Poly(x*z+y*z+1, x,y,z)
 
-    assert p.unify(q) == \
-        (Poly(x**2+x*y, x, y), Poly(x**2+x*y+1, x, y))
+    assert p.unify_with(q) == p.unify_with(x**2+2*x*y+1) == \
+        (Poly(x**2+x*y, x, y), Poly(x**2+2*x*y+1, x, y))
 
-    assert p.unify(x**2+x*y+1) == \
-        (Poly(x**2+x*y, x, y), Poly(x**2+x*y+1, x, y))
+    assert p.unify_with([q, r]) == p.unify_with([x**2+2*x*y+1, r]) == \
+        (Poly(x**2+x*y, x, y, z), [Poly(x**2+2*x*y+1, x,y,z), Poly(x*z+y*z+1, x,y,z)])
+
+    assert p.unify_with((q, r)) == p.unify_with((x**2+2*x*y+1, r)) == \
+        (Poly(x**2+x*y, x, y, z), (Poly(x**2+2*x*y+1, x,y,z), Poly(x*z+y*z+1, x,y,z)))
 
 def test_eq_ne():
     p = Poly(x**2+x*y, x, y)
