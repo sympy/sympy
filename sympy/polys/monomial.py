@@ -136,7 +136,7 @@ def monomial_div(a, b):
     """
     result = [ x - y for x, y in zip(a, b) ]
 
-    if all([ e >= 0 for e in result ]):
+    if all(e >= 0 for e in result):
         return tuple(result)
     else:
         return None
