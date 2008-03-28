@@ -1,5 +1,5 @@
 
-from sympy import symbols, expand, re, im, I
+from sympy import symbols, expand, sin, re, im, I, Rational
 
 from sympy.polys.monomial import *
 from sympy.polys.polynomial import *
@@ -7,7 +7,7 @@ from sympy.polys.algorithms import *
 
 import py
 
-x,y,z,u,v,t = symbols('xyzuvt')
+a,b,c,x,y,z,u,v,t = symbols('abcxyzuvt')
 
 def test_monomial_cmp():
     assert monomial_lex_cmp((3,2,1), (1,2,4)) == 1
@@ -335,8 +335,53 @@ def test_call():
     assert Poly(f, x, y, z)(1, 2, 3) == f.subs({x: 1, y: 2, z: 3})
     assert Poly(f, x, y, z)(u, v, t) == u**2*(v*(u + t) + t)
 
+def test_evaluate():
+    f = x**2*y*z + 2*x*y*z**3 + 3*x*y + 4*y*z
+
+    p = Poly(f, x, y, z)
+
+    assert p.evaluate({x: 7}) == Poly(f.subs({x: 7}), y, z)
+    assert p.evaluate({x: 7, y: 5}) == Poly(f.subs({x: 7, y: 5}), z)
+    assert p.evaluate({x: 7, y: 5, z: 4}) == f.subs({x: 7, y: 5, z: 4})
+
+    py.test.raises(PolynomialError, "Poly(x + y, x, y).evaluate({x: y})")
+
 def test_subs():
-    pass
+    p = Poly(t*x*y**2 + x*y + t**2, x, y)
+
+    assert p.subs(x, 2) == \
+        Poly(((2*t, 2, t**2), ((2,), (1,), (0,))), y, 'grlex')
+    assert p.subs(y, 2) == \
+        Poly(((2 + 4*t, t**2), ((1,), (0,))), x)
+
+    assert p.subs(x, y) == \
+        Poly(((t, 1, t**2), ((3,), (2,), (0,))), y)
+    assert p.subs(y, x) == \
+        Poly(((t, 1, t**2), ((3,), (2,), (0,))), x)
+
+    assert p.subs(x, z) == \
+        Poly(((t, 1, t**2), ((1, 2), (1, 1), (0, 0))), z, y)
+    assert p.subs(y, z) == \
+        Poly(((t, 1, t**2), ((1, 2), (1, 1), (0, 0))), x, z)
+    assert p.subs(t, z) == \
+        Poly(((z, 1, z**2), ((1, 2), (1, 1), (0, 0))), x, y)
+
+    assert p.subs(z, t) == \
+        Poly(((t, 1, t**2), ((1, 2), (1, 1), (0, 0))), x, y)
+
+    assert p.subs(t, x) == \
+        Poly(((1, 1, 1), ((2, 2), (2, 0), (1, 1))), x, y)
+    assert p.subs(t, y) == \
+        Poly(((1, 1, 1), ((1, 3), (1, 1), (0, 2))), x, y)
+
+    assert p.subs(t, sin(1)) == \
+        Poly(((sin(1), 1, sin(1)**2), ((1, 2), (1, 1), (0, 0))), x, y)
+
+    assert p.subs(t, sin(x)) == \
+        x*y**2*sin(x) + x*y + sin(x)**2
+
+    assert p.subs(x, sin(x)) == \
+        t*y**2*sin(x) + y*sin(x) + t**2
 
 def test_unify():
     p = Poly(x**2+x*y, x, y)

@@ -79,7 +79,7 @@ class Poly(Basic, RelMeths, ArithMeths):
        Although all three representation look similar, they are
        designed for different tasks and have specific properties:
 
-           [1] All coefficients and monomials are validated before
+           [1] All coefficients and monomials  are validated before
                polynomial instance is created. Monomials are sorted
                with respect to the given order.
 
@@ -182,10 +182,13 @@ class Poly(Basic, RelMeths, ArithMeths):
           [9.4] [--] map_coeffs   --> applies a function to all coefficients
           [9.5] [UP] coeff        --> returns coefficient of the given monomial
 
-          [9.6] [U-] unify        --> returns polys with common sets of symbols
+          [9.5] [--] map_coeffs    --> applies a function to all coefficients
+          [9.6] [U-] coeff         --> returns coefficient of the given monomial
 
-          [9.7] [U-] diff         --> efficient polynomial differentiation
-          [9.8] [U-] integrate    --> efficient polynomial integration
+          [9.7] [U-] unify_with    --> returns polys with a common set of symbols
+
+          [9.8] [U-] diff          --> efficient polynomial differentiation
+          [9.9] [U-] integrate     --> efficient polynomial integration
 
        [10] Operations on terms:
 
@@ -198,7 +201,8 @@ class Poly(Basic, RelMeths, ArithMeths):
        [11] Substitution and evaluation:
 
           [11.1] [U-] __call__    --> evaluates poly a the given point
-          [11.2] [--] _eval_subs  --> efficiently substitute variables
+          [11.2] [U-] evaluate    --> evaluates poly for specific vars
+          [11.3] [--] _eval_subs  --> efficiently substitute variables
 
        [12] Comparison functions:
 
@@ -280,11 +284,10 @@ class Poly(Basic, RelMeths, ArithMeths):
                 monoms = ((0,) * N,)
             else:
                 for coeff, monom in poly:
-                    if not isinstance(coeff, (int, long)):
-                        coeff = sympify(coeff)
+                    coeff = sympify(coeff)
 
-                        if coeff.has_any_symbols(*symbols):
-                            raise PolynomialError
+                    if coeff.has_any_symbols(*symbols):
+                        raise PolynomialError
 
                     if len(monom) != N:
                         raise PolynomialError
@@ -536,7 +539,10 @@ class Poly(Basic, RelMeths, ArithMeths):
            >>> p.as_uv_dict()
            {0: 3, 2: 1}
         """
-        return dict(zip([ M[0] for M in self.monoms ], self.coeffs))
+        if self.is_univariate:
+            return dict(zip([ M[0] for M in self.monoms ], self.coeffs))
+        else:
+            raise PolynomialError
 
     @property
     def coeffs(self):
@@ -1423,6 +1429,13 @@ class Poly(Basic, RelMeths, ArithMeths):
            required to perform this evaluation. This strategy is efficient
            for most of multivariate polynomials.
 
+           Note that evaluation is done for all variables, which means the
+           dimension of the given point must match the number of symbols.
+
+           If you wish to efficiently evaluate polynomial for a subset of
+           symbols use 'evaluate' method instead. Alternatively one can
+           use Basic.subs() for this purpose.
+
            >>> from sympy import *
            >>> x,y = symbols('xy')
 
@@ -1502,13 +1515,59 @@ class Poly(Basic, RelMeths, ArithMeths):
 
             return evaluate(self.as_dict())
 
+    def evaluate(self, pattern):
+        """Evaluates polynomial for a given set of symbols. """
+        symbols = list(self.symbols)
+
+        if type(pattern) is dict:
+            pattern = pattern.items()
+        elif type(pattern) is tuple:
+            pattern = [pattern]
+
+        poly = self.as_dict()
+
+        for s, value in pattern:
+            if s not in self.stamp:
+                raise PolynomialError
+            else:
+                i = symbols.index(s)
+
+            # 'value' might be int | long
+            if isinstance(value, Symbol):
+                if value in self.stamp:
+                    raise PolynomialError
+
+            terms = {}
+
+            for M, coeff in poly.iteritems():
+                monom = M[:i] + M[i+1:]
+                coeff *= value ** M[i]
+
+                if terms.has_key(monom):
+                    coeff += terms[monom]
+
+                    if not coeff:
+                        del terms[monom]
+                        continue
+
+                terms[monom] = coeff
+
+            del symbols[i]
+            poly = terms
+
+        if len(poly) == 1:
+            return poly.popitem()[1]
+        else:
+            return self.__class__(terms,
+                *symbols, **self.flags)
+
     def _eval_subs(self, old, new):
         symbols = list(self.symbols)
 
         if old in self.stamp:
             terms, i = {}, symbols.index(old)
 
-            if isinstance(new, Symbol):
+            if new.is_Symbol:
                 if new in self.stamp:
                     j = symbols.index(new)
 
@@ -1529,50 +1588,31 @@ class Poly(Basic, RelMeths, ArithMeths):
 
                         terms[monom] = coeff
 
-                    symbols = symbols[:i] + symbols[i+1:]
+                    del symbols[i]
+
+                    return self.__class__(terms, *symbols, **self.flags)
                 else:
-                    symbols, terms = symbols[:i] + [new] + \
-                        symbols[i+1:], (self.coeffs, self.monoms)
+                    for coeff in self.coeffs:
+                        if coeff.has_any_symbols(new):
+                            break
+                    else:
+                        symbols[i], terms = new, (self.coeffs, self.monoms)
+                        return self.__class__(terms, *symbols, **self.flags)
             elif new.is_number:
-                if len(self.symbols) == 1:
+                if len(symbols) == 1:
                     return self(new)
                 else:
-                    terms = {}
+                    return self.evaluate((old, new))
+        elif not new.has_any_symbols(*symbols):
+            coeffs = [ sympify(coeff).subs(old, new) for coeff in self.coeffs ]
+            return self.__class__((coeffs, self.monoms), *symbols, **self.flags)
 
-                    for coeff, M in self.iter_terms():
-                        monom = M[:i] + M[i+1:]
-                        coeff *= new ** M[i]
+        result = self.as_basic().subs(old, new)
 
-                        if terms.has_key(monom):
-                            coeff += terms[monom]
-
-                            if not coeff:
-                                del terms[monom]
-                                continue
-
-                        terms[monom] = coeff
-
-                    symbols = symbols[:i] + symbols[i+1:]
-            else:
-                result = self.as_basic().subs(old, new)
-
-                try:
-                    return self.__class__(result, *symbols, **self.flags)
-                except PolynomialError:
-                    return result
-
-            return self.__class__(terms, *symbols, **self.flags)
-        else:
-            if not new.has_any_symbols(*symbols):
-                coeffs = [ sympify(coeff).subs(old, new) for coeff in self.coeffs ]
-                return self.__class__((coeffs, self.monoms), *symbols, **self.flags)
-            else:
-                result = self.as_basic().subs(old, new)
-
-                try:
-                    return self.__class__(result, *symbols, **self.flags)
-                except PolynomialError:
-                    return result
+        try:
+            return self.__class__(result, *symbols, **self.flags)
+        except PolynomialError:
+            return result
 
     def __eq__(self, other):
         """Compare polynomials up to order of symbols and monomials. """
