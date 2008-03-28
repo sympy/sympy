@@ -4,8 +4,7 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.core.numbers import Integer, Number
-from sympy.core.basic import Basic, S, C, Atom
+from sympy.core.basic import Basic, S, C
 from sympy.core.methods import RelMeths, ArithMeths
 
 from sympy.utilities import all, any
@@ -1379,43 +1378,47 @@ class Poly(Basic, RelMeths, ArithMeths):
                and Searching, v.1, Addison-Wesley Professional, 1998
 
         """
-        compare = monomial_cmp(self.order)
-
-        coeffs = list(self.coeffs)
-        monoms = list(self.monoms)
-
-        if compare(monom, monoms[0]) > 0:
-            coeffs.insert(0, coeff)
-            monoms.insert(0, monom)
-        elif compare(monom, monoms[-1]) < 0:
-            coeffs.append(coeff)
-            monoms.append(monom)
+        if self.is_zero:
+            coeffs = (coeff,)
+            monoms = (monom,)
         else:
-            lo, hi = 0, len(monoms)-1
+            coeffs = list(self.coeffs)
+            monoms = list(self.monoms)
 
-            while lo <= hi:
-                i = (lo + hi) // 2
+            compare = monomial_cmp(self.order)
 
-                k = compare(monom, monoms[i])
-
-                if not k:
-                    coeff += coeffs[i]
-
-                    if coeff:
-                        coeffs[i] = coeff
-                    else:
-                        del coeffs[i]
-                        del monoms[i]
-
-                    break
-                else:
-                    if k > 0:
-                        hi = i - 1
-                    else:
-                        lo = i + 1
+            if compare(monom, monoms[0]) > 0:
+                coeffs.insert(0, coeff)
+                monoms.insert(0, monom)
+            elif compare(monom, monoms[-1]) < 0:
+                coeffs.append(coeff)
+                monoms.append(monom)
             else:
-                coeffs.insert(i, coeff)
-                monoms.insert(i, monom)
+                lo, hi = 0, len(monoms)-1
+
+                while lo <= hi:
+                    i = (lo + hi) // 2
+
+                    k = compare(monom, monoms[i])
+
+                    if not k:
+                        coeff += coeffs[i]
+
+                        if coeff:
+                            coeffs[i] = coeff
+                        else:
+                            del coeffs[i]
+                            del monoms[i]
+
+                        break
+                    else:
+                        if k > 0:
+                            hi = i - 1
+                        else:
+                            lo = i + 1
+                else:
+                    coeffs.insert(i, coeff)
+                    monoms.insert(i, monom)
 
         return self.__class__((coeffs, monoms),
             *self.symbols, **self.flags)
@@ -1435,52 +1438,58 @@ class Poly(Basic, RelMeths, ArithMeths):
                and Searching, v.2, Addison-Wesley Professional, 1998
 
         """
-        compare = monomial_cmp(self.order)
-
-        coeffs = list(self.coeffs)
-        monoms = list(self.monoms)
-
-        if compare(monom, monoms[0]) > 0:
-            coeffs.insert(0, -coeff)
-            monoms.insert(0, monom)
-        elif compare(monom, monoms[-1]) < 0:
-            coeffs.append(-coeff)
-            monoms.append(monom)
+        if self.is_zero:
+            coeffs = (-coeff,)
+            monoms = (monom,)
         else:
-            lo, hi = 0, len(monoms)-1
+            coeffs = list(self.coeffs)
+            monoms = list(self.monoms)
 
-            while lo <= hi:
-                i = (lo + hi) // 2
+            compare = monomial_cmp(self.order)
 
-                k = compare(monom, monoms[i])
-
-                if not k:
-                    coeff -= coeffs[i]
-
-                    if coeff:
-                        coeffs[i] = coeff
-                    else:
-                        del coeffs[i]
-                        del monoms[i]
-
-                    break
-                else:
-                    if k > 0:
-                        hi = i - 1
-                    else:
-                        lo = i + 1
+            if compare(monom, monoms[0]) > 0:
+                coeffs.insert(0, -coeff)
+                monoms.insert(0, monom)
+            elif compare(monom, monoms[-1]) < 0:
+                coeffs.append(-coeff)
+                monoms.append(monom)
             else:
-                coeffs.insert(i, -coeff)
-                monoms.insert(i, monom)
+                lo, hi = 0, len(monoms)-1
+
+                while lo <= hi:
+                    i = (lo + hi) // 2
+
+                    k = compare(monom, monoms[i])
+
+                    if not k:
+                        coeff -= coeffs[i]
+
+                        if coeff:
+                            coeffs[i] = coeff
+                        else:
+                            del coeffs[i]
+                            del monoms[i]
+
+                        break
+                    else:
+                        if k > 0:
+                            hi = i - 1
+                        else:
+                            lo = i + 1
+                else:
+                    coeffs.insert(i, -coeff)
+                    monoms.insert(i, monom)
 
         return self.__class__((coeffs, monoms),
             *self.symbols, **self.flags)
 
     def kill_lead_term(self):
+        """Removes leading term from 'self'. """
         terms = self.coeffs[1:], self.monoms[1:]
         return self.__class__(terms, *self.symbols, **self.flags)
 
     def kill_last_term(self):
+        """Removes last term from 'self'. """
         terms = self.coeffs[:-1], self.monoms[:-1]
         return self.__class__(terms, *self.symbols, **self.flags)
 

@@ -316,14 +316,17 @@ def test_map_coeffs():
 
     py.test.raises(PolynomialError, code)
 
-def test_calculus():
-    pass
-
 def test_add_sub_term():
-    pass
+    f = Poly((), x, y, z)
+
+    assert f.add_term(12, (1,2,3)) == Poly(((12,), ((1,2,3),)), x,y,z)
+    assert f.sub_term(12, (1,2,3)) == Poly(((-12,), ((1,2,3),)), x,y,z)
 
 def test_kill_term():
-    pass
+    f = Poly(2*x**17*y + 3*x*y**15, x, y)
+
+    assert f.kill_lead_term() == Poly(3*x*y**15, x, y)
+    assert f.kill_last_term() == Poly(2*x**17*y, x, y)
 
 def test_call():
     assert Poly(0, x)(2) == 0
