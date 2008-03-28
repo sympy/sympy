@@ -276,8 +276,26 @@ def test_poly_div():
 
     assert divmod(f, g) == (Poly(x-13, x), Poly(16*x-81, x))
 
+    assert f / x == Poly(x**2-12*x, x)
+    assert f % x == Poly(-42, x)
+
+    assert divmod(f, x) == (Poly(x**2-12*x, x), Poly(-42, x))
+
+    assert f / sin(x) == f.as_basic() / sin(x)
+    assert f % sin(x) == 0
+
+    assert divmod(f, sin(x)) == (f.as_basic() / sin(x), 0)
+
+    assert poly_div(4*x**2*y-2*x*y-2*y+4*x+8, 2, x, y) == \
+        (Poly(2*x**2*y-x*y-y+2*x+4, x, y), Poly((), x, y))
+
+    assert poly_div(4*x**2*y-2*x*y-2*y+4*x+8, 2*y, x, y) == \
+        (Poly(2*x**2-x-1, x, y), Poly(4*x+8, x, y))
+
+    assert poly_div(x-1, y-1, x, y) == (Poly((), x, y), Poly(x-1, x, y))
+
     assert poly_div(x**3-12*x**2-42, x-3, x) == \
-           (Poly(x**2-9*x-27, x), Poly(-123, x))
+        (Poly(x**2-9*x-27, x), Poly(-123, x))
 
     assert poly_div(2+2*x+x**2, 1, x) == (Poly(2+2*x+x**2, x), Poly(0, x))
     assert poly_div(2+2*x+x**2, 2, x) == (Poly(1+x+x**2/2, x), Poly(0, x))
@@ -289,12 +307,68 @@ def test_poly_div():
     assert poly_div(x*y+2*x+y,x,x) == (Poly(2+y, x), Poly(y, x))
 
     assert poly_div(x*y**2 + 1, [x*y+1, y+1], x, y) == \
-           ((Poly(y, x, y), Poly(-1, x, y)), Poly(2, x, y))
+        ((Poly(y, x, y), Poly(-1, x, y)), Poly(2, x, y))
 
     assert poly_div(x**2*y+x*y**2+y**2, [x*y-1, y**2-1], x, y) == \
-           ((Poly(x+y, x, y), Poly(1, x, y)), Poly(1+x+y, x, y))
+        ((Poly(x+y, x, y), Poly(1, x, y)), Poly(1+x+y, x, y))
     assert poly_div(x**2*y+x*y**2+y**2, [y**2-1, x*y-1], x, y) == \
-           ((Poly(1+x, x, y), Poly(x, x, y)), Poly(1+2*x, x, y))
+        ((Poly(1+x, x, y), Poly(x, x, y)), Poly(1+2*x, x, y))
+
+    f, g = 3*x**3 + x**2 + x + 5, 5*x**2 - 3*x + 1
+
+    q = Poly(Rational(3,5)*x + Rational(14, 25), x)
+    r = Poly(Rational(52, 25)*x + Rational(111, 25), x)
+
+    assert poly_div(f, g, x) == (q, r)
+    assert poly_div(Poly(f, x), Poly(g, x)) == (q, r)
+
+    q = Poly(15*x + 14, x)
+    r = Poly(52*x + 111, x)
+
+    assert poly_pdiv(f, g, x) == (q, r)
+    assert poly_pdiv(Poly(f, x), Poly(g, x)) == (q, r)
+
+def test_poly_gcdex():
+    f = x**4 - 2*x**3 - 6*x**2 + 12*x + 15
+    g = x**3 + x**2 - 4*x - 4
+
+    assert poly_half_gcdex(f, g, x) == \
+        (Poly(-x+3, x), Poly(5*x+5, x))
+    assert poly_half_gcdex(Poly(f, x), Poly(g, x)) == \
+        (Poly(-x+3, x), Poly(5*x+5, x))
+
+    assert poly_gcdex(f, g, x) == \
+        (Poly(-x+3, x), Poly(x**2-6*x+10, x), Poly(5*x+5, x))
+    assert poly_gcdex(Poly(f, x), Poly(g, x)) == \
+        (Poly(-x+3, x), Poly(x**2-6*x+10, x), Poly(5*x+5, x))
+
+    f = x**4 + 4*x**3 - x + 1
+    g = x**3 - x + 1
+
+    s, t, h = poly_gcdex(f, g, x)
+    S, T, H = poly_gcdex(g, f, x)
+
+    assert s*f + t*g == h
+    assert S*g + T*f == H
+
+def test_poly_resultant():
+    assert poly_resultant(x**2-1, x**3-x**2+2, x) == 0
+    assert poly_resultant(3*x**3-x, 5*x**2+1, x) == 64
+    assert poly_resultant(x**2-2*x+7, x**3-x+5, x) == 265
+    assert poly_resultant((x-a)**2-2, a**2-3, a) == 1 - 10*x**2 + x**4
+    assert poly_resultant((x-1)*(x-2)*(x-3), (x-4)*(x-5)*(x-6), x) == -8640
+    assert poly_resultant((x-1)*(x-2)*(x-3), (x-4)*(x-5)*(x-1), x) == 0
+    assert poly_resultant(x**3-1, x**3+2*x**2+2*x-1, x) == 16
+    assert poly_resultant(x**8-2, x-1, x) == -1
+    assert poly_resultant(3*x**2+2*a*x+3*a**2-2,
+        3*x**2-2*a*x+3*a**2-2, x) == 144*a**4 - 96*a**2
+    assert poly_resultant((x-a)*(x-b), x-c, x) == a*b-a*c-b*c+c**2
+
+def test_poly_subresultants():
+    f = x**8+x**6-3*x**4-3*x**3+8*x**2+2*x-5
+    g = 3*x**6+5*x**4-4*x**2-9*x+21
+
+    # TBD : needs subresultants
 
 def test_map_coeffs():
     p = Poly(x**2 + 2*x*y, x, y)

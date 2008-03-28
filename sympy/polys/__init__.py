@@ -1,11 +1,27 @@
 
-from sympy.polys.monomial import monomials, monomial_count
-from sympy.polys.polynomial import Poly, PolynomialError
-from sympy.polys.algorithms import poly_div, poly_quo, poly_rem
+from monomial import monomials, monomial_count
+from polynomial import Poly, PolynomialError
 
-#from sympy.polys.algorithms import poly_pdiv, poly_pquo, poly_prem
-#from sympy.polys.algorithms import poly_gcd, poly_half_gcdex, poly_gcdex
-#from sympy.polys.algorithms import poly_lcm, poly_groebner
-#from sympy.polys.algorithms import poly_sqf
+from algorithms import poly_div, poly_pdiv
 
-#from sympy.polys.rootof import RootOf, poly_roots
+def poly_quo(f, g, *symbols):
+    return poly_div(f, g, *symbols)[0]
+
+def poly_rem(f, g, *symbols):
+    return poly_div(f, g, *symbols)[1]
+
+def poly_pquo(f, g, *symbols):
+    return poly_pdiv(f, g, *symbols)[0]
+
+def poly_prem(f, g, *symbols):
+    return poly_pdiv(f, g, *symbols)[1]
+
+from algorithms import poly_gcdex, poly_half_gcdex
+
+#from algorithms import poly_lcm, poly_gcd
+
+#from algorithms import poly_subresultants
+from algorithms import poly_resultant
+
+#from algorithms import poly_groebner
+
