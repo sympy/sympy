@@ -405,6 +405,15 @@ def test_map_coeffs():
 
     py.test.raises(PolynomialError, code)
 
+def test_coeff():
+    p = Poly(3*x**2*y + 4*x*y**2 + 1, x, y)
+
+    assert p.coeff(0, 0) == p.coeff() == 1
+
+    assert p.coeff(2, 1) == 3
+    assert p.coeff(1, 2) == 4
+    assert p.coeff(1, 1) == 0
+
 def test_add_sub_term():
     f = Poly((), x, y, z)
 

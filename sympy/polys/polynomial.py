@@ -1121,7 +1121,7 @@ class Poly(Basic, RelMeths, ArithMeths):
            >>> from sympy import *
            >>> x,y = symbols('xy')
 
-           >>> p = Poly(3*x**2*y + 4*x*y**2, x, y)
+           >>> p = Poly(3*x**2*y + 4*x*y**2 + 1, x, y)
 
            >>> p.coeff(2, 1)
            3
@@ -1130,12 +1130,23 @@ class Poly(Basic, RelMeths, ArithMeths):
            >>> p.coeff(1, 1)
            0
 
+           If len(monom) == 0 then returns coeff of the constant term:
+
+           >>> p.coeff(0, 0)
+           1
+           >>> p.coeff()
+           1
+
         """
-        for i in xrange(len(self.monoms)):
-            if self.monoms[i] == monom:
-                return self.coeffs[i]
+        if not monom:
+            if all(e == 0 for e in self.monoms[-1]):
+                return self.coeffs[-1]
         else:
-            return S.Zero
+            for i in xrange(len(self.monoms)):
+                if self.monoms[i] == monom:
+                    return self.coeffs[i]
+
+        return S.Zero
 
     def unify_with(self, other):
         """Unify 'self' with a polynomial or a set of polynomials.
