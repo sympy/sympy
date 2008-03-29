@@ -1029,24 +1029,24 @@ class Poly(Basic, RelMeths, ArithMeths):
            >>> x,y = symbols('xy')
 
            >>> Poly(x**2 + 4, x).as_monic()
-           (1, Poly((1, 4), ((2,), (0,)), (x,), 'grlex'))
+           Poly((1, 4), ((2,), (0,)), (x,), 'grlex')
 
            >>> Poly(2*x**2 + 4, x).as_monic()
-           (2, Poly((1, 2), ((2,), (0,)), (x,), 'grlex'))
+           Poly((1, 2), ((2,), (0,)), (x,), 'grlex')
 
            >>> Poly(y*x**2 + (y**2+y), x).as_monic()
-           (y, Poly((1, 1 + y), ((2,), (0,)), (x,), 'grlex'))
+           Poly((1, 1 + y), ((2,), (0,)), (x,), 'grlex')
 
         """
         LC = self.lead_coeff
 
-        if LC.is_number:
-            coeffs = [ coeff / LC for coeff in self.coeffs ]
-        else:
-            from sympy.simplify import cancel # avoid recursive import
-            coeffs = [ cancel(coeff / LC) for coeff in self.coeffs ]
+        coeffs = [ coeff / LC for coeff in self.coeffs ]
 
-        return LC, self.__class__((coeffs, self.monoms),
+        for i, coeff in enumerate(coeffs):
+            if not coeff.is_Atom:
+                coeffs[i] = cancel(coeff)
+
+        return self.__class__((coeffs, self.monoms),
             *self.symbols, **self.flags)
 
     @property

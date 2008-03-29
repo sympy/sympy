@@ -230,6 +230,21 @@ def test_poly_properties():
     assert f.is_inhomogeneous == True
     assert f.is_monic == False
 
+def test_as_monic():
+    f = x**3*y*z**2 + 7*x*y*z + 14*x*y + 3
+
+    assert Poly(f, x,y,z).as_monic() == Poly(f, x,y,z)
+
+    f = 7*x**3*y*z**2 + 7*x*y*z + 14*x*y + 3
+    g = x**3*y*z**2 + x*y*z + 2*x*y + Rational(3,7)
+
+    assert Poly(f, x,y,z).as_monic() == Poly(g, x,y,z)
+
+    f = (z-1)*x**3*y + (z**2-1)*x*y + (z-1)**2*x + 7
+    g = x**3*y + (z+1)*x*y + (z-1)*x + 7/(z-1)
+
+    assert Poly(f, x,y).as_monic() == Poly(g, x,y)
+
 def test_poly_add():
     f = -Rational(1,6)*x**2-Rational(5,36)+Rational(17,18)
     g = -Rational(1,6)*x**2-Rational(5,36)+Rational(35,18)
