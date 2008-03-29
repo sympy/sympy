@@ -821,6 +821,7 @@ class Matrix(object):
 
            TODO: Implement algorithm for sparse matrices (SFF).
         """
+        from sympy.simplify import cancel
 
         if not self.is_square:
             raise NonSquareMatrixException()
@@ -853,9 +854,12 @@ class Matrix(object):
                         D = M[k, k]*M[i, j] - M[i, k]*M[k, j]
 
                         if k > 0:
-                            M[i, j] = D / M[k-1, k-1]
-                        else:
+                            D /= M[k-1, k-1]
+
+                        if D.is_Atom:
                             M[i, j] = D
+                        else:
+                            M[i, j] = cancel(D)
 
             det = sign * M[n-1, n-1]
 
