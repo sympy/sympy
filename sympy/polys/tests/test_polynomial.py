@@ -71,6 +71,15 @@ def test_poly_basics():
     assert Poly(p, x, z, y) == \
         Poly(((1, 1, 1), ((1, 0, 3), (2, 0, 1), (0, 0, 0))), x, z, y, order='grlex')
 
+    f = x*t**4 + y*t**2 + z
+
+    assert Poly([(x, (4,)), (y, (2,)), (z, (0,))], t) == Poly(f, t)
+    assert Poly([(x, 4), (y, 2), (z, 0)], t) == Poly(f, t)
+
+    f = x*t**4 + z
+
+    assert Poly([(x, 4), (0, 2), (z, 0)], t) == Poly(f, t)
+
 def test_poly_internals():
     p = Poly(x**2*y*z + x*y*z**3 + x*y + y*z, x, y, z)
 

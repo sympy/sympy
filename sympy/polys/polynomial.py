@@ -290,8 +290,14 @@ class Poly(Basic, RelMeths, ArithMeths):
                     if coeff.has_any_symbols(*symbols):
                         raise PolynomialError
 
+                    if type(monom) is int:
+                        monom = (monom,)
+
                     if len(monom) != N:
                         raise PolynomialError
+
+                    if not coeff:
+                        continue
 
                     if terms.has_key(monom):
                         coeff += terms[monom]
