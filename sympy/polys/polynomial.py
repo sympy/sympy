@@ -931,12 +931,12 @@ class Poly(Basic, RelMeths, ArithMeths):
     @property
     def is_one(self):
         return self.coeffs in ((S.One,), (1,)) and \
-            all([ e == 0 for e in self.monoms[0] ])
+            all(e == 0 for e in self.monoms[0])
 
     @property
     def is_constant(self):
         return len(self.monoms) == 1 and \
-            all([ e == 0 for e in self.monoms[0] ])
+            all(e == 0 for e in self.monoms[0])
 
     @property
     def is_monomial(self):
@@ -952,11 +952,11 @@ class Poly(Basic, RelMeths, ArithMeths):
 
     @property
     def is_homogeneous(self):
-        return any([ e != 0 for e in self.monoms[-1] ])
+        return any(e != 0 for e in self.monoms[-1])
 
     @property
     def is_inhomogeneous(self):
-        return all([ e == 0 for e in self.monoms[-1] ])
+        return all(e == 0 for e in self.monoms[-1])
 
     @property
     def is_sparse(self):
