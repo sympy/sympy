@@ -71,53 +71,88 @@ def test_creation():
 def test_determinant():
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
 
-    assert Matrix([ [1] ]).det() == 1
+    M = Matrix((1,))
 
-    assert Matrix(( (-3,  2),
-                    ( 8, -5) )).det() == -1
+    assert M.det() == 1
+    assert M.berkowitz_det() == 1
 
-    assert Matrix(( (x,   1),
-                    (y, 2*y) )).det() == 2*x*y-y
+    M = Matrix(( (-3,  2),
+                 ( 8, -5) ))
 
-    assert Matrix(( (1, 1, 1),
-                    (1, 2, 3),
-                    (1, 3, 6) )).det() == 1
+    assert M.det() == -1
+    assert M.berkowitz_det() == -1
 
-    assert Matrix(( ( 3, -2,  0, 5),
-                    (-2,  1, -2, 2),
-                    ( 0, -2,  5, 0),
-                    ( 5,  0,  3, 4) )).det() == -289
+    M = Matrix(( (x,   1),
+                 (y, 2*y) ))
 
-    assert Matrix(( ( 1,  2,  3,  4),
-                    ( 5,  6,  7,  8),
-                    ( 9, 10, 11, 12),
-                    (13, 14, 15, 16) )).det() == 0
+    assert M.det() == 2*x*y-y
+    assert M.berkowitz_det() == 2*x*y-y
 
-    assert Matrix(( (3, 2, 0, 0, 0),
-                    (0, 3, 2, 0, 0),
-                    (0, 0, 3, 2, 0),
-                    (0, 0, 0, 3, 2),
-                    (2, 0, 0, 0, 3) )).det() == 275
+    M = Matrix(( (1, 1, 1),
+                 (1, 2, 3),
+                 (1, 3, 6) ))
 
-    assert Matrix(( (1, 0,  1,  2, 12),
-                    (2, 0,  1,  1,  4),
-                    (2, 1,  1, -1,  3),
-                    (3, 2, -1,  1,  8),
-                    (1, 1,  1,  0,  6) )).det() == -55
+    assert M.det() == 1
+    assert M.berkowitz_det() == 1
 
-    assert Matrix(( (-5,  2,  3,  4,  5),
-                    ( 1, -4,  3,  4,  5),
-                    ( 1,  2, -3,  4,  5),
-                    ( 1,  2,  3, -2,  5),
-                    ( 1,  2,  3,  4, -1) )).det() == 11664
+    M = Matrix(( ( 3, -2,  0, 5),
+                 (-2,  1, -2, 2),
+                 ( 0, -2,  5, 0),
+                 ( 5,  0,  3, 4) ))
 
-    assert Matrix(( ( 2,  7, -1, 3, 2),
-                    ( 0,  0,  1, 0, 1),
-                    (-2,  0,  7, 0, 2),
-                    (-3, -2,  4, 5, 3),
-                    ( 1,  0,  0, 0, 1) )).det() == 123
-                    
-    assert Matrix([ [x,y,z],[1,0,0],[y,z,x]] ).det() == z**2 - x*y
+    assert M.det() == -289
+    assert M.berkowitz_det() == -289
+
+    M = Matrix(( ( 1,  2,  3,  4),
+                 ( 5,  6,  7,  8),
+                 ( 9, 10, 11, 12),
+                 (13, 14, 15, 16) ))
+
+    assert M.det() == 0
+    assert M.berkowitz_det() == 0
+
+    M = Matrix(( (3, 2, 0, 0, 0),
+                 (0, 3, 2, 0, 0),
+                 (0, 0, 3, 2, 0),
+                 (0, 0, 0, 3, 2),
+                 (2, 0, 0, 0, 3) ))
+
+    assert M.det() == 275
+    assert M.berkowitz_det() == 275
+
+    M = Matrix(( (1, 0,  1,  2, 12),
+                 (2, 0,  1,  1,  4),
+                 (2, 1,  1, -1,  3),
+                 (3, 2, -1,  1,  8),
+                 (1, 1,  1,  0,  6) ))
+
+    assert M.det() == -55
+    assert M.berkowitz_det() == -55
+
+    M = Matrix(( (-5,  2,  3,  4,  5),
+                 ( 1, -4,  3,  4,  5),
+                 ( 1,  2, -3,  4,  5),
+                 ( 1,  2,  3, -2,  5),
+                 ( 1,  2,  3,  4, -1) ))
+
+    assert M.det() == 11664
+    assert M.berkowitz_det() == 11664
+
+    M = Matrix(( ( 2,  7, -1, 3, 2),
+                 ( 0,  0,  1, 0, 1),
+                 (-2,  0,  7, 0, 2),
+                 (-3, -2,  4, 5, 3),
+                 ( 1,  0,  0, 0, 1) ))
+
+    assert M.det() == 123
+    assert M.berkowitz_det() == 123
+
+    M = Matrix(( (x,y,z),
+                 (1,0,0),
+                 (y,z,x) ))
+
+    assert M.det() == z**2 - x*y
+    assert M.berkowitz_det() == z**2 - x*y
 
 def test_submatrix():
     m0 = eye(4)
@@ -725,7 +760,7 @@ def test_str():
     x, y = symbols("xy")
     M = Matrix([[x**+1, 1], [y, x+y]])
 
-    assert repr(M) in [ 
+    assert repr(M) in [
 """\
 Matrix([
   [Symbol('x'),                        One(1)],
