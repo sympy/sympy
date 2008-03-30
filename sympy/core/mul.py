@@ -98,11 +98,23 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 #         n          n          n
                 # (-3 + y)   ->  (-1)  * (3 - y)
                 if b.is_Add and e.is_Number:
+                    #found factor (x+y)**number; split off initial coefficient
                     c, t = b.as_coeff_terms()
-                    if c is not S.One:
+                    #last time I checked, Add.as_coeff_terms returns One or NegativeOne
+                    #but this might change
+                    if c.is_negative and not e.is_integer:
+                        # extracting root from negative number: ignore sign
+                        if c is not S.NegativeOne:
+                            # make c positive (probably never occurs)
+                            coeff *= (-c) ** e
+                            assert len(t)==1,`t`
+                            b = -t[0]
+                        #else: ignoring sign from NegativeOne: nothing to do!
+                    elif c is not S.One:
                         coeff *= c ** e
                         assert len(t)==1,`t`
                         b = t[0]
+                    #else: c is One, so pass
 
                 # let's collect factors with the same base, so e.g.
                 #  y    z     y+z
