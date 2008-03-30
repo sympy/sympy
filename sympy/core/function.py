@@ -306,7 +306,7 @@ class Function(Basic, ArithMeths, RelMeths):
             else:
                 nargs = self.nargs
             if not (1<=argindex<=nargs):
-                raise TypeError("argument index %r is out of range [1,%s]" % (i,nargs))
+                raise TypeError("argument index %r is out of range [1,%s]" % (argindex,nargs))
         return Derivative(self,self.args[argindex-1],evaluate=False)
 
     def torepr(self):
@@ -501,43 +501,106 @@ class Lambda(Function):
         >>> f = Lambda(x, x**2)
         >>> f(4)
         16
+
+    For multivariate functions, use:
+        >>> x = Symbol('x')
+        >>> y = Symbol('y')
+        >>> z = Symbol('z')
+        >>> t = Symbol('t')
+        >>> f2 = Lambda(x,y,z,t,x+y**z+t**z)
+        >>> f2(1,2,3,4)
+        73
+
+    Multivariate functions can be curries for partial applications:
+        >>> sum2numbers = Lambda(x,y,x+y)
+        >>> sum2numbers(1,2)
+        3
+        >>> plus1 = sum2numbers(1)
+        >>> plus1(3)
+        4
+        
     """
 
-    #XXX currently only one argument Lambda is supported
-
+    # a minimum of 2 arguments (parameter, expression) are needed
     nargs = 2
-
+    def __new__(cls,*args):
+       # nargs = len(args)
+        assert len(args) >= 2,"Must have at least one parameter and an expression"
+        obj = Function.__new__(cls,*args)
+        obj.nargs = len(args)
+        return obj
+        
     @classmethod
-    def canonize(cls, x, expr):
-        obj = Basic.__new__(cls, x, expr)
+    def canonize(cls,*args):
+        obj = Basic.__new__(cls, *args)
         #use dummy variables internally, just to be sure
-        tmp = Symbol("x", dummy=True)
-        obj._args = (tmp, expr.subs(x, tmp))
+        nargs = len(args)
+        
+        expression = args[nargs-1]
+        funargs = [Symbol(str(arg),dummy=True) for arg in args[:nargs-1]]
+        #probably could use something like foldl here
+        for arg,funarg in zip(args[:nargs-1],funargs):
+            expression = expression.subs(arg,funarg)
+        funargs.append(expression)
+        obj._args = tuple(funargs)
+        
         return obj
 
-    def apply(self, x):
-        """Applies the Lambda function "self" to the "x"
+    def apply(self, *args):
+        """Applies the Lambda function "self" to the arguments given.
+        This supports partial application.
 
         Example:
             >>> from sympy import Symbol
             >>> x = Symbol('x')
+            >>> y = Symbol('y')
             >>> f = Lambda(x, x**2)
             >>> f.apply(4)
             16
+            >>> sum2numbers = Lambda(x,y,x+y)
+            >>> sum2numbers(1,2)
+            3
+            >>> plus1 = sum2numbers(1)
+            >>> plus1(3)
+            4
 
         """
-        return self.args[1].subs(self.args[0], x)
+        
+        nparams = self.nargs - 1
+        assert nparams >= len(args),"Cannot call function with more parameters than function variables: %s (%d variables) called with %d arguments" % (str(self),nparams,len(args))
+
+
+        #replace arguments
+        expression = self.args[self.nargs-1]
+        for arg,funarg in zip(args,self.args[:nparams]):
+            expression = expression.subs(funarg,arg)
+        
+        #curry the rest
+        if nparams != len(args):
+            unused_args = list(self.args[len(args):nparams])
+            unused_args.append(expression)
+            return Lambda(*tuple(unused_args))
+        return expression
 
     def __call__(self, *args):
         return self.apply(*args)
 
     def __eq__(self, other):
         if isinstance(other, Lambda):
-            if self.args[1] == other.args[1].subs(other.args[0], self.args[0]):
+            if not len(self.args) == len(other.args):
+                return False
+            
+            selfexpr = self.args[self.nargs-1]
+            otherexpr = other.args[other.nargs-1]
+            for selfarg,otherarg in zip(self.args[:self.nargs-1],other.args[:other.nargs-1]):
+                otherexpr = otherexpr.subs(otherarg,selfarg)
+            if selfexpr == otherexpr:
                 return True
+           # if self.args[1] == other.args[1].subs(other.args[0], self.args[0]):
+           #     return True
         return False
 
-
+        
 
 def diff(f, x, times = 1, evaluate=True):
     """Differentiate f with respect to x
