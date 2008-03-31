@@ -171,6 +171,7 @@ def test_poly_properties():
 
     assert f.is_zero == True
     assert f.is_one == False
+    assert f.is_number == True
     assert f.is_constant == True
     assert f.is_monomial == True
     assert f.is_univariate == True
@@ -183,6 +184,7 @@ def test_poly_properties():
 
     assert f.is_zero == True
     assert f.is_one == False
+    assert f.is_number == True
     assert f.is_constant == True
     assert f.is_monomial == True
     assert f.is_univariate == False
@@ -195,6 +197,7 @@ def test_poly_properties():
 
     assert f.is_zero == False
     assert f.is_one == True
+    assert f.is_number == True
     assert f.is_constant == True
     assert f.is_monomial == True
     assert f.is_univariate == True
@@ -207,6 +210,7 @@ def test_poly_properties():
 
     assert f.is_zero == False
     assert f.is_one == False
+    assert f.is_number == True
     assert f.is_constant == True
     assert f.is_monomial == True
     assert f.is_univariate == False
@@ -219,6 +223,7 @@ def test_poly_properties():
 
     assert f.is_zero == False
     assert f.is_one == False
+    assert f.is_number == False
     assert f.is_constant == False
     assert f.is_monomial == True
     assert f.is_univariate == False
@@ -227,10 +232,24 @@ def test_poly_properties():
     assert f.is_inhomogeneous == False
     assert f.is_monic == True
 
+    f = Poly(t, x, y, z)
+
+    assert f.is_zero == False
+    assert f.is_one == False
+    assert f.is_number == False
+    assert f.is_constant == True
+    assert f.is_monomial == True
+    assert f.is_univariate == False
+    assert f.is_multivariate == True
+    assert f.is_homogeneous == False
+    assert f.is_inhomogeneous == True
+    assert f.is_monic == False
+
     f = Poly(2*x*y*z + x*y + 1, x, y, z)
 
     assert f.is_zero == False
     assert f.is_one == False
+    assert f.is_number == False
     assert f.is_constant == False
     assert f.is_monomial == False
     assert f.is_univariate == False

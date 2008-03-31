@@ -479,9 +479,27 @@ class Basic(AssumeMeths):
 
     @property
     def is_number(self):
-        """Returns True if self is a number (like 1, or 1+log(2)), and False
-        otherwise (e.g. 1+x)."""
-        return len(self.atoms(Symbol)) == 0
+        """Returns True if 'self' is a number.
+
+           >>> from sympy import *
+           >>> x,y = symbols('xy')
+
+           >>> x.is_number
+           False
+           >>> (2*x).is_number
+           False
+           >>> (2 + log(2)).is_number
+           True
+
+        """
+        for obj in self.args:
+            if isinstance(obj, Basic):
+                if not obj.is_number:
+                    return False
+            else:
+                raise TypeError
+        else:
+            return True
 
     @property
     def func(self):
@@ -1637,6 +1655,9 @@ class Atom(Basic):
     def _eval_as_leading_term(self, x):
         return self
 
+    @property
+    def is_number(self):
+        return True
 
 class Singleton(Basic):
     """ Singleton object.

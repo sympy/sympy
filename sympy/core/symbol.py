@@ -90,10 +90,13 @@ class Symbol(Atom, RelMeths, ArithMeths):
         import sage.all as sage
         return sage.var(self.name)
 
+    @property
+    def is_number(self):
+        return False
 
 class Dummy(Symbol):
     """Dummy Symbol
-    
+
        use this through Symbol:
 
        >>> x1 = Symbol('x', dummy=True)

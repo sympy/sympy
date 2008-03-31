@@ -390,6 +390,10 @@ class WildFunction(Function, Atom):
     def _eval_apply_evalf(cls, arg):
         return
 
+    @property
+    def is_number(self):
+        return False
+
 class Derivative(Basic, ArithMeths, RelMeths):
     """
     Carries out differentation of the given expression with respect to symbols.

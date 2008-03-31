@@ -154,16 +154,17 @@ class Poly(Basic, RelMeths, ArithMeths):
 
           [7.1]  [UP] is_zero          --> only one term c_0 == 0
           [7.2]  [UP] is_one           --> only one term c_0 == 1
-          [7.3]  [UP] is_constant      --> convertible to a value
-          [7.4]  [UP] is_monomial      --> number of terms == 1
-          [7.5]  [UP] is_univariate    --> number of variables = 1
-          [7.6]  [UP] is_multivariate  --> number of variables > 1
-          [7.7]  [UP] is_homogeneous   --> has constant term
-          [7.8]  [UP] is_inhomogeneous --> no constant term
-          [7.9]  [UP] is_sparse        --> filled with less than 90% of terms
-          [7.10] [UP] is_dense         --> filled with more than 90% of terms
+          [7.3]  [-P] is_number        --> only numeric constant term
+          [7.4]  [UP] is_constant      --> only arbitrary constant term
+          [7.5]  [UP] is_monomial      --> number of terms == 1
+          [7.6]  [UP] is_univariate    --> number of variables = 1
+          [7.7]  [UP] is_multivariate  --> number of variables > 1
+          [7.8]  [UP] is_homogeneous   --> has constant term
+          [7.9]  [UP] is_inhomogeneous --> no constant term
+          [7.10] [UP] is_sparse        --> filled with less than 90% of terms
+          [7.11] [UP] is_dense         --> filled with more than 90% of terms
           [7.12] [UP] is_monic         --> returns True if leading coeff is one
-          [7.11] [UP] is_primitive     --> returns True if content is one
+          [7.13] [UP] is_primitive     --> returns True if content is one
 
        [8] Coefficients properties:
 
@@ -938,6 +939,10 @@ class Poly(Basic, RelMeths, ArithMeths):
     def is_one(self):
         return self.coeffs in ((S.One,), (1,)) and \
             all(e == 0 for e in self.monoms[0])
+
+    @property
+    def is_number(self):
+        return self.is_constant and self.coeffs[0].is_number
 
     @property
     def is_constant(self):

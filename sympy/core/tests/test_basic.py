@@ -1,5 +1,7 @@
-from sympy import Basic, S, Symbol, Real, Integer, Rational, \
-    sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify
+from sympy import Basic, S, Symbol, Real, Integer, Rational,  \
+    sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
+    WildFunction
+
 import py
 
 x = Symbol("x")
@@ -331,3 +333,24 @@ def test_nonzero():
     assert bool(x*y)    == True
     assert bool(x*1)    == True
     assert bool(x*0)    == False
+
+def test_is_number():
+    x, y = symbols('xy')
+    g = WildFunction('g')
+
+    assert Real(3.14).is_number == True
+    assert Integer(737).is_number == True
+    assert Rational(3, 2).is_number == True
+
+    assert x.is_number == False
+    assert (2*x).is_number == False
+
+    assert (x + y).is_number == False
+
+    assert log(2).is_number == True
+    assert log(x).is_number == False
+
+    assert (2 + log(2)).is_number == True
+    assert (2 + log(x)).is_number == False
+
+    assert (2*g).is_number == False
