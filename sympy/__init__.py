@@ -15,7 +15,7 @@ __version__ = "0.5.13-hg"
 #put path to pyglet into the search path, so that it can be imported
 import os.path
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "thirdparty", \
+sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), "thirdparty", \
         "pyglet"))
 
 import symbol as stdlib_symbol
