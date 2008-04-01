@@ -7,6 +7,8 @@ Welcome to SymPy's documentation!
 
 This is the central page for all SymPy's documentation. 
 
+If you are new to SymPy, start with the Tutorial.
+
 Contents:
 
 .. toctree::
