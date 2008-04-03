@@ -1,149 +1,166 @@
 #! /usr/bin/env python
-"""
-Python shell for SymPy. Executes the commands in the "init_code" variable
-before giving you a shell.
 
-command line options:
-  -c : permits to specify a python interactive interpreter, currently only
-       python or ipython. Example usage:
-           isympy -c python
-       default is set to ipython
+import os, sys
 
-  -h : prints this help message
+# common SymPy's code for IPython and Python shells
 
-  --version: prints version number
-"""
+div_code = "from __future__ import division"
+sym_code = "from sympy.interactive import *"
 
-init_code = """
-from __future__ import division
-from sympy import *
-x, y, z = symbols('xyz')
-k, m, n = symbols('kmn', integer=True)
-f = Function("f")
-"""
+# hook in-tree SymPy into Python path, if possible
 
-import sys
+isympy_dir = os.path.dirname(__file__)         # bin/isympy
+sympy_top  = os.path.split(isympy_dir)[0]      # ../
+sympy_dir  = os.path.join(sympy_top, 'sympy')  # ../sympy/
 
-# hook in-tree sympy into python path if running in-tree version of isympy
-import os.path
-isympy_dir  = os.path.dirname(__file__)         # bin/isympy
-sympy_top   = os.path.split(isympy_dir)[0]      # ../
-sympy_dir   = os.path.join(sympy_top, 'sympy')  # ../sympy/
 if os.path.isdir(sympy_dir):
-    #print 'working in-tree...'
     sys.path.insert(0, sympy_top)
 
-from sympy import __version__ as sympy_version
-python_version = "%d.%d.%d" % tuple(sys.version_info[:3])
+# some longer messages
 
-def indent(s):
-    """Puts ">>> " in front of each line."""
-    r = ""
-    for l in s.split("\n"):
-        if l != "":
-            r+=">>> "+l+"\n"
-    return r
+long_message = """\
+These commands were executed:
+>>> from __future__ import division
+>>> from sympy import *
+>>> x, y, z = symbols('xyz')
+>>> k, m, n = symbols('kmn', integer=True)
+>>> f = Function("f")
 
-welcome_msg = \
-    "Python %s console for SymPy %s. These commands were executed:\n%s\nDocumentation can be found at http://sympy.org/\n" % \
-            (python_version, sympy_version, indent(init_code))
+Documentation can be found at http://sympy.org/
+"""
 
-def run_ipython_interpreter():
+no_ipython = """\
+Couldn't locate IPython. Having IPython installed is greatly recommended.
+See http://ipython.scipy.org for more details.  If you use Debian/Ubuntu,
+just install the 'ipython' package and start isympy again.
+"""
 
-    from IPython.Shell import IPShellEmbed
+def init_ipython(*args, **kwargs):
+    import IPython.Shell
 
-    #is the -nopprint necessary?
-    #args = ['-nopprint']
-    args = []
-    ipshell = IPShellEmbed(args)
-    api = ipshell.IP.getapi()
-    api.ex(init_code)
-    def myhook(self, value):
-        # adapted from ipython/IPython/hooks.py:155
-        # respect ~/.ipython/ipythonrc
+    ip = IPython.Shell.make_IPython(argv=[])
+
+    from sympy import pretty
+
+    def result_display(self, arg):
+        """Pretty-printer display hook.
+
+           Called for displaying pretty results to the user. Using this
+           handler not only SymPy's  expression can be printed but also
+           Python's lists, tuples and dictionaries.
+
+           This function was adapted from:
+
+             ipython/IPython/hooks.py:155
+
+        """
         if self.rc.pprint:
-            from sympy import pretty
-            out = pretty(value)
+            out = pretty(arg)
+
             if '\n' in out:
                 print
+
             print out
         else:
-            print repr(value)
+            print repr(arg)
 
-    ipshell.IP.set_hook("result_display", myhook)
-    api.ex('__IP.compile("from __future__ import division", "<input>", "single") in __IP.user_ns')
+    ip.set_hook('result_display', result_display)
 
-    ### create some magic commands
+    ip.runcode(ip.compile(div_code, '<input>', 'single'))
+    ip.runcode(ip.compile(sym_code, '<input>', 'single'))
 
-    #def pretty_print(self, arg):
-    #    self.api.ex("print str((%s).__pretty__())" % arg)
+    ip.interact(kwargs.get('message'))
+    sys.exit('Exiting ...')
 
-    #api.expose_magic("pprint", pretty_print)
-
-    # Now start an embedded ipython.
-    ipshell(welcome_msg)
-    sys.exit("Exiting ...")
-
-def run_python_interpreter():
-    print """\
-Couldn't locate IPython. Having IPython installed is greatly recommended.  See
-http://ipython.scipy.org for more details. If you use Debian/Ubuntu, just
-install the "ipython" package and start isympy again.\n"""
-
-    import code
-    import readline
-    import atexit
-    import os
-
+def init_python(*args, **kwargs):
+    import code, readline, atexit
 
     class HistoryConsole(code.InteractiveConsole):
-        def __init__(self, locals=None, filename="<console>",
-	                 histfile=os.path.expanduser("~/.sympy-history")):
+        def __init__(self, *args, **kwargs):
             code.InteractiveConsole.__init__(self)
-            self.init_history(histfile)
-            self.runcode(self.compile("from __future__ import division", 
-                "<input>", "single"))
 
-        def init_history(self, histfile):
-	        readline.parse_and_bind("tab: complete")
-	        if hasattr(readline, "read_history_file"):
-	            try:
-	                readline.read_history_file(histfile)
-	            except IOError:
-	                pass
-                atexit.register(self.save_history, histfile)
+            history = kwargs.get('history', '~/.sympy-history')
+            history = os.path.expanduser(history)
 
-        def save_history(self, histfile):
-            readline.write_history_file(histfile)
+            readline.parse_and_bind('tab: complete')
+
+            if hasattr(readline, 'read_history_file'):
+                try:
+                    readline.read_history_file(history)
+                except IOError:
+                    pass
+
+                def save_history(history):
+                    readline.write_history_file(history)
+
+                atexit.register(save_history, history)
 
     from sympy import pprint
-    sys.displayhook = lambda value: pprint(value)
-    sh = HistoryConsole()
-    sh.runcode(init_code)
-    sh.interact(welcome_msg)
-    sys.exit("Exiting ...")
+    sys.displayhook = pprint
 
+    console = HistoryConsole(*args, **kwargs)
 
-from optparse import OptionParser
+    console.runcode(console.compile(div_code, '<input>', 'single'))
+    console.runcode(console.compile(sym_code, '<input>', 'single'))
+
+    console.interact(kwargs.get('message'))
+    sys.exit('Exiting ...')
 
 def main():
     from sympy import __version__ as sympy_version
-    parser = OptionParser("usage: isympy [options]", version=sympy_version )
-    parser.add_option("-c", "--console", dest="console",
-                      help="specify a python interactive interpreter, python or ipython")
+    py_version = "%d.%d.%d" % sys.version_info[:3]
+
+    usage = 'usage: isympy [options]'
+
+    key_options = ('dest', 'action', 'default', 'help')
+
+    isympy_options = (
+        # parametric options
+        ('-c', '--console', 'console', 'store', None,
+            'select an interactive console: python | ipython'),
+        # boolean options
+        ('-q', '--quiet', 'quiet', 'store_true', False,
+            'print only version information at startup'),
+    )
+
+    from optparse import OptionParser
+
+    parser = OptionParser(usage, version=sympy_version)
+
+    for option in isympy_options:
+        parser.add_option(*option[0:2],
+            **dict(zip(key_options, option[2:])))
+
     (options, args) = parser.parse_args()
 
-    if options.console == "python":
-        run_python_interpreter()
-    elif options.console == "ipython":
-        run_ipython_interpreter()
-    else:
-	    try:
-	        run_ipython_interpreter()
+    message = "Python %s console for SymPy %s" \
+        % (py_version, sympy_version)
 
-	    except ImportError:
-	        run_python_interpreter()
+    if os.getenv('SYMPY_USE_CACHE') == 'no':
+        message += ' (cache: off)\n'
+    else:
+        message += '\n'
+
+    if not options.quiet:
+        message += '\n' + long_message
+
+    args = {
+        'message' : message,
+    }
+
+    shells = {
+        'ipython' : init_ipython,
+        'python'  : init_python
+    }
+
+    try:
+        shells[options.console](**args)
+    except KeyError:
+        try:
+            init_ipython(**args)
+        except ImportError:
+            print no_ipython
+            init_python(**args)
 
 if __name__ == "__main__":
     main()
-
