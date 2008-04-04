@@ -12,6 +12,9 @@ def init_ipython():
     import IPython.ipapi
     ip = IPython.ipapi.get()
 
+    ip.IP.compile("from __future__ \
+        import division", "<input>", "single")
+
     def result_display(self, arg):
         """Pretty-printer display hook.
 

@@ -26,7 +26,6 @@ include ipythonrc
 
 banner 0
 
-import_some __future__ division
 import_all sympy.interactive
 
 execute init_ipython()
