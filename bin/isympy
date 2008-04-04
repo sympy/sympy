@@ -1,5 +1,45 @@
 #! /usr/bin/env python
 
+"""Python shell for SymPy.
+
+   This is just a normal Python shell  (ipython shell if you have the
+   IPython package installed) that executes the following commands so
+   that you don't have to:
+
+       >>> from __future__ import division
+       >>> from sympy import *
+       >>> x, y, z = symbols("xyz")
+       >>> k, m, n = symbols("kmn", integer=True)
+       >>> f = Function('f')
+
+   So starting 'isympy' is equivalent to starting Python (or IPython)
+   and executing the above commands by hand.  It is intended for easy
+   and quick experimentation with SymPy.
+
+   COMMAND LINE OPTIONS
+   --------------------
+
+   -c CONSOLE, --console=CONSOLE
+
+     Use the specified python or ipython shell (lower case) as console
+     backend instead of the default one  (ipython if present or python
+     otherwise), eg. isympy -c python
+
+   -q, --quiet
+
+     Print only Python's and SymPy's versions to stdout at startup.
+
+   -- IPython's options
+
+     Additionally  you can pass command line options directly to IPython
+     interpreter (standard Python shell is not supported).  However  you
+     need to add '--' separator between two types of options, eg. to run
+     SymPy without startup banner and colors, issue:
+
+        isympy -q -- -colors NoColor
+
+"""
+
 import os, sys
 
 # common SymPy's code for IPython and Python shells
@@ -38,7 +78,7 @@ just install the 'ipython' package and start isympy again.
 def init_ipython(*args, **kwargs):
     import IPython.Shell
 
-    ip = IPython.Shell.make_IPython(argv=[])
+    ip = IPython.Shell.make_IPython(kwargs.get('argv'))
 
     from sympy import pretty
 
@@ -73,7 +113,7 @@ def init_ipython(*args, **kwargs):
     sys.exit('Exiting ...')
 
 def init_python(*args, **kwargs):
-    import code, readline, atexit
+    import code
 
     class HistoryConsole(code.InteractiveConsole):
         def __init__(self, *args, **kwargs):
@@ -82,18 +122,23 @@ def init_python(*args, **kwargs):
             history = kwargs.get('history', '~/.sympy-history')
             history = os.path.expanduser(history)
 
-            readline.parse_and_bind('tab: complete')
+            try:
+                import readline, atexit
 
-            if hasattr(readline, 'read_history_file'):
-                try:
-                    readline.read_history_file(history)
-                except IOError:
-                    pass
+                readline.parse_and_bind('tab: complete')
 
-                def save_history(history):
-                    readline.write_history_file(history)
+                if hasattr(readline, 'read_history_file'):
+                    try:
+                        readline.read_history_file(history)
+                    except IOError:
+                        pass
 
-                atexit.register(save_history, history)
+                    def save_history(history):
+                        readline.write_history_file(history)
+
+                    atexit.register(save_history, history)
+            except ImportError:
+                pass
 
     from sympy import pprint
     sys.displayhook = pprint
@@ -110,7 +155,7 @@ def main():
     from sympy import __version__ as sympy_version
     py_version = "%d.%d.%d" % sys.version_info[:3]
 
-    usage = 'usage: isympy [options]'
+    usage = 'usage: isympy [options] -- [ipython options]'
 
     key_options = ('dest', 'action', 'default', 'help')
 
@@ -146,6 +191,7 @@ def main():
 
     args = {
         'message' : message,
+        'argv'    : args,
     }
 
     shells = {
