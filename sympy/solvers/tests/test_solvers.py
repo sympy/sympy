@@ -1,9 +1,8 @@
-from sympy import solve, Function, Symbol, Derivative, exp, sin, cos, log, \
-        Rational, Eq
+from sympy import *
 from sympy.utilities.pytest import XFAIL
 
 from sympy.matrices import Matrix
-from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve
+from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve, tsolve
 
 def test_solve():
     x, y = map(Symbol, 'xy')
@@ -59,3 +58,33 @@ def test_ODE_1():
     e = e*exp(-l(r))/exp(l(r))
     sol = dsolve(e, [l(r)])
     assert (e.subs(l(r), sol)).expand() == 0
+
+# Note: multiple solutions exist for some of these equations, so the tests
+# should be expected to break if the implementation of the solver changes
+# in such a way that a different branch is chosen
+def test_tsolve():
+    x = Symbol('x')
+    assert solve(exp(x)-3, x) == [log(3)]
+    assert tsolve(exp(x)-3, x) == log(3)
+    assert tsolve(Eq(exp(x),'==',3), x) == log(3)
+    assert tsolve(log(x)-3, x) == exp(3)
+    assert tsolve(sqrt(3*x)-4, x) == Rational(16,3)
+    assert tsolve(3**(x+2), x) == -oo
+    assert tsolve(3**(2-x), x) == oo
+    assert tsolve(4*3**(5*x+2)-7, x) == (log(Rational(7,4))-2*log(3))/(5*log(3))
+    assert tsolve(x+2**x, x) == -LambertW(log(2))/log(2)
+    assert tsolve(3*x+5+2**(-5*x+3), x) == \
+        -Rational(5,3) + LambertW(-10240*2**Rational(1,3)*log(2)/3)/(5*log(2))
+    assert tsolve(5*x-1+3*exp(2-7*x), x) == \
+        Rational(1,5) + LambertW(-21*exp(Rational(3,5))/5)/7
+    assert tsolve(2*x+5+log(3*x-2), x) == \
+        Rational(2,3) + LambertW(2*exp(-Rational(19,3))/3)/2
+    assert tsolve(3*x+log(4*x), x) == LambertW(Rational(3,4))/3
+    assert tsolve((2*x+8)*(8+exp(x)), x) == -4
+    assert tsolve(2*exp(3*x+4)-3, x) == -Rational(4,3)+log(Rational(3,2))/3
+    assert tsolve(2*log(3*x+4)-3, x) == (exp(Rational(3,2))-4)/3
+    assert tsolve(exp(x)+1, x) == pi*I
+    assert tsolve(x**2 - 2**x, x) == 2
+    assert tsolve(x**3 - 3**x, x) == -3/log(3)*LambertW(-log(3)/3)
+    assert tsolve(2*(3*x+4)**5 - 6*7**(3*x+9), x) == \
+        Rational(-4,3) - 5/log(7)/3*LambertW(-7*2**Rational(4,5)*6**Rational(1,5)*log(7)/10)

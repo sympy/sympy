@@ -1,4 +1,5 @@
-from sympy import symbols, integrate, Integral, exp, oo, Symbol, Rational, log, sin, cos, pi, E, I, Polynomial
+from sympy import symbols, integrate, Integral, exp, oo, Symbol, Rational, \
+    log, sin, cos, pi, E, I, Polynomial, LambertW
 from sympy.utilities.pytest import XFAIL
 from sympy.physics.units import m, s
 import py
@@ -160,3 +161,6 @@ def test_issue587(): # remove this when fresnel itegrals are implemented
 
 def test_integrate_units():
     assert integrate(x * m/s, (x, 1*s, 5*s)) == 12*m*s
+
+def test_transcendental_functions():
+    assert integrate(LambertW(2*x), x) == -x + x*LambertW(2*x) + x/LambertW(2*x)

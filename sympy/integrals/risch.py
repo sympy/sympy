@@ -4,7 +4,7 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.function import Function
 from sympy.core.symbol import Symbol, Wild
-from sympy.core.basic import S, Atom, sympify
+from sympy.core.basic import S, C, Atom, sympify
 from sympy.core.numbers import Integer, Rational
 
 from sympy.functions import exp, sin , cos , tan , cot , asin
@@ -259,8 +259,8 @@ def heurisch(f, x, **kwargs):
             elif term.func is tanh:
                 special[1 + substitute(term)] = False
                 special[1 - substitute(term)] = False
-            #elif term.func is LambertW:
-            #    special[substitute(term)] = True
+            elif term.func is C.LambertW:
+                special[substitute(term)] = True
 
     F = substitute(f)
 

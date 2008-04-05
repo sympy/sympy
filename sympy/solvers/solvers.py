@@ -16,7 +16,7 @@ from sympy.simplify import simplify, collect
 from sympy.matrices import Matrix, zeronm
 from sympy.polynomials import roots, PolynomialException
 from sympy.utilities import any
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions import sqrt, log, exp, LambertW
 
 def solve(eq, syms, simplified=True):
     """Solves univariate polynomial equations and linear systems with
@@ -74,6 +74,9 @@ def solve(eq, syms, simplified=True):
             # solutions, however we have to remove duplicates
             solutions = list(set(roots(equ, syms[0])))
         except PolynomialException:
+            if len(syms) == 1:
+                return [tsolve(equ, syms[0])]
+
             raise "Not a polynomial equation. Can't solve it, yet."
 
         if simplified == True:
@@ -396,3 +399,59 @@ def solve_ODE_1(f, x):
     C1 = Symbol("C1")
     C2 = Symbol("C2")
     return -C.log(C1+C2/x)
+
+# Patterns for transcendental equations
+x = Symbol('x', dummy=True)
+a,b,c,d,e,f,g,h = [Wild(t, exclude=[x]) for t in 'abcdefgh']
+
+tmp1 = f ** (h-(c*g/b))
+tmp2 = (-e*tmp1/a)**(1/d)
+
+patterns = [
+    (a*(b*x+c)**d + e   , ((-(e/a))**(1/d)-c)/b),
+    (    b+c*exp(d*x+e) , (log(-b/c)-e)/d),
+    (a*x+b+c*exp(d*x+e) , -b/a-LambertW(c*d*exp(e-b*d/a)/a)/d),
+    (    b+c*f**(d*x+e) , (log(-b/c)-e*log(f))/d/log(f)),
+    (a*x+b+c*f**(d*x+e) , -b/a-LambertW(c*d*f**(e-b*d/a)*log(f)/a)/d/log(f)),
+    (    b+c*log(d*x+e) , (exp(-b/c)-e)/d),
+    (a*x+b+c*log(d*x+e) , -e/d+c/a*LambertW(a/c/d*exp(-b/c+a*e/c/d))),
+    (a*(b*x+c)**d + e*f**(g*x+h) , -c/b-d*LambertW(-tmp2*g*log(f)/b/d)/g/log(f))
+]
+
+def tsolve(eq, sym):
+    """
+    Solves a transcendental equation with respect to the given
+    symbol. Various equations containing mixed linear terms, powers,
+    and logarithms, can be solved.
+
+    Only a single solution is returned. This solution is generally
+    not unique. In some cases, a complex solution may be returned
+    even though a real solution exists.
+
+        >>> from sympy import *
+        >>> x = Symbol('x')
+        
+        >>> tsolve(3**(2*x+5)-4, x)
+        (1/2)/log(3)*(-5*log(3) + log(4))
+
+        >>> tsolve(log(x) + 2*x, x)
+        (1/2)*LambertW(2)
+
+    """
+    eq = sympify(eq)
+    if isinstance(eq, Equality):
+        eq = eq.lhs - eq.rhs
+    sym = sympify(sym)
+    eq2 = eq.subs(sym, x)
+    # First see if the equation has a linear factor
+    # In that case, the other factor can contain x in any way (as long as it
+    # is finite), and we have a direct solution
+    r = Wild('r')
+    m = eq2.match((a*x+b)*r)
+    if m and m[a]:
+        return (-b/a).subs(m).subs(x, sym)
+    for p, sol in patterns:
+        m = eq2.match(p)
+        if m:
+            return sol.subs(m).subs(x, sym)
+    raise ValueError("unable to solve the equation")
