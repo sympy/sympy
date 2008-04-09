@@ -75,7 +75,7 @@ class re(Function):
         return self
 
     def _eval_expand_complex(self, *args):
-        return self.func(self[0].as_real_imag()[0])
+        return self.args[0].as_real_imag()[0]
 
 class im(Function):
     """Returns imaginary part of expression. This function performs
@@ -145,7 +145,7 @@ class im(Function):
         return self
 
     def _eval_expand_complex(self, *args):
-        return self.func(self[0].as_real_imag()[1])
+        return self.args[0].as_real_imag()[1]
 
 ###############################################################################
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################

@@ -328,8 +328,8 @@ class log(Function):
 
     def _eval_expand_complex(self, *args):
         re, im = self.args[0].as_real_imag()
-        return log(re**S.Half + im**S.Half) + \
-               S.ImaginaryUnit * C.arg(self.args[0])
+        return log((re**2 + im**2)**S.Half) + \
+               S.ImaginaryUnit * C.atan2(im,re)
 
     def _eval_is_real(self):
         return self.args[0].is_positive
