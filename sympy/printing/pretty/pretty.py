@@ -9,16 +9,12 @@ pprint_use_unicode = pretty_use_unicode
 pprint_try_use_unicode = pretty_try_use_unicode
 
 
-# syntatic sugar
-def prettyAtom(s):
-    return prettyForm(s, binding=prettyForm.ATOM)
-
 class PrettyPrinter(Printer):
     """Printer, which converts an expression into 2D ascii-art figure."""
 
     def __init__(self, use_unicode=None):
         Printer.__init__(self)
-        self.emptyPrinter = lambda x : prettyAtom(xstr(x))
+        self.emptyPrinter = lambda x : prettyForm(xstr(x))
 
     def doprint(self, expr):
         return self._print(expr).terminal_string()
@@ -29,12 +25,12 @@ class PrettyPrinter(Printer):
 
     def _print_Symbol(self, e):
         symb = pretty_symbol(e.name)
-        return prettyAtom(symb)
+        return prettyForm(symb)
 
     def _print_Atom(self, e):
         try:
             # print atoms like Exp1 or Pi
-            return prettyAtom(pretty_atom(e.__class__.__name__))
+            return prettyForm(pretty_atom(e.__class__.__name__))
         except KeyError:
             pass
 
@@ -230,7 +226,7 @@ class PrettyPrinter(Printer):
 
 
     def _print_exp(self, e):
-        base = prettyAtom(pretty_atom('Exp1', 'e'))
+        base = prettyForm(pretty_atom('Exp1', 'e'))
         return base ** self._print(e.args[0])
 
     def _print_Function(self, e):
