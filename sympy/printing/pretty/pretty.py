@@ -351,7 +351,10 @@ class PrettyPrinter(Printer):
 
     def _print_Rational(self, r):
         if r.q == 1:
-            return prettyAtom(str(r.p))
+            if r.is_negative:
+                return prettyForm(str(r.p),binding=prettyForm.NEG)
+            else:
+                return prettyForm(str(r.p))
         elif abs(r.p) >= 10 and abs(r.q) >= 10:
             # If more than one digit in numer and denom, print larger fraction
             if r.is_negative:
