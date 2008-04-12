@@ -34,8 +34,8 @@ from basic import BasicType, BasicMeta
 from methods import ArithMeths, RelMeths
 from operations import AssocOp
 from cache import cacheit
-
-from numbers import Rational
+from itertools import repeat
+from numbers import Rational,Integer
 from symbol import Symbol
 from add    import Add
 
@@ -407,26 +407,46 @@ class Derivative(Basic, ArithMeths, RelMeths):
     """
 
     precedence = Basic.Apply_precedence
-
+    
+    @staticmethod
+    def _symbolgen(*symbols):
+        last_s = sympify(symbols[len(symbols)-1])
+        for i in xrange(len(symbols)):
+            s = sympify(symbols[i])
+            next_s = None
+            if s != last_s:
+                next_s = sympify(symbols[i+1])
+        #    next_s = sympify(symbols[i+1]) if s != last_s else None
+        
+            if isinstance(s,Integer):
+                continue
+            elif isinstance(s, Symbol):
+                if isinstance(next_s, Integer):
+                    for copy_s in repeat(s,int(next_s)):
+                        yield copy_s
+                else:
+                    yield s
+            else:
+                 raise TypeError("Derivative argument must be Symbol|Integer instance (got %s)" % (s.__class__.__name__))
+            
     def __new__(cls, expr, *symbols, **assumptions):
         expr = sympify(expr)
         if not symbols: return expr
-        symbols = map(sympify, symbols)
-
+        symbols = Derivative._symbolgen(*symbols)
         if not assumptions.get("evaluate", False):
             obj = Basic.__new__(cls, expr, *symbols)
             return obj
-
+        unevaluated_symbols = []
         for s in symbols:
+            s = sympify(s)
             assert isinstance(s, Symbol),`s`
             if not expr.has(s):
                 return S.Zero
-
-        unevaluated_symbols = []
-        for s in symbols:
             obj = expr._eval_derivative(s)
             if obj is None:
                 unevaluated_symbols.append(s)
+            elif obj is S.Zero:
+                return expr
             else:
                 expr = obj
 
@@ -613,13 +633,8 @@ def diff(f, x, times = 1, evaluate=True):
 
     see http://documents.wolfram.com/v5/Built-inFunctions/AlgebraicComputation/Calculus/D.html
     """
-    f = sympify(f)
-    if evaluate == True:
-        for i in range(0,times):
-            f = f.diff(x)
-        return f
-    else:
-        return Derivative(f, x, evaluate=evaluate)
+   
+    return Derivative(f,x,times, **{'evaluate':evaluate})
 
 def expand(e, **hints):
     """

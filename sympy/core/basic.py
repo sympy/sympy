@@ -1366,17 +1366,7 @@ class Basic(AssumeMeths):
     ###################################################################################
 
     def diff(self, *symbols, **assumptions):
-        new_symbols = []
-        for s in symbols:
-            s = sympify(s)
-            if s.is_Integer and new_symbols:
-                last_s = new_symbols.pop()
-                i = int(s)
-                new_symbols += [last_s] * i
-            elif s.is_Symbol:
-                new_symbols.append(s)
-            else:
-                raise TypeError(".diff() argument must be Symbol|Integer instance (got %s)" % (s.__class__.__name__))
+        new_symbols = map(sympify, symbols)
         if not assumptions.has_key("evaluate"):
             assumptions["evaluate"] = True
         ret = Derivative(self, *new_symbols, **assumptions)
