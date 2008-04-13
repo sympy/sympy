@@ -347,8 +347,8 @@ def dsolve(eq, funcs):
         b = Wild('b', exclude=[f(x)])
         c = Wild('c', exclude=[f(x)])
 
-        r = eq.match(a*diff(f(x),x) + b)
-        if r: return solve_ODE_first_order(r[a], r[b], f(x), x)
+        r = eq.match(a*diff(f(x),x) + b*f(x) + c)
+        if r: return solve_ODE_first_order(r[a], r[b], r[c], f(x), x)
 
         r = eq.match(a*f(x).diff(x, x) + b*f(x))
         if r: return solve_ODE_second_order(r[a], 0, r[b], f(x), x)
@@ -376,10 +376,13 @@ def dsolve(eq, funcs):
             return solve_ODE_1(f(x), x)
     raise NotImplementedError("dsolve: Cannot solve " + str(eq))
 
-def solve_ODE_first_order(a, b, f, x):
-    """ a*f'(x)+b = 0 """
+
+def solve_ODE_first_order(a, b, c, f, x):
+    """ a(x)*f'(x)+b(x)*f(x)+c(x) = 0 """
     from sympy.integrals.integrals import integrate
-    return integrate(-b/a, x) + Symbol("C1")
+    t = C.exp(integrate(b/a, x))
+    tt = integrate(t*(-c/a), x)
+    return (tt + Symbol("C1"))/t
 
 def solve_ODE_second_order(a, b, c, f, x):
     """ a*f''(x) + b*f'(x) + c*f(x) = 0 """
