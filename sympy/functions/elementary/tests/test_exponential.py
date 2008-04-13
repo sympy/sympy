@@ -1,4 +1,4 @@
-from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol
+from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol, LambertW
 from sympy.utilities.pytest import XFAIL
 
 def test_exp():
@@ -109,3 +109,13 @@ def test_log_simplify():
     x = Symbol("x")
     assert log(x**2) == 2*log(x)
     assert log(x**(2+log(2))) == (2+log(2))*log(x)
+
+def test_lambertw():
+    x = Symbol('x')
+    assert LambertW(x) == LambertW(x)
+    assert LambertW(0) == 0
+    assert LambertW(E) == 1
+    assert LambertW(-1/E) == -1
+    assert LambertW(-log(2)/2) == -log(2)
+    assert LambertW(oo) == oo
+    assert LambertW(x**2).diff(x) == 2*LambertW(x**2)/x/(1+LambertW(x**2))

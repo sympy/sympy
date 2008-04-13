@@ -424,3 +424,30 @@ class MrvLog(log):
             new = sympify(new)
             return new(arg.subs(old, new))
         return self
+
+
+class LambertW(Function):
+    """Lambert W function, defined as the inverse function of
+    x*exp(x). This function represents the principal branch
+    of this inverse function, which like the natural logarithm
+    is multivalued.
+
+    For more information, see:
+    http://en.wikipedia.org/wiki/Lambert_W_function
+    """
+    nargs = 1
+
+    @classmethod
+    def canonize(cls, x):
+        if x == S.Zero: return S.Zero
+        if x == S.Exp1: return S.One
+        if x == -1/S.Exp1: return -S.One
+        if x == -log(2)/2: return -log(2)
+        if x == S.Infinity: return S.Infinity
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            x = self.args[0]
+            return LambertW(x)/(x*(1+LambertW(x)))
+        else:
+            raise ArgumentIndexError(self, argindex)
