@@ -52,6 +52,7 @@ modules = [
     ( False, 'sympy.functions.special', [] ),
     ( True, 'sympy.geometry', [] ),
     ( True, 'sympy.integrals', [] ),
+    ( True, 'sympy.interactive', [] ),
     ( True, 'sympy.matrices', [] ),
     ( True, 'sympy.ntheory', [] ),
     ( True, 'sympy.numerics', [] ),
