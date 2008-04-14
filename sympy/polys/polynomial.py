@@ -1051,6 +1051,9 @@ class Poly(Basic, RelMeths, ArithMeths):
         """
         LC = self.lead_coeff
 
+        if not self or LC is S.One:
+            return self
+
         coeffs = [ coeff / LC for coeff in self.coeffs ]
 
         for i, coeff in enumerate(coeffs):
@@ -1175,7 +1178,7 @@ class Poly(Basic, RelMeths, ArithMeths):
         symbols, stamp = self.symbols, self.stamp
         flags, cls = self.flags, self.__class__
 
-        if isinstance(other, (tuple, list)):
+        if isinstance(other, (tuple, list, set)):
             for poly in other:
                 if isinstance(poly, Poly):
                     stamp |= poly.stamp

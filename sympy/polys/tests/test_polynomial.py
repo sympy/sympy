@@ -259,6 +259,10 @@ def test_poly_properties():
     assert f.is_monic == False
 
 def test_as_monic():
+    assert Poly(0, x,y,z).as_monic() == Poly(0, x,y,z)
+    assert Poly(1, x,y,z).as_monic() == Poly(1, x,y,z)
+    assert Poly(t, x,y,z).as_monic() == Poly(1, x,y,z)
+
     f = x**3*y*z**2 + 7*x*y*z + 14*x*y + 3
 
     assert Poly(f, x,y,z).as_monic() == Poly(f, x,y,z)
@@ -371,6 +375,12 @@ def test_poly_div():
     assert poly_pdiv(f, g, x) == (q, r)
     assert poly_pdiv(Poly(f, x), Poly(g, x)) == (q, r)
 
+def test_poly_lcm():
+    pass # TBD : needs lcm
+
+def test_poly_gcd():
+    pass # TBD : needs gcd
+
 def test_poly_gcdex():
     f = x**4 - 2*x**3 - 6*x**2 + 12*x + 15
     g = x**3 + x**2 - 4*x - 4
@@ -412,6 +422,25 @@ def test_poly_subresultants():
     g = 3*x**6+5*x**4-4*x**2-9*x+21
 
     # TBD : needs subresultants
+
+def test_poly_groebner():
+    assert poly_groebner(0, x) == (Poly((), x),)
+
+    assert poly_groebner(x*y, x) == (Poly(x, x),)
+    assert poly_groebner(x*y, z) == (Poly(1, z),)
+
+    assert poly_groebner((x**2 + 2*x*y**2, x*y + 2*y**3 - 1), y, x, order='lex') == \
+        (Poly(y**3 - Rational(1,2), y, x, order='lex'),
+         Poly(x, y, x, order='lex'))
+
+    assert poly_groebner((y-x**2, z-x**3), y, z, x, order='lex') == \
+        (Poly(-x**2+y, y, z, x, order='lex'),
+         Poly(z-x**3, y, z, x, order='lex'))
+
+    assert poly_groebner((x**3-2*x*y, x**2*y-2*y**2+x), x, y, order='grlex') == \
+        (Poly(x**2, x, y, order='grlex'),
+         Poly(x*y, x, y, order='grlex'),
+         Poly(y**2-x/2, x, y, order='grlex'))
 
 def test_map_coeffs():
     p = Poly(x**2 + 2*x*y, x, y)
