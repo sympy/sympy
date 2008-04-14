@@ -238,7 +238,7 @@ class PrettyPrinter(Printer):
         func_name = func.__name__
 
         prettyFunc = self._print(C.Symbol(func_name));
-        prettyArgs = self._print_seq(args, '(', ')')
+        prettyArgs = prettyForm(*self._print_seq(args).parens())
 
         pform = prettyForm(binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
 

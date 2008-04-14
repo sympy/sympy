@@ -88,8 +88,9 @@ def test_pretty_functions():
     assert pretty(f(x)) == 'f(x)'
     assert pretty(f(x, y)) == 'f(x, y)'
     assert pretty(f(x/(y+1), y)) in [
-            '    x      \nf(-----, y)\n  1 + y    ',
-            '    x      \nf(-----, y)\n  y + 1    ']
+            ' /  x     \\\nf|-----, y|\n \\1 + y   /',
+            ' /  x     \\\nf|-----, y|\n \\y + 1   /',
+            ]
 
     # Nesting of square roots
     assert pretty( sqrt((sqrt(x+1))+1) ) in [
