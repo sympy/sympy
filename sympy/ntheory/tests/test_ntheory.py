@@ -4,6 +4,7 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, npartitions, totient, trial, \
     factorint, primefactors, divisors, randprime, nextprime, prevprime, \
     primerange, primepi, prime
+from sympy.ntheory.bbp_pi import pi_hex_digits
 
 def test_isprime():
     s = Sieve()
@@ -136,6 +137,14 @@ def test_residue():
     assert legendre_symbol(5,11)==1
     assert legendre_symbol(25,41)==1
     assert legendre_symbol(67,101)==-1
+
+def test_hex_pi_nth_digits():
+    assert pi_hex_digits(0) == '3243f6a8885a30'
+    assert pi_hex_digits(1) == '243f6a8885a308'
+    assert pi_hex_digits(10000) == '68ac8fcfb8016c'
+
+
+
       
     
 
