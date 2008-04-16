@@ -1,6 +1,6 @@
 from sympy.core import S, C
 from sympy.printing.printer import Printer
-from stringpict import *
+from stringpict import prettyForm, stringPict
 
 from pretty_symbology import xstr, hobj, vobj, xobj, xrel, pretty_symbol, pretty_atom, pretty_use_unicode, pretty_try_use_unicode
 
