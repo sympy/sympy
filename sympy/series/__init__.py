@@ -2,6 +2,7 @@
 """
 from order import Order
 from limits import limit
+from gruntz import gruntz
 from limits_series import Limit
 
 O = Order
