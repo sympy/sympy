@@ -1,4 +1,4 @@
-from sympy import limit, exp, oo, log, sqrt
+from sympy import limit, exp, oo, log, sqrt, Limit, sin
 from sympy.abc import x, y, z
 
 def test_basic1():
@@ -38,3 +38,8 @@ def test_basic3():
 
 def test_issue786():
     assert limit(x*y+x*z, z, 2) == x*y+2*x
+
+def test_Limit():
+    assert Limit(sin(x)/x, x, 0) != 1
+    assert str(Limit(1/x, x, 0)) == "Limit(1/x, x, 0, dir='+')" != 1
+    assert Limit(sin(x)/x, x, 0).doit() == 1

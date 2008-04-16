@@ -12,7 +12,7 @@ from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.methods import RelMeths, ArithMeths
 from sympy.core.cache import cacheit
 
-class Limit(Basic, RelMeths, ArithMeths):
+class Limit_series(Basic, RelMeths, ArithMeths):
     """ Find the limit of the expression under process x->xlim.
 
     Limit(expr, x, xlim)
@@ -319,7 +319,7 @@ def rewrite_expr(expr, germ, mrv_map, w):
         e = e.subs(log, mrvlog).subs(germ.args[0], -log(w)).subs(mrvlog, log)
     return e
 
-Basic.singleton['limit'] = lambda : Limit
+#Basic.singleton['limit'] = lambda : Limit
 
 def limit(e, x, x0):
     return e.limit(x, x0)

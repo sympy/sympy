@@ -1,4 +1,5 @@
-from sympy.core import S, Add
+from sympy.core import S, Add, sympify, Basic
+from sympy.core.methods import NoRelMeths, ArithMeths
 from gruntz import gruntz            
 
 def limit(e, z, z0, dir="+"):
@@ -69,3 +70,31 @@ def limit(e, z, z0, dir="+"):
                 return r
 
     return gruntz(e, z, z0, dir)
+
+class Limit(Basic, NoRelMeths, ArithMeths):
+    """Represents unevaluated limit.
+
+    Examples:
+
+    >>> Limit(sin(x)/x, x, 0)
+    Limit(1/x*sin(x), x, 0, dir='+')
+    >>> Limit(1/x, x, 0, dir="-")
+    Limit(1/x, x, 0, dir='-')
+    """
+
+    def __new__(cls, e, z, z0, dir="+"):
+        e = sympify(e)
+        z = sympify(z)
+        z0 = sympify(z0)
+        obj = Basic.__new__(cls)
+        obj._args = (e, z, z0, dir)
+        return obj
+
+    def doit(self):
+        e, z, z0, dir = self.args
+        return limit(e, z, z0, dir)
+
+    def tostr(self, level=0):
+        e, z, z0, dir = self.args
+        return "Limit(%s, %s, %s, dir='%s')" % (e, z, z0, dir)
+
