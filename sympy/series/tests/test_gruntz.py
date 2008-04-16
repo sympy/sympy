@@ -1,5 +1,5 @@
 from sympy import Symbol, exp, log, oo, Rational
-from sympy.series.limits import compare, mrv, rewrite, mrv_leadterm, limit, \
+from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
 from sympy.utilities.pytest import XFAIL
 
@@ -155,43 +155,43 @@ def test_mrv_leadterm3():
     assert mrv_leadterm(exp(-x+exp(-x)*exp(-x*log(x))), x) == (exp(-x), 0)
 
 def test_limit1():
-    assert limit(x, x, oo) == oo
-    assert limit(x, x, -oo) == -oo
-    assert limit(-x, x, oo) == -oo
-    assert limit(x**2, x, -oo) == oo
-    assert limit(-x**2, x, oo) == -oo
-    assert limit(x*log(x), x, 0, dir="+") == 0
-    assert limit(1/x,x,oo) == 0
-    assert limit(exp(x),x,oo) == oo
-    assert limit(-exp(x),x,oo) == -oo
-    assert limit(exp(x)/x,x,oo) == oo
-    assert limit(1/x-exp(-x),x,oo) == 0
-    assert limit(x+1/x,x,oo) == oo
+    assert gruntz(x, x, oo) == oo
+    assert gruntz(x, x, -oo) == -oo
+    assert gruntz(-x, x, oo) == -oo
+    assert gruntz(x**2, x, -oo) == oo
+    assert gruntz(-x**2, x, oo) == -oo
+    assert gruntz(x*log(x), x, 0, dir="+") == 0
+    assert gruntz(1/x,x,oo) == 0
+    assert gruntz(exp(x),x,oo) == oo
+    assert gruntz(-exp(x),x,oo) == -oo
+    assert gruntz(exp(x)/x,x,oo) == oo
+    assert gruntz(1/x-exp(-x),x,oo) == 0
+    assert gruntz(x+1/x,x,oo) == oo
 
 
 def test_limit2():
-    assert limit(x**x, x, 0, dir="+") == 1
-    assert limit((exp(x)-1)/x, x, 0) == 1
-    assert limit(1+1/x,x,oo) == 1
-    assert limit(-exp(1/x),x,oo) == -1
-    assert limit(x+exp(-x),x,oo) == oo
-    assert limit(x+exp(-x**2),x,oo) == oo
-    assert limit(x+exp(-exp(x)),x,oo) == oo
-    assert limit(13+1/x-exp(-x),x,oo) == 13
+    assert gruntz(x**x, x, 0, dir="+") == 1
+    assert gruntz((exp(x)-1)/x, x, 0) == 1
+    assert gruntz(1+1/x,x,oo) == 1
+    assert gruntz(-exp(1/x),x,oo) == -1
+    assert gruntz(x+exp(-x),x,oo) == oo
+    assert gruntz(x+exp(-x**2),x,oo) == oo
+    assert gruntz(x+exp(-exp(x)),x,oo) == oo
+    assert gruntz(13+1/x-exp(-x),x,oo) == 13
 
 def test_limit3():
     a = Symbol('a')
-    assert limit(x-log(1+exp(x)), x, oo) == 0
-    assert limit(x-log(a+exp(x)), x, oo) == 0
-    assert limit(exp(x)/(1+exp(x)), x, oo) == 1
-    assert limit(exp(x)/(a+exp(x)), x, oo) == 1
+    assert gruntz(x-log(1+exp(x)), x, oo) == 0
+    assert gruntz(x-log(a+exp(x)), x, oo) == 0
+    assert gruntz(exp(x)/(1+exp(x)), x, oo) == 1
+    assert gruntz(exp(x)/(a+exp(x)), x, oo) == 1
 
 @XFAIL
 def test_limit4():
     #issue 364
-    assert limit((3**x+5**x)**(1/x), x, oo) == 5
+    assert gruntz((3**x+5**x)**(1/x), x, oo) == 5
     #issue 364
-    assert limit((3**(1/x)+5**(1/x))**x, x, 0) == 5
+    assert gruntz((3**(1/x)+5**(1/x))**x, x, 0) == 5
 
 #@XFAIL
 #def test_MrvTestCase_page47_ex3_21():
