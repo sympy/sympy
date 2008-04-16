@@ -1,7 +1,6 @@
 from sympy import Symbol, Matrix, Integral, log, Rational, Derivative, exp, \
-        sqrt, pi, Function, sin, cos, pprint_use_unicode, oo, Eq
+        sqrt, pi, Function, sin, cos, pprint_use_unicode, oo, Eq, Limit
 from sympy.printing.pretty import pretty as xpretty
-from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
 y = Symbol('y')
@@ -215,10 +214,11 @@ def test_pretty_seq():
 
 
 
-@XFAIL
 def test_pretty_limits():
-    assert pretty( limit(x, x, oo, evaluate=False) ) == ' lim x\nx->oo '
-    assert pretty( limit(x**2, x, 0, evaluate=False) ) == '     2\nlim x \nx->0  '  
+    assert pretty( Limit(x, x, oo) ) == ' lim x\nx->oo '
+    assert pretty( Limit(x**2, x, 0) ) == '     2\nlim x \nx->0  '  
+    assert pretty( Limit(1/x, x, 0) ) == '    1\nlim -\nx->0x'
+
 
 def test_pretty_class():
     """test that printer dispatcher correctly handles classes"""

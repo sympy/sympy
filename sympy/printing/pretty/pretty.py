@@ -169,6 +169,24 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*arg.left(S))
         return pform
 
+
+    def _print_Limit(self, l):
+        # XXX we do not print dir ...
+        e, z, z0, dir = l.args
+
+        E       = self._print(e)
+        Lim     = prettyForm('lim')
+
+        LimArg  = self._print(z)
+        LimArg  = prettyForm(*LimArg.right('->'))
+        LimArg  = prettyForm(*LimArg.right(self._print(z0)))
+
+        Lim     = prettyForm(*Lim.below(LimArg))
+        Lim     = prettyForm(*Lim.right(E))
+
+
+        return Lim
+
     # Matrix is special:
     #
     # it can exist in SymPy in two forms:

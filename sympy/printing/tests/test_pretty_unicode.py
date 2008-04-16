@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sympy import symbols, Symbol, sin, cos, Matrix, Integral, pi, sqrt, \
-        Function, Rational, tan, oo
+        Function, Rational, tan, oo, Limit
 from sympy.printing.pretty import pretty
 
 x,y = symbols('xy')
@@ -127,6 +127,43 @@ u"""\
 ⎮ ⎮ x *sin(y) dx dy
 ⌡ ⌡                
 0 0                \
+"""
+    assert u == s
+
+
+def test_upretty_limit():
+    u = upretty( Limit(x, x, oo) )
+    s = \
+u"""\
+lim x
+x->∞ \
+"""
+    assert u == s
+
+    u = upretty( Limit(x**2, x, 0) )
+    s = \
+u"""\
+     2
+lim x 
+x->0  \
+"""
+    assert u == s
+
+    u = upretty( Limit(1/x, x, 0) )
+    s = \
+u"""\
+    1
+lim ─
+x->0x\
+"""
+    assert u == s
+
+    u = upretty( Limit(sin(x)/x, x, 0) )
+    s = \
+u"""\
+    sin(x)
+lim ──────
+x->0  x   \
 """
     assert u == s
 
