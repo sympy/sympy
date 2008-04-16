@@ -225,6 +225,10 @@ class Add(AssocOp, RelMeths, ArithMeths):
     def _eval_derivative(self, s):
         return Add(*[f.diff(s) for f in self.args])
 
+    def nseries(self, x, x0, n):
+        terms = [t.nseries(x, x0, n) for t in self.args]
+        return Add(*terms)
+
     def _matches_simple(pattern, expr, repl_dict):
         # handle (w+3).matches('x+5') -> {w: x+2}
         coeff, factors = pattern.as_coeff_factors()

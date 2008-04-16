@@ -1508,6 +1508,23 @@ class Basic(AssumeMeths):
             return obj
         raise NotImplementedError('(%s).oseries(%s)' % (self, order))
 
+    def nseries(self, x, x0, n):
+        """
+        Calculates a generalized series expansion.
+
+        The difference between oseries and nseries is that nseries calculates
+        "n" terms in the innermost expressions and then builds up the final
+        series just by "cross-mutliplying" everything out.
+
+        Advantage -- it's fast, because we don't have to determine how many
+        terms we need to calculate in advance.
+
+        Disadvantage -- you may endup with less terms than you may have
+        expected, but the O(x**n) term appended will always be correct, so the
+        result is correct, but maybe shorter.
+        """
+        raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, x0, n))
+
     def _eval_oseries(self, order):
         return
 
@@ -1607,6 +1624,12 @@ class Basic(AssumeMeths):
     ##########################################################################
 
 class Atom(Basic):
+    """
+    A parent class for atomic things.
+    
+    Examples: Symbol, Number, Rational, Integer, ...
+    But not: Add, Mul, Pow, ...
+    """
 
     is_Atom = True
 
@@ -1658,6 +1681,10 @@ class Atom(Basic):
     @property
     def is_number(self):
         return True
+
+    def nseries(self, x, x0, n):
+        return self
+
 
 class Singleton(Basic):
     """ Singleton object.

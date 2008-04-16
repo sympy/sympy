@@ -274,6 +274,9 @@ class Function(Basic, ArithMeths, RelMeths):
             return e1.oseries(order)
         return self._compute_oseries(arg, order, self.func.taylor_term, self.func)
 
+    def nseries(self, x, x0, n):
+        return self.series(x, x0, n)
+
     def _eval_is_polynomial(self, syms):
         for arg in self.args:
             if arg.has(*syms):

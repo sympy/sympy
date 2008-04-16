@@ -542,6 +542,62 @@ class Pow(Basic, ArithMeths, RelMeths):
         r = self._compute_oseries(z, o, self.taylor_term, lambda z: 1+z) * b0**e
         return r
 
+    def nseries(self, x, x0, n):
+        def geto(e):
+            for x in e.args:
+                if x.is_Order:
+                    return x
+            raise Exception("Order not found in (%s)" % e)
+
+        def getn(e):
+            o = geto(e).expr
+            if o.is_Symbol:
+                return Integer(1)
+            if o.is_Pow:
+                return o.args[1]
+            raise Exception("Unimplemented")
+
+        base, exp = self.args
+        if exp.is_number:
+            if exp > 0:
+                # positive powers are easy to expand, e.g.:
+                # sin(x)**4
+                return (base.nseries(x, x0, n) ** exp).expand()
+            elif exp == -1:
+                # this is also easy to expand using the formula:
+                # 1/(1 + x) = 1 + x + x**2 + x**3 ...
+                # so we need to rewrite base to the form "1+x"
+                base = base.nseries(x, x0, n)
+                prefactor = base.as_leading_term(x)
+                rest = (base/prefactor).expand()
+                # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
+                rest = rest - 1
+                if rest == 0:
+                    return 1/prefactor
+                n = getn(rest)
+                term2 = rest.as_leading_term(x)
+                k, l = Wild("k"), Wild("l")
+                r = term2.match(k*x**l)
+                k, l = r[k], int(r[l])
+
+                s = 1
+                m = 1
+                while l * m < n:
+                    s += ((-rest)**m).expand()
+                    m += 1
+                return (s/prefactor).expand()
+            else:
+                # negative powers are rewritten to the cases above, for example:
+                # sin(x)**(-4) = 1/( sin(x)**4) = ...
+                # and expand the denominator:
+                denominator = (base**(-exp)).nseries(x, x0, n)
+                if 1/denominator == self:
+                    return self
+                # now we have a type 1/f(x), that we know how to expand
+                return (1/denominator).nseries(x, x0, n)
+
+        return self.series(x, x0, n)
+
     def _eval_as_leading_term(self, x):
         if not self.exp.has(x):
             return self.base.as_leading_term(x) ** self.exp

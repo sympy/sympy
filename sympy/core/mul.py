@@ -620,6 +620,11 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         #things as (x+x**2+...)*(x-x**2+...) etc.:
         return Mul(*l)
 
+    def nseries(self, x, x0, n):
+        terms = [t.nseries(x, x0, n) for t in self.args]
+        return Mul(*terms).expand()
+
+
     def _eval_as_leading_term(self, x):
         return Mul(*[t.as_leading_term(x) for t in self.args])
 

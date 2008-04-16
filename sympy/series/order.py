@@ -174,6 +174,12 @@ class Order(Basic, ArithMeths, RelMeths):
         
         return obj
 
+    def oseries(self, order):
+        return self
+
+    def nseries(self, x, x0, n):
+        return self
+
     def _get_cache_index(obj, symbol):
         if len(obj.symbols)>1:
             obj = Order(obj.expr, symbol)
