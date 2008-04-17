@@ -78,10 +78,14 @@ class PrettyPrinter(Printer):
         syms.reverse()
         x = None
         for sym in syms:
+            S = self._print(sym)
+            dS= prettyForm(*S.left('d'))
+
             if x is None:
-                x = prettyForm('d' + str(sym))
+                x = dS
             else:
-                x = prettyForm(*stringPict.next(x, ' d' + str(sym)))
+                x = prettyForm(*x.right(' '))
+                x = prettyForm(*x.right(dS))
 
         f = prettyForm(binding=prettyForm.FUNC, *self._print(deriv.expr).parens())
 

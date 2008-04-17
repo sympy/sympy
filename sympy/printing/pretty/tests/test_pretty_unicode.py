@@ -104,6 +104,19 @@ u"""\
 """
     assert u in [s1, s2]
 
+
+def test_upretty_diff():
+    alpha = Symbol('alpha')
+    beta  = Function('beta')
+
+    u = upretty( beta(alpha).diff(alpha) )
+    s = \
+u"""\
+d       
+──(β(α))
+dα      \
+"""
+
 def test_upretty_integral():
     u = upretty( Integral(sin(th)/cos(ph), (th,0,pi), (ph, 0, 2*pi)) )
     s = \
