@@ -66,7 +66,6 @@ def test_Limits_simple_4a():
 def test_limits_simple_4aa():
     assert limit(x*(sqrt(x**2+1)-x),x,oo)==Rational(1)/2  #214
 
-@XFAIL
 def test_Limits_simple_4b():
     #issue 412
     assert limit(x-sqrt3(x**3-1),x,oo)==0  #215
