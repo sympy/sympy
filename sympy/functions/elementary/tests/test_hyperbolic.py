@@ -1,5 +1,5 @@
-from sympy import symbols, Symbol, sinh, nan, oo, pi, asinh, log, sqrt, coth, \
-        I, cot, E, tanh, tan, cosh, cos, S, sin
+from sympy import symbols, Symbol, sinh, nan, oo, pi, asinh, acosh, log, sqrt, \
+        coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational
 
 def test_sinh():
     x, y = symbols('xy')
@@ -251,7 +251,12 @@ def test_asinh():
     assert asinh(+1) == log(sqrt(2)+1)
     assert asinh(-1) == log(sqrt(2)-1)
 
+def test_acosh():
+    # TODO please write more tests  -- see #652
+    assert acosh(1) == 0
+    assert acosh(Rational(1,2))  == I*pi/3
+
+
 # TODO please write tests -- see #652
-#def test_acosh():
 #def test_atanh():
 #def test_acoth():

@@ -3,6 +3,8 @@ from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Function, Lambda
 from sympy.core.cache import cacheit
 
+from sympy.functions.elementary.miscellaneous import sqrt
+
 ###############################################################################
 ########################### HYPERBOLIC FUNCTIONS ##############################
 ###############################################################################
@@ -498,12 +500,12 @@ class acosh(Function):
                 cst_table = {
                     S.Half       : S.Pi/3,
                     -S.Half      : 2*S.Pi/3,
-                    S.Sqrt(2)/2  : S.Pi/4,
-                    -S.Sqrt(2)/2 : 3*S.Pi/4,
-                    1/S.Sqrt(2)  : S.Pi/4,
-                    -1/S.Sqrt(2) : 3*S.Pi/4,
-                    S.Sqrt(3)/2  : S.Pi/6,
-                    -S.Sqrt(3)/2 : 5*S.Pi/6,
+                    sqrt(2)/2    : S.Pi/4,
+                    -sqrt(2)/2   : 3*S.Pi/4,
+                    1/sqrt(2)    : S.Pi/4,
+                    -1/sqrt(2)   : 3*S.Pi/4,
+                    sqrt(3)/2    : S.Pi/6,
+                    -sqrt(3)/2   : 5*S.Pi/6,
                 }
 
                 if arg in cst_table:
