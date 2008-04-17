@@ -64,7 +64,6 @@ def test_trim_xfail():
         y + exp(2*x) + exp(-x + 2*x*y)
 
 
-@XFAIL
 def test_apart1():
     assert apart(1/(x+2)/(x+1), x) == 1/(1 + x) - 1/(2 + x)
 
