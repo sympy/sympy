@@ -1,6 +1,6 @@
 from sympy import Function, dsolve, Symbol, sin, cos, sinh, cosh, I, exp, log, \
         simplify, normal, together, ratsimp, powsimp, fraction, radsimp, Eq, \
-        sqrt, pi, erf
+        sqrt, pi, erf, diff
 from sympy.abc import x
 
 def checksol(eq, func, sol):
@@ -79,3 +79,25 @@ def test_ode9():
     eq = Eq(f(x).diff(x) + x*f(x), '==', x**2)
     assert dsolve(eq, f(x)) == exp(-x**2/2)*(sqrt(2)*sqrt(pi)*I*erf(I*x/sqrt(2))/2 + x*exp(x**2/2) + Symbol("C1"))
     checksol(eq, f(x), dsolve(eq, f(x)))
+
+def test_ode10():
+    f = Function("f")
+    #type:2nd order, constant coefficients (two real different roots)
+    eq = Eq(f(x).diff(x,x) - 3*diff(f(x),x) + 2*f(x), '==', 0)
+    assert dsolve(eq, f(x)) == Symbol("C1")*exp(x) + Symbol("C2")*exp(2*x)
+    checksol(eq, f(x), dsolve(eq, f(x)))
+
+def test_ode11():
+    f = Function("f")
+    #type:2nd order, constant coefficients (two real equal roots)
+    eq = Eq(f(x).diff(x,x) - 4*diff(f(x),x) + 4*f(x), '==', 0)
+    assert dsolve(eq, f(x)) == (Symbol("C1") + Symbol("C2")*x)*exp(2*x)
+    checksol(eq, f(x), dsolve(eq, f(x)))
+
+def test_ode12():
+    f = Function("f")
+    #type:2nd order, constant coefficients (two complex roots)
+    eq = Eq(f(x).diff(x,x)+2*diff(f(x),x)+3*f(x), '==', 0)
+    assert dsolve(eq, f(x)) == (Symbol("C1")*sin(x*sqrt(2))+Symbol("C2")*cos(x*sqrt(2)))*exp(-x)
+    checksol(eq, f(x), dsolve(eq, f(x)))
+

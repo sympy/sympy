@@ -311,7 +311,7 @@ def dsolve(eq, funcs):
         >>> f_ = Derivative(f, x) # f_ will be the derivative of f with respect to x
 
         - This function just parses the equation "eq" and determines the type of
-        differential equation, then it determines all the coefficients and then
+        differential equation by its order, then it determines all the coefficients and then
         calls the particular solver, which just accepts the coefficients.
         - "eq" can be either an Equality, or just the left hand side (in which
           case the right hand side is assumed to be 0)
@@ -346,53 +346,120 @@ def dsolve(eq, funcs):
         x = f.args[0]
         f = f.func
 
-        a = Wild('a', exclude=[f(x)])
-        b = Wild('b', exclude=[f(x)])
-        c = Wild('c', exclude=[f(x)])
+        #We first get the order of the equation, so that we can choose the
+        #corresponding methods. Currently, only first and second
+        #order odes can be handled.
+        order = deriv_degree(eq, f(x))
 
-        r = eq.match(a*diff(f(x),x) + b*f(x) + c)
-        if r: return solve_ODE_first_order(r[a], r[b], r[c], f(x), x)
+        if  order > 2 :
+           raise NotImplementedError("dsolve: Cannot solve " + str(eq))
+        elif order == 2:
+            return solve_ODE_second_order(eq, f(x))
+        elif order == 1:
+            return solve_ODE_first_order(eq, f(x))
+        else:
+            raise NotImplementedError("Not a differential equation!")
 
-        r = eq.match(a*f(x).diff(x, x) + b*f(x))
-        if r: return solve_ODE_second_order(r[a], 0, r[b], f(x), x)
+def deriv_degree(expr, func):
+    """ get the order of a given ode, the function is implemented
+    recursively """
+    a = Wild('a', exclude=[func])
 
-        #special equations, that we know how to solve
-        t = x*C.exp(f(x))
-        tt = a*t.diff(x, x)/t
-        r = eq.match(tt.expand())
-        if r:
-            return -solve_ODE_1(f(x), x)
+    order = 0
+    if isinstance(expr, Derivative):
+        order = len(expr.symbols)
+    else:
+        for arg in expr.args:
+            if isinstance(arg, Derivative):
+                order = max(order, len(arg.symbols))
+            elif expr.match(a):
+                order = 0
+            else :
+                for arg1 in arg.args:
+                    order = max(order, deriv_degree(arg1, func))
 
-        t = x*C.exp(-f(x))
-        tt = a*t.diff(x, x)/t
-        r = eq.match(tt.expand())
-        if r:
-            #check, that we've rewritten the equation correctly:
-            #assert ( r[a]*t.diff(x,2)/t ) == eq.subs(f, t)
-            return solve_ODE_1(f(x), x)
+    return order
 
-        neq = eq*C.exp(f(x))/C.exp(-f(x))
-        r = neq.match(tt.expand())
-        if r:
-            #check, that we've rewritten the equation correctly:
-            #assert ( t.diff(x,2)*r[a]/t ).expand() == eq
-            return solve_ODE_1(f(x), x)
+def solve_ODE_first_order(eq, f):
+    """
+    solves many kinds of first order odes, different methods are used
+    depending on the form of the given equation. Now the linear
+    case is implemented.
+    """
+    from sympy.integrals.integrals import integrate
+    x = f.args[0]
+    f = f.func
+
+    #linear case: a(x)*f'(x)+b(x)*f(x)+c(x) = 0
+    a = Wild('a', exclude=[f(x)])
+    b = Wild('b', exclude=[f(x)])
+    c = Wild('c', exclude=[f(x)])
+
+    r = eq.match(a*diff(f(x),x) + b*f(x) + c)
+    if r:
+        t = C.exp(integrate(r[b]/r[a], x))
+        tt = integrate(t*(-r[c]/r[a]), x)
+        return (tt + Symbol("C1"))/t
+
+    #other cases of first order odes will be implemented here
+
     raise NotImplementedError("dsolve: Cannot solve " + str(eq))
 
+def solve_ODE_second_order(eq, f):
+    """
+    solves many kinds of second order odes, different methods are used
+    depending on the form of the given equation. Now the constanst
+    coefficients case and a special case are implemented.
+    """
+    x = f.args[0]
+    f = f.func
 
-def solve_ODE_first_order(a, b, c, f, x):
-    """ a(x)*f'(x)+b(x)*f(x)+c(x) = 0 """
-    from sympy.integrals.integrals import integrate
-    t = C.exp(integrate(b/a, x))
-    tt = integrate(t*(-c/a), x)
-    return (tt + Symbol("C1"))/t
+    #constant coefficients case: af''(x)+bf'(x)+cf(x)=0
+    a = Wild('a', exclude=[x])
+    b = Wild('b', exclude=[x])
+    c = Wild('c', exclude=[x])
 
-def solve_ODE_second_order(a, b, c, f, x):
-    """ a*f''(x) + b*f'(x) + c*f(x) = 0 """
-    #a very special case, for b=0 and a,c not depending on x:
-    if b != 0:
-        raise NotImplementedError("cannot solve this")
-    return Symbol("C1")*C.sin(sqrt(c/a)*x)+Symbol("C2")*C.cos(sqrt(c/a)*x)
+    r = eq.match(a*f(x).diff(x,x) + c*f(x))
+    if r:
+        return Symbol("C1")*C.sin(sqrt(r[c]/r[a])*x)+Symbol("C2")*C.cos(sqrt(r[c]/r[a])*x)
+
+    r = eq.match(a*f(x).diff(x,x) + b*diff(f(x),x) + c*f(x))
+    if r:
+        r1 = solve(r[a]*x**2 + r[b]*x + r[c], x)
+        if r1[0].is_real:
+            if len(r1) == 1:
+                return (Symbol("C1") + Symbol("C2")*x)*exp(r1[0]*x)
+            else:
+                return Symbol("C1")*exp(r1[0]*x) + Symbol("C2")*exp(r1[1]*x)
+        else:
+            r2 = abs((r1[0] - r1[1])/(2*I))
+            return (Symbol("C2")*C.cos(r2*x) + Symbol("C1")*C.sin(r2*x))*exp((r1[0] + r1[1])*x/2)
+
+    #other cases of the second order odes will be implemented here
+
+    #special equations, that we know how to solve
+    t = x*C.exp(f(x))
+    tt = a*t.diff(x, x)/t
+    r = eq.match(tt.expand())
+    if r:
+        return -solve_ODE_1(f(x), x)
+
+    t = x*C.exp(-f(x))
+    tt = a*t.diff(x, x)/t
+    r = eq.match(tt.expand())
+    if r:
+        #check, that we've rewritten the equation correctly:
+        #assert ( r[a]*t.diff(x,2)/t ) == eq.subs(f, t)
+        return solve_ODE_1(f(x), x)
+
+    neq = eq*C.exp(f(x))/C.exp(-f(x))
+    r = neq.match(tt.expand())
+    if r:
+        #check, that we've rewritten the equation correctly:
+        #assert ( t.diff(x,2)*r[a]/t ).expand() == eq
+        return solve_ODE_1(f(x), x)
+
+    raise NotImplementedError("cannot solve this")
 
 def solve_ODE_1(f, x):
     """ (x*exp(-f(x)))'' = 0 """
