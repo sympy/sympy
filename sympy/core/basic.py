@@ -612,18 +612,6 @@ class Basic(AssumeMeths):
         """
         return self
 
-    def _eval_subs(self, old, new):
-        if self==old:
-            return new
-        return self
-
-    @cacheit
-    def _subs_old_new(self, old, new):
-        """Substitutes an expression old -> new."""
-        old = sympify(old)
-        new = sympify(new)
-        return self._eval_subs(old, new)
-
     def subs(self, *args):
         """
         Substitutes an expression.
@@ -657,6 +645,18 @@ class Basic(AssumeMeths):
         else:
             raise Exception("subs accept either 1 or 2 arguments")
 
+    @cacheit
+    def _subs_old_new(self, old, new):
+        """Substitutes an expression old -> new."""
+        old = sympify(old)
+        new = sympify(new)
+        return self._eval_subs(old, new)
+
+    def _eval_subs(self, old, new):
+        if self==old:
+            return new
+        return self
+
     def _subs_list(self, sequence):
         """
         Performs an order sensitive substitution from the
@@ -678,6 +678,52 @@ class Basic(AssumeMeths):
         for old, new in sequence:
             result = result.subs(old, new)
         return result
+
+    def _subs_dict(self, sequence):
+        """Performs sequential substitution.
+
+           Given a collection of key, value pairs, which correspond to
+           old and new expressions respectively,  substitute all given
+           pairs handling properly all overlapping keys  (according to
+           'in' relation).
+
+           We have to use naive O(n**2) sorting algorithm, as 'in'
+           gives only partial order and all asymptotically faster
+           fail (depending on the initial order).
+
+           >>> from sympy import *
+           >>> x, y = symbols('xy')
+
+           >>> a,b,c,d,e = symbols('abcde')
+
+           >>> A = (sqrt(sin(2*x)), a)
+           >>> B = (sin(2*x), b)
+           >>> C = (cos(2*x), c)
+           >>> D = (x, d)
+           >>> E = (exp(x), e)
+
+           >>> expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
+
+           >>> expr._subs_dict([A,B,C,D,E])
+           b + a*c*sin(d*e)
+
+        """
+        if isinstance(sequence, dict):
+            sequence = sequence.items()
+        elif not isinstance(sequence, (list, tuple)):
+            raise TypeError("Not an iterable container")
+
+        subst = []
+
+        for pattern in sequence:
+            for i, (expr, _) in enumerate(subst):
+                if pattern[0] in expr:
+                    subst.insert(i, pattern)
+                    break
+            else:
+                subst.append(pattern)
+        subst.reverse()
+        return self._subs_list(subst)
 
     def _seq_subs(self, old, new):
         if self==old:
@@ -837,52 +883,6 @@ class Basic(AssumeMeths):
     def conjugate(self):
         from sympy.functions.elementary.complexes import conjugate as c
         return c(self)
-
-    def _subs_dict(self, sequence):
-        """Performs sequential substitution.
-
-           Given a collection of key, value pairs, which correspond to
-           old and new expressions respectively,  substitute all given
-           pairs handling properly all overlapping keys  (according to
-           'in' relation).
-
-           We have to use naive O(n**2) sorting algorithm, as 'in'
-           gives only partial order and all asymptotically faster
-           fail (depending on the initial order).
-
-           >>> from sympy import *
-           >>> x, y = symbols('xy')
-
-           >>> a,b,c,d,e = symbols('abcde')
-
-           >>> A = (sqrt(sin(2*x)), a)
-           >>> B = (sin(2*x), b)
-           >>> C = (cos(2*x), c)
-           >>> D = (x, d)
-           >>> E = (exp(x), e)
-
-           >>> expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
-
-           >>> expr._subs_dict([A,B,C,D,E])
-           b + a*c*sin(d*e)
-
-        """
-        if isinstance(sequence, dict):
-            sequence = sequence.items()
-        elif not isinstance(sequence, (list, tuple)):
-            raise TypeError("Not an iterable container")
-
-        subst = []
-
-        for pattern in sequence:
-            for i, (expr, _) in enumerate(subst):
-                if pattern[0] in expr:
-                    subst.insert(i, pattern)
-                    break
-            else:
-                subst.append(pattern)
-        subst.reverse()
-        return self._subs_list(subst)
 
     #@classmethod
     def matches(pattern, expr, repl_dict={}, evaluate=False):
