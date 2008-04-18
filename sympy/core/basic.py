@@ -872,7 +872,7 @@ class Basic(AssumeMeths):
         elif not isinstance(sequence, (list, tuple)):
             raise TypeError("Not an iterable container")
 
-        subst, result = [], self
+        subst = []
 
         for pattern in sequence:
             for i, (expr, _) in enumerate(subst):
@@ -881,11 +881,8 @@ class Basic(AssumeMeths):
                     break
             else:
                 subst.append(pattern)
-
-        for old, new in reversed(subst):
-            result = result.subs(old, new)
-
-        return result
+        subst.reverse()
+        return self._subs_list(subst)
 
     #@classmethod
     def matches(pattern, expr, repl_dict={}, evaluate=False):
