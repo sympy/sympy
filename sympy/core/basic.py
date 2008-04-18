@@ -628,8 +628,8 @@ class Basic(AssumeMeths):
         """
         Substitutes an expression. 
         
-        Calls either _subs_dict or _subs_old_new depending if you give it
-        a dictionary or two arguments (old, new).
+        Calls either _subs_old_new, _subs_dict or _subs_list depending 
+        if you give it two arguments (old, new), a dictionary or a list.
 
         Examples:
 
@@ -639,15 +639,45 @@ class Basic(AssumeMeths):
         1 + pi*y
         >>> (1+x*y).subs({x:pi, y:2})
         1 + 2*pi
+        >>> (1+x*y).subs([(x,pi), (y,2)])
+        1 + 2*pi
 
         """
         if len(args) == 1:
-            return self._subs_dict(args[0])
+            sequence = args[0]
+            if isinstance(sequence, dict):
+                return self._subs_dict(sequence)
+            elif isinstance(sequence, (list, tuple)):
+                return self._subs_list(sequence)
+            else:
+                raise TypeError("Not an iterable container")
         elif len(args) == 2:
             old, new = args
             return self._subs_old_new(old, new)
         else:
             raise Exception("subs accept either 1 or 2 arguments")
+
+    def _subs_list(self, sequence):
+        """
+        Performs an order sensitive substitution from the 
+        input sequence list.
+
+        Examples:
+        
+        >>> from sympy import *
+        >>> x, y = symbols('xy')
+        >>> (x+y)._subs_list( [(x, 3),     (y, x**2)] )
+        3 + x**2
+        >>> (x+y)._subs_list( [(y, x**2),  (x, 3)   ] )
+        12
+
+        """
+        if not isinstance(sequence, (list, tuple)):
+            raise TypeError("Not an iterable container")
+        result = self
+        for old, new in sequence:
+            result = result.subs(old, new)
+        return result
 
     def _seq_subs(self, old, new):
         if self==old:

@@ -269,6 +269,16 @@ def test_subs_dict():
     seq = [ (sqrt(sin(2*x)),a), (sin(2*x),c), (cos(2*x),b), (x,d), (exp(x),e) ]
     assert expr._subs_dict(seq) == c + a*b*sin(d*e)
 
+def test_subs_list():
+    x,y = symbols('xy')
+
+    assert (sin(x))._subs_list([(sin(x), 2), (x, 1)]) == 2
+    assert (sin(x))._subs_list([(x, 1), (sin(x), 2)]) == sin(1)
+
+    assert (x+y)._subs_list([(x, 3), (y, x**2)]) == 3 + x**2
+    assert (x+y)._subs_list([(y, x**2), (x, 3)]) == 12
+
+
 def test_has_any_symbols():
     x,y,z,t,u = symbols('xyztu')
 
