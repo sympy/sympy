@@ -735,16 +735,7 @@ class Poly(Basic, RelMeths, ArithMeths):
             elif self.is_one:
                 return poly
             else:
-                LC = self.lead_coeff
-
-                coeffs = [ LC * coeff for coeff in poly.coeffs ]
-
-                for i, coeff in enumerate(coeffs):
-                    if not coeff.is_Atom:
-                        coeffs[i] = cancel(coeff)
-
-                return poly.__class__((coeffs, poly.monoms),
-                    *poly.symbols, **poly.flags)
+                return poly.mul_term(self.LC)
 
         if poly.is_constant:
             if poly.is_zero:
@@ -752,40 +743,13 @@ class Poly(Basic, RelMeths, ArithMeths):
             elif poly.is_one:
                 return self
             else:
-                LC = poly.lead_coeff
-
-                coeffs = [ coeff * LC for coeff in self.coeffs ]
-
-                for i, coeff in enumerate(coeffs):
-                    if not coeff.is_Atom:
-                        coeffs[i] = cancel(coeff)
-
-                return self.__class__((coeffs, self.monoms),
-                    *self.symbols, **self.flags)
+                return self.mul_term(poly.LC)
 
         if self.is_monomial:
-            LC, LM = self.lead_term
-
-            coeffs = [ LC * coeff for coeff in poly.coeffs ]
-            monoms = [ monomial_mul(LM, monom) for monom in poly.monoms ]
-
-            for i, coeff in enumerate(coeffs):
-                if not coeff.is_Atom:
-                    coeffs[i] = cancel(coeff)
-
-            return poly.__class__((coeffs, monoms), *poly.symbols, **poly.flags)
+            return poly.mul_term(*self.LT)
 
         if poly.is_monomial:
-            LC, LM = poly.lead_term
-
-            coeffs = [ coeff * LC for coeff in self.coeffs ]
-            monoms = [ monomial_mul(monom, LM) for monom in self.monoms ]
-
-            for i, coeff in enumerate(coeffs):
-                if not coeff.is_Atom:
-                    coeffs[i] = cancel(coeff)
-
-            return self.__class__((coeffs, monoms), *self.symbols, **self.flags)
+            return self.mul_term(*poly.LT)
 
         if self.is_dense and poly.is_dense:
             if self.is_multivariate:

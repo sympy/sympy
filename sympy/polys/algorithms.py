@@ -52,15 +52,7 @@ def poly_div(f, g, *symbols):
             elif g.is_one:
                 return f, r
             else:
-                LC = g.lead_coeff
-
-                coeffs = [ coeff / LC for coeff in f.coeffs ]
-
-                for i, coeff in enumerate(coeffs):
-                    if not coeff.is_Atom:
-                        coeffs[i] = cancel(coeff)
-
-                return Poly((coeffs, f.monoms), *symbols, **flags), r
+                return f.div_term(g.LC), r
 
         if g.is_monomial:
             LC, LM = g.lead_term
@@ -93,20 +85,16 @@ def poly_div(f, g, *symbols):
 
     while not f.is_zero:
         for i, h in enumerate(g):
-            M = monomial_div(f.LM, h.LM)
+            monom = monomial_div(f.LM, h.LM)
 
-            if M is not None:
+            if monom is not None:
                 coeff = f.LC / h.LC
 
-                if coeff.is_Atom:
-                    T = coeff, M
-                else:
-                    T = cancel(coeff), M
+                if not coeff.is_Atom:
+                    coeff = cancel(coeff)
 
-                P = Poly(T, *symbols, **flags)
-
-                q[i] = q[i].add_term(*T)
-                f -= h * P
+                q[i] = q[i].add_term(coeff, monom)
+                f -= h.mul_term(coeff, monom)
 
                 break
         else:
@@ -155,10 +143,12 @@ def poly_pdiv(f, g, *symbols):
         if M < 0:
             break
         else:
-            T = Poly((r.LC, (M,)), *symbols, **flags)
-            q, r, N = q*coeff + T, r*coeff - g*T, N-1
+            T, N = (r.LC, (M,)), N - 1
 
-    return (q * coeff**N, r * coeff**N)
+            q = q.mul_term(coeff).add_term(*T)
+            r = r.mul_term(coeff)-g.mul_term(*T)
+
+    return (q.mul_term(coeff**N), r.mul_term(coeff**N))
 
 def poly_groebner(f, *symbols, **flags):
     """Computes reduced Groebner basis for a set of polynomials.
@@ -320,11 +310,8 @@ def poly_groebner(f, *symbols, **flags):
         if criterion:
             continue
 
-        p_M = monomial_div(M, p_LM)
-        q_M = monomial_div(M, q_LM)
-
-        p *= Poly(((1/p.LC,), (p_M,)), *symbols, **flags)
-        q *= Poly(((1/q.LC,), (q_M,)), *symbols, **flags)
+        p = p.mul_term(1/p.LC, monomial_div(M, p_LM))
+        q = q.mul_term(1/q.LC, monomial_div(M, q_LM))
 
         h = normal(p - q, G)
 
