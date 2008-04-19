@@ -1,5 +1,5 @@
 
-from sympy import symbols, expand, sin, re, im, I, Rational
+from sympy import symbols, expand, sin, sqrt, re, im, I, Rational
 
 from sympy.polys.monomial import *
 from sympy.polys.polynomial import *
@@ -120,6 +120,17 @@ def test_poly_internals():
 
     assert Poly._permute(q, z, y, x) == \
         {(0, 1, 1): 3, (1, 1, 0): 4, (3, 1, 1): 2, (1, 1, 2): 1}
+
+def test_poly_cancel():
+    assert Poly._cancel(x) == x
+    assert Poly._cancel(x+1) == x+1
+    assert Poly._cancel((x+1)/(x-1)) == (x+1)/(x-1)
+
+    assert Poly._cancel((x**2-1)/(x-1)) == x+1
+    assert Poly._cancel((x**2-y**2)/(x-y)) == x+y
+
+    assert Poly._cancel((x**2-y)/(x-y)) == (x**2 - y)/(x - y)
+    assert Poly._cancel((x**2-2)/(x+sqrt(2))) == x - sqrt(2)
 
 def test_poly_characteristics():
     f = -3*x**5*y*z**4 + 2*x**2*y**8 - x*y**4 + x*y*z**3
@@ -276,6 +287,11 @@ def test_as_monic():
     g = x**3*y + (z+1)*x*y + (z-1)*x + 7/(z-1)
 
     assert Poly(f, x,y).as_monic() == Poly(g, x,y)
+
+    f = y*x**2 + y**2 + y
+    g = x**2 + y + 1
+
+    assert Poly(f, x).as_monic() == Poly(g, x)
 
 def test_poly_add():
     f = -Rational(1,6)*x**2-Rational(5,36)+Rational(17,18)

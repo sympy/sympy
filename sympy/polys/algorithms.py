@@ -14,8 +14,7 @@ from polynomial import Poly, PolynomialError
 from monomial import monomial_cmp, monomial_lcm, \
     monomial_gcd, monomial_mul, monomial_div
 
-from sympy.simplify import cancel # TBD : move cancel() here
-from sympy.matrices import zero
+import sympy.matrices
 
 def poly_div(f, g, *symbols):
     """Generalized polynomial division with remainder.
@@ -72,7 +71,7 @@ def poly_div(f, g, *symbols):
                     if coeff.is_Atom:
                         q_coeffs.append(coeff)
                     else:
-                        q_coeffs.append(cancel(coeff))
+                        q_coeffs.append(Poly._cancel(coeff))
 
                     q_monoms.append(M)
                 else:
@@ -94,7 +93,7 @@ def poly_div(f, g, *symbols):
                 coeff = f.LC / h.LC
 
                 if not coeff.is_Atom:
-                    coeff = cancel(coeff)
+                    coeff = Poly._cancel(coeff)
 
                 q[i] = q[i].add_term(coeff, monom)
                 f -= h.mul_term(coeff, monom)
@@ -568,7 +567,7 @@ def poly_resultant(f, g, *symbols):
         q = f.as_uv_dict()
         p = g.as_uv_dict()
 
-    B = zero(N)
+    B = sympy.matrices.zero(N)
 
     for i in xrange(N):
         for j in xrange(i, N):
@@ -601,7 +600,7 @@ def poly_resultant(f, g, *symbols):
         if det.is_Atom:
             return sign * det
         else:
-            return sign * cancel(det)
+            return sign * Poly._cancel(det)
 
 def poly_subresultants(f, g, *symbols):
     """Computes subresultant PRS of two univariate polynomials.

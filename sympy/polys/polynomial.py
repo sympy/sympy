@@ -9,7 +9,6 @@ from sympy.core.numbers import Integer, igcd, ilcm
 from sympy.core.methods import RelMeths, ArithMeths
 
 from sympy.utilities import all, any
-from sympy.simplify import cancel # TBD : move cancel() to algorithms.py
 
 from sympy.polys.monomial import monomial_cmp, monomial_mul, \
     monomial_div, monomial_max, monomial_as_basic
@@ -493,6 +492,47 @@ class Poly(Basic, RelMeths, ArithMeths):
         else:
             return result
 
+    @staticmethod
+    def _cancel(f):
+        """Cancel common factors in a fractional expression.
+
+           Given a quotient of polynomials, cancel common factors from
+           the the numerator and the denominator. The result is formed
+           in an expanded form, even if there was no cancellation.
+
+           >>> from sympy import *
+           >>> x,y = symbols('xy')
+
+           >>> Poly._cancel((x**2-y**2)/(x-y))
+           x + y
+
+        """
+        symbols = f.atoms(Symbol)
+
+        if not symbols:
+            return f
+        else:
+            numer, denom = f.as_numer_denom()
+
+            numer = numer.expand()
+            denom = denom.expand()
+
+            if numer.is_Number or denom.is_Number:
+                return numer / denom
+
+            try:
+                p = Poly(numer, *symbols)
+                q = Poly(denom, *symbols)
+            except PolynomialError:
+                return numer / denom
+
+            g = sympy.polys.algorithms.poly_gcd(p, q)
+
+            p = sympy.polys.algorithms.poly_div(p, g)[0]
+            q = sympy.polys.algorithms.poly_div(q, g)[0]
+
+            return p.as_basic() / q.as_basic()
+
     def as_basic(self):
         """Converts polynomial to a valid sympy expression.
 
@@ -786,7 +826,7 @@ class Poly(Basic, RelMeths, ArithMeths):
                         if product.is_Atom:
                             coeff += product
                         else:
-                            coeff += cancel(product)
+                            coeff += Poly._cancel(product)
 
                 if coeff:
                     coeffs.append(coeff)
@@ -815,7 +855,7 @@ class Poly(Basic, RelMeths, ArithMeths):
                     coeff = coeff_p * coeff_q
 
                     if not coeff.is_Atom:
-                        coeff = cancel(coeff)
+                        coeff = Poly._cancel(coeff)
 
                     if terms.has_key(monom):
                         coeff += terms[monom]
@@ -1026,7 +1066,7 @@ class Poly(Basic, RelMeths, ArithMeths):
 
         for i, coeff in enumerate(coeffs):
             if not coeff.is_Atom:
-                coeffs[i] = cancel(coeff)
+                coeffs[i] = Poly._cancel(coeff)
 
         return self.__class__((coeffs, self.monoms),
             *self.symbols, **self.flags)
@@ -1512,7 +1552,7 @@ class Poly(Basic, RelMeths, ArithMeths):
 
                 for i, coeff in enumerate(coeffs):
                     if not coeff.is_Atom:
-                        coeffs[i] = cancel(coeff)
+                        coeffs[i] = Poly._cancel(coeff)
 
             if monom is None:
                 monoms = self.monoms
@@ -1541,7 +1581,7 @@ class Poly(Basic, RelMeths, ArithMeths):
 
             for i, coeff in enumerate(coeffs):
                 if not coeff.is_Atom:
-                    coeffs[i] = cancel(coeff)
+                    coeffs[i] = Poly._cancel(coeff)
 
         if monom is None:
             monoms = self.monoms
