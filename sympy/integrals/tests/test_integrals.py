@@ -1,5 +1,5 @@
 from sympy import symbols, integrate, Integral, exp, oo, Symbol, Rational, \
-    log, sin, cos, pi, E, I, Polynomial, LambertW
+    log, sin, cos, pi, E, I, Polynomial, LambertW, diff
 from sympy.utilities.pytest import XFAIL
 from sympy.physics.units import m, s
 import py
@@ -11,15 +11,6 @@ n = Symbol('n', integer=True)
 def test_improper_integral():
     assert integrate(log(x), (x, 0, 1)) == -1
     assert integrate(x**(-2), (x, 1, oo)) == 1
-
-
-def diff(expr, sym):
-    from sympy.core import Derivative
-    if isinstance(sym, Symbol):
-        return Derivative(expr, sym)
-    else:
-        return Derivative(expr, sym[0]==[sym[1], sym[2]])
-
 
 def test_basics():
     e=(t+1)**2
@@ -164,3 +155,8 @@ def test_integrate_units():
 
 def test_transcendental_functions():
     assert integrate(LambertW(2*x), x) == -x + x*LambertW(2*x) + x/LambertW(2*x)
+
+def test_issue641():
+    f=4*log(x)-2*log(x)**2
+    fid=diff(integrate(f,x),x)
+    assert abs(f.subs(x,42).evalf() - fid.subs(x,42).evalf()) < 1e-10
