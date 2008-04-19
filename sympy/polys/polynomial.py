@@ -42,8 +42,8 @@ class Poly(Basic, RelMeths, ArithMeths):
        coefficients and monomials (tuples of exponents) respectively.
        Stored are only terms with non-zero coefficients, so generally
        all polynomials are considered sparse. However algorithms will
-       detect dense polynomials and used appropriate method, to solve
-       the given problem in most efficient way.
+       detect dense polynomials and use the appropriate method to
+       solve the given problem in the most efficient way.
 
        The most common way to initialize a polynomial instance is to
        provide a valid expression together witch a set of ordered
