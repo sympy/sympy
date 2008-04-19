@@ -969,7 +969,7 @@ class Poly(Basic, RelMeths, ArithMeths):
             B = math.pow(U/N, N)
             return S * A * B
 
-        V, N = len(self.symbols), self.degree
+        V, N = len(self.symbols), self.total_degree
 
         return (self.length / enum(V, N)) > 0.9
 
