@@ -2,7 +2,8 @@ from sympy import *
 from sympy.utilities.pytest import XFAIL
 
 from sympy.matrices import Matrix
-from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve, tsolve
+from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
+     tsolve, deriv_degree
 
 def test_solve():
     x, y = map(Symbol, 'xy')
@@ -58,6 +59,15 @@ def test_ODE_1():
     e = e*exp(-l(r))/exp(l(r))
     sol = dsolve(e, [l(r)])
     assert (e.subs(l(r), sol)).expand() == 0
+
+def test_deriv_degree():
+    f = Function('f')
+    x = Symbol('x')
+    assert deriv_degree(3*x*exp(f(x)), f(x)) == 0
+    assert deriv_degree(x*diff(f(x),x)+3*x*f(x)-sin(x)/x, f(x)) == 1
+    assert deriv_degree(x**2*f(x).diff(x,x)+x*diff(f(x),x)-f(x),f(x)) == 2
+    assert deriv_degree(diff(x*exp(f(x)),x,x), f(x)) == 2
+    assert deriv_degree(diff(x*diff(x*exp(f(x)), x,x), x), f(x)) == 3
 
 # Note: multiple solutions exist for some of these equations, so the tests
 # should be expected to break if the implementation of the solver changes
