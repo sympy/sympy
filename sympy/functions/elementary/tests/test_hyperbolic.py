@@ -1,6 +1,8 @@
 from sympy import symbols, Symbol, sinh, nan, oo, pi, asinh, acosh, log, sqrt, \
         coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational
 
+from sympy.utilities.pytest import XFAIL
+
 def test_sinh():
     x, y = symbols('xy')
 
@@ -247,9 +249,38 @@ def test_coth():
 
 def test_asinh():
     # TODO please write more tests  -- see #652
+    x, y = symbols('xy')
+    #http://functions.wolfram.com/ElementaryFunctions/ArcSinh/
+    assert asinh(x) == asinh(x)
+    assert asinh(-x) == -asinh(x)
+    assert asinh(nan) == nan
     assert asinh( 0) == 0
     assert asinh(+1) == log(sqrt(2)+1)
+
     assert asinh(-1) == log(sqrt(2)-1)
+    assert asinh(I) == pi*I/2
+    assert asinh(-I) == -pi*I/2
+    assert asinh(I/2) == pi*I/6
+    assert asinh(-I/2) == -pi*I/6
+
+    assert asinh(oo) == oo
+    assert asinh(-oo) == -oo
+
+    assert asinh(I*oo) == oo
+    assert asinh(-I *oo) == -oo
+
+@XFAIL
+# not yet implemented cases which should live in test_asinh
+def test_asinh_noimpl():
+    assert asinh(I *(sqrt(3) - 1)/(2**(3/2))) == pi*I/12
+    assert asinh(-I *(sqrt(3) - 1)/(2**(3/2))) == -pi*I/12
+
+    assert asinh(I*(sqrt(5)-1)/4) == pi*I/10
+    assert asinh(-I*(sqrt(5)-1)/4) == -pi*I/10
+
+    assert asinh(I*(sqrt(5)+1)/4) == 3*pi*I/10
+    assert asinh(-I*(sqrt(5)+1)/4) == -3*pi*I/10
+
 
 def test_acosh():
     # TODO please write more tests  -- see #652
