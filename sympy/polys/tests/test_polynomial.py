@@ -421,7 +421,15 @@ def test_poly_subresultants():
     f = x**8+x**6-3*x**4-3*x**3+8*x**2+2*x-5
     g = 3*x**6+5*x**4-4*x**2-9*x+21
 
-    # TBD : needs subresultants
+    assert poly_subresultants(f, g, x) == \
+        (Poly(f, x), Poly(g, x),
+         Poly(15*x**4 - 3*x**2 + 9,  x),
+         Poly(65*x**2 + 125*x - 245, x),
+         Poly(9326*x - 12300, x),
+         Poly(260708, x))
+
+    assert poly_subresultants((x-1)**2, x**2-1, x) == \
+        (Poly((x-1)**2, x), Poly(x**2-1, x), Poly(2*x - 2, x))
 
 def test_poly_groebner():
     assert poly_groebner(0, x) == (Poly((), x),)

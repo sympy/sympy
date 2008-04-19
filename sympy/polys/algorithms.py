@@ -475,3 +475,88 @@ def poly_resultant(f, g, *symbols):
             return sign * det
         else:
             return sign * cancel(det)
+
+def poly_subresultants(f, g, *symbols):
+    """Computes subresultant PRS of two univariate polynomials.
+
+       Polynomial remainder sequence (PRS) is a fundamental tool in
+       computer algebra as it gives as a sub-product the polynomial
+       greatest common divisor (GCD), provided that the coefficient
+       domain is an unique factorization domain.
+
+       There are several methods for computing PRS, eg.: Euclidean
+       PRS, where the most famous algorithm is used, primitive PRS
+       and, finally, subresultants which are implemented here.
+
+       The Euclidean approach is reasonably efficient but suffers
+       severely from coefficient growth.  The primitive algorithm
+       avoids this but requires a lot of coefficient computations.
+
+       Subresultants solve both problems and so it is efficient and
+       have moderate coefficient growth. The current implementation
+       uses pseudo-divisions  which is well suited for coefficients
+       in integral domains or number fields.
+
+       Formally,  given univariate polynomials f and g over an UFD,
+       then a sequence (R_0, R_1, ..., R_k, 0, ...) is a polynomial
+       remainder sequence where R_0 = f, R_1 = g, R_k != 0 and R_k
+       is similar to gcd(f, g).
+
+       For more information on the implemented algorithm refer to:
+
+       [1] M. Bronstein, Symbolic Integration I: Transcendental
+           Functions, Second Edition, Springer-Verlang, 2005
+
+       [2] M. Keber, Division-Free computation of subresultants
+           using Bezout matrices, Tech. Report MPI-I-2006-1-006,
+           Saarbrucken, 2006
+
+    """
+    if not isinstance(f, Poly):
+        f = Poly(f, *symbols)
+    elif symbols:
+        raise PolynomialError
+
+    f, g = f.unify_with(g)
+
+    if f.is_multivariate:
+        raise PolynomialError
+
+    symbols, flags = f.symbols, f.flags
+
+    n, m = f.degree, g.degree
+
+    if n < m:
+        f, g = g, f
+        n, m = m, n
+
+    prs = [f, g]
+
+    d = n - m
+
+    b = (-1)**(d + 1)
+
+    h = poly_pdiv(f, g)[1]
+    h = h.mul_term(b)
+
+    k = h.degree
+
+    c = S.NegativeOne
+
+    while not h.is_zero:
+        prs.append(h)
+
+        coeff = g.LC
+
+        c = (-coeff)**d / c**(d-1)
+
+        b = -coeff * c**(m-k)
+
+        f, g, m, d = g, h, k, m-k
+
+        h = poly_pdiv(f, g)[1]
+        h = h.div_term(b)
+
+        k = h.degree
+
+    return tuple(prs)

@@ -20,7 +20,7 @@ from algorithms import poly_gcdex, poly_half_gcdex
 
 #from algorithms import poly_lcm, poly_gcd
 
-#from algorithms import poly_subresultants
+from algorithms import poly_subresultants
 from algorithms import poly_resultant
 
 from algorithms import poly_groebner
