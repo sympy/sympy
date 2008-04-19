@@ -376,10 +376,55 @@ def test_poly_div():
     assert poly_pdiv(Poly(f, x), Poly(g, x)) == (q, r)
 
 def test_poly_lcm():
-    pass # TBD : needs lcm
+    assert poly_lcm(2, 6, x) == Poly(6, x)
+    assert poly_lcm(2, 6, x, y) == Poly(6, x, y)
+
+    assert poly_lcm(x, y, x, y) == Poly(x*y, x, y)
+
+    assert poly_lcm(2*x**3, 6*x, x) == Poly(6*x**3, x)
+    assert poly_lcm(2*x**3, 3*x, x) == Poly(6*x**3, x)
+
+    assert poly_lcm(2*x**3, 6*x*y**2, x, y) == Poly(6*x**3*y**2, x, y)
+    assert poly_lcm(2*x**3, 3*x*y**2, x, y) == Poly(6*x**3*y**2, x, y)
+
+    assert poly_lcm(x**2+x, x, x) == Poly(x**2+x, x)
+    assert poly_lcm(x**2+x, 2*x, x) == Poly(2*x**2+2*x, x)
+    assert poly_lcm(x**2+2*x, x, x) == Poly(x**2+2*x, x)
+    assert poly_lcm(2*x**2+x, x, x) == Poly(x**2+x/2, x)
+    assert poly_lcm(2*x**2+x, 2*x, x) == Poly(2*x**2+x, x)
+
+    assert poly_lcm(x**2*y, x*y**2, x, y) == Poly(x**2*y**2, x, y)
+
+    f, g = (x+y)**2*(x-5*y), (x+y)**3*(x+3*y)
+
+    assert poly_lcm(f, g, x, y) == \
+        Poly((x+y)**3*(x-5*y)*(x+3*y), x, y)
 
 def test_poly_gcd():
-    pass # TBD : needs gcd
+    assert poly_gcd(2, 6, x) == Poly(2, x)
+    assert poly_gcd(2, 6, x, y) == Poly(2, x, y)
+
+    assert poly_gcd(x, y, x, y) == Poly(1, x, y)
+
+    assert poly_gcd(2*x**3, 6*x, x) == Poly(2*x, x)
+    assert poly_gcd(2*x**3, 3*x, x) == Poly(x, x)
+
+    assert poly_gcd(2*x**3*y, 6*x*y**2, x, y) == Poly(2*x*y, x, y)
+    assert poly_gcd(2*x**3*y, 3*x*y**2, x, y) == Poly(x*y, x, y)
+
+    assert poly_gcd(x**2+2*x+1, x+1, x) == Poly(x+1, x)
+    assert poly_gcd(x**2+2*x+2, x+1, x) == Poly(1, x)
+
+    assert poly_gcd(x**2+2*x+1, 2+2*x, x) == Poly(x+1, x)
+    assert poly_gcd(x**2+2*x+2, 2+2*x, x) == Poly(1, x)
+
+    assert poly_gcd(sin(z)*(x+y), x**2+2*x*y+y**2,
+        x, y) == Poly(x+y, x, y)
+
+    f = x**8+x**6-3*x**4-3*x**3+8*x**2+2*x-5
+    g = 3*x**6+5*x**4-4*x**2-9*x+21
+
+    assert poly_gcd(f, g, x) == Poly(1, x)
 
 def test_poly_gcdex():
     f = x**4 - 2*x**3 - 6*x**2 + 12*x + 15
