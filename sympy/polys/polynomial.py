@@ -5,6 +5,7 @@ from sympy.core.power import Pow
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.core.basic import Basic, S, C
+from sympy.core.numbers import Integer, igcd, ilcm
 from sympy.core.methods import RelMeths, ArithMeths
 
 from sympy.utilities import all, any
@@ -1032,15 +1033,36 @@ class Poly(Basic, RelMeths, ArithMeths):
 
     @property
     def content(self):
-        """Returns GCD of all the coefficients.
+        """Returns integer GCD of all the coefficients.
 
            >>> from sympy import *
-           >>> x,y = symbols('xy')
+           >>> x,y,z = symbols('xyz')
 
-           # TBD : needs poly_gcd / func_gcd
+           >>> p = Poly(2*x + 5*x*y, x, y)
+           >>> p.content
+           1
+
+           >>> p = Poly(2*x + 4*x*y, x, y)
+           >>> p.content
+           2
+
+           >>> p = Poly(2*x + z*x*y, x, y)
+           >>> p.content
+           1
 
         """
-        raise NotImplementedError
+        if self.is_zero:
+            return S.Zero
+        else:
+            content = 0
+
+            for coeff in self.coeffs:
+                if coeff.is_Rational:
+                    content = igcd(content, coeff.p)
+                else:
+                    return S.One
+
+            return Integer(content)
 
     def as_primitive(self):
         """Returns content and primitive part of a polynomial.
@@ -1048,19 +1070,17 @@ class Poly(Basic, RelMeths, ArithMeths):
            >>> from sympy import *
            >>> x,y = symbols('xy')
 
-           # TBD : needs content
+           >>> p = Poly(4*x**2 + 2*x, x)
+           >>> p.as_primitive()
+           (2, Poly((2, 1), ((2,), (1,)), (x,), 'grlex'))
 
         """
         content = self.content
 
-        if content is S.One:
-            return S.One, self
+        if content is S.Zero or content is S.One:
+            return content, self
         else:
-            if content.is_number:
-                coeffs = [ coeff / content for coeff in self.coeffs ]
-            else:
-                from sympy.simplify import cancel # avoid recursive import
-                coeffs = [ cancel(coeff / content) for coeff in self.coeffs ]
+            coeffs = [ coeff / content for coeff in self.coeffs ]
 
             return content, self.__class__((coeffs,
                 self.monoms), *self.symbols, **self.flags)

@@ -521,6 +521,22 @@ def test_call():
     assert Poly(f, x, y, z)(1, 2, 3) == f.subs({x: 1, y: 2, z: 3})
     assert Poly(f, x, y, z)(u, v, t) == u**2*(v*(u + t) + t)
 
+def test_content():
+    assert Poly(0, x, y, z).content == 0
+    assert Poly(1, x, y, z).content == 1
+
+    assert Poly(2*x + 5*x*y, x, y).content == 1
+    assert Poly(6*x + 4*x*y, x, y).content == 2
+    assert Poly(2*x + z*x*y, x, y).content == 1
+
+def test_primitive():
+    assert Poly(0, x, y, z).as_primitive() == (0, Poly(0, x, y, z))
+    assert Poly(1, x, y, z).as_primitive() == (1, Poly(1, x, y, z))
+
+    assert Poly(2*x + 5*x*y, x, y).as_primitive() == (1, Poly(2*x + 5*x*y, x, y))
+    assert Poly(6*x + 4*x*y, x, y).as_primitive() == (2, Poly(3*x + 2*x*y, x, y))
+    assert Poly(2*x + z*x*y, x, y).as_primitive() == (1, Poly(2*x + z*x*y, x, y))
+
 def test_evaluate():
     f = x**2*y*z + 2*x*y*z**3 + 3*x*y + 4*y*z
 
