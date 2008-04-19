@@ -453,14 +453,7 @@ def test_map_coeffs():
 
     assert q.as_basic() == x**2*(I*im(u) + re(u)) + x*y*(I*im(v) + re(v))
 
-    code = \
-    """
-    p = Poly(x**2 + 2*x*y, x, y)
-    q = p.map_coeffs(lambda c: x*c)
-
-    """
-
-    py.test.raises(PolynomialError, code)
+    py.test.raises(PolynomialError, "p.map_coeffs(lambda c: x*c)")
 
 def test_coeff():
     p = Poly(3*x**2*y + 4*x*y**2 + 1, x, y)
@@ -476,6 +469,25 @@ def test_add_sub_term():
 
     assert f.add_term(12, (1,2,3)) == Poly(((12,), ((1,2,3),)), x,y,z)
     assert f.sub_term(12, (1,2,3)) == Poly(((-12,), ((1,2,3),)), x,y,z)
+
+def test_mul_div_term():
+    f = Poly(x*y**2 + 2*y, x, y)
+
+    assert f.mul_term(0, (0, 1)) == Poly(0, x, y)
+
+    assert f.mul_term(1) == Poly(x*y**2 + 2*y, x, y)
+    assert f.mul_term(1, (0, 1)) == Poly(x*y**3 + 2*y**2, x, y)
+
+    py.test.raises(ZeroDivisionError, "f.div_term(0)")
+
+    assert f.div_term(1) == Poly(x*y**2 + 2*y, x, y)
+    assert f.div_term(1, (0, 1)) == Poly(x*y + 2, x, y)
+
+    assert f.mul_term(2) == Poly(2*x*y**2 + 4*y, x, y)
+    assert f.mul_term(2, (0, 1)) == Poly(2*x*y**3 + 4*y**2, x, y)
+
+    assert f.div_term(2) == Poly(x*y**2 / 2 + y, x, y)
+    assert f.div_term(2, (0, 1)) == Poly(x*y / 2 + 1, x, y)
 
 def test_kill_term():
     f = Poly(2*x**17*y + 3*x*y**15, x, y)

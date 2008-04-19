@@ -10,8 +10,8 @@ from sympy.core.methods import RelMeths, ArithMeths
 from sympy.utilities import all, any
 from sympy.simplify import cancel # TBD : move cancel() to algorithms.py
 
-from sympy.polys.monomial import monomial_cmp, \
-    monomial_mul, monomial_max, monomial_as_basic
+from sympy.polys.monomial import monomial_cmp, monomial_mul, \
+    monomial_div, monomial_max, monomial_as_basic
 
 import sympy.polys
 
@@ -194,11 +194,14 @@ class Poly(Basic, RelMeths, ArithMeths):
 
        [10] Operations on terms:
 
-          [10.1] [U-] add_term --> add particular term to a polynomial
-          [10.2] [U-] sub_term --> subtract particular term from a polynomial
+          [10.1] [U-] add_term --> add a term to a polynomial
+          [10.2] [U-] sub_term --> subtract a term from a polynomial
 
-          [10.3] [U-] remove_lead_term --> remove leading term (up to order)
-          [10.4] [U-] remove_last_term --> remove last term (up to order)
+          [10.3] [--] mul_term --> multiply a polynomial with a term
+          [10.4] [--] div_term --> divide a polynomial by a term
+
+          [10.5] [U-] remove_lead_term --> remove leading term (up to order)
+          [10.6] [U-] remove_last_term --> remove last term (up to order)
 
        [11] Substitution and evaluation:
 
@@ -1504,6 +1507,66 @@ class Poly(Basic, RelMeths, ArithMeths):
                 else:
                     coeffs.insert(i, -coeff)
                     monoms.insert(i, monom)
+
+        return self.__class__((coeffs, monoms),
+            *self.symbols, **self.flags)
+
+    def mul_term(self, coeff, monom=None):
+        """Efficiently multiply 'self' with a single term. """
+        coeff = sympify(coeff)
+
+        if coeff is S.Zero:
+            terms = ()
+        else:
+            if coeff is S.One:
+                if monom is None:
+                    return self
+                else:
+                    coeffs = self.coeffs
+            else:
+                coeffs = [ p_coeff * coeff for p_coeff in self.coeffs ]
+
+                for i, coeff in enumerate(coeffs):
+                    if not coeff.is_Atom:
+                        coeffs[i] = cancel(coeff)
+
+            if monom is None:
+                monoms = self.monoms
+            else:
+                monoms = [ monomial_mul(p_monom, monom)
+                    for p_monom in self.monoms ]
+
+            terms = coeffs, monoms
+
+        return self.__class__(terms, *self.symbols, **self.flags)
+
+    def div_term(self, coeff, monom=None):
+        """Efficiently divide 'self' by a single term. """
+        coeff = sympify(coeff)
+
+        if coeff is S.Zero:
+            raise ZeroDivisionError
+
+        if coeff is S.One:
+            if monom is None:
+                return self
+            else:
+                coeffs = self.coeffs
+        else:
+            coeffs = [ p_coeff / coeff for p_coeff in self.coeffs ]
+
+            for i, coeff in enumerate(coeffs):
+                if not coeff.is_Atom:
+                    coeffs[i] = cancel(coeff)
+
+        if monom is None:
+            monoms = self.monoms
+        else:
+            monoms = [ monomial_div(p_monom, monom)
+                for p_monom in self.monoms ]
+
+            if any(monom is None for monom in monoms):
+                raise PolynomialError
 
         return self.__class__((coeffs, monoms),
             *self.symbols, **self.flags)
