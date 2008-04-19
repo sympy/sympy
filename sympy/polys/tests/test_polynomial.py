@@ -536,6 +536,10 @@ def test_coeff():
 def test_add_sub_term():
     f = Poly((), x, y, z)
 
+    assert Poly(2, x) - Poly(1, x) == Poly(1, x)
+    assert Poly(1, x) - Poly(1, x) == Poly(0, x)
+    assert Poly(1, x) - Poly(2, x) == Poly(-1, x)
+
     assert f.add_term(12, (1,2,3)) == Poly(((12,), ((1,2,3),)), x,y,z)
     assert f.sub_term(12, (1,2,3)) == Poly(((-12,), ((1,2,3),)), x,y,z)
 
@@ -605,6 +609,22 @@ def test_primitive():
     assert Poly(2*x + 5*x*y, x, y).as_primitive() == (1, Poly(2*x + 5*x*y, x, y))
     assert Poly(6*x + 4*x*y, x, y).as_primitive() == (2, Poly(3*x + 2*x*y, x, y))
     assert Poly(2*x + z*x*y, x, y).as_primitive() == (1, Poly(2*x + z*x*y, x, y))
+
+def test_squarefree():
+    assert Poly(x-1, x).is_squarefree == True
+    assert Poly((x-1)**2, x).is_squarefree == False
+
+    assert Poly(3*x**2, x).as_squarefree() == Poly(3*x, x)
+    assert Poly(x**2+2*x+1, x).as_squarefree() == Poly(x+1, x)
+    assert Poly(x**5-x**4-x+1, x).as_squarefree() == Poly(x**4-1, x)
+
+    assert poly_sqf(3*x**2, x) == (Poly(3, x), Poly(x, x))
+    assert poly_sqf(x**2+2*x+1, x) == (Poly(1, x), Poly(x+1, x))
+
+    assert poly_sqf(x**5-x**4-x+1, x) == \
+        (Poly(x**3 + x**2 + x + 1, x), Poly(x-1, x))
+    assert poly_sqf(x**8+6*x**6+12*x**4+8*x**2, x) == \
+        (Poly(1, x), Poly(x, x), Poly(x**2+2, x))
 
 def test_evaluate():
     f = x**2*y*z + 2*x*y*z**3 + 3*x*y + 4*y*z

@@ -686,3 +686,66 @@ def poly_subresultants(f, g, *symbols):
         k = h.degree
 
     return tuple(prs)
+
+def poly_sqf(f, *symbols):
+    """Compute square-free decomposition of an univariate polynoamial.
+
+       Given an unvariate polynomial f over an unique factorization domain
+       returns tuple (f_1, f_2, ..., f_n),  where all A_i are co-prime and
+       square-free polynomials and f = f_1 * f_2**2 * ... * f_n**n.
+
+       >>> from sympy import *
+       >>> x,y = symbols('xy')
+
+       >>> p, q = poly_sqf(x*(x+1)**2, x)
+
+       >>> p.as_basic()
+       x
+       >>> q.as_basic()
+       1 + x
+
+       For more information on the implemented algorithm refer to:
+
+       [1] M. Bronstein, Symbolic Integration I: Transcendental
+           Functions, Second Edition, Springer-Verlang, 2005
+
+       [2] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
+           Second Edition, Cambridge University Press, 2003
+
+    """
+    if not isinstance(f, Poly):
+        f = Poly(f, *symbols)
+    elif symbols:
+        raise PolynomialError
+
+    if f.is_multivariate:
+        raise PolynomialError
+
+    coeff, f = f.as_primitive()
+
+    sqf, x = [], f.symbols[0]
+
+    h = f.diff(x)
+
+    g = poly_gcd(f, h)
+
+    p = poly_div(f, g)[0]
+    q = poly_div(h, g)[0]
+
+    while True:
+        h = q - p.diff(x)
+
+        if h.is_zero:
+            break
+
+        g = poly_gcd(p, h)
+
+        p = poly_div(p, g)[0]
+        q = poly_div(h, g)[0]
+
+        sqf.append(g)
+
+    head, tail = sqf[0], sqf[1:]
+    head = head.mul_term(coeff)
+
+    return (head,) + tuple(tail) + (p,)

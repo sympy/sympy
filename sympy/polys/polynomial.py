@@ -165,6 +165,7 @@ class Poly(Basic, RelMeths, ArithMeths):
           [7.11] [UP] is_dense         --> filled with more than 90% of terms
           [7.12] [UP] is_monic         --> returns True if leading coeff is one
           [7.13] [UP] is_primitive     --> returns True if content is one
+          [7.14] [UP] is_squarefree    --> no factors of multiplicity >= 2
 
        [8] Coefficients properties:
 
@@ -176,13 +177,12 @@ class Poly(Basic, RelMeths, ArithMeths):
 
        [9] Special functionality:
 
-          [9.1] [--] as_monic     --> divides all coefficients by LC
+          [9.1] [--] as_monic      --> divides all coefficients by LC
 
-          [9.2] [-P] content      --> returns GCD of polynomial coefficients
-          [9.3] [--] as_primitive --> returns content and primitive part
+          [9.2] [-P] content       --> returns GCD of polynomial coefficients
+          [9.3] [--] as_primitive  --> returns content and primitive part
 
-          [9.4] [--] map_coeffs   --> applies a function to all coefficients
-          [9.5] [UP] coeff        --> returns coefficient of the given monomial
+          [9.4] [U-] as_squarefree --> returns square-free part of a polynomial
 
           [9.5] [--] map_coeffs    --> applies a function to all coefficients
           [9.6] [U-] coeff         --> returns coefficient of the given monomial
@@ -1022,6 +1022,22 @@ class Poly(Basic, RelMeths, ArithMeths):
         return self.lead_coeff in (S.One, 1)
 
     @property
+    def is_squarefree(self):
+        """Returns True if 'self' has no factors of multiplicity >= 2.
+
+           >>> from sympy import *
+           >>> x,y = symbols('xy')
+
+           >>> Poly(x-1, x).is_squarefree
+           True
+
+           >>> Poly((x-1)**2, x).is_squarefree
+           False
+
+        """
+        return self.as_squarefree() is self
+
+    @property
     def has_integer_coeffs(self):
         return self.domain == 'Z'
 
@@ -1124,6 +1140,30 @@ class Poly(Basic, RelMeths, ArithMeths):
 
             return content, self.__class__((coeffs,
                 self.monoms), *self.symbols, **self.flags)
+
+    def as_squarefree(self):
+        """Returns square-free part of a polynomial.
+
+           >>> from sympy import *
+           >>> x,y = symbols('xy')
+
+           >>> Poly((x-1)**2, x).as_squarefree()
+           Poly((1, -1), ((1,), (0,)), (x,), 'grlex')
+
+        """
+        f, A = self, sympy.polys.algorithms
+
+        if f.is_univariate:
+            F = f.as_primitive()[1]
+
+            h = f.diff(f.symbols[0])
+
+            g = A.poly_gcd(F, h)
+            r = A.poly_div(f, g)
+
+            return r[0]
+        else:
+            raise PolynomialError
 
     def map_coeffs(self, f, *args, **kwargs):
         """Apply a function to all the coefficients.
@@ -1517,7 +1557,7 @@ class Poly(Basic, RelMeths, ArithMeths):
                         coeff -= coeffs[i]
 
                         if coeff:
-                            coeffs[i] = coeff
+                            coeffs[i] = -coeff
                         else:
                             del coeffs[i]
                             del monoms[i]
