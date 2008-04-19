@@ -28,6 +28,15 @@ def gcd(a, b):
         _gcdcache[key] = b
         return b
 
+igcd = gcd # TODO: rename gcd -> igcd in all modules
+
+def ilcm(a, b):
+    """Computes integer least common multiple of two numbers. """
+    if a == 0 and b == 0:
+        return 0
+    else:
+        return a * b / igcd(a, b)
+
 @Memoizer((int, long), return_value_converter = lambda d: d.copy())
 def factor_trial_division(n):
     """

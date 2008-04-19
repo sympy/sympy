@@ -3,6 +3,18 @@ from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, Integer, \
 from sympy.core.power import integer_nthroot
 import py
 
+from sympy.core.numbers import ilcm
+
+def test_ilcm():
+    assert ilcm(0, 0) == 0
+    assert ilcm(1, 0) == 0
+    assert ilcm(0, 1) == 0
+    assert ilcm(1, 1) == 1
+    assert ilcm(2, 1) == 2
+    assert ilcm(8, 2) == 8
+    assert ilcm(8, 6) == 24
+    assert ilcm(8, 7) == 56
+
 def test_Rational():
     n1 = Rational(1,4)
     n2 = Rational(1,3)
@@ -171,7 +183,7 @@ def test_powers():
     assert str((123**25+1)**Rational(1,25)) != "123"
     assert str((123**25-1)**Rational(1,25)) != "123"
     assert str((123**25-1)**Rational(1,25)) != "122"
-    assert sqrt(6) + sqrt(24) == 3*sqrt(6) 
+    assert sqrt(6) + sqrt(24) == 3*sqrt(6)
     assert sqrt(2) * sqrt(3) == sqrt(6)
     x = Symbol("x")
     assert sqrt(49*x) == 7*sqrt(x)
