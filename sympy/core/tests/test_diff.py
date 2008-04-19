@@ -57,3 +57,8 @@ def test_diff3():
     e = (Rational(2)**a/log(Rational(2)))
     assert e == 2**a*log(Rational(2))**(-1)
     assert e.diff(a) == 2**a
+
+def test_speed():
+    # this should return in 0.0s. If it takes forever, it's wrong.
+    x = Symbol("x")
+    assert x.diff(x, 10**8) == 0
