@@ -16,6 +16,9 @@ from monomial import monomial_cmp, monomial_lcm, \
 
 import sympy.matrices
 
+# Python2.4 compatibility
+from sympy.utilities.iterables import all
+
 def poly_div(f, g, *symbols):
     """Generalized polynomial division with remainder.
 
