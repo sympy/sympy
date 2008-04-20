@@ -53,7 +53,7 @@ def trigintegrate(f, x):
     a = M[a]
 
     if n.is_integer and n.is_integer:
-        
+
         if n.is_odd or m.is_odd:
             u = _u
             n_, m_ = n.is_odd, m.is_odd
@@ -139,13 +139,13 @@ class Sin_2k_integrate(PolynomialSequence):
         ⌠             n-1                ⌠
         ⎮ n          S (x)*C(x)    n-1   ⎮  n-2
         ⎮S (x)  = - ──────────── + ─── * ⎮ S (x)
-        ⌡                 n         n    ⌡ 
+        ⌡                 n         n    ⌡
 
         see: http://en.wikipedia.org/wiki/List_of_integrals_of_trigonometric_functions
 
                            n-1
         XXX maybe combine S (x)*C(x)  ->  S(n*x) + ...?
-        """                              
+        """
         n = 2*k
         return -(sin(_x))**(n-1) * cos(_x) / n  +  prev[k-1] * (n-1)/n
 
@@ -157,13 +157,13 @@ class Cos_2k_integrate(PolynomialSequence):
     @recurrence_memo([_x])
     def calc(k, prev):
         """recursively calculate \int(cos(x)**2k, x)
-        
+
         formula used:
 
         ⌠             n-1                ⌠
         ⎮ n          C (x)*S(x)    n-1   ⎮  n-2
         ⎮C (x)  =   ──────────── + ─── * ⎮ C (x)
-        ⌡                 n         n    ⌡ 
+        ⌡                 n         n    ⌡
 
         see: http://en.wikipedia.org/wiki/List_of_integrals_of_trigonometric_functions
 

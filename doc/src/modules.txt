@@ -11,7 +11,7 @@ API documentation
 -----------------
 
 This documents all SymPy modules and it is automatically generated from SymPy
-sources. 
+sources.
 
 Click the  "modules" (:ref:`modindex`) link in the top right corner for
 automatically generated documentation.

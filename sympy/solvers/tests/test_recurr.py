@@ -54,7 +54,7 @@ def test_rsolve_bulk():
         # compute difference
         for c in coeffs:
             q = recurrence_term(c, p)
-            if p.is_polynomial(n): 
+            if p.is_polynomial(n):
                 yield rsolve_bulk_checker, rsolve_poly, c, q, p
-            #if p.is_hypergeometric(n): 
+            #if p.is_hypergeometric(n):
             #    yield rsolve_bulk_checker, rsolve_hyper, c, q, p

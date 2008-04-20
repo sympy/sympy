@@ -50,7 +50,7 @@ def GFPolyFactory(p):
                 if c:
                     result_dict[e] = c
             return newClass(result_dict)
-            
+
         def monic(self):
             if not self:
                 return self.coeff_type(0), self
@@ -93,7 +93,7 @@ def xgcd(f, g):
 
     Outputs the gcd, s and t, such that:
         h == s*f + t*g
-    
+
     """
     one = f.coeff_type(1)
     p, q, r, s, t  = [], [], [], [], []
@@ -107,7 +107,7 @@ def xgcd(f, g):
     s.append(f.__class__())
     t.append(f.__class__())
     t.append(f.__class__({0:(one/p[1])}))
-            
+
     while True:
         q.append(div(r[-2], r[-1])[0])
         pp, rr = (r[-2] - q[-1]*r[-1]).monic()

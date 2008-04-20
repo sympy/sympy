@@ -274,7 +274,7 @@ def test_issue125():
 def test_issue364():
     w = Symbol("w")
     x = Symbol("x")
-    e = 1/x*(-log(w**(1 + 1/log(3)*log(5))) + log(w + w**(1/log(3)*log(5)))) 
+    e = 1/x*(-log(w**(1 + 1/log(3)*log(5))) + log(w + w**(1/log(3)*log(5))))
     assert e.series(w,0,0) == log(w)/x - log(w**(1 + log(5)/log(3)))/x + O(1,w)
 
 def test_sin():
@@ -310,7 +310,7 @@ def test_issue402():
 
 def test_issue403():
     x = Symbol("x")
-    e = sin(5*x)/sin(2*x) 
+    e = sin(5*x)/sin(2*x)
     assert e.series(x, 0, 5) == Rational(5,2) - 35*x**2/4 + 329*x**4/48 + O(x**5)
 
 def test_issue404():

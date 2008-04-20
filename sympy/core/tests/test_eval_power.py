@@ -39,10 +39,10 @@ def test_issue350():
 
     a = Symbol('a', real = True)
     assert (a**Rational(3))**Rational(2,5) == a**Rational(6,5)
-    
+
     #assert Number(5)**Rational(2,3)==Number(25)**Rational(1,3)
 
 def test_issue767():
     assert --sqrt(sqrt(5)-1)==sqrt(sqrt(5)-1)
-    
+
 test_issue350()

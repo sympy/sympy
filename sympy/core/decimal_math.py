@@ -43,11 +43,11 @@ def exp(x):
     getcontext().prec += 2
     i, lasts, s, fact, num = 0, 0, 1, 1, 1
     while s != lasts:
-        lasts = s    
+        lasts = s
         i += 1
         fact *= i
-        num *= x     
-        s += num / fact   
+        num *= x
+        s += num / fact
     getcontext().prec -= 2
     return +s
 
@@ -57,13 +57,13 @@ def cos(x):
     getcontext().prec += 2
     i, lasts, s, fact, num, sign = 0, 0, 1, 1, 1, 1
     while s != lasts:
-        lasts = s    
+        lasts = s
         i += 2
         fact *= i * (i - 1)
         num *= x * x
         sign *= -1
-        s += num / fact * sign 
-    getcontext().prec -= 2        
+        s += num / fact * sign
+    getcontext().prec -= 2
     return +s
 
 def sin(x):
@@ -72,7 +72,7 @@ def sin(x):
     getcontext().prec += 2
     i, lasts, s, fact, num, sign = 1, 0, x, 1, x, 1
     while s != lasts:
-        lasts = s    
+        lasts = s
         i += 2
         fact *= i * (i - 1)
         num *= x * x
@@ -85,7 +85,7 @@ def cosh(x):
     """Return the hyperbolic cosine of Decimal x."""
     if x == 0:
         return D(1)
-    
+
     getcontext().prec += 2
     i, lasts, s, fact, num = 0, 0, 1, 1, 1
     while s != lasts:
@@ -101,7 +101,7 @@ def sinh(x):
     """Return the hyperbolic sine of Decimal x."""
     if x == 0:
         return D(0)
-    
+
     getcontext().prec += 2
     i, lasts, s, fact, num = 1, 0, x, 1, x
     while s != lasts:
@@ -117,14 +117,14 @@ def asin(x):
     """Return the arc sine (measured in radians) of Decimal x."""
     if abs(x) > 1:
         raise ValueError("Domain error: asin accepts -1 <= x <= 1")
-    
+
     if x == -1:
         return pi() / -2
     elif x == 0:
         return D(0)
     elif x == 1:
         return pi() / 2
-    
+
     return atan2(x, D.sqrt(1 - x ** 2))
 
 def acos(x):
@@ -138,7 +138,7 @@ def acos(x):
         return pi() / 2
     elif x == 1:
         return D(0)
-    
+
     return pi() / 2 - atan2(x, D.sqrt(1 - x ** 2))
 
 def tan(x):
@@ -165,7 +165,7 @@ def atan(x):
         return D(0)
     elif x == D('Inf'):
         return pi() / 2
-    
+
     if x < -1:
         c = pi() / -2
         x = 1 / x
@@ -174,14 +174,14 @@ def atan(x):
         x = 1 / x
     else:
         c = 0
-    
+
     getcontext().prec += 2
     x_squared = x ** 2
     y = x_squared / (1 + x_squared)
     y_over_x = y / x
     i, lasts, s, coeff, num = D(0), 0, y_over_x, 1, y_over_x
     while s != lasts:
-        lasts = s 
+        lasts = s
         i += 2
         coeff *= i / (i + 1)
         num *= y
@@ -202,7 +202,7 @@ def atan2(y, x):
     abs_y = abs(y)
     abs_x = abs(x)
     y_is_real = abs_y != D('Inf')
-    
+
     if x:
         if y_is_real:
             a = y and atan(y / x) or D(0)

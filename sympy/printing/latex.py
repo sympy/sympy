@@ -256,7 +256,7 @@ class LatexPrinter(Printer):
             return r"\operatorname{\Gamma}%s" % tex
 
     def _print_Factorial(self, expr, exp=None):
-        x = expr.args[0] 
+        x = expr.args[0]
         if self._needs_brackets(x):
             tex = r"\left(%s\right)!" % self._print(x)
         else:

@@ -121,7 +121,7 @@ def test_pretty_sqrt():
   /      2                     
 \/  3 + x                      \
 '''
-                         
+
 def test_pretty_derivatives():
     # Simple
     f_1 = Derivative(log(x), x, evaluate=False)
@@ -235,7 +235,7 @@ def test_pretty_seq():
 
 def test_pretty_limits():
     assert pretty( Limit(x, x, oo) ) == ' lim x\nx->oo '
-    assert pretty( Limit(x**2, x, 0) ) == '     2\nlim x \nx->0  '  
+    assert pretty( Limit(x**2, x, 0) ) == '     2\nlim x \nx->0  '
     assert pretty( Limit(1/x, x, 0) ) == '    1\nlim -\nx->0x'
 
 

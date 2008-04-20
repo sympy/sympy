@@ -11,9 +11,9 @@ from symbol import Symbol, Wild
 class AssocOp(Basic):
     """ Associative operations, can separate noncommutative and
     commutative parts.
-    
+
     (a op b) op c == a op (b op c) == a op b op c.
-    
+
     Base class for Add and Mul.
     """
 
@@ -117,4 +117,4 @@ class AssocOp(Basic):
         return r
 
     _eval_evalf = Basic._seq_eval_evalf
-    
+

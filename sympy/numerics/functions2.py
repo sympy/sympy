@@ -147,7 +147,7 @@ def gamma(x):
     """
     gamma(x) -- calculate the gamma function of a real or complex
     number x.
-    
+
     x must not be a negative integer or 0
     """
     Float.store()

@@ -5,7 +5,7 @@ from sympy.abc import x
 
 def checksol(eq, func, sol):
     """Substitutes sol for func in eq and checks, that the result is 0
-    
+
     Only works when func is one function, like f(x) and sol just one
     solution like A*sin(x)+B*cos(x).
     """
@@ -72,7 +72,7 @@ def test_ode8():
     eq = Eq(x**2*f(x).diff(x) + 3*x*f(x) - sin(x)/x, '==', 0)
     assert dsolve(eq, f(x)) == (Symbol("C1")-cos(x))/x**3
     checksol(eq, f(x), dsolve(eq, f(x)))
-    
+
 def test_ode9():
     f = Function("f")
     # type:first order linear form f'(x)+p(x)f(x)=q(x)

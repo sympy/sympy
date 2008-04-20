@@ -149,7 +149,7 @@ def testpow():
 
 @XFAIL
 def test_pow2():
-    # XXX These fail - they are maybe discutable, 
+    # XXX These fail - they are maybe discutable,
     # let's see SAGE and similar.
     assert ((-x)**2)**Rational(1,3) == ((-x)**Rational(1,3))**2
     assert (-x)**Rational(2,3) == x**Rational(2,3)
@@ -922,7 +922,7 @@ def test_issue432():
         def __rdiv__(self, other):
             return "something"
     assert sympify(1)/MightyNumeric((1,2)) == "something"
-    
+
 def test_issue432b():
     class Foo:
         def __init__(self):

@@ -1,7 +1,7 @@
 """
 Execute like this:
 
-$ python bin/generate_test_list.py 
+$ python bin/generate_test_list.py
 tests = [
     'sympy.concrete.tests',
     'sympy.core.tests',

@@ -23,7 +23,7 @@ class Printer(object):
        Also, if BAR is a subclass of FOO, _print_FOO(bar) will be called for
        instance of BAR, if no _print_BAR is provided.  Thus, usually, we don't
        need to provide printing routines for every class we want to support --
-       only generic routine has to be provided for a set of classes. 
+       only generic routine has to be provided for a set of classes.
 
        A good example for this are functions - for example PrettyPrinter only
        defines _print_Function, and there is no _print_sin, _print_tan, etc...

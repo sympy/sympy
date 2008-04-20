@@ -8,7 +8,7 @@ This test suite is testing the limit algoritm using the bottom up approach.
 See the documentation in limits2.py. The algorithm itself is highly recursive
 by nature, so "compare" is logically the lowest part of the algorithm, yet in
 some sense it's the most complex part, because it needs to calculate a limit to
-return the result. 
+return the result.
 
 Nevertheless the rest of the algorithm depends on compare that it works
 correctly.

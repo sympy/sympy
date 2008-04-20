@@ -18,25 +18,25 @@ All functions are sorted according to how rapidly varying they are at infinity
 using the following rules. Any two functions f and g can be compared using the
 properties of L:
 
-L=lim  log|f(x)| / log|g(x)|           (for x -> oo) 
+L=lim  log|f(x)| / log|g(x)|           (for x -> oo)
 
 We define >, < ~ according to::
-    
-    1. f > g .... L=+-oo 
-    
+
+    1. f > g .... L=+-oo
+
         we say that:
         - f is greater than any power of g
         - f is more rapidly varying than g
         - f goes to infinity/zero faster than g
-    
-    
-    2. f < g .... L=0 
-    
+
+
+    2. f < g .... L=0
+
         we say that:
         - f is lower than any power of g
-    
-    3. f ~ g .... L!=0,+-oo 
-    
+
+    3. f ~ g .... L!=0,+-oo
+
         we say that:
         - both f and g are bounded from above and below by suitable integral
           powers of the other
@@ -55,7 +55,7 @@ So we can divide all the functions into comparability classes (x and x^2 belong
 to one class, exp(x) and exp(-x) belong to some other class). In principle, we
 could compare any two functions, but in our algorithm, we don't compare
 anything below the class 2~3~-5 (for example log(x) is below this), so we set
-2~3~-5 as the lowest comparability class. 
+2~3~-5 as the lowest comparability class.
 
 Given the function f, we find the list of most rapidly varying (mrv set)
 subexpressions of it. This list belongs to the same comparability class. Let's
@@ -103,7 +103,7 @@ O = Order
 
 def debug(func):
     """Only for debugging purposes: prints a tree
-    
+
     It will print a nice execution tree with arguments and results
     of all decorated functions.
     """
@@ -156,7 +156,7 @@ def maketree(f,*args,**kw):
     if tmp!=[]: s += tree(tmp)
     tmp=oldtmp
     tmp.append(s)
-    if iter == 0: 
+    if iter == 0:
         print tmp[0]
         tmp=[]
     return r
@@ -164,25 +164,25 @@ def maketree(f,*args,**kw):
 def compare(a,b,x):
     """Returns "<" if a<b, "=" for a==b, ">" for a>b"""
     c = limitinf(log(a)/log(b), x)
-    if c == 0: 
+    if c == 0:
         return "<"
-    elif c in [oo,-oo]: 
+    elif c in [oo,-oo]:
         return ">"
-    else: 
+    else:
         return "="
 
 @debug
 def mrv(e, x):
     "Returns a python set of  most rapidly varying (mrv) subexpressions of 'e'"
     assert isinstance(e, Basic)
-    if not e.has(x): 
+    if not e.has(x):
         return set([])
-    elif e == x: 
+    elif e == x:
         return set([x])
     elif e.is_Mul:
         a, b = e.as_two_terms()
         return mrv_max(mrv(a,x), mrv(b,x), x)
-    elif e.is_Add: 
+    elif e.is_Add:
         a, b = e.as_two_terms()
         return mrv_max(mrv(a,x), mrv(b,x), x)
     elif e.is_Pow:
@@ -190,14 +190,14 @@ def mrv(e, x):
             return mrv(exp(e.exp * log(e.base)), x)
         else:
             return mrv(e.base, x)
-    elif e.func is log: 
+    elif e.func is log:
         return mrv(e.args[0], x)
     elif e.func is exp:
         if limitinf(e.args[0], x) in [oo,-oo]:
             return mrv_max(set([e]), mrv(e.args[0], x), x)
         else:
             return mrv(e.args[0], x)
-    elif e.is_Function: 
+    elif e.is_Function:
         if len(e.args) == 1:
             return mrv(e.args[0], x)
         #only functions of 1 argument currently implemented
@@ -205,7 +205,7 @@ def mrv(e, x):
     raise NotImplementedError("Don't know how to calculate the mrv of '%s'" % e)
 
 def mrv_max(f, g, x):
-    """Computes the maximum of two sets of expressions f and g, which 
+    """Computes the maximum of two sets of expressions f and g, which
     are in the same comparability class, i.e. max() compares (two elements of)
     f and g and returns the set, which is in the higher comparability class
     of the union of both, if they have the same order of variation.
@@ -221,7 +221,7 @@ def mrv_max(f, g, x):
     c=compare(list(f)[0], list(g)[0], x)
     if c == ">": return f
     elif c == "<": return g
-    else: 
+    else:
         assert c == "="
         return f.union(g)
 
@@ -245,22 +245,22 @@ def rewrite(e,Omega,x,wsym):
     Omega = list(Omega)
     Omega.sort(cmp=cmpfunc)
     g=Omega[-1] #g is going to be the "w" - the simplest one in the mrv set
-    sig = (sign(g.args[0], x) == 1) 
+    sig = (sign(g.args[0], x) == 1)
     if sig: wsym=1/wsym #if g goes to oo, substitute 1/w
     #O2 is a list, which results by rewriting each item in Omega using "w"
     O2=[]
-    for f in Omega: 
+    for f in Omega:
         c=mrv_leadterm(f.args[0]/g.args[0], x)
         #the c is a constant, because both f and g are from Omega:
         assert c[1] == 0
         O2.append(exp((f.args[0]-c[0]*g.args[0]).expand())*wsym**c[0])
     #Remember that Omega contains subexpressions of "e". So now we find
     #them in "e" and substitute them for our rewriting, stored in O2
-    f=e 
+    f=e
     for a,b in zip(Omega,O2):
         f=f.subs(a,b)
 
-    #finally compute the logarithm of w (logw). 
+    #finally compute the logarithm of w (logw).
     logw=g.args[0]
     if sig: logw=-logw     #log(w)->log(1/w)=-log(w)
     return f, logw
@@ -268,7 +268,7 @@ def rewrite(e,Omega,x,wsym):
 @debug
 def sign(e, x):
     """Returns a sign of an expression e(x) for x->oo.
-    
+
         e >  0 ...  1
         e == 0 ...  0
         e <  0 ... -1
@@ -287,15 +287,15 @@ def sign(e, x):
             return 1
         else:
             return -1
-    elif e == x: 
+    elif e == x:
         return 1
     elif e.is_Mul:
         a,b = e.as_two_terms()
         return sign(a, x) * sign(b, x)
     elif e.func is exp:
-        return 1 
+        return 1
     elif e.is_Pow:
-        if sign(e.base, x) == 1: 
+        if sign(e.base, x) == 1:
             return 1
     elif e.func is log:
         return sign(e.args[0] -1, x)
@@ -310,14 +310,14 @@ def limitinf(e, x):
     #this is needed to simplify 1/log(exp(-x**2))*log(exp(x**2)) to 1
     if e.has(log):
         e = e.normal()
-    c0, e0 = mrv_leadterm(e,x) 
+    c0, e0 = mrv_leadterm(e,x)
     sig=sign(e0,x)
     if sig==1: return S.Zero # e0>0: lim f = 0
     elif sig==-1: #e0<0: lim f = +-oo   (the sign depends on the sign of c0)
         s = sign(c0, x)
         #the leading term shouldn't be 0:
         assert s != 0
-        return s * oo 
+        return s * oo
     elif sig==0: return limitinf(c0, x) #e0=0: lim f = lim c0
 
 def moveup(l, x):
@@ -329,7 +329,7 @@ def movedown(l, x):
 _x = Symbol("x", dummy=True)
 def subexp(e,sub):
     """Is "sub" a subexpression of "e"? """
-    #we substitute some symbol for the "sub", and if the 
+    #we substitute some symbol for the "sub", and if the
     #expression changes, the substitution was successful, thus the answer
     #is yes.
     return e.subs(sub, _x) != e
@@ -416,7 +416,7 @@ def mrv_leadterm(e, x, Omega=[]):
 
 #this class is not yet adapted for the new core.
 class Limit2(Basic):
-    
+
     mathml_tag = 'limit'
 
     def __init__(self,e,x,x0):
@@ -425,7 +425,7 @@ class Limit2(Basic):
         self._args.append(sympify(e))
         self._args.append(sympify(x))
         self._args.append(sympify(x0))
-        
+
 
     def __pretty__(self):
          e, x, t = [a.__pretty__() for a in (self.e,self.x,self.x0)]
@@ -433,27 +433,27 @@ class Limit2(Basic):
          a = prettyForm(*a.below('%s->%s' % (x, t)))
          a = prettyForm(*stringPict.next(a, e))
          return a
-     
+
     def __latex__(self):
          return r"\lim_{%s \to %s}%s" % (self.x.__latex__(), \
-                                                 self.x0.__latex__(), 
+                                                 self.x0.__latex__(),
                                                  self.e.__latex__() )
-                 
+
     @property
     def e(self):
         return self._args[0]
-    
+
     @property
     def x(self):
         return self._args[1]
-    
+
     @property
     def x0(self):
         return self._args[2]
 
     def doit(self):
         return limit(self.e,self.x,self.x0)
-    
+
     def __mathml__(self):
         if self._mathml:
             return self._mathml
@@ -461,18 +461,18 @@ class Limit2(Basic):
         dom = xml.dom.minidom.Document()
         x = dom.createElement("apply")
         x.appendChild(dom.createElement(self.mathml_tag))
-        
+
         x_1 = dom.createElement('bvar')
-        
+
         x_2 = dom.createElement('lowlimit')
-        
+
         x.appendChild(x_1)
         x.appendChild(x_2)
         x.appendChild( self.e.__mathml__() )
         x.childNodes[1].appendChild( self.x.__mathml__() )
         x.childNodes[2].appendChild( self.x0.__mathml__() )
         self._mathml = x
-        
+
         return self._mathml
 
 def gruntz(e, z, z0, dir="+"):

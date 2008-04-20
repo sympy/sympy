@@ -100,29 +100,29 @@ theta=Symbol(r"\theta")
 phi=Symbol(r"\phi")
 
 #general, spherically symmetric metric
-gdd=Matrix(( 
-    (-exp(nu(r)),0,0,0), 
+gdd=Matrix((
+    (-exp(nu(r)),0,0,0),
     (0, exp(lam(r)), 0, 0),
     (0, 0, r**2, 0),
     (0, 0, 0, r**2*sin(theta)**2)
     ))
 #spherical - flat
-#gdd=Matrix(( 
-#    (-1, 0, 0, 0), 
+#gdd=Matrix((
+#    (-1, 0, 0, 0),
 #    (0, 1, 0, 0),
 #    (0, 0, r**2, 0),
 #    (0, 0, 0, r**2*sin(theta)**2)
 #    ))
 #polar - flat
-#gdd=Matrix(( 
-#    (-1, 0, 0, 0), 
+#gdd=Matrix((
+#    (-1, 0, 0, 0),
 #    (0, 1, 0, 0),
 #    (0, 0, 1, 0),
 #    (0, 0, 0, r**2)
 #    ))
 #polar - on the sphere, on the north pole
-#gdd=Matrix(( 
-#    (-1, 0, 0, 0), 
+#gdd=Matrix((
+#    (-1, 0, 0, 0),
 #    (0, 1, 0, 0),
 #    (0, 0, r**2*sin(theta)**2, 0),
 #    (0, 0, 0, r**2)

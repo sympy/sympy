@@ -4,7 +4,7 @@ About
 SymPy Development Team
 ----------------------
 
-SymPy is a team project and it was developed by a lot of people. 
+SymPy is a team project and it was developed by a lot of people.
 
 Here is a list of contributors together with what they do, plus links to their
 wiki pages (if they have one on the page `People

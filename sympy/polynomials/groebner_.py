@@ -47,12 +47,12 @@ def groebner(f, var=None, order=None, reduced=True):
         end, the base is reduced, by trying to eliminate as many terms
         as possible with the leading terms of other base elements. The
         final step is to make all polynomials monic.
-        
+
     References:
     ===========
         Cox, Little, O'Shea: Ideals, Varieties and Algorithms,
         Springer, 2. edition, p. 87
-        
+
     """
 
     if isinstance(f, Basic):

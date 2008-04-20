@@ -246,7 +246,7 @@ class stringPict(object):
                 pass
         except (ImportError, TypeError):
             pass
-        
+
         ncols -= 2
         if ncols <= 0:
             ncols = 78
@@ -294,7 +294,7 @@ class prettyForm(stringPict):
     "Binding" is interpreted as follows:
     ATOM this is an atom: never needs to be parenthesised
     FUNC this is a function application: parenthesise if added (?)
-    DIV  this is a division: make wider division if divided 
+    DIV  this is a division: make wider division if divided
     POW  this is a power: only parenthesise if exponent
     MUL  this is a multiplication: parenthesise if powered
     ADD  this is an addition: parenthesise if multiplied or powered
@@ -317,7 +317,7 @@ class prettyForm(stringPict):
         result = [arg]
         for arg in others:
             #add parentheses for weak binders
-            if arg.binding > prettyForm.NEG: 
+            if arg.binding > prettyForm.NEG:
                 arg = stringPict(*arg.parens())
             #use existing minus sign if available
             if arg.binding != prettyForm.NEG:

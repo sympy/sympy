@@ -1,10 +1,10 @@
 """
-pkgdata is a simple, extensible way for a package to acquire data file 
+pkgdata is a simple, extensible way for a package to acquire data file
 resources.
 
 The getResource function is equivalent to the standard idioms, such as
 the following minimal implementation::
-    
+
     import sys, os
 
     def getResource(identifier, pkgname=__name__):

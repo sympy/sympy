@@ -79,7 +79,7 @@ class PlotWindow(ManagedWindow):
         calc_verts_pos, calc_verts_len = 0, 0
         calc_cverts_pos, calc_cverts_len = 0, 0
 
-        should_update_caption = (clock()-self.last_caption_update > 
+        should_update_caption = (clock()-self.last_caption_update >
                                  self.caption_update_interval)
 
         if len(self.plot._functions.values()) == 0:
@@ -93,7 +93,7 @@ class PlotWindow(ManagedWindow):
             glPushMatrix()
             r._draw()
             glPopMatrix()
-            
+
             # might as well do this while we are
             # iterating and have the lock rather
             # than locking and iterating twice
@@ -117,10 +117,10 @@ class PlotWindow(ManagedWindow):
         if should_update_caption:
             self.update_caption(calc_verts_pos, calc_verts_len, calc_cverts_pos, calc_cverts_len)
             self.last_caption_update = clock()
-        
+
         if self.plot._screenshot:
             self.plot._screenshot._execute_saving()
-        
+
         self.plot._render_lock.release()
 
     def update_caption(self, calc_verts_pos, calc_verts_len, calc_cverts_pos, calc_cverts_len):

@@ -53,7 +53,7 @@ def parse_maxima(str, globals=None, name_dict={}):
     dct = MaximaHelpers.__dict__.copy()
     dct.update(name_dict)
     obj = sympify(str, locals= dct)
-    
+
     if assign_var and globals:
         globals[assign_var] = obj
 

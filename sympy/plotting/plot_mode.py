@@ -89,7 +89,7 @@ class PlotMode(PlotObject):
         """
         Tries to return an appropriate mode class.
         Intended to be called only by __new__.
-        
+
         mode_arg
             Can be a string or a class. If it is a
             PlotMode subclass, it is simply returned.
@@ -101,12 +101,12 @@ class PlotMode(PlotObject):
         i_var_count
             The number of independent variables
             needed to evaluate the d_vars.
-            
+
         d_var_count
             The number of dependent variables;
             usually the number of functions to
             be evaluated in plotting.
-        
+
         For example, a cartesian function y = f(x) has
         one i_var (x) and one d_var (y). A parametric
         form x,y,z = f(u,v), f(u,v), f(u,v) has two
@@ -116,7 +116,7 @@ class PlotMode(PlotObject):
         # check that the mode supports the numbers
         # of independent and dependent vars, then
         # return it
-        try:        
+        try:
             m = None
             if issubclass(mode_arg, PlotMode):
                 m = mode_arg
@@ -357,7 +357,7 @@ class PlotMode(PlotObject):
     def _interpret_args(args):
         interval_wrong_order = "PlotInterval %s was given before any function(s)."
         interpret_error = "Could not interpret %s as a function or interval."
-    
+
         functions, intervals = [], []
         if isinstance(args[0], GeometryEntity):
             for coords in list(args[0].arbitrary_point()):
@@ -379,7 +379,7 @@ class PlotMode(PlotObject):
                         functions.append(f)
                     except:
                         raise ValueError(interpret_error % str(a))
-    
+
         return functions, intervals
 
     @staticmethod

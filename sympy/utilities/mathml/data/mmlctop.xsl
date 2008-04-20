@@ -8,7 +8,7 @@
 <!--                    21 February 2001.                     -->
 <!--                                                          -->
 <!--   Authors Igor Rodionov <igor@csd.uwo.ca>,               -->
-<!--           Stephen Watt  <watt@csd.uwo.ca>.               -->  
+<!--           Stephen Watt  <watt@csd.uwo.ca>.               -->
 <!--                                                          -->
 <!-- (C) Copyright 2000-2003 Symbolic Computation Laboratory, -->
 <!--                         University of Western Ontario,   -->
@@ -181,8 +181,8 @@ CONSTANT and SYMBOL ELEMENTS
     <xsl:choose>
       <xsl:when test="$SEM_SW=$SEM_TOP or $SEM_SW=$SEM_ALL and *[2] or
 	                  $SEM_SW=$SEM_XREF">
-        <semantics>                                                   
-          <mrow>                                                         
+        <semantics>
+          <mrow>
             <xsl:apply-templates mode = "semantics"/>
           </mrow>
           <annotation-xml encoding="MathML">
@@ -223,7 +223,7 @@ CONSTANT and SYMBOL ELEMENTS
     </xsl:when>
     <xsl:when test="($SEM_SW=$SEM_PASS or $SEM_SW=$SEM_TOP) and self::semantics">
       <semantics>
-        <xsl:apply-templates select="*[1]">   
+        <xsl:apply-templates select="*[1]">
         <xsl:with-param name="IN_PREC" select="$IN_PREC"/>
         <xsl:with-param name="PARAM" select="$PARAM"/>
         <xsl:with-param name="PAREN" select="$PAREN"/>
@@ -834,11 +834,11 @@ CONSTANT and SYMBOL ELEMENTS
       <xsl:attribute name="xref">
         <xsl:value-of select="@id"/>
       </xsl:attribute>
-    </xsl:if> 
+    </xsl:if>
     <xsl:apply-templates select = "*" mode = "semantics"/>
   </mrow>
 </xsl:template>
-    
+
 
 <xsl:template match="piecewise">
   <mrow>
@@ -846,7 +846,7 @@ CONSTANT and SYMBOL ELEMENTS
       <xsl:attribute name="xref">
         <xsl:value-of select="@id"/>
       </xsl:attribute>
-    </xsl:if> 
+    </xsl:if>
     <mo stretchy="true"> { </mo>
     <mtable columnalign="left left">
       <xsl:for-each select="piece">
@@ -2560,7 +2560,7 @@ CONSTANT and SYMBOL ELEMENTS
     </xsl:apply-templates>
   </xsl:for-each>
 </xsl:template>
-  
+
 
 <xsl:template match = "apply[card[1]]">
   <mfenced open="&#x2223;" close="&#x2223;" separators=",">
@@ -2963,7 +2963,7 @@ CONSTANT and SYMBOL ELEMENTS
       <msup>
         <xsl:apply-templates select="*[4]" mode = "semantics"/>
         <xsl:apply-templates select="*[2]" mode = "semantics"/>
-      </msup>  
+      </msup>
     </xsl:if>
     <xsl:if test="not(*[2]=degree) and *[2]=momentabout">
       <xsl:for-each select = "*[position()>2]">
@@ -3115,7 +3115,7 @@ CONSTANT and SYMBOL ELEMENTS
 </xsl:template>
 
 <xsl:template match="naturalnumbers">
-  <mo> <xsl:text disable-output-escaping='yes'>&amp;#x2115;</xsl:text> </mo> 
+  <mo> <xsl:text disable-output-escaping='yes'>&amp;#x2115;</xsl:text> </mo>
 </xsl:template>
 
 <xsl:template match="complexes">
@@ -3135,15 +3135,15 @@ CONSTANT and SYMBOL ELEMENTS
 </xsl:template>
 
 <xsl:template match="notanumber">
-  <mo> NaN </mo>  
+  <mo> NaN </mo>
 </xsl:template>
 
 <xsl:template match="true">
-  <mo> true </mo>  
+  <mo> true </mo>
 </xsl:template>
 
 <xsl:template match="false">
-  <mo> false </mo>   
+  <mo> false </mo>
 </xsl:template>
 
 <xsl:template match="emptyset">

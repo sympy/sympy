@@ -5,8 +5,8 @@ from sympy import sqrt,exp,log,Symbol,oo,Rational,sin,cos,limit,I,pi,Mul
 from sympy.core import basic
 from sympy.printing import print_pygame, pprint
 
-x=Symbol("x") 
-y=Symbol("y") 
+x=Symbol("x")
+y=Symbol("y")
 
 expressions = (
     x**x,

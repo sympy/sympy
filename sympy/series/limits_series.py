@@ -33,14 +33,14 @@ class Limit_series(Basic, RelMeths, ArithMeths):
 
         if xlim is S.NegativeInfinity:
             xoo = InfLimit.limit_process_symbol()
-            if expr.has(xoo): 
+            if expr.has(xoo):
                 xoo = C.Symbol(x.name + '_oo',dummy=True,positive=True,unbounded=True)
             return InfLimit(expr.subs(x,-xoo), xoo)
         if xlim is S.Infinity:
             return InfLimit(expr, x)
         else:
             xoo = InfLimit.limit_process_symbol()
-            if expr.has(xoo): 
+            if expr.has(xoo):
                 xoo = C.Symbol(x.name + '_oo',dummy=True,positive=True,unbounded=True)
             if direction=='<':
                 return InfLimit(expr.subs(x, xlim+1/xoo), xoo)
@@ -72,7 +72,7 @@ class Limit_series(Basic, RelMeths, ArithMeths):
     def tostr(self, level=0):
         if (self.varlim is S.Infinity) or (self.varlim is S.NegativeInfinity): s = ''
         elif self.direction=='<': s = '+'
-        else: s = '-'    
+        else: s = '-'
         r = 'lim[%s->%s%s](%s)' % (self.var.tostr(), self.varlim.tostr(),s,self.expr.tostr())
         if self.precedence <= level: r = '(%s)' % (r)
         return r

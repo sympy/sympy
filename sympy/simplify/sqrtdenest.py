@@ -17,20 +17,20 @@ def denester (nested):
     Denests a list of expressions that contain nested square roots.
     This method should not be called directly - use 'denest' instead.
     This algorithm is based on <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
-    
-    It is assumed that all of the elements of 'nested' share the same 
-    bottom-level radicand. (This is stated in the paper, on page 177, in 
+
+    It is assumed that all of the elements of 'nested' share the same
+    bottom-level radicand. (This is stated in the paper, on page 177, in
     the paragraph immediately preceding the algorithm.)
-    
-    When evaluating all of the arguments in parallel, the bottom-level 
-    radicand only needs to be denested once. This means that calling 
-    denester with x arguments results in a recursive invocation with x+1 
+
+    When evaluating all of the arguments in parallel, the bottom-level
+    radicand only needs to be denested once. This means that calling
+    denester with x arguments results in a recursive invocation with x+1
     arguments; hence denester has polynomial complexity.
-     
-    However, if the arguments were evaluated separately, each call would 
-    result in two recursive invocations, and the algorithm would have 
+
+    However, if the arguments were evaluated separately, each call would
+    result in two recursive invocations, and the algorithm would have
     exponential complexity.
-    
+
     This is discussed in the paper in the middle paragraph of page 179.
     """
     if all((n**2).is_Number for n in nested): #If none of the arguments are nested
@@ -59,7 +59,7 @@ def denester (nested):
                 return (sqrt((v[a]+d).expand()/2)+sign(v[b])*sqrt((v[b]**2*R/(2*(v[a]+d))).expand())).expand(), f
             else: #Solution requires a fourth root
                 FR, s = (R.expand()**Rational(1,4)), sqrt((v[b]*R).expand()+d)
-                return (s/(sqrt(2)*FR) + v[a]*FR/(sqrt(2)*s)).expand(), f                
+                return (s/(sqrt(2)*FR) + v[a]*FR/(sqrt(2)*s)).expand(), f
 
 def subsets(n):
     """

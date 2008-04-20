@@ -998,7 +998,7 @@ def combsimp(expr):
 
 def simplify(expr):
     """
-    Simplifies the expression 'expr'. 
+    Simplifies the expression 'expr'.
 
     Simplification is not a well defined term and the exact strategies this
     function tries can change in the future versions of SymPy. If your

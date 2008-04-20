@@ -23,7 +23,7 @@ class Interval(Basic):
             r = '(%s)' % (r)
         return r
 
-    
+
 # /cyclic/
 import sympify as _
 _.Interval  = Interval

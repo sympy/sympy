@@ -18,7 +18,7 @@ class Cartesian2D(PlotCurve):
     intervals = [[-5,5,100]]
     aliases = ['cartesian']
     is_default = True
-    
+
     def _get_sympy_evaluator(self):
         fy = self.d_vars[0]
         x  = self.t_interval.v
@@ -37,7 +37,7 @@ class Cartesian3D(PlotSurface):
     intervals = [[-1,1,40], [-1,1,40]]
     aliases = ['cartesian', 'monge']
     is_default = True
-    
+
     def _get_sympy_evaluator(self):
         fz = self.d_vars[0]
         x  = self.u_interval.v

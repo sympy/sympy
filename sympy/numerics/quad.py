@@ -347,7 +347,7 @@ def nintegrate(f, a, b, method=0, maxsteps=5000, verbose=False):
         3.14159265358979323846264338328
 
     The integration interval can be infinite or semi-infinite:
-    
+
         >>> Float.setdps(15)
         >>> print nintegrate(lambda x: exp(-x)*sin(x), 0, oo)
         0.5

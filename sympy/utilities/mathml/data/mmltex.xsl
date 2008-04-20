@@ -2,13 +2,13 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:m="http://www.w3.org/1998/Math/MathML"
                 version='1.0'>
-                
-<!-- 
+
+<!--
 Copyright (C) 2001, 2002 Vasil Yaroshevich
 
 Modified Fabian Seoane 2007 for sympy
 -->
-                
+
 <xsl:output method="text" indent="no" encoding="UTF-8"/>
 
 <!-- ====================================================================== -->
@@ -41,7 +41,7 @@ Modified Fabian Seoane 2007 for sympy
 	<xsl:text>&#x00024;</xsl:text>
 </xsl:template>
 
-              
+
 <!-- ====================================================================== -->
 <!-- $id: tokens.xsl, 2002/22/11 Exp $
      This file is part of the XSLT MathML Library distribution.
@@ -119,7 +119,7 @@ Modified Fabian Seoane 2007 for sympy
 		<xsl:when test="@closure='open' or @closure='open-closed'">
 			<xsl:text>\left(</xsl:text>		
 		</xsl:when>
-		<xsl:otherwise><xsl:text>\left[</xsl:text></xsl:otherwise> 
+		<xsl:otherwise><xsl:text>\left[</xsl:text></xsl:otherwise>
 	</xsl:choose>
 	<xsl:apply-templates select="*[1]"/>
 	<xsl:text> , </xsl:text>
@@ -128,7 +128,7 @@ Modified Fabian Seoane 2007 for sympy
 		<xsl:when test="@closure='open' or @closure='closed-open'">
 			<xsl:text>\right)</xsl:text>		
 		</xsl:when>
-		<xsl:otherwise><xsl:text>\right]</xsl:text></xsl:otherwise> 
+		<xsl:otherwise><xsl:text>\right]</xsl:text></xsl:otherwise>
 	</xsl:choose>
 </xsl:template>
 
@@ -284,7 +284,7 @@ Modified Fabian Seoane 2007 for sympy
       (number(.) &lt; 0)]]]">-</xsl:when>
       <xsl:otherwise>+</xsl:otherwise>
     </xsl:choose>
-   </xsl:if>   
+   </xsl:if>
     <xsl:choose>
       <xsl:when test="self::m:apply[*[1][self::m:times] and
       *[2][self::m:cn[not(m:sep) and (number(.) &lt;0)]]]">
@@ -347,7 +347,7 @@ Modified Fabian Seoane 2007 for sympy
 				<xsl:when test="self::m:cn">\times <!-- times --></xsl:when>
 				<xsl:otherwise><!--invisible times--></xsl:otherwise>
 			</xsl:choose>
-		</xsl:if> 
+		</xsl:if>
 		<xsl:if test="position()&gt;= $first">
 			<xsl:apply-templates select=".">
 				<xsl:with-param name="p" select="3"/>
@@ -1105,7 +1105,7 @@ priority="2">
   <xsl:for-each select="*[position()&gt;1]">
 		<xsl:if test="position() &gt; 1">
 			<xsl:copy-of select="$mo"/>
-		</xsl:if>   
+		</xsl:if>
 		<xsl:apply-templates select=".">
 			<xsl:with-param name="p" select="$this-p"/>
 		</xsl:apply-templates>
@@ -1128,7 +1128,7 @@ priority="2">
 	<xsl:if test="$this-p &lt; $p"><xsl:text>)</xsl:text></xsl:if>
 </xsl:template>
 
-                
+
 <!-- ====================================================================== -->
 <!-- $id: entities.xsl, 2002/22/11 Exp $
      This file is part of the XSLT MathML Library distribution.
@@ -1439,7 +1439,7 @@ priority="2">
 	</xsl:choose>
 </xsl:template>
 
-                
+
 <!-- ====================================================================== -->
 <!-- $id: tables.xsl, 2002/17/05 Exp $
      This file is part of the XSLT MathML Library distribution.
@@ -1564,7 +1564,7 @@ priority="2">
     </xsl:choose>
 </xsl:template>
 
-                
+
 <!-- ====================================================================== -->
 <!-- $Id: scripts.xsl,v 1.1.1.1 2002/10/26 14:20:06 shade33 Exp $
      This file is part of the XSLT MathML Library distribution.
@@ -1922,7 +1922,7 @@ priority="2">
 		<xsl:otherwise>
 		<!-- number of argumnets is not 2 - code 25 -->
 			<xsl:message>exception 25:</xsl:message>
-			<xsl:text>\text{exception 25:}</xsl:text> 
+			<xsl:text>\text{exception 25:}</xsl:text>
 		</xsl:otherwise>
 	</xsl:choose>
 </xsl:template>
@@ -2066,7 +2066,7 @@ priority="2">
 	<xsl:apply-templates/>
 </xsl:template>
 
-                
+
 <!-- ====================================================================== -->
 <!-- $id: tokens.xsl, 2002/22/11 Exp $
      This file is part of the XSLT MathML Library distribution.

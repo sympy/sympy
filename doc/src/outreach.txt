@@ -1,7 +1,7 @@
 SymPy Presentations
 -------------------
 
-Presentations about SymPy given at conferences are at 
+Presentations about SymPy given at conferences are at
 `SymPyPresentations <http://code.google.com/p/sympy/wiki/SymPyPresentations>`_
 
 Planet SymPy
@@ -17,7 +17,7 @@ SymPy has a collection of official logos, that can be accessed here:
 http://sympy.googlecode.com/svn/materials/logo/
 
 The license of all the logos is the same as SymPy: BSD. See the LICENSE file in
-the trunk for more information. 
+the trunk for more information.
 
 Google Summer of Code
 ---------------------
@@ -36,7 +36,7 @@ Here we list blog/news/magazines mentioning SymPy that we know of.
 * Penguin.cz: `Zajímavé programy 50`_ (Czech), July 2007
 * Penguin.cz: `Zajímavé programy 55`_ (Czech), October 2007
 * `Python Magazine`_, Volume 1, Issue 11, November 2007
-* SymPy and Sage is mentioned in: `CAS and Python`_, December 2007 
+* SymPy and Sage is mentioned in: `CAS and Python`_, December 2007
 
 .. _Zajímavé programy 50: http://www.penguin.cz/novinky-view.php?id=1142
 .. _Zajímavé programy 55: http://www.penguin.cz/novinky-view.php?id=1149

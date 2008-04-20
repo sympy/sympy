@@ -407,7 +407,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
     """
 
     precedence = Basic.Apply_precedence
-    
+
     @staticmethod
     def _symbolgen(*symbols):
         last_s = sympify(symbols[len(symbols)-1])
@@ -417,7 +417,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
             if s != last_s:
                 next_s = sympify(symbols[i+1])
         #    next_s = sympify(symbols[i+1]) if s != last_s else None
-        
+
             if isinstance(s,Integer):
                 continue
             elif isinstance(s, Symbol):
@@ -428,7 +428,7 @@ class Derivative(Basic, ArithMeths, RelMeths):
                     yield s
             else:
                  raise TypeError("Derivative argument must be Symbol|Integer instance (got %s)" % (s.__class__.__name__))
-            
+
     def __new__(cls, expr, *symbols, **assumptions):
         expr = sympify(expr)
         if not symbols: return expr
@@ -541,7 +541,7 @@ class Lambda(Function):
         >>> plus1 = sum2numbers(1)
         >>> plus1(3)
         4
-        
+
     """
 
     # a minimum of 2 arguments (parameter, expression) are needed
@@ -552,13 +552,13 @@ class Lambda(Function):
         obj = Function.__new__(cls,*args)
         obj.nargs = len(args)
         return obj
-        
+
     @classmethod
     def canonize(cls,*args):
         obj = Basic.__new__(cls, *args)
         #use dummy variables internally, just to be sure
         nargs = len(args)
-        
+
         expression = args[nargs-1]
         funargs = [Symbol(str(arg),dummy=True) for arg in args[:nargs-1]]
         #probably could use something like foldl here
@@ -566,7 +566,7 @@ class Lambda(Function):
             expression = expression.subs(arg,funarg)
         funargs.append(expression)
         obj._args = tuple(funargs)
-        
+
         return obj
 
     def apply(self, *args):
@@ -588,7 +588,7 @@ class Lambda(Function):
             4
 
         """
-        
+
         nparams = self.nargs - 1
         assert nparams >= len(args),"Cannot call function with more parameters than function variables: %s (%d variables) called with %d arguments" % (str(self),nparams,len(args))
 
@@ -597,7 +597,7 @@ class Lambda(Function):
         expression = self.args[self.nargs-1]
         for arg,funarg in zip(args,self.args[:nparams]):
             expression = expression.subs(funarg,arg)
-        
+
         #curry the rest
         if nparams != len(args):
             unused_args = list(self.args[len(args):nparams])
@@ -612,7 +612,7 @@ class Lambda(Function):
         if isinstance(other, Lambda):
             if not len(self.args) == len(other.args):
                 return False
-            
+
             selfexpr = self.args[self.nargs-1]
             otherexpr = other.args[other.nargs-1]
             for selfarg,otherarg in zip(self.args[:self.nargs-1],other.args[:other.nargs-1]):
@@ -623,7 +623,7 @@ class Lambda(Function):
            #     return True
         return False
 
-        
+
 
 def diff(f, x, times = 1, evaluate=True):
     """Differentiate f with respect to x
@@ -633,7 +633,7 @@ def diff(f, x, times = 1, evaluate=True):
 
     see http://documents.wolfram.com/v5/Built-inFunctions/AlgebraicComputation/Calculus/D.html
     """
-   
+
     return Derivative(f,x,times, **{'evaluate':evaluate})
 
 def expand(e, **hints):

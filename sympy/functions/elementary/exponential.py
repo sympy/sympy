@@ -189,7 +189,7 @@ class exp(Function):
         #if self[0] == (1 + w)*log(1/w*C.sin(2*w)):
         #    return exp((1 + w)*(-log(w) + log(C.sin(2*w))))
         #print "XX2...."
-        #Example: 
+        #Example:
         #  self       = exp(log(1 + x)/x)
         #  order      = O(x**2)
 
@@ -372,12 +372,12 @@ class log(Function):
             arg0 = arg.limit(x, 0)
             use_lt = (arg0 is S.Zero)
         if use_lt: # singularity, #example: self = log(sin(x))
-            # arg = (arg / lt) * lt    
+            # arg = (arg / lt) * lt
             lt = arg.as_leading_term(x) # arg = sin(x); lt = x
-            a = (arg/lt).expand() # a = sin(x)/x 
+            a = (arg/lt).expand() # a = sin(x)/x
             #the idea is to recursively call ln(a).series(), but the problem
             #is, that ln(sin(x)/x) gets "simplified" to -log(x)+ln(sin(x)) and
-            #an infinite recursion occurs, see also the issue 252. 
+            #an infinite recursion occurs, see also the issue 252.
             return ln(lt) + ln(a).oseries(order)
         # arg -> arg0 + (arg - arg0) -> arg0 * (1 + (arg/arg0 - 1))
         z = (arg/arg0 - 1)

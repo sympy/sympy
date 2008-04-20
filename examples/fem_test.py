@@ -4,7 +4,7 @@ import iam_sympy_example
 """
 Go to the sympy root directory and execute:
 
-$ python examples/fem_test.py 
+$ python examples/fem_test.py
 [  1/60,     0, -1/360,     0, -1/90, -1/360]
 [     0,  4/45,      0,  2/45,  2/45,  -1/90]
 [-1/360,     0,   1/60, -1/90,     0, -1/360]

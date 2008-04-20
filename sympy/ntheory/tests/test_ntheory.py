@@ -144,11 +144,3 @@ def test_hex_pi_nth_digits():
     assert pi_hex_digits(10000) == '68ac8fcfb8016c'
 
 
-
-      
-    
-
-
-
-
-    

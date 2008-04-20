@@ -306,7 +306,7 @@ def dsolve(eq, funcs):
         - you can declare the derivative of an unknown function this way:
         >>> from sympy import *
         >>> x = Symbol('x') # x is the independent variable
-        
+
         >>> f = Function("f")(x) # f is a function of x
         >>> f_ = Derivative(f, x) # f_ will be the derivative of f with respect to x
 
@@ -497,7 +497,7 @@ def tsolve(eq, sym):
 
         >>> from sympy import *
         >>> x = Symbol('x')
-        
+
         >>> tsolve(3**(2*x+5)-4, x)
         (1/2)/log(3)*(-5*log(3) + log(4))
 

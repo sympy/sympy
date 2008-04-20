@@ -11,10 +11,10 @@ def test_pow():
 
 def test_poly_str():
     #if any of these tests fails, it can still be correct, just the terms can
-    #be in a different order. That happens for example when we change the 
+    #be in a different order. That happens for example when we change the
     #hash algorithm. If it is correct, just add another item in the list [] of
     #correct results.
-    assert str((2*x-(7*x**2 - 2) + 3*y)) in ["2 - 7*x**2 + 2*x + 3*y", 
+    assert str((2*x-(7*x**2 - 2) + 3*y)) in ["2 - 7*x**2 + 2*x + 3*y",
             "2 + 3*y + 2*x - 7*x**2", "2 + 3*y - 7*x**2 + 2*x",
             "3*y + 2*x + 2 - 7*x**2", "2 + 2*x + 3*y - 7*x**2"]
     assert str(x-y) in ["x - y", "-y + x"]
@@ -52,7 +52,7 @@ def test_bug4():
     e = -2*sqrt(x)-w/sqrt(x)/2
     assert str(e) not in ["(-2)*x**1/2(-1/2)*x**(-1/2)*w",
             "-2*x**1/2(-1/2)*x**(-1/2)*w","-2*x**1/2-1/2*x**-1/2*w"]
-    assert str(e) in ["-2*x**(1/2) - 1/2*x**(-1/2)*w", "-2*x**(1/2) - 1/2*w*x**(-1/2)", 
+    assert str(e) in ["-2*x**(1/2) - 1/2*x**(-1/2)*w", "-2*x**(1/2) - 1/2*w*x**(-1/2)",
                       "-1/2*x**(-1/2)*w - 2*x**(1/2)", "-1/2*w*x**(-1/2) - 2*x**(1/2)"]
 
 def test_Derivative():

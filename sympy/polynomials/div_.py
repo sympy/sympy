@@ -69,7 +69,7 @@ def div(f, g, var=None, order=None, coeff=None):
         Springer, 2. edition, p. 62
 
     """
-    
+
     if not isinstance(g, list):
         g = [g]
     # Only f is checked, the rest is assumed to match.
@@ -83,7 +83,7 @@ def div(f, g, var=None, order=None, coeff=None):
                             *[g_i.atoms(type=Symbol) for g_i in g])
         f = Polynomial(f, var=var, order=order)
         g = map(lambda x: Polynomial(x, var=var, order=order), g)
-    
+
     # Begin computation.
     r = Polynomial(S.Zero, var=f.var, order=f.order)
     q = []
@@ -147,7 +147,7 @@ def gcd(f, g, var=None, order=None, coeff=None):
         x*y
         >>> print gcd(4*x**2*y, 6*x*y**2, coeff='int')
         2*x*y
-        
+
     References:
     ===========
         Cox, Little, O'Shea: Ideals, Varieties and Algorithms,
@@ -233,7 +233,7 @@ def lcm(f, g, var=None, order=None, coeff=None):
         Springer, 2. edition, p. 187
 
     See also L{div}, L{gcd}.
-        
+
     """
 
     # Check if f is a Polynomial already, g is assumed to match.

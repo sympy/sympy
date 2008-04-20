@@ -70,7 +70,7 @@ def ModularIntegerFactory(m):
 
     class newClass(ModularInteger):
         modulus = m
-        
+
     newClass.__name__ = "IntMod%s" % m
     return newClass
 
@@ -166,4 +166,4 @@ def crt2(m, v, mm, e, s, symmetric=False):
             return result - mm
     else:
         return result
-    
+

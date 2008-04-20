@@ -280,7 +280,7 @@ class PlotModeBase(PlotMode):
 
     def _get_calculating_verts_pos(self):
         return self._calculating_verts_pos
-    
+
     def _get_calculating_verts_len(self):
         return self._calculating_verts_len
 
@@ -289,7 +289,7 @@ class PlotModeBase(PlotMode):
 
     def _get_calculating_cverts_pos(self):
         return self._calculating_cverts_pos
-    
+
     def _get_calculating_cverts_len(self):
         return self._calculating_cverts_len
 

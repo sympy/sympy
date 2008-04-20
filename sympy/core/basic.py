@@ -626,9 +626,9 @@ class Basic(AssumeMeths):
 
     def subs(self, *args):
         """
-        Substitutes an expression. 
-        
-        Calls either _subs_old_new, _subs_dict or _subs_list depending 
+        Substitutes an expression.
+
+        Calls either _subs_old_new, _subs_dict or _subs_list depending
         if you give it two arguments (old, new), a dictionary or a list.
 
         Examples:
@@ -659,11 +659,11 @@ class Basic(AssumeMeths):
 
     def _subs_list(self, sequence):
         """
-        Performs an order sensitive substitution from the 
+        Performs an order sensitive substitution from the
         input sequence list.
 
         Examples:
-        
+
         >>> from sympy import *
         >>> x, y = symbols('xy')
         >>> (x+y)._subs_list( [(x, 3),     (y, x**2)] )
@@ -1643,7 +1643,7 @@ class Basic(AssumeMeths):
 class Atom(Basic):
     """
     A parent class for atomic things.
-    
+
     Examples: Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """

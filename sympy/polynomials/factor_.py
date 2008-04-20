@@ -25,7 +25,7 @@ def sqf(f, var=None, order=None, coeff=None):
         A list is returned, with an instance of Polynomial at each
         index, which represents the multiplicity (except beginning
         with 1 instead of 0).
-    
+
     Examples:
     =========
         >>> x = Symbol('x')
@@ -37,7 +37,7 @@ def sqf(f, var=None, order=None, coeff=None):
         >>> for i, f in enumerate(b): print (i + 1), f
         1 3 + x**2
         2 -1 + 2*x
-        
+
     References:
     ===========
         Gathen, Gerhard: Modern Computer Algebra,
@@ -53,7 +53,7 @@ def sqf(f, var=None, order=None, coeff=None):
     # Check for constant polynomials:
     if f.var == [] or f.coeffs[0][1] is S.Zero:
         return [f]
-    
+
     f = [f]
     while f[-1].coeffs[0][1] is not S.Zero:
         f.append(div_.gcd(f[-1], f[-1].diff(f[-1].var[0])))
@@ -64,7 +64,7 @@ def sqf(f, var=None, order=None, coeff=None):
     for i in range(0, len(g)-1):
         a.append(div_.div(g[i], g[i+1])[0])
     a.append(g[-1])
-    
+
     if coeff == 'int': # Redistribute the constants.
         ca = int(a[0].content())
         c = ca
@@ -92,7 +92,7 @@ def sqf_part(f, var=None, order=None):
         order with the arguments 'var' and 'order'.
 
         The result is returned as an instance of Polynomial.
-    
+
     Examples:
     =========
         >>> x = Symbol('x')
@@ -128,7 +128,7 @@ def factor(f, var=None, order=None):
 
         The result is a list containing all the irreducible factors as
         instances of Polynomial, the first element being a constant
-        factor. 
+        factor.
 
     Notes:
     ======
@@ -170,11 +170,11 @@ def factor(f, var=None, order=None):
         ACM SIGSAM Bulletin 1982
 
     Also see L{sqf}, L{kronecker}, L{kronecker_mv}, L{roots_.rat_roots}.
-    
+
     """
 
     from sympy.polynomials import roots_
-    
+
     if not isinstance(f, Polynomial):
         f = Polynomial(f, var=var, order=order)
 
@@ -199,7 +199,7 @@ def factor(f, var=None, order=None):
 
 def kronecker(f):
     """One step in univariate factorization, see L{factor}."""
-    
+
     def lagrange_base(pos):
         """Compute the base polynomials used for Lagrange interpolation.
 
@@ -259,7 +259,7 @@ def kronecker(f):
             cand += Polynomial(coeffs=tuple([(c*term[0],) + term[1:]
                                              for term in b.coeffs]),
                                var=b.var, order=b.order)
-            
+
         # Filter out constant and non-integer polynomials!
         if not (len(cand.coeffs) == 1
                 and cand.coeffs[0][1] is S.Zero):

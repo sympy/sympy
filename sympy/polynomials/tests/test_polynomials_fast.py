@@ -5,13 +5,13 @@ import sympy
 
 def test_ModularInteger():
     from sympy.polynomials.fast import modint
-    
+
     p = 5
     IntMod5 = modint.ModularIntegerFactory(p)
 
     assert IntMod5(0) == IntMod5(15)
     assert IntMod5(-2) == IntMod5(3)
-    
+
     assert str(IntMod5(2)) == '2 mod 5'
 
     assert int(IntMod5(2)) == 2
@@ -29,7 +29,7 @@ def test_ModularInteger():
     assert modint.crt([2, 3, 5], [0, 0, 0]) == 0
     assert modint.crt([2, 3, 5], [1, 1, 1]) == 1
     assert modint.crt([2, 3, 5], [-1, -1, -1], True) == -1
-    assert modint.crt([2, 3, 5], [-1, -1, -1], False) == 2*3*5 - 1    
+    assert modint.crt([2, 3, 5], [-1, -1, -1], False) == 2*3*5 - 1
 
 # polynomials/fast/gfpoly.py
 
@@ -39,7 +39,7 @@ def test_GFPoly():
     p = 5
     IntMod5Poly = gfpoly.GFPolyFactory(p)
     IntMod5 = IntMod5Poly.coeff_type
-    
+
     f = IntMod5Poly.from_int_dict({2:1, 0:1})
     g = IntMod5Poly.from_int_dict({3:2, 1:1, 0:2})
 
@@ -73,7 +73,7 @@ def test_GFPoly():
     assert s == IntMod5Poly.from_int_dict({1:2})
     assert t == IntMod5Poly.from_int_dict({0:4})
     assert h == (s*f + t*g)
-    
+
     assert gfpoly.truncate(f, 5) == f
     assert gfpoly.truncate(f, 1) == IntMod5Poly.from_int_dict({0:1})
 
@@ -143,7 +143,7 @@ def test_IntPoly():
     assert f.evaluate(0) == 0
     assert f.evaluate(100) == 0
     assert f.evaluate(-2) == 0
-    
+
     f = intpoly.IntPoly({2:12, 1:8, 0:-20})
     lc, pp = f.primitive()
     assert lc == 4
@@ -188,4 +188,4 @@ def test_IntPoly():
     factors = [ff.coeffs for ff in intpoly.zassenhaus(f)]
     assert {2:2, 1:1, 0:4} in factors
     assert {2:3, 1:1, 0:1} in factors
-    
+

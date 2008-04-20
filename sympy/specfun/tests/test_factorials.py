@@ -40,7 +40,7 @@ def test_factorial_evalf():
     #assert relcmp(im, -125.96060801751909) < Real(1e-10)
 
 def test_multifactorials():
-    # OEIS: A006882 
+    # OEIS: A006882
     assert [factorial(n, 2) for n in range(10)] == [1, 1, 2, 3, 8, 15, 48, 105, 384, 945]
 
     assert (factorial(-2, 2) == oo) == True

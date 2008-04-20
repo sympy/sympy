@@ -24,9 +24,9 @@ TerminalSession.namemap[XPass] = '*** XPASS ***'
 
 
 def footer(self, colitems):
-    super(TerminalSession, self).footer(colitems) 
+    super(TerminalSession, self).footer(colitems)
     self.endtime = now()
-    self.out.line() 
+    self.out.line()
     self.skippedreasons()
     self.failures()
     self.xpasses()
@@ -37,24 +37,24 @@ def xpasses(self):
     """report unexpectedly passed tests"""
     texts = {}
     for colitem, outcome in self.getitemoutcomepairs(XPass):
-        raisingtb = self.getlastvisible(outcome.excinfo.traceback) 
+        raisingtb = self.getlastvisible(outcome.excinfo.traceback)
         fn = raisingtb.frame.code.path
         lineno = raisingtb.lineno
         #d = texts.setdefault(outcome.excinfo.exconly(), {})
         d = texts.setdefault(outcome.msg, {})
-        d[(fn,lineno)] = outcome 
+        d[(fn,lineno)] = outcome
 
     if texts:
         self.out.line()
         self.out.sep('_', '*** XPASS ***')
         for text, dict in texts.items():
-            #for (fn, lineno), outcome in dict.items(): 
+            #for (fn, lineno), outcome in dict.items():
             #    self.out.line('Skipped in %s:%d' %(fn, lineno+1))
-            #self.out.line("reason: %s" % text) 
-            self.out.line("%s" % text) 
+            #self.out.line("reason: %s" % text)
+            self.out.line("%s" % text)
             self.out.line()
 
-def summaryline(self): 
+def summaryline(self):
     outlist = []
     sum = 0
     for typ in Passed, XPass, XFail, Failed, Skipped:

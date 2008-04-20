@@ -60,8 +60,8 @@ class nu(Function):
 class lam(Function):
     pass
 
-gdd=Matrix(( 
-    (-exp(nu(r)),0,0,0), 
+gdd=Matrix((
+    (-exp(nu(r)),0,0,0),
     (0, exp(lam(r)), 0, 0),
     (0, 0, r**2, 0),
     (0, 0, 0, r**2*sin(theta)**2)

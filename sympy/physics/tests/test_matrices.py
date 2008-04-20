@@ -1,6 +1,6 @@
 from sympy.physics.matrices import msigma, mgamma, minkowski_tensor
 from sympy import zero, one, I
-                                    
+
 
 
 def test_Pauli():

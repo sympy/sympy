@@ -88,7 +88,7 @@ class PlotInterval(object):
 
     @require_all_args
     def get_v_len(self):
-        return self.v_steps+1    
+        return self.v_steps+1
 
     v = property(get_v, set_v)
     v_min = property(get_v_min, set_v_min)

@@ -97,11 +97,11 @@ def test_python_derivatives():
 
     # Multiple symbols
     f_3 = Derivative(log(x) + x**2, x, y, evaluate=False)
-    #assert python(f_3) == 
+    #assert python(f_3) ==
 
     f_4 = Derivative(2*x*y, y, x, evaluate=False) + x**2
     assert python(f_4) in [
-            "x = Symbol('x')\ny = Symbol('y')\ne = x**2 + D(2*x*y, y, x)", 
+            "x = Symbol('x')\ny = Symbol('y')\ne = x**2 + D(2*x*y, y, x)",
             "x = Symbol('x')\ny = Symbol('y')\ne = D(2*x*y, y, x) + x**2"]
 
 def test_python_integrals():

@@ -6,11 +6,11 @@ A Python library for symbolic mathematics.
 http://code.google.com/p/sympy/
 
 All people who contributed to SymPy by sending at least a patch or more (in
-the order of the date of their first contribution): 
+the order of the date of their first contribution):
     Ondrej Certik <ondrej@certik.cz>
     Fabian Seoane <fabian@fseoane.net>
     Jurjen N.E. Bos <jnebos@gmail.com>
-    Mateusz Paprocki <mattpap@gmail.com> 
+    Mateusz Paprocki <mattpap@gmail.com>
     Marc-Etienne M.Leveille <protonyc@gmail.com>
     Brian Jorgensen <brian.jorgensen@gmail.com>
     Jason Gedge <inferno1386@gmail.com>

@@ -67,7 +67,7 @@ class ArithMeths(object):
 class NoArithMeths(object):
 
     __slots__ = []
-    
+
     def __pos__(self):
         raise TypeError, _no_unary_operation('+', self)
     def __neg__(self):
@@ -98,7 +98,7 @@ class NoArithMeths(object):
 class RelMeths(object):
 
     __slots__ = []
-    
+
     # TODO all comparison methods should return True/False directly
     # see #153
 

@@ -184,16 +184,16 @@ def test_Lambda():
     assert e(4) == 16
     assert e(x) == x**2
     assert e(y) == y**2
-    
+
     assert Lambda(x, x**2) == Lambda(x, x**2)
     assert Lambda(x, x**2) == Lambda(y, y**2)
     assert Lambda(x, x**2) != Lambda(y, y**2+1)
     assert Lambda(x,y,x**y) == Lambda(y,x,y**x)
     assert Lambda(x,y,x**y) != Lambda(x,y,y**x)
-    
-    assert Lambda(x,y,x**y)(x,y) == x**y 
+
+    assert Lambda(x,y,x**y)(x,y) == x**y
     assert Lambda(x,y,x**y)(x) == Lambda(y,x**y)
-    assert Lambda(x,y,x**y)(x)(y) == x**y 
+    assert Lambda(x,y,x**y)(x)(y) == x**y
     assert Lambda(x,y,x**y)(x)(3) == x**3
     assert Lambda(x,y,x**y)(3)(y) == 3**y
     assert Lambda(x,y,x**y)(3)(3) == 3**3

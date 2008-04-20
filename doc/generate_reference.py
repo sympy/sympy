@@ -14,7 +14,7 @@ def isclass(x):
 
 def ismethod(x):
     from inspect import ismethod as _ismethod
-    if _ismethod(x) or isinstance(x, (types.MethodType, types.FunctionType, 
+    if _ismethod(x) or isinstance(x, (types.MethodType, types.FunctionType,
                     types.UnboundMethodType)) or str(type(x)) in [
                     "<type 'classmethod'>", "<type 'staticmethod'>"]:
         return True

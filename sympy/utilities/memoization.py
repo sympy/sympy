@@ -2,7 +2,7 @@
 def recurrence_memo(initial):
     """
     Memo decorator for sequences defined by recurrence
-    
+
     See usage examples e.g. in the specfun/combinatorial module
     """
     cache = initial

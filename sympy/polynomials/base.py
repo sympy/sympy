@@ -671,7 +671,7 @@ class Polynomial(Basic):
             # - coeff_ring != 'sym'
             # - coefficients do not contain `variable`
             return Polynomial(variable, order=self.order) * self
-        nvar = self.var.index(variable) 
+        nvar = self.var.index(variable)
         cint = []
         for term in self.coeffs:
             t = list(term)
@@ -1036,7 +1036,7 @@ def Polynomial2IntPoly(f):
 
     Nothing is checked.
     """
-    
+
     result_dict = {}
     for t in f.coeffs:
         if t[0] is not S.Zero:
@@ -1050,7 +1050,7 @@ def IntPoly2Polynomial(f, var, order):
 
     Nothing is checked.
     """
-    
+
     coeffs = []
     exponents = f.coeffs.keys()
     exponents.sort(reverse=True)
@@ -1058,4 +1058,4 @@ def IntPoly2Polynomial(f, var, order):
         coeffs.append((sympify(f[exp]), sympify(exp)))
     return Polynomial(coeffs=tuple(coeffs), var=var, order=order)
 
-                      
+

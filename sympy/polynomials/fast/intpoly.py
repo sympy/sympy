@@ -68,7 +68,7 @@ def gcd_small_primes(f, g):
                     S.append(p)
 
             # Call the modular gcd.
-            v, ff, gg = {}, {}, {} 
+            v, ff, gg = {}, {}, {}
             for p in S:
                 poly_type = gfpoly.GFPolyFactory(p)
                 ff[p] = poly_type.from_int_dict(f.coeffs)
@@ -87,11 +87,11 @@ def gcd_small_primes(f, g):
 
             if len(S) < l/2: # Forget all primes.
                 continue
-                    
+
             # Replace the unlucky primes.
             while len(S) < l:
                 p = ntheory.generate.randprime(2, prime_border)
-                if (p in unlucky) or (p in S) or (b % p == 0): 
+                if (p in unlucky) or (p in S) or (b % p == 0):
                     continue
                 poly_type = gfpoly.GFPolyFactory(p)
                 ff[p] = poly_type.from_int_dict(f.coeffs)
@@ -105,7 +105,7 @@ def gcd_small_primes(f, g):
                     del ff[p]
                     del gg[p]
             break # The primes are good.
-        
+
         fff, ggg = {}, {}
         for p in S:
             fff[p], r = gfpoly.div(ff[p], v[p])
@@ -169,7 +169,7 @@ def gcd_heuristic(f, g):
             if not r:
                 return h
         u *= 2
-    
+
 gcd = gcd_small_primes
 
 def hensel_step(m, f, g, h, s, t):
@@ -186,9 +186,9 @@ def hensel_step(m, f, g, h, s, t):
     Outputs integer polynomials gg, hh, ss and tt, such that:
         f == gg*hh mod m**2
         ss*gg + tt**hh == 1 mod m**2
-    
+
     """
-    
+
     mm = m**2
 
     e = (f - g*h).mod_int(mm, symmetric=True)
@@ -202,7 +202,7 @@ def hensel_step(m, f, g, h, s, t):
     c, d = c.mod_int(mm, symmetric=True), d.mod_int(mm, symmetric=True)
     ss = (s - d).mod_int(mm, symmetric=True)
     tt = (t - t*b - c*gg).mod_int(mm, symmetric=True)
-    
+
     return gg, hh, ss, tt
 
 def multi_hensel_lift(p, f, f_list, l):
@@ -228,7 +228,7 @@ def multi_hensel_lift(p, f, f_list, l):
     k = int(r/2)
     d = int(math.ceil(math.log(l, 2)))
 
-    # Divide and conquer the factors. 
+    # Divide and conquer the factors.
     IntModpPoly = gfpoly.GFPolyFactory(p)
     g = IntModpPoly.from_int_dict({0:lc})
     for f_i in f_list[0:k]:
@@ -340,9 +340,9 @@ def factor(f):
     """Factorization of univariate integer polynomials.
 
     Outputs a list of factors with their multiplicities, the first
-    being constant. 
+    being constant.
     """
-    
+
     content, pp = f.primitive()
     sqf_part = squarefree_part(pp)
     factors = zassenhaus(sqf_part)
@@ -359,5 +359,5 @@ def factor(f):
                 mult += 1
                 f = q
         result.append((ff, mult))
-    
+
     return result

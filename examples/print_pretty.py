@@ -3,8 +3,8 @@ import iam_sympy_example
 
 from sympy import *
 
-x=Symbol("x") 
-y=Symbol("y") 
+x=Symbol("x")
+y=Symbol("y")
 
 
 pprint( x**x )

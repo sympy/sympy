@@ -8,7 +8,7 @@
 
 docbook2x-man isympy.xml
 
-this will generate isympy.1 in the current directory. --> 
+this will generate isympy.1 in the current directory. -->
 
   <!-- Fill in your name for FIRSTNAME and SURNAME.              -->
   <!ENTITY dhfirstname "Fabian">
@@ -26,7 +26,7 @@ this will generate isympy.1 in the current directory. -->
   <!-- http://www.tldp.org/HOWTO/Man-Page/q2.html). But limit    -->
   <!-- the length to 30 chars.                                   -->
   <!ENTITY dhtitle     "&dhpackage; command-line reference">
-  
+
   <!ENTITY dhucpackage "isympy">
   <!ENTITY dhpackage   "isympy">
 

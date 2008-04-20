@@ -9,9 +9,9 @@ from sympy import limits
 from sympy.core import basic
 limits.debug=True
 
-x=Symbol("x") 
-y=Symbol("y") 
-w=Symbol("w") 
+x=Symbol("x")
+y=Symbol("y")
+w=Symbol("w")
 
 #import pdb
 #pdb.run('print limit(sin(x)/x,x,oo)')

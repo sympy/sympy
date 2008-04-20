@@ -835,12 +835,12 @@ class acot(Function):
 class atan2(Function):
     """
     Returns the atan(y/x) taking two arguments y and x. Signs of
-    both y and x are considered to determine the appropriate 
+    both y and x are considered to determine the appropriate
     quadrant of atan(y/x). The range is (-pi, pi].
     """
-    
+
     nargs = 2
-    
+
     @classmethod
     def canonize(cls, y, x):
         sign_y = C.sign(y)
@@ -857,7 +857,7 @@ class atan2(Function):
                 return sign_y * S.Pi/2
         else:
             abs_yx = C.abs(y/x)
-            if sign_y.is_Number and abs_yx.is_number: 
+            if sign_y.is_Number and abs_yx.is_number:
                 phi = C.atan(abs_yx)
                 if x.is_positive:
                     return sign_y * phi

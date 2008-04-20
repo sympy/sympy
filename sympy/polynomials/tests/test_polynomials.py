@@ -148,12 +148,12 @@ def test_factor():
     assert factor(-2) == -2
     assert factor(-x) == -x
     assert factor(-2*x**2+x) in [x*(1 - 2*x), -x*(2*x-1)]
-    
+
 def test_gcd():
     x = Symbol("x")
     y = Symbol("y")
     z = Symbol("z")
-    
+
     assert gcd(x**2, x, x) == x
     assert gcd(3*x**2, x, x) == x
     assert gcd(3*x**2, 6*x, x, coeff='rat') == x
@@ -177,7 +177,7 @@ def test_groebner():
     assert groebner(y*x, x) == [x]
     assert groebner(y*x, x, reduced=False) == [x*y]
     assert groebner(x*y, z) == [1]
-    
+
     # This one already is a Groebner base.
     assert groebner([y-x**2, z-x**3], [y,z,x], 'lex', reduced=False) \
            == [-x**2+y, z-x**3]
@@ -197,7 +197,7 @@ def test_lcm():
     assert lcm(4, y) == 4*y
     assert lcm(x, y) == x*y
     assert lcm(y*(x+1), x, x) ==x+x**2
-    assert lcm(2*x, x**2) == 2*x**2 
+    assert lcm(2*x, x**2) == 2*x**2
 
 def test_count_real_roots():
     x = Symbol('x')
@@ -321,7 +321,7 @@ def test_solve_system():
     assert solve_system([y - x**2, y + x**2 + 1]) == \
            [(I*Rational(1,2)**Rational(1,2), Rational(-1,2)),
             (-I*Rational(1,2)**Rational(1,2), Rational(-1,2))]
-           
+
 def test_sqf():
     x = Symbol("x")
     assert sqf(3*x**2, x) == 3*x**2
@@ -335,7 +335,7 @@ def test_sqf_part():
     assert sqf_part(x**5 - x**4 - x + 1) == x**4 - 1
 
 ## sympy/modules/polynomials/ideals.py
-    
+
 ## def test_Ideal():
 ##     x = Symbol('x')
 ##     y = Symbol('y')
@@ -436,7 +436,7 @@ def test_roots_issue604():
     assert abs(p.subs(x, r[0]).evalf()) < 1E-20
     assert abs(p.subs(x, r[1]).evalf()) < 1E-20
     assert abs(p.subs(x, r[2]).evalf()) < 1E-20
-        
+
 
 def test_coeff1():
     a, x = symbols("ax")

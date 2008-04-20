@@ -1,6 +1,6 @@
 from sympy.core import S, Add, sympify, Basic
 from sympy.core.methods import NoRelMeths, ArithMeths
-from gruntz import gruntz            
+from gruntz import gruntz
 
 def limit(e, z, z0, dir="+"):
     """

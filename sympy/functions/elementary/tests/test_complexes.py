@@ -38,7 +38,7 @@ def test_re():
     assert re(x + r*I) == re(x)
 
     assert re(log(2*I)) == log(2)
-    
+
     assert re((2+I)**2).expand(complex=True) == 3
 
 def test_im():
@@ -78,7 +78,7 @@ def test_im():
     assert im(x + r*I) == im(x) + r
 
     assert im(log(2*I)) == pi/2
-    
+
     assert im((2+I)**2).expand(complex=True) == 4
 
 def test_abs():
@@ -115,7 +115,7 @@ def test_arg():
     assert arg(1+I) == pi/4
     assert arg(-1+I) == 3*pi/4
     assert arg(1-I) == -pi/4
-    
+
     p = Symbol('p', positive=True)
     assert arg(p) == 0
 

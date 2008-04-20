@@ -19,9 +19,9 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
     @classmethod
     def flatten(cls, seq):
-        """ 
+        """
         Takes the sequence "seq" of nested Adds and returns a flatten list.
-        
+
         Returns: (commutative_part, noncommutative_part, lambda_args,
             order_symbols)
 
@@ -147,7 +147,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
     @staticmethod
     def compare_terms(a, b):
         """
-        Is a>b in the sense of ordering in printing? 
+        Is a>b in the sense of ordering in printing?
 
         yes ..... return 1
         no ...... return -1
@@ -160,7 +160,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         expression and returns the "sane" ordering such as:
 
         1 < x < x**2 < x**3 < O(x**4) etc.
-        
+
         """
         from sympy.series.order import Order
         if isinstance(a, Order) and not isinstance(b, Order):
@@ -425,7 +425,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         s = 0
         for x in self.args:
             s += x._sage_()
-        return s 
+        return s
 
 
 # /cyclic/

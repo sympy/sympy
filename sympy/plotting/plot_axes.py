@@ -97,7 +97,7 @@ class PlotAxes(PlotObject):
 
     def toggle_visible(self):
         self.visible = not self.visible
-    
+
     def toggle_colors(self):
         self._colored = not self._colored
 
@@ -202,7 +202,7 @@ class PlotAxesOrdinate(PlotAxesBase):
         tick_line[0][tick_axis], tick_line[1][tick_axis] = -radius, radius
         self.draw_line(tick_line, color)
         if labels_visible: self.draw_tick_line_label(axis, color, radius, tick)
-            
+
     def draw_tick_line_label(self, axis, color, radius, tick):
         if not self._p._label_axes: return
         tick_label_vector = [0,0,0]

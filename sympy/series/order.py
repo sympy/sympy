@@ -16,7 +16,7 @@ class Order(Basic, ArithMeths, RelMeths):
     for some positive but finite M. An equivalent way of saying (1) is:
 
     lim_{x->0}  |g(x)/f(x)|  < oo
-    
+
     Let's illustrate it on the following example:
 
     sin x = x - x**3/3! + O(x**5)
@@ -30,8 +30,8 @@ class Order(Basic, ArithMeths, RelMeths):
 
     lim_{x->0} | (x**5/5! - x**7/7! + ....) / x**5| < oo
 
-    which surely is true, because 
-    
+    which surely is true, because
+
     lim_{x->0} | (x**5/5! - x**7/7! + ....) / x**5| = 1/5!
 
 
@@ -63,7 +63,7 @@ class Order(Basic, ArithMeths, RelMeths):
 
     Notes:
     ======
-    
+
       In O(f(x),x) the expression f(x) is assumed to have a leading term.
       O(f(x),x) is automatically transformed to O(f(x).as_leading_term(x),x).
       O(expr*f(x),x) is O(f(x),x)
@@ -90,7 +90,7 @@ class Order(Basic, ArithMeths, RelMeths):
         expr = sympify(expr).expand(trig=True)
         if expr is S.NaN:
             return S.NaN
-        
+
         if symbols:
             symbols = map(sympify, symbols)
         else:
@@ -121,7 +121,7 @@ class Order(Basic, ArithMeths, RelMeths):
                 expr = expr.subs(x1,s1)
                 symbol_map[z] = s
                 new_symbols.append(z)
-                
+
             if symbol_map:
                 r = Order(expr, *new_symbols, **assumptions)
                 expr = r.expr.subs(symbol_map)
@@ -140,7 +140,7 @@ class Order(Basic, ArithMeths, RelMeths):
                     coeff, terms = expr.as_coeff_terms()
                     if coeff is S.Zero:
                         return coeff
-                    expr = C.Mul(*[t for t in terms if t.has(*symbols)]) 
+                    expr = C.Mul(*[t for t in terms if t.has(*symbols)])
 
         elif expr is not S.Zero:
             expr = S.One
@@ -171,7 +171,7 @@ class Order(Basic, ArithMeths, RelMeths):
         # cache multivariate Order symbols:
         cache.append(obj)
         Order._cache[symbols] = cache
-        
+
         return obj
 
     def oseries(self, order):

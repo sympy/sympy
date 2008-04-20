@@ -42,7 +42,7 @@ class Ellipse(GeometryEntity):
     Out[7]:
     [0]: cos(t), sin(t), 'mode=parametric'
     [1]: t*cos(1.546086215036205357975518382),
-    t*sin(1.546086215036205357975518382), 'mode=parametric' 
+    t*sin(1.546086215036205357975518382), 'mode=parametric'
     """
 
     def __new__(cls, center, hradius, vradius, **kwargs):
@@ -176,7 +176,7 @@ class Ellipse(GeometryEntity):
     def equation(self, x='x', y='y'):
         """
         Returns the equation of the ellipse.
-        
+
         Optional parameters x and y can be used to specify symbols, or the
         names of the symbols used in the equation.
         """
@@ -330,7 +330,7 @@ class Circle(Ellipse):
     def equation(self, x='x', y='y'):
         """
         Returns the equation of the circle.
-        
+
         Optional parameters x and y can be used to specify symbols, or the
         names of the symbols used in the equation.
         """

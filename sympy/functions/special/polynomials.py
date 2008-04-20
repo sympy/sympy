@@ -195,7 +195,7 @@ class assoc_legendre(PolynomialSequence2):
     assoc_legendre(n,m, x) gives P_nm(x) = mth association to Legendre polynomial P_n(x)
 
     Associated Legende polynomial are orthogonal on [-1, 1] with:
-    
+
     - weight = 1            for the same m, and different n.
     - weight = 1/(1-x**2)   for the same n, and different m.
 
@@ -275,7 +275,7 @@ class hermite(PolynomialSequence):
 
     References
     ==========
-    * http://mathworld.wolfram.com/HermitePolynomial.html    
+    * http://mathworld.wolfram.com/HermitePolynomial.html
     """
     @staticmethod
     @recurrence_memo([S.One, 2*_x])

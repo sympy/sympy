@@ -3,7 +3,7 @@ from pyglet.window.mouse import LEFT, RIGHT, MIDDLE
 from util import get_direction_vectors, get_basis_vectors
 
 class PlotController(object):
-    
+
     normal_mouse_sensitivity = 4.0
     modified_mouse_sensitivity = 1.0
 
@@ -14,25 +14,25 @@ class PlotController(object):
                 key.LEFT:'left',
                 key.A:'left',
                 key.NUM_4:'left',
-                
+
                 key.RIGHT:'right',
                 key.D:'right',
                 key.NUM_6:'right',
-                
+
                 key.UP:'up',
                 key.W:'up',
                 key.NUM_8:'up',
-                
+
                 key.DOWN:'down',
                 key.S:'down',
                 key.NUM_2:'down',
-                
+
                 key.Z:'rotate_z_neg',
                 key.NUM_1:'rotate_z_neg',
-                
+
                 key.C:'rotate_z_pos',
                 key.NUM_3:'rotate_z_pos',
-                
+
                 key.Q:'spin_left',
                 key.NUM_7:'spin_left',
                 key.E:'spin_right',
@@ -40,7 +40,7 @@ class PlotController(object):
 
                 key.X:'reset_camera',
                 key.NUM_5:'reset_camera',
-                
+
                 key.NUM_ADD:'zoom_in',
                 key.PAGEUP:'zoom_in',
                 key.R:'zoom_in',
@@ -48,7 +48,7 @@ class PlotController(object):
                 key.NUM_SUBTRACT:'zoom_out',
                 key.PAGEDOWN:'zoom_out',
                 key.F:'zoom_out',
-                
+
                 key.RSHIFT:'modify_sensitivity',
                 key.LSHIFT:'modify_sensitivity',
 
@@ -56,10 +56,10 @@ class PlotController(object):
                 key.F2:'rot_preset_xz',
                 key.F3:'rot_preset_yz',
                 key.F4:'rot_preset_perspective',
-                
+
                 key.F5:'toggle_axes',
                 key.F6:'toggle_axe_colors',
-    
+
                 key.F8:'save_image'
              }
 
@@ -83,7 +83,7 @@ class PlotController(object):
                 # Reset to the default rotation
                 'reset_camera':False,
                 # Performs camera z-translation
-                'zoom_in':False, 
+                'zoom_in':False,
                 'zoom_out':False,
                 # Use alternative sensitivity (speed)
                 'modify_sensitivity':False,
@@ -98,14 +98,14 @@ class PlotController(object):
                 # screenshot
                 'save_image':False
             }
-        
+
     def update(self, dt):
         z = 0
         if self.action['zoom_out']: z -= 1
         if self.action['zoom_in']: z += 1
         if z != 0:
             self.camera.zoom_relative(z/10.0, self.get_key_sensitivity()/10.0)
-        
+
         dx, dy, dz = 0, 0, 0
         if self.action['left']: dx -= 1
         if self.action['right']: dx += 1
@@ -150,7 +150,7 @@ class PlotController(object):
         if self.action['toggle_axe_colors']:
             self.action['toggle_axe_colors'] = False
             self.camera.axes.toggle_colors()
-            
+
         if self.action['save_image']:
             self.action['save_image'] = False
             self.window.plot.saveimage()

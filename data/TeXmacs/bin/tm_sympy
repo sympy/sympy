@@ -4,7 +4,7 @@
 #
 # This plugin supports LaTeX printing of SymPy expressions
 # using sympy.printing.latex function. It handles pretty
-# printing of containers. If you wish to display raw 
+# printing of containers. If you wish to display raw
 # Python code, then use 'print' before an expression.
 #
 # TeXmacs encodes new-lines as spaces so we must use
@@ -13,7 +13,7 @@
 # in a sequence. However you can and must indent your
 # expression using standard Pyhon rules.
 #
-# You can retrive the last output using '_' built-in 
+# You can retrive the last output using '_' built-in
 # symbol. If the previous command did not generate
 # any ouput, it will be assigned with None.
 #

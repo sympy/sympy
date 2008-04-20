@@ -31,7 +31,7 @@ def test_systematic_basic():
         x = numpy_array ** sympy_object
     x = Symbol("x")
     y = Symbol("y")
-    sympy_objs = [ 
+    sympy_objs = [
             Rational(2),
             Real("1.3"),
             x,
@@ -40,7 +40,7 @@ def test_systematic_basic():
             5,
             5.5,
             ]
-    numpy_objs = [ 
+    numpy_objs = [
             array([1]),
             array([3, 8, -1]),
             array([x, x**2, Rational(5)]),
@@ -84,7 +84,7 @@ def test_arrays():
 def test_conversion1():
     x = Symbol("x")
     a = list2numpy([x**2, x])
-    #looks like an array? 
+    #looks like an array?
     assert isinstance(a, ndarray)
     assert a[0] == x**2
     assert a[1] == x

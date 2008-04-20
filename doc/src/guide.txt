@@ -74,9 +74,9 @@ into the function ``Add.flatten()``::
 
     @classmethod
     def flatten(cls, seq):
-        """ 
+        """
         Takes the sequence "seq" of nested Adds and returns a flatten list.
-        
+
         Returns: (commutative_part, noncommutative_part, lambda_args,
             order_symbols)
 
@@ -95,17 +95,17 @@ into the function ``Add.flatten()``::
 
 and then you can study how it works. I am going to stop here, this should be
 enough to get you going -- with the above technique, I am able to understand
-almost any Python code. 
+almost any Python code.
 
 .. note:: The above debugging was done on the revision `75544c92be1d <http://hg.sympy.org/sympy/rev/75544c92be1d>`_.
 
 SymPy's Architecture
 ====================
 
-We try to make the sources easily understandable, so you can look into the sources and read the doctests, it should be well documented and if you don't understand something, ask on the mailinglist. 
+We try to make the sources easily understandable, so you can look into the sources and read the doctests, it should be well documented and if you don't understand something, ask on the mailinglist.
 
 You can find all the decisions archived in the Issues, to see rationale for
-doing this and that. 
+doing this and that.
 
 Basics
 ------
@@ -119,7 +119,7 @@ class supports.
 
 For easier use, there is a syntactic sugar for expressions like:
 
-``cos(x)+1`` is equal to ``cos(x).__add__(1)`` is equal to ``Add(cos(x),Integer(1))`` 
+``cos(x)+1`` is equal to ``cos(x).__add__(1)`` is equal to ``Add(cos(x),Integer(1))``
 
 or
 
@@ -149,7 +149,7 @@ the only requirement is that all equivalent expressions must have the same
 canonical form.  We tried the conversion to a canonical (standard) form to be
 as fast as possible and also in a way so that the result is what you would
 write by hand - so for example ``b*a + -4 + b + a*b + 4 + (a+b)**2`` becomes
-``2*a*b + b + (a+b)**2``.  
+``2*a*b + b + (a+b)**2``.
 
 Whenever you construct an expression, for example ``Add(x, x)``, the
 ``Add.__new__()`` is called and it determines what to return. In this case::
@@ -163,7 +163,7 @@ Whenever you construct an expression, for example ``Add(x, x)``, the
     Out[3]: <class 'sympy.core.mul.Mul'>
 
 ``e`` is actually an instance of ``Mul(2, x)``, because ``Add.__new__()``
-retuned ``Mul``.  
+retuned ``Mul``.
 
 Comparisons
 -----------
@@ -180,7 +180,7 @@ We made the following decision in SymPy: ``a=Symbol("x")`` and another
 ``b=Symbol("x")`` (with the same string "x") is the same thing, i.e ``a==b`` is
 ``True``. We chose ``a==b``, because it is more natural - ``exp(x)==exp(x)`` is
 also ``True`` for the same intance of ``x`` but different instances of ``exp``,
-so we chose to have ``exp(x)==exp(x)`` even for different instances of ``x``. 
+so we chose to have ``exp(x)==exp(x)`` even for different instances of ``x``.
 
 Sometimes, you need to have a unique symbol, for example as a temporary one in
 some calculation, which is going to be substituted for something else at the
@@ -202,7 +202,7 @@ don't implement the ``fdiff()`` method and you construct an expression using
 such a class, then trying to use the ``Basic.series()`` method will raise an
 exception of not founding the ``fdiff()`` method in your class.  This "duck
 typing" has an advantage that you just implement the functionality which you
-need. 
+need.
 
 You can define the function ``cos`` like this::
 
@@ -289,7 +289,7 @@ both inside and outside of SymPy. Unapplied functions ``sign`` is just the class
 
     sign
 
-Both inside and outside of SymPy. 
+Both inside and outside of SymPy.
 This is the current structure of classes in SymPy::
 
     class BasicType(type):
@@ -338,23 +338,23 @@ Here it's how to define a derivative of the function::
                 return sympify(0)
 
 So guess what this ``my_function`` is going to be? Well, it's derivative is
-``cos`` and the function value at 0 is 0, but let's pretend we don't know:: 
+``cos`` and the function value at 0 is 0, but let's pretend we don't know::
 
     In [2]: my_function(x).series(x, 0, 10)
-    Out[2]: 
-         3     5     7       9             
-        x     x     x       x              
+    Out[2]:
+         3     5     7       9
+        x     x     x       x
     x - ── + ─── - ──── + ────── + O(x**10)
-        6    120   5040   362880           
+        6    120   5040   362880
 
 Looks familiar indeed::
 
     In [3]: sin(x).series(x, 0, 10)
-    Out[3]: 
-         3     5     7       9             
-        x     x     x       x              
+    Out[3]:
+         3     5     7       9
+        x     x     x       x
     x - ── + ─── - ──── + ────── + O(x**10)
-        6    120   5040   362880           
+        6    120   5040   362880
 
 Let's try some more complicated example. Let's define the derivative in terms of the function itself::
 
@@ -373,20 +373,20 @@ Let's try some more complicated example. Let's define the derivative in terms of
 So what is ``what_am_i``?  Let's try it::
 
     In [4]: what_am_i(x).series(x, 0, 10)
-    Out[4]: 
-         3      5       7       9           
-        x    2*x    17*x    62*x            
+    Out[4]:
+         3      5       7       9
+        x    2*x    17*x    62*x
     x - ── + ──── - ───── + ───── + O(x**10)
-        3     15     315     2835           
+        3     15     315     2835
 
 Well, it's ``tanh``::
 
     In [5]: tanh(x).series(x, 0, 10)
-    Out[5]: 
-         3      5       7       9           
-        x    2*x    17*x    62*x            
+    Out[5]:
+         3      5       7       9
+        x    2*x    17*x    62*x
     x - ── + ──── - ───── + ───── + O(x**10)
-        3     15     315     2835           
+        3     15     315     2835
 
 The new functions we just defined are regular SymPy objects, you
 can use them all over SymPy, e.g.::
@@ -405,14 +405,14 @@ Please use the same way as is shown below all across SymPy.
     In [1]: e = sign(x**2)
 
     In [2]: e.args
-    Out[2]: 
+    Out[2]:
     ⎛ 2⎞
     ⎝x ⎠
 
     In [3]: e.args[0]
-    Out[3]: 
+    Out[3]:
      2
-    x 
+    x
 
     In [4]: (x+y*z).args
     Out[4]: (y*z, x)
@@ -447,7 +447,7 @@ Applied functions::
     In [2]: isinstance(e, Function)
     Out[2]: True
 
-So ``e`` is a ``sign(z)`` function, but not ``exp(z)`` function. 
+So ``e`` is a ``sign(z)`` function, but not ``exp(z)`` function.
 
 Unapplied functions::
 
@@ -476,7 +476,7 @@ Contributing
 
 We welcome every SymPy user to participate in it's development. Don't worry if
 you've never contributed to any open source project, we'll help you learn
-anything necessary, just ask on our mailinglist. 
+anything necessary, just ask on our mailinglist.
 
 Don't be afraid to ask anything and don't worry that you are wasting our time
 if you are new to SymPy and ask questions that maybe most of the people know

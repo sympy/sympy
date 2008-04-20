@@ -68,5 +68,5 @@ def legendre_symbol(a,p):
 
 
 
-    
+
 

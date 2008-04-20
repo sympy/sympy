@@ -106,7 +106,7 @@ class PlotCamera(object):
             dist_d = clicks * sensitivity
             min_dist = self.min_dist
             max_dist = self.max_dist
-        
+
         new_dist = (self._dist - dist_d)
         if (clicks < 0 and new_dist < max_dist) or new_dist > min_dist:
             self._dist = new_dist

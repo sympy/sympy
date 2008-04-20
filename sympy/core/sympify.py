@@ -113,8 +113,8 @@ def sympify(a, sympify_lists=False, locals= {}):
             # At this point we were given an arbitrary expression
             # which does not inherit from Basic and doesn't implement
             # _sympy_ (which is a canonical and robust way to convert
-            # anything to SymPy expression). 
-            # 
+            # anything to SymPy expression).
+            #
             # As a last chance, we try to take "a"'s  normal form via str()
             # and try to parse it. If it fails, then we have no luck and
             # return an exception

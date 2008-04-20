@@ -1,7 +1,7 @@
 
 class AssumeMeths(object):
     """ Define default assumption methods.
-    
+
     AssumeMeths should be used to derive Basic class only.
 
     All symbolic objects have assumption attributes that
@@ -49,18 +49,18 @@ class AssumeMeths(object):
     property decorators) or are attributes of objects/classes.
 
     Examples:
-    
+
         - True, when we are sure about a property. For example, when we are
         working only with real numbers:
         >>> from sympy import *
         >>> Symbol('x', real = True)
         x
-        
+
         - False
-        
+
         - None (if you don't know if the property is True or false)
 
-    
+
 
     """
 
@@ -252,7 +252,7 @@ class AssumeMeths(object):
 
         processed = {}
         replace = []
-        aliases = self._assume_aliases 
+        aliases = self._assume_aliases
         negs = self._assume_negs
         inegs = self._assume_inegs
         rels = self._assume_rels

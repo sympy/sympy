@@ -354,7 +354,7 @@ def test_polygon():
     assert altitudes[p2] == s1[0]
     assert altitudes[p3] == s1[2]
 
-    # Ensure 
+    # Ensure
     assert len(intersection(*bisectors.values())) == 1
     assert len(intersection(*altitudes.values())) == 1
     assert len(intersection(*m.values())) == 1

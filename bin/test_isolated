@@ -1,11 +1,11 @@
 #! /usr/bin/python
 """
 Generates a bash script, that executes py.test or nosetest on each file
-individually. 
+individually.
 
 Example:
 
-    $ bin/test_isolated 
+    $ bin/test_isolated
     Generating py.test isolated testsuite...
     Done. Run '/tmp/test_sympy.sh'.
 
@@ -43,7 +43,7 @@ def get_paths(level=6):
 
 def generate_test_script1(testlib="py.test"):
     """Generates a bash script for doing the test.
-    
+
     "testlib" is the name of the executable, that is going to execute the test,
     for example "py.test" or "nosetests".
     """
@@ -60,7 +60,7 @@ def generate_test_script1(testlib="py.test"):
 
 def generate_test_script2(testlib="nosetests"):
     """Generates a bash script for doing the test.
-    
+
     "testlib" is the name of the executable, that is going to execute the test,
     for example "py.test" or "nosetests".
     """

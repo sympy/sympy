@@ -12,7 +12,7 @@ SymPy Patches Tutorial
 .. .. sidebar:: Talk is cheap. Show me the code.
 
 .. epigraph:: Talk is cheap. Show me the code.
-    
+
     -- Linus Torvalds [1]_
 
 
@@ -647,7 +647,7 @@ and clean workdir
 
     $ :input:`hg st`
     $ :input:`hg diff`
-    $ 
+    $
 
 
 Here is a bit of history:
@@ -714,22 +714,22 @@ For this we go to `sympy` mirroring repository, see whats new, and pull updates:
     user:        Ondrej Certik <ondrej@certik.cz>
     date:        Sat Mar 22 16:06:47 2008 +0100
     summary:     The print ordering of Add has been improved.
-    
+
     changeset:   1901:7cd8948a664a
     user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
     date:        Mon Mar 24 00:17:12 2008 +0300
     summary:     [1/2] let's use __slots__
-    
+
     changeset:   1902:529ba5e4a7c6
     user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
     date:        Mon Mar 24 00:17:13 2008 +0300
     summary:     [2/2] let's use __slots__
-    
+
     changeset:   1903:115df7b1ee75
     user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
     date:        Mon Mar 24 00:17:14 2008 +0300
     summary:     add comments to Mul.flatten
-    
+
     changeset:   1904:75544c92be1d
     tag:         tip
     user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
@@ -802,7 +802,7 @@ Now we have our patches applied on top of the latest tip.
     Sometimes changes we've made *overlap* with the changes made by other
     developers. This situation is called conflict_ and has to be resolved using
     automated merge programs or by hands.
-    
+
     This topic is out of scope of this tutorial, but an interested reader is
     encouraged to read `chapter 3`_ in hgbook_ and TutorialConflict_ HG wiki
     page.
@@ -826,13 +826,13 @@ Ensure last time on outgoing changes
     user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
     date:        Wed Mar 26 15:18:09 2008 +0300
     summary:     pprint: fix handling of old-style classes  (#755)
-    
+
     changeset:   1906:316070047993
     tag:         xobj-fix-even-height.patch
     user:        Kirill Smelkov <kirr@landau.phys.spbu.ru>
     date:        Wed Mar 26 15:18:09 2008 +0300
     summary:     pretty: fix xobj for even height
-    
+
     changeset:   1907:63eb63c9f098
     tag:         qtip
     tag:         printer-fix-typos.patch
@@ -849,19 +849,19 @@ And let's finally send them:
     comparing with /home/kirr/src/sympy/spt-work/sympy
     searching for changes
     This patch series consists of 3 patches.
-    
+
     Subject: [PATCH 0 of 3]  :input:`Fix for #755 + two more`
-    
+
     Write the introductory message for the patch series.
 
     :input:`While working on #755  (pprint fails on old style classes) I've spot a couple`
     :input:`of other inconveniences.`
 
     :input:`Please review.`
-    
+
     To:  :input:`sympy-patches@googlegroups.com` TODO put this into .hgrc
-    Cc:  
-    
+    Cc:
+
     Sending [PATCH 0 of 3] Fix for #755 + two more ...
     Sending [PATCH 1 of 3] pprint: fix handling of old-style classes  (#755) ...
     Sending [PATCH 2 of 3] pretty: fix xobj for even height ...

@@ -34,14 +34,14 @@ Unpack it:
 .. parsed-literal::
 
     $ :input:`tar xzf sympy-0.5.12.tar.gz`
-    
+
 and try it from a Python intepreter:
 
 .. parsed-literal::
 
     $ :input:`cd sympy-0.5.12`
     $ :input:`python`
-    Python 2.4.4 (#2, Jan  3 2008, 13:36:28) 
+    Python 2.4.4 (#2, Jan  3 2008, 13:36:28)
     [GCC 4.2.3 20071123 (prerelease) (Debian 4.2.2-4)] on linux2
     Type "help", "copyright", "credits" or "license" for more information.
     >>> :input:`from sympy import Symbol, cos`
@@ -60,7 +60,7 @@ distribution, e.g.:
 
     $ :input:`sudo apt-get install python-sympy`
     Reading package lists... Done
-    Building dependency tree       
+    Building dependency tree
     Reading state information... Done
     The following NEW packages will be installed:
       python-sympy
@@ -68,7 +68,7 @@ distribution, e.g.:
     Need to get 991kB of archives.
     After this operation, 5976kB of additional disk space will be used.
     Get:1 http://ftp.cz.debian.org unstable/main python-sympy 0.5.12-1 [991kB]
-    Fetched 991kB in 2s (361kB/s)        
+    Fetched 991kB in 2s (361kB/s)
     Selecting previously deselected package python-sympy.
     (Reading database ... 232619 files and directories currently installed.)
     Unpacking python-sympy (from .../python-sympy_0.5.12-1_all.deb) ...
@@ -88,7 +88,7 @@ For experimenting with new features, or when figuring out how to do things, you
 can use our special wrapper around IPython called ``isympy`` (located in
 ``bin/isympy`` if you are running from the source directory) which is just a
 standard python shell that has already imported the relevant sympy modules and
-defined the symbols x, y, z and some other things: 
+defined the symbols x, y, z and some other things:
 
 .. parsed-literal::
 
@@ -100,16 +100,16 @@ defined the symbols x, y, z and some other things:
     >>> x, y, z = symbols('xyz')
     >>> k, m, n = symbols('kmn', integer=True)
     >>> f = Function("f")
-    
+
     Documentation can be found at http://sympy.org/
-    
-    
+
+
     In [1]: :input:`(1/cos(x)).series(x, 0, 10)`
-    Out[1]: 
-         2      4       6        8           
-        x    5*x    61*x    277*x            
+    Out[1]:
+         2      4       6        8
+        x    5*x    61*x    277*x
     1 + ── + ──── + ───── + ────── + O(x**10)
-        2     24     720     8064            
+        2     24     720     8064
 
 .. note::
 
@@ -122,7 +122,7 @@ Using SymPy as a calculator
 
 Sympy has three built-in numeric types: Real, Rational and Integer.
 
-The Rational class represents a rational number as a pair of two Integers: the numerator and the denominator, so Rational(1,2) represents 1/2, Rational(5,2) 5/2 and so on. 
+The Rational class represents a rational number as a pair of two Integers: the numerator and the denominator, so Rational(1,2) represents 1/2, Rational(5,2) 5/2 and so on.
 
 ::
 
@@ -140,7 +140,7 @@ The Rational class represents a rational number as a pair of two Integers: the n
 
 
 proceed with caution while working with python int's since they truncate
-integer division, and that's why:: 
+integer division, and that's why::
 
    >>> 1/2
    0
@@ -152,7 +152,7 @@ You can however do::
 
   >>> from __future__ import division
 
-  >>> 1/2 #doctest: +SKIP 
+  >>> 1/2 #doctest: +SKIP
   0.5
 
 True division is going to be standard in python3k and ``isympy`` does that too.
@@ -183,7 +183,7 @@ Symbols
 -------
 
 In contrast to other Computer Algebra Systems, in SymPy you have to declare
-symbolic variables explicitly:: 
+symbolic variables explicitly::
 
     >>> from sympy import *
     >>> x = Symbol('x')
@@ -276,7 +276,7 @@ Higher derivatives can be calculated using the ``diff(func, var, n)`` method::
     -8*cos(2*x)
 
 
-.. index:: 
+.. index::
     single: series expansion
     single: expansion; series
 
@@ -308,11 +308,11 @@ Another simple example::
 That should print the following after the execution::
 
     1/y + x**2*y**(-3) + x**4*y**(-5) - x*y**(-2) - x**3*y**(-4) + O(x**5)
-         2    4         3          
-    1   x    x    x    x           
+         2    4         3
+    1   x    x    x    x
     ─ + ── + ── - ── - ── + O(x**5)
-    y    3    5    2    4          
-        y    y    y    y           
+    y    3    5    2    4
+        y    y    y    y
 
 .. index:: integration
 
@@ -359,7 +359,7 @@ Also improper integrals are supported as well::
     >>> integrate(log(x), (x, 0, 1))
     -1
 
-.. index:: 
+.. index::
     single: complex numbers
     single: expansion; complex
 
@@ -386,11 +386,11 @@ Differential Equations
 In ``isympy``::
 
     In [4]: f(x).diff(x, x) + f(x)
-    Out[4]: 
-       2              
-      d               
+    Out[4]:
+       2
+      d
     ─────(f(x)) + f(x)
-    dx dx             
+    dx dx
 
     In [5]: dsolve(f(x).diff(x, x) + f(x), f(x))
     Out[5]: C₁*sin(x) + C₂*cos(x)
@@ -423,7 +423,7 @@ Matrices
 Matrices are created as instances from the Matrix class::
 
     >>> from sympy import Matrix
-    >>> Matrix([[1,0], [0,1]]) 
+    >>> Matrix([[1,0], [0,1]])
     [1 0]
     [0 1]
 
@@ -435,11 +435,11 @@ you can also put Symbols in it::
     >>> A #doctest: +NORMALIZE_WHITESPACE
     [1 x]
     [y 1]
- 
+
     >>> A**2 #doctest: +NORMALIZE_WHITESPACE
-    [1+x*y 2*x] 
+    [1+x*y 2*x]
     [2*y 1+x*y]
- 
+
     >>> 1
     1
 
@@ -521,16 +521,16 @@ This is a nice ascii-art printing produced by a ``pprint`` function:
     >>> from sympy.abc import x
     >>> pprint(x**2)
      2
-    x 
+    x
     >>> pprint(1/x)
     1
     ─
     x
     >>> pprint(Integral(x**2, x))
-    ⌠      
-    ⎮  2   
+    ⌠
+    ⎮  2
     ⎮ x  dx
-    ⌡      
+    ⌡
     >>>
 
 **Python printing**
@@ -547,7 +547,7 @@ This is a nice ascii-art printing produced by a ``pprint`` function:
     >>> print_python(Integral(x**2, x))
     x = Symbol('x')
     e = Integral(x**2, x)
-    >>> 
+    >>>
 
 **LaTeX printing**
 

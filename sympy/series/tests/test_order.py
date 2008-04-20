@@ -36,7 +36,7 @@ def test_simple_3():
     assert Order(x)+1/x == 1/x+Order(x)
     assert Order(1/x)+1/x**2 == 1/x**2+Order(1/x)
     assert Order(x)+exp(1/x) == Order(x)+exp(1/x)
-        
+
 def test_simple_4():
     assert Order(x)**2 == Order(x**2)
     assert Order(x**3)**-2 == Order(x**-6)
@@ -123,7 +123,7 @@ def test_multivar_1():
     assert (Order(x+y)+x**2) == Order(x+y)
     assert (Order(x+y)+1/x) == 1/x+Order(x+y)
     assert Order(x**2+y*x).expr == x**2+y*x
-        
+
 def test_multivar_2():
     assert Order(x**2*y+y**2*x,x,y).expr == x**2*y+y**2*x
 
@@ -132,14 +132,14 @@ def test_multivar_mul_1():
 
 def test_multivar_3():
     assert (Order(x)+Order(y)).args in [
-            (Order(x), Order(y)), 
+            (Order(x), Order(y)),
             (Order(y), Order(x))]
     assert Order(x)+Order(y)+Order(x+y) == Order(x+y)
     assert (Order(x**2*y)+Order(y**2*x)).args in [
             (Order(x*y**2), Order(y*x**2)),
             (Order(y*x**2), Order(x*y**2))]
     assert (Order(x**2*y)+Order(y*x)) == Order(x*y)
-    
+
 def test_w():
     print
     for k,v in Order._cache.items():
