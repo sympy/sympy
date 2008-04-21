@@ -9,6 +9,40 @@ from sympy.core.cache import cacheit
 ###############################################################################
 
 class sin(Function):
+    """
+    Usage
+    =====
+      sin(x) -> Returns the sine of x (measured in radians)
+
+    Notes
+    =====
+        sin(x) will evaluate automatically in the case x
+        is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
+
+    Examples
+    ========
+        >>> from sympy import *
+        >>> x = Symbol('x')
+        >>> sin(x**2).diff(x)
+        2*x*cos(x**2)
+        >>> sin(1).diff(x)
+        0
+        >>> sin(pi)
+        0
+        >>> sin(pi/2)
+        1
+        >>> sin(pi/6)
+        1/2
+
+    See also
+    ========
+       L{cos}, L{tan}
+
+       External links
+       --------------
+
+         U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    """
 
     nargs = 1
 
@@ -143,6 +177,40 @@ class sin(Function):
         return sage.sin(self.args[0]._sage_())
 
 class cos(Function):
+    """
+    Usage
+    =====
+      cos(x) -> Returns the cosine of x (measured in radians)
+
+    Notes
+    =====
+        cos(x) will evaluate automatically in the case x
+        is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
+
+    Examples
+    ========
+        >>> from sympy import *
+        >>> x = Symbol('x')
+        >>> cos(x**2).diff(x)
+        -2*sin(x**2)*x
+        >>> cos(1).diff(x)
+        0
+        >>> cos(pi)
+        -1
+        >>> cos(pi/2)
+        0
+        >>> cos(2*pi/3)
+        -1/2
+
+    See also
+    ========
+       L{sin}, L{tan}
+
+       External links
+       --------------
+
+         U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    """
 
     nargs = 1
 
@@ -277,6 +345,34 @@ class cos(Function):
         return sage.cos(self.args[0]._sage_())
 
 class tan(Function):
+    """
+    Usage
+    =====
+      tan(x) -> Returns the tangent of x (measured in radians)
+
+    Notes
+    =====
+        tan(x) will evaluate automatically in the case x is a
+        multiple of pi.
+
+    Examples
+    ========
+        >>> from sympy import *
+        >>> x = Symbol('x')
+        >>> tan(x**2).diff(x)
+        2*x*cos(x**2)**(-2)
+        >>> tan(1).diff(x)
+        0
+
+    See also
+    ========
+       L{sin}, L{tan}
+
+       External links
+       --------------
+
+         U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    """
 
     nargs = 1
 
@@ -398,6 +494,11 @@ class tan(Function):
             return True
 
 class cot(Function):
+    """
+    Usage
+    =====
+      cot(x) -> Returns the cotangent of x (measured in radians)
+    """
 
     nargs = 1
 
@@ -515,6 +616,11 @@ class cot(Function):
 ###############################################################################
 
 class asin(Function):
+    """
+    Usage
+    =====
+      asin(x) -> Returns the arc sine of x (measured in radians)
+    """
 
     nargs = 1
 
@@ -603,6 +709,11 @@ class asin(Function):
         return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
 
 class acos(Function):
+    """
+    Usage
+    =====
+      acos(x) -> Returns the arc cosine of x (measured in radians)
+    """
 
     nargs = 1
 
@@ -681,6 +792,11 @@ class acos(Function):
         return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
 
 class atan(Function):
+    """
+    Usage
+    =====
+      tan(x) -> Returns the arc tangent of x (measured in radians)
+    """
 
     nargs = 1
 
@@ -758,6 +874,11 @@ class atan(Function):
         return self.args[0].is_real
 
 class acot(Function):
+    """
+    Usage
+    =====
+      acot(x) -> Returns the arc cotangent of x (measured in radians)
+    """
 
     nargs = 1
 
