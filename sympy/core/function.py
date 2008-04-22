@@ -401,9 +401,13 @@ class Derivative(Basic, ArithMeths, RelMeths):
     """
     Carries out differentation of the given expression with respect to symbols.
 
-    expr must define ._eval_derivative(symbol) method that returns differentation result or None.
+    expr must define ._eval_derivative(symbol) method that returns
+    the differentation result or None.
+
+    Examples:
 
     Derivative(Derivative(expr, x), y) -> Derivative(expr, x, y)
+    Derivative(expr, x, 3)  -> Derivative(expr, x, x, x)
     """
 
     precedence = Basic.Apply_precedence
