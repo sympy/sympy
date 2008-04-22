@@ -7,7 +7,8 @@ from numbers import Number, Real, Rational, Integer
 from power import Pow
 from mul import Mul
 from add import Add
-from relational import Eq, Equality, Inequality, Unequality, StrictInequality
+from relational import Rel, Eq, Ne, Lt, Le, Gt, Ge, \
+    Equality, Inequality, Unequality, StrictInequality
 from function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
     Function, expand
 from interval import Interval

@@ -99,14 +99,14 @@ def test_deriv_sub_bug3():
 def test_equality_subs1():
     f = Function("f")
     x = abc.x
-    eq = Eq(f(x)**2, '==', x)
-    res = Eq(Integer(16), '==', x)
+    eq = Eq(f(x)**2, x)
+    res = Eq(Integer(16), x)
     assert eq.subs(f(x), 4) == res
 
 def test_equality_subs2():
     f = Function("f")
     x = abc.x
-    eq = Eq(f(x)**2, '==', 16)
+    eq = Eq(f(x)**2, 16)
     assert bool(eq.subs(f(x), 3)) == False
     assert bool(eq.subs(f(x), 4)) == True
 

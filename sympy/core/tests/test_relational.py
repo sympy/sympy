@@ -1,5 +1,6 @@
 from sympy import symbols
-from sympy.core.relational import Relational, Equality, StrictInequality
+from sympy.core.relational import Relational, Equality, StrictInequality, \
+    Rel, Eq, Lt, Le, Gt, Ge, Ne
 
 x,y,z = symbols('xyz')
 
@@ -23,3 +24,25 @@ def test_rel_subs():
     assert e.lhs == z
     assert e.rhs == y
 
+
+def test_wrappers():
+    e = x+x**2
+
+    res = Relational(y, e, '==')
+    assert Rel(y, x+x**2, '==') == res
+    assert Eq(y, x+x**2) == res
+
+    res = Relational(y, e, '<')
+    assert Lt(y, x+x**2) == res
+
+    res = Relational(y, e, '<=')
+    assert Le(y, x+x**2) == res
+
+    res = Relational(y, e, '>')
+    assert Gt(y, x+x**2) == res
+
+    res = Relational(y, e, '>=')
+    assert Ge(y, x+x**2) == res
+
+    res = Relational(y, e, '!=')
+    assert Ne(y, x+x**2) == res

@@ -48,13 +48,13 @@ def solve(eq, syms, simplified=True):
        >>> print r
        [1, 2]
 
-       >>> solve(Eq(x**2,'==',a), x)
+       >>> solve(Eq(x**2, a), x)
        [-a**(1/2), a**(1/2)]
 
-       >>> solve(Eq(x**4,'==',1), x)
+       >>> solve(Eq(x**4, 1), x)
        [I, 1, -1, -I]
 
-       >>> solve([Eq(x + 5*y,'==',2), Eq(-3*x + 6*y,'==',15)], [x, y])
+       >>> solve([Eq(x + 5*y, 2), Eq(-3*x + 6*y, 15)], [x, y])
        {y: 1, x: -3}
 
     """
@@ -254,10 +254,10 @@ def solve_undetermined_coeffs(equ, coeffs, sym, simplified=True):
        >>> from sympy import *
        >>> a, b, c, x = symbols('a', 'b', 'c', 'x')
 
-       >>> solve_undetermined_coeffs(Eq(2*a*x + a+b,'==',x), [a, b], x)
+       >>> solve_undetermined_coeffs(Eq(2*a*x + a+b, x), [a, b], x)
        {b: -1/2, a: 1/2}
 
-       >>> solve_undetermined_coeffs(Eq(a*c*x + a+b,'==',x), [a, b], x)
+       >>> solve_undetermined_coeffs(Eq(a*c*x + a+b, x), [a, b], x)
        {b: -1/c, a: 1/c}
 
     """
@@ -326,7 +326,7 @@ def dsolve(eq, funcs):
         >>> f = Function('f')
         >>> dsolve(Derivative(f(x),x,x)+9*f(x), f(x))
         C1*sin(3*x) + C2*cos(3*x)
-        >>> dsolve(Eq(Derivative(f(x),x,x)+9*f(x)+1,'==',1), f(x))
+        >>> dsolve(Eq(Derivative(f(x),x,x)+9*f(x)+1, 1), f(x))
         C1*sin(3*x) + C2*cos(3*x)
 
     """

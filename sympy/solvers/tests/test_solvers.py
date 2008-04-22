@@ -9,10 +9,10 @@ def test_solve():
     x, y = map(Symbol, 'xy')
 
     assert solve(3*x-2, x) == [Rational(2,3)]
-    assert solve(Eq(3*x,'==',2), x) == [Rational(2,3)]
+    assert solve(Eq(3*x, 2), x) == [Rational(2,3)]
 
     assert solve(x**2-1, x) in [[-1, 1], [1, -1]]
-    assert solve(Eq(x**2,'==',1), x) in [[-1, 1], [1, -1]]
+    assert solve(Eq(x**2, 1), x) in [[-1, 1], [1, -1]]
 
 def test_linear_system():
     x, y, z, t, n = map(Symbol, 'xyztn')
@@ -76,7 +76,7 @@ def test_tsolve():
     x = Symbol('x')
     assert solve(exp(x)-3, x) == [log(3)]
     assert tsolve(exp(x)-3, x) == log(3)
-    assert tsolve(Eq(exp(x),'==',3), x) == log(3)
+    assert tsolve(Eq(exp(x), 3), x) == log(3)
     assert tsolve(log(x)-3, x) == exp(3)
     assert tsolve(sqrt(3*x)-4, x) == Rational(16,3)
     assert tsolve(3**(x+2), x) == -oo

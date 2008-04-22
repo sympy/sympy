@@ -248,7 +248,7 @@ def apart(f, z, **flags):
        >>> apart(1/(x+2)/(x+1), x)
        1/(1 + x) - 1/(2 + x)
 
-       >>> apart(Eq((x+1)/(x-1),'==',E/x), x)
+       >>> apart(Eq((x+1)/(x-1), E/x), x)
        1 - 2/(1 - x) == E/x
 
        For more information on the implemented algorithm refer to:

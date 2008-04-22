@@ -5,11 +5,103 @@ from methods import NoRelMeths
 
 from numbers import Number
 
-# handy wrapper around Relational
-def Eq(a, op, b):
-    """Eq(a,'==',b)"""
+def Rel(a, b, op):
+    """
+    A handy wrapper around the Relational class.
+    Rel(a,b, op)
+
+    Example:
+    >>> from sympy import *
+    >>> x,y = symbols('xy')
+    >>> Rel(y, x+x**2, '==')
+    y == x + x**2
+
+    """
     return Relational(a,b,op)
 
+def Eq(a, b):
+    """
+    A handy wrapper around the Relational class.
+    Eq(a,b)
+
+    Example:
+    >>> from sympy import *
+    >>> x,y = symbols('xy')
+    >>> Eq(y, x+x**2)
+    y == x + x**2
+
+    """
+    return Relational(a,b,'==')
+
+def Ne(a, b):
+    """
+    A handy wrapper around the Relational class.
+    Ne(a,b)
+
+    Example:
+    >>> from sympy import *
+    >>> x,y = symbols('xy')
+    >>> Eq(y, x+x**2)
+    y != x + x**2
+
+    """
+    return Relational(a,b,'!=')
+
+def Lt(a, b):
+    """
+    A handy wrapper around the Relational class.
+    Lt(a,b)
+
+    Example:
+    >>> from sympy import *
+    >>> x,y = symbols('xy')
+    >>> Eq(y, x+x**2)
+    y < x + x**2
+
+    """
+    return Relational(a,b,'<')
+
+def Le(a, b):
+    """
+    A handy wrapper around the Relational class.
+    Le(a,b)
+
+    Example:
+    >>> from sympy import *
+    >>> x,y = symbols('xy')
+    >>> Eq(y, x+x**2)
+    y <= x + x**2
+
+    """
+    return Relational(a,b,'<=')
+
+def Gt(a, b):
+    """
+    A handy wrapper around the Relational class.
+    Gt(a,b)
+
+    Example:
+    >>> from sympy import *
+    >>> x,y = symbols('xy')
+    >>> Eq(y, x+x**2)
+    x + x**2 < y
+
+    """
+    return Relational(a,b,'>')
+
+def Ge(a, b):
+    """
+    A handy wrapper around the Relational class.
+    Ge(a,b)
+
+    Example:
+    >>> from sympy import *
+    >>> x,y = symbols('xy')
+    >>> Eq(y, x+x**2)
+    x + x**2 <= y
+
+    """
+    return Relational(a,b,'>=')
 
 class Relational(Basic, NoRelMeths):
 
