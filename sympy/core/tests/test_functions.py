@@ -239,3 +239,8 @@ def test_function_comparable_fail():
     assert sin(zoo).is_comparable   == False
     assert sin(nan).is_comparable   == False
 
+def test_deriv1():
+    f=Function('f')
+    g=Function('g')
+    x = Symbol('x')
+    assert f(g(x)).diff(x) == Derivative(f(g(x)), g(x)) * Derivative(g(x), x)

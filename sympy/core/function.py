@@ -410,24 +410,40 @@ class Derivative(Basic, ArithMeths, RelMeths):
 
     @staticmethod
     def _symbolgen(*symbols):
+        """
+        Generator of all symbols in the argument of the Derivative.
+
+        Example:
+        >> ._symbolgen(x, 3, y)
+        (x, x, x, y)
+        >> ._symbolgen(x, 10**6)
+        (x, x, x, x, x, x, x, ...)
+
+        The second example shows why we don't return a list, but a generator,
+        so that the code that calls _symbolgen can return earlier for special
+        cases, like x.diff(x, 10**6).
+        """
         last_s = sympify(symbols[len(symbols)-1])
         for i in xrange(len(symbols)):
             s = sympify(symbols[i])
             next_s = None
             if s != last_s:
                 next_s = sympify(symbols[i+1])
-        #    next_s = sympify(symbols[i+1]) if s != last_s else None
 
-            if isinstance(s,Integer):
+            if isinstance(s, Integer):
                 continue
             elif isinstance(s, Symbol):
+                # handle cases like (x, 3)
                 if isinstance(next_s, Integer):
+                    # yield (x, x, x)
                     for copy_s in repeat(s,int(next_s)):
                         yield copy_s
                 else:
                     yield s
+            elif isinstance(s, Function):
+                yield s
             else:
-                 raise TypeError("Derivative argument must be Symbol|Integer instance (got %s)" % (s.__class__.__name__))
+                 raise TypeError("Derivative argument must be Symbol|Integer|Function instance (got %s)" % (s.__class__.__name__))
 
     def __new__(cls, expr, *symbols, **assumptions):
         expr = sympify(expr)
