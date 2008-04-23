@@ -227,6 +227,11 @@ _xobj_unicode = {
     '}' :   (( EXT(')'), HUP('}'), HLO('}'),  MID('}')  ),  '}'),   # XXX EXT is wrong
     '|' :   U('BOX DRAWINGS LIGHT VERTICAL'),
 
+    'lfloor' : (( EXT('['), EXT('['), CLO('[') ), U('LEFT FLOOR')),
+    'rfloor' : (( EXT(']'), EXT(']'), CLO(']') ), U('RIGHT FLOOR')),
+    'lceil'  : (( EXT('['), CUP('['), EXT('[') ), U('LEFT CEILING')),
+    'rceil'  : (( EXT(']'), CUP(']'), EXT(']') ), U('RIGHT CEILING')),
+
     'int':  (( EXT('int'), U('TOP HALF INTEGRAL'), U('BOTTOM HALF INTEGRAL') ), U('INTEGRAL')),
    #'sum':  ( U('N-ARY SUMMATION'), TOP('sum'), None, None, BOT('sum')     ),
 

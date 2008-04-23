@@ -65,14 +65,24 @@ class PrettyPrinter(Printer):
 
     def _print_abs(self, e):
         pform = self._print(e.args[0])
-
-        vbar = vobj('|', pform.height())
-        vbar = stringPict(vbar, baseline=pform.baseline)
-
-        pform  = prettyForm(*pform.left (vbar))
-        pform  = prettyForm(*pform.right(vbar))
+        pform = prettyForm(*pform.parens('|', '|'))
         return pform
 
+    def _print_floor(self, e):
+        if pretty_use_unicode():
+            pform = self._print(e.args[0])
+            pform = prettyForm(*pform.parens('lfloor', 'rfloor'))
+            return pform
+        else:
+            return self._print_Function(e)
+
+    def _print_ceiling(self, e):
+        if pretty_use_unicode():
+            pform = self._print(e.args[0])
+            pform = prettyForm(*pform.parens('lceil', 'rceil'))
+            return pform
+        else:
+            return self._print_Function(e)
 
     def _print_Derivative(self, deriv):
         # XXX use U('PARTIAL DIFFERENTIAL') here ?

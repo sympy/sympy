@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from sympy import symbols, Symbol, sin, cos, Matrix, Integral, pi, sqrt, \
-        Function, Rational, tan, oo, Limit
+from sympy import symbols, Symbol, sin, cos, Matrix, Integral, pi, sqrt,\
+        Function, Rational, tan, oo, Limit, ceiling, floor
 from sympy.printing.pretty import pretty
 
 x,y = symbols('xy')
@@ -103,6 +103,43 @@ u"""\
 ╲╱  ╲╱ x + 1  + 1 \
 """
     assert u in [s1, s2]
+
+
+def test_upretty_abs():
+    assert upretty(abs(x)) == u'│x│'
+
+    u = upretty( abs(1 / (y - abs(x))) )
+    s = \
+u"""\
+│   1   │
+│───────│
+│y - │x││\
+"""
+    assert u == s
+
+def test_upretty_floor():
+    assert upretty(floor(x)) == u'⌊x⌋'
+
+    u = upretty( floor(1 / (y - floor(x))) )
+    s = \
+u"""\
+⎢   1   ⎥
+⎢───────⎥
+⎣y - ⌊x⌋⎦\
+"""
+    assert u == s
+
+def test_upretty_ceiling():
+    assert upretty(ceiling(x)) == u'⌈x⌉'
+
+    u = upretty( ceiling(1 / (y - ceiling(x))) )
+    s = \
+u"""\
+⎡   1   ⎤
+⎢───────⎥
+⎢y - ⌈x⌉⎥\
+"""
+    assert u == s
 
 
 def test_upretty_diff():
