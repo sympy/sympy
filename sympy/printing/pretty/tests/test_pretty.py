@@ -108,11 +108,11 @@ def test_pretty_functions():
     #assert pretty( conjugate(a+b*I) ) == '_     _\na - I*b'
     #assert pretty( conjugate(exp(a+b*I)) ) == ' _     _\n a - I*b\ne       '
 
-def test_factorial():
+def test_pretty_factorial():
     n = Symbol('n', integer=True)
     assert pretty( factorial(n) ) == 'n!'
     assert pretty( factorial(2*n) ) == '(2*n)!'
-    assert pretty( factorial(factorial(factorial(n))) ) == 'n!!!'
+    assert pretty( factorial(factorial(factorial(n))) ) == '((n!)!)!'
     assert pretty( factorial(n+1) ) in ['(1 + n)!', '(n + 1)!']
 
 def test_pretty_sqrt():
