@@ -63,6 +63,7 @@ def test_pretty_unicode():
             u' 2    x\n\u03c0  + \u212f ',
             u' x    2\n\u212f  + \u03c0 ']
     assert xpretty( Ne(x, y), True ) == u'x \u2260 y'
+    assert xpretty( gamma(x), True ) == u'\u0393(x)'
 
 def test_pretty_unicode_defaults():
     use_unicode = pprint_use_unicode(True)

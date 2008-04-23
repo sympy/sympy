@@ -2,7 +2,8 @@ from sympy.core import S, C
 from sympy.printing.printer import Printer
 from stringpict import prettyForm, stringPict
 
-from pretty_symbology import xstr, hobj, vobj, xobj, xrel, pretty_symbol, pretty_atom, pretty_use_unicode, pretty_try_use_unicode
+from pretty_symbology import xstr, hobj, vobj, xobj, xrel, pretty_symbol,\
+        pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek
 
 # rename for usage from outside
 pprint_use_unicode = pretty_use_unicode
@@ -270,6 +271,15 @@ class PrettyPrinter(Printer):
         pform.prettyArgs = prettyArgs
 
         return pform
+
+    def _print_gamma(self, e):
+        if pretty_use_unicode():
+            pform = self._print(e.args[0])
+            pform = prettyForm(*pform.parens())
+            pform = prettyForm(*pform.left(greek['gamma'][1]))
+            return pform
+        else:
+            return self._print_Function(e)
 
     def _print_Add(self, sum):
         args = list(sum.args)
