@@ -370,6 +370,8 @@ class Add(AssocOp, RelMeths, ArithMeths):
             if l2<l1: # (a+b+c+d).subs(b+c,x) -> a+x+d
                 for i in xrange(l1-l2+1):
                     if factors2==factors1[i:i+l2]:
+                        factors1 = list(factors1)
+                        factors2 = list(factors2)
                         return Add(*([coeff1-coeff2]+factors1[:i]+[new]+factors1[i+l2:]))
         return self.__class__(*[s.subs(old, new) for s in self.args])
 
