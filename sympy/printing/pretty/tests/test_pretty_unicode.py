@@ -169,6 +169,7 @@ d       \n\
 ──(β(α))\n\
 dα      \
 """
+    assert u == s
 
 def test_upretty_integral():
     u = upretty( Integral(sin(th)/cos(ph), (th,0,pi), (ph, 0, 2*pi)) )
