@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sympy import symbols, Symbol, sin, cos, Matrix, Integral, pi, sqrt,\
-        Function, Rational, tan, oo, Limit, ceiling, floor
+        Function, Rational, tan, oo, Limit, ceiling, floor, conjugate
 from sympy.printing.pretty import pretty
 
 x,y = symbols('xy')
@@ -104,6 +104,22 @@ u"""\
 """
     assert u in [s1, s2]
 
+def test_upretty_conjugate():
+    f = Function('f')
+    u = upretty( conjugate( f(1 + conjugate(f(x))) ) )
+    s1 = \
+u"""\
+⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽
+ ⎛    ⎽⎽⎽⎽⎞
+f⎝1 + f(x)⎠\
+"""
+    s2 = \
+u"""\
+⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽
+ ⎛⎽⎽⎽⎽    ⎞
+f⎝f(x) + 1⎠\
+"""
+    assert u in [s1, s2]
 
 def test_upretty_abs():
     assert upretty(abs(x)) == u'│x│'

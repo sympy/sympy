@@ -1,6 +1,6 @@
 from sympy import Symbol, Matrix, Integral, log, Rational, Derivative, exp, \
         sqrt, pi, Function, sin, cos, pprint_use_unicode, oo, Eq, Le, \
-        Gt, Ne, Limit, factorial, gamma
+        Gt, Ne, Limit, factorial, gamma, conjugate
 from sympy.printing.pretty import pretty as xpretty
 
 x = Symbol('x')
@@ -75,15 +75,20 @@ def test_pretty_unicode_defaults():
 
 
 def test_pretty_functions():
+    f = Function('f')
+
     # Simple
     assert pretty( (2*x + exp(x)) ) in [' x      \ne  + 2*x', '       x\n2*x + e ']
     assert pretty(abs(x)) == '|x|'
     assert pretty(abs(x/(x**2+1))) in [
             '|  x   |\n|------|\n|     2|\n|1 + x |',
             '|  x   |\n|------|\n| 2    |\n|x  + 1|']
+    assert pretty(conjugate(x)) == '_\nx'
+    assert pretty(conjugate(f(x+1))) in [
+            '________\nf(1 + x)',
+            '________\nf(x + 1)']
 
     # Univariate/Multivariate functions
-    f = Function('f')
     assert pretty(f(x)) == 'f(x)'
     assert pretty(f(x, y)) == 'f(x, y)'
     assert pretty(f(x/(y+1), y)) in [
