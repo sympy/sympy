@@ -40,13 +40,14 @@ class PrettyPrinter(Printer):
 
 
     def _print_Factorial(self, e):
-        x = e[0]
-        if (x.is_Integer and x.is_nonnegative) or x.is_Symbol:
-            s = self._print(x)
-        else:
-            # XXX parens
-            s = "(" + self._print(x) + ")"
-        return s + "!"
+        x = e.args[0]
+        pform = self._print(x)
+        # Add parentheses if needed
+        if not ((x.is_Integer and x.is_nonnegative) or x.is_Symbol
+                or isinstance(x, e.__class__)):
+            pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.right('!'))
+        return pform
 
 
     def _print_Relational(self, e):
@@ -58,7 +59,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_conjugate(self, e):
-        pform = self._print(e[0])
+        pform = self._print(e.args[0])
         return prettyForm( *pform.above( hobj('_',pform.width())) )
 
     def _print_abs(self, e):

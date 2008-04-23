@@ -143,7 +143,7 @@ class Factorial(Function):
         return '%s!' % self.args[0].tostr(self.precedence)
 
     def _eval_is_integer(self):
-        return self[0].is_integer
+        return self.args[0].is_integer
 
 class MultiFactorial(Function):
     pass
@@ -400,7 +400,7 @@ class Binomial(Function):
         return C.gamma(r+1) / (C.gamma(r-k+1)*C.gamma(k+1))
 
     def _eval_is_integer(self):
-        return self[0].is_integer and self[1].is_integer
+        return self.args[0].is_integer and self.args[1].is_integer
 
 
 binomial = Binomial

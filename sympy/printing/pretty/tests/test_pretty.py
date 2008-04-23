@@ -1,6 +1,6 @@
 from sympy import Symbol, Matrix, Integral, log, Rational, Derivative, exp, \
         sqrt, pi, Function, sin, cos, pprint_use_unicode, oo, Eq, Le, \
-        Gt, Ne, Limit
+        Gt, Ne, Limit, factorial, gamma
 from sympy.printing.pretty import pretty as xpretty
 
 x = Symbol('x')
@@ -101,6 +101,13 @@ def test_pretty_functions():
     a,b = map(Symbol, 'ab')
     #assert pretty( conjugate(a+b*I) ) == '_     _\na - I*b'
     #assert pretty( conjugate(exp(a+b*I)) ) == ' _     _\n a - I*b\ne       '
+
+def test_factorial():
+    n = Symbol('n', integer=True)
+    assert pretty( factorial(n) ) == 'n!'
+    assert pretty( factorial(2*n) ) == '(2*n)!'
+    assert pretty( factorial(factorial(factorial(n))) ) == 'n!!!'
+    assert pretty( factorial(n+1) ) in ['(1 + n)!', '(n + 1)!']
 
 def test_pretty_sqrt():
     assert pretty( sqrt(2) ) == '  ___\n\\/ 2 '
