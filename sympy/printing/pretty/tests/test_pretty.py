@@ -128,11 +128,11 @@ def test_pretty_sqrt():
     assert pretty( (2+(1+x**2)/(2+x))**Rational(1,4)+
         (1+x**Rational(1,1000))/sqrt(3+x**2) ) == '''\
                    ____________
-    1000___       /          2 
-1 +   \/ x       /      1 + x  
------------ + 4 /   2 + ------ 
-   ________   \/        2 + x  
-  /      2                     
+    1000___       /          2 \n\
+1 +   \/ x       /      1 + x  \n\
+----------- + 4 /   2 + ------ \n\
+   ________   \/        2 + x  \n\
+  /      2                     \n\
 \/  3 + x                      \
 '''
 
@@ -207,10 +207,10 @@ def test_pretty_seq():
     p = pretty(e)
     s = \
 """\
-                 2        
-  2  1        sin (theta) 
-[x , -, x, y, -----------]
-     x            2       
+                 2        \n\
+  2  1        sin (theta) \n\
+[x , -, x, y, -----------]\n\
+     x            2       \n\
                cos (phi)  \
 """
     assert p == s
@@ -219,10 +219,10 @@ def test_pretty_seq():
     p = pretty(e)
     s = \
 """\
-                 2        
-  2  1        sin (theta) 
-(x , -, x, y, -----------)
-     x            2       
+                 2        \n\
+  2  1        sin (theta) \n\
+(x , -, x, y, -----------)\n\
+     x            2       \n\
                cos (phi)  \
 """
     assert p == s
@@ -239,8 +239,8 @@ def test_pretty_seq():
     p = pretty(e)
     s = \
 """\
- 1  1        2    
-{-: -, x: sin (x)}
+ 1  1        2    \n\
+{-: -, x: sin (x)}\n\
  x  y             \
 """
     assert p == s

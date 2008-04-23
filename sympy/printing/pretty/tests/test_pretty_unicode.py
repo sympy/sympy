@@ -43,9 +43,9 @@ def test_upretty_nicerat():
     u = upretty(y*x**-2)
     s = \
 u"""\
-y 
-──
- 2
+y \n\
+──\n\
+ 2\n\
 x \
 """
     assert u == s
@@ -54,9 +54,9 @@ x \
     s = \
 u"""\
  3/2
-y   
-────
- 5/2
+y   \n\
+────\n\
+ 5/2\n\
 x   \
 """
     assert u == s
@@ -64,10 +64,10 @@ x   \
     u = upretty(sin(x)**3/tan(x)**2)
     s = \
 u"""\
-   3   
-sin (x)
-───────
-   2   
+   3   \n\
+sin (x)\n\
+───────\n\
+   2   \n\
 tan (x)\
 """
 
@@ -93,13 +93,13 @@ def test_upretty_sqrt():
     s1 = \
 u"""\
    ⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽
-  ╱       ⎽⎽⎽⎽⎽⎽⎽ 
+  ╱       ⎽⎽⎽⎽⎽⎽⎽ \n\
 ╲╱  1 + ╲╱ 1 + x  \
 """
     s2 = \
 u"""\
    ⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽
-  ╱   ⎽⎽⎽⎽⎽⎽⎽     
+  ╱   ⎽⎽⎽⎽⎽⎽⎽     \n\
 ╲╱  ╲╱ x + 1  + 1 \
 """
     assert u in [s1, s2]
@@ -165,8 +165,8 @@ def test_upretty_diff():
     u = upretty( beta(alpha).diff(alpha) )
     s = \
 u"""\
-d       
-──(β(α))
+d       \n\
+──(β(α))\n\
 dα      \
 """
 
@@ -174,12 +174,12 @@ def test_upretty_integral():
     u = upretty( Integral(sin(th)/cos(ph), (th,0,pi), (ph, 0, 2*pi)) )
     s = \
 u"""\
-2*π π             
- ⌠  ⌠             
- ⎮  ⎮ sin(θ)      
- ⎮  ⎮ ────── dθ dφ
- ⎮  ⎮ cos(φ)      
- ⌡  ⌡             
+2*π π             \n\
+ ⌠  ⌠             \n\
+ ⎮  ⎮ sin(θ)      \n\
+ ⎮  ⎮ ────── dθ dφ\n\
+ ⎮  ⎮ cos(φ)      \n\
+ ⌡  ⌡             \n\
  0  0             \
 """
     assert u == s
@@ -187,11 +187,11 @@ u"""\
     u = upretty( Integral(x**2*sin(y), (x,0,1), (y,0,pi)) )
     s = \
 u"""\
-π 1                
-⌠ ⌠                
-⎮ ⎮  2             
-⎮ ⎮ x *sin(y) dx dy
-⌡ ⌡                
+π 1                \n\
+⌠ ⌠                \n\
+⎮ ⎮  2             \n\
+⎮ ⎮ x *sin(y) dx dy\n\
+⌡ ⌡                \n\
 0 0                \
 """
     assert u == s
@@ -210,7 +210,7 @@ x->∞ \
     s = \
 u"""\
      2
-lim x 
+lim x \n\
 x->0  \
 """
     assert u == s
