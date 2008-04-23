@@ -1,5 +1,5 @@
 from sympy import symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log, \
-        pi, arg
+        pi, arg, conjugate
 
 
 def test_re():
@@ -122,4 +122,6 @@ def test_arg():
     n = Symbol('n', negative=True)
     assert arg(n) == pi
 
-
+def test_conjugate():
+    x = Symbol("x")
+    assert conjugate(conjugate(x)) == x

@@ -258,7 +258,7 @@ class conjugate(Function):
             return obj
 
     def _eval_conjugate(self):
-        return self[0]
+        return self.args[0]
 
 
 # /cyclic/
