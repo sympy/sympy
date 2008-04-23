@@ -70,19 +70,17 @@ class Polygon(GeometryEntity):
             return (b[0] - a[0])*(c[1] - a[1]) - (c[0] - a[0])*(b[1] - a[1])
 
         def isright(a, b, c):
-            return (tarea(a, b, c) <= 0)
+            return bool(tarea(a, b, c) <= 0)
 
         # Determine orientation of points
-        cw = True
-        if not isright(self.vertices[-1], self.vertices[0], self.vertices[1]):
-            cw = False
+        cw = isright(self.vertices[-1], self.vertices[0], self.vertices[1])
+
 
         ret = {}
         for i in xrange(0, len(self.vertices)):
             a,b,c = self.vertices[i-2], self.vertices[i-1], self.vertices[i]
             ang = Line.angle_between(Line(b, a), Line(b, c))
-            right = isright(a, b, c)
-            if (not cw and right) or (cw and not right):
+            if cw ^ isright(a, b, c):
                 ret[b] = 2*S.Pi - ang
             else:
                 ret[b] = ang
@@ -129,21 +127,17 @@ class Polygon(GeometryEntity):
             return (b[0] - a[0])*(c[1] - a[1]) - (c[0] - a[0])*(b[1] - a[1])
 
         def isright(a, b, c):
-            return tarea(a, b, c) <= 0
+            return bool(tarea(a, b, c) <= 0)
 
         # Determine orientation of points
-        cw = True
-        if not isright(self.vertices[-2], self.vertices[-1], self.vertices[0]):
-            cw = False
+        cw = isright(self.vertices[-2], self.vertices[-1], self.vertices[0])
 
-        if cw:
-            for i in xrange(0, len(self.vertices)):
-                if not isright(self.vertices[i-2], self.vertices[i-1], self.vertices[i]):
-                    return False
-        else:
-            for i in xrange(0, len(self.vertices)):
-                if isright(self.vertices[i-2], self.vertices[i-1], self.vertices[i]):
-                    return False
+
+
+        for i in xrange(0, len(self.vertices)):
+            if cw ^ isright(self.vertices[i-2], self.vertices[i-1], self.vertices[i]):
+                return False
+
         return True
 
     def intersection(self, o):
