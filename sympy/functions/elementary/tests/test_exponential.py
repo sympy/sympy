@@ -1,4 +1,4 @@
-from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol, LambertW
+from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol, LambertW, sqrt
 from sympy.utilities.pytest import XFAIL
 
 def test_exp():
@@ -97,6 +97,7 @@ def test_log():
 
 def test_log_expand_complex():
     assert log(1+I).expand(complex=True) == log(2)/2 + I*pi/4
+    assert log(1 - sqrt(2)).expand(complex=True) == log(sqrt(2)-1) + I*pi
 
 def test_log_apply_evalf():
     value = (log(3)/log(2)-1).evalf()
