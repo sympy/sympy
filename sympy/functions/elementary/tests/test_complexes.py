@@ -123,5 +123,14 @@ def test_arg():
     assert arg(n) == pi
 
 def test_conjugate():
-    x = Symbol("x")
+    a = Symbol('a', real=True)
+    assert conjugate(a) == a
+    assert conjugate(I*a) == -I*a
+
+    x, y = symbols('xy')
     assert conjugate(conjugate(x)) == x
+    assert conjugate(x + y) == conjugate(x) + conjugate(y)
+    assert conjugate(x - y) == conjugate(x) - conjugate(y)
+    assert conjugate(x * y) == conjugate(x) * conjugate(y)
+    assert conjugate(x / y) == conjugate(x) / conjugate(y)
+    assert conjugate(-x) == -conjugate(x)
