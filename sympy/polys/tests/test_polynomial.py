@@ -623,6 +623,9 @@ def test_squarefree():
     assert Poly(x**2+2*x+1, x).as_squarefree() == Poly(x+1, x)
     assert Poly(x**5-x**4-x+1, x).as_squarefree() == Poly(x**4-1, x)
 
+    assert poly_sqf(1, x) == (Poly(1, x),)
+    assert poly_sqf(x, x) == (Poly(x, x),)
+
     assert poly_sqf(3*x**2, x) == (Poly(3, x), Poly(x, x))
     assert poly_sqf(x**2+2*x+1, x) == (Poly(1, x), Poly(x+1, x))
 

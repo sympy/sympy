@@ -691,10 +691,10 @@ def poly_subresultants(f, g, *symbols):
     return tuple(prs)
 
 def poly_sqf(f, *symbols):
-    """Compute square-free decomposition of an univariate polynoamial.
+    """Compute square-free decomposition of an univariate polynomial.
 
-       Given an unvariate polynomial f over an unique factorization domain
-       returns tuple (f_1, f_2, ..., f_n),  where all A_i are co-prime and
+       Given an univariate polynomial f over an unique factorization domain
+       returns tuple (f_1, f_2, ..., f_n),  where all  A_i are co-prime and
        square-free polynomials and f = f_1 * f_2**2 * ... * f_n**n.
 
        >>> from sympy import *
@@ -743,15 +743,17 @@ def poly_sqf(f, *symbols):
 
         g = poly_gcd(p, h)
 
+        sqf.append(g)
+
         p = poly_div(p, g)[0]
         q = poly_div(h, g)[0]
 
-        sqf.append(g)
+    sqf.append(p)
 
     head, tail = sqf[0], sqf[1:]
     head = head.mul_term(coeff)
 
-    return (head,) + tuple(tail) + (p,)
+    return (head,) + tuple(tail)
 
 def poly_decompose(f, *symbols):
     """Computes functional decomposition of an univariate polynomial.
