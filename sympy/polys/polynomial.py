@@ -342,12 +342,18 @@ class Poly(Basic, RelMeths, ArithMeths):
             terms = Poly._decompose(poly, *symbols)
 
         if terms:
-            f = monomial_cmp(order)
+            if N == 1 and type(terms.keys()[0]) is not tuple:
+                keys = tuple(reversed(sorted(terms.keys())))
 
-            monoms = terms.keys()
-            monoms.sort(f, reverse=True)
+                coeffs = [ terms[i] for i in keys ]
+                monoms = [ (i,) for i in keys ]
+            else:
+                f = monomial_cmp(order)
 
-            coeffs = [ terms[monom] for monom in monoms ]
+                monoms = terms.keys()
+                monoms.sort(f, reverse=True)
+
+                coeffs = [ terms[monom] for monom in monoms ]
 
         args = (tuple(coeffs), tuple(monoms),
                 symbols, order, stamp, None)

@@ -80,6 +80,11 @@ def test_poly_basics():
 
     assert Poly([(x, 4), (0, 2), (z, 0)], t) == Poly(f, t)
 
+    f = x*t**4 + y*t**2 + z
+
+    assert Poly({(4,): x, (2,): y, (0,): z}, t) == Poly(f, t)
+    assert Poly({4: x, 2: y, 0: z}, t) == Poly(f, t)
+
 def test_poly_internals():
     p = Poly(x**2*y*z + x*y*z**3 + x*y + y*z, x, y, z)
 
