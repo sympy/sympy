@@ -752,3 +752,124 @@ def poly_sqf(f, *symbols):
     head = head.mul_term(coeff)
 
     return (head,) + tuple(tail) + (p,)
+
+def poly_decompose(f, *symbols):
+    """Computes functional decomposition of an univariate polynomial.
+
+       Besides factorization and square-free decomposition, functional
+       decomposition is another important, but very different,  way of
+       breaking down polynomials into simpler parts.
+
+       Formally given an univariate polynomial f with coefficients in a
+       field of characteristic zero, returns tuple (f_1, f_2, ..., f_n)
+       where f = f_1 o f_2 o ... f_n = f_1(f_2(... f_n)) and f_2, ...,
+       f_n are monic and homogeneous polynomials of degree at least 2.
+
+       Unlike factorization, complete functional decompositions of
+       polynomials are not unique, consider examples:
+
+        [1] f o g = f(x + b) o (g - b)
+        [2] x**n o x**m = x**m o x**n
+        [3] T_n o T_m = T_m o T_n
+
+       where T_n and T_m are Chebyshev polynomials.
+
+       >>> from sympy import *
+       >>> x,y = symbols('xy')
+
+       >>> p, q = poly_decompose(x**4+2*x**2 + y, x)
+
+       >>> p.as_basic()
+       y + 2*x + x**2
+       >>> q.as_basic()
+       x**2
+
+       For more information on the implemented algorithm refer to:
+
+       [1] D. Kozen, S. Landau, Polynomial decomposition algorithms,
+           Journal of Symbolic Computation 7 (1989), pp. 445-456
+
+    """
+    if not isinstance(f, Poly):
+        f = Poly(f, *symbols)
+    elif symbols:
+        raise PolynomialError
+
+    if f.is_multivariate:
+        raise PolynomialError
+
+    symbols = f.symbols
+    flags = f.flags
+
+    def right_factor(f, s):
+        n, lc = f.degree, f.LC
+
+        f = f.as_uv_dict()
+        q = { s : S.One }
+
+        r = n // s
+
+        for k in xrange(1, s):
+            coeff = S.Zero
+
+            for j in xrange(0, k):
+                if not f.has_key(n+j-k):
+                    continue
+
+                if not q.has_key(s-j):
+                    continue
+
+                fc, qc = f[n+j-k], q[s-j]
+
+                coeff += (k - r*j)*fc*qc
+
+            if coeff is not S.Zero:
+                q[s-k] = coeff / (k*r*lc)
+
+        return Poly(q, *symbols, **flags)
+
+    def left_factor(f, h):
+        g, i = {}, 0
+
+        while not f.is_zero:
+            q, r = poly_div(f, h)
+
+            if not r.is_constant:
+                return None
+            else:
+                if r.LC is not S.Zero:
+                    g[i] = r.LC
+
+                f, i = q, i + 1
+
+        return Poly(g, *symbols, **flags)
+
+    def decompose(f):
+        deg = f.degree
+
+        for s in xrange(2, deg):
+            if deg % s != 0:
+                continue
+
+            h = right_factor(f, s)
+
+            if h is not None:
+                g = left_factor(f, h)
+
+                if g is not None:
+                    return (g, h)
+
+        return None
+
+    F = []
+
+    while True:
+        result = decompose(f)
+
+        if result is not None:
+            f, h = result
+            F = [h] + F
+        else:
+            break
+
+    return (f,) + tuple(F)

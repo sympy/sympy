@@ -631,6 +631,24 @@ def test_squarefree():
     assert poly_sqf(x**8+6*x**6+12*x**4+8*x**2, x) == \
         (Poly(1, x), Poly(x, x), Poly(x**2+2, x))
 
+def test_decompose():
+    assert poly_decompose(1, x) == (Poly(1, x),)
+    assert poly_decompose(x, x) == (Poly(x, x),)
+
+    assert poly_decompose(z*x**3, x) == (Poly(z*x**3, x),)
+    assert poly_decompose(z*x**5, x) == (Poly(z*x**5, x),)
+
+    assert poly_decompose(x**4, x) == (Poly(x**2, x), Poly(x**2, x))
+    assert poly_decompose(z*x**4+1, x) == (Poly(z*x**2+1, x), Poly(x**2, x))
+
+    assert poly_decompose(x**4+2*x**2+z, x) == (Poly(x**2+2*x+z, x), Poly(x**2, x))
+
+    f, g = x**4 - 2*x + z, x**3 + 5*x
+
+    assert poly_decompose(f.subs(x, g), x) == (Poly(f, x), Poly(g, x))
+    assert poly_decompose(2*f.subs(x, g), x) == (Poly(2*f, x), Poly(g, x))
+    assert poly_decompose(f.subs(x, g-2), x) == (Poly(f.subs(x, x-2), x), Poly(g, x))
+
 def test_evaluate():
     f = x**2*y*z + 2*x*y*z**3 + 3*x*y + 4*y*z
 

@@ -26,3 +26,5 @@ from algorithms import poly_resultant
 from algorithms import poly_groebner
 
 from algorithms import poly_sqf
+
+from algorithms import poly_decompose
