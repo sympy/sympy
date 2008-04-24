@@ -8,7 +8,7 @@ sepd = {"sep": sep}
 # Files having at least one of these in their path will be excluded
 EXCLUDE = set([
     "%(sep)sthirdparty%(sep)s" % sepd,
-    "%(sep)sprinting%(sep)spretty%(sep)s" % sepd,
+#    "%(sep)sprinting%(sep)spretty%(sep)s" % sepd,
 ])
 
 def test_no_trailing_whitespace():
@@ -27,4 +27,3 @@ def test_no_trailing_whitespace():
                         assert False, message % (fname, idx+1)
             finally:
                 file.close()
-
