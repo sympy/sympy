@@ -368,6 +368,14 @@ For this we are going to use `Mercurial Queues`_ and `Record`_ extensions.
 
 I'm going to record fix for `#755` first
 
+.. note::
+
+    The command `qrecord` below was introduced in Mercurial 1.0. If you have an
+    older version of Mercurial, consider upgrading it. If that is not possible,
+    you can use `hg qnew -f` and `hg qrefresh` commands -- they'll do the job,
+    although they are not-so-convenient when you work on several things
+    at once (that's why `qrecord` was invented).
+
 .. parsed-literal::
 
     $ :input:`hg qrecord --edit pprint-fix-old-classes.patch`
