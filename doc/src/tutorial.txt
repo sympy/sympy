@@ -208,6 +208,56 @@ And substitute them for other symbols or numbers using ``subs(old, new)``::
     >>> ((x+y)**2).subs(x, y)
     4*y**2
 
+Algebra
+=======
+
+For partial fraction decomposition, use ``apart(expr, x)``::
+
+    In [1]: 1/( (x+2)*(x+1) )
+    Out[1]:
+           1
+    ───────────────
+    (2 + x)*(1 + x)
+
+    In [2]: apart(1/( (x+2)*(x+1) ), x)
+    Out[2]:
+      1       1
+    ───── - ─────
+    1 + x   2 + x
+
+    In [3]: (x+1)/(x-1)
+    Out[3]:
+    -(1 + x)
+    ────────
+     1 - x
+
+    In [4]: apart((x+1)/(x-1), x)
+    Out[4]:
+          2
+    1 - ─────
+        1 - x
+
+To combine things back together, use ``together(expr, x)``::
+
+    In [7]: together(1/x + 1/y + 1/z)
+    Out[7]:
+    x*y + x*z + y*z
+    ───────────────
+         x*y*z
+
+    In [8]: together(apart((x+1)/(x-1), x), x)
+    Out[8]:
+    -1 - x
+    ──────
+    1 - x
+
+    In [9]: together(apart(1/( (x+2)*(x+1) ), x), x)
+    Out[9]:
+           1
+    ───────────────
+    (2 + x)*(1 + x)
+
+
 .. index:: calculus
 
 Calculus
@@ -377,6 +427,178 @@ Complex numbers
     >>> x = Symbol("x", real=True)
     >>> exp(I*x).expand(complex=True)
     I*sin(x) + cos(x)
+
+Functions
+---------
+
+**trigonometric**::
+
+    In [1]: sin(x+y).expand(trig=True)
+    Out[1]: cos(x)*sin(y) + cos(y)*sin(x)
+
+    In [2]: cos(x+y).expand(trig=True)
+    Out[2]: cos(x)*cos(y) - sin(x)*sin(y)
+
+    In [3]: sin(I*x)
+    Out[3]: ⅈ*sinh(x)
+
+    In [4]: sinh(I*x)
+    Out[4]: ⅈ*sin(x)
+
+    In [5]: asinh(I)
+    Out[5]:
+    π*ⅈ
+    ───
+     2
+
+    In [6]: asinh(I*x)
+    Out[6]: ⅈ*asin(x)
+
+    In [15]: sin(x).series(x, 0, 10)
+    Out[15]:
+         3     5     7       9
+        x     x     x       x
+    x - ── + ─── - ──── + ────── + O(x**10)
+        6    120   5040   362880
+
+    In [16]: sinh(x).series(x, 0, 10)
+    Out[16]:
+         3     5     7       9
+        x     x     x       x
+    x + ── + ─── + ──── + ────── + O(x**10)
+        6    120   5040   362880
+
+    In [17]: asin(x).series(x, 0, 10)
+    Out[17]:
+         3      5      7       9
+        x    3*x    5*x    35*x
+    x + ── + ──── + ──── + ───── + O(x**10)
+        6     40    112     1152
+
+    In [18]: asinh(x).series(x, 0, 10)
+    Out[18]:
+         3      5      7       9
+        x    3*x    5*x    35*x
+    x - ── + ──── - ──── + ───── + O(x**10)
+        6     40    112     1152
+
+
+**spherical harmonics**::
+
+    In [1]: from sympy.abc import theta, phi
+
+    In [2]: Ylm(1, 0, theta, phi)
+    Out[2]:
+      ⎽⎽⎽
+    ╲╱ 3 *cos(θ)
+    ────────────
+          ⎽⎽⎽
+      2*╲╱ π
+
+    In [3]: Ylm(1, 1, theta, phi)
+    Out[3]:
+       ⎽⎽⎽           ⅈ*φ
+    -╲╱ 6 *│sin(θ)│*ℯ
+    ────────────────────
+              ⎽⎽⎽
+          4*╲╱ π
+
+    In [4]: Ylm(2, 1, theta, phi)
+    Out[4]:
+       ⎽⎽⎽⎽                  ⅈ*φ
+    -╲╱ 30 *│sin(θ)│*cos(θ)*ℯ
+    ────────────────────────────
+                  ⎽⎽⎽
+              4*╲╱ π
+
+**factorials and gamma function**::
+
+    In [1]: x = Symbol("x")
+
+    In [2]: y = Symbol("y", integer=True)
+
+    In [3]: factorial(x)
+    Out[3]: Γ(1 + x)
+
+    In [4]: factorial(y)
+    Out[4]: y!
+
+    In [5]: factorial(x).series(x, 0, 3)
+    Out[5]:
+                        2           2    2  2
+                       x *EulerGamma    π *x
+    1 - x*EulerGamma + ────────────── + ───── + O(x**3)
+                             2            12
+
+**zeta function**::
+
+    In [18]: zeta(4, x)
+    Out[18]: ζ(4, x)
+
+    In [19]: zeta(4, 1)
+    Out[19]:
+     4
+    π
+    ──
+    90
+
+    In [20]: zeta(4, 2)
+    Out[20]:
+          4
+         π
+    -1 + ──
+         90
+
+    In [21]: zeta(4, 3)
+    Out[21]:
+            4
+      17   π
+    - ── + ──
+      16   90
+
+
+**polynomials**::
+
+    In [1]: chebyshevt(2, x)
+    Out[1]:
+            2
+    -1 + 2*x
+
+    In [2]: chebyshevt(4, x)
+    Out[2]:
+           2      4
+    1 - 8*x  + 8*x
+
+    In [3]: legendre(2, x)
+    Out[3]:
+              2
+           3*x
+    -1/2 + ────
+            2
+
+    In [4]: legendre(8, x)
+    Out[4]:
+               2         4         6         8
+     35   315*x    3465*x    3003*x    6435*x
+    ─── - ────── + ─────── - ─────── + ───────
+    128     32        64        32       128
+
+    In [5]: assoc_legendre(2, 1, x)
+    Out[5]:
+            ⎽⎽⎽⎽⎽⎽⎽⎽
+           ╱      2
+    -3*x*╲╱  1 - x
+
+    In [6]: assoc_legendre(2, 2, x)
+    Out[6]:
+           2
+    3 - 3*x
+
+    In [7]: hermite(3, x)
+    Out[7]:
+               3
+    -12*x + 8*x
+
 
 .. index:: equations; differential, diff, dsolve
 
