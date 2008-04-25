@@ -6,9 +6,10 @@ from glob import glob
 sepd = {"sep": sep}
 
 # Files having at least one of these in their path will be excluded
+# Example line:
+#    "%(sep)sprinting%(sep)spretty%(sep)s" % sepd,
 EXCLUDE = set([
     "%(sep)sthirdparty%(sep)s" % sepd,
-#    "%(sep)sprinting%(sep)spretty%(sep)s" % sepd,
 ])
 
 def test_no_trailing_whitespace():
