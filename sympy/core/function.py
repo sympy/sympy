@@ -562,6 +562,15 @@ class Lambda(Function):
         >>> plus1(3)
         4
 
+    A handy shortcut for lots of arguments:
+        >>> from sympy import *
+        >>> var('x y z')
+        (x, y, z)
+        >>> p = x, y, z
+        >>> f = Lambda(p, x + y*z)
+        >>> f(*p)
+        x + y*z
+
     """
 
     # a minimum of 2 arguments (parameter, expression) are needed
@@ -569,6 +578,8 @@ class Lambda(Function):
     def __new__(cls,*args):
        # nargs = len(args)
         assert len(args) >= 2,"Must have at least one parameter and an expression"
+        if len(args) == 2 and isinstance(args[0], (list, tuple)):
+            args = tuple(args[0])+(args[1],)
         obj = Function.__new__(cls,*args)
         obj.nargs = len(args)
         return obj

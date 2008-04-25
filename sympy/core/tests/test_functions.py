@@ -210,6 +210,11 @@ def test_Lambda():
     #    pass
     #assert Lambda(x, F(x)) == F
 
+    z = Symbol('z')
+    t = Symbol('t')
+    p = x, y, z, t
+    assert Lambda(p, t*(x+y+z))(*p) == t * (x + y + z)
+
 def test_expand_function():
     assert expand(x+y) == x + y
     assert expand(x+y, complex=True) == I*im(x) + I*im(y) + re(x) + re(y)
