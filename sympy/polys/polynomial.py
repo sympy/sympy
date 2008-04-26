@@ -215,9 +215,14 @@ class Poly(Basic, RelMeths, ArithMeths):
           [12.2] [U-] __ne__      --> P1 != P, up to order of monomials
           [12.3] [U-] __nonzero__ --> check if zero polynomial
 
-       [13] Other functionality:
+       [13] Basic functionality:
 
-          [13.1] [U-] _eval_is_polynomial --> checks if poly is a poly
+          [13.1] [--] atoms       --> returns the atoms that form a polynomial
+
+       [14] Other functionality:
+
+          [14.1] [U-] _eval_is_polynomial --> checks if poly is a poly
+
 
        For general information on polynomials and algorithms, refer to:
 
@@ -1887,6 +1892,28 @@ class Poly(Basic, RelMeths, ArithMeths):
 
     def __nonzero__(self):
         return self.coeffs not in ((S.Zero,), (0,))
+
+    def atoms(self, type=None):
+        """Returns the atoms that form a polynomial.
+
+           >>> from sympy import *
+           >>> x,y = symbols('xy')
+
+           >>> Poly(x + 1, x, y).atoms()
+           set([1, x])
+
+        """
+        result = set()
+
+        for coeff in self.coeffs:
+            result |= coeff.atoms(type)
+
+        if type is None or type is Symbol or Symbol in type:
+            for i, symbol in enumerate(self.symbols):
+                if any(monom[i] != 0 for monom in self.monoms):
+                    result.add(symbol)
+
+        return result
 
     def _eval_is_polynomial(self, symbols):
         try:
