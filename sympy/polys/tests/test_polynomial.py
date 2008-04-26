@@ -615,6 +615,13 @@ def test_primitive():
     assert Poly(6*x + 4*x*y, x, y).as_primitive() == (2, Poly(3*x + 2*x*y, x, y))
     assert Poly(2*x + z*x*y, x, y).as_primitive() == (1, Poly(2*x + z*x*y, x, y))
 
+def test_reduced():
+    assert Poly(x**2+1, x).as_reduced() == ((0,), Poly(x**2+1, x))
+    assert Poly(x**2*y+1, x, y).as_reduced() == ((0,0), Poly(x**2*y+1, x, y))
+
+    assert Poly(x**3+x, x).as_reduced() == ((1,), Poly(x**2+1, x))
+    assert Poly(x**3*y+x**2*y**2, x, y).as_reduced() == ((2, 1), Poly(x+y, x, y))
+
 def test_squarefree():
     assert Poly(x-1, x).is_squarefree == True
     assert Poly((x-1)**2, x).is_squarefree == False

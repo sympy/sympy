@@ -184,6 +184,20 @@ def monomial_max(*monoms):
     return tuple(map(lambda *row: max(row), *monoms))
 
 @cacheit
+def monomial_min(*monoms):
+    """Returns minimal degree for each variable in a set of monomials.
+
+       Consider monomials x**3*y**4*z**5, y**5*z and x**6*y**3*z**9. We
+       wish to find out what is the maximal degree for each of x, y, z
+       variables:
+
+       >>> monomial_max((3,4,5), (0,5,1), (6,3,9))
+       (0, 3, 1)
+
+    """
+    return tuple(map(lambda *row: min(row), *monoms))
+
+@cacheit
 def monomial_as_basic(monom, *syms):
     """Converts tuple representing monomial to a valid sympy expression.
 

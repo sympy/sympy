@@ -11,7 +11,7 @@ from sympy.core.methods import RelMeths, ArithMeths
 from sympy.utilities import all, any
 
 from sympy.polys.monomial import monomial_cmp, monomial_mul, \
-    monomial_div, monomial_max, monomial_as_basic
+    monomial_div, monomial_max, monomial_min, monomial_as_basic
 
 import sympy.polys
 
@@ -177,20 +177,22 @@ class Poly(Basic, RelMeths, ArithMeths):
 
        [9] Special functionality:
 
-          [9.1] [--] as_monic      --> divides all coefficients by LC
+          [9.1]  [--] as_monic      --> divides all coefficients by LC
 
-          [9.2] [-P] content       --> returns GCD of polynomial coefficients
-          [9.3] [--] as_primitive  --> returns content and primitive part
+          [9.2]  [-P] content       --> returns GCD of polynomial coefficients
+          [9.3]  [--] as_primitive  --> returns content and primitive part
 
-          [9.4] [U-] as_squarefree --> returns square-free part of a polynomial
+          [9.4]  [U-] as_squarefree --> returns square-free part of a polynomial
 
-          [9.5] [--] map_coeffs    --> applies a function to all coefficients
-          [9.6] [U-] coeff         --> returns coefficient of the given monomial
+          [9.5]  [U-] as_reduced    --> extract GCD of polynomial monomials
 
-          [9.7] [U-] unify_with    --> returns polys with a common set of symbols
+          [9.6]  [--] map_coeffs    --> applies a function to all coefficients
+          [9.7]  [U-] coeff         --> returns coefficient of the given monomial
 
-          [9.8] [U-] diff          --> efficient polynomial differentiation
-          [9.9] [U-] integrate     --> efficient polynomial integration
+          [9.8]  [U-] unify_with    --> returns polys with a common set of symbols
+
+          [9.9]  [U-] diff          --> efficient polynomial differentiation
+          [9.10] [U-] integrate     --> efficient polynomial integration
 
        [10] Operations on terms:
 
@@ -1175,6 +1177,40 @@ class Poly(Basic, RelMeths, ArithMeths):
             return r[0]
         else:
             raise PolynomialError
+
+    def as_reduced(self):
+        """Remove GCD of monomials from 'self'.
+
+           >>> from sympy import *
+           >>> x,y = symbols('xy')
+
+           >>> Poly(x**3 + x, x).as_reduced()
+           ((1,), Poly((1, 1), ((2,), (0,)), (x,), 'grlex'))
+
+           >>> Poly(x**3*y+x**2*y**2, x, y).as_reduced()
+           ((2, 1), Poly((1, 1), ((1, 0), (0, 1)), (x, y), 'grlex'))
+
+        """
+        if self.is_inhomogeneous:
+            return (0,)*len(self.symbols), self
+        else:
+            if self.is_univariate:
+                gcd = self.monoms[-1]
+
+                terms = self.coeffs, [ (monom - gcd[0],)
+                    for (monom,) in self.monoms ]
+            else:
+                gcd = monomial_min(*self.monoms)
+
+                if all(not n for n in gcd):
+                    return gcd, self
+
+                terms = {}
+
+                for coeff, monom in self.iter_terms():
+                    terms[monomial_div(monom, gcd)] = coeff
+
+            return gcd, Poly(terms, *self.symbols, **self.flags)
 
     def map_coeffs(self, f, *args, **kwargs):
         """Apply a function to all the coefficients.
