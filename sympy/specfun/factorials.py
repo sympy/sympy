@@ -67,6 +67,7 @@ class _Factorial(Function):
 
     @classmethod
     def canonize(cls, x, m=1):
+        m = sympify(m)
 
         # the usual case
         if m == 1 and x.is_integer:
