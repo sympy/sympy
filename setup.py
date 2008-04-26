@@ -237,6 +237,7 @@ tests = [
     'sympy.plotting.tests',
     'sympy.polynomials.tests',
     'sympy.polys.tests',
+    'sympy.printing.pretty.tests',
     'sympy.printing.tests',
     'sympy.series.tests',
     'sympy.simplify.tests',
