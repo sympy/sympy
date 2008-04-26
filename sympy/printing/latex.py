@@ -196,7 +196,7 @@ class LatexPrinter(Printer):
             return name + r"\left(%s\right)" % ",".join(args)
 
     def _print_floor(self, expr, exp=None):
-        tex = r"\lfloor{%s}\rfloor" % self._print(expr[0])
+        tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -204,7 +204,7 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_ceiling(self, expr, exp=None):
-        tex = r"\lceil{%s}\rceil" % self._print(expr[0])
+        tex = r"\lceil{%s}\rceil" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -212,7 +212,7 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_abs(self, expr, exp=None):
-        tex = r"\lvert{%s}\rvert" % self._print(expr[0])
+        tex = r"\lvert{%s}\rvert" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -220,23 +220,23 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_re(self, expr, exp=None):
-        if self._needs_brackets(expr[0]):
-            tex = r"\Re\left(%s\right)" % self._print(expr[0])
+        if self._needs_brackets(expr.args[0]):
+            tex = r"\Re\left(%s\right)" % self._print(expr.args[0])
         else:
-            tex = r"\Re{%s}" % self._print(expr[0])
+            tex = r"\Re{%s}" % self._print(expr.args[0])
 
         return self._do_exponent(tex, exp)
 
     def _print_im(self, expr, exp=None):
-        if self._needs_brackets(expr[0]):
-            tex = r"\Im\left(%s\right)" % self._print(expr[0])
+        if self._needs_brackets(expr.args[0]):
+            tex = r"\Im\left(%s\right)" % self._print(expr.args[0])
         else:
-            tex = r"\Im{%s}" % self._print(expr[0])
+            tex = r"\Im{%s}" % self._print(expr.args[0])
 
         return self._do_exponent(tex, exp)
 
     def _print_conjugate(self, expr, exp=None):
-        tex = r"\overline{%s}" % self._print(expr[0])
+        tex = r"\overline{%s}" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -248,7 +248,7 @@ class LatexPrinter(Printer):
         return self._do_exponent(tex, exp)
 
     def _print_gamma(self, expr, exp=None):
-        tex = r"\left(%s\right)" % self._print(expr[0])
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
             return r"\operatorname{\Gamma}^{%s}%s" % (exp, tex)
@@ -315,7 +315,7 @@ class LatexPrinter(Printer):
 
     def _print_Order(self, expr):
         return r"\operatorname{\mathcal{O}}\left(%s\right)" % \
-            self._print(expr[0])
+            self._print(expr.args[0])
 
     def _print_Symbol(self, expr):
         if len(expr.name) == 1:
