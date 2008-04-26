@@ -544,24 +544,40 @@ class Pow(Basic, ArithMeths, RelMeths):
 
     def nseries(self, x, x0, n):
         def geto(e):
+            "Returns the O(..) symbol, or None if there is none."
             for x in e.args:
                 if x.is_Order:
                     return x
-            raise Exception("Order not found in (%s)" % e)
 
         def getn(e):
-            o = geto(e).expr
-            if o.is_Symbol:
-                return Integer(1)
-            if o.is_Pow:
-                return o.args[1]
+            """
+            Returns the order of the expression "e".
+
+            The order is determined either from the O(...) term. If there
+            is no O(...) term, it returns None.
+
+            Example:
+            >>> getn(1+x+O(x**2))
+            2
+            >>> getn(1+x)
+            >>>
+            """
+            o = geto(e)
+            if o is None:
+                return None
+            else:
+                o = o.expr
+                if o.is_Symbol:
+                    return Integer(1)
+                if o.is_Pow:
+                    return o.args[1]
             raise Exception("Unimplemented")
 
         base, exp = self.args
-        if exp.is_number:
+        if exp.is_Integer:
             if exp > 0:
-                # positive powers are easy to expand, e.g.:
-                # sin(x)**4
+                # positive integer powers are easy to expand, e.g.:
+                # sin(x)**4 = (x-x**3/3+...)**4 = ...
                 return (base.nseries(x, x0, n) ** exp).expand()
             elif exp == -1:
                 # this is also easy to expand using the formula:
@@ -574,7 +590,9 @@ class Pow(Basic, ArithMeths, RelMeths):
                 rest = rest - 1
                 if rest == 0:
                     return 1/prefactor
-                n = getn(rest)
+                n2 = getn(rest)
+                if n2 is not None:
+                    n = n2
                 term2 = rest.as_leading_term(x)
                 k, l = Wild("k"), Wild("l")
                 r = term2.match(k*x**l)
@@ -585,7 +603,12 @@ class Pow(Basic, ArithMeths, RelMeths):
                 while l * m < n:
                     s += ((-rest)**m).expand()
                     m += 1
-                return (s/prefactor).expand()
+                r = (s/prefactor).expand()
+                if n2 is None:
+                    # Append O(...) because it is not included in "r"
+                    from sympy import O
+                    r += O(x**n)
+                return r
             else:
                 # negative powers are rewritten to the cases above, for example:
                 # sin(x)**(-4) = 1/( sin(x)**4) = ...
@@ -595,6 +618,10 @@ class Pow(Basic, ArithMeths, RelMeths):
                     return self
                 # now we have a type 1/f(x), that we know how to expand
                 return (1/denominator).nseries(x, x0, n)
+
+        if exp.has(x):
+            import sympy
+            return sympy.exp(exp*sympy.log(base)).nseries(x, x0, n)
 
         return self.series(x, x0, n)
 

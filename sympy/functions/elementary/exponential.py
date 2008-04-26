@@ -210,6 +210,20 @@ class exp(Function):
         #  o = O(x**2) * exp(-1)
         return self._compute_oseries(arg-arg0, o, exp.taylor_term, exp) * exp(arg0)
 
+    def nseries(self, x, x0, n):
+        arg = self.args[0]
+        arg_series = arg.nseries(x, x0, n)
+        from sympy import limit
+        if limit(arg_series, x, x0) == 0:
+            from sympy import Symbol
+            s = Symbol("s", dummy=True)
+            exp_series = exp(s).series(s, x0, n)
+            r = exp_series.subs(s, arg_series)
+            r = r.expand()
+            return r
+        else:
+            return self.series(x, x0, n)
+
     def _eval_as_leading_term(self, x):
         arg = self.args[0]
         if arg.is_Add:
