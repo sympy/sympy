@@ -39,7 +39,4 @@ from printing import latex, preview, view, pngview, pdfview, dviview
 
 import abc
 
-#for _n, _cls in Basic.singleton.items():
-#    exec '%s = _cls()' % (_n)
-
 from polys import *

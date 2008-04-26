@@ -9,8 +9,8 @@
 
 """
 
-from sympy.core import *
-from sympy.core import sympify
+from sympy.core import sympify, Symbol, Wild, Equality, Basic, S, Derivative, \
+    diff, I, C
 
 from sympy.simplify import simplify, collect
 from sympy.matrices import Matrix, zeronm
@@ -467,23 +467,30 @@ def solve_ODE_1(f, x):
     C2 = Symbol("C2")
     return -C.log(C1+C2/x)
 
-# Patterns for transcendental equations
 x = Symbol('x', dummy=True)
 a,b,c,d,e,f,g,h = [Wild(t, exclude=[x]) for t in 'abcdefgh']
+patterns = None
 
-tmp1 = f ** (h-(c*g/b))
-tmp2 = (-e*tmp1/a)**(1/d)
+def _generate_patterns():
+    """Generates patterns for transcendental equations.
 
-patterns = [
-    (a*(b*x+c)**d + e   , ((-(e/a))**(1/d)-c)/b),
-    (    b+c*exp(d*x+e) , (log(-b/c)-e)/d),
-    (a*x+b+c*exp(d*x+e) , -b/a-LambertW(c*d*exp(e-b*d/a)/a)/d),
-    (    b+c*f**(d*x+e) , (log(-b/c)-e*log(f))/d/log(f)),
-    (a*x+b+c*f**(d*x+e) , -b/a-LambertW(c*d*f**(e-b*d/a)*log(f)/a)/d/log(f)),
-    (    b+c*log(d*x+e) , (exp(-b/c)-e)/d),
-    (a*x+b+c*log(d*x+e) , -e/d+c/a*LambertW(a/c/d*exp(-b/c+a*e/c/d))),
-    (a*(b*x+c)**d + e*f**(g*x+h) , -c/b-d*LambertW(-tmp2*g*log(f)/b/d)/g/log(f))
-]
+    This is lazily calculated (called) in the tsolve() function and stored in
+    the patterns global variable.
+    """
+
+    tmp1 = f ** (h-(c*g/b))
+    tmp2 = (-e*tmp1/a)**(1/d)
+    global patterns
+    patterns = [
+        (a*(b*x+c)**d + e   , ((-(e/a))**(1/d)-c)/b),
+        (    b+c*exp(d*x+e) , (log(-b/c)-e)/d),
+        (a*x+b+c*exp(d*x+e) , -b/a-LambertW(c*d*exp(e-b*d/a)/a)/d),
+        (    b+c*f**(d*x+e) , (log(-b/c)-e*log(f))/d/log(f)),
+        (a*x+b+c*f**(d*x+e) , -b/a-LambertW(c*d*f**(e-b*d/a)*log(f)/a)/d/log(f)),
+        (    b+c*log(d*x+e) , (exp(-b/c)-e)/d),
+        (a*x+b+c*log(d*x+e) , -e/d+c/a*LambertW(a/c/d*exp(-b/c+a*e/c/d))),
+        (a*(b*x+c)**d + e*f**(g*x+h) , -c/b-d*LambertW(-tmp2*g*log(f)/b/d)/g/log(f))
+    ]
 
 def tsolve(eq, sym):
     """
@@ -505,6 +512,8 @@ def tsolve(eq, sym):
         (1/2)*LambertW(2)
 
     """
+    if patterns is None:
+        _generate_patterns()
     eq = sympify(eq)
     if isinstance(eq, Equality):
         eq = eq.lhs - eq.rhs
