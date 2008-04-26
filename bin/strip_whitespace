@@ -1,17 +1,27 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
-def strip_file(filename):
-    lines = open(filename).readlines()
-    f = open(filename, "w")
-    for line in lines:
-        f.write(line.rstrip()+"\n")
+def strip_file(filename, write, report):
+    lines = enumerate(open(filename).readlines())
+    if write:
+        f = open(filename, "w")
+    for index, line in lines:
+        if report and line.endswith(" \n"):
+            print "%s, line %s" % (filename, index + 1)
+        if write:
+            f.write(line.rstrip() + "\n")
 
 def main():
     from optparse import OptionParser
     p = OptionParser("usage: %prog [options] filename")
+    p.add_option("-d", "--dry", action="store_true", dest="dry",
+                 help="Do not modify files.")
+    p.add_option("-v", "--verbose", action="store_true", dest="verbose",
+                 help="Report all changes.")
     options, args = p.parse_args()
+    if options.dry:
+        options.verbose = True
     if len(args) == 1:
-        strip_file(args[0])
+        strip_file(args[0], not options.dry, options.verbose)
     else:
         p.print_help()
 
