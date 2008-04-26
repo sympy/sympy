@@ -310,6 +310,9 @@ class LatexPrinter(Printer):
     def _print_Pi(self, expr):
         return r"\pi"
 
+    def _print_Exp1(self, expr):
+        return r"e"
+
     def _print_EulerGamma(self, expr):
         return r"\gamma"
 
