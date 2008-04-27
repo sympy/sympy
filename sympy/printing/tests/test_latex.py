@@ -1,7 +1,7 @@
 import py
 
 from sympy import symbols, Rational, Symbol, Integral, log, diff, sin, exp, \
-        Function, factorial
+        Function, factorial, floor, ceiling, abs, re, im, conjugate, gamma, Order
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL
@@ -25,6 +25,7 @@ def test_latex_symbols():
 
 def test_latex_functions():
     assert latex(exp(x)) == "${e}^{x}$"
+    assert latex(exp(1)+exp(2)) in ["${e}^{2} + e$", '$e + {e}^{2}$']
 
     f = Function('f')
     assert latex(f(x)) == '$\\operatorname{f}\\left(x\\right)$'
@@ -36,6 +37,15 @@ def test_latex_functions():
 
     assert latex(factorial(k)) == r"$k!$"
     assert latex(factorial(-k)) == r"$\left(- k\right)!$"
+
+    assert latex(floor(x)) == r"$\lfloor{x}\rfloor$"
+    assert latex(ceiling(x)) == r"$\lceil{x}\rceil$"
+    assert latex(abs(x)) == r"$\lvert{x}\rvert$"
+    assert latex(re(x)) == r"$\Re{x}$"
+    assert latex(im(x)) == r"$\Im{x}$"
+    assert latex(conjugate(x)) == r"$\overline{x}$"
+    assert latex(gamma(x)) == r"$\operatorname{\Gamma}\left(x\right)$"
+    assert latex(Order(x)) == r"$\operatorname{\mathcal{O}}\left(x\right)$"
 
 def test_latex_derivatives():
     assert latex(diff(x**3, x, evaluate=False)) == \
