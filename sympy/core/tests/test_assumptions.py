@@ -249,6 +249,10 @@ def test_neg_symbol_positive():
     assert x.is_nonpositive == True
     assert x.is_negative == True
     assert x.is_nonnegative == False
+
+@XFAIL
+def test_neg_symbol_positive2():
+    x = -Symbol('x',positive=True)
     assert x.is_zero == False
     assert x.is_nonzero == True
 
@@ -340,3 +344,13 @@ def test_other_symbol_fail2():
     assert x.is_integer == None
 
 
+def test_issue726():
+    x = Symbol("x")
+    y = Symbol("y")
+    a1 = x+y
+    a2 = y+x
+    a2.is_comparable
+
+    h1 = hash(a1)
+    h2 = hash(a2)
+    assert h1 == h2

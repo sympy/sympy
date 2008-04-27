@@ -164,8 +164,7 @@ class AssumeMeths(object):
             if hasattr(self, '_eval_is_'+k):
                 a = getattr(self,'_eval_is_'+k)()
                 if a is not None:
-                    self.assume(**{k:a})
-                    return getattr(self, name)
+                    return a
 
             # Try the negative assumption evaluation function
             ik = ''
@@ -176,8 +175,7 @@ class AssumeMeths(object):
             if hasattr(self, '_eval_is_'+ik):
                 a = getattr(self,'_eval_is_'+ik)()
                 if a is not None:
-                    self.assume(**{ik:a})
-                    return getattr(self, name)
+                    return not a
 
             # For positive/negative try to ask evalf
             if k in self._real_ordering:
@@ -188,12 +186,9 @@ class AssumeMeths(object):
                     a = self._real_cmp0_table[k][c]
 
                     if a is not None:
-                        self.assume(**{k:a})
-                        return getattr(self, name)
+                        return a
 
             # No result -- unknown
-            # we can modify assumptions directly -- None has no implications
-            assumptions[k] = None
             return None
 
         # assumption alias
