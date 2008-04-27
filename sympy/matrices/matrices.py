@@ -1,5 +1,4 @@
-
-from sympy import * # TBD: fix this !
+from sympy import Basic, Symbol
 from sympy.core import sympify
 
 from sympy.core.basic import S, C
