@@ -1,5 +1,5 @@
 import py
-from sympy.core import *
+from sympy.core import Symbol, S, Rational, Integer
 from sympy.utilities.pytest import XFAIL
 
 def test_symbol_unset():
