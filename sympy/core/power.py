@@ -583,7 +583,27 @@ class Pow(Basic, ArithMeths, RelMeths):
                 # this is also easy to expand using the formula:
                 # 1/(1 + x) = 1 + x + x**2 + x**3 ...
                 # so we need to rewrite base to the form "1+x"
+                from sympy import log
+                if base.has(log(x)):
+                    # we need to handle the log(x) singularity:
+                    assert x0 == 0
+                    y = Symbol("y", dummy=True)
+                    p = self.subs(log(x), -1/y)
+                    if not p.has(x):
+                        p = p.nseries(y, x0, n)
+                        p = p.subs(y, -1/log(x))
+                        return p
                 base = base.nseries(x, x0, n)
+                if base.has(log(x)):
+                    # we need to handle the log(x) singularity:
+                    assert x0 == 0
+                    y = Symbol("y", dummy=True)
+                    self0 = 1/base
+                    p = self0.subs(log(x), -1/y)
+                    if not p.has(x):
+                        p = p.nseries(y, x0, n)
+                        p = p.subs(y, -1/log(x))
+                        return p
                 prefactor = base.as_leading_term(x)
                 rest = (base/prefactor).expand()
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)

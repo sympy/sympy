@@ -1,4 +1,4 @@
-from sympy import Symbol, Rational, ln, exp, log, sqrt, E, O
+from sympy import Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
 
@@ -64,3 +64,17 @@ def test_log_singular1():
 def test_log_power1():
     e = 1 / (1/x + x ** (log(3)/log(2)))
     assert e.nseries(x, 0, 5) == x - x**(2 + log(3)/log(2)) + O(x**5)
+
+def test_log_series():
+    e = 1/(1-log(x))
+    assert e.nseries(x, 0, 5) == -1/log(x) - log(x)**(-2) - log(x)**(-3) - \
+            log(x)**(-4) + O(log(x)**(-5))
+
+def test_log2():
+    e = log(-1/x)
+    assert e.nseries(x, 0, 5) == -log(x) + log(-1)
+
+def test_log3():
+    e = 1/log(-1/x)
+    assert e.nseries(x, 0, 4) == -1/log(x) - pi*I*log(x)**(-2) + \
+        pi**2*log(x)**(-3) + O(log(x)**(-4))

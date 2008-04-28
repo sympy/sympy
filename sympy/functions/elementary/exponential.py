@@ -1,5 +1,5 @@
 
-from sympy.core.basic import Basic, S, C, sympify
+from sympy.core.basic import Basic, S, C, sympify, Wild
 from sympy.core.function import Lambda, Function, Function
 from sympy.core.cache import cacheit
 
@@ -396,6 +396,16 @@ class log(Function):
         # arg -> arg0 + (arg - arg0) -> arg0 * (1 + (arg/arg0 - 1))
         z = (arg/arg0 - 1)
         return self._compute_oseries(z, order, ln.taylor_term, lambda z: ln(1+z)) + ln(arg0)
+
+    def nseries(self, x, x0, n):
+        arg = self.args[0]
+        k, l = Wild("k"), Wild("l")
+        r = arg.match(k*x**l)
+        if r is not None:
+            k, l = r[k], r[l]
+            if l != 0:
+                return log(k) + l*log(x)
+        return self.series(x, x0, n)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
