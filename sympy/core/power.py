@@ -596,7 +596,13 @@ class Pow(Basic, ArithMeths, RelMeths):
                 term2 = rest.as_leading_term(x)
                 k, l = Wild("k"), Wild("l")
                 r = term2.match(k*x**l)
-                k, l = r[k], int(r[l])
+                k, l = r[k], r[l]
+                if l.is_Integer:
+                    l = int(l)
+                elif l.is_number:
+                    l = float(l)
+                else:
+                    raise Exception("Not implemented")
 
                 s = 1
                 m = 1
