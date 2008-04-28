@@ -14,7 +14,6 @@ def test_ratsimp():
     assert ratsimp(e) == x/(x+1)
     assert ratsimp(exp(e)) == exp(x/(x+1))
 
-@XFAIL
 def test_ratsimp2():
     x = Symbol("x")
     e = 1/(1+1/x)
@@ -80,7 +79,6 @@ def test_simplify():
     e = -x-y-(x+y)**(-1)*y**2+(x+y)**(-1)*x**2
     assert simplify(e) == -2*y
 
-@XFAIL
 def test_simplify_fail1():
     x = Symbol('x')
     y = Symbol('y')

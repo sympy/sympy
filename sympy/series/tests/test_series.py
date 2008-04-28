@@ -268,9 +268,6 @@ def test_issue125():
     f=(1-y**(Rational(1)/2))**(Rational(1)/2)
     assert f.series(y,0,2) == 1 - sqrt(y)/2-y/8-y**Rational(3,2)/16+O(y**2)
 
-#sometimes fails, sometimes not...
-#another problem is, that this result is wrong, imho:
-@XFAIL
 def test_issue364():
     w = Symbol("w")
     x = Symbol("x")

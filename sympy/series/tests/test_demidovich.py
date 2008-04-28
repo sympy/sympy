@@ -109,7 +109,6 @@ def test_f1b():
     assert limit((cos(x)-cos(a))/(x-a),x,a) == -sin(a) #223
     assert limit((sin(x+h)-sin(x))/h,h,0) == cos(x) #225
 
-@XFAIL
 def test_f2a():
     assert limit(((x+1)/(2*x+1))**(x**2),x,oo) == 0 #Primer 8
 
