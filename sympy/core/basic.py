@@ -884,6 +884,15 @@ class Basic(AssumeMeths):
         from sympy.functions.elementary.complexes import conjugate as c
         return c(self)
 
+    def removeO(self):
+        "Removes the O(..) symbol if there is one"
+        if self.is_Order:
+            return Integer(0)
+        for i,x in enumerate(self.args):
+            if x.is_Order:
+                return Add(*(self.args[:i]+self.args[i+1:]))
+        return self
+
     #@classmethod
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         """

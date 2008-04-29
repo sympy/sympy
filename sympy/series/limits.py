@@ -29,6 +29,9 @@ def limit(e, z, z0, dir="+"):
     "x**2" and similar, so that it's fast. For all other cases, we use the
     Gruntz algorithm (see the gruntz() function).
     """
+    e = sympify(e)
+    z = sympify(z)
+    z0 = sympify(z0)
 
     if e == z:
         return z0

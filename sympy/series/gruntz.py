@@ -353,21 +353,21 @@ it work, then run this again. If the series cannot be mathematically calculated,
     #solution is to fix oseries, so that it works for any expression.
     f = e.expand().normal()
     try:
-        series=f.oseries(O(x**2, x))
+        series=f.nseries(x, 0, 2).removeO()
         if series == 0:
             #we need to calculate more terms, let's try 4:
-            series=f.oseries(O(x**4, x))
+            series=f.nseries(x, 0, 4).removeO()
         if series == 0:
             #we need to calculate more terms, let's try 10:
-            series=f.oseries(O(x**10, x))
+            series=f.nseries(x, 0, 6).removeO()
         if series == 0:
             #we need to calculate more terms, let's try 30:
-            series=f.oseries(O(x**30, x))
+            series=f.nseries(x, 0, 8).removeO()
     except:
         report(f, x)
     if series == 0:
         report(f, x)
-    assert not isinstance(series, O)
+    assert not isinstance(series, O), f
     return series
 
 def calculate_leadterm(e, x):
