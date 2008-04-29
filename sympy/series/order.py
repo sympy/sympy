@@ -228,6 +228,8 @@ class Order(Basic, ArithMeths, RelMeths):
         that's why find_limit() is defined here.
         """
 
+        from sympy import limit, Wild, log
+
         if f.is_Pow:
             if f.args[0] == x:
                 if f.args[1].is_Rational:
@@ -240,12 +242,25 @@ class Order(Basic, ArithMeths, RelMeths):
                         return S.Zero
                     else:
                         return oo
-        # you can use both limits here - the first is a lot faster, the second
-        # one is a lot slower, but more correct. We need to speed it up, before
-        # we can switch to the second one.
-        return f.limit(x, 0, direction='<')
-        #from sympy import limit
-        #return limit(f, x, 0, dir="+")
+        if f == x:
+            return S.Zero
+        p, q = Wild("p"), Wild("q")
+        r = f.match(x**p * log(x)**q)
+        if r:
+            p, q = r[p], r[q]
+            if q.is_number and p.is_number:
+                if q > 0:
+                    if p > 0:
+                        return S.Zero
+                    else:
+                        return -oo
+                elif q < 0:
+                    if p >= 0:
+                        return S.Zero
+                    else:
+                        return -oo
+
+        return limit(f, x, 0, dir="+")
 
     @property
     def expr(self):
