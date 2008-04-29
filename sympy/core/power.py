@@ -545,9 +545,12 @@ class Pow(Basic, ArithMeths, RelMeths):
     def nseries(self, x, x0, n):
         def geto(e):
             "Returns the O(..) symbol, or None if there is none."
-            for x in e.args:
-                if x.is_Order:
-                    return x
+            if e.is_Order:
+                return e
+            if e.is_Add:
+                for x in e.args:
+                    if x.is_Order:
+                        return x
 
         def getn(e):
             """
@@ -571,6 +574,14 @@ class Pow(Basic, ArithMeths, RelMeths):
                     return Integer(1)
                 if o.is_Pow:
                     return o.args[1]
+                n, d = o.as_numer_denom()
+                if isinstance(d, log):
+                    # i.e. o = x**2/log(x)
+                    if n.is_Symbol:
+                        return Integer(1)
+                    if n.is_Pow:
+                        return n.args[1]
+
             raise Exception("Unimplemented")
 
         base, exp = self.args
@@ -610,6 +621,10 @@ class Pow(Basic, ArithMeths, RelMeths):
                 rest = rest - 1
                 if rest == 0:
                     return 1/prefactor
+                if rest.is_Order:
+                    return ((1+rest)/prefactor).expand()
+                if not rest.has(x):
+                    return 1/(prefactor*(rest+1))
                 n2 = getn(rest)
                 if n2 is not None:
                     n = n2
@@ -648,6 +663,9 @@ class Pow(Basic, ArithMeths, RelMeths):
         if exp.has(x):
             import sympy
             return sympy.exp(exp*sympy.log(base)).nseries(x, x0, n)
+
+        if base == x:
+            return self
 
         return self.series(x, x0, n)
 

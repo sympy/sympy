@@ -404,7 +404,9 @@ class log(Function):
         if r is not None:
             k, l = r[k], r[l]
             if l != 0:
-                return log(k) + l*log(x)
+                r = log(k).nseries(x, x0, n) + \
+                        (l.nseries(x, x0, n)*log(x)).expand()
+                return r
         return self.series(x, x0, n)
 
     def _eval_as_leading_term(self, x):
