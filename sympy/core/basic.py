@@ -1593,11 +1593,6 @@ class Basic(AssumeMeths):
         from sympy.series.limits import limit
         return limit(self, x, xlim, direction)
 
-    def inflimit(self, x): # inflimit has its own cache
-        x = sympify(x)
-        from sympy.series.limits_series import InfLimit
-        return InfLimit(self, x)
-
     @cacheit
     def as_leading_term(self, *symbols):
         if len(symbols)>1:
