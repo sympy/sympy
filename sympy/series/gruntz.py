@@ -407,7 +407,11 @@ def mrv_leadterm(e, x, Omega=[]):
         mrv_leadterm_up = mrv_leadterm(e_up, x, Omega_up)
         #move the result (c0, e0) down
         return tuple(movedown(mrv_leadterm_up, x))
-    wsym = Symbol("w", dummy=True)
+    # The wsym is set as real, so that log(wsym*2) etc. expand (this is needed
+    # in the algorithm). For limits of complex functions, the algorithm would
+    # have to be improved, or just use limits of Re and Im components
+    # separately.
+    wsym = Symbol("w", real=True, dummy=True)
     f, logw=rewrite(e, set(Omega), x, wsym)
     series = calculate_series(f, wsym)
     series=series.subs(log(wsym), logw)

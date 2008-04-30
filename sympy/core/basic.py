@@ -1587,11 +1587,11 @@ class Basic(AssumeMeths):
             l.append(g)
         return Add(*l)
 
-    def limit(self, x, xlim, direction='<'):
+    def limit(self, x, xlim, direction='+'):
         """ Compute limit x->xlim.
         """
-        from sympy.series.limits_series import Limit_series
-        return Limit_series(self, x, xlim, direction)
+        from sympy.series.limits import limit
+        return limit(self, x, xlim, direction)
 
     def inflimit(self, x): # inflimit has its own cache
         x = sympify(x)
