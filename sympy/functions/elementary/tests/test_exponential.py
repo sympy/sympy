@@ -104,13 +104,6 @@ def test_log_apply_evalf():
 
     assert value.epsilon_eq(Real("0.58496250072115618145373"))
 
-#commenting this out, see the issue 252
-@XFAIL
-def test_log_simplify():
-    x = Symbol("x")
-    assert log(x**2) == 2*log(x)
-    assert log(x**(2+log(2))) == (2+log(2))*log(x)
-
 def test_lambertw():
     x = Symbol('x')
     assert LambertW(x) == LambertW(x)
@@ -120,3 +113,14 @@ def test_lambertw():
     assert LambertW(-log(2)/2) == -log(2)
     assert LambertW(oo) == oo
     assert LambertW(x**2).diff(x) == 2*LambertW(x**2)/x/(1+LambertW(x**2))
+
+def test_log_expand():
+    w = Symbol("w", real=True)
+    e = log(w**(log(5)/log(3)))
+    assert e.expand() == log(5)/log(3) * log(w)
+
+def test_log_simplify():
+    x = Symbol("x", real=True)
+    assert log(x**2).expand() == 2*log(x)
+    assert log(x**(2+log(2))).expand() == (2+log(2))*log(x)
+

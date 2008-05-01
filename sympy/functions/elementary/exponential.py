@@ -423,7 +423,7 @@ class log(Function):
                 expr += self.func(x).expand()
             return expr
         elif arg.is_Pow:
-            if arg.exp.is_Number or arg.exp.is_NumberSymbol:
+            if arg.exp.is_number or arg.exp.is_NumberSymbol:
                 return arg.exp * self.func(arg.base).expand()
         return self
 

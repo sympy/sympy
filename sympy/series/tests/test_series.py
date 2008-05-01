@@ -278,7 +278,7 @@ def test_issue364():
     w = Symbol("w")
     x = Symbol("x")
     e = 1/x*(-log(w**(1 + 1/log(3)*log(5))) + log(w + w**(1/log(3)*log(5))))
-    assert e.series(w,0,0) == log(w)/x - log(w**(1 + log(5)/log(3)))/x + O(1,w)
+    assert e.series(w,0,0) == -log(5)/log(3)*log(w)/x + O(1, w)
 
 def test_sin():
     x = Symbol("x")
