@@ -1,5 +1,5 @@
 from sympy import Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh, \
-        sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth
+        sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, Integer
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
 
@@ -193,15 +193,6 @@ def test_seriesbug2c():
     assert e.nseries(w,0,3) == 2-Rational(4,3)*w**2+w**2*log(2)**2+2*w*log(2)+O(w**3, w)
     assert e.nseries(w,0,2).subs(w,0) == 2
 
-def xtest_seriesbug3():
-    # XXX Fails with infinte recursion
-    x = Symbol("x")
-    w = Symbol("w")
-
-    #some limits need this series expansion to work:
-    e = (w**(-log(5)/log(3))-1/w)**(1/x)
-    assert e.nseries(w,0,1).subs(log(w),-log(3)*x).subs(w,0) == 5
-
 def test_expbug4():
     x = Symbol("x", real=True)
     assert (log(sin(2*x)/x)*(1+x)).nseries(x,0,2) == log(2) + x*log(2) + O(x**2, x)
@@ -209,13 +200,11 @@ def test_expbug4():
     assert exp(log(sin(2*x)/x)*(1+x)).nseries(x,0,2) == 2 + 2*x*log(2) + O(x**2)
     #assert ((2+O(x))**(1+x)).nseries(x,0,2) == 2 + O(x**2, x)
 
-def xtest_logbug4():
-    # XXX O(x).series not implemented
+def test_logbug4():
     x = Symbol("x")
     assert log(2+O(x)).nseries(x,0,2) == log(2) + O(x, x)
 
 def test_expbug5():
-    # XXX O(x).series not implemented
     x = Symbol("x")
     #assert exp(O(x)).nseries(x,0,2) == 1 + O(x**2, x)
     assert exp(log(1+x)/x).nseries(x,0,2) == exp(1) + -exp(1)*x/2 + O(x**2)
@@ -294,9 +283,8 @@ def test_issue407():
     e = (x + sin(3*x))**(-2)*(x*(x + sin(3*x)) - (x + sin(3*x))*sin(2*x))
     assert e.nseries(x, 0, 6) == -Rational(1,4) + 5*x**2/96 + 91*x**4/768 + O(x**5)
 
-#unfortunately, it sometimes fails, due to other bugs and caching:
-def xtest_issue409():
-    x = Symbol("x")
+def test_issue409():
+    x = Symbol("x", real=True)
     assert log(sin(x)).nseries(x, 0, 5) == log(x) - x**2/6 - x**4/180 + O(x**5)
     e = -log(x) + x*(-log(x) + log(sin(2*x))) + log(sin(2*x))
     assert e.nseries(x, 0, 5) == log(2)+log(2)*x-2*x**2/3-2*x**3/3-4*x**4/45+O(x**5)
@@ -321,19 +309,17 @@ def test_hyperbolic():
     assert atanh(x).nseries(x, 0, 6) == x + x**3/3 + x**5/5 + O(x**6)
     assert acoth(x).nseries(x, 0, 6) == x + x**3/3 + x**5/5 + pi*I/2 + O(x**6)
 
-#this only works sometimes (caching problems)
-def xtest_series2():
-    w = Symbol("w")
-    x = Symbol("x")
+def test_series2():
+    w = Symbol("w", real=True)
+    x = Symbol("x", real=True)
     e =  w**(-2)*(w*exp(1/x - w) - w*exp(1/x))
-    assert e.nseries(w, 2) == -exp(1/x) + w * exp(1/x) / 2  + O(w**2)
+    assert e.nseries(w, 0, 3) == -exp(1/x) + w * exp(1/x) / 2  + O(w**2)
 
-#this only works sometimes (caching problems)
-def xtest_series3():
-    w = Symbol("w")
-    x = Symbol("x")
+def test_series3():
+    w = Symbol("w", real=True)
+    x = Symbol("x", real=True)
     e = w**(-6)*(w**3*tan(w) - w**3*sin(w))
-    assert e.nseries(w, 2) == Integer(1)/2 + O(w**2)
+    assert e.nseries(w, 0, 5) == Integer(1)/2 + O(w**2)
 
 def test_bug4():
     w = Symbol("w")
