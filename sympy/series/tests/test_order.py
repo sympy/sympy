@@ -2,7 +2,6 @@ from sympy import Symbol, Rational, Order, C, exp, ln, log, O
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import w, x, y, z
 
-@XFAIL
 def test_caching_bug():
     #needs to be a first test, so that all caches are clean
     #cache it
