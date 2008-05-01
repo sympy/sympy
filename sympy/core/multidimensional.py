@@ -100,12 +100,19 @@ class vectorize:
             else:
                 mdargs = range(len(args)) + kwargs.keys()
 
+            arglength = len(args)
+
             for n in mdargs:
                 if isinstance(n, int):
+                    if n>=arglength:
+                        continue
                     entry = args[n]
                     is_arg = True
                 elif isinstance(n, str):
-                    entry = kwargs[n]
+                    try:
+                        entry = kwargs[n]
+                    except KeyError:
+                        continue
                     is_arg = False
                 if hasattr(entry, "__iter__"):
                     # Create now a copy of the given array and manipulate then

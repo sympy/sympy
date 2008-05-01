@@ -656,8 +656,7 @@ class Lambda(Function):
            #     return True
         return False
 
-
-@vectorize(0,1)
+@vectorize(0,1,2)
 def diff(f, x, times = 1, evaluate=True):
     """Differentiate f with respect to x
 
