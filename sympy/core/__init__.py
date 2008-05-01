@@ -9,6 +9,7 @@ from mul import Mul
 from add import Add
 from relational import Rel, Eq, Ne, Lt, Le, Gt, Ge, \
     Equality, Inequality, Unequality, StrictInequality
+from multidimensional import vectorize
 from function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
     Function, expand
 from interval import Interval

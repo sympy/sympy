@@ -38,6 +38,7 @@ from itertools import repeat
 from numbers import Rational,Integer
 from symbol import Symbol
 from add    import Add
+from multidimensional import vectorize
 
 class FunctionClass(BasicMeta):
     """
@@ -83,6 +84,7 @@ class Function(Basic, ArithMeths, RelMeths):
 
     nargs = None
 
+    @vectorize(1)
     @cacheit
     def __new__(cls, *args, **options):
         # NOTE: this __new__ is twofold:
@@ -655,7 +657,7 @@ class Lambda(Function):
         return False
 
 
-
+@vectorize(0,1)
 def diff(f, x, times = 1, evaluate=True):
     """Differentiate f with respect to x
 
@@ -667,6 +669,7 @@ def diff(f, x, times = 1, evaluate=True):
 
     return Derivative(f,x,times, **{'evaluate':evaluate})
 
+@vectorize(0)
 def expand(e, **hints):
     """
     Expand an expression using hints.
