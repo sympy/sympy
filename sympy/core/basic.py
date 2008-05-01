@@ -222,6 +222,19 @@ class Basic(AssumeMeths):
 
     # NB: there is no need in protective __setattr__
 
+    def __getstate__(self):
+        #XXX: This may not be enough, if some important data is stored
+        #     somewhere else.
+        d = {}
+        for name in self.__slots__ + Basic.__slots__:
+            d[name] = getattr(self, name)
+        d["_assumptions"] = self._assumptions
+        return d
+
+    def __setstate__(self, d):
+        for name, value in d.iteritems():
+            setattr(self, name, value)
+
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
         # occurs as hash is needed for setting cache dictionary keys
