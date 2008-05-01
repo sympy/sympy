@@ -81,6 +81,10 @@ class Order(Basic, ArithMeths, RelMeths):
 
     is_Order = True
 
+    # We are caching the order, e.g. O(1) < O(x) < O(x**2) etc in _cache.
+    # Unfortunately, this depends on limits and for very complicated
+    # expressions, it may easily cache a wrong result. Better is to do series
+    # expansion without limits completely.
     _cache = {}
 
     __slots__ = []

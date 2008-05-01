@@ -5,6 +5,16 @@ from sympy.utilities.pytest import XFAIL
 from sympy import O
 #from sympy.core.power import pole_error
 
+def test_bug5():
+    x = Symbol("x", real=True)
+    w = Symbol("w", real=True)
+    e = w**(1-log(x)/(log(2) + log(x)))
+    f = e.series(w,0,1)
+    e = sin(2*w)/w
+    f = e.series(w,0,2)
+    # this fails if real=False for x and w, due to a caching bug in Order
+    assert f == 2 + O(w**2)
+
 def testseries1():
     x = Symbol("x")
     e = sin(x)
@@ -75,12 +85,9 @@ def test_exp():
     e = (1+x)**(1/x)
     assert e.series(x,0,2) == exp(1) - x*exp(1)/2 + O(x**2, x)
 
-@XFAIL
 def test_exp2():
-    # XXX Fails only when py.test is executed at top level, but passes
-    #     when executed within directory (probably caching error)
-    x = Symbol("x")
-    w = Symbol("w")
+    x = Symbol("x", real=True)
+    w = Symbol("w", real=True)
     e = w**(1-log(x)/(log(2) + log(x)))
     assert e.series(w,0,1) != 0
 
