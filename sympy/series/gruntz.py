@@ -1,9 +1,3 @@
-# This is the general Gruntz algorithm for limits. A very simplified (and not
-# that reliable) version is in limits_series.py, and that is only used for
-# series expansion. Use this file for any limit calculation (except in the
-# series expansion code itself, where either use no limits, or
-# limits_series.py).
-
 """
 Limits
 ======
