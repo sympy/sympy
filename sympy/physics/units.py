@@ -1,14 +1,20 @@
 """
-Physical units and dimensions
+Physical units and dimensions.
 
+The base class is Unit, where all here defined units (~200) inherit from.
 """
 
-from sympy import *
+from sympy import Rational, pi
 from sympy.core.basic import Atom
 from sympy.core.methods import ArithMeths, RelMeths
 
-
 class Unit(Atom, RelMeths, ArithMeths):
+    """
+    Base class for all physical units.
+
+    Create own units like:
+    m = Unit("meter", "m")
+    """
     is_positive = True    # make (m**2)**Rational(1,2) --> m
     is_commutative = True
 
@@ -22,6 +28,8 @@ class Unit(Atom, RelMeths, ArithMeths):
     def __eq__(self, other):
         return isinstance(other, Unit) and self.name == other.name
 
+# Delete this so it doesn't pollute the namespace
+del Atom, ArithMeths, RelMeths
 
 def defunit(value, *names):
     u = value
@@ -164,3 +172,6 @@ atmosphere = atmospheres = atm = 101325 * pascal
 
 defunit(c*julian_year, 'ly', 'lightyear', 'lightyears')
 defunit(149597870691*m, 'au', 'astronomical_unit', 'astronomical_units')
+
+# Delete this so it doesn't pollute the namespace
+del Rational, pi

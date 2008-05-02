@@ -32,6 +32,7 @@ from geometry import *
 from polynomials import *
 from utilities import *
 from integrals import *
+from physics import units
 from plotting import Plot, textplot
 from printing import pretty, pretty_print, pprint, pprint_use_unicode, \
     pprint_try_use_unicode, print_gtk
