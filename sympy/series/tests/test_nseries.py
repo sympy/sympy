@@ -47,8 +47,8 @@ def test_exp_1():
             (exp(2)*(1+x+x**2/2+x**3/6+x**4/24)).expand() + O(x**5)
 
 def test_exp_sqrt_1():
-    assert exp(1+sqrt(x)).nseries(x, 0, 2) ==  \
-        (exp(1)*(1+sqrt(x)+x/2+sqrt(x)*x/6)).expand() + O(x**2)
+    assert exp(1+sqrt(x)).nseries(x, 0, 3) ==  \
+        (exp(1)*(1+sqrt(x)+x/2+sqrt(x)*x/6)).expand() + O(sqrt(x)**3)
 
 def test_power_x_x1():
     assert (exp(x*ln(x))).nseries(x, 0, 4) == \
@@ -128,7 +128,7 @@ def test_bug2(): ### 1/log(0) * log(0) problem
 def test_exp():
     x = Symbol("x")
     e = (1+x)**(1/x)
-    assert e.nseries(x,0,2) == exp(1) - x*exp(1)/2 + O(x**2, x)
+    assert e.nseries(x, 0, 3) == exp(1) - x*exp(1)/2 + O(x**2, x)
 
 def test_exp2():
     x = Symbol("x")
@@ -207,7 +207,7 @@ def test_logbug4():
 def test_expbug5():
     x = Symbol("x")
     #assert exp(O(x)).nseries(x,0,2) == 1 + O(x**2, x)
-    assert exp(log(1+x)/x).nseries(x,0,2) == exp(1) + -exp(1)*x/2 + O(x**2)
+    assert exp(log(1+x)/x).nseries(x, 0, 3) == exp(1) + -exp(1)*x/2 + O(x**2)
 
 def test_sinsinbug():
     x = Symbol("x")

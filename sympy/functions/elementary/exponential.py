@@ -213,16 +213,15 @@ class exp(Function):
     def nseries(self, x, x0, n):
         arg = self.args[0]
         arg_series = arg.nseries(x, x0, n)
-        from sympy import limit
-        if limit(arg_series, x, x0) == 0:
-            from sympy import Symbol
-            s = Symbol("s", dummy=True)
-            exp_series = exp(s).series(s, x0, n)
-            r = exp_series.subs(s, arg_series)
-            r = r.expand()
-            return r
-        else:
+        from sympy import limit, Symbol, oo
+        arg0 = limit(arg_series, x, x0)
+        if arg0 in [-oo, oo]:
             return self.series(x, x0, n)
+        s = Symbol("s", dummy=True)
+        exp_series = exp(s).series(s, x0, n)
+        r = exp(arg0)*exp_series.subs(s, arg_series-arg0)
+        r = r.expand()
+        return r
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0]
