@@ -146,6 +146,30 @@ class AssumeMeths(object):
     _real_cmp0_table['nonpositive'] = _real_cmp0_table['negative']
     _real_cmp0_table['nonnegative'] = _real_cmp0_table['positive']
 
+    def __getstate__(self, cls=None):
+        if cls is None:
+            # This is the case for the instance that gets pickled
+            cls = self.__class__
+
+        d = {}
+        # Get all data that should be stored from super classes
+        for c in cls.__bases__:
+            if hasattr(c, "__getstate__"):
+                d.update(c.__getstate__(self, c))
+
+        # Get all information that should be stored from cls and return the dic
+        for name in cls.__slots__:
+            if hasattr(self, name):
+                d[name] = getattr(self, name)
+        return d
+
+    def __setstate__(self, d):
+        # All values that were pickled are now assigned to a fresh instance
+        for name, value in d.iteritems():
+            try:
+                setattr(self, name, value)
+            except:
+                pass
 
     def _get_assumption(self, name):
         k = name[3:]
