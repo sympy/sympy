@@ -916,6 +916,12 @@ Let's first push to local `sympy` mirror
     ``source has mq patches applied``. As we still push to local repository we
     know what we do.
 
+.. note::
+
+    If you want to convert MQ patches to regular commits in the same
+    repository, use "``hg qdelete -r qbase:qtip``" (the patches need to be
+    applied).
+
 Now let's go to `sympy` mirror and push into main repo!
 
 .. parsed-literal::
