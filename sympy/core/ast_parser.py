@@ -31,8 +31,8 @@ class SymPyTransformer(Transformer):
         Transformer.__init__(self)
         self.symbol_class = 'Symbol'
         self.name_dict = global_dict.copy()
-	self.name_dict.update(local_dict)
-	self.local_dict = local_dict
+        self.name_dict.update(local_dict)
+        self.local_dict = local_dict
     def atom_number(self, nodelist):
         n = Transformer.atom_number(self, nodelist)
         number, lineno = nodelist[0][1:]
@@ -51,9 +51,9 @@ class SymPyTransformer(Transformer):
             name_obj = self.name_dict[name]
             #if isinstance(name_obj, (Basic,bool,FunctionClass)) or hasattr(name_obj, '__call__'):
             return Const(name_obj, lineno=lineno)
-	
-	proper_obj = Symbol(name)
-	self.local_dict[name] = proper_obj
+
+        proper_obj = Symbol(name)
+        self.local_dict[name] = proper_obj
         return Const(proper_obj, lineno=lineno)
 
     def lambdef(self, nodelist):
@@ -86,7 +86,7 @@ class SymPyParser:
 
         self.r_transformer = SymPyTransformer(local_dict, global_dict)
         self.local_dict = local_dict
-	self.global_dict = global_dict
+        self.global_dict = global_dict
 
     def parse_expr(self, ws_expression):
         expression = ws_expression.strip() #in case of "   x"
