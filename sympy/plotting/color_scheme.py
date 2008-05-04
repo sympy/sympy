@@ -51,7 +51,7 @@ class ColorScheme(object):
                 cs = default_color_schemes[args[0]]
                 self.f, self.gradient = cs.f, cs.gradient.copy()
             else:
-                self.f = lambdify(args[0], 'x,y,z,u,v')
+                self.f = lambdify('x,y,z,u,v', args[0])
         else:
             self.f, self.gradient = self._interpret_args(args, kwargs)
         self._test_color_function()
@@ -75,12 +75,12 @@ class ColorScheme(object):
         # try to lambdify args
         if len(atoms) == 1:
             fv = atoms[0]
-            try: f = lambdify([fv,fv,fv], s)
+            try: f = lambdify(s, [fv,fv,fv])
             except: raise f_error
 
         elif len(atoms) == 3:
             fr, fg, fb = atoms
-            try: f = lambdify([fr,fg,fb], s)
+            try: f = lambdify(s, [fr,fg,fb])
             except: raise f_error
 
         else: raise ValueError("A ColorScheme must provide 1 or 3 "

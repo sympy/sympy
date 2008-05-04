@@ -143,8 +143,8 @@ if __name__ == "__main__":
                 representing the gradient of f.
                 """
                 dx, dy, dz = f.diff(x), f.diff(y), 0
-                FF = lambdify( [x,y,f],    [x,y] )
-                FG = lambdify( [dx,dy,dz], [x,y] )
+                FF = lambdify( [x,y], [x,y,f] )
+                FG = lambdify( [x,y], [dx,dy,dz] )
                 iu.v_steps /= 5
                 iv.v_steps /= 5
                 Gvl = list(list([FF(u, v), FG(u, v)]

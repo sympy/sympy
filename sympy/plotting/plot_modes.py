@@ -30,7 +30,7 @@ class Cartesian2D(PlotCurve):
     def _get_lambda_evaluator(self):
         fy = self.d_vars[0]
         x  = self.t_interval.v
-        return lambdify([x, fy, 0.0], [x])
+        return lambdify([x], [x, fy, 0.0])
 
 class Cartesian3D(PlotSurface):
     i_vars, d_vars = 'xy', 'z'
@@ -51,7 +51,7 @@ class Cartesian3D(PlotSurface):
         fz = self.d_vars[0]
         x  = self.u_interval.v
         y  = self.v_interval.v
-        return lambdify([x,y,fz], [x,y])
+        return lambdify([x,y], [x,y,fz])
 
 class ParametricCurve2D(PlotCurve):
     i_vars, d_vars = 't', 'xy'
@@ -72,7 +72,7 @@ class ParametricCurve2D(PlotCurve):
     def _get_lambda_evaluator(self):
         fx, fy = self.d_vars
         t  = self.t_interval.v
-        return lambdify([fx,fy,0.0], [t])
+        return lambdify([t], [fx,fy,0.0])
 
 class ParametricCurve3D(PlotCurve):
     i_vars, d_vars = 't', 'xyz'
@@ -93,7 +93,7 @@ class ParametricCurve3D(PlotCurve):
     def _get_lambda_evaluator(self):
         fx, fy, fz = self.d_vars
         t  = self.t_interval.v
-        return lambdify([fx,fy,fz], [t])
+        return lambdify([t], [fx,fy,fz])
 
 class ParametricSurface(PlotSurface):
     i_vars, d_vars = 'uv', 'xyz'
@@ -116,7 +116,7 @@ class ParametricSurface(PlotSurface):
         fx, fy, fz = self.d_vars
         u  = self.u_interval.v
         v  = self.v_interval.v
-        return lambdify([fx, fy, fz], [u,v])
+        return lambdify([u,v], [fx, fy, fz])
 
 class Polar(PlotCurve):
     i_vars, d_vars = 't', 'r'
@@ -136,7 +136,7 @@ class Polar(PlotCurve):
         fr = self.d_vars[0]
         t  = self.t_interval.v
         fx, fy = fr*cos(t), fr*sin(t)
-        return lambdify([fx,fy,0.0], [t])
+        return lambdify([t], [fx,fy,0.0])
 
 class Cylindrical(PlotSurface):
     i_vars, d_vars = 'th', 'r'
@@ -158,7 +158,7 @@ class Cylindrical(PlotSurface):
         t  = self.u_interval.v
         h  = self.v_interval.v
         fx, fy = fr*cos(t), fr*sin(t)
-        return lambdify([fx,fy,h], [t,h])
+        return lambdify([t,h], [fx,fy,h])
 
 class Spherical(PlotSurface):
     i_vars, d_vars = 'tp', 'r'
@@ -184,7 +184,7 @@ class Spherical(PlotSurface):
         fx = fr*cos(t)*sin(p)
         fy = fr*sin(t)*sin(p)
         fz = fr*cos(p)
-        return lambdify([fx,fy,fz], [t,p])
+        return lambdify([t,p], [fx,fy,fz])
 
 Cartesian2D._register()
 Cartesian3D._register()

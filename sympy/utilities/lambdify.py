@@ -81,7 +81,7 @@ def _import(modulename, reload="False"):
     for sympyname, translation in translations.iteritems():
         namespace[sympyname] = getattr(module, translation)
 
-def lambdify(expr, args, modulenames=None):
+def lambdify(args, expr, modulenames=None):
     """
     Returns a lambda function that can be used to calculate fast numerical
     values of expressions.
@@ -90,18 +90,18 @@ def lambdify(expr, args, modulenames=None):
 
     >>> from sympy import symbols, sqrt, sin
     >>> x,y,z = symbols('xyz')
-    >>> f = lambdify(x**2, [x])
+    >>> f = lambdify([x], x**2)
     >>> f(2)
     4
-    >>> f = lambdify([z,y,x], [x,y,z])
+    >>> f = lambdify([x,y,z], [z,y,x])
     >>> f(1,2,3)
     [3, 2, 1]
-    >>> f = lambdify(sqrt(x), [x])
+    >>> f = lambdify([x], sqrt(x))
     >>> f(4)
     2.0
-    >>> f = lambdify(sin(x*y)**2, (x,y))
-    >>> f(0,5)
-    0
+    >>> f = lambdify((x,y), sin(x*y)**2)
+    >>> f(0, 5)
+    0.0
 
 
     Sympy functions are replaced as far as possible by either numpy functions
@@ -118,7 +118,7 @@ def lambdify(expr, args, modulenames=None):
 
     Example:
 
-    >>> f = lambdify(sin(x), [x, y], modulenames="math")
+    >>> f = lambdify([x, y], sin(x), modulenames="math")
     >>> f(0, 5)
     0.0
 

@@ -12,7 +12,7 @@ def textplot(expr, a, b, W=55, H=18):
     f = None
     for x in expr.atoms():
         if isinstance(x, Symbol):
-            f = lambdify(expr, [x])
+            f = lambdify([x], expr)
             break
     assert f is not None
     a = float(a)
