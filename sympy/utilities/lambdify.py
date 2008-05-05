@@ -1,69 +1,198 @@
 from __future__ import division
 
-from sympy import Basic, Symbol
-from sympy.core import sympify
-from math import sin, cos, tan, asin, acos, atan, log, pi, exp
-Pi = pi
-E = exp(1)
+from sympy.core import sympify, vectorize
 
-def lambdify(*args):
+# These are the namespaces that lambda functions will use.
+MATH = {}
+MPMATH = {}
+NUMPY = {}
+SYMPY = {}
+
+# Mappings between sympy and other modules function names.
+MATH_TRANSLATIONS = {
+    "ceiling":"ceil",
+    "abs":"fabs",
+    "ln":"log",
+    "pi":"pi",
+    "E":"e"
+}
+
+MPMATH_TRANSLATIONS = {
+    "lowergamma":"lower_gamma",
+    "uppergamma":"upper_gamma",
+    "pi":"pi",
+    "E":"e",
+    "I":"j"
+}
+
+NUMPY_TRANSLATIONS = {
+    "acos":"arccos",
+    "acosh":"arccosh",
+    "arg":"angle",
+    "asin":"arcsin",
+    "asinh":"arcsinh",
+    "atan":"arctan",
+    "atan2":"arctan2",
+    "atanh":"arctanh",
+    "ceiling":"ceil",
+    "im":"imag",
+    "ln":"log",
+    "max_":"max",
+    "min_":"min",
+    "re":"real",
+    "E":"e",
+    "oo":"inf",
+}
+
+# Available modules:
+MODULES = {
+    "math":(MATH, MATH_TRANSLATIONS, "import math"),
+    "mpmath":(MPMATH, MPMATH_TRANSLATIONS, "from sympy.thirdparty import mpmath"),
+    "numpy":(NUMPY, NUMPY_TRANSLATIONS, "import numpy"),
+    "sympy":(SYMPY, {}, "from sympy import functions")
+}
+
+def _import(modulename, reload="False"):
     """
-    >>> from sympy import symbols, sqrt
-    >>> x,y,z = symbols('xyz')
-    >>> f = lambdify(x**2, [x])
-    >>> f(2)
-    4
-    >>> f = lambdify([z,y,x], [x,y,z])
-    >>> f(1,2,3)
-    (3, 2, 1)
-    >>> f = lambdify(sqrt(x), [x])
-    >>> f(4)
-    2.0
+    Creates the global translated dictionary that maps sympy function names to
+    the corresponding functions.
     """
-    lstr = lambdastr(*args)
-    #print lstr
-    return eval(lstr)
+    if not MODULES.has_key(modulename):
+        raise NameError, "This module can't be used for lambdification."
+    namespace, translations, import_command = MODULES[modulename]
+    # Clear namespace or exit
+    if namespace:
+        if reload:
+            namespace.clear()
+        else:
+            # This namespace was already generated, don't do that again.
+            return
 
-def lambdastr(*args):
+    # It's possible that numpy is not available.
+    try:
+        exec import_command + " as module"
+    except ImportError:
+        raise ImportError, "Can't import %s with command %s"%(modulename,
+                                                              import_command)
+
+    # Add all names of the module to our working namspace
+    namespace.update(vars(module))
+    # Add translated names to namespace
+    for sympyname, translation in translations.iteritems():
+        namespace[sympyname] = getattr(module, translation)
+
+def lambdify(expr, args, modulenames=None):
     """
-    >>> from sympy import symbols
-    >>> x,y,z = symbols('xyz')
-    >>> lambdastr(x**2, [x])
-    'lambda x: (x**2)'
-    >>> lambdastr([z,y,x], [x,y,z])
-    'lambda x,y,z: (z,y,x)'
+    Returns a lambda function that can be used to calculate fast numerical
+    values of expressions.
+
+    Usage:
+    >>f = lambdify((x,y), sin(x*y)**2)
+    >>f(0,5)
+    0.0
+
+    Sympy functions are replaced as far as possible by either numpy functions
+    (if available) or python.math functions. For more precise values consider
+    using lambdify_mpmath, which is slower but has arbitrary precission.
+    The used modules can also be directly specified in "modulenames".
+    Possible modulenames are:
+      - math (=python.math)
+      - mpmath
+      - numpy
+      - sympy
+    Alternatively a dictionary can be passed instead of one modulename, that
+    maps sympy function names to an arbitrary function.
     """
-    assert len(args) == 2
+    # If the user specified the modules use those.
+    if not modulenames is None:
+        return _lambdify(args, expr, modulenames)
 
-    if isinstance(args[0], str) and isinstance(args[1], str):
-        exprs, vargs = args
+    # Use either numpy (if available) or python.math where possible
+    try:
+        _import("numpy")
+    except ImportError:
+        name = "math"
+    else:
+        name = "numpy"
+    return _lambdify(args, expr, ("sympy", name))
 
-    elif isinstance(args[1], (list, tuple)):
-        vargs = args[1]
+def _lambdify(args, expr, modulenames):
+    """
+    Returns a lambda function that takes args as arguments and uses functions
+    defined in the modules.
+    Possible modulenames are:
+      - math (=python.math)
+      - mpmath
+      - numpy
+      - sympy
+    You can also pass more than one modulename - then functions that are not
+    defined in one module, can be taken from another module.
+    Alternatively a dictionary can be passed instead of one modulename, that
+    maps sympy function names to an arbitrary function.
+    The modules that are first in the list have higher priority.
+    """
+    if hasattr(modulenames, "__iter__"):
+        modulenames = list(modulenames)
+        modulenames.reverse()
+        namespace = {}
+        for m in modulenames:
+            namespace.update(_get_namespace(m))
+    else:
+        namespace = _get_namespace(modulenames)
 
-        for v in vargs:
-            assert isinstance(v, Symbol)
+    lstr = lambdastr(args, expr)
+    return eval(lstr, namespace)
 
-        if isinstance(args[0], (list, tuple)):
-            exprs = list(args[0])
-        else: exprs = [args[0]]
+def _get_namespace(m):
+    """
+    This is only used by _lambdify to parse it's arguments.
+    """
+    namespace = {}
+    if isinstance(m, str):
+        _import(m)
+        namespace.update(MODULES[m][0])
+    elif isinstance(m, dict):
+        namespace.update(m)
+    else:
+        raise NotImplementedError
+    return namespace
 
-        for e in xrange(len(exprs)):
-            exprs[e] = sympify(exprs[e])
-            for a in exprs[e].atoms(type=Symbol):
-                assert a in vargs
+def lambdify_math(args, expr):
+    """
+    Can be used exactly like lambdify, but it only uses python.math and sympy
+    functions.
+    """
+    return _lambdify(args, expr, ("math", "sympy"))
 
-        vargs = ','.join(str(v) for v in vargs)
-        exprs = ','.join(str(e) for e in exprs)
+def lambdify_mpmath(args, expr):
+    """
+    Can be used exactly like lambdify, but it only uses mpmath and sympy
+    functions.
+    """
+    return _lambdify(args, expr, ("mpmath", "sympy"))
 
-    else: raise ValueError("Lambdification requires arguments "
-                           "of the form expr(s), vars. Examples: "
-                           "(x**2, [x]) or ([x**2, 1/y], [x,y]).")
+def lambdify_numpy(args, expr, prefix="__convert__"):
+    """
+    Can be used exactly like lambdify, but it only uses numpy and sympy
+    functions.
+    """
+    return _lambdify(args, expr, ("numpy", "sympy"))
 
-    return "lambda %s: (%s)" % (vargs, exprs)
+def lambdastr(args, expr):
+    """
+    Returns a string that can be evaluated to a lambda function. lambdify uses
+    this.
+    """
+    # Transform everything to strings.
+    expr = str(expr)
+    if isinstance(args, str):
+        pass
+    elif hasattr(args, "__iter__"):
+        args = ",".join(str(a) for a in args)
+    elif args.is_Symbol:
+        args = str(args)
+    else:
+        raise NotImplementedError
 
-if __name__ == '__main__':
-    from sympy import symbols
-    x,y,z = symbols('xyz')
-    print lambdastr(x**2, [x])
-    print lambdastr([z,y,x], [x,y,z])
+    # Set names of used variables back so that the expression can be used again.
+    return "lambda %s: (%s)" % (args, expr)

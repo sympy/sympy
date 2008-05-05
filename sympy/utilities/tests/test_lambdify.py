@@ -33,7 +33,7 @@ def test_sqrt():
     except ValueError: pass
 
 def test_vector_simple():
-    f = lambdify([z,y,x], [x,y,z])
+    f = lambdify((z,y,x), (x,y,z))
     assert f(3,2,1) == (1,2,3)
     assert f(1.0,2.0,3.0) == (3.0,2.0,1.0)
     # make sure correct number of args required
@@ -43,7 +43,7 @@ def test_vector_simple():
     except TypeError: pass
 
 def test_vector_discontinuous():
-    f = lambdify([-1/x, 1/x], [x])
+    f = lambdify((-1/x, 1/x), (x,))
     try:
         f(0)
         raise Exception()
@@ -61,7 +61,6 @@ def test_trig_symbolic():
 def test_trig_float():
     f = lambdify([cos(x),sin(x)], [x])
     d = f(3.14159)
-    print d
     assert abs(d[0]+1) < 0.0001
     assert abs(d[1]-0) < 0.0001
 
@@ -70,22 +69,12 @@ def test_bad_args():
         # no vargs given
         f = lambdify(1)
         raise Exception()
-    except AssertionError: pass
+    except TypeError: pass
     try:
         # same with vector exprs
         f = lambdify([1,2])
         raise Exception()
-    except AssertionError: pass
-    try:
-        # vargs must be a list
-        f = lambdify(1, x)
-        raise Exception()
-    except ValueError: pass
-    try:
-        # y is not in vargs
-        f = lambdify(y, [x])
-        raise Exception()
-    except AssertionError: pass
+    except TypeError: pass
 
 def test_str_args():
     f = lambdify('z,y,x', 'x,y,z')
