@@ -23,7 +23,7 @@ def mplot2d(f, var, show=True):
     for f_i in f:
         x, y = sample(f_i, var)
         p.plot(x, y)
-    
+
     p.draw()
     if show:
         p.show()
@@ -31,7 +31,7 @@ def mplot2d(f, var, show=True):
 if __name__ == "__main__":
     from sympy import sqrt, sin, log, pi
     x = Symbol('x')
-    
+
     #mplot2d(log(x), (x, 0, 2, 100))
     #mplot2d([sin(x), -sin(x)], (x, float(-2*pi), float(2*pi), 50))
     mplot2d([sqrt(x), -sqrt(x), sqrt(-x), -sqrt(-x)], (x, -40.0, 40.0, 80))

@@ -29,7 +29,7 @@ def mplot3d(f, var1, var2, show=True):
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
-    
+
     if show:
         p.show()
 

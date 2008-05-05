@@ -136,7 +136,7 @@ if __name__ == "__main__":
             from sympy.plotting.plot_interval import PlotInterval
             from pyglet.gl import glBegin, glColor3f
             from pyglet.gl import glVertex3f, glEnd, GL_LINES
-            
+
             def draw_gradient_vectors(f, iu, iv):
                 """
                 Create a function which draws vectors
