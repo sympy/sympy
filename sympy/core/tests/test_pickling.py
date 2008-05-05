@@ -1,24 +1,23 @@
 import pickle
+import types
 from sympy.utilities.pytest import XFAIL
 
 from sympy.core.assumptions import AssumeMeths
 from sympy.core.basic import Atom, Basic, BasicMeta, BasicType,\
-                             ClassesRegistry, Singleton, SingletonFactory
+        ClassesRegistry, Singleton, SingletonFactory
 from sympy.core.symbol import Dummy, Symbol, Temporary, Wild
 from sympy.core.numbers import Catalan, ComplexInfinity, EulerGamma, Exp1,\
-                               GoldenRatio, Half, ImaginaryUnit, Infinity,\
-                               Integer, NaN, NegativeInfinity,  NegativeOne,\
-                               Number, NumberSymbol, One, Pi, Rational, Real,\
-                               Zero
+        GoldenRatio, Half, ImaginaryUnit, Infinity, Integer, NaN,\
+        NegativeInfinity,  NegativeOne, Number, NumberSymbol, One, Pi,\
+        Rational, Real, Zero
 from sympy.core.relational import Equality, Inequality, Relational,\
-                                  StrictInequality, Unequality
+        StrictInequality, Unequality
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.methods import ArithMeths, NoArithMeths, NoRelMeths, RelMeths
-
 from sympy.core.function import Derivative, Function, FunctionClass, Lambda,\
-                                WildFunction
+        WildFunction
 from sympy.core.interval import Interval
 from sympy.core.multidimensional import vectorize
 from sympy.core.cache import Memoizer
@@ -27,6 +26,7 @@ from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
 def check(a):
     b = pickle.loads(pickle.dumps(a))
+
     d1 = dir(a)
     d2 = dir(b)
     assert d1==d2
@@ -41,6 +41,9 @@ def check(a):
                 assert getattr(b,i)==attr
     c(a,b,d1)
     c(b,a,d2)
+
+
+#================== core =========================
 
 def test_core_assumptions():
     for c in (AssumeMeths, AssumeMeths()):
@@ -125,4 +128,216 @@ def test_core_astparser():
     # This probably fails because of importing the global sympy scope.
     for c in (SymPyParser, SymPyParser(), SymPyTransformer,
               SymPyTransformer({},{})):
+        check(c)
+
+
+#================== functions ===================
+# XXX: These tests are not complete.
+from sympy import functions
+
+def test_functions():
+    x = Symbol("x")
+    for name, cls in vars(functions).iteritems():
+        if hasattr(cls, "__class__") and not cls.__class__ is types.ModuleType and not name[0]=="_":
+            check(cls)
+            try:
+                c = cls(x)
+            except:
+                continue
+            check(c)
+
+#================== geometry ====================
+from sympy.geometry.entity import GeometryEntity
+from sympy.geometry.point import Point
+from sympy.geometry.ellipse import Circle, Ellipse
+from sympy.geometry.line import Line, LinearEntity, Ray, Segment
+from sympy.geometry.polygon import Polygon, RegularPolygon, Triangle
+
+def test_geometry():
+    p1 = Point(1,2)
+    p2 = Point(2,3)
+    p3 = Point(0,0)
+    p4 = Point(0,1)
+    for c in (GeometryEntity, GeometryEntity(), Point, p1, Circle, Circle(p1,2),
+              Ellipse, Ellipse(p1,3,4), Line, Line(p1,p2), LinearEntity,
+              LinearEntity(p1,p2), Ray, Ray(p1,p2), Segment, Segment(p1,p2),
+              Polygon, Polygon(p1,p2,p3,p4), RegularPolygon, RegularPolygon(p1,4,5),
+              Triangle):
+        # XXX: Instance of Triangle hangs because of hasattr in check().
+        # Triangle(p1,p2,p3)
+        check(c)
+        pass
+
+#================== integrals ====================
+from sympy.integrals.integrals import Integral
+from sympy.integrals.trigonometry import Cos_2k_integrate, Sin_2k_integrate
+
+def test_integrals():
+    x = Symbol("x")
+    for c in (Integral, Integral(x), Cos_2k_integrate, Cos_2k_integrate(x, 3),
+              Sin_2k_integrate, Sin_2k_integrate(x, 2)):
+        check(c)
+
+#================== matrices ====================
+from sympy.matrices.matrices import Matrix, SMatrix, _MatrixAsBasic
+
+def test_matrices():
+    for c in (Matrix, Matrix([1,2,3]), SMatrix, SMatrix([[1,2],[3,4]])):
+        check(c)
+
+#================== ntheorie ====================
+from sympy.ntheory.generate import Sieve
+
+def test_ntheory():
+    for c in (Sieve, Sieve()):
+        check(c)
+
+#================== physics =====================
+from sympy.physics.paulialgebra import Pauli
+from sympy.physics.units import Unit
+
+def test_physics():
+    for c in (Unit, Unit("meter", "m"), Pauli, Pauli(1)):
+        check(c)
+
+#================== plotting ====================
+# XXX: These tests are not complete.
+from sympy.plotting.color_scheme import ColorGradient, ColorScheme
+from sympy.plotting.managed_window import ManagedWindow
+from sympy.plotting.plot import Plot, ScreenShot
+from sympy.plotting.plot_axes import PlotAxes, PlotAxesBase, PlotAxesFrame, PlotAxesOrdinate
+from sympy.plotting.plot_camera import PlotCamera
+from sympy.plotting.plot_controller import PlotController
+from sympy.plotting.plot_curve import PlotCurve
+from sympy.plotting.plot_interval import PlotInterval
+from sympy.plotting.plot_mode import PlotMode
+from sympy.plotting.plot_modes import Cartesian2D, Cartesian3D, Cylindrical,\
+    ParametricCurve2D, ParametricCurve3D, ParametricSurface, Polar, Spherical
+from sympy.plotting.plot_object import PlotObject
+from sympy.plotting.plot_surface import PlotSurface
+from sympy.plotting.plot_window import PlotWindow
+
+def test_plotting():
+    for c in (ColorGradient, ColorGradient(0.2,0.4), ColorScheme, ManagedWindow,
+              ManagedWindow, Plot, ScreenShot, PlotAxes, PlotAxesBase,
+              PlotAxesFrame, PlotAxesOrdinate, PlotCamera, PlotController,
+              PlotCurve, PlotInterval, PlotMode, Cartesian2D, Cartesian3D,
+              Cylindrical, ParametricCurve2D, ParametricCurve3D,
+              ParametricSurface, Polar, Spherical, PlotObject, PlotSurface,
+              PlotWindow):
+        check(c)
+
+@XFAIL
+def test_plotting2():
+    check(ColorScheme("rainbow"))
+    check(Plot(1,visible=False))
+    check(PlotAxes())
+
+#================== polynomials =================
+from sympy.polynomials.base import Polynomial
+from sympy.polynomials.fast.intpoly import IntPoly
+from sympy.polynomials.fast.modint import ModularInteger, ModularIntegerFactory
+from sympy.polynomials.fast.sparse_poly import SparsePolynomial
+
+def test_polynomials():
+    for c in (Polynomial, IntPoly, IntPoly(), ModularInteger, SparsePolynomial,
+              SparsePolynomial()):
+        check(c)
+
+@XFAIL
+def test_polynomials2():
+    x = Symbol("x")
+    check(Polynomial(1+x))
+
+@XFAIL
+def test_polynomials3():
+    check(ModularIntegerFactory(2)(4))
+
+#================== polys =======================
+from sympy.polys.polynomial import IntegerPoly, Poly
+
+def test_polys():
+    x = Symbol("x")
+    y = Symbol("y")
+    for c in (IntegerPoly, IntegerPoly(x,y), Poly, Poly(x,y)):
+        check(c)
+
+#================== printing ====================
+from sympy.printing.latex import LatexPrinter
+from sympy.printing.mathml import MathMLPrinter
+from sympy.printing.pretty.pretty import PrettyPrinter
+from sympy.printing.pretty.stringpict import prettyForm, stringPict
+from sympy.printing.printer import Printer
+from sympy.printing.python import PythonPrinter
+
+def test_printing():
+    for c in (LatexPrinter, LatexPrinter(), MathMLPrinter,
+              PrettyPrinter, prettyForm, stringPict, stringPict("a"),
+              Printer, Printer(), PythonPrinter, PythonPrinter()):
+        check(c)
+
+@XFAIL
+def test_printing1():
+    check(MathMLPrinter())
+
+@XFAIL
+def test_printing2():
+    check(PrettyPrinter())
+
+#================== series ======================
+from sympy.series.gruntz import Limit2
+from sympy.series.limits import Limit
+from sympy.series.order import Order
+
+def test_series():
+    e = Symbol("e")
+    x = Symbol("x")
+    for c in (Limit2, Limit2(e, x, 1), Limit, Limit(e, x, 1), Order, Order(e)):
+        check(c)
+
+#================== simplify ====================
+from sympy.simplify.rootof import RootOf
+
+def test_simplify():
+    x = Symbol("x")
+    for c in (RootOf, ):
+        check(c)
+
+@XFAIL
+def test_simplify1():
+    x = Symbol("x")
+    check(RootOf(x**2+x, x))
+
+#================== specfun =====================
+from sympy.specfun.factorials import Binomial2, Falling_factorial,\
+        Rising_factorial, UnevaluatedFactorial, _Factorial
+
+def test_specfun():
+    x = Symbol("x")
+    y = Symbol("y")
+    for c in (Binomial2, Binomial2(x,y), Falling_factorial,
+              Falling_factorial(x,3), Rising_factorial(x,4),
+              UnevaluatedFactorial, UnevaluatedFactorial(x), _Factorial,
+              _Factorial(x,4)):
+        check(c)
+
+#================== statistics ==================
+from sympy.statistics.distributions import ContinuousProbability, Normal, Sample, Uniform
+
+def test_statistics():
+    x = Symbol("x")
+    y = Symbol("y")
+    for c in (ContinuousProbability, ContinuousProbability(), Normal,
+              Normal(x,y), Sample, Sample([1,3,4]), Uniform, Uniform(x,y)):
+        check(c)
+
+#================== concrete ==================
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
+from sympy.concrete.sums_products import Sum2, _BigOperator
+
+def test_concrete():
+    x = Symbol("x")
+    for c in (Product, Product(1,2), Sum, Sum(1), Sum2, Sum2(x,(x,2,4)),
+              _BigOperator):
         check(c)

@@ -37,8 +37,9 @@ class Pauli(Symbol):
     1
     >>> Pauli(1)*Pauli(2)*Pauli(3)
     I
-
     """
+
+    __slots__ = ["i"]
 
     def __new__(cls, i):
         if not i in [1,2,3]:
@@ -61,5 +62,3 @@ class Pauli(Symbol):
     def _eval_power(b, e):
         if e.is_Integer and e.is_positive:
             return super(Pauli, b).__pow__(int(e) % 2)
-
-
