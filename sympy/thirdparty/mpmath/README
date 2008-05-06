@@ -6,12 +6,25 @@ A Python library for arbitrary-precision floating-point arithmetic.
 Website: http://code.google.com/p/mpmath
 Author: Fredrik Johansson <fredrik.johansson@gmail.com>
 
-mpmath is free software released under the New BSD License (see the
+Mpmath is free software released under the New BSD License (see the
 LICENSE file for details)
 
-0. History
-----------
+0. History and credits
+----------------------
 
+The following people have contributed patches and new features
+to mpmath:
+
+* Pearu Peterson
+* Mario Pernici
+* Ondrej Certik
+
+Release history:
+
+* Version 0.8 released on April 20, 2008
+* Version 0.7 released on March 12, 2008
+* Version 0.6 released on January 13, 2008
+* Version 0.5 released on November 24, 2007
 * Version 0.4 released on November 3, 2007
 * Version 0.3 released on October 5, 2007
 * Version 0.2 released on October 2, 2007
@@ -19,11 +32,10 @@ LICENSE file for details)
 
 For a detailed changelog, see the CHANGES file.
 
-
 1. Download & installation
 --------------------------
 
-mpmath requires a recent version of Python. It has been tested with
+Mpmath requires a recent version of Python. It has been tested with
 Python 2.5 and should work with Python 2.4.
 
 The latest release of mpmath can be downloaded from the mpmath
@@ -34,147 +46,63 @@ To install, unpack the mpmath archive and run
 
   python setup.py install
 
-The latest development code is available at
-http://mpmath.googlecode.com/svn/trunk/
+Mpmath can also be installed using
 
+  python -m easy_install mpmath
 
-2. Documentation and usage
---------------------------
+The latest development code is available from
+http://code.google.com/p/mpmath/source/checkout
 
-Note: some additional documentation is available on the mpmath website.
-The unit tests and internal docstrings may also be helpful.
+2. Running tests
+----------------
 
-Import mpmath with
+The unit tests in mpmath/tests/ can be run via the script
+runtests.py, but it is recommended to run them with py.test
+(http://codespeak.net/py/dist/index.html), especially
+to generate more useful reports in case there are failures.
 
-    from mpmath import *
+You may also want to check out the demo scripts in the demo
+directory.
 
-This provides the classes mpf and mpc which work analogously to
-Python's float and complex types:
+3. Documentation
+----------------
 
-    >>> mpf(2) / mpf(3)
-    mpf('0.66666666666666663')
+Documentation in reStructuredText format is available in the
+doc directory included with the source package. These files
+are human-readable, but can be compiled to prettier HTML using
+the build.py script (requires Sphinx, http://sphinx.pocoo.org/).
 
-    >>> mpc(0, -1)
-    mpc(real='0.0', imag='-1.0')
+See setup.txt in the documentation for more information.
 
-    >>> mpf(-0.6) ** mpf(-0.2)
-    mpc(real='0.89603999408558288', imag='-0.65101116249684809')
+The most recent documentation is also available in HTML
+format on the mpmath website:
 
-For prettier output (that also hides small rounding errors), use
-print or str():
+http://mpmath.googlecode.com/svn/trunk/doc/build/index.html
 
-    >>> print mpf(2) / mpf(3)
-    0.666666666666667
-
-    >>> print mpc(1+2j)**0.5
-    (1.27201964951407 + 0.786151377757423j)
-
-The precision is controlled by the properties mpf.prec (number of bits)
-and mpf.dps (number of decimals). These properties are linked, so
-changing one automatically updates the other to match. Setting prec or
-dps changes the precision at which all operations are carried out and
-the number of digits to display when printing numbers. The default is
-prec=53 and dps=15, the same as Python floats.
-
-    >>> mpf.dps = 30
-    >>> mpf(2) / mpf(3)
-    mpf('0.66666666666666666666666666666663')
-    >>> print _
-    0.666666666666666666666666666667
-    >>> mpf.dps = 15     # restore to default
-
-You can create mpfs and mpcs from Python numbers, or combine mpfs
-and mpcs with Python numbers in arithmetic operations, but be
-aware that regular Python floats only have finite precision. To
-initialize an mpf with a full-precision value, use a string:
-
-    >>> mpf(0.1)
-    mpf('0.10000000000000001')      # same accuracy as float
-    >>> mpf.dps = 50
-    >>> mpf(0.1)
-    mpf('0.1000000000000000055511151231257827021181583404541016')   # junk
-
-    >>> mpf('0.1')
-    mpf('0.1000000000000000000000000000000000000000000000000001')   # ok
-
-The following standard functions are available and support both real and
-complex arguments:
-
-  sqrt, exp, log, power, cos, sin, tan, cosh, sinh, tanh,
-  acos, asin, atan, acosh, asinh, atanh
-
-Example:
-
-    >>> mpf.dps = 15
-    >>> print cos(1)
-    0.540302305868140
-    >>> mpf.dps = 50
-    >>> print cos(1)
-    0.54030230586813971740093660744297660373231042061792
-
-Some less-common functions are also available: gamma (gamma function),
-factorial, erf (error function), lower_gamma/upper_gamma (incomplete
-gamma function) and zeta (Riemann zeta function).
-
-Finally, the convenience functions hypot and atan2 are available
-(defined for real numbers only).
-
-The constants pi, e, and cgamma (Euler's constant) are available as
-special objects that behave like mpfs but whose values automatically
-adjust to the precision.
-
-    >>> mpf.dps = 15
-    >>> print pi
-    3.14159265358979
-    >>> mpf.dps = 50
-    >>> print pi
-    3.1415926535897932384626433832795028841971693993751
-
-    >>> mpf.dps = 15
-    >>> e**(-pi*1j)
-    mpc(real='-1', imag='-1.2289836075083701E-16')
-    >>> mpf.dps = 50
-    >>> e**(-pi*1j)
-    mpc(real='-1', imag='1.0106 [...] E-51')
-
-Directed rounding is partially implemented. For example, this computes
-and verifies a 15-digit approximation interval for pi:
-
-    >>> mpf.dps = 15
-    >>> mpf.round_down(); pi1 = +pi
-    >>> mpf.round_up(); pi2 = +pi
-    >>> pi1
-    mpf('3.1415926535897931')
-    >>> pi2
-    mpf('3.1415926535897936')
-    >>> mpf.dps = 30
-    >>> pi1 < pi < pi2
-    True
-
-
-3. Known problems
+4. Known problems
 -----------------
 
-* mpmath temporarily increases the working precision during function
-  evaluations to suppress the effects of intermediate rounding errors.
-  In most functions, the precision is currently increased by a fixed amount
-  that gives accurate results for "normal" input. Close to zeros and
-  singularities, and/or with the precision set to (say) several hundred
-  digits, the last few digits in a result may be wrong.
+Mpmath is a work in progress. Major issues include:
+
+* Some functions may return incorrect values when given extremely
+  large arguments or arguments very close to singularities.
 
 * Directed rounding works for arithmetic operations. It is implemented
   heuristically for other operations, and their results may be off by one
-  or two bits in the last place (if otherwise accurate).
+  or two units in the last place (even if otherwise accurate).
 
-* Some IEEE 754 features such as infinities, NaN and denormal rounding
-  are not supported
+* Some IEEE 754 features are not available. Inifinities and NaN are
+  partially supported; denormal rounding is currently not available
+  at all.
 
+* The interface for switching precision and rounding is not finalized.
+  The current method is not threadsafe.
 
-4. Help and bug reports
+5. Help and bug reports
 -----------------------
 
-You can report bugs at the mpmath issue tracker,
-http://code.google.com/p/mpmath/issues/list
+General questions and comments can be sent to the mpmath mailinglist,
+mpmath@googlegroups.com
 
-Please send any comments or questions to Fredrik
-<fredrik.johansson@gmail.com>
+You can also report bugs and send patches to the mpmath issue tracker,
+http://code.google.com/p/mpmath/issues/list
