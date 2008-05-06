@@ -159,7 +159,7 @@ class sign(Function):
     def canonize(cls, arg):
         if arg is S.NaN:
             return S.NaN
-        if arg is S.Zero: return S.One
+        if arg is S.Zero: return S.Zero
         if arg.is_positive: return S.One
         if arg.is_negative: return S.NegativeOne
         if arg.is_Mul:

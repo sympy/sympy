@@ -81,6 +81,11 @@ def test_im():
 
     assert im((2+I)**2).expand(complex=True) == 4
 
+def test_sign():
+    assert sign(1.2) == 1
+    assert sign(-1.2) == -1
+    assert sign(0) == 0
+
 def test_abs():
     x, y = symbols('xy')
     assert abs(0) == 0
