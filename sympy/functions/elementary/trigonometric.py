@@ -101,6 +101,23 @@ class sin(Function):
 
                 if coeff.is_negative:
                     return -cls(-arg)
+                if arg.is_Add:
+                    x, m = arg.as_independent(S.Pi)
+                    if m in [S.Pi/2, S.Pi]:
+                        return sin(m)*cos(x)+cos(m)*sin(x)
+                    # normalize sin(-x-y) to -sin(x+y)
+                    if arg.args[0].is_Mul:
+                        if arg.args[0].args[0] == -1:
+                            # e.g. arg = -x - y
+                            if (-arg).args[0].is_Mul:
+                                if (-arg).args[0].args[0] == -1:
+                                    # This is to prevent infinite recursion in
+                                    # the case sin(-x+y), for which
+                                    # -arg = -y + x. See also #838 for the
+                                    # root of the problem here.
+                                    return
+                            # convert sin(-x-y) to -sin(x+y)
+                            return -cls(-arg)
 
 
     @staticmethod
@@ -268,6 +285,23 @@ class cos(Function):
 
                 if coeff.is_negative:
                     return cls(-arg)
+                if arg.is_Add:
+                    x, m = arg.as_independent(S.Pi)
+                    if m in [S.Pi/2, S.Pi]:
+                        return cos(m)*cos(x)-sin(m)*sin(x)
+                    # normalize cos(-x-y) to cos(x+y)
+                    if arg.args[0].is_Mul:
+                        if arg.args[0].args[0] == -1:
+                            # e.g. arg = -x - y
+                            if (-arg).args[0].is_Mul:
+                                if (-arg).args[0].args[0] == -1:
+                                    # This is to prevent infinite recursion in
+                                    # the case cos(-x+y), for which
+                                    # -arg = -y + x. See also #838 for the
+                                    # root of the problem here.
+                                    return
+                            # convert cos(-x-y) to cos(x+y)
+                            return cls(-arg)
 
 
     @staticmethod

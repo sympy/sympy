@@ -335,3 +335,20 @@ def test_attributes():
     assert sin(x).args[:] == (x,)
     assert sin(x).args[0] != sin
     assert sin(x).args[0] == x
+
+def test_sincos_rewrite():
+    x = Symbol("x")
+    y = Symbol("y")
+    assert sin(pi/2-x) == cos(x)
+    assert sin(pi-x) == sin(x)
+    assert cos(pi/2-x) == sin(x)
+    assert cos(pi-x) == -cos(x)
+
+    assert sin(-x-y) == -sin(x+y)
+    assert sin(-x-1) == -sin(x+1)
+    assert cos(-x-y) == cos(x+y)
+    assert cos(-x-1) == cos(x+1)
+    assert sin(x-y) == sin(x-y)
+    assert sin(y-x) == sin(y-x)
+    assert cos(y-x) == cos(y-x)
+    assert cos(x-y) == cos(x-y)
