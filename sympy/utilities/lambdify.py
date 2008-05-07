@@ -87,9 +87,22 @@ def lambdify(expr, args, modulenames=None):
     values of expressions.
 
     Usage:
-    >>f = lambdify((x,y), sin(x*y)**2)
-    >>f(0,5)
-    0.0
+
+    >>> from sympy import symbols, sqrt, sin
+    >>> x,y,z = symbols('xyz')
+    >>> f = lambdify(x**2, [x])
+    >>> f(2)
+    4
+    >>> f = lambdify([z,y,x], [x,y,z])
+    >>> f(1,2,3)
+    [3, 2, 1]
+    >>> f = lambdify(sqrt(x), [x])
+    >>> f(4)
+    2.0
+    >>> f = lambdify(sin(x*y)**2, (x,y))
+    >>> f(0,5)
+    0
+
 
     Sympy functions are replaced as far as possible by either numpy functions
     (if available) or python.math functions. For more precise values consider
@@ -102,19 +115,19 @@ def lambdify(expr, args, modulenames=None):
       - sympy
     Alternatively a dictionary can be passed instead of one modulename, that
     maps sympy function names to an arbitrary function.
+
+    Example:
+
+    >>> f = lambdify(sin(x), [x, y], modulenames="math")
+    >>> f(0, 5)
+    0.0
+
     """
     # If the user specified the modules use those.
     if not modulenames is None:
         return _lambdify(args, expr, modulenames)
 
-    # Use either numpy (if available) or python.math where possible
-    try:
-        _import("numpy")
-    except ImportError:
-        name = "math"
-    else:
-        name = "numpy"
-    return _lambdify(args, expr, ("sympy", name))
+    return _lambdify(args, expr, ("math", "sympy"))
 
 def _lambdify(args, expr, modulenames):
     """
@@ -180,8 +193,15 @@ def lambdify_numpy(args, expr, prefix="__convert__"):
 
 def lambdastr(args, expr):
     """
-    Returns a string that can be evaluated to a lambda function. lambdify uses
-    this.
+    Returns a string that can be evaluated to a lambda function.
+    lambdify() uses this.
+
+    >>> from sympy import symbols
+    >>> x,y,z = symbols('xyz')
+    >>> lambdastr([x], x**2)
+    'lambda x: (x**2)'
+    >>> lambdastr([x,y,z], [z,y,x])
+    'lambda x,y,z: ([z, y, x])'
     """
     # Transform everything to strings.
     expr = str(expr)

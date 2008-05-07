@@ -10,4 +10,4 @@ else:
     any = any
     all = all
 
-from lambdify import lambdify
+from lambdify import lambdify, lambdify_numpy, lambdify_math, lambdify_mpmath

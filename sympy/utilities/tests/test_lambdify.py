@@ -1,4 +1,4 @@
-from sympy import symbols, lambdify, sqrt, sin, cos, pi
+from sympy import symbols, lambdify, sqrt, sin, cos, pi, lambdify_math
 
 x,y,z = symbols('xyz')
 
@@ -85,3 +85,23 @@ def test_str_args():
         f(0)
         raise Exception()
     except TypeError: pass
+
+def test_docs():
+    f = lambdify(x**2, [x])
+    assert f(2) == 4
+    f = lambdify([z,y,x], [x,y,z])
+    assert f(1, 2, 3) == [3, 2, 1]
+    f = lambdify(sqrt(x), [x])
+    assert f(4) == 2.0
+    f = lambdify(sin(x*y)**2, (x,y))
+    assert f(0, 5) == 0
+
+def test_math():
+    f = lambdify(sin(x), [x, y], modulenames="math")
+    assert f(0, 5) == 0
+
+def test_sin():
+    f = lambdify(sin(x)**2, [x])
+    assert isinstance(f(2), float)
+    f = lambdify_math([x], sin(x)**2)
+    assert isinstance(f(2), float)
