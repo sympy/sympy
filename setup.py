@@ -60,7 +60,6 @@ modules = [
     ( True, 'sympy.physics', [] ),
     ( False, 'sympy.plotting', [] ),
     ( False, 'sympy.thirdparty.mpmath', [] ),
-    ( False, 'sympy.thirdparty.mpmath.lib', [] ),
     ( True, 'sympy.polynomials', [] ),
     ( True, 'sympy.polynomials.fast', [] ),
     ( True, 'sympy.polys', [] ),
