@@ -248,6 +248,14 @@ class arg(Function):
         return self
 
 class conjugate(Function):
+    """Changes the sign of the imaginary part of a complex number.
+
+        >>> from sympy import *
+
+        >>> conjugate(1 + I)
+        1 - I
+
+    """
 
     nargs = 1
 
