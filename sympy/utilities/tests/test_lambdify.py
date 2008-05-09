@@ -1,8 +1,17 @@
-from sympy import symbols, lambdify, sqrt, sin, cos, pi, lambdify_math
+from sympy import symbols, lambdify, sqrt, sin, cos, pi
+from sympy.utilities.pytest import XFAIL
+from sympy import symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Real
+from sympy.thirdparty import mpmath
+import math, sympy
+
+# high precision output of sin(0.2*pi) is used to detect if precision is lost unwanted
+mpmath.mp.dps = 50
+sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
 
 x,y,z = symbols('xyz')
 
-def test_no_vargs():
+#================== Test different arguments ==============
+def test_no_args():
     f = lambdify([], 1)
     try:
         f(-1)
@@ -11,8 +20,113 @@ def test_no_vargs():
         pass
     assert f() == 1
 
+def test_single_arg():
+    f = lambdify(x, 2*x)
+    assert f(1) == 2
+
+def test_list_args():
+    f = lambdify([x,y], x+y)
+    assert f(1,2) == 3
+
+def test_str_args():
+    f = lambdify('x,y,z', 'z,y,x')
+    assert f(3,2,1) == (1,2,3)
+    assert f(1.0,2.0,3.0) == (3.0,2.0,1.0)
+    # make sure correct number of args required
+    try:
+        f(0)
+        raise Exception()
+    except TypeError:
+        pass
+
+def test_own_namespace():
+    myfunc = lambda x:1
+    f = lambdify(x, sin(x), {"sin":myfunc})
+    assert f(0.1) == 1
+    assert f(100) == 1
+
+def test_own_module():
+    f = lambdify(x, sin(x), math)
+    assert f(0)==0.0
+    f = lambdify(x, sympy.ceiling(x), math)
+    try:
+        f(4.5)
+        raise Exception
+    except NameError:
+        pass
+
+def test_bad_args():
+    try:
+        # no vargs given
+        f = lambdify(1)
+        raise Exception()
+    except TypeError:
+        pass
+    try:
+        # same with vector exprs
+        f = lambdify([1,2])
+        raise Exception()
+    except TypeError:
+        pass
+
+#================== Test different modules ================
+def test_sympy_lambda():
+    f = lambdify(x, sin(x), "sympy")
+    assert f(x) is sin(x)
+    prec = 1e-15
+    assert -prec < f(Rational(1,5)).evalf() - Real(str(sin02)) < prec
+    try:
+        # arctan is in numpy module and should not be available
+        f = lambdify(x, arctan(x), "sympy")
+        raise Exception
+    except NameError:
+        pass
+
+def test_math_lambda():
+    f = lambdify(x, sin(x), "math")
+    prec = 1e-15
+    assert -prec < f(0.2) - sin02 < prec
+    try:
+        f(x) # if this succeeds, it can't be a python math function
+        raise Exception
+    except ValueError:
+        pass
+
+def test_mpmath_lambda():
+    f = lambdify(x, sin(x), "mpmath")
+    prec = 1e-49 # mpmath precision is around 50 decimal places
+    assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
+    try:
+        f(x) # if this succeeds, it can't be a mpmath function
+        raise Exception
+    except TypeError:
+        pass
+
+@XFAIL
+def test_number_precision():
+    f = lambdify(x, sin02, "mpmath")
+    prec = 1e-49 # mpmath precision is around 50 decimal places
+    assert -prec < f(0) - sin02 < prec
+
+#================== Test Translations =====================
+# We can only check if all translated functions are valid. It has to be checked
+# by hand if they are complete.
+
+def test_math_transl():
+    from sympy.utilities.lambdify import MATH_TRANSLATIONS
+    for sym, mat in MATH_TRANSLATIONS.iteritems():
+        assert sym in sympy.functions.__dict__
+        assert mat in math.__dict__
+
+def test_mpmath_transl():
+    from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
+    for sym, mat in MPMATH_TRANSLATIONS.iteritems():
+        assert sym in sympy.functions.__dict__
+        assert mat in mpmath.__dict__
+
+#================== Test some functions ===================
 def test_exponentiation():
-    f = lambdify([x], x**2)
+    f = lambdify(x, x**2)
     assert f(-1) == 1
     assert f(0) == 0
     assert f(1) == 1
@@ -21,7 +135,7 @@ def test_exponentiation():
     assert f(2.5) == 6.25
 
 def test_sqrt():
-    f = lambdify([x], sqrt(x))
+    f = lambdify(x, sqrt(x))
     assert f(0) == 0.0
     assert f(1) == 1.0
     assert f(4) == 2.0
@@ -32,6 +146,18 @@ def test_sqrt():
         raise Exception()
     except ValueError: pass
 
+def test_trig():
+    f = lambdify([x], [cos(x),sin(x)])
+    d = f(pi)
+    prec = 1e-11
+    assert -prec < d[0]+1 < prec
+    assert -prec < d[1] < prec
+    d = f(3.14159)
+    prec = 1e-5
+    assert -prec < d[0]+1 < prec
+    assert -prec < d[1] < prec
+
+#================== Test vectors ==========================
 def test_vector_simple():
     f = lambdify((x,y,z), (z,y,x))
     assert f(3,2,1) == (1,2,3)
@@ -43,7 +169,7 @@ def test_vector_simple():
     except TypeError: pass
 
 def test_vector_discontinuous():
-    f = lambdify((x,), (-1/x, 1/x))
+    f = lambdify(x, (-1/x, 1/x))
     try:
         f(0)
         raise Exception()
@@ -64,44 +190,22 @@ def test_trig_float():
     assert abs(d[0]+1) < 0.0001
     assert abs(d[1]-0) < 0.0001
 
-def test_bad_args():
-    try:
-        # no vargs given
-        f = lambdify(1)
-        raise Exception()
-    except TypeError: pass
-    try:
-        # same with vector exprs
-        f = lambdify([1,2])
-        raise Exception()
-    except TypeError: pass
-
-def test_str_args():
-    f = lambdify('x,y,z', 'z,y,x')
-    assert f(3,2,1) == (1,2,3)
-    assert f(1.0,2.0,3.0) == (3.0,2.0,1.0)
-    # make sure correct number of args required
-    try:
-        f(0)
-        raise Exception()
-    except TypeError: pass
-
 def test_docs():
-    f = lambdify([x], x**2)
+    f = lambdify(x, x**2)
     assert f(2) == 4
     f = lambdify([x,y,z], [z,y,x])
     assert f(1, 2, 3) == [3, 2, 1]
-    f = lambdify([x], sqrt(x))
+    f = lambdify(x, sqrt(x))
     assert f(4) == 2.0
     f = lambdify((x,y), sin(x*y)**2)
     assert f(0, 5) == 0
 
 def test_math():
-    f = lambdify([x, y], sin(x), modulenames="math")
+    f = lambdify((x, y), sin(x), modules="math")
     assert f(0, 5) == 0
 
 def test_sin():
-    f = lambdify([x], sin(x)**2)
+    f = lambdify(x, sin(x)**2)
     assert isinstance(f(2), float)
-    f = lambdify_math([x], sin(x)**2)
+    f = lambdify(x, sin(x)**2, modules="math")
     assert isinstance(f(2), float)

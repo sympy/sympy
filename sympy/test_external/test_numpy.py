@@ -7,12 +7,18 @@
 
 try:
     from numpy import array, matrix, ndarray
+    import numpy
 except ImportError:
     #py.test will not execute any tests now
     disabled = True
 
 
-from sympy import Rational, Symbol, list2numpy, sin, Real, Matrix
+from sympy import Rational, Symbol, list2numpy, sin, Real, Matrix, lambdify
+import sympy
+
+from sympy.thirdparty import mpmath
+mpmath.mp.dps = 16
+sin02 = mpmath.mpf("0.198669330795061215459412627")
 
 # first, systematically check, that all operations are implemented and don't
 # raise and exception
@@ -151,3 +157,20 @@ def test_issue629():
     assert (Rational(1,2)+array([2*x, 0]) == array([2*x+Rational(1,2), Rational(1,2)])).all()
     assert (Real("0.5")*array([2*x, 0]) == array([Real("1.0")*x, 0])).all()
     assert (Real("0.5")+array([2*x, 0]) == array([2*x+Real("0.5"), Real("0.5")])).all()
+
+def test_lambdify():
+    x = Symbol("x")
+    f = lambdify(x, sin(x), "numpy")
+    prec = 1e-15
+    assert -prec < f(0.2) - sin02 < prec
+    try:
+        f(x) # if this succeeds, it can't be a numpy function
+        raise Exception
+    except AttributeError:
+        pass
+
+def test_lambdify_transl():
+    from sympy.utilities.lambdify import NUMPY_TRANSLATIONS
+    for sym, mat in NUMPY_TRANSLATIONS.iteritems():
+        assert sym in sympy.functions.__dict__
+        assert mat in numpy.__dict__
