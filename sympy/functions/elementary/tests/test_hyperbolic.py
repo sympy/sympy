@@ -1,5 +1,5 @@
 from sympy import symbols, Symbol, sinh, nan, oo, pi, asinh, acosh, log, sqrt, \
-        coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational
+        coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth
 
 from sympy.utilities.pytest import XFAIL
 
@@ -288,6 +288,17 @@ def test_acosh():
     assert acosh(Rational(1,2))  == I*pi/3
 
 
-# TODO please write tests -- see #652
-#def test_atanh():
-#def test_acoth():
+# TODO please write more tests -- see #652
+def test_atanh():
+    x = Symbol('x')
+    assert atanh(0) == 0
+    assert atanh(I) == I*pi/4
+    assert atanh(-I) == -I*pi/4
+    assert atanh(-x) == -atanh(x)
+
+def test_acoth():
+    x = Symbol('x')
+    assert acoth(0) == I*pi/2
+    assert acoth(I) == -I*pi/4
+    assert acoth(-I) == I*pi/4
+    assert acoth(-x) == -acoth(x)

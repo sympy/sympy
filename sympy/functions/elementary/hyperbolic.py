@@ -573,7 +573,7 @@ class atanh(Function):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return S.ImaginaryUnit * S.ATan(i_coeff)
+                return S.ImaginaryUnit * C.atan(i_coeff)
             else:
                 coeff, terms = arg.as_coeff_terms()
 
@@ -634,7 +634,7 @@ class acoth(Function):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                return -S.ImaginaryUnit * S.ACot(i_coeff)
+                return -S.ImaginaryUnit * C.acot(i_coeff)
             else:
                 coeff, terms = arg.as_coeff_terms()
 
