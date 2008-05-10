@@ -29,6 +29,7 @@ from special.error_functions import erf
 from special.gamma_functions import gamma, lowergamma, uppergamma, polygamma, loggamma
 from special.zeta_functions import dirichlet_eta, zeta
 from special.spherical_harmonics import Ylm, Zlm
+from special.tensor_functions import Dij, Eijk
 
 ln = log
 
