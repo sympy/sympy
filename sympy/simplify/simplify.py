@@ -983,31 +983,20 @@ def combsimp(expr):
     return expr
 
 def simplify(expr):
-    """
-    Simplifies the expression 'expr'.
+    """Naively simplifies the given expression.
 
-    Simplification is not a well defined term and the exact strategies this
-    function tries can change in the future versions of SymPy. If your
-    algorithm relies on "simplification" (whatever it is), try to determine
-    what you need exactly - is it powsimp(), or radsimp(), or together(), or
-    something else? And use this particular function directly, because those
-    are well defined and thus your algorithm will be robust.
+       Simplification is not a well defined term and the exact strategies
+       this function tries can change in the future versions of SymPy. If
+       your algorithm relies on "simplification" (whatever it is), try to
+       determine what you need exactly  -  is it powsimp(), or radsimp(),
+       or together(), or something else? And use this particular function
+       directly, because those are well defined and thus your algorithm
+       will be robust.
+
     """
-    #from sympy.specfun.factorials import factorial, factorial_simplify
-    #if expr.has_class(factorial):
-    #    expr = factorial_simplify(expr)
-    a,b = [ t.expand() for t in fraction(powsimp(expr)) ]
-    ret = together(radsimp(ratsimp(a/b)))
-    n,d = fraction(ret)
-    if (d is S.One) or (d is S.NegativeOne):
-        return d*n
-    n_var = n.atoms(type=Symbol)
-    d_var = d.atoms(type=Symbol)
-    if n_var and d_var and n.is_polynomial(*n_var) and d.is_polynomial(*d_var):
-        from sympy.polynomials import div, factor
-        q,r = div(n, d)
-        if r == 0:
-            return q
-        else:
-            return q + factor(r) / factor(d)
-    return ret
+    from sympy.polys import Poly
+
+    expr = powsimp(radsimp(expr))
+    expr = Poly._cancel(expr)
+
+    return together(expr.expand())

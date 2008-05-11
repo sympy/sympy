@@ -1,6 +1,6 @@
 from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
         collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
-        simplify, trigsimp, cos, tan, cot, log, ratsimp
+        simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate
 from sympy.utilities.pytest import XFAIL
 
 def test_ratsimp():
@@ -30,8 +30,6 @@ def test_ratsimp_X2():
     e = x/(x+y)+y/(x+y)
     assert e != 1
     assert ratsimp(e) == 1
-
-
 
 def test_trigsimp():
     x,y = map(Symbol, 'xy')
@@ -64,11 +62,14 @@ def test_factorial_simplify():
     assert simplify(factorial(factorial(x))) == factorial(factorial(x))
 
 def test_simplify():
-    x = Symbol('x')
-    y = Symbol('y')
+    x,y,k,n,m,w,f,s,A = symbols('xyknmwfsA')
+
     e = 1/x + 1/y
     assert e != (x+y)/(x*y)
     assert simplify(e) == (x+y)/(x*y)
+
+    e = A**2*s**4/(4*pi*k*m**3)
+    assert simplify(e) == e
 
     e = (4+4*x-2*(2+2*x))/(2+2*x)
     assert simplify(e) == 0
@@ -79,12 +80,31 @@ def test_simplify():
     e = -x-y-(x+y)**(-1)*y**2+(x+y)**(-1)*x**2
     assert simplify(e) == -2*y
 
+    e = (x+x*y)/x
+    assert simplify(e) == 1 + y
+
+    e = (f(x)+y*f(x))/f(x)
+    assert simplify(e) == 1 + y
+
+    e = (2 * (1/n - cos(n * pi)/n))/pi
+    assert simplify(e) == (2 - 2*cos(pi*n))/(pi*n)
+
+    e = integrate(1/(x**3+1), x).diff(x)
+    assert simplify(e) == 1/(x**3+1)
+
+    e = integrate(x/(x**2+3*x+1), x).diff(x)
+    assert simplify(e) == x/(x**2+3*x+1)
+
+    A = Matrix([[2*k-m*w**2, -k],[-k,k-m*w**2]]).inv()
+
+    assert simplify((A*Matrix([0,f]))[1]) == \
+        (-2*f*k + f*m*w**2)/(-k**2 + 3*k*m*w**2 - m**2*w**4)
+
 def test_simplify_fail1():
     x = Symbol('x')
     y = Symbol('y')
     e = (x+y)**2/(-4*x*y**2-2*y**3-2*x**2*y)
     assert simplify(e) == 1 / (-2*y)
-
 
 def test_fraction():
     x, y, z = map(Symbol, 'xyz')

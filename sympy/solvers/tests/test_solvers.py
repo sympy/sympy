@@ -14,6 +14,12 @@ def test_solve():
     assert solve(x**2-1, x) in [[-1, 1], [1, -1]]
     assert solve(Eq(x**2, 1), x) in [[-1, 1], [1, -1]]
 
+    a11,a12,a21,a22,b1,b2 = symbols('a11','a12','a21','a22','b1','b2')
+
+    assert solve([a11*x + a12*y - b1, a21*x + a22*y - b2], [x, y]) == \
+        { x : (a12*b2 - a22*b1)/(a12*a21 - a11*a22),
+          y : (a21*b1 - a11*b2)/(a12*a21 - a11*a22) }
+
 def test_linear_system():
     x, y, z, t, n = map(Symbol, 'xyztn')
 
@@ -24,7 +30,7 @@ def test_linear_system():
                 [-1, 0, 1, 0, 0] )
 
     assert solve_linear_system(M, [x, y, z, t]) == \
-           {y: 0, z: ((-t-t*n)/n).expand(), x: ((-t-t*n)/n).expand()}
+           {y: 0, z: (-t-t*n)/n, x: (-t-t*n)/n}
 
 def test_linear_systemLU():
     x, y, z, n = map(Symbol, 'xyzn')
