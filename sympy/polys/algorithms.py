@@ -384,24 +384,22 @@ def poly_lcm(f, g, *symbols):
 
     if f.is_multivariate:
         t = Symbol('t', dummy=True)
+        lex = { 'order' : 'lex' }
 
         f_monoms = [ (1,) + monom for monom in f.monoms ]
 
-        F = Poly((f.coeffs, f_monoms), t, *symbols, **flags)
+        F = Poly((f.coeffs, f_monoms), t, *symbols, **lex)
 
         g_monoms = [ (0,) + monom for monom in g.monoms ] + \
                    [ (1,) + monom for monom in g.monoms ]
 
         g_coeffs = list(g.coeffs) + [ -coeff for coeff in g.coeffs ]
-        G = Poly(dict(zip(g_monoms, g_coeffs)), t, *symbols, **flags)
+        G = Poly(dict(zip(g_monoms, g_coeffs)), t, *symbols, **lex)
 
         def independent(h):
             return all(not monom[0] for monom in h.monoms)
 
         H = [ h for h in poly_groebner((F, G)) if independent(h) ]
-
-        if len(H) != 1:
-            print "Not a principal Ideal"
 
         if lcm != 1:
             h_coeffs = [ coeff*lcm for coeff in H[0].coeffs ]
@@ -410,7 +408,7 @@ def poly_lcm(f, g, *symbols):
 
         h_monoms = [ monom[1:] for monom in H[0].monoms ]
 
-        return Poly((h_coeffs, h_monoms), *symbols, **flags)
+        return Poly(dict(zip(h_monoms, h_coeffs)), *symbols, **flags)
     else:
         h = poly_div(f * g, poly_gcd(f, g))[0]
 

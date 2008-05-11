@@ -421,6 +421,12 @@ def test_poly_lcm():
     assert poly_lcm(f, g, x, y) == \
         Poly((x+y)**3*(x-5*y)*(x+3*y), x, y)
 
+    f = 3*x*y**2 - 2*x*y**3 - 3*x*y**4 + 2*x*y**5
+    g = y**2 - 2*y**4 + y**6
+
+    assert poly_lcm(f, g, x, y) == \
+        Poly(-3*x*y**2/2+x*y**3+3*x*y**4-2*x*y**5-3*x*y**6/2+x*y**7, x, y)
+
 def test_poly_gcd():
     assert poly_gcd(2, 6, x) == Poly(2, x)
     assert poly_gcd(2, 6, x, y) == Poly(2, x, y)
