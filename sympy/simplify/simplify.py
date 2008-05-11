@@ -904,20 +904,6 @@ def powsimp(expr, deep=False):
 
     return _powsimp(separate(expr, deep=deep))
 
-def normal(expr, *syms):
-    p, q = together(expr).as_numer_denom()
-
-    if p.is_polynomial(*syms) and q.is_polynomial(*syms):
-        from sympy.polynomials import gcd, quo
-
-        G = gcd(p, q, syms)
-
-        if G is not S.One:
-            p = quo(p, G, syms)
-            q = quo(q, G, syms)
-
-    return p / q
-
 def hypersimp(term, n, consecutive=True, simplify=True):
     """Given combinatorial term a(n) simplify its consecutive term
        ratio ie. a(n+1)/a(n). The term can be composed of functions
