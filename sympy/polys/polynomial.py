@@ -510,7 +510,7 @@ class Poly(Basic, RelMeths, ArithMeths):
         """Cancel common factors in a fractional expression.
 
            Given a quotient of polynomials, cancel common factors from
-           the the numerator and the denominator. The result is formed
+           the numerator and the denominator. The result is formed
            in an expanded form, even if there was no cancellation.
 
            >>> from sympy import *
