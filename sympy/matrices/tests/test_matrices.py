@@ -797,3 +797,8 @@ Matrix([
 [x,     1]
 [y, y + x]\
 """ ]
+
+def test_issue851():
+    m = Matrix([1, 2, 3])
+    assert not (m in [])
+    assert not (m in [1])

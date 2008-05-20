@@ -293,10 +293,13 @@ class Matrix(object):
     def __neg__(self):
         return -1*self
 
-    def __eq__(self,a):
+    def __eq__(self, a):
         if not isinstance(a, (Matrix, Basic)):
             a = sympify(a)
-        return self.hash() == a.hash()
+        if isinstance(a, Matrix):
+            return self.hash() == a.hash()
+        else:
+            return False
 
     def __ne__(self,a):
         if not isinstance(a, (Matrix, Basic)):
