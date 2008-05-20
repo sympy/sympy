@@ -241,6 +241,14 @@ class exp(Function):
             return expr
         return self.func(arg)
 
+    def _eval_rewrite_as_sin(self, arg):
+        I = S.ImaginaryUnit
+        return C.sin(I*arg+S.Pi/2) - I*C.sin(I*arg)
+
+    def _eval_rewrite_as_cos(self, arg):
+        I = S.ImaginaryUnit
+        return C.cos(I*arg) + I*C.cos(I*arg+S.Pi/2)
+
     def _sage_(self):
         import sage.all as sage
         return sage.exp(self[0]._sage_())
