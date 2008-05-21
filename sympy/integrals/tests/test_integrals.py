@@ -160,3 +160,10 @@ def test_issue641():
     f=4*log(x)-2*log(x)**2
     fid=diff(integrate(f,x),x)
     assert abs(f.subs(x,42).evalf() - fid.subs(x,42).evalf()) < 1e-10
+
+def test_issue853():
+    f = sin(x)
+    assert integrate(f, x) == -cos(x)
+    py.test.raises(ValueError, "integrate(f, 2*x)")
+    assert f.integral(x) == Integral(sin(x), x)
+    py.test.raises(TypeError, "f.integral(2*x)")

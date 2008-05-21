@@ -1420,7 +1420,7 @@ class Basic(AssumeMeths):
                 last_s = new_symbols[-1]
                 i = int(s)
                 new_symbols += [last_s] * (i-1)
-            elif s.is_Symbol or isinstance(s, Equality):
+            elif s.is_Symbol:
                 new_symbols.append(s)
             else:
                 raise TypeError(".integral() argument must be Symbol|Integer|Equality instance (got %s)" % (s.__class__.__name__))
