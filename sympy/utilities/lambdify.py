@@ -83,7 +83,7 @@ def _import(module, reload="False"):
     try:
         exec import_command + " as module"
     except ImportError:
-        raise ImportError, "Can't import %s with command %s"%(modulename,
+        raise ImportError, "Can't import %s with command %s"%(module,
                                                               import_command)
 
     # Add all names of the module to our working namspace
