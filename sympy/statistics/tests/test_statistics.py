@@ -1,12 +1,13 @@
 from sympy import sqrt, Rational, oo
-from sympy.numerics import Float
 from sympy.functions import erf
 from sympy.statistics import Normal, Uniform
 import operator # XXX weird abs/sympy.abs conflict
 
+from sympy.thirdparty.mpmath import mp
+
 def test_normal():
-    Float.store()
-    Float.setdps(20)
+    dps, mp.dps = mp.dps, 20
+
     N = Normal(0, 1)
     assert N.mean == 0
     assert N.variance == 1
@@ -20,7 +21,8 @@ def test_normal():
     for p in [0.1, 0.3, 0.7, 0.9, 0.995]:
         a, b = N.confidence(p)
         assert operator.abs(float(N.probability(a, b).evalf()) - p) < 1e-10
-    Float.revert()
+
+    mp.dps = dps
 
 def test_uniform():
     U = Uniform(-3, -1)
