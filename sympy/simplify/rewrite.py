@@ -5,16 +5,18 @@
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.function import Function
 from sympy.core.relational import Relational
 from sympy.core.symbol import Symbol, Temporary
 from sympy.core.numbers import Integer, Rational
+from sympy.core.function import Function, Lambda
 from sympy.core.basic import Basic, S, C, Atom, sympify
 
 from sympy.polynomials import factor_, div, quo, rem, gcd, egcd
 from sympy.simplify import together
 from sympy.matrices import Matrix
 from sympy.functions import exp
+
+from sympy.polys import RootSum
 
 def cancel(f, *syms, **flags):
     """Cancel common factors in a given rational function.
@@ -283,9 +285,7 @@ def apart(f, z, **flags):
         f, q, U = r / Q, Q, []
 
         u = Function('u')(z)
-        A = Symbol('a', dummy=True)
-
-        formal = flags.get('formal', False)
+        a = Symbol('a', dummy=True)
 
         for k, d in enumerate(factor_.sqf(q, z)):
             n, d = k + 1, d.as_basic()
@@ -315,15 +315,9 @@ def apart(f, z, **flags):
                 g, B, _ = egcd(Q, D, z)
                 b = rem(P * B / g, D, z)
 
-                denom = (z - A)**(n-j)
+                denom = (z - a)**(n-j)
 
-                rootof = C.RootOf(D, z)
-
-                if not formal:
-                    for root in rootof.roots():
-                        partial += cancel(b.subs(z, root)) \
-                            / denom.subs(A, root)
-                else:
-                    partial += C.Sum(b.subs(z, A) / denom, (A, rootof))
+                partial += RootSum(lambda r:
+                    b.subs(z, r)/denom.subs(a, r), D, z)
 
         return partial

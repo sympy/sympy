@@ -8,6 +8,5 @@ from simplify import collect, separate, together, radsimp, ratsimp, fraction, \
     simplify, trigsimp, powsimp, combsimp, hypersimp, hypersimilar
 
 from rewrite import cancel, trim, apart
-from rootof import RootOf
 
 from sqrtdenest import sqrtdenest

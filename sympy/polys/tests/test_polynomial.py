@@ -1,9 +1,10 @@
 
-from sympy import symbols, expand, sin, sqrt, re, im, I, Rational
+from sympy import symbols, expand, sin, sqrt, re, im, I, Rational, powsimp
 
 from sympy.polys.monomial import *
 from sympy.polys.polynomial import *
 from sympy.polys.algorithms import *
+from sympy.polys.rootfinding import *
 
 import py
 
@@ -802,3 +803,153 @@ def test_atoms():
 
     assert Poly(x+1, x).atoms(type=Symbol) == set([x])
     assert Poly(x+1, x).atoms(type=(Symbol,)) == set([x])
+
+def test_sturm():
+    assert poly_sturm(5, x) == (Poly(5, x),)
+    assert poly_sturm(x, x) == (Poly(x, x), Poly(1, x))
+
+    assert poly_sturm(x**3-2*x**2+3*x-5, x) == \
+        (Poly(x**3-2*x**2+3*x-5, x), Poly(3*x**2-4*x+3, x),
+         Poly(-Rational(10,9)*x+Rational(13,3), x),
+         Poly(Rational(-3303,100), x))
+
+def test_roots():
+    assert roots_linear(Poly(2*x+1, x)) == [-Rational(1, 2)]
+
+    assert roots_quadratic(Poly(2*x**2, x)) == [0, 0]
+    assert roots_quadratic(Poly(2*x**2+3*x, x)) == [0, -Rational(3, 2)]
+    assert roots_quadratic(Poly(2*x**2+3, x)) == [I*sqrt(6)/2, -I*sqrt(6)/2]
+
+    assert roots_quadratic(Poly(2*x**2+4*x+3, x)) == \
+        [-1 + I*sqrt(2)/2, -1 - I*sqrt(2)/2]
+
+    assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
+    assert roots_cubic(Poly(x**3-3*x**2+3*x-1, x)) == [1, 1, 1]
+
+    assert roots_cubic(Poly(x**3+1, x)) == \
+        [-1, S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2]
+
+    assert roots_binomial(Poly(5*x, x)) == [0]
+    assert roots_binomial(Poly(5*x**4, x)) == [0, 0, 0, 0]
+    assert roots_binomial(Poly(5*x+2, x)) == [-Rational(2, 5)]
+
+    A = 10**Rational(3, 4)/10
+
+    assert roots_binomial(Poly(5*x**4+2, x)) == \
+        [A+I*A, -A+I*A, -A-I*A, A-I*A]
+
+    r0 = roots_quadratic(Poly(a*x**2 + b, x))
+    r1 = roots_binomial(Poly(a*x**2 + b, x))
+
+    assert powsimp(r0[0]) == powsimp(r1[0])
+    assert powsimp(r0[1]) == powsimp(r1[1])
+
+    assert roots(1, x) == {}
+    assert roots(x, x) == {S.Zero: 1}
+    assert roots(x**9, x) == {S.Zero: 9}
+
+    assert roots(2*x+1, x) == {-S.Half: 1}
+    assert roots((2*x+1)**2, x) == {-S.Half: 2}
+    assert roots((2*x+1)**5, x) == {-S.Half: 5}
+    assert roots((2*x+1)**10, x) == {-S.Half: 10}
+
+    assert roots(x**4 - 1, x) == {I: 1, S.One: 1, -S.One: 1, -I: 1}
+    assert roots((x**4 - 1)**2, x) == {I: 2, S.One: 2, -S.One: 2, -I: 2}
+
+    assert roots(((2*x-3)**2).expand(), x) == { Rational(3,2): 2}
+    assert roots(((2*x+3)**2).expand(), x) == {-Rational(3,2): 2}
+
+    assert roots(((2*x-3)**3).expand(), x) == { Rational(3,2): 3}
+    assert roots(((2*x+3)**3).expand(), x) == {-Rational(3,2): 3}
+
+    assert roots(((2*x-3)**5).expand(), x) == { Rational(3,2): 5}
+    assert roots(((2*x+3)**5).expand(), x) == {-Rational(3,2): 5}
+
+    assert roots(((a*x-b)**5).expand(), x) == { b/a: 5}
+    assert roots(((a*x+b)**5).expand(), x) == {-b/a: 5}
+
+    assert roots(x**4-2*x**2+1, x) == {S.One: 2, -S.One: 2}
+
+    assert roots(x**8-1, x) == {
+         2**S.Half/2 + I*2**S.Half/2: 1,
+         2**S.Half/2 - I*2**S.Half/2: 1,
+        -2**S.Half/2 + I*2**S.Half/2: 1,
+        -2**S.Half/2 - I*2**S.Half/2: 1,
+        S.One: 1, -S.One: 1, I: 1, -I: 1
+    }
+
+    assert roots(x**3+x**2-x+1, x, cubics=False) == {}
+
+    r1_2, r1_3, r1_9, r4_9, r19_27 = [ Rational(*r) \
+        for r in ((1,2), (1,3), (1,9), (4,9), (19,27)) ]
+
+    assert roots(x**3+x**2-x+1, x, cubics=True) == {
+        -r1_3 - (r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3 - \
+        r4_9*(r19_27 + r1_9*3**r1_2*11**r1_2)**(-r1_3): 1,
+
+        -r1_3 + r1_2*(r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3 + \
+        r4_9/(r1_2 + r1_2*I*3**r1_2)*(r19_27 + r1_9*3**r1_2*11**r1_2)**(-r1_3) + \
+        r1_2*I*3**r1_2*(r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3: 1,
+
+        -r1_3 + r1_2*(r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3 + \
+        r4_9/(r1_2 - r1_2*I*3**r1_2)*(r19_27 + r1_9*3**r1_2*11**r1_2)**(-r1_3) - \
+        r1_2*I*3**r1_2*(r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3: 1,
+    }
+
+    f = (x**2+2*x+3).subs(x, 2*x**2 + 3*x).subs(x, 5*x-4)
+
+    r1_2, r2_25, r13_20, r1_100 = [ Rational(*r) \
+        for r in ((1,2), (2,25), (13,20), (1,100)) ]
+
+    assert roots(f, x) == {
+        r13_20 + r1_2*(r1_100 - r2_25*I*2**r1_2)**r1_2: 1,
+        r13_20 - r1_2*(r1_100 - r2_25*I*2**r1_2)**r1_2: 1,
+        r13_20 + r1_2*(r1_100 + r2_25*I*2**r1_2)**r1_2: 1,
+        r13_20 - r1_2*(r1_100 + r2_25*I*2**r1_2)**r1_2: 1,
+    }
+
+    assert roots(x**4-1, x, domain='Z') == {S.One: 1, -S.One: 1}
+    assert roots(x**4-1, x, domain='I') == {I: 1, -I: 1}
+
+def test_factors():
+    assert poly_factors(1, x) == (Poly(1, x),)
+    assert poly_factors(x, x) == (Poly(x, x),)
+
+    assert poly_factors(x**2-1, x) == (Poly(x-1, x), Poly(x+1, x))
+
+    assert poly_factors((x**4 - 1)**2, x) == \
+        (Poly(((S.One, -I),     ((1,), (0,))), x),
+         Poly(((S.One, -I),     ((1,), (0,))), x),
+         Poly(((S.One, -S.One), ((1,), (0,))), x),
+         Poly(((S.One, -S.One), ((1,), (0,))), x),
+         Poly(((S.One, S.One),  ((1,), (0,))), x),
+         Poly(((S.One, S.One),  ((1,), (0,))), x),
+         Poly(((S.One, I),      ((1,), (0,))), x),
+         Poly(((S.One, I),      ((1,), (0,))), x))
+
+    assert poly_factors(x**4-1, x, domain='Z') == \
+        (Poly(x-1, x), Poly(x+1, x), Poly(x**2+1, x))
+
+def test_RootsOf():
+    f = Poly((x-4)**4, x)
+
+    roots = RootsOf(f)
+
+    assert roots.count == 4
+
+    assert list(roots.roots()) == [ Integer(4),
+        Integer(4), Integer(4), Integer(4) ]
+
+    assert RootSum(lambda r: r**2, f) == 64
+
+    roots = RootsOf(x**5+x+1, x)
+
+    assert roots.count == 5
+
+    f = Poly(x**5+x+1, x)
+
+    assert list(roots.roots()) == [ RootOf(f, 0), RootOf(f, 1),
+        RootOf(f, 2), RootOf(f, 3), RootOf(f, 4) ]
+
+    assert RootSum(lambda r: r**2, f).doit() == RootOf(f, 0)**2 + \
+        RootOf(f, 1)**2 + RootOf(f, 2)**2 + RootOf(f, 3)**2 + RootOf(f, 4)**2

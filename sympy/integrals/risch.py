@@ -13,11 +13,10 @@ from sympy.functions import log, sinh, cosh, tanh, coth, asinh
 from sympy.functions import sqrt, erf
 
 from sympy.solvers import solve
-from sympy.simplify.rootof import factors
 from sympy.simplify import cancel, simplify, together
 from sympy.polynomials import quo, gcd, lcm, factor, PolynomialException
 
-from sympy.polys import monomials
+from sympy.polys import monomials, poly_factors
 
 def components(f, x):
     """Returns a set of all functional components of the given expression
@@ -326,8 +325,9 @@ def heurisch(f, x, **kwargs):
             else:
                 continue
 
-            irreducibles |= set(factors(poly,
-                z, field, factor=False))
+            irreducibles |= set(poly_factors(poly, z, domain=field))
+
+        irreducibles = [ h.as_basic() for h in irreducibles ]
 
         log_coeffs, log_part = [], []
         B = _symbols('B', len(irreducibles))

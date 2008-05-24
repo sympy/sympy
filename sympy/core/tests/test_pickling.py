@@ -272,11 +272,16 @@ def test_polynomials3():
 
 #================== polys =======================
 from sympy.polys.polynomial import IntegerPoly, Poly
+from sympy.polys.rootfinding import RootOf, RootsOf
 
 def test_polys():
     x = Symbol("x")
-    y = Symbol("y")
-    for c in (IntegerPoly, IntegerPoly(x,y), Poly, Poly(x,y)):
+    f = Poly(x, x)
+
+    for c in (IntegerPoly, IntegerPoly(x, x), Poly, Poly(x, x)):
+        check(c)
+
+    for c in (RootOf, RootOf(f, 0), RootsOf, RootsOf(x, x)):
         check(c)
 
 #================== printing ====================
@@ -311,19 +316,6 @@ def test_series():
     x = Symbol("x")
     for c in (Limit2, Limit2(e, x, 1), Limit, Limit(e, x, 1), Order, Order(e)):
         check(c)
-
-#================== simplify ====================
-from sympy.simplify.rootof import RootOf
-
-def test_simplify():
-    x = Symbol("x")
-    for c in (RootOf, ):
-        check(c)
-
-@XFAIL
-def test_simplify1():
-    x = Symbol("x")
-    check(RootOf(x**2+x, x))
 
 #================== specfun =====================
 from sympy.specfun.factorials import Binomial2, Falling_factorial,\

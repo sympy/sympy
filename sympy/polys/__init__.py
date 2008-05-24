@@ -28,3 +28,6 @@ from algorithms import poly_groebner
 from algorithms import poly_sqf
 
 from algorithms import poly_decompose
+
+from rootfinding import RootOf, RootsOf, RootSum
+from rootfinding import poly_factors, poly_sturm
