@@ -127,11 +127,13 @@ class Poly(Basic, RelMeths, ArithMeths):
 
        [4] Items generators:
 
-          [4.1] [U-] iter_coeffs --> iterate over coefficients
-          [4.2] [U-] iter_monoms --> iterate over monomials
-          [4.3] [U-] iter_terms  --> iterate over terms
+          [4.1] [U-] iter_coeffs     --> iterate over coefficients
+          [4.2] [U-] iter_monoms     --> iterate over monomials
+          [4.3] [U-] iter_terms      --> iterate over terms
 
-       [5] Leading items:
+          [4.4] [U-] iter_all_coeffs --> iterate over all coefficients
+          [4.5] [U-] iter_all_monoms --> iterate over all monomials
+          [4.6] [U-] iter_all_terms  --> iterate over all terms
 
           [5.1] [UP] lead_coeff or LC --> returns leading coefficient
           [5.2] [UP] lead_monom or LM --> returns leading monomial
@@ -157,7 +159,7 @@ class Poly(Basic, RelMeths, ArithMeths):
           [7.3]  [-P] is_number        --> only numeric constant term
           [7.4]  [UP] is_constant      --> only arbitrary constant term
           [7.5]  [UP] is_monomial      --> number of terms == 1
-          [7.6]  [UP] is_univariate    --> number of variables = 1
+          [7.6]  [UP] is_univariate    --> number of variables == 1
           [7.7]  [UP] is_multivariate  --> number of variables > 1
           [7.8]  [UP] is_homogeneous   --> has constant term
           [7.9]  [UP] is_inhomogeneous --> no constant term
@@ -671,6 +673,37 @@ class Poly(Basic, RelMeths, ArithMeths):
     def iter_terms(self):
         for coeff, monom in zip(self.coeffs, self.monoms):
             yield coeff, monom
+
+    def iter_all_coeffs(self):
+        if self.is_univariate:
+            terms = self.as_uv_dict()
+
+            for i in xrange(self.degree, -1, -1):
+                if terms.has_key(i):
+                    yield terms[i]
+                else:
+                    yield S.Zero
+        else:
+            raise NotImplementedError
+
+    def iter_all_monoms(self):
+        if self.is_univariate:
+            for i in xrange(self.degree, -1, -1):
+                yield (i,)
+        else:
+            raise NotImplementedError
+
+    def iter_all_terms(self):
+        if self.is_univariate:
+            terms = self.as_uv_dict()
+
+            for i in xrange(self.degree, -1, -1):
+                if terms.has_key(i):
+                    yield terms[i], (i,)
+                else:
+                    yield S.Zero, (i,)
+        else:
+            raise NotImplementedError
 
     @property
     def lead_coeff(self):

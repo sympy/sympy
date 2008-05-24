@@ -274,6 +274,18 @@ def test_poly_properties():
     assert f.is_inhomogeneous == True
     assert f.is_monic == False
 
+def test_iterators():
+    f = Poly(x**5 + x, x)
+
+    assert list(f.iter_all_coeffs()) == \
+        [1, 0, 0, 0, 1, 0]
+
+    assert list(f.iter_all_monoms()) == \
+        [(5,), (4,), (3,), (2,), (1,), (0,)]
+
+    assert list(f.iter_all_terms()) == \
+        [(1, (5,)), (0, (4,)), (0, (3,)), (0, (2,)), (1, (1,)), (0, (0,))]
+
 def test_as_monic():
     assert Poly(0, x,y,z).as_monic() == Poly(0, x,y,z)
     assert Poly(1, x,y,z).as_monic() == Poly(1, x,y,z)
