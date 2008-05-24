@@ -11,3 +11,4 @@ else:
     all = all
 
 from lambdify import lambdify
+from source import source
