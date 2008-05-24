@@ -202,22 +202,25 @@ def test_physics():
 
 #================== plotting ====================
 # XXX: These tests are not complete.
-from sympy.plotting.color_scheme import ColorGradient, ColorScheme
-from sympy.plotting.managed_window import ManagedWindow
-from sympy.plotting.plot import Plot, ScreenShot
-from sympy.plotting.plot_axes import PlotAxes, PlotAxesBase, PlotAxesFrame, PlotAxesOrdinate
-from sympy.plotting.plot_camera import PlotCamera
-from sympy.plotting.plot_controller import PlotController
-from sympy.plotting.plot_curve import PlotCurve
-from sympy.plotting.plot_interval import PlotInterval
-from sympy.plotting.plot_mode import PlotMode
-from sympy.plotting.plot_modes import Cartesian2D, Cartesian3D, Cylindrical,\
-    ParametricCurve2D, ParametricCurve3D, ParametricSurface, Polar, Spherical
-from sympy.plotting.plot_object import PlotObject
-from sympy.plotting.plot_surface import PlotSurface
-from sympy.plotting.plot_window import PlotWindow
 
+# these depend on ctypes, that are not in python2.4 by default, so XFAIled
+
+@XFAIL
 def test_plotting():
+    from sympy.plotting.color_scheme import ColorGradient, ColorScheme
+    from sympy.plotting.managed_window import ManagedWindow
+    from sympy.plotting.plot import Plot, ScreenShot
+    from sympy.plotting.plot_axes import PlotAxes, PlotAxesBase, PlotAxesFrame, PlotAxesOrdinate
+    from sympy.plotting.plot_camera import PlotCamera
+    from sympy.plotting.plot_controller import PlotController
+    from sympy.plotting.plot_curve import PlotCurve
+    from sympy.plotting.plot_interval import PlotInterval
+    from sympy.plotting.plot_mode import PlotMode
+    from sympy.plotting.plot_modes import Cartesian2D, Cartesian3D, Cylindrical,\
+        ParametricCurve2D, ParametricCurve3D, ParametricSurface, Polar, Spherical
+    from sympy.plotting.plot_object import PlotObject
+    from sympy.plotting.plot_surface import PlotSurface
+    from sympy.plotting.plot_window import PlotWindow
     for c in (ColorGradient, ColorGradient(0.2,0.4), ColorScheme, ManagedWindow,
               ManagedWindow, Plot, ScreenShot, PlotAxes, PlotAxesBase,
               PlotAxesFrame, PlotAxesOrdinate, PlotCamera, PlotController,
@@ -229,6 +232,20 @@ def test_plotting():
 
 @XFAIL
 def test_plotting2():
+    from sympy.plotting.color_scheme import ColorGradient, ColorScheme
+    from sympy.plotting.managed_window import ManagedWindow
+    from sympy.plotting.plot import Plot, ScreenShot
+    from sympy.plotting.plot_axes import PlotAxes, PlotAxesBase, PlotAxesFrame, PlotAxesOrdinate
+    from sympy.plotting.plot_camera import PlotCamera
+    from sympy.plotting.plot_controller import PlotController
+    from sympy.plotting.plot_curve import PlotCurve
+    from sympy.plotting.plot_interval import PlotInterval
+    from sympy.plotting.plot_mode import PlotMode
+    from sympy.plotting.plot_modes import Cartesian2D, Cartesian3D, Cylindrical,\
+        ParametricCurve2D, ParametricCurve3D, ParametricSurface, Polar, Spherical
+    from sympy.plotting.plot_object import PlotObject
+    from sympy.plotting.plot_surface import PlotSurface
+    from sympy.plotting.plot_window import PlotWindow
     check(ColorScheme("rainbow"))
     check(Plot(1,visible=False))
     check(PlotAxes())
