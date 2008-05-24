@@ -1,3 +1,5 @@
+#!/bin/sh -e
+
 # This script is for testig SymPy in pure Python environment
 #
 # Usage
