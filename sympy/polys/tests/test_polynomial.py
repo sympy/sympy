@@ -151,6 +151,10 @@ def test_poly_characteristics():
     assert p.LM == (5, 1, 4)
     assert p.LC == -3
 
+    assert p.TT == (1, (1, 1, 3))
+    assert p.TM == (1, 1, 3)
+    assert p.TC == 1
+
     assert p.coeffs == (-3,2,-1,1)
     assert p.monoms == ((5,1,4), (2,8,0), (1,4,0), (1,1,3))
 
@@ -165,6 +169,10 @@ def test_poly_characteristics():
     assert q.LM == (5, 1, 4)
     assert q.LC == -3
 
+    assert p.TT == (1, (1, 1, 3))
+    assert p.TM == (1, 1, 3)
+    assert p.TC == 1
+
     assert q.coeffs == (-3,2,-1,1)
     assert q.monoms == ((5,1,4), (2,8,0), (1,4,0), (1,1,3))
 
@@ -178,6 +186,10 @@ def test_poly_characteristics():
     assert r.LT == (2, (2, 8, 0))
     assert r.LM == (2, 8, 0)
     assert r.LC == 2
+
+    assert p.TT == (1, (1, 1, 3))
+    assert p.TM == (1, 1, 3)
+    assert p.TC == 1
 
     assert r.coeffs == (2,-3,-1,1)
     assert r.monoms == ((2,8,0), (5,1,4), (1,4,0), (1,1,3))

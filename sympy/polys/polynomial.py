@@ -135,9 +135,15 @@ class Poly(Basic, RelMeths, ArithMeths):
           [4.5] [U-] iter_all_monoms --> iterate over all monomials
           [4.6] [U-] iter_all_terms  --> iterate over all terms
 
-          [5.1] [UP] lead_coeff or LC --> returns leading coefficient
-          [5.2] [UP] lead_monom or LM --> returns leading monomial
-          [5.3] [UP] lead_term  or LT --> returns leading term
+       [5] Leading and trailing items:
+
+          [5.1] [UP] lead_coeff or LC --> returns the leading coefficient
+          [5.2] [UP] lead_monom or LM --> returns the leading monomial
+          [5.3] [UP] lead_term  or LT --> returns the leading term
+
+          [5.4] [UP] tail_coeff or TC --> returns the trailing coefficient
+          [5.5] [UP] tail_monom or TM --> returns the trailing monomial
+          [5.6] [UP] tail_term  or TT --> returns the trailing term
 
        [6] Arithmetic operators:
 
@@ -720,6 +726,22 @@ class Poly(Basic, RelMeths, ArithMeths):
     LC = lead_coeff
     LM = lead_monom
     LT = lead_term
+
+    @property
+    def tail_coeff(self):
+        return self.coeffs[-1]
+
+    @property
+    def tail_monom(self):
+        return self.monoms[-1]
+
+    @property
+    def tail_term(self):
+        return (self.coeffs[-1], self.monoms[-1])
+
+    TC = tail_coeff
+    TM = tail_monom
+    TT = tail_term
 
     def __abs__(self):
         return self.__class__(([ abs(coeff) for coeff in self.coeffs ],
