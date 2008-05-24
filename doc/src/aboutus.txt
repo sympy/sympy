@@ -35,6 +35,17 @@ more details what they do and what they are interested in.
 #. Pauli Virtanen: bug fix
 #. Robert Kern: bug fix
 #. James Aspnes: bug fixes
+#. Nimish Telang: multivariate lambdas
+#. Abderrahim Kitouni: pretty printing + complex expansion bug fixes
+#. Pan Peng: ode solvers patch
+#. Friedrich Hagedorn: many bug fixes, refactorings and new features added
+#. Elrond der Elbenfuerst: pretty printing fix
+#. Rizgar Mella: BBP formula for pi calculating algorithm
+#. Felix Kaiser: documentation + whitespace testing patches
+#. Roberto Nobrega: several pretty printing patches
+#. David Roberts: latex printing patches
+#. Sebastian Krämer: implemented lambdify/numpy/mpmath cooperation, bug fixes, refactoring
+#. Vinzent Steinberg: docstring patch
 
 
 Uptodate list of all contributors is maintained in our `Contributors wiki page
