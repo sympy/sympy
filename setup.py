@@ -55,7 +55,6 @@ modules = [
     ( True, 'sympy.interactive', [] ),
     ( True, 'sympy.matrices', [] ),
     ( True, 'sympy.ntheory', [] ),
-    ( True, 'sympy.numerics', [] ),
     ( False, 'sympy.parsing', [] ),
     ( True, 'sympy.physics', [] ),
     ( False, 'sympy.plotting', [] ),
@@ -220,7 +219,7 @@ class test_sympy_doc(Command):
         runner.run(suite)
 
 # Check that this list is uptodate against the result of the command:
-# $ python bin/generate_test_list.py 
+# $ python bin/generate_test_list.py
 tests = [
     'sympy.concrete.tests',
     'sympy.core.tests',
@@ -231,7 +230,6 @@ tests = [
     'sympy.integrals.tests',
     'sympy.matrices.tests',
     'sympy.ntheory.tests',
-    'sympy.numerics.tests',
     'sympy.parsing.tests',
     'sympy.physics.tests',
     'sympy.plotting.tests',
@@ -252,19 +250,19 @@ tests = [
 # http://pyglet.googlecode.com/svn/trunk/setup.py
 # (whenever we update pyglet in sympy)
 pyglet_packages=[
-    'pyglet', 
-    'pyglet.gl', 
-    'pyglet.font', 
-    'pyglet.image', 
+    'pyglet',
+    'pyglet.gl',
+    'pyglet.font',
+    'pyglet.image',
     'pyglet.image.codecs',
-    'pyglet.media', 
-    'pyglet.media.drivers', 
-    'pyglet.media.drivers.alsa', 
-    'pyglet.media.drivers.directsound', 
-    'pyglet.media.drivers.openal', 
-    'pyglet.window', 
+    'pyglet.media',
+    'pyglet.media.drivers',
+    'pyglet.media.drivers.alsa',
+    'pyglet.media.drivers.directsound',
+    'pyglet.media.drivers.openal',
+    'pyglet.window',
     'pyglet.window.carbon',
-    'pyglet.window.win32', 
+    'pyglet.window.win32',
     'pyglet.window.xlib',
 ]
 pyglet_packages = ["sympy.thirdparty.pyglet." + s for s in pyglet_packages]
