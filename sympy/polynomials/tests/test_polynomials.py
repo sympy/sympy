@@ -433,9 +433,9 @@ def test_roots_issue604():
     x = Symbol('x')
     p = x**3+2*x**2+8
     r = roots(p, x)
-    assert abs(p.subs(x, r[0]).evalf()) < 1E-20
-    assert abs(p.subs(x, r[1]).evalf()) < 1E-20
-    assert abs(p.subs(x, r[2]).evalf()) < 1E-20
+    assert abs(p.subs(x, r[0]).evalf()) < 1E-12
+    assert abs(p.subs(x, r[1]).evalf()) < 1E-12
+    assert abs(p.subs(x, r[2]).evalf()) < 1E-12
 
 
 def test_coeff1():

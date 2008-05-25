@@ -1,6 +1,7 @@
 import math
+import sympy.thirdparty.mpmath as mpmath
 import decimal
-import decimal_math
+
 from basic import Basic, Atom, Singleton, S, C, Memoizer, MemoizerArg
 from sympify import _sympify, SympifyError, _sympifyit
 from methods import NoRelMeths, RelMeths, ArithMeths
@@ -104,21 +105,21 @@ class Number(Atom, RelMeths, ArithMeths):
             return Integer(obj)
         if isinstance(obj,tuple) and len(obj)==2:
             return Rational(*obj)
-        if isinstance(obj, (str,float,decimal.Decimal)):
+        if isinstance(obj, (str,float,mpmath.mpf,decimal.Decimal)):
             return Real(obj)
         if isinstance(obj, Number):
             return obj
         raise TypeError("expected str|int|long|float|Decimal|Number object but got %r" % (obj))
 
     def _eval_evalf(self):
-        r = self._as_decimal()
+        r = self._as_mpf()
         return Real(r)
 
     def __float__(self):
-        return float(self._as_decimal())
+        return float(self._as_mpf())
 
-    def _as_decimal(self):
-        raise NotImplementedError('%s needs ._as_decimal() method' % (self.__class__.__name__))
+    def _as_mpf(self):
+        raise NotImplementedError('%s needs ._as_mpf() method' % (self.__class__.__name__))
 
     def _eval_derivative(self, s):
         return S.Zero
@@ -130,27 +131,27 @@ class Number(Atom, RelMeths, ArithMeths):
         # Order(5, x, y) -> Order(1,x,y)
         return C.Order(S.One, *symbols)
 
-    def sqrt(self): return Real(decimal_math.sqrt(self._as_decimal()))
-    def exp(self): return Real(decimal_math.exp(self._as_decimal()))
-    def log(self): return Real(decimal_math.log(self._as_decimal()))
-    def sin(self): return Real(decimal_math.sin(self._as_decimal()))
-    def cos(self): return Real(decimal_math.cos(self._as_decimal()))
-    def tan(self): return Real(decimal_math.tan(self._as_decimal()))
-    def cot(self): return Real(decimal_math.cot(self._as_decimal()))
-    def asin(self): return Real(decimal_math.asin(self._as_decimal()))
-    def acos(self): return Real(decimal_math.acos(self._as_decimal()))
-    def atan(self): return Real(decimal_math.atan(self._as_decimal()))
-    def acot(self): return Real(decimal_math.acot(self._as_decimal()))
-    def sinh(self): return Real(decimal_math.sinh(self._as_decimal()))
-    def cosh(self): return Real(decimal_math.cosh(self._as_decimal()))
-    def tanh(self): return Real(decimal_math.tanh(self._as_decimal()))
-    def coth(self): return Real(decimal_math.coth(self._as_decimal()))
-    def asinh(self): return Real(decimal_math.asinh(self._as_decimal()))
-    def acosh(self): return Real(decimal_math.acosh(self._as_decimal()))
-    def atanh(self): return Real(decimal_math.atanh(self._as_decimal()))
-    def acoth(self): return Real(decimal_math.acoth(self._as_decimal()))
-    def floor(self): return Real(decimal_math.floor(self._as_decimal()))
-    def ceiling(self): return Real(decimal_math.ceiling(self._as_decimal()))
+    def sqrt(self): return Real(mpmath.sqrt(self._as_mpf()))
+    def exp(self): return Real(mpmath.exp(self._as_mpf()))
+    def log(self): return Real(mpmath.log(self._as_mpf()))
+    def sin(self): return Real(mpmath.sin(self._as_mpf()))
+    def cos(self): return Real(mpmath.cos(self._as_mpf()))
+    def tan(self): return Real(mpmath.tan(self._as_mpf()))
+    def cot(self): return Real(mpmath.cot(self._as_mpf()))
+    def asin(self): return Real(mpmath.asin(self._as_mpf()))
+    def acos(self): return Real(mpmath.acos(self._as_mpf()))
+    def atan(self): return Real(mpmath.atan(self._as_mpf()))
+    def acot(self): return Real(mpmath.acot(self._as_mpf()))
+    def sinh(self): return Real(mpmath.sinh(self._as_mpf()))
+    def cosh(self): return Real(mpmath.cosh(self._as_mpf()))
+    def tanh(self): return Real(mpmath.tanh(self._as_mpf()))
+    def coth(self): return Real(mpmath.coth(self._as_mpf()))
+    def asinh(self): return Real(mpmath.asinh(self._as_mpf()))
+    def acosh(self): return Real(mpmath.acosh(self._as_mpf()))
+    def atanh(self): return Real(mpmath.atanh(self._as_mpf()))
+    def acoth(self): return Real(mpmath.acoth(self._as_mpf()))
+    def floor(self): return Real(mpmath.floor(self._as_mpf()))
+    def ceiling(self): return Real(mpmath.ceil(self._as_mpf()))
 
     def __eq__(self, other):
         raise NotImplementedError,'%s needs .__eq__() method' % (self.__class__.__name__)
@@ -170,22 +171,6 @@ class Number(Atom, RelMeths, ArithMeths):
         # a -> c * t
         return self, tuple()
 
-decimal_to_Number_cls = {
-    decimal.Decimal('0').as_tuple():'Zero',
-    decimal.Decimal('-0').as_tuple():'Zero',
-    decimal.Decimal('1').as_tuple():'One',
-    decimal.Decimal('-1').as_tuple():'NegativeOne',
-    decimal.Decimal('Infinity').as_tuple():'Infinity',
-    decimal.Decimal('-Infinity').as_tuple():'NegativeInfinity',
-    decimal.Decimal('NaN').as_tuple():'NaN',
-    }
-
-def convert_to_Decimal(num):
-    if isinstance(num, str):
-        num = decimal.Decimal(num)
-    elif isinstance(num, float):
-        num = Real.float_to_decimal(num)
-    return +num
 
 class Real(Number):
     """
@@ -209,52 +194,24 @@ class Real(Number):
 
     is_Real = True
 
-    @Memoizer(type, MemoizerArg((str, int, long, float, decimal.Decimal), convert_to_Decimal))
     def __new__(cls, num):
         if isinstance(num, (int, long)):
             return Integer(num)
-
-        singleton_cls_name = decimal_to_Number_cls.get(num.as_tuple(), None)
-        if singleton_cls_name is not None:
-            return getattr(C, singleton_cls_name)()
+        if isinstance(num, decimal.Decimal):
+            num = mpmath.mpf(str(num))
+        else:
+            num = mpmath.mpf(num)
+        if not num:
+            return C.Zero()
         obj = Basic.__new__(cls)
         obj.num = num
         return obj
-
-    @staticmethod
-    def float_to_decimal(f):
-        "Convert a floating point number to a Decimal with no loss of information"
-        # Transform (exactly) a float to a mantissa (0.5 <= abs(m) < 1.0) and an
-        # exponent.  Double the mantissa until it is an integer.  Use the integer
-        # mantissa and exponent to compute an equivalent Decimal.  If this cannot
-        # be done exactly, then retry with more precision.
-
-        try:
-            mantissa, exponent = math.frexp(f)
-        except OverflowError:
-            return decimal.Inf
-
-        while mantissa != int(mantissa):
-            mantissa *= 2.0
-            exponent -= 1
-        mantissa = int(mantissa)
-
-        oldcontext = decimal.getcontext()
-        decimal.setcontext(decimal.Context(traps=[decimal.Inexact]))
-        try:
-            while True:
-                try:
-                    return mantissa * decimal.Decimal(2) ** exponent
-                except decimal.Inexact:
-                    decimal.getcontext().prec += 1
-        finally:
-            decimal.setcontext(oldcontext)
 
     def _hashable_content(self):
         return (self.num,)
 
     def tostr(self, level=0):
-        r = str(self.num.normalize())
+        r = str(self.num)
         if self.precedence<=level:
             return '(%s)' % (r)
         return r
@@ -263,15 +220,15 @@ class Real(Number):
         return '%s(%r)' % (self.__class__.__name__, str(self.num))
 
     def _eval_is_positive(self):
-        return self.num.as_tuple()[0] == 0
+        return self.num > 0
 
     def _eval_is_negative(self):
-        return self.num.as_tuple()[0] == 1
+        return self.num < 0
 
     def _eval_evalf(self):
         return self
 
-    def _as_decimal(self):
+    def _as_mpf(self):
         return self.num
 
     def __neg__(self):
@@ -283,7 +240,7 @@ class Real(Number):
         except SympifyError:
             return NotImplemented
         if isinstance(other, Number):
-            return Real(self.num * other._as_decimal())
+            return Real(self.num * other._as_mpf())
         return Number.__mul__(self, other)
 
     def __add__(self, other):
@@ -294,7 +251,7 @@ class Real(Number):
         if (other is S.NaN) or (self is NaN):
             return S.NaN
         if isinstance(other, Number):
-            return Real(self.num + other._as_decimal())
+            return Real(self.num + other._as_mpf())
         return Number.__add__(self, other)
 
     def _eval_power(b, e):
@@ -307,17 +264,12 @@ class Real(Number):
         """
         if isinstance(e, Number):
             if isinstance(e, Integer):
-                e = e.p
-                return Real(decimal_math.pow(b.num, e))
-
-            e2 = e._as_decimal()
-            if b.is_negative and not e.is_integer:
-                m = decimal_math.pow(-b.num, e2)
-                a = decimal_math.pi() * e2
-                s = m * decimal_math.sin(a)
-                c = m * decimal_math.cos(a)
-                return Real(s) + Real(c) * S.ImaginaryUnit
-            return Real(decimal_math.pow(b.num, e2))
+                return Real(b.num ** e.p)
+            y = b.num ** e._as_mpf()
+            if y.imag:
+                return Real(y.real) + Real(y.imag)* S.ImaginaryUnit
+            else:
+                return Real(y.real)
         return
 
     def __abs__(self):
@@ -339,7 +291,7 @@ class Real(Number):
             return other.__eq__(self)
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
-            return bool(self._as_decimal()==other._as_decimal())
+            return bool(self._as_mpf()==other._as_mpf())
 
         return False    # Real != non-Number
 
@@ -353,7 +305,7 @@ class Real(Number):
             return other.__ne__(self)
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
-            return bool(self._as_decimal()!=other._as_decimal())
+            return bool(self._as_mpf()!=other._as_mpf())
 
         return True     # Real != non-Number
 
@@ -366,8 +318,9 @@ class Real(Number):
             return other.__ge__(self)
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
-            return bool(self._as_decimal() < other._as_decimal())
+            return bool(self._as_mpf() < other._as_mpf())
         return RelMeths.__lt__(self, other)
+
     def __le__(self, other):
         try:
             other = _sympify(other)
@@ -377,7 +330,7 @@ class Real(Number):
             return other.__gt__(self)
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
-            return bool(self._as_decimal()<=other._as_decimal())
+            return bool(self._as_mpf()<=other._as_mpf())
         return RelMeths.__le__(self, other)
 
     def epsilon_eq(self, other, epsilon="10e-16"):
@@ -513,7 +466,7 @@ class Rational(Number):
         if (other is S.NaN) or (self is S.NaN):
             return S.NaN
         if isinstance(other, Real):
-            return Real(self._as_decimal() * other.num)
+            return Real(self._as_mpf() * other.num)
         if isinstance(other, Rational):
             return Rational(self.p * other.p, self.q * other.q)
         return Number.__mul__(self, other)
@@ -524,7 +477,7 @@ class Rational(Number):
         if (other is S.NaN) or (self is S.NaN):
             return S.NaN
         if isinstance(other, Real):
-            return Real(self._as_decimal() + other.num)
+            return Real(self._as_mpf() + other.num)
         if isinstance(other, Rational):
             if self.is_unbounded:
                 if other.is_bounded:
@@ -541,7 +494,7 @@ class Rational(Number):
         if isinstance(e, Number):
             if (e is S.NaN): return S.NaN
             if isinstance(e, Real):
-                return Real(decimal_math.pow(b._as_decimal(), e.num))
+                return Real(b._as_mpf() ** e.num)
             if e.is_negative:
                 # (3/4)**-2 -> (4/3)**2
                 ne = -e
@@ -574,8 +527,8 @@ class Rational(Number):
 
         return
 
-    def _as_decimal(self):
-        return decimal.Decimal(self.p) / decimal.Decimal(self.q)
+    def _as_mpf(self):
+        return mpmath.mpf(self.p) / self.q
 
     def __abs__(self):
         return Rational(abs(self.p), self.q)
@@ -596,7 +549,7 @@ class Rational(Number):
         if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
-                return bool(self._as_decimal()==other._as_decimal())
+                return bool(self._as_mpf()==other._as_mpf())
             return bool(self.p==other.p and self.q==other.q)
 
         return False    # Rational != non-Number
@@ -612,7 +565,7 @@ class Rational(Number):
         if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
-                return bool(self._as_decimal()!=other._as_decimal())
+                return bool(self._as_mpf()!=other._as_mpf())
             return bool(self.p!=other.p or self.q!=other.q)
 
         return True     # Rational != non-Number
@@ -627,7 +580,7 @@ class Rational(Number):
         if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
-                return bool(self._as_decimal() < other._as_decimal())
+                return bool(self._as_mpf() < other._as_mpf())
             return bool(self.p * other.q < self.q * other.p)
         return RelMeths.__lt__(self, other)
     def __le__(self, other):
@@ -640,7 +593,7 @@ class Rational(Number):
         if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
-                return bool(self._as_decimal()<=other._as_decimal())
+                return bool(self._as_mpf()<=other._as_mpf())
             return bool(self.p * other.q <= self.q * other.p)
         return RelMeths.__le__(self, other)
 
@@ -807,7 +760,7 @@ class Integer(Rational):
         if isinstance(e, Number):
             if e is S.NaN: return S.NaN
             if isinstance(e, Real):
-                return Real(decimal_math.pow(b._as_decimal(), e.num))
+                return Real(b._as_mpf() ** e.num)
             if e.is_negative:
                 # (3/4)**-2 -> (4/3)**2
                 ne = -e
@@ -995,10 +948,8 @@ class NegativeOne(Singleton, Integer):
         if e.is_even: return S.One
         if isinstance(e, Number):
             if isinstance(e, Real):
-                a = e.num * decimal_math.pi()
-                s = decimal_math.sin(a)
-                c = decimal_math.cos(a)
-                return Real(s) + Real(c) * S.ImaginaryUnit
+                y = mpmath.mpf(-1) ** e._as_mpf()
+                return Real(y.real) + Real(y.imag) * S.ImaginaryUnit
             if e is S.NaN:
                 return S.NaN
             if e is S.Infinity  or  e is S.NegativeInfinity:
@@ -1069,8 +1020,8 @@ class Infinity(Singleton, Rational):
             return b ** d
         return
 
-    def _as_decimal(self):
-        return decimal.Decimal('Infinity')
+    def _as_mpf(self):
+        return mpmath.inf
 
 class NegativeInfinity(Singleton, Rational):
 
@@ -1120,8 +1071,8 @@ class NegativeInfinity(Singleton, Rational):
             return S.NegativeOne**e * S.Infinity ** e
         return
 
-    def _as_decimal(self):
-        return decimal.Decimal('-Infinity')
+    def _as_mpf(self):
+        return -mpmath.inf
 
 class NaN(Singleton, Rational):
 
@@ -1139,8 +1090,8 @@ class NaN(Singleton, Rational):
     def tostr(self, level=0):
         return 'nan'
 
-    def _as_decimal(self):
-        return decimal.Decimal('NaN')
+    def _as_mpf(self):
+        return mpmath.nan
 
     def _eval_power(b, e):
         if e is S.Zero:
@@ -1269,7 +1220,7 @@ class Exp1(NumberSymbol):
         return 'E'
 
     def _eval_evalf(self):
-        return Real(decimal_math.e())
+        return Real(mpmath.e)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls,Integer):
@@ -1294,7 +1245,7 @@ class Pi(NumberSymbol):
         return S.Pi
 
     def _eval_evalf(self):
-        return Real(decimal_math.pi())
+        return Real(mpmath.pi)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls, Integer):
@@ -1315,7 +1266,7 @@ class GoldenRatio(NumberSymbol):
     __slots__ = []
 
     def _eval_evalf(self):
-        return Real(decimal_math.golden_ratio())
+        return Real(mpmath.phi)
 
     def _eval_expand_func(self, *args):
         return S.Half + S.Half*S.Sqrt(5)
@@ -1339,7 +1290,7 @@ class EulerGamma(NumberSymbol):
     __slots__ = []
 
     def _eval_evalf(self):
-        return
+        return Real(mpmath.euler)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls, Integer):
@@ -1360,7 +1311,7 @@ class Catalan(NumberSymbol):
     __slots__ = []
 
     def _eval_evalf(self):
-        return
+        return Real(mpmath.catalan)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls, Integer):

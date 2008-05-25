@@ -2,7 +2,8 @@
 
 type_class = type
 
-import decimal
+import sympy.thirdparty.mpmath as mpmath
+
 from assumptions import AssumeMeths
 from sympify import _sympify, sympify, SympifyError
 from cache import cacheit, Memoizer, MemoizerArg
@@ -1458,12 +1459,11 @@ class Basic(AssumeMeths):
     @staticmethod
     def set_precision(prec = None):
         """
-        Set precision for Decimal number operations and return previous precision value.
+        Set precision for floating-point operations and return previous precision value.
         """
-        context = decimal.getcontext()
-        oldprec = context.prec
+        oldprec = mpmath.mp.dps
         if prec is not None:
-            context.prec = prec
+            mpmath.mp.dps = prec
         return oldprec
 
 
