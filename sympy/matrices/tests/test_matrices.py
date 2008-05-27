@@ -1,4 +1,3 @@
-from __future__ import division
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
         sin, exp, hessian, sqrt, zero, randMatrix
 from sympy.matrices.matrices import ShapeError
