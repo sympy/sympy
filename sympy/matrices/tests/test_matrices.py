@@ -1,8 +1,16 @@
+from __future__ import division
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
         sin, exp, hessian, sqrt, zero, randMatrix
 from sympy.matrices.matrices import ShapeError
 from sympy.utilities.test import REPR0
 import py
+
+def test_division():
+    x, y, z = symbols('x','y','z')
+    v = Matrix(1,2,[x, y])
+    assert v.__div__(z) == Matrix(1,2,[x/z, y/z])
+    assert v.__truediv__(z) == Matrix(1,2,[x/z, y/z])
+    assert v/z == Matrix(1,2,[x/z, y/z])
 
 def test_multiplication():
     a=Matrix((

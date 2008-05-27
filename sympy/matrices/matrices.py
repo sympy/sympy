@@ -264,6 +264,9 @@ class Matrix(object):
     def __div__(self,a):
         return self * (S.One/a)
 
+    def __truediv__(self,a):
+        return self.__div__(a)
+
     def multiply(self,b):
         """Returns self*b """
 
