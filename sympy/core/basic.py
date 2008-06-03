@@ -766,8 +766,11 @@ class Basic(AssumeMeths):
             return True
         else:
             def search(expr):
-                if expr.is_Symbol:
-                    return expr in syms
+                if expr.is_Atom:
+                    if expr.is_Symbol:
+                        return expr in syms
+                    else:
+                        return False
                 else:
                     for term in expr.args:
                         if search(term):
@@ -797,8 +800,8 @@ class Basic(AssumeMeths):
             return True
         else:
             def search(expr):
-                if expr.is_Symbol:
-                    if expr in syms:
+                if expr.is_Atom:
+                    if expr.is_Symbol and expr in syms:
                         syms.remove(expr)
                 else:
                     for term in expr.args:

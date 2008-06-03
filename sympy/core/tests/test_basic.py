@@ -302,6 +302,14 @@ def test_has_any_symbols():
     assert expr.has_any_symbols(x, y, z, t) == True
     assert expr.has_any_symbols(x, y, z, t, u)  == True
 
+    from sympy.physics.units import m, s
+
+    assert (x*m/s).has_any_symbols(x) == True
+    assert (x*m/s).has_all_symbols(x) == True
+
+    assert (x*m/s).has_any_symbols(y, z) == False
+    assert (x*m/s).has_all_symbols(x, y) == False
+
 def test_has_all_symbols():
     x,y,z,t,u = symbols('xyztu')
 
