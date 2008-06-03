@@ -4,9 +4,9 @@ from sympy.core.methods import NoRelMeths, ArithMeths
 
 from sympy.integrals.risch import heurisch
 from sympy.integrals.trigonometry import trigintegrate
-from sympy.polynomials import Polynomial, PolynomialException
 from sympy.simplify import apart
 from sympy.series import limit
+from sympy.polys import Poly
 
 class Integral(Basic, NoRelMeths, ArithMeths):
     """Represents unevaluated integral."""
@@ -164,7 +164,7 @@ class Integral(Basic, NoRelMeths, ArithMeths):
         # will return a sympy expression instead of a Polynomial.
         #
         # see Polynomial for details.
-        if isinstance(f, C.Polynomial):
+        if isinstance(f, Poly):
             return f.integrate(x)
 
         # let's cut it short if `f` does not depend on `x`
@@ -172,15 +172,10 @@ class Integral(Basic, NoRelMeths, ArithMeths):
             return f*x
 
         # try to convert to poly(x) and then integrate if successful (fast)
-        try:
-            p = f.as_polynomial(x)
-        except PolynomialException:
-            p = None
-        if p is not None:
-            # it wasn't a poly, so let's integrate it, and convert back to
-            # sympy expression
-            i = p.integrate(x)
-            return i.sympy_expr
+        poly = f.as_poly(x)
+
+        if poly is not None:
+            return poly.integrate(x).as_basic()
 
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,

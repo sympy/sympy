@@ -1,5 +1,5 @@
 from sympy import symbols, integrate, Integral, exp, oo, Symbol, Rational, \
-    log, sin, cos, pi, E, I, Polynomial, LambertW, diff
+    log, sin, cos, pi, E, I, Poly, LambertW, diff
 from sympy.utilities.pytest import XFAIL
 from sympy.physics.units import m, s
 import py
@@ -26,8 +26,6 @@ def test_basics():
 def test_unevaluated():
     py.test.raises(IntegralError,"integrate(e, (t,0,x), evaluate=False).diff(t)")
     py.test.raises(IntegralError,"integrate(e, t, evaluate=False).diff(x)")
-
-
 
 def test_integration():
     assert integrate(0, (t,0,x)) == 0
@@ -62,35 +60,34 @@ def test_issue461():
     assert integrate(x**Rational(-3,2), x) == -2*x**Rational(-1,2)
 
 def test_integrate_poly():
-    p = Polynomial(x + x**2*y + y**3, var=[x,y])
-    qx= integrate(p, x)
-    qy= integrate(p, y)
+    p = Poly(x + x**2*y + y**3, x, y)
 
-    assert isinstance(qx, Polynomial) == True
-    assert isinstance(qy, Polynomial) == True
+    qx = integrate(p, x)
+    qy = integrate(p, y)
 
-    assert qx.var == [x,y]
-    assert qy.var == [x,y]
+    assert isinstance(qx, Poly) == True
+    assert isinstance(qy, Poly) == True
 
-    assert qx == x**2/2 + x**3*y/3 + x*y**3
-    assert qy == x*y + x**2*y**2/2 + y**4/4
+    assert qx.symbols == (x, y)
+    assert qy.symbols == (x, y)
 
+    assert qx.as_basic() == x**2/2 + x**3*y/3 + x*y**3
+    assert qy.as_basic() == x*y + x**2*y**2/2 + y**4/4
 
-@XFAIL #depends on poly.subs -> poly
 def test_integrate_poly_defined():
-    p = Polynomial(x + x**2*y + y**3, var=[x,y])
-    Qx= integrate(p, (x,0,1))
-    Qy= integrate(p, (y,0,pi))
+    p = Poly(x + x**2*y + y**3, x, y)
 
-    assert isinstance(Qx, Polynomial) == True
-    assert isinstance(Qy, Polynomial) == True
+    Qx = integrate(p, (x, 0, 1))
+    Qy = integrate(p, (y, 0, pi))
 
-    assert Qx.var == [y]
-    assert Qy.var == [x]
+    assert isinstance(Qx, Poly) == True
+    assert isinstance(Qy, Poly) == True
 
-    assert Qx == Rational(1,2) + y/3 + y**3
-    assert Qy == pi**4/4 + pi*x + pi**2*x**2/2
+    assert Qx.symbols == (y,)
+    assert Qy.symbols == (x,)
 
+    assert Qx.as_basic() == Rational(1,2) + y/3 + y**3
+    assert Qy.as_basic() == pi**4/4 + pi*x + pi**2*x**2/2
 
 def test_integrate_varommited():
     y = Symbol('y')
