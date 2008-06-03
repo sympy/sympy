@@ -1,5 +1,5 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
-        sin, exp, hessian, sqrt, zero, randMatrix
+        sin, exp, hessian, sqrt, zero, randMatrix, Poly, S
 from sympy.matrices.matrices import ShapeError
 from sympy.utilities.test import REPR0
 import py
@@ -369,31 +369,34 @@ def test_wronskian():
         exp(x)*cos(x)*x**3 + exp(x)*sin(x)*x**3
 
 def test_eigen():
-    # test charpoly
-    x = Symbol('x')
-    y = Symbol('y')
-    eye3 = eye(3)
-    assert eye3.charpoly(x) == ((1-x)**3).expand()
-    assert eye3.charpoly(y) == ((1-y)**3).expand()
-    # test values
-    M = Matrix([(0,1,-1),
-                (1,1,0),
-                (-1,0,1) ])
-    vals = M.eigenvals()
-    vals.sort()
-    assert vals == [[-1,1],[1,1],[2,1]]
-    # test vectors
+    x,y = symbols('xy')
+
     R = Rational
-    M = Matrix([ [1,0,0],
-                 [0,1,0],
-                 [0,0,1]])
-    assert M.eigenvects() == [[1, 3, [Matrix([1,0,0]), Matrix([0,1,0]), Matrix([0,0,1])]]]
-    M = Matrix([ [5,0,2],
-                 [3,2,0],
-                 [0,0,1]])
-    assert M.eigenvects() == [[1, 1, [Matrix([R(-1)/2,R(3)/2,1])]],
-                              [2, 1, [Matrix([0,1,0])]],
-                              [5, 1, [Matrix([1,1,0])]]]
+
+    assert eye(3).charpoly(x) == Poly((x-1)**3, x)
+    assert eye(3).charpoly(y) == Poly((y-1)**3, y)
+
+    M = Matrix([[1,0,0],
+                [0,1,0],
+                [0,0,1]])
+
+    assert M.eigenvals() == {S.One: 3}
+
+    assert M.eigenvects() == \
+        [(1, 3, [Matrix([1,0,0]),
+                 Matrix([0,1,0]),
+                 Matrix([0,0,1])])]
+
+    M = Matrix([[0,1,1],
+                [1,0,0],
+                [1,1,1]])
+
+    assert M.eigenvals() == {2*S.One: 1, -S.One: 1, S.Zero: 1}
+
+    assert M.eigenvects() == \
+        [( 2, 1, [Matrix([R(2,3), R(1,3), 1])]),
+         (-1, 1, [Matrix([-1, 1, 0])]),
+         ( 0, 1, [Matrix([ 0,-1, 1])])]
 
 def test_sparse_matrix():
     return

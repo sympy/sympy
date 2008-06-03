@@ -2,8 +2,8 @@ from sympy import Basic, Symbol
 from sympy.core import sympify
 
 from sympy.core.basic import S, C
+from sympy.polys import Poly, roots
 
-import sympy.polynomials
 import random
 
 class NonSquareMatrixException(Exception):
@@ -828,8 +828,6 @@ class Matrix(object):
 
            TODO: Implement algorithm for sparse matrices (SFF).
         """
-        from sympy.simplify import cancel
-
         if not self.is_square:
             raise NonSquareMatrixException()
 
@@ -866,7 +864,7 @@ class Matrix(object):
                         if D.is_Atom:
                             M[i, j] = D
                         else:
-                            M[i, j] = cancel(D)
+                            M[i, j] = Poly._cancel(D)
 
             det = sign * M[n-1, n-1]
 
@@ -932,17 +930,6 @@ class Matrix(object):
                         assert j not in pivots
                         basis[basiskey.index(j)][i,0] = -1 * reduced[line, j]
         return basis
-
-    def charpoly(self, var):
-        assert self.lines == self.cols
-        if isinstance(var, Symbol):
-            x = var
-        else:
-            raise "Input variable to charpoly not valid"
-        copy = self[:,:]
-        for i in range(self.lines):
-            copy[i,i] -= x
-        return copy.det()
 
     def berkowitz(self):
         """The Berkowitz algorithm.
@@ -1047,47 +1034,31 @@ class Matrix(object):
     def berkowitz_charpoly(self, x):
         """Computes characteristic polynomial minors using Berkowitz method."""
         coeffs, monoms = self.berkowitz()[-1], range(self.lines+1)
-        return C.Poly(list(zip(coeffs, reversed(monoms))), x)
+        return Poly(list(zip(coeffs, reversed(monoms))), x)
 
-    def eigenvals(self, var=None):
-        """ Calls polynomials's roots(), doesn't support coeff type right now """
-        # returns list of pairs (eigenval, multiplicty)
-        if var == None:
-            var = Symbol('x')
-        p = self.charpoly(var)
-        num, den = p.as_numer_denom()
-        if den != 1:
-            divop = sympy.polynomials.div(num, den)
-            assert divop[1] == 0
-            p = divop[0]
-        rl = sympy.polynomials.roots(p, var)
-        assert len(rl) == self.lines
-        outlist = []
-        def f(num):
-            def g(n):
-                if num == n:
-                    return True
-                else:
-                    return False
-            return g
-        while rl != []:
-            n = len(filter(f(rl[0]), rl))
-            outlist.append([rl[0], n])
-            for i in range(n):
-                rl.remove(rl[0])
-        return outlist
+    charpoly = berkowitz_charpoly
 
-    def eigenvects(self):
+    def berkowitz_eigenvals(self, **flags):
+        """Computes eigenvalues of a Matrix using Berkowitz method. """
+        return roots(self.berkowitz_charpoly(Symbol('x', dummy=True)), **flags)
+
+    eigenvals = berkowitz_eigenvals
+
+    def eigenvects(self, **flags):
         # return list of triples (eigenval, multiplicty, basis)
-        out, vlist = [], self.eigenvals()
-        for i in range(len(vlist)):
-            tmp = self - eye(self.lines)*vlist[i][0]
+
+        if flags.has_key('multiple'):
+            del flags['multiple']
+
+        out, vlist = [], self.eigenvals(**flags)
+
+        for r, k in vlist.iteritems():
+            tmp = self - eye(self.lines)*r
             basis = tmp.nullspace()
             # check if basis is right size, don't do it if symbolic - too many solutions
             if not tmp.is_symbolic():
-                assert len(basis) == vlist[i][1]
-            vlist[i].append(basis)
-            out.append(vlist[i])
+                assert len(basis) == k
+            out.append((r, k, basis))
         return out
 
 def zero(n):
