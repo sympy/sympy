@@ -86,6 +86,15 @@ def test_poly_basics():
     assert Poly({(4,): x, (2,): y, (0,): z}, t) == Poly(f, t)
     assert Poly({4: x, 2: y, 0: z}, t) == Poly(f, t)
 
+    py.test.raises(PolynomialError, "Poly(x, 2)")
+    py.test.raises(PolynomialError, "Poly(x, 2*x)")
+
+    py.test.raises(PolynomialError, "Poly(x, 2, x)")
+    py.test.raises(PolynomialError, "Poly(x, 2*x, x)")
+
+    py.test.raises(PolynomialError, "Poly(x, x, 2)")
+    py.test.raises(PolynomialError, "Poly(x, x, 2*x)")
+
 def test_poly_internals():
     p = Poly(x**2*y*z + x*y*z**3 + x*y + y*z, x, y, z)
 
@@ -705,7 +714,7 @@ def test_subs():
     p = Poly(t*x*y**2 + x*y + t**2, x, y)
 
     assert p.subs(x, 2) == \
-        Poly(((2*t, 2, t**2), ((2,), (1,), (0,))), y, 'grlex')
+        Poly(((2*t, 2, t**2), ((2,), (1,), (0,))), y)
     assert p.subs(y, 2) == \
         Poly(((2 + 4*t, t**2), ((1,), (0,))), x)
 

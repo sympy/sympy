@@ -268,6 +268,11 @@ class Poly(Basic, RelMeths, ArithMeths):
         if N == 0 or len(stamp) != N:
             raise PolynomialError
 
+        symbols = tuple(map(sympify, symbols))
+
+        if any(not s.is_Symbol for s in symbols):
+            raise PolynomialError
+
         order = flags.pop('order', 'grlex')
 
         # { M1: c1, M2: c2, ... }
