@@ -6,8 +6,8 @@ from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational
 from sympy.core.methods import NoRelMeths, ArithMeths
 
-from sympy.polys import Poly, PolynomialError, \
-    poly_decompose, poly_sqf, poly_div, poly_quo
+from sympy.polys.polynomial import Poly, PolynomialError
+from sympy.polys.algorithms import poly_decompose, poly_sqf, poly_div
 
 from sympy.functions import exp
 
@@ -129,11 +129,11 @@ def roots(f, *symbols, **flags):
        >>> from sympy import *
        >>> x,y = symbols('xy')
 
-       #>>> roots(x**2 - 1, x)
-       #{1: 1, -1: 1}
+       >>> roots(x**2 - 1, x)
+       {1: 1, -1: 1}
 
-       #>>> roots(x**2 - y, x)
-       #{-y**(1/2): 1, y**(1/2): 1}
+       >>> roots(x**2 - y, x)
+       {-y**(1/2): 1, y**(1/2): 1}
 
     """
     if not isinstance(f, Poly):
@@ -270,7 +270,7 @@ def poly_factors(f, *symbols, **flags):
 
         if N < f.degree:
             g = reduce(lambda p,q: p*q, factors)
-            factors.append(poly_quo(f, g))
+            factors.append(poly_div(f, g)[0])
 
         return tuple(factors)
 

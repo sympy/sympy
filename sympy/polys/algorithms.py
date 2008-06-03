@@ -14,10 +14,9 @@ from polynomial import Poly, PolynomialError
 from monomial import monomial_cmp, monomial_lcm, \
     monomial_gcd, monomial_mul, monomial_div
 
-import sympy.matrices
+from sympy.utilities.iterables import all, any
 
-# Python2.4 compatibility
-from sympy.utilities.iterables import all
+import sympy.matrices
 
 def poly_div(f, g, *symbols):
     """Generalized polynomial division with remainder.

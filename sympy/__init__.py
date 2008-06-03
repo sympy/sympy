@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), "thi
 import symbol as stdlib_symbol
 from sympy.core import *
 
+from polys import *
 from series import *
 from functions import *
 from ntheory import *
@@ -29,7 +30,6 @@ from simplify import *
 from solvers import *
 from matrices import *
 from geometry import *
-from polynomials import *
 from utilities import *
 from integrals import *
 # This module is slow to import:
@@ -40,5 +40,3 @@ from printing import pretty, pretty_print, pprint, pprint_use_unicode, \
 from printing import latex, preview, view, pngview, pdfview, dviview
 
 import abc
-
-from polys import *

@@ -1,10 +1,12 @@
 import py
 from sympy.utilities.pytest import XFAIL
 
-from sympy import Polynomial, pi, symbols, Symbol, Rational, S, sqf_part, sqf,\
-        solve_system, Integer, I, roots, cos, sin, resultant, \
-        count_real_roots, lcm, groebner, gcd, factor, div, Real, \
-        PolynomialException, sqrt, sympify
+from sympy import pi, symbols, Symbol, Rational, \
+    S, Integer, I, cos, sin, Real, sqrt, sympify
+
+from sympy.polynomials import Polynomial, PolynomialException,  \
+    sqf_part, sqf, solve_system, roots, resultant, lcm, factor, \
+    groebner, count_real_roots, gcd, div
 
 def test_Polynomial():
     x = Symbol("x")

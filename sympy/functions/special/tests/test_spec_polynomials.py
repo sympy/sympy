@@ -1,6 +1,6 @@
 from sympy import legendre, Symbol, hermite, chebyshevu, chebyshevt, \
-        chebyshevt_root, chebyshevu_root, assoc_legendre, Rational, roots, \
-        sympify
+        chebyshevt_root, chebyshevu_root, assoc_legendre, Rational,  \
+        roots, sympify, S
 
 x = Symbol('x')
 
@@ -20,13 +20,12 @@ def test_legendre():
     assert legendre(10, 0) != 0
     assert legendre(11, 0) == 0
 
-    assert roots(legendre(4,x),x) == \
-            [sympify("(3/7 - 2/35*30**(1/2))**(1/2)"), \
-            sympify("-(3/7 - 2/35*30**(1/2))**(1/2)"), \
-            sympify("(3/7 + (2/35)*30**(1/2))**(1/2)"), \
-            sympify("-(3/7 + (2/35)*30**(1/2))**(1/2)")]
-
-
+    assert roots(legendre(4,x), x) == {
+         (Rational(3, 7) - Rational(2, 35)*30**S.Half)**S.Half: 1,
+        -(Rational(3, 7) - Rational(2, 35)*30**S.Half)**S.Half: 1,
+         (Rational(3, 7) + Rational(2, 35)*30**S.Half)**S.Half: 1,
+        -(Rational(3, 7) + Rational(2, 35)*30**S.Half)**S.Half: 1,
+    }
 
 def test_assoc_legendre():
     Plm=assoc_legendre
