@@ -296,6 +296,14 @@ def test_poly_properties():
     assert f.is_inhomogeneous == True
     assert f.is_monic == False
 
+    assert Poly(x + y - 1, x).is_linear == True
+    assert Poly(x + y - 1, y).is_linear == True
+
+    assert Poly(x + y - 1, x, y).is_linear == True
+
+    assert Poly(x*x + y - 1, x, y).is_linear == False
+    assert Poly(x*y + y - 1, x, y).is_linear == False
+
 def test_iterators():
     f = Poly(x**5 + x, x)
 

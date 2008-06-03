@@ -174,6 +174,7 @@ class Poly(Basic, RelMeths, ArithMeths):
           [7.12] [UP] is_monic         --> returns True if leading coeff is one
           [7.13] [UP] is_primitive     --> returns True if content is one
           [7.14] [UP] is_squarefree    --> no factors of multiplicity >= 2
+          [7.15] [UP] is_linear        --> all monomials of degree <= 1
 
        [8] Coefficients properties:
 
@@ -1109,6 +1110,10 @@ class Poly(Basic, RelMeths, ArithMeths):
 
         """
         return self.as_squarefree() is self
+
+    @property
+    def is_linear(self):
+        return all(sum(monom) <= 1 for monom in self.iter_monoms())
 
     @property
     def has_integer_coeffs(self):
