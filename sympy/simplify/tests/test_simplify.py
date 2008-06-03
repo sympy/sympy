@@ -193,7 +193,7 @@ def test_hypersimp():
     assert hypersimp(factorial(k), k) == k + 1
     assert hypersimp(factorial(k**2), k) is None
 
-    assert hypersimp(2**k/factorial(k)**2, k) == 2/(k+1)**2
+    assert hypersimp(2**k/factorial(k)**2, k) == 2/(k**2+2*k+1)
 
     assert hypersimp(binomial(n, k), k) == (n-k)/(k+1)
     assert hypersimp(binomial(n+1, k), k) == (n-k+1)/(k+1)
@@ -202,10 +202,10 @@ def test_hypersimp():
     assert hypersimp(term, k) == (4*k + 5)/(6 + 16*k**2 + 28*k)
 
     term = 1/((2*k-1)*factorial(2*k+1))
-    assert hypersimp(term, k) == (2*k-1)/(2*k+1)/(2*k+2)/(2*k+3)
+    assert hypersimp(term, k) == (2*k-1)/(6 + 22*k + 24*k**2 + 8*k**3)
 
     term = binomial(n, k)*(-1)**k/factorial(k)
-    assert hypersimp(term, k) == (k - n)/(k+1)**2
+    assert hypersimp(term, k) == (k - n)/(k**2+2*k+1)
 
 def test_together2():
     x, y, z = symbols("xyz")

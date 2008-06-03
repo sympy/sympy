@@ -5,6 +5,8 @@ from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
 from sympy.utilities import make_list, all
 from sympy.functions import gamma, exp, sqrt
 
+from sympy.polys import Poly
+
 from sys import maxint
 
 def fraction(expr, exact=False):
@@ -904,80 +906,61 @@ def powsimp(expr, deep=False):
 
     return _powsimp(separate(expr, deep=deep))
 
-def hypersimp(term, n, consecutive=True, simplify=True):
-    """Given combinatorial term a(n) simplify its consecutive term
-       ratio ie. a(n+1)/a(n). The term can be composed of functions
-       and integer sequences which have equivalent represenation
-       in terms of gamma special function. Currently ths includes
-       factorials (falling, rising), binomials and gamma it self.
+def hypersimp(f, k):
+    """Given combinatorial term f(k) simplify its consecutive term ratio
+       ie. f(k+1)/f(k).  The input term can be composed of functions and
+       integer sequences which have equivalent representation in terms
+       of gamma special function.
 
        The algorithm performs three basic steps:
 
            (1) Rewrite all functions in terms of gamma, if possible.
 
-           (2) Rewrite all occurences of gamma in terms of produtcs
-               of gamma and rising factorial with integer, absolute
+           (2) Rewrite all occurrences of gamma in terms of products
+               of gamma and rising factorial with integer,  absolute
                constant exponent.
 
            (3) Perform simplification of nested fractions, powers
                and if the resulting expression is a quotient of
                polynomials, reduce their total degree.
 
-       If the term given is hypergeometric then the result of this
-       procudure is a quotient of polynomials of minimal degree.
-       Sequence is hypergeometric if it is anihilated by linear,
-       homogeneous recurrence operator of first order, so in
-       other words when a(n+1)/a(n) is a rational function.
-
-       When the status of being hypergeometric or not, is required
-       then you can avoid additional simplification by unsetting
-       'simplify' flag.
-
-       This algorithm, due to Wolfram Koepf, is very simple but
-       powerful, however its full potential will be visible when
-       simplification in general will improve.
+       If f(k) is hypergeometric then as result we arrive with a
+       quotient of polynomials of minimal degree. Otherwise None
+       is returned.
 
        For more information on the implemented algorithm refer to:
 
        [1] W. Koepf, Algorithms for m-fold Hypergeometric Summation,
            Journal of Symbolic Computation (1995) 20, 399-417
     """
-    term = sympify(term)
+    f = sympify(f)
 
-    if consecutive == True:
-        term = term.subs(n, n+1)/term
+    g = f.subs(k, k+1) / f
 
-    expr = term.rewrite(gamma).expand(func=True, basic=False)
+    g = g.rewrite(gamma)
+    g = g.expand(func=True, basic=False)
 
-    p, q = together(expr).as_numer_denom()
-
-    if p.is_polynomial(n) and q.is_polynomial(n):
-        if simplify == True:
-            from sympy.polynomials import gcd, quo
-
-            G = gcd(p, q, n)
-
-            if G is not S.One:
-                p = quo(p, G, n)
-                q = quo(q, G, n)
-
-                p = p.as_polynomial(n)
-                q = q.as_polynomial(n)
-
-                a, p = p.as_integer()
-                b, q = q.as_integer()
-
-                p = p.as_basic()
-                q = q.as_basic()
-
-                return (b/a) * (p/q)
-
-        return p/q
+    if g.is_fraction(k):
+        return Poly.cancel(g, k)
     else:
         return None
 
-def hypersimilar(f, g, n):
-    return hypersimp(f/g, n, consecutive=False, simplify=False) is not None
+def hypersimilar(f, g, k):
+    """Returns True if 'f' and 'g' are hyper-similar.
+
+       Similarity in hypergeometric sens means that a quotient of
+       f(k) and g(k) is a rational function in k.  This procedure
+       is useful in solving recurrence relations.
+
+       For more information see hypersimp().
+
+    """
+    f, g = map(sympify, (f, g))
+
+    h = (f/g).rewrite(gamma)
+    h = h.expand(func=True, basic=False)
+
+    return h.is_fraction(k)
 
 def combsimp(expr):
     return expr
@@ -994,8 +977,6 @@ def simplify(expr):
        will be robust.
 
     """
-    from sympy.polys import Poly
-
     expr = powsimp(radsimp(expr))
     expr = Poly.cancel(expr)
 

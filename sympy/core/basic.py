@@ -474,9 +474,9 @@ class Basic(AssumeMeths):
                 result = result.union(obj.atoms(type=type))
         return result
 
-    def is_hypergeometric(self, arg):
+    def is_hypergeometric(self, k):
         from sympy.simplify import hypersimp
-        return hypersimp(self, arg, simplify=False) is not None
+        return hypersimp(self, k) is not None
 
     @property
     def is_number(self):
