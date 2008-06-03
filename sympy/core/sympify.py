@@ -102,10 +102,7 @@ def sympify(a, sympify_lists=False, locals= {}):
     else:
         # XXX this is here because of cyclic-import issues
         from sympy.matrices import Matrix
-        from sympy.polynomials import Polynomial
 
-        if isinstance(a, Polynomial):
-            return a
         if isinstance(a, Matrix):
             raise NotImplementedError('matrix support')
 

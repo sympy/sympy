@@ -1,4 +1,4 @@
-from sympy import Symbol, exp, Integer, Real, sin, cos, log, Polynomial, Lambda, Function, I
+from sympy import Symbol, exp, Integer, Real, sin, cos, log, Poly, Lambda, Function, I
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, _sympifyit, SympifyError
 import py
@@ -48,7 +48,7 @@ def test_sympify4():
 
 
 def test_sympify_poly():
-    p = Polynomial(1+x+x**2)
+    p = Poly(x**2+x+1, x)
 
     assert _sympify(p) is p
     assert sympify(p) is p
