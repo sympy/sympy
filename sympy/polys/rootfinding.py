@@ -126,6 +126,10 @@ def roots(f, *symbols, **flags):
        one of the following specifiers: Z, Q, R, I, C. By default all
        roots are returned (this is equivalent to setting domain='C').
 
+       By default a dictionary is returned giving a compact result in
+       case of multiple roots.  However to get a tuple containing all
+       those roots set the 'multiple' flag to True.
+
        >>> from sympy import *
        >>> x,y = symbols('xy')
 
@@ -173,11 +177,19 @@ def roots(f, *symbols, **flags):
 
         return zeros
 
+    multiple = flags.get('multiple', False)
+
     if f.length == 1:
         if f.is_constant:
-            return {}
+            if multiple:
+                return ()
+            else:
+                return {}
         else:
-            return { S.Zero : f.degree }
+            if multiple:
+                return (S.Zero,) * f.degree
+            else:
+                return { S.Zero : f.degree }
 
     (k,), f = f.as_reduced()
 
@@ -231,7 +243,15 @@ def roots(f, *symbols, **flags):
 
     result.update(zeros)
 
-    return result
+    if not multiple:
+        return result
+    else:
+        zeros = ()
+
+        for zero, k in result.iteritems():
+            zeros += (zero,) * k
+
+        return zeros
 
 def poly_factors(f, *symbols, **flags):
     """Returns all factors of an univariate polynomial.

@@ -920,6 +920,12 @@ def test_roots():
     assert roots(x**4-1, x, domain='Z') == {S.One: 1, -S.One: 1}
     assert roots(x**4-1, x, domain='I') == {I: 1, -I: 1}
 
+    assert roots(x**4-1, x, domain='Z', multiple=True) == (S.One, -S.One)
+    assert roots(x**4-1, x, domain='I', multiple=True) == (I, -I)
+
+    assert roots(x**3, x, multiple=True) == (S.Zero, S.Zero, S.Zero,)
+    assert roots(1234, x, multiple=True) == ()
+
 def test_factors():
     assert poly_factors(1, x) == (Poly(1, x),)
     assert poly_factors(x, x) == (Poly(x, x),)
