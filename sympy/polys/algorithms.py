@@ -16,8 +16,6 @@ from monomial import monomial_cmp, monomial_lcm, \
 
 from sympy.utilities.iterables import all, any
 
-import sympy.matrices
-
 def poly_div(f, g, *symbols):
     """Generalized polynomial division with remainder.
 
@@ -566,6 +564,8 @@ def poly_resultant(f, g, *symbols):
     else:
         q = f.as_uv_dict()
         p = g.as_uv_dict()
+
+    import sympy.matrices
 
     B = sympy.matrices.zero(N)
 

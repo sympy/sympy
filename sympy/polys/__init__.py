@@ -102,3 +102,5 @@ def factors(*args, **kwargs):
 def sturm(*args, **kwargs):
     """Wrapper for poly_sturm() """
     return _map_basic(poly_sturm, *args, **kwargs)
+
+resultant = poly_resultant
