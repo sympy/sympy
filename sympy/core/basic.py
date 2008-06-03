@@ -577,8 +577,15 @@ class Basic(AssumeMeths):
            There are situations when it is easier (simpler or prettier)
            to receive None on failure.
 
+           If no symbols were given and 'self' isn't already a polynomial
+           then all  available symbols will be collected and used to form
+           a new polynomial.
+
            >>> from sympy import *
            >>> x,y = symbols('xy')
+
+           >>> print (x**2 + x*y).as_poly()
+           Poly((1, 1), ((2, 0), (1, 1)), (x, y), 'grlex')
 
            >>> print (x**2 + x*y).as_poly(x, y)
            Poly((1, 1), ((2, 0), (1, 1)), (x, y), 'grlex')
@@ -590,6 +597,12 @@ class Basic(AssumeMeths):
         from sympy.polys import Poly, PolynomialError
 
         try:
+            if not symbols:
+                if isinstance(self, Poly):
+                    return self
+                else:
+                    symbols = sorted(self.atoms(Symbol))
+
             return Poly(self, *symbols, **flags)
         except PolynomialError:
             return None

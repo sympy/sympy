@@ -1,6 +1,6 @@
 from sympy import Basic, S, Symbol, Real, Integer, Rational,  \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
-    WildFunction
+    WildFunction, Poly
 
 import py
 
@@ -339,8 +339,14 @@ def test_as_poly_basic():
 
     f = x**2 + 2*x*y
 
+    assert f.as_poly().as_basic() == f
     assert f.as_poly(x, y).as_basic() == f
+
     assert (f + sin(x)).as_poly(x, y) is None
+
+    p = Poly(f, x, y)
+
+    assert p.as_poly() == p
 
 def test_nonzero():
     assert bool(S.Zero) == False
