@@ -250,38 +250,19 @@ def test_plotting2():
     check(Plot(1,visible=False))
     check(PlotAxes())
 
-#================== polynomials =================
-from sympy.polynomials.base import Polynomial
-from sympy.polynomials.fast.intpoly import IntPoly
-from sympy.polynomials.fast.modint import ModularInteger, ModularIntegerFactory
-from sympy.polynomials.fast.sparse_poly import SparsePolynomial
-
-def test_polynomials():
-    for c in (Polynomial, IntPoly, IntPoly(), ModularInteger, SparsePolynomial,
-              SparsePolynomial()):
-        check(c)
-
-@XFAIL
-def test_polynomials2():
-    x = Symbol("x")
-    check(Polynomial(1+x))
-
-@XFAIL
-def test_polynomials3():
-    check(ModularIntegerFactory(2)(4))
-
 #================== polys =======================
 from sympy.polys.polynomial import IntegerPoly, Poly
-from sympy.polys.rootfinding import RootOf, RootsOf
+from sympy.polys.rootfinding import RootOf, RootsOf, RootSum
 
 def test_polys():
     x = Symbol("x")
     f = Poly(x, x)
+    g = lambda x: x
 
     for c in (IntegerPoly, IntegerPoly(x, x), Poly, Poly(x, x)):
         check(c)
 
-    for c in (RootOf, RootOf(f, 0), RootsOf, RootsOf(x, x)):
+    for c in (RootOf, RootOf(f, 0), RootsOf, RootsOf(x, x), RootSum, RootSum(g, f)):
         check(c)
 
 #================== printing ====================
