@@ -520,45 +520,53 @@ class Poly(Basic, RelMeths, ArithMeths):
             return result
 
     @staticmethod
-    def _cancel(f):
+    def cancel(f, *symbols):
         """Cancel common factors in a fractional expression.
 
            Given a quotient of polynomials, cancel common factors from
-           the numerator and the denominator. The result is formed
-           in an expanded form, even if there was no cancellation.
+           the numerator and the denominator.  The result is formed in
+           an expanded form, even if there was no cancellation.
+
+           To improve the  speed of calculations a list of symbols can
+           be specified. This can be particularly useful in univariate
+           case with additional parameters, to avoid Groebner basis
+           computations.
 
            >>> from sympy import *
            >>> x,y = symbols('xy')
 
-           >>> Poly._cancel((x**2-y**2)/(x-y))
+           >>> Poly.cancel((x**2-y**2)/(x-y))
            x + y
 
         """
-        symbols = f.atoms(Symbol)
-
         if not symbols:
-            return f
-        else:
-            numer, denom = f.as_numer_denom()
+            symbols = f.atoms(Symbol)
 
-            numer = numer.expand()
-            denom = denom.expand()
+            if not symbols:
+                return f
+            else:
+                symbols = sorted(symbols)
 
-            if numer.is_Number or denom.is_Number:
-                return numer / denom
+        numer, denom = f.as_numer_denom()
 
-            try:
-                p = Poly(numer, *symbols)
-                q = Poly(denom, *symbols)
-            except PolynomialError:
-                return numer / denom
+        numer = numer.expand()
+        denom = denom.expand()
 
-            g = sympy.polys.algorithms.poly_gcd(p, q)
+        if numer.is_Number or denom.is_Number:
+            return numer / denom
 
-            p = sympy.polys.algorithms.poly_div(p, g)[0]
-            q = sympy.polys.algorithms.poly_div(q, g)[0]
+        try:
+            p = Poly(numer, *symbols)
+            q = Poly(denom, *symbols)
+        except PolynomialError:
+            return numer / denom
 
-            return p.as_basic() / q.as_basic()
+        g = sympy.polys.algorithms.poly_gcd(p, q)
+
+        p = sympy.polys.algorithms.poly_div(p, g)[0]
+        q = sympy.polys.algorithms.poly_div(q, g)[0]
+
+        return p.as_basic() / q.as_basic()
 
     def as_basic(self):
         """Converts polynomial to a valid sympy expression.
@@ -900,7 +908,7 @@ class Poly(Basic, RelMeths, ArithMeths):
                         if product.is_Atom:
                             coeff += product
                         else:
-                            coeff += Poly._cancel(product)
+                            coeff += Poly.cancel(product)
 
                 if coeff:
                     coeffs.append(coeff)
@@ -929,7 +937,7 @@ class Poly(Basic, RelMeths, ArithMeths):
                     coeff = coeff_p * coeff_q
 
                     if not coeff.is_Atom:
-                        coeff = Poly._cancel(coeff)
+                        coeff = Poly.cancel(coeff)
 
                     if terms.has_key(monom):
                         coeff += terms[monom]
@@ -1160,7 +1168,7 @@ class Poly(Basic, RelMeths, ArithMeths):
 
         for i, coeff in enumerate(coeffs):
             if not coeff.is_Atom:
-                coeffs[i] = Poly._cancel(coeff)
+                coeffs[i] = Poly.cancel(coeff)
 
         return self.__class__((coeffs, self.monoms),
             *self.symbols, **self.flags)
@@ -1704,7 +1712,7 @@ class Poly(Basic, RelMeths, ArithMeths):
 
                 for i, coeff in enumerate(coeffs):
                     if not coeff.is_Atom:
-                        coeffs[i] = Poly._cancel(coeff)
+                        coeffs[i] = Poly.cancel(coeff)
 
             if monom is None:
                 monoms = self.monoms
@@ -1733,7 +1741,7 @@ class Poly(Basic, RelMeths, ArithMeths):
 
             for i, coeff in enumerate(coeffs):
                 if not coeff.is_Atom:
-                    coeffs[i] = Poly._cancel(coeff)
+                    coeffs[i] = Poly.cancel(coeff)
 
         if monom is None:
             monoms = self.monoms

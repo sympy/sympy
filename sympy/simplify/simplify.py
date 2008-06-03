@@ -997,6 +997,6 @@ def simplify(expr):
     from sympy.polys import Poly
 
     expr = powsimp(radsimp(expr))
-    expr = Poly._cancel(expr)
+    expr = Poly.cancel(expr)
 
     return together(expr.expand())

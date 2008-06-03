@@ -137,15 +137,17 @@ def test_poly_internals():
         {(0, 1, 1): 3, (1, 1, 0): 4, (3, 1, 1): 2, (1, 1, 2): 1}
 
 def test_poly_cancel():
-    assert Poly._cancel(x) == x
-    assert Poly._cancel(x+1) == x+1
-    assert Poly._cancel((x+1)/(x-1)) == (x+1)/(x-1)
+    assert Poly.cancel(x) == x
+    assert Poly.cancel(x+1) == x+1
+    assert Poly.cancel((x+1)/(x-1)) == (x+1)/(x-1)
 
-    assert Poly._cancel((x**2-1)/(x-1)) == x+1
-    assert Poly._cancel((x**2-y**2)/(x-y)) == x+y
+    assert Poly.cancel((x**2-1)/(x-1)) == x+1
+    assert Poly.cancel((x**2-y**2)/(x-y)) == x+y
 
-    assert Poly._cancel((x**2-y)/(x-y)) == (x**2 - y)/(x - y)
-    assert Poly._cancel((x**2-2)/(x+sqrt(2))) == x - sqrt(2)
+    assert Poly.cancel((x**2-y)/(x-y)) == (x**2 - y)/(x - y)
+    assert Poly.cancel((x**2-2)/(x+sqrt(2))) == x - sqrt(2)
+
+    assert Poly.cancel((x**2-y**2)/(x-y), x) == x+y
 
 def test_poly_characteristics():
     f = -3*x**5*y*z**4 + 2*x**2*y**8 - x*y**4 + x*y*z**3

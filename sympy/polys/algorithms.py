@@ -71,7 +71,7 @@ def poly_div(f, g, *symbols):
                     if coeff.is_Atom:
                         q_coeffs.append(coeff)
                     else:
-                        q_coeffs.append(Poly._cancel(coeff))
+                        q_coeffs.append(Poly.cancel(coeff))
 
                     q_monoms.append(M)
                 else:
@@ -93,7 +93,7 @@ def poly_div(f, g, *symbols):
                 coeff = f.LC / h.LC
 
                 if not coeff.is_Atom:
-                    coeff = Poly._cancel(coeff)
+                    coeff = Poly.cancel(coeff)
 
                 q[i] = q[i].add_term(coeff, monom)
                 f -= h.mul_term(coeff, monom)
@@ -600,7 +600,7 @@ def poly_resultant(f, g, *symbols):
         if det.is_Atom:
             return sign * det
         else:
-            return sign * Poly._cancel(det)
+            return sign * Poly.cancel(det)
 
 def poly_subresultants(f, g, *symbols):
     """Computes subresultant PRS of two univariate polynomials.

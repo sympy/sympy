@@ -17,8 +17,8 @@ def test_solve():
     a11,a12,a21,a22,b1,b2 = symbols('a11','a12','a21','a22','b1','b2')
 
     assert solve([a11*x + a12*y - b1, a21*x + a22*y - b2], [x, y]) == \
-        { x : (a12*b2 - a22*b1)/(a12*a21 - a11*a22),
-          y : (a21*b1 - a11*b2)/(a12*a21 - a11*a22) }
+        { y : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
+          x : (a12*b2 - a22*b1)/(a12*a21 - a11*a22) }
 
 def test_linear_system():
     x, y, z, t, n = map(Symbol, 'xyztn')

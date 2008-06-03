@@ -864,7 +864,7 @@ class Matrix(object):
                         if D.is_Atom:
                             M[i, j] = D
                         else:
-                            M[i, j] = Poly._cancel(D)
+                            M[i, j] = Poly.cancel(D)
 
             det = sign * M[n-1, n-1]
 
