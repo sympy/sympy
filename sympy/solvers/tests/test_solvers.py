@@ -16,20 +16,20 @@ def test_solve():
 
     a11,a12,a21,a22,b1,b2 = symbols('a11','a12','a21','a22','b1','b2')
 
-    assert solve([a11*x + a12*y - b1, a21*x + a22*y - b2], [x, y]) == \
+    assert solve([a11*x + a12*y - b1, a21*x + a22*y - b2], x, y) == \
         { y : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
           x : (a12*b2 - a22*b1)/(a12*a21 - a11*a22) }
 
 def test_linear_system():
     x, y, z, t, n = map(Symbol, 'xyztn')
 
-    assert solve([x+5*y-2, -3*x+6*y-15], [x, y]) == {x: -3, y: 1}
+    assert solve([x+5*y-2, -3*x+6*y-15], x, y) == {x: -3, y: 1}
 
     M = Matrix( [0,0,n*(n+1),(n+1)**2,0],
                 [n+1,n+1,-2*n-1,-(n+1),0],
                 [-1, 0, 1, 0, 0] )
 
-    assert solve_linear_system(M, [x, y, z, t]) == \
+    assert solve_linear_system(M, x, y, z, t) == \
            {y: 0, z: (-t-t*n)/n, x: (-t-t*n)/n}
 
 def test_linear_systemLU():

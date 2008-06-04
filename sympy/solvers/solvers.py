@@ -9,114 +9,110 @@
 
 """
 
-from sympy.core import sympify, Symbol, Wild, Equality, Basic, S, Derivative, \
-    diff, I, C
+from sympy.core.sympify import sympify
+from sympy.core.basic import Basic, S, C
+from sympy.core.symbol import Symbol, Wild
+from sympy.core.relational import Equality
+from sympy.core.function import Derivative, diff
 
+from sympy.functions import sqrt, log, exp, LambertW
 from sympy.simplify import simplify, collect
 from sympy.matrices import Matrix, zeronm
-from sympy.polynomials import roots, PolynomialException
-from sympy.utilities import any
-from sympy.functions import sqrt, log, exp, LambertW
+from sympy.polys import roots
 
-def solve(eq, syms, simplified=True):
-    """Solves univariate polynomial equations and linear systems with
-       arbitrary symbolic coefficients. This function is just a wrapper
-       which makes analysis of its arguments and executes more specific
-       functions like 'roots' or 'solve_linear_system' etc.
+from sympy.utilities import any, all
 
-       On input you have to specify equation or a set of equations
-       (in this case via a list) using '==' pretty syntax or via
-       ordinary expressions, and a list of variables.
+def solve(f, *symbols, **flags):
+    """Solves equations and systems of equations.
 
-       On output you will get a list of solutions in univariate case
-       or a dictionary with variables as keys and solutions as values
-       in the other case. If there were variables with can be assigned
-       with arbitrary value, then they will be avoided in the output.
+       Currently supported are univariate polynomial and transcendental
+       equations and systems of linear and polynomial equations.  Input
+       is formed as a single expression or an equation,  or an iterable
+       container in case of an equation system.  The type of output may
+       vary and depends heavily on the input. For more details refer to
+       more problem specific functions.
 
-       Optionaly it is possible to have the solutions preprocessed
-       using simplification routines if 'simplified' flag is set.
+       By default all solutions are simplified to make the output more
+       readable. If this is not the expected behavior,  eg. because of
+       speed issues, set simplified=False in function arguments.
 
-       To solve recurrence relations or differential equations use
-       'rsolve' or 'dsolve' functions respectively, which are also
-       wrappers combining set of problem specific methods.
+       To solve equations and systems of equations of other kind, eg.
+       recurrence relations of differential equations use rsolve() or
+       dsolve() functions respectively.
 
        >>> from sympy import *
-       >>> x, y, a = symbols('xya')
+       >>> x,y = symbols('xy')
 
-       >>> r = solve(x**2 - 3*x + 2, x)
-       >>> r.sort()
-       >>> print r
-       [1, 2]
+       Solve a polynomial equation:
 
-       >>> solve(Eq(x**2, a), x)
-       [-a**(1/2), a**(1/2)]
-
-       >>> solve(Eq(x**4, 1), x)
+       >>> solve(x**4-1, x)
        [I, 1, -1, -I]
 
-       >>> solve([Eq(x + 5*y, 2), Eq(-3*x + 6*y, 15)], [x, y])
+       Solve a linear system:
+
+       >>> solve((x+5*y-2, -3*x+6*y-15), x, y)
        {y: 1, x: -3}
 
     """
-    if isinstance(syms, Basic):
-        syms = [syms]
+    if not symbols:
+        raise ValueError
 
-    if not isinstance(eq, list):
-        if isinstance(eq, Equality):
-            # got equation, so move all the
-            # terms to the left hand side
-            equ = eq.lhs - eq.rhs
+    if isinstance(f, Basic):
+        if isinstance(f, Equality):
+            f = f.lhs - f.rhs
         else:
-            equ = sympify(eq)
+            f = sympify(f)
 
-        try:
-            # 'roots' method will return all possible complex
-            # solutions, however we have to remove duplicates
-            solutions = list(set(roots(equ, syms[0])))
-        except PolynomialException:
-            if len(syms) == 1:
-                return [tsolve(equ, syms[0])]
+        if len(symbols) == 1:
+            poly = f.as_poly(*symbols)
 
-            raise "Not a polynomial equation. Can't solve it, yet."
-
-        if simplified == True:
-            return [ simplify(s) for s in solutions ]
+            if poly is not None:
+                result = roots(poly, cubics=True, quartics=True).keys()
+            else:
+                result = [tsolve(f, *symbols)]
         else:
-            return solutions
+            raise NotImplementedError
+
+        if flags.get('simplified', True):
+            return map(simplify, result)
+        else:
+            return result
     else:
-        if eq == []:
+        if not f:
             return {}
         else:
-            # augmented matrix
-            n, m = len(eq), len(syms)
-            matrix = zeronm(n, m+1)
+            polys = []
 
-            index = {}
-
-            for i in range(0, m):
-                index[syms[i]] = i
-
-            for i in range(0, n):
-                if isinstance(eq[i], Equality):
-                    # got equation, so move all the
-                    # terms to the left hand side
-                    equ = eq[i].lhs - eq[i].rhs
+            for g in f:
+                if isinstance(g, Equality):
+                    g = g.lhs - g.rhs
                 else:
-                    equ = sympify(eq[i])
+                    g = sympify(g)
 
-                content = collect(equ.expand(), syms, evaluate=False)
+                poly = g.as_poly(*symbols)
 
-                for var, expr in content.iteritems():
-                    if isinstance(var, Symbol) and not expr.has(*syms):
-                        matrix[i, index[var]] = expr
-                    elif (var is S.One) and not expr.has(*syms):
-                        matrix[i, m] = -expr
-                    else:
-                        raise "Not a linear system. Can't solve it, yet."
+                if poly is not None:
+                    polys.append(poly)
+                else:
+                    raise NotImplementedError
+
+            if all(p.is_linear for p in polys):
+                n, m = len(f), len(symbols)
+                matrix = zeronm(n, m + 1)
+
+                for i, poly in enumerate(polys):
+                    for coeff, monom in poly.iter_terms():
+                        try:
+                            j = list(monom).index(1)
+                            matrix[i, j] = coeff
+                        except ValueError:
+                            matrix[i, m] = -coeff
+
+                return solve_linear_system(matrix, *symbols, **flags)
             else:
-                return solve_linear_system(matrix, syms, simplified)
+                raise NotImplementedError # polynomial system
 
-def solve_linear_system(system, symbols, simplified=True):
+def solve_linear_system(system, *symbols, **flags):
     """Solve system of N linear equations with M variables, which means
        both Cramer and over defined systems are supported. The possible
        number of solutions is zero, one or infinite. Respectively this
@@ -145,12 +141,12 @@ def solve_linear_system(system, symbols, simplified=True):
            -2 x +   y == 14
 
        >>> system = Matrix(( (1, 4, 2), (-2, 1, 14)))
-       >>> solve_linear_system(system, [x, y])
+       >>> solve_linear_system(system, x, y)
        {y: 2, x: -6}
 
     """
     matrix = system[:,:]
-    syms = symbols[:]
+    syms = list(symbols)
 
     i, m = 0, matrix.cols-1  # don't count augmentation
 
@@ -194,6 +190,8 @@ def solve_linear_system(system, symbols, simplified=True):
     # in row-echelon form so we can check how many solutions
     # there are and extract them using back substitution
 
+    simplified = flags.get('simplified', True)
+
     if len(syms) == matrix.lines:
         # this system is Cramer equivalent so there is
         # exactly one solution to this system of equations
@@ -206,7 +204,7 @@ def solve_linear_system(system, symbols, simplified=True):
             for j in range(k+1, m):
                 content -= matrix[k, j]*solutions[syms[j]]
 
-            if simplified == True:
+            if simplified:
                 solutions[syms[k]] = simplify(content)
             else:
                 solutions[syms[k]] = content
@@ -230,7 +228,7 @@ def solve_linear_system(system, symbols, simplified=True):
             for j in range(i, m):
                 content -= matrix[k, j]*syms[j]
 
-            if simplified == True:
+            if simplified:
                 solutions[syms[k]] = simplify(content)
             else:
                 solutions[syms[k]] = content
@@ -241,7 +239,7 @@ def solve_linear_system(system, symbols, simplified=True):
     else:
         return None   # no solutions
 
-def solve_undetermined_coeffs(equ, coeffs, sym, simplified=True):
+def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     """Solve equation of a type p(x; a_1, ..., a_k) == q(x) where both
        p, q are univariate polynomials and f depends on k parameters.
        The result of this functions is a dictionary with symbolic
@@ -272,7 +270,7 @@ def solve_undetermined_coeffs(equ, coeffs, sym, simplified=True):
         # consecutive powers in the input expressions have
         # been successfully collected, so solve remaining
         # system using Gaussian ellimination algorithm
-        return solve(system, coeffs, simplified)
+        return solve(system, *coeffs, **flags)
     else:
         return None # no solutions
 
@@ -432,7 +430,7 @@ def solve_ODE_second_order(eq, f):
             else:
                 return Symbol("C1")*exp(r1[0]*x) + Symbol("C2")*exp(r1[1]*x)
         else:
-            r2 = abs((r1[0] - r1[1])/(2*I))
+            r2 = abs((r1[0] - r1[1])/(2*S.ImaginaryUnit))
             return (Symbol("C2")*C.cos(r2*x) + Symbol("C1")*C.sin(r2*x))*exp((r1[0] + r1[1])*x/2)
 
     #other cases of the second order odes will be implemented here

@@ -264,7 +264,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             E = [ g(i) + delta(h, i) for i in xrange(N+1, U) ]
 
         if E != []:
-            solutions = solve(E, C)
+            solutions = solve(E, *C)
 
             if solutions is None:
                 if homogeneous:

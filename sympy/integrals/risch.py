@@ -358,7 +358,7 @@ def heurisch(f, x, **kwargs):
             else:
                 equations[dependent] = coeff
 
-        solution = solve(equations.values(), coeffs)
+        solution = solve(equations.values(), *coeffs)
 
         if solution is not None:
             return (solution, candidate, coeffs)
