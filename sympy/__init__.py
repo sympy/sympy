@@ -38,5 +38,6 @@ from plotting import Plot, textplot
 from printing import pretty, pretty_print, pprint, pprint_use_unicode, \
     pprint_try_use_unicode, print_gtk
 from printing import latex, preview, view, pngview, pdfview, dviview
+from polynomials import factor
 
 import abc
