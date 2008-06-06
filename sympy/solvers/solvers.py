@@ -55,13 +55,22 @@ def solve(f, *symbols, **flags):
 
     """
     if not symbols:
-        raise ValueError
+        raise ValueError('no symbols were given')
 
-    if isinstance(f, Basic):
+    if len(symbols) == 1:
+        if isinstance(symbols[0], (list, tuple, set)):
+            symbols = symbols[0]
+
+    symbols = map(sympify, symbols)
+
+    if any(not s.is_Symbol for s in symbols):
+        raise TypeError('not a Symbol')
+
+    if not isinstance(f, (tuple, list, set)):
+        f = sympify(f)
+
         if isinstance(f, Equality):
             f = f.lhs - f.rhs
-        else:
-            f = sympify(f)
 
         if len(symbols) == 1:
             poly = f.as_poly(*symbols)
@@ -71,7 +80,7 @@ def solve(f, *symbols, **flags):
             else:
                 result = [tsolve(f, *symbols)]
         else:
-            raise NotImplementedError
+            raise NotImplementedError('multivariate equation')
 
         if flags.get('simplified', True):
             return map(simplify, result)
@@ -84,10 +93,10 @@ def solve(f, *symbols, **flags):
             polys = []
 
             for g in f:
+                g = sympify(g)
+
                 if isinstance(g, Equality):
                     g = g.lhs - g.rhs
-                else:
-                    g = sympify(g)
 
                 poly = g.as_poly(*symbols)
 
@@ -110,7 +119,7 @@ def solve(f, *symbols, **flags):
 
                 return solve_linear_system(matrix, *symbols, **flags)
             else:
-                raise NotImplementedError # polynomial system
+                raise NotImplementedError('polynomial system')
 
 def solve_linear_system(system, *symbols, **flags):
     """Solve system of N linear equations with M variables, which means

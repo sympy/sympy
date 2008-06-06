@@ -5,6 +5,8 @@ from sympy.matrices import Matrix
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, deriv_degree
 
+import py
+
 def test_solve():
     x, y = map(Symbol, 'xy')
 
@@ -19,6 +21,15 @@ def test_solve():
     assert solve([a11*x + a12*y - b1, a21*x + a22*y - b2], x, y) == \
         { y : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
           x : (a12*b2 - a22*b1)/(a12*a21 - a11*a22) }
+
+    solution = {y: S.Zero, x: S.Zero}
+
+    assert solve((x-y, x+y),  x, y ) == solution
+    assert solve((x-y, x+y), (x, y)) == solution
+    assert solve((x-y, x+y), [x, y]) == solution
+
+    py.test.raises(TypeError, "solve(x**2-pi, pi)")
+    py.test.raises(ValueError, "solve(x**2-pi)")
 
 def test_linear_system():
     x, y, z, t, n = map(Symbol, 'xyztn')
