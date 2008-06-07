@@ -338,14 +338,25 @@ class Matrix(object):
         return self._format_str(lambda elem: str(elem))
 
     def inv(self, method="GE"):
+        """
+        Calculates the matrix inverse.
+
+        According to the "method" parameter, it calls the appropriate method:
+
+          GE .... inverse_GE()
+          LU .... inverse_LU()
+          ADJ ... inverse_ADJ()
+
+        """
         assert self.cols==self.lines
-        # gaussian by default, also can be done by LU
         if method == "GE":
             return self.inverse_GE()
         elif method == "LU":
             return self.inverse_LU()
+        elif method == "ADJ":
+            return self.inverse_ADJ()
         else:
-            raise "Inversion method unrecognized"
+            raise Exception("Inversion method unrecognized")
 
 
     def __mathml__(self):
@@ -870,15 +881,44 @@ class Matrix(object):
 
         return det.expand()
 
+    def adjugate(self):
+        """
+        Returns the adjugate matrix.
+
+        Adjugate matrix is the transpose of the cofactor matrix.
+
+        http://en.wikipedia.org/wiki/Adjugate
+
+        See also: .cofactorMatrix(), .T
+        """
+
+        return self.cofactorMatrix().T
+
+
     def inverse_LU(self):
+        """
+        Calculates the inverse using LU decomposition.
+        """
         return self.LUsolve(self.eye(self.lines))
 
     def inverse_GE(self):
+        """
+        Calculates the inverse using Gaussian elimination.
+        """
         assert self.lines == self.cols
         assert self.det() != 0
         big = self.row_join(self.eye(self.lines))
         red = big.rref()
         return red[0][:,big.lines:]
+
+    def inverse_ADJ(self):
+        """
+        Calculates the inverse using the adjugate matrix and a determinant.
+        """
+        assert self.lines == self.cols
+        d = self.berkowitz_det()
+        assert d != 0
+        return self.adjugate()/d
 
     def rref(self):
         # take any matrix and return reduced row-ech form and indices of pivot vars
