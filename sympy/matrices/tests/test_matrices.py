@@ -80,43 +80,43 @@ def test_determinant():
 
     M = Matrix((1,))
 
-    assert M.det() == 1
-    assert M.berkowitz_det() == 1
+    assert M.det(method="bareis") == 1
+    assert M.det(method="berkowitz") == 1
 
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
 
-    assert M.det() == -1
-    assert M.berkowitz_det() == -1
+    assert M.det(method="bareis") == -1
+    assert M.det(method="berkowitz") == -1
 
     M = Matrix(( (x,   1),
                  (y, 2*y) ))
 
-    assert M.det() == 2*x*y-y
-    assert M.berkowitz_det() == 2*x*y-y
+    assert M.det(method="bareis") == 2*x*y-y
+    assert M.det(method="berkowitz") == 2*x*y-y
 
     M = Matrix(( (1, 1, 1),
                  (1, 2, 3),
                  (1, 3, 6) ))
 
-    assert M.det() == 1
-    assert M.berkowitz_det() == 1
+    assert M.det(method="bareis") == 1
+    assert M.det(method="berkowitz") == 1
 
     M = Matrix(( ( 3, -2,  0, 5),
                  (-2,  1, -2, 2),
                  ( 0, -2,  5, 0),
                  ( 5,  0,  3, 4) ))
 
-    assert M.det() == -289
-    assert M.berkowitz_det() == -289
+    assert M.det(method="bareis") == -289
+    assert M.det(method="berkowitz") == -289
 
     M = Matrix(( ( 1,  2,  3,  4),
                  ( 5,  6,  7,  8),
                  ( 9, 10, 11, 12),
                  (13, 14, 15, 16) ))
 
-    assert M.det() == 0
-    assert M.berkowitz_det() == 0
+    assert M.det(method="bareis") == 0
+    assert M.det(method="berkowitz") == 0
 
     M = Matrix(( (3, 2, 0, 0, 0),
                  (0, 3, 2, 0, 0),
@@ -124,8 +124,8 @@ def test_determinant():
                  (0, 0, 0, 3, 2),
                  (2, 0, 0, 0, 3) ))
 
-    assert M.det() == 275
-    assert M.berkowitz_det() == 275
+    assert M.det(method="bareis") == 275
+    assert M.det(method="berkowitz") == 275
 
     M = Matrix(( (1, 0,  1,  2, 12),
                  (2, 0,  1,  1,  4),
@@ -133,8 +133,8 @@ def test_determinant():
                  (3, 2, -1,  1,  8),
                  (1, 1,  1,  0,  6) ))
 
-    assert M.det() == -55
-    assert M.berkowitz_det() == -55
+    assert M.det(method="bareis") == -55
+    assert M.det(method="berkowitz") == -55
 
     M = Matrix(( (-5,  2,  3,  4,  5),
                  ( 1, -4,  3,  4,  5),
@@ -142,8 +142,8 @@ def test_determinant():
                  ( 1,  2,  3, -2,  5),
                  ( 1,  2,  3,  4, -1) ))
 
-    assert M.det() == 11664
-    assert M.berkowitz_det() == 11664
+    assert M.det(method="bareis") == 11664
+    assert M.det(method="berkowitz") == 11664
 
     M = Matrix(( ( 2,  7, -1, 3, 2),
                  ( 0,  0,  1, 0, 1),
@@ -151,15 +151,15 @@ def test_determinant():
                  (-3, -2,  4, 5, 3),
                  ( 1,  0,  0, 0, 1) ))
 
-    assert M.det() == 123
-    assert M.berkowitz_det() == 123
+    assert M.det(method="bareis") == 123
+    assert M.det(method="berkowitz") == 123
 
     M = Matrix(( (x,y,z),
                  (1,0,0),
                  (y,z,x) ))
 
-    assert M.det() == z**2 - x*y
-    assert M.berkowitz_det() == z**2 - x*y
+    assert M.det(method="bareis") == z**2 - x*y
+    assert M.det(method="berkowitz") == z**2 - x*y
 
 def test_submatrix():
     m0 = eye(4)
@@ -279,13 +279,15 @@ def test_LUsolve():
 def test_inverse():
     A = eye(4)
     assert A.inv() == eye(4)
+    assert A.inv("LU") == eye(4)
+    assert A.inv("ADJ") == eye(4)
     A = Matrix([[2,3,5],
                 [3,6,2],
                 [8,3,6]])
     Ainv = A.inv()
     assert A*Ainv == eye(3)
-    Ainv2 = A.inv("LU")
-    assert Ainv == Ainv2
+    assert A.inv("LU") == Ainv
+    assert A.inv("ADJ") == Ainv
 
 def test_util():
     v1 = Matrix(1,3,[1,2,3])
@@ -612,13 +614,15 @@ def test_sparse_matrix():
     # test_inverse
     A = eye(4)
     assert A.inv() == eye(4)
+    assert A.inv("LU") == eye(4)
+    assert A.inv("ADJ") == eye(4)
     A = SMatrix([[2,3,5],
                 [3,6,2],
                 [8,3,6]])
     Ainv = A.inv()
     assert A*Ainv == eye(3)
-    Ainv2 = A.inv("LU")
-    assert Ainv == Ainv2
+    assert A.inv("LU") == Ainv
+    assert A.inv("ADJ") == Ainv
 
     # test_cross
     v1 = Matrix(1,3,[1,2,3])
