@@ -644,24 +644,25 @@ class Matrix(object):
         DD[n-1,n-1] = oldpivot
         return P, L, DD, U
 
-    def cofactorMatrix(self):
+    def cofactorMatrix(self, method="berkowitz"):
         out = self[:,:]
-        out[:,:] = Matrix(self.lines, self.cols, lambda i,j: self.cofactor(i,j))
+        out[:,:] = Matrix(self.lines, self.cols, lambda i,j:
+                self.cofactor(i, j, method))
         return out
 
-    def minorEntry(self, i, j):
+    def minorEntry(self, i, j, method="berkowitz"):
         assert 0 <= i < self.lines and 0 <= j < self.cols
-        return self.minorMatrix(i,j).det()
+        return self.minorMatrix(i,j).det(method)
 
     def minorMatrix(self, i, j):
         assert 0 <= i < self.lines and 0 <= j < self.cols
         return self.delRowCol(i,j)
 
-    def cofactor(self, i, j):
+    def cofactor(self, i, j, method="berkowitz"):
         if (i+j) % 2 == 0:
-            return self.minorEntry(i,j)
+            return self.minorEntry(i, j, method)
         else:
-            return -1 * self.minorEntry(i,j)
+            return -1 * self.minorEntry(i, j, method)
 
     def jacobian(self, varlist):
         # self is a vector of expression representing functions f_i(x_1, ..., x_n)
@@ -829,7 +830,23 @@ class Matrix(object):
     def clone(self):
         return Matrix(self.lines, self.cols, lambda i, j: self[i, j])
 
-    def det(self):
+    def det(self, method="bareis"):
+        """
+        Computes the matrix determinant using the method "method".
+
+        Possible values for "method":
+          bareis ... det_bareis
+          berkowitz ... berkowitz_det
+        """
+
+        if method == "bareis":
+            return self.det_bareis()
+        elif method == "berkowitz":
+            return self.berkowitz_det()
+        else:
+            raise Exception("Determinant method unrecognized")
+
+    def det_bareis(self):
         """Compute matrix determinant using Bareis' fraction-free
            algorithm which is an extension of the well known Gaussian
            elimination method. This approach is best suited for dense
@@ -881,7 +898,7 @@ class Matrix(object):
 
         return det.expand()
 
-    def adjugate(self):
+    def adjugate(self, method="berkowitz"):
         """
         Returns the adjugate matrix.
 
@@ -892,7 +909,7 @@ class Matrix(object):
         See also: .cofactorMatrix(), .T
         """
 
-        return self.cofactorMatrix().T
+        return self.cofactorMatrix(method).T
 
 
     def inverse_LU(self):
