@@ -446,10 +446,8 @@ class Derivative(Basic, ArithMeths, RelMeths):
                         yield copy_s
                 else:
                     yield s
-            elif isinstance(s, Function):
-                yield s
             else:
-                 raise TypeError("Derivative argument must be Symbol|Integer|Function instance (got %s)" % (s.__class__.__name__))
+                yield s
 
     def __new__(cls, expr, *symbols, **assumptions):
         expr = sympify(expr)
