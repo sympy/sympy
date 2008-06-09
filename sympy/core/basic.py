@@ -842,9 +842,12 @@ class Basic(AssumeMeths):
         if p.is_Symbol and not isinstance(p, Wild): # speeds up
             return p in self.atoms(p.__class__)
         if isinstance(p, BasicType):
-            #XXX hack, this is very fragile:
+            #XXX this is very fragile:
             if str(self).find(str(p.__name__)) == -1:
-                #didn't find p in self
+                #didn't find p in self, let's try corner cases
+                if p is Derivative:
+                    if str(self).find("D(") != -1:
+                        return True
                 return False
             else:
                 return True

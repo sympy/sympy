@@ -1,6 +1,6 @@
 from sympy import Basic, S, Symbol, Real, Integer, Rational,  \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
-    WildFunction, Poly
+    WildFunction, Poly, Function, Derivative
 
 import py
 
@@ -278,6 +278,25 @@ def test_subs_list():
     assert (x+y)._subs_list([(x, 3), (y, x**2)]) == 3 + x**2
     assert (x+y)._subs_list([(y, x**2), (x, 3)]) == 12
 
+def test_has():
+    x, y = symbols("xy")
+    f = Function("f")
+    g = Function("g")
+    assert sin(x).has(x)
+    assert sin(x).has(sin)
+    assert not sin(x).has(y)
+    assert not sin(x).has(cos)
+    assert f(x).has(x)
+    assert f(x).has(f)
+    assert not f(x).has(y)
+    assert not f(x).has(g)
+
+    assert f(x).diff(x).has(x)
+    assert f(x).diff(x).has(f)
+    assert f(x).diff(x).has(Derivative)
+    assert not f(x).diff(x).has(y)
+    assert not f(x).diff(x).has(g)
+    assert not f(x).diff(x).has(sin)
 
 def test_has_any_symbols():
     x,y,z,t,u = symbols('xyztu')
