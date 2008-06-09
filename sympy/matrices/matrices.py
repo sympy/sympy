@@ -304,7 +304,10 @@ class Matrix(object):
     def __ne__(self,a):
         if not isinstance(a, (Matrix, Basic)):
             a = sympify(a)
-        return self.hash() != a.hash()
+        if isinstance(a, Matrix):
+            return self.hash() != a.hash()
+        else:
+            return True
 
     # hook Basic.__repr__ & Basic.__str__
     def __repr__(self):
