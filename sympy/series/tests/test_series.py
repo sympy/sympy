@@ -369,3 +369,8 @@ def test_series3():
     x = Symbol("x")
     e = w**(-6)*(w**3*tan(w) - w**3*sin(w))
     assert e.series(w, 2) == Integer(1)/2 + O(w**2)
+
+def test_series_with_order():
+    x = Symbol("x")
+    assert sin(x).series(x, 0, 4, with_order=True) == x-x**3/6+O(x**4)
+    assert sin(x).series(x, 0, 4, with_order=False) == x-x**3/6
