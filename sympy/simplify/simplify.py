@@ -687,16 +687,6 @@ def ratsimp(expr):
     if num.expand() == 0:
         return 0
 
-    #we need to cancel common factors from numerator and denumerator
-    #but SymPy doesn't yet have a multivariate polynomial factorisation
-    #so until we have it, we are just returning the correct results here
-    #to pass all tests...
-    if denum.is_Pow:
-        e = (num/denum.args[0]).expand()
-        f = (e/(-2*Symbol("y"))).expand()
-        if f == denum/denum.args[0]:
-            return -2*Symbol("y")
-        return e/(denum/denum.args[0])
     return num/denum
 
 def trigsimp(expr, deep=False):
