@@ -283,6 +283,18 @@ u"""\
 """
     assert u == s
 
+    e = dict(enumerate(e))
+    u = upretty(e)
+    s = \
+u"""\
+⎧                               2   ⎫
+⎪    2     1                 sin (θ)⎪
+⎨0: x , 1: ─, 2: x, 3: y, 4: ───────⎬
+⎪          x                    2   ⎪
+⎩                            cos (φ)⎭\
+"""
+    assert u == s
+
     e = {x: sin(x)}
     u = upretty(e)
     s = \

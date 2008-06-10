@@ -168,6 +168,7 @@ symb_2txt = {
     '}' :   'RIGHT CURLY BRACKET',
 
     # non-std
+    '{}' :  'CURLY BRACKET',
     'sum':  'SUMMATION',
     'int':  'INTEGRAL',
 }
@@ -219,12 +220,12 @@ _xobj_unicode = {
 
     # vertical symbols
     #          ext       top       bot        mid           c1
-    '(' :   (( EXT('('), HUP('('), HLO('(') ),              '('),
-    ')' :   (( EXT(')'), HUP(')'), HLO(')') ),              ')'),
-    '[' :   (( EXT('['), CUP('['), CLO('[') ),              '['),
-    ']' :   (( EXT(']'), CUP(']'), CLO(']') ),              ']'),
-    '{' :   (( EXT('('), HUP('{'), HLO('{'),  MID('{')  ),  '{'),   # XXX EXT is wrong
-    '}' :   (( EXT(')'), HUP('}'), HLO('}'),  MID('}')  ),  '}'),   # XXX EXT is wrong
+    '(' :   (( EXT('('),  HUP('('), HLO('(') ),              '('),
+    ')' :   (( EXT(')'),  HUP(')'), HLO(')') ),              ')'),
+    '[' :   (( EXT('['),  CUP('['), CLO('[') ),              '['),
+    ']' :   (( EXT(']'),  CUP(']'), CLO(']') ),              ']'),
+    '{' :   (( EXT('{}'), HUP('{'), HLO('{'),  MID('{')  ),  '{'),
+    '}' :   (( EXT('{}'), HUP('}'), HLO('}'),  MID('}')  ),  '}'),
     '|' :   U('BOX DRAWINGS LIGHT VERTICAL'),
 
     'lfloor' : (( EXT('['), EXT('['), CLO('[') ), U('LEFT FLOOR')),
