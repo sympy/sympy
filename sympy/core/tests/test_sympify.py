@@ -127,3 +127,33 @@ def test_sympifyit():
     assert add_raises(x, y)     == x+y
 
     py.test.raises(SympifyError, "add_raises(x, '1')")
+
+def test_int_float():
+    class F1_1():
+        def __float__(self):
+            return 1.1
+
+    class F1_1b():
+        """
+        This class is still a float, even though it also implements __int__().
+        """
+        def __float__(self):
+            return 1.1
+
+        def __int__(self):
+            return 1
+
+    class I5():
+        def __int__(self):
+            return 5
+
+    i5 = I5()
+    f1_1 = F1_1()
+    f1_1b = F1_1b()
+    assert sympify(i5) == 5
+    assert abs(sympify(f1_1) - 1.1) < 1e-5
+    assert abs(sympify(f1_1b) - 1.1) < 1e-5
+
+    assert _sympify(i5) == 5
+    assert abs(_sympify(f1_1) - 1.1) < 1e-5
+    assert abs(_sympify(f1_1b) - 1.1) < 1e-5

@@ -82,7 +82,11 @@ def sympify(a, sympify_lists=False, locals= {}):
     # let's see if 'a' implements conversion methods such as '_sympy_' or
     # '__int__', that returns a SymPy (by definition) or SymPy compatible
     # expression, so we just use it
-    for methname, conv in [('_sympy_',None), ('__int__', Integer)]:
+    for methname, conv in [
+            ('_sympy_',None),
+            ('__float__', Real),
+            ('__int__', Integer),
+            ]:
         meth = getattr(a, methname, None)
         if meth is None:
             continue
@@ -172,7 +176,11 @@ def _sympify(a):
     # let's see if 'a' implements conversion methods such as '_sympy_' or
     # '__int__', that returns a SymPy (by definition) or SymPy compatible
     # expression, so we just use it
-    for methname, conv in [('_sympy_',None), ('__int__', Integer)]:
+    for methname, conv in [
+            ('_sympy_',None),
+            ('__float__', Real),
+            ('__int__', Integer),
+            ]:
         meth = getattr(a, methname, None)
         if meth is None:
             continue
