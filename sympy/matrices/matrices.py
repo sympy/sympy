@@ -147,18 +147,26 @@ class Matrix(object):
         2 - I
 
         """
-        # row-wise decomposition of matrix
-        if isinstance(key, slice) or isinstance(key, int):
-            return self.mat[key]
-        # proper 2-index access
-        assert len(key) == 2
-        if isinstance(key[0], int) and isinstance(key[1], int):
-            i,j=self.key2ij(key)
-            return self.mat[i*self.cols+j]
-        elif isinstance(key[0], slice) or isinstance(key[1], slice):
-            return self.submatrix(key)
+
+        if isinstance(key, (list, tuple)):
+            if len(key) == 2:
+                # proper 2-index access
+                if isinstance(key[0], slice) or isinstance(key[1], slice):
+                    return self.submatrix(key)
+                else:
+                    k1, k2 = a2idx(key[0]), a2idx(key[1])
+                    if k1 is not None and k2 is not None:
+                        i,j=self.key2ij([k1, k2])
+                        return self.mat[i*self.cols+j]
         else:
-            raise IndexError("Index out of range: a[%s]"%repr(key))
+            # row-wise decomposition of matrix
+            if isinstance(key, slice):
+                return self.mat[key]
+            else:
+                k = a2idx(key)
+                if k is not None:
+                    return self.mat[k]
+        raise IndexError("Invalid index: a[%s]"%repr(key))
 
     def __setitem__(self,key,value):
         """
@@ -173,15 +181,32 @@ class Matrix(object):
         [9,     4]
 
         """
-        assert len(key) == 2
-        if isinstance(key[0], slice) or isinstance(key[1], slice):
-            if isinstance(value, Matrix):
-                self.copyin_matrix(key, value)
-            if isinstance(value, (list, tuple)):
-                self.copyin_list(key, value)
+        if isinstance(key, (list, tuple)):
+            if len(key) == 2:
+                # proper 2-index access
+                if isinstance(key[0], slice) or isinstance(key[1], slice):
+                    if isinstance(value, Matrix):
+                        self.copyin_matrix(key, value)
+                        return
+                    if isinstance(value, (list, tuple)):
+                        self.copyin_list(key, value)
+                        return
+                else:
+                    k1, k2 = a2idx(key[0]), a2idx(key[1])
+                    if k1 is not None and k2 is not None:
+                        i,j=self.key2ij([k1, k2])
+                        self.mat[i*self.cols + j] = sympify(value)
+                        return
         else:
-            i,j=self.key2ij(key)
-            self.mat[i*self.cols + j] = sympify(value)
+            # row-wise decomposition of matrix
+            if isinstance(key, slice):
+                raise IndexError("Vector slices not implemented yet.")
+            else:
+                k = a2idx(key)
+                if k is not None:
+                    self.mat[k] = sympify(value)
+                    return
+        raise IndexError("Invalid index: a[%s]"%repr(key))
 
     def __array__(self):
         return matrix2numpy(self)
@@ -1478,3 +1503,15 @@ def matrix2numpy(m):
         for j in range(m.cols):
             a[i, j] = m[i, j]
     return a
+
+def a2idx(a):
+    """
+    Tries to convert "a" to an index, returns None on failure.
+
+    The result of a2idx() (if not None) can be safely used as an index to
+    arrays/matrices.
+    """
+    if hasattr(a, "__int__"):
+        return int(a)
+    if hasattr(a, "__index__"):
+        return a.__index__()

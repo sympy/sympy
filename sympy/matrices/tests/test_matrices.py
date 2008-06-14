@@ -807,3 +807,57 @@ def test_issue851():
     assert m != 1
     assert m == a
     assert m != b
+
+def test_issue882():
+    class Int1():
+        def __int__(self):
+            return 1
+    class Int2():
+        def __int__(self):
+            return 2
+    class Index1():
+        def __index__(self):
+            return 1
+    class Index2():
+        def __index__(self):
+            return 2
+    int1 = Int1()
+    int2 = Int2()
+    index1 = Index1()
+    index2 = Index2()
+
+    m = Matrix([1, 2, 3])
+    assert m[int2] == 3
+    assert m[index2] == 3
+
+    m[int2] = 4
+    assert m[2] == 4
+    m[index2] = 5
+    assert m[2] == 5
+
+    m = Matrix([1, 2, 3], [4, 5, 6])
+    assert m[int1,int2] == 6
+    assert m[index1,int2] == 6
+    assert m[int1,index2] == 6
+    assert m[index1,index2] == 6
+    assert m[1,int2] == 6
+    assert m[1,index2] == 6
+    assert m[int1,2] == 6
+    assert m[index1,2] == 6
+
+    m[int1,int2] = 1
+    assert m[1, 2] == 1
+    m[index1,int2] = 2
+    assert m[1, 2] == 2
+    m[int1,index2] = 3
+    assert m[1, 2] == 3
+    m[index1,index2] = 4
+    assert m[1, 2] == 4
+    m[1,int2] = 5
+    assert m[1, 2] == 5
+    m[1,index2] = 6
+    assert m[1, 2] == 6
+    m[int1,2] = 7
+    assert m[1, 2] == 7
+    m[index1,2] = 8
+    assert m[1, 2] == 8
