@@ -712,6 +712,10 @@ def test_sparse_matrix():
 def test_subs():
     x = Symbol('x')
     assert Matrix([[1,x],[x,4]]).subs(x, 5) == Matrix([[1,5],[5,4]])
+    y = Symbol('y')
+    assert Matrix([[x,2],[x+y,4]]).subs([[x,-1],[y,-2]]) == Matrix([[-1,2],[-3,4]])
+    assert Matrix([[x,2],[x+y,4]]).subs([(x,-1),(y,-2)]) == Matrix([[-1,2],[-3,4]])
+    assert Matrix([[x,2],[x+y,4]]).subs({x:-1,y:-2}) == Matrix([[-1,2],[-3,4]])
 
 
 def test_conjugate():

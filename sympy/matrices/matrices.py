@@ -251,9 +251,9 @@ class Matrix(object):
         out[:,:] = Matrix(self.lines, self.cols, lambda i,j: self[i,j].combine())
         return out
 
-    def subs(self,a,b):
+    def subs(self, *args):
         out = self[:,:]
-        out[:,:] = Matrix(self.lines, self.cols, lambda i,j: self[i,j].subs(a,b))
+        out[:,:] = Matrix(self.lines, self.cols, lambda i,j: self[i,j].subs(*args))
         return out
 
     def __sub__(self,a):
