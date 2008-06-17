@@ -19,6 +19,156 @@ SymPy Patches Tutorial
 
 .. role:: input(strong)
 
+Quick Start
+===========
+
+This section explains how to get you up and running in 5 minutes. However we
+recommend that you read the full tutorial below, at least the introduction and
+then go briefly through the rest.
+
+Edit your :file:`~/.hgrc` (tell Mercurial your name and use git style diffs)::
+
+    [ui]
+    username = Ondrej Certik <ondrej@certik.cz>
+
+    [diff]
+    git = true
+    showfunc = 1
+
+Download the latest SymPy hg and fix something:
+
+.. parsed-literal::
+
+    $ :input:`hg clone http://hg.sympy.org/sympy`
+    destination directory: sympy
+    requesting all changes
+    adding changesets
+    adding manifests
+    adding file changes
+    added 2141 changesets with 7123 changes to 1065 files (+1 heads)
+    updating working directory
+    416 files updated, 0 files merged, 0 files removed, 0 files unresolved
+    $ :input:`cd sympy`
+    $ :input:`vim sympy/matrices/matrices.py`
+
+Check your changes:
+
+.. parsed-literal::
+
+    $ :input:`hg di`
+    diff --git a/sympy/matrices/matrices.py b/sympy/matrices/matrices.py
+    --- a/sympy/matrices/matrices.py
+    +++ b/sympy/matrices/matrices.py
+    @@ -23,7 +23,7 @@ class _MatrixAsBasic(Basic):
+         So for common functionality implemented in Basic, we have to provide this
+         proxy.
+     
+    -    see #420
+    +    see the issue #420
+     """
+         def __init__(self, m):
+             self.m = m
+
+Commit them:
+
+.. parsed-literal::
+
+    $ :input:`hg ci -m "Matrix._MatrixAsBasic() docstring improved"`
+
+Check the final patch and save it to a file:
+
+.. parsed-literal::
+
+    $ :input:`hg export tip`
+    # HG changeset patch
+    # User Ondrej Certik <ondrej@certik.cz>
+    # Date 1213706432 -7200
+    # Node ID 9ad7000c53b914a4a196de87b67e0cd57a60a528
+    # Parent  2c92cefdd78ea34f070c97063802c92ef97fd4d8
+    Matrix._MatrixAsBasic() docstring improved
+
+    diff --git a/sympy/matrices/matrices.py b/sympy/matrices/matrices.py
+    --- a/sympy/matrices/matrices.py
+    +++ b/sympy/matrices/matrices.py
+    @@ -23,7 +23,7 @@ class _MatrixAsBasic(Basic):
+         So for common functionality implemented in Basic, we have to provide this
+         proxy.
+     
+    -    see #420
+    +    see the issue #420
+     """
+         def __init__(self, m):
+             self.m = m
+    $ :input:`hg export tip > matrix.patch`
+
+and attach the file :file:`matrix.patch` to our issues_, or send it to our
+list, preferably to the `sympy-patches@googlecode.com`_ list.
+
+Tip: to send the patch to the sympy-patches list conveniently from the command
+line, join the sympy-patches list with some email address and put this email
+address together with these lines into your :file:`~/.hgrc`::
+
+    [email]
+    to = sympy-patches@googlegroups.com
+    from = Ondrej Certik <ondrej@certik.cz>
+    method = /usr/sbin/sendmail
+
+and then:
+
+.. parsed-literal::
+
+    $ :input:`hg email tip`
+    This patch series consists of 1 patches.
+
+    Cc:
+
+    Sending [PATCH] Matrix._MatrixAsBasic() docstring improved ...
+
+The patch will then be reviewed. What if you have to improve the patch as the
+result of the review? Import it to MQ:
+
+.. parsed-literal::
+
+    $ :input:`hg qimport -r tip`
+
+Change some files:
+
+.. parsed-literal::
+
+    $ :input:`vim sympy/matrices/matrices.py`
+
+Check your improvements:
+
+.. parsed-literal::
+
+    $ :input:`hg di`
+    diff --git a/sympy/matrices/matrices.py b/sympy/matrices/matrices.py
+    --- a/sympy/matrices/matrices.py
+    +++ b/sympy/matrices/matrices.py
+    @@ -23,7 +23,7 @@ class _MatrixAsBasic(Basic):
+         So for common functionality implemented in Basic, we have to provide this
+         proxy.
+     
+    -    see the issue #420
+    +    See the issue #420.
+     """
+         def __init__(self, m):
+             self.m = m
+
+Refresh the patch:
+
+.. parsed-literal::
+
+    $ :input:`hg qrefresh`
+
+Optionally convert it back to a regular commit:
+
+.. parsed-literal::
+
+    $ :input:`hg qdelete -r tip`
+
+And send it for a review again.
+
 Introduction
 ============
 
@@ -68,6 +218,50 @@ patches.
 .. _sympy@googlecode.com:   http://groups.google.com/group/sympy
 .. _sympy-patches@googlecode.com:   http://groups.google.com/group/sympy-patches
 
+The patch will then be reviewed. What if you have to improve the patch as the
+result of the review? Import it to MQ:
+
+.. parsed-literal::
+
+    $ :input:`hg qimport -r tip`
+
+Change some files:
+
+.. parsed-literal::
+
+    $ :input:`vim sympy/matrices/matrices.py`
+
+Check your improvements:
+
+.. parsed-literal::
+
+    $ :input:`hg di`
+    diff --git a/sympy/matrices/matrices.py b/sympy/matrices/matrices.py
+    --- a/sympy/matrices/matrices.py
+    +++ b/sympy/matrices/matrices.py
+    @@ -23,7 +23,7 @@ class _MatrixAsBasic(Basic):
+         So for common functionality implemented in Basic, we have to provide this
+         proxy.
+     
+    -    see the issue #420
+    +    See the issue #420.
+     """
+         def __init__(self, m):
+             self.m = m
+
+Refresh the patch:
+
+.. parsed-literal::
+
+    $ :input:`hg qrefresh`
+
+Optionally convert it back to a regular commit:
+
+.. parsed-literal::
+
+    $ :input:`hg qdelete -r tip`
+
+And send it for a review again.
 
 Workflow
 ========
