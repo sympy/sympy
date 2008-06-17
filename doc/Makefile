@@ -4,7 +4,7 @@ RST2HTML     = rst2html
 
 # You can set these variables from the command line.
 SPHINXOPTS   =
-SPHINXVER    = 0.1.61843
+SPHINXVER    = 0.3
 SPHINXBUILDpy  = sphinx/Sphinx-$(SPHINXVER)/sphinx-build.py
 SPHINXBUILD  = python $(SPHINXBUILDpy)
 PAPER        =
