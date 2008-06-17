@@ -24,7 +24,7 @@ class _MatrixAsBasic(Basic):
     proxy.
 
     see #420
-"""
+    """
     def __init__(self, m):
         self.m = m
     def torepr(self):
@@ -436,7 +436,17 @@ class Matrix(object):
         self.cols -= 1
 
     def row_join(self, rhs):
-        # concatenates two matrices along self's last and rhs's first col
+        """
+        Concatenates two matrices along self's last and rhs's first column
+
+        >>> from sympy import *
+        >>> M = Matrix(3,3,lambda i,j: i+j)
+        >>> V = Matrix(3,1,lambda i,j: 3+i+j)
+        >>> M.row_join(V)
+        [0, 1, 2, 3]
+        [1, 2, 3, 4]
+        [2, 3, 4, 5]
+        """
         assert self.lines == rhs.lines
         newmat = self.zeronm(self.lines, self.cols + rhs.cols)
         newmat[:,:self.cols] = self[:,:]
@@ -444,10 +454,75 @@ class Matrix(object):
         return newmat
 
     def col_join(self, bott):
+        """
+        Concatenates two matrices along self's last and bott's first row
+
+        >>> from sympy import *
+        >>> M = Matrix(3,3,lambda i,j: i+j)
+        >>> V = Matrix(1,3,lambda i,j: 3+i+j)
+        >>> M.col_join(V)
+        [0, 1, 2]
+        [1, 2, 3]
+        [2, 3, 4]
+        [3, 4, 5]
+        """
         assert self.cols == bott.cols
         newmat = self.zeronm(self.lines+bott.lines, self.cols)
         newmat[:self.lines,:] = self[:,:]
         newmat[self.lines:,:] = bott
+        return newmat
+
+    def row_insert(self, pos, mti):
+        """
+        >>> from sympy import *
+        >>> M = Matrix(3,3,lambda i,j: i+j)
+        >>> M
+        [0, 1, 2]
+        [1, 2, 3]
+        [2, 3, 4]
+        >>> V = zeronm(1,3)
+        >>> V
+        [0, 0, 0]
+        >>> M.row_insert(1,V)
+        [0, 1, 2]
+        [0, 0, 0]
+        [1, 2, 3]
+        [2, 3, 4]
+        """
+        if pos is 0:
+            return mti.col_join(self)
+        assert self.cols == mti.cols
+        newmat = self.zeronm(self.lines + mti.lines, self.cols)
+        newmat[:pos,:] = self[:pos,:]
+        newmat[pos:pos+mti.lines,:] = mti[:,:]
+        newmat[pos+mti.lines:,:] = self[pos:,:]
+        return newmat
+
+    def col_insert(self, pos, mti):
+        """
+        >>> from sympy import *
+        >>> M = Matrix(3,3,lambda i,j: i+j)
+        >>> M
+        [0, 1, 2]
+        [1, 2, 3]
+        [2, 3, 4]
+        >>> V = zeronm(3,1)
+        >>> V
+        [0]
+        [0]
+        [0]
+        >>> M.col_insert(1,V)
+        [0, 0, 1, 2]
+        [1, 0, 2, 3]
+        [2, 0, 3, 4]
+        """
+        if pos is 0:
+            return mti.row_join(self)
+        assert self.lines == mti.lines
+        newmat = self.zeronm(self.lines, self.cols + mti.cols)
+        newmat[:,:pos] = self[:,:pos]
+        newmat[:,pos:pos+mti.cols] = mti[:,:]
+        newmat[:,pos+mti.cols:] = self[:,pos:]
         return newmat
 
     def trace(self):
