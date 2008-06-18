@@ -3,6 +3,7 @@ from sympy.core import sympify
 
 from sympy.core.basic import S, C
 from sympy.polys import Poly, roots
+from sympy.simplify import simplify
 
 import random
 
@@ -236,9 +237,8 @@ class Matrix(object):
     def __rmul__(self,a):
         assert not isinstance(a,Matrix)
         r=self.zeronm(self.lines,self.cols)
-        for i in range(self.lines):
-            for j in range(self.cols):
-                r[i,j]=a*self[i,j]
+        for i in xrange(len(self.mat)):
+            r.mat[i]=a*self.mat[i]
         return r
 
     def expand(self):
@@ -262,9 +262,10 @@ class Matrix(object):
     def __mul__(self,a):
         if isinstance(a,Matrix):
             return self.multiply(a)
-        out = self[:,:]
-        out[:,:] = Matrix(self.lines, self.cols, lambda i,j: self[i,j]*a)
-        return out
+        r=self.zeronm(self.lines,self.cols)
+        for i in xrange(len(self.mat)):
+            r.mat[i]=self.mat[i]*a
+        return r
 
     def __pow__(self, num):
         if not self.is_square:
@@ -595,10 +596,9 @@ class Matrix(object):
         [4, 6]
         """
         assert callable(f)
-        out = self[:,:]
-        for i in range(self.lines):
-            for j in range(self.cols):
-                out[i,j] = f(self[i,j])
+        out = self.zeronm(self.lines,self.cols)
+        for i in xrange(len(self.mat)):
+                out.mat[i] = f(self.mat[i])
         return out
 
     def reshape(self, _rows, _cols):
@@ -817,17 +817,12 @@ class Matrix(object):
 
     # Utility functions
     def simplify(self):
-        for i in range(self.lines):
-            for j in range(self.cols):
-                try:
-                    self[i,j] = self[i,j].simplify()
-                except:
-                    pass
+        for i in xrange(len(self.mat)):
+            self.mat[i] = simplify(self.mat[i])
 
     def expand(self):
-        for i in range(self.lines):
-            for j in range(self.cols):
-                self[i,j] = self[i,j].expand()
+        for i in xrange(len(self.mat)):
+            self.mat[i] = self.mat[i].expand()
 
     #def evaluate(self):    # no more eval() so should be removed
     #    for i in range(self.lines):

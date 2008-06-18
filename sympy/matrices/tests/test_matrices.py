@@ -1,5 +1,5 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
-        sin, exp, hessian, sqrt, zero, randMatrix, Poly, S
+        sin, exp, hessian, sqrt, zero, randMatrix, Poly, S, pi
 from sympy.matrices.matrices import ShapeError
 from sympy.utilities.test import REPR0
 import py
@@ -717,6 +717,14 @@ def test_subs():
     assert Matrix([[x,2],[x+y,4]]).subs([(x,-1),(y,-2)]) == Matrix([[-1,2],[-3,4]])
     assert Matrix([[x,2],[x+y,4]]).subs({x:-1,y:-2}) == Matrix([[-1,2],[-3,4]])
 
+def test_simplify():
+    x,y,f,n = symbols('xyfn')
+    M = Matrix([ [    1/x + 1/y,               (x+x*y)/ x             ],
+                 [(f(x)+y*f(x))/f(x), (2 * (1/n - cos(n * pi)/n))/ pi ]
+                 ])
+    M.simplify()
+    assert M ==  Matrix([[(x+y)/(x*y),               1 + y           ],
+                         [   1 + y,       (2 - 2*cos(pi*n))/ (pi*n)   ]])
 
 def test_conjugate():
     M = Matrix([ [0,I,5],
