@@ -277,3 +277,10 @@ def test_deriv3():
     assert diff(x**3, x) == 3*x**2
     assert diff(x**3, x, evaluate=False) != 3*x**2
     assert diff(x**3, x, evaluate=False) == Derivative(x**3, x)
+
+def test_suppressed_evaluation():
+    a = sin(0,evaluate=False)
+    assert a != 0
+    assert str(a) == "sin(0)"
+    assert a.func is sin
+    assert a.args == (0,)

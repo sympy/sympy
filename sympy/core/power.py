@@ -60,6 +60,8 @@ class Pow(Basic, ArithMeths, RelMeths):
     def __new__(cls, a, b, **assumptions):
         a = _sympify(a)
         b = _sympify(b)
+        if assumptions.get('evaluate') is False:
+            return Basic.__new__(cls, a, b, **assumptions)
         if b is S.Zero:
             return S.One
         if b is S.One:

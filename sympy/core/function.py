@@ -126,6 +126,8 @@ class Function(Basic, ArithMeths, RelMeths):
             if opt in options:
                 del options[opt]
         # up to here.
+        if options.get('evaluate') is False:
+            return Basic.__new__(cls, *args, **options)
         r = cls.canonize(*args, **options)
         if isinstance(r, Basic):
             return r

@@ -1,5 +1,5 @@
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Real, re, pi, \
-        sympify, sqrt
+        sympify, sqrt, Add, Mul, Pow
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol("x")
@@ -941,3 +941,17 @@ def test_bug3():
     e = 2*a + b
     f = b + 2*a
     assert e == f
+
+def test_suppressed_evaluation():
+    a = Add(1,3,2,evaluate=False)
+    b = Mul(1,3,2,evaluate=False)
+    c = Pow(3,2,evaluate=False)
+    assert a != 6
+    assert a.func is Add
+    assert a.args == (1,3,2)
+    assert b != 6
+    assert b.func is Mul
+    assert b.args == (1,3,2)
+    assert c != 9
+    assert c.func is Pow
+    assert c.args == (3,2)

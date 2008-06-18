@@ -21,6 +21,8 @@ class AssocOp(Basic):
 
     @cacheit
     def __new__(cls, *args, **assumptions):
+        if assumptions.get('evaluate') is False:
+            return Basic.__new__(cls, *map(_sympify, args), **assumptions)
         if len(args)==0:
             return cls.identity()
         if len(args)==1:
