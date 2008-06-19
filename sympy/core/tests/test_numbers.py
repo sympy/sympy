@@ -195,6 +195,10 @@ def test_powers():
 
     assert str((-4)**Rational(1,2)) == str(2*I)
 
+    # Test that this is fast
+    assert integer_nthroot(2,10**10) == (1, False)
+    assert str(2**Rational(1,10**10)) == "2**(1/10000000000)"
+
 def test_abs1():
     assert str(abs(Rational(1,6))) == "1/6"
     assert str(abs(Rational(-1,6))) == "1/6"

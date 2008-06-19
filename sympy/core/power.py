@@ -27,6 +27,7 @@ def integer_nthroot(y, n):
     if n < 1: raise ValueError, "n must be positive"
     if y in (0, 1): return y, True
     if n == 1: return y, True
+    if n > y: return 1, False
     # Get initial estimate for Newton's method. Care must be taken to
     # avoid overflow
     try:
