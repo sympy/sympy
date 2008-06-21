@@ -63,10 +63,7 @@ class Matrix(object):
             self.lines=args[0]
             self.cols=args[1]
             mat = args[2]
-            self.mat=[]
-            for j in range(self.lines):
-                for i in range(self.cols):
-                    self.mat.append(sympify(mat[j*self.cols+i]))
+            self.mat = map(lambda i: sympify(i), mat)
         else:
             if len(args) == 1:
                 mat = args[0]
@@ -112,12 +109,12 @@ class Matrix(object):
         >>> m.H #doctest: +NORMALIZE_WHITESPACE
         [    1, 3]
         [2 - I, 4]
-
         """
         if name == "T":
-            #transposition
-            out = Matrix(self.cols,self.lines, lambda i,j: self[j,i])
-            return out
+            a = [0]*self.cols*self.lines
+            for i in xrange(self.cols):
+                a[i*self.lines:(i+1)*self.lines] = self.mat[i::self.cols]
+            return Matrix(self.cols,self.lines,a)
         if name == "C":
             #by-element conjugation
             out = Matrix(self.lines,self.cols,
@@ -236,24 +233,19 @@ class Matrix(object):
 
     def __rmul__(self,a):
         assert not isinstance(a,Matrix)
-        r=self.zeronm(self.lines,self.cols)
-        for i in xrange(len(self.mat)):
-            r.mat[i]=a*self.mat[i]
-        return r
+        out = Matrix(self.lines,self.cols,map(lambda i: a*i,self.mat))
+        return out
 
     def expand(self):
-        out = self[:,:]
-        out[:,:] = Matrix(self.lines, self.cols, lambda i,j: self[i,j].expand())
+        out = Matrix(self.lines,self.cols,map(lambda i: i.expand(), self.mat))
         return out
 
     def combine(self):
-        out = self[:,:]
-        out[:,:] = Matrix(self.lines, self.cols, lambda i,j: self[i,j].combine())
+        out = Matrix(self.lines,self.cols,map(lambda i: i.combine(),self.mat))
         return out
 
     def subs(self, *args):
-        out = self[:,:]
-        out[:,:] = Matrix(self.lines, self.cols, lambda i,j: self[i,j].subs(*args))
+        out = Matrix(self.lines,self.cols,map(lambda i: i.subs(*args),self.mat))
         return out
 
     def __sub__(self,a):
@@ -262,10 +254,8 @@ class Matrix(object):
     def __mul__(self,a):
         if isinstance(a,Matrix):
             return self.multiply(a)
-        r=self.zeronm(self.lines,self.cols)
-        for i in xrange(len(self.mat)):
-            r.mat[i]=self.mat[i]*a
-        return r
+        out = Matrix(self.lines,self.cols,map(lambda i: i*a,self.mat))
+        return out
 
     def __pow__(self, num):
         if not self.is_square:
@@ -295,25 +285,22 @@ class Matrix(object):
 
     def multiply(self,b):
         """Returns self*b """
-
-        def dotprod(a,b,i,j):
-            if a.cols != b.lines:
-                raise ShapeError()
-
-            r=0
-            for x in range(a.cols):
-                r+=a[i,x]*b[x,j]
-            return r.expand() # .expand() is a test
-
-        return Matrix(self.lines,b.cols, lambda i,j: dotprod(self,b,i,j))
+        if self.cols != b.lines:
+            raise ShapeError()
+        btl = b.T.mat
+        st = self.cols
+        return Matrix(self.lines,b.cols,lambda i,j:
+                                        reduce(lambda k,l: k+l,
+                                        map(lambda n,m: n*m,
+                                        self.mat[i*st:i*st+st],
+                                        btl[j*st:j*st+st])).expand())
+                                        # .expand() is a test
 
     def add(self,b):
         """Returns self+b """
-
         assert self.lines == b.lines
         assert self.cols == b.cols
-        out = self[:,:]
-        out[:,:] = Matrix(self.lines, self.cols, lambda i,j: self[i,j]+b[i,j])
+        out = Matrix(self.lines,self.cols,map(lambda i,j: i+j,self.mat,b.mat))
         return out
 
     def __neg__(self):
@@ -596,9 +583,11 @@ class Matrix(object):
         [4, 6]
         """
         assert callable(f)
-        out = self.zeronm(self.lines,self.cols)
-        for i in xrange(len(self.mat)):
-                out.mat[i] = f(self.mat[i])
+        out = Matrix(self.lines,self.cols,map(f,self.mat))
+        return out
+
+    def evalf(self):
+        out = out.applyfunc(Basic.evalf)
         return out
 
     def reshape(self, _rows, _cols):
@@ -751,8 +740,7 @@ class Matrix(object):
         return P, L, DD, U
 
     def cofactorMatrix(self, method="berkowitz"):
-        out = self[:,:]
-        out[:,:] = Matrix(self.lines, self.cols, lambda i,j:
+        out = Matrix(self.lines, self.cols, lambda i,j:
                 self.cofactor(i, j, method))
         return out
 
@@ -820,10 +808,6 @@ class Matrix(object):
         for i in xrange(len(self.mat)):
             self.mat[i] = simplify(self.mat[i])
 
-    def expand(self):
-        for i in xrange(len(self.mat)):
-            self.mat[i] = self.mat[i].expand()
-
     #def evaluate(self):    # no more eval() so should be removed
     #    for i in range(self.lines):
     #        for j in range(self.cols):
@@ -863,7 +847,7 @@ class Matrix(object):
     def normalized(self):
         assert self.lines == 1 or self.cols == 1
         norm = self.norm()
-        out = self[:,:].applyfunc(lambda i: i / norm)
+        out = self.applyfunc(lambda i: i / norm)
         return out
 
     def project(self, v):
@@ -892,10 +876,10 @@ class Matrix(object):
     def zeronm(self, n, m):
         # used so that certain functions above can use this
         # then only this func need be overloaded in subclasses
-        return Matrix(n,m,lambda i,j:0)
+        return Matrix(n,m,[0]*n*m)
 
     def zero(self, n):
-        return Matrix(n,n,lambda i,j:0)
+        return Matrix(n,n,[0]*n*n)
 
     def eye(self, n):
         tmp = self.zero(n)
@@ -1227,7 +1211,7 @@ def zeronm(n,m):
     """Create zero matrix n x m"""
     assert n>0
     assert m>0
-    return Matrix(n,m, lambda i,j: 0)
+    return Matrix(n,m,[0]*m*n)
 
 def one(n):
     """Create square all-one matrix n x n"""

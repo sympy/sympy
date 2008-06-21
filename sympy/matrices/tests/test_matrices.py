@@ -213,6 +213,13 @@ def test_applyfunc():
     assert m0.applyfunc(lambda x:2*x) == eye(3)*2
     assert m0.applyfunc(lambda x: 0 ) == zero(3)
 
+def test_expand():
+    x,y = symbols('xy')
+    m0 = Matrix([[x*(x+y),2],[((x+y)*y)*x,x*(y+x*(x+y))]])
+    # Test if expand() returns a matrix
+    m1 = m0.expand()
+    assert m1 == Matrix([[x*y+x**2,2],[x*y**2+y*x**2,x*y+y*x**2+x**3]])
+
 def test_random():
     M = randMatrix(3,3)
     M = randMatrix(3,3,seed=3)
@@ -725,6 +732,21 @@ def test_simplify():
     M.simplify()
     assert M ==  Matrix([[(x+y)/(x*y),               1 + y           ],
                          [   1 + y,       (2 - 2*cos(pi*n))/ (pi*n)   ]])
+
+def test_transpose():
+    M = Matrix([[1,2,3,4,5,6,7,8,9,0],
+                [1,2,3,4,5,6,7,8,9,0]])
+    assert M.T == Matrix( [ [1,1],
+                            [2,2],
+                            [3,3],
+                            [4,4],
+                            [5,5],
+                            [6,6],
+                            [7,7],
+                            [8,8],
+                            [9,9],
+                            [0,0] ])
+    assert M.T.T == M
 
 def test_conjugate():
     M = Matrix([ [0,I,5],
