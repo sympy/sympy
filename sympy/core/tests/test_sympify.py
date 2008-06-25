@@ -143,6 +143,19 @@ def test_int_float():
         def __int__(self):
             return 1
 
+    class F1_1c():
+        """
+        This class is still a float, because it implements _sympy_()
+        """
+        def __float__(self):
+            return 1.1
+
+        def __int__(self):
+            return 1
+
+        def _sympy_(self):
+            return Real(1.1)
+
     class I5():
         def __int__(self):
             return 5
@@ -162,20 +175,42 @@ def test_int_float():
         def __int__(self):
             return 5
 
+    class I5c():
+        """
+        This class implements both __int__() and __float__(), but also
+        a _sympy_() method, so it will be Integer.
+        """
+        def __float__(self):
+            return 5.0
+
+        def __int__(self):
+            return 5
+
+        def _sympy_(self):
+            return Integer(5)
+
     i5 = I5()
     i5b = I5b()
+    i5c = I5c()
     f1_1 = F1_1()
     f1_1b = F1_1b()
+    f1_1c = F1_1c()
     assert sympify(i5) == 5
     assert isinstance(sympify(i5), Integer)
     assert sympify(i5b) == 5
     assert isinstance(sympify(i5b), Real)
+    assert sympify(i5c) == 5
+    assert isinstance(sympify(i5c), Integer)
     assert abs(sympify(f1_1) - 1.1) < 1e-5
     assert abs(sympify(f1_1b) - 1.1) < 1e-5
+    assert abs(sympify(f1_1c) - 1.1) < 1e-5
 
     assert _sympify(i5) == 5
     assert isinstance(_sympify(i5), Integer)
     assert _sympify(i5b) == 5
     assert isinstance(_sympify(i5b), Real)
+    assert _sympify(i5c) == 5
+    assert isinstance(_sympify(i5c), Integer)
     assert abs(_sympify(f1_1) - 1.1) < 1e-5
     assert abs(_sympify(f1_1b) - 1.1) < 1e-5
+    assert abs(_sympify(f1_1c) - 1.1) < 1e-5
