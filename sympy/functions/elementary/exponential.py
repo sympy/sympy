@@ -280,6 +280,8 @@ class log(Function):
 
             if base is not S.Exp1:
                 return cls(arg)/cls(base)
+            else:
+                return cls(arg)
 
         arg = sympify(arg)
 

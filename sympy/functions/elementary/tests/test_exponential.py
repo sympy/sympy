@@ -62,6 +62,7 @@ def test_log():
     x, y = symbols('xy')
 
     assert log(x) == log(x)
+    assert log(x,exp(1)) == log(x)
     assert log(x*y) != log(x) + log(y)
 
     #assert log(x**2) != 2*log(x)
