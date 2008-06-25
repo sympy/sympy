@@ -895,3 +895,8 @@ def test_issue882():
     assert m[1, 2] == 7
     m[index1,2] = 8
     assert m[1, 2] == 8
+
+def test_evalf():
+    a = Matrix([sqrt(5), 6])
+    assert abs(a.evalf()[0] - a[0].evalf()) < 1e-10
+    assert abs(a.evalf()[1] - a[1].evalf()) < 1e-10

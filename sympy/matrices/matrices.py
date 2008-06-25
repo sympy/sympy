@@ -587,7 +587,7 @@ class Matrix(object):
         return out
 
     def evalf(self):
-        out = out.applyfunc(Basic.evalf)
+        out = self.applyfunc(Basic.evalf)
         return out
 
     def reshape(self, _rows, _cols):
