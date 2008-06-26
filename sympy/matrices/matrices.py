@@ -145,7 +145,6 @@ class Matrix(object):
         2 - I
 
         """
-
         if isinstance(key, (list, tuple)):
             if len(key) == 2:
                 # proper 2-index access
@@ -1023,7 +1022,9 @@ class Matrix(object):
         return self.adjugate()/d
 
     def rref(self):
-        # take any matrix and return reduced row-ech form and indices of pivot vars
+        """
+        Take any matrix and return reduced row-echelon form and indices of pivot vars
+        """
         # TODO: rewrite inverse_GE to use this
         pivots, r = 0, self[:,:]        # pivot: index of next row to contain a pivot
         pivotlist = []                  # indices of pivot variables (non-free)
@@ -1034,12 +1035,12 @@ class Matrix(object):
                 for k in range(pivots, r.lines):
                     if r[k,i] != 0:
                         break
-                if k == r.lines - 1:
+                if k == r.lines - 1 and r[k,i] == 0:
                     continue
                 r.row_swap(pivots,k)
             scale = r[pivots,i]
             r.row(pivots, lambda x, _: x/scale)
-            for j in range(0, r.lines):
+            for j in range(r.lines):
                 if j == pivots:
                     continue
                 scale = r[j,i]
@@ -1049,7 +1050,9 @@ class Matrix(object):
         return r, pivotlist
 
     def nullspace(self):
-        # Returns list of vectors (Matrix objects) that span nullspace of self
+        """
+        Returns list of vectors (Matrix objects) that span nullspace of self
+        """
         assert self.cols >= self.lines
         reduced, pivots = self.rref()
         basis = []
