@@ -1,0 +1,319 @@
+=======================================
+Development Tips: Comparisons in Python
+=======================================
+
+.. role:: input(strong)
+
+Introduction
+============
+
+When debugging comparisons and hashes in SymPy, it is necessary to understand
+when exactly Python calls each method.
+Unfortuately, the official Python documentation for this is
+not very detailed (see the docs for `rich comparison
+<http://docs.python.org/dev/reference/datamodel.html#object.__lt__>`_,
+`__cmp__() <http://docs.python.org/dev/reference/datamodel.html#object.__cmp__>`_
+and `__hash__()
+<http://docs.python.org/dev/reference/datamodel.html#object.__hash__>`_
+methods).
+
+We wrote this guide to fill in the missing gaps. After reading it, you should
+be able to understand which methods get called (and which methods
+do not get called) in each case (and in which order).
+
+Hashing
+=======
+
+Every Python class has a ``__hash__()`` method, default
+implementation of which is::
+
+    def __hash__(self):
+        return id(self)
+
+You can reimplement it to return your computed integer. ``hash(x)`` just calls
+``x.__hash__()``. Python builtin classes usually redefine the ``__hash__()``
+method, for example an ``int`` has something like this::
+
+    def __hash__(self):
+        return int(self)
+
+and a ``list`` something like this::
+
+    def __hash__(self):
+        raise TypeError("list objects are unhashable")
+
+The general
+idea about hashes is that if two objects have a different hash, they are not
+equal, but if they have the same hash, they *might* be equal (this is usually
+called a hash collision and you need to use the methods described in the
+next section to determine if they are really equal).
+
+The only requirement from the Python side, is
+that the hash value mustn't change, once it was returned by the
+``__hash__()`` method once.
+
+Method Resolution
+=================
+
+Let ``a``, ``b`` and ``c`` be instances of any Python classes. As can be easily
+checked by the `python script`_ at the end of this guide, if you write::
+
+    a == b
+
+Python tries to call::
+
+    a.__eq__(b)
+    b.__eq__(a)
+    a.__cmp__(b)
+    b.__cmp__(a)
+    id(a) == id(b)
+
+in this order. If the particular method is not implemented (or the method
+returns ``NotImplemented``) Python skips it
+and tries the next one until it succeeds (i.e. the method returns something
+meaningful). The last line is a catch up -- it always succeeds.
+
+If you write::
+
+    a != b
+
+Python tries to call::
+
+    a.__ne__(b)
+    b.__ne__(a)
+    a.__cmp__(b)
+    b.__cmp__(a)
+    id(a) == id(b)
+
+If you write::
+
+    a < b
+
+Python tries to call::
+
+    a.__lt__(b)
+    b.__gt__(a)
+    a.__cmp__(b)
+    b.__cmp__(a)
+    id(a) < id(b)
+
+If you write::
+
+    a <= b
+
+Python tries to call::
+
+    a.__le__(b)
+    b.__ge__(a)
+    a.__cmp__(b)
+    b.__cmp__(a)
+    id(a) <= id(b)
+
+And similarly for ``a > b`` and ``a >= b``.
+
+If you write::
+
+    sorted([a, b, c])
+
+Python calls the same chain of methods as for the ``b < a`` and ``c < b``
+comparisons.
+
+If you write any of those::
+
+    a in {d: 5}
+    a in set([d, d, d])
+    set([a, b]) == set([a, b])
+
+Python first compares hashes, e.g.::
+
+    a.__hash__()
+    d.__hash__()
+
+If ``hash(a) != hash(d)`` then the result of the statement ``a in {d: 5}`` is
+immediatelly ``False`` (remember how hashes work in general), otherwise (i.e.
+if ``hash(a) == hash(d)``) Python goes through the method resolution of the
+``==`` operator (see above).
+
+General Notes and Caveats
+=========================
+
+In the method resolution for ``<``, ``<=``, ``==``, ``!=``, ``>=``, ``>`` and
+``sorted([a, b, c])`` operators the ``__hash__()`` method is *not* called, so
+in these cases it doesn't matter what it returns. The ``__hash__()`` method is
+only called in sets and dictionaries.
+
+In the official Python documentation you can read about `hashable and
+non-hashable <http://docs.python.org/dev/glossary.html#term-hashable>`_ objects. In reality, you don't have to think about it, you just follow the method
+resolution described here. E.g. if you try to use lists as dictionary keys, the
+list's ``__hash__()`` method will be called and it returns an exception.
+
+In SymPy, every instance of any subclass of ``Basic`` is
+immutable.  Technically this means, that it's behavior through all the methods
+above mustn't change once the instance was created. Especially the hash value
+mustn't change, as already stated above (otherwise objects will get mixed up in
+dictionaries, i.e. wrong objects returned etc).
+
+.. _python script:
+
+Script To Verify This Guide
+============================
+
+The above method resolution can be verified using the following program::
+
+    class A(object):
+
+        def __init__(self, a, hash):
+            self.a = a
+            self._hash = hash
+
+        def __lt__(self, o):
+            print "%s.__lt__(%s)" % (self.a, o.a)
+            return NotImplemented
+
+        def __le__(self, o):
+            print "%s.__le__(%s)" % (self.a, o.a)
+            return NotImplemented
+
+        def __gt__(self, o):
+            print "%s.__gt__(%s)" % (self.a, o.a)
+            return NotImplemented
+
+        def __ge__(self, o):
+            print "%s.__ge__(%s)" % (self.a, o.a)
+            return NotImplemented
+
+        def __cmp__(self, o):
+            print "%s.__cmp__(%s)" % (self.a, o.a)
+            #return cmp(self._hash, o._hash)
+            return NotImplemented
+
+        def __eq__(self, o):
+            print "%s.__eq__(%s)" % (self.a, o.a)
+            return NotImplemented
+
+        def __ne__(self, o):
+            print "%s.__ne__(%s)" % (self.a, o.a)
+            return NotImplemented
+
+        def __hash__(self):
+            print "%s.__hash__()" % (self.a)
+            return self._hash
+
+    def show(s):
+        print "--- %s " % s + "-"*40
+        eval(s)
+
+    a = A("a", 1)
+    b = A("b", 2)
+    c = A("c", 3)
+    d = A("d", 1)
+
+    show("a == b")
+    show("a != b")
+    show("a < b")
+    show("a <= b")
+    show("a > b")
+    show("a >= b")
+    show("sorted([a, b, c])")
+    show("{d: 5}")
+    show("a in {d: 5}")
+    show("set([d, d, d])")
+    show("a in set([d, d, d])")
+    show("set([a, b])")
+
+    print "--- x = set([a, b]); y = set([a, b]); ---"
+    x = set([a,b])
+    y = set([a,b])
+    print "               x == y :"
+    x == y
+
+    print "--- x = set([a, b]); y = set([b, d]); ---"
+    x = set([a,b])
+    y = set([b,d])
+    print "               x == y :"
+    x == y
+
+
+and its output::
+
+    --- a == b ----------------------------------------
+    a.__eq__(b)
+    b.__eq__(a)
+    a.__cmp__(b)
+    b.__cmp__(a)
+    --- a != b ----------------------------------------
+    a.__ne__(b)
+    b.__ne__(a)
+    a.__cmp__(b)
+    b.__cmp__(a)
+    --- a < b ----------------------------------------
+    a.__lt__(b)
+    b.__gt__(a)
+    a.__cmp__(b)
+    b.__cmp__(a)
+    --- a <= b ----------------------------------------
+    a.__le__(b)
+    b.__ge__(a)
+    a.__cmp__(b)
+    b.__cmp__(a)
+    --- a > b ----------------------------------------
+    a.__gt__(b)
+    b.__lt__(a)
+    a.__cmp__(b)
+    b.__cmp__(a)
+    --- a >= b ----------------------------------------
+    a.__ge__(b)
+    b.__le__(a)
+    a.__cmp__(b)
+    b.__cmp__(a)
+    --- sorted([a, b, c]) ----------------------------------------
+    b.__lt__(a)
+    a.__gt__(b)
+    b.__cmp__(a)
+    a.__cmp__(b)
+    c.__lt__(b)
+    b.__gt__(c)
+    c.__cmp__(b)
+    b.__cmp__(c)
+    --- {d: 5} ----------------------------------------
+    d.__hash__()
+    --- a in {d: 5} ----------------------------------------
+    d.__hash__()
+    a.__hash__()
+    d.__eq__(a)
+    a.__eq__(d)
+    d.__cmp__(a)
+    a.__cmp__(d)
+    --- set([d, d, d]) ----------------------------------------
+    d.__hash__()
+    d.__hash__()
+    d.__hash__()
+    --- a in set([d, d, d]) ----------------------------------------
+    d.__hash__()
+    d.__hash__()
+    d.__hash__()
+    a.__hash__()
+    d.__eq__(a)
+    a.__eq__(d)
+    d.__cmp__(a)
+    a.__cmp__(d)
+    --- set([a, b]) ----------------------------------------
+    a.__hash__()
+    b.__hash__()
+    --- x = set([a, b]); y = set([a, b]); ---
+    a.__hash__()
+    b.__hash__()
+    a.__hash__()
+    b.__hash__()
+                   x == y :
+    --- x = set([a, b]); y = set([b, d]); ---
+    a.__hash__()
+    b.__hash__()
+    b.__hash__()
+    d.__hash__()
+                   x == y :
+    d.__eq__(a)
+    a.__eq__(d)
+    d.__cmp__(a)
+    a.__cmp__(d)
+

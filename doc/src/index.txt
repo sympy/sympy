@@ -17,6 +17,7 @@ Contents:
    install.txt
    tutorial.txt
    guide.txt
+   python-comparisons.txt
    wiki.txt
    modules.txt
    sympy-patches-tutorial.txt
