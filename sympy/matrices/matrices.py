@@ -542,7 +542,11 @@ class Matrix(object):
         clo, chi = self.slice2bounds(keys[1], self.cols)
         if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
             raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
-        return Matrix(rhi-rlo, chi-clo, lambda i,j: self[i+rlo, j+clo])
+        outLines, outCols = rhi-rlo, chi-clo
+        outMat = [0]*outLines*outCols
+        for i in xrange(outLines):
+            outMat[i*outCols:(i+1)*outCols] = self.mat[(i+rlo)*self.cols+clo:(i+rlo)*self.cols+chi]
+        return Matrix(outLines,outCols,outMat)
 
     def slice2bounds(self, key, defmax):
         """
@@ -875,15 +879,15 @@ class Matrix(object):
     def zeronm(self, n, m):
         # used so that certain functions above can use this
         # then only this func need be overloaded in subclasses
-        return Matrix(n,m,[0]*n*m)
+        return Matrix(n,m,[S.Zero]*n*m)
 
     def zero(self, n):
-        return Matrix(n,n,[0]*n*n)
+        return Matrix(n,n,[S.Zero]*n*n)
 
     def eye(self, n):
         tmp = self.zero(n)
         for i in range(tmp.lines):
-            tmp[i,i] = 1
+            tmp[i,i] = S.One
         return tmp
 
     @property
@@ -1214,7 +1218,7 @@ def zeronm(n,m):
     """Create zero matrix n x m"""
     assert n>0
     assert m>0
-    return Matrix(n,m,[0]*m*n)
+    return Matrix(n,m,[S.Zero]*m*n)
 
 def one(n):
     """Create square all-one matrix n x n"""
@@ -1228,7 +1232,7 @@ def eye(n):
     assert n>0
     out = zeronm(n,n)
     for i in range(n):
-        out[i,i]=1
+        out[i,i]=S.One
     return out
 
 def randMatrix(r,c,min=0,max=99,seed=[]):
