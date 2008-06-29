@@ -63,6 +63,8 @@ class Matrix(object):
             self.lines=args[0]
             self.cols=args[1]
             mat = args[2]
+            if len(mat) != self.lines*self.cols:
+                raise MatrixError('List length should be equal to rows*columns')
             self.mat = map(lambda i: sympify(i), mat)
         else:
             if len(args) == 1:

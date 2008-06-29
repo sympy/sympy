@@ -1,6 +1,6 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
         sin, exp, hessian, sqrt, zero, randMatrix, Poly, S, pi
-from sympy.matrices.matrices import ShapeError
+from sympy.matrices.matrices import ShapeError, MatrixError
 from sympy.utilities.test import REPR0
 import py
 
@@ -61,6 +61,8 @@ def test_power():
     assert eye(2)**10000000 == eye(2)
 
 def test_creation():
+    py.test.raises(MatrixError, 'Matrix(5,5,range(20))')
+
     x = Symbol("x")
     a = Matrix([x, 0], [0, 0])
     m = a
