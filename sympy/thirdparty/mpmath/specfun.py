@@ -38,8 +38,8 @@ def phi_fixed(prec):
 @constant_memo
 def catalan_fixed(prec):
     prec = prec + 20
-    a = one = 1 << prec
-    s, t, n = 0, 1, 1
+    a = one = ONE << prec
+    s, t, n = ZERO, ONE, 1
     while t:
         a *= 32 * n**3 * (2*n-1)
         a //= (3-16*n+16*n**2)**2
@@ -67,8 +67,8 @@ def euler_fixed(prec):
     prec += 30
     # choose p such that exp(-4*(2**p)) < 2**-n
     p = int(math.log((prec/4) * math.log(2), 2)) + 1
-    n = 1<<p
-    r = one = 1<<prec
+    n = ONE<<p
+    r = one = ONE<<prec
     H, A, B, npow, k, d = 0, 0, 0, 1, 1, 1
     while r:
         A += (r * H) >> prec
@@ -217,10 +217,10 @@ def glaisher_fixed(prec):
 @constant_memo
 def apery_fixed(prec):
     prec += 20
-    d = 1 << prec
+    d = ONE << prec
     term = 77 << prec
     n = 1
-    s = 0
+    s = ZERO
     while term:
         s += term
         d *= (n**10)
@@ -264,6 +264,9 @@ def int_fac(n, memo={0:1, 1:1}):
             memo[k] = p
         k += 1
     return p
+
+if MODE == "gmpy":
+    int_fac = gmpy.fac
 
 """
 We compute the gamma function using Spouge's approximation
@@ -551,9 +554,9 @@ d_cache = {}
 def zeta_coefs(n):
     if n in d_cache:
         return d_cache[n]
-    ds = [0] * (n+1)
-    d = 1
-    s = ds[0] = 1
+    ds = [ZERO] * (n+1)
+    d = ONE
+    s = ds[0] = ONE
     for i in range(1, n+1):
         d = d * 4 * (n+i-1) * (n-i+1)
         d //= ((2*i) * ((2*i)-1))
@@ -596,7 +599,7 @@ def zeta(s):
             for k in range(n):
                 t += (-1)**k * mpf(d[k]-d[n]) * exp(-_logk(k+1)*s)
             return (t / -d[n]) / (mpf(1) - exp(log(2)*(1-s)))
-    
+
 
 @extraprec(5, normalize_output=True)
 def bernoulli(n):
@@ -607,9 +610,6 @@ def bernoulli(n):
         return mpf(0)
     m = n // 2
     return (-1)**(m-1) * 2 * factorial(n) / (2*pi)**n * zeta(n)
-
-from lib import fmuli, fmul, fpos, fdiv, fadd, fdivi, fsub, from_int, round_down, fone, fzero
-from mptypes import make_mpf
 
 # For sequential computation of Bernoulli numbers, we use Ramanujan's formula
 
@@ -633,13 +633,13 @@ def bernoulli_range():
     rounding = mp.rounding[0]
     prec = oprec + 30
     computed = {0:fone}
-    m, bin1, bin = 2, 1, 10
+    m, bin1, bin = 2, MPBASE(1), MPBASE(10)
     f3 = from_int(3)
     f6 = from_int(6)
     while 1:
         case = m % 6
         s = fzero
-        if m < 6: a = 0
+        if m < 6: a = ZERO
         else:     a = bin1
         for j in xrange(1, m//6+1):
             s = fadd(s, fmuli(computed[m-6*j], a, prec), prec)
@@ -709,15 +709,15 @@ def hypsum(ar, af, ac, br, bf, bc, x):
 
     if isinstance(x, mpf):
         x = to_fixed(x._mpf_, wp)
-        y = 0
+        y = ZERO
     else:
         have_complex = 1
         x, y = x._mpc_
         x = to_fixed(x, wp)
         y = to_fixed(y, wp)
 
-    sre = pre = one = 1 << wp
-    sim = pim = 0
+    sre = pre = one = ONE << wp
+    sim = pim = ZERO
 
     n = 1
 
@@ -838,7 +838,7 @@ def sum_hyp0f1_rat((bp, bq), x):
     wp = prec + 25
     if isinstance(x, mpf):
         x = to_fixed(x._mpf_, wp)
-        s = p = 1 << wp
+        s = p = ONE << wp
         n = 1
         while 1:
             p = (p * (bq*x) // (n*bp)) >> wp
@@ -851,8 +851,8 @@ def sum_hyp0f1_rat((bp, bq), x):
         zre, zim = x._mpc_
         zre = to_fixed(zre, wp)
         zim = to_fixed(zim, wp)
-        sre = pre = 1 << wp
-        sim = pim = 0
+        sre = pre = ONE << wp
+        sim = pim = ZERO
         n = 1
         while 1:
             r1 = bq
@@ -875,7 +875,7 @@ def sum_hyp1f1_rat((ap, aq), (bp, bq), x):
     wp = prec + 25
     if isinstance(x, mpf):
         x = to_fixed(x._mpf_, wp)
-        s = p = 1 << wp
+        s = p = ONE << wp
         n = 1
         while 1:
             p = (p * (ap*bq*x) // (n*aq*bp)) >> wp
@@ -888,8 +888,8 @@ def sum_hyp1f1_rat((ap, aq), (bp, bq), x):
         zre, zim = x._mpc_
         zre = to_fixed(zre, wp)
         zim = to_fixed(zim, wp)
-        sre = pre = 1 << wp
-        sim = pim = 0
+        sre = pre = ONE << wp
+        sim = pim = ZERO
         n = 1
         while 1:
             r1 = ap*bq
@@ -911,7 +911,7 @@ def sum_hyp2f1_rat((ap, aq), (bp, bq), (cp, cq), x):
     wp = prec + 25
     if isinstance(x, mpf):
         x = to_fixed(x._mpf_, wp)
-        s = p = 1 << wp
+        s = p = ONE << wp
         n = 1
         while 1:
             p = (p * (ap*bp*cq*x) // (n*aq*bq*cp)) >> wp
@@ -924,8 +924,8 @@ def sum_hyp2f1_rat((ap, aq), (bp, bq), (cp, cq), x):
         zre, zim = x._mpc_
         zre = to_fixed(zre, wp)
         zim = to_fixed(zim, wp)
-        sre = pre = 1 << wp
-        sim = pim = 0
+        sre = pre = ONE << wp
+        sim = pim = ZERO
         n = 1
         while 1:
             r1 = ap*bp*cq
@@ -1222,7 +1222,7 @@ def mpf_jn_series(n, x, prec):
     x = to_fixed(x, prec)
     x2 = (x**2) >> prec
     if not n:
-        s = t = 1 << prec
+        s = t = ONE << prec
     else:
         s = t = (x**n // int_fac(n)) >> ((n-1)*prec + n)
     k = 1
@@ -1245,8 +1245,8 @@ def mpc_jn_series(n, z, prec):
     z2re = (zre**2 - zim**2) >> prec
     z2im = (zre*zim) >> (prec-1)
     if not n:
-        sre = tre = 1 << prec
-        sim = tim = 0
+        sre = tre = ONE << prec
+        sim = tim = ZERO
     else:
         re, im = complex_int_pow(zre, zim, n)
         sre = tre = (re // int_fac(n)) >> ((n-1)*prec + n)
@@ -1271,7 +1271,7 @@ def jv(v, x):
     """Bessel function J_v(x)."""
     prec = mp.prec
     x = convert_lossless(x)
-    if isinstance(v, (int, long)):
+    if isinstance(v, int_types):
         if isinstance(x, mpf):
             return mpf_jn_series(v, x._mpf_, prec)
         if isinstance(x, mpc):

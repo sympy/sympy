@@ -236,6 +236,14 @@ def polyroots(coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False):
         ([(-0.375 - 0.599479j), (-0.375 + 0.599479j)], 2.22045e-16)
 
     """
+
+    
+    if len(coeffs) == 1:
+        if coeffs[0]:
+            return []
+        else:
+            raise ValueError,"tautology"
+    
     orig = mp.prec
     weps = +eps
     try:
@@ -248,12 +256,12 @@ def polyroots(coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False):
         else:
             coeffs = [c/lead for c in coeffs]
         f = lambda x: polyval(coeffs, x)
-        roots = [mpc((0.4+0.9j)**n) for n in range(deg)]
-        err = [mpf(1) for n in range(deg)]
-        for step in range(maxsteps):
+        roots = [mpc((0.4+0.9j)**n) for n in xrange(deg)]
+        err = [mpf(1) for n in xrange(deg)]
+        for step in xrange(maxsteps):
             if max(err).ae(0):
                 break
-            for i in range(deg):
+            for i in xrange(deg):
                 if not err[i].ae(0):
                     p = roots[i]
                     x = f(p)
@@ -266,7 +274,7 @@ def polyroots(coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False):
                     roots[i] = p - x
                     err[i] = abs(x)
         if cleanup:
-            for i in range(deg):
+            for i in xrange(deg):
                 if abs(roots[i].imag) < weps:
                     roots[i] = roots[i].real
                 elif abs(roots[i].real) < weps:
@@ -349,6 +357,8 @@ def TS_estimate_error(res, prec, eps):
     comparing it to the results from two previous levels. The
     algorithm is that described by D. H. Bailey."""
     try:
+        if res[-1] == res[-2] == res[-3]:
+            return mpf(0)
         D1 = log(abs(res[-1]-res[-2]), 10)
         D2 = log(abs(res[-1]-res[-3]), 10)
     except ValueError:
@@ -778,12 +788,13 @@ def vadd(*args):
     """Adds vectors "x", "y", ... together."""
     assert len(args) >= 2
     n = len(args[0])
+    rest = args[1:]
     for x in args:
         assert len(x) == n
     R = []
     for i in range(n):
-        s = 0.
-        for x in args:
+        s = args[0][i]
+        for x in rest:
             s += x[i]
         R.append(s)
     return R
@@ -808,15 +819,16 @@ def ODE_step_rk4(x, y, h, derivs):
     derivs .... a python function f(x, (y1, y2, y3, ...)) returning
     a tuple (y1', y2', y3', ...) where y1' is the derivative of y1 at x.
     """
-    h2 = h/2
+    h2 = ldexp(h, -1)
     third = mpf(1)/3
-    sixth = mpf(1)/6
     k1 = smul(h, derivs(y, x))
     k2 = smul(h, derivs(vadd(y, smul(half, k1)), x+h2))
     k3 = smul(h, derivs(vadd(y, smul(half, k2)), x+h2))
     k4 = smul(h, derivs(vadd(y, k3), x+h))
-    return vadd(y, smul(sixth, k1), smul(third, k2), smul(third, k3), 
-            smul(sixth, k4))
+    v = []
+    for i in range(len(y)):
+        v.append(y[i] + third*(k2[i]+k3[i] + half*(k1[i]+k4[i])))
+    return v
 
 def odeint(derivs, x0, t_list, step=ODE_step_rk4):
     """
@@ -1124,7 +1136,7 @@ transforms = [
 
 def identify(x, constants=[], full=False, maxcoeff=1000, tolerance=None,
     quadratics=True, verbose=False):
-    """"
+    """
     This function attempts to find a symbolic expression for the given
     quantity x. It can identify simple algebraic numbers, as well as
     simple combinations of the given list of base constants, and

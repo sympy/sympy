@@ -16,8 +16,6 @@ __all__ = ["mpnumeric", "mpf", "mpc", "pi", "e", "ln2", "ln10",
 from lib import *
 from libmpc import *
 
-int_types = (int, long)
-
 rounding_table = {
   'floor' : round_floor,
   'ceiling' : round_ceiling,
@@ -238,7 +236,7 @@ class mpf(mpnumeric):
                 return make_mpf(from_man_exp(val[0], val[1], gp, gr))
             if len(val) == 4:
                 sign, man, exp, bc = val
-                return make_mpf(normalize(sign, man, exp, bc, gp, gr))
+                return make_mpf(normalize(sign, MPBASE(man), exp, bc, gp, gr))
             raise ValueError
         else:
             return make_mpf(fpos(mpf_convert_arg(val), gp, gr))
@@ -251,13 +249,14 @@ class mpf(mpnumeric):
     real = property(lambda self: self)
     imag = property(lambda self: zero)
 
-    def __getstate__(self): return self._mpf_
-    def __setstate__(self, val): self._mpf_ = val
+    def __getstate__(self): return to_pickable(self._mpf_)
+    def __setstate__(self, val): self._mpf_ = from_pickable(val)
 
     def __repr__(s): return "mpf('%s')" % to_str(s._mpf_, repr_dps(gp))
     def __str__(s): return to_str(s._mpf_, gd)
     def __hash__(s): return fhash(s._mpf_)
-    def __int__(s): return to_int(s._mpf_)
+    def __int__(s): return long(to_int(s._mpf_))
+    __long__ = __int__
     def __float__(s): return to_float(s._mpf_)
     def __complex__(s): return float(s) + 0j
 
@@ -482,8 +481,11 @@ class mpc(mpnumeric):
     real = property(lambda self: make_mpf(self._mpc_[0]))
     imag = property(lambda self: make_mpf(self._mpc_[1]))
 
-    def __getstate__(self): return self._mpc_
-    def __setstate__(self, val): self._mpc_ = val
+    def __getstate__(self):
+        return to_pickable(self._mpc_[0]), to_pickable(self._mpc_[1])
+
+    def __setstate__(self, val):
+        self._mpc_ = from_pickable(val[0]), from_pickable(val[1])
 
     def __repr__(s):
         r = repr(s.real)[4:-1]
@@ -550,7 +552,7 @@ class mpc(mpnumeric):
         if not isinstance(t, mpc):
             t = mpc(t)
         return make_mpc(mpc_mul(s._mpc_, t._mpc_, gp, gr))
-    
+
     def __div__(s, t):
         if not isinstance(t, mpc):
             try:
@@ -615,7 +617,7 @@ degree = constant(fdegree, "degree")
 e = constant(fe, "e")
 ln2 = constant(flog2, "log 2")
 ln10 = constant(flog10, "log 10")
-eps = constant(lambda p, r: (0, 1, -p+1, 1), "epsilon of working precision")
+eps = constant(lambda p, r: (0, ONE, -p+1, 1), "epsilon of working precision")
 
 def fraction(p, q):
     """Given Python integers p, q, return a lazy mpf with value p/q.

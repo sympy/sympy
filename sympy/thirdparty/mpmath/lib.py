@@ -8,6 +8,55 @@ import math
 from bisect import bisect
 from random import randrange
 
+#----------------------------------------------------------------------------#
+# Support GMPY for high-speed large integer arithmetic.                      #
+#                                                                            #
+# To allow an external module to handle arithmetic, we need to make sure     #
+# that all high-precision variables are declared of the correct type. MPBASE #
+# is the constructor for the high-precision type. It defaults to Python's    #
+# long type but can be assinged another type, typically gmpy.mpz.            #
+#                                                                            #
+# MPBASE must be used for the mantissa component of an mpf and must be used  #
+# for internal fixed-point operations.                                       #
+#                                                                            #
+# Side-effects                                                               #
+# 1) "is" cannot be used to test for special values. Must use "==".          #
+# 2) There are bugs in GMPY prior to v1.02 so we must use v1.03 or later.    #
+#----------------------------------------------------------------------------#
+
+MODE = 'python'
+MPBASE = long
+try:
+    import gmpy
+    if gmpy.version() >= '1.03':
+        MODE = 'gmpy'
+        MPBASE = gmpy.mpz
+except:
+    pass
+
+MPBASE_TYPE = type(MPBASE(0))
+ZERO = MPBASE(0)
+ONE = MPBASE(1)
+TWO = MPBASE(2)
+THREE = MPBASE(3)
+
+if MODE == 'gmpy':
+    int_types = (int, long, MPBASE_TYPE)
+else:
+    int_types = (int, long)
+
+# XXX: mpz can't be pickled
+def to_pickable(x):
+    if MODE == 'gmpy':
+        sign, man, exp, bc = x
+        return sign, long(man), exp, bc
+    else:
+        return x
+
+def from_pickable(x):
+    sign, man, exp, bc = x
+    return (sign, MPBASE(man), exp, bc)
+
 class ComplexResult(ValueError):
     pass
 
@@ -17,13 +66,13 @@ class ComplexResult(ValueError):
 
 # Regular number format:
 # (-1)**sign * mantissa * 2**exponent, plus bitcount of mantissa
-fzero = (0, 0, 0, 0)
-fnzero = (1, 0, 0, 0)
-fone = (0, 1, 0, 1)
-fnone = (1, 1, 0, 1)
-ftwo = (0, 1, 1, 1)
-ften = (0, 5, 1, 3)
-fhalf = (0, 1, -1, 1)
+fzero = (0, ZERO, 0, 0)
+fnzero = (1, ZERO, 0, 0)
+fone = (0, ONE, 0, 1)
+fnone = (1, ONE, 0, 1)
+ftwo = (0, ONE, 1, 1)
+ften = (0, MPBASE(5), 1, 3)
+fhalf = (0, ONE, -1, 1)
 
 # Arbitrary encoding for special numbers: zero mantissa, nonzero exponent
 fnan = (0, 0, -123, -1)
@@ -62,6 +111,14 @@ def giant_steps(start, target):
         L = L + [L[-1]//2 + 1]
     return L[::-1]
 
+def giant_steps2(start, target):
+    """Return a list of integers ~= [start, 3*start, ..., target/3,
+    target] describing suitable precision steps for Halley's method."""
+    L = [target]
+    while L[-1] > start*3:
+        L = L + [L[-1]//3 + 1]
+    return L[::-1]
+
 def rshift(x, n):
     """For an integer x, calculate x >> n with the fastest (floor)
     rounding. Unlike the plain Python expression (x >> n), n is
@@ -89,13 +146,23 @@ def trailing(n):
 # Small powers of 2
 powers = [1<<_ for _ in range(300)]
 
-def bitcount(n):
+def python_bitcount(n):
     """Calculate bit size of the nonnegative integer n."""
     bc = bisect(powers, n)
     if bc != 300:
         return bc
     bc = int(math.log(n, 2)) - 4
     return bc + bctable[n>>bc]
+
+def gmpy_bitcount(n):
+    """Calculate bit size of the nonnegative integer n."""
+    if n: return MPBASE(n).numdigits(2)
+    else: return 0
+
+if MODE == 'gmpy':
+    bitcount = gmpy_bitcount
+else:
+    bitcount = python_bitcount
 
 # Used to avoid slow function calls as far as possible
 trailtable = map(trailing, range(256))
@@ -173,7 +240,7 @@ def normalize(sign, man, exp, bc, prec, rnd):
     * The input must represent a regular (finite) number
     * The sign bit must be 0 or 1
     * The mantissa must be positive
-    * The mxponent must be an integer
+    * The exponent must be an integer
     * The bitcount must be exact
 
     If these conditions are not met, use from_man_exp, fpos, or any
@@ -181,6 +248,7 @@ def normalize(sign, man, exp, bc, prec, rnd):
     """
     if not man:
         return fzero
+    #~ assert type(man) == MPBASE_TYPE
     # Cut mantissa down to size if larger than target precision
     n = bc - prec
     if n > 0:
@@ -216,6 +284,47 @@ def normalize(sign, man, exp, bc, prec, rnd):
         bc = 1
     return sign, man, exp, bc
 
+def normalize1(sign, man, exp, bc, prec, rnd):
+    """same as normalize, but with the added condition that 
+       man is odd or zero
+    """
+    if not man:
+        return fzero
+    if bc <= prec:
+        return sign, man, exp, bc
+    n = bc - prec
+    if rnd is round_nearest:
+        t = man >> (n-1)
+        if t & 1 and ((t & 2) or (man & h_mask[n<300][n])):
+            man = (t>>1)+1
+        else:
+            man = t>>1
+    elif shifts_down[rnd][sign]:
+        man >>= n
+    else:
+        man = -((-man)>>n)
+    exp += n
+    bc = prec
+    # Strip trailing bits
+    if not man & 1:
+        t = trailtable[man & 255]
+        if not t:
+            while not man & 255:
+                man >>= 8
+                exp += 8
+                bc -= 8
+            t = trailtable[man & 255]
+        man >>= t
+        exp += t
+        bc -= t
+    # Bit count can be wrong if the input mantissa was 1 less than
+    # a power of 2 and got rounded up, thereby adding an extra bit.
+    # With trailing bits removed, all powers of two have mantissa 1,
+    # so this is easy to check for.
+    if man == 1:
+        bc = 1
+    return sign, man, exp, bc
+
 
 #----------------------------------------------------------------------------#
 #                            Conversion functions                            #
@@ -224,6 +333,7 @@ def normalize(sign, man, exp, bc, prec, rnd):
 def from_man_exp(man, exp, prec=None, rnd=round_fast):
     """Create raw mpf from (man, exp) pair. The mantissa may be signed.
     If no precision is specified, the mantissa is stored exactly."""
+    man = MPBASE(man)
     sign = 0
     if man < 0:
         sign = 1
@@ -407,10 +517,10 @@ def fcmp(s, t):
     if not sman or not tman:
         if s == fzero: return -fsign(t)
         if t == fzero: return fsign(s)
-        if s is t: return 0
+        if s == t: return 0
         # Follow same convention as Python's cmp for float nan
-        if t is fnan: return 1
-        if s is finf: return 1
+        if t == fnan: return 1
+        if s == finf: return 1
         return -1
     # Different sides of zero
     if ssign != tsign:
@@ -464,7 +574,7 @@ def fpos(s, prec, rnd=round_fast):
     sign, man, exp, bc = s
     if (not man) and exp:
         return s
-    return normalize(sign, man, exp, bc, prec, rnd)
+    return normalize1(sign, man, exp, bc, prec, rnd)
 
 def fneg(s, prec=None, rnd=round_fast):
     """Negate a raw mpf (return -s), rounding the result to the
@@ -473,12 +583,12 @@ def fneg(s, prec=None, rnd=round_fast):
     sign, man, exp, bc = s
     if not man:
         if exp:
-            if s is finf: return fninf
-            if s is fninf: return finf
+            if s == finf: return fninf
+            if s == fninf: return finf
         return s
     if not prec:
         return (1-sign, man, exp, bc)
-    return normalize(1-sign, man, exp, bc, prec, rnd)
+    return normalize1(1-sign, man, exp, bc, prec, rnd)
 
 def fabs(s, prec=None, rnd=round_fast):
     """Return abs(s) of the raw mpf s, rounded to the specified
@@ -486,22 +596,22 @@ def fabs(s, prec=None, rnd=round_fast):
     exact result."""
     sign, man, exp, bc = s
     if (not man) and exp:
-        if s is fninf:
+        if s == fninf:
             return finf
         return s
     if not prec:
         if sign:
             return (not sign, man, exp, bc)
         return s
-    return normalize(0, man, exp, bc, prec, rnd)
+    return normalize1(0, man, exp, bc, prec, rnd)
 
 def fsign(s):
     """Return -1, 0, or 1 (as a Python int, not a raw mpf) depending on
     whether s is negative, zero, or positive. (Nan is taken to give 0.)"""
     sign, man, exp, bc = s
     if not man:
-        if s is finf: return 1
-        if s is fninf: return -1
+        if s == finf: return 1
+        if s == fninf: return -1
         return 0
     return (-1) ** sign
 
@@ -521,8 +631,8 @@ def fadd(s, t, prec, rnd=round_fast):
         # Check if one operand is zero. Zero always has exp = 0; if the
         # other operand has a huge exponent, its mantissa will unnecessarily
         # be shifted into something huge if we don't check for this case.
-        if not tman: return normalize(ssign, sman, sexp, sbc, prec, rnd)
-        if not sman: return normalize(tsign, tman, texp, tbc, prec, rnd)
+        if not tman: return normalize1(ssign, sman, sexp, sbc, prec, rnd)
+        if not sman: return normalize1(tsign, tman, texp, tbc, prec, rnd)
 
     # More generally, if one number is huge and the other is small,
     # and in particular, if their mantissas don't overlap at all at
@@ -543,25 +653,44 @@ def fadd(s, t, prec, rnd=round_fast):
             else:     sman += 1
             # TODO: use that bc ~= sbc+offset
             bc = bitcount(sman)
-            return normalize(ssign, sman, sexp-offset, bc, prec, rnd)
-    if ssign == tsign:
-        man = tman + (sman << offset)
-        sbc += offset
-        if tbc > sbc: bc = tbc - 4
-        else:         bc = sbc - 4
-        if bc < 4:    bc = bctable[man]
-        else:         bc += bctable[man>>bc]
-        return normalize(ssign, man, texp, bc, prec, rnd)
-    else:
-        if ssign: man = tman - (sman << offset)
-        else:     man = (sman << offset) - tman
-        if man >= 0:
-            sign = 0
+            return normalize1(ssign, sman, sexp-offset, bc, prec, rnd)
+    if offset:
+        if ssign == tsign:
+            man = tman + (sman << offset)
+            sbc += offset
+            if tbc > sbc: bc = tbc - 4
+            else:         bc = sbc - 4
+            if bc < 4:    bc = bctable[man]
+            else:         bc += bctable[man>>bc]
+            return normalize1(ssign, man, texp, bc, prec, rnd)
         else:
-            man = -man
-            sign = 1
-        bc = bitcount(man)
-        return normalize(sign, man, texp, bc, prec, rnd)
+            if ssign: man = tman - (sman << offset)
+            else:     man = (sman << offset) - tman
+            if man >= 0:
+                ssign = 0
+            else:
+                man = -man
+                ssign = 1
+            bc = bitcount(man)
+            return normalize1(ssign, man, texp, bc, prec, rnd)
+    else:
+        if ssign == tsign:
+            man = tman + sman
+            if tbc > sbc: bc = tbc - 4
+            else:         bc = sbc - 4
+            if bc < 4:    bc = bctable[man]
+            else:         bc += bctable[man>>bc]
+            return normalize(ssign, man, texp, bc, prec, rnd)
+        else:
+            if ssign: man = tman - sman
+            else:     man = sman - tman
+            if man >= 0:
+                ssign = 0
+            else:
+                man = -man
+                ssign = 1
+            bc = bitcount(man)
+            return normalize(ssign, man, texp, bc, prec, rnd)
 
 def fsub(s, t, prec, rnd=round_fast):
     """Return the difference of two raw mpfs, s-t. This function is
@@ -590,7 +719,7 @@ def fmul(s, t, prec=0, rnd=round_fast):
     if bc < 4: bc = bctable[man]
     else:      bc += bctable[man>>bc]
     if prec:
-        return normalize(sign, man, sexp+texp, bc, prec, rnd)
+        return normalize1(sign, man, sexp+texp, bc, prec, rnd)
     else:
         return (sign, man, sexp+texp, bc)
 
@@ -625,7 +754,9 @@ def fdiv(s, t, prec, rnd=round_fast):
     """Floating-point division"""
     ssign, sman, sexp, sbc = s
     tsign, tman, texp, tbc = t
-    if not sman or not tman:
+    if not sman or tman <= 1:
+        if tman == 1:
+            return normalize1(ssign^tsign, sman, sexp-texp, sbc, prec, rnd)
         if s == fzero:
             if t == fzero: raise ZeroDivisionError
             if t == fnan: return fnan
@@ -683,6 +814,7 @@ def fdivi(n, t, prec, rnd=round_fast):
     if rem:
         quot = (quot << 5) + 1
         extra += 5
+        return normalize1(sign, quot, -texp-extra, bitcount(quot), prec, rnd)
     return normalize(sign, quot, -texp-extra, bitcount(quot), prec, rnd)
 
 def fmod(s, t, prec, rnd=round_fast):
@@ -772,10 +904,10 @@ def fpowi(s, n, prec, rnd=round_fast):
             return fzero
         man = man*man
         if man == 1:
-            return (0, 1, exp+exp, 1)
+            return (0, ONE, exp+exp, 1)
         bc = bc + bc - 2
         bc += bctable[man>>bc]
-        return normalize(0, man, exp+exp, bc, prec, rnd)
+        return normalize1(0, man, exp+exp, bc, prec, rnd)
     if n == -1: return fdiv(fone, s, prec, rnd)
     if n < 0:
         inverse = fpowi(s, -n, prec+5, reciprocal_rnd[rnd])
@@ -785,10 +917,10 @@ def fpowi(s, n, prec, rnd=round_fast):
 
     # Use exact integer power when the exact mantissa is small
     if man == 1:
-        return (result_sign, 1, exp*n, 1)
+        return (result_sign, ONE, exp*n, 1)
     if bc*n < 1000:
         man **= n
-        return normalize(result_sign, man, exp*n, bitcount(man), prec, rnd)
+        return normalize1(result_sign, man, exp*n, bitcount(man), prec, rnd)
 
     # Use directed rounding all the way through to maintain rigorous
     # bounds for interval arithmetic
@@ -844,7 +976,7 @@ def fpowi(s, n, prec, rnd=round_fast):
 def bin_to_radix(x, xbits, base, bdigits):
     """Changes radix of a fixed-point number; i.e., converts
     x * 2**xbits to floor(x * 10**bdigits)."""
-    return x * (base**bdigits) >> xbits
+    return x * (MPBASE(base)**bdigits) >> xbits
 
 stddigits = '0123456789abcdefghijklmnopqrstuvwxyz'
 
@@ -859,7 +991,10 @@ def small_numeral(n, base=10, digits=stddigits):
         digs.append(digits[digit])
     return "".join(digs[::-1])
 
-def numeral(n, base=10, size=0, digits=stddigits):
+def numeral_gmpy(n, base=10, size=0, digits=stddigits):
+    return gmpy.digits(n, base)
+
+def numeral_python(n, base=10, size=0, digits=stddigits):
     """Represent the integer n as a string of digits in the given base.
     Recursive division is used to make this function about 3x faster
     than Python's str() for converting integers to decimal strings.
@@ -878,6 +1013,11 @@ def numeral(n, base=10, size=0, digits=stddigits):
     ad = numeral(A, base, half, digits)
     bd = numeral(B, base, half, digits).rjust(half, "0")
     return ad + bd
+
+if MODE == "gmpy":
+    numeral = numeral_gmpy
+else:
+    numeral = numeral_python
 
 def to_digits_exp(s, dps):
     """Helper function for representing the floating-point number s as
@@ -1001,7 +1141,7 @@ def str_to_man_exp(x, base=10):
         a, b = parts[0], parts[1].rstrip('0')
         exp -= len(b)
         x = a + b
-    x = int(x, base)
+    x = MPBASE(int(x, base))
     return x, exp
 
 special_str = {'inf':finf, '+inf':finf, '-inf':fninf, 'nan':fnan}
@@ -1037,6 +1177,7 @@ def from_str(x, prec, rnd=round_fast):
 
 def from_bstr(x):
     man, exp = str_to_man_exp(x, base=2)
+    man = MPBASE(man)
     sign = 0
     if man < 0:
         man = -man
@@ -1066,14 +1207,14 @@ def sqrt_initial(y, prec):
     assumed that x ~= 1."""
 
     # Two cases; the second avoids overflow
-    if prec < 200: return int(y**0.5 * 2.0**(50 - prec*0.5))
-    else:          return int((y >> (prec-100))**0.5)
+    if prec < 200: return MPBASE(y**0.5 * 2.0**(50 - prec*0.5))
+    else:          return MPBASE((y >> (prec-100))**0.5)
 
 # XXX: doesn't work
 def invsqrt_initial(y, prec):
     """Like sqrt_initial, but computes 1/sqrt(y) instead of sqrt(y)."""
-    if prec < 200: return int(y**-0.5 * 2.0**(50 + prec*0.5))
-    else:          return int((y >> (prec-100)) ** -0.5)
+    if prec < 200: return MPBASE(y**-0.5 * 2.0**(50 + prec*0.5))
+    else:          return MPBASE((y >> (prec-100)) ** -0.5)
 
 
 
@@ -1122,7 +1263,14 @@ def _sqrt_fixed(y, prec):
         prevp = p
     return r >> extra
 
-def sqrt_fixed(y, prec,shifted=True):
+def gmpy_sqrt_fixed(y, prec, shifted=True):
+    if shifted:
+        return gmpy.sqrt(y << prec)
+    else:
+        extra = 10
+        return gmpy.sqrt(y << (prec + 2 * extra)), extra
+
+def python_sqrt_fixed(y, prec, shifted=True):
     """
     Square root of a fixed-point number. Given the big integer
     y = floor(x * 2**prec), this function returns floor(r * 2**prec)
@@ -1151,7 +1299,10 @@ def sqrt_fixed(y, prec,shifted=True):
     if shifted: return r >> extra
     else:       return r, extra
 
-def sqrt_fixed2(y, prec):
+def gmpy_sqrt_fixed2(y, prec):
+    return gmpy.sqrt(y << prec)
+
+def python_sqrt_fixed2(y, prec):
     """
     This function is essentially equivalent to sqrt_fixed (see its
     documentation), but uses an asymptotically faster algorithm.
@@ -1210,6 +1361,13 @@ def sqrt_fixed2(y, prec):
 
     return r >> extra
 
+if MODE == 'gmpy':
+    sqrt_fixed = gmpy_sqrt_fixed
+    sqrt_fixed2 = gmpy_sqrt_fixed2
+else:
+    sqrt_fixed = python_sqrt_fixed
+    sqrt_fixed2 = python_sqrt_fixed2
+ 
 def fsqrt(s, prec, rnd=round_fast):
     """Compute the square root of a raw mpf.
 
@@ -1284,8 +1442,9 @@ def acot(n, prec, hyperbolic):
     """Compute acot of an integer using fixed-point arithmetic. With
     hyperbolic=True, compute acoth. The standard Taylor series
     is used."""
-    s = t = (1 << prec) // n  # 1 / n
-    k = 3
+    n = MPBASE(n)
+    s = t = (ONE << prec) // n  # 1 / n
+    k = THREE
     while 1:
         # Repeatedly divide by k * n**2, and add
         t //= (n*n)
@@ -1306,16 +1465,16 @@ def machin(coefs, prec, hyperbolic=False):
     point arithmetic. The input should be a list [(c, n), ...], giving
     c*acot[h](n) + ..."""
     extraprec = 10
-    s = 0
+    s = ZERO
     for a, b in coefs:
-        s += a * acot(b, prec+extraprec, hyperbolic)
+        s += MPBASE(a) * acot(MPBASE(b), prec+extraprec, hyperbolic)
     return (s >> extraprec)
 
 #----------------------------------------------------------------------------
 # Pi
 
 def agm_status(prec, step, adiff, verbose_base):
-    logdiff = math.log(max(1, adiff), verbose_base)
+    logdiff = bitcount(adiff) * math.log(2,verbose_base)
     digits = int(prec/math.log(verbose_base,2) - logdiff)
     print "  iteration", step, ("(accuracy ~= %i base-%i digits)" % \
        (digits, verbose_base))
@@ -1350,10 +1509,10 @@ def pi_agm(prec, verbose=False, verbose_base=10):
     prec += extraprec
 
     # Initialial values. a, b and t are fixed-point numbers
-    a = 1 << prec
+    a = ONE << prec
     b = sqrt_fixed2(a >> 1, prec)
     t = a >> 2
-    p = 1
+    p = ONE
 
     step = 1
     while 1:
@@ -1414,17 +1573,26 @@ def flog10(prec, rnd=round_fast):
     return from_man_exp(log10_fixed(prec+5), -prec-5, prec, rnd)
 
 #----------------------------------------------------------------------------
-# exp(1) is computed using the Taylor series for exp
+# exp(1) is computed from the Taylor series for exp, using binary splitting.
+
+# See http://numbers.computation.free.fr/Constants/Algorithms/splitting.html
+# for an explanation of this algorithm
+
+def bspe(a,b):
+    if b-a == 1:
+        return ONE, MPBASE(b)
+    m = (a+b)//2
+    p1, q1 = bspe(a,m)
+    p2, q2 = bspe(m,b)
+    return p1*q2+p2, q1*q2
+
 @constant_memo
 def e_fixed(prec):
-    a = 1 << prec
-    s = a << 1
-    n = 2
-    while a:
-        a //= n
-        s += a
-        n += 1
-    return s
+    # Slight overestimate of N needed for 1/N! < 2**(-prec)
+    # This could be tightened for large N.
+    N = int(1.1*prec/math.log(prec) + 20)
+    p, q = bspe(0,N)
+    return ((p+q)<<prec)//q
 
 def fe(prec, rnd=round_fast):
     return from_man_exp(e_fixed(prec+15), -prec-15, prec, rnd)
@@ -1466,8 +1634,9 @@ def fe(prec, rnd=round_fast):
 # Input: x * 2**prec
 # Output: exp(x) * 2**(prec + r)
 def exp_series(x, prec, r):
+    x = MPBASE(x)
     x >>= r
-    s = (1 << prec) + x
+    s = (ONE << prec) + x
     a = x
     k = 2
     # Sum exp(x/2**r)
@@ -1482,6 +1651,31 @@ def exp_series(x, prec, r):
         s = (s*s) >> prec
         r -= 1
     return s
+
+def exp_series2(x, prec, r):
+    x >>= r
+    sign = 0
+    if x < 0:
+        sign = 1
+        x = -x
+    x2 = (x*x) >> prec
+    s1 = a = x
+    k = THREE
+    while a:
+        a = ((a * x2) >> prec) // (k*(k-1))
+        s1 += a
+        k += 2
+    c1 = sqrt_fixed(((s1*s1) >> prec) + (1<<prec), prec)
+    if sign:
+        s = c1 - s1
+    else:
+        s = c1 + s1
+    # Calculate s**(2**r) by repeated squaring
+    while r:
+        s = (s*s) >> prec
+        r -= 1
+    return s
+
 
 def fexp(x, prec, rnd=round_fast):
     sign, man, exp, bc = x
@@ -1498,16 +1692,31 @@ def fexp(x, prec, rnd=round_fast):
     # extra precision needs to be similar in magnitude to log_2(|x|)
     # for the modulo reduction, plus r for the error from squaring r times
     wp = prec + max(0, bc+exp)
-    r = int(2 * wp**0.4)
-    wp += r + 20
-    t = to_fixed(x, wp)
-    # abs(x) > 1?
-    if exp+bc > 1:
-        lg2 = log2_fixed(wp)
-        n, t = divmod(t, lg2)
+    if wp < 300:
+        r = int(2*wp**0.4)
+        if bc+exp < 0:
+            r = max(1, r + bc + exp)
+        wp += r + 20
+        t = to_fixed(x, wp)
+        # abs(x) > 1?
+        if exp+bc > 1:
+            lg2 = log2_fixed(wp)
+            n, t = divmod(t, lg2)
+        else:
+            n = 0
+        man = exp_series(t, wp, r)
     else:
-        n = 0
-    man = exp_series(t, wp, r)
+        r = int(0.7 * wp**0.5)
+        if bc+exp < 0:
+            r = max(1, r + bc + exp)
+        wp += r + 20
+        t = to_fixed(x, wp)
+        if exp+bc > 1:
+            lg2 = log2_fixed(wp)
+            n, t = divmod(t, lg2)
+        else:
+            n = 0
+        man = exp_series2(t, wp, r)
     bc = wp - 2 + bctable[man >> (wp - 2)]
     return normalize(0, man, -wp+n, bc, prec, rnd)
 
@@ -1519,8 +1728,15 @@ def fexp(x, prec, rnd=round_fast):
 #----------------------------------------------------------------------------#
 
 # The basic strategy for computing log(x) is to set r = log(x) and use
-# Newton's method to solve the equation exp(r) = x. We set the initial
-# value r_0 to math.log(x) and then iterate r_{n+1} = r_n + exp(-r_n) - 1
+# Newton's method to solve the equation exp(r) = x. 
+# To obtain the Newton method one solves exp(r+h) = x, expanding in h
+# which is supposed to be small; one has
+# h = log(x * exp(-r)), which can be expanded in powers of
+# s = (x * exp(-r) - 1) : h = s - s*s/2 + s**3/3 + ...
+# The first order approximation is Newton method, the second order is
+# Halley method. We use the second order approximation.
+# We set the initial value r_0 to math.log(x) and then iterate 
+# r_{n+1} = (r_n + exp(-r_n) - 1) - (r_n + exp(-r_n) - 1)/2
 # until convergence. As with square roots, we increase the working
 # precision dynamically during the process so that only one full-precision
 # evaluation of exp is required.
@@ -1540,19 +1756,19 @@ def fexp(x, prec, rnd=round_fast):
 # arithmetic. x is assumed to have magnitude ~= 1
 def log_newton(x, prec):
     extra = 10
-    # 50-bit approximation
-    fx = math.log(x) - 0.69314718055994529*prec
-    r = int(fx * 2.0**50)
-    prevp = 50
-    for p in giant_steps(50, prec+extra):
+    # 40-bit approximation
+    fx = math.log(long(x)) - 0.69314718055994529*prec
+    r = int(fx * 2.0**40)
+    prevp = 40
+    for p in giant_steps2(40, prec+extra):
         rb = lshift(r, p-prevp)
-
         # Parameters for exponential series
         r = int(2 * p**0.4)
         exp_extra = r + 10
-
         e = exp_series((-rb) << exp_extra, p + exp_extra, r)
-        r = rb + ((rshift(x, prec-p)*e)>>(p + exp_extra)) - (1 << p)
+        s = ((rshift(x, prec-p)*e)>>(p + exp_extra)) - (1 << p)
+        s1 = -((s*s)>>(p+1))
+        r = rb + s + s1
         prevp = p
     return r >> extra
 
@@ -1628,9 +1844,10 @@ def flog(x, prec, rnd=round_fast):
 
 
 def sin_taylor(x, prec):
+    x = MPBASE(x)
     x2 = (x*x) >> prec
     s = a = x
-    k = 3
+    k = THREE
     while a:
         a = ((a * x2) >> prec) // (k*(1-k))
         s += a
@@ -1638,14 +1855,35 @@ def sin_taylor(x, prec):
     return s
 
 def cos_taylor(x, prec):
+    x = MPBASE(x)
     x2 = (x*x) >> prec
-    a = c = (1<<prec)
-    k = 2
+    a = c = (ONE<<prec)
+    k = TWO
     while a:
         a = ((a * x2) >> prec) // (k*(1-k))
         c += a
         k += 2
     return c
+
+# Input: x * 2**prec
+# Output: c * 2**(prec + r), s * 2**(prec + r)
+def expi_series(x, prec, r):
+    x >>= r
+    one = 1 << prec
+    x2 = (x*x) >> prec
+    s = x
+    a = x
+    k = 2
+    while a:
+        a = ((a * x2) >> prec) // (-k*(k+1))
+        s += a
+        k += 2
+    c = sqrt_fixed(one - ((s*s)>>prec), prec)
+    # Calculate (c + j*s)**(2**r) by repeated squaring
+    for j in range(r):
+      c, s =  (c*c-s*s) >> prec, (2*c*s ) >> prec
+    return c, s
+
 
 # TODO: what we really want is the general version of Ziv's algorithm
 def clamp1(x, prec, rnd):
@@ -1722,30 +1960,62 @@ def cos_sin(x, prec, rnd=round_fast, nt=2):
             wp += wp1 - bitcount(abs(rx))
         else:
             break
-
+    
     case = n % 4
-    if nt == 2:
-        one = 1 << wp
-        s = sin_taylor(rx, wp)
-        c = sqrt_fixed(one - ((s*s)>>wp), wp)
-        if   case == 1: c, s = -s, c
-        elif case == 2: s, c = -s, -c
-        elif case == 3: c, s = s, -c
-        c = clamp1(from_man_exp(c, -wp, prec, rnd), prec, rnd)
-        s = clamp1(from_man_exp(s, -wp, prec, rnd), prec, rnd)
-        return c, s
-    elif nt == 0:
-        if   case == 0: c = cos_taylor(rx, wp)
-        elif case == 1: c = -sin_taylor(rx, wp)
-        elif case == 2: c = -cos_taylor(rx, wp)
-        elif case == 3: c = sin_taylor(rx, wp)
-        return clamp1(from_man_exp(c, -wp, prec, rnd), prec, rnd)
+    if prec < 600:  
+        if nt == 2:
+            one = 1 << wp
+            s = sin_taylor(rx, wp)
+            c = sqrt_fixed(one - ((s*s)>>wp), wp)
+            if   case == 1: c, s = -s, c
+            elif case == 2: s, c = -s, -c
+            elif case == 3: c, s = s, -c
+            c = clamp1(from_man_exp(c, -wp, prec, rnd), prec, rnd)
+            s = clamp1(from_man_exp(s, -wp, prec, rnd), prec, rnd)
+            return c, s
+        elif nt == 0:
+            if   case == 0: c = cos_taylor(rx, wp)
+            elif case == 1: c = -sin_taylor(rx, wp)
+            elif case == 2: c = -cos_taylor(rx, wp)
+            elif case == 3: c = sin_taylor(rx, wp)
+            return clamp1(from_man_exp(c, -wp, prec, rnd), prec, rnd)
+        else:
+            if   case == 0: s = sin_taylor(rx, wp)
+            elif case == 1: s = cos_taylor(rx, wp)
+            elif case == 2: s = -sin_taylor(rx, wp)
+            elif case == 3: s = -cos_taylor(rx, wp)
+            return clamp1(from_man_exp(s, -wp, prec, rnd), prec, rnd)
     else:
-        if   case == 0: s = sin_taylor(rx, wp)
-        elif case == 1: s = cos_taylor(rx, wp)
-        elif case == 2: s = -sin_taylor(rx, wp)
-        elif case == 3: s = -cos_taylor(rx, wp)
-        return clamp1(from_man_exp(s, -wp, prec, rnd), prec, rnd)
+        #Use Brent's trick for large precision, 
+        # see documentation to exp_series
+        wp0 = wp
+        wp += abs_mag
+        r = int(0.137 * prec**0.579)
+        wp += r + 20
+        rx <<= (wp-wp0)
+        rc, rs = expi_series(rx, wp, r)
+        if nt == 2:
+            one = 1 << wp
+            s = rs
+            c = rc
+            if   case == 1: c, s = -s, c
+            elif case == 2: s, c = -s, -c
+            elif case == 3: c, s = s, -c
+            c = clamp1(from_man_exp(c, -wp, prec, rnd), prec, rnd)
+            s = clamp1(from_man_exp(s, -wp, prec, rnd), prec, rnd)
+            return c, s
+        elif nt == 0:
+            if   case == 0: c = rc
+            elif case == 1: c = -rs
+            elif case == 2: c = -rc
+            elif case == 3: c = rs
+            return clamp1(from_man_exp(c, -wp, prec, rnd), prec, rnd)
+        else:
+            if   case == 0: s = rs
+            elif case == 1: s = rc
+            elif case == 2: s = -rs
+            elif case == 3: s = -rc
+            return clamp1(from_man_exp(s, -wp, prec, rnd), prec, rnd)
 
 def fcos(x, prec, rnd=round_fast):
     return cos_sin(x, prec, rnd, 0)
@@ -1763,9 +2033,10 @@ def ftan(x, prec, rnd=round_fast):
 #
 
 def sinh_taylor(x, prec):
+    x = MPBASE(x)
     x2 = (x*x) >> prec
     s = a = x
-    k = 3
+    k = THREE
     while a:
         a = ((a * x2) >> prec) // (k*(k-1))
         s += a
@@ -1828,17 +2099,16 @@ def ftanh(x, prec, rnd=round_fast):
 Near x = 0, use atan(x) = x - x**3/3 + x**5/5 - ...
 Near x = 1, use atan(x) = y/x * (1 + 2/3*y + 2*4/3/5*y**2 + ...)
 where y = x**2/(1+x**2).
+At high precision use the Newton method  for 1.0/8 <= x < 256
 
-TODO: these series are not impressively fast. It is probably better
-to calculate atan from tan, using Newton's method or even the
-secant method.
+TODO: see if one can improve the case x < 1.0/8;
+      write a fixed-point function atan_newton
 """
 
 def atan_taylor(x, prec, rnd=round_fast):
     sign, man, exp, bc = x
     assert not sign
     # Increase absolute precision when extremely close to 0
-    bc = bitcount(man)
     diff = -(bc + exp)
     prec2 = prec
     if diff > 10:
@@ -1877,21 +2147,57 @@ def fatan(x, prec, rnd=round_fast):
         if x == finf: return fshift(fpi(prec), -1)
         if x == fninf: return fneg(fshift(fpi(prec), -1))
         return fnan
-    if sign:
-        return fneg(fatan(fneg(x), prec, rnd))
-    if fcmp(x, _cutoff_1) < 0:
-        return atan_taylor(x, prec, rnd)
-    if fcmp(x, _cutoff_2) < 0:
-        return atan_euler(x, prec, rnd)
-    # For large x, use atan(x) = pi/2 - atan(1/x)
-    if x[2] > 10*prec:
-        pi = fpi(prec, rnd)
-        pihalf = fshift(pi, -1)
+    flag_nr = True
+    if prec < 400:
+        flag_nr = False
     else:
-        pi = fpi(prec+4)
-        pihalf = fshift(pi, -1)
-        t = fatan(fdiv(fone, x, prec+4), prec+4)
+        ebc = exp + bc
+    # the Newton method is used if flag_nr = True; otherwise one of the
+    # two series is used.
+    # This selection is based on a benchmark.
+        if ebc < -2 or ebc > 8:
+            flag_nr = False
+        elif ebc == -2:
+            if prec < 1500:
+                flag_nr = False
+        elif ebc <= 0:
+            if prec < 600:
+                flag_nr = False
+        else:
+            if prec < 400*ebc:
+                flag_nr = False
+    if not flag_nr:
+        if sign:
+            return fneg(fatan(fneg(x), prec, rnd))
+        if fcmp(x, _cutoff_1) < 0:
+            return atan_taylor(x, prec, rnd)
+        if fcmp(x, _cutoff_2) < 0:
+            return atan_euler(x, prec, rnd)
+        # For large x, use atan(x) = pi/2 - atan(1/x)
+        if x[2] > 10*prec:
+            pi = fpi(prec, rnd)
+            pihalf = fshift(pi, -1)
+        else:
+            pi = fpi(prec+4)
+            pihalf = fshift(pi, -1)
+            t = fatan(fdiv(fone, x, prec+4), prec+4)
         return fsub(pihalf, t, prec, rnd)
+    # use Newton's method
+    extra = 10
+    extra_p = 100
+    prec2 = prec + extra
+    r = math.atan(to_float(x))
+    r = from_float(r, 50, rnd)
+    for p in giant_steps(50, prec2):
+        wp = p + extra_p
+        t = ftan(r, wp, rnd)
+        tmp1 = fsub(x, t, wp, rnd)
+        tmp2 = fmul(t, t, wp, rnd)
+        tmp2 = fadd(fone, tmp2, wp, rnd)
+        tmp1 = fdiv(tmp1, tmp2, wp, rnd)
+        r = fadd(r, tmp1, wp, rnd)
+    sign, man, exp, bc = r
+    return normalize(sign, man, exp, bc, prec, rnd)
 
 def fatan2(y, x, prec, rnd=round_fast):
     xsign, xman, xexp, xbc = x
@@ -1909,15 +2215,40 @@ def fatan2(y, x, prec, rnd=round_fast):
         return fpos(tquo, prec, rnd)
 
 def fasin(x, prec, rnd=round_fast):
-    # asin(x) = 2*atan(x/(1+sqrt(1-x**2)))
     sign, man, exp, bc = x
     if bc+exp > 0 and x not in (fone, fnone):
         raise ComplexResult("asin(x) is real only for -1 <= x <= 1")
-    wp = prec + 15
-    a = fmul(x, x)
-    b = fadd(fone, fsqrt(fsub(fone, a, wp), wp), wp)
-    c = fdiv(x, b, wp)
-    return fshift(fatan(c, prec, rnd), 1)
+    flag_nr = True
+    if prec < 1000 or exp+bc < -13:
+        flag_nr = False
+    else:
+        ebc = exp + bc
+        if ebc < -13:
+            flag_nr = False
+        elif ebc < -3:
+            if prec < 3000:
+                flag_nr = False
+    if not flag_nr:
+        # asin(x) = 2*atan(x/(1+sqrt(1-x**2)))
+        wp = prec + 15
+        a = fmul(x, x)
+        b = fadd(fone, fsqrt(fsub(fone, a, wp), wp), wp)
+        c = fdiv(x, b, wp)
+        return fshift(fatan(c, prec, rnd), 1)
+    # use Newton's method
+    extra = 10
+    extra_p = 10
+    prec2 = prec + extra
+    r = math.asin(to_float(x))
+    r = from_float(r, 50, rnd)
+    for p in giant_steps(50, prec2):
+        wp = p + extra_p
+        c, s = cos_sin(r, wp, rnd)
+        tmp = fsub(x, s, wp, rnd)
+        tmp = fdiv(tmp, c, wp, rnd)
+        r = fadd(r, tmp, wp, rnd)
+    sign, man, exp, bc = r
+    return normalize(sign, man, exp, bc, prec, rnd)
 
 def facos(x, prec, rnd=round_fast):
     # acos(x) = 2*atan(sqrt(1-x**2)/(1+x))
