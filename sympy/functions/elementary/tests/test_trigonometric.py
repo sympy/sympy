@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, nan, oo, I, sinh, sin, acot, pi, atan, \
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos, \
-        cosh, atan2
+        cosh, atan2, exp
 
 def test_sin():
     x, y = symbols('xy')
@@ -66,6 +66,8 @@ def test_sin():
     assert sin(k*pi*I) == sinh(k*pi)*I
 
     assert sin(r).is_real == True
+
+    assert sin(exp(10)-1) == sin(-1+exp(10))
 
 def test_cos():
     x, y = symbols('xy')
