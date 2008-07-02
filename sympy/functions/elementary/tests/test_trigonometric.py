@@ -135,6 +135,8 @@ def test_cos():
 
     assert cos(r).is_real == True
 
+    assert cos(exp(10)-1) == cos(-1+exp(10))
+
 def test_tan():
     x, y = symbols('xy')
 

@@ -279,9 +279,7 @@ class cos(Function):
                         except KeyError:
                             pass
 
-                coeff, terms = arg.as_coeff_terms()
-
-                if coeff.is_negative:
+                if arg.is_Mul and arg.args[0].is_negative:
                     return cls(-arg)
                 if arg.is_Add:
                     x, m = arg.as_independent(S.Pi)
@@ -289,10 +287,10 @@ class cos(Function):
                         return cos(m)*cos(x)-sin(m)*sin(x)
                     # normalize cos(-x-y) to cos(x+y)
                     if arg.args[0].is_Mul:
-                        if arg.args[0].args[0] == -1:
+                        if arg.args[0].args[0].is_negative:
                             # e.g. arg = -x - y
                             if (-arg).args[0].is_Mul:
-                                if (-arg).args[0].args[0] == -1:
+                                if (-arg).args[0].args[0].is_negative:
                                     # This is to prevent infinite recursion in
                                     # the case cos(-x+y), for which
                                     # -arg = -y + x. See also #838 for the
