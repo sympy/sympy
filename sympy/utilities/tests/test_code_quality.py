@@ -62,5 +62,3 @@ def test_no_trailing_whitespace_and_no_tabs():
     for p in paths:
         assert exists(p)
         check_directory_tree(p)
-
-test_no_trailing_whitespace_and_no_tabs()
