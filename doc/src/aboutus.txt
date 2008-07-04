@@ -46,6 +46,7 @@ more details what they do and what they are interested in.
 #. David Roberts: latex printing patches
 #. Sebastian Krämer: implemented lambdify/numpy/mpmath cooperation, bug fixes, refactoring
 #. Vinzent Steinberg: docstring patch
+#. Riccardo Gori: several improvements to matrices, other bug fixes
 
 
 Uptodate list of all contributors is maintained in our `Contributors wiki page
