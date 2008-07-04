@@ -17,9 +17,10 @@ Contents:
    install.txt
    tutorial.txt
    guide.txt
+   modules.txt
+   mpmath/index.txt
    python-comparisons.txt
    wiki.txt
-   modules.txt
    sympy-patches-tutorial.txt
    outreach.txt
    aboutus.txt
