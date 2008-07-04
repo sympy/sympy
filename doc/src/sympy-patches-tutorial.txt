@@ -26,7 +26,7 @@ This section explains how to get you up and running in 5 minutes. However we
 recommend that you read the full tutorial below, at least the introduction and
 then go briefly through the rest.
 
-Edit your :file:`~/.hgrc` (tell Mercurial your name and use git style diffs)::
+Edit your ``~/.hgrc`` (tell Mercurial your name and use git style diffs)::
 
     [ui]
     username = Ondrej Certik <ondrej@certik.cz>
@@ -101,12 +101,12 @@ Check the final patch and save it to a file:
              self.m = m
     $ :input:`hg export tip > matrix.patch`
 
-and attach the file :file:`matrix.patch` to our issues_, or send it to our
+and attach the file ``matrix.patch`` to our issues_, or send it to our
 list, preferably to the `sympy-patches@googlecode.com`_ list.
 
 Tip: to send the patch to the sympy-patches list conveniently from the command
 line, join the sympy-patches list with some email address and put this email
-address together with these lines into your :file:`~/.hgrc`::
+address together with these lines into your ``~/.hgrc``::
 
     [email]
     to = sympy-patches@googlegroups.com
