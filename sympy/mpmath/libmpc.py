@@ -343,10 +343,10 @@ alpha_crossover = from_float(1.5)
 
 def acos_asin(z, prec, rnd, n):
     """ complex acos for n = 0, asin for n = 1
-    The algorithm is described in 
+    The algorithm is described in
     T.E. Hull, T.F. Fairgrieve and P.T.P. Tang
     'Implementing the Complex Arcsine and Arcosine Functions
-    using Exception Handling', 
+    using Exception Handling',
     ACM Trans. on Math. Software Vol. 23 (1997), p299
     The complex acos and asin can be defined as
     acos(z) = acos(beta) - I*sign(a)* log(alpha + sqrt(alpha**2 -1))
@@ -363,7 +363,7 @@ def acos_asin(z, prec, rnd, n):
     # special cases with real argument
     if b == fzero:
         am = fsub(fone, fabs(a), wp)
-        # case abs(a) <= 1 
+        # case abs(a) <= 1
         if not am[0]:
             if n == 0:
                 return facos(a, prec, rnd), fzero
@@ -411,7 +411,7 @@ def acos_asin(z, prec, rnd, n):
         # to compute the real part in this region use the identity
         # asin(beta) = atan(beta/sqrt(1-beta**2))
         # beta/sqrt(1-beta**2) = (alpha + a) * (alpha - a)
-        # alpha + a is numerically accurate; alpha - a can have 
+        # alpha + a is numerically accurate; alpha - a can have
         # cancellations leading to numerical inaccuracies, so rewrite
         # it in differente ways according to the region
         Ax = fadd(alpha, a, wp)

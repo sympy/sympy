@@ -1,17 +1,17 @@
 #!/usr/bin/env python
-""" 
+"""
     elliptic.py
 
     Implements the Jacobi theta and Jacobi elliptic functions, using
-    arbitrary precision math library 
+    arbitrary precision math library
 
     Author: M.T. Taschuk
 
     References:
 
-    [1] Abramowitz & Stegun. 'Handbook of Mathematical Functions, 9th Ed.', 
+    [1] Abramowitz & Stegun. 'Handbook of Mathematical Functions, 9th Ed.',
         (Dover duplicate of 1972 edition)
-    [2] Whittaker 'A Course of Modern Analysis, 4th Ed.', 1946, 
+    [2] Whittaker 'A Course of Modern Analysis, 4th Ed.', 1946,
         Cambridge Univeristy Press
 
 """
@@ -21,7 +21,7 @@ from mptypes import *
 from specfun import ellipk
 
 def calculate_nome(k):
-    """ 
+    """
     Calculate the nome, q, from the value for k.
 
     Useful factoids:
@@ -96,7 +96,7 @@ def calculate_k(q, verbose=False):
     while True:
         factor1 = q**(term*term)
         term_n = factor1                # suboptimal, kept for readability
-        sum = sum + term_n              
+        sum = sum + term_n
 
         if factor1 == mpf('0'):      # all further terms will be zero
             break
@@ -130,8 +130,8 @@ def jacobi_theta_1(z, m, verbose=False):
     q = calculate_nome(k)
 
     if verbose:
-        print >> sys.stderr, '\tk: %f ' % k 
-        print >> sys.stderr, '\tq: %f ' % q 
+        print >> sys.stderr, '\tk: %f ' % k
+        print >> sys.stderr, '\tq: %f ' % q
 
     if abs(q) >= mpf('1'):
         raise ValueError
@@ -169,18 +169,18 @@ def jacobi_theta_1(z, m, verbose=False):
                 print >> sys.stderr, '\tTerm: %d' % term,
                 print >> sys.stderr, '\tterm_n: %e' % term_n,
                 print >> sys.stderr, '\tsum: %e' % sum
-            
+
             if factor1 == zero:         # all further terms will be zero
                 break
-            if factor2 != zero:         # check precision iff cos != 0 
+            if factor2 != zero:         # check precision iff cos != 0
                 #if log(term_n, '10') < -1*mpf.dps:
                 if abs(term_n) < eps:
                     break
 
             term = term + 1
-       
+
         return (2*q**(0.25))*sum
-    
+
     # can't get here
     print >> sys.stderr, 'elliptic.jacobi_theta_1 in impossible state'
     sys.exit(2)
@@ -258,7 +258,7 @@ def jacobi_theta_2(z, m, verbose=False):
 
                 if factor1 == zero:         # all further terms will be zero
                     break
-                if factor2 != zero:         # check precision iff cos != 0 
+                if factor2 != zero:         # check precision iff cos != 0
                     #if log(term_n, '10') < -1*mpf.dps:
                     if abs(term_n) < eps:
                         break
@@ -278,7 +278,7 @@ def jacobi_theta_3(z, m):
 
     z is any complex number, but only reals here?
     m is the parameter, which must be converted to the nome
-    """ 
+    """
     m = convert_lossless(m)
     z = convert_lossless(z)
 
@@ -300,7 +300,7 @@ def jacobi_theta_3(z, m):
 
             factor1 = q**(term*term)
             term_n = factor1                # suboptimal, kept for readability
-            sum = sum + term_n              
+            sum = sum + term_n
 
             if factor1 == mpf('0'):      # all further terms will be zero
                 break
@@ -323,19 +323,19 @@ def jacobi_theta_3(z, m):
 
             if factor1 == mpf('0'):      # all further terms will be zero
                 break
-            if factor2 != mpf('0'):      # check precision iff cos != 0 
+            if factor2 != mpf('0'):      # check precision iff cos != 0
                 #if log(term_n, '10') < -1*mpf.dps:
                 if abs(term_n) < eps:
                     break
 
             term = term + 1
-        
+
     return 1 + 2*sum
 
 def jacobi_theta_4(z, m):
     """
     Implements the series expansion of the jacobi theta function
-    1, where z == 0.  
+    1, where z == 0.
 
     z is any complex number, but only reals here?
     m is the parameter, which must be converted to the nome
@@ -390,7 +390,7 @@ def jacobi_theta_4(z, m):
 
             if factor1 == mpf('0'):      # all further terms will be zero
                 break
-            if factor2 != mpf('0'):      # check precision iff cos != 0 
+            if factor2 != mpf('0'):      # check precision iff cos != 0
                 #if log(term_n, '10') < -1*mpf.dps:
                 if abs(term_n) < eps:
                     break
@@ -410,7 +410,7 @@ def jacobi_elliptic_sn(u, m, verbose=False):
 
     Expansion in terms of jacobi theta functions appears to fail with
     round off error, despite   I also think that the expansion in
-    terms of q is much faster than four expansions in terms of q.  
+    terms of q is much faster than four expansions in terms of q.
 
     **********************************
     Previous implementation kept here:
@@ -419,7 +419,7 @@ def jacobi_elliptic_sn(u, m, verbose=False):
         raise TypeError
     if not isinstance(m, mpf):
         raise TypeError
-    
+
     zero = mpf('0')
 
     if u == zero and m == 0:
@@ -463,7 +463,7 @@ def jacobi_elliptic_sn(u, m, verbose=False):
         return tanh(u)
     else:
         k = m.sqrt()                        # convert m to k
-        q = calculate_nome(k)      
+        q = calculate_nome(k)
         v = (pi * u) / (two*ellipk(k**2))
 
     if v == pi or v == zero:     # sin factor always zero
@@ -478,7 +478,7 @@ def jacobi_elliptic_sn(u, m, verbose=False):
         factor1 = (q**(term + onehalf)) / (one - q**(two*term + one))
         factor2 = sin((two*term + one)*v)
 
-        term_n = factor1*factor2         
+        term_n = factor1*factor2
         sum = sum + term_n
 
         if verbose:
@@ -525,7 +525,7 @@ def jacobi_elliptic_cn(u, m, verbose=False):
         return sech(u)
     else:
         k = m.sqrt()                        # convert m to k
-        q = calculate_nome(k)      
+        q = calculate_nome(k)
         kprimesquared = one - k**2
         kprime = kprimesquared.sqrt()
         v = (pi * u) / (two*ellipk(k**2))
@@ -539,7 +539,7 @@ def jacobi_elliptic_cn(u, m, verbose=False):
         factor1 = (q**(term + onehalf)) / (one + q**(two*term + one))
         factor2 = cos((two*term + one)*v)
 
-        term_n = factor1*factor2         
+        term_n = factor1*factor2
         sum = sum + term_n
 
         if verbose:
@@ -582,7 +582,7 @@ def jacobi_elliptic_dn(u, m, verbose=False):
         return sech(u)
     else:
         k = m.sqrt()                        # convert m to k
-        q = calculate_nome(k)      
+        q = calculate_nome(k)
         v = (pi * u) / (two*ellipk(k**2))
 
     sum = zero
@@ -594,7 +594,7 @@ def jacobi_elliptic_dn(u, m, verbose=False):
         factor1 = (q**term) / (one + q**(two*term))
         factor2 = cos(two*term*v)
 
-        term_n = factor1*factor2         
+        term_n = factor1*factor2
         sum = sum + term_n
 
         if verbose:

@@ -68,7 +68,7 @@ class Context(object):
         try:
             gr = rounding_table[s]
         except KeyError:
-            raise ValueError(("unknown rounding mode: %s.\n" % s) + 
+            raise ValueError(("unknown rounding mode: %s.\n" % s) +
                 "Value must be one of: %r" % rounding_table.keys())
 
     prec = property(lambda self: gp, set_prec)
@@ -783,7 +783,7 @@ from operator import gt, lt
 def arange(*args):
     """arange([a,] b[, dt]) -> list [a, a + dt, a + 2*dt, ..., b]"""
     if not len(args) <= 3:
-        raise TypeError('arange expected at most 3 arguments, got %i' 
+        raise TypeError('arange expected at most 3 arguments, got %i'
                         % len(args))
     if not len(args) >= 1:
         raise TypeError('arange expected at least 1 argument, got %i'
@@ -805,7 +805,7 @@ def arange(*args):
     if a > b:
         if dt > 0:
             return []
-        op = gt 
+        op = gt
     else:
         if dt < 0:
             return []

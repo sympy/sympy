@@ -285,7 +285,7 @@ def normalize(sign, man, exp, bc, prec, rnd):
     return sign, man, exp, bc
 
 def normalize1(sign, man, exp, bc, prec, rnd):
-    """same as normalize, but with the added condition that 
+    """same as normalize, but with the added condition that
        man is odd or zero
     """
     if not man:
@@ -1367,7 +1367,7 @@ if MODE == 'gmpy':
 else:
     sqrt_fixed = python_sqrt_fixed
     sqrt_fixed2 = python_sqrt_fixed2
- 
+
 def fsqrt(s, prec, rnd=round_fast):
     """Compute the square root of a raw mpf.
 
@@ -1608,9 +1608,9 @@ def fe(prec, rnd=round_fast):
 #----------------------------------------------------------------------------#
 
 # The exponential function has a rapidly convergent Maclaurin series:
-# 
+#
 #     exp(x) = 1 + x + x**2/2! + x**3/3! + x**4/4! + ...
-# 
+#
 # The series can be summed very easily using fixed-point arithmetic.
 # The convergence can be improved further, using a trick due to
 # Richard P. Brent: instead of computing exp(x) directly, we choose a
@@ -1728,14 +1728,14 @@ def fexp(x, prec, rnd=round_fast):
 #----------------------------------------------------------------------------#
 
 # The basic strategy for computing log(x) is to set r = log(x) and use
-# Newton's method to solve the equation exp(r) = x. 
+# Newton's method to solve the equation exp(r) = x.
 # To obtain the Newton method one solves exp(r+h) = x, expanding in h
 # which is supposed to be small; one has
 # h = log(x * exp(-r)), which can be expanded in powers of
 # s = (x * exp(-r) - 1) : h = s - s*s/2 + s**3/3 + ...
 # The first order approximation is Newton method, the second order is
 # Halley method. We use the second order approximation.
-# We set the initial value r_0 to math.log(x) and then iterate 
+# We set the initial value r_0 to math.log(x) and then iterate
 # r_{n+1} = (r_n + exp(-r_n) - 1) - (r_n + exp(-r_n) - 1)/2
 # until convergence. As with square roots, we increase the working
 # precision dynamically during the process so that only one full-precision
@@ -1827,7 +1827,7 @@ def flog(x, prec, rnd=round_fast):
 
 # |     A      |      B     |      C     |     D     |
 # v            v            v            v           v
-# 
+#
 #    1 |  ____   ..........                            ____
 #      |      _..          ..                        __
 #      |      . __           .                     __
@@ -1960,9 +1960,9 @@ def cos_sin(x, prec, rnd=round_fast, nt=2):
             wp += wp1 - bitcount(abs(rx))
         else:
             break
-    
+
     case = n % 4
-    if prec < 600:  
+    if prec < 600:
         if nt == 2:
             one = 1 << wp
             s = sin_taylor(rx, wp)
@@ -1986,7 +1986,7 @@ def cos_sin(x, prec, rnd=round_fast, nt=2):
             elif case == 3: s = -cos_taylor(rx, wp)
             return clamp1(from_man_exp(s, -wp, prec, rnd), prec, rnd)
     else:
-        #Use Brent's trick for large precision, 
+        #Use Brent's trick for large precision,
         # see documentation to exp_series
         wp0 = wp
         wp += abs_mag
