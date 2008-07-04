@@ -16,7 +16,7 @@ except ImportError:
 from sympy import Rational, Symbol, list2numpy, sin, Real, Matrix, lambdify
 import sympy
 
-from sympy.thirdparty import mpmath
+from sympy import mpmath
 mpmath.mp.dps = 16
 sin02 = mpmath.mpf("0.198669330795061215459412627")
 

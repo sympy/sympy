@@ -74,6 +74,6 @@ class erf(Function):
         if arg.is_Number:
             # XXX: Temporary hack. FIX THIS
             from sympy.core.numbers import Real
-            from sympy.thirdparty.mpmath import erf
+            from sympy.mpmath import erf
             e = erf(float(arg))
             return Real(str(e))

@@ -1,7 +1,7 @@
 from sympy import symbols, lambdify, sqrt, sin, cos, pi
 from sympy.utilities.pytest import XFAIL
 from sympy import symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Real
-from sympy.thirdparty import mpmath
+from sympy import mpmath
 import math, sympy
 
 # high precision output of sin(0.2*pi) is used to detect if precision is lost unwanted

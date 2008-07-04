@@ -1,4 +1,4 @@
-from sympy.thirdparty.mpmath.lib import (fzero, fadd, fsub, fmul, fsqrt,
+from sympy.mpmath.lib import (fzero, fadd, fsub, fmul, fsqrt,
     fdiv, fpi, pi_fixed, from_man_exp, from_int, from_rational, cosh_sinh,
     fone, fcos, fshift, ftwo, fhalf, bitcount, to_int, to_str)
 from sympy.core.numbers import gcd

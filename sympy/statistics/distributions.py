@@ -129,7 +129,7 @@ class Normal(ContinuousProbability):
         # error function is not yet implemented in SymPy but can easily be
         # computed numerically
 
-        from sympy.thirdparty.mpmath import mpf, secant, erf
+        from sympy.mpmath import mpf, secant, erf
 
         p = mpf(p)
         # calculate y = ierf(p) by solving erf(y) - p = 0

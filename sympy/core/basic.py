@@ -2,7 +2,7 @@
 
 type_class = type
 
-import sympy.thirdparty.mpmath as mpmath
+import sympy.mpmath as mpmath
 
 from assumptions import AssumeMeths
 from sympify import _sympify, sympify, SympifyError

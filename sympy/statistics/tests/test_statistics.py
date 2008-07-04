@@ -3,7 +3,7 @@ from sympy.functions import erf
 from sympy.statistics import Normal, Uniform
 import operator # XXX weird abs/sympy.abs conflict
 
-from sympy.thirdparty.mpmath import mp
+from sympy.mpmath import mp
 
 def test_normal():
     dps, mp.dps = mp.dps, 20

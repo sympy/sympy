@@ -1,5 +1,5 @@
 import math
-import sympy.thirdparty.mpmath as mpmath
+import sympy.mpmath as mpmath
 import decimal
 
 from basic import Basic, Atom, Singleton, S, C, Memoizer, MemoizerArg
