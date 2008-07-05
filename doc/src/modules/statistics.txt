@@ -1,0 +1,96 @@
+Statistics
+==========
+
+.. module:: sympy.statistics
+
+The *statistics* module in SymPy implements standard probability distributions
+and related tools. Its contents can be imported with the following statement::
+
+    from sympy.statistics import *
+
+Normal distributions
+--------------------
+
+``Normal(mu, sigma)`` creates a normal distribution with mean value ``mu`` and
+standard deviation ``sigma``. The ``Normal`` class defines several
+useful methods and properties. Various properties can be accessed directly as
+follows:
+
+    >>> N = Normal(0, 1)
+    >>> N.mean
+    0
+    >>> N.median
+    0
+    >>> N.variance
+    1
+    >>> N.stddev
+    1
+
+You can generate random numbers from the desired distribution with the
+``random`` method:
+
+    >>> N = Normal(10, 5)
+    >>> N.random()
+    4.914375200829805834246144514
+    >>> N.random()
+    11.84331557474637897087177407
+    >>> N.random()
+    17.22474580071733640806996846
+    >>> N.random()
+    9.864643097429464546621602494
+
+The probability density function (pdf) and cumulative distribution function
+(cdf) of a distribution can be computed, either in symbolic form or for
+particular values:
+
+    >>> N = Normal(1, 1)
+    >>> x = Symbol('x')
+    >>> N.pdf(1)
+    (1/2)**(1/2)*pi**(-1/2)
+    >>> N.pdf(3).evalf()
+    0.05399096651318805195056420043
+    >>> N.cdf(x)
+    1/2 - 1/2*erf((1/2)**(1/2)*(1 - x))
+    >>> N.cdf(-oo), N.cdf(1), N.cdf(oo)
+    (0, 1/2, 1)
+    >>> N.cdf(5).evalf()
+    0.999968328758167
+
+The method ``probability`` gives the total probability on a given interval (a
+convenient alternative syntax for cdf(b)-cdf(a)):
+
+    >>> N = Normal(0, 1)
+    >>> N.probability(-oo, 0)
+    1/2
+    >>> N.probability(-1, 1)
+    (1/2)*erf(2*(1/2)**(1/2))
+    >>> _.evalf()
+    0.477249868051821
+
+You can also generate a symmetric confidence interval from a given desired
+confidence level (given as a fraction 0-1). For the normal distribution, 68%,
+95% and 99.7% confidence levels respectively correspond to approximately 1, 2
+and 3 standard deviations:
+
+    >>> N = Normal(0, 1)
+    >>> N.confidence(0.68)
+    (-0.994457883209753, 0.994457883209753)
+    >>> N.confidence(0.95)
+    (-1.95996398454005, 1.95996398454005)
+    >>> N.confidence(0.997)
+    (-2.96773792534179, 2.96773792534179)
+
+Plug the interval back in to see that the value is correct:
+
+    >>> N.probability(*N.confidence(0.95)).evalf()
+    0.95
+
+Other distributions
+-------------------
+
+Besides the normal distribution, uniform continuous distributions are also
+supported. ``Uniform(a, b)`` represents the distribution with uniform
+probability on the interval [a, b] and zero probability everywhere else. The
+``Uniform`` class supports the same methods as the ``Normal`` class.
+
+Additional distributions, including support for arbitrary user-defined distributions, are planned for the future.
