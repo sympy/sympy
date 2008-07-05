@@ -661,6 +661,10 @@ class Matrix(object):
         print s
 
     def LUsolve(self, rhs):
+        """
+        Solve the linear system Ax = b.
+        self is the coefficient matrix A and rhs is the right side b.
+        """
         assert rhs.lines == self.lines
         A, perm = self.LUdecomposition_Simple()
         n = self.lines
@@ -677,6 +681,9 @@ class Matrix(object):
         return b
 
     def LUdecomposition(self):
+        """
+        Returns the decompositon LU and the row swaps p.
+        """
         combined, p = self.LUdecomposition_Simple()
         L = self.zero(self.lines)
         U = self.zero(self.lines)
@@ -691,8 +698,10 @@ class Matrix(object):
         return L, U, p
 
     def LUdecomposition_Simple(self):
-        # returns A compused of L,U (L's diag entries are 1) and
-        # p which is the list of the row swaps (in order)
+        """
+        Returns A compused of L,U (L's diag entries are 1) and
+        p which is the list of the row swaps (in order).
+        """
         assert self.lines == self.cols
         n = self.lines
         A = self[:,:]
@@ -722,8 +731,11 @@ class Matrix(object):
 
 
     def LUdecompositionFF(self):
-        # returns 4 matrices P, L, D, U such that PA = L D**-1 U
-        # from the paper "fraction-free matrix factors..." by Zhou and Jeffrey
+        """
+        Returns 4 matrices P, L, D, U such that PA = L D**-1 U.
+
+        From the paper "fraction-free matrix factors..." by Zhou and Jeffrey
+        """
         n, m = self.lines, self.cols
         U, L, P = self[:,:], eye(n), eye(n)
         DD = zero(n) # store it smarter since it's just diagonal
@@ -782,8 +794,12 @@ class Matrix(object):
             return -1 * self.minorEntry(i, j, method)
 
     def jacobian(self, varlist):
-        # self is a vector of expression representing functions f_i(x_1, ..., x_n)
-        # varlist is the set of x_i's in order
+        """
+        Calculates the Jacobian matrix (derivative of a vectorial function).
+
+        self is a vector of expression representing functions f_i(x_1, ...,
+        x_n).  varlist is the set of x_i's in order.
+        """
         assert self.lines == 1
         m = self.cols
         if isinstance(varlist, Matrix):
@@ -806,9 +822,11 @@ class Matrix(object):
         return J
 
     def QRdecomposition(self):
-        # TODO: still doesn't work for large expressions, there's a bug in an eval somewhere
-        # return Q*R where Q is orthogonal and R is upper triangular
-        # assume full-rank square, for now
+        """
+        Return Q*R where Q is orthogonal and R is upper triangular.
+
+        Assumes full-rank square (for now).
+        """
         assert self.lines == self.cols
         n = self.lines
         Q, R = self.zero(n), self.zero(n)
@@ -825,6 +843,8 @@ class Matrix(object):
             for i in range(j):
                 R[i,j] = Q[:,i].dot(self[:,j])
         return Q,R
+
+    # TODO: QRsolve
 
     # Utility functions
     def simplify(self):
@@ -874,7 +894,7 @@ class Matrix(object):
         return out
 
     def project(self, v):
-        # project ONTO v
+        """Project onto v."""
         return v * (self.dot(v) / v.dot(v))
 
     def permuteBkwd(self, perm):
@@ -890,7 +910,7 @@ class Matrix(object):
         return copy
 
     def delRowCol(self, i, j):
-        #used only for cofactors, makes a copy
+        # used only for cofactors, makes a copy
         M = self[:,:]
         M.row_del(i)
         M.col_del(j)
@@ -902,9 +922,11 @@ class Matrix(object):
         return Matrix(n,m,[S.Zero]*n*m)
 
     def zero(self, n):
+        """Returns a n x n matrix of zeros."""
         return Matrix(n,n,[S.Zero]*n*n)
 
     def eye(self, n):
+        """Returns the identity matrix of size n."""
         tmp = self.zero(n)
         for i in range(tmp.lines):
             tmp[i,i] = S.One
@@ -1214,7 +1236,7 @@ class Matrix(object):
     eigenvals = berkowitz_eigenvals
 
     def eigenvects(self, **flags):
-        # return list of triples (eigenval, multiplicty, basis)
+        """Return list of triples (eigenval, multiplicty, basis)."""
 
         if flags.has_key('multiple'):
             del flags['multiple']
