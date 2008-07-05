@@ -15,9 +15,10 @@ access any SymPy module, or use this contens:
 
 .. toctree::
    :maxdepth: 2
-   :glob:
 
-   modules/*
+   modules/core.txt
+   modules/matrices.txt
+   modules/mpmath/index.txt
 
 Old wiki documentation:
 

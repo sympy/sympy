@@ -20,7 +20,6 @@ Contents:
    tutorial.txt
    guide.txt
    modules.txt
-   mpmath/index.txt
    python-comparisons.txt
    wiki.txt
    sympy-patches-tutorial.txt
