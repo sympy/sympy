@@ -62,7 +62,7 @@ if __name__ == "__main__":
     @example_wrapper
     def ding_dong_surface():
         f = sqrt(1.0-y)*y
-        p[1] = f, [x,0,2*Pi,40], [y,-1,4,100], 'mode=cylindrical; style=solid; color=zfade4'
+        p[1] = f, [x,0,2*pi,40], [y,-1,4,100], 'mode=cylindrical; style=solid; color=zfade4'
 
     @example_wrapper
     def polar_circle():
@@ -90,16 +90,16 @@ if __name__ == "__main__":
     @example_wrapper
     def torus():
         a,b = 1, 0.5 # radius, thickness
-        p[13] = (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x), [x,0,Pi*2,40], [y,0,Pi*2,40]
+        p[13] = (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x), [x,0,pi*2,40], [y,0,pi*2,40]
 
     @example_wrapper
     def warped_torus():
         a,b = 2, 1 # radius, thickness
-        p[13] = (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x)+0.5*sin(4*y), [x,0,Pi*2,40], [y,0,Pi*2,40]
+        p[13] = (a+b*cos(x))*cos(y), (a+b*cos(x))*sin(y), b*sin(x)+0.5*sin(4*y), [x,0,pi*2,40], [y,0,pi*2,40]
 
     @example_wrapper
     def parametric_spiral():
-        p[14] = cos(y), sin(y), y/10.0, [y,-4*Pi,4*Pi,100]
+        p[14] = cos(y), sin(y), y/10.0, [y,-4*pi,4*pi,100]
         p[14].color = x,(0.1,0.9),y,(0.1,0.9),z,(0.1,0.9)
 
     @example_wrapper
