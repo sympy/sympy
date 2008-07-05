@@ -1,6 +1,8 @@
 Matrices (linear algebra)
 =========================
 
+.. module:: sympy.matrices.matrices
+
 Creating Matrices
 -----------------
 
@@ -377,6 +379,5 @@ here one might want to look over the matrices.py file for all functionality.
 
 Matrix Class Reference
 ----------------------
-.. module:: sympy.matrices.matrices
 .. autoclass:: Matrix
    :members:
