@@ -1,0 +1,7 @@
+To make the html documentation, do:
+
+$ make html
+
+and to view it, do:
+
+$ epiphany _build/html/index.html
