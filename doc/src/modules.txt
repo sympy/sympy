@@ -21,15 +21,11 @@ access any SymPy module, or use this contens:
    modules/mpmath/index.txt
    modules/rewriting.txt
    modules/polynomials.txt
+   modules/printing.txt
+   modules/plotting.txt
    modules/geometry.txt
    modules/statistics.txt
    modules/concrete.txt
-
-Old wiki documentation:
-
-* `Plotting Module <http://code.google.com/p/sympy/wiki/PlottingModule>`_
-* `Printing System <http://code.google.com/p/sympy/wiki/PrintingSystem>`_
-* `Pretty Printing <http://code.google.com/p/sympy/wiki/PrettyPrinting>`_
 
 Contributions to docs
 ---------------------

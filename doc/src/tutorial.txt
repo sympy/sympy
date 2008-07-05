@@ -715,6 +715,8 @@ certain things do not show up in the result::
     >>> print (x+1).match(x+2+p) # -1 is not excluded
     {p_: -1}
 
+.. _printing-tutorial:
+
 Printing
 ========
 
@@ -754,6 +756,34 @@ This is a nice ascii-art printing produced by a ``pprint`` function:
     ⎮ x  dx
     ⌡
     >>>
+
+See also the wiki `Pretty Printing
+<http://wiki.sympy.org/wiki/Pretty_Printing>`_ for more examples of a nice
+unicode printing.
+
+Tip: To make the pretty printing default in the python interpreter, use::
+
+    $ python
+    Python 2.5.2 (r252:60911, Jun 25 2008, 17:58:32) 
+    [GCC 4.3.1] on linux2
+    Type "help", "copyright", "credits" or "license" for more information.
+    >>> from sympy import *
+    >>> import sys
+    >>> sys.displayhook = pprint
+    >>> var("x")
+    x
+    >>> x**3/3
+     3
+    x 
+    ──
+    3 
+    >>> Integral(x**2, x)
+    ⌠      
+    ⎮  2   
+    ⎮ x  dx
+    ⌡      
+
+
 
 **Python printing**
 

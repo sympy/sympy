@@ -1,0 +1,97 @@
+Printing System
+===============
+
+See the :ref:`printing-tutorial` section in Tutorial for introduction into
+printing.
+
+This guide documents the printing system in SymPy and how it works
+internally.
+
+Printer Class
+-------------
+
+.. module:: sympy.printing.printer
+
+The main class responsible for printing is ``Printer`` (see also its
+`source code <http://hg.sympy.org/sympy/file/tip/sympy/printing/printer.py>`_):
+
+.. autoclass:: Printer
+    :members: doprint, _print
+
+PrettyPrinter Class
+-------------------
+
+.. module:: sympy.printing.pretty.pretty
+.. module:: sympy.printing.pretty.pretty_symbology
+.. module:: sympy.printing.pretty.pretty_stringpict
+
+Pretty printing subsystem is implemented in ``sympy.printing.pretty.pretty`` by
+the ``PrettyPrinter`` class deriving from ``Printer``.  It relies on modules
+``sympy.printing.pretty.stringPict``, and
+``sympy.printing.pretty.pretty_symbology`` for rendering nice-looking formulas.
+
+The module ``stringPict`` provides a base class ``stringPict`` and a derived
+class ``prettyForm`` that ease the creation and manipulation of formulas that
+span across multiple lines.
+
+The module ``pretty_symbology`` provides primitives to construct 2D shapes
+(hline, vline, etc) together with a technique to use unicode automatically when
+possible.
+
+MathMLPrinter
+-------------
+
+.. module:: sympy.printing.mathml
+
+This class is responsible for MathML printing. See ``sympy.printing.mathml``.
+
+More info on mathml content: http://www.w3.org/TR/MathML2/chapter4.html
+
+LatexPrinter
+------------
+
+.. module:: sympy.printing.latex
+
+This class implements LaTeX printing. See ``sympy.printing.latex``.
+
+Gtk
+---
+
+.. module:: sympy.printing.gtk
+
+You can print to a grkmathview widget using the function print_gtk located in
+sympy.printing.gtk (it requires to have installed gtkmatmatview and
+libgtkmathview-bin in some systems).
+
+GtkMathView accepts MathML, so this rendering depends on the mathml representation of the expression
+
+Usage::
+
+    from sympy import *
+    print_gtk(x**2 + 2*exp(x**3))
+
+PythonPrinter
+-------------
+
+.. module:: sympy.printing.python
+
+This class implements Python printing. Usage::
+
+    In [1]: print_python(5*x**3 + sin(x))
+    x = Symbol('x')
+    e = sin(x) + 5*x**3
+
+Preview
+-------
+
+Useful function is ``preview``:
+
+.. module:: sympy.printing.preview
+
+.. autofunction:: preview
+
+And convenience functions:
+
+.. autofunction:: pngview
+.. autofunction:: pdfview
+.. autofunction:: dviview
