@@ -6,7 +6,7 @@ RST2HTML     = rst2html
 SPHINXOPTS   =
 SPHINXVER    = 0.4
 SPHINXBUILDpy  = sphinx/Sphinx-$(SPHINXVER)/sphinx-build.py
-SPHINXBUILD  = python $(SPHINXBUILDpy)
+SPHINXBUILD  = PYTHONPATH=.. python $(SPHINXBUILDpy)
 PAPER        =
 
 ALLSPHINXOPTS = -d _build/doctrees -D latex_paper_size=$(PAPER) \
@@ -29,8 +29,6 @@ help:
 clean:
 	-rm -rf _build
 	-rm -rf sphinx
-	-rm -f src/modules/sympy*.txt
-	-rm -f api/modules/sympy*.txt
 
 $(SPHINXBUILDpy):
 	rm -rf sphinx
