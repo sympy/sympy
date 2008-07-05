@@ -10,9 +10,6 @@ and read the tests for it, that will tell you everything you need to know.
 Most of the things are already documented though in this document, that is
 automatically generated using SymPy's docstrings.
 
-Modules User's Guide and Reference
-----------------------------------
-
 Click the  "modules" (:ref:`modindex`) link in the top right corner to easily
 access any SymPy module, or use this contens:
 
