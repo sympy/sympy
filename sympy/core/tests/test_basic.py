@@ -4,7 +4,7 @@ from sympy import Basic, S, Symbol, Real, Integer, Rational,  \
 
 import py
 
-class DummyNumber():
+class DummyNumber(object):
     """
     Minimal implementation of a number that works with SymPy.
 
