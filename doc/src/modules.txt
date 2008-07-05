@@ -19,10 +19,10 @@ access any SymPy module, or use this contens:
    modules/core.txt
    modules/matrices.txt
    modules/mpmath/index.txt
+   modules/geometry.txt
 
 Old wiki documentation:
 
-* `Geometry Module <http://code.google.com/p/sympy/wiki/GeometryModule>`_
 * `Plotting Module <http://code.google.com/p/sympy/wiki/PlottingModule>`_
 * `Concrete Mathematics Module <http://code.google.com/p/sympy/wiki/ConcreteMathAndTermRewriting>`_
 * `Polynomials Module <http://code.google.com/p/sympy/wiki/PolynomialsTutorial>`_
