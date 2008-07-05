@@ -98,41 +98,59 @@ class Matrix(object):
             raise IndexError("Index out of range: a[%s]"%repr(key))
         return i,j
 
-    def __getattr__(self,name):
+    def transpose(self):
         """
+        Matrix transposition.
+
         >>> from sympy import *
         >>> m=Matrix(((1,2+I),(3,4)))
         >>> m  #doctest: +NORMALIZE_WHITESPACE
         [1, 2 + I]
         [3,     4]
-        >>> m.T #doctest: +NORMALIZE_WHITESPACE
+        >>> m.transpose() #doctest: +NORMALIZE_WHITESPACE
         [    1, 3]
         [2 + I, 4]
+        >>> m.T == m.transpose()
+        True
+        """
+        a = [0]*self.cols*self.lines
+        for i in xrange(self.cols):
+            a[i*self.lines:(i+1)*self.lines] = self.mat[i::self.cols]
+        return Matrix(self.cols,self.lines,a)
+
+    T = property(transpose,None,None,"Matrix transposition.")
+
+    def conjugate(self):
+        """By-element conjugation."""
+        out = Matrix(self.lines,self.cols,
+                lambda i,j: self[i,j].conjugate())
+        return out
+
+    C = property(conjugate,None,None,"By-element conjugation.")
+
+    @property
+    def H(self):
+        """
+        Hermite conjugation.
+
+        >>> from sympy import *
+        >>> m=Matrix(((1,2+I),(3,4)))
+        >>> m  #doctest: +NORMALIZE_WHITESPACE
+        [1, 2 + I]
+        [3,     4]
         >>> m.H #doctest: +NORMALIZE_WHITESPACE
         [    1, 3]
         [2 - I, 4]
         """
-        if name == "T":
-            a = [0]*self.cols*self.lines
-            for i in xrange(self.cols):
-                a[i*self.lines:(i+1)*self.lines] = self.mat[i::self.cols]
-            return Matrix(self.cols,self.lines,a)
-        if name == "C":
-            #by-element conjugation
-            out = Matrix(self.lines,self.cols,
-                    lambda i,j: self[i,j].conjugate())
-            return out
-        if name == "H":
-            #hermite conjugation
-            out = self.T.C
-            return out
-        if name == "D":
-            #dirac conjugation
-            from sympy.physics.matrices import mgamma
-            out = self.H * mgamma(0)
-            return out
-        raise AttributeError("'%s' object has no attribute '%s'"%
-                (self.__class__.__name__, name))
+        out = self.T.C
+        return out
+
+    @property
+    def D(self):
+        """Dirac conjugation."""
+        from sympy.physics.matrices import mgamma
+        out = self.H * mgamma(0)
+        return out
 
     def __getitem__(self,key):
         """

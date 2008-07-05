@@ -757,6 +757,7 @@ def test_transpose():
                             [9,9],
                             [0,0] ])
     assert M.T.T == M
+    assert M.T == M.transpose()
 
 def test_conjugate():
     M = Matrix([ [0,I,5],
@@ -768,6 +769,7 @@ def test_conjugate():
 
     assert M.C == Matrix([ [0,-I,5],
                            [1,2,0]])
+    assert M.C == M.conjugate()
 
     assert M.H == M.T.C
     assert M.H == Matrix([ [0,1],
