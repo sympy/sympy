@@ -508,9 +508,9 @@ class Basic(AssumeMeths):
         """
         The top-level function in an expression.
 
-        The following should hold for all objects:
+        The following should hold for all objects::
 
-        >>> x == x.func(*x.args)
+            >> x == x.func(*x.args)
 
         """
         return self.__class__
