@@ -129,11 +129,11 @@ def test_sympifyit():
     py.test.raises(SympifyError, "add_raises(x, '1')")
 
 def test_int_float():
-    class F1_1():
+    class F1_1(object):
         def __float__(self):
             return 1.1
 
-    class F1_1b():
+    class F1_1b(object):
         """
         This class is still a float, even though it also implements __int__().
         """
@@ -143,7 +143,7 @@ def test_int_float():
         def __int__(self):
             return 1
 
-    class F1_1c():
+    class F1_1c(object):
         """
         This class is still a float, because it implements _sympy_()
         """
@@ -156,11 +156,11 @@ def test_int_float():
         def _sympy_(self):
             return Real(1.1)
 
-    class I5():
+    class I5(object):
         def __int__(self):
             return 5
 
-    class I5b():
+    class I5b(object):
         """
         This class implements both __int__() and __float__(), so it will be
         treated as Real in SymPy. One could change this behavior, by using
@@ -175,7 +175,7 @@ def test_int_float():
         def __int__(self):
             return 5
 
-    class I5c():
+    class I5c(object):
         """
         This class implements both __int__() and __float__(), but also
         a _sympy_() method, so it will be Integer.

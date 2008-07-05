@@ -855,16 +855,16 @@ def test_issue851():
     assert m != b
 
 def test_issue882():
-    class Int1():
+    class Int1(object):
         def __int__(self):
             return 1
-    class Int2():
+    class Int2(object):
         def __int__(self):
             return 2
-    class Index1():
+    class Index1(object):
         def __index__(self):
             return 1
-    class Index2():
+    class Index2(object):
         def __index__(self):
             return 2
     int1 = Int1()
