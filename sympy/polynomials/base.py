@@ -31,7 +31,6 @@ class Polynomial(Basic):
     """Unified representation of all kinds of polynomials.
 
     Usage:
-    ======
         Most of the time, the Polynomial instances are created of a
         SymPy expression, which is a polynomial.
 
@@ -63,7 +62,6 @@ class Polynomial(Basic):
         f.coeffs , f.var and f.order hold the respective arguments.
 
     Notes:
-    ======
         Computes the coefficients with the exponents in sparse
         representation for faster arithmetic and leading terms etc.
         Tries to be compatible with other SymPy expressions, for
@@ -71,7 +69,6 @@ class Polynomial(Basic):
         underlying SymPy expression.
 
     Examples:
-    =========
         >>> x, y = symbols('xy')
         >>> f = Polynomial(x + 1)
         >>> f.sympy_expr
@@ -408,12 +405,10 @@ class Polynomial(Basic):
         """Evaluate the polynomial function at a specific point.
 
         Usage:
-        ======
             Give an arbitrary argument for each variable and get the
             SymPy expression with the variables substituted.
 
         Examples:
-        =========
             >>> x, y = symbols('xy')
             >>> f = Polynomial(2*x - y)
             >>> f(1, 7)
@@ -435,7 +430,6 @@ class Polynomial(Basic):
         """Return the polynomial with integer coefficients.
 
         Usage:
-        ======
             Starting from an instance of Polynomial with only rational
             coefficients, this function multiplies it with the common
             denominator. The result is a tuple consisting of the
@@ -443,7 +437,6 @@ class Polynomial(Basic):
             Polynomial in the integers.
 
         Example:
-        ========
             >>> x, y = symbols('xy')
             >>> f = Polynomial(x/6 + y/4 + x*y/3)
             >>> denominator, f = f.as_integer()
@@ -481,13 +474,11 @@ class Polynomial(Basic):
         """Return the polynomial with leading coefficient 1.
 
         Usage:
-        ======
             Starting with any instance of Polynomial, this returns the
             former leading coefficient and a new Polynomial which is
             monic.
 
         Examples:
-        =========
             >>> x, y = symbols('xy')
             >>> f = Polynomial(x/2 + y/4 + x*y/3)
             >>> leadcoeff, f = f.as_monic()
@@ -522,7 +513,6 @@ class Polynomial(Basic):
         """Return the content and a primitive Polynomial.
 
         Usage:
-        ======
             Starting with any instance of Polynomial, this returns the
             content, that is, the greatest common divisor of the
             (integer-or-symbolic) coefficients, and a new Polynomial which is
@@ -530,7 +520,6 @@ class Polynomial(Basic):
             coefficients.
 
         Examples:
-        =========
             >>> x, y = symbols('xy')
             >>> f = Polynomial(6*x + 20*y + 4*x*y)
             >>> content, f = f.as_primitive()
@@ -569,12 +558,10 @@ class Polynomial(Basic):
         """Return the content of a Polynomial.
 
         Usage:
-        ======
             Returns the content, that is, the positive greatest common
             divisor of the (integer-or-symbolic) coefficients.
 
         Examples:
-        =========
             >>> x, y = symbols('xy')
             >>> f = Polynomial(6*x + 20*y + 4*x*y)
             >>> f.content()
@@ -609,12 +596,10 @@ class Polynomial(Basic):
         """Derivative of a Polynomial.
 
         Usage:
-        ======
             Returns a new instance of Polynomial which is the partial
             derivative by the given variable.
 
         Examples:
-        =========
             >>> x, y, z = symbols('xyz')
             >>> f = Polynomial(6*x + 20*y + 4*x*y)
             >>> fx = f.diff(x)
@@ -648,13 +633,11 @@ class Polynomial(Basic):
         """Primitive function of a Polynomial.
 
         Usage:
-        ======
             Returns a new instance of Polynomial which is the primitive
             function (antiderivative) of "self" with respect to the given
             variable.
 
         Examples:
-        =========
             >>> x, y, z = symbols('xyz')
             >>> f = Polynomial(6*x + 20*y + 4*x*y)
             >>> fx = f.integrate(x)
@@ -700,13 +683,11 @@ class Polynomial(Basic):
         """Return the leading coefficient of a Polynomial.
 
         Usage:
-        ======
             This gives the coefficient, that is, non-symbolic part, of
             the leading term, according to the monomial order, or
             simply highest degree, in the univariate case.
 
         Examples:
-        =========
             >>> x, y = symbols('xy')
             >>> f = Polynomial(6*x + 20*y + 4*x*y)
             >>> f.leading_coeff()
@@ -723,12 +704,10 @@ class Polynomial(Basic):
         """Return the leading term of a Polynomial.
 
         Usage:
-        ======
             The leading term, according to the monomial order, or
             simply highest degree, in the univariate case.
 
         Examples:
-        =========
             >>> x, y = symbols('xy')
             >>> f = Polynomial(6*x + 20*y + 4*x*y)
             >>> print f.leading_term()
@@ -746,12 +725,10 @@ class Polynomial(Basic):
         """Return a specific coefficient of a Polynomial.
 
         Usage:
-        ======
             This gives the coefficient, that is, non-symbolic part, of
             the term with matching exponents, or 0, if it doesn't appear.
 
         Examples:
-        =========
             >>> x, y = symbols('xy')
             >>> f = Polynomial(6*x + 20*y + 4*x*y)
             >>> f.nth_coeff(1, 0)
@@ -781,7 +758,6 @@ def sympy2coefficients(sympy_expr, var, order):
     """Return the tuple of coefficients and exponents.
 
     Usage:
-    ======
         This functions computes the tuples of coefficients and
         exponents from a given SymPy expression. This expression is
         assumed to be expanded already. The arguments 'var' and
@@ -792,7 +768,6 @@ def sympy2coefficients(sympy_expr, var, order):
         is rather used within the Polynomial class.
 
     Examples:
-    =========
         >>> x, y = symbols('xy')
         >>> sympy2coefficients(2*x + 3, [x], 'lex')
         ((2, 1), (3, 0))
@@ -851,7 +826,6 @@ def coefficients2sympy(coeffs, var):
     """Return the SymPy expression of given coefficients and exponents.
 
     Usage:
-    ======
         This functions computes the original SymPy expression from the
         tuples of coefficients and exponents. The argument 'var'
         defines the occuring variables.
@@ -860,7 +834,6 @@ def coefficients2sympy(coeffs, var):
         is rather used within the Polynomial class.
 
     Examples:
-    =========
         >>> x, y = symbols('xy')
         >>> coefficients2sympy(((2, 1), (3, 0)), [x])
         3 + 2*x
