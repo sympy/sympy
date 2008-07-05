@@ -63,7 +63,7 @@ class Printer(object):
                 Rational
 
            then, for expr=Rational(...), in order to dispatch, we will try
-           calling printer methods as shown in the figure below:
+           calling printer methods as shown in the figure below::
 
                p._print(expr)
                |

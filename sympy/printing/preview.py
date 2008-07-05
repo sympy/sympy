@@ -20,29 +20,29 @@ def preview(expr, output='ps', viewer=None, euler=True):
        book). If you prefer default AMS fonts or your system lacks
        'eulervm' LaTeX package then unset 'euler' keyword argument.
 
-       To use viewer auto-detection, lets say for 'png' output, issue:
+       To use viewer auto-detection, lets say for 'png' output, issue::
 
-       >> from sympy import *
-       >> x, y = symbols("xy")
+           >> from sympy import *
+           >> x, y = symbols("xy")
 
-       >> preview(x + y, output='png')
+           >> preview(x + y, output='png')
 
-       This will choose 'pyglet by default. To select different one:
+       This will choose 'pyglet by default. To select different one::
 
-       >> preview(x + y, output='png', viewer='gimp')
+           >> preview(x + y, output='png', viewer='gimp')
 
        The 'png' format is considered special. For all other formats
        the rules are sligtly different. As an example we will take
-       'dvi' output format. If you would run:
+       'dvi' output format. If you would run::
 
-       >> preview(x + y, output='dvi')
+           >> preview(x + y, output='dvi')
 
        then 'view' will look for available 'dvi' viewers on your
        system (predefined in the function, so it will try evince,
        first, then kdvi and xdvi). If nothing is found you will
-       need to set the viewer explicitely:
+       need to set the viewer explicitely::
 
-       >> preview(x + y, output='dvi', viewer='superior-dvi-viwer')
+           >> preview(x + y, output='dvi', viewer='superior-dvi-viwer')
 
        This will skip auto-dection and will run user specified
        'superior-dvi-viwer'. If 'view' fails to find it on
@@ -201,10 +201,25 @@ def preview(expr, output='ps', viewer=None, euler=True):
 view = preview
 
 def pngview(expr, viewer=None, euler=True):
+    """Calls preview(expr, output="png", ...)
+
+    This is a convenience function. See the docstring of preview for more
+    information.
+    """
     return preview(expr, output="png", viewer=viewer, euler=euler)
 
 def pdfview(expr, viewer=None, euler=True):
+    """Calls preview(expr, output="pdf", ...)
+
+    This is a convenience function. See the docstring of preview for more
+    information.
+    """
     return preview(expr, output="pdf", viewer=viewer, euler=euler)
 
 def dviview(expr, viewer=None, euler=True):
+    """Calls preview(expr, output="dvi", ...)
+
+    This is a convenience function. See the docstring of preview for more
+    information.
+    """
     return preview(expr, output="dvi", viewer=viewer, euler=euler)
