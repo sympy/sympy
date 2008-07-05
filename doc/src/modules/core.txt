@@ -1,0 +1,20 @@
+SymPy Core
+==========
+
+Basic
+-----
+.. module:: sympy.core.basic
+.. autoclass:: Basic
+   :members:
+
+Symbol
+------
+.. module:: sympy.core.symbol
+.. autoclass:: Symbol
+   :members:
+
+Add
+---
+.. module:: sympy.core.add
+.. autoclass:: Add
+   :members:

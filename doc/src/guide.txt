@@ -1,3 +1,5 @@
+.. _guide:
+
 ==================
 SymPy User's Guide
 ==================
@@ -12,6 +14,7 @@ through it, now
 it's time to learn how SymPy works internally and this is what this guide is
 about. Once you grasp the idea behind SymPy, you will be able to use it
 effectively and also know how to extend it and fix it.
+You may also be just interested in :ref:`SymPy Modules Reference <module-docs>`.
 
 Learning SymPy
 ==============
@@ -508,5 +511,5 @@ how to get your life easier and get started with SymPy.
 Improving the docs
 ------------------
 
-Please see :ref:`the documentatoin <module-docs>` how to fix and improve
+Please see :ref:`the documentation <module-docs>` how to fix and improve
 SymPy's documentation. All contribution is very welcome.

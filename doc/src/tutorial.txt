@@ -841,12 +841,12 @@ printing methods available trough this module are:
 
 * ``print_gtk(expr)``: Print ``expr`` to `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_, a GTK widget that displays MathML code. The `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_ program is required.
 
-Modules
-=======
+Further documentation
+=====================
 
-The following list provides links to documentation for some of the various modules SymPy offers:
-
-.. include:: modules-list.txt
+Now it's time to learn more about SymPy. Go through the
+:ref:`SymPy User's Guide <guide>` and
+:ref:`SymPy Modules Reference <module-docs>`.
 
 Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/>`_,
 that contains a lot of useful examples, tutorials, cookbooks that we and our

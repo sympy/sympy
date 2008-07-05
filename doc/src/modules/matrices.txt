@@ -1,0 +1,8 @@
+Matrices
+========
+
+Matrix
+------
+.. module:: sympy.matrices.matrices
+.. autoclass:: Matrix
+   :members:
