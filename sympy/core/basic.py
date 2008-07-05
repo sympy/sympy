@@ -150,8 +150,7 @@ class Basic(AssumeMeths):
     """
     Base class for all objects in sympy.
 
-    Conventions
-    ===========
+    Conventions:
 
     1)
     When you want to access parameters of some instance, always use .args:
@@ -386,18 +385,20 @@ class Basic(AssumeMeths):
         """
         Set the representation level used for repr() printing,
         returning the current level. The available levels are:
-            0: Lowest level printing. Expressions printing should be
-               be able to be evaluated through Python's eval()
-               function
-            1: Higher level printing. Expressions are printed in a
-               one-dimensional fashion, are easier to read than
-               level 1, but cannot be parsed through eval()
-            2: Highest level printing. Expressions are simply
-               two-dimensional, "pretty" versions of the expressions
-               that are only useful for readability purposes.
+
+        flag == 0:
+            Lowest level printing. Expressions printing should be be able to be
+            evaluated through Python's eval() function
+        flag == 1:
+            Higher level printing. Expressions are printed in a one-dimensional
+            fashion, are easier to read than level 1, but cannot be parsed
+            through eval()
+        flag == 2:
+            Highest level printing. Expressions are simply two-dimensional,
+            "pretty" versions of the expressions that are only useful for
+            readability purposes.
 
         Notes:
-        ======
             - Level 2 printing is done through the printing module in
               smpy.printing.pretty.
         """
@@ -509,7 +510,7 @@ class Basic(AssumeMeths):
 
         The following should hold for all objects:
 
-            x = x.func(*x.args)
+        >>> x == x.func(*x.args)
 
         """
         return self.__class__
@@ -518,8 +519,7 @@ class Basic(AssumeMeths):
     def args(self):
         """Returns a tuple of arguments of "self".
 
-        Example
-        -------
+        Example:
 
         >>> from sympy import symbols, cot
         >>> x, y = symbols('xy')
@@ -1004,12 +1004,11 @@ class Basic(AssumeMeths):
         return pattern.matches(self, {})
 
     def solve4linearsymbol(eqn, rhs, symbols = None):
-        """ Solve equation
-          eqn == rhs
-        with respect to some linear symbol in eqn.
-        Returns (symbol, solution). If eqn is nonlinear
-        with respect to all symbols, then return
-        trivial solution (eqn, rhs).
+        """
+        Solve equation "eqn == rhs" with respect to some linear symbol in eqn.
+
+        Returns (symbol, solution). If eqn is nonlinear with respect to all
+        symbols, then return trivial solution (eqn, rhs).
         """
         if eqn.is_Symbol:
             return (eqn, rhs)
@@ -1494,8 +1493,7 @@ class Basic(AssumeMeths):
         """
         Series expansion of "self" around "point".
 
-        Usage
-        =====
+        Usage:
             Returns the Taylor (Laurent or generalized) series of "self" around
             the point "point" (default 0) with respect to "x" until the n-th
             term (default n is 6).
@@ -1503,8 +1501,7 @@ class Basic(AssumeMeths):
             with_order .... if False, the order term (see the class Order) is
                 not appended
 
-        Notes
-        =====
+        Notes:
             This method is the most high level method and it returns the
             series including the O(x**n) term.
 
