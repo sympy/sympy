@@ -5,9 +5,11 @@
 Welcome to SymPy's documentation!
 =================================
 
+`SymPy <http://sympy.org>`_ is a Python library for symbolic mathematics.
+If you are new to SymPy, start with the Tutorial.
+
 This is the central page for all SymPy's documentation.
 
-If you are new to SymPy, start with the Tutorial.
 
 Contents:
 
