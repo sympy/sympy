@@ -16,8 +16,10 @@ entirely in Python and does not require any external libraries.
 
 This tutorial gives an overview and introduction to SymPy.
 Read this to have an idea what SymPy can do for you (and how) and if you want
-to know more, read the `API <http://sympy.googlecode.com/svn/api/sympy.html>`_
-documentation (that is generated from the sources) or the `sources
+to know more, read the
+:ref:`SymPy User's Guide <guide>`,
+:ref:`SymPy Modules Reference <module-docs>`.
+or the `sources
 <http://hg.sympy.org/sympy/file/tip>`_ directly.
 
 First Steps with SymPy
