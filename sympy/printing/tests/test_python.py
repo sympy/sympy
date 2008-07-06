@@ -48,7 +48,10 @@ def test_python_basic():
 
     # Check for proper placement of negative sign
     assert python(-5*x/(x+10)) == "x = Symbol('x')\ne = -5*x/(10 + x)"
-    assert python(1 - Rational(3,2)*(x+1)) == "x = Symbol('x')\ne = (-1/2) - 3/2*x"
+    assert python(1 - Rational(3,2)*(x+1)) in [
+            "x = Symbol('x')\ne = (-1/2) - 3/2*x",
+            "x = Symbol('x')\ne = -1/2 - 3/2*x",
+            ]
 
 def test_python_relational():
     assert python(Eq(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x == y"
