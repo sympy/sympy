@@ -75,50 +75,6 @@ patches.
 .. _sympy@googlecode.com:   http://groups.google.com/group/sympy
 .. _sympy-patches@googlecode.com:   http://groups.google.com/group/sympy-patches
 
-The patch will then be reviewed. What if you have to improve the patch as the
-result of the review? Import it to MQ:
-
-.. parsed-literal::
-
-    $ :input:`hg qimport -r tip`
-
-Change some files:
-
-.. parsed-literal::
-
-    $ :input:`vim sympy/matrices/matrices.py`
-
-Check your improvements:
-
-.. parsed-literal::
-
-    $ :input:`hg di`
-    diff --git a/sympy/matrices/matrices.py b/sympy/matrices/matrices.py
-    --- a/sympy/matrices/matrices.py
-    +++ b/sympy/matrices/matrices.py
-    @@ -23,7 +23,7 @@ class _MatrixAsBasic(Basic):
-         So for common functionality implemented in Basic, we have to provide this
-         proxy.
-     
-    -    see the issue #420
-    +    See the issue #420.
-     """
-         def __init__(self, m):
-             self.m = m
-
-Refresh the patch:
-
-.. parsed-literal::
-
-    $ :input:`hg qrefresh`
-
-Optionally convert it back to a regular commit:
-
-.. parsed-literal::
-
-    $ :input:`hg qdelete -r tip`
-
-And send it for a review again.
 
 Workflow
 ========
