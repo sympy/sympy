@@ -11,7 +11,8 @@ __all__ = ["mpnumeric", "mpf", "mpc", "pi", "e", "ln2", "ln10",
   "ldexp", "fraction", "nstr", "nprint", "mp", "extraprec",
   "extradps", "workprec", "workdps", "eps", "convert_lossless", "make_mpf",
   "make_mpc", "sec", "csc", "cot", "sech", "csch", "coth",
-  "asec", "acsc", "acot", "asech", "acsch", "acoth", "arange"]
+  "asec", "acsc", "acot", "asech", "acsch", "acoth", "arange",
+  "ln", "log10", "frexp", "radians", "degrees", "modf"]
 
 from lib import *
 from libmpc import *
@@ -236,7 +237,7 @@ class mpf(mpnumeric):
                 return make_mpf(from_man_exp(val[0], val[1], gp, gr))
             if len(val) == 4:
                 sign, man, exp, bc = val
-                return make_mpf(normalize(sign, MPBASE(man), exp, bc, gp, gr))
+                return make_mpf(normalize(sign, MP_BASE(man), exp, bc, gp, gr))
             raise ValueError
         else:
             return make_mpf(fpos(mpf_convert_arg(val), gp, gr))
@@ -617,7 +618,7 @@ degree = constant(fdegree, "degree")
 e = constant(fe, "e")
 ln2 = constant(flog2, "log 2")
 ln10 = constant(flog10, "log 10")
-eps = constant(lambda p, r: (0, ONE, -p+1, 1), "epsilon of working precision")
+eps = constant(lambda p, r: (0, MP_ONE, -p+1, 1), "epsilon of working precision")
 
 def fraction(p, q):
     """Given Python integers p, q, return a lazy mpf with value p/q.
@@ -739,6 +740,13 @@ def ldexp(x, n):
     x = convert_lossless(x)
     return make_mpf(fshift(x._mpf_, n))
 
+def frexp(x):
+    """Convert x to a scaled number y in the range [0.5, 1). Returns
+    (y, n) such that x = y * 2**n. No rounding is performed."""
+    x = convert_lossless(x)
+    y, n = mpf_frexp(x._mpf_)
+    return make_mpf(y), n
+
 @extraprec(5)
 def arg(x):
     """Returns the complex argument (phase) of x. The returned value is
@@ -763,9 +771,27 @@ def log(x, b=None):
         return +a
     return ln(x)
 
+def log10(x):
+    """Base-10 logarithm. Equivalent to log(x,10)."""
+    return log(x,10)
+
 def power(x, y):
-    """Returns x**y = exp(y*log(x)) for real or complex x and y."""
+    """Converts x and y to mpf or mpc and returns x**y = exp(y*log(x))."""
     return convert_lossless(x) ** convert_lossless(y)
+
+def modf(x,y):
+    """Converts x and y to mpf or mpc and returns x % y"""
+    x = convert_lossless(x)
+    y = convert_lossless(y)
+    return x % y
+
+def degrees(x):
+    """Convert x given in radians to degrees"""
+    return x / degree
+
+def radians(x):
+    """Convert x given in degrees to radians"""
+    return x * degree
 
 def atan2(y,x):
     """atan2(y, x) has the same magnitude as atan(y/x) but accounts for

@@ -90,32 +90,32 @@ def mpc_mul((a, b), (c, d), prec, rnd=round_fast):
     pman = aman * cman
     pexp = aexp + cexp
     pbc = abc + cbc - 4
-    if pbc < 4: pbc = bct[pman]
-    else:       pbc += bct[pman>>pbc]
+    if pbc < 4: pbc = bct[int(pman)]
+    else:       pbc += bct[int(pman>>pbc)]
     p = psign, pman, pexp, pbc
 
     qsign = (bsign ^ dsign) ^ 1
     qman = bman * dman
     qexp = bexp + dexp
     qbc = bbc + dbc - 4
-    if qbc < 4: qbc = bct[qman]
-    else:       qbc += bct[qman>>qbc]
+    if qbc < 4: qbc = bct[int(qman)]
+    else:       qbc += bct[int(qman>>qbc)]
     q = qsign, qman, qexp, qbc
 
     rsign = bsign ^ csign
     rman = bman * cman
     rexp = bexp + cexp
     rbc = bbc + cbc - 4
-    if rbc < 4: rbc = bct[rman]
-    else:       rbc += bct[rman>>rbc]
+    if rbc < 4: rbc = bct[int(rman)]
+    else:       rbc += bct[int(rman>>rbc)]
     r = rsign, rman, rexp, rbc
 
     ssign = asign ^ dsign
     sman = aman * dman
     sexp = aexp + dexp
     sbc = abc + dbc - 4
-    if sbc < 4: sbc = bct[sman]
-    else:       sbc += bct[sman>>sbc]
+    if sbc < 4: sbc = bct[int(sman)]
+    else:       sbc += bct[int(sman>>sbc)]
     s = ssign, sman, sexp, sbc
 
     return fadd(p, q, prec, rnd), fadd(r, s, prec, rnd)
@@ -194,8 +194,8 @@ def mpc_pow_int(z, n, prec, rnd=round_fast):
             bman <<= (-de)
             bexp = aexp
         re, im = complex_int_pow(aman, bman, n)
-        re = from_man_exp(re, n*aexp, prec, rnd)
-        im = from_man_exp(im, n*bexp, prec, rnd)
+        re = from_man_exp(re, int(n*aexp), prec, rnd)
+        im = from_man_exp(im, int(n*bexp), prec, rnd)
         return re, im
     return mpc_exp(mpc_mul_int(mpc_log(z, prec+10), n, prec+10), prec, rnd)
 

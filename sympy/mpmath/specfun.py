@@ -22,7 +22,7 @@ __docformat__ = 'plaintext'
 def phi_fixed(prec):
     prec += 10
     sqrt = [sqrt_fixed2, sqrt_fixed][prec < 20000]
-    a = sqrt(5<<prec, prec) + (1 << prec)
+    a = sqrt(MP_FIVE<<prec, prec) + (MP_ONE << prec)
     return a >> 11
 
 # Catalan's constant is computed using Lupas's rapidly convergent series
@@ -38,8 +38,8 @@ def phi_fixed(prec):
 @constant_memo
 def catalan_fixed(prec):
     prec = prec + 20
-    a = one = ONE << prec
-    s, t, n = ZERO, ONE, 1
+    a = one = MP_ONE << prec
+    s, t, n = 0, 1, 1
     while t:
         a *= 32 * n**3 * (2*n-1)
         a //= (3-16*n+16*n**2)**2
@@ -67,9 +67,9 @@ def euler_fixed(prec):
     prec += 30
     # choose p such that exp(-4*(2**p)) < 2**-n
     p = int(math.log((prec/4) * math.log(2), 2)) + 1
-    n = ONE<<p
-    r = one = ONE<<prec
-    H, A, B, npow, k, d = 0, 0, 0, 1, 1, 1
+    n = MP_ONE<<p
+    r = one = MP_ONE<<prec
+    H, A, B, npow, k, d = MP_ZERO, MP_ZERO, MP_ZERO, 1, 1, 1
     while r:
         A += (r * H) >> prec
         B += r
@@ -217,10 +217,10 @@ def glaisher_fixed(prec):
 @constant_memo
 def apery_fixed(prec):
     prec += 20
-    d = ONE << prec
-    term = 77 << prec
+    d = MP_ONE << prec
+    term = MP_BASE(77) << prec
     n = 1
-    s = ZERO
+    s = MP_ZERO
     while term:
         s += term
         d *= (n**10)
@@ -554,9 +554,9 @@ d_cache = {}
 def zeta_coefs(n):
     if n in d_cache:
         return d_cache[n]
-    ds = [ZERO] * (n+1)
-    d = ONE
-    s = ds[0] = ONE
+    ds = [MP_ZERO] * (n+1)
+    d = MP_ONE
+    s = ds[0] = MP_ONE
     for i in range(1, n+1):
         d = d * 4 * (n+i-1) * (n-i+1)
         d //= ((2*i) * ((2*i)-1))
@@ -633,13 +633,13 @@ def bernoulli_range():
     rounding = mp.rounding[0]
     prec = oprec + 30
     computed = {0:fone}
-    m, bin1, bin = 2, MPBASE(1), MPBASE(10)
+    m, bin1, bin = 2, MP_ONE, MP_BASE(10)
     f3 = from_int(3)
     f6 = from_int(6)
     while 1:
         case = m % 6
         s = fzero
-        if m < 6: a = ZERO
+        if m < 6: a = MP_ZERO
         else:     a = bin1
         for j in xrange(1, m//6+1):
             s = fadd(s, fmuli(computed[m-6*j], a, prec), prec)
@@ -709,15 +709,15 @@ def hypsum(ar, af, ac, br, bf, bc, x):
 
     if isinstance(x, mpf):
         x = to_fixed(x._mpf_, wp)
-        y = ZERO
+        y = MP_ZERO
     else:
         have_complex = 1
         x, y = x._mpc_
         x = to_fixed(x, wp)
         y = to_fixed(y, wp)
 
-    sre = pre = one = ONE << wp
-    sim = pim = ZERO
+    sre = pre = one = MP_ONE << wp
+    sim = pim = MP_ZERO
 
     n = 1
 
@@ -838,7 +838,7 @@ def sum_hyp0f1_rat((bp, bq), x):
     wp = prec + 25
     if isinstance(x, mpf):
         x = to_fixed(x._mpf_, wp)
-        s = p = ONE << wp
+        s = p = MP_ONE << wp
         n = 1
         while 1:
             p = (p * (bq*x) // (n*bp)) >> wp
@@ -851,8 +851,8 @@ def sum_hyp0f1_rat((bp, bq), x):
         zre, zim = x._mpc_
         zre = to_fixed(zre, wp)
         zim = to_fixed(zim, wp)
-        sre = pre = ONE << wp
-        sim = pim = ZERO
+        sre = pre = MP_ONE << wp
+        sim = pim = MP_ZERO
         n = 1
         while 1:
             r1 = bq
@@ -875,7 +875,7 @@ def sum_hyp1f1_rat((ap, aq), (bp, bq), x):
     wp = prec + 25
     if isinstance(x, mpf):
         x = to_fixed(x._mpf_, wp)
-        s = p = ONE << wp
+        s = p = MP_ONE << wp
         n = 1
         while 1:
             p = (p * (ap*bq*x) // (n*aq*bp)) >> wp
@@ -888,8 +888,8 @@ def sum_hyp1f1_rat((ap, aq), (bp, bq), x):
         zre, zim = x._mpc_
         zre = to_fixed(zre, wp)
         zim = to_fixed(zim, wp)
-        sre = pre = ONE << wp
-        sim = pim = ZERO
+        sre = pre = MP_ONE << wp
+        sim = pim = MP_ZERO
         n = 1
         while 1:
             r1 = ap*bq
@@ -911,7 +911,7 @@ def sum_hyp2f1_rat((ap, aq), (bp, bq), (cp, cq), x):
     wp = prec + 25
     if isinstance(x, mpf):
         x = to_fixed(x._mpf_, wp)
-        s = p = ONE << wp
+        s = p = MP_ONE << wp
         n = 1
         while 1:
             p = (p * (ap*bp*cq*x) // (n*aq*bq*cp)) >> wp
@@ -924,8 +924,8 @@ def sum_hyp2f1_rat((ap, aq), (bp, bq), (cp, cq), x):
         zre, zim = x._mpc_
         zre = to_fixed(zre, wp)
         zim = to_fixed(zim, wp)
-        sre = pre = ONE << wp
-        sim = pim = ZERO
+        sre = pre = MP_ONE << wp
+        sim = pim = MP_ZERO
         n = 1
         while 1:
             r1 = ap*bp*cq
@@ -1222,7 +1222,7 @@ def mpf_jn_series(n, x, prec):
     x = to_fixed(x, prec)
     x2 = (x**2) >> prec
     if not n:
-        s = t = ONE << prec
+        s = t = MP_ONE << prec
     else:
         s = t = (x**n // int_fac(n)) >> ((n-1)*prec + n)
     k = 1
@@ -1245,8 +1245,8 @@ def mpc_jn_series(n, z, prec):
     z2re = (zre**2 - zim**2) >> prec
     z2im = (zre*zim) >> (prec-1)
     if not n:
-        sre = tre = ONE << prec
-        sim = tim = ZERO
+        sre = tre = MP_ONE << prec
+        sim = tim = MP_ZERO
     else:
         re, im = complex_int_pow(zre, zim, n)
         sre = tre = (re // int_fac(n)) >> ((n-1)*prec + n)

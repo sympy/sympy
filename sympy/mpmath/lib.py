@@ -4,7 +4,7 @@ Low-level functions for arbitrary-precision floating-point arithmetic.
 
 __docformat__ = 'plaintext'
 
-import math
+import math, os
 from bisect import bisect
 from random import randrange
 
@@ -12,11 +12,11 @@ from random import randrange
 # Support GMPY for high-speed large integer arithmetic.                      #
 #                                                                            #
 # To allow an external module to handle arithmetic, we need to make sure     #
-# that all high-precision variables are declared of the correct type. MPBASE #
+# that all high-precision variables are declared of the correct type. MP_BASE#
 # is the constructor for the high-precision type. It defaults to Python's    #
 # long type but can be assinged another type, typically gmpy.mpz.            #
 #                                                                            #
-# MPBASE must be used for the mantissa component of an mpf and must be used  #
+# MP_BASE must be used for the mantissa component of an mpf and must be used #
 # for internal fixed-point operations.                                       #
 #                                                                            #
 # Side-effects                                                               #
@@ -25,23 +25,30 @@ from random import randrange
 #----------------------------------------------------------------------------#
 
 MODE = 'python'
-MPBASE = long
-try:
-    import gmpy
-    if gmpy.version() >= '1.03':
-        MODE = 'gmpy'
-        MPBASE = gmpy.mpz
-except:
-    pass
+MP_BASE = long
+if not os.environ.has_key('MPMATH_NOGMPY'):
+    try:
+        import gmpy
+        if gmpy.version() >= '1.03':
+            MODE = 'gmpy'
+            MP_BASE = gmpy.mpz
+    except:
+        pass
 
-MPBASE_TYPE = type(MPBASE(0))
-ZERO = MPBASE(0)
-ONE = MPBASE(1)
-TWO = MPBASE(2)
-THREE = MPBASE(3)
+if os.environ.has_key('MPMATH_STRICT'):
+    STRICT = True
+else:
+    STRICT = False
+
+MP_BASE_TYPE = type(MP_BASE(0))
+MP_ZERO = MP_BASE(0)
+MP_ONE = MP_BASE(1)
+MP_TWO = MP_BASE(2)
+MP_THREE = MP_BASE(3)
+MP_FIVE = MP_BASE(5)
 
 if MODE == 'gmpy':
-    int_types = (int, long, MPBASE_TYPE)
+    int_types = (int, long, MP_BASE_TYPE)
 else:
     int_types = (int, long)
 
@@ -55,7 +62,7 @@ def to_pickable(x):
 
 def from_pickable(x):
     sign, man, exp, bc = x
-    return (sign, MPBASE(man), exp, bc)
+    return (sign, MP_BASE(man), exp, bc)
 
 class ComplexResult(ValueError):
     pass
@@ -66,13 +73,13 @@ class ComplexResult(ValueError):
 
 # Regular number format:
 # (-1)**sign * mantissa * 2**exponent, plus bitcount of mantissa
-fzero = (0, ZERO, 0, 0)
-fnzero = (1, ZERO, 0, 0)
-fone = (0, ONE, 0, 1)
-fnone = (1, ONE, 0, 1)
-ftwo = (0, ONE, 1, 1)
-ften = (0, MPBASE(5), 1, 3)
-fhalf = (0, ONE, -1, 1)
+fzero = (0, MP_ZERO, 0, 0)
+fnzero = (1, MP_ZERO, 0, 0)
+fone = (0, MP_ONE, 0, 1)
+fnone = (1, MP_ONE, 0, 1)
+ftwo = (0, MP_ONE, 1, 1)
+ften = (0, MP_FIVE, 1, 3)
+fhalf = (0, MP_ONE, -1, 1)
 
 # Arbitrary encoding for special numbers: zero mantissa, nonzero exponent
 fnan = (0, 0, -123, -1)
@@ -133,7 +140,7 @@ def lshift(x, n):
     if n >= 0: return x << n
     else:      return x >> (-n)
 
-def trailing(n):
+def python_trailing(n):
     """Count the number of trailing zero bits in abs(n)."""
     if not n:
         return 0
@@ -142,6 +149,11 @@ def trailing(n):
         n >>= 1
         t += 1
     return t
+
+def gmpy_trailing(n):
+    """Count the number of trailing zero bits in abs(n) using gmpy."""
+    if n: return MP_BASE(n).scan1()
+    else: return 0
 
 # Small powers of 2
 powers = [1<<_ for _ in range(300)]
@@ -156,13 +168,15 @@ def python_bitcount(n):
 
 def gmpy_bitcount(n):
     """Calculate bit size of the nonnegative integer n."""
-    if n: return MPBASE(n).numdigits(2)
+    if n: return MP_BASE(n).numdigits(2)
     else: return 0
 
 if MODE == 'gmpy':
     bitcount = gmpy_bitcount
+    trailing = gmpy_trailing
 else:
     bitcount = python_bitcount
+    trailing = python_trailing
 
 # Used to avoid slow function calls as far as possible
 trailtable = map(trailing, range(256))
@@ -228,7 +242,7 @@ shifts_down = {'f':(1,0), 'c':(0,1), 'd':(1,1), 'u':(0,0)}
 # This function is called almost every time an mpf is created.
 # It has been optimized accordingly.
 
-def normalize(sign, man, exp, bc, prec, rnd):
+def _normalize(sign, man, exp, bc, prec, rnd):
     """
     Create a raw mpf tuple with value (-1)**sign * man * 2**exp and
     normalized mantissa. The mantissa is rounded in the specified
@@ -248,7 +262,6 @@ def normalize(sign, man, exp, bc, prec, rnd):
     """
     if not man:
         return fzero
-    #~ assert type(man) == MPBASE_TYPE
     # Cut mantissa down to size if larger than target precision
     n = bc - prec
     if n > 0:
@@ -266,13 +279,13 @@ def normalize(sign, man, exp, bc, prec, rnd):
         bc = prec
     # Strip trailing bits
     if not man & 1:
-        t = trailtable[man & 255]
+        t = trailtable[int(man & 255)]
         if not t:
             while not man & 255:
                 man >>= 8
                 exp += 8
                 bc -= 8
-            t = trailtable[man & 255]
+            t = trailtable[int(man & 255)]
         man >>= t
         exp += t
         bc -= t
@@ -284,7 +297,7 @@ def normalize(sign, man, exp, bc, prec, rnd):
         bc = 1
     return sign, man, exp, bc
 
-def normalize1(sign, man, exp, bc, prec, rnd):
+def _normalize1(sign, man, exp, bc, prec, rnd):
     """same as normalize, but with the added condition that
        man is odd or zero
     """
@@ -307,13 +320,13 @@ def normalize1(sign, man, exp, bc, prec, rnd):
     bc = prec
     # Strip trailing bits
     if not man & 1:
-        t = trailtable[man & 255]
+        t = trailtable[int(man & 255)]
         if not t:
             while not man & 255:
                 man >>= 8
                 exp += 8
                 bc -= 8
-            t = trailtable[man & 255]
+            t = trailtable[int(man & 255)]
         man >>= t
         exp += t
         bc -= t
@@ -325,6 +338,31 @@ def normalize1(sign, man, exp, bc, prec, rnd):
         bc = 1
     return sign, man, exp, bc
 
+def strict_normalize(sign, man, exp, bc, prec, rnd):
+    """Additional checks on the components of an mpf. Enable tests by setting
+       the environment variable MPMATH_STRICT to Y."""
+    assert type(man) == MP_BASE_TYPE
+    assert type(bc) in (int, long)
+    assert type(exp) in (int, long)
+    assert bc == bitcount(man)
+    return _normalize(sign, man, exp, bc, prec, rnd)
+
+def strict_normalize1(sign, man, exp, bc, prec, rnd):
+    """Additional checks on the components of an mpf. Enable tests by setting
+       the environment variable MPMATH_STRICT to Y."""
+    assert type(man) == MP_BASE_TYPE
+    assert type(bc) in (int, long)
+    assert type(exp) in (int, long)
+    assert bc == bitcount(man)
+    assert (not man) or (man & 1)
+    return _normalize1(sign, man, exp, bc, prec, rnd)
+
+if STRICT:
+    normalize = strict_normalize
+    normalize1 = strict_normalize1
+else:
+    normalize = _normalize
+    normalize1 = _normalize1
 
 #----------------------------------------------------------------------------#
 #                            Conversion functions                            #
@@ -333,13 +371,13 @@ def normalize1(sign, man, exp, bc, prec, rnd):
 def from_man_exp(man, exp, prec=None, rnd=round_fast):
     """Create raw mpf from (man, exp) pair. The mantissa may be signed.
     If no precision is specified, the mantissa is stored exactly."""
-    man = MPBASE(man)
+    man = MP_BASE(man)
     sign = 0
     if man < 0:
         sign = 1
         man = -man
     if man < 1024:
-        bc = bctable[man]
+        bc = bctable[int(man)]
     else:
         bc = bitcount(man)
     if not prec:
@@ -660,8 +698,8 @@ def fadd(s, t, prec, rnd=round_fast):
             sbc += offset
             if tbc > sbc: bc = tbc - 4
             else:         bc = sbc - 4
-            if bc < 4:    bc = bctable[man]
-            else:         bc += bctable[man>>bc]
+            if bc < 4:    bc = bctable[int(man)]
+            else:         bc += bctable[int(man>>bc)]
             return normalize1(ssign, man, texp, bc, prec, rnd)
         else:
             if ssign: man = tman - (sman << offset)
@@ -678,8 +716,8 @@ def fadd(s, t, prec, rnd=round_fast):
             man = tman + sman
             if tbc > sbc: bc = tbc - 4
             else:         bc = sbc - 4
-            if bc < 4:    bc = bctable[man]
-            else:         bc += bctable[man>>bc]
+            if bc < 4:    bc = bctable[int(man)]
+            else:         bc += bctable[int(man>>bc)]
             return normalize(ssign, man, texp, bc, prec, rnd)
         else:
             if ssign: man = tman - sman
@@ -716,8 +754,8 @@ def fmul(s, t, prec=0, rnd=round_fast):
         if t == fzero: return fnan
         return {1:finf, -1:fninf}[fsign(s) * fsign(t)]
     bc = sbc + tbc - 4
-    if bc < 4: bc = bctable[man]
-    else:      bc += bctable[man>>bc]
+    if bc < 4: bc = bctable[int(man)]
+    else:      bc += bctable[int(man>>bc)]
     if prec:
         return normalize1(sign, man, sexp+texp, bc, prec, rnd)
     else:
@@ -736,19 +774,29 @@ def fmuli(s, n, prec, rnd=round_fast):
     man *= n
     # Generally n will be small
     if n < 1024:
-        bc += bctable[n] - 4
+        bc += bctable[int(n)] - 4
     else:
         bc += bitcount(n) - 4
-    if bc < 4: bc = bctable[man]
-    else:      bc += bctable[man>>bc]
+    if bc < 4: bc = bctable[int(man)]
+    else:      bc += bctable[int(man>>bc)]
     return normalize(sign, man, exp, bc, prec, rnd)
 
 def fshift(s, n):
-    """Quickly multiply the raw mpf s by 2**n without rnd."""
+    """Quickly multiply the raw mpf s by 2**n without rounding."""
     sign, man, exp, bc = s
     if not man:
         return s
     return sign, man, exp+n, bc
+
+def mpf_frexp(x):
+    """Convert x = y*2**n to (y, n) with abs(y) in [0.5, 1) if nonzero"""
+    sign, man, exp, bc = x
+    if not man:
+        if x == fzero:
+            return (fzero, 0)
+        else:
+            raise ValueError
+    return fshift(x, -bc-exp), bc+exp
 
 def fdiv(s, t, prec, rnd=round_fast):
     """Floating-point division"""
@@ -793,8 +841,8 @@ def fdiv(s, t, prec, rnd=round_fast):
         quot = (quot << 5) + 1
         extra += 5
     bc = sbc+extra-tbc-4
-    if bc < 4: bc = bctable[quot]
-    else:      bc += bctable[quot>>bc]
+    if bc < 4: bc = bctable[int(quot)]
+    else:      bc += bctable[int(quot>>bc)]
     return normalize(sign, quot, sexp-texp-extra, bc, prec, rnd)
 
 def fdivi(n, t, prec, rnd=round_fast):
@@ -904,9 +952,9 @@ def fpowi(s, n, prec, rnd=round_fast):
             return fzero
         man = man*man
         if man == 1:
-            return (0, ONE, exp+exp, 1)
+            return (0, MP_ONE, exp+exp, 1)
         bc = bc + bc - 2
-        bc += bctable[man>>bc]
+        bc += bctable[int(man>>bc)]
         return normalize1(0, man, exp+exp, bc, prec, rnd)
     if n == -1: return fdiv(fone, s, prec, rnd)
     if n < 0:
@@ -917,7 +965,7 @@ def fpowi(s, n, prec, rnd=round_fast):
 
     # Use exact integer power when the exact mantissa is small
     if man == 1:
-        return (result_sign, ONE, exp*n, 1)
+        return (result_sign, MP_ONE, exp*n, 1)
     if bc*n < 1000:
         man **= n
         return normalize1(result_sign, man, exp*n, bitcount(man), prec, rnd)
@@ -937,7 +985,7 @@ def fpowi(s, n, prec, rnd=round_fast):
             pm = pm*man
             pe = pe+exp
             pbc += bc - 2
-            pbc = pbc + bctable[pm >> pbc]
+            pbc = pbc + bctable[int(pm >> pbc)]
             if pbc > workprec:
                 if rounds_down:
                     pm = pm >> (pbc-workprec)
@@ -951,7 +999,7 @@ def fpowi(s, n, prec, rnd=round_fast):
         man = man*man
         exp = exp+exp
         bc = bc + bc - 2
-        bc = bc + bctable[man >> bc]
+        bc = bc + bctable[int(man >> bc)]
         if bc > workprec:
             if rounds_down:
                 man = man >> (bc-workprec)
@@ -976,7 +1024,7 @@ def fpowi(s, n, prec, rnd=round_fast):
 def bin_to_radix(x, xbits, base, bdigits):
     """Changes radix of a fixed-point number; i.e., converts
     x * 2**xbits to floor(x * 10**bdigits)."""
-    return x * (MPBASE(base)**bdigits) >> xbits
+    return x * (MP_BASE(base)**bdigits) >> xbits
 
 stddigits = '0123456789abcdefghijklmnopqrstuvwxyz'
 
@@ -990,9 +1038,6 @@ def small_numeral(n, base=10, digits=stddigits):
         n, digit = divmod(n, base)
         digs.append(digits[digit])
     return "".join(digs[::-1])
-
-def numeral_gmpy(n, base=10, size=0, digits=stddigits):
-    return gmpy.digits(n, base)
 
 def numeral_python(n, base=10, size=0, digits=stddigits):
     """Represent the integer n as a string of digits in the given base.
@@ -1010,6 +1055,28 @@ def numeral_python(n, base=10, size=0, digits=stddigits):
     # Divide in half
     half = (size // 2) + (size & 1)
     A, B = divmod(n, base**half)
+    ad = numeral(A, base, half, digits)
+    bd = numeral(B, base, half, digits).rjust(half, "0")
+    return ad + bd
+
+def numeral_gmpy(n, base=10, size=0, digits=stddigits):
+    """Represent the integer n as a string of digits in the given base.
+    Recursive division is used to make this function about 3x faster
+    than Python's str() for converting integers to decimal strings.
+
+    The 'size' parameters specifies the number of digits in n; this
+    number is only used to determine splitting points and need not be
+    exact."""
+    if n < 0:
+        return "-" + numeral(-n, base, size, digits)
+    # gmpy.digits() may cause a segmentation fault when trying to convert
+    # extremely large values to a string. The size limit may need to be
+    # adjusted on some platforms, but 1500000 works on Windows and Linux.
+    if size < 1500000:
+        return gmpy.digits(n, base)
+    # Divide in half
+    half = (size // 2) + (size & 1)
+    A, B = divmod(n, MP_BASE(base)**half)
     ad = numeral(A, base, half, digits)
     bd = numeral(B, base, half, digits).rjust(half, "0")
     return ad + bd
@@ -1070,7 +1137,7 @@ def to_digits_exp(s, dps):
     exponent += len(digits) - fixdps - 1
     return sign, digits, exponent
 
-def to_str(s, dps):
+def to_str(s, dps, strip_zeros=True):
     """Convert a raw mpf to a decimal floating-point literal with at
     most `dps` decimal digits in the mantissa (not counting extra zeros
     that may be inserted for visual purposes).
@@ -1090,37 +1157,44 @@ def to_str(s, dps):
     # This sometimes kills some instances of "...00001"
     sign, digits, exponent = to_digits_exp(s, dps+3)
 
-    # Rounding up kills some instances of "...99999"
-    if len(digits) > dps and digits[dps] in '56789' and \
-        (dps < 500 or digits[dps-4:dps] == '9999'):
-        digits2 = str(int(digits[:dps]) + 1)
-        if len(digits2) > dps:
-            digits2 = digits2[:dps]
+    if not dps:
+        if digits[0] in '56789':
             exponent += 1
-        digits = digits2
-    else:
-        digits = digits[:dps]
+        digits = ".0"
 
-    # Prettify numbers close to unit magnitude
-    if -(dps//3) < exponent < dps:
-        if exponent < 0:
-            digits = ("0"*(-exponent)) + digits
-            split = 1
+    else:
+        # Rounding up kills some instances of "...99999"
+        if len(digits) > dps and digits[dps] in '56789' and \
+            (dps < 500 or digits[dps-4:dps] == '9999'):
+            digits2 = str(int(digits[:dps]) + 1)
+            if len(digits2) > dps:
+                digits2 = digits2[:dps]
+                exponent += 1
+            digits = digits2
         else:
-            split = exponent + 1
-        exponent = 0
-    else:
-        split = 1
+            digits = digits[:dps]
 
-    digits = (digits[:split] + "." + digits[split:])
+        # Prettify numbers close to unit magnitude
+        if -(dps//3) < exponent < dps:
+            if exponent < 0:
+                digits = ("0"*(-exponent)) + digits
+                split = 1
+            else:
+                split = exponent + 1
+            exponent = 0
+        else:
+            split = 1
 
-    # Clean up trailing zeros
-    digits = digits.rstrip('0')
-    if digits[-1] == ".":
-        digits += "0"
+        digits = (digits[:split] + "." + digits[split:])
 
-    if exponent == 0: return sign + digits
-    if exponent > 0: return sign + digits + "e+" + str(exponent)
+        if strip_zeros:
+            # Clean up trailing zeros
+            digits = digits.rstrip('0')
+            if digits[-1] == ".":
+                digits += "0"
+
+    if exponent == 0 and dps: return sign + digits
+    if exponent >= 0: return sign + digits + "e+" + str(exponent)
     if exponent < 0: return sign + digits + "e" + str(exponent)
 
 def str_to_man_exp(x, base=10):
@@ -1141,7 +1215,7 @@ def str_to_man_exp(x, base=10):
         a, b = parts[0], parts[1].rstrip('0')
         exp -= len(b)
         x = a + b
-    x = MPBASE(int(x, base))
+    x = MP_BASE(int(x, base))
     return x, exp
 
 special_str = {'inf':finf, '+inf':finf, '-inf':fninf, 'nan':fnan}
@@ -1177,7 +1251,7 @@ def from_str(x, prec, rnd=round_fast):
 
 def from_bstr(x):
     man, exp = str_to_man_exp(x, base=2)
-    man = MPBASE(man)
+    man = MP_BASE(man)
     sign = 0
     if man < 0:
         man = -man
@@ -1207,14 +1281,14 @@ def sqrt_initial(y, prec):
     assumed that x ~= 1."""
 
     # Two cases; the second avoids overflow
-    if prec < 200: return MPBASE(y**0.5 * 2.0**(50 - prec*0.5))
-    else:          return MPBASE((y >> (prec-100))**0.5)
+    if prec < 200: return MP_BASE(y**0.5 * 2.0**(50 - prec*0.5))
+    else:          return MP_BASE((y >> (prec-100))**0.5)
 
 # XXX: doesn't work
 def invsqrt_initial(y, prec):
     """Like sqrt_initial, but computes 1/sqrt(y) instead of sqrt(y)."""
-    if prec < 200: return MPBASE(y**-0.5 * 2.0**(50 + prec*0.5))
-    else:          return MPBASE((y >> (prec-100)) ** -0.5)
+    if prec < 200: return MP_BASE(y**-0.5 * 2.0**(50 + prec*0.5))
+    else:          return MP_BASE((y >> (prec-100)) ** -0.5)
 
 
 
@@ -1442,9 +1516,9 @@ def acot(n, prec, hyperbolic):
     """Compute acot of an integer using fixed-point arithmetic. With
     hyperbolic=True, compute acoth. The standard Taylor series
     is used."""
-    n = MPBASE(n)
-    s = t = (ONE << prec) // n  # 1 / n
-    k = THREE
+    n = MP_BASE(n)
+    s = t = (MP_ONE << prec) // n  # 1 / n
+    k = 3
     while 1:
         # Repeatedly divide by k * n**2, and add
         t //= (n*n)
@@ -1465,9 +1539,9 @@ def machin(coefs, prec, hyperbolic=False):
     point arithmetic. The input should be a list [(c, n), ...], giving
     c*acot[h](n) + ..."""
     extraprec = 10
-    s = ZERO
+    s = MP_ZERO
     for a, b in coefs:
-        s += MPBASE(a) * acot(MPBASE(b), prec+extraprec, hyperbolic)
+        s += MP_BASE(a) * acot(MP_BASE(b), prec+extraprec, hyperbolic)
     return (s >> extraprec)
 
 #----------------------------------------------------------------------------
@@ -1509,10 +1583,10 @@ def pi_agm(prec, verbose=False, verbose_base=10):
     prec += extraprec
 
     # Initialial values. a, b and t are fixed-point numbers
-    a = ONE << prec
+    a = MP_ONE << prec
     b = sqrt_fixed2(a >> 1, prec)
     t = a >> 2
-    p = ONE
+    p = 1
 
     step = 1
     while 1:
@@ -1534,22 +1608,57 @@ def pi_agm(prec, verbose=False, verbose_base=10):
     pi = ((((a+b)**2) >> 2) // t)
     return pi >> extraprec
 
+# Chudnovsky's series for pi, with binary splitting
+# The formulas are given in ftp://ftp.gmplib.org/pub/src/gmp-chudnovsky.c
+
+# Constants in Chudnovsky's series
+CHUD_A = MP_BASE(13591409)
+CHUD_B = MP_BASE(545140134)
+CHUD_C = MP_BASE(640320)
+CHUD_D = MP_BASE(12)
+
+def bs_chudnovsky(a,b,level,verbose):
+    if b-a == 1:
+        g = MP_BASE((6*b-5)*(2*b-1)*(6*b-1))
+        p = b**3 * CHUD_C**3 // 24
+        q = (-1)**b * g * (CHUD_A+CHUD_B*b)
+    else:
+        if verbose and level < 4:
+            print "  binary splitting", a, b
+        mid = (a+b)//2
+        g1, p1, q1 = bs_chudnovsky(a,mid,level+1,verbose)
+        g2, p2, q2 = bs_chudnovsky(mid,b,level+1,verbose)
+        p = p1*p2
+        g = g1*g2
+        q = q1*p2 + q2*g1
+    return g, p, q
+
+def pi_chudnovsky(prec, verbose=False, verbose_base=None):
+    """
+    Calculate floor(pi * 2**prec) using Chudnovsky's algorithm.
+    """
+    # The Chudnovsky series gives 14.18 digits per term
+    N = int(prec/3.3219280948/14.181647462 + 2)
+    if verbose:
+        print "binary splitting with N =", N
+    g, p, q = bs_chudnovsky(0,N,0,verbose)
+    sqrtC = sqrt_fixed(CHUD_C<<prec, prec)
+    v = p*CHUD_C*sqrtC//((q+CHUD_A*p)*CHUD_D)
+    return v
+
 @constant_memo
 def pi_fixed(prec):
     """
     Compute floor(pi * 2**prec) as a big integer.
-
-    For low precisions, Machin's formula pi = 16*acot(5)-4*acot(239)
-    is used. For high precisions, the more efficient arithmetic-
-    geometric mean iteration is used.
     """
-    if prec < 2000:
-        return machin([(16, 5), (-4, 239)], prec)
-    return pi_agm(prec)
+    #if prec < 2000:
+    #    return machin([(16, 5), (-4, 239)], prec)
+    #return pi_agm(prec)
+    return pi_chudnovsky(prec)
 
 def fpi(prec, rnd=round_fast):
     """Compute a floating-point approximation of pi"""
-    return from_man_exp(pi_fixed(prec+5), -prec-5, prec, rnd)
+    return from_man_exp(pi_fixed(prec+10), -prec-10, prec, rnd)
 
 def fdegree(prec, rnd=round_fast):
     """Compute 1 degree = pi / 180."""
@@ -1580,7 +1689,7 @@ def flog10(prec, rnd=round_fast):
 
 def bspe(a,b):
     if b-a == 1:
-        return ONE, MPBASE(b)
+        return MP_ONE, MP_BASE(b)
     m = (a+b)//2
     p1, q1 = bspe(a,m)
     p2, q2 = bspe(m,b)
@@ -1634,9 +1743,8 @@ def fe(prec, rnd=round_fast):
 # Input: x * 2**prec
 # Output: exp(x) * 2**(prec + r)
 def exp_series(x, prec, r):
-    x = MPBASE(x)
     x >>= r
-    s = (ONE << prec) + x
+    s = (MP_ONE << prec) + x
     a = x
     k = 2
     # Sum exp(x/2**r)
@@ -1660,7 +1768,7 @@ def exp_series2(x, prec, r):
         x = -x
     x2 = (x*x) >> prec
     s1 = a = x
-    k = THREE
+    k = 3
     while a:
         a = ((a * x2) >> prec) // (k*(k-1))
         s1 += a
@@ -1675,7 +1783,6 @@ def exp_series2(x, prec, r):
         s = (s*s) >> prec
         r -= 1
     return s
-
 
 def fexp(x, prec, rnd=round_fast):
     sign, man, exp, bc = x
@@ -1717,8 +1824,8 @@ def fexp(x, prec, rnd=round_fast):
         else:
             n = 0
         man = exp_series2(t, wp, r)
-    bc = wp - 2 + bctable[man >> (wp - 2)]
-    return normalize(0, man, -wp+n, bc, prec, rnd)
+    bc = wp - 2 + bctable[int(man >> (wp - 2))]
+    return normalize(0, man, int(-wp+n), bc, prec, rnd)
 
 
 #----------------------------------------------------------------------------#
@@ -1758,7 +1865,7 @@ def log_newton(x, prec):
     extra = 10
     # 40-bit approximation
     fx = math.log(long(x)) - 0.69314718055994529*prec
-    r = int(fx * 2.0**40)
+    r = MP_BASE(fx * 2.0**40)
     prevp = 40
     for p in giant_steps2(40, prec+extra):
         rb = lshift(r, p-prevp)
@@ -1844,10 +1951,10 @@ def flog(x, prec, rnd=round_fast):
 
 
 def sin_taylor(x, prec):
-    x = MPBASE(x)
+    x = MP_BASE(x)
     x2 = (x*x) >> prec
     s = a = x
-    k = THREE
+    k = 3
     while a:
         a = ((a * x2) >> prec) // (k*(1-k))
         s += a
@@ -1855,10 +1962,10 @@ def sin_taylor(x, prec):
     return s
 
 def cos_taylor(x, prec):
-    x = MPBASE(x)
+    x = MP_BASE(x)
     x2 = (x*x) >> prec
-    a = c = (ONE<<prec)
-    k = TWO
+    a = c = (MP_ONE<<prec)
+    k = 2
     while a:
         a = ((a * x2) >> prec) // (k*(1-k))
         c += a
@@ -2033,10 +2140,10 @@ def ftan(x, prec, rnd=round_fast):
 #
 
 def sinh_taylor(x, prec):
-    x = MPBASE(x)
+    x = MP_BASE(x)
     x2 = (x*x) >> prec
     s = a = x
-    k = THREE
+    k = 3
     while a:
         a = ((a * x2) >> prec) // (k*(k-1))
         s += a
@@ -2137,8 +2244,8 @@ def atan_euler(x, prec, rnd=round_fast):
         s += a
     return from_man_exp(y*s//x, -prec2, prec, rnd)
 
-_cutoff_1 = (0, 5, -3, 3)   # ~0.6
-_cutoff_2 = (0, 3, -1, 2)   # 1.5
+_cutoff_1 = (0, MP_FIVE, -3, 3)   # ~0.6
+_cutoff_2 = (0, MP_THREE, -1, 2)   # 1.5
 
 def fatan(x, prec, rnd=round_fast):
     sign, man, exp, bc = x
@@ -2180,7 +2287,7 @@ def fatan(x, prec, rnd=round_fast):
         else:
             pi = fpi(prec+4)
             pihalf = fshift(pi, -1)
-            t = fatan(fdiv(fone, x, prec+4), prec+4)
+        t = fatan(fdiv(fone, x, prec+4), prec+4)
         return fsub(pihalf, t, prec, rnd)
     # use Newton's method
     extra = 10
