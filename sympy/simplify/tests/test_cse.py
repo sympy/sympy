@@ -66,5 +66,12 @@ def test_subtraction_opt():
     assert substs == [(x0, z-y), (x1, x-y), (x2, x0*x1)]
     assert reduced == [x2 + sin(x2)]
 
+def test_multiple_expressions():
+    e1 = (x+y)*z
+    e2 = (x+y)*w
+    substs, reduced = cse.cse([e1, e2], optimizations=[])
+    assert substs == [(x0, x+y)]
+    assert reduced == [x0*z, x0*w]
+
 
 
