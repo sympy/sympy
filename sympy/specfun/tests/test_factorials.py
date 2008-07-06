@@ -141,4 +141,7 @@ def test_binomial3():
     assert [binomial2(3,k) for k in range(4)] == [1, 3, 3, 1]
     assert binomial2(Rational(5,4), 3) == -Integer(5)/128
     x = Symbol('x')
-    assert binomial2(x, 3) == x*(1 - x)*(2 - x)/6
+    assert binomial2(x, 3) in [
+            x*(1 - x)*(2 - x)/6,
+            x*(-1 + x)*(-2 + x)/6,
+            ]
