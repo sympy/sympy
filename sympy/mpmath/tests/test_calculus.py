@@ -22,4 +22,4 @@ def test_polyroots():
         assert False
     except ValueError:
         pass
-    
+

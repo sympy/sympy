@@ -200,4 +200,4 @@ def test_hp():
     mp.dps = 460
     assert str(log(3))[-20:] == '02166121184001409826'
     mp.dps = 15
- 
+

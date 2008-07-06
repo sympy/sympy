@@ -7,9 +7,9 @@
 
     References:
 
-    [1] Abramowitz & Stegun. 'Handbook of Mathematical Functions, 9th Ed.', 
+    [1] Abramowitz & Stegun. 'Handbook of Mathematical Functions, 9th Ed.',
         (Dover duplicate of 1972 edition)
-    [2] Whittaker 'A Course of Modern Analysis, 4th Ed.', 1946, 
+    [2] Whittaker 'A Course of Modern Analysis, 4th Ed.', 1946,
         Cambridge Univeristy Press
 
 """
@@ -36,18 +36,18 @@ class precisemathTests(unittest.TestCase):
         q = calculate_nome(mpmath.mpf('0'))
         self.assertEquals(mpmath.mpf('0'), mpmath.mpf('0'))
 
-        mathematica = [ (0.1,   0.00658465), 
+        mathematica = [ (0.1,   0.00658465),
                         (0.3,   0.0222774),
                         (0.5,   0.0432139),
                         (0.7,   0.0746899),
                         (0.9,   0.140173),
                         (0.99,  0.262196)]
-        
+
         for i in mathematica:
             m = mpmath.mpf(i[0])
             value = calculate_nome(m.sqrt())
             self.assertEquals(round(i[1], 6), round(value, 6))
-    
+
     def testJacobiTheta1(self):
         mpmath.mpf.dps = 100
         mpmath.mp.dps = 100
@@ -56,14 +56,14 @@ class precisemathTests(unittest.TestCase):
 
         zero = mpmath.mpf('0')
         #self.assertRaises(TypeError, jacobi_theta_1, 0, 0)
-        
+
         z = mpmath.mpf('0')
         q = mpmath.mpf('0')
         value = jacobi_theta_1(z, q)
         self.assertEquals(value, mpmath.mpf('0'))
 
         z = mpmath.mpf('0')
-        m = mpmath.pi 
+        m = mpmath.pi
         self.assertRaises(ValueError, jacobi_theta_1, z, m)
         m = mpmath.mpf('1')
         self.assertRaises(ValueError, jacobi_theta_1, z, m)
@@ -73,10 +73,10 @@ class precisemathTests(unittest.TestCase):
         z = mpmath.mpf('0.1')
         m = mpmath.mpf('0.802403')
 
-        result = jacobi_theta_1(z, m) 
+        result = jacobi_theta_1(z, m)
         self.assertEquals(round(result, 6), 0.108958)
         self.assertTrue(isinstance(result, mpmath.mpf))
-        
+
     def testJacobiTheta2(self):
         mpmath.mpf.dps = 100
         mpmath.mp.dps = 100
@@ -99,7 +99,7 @@ class precisemathTests(unittest.TestCase):
 
         result = jacobi_theta_2(z, m)     # verbosity on
         self.assertEquals(round(result, 5), 1.12981)
-       
+
         z = mpmath.mpf('0')
         q = mpmath.pi / mpmath.mpf('2')
         self.assertRaises(ValueError, jacobi_theta_1, z, q)
@@ -118,7 +118,7 @@ class precisemathTests(unittest.TestCase):
         #print >> sys.stderr, testlimit
 
         one = mpmath.mpf('1')
-        
+
         #self.assertRaises(TypeError, jacobi_theta_2, 0, 0)
 
         z = mpmath.mpf('0')
@@ -167,7 +167,7 @@ class precisemathTests(unittest.TestCase):
 
         result = jacobi_theta_4(z, m)
         self.assertEquals(round(result, 6), 0.804171)
-       
+
         z = mpmath.mpf('0')
         q = mpmath.pi / mpmath.mpf('2')
         self.assertRaises(ValueError, jacobi_theta_1, z, q)
@@ -195,7 +195,7 @@ class precisemathTests(unittest.TestCase):
 
         zero = mpmath.mpf('0')
         one = mpmath.mpf('1')
-        
+
         # trival case
         result = jacobi_elliptic_sn(zero, zero)
         self.assertEquals(result, zero)
@@ -227,7 +227,7 @@ class precisemathTests(unittest.TestCase):
         # It would be nice to test these, but I find that they run
         # in to numerical trouble.  I'm currently treating as a boundary
         # case for sn function.
-        
+
         # Mathematica value for sn(z = 0.1, m = 0.1) = 0.0998169
         arg = mpmath.mpf('0.1')
         result = jacobi_elliptic_sn(arg, arg)
@@ -284,7 +284,7 @@ class precisemathTests(unittest.TestCase):
         else:
             print >> sys.stderr, '\n**** Cn failure ****'
             print >> sys.stderr, '\nK: %e' % K,
-            print >> sys.stderr, '\tm: %f' % m, 
+            print >> sys.stderr, '\tm: %f' % m,
             print >> sys.stderr, '\tcn: %e' % equality
             equality = jacobi_elliptic_cn(K, k, True)
             self.assertEquals(False, True)
@@ -327,7 +327,7 @@ class precisemathTests(unittest.TestCase):
             self.assertEquals(True, True)
         else:
             print >> sys.stderr, '\n**** Dn failure ****'
-            print >> sys.stderr, '\tm: %f' % m, 
+            print >> sys.stderr, '\tm: %f' % m,
             print >> sys.stderr, '\tdn: %e' % dn,
             print >> sys.stderr, '\tEquality: %e' % equality
             equality = jacobi_elliptic_dn(zero, m, True)

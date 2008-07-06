@@ -6,7 +6,7 @@ from mpmath import *
 
 def pickler(obj):
     fn = tempfile.mktemp()
-    
+
     f = open(fn, 'wb')
     pickle.dump(obj, f)
     f.close()
@@ -22,6 +22,6 @@ def test_pickle():
 
     obj = mpf('0.5')
     assert obj == pickler(obj)
-    
+
     obj = mpc('0.5','0.2')
     assert obj == pickler(obj)

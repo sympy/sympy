@@ -81,7 +81,7 @@ def test_sqrt_rounding():
             assert (mpf(i)**0.5)**2 > i
     mp.dps = 15
     mp.rounding = 'default'
-        
+
 def test_odd_int_bug():
     assert to_int(from_int(3), round_nearest) == 3
 
