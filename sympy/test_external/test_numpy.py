@@ -169,8 +169,13 @@ def test_lambdify():
     except AttributeError:
         pass
 
+def test_lambdify_matrix():
+    x = Symbol("x")
+    f = lambdify(x, Matrix([[x, 2*x],[1, 2]]), "numpy")
+    assert (f(1) == matrix([[1,2],[1,2]])).all()
+
 def test_lambdify_transl():
     from sympy.utilities.lambdify import NUMPY_TRANSLATIONS
     for sym, mat in NUMPY_TRANSLATIONS.iteritems():
-        assert sym in sympy.functions.__dict__
+        assert sym in sympy.functions.__dict__ or sym in ("Matrix", )
         assert mat in numpy.__dict__

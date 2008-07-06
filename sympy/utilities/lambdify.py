@@ -45,18 +45,20 @@ NUMPY_TRANSLATIONS = {
     "E":"e",
     "im":"imag",
     "ln":"log",
-    "max_":"max",
-    "min_":"min",
+    "Matrix":"matrix",
+    "max_":"amax",
+    "min_":"amin",
     "oo":"inf",
     "re":"real",
 }
 
 # Available modules:
 MODULES = {
-    "math":(MATH, MATH_TRANSLATIONS, "import math"),
-    "mpmath":(MPMATH, MPMATH_TRANSLATIONS, "from sympy import mpmath"),
-    "numpy":(NUMPY, NUMPY_TRANSLATIONS, "import numpy"),
-    "sympy":(SYMPY, {}, "from sympy import functions")
+    "math":(MATH, MATH_TRANSLATIONS, ("from math import *",)),
+    "mpmath":(MPMATH, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
+    "numpy":(NUMPY, NUMPY_TRANSLATIONS, ("from numpy import *",)),
+    "sympy":(SYMPY, {}, ("from sympy.functions import *",
+                         "from sympy.matrices import Matrix"))
 }
 
 def _import(module, reload="False"):
@@ -70,7 +72,7 @@ def _import(module, reload="False"):
     """
     if not MODULES.has_key(module):
         raise NameError, "This module can't be used for lambdification."
-    namespace, translations, import_command = MODULES[module]
+    namespace, translations, import_commands = MODULES[module]
     # Clear namespace or exit
     if namespace:
         # The namespace was already generated, don't do it again if not forced.
@@ -80,17 +82,16 @@ def _import(module, reload="False"):
             return
 
     # It's possible that numpy is not available.
-    try:
-        exec import_command + " as module"
-    except ImportError:
-        raise ImportError, "Can't import %s with command %s"%(module,
-                                                              import_command)
+    for import_command in import_commands:
+        try:
+            exec import_command in {}, namespace
+        except ImportError:
+            raise ImportError, "Can't import %s with command %s"%(module,
+                                                                  import_command)
 
-    # Add all names of the module to our working namspace
-    namespace.update(vars(module))
     # Add translated names to namespace
     for sympyname, translation in translations.iteritems():
-        namespace[sympyname] = getattr(module, translation)
+        namespace[sympyname] = namespace[translation]
 
 def lambdify(args, expr, modules=None):
     """
@@ -197,12 +198,16 @@ def lambdastr(args, expr):
     >>> from sympy import symbols
     >>> x,y,z = symbols('xyz')
     >>> lambdastr(x, x**2)
-    'lambda x: (x**2)'
+    'lambda x: ((x)**(2))'
     >>> lambdastr((x,y,z), [z,y,x])
     'lambda x,y,z: ([z, y, x])'
     """
+
+    #XXX: This has to be done here because of circular imports
+    from sympy.printing.lambdarepr import lambdarepr
+
     # Transform everything to strings.
-    expr = str(expr)
+    expr = lambdarepr(expr)
     if isinstance(args, str):
         pass
     elif hasattr(args, "__iter__"):
