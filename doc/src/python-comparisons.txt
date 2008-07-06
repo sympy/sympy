@@ -9,7 +9,7 @@ Introduction
 
 When debugging comparisons and hashes in SymPy, it is necessary to understand
 when exactly Python calls each method.
-Unfortuately, the official Python documentation for this is
+Unfortunately, the official Python documentation for this is
 not very detailed (see the docs for `rich comparison
 <http://docs.python.org/dev/reference/datamodel.html#object.__lt__>`_,
 `__cmp__() <http://docs.python.org/dev/reference/datamodel.html#object.__cmp__>`_
@@ -130,7 +130,7 @@ Python first compares hashes, e.g.::
     d.__hash__()
 
 If ``hash(a) != hash(d)`` then the result of the statement ``a in {d: 5}`` is
-immediatelly ``False`` (remember how hashes work in general), otherwise (i.e.
+immediately ``False`` (remember how hashes work in general), otherwise (i.e.
 if ``hash(a) == hash(d)``) Python goes through the method resolution of the
 ``==`` operator (see above).
 
