@@ -69,7 +69,7 @@ Python tries to call::
     id(a) == id(b)
 
 in this order. If the particular method is not implemented (or the method
-returns ``NotImplemented``) Python skips it
+returns ``NotImplemented`` [1]_) Python skips it
 and tries the next one until it succeeds (i.e. the method returns something
 meaningful). The last line is a catch up -- it always succeeds.
 
@@ -317,3 +317,16 @@ and its output::
     d.__cmp__(a)
     a.__cmp__(d)
 
+----------
+
+.. [1] There is also similar ``NotImplementedError`` exception, which one may
+       be tempted to raise to obtain the same effect as returning
+       ``NotImplemented``.
+
+       But these are **not** the same, and Python will completely ignore
+       ``NotImplementedError`` with respect to choosing appropriate comparison
+       method, and will just propagate this exception upwards, to the caller.
+
+       So::
+
+          'return NotImplemented'  !=  'raise NotImplementedError'
