@@ -229,6 +229,7 @@ tests = [
     'sympy.geometry.tests',
     'sympy.integrals.tests',
     'sympy.matrices.tests',
+    'sympy.mpmath.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
     'sympy.physics.tests',
