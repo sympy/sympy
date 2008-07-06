@@ -4,7 +4,7 @@ x,y,z = symbols("xyz")
 
 def test_basic():
     assert lambdarepr(x*y)=="(x*y)"
-    assert lambdarepr(x+y)=="(y+x)"
+    assert lambdarepr(x+y) in ["(y+x)", "(x+y)"]
     assert lambdarepr(x**y)=="(x)**(y)"
 
 def test_matrix():
