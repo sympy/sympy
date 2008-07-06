@@ -2,7 +2,7 @@ import py
 
 import sympy as g
 from sympy import Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,\
-        abc, Integer, Eq, symbols
+        abc, Integer, Eq, symbols, Add
 
 def test_subs():
     n3=g.Rational(3)
@@ -134,7 +134,11 @@ def test_subs_dict2():
 
 def test_add():
     a, b, c, d, x = abc.a, abc.b, abc.c, abc.d, abc.x
-    assert (a**2 - b - c).subs(a**2 - b, d) == d - c
+    assert (a**2 - b - c).subs(a**2 - b, d) in [d - c, a**2 - b - c]
     assert (a**2 - c).subs(a**2 - c, d) == d
     assert (a**2 - b - c).subs(a**2 - c, d) in [d - b, a**2 - b - c]
-    assert (a**2 - x - c).subs(a**2 - c, d) == d - x
+    assert (a**2 - x - c).subs(a**2 - c, d) in [d - x, a**2 - x - c]
+
+    # this should work everytime:
+    e = a**2 - b - c
+    assert e.subs(Add(*e.args[:2]), d) == d + e.args[2]
