@@ -1040,7 +1040,7 @@ Check your changes:
     @@ -23,7 +23,7 @@ class _MatrixAsBasic(Basic):
          So for common functionality implemented in Basic, we have to provide this
          proxy.
-     
+
     -    see #420
     +    see the issue #420
      """
@@ -1071,7 +1071,7 @@ Check the final patch and save it to a file:
     @@ -23,7 +23,7 @@ class _MatrixAsBasic(Basic):
          So for common functionality implemented in Basic, we have to provide this
          proxy.
-     
+
     -    see #420
     +    see the issue #420
      """
@@ -1126,7 +1126,7 @@ Check your improvements:
     @@ -23,7 +23,7 @@ class _MatrixAsBasic(Basic):
          So for common functionality implemented in Basic, we have to provide this
          proxy.
-     
+
     -    see the issue #420
     +    See the issue #420.
      """
