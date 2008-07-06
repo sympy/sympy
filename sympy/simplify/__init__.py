@@ -10,3 +10,5 @@ from simplify import collect, separate, together, radsimp, ratsimp, fraction, \
 from rewrite import cancel, trim, apart
 
 from sqrtdenest import sqrtdenest
+
+from cse_main import cse
