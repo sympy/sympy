@@ -38,7 +38,9 @@ def test_cancel():
     assert cancel((x**2-1)/(x-1) + (x**2+1)/(x-I), x) == 1 + I + 2*x
     assert cancel((x**2-1)/(x-1) + (x**2+1)/(x-I), y) in [
             1/(1 - x)*(1 - x**2) + 1/(x - I)*(1 + x**2),
-            -1/(1 - x)*(-1 + x**2) + 1/(x - I)*(1 + x**2)]
+            -1/(1 - x)*(-1 + x**2) + 1/(x - I)*(1 + x**2),
+            1/(-1 + x)*(-1 + x**2) + 1/(x - I)*(1 + x**2),
+            ]
 
 def test_trim():
     f = Function('f')
