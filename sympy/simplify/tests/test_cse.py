@@ -1,0 +1,70 @@
+import itertools
+
+from sympy import Add, Mul, Pow, Symbol, sin, sqrt, symbols, sympify
+from sympy.simplify import cse, cse_opts
+
+w,x,y,z = symbols('wxyz')
+x0,x1,x2 = list(itertools.islice(cse.numbered_symbols(), 0, 3))
+negone = sympify(-1)
+
+
+def test_numbered_symbols():
+    ns = cse.numbered_symbols(prefix='y')
+    assert list(itertools.islice(ns, 0, 10)) == [Symbol('y%s'%i) for i in range(0, 10)]
+    ns = cse.numbered_symbols(prefix='y')
+    assert list(itertools.islice(ns, 10, 20)) == [Symbol('y%s'%i) for i in range(10, 20)]
+    ns = cse.numbered_symbols()
+    assert list(itertools.islice(ns, 0, 10)) == [Symbol('x%s'%i) for i in range(0, 10)]
+
+# Dummy "optimization" functions for testing.
+
+def opt1(expr):
+    return expr+y
+def opt2(expr):
+    return expr*z
+
+def test_preprocess_for_cse():
+    assert cse.preprocess_for_cse(x, [(opt1, None)]) == x+y
+    assert cse.preprocess_for_cse(x, [(None, opt1)]) == x
+    assert cse.preprocess_for_cse(x, [(None, None)]) == x
+    assert cse.preprocess_for_cse(x, [(opt1, opt2)]) == x+y
+    assert cse.preprocess_for_cse(x, [(opt1, None), (opt2, None)]) == (x+y)*z
+
+def test_postprocess_for_cse():
+    assert cse.postprocess_for_cse(x, [(opt1, None)]) == x
+    assert cse.postprocess_for_cse(x, [(None, opt1)]) == x+y
+    assert cse.postprocess_for_cse(x, [(None, None)]) == x
+    assert cse.postprocess_for_cse(x, [(opt1, opt2)]) == x*z
+    # Note the reverse order of application.
+    assert cse.postprocess_for_cse(x, [(None, opt1), (None, opt2)]) == x*z+y
+
+def test_cse_single():
+    # Simple substitution.
+    e = Add(Pow(x+y,2), sqrt(x+y))
+    substs, reduced = cse.cse([e], optimizations=[])
+    assert substs == [(x0, x+y)]
+    assert reduced == [sqrt(x0) + x0**2]
+
+def test_cse_not_possible():
+    # No substitution possible.
+    e = Add(x,y)
+    substs, reduced = cse.cse([e], optimizations=[])
+    assert substs == []
+    assert reduced == [x+y]
+
+def test_nested_substitution():
+    # Substitution within a substitution.
+    e = Add(Pow(w*x+y,2), sqrt(w*x+y))
+    substs, reduced = cse.cse([e], optimizations=[])
+    assert substs == [(x0, w*x), (x1, x0+y)]
+    assert reduced == [sqrt(x1) + x1**2]
+
+def test_subtraction_opt():
+    # Make sure subtraction is optimized.
+    e = (x-y)*(z-y) + sin((x-y)*(z-y))
+    substs, reduced = cse.cse([e], optimizations=[(cse_opts.sub_pre,cse_opts.sub_post)])
+    assert substs == [(x0, z-y), (x1, x-y), (x2, x0*x1)]
+    assert reduced == [x2 + sin(x2)]
+
+
+

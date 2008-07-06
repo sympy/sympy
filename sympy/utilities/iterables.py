@@ -83,3 +83,64 @@ def flatten(iterable):
             result.append(item)
 
     return result
+
+def postorder_traversal(node):
+    """ Do a postorder traversal of a tree.
+
+    This generator recursively yields nodes that it has visited in a postorder
+    fashion. That is, it descends through the tree depth-first to yield all of
+    a node's children's postorder traversal before yielding the node itself.
+
+    Parameters
+    ----------
+    node : sympy expression
+        The expression to traverse.
+
+    Yields
+    ------
+    subtree : sympy expression
+        All of the subtrees in the tree.
+
+    Examples
+    --------
+    >>> from sympy import symbols
+    >>> from sympy.utilities.iterables import postorder_traversal
+    >>> x,y,z = symbols('xyz')
+    >>> list(postorder_traversal((x+y)*z))
+    [z, y, x, x + y, z*(x + y)]
+    """
+    for arg in node.args:
+        for subtree in postorder_traversal(arg):
+            yield subtree
+    yield node
+
+def preorder_traversal(node):
+    """ Do a preorder traversal of a tree.
+
+    This generator recursively yields nodes that it has visited in a preorder
+    fashion. That is, it yields the current node then descends through the tree
+    breadth-first to yield all of a node's children's preorder traversal.
+
+    Parameters
+    ----------
+    node : sympy expression
+        The expression to traverse.
+
+    Yields
+    ------
+    subtree : sympy expression
+        All of the subtrees in the tree.
+
+    Examples
+    --------
+    >>> from sympy import symbols
+    >>> from sympy.utilities.iterables import preorder_traversal
+    >>> x,y,z = symbols('xyz')
+    >>> list(preorder_traversal((x+y)*z))
+    [z*(x + y), z, x + y, y, x]
+    """
+    yield node
+    for arg in node.args:
+        for subtree in preorder_traversal(arg):
+            yield subtree
+
