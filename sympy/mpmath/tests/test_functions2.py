@@ -1,5 +1,5 @@
 import math
-from mpmath import *
+from sympy.mpmath import *
 
 def test_bessel():
     mp.dps = 15

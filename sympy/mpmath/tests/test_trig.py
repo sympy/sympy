@@ -1,4 +1,4 @@
-from mpmath import *
+from sympy.mpmath import *
 
 def test_trig_misc_hard():
     mp.prec = 150

@@ -1,4 +1,4 @@
-from mpmath import *
+from sympy.mpmath import *
 
 def ae(a, b):
     return abs(a-b) < 10**(-mp.dps+5)

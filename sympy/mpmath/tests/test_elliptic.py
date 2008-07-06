@@ -16,11 +16,11 @@
 __version__ = '$Id:$'
 
 import unittest
-#import mpmath.mptypes      # switch to this once integrated with mpmath
-import mpmath
+#import sympy.mpmath.mptypes      # switch to this once integrated with sympy.mpmath
+import sympy.mpmath
 import random
 
-from mpmath.elliptic import *
+from sympy.mpmath.elliptic import *
 
 class precisemathTests(unittest.TestCase):
 
@@ -28,13 +28,13 @@ class precisemathTests(unittest.TestCase):
         pass
 
     def testCalculateNome(self):
-        mpmath.mpf.dps = 100
-        mpmath.mp.dps = 100
-        testlimit = mpmath.mpf('10')**(-1*(mpmath.mpf.dps - 2))
+        sympy.mpmath.mpf.dps = 100
+        sympy.mpmath.mp.dps = 100
+        testlimit = sympy.mpmath.mpf('10')**(-1*(sympy.mpmath.mpf.dps - 2))
         #print >> sys.stderr, testlimit
 
-        q = calculate_nome(mpmath.mpf('0'))
-        self.assertEquals(mpmath.mpf('0'), mpmath.mpf('0'))
+        q = calculate_nome(sympy.mpmath.mpf('0'))
+        self.assertEquals(sympy.mpmath.mpf('0'), sympy.mpmath.mpf('0'))
 
         mathematica = [ (0.1,   0.00658465),
                         (0.3,   0.0222774),
@@ -44,140 +44,140 @@ class precisemathTests(unittest.TestCase):
                         (0.99,  0.262196)]
 
         for i in mathematica:
-            m = mpmath.mpf(i[0])
+            m = sympy.mpmath.mpf(i[0])
             value = calculate_nome(m.sqrt())
             self.assertEquals(round(i[1], 6), round(value, 6))
 
     def testJacobiTheta1(self):
-        mpmath.mpf.dps = 100
-        mpmath.mp.dps = 100
-        testlimit = mpmath.mpf('10')**(-1*(mpmath.mpf.dps - 2))
+        sympy.mpmath.mpf.dps = 100
+        sympy.mpmath.mp.dps = 100
+        testlimit = sympy.mpmath.mpf('10')**(-1*(sympy.mpmath.mpf.dps - 2))
         #print >> sys.stderr, testlimit
 
-        zero = mpmath.mpf('0')
+        zero = sympy.mpmath.mpf('0')
         #self.assertRaises(TypeError, jacobi_theta_1, 0, 0)
 
-        z = mpmath.mpf('0')
-        q = mpmath.mpf('0')
+        z = sympy.mpmath.mpf('0')
+        q = sympy.mpmath.mpf('0')
         value = jacobi_theta_1(z, q)
-        self.assertEquals(value, mpmath.mpf('0'))
+        self.assertEquals(value, sympy.mpmath.mpf('0'))
 
-        z = mpmath.mpf('0')
-        m = mpmath.pi
+        z = sympy.mpmath.mpf('0')
+        m = sympy.mpmath.pi
         self.assertRaises(ValueError, jacobi_theta_1, z, m)
-        m = mpmath.mpf('1')
+        m = sympy.mpmath.mpf('1')
         self.assertRaises(ValueError, jacobi_theta_1, z, m)
 
         # Mathematica value for v1(u = 0.1, q = 0.1) = 0.108958
         # q = 0.1, therefore m = 0.802403, according to Mathematica
-        z = mpmath.mpf('0.1')
-        m = mpmath.mpf('0.802403')
+        z = sympy.mpmath.mpf('0.1')
+        m = sympy.mpmath.mpf('0.802403')
 
         result = jacobi_theta_1(z, m)
         self.assertEquals(round(result, 6), 0.108958)
-        self.assertTrue(isinstance(result, mpmath.mpf))
+        self.assertTrue(isinstance(result, sympy.mpmath.mpf))
 
     def testJacobiTheta2(self):
-        mpmath.mpf.dps = 100
-        mpmath.mp.dps = 100
-        testlimit = mpmath.mpf('10')**(-1*(mpmath.mpf.dps - 2))
+        sympy.mpmath.mpf.dps = 100
+        sympy.mpmath.mp.dps = 100
+        testlimit = sympy.mpmath.mpf('10')**(-1*(sympy.mpmath.mpf.dps - 2))
         #print >> sys.stderr, testlimit
 
-        zero = mpmath.mpf('0')
+        zero = sympy.mpmath.mpf('0')
 
         #self.assertRaises(TypeError, jacobi_theta_2, 0, 0)
 
-        z = mpmath.mpf('0')
-        q = mpmath.mpf('0')
+        z = sympy.mpmath.mpf('0')
+        q = sympy.mpmath.mpf('0')
         value = jacobi_theta_2(z, q)
-        self.assertEquals(value, mpmath.mpf('0'))
+        self.assertEquals(value, sympy.mpmath.mpf('0'))
 
         # Mathematica value for v2(z = 0.1, q = 0.1) = 1.12981
         # q = 0.1, therefore m = 0.802403, according to Mathematica
-        z = mpmath.mpf('0.1')
-        m = mpmath.mpf('0.802403')
+        z = sympy.mpmath.mpf('0.1')
+        m = sympy.mpmath.mpf('0.802403')
 
         result = jacobi_theta_2(z, m)     # verbosity on
         self.assertEquals(round(result, 5), 1.12981)
 
-        z = mpmath.mpf('0')
-        q = mpmath.pi / mpmath.mpf('2')
+        z = sympy.mpmath.mpf('0')
+        q = sympy.mpmath.pi / sympy.mpmath.mpf('2')
         self.assertRaises(ValueError, jacobi_theta_1, z, q)
-        q = mpmath.mpf('1')
+        q = sympy.mpmath.mpf('1')
         self.assertRaises(ValueError, jacobi_theta_1, z, q)
 
-        z = mpmath.mpf('0.1')
-        q = mpmath.mpf('0.1')
+        z = sympy.mpmath.mpf('0.1')
+        q = sympy.mpmath.mpf('0.1')
         value = jacobi_theta_2(z, q)
-        self.assertTrue(isinstance(value, mpmath.mpf))
+        self.assertTrue(isinstance(value, sympy.mpmath.mpf))
 
     def testJacobiTheta3(self):
-        mpmath.mpf.dps = 100
-        mpmath.mp.dps = 100
-        testlimit = mpmath.mpf('10')**(-1*(mpmath.mpf.dps - 2))
+        sympy.mpmath.mpf.dps = 100
+        sympy.mpmath.mp.dps = 100
+        testlimit = sympy.mpmath.mpf('10')**(-1*(sympy.mpmath.mpf.dps - 2))
         #print >> sys.stderr, testlimit
 
-        one = mpmath.mpf('1')
+        one = sympy.mpmath.mpf('1')
 
         #self.assertRaises(TypeError, jacobi_theta_2, 0, 0)
 
-        z = mpmath.mpf('0')
-        q = mpmath.mpf('0')
+        z = sympy.mpmath.mpf('0')
+        q = sympy.mpmath.mpf('0')
         value = jacobi_theta_3(z, q)
-        self.assertEquals(mpmath.mpf('1'), value)
-        self.assertTrue(isinstance(value, mpmath.mpf))
+        self.assertEquals(sympy.mpmath.mpf('1'), value)
+        self.assertTrue(isinstance(value, sympy.mpmath.mpf))
 
         # Mathematica value for v3(z = 0.1, q = 0.1) = 1.1962
         # q = 0.1, therefore m = 0.802403, according to Mathematica
-        z = mpmath.mpf('0.1')
-        m = mpmath.mpf('0.802403')
+        z = sympy.mpmath.mpf('0.1')
+        m = sympy.mpmath.mpf('0.802403')
 
         result = jacobi_theta_3(z, m)
         self.assertEquals(round(result, 4), 1.1962)
 
-        mpmath.mpf.dps = 2
-        z = mpmath.mpf('0')
-        q = mpmath.pi / mpmath.mpf('2')
+        sympy.mpmath.mpf.dps = 2
+        z = sympy.mpmath.mpf('0')
+        q = sympy.mpmath.pi / sympy.mpmath.mpf('2')
         self.assertRaises(ValueError, jacobi_theta_1, z, q)
-        q = mpmath.mpf('1')
+        q = sympy.mpmath.mpf('1')
         self.assertRaises(ValueError, jacobi_theta_1, z, q)
 
-        z = mpmath.mpf('0.1')
-        q = mpmath.mpf('0.1')
+        z = sympy.mpmath.mpf('0.1')
+        q = sympy.mpmath.mpf('0.1')
         value = jacobi_theta_2(z, q)
-        self.assertTrue(isinstance(value, mpmath.mpf))
+        self.assertTrue(isinstance(value, sympy.mpmath.mpf))
 
     def testJacobiTheta4(self):
-        mpmath.mpf.dps = 100
-        mpmath.mp.dps = 100
-        testlimit = mpmath.mpf('10')**(-1*(mpmath.mpf.dps - 2))
+        sympy.mpmath.mpf.dps = 100
+        sympy.mpmath.mp.dps = 100
+        testlimit = sympy.mpmath.mpf('10')**(-1*(sympy.mpmath.mpf.dps - 2))
         #print >> sys.stderr, testlimit
 
         #self.assertRaises(TypeError, jacobi_theta_4, 0, 0)
 
-        z = mpmath.mpf('0')
-        q = mpmath.mpf('0')
+        z = sympy.mpmath.mpf('0')
+        q = sympy.mpmath.mpf('0')
         value = jacobi_theta_4(z, q)
-        self.assertEquals(value, mpmath.mpf('1.0'))
+        self.assertEquals(value, sympy.mpmath.mpf('1.0'))
 
         # Mathematica value for v4(z = 0.1, q = 0.1) = 0.804171
         # q = 0.1, therefore m = 0.802403, according to Mathematica
-        z = mpmath.mpf('0.1')
-        m = mpmath.mpf('0.802403')
+        z = sympy.mpmath.mpf('0.1')
+        m = sympy.mpmath.mpf('0.802403')
 
         result = jacobi_theta_4(z, m)
         self.assertEquals(round(result, 6), 0.804171)
 
-        z = mpmath.mpf('0')
-        q = mpmath.pi / mpmath.mpf('2')
+        z = sympy.mpmath.mpf('0')
+        q = sympy.mpmath.pi / sympy.mpmath.mpf('2')
         self.assertRaises(ValueError, jacobi_theta_1, z, q)
-        q = mpmath.mpf('1')
+        q = sympy.mpmath.mpf('1')
         self.assertRaises(ValueError, jacobi_theta_1, z, q)
 
-        z = mpmath.mpf('0.1')
-        q = mpmath.mpf('0.1')
+        z = sympy.mpmath.mpf('0.1')
+        q = sympy.mpmath.mpf('0.1')
         value = jacobi_theta_4(z, q)
-        self.assertTrue(isinstance(value, mpmath.mpf))
+        self.assertTrue(isinstance(value, sympy.mpmath.mpf))
 
     def testJacobiEllipticSn(self):
         """
@@ -186,15 +186,15 @@ class precisemathTests(unittest.TestCase):
         This is an intensive test, so precision turned down during
         development.
         """
-        mpmath.mpf.dps = 100
-        mpmath.mp.dps = 100
-        #mpmath.mpf.dps = 20             # testing version
-        #mpmath.mp.dps = 20
-        testlimit = mpmath.mpf('10')**(-1*(mpmath.mpf.dps - 4))
+        sympy.mpmath.mpf.dps = 100
+        sympy.mpmath.mp.dps = 100
+        #sympy.mpmath.mpf.dps = 20             # testing version
+        #sympy.mpmath.mp.dps = 20
+        testlimit = sympy.mpmath.mpf('10')**(-1*(sympy.mpmath.mpf.dps - 4))
         #print >> sys.stderr, testlimit
 
-        zero = mpmath.mpf('0')
-        one = mpmath.mpf('1')
+        zero = sympy.mpmath.mpf('0')
+        one = sympy.mpmath.mpf('1')
 
         # trival case
         result = jacobi_elliptic_sn(zero, zero)
@@ -204,10 +204,10 @@ class precisemathTests(unittest.TestCase):
         #
         # sn(K, m) = 1; K is K(k), first complete elliptic integral
         mstring = str(random.random())
-        m = mpmath.mpf(mstring)
+        m = sympy.mpmath.mpf(mstring)
         k = m.sqrt()
 
-        K = mpmath.ellipk(k**2)
+        K = sympy.mpmath.ellipk(k**2)
 
         equality = abs(one - jacobi_elliptic_sn(K, m))
 
@@ -229,7 +229,7 @@ class precisemathTests(unittest.TestCase):
         # case for sn function.
 
         # Mathematica value for sn(z = 0.1, m = 0.1) = 0.0998169
-        arg = mpmath.mpf('0.1')
+        arg = sympy.mpmath.mpf('0.1')
         result = jacobi_elliptic_sn(arg, arg)
         self.assertEquals(round(result, 7), 0.0998169)
 
@@ -240,22 +240,22 @@ class precisemathTests(unittest.TestCase):
         This is an intensive test, so precision turned down during
         development.
         """
-        mpmath.mpf.dps = 100
-        mpmath.mp.dps = 100
-        #mpmath.mpf.dps = 20             # testing version
-        #mpmath.mp.dps = 20
-        testlimit = mpmath.mpf('10')**(-1*(mpmath.mpf.dps - 4))
+        sympy.mpmath.mpf.dps = 100
+        sympy.mpmath.mp.dps = 100
+        #sympy.mpmath.mpf.dps = 20             # testing version
+        #sympy.mpmath.mp.dps = 20
+        testlimit = sympy.mpmath.mpf('10')**(-1*(sympy.mpmath.mpf.dps - 4))
         #print >> sys.stderr, testlimit
 
-        zero = mpmath.mpf('0')
-        one = mpmath.mpf('1')
+        zero = sympy.mpmath.mpf('0')
+        one = sympy.mpmath.mpf('1')
 
         # Abramowitz Table 16.5
         #
         # cn(0, q) = 1
 
         qstring = str(random.random())
-        q = mpmath.mpf(qstring)
+        q = sympy.mpmath.mpf(qstring)
 
         cn = jacobi_elliptic_cn(zero, q)
         equality = one - cn
@@ -272,10 +272,10 @@ class precisemathTests(unittest.TestCase):
         # cn(K, q) = 0; K is K(k), first complete elliptic integral
 
         mstring = str(random.random())
-        m = mpmath.mpf(mstring)
+        m = sympy.mpmath.mpf(mstring)
         k = m.sqrt()
 
-        K = mpmath.ellipk(k**2)
+        K = sympy.mpmath.ellipk(k**2)
 
         equality = jacobi_elliptic_cn(K, m)
 
@@ -303,22 +303,22 @@ class precisemathTests(unittest.TestCase):
         """
         Test some special cases of the dn(z, q) function.
         """
-        mpmath.mpf.dps = 100
-        mpmath.mp.dps = 100
-        #mpmath.mpf.dps = 20             # testing version
-        #mpmath.mp.dps = 20
-        testlimit = mpmath.mpf('10')**(-1*(mpmath.mpf.dps - 4))
+        sympy.mpmath.mpf.dps = 100
+        sympy.mpmath.mp.dps = 100
+        #sympy.mpmath.mpf.dps = 20             # testing version
+        #sympy.mpmath.mp.dps = 20
+        testlimit = sympy.mpmath.mpf('10')**(-1*(sympy.mpmath.mpf.dps - 4))
         #print >> sys.stderr, testlimit
 
-        zero = mpmath.mpf('0')
-        one = mpmath.mpf('1')
+        zero = sympy.mpmath.mpf('0')
+        one = sympy.mpmath.mpf('1')
 
         # Abramowitz Table 16.5
         #
         # dn(0, q) = 1
 
         mstring = str(random.random())
-        m = mpmath.mpf(mstring)
+        m = sympy.mpmath.mpf(mstring)
 
         dn = jacobi_elliptic_dn(zero, m)
         equality = one - dn
@@ -338,7 +338,7 @@ class precisemathTests(unittest.TestCase):
         # dn(z, 0) = 1, m == 0
 
         zstring = str(random.random())
-        z = mpmath.mpf(zstring)
+        z = sympy.mpmath.mpf(zstring)
 
         value = jacobi_elliptic_dn(z, zero)
 
