@@ -116,6 +116,12 @@ class sin(Function):
                                     return
                             # convert sin(-x-y) to -sin(x+y)
                             return -cls(-arg)
+                    if arg.args[0].is_negative:
+                        if (-arg).args[0].is_negative:
+                            # This is to avoid infinite recursion in the case
+                            # sin(-x-1)
+                            return
+                        return -cls(-arg)
 
 
     @staticmethod
@@ -298,6 +304,12 @@ class cos(Function):
                                     return
                             # convert cos(-x-y) to cos(x+y)
                             return cls(-arg)
+                    if arg.args[0].is_negative:
+                        if (-arg).args[0].is_negative:
+                            # This is to avoid infinite recursion in the case
+                            # sin(-x-1)
+                            return
+                        return cls(-arg)
 
 
     @staticmethod
