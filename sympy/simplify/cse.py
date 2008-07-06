@@ -1,7 +1,7 @@
 """ Tools for doing common subexpression elimination.
 """
 
-from sympy import Symbol
+from sympy import Symbol, Basic
 from sympy.utilities.iterables import postorder_traversal
 
 import cse_opts
@@ -91,7 +91,7 @@ def cse(exprs, symbols=None, optimizations=None):
 
     Parameters
     ----------
-    exprs : list of sympy expressions
+    exprs : list of sympy expressions, or a single sympy expression
         The expressions to reduce.
     symbols : infinite iterator yielding unique Symbols
         The symbols used to label the common subexpressions which are pulled
@@ -124,6 +124,9 @@ def cse(exprs, symbols=None, optimizations=None):
         # manipulations of the module-level list in some other thread.
         optimizations = list(cse_optimizations)
 
+    # Handle the case if just one expression was passed.
+    if isinstance(exprs, Basic):
+        exprs = [exprs]
     # Preprocess the expressions to give us better optimization opportunities.
     exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
 
