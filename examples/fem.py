@@ -121,7 +121,7 @@ def create_matrix(equations, coeffs):
        c = coeffs[j]
        for i in range(0, len(equations)):
            e = equations[i]
-           d, r = div(e, c)
+           d, r = div(e, c, *coeffs)
            A[i,j] = d
    return A
 
