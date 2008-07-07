@@ -14,13 +14,13 @@ more details what they do and what they are interested in.
 #. `Ondřej Čertík <http://wiki.sympy.org/wiki/Ond%C5%99ej_%C4%8Cert%C3%ADk>`_: project leader
 #. Fabian Seoane: everything, reviewing patches, releases, general advice (issues and mailinglist), not active anymore
 #. Jurjen N.E. Bos: pretty printing and other patches
-#. Mateusz Paprocki: GSoC 2007, concrete math module, integration module, new core integration, a lot of patches, general advice
+#. Mateusz Paprocki: GSoC 2007, concrete math module, integration module, new core integration, a lot of patches, general advice, new polynomial module, improvements to solvers, simplifications
 #. Marc-Etienne M.Leveille: matrix patch
 #. Brian Jorgensen: GSoC 2007, plotting module and related things, patches
 #. Jason Gedge: GSoC 2007, geometry module, a lot of patches and fixes, new core integration
 #. Robert Schwarz: GSoC 2007, polynomials module, patches
 #. `Pearu Peterson <http://wiki.sympy.org/wiki/Pearu_Peterson>`_: new core, sympycore project, general advice (issues and mailinglist)
-#. `Fredrik Johansson <http://wiki.sympy.org/wiki/Fredrik_Johansson>`_: mpmath project, number theory, combinatorial functions, products & summation, statistics, units, patches, documentation, general advice (issues and mailinglist)
+#. `Fredrik Johansson <http://wiki.sympy.org/wiki/Fredrik_Johansson>`_: mpmath project and its integration in SymPy, number theory, combinatorial functions, products & summation, statistics, units, patches, documentation, general advice (issues and mailinglist)
 #. Chris Wu: GSoC 2007, linear algebra module
 #. `Kirill Smelkov <http://wiki.sympy.org/wiki/Kirill_Smelkov>`_: everything, reviewing patches, releases, general advice (issues and mailinglist)
 #. Ulrich Hecht: pattern matching and other patches
@@ -33,7 +33,7 @@ more details what they do and what they are interested in.
 #. Or Dvory: GHOP, documentation
 #. `Saroj Adhikari <http://wiki.sympy.org/wiki/User:Saroj>`_: bug fixes
 #. Pauli Virtanen: bug fix
-#. Robert Kern: bug fix
+#. Robert Kern: bug fix, common subexpression elimination
 #. James Aspnes: bug fixes
 #. Nimish Telang: multivariate lambdas
 #. Abderrahim Kitouni: pretty printing + complex expansion bug fixes
@@ -44,13 +44,13 @@ more details what they do and what they are interested in.
 #. Felix Kaiser: documentation + whitespace testing patches
 #. Roberto Nobrega: several pretty printing patches
 #. David Roberts: latex printing patches
-#. Sebastian Krämer: implemented lambdify/numpy/mpmath cooperation, bug fixes, refactoring
-#. Vinzent Steinberg: docstring patch
-#. Riccardo Gori: several improvements to matrices, other bug fixes
+#. Sebastian Krämer: implemented lambdify/numpy/mpmath cooperation, bug fixes, refactoring, lambdifying of matrices
+#. Vinzent Steinberg: docstring patches, bug fixes
+#. Riccardo Gori: improvements and speedups to matrices, bug fixes
 
-
-Uptodate list of all contributors is maintained in our `Contributors wiki page
-<http://wiki.sympy.org/wiki/Contributors>`_.
+Uptodate list in the order of the first contribution is given in the `README
+<http://hg.sympy.org/sympy/file/tip/README>`_
+(you can also find a brief history of SymPy in the README).
 
 Financial and Infrastructure Support
 ------------------------------------
