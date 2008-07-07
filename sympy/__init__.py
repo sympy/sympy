@@ -10,7 +10,7 @@ See the webpage for more information and documentation:
     http://code.google.com/p/sympy/
 """
 
-__version__ = "0.6.0"
+__version__ = "0.6.0-hg"
 
 #put path to pyglet into the search path, so that it can be imported
 import os.path
