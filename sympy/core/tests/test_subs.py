@@ -2,7 +2,7 @@ import py
 
 import sympy as g
 from sympy import Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,\
-        abc, Integer, Eq, symbols, Add
+        abc, Integer, Eq, symbols, Add, I
 
 def test_subs():
     n3=g.Rational(3)
@@ -142,3 +142,14 @@ def test_add():
     # this should work everytime:
     e = a**2 - b - c
     assert e.subs(Add(*e.args[:2]), d) == d + e.args[2]
+
+def test_subs_issue910():
+    assert (I*Symbol("a")).subs(1, 2) == I*Symbol("a")
+
+def test_subs_subs_nums():
+    x = Symbol("x")
+    assert sin(1).subs(1, 2) == sin(2)
+    assert sin(2).subs(1, 3) == sin(2)
+    assert (2*x).subs(1, 3) == 2*x
+    assert (2*x).subs(2, 3) == 3*x
+    assert (2*x).subs(x, 3) == 6

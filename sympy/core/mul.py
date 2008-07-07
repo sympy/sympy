@@ -580,7 +580,14 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         if terms1==terms2: # (2*a).subs(3*a,y) -> 2/3*y
             return new * coeff1/coeff2
         l1,l2 = len(terms1),len(terms2)
-        if l2<l1: # (a*b*c*d).subs(b*c,x) -> a*x*d
+        if l2 == 0:
+            # if old is just a number, go through the self.args one by one
+            return Mul(*[x.subs(old, new) for x in self.args])
+        elif l2<l1:
+            # old is some something more complex, like:
+            # (a*b*c*d).subs(b*c,x) -> a*x*d
+            # then we need to search where in self.args the "old" is, and then
+            # correctly substitute both terms and coefficients.
             for i in xrange(l1-l2+1):
                 if terms2==terms1[i:i+l2]:
                     m1 = Mul(*terms1[:i]).subs(old,new)
