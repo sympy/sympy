@@ -12,8 +12,8 @@ def A(x):
 
 
 x=Symbol("x")
-s = Polynomial(A(x))
-num = [s.nth_coeff(n) for n in range(11)]
+s = Poly(A(x), x)
+num = [s.coeff(n) for n in range(11)]
 
-print s
+print s.as_basic()
 print num
