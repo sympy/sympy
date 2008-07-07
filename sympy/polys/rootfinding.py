@@ -171,7 +171,19 @@ def roots(f, *symbols, **flags):
                 zeros += roots_quadratic(g)
             else:
                 if n == 3 and flags.get('cubics', False):
-                    zeros += roots_cubic(g)
+                    from sympy.polynomials.factor_ import factor
+                    from sympy.polynomials.base import PolynomialException
+
+                    try:
+                        factors = factor(g.as_basic(), g.symbols)
+
+                        if len(factors) <= 2:
+                            raise PolynomialException
+
+                        for term in factors:
+                            zeros += roots(term.as_poly(*g.symbols))
+                    except PolynomialException:
+                        zeros += roots_cubic(g)
                 elif n == 4 and flags.get('quartics', False):
                     zeros += roots_quartic(g)
 

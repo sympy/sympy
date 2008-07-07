@@ -941,6 +941,9 @@ def test_roots():
         r13_20 - r1_2*(r1_100 + r2_25*I*2**r1_2)**r1_2: 1,
     }
 
+    assert roots(x**3 + 2*x**2 + 4*x + 8, x, cubics=True) == \
+        {-2*I: 1, 2*I: 1, -Integer(2): 1}
+
     assert roots(x**4-1, x, domain='Z') == {S.One: 1, -S.One: 1}
     assert roots(x**4-1, x, domain='I') == {I: 1, -I: 1}
 
