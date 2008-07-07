@@ -41,4 +41,5 @@ from printing import latex, preview, view, pngview, pdfview, dviview
 from printing import python, print_python
 from polynomials import factor
 
-import abc
+# This is slow to import:
+#import abc
