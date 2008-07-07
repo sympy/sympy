@@ -1,15 +1,14 @@
 import py
 
-import sympy as g
 from sympy import Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,\
-        abc, Integer, Eq, symbols, Add, I
+        abc, Integer, Eq, symbols, Add, I, Real, log, Rational
 
 def test_subs():
-    n3=g.Rational(3)
-    n2=g.Rational(2)
-    n6=g.Rational(6)
-    x=g.Symbol("x")
-    c=g.Symbol("c")
+    n3=Rational(3)
+    n2=Rational(2)
+    n6=Rational(6)
+    x=Symbol("x")
+    c=Symbol("c")
     e=x
     assert str(e) == "x"
     e=e.subs(x,n3)
@@ -20,41 +19,41 @@ def test_subs():
     e=e.subs(x,n3)
     assert str(e) == "6"
 
-    e=(g.sin(x)**2).diff(x)
-    assert e == 2*g.sin(x)*g.cos(x)
+    e=(sin(x)**2).diff(x)
+    assert e == 2*sin(x)*cos(x)
     e=e.subs(x,n3)
-    assert e == 2*g.cos(n3)*g.sin(n3)
+    assert e == 2*cos(n3)*sin(n3)
 
-    e=(g.sin(x)**2).diff(x)
-    assert e == 2*g.sin(x)*g.cos(x)
-    e=e.subs(g.sin(x),g.cos(x))
-    assert e == 2*g.cos(x)**2
+    e=(sin(x)**2).diff(x)
+    assert e == 2*sin(x)*cos(x)
+    e=e.subs(sin(x),cos(x))
+    assert e == 2*cos(x)**2
 
     assert exp(pi).subs(exp, sin) == 0
     assert cos(exp(pi)).subs(exp, sin) == 1
 
 def test_logexppow():   # no eval()
-    x = g.Symbol("x")
-    w = g.Symbol("dummy :)")
+    x = Symbol("x")
+    w = Symbol("dummy :)")
     e = (3**(1+x)+2**(1+x))/(3**x+2**x)
     assert e.subs(2**x, w) != e
-    assert e.subs(g.exp(x*g.log(g.Rational(2))),w) != e
+    assert e.subs(exp(x*log(Rational(2))),w) != e
 
 def test_bug():
-    x1=g.Symbol("x1")
-    x2=g.Symbol("x2")
+    x1=Symbol("x1")
+    x2=Symbol("x2")
     y=x1*x2
-    y.subs(x1,g.Real(3.0))
+    y.subs(x1,Real(3.0))
 
 def test_subbug1():
-    x=g.Symbol("x")
+    x=Symbol("x")
     e=(x**x).subs(x,1)
     e=(x**x).subs(x,1.0)
 
 def test_subbug2():
     # Ensure this does not cause infinite recursion
-    x = g.Symbol('x')
-    assert g.Real(7.7).epsilon_eq(abs(x).subs(x, -7.7))
+    x = Symbol('x')
+    assert Real(7.7).epsilon_eq(abs(x).subs(x, -7.7))
 
 def test_dict():
     x = Symbol('x')
