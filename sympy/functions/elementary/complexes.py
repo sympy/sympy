@@ -230,6 +230,12 @@ class abs(Function):
     def _eval_conjugate(self):
         return self
 
+    def _eval_power(self,other):
+        if self.args[0].is_real and other.is_integer:
+            if other.is_even:
+                return self.args[0]**other
+        return
+
 class arg(Function):
 
     nargs = 1

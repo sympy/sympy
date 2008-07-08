@@ -93,6 +93,9 @@ def test_abs():
     assert abs(-1)== 1
     assert sqrt(x**2) == abs(x)
     assert abs(x).diff(x) == sign(x)
+    x = Symbol('x',real=True)
+    n = Symbol('n',integer=True)
+    assert x**(2*n) == abs(x)**(2*n)
 
 def test_abs_properties():
     x = Symbol('x')
