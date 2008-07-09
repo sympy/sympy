@@ -317,6 +317,14 @@ def test_args():
     assert (x**y).args[0] == x
     assert (x**y).args[1] == y
 
+def test_iter_basic_args():
+    assert list(sin(x*y).iter_basic_args()) == [x*y]
+    assert list((x**y).iter_basic_args()) == [x, y]
+
+    assert list(Poly(0, x).iter_basic_args()) == [S.Zero]
+    assert list(Poly(1, x).iter_basic_args()) == [S.One]
+    assert list(Poly(x, x).iter_basic_args()) == [S.One, x]
+
 def test_noncommutative_expand_issue658():
     A, B, C = symbols('ABC', commutative=False)
     assert A*B - B*A != 0
@@ -413,6 +421,15 @@ def test_has_any_symbols():
 
     assert (x*m/s).has_any_symbols(y, z) == False
     assert (x*m/s).has_all_symbols(x, y) == False
+
+    poly = Poly(x**2 + x*y*sin(z), x, y, t)
+
+    assert poly.has_any_symbols(x) == True
+    assert poly.has_any_symbols(x, y, z) == True
+    assert poly.has_any_symbols(x, y, z, t) == True
+
+    assert poly.has_all_symbols(x, y, z) == True
+    assert poly.has_all_symbols(x, y, z, t) == False
 
 def test_has_all_symbols():
     x,y,z,t,u = symbols('xyztu')

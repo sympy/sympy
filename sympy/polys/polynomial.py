@@ -682,6 +682,14 @@ class Poly(Basic, RelMeths, ArithMeths):
         """Computes oo-norm of polynomial's coefficients. """
         return max([ abs(coeff) for coeff in self.coeffs ])
 
+    def iter_basic_args(self):
+        for coeff in self.coeffs:
+            yield coeff
+
+        for i, symbol in enumerate(self.symbols):
+            if any(monom[i] != 0 for monom in self.monoms):
+                yield symbol
+
     def iter_coeffs(self):
         for coeff in self.coeffs:
             yield coeff

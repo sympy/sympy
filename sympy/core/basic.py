@@ -494,12 +494,9 @@ class Basic(AssumeMeths):
            True
 
         """
-        for obj in self.args:
-            if isinstance(obj, Basic):
-                if not obj.is_number:
-                    return False
-            else:
-                raise TypeError
+        for obj in self.iter_basic_args():
+            if not obj.is_number:
+                return False
         else:
             return True
 
@@ -517,7 +514,7 @@ class Basic(AssumeMeths):
 
     @property
     def args(self):
-        """Returns a tuple of arguments of "self".
+        """Returns a tuple of arguments of 'self'.
 
         Example:
 
@@ -542,6 +539,10 @@ class Basic(AssumeMeths):
         easy to change the interface in the future if needed).
         """
         return self._args[:]
+
+    def iter_basic_args(self):
+        """Iterates arguments of 'self' with are Basic instances. """
+        return iter(self.args)
 
     def is_fraction(self, *syms):
         p, q = self.as_numer_denom()
@@ -785,7 +786,7 @@ class Basic(AssumeMeths):
                     else:
                         return False
                 else:
-                    for term in expr.args:
+                    for term in expr.iter_basic_args():
                         if search(term):
                             return True
                     else:
@@ -817,7 +818,7 @@ class Basic(AssumeMeths):
                     if expr.is_Symbol and expr in syms:
                         syms.remove(expr)
                 else:
-                    for term in expr.args:
+                    for term in expr.iter_basic_args():
                         if not syms:
                             break
                         else:
