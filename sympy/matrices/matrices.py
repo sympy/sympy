@@ -1067,9 +1067,11 @@ class Matrix(object):
         assert d != 0
         return self.adjugate()/d
 
-    def rref(self):
+    def rref(self,simplified=False):
         """
         Take any matrix and return reduced row-echelon form and indices of pivot vars
+
+        To simplify elements before finding nonzero pivots set simplified=True
         """
         # TODO: rewrite inverse_GE to use this
         pivots, r = 0, self[:,:]        # pivot: index of next row to contain a pivot
@@ -1077,8 +1079,12 @@ class Matrix(object):
         for i in range(r.cols):
             if pivots == r.lines:
                 break
+            if simplified:
+                r[pivots,i] = simplify(r[pivots,i])
             if r[pivots,i] == 0:
                 for k in range(pivots, r.lines):
+                    if simplified and k>pivots:
+                        r[k,i] = simplify(r[k,i])
                     if r[k,i] != 0:
                         break
                 if k == r.lines - 1 and r[k,i] == 0:
@@ -1095,12 +1101,12 @@ class Matrix(object):
             pivots += 1
         return r, pivotlist
 
-    def nullspace(self):
+    def nullspace(self,simplified=False):
         """
         Returns list of vectors (Matrix objects) that span nullspace of self
         """
         assert self.cols >= self.lines
-        reduced, pivots = self.rref()
+        reduced, pivots = self.rref(simplified)
         basis = []
         # create a set of vectors for the basis
         for i in range(self.cols - len(pivots)):
@@ -1249,6 +1255,9 @@ class Matrix(object):
             # check if basis is right size, don't do it if symbolic - too many solutions
             if not tmp.is_symbolic():
                 assert len(basis) == k
+            elif len(basis) != k:
+                # The nullspace routine failed, try it again with simplification
+                basis = tmp.nullspace(simplified=True)
             out.append((r, k, basis))
         return out
 

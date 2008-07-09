@@ -417,6 +417,14 @@ def test_eigen():
          (-1, 1, [Matrix([-1, 1, 0])]),
          ( 0, 1, [Matrix([ 0,-1, 1])])]
 
+    eps = Symbol('eps',real=True)
+
+    M = Matrix([abs(eps), I*eps    ],
+               [-I*eps,   abs(eps) ])
+
+    assert M.eigenvects() ==  \
+        [( 2*abs(eps), 1, [ Matrix([I*eps/abs(eps)],[1]) ] ),
+         ( 0, 1, [Matrix([-I*eps/abs(eps)],[1])]) ]
 def test_sparse_matrix():
     return
     def eye(n):
