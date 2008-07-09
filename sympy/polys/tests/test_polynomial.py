@@ -811,18 +811,6 @@ def test_nonzero():
     assert bool(Poly(102, x, y, z)) == True
     assert bool(Poly(x+21*y, x, y)) == True
 
-def test_atoms():
-    assert Poly(0, x).atoms() == set([S.Zero])
-    assert Poly(1, x).atoms() == set([S.One])
-    assert Poly(x, x).atoms() == set([S.One, x])
-    assert Poly(x, x, y).atoms() == set([S.One, x])
-    assert Poly(x + y, x, y).atoms() == set([S.One, x, y])
-    assert Poly(x + y, x, y, z).atoms() == set([S.One, x, y])
-    assert Poly(x + y*t, x, y, z).atoms() == set([S.One, x, t, y])
-
-    assert Poly(x+1, x).atoms(type=Symbol) == set([x])
-    assert Poly(x+1, x).atoms(type=(Symbol,)) == set([x])
-
 def test_sturm():
     assert poly_sturm(5, x) == (Poly(5, x),)
     assert poly_sturm(x, x) == (Poly(x, x), Poly(1, x))

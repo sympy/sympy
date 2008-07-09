@@ -59,7 +59,7 @@ def groebner(f, var=None, order=None, reduced=True):
         f = [f]
     if not isinstance(f[0], Polynomial):
         if var is None:
-            var = merge_var(*map(lambda p: p.atoms(type=Symbol), f))
+            var = merge_var(*map(lambda p: p.atoms(Symbol), f))
         if isinstance(var, Symbol):
             var = [var]
         f = map(lambda p: Polynomial(p, var=var, order=order), f)

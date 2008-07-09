@@ -110,7 +110,7 @@ class Polynomial(Basic):
             sympy_expr = sympify(sympy_expr).expand()
             if var is None:
                 # Automatically extract the variables from the expression.
-                var = list(sympy_expr.atoms(type=Symbol))
+                var = list(sympy_expr.atoms(Symbol))
                 var.sort()
             if isinstance(var, Symbol):
                 var = [var]
@@ -147,7 +147,7 @@ class Polynomial(Basic):
             obj.sympy_expr = sympy_expr
             obj.coeffs = coeffs
             if var is None:
-                var = list(sympy_expr.atoms(type=Symbol))
+                var = list(sympy_expr.atoms(Symbol))
                 var.sort()
             if isinstance(var, Symbol):
                 var = [var]
@@ -794,7 +794,7 @@ def sympy2coefficients(sympy_expr, var, order):
         exponents = [S.Zero]*len(var)
         for factor in factors:
             # Check if any of the variables occur.
-            if filter(lambda x:x in var, factor.atoms(type=Symbol)):
+            if filter(lambda x:x in var, factor.atoms(Symbol)):
                 if isinstance(factor, Pow) \
                    and isinstance(factor.base, Symbol) \
                    and factor.exp.is_integer \

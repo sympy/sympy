@@ -429,8 +429,8 @@ class Ray(LinearEntity):
             return ((o.p1 in self) and (o.p2 in self))
         elif isinstance(o, Point):
             if Point.is_collinear(self.p1, self.p2, o):
-                if (not self.p1[0].atoms(type=C.Symbol)) and (not self.p1[1].atoms(type=C.Symbol)) \
-                        and (not self.p2[0].atoms(type=C.Symbol)) and (not self.p2[1].atoms(type=C.Symbol)):
+                if (not self.p1[0].atoms(C.Symbol)) and (not self.p1[1].atoms(C.Symbol)) \
+                        and (not self.p2[0].atoms(C.Symbol)) and (not self.p2[1].atoms(C.Symbol)):
                     if self.xdirection is S.Infinity:
                         return o[0] >= self.source[0]
                     elif self.xdirection is S.NegativeInfinity:
@@ -512,7 +512,7 @@ class Segment(LinearEntity):
         elif isinstance(o, Point):
             if Point.is_collinear(self.p1, self.p2, o):
                 x1,x2 = self.p1[0], self.p2[0]
-                if not (x1.atoms(type=C.Symbol)) or (x2.atoms(type=C.Symbol)):
+                if not (x1.atoms(C.Symbol)) or (x2.atoms(C.Symbol)):
                     return (min(x1,x2) <= o[0]) and (o[0] <= max(x1,x2))
                 else:
                     return True

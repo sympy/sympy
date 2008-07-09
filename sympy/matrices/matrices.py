@@ -953,7 +953,7 @@ class Matrix(object):
     def is_symbolic(self):
         for i in range(self.cols):
             for j in range(self.lines):
-                if self[i,j].atoms(type=Symbol):
+                if self[i,j].atoms(Symbol):
                     return True
         return False
 

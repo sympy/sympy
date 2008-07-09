@@ -285,7 +285,7 @@ def roots(f, var=None):
         raise PolynomialException('Multivariate polynomials not supported.')
 
     # Determine type of coeffs (for factorization purposes)
-    symbols = f.sympy_expr.atoms(type=Symbol)
+    symbols = f.sympy_expr.atoms(Symbol)
     symbols = filter(lambda a: not a in f.var, symbols)
     if symbols:
         coeff = 'sym'
@@ -375,7 +375,7 @@ def solve_system(eqs, var=None, order=None):
         eqs = [eqs]
     if not isinstance(eqs[0], Polynomial):
         if var is None:
-            var = merge_var(*[f.atoms(type=Symbol) for f in eqs])
+            var = merge_var(*[f.atoms(Symbol) for f in eqs])
         eqs = [Polynomial(f, var=var, order='lex') for f in eqs]
     else:
         eqs = [Polynomial(f.sympy_expr, var=f.var, order='lex') for f in eqs]

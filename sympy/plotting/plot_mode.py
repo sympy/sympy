@@ -320,7 +320,7 @@ class PlotMode(PlotObject):
         # i_vars in given functions
         # (aka d_vars)
         for f in functions:
-            for a in f.atoms(type=Symbol):
+            for a in f.atoms(Symbol):
                 if a not in i_vars:
                     i_vars.append(a)
 

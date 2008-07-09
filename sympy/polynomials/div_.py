@@ -79,8 +79,8 @@ def div(f, g, var=None, order=None, coeff=None):
         if isinstance(var, Symbol):
             var = [var]
         if var is None:
-            var = merge_var(f.atoms(type=Symbol),
-                            *[g_i.atoms(type=Symbol) for g_i in g])
+            var = merge_var(f.atoms(Symbol),
+                            *[g_i.atoms(Symbol) for g_i in g])
         f = Polynomial(f, var=var, order=order)
         g = map(lambda x: Polynomial(x, var=var, order=order), g)
 
@@ -162,7 +162,7 @@ def gcd(f, g, var=None, order=None, coeff=None):
         f = sympify(f)
         g = sympify(g)
         if var is None:
-            var = merge_var(f.atoms(type=Symbol), g.atoms(type=Symbol))
+            var = merge_var(f.atoms(Symbol), g.atoms(Symbol))
         f = Polynomial(f, var=var, order=order)
         g = Polynomial(g, var=var, order=order)
 
@@ -241,7 +241,7 @@ def lcm(f, g, var=None, order=None, coeff=None):
         f = sympify(f)
         g = sympify(g)
         if var is None:
-            var = merge_var(f.atoms(type=Symbol), g.atoms(type=Symbol))
+            var = merge_var(f.atoms(Symbol), g.atoms(Symbol))
         f = Polynomial(f, var=var, order=order)
         g = Polynomial(g, var=var, order=order)
 
@@ -275,7 +275,7 @@ def lcm(f, g, var=None, order=None, coeff=None):
                                reduced=True)
         # Now intersect this result with the polynomial ring in the
         # var in `var', that is, eliminate t.
-        I = filter(lambda p: t not in p.sympy_expr.atoms(type=Symbol), G)
+        I = filter(lambda p: t not in p.sympy_expr.atoms(Symbol), G)
         # The intersection should be a principal ideal, that is generated
         # by a single polynomial.
         if not len(I) == 1:

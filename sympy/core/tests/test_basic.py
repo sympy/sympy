@@ -1,6 +1,6 @@
 from sympy import Basic, S, Symbol, Real, Integer, Rational,  \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
-    WildFunction, Poly, Function, Derivative
+    WildFunction, Poly, Function, Derivative, Number
 
 import py
 
@@ -83,9 +83,7 @@ class F1_1(DummyNumber):
     def __float__(self):
         return self.number
 
-
-x = Symbol("x")
-y = Symbol("y")
+x,y,z,t = symbols('xyzt')
 
 i5 = I5()
 f1_1 = F1_1()
@@ -154,12 +152,26 @@ def test_leadterm():
     assert (x**2).leadterm(x)[1] == 2
 
 def test_atoms():
-   assert list((1+x).atoms()) == [1,x]
-   assert list(x.atoms()) == [x]
-   assert list((1+2*cos(x)).atoms(type=Symbol)) == [x]
-   assert list((2*(x**(y**x))).atoms()) == [2,x,y]
-   assert list(Rational(1,2).atoms()) == [Rational(1,2)]
-   assert list(Rational(1,2).atoms(type=type(oo))) == []
+   assert sorted(list(x.atoms())) == [x]
+   assert sorted(list((1+x).atoms())) == [1, x]
+
+   assert sorted(list((1+2*cos(x)).atoms(Symbol))) == [x]
+   assert sorted(list((1+2*cos(x)).atoms(Symbol,Number))) == [1, 2, x]
+
+   assert sorted(list((2*(x**(y**x))).atoms())) == [2, x, y]
+
+   assert sorted(list(Rational(1,2).atoms())) == [S.Half]
+   assert sorted(list(Rational(1,2).atoms(Symbol))) == []
+
+   assert sorted(list(sin(oo).atoms(oo))) == [oo]
+
+   assert sorted(list(Poly(0, x).atoms())) == [S.Zero]
+   assert sorted(list(Poly(1, x).atoms())) == [S.One]
+   assert sorted(list(Poly(x, x).atoms())) == [S.One, x]
+   assert sorted(list(Poly(x, x, y).atoms())) == [S.One, x]
+   assert sorted(list(Poly(x + y, x, y).atoms())) == [S.One, x, y]
+   assert sorted(list(Poly(x + y, x, y, z).atoms())) == [S.One, x, y]
+   assert sorted(list(Poly(x + y*t, x, y, z).atoms())) == [S.One, t, x, y]
 
 def test_is_polynomial():
     z = Symbol('z')

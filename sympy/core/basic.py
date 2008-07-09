@@ -1,7 +1,5 @@
 """Base class for all objects in sympy"""
 
-type_class = type
-
 import sympy.mpmath as mpmath
 
 from assumptions import AssumeMeths
@@ -441,38 +439,44 @@ class Basic(AssumeMeths):
 
         return self.torepr()
 
+    def atoms(self, *types):
+        """Returns the atoms that form the current object.
 
+           >>> from sympy import *
+           >>> x,y = symbols('xy')
 
-    @Memoizer('Basic', MemoizerArg((type, type(None), tuple), name='type'), return_value_converter = lambda obj: obj.copy())
-    def atoms(self, type=None):
-        """Returns the atoms that form current object.
+           >>> sorted((x+y**2 + 2*x*y).atoms())
+           [2, x, y]
 
-        Example:
-        >>> from sympy import *
-        >>> x = Symbol('x')
-        >>> y = Symbol('y')
-        >>> (x+y**2+ 2*x*y).atoms()
-        set([2, x, y])
+           You can also filter the results by a given type(s) of object:
 
-        You can also filter the results by a given type(s) of object
-        >>> (x+y+2+y**2*sin(x)).atoms(type=Symbol)
-        set([x, y])
+           >>> sorted((x+y+2+y**2*sin(x)).atoms(Symbol))
+           [x, y]
 
-        >>> (x+y+2+y**2*sin(x)).atoms(type=Number)
-        set([2])
+           >>> sorted((x+y+2+y**3*sin(x)).atoms(Number))
+           [2, 3]
 
-        >>> (x+y+2+y**2*sin(x)).atoms(type=(Symbol, Number))
-        set([2, x, y])
+           >>> sorted((x+y+2+y**2*sin(x)).atoms(Symbol, Number))
+           [2, x, y]
+
+           Or by a type of on object in an impliciy way:
+
+           >>> sorted((x+y+2+y**2*sin(x)).atoms(x))
+           [x, y]
+
         """
-        result = set()
-        if type is not None and not isinstance(type, (type_class, tuple)):
-            type = sympify(type).__class__
+        if len(types) == 1 and not isinstance(types[0], type):
+            types = (sympify(types[0]).__class__,)
+
+        result = set([])
+
         if self.is_Atom:
-            if type is None or isinstance(self, type):
+            if not types or isinstance(self, types):
                 result.add(self)
         else:
-            for obj in self.args:
-                result = result.union(obj.atoms(type=type))
+            for obj in self.iter_basic_args():
+                result |= obj.atoms(*types)
+
         return result
 
     def is_hypergeometric(self, k):
@@ -560,7 +564,7 @@ class Basic(AssumeMeths):
         if syms:
             syms = map(sympify, syms)
         else:
-            syms = list(self.atoms(type=Symbol))
+            syms = list(self.atoms(Symbol))
 
         if not syms: # constant polynomial
             return True
@@ -1002,7 +1006,7 @@ class Basic(AssumeMeths):
         if eqn.is_Symbol:
             return (eqn, rhs)
         if symbols is None:
-            symbols = eqn.atoms(type=Symbol)
+            symbols = eqn.atoms(Symbol)
         if symbols:
             # find  symbol
             for s in symbols:

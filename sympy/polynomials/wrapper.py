@@ -55,7 +55,7 @@ def gcd(f, g, var=None, order=None, coeff=None):
         if var is not None:
             if isinstance(var, Symbol):
                 var = [var]
-            if [v for v in f.atoms(type=Symbol).union(g.atoms(type=Symbol))
+            if [v for v in f.atoms(Symbol).union(g.atoms(Symbol))
                 if v not in var]:
                 coeff = 'sym'
 
@@ -87,7 +87,7 @@ def lcm(f, g, var=None, order=None, coeff=None):
         if var is not None:
             if isinstance(var, Symbol):
                 var = [var]
-            if [v for v in f.atoms(type=Symbol).union(g.atoms(type=Symbol))
+            if [v for v in f.atoms(Symbol).union(g.atoms(Symbol))
                 if v not in var]:
                 coeff = 'sym'
 

@@ -2010,28 +2010,6 @@ class Poly(Basic, RelMeths, ArithMeths):
     def __nonzero__(self):
         return self.coeffs not in ((S.Zero,), (0,))
 
-    def atoms(self, type=None):
-        """Returns the atoms that form a polynomial.
-
-           >>> from sympy import *
-           >>> x,y = symbols('xy')
-
-           >>> Poly(x + 1, x, y).atoms()
-           set([1, x])
-
-        """
-        result = set()
-
-        for coeff in self.coeffs:
-            result |= coeff.atoms(type)
-
-        if type is None or type is Symbol or Symbol in type:
-            for i, symbol in enumerate(self.symbols):
-                if any(monom[i] != 0 for monom in self.monoms):
-                    result.add(symbol)
-
-        return result
-
     def _eval_is_polynomial(self, symbols):
         try:
             self.__class__(self, *symbols, **self.flags)

@@ -77,7 +77,7 @@ class floor(Function):
         else:
             coeff, terms = arg.as_coeff_terms(S.ImaginaryUnit)
 
-            if not terms and not arg.atoms(type=C.Symbol):
+            if not terms and not arg.atoms(C.Symbol):
                 if arg.is_negative:
                     return -ceiling(-arg)
                 else:
@@ -165,7 +165,7 @@ class ceiling(Function):
         else:
             coeff, terms = arg.as_coeff_terms(S.ImaginaryUnit)
 
-            if not terms and not arg.atoms(type=C.Symbol):
+            if not terms and not arg.atoms(C.Symbol):
                 if arg.is_negative:
                     return -floor(-arg)
                 else:

@@ -804,7 +804,7 @@ def radsimp(expr):
         else:
             b,c = r[b],r[c]
 
-        syms = list(n.atoms(type=C.Symbol))
+        syms = list(n.atoms(Symbol))
         n = collect( (n*(a-b*sqrt(c))).expand(), syms )
         d = a**2 - c*b**2
 
