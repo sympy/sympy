@@ -1338,17 +1338,6 @@ class Basic(AssumeMeths):
                 return self, tuple()
         return S.One, (self,)
 
-    def as_indep_terms(self, x):
-        coeff, terms = self.as_coeff_terms()
-        indeps = [coeff]
-        new_terms = []
-        for t in terms:
-            if t.has(x):
-                new_terms.append(x)
-            else:
-                indeps.append(x)
-        return Mul(*indeps), Mul(*new_terms)
-
     def as_coeff_factors(self, x=None):
         # a -> c + f
         if x is not None:
