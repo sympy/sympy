@@ -868,12 +868,6 @@ class Basic(AssumeMeths):
     def _eval_derivative(self, s):
         return
 
-    def _eval_integral(self, s):
-        return
-
-    def _eval_defined_integral(self, s, a, b):
-        return
-
     def _eval_fapply(self, *args, **assumptions):
         return
 
@@ -1701,16 +1695,6 @@ class Atom(Basic):
 
     def doit(self, **hints):
         return self
-
-    def _eval_integral(self, s):
-        if s==self:
-            return self**2/2
-        return self*s
-
-    def _eval_defined_integral(self, s, a, b):
-        if s==self:
-            return (b**2-a**2)/2
-        return self*(b-a)
 
     def _eval_is_polynomial(self, syms):
         return True

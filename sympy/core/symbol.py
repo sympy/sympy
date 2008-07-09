@@ -73,16 +73,6 @@ class Symbol(Atom, RelMeths, ArithMeths):
         assumptions = self._assumptions
         return Function(self.name, nargs=len(args))(*args, **assumptions)
 
-    def _eval_integral(self, s):
-        if self==s:
-            return self**2/2
-        return self*s
-
-    def _eval_defined_integral(self, s, a, b):
-        if self==s:
-            return (b**2-a**2)/2
-        return self*(b-a)
-
     def _eval_expand_complex(self, *args):
         return C.re(self) + C.im(self)*S.ImaginaryUnit
 

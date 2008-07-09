@@ -471,33 +471,6 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             return Add(*[t.count_ops(symbolic) for t in self[:]]) + Symbol('MUL') * (len(self[:])-1)
         return Add(*[t.count_ops(symbolic) for t in self.args[:]]) + (len(self.args)-1)
 
-    def _eval_integral(self, s):
-        coeffs = []
-        terms = []
-        for t in self:
-            if not t.has(s): coeffs.append(t)
-            else: terms.append(t)
-        if coeffs:
-            return Mul(*coeffs) * Mul(*terms).integral(s)
-        u = self[0].integral(s)
-        v = Mul(*(self[1:]))
-        uv = u * v
-        return uv - (u*v.diff(s)).integral(s)
-
-    def _eval_defined_integral(self, s, a, b):
-        coeffs = []
-        terms = []
-        for t in self:
-            if not t.has(s): coeffs.append(t)
-            else: terms.append(t)
-        if coeffs:
-            return Mul(*coeffs) * Mul(*terms).integral(s==[a,b])
-        # (u'v) -> (uv) - (uv')
-        u = self[0].integral(s)
-        v = Mul(*(self[1:]))
-        uv = u * v
-        return (uv.subs(s,b) - uv.subs(s,a)) - (u*v.diff(s)).integral(s==[a,b])
-
     def _eval_is_polynomial(self, syms):
         for term in self.args:
             if not term._eval_is_polynomial(syms):

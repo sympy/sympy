@@ -278,12 +278,6 @@ class Add(AssocOp, RelMeths, ArithMeths):
             return Add(*[t.count_ops(symbolic) for t in self[:]]) + Symbol('ADD') * (len(self[:])-1)
         return Add(*[t.count_ops(symbolic) for t in self.args[:]]) + (len(self.args[:])-1)
 
-    def _eval_integral(self, s):
-        return Add(*[f.integral(s) for f in self])
-
-    def _eval_defined_integral(self, s,a,b):
-        return Add(*[f.integral(s==[a,b]) for f in self])
-
     def _eval_is_polynomial(self, syms):
         for term in self.args:
             if not term._eval_is_polynomial(syms):

@@ -444,30 +444,6 @@ class Pow(Basic, ArithMeths, RelMeths):
             return Add(*[t.count_ops(symbolic) for t in self[:]]) + Symbol('POW')
         return Add(*[t.count_ops(symbolic) for t in self.args[:]]) + 1
 
-    def _eval_integral(self, s):
-        if not self.exp.has(s):
-            if self.base==s:
-                n = self.exp+1
-                return self.base ** n/n
-            y = Symbol('y',dummy=True)
-            x,ix = self.base.solve4linearsymbol(y,symbols=set([s]))
-            if x.is_Symbol:
-                dx = 1/self.base.diff(x)
-                if not dx.has(s):
-                    return (y**self.exp*dx).integral(y).subs(y, self.base)
-
-    def _eval_defined_integral(self, s, a, b):
-        if not self.exp.has(s):
-            if self.base==s:
-                n = self.exp+1
-                return (b**n-a**n)/n
-            x,ix = self.base.solve4linearsymbol(s)
-            if x.is_Symbol:
-                dx = ix.diff(x)
-                if dx.is_Number:
-                    y = Symbol('y',dummy=True)
-                    return (y**self.exp*dx).integral(y==[self.base.subs(s,a), self.base.subs(s,b)])
-
     def _eval_is_polynomial(self, syms):
         if self.exp.has(*syms):
             return False
