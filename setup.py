@@ -70,7 +70,7 @@ modules = [
     ( True, 'sympy.solvers', [] ),
     ( True, 'sympy.specfun', [] ),
     ( True, 'sympy.statistics', [] ),
-    ( True, 'sympy.utilities', [] ),
+    ( True, 'sympy.utilities', ["compilef"] ),
     ( True, 'sympy.utilities.mathml', [] ),
     ]
 
