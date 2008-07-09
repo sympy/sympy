@@ -412,32 +412,6 @@ class Pow(Basic, ArithMeths, RelMeths):
 
         return (base ** exp).expand()
 
-    def _calc_splitter(self, d):
-        if d.has_key(self):
-            return d[self]
-        base = self.base._calc_splitter(d)
-        exp = self.exp._calc_splitter(d)
-        if exp.is_Integer:
-            if abs(exp.p)>2:
-                n = exp.p//2
-                r = exp.p - n
-                if n!=r:
-                    p1 = (base ** n)._calc_splitter(d)
-                    p2 = (base ** r)._calc_splitter(d)
-                    r = p1*p2
-                else:
-                    r = (base ** n)._calc_splitter(d) ** 2
-            elif exp.p==-2:
-                r = (1/base)._calc_splitter(d) ** 2
-            else:
-                r = base ** exp
-        else:
-            r = base ** exp
-        if d.has_key(r):
-            return d[r]
-        s = d[r] = Temporary()
-        return s
-
     @cacheit
     def count_ops(self, symbolic=True):
         if symbolic:

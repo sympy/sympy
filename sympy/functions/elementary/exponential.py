@@ -331,12 +331,6 @@ class log(Function):
         #why is this here:?
         return exp, S.NegativeOne
 
-    def _calc_apply_positive(self, x):
-        if x.is_positive and x.is_unbounded: return True
-
-    def _calc_apply_unbounded(self, x):
-        return x.is_unbounded
-
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms): # of log(1+x)

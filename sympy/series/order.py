@@ -341,9 +341,6 @@ class Order(Basic, ArithMeths, RelMeths):
             return Order(self.expr.subs(old, new), *(self.symbols[:i]+self.symbols[i+1:]))
         return Order(self.expr.subs(old, new), *self.symbols)
 
-    def _calc_splitter(self, d):
-        return S.Zero
-
     def _sage_(self):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.
         return Rational(0)._sage_()

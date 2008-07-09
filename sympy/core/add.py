@@ -256,23 +256,6 @@ class Add(AssocOp, RelMeths, ArithMeths):
         r = xrange(len(numers))
         return Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:])) for i in r]),Mul(*denoms)
 
-    def _calc_splitter(self, d):
-        if d.has_key(self):
-            return d[self]
-        coeff, factors = self.as_coeff_factors()
-        r = self.__class__(*[t._calc_splitter(d) for t in factors])
-        if r.is_Add and 0:
-            for e,t in d.items():
-                w = Wild('w')
-                d1 = r.match(e+w)
-                if d1 is not None:
-                    r1 = t + d1[w]
-                    break
-        if d.has_key(r):
-            return coeff + d[r]
-        s = d[r] = Temporary()
-        return s + coeff
-
     def count_ops(self, symbolic=True):
         if symbolic:
             return Add(*[t.count_ops(symbolic) for t in self[:]]) + Symbol('ADD') * (len(self[:])-1)

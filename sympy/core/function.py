@@ -226,15 +226,6 @@ class Function(Basic, ArithMeths, RelMeths):
             if not c: r = False
         return r
 
-    def _calc_positive(self):
-        return self.func._calc_apply_positive(*self[:])
-
-    def _calc_real(self):
-        return self.func._calc_apply_real(*self[:])
-
-    def _calc_unbounded(self):
-        return self.func._calc_apply_unbounded(*self[:])
-
     def _eval_eq_nonzero(self, other):
         if isinstance(other.func, self.func.__class__) and len(self)==len(other):
             for a1,a2 in zip(self,other):

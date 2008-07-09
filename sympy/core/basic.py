@@ -884,12 +884,6 @@ class Basic(AssumeMeths):
     def _eval_apply_subs(cls, *args):
         return
 
-    def _calc_apply_positive(self, *args):
-        return
-
-    def _calc_apply_real(self, *args):
-        return
-
     def _eval_conjugate(self):
         if self.is_real:
             return self
@@ -1017,22 +1011,6 @@ class Basic(AssumeMeths):
                     return s, (rhs - eqn.subs(s,0))/deqn.subs(s,0)
         # no linear symbol, return trivial solution
         return eqn, rhs
-
-    def _calc_splitter(self, d):
-        if d.has_key(self):
-            return d[self]
-        r = self.__class__(*[t._calc_splitter(d) for t in self])
-        if d.has_key(r):
-            return d[r]
-        s = d[r] = Temporary()
-        return s
-
-    def splitter(self):
-        d = {}
-        r = self._calc_splitter(d)
-        l = [(s.dummy_index,s,e) for e,s in d.items()]
-        l.sort()
-        return [(s,e) for i,s,e in l]
 
     @cacheit
     def count_ops(self, symbolic=True):
@@ -1686,9 +1664,6 @@ class Atom(Basic):
 
     def as_numer_denom(self):
         return self, S.One
-
-    def _calc_splitter(self, d):
-        return self
 
     def count_ops(self, symbolic=True):
         return S.Zero
