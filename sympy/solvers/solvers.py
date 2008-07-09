@@ -7,6 +7,10 @@
 
     - differential, use dsolve()
 
+    -transcendental, use tsolve()
+
+    -nonlinear (numerically), use msolve() (you will need a good starting point)
+
 """
 
 from sympy.core.sympify import sympify
@@ -21,6 +25,8 @@ from sympy.matrices import Matrix, zeronm
 from sympy.polys import roots
 
 from sympy.utilities import any, all
+from sympy.utilities.lambdify import lambdify
+from sympy.solvers.numeric import newton
 
 def solve(f, *symbols, **flags):
     """Solves equations and systems of equations.
@@ -538,3 +544,52 @@ def tsolve(eq, sym):
         if m:
             return sol.subs(m).subs(x, sym)
     raise ValueError("unable to solve the equation")
+
+
+def msolve(args, f, x0, tol=None, maxsteps=None, verbose=False, norm=None):
+    """
+    Solves a nonlinear equation system numerically.
+
+    f is a vector function of symbolic expressions representing the system.
+    args are the variables.
+    x0 is a starting vector close to a solution.
+
+    Be careful with x0, not using floats might give unexpected results.
+
+    Currently only fully determined systems are supported.
+
+    >>> from sympy import Symbol, Matrix
+    >>> x1 = Symbol('x1')
+    >>> x2 = Symbol('x2')
+    >>> f1 = 3 * x1**2 - 2 * x2**2 - 1
+    >>> f2 = x1**2 - 2 * x1 + x2**2 + 2 * x2 - 8
+    >>> f = Matrix(f1, f2).T
+    >>> msolve((x1, x2), f, (-1., 1.))
+    [-1.19287309935246]
+    [ 1.27844411169911]
+    """
+    # TODO: accept a list of equation as argument and transform it automatically to a matrix
+    if len(args) != f.cols:
+        raise NotImplementedError,  'need exactly as many variables as equations'
+    if verbose:
+        print 'f(x):'
+        print f
+    # derive Jacobian
+    J = f.jacobian(args)
+    if verbose:
+        print 'J(x):'
+        print J
+    # create functions
+    f = lambdify(args, f.T, ('sympy', 'mpmath'))
+    J = lambdify(args, J, ('sympy', 'mpmath'))
+    # solve system using Newton's method
+    kwargs = {}
+    if tol:
+        kwargs['tol'] = tol
+    if maxsteps:
+        kwargs['maxsteps'] = maxsteps
+    kwargs['verbose'] = verbose
+    if norm:
+        kwargs['norm'] = norm
+    x = newton(f, x0, J, **kwargs)
+    return x
