@@ -912,3 +912,12 @@ def test_evalf():
     a = Matrix([sqrt(5), 6])
     assert abs(a.evalf()[0] - a[0].evalf()) < 1e-10
     assert abs(a.evalf()[1] - a[1].evalf()) < 1e-10
+
+def test_is_symbolic():
+    x = Symbol('x')
+    a = Matrix([x,x],[x,x])
+    assert a.is_symbolic() == True
+    a = Matrix([1,2],[3,4])
+    assert a.is_symbolic() == False
+    a = Matrix([1,x],[3,4])
+    assert a.is_symbolic() == True
