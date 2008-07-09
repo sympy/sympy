@@ -1365,23 +1365,6 @@ class Basic(AssumeMeths):
             return S.One, base ** (-exp)
         return self, S.One
 
-    def as_expr_orders(self):
-        """ Split expr + Order(..) to (expr, Order(..)).
-        """
-        l1 = []
-        l2 = []
-        if self.is_Add:
-            for f in self:
-                if isinstance(f, C.Order):
-                    l2.append(f)
-                else:
-                    l1.append(f)
-        elif self.is_Order:
-            l2.append(self)
-        else:
-            l1.append(self)
-        return Add(*l1), Add(*l2)
-
     def normal(self):
         n, d = self.as_numer_denom()
         if d is S.One:
