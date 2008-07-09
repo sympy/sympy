@@ -118,5 +118,5 @@ class AssocOp(Basic):
             if r and not a: r = False
         return r
 
-    _eval_evalf = Basic._seq_eval_evalf
-
+    def _eval_evalf(self):
+        return self.__class__(*[ arg.evalf() for arg in self.args ])

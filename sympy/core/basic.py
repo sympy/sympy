@@ -1424,9 +1424,6 @@ class Basic(AssumeMeths):
     def _eval_evalf(self):
         return
 
-    def _seq_eval_evalf(self):
-        return self.__class__(*[s.evalf() for s in self.args])
-
     def __float__(self):
         result = self.evalf(precision=16)
 
