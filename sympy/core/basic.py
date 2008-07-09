@@ -1620,19 +1620,12 @@ class Basic(AssumeMeths):
             return d[wc], d[we]
         return self, S.Zero
 
-    def ldegree(self, x):
-        x = sympify(x)
-        c,e = self.as_leading_term(x).as_coeff_exponent(x)
-        if not c.has(x):
-            return e
-        raise ValueError("cannot compute ldegree(%s, %s), got c=%s" % (self, x, c))
-
     def leadterm(self, x):
         x = sympify(x)
         c,e = self.as_leading_term(x).as_coeff_exponent(x)
         if not c.has(x):
             return c,e
-        raise ValueError("cannot compute ldegree(%s, %s), got c=%s" % (self, x, c))
+        raise ValueError("cannot compute leadterm(%s, %s), got c=%s" % (self, x, c))
 
 
     ##########################################################################

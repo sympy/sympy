@@ -142,17 +142,16 @@ def test_basic_nostr():
         for op in ['+','-','*','/','**']:
             py.test.raises(TypeError, "obj %s '1'" % op)
 
-def test_ldegree():
-    assert (1/x**2+1+x+x**2).ldegree(x)==-2
-    assert (1/x+1+x+x**2).ldegree(x)==-1
-    assert (x**2+1/x).ldegree(x)==-1
-    assert (1+x**2).ldegree(x)==0
-    assert (x+1).ldegree(x)==0
-    assert (x+x**2).ldegree(x)==1
-    assert (x**2).ldegree(x)==2
-
 def test_leadterm():
-    assert (3+2*x**(log(3)/log(2)-1)).leadterm(x)==(3,0)
+    assert (3+2*x**(log(3)/log(2)-1)).leadterm(x) == (3,0)
+
+    assert (1/x**2+1+x+x**2).leadterm(x)[1] == -2
+    assert (1/x+1+x+x**2).leadterm(x)[1] == -1
+    assert (x**2+1/x).leadterm(x)[1] == -1
+    assert (1+x**2).leadterm(x)[1] == 0
+    assert (x+1).leadterm(x)[1] == 0
+    assert (x+x**2).leadterm(x)[1] == 1
+    assert (x**2).leadterm(x)[1] == 2
 
 def test_atoms():
    assert list((1+x).atoms()) == [1,x]
