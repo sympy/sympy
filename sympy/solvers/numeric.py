@@ -29,6 +29,7 @@ def solve(A, b):
     linear equation system Ax = b -> x
     """
     A = Matrix(A)
+    b = Matrix(b)
     x = A.LUsolve(b)
     return x
 

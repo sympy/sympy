@@ -546,7 +546,7 @@ def tsolve(eq, sym):
     raise ValueError("unable to solve the equation")
 
 
-def msolve(args, f, x0, tol=None, maxsteps=None, verbose=False, norm=None):
+def msolve(args, f, x0, tol=None, maxsteps=None, numpy=False, verbose=False, norm=None):
     """
     Solves a nonlinear equation system numerically.
 
@@ -555,6 +555,8 @@ def msolve(args, f, x0, tol=None, maxsteps=None, verbose=False, norm=None):
     x0 is a starting vector close to a solution.
 
     Be careful with x0, not using floats might give unexpected results.
+
+    For trigonometric functions numpy is recommended.
 
     Currently only fully determined systems are supported.
 
@@ -580,8 +582,12 @@ def msolve(args, f, x0, tol=None, maxsteps=None, verbose=False, norm=None):
         print 'J(x):'
         print J
     # create functions
-    f = lambdify(args, f.T, ('sympy', 'mpmath'))
-    J = lambdify(args, J, ('sympy', 'mpmath'))
+    if numpy is True:
+        mtd = ('numpy','mpmath')
+    else:
+        mtd = ('sympy','mpmath')
+    f = lambdify(args, f.T, mtd)
+    J = lambdify(args, J, mtd)
     # solve system using Newton's method
     kwargs = {}
     if tol:
