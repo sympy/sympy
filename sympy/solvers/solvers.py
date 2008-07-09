@@ -3,9 +3,9 @@
 
     - algebraic, use solve()
 
-    - recurrence, use rsolve() (not implemented)
+    - recurrence, use rsolve()
 
-    - differential, use dsolve() (not implemented)
+    - differential, use dsolve()
 
 """
 
