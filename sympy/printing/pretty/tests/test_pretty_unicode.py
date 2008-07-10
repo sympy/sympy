@@ -271,6 +271,18 @@ u"""\
 """
     assert u == s
 
+    assert pretty((x,)) == '(x,)'
+
+    p = pretty((1/x,))
+    s = \
+u"""\
+⎛1 ⎞
+⎜─,⎟
+⎝x ⎠\
+"""
+    assert p == s
+
+
     e = tuple(e)
     u = upretty(e)
     s = \
@@ -327,8 +339,8 @@ u"""\
     u = upretty((x**2,))
     s = \
 u"""\
-⎛ 2⎞
-⎝x ⎠\
+⎛ 2 ⎞
+⎝x ,⎠\
 """
     assert u == s
 

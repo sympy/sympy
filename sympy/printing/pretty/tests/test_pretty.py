@@ -239,6 +239,17 @@ def test_pretty_seq():
 """
     assert p == s
 
+    assert pretty((x,)) == '(x,)'
+
+    p = pretty((1/x,))
+    s = \
+"""\
+ 1  \n\
+(-,)\n\
+ x  \
+"""
+    assert p == s
+
     e = tuple(e)
     p = pretty(e)
     s = \

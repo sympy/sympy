@@ -451,7 +451,11 @@ class PrettyPrinter(Printer):
         return self._print_seq(l, '[', ']')
 
     def _print_tuple(self, t):
-        return self._print_seq(t, '(', ')')
+        if len(t) == 1:
+            ptuple = prettyForm(*stringPict.next(self._print(t[0]), ','))
+            return prettyForm(*ptuple.parens('(', ')', ifascii_nougly=True))
+        else:
+            return self._print_seq(t, '(', ')')
 
     def _print_dict(self, d):
         items = []
