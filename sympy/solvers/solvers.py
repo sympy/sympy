@@ -546,7 +546,8 @@ def tsolve(eq, sym):
     raise ValueError("unable to solve the equation")
 
 
-def msolve(args, f, x0, tol=None, maxsteps=None, numpy=False, verbose=False, norm=None):
+def msolve(args, f, x0, tol=None, maxsteps=None, verbose=False, norm=None,
+           modules=['mpmath', 'sympy']):
     """
     Solves a nonlinear equation system numerically.
 
@@ -556,7 +557,10 @@ def msolve(args, f, x0, tol=None, maxsteps=None, numpy=False, verbose=False, nor
 
     Be careful with x0, not using floats might give unexpected results.
 
-    For trigonometric functions numpy is recommended.
+    Use modules to specify which modules should be used to evaluate the
+    function and the Jacobian matrix. Make sure to use a module that supports
+    matrices. For more information on the syntax, please see the docstring
+    of lambdify.
 
     Currently only fully determined systems are supported.
 
@@ -572,7 +576,7 @@ def msolve(args, f, x0, tol=None, maxsteps=None, numpy=False, verbose=False, nor
     """
     # TODO: accept a list of equation as argument and transform it automatically to a matrix
     if len(args) != f.cols:
-        raise NotImplementedError,  'need exactly as many variables as equations'
+        raise NotImplementedError, 'need exactly as many variables as equations'
     if verbose:
         print 'f(x):'
         print f
@@ -582,12 +586,8 @@ def msolve(args, f, x0, tol=None, maxsteps=None, numpy=False, verbose=False, nor
         print 'J(x):'
         print J
     # create functions
-    if numpy is True:
-        mtd = ('numpy','mpmath')
-    else:
-        mtd = ('sympy','mpmath')
-    f = lambdify(args, f.T, mtd)
-    J = lambdify(args, J, mtd)
+    f = lambdify(args, f.T, modules)
+    J = lambdify(args, J, modules)
     # solve system using Newton's method
     kwargs = {}
     if tol:
