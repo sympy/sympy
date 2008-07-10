@@ -24,6 +24,12 @@ class PrettyPrinter(Printer):
     def _print_stringPict(self, e):
         return e
 
+    def _print_str(self, e):
+        return prettyForm(repr(e))
+
+    def _print_unicode(self, e):
+        return prettyForm(repr(e))
+
     def _print_Symbol(self, e):
         symb = pretty_symbol(e.name)
         return prettyForm(symb)
@@ -38,7 +44,6 @@ class PrettyPrinter(Printer):
     # Infinity inherits from Rational, so we have to override _print_XXX order
     _print_Infinity         = _print_Atom
     _print_NegativeInfinity = _print_Atom
-
 
     def _print_Factorial(self, e):
         x = e.args[0]

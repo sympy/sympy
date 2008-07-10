@@ -12,6 +12,30 @@ def pretty(expr):
     # ascii-pretty by default
     return xpretty(expr, False)
 
+def test_pretty_str():
+    assert pretty( 'xxx' ) == "'xxx'"
+    assert pretty( "xxx" ) == "'xxx'"
+    assert pretty( 'xxx\'xxx' ) == '"xxx\'xxx"'
+    assert pretty( 'xxx"xxx' ) == "'xxx\"xxx'"
+    assert pretty( 'xxx\"xxx' ) == "'xxx\"xxx'"
+    assert pretty( "xxx'xxx" ) == '"xxx\'xxx"'
+    assert pretty( "xxx\'xxx" ) == '"xxx\'xxx"'
+    assert pretty( "xxx\"xxx" ) == "'xxx\"xxx'"
+    assert pretty( "xxx\"xxx\'xxx" ) == '\'xxx"xxx\\\'xxx\''
+    assert pretty( "xxx\nxxx\'xxx" ) == '"xxx\\nxxx\'xxx"'
+
+def test_pretty_unicode():
+    assert pretty( u'xxx' ) == "u'xxx'"
+    assert pretty( u"xxx" ) == "u'xxx'"
+    assert pretty( u'xxx\'xxx' ) == 'u"xxx\'xxx"'
+    assert pretty( u'xxx"xxx' ) == "u'xxx\"xxx'"
+    assert pretty( u'xxx\"xxx' ) == "u'xxx\"xxx'"
+    assert pretty( u"xxx'xxx" ) == 'u"xxx\'xxx"'
+    assert pretty( u"xxx\'xxx" ) == 'u"xxx\'xxx"'
+    assert pretty( u"xxx\"xxx" ) == "u'xxx\"xxx'"
+    assert pretty( u"xxx\"xxx\'xxx" ) == 'u\'xxx"xxx\\\'xxx\''
+    assert pretty( u"xxx\nxxx\'xxx" ) == 'u"xxx\\nxxx\'xxx"'
+
 def test_pretty_basic():
     # Simple numbers/symbols
     assert pretty( -Rational(1)/2 ) == '-1/2'
