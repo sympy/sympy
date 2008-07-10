@@ -11,6 +11,11 @@ def test_division():
     assert v.__truediv__(z) == Matrix(1,2,[x/z, y/z])
     assert v/z == Matrix(1,2,[x/z, y/z])
 
+def test_sum():
+    x, y, z = symbols('xyz')
+    m = Matrix([[1,2,3],[x,y,x],[2*y,-50,z*x]])
+    assert m+m == Matrix([[2,4,6],[2*x,2*y,2*x],[4*y,-100,2*z*x]])
+
 def test_multiplication():
     a=Matrix((
         (1, 2),
@@ -76,6 +81,12 @@ def test_creation():
     assert m[:] == [x,0,0,0]
 
     assert a == b
+
+def test_tolist():
+    x, y, z = symbols('xyz')
+    lst = [[S.One,S.Half,x*y,S.Zero],[x,y,z,x**2],[y,-S.One,z*x,3]]
+    m = Matrix(lst)
+    assert m.tolist() == lst
 
 def test_determinant():
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')

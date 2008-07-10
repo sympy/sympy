@@ -228,6 +228,23 @@ class Matrix(object):
     def __array__(self):
         return matrix2numpy(self)
 
+    def tolist(self):
+        """
+        Return the Matrix converted in a python list.
+
+        >>> from sympy import *
+        >>> m=Matrix(3, 3, range(9))
+        >>> m
+        [1, 2, 3]
+        [4, 5, 6]
+        [7, 8, 9]
+        >>> m.tolist()
+        [[1,2,3],[4,5,6],[7,8,9]]
+        """
+        ret = [0]*self.lines
+        for i in xrange(self.lines):
+            ret[i] = self.mat[i*self.cols:(i+1)*self.cols]
+        return ret
 
     def copyin_matrix(self, key, value):
         rlo, rhi = self.slice2bounds(key[0], self.lines)
@@ -251,7 +268,8 @@ class Matrix(object):
         return (self.lines, self.cols)
 
     def __rmul__(self,a):
-        assert not isinstance(a,Matrix)
+        if hasattr(a, "__array__"):
+            return matrix_multiply(a,self)
         out = Matrix(self.lines,self.cols,map(lambda i: a*i,self.mat))
         return out
 
@@ -271,8 +289,8 @@ class Matrix(object):
         return self + (-a)
 
     def __mul__(self,a):
-        if isinstance(a,Matrix):
-            return self.multiply(a)
+        if hasattr(a, "__array__"):
+            return matrix_multiply(self,a)
         out = Matrix(self.lines,self.cols,map(lambda i: i*a,self.mat))
         return out
 
@@ -304,23 +322,18 @@ class Matrix(object):
 
     def multiply(self,b):
         """Returns self*b """
-        if self.cols != b.lines:
-            raise ShapeError()
-        btl = b.T.mat
-        st = self.cols
-        return Matrix(self.lines,b.cols,lambda i,j:
-                                        reduce(lambda k,l: k+l,
-                                        map(lambda n,m: n*m,
-                                        self.mat[i*st:i*st+st],
-                                        btl[j*st:j*st+st])).expand())
-                                        # .expand() is a test
+        return matrix_multiply(self,b)
 
     def add(self,b):
         """Returns self+b """
-        assert self.lines == b.lines
-        assert self.cols == b.cols
-        out = Matrix(self.lines,self.cols,map(lambda i,j: i+j,self.mat,b.mat))
-        return out
+        if self.shape != b.shape:
+            raise ShapeError()
+        slst = self.tolist()
+        blst = b.tolist()
+        ret = [0]*self.lines
+        for i in xrange(self.lines):
+            ret[i] = map(lambda j,k: j+k,slst[i],blst[i])
+        return Matrix(ret)
 
     def __neg__(self):
         return -1*self
@@ -1260,6 +1273,21 @@ class Matrix(object):
                 basis = tmp.nullspace(simplified=True)
             out.append((r, k, basis))
         return out
+
+def matrix_multiply(A,B):
+    """
+    Return  A*B.
+    """
+    if A.shape[1] != B.shape[0]:
+        raise ShapeError()
+    blst = B.T.tolist()
+    alst = A.tolist()
+    return Matrix(A.shape[0], B.shape[1], lambda i,j:
+                                        reduce(lambda k,l: k+l,
+                                        map(lambda n,m: n*m,
+                                        alst[i],
+                                        blst[j])).expand())
+                                        # .expand() is a test
 
 def zero(n):
     """Create square zero matrix n x n"""
