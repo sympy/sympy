@@ -569,12 +569,12 @@ def msolve(args, f, x0, tol=None, maxsteps=None, verbose=False, norm=None,
     >>> x2 = Symbol('x2')
     >>> f1 = 3 * x1**2 - 2 * x2**2 - 1
     >>> f2 = x1**2 - 2 * x1 + x2**2 + 2 * x2 - 8
-    >>> f = Matrix(f1, f2).T
-    >>> msolve((x1, x2), f, (-1., 1.))
+    >>> msolve((x1, x2), (f1, f2), (-1., 1.))
     [-1.19287309935246]
     [ 1.27844411169911]
     """
-    # TODO: accept a list of equation as argument and transform it automatically to a matrix
+    if isinstance(f,  (list,  tuple)):
+        f = Matrix(f).T
     if len(args) != f.cols:
         raise NotImplementedError, 'need exactly as many variables as equations'
     if verbose:

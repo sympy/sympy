@@ -25,8 +25,7 @@ def test_msolve():
     f = Matrix((f1, f2, f3)).T
     F = lambdify((x,  y,  z), f.T)
     def getroot(x0):
-        root = msolve((x,  y,  z),  f,  x0)
+        root = msolve((x,  y,  z),  (f1,  f2,  f3),  x0)
         assert maxnorm(F(*root)) <= 1.e-8
-        print root
         return root
     assert map(round,  getroot((1.,  1.,  1.))) == [2.0,  1.0,  0.0]
