@@ -957,6 +957,9 @@ def test_roots():
     assert roots(x**4-1, x, domain='Z') == {S.One: 1, -S.One: 1}
     assert roots(x**4-1, x, domain='I') == {I: 1, -I: 1}
 
+    assert roots((x-1)*(x+1), x) == {S.One: 1, -S.One: 1}
+    assert roots((x-1)*(x+1), x, predicate=lambda r: r.is_positive) == {S.One: 1}
+
     assert roots(x**4-1, x, domain='Z', multiple=True) == [S.One, -S.One]
     assert roots(x**4-1, x, domain='I', multiple=True) == [I, -I]
 

@@ -234,6 +234,8 @@ def roots(f, *symbols, **flags):
                     else:
                         zeros[zero] = i*(j+1)
 
+    result.update(zeros)
+
     domain = flags.get('domain', None)
 
     if domain not in [None, 'C']:
@@ -249,11 +251,16 @@ def roots(f, *symbols, **flags):
         except KeyError:
             raise ValueError("Invalid domain: " + domain)
 
-        for zero in dict(zeros).iterkeys():
+        for zero in dict(result).iterkeys():
             if not query(zero):
-                del zeros[zero]
+                del result[zero]
 
-    result.update(zeros)
+    predicate = flags.get('predicate', None)
+
+    if predicate is not None:
+        for zero in dict(result).iterkeys():
+            if not predicate(zero):
+                del result[zero]
 
     if not multiple:
         return result
