@@ -49,6 +49,9 @@ def test_heurisch_exp():
 
     assert heurisch(exp(-x**2), x) is None
 
+    assert heurisch(2**x, x) == 2**x/log(2)
+    assert heurisch(x*2**x, x) == x*2**x/log(2) - 2**x*log(2)**(-2)
+
 def test_heurisch_trigonometric():
     assert heurisch(sin(x), x) == -cos(x)
     assert heurisch(pi*sin(x)+1, x) == x-pi*cos(x)
