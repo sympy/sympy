@@ -86,14 +86,16 @@ def test_poly_basics():
     assert Poly({(4,): x, (2,): y, (0,): z}, t) == Poly(f, t)
     assert Poly({4: x, 2: y, 0: z}, t) == Poly(f, t)
 
-    py.test.raises(PolynomialError, "Poly(x, 2)")
-    py.test.raises(PolynomialError, "Poly(x, 2*x)")
+    assert Poly(Poly(x, x)) == Poly(x, x)
 
-    py.test.raises(PolynomialError, "Poly(x, 2, x)")
-    py.test.raises(PolynomialError, "Poly(x, 2*x, x)")
+    py.test.raises(SymbolsError, "Poly(x, 2)")
+    py.test.raises(SymbolsError, "Poly(x, 2*x)")
 
-    py.test.raises(PolynomialError, "Poly(x, x, 2)")
-    py.test.raises(PolynomialError, "Poly(x, x, 2*x)")
+    py.test.raises(SymbolsError, "Poly(x, 2, x)")
+    py.test.raises(SymbolsError, "Poly(x, 2*x, x)")
+
+    py.test.raises(SymbolsError, "Poly(x, x, 2)")
+    py.test.raises(SymbolsError, "Poly(x, x, 2*x)")
 
 def test_poly_internals():
     p = Poly(x**2*y*z + x*y*z**3 + x*y + y*z, x, y, z)

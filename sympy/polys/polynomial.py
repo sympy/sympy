@@ -20,6 +20,9 @@ import math
 class PolynomialError(Exception):
     pass
 
+class SymbolsError(Exception):
+    pass
+
 ##
 ## TODO:
 ##
@@ -266,13 +269,19 @@ class Poly(Basic, RelMeths, ArithMeths):
         stamp = frozenset(symbols)
         coeffs, monoms = (), ()
 
-        if N == 0 or len(stamp) != N:
-            raise PolynomialError
+        if N == 0:
+            if isinstance(poly, Poly):
+                return poly
+            else:
+                raise SymbolsError
+
+        if len(stamp) != N:
+            raise SymbolsError
 
         symbols = tuple(map(sympify, symbols))
 
         if any(not s.is_Symbol for s in symbols):
-            raise PolynomialError
+            raise SymbolsError
 
         order = flags.pop('order', 'grlex')
 
@@ -499,7 +508,7 @@ class Poly(Basic, RelMeths, ArithMeths):
                             monom[indices[factor]] += 1
                             continue
 
-                        raise PolynomialError
+                        raise PolynomialError, "Can't decompose: %s" % factor
                     else:
                         coeff *= factor
 
