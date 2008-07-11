@@ -7,18 +7,19 @@
    are pairwise dissimilar.
 """
 
-from sympy.core.basic import Basic, S, C as CC
-from sympy.core.symbol import Symbol
+from sympy.core.basic import Basic, S
 from sympy.core.numbers import Rational
+from sympy.core.symbol import Symbol
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core import sympify
 
 from sympy.simplify import simplify, hypersimp, hypersimilar, collect
 from sympy.solvers import solve, solve_undetermined_coeffs
-from sympy.polynomials import quo, gcd, roots, resultant
-from sympy.concrete import nni_roots, product
+from sympy.polys import Poly, quo, gcd, roots, resultant
+from sympy.functions import Binomial, FallingFactorial
 from sympy.matrices import Matrix, casoratian
+from sympy.concrete import product
 
 def rsolve_poly(coeffs, f, n, **hints):
     """Given linear recurrence operator L of order 'k' with polynomial
@@ -74,26 +75,22 @@ def rsolve_poly(coeffs, f, n, **hints):
     if not f.is_polynomial(n):
         return None
 
-    homogeneous = (f is S.Zero)
-
-    if not homogeneous:
-        df = f.as_polynomial(n).degree()
-
-    coeffs = map(sympify, coeffs)
+    homogeneous = f.is_zero
 
     r = len(coeffs)-1
 
-    polys = [S.Zero]*(r+1)
-    terms = [ (S.Zero, S.NegativeInfinity) ]*(r+1)
+    coeffs = [ Poly(coeff, n) for coeff in coeffs ]
+
+    polys = [ Poly((), n) ] * (r+1)
+    terms = [ (S.Zero, S.NegativeInfinity) ] *(r+1)
 
     for i in xrange(0, r+1):
         for j in xrange(i, r+1):
-            polys[i] += CC.Binomial(j, i)*coeffs[j]
+            polys[i] += coeffs[j]*Binomial(j, i)
 
-        polys[i] = polys[i].expand()
-
-        if polys[i] is not S.Zero:
-            terms[i] = polys[i].as_polynomial(n).coeffs[0]
+        if not polys[i].is_zero:
+            coeff, (exp,) = polys[i].LT
+            terms[i] = (coeff, exp)
 
     d = b = terms[0][1]
 
@@ -112,19 +109,20 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     for i in xrange(0, r+1):
         if terms[i][1] - i == b:
-            degree_poly += terms[i][0]*CC.FallingFactorial(x, i)
+            degree_poly += terms[i][0]*FallingFactorial(x, i)
 
-    _nni_roots = nni_roots(degree_poly, x)
+    nni_roots = roots(degree_poly, x, domain='Z',
+        predicate=lambda r: r >= 0).keys()
 
-    if _nni_roots != []:
-        N = [max(_nni_roots)]
+    if nni_roots:
+        N = [max(nni_roots)]
     else:
         N = []
 
     if homogeneous:
         N += [-b-1]
     else:
-        N += [df-b, -b-1]
+        N += [f.as_poly(n).degree - b, -b-1]
 
     N = int(max(N))
 
@@ -146,7 +144,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             y += C[i] * n**i
 
         for i in xrange(0, r+1):
-            E += coeffs[i]*y.subs(n, n+i)
+            E += coeffs[i].as_basic()*y.subs(n, n+i)
 
         solutions = solve_undetermined_coeffs(E-f, C, n)
 
@@ -159,10 +157,11 @@ def rsolve_poly(coeffs, f, n, **hints):
         A = r
         U = N+A+b+1
 
-        _nni_roots = nni_roots(polys[r], n)
+        nni_roots = roots(polys[r], domain='Z',
+            predicate=lambda r: r >= 0).keys()
 
-        if _nni_roots != []:
-            a = max(_nni_roots) + 1
+        if nni_roots != []:
+            a = max(nni_roots) + 1
         else:
             a = S.Zero
 
@@ -194,8 +193,8 @@ def rsolve_poly(coeffs, f, n, **hints):
 
             for j in xrange(0, A+1):
                 for k in xrange(0, d+1):
-                    B = CC.Binomial(k, i+j)
-                    D = delta(polys[j], k)
+                    B = Binomial(k, i+j)
+                    D = delta(polys[j].as_basic(), k)
 
                     alpha[i] += I[k]*B*D
 
@@ -353,14 +352,15 @@ def rsolve_ratio(coeffs, f, n, **hints):
         p, q = res.as_numer_denom()
         res = quo(p, q, h)
 
-    _nni_roots = nni_roots(res, h)
+    nni_roots = roots(res, h, domain='Z',
+        predicate=lambda r: r >= 0).keys()
 
-    if _nni_roots == []:
+    if not nni_roots:
         return rsolve_poly(coeffs, f, n, **hints)
     else:
         C, numers = S.One, [S.Zero]*(r+1)
 
-        for i in xrange(int(max(_nni_roots)), -1, -1):
+        for i in xrange(int(max(nni_roots)), -1, -1):
             d = gcd(A, B.subs(n, n+i), n)
 
             A = quo(A, d, n)
@@ -436,7 +436,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     r, kernel = len(coeffs)-1, []
 
-    if f is not S.Zero:
+    if not f.is_zero:
         if f.is_Add:
             similar = {}
 
@@ -492,8 +492,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     p, q = coeffs[0], coeffs[r].subs(n, n-r+1)
 
-    p_factors = [ z for z in set(roots(p, n)) ]
-    q_factors = [ z for z in set(roots(q, n)) ]
+    p_factors = [ z for z in roots(p, n).iterkeys() ]
+    q_factors = [ z for z in roots(q, n).iterkeys() ]
 
     factors = [ (S.One, S.One) ]
 
@@ -517,21 +517,21 @@ def rsolve_hyper(coeffs, f, n, **hints):
             a = Mul(*[ A.subs(n, n+j) for j in xrange(0, i) ])
             b = Mul(*[ B.subs(n, n+j) for j in xrange(i, r) ])
 
-            poly = (quo(coeffs[i]*a*b, D, n))
-            polys.append(poly.as_polynomial(n))
+            poly = quo(coeffs[i]*a*b, D, n)
+            polys.append(poly.as_poly(n))
 
-            if poly is not S.Zero:
-                degrees.append(polys[i].degree())
+            if not poly.is_zero:
+                degrees.append(polys[i].degree)
 
         d, poly = max(degrees), S.Zero
 
         for i in xrange(0, r+1):
-            coeff = polys[i].nth_coeff(d)
+            coeff = polys[i].coeff(d)
 
             if coeff is not S.Zero:
                 poly += coeff * Z**i
 
-        for z in set(roots(poly, Z)):
+        for z in roots(poly, Z).iterkeys():
             if not z.is_real or z.is_zero:
                 continue
 
