@@ -11,14 +11,14 @@ from sympy.core.numbers import Integer, Rational
 from sympy.core.function import Function, Lambda
 from sympy.core.basic import Basic, S, C, Atom, sympify
 
-from sympy.polynomials import factor_, div, quo, rem, gcd, egcd
 from sympy.simplify import together
 from sympy.matrices import Matrix
 from sympy.functions import exp
 
-from sympy.polys import RootSum
+from sympy.polys import Poly, RootSum, poly_quo, poly_rem, \
+    poly_sqf, poly_gcd, poly_half_gcdex, div, quo, gcd
 
-def cancel(f, *syms, **flags):
+def cancel(f, *symbols):
     """Cancel common factors in a given rational function.
 
        Given a quotient of polynomials, performing only gcd and quo
@@ -48,35 +48,17 @@ def cancel(f, *syms, **flags):
     """
     f = sympify(f)
 
-    if syms and not f.has(*syms):
+    if not f.has_any_symbols(*symbols):
         return f
     elif f.is_Add:
-        return Add(*[ cancel(g, *syms, **flags) for g in f.args ])
+        return Add(*[ cancel(g, *symbols) for g in f.args ])
     elif isinstance(f, Relational):
-        return Relational(cancel(f.lhs, *syms, **flags),
-            cancel(f.rhs, *syms, **flags), f.rel_op)
+        return Relational(cancel(f.lhs, *symbols),
+                          cancel(f.rhs, *symbols), f.rel_op)
     else:
-        g = together(f)
+        return Poly.cancel(f, *symbols)
 
-        if not g.is_fraction(*syms):
-            return f
-        else:
-            p, q = g.as_numer_denom()
-
-            p = p.expand()
-            q = q.expand()
-
-            syms = syms or None
-
-            g = gcd(p, q, syms)
-
-            if g is not S.One:
-                p = quo(p, g, syms)
-                q = quo(q, g, syms)
-
-            return p / q
-
-def trim(f, *syms, **flags):
+def trim(f, *symbols, **flags):
     """Cancel common factors in a given formal rational expression.
 
        Given an arbitrary expression, map all functional components
@@ -109,17 +91,19 @@ def trim(f, *syms, **flags):
        sin(1 + f(x))
 
     """
+    f = sympify(f)
+
     if isinstance(f, Relational):
-        return Relational(trim(f.lhs, *syms, **flags),
-            trim(f.rhs, *syms, **flags), f.rel_op)
-    elif isinstance(f, Matrix):
-        return f.applyfunc(lambda g: trim(g, *syms, **flags))
+        return Relational(trim(f.lhs, *symbols, **flags),
+                          trim(f.rhs, *symbols, **flags), f.rel_op)
+    #elif isinstance(f, Matrix):
+    #    return f.applyfunc(lambda g: trim(g, *symbols, **flags))
     else:
         recursive = flags.get('recursive', True)
 
         def is_functional(g):
             return not (g.is_Atom or g.is_number) \
-                and (not syms or g.has(*syms))
+                and (not symbols or g.has(*symbols))
 
         def components(g):
             result = set()
@@ -137,7 +121,7 @@ def trim(f, *syms, **flags):
                     g = g.__class__(*args)
                 elif g.is_Pow:
                     if recursive:
-                        base = trim(g.base, *syms, **flags)
+                        base = trim(g.base, *symbols, **flags)
                     else:
                         base = g.base
 
@@ -154,7 +138,7 @@ def trim(f, *syms, **flags):
                         g = base**g.exp
                     else:
                         if recursive:
-                            h = g = base**trim(g.exp, *syms, **flags)
+                            h = g = base**trim(g.exp, *symbols, **flags)
                         else:
                             h = g = base**g.exp
 
@@ -164,7 +148,7 @@ def trim(f, *syms, **flags):
                     if not recursive:
                         result.add(g)
                     else:
-                        g = g.__class__(*[trim(h, *syms,
+                        g = g.__class__(*[trim(h, *symbols,
                             **flags) for h in g.args])
 
                         if is_functional(g):
@@ -172,16 +156,14 @@ def trim(f, *syms, **flags):
 
             return g, result
 
-        f = sympify(f)
-
-        if f.is_number or (syms and not f.has(*syms)):
+        if f.is_number or not f.has_any_symbols(*symbols):
             return f
 
         f = together(f.expand())
         f, terms = components(f)
 
         if not terms:
-            return cancel(f, *syms)
+            return Poly.cancel(f, *symbols)
         else:
             mapping, reverse = {}, {}
 
@@ -192,23 +174,26 @@ def trim(f, *syms, **flags):
             p, q = f.as_numer_denom()
             f = p.expand()/q.expand()
 
-            H = cancel(f.subs(mapping), *syms)
+            if not symbols:
+                symbols = tuple(f.atoms(Symbol))
+
+            symbols = tuple(mapping.values()) + symbols
+
+            H = Poly.cancel(f.subs(mapping), *symbols)
 
             if not flags.get('extract', True):
                 return H.subs(reverse)
             else:
-                syms = syms or None
-
                 def extract(f):
                     p = f.args[0]
 
                     for q in f.args[1:]:
-                        p = gcd(p, q, syms)
+                        p = gcd(p, q, *symbols)
 
                         if p.is_number:
                             return S.One, f
 
-                    return p, Add(*[quo(g, p, syms) for g in f.args])
+                    return p, Add(*[quo(g, p, *symbols) for g in f.args])
 
                 P, Q = H.as_numer_denom()
 
@@ -240,10 +225,6 @@ def apart(f, z, **flags):
        howevert at some point root finding algorithms are executed but
        for polynomials of much lower degree than the denominator.
 
-       If given an additional flag 'formal', then even root finding
-       algorithms are avoided and the result is formed as a combination
-       of formal summations over implicit roots of some polynomials.
-
        >>> from sympy import *
        >>> x,y = symbols('xy')
 
@@ -263,18 +244,15 @@ def apart(f, z, **flags):
     f = sympify(f)
 
     if f.is_Add:
-        return Add(*[ apart(g, z, **flags) for g in f ])
+        return Add(*[ apart(g, z) for g in f ])
     elif isinstance(f, Relational):
-        return Relational(apart(f.lhs, z, **flags),
-            apart(f.rhs, z, **flags), f.rel_op)
+        return Relational(apart(f.lhs, z),
+                          apart(f.rhs, z), f.rel_op)
     else:
         if not f.has(z):
             return f
 
-        if f.is_fraction(z):
-            f = cancel(f, z)
-        else:
-            return f
+        f = Poly.cancel(f, z)
 
         P, Q = f.as_numer_denom()
 
@@ -287,11 +265,11 @@ def apart(f, z, **flags):
         u = Function('u')(z)
         a = Symbol('a', dummy=True)
 
-        for k, d in enumerate(factor_.sqf(q, z)):
-            n, d = k + 1, d.as_basic()
+        for k, d in enumerate(poly_sqf(q, z)):
+            n, b = k + 1, d.as_basic()
             U += [ u.diff(z, k) ]
 
-            h = together(cancel(f * d**n, z) / u**n)
+            h = together(Poly.cancel(f*b**n, z) / u**n)
 
             H, subs = [h], []
 
@@ -299,7 +277,7 @@ def apart(f, z, **flags):
                 H += [ H[-1].diff(z) / j ]
 
             for j in range(1, n+1):
-                subs += [ (U[j-1], d.diff(z, j) / j) ]
+                subs += [ (U[j-1], b.diff(z, j) / j) ]
 
             for j in range(0, n):
                 P, Q = together(H[j]).as_numer_denom()
@@ -309,15 +287,18 @@ def apart(f, z, **flags):
 
                 Q = Q.subs(*subs[0])
 
-                G = gcd(P, d, z)
-                D = quo(d, G, z)
+                P, Q = Poly(P, z), Poly(Q, z)
 
-                g, B, _ = egcd(Q, D, z)
-                b = rem(P * B / g, D, z)
+                G = poly_gcd(P, d)
+                D = poly_quo(d, G)
 
-                denom = (z - a)**(n-j)
+                B, g = poly_half_gcdex(Q, D)
+                b = poly_rem(P * poly_quo(B, g), D)
+
+                numer = b.as_basic()
+                denom = (z-a)**(n-j)
 
                 partial += RootSum(lambda r:
-                    b.subs(z, r)/denom.subs(a, r), D, z)
+                    numer.subs(z, r) / denom.subs(a, r), D)
 
         return partial

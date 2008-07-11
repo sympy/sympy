@@ -30,9 +30,7 @@ def test_cancel():
     assert cancel((x**2-y**2)/(x-y), x) == x + y
     assert cancel((x**2-y**2)/(x-y), y) == x + y
     assert cancel((x**2-y**2)/(x-y)) == x + y
-    assert cancel((E*x+2)/(x-pi)*(x-1)) in  \
-            [-1/(x - pi)*(2 - 2*x + E*x - E*x**2),
-             1/(x - pi)*(-2 + 2*x - E*x + E*x**2)]
+    assert cancel((E*x+2)/(x-pi)*(x-1)) == (-2 + x*(2 - E) + E*x**2)/(x - pi)
     assert cancel((x**3-1)/(x-1) < sin(x)) == (1 + x + x**2 < sin(x))
     assert cancel((x**2-1)/(x-1) == (x**2+1)/(x-I), x) == (1 + x == I + x)
     assert cancel((x**2-1)/(x-1) + (x**2+1)/(x-I), x) == 1 + I + 2*x
@@ -71,7 +69,6 @@ def test_trim():
 def test_trim_xfail():
     assert trim((exp(3*x)+exp(2*x*y) + y*exp(x))/exp(x)) == \
         y + exp(2*x) + exp(-x + 2*x*y)
-
 
 def test_apart1():
     assert apart(1/(x+2)/(x+1), x) == 1/(1 + x) - 1/(2 + x)
