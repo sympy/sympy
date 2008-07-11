@@ -830,13 +830,13 @@ def test_nonzero():
     assert bool(Poly(x+21*y, x, y)) == True
 
 def test_sturm():
-    assert poly_sturm(5, x) == (Poly(5, x),)
-    assert poly_sturm(x, x) == (Poly(x, x), Poly(1, x))
+    assert poly_sturm(5, x) == [Poly(5, x)]
+    assert poly_sturm(x, x) == [Poly(x, x), Poly(1, x)]
 
     assert poly_sturm(x**3-2*x**2+3*x-5, x) == \
-        (Poly(x**3-2*x**2+3*x-5, x), Poly(3*x**2-4*x+3, x),
+        [Poly(x**3-2*x**2+3*x-5, x), Poly(3*x**2-4*x+3, x),
          Poly(-Rational(10,9)*x+Rational(13,3), x),
-         Poly(Rational(-3303,100), x))
+         Poly(Rational(-3303,100), x)]
 
 def test_roots():
     assert roots_linear(Poly(2*x+1, x)) == [-Rational(1, 2)]
@@ -957,30 +957,30 @@ def test_roots():
     assert roots(x**4-1, x, domain='Z') == {S.One: 1, -S.One: 1}
     assert roots(x**4-1, x, domain='I') == {I: 1, -I: 1}
 
-    assert roots(x**4-1, x, domain='Z', multiple=True) == (S.One, -S.One)
-    assert roots(x**4-1, x, domain='I', multiple=True) == (I, -I)
+    assert roots(x**4-1, x, domain='Z', multiple=True) == [S.One, -S.One]
+    assert roots(x**4-1, x, domain='I', multiple=True) == [I, -I]
 
-    assert roots(x**3, x, multiple=True) == (S.Zero, S.Zero, S.Zero,)
-    assert roots(1234, x, multiple=True) == ()
+    assert roots(x**3, x, multiple=True) == [S.Zero, S.Zero, S.Zero]
+    assert roots(1234, x, multiple=True) == []
 
 def test_factors():
-    assert poly_factors(1, x) == (Poly(1, x),)
-    assert poly_factors(x, x) == (Poly(x, x),)
+    assert poly_factors(1, x) == [Poly(1, x)]
+    assert poly_factors(x, x) == [Poly(x, x)]
 
-    assert poly_factors(x**2-1, x) == (Poly(x-1, x), Poly(x+1, x))
+    assert poly_factors(x**2-1, x) == [Poly(x-1, x), Poly(x+1, x)]
 
     assert poly_factors((x**4 - 1)**2, x) == \
-        (Poly(((S.One, -I),     ((1,), (0,))), x),
+        [Poly(((S.One, -I),     ((1,), (0,))), x),
          Poly(((S.One, -I),     ((1,), (0,))), x),
          Poly(((S.One, -S.One), ((1,), (0,))), x),
          Poly(((S.One, -S.One), ((1,), (0,))), x),
          Poly(((S.One, S.One),  ((1,), (0,))), x),
          Poly(((S.One, S.One),  ((1,), (0,))), x),
          Poly(((S.One, I),      ((1,), (0,))), x),
-         Poly(((S.One, I),      ((1,), (0,))), x))
+         Poly(((S.One, I),      ((1,), (0,))), x)]
 
     assert poly_factors(x**4-1, x, domain='Z') == \
-        (Poly(x-1, x), Poly(x+1, x), Poly(x**2+1, x))
+        [Poly(x-1, x), Poly(x+1, x), Poly(x**2+1, x)]
 
 def test_RootsOf():
     f = Poly((x-4)**4, x)

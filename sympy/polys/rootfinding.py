@@ -194,12 +194,12 @@ def roots(f, *symbols, **flags):
     if f.length == 1:
         if f.is_constant:
             if multiple:
-                return ()
+                return []
             else:
                 return {}
         else:
             if multiple:
-                return (S.Zero,) * f.degree
+                return [S.Zero] * f.degree
             else:
                 return { S.Zero : f.degree }
 
@@ -258,10 +258,10 @@ def roots(f, *symbols, **flags):
     if not multiple:
         return result
     else:
-        zeros = ()
+        zeros = []
 
         for zero, k in result.iteritems():
-            zeros += (zero,) * k
+            zeros.extend([zero] * k)
 
         return zeros
 
@@ -289,10 +289,13 @@ def poly_factors(f, *symbols, **flags):
     else:
         x = f.symbols[0]
 
+    if flags.has_key('multiple'):
+        del flags['multiple']
+
     zeros = roots(f, **flags)
 
     if not zeros:
-        return (f,)
+        return [f]
     else:
         factors, N = [], 0
 
@@ -304,7 +307,7 @@ def poly_factors(f, *symbols, **flags):
             g = reduce(lambda p,q: p*q, factors)
             factors.append(poly_div(f, g)[0])
 
-        return tuple(factors)
+        return factors
 
 def poly_sturm(f, *symbols):
     """Computes the Sturm sequence of a given polynomial.
@@ -337,7 +340,7 @@ def poly_sturm(f, *symbols):
     while not sturm[-1].is_zero:
         sturm.append(-poly_div(sturm[-2], sturm[-1])[1])
 
-    return tuple(sturm[:-1])
+    return sturm[:-1]
 
 _exact_roots_cache = {}
 
