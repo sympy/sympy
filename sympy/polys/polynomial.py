@@ -541,27 +541,43 @@ class Poly(Basic, RelMeths, ArithMeths):
            case with additional parameters, to avoid Groebner basis
            computations.
 
+           The input fraction can be given as a single expression or
+           as a tuple consisting of the numerator and denominator.
+
            >>> from sympy import *
            >>> x,y = symbols('xy')
 
-           >>> Poly.cancel((x**2-y**2)/(x-y))
+           >>> Poly.cancel((x**2-y**2)/(x-y), x, y)
+           x + y
+
+           >>> Poly.cancel((x**2-y**2, x-y), x, y)
            x + y
 
         """
-        if not symbols:
-            symbols = f.atoms(Symbol)
+        if type(f) is tuple:
+            numer, denom = f
+        else:
+            if f.is_Atom:
+                return f
 
             if not symbols:
-                return f
-            else:
-                symbols = sorted(symbols)
+                symbols = f.atoms(Symbol)
 
-        numer, denom = f.as_numer_denom()
+                if not symbols:
+                    return f
+                else:
+                    symbols = sorted(symbols)
+
+            numer, denom = f.as_numer_denom()
 
         numer = numer.expand()
+
+        if numer is S.Zero:
+            return numer
+
         denom = denom.expand()
 
-        if numer.is_Number or denom.is_Number:
+        if denom.is_Number:
             return numer / denom
 
         try:
