@@ -46,6 +46,19 @@ def test_sympify4():
     assert sympify(a)**3 == x**3
     assert a == x
 
+def test_sympify_text():
+    assert sympify('some') == Symbol('some')
+    assert sympify('core') == Symbol('core')
+
+    assert sympify('True') == True
+    assert sympify('False') == False
+
+    assert sympify('Poly') == Poly
+    assert sympify('sin') == sin
+
+def test_sympify_function():
+    assert sympify('factor(x**2-1, x)') == -(1-x)*(x+1)
+    assert sympify('sin(pi/2)*cos(pi)') == -Integer(1)
 
 def test_sympify_poly():
     p = Poly(x**2+x+1, x)

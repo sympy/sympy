@@ -29,10 +29,12 @@ classes = Basic
 class SymPyTransformer(Transformer):
     def __init__(self, local_dict, global_dict):
         Transformer.__init__(self)
+
         self.symbol_class = 'Symbol'
-        self.name_dict = global_dict.copy()
-        self.name_dict.update(local_dict)
+
         self.local_dict = local_dict
+        self.global_dict = global_dict
+
     def atom_number(self, nodelist):
         n = Transformer.atom_number(self, nodelist)
         number, lineno = nodelist[0][1:]
@@ -47,14 +49,22 @@ class SymPyTransformer(Transformer):
 
     def atom_name(self, nodelist):
         name, lineno = nodelist[0][1:]
-        if name in self.name_dict:
-            name_obj = self.name_dict[name]
-            #if isinstance(name_obj, (Basic,bool,FunctionClass)) or hasattr(name_obj, '__call__'):
-            return Const(name_obj, lineno=lineno)
 
-        proper_obj = Symbol(name)
-        self.local_dict[name] = proper_obj
-        return Const(proper_obj, lineno=lineno)
+        if self.local_dict.has_key(name):
+            name_obj = self.local_dict[name]
+            return Const(name_obj, lineno=lineno)
+        elif self.global_dict.has_key(name):
+            name_obj = self.global_dict[name]
+
+            if isinstance(name_obj, (Basic, type)) or callable(name_obj):
+                return Const(name_obj, lineno=lineno)
+        elif name in ['True', 'False']:
+            return Const(eval(name), lineno=lineno)
+
+        symbol_obj = Symbol(name)
+        self.local_dict[name] = symbol_obj
+
+        return Const(symbol_obj, lineno=lineno)
 
     def lambdef(self, nodelist):
         #this is python stdlib symbol, not SymPy symbol:
