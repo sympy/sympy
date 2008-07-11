@@ -13,10 +13,10 @@ from sympy.functions import log, sinh, cosh, tanh, coth, asinh
 from sympy.functions import sqrt, erf
 
 from sympy.solvers import solve
-from sympy.simplify import cancel, simplify, together
-from sympy.polynomials import quo, gcd, lcm, factor, PolynomialException
+from sympy.simplify import simplify, together
 
-from sympy.polys import monomials, poly_factors
+from sympy.polynomials import factor, PolynomialException
+from sympy.polys import Poly, quo, gcd, lcm, factors, monomials
 
 def components(f, x):
     """Returns a set of all functional components of the given expression
@@ -215,7 +215,7 @@ def heurisch(f, x, **kwargs):
     denoms = [ g.as_numer_denom()[1] for g in diffs ]
     denom = reduce(lambda p, q: lcm(p, q, V), denoms)
 
-    numers = [ cancel(denom * g, *V) for g in diffs ]
+    numers = [ Poly.cancel(denom * g, *V) for g in diffs ]
 
     def derivation(h):
         return Add(*[ d * h.diff(v) for d, v in zip(numers, V) ])
@@ -223,15 +223,15 @@ def heurisch(f, x, **kwargs):
     def deflation(p):
         for y in p.atoms(Symbol):
             if derivation(p) is not S.Zero:
-                c, q = p.as_polynomial(y).as_primitive()
-                return deflation(c) * gcd(q, q.diff(y))
+                c, q = p.as_poly(y).as_primitive()
+                return deflation(c)*gcd(q, q.diff(y))
         else:
             return p
 
     def splitter(p):
         for y in p.atoms(Symbol):
             if derivation(y) is not S.Zero:
-                c, q = p.as_polynomial(y).as_primitive()
+                c, q = p.as_poly(y).as_primitive()
 
                 q = q.as_basic()
 
@@ -240,10 +240,10 @@ def heurisch(f, x, **kwargs):
 
                 c_split = splitter(c)
 
-                if s.as_polynomial(y).degree() == 0:
+                if s.as_poly(y).degree == 0:
                     return (c_split[0], q * c_split[1])
 
-                q_split = splitter(cancel(q / s, *V))
+                q_split = splitter(Poly.cancel((q, s), *V))
 
                 return (c_split[0]*q_split[0]*s, c_split[1]*q_split[1])
         else:
@@ -271,7 +271,7 @@ def heurisch(f, x, **kwargs):
     polys = list(v_split) + [ u_split[0] ] + special.keys()
 
     s = u_split[0] * Mul(*[ k for k, v in special.iteritems() if v ])
-    a, b, c = [ p.as_polynomial(*V).degree() for p in [s, P, Q] ]
+    a, b, c = [ p.as_poly(*V).degree for p in [s, P, Q] ]
 
     poly_denom = s * v_split[0] * deflation(v_split[1])
 
@@ -325,9 +325,9 @@ def heurisch(f, x, **kwargs):
             else:
                 continue
 
-            irreducibles |= set(poly_factors(poly, z, domain=field))
+            irreducibles |= set(factors(poly, z, domain=field))
 
-        irreducibles = [ h.as_basic() for h in irreducibles ]
+        #irreducibles = [ h.as_basic() for h in irreducibles ]
 
         log_coeffs, log_part = [], []
         B = _symbols('B', len(irreducibles))
