@@ -571,9 +571,6 @@ class Basic(AssumeMeths):
         else:
             return self._eval_is_polynomial(syms)
 
-    def as_polynomial(self, *syms, **kwargs): # remove
-        return C.Polynomial(self, var=(syms or None), **kwargs)
-
     def as_poly(self, *symbols, **flags):
         """Converts 'self' to a polynomial or returns None.
 
