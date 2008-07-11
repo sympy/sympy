@@ -8,12 +8,9 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core import sympify
 
-from sympy.polynomials import gcd, quo, roots, resultant
-from sympy.simplify import ratsimp, combsimp
+from sympy.polys import gcd, quo, roots, resultant
 
-from sympy.concrete.utilities import nni_roots
-
-def normal(f, g, n):
+def normal(f, g, n=None):
     """Given relatively prime univariate polynomials 'f' and 'g',
        rewrite their quotient to a normal form defined as follows:
 
@@ -45,21 +42,14 @@ def normal(f, g, n):
     """
     f, g = map(sympify, (f, g))
 
-    if f.is_polynomial:
-        p = f.as_polynomial(n)
-    else:
-        raise ValueError("'f' must be a polynomial")
+    p = f.as_poly(n)
+    q = g.as_poly(n)
 
-    if g.is_polynomial:
-        q = g.as_polynomial(n)
-    else:
-        raise ValueError("'g' must be a polynomial")
+    a, p = p.LC, p.as_monic()
+    b, q = q.LC, q.as_monic()
 
-    a, p = p.as_monic()
-    b, q = q.as_monic()
-
-    A = p.sympy_expr
-    B = q.sympy_expr
+    A = p.as_basic()
+    B = q.as_basic()
 
     C, Z = S.One, a / b
 
@@ -67,17 +57,13 @@ def normal(f, g, n):
 
     res = resultant(A, B.subs(n, n+h), n)
 
-    if not res.is_polynomial(h):
-        res = quo(*res.as_numer_denom())
+    nni_roots = roots(res, h, domain='Z',
+        predicate=lambda r: r >= 0).keys()
 
-    _nni_roots = nni_roots(res, h)
-
-    if _nni_roots == []:
+    if not nni_roots:
         return (f, g, S.One)
     else:
-        _nni_roots.sort()
-
-        for i in _nni_roots:
+        for i in sorted(nni_roots):
             d = gcd(A, B.subs(n, n+i), n)
 
             A = quo(A, d, n)
@@ -89,8 +75,6 @@ def normal(f, g, n):
 
 def gosper(term, k, a, n):
     from sympy.solvers import rsolve_poly
-
-    #expr, hyper = combsimp(term.subs(k, k+1)/term, k, verify=True)
 
     if not hyper:
         return None

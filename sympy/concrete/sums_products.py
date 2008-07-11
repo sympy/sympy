@@ -4,7 +4,6 @@ from sympy.functions import factorial
 #from sympy.specfun import rising_factorial, factorial, factorial_simplify
 #from sympy.specfun.factorials import unfac
 #from sympy.specfun import bernoulli
-#from sympy.polynomials import factor, PolynomialException
 #from sympy.simplify import powsimp
 
 def ispoly(expr, var):

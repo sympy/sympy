@@ -2,7 +2,7 @@
 from sympy.core import Basic, S, C, Add, Mul, Symbol, sympify
 from sympy.core.methods import NoRelMeths, ArithMeths
 
-from sympy.polynomials import quo, roots
+from sympy.polys import quo, roots
 from sympy.simplify import powsimp
 
 class Product(Basic, NoRelMeths, ArithMeths):
@@ -94,21 +94,21 @@ class Product(Basic, NoRelMeths, ArithMeths):
         if not term.has(k):
             return term**(n-a+1)
         elif term.is_polynomial(k):
-            poly = term.as_polynomial(k)
+            poly = term.as_poly(k)
 
             A = B = Q = S.One
-            C_= poly.leading_coeff()
+            C_= poly.LC
 
-            all_roots = roots(poly)
+            all_roots = roots(poly, multiple=True)
 
             for r in all_roots:
                 A *= C.RisingFactorial(a-r, n-a+1)
                 Q *= n - r
 
-            if len(all_roots) < poly.degree():
-                B = Product(quo(poly, Q, k), (k, a, n))
+            if len(all_roots) < poly.degree:
+                B = Product(quo(poly, Q.as_poly(k)), (k, a, n))
 
-            return C_**(n-a+1) * A * B
+            return poly.LC**(n-a+1) * A * B
         elif term.is_Add:
             p, q = term.as_numer_denom()
 
