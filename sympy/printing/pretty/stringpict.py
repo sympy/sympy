@@ -267,7 +267,7 @@ class stringPict(object):
                 ncols = curses.tigetnum('cols')
             except AttributeError:
                 # windows curses doesn't implement setupterm or tigetnum
-                # code below from 
+                # code below from
                 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/440694
                 from ctypes import windll, create_string_buffer
                 # stdin handle is -10
