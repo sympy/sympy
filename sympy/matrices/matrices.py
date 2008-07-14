@@ -28,10 +28,10 @@ class _MatrixAsBasic(Basic):
     """
     def __init__(self, m):
         self.m = m
-    def torepr(self):
-        return self.m.torepr()
-    def tostr(self):
-        return self.m.tostr()
+    def __repr__(self):
+        return self.m.__repr__()
+    def __str__(self):
+        return self.m.__str__()
 
 class Matrix(object):
 
@@ -359,13 +359,6 @@ class Matrix(object):
         else:
             return True
 
-    # hook Basic.__repr__ & Basic.__str__
-    def __repr__(self):
-        return _MatrixAsBasic(self).__repr__()
-
-    def __str__(self):
-        return _MatrixAsBasic(self).__str__()
-
     def _format_str(self, strfunc, rowsep='\n'):
         # Build table of string representations of the elements
         res = []
@@ -385,13 +378,9 @@ class Matrix(object):
             res[i] = "[" + ", ".join(row) + "]"
         return rowsep.join(res)
 
-    def torepr(self):
+    def __repr__(self):
         s = self._format_str(lambda elem: repr(elem), ',\n  ')
-
         return '%s([\n  %s,\n])' % (self.__class__.__name__, s)
-
-    def tostr(self):
-        return self._format_str(lambda elem: str(elem))
 
     def inv(self, method="GE"):
         """
@@ -1542,17 +1531,6 @@ class SMatrix(Matrix):
                 self.mat[(i,j)] = testval
             elif self.mat.has_key((i,j)):
                 del self.mat[(i,j)]
-
-    def __str__(self):
-        s = ""
-        for i in range(self.lines):
-            for j in range(self.cols):
-                if self.mat.has_key((i,j)):
-                    s += "%s " % repr(self[i,j])
-                else:
-                    s += "0 "
-            s += "\n"
-        return s
 
     def row_del(self, k):
         newD = {}

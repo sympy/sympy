@@ -287,13 +287,7 @@ class Real(Number):
     def _hashable_content(self):
         return (self._mpf_, self._prec)
 
-    def tostr(self, level=0):
-        r = mlib.to_str(self._mpf_, mlib.prec_to_dps(self._prec))
-        if self.precedence<=level:
-            return '(%s)' % (r)
-        return r
-
-    def torepr(self):
+    def __repr__(self):
         dps = mlib.prec_to_dps(self._prec)
         r = mlib.to_str(self._mpf_, dps+3)
         return '%s(%r, prec=%i)' % (self.__class__.__name__, r, dps)
@@ -512,19 +506,8 @@ class Rational(Number):
     def _hashable_content(self):
         return (self.p, self.q)
 
-    def tostr(self, level=0):
-        if self.precedence<=level:
-            return '(%s/%s)' % (self.p, self.q)
-        return '%s/%s' % (self.p, self.q)
-
-    def torepr(self):
+    def __repr__(self):
         return '%s(%r, %r)' % (self.__class__.__name__, self.p, self.q)
-
-    @property
-    def precedence(self):
-        if self.p < 0:
-            return Basic.Add_precedence
-        return Basic.Mul_precedence
 
     def _eval_is_positive(self):
         return self.p > 0
@@ -816,18 +799,7 @@ class Integer(Rational):
     def _eval_is_odd(self):
         return bool(self.p % 2)
 
-    @property
-    def precedence(self):
-        if self.p < 0:
-            return 40 # same as Add
-        return Atom.precedence
-
-    def tostr(self, level=0):
-        if self.precedence<=level:
-            return '(%s)' % (self.p)
-        return str(self.p)
-
-    def torepr(self):
+    def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, self.p)
 
     def _eval_power(b, e):
@@ -1080,9 +1052,6 @@ class Infinity(Singleton, Rational):
     def __neg__():
         return S.NegativeInfinity
 
-    def tostr(self, level=0):
-        return 'oo'
-
     def _eval_power(b, e):
         """
         e is symbolic object but not equal to 0, 1
@@ -1125,8 +1094,6 @@ class NegativeInfinity(Singleton, Rational):
     is_integer  = None
     is_rational = None
 
-    precedence = 40 # same as Add
-
     @staticmethod
     def __abs__():
         return S.Infinity
@@ -1134,9 +1101,6 @@ class NegativeInfinity(Singleton, Rational):
     @staticmethod
     def __neg__():
         return S.Infinity
-
-    def tostr(self, level=0):
-        return '-oo'
 
     def _eval_power(b, e):
         """
@@ -1182,9 +1146,6 @@ class NaN(Singleton, Rational):
 
     __slots__ = []
 
-    def tostr(self, level=0):
-        return 'nan'
-
     def _as_mpf_val(self, prec):
         return mlib.fnan
 
@@ -1213,9 +1174,6 @@ class ComplexInfinity(Singleton, Atom, NoRelMeths, ArithMeths):
     @staticmethod
     def __neg__():
         return S.ComplexInfinity
-
-    def tostr(self, level=0):
-        return 'zoo'
 
     def _eval_power(b, e):
         if e is S.ComplexInfinity:
@@ -1319,9 +1277,6 @@ class Exp1(NumberSymbol):
     def __abs__():
         return S.Exp1
 
-    def tostr(self, level=0):
-        return 'E'
-
     def _as_mpf_val(self, prec):
         return mlib.fe(prec)
 
@@ -1360,9 +1315,6 @@ class Pi(NumberSymbol):
         elif issubclass(number_cls, Rational):
             return (Rational(223,71), Rational(22,7))
 
-    def tostr(self, level=0):
-        return 'pi'
-
     def _sage_(self):
         import sage.all as sage
         return sage.pi
@@ -1388,9 +1340,6 @@ class GoldenRatio(NumberSymbol):
         elif issubclass(number_cls, Rational):
             pass
 
-    def tostr(self, level=0):
-        return 'GoldenRatio'
-
     def _sage_(self):
         import sage.all as sage
         return sage.golden_ratio
@@ -1412,9 +1361,6 @@ class EulerGamma(NumberSymbol):
             return (S.Zero, S.One)
         elif issubclass(number_cls, Rational):
             return (S.Half, Rational(3, 5))
-
-    def tostr(self, level=0):
-        return 'EulerGamma'
 
     def _sage_(self):
         import sage.all as sage
@@ -1438,9 +1384,6 @@ class Catalan(NumberSymbol):
         elif issubclass(number_cls, Rational):
             return (Rational(9, 10), S.One)
 
-    def tostr(self, level=0):
-        return 'Catalan'
-
     def _sage_(self):
         import sage.all as sage
         return sage.catalan
@@ -1460,9 +1403,6 @@ class ImaginaryUnit(Singleton, Atom, RelMeths, ArithMeths):
 
     def _eval_evalf(self, prec):
         return self
-
-    def tostr(self, level=0):
-        return 'I'
 
     def _eval_conjugate(self):
         return -S.ImaginaryUnit

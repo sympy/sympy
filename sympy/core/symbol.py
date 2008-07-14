@@ -59,10 +59,7 @@ class Symbol(Atom, RelMeths, ArithMeths):
     def _hashable_content(self):
         return (self.name,)
 
-    def tostr(self, level=0):
-        return self.name
-
-    def torepr(self):
+    def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, self.name)
 
     def as_dummy(self):
@@ -106,9 +103,6 @@ class Dummy(Symbol):
 
     def _hashable_content(self):
         return (self.name, self.dummy_index)
-
-    def tostr(self, level=0):
-        return '_' + self.name
 
 
 class Temporary(Dummy):
@@ -168,9 +162,6 @@ class Wild(Symbol):
 
     def __call__(self, *args, **assumptions):
         return WildFunction(self.name, nargs=len(args))(*args, **assumptions)
-
-    def tostr(self, level=0):
-        return self.name + '_'
 
 
 def symbols(*names, **kwargs):

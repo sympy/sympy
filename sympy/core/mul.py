@@ -297,51 +297,6 @@ class Mul(AssocOp, RelMeths, ArithMeths):
     def _eval_evalf(self, prec):
         return AssocOp._eval_evalf(self, prec).expand()
 
-    @property
-    def precedence(self):
-        coeff, rest = self.as_coeff_terms()
-        if coeff.is_negative: return Basic.Add_precedence
-        return Basic.Mul_precedence
-
-    def tostr(self, level = 0):
-        precedence = self.precedence
-        coeff, terms = self.as_coeff_terms()
-        if coeff.is_negative:
-            coeff = -coeff
-            if coeff is not S.One:
-                terms = (coeff,) + terms
-            if isinstance(terms, Basic):
-                terms = terms.args
-            r = '-' + '*'.join([t.tostr(precedence) for t in terms])
-        else:
-            r = '*'.join([t.tostr(precedence) for t in self.args])
-        r = r.replace('*1/', '/')
-        if precedence <= level:
-            return '(%s)' % r
-        return r
-
-        numer,denom = self.as_numer_denom()
-        if denom is S.One:
-            delim = '*'
-            coeff, rest = self.as_coeff_terms()
-            r = delim.join([s.tostr(precedence) for s in rest.args])
-            if coeff is S.One:
-                pass
-            elif -coeff is S.One:
-                r = '-' + r
-            elif coeff.is_negative:
-                r = '-' + (-coeff).tostr() + delim + r
-            else:
-                r = coeff.tostr() + delim + r
-        else:
-            if len(denom[:])>1:
-                r = '(' + numer.tostr() + ') / (' + denom.tostr() + ')'
-            else:
-                r = '(' + numer.tostr() + ') / ' + denom.tostr()
-        if precedence<=level:
-            return '(%s)' % r
-        return r
-
     @cacheit
     def as_two_terms(self):
         if len(self.args) == 1:

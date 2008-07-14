@@ -12,8 +12,6 @@ from sympy.polys import Poly
 class Integral(Basic, NoRelMeths, ArithMeths):
     """Represents unevaluated integral."""
 
-    precedence = Basic.Apply_precedence
-
     def __new__(cls, function, *symbols, **assumptions):
         function = sympify(function)
 
@@ -70,20 +68,6 @@ class Integral(Basic, NoRelMeths, ArithMeths):
             variables.append(x)
 
         return variables
-
-    @staticmethod
-    def _xab_tostr(xab):
-        """str representation of integration variable with optional limits"""
-        x,ab = xab
-        if ab is None:
-            return str(x)
-        else:
-            return str(xab)
-
-
-    def tostr(self, level=0):
-        L = ', '.join([ self._xab_tostr(l) for l in self.limits ])
-        return 'Integral(%s, %s)' % (self.function.tostr(), L)
 
     def doit(self, **hints):
         if not hints.get('integrals', True):

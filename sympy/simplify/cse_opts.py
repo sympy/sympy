@@ -27,7 +27,6 @@ def assumed(e, name):
 class Sub(AssocOp, RelMeths, ArithMeths):
     """ Stub of a Sub operator to replace Add(x, Mul(NegativeOne(-1), y)).
     """
-    precedence = Basic.Add_precedence
     __slots__ = []
     is_Add = False
     is_Sub = True

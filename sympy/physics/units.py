@@ -24,9 +24,6 @@ class Unit(Atom, RelMeths, ArithMeths):
         self.name = name
         self.abbrev = abbrev
 
-    def tostr(self, level=0):
-        return self.abbrev
-
     def __eq__(self, other):
         return isinstance(other, Unit) and self.name == other.name
 

@@ -512,11 +512,6 @@ class RootOf(Basic, NoRelMeths, ArithMeths):
     def atoms(self, *args, **kwargs):
         return self.poly.atoms(*args, **kwargs)
 
-    def tostr(self, level=0):
-        poly = self.poly.tostr()
-
-        return "RootOf(%s, index=%d)" % \
-            (poly[1+poly.index("("):-1], self.index)
 
 class RootsOf(Basic, NoRelMeths, ArithMeths):
     """Represents all roots of an univariate polynomial.
@@ -580,10 +575,6 @@ class RootsOf(Basic, NoRelMeths, ArithMeths):
     def atoms(self, *args, **kwargs):
         return self.poly.atoms(*args, **kwargs)
 
-    def tostr(self, level=0):
-        poly = self.poly.tostr()
-
-        return "RootsOf(" + poly[1+poly.index("("):]
 
 class RootSum(Basic, NoRelMeths, ArithMeths):
     """Represents a sum of all roots of an univariate polynomial. """
@@ -628,14 +619,3 @@ class RootSum(Basic, NoRelMeths, ArithMeths):
                 result += self.function(root)
 
             return result
-
-    def tostr(self, level=0):
-        if hasattr(self.function, 'tostr'):
-            func = self.function.tostr()
-        else:
-            func = str(self.function)
-
-        poly = self.roots.poly.tostr()
-
-        return "RootSum(%s, %s)" % \
-            (func, poly[1+poly.index("("):-1])

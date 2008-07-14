@@ -136,17 +136,6 @@ class Relational(Basic, NoRelMeths):
     def rhs(self):
         return self._args[1]
 
-    @property
-    def precedence(self):
-        return 20
-
-    def tostr(self, level=0):
-        precedence = self.precedence
-        r = '%s %s %s' % (self.lhs.tostr(precedence), self.rel_op, self.rhs.tostr(precedence))
-        if precedence <= level:
-            return '(%s)' % r
-        return r
-
     def subs(self, old, new):
         return self.__class__(self.lhs.subs(old, new), self.rhs.subs(old, new))
 

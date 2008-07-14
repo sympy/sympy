@@ -21,7 +21,6 @@ class PolynomialSequence(Function):
     """
 
     nargs = 2
-    precedence = Basic.Apply_precedence
 
     @classmethod
     def canonize(cls, n, x):

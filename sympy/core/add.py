@@ -11,8 +11,6 @@ from symbol import Symbol, Wild, Temporary
 
 class Add(AssocOp, RelMeths, ArithMeths):
 
-    precedence = Basic.Add_precedence
-
     __slots__ = []
 
     is_Add = True
@@ -175,56 +173,6 @@ class Add(AssocOp, RelMeths, ArithMeths):
             if c!=0:
                 return c
         return Basic.compare(a,b)
-
-    def tostr(self, level=0):
-        coeff, rest = self.as_coeff_factors()
-
-        # Now we need to sort the factors in Add, which are in "rest". Any
-        # ordering is fine, but some ordering looks better and some looks bad.
-        # This particular solution is slow, but it ensures a sane ordering. It
-        # can of course be improved:
-
-        rest = list(rest)
-
-        # HACK: the pattern matching in compare_terms ends up with
-        # infinite recursion if there are Wilds present. The following code
-        # can be removed if a better fix is found in .match()
-        def cleanup_wild(x):
-            if isinstance(x, Wild):
-                return Symbol(x.name), True
-            L = []
-            modified = False
-            for g in x.args:
-                g, modified_ = cleanup_wild(g)
-                modified = modified or modified_
-                L.append(g)
-            if modified:
-                x = x.func(*L)
-            return x, modified
-
-        rest = [cleanup_wild(t)[0] for t in rest]
-        # END HACK
-
-        rest.sort(self.compare_terms)
-
-        l = []
-        precedence = self.precedence
-        if coeff is not S.Zero:
-            l.append(coeff.tostr(precedence))
-        for factor in rest:
-            f = factor.tostr()
-            if f.startswith('-'):
-                if l:
-                    l.extend(['-',f[1:]])
-                else:
-                    l.append(f)
-            else:
-                l.extend(['+',f])
-        if l[0]=='+': l.pop(0)
-        r = ' '.join(l)
-        if precedence<=level:
-            return '(%s)' % r
-        return r
 
     @cacheit
     def as_coeff_factors(self, x=None):

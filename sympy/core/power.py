@@ -55,8 +55,6 @@ class Pow(Basic, ArithMeths, RelMeths):
 
     is_Pow = True
 
-    precedence = Basic.Pow_precedence
-
     __slots__ = []
 
     @cacheit
@@ -197,17 +195,6 @@ class Pow(Basic, ArithMeths, RelMeths):
         if c1 and c2:
             if self.exp.is_nonnegative:
                 return True
-
-    def tostr(self, level=0):
-        precedence = self.precedence
-        b = self.base.tostr(precedence)
-        if self.exp is S.NegativeOne:
-            r = '1/%s' % (b)
-        else:
-            r = '%s**%s' % (b,self.exp.tostr(precedence))
-        if precedence <= level:
-            return '(%s)' % (r)
-        return r
 
     def _eval_subs(self, old, new):
         if self==old: return new

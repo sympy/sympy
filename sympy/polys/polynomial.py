@@ -248,8 +248,8 @@ class Poly(Basic, RelMeths, ArithMeths):
 
        [13] String representation functions:
 
-          [13.1] [U-] torepr      --> returns represtation of 'self'
-          [13.3] [U-] tostr       --> returns pretty representation
+          [13.1] [U-] repr      --> returns represantation of 'self'
+          [13.3] [U-] str       --> returns pretty representation
 
        [14] Other (derived from Basic) functionality:
 
@@ -2136,66 +2136,10 @@ class Poly(Basic, RelMeths, ArithMeths):
 
         format = self.__class__.__name__ + "([%s], %s, order='%s')"
 
-        symbols = [ s.torepr() for s in self.symbols ]
+        symbols = [ repr(s) for s in self.symbols ]
 
         return format % (', '.join(terms),
             ', '.join(symbols), self.order)
-
-    def tostr(self, level=0):
-        terms, symbols = [], [ s.tostr() for s in self.symbols ]
-
-        for coeff, monom in self.iter_terms():
-            s_monom = []
-
-            for i, exp in enumerate(monom):
-                if exp > 0:
-                    if exp == 1:
-                        s_monom.append(symbols[i])
-                    else:
-                        s_monom.append(symbols[i] + "**%d" % exp)
-
-            s_monom = "*".join(s_monom)
-
-            if coeff.is_Add:
-                if s_monom:
-                    s_coeff = "(" + coeff.tostr() + ")"
-                else:
-                    s_coeff = coeff.tostr()
-            else:
-                if s_monom and abs(coeff) is S.One:
-                    if coeff.is_negative:
-                        terms.extend(['-', s_monom])
-                    else:
-                        terms.extend(['+', s_monom])
-
-                    continue
-                else:
-                    s_coeff = coeff.tostr()
-
-            if not s_monom:
-                s_term = s_coeff
-            else:
-                s_term = s_coeff + "*" + s_monom
-
-            if s_term.startswith('-'):
-                terms.extend(['-', s_term[1:]])
-            else:
-                terms.extend(['+', s_term])
-
-        if terms[0] in ['-', '+']:
-            modifier = terms.pop(0)
-
-            if modifier == '-':
-                terms[0] = '-' + terms[0]
-
-        format = self.__class__.__name__ + "(%s, %s"
-
-        if self.is_multivariate and self.order != 'grlex':
-            format += ", order='%s')" % self.order
-        else:
-            format += ")"
-
-        return format % (' '.join(terms), ', '.join(symbols))
 
     def _eval_is_polynomial(self, symbols):
         try:

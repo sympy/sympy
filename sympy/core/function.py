@@ -68,7 +68,7 @@ class FunctionClass(BasicMeta):
             name, bases, attrdict = arg1, arg2, arg3
             return type.__new__(cls, name, bases, attrdict)
 
-    def torepr(cls):
+    def __repr__(cls):
         return cls.__name__
 
 class Function(Basic, ArithMeths, RelMeths):
@@ -81,8 +81,6 @@ class Function(Basic, ArithMeths, RelMeths):
     __metaclass__ = FunctionClass
 
     is_Function = True
-
-    precedence = Basic.Apply_precedence
 
     nargs = None
 
@@ -331,17 +329,9 @@ class Function(Basic, ArithMeths, RelMeths):
                 raise TypeError("argument index %r is out of range [1,%s]" % (argindex,nargs))
         return Derivative(self,self.args[argindex-1],evaluate=False)
 
-    def torepr(self):
+    def __repr__(self):
         r = '%s(%r)' % (self.func.__base__.__name__, self.func.__name__)
-        r+= '(%s)' % ', '.join([a.torepr() for a in self.args])
-        return r
-
-    def tostr(self, level=0):
-        p = self.precedence
-        r = '%s(%s)' % (self.func.__name__, ', '.join([a.tostr() for a in
-            self.args]))
-        if p <= level:
-            return '(%s)' % (r)
+        r+= '(%s)' % ', '.join([repr(a) for a in self.args])
         return r
 
     @classmethod
@@ -402,11 +392,8 @@ class WildFunction(Function, Atom):
         repl_dict[pattern] = expr
         return repl_dict
 
-    def torepr(self):
+    def __repr__(self):
         return '%s(%r)' % (self.__class__.__name__, self.name)
-
-    def tostr(self, level=0):
-        return self.name + '_'
 
     @classmethod
     def _eval_apply_evalf(cls, arg):
@@ -428,8 +415,6 @@ class Derivative(Basic, ArithMeths, RelMeths):
     Derivative(Derivative(expr, x), y) -> Derivative(expr, x, y)
     Derivative(expr, x, 3)  -> Derivative(expr, x, x, x)
     """
-
-    precedence = Basic.Apply_precedence
 
     @staticmethod
     def _symbolgen(*symbols):
@@ -513,12 +498,6 @@ class Derivative(Basic, ArithMeths, RelMeths):
     @property
     def symbols(self):
         return self._args[1:]
-
-    def tostr(self, level=0):
-        r = 'D' + `tuple(self.args)`
-        if self.precedence <= level:
-            r = '(%s)' % (r)
-        return r
 
     def _eval_subs(self, old, new):
         return Derivative(self.args[0].subs(old, new), *self.args[1:], **{'evaluate': True})

@@ -1,3 +1,4 @@
+
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core import oo, Rational, Pow
 from sympy.core.methods import ArithMeths, RelMeths
@@ -76,8 +77,6 @@ class Order(Basic, ArithMeths, RelMeths):
       If O is used with only expression argument then the symbols are
       all symbols in the expression.
     """
-
-    precedence = Basic.Apply_precedence
 
     is_Order = True
 
@@ -210,15 +209,6 @@ class Order(Basic, ArithMeths, RelMeths):
     @property
     def symbols(self):
         return self._args[1:]
-
-    def tostr(self, level = 0):
-        if len(self.symbols) <= 1:
-            r = 'O(%s)' % self.expr.tostr()
-        else:
-            r = 'O(%s)' % (', '.join([s.tostr() for s in self.args]))
-        if self.precedence <= level:
-            r = '(%s)' % (r)
-        return r
 
     def _eval_power(b, e):
         if e.is_Number:

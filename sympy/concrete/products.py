@@ -10,8 +10,6 @@ class Product(Basic, NoRelMeths, ArithMeths):
 
     """
 
-    precedence = Basic.Apply_precedence
-
     def __new__(cls, term, *symbols, **assumptions):
         term = sympify(term)
 
@@ -66,14 +64,6 @@ class Product(Basic, NoRelMeths, ArithMeths):
     @property
     def upper(self):
         return self._args[3]
-
-    def tostr(self, level=0):
-        r = 'Product(%s)' % ', '.join([a.tostr() for a in self._args])
-
-        if self.precedence <= level:
-            return '(%s)' % (r)
-        else:
-            return r
 
     def doit(self):
         prod = self._eval_product()

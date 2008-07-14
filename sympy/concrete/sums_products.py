@@ -41,8 +41,6 @@ class Sum2(_BigOperator):
     def __repr__(self):
         return "Sum2(%r, (%r, %r, %r))" % (self.f, self.i, self.a, self.b)
 
-    __str__ = __repr__
-
     def reindex(self, a):
         """Reindex the sum to start at a new lower index a."""
         diff = self.a - a

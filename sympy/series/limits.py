@@ -96,8 +96,3 @@ class Limit(Basic, NoRelMeths, ArithMeths):
     def doit(self):
         e, z, z0, dir = self.args
         return limit(e, z, z0, dir)
-
-    def tostr(self, level=0):
-        e, z, z0, dir = self.args
-        return "Limit(%s, %s, %s, dir='%s')" % (e, z, z0, dir)
-

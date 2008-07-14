@@ -14,9 +14,6 @@ from function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
     Function, expand
 from interval import Interval
 
-# set repr output to pretty output:
-Basic.set_repr_level(1)
-
 # expose singletons like exp, log, oo, I, etc.
 for _n, _cls in Basic.singleton.items():
     exec '%s = _cls()' % (_n)

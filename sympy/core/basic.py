@@ -13,14 +13,7 @@ from cache import cacheit, Memoizer, MemoizerArg
 # from mul      import Mul  /cyclic/
 # from power    import Pow  /cyclic/
 # from function import Derivative, FunctionClass   /cyclic/
-
-def repr_level(flag=None, _cache=[1]):
-    if flag is None:
-        return _cache[0]
-    old_flag = _cache[0]
-    _cache[0] = max(0, min(2, int(flag))) # restrict to 0,1,2
-    return old_flag
-
+# from sympy.printing import StrPrinter
 
 # used for canonical ordering of symbolic sequences
 # via __cmp__ method:
@@ -83,7 +76,6 @@ ordering_of_classes = [
     'Equality', 'Unequality', 'StrictInequality', 'Inequality',
     ]
 
-#
 
 class BasicType(type):
     pass
@@ -91,7 +83,6 @@ class BasicType(type):
 class BasicMeta(BasicType):
 
     classnamespace = {}
-    repr_level = 0        # defines the output of repr()
     singleton = {}
 
     def __init__(cls,*args,**kws):
@@ -548,99 +539,14 @@ class Basic(AssumeMeths):
 
         return (st != ot)
 
-
-
-    ##############
-    # STR / REPR #
-    ##############
-
-    Lambda_precedence = 1
-    Add_precedence = 40
-    Mul_precedence = 50
-    Pow_precedence = 60
-    Apply_precedence = 70
-    Item_precedence = 75
-    Atom_precedence = 1000
-
-    @property
-    def precedence(self):
-        return 0
-
-    def tostr(self, level=0):
-        return self.torepr()
-
-    def torepr(self):
+    def __repr__(self):
         l = []
         for o in self.args:
-            try:
-                l.append(o.torepr())
-            except AttributeError:
-                l.append(repr(o))
-        return self.__class__.__name__ + '(' + ', '.join(l) + ')'
+            l.append(repr(o))
+        return self.__class__.__name__ + '(%s)'%', '.join(l)
 
     def __str__(self):
-        return self.tostr()
-
-    @staticmethod
-    def set_repr_level(flag = None):
-        """
-        Set the representation level used for repr() printing,
-        returning the current level. The available levels are:
-
-        flag == 0:
-            Lowest level printing. Expressions printing should be be able to be
-            evaluated through Python's eval() function
-        flag == 1:
-            Higher level printing. Expressions are printed in a one-dimensional
-            fashion, are easier to read than level 1, but cannot be parsed
-            through eval()
-        flag == 2:
-            Highest level printing. Expressions are simply two-dimensional,
-            "pretty" versions of the expressions that are only useful for
-            readability purposes.
-
-        Notes:
-            - Level 2 printing is done through the printing module in
-              smpy.printing.pretty.
-        """
-        return repr_level(flag)
-
-    def __repr__(self):
-        plevel = repr_level()
-        if plevel == 1:
-            return self.tostr()
-        elif plevel == 2:
-            from sympy.printing.pretty import pretty
-            # in fact, we should just return pretty(self) -- it would be right,
-            # in the real world, the situation is somewhat complicated:
-            # - there is a bug in python2.4 -- unicode result from __repr__ is
-            #   wrongly handled: http://bugs.python.org/issue1459029
-            # - interactive interpreter will try to encode unicode strings with
-            #   sys.getdefaultencoding() encoding. site.py just deletes
-            #   sys.setdefaultencoding and thus, we are out of chance to change
-            #   it from 'ascii' to something unicode-aware.
-            #
-            #   So, by default, python is unable to handle unicode repr's in
-            #   interactive sessions.
-            #
-            #   we could change default site.py to set default encoding based
-            #   on locale, but it is not convenient to force users to change
-            #   system-wide python setup.
-            #
-            #   It's ugly, but we are going to workaround this.
-            #   See #425 for motivation.
-            pstr = pretty(self)
-            if isinstance(pstr, unicode):
-                import sys
-                try:
-                    pstr = pstr.encode(sys.stdout.encoding)
-                except UnicodeEncodeError:
-                    print 'W: unicode problem in __repr__, will use ascii as fallback'
-                    pstr = pretty(self, use_unicode=False)
-
-            return pstr
-
-        return self.torepr()
+        return StrPrinter.doprint(self)
 
     def atoms(self, *types):
         """Returns the atoms that form the current object.
@@ -1356,7 +1262,7 @@ class Basic(AssumeMeths):
            As a pattern this function accepts a list of functions to
            to rewrite (instances of DefinedFunction class). As rule
            you can use string or a destination function instance (in
-           this cas rewrite() will use tostr() method).
+           this case rewrite() will use the str() function).
 
            There is also possibility to pass hints on how to rewrite
            the given expressions. For now there is only one such hint
@@ -1386,7 +1292,7 @@ class Basic(AssumeMeths):
                     rule = rule.__name__  # XXX proper attribute for name?
                     #print rule
                 else:
-                    rule = rule.tostr()
+                    rule = str(rule)
 
             rule = '_eval_rewrite_as_' + rule
 
@@ -1844,8 +1750,6 @@ class Atom(Basic):
     """
 
     is_Atom = True
-
-    precedence = Basic.Atom_precedence
 
     __slots__ = []
 

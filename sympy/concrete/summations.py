@@ -5,8 +5,6 @@ from sympy.core.methods import NoRelMeths, ArithMeths
 class Sum(Basic, NoRelMeths, ArithMeths):
     """Represents unevaluated summation."""
 
-    precedence = Basic.Apply_precedence
-
     def __new__(cls, f, *symbols, **assumptions):
         f = sympify(f)
 
@@ -60,10 +58,6 @@ class Sum(Basic, NoRelMeths, ArithMeths):
     @property
     def limits(self):
         return self._args[1]
-
-    def tostr(self, level=0):
-        L = ', '.join([ str(L) for L in self.limits ])
-        return 'Sum(%s, %s)' % (self.function.tostr(), L)
 
     def doit(self, **hints):
         #if not hints.get('sums', True):

@@ -208,11 +208,6 @@ class Polynomial(Basic):
         return object.__getattribute__(self, name)
 
 
-    def __str__(self):
-        """Return only the SymPy expression to be human-readable."""
-        return str(self.sympy_expr)
-
-
     def __repr__(self):
         """Returns a string that could be used to reconstruct this object."""
         return "Polynomial(%s, %s, %s, %s)" % (repr(self.sympy_expr),
@@ -1030,5 +1025,4 @@ def IntPoly2Polynomial(f, var, order):
     for exp in exponents:
         coeffs.append((sympify(f[exp]), sympify(exp)))
     return Polynomial(coeffs=tuple(coeffs), var=var, order=order)
-
 

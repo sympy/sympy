@@ -17,15 +17,7 @@ class Interval(Basic):
     def end(self):
         return self._args[1]
 
-    def tostr(self, level=0):
-        r = '[%s, %s]' % (self.start, self.end)
-        if self.precedence <= level:
-            r = '(%s)' % (r)
-        return r
-
-
 # /cyclic/
 import sympify as _
 _.Interval  = Interval
 del _
-

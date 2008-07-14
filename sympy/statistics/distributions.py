@@ -24,9 +24,6 @@ class Sample(tuple):
     def __repr__(self):
         return "Sample([" + ", ".join([str(x) for x in self]) + "])"
 
-    __str__ = __repr__
-
-
 
 class ContinuousProbability:
     """Base class for continuous probability distributions"""
@@ -77,8 +74,6 @@ class Normal(ContinuousProbability):
 
     def __repr__(self):
         return "Normal(%s, %s)" % (self.mu, self.sigma)
-
-    __str__ = __repr__
 
     mean = property(lambda s: s.mu)
     median = property(lambda s: s.mu)
@@ -159,8 +154,6 @@ class Uniform(ContinuousProbability):
 
     def __repr__(self):
         return "Uniform(%s, %s)" % (self.a, self.b)
-
-    __str__ = __repr__
 
     mean = property(lambda s: (s.a+s.b)/2)
     median = property(lambda s: (s.a+s.b)/2)

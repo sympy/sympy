@@ -139,9 +139,6 @@ class Factorial(Function):
     def _eval_rewrite_as_gamma(self, arg):
         return C.gamma(1 + arg)
 
-    def tostr(self, level=0):
-        return '%s!' % self.args[0].tostr(self.precedence)
-
     def _eval_is_integer(self):
         return self.args[0].is_integer
 
