@@ -587,10 +587,10 @@ class Basic(AssumeMeths):
            >>> x,y = symbols('xy')
 
            >>> print (x**2 + x*y).as_poly()
-           Poly((1, 1), ((2, 0), (1, 1)), (x, y), 'grlex')
+           Poly(x**2 + x*y, x, y)
 
            >>> print (x**2 + x*y).as_poly(x, y)
-           Poly((1, 1), ((2, 0), (1, 1)), (x, y), 'grlex')
+           Poly(x**2 + x*y, x, y)
 
            >>> print (x**2 + sin(y)).as_poly(x, y)
            None

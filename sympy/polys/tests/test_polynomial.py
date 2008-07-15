@@ -138,6 +138,47 @@ def test_poly_internals():
     assert Poly._permute(q, z, y, x) == \
         {(0, 1, 1): 3, (1, 1, 0): 4, (3, 1, 1): 2, (1, 1, 2): 1}
 
+def test_poly_repr():
+    assert Poly(7, x).torepr() == \
+        "Poly([(Integer(7), (0,))], Symbol('x'), order='grlex')"
+
+    assert Poly(2*x*y + 7, x, y).torepr() == \
+        "Poly([(Integer(2), (1, 1)), (Integer(7), (0, 0))]," \
+        " Symbol('x'), Symbol('y'), order='grlex')"
+
+    assert Poly(2*x*y - 7, x, y, order='grevlex').torepr() == \
+        "Poly([(Integer(2), (1, 1)), (Integer(-7), (0, 0))]," \
+        " Symbol('x'), Symbol('y'), order='grevlex')"
+
+    assert Poly(0, x).tostr() == "Poly(0, x)"
+
+    assert Poly(1, x).tostr() == "Poly(1, x)"
+    assert Poly(x, x).tostr() == "Poly(x, x)"
+
+    assert Poly(2*x + 1, x).tostr() == "Poly(2*x + 1, x)"
+    assert Poly(2*x - 1, x).tostr() == "Poly(2*x - 1, x)"
+
+    assert Poly(-1, x).tostr() == "Poly(-1, x)"
+    assert Poly(-x, x).tostr() == "Poly(-x, x)"
+
+    assert Poly(-2*x + 1, x).tostr() == "Poly(-2*x + 1, x)"
+    assert Poly(-2*x - 1, x).tostr() == "Poly(-2*x - 1, x)"
+
+    assert Poly(x**2 + 1 + y, x).tostr() == "Poly(x**2 + 1 + y, x)"
+    assert Poly(x**2 - 1 + y, x).tostr() == "Poly(x**2 - 1 + y, x)"
+
+    assert Poly(-x*y*z + x*y - 1, x, y, z).tostr() == "Poly(-x*y*z + x*y - 1, x, y, z)"
+
+    assert Poly(-t*x**21*y**7*z + (1 + t)*z**3 - 2*x*z + 1, x, y, z).tostr() == \
+        "Poly(-t*x**21*y**7*z + (1 + t)*z**3 - 2*x*z + 1, x, y, z)"
+
+    assert Poly(x*y*z**2 - 27*x, x, y, z, order='lex').tostr() == \
+        "Poly(x*y*z**2 - 27*x, x, y, z, order='lex')"
+    assert Poly(x*y*z**2 - 27*x, x, y, z, order='grlex').tostr() == \
+        "Poly(x*y*z**2 - 27*x, x, y, z)"
+    assert Poly(x*y*z**2 - 27*x, x, y, z, order='grevlex').tostr() == \
+        "Poly(x*y*z**2 - 27*x, x, y, z, order='grevlex')"
+
 def test_poly_cancel():
     assert Poly.cancel(x) == x
     assert Poly.cancel(x+1) == x+1

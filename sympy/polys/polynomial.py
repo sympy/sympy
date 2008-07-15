@@ -246,14 +246,14 @@ class Poly(Basic, RelMeths, ArithMeths):
           [12.2] [U-] __ne__      --> P1 != P, up to order of monomials
           [12.3] [U-] __nonzero__ --> check if zero polynomial
 
-       [13] Basic functionality:
+       [13] String representation functions:
 
-          [13.1] [--] atoms       --> returns the atoms that form a polynomial
+          [13.1] [U-] torepr      --> returns represtation of 'self'
+          [13.3] [U-] tostr       --> returns pretty representation
 
-       [14] Other functionality:
+       [14] Other (derived from Basic) functionality:
 
           [14.1] [U-] _eval_is_polynomial --> checks if poly is a poly
-
 
        For general information on polynomials and algorithms, refer to:
 
@@ -1192,19 +1192,19 @@ class Poly(Basic, RelMeths, ArithMeths):
         return self.domain == 'S'
 
     def as_monic(self):
-        """Returns leading coefficient and monic polynomial.
+        """Returns a monic polynomial.
 
            >>> from sympy import *
            >>> x,y = symbols('xy')
 
            >>> Poly(x**2 + 4, x).as_monic()
-           Poly((1, 4), ((2,), (0,)), (x,), 'grlex')
+           Poly(x**2 + 4, x)
 
            >>> Poly(2*x**2 + 4, x).as_monic()
-           Poly((1, 2), ((2,), (0,)), (x,), 'grlex')
+           Poly(x**2 + 2, x)
 
-           >>> Poly(y*x**2 + (y**2+y), x).as_monic()
-           Poly((1, 1 + y), ((2,), (0,)), (x,), 'grlex')
+           >>> Poly(y*x**2 + y**2 + y, x).as_monic()
+           Poly(x**2 + 1 + y, x)
 
         """
         LC = self.lead_coeff
@@ -1231,10 +1231,10 @@ class Poly(Basic, RelMeths, ArithMeths):
            >>> x,y = symbols("xy")
 
            >>> Poly(3*x**2 + x, x).as_integer()
-           (1, Poly((3, 1), ((2,), (1,)), (x,), 'grlex'))
+           (1, Poly(3*x**2 + x, x))
 
            >>> Poly(3*x**2 + x/2, x).as_integer()
-           (2, Poly((6, 1), ((2,), (1,)), (x,), 'grlex'))
+           (2, Poly(6*x**2 + x, x))
 
         """
         denom = 1
@@ -1297,7 +1297,7 @@ class Poly(Basic, RelMeths, ArithMeths):
 
            >>> p = Poly(4*x**2 + 2*x, x)
            >>> p.as_primitive()
-           (2, Poly((2, 1), ((2,), (1,)), (x,), 'grlex'))
+           (2, Poly(2*x**2 + x, x))
 
         """
         content = self.content
@@ -1317,7 +1317,7 @@ class Poly(Basic, RelMeths, ArithMeths):
            >>> x,y = symbols('xy')
 
            >>> Poly((x-1)**2, x).as_squarefree()
-           Poly((1, -1), ((1,), (0,)), (x,), 'grlex')
+           Poly(x - 1, x)
 
         """
         f, A = self, sympy.polys.algorithms
@@ -1341,10 +1341,10 @@ class Poly(Basic, RelMeths, ArithMeths):
            >>> x,y = symbols('xy')
 
            >>> Poly(x**3 + x, x).as_reduced()
-           ((1,), Poly((1, 1), ((2,), (0,)), (x,), 'grlex'))
+           ((1,), Poly(x**2 + 1, x))
 
            >>> Poly(x**3*y+x**2*y**2, x, y).as_reduced()
-           ((2, 1), Poly((1, 1), ((1, 0), (0, 1)), (x, y), 'grlex'))
+           ((2, 1), Poly(x + y, x, y))
 
         """
         if self.is_inhomogeneous:
@@ -1494,20 +1494,18 @@ class Poly(Basic, RelMeths, ArithMeths):
            >>> x,y,z = symbols('xyz')
 
            >>> p = Poly(x**2*y + z**2, x, y)
-           >>> print p
-           Poly((1, z**2), ((2, 1), (0, 0)), (x, y), 'grlex')
 
            >>> p.diff(x)
-           Poly((2,), ((1, 1),), (x, y), 'grlex')
+           Poly(2*x*y, x, y)
 
            >>> p.diff(x, 2)
-           Poly((2,), ((0, 1),), (x, y), 'grlex')
+           Poly(2*y, x, y)
 
            >>> p.diff(x, 2, y)
-           Poly((2,), ((0, 0),), (x, y), 'grlex')
+           Poly(2, x, y)
 
            >>> p.diff(z)
-           Poly((2*z,), ((0, 0),), (x, y), 'grlex')
+           Poly(2*z, x, y)
 
         """
         if self.is_zero:
@@ -1587,20 +1585,18 @@ class Poly(Basic, RelMeths, ArithMeths):
            >>> x,y,z = symbols('xyz')
 
            >>> p = Poly(x**2*y + z**2, x, y)
-           >>> print p
-           Poly((1, z**2), ((2, 1), (0, 0)), (x, y), 'grlex')
 
            >>> p.integrate(x)
-           Poly((1/3, z**2), ((3, 1), (1, 0)), (x, y), 'grlex')
+           Poly(1/3*x**3*y + z**2*x, x, y)
 
            >>> p.integrate(x, 2)
-           Poly((1/12, (1/2)*z**2), ((4, 1), (2, 0)), (x, y), 'grlex')
+           Poly(1/12*x**4*y + (1/2)*z**2*x**2, x, y)
 
            >>> p.integrate(x, 2, y)
-           Poly((1/24, (1/2)*z**2), ((4, 2), (2, 1)), (x, y), 'grlex')
+           Poly(1/24*x**4*y**2 + (1/2)*z**2*x**2*y, x, y)
 
            >>> p.integrate(z)
-           Poly((z, (1/3)*z**3), ((2, 1), (0, 0)), (x, y), 'grlex')
+           Poly(z*x**2*y + (1/3)*z**3, x, y)
 
         """
         if self.is_zero:
@@ -2087,6 +2083,75 @@ class Poly(Basic, RelMeths, ArithMeths):
 
     def __nonzero__(self):
         return self.coeffs not in ((S.Zero,), (0,))
+
+    def torepr(self):
+        terms = []
+
+        for coeff, monom in self.iter_terms():
+            terms.append("(%s, %s)" % (coeff.torepr(), monom))
+
+        format = self.__class__.__name__ + "([%s], %s, order='%s')"
+
+        symbols = [ s.torepr() for s in self.symbols ]
+
+        return format % (', '.join(terms),
+            ', '.join(symbols), self.order)
+
+    def tostr(self, level=0):
+        terms, symbols = [], [ s.tostr() for s in self.symbols ]
+
+        for coeff, monom in self.iter_terms():
+            s_monom = []
+
+            for i, exp in enumerate(monom):
+                if exp > 0:
+                    if exp == 1:
+                        s_monom.append(symbols[i])
+                    else:
+                        s_monom.append(symbols[i] + "**%d" % exp)
+
+            s_monom = "*".join(s_monom)
+
+            if coeff.is_Add:
+                if s_monom:
+                    s_coeff = "(" + coeff.tostr() + ")"
+                else:
+                    s_coeff = coeff.tostr()
+            else:
+                if s_monom and abs(coeff) is S.One:
+                    if coeff.is_negative:
+                        terms.extend(['-', s_monom])
+                    else:
+                        terms.extend(['+', s_monom])
+
+                    continue
+                else:
+                    s_coeff = coeff.tostr()
+
+            if not s_monom:
+                s_term = s_coeff
+            else:
+                s_term = s_coeff + "*" + s_monom
+
+            if s_term.startswith('-'):
+                terms.extend(['-', s_term[1:]])
+            else:
+                terms.extend(['+', s_term])
+
+        if terms[0] in ['-', '+']:
+            modifier = terms.pop(0)
+
+            if modifier == '-':
+                terms[0] = '-' + terms[0]
+
+        format = self.__class__.__name__ + "(%s, %s"
+
+        if self.order != 'grlex':
+            format += ", order='%s')" % self.order
+        else:
+            format += ")"
+
+        return format % (' '.join(terms), ', '.join(symbols))
 
     def _eval_is_polynomial(self, symbols):
         try:
