@@ -6,9 +6,10 @@ from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational
 from sympy.core.methods import NoRelMeths, ArithMeths
 
-from sympy.polys.polynomial import Poly, PolynomialError
+from sympy.polys.polynomial import Poly, PolynomialError, CoefficientError
 from sympy.polys.algorithms import poly_decompose, poly_sqf, poly_div
 
+from sympy.ntheory import divisors
 from sympy.functions import exp
 
 def roots_linear(f):
@@ -109,6 +110,34 @@ def roots_binomial(f):
         roots.append((alpha*zeta).expand())
 
     return roots
+
+def roots_rational(f):
+    """Returns a list of rational roots of a polynomial."""
+
+    try:
+        g = f.as_integer()[1]
+    except CoefficientError:
+        return []
+
+    LC_divs = divisors(int(g.LC))
+    TC_divs = divisors(int(g.TC))
+
+    if not g(S.Zero):
+        zeros = [S.Zero]
+    else:
+        zeros = []
+
+    for p in LC_divs:
+        for q in TC_divs:
+            zero = Rational(p, q)
+
+            if not g(zero):
+                zeros.append(zero)
+
+            if not g(-zero):
+                zeros.append(-zero)
+
+    return zeros
 
 def roots(f, *symbols, **flags):
     """Computes symbolic roots of an univariate polynomial.

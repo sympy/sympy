@@ -878,6 +878,14 @@ def test_roots():
     assert powsimp(r0[0]) == powsimp(r1[0])
     assert powsimp(r0[1]) == powsimp(r1[1])
 
+    assert roots_rational(Poly(x**2-1, x)) == [S.One, -S.One]
+    assert roots_rational(Poly(x**2-x, x)) == [S.Zero, S.One]
+
+    assert roots_rational(Poly(x**2-x/2, x)) == [S.Zero]
+    assert roots_rational(Poly(2*x**2-x, x)) == [S.Zero]
+
+    assert roots_rational(Poly(t*x**2-x, x)) == []
+
     assert roots(1, x) == {}
     assert roots(x, x) == {S.Zero: 1}
     assert roots(x**9, x) == {S.Zero: 9}
