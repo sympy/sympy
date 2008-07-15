@@ -36,9 +36,6 @@ class CoefficientError(PolynomialError):
 ##  [5] Improve coefficients analysis.
 ##  [6] Implement FactoredPoly.
 ##  [7] Concept of Monomial.
-##  [8] Generalize some polynomial functions, like factor(),
-##      to rational expressions. Move at least cancel() and
-##      maybe apart() to polys.fraction (or similar).
 ##
 
 class Poly(Basic, RelMeths, ArithMeths):
@@ -942,12 +939,7 @@ class Poly(Basic, RelMeths, ArithMeths):
 
                 for i in xrange(k+1):
                     if p.has_key(i) and q.has_key(k-i):
-                        product = p[i] * q[k-i]
-
-                        if product.is_Atom:
-                            coeff += product
-                        else:
-                            coeff += Poly.cancel(product)
+                        coeff += Poly.cancel(p[i] * q[k-i])
 
                 if coeff:
                     coeffs.append(coeff)
@@ -974,9 +966,7 @@ class Poly(Basic, RelMeths, ArithMeths):
                     monom = monomial_mul(M, N)
 
                     coeff = coeff_p * coeff_q
-
-                    if not coeff.is_Atom:
-                        coeff = Poly.cancel(coeff)
+                    coeff = Poly.cancel(coeff)
 
                     if terms.has_key(monom):
                         coeff += terms[monom]
@@ -1206,8 +1196,7 @@ class Poly(Basic, RelMeths, ArithMeths):
         coeffs = [ coeff / LC for coeff in self.coeffs ]
 
         for i, coeff in enumerate(coeffs):
-            if not coeff.is_Atom:
-                coeffs[i] = Poly.cancel(coeff)
+            coeffs[i] = Poly.cancel(coeff)
 
         return self.__class__((coeffs, self.monoms),
             *self.symbols, **self.flags)
@@ -1786,8 +1775,7 @@ class Poly(Basic, RelMeths, ArithMeths):
                 coeffs = [ p_coeff * coeff for p_coeff in self.coeffs ]
 
                 for i, coeff in enumerate(coeffs):
-                    if not coeff.is_Atom:
-                        coeffs[i] = Poly.cancel(coeff)
+                    coeffs[i] = Poly.cancel(coeff)
 
             if monom is None:
                 monoms = self.monoms
@@ -1815,8 +1803,7 @@ class Poly(Basic, RelMeths, ArithMeths):
             coeffs = [ p_coeff / coeff for p_coeff in self.coeffs ]
 
             for i, coeff in enumerate(coeffs):
-                if not coeff.is_Atom:
-                    coeffs[i] = Poly.cancel(coeff)
+                coeffs[i] = Poly.cancel(coeff)
 
         if monom is None:
             monoms = self.monoms

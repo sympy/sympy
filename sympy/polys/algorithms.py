@@ -63,17 +63,13 @@ def poly_div(f, g, *symbols):
             r_coeffs, r_monoms = [], []
 
             for coeff, monom in f.iter_terms():
-                M = monomial_div(monom, LM)
+                quotient = monomial_div(monom, LM)
 
-                if M is not None:
+                if quotient is not None:
                     coeff /= LC
 
-                    if coeff.is_Atom:
-                        q_coeffs.append(coeff)
-                    else:
-                        q_coeffs.append(Poly.cancel(coeff))
-
-                    q_monoms.append(M)
+                    q_coeffs.append(Poly.cancel(coeff))
+                    q_monoms.append(quotient)
                 else:
                     r_coeffs.append(coeff)
                     r_monoms.append(monom)
@@ -90,10 +86,7 @@ def poly_div(f, g, *symbols):
             monom = monomial_div(f.LM, h.LM)
 
             if monom is not None:
-                coeff = f.LC / h.LC
-
-                if not coeff.is_Atom:
-                    coeff = Poly.cancel(coeff)
+                coeff = Poly.cancel(f.LC / h.LC)
 
                 q[i] = q[i].add_term(coeff, monom)
                 f -= h.mul_term(coeff, monom)
