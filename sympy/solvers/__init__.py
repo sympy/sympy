@@ -6,3 +6,5 @@ Out[3]: [-1]
 from solvers import solve, solve_linear_system, solve_linear_system_LU, \
     dsolve, solve_undetermined_coeffs, tsolve, deriv_degree,  msolve
 from recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
+
+from polysys import solve_poly_system

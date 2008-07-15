@@ -28,6 +28,8 @@ from sympy.utilities import any, all
 from sympy.utilities.lambdify import lambdify
 from sympy.solvers.numeric import newton
 
+from sympy.solvers.polysys import solve_poly_system
+
 def solve(f, *symbols, **flags):
     """Solves equations and systems of equations.
 
@@ -125,7 +127,7 @@ def solve(f, *symbols, **flags):
 
                 return solve_linear_system(matrix, *symbols, **flags)
             else:
-                raise NotImplementedError('polynomial system')
+                return solve_poly_system(polys)
 
 def solve_linear_system(system, *symbols, **flags):
     """Solve system of N linear equations with M variables, which means
