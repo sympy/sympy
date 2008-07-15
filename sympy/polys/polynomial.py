@@ -643,10 +643,11 @@ class Poly(Basic, RelMeths, ArithMeths):
     def as_uv_dict(self):
         """Return dictionary representation with integer keys.
 
-           In case of univariate polynomials it is in efficient to
+           In case of univariate polynomials it is inefficient to
            to handle exponents as singleton tuples, as an example
-           see multiplication algorithm. This procedure will
-           convert tuples to explicit integers.
+           see multiplication algorithm.  This method will return
+           dictionary representation with all tuples converted to
+           explicit integers.
 
            >>> from sympy import *
            >>> x,y = symbols('xy')
@@ -654,6 +655,7 @@ class Poly(Basic, RelMeths, ArithMeths):
            >>> p = Poly(x**2+3, x)
            >>> p.as_uv_dict()
            {0: 3, 2: 1}
+
         """
         if self.is_univariate:
             return dict(zip([ M[0] for M in self.monoms ], self.coeffs))
