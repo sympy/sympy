@@ -378,6 +378,80 @@ def poly_sturm(f, *symbols):
 
     return sturm[:-1]
 
+def number_of_real_roots(f, *symbols, **flags):
+    """Returns the number of distinct real roots of f in (inf, sup].
+
+       >>> from sympy import *
+       >>> x,y = symbols('xy')
+
+       >>> f = Poly(x**2 - 1, x)
+
+       Count real roots in the (-oo, oo) interval:
+
+       >>> number_of_real_roots(f)
+       2
+
+       Count real roots in the (0, 2) interval:
+
+       >>> number_of_real_roots(f, inf=0, sup=2)
+       1
+
+       Count real roots in the (sqrt(2), oo) interval:
+
+       >>> number_of_real_roots(f, inf=sqrt(2))
+       0
+
+       For more information on the implemented algorithm refer to:
+
+       [1] J.H. Davenport, Y. Siret, E. Tournier, Computer Algebra
+           Systems and Algorithms for Algebraic Computation,
+           Academic Press, London, 1988, pp. 124-128
+    """
+
+    def sign_changes(seq):
+        count = 0
+
+        for i in xrange(1, len(seq)):
+            if (seq[i-1] < 0 and seq[i] >= 0) or \
+               (seq[i-1] > 0 and seq[i] <= 0):
+                count += 1
+
+        return count
+
+    inf = flags.get('inf', None)
+
+    if inf is not None:
+        inf = sympify(inf)
+
+        if not inf.is_number:
+            raise ValueError, "Not a number: %s" % inf
+        elif abs(inf) is S.Infinity:
+            inf = None
+
+    sup = flags.get('sup', None)
+
+    if sup is not None:
+        sup = sympify(sup)
+
+        if not sup.is_number:
+            raise ValueError, "Not a number: %s" % sup
+        elif abs(sup) is S.Infinity:
+            sup = None
+
+    sturm = poly_sturm(f, *symbols)
+
+    if inf is None:
+        signs_inf = sign_changes([ s.LC * (-1)**s.LM[0] for s in sturm ])
+    else:
+        signs_inf = sign_changes([ s(inf) for s in sturm ])
+
+    if sup is None:
+        signs_sup = sign_changes([ s.LC for s in sturm ])
+    else:
+        signs_sup = sign_changes([ s(sup) for s in sturm ])
+
+    return abs(signs_inf - signs_sup)
+
 _exact_roots_cache = {}
 
 def _exact_roots(f):

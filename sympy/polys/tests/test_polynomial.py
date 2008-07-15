@@ -847,6 +847,25 @@ def test_sturm():
          Poly(-Rational(10,9)*x+Rational(13,3), x),
          Poly(Rational(-3303,100), x)]
 
+def test_number_of_real_roots():
+    f = Poly(x - 1, x)
+
+    assert number_of_real_roots(f) == 1
+    assert number_of_real_roots(f, sup=0) == 0
+    assert number_of_real_roots(f, inf=1) == 0
+    assert number_of_real_roots(f, sup=0, inf=1) == 1
+
+    assert number_of_real_roots(f, sup=1, inf=0) == 1
+
+    f = x**2 - 4
+
+    assert number_of_real_roots(f, x) == 2
+    assert number_of_real_roots(f, x, sup=0) == 1
+    assert number_of_real_roots(f, x, inf=-1, sup=1) == 0
+
+    py.test.raises(ValueError, "number_of_real_roots(f, x, inf=t)")
+    py.test.raises(ValueError, "number_of_real_roots(f, x, sup=t)")
+
 def test_roots():
     assert roots_linear(Poly(2*x+1, x)) == [-Rational(1, 2)]
 
