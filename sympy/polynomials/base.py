@@ -4,7 +4,7 @@ from sympy.core import *
 # Use (faster) Singleton comparisons.
 from sympy.core.basic import S
 # Need numbers.gcd, for content.
-from sympy.core import numbers
+from sympy.core.numbers import igcd
 # To determine coefficient type:
 from sympy.core.numbers import NumberSymbol, ImaginaryUnit
 from sympy.utilities import *
@@ -460,7 +460,7 @@ class Polynomial(Basic):
                 raise PolynomialException("%s is no rational coefficient!" % term[0])
             else:
                 # Compute the least common multiple of the denominators:
-                denom = term[0].q*denom/numbers.gcd(int(denom), int(term[0].q))
+                denom = term[0].q*denom/igcd(int(denom), int(term[0].q))
         if denom is S.One:
             return S.One, self
         else:
@@ -578,7 +578,7 @@ class Polynomial(Basic):
         result_sym = 0  # part result for symbolic coeffs
         for term in self.coeffs:
             if isinstance(term[0], Integer):
-                result_int = abs(numbers.gcd(result_int, abs(int(term[0]))))
+                result_int = abs(igcd(result_int, abs(int(term[0]))))
             elif isinstance(term[0], Number):
                 raise PolynomialException("%s is no integer coefficient!" % term[0])
             else:

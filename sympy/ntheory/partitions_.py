@@ -1,7 +1,7 @@
 from sympy.mpmath.lib import (fzero, fadd, fsub, fmul, fsqrt,
     fdiv, fpi, pi_fixed, from_man_exp, from_int, from_rational, cosh_sinh,
     fone, fcos, fshift, ftwo, fhalf, bitcount, to_int, to_str)
-from sympy.core.numbers import gcd
+from sympy.core.numbers import igcd
 import math
 
 def A(n, j, prec):
@@ -11,7 +11,7 @@ def A(n, j, prec):
     s = fzero
     pi = pi_fixed(prec)
     for h in xrange(1, j):
-        if gcd(h,j) != 1:
+        if igcd(h,j) != 1:
             continue
         # & with mask to compute fractional part of fixed-point number
         one = 1 << prec

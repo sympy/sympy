@@ -1,4 +1,4 @@
-from sympy.core.numbers import gcd
+from sympy.core.numbers import igcd
 from primetest import isprime
 
 def totient_(n):
@@ -8,7 +8,7 @@ def totient_(n):
         raise ValueError, "n must be a positive integer"
     tot=0
     for x in xrange(1,n):
-        if gcd(x,n)==1:
+        if igcd(x,n)==1:
             tot+=1
     return tot
 
@@ -17,7 +17,7 @@ def n_order(a,n):
     Order of a modulo n is the smallest integer
     k such that a^k leaves a remainder of 1 with n.
     """
-    assert gcd(a,n)==1
+    assert igcd(a,n)==1
     if a>n : a=a%n
     for x in xrange(1,totient_(n)+1):
         if (a**x)%n==1:
@@ -27,7 +27,7 @@ def is_primitive_root(a,p):
     """
     returns True if a is a primitive root of p
     """
-    assert gcd(a,p) == 1,"The two numbers should be relatively prime"
+    assert igcd(a,p) == 1,"The two numbers should be relatively prime"
     if a>p:
         a=a%p
     if n_order(a,p)==totient_(p):
@@ -42,7 +42,7 @@ def is_quad_residue(a,p):
     prime to p
     """
     assert isprime(p) and p!=2,"p should be an odd prime"
-    assert gcd(a,p)==1,"The two numbers should be relatively prime"
+    assert igcd(a,p)==1,"The two numbers should be relatively prime"
     if a>p:
         a=a%p
     rem=(a**((p-1)/2))%p    # a^(p-1 / 2) % p
@@ -56,7 +56,7 @@ def legendre_symbol(a,p):
     p should be an odd prime by definition
     """
     assert isprime(p) and p!=2,"p should be an odd prime"
-    assert gcd(a,p)==1,"The two numbers should be relatively prime"
+    assert igcd(a,p)==1,"The two numbers should be relatively prime"
     if a>p:
         a=a%p
     if is_quad_residue(a,p)==True: return 1

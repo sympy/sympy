@@ -3,6 +3,8 @@
 from sympy.polynomials.base import *
 from sympy.core import sympify
 
+from sympy.core.numbers import igcd
+
 def div(f, g, var=None, order=None, coeff=None):
     """Division with remainder.
 
@@ -170,7 +172,7 @@ def gcd(f, g, var=None, order=None, coeff=None):
     if coeff == 'int':
         cf, f = f.as_primitive()
         cg, g = g.as_primitive()
-        c = Integer(numbers.gcd(int(cf), int(cg)))
+        c = Integer(igcd(int(cf), int(cg)))
     else:
         c = S.One
 
@@ -250,7 +252,7 @@ def lcm(f, g, var=None, order=None, coeff=None):
         cf, f = f.as_primitive()
         cg, g = g.as_primitive()
         cf, cg = int(cf), int(cg)
-        c = Integer(cf*cg/numbers.gcd(cf, cg))
+        c = Integer(cf*cg/igcd(cf, cg))
     else:
         c = S.One
 

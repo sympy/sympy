@@ -3,7 +3,7 @@
 
 from basic import Basic, S, C, sympify
 from symbol import Symbol, Wild, symbols, var
-from numbers import Number, Real, Rational, Integer
+from numbers import Number, Real, Rational, Integer, igcd, ilcm
 from power import Pow
 from mul import Mul
 from add import Add
@@ -20,4 +20,3 @@ Basic.set_repr_level(1)
 # expose singletons like exp, log, oo, I, etc.
 for _n, _cls in Basic.singleton.items():
     exec '%s = _cls()' % (_n)
-

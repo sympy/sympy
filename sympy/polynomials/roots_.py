@@ -5,6 +5,8 @@ from sympy.polynomials import div_, groebner_
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core import sympify
 
+from sympy.core.numbers import igcd
+
 def cubic(f):
     """Computes the roots of a cubic polynomial.
 
@@ -70,7 +72,7 @@ def n_poly(f):
         return result
 
     exponents = map(lambda t:int(t[1]), f.coeffs)
-    g = reduce(numbers.gcd, exponents)
+    g = reduce(igcd, exponents)
     if g == 1 or g == 0:
         return None
     n = int(f.coeffs[0][1]/g)

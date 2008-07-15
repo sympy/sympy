@@ -15,9 +15,11 @@ from power import integer_nthroot
 _gcdcache = {}
 
 # TODO caching with decorator, but not to degrade performance
-def gcd(a, b):
-    """
-    Returns the Greatest Common Divisor, implementing Euclid's algorithm.
+def igcd(a, b):
+    """Computes integer greates common divisor of two numbers.
+
+       The algorithm is based on the well known Euclid's algorithm. To
+       improve speed igcd() has its own caching mechanizm implemented.
     """
     try:
         return _gcdcache[(a,b)]
@@ -28,8 +30,6 @@ def gcd(a, b):
 
         _gcdcache[key] = b
         return b
-
-igcd = gcd # TODO: rename gcd -> igcd in all modules
 
 def ilcm(a, b):
     """Computes integer least common multiple of two numbers. """
@@ -424,7 +424,7 @@ class Rational(Number):
         if q<0:
             q = -q
             p = -p
-        n = gcd(abs(p), q)
+        n = igcd(abs(p), q)
         if n>1:
             p /= n
             q /= n
@@ -830,7 +830,7 @@ class Integer(Rational):
                             if sqr_gcd == 0:
                                 sqr_gcd = ex
                             else:
-                                sqr_gcd = gcd(sqr_gcd, ex)
+                                sqr_gcd = igcd(sqr_gcd, ex)
 
                         for k,v in sqr_dict.iteritems():
                             sqr_int *= k**(v/sqr_gcd)

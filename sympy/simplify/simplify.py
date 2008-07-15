@@ -2,6 +2,8 @@
 from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
         Derivative, Wild, Symbol, sympify
 
+from sympy.core.numbers import igcd
+
 from sympy.utilities import make_list, all
 from sympy.functions import gamma, exp, sqrt
 
@@ -300,10 +302,8 @@ def together(expr, deep=False):
                     else:
                         denominator.append(Pow(term, maxi))
 
-            from sympy.core.numbers import gcd as int_gcd
-
             if all([ c.is_integer for c in coeffs ]):
-                gcds = lambda x, y: int_gcd(int(x), int(y))
+                gcds = lambda x, y: igcd(int(x), int(y))
                 common = Rational(reduce(gcds, coeffs))
             else:
                 common = S.One
