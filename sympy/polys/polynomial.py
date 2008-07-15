@@ -17,10 +17,13 @@ import sympy.polys
 
 import math
 
+class SymbolsError(Exception):
+    pass
+
 class PolynomialError(Exception):
     pass
 
-class SymbolsError(Exception):
+class CoefficientError(PolynomialError):
     pass
 
 ##
@@ -190,21 +193,22 @@ class Poly(Basic, RelMeths, ArithMeths):
        [9] Special functionality:
 
           [9.1]  [--] as_monic      --> divides all coefficients by LC
+          [9.2]  [--] as_integer    --> returns polynomial with integer coeffs
 
-          [9.2]  [-P] content       --> returns GCD of polynomial coefficients
-          [9.3]  [--] as_primitive  --> returns content and primitive part
+          [9.3]  [-P] content       --> returns GCD of polynomial coefficients
+          [9.4]  [--] as_primitive  --> returns content and primitive part
 
-          [9.4]  [U-] as_squarefree --> returns square-free part of a polynomial
+          [9.5]  [U-] as_squarefree --> returns square-free part of a polynomial
 
-          [9.5]  [U-] as_reduced    --> extract GCD of polynomial monomials
+          [9.6]  [U-] as_reduced    --> extract GCD of polynomial monomials
 
-          [9.6]  [--] map_coeffs    --> applies a function to all coefficients
-          [9.7]  [U-] coeff         --> returns coefficient of the given monomial
+          [9.7]  [--] map_coeffs    --> applies a function to all coefficients
+          [9.8]  [U-] coeff         --> returns coefficient of the given monomial
 
-          [9.8]  [U-] unify_with    --> returns polys with a common set of symbols
+          [9.9]  [U-] unify_with    --> returns polys with a common set of symbols
 
-          [9.9]  [U-] diff          --> efficient polynomial differentiation
-          [9.10] [U-] integrate     --> efficient polynomial integration
+          [9.10] [U-] diff          --> efficient polynomial differentiation
+          [9.11] [U-] integrate     --> efficient polynomial integration
 
        [10] Operations on terms:
 
@@ -1205,6 +1209,42 @@ class Poly(Basic, RelMeths, ArithMeths):
 
         return self.__class__((coeffs, self.monoms),
             *self.symbols, **self.flags)
+
+    def as_integer(self):
+        """Makes all coefficients integers if possible.
+
+           Given a polynomial with rational coefficients,  returns a tuple
+           consisting of a common denominator of those coefficients and an
+           integer polynomial. Otherwise an exception is being raised.
+
+           >>> from sympy import *
+           >>> x,y = symbols("xy")
+
+           >>> Poly(3*x**2 + x, x).as_integer()
+           (1, Poly((3, 1), ((2,), (1,)), (x,), 'grlex'))
+
+           >>> Poly(3*x**2 + x/2, x).as_integer()
+           (2, Poly((6, 1), ((2,), (1,)), (x,), 'grlex'))
+
+        """
+        denom = 1
+
+        for coeff in self.iter_coeffs():
+            if coeff.is_Rational:
+                if not coeff.is_Integer:
+                    denom = ilcm(denom, coeff.q)
+            else:
+                raise CoefficientError, "Not a rational number: %s" % coeff
+
+        denom = sympify(denom)
+
+        if denom is S.One:
+            return denom, self
+        else:
+            coeffs = [ coeff * denom for coeff in self.iter_coeffs() ]
+
+            return denom, self.__class__((coeffs, self.monoms),
+                *self.symbols, **self.flags)
 
     @property
     def content(self):

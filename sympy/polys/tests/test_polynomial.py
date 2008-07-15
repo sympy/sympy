@@ -360,6 +360,15 @@ def test_as_monic():
 
     assert Poly(f, x).as_monic() == Poly(g, x)
 
+def test_as_integer():
+    assert Poly(3*x**2 + x, x).as_integer() == \
+        (Integer(1), Poly(3*x**2 + x, x))
+
+    assert Poly(x**2 + x/2, x).as_integer() == \
+        (Integer(2), Poly(2*x**2 + x, x))
+
+    py.test.raises(CoefficientError, "Poly(x**2 + t*x, x).as_integer()")
+
 def test_poly_add():
     f = -Rational(1,6)*x**2-Rational(5,36)+Rational(17,18)
     g = -Rational(1,6)*x**2-Rational(5,36)+Rational(35,18)
