@@ -2,9 +2,9 @@
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.core.basic import Basic, S, C
+from sympy.core.symbol import Symbol, Wild
 from sympy.core.numbers import Integer, igcd, ilcm
 from sympy.core.methods import RelMeths, ArithMeths
 
@@ -584,7 +584,7 @@ class Poly(Basic, RelMeths, ArithMeths):
                 symbols = f.atoms(Symbol)
 
                 if not symbols:
-                    return f
+                    symbols = None
                 else:
                     symbols = sorted(symbols)
 
@@ -598,6 +598,25 @@ class Poly(Basic, RelMeths, ArithMeths):
         denom = denom.expand()
 
         if denom.is_Number:
+            return numer / denom
+
+        if symbols is None:
+            if denom.is_Add:
+                a, b, c = map(Wild, 'abc')
+
+                r = denom.match(a + b*c**S.Half)
+
+                if r is not None:
+                    if r[b] is S.Zero:
+                        denom = match[a]
+                    else:
+                        a, b, c = r[a], r[b], r[c]
+
+                        numer *= a-b*c**S.Half
+                        numer = numer.expand()
+
+                        denom = a**2 - c*b**2
+
             return numer / denom
 
         try:
@@ -844,6 +863,8 @@ class Poly(Basic, RelMeths, ArithMeths):
             if terms.has_key(monom):
                 coeff += terms[monom]
 
+                coeff = Poly.cancel(coeff)
+
                 if not coeff:
                     del terms[monom]
                     continue
@@ -875,6 +896,8 @@ class Poly(Basic, RelMeths, ArithMeths):
         for coeff, monom in poly.iter_terms():
             if terms.has_key(monom):
                 coeff -= terms[monom]
+
+                coeff = Poly.cancel(coeff)
 
                 if not coeff:
                     del terms[monom]
@@ -1969,6 +1992,8 @@ class Poly(Basic, RelMeths, ArithMeths):
             for M, coeff in poly.iteritems():
                 monom = M[:i] + M[i+1:]
                 coeff *= value ** M[i]
+
+                coeff = Poly.cancel(coeff)
 
                 if terms.has_key(monom):
                     coeff += terms[monom]

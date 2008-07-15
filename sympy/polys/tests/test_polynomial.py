@@ -206,6 +206,10 @@ def test_poly_cancel():
 
     assert Poly.cancel(((x**2-y**2).as_poly(x), (x-y).as_poly(x))) == x+y
 
+    f = -1/(3 + 2*sqrt(2))*(1 + 1/(3 + 2*sqrt(2))*(7 + 5*sqrt(2)))
+
+    assert Poly.cancel(f) == -2 + sqrt(2)
+
     py.test.raises(SymbolsError, "Poly.cancel((x**2-y**2, x-y))")
 
 def test_poly_characteristics():
