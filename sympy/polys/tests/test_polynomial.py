@@ -786,6 +786,19 @@ def test_evaluate():
     assert p.evaluate({x: 7, y: 5}) == Poly(f.subs({x: 7, y: 5}), z)
     assert p.evaluate({x: 7, y: 5, z: 4}) == f.subs({x: 7, y: 5, z: 4})
 
+    p = Poly(x**2 + x*y*sin(z), x, y, order='lex')
+
+    assert p.evaluate({x: 3, y: 0}) == 9
+    assert p.evaluate({x: 0, y: 0}) == 0
+
+    q = p.evaluate({x: 0})
+
+    assert q == Poly(0, y, order='lex')
+    assert q.is_zero == True
+
+    assert p.evaluate({y: 0}) == \
+        Poly(x**2, x, order='lex')
+
     py.test.raises(PolynomialError, "Poly(x + y, x, y).evaluate({x: y})")
 
 def test_subs():

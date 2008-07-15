@@ -1976,17 +1976,21 @@ class Poly(Basic, RelMeths, ArithMeths):
                     if not coeff:
                         del terms[monom]
                         continue
+                elif not coeff:
+                    continue
 
                 terms[monom] = coeff
 
             del symbols[i]
             poly = terms
 
-        if len(poly) == 1:
-            return poly.popitem()[1]
+        if not symbols:
+            if not poly:
+                return S.Zero
+            else:
+                return poly.popitem()[1]
         else:
-            return self.__class__(terms,
-                *symbols, **self.flags)
+            return self.__class__(poly, *symbols, **self.flags)
 
     def _eval_subs(self, old, new):
         symbols = list(self.symbols)
