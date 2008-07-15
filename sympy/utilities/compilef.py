@@ -19,16 +19,17 @@ Can also be used to generate C code from SymPy expressions.
 Depends on libtcc.
 
 This code is experimental. It may have severe bugs. Due to the use of C, it's
-able to crash your Python interpreter with obscure error messages.
+able to crash your Python interpreter/debugger with obscure error messages.
 
 
 Overview
 ========
 
-clambdify:  compile a function to machine code (only useful for big functions)
-frange:     evaluate a function on a range of numbers using machine code
-cexpr:      translate a Python expression to a C expression
-genfcode:   generate C code from a lambda string
+clambdify:   compile a function to machine code (only useful for big functions)
+frange:      evaluate a function on a range of numbers using machine code
+cexpr:       translate a Python expression to a C expression
+genfcode:    generate C code from a lambda string
+evanonarray: evaluate a function on an array using machine code
 
 
 Performance
@@ -82,6 +83,10 @@ import os
 import ctypes
 from sympy import Symbol
 from sympy.utilities.lambdify import lambdastr as getlambdastr
+try:
+    import numpy
+except ImportError:
+    numpy = None
 
 libtccpath = './libtcc.so'
 # load libtcc TODO: better Windows support
@@ -339,14 +344,63 @@ void evalonrange(double *result, int n)
     # return ctypes array with results
     return a
 
+def evalonarray(lambdastr, array, length=None):
+    """
+    Evaluates a function on an array using machine code.
 
+    array can be a numpy array, a ctypes array or a pointer to an array.
+    In the latter case, the correct length must be specified.
+
+    array will be overwritten! Make a copy before to avoid this.
+    """
+    # interpret arguments
+    if hasattr(array,  'ctypes'): # numpy array
+        pointer = array.ctypes.get_as_parameter()
+        length = len(array)
+    elif isinstance(array,  ctypes.Array): # ctypes array
+        pointer = ctypes.byref(array)
+        length = len(array)
+    elif isinstance(array,  ctypes.c_void_p): # ctypes pointer FIXME
+        pointer = array
+        assert isinstance(length,  int) and not length < 0
+    else:
+        raise ValueError,  'array type not recognized'
+    # generate code
+    code = """
+# include <math.h>
+
+# define pi M_PI
+# define e M_E
+
+%s
+
+void evalonarray(double *array, int length)
+    {
+    int MAX;
+    for (MAX = array + length; array < MAX; array++)
+        {
+        *array = f(*array);
+        }
+    }
+
+""" % genfcode(lambdastr)
+    # compile an run on array
+    run = _compile(code,  fname='evalonarray',
+                   fprototype=[None, ctypes.c_void_p, ctypes.c_int])
+    run(pointer, length)
+
+#########
+# TESTS #
+#########
+
+from sympy import sqrt, pi, lambdify
+from math import exp, cos, sin
 
 def test_cexpr():
     expr = '1/(g(x)*3.5)**(x - a**x)/(x**2 + a)'
     assert cexpr(expr).replace(' ', '') == \
            '1/pow((g(x)*3.5),(x-pow(a,x)))/(pow(x,2)+a)'
 
-from sympy import sqrt, pi, lambdify
 def test_clambdify():
     x = Symbol('x')
     y = Symbol('y')
@@ -362,7 +416,6 @@ def test_clambdify():
     assert round(pf2(1, 2, 3),  14) == round(cf2(1, 2, 3),  14)
     # FIXME: slight difference in precision
 
-from math import exp, cos
 def test_frange():
     fstr = 'lambda x: exp(x)*cos(x)**x'
     f = eval(fstr)
@@ -402,6 +455,23 @@ def test_frange():
         assert False
     except TypeError:
         pass
+
+def test_evalonarray_ctypes():
+    a = frange('lambda x: x', 10)
+    evalonarray('lambda x: sin(x)', a)
+    for i, j in enumerate(a):
+        assert sin(i) == j
+# TODO: test for ctypes pointers
+##    evalonarray('lambda x: asin(x)', ctypes.byref(a), len(a))
+##    for i, j in enumerater(a):
+##        print j
+
+def test_evalonarray_numpy():
+    a = numpy.arange(10, dtype=float)
+    evalonarray('lambda x: x + 1',  a)
+    for i, j in enumerate(a):
+        assert float(i + 1) == j
+
 
 def benchmark():
     """
@@ -484,6 +554,9 @@ if __name__ == '__main__':
         test_cexpr()
         test_clambdify()
         test_frange()
+        test_evalonarray_ctypes()
+        if numpy:
+            test_evalonarray_numpy()
         import doctest
         doctest.testmod()
         print 'OK'
