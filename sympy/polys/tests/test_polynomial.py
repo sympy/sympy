@@ -985,6 +985,9 @@ def test_roots():
 
     assert roots(x**4-2*x**2+1, x) == {S.One: 2, -S.One: 2}
 
+    assert roots(x**6-4*x**4+4*x**3-x**2, x) == \
+        {S.One: 2, -1 - sqrt(2): 1, S.Zero: 2, -1 + sqrt(2): 1}
+
     assert roots(x**8-1, x) == {
          2**S.Half/2 + I*2**S.Half/2: 1,
          2**S.Half/2 - I*2**S.Half/2: 1,
