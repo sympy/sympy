@@ -1,6 +1,8 @@
 
 from monomial import monomials, monomial_count
-from polynomial import Poly, PolynomialError
+
+from polynomial import Poly, PolynomialError, SymbolsError, \
+    CoefficientError, UnivariatePolyError, MultivariatePolyError
 
 from algorithms import poly_div, poly_pdiv, poly_groebner, poly_lcm, \
     poly_gcd, poly_half_gcdex, poly_gcdex, poly_sqf, poly_resultant, \

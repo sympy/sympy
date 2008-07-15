@@ -6,7 +6,8 @@ from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational
 from sympy.core.methods import NoRelMeths, ArithMeths
 
-from sympy.polys.polynomial import Poly, PolynomialError, CoefficientError
+from sympy.polys.polynomial import Poly, SymbolsError, \
+    PolynomialError, CoefficientError, MultivariatePolyError
 from sympy.polys.algorithms import poly_decompose, poly_sqf, poly_div
 
 from sympy.ntheory import divisors
@@ -172,10 +173,10 @@ def roots(f, *symbols, **flags):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise PolynomialError
+        raise SymbolsError, "Redundant symbols were given"
 
     if f.is_multivariate:
-        raise PolynomialError
+        raise MultivariatePolyError, f
 
     def roots_trivial(g):
         if g.length == 1:
@@ -278,7 +279,7 @@ def roots(f, *symbols, **flags):
         try:
             query = handlers[domain]
         except KeyError:
-            raise ValueError("Invalid domain: " + domain)
+            raise ValueError, "Invalid domain: %s" % domain
 
         for zero in dict(result).iterkeys():
             if not query(zero):
@@ -318,10 +319,10 @@ def poly_factors(f, *symbols, **flags):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise PolynomialError
+        raise SymbolsError, "Redundant symbols were given"
 
     if f.is_multivariate:
-        raise PolynomialError
+        raise MultivariatePolyError, f
     else:
         x = f.symbols[0]
 
@@ -364,10 +365,10 @@ def poly_sturm(f, *symbols):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise PolynomialError
+        raise SymbolsError, "Redundant symbols were given"
 
     if f.is_multivariate:
-        raise PolynomialError
+        raise MultivariatePolyError, f
     else:
         f = f.as_squarefree()
 
@@ -474,10 +475,10 @@ class RootOf(Basic, NoRelMeths, ArithMeths):
         if isinstance(f, RootsOf):
             f = f.poly
         elif not isinstance(f, Poly):
-            raise PolynomialError
+            raise PolynomialError, "%s is not a polynomial" % f
 
         if f.is_multivariate:
-            raise PolynomialError
+            raise MultivariatePolyError, f
 
         if index < 0 or index >= f.degree:
             raise IndexError, "Index must be in [0, %d] range" % (f.degree-1)
@@ -517,10 +518,10 @@ class RootsOf(Basic, NoRelMeths, ArithMeths):
         if not isinstance(f, Poly):
             f = Poly(f, x)
         elif x is not None:
-            raise PolynomialError
+            raise SymbolsError, "Redundant symbols were given"
 
         if f.is_multivariate:
-            raise PolynomialError
+            raise MultivariatePolyError, f
 
         return Basic.__new__(cls, f)
 
