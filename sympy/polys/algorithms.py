@@ -97,7 +97,7 @@ def poly_div(f, g, *symbols):
             f = f.kill_lead_term()
 
     if len(q) != 1:
-        return tuple(q), r
+        return q, r
     else:
         return q[0], r
 
@@ -204,14 +204,14 @@ def poly_groebner(f, *symbols, **flags):
         elif symbols or flags:
             raise SymbolsError, "Redundant symbols or flags were given"
 
-        return (f.as_monic(),)
+        return [f.as_monic()]
 
     compare = monomial_cmp(flags.get('order'))
 
     f = [ h for h in [f] + g if h ]
 
     if not f:
-        return (Poly((), *symbols, **flags),)
+        return [Poly((), *symbols, **flags)]
 
     R, P, G, B, F = set(), set(), set(), {}, {}
 
@@ -327,7 +327,7 @@ def poly_groebner(f, *symbols, **flags):
 
     G = sorted(G, compare, lambda p: p.LM)
 
-    return tuple(reversed(G))
+    return list(reversed(G))
 
 def poly_lcm(f, g, *symbols):
     """Computes least common multiple of two polynomials.
@@ -678,7 +678,7 @@ def poly_subresultants(f, g, *symbols):
 
         k = h.degree
 
-    return tuple(prs)
+    return prs
 
 def poly_sqf(f, *symbols):
     """Compute square-free decomposition of an univariate polynomial.
@@ -743,7 +743,7 @@ def poly_sqf(f, *symbols):
     head, tail = sqf[0], sqf[1:]
     head = head.mul_term(coeff)
 
-    return (head,) + tuple(tail)
+    return [head] + tail
 
 def poly_decompose(f, *symbols):
     """Computes functional decomposition of an univariate polynomial.
@@ -864,4 +864,4 @@ def poly_decompose(f, *symbols):
         else:
             break
 
-    return (f,) + tuple(F)
+    return [f] + F

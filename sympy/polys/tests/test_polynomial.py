@@ -446,12 +446,12 @@ def test_poly_div():
     assert poly_div(x*y+2*x+y,x,x) == (Poly(2+y, x), Poly(y, x))
 
     assert poly_div(x*y**2 + 1, [x*y+1, y+1], x, y) == \
-        ((Poly(y, x, y), Poly(-1, x, y)), Poly(2, x, y))
+        ([Poly(y, x, y), Poly(-1, x, y)], Poly(2, x, y))
 
     assert poly_div(x**2*y+x*y**2+y**2, [x*y-1, y**2-1], x, y) == \
-        ((Poly(x+y, x, y), Poly(1, x, y)), Poly(1+x+y, x, y))
+        ([Poly(x+y, x, y), Poly(1, x, y)], Poly(1+x+y, x, y))
     assert poly_div(x**2*y+x*y**2+y**2, [y**2-1, x*y-1], x, y) == \
-        ((Poly(1+x, x, y), Poly(x, x, y)), Poly(1+2*x, x, y))
+        ([Poly(1+x, x, y), Poly(x, x, y)], Poly(1+2*x, x, y))
 
     f, g = 3*x**3 + x**2 + x + 5, 5*x**2 - 3*x + 1
 
@@ -565,33 +565,33 @@ def test_poly_subresultants():
     g = 3*x**6+5*x**4-4*x**2-9*x+21
 
     assert poly_subresultants(f, g, x) == \
-        (Poly(f, x), Poly(g, x),
+        [Poly(f, x), Poly(g, x),
          Poly(15*x**4 - 3*x**2 + 9,  x),
          Poly(65*x**2 + 125*x - 245, x),
          Poly(9326*x - 12300, x),
-         Poly(260708, x))
+         Poly(260708, x)]
 
     assert poly_subresultants((x-1)**2, x**2-1, x) == \
-        (Poly((x-1)**2, x), Poly(x**2-1, x), Poly(2*x - 2, x))
+        [Poly((x-1)**2, x), Poly(x**2-1, x), Poly(2*x - 2, x)]
 
 def test_poly_groebner():
-    assert poly_groebner(0, x) == (Poly((), x),)
+    assert poly_groebner(0, x) == [Poly((), x)]
 
-    assert poly_groebner(x*y, x) == (Poly(x, x),)
-    assert poly_groebner(x*y, z) == (Poly(1, z),)
+    assert poly_groebner(x*y, x) == [Poly(x, x)]
+    assert poly_groebner(x*y, z) == [Poly(1, z)]
 
     assert poly_groebner((x**2 + 2*x*y**2, x*y + 2*y**3 - 1), y, x, order='lex') == \
-        (Poly(y**3 - Rational(1,2), y, x, order='lex'),
-         Poly(x, y, x, order='lex'))
+        [Poly(y**3 - Rational(1,2), y, x, order='lex'),
+         Poly(x, y, x, order='lex')]
 
     assert poly_groebner((y-x**2, z-x**3), y, z, x, order='lex') == \
-        (Poly(-x**2+y, y, z, x, order='lex'),
-         Poly(z-x**3, y, z, x, order='lex'))
+        [Poly(-x**2+y, y, z, x, order='lex'),
+         Poly(z-x**3, y, z, x, order='lex')]
 
     assert poly_groebner((x**3-2*x*y, x**2*y-2*y**2+x), x, y, order='grlex') == \
-        (Poly(x**2, x, y, order='grlex'),
+        [Poly(x**2, x, y, order='grlex'),
          Poly(x*y, x, y, order='grlex'),
-         Poly(y**2-x/2, x, y, order='grlex'))
+         Poly(y**2-x/2, x, y, order='grlex')]
 
 def test_map_coeffs():
     p = Poly(x**2 + 2*x*y, x, y)
@@ -707,34 +707,34 @@ def test_squarefree():
     assert Poly(x**2+2*x+1, x).as_squarefree() == Poly(x+1, x)
     assert Poly(x**5-x**4-x+1, x).as_squarefree() == Poly(x**4-1, x)
 
-    assert poly_sqf(1, x) == (Poly(1, x),)
-    assert poly_sqf(x, x) == (Poly(x, x),)
+    assert poly_sqf(1, x) == [Poly(1, x)]
+    assert poly_sqf(x, x) == [Poly(x, x)]
 
-    assert poly_sqf(3*x**2, x) == (Poly(3, x), Poly(x, x))
-    assert poly_sqf(x**2+2*x+1, x) == (Poly(1, x), Poly(x+1, x))
+    assert poly_sqf(3*x**2, x) == [Poly(3, x), Poly(x, x)]
+    assert poly_sqf(x**2+2*x+1, x) == [Poly(1, x), Poly(x+1, x)]
 
     assert poly_sqf(x**5-x**4-x+1, x) == \
-        (Poly(x**3 + x**2 + x + 1, x), Poly(x-1, x))
+        [Poly(x**3 + x**2 + x + 1, x), Poly(x-1, x)]
     assert poly_sqf(x**8+6*x**6+12*x**4+8*x**2, x) == \
-        (Poly(1, x), Poly(x, x), Poly(x**2+2, x))
+        [Poly(1, x), Poly(x, x), Poly(x**2+2, x)]
 
 def test_decompose():
-    assert poly_decompose(1, x) == (Poly(1, x),)
-    assert poly_decompose(x, x) == (Poly(x, x),)
+    assert poly_decompose(1, x) == [Poly(1, x)]
+    assert poly_decompose(x, x) == [Poly(x, x)]
 
-    assert poly_decompose(z*x**3, x) == (Poly(z*x**3, x),)
-    assert poly_decompose(z*x**5, x) == (Poly(z*x**5, x),)
+    assert poly_decompose(z*x**3, x) == [Poly(z*x**3, x)]
+    assert poly_decompose(z*x**5, x) == [Poly(z*x**5, x)]
 
-    assert poly_decompose(x**4, x) == (Poly(x**2, x), Poly(x**2, x))
-    assert poly_decompose(z*x**4+1, x) == (Poly(z*x**2+1, x), Poly(x**2, x))
+    assert poly_decompose(x**4, x) == [Poly(x**2, x), Poly(x**2, x)]
+    assert poly_decompose(z*x**4+1, x) == [Poly(z*x**2+1, x), Poly(x**2, x)]
 
-    assert poly_decompose(x**4+2*x**2+z, x) == (Poly(x**2+2*x+z, x), Poly(x**2, x))
+    assert poly_decompose(x**4+2*x**2+z, x) == [Poly(x**2+2*x+z, x), Poly(x**2, x)]
 
     f, g = x**4 - 2*x + z, x**3 + 5*x
 
-    assert poly_decompose(f.subs(x, g), x) == (Poly(f, x), Poly(g, x))
-    assert poly_decompose(2*f.subs(x, g), x) == (Poly(2*f, x), Poly(g, x))
-    assert poly_decompose(f.subs(x, g-2), x) == (Poly(f.subs(x, x-2), x), Poly(g, x))
+    assert poly_decompose(f.subs(x, g), x) == [Poly(f, x), Poly(g, x)]
+    assert poly_decompose(2*f.subs(x, g), x) == [Poly(2*f, x), Poly(g, x)]
+    assert poly_decompose(f.subs(x, g-2), x) == [Poly(f.subs(x, x-2), x), Poly(g, x)]
 
 def test_evaluate():
     f = x**2*y*z + 2*x*y*z**3 + 3*x*y + 4*y*z

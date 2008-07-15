@@ -32,8 +32,8 @@ def _conv_args(n, args):
 def _map_basic(f, n, *args, **kwargs):
     result = f(*_conv_args(n, args), **kwargs)
 
-    if isinstance(result, (tuple, list)):
-        return tuple(g.as_basic() for g in result)
+    if isinstance(result, (list, tuple, set)):
+        return result.__class__(g.as_basic() for g in result)
     else:
         return result.as_basic()
 
@@ -70,10 +70,10 @@ for _func, _n in _funcs.iteritems():
 def div(*args, **kwargs):
     q, r = poly_div(*_conv_args(2, args), **kwargs)
 
-    if type(q) is not tuple:
+    if type(q) is not list:
         q = q.as_basic()
     else:
-        q = tuple(p.as_basic() for p in q)
+        q = [ p.as_basic() for p in q ]
 
     return q, r.as_basic()
 
