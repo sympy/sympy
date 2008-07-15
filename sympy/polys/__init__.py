@@ -14,4 +14,4 @@ from wrappers import poly_quo, poly_rem, poly_pquo, poly_prem
 
 from wrappers import div, quo, rem, pdiv, pquo, prem, groebner, lcm,  \
     gcd, half_gcdex, gcdex, sqf, resultant, subresultants, decompose, \
-    factors, sturm
+    factors, sturm, LexPoly

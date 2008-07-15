@@ -1,4 +1,10 @@
 
+from polynomial import Poly
+
+def LexPoly(*args):
+    """Returns a polynomial with lexicographic order of terms. """
+    return Poly(*args, **{ 'order' : 'lex' })
+
 from algorithms import poly_div, poly_pdiv, poly_groebner, poly_lcm, poly_gcd, \
     poly_half_gcdex, poly_gcdex, poly_sqf, poly_resultant, poly_subresultants, \
     poly_decompose
