@@ -283,14 +283,22 @@ class Poly(Basic, RelMeths, ArithMeths):
 
     def __new__(cls, poly, *symbols, **flags):
         N, terms = len(symbols), {}
-        stamp = frozenset(symbols)
         coeffs, monoms = (), ()
+
+        order = flags.pop('order', 'grlex')
 
         if N == 0:
             if isinstance(poly, Poly):
-                return poly
+                if order != poly.order:
+                    symbols = poly.symbols
+                    N = len(poly.symbols)
+                    poly = poly.as_dict()
+                else:
+                    return poly
             else:
                 raise SymbolsError, "No symbols were given"
+
+        stamp = frozenset(symbols)
 
         if len(stamp) != N:
             raise SymbolsError, "Got duplicate symbols: %s" % (symbols,)
@@ -299,8 +307,6 @@ class Poly(Basic, RelMeths, ArithMeths):
 
         if any(not s.is_Symbol for s in symbols):
             raise SymbolsError, "Got invalid symbols: %s" % (symbols,)
-
-        order = flags.pop('order', 'grlex')
 
         # { M1: c1, M2: c2, ... }
         if type(poly) is dict:

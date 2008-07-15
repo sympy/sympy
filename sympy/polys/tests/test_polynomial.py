@@ -88,6 +88,9 @@ def test_poly_basics():
 
     assert Poly(Poly(x, x)) == Poly(x, x)
 
+    assert Poly(Poly(x*y, x, y), order='lex') == \
+        Poly(x*y, x, y, order='lex')
+
     py.test.raises(SymbolsError, "Poly(x, 2)")
     py.test.raises(SymbolsError, "Poly(x, 2*x)")
 
