@@ -11,8 +11,8 @@ from sympy.core.numbers import Integer, Rational
 from sympy.core.function import Function, Lambda
 from sympy.core.basic import Basic, S, C, Atom, sympify
 
+from sympy.utilities import threaded
 from sympy.simplify import together
-from sympy.matrices import Matrix
 from sympy.functions import exp
 
 from sympy.polys import Poly, RootSum, poly_quo, poly_rem, \
@@ -209,96 +209,93 @@ def trim(f, *symbols, **flags):
 
                 return ((GP*P)/(GQ*Q)).subs(reverse)
 
+@threaded()
 def apart(f, z, **flags):
     """Compute partial fraction decomposition of a rational function.
 
-       Given an rational function, performing only gcd operations over
-       the algebraic closue of its field of definition, compute full
-       partial fraction decomposition with fractions having linear
-       denominators.
+       Given a rational function 'f', performing only gcd operations
+       over the algebraic closue of the initial field of definition,
+       compute full partial fraction decomposition with fractions
+       having linear denominators.
 
        For all other kinds of expressions the input is returned in an
        unchanged form. Note however, that 'apart' function can thread
        over sums and relational operators.
 
-       Note that no factorization of the initial denominator is needed,
-       howevert at some point root finding algorithms are executed but
-       for polynomials of much lower degree than the denominator.
+       Note that no factorization of the initial denominator of 'f' is
+       needed.  The final decomposition is formed in terms of a sum of
+       RootSum instances.  By default RootSum tries to compute all its
+       roots to simplify itself. This behaviour can be however avoided
+       by seting the keyword flag evaluate=False, which will make this
+       function return a formal decomposition.
 
        >>> from sympy import *
        >>> x,y = symbols('xy')
 
-       >>> apart(1/(x+2)/(x+1), x)
-       1/(1 + x) - 1/(2 + x)
+       >>> apart(y/(x+2)/(x+1), x)
+       y/(1 + x) - y/(2 + x)
 
-       >>> apart(Eq((x+1)/(x-1), E/x), x)
-       1 - 2/(1 - x) == E/x
+       >>> apart(1/(1+x**5), x, evaluate=False)
+       RootSum(Lambda(_a, -1/5/(x - _a)*_a), x**5 + 1, x)
 
        For more information on the implemented algorithm refer to:
 
        [1] M. Bronstein, B. Salvy, Full partial fraction decomposition
-           of rational functions, in: M. Bronstein, ed., Proceedings
+           of rational functions,  in: M. Bronstein,  ed., Proceedings
            ISSAC '93, ACM Press, Kiev, Ukraine, 1993, pp. 157-160.
 
     """
-    f = sympify(f)
+    if not f.has(z):
+        return f
 
-    if f.is_Add:
-        return Add(*[ apart(g, z) for g in f ])
-    elif isinstance(f, Relational):
-        return Relational(apart(f.lhs, z),
-                          apart(f.rhs, z), f.rel_op)
-    else:
-        if not f.has(z):
-            return f
+    f = Poly.cancel(f, z)
 
-        f = Poly.cancel(f, z)
+    P, Q = f.as_numer_denom()
 
-        P, Q = f.as_numer_denom()
+    if not Q.has(z):
+        return f
 
-        if not Q.has(z):
-            return f
+    partial, r = div(P, Q, z)
+    f, q, U = r / Q, Q, []
 
-        partial, r = div(P, Q, z)
-        f, q, U = r / Q, Q, []
+    u = Function('u')(z)
+    a = Symbol('a', dummy=True)
 
-        u = Function('u')(z)
-        a = Symbol('a', dummy=True)
+    for k, d in enumerate(poly_sqf(q, z)):
+        n, b = k + 1, d.as_basic()
+        U += [ u.diff(z, k) ]
 
-        for k, d in enumerate(poly_sqf(q, z)):
-            n, b = k + 1, d.as_basic()
-            U += [ u.diff(z, k) ]
+        h = together(Poly.cancel(f*b**n, z) / u**n)
 
-            h = together(Poly.cancel(f*b**n, z) / u**n)
+        H, subs = [h], []
 
-            H, subs = [h], []
+        for j in range(1, n):
+            H += [ H[-1].diff(z) / j ]
 
-            for j in range(1, n):
-                H += [ H[-1].diff(z) / j ]
+        for j in range(1, n+1):
+            subs += [ (U[j-1], b.diff(z, j) / j) ]
 
-            for j in range(1, n+1):
-                subs += [ (U[j-1], b.diff(z, j) / j) ]
+        for j in range(0, n):
+            P, Q = together(H[j]).as_numer_denom()
 
-            for j in range(0, n):
-                P, Q = together(H[j]).as_numer_denom()
+            for i in range(0, j+1):
+                P = P.subs(*subs[j-i])
 
-                for i in range(0, j+1):
-                    P = P.subs(*subs[j-i])
+            Q = Q.subs(*subs[0])
 
-                Q = Q.subs(*subs[0])
+            P, Q = Poly(P, z), Poly(Q, z)
 
-                P, Q = Poly(P, z), Poly(Q, z)
+            G = poly_gcd(P, d)
+            D = poly_quo(d, G)
 
-                G = poly_gcd(P, d)
-                D = poly_quo(d, G)
+            B, g = poly_half_gcdex(Q, D)
+            b = poly_rem(P * poly_quo(B, g), D)
 
-                B, g = poly_half_gcdex(Q, D)
-                b = poly_rem(P * poly_quo(B, g), D)
+            numer = b.as_basic()
+            denom = (z-a)**(n-j)
 
-                numer = b.as_basic()
-                denom = (z-a)**(n-j)
+            expr = numer.subs(z, a) / denom
 
-                partial += RootSum(lambda r:
-                    numer.subs(z, r) / denom.subs(a, r), D)
+            partial += RootSum(Lambda(a, expr), D, **flags)
 
-        return partial
+    return partial

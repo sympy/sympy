@@ -1,9 +1,9 @@
-from sympy import sin, cos, exp, cot, sqrt, I, E, pi, symbols, Function
+from sympy import sin, cos, exp, cot, sqrt, S, I, E, pi, symbols, Function, Matrix, Eq, RootSum, Lambda
 from sympy.simplify import cancel, trim, apart, together
 from sympy.integrals import integrate
 from sympy.utilities.pytest import XFAIL
 
-x,y,n = symbols('xyn')
+x,y,z,n = symbols('xyzn')
 
 def test_has():
     assert cot(x).has(x)
@@ -70,12 +70,28 @@ def test_trim_xfail():
     assert trim((exp(3*x)+exp(2*x*y) + y*exp(x))/exp(x)) == \
         y + exp(2*x) + exp(-x + 2*x*y)
 
-def test_apart1():
+def test_apart():
     assert apart(1/(x+2)/(x+1), x) == 1/(1 + x) - 1/(2 + x)
-
-def test_apart2():
     assert apart(1/(x+1)/(x+5), x) == -1/(5 + x)/4 + 1/(1 + x)/4
-    assert apart((x**2+1)/(x+1) == sin(x), x) == (x - 1 + 2/(x+1) == sin(x))
+
+    f = apart(1/(x-y)/(x-z), x)
+
+    assert f.subs({y:1,z:2}) == apart(1/(x-1)/(x-2), x)
+
     assert apart((E*x+2)/(x-pi)*(x-1), x) in [
-            2 - E + E*pi + E*x - 1/(x - pi)*(2 - 2*pi + E*pi - E*pi**2),
-            2 - E + E*pi + E*x + 1/(x - pi)*(-2 + 2*pi - E*pi + E*pi**2)]
+        2 - E + E*pi + E*x - 1/(x - pi)*( 2 - 2*pi + E*pi - E*pi**2),
+        2 - E + E*pi + E*x + 1/(x - pi)*(-2 + 2*pi - E*pi + E*pi**2),
+    ]
+
+    M = Matrix(2, 2, lambda i, j: 1/(x-(i+1))/(x-(1-j)))
+
+    assert apart(M, x) == Matrix([
+        [(x-1)**(-2),     -1/x-1/(1-x)          ],
+        [1/(1-x)-1/(2-x), -S.Half/x-S.Half/(2-x)],
+    ])
+
+    assert apart(Eq((x**2+1)/(x+1), sin(x)), x) == \
+        Eq(x - 1 + 2/(x+1), sin(x))
+
+    assert apart(1/(1+x**5), x, evaluate=False).tostr() == \
+        "RootSum(Lambda(_a, -1/5/(x - _a)*_a), x**5 + 1, x)"
