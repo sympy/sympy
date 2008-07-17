@@ -84,7 +84,10 @@ def test_ode10():
     f = Function("f")
     #type:2nd order, constant coefficients (two real different roots)
     eq = Eq(f(x).diff(x,x) - 3*diff(f(x),x) + 2*f(x), 0)
-    assert dsolve(eq, f(x)) == Symbol("C1")*exp(2*x) + Symbol("C2")*exp(x)
+    assert dsolve(eq, f(x)) in [
+        Symbol("C1")*exp(2*x) + Symbol("C2")*exp(x),
+        Symbol("C1")*exp(x) + Symbol("C2")*exp(2*x),
+    ]
     checksol(eq, f(x), dsolve(eq, f(x)))
 
 def test_ode11():
