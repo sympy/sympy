@@ -1119,6 +1119,9 @@ def test_RootsOf():
     assert RootSum(lambda r: r**2, f).doit() == RootOf(f, 0)**2 + \
         RootOf(f, 1)**2 + RootOf(f, 2)**2 + RootOf(f, 3)**2 + RootOf(f, 4)**2
 
+    assert RootSum(Lambda(x, x), Poly(0, x), evaluate=True)  == S.Zero
+    assert RootSum(Lambda(x, x), Poly(0, x), evaluate=False) != S.Zero
+
     f = Poly(x**17 + x - 1, x)
 
     assert RootsOf(f).tostr() == "RootsOf(x**17 + x - 1, x)"

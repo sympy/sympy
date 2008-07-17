@@ -575,24 +575,27 @@ class RootsOf(Basic, NoRelMeths, ArithMeths):
 class RootSum(Basic, NoRelMeths, ArithMeths):
     """Represents a sum of all roots of an univariate polynomial. """
 
-    def __new__(cls, f, *args):
+    def __new__(cls, f, *args, **flags):
         if not hasattr(f, '__call__'):
             raise TypeError("%s is not a callable object" % f)
 
         roots = RootsOf(*args)
 
-        if roots.count == 0:
-            return S.Zero
+        if not flags.get('evaluate', True):
+            return Basic.__new__(cls, f, roots)
         else:
-            result = []
+            if roots.count == 0:
+                return S.Zero
+            else:
+                result = []
 
-            for root in roots.exact_roots():
-                result.append(f(root))
+                for root in roots.exact_roots():
+                    result.append(f(root))
 
-            if len(result) < roots.count:
-                result.append(Basic.__new__(cls, f, roots))
+                if len(result) < roots.count:
+                    result.append(Basic.__new__(cls, f, roots))
 
-            return Add(*result)
+                return Add(*result)
 
     @property
     def function(self):
