@@ -1,5 +1,5 @@
 
-from sympy import symbols, expand, sin, sqrt, re, im, I, Rational, powsimp
+from sympy import symbols, expand, sin, sqrt, re, im, I, Rational, Lambda, powsimp
 
 from sympy.polys.monomial import *
 from sympy.polys.polynomial import *
@@ -1110,3 +1110,12 @@ def test_RootsOf():
 
     assert RootSum(lambda r: r**2, f).doit() == RootOf(f, 0)**2 + \
         RootOf(f, 1)**2 + RootOf(f, 2)**2 + RootOf(f, 3)**2 + RootOf(f, 4)**2
+
+    f = Poly(x**17 + x - 1, x)
+
+    assert RootsOf(f).tostr() == "RootsOf(x**17 + x - 1, x)"
+
+    assert RootOf(f, 0).tostr() == "RootOf(x**17 + x - 1, x, index=0)"
+
+    assert RootSum(Lambda(z, z**2), f).tostr() == \
+        "RootSum(Lambda(_z, _z**2), x**17 + x - 1, x)"

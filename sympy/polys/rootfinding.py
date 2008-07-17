@@ -501,6 +501,12 @@ class RootOf(Basic, NoRelMeths, ArithMeths):
     def atoms(self, *args, **kwargs):
         return self.poly.atoms(*args, **kwargs)
 
+    def tostr(self, level=0):
+        poly = self.poly.tostr()
+
+        return "RootOf(%s, index=%d)" % \
+            (poly[1+poly.index("("):-1], self.index)
+
 class RootsOf(Basic, NoRelMeths, ArithMeths):
     """Represents all roots of an univariate polynomial.
 
@@ -534,6 +540,7 @@ class RootsOf(Basic, NoRelMeths, ArithMeths):
         return self.poly.degree
 
     def roots(self):
+        """Iterates over all roots: exact and formal. """
         exact = _exact_roots(self.poly)
 
         for root in exact:
@@ -543,12 +550,14 @@ class RootsOf(Basic, NoRelMeths, ArithMeths):
             yield RootOf(self.poly, j)
 
     def exact_roots(self):
+        """Iterates over exact roots only. """
         exact = _exact_roots(self.poly)
 
         for root in exact:
             yield root
 
     def formal_roots(self):
+        """Iterates over formal roots only. """
         exact = _exact_roots(self.poly)
 
         for j in range(len(exact), self.count):
@@ -560,10 +569,16 @@ class RootsOf(Basic, NoRelMeths, ArithMeths):
     def atoms(self, *args, **kwargs):
         return self.poly.atoms(*args, **kwargs)
 
+    def tostr(self, level=0):
+        return "RootsOf(" + self.poly.tostr().partition("(")[-1]
+
 class RootSum(Basic, NoRelMeths, ArithMeths):
     """Represents a sum of all roots of an univariate polynomial. """
 
     def __new__(cls, f, *args):
+        if not hasattr(f, '__call__'):
+            raise TypeError("%s is not a callable object" % f)
+
         roots = RootsOf(*args)
 
         if roots.count == 0:
@@ -597,3 +612,14 @@ class RootSum(Basic, NoRelMeths, ArithMeths):
                 result += self.function(root)
 
             return result
+
+    def tostr(self, level=0):
+        if hasattr(self.function, 'tostr'):
+            func = self.function.tostr()
+        else:
+            func = str(self.function)
+
+        poly = self.roots.poly.tostr()
+
+        return "RootSum(%s, %s)" % \
+            (func, poly[1+poly.index("("):-1])
