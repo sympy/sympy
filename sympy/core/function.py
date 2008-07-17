@@ -584,7 +584,7 @@ class Lambda(Function):
         nargs = len(args)
 
         expression = args[nargs-1]
-        funargs = [Symbol(str(arg),dummy=True) for arg in args[:nargs-1]]
+        funargs = [Symbol(arg.name, dummy=True) for arg in args[:nargs-1]]
         #probably could use something like foldl here
         for arg,funarg in zip(args[:nargs-1],funargs):
             expression = expression.subs(arg,funarg)

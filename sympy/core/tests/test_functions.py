@@ -215,6 +215,10 @@ def test_Lambda():
     p = x, y, z, t
     assert Lambda(p, t*(x+y+z))(*p) == t * (x + y + z)
 
+    d = Symbol('d', dummy=True)
+
+    assert Lambda(d, d**2).tostr() == "Lambda(_d, _d**2)"
+
 def test_expand_function():
     assert expand(x+y) == x + y
     assert expand(x+y, complex=True) == I*im(x) + I*im(y) + re(x) + re(y)
