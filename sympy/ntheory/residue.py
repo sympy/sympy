@@ -5,7 +5,7 @@ def totient_(n):
     """returns the number of integers less than n
     and relatively prime to n"""
     if n < 1:
-        raise ValueError, "n must be a positive integer"
+        raise ValueError("n must be a positive integer")
     tot=0
     for x in xrange(1,n):
         if igcd(x,n)==1:

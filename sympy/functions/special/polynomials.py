@@ -132,7 +132,7 @@ class chebyshevt_root(Function):
     @classmethod
     def canonize(cls, n, k):
         if not 0 <= k < n:
-            raise ValueError, "must have 0 <= k < n"
+            raise ValueError("must have 0 <= k < n")
         return C.cos(S.Pi*(2*k+1)/(2*n))
 
 class chebyshevu_root(Function):
@@ -154,7 +154,7 @@ class chebyshevu_root(Function):
     @classmethod
     def canonize(cls, n, k):
         if not 0 <= k < n:
-            raise ValueError, "must have 0 <= k < n"
+            raise ValueError("must have 0 <= k < n")
         return C.cos(S.Pi*(k+1)/(n+1))
 
 

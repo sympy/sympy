@@ -173,10 +173,10 @@ def roots(f, *symbols, **flags):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise SymbolsError, "Redundant symbols were given"
+        raise SymbolsError("Redundant symbols were given")
 
     if f.is_multivariate:
-        raise MultivariatePolyError, f
+        raise MultivariatePolyError(f)
 
     def roots_trivial(g):
         if g.length == 1:
@@ -279,7 +279,7 @@ def roots(f, *symbols, **flags):
         try:
             query = handlers[domain]
         except KeyError:
-            raise ValueError, "Invalid domain: %s" % domain
+            raise ValueError("Invalid domain: %s" % domain)
 
         for zero in dict(result).iterkeys():
             if not query(zero):
@@ -319,10 +319,10 @@ def poly_factors(f, *symbols, **flags):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise SymbolsError, "Redundant symbols were given"
+        raise SymbolsError("Redundant symbols were given")
 
     if f.is_multivariate:
-        raise MultivariatePolyError, f
+        raise MultivariatePolyError(f)
     else:
         x = f.symbols[0]
 
@@ -365,10 +365,10 @@ def poly_sturm(f, *symbols):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise SymbolsError, "Redundant symbols were given"
+        raise SymbolsError("Redundant symbols were given")
 
     if f.is_multivariate:
-        raise MultivariatePolyError, f
+        raise MultivariatePolyError(f)
     else:
         f = f.as_squarefree()
 
@@ -425,7 +425,7 @@ def number_of_real_roots(f, *symbols, **flags):
         inf = sympify(inf)
 
         if not inf.is_number:
-            raise ValueError, "Not a number: %s" % inf
+            raise ValueError("Not a number: %s" % inf)
         elif abs(inf) is S.Infinity:
             inf = None
 
@@ -435,7 +435,7 @@ def number_of_real_roots(f, *symbols, **flags):
         sup = sympify(sup)
 
         if not sup.is_number:
-            raise ValueError, "Not a number: %s" % sup
+            raise ValueError("Not a number: %s" % sup)
         elif abs(sup) is S.Infinity:
             sup = None
 
@@ -475,13 +475,13 @@ class RootOf(Basic, NoRelMeths, ArithMeths):
         if isinstance(f, RootsOf):
             f = f.poly
         elif not isinstance(f, Poly):
-            raise PolynomialError, "%s is not a polynomial" % f
+            raise PolynomialError("%s is not a polynomial" % f)
 
         if f.is_multivariate:
-            raise MultivariatePolyError, f
+            raise MultivariatePolyError(f)
 
         if index < 0 or index >= f.degree:
-            raise IndexError, "Index must be in [0, %d] range" % (f.degree-1)
+            raise IndexError("Index must be in [0, %d] range" % (f.degree-1))
         else:
             exact = _exact_roots(f)
 
@@ -518,10 +518,10 @@ class RootsOf(Basic, NoRelMeths, ArithMeths):
         if not isinstance(f, Poly):
             f = Poly(f, x)
         elif x is not None:
-            raise SymbolsError, "Redundant symbols were given"
+            raise SymbolsError("Redundant symbols were given")
 
         if f.is_multivariate:
-            raise MultivariatePolyError, f
+            raise MultivariatePolyError(f)
 
         return Basic.__new__(cls, f)
 

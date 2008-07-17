@@ -72,10 +72,10 @@ class PythonPrinter(Printer):
         pass
 
     def _print_module(self, expr):
-        raise Exception, 'Modules in the expression are unacceptable'
+        raise Exception('Modules in the expression are unacceptable')
 
     def _print_str(self, expr):
-        raise Exception, 'Strings in the expression are unacceptable'
+        raise Exception('Strings in the expression are unacceptable')
 
     def emptyPrinter(self, expr):
         pass

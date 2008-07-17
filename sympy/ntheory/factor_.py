@@ -353,7 +353,7 @@ def totient(n):
 
     """
     if n < 1:
-        raise ValueError, "n must be a positive integer"
+        raise ValueError("n must be a positive integer")
     factors = factorint(n)
     t = 1
     for p, k in factors:

@@ -66,7 +66,7 @@ def solve_poly_system(system, *symbols):
         if len(univariate) == 1:
             f = univariate.pop()
         else:
-            raise PolynomialError, "Not a zero-dimensional system"
+            raise PolynomialError("Not a zero-dimensional system")
 
         zeros = roots(Poly(f, f.symbols[-1])).keys()
 
@@ -95,7 +95,7 @@ def solve_poly_system(system, *symbols):
     if hasattr(system, "__iter__"):
         system = list(system)
     else:
-        raise TypeError, "Expected iterable container, got %s" % system
+        raise TypeError("Expected iterable container, got %s" % system)
 
     f = system.pop(0)
 
@@ -105,7 +105,7 @@ def solve_poly_system(system, *symbols):
         if not symbols:
             f = LexPoly(f)
         else:
-            raise SymbolsError, "Redundant symbols were given"
+            raise SymbolsError("Redundant symbols were given")
 
     head, tail = f.unify_with(system)
 

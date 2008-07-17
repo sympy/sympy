@@ -71,7 +71,7 @@ def mr_safe(n):
     if n < 3474749660383: return mr(n, [2, 3, 5, 7, 11, 13])
     if n < 341550071728321: return mr(n, [2, 3, 5, 7, 11, 13, 17])
     if n < 10000000000000000: return mr(n, [2, 3, 7, 61, 24251])
-    raise ValueError, "n too large"
+    raise ValueError("n too large")
 
 def isprime(n):
     """

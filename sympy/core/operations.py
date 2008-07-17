@@ -48,7 +48,7 @@ class AssocOp(Basic):
         if cls is C.Composition:
             s = Symbol('x',dummy=True)
             return Lambda(s,s)
-        raise NotImplementedError,"identity not defined for class %r" % (cls.__name__)
+        raise NotImplementedError("identity not defined for class %r" % (cls.__name__))
 
     @classmethod
     def flatten(cls, seq):

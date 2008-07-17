@@ -39,7 +39,7 @@ def poly_div(f, g, *symbols):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise SymbolsError, "Redundant symbols were given"
+        raise SymbolsError("Redundant symbols were given")
 
     f, g = f.unify_with(g)
 
@@ -120,12 +120,12 @@ def poly_pdiv(f, g, *symbols):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise SymbolsError, "Redundant symbols were given"
+        raise SymbolsError("Redundant symbols were given")
 
     f, g = f.unify_with(g)
 
     if f.is_multivariate:
-        raise MultivariatePolyError, f
+        raise MultivariatePolyError(f)
 
     symbols, flags = f.symbols, f.flags
 
@@ -193,7 +193,7 @@ def poly_groebner(f, *symbols, **flags):
         if not isinstance(f, Poly):
             f = Poly(f, *symbols, **flags)
         elif symbols or flags:
-            raise SymbolsError, "Redundant symbols or flags were given"
+            raise SymbolsError("Redundant symbols or flags were given")
 
         f, g = f.unify_with(g)
 
@@ -202,7 +202,7 @@ def poly_groebner(f, *symbols, **flags):
         if not isinstance(f, Poly):
             f = Poly(f, *symbols, **flags)
         elif symbols or flags:
-            raise SymbolsError, "Redundant symbols or flags were given"
+            raise SymbolsError("Redundant symbols or flags were given")
 
         return [f.as_monic()]
 
@@ -349,7 +349,7 @@ def poly_lcm(f, g, *symbols):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise SymbolsError, "Redundant symbols were given"
+        raise SymbolsError("Redundant symbols were given")
 
     f, g = f.unify_with(g)
 
@@ -424,7 +424,7 @@ def poly_gcd(f, g, *symbols):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise SymbolsError, "Redundant symbols were given"
+        raise SymbolsError("Redundant symbols were given")
 
     f, g = f.unify_with(g)
 
@@ -490,12 +490,12 @@ def poly_half_gcdex(f, g, *symbols):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise SymbolsError, "Redundant symbols were given"
+        raise SymbolsError("Redundant symbols were given")
 
     f, g = f.unify_with(g)
 
     if f.is_multivariate:
-        raise MultivariatePolyError, f
+        raise MultivariatePolyError(f)
 
     symbols, flags = f.symbols, f.flags
 
@@ -540,12 +540,12 @@ def poly_resultant(f, g, *symbols):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise SymbolsError, "Redundant symbols were given"
+        raise SymbolsError("Redundant symbols were given")
 
     f, g = f.unify_with(g)
 
     if f.is_multivariate:
-        raise MultivariatePolyError, f
+        raise MultivariatePolyError(f)
 
     n, m = f.degree, g.degree
 
@@ -634,12 +634,12 @@ def poly_subresultants(f, g, *symbols):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise SymbolsError, "Redundant symbols were given"
+        raise SymbolsError("Redundant symbols were given")
 
     f, g = f.unify_with(g)
 
     if f.is_multivariate:
-        raise MultivariatePolyError, f
+        raise MultivariatePolyError(f)
 
     symbols, flags = f.symbols, f.flags
 
@@ -709,10 +709,10 @@ def poly_sqf(f, *symbols):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise SymbolsError, "Redundant symbols were given"
+        raise SymbolsError("Redundant symbols were given")
 
     if f.is_multivariate:
-        raise MultivariatePolyError, f
+        raise MultivariatePolyError(f)
 
     coeff, f = f.as_primitive()
 
@@ -785,10 +785,10 @@ def poly_decompose(f, *symbols):
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
     elif symbols:
-        raise SymbolsError, "Redundant symbols were given"
+        raise SymbolsError("Redundant symbols were given")
 
     if f.is_multivariate:
-        raise MultivariatePolyError, f
+        raise MultivariatePolyError(f)
 
     symbols = f.symbols
     flags = f.flags

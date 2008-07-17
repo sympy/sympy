@@ -92,7 +92,7 @@ libtccpath = './libtcc.so'
 # load libtcc TODO: better Windows support
 libtcc = ctypes.cdll.LoadLibrary(libtccpath)
 if not libtcc:
-    raise ImportError, 'Could not load libtcc'
+    raise ImportError('Could not load libtcc')
 ##mathh = '/usr/include/math.h' # usually tcc knows where to find math.h
 
 def __getLeftRight(expr, index, oplength=1, stopchar='+-'):
@@ -202,7 +202,7 @@ def __run(cmd):
     Checks the exit code of a ran command.
     """
     if not cmd == 0:
-        raise Exception, 'could not run libtcc command'
+        raise Exception('could not run libtcc command')
 
 def _compile(code, argcount=None, fname='f', fprototype=None):
     """
@@ -281,9 +281,9 @@ def frange(*args):
     1.73205080757
     """
     if len(args) > 4:
-        raise TypeError, 'expected at most 4 arguments, got %i' % len(args)
+        raise TypeError('expected at most 4 arguments, got %i' % len(args))
     if len(args) < 2:
-        raise TypeError, 'expected at least 2 argument, got %i' % len(args)
+        raise TypeError('expected at least 2 argument, got %i' % len(args))
     # interpret arguments
     lambdastr = args[0]
     start = 0

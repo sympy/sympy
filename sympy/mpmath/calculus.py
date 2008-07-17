@@ -242,7 +242,7 @@ def polyroots(coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False):
         if coeffs[0]:
             return []
         else:
-            raise ValueError,"tautology"
+            raise ValueError("tautology")
 
     orig = mp.prec
     weps = +eps

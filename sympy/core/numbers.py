@@ -154,13 +154,13 @@ class Number(Atom, RelMeths, ArithMeths):
     def ceiling(self): return Real(mpmath.ceil(self._as_mpf()))
 
     def __eq__(self, other):
-        raise NotImplementedError,'%s needs .__eq__() method' % (self.__class__.__name__)
+        raise NotImplementedError('%s needs .__eq__() method' % (self.__class__.__name__))
     def __ne__(self, other):
-        raise NotImplementedError,'%s needs .__ne__() method' % (self.__class__.__name__)
+        raise NotImplementedError('%s needs .__ne__() method' % (self.__class__.__name__))
     def __lt__(self, other):
-        raise NotImplementedError,'%s needs .__lt__() method' % (self.__class__.__name__)
+        raise NotImplementedError('%s needs .__lt__() method' % (self.__class__.__name__))
     def __le__(self, other):
-        raise NotImplementedError,'%s needs .__le__() method' % (self.__class__.__name__)
+        raise NotImplementedError('%s needs .__le__() method' % (self.__class__.__name__))
 
     def __gt__(self, other):
         return _sympify(other).__lt__(self)

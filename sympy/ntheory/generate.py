@@ -144,7 +144,7 @@ def nextprime(n):
 def prevprime(n):
     """Return the largest prime smaller than n."""
     if n < 3:
-        raise ValueError, "no preceding primes"
+        raise ValueError("no preceding primes")
     while 1:
         n -= 1
         if isprime(n):

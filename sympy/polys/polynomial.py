@@ -296,17 +296,17 @@ class Poly(Basic, RelMeths, ArithMeths):
                 else:
                     return poly
             else:
-                raise SymbolsError, "No symbols were given"
+                raise SymbolsError("No symbols were given")
 
         stamp = frozenset(symbols)
 
         if len(stamp) != N:
-            raise SymbolsError, "Got duplicate symbols: %s" % (symbols,)
+            raise SymbolsError("Got duplicate symbols: %s" % (symbols,))
 
         symbols = tuple(map(sympify, symbols))
 
         if any(not s.is_Symbol for s in symbols):
-            raise SymbolsError, "Got invalid symbols: %s" % (symbols,)
+            raise SymbolsError("Got invalid symbols: %s" % (symbols,))
 
         # { M1: c1, M2: c2, ... }
         if type(poly) is dict:
@@ -333,8 +333,8 @@ class Poly(Basic, RelMeths, ArithMeths):
                         coeffs = (coeffs,)
                         monoms = (monoms,)
                 else:
-                    raise PolynomialError, "Invalid arguments," \
-                        " should get '(coeffs, monoms)' tuple"
+                    raise PolynomialError("Invalid arguments," \
+                        " should get '(coeffs, monoms)' tuple")
 
         # [ (c1,M1), (c2,M2), ... ]
         elif type(poly) is list:
@@ -346,15 +346,15 @@ class Poly(Basic, RelMeths, ArithMeths):
                     coeff = sympify(coeff)
 
                     if coeff.has_any_symbols(*symbols):
-                        raise CoefficientError, "%s coefficient is dependent" \
-                            " of polynomial's symbols %s" % (coeff, symbols)
+                        raise CoefficientError("%s coefficient is dependent" \
+                            " of polynomial's symbols %s" % (coeff, symbols))
 
                     if type(monom) is int:
                         monom = (monom,)
 
                     if len(monom) != N:
-                        raise PolynomialError, "Dimension of %s monomial does" \
-                            " not match the number of symbols (%d)" % (monom, N)
+                        raise PolynomialError("Dimension of %s monomial does" \
+                            " not match the number of symbols (%d)" % (monom, N))
 
                     if not coeff:
                         continue
@@ -534,7 +534,7 @@ class Poly(Basic, RelMeths, ArithMeths):
                             monom[indices[factor]] += 1
                             continue
 
-                        raise PolynomialError, "Can't decompose %s" % factor
+                        raise PolynomialError("Can't decompose %s" % factor)
                     else:
                         coeff *= factor
 
@@ -701,7 +701,7 @@ class Poly(Basic, RelMeths, ArithMeths):
         if self.is_univariate:
             return dict(zip([ M[0] for M in self.monoms ], self.coeffs))
         else:
-            raise MultivariatePolyError, self
+            raise MultivariatePolyError(self)
 
     @property
     def coeffs(self):
@@ -784,14 +784,14 @@ class Poly(Basic, RelMeths, ArithMeths):
                 else:
                     yield S.Zero
         else:
-            raise MultivariatePolyError, self
+            raise MultivariatePolyError(self)
 
     def iter_all_monoms(self):
         if self.is_univariate:
             for i in xrange(self.degree, -1, -1):
                 yield (i,)
         else:
-            raise MultivariatePolyError, self
+            raise MultivariatePolyError(self)
 
     def iter_all_terms(self):
         if self.is_univariate:
@@ -803,7 +803,7 @@ class Poly(Basic, RelMeths, ArithMeths):
                 else:
                     yield S.Zero, (i,)
         else:
-            raise MultivariatePolyError, self
+            raise MultivariatePolyError(self)
 
     @property
     def lead_coeff(self):
@@ -1273,7 +1273,7 @@ class Poly(Basic, RelMeths, ArithMeths):
                 if not coeff.is_Integer:
                     denom = ilcm(denom, coeff.q)
             else:
-                raise CoefficientError, "%s is not a rational number" % coeff
+                raise CoefficientError("%s is not a rational number" % coeff)
 
         denom = sympify(denom)
 
@@ -1361,7 +1361,7 @@ class Poly(Basic, RelMeths, ArithMeths):
 
             return r[0]
         else:
-            raise MultivariatePolyError, f
+            raise MultivariatePolyError(f)
 
     def as_reduced(self):
         """Remove GCD of monomials from 'self'.
@@ -1422,8 +1422,8 @@ class Poly(Basic, RelMeths, ArithMeths):
             coeff = f(coeff, *args, **kwargs)
 
             if coeff.has_any_symbols(*self.symbols):
-                raise CoefficientError, "%s coefficient is dependent" \
-                    " of polynomial's symbols %s" % (coeff, self.symbols)
+                raise CoefficientError("%s coefficient is dependent" \
+                    " of polynomial's symbols %s" % (coeff, self.symbols))
             elif coeff is not S.Zero:
                 terms.append((coeff, monom))
 
@@ -1857,8 +1857,8 @@ class Poly(Basic, RelMeths, ArithMeths):
                 for p_monom in self.monoms ]
 
             if any(monom is None for monom in monoms):
-                raise PolynomialError, "%s monomial must divide" \
-                    " exactly the given polynomial" % (monom,)
+                raise PolynomialError("%s monomial must divide" \
+                    " exactly the given polynomial" % (monom,))
 
         return self.__class__((coeffs, monoms),
             *self.symbols, **self.flags)
@@ -1909,8 +1909,8 @@ class Poly(Basic, RelMeths, ArithMeths):
         N = len(self.symbols)
 
         if len(point) != N:
-            raise ValueError, "Dimension of %s does not match" \
-                " the number of symbols (%d)" % (point, N)
+            raise ValueError("Dimension of %s does not match" \
+                " the number of symbols (%d)" % (point, N))
 
         if self.is_univariate:
             terms = self.as_uv_dict()
@@ -1982,16 +1982,16 @@ class Poly(Basic, RelMeths, ArithMeths):
 
         for s, value in pattern:
             if s not in self.stamp:
-                raise PolynomialError, "%s symbol does" \
-                    " not belong to %s" % (s, self.symbols)
+                raise PolynomialError("%s symbol does" \
+                    " not belong to %s" % (s, self.symbols))
             else:
                 i = symbols.index(s)
 
             # 'value' might be int | long
             if isinstance(value, Symbol):
                 if value in self.stamp:
-                    raise PolynomialError, "%s symbol must" \
-                        " not belong to %s" % (s, self.symbols)
+                    raise PolynomialError("%s symbol must" \
+                        " not belong to %s" % (s, self.symbols))
 
             terms = {}
 

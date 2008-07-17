@@ -71,7 +71,7 @@ def _import(module, reload="False"):
     other modules.
     """
     if not MODULES.has_key(module):
-        raise NameError, "This module can't be used for lambdification."
+        raise NameError("This module can't be used for lambdification.")
     namespace, translations, import_commands = MODULES[module]
     # Clear namespace or exit
     if namespace:
@@ -86,8 +86,7 @@ def _import(module, reload="False"):
         try:
             exec import_command in {}, namespace
         except ImportError:
-            raise ImportError, "Can't import %s with command %s"%(module,
-                                                                  import_command)
+            raise ImportError("Can't import %s with command %s" % (module, import_command))
 
     # Add translated names to namespace
     for sympyname, translation in translations.iteritems():
@@ -189,7 +188,7 @@ def _get_namespace(m):
     elif hasattr(m, "__dict__"):
         return m.__dict__
     else:
-        raise TypeError, "Argument must be either a string, dict or module but it is: %s"%m
+        raise TypeError("Argument must be either a string, dict or module but it is: %s" % m)
 
 def lambdastr(args, expr):
     """

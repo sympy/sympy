@@ -578,7 +578,7 @@ def msolve(args, f, x0, tol=None, maxsteps=None, verbose=False, norm=None,
     if isinstance(f,  (list,  tuple)):
         f = Matrix(f).T
     if len(args) != f.cols:
-        raise NotImplementedError, 'need exactly as many variables as equations'
+        raise NotImplementedError('need exactly as many variables as equations')
     if verbose:
         print 'f(x):'
         print f

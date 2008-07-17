@@ -23,8 +23,8 @@ def integer_nthroot(y, n):
     >>> integer_nthroot(26,2)
     (5, False)
     """
-    if y < 0: raise ValueError, "y must not be negative"
-    if n < 1: raise ValueError, "n must be positive"
+    if y < 0: raise ValueError("y must not be negative")
+    if n < 1: raise ValueError("n must be positive")
     if y in (0, 1): return y, True
     if n == 1: return y, True
     if n > y: return 1, False
