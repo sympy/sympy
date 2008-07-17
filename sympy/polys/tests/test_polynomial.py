@@ -1057,6 +1057,14 @@ def test_roots():
         r13_20 - r1_2*(r1_100 + r2_25*I*2**r1_2)**r1_2: 1,
     }
 
+    p = Poly(z**3 + (-2 - y)*z**2 + (1 + 2*y - 2*x**2)*z - y + 2*x**2, z)
+
+    assert roots(p) == {
+        S.One: 1,
+        S.Half + S.Half*y + S.Half*(1 - 2*y + y**2 + 8*x**2)**S.Half: 1,
+        S.Half + S.Half*y - S.Half*(1 - 2*y + y**2 + 8*x**2)**S.Half: 1,
+    }
+
     assert roots(x**3 + 2*x**2 + 4*x + 8, x) == {}
     assert roots(x**3 + 2*x**2 + 4*x + 8, x, cubics=True) == \
         {-2*I: 1, 2*I: 1, -Integer(2): 1}

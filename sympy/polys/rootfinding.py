@@ -195,12 +195,22 @@ def roots(f, *symbols, **flags):
         if g.length == 2:
             zeros += roots_binomial(g)
         else:
+            x = g.symbols[0]
+
+            for i in [S.NegativeOne, S.One]:
+                if g(i).expand() is S.Zero:
+                    g = poly_div(g, x-i)[0]
+                    zeros.append(i)
+                    break
+
             n = g.degree
 
-            if n == 2:
+            if n == 1:
+                zeros += roots_linear(g)
+            elif n == 2:
                 zeros += roots_quadratic(g)
-            else:
-                if n == 3 and flags.get('cubics', False):
+            elif n == 3:
+                if flags.get('cubics', False):
                     from sympy.polynomials.factor_ import factor
                     from sympy.polynomials.base import PolynomialException
 
@@ -211,10 +221,11 @@ def roots(f, *symbols, **flags):
                             raise PolynomialException
 
                         for term in factors:
-                            zeros += roots(term.as_poly(*g.symbols))
+                            zeros += roots(term.as_poly(x))
                     except PolynomialException:
                         zeros += roots_cubic(g)
-                elif n == 4 and flags.get('quartics', False):
+            elif n == 4:
+                if flags.get('quartics', False):
                     zeros += roots_quartic(g)
 
         return zeros
