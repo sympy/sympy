@@ -271,9 +271,9 @@ u"""\
 """
     assert u == s
 
-    assert pretty((x,)) == '(x,)'
+    assert upretty((x,)) == '(x,)'
 
-    p = pretty((1/x,))
+    p = upretty((1/x,))
     s = \
 u"""\
 ⎛1 ⎞
