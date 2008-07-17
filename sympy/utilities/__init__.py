@@ -12,3 +12,5 @@ else:
 
 from lambdify import lambdify
 from source import source
+
+from decorator import threaded
