@@ -2181,7 +2181,7 @@ class Poly(Basic, RelMeths, ArithMeths):
 
         format = self.__class__.__name__ + "(%s, %s"
 
-        if self.order != 'grlex':
+        if self.is_multivariate and self.order != 'grlex':
             format += ", order='%s')" % self.order
         else:
             format += ")"

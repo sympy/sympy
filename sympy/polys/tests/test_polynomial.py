@@ -167,6 +167,8 @@ def test_poly_repr():
     assert Poly(-2*x + 1, x).tostr() == "Poly(-2*x + 1, x)"
     assert Poly(-2*x - 1, x).tostr() == "Poly(-2*x - 1, x)"
 
+    assert Poly(x - 1, x, order='lex').tostr() == "Poly(x - 1, x)"
+
     assert Poly(x**2 + 1 + y, x).tostr() == "Poly(x**2 + 1 + y, x)"
     assert Poly(x**2 - 1 + y, x).tostr() == "Poly(x**2 - 1 + y, x)"
 
