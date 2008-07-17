@@ -581,7 +581,9 @@ class RootsOf(Basic, NoRelMeths, ArithMeths):
         return self.poly.atoms(*args, **kwargs)
 
     def tostr(self, level=0):
-        return "RootsOf(" + self.poly.tostr().partition("(")[-1]
+        poly = self.poly.tostr()
+
+        return "RootsOf(" + poly[1+poly.index("("):]
 
 class RootSum(Basic, NoRelMeths, ArithMeths):
     """Represents a sum of all roots of an univariate polynomial. """
