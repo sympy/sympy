@@ -18,6 +18,7 @@ from sympy.functions import exp
 from sympy.polys import Poly, RootSum, poly_quo, poly_rem, \
     poly_sqf, poly_gcd, poly_half_gcdex, div, quo, gcd
 
+@threaded()
 def cancel(f, *symbols):
     """Cancel common factors in a given rational function.
 
@@ -46,17 +47,7 @@ def cancel(f, *symbols):
        x - 2**(1/2)
 
     """
-    f = sympify(f)
-
-    if not f.has_any_symbols(*symbols):
-        return f
-    elif f.is_Add:
-        return Add(*[ cancel(g, *symbols) for g in f.args ])
-    elif isinstance(f, Relational):
-        return Relational(cancel(f.lhs, *symbols),
-                          cancel(f.rhs, *symbols), f.rel_op)
-    else:
-        return Poly.cancel(f, *symbols)
+    return Poly.cancel(f, *symbols)
 
 def trim(f, *symbols, **flags):
     """Cancel common factors in a given formal rational expression.
