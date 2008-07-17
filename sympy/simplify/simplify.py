@@ -967,7 +967,5 @@ def simplify(expr):
        will be robust.
 
     """
-    expr = powsimp(radsimp(expr))
-    expr = Poly.cancel(expr)
-
+    expr = Poly.cancel(powsimp(expr))
     return together(expr.expand())

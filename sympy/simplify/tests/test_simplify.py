@@ -1,6 +1,7 @@
 from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
         collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
-        simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate
+        simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
+        solve
 from sympy.utilities.pytest import XFAIL
 
 def test_ratsimp():
@@ -62,7 +63,7 @@ def test_factorial_simplify():
     assert simplify(factorial(factorial(x))) == factorial(factorial(x))
 
 def test_simplify():
-    x,y,k,n,m,w,f,s,A = symbols('xyknmwfsA')
+    x,y,z,k,n,m,w,f,s,A = symbols('xyzknmwfsA')
 
     e = 1/x + 1/y
     assert e != (x+y)/(x*y)
@@ -99,6 +100,17 @@ def test_simplify():
 
     assert simplify((A*Matrix([0,f]))[1]) == \
         (-2*f*k + f*m*w**2)/(-k**2 + 3*k*m*w**2 - m**2*w**4)
+
+    a,b,c,d,e,f,g,h,i = symbols('abcdefghi')
+
+    f_1 = x*a + y*b + z*c - 1
+    f_2 = x*d + y*e + z*f - 1
+    f_3 = x*g + y*h + z*i - 1
+
+    solutions = solve([f_1,f_2,f_3], x,y,z, simplified=False)
+
+    assert simplify(solutions[y]) == \
+        (a*f+c*g+d*i-a*i-c*d-f*g)/(a*f*h+b*d*i+c*e*g-a*e*i-b*f*g-c*d*h)
 
 def test_simplify_fail1():
     x = Symbol('x')
