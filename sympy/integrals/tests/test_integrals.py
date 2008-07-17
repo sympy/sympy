@@ -1,5 +1,5 @@
 from sympy import symbols, integrate, Integral, exp, oo, Symbol, Rational, \
-    log, sin, cos, pi, E, I, Poly, LambertW, diff
+    log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix
 from sympy.utilities.pytest import XFAIL
 from sympy.physics.units import m, s
 import py
@@ -164,3 +164,11 @@ def test_issue853():
     py.test.raises(ValueError, "integrate(f, 2*x)")
     assert f.integral(x) == Integral(sin(x), x)
     py.test.raises(TypeError, "f.integral(2*x)")
+
+def test_matrices():
+    M = Matrix(2, 2, lambda i, j: (i+j+1)*sin((i+j+1)*x))
+
+    assert integrate(M, x) == Matrix([
+        [-cos(x),   -cos(2*x)],
+        [-cos(2*x), -cos(3*x)],
+    ])

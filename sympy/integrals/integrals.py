@@ -2,8 +2,9 @@
 from sympy.core import Basic, S, C, Symbol, Wild, Pow, sympify
 from sympy.core.methods import NoRelMeths, ArithMeths
 
-from sympy.integrals.risch import heurisch
 from sympy.integrals.trigonometry import trigintegrate
+from sympy.integrals.risch import heurisch
+from sympy.utilities import threaded
 from sympy.simplify import apart
 from sympy.series import limit
 from sympy.polys import Poly
@@ -236,6 +237,7 @@ class Integral(Basic, NoRelMeths, ArithMeths):
 
         return C.Add(*parts)
 
+@threaded(use_add=False)
 def integrate(*args, **kwargs):
     """integrate(f, var, ...)
 
