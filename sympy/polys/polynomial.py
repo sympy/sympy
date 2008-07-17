@@ -1306,7 +1306,7 @@ class Poly(Basic, RelMeths, ArithMeths):
 
         """
         if self.is_zero:
-            return S.Zero
+            return S.One
         else:
             content = 0
 

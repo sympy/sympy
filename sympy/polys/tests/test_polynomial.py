@@ -549,6 +549,14 @@ def test_poly_lcm():
         Poly(-3*x*y**2/2+x*y**3+3*x*y**4-2*x*y**5-3*x*y**6/2+x*y**7, x, y)
 
 def test_poly_gcd():
+    assert poly_gcd(0, 0, x) == Poly(1, x)
+    assert poly_gcd(0, 1, x) == Poly(1, x)
+    assert poly_gcd(1, 0, x) == Poly(1, x)
+    assert poly_gcd(0, 1, x) == Poly(1, x)
+
+    assert poly_gcd(x-1, 0, x) == Poly(1, x)
+    assert poly_gcd(0, 1-x, x) == Poly(1, x)
+
     assert poly_gcd(2, 6, x) == Poly(2, x)
     assert poly_gcd(2, 6, x, y) == Poly(2, x, y)
 
@@ -727,7 +735,7 @@ def test_call():
     assert Poly(f, x, y, z)(u, v, t) == u**2*(v*(u + t) + t)
 
 def test_content():
-    assert Poly(0, x, y, z).content == 0
+    assert Poly(0, x, y, z).content == 1
     assert Poly(1, x, y, z).content == 1
 
     assert Poly(2*x + 5*x*y, x, y).content == 1
@@ -735,7 +743,7 @@ def test_content():
     assert Poly(2*x + z*x*y, x, y).content == 1
 
 def test_primitive():
-    assert Poly(0, x, y, z).as_primitive() == (0, Poly(0, x, y, z))
+    assert Poly(0, x, y, z).as_primitive() == (1, Poly(0, x, y, z))
     assert Poly(1, x, y, z).as_primitive() == (1, Poly(1, x, y, z))
 
     assert Poly(2*x + 5*x*y, x, y).as_primitive() == (1, Poly(2*x + 5*x*y, x, y))

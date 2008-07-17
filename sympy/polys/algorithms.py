@@ -430,6 +430,9 @@ def poly_gcd(f, g, *symbols):
 
     symbols, flags = f.symbols, f.flags
 
+    if (f.is_zero or g.is_zero) or (f.is_one or g.is_one):
+        return Poly(S.One, *symbols, **flags)
+
     if f.is_monomial and g.is_monomial:
         monom = monomial_gcd(f.LM, g.LM)
 
