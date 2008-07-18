@@ -199,6 +199,7 @@ class Basic(AssumeMeths):
 
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)
+        obj._assumptions = None
         obj.assume(**assumptions)
         obj._mhash = None # will be set by __hash__ method.
         obj._args = args  # all items in args must be Basic objects

@@ -258,7 +258,10 @@ class AssumeMeths(object):
                     raise TypeError("%s: assumption %r is fixed to %r for this class." \
                                     % (self.__class__.__name__,k,v))
             assumptions[k] = v
-        d = self._assumptions = getattr(self, '_assumptions', {})
+        d = self._assumptions
+        if d is None:
+            d = {}
+            self._assumptions = d
 
         ###
         if "negative" in assumptions:
