@@ -1401,38 +1401,67 @@ class Basic(AssumeMeths):
     def __call__(self, *args, **removeme):
         return Function(self[0])(*args)
 
-    def _eval_evalf(self):
-        return
-
     def __float__(self):
-        result = self.evalf(precision=16)
-
+        result = self.evalf()
         if result.is_Number:
             return float(result)
         else:
             raise ValueError("Symbolic value, can't compute")
 
-    def evalf(self, precision=None):
-        if precision is None:
-            r = self._eval_evalf()
-        else:
-            old_precision = Basic.set_precision(precision)
-            r = self._eval_evalf()
-            Basic.set_precision(old_precision)
+    def _evalf(self, prec):
+        """Helper for evalf. Does the same thing but takes binary precision"""
+        r = self._eval_evalf(prec)
         if r is None:
             r = self
         return r
 
-    @staticmethod
-    def set_precision(prec = None):
-        """
-        Set precision for floating-point operations and return previous precision value.
-        """
-        oldprec = mpmath.mp.dps
-        if prec is not None:
-            mpmath.mp.dps = prec
-        return oldprec
+    def _eval_evalf(self, prec):
+        return
 
+    def _seq_eval_evalf(self, prec):
+        return self.__class__(*[s._evalf(prec) for s in self.args])
+
+    def evalf(self, prec=15):
+        """Numerically evaluate to the specified precision."""
+        return self._evalf(mpmath.lib.dps_to_prec(prec))
+
+    def _to_mpmath(self, prec, allow_ints=True):
+        # mpmath functions accept ints as input
+        errmsg = "cannot convert to mpmath number"
+        if allow_ints and self.is_Integer:
+            return self.p
+        v = self._eval_evalf(prec)
+        if v is None:
+            raise ValueError(errmsg)
+        if v.is_Real:
+            return mpmath.make_mpf(v._mpf_)
+        # Number + Number*I is also fine
+        re, im = v.as_real_imag()
+        if allow_ints and re.is_Integer:
+            re = mpmath.lib.from_int(re.p)
+        elif re.is_Real:
+            re = re._mpf_
+        else:
+            raise ValueError(errmsg)
+        if allow_ints and im.is_Integer:
+            im = mpmath.lib.from_int(im.p)
+        elif im.is_Real:
+            im = im._mpf_
+        else:
+            raise ValueError(errmsg)
+        return mpmath.make_mpc((re, im))
+
+    @staticmethod
+    def _from_mpmath(x, prec):
+        if hasattr(x, "_mpf_"):
+            return C.Real._new(x._mpf_, prec)
+        elif hasattr(x, "_mpc_"):
+            re, im = x._mpc_
+            re = C.Real._new(re, prec)
+            im = C.Real._new(im, prec)*S.ImaginaryUnit
+            return re+im
+        else:
+            raise TypeError("expected mpmath number (mpf or mpc)")
 
     ###################################################################################
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################

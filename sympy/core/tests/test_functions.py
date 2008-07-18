@@ -1,6 +1,6 @@
 from sympy import Lambda, Symbol, Function, WildFunction, Derivative, sqrt, \
         log, exp, Rational, Real, sign, Basic, sin, cos, diff, I, re, im, \
-        oo, zoo, nan, E, expand
+        oo, zoo, nan, E, expand, pi
 from sympy.utilities.pytest import XFAIL
 from sympy.utilities.test import REPR0
 from sympy.abc import x, y
@@ -288,3 +288,12 @@ def test_suppressed_evaluation():
     assert str(a) == "sin(0)"
     assert a.func is sin
     assert a.args == (0,)
+
+def test_function_evalf():
+    def eq(a,b,eps):
+        return abs(a-b) < eps
+    assert eq(sin(1).evalf(15), Real("0.841470984807897"), 1e-13)
+    assert eq(sin(2).evalf(25), Real("0.9092974268256816953960199",25), 1e-23)
+    assert eq(sin(1+I).evalf(15), Real("1.29845758141598") + Real("0.634963914784736")*I, 1e-13)
+    assert eq(exp(1+I).evalf(15), Real("1.46869393991588") + Real("2.28735528717884239")*I, 1e-13)
+    assert eq(log(pi+sqrt(2)*I).evalf(15), Real("1.23699044022052") + Real("0.422985442737893")*I, 1e-13)

@@ -102,7 +102,6 @@ def test_log_expand_complex():
 
 def test_log_apply_evalf():
     value = (log(3)/log(2)-1).evalf()
-
     assert value.epsilon_eq(Real("0.58496250072115618145373"))
 
 def test_lambertw():
@@ -114,6 +113,8 @@ def test_lambertw():
     assert LambertW(-log(2)/2) == -log(2)
     assert LambertW(oo) == oo
     assert LambertW(x**2).diff(x) == 2*LambertW(x**2)/x/(1+LambertW(x**2))
+    assert LambertW(sqrt(2)).evalf(30).epsilon_eq(
+        Real("0.701338383413663009202120278965",30),1e-29)
 
 def test_log_expand():
     w = Symbol("w", real=True)

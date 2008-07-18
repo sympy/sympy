@@ -10,6 +10,8 @@ from symbol import Symbol, Wild
 # from add   import Add /cyclic/
 # from power import Pow /cyclic/
 
+import sympy.mpmath as mpmath
+
 class Mul(AssocOp, RelMeths, ArithMeths):
 
     __slots__ = []
@@ -290,8 +292,8 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         #if e.atoms(Wild):
         #    return Mul(*[t**e for t in b])
 
-    def _eval_evalf(self):
-        return self.__class__(*[s.evalf() for s in self.args]).expand()
+    def _eval_evalf(self, prec):
+        return AssocOp._eval_evalf(self, prec).expand()
 
     @property
     def precedence(self):

@@ -40,6 +40,8 @@ from symbol import Symbol
 from add    import Add
 from multidimensional import vectorize
 
+from sympy import mpmath
+
 class FunctionClass(BasicMeta):
     """
     Base class for function classes. FunctionClass is a subclass of type.
@@ -187,11 +189,33 @@ class Function(Basic, ArithMeths, RelMeths):
     def _eval_expand_basic(self, *args):
         return None
 
-    def _eval_evalf(self):
-        obj = self.func._eval_apply_evalf(*self.args[:])
-        if obj is None:
-            return self
-        return obj
+    def _eval_evalf(self, prec):
+        # Lookup mpmath function based on name
+        fname = self.func.__name__
+        try:
+            if not hasattr(mpmath, fname):
+                from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
+                fname = MPMATH_TRANSLATIONS[fname]
+            func = getattr(mpmath, fname)
+        except (AttributeError, KeyError):
+            return
+
+        # Convert all args to mpf or mpc
+        try:
+            args = [arg._to_mpmath(prec) for arg in self.args]
+        except ValueError:
+            return
+
+        # Set mpmath precision and apply. Make sure precision is restored
+        # afterwards
+        orig = mpmath.mp.prec
+        try:
+            mpmath.mp.prec = prec
+            v = func(*args)
+        finally:
+            mpmath.mp.prec = orig
+
+        return Basic._from_mpmath(v, prec)
 
     def _eval_is_comparable(self):
         if self.is_Function:
@@ -322,7 +346,7 @@ class Function(Basic, ArithMeths, RelMeths):
 
     @classmethod
     def _eval_apply_evalf(cls, arg):
-        arg = arg.evalf()
+        arg = arg.evalf(prec)
 
         #if cls.nargs == 1:
         # common case for functions with 1 argument

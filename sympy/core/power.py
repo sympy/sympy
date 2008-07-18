@@ -4,6 +4,8 @@ from sympify import _sympify
 from methods import ArithMeths, RelMeths
 from cache import cacheit
 
+from sympy import mpmath
+
 from symbol import Symbol, Wild, Temporary
 # from numbers import Number, Rational, Integer     /cyclic/
 # from add import Add   /cyclic/
@@ -400,16 +402,14 @@ class Pow(Basic, ArithMeths, RelMeths):
         dexp = self.exp.diff(s)
         return self * (dexp * C.log(self.base) + dbase * self.exp/self.base)
 
-    def _eval_evalf(self):
+    def _eval_evalf(self, prec):
         base, exp = self.as_base_exp()
-
-        base = base.evalf()
-        exp = exp.evalf()
-
+        base = base._evalf(prec)
+        if not exp.is_Integer:
+            exp = exp._evalf(prec)
         if exp < 0 and not base.is_real:
-            base = base.conjugate() / (base * base.conjugate()).evalf()
+            base = base.conjugate() / (base * base.conjugate())._evalf(prec)
             exp = -exp
-
         return (base ** exp).expand()
 
     @cacheit

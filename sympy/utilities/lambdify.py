@@ -30,6 +30,7 @@ MPMATH_TRANSLATIONS = {
     "lowergamma":"lower_gamma",
     "oo":"inf",
     "uppergamma":"upper_gamma",
+    "LambertW":"lambertw",
 }
 
 NUMPY_TRANSLATIONS = {

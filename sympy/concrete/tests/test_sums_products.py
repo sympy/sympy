@@ -53,7 +53,7 @@ def test_euler_maclaurin():
     if not A.is_Rational:
         A, B = B, A
     apery = (A + B.euler_maclaurin(8)).evalf(25)
-    assert abs(apery - Real("1.202056903159594285399738162")) < Real("1e-20")
+    assert abs(apery - Real("1.202056903159594285399738162",25)) < Real("1e-20")
 
 @XFAIL
 def test_simple_products():

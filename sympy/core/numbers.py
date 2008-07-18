@@ -1,6 +1,10 @@
 import math
 import sympy.mpmath as mpmath
+import sympy.mpmath.lib as mlib
+import sympy.mpmath.libmpc as mlibc
 import decimal
+
+rnd = mlib.round_nearest
 
 from basic import Basic, Atom, Singleton, S, C, Memoizer, MemoizerArg
 from sympify import _sympify, SympifyError, _sympifyit
@@ -97,6 +101,9 @@ class Number(Atom, RelMeths, ArithMeths):
 
     __slots__ = []
 
+    # Used to make max(x._prec, y._prec) return x._prec when only x is a float
+    _prec = -1
+
     is_Number = True
 
     def __new__(cls, *obj):
@@ -111,15 +118,20 @@ class Number(Atom, RelMeths, ArithMeths):
             return obj
         raise TypeError("expected str|int|long|float|Decimal|Number object but got %r" % (obj))
 
-    def _eval_evalf(self):
-        r = self._as_mpf()
-        return Real(r)
+    def _as_mpf_val(self, prec):
+        """Evaluate to mpf tuple accurate to at least prec bits"""
+        raise NotImplementedError('%s needs ._as_mpf_val() method' % \
+            (self.__class__.__name__))
+
+    def _eval_evalf(self, prec):
+        return Real._new(self._as_mpf_val(prec), prec)
+
+    def _as_mpf_op(self, prec):
+        prec = max(prec, self._prec)
+        return self._as_mpf_val(prec), prec
 
     def __float__(self):
-        return float(self._as_mpf())
-
-    def _as_mpf(self):
-        raise NotImplementedError('%s needs ._as_mpf() method' % (self.__class__.__name__))
+        return mlib.to_float(self._as_mpf_val(53))
 
     def _eval_derivative(self, s):
         return S.Zero
@@ -130,28 +142,6 @@ class Number(Atom, RelMeths, ArithMeths):
     def _eval_order(self, *symbols):
         # Order(5, x, y) -> Order(1,x,y)
         return C.Order(S.One, *symbols)
-
-    def sqrt(self): return Real(mpmath.sqrt(self._as_mpf()))
-    def exp(self): return Real(mpmath.exp(self._as_mpf()))
-    def log(self): return Real(mpmath.log(self._as_mpf()))
-    def sin(self): return Real(mpmath.sin(self._as_mpf()))
-    def cos(self): return Real(mpmath.cos(self._as_mpf()))
-    def tan(self): return Real(mpmath.tan(self._as_mpf()))
-    def cot(self): return Real(mpmath.cot(self._as_mpf()))
-    def asin(self): return Real(mpmath.asin(self._as_mpf()))
-    def acos(self): return Real(mpmath.acos(self._as_mpf()))
-    def atan(self): return Real(mpmath.atan(self._as_mpf()))
-    def acot(self): return Real(mpmath.acot(self._as_mpf()))
-    def sinh(self): return Real(mpmath.sinh(self._as_mpf()))
-    def cosh(self): return Real(mpmath.cosh(self._as_mpf()))
-    def tanh(self): return Real(mpmath.tanh(self._as_mpf()))
-    def coth(self): return Real(mpmath.coth(self._as_mpf()))
-    def asinh(self): return Real(mpmath.asinh(self._as_mpf()))
-    def acosh(self): return Real(mpmath.acosh(self._as_mpf()))
-    def atanh(self): return Real(mpmath.atanh(self._as_mpf()))
-    def acoth(self): return Real(mpmath.acoth(self._as_mpf()))
-    def floor(self): return Real(mpmath.floor(self._as_mpf()))
-    def ceiling(self): return Real(mpmath.ceil(self._as_mpf()))
 
     def __eq__(self, other):
         raise NotImplementedError('%s needs .__eq__() method' % (self.__class__.__name__))
@@ -190,34 +180,77 @@ class Real(Number):
     is_irrational = False
     is_integer = False
 
-    __slots__ = ['num']
+    __slots__ = ['_mpf_', '_prec']
+
+    # mpz can't be pickled
+    def __getstate__(self):
+        d = Basic.__getstate__(self).copy()
+        del d["_mpf_"]
+        return mlib.to_pickable(self._mpf_), d
+
+    def __setstate__(self, state):
+        _mpf_, d = state
+        _mpf_ = mlib.from_pickable(_mpf_)
+        self._mpf_ = _mpf_
+        Basic.__setstate__(self, d)
 
     is_Real = True
 
-    def __new__(cls, num):
+    def floor(self):
+        return C.Integer(int(mlib.to_int(mlib.ffloor(self._mpf_, self._prec))))
+
+    def ceiling(self):
+        return C.Integer(int(mlib.to_int(mlib.fceil(self._mpf_, self._prec))))
+
+    @property
+    def num(self):
+        return mpmath.mpf(self._mpf_)
+
+    def _as_mpf_val(self, prec):
+        return self._mpf_
+
+    def _as_mpf_op(self, prec):
+        return self._mpf_, max(prec, self._prec)
+
+    def __new__(cls, num, prec=15):
+        prec = mlib.dps_to_prec(prec)
         if isinstance(num, (int, long)):
             return Integer(num)
-        if isinstance(num, decimal.Decimal):
-            num = mpmath.mpf(str(num))
+        if isinstance(num, (str, decimal.Decimal)):
+            _mpf_ = mlib.from_str(str(num), prec)
+        elif isinstance(num, tuple) and len(num) == 4:
+            _mpf_ = num
         else:
-            num = mpmath.mpf(num)
+            _mpf_ = mpmath.mpf(num)._mpf_
         if not num:
             return C.Zero()
         obj = Basic.__new__(cls)
-        obj.num = num
+        obj._mpf_ = _mpf_
+        obj._prec = prec
+        return obj
+
+    @classmethod
+    def _new(cls, _mpf_, _prec):
+        if _mpf_ == mlib.fzero:
+            return S.Zero
+        obj = Basic.__new__(cls)
+        obj._mpf_ = _mpf_
+        obj._prec = _prec
         return obj
 
     def _hashable_content(self):
-        return (self.num,)
+        return (self._mpf_, self._prec)
 
     def tostr(self, level=0):
-        r = str(self.num)
+        r = mlib.to_str(self._mpf_, mlib.prec_to_dps(self._prec))
         if self.precedence<=level:
             return '(%s)' % (r)
         return r
 
     def torepr(self):
-        return '%s(%r)' % (self.__class__.__name__, str(self.num))
+        dps = mlib.prec_to_dps(self._prec)
+        r = mlib.to_str(self._mpf_, dps+3)
+        return '%s(%r, prec=%i)' % (self.__class__.__name__, r, dps)
 
     def _eval_is_positive(self):
         return self.num > 0
@@ -225,14 +258,8 @@ class Real(Number):
     def _eval_is_negative(self):
         return self.num < 0
 
-    def _eval_evalf(self):
-        return self
-
-    def _as_mpf(self):
-        return self.num
-
     def __neg__(self):
-        return Real(-self.num)
+        return Real._new(mlib.fneg(self._mpf_), self._prec)
 
     def __mul__(self, other):
         try:
@@ -240,7 +267,8 @@ class Real(Number):
         except SympifyError:
             return NotImplemented
         if isinstance(other, Number):
-            return Real(self.num * other._as_mpf())
+            rhs, prec = other._as_mpf_op(self._prec)
+            return Real._new(mlib.fmul(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mul__(self, other)
 
     def __add__(self, other):
@@ -251,7 +279,8 @@ class Real(Number):
         if (other is S.NaN) or (self is NaN):
             return S.NaN
         if isinstance(other, Number):
-            return Real(self.num + other._as_mpf())
+            rhs, prec = other._as_mpf_op(self._prec)
+            return Real._new(mlib.fadd(self._mpf_, rhs, prec, rnd), prec)
         return Number.__add__(self, other)
 
     def _eval_power(b, e):
@@ -264,22 +293,22 @@ class Real(Number):
         """
         if isinstance(e, Number):
             if isinstance(e, Integer):
-                return Real(b.num ** e.p)
-            y = b.num ** e._as_mpf()
-            if y.imag:
-                return Real(y.real) + Real(y.imag)* S.ImaginaryUnit
-            else:
-                return Real(y.real)
-        return
+                prec = b._prec
+                return Real._new(mlib.fpowi(b._mpf_, e.p, prec, rnd), prec)
+            e, prec = e._as_mpf_op(b._prec)
+            b = b._mpf_
+            try:
+                y = mlib.fpow(b, e, prec, rnd)
+                return Real._new(y, prec)
+            except mlib.ComplexResult:
+                re, im = mlibc.mpc_pow((b, mlib.fzero), (e, mlib.fzero), prec, rnd)
+                return Real._new(re, prec) + Real._new(im, prec) * S.ImaginaryUnit
 
     def __abs__(self):
-        return Real(abs(self.num))
+        return Real._new(mlib.fabs(self._mpf_), self._prec)
 
     def __int__(self):
-        return int(self.num)
-
-    def __float__(self):
-        return float(self.num)
+        return int(mlib.to_int(self._mpf_))
 
     def __eq__(self, other):
         try:
@@ -291,8 +320,7 @@ class Real(Number):
             return other.__eq__(self)
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
-            return bool(self._as_mpf()==other._as_mpf())
-
+            return bool(mlib.feq(self._mpf_, other._as_mpf_val(self._prec)))
         return False    # Real != non-Number
 
     def __ne__(self, other):
@@ -305,8 +333,7 @@ class Real(Number):
             return other.__ne__(self)
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
-            return bool(self._as_mpf()!=other._as_mpf())
-
+            return bool(not mlib.feq(self._mpf_, other._as_mpf_val(self._prec)))
         return True     # Real != non-Number
 
     def __lt__(self, other):
@@ -318,7 +345,7 @@ class Real(Number):
             return other.__ge__(self)
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
-            return bool(self._as_mpf() < other._as_mpf())
+            return bool(mlib.flt(self._mpf_, other._as_mpf_val(self._prec)))
         return RelMeths.__lt__(self, other)
 
     def __le__(self, other):
@@ -330,7 +357,7 @@ class Real(Number):
             return other.__gt__(self)
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
-            return bool(self._as_mpf()<=other._as_mpf())
+            return bool(mlib.fle(self._mpf_, other._as_mpf_val(self._prec)))
         return RelMeths.__le__(self, other)
 
     def epsilon_eq(self, other, epsilon="10e-16"):
@@ -466,7 +493,7 @@ class Rational(Number):
         if (other is S.NaN) or (self is S.NaN):
             return S.NaN
         if isinstance(other, Real):
-            return Real(self._as_mpf() * other.num)
+            return other * self
         if isinstance(other, Rational):
             return Rational(self.p * other.p, self.q * other.q)
         return Number.__mul__(self, other)
@@ -477,7 +504,7 @@ class Rational(Number):
         if (other is S.NaN) or (self is S.NaN):
             return S.NaN
         if isinstance(other, Real):
-            return Real(self._as_mpf() + other.num)
+            return other + self
         if isinstance(other, Rational):
             if self.is_unbounded:
                 if other.is_bounded:
@@ -494,7 +521,7 @@ class Rational(Number):
         if isinstance(e, Number):
             if (e is S.NaN): return S.NaN
             if isinstance(e, Real):
-                return Real(b._as_mpf() ** e.num)
+                return b._eval_evalf(e._prec) ** e
             if e.is_negative:
                 # (3/4)**-2 -> (4/3)**2
                 ne = -e
@@ -527,8 +554,8 @@ class Rational(Number):
 
         return
 
-    def _as_mpf(self):
-        return mpmath.mpf(self.p) / self.q
+    def _as_mpf_val(self, prec):
+        return mlib.from_rational(self.p, self.q, prec, rnd)
 
     def __abs__(self):
         return Rational(abs(self.p), self.q)
@@ -549,7 +576,7 @@ class Rational(Number):
         if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
-                return bool(self._as_mpf()==other._as_mpf())
+                return bool(mlib.feq(self._as_mpf_val(other._prec), other._mpf_))
             return bool(self.p==other.p and self.q==other.q)
 
         return False    # Rational != non-Number
@@ -565,7 +592,7 @@ class Rational(Number):
         if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
-                return bool(self._as_mpf()!=other._as_mpf())
+                return bool(not mlib.feq(self._as_mpf_val(other._prec), other._mpf_))
             return bool(self.p!=other.p or self.q!=other.q)
 
         return True     # Rational != non-Number
@@ -580,9 +607,10 @@ class Rational(Number):
         if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
-                return bool(self._as_mpf() < other._as_mpf())
+                return bool(mlib.flt(self._as_mpf_val(other._prec), other._mpf_))
             return bool(self.p * other.q < self.q * other.p)
         return RelMeths.__lt__(self, other)
+
     def __le__(self, other):
         try:
             other = _sympify(other)
@@ -593,7 +621,7 @@ class Rational(Number):
         if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
-                return bool(self._as_mpf()<=other._as_mpf())
+                return bool(mlib.fle(self._as_mpf_val(other._prec), other._mpf_))
             return bool(self.p * other.q <= self.q * other.p)
         return RelMeths.__le__(self, other)
 
@@ -635,6 +663,9 @@ class Integer(Rational):
     is_Integer = True
 
     __slots__ = ['p']
+
+    def _as_mpf_val(self, prec):
+        return mlib.from_int(self.p)
 
     # TODO caching with decorator, but not to degrade performance
     def __new__(cls, i):
@@ -753,14 +784,11 @@ class Integer(Rational):
     def torepr(self):
         return '%s(%r)' % (self.__class__.__name__, self.p)
 
-    def _eval_evalf(self):
-        return self
-
     def _eval_power(b, e):
         if isinstance(e, Number):
             if e is S.NaN: return S.NaN
             if isinstance(e, Real):
-                return Real(b._as_mpf() ** e.num)
+                return b._eval_evalf(e._prec) ** e
             if e.is_negative:
                 # (3/4)**-2 -> (4/3)**2
                 ne = -e
@@ -914,6 +942,9 @@ class One(Singleton, Integer):
 
     __slots__ = []
 
+    def _eval_evalf(self, prec):
+        return self
+
     @staticmethod
     def __abs__():
         return S.One
@@ -935,6 +966,9 @@ class NegativeOne(Singleton, Integer):
 
     __slots__ = []
 
+    def _eval_evalf(self, prec):
+        return self
+
     @staticmethod
     def __abs__():
         return S.One
@@ -948,8 +982,7 @@ class NegativeOne(Singleton, Integer):
         if e.is_even: return S.One
         if isinstance(e, Number):
             if isinstance(e, Real):
-                y = mpmath.mpf(-1) ** e._as_mpf()
-                return Real(y.real) + Real(y.imag) * S.ImaginaryUnit
+                return Real(-1.0) ** e
             if e is S.NaN:
                 return S.NaN
             if e is S.Infinity  or  e is S.NegativeInfinity:
@@ -1020,8 +1053,8 @@ class Infinity(Singleton, Rational):
             return b ** d
         return
 
-    def _as_mpf(self):
-        return mpmath.inf
+    def _as_mpf_val(self, prec):
+        return mlib.finf
 
 class NegativeInfinity(Singleton, Rational):
 
@@ -1071,8 +1104,8 @@ class NegativeInfinity(Singleton, Rational):
             return S.NegativeOne**e * S.Infinity ** e
         return
 
-    def _as_mpf(self):
-        return -mpmath.inf
+    def _as_mpf_val(self, prec):
+        return mlib.fninf
 
 class NaN(Singleton, Rational):
 
@@ -1090,8 +1123,8 @@ class NaN(Singleton, Rational):
     def tostr(self, level=0):
         return 'nan'
 
-    def _as_mpf(self):
-        return mpmath.nan
+    def _as_mpf_val(self, prec):
+        return mlib.fnan
 
     def _eval_power(b, e):
         if e is S.Zero:
@@ -1148,8 +1181,12 @@ class NumberSymbol(Singleton, Atom, RelMeths, ArithMeths):
         If not implemented, then return None.
         """
 
+    def _eval_evalf(self, prec):
+        return Real._new(self._as_mpf_val(prec), prec)
+
     def _eval_derivative(self, s):
         return S.Zero
+
     def __eq__(self, other):
         try:
             other = _sympify(other)
@@ -1219,8 +1256,8 @@ class Exp1(NumberSymbol):
     def tostr(self, level=0):
         return 'E'
 
-    def _eval_evalf(self):
-        return Real(mpmath.e)
+    def _as_mpf_val(self, prec):
+        return mlib.fe(prec)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls,Integer):
@@ -1244,8 +1281,8 @@ class Pi(NumberSymbol):
     def __abs__():
         return S.Pi
 
-    def _eval_evalf(self):
-        return Real(mpmath.pi)
+    def _as_mpf_val(self, prec):
+        return mlib.fpi(prec)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls, Integer):
@@ -1265,8 +1302,8 @@ class GoldenRatio(NumberSymbol):
 
     __slots__ = []
 
-    def _eval_evalf(self):
-        return Real(mpmath.phi)
+    def _as_mpf_val(self, prec):
+        return mlib.from_man_exp(mpmath.specfun.phi_fixed(prec+10), -prec-10)
 
     def _eval_expand_func(self, *args):
         return S.Half + S.Half*S.Sqrt(5)
@@ -1289,8 +1326,8 @@ class EulerGamma(NumberSymbol):
 
     __slots__ = []
 
-    def _eval_evalf(self):
-        return Real(mpmath.euler)
+    def _as_mpf_val(self, prec):
+        return mlib.from_man_exp(mpmath.specfun.euler_fixed(prec+10), -prec-10)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls, Integer):
@@ -1310,8 +1347,8 @@ class Catalan(NumberSymbol):
 
     __slots__ = []
 
-    def _eval_evalf(self):
-        return Real(mpmath.catalan)
+    def _as_mpf_val(self, prec):
+        return mlib.from_man_exp(mpmath.specfun.catalan_fixed(prec+10), -prec-10)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls, Integer):
@@ -1334,6 +1371,9 @@ class ImaginaryUnit(Singleton, Atom, RelMeths, ArithMeths):
     @staticmethod
     def __abs__():
         return S.One
+
+    def _eval_evalf(self, prec):
+        return self
 
     def tostr(self, level=0):
         return 'I'
