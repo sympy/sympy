@@ -108,6 +108,11 @@ class BasicMeta(BasicType):
         for k in dir(cls):
             if not k.startswith('is_'):
                 continue
+
+            # this is not an assumption (e.g. is_Integer)
+            if k[3:] not in AssumeMeths._assume_defined:
+                continue
+
             v = getattr(cls, k)
             k = k[3:]
             if isinstance(v,(bool,int,long)):
