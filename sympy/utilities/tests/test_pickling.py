@@ -298,19 +298,6 @@ def test_series():
     for c in (Limit2, Limit2(e, x, 1), Limit, Limit(e, x, 1), Order, Order(e)):
         check(c)
 
-#================== specfun =====================
-from sympy.specfun.factorials import Binomial2, Falling_factorial,\
-        Rising_factorial, UnevaluatedFactorial, _Factorial
-
-def test_specfun():
-    x = Symbol("x")
-    y = Symbol("y")
-    for c in (Binomial2, Binomial2(x,y), Falling_factorial,
-              Falling_factorial(x,3), Rising_factorial(x,4),
-              UnevaluatedFactorial, UnevaluatedFactorial(x), _Factorial,
-              _Factorial(x,4)):
-        check(c)
-
 #================== statistics ==================
 from sympy.statistics.distributions import ContinuousProbability, Normal, Sample, Uniform
 
