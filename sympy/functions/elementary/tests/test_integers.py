@@ -1,5 +1,5 @@
 from sympy import Symbol, floor, nan, oo, E, symbols, ceiling, pi, Rational, \
-        Real, I, sin
+        Real, I, sin, exp
 
 def test_floor():
 
@@ -88,6 +88,9 @@ def test_floor():
     assert floor(sin(1)) == 0
     assert floor(sin(-1)) == -1
 
+    assert floor(exp(2)) == 7
+
+
 def test_ceiling():
 
     x = Symbol('x')
@@ -174,3 +177,5 @@ def test_ceiling():
 
     assert ceiling(sin(1)) == 1
     assert ceiling(sin(-1)) == 0
+
+    assert ceiling(exp(2)) == 8

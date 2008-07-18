@@ -113,7 +113,7 @@ class exp(Function):
         arg = self.args[0]
         if x is not None:
             c,f = arg.as_coeff_factors(x)
-            return self.func(c), tuple( self.func(a) for a in f.args )
+            return self.func(c), tuple( self.func(a) for a in f )
         if arg.is_Add:
             return S.One, tuple( self.func(a) for a in arg.args )
         return S.One,(self,)
