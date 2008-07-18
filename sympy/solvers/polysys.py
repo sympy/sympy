@@ -2,6 +2,8 @@
 from sympy.polys import Poly, LexPoly, roots, \
     poly_groebner, SymbolsError, PolynomialError
 
+from sympy.utilities import any, all
+
 def solve_poly_system(system, *symbols):
     """Solves a system of polynomial equations.
 
