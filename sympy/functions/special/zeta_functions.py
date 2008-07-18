@@ -38,6 +38,8 @@ class zeta(Function):
                     elif z.is_even:
                         B, F = C.bernoulli(z), C.Factorial(z)
                         zeta = 2**(z-1) * abs(B) * pi**z / F
+                    else:
+                        return
 
                     if a.is_negative:
                         return zeta + C.harmonic(abs(a), z)
