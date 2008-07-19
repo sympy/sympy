@@ -1,4 +1,4 @@
-from sympy import Symbol, Rational, Derivative, I, log, sqrt, exp, sin
+from sympy import Symbol, Wild, Rational, Derivative, I, log, sqrt, exp, sin
 
 x = Symbol('x')
 y = Symbol('y')
@@ -74,3 +74,14 @@ def test_x_div_y():
 def test_ordering():
     x = Symbol("x")
     assert str(sin(x).series(x, 0, 15)) == "x - 1/6*x**3 + (1/120)*x**5 - 1/5040*x**7 + (1/362880)*x**9 - 1/39916800*x**11 + (1/6227020800)*x**13 + O(x**15)"
+
+def test_wild_str():
+    # Check expressions containing Wild not causing infinite recursion
+    a1 = Wild('a')
+    a2 = Symbol('a')
+    assert str(a1 + 1) == str(a2 + 1)
+    assert str(exp(2**a1) + 5) == str(exp(2**a2) + 5)
+    assert str(3*a1 + 1) == str(3*a2 + 1)
+    assert str(1/a1 + 1) == str(1/a2 + 1)
+    assert str(a1**2 + 1) == str(a2**2 + 1)
+    assert str(1/(1-a1)) == str(1/(1-a2))

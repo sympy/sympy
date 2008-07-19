@@ -181,10 +181,30 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
         # Now we need to sort the factors in Add, which are in "rest". Any
         # ordering is fine, but some ordering looks better and some looks bad.
-
         # This particular solution is slow, but it ensures a sane ordering. It
         # can of course be improved:
+
         rest = list(rest)
+
+        # HACK: the pattern matching in compare_terms ends up with
+        # infinite recursion if there are Wilds present. The following code
+        # can be removed if a better fix is found in .match()
+        def cleanup_wild(x):
+            if isinstance(x, Wild):
+                return Symbol(x.name), True
+            L = []
+            modified = False
+            for g in x.args:
+                g, modified_ = cleanup_wild(g)
+                modified = modified or modified_
+                L.append(g)
+            if modified:
+                x = x.func(*L)
+            return x, modified
+
+        rest = [cleanup_wild(t)[0] for t in rest]
+        # END HACK
+
         rest.sort(self.compare_terms)
 
         l = []
