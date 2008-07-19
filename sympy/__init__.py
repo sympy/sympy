@@ -12,12 +12,6 @@ See the webpage for more information and documentation:
 
 __version__ = "0.6.0-hg"
 
-#put path to pyglet into the search path, so that it can be imported
-import os.path
-import sys
-sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), "thirdparty", \
-        "pyglet"))
-
 import symbol as stdlib_symbol
 from sympy.core import *
 

@@ -2,6 +2,10 @@ from sympy import Integer
 
 from threading import RLock
 
+# it is sufficient to import "pyglet" here once
+from sympy.thirdparty import import_thirdparty
+pyglet = import_thirdparty("pyglet")
+
 from pyglet.gl import *
 
 from plot_object import PlotObject
