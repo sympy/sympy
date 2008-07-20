@@ -99,7 +99,7 @@ def test_simplify():
     A = Matrix([[2*k-m*w**2, -k],[-k,k-m*w**2]]).inv()
 
     assert simplify((A*Matrix([0,f]))[1]) == \
-        (-2*f*k + f*m*w**2)/(-k**2 + 3*k*m*w**2 - m**2*w**4)
+        (2*f*k - f*m*w**2)/(k**2 - 3*k*m*w**2 + m**2*w**4)
 
     a,b,c,d,e,f,g,h,i = symbols('abcdefghi')
 
@@ -110,7 +110,7 @@ def test_simplify():
     solutions = solve([f_1,f_2,f_3], x,y,z, simplified=False)
 
     assert simplify(solutions[y]) == \
-        (a*f+c*g+d*i-a*i-c*d-f*g)/(a*f*h+b*d*i+c*e*g-a*e*i-b*f*g-c*d*h)
+        (a*i+c*d+f*g-a*f-c*g-d*i)/(a*e*i+b*f*g+c*d*h-a*f*h-b*d*i-c*e*g)
 
 def test_simplify_fail1():
     x = Symbol('x')

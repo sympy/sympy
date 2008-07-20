@@ -28,12 +28,17 @@ def igcd(a, b):
     try:
         return _gcdcache[(a,b)]
     except KeyError:
-        key = (a,b)
-        while a:
-            a, b = b%a, a
+        if a and b:
+            if b < 0:
+                b = -b
 
-        _gcdcache[key] = b
-        return b
+            while b:
+                a, b = b, a % b
+        else:
+            a = abs(a or b)
+
+        _gcdcache[(a,b)] = a
+        return a
 
 def ilcm(a, b):
     """Computes integer least common multiple of two numbers. """

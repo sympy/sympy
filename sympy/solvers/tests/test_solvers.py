@@ -20,7 +20,7 @@ def test_solve():
 
     assert solve([a11*x + a12*y - b1, a21*x + a22*y - b2], x, y) == \
         { y : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
-          x : (a12*b2 - a22*b1)/(a12*a21 - a11*a22) }
+          x : (a22*b1 - a12*b2)/(a11*a22 - a12*a21) }
 
     solution = {y: S.Zero, x: S.Zero}
 
