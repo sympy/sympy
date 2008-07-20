@@ -272,13 +272,20 @@ def test_pretty_seq():
 
     e = {1/x: 1/y, x: sin(x)**2}
     p = pretty(e)
-    s = \
+    s1 = \
 """\
  1  1        2    \n\
 {-: -, x: sin (x)}\n\
  x  y             \
 """
-    assert p == s
+    s2 = \
+"""\
+       2     1  1 \n\
+{x: sin (x), -: -}\n\
+             x  y \
+"""
+    # NOTE dict does not guaranty ordering
+    assert (p == s1) or (p == s2)
 
 
 

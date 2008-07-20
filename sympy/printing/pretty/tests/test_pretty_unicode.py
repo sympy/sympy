@@ -317,13 +317,21 @@ u"""\
 
     e = {1/x: 1/y, x: sin(x)**2}
     u = upretty(e)
-    s = \
+    s1 = \
 u"""\
 ⎧1  1        2   ⎫
 ⎨─: ─, x: sin (x)⎬
 ⎩x  y            ⎭\
 """
-    assert u == s
+
+    s2 = \
+u"""\
+⎧      2     1  1⎫
+⎨x: sin (x), ─: ─⎬
+⎩            x  y⎭\
+"""
+    # NOTE dict does not guaranty ordering
+    assert (u == s1) or (u == s2)
 
 
 def test_upretty_seq_even():
