@@ -11,7 +11,7 @@ class ModularInteger(object):
         self.value = value % self.modulus
 
     def __repr__(self):
-        return "%s(%s)" % (self.__class__, self.value)
+        return "%s(%s)" % (self.__class__.__name__, self.value)
 
     def __str__(self):
         return "%s mod %s" % (int(self), self.modulus)

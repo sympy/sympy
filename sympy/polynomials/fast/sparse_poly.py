@@ -15,7 +15,7 @@ class SparsePolynomial(object):
             self.degree = -1
 
     def __repr__(self):
-        return "%s(%s)" % (self.__class__, repr(self.coeffs))
+        return "%s(%s)" % (self.__class__.__name__, str(self.coeffs))
 
     def __getitem__(self, item):
         """Returns the nth coefficient."""
