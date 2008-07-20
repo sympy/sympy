@@ -191,7 +191,7 @@ def test_poly_repr():
 def test_poly_cancel():
     assert Poly.cancel(x) == x
     assert Poly.cancel(x+1) == x+1
-    assert Poly.cancel((x+1)/(x-1)) == (x+1)/(x-1)
+    assert Poly.cancel((x+1)/(1-x)) == (x+1)/(1-x)
 
     assert Poly.cancel((x**2-1)/(x-1)) == x+1
     assert Poly.cancel((x**2-y**2)/(x-y)) == x+y
@@ -553,13 +553,16 @@ def test_poly_lcm():
         Poly(-3*x*y**2/2+x*y**3+3*x*y**4-2*x*y**5-3*x*y**6/2+x*y**7, x, y)
 
 def test_poly_gcd():
-    assert poly_gcd(0, 0, x) == Poly(1, x)
+    assert poly_gcd(0, 0, x) == Poly(0, x)
     assert poly_gcd(0, 1, x) == Poly(1, x)
     assert poly_gcd(1, 0, x) == Poly(1, x)
-    assert poly_gcd(0, 1, x) == Poly(1, x)
+    assert poly_gcd(1, 1, x) == Poly(1, x)
 
-    assert poly_gcd(x-1, 0, x) == Poly(1, x)
-    assert poly_gcd(0, 1-x, x) == Poly(1, x)
+    assert poly_gcd(x-1, 0, x) == Poly(x-1, x)
+    assert poly_gcd(0, x-1, x) == Poly(x-1, x)
+
+    assert poly_gcd(-x-1, 0, x) == Poly(x+1, x)
+    assert poly_gcd(0, -x-1, x) == Poly(x+1, x)
 
     assert poly_gcd(2, 6, x) == Poly(2, x)
     assert poly_gcd(2, 6, x, y) == Poly(2, x, y)

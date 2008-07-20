@@ -430,8 +430,22 @@ def poly_gcd(f, g, *symbols):
 
     symbols, flags = f.symbols, f.flags
 
-    if (f.is_zero or g.is_zero) or (f.is_one or g.is_one):
-        return Poly(S.One, *symbols, **flags)
+    if f.is_zero and g.is_zero:
+        return f
+
+    if f.is_constant:
+        if f.is_zero:
+            cont, g = g.as_primitive()
+            return g.mul_term(cont / g.LC)
+        if f.is_one:
+            return f
+
+    if g.is_constant:
+        if g.is_zero:
+            cont, f = f.as_primitive()
+            return f.mul_term(cont / f.LC)
+        if g.is_one:
+            return g
 
     if f.is_monomial and g.is_monomial:
         monom = monomial_gcd(f.LM, g.LM)
