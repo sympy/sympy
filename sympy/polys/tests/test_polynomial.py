@@ -1079,7 +1079,7 @@ def test_roots():
     assert roots((x-1)*(x+1), x, predicate=lambda r: r.is_positive) == {S.One: 1}
 
     assert roots(x**4-1, x, domain='Z', multiple=True) == [S.One, -S.One]
-    assert roots(x**4-1, x, domain='I', multiple=True) == [I, -I]
+    assert roots(x**4-1, x, domain='I', multiple=True) in ([I, -I], [-I, I])
 
     assert roots(x**3, x, multiple=True) == [S.Zero, S.Zero, S.Zero]
     assert roots(1234, x, multiple=True) == []
@@ -1090,15 +1090,15 @@ def test_factors():
 
     assert poly_factors(x**2-1, x) == [Poly(x-1, x), Poly(x+1, x)]
 
-    assert poly_factors((x**4 - 1)**2, x) == \
-        [Poly(((S.One, -I),     ((1,), (0,))), x),
+    assert set( poly_factors((x**4 - 1)**2, x) ) == \
+    set([Poly(((S.One, -I),     ((1,), (0,))), x),
          Poly(((S.One, -I),     ((1,), (0,))), x),
          Poly(((S.One, -S.One), ((1,), (0,))), x),
          Poly(((S.One, -S.One), ((1,), (0,))), x),
          Poly(((S.One, S.One),  ((1,), (0,))), x),
          Poly(((S.One, S.One),  ((1,), (0,))), x),
          Poly(((S.One, I),      ((1,), (0,))), x),
-         Poly(((S.One, I),      ((1,), (0,))), x)]
+         Poly(((S.One, I),      ((1,), (0,))), x)])
 
     assert poly_factors(x**4-1, x, domain='Z') == \
         [Poly(x-1, x), Poly(x+1, x), Poly(x**2+1, x)]
