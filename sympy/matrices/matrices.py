@@ -35,6 +35,10 @@ class _MatrixAsBasic(Basic):
 
 class Matrix(object):
 
+    # Added just for numpy compatibility
+    # TODO: investigate about __array_priority__
+    __array_priority__ = 10.0
+
     def __init__(self, *args):
         """
         Matrix can be constructed with values or a rule.
@@ -312,7 +316,10 @@ class Matrix(object):
         raise NotImplementedError('Can only rise to the power of an integer for now')
 
     def __add__(self,a):
-        return self.add(a)
+        return matrix_add(self,a)
+
+    def __radd__(self,a):
+        return matrix_add(a,self)
 
     def __div__(self,a):
         return self * (S.One/a)
@@ -325,15 +332,8 @@ class Matrix(object):
         return matrix_multiply(self,b)
 
     def add(self,b):
-        """Returns self+b """
-        if self.shape != b.shape:
-            raise ShapeError()
-        slst = self.tolist()
-        blst = b.tolist()
-        ret = [0]*self.lines
-        for i in xrange(self.lines):
-            ret[i] = map(lambda j,k: j+k,slst[i],blst[i])
-        return Matrix(ret)
+        """Return self+b """
+        return matrix_add(self,b)
 
     def __neg__(self):
         return -1*self
@@ -1288,6 +1288,17 @@ def matrix_multiply(A,B):
                                         alst[i],
                                         blst[j])).expand())
                                         # .expand() is a test
+
+def matrix_add(A,B):
+    """Return A+B"""
+    if A.shape != B.shape:
+        raise ShapeError()
+    alst = A.tolist()
+    blst = B.tolist()
+    ret = [0]*A.shape[0]
+    for i in xrange(A.shape[0]):
+        ret[i] = map(lambda j,k: j+k, alst[i], blst[i])
+    return Matrix(ret)
 
 def zero(n):
     """Create square zero matrix n x n"""
