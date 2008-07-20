@@ -7,3 +7,5 @@ from python import python, print_python
 from gtk import *
 
 from preview import preview, view, pngview, pdfview, dviview
+
+from tree import print_tree
