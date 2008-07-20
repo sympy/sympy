@@ -100,6 +100,10 @@ def test_poly_basics():
     py.test.raises(SymbolsError, "Poly(x, x, 2)")
     py.test.raises(SymbolsError, "Poly(x, x, 2*x)")
 
+    A, B = symbols('AB', commutative=False)
+
+    py.test.raises(SymbolsError, "Poly(x + A**2 + B**2, x, A, B)")
+
 def test_poly_internals():
     p = Poly(x**2*y*z + x*y*z**3 + x*y + y*z, x, y, z)
 

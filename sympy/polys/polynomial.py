@@ -301,12 +301,15 @@ class Poly(Basic, RelMeths, ArithMeths):
         stamp = frozenset(symbols)
 
         if len(stamp) != N:
-            raise SymbolsError("Got duplicate symbols: %s" % (symbols,))
+            raise SymbolsError("Duplicate symbols: %s" % (symbols,))
 
         symbols = tuple(map(sympify, symbols))
 
         if any(not s.is_Symbol for s in symbols):
-            raise SymbolsError("Got invalid symbols: %s" % (symbols,))
+            raise SymbolsError("Invalid symbols: %s" % (symbols,))
+
+        if any(not s.is_commutative for s in symbols):
+            raise SymbolsError("Non-commutative symbols: %s" % (symbols,))
 
         # { M1: c1, M2: c2, ... }
         if type(poly) is dict:
