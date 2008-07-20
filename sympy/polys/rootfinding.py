@@ -383,7 +383,7 @@ def poly_sturm(f, *symbols):
     else:
         f = f.as_squarefree()
 
-    sturm = [f, f.diff(f.symbols[0])]
+    sturm = [f, f.diff()]
 
     while not sturm[-1].is_zero:
         sturm.append(-poly_div(sturm[-2], sturm[-1])[1])

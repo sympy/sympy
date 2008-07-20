@@ -719,9 +719,9 @@ def poly_sqf(f, *symbols):
 
     coeff, f = f.as_primitive()
 
-    sqf, x = [], f.symbols[0]
+    sqf = []
 
-    h = f.diff(x)
+    h = f.diff()
 
     g = poly_gcd(f, h)
 
@@ -729,7 +729,7 @@ def poly_sqf(f, *symbols):
     q = poly_div(h, g)[0]
 
     while True:
-        h = q - p.diff(x)
+        h = q - p.diff()
 
         if h.is_zero:
             break

@@ -869,6 +869,25 @@ def test_unify():
     assert p.unify_with((q, r)) == p.unify_with((x**2+2*x*y+1, r)) == \
         (Poly(x**2+x*y, x, y, z), (Poly(x**2+2*x*y+1, x,y,z), Poly(x*z+y*z+1, x,y,z)))
 
+def test_diff():
+    f = Poly(a*x**2 + b*x + 2, x)
+
+    assert f.diff(x) == Poly(2*a*x + b, x)
+    assert f.diff(y) == Poly(0, x)
+    assert f.diff(a) == Poly(x**2, x)
+    assert f.diff(b) == Poly(x, x)
+
+    assert f.diff() == Poly(2*a*x + b, x)
+
+    g = Poly(a*x**2 + b*x*y + 2, x, y)
+
+    assert g.diff(x) == Poly(2*a*x + b*y, x, y)
+    assert g.diff(y) == Poly(b*x, x, y)
+    assert g.diff(a) == Poly(x**2, x, y)
+    assert g.diff(b) == Poly(x*y, x, y)
+
+    assert g.diff() == g
+
 def test_eq_ne():
     p = Poly(x**2+x*y, x, y)
     q = Poly(x**2+x*y+1, x, y)

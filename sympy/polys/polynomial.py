@@ -1354,7 +1354,7 @@ class Poly(Basic, RelMeths, ArithMeths):
         if f.is_univariate:
             F = f.as_primitive()[1]
 
-            h = f.diff(f.symbols[0])
+            h = f.diff()
 
             g = A.poly_gcd(F, h)
             r = A.poly_div(f, g)
@@ -1552,6 +1552,12 @@ class Poly(Basic, RelMeths, ArithMeths):
                 new_symbols.append((sym, int(s)))
             else:
                 raise TypeError
+
+        if not new_symbols:
+            if self.is_univariate:
+                new_symbols = [(self.symbols[0], 1)]
+            else:
+                return self
 
         indices, symbols = {}, self.stamp
 
