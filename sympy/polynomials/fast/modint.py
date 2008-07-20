@@ -1,5 +1,7 @@
 """Class for modular integer arithmetic."""
 
+from sympy.core.numbers import igcdex
+
 class ModularInteger(object):
     """Modular integer arithmetic, based on Python integers."""
 
@@ -37,7 +39,7 @@ class ModularInteger(object):
         return self.__class__(self.value * other.value)
 
     def __div__(self, other):
-        g, x, y = xgcd(other.value, self.modulus)
+        x, y, g = igcdex(other.value, self.modulus)
         assert g == 1, "Zero division!"
         return self.__class__(self.value * x)
 
@@ -45,7 +47,7 @@ class ModularInteger(object):
         """Repeated squaring."""
         exponent = int(exponent)
         if exponent < 0:
-            g, x, y = xgcd(self.value, self.exponent)
+            x, y, g = igcdex(self.value, self.exponent)
             assert g == 1, "Zero division!"
             value = x
             exponent *= -1
@@ -74,47 +76,6 @@ def ModularIntegerFactory(m):
     newClass.__name__ = "IntMod%s" % m
     return newClass
 
-def gcd(a, b):
-    if a == 0: return abs(b)
-    if b == 0: return abs(a)
-    if b < 0: b *= -1
-    while b:
-        a, b = b, a % b
-    return a
-
-def xgcd(a, b):
-    """
-    Returns g, x, y such that g = x*a + y*b = gcd(a,b).
-    Input:
-        a -- an integer
-        b -- an integer
-    Output:
-        g -- an integer, the gcd of a and b
-        x -- an integer
-        y -- an integer
-    Examples:
-    >>> xgcd(2,3)
-    (1, -1, 1)
-    >>> xgcd(10, 12)
-    (2, -1, 1)
-    >>> g, x, y = xgcd(100, 2004)
-    >>> print g, x, y
-    4 -20 1
-    >>> print x*100 + y*2004
-    4
-    """
-    if a == 0 and b == 0: return (0, 0, 1)
-    if a == 0: return (abs(b), 0, b/abs(b))
-    if b == 0: return (abs(a), a/abs(a), 0)
-    x_sign = 1; y_sign = 1
-    if a < 0: a = -a; x_sign = -1
-    if b < 0: b = -b; y_sign = -1
-    x = 1; y = 0; r = 0; s = 1
-    while b != 0:
-        (c, q) = (a%b, a/b)
-        (a, b, r, s, x, y) = (b, c, x-q*r, y-q*s, r, s)
-    return (a, x*x_sign, y*y_sign)
-
 def crt(m, v, symmetric=False):
     """Chinese remainder theorem.
 
@@ -128,7 +89,7 @@ def crt(m, v, symmetric=False):
     result = 0
     for m_i, v_i in zip(m, v):
         e = mm/m_i
-        g, s, t = xgcd(e, m_i)
+        s, t, g = igcdex(e, m_i)
         c = (v_i*s) % m_i
         result += c*e
     result %= mm
@@ -149,7 +110,7 @@ def crt1(m):
         mm *= m_i
     for m_i in m:
         e.append(mm/m_i)
-        s.append(xgcd(e[-1], m_i)[1])
+        s.append(igcdex(e[-1], m_i)[0])
     return mm, e, s
 
 def crt2(m, v, mm, e, s, symmetric=False):
@@ -166,4 +127,3 @@ def crt2(m, v, mm, e, s, symmetric=False):
             return result - mm
     else:
         return result
-

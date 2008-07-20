@@ -3,7 +3,7 @@ from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, Integer, \
 from sympy.core.power import integer_nthroot
 import py
 
-from sympy.core.numbers import igcd, ilcm
+from sympy.core.numbers import igcd, ilcm, igcdex
 
 def test_igcd():
     assert igcd(0, 0) == 0
@@ -34,6 +34,11 @@ def test_ilcm():
     assert ilcm(8, 2) == 8
     assert ilcm(8, 6) == 24
     assert ilcm(8, 7) == 56
+
+def test_igcdex():
+    assert igcdex(2, 3) == (-1, 1, 1)
+    assert igcdex(10, 12) == (-1, 1, 2)
+    assert igcdex(100, 2004) == (-20, 1, 4)
 
 def test_Rational():
     n1 = Rational(1,4)

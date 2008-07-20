@@ -5,6 +5,9 @@ import math
 from sympy import ntheory
 from sympy.polynomials.fast import modint, sparse_poly, gfpoly
 
+from sympy.core.numbers import igcd, igcdex
+from sympy.polys.polynomial import Poly
+
 class IntPoly(sparse_poly.SparsePolynomial):
     def primitive(self):
         content = reduce(modint.gcd, self.coeffs.itervalues(), 0)
@@ -45,13 +48,13 @@ def gcd_small_primes(f, g):
     if not g:
         return f
     if g.degree == 0:
-        c = reduce(modint.gcd, f.coeffs.itervalues(), g[0])
+        c = reduce(igcd, f.coeffs.itervalues(), g[0])
         return IntPoly({0: c})
 
     n = f.degree
     A = max([abs(c) for c in f.coeffs.itervalues()]
             + [abs(c) for c in g.coeffs.itervalues()])
-    b = modint.gcd(f[f.degree], g[g.degree])
+    b = igcd(f[f.degree], g[g.degree])
     B = int(math.ceil(2**n*A*b*math.sqrt(n+1)))
     k = int(math.ceil(2*math.log((n+1)**n*b*A**(2*n), 2)))
     l = int(math.ceil(math.log(2*B + 1, 2)))
@@ -138,6 +141,7 @@ def gcd_small_primes(f, g):
     content, result =  IntPoly(w_dict).primitive()
     return result
 
+### REMOVE --> IMPLEMENT MV HEUGCD (Fateman)
 def gcd_heuristic(f, g):
     """Heuristic gcd for primitive univariate polynomials."""
     def reconstruct_poly(u, c):
@@ -161,7 +165,7 @@ def gcd_heuristic(f, g):
     while True:
         ff = f.evaluate(u)
         gg = g.evaluate(u)
-        hh = modint.gcd(ff, gg)
+        hh = igcd(ff, gg)
         h = reconstruct_poly(u, hh)
         q, r = div(f, h)
         if not r:
@@ -223,7 +227,7 @@ def multi_hensel_lift(p, f, f_list, l):
     lc = f[f.degree]
 
     if r == 1:
-        lc_g, lc_s, lc_t = modint.xgcd(lc, p**l)
+        lc_s, lc_t, lc_g = igcdex(lc, p**l)
         return [f.scale(lc_s).mod_int(p**l, symmetric=True)]
     k = int(r/2)
     d = int(math.ceil(math.log(l, 2)))
