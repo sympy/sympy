@@ -302,7 +302,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
             return Add(*l[1:]).is_even
 
     def _eval_is_irrational(self):
-        for t in self:
+        for t in self.args:
             a = t.is_irrational
             if a: return True
             if a is None: return

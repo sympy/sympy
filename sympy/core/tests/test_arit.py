@@ -917,6 +917,15 @@ def test_Add_is_positive_2():
     assert e.is_negative    == False
 
 
+def test_Add_is_irrational():
+    i = Symbol('i', irrational=True)
+
+    assert i.is_irrational  == True
+    assert i.is_rational    == False
+
+    assert (i+1).is_irrational  == True
+    assert (i+1).is_rational    == False
+
 def test_issue432():
     class MightyNumeric(tuple):
         def __rdiv__(self, other):
