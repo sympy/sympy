@@ -26,11 +26,6 @@ def test_ModularInteger():
     assert IntMod5(3)**7 == IntMod5(1) / IntMod5(3)
     assert IntMod5(2)
 
-    assert modint.crt([2, 3, 5], [0, 0, 0]) == 0
-    assert modint.crt([2, 3, 5], [1, 1, 1]) == 1
-    assert modint.crt([2, 3, 5], [-1, -1, -1], True) == -1
-    assert modint.crt([2, 3, 5], [-1, -1, -1], False) == 2*3*5 - 1
-
 # polynomials/fast/gfpoly.py
 
 def test_GFPoly():

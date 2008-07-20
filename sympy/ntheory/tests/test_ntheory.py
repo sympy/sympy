@@ -6,6 +6,8 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
     primerange, primepi, prime
 from sympy.ntheory.bbp_pi import pi_hex_digits
 
+from sympy.ntheory.modular import crt, crt1, crt2
+
 def test_isprime():
     s = Sieve()
     s.extend(100000)
@@ -145,4 +147,9 @@ def test_hex_pi_nth_digits():
     assert pi_hex_digits(1) == '243f6a8885a308'
     assert pi_hex_digits(10000) == '68ac8fcfb8016c'
 
+def test_crt():
+    assert crt([2, 3, 5], [0, 0, 0]) == 0
+    assert crt([2, 3, 5], [1, 1, 1]) == 1
 
+    assert crt([2, 3, 5], [-1, -1, -1], True) == -1
+    assert crt([2, 3, 5], [-1, -1, -1], False) == 2*3*5 - 1
