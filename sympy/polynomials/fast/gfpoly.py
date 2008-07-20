@@ -37,19 +37,20 @@ def GFPolyFactory(p):
             return result_dict
 
         @staticmethod
-        def random(min_degree, max_degree, monic=True):
+        def random(min_degree, max_degree):
             """Generate random polynomial in given degree range."""
-            degree = random.randrange(min_degree, max_degree + 1)
+            degree = random.randrange(min_degree, max_degree+1)
             p = coefficient_type.modulus
-            result_dict = {}
-            if monic:
-                result_dict[degree] = coefficient_type(1)
-                degree -= 1
-            for e in xrange(0, degree + 1):
-                c = coefficient_type(random.randrange(p))
-                if c:
-                    result_dict[e] = c
-            return newClass(result_dict)
+            poly = {}
+
+            while not poly:
+                for monom in xrange(0, degree+1):
+                    coeff = coefficient_type(random.randrange(p))
+
+                    if coeff:
+                        poly[monom] = coeff
+
+            return newClass(poly)
 
         def monic(self):
             if not self:
@@ -179,30 +180,34 @@ def distinct_degree_factor(f):
             break
     return result
 
-def equal_degree_split(f, degree):
-    """Finds divisor of a result from distinct-degree factorization."""
+def edf(f, n):
+    """Cantor-Zassenhaus: Equal Degree Factorizaton """
+
+    # TBD #################
     coeff_type = f.__class__.coeff_type
     one_poly = f.__class__({0: coeff_type(1)})
-    a = f.random(1, f.degree - 1)
-    g = gcd(f, a)
-    if g != one_poly:
-        return g
-    b = pow_mod(a, (coeff_type.modulus**degree - 1)/2, f)
-    g = gcd(b - one_poly, f)
-    if g != one_poly and g != f:
-        return g
-    return None # Failure, try again with another random a.
+    modulus = coeff_type.modulus
+    ################# END #
 
-def equal_degree_factor(f, degree):
-    """Finds all divisors of a result from distinct-degree factorization."""
-    if f.degree == degree:
-        return [f]
-    g = None
-    while g is None:
-        g = equal_degree_split(f, degree)
-    q, r = div(f, g)
-    assert not r
-    return equal_degree_factor(g, degree) + equal_degree_factor(q, degree)
+    factors = [f]
+
+    if f.degree > n:
+        m = f.degree/n
+
+        while len(factors) < m:
+            r = f.random(0, 2*n-1)
+
+            if modulus == 2:
+                raise NotImplementedError
+            else:
+                h = pow_mod(r, (modulus**n-1)/2, f)
+
+            g = gcd(f, h-one_poly)
+
+            if g != one_poly and g != f:
+                factors = edf(g, n) + edf(div(f, g)[0], n)
+
+    return factors
 
 def factor(f):
     """Factorization of a univariate polynomial over a Galois field.
@@ -225,7 +230,7 @@ def factor(f):
         g = gcd(h - x_poly, f)
         if g != one_poly:
             # Equal-degree factorization for degree i:
-            g_factors = equal_degree_factor(g, i)
+            g_factors = edf(g, i)
             # Now determine multiplicities of factors.
             for gg in g_factors:
                 e = 0
@@ -247,8 +252,8 @@ def factor_sqf(f):
     leading_coeff, f = f.monic()
     result = [leading_coeff]
     for degree, divisor in enumerate(distinct_degree_factor(f)):
-        if divisor == one_poly:
-            continue
-        result += equal_degree_factor(divisor, degree + 1)
+        if divisor != one_poly:
+            result += edf(divisor, degree+1)
+
     return result
 

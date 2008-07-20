@@ -84,10 +84,10 @@ def test_GFPoly():
     a = gfpoly.distinct_degree_factor(f)
     assert [g.to_sym_int_dict() for g in a] \
            == [{1: 1, 2: 1}, {0: -1, 1: 1, 3: 1, 4: 1}]
-    b = gfpoly.equal_degree_factor(a[0], 1)
+    b = gfpoly.edf(a[0], 1)
     assert sorted([g.to_sym_int_dict() for g in b]) \
            == sorted([{1:1}, {1:1, 0:1}])
-    c = gfpoly.equal_degree_factor(a[1], 2)
+    c = gfpoly.edf(a[1], 2)
     assert sorted([g.to_sym_int_dict() for g in c]) \
            == sorted([{2:1, 0:1}, {2:1, 1:1, 0:-1}])
 
@@ -132,7 +132,7 @@ def test_IntPoly():
     from sympy.polynomials.fast import intpoly
 
     f = intpoly.IntPoly()
-    lc, pp = f.primitive()
+    lc, pp = f.as_primitive()
     assert lc == 0
     assert pp == f
     assert f.evaluate(0) == 0
@@ -140,7 +140,7 @@ def test_IntPoly():
     assert f.evaluate(-2) == 0
 
     f = intpoly.IntPoly({2:12, 1:8, 0:-20})
-    lc, pp = f.primitive()
+    lc, pp = f.as_primitive()
     assert lc == 4
     assert pp == intpoly.IntPoly({2:3, 1:2, 0:-5})
     assert f.evaluate(0) == -20
@@ -158,7 +158,7 @@ def test_IntPoly():
     assert intpoly.gcd_small_primes(f, g) == intpoly.IntPoly({1:2, 0:3})
     assert intpoly.gcd_heuristic(f, g) == intpoly.IntPoly({1:2, 0:3})
 
-    assert intpoly.squarefree_part(f).coeffs == {2:2, 1:3}
+    assert f.as_squarefree().coeffs == {2:2, 1:3}
 
     f = intpoly.IntPoly({4:1, 0:-1})
     g = intpoly.IntPoly({3:1, 2:2, 1:-1, 0:-2})
@@ -184,3 +184,19 @@ def test_IntPoly():
     assert {2:2, 1:1, 0:4} in factors
     assert {2:3, 1:1, 0:1} in factors
 
+    ### NEW TESTS
+
+    from sympy import Poly, Symbol
+
+    x = Symbol('x')
+
+    f = intpoly.IntPoly(Poly(x**4+x+1, x))
+
+    for i in xrange(0, 20):
+        g = intpoly.factor(f)
+
+    assert g[0][0].as_poly(x) == Poly(1, x)
+    assert g[0][1] == 1
+
+    assert g[1][0].as_poly(x) == Poly(x**4 + x + 1, x)
+    assert g[1][1] == 1

@@ -5,19 +5,50 @@ import math
 from sympy import ntheory
 from sympy.polynomials.fast import sparse_poly, gfpoly
 
+from sympy.core.sympify import sympify
 from sympy.ntheory.modular import crt1, crt2
 from sympy.core.numbers import igcd, igcdex
 from sympy.polys.polynomial import Poly
 
 class IntPoly(sparse_poly.SparsePolynomial):
-    def primitive(self):
-        content = reduce(modint.gcd, self.coeffs.itervalues(), 0)
+
+    def __init__(self, coeffs={}):
+        if type(coeffs) is not dict:
+            f, coeffs = coeffs, {}
+
+            for c, (e,) in f.iter_terms():
+                coeffs[e] = int(c)
+
+        self.coeffs = coeffs
+
+        if coeffs:
+            self.degree = max(coeffs.iterkeys())
+        else:
+            self.degree = -1
+
+    def as_poly(self, x):
+        """Convert 'self' to a Poly. """
+        terms = {}
+
+        for e, c in self.coeffs.iteritems():
+            terms[(e,)] = sympify(c)
+
+        return Poly(terms, x)
+
+    def as_primitive(self):
+        """Returns the primitive part of a polynomial. """
+        content = reduce(igcd, self.coeffs.itervalues(), 0)
         result_dict = {}
         for e, c in self.coeffs.iteritems():
             result_dict[e] = c/content
         return content, IntPoly(result_dict)
 
-    def mod_int(self, m, symmetric=False):
+    def as_squarefree(self):
+        """Computes the square-free part of a polynomial. """
+        q = div(self, gcd(self, self.diff()))
+        return q[0].as_primitive()[1]
+
+    def mod_int(self, m, symmetric=True):
         result_dict = {}
         for e, c in self.coeffs.iteritems():
             cc = c % m
@@ -139,7 +170,7 @@ def gcd_small_primes(f, g):
         if w_norm*fff_norm <= B and w_norm*ggg_norm <= B:
             break
 
-    content, result =  IntPoly(w_dict).primitive()
+    content, result =  IntPoly(w_dict).as_primitive()
     return result
 
 ### REMOVE --> IMPLEMENT MV HEUGCD (Fateman)
@@ -196,17 +227,17 @@ def hensel_step(m, f, g, h, s, t):
 
     mm = m**2
 
-    e = (f - g*h).mod_int(mm, symmetric=True)
+    e = (f - g*h).mod_int(mm)
     q, r = div(s*e, h)
-    q, r = q.mod_int(mm, symmetric=True), r.mod_int(mm, symmetric=True)
-    gg = (g + t*e + q*g).mod_int(mm, symmetric=True)
-    hh = (h + r).mod_int(mm, symmetric=True)
+    q, r = q.mod_int(mm), r.mod_int(mm)
+    gg = (g + t*e + q*g).mod_int(mm)
+    hh = (h + r).mod_int(mm)
 
-    b = (s*gg + t*hh - IntPoly({0: 1})).mod_int(mm, symmetric=True)
+    b = (s*gg + t*hh - IntPoly({0: 1})).mod_int(mm)
     c, d = div(s*b, hh)
-    c, d = c.mod_int(mm, symmetric=True), d.mod_int(mm, symmetric=True)
-    ss = (s - d).mod_int(mm, symmetric=True)
-    tt = (t - t*b - c*gg).mod_int(mm, symmetric=True)
+    c, d = c.mod_int(mm), d.mod_int(mm)
+    ss = (s - d).mod_int(mm)
+    tt = (t - t*b - c*gg).mod_int(mm)
 
     return gg, hh, ss, tt
 
@@ -229,7 +260,7 @@ def multi_hensel_lift(p, f, f_list, l):
 
     if r == 1:
         lc_s, lc_t, lc_g = igcdex(lc, p**l)
-        return [f.scale(lc_s).mod_int(p**l, symmetric=True)]
+        return [f.scale(lc_s).mod_int(p**l)]
     k = int(r/2)
     d = int(math.ceil(math.log(l, 2)))
 
@@ -287,15 +318,20 @@ def zassenhaus(f):
     gamma = int(math.ceil(2*math.log(C, 2)))
     prime_border = int(2*gamma*math.log(gamma)) + 1
 
-    # Choose a prime.
-    while True:
-        p = ntheory.generate.randprime(2, prime_border)
-        if b % p:
-            poly_type = gfpoly.GFPolyFactory(p)
-            ff = poly_type.from_int_dict(f.coeffs)
-            gg = gfpoly.gcd(ff, ff.diff())
-            if gg.degree == 0:
-                break
+    for p in xrange(3, prime_border):
+        if p % 2 == 0 or b % p == 0:
+            continue
+
+        if not ntheory.primetest.isprime(p):
+            continue
+
+        poly_type = gfpoly.GFPolyFactory(p)
+        ff = poly_type.from_int_dict(f.coeffs)
+        gg = gfpoly.gcd(ff, ff.diff())
+
+        if gg.degree == 0:
+            break
+
     l = int(math.ceil(math.log(2*B + 1, p)))
 
     # Modular factorization.
@@ -315,18 +351,18 @@ def zassenhaus(f):
             gg = IntPoly({0:b})
             for i in S:
                 gg *= g[i]
-            gg = gg.mod_int(p**l, symmetric=True)
+            gg = gg.mod_int(p**l)
             hh = IntPoly({0:b})
             for i in [i for i in T if i not in S]: # T \ S
                 hh *= g[i]
-            hh = hh.mod_int(p**l, symmetric=True)
+            hh = hh.mod_int(p**l)
 
             gg_norm = sum([abs(c) for c in gg.coeffs.itervalues()])
             hh_norm = sum([abs(c) for c in hh.coeffs.itervalues()])
             if gg_norm*hh_norm <= B: # Found divisor
                 T = [i for i in T if i not in S] # T \ S
-                G.append(gg.primitive()[1])
-                f = hh.primitive()[1]
+                G.append(gg.as_primitive()[1])
+                f = hh.as_primitive()[1]
                 b = f[f.degree]
                 break
         else: # No factors of degree s
@@ -339,7 +375,7 @@ def squarefree_part(f):
     g = gcd(f, f.diff())
     q, r = div(f, g)
     assert not r
-    return q.primitive()[1]
+    return q.as_primitive()[1]
 
 def factor(f):
     """Factorization of univariate integer polynomials.
@@ -348,8 +384,8 @@ def factor(f):
     being constant.
     """
 
-    content, pp = f.primitive()
-    sqf_part = squarefree_part(pp)
+    content, pp = f.as_primitive()
+    sqf_part = pp.as_squarefree()
     factors = zassenhaus(sqf_part)
 
     result = [(IntPoly({0:content}), 1)]
