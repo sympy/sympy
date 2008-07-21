@@ -397,8 +397,9 @@ class Triangle(Polygon):
             >>> p1,p2,p3 = Point(0,0), Point(1,0), Point(0,1)
             >>> t = Triangle(p1, p2, p3)
 
-            >>> t.bisectors[p2]
-            Segment(Point(0, -1 + 2**(1/2)), Point(1, 0))
+            >>> from sympy import sqrt
+            >>> t.bisectors[p2] == Segment(Point(0, sqrt(2)-1), Point(1, 0))
+            True
         """
         s = self.sides
         v = self.vertices
