@@ -342,7 +342,7 @@ class Circle(Ellipse):
 
     def intersection(self, o):
         if isinstance(o, Circle):
-            dx,dy = o._c - self.center
+            dx,dy = o.center - self.center
             d = sqrt( simplify(dy**2 + dx**2) )
             a = simplify((self.radius**2 - o.radius**2 + d**2) / (2*d))
 

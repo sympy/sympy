@@ -178,6 +178,8 @@ def test_ellipse():
     e2 = Ellipse(p2, half, 1)
     e3 = Ellipse(p1, y1, y1)
     c1 = Circle(p1, 1)
+    c2 = Circle(p2,1)
+    c3 = Circle(Point(sqrt(2),sqrt(2)),1)
 
     # Test creation with three points
     cen,rad = Point(3*half, 2), 5*half
@@ -230,6 +232,8 @@ def test_ellipse():
     assert intersection(c1, l1) == [Point(1, 0)]
     assert intersection(c1, l2) == [Point(0, -1)]
     assert intersection(c1, l3) in [pts_c1_l3, [pts_c1_l3[1], pts_c1_l3[0]]]
+    assert intersection(c1, c2) in [[(1,0), (0,1)],[(0,1),(1,0)]]
+    assert intersection(c1, c3) == [(sqrt(2)/2, sqrt(2)/2)]
 
     v = sqrt(2)
     t1 = Triangle(Point(0, v), Point(0, -v), Point(v, 0))
