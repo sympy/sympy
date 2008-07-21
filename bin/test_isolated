@@ -3,16 +3,11 @@
 Generates a bash script, that executes py.test or nosetest on each file
 individually.
 
-Example:
-
-    $ bin/test_isolated
-    Generating py.test isolated testsuite...
-    Done. Run '/tmp/test_sympy.sh'.
-
-Help:
+Usage and help:
 
     $ bin/test_isolated -h
-    [...]
+
+and read the instructions.
 """
 
 from os import chmod, getcwd
@@ -76,8 +71,24 @@ def generate_test_script2(testlib="nosetests"):
     f.write("echo 'all tests passed, ok to commit'")
     chmod(f.name, filemode)
 
+usage = """%prog [options]
+
+Generates a bash script, that executes py.test or nosetest on each file
+individually.
+
+Usage:
+
+    $ bin/test_isolated
+    Generating py.test isolated testsuite...
+    Done. Run (search for 'COMMIT' in the less environment):
+    /tmp/test_sympy.sh | less
+    $ /tmp/test_sympy.sh | less
+
+Let the tests run and then search if any test failed (it will write DO NOT
+COMMIT), so search for COMMIT."""
+
 def main():
-    parser = OptionParser()
+    parser = OptionParser(usage=usage)
     parser.add_option("-p","--py.test", action="store_false", dest="nosetests",
             help="Use py.test (default)")
     parser.add_option("-n","--nosetests", action="store_true", dest="nosetests",
@@ -97,7 +108,8 @@ def main():
             print "Generating py.test isolated testsuite..."
         generate_test_script1("py.test")
     if options.verbose:
-        print "Done. Run '/tmp/test_sympy.sh'."
+        print "Done. Run (search for 'COMMIT' in the less environment):"
+        print "/tmp/test_sympy.sh | less"
 
 if __name__ == "__main__":
     main()
