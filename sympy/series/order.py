@@ -185,6 +185,25 @@ class Order(Basic, ArithMeths, RelMeths):
         return self
 
     def _get_cache_index(obj, symbol):
+        """
+        Returns the index of "obj" from cache, adding it in if necessary.
+
+        The obj._cache contains sorted expressions like [O(1), O(x), O(x**3)]
+        so we need to find the right place for "obj", put it in and return the
+        correct index.
+
+        Example:
+
+        Let _cache = [O(1), O(x), O(x**3)], then for:
+
+        obj = O(1), --> _cache = [O(1), O(x), O(x**3)] and index 0
+        obj = O(x), --> _cache = [O(1), O(x), O(x**3)] and index 1
+        obj = O(x**2), --> _cache = [O(1), O(x), O(x**2), O(x**3)] and index 2
+        obj = O(x**3), --> _cache = [O(1), O(x), O(x**3)] and index 2
+
+        We use Order.find_limit() to determine if x**2 < x**3 etc.
+        """
+
         if len(obj.symbols)>1:
             obj = Order(obj.expr, symbol)
         elif not obj.symbols:
