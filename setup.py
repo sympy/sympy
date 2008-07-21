@@ -63,7 +63,7 @@ modules = [
     ( True, 'sympy.polynomials', [] ),
     ( True, 'sympy.polynomials.fast', [] ),
     ( True, 'sympy.polys', ['wrappers'] ),
-    ( True, 'sympy.printing', ['gtk'] ),
+    ( True, 'sympy.printing', ['gtk', 'tree'] ),
     ( True, 'sympy.printing.pretty', [] ),
     ( True, 'sympy.series', ["limits"] ),
     ( True, 'sympy.simplify', [] ),
