@@ -236,6 +236,10 @@ class abs(Function):
                 return self.args[0]**other
         return
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.abs_symbolic(self.args[0]._sage_())
+
 class arg(Function):
 
     nargs = 1

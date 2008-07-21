@@ -251,7 +251,7 @@ class exp(Function):
 
     def _sage_(self):
         import sage.all as sage
-        return sage.exp(self[0]._sage_())
+        return sage.exp(self.args[0]._sage_())
 
 class log(Function):
 
@@ -441,7 +441,7 @@ class log(Function):
 
     def _sage_(self):
         import sage.all as sage
-        return sage.log(self[0]._sage_())
+        return sage.log(self.args[0]._sage_())
 
 # MrvLog is used by limit.py
 class MrvLog(log):

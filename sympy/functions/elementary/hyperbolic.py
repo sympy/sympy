@@ -105,6 +105,10 @@ class sinh(Function):
         if arg.is_imaginary:
             return True
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.sinh(self.args[0]._sage_())
+
 class cosh(Function):
 
     nargs = 1
@@ -200,6 +204,10 @@ class cosh(Function):
         arg = self.args[0]
         if arg.is_imaginary:
             return True
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.cosh(self.args[0]._sage_())
 
 class tanh(Function):
 
@@ -299,6 +307,10 @@ class tanh(Function):
         if arg.is_real:
             return True
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.tanh(self.args[0]._sage_())
+
 class coth(Function):
 
     nargs = 1
@@ -389,6 +401,10 @@ class coth(Function):
         else:
             return self.func(arg)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.coth(self.args[0]._sage_())
+
 
 ###############################################################################
 ############################# HYPERBOLIC INVERSES #############################
@@ -465,6 +481,10 @@ class asinh(Function):
         else:
             return self.func(arg)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.asinh(self.args[0]._sage_())
+
 class acosh(Function):
 
     nargs = 1
@@ -540,6 +560,10 @@ class acosh(Function):
         else:
             return self.func(arg)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.acosh(self.args[0]._sage_())
+
 class atanh(Function):
 
     nargs = 1
@@ -596,6 +620,10 @@ class atanh(Function):
             return arg
         else:
             return self.func(arg)
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.atanh(self.args[0]._sage_())
 
 class acoth(Function):
 
@@ -660,3 +688,6 @@ class acoth(Function):
         else:
             return self.func(arg)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.acoth(self.args[0]._sage_())

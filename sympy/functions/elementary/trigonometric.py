@@ -535,6 +535,10 @@ class tan(Function):
         if arg.is_imaginary:
             return True
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.tan(self.args[0]._sage_())
+
 class cot(Function):
     """
     Usage
@@ -653,6 +657,10 @@ class cot(Function):
     def _eval_is_real(self):
         return self.args[0].is_real
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.cot(self.args[0]._sage_())
+
 ###############################################################################
 ########################### TRIGONOMETRIC INVERSES ############################
 ###############################################################################
@@ -750,6 +758,10 @@ class asin(Function):
     def _eval_is_real(self):
         return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.asin(self.args[0]._sage_())
+
 class acos(Function):
     """
     Usage
@@ -833,6 +845,10 @@ class acos(Function):
     def _eval_is_real(self):
         return self.args[0].is_real and (self.args[0]>=-1 and self.args[0]<=1)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.acos(self.args[0]._sage_())
+
 class atan(Function):
     """
     Usage
@@ -915,6 +931,10 @@ class atan(Function):
     def _eval_is_real(self):
         return self.args[0].is_real
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.atan(self.args[0]._sage_())
+
 class acot(Function):
     """
     Usage
@@ -994,6 +1014,10 @@ class acot(Function):
 
     def _eval_is_real(self):
         return self.args[0].is_real
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.acot(self.args[0]._sage_())
 
 class atan2(Function):
     """

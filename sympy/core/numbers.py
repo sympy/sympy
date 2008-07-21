@@ -1102,6 +1102,10 @@ class Infinity(Singleton, Rational):
     def _as_mpf_val(self, prec):
         return mlib.finf
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.oo
+
 class NegativeInfinity(Singleton, Rational):
 
     p = -1
@@ -1176,6 +1180,10 @@ class NaN(Singleton, Rational):
         if e is S.Zero:
             return S.One
         return b
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.NaN
 
 class ComplexInfinity(Singleton, Atom, NoRelMeths, ArithMeths):
 
@@ -1314,6 +1322,10 @@ class Exp1(NumberSymbol):
     def _eval_power(self, exp):
         return C.exp(exp)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.e
+
 class Pi(NumberSymbol):
 
     is_real = True
@@ -1339,6 +1351,10 @@ class Pi(NumberSymbol):
     def tostr(self, level=0):
         return 'pi'
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.pi
+
 class GoldenRatio(NumberSymbol):
 
     is_real = True
@@ -1363,6 +1379,10 @@ class GoldenRatio(NumberSymbol):
     def tostr(self, level=0):
         return 'GoldenRatio'
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.golden_ratio
+
 class EulerGamma(NumberSymbol):
 
     is_real = True
@@ -1384,6 +1404,10 @@ class EulerGamma(NumberSymbol):
     def tostr(self, level=0):
         return 'EulerGamma'
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.euler_gamma
+
 class Catalan(NumberSymbol):
 
     is_real = True
@@ -1404,6 +1428,10 @@ class Catalan(NumberSymbol):
 
     def tostr(self, level=0):
         return 'Catalan'
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.catalan
 
 class ImaginaryUnit(Singleton, Atom, RelMeths, ArithMeths):
 
@@ -1458,6 +1486,10 @@ class ImaginaryUnit(Singleton, Atom, RelMeths, ArithMeths):
 
     def as_base_exp(self):
         return -S.One, S.Half
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.I
 
 # /cyclic/
 import basic as _
