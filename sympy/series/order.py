@@ -337,13 +337,12 @@ class Order(Basic, ArithMeths, RelMeths):
                 return Order.find_limit(self.expr/expr.expr, s) != 0
             # multivariate Order symbol:
             for s in common_symbols:
-                i1 = self._get_cache_index(s)
-                i2 = expr._get_cache_index(s)
+                l = Order.find_limit(self.expr/expr.expr, s) != 0
                 if r is None:
-                    r = (i1<=i2)
+                    r = l
                 else:
-                    if r != (i1<=i2):
-                        return None
+                    if r != l:
+                        return
             return r
         obj = Order(expr, *self.symbols)
         return self.contains(obj)
