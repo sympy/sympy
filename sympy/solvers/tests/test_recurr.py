@@ -25,9 +25,11 @@ def test_rsolve_ratio():
 def test_rsolve_hyper():
     assert rsolve_hyper([-1, -1, 1], 0, n) == C0*(S.Half + S.Half*sqrt(5))**n + C1*(S.Half - S.Half*sqrt(5))**n
 
-    assert rsolve_hyper([n**2-2, -2*n-1, 1], 0, n) == C0*rf(sqrt(2), n) + C1*rf(-sqrt(2), n)
+    assert rsolve_hyper([n**2-2, -2*n-1, 1], 0, n) in [C0*rf(sqrt(2), n) + C1*rf(-sqrt(2), n),
+                                                       C1*rf(sqrt(2), n) + C0*rf(-sqrt(2), n)]
 
-    assert rsolve_hyper([n**2-k, -2*n-1, 1], 0, n) == C0*rf(sqrt(k), n) + C1*rf(-sqrt(k), n)
+    assert rsolve_hyper([n**2-k, -2*n-1, 1], 0, n) in [C0*rf(sqrt(k), n) + C1*rf(-sqrt(k), n),
+                                                       C1*rf(sqrt(k), n) + C0*rf(-sqrt(k), n)]
 
     assert rsolve_hyper([2*n*(n+1), -n**2-3*n+2, n-1], 0, n) == C0*factorial(n) + C1*2**n
 
