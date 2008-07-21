@@ -164,13 +164,6 @@ class Order(Basic, ArithMeths, RelMeths):
         # create Order instance:
         obj = Basic.__new__(cls, expr, *symbols, **assumptions)
 
-        # cache univariate Order symbols:
-        if len(symbols)>1:
-            for s in symbols:
-                Order(expr, s)._get_cache_index(s)
-        elif symbols:
-            obj._get_cache_index(symbols[0])
-
         # cache multivariate Order symbols:
         cache.append(obj)
         Order._cache[symbols] = cache
@@ -182,53 +175,6 @@ class Order(Basic, ArithMeths, RelMeths):
 
     def nseries(self, x, x0, n):
         return self
-
-    def _get_cache_index(obj, symbol):
-        """
-        Returns the index of "obj" from cache, adding it in if necessary.
-
-        The obj._cache contains sorted expressions like [O(1), O(x), O(x**3)]
-        so we need to find the right place for "obj", put it in and return the
-        correct index.
-
-        Example:
-
-        Let _cache = [O(1), O(x), O(x**3)], then for:
-
-        obj = O(1), --> _cache = [O(1), O(x), O(x**3)] and index 0
-        obj = O(x), --> _cache = [O(1), O(x), O(x**3)] and index 1
-        obj = O(x**2), --> _cache = [O(1), O(x), O(x**2), O(x**3)] and index 2
-        obj = O(x**3), --> _cache = [O(1), O(x), O(x**3)] and index 2
-
-        We use Order.find_limit() to determine if x**2 < x**3 etc.
-        """
-
-        if len(obj.symbols)>1:
-            obj = Order(obj.expr, symbol)
-        elif not obj.symbols:
-            obj = Order(obj.expr, symbol)
-        cache = Order._cache.get(symbol,[])
-        try: return cache.index(obj)
-        except ValueError: pass
-        i = -1
-        for o in cache:
-            i += 1
-            l = Order.find_limit(obj.expr/o.expr, symbol)
-            if l.is_unbounded:
-                cache.insert(i,obj)
-                break
-            if l.is_bounded:
-                continue
-            # If l.is_number is True, then l.is_bounded above should also be
-            # True, imho. It's probably a bug in assumptions.
-            if l.is_number:
-                continue
-            print obj.expr/o.expr,l
-            raise NotImplementedError("failed to determine the inclusion relation between %s and %s (got lim=%s)" % (o, obj, l))
-        else:
-            cache.append(obj)
-        Order._cache[symbol] = cache
-        return cache.index(obj)
 
     @classmethod
     def find_limit(cls, f, x):
