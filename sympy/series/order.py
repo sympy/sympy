@@ -152,11 +152,10 @@ class Order(Basic, ArithMeths, RelMeths):
         if expr is S.Zero:
             return expr
 
-        # remove unused symbols
-        #symbols = tuple([s for s in symbols if expr.has(s)])
+        # remove unused symbols:
         symbols = tuple(symbols)
 
-        # look Order symbols from cache, TODO: make cache a dictionary
+        # look Order symbols from cache:
         cache = Order._cache.get(symbols,[])
         for o in cache:
             if o.expr==expr:
@@ -224,14 +223,6 @@ class Order(Basic, ArithMeths, RelMeths):
             # True, imho. It's probably a bug in assumptions.
             if l.is_number:
                 continue
-            #try the new limit algorithm:
-            #from sympy import limit
-            #l = limit(obj.expr/o.expr, symbol, 0)
-            #if l.is_unbounded:
-            #    cache.insert(i,obj)
-            #    break
-            #if l.is_number:
-            #    continue
             print obj.expr/o.expr,l
             raise NotImplementedError("failed to determine the inclusion relation between %s and %s (got lim=%s)" % (o, obj, l))
         else:
