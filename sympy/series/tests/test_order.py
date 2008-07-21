@@ -136,13 +136,6 @@ def test_multivar_3():
             (Order(y*x**2), Order(x*y**2))]
     assert (Order(x**2*y)+Order(y*x)) == Order(x*y)
 
-def test_w():
-    print
-    for k,v in Order._cache.items():
-        if isinstance(k, C.Symbol):
-            print k,v
-
-
 def test_issue369():
     x = Symbol('x')
     y = Symbol('y', negative=True)
