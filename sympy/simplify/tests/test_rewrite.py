@@ -85,10 +85,16 @@ def test_apart():
 
     M = Matrix(2, 2, lambda i, j: 1/(x-(i+1))/(x-(1-j)))
 
-    assert apart(M, x) == Matrix([
-        [(x-1)**(-2),     -1/x-1/(1-x)          ],
-        [1/(1-x)-1/(2-x), -S.Half/x-S.Half/(2-x)],
-    ])
+    assert apart(M, x) in [
+            Matrix([
+                [(x-1)**(-2),     -1/x-1/(1-x)          ],
+                [1/(1-x)-1/(2-x), -S.Half/x-S.Half/(2-x)],
+            ]),
+            Matrix([
+                [(-1+x)**(-2),     -1/x+1/(-1+x)          ],
+                [-1/(-1+x)+1/(-2+x), -S.Half/x+S.Half/(-2+x)],
+            ]),
+            ]
 
     assert apart(Eq((x**2+1)/(x+1), sin(x)), x) == \
         Eq(x - 1 + 2/(x+1), sin(x))
