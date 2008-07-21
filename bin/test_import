@@ -9,7 +9,7 @@ Usage:
 $ bin/test_import
 """
 
-n_tests = 10
+n_tests = 50
 
 from pexpect import run
 from numpy import mean, std
