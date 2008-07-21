@@ -30,13 +30,11 @@ def sqf(f, var=None, order=None, coeff=None):
     =========
         >>> x = Symbol('x')
         >>> a = sqf(3 - 12*x - 4*x**3 + 4*x**4 + 13*x**2)
-        >>> for i, f in enumerate(a): print (i + 1), f
-        1 12 + 4*x**2
-        2 (-1/2) + x
+        >>> a == [12 + 4*x**2, -sympify(1)/2 + x]
+        True
         >>> b = sqf(3 - 12*x - 4*x**3 + 4*x**4 + 13*x**2, coeff='int')
-        >>> for i, f in enumerate(b): print (i + 1), f
-        1 3 + x**2
-        2 -1 + 2*x
+        >>> b == [3+x**2, -1+2*x]
+        True
 
     References:
     ===========

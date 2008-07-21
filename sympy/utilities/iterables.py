@@ -55,8 +55,8 @@ def make_list(expr, kind):
        [x, y]
        >>> make_list(x*y, Add)
        [x*y]
-       >>> make_list(x*y + y, Add)
-       [y, x*y]
+       >>> set(make_list(x*y + y, Add)) == set([y, x*y])
+       True
 
     """
     if isinstance(expr, kind):
@@ -106,8 +106,8 @@ def postorder_traversal(node):
     >>> from sympy import symbols
     >>> from sympy.utilities.iterables import postorder_traversal
     >>> x,y,z = symbols('xyz')
-    >>> list(postorder_traversal((x+y)*z))
-    [z, y, x, x + y, z*(x + y)]
+    >>> set(postorder_traversal((x+y)*z)) == set([z, y, x, x + y, z*(x + y)])
+    True
     """
     for arg in node.args:
         for subtree in postorder_traversal(arg):
@@ -136,8 +136,8 @@ def preorder_traversal(node):
     >>> from sympy import symbols
     >>> from sympy.utilities.iterables import preorder_traversal
     >>> x,y,z = symbols('xyz')
-    >>> list(preorder_traversal((x+y)*z))
-    [z*(x + y), z, x + y, y, x]
+    >>> set(preorder_traversal((x+y)*z)) == set([z, x + y, z*(x + y), x, y])
+    True
     """
     yield node
     for arg in node.args:

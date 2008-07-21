@@ -175,8 +175,8 @@ class RisingFactorial(Function):
        >>> rf(1, 5)
        120
 
-       >>> rf(x, 5)
-       x*(2 + x)*(3 + x)*(4 + x)*(1 + x)
+       >>> rf(x, 5) == x*(1 + x)*(2 + x)*(3 + x)*(4 + x)
+       True
 
     """
 
@@ -238,8 +238,8 @@ class FallingFactorial(Function):
        >>> ff(5, 5)
        120
 
-       >>> ff(x, 5)
-       x*(1 - x)*(2 - x)*(3 - x)*(4 - x)
+       >>> ff(x, 5) == x*(x-1)*(x-2)*(x-3)*(x-4)
+       True
 
     """
 
