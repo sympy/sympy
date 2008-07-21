@@ -358,6 +358,8 @@ it work, then run this again. If the series cannot be mathematically calculated,
             #we need to calculate more terms, let's try 30:
             series=f.nseries(x, 0, 8).removeO()
     except:
+        import traceback
+        traceback.print_exc()
         report(f, x)
     if series == 0:
         report(f, x)
