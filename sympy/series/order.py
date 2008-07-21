@@ -288,7 +288,7 @@ class Order(Basic, ArithMeths, RelMeths):
         if len(self.symbols) <= 1:
             r = 'O(%s)' % self.expr.tostr()
         else:
-            r = 'O(%s)' % (', '.join([s.tostr() for s in self]))
+            r = 'O(%s)' % (', '.join([s.tostr() for s in self.args]))
         if self.precedence <= level:
             r = '(%s)' % (r)
         return r
