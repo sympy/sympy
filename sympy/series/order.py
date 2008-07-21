@@ -256,13 +256,6 @@ class Order(Basic, ArithMeths, RelMeths):
                     return True
                 return None
             r = None
-            # univariate Order symbol:
-            if len(common_symbols) == 1:
-                s = common_symbols[0]
-                # just compare 'self' and 'expr' using the definition of the O
-                # symbol
-                return Order.find_limit(self.expr/expr.expr, s) != 0
-            # multivariate Order symbol:
             for s in common_symbols:
                 l = Order.find_limit(self.expr/expr.expr, s) != 0
                 if r is None:
