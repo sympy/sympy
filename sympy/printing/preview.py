@@ -101,6 +101,11 @@ def preview(expr, output='ps', viewer=None, euler=True):
                      \end{document}
                  """
 
+    if viewer == "pyglet":
+        # import pyglet before we change the current dir, because after that it
+        # would fail:
+        from sympy.thirdparty import import_thirdparty
+        pyglet = import_thirdparty("pyglet")
     tmp = tempfile.mktemp()
 
     tex = open(tmp + ".tex", "w")
