@@ -341,41 +341,35 @@ class Pow(Basic, ArithMeths, RelMeths):
                         else:
                             return Integer(c)/k + I*d/k
 
-                # Consider polynomial:
-                #
-                #   P(x) = sum_{i=0}^n p_i x^k
-                #
-                # and its m-th exponent:
-                #
-                #   P(x)^m = sum_{k=0}^{m n} a(m,k) x^k
-                #
-                # The coefficients a(m,k) can be computed using
-                # the J.C.P. Miller Pure Recurrence:
-                #
-                #  a(m,k) = 1/(k p_0) sum_{i=1}^n p_i ((m+1)i-k) a(m,k-i)
-                #
-                # where a(m,0) = p_0^m.
-                #
-                # For more information refer to:
-                #
-                # [1] D.E.Knuth, The Art of Computer Programming:
-                #     Seminumerical Algorithms, v.2, Addison
-                #     Wesley, Reading, 1981, pp. 751
-
                 p = other_terms
-                m = len(p)-1
-                cache = {0: p[0] ** n}
-                p0 = [t/p[0] for t in p]
-                l = [cache[0]]
-                for k in xrange(1, n * m + 1):
-                    a = []
-                    for i in xrange(1,m+1):
-                        if i<=k:
-                            a.append(Mul(Rational((n+1)*i-k,k), p0[i], cache[k-i]).expand())
-                    a = Add(*a)
-                    cache[k] = a
-                    l.append(a)
-                return Add(*l)
+                # (x+y)**3 -> x**3 + 3*x**2*y + 3*x*y**2 + y**3
+                # in this particular example:
+                # p = [x,y]; n = 3
+                # so now it's easy to get the correct result -- we get the
+                # coefficients first:
+                from sympy import multinomial_coefficients
+                expansion_dict = multinomial_coefficients(len(p), n)
+                # in our example: {(3, 0): 1, (1, 2): 3, (0, 3): 1, (2, 1): 3}
+                # and now construct the expression.
+
+                # An elegant way would be to use Poly, but unfortunately it is
+                # slower than the direct method below, so it is commented out:
+                #b = {}
+                #for k in expansion_dict:
+                #    b[k] = Integer(expansion_dict[k])
+                #return Poly(b, *p).as_basic()
+
+                # use a direct method which is faster:
+                l = []
+                for powers, k in expansion_dict.iteritems():
+                    # assemble a term, e.g. 3*x**2*y
+                    term = [k]
+                    for i,e in enumerate(powers):
+                        term.append(Pow(p[i], powers[i]))
+                    l.append(Mul(*term))
+                # sum up all terms
+                result = Add(*l)
+                return result
             else:
                 if n == 2:
                     return Add(*[f*g for f in base.args for g in base.args])
