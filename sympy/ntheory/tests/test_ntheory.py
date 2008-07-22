@@ -1,5 +1,6 @@
 import py
-from sympy import Sieve
+from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
+        multinomial_coefficients
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, npartitions, totient, trial, \
     factorint, primefactors, divisors, randprime, nextprime, prevprime, \
@@ -153,3 +154,35 @@ def test_crt():
 
     assert crt([2, 3, 5], [-1, -1, -1], True) == -1
     assert crt([2, 3, 5], [-1, -1, -1], False) == 2*3*5 - 1
+
+
+def test_binomial_coefficients_list():
+    assert binomial_coefficients_list(0) == [1]
+    assert binomial_coefficients_list(1) == [1,1]
+    assert binomial_coefficients_list(2) == [1,2,1]
+    assert binomial_coefficients_list(3) == [1,3,3,1]
+    assert binomial_coefficients_list(4) == [1,4,6,4,1]
+    assert binomial_coefficients_list(5) == [1,5,10,10,5,1]
+    assert binomial_coefficients_list(6) == [1,6,15,20,15,6,1]
+
+def test_binomial_coefficients():
+    for n in range(15):
+        c = binomial_coefficients(n)
+        l = [c[k] for k in sorted(c)]
+        assert l==binomial_coefficients_list(n)
+
+def test_multinomial_coefficients():
+    assert multinomial_coefficients(1, 1) == {(1,): 1}
+    assert multinomial_coefficients(1, 2) == {(2,): 1}
+    assert multinomial_coefficients(1, 3) == {(3,): 1}
+    assert multinomial_coefficients(2, 1) == {(0, 1): 1, (1, 0): 1}
+    assert multinomial_coefficients(2, 2) == {(2, 0): 1, (0, 2): 1, (1, 1): 2}
+    assert multinomial_coefficients(2, 3) == {(3, 0): 1, (1, 2): 3, (0, 3): 1,
+            (2, 1): 3}
+    assert multinomial_coefficients(3, 1) == {(1, 0, 0): 1, (0, 1, 0): 1,
+            (0, 0, 1): 1}
+    assert multinomial_coefficients(3, 2) == {(0, 1, 1): 2, (0, 0, 2): 1,
+            (1, 1, 0): 2, (0, 2, 0): 1, (1, 0, 1): 2, (2, 0, 0): 1}
+    assert multinomial_coefficients(3, 3) == {(2, 1, 0): 3, (0, 3, 0): 1,
+            (1, 0, 2): 3, (0, 2, 1): 3, (0, 1, 2): 3, (3, 0, 0): 1,
+            (2, 0, 1): 3, (1, 2, 0): 3, (1, 1, 1): 6, (0, 0, 3): 1}
