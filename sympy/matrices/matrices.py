@@ -75,10 +75,15 @@ class Matrix(object):
                 mat = args[0]
             else:
                 mat = args
-            if hasattr(mat, "__array__"):
+            if isinstance(mat, Matrix):
+                self.lines = mat.lines
+                self.cols = mat.cols
+                self.mat = mat[:]
+                return
+            elif hasattr(mat, "__array__"):
                 # NumPy array or matrix or some other object that implements
-                # __array__ (like SymPy Matrix). So let's first use this method
-                # to get a numpy.array() and then make a python list out of it.
+                # __array__. So let's first use this method to get a
+                # numpy.array() and then make a python list out of it.
                 mat = list(mat.__array__())
             elif not isinstance(mat[0], (list, tuple)):
                 # make each element a singleton

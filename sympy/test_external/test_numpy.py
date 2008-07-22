@@ -174,6 +174,14 @@ def test_Matrix_mul():
                          [x + x*z**2, 2*x + y*z**2, 3*x + x*z**2],
                          ])
 
+def test_Matrix_array():
+    class matarray(object):
+        def __array__(self):
+            from numpy import array
+            return array([[1,2,3],[4,5,6],[7,8,9]])
+    matarr = matarray()
+    assert Matrix(matarr) == Matrix([[1,2,3],[4,5,6],[7,8,9]])
+
 def test_issue629():
     x = Symbol("x")
     assert (Rational(1,2)*array([2*x, 0]) == array([x, 0])).all()
