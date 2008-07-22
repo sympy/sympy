@@ -51,14 +51,16 @@ def pollard_rho(n, max_iters=5, seed=1234):
     """
     prng = random.Random(seed + max_iters)
     for i in range(max_iters):
+        # Alternative good nonrandom choice: a = 1
         a = prng.randint(1, n-3)
+        # Alternative good nonrandom choice: s = 2
         s = prng.randint(0, n-1)
         U = V = s
-        F = lambda x: (x**2 + a) % a
+        F = lambda x: (x**2 + a) % n
         while 1:
             U = F(U)
             V = F(F(V))
-            g = igcd(U-V, n)
+            g = igcd(abs(U-V), n)
             if g == 1:
                 continue
             if g == n:

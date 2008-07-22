@@ -4,7 +4,7 @@ from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, npartitions, totient, trial, \
     factorint, primefactors, divisors, randprime, nextprime, prevprime, \
-    primerange, primepi, prime
+    primerange, primepi, prime, pollard_rho
 from sympy.ntheory.bbp_pi import pi_hex_digits
 
 from sympy.ntheory.modular import crt, crt1, crt2
@@ -103,6 +103,8 @@ def test_factor():
     assert divisors(10) == [1, 2, 5, 10]
     assert divisors(100) == [1, 2, 4, 5, 10, 20, 25, 50, 100]
     assert divisors(101) == [1, 101]
+    assert pollard_rho(2**64+1, max_iters=1, seed=1) == 274177
+    assert pollard_rho(19) is None
 
 def test_totient():
     assert [totient(k) for k in range(1, 12)] == \
