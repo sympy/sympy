@@ -47,6 +47,7 @@ more details what they do and what they are interested in.
 #. Sebastian Krämer: implemented lambdify/numpy/mpmath cooperation, bug fixes, refactoring, lambdifying of matrices
 #. Vinzent Steinberg: docstring patches, bug fixes, msolve (nonlinear equation systems solver), compiling functions to machine code
 #. Riccardo Gori: improvements and speedups to matrices, many bug fixes
+#. Case Van Horsen: implemented optional support for gmpy in mpmath
 #. Štěpán Roučka: several matrix and simplification fixes
 #. Ali Raza Syed: pretty printing/isympy on windows fix
 
