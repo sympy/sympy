@@ -45,6 +45,7 @@ Blogs, News, Magazines
 
 Here we list blog/news/magazines mentioning SymPy that we know of.
 
+* `Python inside LaTeX <http://thewikiblog.appspot.com/blog/python-inside-latex>`_, July 22, 2008
 * `Playing with SymPy <http://stochastix.wordpress.com/2008/07/05/playing-with-sympy/>`_, July 5, 2008
 * `Polish developers awarded by Google <http://poland-for-foreigners.blogspot.com/2008/04/polish-developers-awarded-by-google.html>`_, April 25, 2008
 * `open source symbolic algebra <http://elusiveat.livejournal.com/261142.html>`_, April 24, 2008
