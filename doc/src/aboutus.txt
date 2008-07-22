@@ -45,8 +45,10 @@ more details what they do and what they are interested in.
 #. Roberto Nobrega: several pretty printing patches
 #. David Roberts: latex printing patches
 #. Sebastian Krämer: implemented lambdify/numpy/mpmath cooperation, bug fixes, refactoring, lambdifying of matrices
-#. Vinzent Steinberg: docstring patches, bug fixes
-#. Riccardo Gori: improvements and speedups to matrices, bug fixes
+#. Vinzent Steinberg: docstring patches, bug fixes, msolve (nonlinear equation systems solver), compiling functions to machine code
+#. Riccardo Gori: improvements and speedups to matrices, many bug fixes
+#. Štěpán Roučka: several matrix and simplification fixes
+#. Ali Raza Syed: pretty printing/isympy on windows fix
 
 Uptodate list in the order of the first contribution is given in the `README
 <http://hg.sympy.org/sympy/file/tip/README>`_
