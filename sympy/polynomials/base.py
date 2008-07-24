@@ -207,13 +207,6 @@ class Polynomial(Basic):
         # This uses the Polynomial's attributes
         return object.__getattribute__(self, name)
 
-
-    def __repr__(self):
-        """Returns a string that could be used to reconstruct this object."""
-        return "Polynomial(%s, %s, %s, %s)" % (repr(self.sympy_expr),
-                  repr(self.coeffs), repr(self.var), repr(self.order))
-
-
     def __eq__(self, other):
         """Equality is restricted to equality of SymPy expression.
 
@@ -1025,4 +1018,3 @@ def IntPoly2Polynomial(f, var, order):
     for exp in exponents:
         coeffs.append((sympify(f[exp]), sympify(exp)))
     return Polynomial(coeffs=tuple(coeffs), var=var, order=order)
-

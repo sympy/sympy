@@ -13,7 +13,7 @@ from cache import cacheit, Memoizer, MemoizerArg
 # from mul      import Mul  /cyclic/
 # from power    import Pow  /cyclic/
 # from function import Derivative, FunctionClass   /cyclic/
-# from sympy.printing import StrPrinter
+# from sympy.printing import StrPrinter, ReprPrinter
 
 # used for canonical ordering of symbolic sequences
 # via __cmp__ method:
@@ -540,10 +540,7 @@ class Basic(AssumeMeths):
         return (st != ot)
 
     def __repr__(self):
-        l = []
-        for o in self.args:
-            l.append(repr(o))
-        return self.__class__.__name__ + '(%s)'%', '.join(l)
+        return ReprPrinter.doprint(self)
 
     def __str__(self):
         return StrPrinter.doprint(self)

@@ -38,9 +38,6 @@ class Sum2(_BigOperator):
     Sum2(f, (i, a, b)) represents \sum_{i=a}^b f(i)
     """
 
-    def __repr__(self):
-        return "Sum2(%r, (%r, %r, %r))" % (self.f, self.i, self.a, self.b)
-
     def reindex(self, a):
         """Reindex the sum to start at a new lower index a."""
         diff = self.a - a

@@ -40,7 +40,8 @@ class Printer(object):
     def __init__(self):
         self._depth = -1
         self._str = str
-        self.emptyPrinter = str
+        if not hasattr(self, "emptyPrinter"):
+            self.emptyPrinter = str
 
     def doprint(self, expr):
         """Returns printer's representation for expr (as a string)"""
@@ -101,4 +102,3 @@ class Printer(object):
 
         self._depth -= 1
         return res
-

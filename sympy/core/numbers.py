@@ -287,11 +287,6 @@ class Real(Number):
     def _hashable_content(self):
         return (self._mpf_, self._prec)
 
-    def __repr__(self):
-        dps = mlib.prec_to_dps(self._prec)
-        r = mlib.to_str(self._mpf_, dps+3)
-        return '%s(%r, prec=%i)' % (self.__class__.__name__, r, dps)
-
     def _eval_is_positive(self):
         return self.num > 0
 
@@ -505,9 +500,6 @@ class Rational(Number):
 
     def _hashable_content(self):
         return (self.p, self.q)
-
-    def __repr__(self):
-        return '%s(%r, %r)' % (self.__class__.__name__, self.p, self.q)
 
     def _eval_is_positive(self):
         return self.p > 0
@@ -798,9 +790,6 @@ class Integer(Rational):
 
     def _eval_is_odd(self):
         return bool(self.p % 2)
-
-    def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, self.p)
 
     def _eval_power(b, e):
         if isinstance(e, Number):

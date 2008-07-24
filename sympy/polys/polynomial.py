@@ -2128,19 +2128,6 @@ class Poly(Basic, RelMeths, ArithMeths):
     def __nonzero__(self):
         return self.coeffs not in ((S.Zero,), (0,))
 
-    def torepr(self):
-        terms = []
-
-        for coeff, monom in self.iter_terms():
-            terms.append("(%s, %s)" % (repr(coeff), monom))
-
-        format = self.__class__.__name__ + "([%s], %s, order='%s')"
-
-        symbols = [ repr(s) for s in self.symbols ]
-
-        return format % (', '.join(terms),
-            ', '.join(symbols), self.order)
-
     def _eval_is_polynomial(self, symbols):
         try:
             self.__class__(self, *symbols, **self.flags)

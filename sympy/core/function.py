@@ -329,11 +329,6 @@ class Function(Basic, ArithMeths, RelMeths):
                 raise TypeError("argument index %r is out of range [1,%s]" % (argindex,nargs))
         return Derivative(self,self.args[argindex-1],evaluate=False)
 
-    def __repr__(self):
-        r = '%s(%r)' % (self.func.__base__.__name__, self.func.__name__)
-        r+= '(%s)' % ', '.join([repr(a) for a in self.args])
-        return r
-
     @classmethod
     def _eval_apply_evalf(cls, arg):
         arg = arg.evalf(prec)
@@ -391,9 +386,6 @@ class WildFunction(Function, Atom):
         repl_dict = repl_dict.copy()
         repl_dict[pattern] = expr
         return repl_dict
-
-    def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, self.name)
 
     @classmethod
     def _eval_apply_evalf(cls, arg):

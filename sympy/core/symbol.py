@@ -59,9 +59,6 @@ class Symbol(Atom, RelMeths, ArithMeths):
     def _hashable_content(self):
         return (self.name,)
 
-    def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, self.name)
-
     def as_dummy(self):
         return Dummy(self.name, **self.assumptions0)
 
