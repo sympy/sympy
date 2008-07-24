@@ -3,6 +3,7 @@ from sympy import Basic, S, Symbol, Real, Integer, Rational,  \
     WildFunction, Poly, Function, Derivative, Number
 
 import py
+from sympy.utilities.pytest import XFAIL
 
 class DummyNumber(object):
     """
@@ -511,6 +512,22 @@ def test_is_number():
     assert (2 + log(x)).is_number == False
 
     assert (2*g).is_number == False
+
+
+# TODO write more tests for as_coeff_factors
+def test_as_coeff_factors():
+    x = Symbol('x')
+
+    assert     x .as_coeff_factors() == ( 0, (x,))
+    assert (-1+x).as_coeff_factors() == (-1, (x,))
+    assert ( 2+x).as_coeff_factors() == ( 2, (x,))
+
+@XFAIL  # as_coeff_factors assumes Number goes as first entry in Add.args
+def test_as_coeff_factors_0():
+    x = Symbol('x')
+
+    assert ( 1+x).as_coeff_factors() == ( 1, (x,))
+
 
 def test_as_coeff_exponent():
     x, y = symbols("xy")
