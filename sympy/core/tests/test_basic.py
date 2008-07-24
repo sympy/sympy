@@ -277,20 +277,6 @@ def test_SAGE3():
 
     assert e == ('mys', x, o)
 
-def test_ordering():
-    from sympy.core.methods import ArithMeths
-    class CustomClass1(Basic, ArithMeths): pass
-    class CustomClass2(Basic, ArithMeths): pass
-    cc1 = CustomClass1(commutative=True)
-    cc2 = CustomClass2(commutative=True)
-
-    assert str(Rational(2)*cc1) == '2*CustomClass1()'
-    assert str(cc1*Rational(2)) == '2*CustomClass1()'
-    assert str(cc1*Real("1.5")) == '1.5*CustomClass1()'
-    assert str(cc2*Rational(2)) == '2*CustomClass2()'
-    assert str(cc2*Rational(2)*cc1) == '2*CustomClass1()*CustomClass2()'
-    assert str(cc1*Rational(2)*cc2) == '2*CustomClass1()*CustomClass2()'
-
 def test_len():
     x, y, z = symbols("xyz")
     e = x*y

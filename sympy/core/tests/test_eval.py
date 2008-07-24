@@ -5,12 +5,6 @@ from sympy.utilities.pytest import XFAIL
 def test_add_eval():
     a = Symbol("a")
     b = Symbol("b")
-
-    e = a+b+a+b
-    s1 = str(e)
-    s2 = str(e)
-    assert s1 == s2
-
     c = Rational(1)
     p = Rational(5)
     assert a*b+c+p == a*b+6

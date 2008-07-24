@@ -65,11 +65,3 @@ def test_factorials():
     assert factorial(7) == 5040
     assert isinstance(factorial(n), Factorial)
     assert isinstance(factorial(2*n), Factorial)
-
-def test_factorials_str():
-    n = Symbol('n', integer=True)
-    assert str(factorial(-2)) == "0"
-    assert str(factorial(0)) == "1"
-    assert str(factorial(7)) == "5040"
-    assert str(factorial(n)) == "n!"
-    assert str(factorial(2*n)) == "(2*n)!"

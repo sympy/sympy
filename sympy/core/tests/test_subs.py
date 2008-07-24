@@ -10,14 +10,13 @@ def test_subs():
     x=Symbol("x")
     c=Symbol("c")
     e=x
-    assert str(e) == "x"
     e=e.subs(x,n3)
-    assert str(e) == "3"
+    assert e == Rational(3)
 
     e=2*x
     assert e == 2*x
     e=e.subs(x,n3)
-    assert str(e) == "6"
+    assert e == Rational(6)
 
     e=(sin(x)**2).diff(x)
     assert e == 2*sin(x)*cos(x)

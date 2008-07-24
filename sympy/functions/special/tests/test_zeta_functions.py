@@ -52,7 +52,6 @@ def test_zeta():
     assert zeta(0, 2) == -Rational(3, 2)
     assert zeta(0, -2) == Rational(3, 2)
 
-    assert str(zeta(3)) == "zeta(3)"
     assert zeta(3).evalf(20).epsilon_eq(Real("1.2020569031595942854",20), 1e-19)
 
 def test_dirichlet_eta():

@@ -152,10 +152,3 @@ def test_issue369():
     assert x.is_infinitesimal == None
     assert y.is_infinitesimal == None
     assert z.is_infinitesimal == None
-
-def test_order_str():
-    x, y = var("x y")
-    assert str(O(x)) == "O(x)"
-    assert str(O(x**2)) == "O(x**2)"
-
-    assert str(O(x*y)) == "O(x*y, x, y)"

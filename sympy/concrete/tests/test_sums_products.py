@@ -4,9 +4,6 @@ from sympy.utilities.pytest import XFAIL
 
 a, b, c, d, m, n = map(Symbol, 'abcdmn')
 
-def test_str():
-    assert str(sum(cos(3*n), (n, a, b))) == "Sum(cos(3*n), (n, a, b))"
-
 def test_arithmetic_sums():
     assert sum(1, (n, a, b)) == b-a+1
     assert sum(1, (n, 1, 10)) == 10

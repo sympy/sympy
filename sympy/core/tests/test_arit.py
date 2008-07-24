@@ -15,8 +15,6 @@ b = Symbol("b", positive=True)
 c = Symbol("c")
 
 def test_Symbol():
-    assert str(a)=="a"
-    assert str(b)=="b"
     e=a*b
     assert e==a*b
     assert a*b*b==a*b**2

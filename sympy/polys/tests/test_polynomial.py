@@ -157,40 +157,6 @@ def test_poly_repr():
         "Poly([(Integer(2), (1, 1)), (Integer(-7), (0, 0))]," \
         " Symbol('x'), Symbol('y'), order='grevlex')"
 
-    assert str(Poly(0, x)) == "Poly(0, x)"
-
-    assert str(Poly(1, x)) == "Poly(1, x)"
-    assert str(Poly(x, x)) == "Poly(x, x)"
-
-    assert str(Poly(2*x + 1, x)) == "Poly(2*x + 1, x)"
-    assert str(Poly(2*x - 1, x)) == "Poly(2*x - 1, x)"
-
-    assert str(Poly(-1, x)) == "Poly(-1, x)"
-    assert str(Poly(-x, x)) == "Poly(-x, x)"
-
-    assert str(Poly(-2*x + 1, x)) == "Poly(-2*x + 1, x)"
-    assert str(Poly(-2*x - 1, x)) == "Poly(-2*x - 1, x)"
-
-    assert str(Poly(x - 1, x, order='lex')) == "Poly(x - 1, x)"
-
-    assert str(Poly(x**2 + 1 + y, x)) == "Poly(x**2 + 1 + y, x)"
-    assert str(Poly(x**2 - 1 + y, x)) in [
-            "Poly(x**2 - 1 + y, x)",
-            "Poly(x**2 + (-1) + y, x)",
-            ]
-
-    assert str(Poly(-x*y*z + x*y - 1, x, y, z)) == "Poly(-x*y*z + x*y - 1, x, y, z)"
-
-    assert str(Poly(-t*x**21*y**7*z + (1 + t)*z**3 - 2*x*z + 1, x, y, z)) == \
-        "Poly(-t*x**21*y**7*z + (1 + t)*z**3 - 2*x*z + 1, x, y, z)"
-
-    assert str(Poly(x*y*z**2 - 27*x, x, y, z, order='lex')) == \
-        "Poly(x*y*z**2 - 27*x, x, y, z, order='lex')"
-    assert str(Poly(x*y*z**2 - 27*x, x, y, z, order='grlex')) == \
-        "Poly(x*y*z**2 - 27*x, x, y, z)"
-    assert str(Poly(x*y*z**2 - 27*x, x, y, z, order='grevlex')) == \
-        "Poly(x*y*z**2 - 27*x, x, y, z, order='grevlex')"
-
 def test_poly_cancel():
     assert Poly.cancel(x) == x
     assert Poly.cancel(x+1) == x+1
@@ -1158,12 +1124,3 @@ def test_RootsOf():
 
     assert RootSum(Lambda(x, x), Poly(0, x), evaluate=True)  == S.Zero
     assert RootSum(Lambda(x, x), Poly(0, x), evaluate=False) != S.Zero
-
-    f = Poly(x**17 + x - 1, x)
-
-    assert str(RootsOf(f)) == "RootsOf(x**17 + x - 1, x)"
-
-    assert str(RootOf(f, 0)) == "RootOf(x**17 + x - 1, x, index=0)"
-
-    assert str(RootSum(Lambda(z, z**2), f)) == \
-        "RootSum(Lambda(_z, _z**2), x**17 + x - 1, x)"

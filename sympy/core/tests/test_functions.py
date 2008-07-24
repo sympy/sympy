@@ -153,7 +153,7 @@ def test_combine():
     assert (x/exp(x)*exp(-x)).combine() == x*exp(-2*x)
 
 
-def test_function_str():
+def test_function_repr():
     x = Symbol('x')
     f = Function('f')
     fx= f(x)
@@ -162,16 +162,11 @@ def test_function_str():
     assert repr(fx) == "Function('f')(Symbol('x'))"
     assert repr(w)  == "WildFunction('w')"
 
-    assert str(fx)  == "f(x)"
-    assert str(w)   == "w_"
-
 
 @XFAIL
-def test_unapplied_function_str():
+def test_unapplied_function_repr():
     f = Function('f')
-
     assert repr(f)     == "Function('f')"   # this does not work
-    assert str(f)      == "f"               # this does not work
 
 def test_Lambda():
     e = Lambda(x, x**2)
@@ -210,9 +205,6 @@ def test_Lambda():
     p = x, y, z, t
     assert Lambda(p, t*(x+y+z))(*p) == t * (x + y + z)
 
-    d = Symbol('d', dummy=True)
-
-    assert str(Lambda(d, d**2)) == "Lambda(_d, _d**2)"
 
 def test_expand_function():
     assert expand(x+y) == x + y
@@ -278,9 +270,8 @@ def test_deriv3():
     assert diff(x**3, x, evaluate=False) == Derivative(x**3, x)
 
 def test_suppressed_evaluation():
-    a = sin(0,evaluate=False)
+    a = sin(0, evaluate=False)
     assert a != 0
-    assert str(a) == "sin(0)"
     assert a.func is sin
     assert a.args == (0,)
 
