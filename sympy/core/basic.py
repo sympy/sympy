@@ -1622,7 +1622,7 @@ class Basic(AssumeMeths):
         c, terms = self.as_coeff_terms()
         p  = wc*x**we
         d = self.match(p)
-        if d is not None:
+        if d is not None and we in d:
             return d[wc], d[we]
         return self, S.Zero
 

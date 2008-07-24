@@ -521,6 +521,6 @@ def test_as_coeff_exponent():
     assert (3*x**0).as_coeff_exponent(x) == (3, 0)
     assert (2*x**0).as_coeff_exponent(x) == (2, 0)
     assert (1*x**0).as_coeff_exponent(x) == (1, 0)
-    #assert (0*x**0).as_coeff_exponent(x) == (0, 0)
+    assert (0*x**0).as_coeff_exponent(x) == (0, 0)
     assert (-1*x**0).as_coeff_exponent(x) == (-1, 0)
     assert (-2*x**0).as_coeff_exponent(x) == (-2, 0)
