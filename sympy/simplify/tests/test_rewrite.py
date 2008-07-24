@@ -99,5 +99,6 @@ def test_apart():
     assert apart(Eq((x**2+1)/(x+1), sin(x)), x) == \
         Eq(x - 1 + 2/(x+1), sin(x))
 
-    assert apart(1/(1+x**5), x, evaluate=False).tostr() == \
-        "RootSum(Lambda(_a, -1/5/(x - _a)*_a), x**5 + 1, x)"
+    assert str(apart(1/(1+x**5), x, evaluate=False)) in [
+        "RootSum(Lambda(_a, -1/5/(x - _a)*_a), x**5 + 1, x)",
+        "RootSum(Lambda(_a, -_a/(5*(x - _a))), x**5 + 1, x)"]

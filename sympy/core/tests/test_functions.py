@@ -2,7 +2,6 @@ from sympy import Lambda, Symbol, Function, WildFunction, Derivative, sqrt, \
         log, exp, Rational, Real, sign, Basic, sin, cos, diff, I, re, im, \
         oo, zoo, nan, E, expand, pi
 from sympy.utilities.pytest import XFAIL
-from sympy.utilities.test import REPR0
 from sympy.abc import x, y
 
 
@@ -154,15 +153,12 @@ def test_combine():
     assert (x/exp(x)*exp(-x)).combine() == x*exp(-2*x)
 
 
-@REPR0
 def test_function_str():
     x = Symbol('x')
     f = Function('f')
     fx= f(x)
     w = WildFunction('w')
 
-    # XXX we are not using repr(...) str(...) here, becuase Basic.__repr__ and __str__
-    #     are doing some tricks, and repr(...) is not always a repr.
     assert repr(fx) == "Function('f')(Symbol('x'))"
     assert repr(w)  == "WildFunction('w')"
 
@@ -171,7 +167,6 @@ def test_function_str():
 
 
 @XFAIL
-@REPR0
 def test_unapplied_function_str():
     f = Function('f')
 
@@ -217,7 +212,7 @@ def test_Lambda():
 
     d = Symbol('d', dummy=True)
 
-    assert Lambda(d, d**2).tostr() == "Lambda(_d, _d**2)"
+    assert str(Lambda(d, d**2)) == "Lambda(_d, _d**2)"
 
 def test_expand_function():
     assert expand(x+y) == x + y

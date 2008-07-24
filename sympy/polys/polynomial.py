@@ -2132,7 +2132,7 @@ class Poly(Basic, RelMeths, ArithMeths):
         terms = []
 
         for coeff, monom in self.iter_terms():
-            terms.append("(%s, %s)" % (coeff.torepr(), monom))
+            terms.append("(%s, %s)" % (repr(coeff), monom))
 
         format = self.__class__.__name__ + "([%s], %s, order='%s')"
 

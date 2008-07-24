@@ -53,7 +53,8 @@ def test_bug4():
     assert str(e) not in ["(-2)*x**1/2(-1/2)*x**(-1/2)*w",
             "-2*x**1/2(-1/2)*x**(-1/2)*w","-2*x**1/2-1/2*x**-1/2*w"]
     assert str(e) in ["-2*x**(1/2) - 1/2*x**(-1/2)*w", "-2*x**(1/2) - 1/2*w*x**(-1/2)",
-                      "-1/2*x**(-1/2)*w - 2*x**(1/2)", "-1/2*w*x**(-1/2) - 2*x**(1/2)"]
+                      "-1/2*x**(-1/2)*w - 2*x**(1/2)", "-1/2*w*x**(-1/2) - 2*x**(1/2)",
+                      "-2*x**(1/2) - w/(2*x**(1/2))"]
 
 def test_Derivative():
     x = Symbol("x")
@@ -63,7 +64,7 @@ def test_Derivative():
     assert str(e) == "D(x**2, x)"
 
     e = Derivative(x**2/y, x, y, evaluate=False)
-    assert str(e) == "D(x**2/y, x, y)"
+    assert str(e) == "D(1/y*x**2, x, y)"
 
 def test_x_div_y():
     x = Symbol("x")
@@ -73,7 +74,7 @@ def test_x_div_y():
 
 def test_ordering():
     x = Symbol("x")
-    assert str(sin(x).series(x, 0, 15)) == "x - 1/6*x**3 + (1/120)*x**5 - 1/5040*x**7 + (1/362880)*x**9 - 1/39916800*x**11 + (1/6227020800)*x**13 + O(x**15)"
+    assert str(sin(x).series(x, 0, 15)) == "x - 1/6*x**3 + 1/120*x**5 - 1/5040*x**7 + 1/362880*x**9 - 1/39916800*x**11 + 1/6227020800*x**13 + O(x**15)"
 
 def test_wild_str():
     # Check expressions containing Wild not causing infinite recursion

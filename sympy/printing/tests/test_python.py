@@ -18,7 +18,7 @@ def test_python_basic():
     # Powers
     assert python((x**2)) == "x = Symbol(\'x\')\ne = x**2"
     assert python(1/x) == "x = Symbol('x')\ne = 1/x"
-    assert python(y*x**-2) == "y = Symbol('y')\nx = Symbol('x')\ne = y*x**(-2)"
+    assert python(y*x**-2) == "y = Symbol('y')\nx = Symbol('x')\ne = y/x**2"
     assert python(x**Rational(-5, 2)) == "x = Symbol('x')\ne = x**(-5/2)"
 
     # Sums of terms
@@ -34,7 +34,8 @@ def test_python_basic():
             "x = Symbol('x')\ne = -2*x + 1"]
     assert python(1-Rational(3,2)*y/x) in [
             "y = Symbol('y')\nx = Symbol('x')\ne = 1 - 3/2*y/x",
-            "y = Symbol('y')\nx = Symbol('x')\ne = -3/2*y/x + 1"]
+            "y = Symbol('y')\nx = Symbol('x')\ne = -3/2*y/x + 1",
+            "y = Symbol('y')\nx = Symbol('x')\ne = 1 - 3*y/(2*x)"]
 
     # Multiplication
     assert python(x/y) == "x = Symbol('x')\ny = Symbol('y')\ne = x/y"
@@ -51,6 +52,7 @@ def test_python_basic():
     assert python(1 - Rational(3,2)*(x+1)) in [
             "x = Symbol('x')\ne = (-1/2) - 3/2*x",
             "x = Symbol('x')\ne = -1/2 - 3/2*x",
+            "x = Symbol('x')\ne = -1/2 - 3*x/2",
             ]
 
 def test_python_relational():

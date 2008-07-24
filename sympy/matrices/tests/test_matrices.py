@@ -1,7 +1,6 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
         sin, exp, hessian, sqrt, zero, randMatrix, Poly, S, pi
 from sympy.matrices.matrices import ShapeError, MatrixError
-from sympy.utilities.test import REPR0
 import py
 
 def test_division():
@@ -836,34 +835,16 @@ def test_col_row():
                         [1+y,y+2,3]])
 
 
-@REPR0
 def test_str():
     x, y = symbols("xy")
     M = Matrix([[x**+1, 1], [y, x+y]])
 
-    assert repr(M) in [
-"""\
-Matrix([
-  [Symbol('x'),                        One(1)],
-  [Symbol('y'), Add(Symbol('x'), Symbol('y'))],
-])\
-""",
-"""\
-Matrix([
-  [Symbol('x'),                        One(1)],
-  [Symbol('y'), Add(Symbol('y'), Symbol('x'))],
-])\
-""" ]
+    assert repr(M) in ["Matrix([\n  [Symbol('x'),                        One(1)],\n  [Symbol('y'), Add(Symbol('y'), Symbol('x'))],\n])",
+                       "Matrix([\n  [Symbol('x'),                        One(1)],\n  [Symbol('y'), Add(Symbol('x'), Symbol('y'))],\n])"]
 
-    assert str(M) in [
-"""\
-[x,     1]
-[y, x + y]\
-""",
-"""\
-[x,     1]
-[y, y + x]\
-""" ]
+
+    assert str(M) in ["[x,     1]\n[y, x + y]",
+                      "[x,     1]\n[y, y + x]"]
 
 def test_issue851():
     m = Matrix([1, 2, 3])
