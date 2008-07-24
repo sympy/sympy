@@ -511,3 +511,16 @@ def test_is_number():
     assert (2 + log(x)).is_number == False
 
     assert (2*g).is_number == False
+
+def test_as_coeff_exponent():
+    x, y = symbols("xy")
+    assert (3*x**4).as_coeff_exponent(x) == (3, 4)
+    assert (2*x**3).as_coeff_exponent(x) == (2, 3)
+    assert (4*x**2).as_coeff_exponent(x) == (4, 2)
+    assert (6*x**1).as_coeff_exponent(x) == (6, 1)
+    assert (3*x**0).as_coeff_exponent(x) == (3, 0)
+    assert (2*x**0).as_coeff_exponent(x) == (2, 0)
+    assert (1*x**0).as_coeff_exponent(x) == (1, 0)
+    #assert (0*x**0).as_coeff_exponent(x) == (0, 0)
+    assert (-1*x**0).as_coeff_exponent(x) == (-1, 0)
+    assert (-2*x**0).as_coeff_exponent(x) == (-2, 0)
