@@ -152,22 +152,6 @@ def test_combine():
     assert (2*exp(x)*exp(-x)).combine() == 2
     assert (x/exp(x)*exp(-x)).combine() == x*exp(-2*x)
 
-
-def test_function_repr():
-    x = Symbol('x')
-    f = Function('f')
-    fx= f(x)
-    w = WildFunction('w')
-
-    assert repr(fx) == "Function('f')(Symbol('x'))"
-    assert repr(w)  == "WildFunction('w')"
-
-
-@XFAIL
-def test_unapplied_function_repr():
-    f = Function('f')
-    assert repr(f)     == "Function('f')"   # this does not work
-
 def test_Lambda():
     e = Lambda(x, x**2)
     f = Function('f')

@@ -145,18 +145,6 @@ def test_poly_internals():
     assert Poly._permute(q, z, y, x) == \
         {(0, 1, 1): 3, (1, 1, 0): 4, (3, 1, 1): 2, (1, 1, 2): 1}
 
-def test_poly_repr():
-    assert repr(Poly(7, x)) == \
-        "Poly([(Integer(7), (0,))], Symbol('x'), order='grlex')"
-
-    assert repr(Poly(2*x*y + 7, x, y)) == \
-        "Poly([(Integer(2), (1, 1)), (Integer(7), (0, 0))]," \
-        " Symbol('x'), Symbol('y'), order='grlex')"
-
-    assert repr(Poly(2*x*y - 7, x, y, order='grevlex')) == \
-        "Poly([(Integer(2), (1, 1)), (Integer(-7), (0, 0))]," \
-        " Symbol('x'), Symbol('y'), order='grevlex')"
-
 def test_poly_cancel():
     assert Poly.cancel(x) == x
     assert Poly.cancel(x+1) == x+1
