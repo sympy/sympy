@@ -386,6 +386,8 @@ calculated, the bug is in the limit algorithm."""
     try:
         return e.leadterm(x)
     except:
+        import traceback
+        traceback.print_exc()
         report(e, x)
 
 @debug
