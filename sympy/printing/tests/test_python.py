@@ -19,7 +19,7 @@ def test_python_basic():
     assert python((x**2)) == "x = Symbol(\'x\')\ne = x**2"
     assert python(1/x) == "x = Symbol('x')\ne = 1/x"
     assert python(y*x**-2) == "y = Symbol('y')\nx = Symbol('x')\ne = y/x**2"
-    assert python(x**Rational(-5, 2)) == "x = Symbol('x')\ne = x**(-5/2)"
+    assert python(x**Rational(-5, 2)) == "x = Symbol('x')\ne = x**(Rational(-5, 2))"
 
     # Sums of terms
     assert python((x**2 + x + 1)) in [
@@ -42,17 +42,18 @@ def test_python_basic():
     assert python(-x/y) == "x = Symbol('x')\ny = Symbol('y')\ne = -x/y"
     assert python((x+2)/y) in [
             "y = Symbol('y')\nx = Symbol('x')\ne = 1/y*(2 + x)",
-            "y = Symbol('y')\nx = Symbol('x')\ne = 1/y*(x + 2)"]
+            "y = Symbol('y')\nx = Symbol('x')\ne = 1/y*(x + 2)",
+            "x = Symbol('x')\ny = Symbol('y')\ne = 1/y*(2 + x)"]
     assert python((1+x)*y) in [
             "y = Symbol('y')\nx = Symbol('x')\ne = y*(1 + x)",
-            "y = Symbol('y')\nx = Symbol('x')\ne = y*(x + 1)"]
+            "y = Symbol('y')\nx = Symbol('x')\ne = y*(x + 1)",]
 
     # Check for proper placement of negative sign
     assert python(-5*x/(x+10)) == "x = Symbol('x')\ne = -5*x/(10 + x)"
     assert python(1 - Rational(3,2)*(x+1)) in [
-            "x = Symbol('x')\ne = (-1/2) - 3/2*x",
-            "x = Symbol('x')\ne = -1/2 - 3/2*x",
-            "x = Symbol('x')\ne = -1/2 - 3*x/2",
+            "x = Symbol('x')\ne = Rational(-1, 2) + Rational(-3, 2)*x",
+            "x = Symbol('x')\ne = Rational(-1, 2) - 3*x/2",
+            "x = Symbol('x')\ne = Rational(-1, 2) - 3*x/2"
             ]
 
 def test_python_relational():
@@ -66,8 +67,8 @@ def test_python_relational():
 def test_python_functions():
     # Simple
     assert python((2*x + exp(x))) in "x = Symbol('x')\ne = 2*x + exp(x)"
-    assert python(sqrt(2)) == 'e = 2**(1/2)'
-    assert python(sqrt(2+pi)) == 'e = (2 + pi)**(1/2)'
+    assert python(sqrt(2)) == 'e = 2**(Half(1, 2))'
+    assert python(sqrt(2+pi)) == 'e = (2 + pi)**(Half(1, 2))'
     assert python(abs(x)) == "x = Symbol('x')\ne = abs(x)"
     assert python(abs(x/(x**2+1))) in ["x = Symbol('x')\ne = abs(x/(1 + x**2))",
             "x = Symbol('x')\ne = abs(x/(x**2 + 1))"]
@@ -82,8 +83,8 @@ def test_python_functions():
 
     # Nesting of square roots
     assert python(sqrt((sqrt(x+1))+1)) in [
-            "x = Symbol('x')\ne = (1 + (1 + x)**(1/2))**(1/2)",
-            "x = Symbol('x')\ne = ((x + 1)**(1/2) + 1)**(1/2)"]
+            "x = Symbol('x')\ne = (1 + (1 + x)**(Half(1, 2)))**(Half(1, 2))",
+            "x = Symbol('x')\ne = ((x + 1)**(Half(1, 2)) + 1)**(Half(1, 2))"]
     # Function powers
     assert python(sin(x)**2) == "x = Symbol('x')\ne = sin(x)**2"
 
@@ -126,7 +127,7 @@ def test_python_integrals():
     assert python(f_4) == "x = Symbol('x')\ne = Integral(x**2, (x, (1, 2)))"
 
     f_5 = Integral(x**2, (x,Rational(1,2),10))
-    assert python(f_5) == "x = Symbol('x')\ne = Integral(x**2, (x, (1/2, 10)))"
+    assert python(f_5) == "x = Symbol('x')\ne = Integral(x**2, (x, (Half(1, 2), 10)))"
 
     # Nested integrals
     f_6 = Integral(x**2*y**2, x,y)

@@ -1,84 +1,48 @@
 # -*- coding: utf-8 -*-
 
-from sympy.core import C
-from sympy import oo
-from printer import Printer
+import sympy
+from repr import ReprPrinter
+from str import StrPrinter
 
-class PythonPrinter(Printer):
+class PythonPrinter(ReprPrinter, StrPrinter):
     """A printer which converts an expression into its Python interpretation."""
 
     def __init__(self):
-        Printer.__init__(self)
+        ReprPrinter.__init__(self)
+        StrPrinter.__init__(self)
         self.symbols = []
         self.functions = []
 
-    # Functions for printing exact type of expression
     def _print_Add(self, expr):
-        for value in expr.args:
-            self._print(value)
+        return StrPrinter._print_Add(self, expr)
 
-    def _print_Derivative(self, expr):
-        for arg in expr.args:
-            self._print(arg)
-
-    # procedure (!) for defining functions which have to be defined in print_python()
-    def _print_Function(self, expr, exp=None):
+    def _print_Function(self, expr):
         func = expr.func.__name__
-        args = ''.join([self._print(arg) for arg in expr.args])
-        import sympy
-        if not hasattr(sympy, func) and func not in self.functions:
+        if not hasattr(sympy, func) and not func in self.functions:
             self.functions.append(func)
+        return StrPrinter._print_Function(self, expr)
 
-    def _print_Integral(self, expr):
-        for arg in expr._args:
-            self._print(arg)
+    def _print_Infinity(self, expr):
+        return StrPrinter._print_Infinity(self, expr)
+
+    def _print_Integer(self, expr):
+        return StrPrinter._print_Integer(self, expr)
 
     def _print_Mul(self, expr):
-        terms = expr.as_coeff_terms()[1]
-        for term in terms:
-            self._print(term)
+        return StrPrinter._print_Mul(self, expr)
 
     def _print_Pow(self, expr):
-        if expr.exp.is_Rational and expr.exp.q == 2:
-            self._print(expr.base)
-        else:
-            if expr.base.is_Function or expr.base.is_Symbol:
-                self._print(expr.base)
-                self._print(expr.exp)
-
-    def _print_Rational(self, expr):
-        if expr == oo:
-            return oo
-        if expr == 0:
-            return 0
-        return 'Rational(' + self._str(expr.p) + ', ' + self._str(expr.q) + ')'
-
-    def _print_Relational(self, expr):
-        self._print(expr.lhs) + self._print(expr.rhs)
+        return StrPrinter._print_Pow(self, expr)
 
     # procedure (!) for defining symbols which have be defined in print_python()
     def _print_Symbol(self, expr):
         symbol = self._str(expr)
         if symbol not in self.symbols:
             self.symbols.append(symbol)
-
-    # Main function for printing
-    def doprint(self, expr):
-        return Printer.doprint(self, expr)
-
-    # Function definitions for clearer output
-    # (it's possible they don't have to be defined)
-    def _print_int(self, expr):
-        pass
+        return StrPrinter._print_Symbol(self, expr)
 
     def _print_module(self, expr):
         raise Exception('Modules in the expression are unacceptable')
-
-    def _print_str(self, expr):
-        raise Exception('Strings in the expression are unacceptable')
-
-    def emptyPrinter(self, expr):
-        pass
 
 def python(expr):
     """Return Python interpretation of passed expression
