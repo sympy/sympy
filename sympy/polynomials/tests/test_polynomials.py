@@ -18,7 +18,7 @@ def test_Polynomial():
     assert f.var == [x]
     assert f.coeffs == ((1, 1), (2, 0))
     assert str(f) == "2 + x"
-    assert repr(f) == "Polynomial(2 + x, ((1, 1), (2, 0)), [x], 'grevlex')"
+    assert repr(f) == "Polynomial(Add(Integer(2), Symbol('x')), ((One(1), One(1)), (Integer(2), Zero(0))), [Symbol('x')], 'grevlex')"
     assert f == 2 + x
     assert f == Polynomial(None, f.coeffs, f.var, f.order)
     assert f.nth_coeff(0) == 2

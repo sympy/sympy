@@ -146,14 +146,14 @@ def test_poly_internals():
         {(0, 1, 1): 3, (1, 1, 0): 4, (3, 1, 1): 2, (1, 1, 2): 1}
 
 def test_poly_repr():
-    assert Poly(7, x).torepr() == \
+    assert repr(Poly(7, x)) == \
         "Poly([(Integer(7), (0,))], Symbol('x'), order='grlex')"
 
-    assert Poly(2*x*y + 7, x, y).torepr() == \
+    assert repr(Poly(2*x*y + 7, x, y)) == \
         "Poly([(Integer(2), (1, 1)), (Integer(7), (0, 0))]," \
         " Symbol('x'), Symbol('y'), order='grlex')"
 
-    assert Poly(2*x*y - 7, x, y, order='grevlex').torepr() == \
+    assert repr(Poly(2*x*y - 7, x, y, order='grevlex')) == \
         "Poly([(Integer(2), (1, 1)), (Integer(-7), (0, 0))]," \
         " Symbol('x'), Symbol('y'), order='grevlex')"
 
