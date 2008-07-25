@@ -1,3 +1,7 @@
+"""
+A Printer for generating readable representation of most sympy classes.
+"""
+
 from printer import Printer
 from sympy.printing.precedence import precedence
 from sympy.core.basic import S

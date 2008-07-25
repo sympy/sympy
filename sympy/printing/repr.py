@@ -1,3 +1,10 @@
+"""
+A Printer for generating executable code.
+
+The most important function here is srepr that returns a string so that the
+relation eval(srepr(expr))=expr holds in an apropriate environment.
+"""
+
 from printer import Printer
 from sympy.printing.precedence import precedence
 import sympy.mpmath.lib as mlib
