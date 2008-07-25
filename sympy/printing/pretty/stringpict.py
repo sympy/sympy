@@ -245,14 +245,29 @@ class stringPict(object):
         if self.width() <= ncols:
             return type(self.picture[0])(self)
 
+        # for one-line pictures we don't need v-spacers. on the other hand, for
+        # multiline-pictures, we need v-spacers between blocks, compare:
+        #
+        #    2  2        3    | a*c*e + a*c*f + a*d  | a*c*e + a*c*f + a*d  | 3.14159265358979323
+        # 6*x *y  + 4*x*y  +  |                      | *e + a*d*f + b*c*e   | 84626433832795
+        #                     | *e + a*d*f + b*c*e   | + b*c*f + b*d*e + b  |
+        #      3    4    4    |                      | *d*f                 |
+        # 4*y*x  + x  + y     | + b*c*f + b*d*e + b  |                      |
+        #                     |                      |                      |
+        #                     | *d*f
+        do_vspacers = (self.height() > 1)
+
         i = 0
         svals = []
         while i < self.width():
             svals.extend([ sval[i:i+ncols] for sval in self.picture ])
-            svals.append("") # a vertical spacer
+            if (self.height() > 1):
+                svals.append("") # a vertical spacer
             i += ncols
 
-        del svals[-1] #  Get rid of the last spacer
+        if svals[-1] == '':
+            del svals[-1] #  Get rid of the last spacer
+
         _str = type(self.picture[0])
         return _str.join(_str("\n"), svals)
 
