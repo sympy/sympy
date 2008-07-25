@@ -103,9 +103,12 @@ class BasicMeta(BasicType):
             print 'Ignoring redefinition of %s: %s defined earlier than %s' % (n, c, cls)
         type.__init__(cls, *args, **kws)
 
+        # --- assumptions ---
+
         # initialize default_assumptions dictionary
         default_assumptions = {}
-        for k in dir(cls):
+
+        for k,v in cls.__dict__.iteritems():
             if not k.startswith('is_'):
                 continue
 
@@ -113,11 +116,47 @@ class BasicMeta(BasicType):
             if k[3:] not in AssumeMeths._assume_defined:
                 continue
 
-            v = getattr(cls, k)
             k = k[3:]
-            if isinstance(v,(bool,int,long)):
-                default_assumptions[k] = bool(v)
-        cls.default_assumptions = default_assumptions
+            if isinstance(v,(bool,int,long,type(None))):
+                if v is not None:
+                    v = bool(v)
+                default_assumptions[k] = v
+                #print '  %r <-- %s' % (k,v)
+
+
+        # XXX maybe we should try to keep ._default_premises out of class ?
+        # XXX __slots__ in class ?
+        cls._default_premises = default_assumptions
+
+        for base in cls.__bases__:
+            try:
+                base_premises = base._default_premises
+            except AttributeError:
+                continue    # no ._default_premises is ok
+
+            for k,v in base_premises.iteritems():
+
+                # if an assumption is already present in child, we should ignore base
+                # e.g. Integer.is_integer=T, but Rational.is_integer=F (for speed)
+                if k in default_assumptions:
+                    continue
+
+                default_assumptions[k] = v
+
+
+
+        # deduce all consequences from default assumptions -- make it complete
+        xass = AssumeMeths._assume_rules.deduce_all_facts(default_assumptions)
+
+        # and store completed set into cls -- this way we'll avoid rededucing
+        # extensions of class default assumptions each time on instance
+        # creation -- we keep it prededuced already.
+        cls.default_assumptions = xass
+
+        #print '\t(%2i)  %s' % (len(default_assumptions), default_assumptions)
+        #print '\t(%2i)  %s' % (len(xass), xass)
+
+
 
     def __cmp__(cls, other):
         try:
