@@ -12,7 +12,7 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
-from pretty_symbology import hobj, vobj, pretty_use_unicode
+from pretty_symbology import hobj, vobj, xsym, pretty_use_unicode
 
 class stringPict(object):
     """A ASCII picture.
@@ -367,13 +367,13 @@ class prettyForm(stringPict):
         if args.binding > prettyForm.MUL: arg = stringPict(*args.parens())
         result = [args]
         for arg in others:
-            result.append('*')
+            result.append(xsym('*'))
             #add parentheses for weak binders
             if arg.binding > prettyForm.MUL: arg = stringPict(*arg.parens())
             result.append(arg)
         len_res = len(result)
         for i in xrange(len_res):
-            if i < len_res-1 and result[i] == '-1' and result[i+1] == "*":
+            if i < len_res-1 and result[i] == '-1' and result[i+1] == xsym('*'):
                 # substitute -1 by -, like in -1*x -> -x
                 result.pop(i)
                 result.pop(i)

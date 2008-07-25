@@ -39,6 +39,10 @@ def test_upretty_subs_missingin_24():
     assert upretty( Symbol('F_x') )     == u'Fₓ'
 
 
+def test_upretty_nicemul():
+    assert upretty(x*y) ==  u'x⋅y'
+
+
 def test_upretty_nicerat():
     u = upretty(y*x**-2)
     s = \
@@ -175,7 +179,7 @@ def test_upretty_integral():
     u = upretty( Integral(sin(th)/cos(ph), (th,0,pi), (ph, 0, 2*pi)) )
     s = \
 u"""\
-2*π π             \n\
+2⋅π π             \n\
  ⌠  ⌠             \n\
  ⎮  ⎮ sin(θ)      \n\
  ⎮  ⎮ ────── dθ dφ\n\
@@ -191,7 +195,7 @@ u"""\
 π 1                \n\
 ⌠ ⌠                \n\
 ⎮ ⎮  2             \n\
-⎮ ⎮ x *sin(y) dx dy\n\
+⎮ ⎮ x ⋅sin(y) dx dy\n\
 ⌡ ⌡                \n\
 0 0                \
 """

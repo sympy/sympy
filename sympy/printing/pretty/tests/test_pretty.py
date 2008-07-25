@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from sympy import Symbol, Matrix, Integral, log, Rational, Derivative, exp, \
         sqrt, pi, Function, sin, cos, pprint_use_unicode, oo, Eq, Le, \
         Gt, Ne, Limit, factorial, gamma, conjugate
@@ -82,7 +83,7 @@ def test_pretty_relational():
 def test_pretty_unicode():
     assert xpretty( oo, True ) == u'\u221e'
     assert xpretty( pi, True ) == u'\u03c0'
-    assert xpretty( pi+2*x, True ) in [u'\u03c0 + 2*x', u'2*x + \u03c0']
+    assert xpretty( pi+2*x, True ) in [u'\u03c0 + 2⋅x', u'2⋅x + \u03c0']
     assert xpretty( pi**2+exp(x), True ) in [
             u' 2    x\n\u03c0  + \u212f ',
             u' x    2\n\u212f  + \u03c0 ']

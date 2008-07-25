@@ -394,6 +394,7 @@ _xsym = {
     '<='    : ('<=',    U('LESS-THAN OR EQUAL TO')),
     '>='    : ('>=',    U('GREATER-THAN OR EQUAL TO')),
     '!='    : ('!=',    U('NOT EQUAL TO')),
+    '*'     : ('*',     U('DOT OPERATOR')),
 }
 
 
