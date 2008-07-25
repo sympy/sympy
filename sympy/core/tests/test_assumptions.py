@@ -345,6 +345,7 @@ def test_other_symbol_fail2():
 
 
 def test_issue726():
+    """catch: hash instability"""
     x = Symbol("x")
     y = Symbol("y")
     a1 = x+y
@@ -354,3 +355,27 @@ def test_issue726():
     h1 = hash(a1)
     h2 = hash(a2)
     assert h1 == h2
+
+
+def test_hash_vs_typeinfo():
+    """seemingly different typeinfo, but in fact equal"""
+    x = Symbol('x')
+
+    # the following two are semantically equal
+    x1= Symbol('x', even=True)
+    x2= Symbol('x', integer=True, odd=False)
+
+    assert hash(x1) == hash(x2)
+    assert x1 == x2
+
+
+@XFAIL  # our __eq__ just does not look at it (yet)
+def test_hash_vs_typeinfo_2():
+    """different typeinfo should mean !eq"""
+    # the following two are semantically different
+    x = Symbol('x')
+    x1= Symbol('x', even=True)
+
+    assert x != x1
+
+

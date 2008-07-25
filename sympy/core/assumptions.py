@@ -344,11 +344,3 @@ class AssumeMeths(object):
             # NOTE it modifies base inplace
             self._assume_rules.deduce_all_facts(facts, base)
 
-
-
-    def _assume_hashable_content(self):
-        d = self._assumptions
-        keys = d.keys()
-        keys.sort()
-        return tuple([(k+'=', d[k]) for k in keys])
-

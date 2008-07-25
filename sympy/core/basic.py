@@ -225,7 +225,10 @@ class Basic(AssumeMeths):
 
     __metaclass__ = BasicMeta
 
-    __slots__ = ['_mhash', '_args']
+    __slots__ = ['_mhash',              # hash value
+                 '_args',               # arguments
+                 '_assume_type_keys',   # assumptions typeinfo keys
+                ]
 
     # To be overridden with True in the appropriate subclasses
     is_Atom = False
@@ -258,6 +261,20 @@ class Basic(AssumeMeths):
         # fully derived assumptions?
         if assumptions:
             obj._learn_new_facts(assumptions)
+            #                      ^
+            # FIXME this is slow   |    another NOTE: speeding this up is *not*
+            #        |             |    important. say for %timeit x+y most of
+            # .------'             |    the time is spent elsewhere
+            # |                    |
+            # |  XXX _learn_new_facts  could be asked about what *new* facts have
+            # v  XXX been learned -- we'll need this to append to _hashable_content
+            basek = set(cls.default_assumptions.keys())
+            k2    = set(obj._assumptions.keys())
+            newk  = k2.difference(basek)
+
+            obj._assume_type_keys = frozenset(newk)
+        else:
+            obj._assume_type_keys = None
 
         obj._mhash = None # will be set by __hash__ method.
         obj._args = args  # all items in args must be Basic objects
@@ -287,9 +304,25 @@ class Basic(AssumeMeths):
         # occurs as hash is needed for setting cache dictionary keys
         h = self._mhash
         if h is None:
-            a = self._assume_hashable_content()
-            self._mhash = h = hash((self.__class__.__name__,) + self._hashable_content() + a)
-        return h
+            h = (type(self).__name__,) + self._hashable_content()
+
+            if self._assume_type_keys is not None:
+                a = []
+                kv= self._assumptions
+                for k in sorted(self._assume_type_keys):
+                    a.append( (k, kv[k]) )
+
+                h = hash( h + tuple(a) )
+
+            else:
+                h = hash( h )
+
+
+            self._mhash = h
+            return h
+
+        else:
+            return h
 
     def _hashable_content(self):
         # If class defines additional attributes, like name in Symbol,
