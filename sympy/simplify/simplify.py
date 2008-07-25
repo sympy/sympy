@@ -208,7 +208,7 @@ def together(expr, deep=False):
        #(z*x + x*y + z*y)/(y*x*z)
 
        >>> together(1/(x*y) + 1/y**2)
-       1/x*y**(-2)*(x + y)
+       (x + y)/(x*y**2)
 
        Or you can just denest multi-level fractional expressions:
 

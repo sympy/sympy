@@ -20,7 +20,7 @@ def intersection(*entities):
         >>> intersection(c, Point(1, 0))
         [Point(1, 0)]
         >>> intersection(c, l2)
-        [Point(1 - 1/5*5**(1/2), 1 + (2/5)*5**(1/2)), Point(1 + (1/5)*5**(1/2), 1 - 2/5*5**(1/2))]
+        [Point(1 - 1/5*5**(1/2), 1 + 2*5**(1/2)/5), Point(1 + 1/5*5**(1/2), 1 - 2*5**(1/2)/5)]
 
     Notes:
     ======

@@ -376,7 +376,7 @@ class harmonic(Function):
         >>> [harmonic(n, 2) for n in range(6)]
         [0, 1, 5/4, 49/36, 205/144, 5269/3600]
         >>> harmonic(oo, 2)
-        (1/6)*pi**2
+        1/6*pi**2
 
     Mathematical description
     ========================

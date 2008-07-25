@@ -117,7 +117,7 @@ def heurisch(f, x, **kwargs):
        >>> x,y = symbols('xy')
 
        >>> heurisch(y*tan(x), x)
-       (1/2)*y*log(1 + tan(x)**2)
+       y*log(1 + tan(x)**2)/2
 
        See Manuel Bronstein's "Poor Man's Integrator":
 

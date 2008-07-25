@@ -49,7 +49,7 @@ def div(f, g, var=None, order=None, coeff=None):
         >>> x, y = symbols('xy')
         >>> q, r = div(x**2 + 6*x + 1, 3*x - 1)
         >>> print q
-        19/9 + (1/3)*x
+        19/9 + x/3
         >>> print r
         28/9
         >>> q, r = div(x**2 + 6*x + 1, 3*x - 1, coeff='int')

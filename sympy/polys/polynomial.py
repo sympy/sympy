@@ -1628,13 +1628,13 @@ class Poly(Basic, RelMeths, ArithMeths):
            Poly(1/3*x**3*y + z**2*x, x, y)
 
            >>> p.integrate(x, 2)
-           Poly(1/12*x**4*y + (1/2)*z**2*x**2, x, y)
+           Poly(1/12*x**4*y + 1/2*z**2*x**2, x, y)
 
            >>> p.integrate(x, 2, y)
-           Poly(1/24*x**4*y**2 + (1/2)*z**2*x**2*y, x, y)
+           Poly(1/24*x**4*y**2 + 1/2*z**2*x**2*y, x, y)
 
            >>> p.integrate(z)
-           Poly(z*x**2*y + (1/3)*z**3, x, y)
+           Poly(z*x**2*y + 1/3*z**3, x, y)
 
         """
         if self.is_zero:

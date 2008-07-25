@@ -329,7 +329,7 @@ class Binomial(Function):
        -5/128
 
        >>> binomial(n, 3)
-       (1/6)*n*(-1 + n)*(-2 + n)
+       n*(-1 + n)*(-2 + n)/6
 
     """
 

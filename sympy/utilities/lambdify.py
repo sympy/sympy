@@ -198,7 +198,7 @@ def lambdastr(args, expr):
     >>> from sympy import symbols
     >>> x,y,z = symbols('xyz')
     >>> lambdastr(x, x**2)
-    'lambda x: ((x)**(2))'
+    'lambda x: (x**2)'
     >>> lambdastr((x,y,z), [z,y,x])
     'lambda x,y,z: ([z, y, x])'
     """

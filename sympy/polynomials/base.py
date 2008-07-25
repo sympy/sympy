@@ -473,12 +473,12 @@ class Polynomial(Basic):
             >>> print leadcoeff
             1/3
             >>> print f
-            (3/2)*x + (3/4)*y + x*y
+            3*x/2 + 3*y/4 + x*y
             >>> leadcoeff, f = f.as_monic()
             >>> print leadcoeff
             1
             >>> print f
-            (3/2)*x + (3/4)*y + x*y
+            3*x/2 + 3*y/4 + x*y
 
             >>> f = Polynomial(y*x, var=x)
             >>> leadcoeff, f = f.as_monic()

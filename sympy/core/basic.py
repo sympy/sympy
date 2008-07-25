@@ -1270,7 +1270,7 @@ class Basic(AssumeMeths):
            >>> x, y = symbols('xy')
 
            >>> sin(x).rewrite(sin, exp)
-           -1/2*I*(exp(I*x) - exp(-I*x))
+           -I*(exp(I*x) - exp(-I*x))/2
 
         """
         if self.is_Atom or not args:

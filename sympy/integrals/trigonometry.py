@@ -32,10 +32,10 @@ def trigintegrate(f, x):
        >>> x = Symbol('x')
 
        >>> trigintegrate(sin(x)*cos(x), x)
-       (1/2)*sin(x)**2
+       1/2*sin(x)**2
 
        >>> trigintegrate(sin(x)**2, x)
-       (1/2)*x - 1/2*cos(x)*sin(x)
+       x/2 - cos(x)*sin(x)/2
 
        http://en.wikibooks.org/wiki/Calculus/Further_integration_techniques
     """
@@ -172,4 +172,3 @@ class Cos_2k_integrate(PolynomialSequence):
         """
         n = 2*k
         return (cos(_x))**(n-1) * sin(_x) / n  +  prev[k-1] * (n-1)/n
-

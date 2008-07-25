@@ -521,10 +521,10 @@ def tsolve(eq, sym):
         >>> x = Symbol('x')
 
         >>> tsolve(3**(2*x+5)-4, x)
-        (1/2)/log(3)*(-5*log(3) + log(4))
+        (-5*log(3) + log(4))/(2*log(3))
 
         >>> tsolve(log(x) + 2*x, x)
-        (1/2)*LambertW(2)
+        1/2*LambertW(2)
 
     """
     if patterns is None:
