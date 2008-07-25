@@ -32,7 +32,7 @@ from plotting import Plot, textplot
 from printing import pretty, pretty_print, pprint, pprint_use_unicode, \
     pprint_try_use_unicode, print_gtk, print_tree
 from printing import latex, preview, view, pngview, pdfview, dviview
-from printing import python, print_python
+from printing import python, print_python, srepr
 from polynomials import factor
 
 # This is slow to import:
