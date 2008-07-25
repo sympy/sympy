@@ -947,7 +947,7 @@ class Zero(Singleton, Integer):
     is_finite = False
     is_zero = True
     is_prime = False
-    is_composite = True
+    is_composite = False
 
     __slots__ = []
 

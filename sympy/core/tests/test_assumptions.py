@@ -32,7 +32,7 @@ def test_zero():
     assert z.is_infinitesimal == True
     assert z.is_comparable == True
     assert z.is_prime == False
-    assert z.is_composite == True
+    assert z.is_composite == False
 
 def test_one():
     z = Integer(1)
