@@ -346,6 +346,48 @@ class Basic(AssumeMeths):
         obj._args = args  # all items in args must be Basic objects
         return obj
 
+
+    # XXX better name?
+    @property
+    def assumptions0(self):
+        """return object `type` assumptions
+
+           For example:
+
+             Symbol('x', real=True)
+             Symbol('x', integer=True)
+
+          are different objects, and besides Python type (Symbol), initial
+          assumptions, are too forming their typeinfo.
+        """
+
+        cls = type(self)
+        A   = self._assumptions
+
+        # assumptions shared:
+        if A is cls.default_assumptions or (self._assume_type_keys is None):
+            assumptions0 = {}
+        else:
+            assumptions0 = dict( (k, A[k]) for k in self._assume_type_keys )
+
+        return assumptions0
+
+
+    def new(self, *args):
+        """create new 'similar' object
+
+           this is conceptually equivalent to:
+
+             type(self) (*args)
+
+           but takes type assumptions into account.
+
+           see: assumptions0
+        """
+        obj = type(self) (*args, **self.assumptions0)
+        return obj
+
+
     def __getattr__(self, name):
         # if it's not an assumption -- we don't have it
         if name[:3] != 'is_':
