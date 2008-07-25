@@ -303,8 +303,9 @@ def test_Mul_is_even_odd():
     assert (3*x).is_even == None
     assert (3*x).is_odd == None
 
-    assert (k/3).is_even == None
-    assert (k/3).is_odd == None
+    assert (k/3).is_integer == False
+    assert (k/3).is_even    == False
+    assert (k/3).is_odd     == False
 
     assert (2*n).is_even == True
     assert (2*n).is_odd == False

@@ -583,7 +583,9 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             return False
 
     def _eval_is_odd(self):
-        if self.is_integer:
+        is_integer = self.is_integer
+
+        if is_integer:
             r = True
             for t in self.args:
                 if t.is_even:
@@ -591,6 +593,20 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 if t.is_odd is None:
                     r = None
             return r
+
+        # !integer -> !odd
+        elif is_integer == False:
+            return False
+
+
+    def _eval_is_even(self):
+        is_integer = self.is_integer
+
+        if is_integer:
+            return fuzzy_not(self._eval_is_odd())
+
+        elif is_integer == False:
+            return False
 
     def _eval_subs(self, old, new):
         if self==old:
