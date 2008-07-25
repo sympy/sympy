@@ -179,7 +179,7 @@ def test_integrals():
         check(c)
 
 #================== matrices ====================
-from sympy.matrices.matrices import Matrix, SMatrix, _MatrixAsBasic
+from sympy.matrices.matrices import Matrix, SMatrix
 
 def test_matrices():
     for c in (Matrix, Matrix([1,2,3]), SMatrix, SMatrix([[1,2],[3,4]])):

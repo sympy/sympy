@@ -15,8 +15,9 @@ from repr import srepr
 
 # /cyclic/
 from sympy.core import basic
+from sympy.matrices import matrices
 basic.StrPrinter = StrPrinter
-basic.ReprPrinter = ReprPrinter
-del basic
+matrices.StrPrinter = StrPrinter
+del basic, matrices, StrPrinter
 
 from tree import print_tree

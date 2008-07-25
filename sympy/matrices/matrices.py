@@ -5,6 +5,8 @@ from sympy.core.basic import S, C
 from sympy.polys import Poly, roots
 from sympy.simplify import simplify
 
+# from sympy.printing import StrPrinter /cyclic/
+
 import random
 
 class NonSquareMatrixException(Exception):
@@ -16,22 +18,6 @@ class ShapeError(ValueError):
 
 class MatrixError(Exception):
     pass
-
-class _MatrixAsBasic(Basic):
-    """Proxy between Matrix & Basic
-
-    The reason, this class is here, is that Matrix does not inherit from Basic.
-    So for common functionality implemented in Basic, we have to provide this
-    proxy.
-
-    see #420
-    """
-    def __init__(self, m):
-        self.m = m
-    def __repr__(self):
-        return self.m.__repr__()
-    def __str__(self):
-        return self.m.__str__()
 
 class Matrix(object):
 
@@ -378,9 +364,11 @@ class Matrix(object):
             res[i] = "[" + ", ".join(row) + "]"
         return rowsep.join(res)
 
+    def __str__(self):
+        return StrPrinter.doprint(self)
+
     def __repr__(self):
-        s = self._format_str(lambda elem: repr(elem), ',\n  ')
-        return '%s([\n  %s,\n])' % (self.__class__.__name__, s)
+        return StrPrinter.doprint(self)
 
     def inv(self, method="GE"):
         """

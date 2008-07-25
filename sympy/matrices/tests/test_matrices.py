@@ -1,6 +1,7 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
         sin, exp, hessian, sqrt, zero, randMatrix, Poly, S, pi
 from sympy.matrices.matrices import ShapeError, MatrixError
+from sympy.printing import srepr
 import py
 
 def test_division():
@@ -839,14 +840,15 @@ def test_str():
     x, y = symbols("xy")
     M = Matrix([[x**+1, 1], [y, x+y]])
 
-    assert repr(M) in ["Matrix([\n  [Symbol('x'),                        One(1)],\n  [Symbol('y'), Add(Symbol('y'), Symbol('x'))],\n])",
-                       "Matrix([\n  [Symbol('x'),                        One(1)],\n  [Symbol('y'), Add(Symbol('x'), Symbol('y'))],\n])"]
+    assert str(M) in ["[x,     1]\n[y, x + y]",
+                      "[x,     1]\n[y, y + x]"]
 
-    #XXX: str() on lists calls repr() on elements!
-    #assert str(M) in ["[x,     1]\n[y, x + y]",
-    #                  "[x,     1]\n[y, y + x]"]
-    assert str(M) in ["Matrix([\n  [Symbol('x'),                        One(1)],\n  [Symbol('y'), Add(Symbol('y'), Symbol('x'))],\n])",
-                       "Matrix([\n  [Symbol('x'),                        One(1)],\n  [Symbol('y'), Add(Symbol('x'), Symbol('y'))],\n])"]
+def test_repr():
+    x, y = symbols("xy")
+    M = Matrix([[x**+1, 1], [y, x+y]])
+
+    assert srepr(M) in ["Matrix([\n  [Symbol('x'),                        One(1)],\n  [Symbol('y'), Add(Symbol('y'), Symbol('x'))],\n])",
+                        "Matrix([\n  [Symbol('x'),                        One(1)],\n  [Symbol('y'), Add(Symbol('x'), Symbol('y'))],\n])"]
 
 def test_issue851():
     m = Matrix([1, 2, 3])
