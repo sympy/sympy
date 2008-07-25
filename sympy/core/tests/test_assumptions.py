@@ -325,7 +325,6 @@ def test_neg_symbol_positive():
     assert x.is_negative == True
     assert x.is_nonnegative == False
 
-@XFAIL
 def test_neg_symbol_positive2():
     x = -Symbol('x',positive=True)
     assert x.is_zero == False
@@ -402,7 +401,6 @@ def test_other_symbol():
     py.test.raises(AttributeError, "x.is_real = False")
 
 
-@XFAIL
 def test_other_symbol_fail1():
     # XXX x.is_even currently will be True
     x = Symbol('x', odd=False)
@@ -410,7 +408,6 @@ def test_other_symbol_fail1():
     assert x.is_even == None
     assert x.is_integer == None
 
-@XFAIL
 def test_other_symbol_fail2():
     # XXX x.is_odd currently will be True
     x = Symbol('x', even=False)
