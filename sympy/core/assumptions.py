@@ -352,16 +352,3 @@ class AssumeMeths(object):
         keys.sort()
         return tuple([(k+'=', d[k]) for k in keys])
 
-    def _eval_is_nonnegative(self):
-        a = None
-        if hasattr(self, '_eval_is_zero'):
-            a = self._eval_is_zero()
-
-        b = None
-        if hasattr(self, '_eval_is_positive'):
-            b = self._eval_is_positive()
-
-        if a == True or b == True:
-            return True
-        elif a == False and b == False:
-            return False
