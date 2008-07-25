@@ -374,6 +374,9 @@ def test_Mul_is_negative_positive():
     assert (-k).is_negative == False
     assert (2*k).is_negative == True
 
+    assert (2*n)._eval_is_negative() == False
+    assert (2*n).is_negative == False
+
     assert n.is_negative == False
     assert (-n).is_negative == True
     assert (2*n).is_negative == False

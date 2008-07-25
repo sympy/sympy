@@ -567,7 +567,12 @@ class Mul(AssocOp, RelMeths, ArithMeths):
     def _eval_is_negative(self):
         terms = [t for t in self.args if not t.is_positive]
         if not terms:
-            return None
+            # all terms are either positive -- 2*Symbol('n', positive=T)
+            #               or     unknown  -- 2*Symbol('x')
+            if self.is_positive:
+                return False
+            else:
+                return None
         c = terms[0]
         if len(terms)==1:
             return c.is_negative
