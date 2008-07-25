@@ -2,7 +2,7 @@ from sympy.core import S, C
 from sympy.printing.printer import Printer
 from stringpict import prettyForm, stringPict
 
-from pretty_symbology import xstr, hobj, vobj, xobj, xrel, pretty_symbol,\
+from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol,\
         pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek
 
 # rename for usage from outside
@@ -55,7 +55,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Relational(self, e):
-        op = prettyForm(' ' + xrel(e.rel_op) + ' ')
+        op = prettyForm(' ' + xsym(e.rel_op) + ' ')
 
         l = self._print(e.lhs)
         r = self._print(e.rhs)

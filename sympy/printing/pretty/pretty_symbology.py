@@ -56,7 +56,7 @@ import re
 # S   - SYMBOL    +
 
 
-__all__ = ['greek','sub','sup','vobj','hobj','pretty_symbol']
+__all__ = ['greek','sub','sup','xsym','vobj','hobj','pretty_symbol']
 
 
 _use_unicode = False
@@ -387,8 +387,8 @@ frac = {
 }
 
 
-# RELATIONAL
-relations = {
+# atom symbols
+_xsym = {
     '=='    : ( '=',    '='),
     '<'     : ( '<',    '<'),
     '<='    : ('<=',    U('LESS-THAN OR EQUAL TO')),
@@ -397,9 +397,9 @@ relations = {
 }
 
 
-def xrel(rel_name):
-    """get symbology for a relation"""
-    op = relations[rel_name]
+def xsym(sym):
+    """get symbology for a 'character'"""
+    op = _xsym[sym]
 
     if _use_unicode:
         return op[1]
