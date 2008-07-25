@@ -459,6 +459,28 @@ def test_Mul_is_negative_positive():
     assert (x*k).is_positive == None
     assert (u*v*n*x*k).is_positive == None
 
+def test_Mul_is_negative_positive_2():
+    a = Symbol('a', nonnegative=True)
+    b = Symbol('b', nonnegative=True)
+    c = Symbol('c', nonpositive=True)
+    d = Symbol('d', nonpositive=True)
+
+    assert (a*b).is_nonnegative == True
+    assert (a*b).is_negative    == False
+    assert (a*b).is_zero        == None
+    assert (a*b).is_positive    == None
+
+    assert (c*d).is_nonnegative == True
+    assert (c*d).is_negative    == False
+    assert (c*d).is_zero        == None
+    assert (c*d).is_positive    == None
+
+    assert (a*c).is_nonpositive == True
+    assert (a*c).is_positive    == False
+    assert (a*c).is_zero        == None
+    assert (a*c).is_negative    == None
+
+
 def test_Mul_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
 
