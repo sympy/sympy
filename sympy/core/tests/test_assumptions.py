@@ -136,6 +136,32 @@ def test_neg_infinity():
     assert mm.is_prime          == False
     assert mm.is_composite      == False
 
+def test_nan():
+    nan = S.NaN
+
+    assert nan.is_commutative   == True
+    assert nan.is_integer       == None
+    assert nan.is_rational      == None
+    assert nan.is_real          == None
+    assert nan.is_complex       == None
+    assert nan.is_noninteger    == None
+    assert nan.is_irrational    == None
+    assert nan.is_imaginary     == None
+    assert nan.is_noncomplex    == None
+    assert nan.is_positive      == None
+    assert nan.is_negative      == None
+    assert nan.is_nonpositive   == None
+    assert nan.is_nonnegative   == None
+    assert nan.is_even          == None
+    assert nan.is_odd           == None
+    assert nan.is_bounded       == None
+    assert nan.is_unbounded     == None
+    assert nan.is_finite        == None
+    assert nan.is_infinitesimal == None
+    assert nan.is_comparable    == False
+    assert nan.is_prime         == None
+    assert nan.is_composite     == None
+
 def test_pos_rational():
     r = Rational(3,4)
     assert r.is_commutative == True

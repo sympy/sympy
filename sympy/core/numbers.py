@@ -1170,9 +1170,15 @@ class NaN(Singleton, Rational):
 
     is_commutative = True
     is_real = None
-    is_comparable = None
+    is_rational = None
+    is_integer  = None
+    is_comparable = False
+    is_finite   = None
     is_bounded = None
     #is_unbounded = False
+    is_zero     = None
+    is_prime    = None
+    is_positive = None
 
     __slots__ = []
 
