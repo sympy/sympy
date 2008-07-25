@@ -419,6 +419,18 @@ def test_other_symbol_fail2():
     assert x.is_integer == None
 
 
+def test_issue749():
+    a = Symbol('a', real=False)
+
+    assert a.is_real        == False
+    assert a.is_integer     == False
+    assert a.is_negative    == False
+    assert a.is_positive    == False
+    assert a.is_nonnegative == False
+    assert a.is_nonpositive == False
+    assert a.is_zero        == False
+
+
 def test_issue726():
     """catch: hash instability"""
     x = Symbol("x")
