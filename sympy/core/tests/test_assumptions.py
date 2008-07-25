@@ -82,7 +82,7 @@ def test_negativeone():
     assert z.is_infinitesimal == False
     assert z.is_comparable == True
     assert z.is_prime == False
-    assert z.is_composite == True
+    assert z.is_composite == False
 
 def test_infinity():
     oo = S.Infinity
@@ -228,11 +228,11 @@ def test_neg_rational():
 def test_pi():
     z = S.Pi
     assert z.is_commutative == True
-    assert z.is_integer == None
+    assert z.is_integer == False
     assert z.is_rational == False
     assert z.is_real == True
     assert z.is_complex == True
-    assert z.is_noninteger == None
+    assert z.is_noninteger == True
     assert z.is_irrational == True
     assert z.is_imaginary == False
     assert z.is_noncomplex == False
@@ -253,11 +253,11 @@ def test_pi():
 def test_E():
     z = S.Exp1
     assert z.is_commutative == True
-    assert z.is_integer == None
+    assert z.is_integer == False
     assert z.is_rational == False
     assert z.is_real == True
     assert z.is_complex == True
-    assert z.is_noninteger == None
+    assert z.is_noninteger == True
     assert z.is_irrational == True
     assert z.is_imaginary == False
     assert z.is_noncomplex == False
