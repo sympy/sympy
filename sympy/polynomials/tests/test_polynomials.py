@@ -268,6 +268,8 @@ def test_resultant():
      assert b_res == s_res == ((a-c)*(b-c)).expand()
 
 def test_roots():
+    S = sympify
+
     a = Symbol("a")
     b = Symbol("b")
     c = Symbol("c")
@@ -288,13 +290,14 @@ def test_roots():
             -b/(a*2)-(((b/a)**2-4*c/a)**Rational(1,2))/2]
     assert roots(x**3 + x**2 + x + 1) == [-1, I, -I]
     assert roots(x**3 + x**2 - x + 1) in [
-           [Rational(-1,3) - (Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3) - Rational(4,9)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(-1,3),
-            Rational(-1,3) + Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3) + Rational(4,9)/(Rational(1,2) + Rational(1,2)*I*3**Rational(1,2))*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(-1,3) + Rational(1,2)*I*3**Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3),
-            Rational(-1,3) + Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3) + Rational(4,9)/(Rational(1,2) - Rational(1,2)*I*3**Rational(1,2))*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(-1,3) - Rational(1,2)*I*3**Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3)],
+           [S('-1/3 - (19/27 + 1/9*3**(1/2)*11**(1/2))**(1/3) - 4/9*(19/27 + 1/9*3**(1/2)*11**(1/2))**(-1/3)'),
+            S('-1/3 + 1/2*(19/27 + 1/9*3**(1/2)*11**(1/2))**(1/3) + 4/9/(1/2 + 1/2*I*3**(1/2))*(19/27 + 1/9*3**(1/2)*11**(1/2))**(-1/3) + 1/2*I*3**(1/2)*(19/27 + 1/9*3**(1/2)*11**(1/2))**(1/3)'),
+            S('-1/3 + (4/9)/(1/2 - 1/2*I*3**(1/2))*(19/27 + (1/9)*33**(1/2))**(-1/3) + (1/2)*(19/27 + (1/9)*33**(1/2))**(1/3) - 1/2*I*3**(1/2)*(19/27 + (1/9)*33**(1/2))**(1/3)')],
 
-           [Rational(-1,3) - (Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3) - Rational(4,9)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(-1,3),
-            Rational(-1,3) + Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3) - Rational(4,9)/(-Rational(1,2) - Rational(1,2)*I*3**Rational(1,2))*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(-1,3) + Rational(1,2)*I*3**Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3),
-            Rational(-1,3) + Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3) + Rational(4,9)/(Rational(1,2) - Rational(1,2)*I*3**Rational(1,2))*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(-1,3) - Rational(1,2)*I*3**Rational(1,2)*(Rational(19,27) + Rational(1,9)*3**Rational(1,2)*11**Rational(1,2))**Rational(1,3)],
+           [S('-1/3 - 4/9*(19/27 + (1/9)*33**(1/2))**(-1/3) - (19/27 + (1/9)*33**(1/2))**(1/3)'),
+            S('-1/3 + 4/9/(1/2 + (1/2)*I*3**(1/2))*(19/27 + (1/9)*33**(1/2))**(-1/3) + (1/2)*(19/27 + (1/9)*33**(1/2))**(1/3) + (1/2)*I*3**(1/2)*(19/27 + (1/9)*33**(1/2))**(1/3)'),
+            S('-1/3 + (4/9)/(1/2 - 1/2*I*3**(1/2))*(19/27 + (1/9)*33**(1/2))**(-1/3) + (1/2)*(19/27 + (1/9)*33**(1/2))**(1/3) - 1/2*I*3**(1/2)*(19/27 + (1/9)*33**(1/2))**(1/3)')],
+
                                             ]
 
     assert roots(x**4 - 1) == [1, I, -1, -I]
