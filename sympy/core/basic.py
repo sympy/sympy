@@ -158,6 +158,72 @@ class BasicMeta(BasicType):
 
 
 
+        # let's store new derived assumptions back into class.
+        # this will result in faster access to this attributes.
+        #
+        # Timings
+        # -------
+        #
+        # a = Integer(5)
+        # %timeit a.is_zero     -> 20 us (without this optimization)
+        # %timeit a.is_zero     ->  2 us (with    this optimization)
+        #
+        #
+        # BTW: it is very important to study the lessons learned here --
+        #      we could drop Basic.__getattr__ completely (!)
+        #
+        # %timeit x.is_Add      -> 2090 ns  (Basic.__getattr__  present)
+        # %timeit x.is_Add      ->  825 ns  (Basic.__getattr__  absent)
+        #
+        # so we may want to override all assumptions is_<xxx> methods and
+        # remove Basic.__getattr__
+
+
+        # first we need to collect derived premises
+        derived_premises = {}
+
+        for k,v in xass.iteritems():
+            if k not in default_assumptions:
+                derived_premises[k] = v
+
+        cls._derived_premises = derived_premises
+
+
+        for k,v in xass.iteritems():
+            assert v == cls.__dict__.get('is_'+k, v),  (cls,k,v)
+            # NOTE: this way Integer.is_even = False (inherited from Rational)
+            # NOTE: the next code blocks add 'protection-properties' to overcome this
+            setattr(cls, 'is_'+k, v)
+
+        # protection e.g. for Initeger.is_even=F <- (Rational.is_integer=F)
+        for base in cls.__bases__:
+            try:
+                base_derived_premises = base._derived_premises
+            except AttributeError:
+                continue    # no ._derived_premises is ok
+
+            for k,v in base_derived_premises.iteritems():
+                if not cls.__dict__.has_key('is_'+k):
+                    #print '%s -- overriding: %s' % (cls.__name__, k)
+                    code = """\
+def %(cls)s__is_%(k)s(self):
+#   print '%(k)s'
+
+    # this mimics Basic.__getattr__
+    try:
+        # see if it is already known:
+        return self._assumptions[ '%(k)s' ]
+    except KeyError:
+        return self._what_known_about( '%(k)s' )
+
+is_xxx = %(cls)s__is_%(k)s
+""" % {'k': k, 'cls': cls.__name__}
+
+                    exec code
+                    setattr(cls, 'is_'+k, property(is_xxx))
+
+
+
     def __cmp__(cls, other):
         try:
             other = sympify(other)
