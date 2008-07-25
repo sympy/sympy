@@ -3,9 +3,14 @@ from sympy.printing.precedence import precedence
 import sympy.mpmath.lib as mlib
 
 class ReprPrinter(Printer):
+    def reprify(self, args, sep):
+        return sep.join([self.doprint(item) for item in args])
+
     def emptyPrinter(self, expr):
         if isinstance(expr, str):
             return expr
+        elif hasattr(expr, "__srepr__"):
+            return expr.__srepr__()
         elif hasattr(expr, "args"):
             l = []
             for o in expr.args:
@@ -21,6 +26,9 @@ class ReprPrinter(Printer):
 
     def _print_Integer(self, expr):
         return '%s(%s)' % (expr.__class__.__name__, self._print(expr.p))
+
+    def _print_list(self, expr):
+        return "[%s]"%self.reprify(expr, ", ")
 
     def _print_Matrix(self, expr):
         s = expr._format_str(lambda elem: self._print(elem), ',\n  ')
@@ -58,5 +66,16 @@ class ReprPrinter(Printer):
     def _print_Symbol(self, expr):
         return "%s('%s')" % (expr.__class__.__name__, self._print(expr.name))
 
+    def _print_tuple(self, expr):
+        if len(expr)==1:
+            return "(%s,)"%self._print(expr[0])
+        else:
+            return "(%s)"%self.reprify(expr, ", ")
+
     def _print_WildFunction(self, expr):
         return "%s('%s')" % (expr.__class__.__name__, expr.name)
+
+RPrinter = ReprPrinter()
+
+def srepr(s):
+    return RPrinter.doprint(s)

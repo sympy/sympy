@@ -11,8 +11,7 @@ from preview import preview, view, pngview, pdfview, dviview
 from str import StrPrinter
 StrPrinter = StrPrinter()
 
-from repr import ReprPrinter
-ReprPrinter = ReprPrinter()
+from repr import srepr
 
 # /cyclic/
 from sympy.core import basic
