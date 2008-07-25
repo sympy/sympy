@@ -4,6 +4,8 @@ from operations import AssocOp
 from methods import RelMeths, ArithMeths
 from cache import cacheit
 
+from logic import fuzzy_not
+
 from symbol import Symbol, Wild
 # from function import FunctionClass, WildFunction /cyclic/
 # from numbers import Number, Integer, Real /cyclic/
@@ -479,11 +481,56 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 return False
         return True
 
-    _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
     _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
     _eval_is_comparable = lambda self: self._eval_template_is_attr('is_comparable')
+
+
+    # I*I -> R,  I*I*I -> -I
+
+    def _eval_is_real(self):
+        im_count = 0
+        re_not   = False
+
+        for t in self.args:
+            if t.is_imaginary:
+                im_count += 1
+                continue
+
+            t_real = t.is_real
+            if t_real:
+                continue
+
+            elif fuzzy_not(t_real):
+                re_not = True
+
+            else:
+                return None
+
+        if re_not:
+            return False
+
+        return (im_count % 2 == 0)
+
+
+    def _eval_is_imaginary(self):
+        im_count = 0
+
+        for t in self.args:
+            if t.is_imaginary:
+                im_count += 1
+
+            elif t.is_real:
+                continue
+
+            # real=F|U
+            else:
+                return None
+
+        return (im_count % 2 == 1)
+
+
 
     def _eval_is_irrational(self):
         for t in self.args:

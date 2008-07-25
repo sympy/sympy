@@ -1,5 +1,5 @@
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Real, re, pi, \
-        sympify, sqrt, Add, Mul, Pow
+        sympify, sqrt, Add, Mul, Pow, I
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol("x")
@@ -380,7 +380,7 @@ def test_Mul_is_negative_positive():
     assert (n*k).is_negative == True
     assert (2*n*k).is_negative == True
     assert (-n*k).is_negative == False
-    assert (n*k*y).is_negative == None
+    assert (n*k*y).is_negative == False     # y.is_real=F;  !real -> !neg
 
     assert u.is_negative == False
     assert (-u).is_negative == None
@@ -423,7 +423,7 @@ def test_Mul_is_negative_positive():
     assert (n*k).is_positive == False
     assert (2*n*k).is_positive == False
     assert (-n*k).is_positive == True
-    assert (-n*k*y).is_positive == None
+    assert (-n*k*y).is_positive == False    # y.is_real=F;  !real -> !neg
 
     assert u.is_positive == None
     assert (-u).is_positive == False
@@ -889,6 +889,36 @@ def test_Pow_is_nonpositive_nonnegative():
     assert ((-k)**x).is_nonpositive == None
     assert ((-k)**n).is_nonpositive == None
     assert ((-k)**m).is_nonpositive == True
+
+
+def test_Mul_is_imaginary_real():
+    r = Symbol('r', real=True)
+    i = Symbol('i', imaginary=True)
+    ii= Symbol('ii',imaginary=True)
+    x = Symbol('x')
+
+    assert    I  .is_imaginary  == True
+    assert    I  .is_real       == False
+    assert  (-I) .is_imaginary  == True
+    assert  (-I) .is_real       == False
+    assert (3*I) .is_imaginary  == True
+    assert (3*I) .is_real       == False
+    assert (I*I) .is_imaginary  == False
+    assert (I*I) .is_real       == True
+
+    assert (r*i) .is_imaginary  == True
+    assert (r*i) .is_real       == False
+
+    assert (x*i) .is_imaginary  == None
+    assert (x*i) .is_real       == None
+
+    assert (i*ii).is_imaginary  == False
+    assert (i*ii).is_real       == True
+
+    assert (r*i*ii).is_imaginary == False
+    assert (r*i*ii).is_real      == True
+
+
 
 def test_Add_is_comparable():
     assert (x+y).is_comparable  == False
