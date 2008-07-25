@@ -865,6 +865,7 @@ def test_Pow_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
 
     k = Symbol('k', nni=True)
+    l = Symbol('l',  pi=True)
     n = Symbol('n', even=True)
     m = Symbol('m', odd=True)
 
@@ -876,7 +877,9 @@ def test_Pow_is_nonpositive_nonnegative():
     assert (k**2).is_nonnegative == True
     assert (k**(-2)).is_nonnegative == True
 
-    assert (k**x).is_nonnegative == True
+    assert (k**x).is_nonnegative == None    # NOTE (0**x).is_real = U
+    assert (l**x).is_nonnegative == True
+    assert (l**x).is_positive    == True
     assert ((-k)**x).is_nonnegative == None
     assert ((-k)**n).is_nonnegative == True
     assert ((-k)**m).is_nonnegative == None
