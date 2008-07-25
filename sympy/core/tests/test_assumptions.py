@@ -177,15 +177,15 @@ def test_pos_rational():
     assert r.is_negative == False
     assert r.is_nonpositive == False
     assert r.is_nonnegative == True
-    assert r.is_even == None
-    assert r.is_odd == None
+    assert r.is_even == False
+    assert r.is_odd == False
     assert r.is_bounded == True
     assert r.is_unbounded == False
     assert r.is_finite == True
     assert r.is_infinitesimal == False
     assert r.is_comparable == True
-    assert r.is_prime == None
-    assert r.is_composite == None
+    assert r.is_prime == False
+    assert r.is_composite == False
 
     r = Rational(1,4)
     assert r.is_nonpositive == False
@@ -240,15 +240,15 @@ def test_pi():
     assert z.is_negative == False
     assert z.is_nonpositive == False
     assert z.is_nonnegative == True
-    assert z.is_even == None
-    assert z.is_odd == None
+    assert z.is_even == False
+    assert z.is_odd == False
     assert z.is_bounded == True
     assert z.is_unbounded == False
     assert z.is_finite == True
     assert z.is_infinitesimal == False
     assert z.is_comparable == True
-    assert z.is_prime == None
-    assert z.is_composite == None
+    assert z.is_prime == False
+    assert z.is_composite == False
 
 def test_E():
     z = S.Exp1
@@ -265,15 +265,15 @@ def test_E():
     assert z.is_negative == False
     assert z.is_nonpositive == False
     assert z.is_nonnegative == True
-    assert z.is_even == None
-    assert z.is_odd == None
+    assert z.is_even == False
+    assert z.is_odd == False
     assert z.is_bounded == True
     assert z.is_unbounded == False
     assert z.is_finite == True
     assert z.is_infinitesimal == False
     assert z.is_comparable == True
-    assert z.is_prime == None
-    assert z.is_composite == None
+    assert z.is_prime == False
+    assert z.is_composite == False
 
 def test_I():
     z = S.ImaginaryUnit
@@ -282,23 +282,23 @@ def test_I():
     assert z.is_rational == False
     assert z.is_real == False
     assert z.is_complex == True
-    assert z.is_noninteger == None
-    assert z.is_irrational == None
+    assert z.is_noninteger == False
+    assert z.is_irrational == False
     assert z.is_imaginary == True
     assert z.is_noncomplex == False
-    assert z.is_positive == None
-    assert z.is_negative == None
-    assert z.is_nonpositive == None
-    assert z.is_nonnegative == None
-    assert z.is_even == None
-    assert z.is_odd == None
+    assert z.is_positive == False
+    assert z.is_negative == False
+    assert z.is_nonpositive == False
+    assert z.is_nonnegative == False
+    assert z.is_even == False
+    assert z.is_odd == False
     assert z.is_bounded == True
     assert z.is_unbounded == False
     assert z.is_finite == True
     assert z.is_infinitesimal == False
     assert z.is_comparable == None
-    assert z.is_prime == None
-    assert z.is_composite == None
+    assert z.is_prime == False
+    assert z.is_composite == False
 
 def test_symbol_zero():
     x = Symbol('x',zero=True)
