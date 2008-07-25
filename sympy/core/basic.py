@@ -1245,7 +1245,7 @@ class Basic(AssumeMeths):
 
         """
         terms = [ term.doit(**hints) for term in self.args ]
-        return self.__class__(*terms, **self._assumptions)
+        return self.new(*terms)
 
     ###########################################################################
     ################# EXPRESSION REPRESENTATION METHODS #######################
@@ -1268,7 +1268,7 @@ class Basic(AssumeMeths):
                     rewrite = True
 
         if rewrite:
-            return self.__class__(*terms, **self._assumptions)
+            return self.new(*terms)
         else:
             return None
 
@@ -1280,28 +1280,28 @@ class Basic(AssumeMeths):
         else:
             sargs = (self.func,)+self[:]
         terms = [ term._eval_expand_power(*args) for term in sargs ]
-        return self.__class__(*terms, **self._assumptions)
+        return self.new(*terms)
 
     def _eval_expand_complex(self, *args):
         if self.is_Atom:
             return self
         sargs = self.args[:]
         terms = [ term._eval_expand_complex(*args) for term in sargs ]
-        return self.__class__(*terms, **self._assumptions)
+        return self.new(*terms)
 
     def _eval_expand_trig(self, *args):
         if self.is_Atom:
             return self
         sargs = self.args[:]
         terms = [ term._eval_expand_trig(*args) for term in sargs ]
-        return self.__class__(*terms, **self._assumptions)
+        return self.new(*terms)
 
     def _eval_expand_func(self, *args):
         if self.is_Atom:
             return self
         sargs = self.args
         terms = [ term._eval_expand_func(*args) for term in sargs ]
-        return self.__class__(*terms, **self._assumptions)
+        return self.new(*terms)
 
     def expand(self, **hints):
         """Expand an expression using hints.
@@ -1345,7 +1345,7 @@ class Basic(AssumeMeths):
             return self
         sargs = self.args
         terms = [ t._eval_rewrite(pattern, rule, **hints) for t in sargs ]
-        return self.__class__(*terms, **self._assumptions)
+        return self.new(*terms)
 
     def rewrite(self, *args, **hints):
         """Rewrites expression containing applications of functions

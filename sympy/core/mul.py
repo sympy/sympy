@@ -422,9 +422,9 @@ class Mul(AssocOp, RelMeths, ArithMeths):
 
                 plain = Mul(*plain)
 
-                return Add(*(Mul(plain, term) for term in terms), **self._assumptions)
+                return Add(*(Mul(plain, term) for term in terms), **self.assumptions0)
             else:
-                return Mul(*plain, **self._assumptions)
+                return Mul(*plain, **self.assumptions0)
 
     def _eval_derivative(self, s):
         terms = list(self.args)

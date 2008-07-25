@@ -66,12 +66,10 @@ class Symbol(Atom, RelMeths, ArithMeths):
         return '%s(%r)' % (self.__class__.__name__, self.name)
 
     def as_dummy(self):
-        assumptions = self._assumptions.copy()
-        return Dummy(self.name, **assumptions)
+        return Dummy(self.name, **self.assumptions0)
 
     def __call__(self, *args):
-        assumptions = self._assumptions
-        return Function(self.name, nargs=len(args))(*args, **assumptions)
+        return Function(self.name, nargs=len(args))(*args, **self.assumptions0)
 
     def _eval_expand_complex(self, *args):
         return C.re(self) + C.im(self)*S.ImaginaryUnit
