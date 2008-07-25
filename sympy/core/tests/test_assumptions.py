@@ -84,6 +84,58 @@ def test_negativeone():
     assert z.is_prime == False
     assert z.is_composite == True
 
+def test_infinity():
+    oo = S.Infinity
+
+    assert oo.is_commutative    == True
+    assert oo.is_integer        == None
+    assert oo.is_rational       == None
+    assert oo.is_real           == True
+    assert oo.is_complex        == True
+    assert oo.is_noninteger     == None
+    assert oo.is_irrational     == None
+    assert oo.is_imaginary      == False
+    assert oo.is_noncomplex     == False
+    assert oo.is_positive       == True
+    assert oo.is_negative       == False
+    assert oo.is_nonpositive    == False
+    assert oo.is_nonnegative    == True
+    assert oo.is_even           == None
+    assert oo.is_odd            == None
+    assert oo.is_bounded        == False
+    assert oo.is_unbounded      == True
+    assert oo.is_finite         == False
+    assert oo.is_infinitesimal  == False
+    assert oo.is_comparable     == True
+    assert oo.is_prime          == None
+    assert oo.is_composite      == None
+
+def test_neg_infinity():
+    mm = S.NegativeInfinity
+
+    assert mm.is_commutative    == True
+    assert mm.is_integer        == None
+    assert mm.is_rational       == None
+    assert mm.is_real           == True
+    assert mm.is_complex        == True
+    assert mm.is_noninteger     == None
+    assert mm.is_irrational     == None
+    assert mm.is_imaginary      == False
+    assert mm.is_noncomplex     == False
+    assert mm.is_positive       == False
+    assert mm.is_negative       == True
+    assert mm.is_nonpositive    == True
+    assert mm.is_nonnegative    == False
+    assert mm.is_even           == None
+    assert mm.is_odd            == None
+    assert mm.is_bounded        == False
+    assert mm.is_unbounded      == True
+    assert mm.is_finite         == False
+    assert mm.is_infinitesimal  == False
+    assert mm.is_comparable     == True
+    assert mm.is_prime          == False
+    assert mm.is_composite      == False
+
 def test_pos_rational():
     r = Rational(3,4)
     assert r.is_commutative == True

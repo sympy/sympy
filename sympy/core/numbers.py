@@ -1066,7 +1066,10 @@ class Infinity(Singleton, Rational):
     is_commutative = True
     is_positive = True
     is_bounded = False
-    is_finite = None
+    is_finite   = False
+    is_infinitesimal = False
+    is_integer  = None
+    is_rational = None
     is_odd = None
 
     @staticmethod
@@ -1118,6 +1121,9 @@ class NegativeInfinity(Singleton, Rational):
     is_positive = False
     is_bounded = False
     is_finite = False
+    is_infinitesimal = False
+    is_integer  = None
+    is_rational = None
 
     precedence = 40 # same as Add
 
