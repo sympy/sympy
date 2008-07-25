@@ -243,8 +243,22 @@ class Basic(AssumeMeths):
 
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)
-        obj._assumptions = None
-        obj.assume(**assumptions)
+
+        # FIXME we are slowed a *lot* by Add/Mul passing is_commutative as the
+        # only assumption.
+        #
+        # .is_commutative is not an assumption -- it's like typeinfo!!!
+        # we should remove it.
+
+        # initially assumptions are shared between instances and class
+        obj._assumptions  = cls.default_assumptions
+        obj._a_inprogress = []
+
+        # NOTE this could be made lazy -- probably not all instances will need
+        # fully derived assumptions?
+        if assumptions:
+            obj._learn_new_facts(assumptions)
+
         obj._mhash = None # will be set by __hash__ method.
         obj._args = args  # all items in args must be Basic objects
         return obj
@@ -261,7 +275,10 @@ class Basic(AssumeMeths):
             raise AttributeError(name)
 
         else:
-            return self._get_assumption(name)
+            try:
+                return self._assumptions[name[3:]]
+            except KeyError:
+                return self._what_known_about(name[3:])
 
     # NB: there is no need in protective __setattr__
 
