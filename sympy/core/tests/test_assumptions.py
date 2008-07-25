@@ -8,9 +8,6 @@ def test_symbol_unset():
     assert x.is_integer == True
     assert x.is_imaginary == False
     assert x.is_noninteger == False
-    x.assume(real=None)
-    assert x.is_real == None
-    assert x.is_integer == None
 
 def test_zero():
     z = Integer(0)
