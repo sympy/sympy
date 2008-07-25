@@ -278,8 +278,8 @@ def test_E():
 def test_I():
     z = S.ImaginaryUnit
     assert z.is_commutative == True
-    assert z.is_integer == None
-    assert z.is_rational == None
+    assert z.is_integer == False
+    assert z.is_rational == False
     assert z.is_real == False
     assert z.is_complex == True
     assert z.is_noninteger == None
