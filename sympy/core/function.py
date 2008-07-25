@@ -23,8 +23,8 @@ Example:
     >>> x = Symbol("x")
     >>> f(x)
     f(x)
-    >>> f(x).func
-    <class 'sympy.core.function.f'>
+    >>> print srepr(f(x).func)
+    <'sympy.core.function.f'>
     >>> f(x).args
     (x,)
 """

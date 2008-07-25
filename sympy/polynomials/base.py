@@ -69,6 +69,7 @@ class Polynomial(Basic):
         underlying SymPy expression.
 
     Examples:
+        >>> from sympy import *
         >>> x, y = symbols('xy')
         >>> f = Polynomial(x + 1)
         >>> f.sympy_expr
@@ -81,8 +82,8 @@ class Polynomial(Basic):
         'grevlex'
         >>> print f
         1 + x
-        >>> f
-        Polynomial(1 + x, ((1, 1), (1, 0)), [x], 'grevlex')
+        >>> print srepr(f)
+        Polynomial(Add(Symbol('x'), One(1)), ((One(1), One(1)), (One(1), Zero(0))), [Symbol('x')], 'grevlex')
         >>> g = Polynomial(y**2 - x*y)
         >>> s = f + g
         >>> s.var == [x, y]
