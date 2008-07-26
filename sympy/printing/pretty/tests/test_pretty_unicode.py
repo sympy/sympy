@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from sympy import symbols, Symbol, sin, cos, Matrix, Integral, pi, sqrt,\
-        Function, Rational, tan, oo, Limit, ceiling, floor, conjugate
+        Function, Rational, tan, oo, Limit, ceiling, floor, conjugate, exp, I
 from sympy.printing.pretty import pretty
 
-x,y = symbols('xy')
+x,y,k = symbols('xyk')
 th  = Symbol('theta')
 ph  = Symbol('phi')
 
@@ -244,18 +244,34 @@ def test_upretty_matrix():
     s1 = \
 u"""\
 ⎡     2       ⎤
-⎢1 + x       1⎥
+⎢1 + x     1  ⎥
 ⎢             ⎥
-⎣     y  x + y⎦\
+⎣  y     x + y⎦\
 """
     s2 = \
 u"""\
 ⎡ 2           ⎤
-⎢x  + 1      1⎥
+⎢x  + 1    1  ⎥
 ⎢             ⎥
-⎣     y  y + x⎦\
+⎣  y     y + x⎦\
 """
     assert u in [s1, s2]
+
+
+def test_upretty_matrix2():
+    m = Matrix([[x/y, y, th], [0, exp(I*k*ph), 1]])
+    u = upretty(m)
+    s = \
+u"""\
+⎡x           ⎤
+⎢─    y     θ⎥
+⎢y           ⎥
+⎢            ⎥
+⎢    ⅈ⋅k⋅φ   ⎥
+⎣0  ℯ       1⎦\
+"""
+    assert u == s
+
 
 
 def test_upretty_seq():

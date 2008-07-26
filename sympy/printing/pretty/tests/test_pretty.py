@@ -210,16 +210,16 @@ def test_pretty_matrix():
     s1 = \
 """\
 [     2       ]
-[1 + x       1]
+[1 + x     1  ]
 [             ]
-[     y  x + y]\
+[  y     x + y]\
 """
     s2 = \
 """\
 [ 2           ]
-[x  + 1      1]
+[x  + 1    1  ]
 [             ]
-[     y  y + x]\
+[  y     y + x]\
 """
     assert p in [s1, s2]
 

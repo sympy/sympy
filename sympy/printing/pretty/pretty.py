@@ -223,38 +223,58 @@ class PrettyPrinter(Printer):
             for j in range(M.cols):
                 S[i,j] = self._print(M[i,j])
 
-        # max w/h for elements
-        maxw = max([s.width()  for s in S.values()])
-        maxh = max([s.height() for s in S.values()])
+        # h- and v- spacers
+        hsep = 2
+        vsep = 1
+
+        # max width for columns
+        maxw = [-1] * M.cols
+
+        for j in range(M.cols):
+            maxw[j] = max([S[i,j].width()  for i in range(M.lines)])
+
 
         # drawing result
         D = None
 
-        # XXX at present, we reshape each cell to be of the same size,
-        # XXX and it is ugly most of the time!
         for i in range(M.lines):
 
             D_row = None
             for j in range(M.cols):
                 s = S[i,j]
 
-                # reshape s to maxw/maxh
+                # reshape s to maxw
                 # XXX this should be generalized, and go to stringPict.reshape ?
-                while s.width() < maxw:
-                    s = prettyForm(*s.left(' '))    # right align
-                while s.height() < maxh:
-                    s = prettyForm(*s.above(' '))   # down align
+                assert s.width()  <= maxw[j]
+
+                # hcenter it, +0.5 to the right                        2
+                # ( it's better to align formula starts for say 0 and r )
+                # XXX this is not good in all cases -- maybe introduce vbaseline?
+                wdelta = maxw[j] - s.width()
+                wleft  = wdelta // 2
+                wright = wdelta - wleft
+
+                s = prettyForm(*s.right(' '*wright))
+                s = prettyForm(*s.left (' '*wleft))
+
+                # we don't need vcenter cells -- this is automatically done in
+                # a pretty way because when their baselines are taking into
+                # account in .right()
 
                 if D_row is None:
                     D_row = s   # first box in a row
                     continue
 
-                D_row = prettyForm(*D_row.right(' '))
+                D_row = prettyForm(*D_row.right(' '*hsep))  # h-spacer
                 D_row = prettyForm(*D_row.right(s))
 
             if D is None:
                 D = D_row       # first row in a picture
                 continue
+
+            # v-spacer
+            for _ in range(vsep):
+                D = prettyForm(*D.below(' '))
 
             D = prettyForm(*D.below(D_row))
 
