@@ -141,7 +141,8 @@ def pprint_Rmn_dd(i,j):
 
 def main():
 
-    #print g
+    print "Initial metric:"
+    pprint(gdd)
     print "-"*40
     print "Christoffel symbols:"
     pprint_Gamma_udd(0,1,0)
