@@ -1112,3 +1112,5 @@ def test_RootsOf():
 
     assert RootSum(Lambda(x, x), Poly(0, x), evaluate=True)  == S.Zero
     assert RootSum(Lambda(x, x), Poly(0, x), evaluate=False) != S.Zero
+
+    assert RootSum(Lambda(x, x), Poly(x-1, x), evaluate=False).doit() == S.One

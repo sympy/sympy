@@ -512,7 +512,6 @@ class RootOf(Basic, NoRelMeths, ArithMeths):
     def atoms(self, *args, **kwargs):
         return self.poly.atoms(*args, **kwargs)
 
-
 class RootsOf(Basic, NoRelMeths, ArithMeths):
     """Represents all roots of an univariate polynomial.
 
@@ -615,7 +614,7 @@ class RootSum(Basic, NoRelMeths, ArithMeths):
         else:
             result = S.Zero
 
-            for root in self.roots.formal_roots():
+            for root in self.roots.roots():
                 result += self.function(root)
 
             return result
