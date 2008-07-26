@@ -263,3 +263,8 @@ def test_wild_str():
     assert str(1/w + 1) == str(1/x + 1)
     assert str(w**2 + 1) == str(x**2 + 1)
     assert str(1/(1-w)) == str(1/(1-x))
+
+
+def test_issue634():
+    assert str( 2*x/3)  ==  '2*x/3'
+    assert str(-2*x/3)  == '-2*x/3'
