@@ -1,5 +1,6 @@
-from sympy import Symbol, Wild, Rational, Derivative, I, log, sqrt, exp, sin, abs,\
-                  factorial, Lambda, O, cos, Function, WildFunction, sum, zeta
+from sympy import Symbol, Wild, Rational, Real, Derivative, I, log, sqrt, exp, \
+                  sin, abs, factorial, Lambda, O, cos, Function, WildFunction, \
+                  sum, zeta, pi
 from sympy.polynomials import Polynomial
 from sympy.polys.polynomial import Poly
 from sympy.polys.rootfinding import RootsOf, RootOf, RootSum
@@ -182,6 +183,17 @@ def test_Rational():
 
     assert str((-4)**Rational(1,2)) == str(2*I)
     assert str(2**Rational(1,10**10)) == "2**(1/10000000000)"
+
+
+def test_Real():
+    # NOTE prec is the whole number of decimal digits
+    assert str(Real('1.23', prec=1+2))    == '1.23'
+    assert str(Real('1.23456789', prec=1+8))  == '1.23456789'
+    assert str(Real('1.234567890123456789', prec=1+18))    == '1.234567890123456789'
+    assert str(pi.evalf(1+2))   == '3.14'
+    assert str(pi.evalf(1+14))  == '3.14159265358979'
+    assert str(pi.evalf(1+64))  == '3.1415926535897932384626433832795028841971693993751058209749445923'
+
 
 def test_poly_str():
     #if any of these tests fails, it can still be correct, just the terms can

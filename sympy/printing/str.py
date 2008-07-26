@@ -10,6 +10,8 @@ from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Wild
 from sympy.core.basic import Basic
 
+import sympy.mpmath.lib as mlib
+
 class StrPrinter(Printer):
     def parenthesize(self, item, level):
         if precedence(item) <= level:
@@ -282,7 +284,8 @@ class StrPrinter(Printer):
         return '%s/%s'%(expr.p, expr.q)
 
     def _print_Real(self, expr):
-        return self._print(expr.num)
+        dps = mlib.prec_to_dps(expr._prec)
+        return mlib.to_str(expr._mpf_, dps)
 
     def _print_Relational(self, expr):
         return '%s %s %s'%(self.parenthesize(expr.lhs, precedence(expr)),
