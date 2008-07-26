@@ -83,7 +83,7 @@ class Polynomial(Basic):
         >>> print f
         1 + x
         >>> print srepr(f)
-        Polynomial(Add(Symbol('x'), One(1)), ((One(1), One(1)), (One(1), Zero(0))), [Symbol('x')], 'grevlex')
+        Polynomial(Add(One(1), Symbol('x')), ((One(1), One(1)), (One(1), Zero(0))), [Symbol('x')], 'grevlex')
         >>> g = Polynomial(y**2 - x*y)
         >>> s = f + g
         >>> s.var == [x, y]

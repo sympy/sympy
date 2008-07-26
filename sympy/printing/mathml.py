@@ -143,12 +143,12 @@ def print_mathml(expr):
     >>> print_mathml(x+1) #doctest: +NORMALIZE_WHITESPACE
     <apply>
         <plus/>
-        <ci>
-                x
-        </ci>
         <cn>
                 1
         </cn>
+        <ci>
+                x
+        </ci>
     </apply>
     """
     print mathml(expr)
