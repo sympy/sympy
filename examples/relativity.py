@@ -6,7 +6,8 @@ This example calculates the Ricci tensor from the metric and does this
 on the example of Schwarzschild solution.
 """
 
-from sympy import exp, Symbol, sin, Rational, Derivative, dsolve, Function, Matrix
+from sympy import exp, Symbol, sin, Rational, Derivative, dsolve, Function, \
+                  Matrix, Eq, pprint, Pow
 
 def grad(f,X):
     a=[]
@@ -92,12 +93,12 @@ def curvature(Rmn):
 #        return r"\lambda"
 #        return r"lambda"
 nu = Function("nu")
-lam = Function("lam")
+lam = Function("lamda")
 
 t=Symbol("t")
 r=Symbol("r")
-theta=Symbol(r"\theta")
-phi=Symbol(r"\phi")
+theta=Symbol(r"theta")
+phi=Symbol(r"phi")
 
 #general, spherically symmetric metric
 gdd=Matrix((
@@ -132,34 +133,40 @@ X=(t,r,theta,phi)
 Gamma=G(g,X)
 Rmn=Ricci(Riemann(Gamma,X),X)
 
+def pprint_Gamma_udd(i,k,l):
+    pprint( Eq(Symbol('Gamma^%i_%i%i' % (i,k,l)), Gamma.udd(i,k,l))    )
+
+def pprint_Rmn_dd(i,j):
+    pprint( Eq(Symbol('R_%i%i' % (i,j)), Rmn.dd(i,j))    )
+
 def main():
 
     #print g
     print "-"*40
     print "Christoffel symbols:"
-    print Gamma.udd(0,1,0)
-    print Gamma.udd(0,0,1)
+    pprint_Gamma_udd(0,1,0)
+    pprint_Gamma_udd(0,0,1)
     print
-    print Gamma.udd(1,0,0)
-    print Gamma.udd(1,1,1)
-    print Gamma.udd(1,2,2)
-    print Gamma.udd(1,3,3)
+    pprint_Gamma_udd(1,0,0)
+    pprint_Gamma_udd(1,1,1)
+    pprint_Gamma_udd(1,2,2)
+    pprint_Gamma_udd(1,3,3)
     print
-    print Gamma.udd(2,2,1)
-    print Gamma.udd(2,1,2)
-    print Gamma.udd(2,3,3)
+    pprint_Gamma_udd(2,2,1)
+    pprint_Gamma_udd(2,1,2)
+    pprint_Gamma_udd(2,3,3)
     print
-    print Gamma.udd(3,2,3)
-    print Gamma.udd(3,3,2)
-    print Gamma.udd(3,1,3)
-    print Gamma.udd(3,3,1)
-    print "-"*40
-    print "Ricci tensor:"
-    print Rmn.dd(0,0)
+    pprint_Gamma_udd(3,2,3)
+    pprint_Gamma_udd(3,3,2)
+    pprint_Gamma_udd(3,1,3)
+    pprint_Gamma_udd(3,3,1)
+    print"-"*40
+    print"Ricci tensor:"
+    pprint_Rmn_dd(0,0)
     e =  Rmn.dd(1,1)
-    print e
-    print Rmn.dd(2,2)
-    print Rmn.dd(3,3)
+    pprint_Rmn_dd(1,1)
+    pprint_Rmn_dd(2,2)
+    pprint_Rmn_dd(3,3)
     #print
     #print "scalar curvature:"
     #print curvature(Rmn)
@@ -167,10 +174,10 @@ def main():
     print "solve the Einstein's equations:"
     e = e.subs(nu(r), -lam(r))
     l =  dsolve(e, [lam(r)])
-    print lam(r)," = ",l
+    pprint( Eq(lam(r), l) )
     metric = gdd.subs(lam(r), l).subs(nu(r),-l)#.combine()
     print "metric:"
-    print metric
+    pprint( metric )
 
 if __name__ == "__main__":
     main()
