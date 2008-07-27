@@ -1,4 +1,4 @@
-from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol, LambertW, sqrt, Rational
+from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol, LambertW, sqrt, Rational, sin
 from sympy.utilities.pytest import XFAIL
 
 def test_exp():
@@ -32,6 +32,7 @@ def test_exp():
     assert exp(17*log(x) + E*log(y)) == x**17 * y**E
 
     assert exp(x*log(x)) != x**x
+    assert exp(sin(x)*log(x)) != x
 
 
 def test_log():
