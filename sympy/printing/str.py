@@ -3,7 +3,7 @@ A Printer for generating readable representation of most sympy classes.
 """
 
 from printer import Printer
-from sympy.printing.precedence import precedence
+from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.core.basic import S
 from sympy.core.numbers import One, Rational
 from sympy.core.power import Pow
@@ -107,7 +107,7 @@ class StrPrinter(Printer):
         return 'E'
 
     def _print_Factorial(self, expr):
-        return "%s!" % self.parenthesize(expr.args[0], precedence(expr))
+        return "%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Pow"])
 
     def _print_Function(self, expr):
         return expr.func.__name__ + "(%s)"%self.stringify(expr.args, ", ")

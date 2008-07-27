@@ -7,45 +7,23 @@ PRECEDENCE = {
     "Add":40,
     "Mul":50,
     "Pow":60,
-    "Apply":70,
-    "Item":75,
     "Atom":1000
 }
 
 # A dictionary assigning precedence values to certain classes. These values are
 # treated like they were inherited, so not every single class has to be named
 # here.
-PRECEDENCE_VALUES = {}
+PRECEDENCE_VALUES = {
+    "Add" : PRECEDENCE["Add"],
+    "Pow" : PRECEDENCE["Pow"],
+    "Relational" : PRECEDENCE["Relational"],
+    "Sub" : PRECEDENCE["Add"],
+}
 
 # Sometimes it's not enough to assign a fixed precedence value to a
 # class. Then a function can be inserted in this dictionary that takes
 # an instance of this class as argument and returns the appropriate
 # precedence value.
-PRECEDENCE_FUNCTIONS = {}
-
-# Clearly arranged list of classes with their precedence level. These classes
-# are imported and inserted into PRECEDENCE_VALUES.
-_PREC_VALS = (
-    ("sympy.core.add.Add", "Add"),
-    ("sympy.core.basic.Atom", "Atom"),
-    ("sympy.core.function.Function", "Apply"),
-    ("sympy.core.function.Derivative", "Apply"),
-    ("sympy.core.numbers.Integer", "Atom"),
-    ("sympy.core.power.Pow", "Pow"),
-    ("sympy.core.relational.Relational", "Relational"),
-    ("sympy.simplify.cse_opts.Sub", "Add"),
-    ("sympy.series.order.Order", "Apply"),
-    ("sympy.integrals.integrals.Integral", "Apply"),
-    ("sympy.concrete.products.Product", "Apply"),
-    ("sympy.concrete.summations.Sum", "Apply"),
-)
-
-# Insert information of _PREC_VALS propperly into PRECEDENCE_VALUES
-for imp, level in _PREC_VALS:
-    mod, cls = imp.rsplit(".", 1)
-    mod = __import__(mod, fromlist=[cls])
-    PRECEDENCE_VALUES[getattr(mod, cls)] = PRECEDENCE[level]
-
 
 # Precedence functions
 def precedence_Mul(item):
@@ -59,18 +37,16 @@ def precedence_Rational(item):
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
 
-# Clearly arranged list of classes with their precedence functions. These
-#  functions are inserted into PRECEDENCE_FUNCTIONS.
-_PREC_FUNCS =(
-    ("sympy.core.mul.Mul", precedence_Mul),
-    ("sympy.core.numbers.Rational", precedence_Rational),
-)
+def precedence_Integer(item):
+    if item.p < 0:
+        return PRECEDENCE["Add"]
+    return PRECEDENCE["Atom"]
 
-# Insert information of _PREC_FUNCS propperly into PRECEDENCE_FUNCS
-for imp, func in _PREC_FUNCS:
-    mod, cls = imp.rsplit(".", 1)
-    mod = __import__(mod, fromlist=[cls])
-    PRECEDENCE_FUNCTIONS[getattr(mod, cls)] = func
+PRECEDENCE_FUNCTIONS = {
+    "Integer" : precedence_Integer,
+    "Mul" : precedence_Mul,
+    "Rational" : precedence_Rational,
+}
 
 
 def precedence(item):
@@ -80,8 +56,9 @@ def precedence(item):
     if hasattr(item, "precedence"):
             return item.precedence
     for i in item.__class__.__mro__:
-        if i in PRECEDENCE_FUNCTIONS:
-            return PRECEDENCE_FUNCTIONS[i](item)
-        elif i in PRECEDENCE_VALUES:
-            return PRECEDENCE_VALUES[i]
-    return 1000
+        n = i.__name__
+        if n in PRECEDENCE_FUNCTIONS:
+            return PRECEDENCE_FUNCTIONS[n](item)
+        elif n in PRECEDENCE_VALUES:
+            return PRECEDENCE_VALUES[n]
+    return PRECEDENCE["Atom"]
