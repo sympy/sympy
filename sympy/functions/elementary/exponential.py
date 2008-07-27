@@ -40,15 +40,15 @@ class exp(Function):
             coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
 
             if coeff is not None:
-                if (2*coeff).is_Integer:
-                    cst_table = {
-                        0 : S.One,
-                        1 : S.ImaginaryUnit,
-                        2 : S.NegativeOne,
-                        3 : -S.ImaginaryUnit,
-                    }
-
-                    return cst_table[int(2*coeff) % 4]
+                if (2*coeff).is_integer:
+                    if coeff.is_even:
+                        return S.One
+                    elif coeff.is_odd:
+                        return S.NegativeOne
+                    elif (coeff + S.Half).is_even:
+                        return -S.ImaginaryUnit
+                    elif (coeff + S.Half).is_odd:
+                        return S.ImaginaryUnit
 
         if arg.is_Add:
             args = arg.args[:]

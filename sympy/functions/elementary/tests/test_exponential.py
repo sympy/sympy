@@ -1,9 +1,11 @@
-from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol, LambertW, sqrt
+from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol, LambertW, sqrt, Rational
 from sympy.utilities.pytest import XFAIL
 
 def test_exp():
 
     x, y = symbols('xy')
+
+    k = Symbol('k', integer=True)
 
     assert exp(nan) == nan
 
@@ -17,6 +19,11 @@ def test_exp():
     assert exp(pi*I) == -1
     assert exp(3*pi*I/2) == -I
     assert exp(2*pi*I) == 1
+
+    assert exp(pi*I*2*k) == 1
+    assert exp(pi*I*2*(k+Rational(1,2))) == -1
+    assert exp(pi*I*2*(k+Rational(1,4))) == I
+    assert exp(pi*I*2*(k+Rational(3,4))) == -I
 
     assert exp(log(x)) == x
     assert exp(2*log(x)) == x**2
