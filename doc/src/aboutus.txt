@@ -50,6 +50,7 @@ more details what they do and what they are interested in.
 #. Case Van Horsen: implemented optional support for gmpy in mpmath
 #. Štěpán Roučka: several matrix and simplification fixes
 #. Ali Raza Syed: pretty printing/isympy on windows fix
+#. Stefano Maggiolo: bug fixes
 
 Uptodate list in the order of the first contribution is given in the `README
 <http://hg.sympy.org/sympy/file/tip/README>`_
