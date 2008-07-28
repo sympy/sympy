@@ -195,6 +195,9 @@ class AssumeMeths(object):
     def _what_known_about(self, k):
         """tries hard to give an answer to: what is known about fact `k`
 
+           NOTE: You should not use this directly -- see make__get_assumption
+                 instead
+
            This function is called when a request is made to see what a fact
            value is.
 
@@ -344,3 +347,36 @@ class AssumeMeths(object):
             # NOTE it modifies base inplace
             self._assume_rules.deduce_all_facts(facts, base)
 
+
+def make__get_assumption(classname, name):
+    """Cooks function which will get named assumption
+
+       e.g.
+
+       class C:
+
+           is_xxx = make__get_assumption('C', 'xxx')
+           is_yyy = property( make__get_assumption('C', 'yyy'))
+
+
+       then
+
+       c = C()
+
+       c.is_xxx()   # note braces -- it's function call
+       c.is_yyy     # no braces   -- it's property
+    """
+
+    def getit(self):
+        try:
+            return self._assumptions[name]
+        except KeyError:
+            return self._what_known_about(name)
+
+    getit.func_name = '%s__is_%s' % (classname, name)
+
+    #print '\n\n\n%s\n' % getit
+    #from dis import dis
+    #dis(getit)
+
+    return getit

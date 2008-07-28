@@ -2,7 +2,7 @@
 
 import sympy.mpmath as mpmath
 
-from assumptions import AssumeMeths
+from assumptions import AssumeMeths, make__get_assumption
 from sympify import _sympify, sympify, SympifyError
 from cache import cacheit, Memoizer, MemoizerArg
 
@@ -196,22 +196,8 @@ class BasicMeta(BasicType):
             for k,v in base_derived_premises.iteritems():
                 if not cls.__dict__.has_key('is_'+k):
                     #print '%s -- overriding: %s' % (cls.__name__, k)
-                    code = """\
-def %(cls)s__is_%(k)s(self):
-#   print '%(k)s'
-
-    # this mimics Basic.__getattr__
-    try:
-        # see if it is already known:
-        return self._assumptions[ '%(k)s' ]
-    except KeyError:
-        return self._what_known_about( '%(k)s' )
-
-is_xxx = %(cls)s__is_%(k)s
-""" % {'k': k, 'cls': cls.__name__}
-
-                    exec code
-                    setattr(cls, 'is_'+k, property(is_xxx))
+                    is_k = make__get_assumption(cls.__name__, k)
+                    setattr(cls, 'is_'+k, property(is_k))
 
 
 
@@ -379,24 +365,22 @@ class Basic(AssumeMeths):
         return obj
 
 
-    def __getattr__(self, name):
-        # if it's not an assumption -- we don't have it
-        if name[:3] != 'is_':
-            # it is important to return shortly for speed reasons:
-            # we have *lots* of non-'is_' attribute access, e.g.
-            # '_eval_<smth>', and a lot of them does *not* exits.
-            #
-            # if we are here -- it surely does not exist,
-            # so let's get out of here as fast as possible.
-            raise AttributeError(name)
+    # NOTE NOTE NOTE
+    # --------------
+    #
+    # new-style classes + __getattr__ is *very* slow!
 
-        else:
-            try:
-                return self._assumptions[name[3:]]
-            except KeyError:
-                return self._what_known_about(name[3:])
+    # def __getattr__(self, name):
+    #     raise 'no way, *all* attribute access will be 2.5x slower'
+
+    # here is what we do instead:
+    for k in AssumeMeths._assume_defined:
+        exec "is_%s  = property(make__get_assumption('Basic', '%s'))" % (k,k)
+
 
     # NB: there is no need in protective __setattr__
+
+
 
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
