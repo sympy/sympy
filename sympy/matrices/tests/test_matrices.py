@@ -835,14 +835,6 @@ def test_col_row():
     assert M == Matrix([[x+1,0,0],
                         [1+y,y+2,3]])
 
-
-def test_str():
-    x, y = symbols("xy")
-    M = Matrix([[x**+1, 1], [y, x+y]])
-
-    assert str(M) in ["[x,     1]\n[y, x + y]",
-                      "[x,     1]\n[y, y + x]"]
-
 def test_repr():
     x, y = symbols("xy")
     M = Matrix([[x**+1, 1], [y, x+y]])
