@@ -9,15 +9,15 @@ from gtk import *
 from preview import preview, view, pngview, pdfview, dviview
 
 from str import StrPrinter
-StrPrinter = StrPrinter()
+_StrPrinter = StrPrinter()
 
 from repr import srepr
 
 # /cyclic/
 from sympy.core import basic
 from sympy.matrices import matrices
-basic.StrPrinter = StrPrinter
-matrices.StrPrinter = StrPrinter
-del basic, matrices, StrPrinter
+basic.StrPrinter = _StrPrinter
+matrices.StrPrinter = _StrPrinter
+del basic, matrices
 
 from tree import print_tree

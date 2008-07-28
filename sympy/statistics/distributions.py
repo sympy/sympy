@@ -1,6 +1,7 @@
 from sympy.core import *
 from sympy.core import sympify
 from sympy.functions import sqrt, exp, erf
+from sympy.printing import _StrPrinter as StrPrinter
 import random
 
 
@@ -22,10 +23,10 @@ class Sample(tuple):
         raise NotImplementedError
 
     def __repr__(self):
-        return "Sample([" + ", ".join([str(x) for x in self]) + "])"
+        return StrPrinter.doprint(self)
 
 
-class ContinuousProbability:
+class ContinuousProbability(object):
     """Base class for continuous probability distributions"""
 
     def probability(s, a, b):
@@ -42,6 +43,9 @@ class ContinuousProbability:
             return s._random()
         else:
             return Sample([s._random() for i in xrange(n)])
+
+    def __repr__(self):
+        return StrPrinter.doprint(self)
 
 
 class Normal(ContinuousProbability):
@@ -71,9 +75,6 @@ class Normal(ContinuousProbability):
     def __init__(self, mu, sigma):
         self.mu = sympify(mu)
         self.sigma = sympify(sigma)
-
-    def __repr__(self):
-        return "Normal(%s, %s)" % (self.mu, self.sigma)
 
     mean = property(lambda s: s.mu)
     median = property(lambda s: s.mu)
@@ -151,9 +152,6 @@ class Uniform(ContinuousProbability):
     def __init__(self, a, b):
         self.a = sympify(a)
         self.b = sympify(b)
-
-    def __repr__(self):
-        return "Uniform(%s, %s)" % (self.a, self.b)
 
     mean = property(lambda s: (s.a+s.b)/2)
     median = property(lambda s: (s.a+s.b)/2)

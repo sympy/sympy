@@ -308,7 +308,7 @@ class StrPrinter(Printer):
             (func, poly[1+poly.index("("):-1])
 
     def _print_Sample(self, expr):
-        return "Sample([%s])"%self.stringify(expr, ", ", precedence(expr))
+        return "Sample([%s])"%self.stringify(expr, ", ", 0)
 
     def _print_SMatrix(self, expr):
         return self._print(expr.toMatrix())
