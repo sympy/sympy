@@ -311,15 +311,7 @@ class StrPrinter(Printer):
         return "Sample([%s])"%self.stringify(expr, ", ", precedence(expr))
 
     def _print_SMatrix(self, expr):
-        s = ""
-        for i in range(expr.lines):
-            for j in range(expr.cols):
-                if expr.mat.has_key((i,j)):
-                    s += "%s "%self._print(expr[i,j])
-                else:
-                    s += "0 "
-            s += "\n"
-        return s
+        return self._print(expr.toMatrix())
 
     def _print_Sum(self, expr):
         return 'Sum(%s, (%s))'%(self._print(expr.function), self.stringify(expr.limits[0], ', '))

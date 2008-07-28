@@ -1544,6 +1544,18 @@ class SMatrix(Matrix):
         self.mat = newD
         self.cols -= 1
 
+    def toMatrix(self):
+        l = []
+        for i in range(self.lines):
+            c = []
+            l.append(c)
+            for j in range(self.cols):
+                if self.mat.has_key((i, j)):
+                    c.append(self[i, j])
+                else:
+                    c.append(0)
+        return Matrix(l)
+
     # from here to end all functions are same as in matrices.py
     # with Matrix replaced with SMatrix
     def copyin_list(self, key, value):
