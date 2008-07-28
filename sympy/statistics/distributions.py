@@ -12,7 +12,7 @@ class Sample(tuple):
     """
     def __new__(cls, sample):
         s = tuple.__new__(cls, sample)
-        s.mean = mean = sum(s) / len(s)
+        s.mean = mean = sum(s) / Integer(len(s))
         s.variance = sum([(x-mean)**2 for x in s]) / Integer(len(s))
         s.stddev = sqrt(s.variance)
         return s

@@ -44,3 +44,8 @@ def test_fit():
     #print n.stddev
     assert abs(n.mean - 2) < 0.3
     assert abs(n.stddev - 1.5) < 0.3
+
+def test_sample():
+    from sympy.statistics.distributions import Sample
+    s = Sample([0,1])
+    assert s.mean == Rational(1,2)
