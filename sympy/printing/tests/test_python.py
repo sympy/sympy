@@ -43,7 +43,8 @@ def test_python_basic():
     assert python((x+2)/y) in [
             "y = Symbol('y')\nx = Symbol('x')\ne = 1/y*(2 + x)",
             "y = Symbol('y')\nx = Symbol('x')\ne = 1/y*(x + 2)",
-            "x = Symbol('x')\ny = Symbol('y')\ne = 1/y*(2 + x)"]
+            "x = Symbol('x')\ny = Symbol('y')\ne = 1/y*(2 + x)",
+            "x = Symbol('x')\ny = Symbol('y')\ne = (2 + x)/y"]
     assert python((1+x)*y) in [
             "y = Symbol('y')\nx = Symbol('x')\ne = y*(1 + x)",
             "y = Symbol('y')\nx = Symbol('x')\ne = y*(x + 1)",]
@@ -124,10 +125,10 @@ def test_python_integrals():
 
     # Definite integrals
     f_4 = Integral(x**2, (x,1,2))
-    assert python(f_4) == "x = Symbol('x')\ne = Integral(x**2, (x, (1, 2)))"
+    assert python(f_4) == "x = Symbol('x')\ne = Integral(x**2, (x, 1, 2))"
 
     f_5 = Integral(x**2, (x,Rational(1,2),10))
-    assert python(f_5) == "x = Symbol('x')\ne = Integral(x**2, (x, (Half(1, 2), 10)))"
+    assert python(f_5) == "x = Symbol('x')\ne = Integral(x**2, (x, Half(1, 2), 10))"
 
     # Nested integrals
     f_6 = Integral(x**2*y**2, x,y)

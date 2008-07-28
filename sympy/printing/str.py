@@ -93,8 +93,8 @@ class StrPrinter(Printer):
         return 'D(%s)'%", ".join(map(self._print, expr.args))
 
     def _print_dict(self, expr):
-        items = ["%s:%s"%(self._print(arg), self._print(arg)) for
-                 key, value in expr.iteritems]
+        items = ["%s: %s"%(self._print(key), self._print(value)) for
+                 key, value in expr.iteritems()]
         return "{%s}"%", ".join(items)
 
     def _print_Dummy(self, expr):
@@ -126,11 +126,11 @@ class StrPrinter(Printer):
 
     def _print_Integral(self, expr):
         def _xab_tostr(xab):
-            x,ab = xab
+            x, ab = xab
             if ab is None:
                 return self._print(x)
             else:
-                return self._print(xab)
+                return self._print((x,) + ab)
         L = ', '.join([_xab_tostr(l) for l in expr.limits])
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
 
@@ -139,7 +139,10 @@ class StrPrinter(Printer):
 
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
-        return "Limit(%s, %s, %s, dir='%s')" % (e, z, z0, dir)
+        if dir == "+":
+            return "Limit(%s, %s, %s)" % (e, z, z0)
+        else:
+            return "Limit(%s, %s, %s, dir='%s')" % (e, z, z0, dir)
 
     def _print_list(self, expr):
         return "[%s]"%self.stringify(expr, ", ")
@@ -182,7 +185,7 @@ class StrPrinter(Printer):
         if len(b)==0:
             return sign + '*'.join(a_str)
         elif len(b)==1:
-            if len(a)==1 and not a[0].is_Atom:
+            if len(a)==1 and not (a[0].is_Atom or a[0].is_Add):
                 return sign + "1/%s*"%b_str[0] + '*'.join(a_str)
             else:
                 return sign + '*'.join(a_str) + "/%s"%b_str[0]

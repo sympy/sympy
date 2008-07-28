@@ -41,5 +41,4 @@ def test_issue786():
 
 def test_Limit():
     assert Limit(sin(x)/x, x, 0) != 1
-    assert str(Limit(1/x, x, 0)) == "Limit(1/x, x, 0, dir='+')" != 1
     assert Limit(sin(x)/x, x, 0).doit() == 1
