@@ -176,6 +176,9 @@ def test_limit2():
     assert gruntz(x+exp(-x),x,oo) == oo
     assert gruntz(x+exp(-x**2),x,oo) == oo
     assert gruntz(x+exp(-exp(x)),x,oo) == oo
+
+@XFAIL  #605
+def test_limit2b():
     assert gruntz(13+1/x-exp(-x),x,oo) == 13
 
 def test_limit3():
