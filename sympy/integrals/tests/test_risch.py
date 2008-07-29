@@ -29,8 +29,9 @@ def test_heurisch_fractions():
     # Up to a constant, where C = 5*pi*I/12, Matematica gives identical
     # result in the first case. The difference is because sympy changes
     # signs of expressions without any care.
-    assert heurisch(5*x**5/(2*x**6 - 5), x) == 5*log(5 - 2*x**6) / 12
-    assert heurisch(5*x**5/(2*x**6 + 5), x) == 5*log(5 + 2*x**6) / 12
+    # XXX ^ ^ ^ is this still correct?
+    assert heurisch(5*x**5/(2*x**6 - 5), x) in [5*log(2*x**6 - 5) / 12, 5*log(-2*x**6 + 5) / 12]
+    assert heurisch(5*x**5/(2*x**6 + 5), x) == 5*log(2*x**6 + 5) / 12
 
     assert heurisch(1/x**2, x) == -1/x
     assert heurisch(-1/x**5, x) == 1/(4*x**4)
