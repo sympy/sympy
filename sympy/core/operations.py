@@ -17,7 +17,9 @@ class AssocOp(Basic):
     Base class for Add and Mul.
     """
 
-    __slots__ = []
+    # for performance reason, we don't let is_commutative go to assumptions,
+    # and keep it right here
+    __slots__ = ['is_commutative']
 
     @cacheit
     def __new__(cls, *args, **assumptions):
@@ -33,8 +35,9 @@ class AssocOp(Basic):
             elif nc_part: obj = nc_part[0]
             else: obj = cls.identity()
         else:
-            assumptions['commutative'] = not nc_part
             obj = Basic.__new__(cls, *(c_part + nc_part), **assumptions)
+            obj.is_commutative = not nc_part
+
         if order_symbols is not None:
             obj = C.Order(obj, *order_symbols)
         if lambda_args is not None:
