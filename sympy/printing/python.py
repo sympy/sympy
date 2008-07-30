@@ -4,6 +4,10 @@ import sympy
 from repr import ReprPrinter
 from str import StrPrinter
 
+# A list of classes that should be printed using StrPrinter
+STRPRINT = ("Add", "Infinity", "Integer", "Mul", "NegativeInfinity",
+            "NegativeOne", "One", "Pow", "Zero")
+
 class PythonPrinter(ReprPrinter, StrPrinter):
     """A printer which converts an expression into its Python interpretation."""
 
@@ -13,26 +17,18 @@ class PythonPrinter(ReprPrinter, StrPrinter):
         self.symbols = []
         self.functions = []
 
-    def _print_Add(self, expr):
-        return StrPrinter._print_Add(self, expr)
+        # Create print methods for classes that should use StrPrinter instead
+        # of ReprPrinter.
+        for name in STRPRINT:
+            f_name = "_print_%s"%name
+            f = getattr(StrPrinter, f_name)
+            setattr(PythonPrinter, f_name, f)
 
     def _print_Function(self, expr):
         func = expr.func.__name__
         if not hasattr(sympy, func) and not func in self.functions:
             self.functions.append(func)
         return StrPrinter._print_Function(self, expr)
-
-    def _print_Infinity(self, expr):
-        return StrPrinter._print_Infinity(self, expr)
-
-    def _print_Integer(self, expr):
-        return StrPrinter._print_Integer(self, expr)
-
-    def _print_Mul(self, expr):
-        return StrPrinter._print_Mul(self, expr)
-
-    def _print_Pow(self, expr):
-        return StrPrinter._print_Pow(self, expr)
 
     # procedure (!) for defining symbols which have be defined in print_python()
     def _print_Symbol(self, expr):
@@ -43,6 +39,7 @@ class PythonPrinter(ReprPrinter, StrPrinter):
 
     def _print_module(self, expr):
         raise Exception('Modules in the expression are unacceptable')
+
 
 def python(expr):
     """Return Python interpretation of passed expression

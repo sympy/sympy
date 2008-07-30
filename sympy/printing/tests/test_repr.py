@@ -1,36 +1,93 @@
 from sympy.utilities.pytest import XFAIL
-from sympy import Symbol, Function, WildFunction
+from sympy import Symbol, symbols, Function, Integer, Matrix, nan, oo, Rational, Real, S, WildFunction
 from sympy.polynomials import Polynomial
 from sympy.polys.polynomial import Poly
 from sympy.printing import srepr
 
-x = Symbol('x')
-y = Symbol('y')
+x, y = symbols('xy')
 
-def test_function_repr():
-    f = Function('f')
-    fx= f(x)
-    w = WildFunction('w')
-    assert srepr(fx) == "Function('f')(Symbol('x'))"
-    assert srepr(w)  == "WildFunction('w')"
+# eval(srepr(expr)) == expr has to succeed in the right environment. The right
+# environment is the scope of "from sympy import *" for most cases.
+ENV = {}
+exec "from sympy import *" in ENV
+# These classes have to be added separately:
+ENV["Polynomial"] = Polynomial
+ENV["Infinity"] = S.Infinity
+ENV["NegativeInfinity"] = S.NegativeInfinity
+ENV["NegativeOne"] = S.NegativeOne
+ENV["One"] = S.One
+ENV["Zero"] = S.Zero
 
-@XFAIL
-def test_unapplied_function_repr():
-    f = Function('f')
-    assert srepr(f) == "Function('f')"   # this does not work
+def sT(expr, string):
+    """
+    sT := sreprTest
 
-def test_Polynomial():
-    f = Polynomial(x+2)
-    assert srepr(f) == "Polynomial(Add(Integer(2), Symbol('x')), ((One(1), One(1)), (Integer(2), Zero(0))), [Symbol('x')], 'grevlex')"
+    Tests that srepr delivers the expected string and that
+    the condition eval(srepr(expr))==expr holds.
+    """
+    assert srepr(expr) == string
+    assert eval(string, ENV) == expr
+
+
+def test_Add():
+    sT(x+y, "Add(Symbol('x'), Symbol('y'))")
+
+def test_Function():
+    sT(Function("f")(x), "Function('f')(Symbol('x'))")
+    # test unapplied Function
+    sT(Function('f'), "Function('f')")
+
+def test_Infinity():
+    sT(oo, "Infinity")
+
+def test_Integer():
+    sT(Integer(4), "Integer(4)")
+
+def test_list():
+    sT([x, Integer(4)], "[Symbol('x'), Integer(4)]")
+
+def test_Matrix():
+    sT(Matrix([[x**+1, 1], [y, x+y]]), "Matrix([[Symbol('x'), One], [Symbol('y'), Add(Symbol('x'), Symbol('y'))]])")
+
+def test_NaN():
+    sT(nan, "nan")
+
+def test_NegativeInfinity():
+    sT(-oo, "NegativeInfinity")
+
+def test_NegativeOne():
+    sT(-Integer(1), "NegativeOne")
+
+def test_One():
+    sT(S.One, "One")
 
 def test_Poly():
-    assert srepr(Poly(7, x)) == \
-        "Poly([(Integer(7), (0,))], Symbol('x'), order='grlex')"
+    sT(Poly(7, x), "Poly([(Integer(7), (0,))], Symbol('x'), order='grlex')")
+    sT(Poly(2*x*y + 7, x, y), "Poly([(Integer(2), (1, 1)), (Integer(7), (0, 0))], Symbol('x'), Symbol('y'), order='grlex')")
+    sT(Poly(2*x*y - 7, x, y, order='grevlex'), "Poly([(Integer(2), (1, 1)), (Integer(-7), (0, 0))], Symbol('x'), Symbol('y'), order='grevlex')")
 
-    assert srepr(Poly(2*x*y + 7, x, y)) == \
-        "Poly([(Integer(2), (1, 1)), (Integer(7), (0, 0))]," \
-        " Symbol('x'), Symbol('y'), order='grlex')"
+def test_Polynomial():
+    sT(Polynomial(x+2), "Polynomial(Add(Integer(2), Symbol('x')), ((One, One), (Integer(2), Zero)), [Symbol('x')], 'grevlex')")
 
-    assert srepr(Poly(2*x*y - 7, x, y, order='grevlex')) == \
-        "Poly([(Integer(2), (1, 1)), (Integer(-7), (0, 0))]," \
-        " Symbol('x'), Symbol('y'), order='grevlex')"
+def test_Rational():
+    sT(Rational(1,3), "Rational(1, 3)")
+    sT(Rational(-1,3), "Rational(-1, 3)")
+
+def test_Real():
+    sT(Real('1.23', prec=3), "Real('1.23', prec=3)")
+    sT(Real('1.23456789', prec=9), "Real('1.23456789', prec=9)")
+    sT(Real('1.234567890123456789', prec=19), "Real('1.234567890123456789', prec=19)")
+
+def test_Symbol():
+    sT(x, "Symbol('x')")
+    sT(y, "Symbol('y')")
+
+def test_tuple():
+    sT((x,), "(Symbol('x'),)")
+    sT((x,y), "(Symbol('x'), Symbol('y'))")
+
+def test_WildFunction():
+    sT(WildFunction('w'), "WildFunction('w')")
+
+def test_Zero():
+    sT(S.Zero, "Zero")

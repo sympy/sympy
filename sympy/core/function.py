@@ -24,7 +24,7 @@ Example:
     >>> f(x)
     f(x)
     >>> print srepr(f(x).func)
-    <'sympy.core.function.f'>
+    Function('f')
     >>> f(x).args
     (x,)
 """

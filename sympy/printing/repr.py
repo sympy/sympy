@@ -28,10 +28,22 @@ class ReprPrinter(Printer):
         else:
             return str(expr)
 
+    def _print_Add(self, expr):
+        args = list(expr.args)
+        args.sort(expr.compare_terms)
+        args = map(self._print, args)
+        return "Add(%s)"%", ".join(args)
+
     def _print_Function(self, expr):
         r = '%s(%r)' % (expr.func.__base__.__name__, expr.func.__name__)
         r+= '(%s)' % ', '.join([self._print(a) for a in expr.args])
         return r
+
+    def _print_FunctionClass(self, expr):
+        return 'Function(%r)'%(expr.__name__)
+
+    def _print_Infinity(self, expr):
+        return 'Infinity'
 
     def _print_Integer(self, expr):
         return '%s(%s)' % (expr.__class__.__name__, self._print(expr.p))
@@ -40,8 +52,24 @@ class ReprPrinter(Printer):
         return "[%s]"%self.reprify(expr, ", ")
 
     def _print_Matrix(self, expr):
-        s = expr._format_str(lambda elem: self._print(elem), ',\n  ')
-        return '%s([\n  %s,\n])' % (expr.__class__.__name__, s)
+        l = []
+        for i in range(expr.lines):
+            l.append([])
+            for j in range(expr.cols):
+                l[-1].append(expr[i,j])
+        return '%s(%s)' % (expr.__class__.__name__, self._print(l))
+
+    def _print_NaN(self, expr):
+        return "nan"
+
+    def _print_NegativeInfinity(self, expr):
+        return "NegativeInfinity"
+
+    def _print_NegativeOne(self, expr):
+        return "NegativeOne"
+
+    def _print_One(self, expr):
+        return "One"
 
     def _print_Poly(self, expr):
         terms = []
@@ -65,8 +93,8 @@ class ReprPrinter(Printer):
 
     def _print_Real(self, expr):
         dps = mlib.prec_to_dps(expr._prec)
-        r = mlib.to_str(expr._mpf_, dps+3)
-        return '%s(%s, prec=%i)' % (expr.__class__.__name__, r, dps)
+        r = mlib.to_str(expr._mpf_, dps)
+        return "%s('%s', prec=%i)" % (expr.__class__.__name__, r, dps)
 
     def _print_Sum2(self, expr):
         return "Sum2(%s, (%s, %s, %s))" % (self._print(expr.f), self._print(expr.i),
@@ -83,6 +111,9 @@ class ReprPrinter(Printer):
 
     def _print_WildFunction(self, expr):
         return "%s('%s')" % (expr.__class__.__name__, expr.name)
+
+    def _print_Zero(self, expr):
+        return "Zero"
 
 RPrinter = ReprPrinter()
 

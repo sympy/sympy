@@ -342,3 +342,6 @@ class StrPrinter(Printer):
 
     def _print_WildFunction(self, expr):
         return expr.name + '_'
+
+    def _print_Zero(self, expr):
+        return "0"

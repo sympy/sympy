@@ -837,13 +837,6 @@ def test_col_row():
     assert M == Matrix([[x+1,0,0],
                         [1+y,y+2,3]])
 
-def test_repr():
-    x, y = symbols("xy")
-    M = Matrix([[x**+1, 1], [y, x+y]])
-
-    assert srepr(M) in ["Matrix([\n  [Symbol('x'),                        One(1)],\n  [Symbol('y'), Add(Symbol('y'), Symbol('x'))],\n])",
-                        "Matrix([\n  [Symbol('x'),                        One(1)],\n  [Symbol('y'), Add(Symbol('x'), Symbol('y'))],\n])"]
-
 def test_issue851():
     m = Matrix([1, 2, 3])
     a = Matrix([1, 2, 3])
