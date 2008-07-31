@@ -496,7 +496,7 @@ class Matrix(object):
         [3, 4, 5]
         """
         assert self.cols == bott.cols
-        newmat = self.zeros(self.lines+bott.lines, self.cols)
+        newmat = self.zeros((self.lines+bott.lines, self.cols))
         newmat[:self.lines,:] = self[:,:]
         newmat[self.lines:,:] = bott
         return newmat
@@ -521,7 +521,7 @@ class Matrix(object):
         if pos is 0:
             return mti.col_join(self)
         assert self.cols == mti.cols
-        newmat = self.zeros(self.lines + mti.lines, self.cols)
+        newmat = self.zeros((self.lines + mti.lines, self.cols))
         newmat[:pos,:] = self[:pos,:]
         newmat[pos:pos+mti.lines,:] = mti[:,:]
         newmat[pos+mti.lines:,:] = self[pos:,:]
@@ -548,7 +548,7 @@ class Matrix(object):
         if pos is 0:
             return mti.row_join(self)
         assert self.lines == mti.lines
-        newmat = self.zeros(self.lines, self.cols + mti.cols)
+        newmat = self.zeros((self.lines, self.cols + mti.cols))
         newmat[:,:pos] = self[:,:pos]
         newmat[:,pos:pos+mti.cols] = mti[:,:]
         newmat[:,pos+mti.cols:] = self[:,pos:]
