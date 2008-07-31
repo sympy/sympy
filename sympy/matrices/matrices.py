@@ -1,3 +1,4 @@
+import warnings
 from sympy import Basic, Symbol
 from sympy.core import sympify
 
@@ -18,6 +19,32 @@ class ShapeError(ValueError):
 
 class MatrixError(Exception):
     pass
+
+def _dims_to_nm( dims ):
+    """Converts dimensions tuple (or any object with length 1 or 2) or scalar
+    in dims to matrix dimensions n and m."""
+
+    try:
+        l = len( dims )
+    except TypeError:
+        dims = (dims,)
+        l = 1
+
+    # This will work for nd-array too when they are added to sympy.
+    try:
+        for dim in dims:
+            assert (dim > 0) and isinstance( dim, int )
+    except AssertionError:
+        raise ValueError("Matrix dimensions should positive integers!")
+
+    if l == 2:
+        n, m = dims
+    elif l == 1:
+        n, m = dims[0], dims[0]
+    else:
+        raise ValueError("Matrix dimensions should be a two-element tuple of ints or a single int!")
+
+    return n, m
 
 class Matrix(object):
 
@@ -914,15 +941,22 @@ class Matrix(object):
     def zeronm(self, n, m):
         # used so that certain functions above can use this
         # then only this func need be overloaded in subclasses
+        warnings.warn( 'Deprecated: use zeros() instead.' )
         return Matrix(n,m,[S.Zero]*n*m)
 
     def zero(self, n):
         """Returns a n x n matrix of zeros."""
+        warnings.warn( 'Deprecated: use zeros() instead.' )
         return Matrix(n,n,[S.Zero]*n*n)
+
+    def zeros(self, dims):
+        """Returns a dims = (d1,d2) matrix of zeros."""
+        n, m = _dims_to_nm( dims )
+        return Matrix(n,m,[S.Zero]*n*m)
 
     def eye(self, n):
         """Returns the identity matrix of size n."""
-        tmp = self.zero(n)
+        tmp = self.zeros(n)
         for i in range(tmp.lines):
             tmp[i,i] = S.One
         return tmp
@@ -1256,6 +1290,10 @@ class Matrix(object):
             out.append((r, k, basis))
         return out
 
+    def fill(self, value):
+        """Fill the matrix with the scalar value."""
+        self.mat = [value] * self.lines * self.cols
+
 def matrix_multiply(A,B):
     """
     Return  A*B.
@@ -1284,25 +1322,35 @@ def matrix_add(A,B):
 
 def zero(n):
     """Create square zero matrix n x n"""
+    warnings.warn( 'Deprecated: use zeros() instead.' )
     return zeronm(n,n)
 
 def zeronm(n,m):
     """Create zero matrix n x m"""
+    warnings.warn( 'Deprecated: use zeros() instead.' )
     assert n>0
     assert m>0
     return Matrix(n,m,[S.Zero]*m*n)
 
+def zeros(dims):
+    """Create zero matrix of dimensions dims = (d1,d2)"""
+    n, m = _dims_to_nm( dims )
+    return Matrix(n,m,[S.Zero]*m*n)
+
 def one(n):
     """Create square all-one matrix n x n"""
-    m = zero(n)
-    for i in range(n):
-        m[i,i]=1
-    return m
+    warnings.warn( 'Deprecated: use ones() instead.' )
+    return Matrix(n,n,[S.One]*m*n)
+
+def ones(dims):
+    """Create all-one matrix of dimensions dims = (d1,d2)"""
+    n, m = _dims_to_nm( dims )
+    return Matrix(n,m,[S.One]*m*n)
 
 def eye(n):
     """Create square identity matrix n x n"""
     assert n>0
-    out = zeronm(n,n)
+    out = zeros(n)
     for i in range(n):
         out[i,i]=S.One
     return out
@@ -1609,10 +1657,17 @@ class SMatrix(Matrix):
                                (self[0]*b[1] - self[1]*b[0])))
 
     def zeronm(self,n,m):
+        warnings.warn( 'Deprecated: use zeros() instead.' )
         return SMatrix(n,m,{})
 
     def zero(self, n):
+        warnings.warn( 'Deprecated: use zeros() instead.' )
         return SMatrix(n,n,{})
+
+    def zeros(self, dims):
+        """Returns a dims = (d1,d2) matrix of zeros."""
+        n, m = _dims_to_nm( dims )
+        return SMatrix(n,m,{})
 
     def eye(self, n):
         tmp = SMatrix(n,n,lambda i,j:0)

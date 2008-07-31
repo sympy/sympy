@@ -1,5 +1,5 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
-        sin, exp, hessian, sqrt, zero, randMatrix, Poly, S, pi
+        sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi
 from sympy.matrices.matrices import ShapeError, MatrixError
 from sympy.printing import srepr
 import py
@@ -179,7 +179,7 @@ def test_determinant():
 def test_submatrix():
     m0 = eye(4)
     assert m0[0:3, 0:3] == eye(3)
-    assert m0[2:4, 0:2] == zero(2)
+    assert m0[2:4, 0:2] == zeros(2)
 
     m1 = Matrix(3,3, lambda i,j: i+j)
     assert m1[0,:] == Matrix(1,3,(0,1,2))
@@ -190,7 +190,7 @@ def test_submatrix():
     assert m2[-2:,:] == Matrix([[8,9,10,11],[12,13,14,15]])
 
 def test_submatrix_assignment():
-    m = zero(4)
+    m = zeros(4)
     m[2:4, 2:4] = eye(2)
     assert m == Matrix((0,0,0,0),
                         (0,0,0,0),
@@ -203,8 +203,8 @@ def test_submatrix_assignment():
                         (2,1,0,0),
                         (3,0,1,0),
                         (4,0,0,1))
-    m[:,:] = zero(4)
-    assert m == zero(4)
+    m[:,:] = zeros(4)
+    assert m == zeros(4)
     m[:,:] = ((1,2,3,4),(5,6,7,8),(9, 10, 11, 12),(13,14,15,16))
     assert m == Matrix(((1,2,3,4),
                         (5,6,7,8),
@@ -226,7 +226,7 @@ def test_reshape():
 def test_applyfunc():
     m0 = eye(3)
     assert m0.applyfunc(lambda x:2*x) == eye(3)*2
-    assert m0.applyfunc(lambda x: 0 ) == zero(3)
+    assert m0.applyfunc(lambda x: 0 ) == zeros(3)
 
 def test_expand():
     x,y = symbols('xy')
@@ -248,7 +248,7 @@ def test_LUdecomp():
     L,U,p = testmat.LUdecomposition()
     assert L.is_lower()
     assert U.is_upper()
-    assert (L*U).permuteBkwd(p)-testmat == zero(4)
+    assert (L*U).permuteBkwd(p)-testmat == zeros(4)
 
     testmat = Matrix([[6,-2,7,4],
                       [0,3,6,7],
@@ -257,14 +257,14 @@ def test_LUdecomp():
     L,U,p = testmat.LUdecomposition()
     assert L.is_lower()
     assert U.is_upper()
-    assert (L*U).permuteBkwd(p)-testmat == zero(4)
+    assert (L*U).permuteBkwd(p)-testmat == zeros(4)
 
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
     M = Matrix((1, x, 1), (2, y, 0), (y, 0, z))
     L, U, p = M.LUdecomposition()
     assert L.is_lower()
     assert U.is_upper()
-    assert (L*U).permuteBkwd(p)-M == zero(3)
+    assert (L*U).permuteBkwd(p)-M == zeros(3)
 
     # test FF LUdecomp
     M = Matrix([[1, 3, 3],
@@ -445,7 +445,7 @@ def test_sparse_matrix():
         for i in range(tmp.lines):
             tmp[i,i] = 1
         return tmp
-    def zero(n):
+    def zeros(n):
         return SMatrix(n,n,lambda i,j:0)
 
     # test_multiplication
@@ -558,7 +558,7 @@ def test_sparse_matrix():
     # test_submatrix
     m0 = eye(4)
     assert m0[0:3, 0:3] == eye(3)
-    assert m0[2:4, 0:2] == zero(2)
+    assert m0[2:4, 0:2] == zeros(2)
 
     m1 = SMatrix(3,3, lambda i,j: i+j)
     assert m1[0,:] == SMatrix(1,3,(0,1,2))
@@ -569,7 +569,7 @@ def test_sparse_matrix():
     assert m2[-2:,:] == SMatrix([[8,9,10,11],[12,13,14,15]])
 
     # test_submatrix_assignment
-    m = zero(4)
+    m = zeros(4)
     m[2:4, 2:4] = eye(2)
     assert m == SMatrix((0,0,0,0),
                         (0,0,0,0),
@@ -582,8 +582,8 @@ def test_sparse_matrix():
                         (2,1,0,0),
                         (3,0,1,0),
                         (4,0,0,1))
-    m[:,:] = zero(4)
-    assert m == zero(4)
+    m[:,:] = zeros(4)
+    assert m == zeros(4)
     m[:,:] = ((1,2,3,4),(5,6,7,8),(9, 10, 11, 12),(13,14,15,16))
     assert m == SMatrix(((1,2,3,4),
                         (5,6,7,8),
@@ -605,7 +605,7 @@ def test_sparse_matrix():
     # test_applyfunc
     m0 = eye(3)
     assert m0.applyfunc(lambda x:2*x) == eye(3)*2
-    assert m0.applyfunc(lambda x: 0 ) == zero(3)
+    assert m0.applyfunc(lambda x: 0 ) == zeros(3)
 
     # test_LUdecomp
     testmat = SMatrix([[0,2,5,3],
@@ -615,7 +615,7 @@ def test_sparse_matrix():
     L,U,p = testmat.LUdecomposition()
     assert L.is_lower()
     assert U.is_upper()
-    assert (L*U).permuteBkwd(p)-testmat == zero(4)
+    assert (L*U).permuteBkwd(p)-testmat == zeros(4)
 
     testmat = SMatrix([[6,-2,7,4],
                       [0,3,6,7],
@@ -624,14 +624,14 @@ def test_sparse_matrix():
     L,U,p = testmat.LUdecomposition()
     assert L.is_lower()
     assert U.is_upper()
-    assert (L*U).permuteBkwd(p)-testmat == zero(4)
+    assert (L*U).permuteBkwd(p)-testmat == zeros(4)
 
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
     M = Matrix((1, x, 1), (2, y, 0), (y, 0, z))
     L, U, p = M.LUdecomposition()
     assert L.is_lower()
     assert U.is_upper()
-    assert (L*U).permuteBkwd(p)-M == zero(3)
+    assert (L*U).permuteBkwd(p)-M == zeros(3)
 
     # test_LUsolve
     A = SMatrix([[2,3,5],
@@ -746,6 +746,8 @@ def test_sparse_matrix():
     assert M.eigenvects() == [[1, 1, [Matrix(1,3,[R(-1)/2,R(3)/2,1])]],
                               [2, 1, [Matrix(1,3,[0,1,0])]],
                               [5, 1, [Matrix(1,3,[1,1,0])]]]
+
+    assert M.zeros((3, 5)) == SMatrix(3, 5, {})
 
 def test_subs():
     x = Symbol('x')
@@ -919,3 +921,16 @@ def test_is_symbolic():
     assert a.is_symbolic() == False
     a = Matrix([1,x],[3,4])
     assert a.is_symbolic() == True
+
+def test_zeros_ones_fill():
+    n, m = 3, 5
+
+    a = zeros( (n, m) )
+    a.fill( 5 )
+
+    b = 5 * ones( (n, m) )
+
+    assert a == b
+    assert a.lines == b.lines == 3
+    assert a.cols == b.cols == 5
+    assert a.shape == b.shape == (3, 5)

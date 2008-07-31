@@ -1,5 +1,5 @@
 from sympy.physics.matrices import msigma, mgamma, minkowski_tensor
-from sympy import zero, one, I
+from sympy import zeros, eye, I
 
 
 
@@ -19,11 +19,11 @@ def test_Pauli():
     assert sigma3*sigma1 == sigma2*I
     assert sigma2*sigma3 == sigma1*I
 
-    assert sigma1*sigma1 == one(2)
-    assert sigma2*sigma2 == one(2)
-    assert sigma3*sigma3 == one(2)
+    assert sigma1*sigma1 == eye(2)
+    assert sigma2*sigma2 == eye(2)
+    assert sigma3*sigma3 == eye(2)
 
-    assert sigma1*2*sigma1 == 2*one(2)
+    assert sigma1*2*sigma1 == 2*eye(2)
     assert sigma1*sigma3*sigma1 == -sigma3
 
 def test_Dirac():
@@ -35,10 +35,10 @@ def test_Dirac():
 
     # gamma*I -> I*gamma    (see #354)
     assert gamma5 == gamma0 * gamma1 * gamma2 * gamma3 * I
-    assert gamma1 * gamma2 + gamma2 * gamma1 == zero(4)
-    assert gamma0 * gamma0 == one(4) * minkowski_tensor[0,0]
-    assert gamma2 * gamma2 != one(4) * minkowski_tensor[0,0]
-    assert gamma2 * gamma2 == one(4) * minkowski_tensor[2,2]
+    assert gamma1 * gamma2 + gamma2 * gamma1 == zeros(4)
+    assert gamma0 * gamma0 == eye(4) * minkowski_tensor[0,0]
+    assert gamma2 * gamma2 != eye(4) * minkowski_tensor[0,0]
+    assert gamma2 * gamma2 == eye(4) * minkowski_tensor[2,2]
 
     assert mgamma(5,True) == \
         mgamma(0,True)*mgamma(1,True)*mgamma(2,True)*mgamma(3,True)*I
