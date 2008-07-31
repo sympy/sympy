@@ -29,7 +29,7 @@ class AssocOp(Basic):
             return cls.identity()
         if len(args)==1:
             return _sympify(args[0])
-        c_part, nc_part, lambda_args, order_symbols = cls.flatten(map(_sympify, args))
+        c_part, nc_part, order_symbols = cls.flatten(map(_sympify, args))
         if len(c_part) + len(nc_part) <= 1:
             if c_part: obj = c_part[0]
             elif nc_part: obj = nc_part[0]
@@ -40,8 +40,6 @@ class AssocOp(Basic):
 
         if order_symbols is not None:
             obj = C.Order(obj, *order_symbols)
-        if lambda_args is not None:
-            obj = Lambda(obj, *lambda_args)
         return obj
 
     @classmethod
@@ -63,7 +61,7 @@ class AssocOp(Basic):
                 seq = list(o[:]) + seq
                 continue
             new_seq.append(o)
-        return [], new_seq, None, None
+        return [], new_seq, None
 
     _eval_subs = Basic._seq_subs
 

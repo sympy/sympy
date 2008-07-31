@@ -20,8 +20,7 @@ class Add(AssocOp, RelMeths, ArithMeths):
         """
         Takes the sequence "seq" of nested Adds and returns a flatten list.
 
-        Returns: (commutative_part, noncommutative_part, lambda_args,
-            order_symbols)
+        Returns: (commutative_part, noncommutative_part, order_symbols)
 
         Applies associativity, all terms are commutable with respect to
         addition.
@@ -31,13 +30,9 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
         coeff = S.Zero  # standalone term
                         # e.g. 3 + ...
-        lambda_args = None
         order_factors = []
         while seq:
             o = seq.pop(0)
-            #if o.is_Function:
-            #    if o.nargs is not None:
-            #        o, lambda_args = o.with_dummy_arguments(lambda_args)
 
             # O(x)
             if o.is_Order:
@@ -138,9 +133,9 @@ class Add(AssocOp, RelMeths, ArithMeths):
 
         # we are done
         if noncommutative:
-            return [],newseq,lambda_args,None
+            return [], newseq, None
         else:
-            return newseq,[],lambda_args,None
+            return newseq, [], None
 
     @staticmethod
     def compare_terms(a, b):

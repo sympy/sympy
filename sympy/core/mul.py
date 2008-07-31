@@ -41,7 +41,6 @@ class Mul(AssocOp, RelMeths, ArithMeths):
         inv_exp_dict = {}   # exp -> Mul(num-bases)     x    x
                             # e.g.  x -> 6  for  ... * 2  * 3  * ...
 
-        lambda_args = None
         order_symbols = None
 
 
@@ -51,9 +50,6 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             if c_seq:
                 # first process commutative objects
                 o = c_seq.pop(0)
-                if isinstance(o, FunctionClass):
-                    if o.nargs is not None:
-                        o, lambda_args = o.with_dummy_arguments(lambda_args)
 
                 # O(x)
                 if o.is_Order:
@@ -134,9 +130,6 @@ class Mul(AssocOp, RelMeths, ArithMeths):
                 o = nc_seq.pop(0)
                 if isinstance(o, WildFunction):
                     pass
-                elif isinstance(o, FunctionClass):
-                    if o.nargs is not None:
-                        o, lambda_args = o.with_dummy_arguments(lambda_args)
                 elif o.is_Order:
                     o, order_symbols = o.as_expr_symbols(order_symbols)
 
@@ -256,7 +249,7 @@ class Mul(AssocOp, RelMeths, ArithMeths):
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
 
-        return c_part, nc_part, lambda_args, order_symbols
+        return c_part, nc_part, order_symbols
 
 
     def _eval_power(b, e):
