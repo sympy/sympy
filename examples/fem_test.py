@@ -27,7 +27,7 @@ for i in range(0, fe.nbf()):
    u += ui*fe.N[i]
 
 
-J = zeronm(fe.nbf(), fe.nbf())
+J = zeros(fe.nbf())
 for i in range(0, fe.nbf()):
    Fi = u*fe.N[i]
    for j in range(0, fe.nbf()):

@@ -509,7 +509,7 @@ class Matrix(object):
         [0, 1, 2]
         [1, 2, 3]
         [2, 3, 4]
-        >>> V = zeronm(1,3)
+        >>> V = zeros((1, 3))
         >>> V
         [0, 0, 0]
         >>> M.row_insert(1,V)
@@ -535,7 +535,7 @@ class Matrix(object):
         [0, 1, 2]
         [1, 2, 3]
         [2, 3, 4]
-        >>> V = zeronm(3,1)
+        >>> V = zeros((3, 1))
         >>> V
         [0]
         [0]

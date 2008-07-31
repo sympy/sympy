@@ -111,7 +111,7 @@ def resultant(f, g, x, method='bezout'):
 
     """
 
-    from sympy.matrices import zero
+    from sympy.matrices import zeros
 
     fp = Polynomial(f, var=x).coeffs
     gp = Polynomial(g, var=x).coeffs
@@ -119,7 +119,7 @@ def resultant(f, g, x, method='bezout'):
     m, n = int(fp[0][1]), int(gp[0][1])
 
     if method is 'sylvester':
-        M = zero(m+n)
+        M = zeros(m+n)
 
         for i in range(n):
             for coeff, j in fp:
@@ -145,7 +145,7 @@ def resultant(f, g, x, method='bezout'):
         for coeff, j in gp:
             q[int(j)] = coeff
 
-        M = zero(s)
+        M = zeros(s)
 
         for i in range(s):
             for j in range(i, s):

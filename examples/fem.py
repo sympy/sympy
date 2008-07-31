@@ -115,7 +115,7 @@ def create_point_set(order, nsd):
 
 
 def create_matrix(equations, coeffs):
-   A = zeronm(len(equations), len(equations))
+   A = zeros(len(equations))
    i = 0;  j = 0
    for j in range(0, len(coeffs)):
        c = coeffs[j]

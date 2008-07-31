@@ -577,7 +577,7 @@ def poly_resultant(f, g, *symbols):
 
     import sympy.matrices
 
-    B = sympy.matrices.zero(N)
+    B = sympy.matrices.zeros(N)
 
     for i in xrange(N):
         for j in xrange(i, N):

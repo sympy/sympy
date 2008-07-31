@@ -21,7 +21,7 @@ from sympy.core.function import Derivative, diff
 
 from sympy.functions import sqrt, log, exp, LambertW
 from sympy.simplify import simplify, collect
-from sympy.matrices import Matrix, zeronm
+from sympy.matrices import Matrix, zeros
 from sympy.polys import roots
 
 from sympy.utilities import any, all
@@ -115,7 +115,7 @@ def solve(f, *symbols, **flags):
 
             if all(p.is_linear for p in polys):
                 n, m = len(f), len(symbols)
-                matrix = zeronm(n, m + 1)
+                matrix = zeros((n, m + 1))
 
                 for i, poly in enumerate(polys):
                     for coeff, monom in poly.iter_terms():
