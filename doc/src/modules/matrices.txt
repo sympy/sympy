@@ -15,7 +15,7 @@ import and declare our first Matrix object:
     ⎣0 1⎦
 
 This is the standard manner one creates a matrix, i.e. with a list of
-appropriately-sizes lists. !SymPy also supports more advanced methods of matrix
+appropriately-sizes lists. SymPy also supports more advanced methods of matrix
 creation including a single list of values and dimension inputs:
 
     >>> Matrix(2, 3, [1, 2, 3, 4, 5, 6])
@@ -269,7 +269,7 @@ like the determinant:
     >>> M3.det()
     0
 
-and the inverse. In !SymPy the inverse is computed by Gaussian elimination by
+and the inverse. In SymPy the inverse is computed by Gaussian elimination by
 default but we can specify it be done by LU decomposition as well:
 
     >>> M2.inv()
@@ -372,7 +372,7 @@ Let's take a look at the vectors:
     [ -11/706*706**(1/2)]
     [  -3/706*706**(1/2)]
 
-We can spot-check their orthogonality with dot() and their orthogonality with
+We can spot-check their orthogonality with dot() and their normality with
 norm():
 
     >>> out1[0].dot(out1[1])
