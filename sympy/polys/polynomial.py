@@ -659,8 +659,8 @@ class Poly(Basic, RelMeths, ArithMeths):
            3 + x**2
 
         """
-        return Add(*[ coeff.as_basic() * monomial_as_basic(monom,
-            *self.symbols) for coeff, monom in self.iter_terms() ])
+        multinomial = dict(zip(self.monoms, self.coeffs))
+        return multinomial_as_basic(multinomial, *self.symbols)
 
     def as_dict(self):
         """Convert list representation to dictionary representation.
