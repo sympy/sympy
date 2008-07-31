@@ -477,7 +477,7 @@ class Matrix(object):
         [2, 3, 4, 5]
         """
         assert self.lines == rhs.lines
-        newmat = self.zeronm(self.lines, self.cols + rhs.cols)
+        newmat = self.zeros((self.lines, self.cols + rhs.cols))
         newmat[:,:self.cols] = self[:,:]
         newmat[:,self.cols:] = rhs
         return newmat
@@ -496,7 +496,7 @@ class Matrix(object):
         [3, 4, 5]
         """
         assert self.cols == bott.cols
-        newmat = self.zeronm(self.lines+bott.lines, self.cols)
+        newmat = self.zeros(self.lines+bott.lines, self.cols)
         newmat[:self.lines,:] = self[:,:]
         newmat[self.lines:,:] = bott
         return newmat
@@ -521,7 +521,7 @@ class Matrix(object):
         if pos is 0:
             return mti.col_join(self)
         assert self.cols == mti.cols
-        newmat = self.zeronm(self.lines + mti.lines, self.cols)
+        newmat = self.zeros(self.lines + mti.lines, self.cols)
         newmat[:pos,:] = self[:pos,:]
         newmat[pos:pos+mti.lines,:] = mti[:,:]
         newmat[pos+mti.lines:,:] = self[pos:,:]
@@ -548,7 +548,7 @@ class Matrix(object):
         if pos is 0:
             return mti.row_join(self)
         assert self.lines == mti.lines
-        newmat = self.zeronm(self.lines, self.cols + mti.cols)
+        newmat = self.zeros(self.lines, self.cols + mti.cols)
         newmat[:,:pos] = self[:,:pos]
         newmat[:,pos:pos+mti.cols] = mti[:,:]
         newmat[:,pos+mti.cols:] = self[:,pos:]
@@ -707,8 +707,8 @@ class Matrix(object):
         Returns the decompositon LU and the row swaps p.
         """
         combined, p = self.LUdecomposition_Simple()
-        L = self.zero(self.lines)
-        U = self.zero(self.lines)
+        L = self.zeros(self.lines)
+        U = self.zeros(self.lines)
         for i in range(self.lines):
             for j in range(self.lines):
                 if i > j:
@@ -760,7 +760,7 @@ class Matrix(object):
         """
         n, m = self.lines, self.cols
         U, L, P = self[:,:], eye(n), eye(n)
-        DD = zero(n) # store it smarter since it's just diagonal
+        DD = zeros(n) # store it smarter since it's just diagonal
         oldpivot = 1
 
         for k in range(n-1):
@@ -830,7 +830,7 @@ class Matrix(object):
         elif isinstance(varlist, (list, tuple)):
             n = len(varlist)
         assert n > 0 # need to diff by something
-        J = self.zeronm(m,n) # maintain subclass type
+        J = self.zeros((m, n)) # maintain subclass type
         for i in range(m):
             if isinstance(self[i], (float, int)):
                 continue    # constant function, jacobian row is zero
@@ -851,7 +851,7 @@ class Matrix(object):
         """
         assert self.lines == self.cols
         n = self.lines
-        Q, R = self.zero(n), self.zero(n)
+        Q, R = self.zeros(n), self.zeros(n)
         for j in range(n):      # for each column vector
             tmp = self[:,j]     # take original v
             for i in range(j):
@@ -1139,7 +1139,7 @@ class Matrix(object):
         basis = []
         # create a set of vectors for the basis
         for i in range(self.cols - len(pivots)):
-            basis.append(zeronm(self.cols,1))
+            basis.append(zeros((self.cols, 1)))
         # contains the variable index to which the vector corresponds
         basiskey, cur = [-1]*len(basis), 0
         for i in range(self.cols):
@@ -1214,7 +1214,7 @@ class Matrix(object):
         transforms = [0] * (N-1)
 
         for n in xrange(N, 1, -1):
-            T, k = zeronm(n+1,n), n - 1
+            T, k = zeros((n+1,n)), n - 1
 
             R, C = -A[k,:k], A[:k,k]
             A, a = A[:k,:k], -A[k,k]
@@ -1381,7 +1381,7 @@ def hessian(f, varlist):
         f.diff(varlist[0])   # check differentiability
     except AttributeError:
         raise "Function %d is not differentiable" % i
-    out = zero(m)
+    out = zeros(m)
     for i in range(m):
         for j in range(i,m):
             out[i,j] = f.diff(varlist[i]).diff(varlist[j])
