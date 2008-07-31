@@ -47,19 +47,34 @@ permutation entries:
     ⎣1 0 1 0⎦
 
 There are also a couple of special constructors for quick matrix construction -
-``eye`` is the identity matrix and there are two zero matrix functions:
+``eye`` is the identity matrix, ``zeros`` and ``ones`` for matrices of all
+zeros and ones, respectively:
 
     >>> eye(4)
-    ⎡1 0 0 0⎤
-    ⎢0 1 0 0⎥
-    ⎢0 0 1 0⎥
-    ⎣0 0 0 1⎦
-    >>> zero(2)
-    ⎡0 0⎤
-    ⎣0 0⎦
-    >>> zeronm(2,5)
-    ⎡0 0 0 0 0⎤
-    ⎣0 0 0 0 0⎦
+    ⎡1  0  0  0⎤
+    ⎢          ⎥
+    ⎢0  1  0  0⎥
+    ⎢          ⎥
+    ⎢0  0  1  0⎥
+    ⎢          ⎥
+    ⎣0  0  0  1⎦
+    >>> zeros(2)
+    ⎡0  0⎤
+    ⎢    ⎥
+    ⎣0  0⎦
+    >>> zeros((2, 5))
+    ⎡0  0  0  0  0⎤
+    ⎢             ⎥
+    ⎣0  0  0  0  0⎦
+    >>> ones(3)
+    ⎡1  1  1⎤
+    ⎢       ⎥
+    ⎢1  1  1⎥
+    ⎢       ⎥
+    ⎣1  1  1⎦
+    >>> ones((1, 3))
+    [1  1  1]
+
 
 Basic Manipulation
 ------------------
@@ -179,12 +194,12 @@ simply change the matrix object. We can also ''glue'' together matrices of the
 appropriate size:
 
     >>> M1 = eye(3)
-    >>> M2 = zeronm(3,4)
+    >>> M2 = zeros((3, 4))
     >>> M1.row_join(M2)
     ⎡1 0 0 0 0 0 0⎤
     ⎢0 1 0 0 0 0 0⎥
     ⎣0 0 1 0 0 0 0⎦
-    >>> M3 = zeronm(4,3)
+    >>> M3 = zeros((4, 3))
     >>> M1.col_join(M3)
     ⎡1 0 0⎤
     ⎢0 1 0⎥
