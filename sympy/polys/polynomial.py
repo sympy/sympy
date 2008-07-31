@@ -2138,3 +2138,19 @@ class Poly(Basic, RelMeths, ArithMeths):
 
 class IntegerPoly(Poly):
     pass
+
+def multinomial_as_basic(multinomial, *symbols):
+    """
+    Converts the multinomial to Add/Mul/Pow instances.
+
+    multinomial is a dict of {powers: coefficient} pairs, powers is a tuple of
+    python integers, coefficient is a python integer.
+    """
+    l = []
+    for powers, k in multinomial.iteritems():
+        term = [k]
+        for i,e in enumerate(powers):
+            term.append(Pow(symbols[i], powers[i]))
+        l.append(Mul(*term))
+    result = Add(*l)
+    return result

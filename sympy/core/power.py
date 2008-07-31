@@ -346,16 +346,8 @@ class Pow(Basic, ArithMeths, RelMeths):
                 #    b[k] = Integer(expansion_dict[k])
                 #return Poly(b, *p).as_basic()
 
-                # use a direct method which is faster:
-                l = []
-                for powers, k in expansion_dict.iteritems():
-                    # assemble a term, e.g. 3*x**2*y
-                    term = [k]
-                    for i,e in enumerate(powers):
-                        term.append(Pow(p[i], powers[i]))
-                    l.append(Mul(*term))
-                # sum up all terms
-                result = Add(*l)
+                from sympy.polys.polynomial import multinomial_as_basic
+                result = multinomial_as_basic(expansion_dict, *p)
                 return result
             else:
                 if n == 2:
