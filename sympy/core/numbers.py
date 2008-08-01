@@ -263,7 +263,7 @@ class Real(Number):
         if isinstance(num, (int, long)):
             return Integer(num)
         if isinstance(num, (str, decimal.Decimal)):
-            _mpf_ = mlib.from_str(str(num), prec)
+            _mpf_ = mlib.from_str(str(num), prec, rnd)
         elif isinstance(num, tuple) and len(num) == 4:
             _mpf_ = num
         else:

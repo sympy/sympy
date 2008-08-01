@@ -74,9 +74,10 @@ def test_Rational():
     sT(Rational(-1,3), "Rational(-1, 3)")
 
 def test_Real():
-    sT(Real('1.23', prec=3), "Real('1.23', prec=3)")
-    sT(Real('1.23456789', prec=9), "Real('1.23456789', prec=9)")
-    sT(Real('1.234567890123456789', prec=19), "Real('1.234567890123456789', prec=19)")
+    sT(Real('1.23', prec=3), "Real('1.22998', prec=3)")
+    sT(Real('1.23456789', prec=9), "Real('1.23456788994', prec=9)")
+    sT(Real('1.234567890123456789', prec=19), "Real('1.234567890123456789013', prec=19)")
+    sT(Real('0.60038617995049726', 15), "Real('0.60038617995049726', prec=15)")
 
 def test_Symbol():
     sT(x, "Symbol('x')")

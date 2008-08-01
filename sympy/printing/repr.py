@@ -93,7 +93,7 @@ class ReprPrinter(Printer):
 
     def _print_Real(self, expr):
         dps = mlib.prec_to_dps(expr._prec)
-        r = mlib.to_str(expr._mpf_, dps)
+        r = mlib.to_str(expr._mpf_, mlib.repr_dps(expr._prec))
         return "%s('%s', prec=%i)" % (expr.__class__.__name__, r, dps)
 
     def _print_Sum2(self, expr):
