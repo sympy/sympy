@@ -2,6 +2,8 @@
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Lambda, Function
 
+from sympy.core.evalf import get_integer_part, PrecisionExhausted
+
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################
 ###############################################################################
@@ -81,7 +83,11 @@ class floor(Function):
                 if arg.is_negative:
                     return -ceiling(-arg)
                 else:
-                    return cls(arg.evalf())
+                    try:
+                        re, im = get_integer_part(arg, -1, {}, return_ints=True)
+                        return C.Integer(re) + C.Integer(im)*S.ImaginaryUnit
+                    except (PrecisionExhausted, NotImplementedError):
+                        return
             elif terms == ( S.ImaginaryUnit, ) and coeff.is_real:
                 return cls(coeff)*S.ImaginaryUnit
 
@@ -169,7 +175,11 @@ class ceiling(Function):
                 if arg.is_negative:
                     return -floor(-arg)
                 else:
-                    return cls(arg.evalf())
+                    try:
+                        re, im = get_integer_part(arg, 1, {}, return_ints=True)
+                        return C.Integer(re) + C.Integer(im)*S.ImaginaryUnit
+                    except (PrecisionExhausted, NotImplementedError):
+                        return
             elif terms == ( S.ImaginaryUnit, ) and coeff.is_real:
                 return cls(coeff)*S.ImaginaryUnit
 

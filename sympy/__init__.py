@@ -35,5 +35,7 @@ from printing import latex, preview, view, pngview, pdfview, dviview
 from printing import python, print_python, srepr
 from polynomials import factor
 
+evalf._create_evalf_table()
+
 # This is slow to import:
 #import abc

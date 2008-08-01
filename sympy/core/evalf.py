@@ -165,7 +165,7 @@ def check_target(expr, result, prec):
             "from zero. Try simplifying the input, using chop=True, or providing "
             "a higher maxprec for evalf" % (expr))
 
-def get_integer_part(expr, no, options):
+def get_integer_part(expr, no, options, return_ints=False):
     """
     With no = 1, computes ceiling(expr)
     With no = -1, computes floor(expr)
@@ -200,6 +200,8 @@ def get_integer_part(expr, no, options):
         #assert (im_acc - fastlog(im)) > 3
         nint_im += int(no*(fcmp(im or fzero, fzero) == no))
         im = from_int(nint_im)
+    if return_ints:
+        return int(to_int(re or fzero)), int(to_int(im or fzero))
     return re, im, re_acc, im_acc
 
 def evalf_ceiling(expr, prec, options):
