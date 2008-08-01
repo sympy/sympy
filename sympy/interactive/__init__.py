@@ -3,57 +3,141 @@ from sympy import *
 
 x, y, z = symbols('xyz')
 k, m, n = symbols('kmn', integer=True)
+f, g, h = map(Function, 'fgh')
 
-f = Function("f")
+def init_printing(use_unicode=None):
+    """Initializes pretty-printer depending on the environment. """
+    from sympy.printing import pprint
 
-def init_ipython():
-    import os, sys
+    try:
+        import IPython
 
-    import IPython.ipapi
-    ip = IPython.ipapi.get()
+        ip = IPython.ipapi.get()
 
-    ip.IP.compile("from __future__ \
-        import division", "<input>", "single")
+        if ip is not None:
+            def result_display(self, arg):
+                """IPython's pretty-printer display hook.
 
-    def result_display(self, arg):
-        """Pretty-printer display hook.
+                   This function was adapted from:
 
-           Called for displaying pretty results to the user. Using this
-           handler not only SymPy's  expression can be printed but also
-           Python's lists, tuples and dictionaries.
+                    ipython/IPython/hooks.py:155
+
+                """
+                if self.rc.pprint:
+                    out = pretty(arg, use_unicode)
+
+                    if '\n' in out:
+                        print
+
+                    print out
+                else:
+                    print repr(arg)
+
+            ip.set_hook('result_display', result_display)
+            return
+    except ImportError:
+        pass
+
+    import __builtin__, sys
+
+    def displayhook(arg):
+        """Python's pretty-printer display hook.
 
            This function was adapted from:
 
-             ipython/IPython/hooks.py:155
+            http://www.python.org/dev/peps/pep-0217/
 
         """
-        if self.rc.pprint:
-            out = pretty(arg)
+        if arg is not None:
+            __builtin__._ = None
+            print pretty(arg, use_unicode)
+            __builtin__._ = arg
 
-            if '\n' in out:
-                print
+    sys.displayhook = displayhook
 
-            print out
+def init_session(session="ipython", pretty=True, use_unicode=None, message=None, argv=[]):
+    """Initialize embedded IPython or Python session. """
+    import os, sys
+
+    def init_IPython():
+        return IPython.Shell.make_IPython(argv)
+
+    def init_Python():
+        import code
+
+        class HistoryConsole(code.InteractiveConsole):
+            def __init__(self):
+                code.InteractiveConsole.__init__(self)
+
+                history = os.path.expanduser('~/.sympy-history')
+
+                try:
+                    import readline, atexit
+
+                    readline.parse_and_bind('tab: complete')
+
+                    if hasattr(readline, 'read_history_file'):
+                        try:
+                            readline.read_history_file(history)
+                        except IOError:
+                            pass
+
+                        atexit.register(readline.write_history_file, history)
+                except ImportError:
+                    pass
+
+        return HistoryConsole()
+
+    if session not in ['ipython', 'python']:
+        raise ValueError("'%s' is not a valid session name" % session)
+
+    in_ipyshell = False
+
+    try:
+        import IPython
+
+        ip = IPython.ipapi.get()
+
+        if ip is not None:
+            if session == 'ipython':
+                ip, in_ipyshell = ip.IP, True
+            else:
+                raise ValueError("Can't start Python shell from IPython")
         else:
-            print repr(arg)
+            if session == 'ipython':
+                ip = init_IPython()
+            else:
+                ip = init_Python()
+    except ImportError:
+        if session == 'ipython':
+            raise
+        else:
+            ip = init_Python()
 
-    ip.set_hook('result_display', result_display)
+    ip.runcode(ip.compile("from __future__ import division"))
+    ip.runcode(ip.compile("from sympy.interactive import *"))
 
-    from sympy import __version__ as sympy_version
-    py_version = "%d.%d.%d" % sys.version_info[:3]
+    if pretty:
+        ip.runcode(ip.compile("init_printing(%s)" % use_unicode))
 
-    welcome = "Python %s console for SymPy %s" \
-        % (py_version, sympy_version)
+    if not in_ipyshell:
+        from sympy import __version__ as sympy_version
+        py_version = "%d.%d.%d" % sys.version_info[:3]
 
-    if os.getenv('SYMPY_USE_CACHE') == 'no':
-        welcome += ' (cache: off)'
+        welcome = "Python %s console for SymPy %s" % (py_version, sympy_version)
 
-    def late_startup_hook(self):
-        print welcome
+        if os.getenv('SYMPY_USE_CACHE') == 'no':
+            welcome += ' (cache: off)'
 
-    ip.set_hook('late_startup_hook', late_startup_hook)
+        if message is not None:
+            message = welcome + '\n\n' + message
+        else:
+            message = welcome + '\n'
 
-    def shutdown_hook(self):
-        print "Exiting ..."
+        ip.interact(message)
+        sys.exit('Exiting ...')
+    else:
+        def shutdown_hook(self):
+            print "Exiting ..."
 
-    ip.set_hook('shutdown_hook', shutdown_hook)
+        ip.set_hook('shutdown_hook', shutdown_hook)

@@ -2,15 +2,15 @@
 
 """Python shell for SymPy.
 
-   This is just a normal Python shell  (ipython shell if you have the
-   IPython package installed) that executes the following commands so
-   that you don't have to:
+   This is just a normal Python shell (IPython shell if you have the
+   IPython package installed),  that executes the following commands
+   for the user:
 
        >>> from __future__ import division
        >>> from sympy import *
        >>> x, y, z = symbols("xyz")
        >>> k, m, n = symbols("kmn", integer=True)
-       >>> f = Function('f')
+       >>> f, g, h = map(Function, 'fgh')
 
    So starting 'isympy' is equivalent to starting Python (or IPython)
    and executing the above commands by hand.  It is intended for easy
@@ -21,9 +21,16 @@
 
    -c CONSOLE, --console=CONSOLE
 
-     Use the specified python or ipython shell (lower case) as console
-     backend instead of the default one  (ipython if present or python
-     otherwise), eg. isympy -c python
+     Use the specified Python or IPython shell as console backend instead
+     of the default one (IPython if present or Python otherwise), e.g.:
+
+        isympy -c python
+
+   -p PRETTY, --pretty PRETTY
+
+     Setup pretty printing in SymPy. By default the most pretty,  Unicode
+     printing is enabled. User can use less pretty ASCII printing instead
+     or no pretty printing at all, e.g.:
 
    -q, --quiet
 
@@ -31,21 +38,16 @@
 
    -- IPython's options
 
-     Additionally  you can pass command line options directly to IPython
-     interpreter (standard Python shell is not supported).  However  you
-     need to add '--' separator between two types of options, eg. to run
-     SymPy without startup banner and colors, issue:
+     Additionally you can pass command line options directly to IPython
+     interpreter (standard Python shell is not supported).  However you
+     need to add '--' separator between two types of options. To run
+     SymPy without startup banner and colors, for example, issue:
 
         isympy -q -- -colors NoColor
 
 """
 
 import os, sys
-
-# common SymPy's code for IPython and Python shells
-
-div_code = "from __future__ import division"
-sym_code = "from sympy.interactive import *"
 
 # hook in-tree SymPy into Python path, if possible
 
@@ -64,7 +66,7 @@ These commands were executed:
 >>> from sympy import *
 >>> x, y, z = symbols('xyz')
 >>> k, m, n = symbols('kmn', integer=True)
->>> f = Function("f")
+>>> f, g, h = map(Function, 'fgh')
 
 Documentation can be found at http://sympy.org/
 """
@@ -75,138 +77,77 @@ See http://ipython.scipy.org for more details.  If you use Debian/Ubuntu,
 just install the 'ipython' package and start isympy again.
 """
 
-def init_ipython(*args, **kwargs):
-    import IPython.Shell
-
-    ip = IPython.Shell.make_IPython(kwargs.get('argv'))
-
-    from sympy import pretty
-
-    def result_display(self, arg):
-        """Pretty-printer display hook.
-
-           Called for displaying pretty results to the user. Using this
-           handler not only SymPy's  expression can be printed but also
-           Python's lists, tuples and dictionaries.
-
-           This function was adapted from:
-
-             ipython/IPython/hooks.py:155
-
-        """
-        if self.rc.pprint:
-            out = pretty(arg)
-
-            if '\n' in out:
-                print
-
-            print out
-        else:
-            print repr(arg)
-
-    ip.set_hook('result_display', result_display)
-
-    ip.runcode(ip.compile(div_code, '<input>', 'single'))
-    ip.runcode(ip.compile(sym_code, '<input>', 'single'))
-
-    ip.interact(kwargs.get('message'))
-    sys.exit('Exiting ...')
-
-def init_python(*args, **kwargs):
-    import code
-
-    class HistoryConsole(code.InteractiveConsole):
-        def __init__(self, *args, **kwargs):
-            code.InteractiveConsole.__init__(self)
-
-            history = kwargs.get('history', '~/.sympy-history')
-            history = os.path.expanduser(history)
-
-            try:
-                import readline, atexit
-
-                readline.parse_and_bind('tab: complete')
-
-                if hasattr(readline, 'read_history_file'):
-                    try:
-                        readline.read_history_file(history)
-                    except IOError:
-                        pass
-
-                    def save_history(history):
-                        readline.write_history_file(history)
-
-                    atexit.register(save_history, history)
-            except ImportError:
-                pass
-
-    from sympy import pprint
-    sys.displayhook = pprint
-
-    console = HistoryConsole(*args, **kwargs)
-
-    console.runcode(console.compile(div_code, '<input>', 'single'))
-    console.runcode(console.compile(sym_code, '<input>', 'single'))
-
-    console.interact(kwargs.get('message'))
-    sys.exit('Exiting ...')
+from sympy.interactive import init_session
 
 def main():
     from sympy import __version__ as sympy_version
     py_version = "%d.%d.%d" % sys.version_info[:3]
 
-    usage = 'usage: isympy [options] -- [ipython options]'
-
-    key_options = ('dest', 'action', 'default', 'help')
-
-    isympy_options = (
-        # parametric options
-        ('-c', '--console', 'console', 'store', None,
-            'select an interactive console: python | ipython'),
-        # boolean options
-        ('-q', '--quiet', 'quiet', 'store_true', False,
-            'print only version information at startup'),
-    )
-
     from optparse import OptionParser
 
+    usage = 'usage: isympy [options] -- [ipython options]'
     parser = OptionParser(usage, version=sympy_version)
 
-    for option in isympy_options:
-        parser.add_option(*option[0:2],
-            **dict(zip(key_options, option[2:])))
+    parser.add_option(
+        '-c', '--console',
+        dest='console',
+        action='store',
+        default=None,
+        help='select type of interactive session: IPython | Python')
 
-    (options, args) = parser.parse_args()
+    parser.add_option(
+        '-p', '--pretty',
+        dest='pretty',
+        action='store',
+        default="any",
+        help='setup pretty printing: Unicode | ASCII | any | no')
 
-    message = "Python %s console for SymPy %s" \
-        % (py_version, sympy_version)
+    parser.add_option(
+        '-q', '--quiet',
+        dest='quiet',
+        action='store_true',
+        default=False,
+        help='print only version information at startup')
 
-    if os.getenv('SYMPY_USE_CACHE') == 'no':
-        message += ' (cache: off)\n'
-    else:
-        message += '\n'
+    (options, ipy_args) = parser.parse_args()
 
-    if not options.quiet:
-        message += '\n' + long_message
+    session = options.console
+
+    if session is not None:
+        session = session.lower()
 
     args = {
-        'message' : message,
-        'argv'    : args,
+        'argv'        : ipy_args,
+        'pretty'      : True,
+        'use_unicode' : None,
     }
 
-    shells = {
-        'ipython' : init_ipython,
-        'python'  : init_python
-    }
+    pretty = options.pretty.lower()
+
+    if pretty != 'any':
+        if pretty == 'unicode':
+            args['use_unicode'] = True
+        else:
+            args['use_unicode'] = False
+
+            if pretty != 'ascii':
+                if pretty == 'no':
+                    args['pretty'] = False
+                else:
+                    raise ValueError("Unknown pretty" \
+                        " printing setup: " + options.pretty)
+
+    if not options.quiet:
+        args['message'] = long_message
 
     try:
-        shells[options.console](**args)
-    except KeyError:
+        init_session(session, **args)
+    except ValueError:
         try:
-            init_ipython(**args)
+            init_session('ipython', **args)
         except ImportError:
             print no_ipython
-            init_python(**args)
+            init_session('python', **args)
 
 if __name__ == "__main__":
     main()
