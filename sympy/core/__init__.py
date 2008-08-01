@@ -13,6 +13,7 @@ from multidimensional import vectorize
 from function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
     Function, expand
 from interval import Interval
+from evalf import PrecisionExhausted, N
 
 # expose singletons like exp, log, oo, I, etc.
 for _n, _cls in Basic.singleton.items():

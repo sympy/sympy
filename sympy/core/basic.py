@@ -1505,10 +1505,6 @@ class Basic(AssumeMeths):
     def _seq_eval_evalf(self, prec):
         return self.__class__(*[s._evalf(prec) for s in self.args])
 
-    def evalf(self, prec=15):
-        """Numerically evaluate to the specified precision."""
-        return self._evalf(mpmath.lib.dps_to_prec(prec))
-
     def _to_mpmath(self, prec, allow_ints=True):
         # mpmath functions accept ints as input
         errmsg = "cannot convert to mpmath number"
