@@ -143,6 +143,11 @@ def test_z_integrals():
     assert NS(2+Integral(log(2*cos(x/2)), (x, -pi, pi)), 22, chop=True) == '2.0'
     # Needs zero handling
     assert NS(pi - 4*Integral('sqrt(1-x**2)', (x, 0, 1)), 15, maxprec=30, chop=True) in ('0.0', '0')
+    # Oscillatory quadrature
+    a = Integral(sin(x)/x**2, (x, 1, oo)).evalf(maxprec=15)
+    assert 0.49 < a < 0.51
+    assert NS(Integral(sin(x)/x**2, (x, 1, oo)), quad='osc') == '0.504067061906928'
+    assert NS(Integral(cos(pi*x+1)/x, (x, -oo, -1)), quad='osc') == '0.276374705640365'
 
 def test_z_issue_939():
     # http://code.google.com/p/sympy/issues/detail?id=939

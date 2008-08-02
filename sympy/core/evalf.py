@@ -10,7 +10,7 @@ from sympy.mpmath.lib import (from_int, from_rational, fpi, fzero, fcmp,
     fnone, to_int, flt)
 
 import sympy.mpmath.libmpc as libmpc
-from sympy.mpmath import mpf, mpc, quadts, mp
+from sympy.mpmath import mpf, mpc, quadts, quadosc, mp
 from sympy.mpmath.specfun import mpf_gamma
 
 import math
@@ -592,8 +592,23 @@ def do_integral(expr, prec, options):
                 return mpc(re or fzero, im)
             return mpf(re or fzero)
 
-        result, quadrature_error = quadts(f, xlow, xhigh, error=1)
-        quadrature_error = fastlog(quadrature_error._mpf_)
+        if options.get('quad') == 'osc':
+            A = C.Wild('A', exclude=[x])
+            B = C.Wild('B', exclude=[x])
+            D = C.Wild('D')
+            m = func.match(C.cos(A*x+B)*D)
+            if not m:
+                m = func.match(C.sin(A*x+B)*D)
+            if not m:
+                raise ValueError("An integrand of the form sin(A*x+B)*f(x) "
+                  "or cos(A*x+B)*f(x) is required for oscillatory quadrature")
+            period = as_mpmath(2*S.Pi/m[A], prec+15, options)
+            result = quadosc(f, xlow, xhigh, period=period)
+            # XXX: quadosc does not do error detection yet
+            quadrature_error = MINUS_INF
+        else:
+            result, quadrature_error = quadts(f, xlow, xhigh, error=1)
+            quadrature_error = fastlog(quadrature_error._mpf_)
 
     finally:
         options['maxprec'] = oldmaxprec
@@ -740,6 +755,11 @@ def Basic_evalf(x, n=15, **options):
             Raise PrecisionExhausted if any subresult fails to evaluate
             to full accuracy, given the available maxprec
             (default=False)
+
+        quad=<str>
+            Choose algorithm for numerical quadrature. By default,
+            tanh-sinh quadrature is used. For oscillatory
+            integrals on an infinite interval, try quad='osc'.
 
         verbose=<bool>
             Print debug information (default=False)
