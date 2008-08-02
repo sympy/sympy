@@ -527,3 +527,27 @@ def test_as_coeff_exponent():
     assert (0*x**0).as_coeff_exponent(x) == (0, 0)
     assert (-1*x**0).as_coeff_exponent(x) == (-1, 0)
     assert (-2*x**0).as_coeff_exponent(x) == (-2, 0)
+
+def test_extractions():
+    x, y = symbols("xy")
+    n = Symbol("n", integer=True)
+    assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2
+    assert ((x*y)**3).extract_multiplicatively(x**4 * y) == None
+    assert (2*x).extract_multiplicatively(2) == x
+    assert (2*x).extract_multiplicatively(3) == None
+    assert (2*x).extract_multiplicatively(-1) == None
+    assert (Rational(1,2)*x).extract_multiplicatively(3) == x/6
+    assert (x**(Rational(1,2))).extract_multiplicatively(x) == None
+    assert (x**(Rational(1,2))).extract_multiplicatively(1/x) == x**(Rational(3,2))
+
+    assert ((x*y)**3).extract_additively(1) == None
+    assert (x+1).extract_additively(x) == 1
+    assert (x+1).extract_additively(2*x) == None
+    assert (x+1).extract_additively(-x) == 1+2*x
+    assert (-x+1).extract_additively(2*x) == 1-3*x
+
+    assert (Integer(-3)).could_extract_minus_sign() == True
+    assert (-n*x+x).could_extract_minus_sign() != (n*x-x).could_extract_minus_sign()
+    assert (x-y).could_extract_minus_sign() != (-x+y).could_extract_minus_sign()
+    assert (1-x-y).could_extract_minus_sign() == True
+    assert (1-x+y).could_extract_minus_sign() == False

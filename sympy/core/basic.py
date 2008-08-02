@@ -1452,6 +1452,227 @@ class Basic(AssumeMeths):
             return n
         return n/d
 
+    def extract_multiplicatively(self, c):
+        """Return None if it's not possible to make self in the form
+           c * something in a nice way, i.e. preserving the properties
+           of arguments of self.
+
+           >>> from sympy import *
+
+           >>> x, y = symbols('xy', real=True)
+
+           >>> ((x*y)**3).extract_multiplicatively(x**2 * y)
+           x*y**2
+
+           >>> ((x*y)**3).extract_multiplicatively(x**4 * y)
+
+           >>> (2*x).extract_multiplicatively(2)
+           x
+
+           >>> (2*x).extract_multiplicatively(3)
+
+           >>> (Rational(1,2)*x).extract_multiplicatively(3)
+           x/6
+
+        """
+        c = sympify(c)
+        if c is S.One:
+            return self
+        elif c == self:
+            return S.One
+        elif c.is_Mul:
+            x = self.extract_multiplicatively(c.as_two_terms()[0])
+            if x != None:
+                return x.extract_multiplicatively(c.as_two_terms()[1])
+        quotient = self / c
+        if self.is_Number:
+            if self is S.Infinity:
+                if c.is_positive:
+                    return S.Infinity
+            elif self is S.NegativeInfinity:
+                if c.is_negative:
+                    return S.Infinity
+                elif c.is_positive:
+                    return S.NegativeInfinity
+            elif self is S.ComplexInfinity:
+                if not c.is_zero:
+                    return S.ComplexInfinity
+            elif self is S.NaN:
+                return S.NaN
+            elif self.is_Integer:
+                if not quotient.is_Integer:
+                    return None
+                elif self.is_positive and quotient.is_negative:
+                    return None
+                else:
+                    return quotient
+            elif self.is_Rational:
+                if not quotient.is_Rational:
+                    return None
+                elif self.is_positive and quotient.is_negative:
+                    return None
+                else:
+                    return quotient
+            elif self.is_Real:
+                if not quotient.is_Real:
+                    return None
+                elif self.is_positive and quotient.is_negative:
+                    return None
+                else:
+                    return quotient
+        elif self.is_NumberSymbol or self.is_Symbol or self is S.ImaginaryUnit:
+            if quotient.is_Mul and len(quotient.args) == 2:
+                if quotient.args[0].is_Integer and quotient.args[0].is_positive and quotient.args[1] == self:
+                    return quotient
+            elif quotient.is_Integer:
+                return quotient
+        elif self.is_Add:
+            newargs = []
+            for arg in self.args:
+                newarg = arg.extract_multiplicatively(c)
+                if newarg != None:
+                    newargs.append(newarg)
+                else:
+                    return None
+            return C.Add(*newargs)
+        elif self.is_Mul:
+            for i in xrange(len(self.args)):
+                newargs = list(self.args)
+                del(newargs[i])
+                tmp = C.Mul(*newargs).extract_multiplicatively(c)
+                if tmp != None:
+                    return tmp * self.args[i]
+        elif self.is_Pow:
+            if c.is_Pow and c.base == self.base:
+                new_exp = self.exp.extract_additively(c.exp)
+                if new_exp != None:
+                    return self.base ** (new_exp)
+            elif c == self.base:
+                new_exp = self.exp.extract_additively(1)
+                if new_exp != None:
+                    return self.base ** (new_exp)
+
+    def extract_additively(self, c):
+        """Return None if it's not possible to make self in the form
+           something + c in a nice way, i.e. preserving the properties
+           of arguments of self.
+
+           >>> from sympy import *
+
+           >>> x, y = symbols('xy', real=True)
+
+           >>> ((x*y)**3).extract_additively(1)
+
+           >>> (x+1).extract_additively(x)
+           1
+
+           >>> (x+1).extract_additively(2*x)
+
+           >>> (x+1).extract_additively(-x)
+           1 + 2*x
+
+           >>> (-x+1).extract_additively(2*x)
+           1 - 3*x
+
+        """
+        c = sympify(c)
+        if c is S.Zero:
+            return self
+        elif c == self:
+            return S.Zero
+        elif self is S.Zero:
+            return None
+        elif c.is_Add:
+            x = self.extract_additively(c.as_two_terms()[0])
+            if x != None:
+                return x.extract_additively(c.as_two_terms()[1])
+        sub = self - c
+        if self.is_Number:
+            if self.is_Integer:
+                if not sub.is_Integer:
+                    return None
+                elif self.is_positive and sub.is_negative:
+                    return None
+                else:
+                    return sub
+            elif self.is_Rational:
+                if not sub.is_Rational:
+                    return None
+                elif self.is_positive and sub.is_negative:
+                    return None
+                else:
+                    return sub
+            elif self.is_Real:
+                if not sub.is_Real:
+                    return None
+                elif self.is_positive and sub.is_negative:
+                    return None
+                else:
+                    return sub
+        elif self.is_NumberSymbol or self.is_Symbol or self is S.ImaginaryUnit:
+            if sub.is_Mul and len(sub.args) == 2:
+                if sub.args[0].is_Integer and sub.args[0].is_positive and sub.args[1] == self:
+                    return sub
+            elif sub.is_Integer:
+                return sub
+        elif self.is_Add:
+            terms = self.as_two_terms()
+            subs0 = terms[0].extract_additively(c)
+            if subs0 != None:
+                return subs0 + terms[1]
+            else:
+                subs1 = terms[1].extract_additively(c)
+                if subs1 != None:
+                    return subs1 + terms[0]
+        elif self.is_Mul:
+            self_coeff, self_terms = self.as_coeff_terms()
+            if c.is_Mul:
+                c_coeff, c_terms = c.as_coeff_terms()
+                if c_terms == self_terms:
+                    new_coeff = self_coeff.extract_additively(c_coeff)
+                    if new_coeff != None:
+                        return new_coeff * C.Mul(*self_terms)
+            elif c == self_terms:
+                new_coeff = self_coeff.extract_additively(1)
+                if new_coeff != None:
+                    return new_coeff * C.Mul(*self_terms)
+
+    def could_extract_minus_sign(self):
+        """Canonical way to choose an element in the set {e, -e} where
+           e is any expression. If the canonical element is e, we have
+           e.could_extract_minus_sign() == True, else
+           e.could_extract_minus_sign() == False.
+
+           For any expression, the set {e.could_extract_minus_sign(),
+           (-e).could_extract_minus_sign()} must be {True, False}.
+
+           >>> from sympy import *
+
+           >>> x, y = symbols("xy")
+
+           >>> (x-y).could_extract_minus_sign() != (y-x).could_extract_minus_sign()
+           True
+
+        """
+        negative_self = -self
+        self_has_minus = (self.extract_multiplicatively(-1) != None)
+        negative_self_has_minus = ((negative_self).extract_multiplicatively(-1) != None)
+        if self_has_minus != negative_self_has_minus:
+            return self_has_minus
+        else:
+            if self.is_Add:
+                # We choose the one with less arguments with minus signs
+                arg_signs = [arg.could_extract_minus_sign() for arg in self.args]
+                positive_args = arg_signs.count(False)
+                negative_args = arg_signs.count(True)
+                if positive_args > negative_args:
+                    return False
+                elif positive_args < negative_args:
+                    return True
+
+            # As a last resort, we choose the one with greater hash
+            return hash(self) < hash(negative_self)
+
     ###################################################################################
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################
