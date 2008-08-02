@@ -172,3 +172,16 @@ def test_matrices():
         [-cos(x),   -cos(2*x)],
         [-cos(2*x), -cos(3*x)],
     ])
+
+def test_transform():
+    a = Integral(x**2+1, (x, -1, 2))
+    assert a.doit() == a.transform(x, 3*x+1).doit()
+    assert a.transform(x, 3*x+1).transform(x, 3*x+1, inverse=True) == a
+    assert a.transform(x, 3*x+1, inverse=True).transform(x, 3*x+1) == a
+    a = Integral(sin(1/x), (x, 0, 1))
+    assert a.transform(x, 1/x) == Integral(sin(x)/x**2, (x, 1, oo))
+    assert a.transform(x, 1/x).transform(x, 1/x) == a
+    a = Integral(exp(-x**2), (x, -oo, oo))
+    assert a.transform(x, 2*x) == Integral(2*exp(-4*x**2), (x, -oo, oo))
+    assert py.test.raises(ValueError, "a.transform(x, 1/x)")
+    assert py.test.raises(ValueError, "a.transform(x, 1/x)")

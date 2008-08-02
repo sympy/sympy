@@ -8,6 +8,7 @@ from sympy.utilities import threaded
 from sympy.simplify import apart
 from sympy.series import limit
 from sympy.polys import Poly
+from sympy.solvers import solve
 
 class Integral(Basic, NoRelMeths, ArithMeths):
     """Represents unevaluated integral."""
@@ -68,6 +69,51 @@ class Integral(Basic, NoRelMeths, ArithMeths):
             variables.append(x)
 
         return variables
+
+    def transform(self, x, mapping, inverse=False):
+        """
+        Replace the integration variable x in the integrand with the
+        expression given by `mapping`, e.g. 2*x or 1/x. The integrand and
+        endpoints are rescaled to preserve the value of the original
+        integral.
+
+        In effect, this performs a variable substitution (although the
+        symbol remains unchanged; follow up with subs to obtain a
+        new symbol.)
+
+        With inverse=True, the inverse transformation is performed.
+
+        The mapping must be uniquely invertible (e.g. a linear or linear
+        fractional transformation).
+        """
+        if x not in self.variables:
+            return self
+        limits = self.limits
+        function = self.function
+        y = Symbol('y', dummy=True)
+        inverse_mapping = solve(mapping.subs(x,y)-x, y)
+        if len(inverse_mapping) != 1 or not inverse_mapping[0].has(x):
+            raise ValueError("The mapping must be uniquely invertible")
+        inverse_mapping = inverse_mapping[0]
+        if inverse:
+            mapping, inverse_mapping = inverse_mapping, mapping
+        function = function.subs(x, mapping) * mapping.diff(x)
+        newlimits = []
+        for sym, limit in limits:
+            if sym == x and limit and len(limit) == 2:
+                a, b = limit
+                a = inverse_mapping.subs(x, a)
+                b = inverse_mapping.subs(x, b)
+                if a == b:
+                    raise ValueError("The mapping must transform the "
+                        "endpoints into separate points")
+                if a > b:
+                    a, b = b, a
+                    function = -function
+                newlimits.append((sym, a, b))
+            else:
+                newlimits.append((sym, limit))
+        return Integral(function, *newlimits)
 
     def doit(self, **hints):
         if not hints.get('integrals', True):
