@@ -10,8 +10,11 @@ from sympy.mpmath.lib import (from_int, from_rational, fpi, fzero, fcmp,
     fnone, to_int, flt)
 
 import sympy.mpmath.libmpc as libmpc
-from sympy.mpmath import mpf, mpc, quadts, quadosc, mp
+from sympy.mpmath import mpf, mpc, quadts, quadosc, mp, make_mpf
 from sympy.mpmath.specfun import mpf_gamma
+from sympy.mpmath.lib import MP_BASE, from_man_exp
+from sympy.mpmath.calculus import shanks_extrapolation, richardson_extrapolation
+
 
 import math
 
@@ -649,6 +652,137 @@ def evalf_integral(expr, prec, options):
         workprec += prec - max(-2**i, accuracy)
         i += 1
 
+def check_convergence(numer, denom, n):
+    """
+    Returns (h, g, p) where
+    -- h is:
+        > 0 for convergence of rate 1/factorial(n)**h
+        < 0 for divergence of rate factorial(n)**(-h)
+        = 0 for geometric or polynomial convergence or divergence
+
+    -- abs(g) is:
+        > 1 for geometric convergence of rate 1/h**n
+        < 1 for geometric divergence of rate h**n
+        = 1 for polynomial convergence or divergence
+
+        (g < 0 indicates an alternating series)
+
+    -- p is:
+        > 1 for polynomial convergence of rate 1/n**h
+        <= 1 for polynomial divergence of rate n**(-h)
+
+    """
+    npol = C.Poly(numer, n)
+    dpol = C.Poly(denom, n)
+    p = npol.degree
+    q = dpol.degree
+    rate = q - p
+    if rate:
+        return rate, None, None
+    constant = dpol.lead_term[0] / npol.lead_term[0]
+    if abs(constant) != 1:
+        return rate, constant, None
+    if npol.degree == dpol.degree == 0:
+        return rate, constant, 0
+    pc = list(npol.iter_all_terms())[1][0]
+    qc = list(dpol.iter_all_terms())[1][0]
+    return rate, constant, qc-pc
+
+def hypsum(expr, n, start, prec):
+    """
+    Sum a rapidly convergent infinite hypergeometric series with
+    given general term, e.g. e = hypsum(1/factorial(n), n). The
+    quotient between successive terms must be a quotient of integer
+    polynomials.
+    """
+    from sympy import hypersimp, lambdify
+
+    if start:
+        expr = expr.subs(n, n+start)
+    hs = hypersimp(expr, n)
+    if hs is None:
+        raise NotImplementedError("a hypergeometric series is required")
+    num, den = hs.as_numer_denom()
+    func1 = lambdify(n, num)
+    func2 = lambdify(n, den)
+
+    h, g, p = check_convergence(num, den, n)
+
+    if h < 0:
+        raise ValueError("Sum diverges like (n!)^%i" % (-h))
+
+    # Direct summation if geometric or faster
+    if h > 0 or (h == 0 and abs(g) > 1):
+        one = MP_BASE(1) << prec
+        term = expr.subs(n, 0)
+        term = (MP_BASE(term.p) << prec) // term.q
+        s = term
+        k = 1
+        while abs(term) > 5:
+            term *= MP_BASE(func1(k-1))
+            term //= MP_BASE(func2(k-1))
+            s += term
+            k += 1
+        return from_man_exp(s, -prec)
+    else:
+        alt = g < 0
+        if abs(g) < 1:
+            raise ValueError("Sum diverges like (%i)^n" % abs(1/g))
+        if p < 1 or (p == 1 and not alt):
+            raise ValueError("Sum diverges like n^%i" % (-p))
+        # We have polynomial convergence:
+        # Use Shanks extrapolation for alternating series,
+        # Richardson extrapolation for nonalternating series
+        if alt:
+            # XXX: better parameters for Shanks transformation
+            # This tends to get bad somewhere > 50 digits
+            N = 5 + int(prec*0.36)
+            M = 2 + N//3
+            NTERMS = M + N + 2
+        else:
+            N = 3 + int(prec*0.15)
+            M = 2*N
+            NTERMS = M + N + 2
+        # Need to use at least double precision because a lot of cancellation
+        # might occur in the extrapolation process
+        prec2 = 2*prec
+        one = MP_BASE(1) << prec2
+        term = expr.subs(n, 0)
+        term = (MP_BASE(term.p) << prec2) // term.q
+        s = term
+        table = [make_mpf(from_man_exp(s, -prec2))]
+        for k in xrange(1, NTERMS):
+            term *= MP_BASE(func1(k-1))
+            term //= MP_BASE(func2(k-1))
+            s += term
+            table.append(make_mpf(from_man_exp(s, -prec2)))
+            k += 1
+        orig = mp.prec
+        try:
+            mp.prec = prec
+            if alt:
+                v = shanks_extrapolation(table, N, M)
+            else:
+                v = richardson_extrapolation(table, N, M)
+        finally:
+            mp.prec = orig
+        return v._mpf_
+
+def evalf_sum(expr, prec, options):
+    func = expr.function
+    limits = expr.limits
+    if len(limits) != 1 or not isinstance(limits[0], tuple) or \
+        len(limits[0]) != 3:
+        raise NotImplementedError
+    n, a, b = limits[0]
+    if b != S.Infinity or a != int(a):
+        raise NotImplementedError
+    v = hypsum(func, n, int(a), prec+10)
+    delta = prec - fastlog(v)
+    if fastlog(v) < -10:
+        v = hypsum(func, n, int(a), delta)
+    return v, None, min(prec, delta), None
+
 #----------------------------------------------------------------------------#
 #                                                                            #
 #                            Symbolic interface                              #
@@ -709,6 +843,7 @@ def _create_evalf_table():
     C.ceiling : evalf_ceiling,
 
     C.Integral : evalf_integral,
+    C.Sum : evalf_sum,
     }
 
 def evalf(x, prec, options):
