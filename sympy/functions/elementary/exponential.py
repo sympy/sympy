@@ -20,9 +20,8 @@ class exp(Function):
     def _eval_apply_subs(self, *args):
         return
 
-    #XXX: investigate why we need the **optionsXXX and remove it
     @classmethod
-    def canonize(cls, arg, **optionsXXX):
+    def canonize(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -273,9 +272,8 @@ class log(Function):
     def _eval_apply_subs(self, *args):
         return
 
-    #XXX: why is the fixme parameter needed here?
     @classmethod
-    def canonize(cls, arg, base=None, **fixme):
+    def canonize(cls, arg, base=None):
         if base is not None:
             base = sympify(base)
 

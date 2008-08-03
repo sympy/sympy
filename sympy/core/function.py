@@ -128,7 +128,7 @@ class Function(Basic, ArithMeths, RelMeths):
         # up to here.
         if options.get('evaluate') is False:
             return Basic.__new__(cls, *args, **options)
-        r = cls.canonize(*args, **options)
+        r = cls.canonize(*args)
         if isinstance(r, Basic):
             return r
         elif r is None:
@@ -142,7 +142,7 @@ class Function(Basic, ArithMeths, RelMeths):
         return True
 
     @classmethod
-    def canonize(cls, *args, **options):
+    def canonize(cls, *args):
         """
         Returns a canonical form of cls applied to arguments args.
 

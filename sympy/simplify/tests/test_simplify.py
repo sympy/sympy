@@ -205,6 +205,8 @@ def test_hypersimp():
     assert hypersimp(factorial(k), k) == k + 1
     assert hypersimp(factorial(k**2), k) is None
 
+    assert hypersimp(1/factorial(k), k) == 1/(k + 1)
+
     assert hypersimp(2**k/factorial(k)**2, k) == 2/(k**2+2*k+1)
 
     assert hypersimp(binomial(n, k), k) == (n-k)/(k+1)
