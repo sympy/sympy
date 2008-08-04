@@ -115,55 +115,6 @@ def test_evalf_ramanujan():
     C = 103378831900730205293632*exp(-3*pi*sqrt(163))
     assert NS(1-A-B+C,10) == '1.613679005e-59'
 
-def test_evalf_integrals():
-    assert NS(Integral(x, (x, 2, 5)), 15) == '10.5'
-    gauss = Integral(exp(-x**2), (x, -oo, oo))
-    assert NS(gauss, 15) == '1.77245385090552'
-    assert NS(gauss**2 - pi + E*Rational(1,10**20), 15) in ('2.71828182845904e-20', '2.71828182845905e-20')
-    # A monster of an integral from http://mathworld.wolfram.com/DefiniteIntegral.html
-    t = Symbol('t')
-    a = 8*sqrt(3)/(1+3*t**2)
-    b = 16*sqrt(2)*(3*t+1)*(4*t**2+t+1)**Rational(3,2)
-    c = (3*t**2+1)*(11*t**2+2*t+3)**2
-    d = sqrt(2)*(249*t**2+54*t+65)/(11*t**2+2*t+3)**2
-    f = a - b/c - d
-    assert NS(Integral(f, (t, 0, 1)), 50) == NS((3*sqrt(2)-49*pi+162*atan(sqrt(2)))/12,50)
-    # http://mathworld.wolfram.com/VardisIntegral.html
-    assert NS(Integral(log(log(1/x))/(1+x+x**2), (x, 0, 1)), 15) == NS('pi/sqrt(3) * log(2*pi**(5/6) / gamma(1/6))', 15)
-    # http://mathworld.wolfram.com/AhmedsIntegral.html
-    assert NS(Integral(atan(sqrt(x**2+2))/(sqrt(x**2+2)*(x**2+1)), (x, 0, 1)), 15) == NS(5*pi**2/96, 15)
-    # http://mathworld.wolfram.com/AbelsIntegral.html
-    assert NS(Integral(x/((exp(pi*x)-exp(-pi*x))*(x**2+1)), (x, 0, oo)), 15) == NS('log(2)/2-1/4',15)
-    # Complex part trimming
-    # http://mathworld.wolfram.com/VardisIntegral.html
-    assert NS(Integral(log(log(sin(x)/cos(x))), (x, pi/4, pi/2)), 15, chop=True) == \
-        NS('pi/4*log(4*pi**3/gamma(1/4)**4)', 15)
-    #
-    # Endpoints causing trouble (rounding error in integration points -> complex log)
-    assert NS(2+Integral(log(2*cos(x/2)), (x, -pi, pi)), 17, chop=True) == '2.0'
-    assert NS(2+Integral(log(2*cos(x/2)), (x, -pi, pi)), 20, chop=True) == '2.0'
-    assert NS(2+Integral(log(2*cos(x/2)), (x, -pi, pi)), 22, chop=True) == '2.0'
-    # Needs zero handling
-    assert NS(pi - 4*Integral('sqrt(1-x**2)', (x, 0, 1)), 15, maxprec=30, chop=True) in ('0.0', '0')
-    # Oscillatory quadrature
-    a = Integral(sin(x)/x**2, (x, 1, oo)).evalf(maxprec=15)
-    assert 0.49 < a < 0.51
-    assert NS(Integral(sin(x)/x**2, (x, 1, oo)), quad='osc') == '0.504067061906928'
-    assert NS(Integral(cos(pi*x+1)/x, (x, -oo, -1)), quad='osc') == '0.276374705640365'
-
-def test_evalf_issue_939():
-    # http://code.google.com/p/sympy/issues/detail?id=939
-    assert NS(integrate(1/(x**5+1), x).subs(x, 4), chop=True) == '-0.000976138910649103'
-    assert NS(Integral(1/(x**5+1), (x, 2, 4))) == '0.014436108888674'
-    assert NS(integrate(1/(x**5+1), (x, 2, 4)), chop=True) == '0.014436108888674'
-
-def xtest_failing_integrals():
-    #---
-    # Double integrals not implemented
-    assert NS(Integral(sqrt(x)+x*y, (x, 1, 2), (y, -1, 1)), 15) == '2.43790283299492'
-    # double integral + zero detection
-    assert NS(Integral(sin(x+x*y), (x, -1, 1), (y, -1, 1)), 15) == '0.0'
-
 # Input that for various reasons have failed at some point
 def test_evalf_bugs():
     assert NS(sin(1)+exp(-10**10),10) == NS(sin(1),10)
@@ -197,50 +148,6 @@ def test_evalf_trig_zero_detection():
     assert a.evalf(chop=True) == 0
     assert py.test.raises(PrecisionExhausted, "a.evalf(strict=True)")
 
-fac = factorial
-
-def test_evalf_fast_series():
-    # Euler transformed series for sqrt(1+x)
-    assert NS(Sum(fac(2*n+1)/fac(n)**2/2**(3*n+1), (n, 0, oo)), 100) == NS(sqrt(2), 100)
-
-    # Some series for exp(1)
-    estr = NS(E, 100)
-    assert NS(Sum(1/fac(n), (n, 0, oo)), 100) == estr
-    assert NS(1/Sum((1-2*n)/fac(2*n), (n, 0, oo)), 100) == estr
-    assert NS(Sum((2*n+1)/fac(2*n), (n, 0, oo)), 100) == estr
-    assert NS(Sum((4*n+3)/2**(2*n+1)/fac(2*n+1), (n, 0, oo))**2, 100) == estr
-
-    pistr = NS(pi, 100)
-    # Ramanujan series for pi
-    assert NS(9801/sqrt(8)/Sum(fac(4*n)*(1103+26390*n)/fac(n)**4/396**(4*n), (n, 0, oo)), 100) == pistr
-    assert NS(1/Sum(binomial(2*n,n)**3 * (42*n+5)/2**(12*n+4), (n, 0, oo)), 100) == pistr
-    # Machin's formula for pi
-    assert NS(16*Sum((-1)**n/(2*n+1)/5**(2*n+1), (n, 0, oo)) - \
-        4*Sum((-1)**n/(2*n+1)/239**(2*n+1), (n, 0, oo)), 100) == pistr
-
-    # Apery's constant
-    astr = NS(zeta(3), 100)
-    P = 126392*n**5 + 412708*n**4 + 531578*n**3 + 336367*n**2 + 104000*n + 12463
-    assert NS(Sum((-1)**n * P / 24 * (fac(2*n+1)*fac(2*n)*fac(n))**3 / fac(3*n+2) / fac(4*n+3)**3, (n, 0, oo)), 100) == astr
-    assert NS(Sum((-1)**n * (205*n**2 + 250*n + 77)/64 * fac(n)**10 / fac(2*n+1)**5, (n, 0, oo)), 100) == astr
-
-def test_evalf_fast_series_issue998():
-    # Catalan's constant
-    assert NS(Sum((-1)**(n-1)*2**(8*n)*(40*n**2-24*n+3)*fac(2*n)**3*\
-        fac(n)**2/n**3/(2*n-1)/fac(4*n)**2, (n, 1, oo))/64, 100) == \
-        NS(Catalan, 100)
-    astr = NS(zeta(3), 100)
-    assert NS(5*Sum((-1)**(n-1)*fac(n)**2 / n**3 / fac(2*n), (n, 1, oo))/2, 100) == astr
-    assert NS(Sum((-1)**(n-1)*(56*n**2-32*n+5) / (2*n-1)**2 * fac(n-1)**3 / fac(3*n), (n, 1, oo))/4, 100) == astr
-
-def test_evalf_slow_series():
-    assert NS(Sum((-1)**n / n, (n, 1, oo)), 15) == NS(-log(2), 15)
-    assert NS(Sum((-1)**n / n, (n, 1, oo)), 50) == NS(-log(2), 50)
-    assert NS(Sum(1/n**2, (n, 1, oo)), 15) == NS(pi**2/6, 15)
-    assert NS(Sum(1/n**2, (n, 1, oo)), 100) == NS(pi**2/6, 100)
-    assert NS(Sum(1/n**2, (n, 1, oo)), 500) == NS(pi**2/6, 500)
-    assert NS(Sum((-1)**n / (2*n+1)**3, (n, 0, oo)), 15) == NS(pi**3/32, 15)
-    assert NS(Sum((-1)**n / (2*n+1)**3, (n, 0, oo)), 50) == NS(pi**3/32, 50)
 
 def test_evalf_divergent_series():
     py.test.raises(ValueError, 'Sum(1/n, (n, 1, oo)).evalf()')
