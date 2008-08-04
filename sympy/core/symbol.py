@@ -5,6 +5,8 @@ from cache import cacheit
 
 # from function import Function, WildFunction   /cyclic/
 
+import re
+
 class Symbol(Atom, RelMeths, ArithMeths):
     """
     Assumptions::
@@ -221,7 +223,7 @@ def var(s):
 
     try:
         if not isinstance(s, list):
-            s = s.split(" ")
+            s = re.split('\s|,', s)
 
         res = []
 

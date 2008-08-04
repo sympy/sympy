@@ -51,3 +51,11 @@ def test_var_return():
     assert v1 == None
     assert v2 == Symbol('q')
     assert v3 == (Symbol('q'), Symbol('p'))
+
+def test_var_accepts_comma():
+    v1 = var('x y z')
+    v2 = var('x,y,z')
+    v3 = var('x,y z')
+
+    assert v1 == v2
+    assert v1 == v3
