@@ -790,7 +790,8 @@ def evalf_sum(expr, prec, options):
         eps = C.Real(2.0)**(-prec)
         for i in range(1, 5):
             m = n = 2**i * prec
-            s, err = expr.euler_maclaurin(m=m, n=n, eps=eps)
+            s, err = expr.euler_maclaurin(m=m, n=n, eps=eps, \
+                eval_integral=False)
             err = err.evalf()
             if err <= eps:
                 break
@@ -830,6 +831,7 @@ def _create_evalf_table():
     global evalf_table
     evalf_table = {
     C.Symbol : evalf_symbol,
+    C.Dummy : evalf_symbol,
     C.Real : lambda x, prec, options: (x._mpf_, None, prec, None),
     C.Rational : lambda x, prec, options: (from_rational(x.p, x.q, prec), None, prec, None),
     C.Integer : lambda x, prec, options: (from_int(x.p, prec), None, prec, None),

@@ -74,7 +74,7 @@ class Sum(Basic, NoRelMeths, ArithMeths):
     def _eval_summation(self, f, x):
         return
 
-    def euler_maclaurin(self, m=0, n=0, eps=0):
+    def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """
         Return an Euler-Maclaurin approximation of self, where m is the
         number of leading terms to sum directly and n is the number of
@@ -130,7 +130,10 @@ class Sum(Basic, NoRelMeths, ArithMeths):
                 s += term
             a += m
         x = Symbol('x', dummy=True)
-        s += C.Integral(f.subs(i, x), (x, a, b)).doit()
+        I = C.Integral(f.subs(i, x), (x, a, b))
+        if eval_integral:
+            I = I.doit()
+        s += I
         def fpoint(expr):
             if b is S.Infinity:
                 return expr.subs(i, a), 0
