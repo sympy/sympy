@@ -1,6 +1,5 @@
 from sympy.core import Basic, C, Rational, Add, Mul, Pow, Symbol, Wild, oo
 from sympy.core import sympify
-from sympy.functions import factorial
 #from sympy.specfun import rising_factorial, factorial, factorial_simplify
 #from sympy.specfun.factorials import unfac
 #from sympy.specfun import bernoulli
@@ -98,24 +97,6 @@ class Sum2(_BigOperator):
             return s
 
         return self
-
-    def euler_maclaurin(self, n=0):
-        """
-        Return n-th order Euler-Maclaurin approximation of self.
-
-        The 0-th order approximation is simply the corresponding
-        integral
-        """
-        f, i, a, b = self.f, self.i, self.a, self.b
-        x = Symbol('x', dummy=True)
-        s = C.Integral(f.subs(i, x), (x, a, b)).doit()
-        if n > 0:
-            s += (f.subs(i, a) + f.subs(i, b))/2
-        for k in range(1, n):
-            g = f.diff(i, 2*k-1)
-            B = C.bernoulli
-            s += B(2*k)/factorial(2*k)*(g.subs(i,b)-g.subs(i,a))
-        return s
 
     def subs(self, x, y):
         if x == self.b:

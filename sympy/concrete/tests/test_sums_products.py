@@ -1,4 +1,4 @@
-from sympy import (Symbol, Sum2, oo, Real, Rational, sum, Sum, pi, cos, zeta,
+from sympy import (Symbol, Sum, oo, Real, Rational, sum, pi, cos, zeta,
     Catalan, log, factorial, sqrt, E, sympify, binomial)
 from sympy.concrete.summations import getab
 from sympy.utilities.pytest import XFAIL
@@ -94,10 +94,8 @@ def test_evalf_slow_series():
     assert NS(Sum((-1)**n / (2*n+1)**3, (n, 0, oo)), 50) == NS(pi**3/32, 50)
 
 def test_euler_maclaurin():
-    z = Sum2(1/n**3, (n, 1, oo))
-    A, B = getab(z.split(50))
-    if not A.is_Rational:
-        A, B = B, A
+    A = Sum(1/n**3, (n, 1, 50)).doit()
+    B = Sum(1/n**3, (n,51, oo))
     apery = (A + B.euler_maclaurin(8)).evalf(25)
     assert abs(apery - Real("1.202056903159594285399738162",25)) < Real("1e-20")
 

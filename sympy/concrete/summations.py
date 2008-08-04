@@ -1,6 +1,7 @@
 
 from sympy.core import Basic, S, C, Add, Mul, Symbol, Equality, Interval, sympify
 from sympy.core.methods import NoRelMeths, ArithMeths
+from sympy.functions import factorial
 
 class Sum(Basic, NoRelMeths, ArithMeths):
     """Represents unevaluated summation."""
@@ -71,6 +72,26 @@ class Sum(Basic, NoRelMeths, ArithMeths):
 
     def _eval_summation(self, f, x):
         return
+
+    def euler_maclaurin(self, n=0):
+        """
+        Return n-th order Euler-Maclaurin approximation of self.
+
+        The 0-th order approximation is simply the corresponding
+        integral
+        """
+        f = self.function
+        assert len(self.limits) == 1
+        i, a, b = self.limits[0]
+        x = Symbol('x', dummy=True)
+        s = C.Integral(f.subs(i, x), (x, a, b)).doit()
+        if n > 0:
+            s += (f.subs(i, a) + f.subs(i, b))/2
+        for k in range(1, n):
+            g = f.diff(i, 2*k-1)
+            B = C.bernoulli
+            s += B(2*k)/factorial(2*k)*(g.subs(i,b)-g.subs(i,a))
+        return s
 
 def sum(*args, **kwargs):
     summation = Sum(*args, **kwargs)
