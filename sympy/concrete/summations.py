@@ -1,5 +1,6 @@
 
-from sympy.core import Basic, S, C, Add, Mul, Symbol, Equality, Interval, sympify
+from sympy.core import (Basic, S, C, Add, Mul, Symbol, Equality, Interval,
+    sympify, symbols)
 from sympy.core.methods import NoRelMeths, ArithMeths
 from sympy.functions import factorial
 
@@ -73,25 +74,79 @@ class Sum(Basic, NoRelMeths, ArithMeths):
     def _eval_summation(self, f, x):
         return
 
-    def euler_maclaurin(self, n=0):
+    def euler_maclaurin(self, m=0, n=0, eps=0):
         """
-        Return n-th order Euler-Maclaurin approximation of self.
+        Return an Euler-Maclaurin approximation of self, where m is the
+        number of leading terms to sum directly and n is the number of
+        terms in the tail.
 
-        The 0-th order approximation is simply the corresponding
-        integral
+        With m = n = 0, this is simply the corresponding integral
+        plus a first-order endpoint correction.
+
+        Returns (s, e) where s is the Euler-Maclaurin approximation
+        and e is the estimated error (taken to be the magnitude of
+        the first omitted term in the tail):
+
+            >>> k = Symbol('k')
+            >>> Sum(1/k, (k, 2, 5)).doit().evalf()
+            1.28333333333333
+            >>> s, e = Sum(1/k, (k, 2, 5)).euler_maclaurin()
+            >>> s
+            7/20 - log(2) + log(5)
+            >>> s.evalf(), e.evalf()
+            (1.26629073187416, 0.0175)
+
+        The endpoints may be symbolic:
+
+            >>> k, a, b = symbols('kab')
+            >>> s, e = Sum(1/k, (k, a, b)).euler_maclaurin()
+            >>> s
+            -log(a) + log(b) + 1/(2*a) + 1/(2*b)
+            >>> e
+            abs(-1/(12*b**2) + 1/(12*a**2))
+
+        If the function is a polynomial of degree at most 2n+1, the
+        Euler-Maclaurin formula becomes exact (and e = 0 is returned):
+
+            >>> Sum(k, (k, 2, b)).euler_maclaurin()
+            (-1 + b/2 + 1/2*b**2, 0)
+            >>> Sum(k, (k, 2, b)).doit()
+            -1 + b/2 + 1/2*b**2
+
+        With a nonzero eps specified, the summation is ended
+        as soon as the remainder term is less than the epsilon.
         """
+        m = int(m)
+        n = int(n)
         f = self.function
         assert len(self.limits) == 1
         i, a, b = self.limits[0]
+        s = S.Zero
+        if m:
+            for k in range(m):
+                term = f.subs(i, a+k)
+                if (eps and term and abs(term.evalf(3)) < eps):
+                    return s, abs(term)
+                s += term
+            a += m
         x = Symbol('x', dummy=True)
-        s = C.Integral(f.subs(i, x), (x, a, b)).doit()
-        if n > 0:
-            s += (f.subs(i, a) + f.subs(i, b))/2
-        for k in range(1, n):
-            g = f.diff(i, 2*k-1)
-            B = C.bernoulli
-            s += B(2*k)/factorial(2*k)*(g.subs(i,b)-g.subs(i,a))
-        return s
+        s += C.Integral(f.subs(i, x), (x, a, b)).doit()
+        def fpoint(expr):
+            if b is S.Infinity:
+                return expr.subs(i, a), 0
+            return expr.subs(i, a), expr.subs(i, b)
+        fa, fb = fpoint(f)
+        iterm = (fa + fb)/2
+        g = f.diff(i)
+        for k in xrange(1, n+2):
+            ga, gb = fpoint(g)
+            term = C.bernoulli(2*k)/C.Factorial(2*k)*(gb-ga)
+            if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
+                break
+            s += term
+            g = g.diff(i, 2)
+        return s + iterm, abs(term)
+
 
 def sum(*args, **kwargs):
     summation = Sum(*args, **kwargs)

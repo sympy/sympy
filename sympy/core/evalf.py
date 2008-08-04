@@ -774,14 +774,32 @@ def evalf_sum(expr, prec, options):
     if len(limits) != 1 or not isinstance(limits[0], tuple) or \
         len(limits[0]) != 3:
         raise NotImplementedError
-    n, a, b = limits[0]
-    if b != S.Infinity or a != int(a):
-        raise NotImplementedError
-    v = hypsum(func, n, int(a), prec+10)
-    delta = prec - fastlog(v)
-    if fastlog(v) < -10:
-        v = hypsum(func, n, int(a), delta)
-    return v, None, min(prec, delta), None
+    prec2 = prec+10
+    try:
+        n, a, b = limits[0]
+        if b != S.Infinity or a != int(a):
+            raise NotImplementedError
+        # Use fast hypergeometric summation if possible
+        v = hypsum(func, n, int(a), prec2)
+        delta = prec - fastlog(v)
+        if fastlog(v) < -10:
+            v = hypsum(func, n, int(a), delta)
+        return v, None, min(prec, delta), None
+    except NotImplementedError:
+        # Euler-Maclaurin summation for general series
+        eps = C.Real(2.0)**(-prec)
+        for i in range(1, 5):
+            m = n = 2**i * prec
+            s, err = expr.euler_maclaurin(m=m, n=n, eps=eps)
+            err = err.evalf()
+            if err <= eps:
+                break
+        err = fastlog(evalf(abs(err), 20, options)[0])
+        re, im, re_acc, im_acc = evalf(s, prec2, options)
+        re_acc = max(re_acc, -err)
+        im_acc = max(im_acc, -err)
+        return re, im, re_acc, im_acc
+
 
 #----------------------------------------------------------------------------#
 #                                                                            #

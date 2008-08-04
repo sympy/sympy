@@ -1,9 +1,9 @@
 from sympy import (Symbol, Sum, oo, Real, Rational, sum, pi, cos, zeta,
-    Catalan, log, factorial, sqrt, E, sympify, binomial)
+    Catalan, log, factorial, sqrt, E, sympify, binomial, EulerGamma)
 from sympy.concrete.summations import getab
 from sympy.utilities.pytest import XFAIL
 
-a, b, c, d, m, n = map(Symbol, 'abcdmn')
+a, b, c, d, m, n, k = map(Symbol, 'abcdmnk')
 
 def test_arithmetic_sums():
     assert sum(1, (n, a, b)) == b-a+1
@@ -94,10 +94,33 @@ def test_evalf_slow_series():
     assert NS(Sum((-1)**n / (2*n+1)**3, (n, 0, oo)), 50) == NS(pi**3/32, 50)
 
 def test_euler_maclaurin():
-    A = Sum(1/n**3, (n, 1, 50)).doit()
-    B = Sum(1/n**3, (n,51, oo))
-    apery = (A + B.euler_maclaurin(8)).evalf(25)
-    assert abs(apery - Real("1.202056903159594285399738162",25)) < Real("1e-20")
+    # Exact polynomial sums with E-M
+    def check_exact(f, a, b, m, n):
+        A = Sum(f, (k, a, b))
+        s, e = A.euler_maclaurin(m, n)
+        assert (e == 0) and (s.expand() == A.doit())
+    check_exact(k**4, a, b, 0, 2)
+    check_exact(k**4 + 2*k, a, b, 1, 2)
+    check_exact(k**4 + k**2, a, b, 1, 5)
+    check_exact(k**5, 2, 6, 1, 2)
+    check_exact(k**5, 2, 6, 1, 3)
+    # Not exact
+    assert Sum(k**6, (k, a, b)).euler_maclaurin(0, 2)[1] != 0
+    # Numerical test
+    for m, n in [(2, 4), (2, 20), (10, 20), (18, 20)]:
+        A = Sum(1/k**3, (k, 1, oo))
+        s, e = A.euler_maclaurin(m, n)
+        assert abs((s-zeta(3)).evalf()) < e.evalf()
+
+def test_evalf_euler_maclaurin():
+    assert NS(Sum(1/k**k, (k, 1, oo)), 15) == '1.29128599706266'
+    assert NS(Sum(1/k**k, (k, 1, oo)), 50) == '1.2912859970626635404072825905956005414986193682745'
+    assert NS(Sum(1/k-log(1+1/k), (k, 1, oo)), 15) == NS(EulerGamma, 15)
+    assert NS(Sum(1/k-log(1+1/k), (k, 1, oo)), 50) == NS(EulerGamma, 50)
+    assert NS(Sum(log(k)/k**2, (k, 1, oo)), 15) == '0.937548254315844'
+    assert NS(Sum(log(k)/k**2, (k, 1, oo)), 50) == '0.93754825431584375370257409456786497789786028861483'
+    assert NS(Sum(1/k, (k, 1000000, 2000000)), 15) == '0.693147930560008'
+    assert NS(Sum(1/k, (k, 1000000, 2000000)), 50) == '0.69314793056000780941723211364567656807940638436025'
 
 @XFAIL
 def test_simple_products():
