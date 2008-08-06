@@ -5,7 +5,7 @@ The base class is Unit, where all here defined units (~200) inherit from.
 """
 
 from sympy import Rational, pi
-from sympy.core.basic import Atom
+from sympy.core.basic import Basic, Atom
 from sympy.core.methods import ArithMeths, RelMeths
 
 class Unit(Atom, RelMeths, ArithMeths):
@@ -20,12 +20,19 @@ class Unit(Atom, RelMeths, ArithMeths):
 
     __slots__ = ["name", "abbrev"]
 
-    def __init__(self, name, abbrev):
-        self.name = name
-        self.abbrev = abbrev
+    def __new__(cls, name, abbrev, **assumptions):
+        obj = Basic.__new__(cls, **assumptions)
+        assert isinstance(name, str),`type(name)`
+        assert isinstance(abbrev, str),`type(abbrev)`
+        obj.name = name
+        obj.abbrev = abbrev
+        return obj
 
     def __eq__(self, other):
         return isinstance(other, Unit) and self.name == other.name
+
+    def _hashable_content(self):
+        return (self.name,self.abbrev)
 
 # Delete this so it doesn't pollute the namespace
 del Atom, ArithMeths, RelMeths
