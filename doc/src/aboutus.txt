@@ -51,6 +51,7 @@ more details what they do and what they are interested in.
 #. Štěpán Roučka: several matrix and simplification fixes
 #. Ali Raza Syed: pretty printing/isympy on windows fix
 #. Stefano Maggiolo: bug fixes
+#. Robert Cimrman: matrix patches
 #. Bastian Weber: latex printing patches
 
 Uptodate list in the order of the first contribution is given in the `README
