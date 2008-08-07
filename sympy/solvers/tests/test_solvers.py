@@ -91,7 +91,11 @@ def test_deriv_degree():
 # in such a way that a different branch is chosen
 def test_tsolve():
     x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
     assert solve(exp(x)-3, x) == [log(3)]
+    assert solve(cos(x)-y, x) == [acos(y)]
+    assert solve(2*cos(x)-y,x)== [acos(y/2)]
     assert tsolve(exp(x)-3, x) == log(3)
     assert tsolve(Eq(exp(x), 3), x) == log(3)
     assert tsolve(log(x)-3, x) == exp(3)
@@ -115,3 +119,9 @@ def test_tsolve():
     assert tsolve(x**3 - 3**x, x) == -3/log(3)*LambertW(-log(3)/3)
     assert tsolve(2*(3*x+4)**5 - 6*7**(3*x+9), x) == \
         Rational(-4,3) - 5/log(7)/3*LambertW(-7*2**Rational(4,5)*6**Rational(1,5)*log(7)/10)
+
+    assert tsolve(z*cos(x)-y, x)      == acos(y/z)
+    assert tsolve(z*cos(2*x)-y, x)    == acos(y/z)/2
+    assert tsolve(z*cos(sin(x))-y, x) == asin(acos(y/z))
+
+    assert tsolve(z*cos(x), x)        == acos(0)

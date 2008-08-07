@@ -545,6 +545,38 @@ def tsolve(eq, sym):
         m = eq2.match(p)
         if m:
             return sol.subs(m).subs(x, sym)
+
+    # let's also try to inverse the equation
+    lhs = eq
+    rhs = S.Zero
+
+    while True:
+        indep, dep = lhs.as_independent(sym)
+
+        # dep + indep == rhs
+        if lhs.is_Add:
+            lhs = dep
+            rhs-= indep
+
+        # dep * indep == rhs
+        else:
+            # this indicates we have done it all
+            if indep is S.One:
+                break
+
+            lhs = dep
+            rhs/= indep
+
+    #                    -1
+    # f(x) = g  ->  x = f  (g)
+    if lhs.is_Function and lhs.nargs==1 and hasattr(lhs, 'inverse'):
+        rhs = lhs.inverse() (rhs)
+        lhs = lhs.args[0]
+
+        sol = solve(lhs-rhs, sym)
+        return sol[0]
+
+
     raise ValueError("unable to solve the equation")
 
 
