@@ -304,12 +304,12 @@ def test_Unit():
 def test_wild_str():
     # Check expressions containing Wild not causing infinite recursion
     w = Wild('x')
-    assert str(w + 1) == str(x + 1)
-    assert str(exp(2**w) + 5) == str(exp(2**x) + 5)
-    assert str(3*w + 1) == str(3*x + 1)
-    assert str(1/w + 1) == str(1/x + 1)
-    assert str(w**2 + 1) == str(x**2 + 1)
-    assert str(1/(1-w)) == str(1/(1-x))
+    assert str(w + 1)           == '1 + x_'
+    assert str(exp(2**w) + 5)   == '5 + exp(2**x_)'
+    assert str(3*w + 1)         == '1 + 3*x_'
+    assert str(1/w + 1)         == '1 + 1/x_'
+    assert str(w**2 + 1)        == '1 + x_**2'
+    assert str(1/(1-w))         == '1/(1 - x_)'
 
 def test_zeta():
     assert str(zeta(3)) == "zeta(3)"
