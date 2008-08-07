@@ -41,7 +41,7 @@ class StrPrinter(Printer):
         # This particular solution is slow, but it ensures a sane ordering. It
         # can of course be improved:
 
-        args.sort(expr.compare_terms)
+        args.sort(Basic._compare_pretty)
         PREC = precedence(expr)
         l = []
         for term in args:

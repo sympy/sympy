@@ -1,4 +1,4 @@
-from sympy.core import S, C
+from sympy.core import S, C, Basic
 from sympy.printing.printer import Printer
 from stringpict import prettyForm, stringPict
 
@@ -313,7 +313,7 @@ class PrettyPrinter(Printer):
 
     def _print_Add(self, sum):
         args = list(sum.args)
-        args.sort(sum.compare_terms)
+        args.sort(Basic._compare_pretty)
         pforms = []
         for x in args:
             # Check for negative "things" so that this information can be enforce upon
