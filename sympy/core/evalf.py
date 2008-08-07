@@ -958,4 +958,18 @@ def Basic_evalf(x, n=15, **options):
 Basic.evalf = Basic.n = Basic_evalf
 
 def N(x, n=15, **options):
+    """
+    Calls x.evalf(n, **options).
+
+    Both .evalf() and N() are equivalent, use the one that you like better.
+
+    Example:
+    >>> from sympy import Sum, Symbol, oo
+    >>> k = Symbol("k")
+    >>> Sum(1/k**k, (k, 1, oo))
+    Sum(k**(-k), (k, 1, oo))
+    >>> N(Sum(1/k**k, (k, 1, oo)), 4)
+    1.291
+
+    """
     return sympify(x).evalf(n, **options)
