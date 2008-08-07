@@ -24,10 +24,7 @@ class PrettyPrinter(Printer):
     def _print_stringPict(self, e):
         return e
 
-    def _print_str(self, e):
-        return prettyForm(repr(e))
-
-    def _print_unicode(self, e):
+    def _print_basestring(self, e):
         return prettyForm(repr(e))
 
     def _print_Symbol(self, e):
