@@ -320,9 +320,9 @@ u"""\
     s = \
 u"""\
 ⎧                               2   ⎫
-⎪    2     1                 sin (θ)⎪
-⎨0: x , 1: ─, 2: x, 3: y, 4: ───────⎬
-⎪          x                    2   ⎪
+⎪   1      2                 sin (θ)⎪
+⎨1: ─, 0: x , 2: x, 3: y, 4: ───────⎬
+⎪   x                           2   ⎪
 ⎩                            cos (φ)⎭\
 """
     assert u == s
@@ -337,21 +337,13 @@ u"""\
 
     e = {1/x: 1/y, x: sin(x)**2}
     u = upretty(e)
-    s1 = \
-u"""\
-⎧1  1        2   ⎫
-⎨─: ─, x: sin (x)⎬
-⎩x  y            ⎭\
-"""
-
-    s2 = \
+    s = \
 u"""\
 ⎧      2     1  1⎫
 ⎨x: sin (x), ─: ─⎬
 ⎩            x  y⎭\
 """
-    # NOTE dict does not guaranty ordering
-    assert (u == s1) or (u == s2)
+    assert u == s
 
 
 def test_upretty_seq_even():

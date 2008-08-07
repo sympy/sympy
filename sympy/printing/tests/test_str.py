@@ -54,7 +54,7 @@ def test_Derivative():
 def test_dict():
     assert str({1: 1+x}) == spr({1: 1+x}) == "{1: 1 + x}"
     assert str({1: x**2, 2: y*x}) in ("{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
-    assert spr({1: x**2, 2: y*x}) in ("{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
+    assert spr({1: x**2, 2: y*x}) == "{1: x**2, 2: x*y}"
 
 def test_Dummy():
     assert str(d) == "_d"

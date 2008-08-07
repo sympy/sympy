@@ -1,4 +1,4 @@
-from sympy.core import S, C, Symbol
+from sympy.core import S, C, Basic, Symbol
 from printer import Printer
 from sympy.simplify import fraction
 import re
@@ -391,7 +391,10 @@ class LatexPrinter(Printer):
     def _print_dict(self, expr):
         items = []
 
-        for key, val in expr.iteritems():
+        keys = expr.keys()
+        keys.sort(Basic.compare_pretty)
+        for key in keys:
+            val = expr[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))
 
         return r"\begin{Bmatrix}%s\end{Bmatrix}" % r", & ".join(items)

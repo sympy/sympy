@@ -476,9 +476,13 @@ class PrettyPrinter(Printer):
 
     def _print_dict(self, d):
         items = []
-        for k,v in d.items():
+
+        keys = d.keys()
+        keys.sort( Basic.compare_pretty )
+
+        for k in keys:
             K = self._print(k)
-            V = self._print(v)
+            V = self._print(d[k])
             S = prettyForm(*stringPict.next(K, ': ', V))
 
             items.append(S)

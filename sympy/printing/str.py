@@ -74,8 +74,14 @@ class StrPrinter(Printer):
         return 'D(%s)'%", ".join(map(self._print, expr.args))
 
     def _print_dict(self, expr):
-        items = ["%s: %s"%(self._print(key), self._print(value)) for
-                 key, value in expr.iteritems()]
+        keys = expr.keys()
+        keys.sort( Basic.compare_pretty )
+
+        items = []
+        for key in keys:
+            item = "%s: %s" % (self._print(key), self._print(expr[key]))
+            items.append(item)
+
         return "{%s}"%", ".join(items)
 
     def _print_Dummy(self, expr):

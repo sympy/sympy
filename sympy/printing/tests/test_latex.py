@@ -84,3 +84,8 @@ def test_latex():
     assert latex((2*mu)**Rational(7,2), inline=False) == \
             "\\begin{equation*}8 \\sqrt{2} \\sqrt[7]{\\mu}\\end{equation*}"
     assert latex([2/x, y]) =="$\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}$"
+
+
+def test_latex_dict():
+    d = {Rational(1): 1, x**2: 2, x: 3, x**3: 4}
+    assert latex(d) == '$\\begin{Bmatrix}1 : 1, & x : 3, & {x}^{2} : 2, & {x}^{3} : 4\\end{Bmatrix}$'
