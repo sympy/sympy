@@ -278,6 +278,8 @@ def test_upretty_seq():
     assert upretty([]) == '[]'
     assert upretty(()) == '()'
     assert upretty({}) == '{}'
+    assert upretty(set()) == 'set()'
+    assert upretty(frozenset()) == 'frozenset()'
 
     e = [x**2, 1/x, x, y, sin(th)**2/cos(ph)**2]
     u = upretty(e)
@@ -315,8 +317,8 @@ u"""\
 """
     assert u == s
 
-    e = dict(enumerate(e))
-    u = upretty(e)
+    e_= dict(enumerate(e))
+    u = upretty(e_)
     s = \
 u"""\
 ⎧                               2   ⎫
@@ -326,6 +328,17 @@ u"""\
 ⎩                            cos (φ)⎭\
 """
     assert u == s
+
+    e_= set(e)
+    u = upretty(e_)
+    s = \
+u"""\
+   ⎛                2   ⎞
+   ⎜      1   2  sin (θ)⎟
+set⎜x, y, ─, x , ───────⎟
+   ⎜      x         2   ⎟
+   ⎝             cos (φ)⎠\
+"""
 
     e = {x: sin(x)}
     u = upretty(e)

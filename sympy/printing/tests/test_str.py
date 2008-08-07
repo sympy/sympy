@@ -273,6 +273,13 @@ def test_Roots():
 def test_Sample():
     assert str(Sample([x, y, 1])) == "Sample([x, y, 1])"
 
+def test_set():
+    assert spr(set())       == 'set()'
+    assert spr(frozenset()) == 'frozenset()'
+
+    assert spr(set([1,2,3]))== 'set([1, 2, 3])'
+    assert spr(set([1,x,x**2,x**3,x**4]))   == 'set([1, x, x**2, x**3, x**4])'
+
 def test_SMatrix():
     M = SMatrix([[x**+1, 1], [y, x+y]])
     assert str(M) == spr(M) == "[x,     1]\n[y, x + y]"

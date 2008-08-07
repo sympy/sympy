@@ -489,6 +489,17 @@ class PrettyPrinter(Printer):
 
         return self._print_seq(items, '{', '}')
 
+    def __print_set(self, s):
+        items = list(s)
+        items.sort( Basic.compare_pretty )
+
+        S = self._print_seq(items, '(', ')')
+        S = prettyForm(*stringPict.next(type(s).__name__, S))
+        return S
+
+    _print_set       = __print_set
+    _print_frozenset = __print_set
+
 
 def pretty(expr, use_unicode=None):
     """

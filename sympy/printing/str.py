@@ -300,6 +300,18 @@ class StrPrinter(Printer):
     def _print_Sample(self, expr):
         return "Sample([%s])"%self.stringify(expr, ", ", 0)
 
+    def __print_set(self, expr):
+        items = list(expr)
+        items.sort( Basic.compare_pretty )
+
+        args = ', '.join(self._print(item) for item in items)
+        if args:
+            args = '[%s]' % args
+        return '%s(%s)' % (type(expr).__name__, args)
+
+    _print_set       = __print_set
+    _print_frozenset = __print_set
+
     def _print_SMatrix(self, expr):
         return self._print(expr.toMatrix())
 
