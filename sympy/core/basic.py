@@ -474,6 +474,27 @@ class Basic(AssumeMeths):
 
     @staticmethod
     def _compare_pretty(a, b):
+        from sympy.series.order import Order
+        if isinstance(a, Order) and not isinstance(b, Order):
+            return 1
+        if not isinstance(a, Order) and isinstance(b, Order):
+            return -1
+
+        # FIXME this produces wrong ordering for 1 and 0
+        # e.g. the ordering will be 1 0 2 3 4 ...
+        # because 1 = x^0, but 0 2 3 4 ... = x^1
+        p1, p2, p3 = Wild("p1"), Wild("p2"), Wild("p3")
+        r_a = a.match(p1 * p2**p3)
+        r_b = b.match(p1 * p2**p3)
+        if r_a is not None and r_b is not None:
+            c = Basic.compare(r_a[p3], r_b[p3])
+            if c!=0:
+                return c
+
+        return Basic.compare(a,b)
+
+    @staticmethod
+    def compare_pretty(a, b):
         """
         Is a>b in the sense of ordering in printing?
 
@@ -490,19 +511,28 @@ class Basic(AssumeMeths):
         1 < x < x**2 < x**3 < O(x**4) etc.
 
         """
-        from sympy.series.order import Order
-        if isinstance(a, Order) and not isinstance(b, Order):
-            return 1
-        if not isinstance(a, Order) and isinstance(b, Order):
-            return -1
-        p1, p2, p3 = Wild("p1"), Wild("p2"), Wild("p3")
-        r_a = a.match(p1 * p2**p3)
-        r_b = b.match(p1 * p2**p3)
-        if r_a is not None and r_b is not None:
-            c = Basic.compare(r_a[p3], r_b[p3])
-            if c!=0:
-                return c
-        return Basic.compare(a,b)
+        try:
+            a = _sympify(a)
+        except SympifyError:
+            pass
+
+        try:
+            b = _sympify(b)
+        except SympifyError:
+            pass
+
+        # both objects are non-SymPy
+        if (not isinstance(a, Basic)) and (not isinstance(b, Basic)):
+            return cmp(a,b)
+
+        if not isinstance(a, Basic):
+            return -1   # other < sympy
+
+        if not isinstance(b, Basic):
+            return +1   # sympy > other
+
+        # now both objects are from SymPy, so we can proceed to usual comparison
+        return Basic._compare_pretty(a, b)
 
 
     def __eq__(self, other):
