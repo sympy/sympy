@@ -300,3 +300,27 @@ def test_Derivative_bug1():
     b = Wild("b", exclude=[f(x)])
     eq = f(x).diff(x)
     assert eq.match(a*Derivative(f(x), x) + b) == {a: 1, b: 0}
+
+
+def test_match_wild_wild():
+    p = Wild('p')
+    q = Wild('q')
+    r = Wild('r')
+
+    assert p.match(q+r)  in  [ {q: p, r: 0} , {q: 0, r: p} ]
+    assert p.match(q*r)  in  [ {q: p, r: 1} , {q: 1, r: p} ]
+
+
+    p = Wild('p')
+    q = Wild('q', exclude=[p])
+    r = Wild('r')
+
+    assert p.match(q+r) == {q: 0, r: p}
+    assert p.match(q*r) == {q: 1, r: p}
+
+    p = Wild('p')
+    q = Wild('q', exclude=[p])
+    r = Wild('r', exclude=[p])
+
+    assert p.match(q+r) == None
+    assert p.match(q*r) == None

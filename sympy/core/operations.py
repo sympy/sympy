@@ -84,9 +84,14 @@ class AssocOp(Basic):
         exact_part = []
         for p in pattern.args:
             if p.atoms(Wild, WildFunction):
-                wild_part.append(p)
-            else:
-                exact_part.append(p)
+                # not all Wild should stay Wilds, for example:
+                # (w2+w3).matches(w1) -> (w1+w3).matches(w1) -> w3.matches(0)
+                if (not p in repl_dict) and (not p in expr):
+                    wild_part.append(p)
+                    continue
+
+            exact_part.append(p)
+
         if exact_part:
             newpattern = pattern.__class__(*wild_part)
             newexpr = pattern.__class__._combine_inverse(expr, pattern.__class__(*exact_part))

@@ -999,10 +999,10 @@ class Basic(AssumeMeths):
         Helper method for match() - switches the pattern and expr.
 
         Can be used to solve linear equations:
-          >>> from sympy import Symbol, Wild
+          >>> from sympy import Symbol, Wild, Integer
           >>> a,b = map(Symbol, 'ab')
           >>> x = Wild('x')
-          >>> (a+b*x).matches(0)
+          >>> (a+b*x).matches(Integer(0))
           {x_: -a/b}
 
         """
