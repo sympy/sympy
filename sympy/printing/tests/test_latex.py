@@ -19,6 +19,12 @@ def test_latex_symbols():
     mass, volume = map(Symbol, ('mass', 'volume'))
     assert latex(Gamma + lmbda) in [r"$\Gamma + \lambda$", '$\lambda + \Gamma$']
     assert latex(Gamma * lmbda) == r"$\Gamma \lambda$"
+    assert latex(Symbol('q21')) == r"$q_{21}$"
+    assert latex(Symbol('epsilon0')) == r"$\epsilon_{0}$"
+    assert latex(Symbol('91')) == r"$91$"
+    assert latex(Symbol('alpha_new')) == r"$\alpha_{new}$"
+    assert latex(Symbol('C^orig')) == r"$C^{orig}$"
+
     #assert latex(volume * rho == mass) == r"$\rho \mathrm{volume} = \mathrm{mass}$"
     #assert latex(volume / mass * rho == 1) == r"$\rho \mathrm{volume} {\mathrm{mass}}^{(-1)} = 1$"
     #assert latex(mass**3 * volume**3) == r"${\mathrm{mass}}^{3} \cdot {\mathrm{volume}}^{3}$"

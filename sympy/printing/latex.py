@@ -1,6 +1,7 @@
-from sympy.core import S, C
+from sympy.core import S, C, Symbol
 from printer import Printer
 from sympy.simplify import fraction
+import re
 
 class LatexPrinter(Printer):
     """A printer which converts an expression into its LaTeX equivalent."""
@@ -323,6 +324,22 @@ class LatexPrinter(Printer):
     def _print_Symbol(self, expr):
         if len(expr.name) == 1:
             return expr.name
+
+        #convert trailing digits to subscript
+        m = re.match('(^[a-zA-Z]+)([0-9]+)$', expr.name)
+        if m is not None:
+            name, sub=m.groups()
+            tex=self._print_Symbol(Symbol(name))
+            tex="%s_{%s}" %(tex, sub)
+            return tex
+
+        # insert braces to expresions containing '_' or '^'
+        m = re.match('(^[a-zA-Z0-9]+)([_\^]{1})([a-zA-Z0-9]+)$', expr.name)
+        if m is not None:
+            name, sep, rest=m.groups()
+            tex=self._print_Symbol(Symbol(name))
+            tex="%s%s{%s}" %(tex, sep, rest)
+            return tex
 
         greek = set([ 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
                       'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu',
