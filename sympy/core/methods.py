@@ -64,36 +64,6 @@ class ArithMeths(object):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
-class NoArithMeths(object):
-
-    __slots__ = []
-
-    def __pos__(self):
-        raise TypeError(_no_unary_operation('+', self))
-    def __neg__(self):
-        raise TypeError(_no_unary_operation('-', self))
-    def __add__(self, other):
-        raise TypeError(_no_binary_operation('+', self, other))
-    def __radd__(self, other):
-        raise TypeError(_no_binary_operation('+', other, self))
-    def __sub__(self, other):
-        raise TypeError(_no_binary_operation('-', self, other))
-    def __rsub__(self, other):
-        raise TypeError(_no_binary_operation('-', other, self))
-    def __mul__(self, other):
-        raise TypeError(_no_binary_operation('*', self, other))
-    def __rmul__(self, other):
-        raise TypeError(_no_binary_operation('*', other, self))
-    def __div__(self, other):
-        raise TypeError(_no_binary_operation('/', self, other))
-    def __rdiv__(self, other):
-        raise TypeError(_no_binary_operation('/', other, self))
-    def __pow__(self, other):
-        raise TypeError(_no_binary_operation('**', self, other))
-    def __rpow__(self, other):
-        raise TypeError(_no_binary_operation('**', other, self))
-    def _eval_power(self, other):
-        return None
 
 class RelMeths(object):
 
