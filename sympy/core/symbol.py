@@ -1,13 +1,12 @@
 
 from basic import Basic, Atom, S, C, sympify
-from methods import RelMeths, ArithMeths
 from cache import cacheit
 
 # from function import Function, WildFunction   /cyclic/
 
 import re
 
-class Symbol(Atom, RelMeths, ArithMeths):
+class Symbol(Atom):
     """
     Assumptions::
        real = True

@@ -1,7 +1,6 @@
 
 from basic import Basic, S, C
 from sympify import _sympify
-from methods import ArithMeths, RelMeths
 from cache import cacheit
 
 from sympy import mpmath
@@ -51,7 +50,7 @@ def integer_nthroot(y, n):
         t = x**n
     return x, t == y
 
-class Pow(Basic, ArithMeths, RelMeths):
+class Pow(Basic):
 
     is_Pow = True
 

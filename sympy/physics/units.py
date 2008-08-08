@@ -6,9 +6,8 @@ The base class is Unit, where all here defined units (~200) inherit from.
 
 from sympy import Rational, pi
 from sympy.core.basic import Basic, Atom
-from sympy.core.methods import ArithMeths, RelMeths
 
-class Unit(Atom, RelMeths, ArithMeths):
+class Unit(Atom):
     """
     Base class for all physical units.
 
@@ -35,7 +34,7 @@ class Unit(Atom, RelMeths, ArithMeths):
         return (self.name,self.abbrev)
 
 # Delete this so it doesn't pollute the namespace
-del Atom, ArithMeths, RelMeths
+del Atom
 
 def defunit(value, *names):
     u = value

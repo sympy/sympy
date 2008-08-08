@@ -4,7 +4,6 @@ from sympy import abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,\
                   sin, SMatrix, sqrt, sum, Sum2, Symbol, symbols, Wild,\
                   WildFunction, zeta, zoo
 from sympy.core.basic import Basic
-from sympy.core.methods import ArithMeths
 from sympy.physics.units import second
 from sympy.polynomials import Polynomial
 from sympy.polys.polynomial import Poly
@@ -129,9 +128,9 @@ def test_Mul():
     assert str(2*x/3)  ==  '2*x/3'
     assert str(-2*x/3)  == '-2*x/3'
 
-    class CustomClass1(Basic, ArithMeths):
+    class CustomClass1(Basic):
         pass
-    class CustomClass2(Basic, ArithMeths):
+    class CustomClass2(Basic):
         pass
     cc1 = CustomClass1(commutative=True)
     cc2 = CustomClass2(commutative=True)

@@ -1,7 +1,6 @@
 
 from basic import Basic, S, C, sympify
 from operations import AssocOp
-from methods import RelMeths, ArithMeths
 from cache import cacheit
 
 from logic import fuzzy_not
@@ -14,7 +13,7 @@ from symbol import Symbol, Wild
 
 import sympy.mpmath as mpmath
 
-class Mul(AssocOp, RelMeths, ArithMeths):
+class Mul(AssocOp):
 
     __slots__ = []
 

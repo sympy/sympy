@@ -1,7 +1,6 @@
 
 from basic import Basic, S, C
 from operations import AssocOp
-from methods import RelMeths, ArithMeths
 from cache import cacheit
 
 from symbol import Symbol, Wild, Temporary
@@ -9,7 +8,7 @@ from symbol import Symbol, Wild, Temporary
 # from mul import Mul    /cyclic/
 # from function import FunctionClass    /cyclic/
 
-class Add(AssocOp, RelMeths, ArithMeths):
+class Add(AssocOp):
 
     __slots__ = []
 

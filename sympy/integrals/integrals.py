@@ -1,6 +1,5 @@
 
 from sympy.core import Basic, S, C, Symbol, Wild, Pow, sympify
-from sympy.core.methods import RelMeths, ArithMeths
 
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.risch import heurisch
@@ -10,7 +9,7 @@ from sympy.series import limit
 from sympy.polys import Poly
 from sympy.solvers import solve
 
-class Integral(Basic, RelMeths, ArithMeths):
+class Integral(Basic):
     """Represents unevaluated integral."""
 
     def __new__(cls, function, *symbols, **assumptions):

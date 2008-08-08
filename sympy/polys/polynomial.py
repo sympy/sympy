@@ -6,7 +6,6 @@ from sympy.core.sympify import sympify
 from sympy.core.basic import Basic, S, C
 from sympy.core.symbol import Symbol, Wild
 from sympy.core.numbers import Integer, igcd, ilcm
-from sympy.core.methods import RelMeths, ArithMeths
 
 from sympy.utilities import all, any
 
@@ -54,7 +53,7 @@ class MultivariatePolyError(PolynomialError):
 ##  [7] Concept of Monomial.
 ##
 
-class Poly(Basic, RelMeths, ArithMeths):
+class Poly(Basic):
     """Represents polynomials with symbolic coefficients.
 
        Polynomials are internally represented as two lists containing

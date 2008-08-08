@@ -4,7 +4,6 @@ opportunities.
 
 from sympy.core.basic import Basic
 from sympy.core.operations import AssocOp
-from sympy.core.methods import RelMeths, ArithMeths
 from sympy.utilities.iterables import preorder_traversal
 
 from sympy import Add, Mul
@@ -24,7 +23,7 @@ def assumed(e, name):
     """
     return getattr(e, name, False)
 
-class Sub(AssocOp, RelMeths, ArithMeths):
+class Sub(AssocOp):
     """ Stub of a Sub operator to replace Add(x, Mul(NegativeOne(-1), y)).
     """
     __slots__ = []

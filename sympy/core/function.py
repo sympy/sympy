@@ -31,7 +31,6 @@ Example:
 
 from basic import Basic, Atom, S, C, sympify
 from basic import BasicType, BasicMeta
-from methods import ArithMeths, RelMeths
 from operations import AssocOp
 from cache import cacheit
 from itertools import repeat
@@ -71,7 +70,7 @@ class FunctionClass(BasicMeta):
     def __repr__(cls):
         return cls.__name__
 
-class Function(Basic, ArithMeths, RelMeths):
+class Function(Basic):
     """
     Base class for applied functions.
     Constructor of undefined classes.
@@ -395,7 +394,7 @@ class WildFunction(Function, Atom):
     def is_number(self):
         return False
 
-class Derivative(Basic, ArithMeths, RelMeths):
+class Derivative(Basic):
     """
     Carries out differentation of the given expression with respect to symbols.
 

@@ -1,5 +1,4 @@
 from sympy.core import S, Add, sympify, Basic
-from sympy.core.methods import RelMeths, ArithMeths
 from gruntz import gruntz
 
 def limit(e, z, z0, dir="+"):
@@ -74,7 +73,7 @@ def limit(e, z, z0, dir="+"):
 
     return gruntz(e, z, z0, dir)
 
-class Limit(Basic, RelMeths, ArithMeths):
+class Limit(Basic):
     """Represents unevaluated limit.
 
     Examples:

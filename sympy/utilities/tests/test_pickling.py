@@ -15,7 +15,6 @@ from sympy.core.relational import Equality, Inequality, Relational,\
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.methods import ArithMeths, RelMeths
 from sympy.core.function import Derivative, Function, FunctionClass, Lambda,\
         WildFunction
 from sympy.core.interval import Interval
@@ -91,11 +90,6 @@ def test_core_mul():
 def test_core_power():
     x = Symbol("x")
     for c in (Pow, Pow(x,4)):
-        check(c)
-
-def test_core_methods():
-    for c in (ArithMeths, ArithMeths(),
-              RelMeths, RelMeths()):
         check(c)
 
 def test_core_function():

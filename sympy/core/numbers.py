@@ -8,7 +8,6 @@ rnd = mlib.round_nearest
 
 from basic import Basic, Atom, S, C, SingletonMeta, Memoizer, MemoizerArg
 from sympify import _sympify, SympifyError, _sympifyit
-from methods import RelMeths, ArithMeths
 from power import integer_nthroot
 
 # from mul import Mul   /cyclic/
@@ -128,7 +127,7 @@ def factor_trial_division(n):
     return factors
 
 
-class Number(Atom, RelMeths, ArithMeths):
+class Number(Atom):
     """
     Represents any kind of number in sympy.
 
@@ -381,7 +380,7 @@ class Real(Number):
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
             return bool(mlib.flt(self._mpf_, other._as_mpf_val(self._prec)))
-        return RelMeths.__lt__(self, other)
+        return Basic.__lt__(self, other)
 
     def __le__(self, other):
         try:
@@ -393,7 +392,7 @@ class Real(Number):
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
             return bool(mlib.fle(self._mpf_, other._as_mpf_val(self._prec)))
-        return RelMeths.__le__(self, other)
+        return Basic.__le__(self, other)
 
     def epsilon_eq(self, other, epsilon="10e-16"):
         return abs(self - other) < Real(epsilon)
@@ -630,7 +629,7 @@ class Rational(Number):
             if isinstance(other, Real):
                 return bool(mlib.flt(self._as_mpf_val(other._prec), other._mpf_))
             return bool(self.p * other.q < self.q * other.p)
-        return RelMeths.__lt__(self, other)
+        return Basic.__lt__(self, other)
 
     def __le__(self, other):
         try:
@@ -644,7 +643,7 @@ class Rational(Number):
             if isinstance(other, Real):
                 return bool(mlib.fle(self._as_mpf_val(other._prec), other._mpf_))
             return bool(self.p * other.q <= self.q * other.p)
-        return RelMeths.__le__(self, other)
+        return Basic.__le__(self, other)
 
     def factors(self):
         f = factor_trial_division(self.p).copy()
@@ -1154,7 +1153,7 @@ class NaN(Rational):
         import sage.all as sage
         return sage.NaN
 
-class ComplexInfinity(Atom, RelMeths, ArithMeths):
+class ComplexInfinity(Atom):
     __metaclass__ = SingletonMeta
 
     is_commutative = True
@@ -1185,7 +1184,7 @@ class ComplexInfinity(Atom, RelMeths, ArithMeths):
                 else:
                     return S.Zero
 
-class NumberSymbol(Atom, RelMeths, ArithMeths):
+class NumberSymbol(Atom):
     __metaclass__ = SingletonMeta
 
     is_commutative = True
@@ -1245,7 +1244,7 @@ class NumberSymbol(Atom, RelMeths, ArithMeths):
         if other.is_comparable:
             other = other.evalf()
             return self.evalf()<other
-        return RelMeths.__lt__(self, other)
+        return Basic.__lt__(self, other)
     def __le__(self, other):
         try:
             other = _sympify(other)
@@ -1255,7 +1254,7 @@ class NumberSymbol(Atom, RelMeths, ArithMeths):
         if other.is_comparable: other = other.evalf()
         if isinstance(other, Number):
             return self.evalf()<=other
-        return RelMeths.__le__(self, other)
+        return Basic.__le__(self, other)
     def __gt__(self, other):
         return (-self) < (-other)
     def __ge__(self, other):
@@ -1386,7 +1385,7 @@ class Catalan(NumberSymbol):
         import sage.all as sage
         return sage.catalan
 
-class ImaginaryUnit(Atom, RelMeths, ArithMeths):
+class ImaginaryUnit(Atom):
     __metaclass__ = SingletonMeta
 
     is_commutative = True
