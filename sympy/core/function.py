@@ -29,7 +29,7 @@ Example:
     (x,)
 """
 
-from basic import Basic, Singleton, Atom, S, C, sympify
+from basic import Basic, Atom, S, C, sympify
 from basic import BasicType, BasicMeta
 from methods import ArithMeths, RelMeths
 from operations import AssocOp

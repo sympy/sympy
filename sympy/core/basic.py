@@ -2049,22 +2049,46 @@ class Atom(Basic):
         return self
 
 
-class Singleton(Basic):
-    """ Singleton object.
+class SingletonMeta(BasicMeta):
+    """Metaclass for all singletons
+
+       All singleton classes should put this into their __metaclass__, and
+       _not_ to define __new__
+
+       example:
+
+       class Zero(Integer):
+           __metaclass__ = SingletonMeta
+
+           p = 0
+           q = 1
     """
 
-    __slots__ = []
+    def __init__(cls, *args, **kw):
+        BasicMeta.__init__(cls, *args, **kw)
 
-    def __new__(cls, *args, **assumptions):
-        # if you need to overload __new__, then
-        # use the same code as below to ensure
-        # that only one instance of Singleton
-        # class is created.
-        obj = Singleton.__dict__.get(cls.__name__)
-        if obj is None:
-            obj = Basic.__new__(cls,*args,**assumptions)
-            setattr(Singleton, cls.__name__, obj)
-        return obj
+        # we are going to inject singletonic __new__, here it is:
+        def cls_new(cls):
+            try:
+                obj = getattr(SingletonFactory, cls.__name__)
+
+            except AttributeError:
+                obj = Basic.__new__(cls, *(), **{})
+                setattr(SingletonFactory, cls.__name__, obj)
+
+            return obj
+
+        cls_new.__name__ = '%s.__new__' % (cls.__name__)
+
+        assert not cls.__dict__.has_key('__new__'), \
+                'Singleton classes are not allowed to redefine __new__'
+
+        # inject singletonic __new__
+        cls.__new__      = staticmethod(cls_new)
+
+        # tag the class appropriately (so we could verify it later when doing
+        # S.<something>
+        cls.is_Singleton = True
 
 class SingletonFactory:
     """
@@ -2075,11 +2099,10 @@ class SingletonFactory:
     def __getattr__(self, clsname):
         if clsname == "__repr__":
             return lambda: "S"
-        obj = Singleton.__dict__.get(clsname)
-        if obj is None:
-            cls = getattr(C, clsname)
-            assert issubclass(cls, Singleton),`cls`
-            obj = cls()
+
+        cls = getattr(C, clsname)
+        assert cls.is_Singleton
+        obj = cls()
 
         # store found object in own __dict__, so the next lookups will be
         # serviced without entering __getattr__, and so will be fast

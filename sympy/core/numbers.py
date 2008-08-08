@@ -6,7 +6,7 @@ import decimal
 
 rnd = mlib.round_nearest
 
-from basic import Basic, Atom, Singleton, S, C, Memoizer, MemoizerArg
+from basic import Basic, Atom, S, C, SingletonMeta, Memoizer, MemoizerArg
 from sympify import _sympify, SympifyError, _sympifyit
 from methods import NoRelMeths, RelMeths, ArithMeths
 from power import integer_nthroot
@@ -899,7 +899,8 @@ class Integer(Rational):
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
 
-class Zero(Singleton, Integer):
+class Zero(Integer):
+    __metaclass__ = SingletonMeta
 
     p = 0
     q = 1
@@ -940,7 +941,8 @@ class Zero(Singleton, Integer):
         # Order(0,x) -> 0
         return self
 
-class One(Singleton, Integer):
+class One(Integer):
+    __metaclass__ = SingletonMeta
 
     p = 1
     q = 1
@@ -966,7 +968,8 @@ class One(Singleton, Integer):
     def _eval_order(self, *symbols):
         return
 
-class NegativeOne(Singleton, Integer):
+class NegativeOne(Integer):
+    __metaclass__ = SingletonMeta
 
     p = -1
     q = 1
@@ -1005,7 +1008,8 @@ class NegativeOne(Singleton, Integer):
                     return b ** q * b ** (e - q)
         return
 
-class Half(Singleton, Rational):
+class Half(Rational):
+    __metaclass__ = SingletonMeta
 
     p = 1
     q = 2
@@ -1017,7 +1021,8 @@ class Half(Singleton, Rational):
         return S.Half
 
 
-class Infinity(Singleton, Rational):
+class Infinity(Rational):
+    __metaclass__ = SingletonMeta
 
     p = 1
     q = 0
@@ -1067,7 +1072,8 @@ class Infinity(Singleton, Rational):
         import sage.all as sage
         return sage.oo
 
-class NegativeInfinity(Singleton, Rational):
+class NegativeInfinity(Rational):
+    __metaclass__ = SingletonMeta
 
     p = -1
     q = 0
@@ -1116,7 +1122,8 @@ class NegativeInfinity(Singleton, Rational):
     def _as_mpf_val(self, prec):
         return mlib.fninf
 
-class NaN(Singleton, Rational):
+class NaN(Rational):
+    __metaclass__ = SingletonMeta
 
     p = 0
     q = 0
@@ -1147,7 +1154,8 @@ class NaN(Singleton, Rational):
         import sage.all as sage
         return sage.NaN
 
-class ComplexInfinity(Singleton, Atom, NoRelMeths, ArithMeths):
+class ComplexInfinity(Atom, NoRelMeths, ArithMeths):
+    __metaclass__ = SingletonMeta
 
     is_commutative = True
     is_comparable = None
@@ -1177,7 +1185,8 @@ class ComplexInfinity(Singleton, Atom, NoRelMeths, ArithMeths):
                 else:
                     return S.Zero
 
-class NumberSymbol(Singleton, Atom, RelMeths, ArithMeths):
+class NumberSymbol(Atom, RelMeths, ArithMeths):
+    __metaclass__ = SingletonMeta
 
     is_commutative = True
     is_comparable = True
@@ -1377,7 +1386,8 @@ class Catalan(NumberSymbol):
         import sage.all as sage
         return sage.catalan
 
-class ImaginaryUnit(Singleton, Atom, RelMeths, ArithMeths):
+class ImaginaryUnit(Atom, RelMeths, ArithMeths):
+    __metaclass__ = SingletonMeta
 
     is_commutative = True
     is_imaginary = True
