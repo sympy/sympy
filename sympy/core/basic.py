@@ -3,7 +3,7 @@
 import sympy.mpmath as mpmath
 
 from assumptions import AssumeMeths, make__get_assumption
-from sympify import _sympify, sympify, SympifyError
+from sympify import _sympify, _sympifyit, sympify, SympifyError
 from cache import cacheit, Memoizer, MemoizerArg
 
 # from numbers  import Number, Integer, Rational, Real /cyclic/
@@ -13,6 +13,8 @@ from cache import cacheit, Memoizer, MemoizerArg
 # from mul      import Mul  /cyclic/
 # from power    import Pow  /cyclic/
 # from function import Derivative, FunctionClass   /cyclic/
+# from relational import Equality, Unequality, Inequality, StrictInequality /cyclic/
+# from sympy.functions.elementary.complexes import abs as abs_   /cyclic/
 # from sympy.printing import StrPrinter
 
 # used for canonical ordering of symbolic sequences
@@ -584,6 +586,81 @@ class Basic(AssumeMeths):
         ot = other._hashable_content()
 
         return (st != ot)
+
+    # TODO all comparison methods should return True/False directly
+    # see #153
+
+    @_sympifyit('other', False) # sympy >  other
+    def __lt__(self, other):
+        #return sympify(other) > self
+        return StrictInequality(self, other)
+
+    @_sympifyit('other', True)  # sympy >  other
+    def __gt__(self, other):
+        return StrictInequality(other, self)
+        #return sympify(other) < self
+
+    @_sympifyit('other', False) # sympy >  other
+    def __le__(self, other):
+        return Inequality(self, other)
+
+    @_sympifyit('other', True)  # sympy >  other
+    def __ge__(self, other):
+        return sympify(other) <= self
+
+
+    # ***************
+    # * Arithmetics *
+    # ***************
+
+    def __pos__(self):
+        return self
+    def __neg__(self):
+        return Mul(S.NegativeOne, self)
+    def __abs__(self):
+        return abs_(self)
+
+    @_sympifyit('other', NotImplemented)
+    def __add__(self, other):
+        return Add(self, other)
+    @_sympifyit('other', NotImplemented)
+    def __radd__(self, other):
+        return Add(other, self)
+
+    @_sympifyit('other', NotImplemented)
+    def __sub__(self, other):
+        return Add(self, -other)
+    @_sympifyit('other', NotImplemented)
+    def __rsub__(self, other):
+        return Add(other, -self)
+
+    @_sympifyit('other', NotImplemented)
+    def __mul__(self, other):
+        return Mul(self, other)
+    @_sympifyit('other', NotImplemented)
+    def __rmul__(self, other):
+        return Mul(other, self)
+
+    @_sympifyit('other', NotImplemented)
+    def __pow__(self, other):
+        return Pow(self, other)
+    @_sympifyit('other', NotImplemented)
+    def __rpow__(self, other):
+        return Pow(other, self)
+
+    @_sympifyit('other', NotImplemented)
+    def __div__(self, other):
+        return Mul(self, Pow(other, S.NegativeOne))
+    @_sympifyit('other', NotImplemented)
+    def __rdiv__(self, other):
+        return Mul(other, Pow(self, S.NegativeOne))
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
+
+
+
 
     def __repr__(self):
         return StrPrinter.doprint(self)

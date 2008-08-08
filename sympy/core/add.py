@@ -344,10 +344,6 @@ import basic as _
 _.Add       = Add
 del _
 
-import methods as _
-_.Add       = Add
-del _
-
 import mul as _
 _.Add       = Add
 del _

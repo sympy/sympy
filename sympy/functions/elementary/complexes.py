@@ -280,6 +280,6 @@ class conjugate(Function):
 
 
 # /cyclic/
-from sympy.core import methods
-methods.abs_ = abs
-del methods
+from sympy.core import basic as _
+_.abs_ = abs
+del _

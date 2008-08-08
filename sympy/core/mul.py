@@ -641,10 +641,6 @@ import basic as _
 _.Mul       = Mul
 del _
 
-import methods as _
-_.Mul       = Mul
-del _
-
 import add as _
 _.Mul       = Mul
 del _

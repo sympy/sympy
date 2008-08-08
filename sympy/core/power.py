@@ -615,10 +615,6 @@ import basic as _
 _.Pow =     Pow
 del _
 
-import methods as _
-_.Pow =     Pow
-del _
-
 import mul as _
 _.Pow =     Pow
 del _
