@@ -1,10 +1,10 @@
 
 from sympy.core import (Basic, S, C, Add, Mul, Symbol, Equality, Interval,
     sympify, symbols)
-from sympy.core.methods import NoRelMeths, ArithMeths
+from sympy.core.methods import RelMeths, ArithMeths
 from sympy.functions import factorial
 
-class Sum(Basic, NoRelMeths, ArithMeths):
+class Sum(Basic, RelMeths, ArithMeths):
     """Represents unevaluated summation."""
 
     def __new__(cls, f, *symbols, **assumptions):

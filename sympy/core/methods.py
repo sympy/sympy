@@ -90,17 +90,3 @@ class RelMeths(object):
     def __ge__(self, other):
         return sympify(other) <= self
 
-class NoRelMeths(object):
-
-    __slots__ = []
-
-    def __lt__(self, other):
-        return hash(self) < hash(other)
-        raise TypeError(_no_binary_operation('<', self, other))
-    def __gt__(self, other):
-        return hash(self) > hash(other)
-        raise TypeError(_no_binary_operation('>', self, other))
-    def __le__(self, other):
-        raise TypeError(_no_binary_operation('<=', self, other))
-    def __ge__(self, other):
-        raise TypeError(_no_binary_operation('>=', self, other))

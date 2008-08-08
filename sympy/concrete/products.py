@@ -1,11 +1,11 @@
 
 from sympy.core import Basic, S, C, Add, Mul, Symbol, sympify
-from sympy.core.methods import NoRelMeths, ArithMeths
+from sympy.core.methods import RelMeths, ArithMeths
 
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
 
-class Product(Basic, NoRelMeths, ArithMeths):
+class Product(Basic, RelMeths, ArithMeths):
     """Represents unevaluated product.
 
     """

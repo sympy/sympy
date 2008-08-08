@@ -4,7 +4,7 @@ from sympy.core.mul import Mul
 from sympy.core.basic import Basic, S
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational
-from sympy.core.methods import NoRelMeths, ArithMeths
+from sympy.core.methods import RelMeths, ArithMeths
 
 from sympy.polys.polynomial import Poly, SymbolsError, \
     PolynomialError, CoefficientError, MultivariatePolyError
@@ -479,7 +479,7 @@ def _exact_roots(f):
 
     return zeros
 
-class RootOf(Basic, NoRelMeths, ArithMeths):
+class RootOf(Basic, RelMeths, ArithMeths):
     """Represents n-th root of an univariate polynomial. """
 
     def __new__(cls, f, index):
@@ -512,7 +512,7 @@ class RootOf(Basic, NoRelMeths, ArithMeths):
     def atoms(self, *args, **kwargs):
         return self.poly.atoms(*args, **kwargs)
 
-class RootsOf(Basic, NoRelMeths, ArithMeths):
+class RootsOf(Basic, RelMeths, ArithMeths):
     """Represents all roots of an univariate polynomial.
 
        >>> from sympy import *
@@ -575,7 +575,7 @@ class RootsOf(Basic, NoRelMeths, ArithMeths):
         return self.poly.atoms(*args, **kwargs)
 
 
-class RootSum(Basic, NoRelMeths, ArithMeths):
+class RootSum(Basic, RelMeths, ArithMeths):
     """Represents a sum of all roots of an univariate polynomial. """
 
     def __new__(cls, f, *args, **flags):

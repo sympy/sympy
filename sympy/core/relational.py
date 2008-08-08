@@ -1,7 +1,7 @@
 
 from basic import Basic, C
 from sympify import _sympify
-from methods import NoRelMeths
+from methods import RelMeths
 
 from numbers import Number
 
@@ -103,7 +103,7 @@ def Ge(a, b):
     """
     return Relational(a,b,'>=')
 
-class Relational(Basic, NoRelMeths):
+class Relational(Basic, RelMeths):
 
     __slots__ = []
 

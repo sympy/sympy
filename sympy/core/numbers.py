@@ -8,7 +8,7 @@ rnd = mlib.round_nearest
 
 from basic import Basic, Atom, S, C, SingletonMeta, Memoizer, MemoizerArg
 from sympify import _sympify, SympifyError, _sympifyit
-from methods import NoRelMeths, RelMeths, ArithMeths
+from methods import RelMeths, ArithMeths
 from power import integer_nthroot
 
 # from mul import Mul   /cyclic/
@@ -1154,7 +1154,7 @@ class NaN(Rational):
         import sage.all as sage
         return sage.NaN
 
-class ComplexInfinity(Atom, NoRelMeths, ArithMeths):
+class ComplexInfinity(Atom, RelMeths, ArithMeths):
     __metaclass__ = SingletonMeta
 
     is_commutative = True
