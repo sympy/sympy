@@ -2,6 +2,7 @@ from sympy.utilities.pytest import XFAIL
 from sympy import Symbol, symbols, Function, Integer, Matrix, nan, oo, Rational, Real, S, WildFunction
 from sympy.polynomials import Polynomial
 from sympy.polys.polynomial import Poly
+from sympy.geometry import Point, Circle, Ellipse
 from sympy.printing import srepr
 
 x, y = symbols('xy')
@@ -36,6 +37,11 @@ def test_Function():
     sT(Function("f")(x), "Function('f')(Symbol('x'))")
     # test unapplied Function
     sT(Function('f'), "Function('f')")
+
+def test_Geometry():
+    sT(Point(0,0),  "Point(Zero, Zero)")
+    sT(Ellipse(Point(0, 0), 5, 1),  "Ellipse(Point(Zero, Zero), Integer(5), One)")
+    # TODO more tests
 
 def test_Infinity():
     sT(oo, "Infinity")

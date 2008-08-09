@@ -9,6 +9,7 @@ from sympy.polynomials import Polynomial
 from sympy.polys.polynomial import Poly
 from sympy.polys.rootfinding import RootsOf, RootOf, RootSum
 from sympy.statistics.distributions import Normal, Sample, Uniform
+from sympy.geometry import Point, Circle
 from sympy.utilities.pytest import XFAIL
 
 from sympy.core.basic import StrPrinter
@@ -82,6 +83,11 @@ def test_Function():
     assert str(f) == "f"
     assert str(fx) == "f(x)"
     assert str(w) == "w_"
+
+def test_Geometry():
+    assert spr(Point(0,0))  == 'Point(0, 0)'
+    assert spr(Circle(Point(0,0), 3))   == 'Circle(Point(0, 0), 3)'
+    # TODO test other Geometry entities
 
 def test_GoldenRatio():
     assert str(GoldenRatio) == "GoldenRatio"

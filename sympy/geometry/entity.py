@@ -118,10 +118,12 @@ class GeometryEntity(tuple):
         return a.__div__(self)
 
     def __str__(self):
-        return self.__class__.__name__ + tuple.__str__(self)
+        from sympy.printing import sstr
+        return type(self).__name__ + sstr (tuple(self))
 
     def __repr__(self):
-        return self.__class__.__name__ + tuple.__repr__(self)
+        from sympy.printing import srepr
+        return type(self).__name__ + srepr(tuple(self))
 
     def __cmp__(self, other):
         n1 = self.__class__.__name__

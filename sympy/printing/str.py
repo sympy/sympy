@@ -99,6 +99,10 @@ class StrPrinter(Printer):
     def _print_Function(self, expr):
         return expr.func.__name__ + "(%s)"%self.stringify(expr.args, ", ")
 
+    def _print_GeometryEntity(self, expr):
+        # GeometryEntity is special -- it's base is tuple
+        return str(expr)
+
     def _print_GoldenRatio(self, expr):
         return 'GoldenRatio'
 

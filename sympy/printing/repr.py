@@ -43,6 +43,10 @@ class ReprPrinter(Printer):
     def _print_FunctionClass(self, expr):
         return 'Function(%r)'%(expr.__name__)
 
+    def _print_GeometryEntity(self, expr):
+        # GeometryEntity is special -- it's base is tuple
+        return repr(expr)
+
     def _print_Infinity(self, expr):
         return 'Infinity'
 
