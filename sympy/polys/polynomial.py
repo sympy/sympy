@@ -491,7 +491,7 @@ class Poly(Basic):
            >>> x, y = symbols('xy')
 
            >>> Poly._decompose(y*x**2 + 3, x)
-           {(2,): y, (0,): 3}
+           {(0,): 3, (2,): y}
 
            >>> Poly._decompose(y*x**2 + 3, x, y)
            {(0, 0): 3, (2, 1): 1}
@@ -678,7 +678,7 @@ class Poly(Basic):
 
            >>> p = Poly(x**2+3, x)
            >>> p.as_dict()
-           {(2,): 1, (0,): 3}
+           {(0,): 3, (2,): 1}
 
         """
         return dict(zip(self.monoms, self.coeffs))

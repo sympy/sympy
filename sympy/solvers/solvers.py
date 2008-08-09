@@ -59,7 +59,7 @@ def solve(f, *symbols, **flags):
        Solve a linear system:
 
        >>> solve((x+5*y-2, -3*x+6*y-15), x, y)
-       {y: 1, x: -3}
+       {x: -3, y: 1}
 
     """
     if not symbols:
@@ -159,7 +159,7 @@ def solve_linear_system(system, *symbols, **flags):
 
        >>> system = Matrix(( (1, 4, 2), (-2, 1, 14)))
        >>> solve_linear_system(system, x, y)
-       {y: 2, x: -6}
+       {x: -6, y: 2}
 
     """
     matrix = system[:,:]

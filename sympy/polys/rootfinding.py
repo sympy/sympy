@@ -166,7 +166,7 @@ def roots(f, *symbols, **flags):
        {1: 1, -1: 1}
 
        >>> roots(x**2 - y, x)
-       {-y**(1/2): 1, y**(1/2): 1}
+       {y**(1/2): 1, -y**(1/2): 1}
 
     """
     if not isinstance(f, Poly):

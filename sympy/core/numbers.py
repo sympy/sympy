@@ -448,7 +448,7 @@ class Rational(Number):
         >>> Rational("1.2[05]")
         1193/990
         >>> float(Rational(1193,990))
-        1.2050505050505051
+        1.20505050505
 
 
     Low-level

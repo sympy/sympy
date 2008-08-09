@@ -28,7 +28,7 @@ def components(f, x):
        >>> x, y = symbols('xy')
 
        >>> components(sin(x)*cos(x)**2, x)
-       set([cos(x), x, sin(x)])
+       set([x, cos(x), sin(x)])
 
     """
     result = set()

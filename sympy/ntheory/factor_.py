@@ -85,7 +85,7 @@ def pollard_pm1(n, B=10, seed=1234):
 
     Increasing the smoothness bound helps:
         >>> pollard_pm1(21477639576571, 2000)
-        4410317L
+        4410317
 
     References
     ==========
@@ -219,7 +219,7 @@ def factorint(n, limit=None, verbose=False):
 
         >>> a = 1407633717262338957430697921446883
         >>> factorint(a, limit=10000)
-        [(7, 1), (991, 1), (202916782076162456022877024859L, 1)]
+        [(7, 1), (991, 1), (202916782076162456022877024859, 1)]
         >>> isprime(_[-1][0])
         False
 
