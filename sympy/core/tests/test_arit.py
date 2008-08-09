@@ -1021,3 +1021,27 @@ def test_suppressed_evaluation():
     assert c != 9
     assert c.func is Pow
     assert c.args == (3,2)
+
+
+def test_Add_as_coeff_terms():
+    assert (x+1).as_coeff_terms()   == ( 1, (x+1,) )
+    assert (x+2).as_coeff_terms()   == ( 1, (x+2,) )
+    assert (x+3).as_coeff_terms()   == ( 1, (x+3,) )
+
+    assert (x-1).as_coeff_terms()   == (-1, (1-x,) )
+    assert (x-2).as_coeff_terms()   == (-1, (2-x,) )
+    assert (x-3).as_coeff_terms()   == (-1, (3-x,) )
+
+    n = Symbol('n', integer=True)
+    assert (n+1).as_coeff_terms()   == ( 1, (n+1,) )
+    assert (n+2).as_coeff_terms()   == ( 1, (n+2,) )
+    assert (n+3).as_coeff_terms()   == ( 1, (n+3,) )
+
+    assert (n-1).as_coeff_terms()   == (-1, (1-n,) )
+    assert (n-2).as_coeff_terms()   == (-1, (2-n,) )
+    assert (n-3).as_coeff_terms()   == (-1, (3-n,) )
+
+
+def test_issue974():
+    assert -1/(-1-x)    == 1/(1+x)
+

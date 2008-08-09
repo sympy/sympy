@@ -104,13 +104,15 @@ class Add(AssocOp):
                 newseq.append(Mul(c,s))
             noncommutative = noncommutative or not s.is_commutative
 
-        # deal with nan, oo, -oo, etc...
+        # nan
         if coeff is S.NaN:
-            newseq = [coeff]
+            # we know for sure the result will be nan
+            return [S.NaN], [], None
+
+        # oo, -oo
         elif (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
-            newseq = [coeff] + [f for f in newseq if not f.is_real]
-        elif coeff is not S.Zero:
-            newseq.insert(0, coeff)
+            newseq = [f for f in newseq if not f.is_real]
+
 
         # process O(x)
         if order_factors:
@@ -129,6 +131,10 @@ class Add(AssocOp):
         # solution is not to sort things at all - but this needs some more
         # fixing.
         newseq.sort(key=hash)
+
+        # current code expects coeff to be always in slot-0
+        if coeff is not S.Zero:
+            newseq.insert(0, coeff)
 
         # we are done
         if noncommutative:
