@@ -507,11 +507,6 @@ def test_as_coeff_factors():
     assert     x .as_coeff_factors() == ( 0, (x,))
     assert (-1+x).as_coeff_factors() == (-1, (x,))
     assert ( 2+x).as_coeff_factors() == ( 2, (x,))
-
-@XFAIL  # as_coeff_factors assumes Number goes as first entry in Add.args
-def test_as_coeff_factors_0():
-    x = Symbol('x')
-
     assert ( 1+x).as_coeff_factors() == ( 1, (x,))
 
 
