@@ -344,3 +344,33 @@ class StrPrinter(Printer):
 
     def _print_Zero(self, expr):
         return "0"
+
+
+def sstr(expr):
+    """return expr in str form"""
+
+    p = StrPrinter()
+    s = p.doprint(expr)
+
+    return s
+
+
+class StrReprPrinter(StrPrinter):
+    """(internal) -- see sstrrepr"""
+
+    def _print_basestring(self, s):
+        return repr(s)
+
+def sstrrepr(expr):
+    """return expr in mixed str/repr form
+
+       i.e. strings are returned in repr form with quotes, and everything else
+       is returned in str form.
+
+       This function could be useful for hooking into sys.displayhook
+    """
+
+    p = StrReprPrinter()
+    s = p.doprint(expr)
+
+    return s

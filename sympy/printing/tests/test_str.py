@@ -13,6 +13,8 @@ from sympy.utilities.pytest import XFAIL
 
 from sympy.core.basic import StrPrinter
 
+from sympy.printing import sstr, sstrrepr
+
 spr = StrPrinter.doprint
 
 x, y, z, w = symbols('xyzw')
@@ -341,3 +343,12 @@ def test_bug4():
 def test_issue922():
     e = Integral(x,x) + 1
     assert str(e)   == '1 + Integral(x, x)'
+
+
+def test_sstrrepr():
+    assert sstr('abc')      == "abc"
+    assert sstrrepr('abc')  == "'abc'"
+
+    e = ['a', 'b', 'c', x]
+    assert sstr(e)      == "[a, b, c, x]"
+    assert sstrrepr(e)  == "['a', 'b', 'c', x]"

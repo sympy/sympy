@@ -8,7 +8,7 @@ from gtk import *
 
 from preview import preview, view, pngview, pdfview, dviview
 
-from str import StrPrinter
+from str import StrPrinter, sstr, sstrrepr
 _StrPrinter = StrPrinter()
 
 from repr import srepr

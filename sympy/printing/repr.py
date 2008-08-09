@@ -118,5 +118,6 @@ class ReprPrinter(Printer):
 
 RPrinter = ReprPrinter()
 
-def srepr(s):
-    return RPrinter.doprint(s)
+def srepr(expr):
+    """return expr in repr form"""
+    return RPrinter.doprint(expr)
