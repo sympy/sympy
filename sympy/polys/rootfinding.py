@@ -320,11 +320,8 @@ def poly_factors(f, *symbols, **flags):
 
        >>> factors = poly_factors(x**2-y, x)
 
-       >>> factors[0].as_basic()
-       x + y**(1/2)
-       >>> factors[1].as_basic()
-       x - y**(1/2)
-
+       >>> set(f.as_basic() for f in factors)
+       set([x + y**(1/2), x - y**(1/2)])
     """
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)
