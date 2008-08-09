@@ -68,7 +68,6 @@ def print_tree(node):
     | commutative: True
     +-Integer: 2
       real: True
-      noncomplex: False
       comparable: True
       commutative: True
       infinitesimal: False

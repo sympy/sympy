@@ -762,8 +762,8 @@ def test_Pow_is_integer():
     x = Symbol('x')
 
     k = Symbol('k', integer=True)
-    n = Symbol('n', nni=True)
-    m = Symbol('m', pi=True)
+    n = Symbol('n', integer=True, nonnegative=True)
+    m = Symbol('m', integer=True, positive=True)
 
     assert (k**2).is_integer == True
     assert (k**(-2)).is_integer == False
@@ -821,7 +821,7 @@ def test_Pow_is_even_odd():
 
     k = Symbol('k', even=True)
     n = Symbol('n', odd=True)
-    m = Symbol('m', nni=True)
+    m = Symbol('m', integer=True, nonnegative=True)
 
     assert (k**2).is_even == True
     assert (n**2).is_even == False
@@ -846,7 +846,7 @@ def test_Pow_is_even_odd():
 def test_Pow_is_negative_positive():
     x = Symbol('x', real=True)
 
-    k = Symbol('k', pi=True)
+    k = Symbol('k', integer=True, positive=True)
     n = Symbol('n', even=True)
     m = Symbol('m', odd=True)
 
@@ -884,8 +884,8 @@ def test_Pow_is_negative_positive():
 def test_Pow_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
 
-    k = Symbol('k', nni=True)
-    l = Symbol('l',  pi=True)
+    k = Symbol('k', integer=True, nonnegative=True)
+    l = Symbol('l', integer=True, positive=True)
     n = Symbol('n', even=True)
     m = Symbol('m', odd=True)
 

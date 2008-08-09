@@ -19,7 +19,6 @@ def test_zero():
     assert z.is_noninteger == False
     assert z.is_irrational == False
     assert z.is_imaginary == False
-    assert z.is_noncomplex == False
     assert z.is_positive == False
     assert z.is_negative == False
     assert z.is_nonpositive == True
@@ -44,7 +43,6 @@ def test_one():
     assert z.is_noninteger == False
     assert z.is_irrational == False
     assert z.is_imaginary == False
-    assert z.is_noncomplex == False
     assert z.is_positive == True
     assert z.is_negative == False
     assert z.is_nonpositive == False
@@ -69,7 +67,6 @@ def test_negativeone():
     assert z.is_noninteger == False
     assert z.is_irrational == False
     assert z.is_imaginary == False
-    assert z.is_noncomplex == False
     assert z.is_positive == False
     assert z.is_negative == True
     assert z.is_nonpositive == True
@@ -95,7 +92,6 @@ def test_infinity():
     assert oo.is_noninteger     == None
     assert oo.is_irrational     == None
     assert oo.is_imaginary      == False
-    assert oo.is_noncomplex     == False
     assert oo.is_positive       == True
     assert oo.is_negative       == False
     assert oo.is_nonpositive    == False
@@ -121,7 +117,6 @@ def test_neg_infinity():
     assert mm.is_noninteger     == None
     assert mm.is_irrational     == None
     assert mm.is_imaginary      == False
-    assert mm.is_noncomplex     == False
     assert mm.is_positive       == False
     assert mm.is_negative       == True
     assert mm.is_nonpositive    == True
@@ -147,7 +142,6 @@ def test_nan():
     assert nan.is_noninteger    == None
     assert nan.is_irrational    == None
     assert nan.is_imaginary     == None
-    assert nan.is_noncomplex    == None
     assert nan.is_positive      == None
     assert nan.is_negative      == None
     assert nan.is_nonpositive   == None
@@ -172,7 +166,6 @@ def test_pos_rational():
     assert r.is_noninteger == True
     assert r.is_irrational == False
     assert r.is_imaginary == False
-    assert r.is_noncomplex == False
     assert r.is_positive == True
     assert r.is_negative == False
     assert r.is_nonpositive == False
@@ -235,7 +228,6 @@ def test_pi():
     assert z.is_noninteger == True
     assert z.is_irrational == True
     assert z.is_imaginary == False
-    assert z.is_noncomplex == False
     assert z.is_positive == True
     assert z.is_negative == False
     assert z.is_nonpositive == False
@@ -260,7 +252,6 @@ def test_E():
     assert z.is_noninteger == True
     assert z.is_irrational == True
     assert z.is_imaginary == False
-    assert z.is_noncomplex == False
     assert z.is_positive == True
     assert z.is_negative == False
     assert z.is_nonpositive == False
@@ -285,7 +276,6 @@ def test_I():
     assert z.is_noninteger == False
     assert z.is_irrational == False
     assert z.is_imaginary == True
-    assert z.is_noncomplex == False
     assert z.is_positive == False
     assert z.is_negative == False
     assert z.is_nonpositive == False
@@ -371,14 +361,16 @@ def test_other_symbol():
     assert x.is_real == True
 
     x = Symbol('x', integer=True, nonnegative=True)
-    assert x.is_nni == True
-    assert x.is_ni == False
-    assert x.is_pi == None
+    assert x.is_integer     == True
+    assert x.is_nonnegative == True
+    assert x.is_negative    == False
+    assert x.is_positive    == None
 
     x = Symbol('x', integer=True, nonpositive=True)
-    assert x.is_npi == True
-    assert x.is_pi == False
-    assert x.is_ni == None
+    assert x.is_integer     == True
+    assert x.is_nonpositive == True
+    assert x.is_positive    == False
+    assert x.is_negative    == None
 
     x = Symbol('x', odd=True)
     assert x.is_odd == True
@@ -390,11 +382,11 @@ def test_other_symbol():
     assert x.is_odd == False
     assert x.is_integer == True
 
-    x = Symbol('x', nni=True)
+    x = Symbol('x', integer=True, nonnegative=True)
     assert x.is_integer == True
     assert x.is_nonnegative == True
 
-    x = Symbol('x', npi=True)
+    x = Symbol('x', integer=True, nonpositive=True)
     assert x.is_integer == True
     assert x.is_nonpositive == True
 

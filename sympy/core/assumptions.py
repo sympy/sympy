@@ -122,22 +122,14 @@ class AssumeMeths(object):
 
 
         '!bounded     ==  unbounded',
-        '!commutative ==  noncommutative',
-        '!complex       ==  noncomplex',
         'noninteger     ==  real & !integer',
         '!zero        ==  nonzero',
-        '!homogeneous ==  inhomogeneous',
 
         # XXX do we need this ?
         'finite     ->  bounded',       # XXX do we need this?
         'finite     ->  !zero',         # XXX wrong?
         'infinitesimal ->  !finite',    # XXX is this ok?
 
-        # TODO we should remove this (very seldomly used, but affect performance):
-        'nni    ==  integer & nonnegative',
-        'npi    ==  integer & nonpositive',
-        'pi     ==  integer & positive',
-        'ni     ==  integer & negative',
     ])
 
     _assume_defined = _assume_rules.defined_facts.copy()
