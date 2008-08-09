@@ -5,9 +5,8 @@ x, y, z = symbols('xyz')
 k, m, n = symbols('kmn', integer=True)
 f, g, h = map(Function, 'fgh')
 
-def init_printing(use_unicode=None):
+def init_printing(stringify_func):
     """Initializes pretty-printer depending on the environment. """
-    from sympy.printing import pprint
 
     try:
         import IPython
@@ -24,7 +23,7 @@ def init_printing(use_unicode=None):
 
                 """
                 if self.rc.pprint:
-                    out = pretty(arg, use_unicode)
+                    out = stringify_func(arg)
 
                     if '\n' in out:
                         print
@@ -50,7 +49,7 @@ def init_printing(use_unicode=None):
         """
         if arg is not None:
             __builtin__._ = None
-            print pretty(arg, use_unicode)
+            print stringify_func(arg)
             __builtin__._ = arg
 
     sys.displayhook = displayhook
@@ -118,7 +117,11 @@ def init_session(session="ipython", pretty=True, use_unicode=None, message=None,
     ip.runcode(ip.compile("from sympy.interactive import *"))
 
     if pretty:
-        ip.runcode(ip.compile("init_printing(%s)" % use_unicode))
+        stringify_func = 'lambda arg: pretty(arg, %s)' % use_unicode
+    else:
+        stringify_func = 'sstrrepr'
+
+    ip.runcode(ip.compile("init_printing(%s)" % stringify_func))
 
     if not in_ipyshell:
         from sympy import __version__ as sympy_version
