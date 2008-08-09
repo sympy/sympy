@@ -22,7 +22,7 @@ class Symbol(Atom):
 
     is_comparable = False
 
-    __slots__ = ['name']
+    __slots__ = ['is_commutative', 'name']
 
     is_Symbol = True
 
@@ -47,10 +47,9 @@ class Symbol(Atom):
             return Symbol.__xnew_cached_(cls, name, commutative, **assumptions)
 
     def __new_stage2__(cls, name, commutative=True, **assumptions):
-        obj = Basic.__new__(cls,
-                            commutative=commutative,
-                            **assumptions)
         assert isinstance(name, str),`type(name)`
+        obj = Basic.__new__(cls, **assumptions)
+        obj.is_commutative = commutative
         obj.name = name
         return obj
 
@@ -58,7 +57,7 @@ class Symbol(Atom):
     __xnew_cached_ = staticmethod(cacheit(__new_stage2__))   # symbols are always cached
 
     def _hashable_content(self):
-        return (self.name,)
+        return (self.is_commutative, self.name)
 
     def as_dummy(self):
         return Dummy(self.name, **self.assumptions0)
@@ -100,7 +99,7 @@ class Dummy(Symbol):
         return obj
 
     def _hashable_content(self):
-        return (self.name, self.dummy_index)
+        return Symbol._hashable_content(self) + (self.dummy_index,)
 
 
 class Temporary(Dummy):

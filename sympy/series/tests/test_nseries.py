@@ -325,7 +325,7 @@ def test_bug4():
     w = Symbol("w")
     x = Symbol("x")
     e = x/(w**4 + x**2*w**4 + 2*x*w**4)*w**4
-    assert e.nseries(w, 0, 2) in [1/(1+x/2+1/x/2)/2, 1/x/(1 + 2/x + x**(-2))]
+    assert e.nseries(w, 0, 2) in [x/(1 + 2*x + x**2), 1/(1+x/2+1/x/2)/2, 1/x/(1 + 2/x + x**(-2))]
 
 def test_bug5():
     w = Symbol("w")

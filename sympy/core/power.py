@@ -54,7 +54,7 @@ class Pow(Basic):
 
     is_Pow = True
 
-    __slots__ = []
+    __slots__ = ['is_commutative']
 
     @cacheit
     def __new__(cls, a, b, **assumptions):
@@ -69,6 +69,7 @@ class Pow(Basic):
         obj = a._eval_power(b)
         if obj is None:
             obj = Basic.__new__(cls, a, b, **assumptions)
+            obj.is_commutative = (a.is_commutative and b.is_commutative)
         return obj
 
     @property
@@ -100,12 +101,6 @@ class Pow(Basic):
             return Pow(self.base, self.exp * other)
         return
 
-    def _eval_is_commutative(self):
-        c1 = self.base.is_commutative
-        if c1 is None: return
-        c2 = self.base.is_commutative
-        if c2 is None: return
-        return c1 and c2
 
     def _eval_is_comparable(self):
         c1 = self.base.is_comparable
