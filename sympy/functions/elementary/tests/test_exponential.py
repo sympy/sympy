@@ -134,3 +134,16 @@ def test_log_simplify():
     assert log(x**2).expand() == 2*log(x)
     assert log(x**(2+log(2))).expand() == (2+log(2))*log(x)
 
+
+def test_exp__as_base_exp():
+    x,y = symbols('xy')
+
+    assert exp(x)   .as_base_exp()  == (E, x)
+    assert exp(2*x) .as_base_exp()  == (E, 2*x)
+    assert exp(x*y) .as_base_exp()  == (E, x*y)
+
+    # Pow( *expr.as_base_exp() ) == expr    invariant should hold
+    assert E**x     == exp(x)
+    assert E**(2*x) == exp(2*x)
+    assert E**(x*y) == exp(x*y)
+

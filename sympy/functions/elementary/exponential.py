@@ -106,8 +106,7 @@ class exp(Function):
         return self.func(self.args[0].conjugate())
 
     def as_base_exp(self):
-        coeff, terms = self.args[0].as_coeff_terms()
-        return self.func(C.Mul(*terms)), coeff
+        return S.Exp1, C.Mul(*self.args)
 
     def as_coeff_terms(self, x=None):
         arg = self.args[0]
@@ -125,10 +124,14 @@ class exp(Function):
         if old.is_Pow: # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
             old = exp(old.exp * log(old.base))
         if old.func is exp:
-            b,e = self.as_base_exp()
-            bo,eo = old.as_base_exp()
-            if b==bo:
-                return new ** (e/eo) # exp(2/3*x*3).subs(exp(3*x),y) -> y**(2/3)
+            # exp(a*expr) .subs( exp(b*expr), y )  ->  y ** (a/b)
+            a, expr_terms = self.args[0].as_coeff_terms()
+            b, expr_terms_= old .args[0].as_coeff_terms()
+
+            if expr_terms == expr_terms_:
+                return new ** (a/b)
+
+
             if arg.is_Add: # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
                 # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
                 oarg = old.args[0]
