@@ -195,8 +195,7 @@ class Mul(AssocOp):
                     c_part.append(obj)
 
 
-        # deal with
-        # (oo|nan|zero) * ...
+        # oo, -oo
         if (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
             new_c_part = []
             for t in c_part:
@@ -216,19 +215,27 @@ class Mul(AssocOp):
                     continue
                 new_nc_part.append(t)
             nc_part = new_nc_part
-            c_part.insert(0, coeff)
+
+        # 0, nan
         elif (coeff is S.Zero) or (coeff is S.NaN):
-            c_part, nc_part = [coeff], []
+            # we know for sure the result will be the same as coeff (0 or nan)
+            return [coeff], [], order_symbols
+
         elif coeff.is_Real:
             if coeff == Real(0):
                 c_part, nc_part = [coeff], []
-            elif coeff != Real(1):
-                c_part.insert(0, coeff)
-        elif coeff is not S.One:
-            c_part.insert(0, coeff)
+            elif coeff == Real(1):
+                # change it to One, so it don't get inserted to slot0
+                coeff = S.One
+
 
         # order commutative part canonically
         c_part.sort(Basic.compare)
+
+        # current code expects coeff to be always in slot-0
+        if coeff is not S.One:
+            c_part.insert(0, coeff)
+
 
         # we are done
         if len(c_part)==2 and c_part[0].is_Number and c_part[1].is_Add:
