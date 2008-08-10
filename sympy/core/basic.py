@@ -1863,6 +1863,11 @@ class Basic(AssumeMeths):
         else:
             raise ValueError("Symbolic value, can't compute")
 
+    def __complex__(self):
+        result = self.evalf()
+        re, im = result.as_real_imag()
+        return complex(float(re), float(im))
+
     def _evalf(self, prec):
         """Helper for evalf. Does the same thing but takes binary precision"""
         r = self._eval_evalf(prec)
