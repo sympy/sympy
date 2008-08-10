@@ -1,5 +1,5 @@
 
-from basic import Basic, S, C, sympify
+from basic import Basic, S, sympify
 from operations import AssocOp
 from cache import cacheit
 
@@ -65,34 +65,22 @@ class Mul(AssocOp):
                     coeff *= o
                     continue
 
-                #  y
-                # x
-                if o.is_Pow:
-                    base, exponent = o.as_base_exp()
-
-                    #  y
-                    # 3
-                    if base.is_Number:
-
-                        # let's collect factors with numeric base
-                        if base in exp_dict:
-                            exp_dict[base] += exponent
-                        else:
-                            exp_dict[base] = exponent
-                        continue
-
-                # exp(x)
-                if o.func is C.exp:
-                    # exp(x) / exp(y) -> exp(x-y)
-                    b = S.Exp1
-                    e = o.args[0]
-
-                # everything else
+                #      e
+                # o = b
                 else:
                     b, e = o.as_base_exp()
 
-                # now we have
-                # o = b**e
+                    #  y
+                    # 3
+                    if o.is_Pow and b.is_Number:
+
+                        # let's collect factors with numeric base
+                        if b in exp_dict:
+                            exp_dict[b] += e
+                        else:
+                            exp_dict[b]  = e
+                        continue
+
 
                 #         n          n          n
                 # (-3 + y)   ->  (-1)  * (3 - y)
