@@ -650,16 +650,7 @@ class Rational(Number):
         for p,e in factor_trial_division(self.q).items():
             try: f[p] += -e
             except KeyError: f[p] = -e
-        fi = {}
-        for p,e in f.items():
-            if e==0:
-                del f[p]
-            else:
-                try: fi[e] *= p
-                except KeyError: fi[e] = p
-        f = {}
-        for e,p in fi.items():
-            f[p] = e
+
         if len(f)>1 and f.has_key(1): del f[1]
         return f
 
@@ -966,6 +957,10 @@ class One(Integer):
 
     def _eval_order(self, *symbols):
         return
+
+    @staticmethod
+    def factors():
+        return {1: 1}
 
 class NegativeOne(Integer):
     __metaclass__ = SingletonMeta
