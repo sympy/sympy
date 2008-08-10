@@ -2,7 +2,7 @@ from sympy.core.evalf import *
 
 from sympy import pi, I, Symbol, Add, Rational, exp, sqrt, sin, cos, fibonacci, \
     Integral, oo, E, atan, log, integrate, floor, ceiling, factorial, binomial, \
-    Sum, zeta, Catalan
+    Sum, zeta, Catalan, Pow
 
 import py
 
@@ -64,6 +64,18 @@ def test_evalf_complex_powers():
     assert NS('(pi + 1/10**8 + pi*I)**4') == '-389.636366616512 + 2.4805021e-6*I'
     assert NS('(pi + 1/10**12 + pi*I)**4') == '-389.636364136258 + 2.481e-10*I'
     assert NS('(10000*pi + 10000*pi*I)**4', chop=True) == '-3.8963636413601e+18'
+
+def test_evalf_exponentiation():
+    assert NS(sqrt(-pi)) == '1.77245385090552*I'
+    assert NS(Pow(pi*I, Rational(1,2), evaluate=False)) == '1.2533141373155 + 1.2533141373155*I'
+    assert NS(pi**I) == '0.413292116101594 + 0.910598499212615*I'
+    assert NS(pi**(E+I/3)) == '20.8438653991931 + 8.36343473930031*I'
+    assert NS((pi+I/3)**(E+I/3)) == '17.244290609359 + 13.6839376767037*I'
+    assert NS(exp(pi)) == '23.1406926327793'
+    assert NS(exp(pi+E*I)) == '-21.0981542849657 + 9.50576358282422*I'
+    assert NS(pi**pi) == '36.4621596072079'
+    assert NS((-pi)**pi) == '-32.9138577418939 - 15.6897116534332*I'
+    assert NS((-pi)**(-pi)) == '-0.0247567717232697 + 0.0118013091280262*I'
 
 # An example from Smith, "Multiple Precision Complex Arithmetic and Functions"
 def test_evalf_complex_cancellation():

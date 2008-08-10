@@ -7,7 +7,7 @@ from sympy.mpmath.lib import (from_int, from_rational, fpi, fzero, fcmp,
     normalize, bitcount, round_nearest, to_str, fpow, fone, fpowi, fe,
     fnone, fhalf, fcos, fsin, flog, fatan, fmul, fneg, to_float, fshift,
     fabs, fatan2, fadd, fdiv, flt, dps_to_prec, prec_to_dps, fpos, from_float,
-    fnone, to_int, flt)
+    fnone, to_int, flt, fexp, fsqrt)
 
 import sympy.mpmath.libmpc as libmpc
 from sympy.mpmath import mpf, mpc, quadts, quadosc, mp, make_mpf
@@ -50,8 +50,8 @@ A temporary result is a tuple (re, im, re_acc, im_acc) where
 re and im are nonzero mpf value tuples representing approximate
 numbers, or None to denote exact zeros.
 
-re_acc, im_acc are integers denoting log2(e) where is the estimated
-relative accuracy of the respective complex part, but many be anything
+re_acc, im_acc are integers denoting log2(e) where e is the estimated
+relative accuracy of the respective complex part, but may be anything
 if the corresponding complex part is None.
 
 """
@@ -377,8 +377,10 @@ def evalf_mul(v, prec, options):
             return v, None, acc, None
 
 def evalf_pow(v, prec, options):
+
     target_prec = prec
     base, exp = v.args
+
     # We handle x**n separately. This has two purposes: 1) it is much
     # faster, because we avoid calling evalf on the exponent, and 2) it
     # allows better handling of real/imaginary parts that are exactly zero
@@ -407,32 +409,55 @@ def evalf_pow(v, prec, options):
         # Assumes full accuracy in input
         return finalize_complex(re, im, target_prec)
 
-    # TODO: optimize these cases
-    #pure_exp = (base is S.Exp1)
-    #pure_sqrt = (base is S.Half)
+    # Pure square root
+    if exp is S.Half:
+        xre, xim, xre_acc, yim_acc = evalf(base, prec+5, options)
+        # General complex square root
+        if xim:
+            re, im = libmpc.mpc_sqrt((xre or fzero, xim), prec)
+            return finalize_complex(re, im, prec)
+        if not xre:
+            return None, None, None, None
+        # Square root of a negative real number
+        if flt(xre, fzero):
+            return None, fsqrt(fneg(xre), prec), None, prec
+        # Positive square root
+        return fsqrt(xre, prec), None, prec, None
 
-    # Complex or real to a real power
     # We first evaluate the exponent to find its magnitude
+    # This determines the working precision that must be used
     prec += 10
     yre, yim, yre_acc, yim_acc = evalf(exp, prec, options)
     ysize = fastlog(yre)
-    # Need to restart if too big
+    # Restart if too big
+    # XXX: prec + ysize might exceed maxprec
     if ysize > 5:
         prec += ysize
         yre, yim, yre_acc, yim_acc = evalf(exp, prec, options)
-    if yim:
-        if base is S.Exp1:
-            re, im = libmpc.mpc_exp((yre or fzero, yim or fzero), prec)
+
+    # Pure exponential function; no need to evalf the base
+    if base is S.Exp1:
+        if yim:
+            re, im = libmpc.mpc_exp((yre or fzero, yim), prec)
             return finalize_complex(re, im, target_prec)
-        raise NotImplementedError
-    xre, xim, xre_acc, yim_acc = evalf(base, prec, options)
-    # Complex ** real
+        return fexp(yre, target_prec), None, target_prec, None
+
+    xre, xim, xre_acc, yim_acc = evalf(base, prec+5, options)
+
+    # (real ** complex) or (complex ** complex)
+    if yim:
+        re, im = libmpc.mpc_pow((xre or fzero, xim or fzero), (yre or fzero, yim),
+            target_prec)
+        return finalize_complex(re, im, target_prec)
+    # complex ** real
     if xim:
         re, im = libmpc.mpc_pow_mpf((xre or fzero, xim), yre, target_prec)
         return finalize_complex(re, im, target_prec)
-    # Fractional power of negative real
+    # negative ** real
     elif flt(xre, fzero):
-        return None, fpow(fneg(xre), yre, target_prec), None, target_prec
+        re, im = libmpc.mpc_pow_mpf((xre, fzero), yre, target_prec)
+        return finalize_complex(re, im, target_prec)
+    # positive ** real
     else:
         return fpow(xre, yre, target_prec), None, target_prec, None
 
