@@ -37,11 +37,16 @@ class Mul(AssocOp):
         exp_dict = {}       # num-base -> exp           y
                             # e.g.  3 -> y  for  ... * 3  * ...
 
-        inv_exp_dict = {}   # exp -> Mul(num-bases)     x    x
-                            # e.g.  x -> 6  for  ... * 2  * 3  * ...
-
         order_symbols = None
 
+
+        # --- PART 1 ---
+        #
+        # "collect powers and coeff":
+        #
+        # o coeff
+        # o c_powers
+        # o exp_dict
 
         while c_seq or nc_seq:
 
@@ -147,13 +152,19 @@ class Mul(AssocOp):
                     nc_part.append(o)
 
 
+        # --- PART 2 ---
+        #
+        # o process collected powers  (x**0 -> 1; x**1 -> x; otherwise Pow)
+        # o combine collected powers  (2**x * 3**x -> 6**x)
+
         # ................................
         # now we have:
         # - coeff:
         # - c_powers:   b -> e
         # - exp_dict:   3 -> e
 
-        # XXX
+        #  0             1
+        # x  -> 1       x  -> x
         for b, e in c_powers.items():
             if e is S.Zero:
                 continue
@@ -170,6 +181,8 @@ class Mul(AssocOp):
 
         #  x    x     x
         # 2  * 3  -> 6
+        inv_exp_dict = {}   # exp -> Mul(num-bases)     x    x
+                            # e.g.  x -> 6  for  ... * 2  * 3  * ...
         for b,e in exp_dict.items():
             if e in inv_exp_dict:
                 inv_exp_dict[e] *= b
