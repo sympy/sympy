@@ -13,6 +13,16 @@ from symbol import Symbol, Wild
 
 import sympy.mpmath as mpmath
 
+# internal marker to indicate:
+#   "there are still non-commutative objects -- don't forget to processe them"
+class NC_Marker:
+    is_Order    = False
+    is_Mul      = False
+    is_Number   = False
+
+    is_commutative = False
+
+
 class Mul(AssocOp):
 
     __slots__ = []
@@ -22,11 +32,10 @@ class Mul(AssocOp):
     @classmethod
     def flatten(cls, seq):
         # apply associativity, separate commutative part of seq
-        c_part = []
-        nc_part = []
+        c_part = []         # out: commutative factors
+        nc_part = []        # out: non-commutative factors
 
-        c_seq = []
-        nc_seq = seq
+        nc_seq = []
 
         coeff = S.One       # standalone term
                             # e.g. 3 * ...
@@ -47,44 +56,54 @@ class Mul(AssocOp):
         # o coeff
         # o c_powers
         # o exp_dict
+        #
+        # NOTE: this is optimized for all-objects-are-commutative case
 
-        while c_seq or nc_seq:
+        for o in seq:
+            # O(x)
+            if o.is_Order:
+                o, order_symbols = o.as_expr_symbols(order_symbols)
 
-            # COMMUTATIVE
-            if c_seq:
-                # first process commutative objects
-                o = c_seq.pop(0)
+            # Mul([...])
+            if o.is_Mul:
+                if o.is_commutative:
+                    seq.extend(o.args)    # XXX zerocopy?
 
-                # O(x)
-                if o.is_Order:
-                    o, order_symbols = o.as_expr_symbols(order_symbols)
+                else:
+                    # NCMul can have commutative parts as well
+                    for q in o.args:
+                        if q.is_commutative:
+                            seq.append(q)
+                        else:
+                            nc_seq.append(q)
 
-                # Mul([...])
-                if o.is_Mul:
-                    # associativity
-                    c_seq = list(o.args[:]) + c_seq
-                    continue
+                    # append non-commutative marker, so we don't forget to
+                    # process scheduled non-commutative objects
+                    seq.append(NC_Marker)
 
-                # 3
-                if o.is_Number:
-                    coeff *= o
-                    continue
+                continue
 
+            # 3
+            elif o.is_Number:
+                coeff *= o
+                continue
+
+
+            elif o.is_commutative:
                 #      e
                 # o = b
-                else:
-                    b, e = o.as_base_exp()
+                b, e = o.as_base_exp()
 
-                    #  y
-                    # 3
-                    if o.is_Pow and b.is_Number:
+                #  y
+                # 3
+                if o.is_Pow and b.is_Number:
 
-                        # let's collect factors with numeric base
-                        if b in exp_dict:
-                            exp_dict[b] += e
-                        else:
-                            exp_dict[b]  = e
-                        continue
+                    # let's collect factors with numeric base
+                    if b in exp_dict:
+                        exp_dict[b] += e
+                    else:
+                        exp_dict[b]  = e
+                    continue
 
 
                 #         n          n          n
@@ -119,37 +138,35 @@ class Mul(AssocOp):
 
             # NON-COMMUTATIVE
             else:
-                o = nc_seq.pop(0)
-                if isinstance(o, WildFunction):
-                    pass
-                elif o.is_Order:
-                    o, order_symbols = o.as_expr_symbols(order_symbols)
+                if o is not NC_Marker:
+                    nc_seq.append(o)
 
-                # -> commutative
-                if o.is_commutative:
-                    # separate commutative symbols
-                    c_seq.append(o)
-                    continue
+                # process nc_seq (if any)
+                while nc_seq:
+                    o = nc_seq.pop(0)
+                    if not nc_part:
+                        nc_part.append(o)
+                        continue
 
-                # Mul([...])
-                if o.__class__ is cls:
-                    # associativity
-                    nc_seq = list(o.args) + nc_seq
-                    continue
-                if not nc_part:
-                    nc_part.append(o)
-                    continue
+                    #                             b    c       b+c
+                    # try to combine last terms: a  * a   ->  a
+                    o1 = nc_part.pop()
+                    b1,e1 = o1.as_base_exp()
+                    b2,e2 = o.as_base_exp()
+                    if b1==b2:
+                        o12 = b1 ** (e1 + e2)
 
-                #                             b    c       b+c
-                # try to combine last terms: a  * a   ->  a
-                o1 = nc_part.pop()
-                b1,e1 = o1.as_base_exp()
-                b2,e2 = o.as_base_exp()
-                if b1==b2:
-                    nc_seq.insert(0, b1 ** (e1 + e2))
-                else:
-                    nc_part.append(o1)
-                    nc_part.append(o)
+                        # now o12 could be a commutative object
+                        if o12.is_commutative:
+                            seq.append(o12)
+                            continue
+
+                        else:
+                            nc_seq.insert(0, o12)
+
+                    else:
+                        nc_part.append(o1)
+                        nc_part.append(o)
 
 
         # --- PART 2 ---
