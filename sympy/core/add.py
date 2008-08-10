@@ -30,8 +30,8 @@ class Add(AssocOp):
         coeff = S.Zero  # standalone term
                         # e.g. 3 + ...
         order_factors = []
-        while seq:
-            o = seq.pop(0)
+
+        for o in seq:
 
             # O(x)
             if o.is_Order:
@@ -45,17 +45,18 @@ class Add(AssocOp):
                 continue
 
             # 3
-            if o.is_Number:
+            elif o.is_Number:
                 coeff += o
                 continue
 
             # Add([...])
-            if o.is_Add:
-                seq = list(o.args) + seq
+            elif o.is_Add:
+                # NB: here we assume Add is always commutative
+                seq.extend(o.args)  # TODO zerocopy?
                 continue
 
             # Mul([...])
-            if o.is_Mul:
+            elif o.is_Mul:
                 c = o.args[0]
 
                 # 3*...
@@ -63,7 +64,8 @@ class Add(AssocOp):
                     if c is S.One:
                         s = o
                     else:
-                        s = Mul(*o.args[1:])
+                        s = o.as_two_terms()[1]
+
                 else:
                     c = S.One
                     s = o
@@ -82,7 +84,7 @@ class Add(AssocOp):
 
             # let's collect terms with the same s, so e.g.
             # 2*x**2 + 3*x**2  ->  5*x**2
-            if terms.has_key(s):
+            if s in terms:
                 terms[s] += c
             else:
                 terms[s] = c
@@ -101,7 +103,16 @@ class Add(AssocOp):
                 newseq.append(s)
             # c*s
             else:
-                newseq.append(Mul(c,s))
+                if s.is_Mul:
+                    # Mul, already keeps it's arguments in perfect order.
+                    # so we can simply put c in slot0 and go the fast way.
+                    cs = s._new_rawargs(*((c,) + s.args))
+                    newseq.append(cs)
+
+                else:
+                    # alternatively we have to call all Mul's machinery (slow)
+                    newseq.append(Mul(c,s))
+
             noncommutative = noncommutative or not s.is_commutative
 
         # nan

@@ -291,9 +291,15 @@ class Mul(AssocOp):
 
     @cacheit
     def as_two_terms(self):
-        if len(self.args) == 1:
+        args = self.args
+
+        if len(args) == 1:
             return S.One, self
-        return self.args[0], Mul(*self.args[1:])
+        elif len(args) == 2:
+            return args
+
+        else:
+            return args[0], self._new_rawargs(*args[1:])
 
     @cacheit
     def as_coeff_terms(self, x=None):
