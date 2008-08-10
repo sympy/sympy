@@ -42,6 +42,28 @@ class AssocOp(Basic):
             obj = C.Order(obj, *order_symbols)
         return obj
 
+
+    def _new_rawargs(self, *args):
+        """create new instance of own class with args exactly as provided by caller
+
+           This is handy when we want to optimize things, e.g.
+
+           >>> from sympy import Mul, symbols
+           >>> x,y = symbols('xy')
+           >>> e = Mul(3,x,y)
+           >>> e.args
+           (3, x, y)
+           >>> Mul(*e.args[1:])
+           x*y
+           >>> e._new_rawargs(*e.args[1:])  # the same as above, but faster
+           x*y
+
+        """
+        obj = Basic.__new__(type(self), *args)  # NB no assumptions for Add/Mul
+        obj.is_commutative = self.is_commutative
+
+        return obj
+
     @classmethod
     def identity(cls):
         if cls is Mul: return S.One
