@@ -580,6 +580,40 @@ def tsolve(eq, sym):
         sol = solve(lhs-rhs, sym)
         return sol[0]
 
+    elif lhs.is_Add:
+        # just a simple case - we do variable substitution for first function,
+        # and if it removes all functions - let's call solve.
+        #      x    -x                   -1
+        # UC: e  + e   = y      ->  t + t   = y
+        t = Symbol('t', dummy=True)
+        terms = lhs.args
+
+        # find first term which is Function
+        for f1 in lhs.args:
+            if f1.is_Function:
+                break
+        else:
+            assert False, 'tsolve: at least one Function expected at this point'
+
+        # perform the substitution
+        lhs_ = lhs.subs(f1, t)
+
+        # if no Functions left, we can proceed with usual solve
+        if not (lhs_.is_Function or
+                any(term.is_Function for term in lhs_.args)):
+
+            # FIXME at present solve cannot solve x + 1/x = y
+            # FIXME so we do this:
+            numer, denom = lhs_.as_numer_denom()
+            sol = solve(numer-rhs*denom, t)
+           #sol = solve(lhs_-rhs, t)
+            sol = sol[0]
+
+            sol = tsolve(sol-f1, sym)
+            return sol
+
+
+
 
     raise ValueError("unable to solve the equation")
 

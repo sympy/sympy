@@ -96,6 +96,8 @@ def test_tsolve():
     assert solve(exp(x)-3, x) == [log(3)]
     assert solve(cos(x)-y, x) == [acos(y)]
     assert solve(2*cos(x)-y,x)== [acos(y/2)]
+    # XXX in the following test, log(2*y + 2*...) should -> log(2) + log(y +...)
+    assert solve(exp(x)+exp(-x)-y,x)    == [-log(4) + log(2*y + 2*(-4 + y**2)**Rational(1,2))]
     assert tsolve(exp(x)-3, x) == log(3)
     assert tsolve(Eq(exp(x), 3), x) == log(3)
     assert tsolve(log(x)-3, x) == exp(3)
@@ -125,3 +127,5 @@ def test_tsolve():
     assert tsolve(z*cos(sin(x))-y, x) == asin(acos(y/z))
 
     assert tsolve(z*cos(x), x)        == acos(0)
+
+    assert tsolve(exp(x)+exp(-x)-y, x)== log(y/2 + Rational(1,2)*(-4 + y**2)**Rational(1,2))
