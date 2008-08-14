@@ -555,6 +555,10 @@ def tsolve(eq, sym):
 
         # dep + indep == rhs
         if lhs.is_Add:
+            # this indicates we have done it all
+            if indep is S.Zero:
+                break
+
             lhs = dep
             rhs-= indep
 
