@@ -119,27 +119,33 @@ class Wild(Symbol):
     Wild() matches any expression but another Wild().
     """
 
-    __slots__ = ['exclude']
+    __slots__ = ['exclude', 'properties']
 
-    def __new__(cls, name, exclude=None, **assumptions):
+    def __new__(cls, name, exclude=None, properties=None, **assumptions):
         if type(exclude) is list:
             exclude = tuple(exclude)
+        if type(properties) is list:
+            properties = tuple(properties)
 
-        return Wild.__xnew__(cls, name, exclude, **assumptions)
+        return Wild.__xnew__(cls, name, exclude, properties, **assumptions)
 
     @staticmethod
     @cacheit
-    def __xnew__(cls, name, exclude, **assumptions):
+    def __xnew__(cls, name, exclude, properties, **assumptions):
         obj = Symbol.__xnew__(cls, name, **assumptions)
 
         if exclude is None:
             obj.exclude = None
         else:
             obj.exclude = tuple([sympify(x) for x in exclude])
+        if properties is None:
+            obj.properties = None
+        else:
+            obj.properties = tuple(properties)
         return obj
 
     def _hashable_content(self):
-        return (self.name, self.exclude)
+        return (self.name, self.exclude, self.properties )
 
     # TODO add check against another Wild
     def matches(pattern, expr, repl_dict={}, evaluate=False):
@@ -153,6 +159,10 @@ class Wild(Symbol):
                     return None
                 #else:
                 #    print x, expr, pattern, expr, pattern.exclude
+        if pattern.properties:
+            for f in pattern.properties:
+                if not f(expr):
+                    return None
         repl_dict = repl_dict.copy()
         repl_dict[pattern] = expr
         return repl_dict
