@@ -1,4 +1,4 @@
-from sympy import (symbols, integrate, Integral, exp, oo, Symbol, Rational,
+from sympy import (symbols, integrate, Integral, exp, oo, Symbol, Function, Rational,
     log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix, sympify, sqrt, atan)
 from sympy.utilities.pytest import XFAIL
 from sympy.physics.units import m, s
@@ -7,6 +7,7 @@ from py.test import skip
 
 x,y,a,t = symbols('xyat')
 n = Symbol('n', integer=True)
+f = Function('f')
 
 def test_improper_integral():
     assert integrate(log(x), (x, 0, 1)) == -1
@@ -172,6 +173,14 @@ def test_matrices():
         [-cos(x),   -cos(2*x)],
         [-cos(2*x), -cos(3*x)],
     ])
+
+# issue1012
+def test_integrate_functions():
+    assert integrate(f(x), x)       == Integral(f(x), x)
+    assert integrate(f(x), (x,0,1)) == Integral(f(x), (x,0,1))
+    assert integrate(f(x)*diff(f(x), x), x) == f(x)**2/2
+    assert integrate(diff(f(x),x) / f(x),x) == log(f(x))
+
 
 def test_transform():
     a = Integral(x**2+1, (x, -1, 2))

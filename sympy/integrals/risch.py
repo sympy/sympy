@@ -36,7 +36,7 @@ def components(f, x):
     if f.has(x):
         if f.is_Symbol:
             result.add(f)
-        elif f.is_Function:
+        elif f.is_Function or f.is_Derivative:
             for g in f.args:
                 result |= components(g, x)
 

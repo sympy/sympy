@@ -1,10 +1,11 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
-        I, S, erf, tan, asin, asinh
+        I, S, erf, tan, asin, asinh, Function, Derivative, diff
 from sympy.integrals.risch import heurisch, components
 from sympy.utilities.pytest import XFAIL
 from py.test import skip
 
 x, y = symbols('xy')
+f    = Function('f')
 
 def test_components():
     assert components(x*y, x) == set([x])
@@ -16,6 +17,13 @@ def test_components():
        set([sin(y*exp(x)), x, exp(x)])
     assert components(x**Rational(17,54)/sqrt(sin(x)), x) == \
        set([sin(x), x**Rational(1,54), sqrt(sin(x)), x])
+
+    assert components(f(x), x) == \
+        set([x, f(x)])
+    assert components(Derivative(f(x),x), x) == \
+        set([x, f(x), Derivative(f(x), x)])
+    assert components(f(x)*diff(f(x), x),  x) == \
+        set([x, f(x), Derivative(f(x), x), Derivative(f(x), x)])
 
 def test_heurisch_polynomials():
     assert heurisch(1, x) == x
@@ -112,6 +120,14 @@ def test_heurisch_hacking():
 
     assert heurisch(exp(-7*x**2),x,hints=[]) == \
         sqrt(7*pi)*erf(sqrt(7)*x)/14
+
+def test_heurisch_function():
+    df = diff(f(x), x)
+
+    assert heurisch(f(x), x)            == None
+    assert heurisch(f(x)*df, x)         == f(x)**2/2
+    assert heurisch(f(x)**2 * df, x)    == f(x)**3/3
+    assert heurisch(df / f(x), x)       == log(f(x))
 
 def test_issue510():
     assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \
