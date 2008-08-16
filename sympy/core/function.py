@@ -407,6 +407,8 @@ class Derivative(Basic):
     Derivative(expr, x, 3)  -> Derivative(expr, x, x, x)
     """
 
+    is_Derivative   = True
+
     @staticmethod
     def _symbolgen(*symbols):
         """
