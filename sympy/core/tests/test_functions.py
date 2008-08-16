@@ -111,6 +111,13 @@ def test_derivative_subs_bug():
     assert e.subs(n(x), l(x)) == diff(l(x), x)
     assert e.subs(n(x), -l(x)) == diff(-l(x), x)
 
+def test_derivative_subs_self_bug():
+    f = Function('f')
+    d = diff(f(x), x)
+
+    assert d.subs(d, y) == y
+
+
 def test_derivative_linearity():
     x = Symbol("x")
     y = Symbol("y")
