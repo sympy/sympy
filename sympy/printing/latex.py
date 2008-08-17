@@ -291,7 +291,12 @@ class LatexPrinter(Printer):
 
     def _print_Rational(self, expr):
         if expr.q != 1:
-            return r"\frac{%d}{%d}" % (expr.p, expr.q)
+            sign = ""
+            p = expr.p
+            if expr.p < 0:
+                sign = "- "
+                p = -p
+            return r"%s\frac{%d}{%d}" % (sign, p, expr.q)
 
     def _print_Infinity(self, expr):
         return r"\infty"

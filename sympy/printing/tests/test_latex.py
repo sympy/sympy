@@ -89,3 +89,12 @@ def test_latex():
 def test_latex_dict():
     d = {Rational(1): 1, x**2: 2, x: 3, x**3: 4}
     assert latex(d) == '$\\begin{Bmatrix}1 : 1, & x : 3, & {x}^{2} : 2, & {x}^{3} : 4\\end{Bmatrix}$'
+
+def test_latex_rational():
+    #tests issue 874
+    assert latex(-Rational(1,2)) == "$- \\frac{1}{2}$"
+    assert latex(Rational(-1,2)) == "$- \\frac{1}{2}$"
+    assert latex(Rational(1,-2)) == "$- \\frac{1}{2}$"
+    assert latex(-Rational(-1,2)) == "$\\frac{1}{2}$"
+    assert latex(-Rational(1,2)*x) == "$- \\frac{1}{2} x$"
+    assert latex(-Rational(1,2)*x+Rational(-2,3)*y) == "$- \\frac{1}{2} x - \\frac{2}{3} y$"
