@@ -219,9 +219,9 @@ class exp(Function):
         from sympy import limit, Symbol, oo
         arg0 = limit(arg_series, x, x0)
         if arg0 in [-oo, oo]:
-            return self.series(x, x0, n)
+            return self._series(x, x0, n)
         s = Symbol("s", dummy=True)
-        exp_series = exp(s).series(s, x0, n)
+        exp_series = exp(s)._series(s, x0, n)
         r = exp(arg0)*exp_series.subs(s, arg_series-arg0)
         r = r.expand()
         return r
@@ -412,7 +412,7 @@ class log(Function):
                 r = log(k).nseries(x, x0, n) + \
                         (l.nseries(x, x0, n)*log(x)).expand()
                 return r
-        return self.series(x, x0, n)
+        return self._series(x, x0, n)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)

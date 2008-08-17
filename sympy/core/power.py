@@ -587,7 +587,7 @@ class Pow(Basic):
         if base == x:
             return self
 
-        return self.series(x, x0, n)
+        return self._series(x, x0, n)
 
     def _eval_as_leading_term(self, x):
         if not self.exp.has(x):

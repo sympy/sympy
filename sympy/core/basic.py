@@ -1946,6 +1946,11 @@ class Basic(AssumeMeths):
         """
         x = sympify(x)
         point = sympify(point)
+        return self.nseries(x, point, n)
+
+    def _series(self, x, point=0, n=6, with_order=True):
+        x = sympify(x)
+        point = sympify(point)
         if point != 0:
             raise NotImplementedError("series expansion around arbitrary point")
             #self = self.subs(x, x + point)

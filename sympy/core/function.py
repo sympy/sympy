@@ -291,7 +291,7 @@ class Function(Basic):
         return self._compute_oseries(arg, order, self.func.taylor_term, self.func)
 
     def nseries(self, x, x0, n):
-        return self.series(x, x0, n)
+        return self._series(x, x0, n)
 
     def _eval_is_polynomial(self, syms):
         for arg in self.args:
