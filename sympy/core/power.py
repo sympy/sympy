@@ -536,9 +536,8 @@ class Pow(Basic):
                         p = p.subs(y, -1/log(x))
                         return p
                 prefactor = base.as_leading_term(x)
-                rest = (base/prefactor).expand()
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
-                rest = rest - 1
+                rest = ((base-prefactor)/prefactor).expand()
                 if rest == 0:
                     return 1/prefactor
                 if rest.is_Order:
