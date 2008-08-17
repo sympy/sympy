@@ -586,15 +586,7 @@ class Pow(Basic):
         if base == x:
             return self
 
-        base = base.nseries(x, x0, n)
-        prefactor = base.as_leading_term(x)
-        rest = (base/prefactor).expand()
-        rest = rest - 1
-        r = 0
-        for i in range(n):
-            r += (C.Binomial(exp, i) * rest**i).expand()
-        from sympy import O
-        return (prefactor**exp * r).expand()+O(x**n)
+        return self._series(x, x0, n)
 
     def _eval_as_leading_term(self, x):
         if not self.exp.has(x):

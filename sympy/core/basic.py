@@ -1962,15 +1962,6 @@ class Basic(AssumeMeths):
             r += o
         return r
 
-    def _taylor(self, x, x0, n):
-        from sympy.series.order import Order
-        terms = []
-        f = self
-        for i in range(n):
-            terms.append(f.subs(x, x0) * x**i)
-            f = f.diff(x)/(i+1)
-        return Add(*terms)+Order(x**n)
-
     @cacheit
     def oseries(self, order):
         """
