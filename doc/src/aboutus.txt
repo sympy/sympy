@@ -44,13 +44,13 @@ more details what they do and what they are interested in.
 #. Felix Kaiser: documentation + whitespace testing patches
 #. Roberto Nobrega: several pretty printing patches
 #. David Roberts: latex printing patches
-#. Sebastian Krämer: implemented lambdify/numpy/mpmath cooperation, bug fixes, refactoring, lambdifying of matrices
+#. Sebastian Krämer: implemented lambdify/numpy/mpmath cooperation, bug fixes, refactoring, lambdifying of matrices, large printing refactoring and bugfixes
 #. Vinzent Steinberg: docstring patches, bug fixes, msolve (nonlinear equation systems solver), compiling functions to machine code
 #. Riccardo Gori: improvements and speedups to matrices, many bug fixes
 #. Case Van Horsen: implemented optional support for gmpy in mpmath
 #. Štěpán Roučka: several matrix and simplification fixes
 #. Ali Raza Syed: pretty printing/isympy on windows fix
-#. Stefano Maggiolo: bug fixes
+#. Stefano Maggiolo: many bug fixes, polishings and improvements
 #. Robert Cimrman: matrix patches
 #. Bastian Weber: latex printing patches
 #. Sebastian Krause: match patches
