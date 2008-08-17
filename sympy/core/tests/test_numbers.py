@@ -1,4 +1,4 @@
-from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, Integer, \
+from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer, \
         Basic, S
 from sympy.core.power import integer_nthroot
 import py
@@ -297,3 +297,10 @@ def test_Rational_factors():
     assert F(6,10)  == { 3:1, 5:-1}
 
     # TODO write more Rational.factor() tests
+
+
+def test_issue1008():
+    assert  pi*(E + 10) + pi*(-E - 10)          == 0
+    assert  pi*(E + 10**10) + pi*(-E - 10**10)  == 0
+    assert  pi*(E + 10**20) + pi*(-E - 10**20)  == 0
+    assert  pi*(E + 10**80) + pi*(-E - 10**80)  == 0
