@@ -2086,7 +2086,8 @@ class Basic(AssumeMeths):
         we = Wild('we')
         p  = wc*x**we
         from sympy import collect
-        d = collect(self, x).match(p)
+        self = collect(self, x)
+        d = self.match(p)
         if d is not None and we in d:
             return d[wc], d[we]
         return self, S.Zero

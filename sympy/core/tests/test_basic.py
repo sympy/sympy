@@ -523,6 +523,8 @@ def test_as_coeff_exponent():
     assert (-1*x**0).as_coeff_exponent(x) == (-1, 0)
     assert (-2*x**0).as_coeff_exponent(x) == (-2, 0)
     assert (2*x**3+pi*x**3).as_coeff_exponent(x) == (2+pi, 3)
+    assert (x*log(2)/(2*x + pi*x)).as_coeff_exponent(x) == \
+            (log(2)/(2+pi), 0)
 
 def test_extractions():
     x, y = symbols("xy")
