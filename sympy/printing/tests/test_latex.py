@@ -97,4 +97,7 @@ def test_latex_rational():
     assert latex(Rational(1,-2)) == "$- \\frac{1}{2}$"
     assert latex(-Rational(-1,2)) == "$\\frac{1}{2}$"
     assert latex(-Rational(1,2)*x) == "$- \\frac{1}{2} x$"
-    assert latex(-Rational(1,2)*x+Rational(-2,3)*y) == "$- \\frac{1}{2} x - \\frac{2}{3} y$"
+    assert latex(-Rational(1,2)*x+Rational(-2,3)*y) in [
+            "$- \\frac{1}{2} x - \\frac{2}{3} y$",
+            "$- \\frac{2}{3} y - \\frac{1}{2} x$",
+            ]
