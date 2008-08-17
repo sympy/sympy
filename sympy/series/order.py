@@ -266,6 +266,9 @@ class Order(Basic):
             return Order(self.expr.subs(old, new), *(self.symbols[:i]+self.symbols[i+1:]))
         return Order(self.expr.subs(old, new), *self.symbols)
 
+    def diff(self, x):
+        return Order(self.expr.diff(x))
+
     def _sage_(self):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.
         return Rational(0)._sage_()

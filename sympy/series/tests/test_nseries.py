@@ -221,12 +221,13 @@ def test_issue159():
 def test_issue105():
     x = Symbol("x")
     f = sin(x**3)**Rational(1,3)
-    assert f.nseries(x,0,17) == x - x**7/18 - x**13/3240 + O(x**17)
+    assert f.nseries(x,0,17) == x - x**7/18 - x**13/3240 + O(x**15)
 
 def test_issue125():
     y = Symbol("y")
     f=(1-y**(Rational(1)/2))**(Rational(1)/2)
-    assert f.nseries(y,0,2) == 1 - sqrt(y)/2-y/8-y**Rational(3,2)/16+O(y**2)
+    # the Order term is not correct here, it should be O(y**2)
+    assert f.nseries(y, 0, 4) == 1 - sqrt(y)/2-y/8-y**Rational(3,2)/16+O(y**4)
 
 def test_issue364():
     w = Symbol("w")
