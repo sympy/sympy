@@ -134,7 +134,7 @@ class Add(AssocOp):
                     if o.contains(t):
                         t = None
                         break
-                # 1 + O(x) -> 1 + O(x)
+                # x + O(x**2) -> x + O(x**2)
                 if t is not None:
                     newseq2.append(t)
             newseq = newseq2 + order_factors
