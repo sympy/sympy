@@ -130,12 +130,20 @@ class Add(AssocOp):
             newseq2 = []
             for t in newseq:
                 for o in order_factors:
+                    # x + O(x) -> O(x)
                     if o.contains(t):
                         t = None
                         break
+                # 1 + O(x) -> 1 + O(x)
                 if t is not None:
                     newseq2.append(t)
             newseq = newseq2 + order_factors
+            # 1 + O(1) -> O(1)
+            for o in order_factors:
+                if o.contains(coeff):
+                    coeff = S.Zero
+                    break
+
 
         # order args canonically
         # Currently we sort things using hashes, as it is quite fast. A better
