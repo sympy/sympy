@@ -2084,9 +2084,9 @@ class Basic(AssumeMeths):
         x = sympify(x)
         wc = Wild('wc')
         we = Wild('we')
-        c, terms = self.as_coeff_terms()
         p  = wc*x**we
-        d = self.match(p)
+        from sympy import collect
+        d = collect(self, x).match(p)
         if d is not None and we in d:
             return d[wc], d[we]
         return self, S.Zero

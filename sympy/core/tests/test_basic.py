@@ -1,6 +1,6 @@
 from sympy import Basic, S, Symbol, Real, Integer, Rational,  \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
-    WildFunction, Poly, Function, Derivative, Number
+    WildFunction, Poly, Function, Derivative, Number, pi
 
 import py
 from sympy.utilities.pytest import XFAIL
@@ -522,6 +522,7 @@ def test_as_coeff_exponent():
     assert (0*x**0).as_coeff_exponent(x) == (0, 0)
     assert (-1*x**0).as_coeff_exponent(x) == (-1, 0)
     assert (-2*x**0).as_coeff_exponent(x) == (-2, 0)
+    assert (2*x**3+pi*x**3).as_coeff_exponent(x) == (2+pi, 3)
 
 def test_extractions():
     x, y = symbols("xy")
