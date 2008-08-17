@@ -2075,6 +2075,9 @@ class Basic(AssumeMeths):
             return obj
         raise NotImplementedError('as_leading_term(%s, %s)' % (self, x))
 
+    def _eval_as_leading_term(self, x):
+        return self
+
     def as_coeff_exponent(self, x):
         """ c*x**e -> c,e where x can be any symbolic expression.
         """
@@ -2135,9 +2138,6 @@ class Atom(Basic):
 
     def _eval_oseries(self, order):
         # .oseries() method checks for order.contains(self)
-        return self
-
-    def _eval_as_leading_term(self, x):
         return self
 
     @property

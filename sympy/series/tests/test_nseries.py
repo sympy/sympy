@@ -337,3 +337,8 @@ def test_bug5():
     assert e.nseries(w, 0, 2) == x/w/log(w) + 1/w - x/log(w) + 1/log(w)*log(x)\
             + x*log(x)/log(w)**2 + O(w/log(w))
 
+
+def test_issue1016():
+    x = Symbol("x")
+    assert ( sin(x)/(1 - cos(x)) ).nseries(x, 0, 2) == O(1/x)
+    assert ( sin(x)**2/(1 - cos(x)) ).nseries(x, 0, 2) == O(1, x)

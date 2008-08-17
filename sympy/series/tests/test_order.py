@@ -167,3 +167,5 @@ def test_leading_order():
     assert (2+x**2).extract_leading_order(x) == ((2, O(1, x)),)
     assert (x+x**2).extract_leading_order(x) == ((x, O(x)),)
 
+def test_order_leadterm():
+    assert O(x**2)._eval_as_leading_term(x) == O(x**2)
