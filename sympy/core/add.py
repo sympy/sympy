@@ -313,6 +313,18 @@ class Add(AssocOp):
 
     @cacheit
     def extract_leading_order(self, *symbols):
+        """
+        Returns the leading term and it's order.
+
+        Examples:
+
+        >>> (x+1+1/x**5).extract_leading_order(x)
+        ((1/x**5, O(1/x**5)),)
+        >>> (1+x).extract_leading_order(x)
+        ((1, O(1, x)),)
+        >>> (x+x**2).extract_leading_order(x)
+        ((x, O(x)),)
+        """
         lst = []
         seq = [(f, C.Order(f, *symbols)) for f in self.args]
         for ef,of in seq:
