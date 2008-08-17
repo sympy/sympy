@@ -54,6 +54,7 @@ more details what they do and what they are interested in.
 #. Robert Cimrman: matrix patches
 #. Bastian Weber: latex printing patches
 #. Sebastian Krause: match patches
+#. Sebastian Kreft: latex printing patches
 
 Uptodate list in the order of the first contribution is given in the `README
 <http://hg.sympy.org/sympy/file/tip/README>`_
