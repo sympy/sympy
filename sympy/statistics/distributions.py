@@ -106,14 +106,14 @@ class Normal(ContinuousProbability):
             >>> N.confidence(0.68)
             (-0.994457883209753, 0.994457883209753)
             >>> N.probability(*_).evalf()
-            0.68
+            0.680000000000000
 
             # Two standard deviations
             >>> N = Normal(0, 1)
             >>> N.confidence(0.95)
             (-1.95996398454005, 1.95996398454005)
             >>> N.probability(*_).evalf()
-            0.95
+            0.950000000000000
         """
 
         if p == 1:

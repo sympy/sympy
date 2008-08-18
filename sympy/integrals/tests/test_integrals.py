@@ -199,7 +199,7 @@ def NS(e, n=15, **options):
     return str(sympify(e).evalf(n, **options))
 
 def test_evalf_integrals():
-    assert NS(Integral(x, (x, 2, 5)), 15) == '10.5'
+    assert NS(Integral(x, (x, 2, 5)), 15) == '10.5000000000000'
     gauss = Integral(exp(-x**2), (x, -oo, oo))
     assert NS(gauss, 15) == '1.77245385090552'
     assert NS(gauss**2 - pi + E*Rational(1,10**20), 15) in ('2.71828182845904e-20', '2.71828182845905e-20')
@@ -223,9 +223,9 @@ def test_evalf_integrals():
         NS('pi/4*log(4*pi**3/gamma(1/4)**4)', 15)
     #
     # Endpoints causing trouble (rounding error in integration points -> complex log)
-    assert NS(2+Integral(log(2*cos(x/2)), (x, -pi, pi)), 17, chop=True) == '2.0'
-    assert NS(2+Integral(log(2*cos(x/2)), (x, -pi, pi)), 20, chop=True) == '2.0'
-    assert NS(2+Integral(log(2*cos(x/2)), (x, -pi, pi)), 22, chop=True) == '2.0'
+    assert NS(2+Integral(log(2*cos(x/2)), (x, -pi, pi)), 17, chop=True) == NS(2, 17)
+    assert NS(2+Integral(log(2*cos(x/2)), (x, -pi, pi)), 20, chop=True) == NS(2, 20)
+    assert NS(2+Integral(log(2*cos(x/2)), (x, -pi, pi)), 22, chop=True) == NS(2, 22)
     # Needs zero handling
     assert NS(pi - 4*Integral('sqrt(1-x**2)', (x, 0, 1)), 15, maxprec=30, chop=True) in ('0.0', '0')
     # Oscillatory quadrature
@@ -237,8 +237,8 @@ def test_evalf_integrals():
 def test_evalf_issue_939():
     # http://code.google.com/p/sympy/issues/detail?id=939
     assert NS(integrate(1/(x**5+1), x).subs(x, 4), chop=True) == '-0.000976138910649103'
-    assert NS(Integral(1/(x**5+1), (x, 2, 4))) == '0.014436108888674'
-    assert NS(integrate(1/(x**5+1), (x, 2, 4)), chop=True) == '0.014436108888674'
+    assert NS(Integral(1/(x**5+1), (x, 2, 4))) == '0.0144361088886740'
+    assert NS(integrate(1/(x**5+1), (x, 2, 4)), chop=True) == '0.0144361088886740'
 
 def xtest_failing_integrals():
     #---

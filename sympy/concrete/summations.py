@@ -93,7 +93,7 @@ class Sum(Basic):
             >>> s
             7/20 - log(2) + log(5)
             >>> s.evalf(), e.evalf()
-            (1.26629073187416, 0.0175)
+            (1.26629073187416, 0.0175000000000000)
 
         The endpoints may be symbolic:
 

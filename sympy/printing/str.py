@@ -278,8 +278,12 @@ class StrPrinter(Printer):
         return '%s/%s'%(expr.p, expr.q)
 
     def _print_Real(self, expr):
-        dps = mlib.prec_to_dps(expr._prec)
-        return mlib.to_str(expr._mpf_, dps)
+        prec = expr._prec
+        if prec < 5:
+            dps = 0
+        else:
+            dps = mlib.prec_to_dps(expr._prec)
+        return mlib.to_str(expr._mpf_, dps, strip_zeros=False)
 
     def _print_Relational(self, expr):
         return '%s %s %s'%(self.parenthesize(expr.lhs, precedence(expr)),

@@ -183,7 +183,7 @@ class Point(GeometryEntity):
         ========
             >>> from sympy import *
             >>> Point(Rational(1,2), Rational(3,2)).evalf()
-            Point(0.5, 1.5)
+            Point(0.500000000000000, 1.50000000000000)
         """
         return Point([x.evalf() for x in self])
 

@@ -144,7 +144,7 @@ def test_Mul():
     cc2 = CustomClass2(commutative=True)
     assert str(Rational(2)*cc1) == '2*CustomClass1()'
     assert str(cc1*Rational(2)) == '2*CustomClass1()'
-    assert str(cc1*Real("1.5")) == '1.5*CustomClass1()'
+    assert str(cc1*Real("1.5")) == '1.50000000000000*CustomClass1()'
     assert str(cc2*Rational(2)) == '2*CustomClass2()'
     assert str(cc2*Rational(2)*cc1) == '2*CustomClass1()*CustomClass2()'
     assert str(cc1*Rational(2)*cc2) == '2*CustomClass1()*CustomClass2()'
