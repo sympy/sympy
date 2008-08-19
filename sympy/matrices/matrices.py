@@ -1340,7 +1340,7 @@ def zeros(dims):
 def one(n):
     """Create square all-one matrix n x n"""
     warnings.warn( 'Deprecated: use ones() instead.' )
-    return Matrix(n,n,[S.One]*m*n)
+    return Matrix(n,n,[S.One]*n*n)
 
 def ones(dims):
     """Create all-one matrix of dimensions dims = (d1,d2)"""
