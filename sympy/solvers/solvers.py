@@ -188,10 +188,10 @@ def solve_linear_system(system, *symbols, **flags):
             syms[i], syms[k] = syms[k], syms[i]
             matrix.col_swap(i, k)
 
-        pivot = matrix [i, i]
+        pivot_inv = S.One / matrix [i, i]
 
         # divide all elements in the current row by the pivot
-        matrix.row(i, lambda x, _: x / pivot)
+        matrix.row(i, lambda x, _: x * pivot_inv)
 
         for k in range(i+1, matrix.lines):
             if matrix[k, i] != 0:
