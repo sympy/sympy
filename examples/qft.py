@@ -2,7 +2,7 @@
 import iam_sympy_example
 
 from sympy import Basic,exp,Symbol,sin,Rational,I,Mul, Matrix, \
-    ones, sqrt, pprint, simplify, trim
+    ones, sqrt, pprint, simplify, trim, Eq, sympify
 
 from sympy.physics import msigma, mgamma
 
@@ -84,8 +84,13 @@ mu = Symbol("mu")
 e = (pslash(p)+m*ones(4))*(pslash(k)-m*ones(4))
 f = pslash(p)+m*ones(4)
 g = pslash(p)-m*ones(4)
+
+
+def xprint(lhs, rhs):
+    pprint( Eq(sympify(lhs), rhs ) )
+
 #pprint(e)
-print Tr(f*g)
+xprint( 'Tr(f*g)', Tr(f*g) )
 #print Tr(pslash(p) * pslash(k)).expand()
 
 M0 = [ ( v(pp, 1).D * mgamma(mu) * u(p, 1) ) * ( u(k, 1).D * mgamma(mu,True) * \
@@ -98,17 +103,18 @@ assert isinstance(M, Basic)
 
 d=Symbol("d", real=True) #d=E+m
 
-print M
+xprint('M', M)
 print "-"*40
 M = ((M.subs(E,d-m)).expand() * d**2 ).expand()
-print "1/(E+m)**2 * ",M
+xprint('M2', 1/(E+m)**2 * M)
 print "-"*40
 x,y= M.as_real_imag()
-print x,y
+xprint('Re(M)', x)
+xprint('Im(M)', y)
 e = x**2+y**2
-print e
+xprint('abs(M)**2', e)
 print "-"*40
-print e.expand()
+xprint('Expand(abs(M)**2)', e.expand())
 
 #print Pauli(1)*Pauli(1)
 #print Pauli(1)**2
