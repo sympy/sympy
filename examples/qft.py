@@ -1,27 +1,25 @@
 #!/usr/bin/env python
 import iam_sympy_example
 
-from sympy import Basic,exp,Symbol,sin,Rational,I,Mul,NCSymbol, Matrix, \
-    gamma, sigma, one, Pauli
+from sympy import Basic,exp,Symbol,sin,Rational,I,Mul, Matrix, \
+    ones, sqrt, pprint, simplify, trim
+
+from sympy.physics import msigma, mgamma
 
 #gamma^mu
-gamma0=gamma(0)
-gamma1=gamma(1)
-gamma2=gamma(2)
-gamma3=gamma(3)
-gamma5=gamma(5)
+gamma0=mgamma(0)
+gamma1=mgamma(1)
+gamma2=mgamma(2)
+gamma3=mgamma(3)
+gamma5=mgamma(5)
 
 #sigma_i
-sigma1=sigma(1)
-sigma2=sigma(2)
-sigma3=sigma(3)
+sigma1=msigma(1)
+sigma2=msigma(2)
+sigma3=msigma(3)
 
-a=Symbol("a")
-b=Symbol("b")
-c=Symbol("c")
-
-E = Symbol("E")
-m = Symbol("m")
+E = Symbol("E", real=True)
+m = Symbol("m", real=True)
 
 def u(p,r):
     """ p = (p1, p2, p3); r = 0,1 """
@@ -34,7 +32,7 @@ def u(p,r):
     a = (sigma1*p1 + sigma2*p2 + sigma3*p3) / (E+m) * ksi
     if a ==0:
         a = zeros((2, 1))
-    return (E+m).sqrt() * Matrix([ [ksi[0,0]], [ksi[1,0]], [a[0,0]], [a[1,0]] ])
+    return sqrt(E+m) * Matrix([ [ksi[0,0]], [ksi[1,0]], [a[0,0]], [a[1,0]] ])
 
 def v(p,r):
     """ p = (p1, p2, p3); r = 0,1 """
@@ -61,15 +59,19 @@ def Tr(M):
         t+=M[i,i]
     return t
 
+a=Symbol("a", real=True)
+b=Symbol("b", real=True)
+c=Symbol("c", real=True)
+
 p = (a,b,c)
 
-assert u(p, 1).D * u(p, 2) == 0
-assert u(p, 2).D * u(p, 1) == 0
+assert u(p, 1).D * u(p, 2) == Matrix(1, 1, [0])
+assert u(p, 2).D * u(p, 1) == Matrix(1, 1, [0])
 
-p1,p2,p3 =[Symbol(x) for x in ["p1","p2","p3"]]
-pp1,pp2,pp3 =[Symbol(x) for x in ["pp1","pp2","pp3"]]
-k1,k2,k3 =[Symbol(x) for x in ["k1","k2","k3"]]
-kp1,kp2,kp3 =[Symbol(x) for x in ["kp1","kp2","kp3"]]
+p1,p2,p3 =[Symbol(x, real=True) for x in ["p1","p2","p3"]]
+pp1,pp2,pp3 =[Symbol(x, real=True) for x in ["pp1","pp2","pp3"]]
+k1,k2,k3 =[Symbol(x, real=True) for x in ["k1","k2","k3"]]
+kp1,kp2,kp3 =[Symbol(x, real=True) for x in ["kp1","kp2","kp3"]]
 
 p = (p1,p2,p3)
 pp = (pp1,pp2,pp3)
@@ -79,29 +81,35 @@ kp = (kp1,kp2,kp3)
 
 mu = Symbol("mu")
 
-#e = (pslash(p)+m*one(4))*(pslash(k)-m*one(4))
-#f = pslash(p)+m*one(4)
-#g = pslash(p)-m*one(4)
-#print Tr(f*g)
+e = (pslash(p)+m*ones(4))*(pslash(k)-m*ones(4))
+f = pslash(p)+m*ones(4)
+g = pslash(p)-m*ones(4)
+#pprint(e)
+print Tr(f*g)
 #print Tr(pslash(p) * pslash(k)).expand()
 
-#M0 = [ ( v(pp, 1).D * gamma(mu) * u(p, 1) ) * ( u(k, 1).D * gamma(mu,True) * \
-#        v(kp, 1) ) for mu in range(4)]
-#M = M0[0]+M0[1]+M0[2]+M0[3]
-#assert isinstance(M, Basic)
-
-#d=Symbol("d",True) #d=E+m
-
+M0 = [ ( v(pp, 1).D * mgamma(mu) * u(p, 1) ) * ( u(k, 1).D * mgamma(mu,True) * \
+        v(kp, 1) ) for mu in range(4)]
+M = M0[0]+M0[1]+M0[2]+M0[3]
+M = M[0]
+assert isinstance(M, Basic)
 #print M
-#print "-"*40
-#M = ((M.subs(E,d-m)).expand() * d**2 ).expand()
-#print "1/(E+m)**2 * ",M
-#print "-"*40
-#x,y= get_re_im(M)
-#print x,y
-#e = x**2+y**2
-#print e
+#print trim(M)
 
-print Pauli(1)*Pauli(1)
+d=Symbol("d", real=True) #d=E+m
+
+print M
+print "-"*40
+M = ((M.subs(E,d-m)).expand() * d**2 ).expand()
+print "1/(E+m)**2 * ",M
+print "-"*40
+x,y= M.as_real_imag()
+print x,y
+e = x**2+y**2
+print e
+print "-"*40
+print e.expand()
+
+#print Pauli(1)*Pauli(1)
 #print Pauli(1)**2
 #print Pauli(1)*2*Pauli(1)
