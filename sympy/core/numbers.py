@@ -691,6 +691,9 @@ class Integer(Rational):
             return obj
 
     # Arithmetic operations are here for efficiency
+    def __int__(self):
+        return self.p
+
     def __neg__(self):
         return Integer(-self.p)
 
