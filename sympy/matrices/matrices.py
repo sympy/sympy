@@ -187,19 +187,40 @@ class Matrix(object):
         2 - I
 
         """
-        if isinstance(key, (list, tuple)):
-            if len(key) == 2:
-                # proper 2-index access
-                if isinstance(key[0], slice) or isinstance(key[1], slice):
-                    return self.submatrix(key)
+        if type(key) is tuple:
+            i, j = key
+            if type(i) is slice or type(j) is slice:
+                return self.submatrix(key)
+
+            else:
+                # a2idx inlined
+                try:
+                    i = i.__int__()
+                except AttributeError:
+                    try:
+                        i = i.__index__()
+                    except AttributeError:
+                        raise IndexError("Invalid index a[%r]" % (key,))
+
+                # a2idx inlined
+                try:
+                    j = j.__int__()
+                except AttributeError:
+                    try:
+                        j = j.__index__()
+                    except AttributeError:
+                        raise IndexError("Invalid index a[%r]" % (key,))
+
+
+                if not (i>=0 and i<self.lines and j>=0 and j < self.cols):
+                    raise IndexError("Index out of range: a[%s]" % (key,))
                 else:
-                    k1, k2 = a2idx(key[0]), a2idx(key[1])
-                    if k1 is not None and k2 is not None:
-                        i,j=self.key2ij([k1, k2])
-                        return self.mat[i*self.cols+j]
+                    return self.mat[i*self.cols + j]
+
+
         else:
             # row-wise decomposition of matrix
-            if isinstance(key, slice):
+            if type(key) is slice:
                 return self.mat[key]
             else:
                 k = a2idx(key)
@@ -220,25 +241,44 @@ class Matrix(object):
         [9,     4]
 
         """
-        if isinstance(key, (list, tuple)):
-            if len(key) == 2:
-                # proper 2-index access
-                if isinstance(key[0], slice) or isinstance(key[1], slice):
-                    if isinstance(value, Matrix):
-                        self.copyin_matrix(key, value)
-                        return
-                    if isinstance(value, (list, tuple)):
-                        self.copyin_list(key, value)
-                        return
+        if type(key) is tuple:
+            i, j = key
+            if type(i) is slice or type(j) is slice:
+                if isinstance(value, Matrix):
+                    self.copyin_matrix(key, value)
+                    return
+                if isinstance(value, (list, tuple)):
+                    self.copyin_list(key, value)
+                    return
+            else:
+                # a2idx inlined
+                try:
+                    i = i.__int__()
+                except AttributeError:
+                    try:
+                        i = i.__index__()
+                    except AttributeError:
+                        raise IndexError("Invalid index a[%r]" % (key,))
+
+                # a2idx inlined
+                try:
+                    j = j.__int__()
+                except AttributeError:
+                    try:
+                        j = j.__index__()
+                    except AttributeError:
+                        raise IndexError("Invalid index a[%r]" % (key,))
+
+
+                if not (i>=0 and i<self.lines and j>=0 and j < self.cols):
+                    raise IndexError("Index out of range: a[%s]" % (key,))
                 else:
-                    k1, k2 = a2idx(key[0]), a2idx(key[1])
-                    if k1 is not None and k2 is not None:
-                        i,j=self.key2ij([k1, k2])
-                        self.mat[i*self.cols + j] = sympify(value)
-                        return
+                    self.mat[i*self.cols + j] = sympify(value)
+                    return
+
         else:
             # row-wise decomposition of matrix
-            if isinstance(key, slice):
+            if type(key) is slice:
                 raise IndexError("Vector slices not implemented yet.")
             else:
                 k = a2idx(key)
