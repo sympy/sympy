@@ -718,6 +718,20 @@ class Integer(Rational):
             return Integer(b.p + a.p)
         return Rational.__add__(a, b)
 
+    def __sub__(a, b):
+        if type(b) is int:
+            return Integer(a.p - b)
+        elif isinstance(b, Integer):
+            return Integer(a.p - b.p)
+        return Rational.__sub__(a, b)
+
+    def __rsub__(a, b):
+        if type(b) is int:
+            return Integer(b - a.p)
+        elif isinstance(b, Integer):
+            return Integer(b.p - a.p)
+        return Rational.__rsub__(a, b)
+
     def __mul__(a, b):
         if type(b) is int:
             return Integer(a.p * b)
