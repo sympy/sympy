@@ -18,6 +18,7 @@ In addition, there are some other commands:
     python setup.py test  -> will run the complete test suite
     python setup.py test_core -> will run only tests concerning core features
     python setup.py test_doc -> will run tests on the examples of the documentation
+    python setup.py bench   -> will run the complete benchmark suite
 
 To get a full list of avaiable commands, read the output of:
 
@@ -224,6 +225,34 @@ class test_sympy_doc(Command):
         runner = unittest.TextTestRunner()
         runner.run(suite)
 
+
+class run_benchmarks(Command):
+    """Runs all SymPy benchmarks"""
+
+    description = "Automatically run the test suite for Sympy."
+    user_options = []  # distutils complains if this is not here.
+
+    def __init__(self, *args):
+        self.args = args[0] # so we can pass it to other classes
+        Command.__init__(self, *args)
+
+    def initialize_options(self):  # distutils wants this
+        pass
+
+    def finalize_options(self):    # this too
+        pass
+
+    # TODO we should refactor it:
+    # o collector   -- should collect benchmarks
+    # o runner      -- should execute benchmarks
+    # o presenter   -- should display benchmarks results
+    # this is better done on top of some testing framework (py.test / nosetests / ...)
+    # -- testing and benchmarking are very similar.
+    def run(self):
+        import os
+        os.system('python ./benchmarks/symbench.py')
+
+
 # Check that this list is uptodate against the result of the command:
 # $ python bin/generate_test_list.py
 tests = [
@@ -288,6 +317,7 @@ setup(
       cmdclass    = {'test': test_sympy,
                      'test_core' : test_sympy_core,
                      'test_doc' : test_sympy_doc,
+                     'bench'    : run_benchmarks,
                      'gen_doc' : gen_doc,
                      'clean' : clean,
                      },
