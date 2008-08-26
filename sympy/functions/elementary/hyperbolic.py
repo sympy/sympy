@@ -152,6 +152,15 @@ class cosh(Function):
                 if coeff.is_negative:
                     return cls(-arg)
 
+            if isinstance(arg, acosh):
+                return arg.args[0]
+
+            if isinstance(arg, asinh):
+                return sqrt(1+arg.args[0]**2)
+
+            if isinstance(arg, atanh):
+                return 1/sqrt(1-arg.args[0]**2)
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):

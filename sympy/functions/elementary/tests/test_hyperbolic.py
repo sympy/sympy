@@ -1,5 +1,6 @@
 from sympy import symbols, Symbol, sinh, nan, oo, pi, asinh, acosh, log, sqrt, \
-        coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth
+        coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
+        Integer
 
 from sympy.utilities.pytest import XFAIL
 
@@ -302,3 +303,12 @@ def test_acoth():
     assert acoth(I) == -I*pi/4
     assert acoth(-I) == I*pi/4
     assert acoth(-x) == -acoth(x)
+
+def test_simplifications():
+    x = Symbol('x')
+    assert cosh(acosh(x)) == x
+    assert cosh(asinh(x)) == sqrt(1+x**2)
+    assert cosh(atanh(x)) == 1/sqrt(1-x**2)
+
+def test_issue1037():
+    assert cosh(asinh(Integer(3)/2)) == sqrt(Integer(13)/4)
