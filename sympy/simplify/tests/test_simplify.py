@@ -242,3 +242,8 @@ def test_nsimplify():
     assert nsimplify(sin(3*pi/5, evaluate=False)) == sympify('(5/8 + 1/8*5**(1/2))**(1/2)')
     assert nsimplify(sqrt(atan('1', evaluate=False))*(2+I), [pi]) == sqrt(pi) + sqrt(pi)/2*I
     assert nsimplify(2 + exp(2*atan('1/4')*I)) == sympify('49/17 + 8*I/17')
+    assert nsimplify(pi, tolerance=0.01) == Rational(22,7)
+    assert nsimplify(pi, tolerance=0.001) == Rational(355,113)
+    assert nsimplify(0.33333, tolerance=1e-4) == Rational(1,3)
+    assert nsimplify(2.0**(1/3.), tolerance=0.001) == Rational(635,504)
+    assert nsimplify(2.0**(1/3.), tolerance=0.001, full=True) == 2**Rational(1,3)

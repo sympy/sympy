@@ -980,7 +980,7 @@ def simplify(expr):
     expr = Poly.cancel(powsimp(expr))
     return together(expr.expand())
 
-def nsimplify(expr, constants=[]):
+def nsimplify(expr, constants=[], tolerance=None, full=False):
     """
     Numerical simplification -- tries to find a simple formula
     that numerically matches the given expression. The input should
@@ -988,6 +988,12 @@ def nsimplify(expr, constants=[]):
 
     Optionally, a list of (rationally independent) constants to
     include in the formula may be given.
+
+    A lower tolerance may be set to find less exact matches.
+
+    With full=True, a more extensive search is performed
+    (this is useful to find simpler numbers when the tolerance
+    is set low).
 
     Examples:
 
@@ -998,6 +1004,8 @@ def nsimplify(expr, constants=[]):
         1/2 - I*(1/4 + 1/10*5**(1/2))**(1/2)
         >>> nsimplify(I**I, [pi])
         exp(-pi/2)
+        >>> nsimplify(pi, tolerance=0.01)
+        22/7
 
     """
     expr = sympify(expr)
@@ -1025,16 +1033,20 @@ def nsimplify(expr, constants=[]):
         xv = x._to_mpmath(bprec)
         try:
             # We'll be happy with low precision if a simple fraction
-            mpmath.mp.dps = 15
-            rat = mpmath.findpoly(xv, 1)
-            if rat is not None:
-                # XXX: will need to reverse rat coefficients when
-                # updating mpmath in sympy
-                return Rational(-int(rat[0]), int(rat[1]))
+            if not (tolerance or full):
+                mpmath.mp.dps = 15
+                rat = mpmath.findpoly(xv, 1)
+                if rat is not None:
+                    # XXX: will need to reverse rat coefficients when
+                    # updating mpmath in sympy
+                    return Rational(-int(rat[0]), int(rat[1]))
             mpmath.mp.dps = prec
-            newexpr = mpmath.identify(xv, constants_dict)
-            if newexpr is None:
+            newexpr = mpmath.identify(xv, constants=constants_dict,
+                tolerance=tolerance, full=full)
+            if not newexpr:
                 raise ValueError
+            if full:
+                newexpr = newexpr[0]
             return sympify(newexpr)
         finally:
             mpmath.mp.dps = orig
