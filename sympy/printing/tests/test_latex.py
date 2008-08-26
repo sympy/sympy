@@ -101,3 +101,8 @@ def test_latex_rational():
             "$- \\frac{1}{2} x - \\frac{2}{3} y$",
             "$- \\frac{2}{3} y - \\frac{1}{2} x$",
             ]
+
+def test_latex_inverse():
+    #tests issue 1030
+    assert latex(1/x) == "$\\frac{1}{x}$"
+    assert latex(1/(x+y)) in ["$\\frac{1}{x + y}$", "$\\frac{1}{y + x}$"]

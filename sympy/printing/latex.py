@@ -114,6 +114,16 @@ class LatexPrinter(Printer):
             if expr.base.is_Function:
                 return self._print(expr.base, self._print(expr.exp))
             else:
+                if expr.exp == S.NegativeOne:
+                    #solves issue 1030
+                    #As Mul always simplify 1/x to x**-1
+                    #The objective is achieved with this hack
+                    #first we get the latex for -1 * expr,
+                    #which is a Mul expression
+                    tex = self._print(S.NegativeOne * expr).strip()
+                    #the result comes with a minus and a space, so we remove
+                    if tex[:1] == "-":
+                        return tex[1:].strip()
                 if self._needs_brackets(expr.base):
                     tex = r"\left(%s\right)^{%s}"
                 else:
