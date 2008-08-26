@@ -438,25 +438,25 @@ def collect(expr, syms, evaluate=True, exact=False):
        You can also apply this function to differential equations, where
        derivatives of arbitary order can be collected:
 
-       #>>> from sympy import Derivative as D
-       #>>> f = Function(x)
+       >>> from sympy import Derivative as D
+       >>> f = Function('f') (x)
 
-       #>>> collect(a*D(f,x) + b*D(f,x), D(f,x))
-       #(a+b)*Function'(x)
+       >>> collect(a*D(f,x) + b*D(f,x), D(f,x))
+       (a + b)*D(f(x), x)
 
-       #>>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x))
-       #(a+b)*(Function'(x))'
+       >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x))
+       (a + b)*D(D(f(x), x), x)
 
-       #>>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x), exact=True)
-       #a*(Function'(x))'+b*(Function'(x))'
+       >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x), exact=True)
+       a*D(D(f(x), x), x) + b*D(D(f(x), x), x)
 
-       #>>> collect(a*D(D(f,x),x) + b*D(D(f,x),x) + a*D(f,x) + b*D(f,x), D(f,x))
-       #(a+b)*Function'(x)+(a+b)*(Function'(x))'
+       >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x) + a*D(f,x) + b*D(f,x), D(f,x))
+       (a + b)*D(D(f(x), x), x) + (a + b)*D(f(x), x)
 
        Or you can even match both derivative order and exponent at time:
 
-       #>>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
-       #(a+b)*(Function'(x))'**2
+       >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
+       (a + b)*D(D(f(x), x), x)**2
 
     """
     def make_expression(terms):
@@ -482,10 +482,18 @@ def collect(expr, syms, evaluate=True, exact=False):
     def parse_derivative(deriv):
         # scan derivatives tower in the input expression and return
         # underlying function and maximal differentiation order
-        expr, sym, order = deriv.f, deriv.x, 1
+        if len(deriv.symbols) != 1:
+            raise NotImplementedError('Improve Derivative support in collect')
+        expr, sym, order = deriv.expr, deriv.symbols[0], 1
 
-        while isinstance(expr, Derivative) and expr.x == sym:
-            expr, order = expr.f, order+1
+        while isinstance(expr, Derivative):
+            if len(expr.symbols) != 1:
+                raise NotImplementedError('Improve Derivative support in collect')
+
+            if expr.symbols[0] == sym:
+                expr, order = expr.expr, order+1
+            else:
+                break
 
         return expr, (sym, Rational(order))
 
