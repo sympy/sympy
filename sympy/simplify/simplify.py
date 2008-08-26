@@ -408,11 +408,11 @@ def collect(expr, syms, evaluate=True, exact=False):
        power's base and symbolic part of the exponent are treated
        as a single symbol:
 
-       #>>> collect(a*x**c + b*x**c, x)
-       #a*x**c + b*x**c
+       >>> collect(a*x**c + b*x**c, x)
+       a*x**c + b*x**c
 
-       #>>> collect(a*x**c + b*x**c, x**c)
-       #x**c*(a + b)
+       >>> collect(a*x**c + b*x**c, x**c)
+       x**c*(a + b)
 
        However if you incorporate rationals to the exponents, then
        you will get well known behaviour:
@@ -423,8 +423,8 @@ def collect(expr, syms, evaluate=True, exact=False):
        Note also that all previously stated facts about 'collect'
        function apply to the exponential function, so you can get:
 
-       #>>> collect(a*exp(2*x) + b*exp(2*x), exp(x))
-       #(a+b)*exp(2*x)
+       >>> collect(a*exp(2*x) + b*exp(2*x), exp(x))
+       (a + b)*exp(2*x)
 
        If you are interested only in collecting specific powers
        of some symbols then set 'exact' flag in arguments:
