@@ -397,6 +397,10 @@ class Real(Number):
     def epsilon_eq(self, other, epsilon="10e-16"):
         return abs(self - other) < Real(epsilon)
 
+# this is here to work nicely in Sage
+RealNumber = Real
+
+
 def _parse_rational(s):
     """Parse rational number from string representation"""
     # Simple fraction

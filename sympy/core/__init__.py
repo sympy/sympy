@@ -3,7 +3,7 @@
 
 from basic import Basic, S, C, sympify
 from symbol import Symbol, Wild, symbols, var
-from numbers import Number, Real, Rational, Integer, igcd, ilcm
+from numbers import Number, Real, Rational, Integer, igcd, ilcm, RealNumber
 from power import Pow
 from mul import Mul
 from add import Add
