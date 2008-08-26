@@ -1,5 +1,6 @@
 from sympy import (symbols, integrate, Integral, exp, oo, Symbol, Function, Rational,
-    log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix, sympify, sqrt, atan)
+    log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix, sympify, sqrt, atan,
+    DiracDelta, Heaviside)
 from sympy.utilities.pytest import XFAIL
 from sympy.physics.units import m, s
 import py
@@ -246,3 +247,14 @@ def xtest_failing_integrals():
     assert NS(Integral(sqrt(x)+x*y, (x, 1, 2), (y, -1, 1)), 15) == '2.43790283299492'
     # double integral + zero detection
     assert NS(Integral(sin(x+x*y), (x, -1, 1), (y, -1, 1)), 15) == '0.0'
+
+def test_integrate_DiracDelta():
+    assert integrate(DiracDelta(x),x) == Heaviside(x)
+    assert integrate(DiracDelta(x) * f(x),x) == f(0) * Heaviside(x)
+    assert integrate(DiracDelta(x) * f(x),(x,-oo,oo)) == f(0)
+    assert integrate(DiracDelta(x) * f(x),(x,0,oo)) == f(0)/2
+    assert integrate(DiracDelta(x**2+x-2),x) - \
+           (Heaviside(-1 + x)/3 + Heaviside(2 + x)/3) == 0
+    assert integrate(cos(x)*(DiracDelta(x)+DiracDelta(x**2-1))*sin(x)*(x-pi),x) - \
+           (-pi*(cos(1)*Heaviside(-1 + x)*sin(1)/2 - cos(1)*Heaviside(1 + x)*sin(1)/2) + \
+           cos(1)*Heaviside(1 + x)*sin(1)/2 + cos(1)*Heaviside(-1 + x)*sin(1)/2) == 0

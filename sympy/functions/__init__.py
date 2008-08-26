@@ -30,6 +30,7 @@ from special.gamma_functions import gamma, lowergamma, uppergamma, polygamma, lo
 from special.zeta_functions import dirichlet_eta, zeta
 from special.spherical_harmonics import Ylm, Zlm
 from special.tensor_functions import Dij, Eijk
+from special.delta_functions import DiracDelta, Heaviside
 
 ln = log
 

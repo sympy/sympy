@@ -414,6 +414,14 @@ class LatexPrinter(Printer):
 
         return r"\begin{Bmatrix}%s\end{Bmatrix}" % r", & ".join(items)
 
+    def _print_DiracDelta(self, expr):
+        if len(expr.args) == 1 or expr.args[1] == 0:
+            tex = r"\delta\left(%s\right)" % self._print(expr.args[0])
+        else:
+            tex = r"\delta^{\left( %s \right)}\left( %s \right)" % (\
+            self._print(expr.args[1]), self._print(expr.args[0]))
+        return tex
+
 def latex(expr, inline=True):
     r"""Convert the given expression to LaTeX representation.
 

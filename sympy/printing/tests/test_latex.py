@@ -5,6 +5,7 @@ from sympy import symbols, Rational, Symbol, Integral, log, diff, sin, exp, \
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL
+from sympy.functions import DiracDelta
 
 x,y = symbols('xy')
 k,n = symbols('kn', integer=True)
@@ -106,3 +107,8 @@ def test_latex_inverse():
     #tests issue 1030
     assert latex(1/x) == "$\\frac{1}{x}$"
     assert latex(1/(x+y)) in ["$\\frac{1}{x + y}$", "$\\frac{1}{y + x}$"]
+
+def test_latex_DiracDelta():
+    assert latex(DiracDelta(x)) == "$\\delta\\left(x\\right)$"
+    assert latex(DiracDelta(x,0)) == "$\\delta\\left(x\\right)$"
+    assert latex(DiracDelta(x,5)) == "$\\delta^{\\left( 5 \\right)}\\left( x \\right)$"
