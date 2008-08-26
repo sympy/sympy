@@ -1,5 +1,5 @@
 from sympy import (Symbol, Sum, oo, Real, Rational, sum, pi, cos, zeta,
-    Catalan, log, factorial, sqrt, E, sympify, binomial, EulerGamma)
+    Catalan, log, factorial, sqrt, E, sympify, binomial, EulerGamma, Function)
 from sympy.concrete.summations import getab
 from sympy.utilities.pytest import XFAIL
 
@@ -155,3 +155,11 @@ def test_wallis_product():
     assert B == R
     # This one should eventually also be doable (Euler's product formula for sin)
     # assert Product(1+x/n**2, (n, 1, b)) == ...
+
+def test_telescopic_sums():
+    #checks also input 2 of comment 1 issue 1028
+    assert Sum(1/k - 1/(k+1),(k,1,n)).doit() == 1 - 1/(1 + n)
+    f = Function("f")
+    assert Sum(f(k)-f(k+2),(k,m,n)).doit() == -f(1+n) - f(2+n) + f(m) + f(1+m)
+    assert Sum(cos(k)-cos(k+3),(k,1,n)).doit() == -cos(1 + n) - cos(2 + n) - \
+                                           cos(3 + n) + cos(1) + cos(2) + cos(3)

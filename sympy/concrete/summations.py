@@ -1,7 +1,8 @@
 
 from sympy.core import (Basic, S, C, Add, Mul, Symbol, Equality, Interval,
-    sympify, symbols)
+    sympify, symbols, Wild)
 from sympy.functions import factorial
+from sympy.solvers import solve
 
 class Sum(Basic):
     """Represents unevaluated summation."""
@@ -163,6 +164,54 @@ def getab(expr):
     cls = expr.__class__
     return cls(expr.args[0]), cls(*expr.args[1:])
 
+def telescopic_direct(L, R, n, (i, a, b)):
+    '''Returns the direct summation of the terms of a telescopic sum
+
+    L is the term with lower index
+    R is the term with higher index
+    n difference between the indexes of L and R
+
+    For example:
+
+    >>> k,a,b = symbols('kab')
+    >>> telescopic_direct(1/k, -1/(k+2), 2, (k, a, b))
+    1/a + 1/(1 + a) - 1/(1 + b) - 1/(2 + b)
+    '''
+    s = 0
+    for m in xrange(n):
+        s += L.subs(i,a+m) + R.subs(i,b-m)
+    return s
+
+def telescopic(L, R, (i, a, b)):
+    '''Tries to perform the summation using the telescopic property
+
+    return None if not possible
+    '''
+    if L.is_Add or R.is_Add:
+        return None
+    s = None
+    #First we try to solve using match
+    #Maybe this should go inside solve
+    k = Wild("k")
+    sol = (-R).match(L.subs(i, i + k))
+    if sol and sol.has_key(k):
+        if L.subs(i,i + sol[k]) == -R:
+            #sometimes match fail(f(x+2).match(-f(x+k))->{k: -2 - 2x}))
+            s = sol[k]
+    #Then we try to solve using solve
+    if not s or not s.is_Integer:
+        m = Symbol("m")
+        try:
+            s = solve(L.subs(i, i + m) + R, m)[0]
+        except ValueError:
+            pass
+    if s and s.is_Integer:
+        if s < 0:
+            return telescopic_direct(R, L, abs(s), (i, a, b))
+        elif s > 0:
+            return telescopic_direct(L, R, s, (i, a, b))
+    return None
+
 def eval_sum(f, (i, a, b)):
     if not f.has(i):
         return f*(b-a+1)
@@ -172,6 +221,7 @@ def eval_sum(f, (i, a, b)):
         return eval_sum_direct(f, (i, a, b))
     # Try to do it symbolically. Even when the number of terms is known,
     # this can save time when b-a is big.
+    # We should try to transform to partial fractions
     value = eval_sum_symbolic(f.expand(), (i, a, b))
     if value is not None:
         return value
@@ -185,10 +235,16 @@ def eval_sum_symbolic(f, (i, a, b)):
     # Linearity
     if f.is_Mul:
         L, R = getab(f)
-        if not L.has(i): return L*eval_sum_symbolic(R, (i, a, b))
-        if not R.has(i): return R*eval_sum_symbolic(L, (i, a, b))
+        if not L.has(i):
+            sR = eval_sum_symbolic(R, (i, a, b))
+            if sR: return L*sR
+        if not R.has(i):
+            sL = eval_sum_symbolic(L, (i, a, b))
+            if sL: return R*sL
     if f.is_Add:
         L, R = getab(f)
+        lrsum = telescopic(L, R, (i, a, b))
+        if lrsum: return lrsum
         lsum = eval_sum_symbolic(L, (i, a, b))
         rsum = eval_sum_symbolic(R, (i, a, b))
         if None not in (lsum, rsum):
