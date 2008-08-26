@@ -227,3 +227,10 @@ def test_int_float():
     assert abs(_sympify(f1_1) - 1.1) < 1e-5
     assert abs(_sympify(f1_1b) - 1.1) < 1e-5
     assert abs(_sympify(f1_1c) - 1.1) < 1e-5
+
+
+def test_issue1034():
+    a = sympify('Integer(4)')
+
+    assert a == Integer(4)
+    assert a.is_Integer

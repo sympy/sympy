@@ -304,3 +304,10 @@ def test_issue1008():
     assert  pi*(E + 10**10) + pi*(-E - 10**10)  == 0
     assert  pi*(E + 10**20) + pi*(-E - 10**20)  == 0
     assert  pi*(E + 10**80) + pi*(-E - 10**80)  == 0
+
+
+def test_IntegerInteger():
+    a = Integer(4)
+    b = Integer(a)
+
+    assert a == b

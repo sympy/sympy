@@ -687,12 +687,21 @@ class Integer(Rational):
         try:
             return _intcache[i]
         except KeyError:
-            if not isinstance(i, (int, long)):
+            # The most often situation is when Integers are created from Python
+            # int or long
+            if isinstance(i, (int, long)):
+                obj = Basic.__new__(cls)
+                obj.p = i
+                _intcache[i] = obj
+                return obj
+
+            # Also, we seldomly need the following to work:
+            # UC: Integer(Integer(4))   <-- sympify('4')
+            elif i.is_Integer:
+                return i
+
+            else:
                 raise ValueError('invalid argument for Integer: %r' % (i,))
-            obj = Basic.__new__(cls)
-            obj.p = i
-            _intcache[i] = obj
-            return obj
 
     # Arithmetic operations are here for efficiency
     def __int__(self):
