@@ -11,6 +11,8 @@ from sympy.polys import Poly
 
 from sys import maxint
 
+import sympy.mpmath as mpmath
+
 def fraction(expr, exact=False):
     """Returns a pair with expression's numerator and denominator.
        If the given expression is not a fraction then this function
@@ -977,3 +979,71 @@ def simplify(expr):
     """
     expr = Poly.cancel(powsimp(expr))
     return together(expr.expand())
+
+def nsimplify(expr, constants=[]):
+    """
+    Numerical simplification -- tries to find a simple formula
+    that numerically matches the given expression. The input should
+    be possible to evalf to a precision of at least 30 digits.
+
+    Optionally, a list of (rationally independent) constants to
+    include in the formula may be given.
+
+    Examples:
+
+        >>> from sympy import *
+        >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
+        -2 + 2*GoldenRatio
+        >>> nsimplify((1/(exp(3*pi*I/5)+1)))
+        1/2 - I*(1/4 + 1/10*5**(1/2))**(1/2)
+        >>> nsimplify(I**I, [pi])
+        exp(-pi/2)
+
+    """
+    expr = sympify(expr)
+
+    prec = 30
+    bprec = int(prec*3.33)
+
+    constants_dict = {}
+    for constant in constants:
+        constant = sympify(constant)
+        v = constant.evalf(prec)
+        if not v.is_Real:
+            raise ValueError("constants must be real-valued")
+        constants_dict[str(constant)] = v._to_mpmath(bprec)
+
+    exprval = expr.evalf(prec, chop=True)
+    re, im = exprval.as_real_imag()
+
+    # Must be numerical
+    if not ((re.is_Real or re.is_Integer) and (im.is_Real or im.is_Integer)):
+        return expr
+
+    def nsimplify_real(x):
+        orig = mpmath.mp.dps
+        xv = x._to_mpmath(bprec)
+        try:
+            # We'll be happy with low precision if a simple fraction
+            mpmath.mp.dps = 15
+            rat = mpmath.findpoly(xv, 1)
+            if rat is not None:
+                # XXX: will need to reverse rat coefficients when
+                # updating mpmath in sympy
+                return Rational(-int(rat[0]), int(rat[1]))
+            mpmath.mp.dps = prec
+            newexpr = mpmath.identify(xv, constants_dict)
+            if newexpr is None:
+                raise ValueError
+            return sympify(newexpr)
+        finally:
+            mpmath.mp.dps = orig
+    try:
+        if re: re = nsimplify_real(re)
+        if im: im = nsimplify_real(im)
+    except ValueError:
+        return expr
+
+    return re + im*S.ImaginaryUnit
+
+

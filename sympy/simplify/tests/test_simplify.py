@@ -1,7 +1,8 @@
 from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
         collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
-        solve
+        solve, nsimplify, GoldenRatio, sqrt, I, sympify, atan
+
 from sympy.utilities.pytest import XFAIL
 
 def test_ratsimp():
@@ -226,3 +227,18 @@ def test_together2():
     assert together(1/(x*y) + 1/y**2) == 1/x*y**(-2)*(x + y)
     assert together(1/(1 + 1/x)) == x/(1 + x)
     assert together(1/x**y + 1/x**(y-1)) == x**(-y)*(1 + x)
+
+def test_nsimplify():
+    x = Symbol("x")
+    assert nsimplify(0) == 0
+    assert nsimplify(-1) == -1
+    assert nsimplify(1) == 1
+    assert nsimplify(1+x) == 1+x
+    assert nsimplify(2.7) == Rational(27,10)
+    assert nsimplify(1-GoldenRatio) == (1-sqrt(5))/2
+    assert nsimplify((1+sqrt(5))/4, [GoldenRatio]) == GoldenRatio/2
+    assert nsimplify(2/GoldenRatio, [GoldenRatio]) == 2*GoldenRatio - 2
+    assert nsimplify(exp(5*pi*I/3, evaluate=False)) == sympify('1/2 - I*3**(1/2)/2')
+    assert nsimplify(sin(3*pi/5, evaluate=False)) == sympify('(5/8 + 1/8*5**(1/2))**(1/2)')
+    assert nsimplify(sqrt(atan('1', evaluate=False))*(2+I), [pi]) == sqrt(pi) + sqrt(pi)/2*I
+    assert nsimplify(2 + exp(2*atan('1/4')*I)) == sympify('49/17 + 8*I/17')
