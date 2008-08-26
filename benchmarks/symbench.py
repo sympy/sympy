@@ -14,19 +14,17 @@ def R1():
     e = f(f(f(f(f(f(f(f(f(f(I/2)))))))))).as_real_imag()[0]
 
 def R2():
-    "Hermite polynomial phi(25, 4)"
+    "Hermite polynomial hermite(15, y)"
     def hermite(n, y):
-      if n == 1:
-          return 2*y
-      if n == 0:
-          return 1
-      return 2*y*hermite(n-1,y) - 2*(n-1)*hermite(n-2,y)
+      if n == 1: return 2*y
+      if n == 0: return 1
+      return (2*y*hermite(n-1,y) - 2*(n-1)*hermite(n-2,y)).expand()
 
-    def phi(n, y):
-      return 1/(sqrt(2**n*factorial(n))*pi**(Integer(1)/4))*exp(-y**2/2)* \
-                hermite(n,y)
+    #def phi(n, y):
+    #  return 1/(sqrt(2**n*factorial(n))*pi**(Integer(1)/4))*exp(-y**2/2)* \
+    #            hermite(n,y)
 
-    a = phi(25,4)
+    a = hermite(15, y)
 
 def R3():
     "a = [bool(f==f) for _ in range(10)]"
