@@ -2,7 +2,7 @@ from sympy.core.evalf import *
 
 from sympy import pi, I, Symbol, Add, Rational, exp, sqrt, sin, cos, fibonacci, \
     Integral, oo, E, atan, log, integrate, floor, ceiling, factorial, binomial, \
-    Sum, zeta, Catalan, Pow
+    Sum, zeta, Catalan, Pow, GoldenRatio
 
 import py
 
@@ -93,6 +93,7 @@ def test_evalf_complex_cancellation():
 
 def test_evalf_logs():
     assert NS("log(3+pi*I)", 15) == '1.46877619736226 + 0.808448792630022*I'
+    assert NS("log(pi*I)", 15) == '1.14472988584940 + 1.57079632679490*I'
 
 def test_evalf_trig():
     assert NS('sin(1)',15) == '0.841470984807897'
@@ -151,6 +152,8 @@ def test_evalf_integer_parts():
         11188719610782480504630258070757734324011354208865721592720336800L
     assert int(ceiling(factorial(50)/E,evaluate=False).evalf()) == \
         11188719610782480504630258070757734324011354208865721592720336801L
+    assert int(floor((GoldenRatio**999 / sqrt(5) + Rational(1,2))).evalf(1000)) == fibonacci(999)
+    assert int(floor((GoldenRatio**1000 / sqrt(5) + Rational(1,2))).evalf(1000)) == fibonacci(1000)
 
 def test_evalf_trig_zero_detection():
     a = sin(160*pi, evaluate=False)
@@ -159,7 +162,6 @@ def test_evalf_trig_zero_detection():
     assert t._prec < 2
     assert a.evalf(chop=True) == 0
     assert py.test.raises(PrecisionExhausted, "a.evalf(strict=True)")
-
 
 def test_evalf_divergent_series():
     py.test.raises(ValueError, 'Sum(1/n, (n, 1, oo)).evalf()')

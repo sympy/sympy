@@ -94,7 +94,7 @@ def complex_accuracy(result):
 def get_abs(expr, prec, options):
     re, im, re_acc, im_acc = evalf(expr, prec+2, options)
     if not re:
-        re, re_acc = im, im_acc
+        re, re_acc, im, im_acc = im, im_acc, re, re_acc
     if im:
         return libmpc.mpc_abs((re, im), prec), None, re_acc, None
     else:
@@ -175,7 +175,13 @@ def get_integer_part(expr, no, options, return_ints=False):
 
     Note: this function either gives the exact result or signals failure.
     """
-    ire, iim, ire_acc, iim_acc = evalf(expr, 30, options)
+
+    # The expression is likely less than 2^30 or so
+    assumed_size = 30
+    ire, iim, ire_acc, iim_acc = evalf(expr, assumed_size, options)
+
+    # We now know the size, so we can calculate how much extra precision
+    # (if any) is needed to get within the nearest integer
     if ire and iim:
         gap = max(fastlog(ire)-ire_acc, fastlog(iim)-iim_acc)
     elif ire:
@@ -183,26 +189,33 @@ def get_integer_part(expr, no, options, return_ints=False):
     elif iim:
         gap = fastlog(iim)-iim_acc
     else:
+        # ... or maybe the expression was exactly zero
         return None, None, None, None
-    if gap >= -10:
-        ire, iim, ire_acc, iim_acc = evalf(expr, 30+gap, options)
-    if ire: nint_re = int(to_int(ire, round_nearest))
-    if iim: nint_im = int(to_int(iim, round_nearest))
+
+    margin = 10
+
+    if gap >= -margin:
+        ire, iim, ire_acc, iim_acc = evalf(expr, margin+assumed_size+gap, options)
+
+    # We can now easily find the nearest integer, but to find floor/ceil, we
+    # must also calculate whether the difference to the nearest integer is
+    # positive or negative (which may fail if very close)
+    def calc_part(expr, nexpr):
+        nint = int(to_int(nexpr, round_nearest))
+        expr = C.Add(expr, -nint, evaluate=False)
+        x, _, x_acc, _ = evalf(expr, 10, options)
+        check_target(expr, (x, None, x_acc, None), 3)
+        nint += int(no*(fcmp(x or fzero, fzero) == no))
+        nint = from_int(nint)
+        return nint, fastlog(nint) + 10
+
     re, im, re_acc, im_acc = None, None, None, None
+
     if ire:
-        e = C.Add(C.re(expr, evaluate=False), -nint_re, evaluate=False)
-        re, _, re_acc, _ = evalf(e, 10, options)
-        check_target(e, (re, None, re_acc, None), 3)
-        #assert (re_acc - fastlog(re)) > 3
-        nint_re += int(no*(fcmp(re or fzero, fzero) == no))
-        re = from_int(nint_re)
+        re, re_acc = calc_part(C.re(expr, evaluate=False), ire)
     if iim:
-        e = C.Add(C.im(expr, evaluate=False), -nint_im*S.ImaginaryUnit, evaluate=False)
-        _, im, _, im_acc = evalf(e, 10, options)
-        check_target(e, (im, None, im_acc, None), 3)
-        #assert (im_acc - fastlog(im)) > 3
-        nint_im += int(no*(fcmp(im or fzero, fzero) == no))
-        im = from_int(nint_im)
+        im, im_acc = calc_part(C.im(expr, evaluate=False), iim)
+
     if return_ints:
         return int(to_int(re or fzero)), int(to_int(im or fzero))
     return re, im, re_acc, im_acc
@@ -535,7 +548,7 @@ def evalf_log(expr, prec, options):
     if xim:
         # XXX: use get_abs etc instead
         re = evalf_log(C.log(C.abs(arg, evaluate=False), evaluate=False), prec, options)
-        im = fatan2(xim, xre, prec)
+        im = fatan2(xim, xre or fzero, prec)
         return re[0], im, re[2], prec
 
     imaginary_term = (fcmp(xre, fzero) < 0)
