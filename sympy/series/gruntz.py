@@ -334,61 +334,23 @@ def calculate_series(e, x):
     This is a place that fails most often, so it is made robust so that
     meaningful errors are printed out in case of problems.
     """
-    def report(f, x):
-        print "The limit algorithm needs to calculate the series of"
-        print "series:", f
-        print "expansion variable (expanding around 0+):", x
-        print """\
-But the series expansion failed. Check that this series is meaningful and make
-it work, then run this again. If the series cannot be mathematically calculated, the bug is in the limit algorithm."""
-        raise NotImplementedError("The underlying series facility failed (read the messages printed to stdout for more information)")
 
     #First do some simplification (the oseries can fail otherwise). Better
     #solution is to fix oseries, so that it works for any expression.
     f = e.expand().normal()
-    try:
-        series=f.nseries(x, 0, 2).removeO()
-        if series == 0:
-            #we need to calculate more terms, let's try 4:
-            series=f.nseries(x, 0, 4).removeO()
-        if series == 0:
-            #we need to calculate more terms, let's try 10:
-            series=f.nseries(x, 0, 6).removeO()
-        if series == 0:
-            #we need to calculate more terms, let's try 30:
-            series=f.nseries(x, 0, 8).removeO()
-    except:
-        import traceback
-        traceback.print_exc()
-        report(f, x)
+    series=f.nseries(x, 0, 2).removeO()
     if series == 0:
-        report(f, x)
+        #we need to calculate more terms, let's try 4:
+        series=f.nseries(x, 0, 4).removeO()
+    if series == 0:
+        #we need to calculate more terms, let's try 10:
+        series=f.nseries(x, 0, 6).removeO()
+    if series == 0:
+        #we need to calculate more terms, let's try 30:
+        series=f.nseries(x, 0, 8).removeO()
+    assert series != 0
     assert not isinstance(series, O), f
     return series
-
-def calculate_leadterm(e, x):
-    """ Calculates the leadterm of "e" in "x".
-
-    Make a nice report if it fails, that signals a bug either in limits or
-    series expansion.
-    """
-
-    def report(f, x):
-        print "The limit algorithm needs to calculate the leadterm of"
-        print "series:", f
-        print "expansion variable (expanding around 0+):", x
-        print """\
-But the leadterm() method failed. Check that this series is meaningful and make
-it work, then run this again. If the leadterm() cannot be mathematically
-calculated, the bug is in the limit algorithm."""
-        raise NotImplementedError("The underlying series facility failed (read the messages printed to stdout for more information)")
-
-    try:
-        return e.leadterm(x)
-    except:
-        import traceback
-        traceback.print_exc()
-        report(e, x)
 
 @debug
 def mrv_leadterm(e, x, Omega=[]):
@@ -413,7 +375,7 @@ def mrv_leadterm(e, x, Omega=[]):
     f, logw=rewrite(e, set(Omega), x, wsym)
     series = calculate_series(f, wsym)
     series=series.subs(log(wsym), logw)
-    return calculate_leadterm(series, wsym)
+    return series.leadterm(wsym)
 
 
 #this class is not yet adapted for the new core.
