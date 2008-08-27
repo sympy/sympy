@@ -417,11 +417,63 @@ class log(Function):
         r = arg.match(k*x**l)
         if r is not None:
             k, l = r[k], r[l]
-            if l != 0:
-                r = log(k).nseries(x, x0, n) + \
-                        (l.nseries(x, x0, n)*log(x)).expand()
+            if l != 0 and not l.has(x) and not k.has(x):
+                r = log(k) + l*log(x)
                 return r
-        return self._series(x, x0, n)
+        order = C.Order(x**n, x)
+        arg = self.args[0]
+        x = order.symbols[0]
+        ln = C.log
+        use_lt = not C.Order(1,x).contains(arg)
+        if not use_lt:
+            arg0 = arg.limit(x, 0)
+            use_lt = (arg0 is S.Zero)
+        if use_lt: # singularity, #example: self = log(sin(x))
+            # arg = (arg / lt) * lt
+            lt = arg.as_leading_term(x) # arg = sin(x); lt = x
+            a = (arg/lt).expand() # a = sin(x)/x
+            # the idea is to recursively call ln(a).series(), but one needs to
+            # make sure that ln(sin(x)/x) doesn't get "simplified" to
+            # -log(x)+ln(sin(x)) and an infinite recursion occurs, see also the
+            # issue 252.
+            obj = ln(lt) + ln(a)._eval_nseries(x, x0, n)
+        else:
+            # arg -> arg0 + (arg - arg0) -> arg0 * (1 + (arg/arg0 - 1))
+            z = (arg/arg0 - 1)
+            x = order.symbols[0]
+            ln = C.log
+            o = C.Order(z, x)
+            if o is S.Zero:
+                return ln(1+z)+ ln(arg0)
+            if o.expr==1:
+                e = ln(order.expr*x)/ln(x)
+            else:
+                e = ln(order.expr)/ln(o.expr)
+            n = e.limit(x,0) + 1
+            if n.is_unbounded:
+                # requested accuracy gives infinite series,
+                # order is probably nonpolynomial e.g. O(exp(-1/x), x).
+                return ln(1+z)+ ln(arg0)
+            try:
+                n = int(n)
+            except TypeError:
+                #well, the n is something more complicated (like 1+log(2))
+                n = int(n.evalf()) + 1
+            assert n>=0,`n`
+            l = []
+            g = None
+            for i in xrange(n+2):
+                g = ln.taylor_term(i, z, g)
+                l.append(g)
+            obj = C.Add(*l) + ln(arg0)
+        obj2 = obj.expand()
+        if obj2 != obj:
+            r = obj2.nseries(x, x0, n)
+        else:
+            r = obj
+        if r==self:
+            return self
+        return r + order
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
