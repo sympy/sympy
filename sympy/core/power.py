@@ -434,34 +434,6 @@ class Pow(Basic):
             return Basic.matches(pattern, expr, repl_dict, evaluate)
         return d
 
-    def _eval_oseries(self, order):
-        """
-        f**g + O(h) == (f+O(k))**g -> .. -> f**g + O(f**(g-1)*k), hence O(k)==O(h*f**(1-g)).
-        If f->0 as x->0 then
-        """
-        x = order.symbols[0]
-        e = self.exp
-        b = self.base
-        ln = C.log
-        exp = C.exp
-        if e.has(x):
-            return exp(e * ln(b)).oseries(order)
-        if b==x: return self
-        b0 = b.limit(x,0)
-        if b0 is S.Zero or b0.is_unbounded:
-            lt = b.as_leading_term(x)
-            o = order * lt**(1-e)
-            bs = b.oseries(o)
-            if bs.is_Add:
-                # bs -> lt + rest -> lt * (1 + (bs/lt - 1))
-                return lt**e * ((bs/lt).expand()**e).oseries(order * lt**(-e))
-            return bs**e
-        o = order * (b0**-e)
-        # b -> b0 + (b-b0) -> b0 * (1 + (b/b0-1))
-        z = (b/b0-1)
-        r = self._compute_oseries(z, o, self.taylor_term, lambda z: 1+z) * b0**e
-        return r
-
     def _eval_nseries(self, x, x0, n):
         def geto(e):
             "Returns the O(..) symbol, or None if there is none."

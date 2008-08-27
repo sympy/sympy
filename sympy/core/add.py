@@ -308,9 +308,6 @@ class Add(AssocOp):
                         return Add(*([coeff1-coeff2]+factors1[:i]+[new]+factors1[i+l2:]))
         return self.__class__(*[s.subs(old, new) for s in self.args])
 
-    def _eval_oseries(self, order):
-        return Add(*[f.oseries(order) for f in self.args])
-
     @cacheit
     def extract_leading_order(self, *symbols):
         """

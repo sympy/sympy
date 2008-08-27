@@ -1948,41 +1948,6 @@ class Basic(AssumeMeths):
         point = sympify(point)
         return self.nseries(x, point, n)
 
-    @cacheit
-    def oseries(self, order):
-        """
-        Return the series of an expression up to given Order symbol (without the
-        actual O term).
-
-        The general philosophy is this: simply start with the most simple
-        Taylor (Laurent) term and calculate one be one and use
-        order.contains(term) method to determine if your term is still
-        significant and should be added to the series, or we should stop.
-        """
-        order = C.Order(order)
-        if order is S.Zero:
-            return self
-        if order.contains(self):
-            return S.Zero
-        if len(order.symbols)>1:
-            r = self
-            for s in order.symbols:
-                o = C.Order(order.expr, s)
-                r = r.oseries(o)
-            return r
-        x = order.symbols[0]
-        if not self.has(x):
-            return self
-        obj = self._eval_oseries(order)
-        if obj is not None:
-            #obj2 = obj.expand(trig=True)
-            obj2 = obj.expand()
-            if obj2 != obj:
-                r = obj2.oseries(order)
-                return r
-            return obj
-        raise NotImplementedError('(%s).oseries(%s)' % (self, order))
-
     def nseries(self, x, x0, n):
         """
         Calculates a generalized series expansion.
@@ -2007,42 +1972,6 @@ class Basic(AssumeMeths):
         have to write docstrings for _eval_nseries().
         """
         raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, x0, n))
-
-    def _eval_oseries(self, order):
-        return
-
-    def _compute_oseries(self, arg, order, taylor_term, unevaluated_func, correction = 0):
-        """
-        compute series sum(taylor_term(i, arg), i=0..n-1) such
-        that order.contains(taylor_term(n, arg)). Assumes that arg->0 as x->0.
-        """
-        x = order.symbols[0]
-        ln = C.log
-        o = C.Order(arg, x)
-        if o is S.Zero:
-            return unevaluated_func(arg)
-        if o.expr==1:
-            e = ln(order.expr*x)/ln(x)
-        else:
-            e = ln(order.expr)/ln(o.expr)
-        n = e.limit(x,0) + 1 + correction
-        if n.is_unbounded:
-            # requested accuracy gives infinite series,
-            # order is probably nonpolynomial e.g. O(exp(-1/x), x).
-            return unevaluated_func(arg)
-        try:
-            n = int(n)
-        except TypeError:
-            #well, the n is something more complicated (like 1+log(2))
-            n = int(n.evalf()) + 1
-        assert n>=0,`n`
-        l = []
-        g = None
-        for i in xrange(n+2):
-            g = taylor_term(i, arg, g)
-            g = g.oseries(order)
-            l.append(g)
-        return Add(*l)
 
     def limit(self, x, xlim, direction='+'):
         """ Compute limit x->xlim.
@@ -2130,10 +2059,6 @@ class Atom(Basic):
 
     def _eval_is_polynomial(self, syms):
         return True
-
-    def _eval_oseries(self, order):
-        # .oseries() method checks for order.contains(self)
-        return self
 
     @property
     def is_number(self):

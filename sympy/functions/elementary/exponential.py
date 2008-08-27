@@ -175,44 +175,6 @@ class exp(Function):
         """exp(b[0])**e -> exp(b[0]*e)"""
         return exp(b.args[0] * e)
 
-    def _eval_oseries(self, order):
-        #XXX quick hack, to pass the tests:
-        #print "XX", self, order
-        #w = C.Symbol("w")
-        #if self[0] == (1 + w)*(-log(w) + log(C.sin(2*w))):
-        #    if order == C.Order(w**3,w):
-        #        return self
-        #    else:
-        #        return self
-        #if self[0] == w*log(2*C.cos(w)*C.sin(w)) - w*log(w):
-        #    if order == C.Order(w**3,w):
-        #        return 1 + w*log(2) + w**2*log(2)**2/2
-        #    else:
-        #        return S.One
-        #if self[0] == (1 + w)*log(1/w*C.sin(2*w)):
-        #    return exp((1 + w)*(-log(w) + log(C.sin(2*w))))
-        #print "XX2...."
-        #Example:
-        #  self       = exp(log(1 + x)/x)
-        #  order      = O(x**2)
-
-        arg = self.args[0]
-        #  arg        = log(1 + x)/x
-        x = order.symbols[0]
-        #  x          = x
-        if not C.Order(1,x).contains(arg): # singularity
-            arg0 = arg.as_leading_term(x)
-            d = (arg-arg0).limit(x, S.Zero)
-            if d is not S.Zero:
-                return exp(arg)
-        else:
-            #  arg = log(1+x)/x   ~ O(1)
-            arg0 = arg.limit(x, S.Zero)
-            #  arg0 = 1
-        o = order * exp(-arg0)
-        #  o = O(x**2) * exp(-1)
-        return self._compute_oseries(arg-arg0, o, exp.taylor_term, exp) * exp(arg0)
-
     def _eval_nseries(self, x, x0, n):
         arg = self.args[0]
         arg_series = arg.nseries(x, x0, n)
@@ -386,30 +348,6 @@ class log(Function):
         if d is S.One:
             return self.func(n), d
         return (self.func(n) - self.func(d)).as_numer_denom()
-
-    # similar code must be added to other functions with have singularites
-    # in their domains eg. cot(), tan() ...
-    # the trick is to factor out the singularity and leave it as is, and expand
-    # the rest, that can be expanded.
-    def _eval_oseries(self, order):
-        arg = self.args[0]
-        x = order.symbols[0]
-        ln = C.log
-        use_lt = not C.Order(1,x).contains(arg)
-        if not use_lt:
-            arg0 = arg.limit(x, 0)
-            use_lt = (arg0 is S.Zero)
-        if use_lt: # singularity, #example: self = log(sin(x))
-            # arg = (arg / lt) * lt
-            lt = arg.as_leading_term(x) # arg = sin(x); lt = x
-            a = (arg/lt).expand() # a = sin(x)/x
-            #the idea is to recursively call ln(a).series(), but the problem
-            #is, that ln(sin(x)/x) gets "simplified" to -log(x)+ln(sin(x)) and
-            #an infinite recursion occurs, see also the issue 252.
-            return ln(lt) + ln(a).oseries(order)
-        # arg -> arg0 + (arg - arg0) -> arg0 * (1 + (arg/arg0 - 1))
-        z = (arg/arg0 - 1)
-        return self._compute_oseries(z, order, ln.taylor_term, lambda z: ln(1+z)) + ln(arg0)
 
     def _eval_nseries(self, x, x0, n):
         arg = self.args[0]

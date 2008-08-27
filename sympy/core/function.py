@@ -261,35 +261,6 @@ class Function(Basic):
         #      f()             args
         return 1   + Add(*[t.count_ops(symbolic) for t in self.args])
 
-    def _eval_oseries(self, order):
-        assert self.func.nargs==1,`self.func`
-        arg = self.args[0]
-        x = order.symbols[0]
-        if not C.Order(1,x).contains(arg):
-            return self.func(arg)
-        arg0 = arg.limit(x, 0)
-        if arg0 is not S.Zero:
-            e = self.func(arg)
-            e1 = e.expand()
-            if e==e1:
-                #for example when e = sin(x+1) or e = sin(cos(x))
-                #let's try the general algorithm
-                term = e.subs(x, S.Zero)
-                series = S.Zero
-                fact = S.One
-                i = 0
-                while not order.contains(term) or term == 0:
-                    series += term
-                    i += 1
-                    fact *= Rational(i)
-                    e = e.diff(x)
-                    term = e.subs(x, S.Zero)*(x**i)/fact
-                return series
-
-                #print '%s(%s).oseries(%s) is unevaluated' % (self.func,arg,order)
-            return e1.oseries(order)
-        return self._compute_oseries(arg, order, self.func.taylor_term, self.func)
-
     def _eval_nseries(self, x, x0, n):
         assert len(self.args) == 1
         arg = self.args[0]
