@@ -402,6 +402,7 @@ class log(Function):
             g = None
             for i in xrange(n+2):
                 g = ln.taylor_term(i, z, g)
+                g = g.nseries(x, x0, n)
                 l.append(g)
             obj = C.Add(*l) + ln(arg0)
         obj2 = obj.expand()

@@ -520,7 +520,7 @@ def collect(expr, syms, evaluate=True, exact=False):
                 sym_expo = expr.exp
         elif expr.func is C.exp:
             if expr.args[0].is_Rational:
-                sexpr, rat_expo = S.Exp1, expr[0]
+                sexpr, rat_expo = S.Exp1, expr.args[0]
             elif expr.args[0].is_Mul:
                 coeff, tail = expr.args[0].as_coeff_terms()
 

@@ -82,7 +82,6 @@ def test_f1a():
     #issue 409:
     assert limit((sin(2*x)/x)**(1+x),x,0) == 2 #Primer 7
 
-@XFAIL
 def test_f1a2():
     #issue 410:
     assert limit(((x-1)/(x+1))**x,x,oo) == exp(-2) #Primer 9
