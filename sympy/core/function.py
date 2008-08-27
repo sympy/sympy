@@ -291,7 +291,34 @@ class Function(Basic):
         return self._compute_oseries(arg, order, self.func.taylor_term, self.func)
 
     def _eval_nseries(self, x, x0, n):
-        return self._series(x, x0, n)
+        assert len(self.args) == 1
+        arg = self.args[0]
+        arg0 = arg.limit(x, 0)
+        if arg0 is not S.Zero:
+            e = self.func(arg)
+            e1 = e.expand()
+            if e==e1:
+                #for example when e = sin(x+1) or e = sin(cos(x))
+                #let's try the general algorithm
+                term = e.subs(x, S.Zero)
+                series = term
+                fact = S.One
+                for i in range(n-1):
+                    i += 1
+                    fact *= Rational(i)
+                    e = e.diff(x)
+                    term = e.subs(x, S.Zero)*(x**i)/fact
+                    term = term.expand()
+                    series += term
+                return series + C.Order(x**n, x)
+            return self.nseries(x, x0, n)
+        l = []
+        g = None
+        for i in xrange(n+2):
+            g = self.taylor_term(i, arg, g)
+            g = g.nseries(x, x0, n)
+            l.append(g)
+        return Add(*l) + C.Order(x**n, x)
 
     def _eval_is_polynomial(self, syms):
         for arg in self.args:
