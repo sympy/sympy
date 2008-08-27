@@ -1948,26 +1948,6 @@ class Basic(AssumeMeths):
         point = sympify(point)
         return self.nseries(x, point, n)
 
-    def _series(self, x, point=0, n=6, with_order=True):
-        """
-        This is an interface to the oseries() facility.
-
-        Unfortunately oseries are not so robustly implemented, so this
-        interface is not recommended for end users, thus it is named _series().
-        """
-        x = sympify(x)
-        point = sympify(point)
-        if point != 0:
-            raise NotImplementedError("series expansion around arbitrary point")
-            #self = self.subs(x, x + point)
-        o = C.Order(x**n,x)
-        r = self.oseries(o)
-        if r==self:
-            return self
-        if with_order:
-            r += o
-        return r
-
     @cacheit
     def oseries(self, order):
         """
