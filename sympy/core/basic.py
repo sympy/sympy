@@ -1144,6 +1144,15 @@ class Basic(AssumeMeths):
                 return Add(*(self.args[:i]+self.args[i+1:]))
         return self
 
+    def getO(e):
+        "Returns the O(..) symbol, or None if there is none."
+        if e.is_Order:
+            return e
+        if e.is_Add:
+            for x in e.args:
+                if x.is_Order:
+                    return x
+
     #@classmethod
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         """
@@ -1947,6 +1956,50 @@ class Basic(AssumeMeths):
         point = sympify(point)
         return self.nseries(x, point, n)
 
+    def lseries(self, x, x0):
+        """
+        lseries is a generator yielding terms in the series.
+
+        Example: if you do:
+
+        for term in sin(x).lseries(x, 0):
+            print term
+
+        It will print all terms of the sin(x) series (i.e. it never
+        terminates).
+
+        The advantage of lseries() over nseries() is that many times you are
+        just interested in the next term in the series (i.e. the first term for
+        example), but you don't know how many you should ask for in nseries()
+        using the "n" parameter.
+
+        See also nseries().
+        """
+        return self._eval_lseries(x, x0)
+
+    def _eval_lseries(self, x, x0):
+        # default implementation of lseries is using nseries(), and adaptively
+        # increasing the "n". As you can see, it is not very efficient, because
+        # we are calculating the series over and over again. Subclasses should
+        # override this method and implement much more efficient yielding of
+        # terms.
+        n = 0
+        e = self.nseries(x, x0, n)
+        while e.is_Order:
+            n += 1
+            e = self.nseries(x, x0, n)
+        series = e.removeO()
+        yield series
+        while 1:
+            n += 1
+            e = self.nseries(x, x0, n).removeO()
+            while series == e:
+                n += 1
+                e = self.nseries(x, x0, n).removeO()
+            term = e - series
+            series = e
+            yield term
+
     def nseries(self, x, x0, n):
         """
         Calculates a generalized series expansion.
@@ -1960,6 +2013,8 @@ class Basic(AssumeMeths):
         Disadvantage -- you may endup with less terms than you may have
         expected, but the O(x**n) term appended will always be correct, so the
         result is correct, but maybe shorter.
+
+        See also lseries().
         """
         return self._eval_nseries(x, x0, n)
 

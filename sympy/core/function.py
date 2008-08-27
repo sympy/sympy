@@ -527,6 +527,23 @@ class Derivative(Basic):
         repl_dict[pattern] = expr
         return repl_dict
 
+    def _eval_lseries(self, x, x0):
+        stop
+        arg = self.args[0]
+        dx = self.args[1]
+        for term in arg.lseries(x, x0):
+            yield term.diff(dx)
+
+    def _eval_nseries(self, x, x0, n):
+        arg = self.args[0]
+        arg = arg.nseries(x, x0, n)
+        o = arg.getO()
+        dx = self.args[1]
+        if o:
+            return arg.removeO().diff(dx) + arg.getO()/dx
+        else:
+            return arg.removeO().diff(dx)
+
 class Lambda(Function):
     """
     Lambda(x, expr) represents a lambda function similar to Python's

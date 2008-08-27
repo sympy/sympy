@@ -175,6 +175,16 @@ class exp(Function):
         """exp(b[0])**e -> exp(b[0]*e)"""
         return exp(b.args[0] * e)
 
+    def _eval_lseries(self, x, x0):
+        s = self.args[0]
+        yield exp(s.subs(x, x0))
+        from sympy import Symbol, Integral, Derivative
+        t = Symbol("t", dummy=True)
+        f = s.subs(x, t)
+        g = Integral(exp(f) * Derivative(f, t), (t, x0, x)).lseries(x, x0)
+        for term in g:
+            yield term
+
     def _eval_nseries(self, x, x0, n):
         arg = self.args[0]
         arg_series = arg.nseries(x, x0, n)

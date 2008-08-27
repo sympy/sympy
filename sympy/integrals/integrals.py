@@ -274,6 +274,26 @@ class Integral(Basic):
 
         return C.Add(*parts)
 
+    def _eval_lseries(self, x, x0):
+        arg = self.args[0]
+        dx, bounds = self.args[1][0]
+        for term in arg.lseries(dx, x0):
+            if bounds:
+                a, b = bounds
+                yield integrate(term, (dx, a, b))
+            else:
+                yield integrate(term, x)
+
+    def _eval_nseries(self, x, x0, n):
+        arg = self.args[0]
+        x, bounds = self.args[1][0]
+        arg = arg.nseries(x, x0, n)
+        if bounds:
+            a, b = bounds
+            return integrate(arg.removeO(), (x, a, b)) + arg.getO()*x
+        else:
+            return integrate(arg.removeO(), x) + arg.getO()*x
+
 @threaded(use_add=False)
 def integrate(*args, **kwargs):
     """integrate(f, var, ...)
