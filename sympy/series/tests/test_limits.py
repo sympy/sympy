@@ -1,4 +1,4 @@
-from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos
+from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling
 from sympy.abc import x, y, z
 
 def test_basic1():
@@ -71,3 +71,32 @@ def test_floor():
     assert limit(floor(5+sin(x)), x, 0, "-") == 4
     assert limit(floor(5+cos(x)), x, 0, "+") == 5
     assert limit(floor(5+cos(x)), x, 0, "-") == 5
+
+def test_ceiling():
+    assert limit(ceiling(x), x, -2, "+") == -1
+    assert limit(ceiling(x), x, -2, "-") == -2
+    assert limit(ceiling(x), x, -1, "+") == 0
+    assert limit(ceiling(x), x, -1, "-") == -1
+    assert limit(ceiling(x), x, 0, "+") == 1
+    assert limit(ceiling(x), x, 0, "-") == 0
+    assert limit(ceiling(x), x, 1, "+") == 2
+    assert limit(ceiling(x), x, 1, "-") == 1
+    assert limit(ceiling(x), x, 2, "+") == 3
+    assert limit(ceiling(x), x, 2, "-") == 2
+    assert limit(ceiling(x), x, 248, "+") == 249
+    assert limit(ceiling(x), x, 248, "-") == 248
+
+    # note: if any of the tests below fails, just comment it out. General fix
+    # needs better assumptions handling.
+
+    # this doesn't work, it requires robust assumptions:
+    #assert limit(ceiling(sin(x)), x, 0, "+") == 1
+    assert limit(ceiling(sin(x)), x, 0, "-") == 0
+    assert limit(ceiling(cos(x)), x, 0, "+") == 1
+    assert limit(ceiling(cos(x)), x, 0, "-") == 1
+
+    # this doesn't work, it requires robust assumptions:
+    #assert limit(ceiling(5+sin(x)), x, 0, "+") == 6
+    assert limit(ceiling(5+sin(x)), x, 0, "-") == 5
+    assert limit(ceiling(5+cos(x)), x, 0, "+") == 6
+    assert limit(ceiling(5+cos(x)), x, 0, "-") == 6

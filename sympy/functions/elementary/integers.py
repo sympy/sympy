@@ -199,3 +199,11 @@ class ceiling(Function):
 
     def _eval_is_integer(self):
         return self.args[0].is_real
+
+    def _eval_nseries(self, x, x0, n):
+        positive = self.args[0].is_positive
+        r = self.subs(x, x0)
+        if positive:
+            return r+1
+        else:
+            return r
