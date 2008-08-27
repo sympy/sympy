@@ -1,5 +1,5 @@
 from sympy import limit, Symbol, oo, sqrt, Rational, log, exp, cos, sin, tan, \
-    pi
+    pi, asin
 from sympy.utilities.pytest import XFAIL
 
 """
@@ -77,11 +77,13 @@ def test_bounded():
     assert limit(sin(x)/x, x, oo) == 0 #216b
     assert limit(x*sin(1/x), x, 0) == 0 #227a
 
-@XFAIL
 def test_f1a():
     h = Symbol("h")
     #issue 409:
     assert limit((sin(2*x)/x)**(1+x),x,0) == 2 #Primer 7
+
+@XFAIL
+def test_f1a2():
     #issue 410:
     assert limit(((x-1)/(x+1))**x,x,oo) == exp(-2) #Primer 9
 
@@ -114,7 +116,6 @@ def test_f2a():
 def test_f2():
     assert limit((sqrt(cos(x))-sqrt3(cos(x)))/(sin(x)**2),x,0) == -Rational(1,12) #*184
 
-@XFAIL
 def test_f3():
     a = Symbol('a', real=True)
     #issue 405
