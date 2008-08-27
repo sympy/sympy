@@ -345,7 +345,6 @@ def calculate_series(e, x):
     if series == 0:
         #we need to calculate more terms, let's try 8:
         series=f.nseries(x, 0, 8).removeO()
-    assert series != 0
     assert not isinstance(series, O), f
     return series
 
@@ -368,7 +367,7 @@ def mrv_leadterm(e, x, Omega=[]):
     # in the algorithm). For limits of complex functions, the algorithm would
     # have to be improved, or just use limits of Re and Im components
     # separately.
-    wsym = Symbol("w", real=True, dummy=True)
+    wsym = Symbol("w", real=True, positive=True, dummy=True)
     f, logw=rewrite(e, set(Omega), x, wsym)
     series = calculate_series(f, wsym)
     series=series.subs(log(wsym), logw)

@@ -1,4 +1,4 @@
-from sympy import limit, exp, oo, log, sqrt, Limit, sin
+from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos
 from sympy.abc import x, y, z
 
 def test_basic1():
@@ -42,3 +42,32 @@ def test_issue786():
 def test_Limit():
     assert Limit(sin(x)/x, x, 0) != 1
     assert Limit(sin(x)/x, x, 0).doit() == 1
+
+def test_floor():
+    assert limit(floor(x), x, -2, "+") == -2
+    assert limit(floor(x), x, -2, "-") == -3
+    assert limit(floor(x), x, -1, "+") == -1
+    assert limit(floor(x), x, -1, "-") == -2
+    assert limit(floor(x), x, 0, "+") == 0
+    assert limit(floor(x), x, 0, "-") == -1
+    assert limit(floor(x), x, 1, "+") == 1
+    assert limit(floor(x), x, 1, "-") == 0
+    assert limit(floor(x), x, 2, "+") == 2
+    assert limit(floor(x), x, 2, "-") == 1
+    assert limit(floor(x), x, 248, "+") == 248
+    assert limit(floor(x), x, 248, "-") == 247
+
+    # note: if any of the tests below fails, just comment it out. General fix
+    # needs better assumptions handling.
+
+    # this doesn't work, it requires robust assumptions:
+    #assert limit(floor(sin(x)), x, 0, "+") == 0
+    assert limit(floor(sin(x)), x, 0, "-") == -1
+    assert limit(floor(cos(x)), x, 0, "+") == 0
+    assert limit(floor(cos(x)), x, 0, "-") == 0
+
+    # this doesn't work, it requires robust assumptions:
+    #assert limit(floor(5+sin(x)), x, 0, "+") == 5
+    assert limit(floor(5+sin(x)), x, 0, "-") == 4
+    assert limit(floor(5+cos(x)), x, 0, "+") == 5
+    assert limit(floor(5+cos(x)), x, 0, "-") == 5

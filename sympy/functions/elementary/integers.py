@@ -100,6 +100,14 @@ class floor(Function):
     def _eval_is_integer(self):
         return self.args[0].is_real
 
+    def _eval_nseries(self, x, x0, n):
+        positive = self.args[0].is_positive
+        r = self.subs(x, x0)
+        if positive:
+            return r
+        else:
+            return r-1
+
 class ceiling(Function):
     """Ceiling is a univariate function which returns the smallest integer
        value not less than its argument. Ceiling function is generalized
