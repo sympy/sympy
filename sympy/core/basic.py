@@ -1940,9 +1940,8 @@ class Basic(AssumeMeths):
             This method is the most high level method and it returns the
             series including the O(x**n) term.
 
-            Internally, it executes a method oseries(), which takes an
-            O instance as the only parameter and it is responsible for
-            returning a series (without the O term) up to the given order.
+            Internally, it executes a method nseries(), see nseries() docstring
+            for more information.
         """
         x = sympify(x)
         point = sympify(point)
@@ -1952,9 +1951,8 @@ class Basic(AssumeMeths):
         """
         Calculates a generalized series expansion.
 
-        The difference between oseries and nseries is that nseries calculates
-        "n" terms in the innermost expressions and then builds up the final
-        series just by "cross-mutliplying" everything out.
+        nseries calculates "n" terms in the innermost expressions and then
+        builds up the final series just by "cross-mutliplying" everything out.
 
         Advantage -- it's fast, because we don't have to determine how many
         terms we need to calculate in advance.
