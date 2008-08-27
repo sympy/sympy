@@ -599,7 +599,9 @@ class Pow(Basic):
         if b0 is S.Zero or b0.is_unbounded:
             lt = b.as_leading_term(x)
             o = order * lt**(1-e)
-            bs = b.oseries(o)
+            bs = b.nseries(x, x0, n-e)
+            if bs.is_Add:
+                bs = bs.removeO()
             if bs.is_Add:
                 # bs -> lt + rest -> lt * (1 + (bs/lt - 1))
                 return (lt**e * ((bs/lt).expand()**e).nseries(x,

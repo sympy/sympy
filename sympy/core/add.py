@@ -353,10 +353,13 @@ class Add(AssocOp):
             o = C.Order(x)
         else:
             o = C.Order(factors[0]*x,x)
-        s = self.oseries(o)
-        while s is S.Zero:
-            o *= x
-            s = self.oseries(o)
+        n = 1
+        s = self.nseries(x, 0, n)
+        while s.is_Order:
+            n +=1
+            s = self.nseries(x, 0, n)
+        if s.is_Add:
+            s = s.removeO()
         if s.is_Add:
             lst = s.extract_leading_order(x)
             return Add(*[e for (e,f) in lst])
