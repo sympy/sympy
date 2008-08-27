@@ -1,5 +1,7 @@
-from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling
+from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,\
+        Symbol
 from sympy.abc import x, y, z
+from sympy.utilities.pytest import XFAIL
 
 def test_basic1():
     assert limit(x, x, oo) == oo
@@ -105,3 +107,14 @@ def test_abs():
     assert limit(abs(x), x, 0) == 0
     #assert limit(abs(sin(x)), x, 0) == 0
     assert limit(abs(cos(x)), x, 0) == 1
+
+def test_exponential():
+    n = Symbol('n')
+    assert limit((1+x/n)**n,n,oo) == exp(x)
+    assert limit((1+x/(2*n))**n,n,oo) == exp(x/2)
+    assert limit((1+x/(2*n+1))**n,n,oo) == exp(x/2)
+
+@XFAIL
+def test_exponential2():
+    n = Symbol('n')
+    assert limit((1+x/(n+sin(n)))**n,n,oo) == exp(x)
