@@ -1,4 +1,4 @@
-from sympy.core import S, Add, sympify, Basic
+from sympy.core import S, Add, sympify, Basic, PoleError, Mul
 from gruntz import gruntz
 
 def limit(e, z, z0, dir="+"):
@@ -71,7 +71,22 @@ def limit(e, z, z0, dir="+"):
             if r is not S.NaN:
                 return r
 
-    return gruntz(e, z, z0, dir)
+    try:
+        r = gruntz(e, z, z0, dir)
+    except PoleError:
+        r = heuristics(e, z, z0, dir)
+    return r
+
+def heuristics(e, z, z0, dir):
+    if e.is_Mul:
+        r = []
+        for a in e.args:
+            if not a.is_bounded:
+                r.append(a.limit(z, z0, dir))
+        if not (r is []):
+            return Mul(*r)
+    raise NotImplementedError("Don't know how to calculate the limit, sorry.")
+
 
 class Limit(Basic):
     """Represents unevaluated limit.

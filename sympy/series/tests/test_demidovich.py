@@ -73,13 +73,13 @@ def test_Limits_simple_4c():
     assert limit(log(1+exp(x))/x,x,-oo)==0  #267a
     assert limit(log(1+exp(x))/x,x,oo)==1  #267b
 
+def test_bounded():
+    #assert limit(sin(x)/x, x, oo) == 0 #216b
+    assert limit(x*sin(1/x), x, 0) == 0 #227a
+
 @XFAIL
 def test_f1a():
     h = Symbol("h")
-    #needs a special logic for deciding that sin(x) is bounded:
-    assert limit(sin(x)/x,x,oo) == 0 #216b
-    #needs a special logic for deciding that sin(x) is bounded:
-    assert limit(x*sin(1/x),x,0) == 0 #227a
     #issue 409:
     assert limit((sin(2*x)/x)**(1+x),x,0) == 2 #Primer 7
     #issue 410:
