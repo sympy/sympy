@@ -331,22 +331,19 @@ def subexp(e,sub):
 def calculate_series(e, x):
     """ Calculates at least one term of the series of "e" in "x".
 
-    This is a place that fails most often, so it is made robust so that
-    meaningful errors are printed out in case of problems.
+    This is a place that fails most often, so it is in it's own function.
     """
 
-    #First do some simplification (the oseries can fail otherwise). Better
-    #solution is to fix oseries, so that it works for any expression.
-    f = e.expand().normal()
+    f = e
     series=f.nseries(x, 0, 2).removeO()
     if series == 0:
         #we need to calculate more terms, let's try 4:
         series=f.nseries(x, 0, 4).removeO()
     if series == 0:
-        #we need to calculate more terms, let's try 10:
+        #we need to calculate more terms, let's try 6:
         series=f.nseries(x, 0, 6).removeO()
     if series == 0:
-        #we need to calculate more terms, let's try 30:
+        #we need to calculate more terms, let's try 8:
         series=f.nseries(x, 0, 8).removeO()
     assert series != 0
     assert not isinstance(series, O), f
