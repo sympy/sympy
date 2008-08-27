@@ -108,6 +108,11 @@ def test_abs():
     #assert limit(abs(sin(x)), x, 0) == 0
     assert limit(abs(cos(x)), x, 0) == 1
 
+def test_issue772():
+    f = -1/z*exp(-z*x)
+    assert limit(f, x, oo) == 0
+    assert f.limit(x, oo) == 0
+
 def test_exponential():
     n = Symbol('n')
     assert limit((1+x/n)**n,n,oo) == exp(x)
