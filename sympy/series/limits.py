@@ -1,4 +1,4 @@
-from sympy.core import S, Add, sympify, Basic, PoleError, Mul
+from sympy.core import S, Add, sympify, Basic, PoleError, Mul, oo
 from gruntz import gruntz
 
 def limit(e, z, z0, dir="+"):
@@ -78,6 +78,8 @@ def limit(e, z, z0, dir="+"):
     return r
 
 def heuristics(e, z, z0, dir):
+    if z0 == oo:
+        return heuristics(e.subs(z, 1/z), z, sympify(0), "+")
     if e.is_Mul:
         r = []
         for a in e.args:

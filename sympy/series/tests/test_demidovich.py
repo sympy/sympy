@@ -74,7 +74,7 @@ def test_Limits_simple_4c():
     assert limit(log(1+exp(x))/x,x,oo)==1  #267b
 
 def test_bounded():
-    #assert limit(sin(x)/x, x, oo) == 0 #216b
+    assert limit(sin(x)/x, x, oo) == 0 #216b
     assert limit(x*sin(1/x), x, 0) == 0 #227a
 
 @XFAIL
