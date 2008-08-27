@@ -219,12 +219,21 @@ class exp(Function):
         from sympy import limit, Symbol, oo
         arg0 = limit(arg_series, x, x0)
         if arg0 in [-oo, oo]:
-            return self._series(x, x0, n)
+            return self
         s = Symbol("s", dummy=True)
-        exp_series = exp(s)._series(s, x0, n)
+        exp_series = exp(s)._taylor(s, x0, n)
         r = exp(arg0)*exp_series.subs(s, arg_series-arg0)
         r = r.expand()
         return r
+
+    def _taylor(self, x, x0, n):
+        l = []
+        g = None
+        for i in xrange(n):
+            g = self.taylor_term(i, self.args[0], g)
+            g = g.nseries(x, x0, n)
+            l.append(g)
+        return C.Add(*l) + C.Order(x**n, x)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0]
