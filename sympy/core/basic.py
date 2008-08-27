@@ -2012,6 +2012,14 @@ class Basic(AssumeMeths):
         expected, but the O(x**n) term appended will always be correct, so the
         result is correct, but maybe shorter.
         """
+        return self._eval_nseries(x, x0, n)
+
+    def _eval_nseries(self, x, x0, n):
+        """
+        This is a method that should be overriden in subclasses. Users should
+        never call this method directl (use .nseries() instead), so you don't
+        have to write docstrings for _eval_nseries().
+        """
         raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, x0, n))
 
     def _eval_oseries(self, order):
@@ -2145,7 +2153,7 @@ class Atom(Basic):
     def is_number(self):
         return True
 
-    def nseries(self, x, x0, n):
+    def _eval_nseries(self, x, x0, n):
         return self
 
 

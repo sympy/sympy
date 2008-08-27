@@ -152,7 +152,7 @@ class Order(Basic):
     def oseries(self, order):
         return self
 
-    def nseries(self, x, x0, n):
+    def _eval_nseries(self, x, x0, n):
         return self
 
     @classmethod

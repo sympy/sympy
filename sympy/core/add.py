@@ -181,7 +181,7 @@ class Add(AssocOp):
     def _eval_derivative(self, s):
         return Add(*[f.diff(s) for f in self.args])
 
-    def nseries(self, x, x0, n):
+    def _eval_nseries(self, x, x0, n):
         terms = [t.nseries(x, x0, n) for t in self.args]
         return Add(*terms)
 

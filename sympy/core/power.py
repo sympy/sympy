@@ -462,7 +462,7 @@ class Pow(Basic):
         r = self._compute_oseries(z, o, self.taylor_term, lambda z: 1+z) * b0**e
         return r
 
-    def nseries(self, x, x0, n):
+    def _eval_nseries(self, x, x0, n):
         def geto(e):
             "Returns the O(..) symbol, or None if there is none."
             if e.is_Order:

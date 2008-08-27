@@ -648,7 +648,7 @@ class Mul(AssocOp):
         #things as (x+x**2+...)*(x-x**2+...) etc.:
         return Mul(*l)
 
-    def nseries(self, x, x0, n):
+    def _eval_nseries(self, x, x0, n):
         terms = [t.nseries(x, x0, n) for t in self.args]
         return Mul(*terms).expand()
 

@@ -213,7 +213,7 @@ class exp(Function):
         #  o = O(x**2) * exp(-1)
         return self._compute_oseries(arg-arg0, o, exp.taylor_term, exp) * exp(arg0)
 
-    def nseries(self, x, x0, n):
+    def _eval_nseries(self, x, x0, n):
         arg = self.args[0]
         arg_series = arg.nseries(x, x0, n)
         from sympy import limit, Symbol, oo
@@ -402,7 +402,7 @@ class log(Function):
         z = (arg/arg0 - 1)
         return self._compute_oseries(z, order, ln.taylor_term, lambda z: ln(1+z)) + ln(arg0)
 
-    def nseries(self, x, x0, n):
+    def _eval_nseries(self, x, x0, n):
         arg = self.args[0]
         k, l = Wild("k"), Wild("l")
         r = arg.match(k*x**l)
