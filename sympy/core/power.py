@@ -586,7 +586,59 @@ class Pow(Basic):
         if base == x:
             return self
 
-        return self._series(x, x0, n)
+        order = C.Order(x**n, x)
+        x = order.symbols[0]
+        e = self.exp
+        b = self.base
+        ln = C.log
+        exp = C.exp
+        if e.has(x):
+            return exp(e * ln(b)).nseries(x, x0, n)
+        if b==x: return self
+        b0 = b.limit(x,0)
+        if b0 is S.Zero or b0.is_unbounded:
+            lt = b.as_leading_term(x)
+            o = order * lt**(1-e)
+            bs = b.oseries(o)
+            if bs.is_Add:
+                # bs -> lt + rest -> lt * (1 + (bs/lt - 1))
+                return (lt**e * ((bs/lt).expand()**e).nseries(x,
+                        x0, n-e)).expand() + order
+            return bs**e+order
+        o2 = order * (b0**-e)
+        # b -> b0 + (b-b0) -> b0 * (1 + (b/b0-1))
+        z = (b/b0-1)
+        #r = self._compute_oseries3(z, o2, self.taylor_term)
+        x = o2.symbols[0]
+        ln = C.log
+        o = C.Order(z, x)
+        if o is S.Zero:
+            r = (1+z)
+        else:
+            if o.expr==1:
+                e2 = ln(o2.expr*x)/ln(x)
+            else:
+                e2 = ln(o2.expr)/ln(o.expr)
+            n = e2.limit(x,0) + 1
+            if n.is_unbounded:
+                # requested accuracy gives infinite series,
+                # order is probably nonpolynomial e.g. O(exp(-1/x), x).
+                r = (1+z)
+            else:
+                try:
+                    n = int(n)
+                except TypeError:
+                    #well, the n is something more complicated (like 1+log(2))
+                    n = int(n.evalf()) + 1
+                assert n>=0,`n`
+                l = []
+                g = None
+                for i in xrange(n+2):
+                    g = self.taylor_term(i, z, g)
+                    g = g.nseries(x, x0, n)
+                    l.append(g)
+                r = Add(*l)
+        return r * b0**e + order
 
     def _eval_as_leading_term(self, x):
         if not self.exp.has(x):
