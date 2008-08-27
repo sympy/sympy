@@ -100,3 +100,8 @@ def test_ceiling():
     assert limit(ceiling(5+sin(x)), x, 0, "-") == 5
     assert limit(ceiling(5+cos(x)), x, 0, "+") == 6
     assert limit(ceiling(5+cos(x)), x, 0, "-") == 6
+
+def test_abs():
+    assert limit(abs(x), x, 0) == 0
+    #assert limit(abs(sin(x)), x, 0) == 0
+    assert limit(abs(cos(x)), x, 0) == 1
