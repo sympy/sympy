@@ -1,6 +1,8 @@
 from sympy import Symbol, floor, nan, oo, E, symbols, ceiling, pi, Rational, \
         Real, I, sin, exp, log, factorial
 
+from sympy.utilities.pytest import XFAIL
+
 def test_floor():
 
     x = Symbol('x')
@@ -77,6 +79,8 @@ def test_floor():
 
     assert floor(y + 3) == floor(y) + 3
     assert floor(y + k) == floor(y) + k
+
+    assert floor(3 + I*y + pi) == 6 + floor(y)*I
 
     assert floor(k + n) == k + n
 
@@ -174,6 +178,8 @@ def test_ceiling():
     assert ceiling(y + 3) == ceiling(y) + 3
     assert ceiling(y + k) == ceiling(y) + k
 
+    assert ceiling(3 + pi + y*I) == 7 + ceiling(y)*I
+
     assert ceiling(k + n) == k + n
 
     assert ceiling(x*I) == ceiling(x*I)
@@ -191,3 +197,9 @@ def test_ceiling():
 
     assert ceiling(factorial(50)/exp(1)) == \
         11188719610782480504630258070757734324011354208865721592720336801
+
+@XFAIL
+def test_issue_1050():
+    assert floor(3 + pi*I + y*I) == 3 + floor(pi+y)*I
+    assert floor(3*I + pi*I + y*I) == floor(3+pi+y)*I
+    assert floor(3 + E + pi*I + y*I) == 5 + floor(pi+y)*I

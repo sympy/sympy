@@ -8,32 +8,7 @@ from sympy.core.evalf import get_integer_part, PrecisionExhausted
 ######################### FLOOR and CEILING FUNCTIONS #########################
 ###############################################################################
 
-class floor(Function):
-    """Floor is a univariate function which returns the largest integer
-       value not greater than its argument. However this implementaion
-       generalizes floor to complex numbers.
-
-       More information can be found in "Concrete mathematics" by Graham,
-       pp. 87 or visit http://mathworld.wolfram.com/FloorFunction.html.
-
-       >>> from sympy import *
-
-       >>> floor(17)
-       17
-
-       >>> floor(Rational(23, 10))
-       2
-
-       >>> floor(2*E)
-       5
-
-       >>> floor(-Real(0.567))
-       -1
-
-       >>> floor(-I/2)
-       -I
-
-    """
+class RoundFunction(Function):
 
     nargs = 1
 
@@ -41,55 +16,51 @@ class floor(Function):
     def canonize(cls, arg):
         if arg.is_integer:
             return arg
-        elif arg.is_Number:
-            if arg is S.Infinity:
-                return S.Infinity
-            elif arg is S.NegativeInfinity:
-                return S.NegativeInfinity
-            elif arg is S.NaN:
-                return S.NaN
-            elif arg.is_Integer:
-                return arg
-            elif arg.is_Rational:
-                return C.Integer(arg.p // arg.q)
-            elif arg.is_Real:
-                return C.Integer(int(arg.floor()))
-        elif arg.is_NumberSymbol:
-            return arg.approximation_interval(C.Integer)[0]
-        elif arg is S.ImaginaryUnit:
-            return S.ImaginaryUnit
-        elif arg.is_Add:
-            included, excluded = [], []
+        if arg.is_imaginary:
+            return cls(C.im(arg))*S.ImaginaryUnit
 
-            for term in arg.args:
-                coeff = term.as_coefficient(S.ImaginaryUnit)
+        v = cls._eval_number(arg)
+        if v is not None:
+            return v
 
-                if coeff is not None and coeff.is_real:
-                    excluded.append(cls(coeff)*S.ImaginaryUnit)
-                elif term.is_real:
-                    if term.is_integer:
-                        excluded.append(term)
-                    else:
-                        included.append(term)
-                else:
-                    return
+        # Integral, numerical, symbolic part
+        ipart = npart = spart = S.Zero
 
-            if excluded:
-                return cls(C.Add(*included)) + C.Add(*excluded)
+        # Extract integral (or complex integral) terms
+        if arg.is_Add:
+            terms = arg.args
         else:
-            coeff, terms = arg.as_coeff_terms(S.ImaginaryUnit)
+            terms = [arg]
 
-            if not terms and not arg.atoms(C.Symbol):
-                if arg.is_negative:
-                    return -ceiling(-arg)
-                else:
-                    try:
-                        re, im = get_integer_part(arg, -1, {}, return_ints=True)
-                        return C.Integer(re) + C.Integer(im)*S.ImaginaryUnit
-                    except (PrecisionExhausted, NotImplementedError):
-                        return
-            elif terms == ( S.ImaginaryUnit, ) and coeff.is_real:
-                return cls(coeff)*S.ImaginaryUnit
+        for t in terms:
+            if t.is_integer or (t.is_imaginary and C.im(t).is_integer):
+                ipart += t
+            elif t.atoms(C.Symbol):
+                spart += t
+            else:
+                npart += t
+
+        if not (npart or spart):
+            return ipart
+
+        # Evaluate npart numerically if independent of spart
+        orthogonal = (npart.is_real and spart.is_imaginary) or \
+            (npart.is_imaginary and spart.is_real)
+        if npart and ((not spart) or orthogonal):
+            try:
+                re, im = get_integer_part(npart, cls._dir, {}, return_ints=True)
+                ipart += C.Integer(re) + C.Integer(im)*S.ImaginaryUnit
+                npart = S.Zero
+            except (PrecisionExhausted, NotImplementedError):
+                pass
+
+        spart = npart + spart
+        if not spart:
+            return ipart
+        elif spart.is_imaginary:
+            return ipart + cls(C.im(spart),evaluate=False)*S.ImaginaryUnit
+        else:
+            return ipart + cls(spart, evaluate=False)
 
     def _eval_is_bounded(self):
         return self.args[0].is_bounded
@@ -108,97 +79,75 @@ class floor(Function):
         else:
             return r-1
 
-class ceiling(Function):
-    """Ceiling is a univariate function which returns the smallest integer
-       value not less than its argument. Ceiling function is generalized
-       in this implementation to complex numbers.
-
-       More information can be found in "Concrete mathematics" by Graham,
-       pp. 87 or visit http://mathworld.wolfram.com/CeilingFunction.html.
-
-       >>> from sympy import *
-
-       >>> ceiling(17)
-       17
-
-       >>> ceiling(Rational(23, 10))
-       3
-
-       >>> ceiling(2*E)
-       6
-
-       >>> ceiling(-Real(0.567))
-       0
-
-       >>> ceiling(I/2)
-       I
-
+class floor(RoundFunction):
     """
+    Floor is a univariate function which returns the largest integer
+    value not greater than its argument. However this implementaion
+    generalizes floor to complex numbers.
 
-    nargs = 1
+    More information can be found in "Concrete mathematics" by Graham,
+    pp. 87 or visit http://mathworld.wolfram.com/FloorFunction.html.
+
+        >>> from sympy import *
+        >>> floor(17)
+        17
+        >>> floor(Rational(23, 10))
+        2
+        >>> floor(2*E)
+        5
+        >>> floor(-Real(0.567))
+        -1
+        >>> floor(-I/2)
+        -I
+    """
+    _dir = -1
 
     @classmethod
-    def canonize(cls, arg):
-        if arg.is_integer:
-            return arg
-        elif arg.is_Number:
-            if arg is S.Infinity:
-                return S.Infinity
-            elif arg is S.NegativeInfinity:
-                return S.NegativeInfinity
-            elif arg is S.NaN:
-                return S.NaN
-            elif arg.is_Integer:
-                return arg
-            elif arg.is_Rational:
-                return C.Integer(arg.p // arg.q + 1)
+    def _eval_number(cls, arg):
+        if arg.is_Number:
+            if arg.is_Rational:
+                if not arg.q:
+                    return arg
+                return C.Integer(arg.p // arg.q)
+            elif arg.is_Real:
+                return C.Integer(int(arg.floor()))
+        if arg.is_NumberSymbol:
+            return arg.approximation_interval(C.Integer)[0]
+
+class ceiling(RoundFunction):
+    """
+    Ceiling is a univariate function which returns the smallest integer
+    value not less than its argument. Ceiling function is generalized
+    in this implementation to complex numbers.
+
+    More information can be found in "Concrete mathematics" by Graham,
+    pp. 87 or visit http://mathworld.wolfram.com/CeilingFunction.html.
+
+        >>> from sympy import *
+        >>> ceiling(17)
+        17
+        >>> ceiling(Rational(23, 10))
+        3
+        >>> ceiling(2*E)
+        6
+        >>> ceiling(-Real(0.567))
+        0
+        >>> ceiling(I/2)
+        I
+    """
+    _dir = 1
+
+    @classmethod
+    def _eval_number(cls, arg):
+        if arg.is_Number:
+            if arg.is_Rational:
+                if not arg.q:
+                    return arg
+                return -C.Integer(-arg.p // arg.q)
             elif arg.is_Real:
                 return C.Integer(int(arg.ceiling()))
-        elif arg.is_NumberSymbol:
+        if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[1]
-        elif arg is S.ImaginaryUnit:
-            return S.ImaginaryUnit
-        elif arg.is_Add:
-            included, excluded = [], []
-
-            for term in arg.args:
-                coeff = term.as_coefficient(S.ImaginaryUnit)
-
-                if coeff is not None and coeff.is_real:
-                    excluded.append(cls(coeff)*S.ImaginaryUnit)
-                elif term.is_real:
-                    if term.is_integer:
-                        excluded.append(term)
-                    else:
-                        included.append(term)
-                else:
-                    return
-
-            if excluded:
-                return cls(C.Add(*included)) + C.Add(*excluded)
-        else:
-            coeff, terms = arg.as_coeff_terms(S.ImaginaryUnit)
-
-            if not terms and not arg.atoms(C.Symbol):
-                if arg.is_negative:
-                    return -floor(-arg)
-                else:
-                    try:
-                        re, im = get_integer_part(arg, 1, {}, return_ints=True)
-                        return C.Integer(re) + C.Integer(im)*S.ImaginaryUnit
-                    except (PrecisionExhausted, NotImplementedError):
-                        return
-            elif terms == ( S.ImaginaryUnit, ) and coeff.is_real:
-                return cls(coeff)*S.ImaginaryUnit
-
-    def _eval_is_bounded(self):
-        return self.args[0].is_bounded
-
-    def _eval_is_real(self):
-        return self.args[0].is_real
-
-    def _eval_is_integer(self):
-        return self.args[0].is_real
 
     def _eval_nseries(self, x, x0, n):
         positive = self.args[0].is_positive
