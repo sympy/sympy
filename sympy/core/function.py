@@ -34,12 +34,15 @@ from basic import BasicType, BasicMeta
 from operations import AssocOp
 from cache import cacheit
 from itertools import repeat
-from numbers import Rational,Integer
+from numbers import Rational, Integer
 from symbol import Symbol
 from add    import Add
 from multidimensional import vectorize
 
 from sympy import mpmath
+
+class PoleError(Exception):
+    pass
 
 class FunctionClass(BasicMeta):
     """
@@ -265,6 +268,9 @@ class Function(Basic):
         assert len(self.args) == 1
         arg = self.args[0]
         arg0 = arg.limit(x, 0)
+        from sympy import oo
+        if arg0 in [-oo, oo]:
+            raise PoleError("Cannot expand around %s" % (arg))
         if arg0 is not S.Zero:
             e = self.func(arg)
             e1 = e.expand()

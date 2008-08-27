@@ -11,7 +11,7 @@ from relational import Rel, Eq, Ne, Lt, Le, Gt, Ge, \
     Equality, Inequality, Unequality, StrictInequality
 from multidimensional import vectorize
 from function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
-    Function, expand
+    Function, expand, PoleError
 from interval import Interval
 from evalf import PrecisionExhausted, N
 
