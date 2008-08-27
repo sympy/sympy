@@ -178,6 +178,8 @@ class exp(Function):
     def _eval_nseries(self, x, x0, n):
         arg = self.args[0]
         arg_series = arg.nseries(x, x0, n)
+        if arg_series.is_Order:
+            return 1+arg_series
         from sympy import limit, Symbol, oo
         arg0 = limit(arg_series, x, x0)
         if arg0 in [-oo, oo]:
