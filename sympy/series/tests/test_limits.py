@@ -1,5 +1,5 @@
-from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,\
-        Symbol
+from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, \
+        atan, Symbol
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
 
@@ -102,6 +102,10 @@ def test_ceiling():
     assert limit(ceiling(5+sin(x)), x, 0, "-") == 5
     assert limit(ceiling(5+cos(x)), x, 0, "+") == 6
     assert limit(ceiling(5+cos(x)), x, 0, "-") == 6
+
+def test_atan():
+    x = Symbol("x", real=True)
+    assert limit(atan(x)*sin(1/x), x, 0) == 0
 
 def test_abs():
     assert limit(abs(x), x, 0) == 0
