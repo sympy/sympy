@@ -126,6 +126,7 @@ def test_exponential():
     assert limit((1+x/n)**n,n,oo) == exp(x)
     assert limit((1+x/(2*n))**n,n,oo) == exp(x/2)
     assert limit((1+x/(2*n+1))**n,n,oo) == exp(x/2)
+    assert limit(((x-1)/(x+1))**x,x,oo) == exp(-2)
 
 @XFAIL
 def test_exponential2():
