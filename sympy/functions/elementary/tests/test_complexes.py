@@ -145,6 +145,6 @@ def test_conjugate():
 
 def test_issue936():
     x = Symbol('x')
-    abs(x).expand(trig=True)
-    sign(x).expand(trig=True)
-    arg(x).expand(trig=True)
+    assert abs(x).expand(trig=True)     == abs(x)
+    assert sign(x).expand(trig=True)    == sign(x)
+    assert arg(x).expand(trig=True)     == arg(x)
