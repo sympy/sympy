@@ -109,7 +109,7 @@ def test_atan():
 
 def test_abs():
     assert limit(abs(x), x, 0) == 0
-    #assert limit(abs(sin(x)), x, 0) == 0
+    assert limit(abs(sin(x)), x, 0) == 0
     assert limit(abs(cos(x)), x, 0) == 1
 
 def test_heuristic():

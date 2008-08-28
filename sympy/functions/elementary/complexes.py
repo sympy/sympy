@@ -236,6 +236,14 @@ class abs(Function):
                 return self.args[0]**other
         return
 
+    @staticmethod
+    def taylor_term(n, x, *previous_terms):
+        if n == 1:
+            return x
+        else:
+            return S.Zero
+
+
     def _sage_(self):
         import sage.all as sage
         return sage.abs_symbolic(self.args[0]._sage_())
