@@ -1,0 +1,903 @@
+%&latex
+\documentclass{article}
+\usepackage[dvips]{graphicx,epsfig,rotating,color}
+\usepackage{latexsym,epic,eepic,pstricks}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{hyperref}
+\usepackage{verbatim}
+\usepackage{tabularx}
+\usepackage{bm}
+\input{macros}    
+
+\newcommand{\rotxt}[1]{\begin{sideways}{#1}\end{sideways}}                                                 
+ 
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1.5ex plus 0.5ex minus 0.5ex}
+
+\begin{document}
+
+\title{{\bf DESIGN OF A PYTHON MODULE FOR SYMBOLIC GEOMETRIC ALGEBRA CALCULATIONS}}
+
+\author{Alan Bromborsky\\
+abrombo@verizon.net\\
+12435 Kemp Mill Road\\
+Silver Spring, MD 20902}
+\maketitle
+
+\begin{abstract}
+A python module (GAsympy.py) has been developed for coordinate free calculations
+using the operations (geometric, outer, and inner products etc.) of geometric
+algebra.  The operations can be defined using a completely arbitrary pseudometric
+defined by the inner products of a set of arbitrary vectors or the pseudometric 
+can be restricted to enforce orthogonality and signature constraints on the set
+of vectors.  The module requires the numpy and the sympy modules.  A simple 
+calculator program is included for those who do not wish to program in python.
+\end{abstract}
+
+\section{Introduction}
+Several software packages for numerical geometric algebra calculations are available from Doran-Lazenby
+group and the Dorst group. Symbolic packages for Clifford algebra using orthongonal bases such as
+$e_{i}e_{j}+e_{j}e_{i} = 2\eta_{ij}$, where $\eta_{ij}$ is a numeric array are available from the 
+Doran-Lazenby group. The symbolic algebra module, GAsympy.py, developed for python does note depend on
+an orthogonal basis representation, but rather is generated from a set of $n$ arbitrary symbolic vectors, 
+$a_{1},a_{2},\dots,a_{n}$ and a symbolic pseudo-metric tensor $g_{ij} = a_{i}\cdot a_{j}$.
+
+In order not to reinvent the wheel all scalar symbolic algebra is handled by the python module (library) 
+sympy. {\bf The basic classes used from the sympy module 
+are the creation of symbolic scalar symbols and numerical symbols for exact rational arithmetic:}
+\newpage
+{\bf Examples of sympy class usage}
+
+\begin{verbatim}
+import sympy
+x = sympy.Symbol('x')
+half = sympy.Rational(4,8)
+print x,half
+	x,1/2
+\end{verbatim}
+as you can see in the example rational numbers are simplified. Also, if we had used {\tt 'ab'} for the 
+argument of {\tt sympy.Symbol} then {\tt print x} would have returned {\tt ab}.
+
+The basic geometic algebra operations will be implemented in python by defining a multivector 
+class, MV, and overloading the class operators and defining class functions shown in Table~\ref{table1}.
+\begin{table}[h!]
+\begin{tabular}{cl}
+	{\tt +} & sum of multivectors or multivector and scalar \\
+	{\tt -} & difference of multivectors  or multivector and scalar \\
+	{\tt *} & geometric product or multiplication by scalar \\
+	{\tt \verb!^!} & outer product of multivectors \\
+	{\tt |} & inner product of multivectors \\	
+	{\tt rev()} & reverse of multivector \\
+	{\tt even()} & even part of multivector \\
+	{\tt odd()} & odd part of multivector \\
+	{\tt project(r)} & grade {\tt r} part of multivector \\
+	{\tt X(ig,ib)} & \parbox[t]{3.5in}{For a multivector {\tt X} the call operator gives the symbolic 
+					  coefficient of the {\tt ib} base of the {\tt ig} grade of the 
+                      multivector.  Because of the defaults in the function call {\tt X()} returns 
+                      the scalar part of {\tt X}.}
+\end{tabular}
+\caption{Multivector operations for symbolicGA.py.}\label{table1}
+\end{table}
+Note that the operator order precedence is determined by python and is not neccessarily that used by 
+geometric algebra. Always use parenthesis in python expressions containing {\tt $\W$} and/or {\tt |}.
+
+Complete documentation of GAsympy is obtained by running {\tt pydoc GAsympy} or {\tt pydoc -w GAsympy} 
+(for html document) in the directory containing GAsympy.
+
+If the reader is not familiar with python the recommended reference is {\bf Learning Python: 3$^{rd}$ 
+edition} by Mark Lutz.
+
+The GAsympy module was implemented in python 2.5.1 on a linux machine running Kubuntu.  The only 
+required packages (in addition to the standard python installation) are numpy and sympy.
+
+\section{Vector Basis and Metric}
+
+The two structures that define the {\tt MV} (multivector) class are the symbolic basis vectors and the 
+symbolic pseudometric.  The symbolic basis vectors are input as a string with the symbol
+name separated by spaces.  For example if we are calculating the geometric algebra of a system with three
+vectors that we wish to denote as {\tt a0}, {\tt a1}, and {\tt a2} we would define the string variable:
+
+{\tt basis = 'a0 a1 a2'}
+
+that would be input into the multivector setup function.  The next step would be to define the symbolic 
+pseudometric for the geometric algebra of the basis we have defined. The default basis is the most general
+and is the matrix of the following symbols
+
+\be\label{eq1}
+g = \lbrk
+\begin{array}{ccc}
+	{\tt a0**2} & {\tt (a0.a1)}  & {\tt (a0.a2)} \\ 
+	{\tt (a0.a1)} & {\tt a1**2}  & {\tt (a1.a2)} \\
+	{\tt (a0.a2)} & {\tt (a1.a2)} & {\tt a2**2} \\
+\end{array}
+\rbrk
+\ee
+
+where each of the $g_{ij}$ is a symbol representing all of the dot products of the basis vectors. Note that the symbols are named so that $g_{ij} = g_{ji}$ since for the symbol function ${\tt (a0.a1)} \ne {\tt (a1.a0)}$.
+
+Note that the strings shown in equation~\ref{eq1} are only used when the values of $g_{ij}$ are output (printed).  
+In the {\tt GAsympy} module (library) the $g_{ij}$ symbols are stored in a static member list of the multivector class
+{\tt MV} as the double list {\tt MV.metric} ($g_{ij} = $ {\tt MV.metric[i][j]}).
+
+The default definition of $g$ can be overwritten by specifying a string that will define $g$. As an example 
+consider a symbolic representation for conformal geometry. Define for a basis    
+
+{\tt basis = 'a0 a1 a2 n nbar'}
+
+and for a metric
+
+\verb!metric = '# # # 0 0, # # # 0 0, # # # 0 0, 0 0 0 0 2, 0 0 0 2 0'!
+
+which is processed by setup to yield
+
+\be
+g = \lbrk
+\begin{array}{ccccc}
+	{\tt a0**2} & {\tt (a0.a1)}  & {\tt (a0.a2)} & 0 & 0\\ 
+	{\tt (a0.a1)} & {\tt a1**2}  & {\tt (a1.a2)} & 0 & 0\\
+	{\tt (a0.a2)} & {\tt (a1.a2)} & {\tt a2**2} & 0 & 0 \\
+	0 & 0 & 0 & 0 & 2 \\
+	0 & 0 & 0 & 2 & 0
+\end{array}
+\rbrk
+\ee 
+
+Here we have specified that {\tt n} and {\tt nbar} are orthonal to all the {\tt a}'s,
+${\tt n**2} = {\tt nbar**2} = 0$, and ${\tt (n.nbar)} = 2$. Using {\tt \#} in the metric
+definition string just tells the program to use the default symbol for that value.  The multivector
+algebra is then initialized with the function call
+
+{\tt MV.setup(basis,metric)}
+
+At this time multivector representations of the basis local to the program are instantiated.  For our
+first example that means that the symbolic multivectors named {\tt a0}, {\tt a1}, and {\tt a2} are
+created and made available to the programmer for future calculations.
+
+In addition to the basis vectors the $g_{ij}$ are also made available to the programer with the following
+convention. If {\tt a0} and {\tt a1} are basis vectors, then their dot products are denoted by 
+{\tt a0sq}, {\tt a2sq}, and {\tt a0dota1} for use as python program varibles. If you print 
+{\tt a0sq} the output would be {\tt a0**2} and the output for {\tt a0dota1} would be {\tt (a0.a1)} as
+shown in equation~\ref{eq1}.  If the default value are overridden the new values are output by print.  For
+examle if $g_{00} = 0$ then "{\tt print a0sq}" would output "0."
+
+
+More generally, if {\tt metric} is not a string, but a list of lists, it is assumed that each element
+of {\tt metric} is symbolic variable so that the $g_{ij}$ could be defined as symbolic functions as well
+as variables. For example instead of letting $g_{01} = {\tt (a0.a1)}$ we could have 
+$g_{01} = {\tt cos(theta)}$ where we use a symbolic $\cos$ function.
+
+\section{Representation and Reduction of Multivector Bases}
+
+{\bf Python Note: In python a list of objects is denoted with square brackets {\tt []}. For example a list
+of the integers 1, 2, and 3 would be written in python code as {\tt [1,2,3]}. An object in a list can itself
+be a list (nested lists).  Objects in a list containing $n$-objects are indexed $0,1,\dots,n-1$ where if
+{\tt B} is the list, {\tt B[0]} is the first object in the list and {\tt B[n-1]} is the last object in the list.}
+
+In our symbolic geometric algebra we assume that all multivectors of interest to us can be obtained from the
+symbolic bases vectors we have input, via the different operations available to geometric algebra. The first
+problem we have is representing the general multivector in terms terms of the basis vectors.  To do this we 
+form the ordered geometric products of the basis vectors and develop an internal representation of these 
+products in terms of python classes.  The ordered geometric products are all multivectors of the form
+$a_{i_{1}}a_{i_{2}}\dots a_{i_{r}}$ where $i_{1}<i_{2}<\dots <i_{r}$ and $r \le n$. We call these
+multivectors bases and represent them internally with the list of integers 
+$\lbrk i_{1},i_{2},\dots,i_{r}\rbrk$. The bases are labeled, for the purpose of output display, with strings
+that are concatenations of the strings representing the basis vectors.  So that in our example 
+{\tt [1,2]} would be labeled with the string {\tt 'a1a2'} and represents the geometric product 
+{\tt a1*a2}. Thus the list {\tt [0,1,2]} represents {\tt a0*a1*a2}.For our example the complete set
+ of bases and labels
+are shown in Table~\ref{table2}\footnote{The empty list, {\tt[]}, represents the scalar 1.}
+\begin{table}[h]
+\begin{verbatim}
+MV.basislabel = ['1', ['a0', 'a1', 'a2'], ['a0a1', 'a0a2', 'a1a2'], 
+                 ['a0a1a2']]
+MV.basis      = [[], [[0], [1], [2]], [[0, 1], [0, 2], [1, 2]], 
+                 [[0, 1, 2]]]
+\end{verbatim}
+\caption{Multivector basis labels and internal basis representation.}\label{table2}
+\end{table}
+Since there are $2^{n}$ bases and the number of bases with equal list lengths is the same as for the 
+grade decomposition of a dimension $n$ geometric algebra we will call the collections of bases of equal length
+{\bf psuedogrades}.
+
+The critical operation in setting up the geometric algebra module is reducing the geomertric product of any two bases to
+a linear combination of bases so that we can calculate a multiplication table for the bases.  
+First we represent the product as the concatenation of two base lists.  For
+example {\tt a1a2*a0a1} is represented by the list {\tt [1,2]+[0,1] = [1,2,0,1]} (In python the "+" operator for lists concatenates the lists). The representation of the product is reduced via two operations, contraction and
+revision. The state of the reduction is saved in two lists of equal length.  The first list contains symbolic
+scale factors (symbol or numeric types) for the corresponding interger list representing the product of 
+bases.  If we wish to reduce $\lbrk i_{1},\dots,i_{r}\rbrk$ the starting point is the coefficient list 
+$C = \lbrk 1 \rbrk$ and the bases list $B = \lbrk \lbrk i_{1},\dots,i_{r}\rbrk \rbrk$.  We now operate 
+on each element of the lists as follows:
+
+\begin{center}
+\begin{tabularx}{4.5in}{cXlX}\hline
+	{\bf contraction} &  \parbox{3.5in}{\vspace{0.1in}Consider a basis list $B$ with element
+						 $B[j] = \lbrk i_{1},\dots,i_{l},i_{l+1},\dots,i_{s}\rbrk$ where 
+					     $i_{l} = i_{l+1}$. Then the product of the $l$ and $l+1$ terms result in a scalar and $B[j]$ is
+						replaced by the new list
+						 representation $\lbrk i_{1},\dots,i_{l-1},i_{l+2},\dots,i_{r}\rbrk$ which is of 
+						 psuedo grade $r-2$ and $C[j]$ is replaced by the symbol $g_{i_{l}i_{l}}C[j]$.\vspace{0.1in}} \\
+						 \hline
+\end{tabularx}
+\begin{tabularx}{4.5in}{cXlX}\hline 
+    {\bf revision}    & \parbox{3.5in}{\vspace{0.1in}Consider a basis list $B$ with element
+						 $B[j] = \lbrk i_{1},\dots,i_{l},i_{l+1},\dots,i_{s}\rbrk$ where 
+					     $i_{l} > i_{l+1}$. Then the $l$ and $l+1$ elements must be reversed to be
+						 put in normal order,
+						 but we have $a_{i_{l}}a_{i_{l+1}} = 2g_{i_{l}i_{l+1}}-
+						 a_{i_{l+1}}a_{i_{l}}$ (From the geometric 
+						 algebra definition of the dot product of two vectors). Thus
+						 we append the list representing the reduced element ,
+						 $\lbrk i_{1},\dots,i_{l-1},i_{l+2},\dots,i_{s}\rbrk$, to the pseudo bases list, $B$, and
+						 append $2g_{i{l}i_{l+1}}C[j]$ to the coefficients list, then 
+						 we replace $B[j]$ with $\lbrk i_{1},\dots,i_{l+1},i_{l},\dots,i_{s}\rbrk$ 
+					     and $C[j]$ with $-C[j]$. Both lists are increased by one element if 
+						 $g_{i_{l}i_{l+1}} \ne 0$.\vspace{0.1in}} \\ \hline
+\end{tabularx}
+\end{center}
+
+These processes are repeated untill every bases list in $B$ is in normal (ascending) order with no repeated elements.  Then the coefficents of equivalent bases are summed and the bases sorted according to psuedograde
+and ascending order.  We now have a way of calculating the geometric product of any two bases as a symbolic linear combination of all the bases with the coefficients determined by $g$. The base multiplication table
+for our simple example of three vectors is given by (the coefficient of each psuedo base is enclosed with \{\} for clarity):
+
+{\small
+\begin{verbatim}
+(1)(1) = 1
+(1)(a0) = a0
+(1)(a1) = a1
+(1)(a2) = a2
+(1)(a0a1) = a0a1
+(1)(a0a2) = a0a2
+(1)(a1a2) = a1a2
+(1)(a0a1a2) = a0a1a2
+
+(a0)(1) = a0
+(a0)(a0) = {a0**2}1
+(a0)(a1) = a0a1
+(a0)(a2) = a0a2
+(a0)(a0a1) = {a0**2}a1
+(a0)(a0a2) = {a0**2}a2
+(a0)(a1a2) = a0a1a2
+(a0)(a0a1a2) = {a0**2}a1a2
+
+(a1)(1) = a1
+(a1)(a0) = {2*(a0.a1)}1-a0a1
+(a1)(a1) = {a1**2}1
+(a1)(a2) = a1a2
+(a1)(a0a1) = {-a1**2}a0+{2*(a0.a1)}a1
+(a1)(a0a2) = {2*(a0.a1)}a2-a0a1a2
+(a1)(a1a2) = {a1**2}a2
+(a1)(a0a1a2) = {-a1**2}a0a2+{2*(a0.a1)}a1a2
+
+(a2)(1) = a2
+(a2)(a0) = {2*(a0.a2)}1-a0a2
+(a2)(a1) = {2*(a1.a2)}1-a1a2
+(a2)(a2) = {a2**2}1
+(a2)(a0a1) = {-2*(a1.a2)}a0+{2*(a0.a2)}a1+a0a1a2
+(a2)(a0a2) = {-a2**2}a0+{2*(a0.a2)}a2
+(a2)(a1a2) = {-a2**2}a1+{2*(a1.a2)}a2
+(a2)(a0a1a2) = {a2**2}a0a1+{-2*(a1.a2)}a0a2+{2*(a0.a2)}a1a2
+
+(a0a1)(1) = a0a1
+(a0a1)(a0) = {2*(a0.a1)}a0+{-a0**2}a1
+(a0a1)(a1) = {a1**2}a0
+(a0a1)(a2) = a0a1a2
+(a0a1)(a0a1) = {-a0**2*a1**2}1+{2*(a0.a1)}a0a1
+(a0a1)(a0a2) = {2*(a0.a1)}a0a2+{-a0**2}a1a2
+(a0a1)(a1a2) = {a1**2}a0a2
+(a0a1)(a0a1a2) = {-a0**2*a1**2}a2+{2*(a0.a1)}a0a1a2
+
+(a0a2)(1) = a0a2
+(a0a2)(a0) = {2*(a0.a2)}a0+{-a0**2}a2
+(a0a2)(a1) = {2*(a1.a2)}a0-a0a1a2
+(a0a2)(a2) = {a2**2}a0
+(a0a2)(a0a1) = {-2*a0**2*(a1.a2)}1+{2*(a0.a2)}a0a1+{a0**2}a1a2
+(a0a2)(a0a2) = {-a0**2*a2**2}1+{2*(a0.a2)}a0a2
+(a0a2)(a1a2) = {-a2**2}a0a1+{2*(a1.a2)}a0a2
+(a0a2)(a0a1a2) = {a0**2*a2**2}a1+{-2*a0**2*(a1.a2)}a2+{2*(a0.a2)}a0a1a2
+
+(a1a2)(1) = a1a2
+(a1a2)(a0) = {2*(a0.a2)}a1+{-2*(a0.a1)}a2+a0a1a2
+(a1a2)(a1) = {2*(a1.a2)}a1+{-a1**2}a2
+(a1a2)(a2) = {a2**2}a1
+(a1a2)(a0a1) = {2*a1**2*(a0.a2)-4*(a0.a1)*(a1.a2)}1+{2*(a1.a2)}a0a1+{-a1**2}a0a2
+              +{2*(a0.a1)}a1a2
+(a1a2)(a0a2) = {-2*a2**2*(a0.a1)}1+{a2**2}a0a1+{2*(a0.a2)}a1a2
+(a1a2)(a1a2) = {-a1**2*a2**2}1+{2*(a1.a2)}a1a2
+(a1a2)(a0a1a2) = {-a1**2*a2**2}a0+{2*a2**2*(a0.a1)}a1+{2*a1**2*(a0.a2)
+                -4*(a0.a1)*(a1.a2)}a2+{2*(a1.a2)}a0a1a2
+
+(a0a1a2)(1) = a0a1a2
+(a0a1a2)(a0) = {2*(a0.a2)}a0a1+{-2*(a0.a1)}a0a2+{a0**2}a1a2
+(a0a1a2)(a1) = {2*(a1.a2)}a0a1+{-a1**2}a0a2
+(a0a1a2)(a2) = {a2**2}a0a1
+(a0a1a2)(a0a1) = {2*a1**2*(a0.a2)-4*(a0.a1)*(a1.a2)}a0+{2*a0**2*(a1.a2)}a1
+                +{-a0**2*a1**2}a2+{2*(a0.a1)}a0a1a2
+(a0a1a2)(a0a2) = {-2*a2**2*(a0.a1)}a0+{a0**2*a2**2}a1+{2*(a0.a2)}a0a1a2
+(a0a1a2)(a1a2) = {-a1**2*a2**2}a0+{2*(a1.a2)}a0a1a2
+(a0a1a2)(a0a1a2) = {-a0**2*a1**2*a2**2}1+{2*a2**2*(a0.a1)}a0a1+{2*a1**2*(a0.a2)
+                  -4*(a0.a1)*(a1.a2)}a0a2+{2*a0**2*(a1.a2)}a1a2
+\end{verbatim}
+}
+
+\section{Base Representation of Multivectors}
+
+{\bf Python Note: In GAsympy symbolic multivectors are instanciated as the python class {\tt MV}. This means that 
+associated with each instance of a particular multivector {\tt A} is a set of data which defines that particular
+multivector and a set of operations (functions such as projection and reversal and operations such as addition, 
+subtraction, geometric product, innner product, and outer product) defined by the class. For a particular {\tt A} most of
+the data related to {\tt A} is stored in the list of arrays {\tt A.mv}. In addition there is a flag, {\tt A.bladeflg},
+that would indicate if {\tt A} is currently a base or blade representation (see section 5) and data structures 
+for any other required information.}
+
+In terms of the bases defined an arbitrary multivector can be represented as a list of arrays 
+(we use the numpy python module to implement arrays).  
+If we have $n$ basis vectors we initialize the list {\tt self.mv = [0,0,...,0]} with $n+1$ zeros.  Each zero is a
+placeholder for an array of python objects (in this case the objects will be sympy 
+symbol objects). If {\tt self.mv[r] = numpy.array([list of symbol objects])} each entry in the {\tt numpy.array}
+will be a coefficient of the corresponding psuedo base. {\tt self.mv[r] = 0} indicates that the coefficients of every
+base of psuedo grade $r$ are 0.  The length of the array {\tt self.mv[r]} is $n \choose r$ the
+binomial coefficient. For example the psuedo basis vector {\tt a1} would be represented as a multivector by the list:
+
+{\tt a1.mv = [0,numpy.array([numeric(0),numeric(1),numeric(0)]),0,0]}
+
+and {\tt a0a1a2} by:
+
+{\tt a0a1a2.mv = [0,0,0,numpy.array([numeric(1)])]}
+
+The array is stuffed with sympy numeric objects instead of python integers so that we can perform symbolically manipulate
+sympy expressions that consist of scalar algebraic symbols and exact rational numbers which sympy can also represent.
+
+The {\tt numpy.array} is used because operations of addition, substraction, and multiplication by an object are
+defined for the array if they are defined for the objects making up the array, which they are by sympy. 
+We call this representation a base type because the {\tt r} index is not a grade index since the bases we are using are not blades. In a blade representation the structure would be identical, but the bases would be replaced by 
+blades and {\tt self.mv[r]} would represent the {\tt r} grade components of the multivector.  The first use of the
+base representation is to store the results of the multiplication tabel for the bases in the class variable {\tt MV.mtabel}.  This variable is a group of nested lists so that the geometric product of the {\tt igrade} and 
+{\tt ibase} with the {\tt jgrade} and {\tt jbase} is {\tt MV.mtabel[igrade][ibase][jgrade][jbase]}.  We can then use this table to calculate the geometric product of any two multivectors.
+
+\section{Blade Representation of Multivectors}
+
+Since we can now calculate the symbolic geometric product of any two multivectors we can also calculate the
+blades corresponding to the product of the symbolic basis vectors using the formula
+\be
+	A_{r}\W b = \half\lp A_{r}b-\lp -1 \rp^{r}bA_{r} \rp,
+\ee
+where $A_{r}$ is a multivector of grade $r$ and $b$ is a vector.  For our example basis the result 
+is shown in Table~\ref{table3}.
+\begin{table}[h]
+\begin{verbatim}
+1 = 1
+a0 = a0
+a1 = a1
+a2 = a2
+a0^a1 = {-(a0.a1)}1+a0a1
+a0^a2 = {-(a0.a2)}1+a0a2
+a1^a2 = {-(a1.a2)}1+a1a2
+a0^a1^a2 = {-(a1.a2)}a0+{(a0.a2)}a1+{-(a0.a1)}a2+a0a1a2
+\end{verbatim}
+\caption{Bases blades in terms of bases.}\label{table3}
+\end{table}
+The important thing to notice about Table~\ref{table3} is that it is a triagonal (lower triangular) system of equations so that
+using a simple back substitution algorithym we can solve for the psuedo bases in terms of the blades giving Table~\ref{table4}.  
+\begin{table}[h]
+\begin{verbatim}
+1 = 1
+a0 = a0
+a1 = a1
+a2 = a2
+a0a1 = {(a0.a1)}1+a0^a1
+a0a2 = {(a0.a2)}1+a0^a2
+a1a2 = {(a1.a2)}1+a1^a2
+a0a1a2 = {(a1.a2)}a0+{-(a0.a2)}a1+{(a0.a1)}a2+a0^a1^a2
+\end{verbatim}
+\caption{Bases in terms of bases blades.}\label{table4}
+\end{table}
+Using Table~\ref{table4} and simple substitution we can convert from a base multivector representation to a
+blade representation.  Likewise, using Table~\ref{table3} we can convert from 
+blades to bases.
+
+Using the blade representation it becomes simple to program functions that will calculate the grade projection,
+reverse, even, and odd multivector functions.
+
+Note that in the multivector class {\tt MV} there is a class variable for each instantiation, {\tt self.bladeflg}, that is set to zero
+for a base representation and 1 for a blade representation.  One needs to keep track of which representation is
+in use since various multivector operations require conversion from one representation to the other.
+
+\section{Outer and Inner Product}
+
+{\bf Geometric Algebra Note: In geometric algebra any general multivector $A$ can be decomposed into pure grade 
+multivectors (a linear combination of blades of all the same order) so that in a $n$-dimensional vector space
+\be
+A = \sum_{r = 0}^{n}A_{r}
+\ee
+The geometric product of two pure grade multivectors $A_{r}$ and $B_{s}$ has the form
+\be
+A_{r}B_{s} = \proj{A_{r}B_{s}}{\abs{r-s}}+\proj{A_{r}B_{s}}{\abs{r-s}+2}+\cdots+\proj{A_{r}B_{s}}{r+s}
+\ee
+where $\proj{}{t}$ projects the $t$ grade components of the multivector argument.  The  
+inner and outer products of $A_{r}$ and $B_{s}$ are then defined to be
+\be
+A_{r}\cdot B_{s} = \proj{A_{r}B_{s}}{\abs{r-s}}
+\ee
+\be
+A_{r}\wedge B_{s} = \proj{A_{r}B_{s}}{r+s}
+\ee
+and
+\be
+A\cdot B = \sum_{r,s}A_{r}\cdot B_{s}
+\ee
+\be
+A\wedge B = \sum_{r,s}A_{r}\wedge B_{s}
+\ee
+}
+
+The {\tt MV} class function for the outer product of the multivectors {\tt mv1} and {\tt mv2} is
+
+\begin{verbatim}
+   def outer_product(mv1,mv2):
+        product = MV()
+        product.bladeflg = 1
+        mv1.convert_to_blades()
+        mv2.convert_to_blades()
+        for igrade1 in MV.n1rg:
+            if not isint(mv1.mv[igrade1]):
+                pg1 = mv1.project(igrade1)
+                for igrade2 in MV.n1rg:
+                    igrade = igrade1+igrade2
+                    if igrade <= MV.n:
+                        if not isint(mv2.mv[igrade2]):
+                            pg2 = mv2.project(igrade2)
+                            pg1pg2 = pg1*pg2
+                            product.add_in_place(pg1pg2.project(igrade))
+        return(product)
+    outer_product = staticmethod(outer_product) 
+\end{verbatim}
+
+In the 
+{\tt MV} class we have overloaded the {\tt \verb!^!} operator so that instead of calling the function we
+can write {\tt mv1\verb!^!mv2}.  Due to the precedence rules for python we should {\bf always} enclose outer
+and inner products in parenthesis.  The steps for calculating the outer product are:
+\begin{enumerate}
+\item Convert {\tt mv1} and {\tt mv2} to blade representation if they are not already in that form.
+\item Project and loop through each grade {\tt mv1.mv[i1]} and {\tt mv2.mv[i2]}.
+\item Calculate the geometric product {\tt pg1*pg2}.
+\item Project the {\tt i1+i2} grade from {\tt pg1*pg2}.
+\item Accumulate the results for each pair of grades in the imput multivectors.
+\end{enumerate}
+For the inner product of the multivectors {\tt mv1} and {\tt mv2} the {\tt MV} class function is 
+
+\begin{verbatim}
+    def inner_product(mv1,mv2):
+        product = MV()
+        product.bladeflg = 1
+        mv1.convert_to_blades()
+        mv2.convert_to_blades()
+        for igrade1 in range(1,MV.n1):
+            if not isint(mv1.mv[igrade1]):
+                pg1 = mv1.project(igrade1)
+                for igrade2 in range(1,MV.n1):
+                    igrade = abs(igrade1-igrade2)
+                    if not isint(mv2.mv[igrade2]):
+                        pg2 = mv2.project(igrade2)
+                        pg1pg2 = pg1*pg2
+                        product.add_in_place(pg1pg2.project(igrade))
+        return(product)
+    inner_product = staticmethod(inner_product)  
+\end{verbatim}
+
+In the {\tt MV} class we have overloaded the {\tt |} operator so that instead 
+of calling the function we can write {\tt mv1|mv2}. The inner product is calculated the same way 
+as the outer product except that in step~4, {\tt i1+i2} is replaced by {\tt abs(i1-i2)}.
+
+\section{Examples of GAsympy in Action}
+
+We now give three examples of symbolicGA in use (all are from {\bf Geometric Algebra for Physicists}
+by Doran and Lazenby). The complete python code for all three examples is given in the file
+{\tt test\_symbolicGA.py} and the results in {\tt test\_symbolicGA.out}.
+
+\subsection{Derive Non-Euclidian Distance}
+
+We shall derive the formula for caculating the distance in hyperbolic space
+from chapter~10 of {\bf Geometric Algebra for Physicists} by Doran and Lazenby. The equations we must 
+solve (pages 373-374) are
+\be
+ B = \lp X\W Y\W e\rp e = Le, \mbox{ where }X^{2} = Y^{2} = 0 \mbox{ and }e^{2} = 1
+\ee
+\be
+	\hat{B} = \bfrac{B}{\sqrt{B^{2}}}
+\ee
+\be\label{eq6}
+	Y = e^{\bfrac{\alpha\hat{B}}{2}}Xe^{-\bfrac{\alpha\hat{B}}{2}}
+\ee
+To solve equation~\ref{eq6} note that $Y\W Y = 0$ so that equation~\ref{eq6} is satisfied if,
+\be\label{eq7}
+    \lp e^{\bfrac{\alpha\hat{B}}{2}}Xe^{-\bfrac{\alpha\hat{B}}{2}}\rp \cdot Y = 0
+\ee
+and we use
+\be
+	e^{\bfrac{\alpha\hat{B}}{2}} = \cosh\lp\frac{\alpha}{2}\rp+\sinh\lp\frac{\alpha}{2}\rp\hat{B}
+\ee
+to solve for $\alpha$ as a function of $X$ and $Y$.
+
+The python code used to solve equation~\ref{eq7} is shown below.  Note the comments (all lines
+between """'s) that explain the inputs and outputs.
+
+\begin{verbatim}
+	print 'Example: non-euclidian distance calculation'
+
+	metric = '0 # #,'+ \
+			 '# 0 #,'+ \
+			 '# # 1,'
+
+	MV.setup('X Y e',metric,debug=0)
+	MV.set_str_format(1)
+
+	"""
+	X and Y are conformal mappings of two vectors on the Poincare disk
+	"""
+
+	L = X^Y^e
+
+	"""
+	B is the bivector generator of translations on the circle defined by L
+	"""
+
+	B = L*e
+	Bsq = (B*B)()
+	print 'L = X^Y^e is a non-euclidian line'
+	print 'B = L*e =',B
+	print 'B^2 =',Bsq
+	print 'L^2 =',(L*L)()
+
+	#make_scalars('s c Binv')
+	make_symbols('s c Binv M S C alpha')
+	"""
+	s = sinh(alpha/2)
+	c = cosh(alpha/2)
+	Binv = 1/sqrt(B*B)  It can be shown that B*B > 0
+	"""
+
+	Bhat = Binv*B # Normalize translation generator
+	R = c+s*Bhat # Rotor R = exp(alpha*Bhat/2)
+	print 's = sinh(alpha/2) and c = cosh(alpha/2)'
+	print 'R = exp(alpha*B/(2*|B|)) =',R
+	Z = R*X*R.rev()
+	Z.expand()
+	Z.collect([Binv,s,c,XdotY])
+	print 'R*X*R.rev() =',Z
+	#W = Z^Y
+	W = Z|Y
+	W.expand()
+	W.collect([s*Binv])
+	print '(R*X*rev(R)).Y =',W
+	M = 1/Bsq
+	W.subs(Binv**2,M)
+	W.simplify()
+	Bmag = sympy.sqrt(XdotY**2-2*XdotY*Xdote*Ydote)
+	W.collect([Binv*c*s,XdotY])
+
+	"""
+	Coefficients of W blades must be reduced via hyperbolic trig
+	substitutions to yield solution for alpha.
+	"""
+	W.subs(2*XdotY**2-4*XdotY*Xdote*Ydote,2/(Binv**2))
+	W.subs(2*c*s,S)
+	W.subs(c**2,(C+1)/2)
+	W.subs(s**2,(C-1)/2)
+	W.simplify()
+	W.subs(1/Binv,Bmag)
+	W = W()
+	print '(R*X*R.rev()).Y =',W
+	nl = '\n'
+	Wd = collect(W,[C,S],evaluate=False)
+	lhs = Wd[ONE]+Wd[C]*C
+	rhs = -Wd[S]*S
+	lhs = lhs**2
+	rhs = rhs**2
+	W = (lhs-rhs).expand()
+	W = (W.subs(S**2,C**2-1)).expand()
+	W = collect(W,[C**2,C],evaluate=False)
+	a = W[C**2]
+	b = W[abs(C)]
+	c = W[ONE]
+	D = (b**2-4*a*c).expand()
+	print 'Setting to 0 and solving for C gives:'
+	print 'Descriminant D = b^2-4*a*c =',D
+	C = (-b/(2*a)).expand()
+	print 'C = cosh(alpha) = -b/(2*a) =',C
+\end{verbatim}
+
+Note that {\tt Binv} is $\abs{B}^{-1}$.  The critical outputs are the
+expressions for {\tt B\verb!^!2} and {\tt (R*X*R.rev())\verb!|Y!}. Then we solve
+for {\tt (R*X*R.rev())\verb!|!Y = 0}.  Most of the code is reducing {\tt (R*X*R.rev())\verb!|Y! = 0}
+to a quadratic equation in $\cosh\lp\alpha\rp$ which we can solve.  The output of the code is:
+\begin{verbatim}
+xample: non-euclidian distance calculation
+L = X^Y^e is a non-euclidian line
+B = L*e = X^Y
++{-(Y.e)}X^e
++{(X.e)}Y^e
+
+B^2 = (X.Y)**2 - 2*(X.Y)*(X.e)*(Y.e)
+L^2 = (X.Y)**2 - 2*(X.Y)*(X.e)*(Y.e)
+s = sinh(alpha/2) and c = cosh(alpha/2)
+R = exp(alpha*B/(2*|B|)) = {c}1
++{Binv*s}X^Y
++{-(Y.e)*Binv*s}X^e
++{(X.e)*Binv*s}Y^e
+
+R*X*R.rev() = {c**2 + Binv*(2*(X.Y)*c*s - 2*(X.e)*(Y.e)*c*s) 
+               + Binv**2*((X.Y)**2*s**2 - 2*(X.Y)*(X.e)*(Y.e)*s**2)}X
+              +{2*Binv*c*s*(X.e)**2}Y
+               +{Binv**2*(-2*(X.e)*(X.Y)**2*s**2 + 4*(X.Y)*(Y.e)*(X.e)**2*s**2) 
+               - 2*(X.Y)*(X.e)*Binv*c*s}e
+
+(R*X*rev(R)).Y = {(X.Y)*c**2 + Binv*s*(2*c*(X.Y)**2 - 4*(X.Y)*(X.e)*(Y.e)*c) 
+                   + Binv**2*s**2*((X.Y)**3 - 4*(X.e)*(Y.e)*(X.Y)**2 
+                   + 4*(X.Y)*(X.e)**2*(Y.e)**2)}1
+
+(R*X*R.rev()).Y = (X.Y)*C+(X.e)*(Y.e)+S*((X.Y)**2-2*(X.Y)*(X.e)*(Y.e))**(1/2)-(X.e)*(Y.e)*C
+Setting to 0 and solving for C gives:
+Descriminant D = b^2-4*a*c = 0
+C = cosh(alpha) = -b/(2*a) = 1 - (X.Y)/(X.e)/(Y.e)
+\end{verbatim}
+Due to the way sympy processes the output symbolic manipulations {\tt 1 - (X.Y)/(X.e)/(Y.e) =
+1 - (X.Y)/((X.e)*(Y.e))}.  Using the value calculated for {\tt B\verb!^!2} 
+(the quantity in the radical is always positive for any point 
+on the Poincare disk) we have
+\be 
+\abs{B} = \sqrt{\lp X\cdot Y\rp^{2}-2\lp X\cdot Y\rp\lp X\cdot e\rp\lp Y\cdot e \rp}
+\ee
+The equation for {\tt X\verb!|!Y = 0} is then
+\be\label{eq9}
+\hspace{-0.25in}\lp X\cdot Y- \lp X\cdot e\rp\lp Y\cdot e \rp \rp\cosh\lp\alpha\rp+\lp X\cdot e\rp\lp Y\cdot e \rp+
+\lp X\cdot Y \rp\lp X\cdot e\rp\lp Y\cdot e \rp\abs{B}\sinh\lp\alpha \rp = 0
+\ee
+Equation\ref{eq9} is identical to 10.161 in Doran and
+Lazenby.  If one employs the standard hyperbolic trig identities we get a quadratic 
+equation in $\cosh\lp\alpha\rp$ with solution 
+\be
+	\cosh\lp\alpha\rp = 1 - \bfrac{X\cdot Y}{\lp X\cdot e\rp\lp Y\cdot e \rp}
+\ee
+which is the equation in Doran and 
+Lazenby without the intermediate geometric algebra manipulations in their equations~10.156 through 10.161.
+
+The biggest problem in using GAsym in this case is having enough understanding of sympy to be able to 
+simplify the symbolic coefficient expansions so that we can solve for $\cosh\lp\alpha\rp$. The easiest thing to do
+ was to use the metric tensor to enforce the required auxiliary conditions on $X$, $Y$, and $e$. 
+
+\subsection{Conformal Geometry}
+
+We shall show that blades in conformal space represent basis geometric shapes such as circles, lines, spheres,
+and planes. In chapter~10 of {\bf Geometric Algebra for Physicists} by Doran and Lazenby it is shown that points
+in euclidian space can be represented by rays (null vectors) in a space with two appended dimensions. If basis
+vectors for the appended dimensions are $e$ and $\ebar$ where $e^{2} = -\ebar^2 = 1$ we define the null basis
+vectors $n = e+\ebar$ and $\nbar = e-\ebar$ and have from the definitions that $n^{2} = \nbar = 0$ and
+$n\cdot nbar = 2$. A vector $x$ in the euclidian space is mapped into a ray in the conformal space by
+\be\label{eq12}
+X = \Fof{x} = \half\lp x^{2}n+2x-\nbar\rp
+\ee
+Now let $A$, $B$, $C$, and $D$ be rays representing fixed points in a 3-D euclidian space and $X$ representing
+the variable point $x = x_{1}e_{1}+x_{2}e_{2}+x_{3}e_{3}$ via the mapping in equation~\ref{eq12}.  Then the
+basis geometric shapes are represented by the blade equations:
+
+\begin{center}
+\begin{tabular}{ccc}
+Line & - & $\lp A\W B\W n \rp\W X = 0$ \\
+Circle & - & $\lp A\W B\W C \rp\W X = 0$ \\
+Plane & - & $\lp A\W B\W C\W n \rp\W X = 0$ \\
+Sphere & - & $\lp A\W B\W C\W D \rp\W X = 0$ \\
+\end{tabular}
+\end{center}
+
+The python code demonstrating this is shown below.  The points on the circle and sphere are selected so that both
+shapes have centers at the origin and the form of the equation in $x_{1}$, $x_{2}$, and $x_{3}$ are obvious.
+
+\begin{verbatim}
+def F(x):
+    Fx = HALF*((x*x)*n+2*x-nbar)
+    return(Fx)
+
+def make_vector(a,n = 3):
+    if type(a) == types.StringType:
+        sym_str = ''
+        for i in range(n):
+        sym_str += a+str(i)+' '
+        sym_lst = make_symbols(sym_str)
+        sym_lst.append(ZERO)
+        sym_lst.append(ZERO)
+        a = MV(sym_lst,'vector')
+    return(F(a))
+\end{verbatim}
+
+\begin{verbatim}
+    print '\n\n\nExample: Conformal representations of circles, lines,\n'+\
+          ' spheres, and planes'
+
+    metric = '1 0 0 0 0,'+ \
+             '0 1 0 0 0,'+ \
+             '0 0 1 0 0,'+ \
+             '0 0 0 0 2,'+ \
+             '0 0 0 2 0'
+
+    MV.setup('e0 e1 e2 n nbar',metric,debug=0)
+    MV.set_str_format(1)
+
+    #conformal representation of points
+    A = make_vector(e0)    # point a = (1,0,0)  A = F(a)
+    B = make_vector(e1)    # point b = (0,1,0)  B = F(b)
+    C = make_vector(-1*e0) # point c = (-1,0,0) C = F(c)
+    D = make_vector(e2)    # point d = (0,0,1)  D = F(d)
+    X = make_vector('x')
+    print 'a = e0, b = e1, c = -e0, and d = e2'
+    print 'A = F(a) = 1/2*(a*a*n+2*a-nbar), etc.'
+    print 'Circle through a, b, and c'
+    print 'Circle: A^B^C^X = 0 =',(A^B^C^X)
+    print 'Line through a and b'
+    print 'Line  : A^B^n^X = 0 =',(A^B^n^X)
+    print 'Sphere through a, b, c, and d'
+    print 'Sphere: A^B^C^D^X = 0 =',(A^B^C^D^X)
+    print 'Plane through a, b, and d'
+    print 'Plane : A^B^n^D^X = 0 =',(A^B^n^D^X)
+\end{verbatim}
+
+The output of the code is shown below.  This output show that the blade
+equations properly encode the basic geometric shapes.  The shapes shown
+can be translated and scaled using rotations in the conformal space. Thus
+the blade equations are corrent for any line, circle, plane, or sphere. 
+
+\begin{verbatim}
+Example: Conformal representations of circles, lines, spheres, and planes
+a = e0, b = e1, c = -e0, and d = e2
+A = F(a) = 1/2*(a*a*n+2*a-nbar), etc.
+Circle through a, b, and c
+Circle: A^B^C^X = 0 = {-x2}e0^e1^e2^n
++{x2}e0^e1^e2^nbar
++{-1/2+1/2*x0**2+1/2*x2**2+1/2*x1**2}e0^e1^n^nbar
+
+Line through a and b
+Line  : A^B^n^X = 0 = {-x2}e0^e1^e2^n
++{-1/2+1/2*x1+1/2*x0}e0^e1^n^nbar
++{1/2*x2}e0^e2^n^nbar
++{-1/2*x2}e1^e2^n^nbar
+
+Sphere through a, b, c, and d
+Sphere: A^B^C^D^X = 0 = {1/2-1/2*x0**2-1/2*x2**2-1/2*x1**2}e0^e1^e2^n^nbar
+
+Plane through a, b, and d
+Plane : A^B^n^D^X = 0 = {1/2-1/2*x1-1/2*x0-1/2*x2}e0^e1^e2^n^nbar
+\end{verbatim}
+
+\subsection{Reciprocal Frames}
+
+We shall show that the set of reciprocal vectors with respect to an arbitrary basis are
+correctly calculated according to {\bf Geometric Algebra for Physicists} by Doran and Lazenby,
+chapter~4, page~100. The only simplification we make is that our basis consists of unit
+vectors $e_{1}^{2} = e_{2}^{2} = e_{3}^{2} = 1$, otherwise $e_{1}$, $e_{2}$, and $e_{3}$
+are arbitrary. We program formula~4.94, the program implementing this is shown below. In
+the program we have $e^{j} = {\tt Ej}$ and $E_{n} = {\tt E}$ for formulas~4.92 and 4.94 in
+the reference. 
+\begin{verbatim}
+    metric = '1 # #,'+ \
+             '# 1 #,'+ \
+             '# # 1,'
+
+    MV.setup('e1 e2 e3',metric)
+    print 'Example: Reciprocal Frames e1, e2, and e3 unit vectors.\n\n'
+    E = e1^e2^e3
+    Esq = (E*E)()
+    print 'E =',E
+    print 'E^2 =',Esq
+    Esq_inv = 1/Esq
+    E1 = (e2^e3)*E
+    E2 = (-1)*(e1^e3)*E
+    E3 = (e1^e2)*E
+    print 'E1 = (e2^e3)*E =',E1
+    print 'E2 =-(e1^e3)*E =',E2
+    print 'E3 = (e1^e2)*E =',E3
+    w = (E1|e2)
+    w.collect(MV.g)
+    print 'E1|e2 =',w
+    w = (E1|e3)
+    w.collect(MV.g)
+    print 'E1|e3 =',w
+    w = (E2|e1)
+    w.collect(MV.g)
+    print 'E2|e1 =',w
+    w = (E2|e3)
+    w.collect(MV.g)
+    print 'E2|e3 =',w
+    w = (E3|e1)
+    w.collect(MV.g)
+    print 'E3|e1 =',w
+    w = (E3|e2)
+    w.collect(MV.g)
+    print 'E3|e2 =',w
+    w = (E1|e1)
+    w = expand(w())
+    Esq = expand(Esq)
+    print '(E1|e1)/E^2 =',w/Esq
+    w = (E2|e2)
+    w = expand(w())
+    print '(E2|e2)/E^2 =',w/Esq
+    w = (E3|e3)
+    w = expand(w())
+    print '(E3|e3)/E^2 =',w/Esq
+\end{verbatim}
+The output of the program is below and shows that $e^{i}\cdot e_{j} = \delta^{i}_{j}$,
+where $\delta^{i}_{j}$ is the Knonecker delta function (one if $i = j$, zero if $i \ne j$).  
+The output is correct
+\begin{verbatim}
+Example: Reciprocal Frames e1, e2, and e3 unit vectors.
+E = e1^e2^e3
+E^2 = -1+(e1.e3)**2+(e2.e3)**2-2*(e1.e2)*(e2.e3)*(e1.e3)+(e1.e2)**2
+E1 = (e2^e3)*E = {-1+(e2.e3)**2}e1
+                +{(e1.e2)-(e2.e3)*(e1.e3)}e2
+                +{-(e1.e2)*(e2.e3)+(e1.e3)}e3
+E2 =-(e1^e3)*E = {(e1.e2)-(e2.e3)*(e1.e3)}e1
+                +{-1+(e1.e3)**2}e2
+                +{-(e1.e2)*(e1.e3)+(e2.e3)}e3
+E3 = (e1^e2)*E = {-(e1.e2)*(e2.e3)+(e1.e3)}e1
+                +{-(e1.e2)*(e1.e3)+(e2.e3)}e2
+                +{-1+(e1.e2)**2}e3
+E1|e2 = 0
+E1|e3 = 0
+E2|e1 = 0
+E2|e3 = 0
+E3|e1 = 0
+E3|e2 = 0
+(E1|e1)/E^2 = 1
+(E2|e2)/E^2 = 1
+(E3|e3)/E^2 = 1
+\end{verbatim}
+\subsection{More Examples}
+The complete test suite ({\tt test\_symbolicGA.py}) and its output ({\tt test\_symbolicGA.out}) are part of the
+GAsympy documentation and include more examples than shown in this document.  Documentation of all the classes
+and functions in GAsympy are obtained by the command line {\tt pydoc GAsympy} for the generation of a text 
+file or {\tt pydoc -w GAsympy} for the generation of a html file documenting GAsympy in the GAsympy directory.
+
+\section{GAcalc.py - A Calculator for Geometric Algebra}
+If one is not familiar with python programming a simple Geometric Algebra calculator is included with symbolicGA.  To run GAcalc.py use the command line {\tt GAcalc.py [savefile]}.  {\tt savefile} is an optional command line argument that
+allows one to save or restore their calculator session.  If the file {\tt savefile} does not exist GAcalc 
+creates it and saves the
+current GAcalc session in it.  If {\tt savefile} exists, GAcalc reads it and executes the commands saved from a previous
+session restoring and making available all the quantities calculated in the previous session to the current session. Note 
+one should never use a {\tt savefile} name that ends in {\tt .py} since this causes problems in the python interpeture
+that will cause the calculator to lock up.  An example of a GAcalc session follows:
+
+\begin{verbatim}
+$ GAcalc.py session.sav
+In: make_symbols('x0 x1 x2')
+Out: [x0 x1 x2]
+In: x = x0*a0+x1*a1+x2*a2
+Out: x = {x0}a0+{x1}a1+{x2}a2
+In: y = a0^a1^a2
+Out: y = a0^a1^a2
+In: x^y
+Out: 0
+In: y = a0^a1
+Out: y = a0^a1
+In: x^y
+Out: {x2}a0^a1^a2
+In: z = x+y
+Out: z = {x0}a0+{x1}a1+{x2}a2+a0^a1
+In: z = z+(a0^a1^a2)
+Out: z = {x0}a0+{x1}a1+{x2}a2+a0^a1+a0^a1^a2
+In: z.even()
+Out: a0^a1
+In: z.odd()
+Out: {x0}a0+{x1}a1+{x2}a2+a0^a1^a2
+In: z.rev()
+Out: {x0}a0+{x1}a1+{x2}a2-a0^a1-a0^a1^a2
+In: z = z+1
+Out: z = 1+{x0}a0+{x1}a1+{x2}a2+a0^a1+a0^a1^a2
+In: ?
+\end{verbatim}
+
+The default basis for GAcalc is {\tt 'a0 a1 a2'} with the corresponding default metric. This can be
+overidden by inputing {\tt MV.setup(your basis,your metric)}. Also it is absolutely critical to enclose
+operations with \verb!^! and {\tt |} in parenthesis since they have a lower priority than {\tt +}, 
+{\tt -}, and {\tt *}.
+
+\end{document}
