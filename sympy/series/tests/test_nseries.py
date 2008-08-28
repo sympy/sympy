@@ -1,6 +1,6 @@
 from sympy import Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh, \
         sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, Integer, \
-        PoleError
+        PoleError, floor, ceiling
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
 import py
@@ -359,3 +359,28 @@ def test_expsinbug():
     assert exp(sin(x)).series(x, 0, 3) == 1+x+x**2/2+O(x**3)
     assert exp(sin(x)).series(x, 0, 4) == 1+x+x**2/2+O(x**4)
     assert exp(sin(x)).series(x, 0, 5) == 1+x+x**2/2-x**4/8+O(x**5)
+
+def test_floor():
+    x = Symbol('x')
+    assert floor(x).series(x) == 0
+    assert floor(-x).series(x) == -1
+    assert floor(sin(x)).series(x) == 0
+    assert floor(sin(-x)).series(x) == -1
+    assert floor(x**3).series(x) == 0
+    assert floor(-x**3).series(x) == -1
+    assert floor(cos(x)).series(x) == 0
+    assert floor(cos(-x)).series(x) == 0
+    assert floor(5+sin(x)).series(x) == 5
+    assert floor(5+sin(-x)).series(x) == 4
+
+    x = Symbol('x', negative=True)
+    assert floor(x+1.5).series(x) == 1
+
+def test_ceiling():
+    x = Symbol('x')
+    assert ceiling(x).series(x) == 1
+    assert ceiling(-x).series(x) == 0
+    assert ceiling(sin(x)).series(x) == 1
+    assert ceiling(sin(-x)).series(x) == 0
+    assert ceiling(1-cos(x)).series(x) == 1
+    assert ceiling(1-cos(-x)).series(x) == 1

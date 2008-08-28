@@ -71,14 +71,6 @@ class RoundFunction(Function):
     def _eval_is_integer(self):
         return self.args[0].is_real
 
-    def _eval_nseries(self, x, x0, n):
-        positive = self.args[0].is_positive
-        r = self.subs(x, x0)
-        if positive:
-            return r
-        else:
-            return r-1
-
 class floor(RoundFunction):
     """
     Floor is a univariate function which returns the largest integer
@@ -113,6 +105,18 @@ class floor(RoundFunction):
                 return C.Integer(int(arg.floor()))
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[0]
+
+    def _eval_nseries(self, x, x0, n):
+        r = self.subs(x, x0)
+        args = self.args[0]
+        if args.subs(x,x0) == r:
+            if (args - args.subs(x,x0)).leadterm(x)[0].is_positive:
+                return r
+            else:
+                return r-1
+        else:
+            return r
+
 
 class ceiling(RoundFunction):
     """
@@ -150,9 +154,13 @@ class ceiling(RoundFunction):
             return arg.approximation_interval(C.Integer)[1]
 
     def _eval_nseries(self, x, x0, n):
-        positive = self.args[0].is_positive
         r = self.subs(x, x0)
-        if positive:
-            return r+1
+        args = self.args[0]
+        if args.subs(x,x0) == r:
+            if (args - args.subs(x,x0)).leadterm(x)[0].is_positive:
+                return r+1
+            else:
+                return r
         else:
             return r
+

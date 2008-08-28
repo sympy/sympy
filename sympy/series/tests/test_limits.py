@@ -63,13 +63,13 @@ def test_floor():
     # needs better assumptions handling.
 
     # this doesn't work, it requires robust assumptions:
-    #assert limit(floor(sin(x)), x, 0, "+") == 0
+    assert limit(floor(sin(x)), x, 0, "+") == 0
     assert limit(floor(sin(x)), x, 0, "-") == -1
     assert limit(floor(cos(x)), x, 0, "+") == 0
     assert limit(floor(cos(x)), x, 0, "-") == 0
 
     # this doesn't work, it requires robust assumptions:
-    #assert limit(floor(5+sin(x)), x, 0, "+") == 5
+    assert limit(floor(5+sin(x)), x, 0, "+") == 5
     #assert limit(floor(5+sin(x)), x, 0, "-") == 4
     #assert limit(floor(5+cos(x)), x, 0, "+") == 5
     #assert limit(floor(5+cos(x)), x, 0, "-") == 5
