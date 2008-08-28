@@ -1,11 +1,11 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
-        I, S, erf, tan, asin, asinh, Function, Derivative, diff
+        I, S, erf, tan, asin, asinh, Function, Derivative, diff, trim
 from sympy.integrals.risch import heurisch, components
 from sympy.utilities.pytest import XFAIL
 from py.test import skip
 
-x, y = symbols('xy')
-f    = Function('f')
+x, y, z = symbols('xyz')
+f = Function('f')
 
 def test_components():
     assert components(x*y, x) == set([x])
@@ -106,6 +106,8 @@ def test_heurisch_symbolic_coeffs():
     assert heurisch(1/(x+sqrt(2)), x)   == log(x+sqrt(2))
     assert heurisch(1/(x**2+y), x)      == I*y**(-S.Half)*log(x + (-y)**S.Half)/2 - \
                                            I*y**(-S.Half)*log(x - (-y)**S.Half)/2
+
+    assert trim(diff(heurisch(log(x+y+z), y), y)) == log(x+y+z)
 
 def test_heurisch_hacking():
     assert heurisch(sqrt(1 + 7*x**2), x, hints=[]) == \

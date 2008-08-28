@@ -34,6 +34,11 @@ def test_solve():
 def test_linear_system():
     x, y, z, t, n = map(Symbol, 'xyztn')
 
+    assert solve([x-1, x-y, x-2*y, y-1], [x,y]) is None
+
+    assert solve([x-1, x-y, x-2*y, x-1], [x,y]) is None
+    assert solve([x-1, x-1, x-y, x-2*y], [x,y]) is None
+
     assert solve([x+5*y-2, -3*x+6*y-15], x, y) == {x: -3, y: 1}
 
     M = Matrix( [0,0,n*(n+1),(n+1)**2,0],

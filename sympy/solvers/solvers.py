@@ -168,14 +168,23 @@ def solve_linear_system(system, *symbols, **flags):
     i, m = 0, matrix.cols-1  # don't count augmentation
 
     while i < matrix.lines:
-        if matrix [i, i] == 0:
+        if i == m:
+            # an overdetermined system
+            if any(matrix[i:,m]):
+                return None   # no solutions
+            else:
+                # remove trailing rows
+                matrix = matrix[:i,:]
+                break
+
+        if not matrix[i, i]:
             # there is no pivot in current column
             # so try to find one in other colums
-            for k in range(i+1, m):
-                if matrix[i, k] != 0:
+            for k in xrange(i+1, m):
+                if matrix[i, k]:
                     break
             else:
-                if matrix[i, m] != 0:
+                if matrix[i, m]:
                     return None   # no solutions
                 else:
                     # zero row or was a linear combination of
@@ -193,13 +202,13 @@ def solve_linear_system(system, *symbols, **flags):
         # divide all elements in the current row by the pivot
         matrix.row(i, lambda x, _: x * pivot_inv)
 
-        for k in range(i+1, matrix.lines):
-            if matrix[k, i] != 0:
+        for k in xrange(i+1, matrix.lines):
+            if matrix[k, i]:
                 coeff = matrix[k, i]
 
                 # subtract from the current row the row containing
                 # pivot and multiplied by extracted coefficient
-                matrix.row(k, lambda x, j: x - matrix[i, j]*coeff)
+                matrix.row(k, lambda x, j: simplify(x - matrix[i, j]*coeff))
 
         i += 1
 
@@ -218,7 +227,7 @@ def solve_linear_system(system, *symbols, **flags):
             content = matrix[k, m]
 
             # run back-substitution for variables
-            for j in range(k+1, m):
+            for j in xrange(k+1, m):
                 content -= matrix[k, j]*solutions[syms[j]]
 
             if simplified:
@@ -238,11 +247,11 @@ def solve_linear_system(system, *symbols, **flags):
             content = matrix[k, m]
 
             # run back-substitution for variables
-            for j in range(k+1, i):
+            for j in xrange(k+1, i):
                 content -= matrix[k, j]*solutions[syms[j]]
 
             # run back-substitution for parameters
-            for j in range(i, m):
+            for j in xrange(i, m):
                 content -= matrix[k, j]*syms[j]
 
             if simplified:
