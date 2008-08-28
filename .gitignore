@@ -1,0 +1,11 @@
+*.pyc
+*.pyo
+*.swp
+tags
+
+dist/
+build/
+
+doc/_build/
+doc/sphinx/
+
