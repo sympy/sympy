@@ -221,7 +221,10 @@ def heurisch(f, x, **kwargs):
         return Add(*[ d * h.diff(v) for d, v in zip(numers, V) ])
 
     def deflation(p):
-        for y in p.atoms(Symbol):
+        for y in V:
+            if not p.has_any_symbols(y):
+                continue
+
             if derivation(p) is not S.Zero:
                 c, q = p.as_poly(y).as_primitive()
                 return deflation(c)*gcd(q, q.diff(y))
@@ -229,7 +232,10 @@ def heurisch(f, x, **kwargs):
             return p
 
     def splitter(p):
-        for y in p.atoms(Symbol):
+        for y in V:
+            if not p.has_any_symbols(y):
+                continue
+
             if derivation(y) is not S.Zero:
                 c, q = p.as_poly(y).as_primitive()
 
@@ -326,8 +332,6 @@ def heurisch(f, x, **kwargs):
                 continue
 
             irreducibles |= set(factors(poly, z, domain=field))
-
-        #irreducibles = [ h.as_basic() for h in irreducibles ]
 
         log_coeffs, log_part = [], []
         B = _symbols('B', len(irreducibles))

@@ -33,6 +33,7 @@ def test_heurisch_polynomials():
 def test_heurisch_fractions():
     assert heurisch(1/x, x) == log(x)
     assert heurisch(1/(2 + x), x) == log(x + 2)
+    assert heurisch(1/(x+sin(y)), x) == log(x+sin(y))
 
     # Up to a constant, where C = 5*pi*I/12, Matematica gives identical
     # result in the first case. The difference is because sympy changes
@@ -134,11 +135,6 @@ def test_heurisch_function():
 def test_issue510():
     assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \
                                                    I*log(log(x) - I)/2
-
-    # Following won't work as long as polynomials have functionality like:
-    # "XXX this will not work for sin(x), sqrt(2), etc..."
-
-    # assert heurisch(1/(x+sin(y)), x)    == log(x+sin(y))
 
 ### These are examples from the Poor Man's Integrator
 ### http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/examples/
