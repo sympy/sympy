@@ -112,6 +112,10 @@ def test_abs():
     #assert limit(abs(sin(x)), x, 0) == 0
     assert limit(abs(cos(x)), x, 0) == 1
 
+def test_heuristic():
+    x = Symbol("x", real=True)
+    assert limit(log(2+sqrt(atan(x)*sin(1/x))), x, 0) == log(2)
+
 def test_issue772():
     f = -1/z*exp(-z*x)
     assert limit(f, x, oo) == 0

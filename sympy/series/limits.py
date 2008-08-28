@@ -1,4 +1,4 @@
-from sympy.core import S, Add, sympify, Basic, PoleError, Mul, oo
+from sympy.core import S, Add, sympify, Basic, PoleError, Mul, oo, C
 from gruntz import gruntz
 
 def limit(e, z, z0, dir="+"):
@@ -80,14 +80,22 @@ def limit(e, z, z0, dir="+"):
 def heuristics(e, z, z0, dir):
     if z0 == oo:
         return heuristics(e.subs(z, 1/z), z, sympify(0), "+")
-    if e.is_Mul:
+    elif e.is_Mul:
         r = []
         for a in e.args:
             if not a.is_bounded:
                 r.append(a.limit(z, z0, dir))
         if not (r is []):
             return Mul(*r)
-    raise NotImplementedError("Don't know how to calculate the limit, sorry.")
+    elif e.is_Add:
+        r = []
+        for a in e.args:
+            r.append(a.limit(z, z0, dir))
+        return Add(*r)
+    elif isinstance(e, C.Function):
+        return e.subs(e.args[0], heuristics(e.args[0], z, z0, dir))
+    msg = "Don't know how to calculate the limit(%s, %s, %s, dir=%s), sorry."
+    raise PoleError(msg % (e, z, z0, dir))
 
 
 class Limit(Basic):
