@@ -56,6 +56,7 @@ more details what they do and what they are interested in.
 #. Sebastian Krause: match patches
 #. Sebastian Kreft: latex printing patches
 #. Dan (coolg49964): documentation fixes
+#. Alan Bromborsky: geometric algebra modules
 
 Uptodate list in the order of the first contribution is given in the `README
 <http://hg.sympy.org/sympy/file/tip/README>`_
