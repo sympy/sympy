@@ -373,6 +373,9 @@ def test_floor():
     assert floor(5+sin(x)).series(x) == 5
     assert floor(5+sin(-x)).series(x) == 4
 
+    assert floor(x).series(x, 2) == 2
+    assert floor(-x).series(x, 2) == -3
+
     x = Symbol('x', negative=True)
     assert floor(x+1.5).series(x) == 1
 
@@ -384,6 +387,8 @@ def test_ceiling():
     assert ceiling(sin(-x)).series(x) == 0
     assert ceiling(1-cos(x)).series(x) == 1
     assert ceiling(1-cos(-x)).series(x) == 1
+    assert ceiling(x).series(x, 2) == 3
+    assert ceiling(-x).series(x, 2) == -2
 
 def test_abs():
     x = Symbol('x')

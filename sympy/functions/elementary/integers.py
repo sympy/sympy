@@ -109,8 +109,9 @@ class floor(RoundFunction):
     def _eval_nseries(self, x, x0, n):
         r = self.subs(x, x0)
         args = self.args[0]
-        if args.subs(x,x0) == r:
-            if (args - args.subs(x,x0)).leadterm(x)[0].is_positive:
+        if args.subs(x, x0) == r:
+            direction = (args.subs(x, x+x0) - args.subs(x, x0)).leadterm(x)[0]
+            if direction.is_positive:
                 return r
             else:
                 return r-1
@@ -157,7 +158,8 @@ class ceiling(RoundFunction):
         r = self.subs(x, x0)
         args = self.args[0]
         if args.subs(x,x0) == r:
-            if (args - args.subs(x,x0)).leadterm(x)[0].is_positive:
+            direction = (args.subs(x, x+x0) - args.subs(x, x0)).leadterm(x)[0]
+            if direction.is_positive:
                 return r+1
             else:
                 return r
