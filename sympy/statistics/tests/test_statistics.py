@@ -1,6 +1,7 @@
-from sympy import sqrt, Rational, oo
+from sympy import sqrt, Rational, oo, Symbol, exp
 from sympy.functions import erf
 from sympy.statistics import Normal, Uniform
+from sympy.statistics.distributions import PDF
 import operator # XXX weird abs/sympy.abs conflict
 
 from sympy.mpmath import mp
@@ -49,3 +50,14 @@ def test_sample():
     from sympy.statistics.distributions import Sample
     s = Sample([0,1])
     assert s.mean == Rational(1,2)
+
+def test_PDF():
+    a = Symbol('a', positive=True)
+    x = Symbol('x', real=True)
+    exponential = PDF(exp(-x/a), (x,0,oo))
+    exponential = exponential.normalize()
+    assert exponential.pdf(x) == 1/a*exp(-x/a)
+    assert exponential.cdf(x) == 1 - exp(-x/a)
+    assert exponential.mean == a
+    assert exponential.variance == a**2
+    assert exponential.stddev == a
