@@ -1,6 +1,6 @@
 from sympy import Basic, S, Symbol, Real, Integer, Rational,  \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
-    WildFunction, Poly, Function, Derivative, Number, pi
+    WildFunction, Poly, Function, Derivative, Number, pi, var
 
 import py
 from sympy.utilities.pytest import XFAIL
@@ -549,3 +549,25 @@ def test_extractions():
     assert (x-y).could_extract_minus_sign() != (-x+y).could_extract_minus_sign()
     assert (1-x-y).could_extract_minus_sign() == True
     assert (1-x+y).could_extract_minus_sign() == False
+
+def test_coeff():
+    assert (3+2*x+4*x**2).coeff(1) == None
+    assert (3+2*x+4*x**2).coeff(x) == 2
+    assert (3+2*x+4*x**2).coeff(x**2) == 4
+    assert (3+2*x+4*x**2).coeff(x**3) == None
+
+def test_coeff2():
+    var('r, kappa')
+    psi = Function("psi")
+    g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
+    assert g.coeff(psi(r).diff(r)) == 2/r
+
+@XFAIL
+def test_coeff2_0():
+    var('r, kappa')
+    psi = Function("psi")
+    g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
+
+    # unfortunately since collect does not distinguish nested/flattenned
+    # Derivatives, the following does not work
+    assert g.coeff(psi(r).diff(r, 2)) == 1

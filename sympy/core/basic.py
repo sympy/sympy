@@ -1450,6 +1450,34 @@ class Basic(AssumeMeths):
                 else:
                     return self
 
+    def coeff(self, x):
+        """
+        Returns the coefficient of the term "x" or None if there is no "x".
+
+        Example:
+
+        >>> x = Symbol('x')
+
+        >>> (3+2*x+4*x**2).coeff(1)
+        >>> (3+2*x+4*x**2).coeff(x)
+        2
+        >>> (3+2*x+4*x**2).coeff(x**2)
+        4
+        >>> (3+2*x+4*x**2).coeff(x**3)
+        >>>
+        """
+        from sympy import collect
+        x = sympify(x)
+        self = self.expand()
+        if x.is_Integer:
+            return
+        expr = collect(self, x)
+        symbols = list(x.atoms(Symbol))
+        w = Wild("coeff", exclude=symbols)
+        m = expr.match(w*x+Wild("rest"))
+        if m:
+            return m[w]
+
     def as_coefficient(self, expr):
         """Extracts symbolic coefficient at the given expression. In
            other words, this functions separates 'self' into product
