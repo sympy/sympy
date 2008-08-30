@@ -1,7 +1,7 @@
 from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
         collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
-        solve, nsimplify, GoldenRatio, sqrt, I, sympify, atan
+        solve, nsimplify, GoldenRatio, sqrt, I, sympify, atan, Derivative
 
 from sympy.utilities.pytest import XFAIL
 
@@ -199,6 +199,28 @@ def test_collect():
     x,y,n = symbols('xyn')
     assert collect(2*x**2 + y*x**2 + 3*x*y, [x]) == x**2*(2+y) + 3*x*y
     assert collect(2*x**2 + y*x**2 + 3*x*y, [y]) == 2*x**2 + y*(x**2+3*x)
+
+def test_collect_D():
+    D = Derivative
+    f = Function('f')
+    x,a,b = symbols('xab')
+    fx  = D(f(x), x)
+    fxx = D(f(x), x,x)
+
+    assert collect(a*fx + b*fx, fx) == (a + b)*fx
+    assert collect(a*D(fx,x) + b*D(fx,x), fx)   == (a + b)*D(fx, x)
+    assert collect(a*fxx     + b*fxx    , fx)   == (a + b)*D(fx, x)
+
+@XFAIL
+def test_collect_D_0():
+    D = Derivative
+    f = Function('f')
+    x,a,b = symbols('xab')
+    fxx = D(f(x), x,x)
+
+    # collect does not distinguish nested derivatives, so it returns
+    #                                           -- (a + b)*D(D(f,x), x)
+    assert collect(a*fxx     + b*fxx    , fxx)  == (a + b)*fxx
 
 def test_hypersimp():
     n, k = symbols('nk', integer=True)
