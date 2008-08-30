@@ -384,3 +384,11 @@ def test_ceiling():
     assert ceiling(sin(-x)).series(x) == 0
     assert ceiling(1-cos(x)).series(x) == 1
     assert ceiling(1-cos(-x)).series(x) == 1
+
+def test_abs():
+    x = Symbol('x')
+    assert abs(x).nseries(x, 0, 4) == x
+    assert abs(-x).nseries(x, 0, 4) == x
+    assert abs(x+1).nseries(x, 0, 4) == x+1
+    assert abs(sin(x)).nseries(x, 0, 4) == x - Rational(1, 6)*x**3 + O(x**4)
+    assert abs(sin(-x)).nseries(x, 0, 4) == x - Rational(1, 6)*x**3 + O(x**4)

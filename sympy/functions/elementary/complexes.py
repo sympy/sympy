@@ -236,13 +236,9 @@ class abs(Function):
                 return self.args[0]**other
         return
 
-    @staticmethod
-    def taylor_term(n, x, *previous_terms):
-        if n == 1:
-            return x
-        else:
-            return S.Zero
-
+    def nseries(self, x, x0, n):
+        direction = self.args[0].leadterm(x)[0]
+        return sign(direction)*self.args[0].nseries(x, x0, n)
 
     def _sage_(self):
         import sage.all as sage
