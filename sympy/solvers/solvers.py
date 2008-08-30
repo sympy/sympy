@@ -427,7 +427,7 @@ def solve_ODE_first_order(eq, f):
 
     #other cases of first order odes will be implemented here
 
-    raise NotImplementedError("dsolve: Cannot solve " + str(eq))
+    raise NotImplementedError("solve_ODE_first_order: Cannot solve " + str(eq))
 
 def solve_ODE_second_order(eq, f):
     """
@@ -483,7 +483,7 @@ def solve_ODE_second_order(eq, f):
         #assert ( t.diff(x,2)*r[a]/t ).expand() == eq
         return solve_ODE_1(f(x), x)
 
-    raise NotImplementedError("cannot solve this")
+    raise NotImplementedError("solve_ODE_second_order: cannot solve " + str(eq))
 
 def solve_ODE_1(f, x):
     """ (x*exp(-f(x)))'' = 0 """
