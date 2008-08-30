@@ -208,3 +208,103 @@ class Uniform(ContinuousProbability):
         m = sample.mean
         d = sqrt(12*sample.variance)/2
         return Uniform(m-d, m+d)
+
+class PDF(ContinuousProbability):
+    def __init__(self, pdf, var):
+        #XXX maybe add some checking of parameters
+        if  isinstance(var, (tuple, list)):
+            self.pdf = Lambda(var[0], pdf)
+            self.domain = tuple(var[1:])
+        else:
+            self.pdf = Lambda(var, pdf)
+            self.domain = (-oo, oo)
+        self._cdf = None
+        self._mean = None
+        self._variance = None
+        self._stddev = None
+
+
+    def normalize(self):
+        norm = self.probability(*self.domain)
+        if norm != 1:
+            w = Symbol('w', real=True, dummy=True)
+            return self.__class__(self.pdf(w)/norm, (w, self.domain[0], self.domain[1]))
+            #self._cdf = Lambda(w, (self.cdf(w) - self.cdf(self.domain[0]))/norm)
+            #if self._mean is not None:
+            #    self._mean /= norm
+            #if self._variance is not None:
+            #    self._variance = (self._variance + (self._mean*norm)**2)/norm - self.mean**2
+            #if self._stddev is not None:
+            #    self._stddev = sqrt(self._variance)
+        else:
+            return self
+
+
+    def cdf(self, x):
+        x = sympify(x)
+        if self._cdf is not None:
+            return self._cdf(x)
+        else:
+            from sympy import integrate
+            w = Symbol('w', real=True, dummy=True)
+            self._cdf = integrate(self.pdf(w), w)
+            self._cdf = Lambda(w, self._cdf - self._cdf.subs(w, self.domain[0]))
+            return self._cdf(x)
+
+    def _get_mean(self):
+        if self._mean is not None:
+            return self._mean
+        else:
+            from sympy import integrate
+            w = Symbol('w', real=True, dummy=True)
+            self._mean = integrate(self.pdf(w)*w,(w,self.domain[0],self.domain[1]))
+            return self._mean
+
+    def _get_variance(self):
+        if self._variance is not None:
+            return self._variance
+        else:
+            from sympy import integrate, trim, together
+            w = Symbol('w', real=True, dummy=True)
+            self._variance = integrate(self.pdf(w)*w**2,(w,self.domain[0],self.domain[1])) - self.mean**2
+            self._variance = trim(self._variance)
+            return self._variance
+
+    def _get_stddev(self):
+        if self._stddev is not None:
+            return self._stddev
+        else:
+            self._stddev = sqrt(self.variance)
+            return self._stddev
+
+    mean = property(_get_mean)
+    variance = property(_get_variance)
+    stddev = property(_get_stddev)
+
+
+    def _random(s):
+        raise NotImplementedError
+
+    def transform(self,func,var):
+        """Return a probability distribution of random variable func(x)"""
+        #gamma = func(xi)
+
+        #w1 = Symbol('w1', real=True, dummy=True)
+        w = Symbol('w', real=True, dummy=True)
+
+        from sympy import solve
+        inverse = solve(func-w, var)
+        newPdf = S.Zero
+        funcdiff = func.diff(var)
+        #TODO check if x is in domain
+        for x in inverse:
+            # this assignment holds only for x in domain
+            # in general it would require implementing
+            # piecewise defined functions in sympy
+            newPdf += (self.pdf(var)/abs(funcdiff)).subs(var,x)
+        #from sympy import pprint
+        #pprint( newPdf)
+
+        #TODO compute new domain
+
+        return PDF(newPdf, (w, func.subs(var, self.domain[0]), func.subs(var, self.domain[1])))
