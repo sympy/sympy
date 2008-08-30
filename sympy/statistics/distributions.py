@@ -210,6 +210,30 @@ class Uniform(ContinuousProbability):
         return Uniform(m-d, m+d)
 
 class PDF(ContinuousProbability):
+    """
+    PDF(func, (x, a, b)) represents continuous probability distribution
+    with probability distribution function func(x) on interval (a, b)
+
+    If func is not normalized so that integrate(func, (x, a, b)) == 1,
+    it can be normalized using PDF.normalize() method
+
+    Example usage:
+
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> a = Symbol('a', positive=True)
+
+        >>> exponential = PDF(exp(-x/a)/a, (x,0,oo))
+        >>> exponential.pdf(x)
+        1/a*exp(-x/a)
+        >>> exponential.cdf(x)
+        1 - exp(-x/a)
+        >>> exponential.mean
+        a
+        >>> exponential.variance
+        a**2
+    """
+
     def __init__(self, pdf, var):
         #XXX maybe add some checking of parameters
         if  isinstance(var, (tuple, list)):
@@ -225,6 +249,21 @@ class PDF(ContinuousProbability):
 
 
     def normalize(self):
+        """
+        Normalize the probability distribution function so that
+        integrate(self.pdf(x), (x, a, b)) == 1
+
+        Example usage:
+
+            >>> from sympy import Symbol
+            >>> x = Symbol('x')
+            >>> a = Symbol('a', positive=True)
+
+            >>> exponential = PDF(exp(-x/a), (x,0,oo))
+            >>> exponential.normalize().pdf(x)
+            1/a*exp(-x/a)
+        """
+
         norm = self.probability(*self.domain)
         if norm != 1:
             w = Symbol('w', real=True, dummy=True)
@@ -286,10 +325,9 @@ class PDF(ContinuousProbability):
         raise NotImplementedError
 
     def transform(self,func,var):
-        """Return a probability distribution of random variable func(x)"""
-        #gamma = func(xi)
+        """Return a probability distribution of random variable func(x)
+        currently only some simple injective functions are supported"""
 
-        #w1 = Symbol('w1', real=True, dummy=True)
         w = Symbol('w', real=True, dummy=True)
 
         from sympy import solve
@@ -302,9 +340,5 @@ class PDF(ContinuousProbability):
             # in general it would require implementing
             # piecewise defined functions in sympy
             newPdf += (self.pdf(var)/abs(funcdiff)).subs(var,x)
-        #from sympy import pprint
-        #pprint( newPdf)
-
-        #TODO compute new domain
 
         return PDF(newPdf, (w, func.subs(var, self.domain[0]), func.subs(var, self.domain[1])))
