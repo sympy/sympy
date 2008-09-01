@@ -8,12 +8,12 @@ x = Symbol("x")
 y = Symbol("y")
 z = Symbol("z")
 
-def R1():
+def bench_R1():
     "real(f(f(f(f(f(f(f(f(f(f(i/2)))))))))))"
     def f(z): return sqrt(Integer(1)/3)*z**2 + I/3
     e = f(f(f(f(f(f(f(f(f(f(I/2)))))))))).as_real_imag()[0]
 
-def R2():
+def bench_R2():
     "Hermite polynomial hermite(15, y)"
     def hermite(n, y):
       if n == 1: return 2*y
@@ -26,16 +26,16 @@ def R2():
 
     a = hermite(15, y)
 
-def R3():
+def bench_R3():
     "a = [bool(f==f) for _ in range(10)]"
     f = x+y+z
     a = [bool(f==f) for _ in range(10)]
 
-def R4():
+def bench_R4():
     # we don't have Tuples
     pass
 
-def R5():
+def bench_R5():
     "blowup(L, 8); L=uniq(L)"
     def blowup(L,n):
         for i in range(n):
@@ -48,16 +48,16 @@ def R5():
     blowup(L, 8)
     L = uniq(L)
 
-def R6():
+def bench_R6():
     "sum(trim((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))"
     s = sum(trim((x+sin(i))/x+(x-sin(i))/x) for i in xrange(100))
 
-def R7():
+def bench_R7():
     "[f.subs(x, random()) for _ in xrange(10**4)]"
     f = x**24+34*x**12+45*x**3+9*x**18+34*x**10+32*x**21
     a = [f.subs(x, random()) for _ in xrange(10**4)]
 
-def R8():
+def bench_R8():
     "right(x^2,0,5,10^4)"
     def right(f,a,b,n):
         a = sympify(a)
@@ -72,11 +72,11 @@ def R8():
 
     a = right(x**2,0,5,10**4)
 
-def R9():
+def _bench_R9():
     "factor(x^20 - pi^5*y^20)"
     factor(x**20 - pi**5*y**20)
 
-def R10():
+def bench_R10():
     "v = [-pi,-pi+1/10..,pi]"
     def srange(min, max, step):
         v = [min]
@@ -85,36 +85,37 @@ def R10():
         return v[:-1]
     v = srange(-pi, pi, sympify(1)/10)
 
-def R11():
+def bench_R11():
     "a = [random() + random()*I for w in [0..1000]]"
     a = [random() + random()*I for w in range(1000)]
     a.sort()
 
 
-def S1():
+def bench_S1():
     "e=(x+y+z+1)**7;f=e*(e+1);f.expand()"
     e = (x+y+z+1)**7
     f = e*(e+1)
     f = f.expand()
 
 
-benchmarks = [
-        R1,
-        R2,
-        R3,
-        R5,
-        R6,
-        R7,
-        R8,
-        #R9,
-        R10,
-        R11,
-        #S1,
-        ]
+if __name__ == '__main__':
+    benchmarks = [
+            bench_R1,
+            bench_R2,
+            bench_R3,
+            bench_R5,
+            bench_R6,
+            bench_R7,
+            bench_R8,
+            #_bench_R9,
+            bench_R10,
+            bench_R11,
+            #bench_S1,
+            ]
 
-report = []
-for b in benchmarks:
-    t = clock()
-    b()
-    t = clock()-t
-    print "%s%65s: %f" % (b.__name__, b.__doc__, t)
+    report = []
+    for b in benchmarks:
+        t = clock()
+        b()
+        t = clock()-t
+        print "%s%65s: %f" % (b.__name__, b.__doc__, t)
