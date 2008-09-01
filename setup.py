@@ -310,7 +310,7 @@ setup(
       url = 'http://code.google.com/p/sympy',
       packages = ['sympy'] + [ m[1] for m in modules ] + tests + \
         pyglet_packages,
-      scripts = ['bin/isympy'],
+      scripts = ['bin/isympy', 'bin/py.bench'],
       ext_modules = [],
       package_data = { 'sympy.utilities.mathml' : ['data/*.xsl'] },
       data_files = [('share/man/man1', ['doc/man/isympy.1'])],
