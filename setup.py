@@ -242,15 +242,16 @@ class run_benchmarks(Command):
     def finalize_options(self):    # this too
         pass
 
-    # TODO we should refactor it:
-    # o collector   -- should collect benchmarks
-    # o runner      -- should execute benchmarks
-    # o presenter   -- should display benchmarks results
-    # this is better done on top of some testing framework (py.test / nosetests / ...)
-    # -- testing and benchmarking are very similar.
+    # we use py.test like architecture:
+    #
+    # o collector   -- collects benchmarks
+    # o runner      -- executes benchmarks
+    # o presenter   -- displays benchmarks results
+    #
+    # this is done in sympy.utilities.benchmarking on top of py.test
     def run(self):
-        import os
-        os.system('python ./benchmarks/symbench.py')
+        from sympy.utilities import benchmarking
+        benchmarking.main(['sympy'])
 
 
 # Check that this list is uptodate against the result of the command:
