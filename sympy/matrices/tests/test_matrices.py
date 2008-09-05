@@ -69,7 +69,7 @@ def test_creation():
     py.test.raises(MatrixError, 'Matrix(5,5,range(20))')
 
     x = Symbol("x")
-    a = Matrix([x, 0], [0, 0])
+    a = Matrix([[x, 0], [0, 0]])
     m = a
     assert m.cols == m.lines
     assert m.cols == 2
@@ -185,24 +185,24 @@ def test_submatrix():
     assert m1[0,:] == Matrix(1,3,(0,1,2))
     assert m1[1:3, 1] == Matrix(2,1,(2,3))
 
-    m2 = Matrix([0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15])
+    m2 = Matrix([[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]])
     assert m2[:,-1] == Matrix(4,1,[3,7,11,15])
     assert m2[-2:,:] == Matrix([[8,9,10,11],[12,13,14,15]])
 
 def test_submatrix_assignment():
     m = zeros(4)
     m[2:4, 2:4] = eye(2)
-    assert m == Matrix((0,0,0,0),
+    assert m == Matrix(((0,0,0,0),
                         (0,0,0,0),
                         (0,0,1,0),
-                        (0,0,0,1))
+                        (0,0,0,1)))
     m[0:2, 0:2] = eye(2)
     assert m == eye(4)
     m[:,0] = Matrix(4,1,(1,2,3,4))
-    assert m == Matrix((1,0,0,0),
+    assert m == Matrix(((1,0,0,0),
                         (2,1,0,0),
                         (3,0,1,0),
-                        (4,0,0,1))
+                        (4,0,0,1)))
     m[:,:] = zeros(4)
     assert m == zeros(4)
     m[:,:] = ((1,2,3,4),(5,6,7,8),(9, 10, 11, 12),(13,14,15,16))
@@ -220,8 +220,8 @@ def test_reshape():
     m0 = eye(3)
     assert m0.reshape(1,9) == Matrix(1,9,(1,0,0,0,1,0,0,0,1))
     m1 = Matrix(3,4, lambda i,j: i+j)
-    assert m1.reshape(4,3) == Matrix((0,1,2), (3,1,2), (3,4,2), (3,4,5))
-    assert m1.reshape(2,6) == Matrix((0,1,2,3,1,2), (3,4,2,3,4,5))
+    assert m1.reshape(4,3) == Matrix(((0,1,2), (3,1,2), (3,4,2), (3,4,5)))
+    assert m1.reshape(2,6) == Matrix(((0,1,2,3,1,2), (3,4,2,3,4,5)))
 
 def test_applyfunc():
     m0 = eye(3)
@@ -260,7 +260,7 @@ def test_LUdecomp():
     assert (L*U).permuteBkwd(p)-testmat == zeros(4)
 
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
-    M = Matrix((1, x, 1), (2, y, 0), (y, 0, z))
+    M = Matrix(((1, x, 1), (2, y, 0), (y, 0, z)))
     L, U, p = M.LUdecomposition()
     assert L.is_lower()
     assert U.is_upper()
@@ -432,12 +432,13 @@ def test_eigen():
 
     eps = Symbol('eps',real=True)
 
-    M = Matrix([abs(eps), I*eps    ],
-               [-I*eps,   abs(eps) ])
+    M = Matrix([[abs(eps), I*eps    ],
+               [-I*eps,   abs(eps) ]])
 
     assert M.eigenvects() ==  \
-        [( 2*abs(eps), 1, [ Matrix([I*eps/abs(eps)],[1]) ] ),
-         ( 0, 1, [Matrix([-I*eps/abs(eps)],[1])]) ]
+        [( 2*abs(eps), 1, [ Matrix([[I*eps/abs(eps)],[1]]) ] ),
+         ( 0, 1, [Matrix([[-I*eps/abs(eps)],[1]])]) ]
+
 def test_sparse_matrix():
     return
     def eye(n):
@@ -627,7 +628,7 @@ def test_sparse_matrix():
     assert (L*U).permuteBkwd(p)-testmat == zeros(4)
 
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
-    M = Matrix((1, x, 1), (2, y, 0), (y, 0, z))
+    M = Matrix(((1, x, 1), (2, y, 0), (y, 0, z)))
     L, U, p = M.LUdecomposition()
     assert L.is_lower()
     assert U.is_upper()
@@ -874,7 +875,7 @@ def test_issue882():
     m[index2] = 5
     assert m[2] == 5
 
-    m = Matrix([1, 2, 3], [4, 5, 6])
+    m = Matrix([[1, 2, 3], [4, 5, 6]])
     assert m[int1,int2] == 6
     assert m[index1,int2] == 6
     assert m[int1,index2] == 6
@@ -908,11 +909,11 @@ def test_evalf():
 
 def test_is_symbolic():
     x = Symbol('x')
-    a = Matrix([x,x],[x,x])
+    a = Matrix([[x,x],[x,x]])
     assert a.is_symbolic() == True
-    a = Matrix([1,2],[3,4])
+    a = Matrix([[1,2],[3,4]])
     assert a.is_symbolic() == False
-    a = Matrix([1,x],[3,4])
+    a = Matrix([[1,x],[3,4]])
     assert a.is_symbolic() == True
 
 def test_zeros_ones_fill():

@@ -8,7 +8,7 @@ def test_msolve():
     x2 = Symbol('x2')
     f1 = 3 * x1**2 - 2 * x2**2 - 1
     f2 = x1**2 - 2 * x1 + x2**2 + 2 * x2 - 8
-    f = Matrix(f1, f2).T
+    f = Matrix((f1, f2)).T
     F = lambdify((x1, x2), f.T)
     # numeric.newton is tested in this example too
     for x0 in [(-1., 1.), (1., -2.), (4., 4.), (-4., -4.)]:

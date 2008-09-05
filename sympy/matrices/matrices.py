@@ -57,14 +57,12 @@ class Matrix(object):
         Matrix can be constructed with values or a rule.
 
         >>> from sympy import *
-        >>> Matrix( (1,2+I), (3,4) ) #doctest:+NORMALIZE_WHITESPACE
+        >>> Matrix( ((1,2+I), (3,4)) ) #doctest:+NORMALIZE_WHITESPACE
         [1, 2 + I]
         [3,     4]
         >>> Matrix(2, 2, lambda i,j: (i+1)*j ) #doctest:+NORMALIZE_WHITESPACE
         [0, 1]
         [0, 2]
-
-        Note: in SymPy we count indices from 0. The rule however counts from 1.
         """
         if len(args) == 3 and callable(args[2]):
             operation = args[2]
@@ -83,11 +81,8 @@ class Matrix(object):
             if len(mat) != self.lines*self.cols:
                 raise MatrixError('List length should be equal to rows*columns')
             self.mat = map(lambda i: sympify(i), mat)
-        else:
-            if len(args) == 1:
-                mat = args[0]
-            else:
-                mat = args
+        elif len(args) == 1:
+            mat = args[0]
             if isinstance(mat, Matrix):
                 self.lines = mat.lines
                 self.cols = mat.cols
@@ -97,17 +92,54 @@ class Matrix(object):
                 # NumPy array or matrix or some other object that implements
                 # __array__. So let's first use this method to get a
                 # numpy.array() and then make a python list out of it.
-                mat = list(mat.__array__())
-            elif not isinstance(mat[0], (list, tuple)):
+                arr = mat.__array__()
+                if len(arr.shape) == 2:
+                    self.lines, self.cols = arr.shape[0], arr.shape[1]
+                    self.mat = map(lambda i: sympify(i), arr.ravel())
+                    return
+                elif len(arr.shape) == 1:
+                    self.lines, self.cols = 1, arr.shape[0]
+                    self.mat = [0]*self.cols
+                    for i in xrange(len(arr)):
+                        self.mat[i] = sympify(arr[i])
+                    return
+                else:
+                    raise NotImplementedError("Sympy supports just 1D and 2D matrices")
+            elif not isinstance(mat, (list, tuple)):
+                raise TypeError("Matrix constructor doesn't accept %s as input" % str(type(mat)))
+            self.lines = len(mat)
+            if len(mat) != 0:
+                if not isinstance(mat[0], (list, tuple)):
+                    self.cols = 1
+                    self.mat = map(lambda i: sympify(i), mat)
+                    return
+                self.cols = len(mat[0])
+            else:
+                self.cols = 0
+            self.mat = []
+            for j in xrange(self.lines):
+                assert len(mat[j])==self.cols
+                for i in xrange(self.cols):
+                    self.mat.append(sympify(mat[j][i]))
+        elif len(args) == 0:
+            # Empty Matrix
+            self.lines = self.cols = 0
+            self.mat = []
+        else:
+            # TODO: on 0.7.0 delete this and uncomment the last line
+            mat = args
+            if not isinstance(mat[0], (list, tuple)):
                 # make each element a singleton
                 mat = [ [element] for element in mat ]
-            self.lines=len(mat)
-            self.cols=len(mat[0])
-            self.mat=[]
-            for j in range(self.lines):
-                assert len(mat[j])==self.cols
-                for i in range(self.cols):
-                    self.mat.append(sympify(mat[j][i]))
+                warnings.warn("Deprecated constructor, use brackets: Matrix(%s)" % str(mat))
+                self.lines=len(mat)
+                self.cols=len(mat[0])
+                self.mat=[]
+                for j in xrange(self.lines):
+                    assert len(mat[j])==self.cols
+                    for i in xrange(self.cols):
+                        self.mat.append(sympify(mat[j][i]))
+            #raise TypeError("Data type not understood")
 
     def key2ij(self,key):
         """Converts key=(4,6) to 4,6 and ensures the key is correct."""
@@ -1274,7 +1306,7 @@ class Matrix(object):
 
             transforms[k-1] = T
 
-        polys = [ Matrix(S.One, -A[0,0]) ]
+        polys = [ Matrix([S.One, -A[0,0]]) ]
 
         for i, T in enumerate(transforms):
             polys.append(T * polys[i])
