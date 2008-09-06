@@ -1961,7 +1961,7 @@ class Basic(AssumeMeths):
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
     ###################################################################################
 
-    def series(self, x, point=0, n=6, with_order=True):
+    def series(self, x, point=0, n=6):
         """
         Series expansion of "self" around "point".
 
@@ -1969,9 +1969,6 @@ class Basic(AssumeMeths):
             Returns the Taylor (Laurent or generalized) series of "self" around
             the point "point" (default 0) with respect to "x" until the n-th
             term (default n is 6).
-
-            with_order .... if False, the order term (see the class Order) is
-                not appended
 
         Notes:
             This method is the most high level method and it returns the
