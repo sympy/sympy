@@ -51,6 +51,7 @@ modules = [
     ( True, 'sympy.functions.elementary',
         ['miscellaneous', 'trigonometric', 'hyperbolic', 'exponential'] ),
     ( False, 'sympy.functions.special', [] ),
+    ( True, 'sympy.galgebra', [] ),
     ( True, 'sympy.geometry', [] ),
     ( True, 'sympy.integrals', [] ),
     ( True, 'sympy.interactive', [] ),
