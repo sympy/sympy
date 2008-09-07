@@ -397,3 +397,13 @@ def test_abs():
     assert abs(x+1).nseries(x, 0, 4) == x+1
     assert abs(sin(x)).nseries(x, 0, 4) == x - Rational(1, 6)*x**3 + O(x**4)
     assert abs(sin(-x)).nseries(x, 0, 4) == x - Rational(1, 6)*x**3 + O(x**4)
+
+def test_dir():
+    x = Symbol('x')
+    y = Symbol('y')
+    assert abs(x).series(x, 0, dir="+") == x
+    assert abs(x).series(x, 0, dir="-") == -x
+    assert floor(x+2).series(x,0,dir='+') == 2
+    assert floor(x+2).series(x,0,dir='-') == 1
+    assert floor(x+2.2).series(x,0,dir='-') == 2
+    assert sin(x+y).series(x,0,dir='-') == sin(x+y).series(x,0,dir='+')

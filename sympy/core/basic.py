@@ -1961,7 +1961,7 @@ class Basic(AssumeMeths):
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
     ###################################################################################
 
-    def series(self, x, point=0, n=6):
+    def series(self, x, point=0, n=6, dir="+"):
         """
         Series expansion of "self" around "point".
 
@@ -1969,6 +1969,10 @@ class Basic(AssumeMeths):
             Returns the Taylor (Laurent or generalized) series of "self" around
             the point "point" (default 0) with respect to "x" until the n-th
             term (default n is 6).
+
+            For dir="+" (default) it calculates the series from the right
+            and for dir="-" the series from the left.
+            For smooth functions this argument doesn't matter.
 
         Notes:
             This method is the most high level method and it returns the
@@ -1979,7 +1983,13 @@ class Basic(AssumeMeths):
         """
         x = sympify(x)
         point = sympify(point)
-        return self.nseries(x, point, n)
+        if dir == "+":
+            return self.nseries(x, point, n)
+        elif dir == "-":
+            return self.subs(x, -x).nseries(x, -point, n).subs(x, -x)
+        else:
+            raise ValueError("Dir has to be '+' or '-'")
+
 
     def lseries(self, x, x0):
         """
