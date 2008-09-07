@@ -10,6 +10,9 @@ from sympy.ntheory.modular import crt1, crt2
 from sympy.core.numbers import igcd, igcdex
 from sympy.polys.polynomial import Poly
 
+from sympy.polys.galoispolys import gf_from_dict, \
+    gf_to_dict, gf_degree, gf_sqf_p, gf_factor_sqf
+
 class IntPoly(sparse_poly.SparsePolynomial):
 
     def __init__(self, coeffs={}):
@@ -325,22 +328,17 @@ def zassenhaus(f):
         if not ntheory.primetest.isprime(p):
             continue
 
-        poly_type = gfpoly.GFPolyFactory(p)
-        ff = poly_type.from_int_dict(f.coeffs)
-        gg = gfpoly.gcd(ff, ff.diff())
+        F = gf_from_dict(f.coeffs, p)
 
-        if gg.degree == 0:
+        if gf_sqf_p(F, p):
             break
 
     l = int(math.ceil(math.log(2*B + 1, p)))
 
-    # Modular factorization.
-    mod_factors = gfpoly.factor_sqf(ff)
-    bb = mod_factors[0] # Leading coefficient mod p.
-    h = [IntPoly(hh.to_sym_int_dict()) for hh in mod_factors[1:]]
+    modular = [ IntPoly(gf_to_dict(h, p)) for h in gf_factor_sqf(F, p)[1] ]
 
     # Hensel lifting.
-    g = multi_hensel_lift(p, f, h, l)
+    g = multi_hensel_lift(p, f, modular, l)
 
     # Factor combination and trial division.
     G = []
