@@ -571,3 +571,8 @@ def test_coeff2_0():
     # unfortunately since collect does not distinguish nested/flattenned
     # Derivatives, the following does not work
     assert g.coeff(psi(r).diff(r, 2)) == 1
+
+def test_integrate():
+    assert (log(x)).integrate((x, 0, 1)) == -1
+    assert sin(x).integrate(x) == -cos(x)
+    assert sin(x).integrate(('x',0,1)) == 1 - cos(1)

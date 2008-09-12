@@ -164,8 +164,6 @@ def test_issue853():
     f = sin(x)
     assert integrate(f, x) == -cos(x)
     py.test.raises(ValueError, "integrate(f, 2*x)")
-    assert f.integral(x) == Integral(sin(x), x)
-    py.test.raises(TypeError, "f.integral(2*x)")
 
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i+j+1)*sin((i+j+1)*x))
