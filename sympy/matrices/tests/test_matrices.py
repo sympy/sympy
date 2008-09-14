@@ -1,8 +1,9 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
-        sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi
+        sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, integrate, oo
 from sympy.matrices.matrices import ShapeError, MatrixError
 from sympy.printing import srepr
 import py
+from sympy.utilities.pytest import XFAIL
 
 def test_division():
     x, y, z = symbols('x','y','z')
@@ -928,3 +929,17 @@ def test_zeros_ones_fill():
     assert a.lines == b.lines == 3
     assert a.cols == b.cols == 5
     assert a.shape == b.shape == (3, 5)
+
+def test_issue650():
+    x, y = symbols('x','y')
+    a = Matrix([[x**2, x*y],[x*sin(y), x*cos(y)]])
+    assert a.diff(x) == Matrix([[2*x, y],[sin(y), cos(y)]])
+    assert Matrix([[x, -x, x**2],[exp(x),1/x-exp(-x), x+1/x]]).limit(x, oo) == Matrix([[oo, -oo, oo],[oo, 0, oo]])
+    assert Matrix([[(exp(x)-1)/x, 2*x + y*x, x**x ],
+                    [1/x, abs(x) , abs(sin(x+1))]]).limit(x, 0) == Matrix([[1, 0, 1],[oo, 0, sin(1)]])
+
+@XFAIL  # this waits for Basic.integrate() support
+def test_issue650_1():
+    x, y = symbols('x','y')
+    a = Matrix([[x**2, x*y],[x*sin(y), x*cos(y)]])
+    assert a.integrate(x) == Matrix([[Rational(1,3)*x**3, y*x**2/2],[x**2*sin(y)/2, x**2*cos(y)/2]])

@@ -1366,6 +1366,15 @@ class Matrix(object):
         """Fill the matrix with the scalar value."""
         self.mat = [value] * self.lines * self.cols
 
+    def __getattr__(self, attr):
+        if attr in ('diff','integrate','limit'):
+            def doit(*args):
+                item_doit = lambda item: getattr(item, attr)(*args)
+                return self.applyfunc( item_doit )
+            return doit
+        else:
+            raise AttributeError()
+
 def matrix_multiply(A,B):
     """
     Return  A*B.
