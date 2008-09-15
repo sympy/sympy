@@ -588,24 +588,23 @@ class Lambda(Function):
     # a minimum of 2 arguments (parameter, expression) are needed
     nargs = 2
     def __new__(cls,*args):
-       # nargs = len(args)
         assert len(args) >= 2,"Must have at least one parameter and an expression"
         if len(args) == 2 and isinstance(args[0], (list, tuple)):
             args = tuple(args[0])+(args[1],)
         obj = Function.__new__(cls,*args)
-        obj.nargs = len(args)
+        obj.nargs = len(args)-1
         return obj
 
     @classmethod
     def canonize(cls,*args):
         obj = Basic.__new__(cls, *args)
         #use dummy variables internally, just to be sure
-        nargs = len(args)
+        nargs = len(args)-1
 
-        expression = args[nargs-1]
-        funargs = [Symbol(arg.name, dummy=True) for arg in args[:nargs-1]]
+        expression = args[nargs]
+        funargs = [Symbol(arg.name, dummy=True) for arg in args[:nargs]]
         #probably could use something like foldl here
-        for arg,funarg in zip(args[:nargs-1],funargs):
+        for arg,funarg in zip(args[:nargs],funargs):
             expression = expression.subs(arg,funarg)
         funargs.append(expression)
         obj._args = tuple(funargs)
@@ -632,12 +631,12 @@ class Lambda(Function):
 
         """
 
-        nparams = self.nargs - 1
+        nparams = self.nargs
         assert nparams >= len(args),"Cannot call function with more parameters than function variables: %s (%d variables) called with %d arguments" % (str(self),nparams,len(args))
 
 
         #replace arguments
-        expression = self.args[self.nargs-1]
+        expression = self.args[self.nargs]
         for arg,funarg in zip(args,self.args[:nparams]):
             expression = expression.subs(funarg,arg)
 
@@ -656,9 +655,9 @@ class Lambda(Function):
             if not len(self.args) == len(other.args):
                 return False
 
-            selfexpr = self.args[self.nargs-1]
-            otherexpr = other.args[other.nargs-1]
-            for selfarg,otherarg in zip(self.args[:self.nargs-1],other.args[:other.nargs-1]):
+            selfexpr = self.args[self.nargs]
+            otherexpr = other.args[other.nargs]
+            for selfarg,otherarg in zip(self.args[:self.nargs],other.args[:other.nargs]):
                 otherexpr = otherexpr.subs(otherarg,selfarg)
             if selfexpr == otherexpr:
                 return True

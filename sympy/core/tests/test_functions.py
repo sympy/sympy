@@ -191,6 +191,8 @@ def test_Lambda():
     #    pass
     #assert Lambda(x, F(x)) == F
 
+    assert Lambda(x, y, x+y).nargs == 2
+
     z = Symbol('z')
     t = Symbol('t')
     p = x, y, z, t
