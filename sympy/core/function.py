@@ -182,8 +182,8 @@ class Function(Basic):
     def _eval_subs(self, old, new):
         if self == old:
             return new
-        elif isinstance(old, FunctionClass) and isinstance(new, FunctionClass):
-            if old == self.func and old.nargs == new.nargs:
+        elif isinstance(old, FunctionClass) and new.is_Function:
+            if old == self.func and new.nargs in (old.nargs, self.nargs):
                 return new(*self.args[:])
         obj = self.func._eval_apply_subs(*(self.args[:] + (old,) + (new,)))
         if obj is not None:

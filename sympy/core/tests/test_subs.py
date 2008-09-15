@@ -1,7 +1,7 @@
 import py
 
 from sympy import Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,\
-        abc, Integer, Eq, symbols, Add, I, Real, log, Rational
+        abc, Integer, Eq, symbols, Add, I, Real, log, Rational, Lambda
 
 def test_subs():
     n3=Rational(3)
@@ -151,3 +151,11 @@ def test_subs_subs_nums():
     assert (2*x).subs(1, 3) == 2*x
     assert (2*x).subs(2, 3) == 3*x
     assert (2*x).subs(x, 3) == 6
+
+def test_functions_subs():
+    x, y = map(Symbol, 'xy')
+    f, g = map(Function, 'fg')
+    l = Lambda(x, y, sin(x) + y)
+    assert (g(y, x)+cos(x)).subs(g, l) == sin(y) + x + cos(x)
+    assert (f(x)**2).subs(f, sin) == sin(x)**2
+    assert (g(f(x+y, x))).subs([[f, l], [g, exp]]) == exp(x + sin(x + y))
