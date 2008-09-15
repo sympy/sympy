@@ -137,6 +137,10 @@ class Function(Basic):
             pass
         elif not isinstance(r, tuple):
             args = (r,)
+        if not cls.nargs and hasattr(cls, 'undefined_Function'):
+            r = Basic.__new__(cls, *args, **options)
+            r.nargs = len(args)
+            return r
         return Basic.__new__(cls, *args, **options)
 
     @property

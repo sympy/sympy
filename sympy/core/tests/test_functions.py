@@ -101,6 +101,13 @@ def test_general_function():
     assert edxdx == diff(diff(nu(x), x), x)
     assert edxdy == 0
 
+def test_function_nargs():
+    f = Function('f')
+    x = Symbol('x')
+    assert f.nargs == None
+    assert f(x).nargs == 1
+    assert f(x, x, x, x).nargs == 4
+
 def test_derivative_subs_bug():
     x = Symbol("x")
     l = Function('l', nargs=1)
