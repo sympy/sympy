@@ -1,5 +1,6 @@
 from sympy import symbols
-from sympy.utilities.iterables import postorder_traversal, preorder_traversal
+from sympy.utilities.iterables import postorder_traversal, \
+    preorder_traversal, flatten
 
 
 w,x,y,z= symbols('wxyz')
@@ -20,3 +21,6 @@ def test_preorder_traversal():
     assert list(preorder_traversal(expr)) in [expected1, expected2, expected3]
 
 
+def test_flatten():
+    assert flatten( (1,(1,)) ) == [1,1]
+    assert flatten( (x,(x,)) ) == [x,x]

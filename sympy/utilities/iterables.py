@@ -64,6 +64,7 @@ def make_list(expr, kind):
     else:
         return [expr]
 
+
 def flatten(iterable):
     """Recursively denest iterable containers.
 
@@ -73,15 +74,18 @@ def flatten(iterable):
        [1, 2, 3]
        >>> flatten([1, [2, 3], [4, 5]])
        [1, 2, 3, 4, 5]
+       >>> flatten( (1,2, (1, None)) )
+       [1, 2, 1, None]
+
+    adapted from http://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
     """
+
     result = []
-
-    for item in iterable:
-        if isinstance(item, list):
-            result.extend(flatten(item))
+    for el in iterable:
+        if hasattr(el, "__iter__") and not isinstance(el, basestring):
+            result.extend(flatten(el))
         else:
-            result.append(item)
-
+            result.append(el)
     return result
 
 def postorder_traversal(node):
