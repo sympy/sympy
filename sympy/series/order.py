@@ -1,4 +1,3 @@
-
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core import oo, Rational, Pow
 from sympy.core.cache import cacheit
@@ -233,6 +232,8 @@ class Order(Basic):
         """
         if expr is S.Zero:
             return True
+        if expr is S.NaN:
+            return False
         if expr.is_Order:
             if self.symbols and expr.symbols:
                 common_symbols = tuple([s for s in self.symbols if s in expr.symbols])

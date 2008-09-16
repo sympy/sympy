@@ -1,4 +1,4 @@
-from sympy import Symbol, Rational, Order, C, exp, ln, log, O, var
+from sympy import Symbol, Rational, Order, C, exp, ln, log, O, var, nan
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import w, x, y, z
 
@@ -169,3 +169,6 @@ def test_leading_order():
 
 def test_order_leadterm():
     assert O(x**2)._eval_as_leading_term(x) == O(x**2)
+
+def test_nan():
+    assert not O(x).contains(nan)
