@@ -1,4 +1,5 @@
-from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol, LambertW, sqrt, Rational, sin
+from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol, \
+        LambertW, sqrt, Rational, sin
 from sympy.utilities.pytest import XFAIL
 
 def test_exp():
@@ -147,3 +148,8 @@ def test_exp__as_base_exp():
     assert E**(2*x) == exp(2*x)
     assert E**(x*y) == exp(x*y)
 
+def test_infinity():
+    y = Symbol('y')
+    assert exp(I*y) != nan
+    assert exp(I*oo) == nan
+    assert exp(y*I*oo) == nan

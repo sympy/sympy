@@ -48,6 +48,12 @@ class exp(Function):
                         return -S.ImaginaryUnit
                     elif (coeff + S.Half).is_odd:
                         return S.ImaginaryUnit
+            I = S.ImaginaryUnit
+            oo = S.Infinity
+            a = Wild("a", exclude=[I, oo])
+            r = arg.match(I*a*oo)
+            if r and r[a] != 0:
+                return S.NaN
 
         if arg.is_Add:
             args = arg.args[:]
