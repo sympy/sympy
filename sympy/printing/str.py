@@ -159,7 +159,7 @@ class StrPrinter(Printer):
         for item in terms:
             if item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
                 b.append(Pow(item.base, -item.exp))
-            elif item.is_Rational:
+            elif item.is_Rational and item is not S.Infinity:
                 if item.p != 1:
                     a.append(Rational(item.p))
                 if item.q != 1:

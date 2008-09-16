@@ -369,7 +369,7 @@ class PrettyPrinter(Printer):
         for item in product.args:
             if item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
                 b.append(C.Pow(item.base, -item.exp))
-            elif item.is_Rational:
+            elif item.is_Rational and item is not S.Infinity:
                 if item.p != 1:
                     a.append( C.Rational(item.p) )
                 if item.q != 1:

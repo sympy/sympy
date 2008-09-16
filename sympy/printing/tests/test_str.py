@@ -358,3 +358,6 @@ def test_sstrrepr():
     e = ['a', 'b', 'c', x]
     assert sstr(e)      == "[a, b, c, x]"
     assert sstrrepr(e)  == "['a', 'b', 'c', x]"
+
+def test_infinity():
+    assert sstr(I*oo) == "(oo)*I"
