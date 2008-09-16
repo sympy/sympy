@@ -1,4 +1,4 @@
-from sympy import Symbol, exp, log, oo, Rational
+from sympy import Symbol, exp, log, oo, Rational, I, sin
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
 from sympy.utilities.pytest import XFAIL
@@ -199,3 +199,10 @@ def test_limit4():
 #    expected = set([1/h,exp(x),exp(x-h),exp(x/(1+h))])
 #    # XXX Incorrect result
 #    assert mrv(expr,x).difference(expected) == set()
+
+def test_I():
+    y = Symbol("y")
+    assert gruntz(I*x, x, oo) == I*oo
+    assert gruntz(y*I*x, x, oo) == y*I*oo
+    assert gruntz(y*3*I*x, x, oo) == y*I*oo
+    assert gruntz(y*3*sin(I)*x, x, oo) == y*I*oo
