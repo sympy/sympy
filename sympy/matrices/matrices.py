@@ -131,14 +131,14 @@ class Matrix(object):
             if not isinstance(mat[0], (list, tuple)):
                 # make each element a singleton
                 mat = [ [element] for element in mat ]
-                warnings.warn("Deprecated constructor, use brackets: Matrix(%s)" % str(mat))
-                self.lines=len(mat)
-                self.cols=len(mat[0])
-                self.mat=[]
-                for j in xrange(self.lines):
-                    assert len(mat[j])==self.cols
-                    for i in xrange(self.cols):
-                        self.mat.append(sympify(mat[j][i]))
+            warnings.warn("Deprecated constructor, use brackets: Matrix(%s)" % str(mat))
+            self.lines=len(mat)
+            self.cols=len(mat[0])
+            self.mat=[]
+            for j in xrange(self.lines):
+                assert len(mat[j])==self.cols
+                for i in xrange(self.cols):
+                    self.mat.append(sympify(mat[j][i]))
             #raise TypeError("Data type not understood")
 
     def key2ij(self,key):
