@@ -14,6 +14,16 @@ from power import integer_nthroot
 # from power import Pow /cyclic/
 # from function import FunctionClass    /cyclic/
 
+_errdict = {"divide": False}
+def seterr(divide=False):
+    """
+    Should sympy raise an exception on 0/0 or return a nan?
+
+    divide == True .... raise an exception
+    divide == False ... return nan
+    """
+    _errdict["divide"] = divide
+
 # (a,b) -> gcd(a,b)
 _gcdcache = {}
 
@@ -483,7 +493,11 @@ class Rational(Number):
             else:
                 return Integer(p)
         if q==0:
-            if p==0: return S.NaN
+            if p==0:
+                if _errdict["divide"]:
+                    raise Exception("Indeterminate 0/0")
+                else:
+                    return S.NaN
             if p<0: return S.NegativeInfinity
             return S.Infinity
         if q<0:
