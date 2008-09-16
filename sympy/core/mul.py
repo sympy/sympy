@@ -432,8 +432,21 @@ class Mul(AssocOp):
 
     @staticmethod
     def _combine_inverse(lhs, rhs):
+        """
+        Returns lhs/rhs, but treats arguments like symbols, so things like
+        oo/oo return 1, instead of a nan.
+        """
         if lhs == rhs:
             return S.One
+        if lhs.is_Mul and rhs.is_Mul:
+            a = list(lhs.args[:])
+            b = [1]
+            for x in rhs.args:
+                if x in a:
+                    a.remove(x)
+                else:
+                    b.append(x)
+            return Mul(*a)/Mul(*b)
         return lhs / rhs
 
     def as_powers_dict(self):
