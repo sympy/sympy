@@ -57,16 +57,16 @@ You will probably need to compile libtcc on your own. Get the sources of tcc:
 
 http://bellard.org/tcc/
 
-Then run for example
+Currently it only works for a recent development version. So you might want to
+run the following commands (you have to use your own pathes of course):
 
+$ cvs -z3 -d:pserver:anonymous@cvs.savannah.nongnu.org:/sources/tinycc co tinycc
+$ cd tinycc
 $ ./configure
 $ make
-$ sudo make install
 $ gcc -shared -Wl,-soname,libtcc.so -o libtcc.so libtcc.o
-$ cp libtcc.so dir/to/compilef.py   # or change libtccpath in compilef.py
-
-Sadly there seems to be no other way without using root privileges. If you are
-to prove me wrong, please tell it on sympy@googlegroups.com.
+$ cd sympy/utilities/
+$ ln -s tinycc/libtcc.so # or change libtccpath in compilef.py
 
 You might try to run libtcc_test. If something went wrong there will be bad low
 level Python errors probably crashing the interpreter. The error output will be
