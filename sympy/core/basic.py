@@ -682,6 +682,11 @@ class Basic(AssumeMeths):
 
     def atoms(self, *types):
         """Returns the atoms that form the current object.
+           An atom is the smallest piece in which we can divide an
+           expression.
+
+
+           Examples:
 
            >>> from sympy import *
            >>> x,y = symbols('xy')
@@ -706,19 +711,33 @@ class Basic(AssumeMeths):
            [x, y]
 
         """
-        if len(types) == 1 and not isinstance(types[0], type):
-            types = (sympify(types[0]).__class__,)
 
-        result = set([])
 
-        if self.is_Atom:
-            if not types or isinstance(self, types):
-                result.add(self)
-        else:
-            for obj in self.iter_basic_args():
-                result |= obj.atoms(*types)
+        def _atoms(expr, typ):
+            """Helper function for recursively denesting atoms"""
+            if isinstance(expr, Basic):
+                if expr.is_Atom and len(typ) == 0: # if we haven't specified types
+                        return [expr]
+                else:
+                    try:
+                        if isinstance(expr, typ): return [expr]
+                    except TypeError:
+                        #if type is in implicit form
+                        if isinstance(expr, tuple(map(type, typ))): return [expr]
+            result = []
+            #search for a suitable iterator
+            if isinstance(expr, Basic):
+                iter = expr.iter_basic_args()
+            elif isinstance(expr, (tuple, list)):
+                iter = expr.__iter__()
+            else:
+                iter = []
 
-        return result
+            for obj in iter:
+                result.extend(_atoms(obj, typ))
+            return result
+
+        return set(_atoms(self, typ=types))
 
     def is_hypergeometric(self, k):
         from sympy.simplify import hypersimp

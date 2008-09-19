@@ -34,7 +34,8 @@ class Integral(Basic):
                     continue
                 elif isinstance(V, (tuple, list)):
                     if len(V) == 3:
-                        limits.append( (V[0],tuple(V[1:])) )
+                        nlim = map(sympify, V[1:])
+                        limits.append( (V[0], tuple(nlim) ))
                         continue
                     elif len(V) == 1:
                         if isinstance(V[0], Symbol):
