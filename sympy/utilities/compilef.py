@@ -6,10 +6,9 @@
 #       *currently the compiled function accepts too many arguments silently
 #       *implement multi-dimensional functions for frange
 #       *list comprehension syntax for frange?
-#       *configuration of path to libtcc.so/improve instructions
+#       *configuration of path to libtcc.so
 #       *add gcc support again (easier to set up than tcc)
 #       *fix compiler warnings
-
 
 # heavily inspired by http://www.cs.tut.fi/~ask/cinpy/
 
@@ -20,6 +19,8 @@ Depends on libtcc.
 
 This code is experimental. It may have severe bugs. Due to the use of C, it's
 able to crash your Python interpreter/debugger with obscure error messages.
+
+64 bit floats (double) are used.
 
 
 Overview
@@ -81,7 +82,7 @@ to see the results of some benchmarks.
 
 import os
 import ctypes
-from sympy import Symbol
+from sympy import Symbol, cse, sympify
 from sympy.utilities.lambdify import lambdastr as getlambdastr
 try:
     import numpy
@@ -89,11 +90,11 @@ except ImportError:
     numpy = None
 
 libtccpath = './libtcc.so'
+dps = 17 # decimal places of float precision
 # load libtcc TODO: better Windows support
 libtcc = ctypes.cdll.LoadLibrary(libtccpath)
 if not libtcc:
     raise ImportError('Could not load libtcc')
-##mathh = '/usr/include/math.h' # usually tcc knows where to find math.h
 
 def __getLeftRight(expr, index, oplength=1, stopchar='+-'):
     """
@@ -159,6 +160,7 @@ def cexpr(pyexpr):
     Python math expression string -> C expression string
     """
     # TODO: better spacing
+    # replace 'a**b' with 'pow(a, b)'
     while True:
         index = pyexpr.find('**')
         if index != -1:
@@ -169,12 +171,22 @@ def cexpr(pyexpr):
             break
     # TODO: convert 'x**n' to 'x*x*...*x'
     # TODO: avoid integer division
-    # TODO: use cse
     return pyexpr
 
-def genfcode(lambdastr):
+def _gentmpvars():
+    """
+    Generate symbols tmp1, tmp2, ... infinitely.
+    """
+    i = 0
+    while True:
+        i += 1
+        yield Symbol('tmp' + str(i))
+
+def genfcode(lambdastr, use_cse=False):
     """
     Python lambda string -> C function code
+
+    Optionally cse() is used to eliminate common subexpressions.
     """
     # TODO: verify lambda string
     # interpret lambda string
@@ -187,14 +199,28 @@ def genfcode(lambdastr):
         cvarstr += 'double %s, ' % v
     cvarstr = cvarstr.rstrip(', ')
     # convert function string to C syntax
-    cfstr = cexpr(fstr)
+    if not use_cse:
+        cfstr = ''
+        finalexpr = cexpr(fstr)
+    else:
+        # eliminate common subexpressions
+        subs, finalexpr = cse(sympify(fstr), _gentmpvars())
+        assert len(finalexpr) == 1
+        vardec = ''
+        cfstr = ''
+        for symbol, expr in subs:
+            vardec += '    double %s;\n' % symbol.name
+            cfstr += '    %s = %s;\n' % (symbol.name, cexpr(str(expr.evalf(dps))))
+        cfstr = vardec + cfstr
+        finalexpr = cexpr(str(finalexpr[0].evalf(dps)))
     # generate C code
     code = """
 inline double f(%s)
     {
+%s
     return %s;
     }
-""" % (cvarstr, cfstr)
+""" % (cvarstr, cfstr, finalexpr)
     return code
 
 def __run(cmd):
@@ -233,7 +259,7 @@ def _compile(code, argcount=None, fname='f', fprototype=None):
     return fprototype(symbol.value)
 
 # expr needs to work with lambdastr
-def clambdify(args, expr):
+def clambdify(args, expr, **kwargs):
     """
     SymPy expression -> compiled function
 
@@ -255,11 +281,11 @@ def clambdify(args, expr):
 # define e M_E
 
 %s
-""" % genfcode(s)
+""" % genfcode(s, **kwargs)
     # compile code
     return _compile(code, len(args))
 
-def frange(*args):
+def frange(*args, **kwargs):
     """
     frange(lambdastr, [start,] stop[, step]) -> ctypes double array
 
@@ -336,7 +362,7 @@ void evalonrange(double *result, int n)
         }
     }
 
-""" % (genfcode(lambdastr), vardef, loopbody)
+""" % (genfcode(lambdastr, **kwargs), vardef, loopbody)
     # compile and run
     evalonrange = _compile(code, fname='evalonrange',
                            fprototype=[None, ctypes.c_void_p, ctypes.c_int])
@@ -344,7 +370,7 @@ void evalonrange(double *result, int n)
     # return ctypes array with results
     return a
 
-def evalonarray(lambdastr, array, length=None):
+def evalonarray(lambdastr, array, length=None, **kwargs):
     """
     Evaluates a function on an array using machine code.
 
@@ -383,7 +409,7 @@ void evalonarray(double *array, int length)
         }
     }
 
-""" % genfcode(lambdastr)
+""" % genfcode(lambdastr, **kwargs)
     # compile an run on array
     run = _compile(code,  fname='evalonarray',
                    fprototype=[None, ctypes.c_void_p, ctypes.c_int])
@@ -472,6 +498,15 @@ def test_evalonarray_numpy():
     for i, j in enumerate(a):
         assert float(i + 1) == j
 
+def test_use_cse():
+    args = ('lambda x: sqrt(x + 1)**sqrt(x + 1)', 1, 10)
+    a = frange(*args)
+    kwargs = {}
+    kwargs['use_cse'] = True
+    b = frange(*args, **kwargs)
+    assert len(a) == len(b)
+    for i in xrange(len(a)):
+        assert a[i] == b[i]
 
 def benchmark():
     """
@@ -484,7 +519,7 @@ def benchmark():
 
     def fbenchmark(f, var=[Symbol('x')]):
         """
-        Does some benchmarks with f using clambdify, lambdify and psyco.
+        Do some benchmarks with f using clambdify, lambdify and psyco.
         """
         global cf, pf, psyf
         start = time()
@@ -557,6 +592,7 @@ if __name__ == '__main__':
         test_evalonarray_ctypes()
         if numpy:
             test_evalonarray_numpy()
+        test_use_cse()
         import doctest
         doctest.testmod()
         print 'OK'
