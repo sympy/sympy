@@ -1,5 +1,5 @@
-from sympy import (symbols, integrate, Integral, exp, oo, Symbol, Function, Rational,
-    log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix, sympify, sqrt, atan,
+from sympy import (symbols, integrate, Integral, Derivative, exp, oo, Symbol, Function,
+    Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix, sympify, sqrt, atan,
     DiracDelta, Heaviside)
 from sympy.utilities.pytest import XFAIL
 from sympy.physics.units import m, s
@@ -184,6 +184,9 @@ def test_integrate_functions():
     assert integrate(f(x)*diff(f(x), x), x) == f(x)**2/2
     assert integrate(diff(f(x),x) / f(x),x) == log(f(x))
 
+def test_integrate_derivatives():
+    assert integrate(Derivative(f(x), x), x) == f(x)
+    assert integrate(Derivative(f(y), y), x) == x*Derivative(f(y), y)
 
 def test_transform():
     a = Integral(x**2+1, (x, -1, 2))
