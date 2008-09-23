@@ -1,7 +1,7 @@
 import py
 
 from sympy import Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,\
-        abc, Integer, Eq, symbols, Add, I, Real, log, Rational, Lambda
+        abc, Integer, Eq, symbols, Add, I, Real, log, Rational, Lambda, atan2
 
 def test_subs():
     n3=Rational(3)
@@ -158,4 +158,7 @@ def test_functions_subs():
     l = Lambda(x, y, sin(x) + y)
     assert (g(y, x)+cos(x)).subs(g, l) == sin(y) + x + cos(x)
     assert (f(x)**2).subs(f, sin) == sin(x)**2
+    assert (f(x,y)).subs(f,log) == log(x,y)
+    assert (f(x,y)).subs(f,sin) == f(x,y)
+    assert (sin(x)+atan2(x,y)).subs([[atan2,f],[sin,g]]) == f(x,y) + g(x)
     assert (g(f(x+y, x))).subs([[f, l], [g, exp]]) == exp(x + sin(x + y))

@@ -182,9 +182,13 @@ class Function(Basic):
     def _eval_subs(self, old, new):
         if self == old:
             return new
-        elif isinstance(old, FunctionClass) and new.is_Function:
-            if old == self.func and new.nargs in (old.nargs, self.nargs):
-                return new(*self.args[:])
+        elif old.is_Function and new.is_Function:
+            if old == self.func:
+                if self.nargs is new.nargs or not new.nargs:
+                    return new(*self.args[:])
+                # Written down as an elif to avoid a super-long line
+                elif isinstance(new.nargs,tuple) and self.nargs in new.nargs:
+                    return new(*self.args[:])
         obj = self.func._eval_apply_subs(*(self.args[:] + (old,) + (new,)))
         if obj is not None:
             return obj
