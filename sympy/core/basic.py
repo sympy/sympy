@@ -717,7 +717,7 @@ class Basic(AssumeMeths):
             """Helper function for recursively denesting atoms"""
             if isinstance(expr, Basic):
                 if expr.is_Atom and len(typ) == 0: # if we haven't specified types
-                        return [expr]
+                    return [expr]
                 else:
                     try:
                         if isinstance(expr, typ): return [expr]
