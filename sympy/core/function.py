@@ -462,14 +462,15 @@ class Derivative(Basic):
         unevaluated_symbols = []
         for s in symbols:
             s = sympify(s)
-            assert isinstance(s, Symbol),`s`
+            if not isinstance(s, Symbol):
+                raise ValueError('Invalid literal: %s is not a valid variable' % s)
             if not expr.has(s):
                 return S.Zero
             obj = expr._eval_derivative(s)
             if obj is None:
                 unevaluated_symbols.append(s)
             elif obj is S.Zero:
-                return expr
+                return S.Zero
             else:
                 expr = obj
 

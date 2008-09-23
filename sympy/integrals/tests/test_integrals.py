@@ -15,23 +15,31 @@ def test_improper_integral():
     assert integrate(x**(-2), (x, 1, oo)) == 1
 
 def test_basics():
+
+    assert diff(Integral(y, y), x)       == 0
+    assert diff(Integral(x, (x,0,1)), x) == 0
+    assert diff(Integral(x, x), x)       == x
+    assert diff(Integral(t, (t,0,x)), x) == x
+
     e=(t+1)**2
-    assert integrate(e, (t,0,x), evaluate=False).diff(x)==((1+x)**2).expand()
-    assert integrate(e, (t,0,x), evaluate=False).diff(a)==0
+    assert diff(integrate(e, (t,0,x)), x) == diff(Integral(e, (t, 0, x)), x).expand() == ((1+x)**2).expand()
+    assert diff(integrate(e, (t,0,x)), t) == diff(Integral(e, (t,0,x)), t)            == 0
+    assert diff(integrate(e, (t,0,x)), a) == diff(Integral(e, (t, 0, x)), a)          == 0
+    assert diff(integrate(e, t), a)       == diff(Integral(e, t), a)                  == 0
 
-    assert integrate(e, (t,a,x), evaluate=False).diff(x)==((1+x)**2).expand()
-    assert integrate(e, (t,x,a), evaluate=False).diff(x)==(-(1+x)**2).expand()
+    assert integrate(e, (t,a,x)).diff(x) == Integral(e, (t, a, x)).diff(x).expand()
+    assert Integral(e, (t, a, x)).diff(x) == ((1+x)**2)
+    assert integrate(e, (t,x,a)).diff(x) == (-(1+x)**2).expand()
 
-    assert integrate(t**2, (t,x,2*x), evaluate=False).diff(x)==7*x**2
+    assert integrate(t**2, (t,x,2*x)).diff(x) == 7*x**2
 
     assert sorted(list( Integral(x,x).atoms() )) == [x]
     assert sorted(list( Integral(f(x),(x,0,1)).atoms() )) == [0,1,x]
 
+def test_basics_multiple():
 
-@XFAIL
-def test_unevaluated():
-    py.test.raises(IntegralError,"integrate(e, (t,0,x), evaluate=False).diff(t)")
-    py.test.raises(IntegralError,"integrate(e, t, evaluate=False).diff(x)")
+    assert diff(Integral(y, y, x), x) == Integral(y, y)
+    assert diff(Integral(y*x, x, y), x) == Integral(x*y, y)
 
 def test_integration():
     assert integrate(0, (t,0,x)) == 0

@@ -1,5 +1,5 @@
 
-from sympy.core import Basic, S, C, Symbol, Wild, Pow, sympify
+from sympy.core import Basic, S, C, Symbol, Wild, Pow, sympify, diff
 
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -37,12 +37,12 @@ class Integral(Basic):
                         nlim = map(sympify, V[1:])
                         limits.append( (V[0], tuple(nlim) ))
                         continue
-                    elif len(V) == 1:
+                    elif len(V) == 1 or (len(V) == 2 and V[1] is None):
                         if isinstance(V[0], Symbol):
                             limits.append((V[0],None))
                             continue
 
-                raise ValueError("Invalid integration variable or limits")
+                raise ValueError("Invalid integration variable or limits: %s" % str(symbols))
         else:
             # no symbols provided -- let's compute full antiderivative
             limits = [(symb,None) for symb in function.atoms(Symbol)]
@@ -150,6 +150,48 @@ class Integral(Basic):
                     function = B - A
 
         return function
+
+    def _eval_derivative(self, sym):
+        """Evaluate the derivative of the current Integral object.
+        We follow these steps:
+
+        (1) If sym is not part of the function nor the integration limits,
+            return 0
+
+        (2) Check for a possible application of the Fundamental Theorem of
+            Calculus [1]
+
+        (3) Derive under the integral sign [2]
+
+        References:
+           [1] http://en.wikipedia.org/wiki/Fundamental_theorem_of_calculus
+           [2] http://en.wikipedia.org/wiki/Differentiation_under_the_integral_sign
+        """
+
+        if not sym in self.atoms(Symbol):
+            return S.Zero
+
+        if (sym, None) in self.limits:
+            #case undefinite integral
+            if len(self.limits) == 1:
+                return self.function
+            else:
+                _limits = list(self.limits)
+                _limits.pop( _limits.index((sym, None)) )
+                return Integral(self.function, *tuple(_limits))
+
+        #diff under the integral sign
+        #we do not check for regularity conditions (TODO), see issue 1116
+        if len(self.limits) > 1:
+            # TODO:implement the multidimensional case
+            raise NotImplementedError
+        int_var = self.limits[0][0]
+        lower_limit, upper_limit = self.limits[0][1]
+        if sym == int_var:
+            sym = Symbol(str(int_var), dummy=True)
+        return self.function.subs(int_var, upper_limit)*diff(upper_limit, sym) - \
+               self.function.subs(int_var, lower_limit)*diff(lower_limit, sym) + \
+               integrate(diff(self.function, sym), (int_var, lower_limit, upper_limit))
 
     def _eval_integral(self, f, x):
         """Calculate the antiderivative to the function f(x).
