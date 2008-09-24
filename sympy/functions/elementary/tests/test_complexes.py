@@ -1,5 +1,6 @@
 from sympy import symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log, \
         pi, arg, conjugate, expand
+from sympy.utilities.pytest import XFAIL
 
 
 def test_re():
@@ -91,11 +92,17 @@ def test_abs():
     assert abs(0) == 0
     assert abs(1) == 1
     assert abs(-1)== 1
-    assert sqrt(x**2) == abs(x)
     assert abs(x).diff(x) == sign(x)
     x = Symbol('x',real=True)
     n = Symbol('n',integer=True)
     assert x**(2*n) == abs(x)**(2*n)
+
+@XFAIL
+def test_abs_real():
+    x = Symbol('x', complex=True)
+    assert sqrt(x**2) != abs(x)
+    x = Symbol('x', real=True)
+    assert sqrt(x**2) == abs(x)
 
 def test_abs_properties():
     x = Symbol('x')

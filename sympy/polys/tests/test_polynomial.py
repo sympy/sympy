@@ -945,8 +945,11 @@ def test_roots():
     assert roots_binomial(Poly(5*x**4+2, x)) == \
         [A+I*A, -A+I*A, -A-I*A, A-I*A]
 
-    r0 = roots_quadratic(Poly(a*x**2 + b, x))
-    r1 = roots_binomial(Poly(a*x**2 + b, x))
+    a1 = Symbol('a1', nonnegative=True)
+    b1 = Symbol('b1', nonnegative=True)
+
+    r0 = roots_quadratic(Poly(a1*x**2 + b1, x))
+    r1 = roots_binomial(Poly(a1*x**2 + b1, x))
 
     assert powsimp(r0[0]) == powsimp(r1[0])
     assert powsimp(r0[1]) == powsimp(r1[1])

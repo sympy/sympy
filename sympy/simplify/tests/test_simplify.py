@@ -188,12 +188,14 @@ def test_separate_X1():
 def test_powsimp():
     x,y,n = symbols('xyn')
     f = Function('f')
-    assert powsimp( y**n * (y/x)**(-n) ) == x**n
     assert powsimp( 4**x * 2**(-x) * 2**(-x) ) == 1
     assert powsimp( (-4)**x * (-2)**(-x) * 2**(-x) ) == 1
 
     assert powsimp( f(4**x * 2**(-x) * 2**(-x)) )   == f(4**x * 2**(-x) * 2**(-x))
     assert powsimp( f(4**x * 2**(-x) * 2**(-x)), deep = True )  == f(1)
+    x,y = symbols('xy', nonnegative=True)
+    n = Symbol('n', real=True)
+    assert powsimp( y**n * (y/x)**(-n) ) == x**n
 
 def test_collect():
     x,y,n = symbols('xyn')
@@ -248,6 +250,8 @@ def test_together2():
     x, y, z = symbols("xyz")
     assert together(1/(x*y) + 1/y**2) == 1/x*y**(-2)*(x + y)
     assert together(1/(1 + 1/x)) == x/(1 + x)
+    x = symbols("x", nonnegative=True)
+    y = symbols("y", real=True)
     assert together(1/x**y + 1/x**(y-1)) == x**(-y)*(1 + x)
 
 def test_nsimplify():

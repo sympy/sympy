@@ -3,7 +3,8 @@ from sympy import (Symbol, Sum, oo, Real, Rational, sum, pi, cos, zeta,
 from sympy.concrete.summations import getab
 from sympy.utilities.pytest import XFAIL
 
-a, b, c, d, m, n, k = map(Symbol, 'abcdmnk')
+a, b, c, d, m, k = map(Symbol, 'abcdmk')
+n = Symbol('n', integer=True)
 
 def test_arithmetic_sums():
     assert sum(1, (n, a, b)) == b-a+1

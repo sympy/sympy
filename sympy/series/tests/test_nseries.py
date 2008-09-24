@@ -121,7 +121,7 @@ def testseries2():
     assert (1/(1+1/x**2)).nseries(x,0,6) == x**2-x**4+O(x**6, x)
 
 def test_bug2(): ### 1/log(0) * log(0) problem
-    w = Symbol("w")
+    w = Symbol("w", nonnegative=True)
     e = (w**(-1)+w**(-log(3)*log(2)**(-1)))**(-1)*(3*w**(-log(3)*log(2)**(-1))+2*w**(-1))
     e = e.expand()
     #should be 3, but is 2
@@ -164,7 +164,7 @@ def test_genexp_x():
 
 # more complicated example
 def test_genexp_x2():
-    x = Symbol("x")
+    x = Symbol("x", nonnegative=True)
     p = Rational(3,2)
     e = (2/x+3/x**p)/(1/x+1/x**p)
     assert e.nseries(x,0,3) == 3 - sqrt(x) + x + O(sqrt(x)**3)

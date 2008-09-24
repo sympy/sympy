@@ -164,6 +164,7 @@ def test_evalf_trig_zero_detection():
     assert py.test.raises(PrecisionExhausted, "a.evalf(strict=True)")
 
 def test_evalf_divergent_series():
+    n = Symbol('n', integer=True)
     py.test.raises(ValueError, 'Sum(1/n, (n, 1, oo)).evalf()')
     py.test.raises(ValueError, 'Sum(n/(n**2+1), (n, 1, oo)).evalf()')
     py.test.raises(ValueError, 'Sum((-1)**n, (n, 1, oo)).evalf()')
