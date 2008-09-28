@@ -201,6 +201,7 @@ def test_collect():
     x,y,n = symbols('xyn')
     assert collect(2*x**2 + y*x**2 + 3*x*y, [x]) == x**2*(2+y) + 3*x*y
     assert collect(2*x**2 + y*x**2 + 3*x*y, [y]) == 2*x**2 + y*(x**2+3*x)
+    assert collect((1+ (x+y) + (x+y)**2).expand(), [x,y]) == 1 + y + x*(1 + 2*y) + x**2  + y**2
 
 def test_collect_D():
     D = Derivative

@@ -460,6 +460,11 @@ def collect(expr, syms, evaluate=True, exact=False):
        >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
        (a + b)*D(D(f(x), x), x)**2
 
+
+    Notes
+    =====
+        - arguments are expected to be in expanded form, so you might have to call
+           .expand prior to calling this function.
     """
     def make_expression(terms):
         product = []
