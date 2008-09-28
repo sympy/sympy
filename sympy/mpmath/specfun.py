@@ -1014,7 +1014,7 @@ def eval_hyp2f1(a,b,c,z):
 #                      And now the user-friendly versions                   #
 #---------------------------------------------------------------------------#
 
-def hyper(as, bs, z):
+def hyper(as_, bs, z):
     """
     Hypergeometric function pFq,
 
@@ -1025,7 +1025,7 @@ def hyper(as, bs, z):
     The parameter lists as and bs may contain real or complex numbers.
     Exact rational parameters can be given as tuples (p, q).
     """
-    p = len(as)
+    p = len(as_)
     q = len(bs)
     z = convert_lossless(z)
     degree = p, q
@@ -1035,16 +1035,16 @@ def hyper(as, bs, z):
             return sum_hyp0f1_rat(br[0], z)
         return hypsum([], [], [], br, bf, bc, z)
     if degree == (1, 1):
-        ar, af, ac = parse_param(as[0])
+        ar, af, ac = parse_param(as_[0])
         br, bf, bc = parse_param(bs[0])
         if ar and br:
             a, b = ar[0], br[0]
             return sum_hyp1f1_rat(a, b, z)
         return hypsum(ar, af, ac, br, bf, bc, z)
     if degree == (2, 1):
-        return eval_hyp2f1(as[0],as[1],bs[0],z)
+        return eval_hyp2f1(as_[0],as_[1],bs[0],z)
     ars, afs, acs, brs, bfs, bcs = [], [], [], [], [], []
-    for a in as:
+    for a in as_:
         r, f, c = parse_param(a)
         ars += r
         afs += f
