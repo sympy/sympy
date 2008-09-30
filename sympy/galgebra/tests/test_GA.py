@@ -1,12 +1,20 @@
 #!/usr/bin/python
 #GAtest.py
 
-from sympy.galgebra.GAsympy import set_main, MV, make_symbols, types, ZERO, ONE, HALF
-import sympy
-from sympy import collect
+try:
+    import numpy
+    disabled = False
+except ImportError:
+    #py.test will not execute any tests now
+    disabled = True
 
-import sys
-set_main(sys.modules[__name__])
+if not disabled:
+    from sympy.galgebra.GAsympy import set_main, MV, make_symbols, types, ZERO, ONE, HALF
+    import sympy
+    from sympy import collect
+
+    import sys
+    set_main(sys.modules[__name__])
 
 def F(x):
     """
