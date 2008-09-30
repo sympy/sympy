@@ -94,7 +94,7 @@ class BasicMeta(BasicType):
             BasicMeta.classnamespace[n] = cls
         else:
             print 'Ignoring redefinition of %s: %s defined earlier than %s' % (n, c, cls)
-        type.__init__(cls, *args, **kws)
+        super(BasicMeta, cls).__init__(cls)
 
         # --- assumptions ---
 
