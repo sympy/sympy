@@ -18,7 +18,7 @@ def Rel(a, b, op):
     """
     return Relational(a,b,op)
 
-def Eq(a, b):
+def Eq(a, b=0):
     """
     A handy wrapper around the Relational class.
     Eq(a,b)

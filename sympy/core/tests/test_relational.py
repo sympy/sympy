@@ -46,3 +46,8 @@ def test_wrappers():
 
     res = Relational(y, e, '!=')
     assert Ne(y, x+x**2) == res
+
+def test_Eq():
+
+    assert Eq(x**2) == Eq(x**2, 0)
+    assert Eq(x**2) != Eq(x**2, 1)
