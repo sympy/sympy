@@ -81,26 +81,15 @@ class Pow(Basic):
         return self._args[1]
 
     def _eval_power(self, other):
-        if other.is_Number:
-            if self.base.is_real:
-                if self.exp.is_Number:
-                    # (a ** 2) ** 3 -> a ** (2 * 3)
-                    return Pow(self.base, self.exp * other)
-            if other.is_Rational:
-                if self.exp.is_even and Integer(other.q).is_even:
-                    return abs( Pow(self.base, self.exp * other))
-                return Pow(self.base, self.exp * other)
-            if other.is_Integer:
-                # (a ** b) ** 3 -> a ** (3 * b)
-                return Pow(self.base, self.exp * other)
-        elif other.is_Add or other.is_Mul:
-            # (a**b)**c = a**(b*c)
+        if self.exp.is_integer and other.is_integer:
             return Pow(self.base, self.exp * other)
-
-        if other.atoms(Wild):
+        if self.base.is_nonnegative and self.exp.is_real and other.is_real:
+            return Pow(self.base, self.exp * other)
+        if self.exp.is_even and self.base.is_real:
+            return Pow(abs(self.base), self.exp * other)
+        if self.exp.is_real and other.is_real and abs(self.exp) < S.One:
             return Pow(self.base, self.exp * other)
         return
-
 
     def _eval_is_comparable(self):
         c1 = self.base.is_comparable

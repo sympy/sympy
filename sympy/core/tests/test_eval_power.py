@@ -33,16 +33,25 @@ def test_issue153():
 
 def test_issue350():
     #test if powers are simplified correctly
+    #see also issue 896
     a = Symbol('a')
     assert ((a**Rational(1,3))**Rational(2)) == a**Rational(2,3)
-    assert ((a**Rational(3))**Rational(2,5)) == a**Rational(6,5)
+    assert ((a**Rational(3))**Rational(2,5)) == (a**Rational(3))**Rational(2,5)
 
-    a = Symbol('a', real = True)
-    assert (a**Rational(3))**Rational(2,5) == a**Rational(6,5)
+    a = Symbol('a', real=True)
+    b = Symbol('b', real=True)
+    assert (a**2)**b == abs(a)**(2*b)
+    assert sqrt(1/a) != 1/sqrt(a)
+    assert (a**3)**Rational(1,3) != a
 
+    z = Symbol('z')
+    k = Symbol('k',integer=True)
+    m = Symbol('m',integer=True)
+    assert (z**k)**m == z**(k*m)
     #assert Number(5)**Rational(2,3)==Number(25)**Rational(1,3)
+
+    a = Symbol('a', positive=True)
+    assert (a**3)**Rational(2,5) == a**Rational(6,5)
 
 def test_issue767():
     assert --sqrt(sqrt(5)-1)==sqrt(sqrt(5)-1)
-
-test_issue350()
