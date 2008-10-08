@@ -1,10 +1,8 @@
-from sympy import (symbols, integrate, Integral, Derivative, exp, oo, Symbol, Function,
-    Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix, sympify, sqrt, atan,
-    DiracDelta, Heaviside)
-from sympy.utilities.pytest import XFAIL
+from sympy import (symbols, integrate, Integral, Derivative, exp, oo, Symbol,
+        Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
+        Matrix, sympify, sqrt, atan, DiracDelta, Heaviside, raises)
+from sympy.utilities.pytest import XFAIL, skip
 from sympy.physics.units import m, s
-import py
-from py.test import skip
 
 x,y,a,t = symbols('xyat')
 n = Symbol('n', integer=True)
@@ -175,7 +173,7 @@ def test_issue641():
 def test_issue853():
     f = sin(x)
     assert integrate(f, x) == -cos(x)
-    py.test.raises(ValueError, "integrate(f, 2*x)")
+    raises(ValueError, "integrate(f, 2*x)")
 
 def test_matrices():
     M = Matrix(2, 2, lambda i, j: (i+j+1)*sin((i+j+1)*x))
@@ -206,8 +204,8 @@ def test_transform():
     assert a.transform(x, 1/x).transform(x, 1/x) == a
     a = Integral(exp(-x**2), (x, -oo, oo))
     assert a.transform(x, 2*x) == Integral(2*exp(-4*x**2), (x, -oo, oo))
-    assert py.test.raises(ValueError, "a.transform(x, 1/x)")
-    assert py.test.raises(ValueError, "a.transform(x, 1/x)")
+    raises(ValueError, "a.transform(x, 1/x)")
+    raises(ValueError, "a.transform(x, 1/x)")
 
 def NS(e, n=15, **options):
     return str(sympify(e).evalf(n, **options))

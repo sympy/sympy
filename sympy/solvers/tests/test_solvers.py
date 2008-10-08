@@ -1,11 +1,10 @@
 from sympy import Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq, \
         sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, \
-        symbols, S
+        symbols, S, raises
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, deriv_degree
 
 from sympy.utilities.pytest import XFAIL
-import py
 
 def test_solve():
     x, y = map(Symbol, 'xy')
@@ -28,8 +27,8 @@ def test_solve():
     assert solve((x-y, x+y), (x, y)) == solution
     assert solve((x-y, x+y), [x, y]) == solution
 
-    py.test.raises(TypeError, "solve(x**2-pi, pi)")
-    py.test.raises(ValueError, "solve(x**2-pi)")
+    raises(TypeError, "solve(x**2-pi, pi)")
+    raises(ValueError, "solve(x**2-pi)")
 
 def test_linear_system():
     x, y, z, t, n = map(Symbol, 'xyztn')

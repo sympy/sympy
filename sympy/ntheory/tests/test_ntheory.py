@@ -1,6 +1,5 @@
-import py
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
-        multinomial_coefficients
+        multinomial_coefficients, raises
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, npartitions, totient, trial, \
     factorint, primefactors, divisors, randprime, nextprime, prevprime, \
@@ -77,7 +76,7 @@ def test_randprime():
     assert randprime(2, 3) == 2
     assert randprime(1, 3) == 2
     assert randprime(3, 5) == 3
-    assert py.test.raises(ValueError, 'randprime(20, 22)')
+    raises(ValueError, 'randprime(20, 22)')
     for a in [100, 300, 500, 250000]:
         for b in [100, 300, 500, 250000]:
             p = randprime(a, a+b)

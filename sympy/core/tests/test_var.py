@@ -1,7 +1,6 @@
 # Tests for var are in their own file, because var pollutes global namespace.
 
-from sympy import Symbol, var
-import py
+from sympy import Symbol, var, raises
 
 # make z1 with call-depth = 1
 def make_z1():
@@ -35,11 +34,11 @@ def test_var():
     assert v  == (d, e, fg)
 
     # see if var() really injects into global namespace
-    py.test.raises(NameError, "z1")
+    raises(NameError, "z1")
     make_z1()
     assert z1 == Symbol("z1")
 
-    py.test.raises(NameError, "z2")
+    raises(NameError, "z2")
     make_z2()
     assert z2 == Symbol("z2")
 

@@ -1,5 +1,3 @@
-import py
-
 from sympy import Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,\
         abc, Integer, Eq, symbols, Add, I, Real, log, Rational, Lambda, atan2
 

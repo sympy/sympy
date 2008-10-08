@@ -1,10 +1,9 @@
 from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer, \
         Basic, S
 from sympy.core.power import integer_nthroot
-import py
 
 from sympy.core.numbers import igcd, ilcm, igcdex
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
 
 def test_igcd():
@@ -203,13 +202,13 @@ def test_bug_sqrt():
 def test_pi_Pi():
     "Test, that pi (instance) is imported, but Pi (class) is not"
     from sympy import pi
-    py.test.raises(ImportError, "from sympy import Pi")
+    raises(ImportError, "from sympy import Pi")
 
 def test_no_len():
     # there should be no len for numbers
-    py.test.raises(TypeError, "len(Rational(2))")
-    py.test.raises(TypeError, "len(Rational(2,3))")
-    py.test.raises(TypeError, "len(Integer(2))")
+    raises(TypeError, "len(Rational(2))")
+    raises(TypeError, "len(Rational(2,3))")
+    raises(TypeError, "len(Integer(2))")
 
 def test_issue222():
     assert sqrt(Rational(1, 5)) == Rational(1, 5)**S.Half

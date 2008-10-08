@@ -1,5 +1,5 @@
-from sympy import Symbol, Wild, Inequality, StrictInequality, pi, I, Rational, sympify
-import py
+from sympy import Symbol, Wild, Inequality, StrictInequality, pi, I, Rational, \
+        sympify, raises
 
 
 def test_Symbol():
@@ -38,8 +38,8 @@ def test_no_len():
     # there should be no len for numbers
     x = Symbol('x')
     xxl = Symbol('xxl')
-    py.test.raises(TypeError, "len(x)")
-    py.test.raises(TypeError, "len(xxl)")
+    raises(TypeError, "len(x)")
+    raises(TypeError, "len(xxl)")
 
 def test_Wild_properties():
     # these tests only include Atoms

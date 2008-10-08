@@ -16,3 +16,5 @@ from source import source
 from decorator import threaded
 
 from runtests import test_core, test
+
+from pytest import raises

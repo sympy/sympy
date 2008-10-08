@@ -1,8 +1,7 @@
-from sympy import Symbol, exp, Integer, Real, sin, cos, log, Poly, Lambda, Function, I
+from sympy import Symbol, exp, Integer, Real, sin, cos, log, Poly, Lambda, \
+        Function, I, raises
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, _sympifyit, SympifyError
-import py
-#from sympy.utilities.pytest import XFAIL
 
 
 def test_439():
@@ -32,8 +31,8 @@ def test_sympify3():
     assert sympify("x**3") == x**3
     assert sympify("1/2") == Integer(1)/2
 
-    py.test.raises(SympifyError, "_sympify('x**3')")
-    py.test.raises(SympifyError, "_sympify('1/2')")
+    raises(SympifyError, "_sympify('x**3')")
+    raises(SympifyError, "_sympify('1/2')")
 
 def test_sympify4():
     class A:
@@ -87,10 +86,10 @@ def test_lambda():
     assert sympify('lambda : 1')==Lambda(x, 1)
     assert sympify('lambda x: 2*x')==Lambda(x, 2*x)
 
-    py.test.raises(SympifyError, "_sympify('lambda : 1')")
+    raises(SympifyError, "_sympify('lambda : 1')")
 
 def test_sympify_raises():
-    py.test.raises(SympifyError, sympify, "fx)")
+    raises(SympifyError, 'sympify("fx)")')
 
 
 def test__sympify():
@@ -112,8 +111,8 @@ def test__sympify():
     assert _sympify(a)      == Integer(5)
 
     # negative _sympify
-    py.test.raises(SympifyError, "_sympify('1')")
-    py.test.raises(SympifyError, "_sympify([1,2,3])")
+    raises(SympifyError, "_sympify('1')")
+    raises(SympifyError, "_sympify([1,2,3])")
 
 
 def test_sympifyit():
@@ -139,7 +138,7 @@ def test_sympifyit():
     assert add_raises(x, 0.5)   == x+Real('0.5')
     assert add_raises(x, y)     == x+y
 
-    py.test.raises(SympifyError, "add_raises(x, '1')")
+    raises(SympifyError, "add_raises(x, '1')")
 
 def test_int_float():
     class F1_1(object):

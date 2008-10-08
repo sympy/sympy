@@ -4,7 +4,7 @@ from sympy import pi, I, Symbol, Add, Rational, exp, sqrt, sin, cos, fibonacci, 
     Integral, oo, E, atan, log, integrate, floor, ceiling, factorial, binomial, \
     Sum, zeta, Catalan, Pow, GoldenRatio
 
-import py
+from sympy.utilities.pytest import raises
 
 x = Symbol('x')
 y = Symbol('y')
@@ -142,11 +142,11 @@ def test_evalf_bugs():
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
     b = floor(log(8)/log(2), evaluate=False)
-    py.test.raises(PrecisionExhausted, "a.evalf()")
+    raises(PrecisionExhausted, "a.evalf()")
     assert a.evalf(chop=True) == 3
     assert a.evalf(maxprec=500) == 2
-    py.test.raises(PrecisionExhausted, "b.evalf()")
-    py.test.raises(PrecisionExhausted, "b.evalf(maxprec=500)")
+    raises(PrecisionExhausted, "b.evalf()")
+    raises(PrecisionExhausted, "b.evalf(maxprec=500)")
     assert b.evalf(chop=True) == 3
     assert int(floor(factorial(50)/E,evaluate=False).evalf()) == \
         11188719610782480504630258070757734324011354208865721592720336800L
@@ -161,21 +161,21 @@ def test_evalf_trig_zero_detection():
     assert abs(t) < 1e-100
     assert t._prec < 2
     assert a.evalf(chop=True) == 0
-    assert py.test.raises(PrecisionExhausted, "a.evalf(strict=True)")
+    raises(PrecisionExhausted, "a.evalf(strict=True)")
 
 def test_evalf_divergent_series():
     n = Symbol('n', integer=True)
-    py.test.raises(ValueError, 'Sum(1/n, (n, 1, oo)).evalf()')
-    py.test.raises(ValueError, 'Sum(n/(n**2+1), (n, 1, oo)).evalf()')
-    py.test.raises(ValueError, 'Sum((-1)**n, (n, 1, oo)).evalf()')
-    py.test.raises(ValueError, 'Sum((-1)**n, (n, 1, oo)).evalf()')
-    py.test.raises(ValueError, 'Sum(n**2, (n, 1, oo)).evalf()')
-    py.test.raises(ValueError, 'Sum(2**n, (n, 1, oo)).evalf()')
-    py.test.raises(ValueError, 'Sum((-2)**n, (n, 1, oo)).evalf()')
+    raises(ValueError, 'Sum(1/n, (n, 1, oo)).evalf()')
+    raises(ValueError, 'Sum(n/(n**2+1), (n, 1, oo)).evalf()')
+    raises(ValueError, 'Sum((-1)**n, (n, 1, oo)).evalf()')
+    raises(ValueError, 'Sum((-1)**n, (n, 1, oo)).evalf()')
+    raises(ValueError, 'Sum(n**2, (n, 1, oo)).evalf()')
+    raises(ValueError, 'Sum(2**n, (n, 1, oo)).evalf()')
+    raises(ValueError, 'Sum((-2)**n, (n, 1, oo)).evalf()')
 
 def test_evalf_py_methods():
     assert abs(float(pi+1) - 4.1415926535897932) < 1e-10
     assert abs(complex(pi+1) - 4.1415926535897932) < 1e-10
     assert abs(complex(pi+E*I) - (3.1415926535897931+2.7182818284590451j)) < 1e-10
-    py.test.raises(ValueError, "float(pi+x)")
-    py.test.raises(ValueError, "complex(pi+x)")
+    raises(ValueError, "float(pi+x)")
+    raises(ValueError, "complex(pi+x)")

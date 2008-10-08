@@ -1,12 +1,10 @@
-
-from sympy import symbols, expand, sin, sqrt, re, im, I, Rational, Lambda, powsimp
+from sympy import symbols, expand, sin, sqrt, re, im, I, Rational, Lambda, \
+        powsimp, raises
 
 from sympy.polys.monomial import *
 from sympy.polys.polynomial import *
 from sympy.polys.algorithms import *
 from sympy.polys.rootfinding import *
-
-import py
 
 a,b,c,x,y,z,u,v,t = symbols('abcxyzuvt')
 
@@ -91,18 +89,18 @@ def test_poly_basics():
     assert Poly(Poly(x*y, x, y), order='lex') == \
         Poly(x*y, x, y, order='lex')
 
-    py.test.raises(SymbolsError, "Poly(x, 2)")
-    py.test.raises(SymbolsError, "Poly(x, 2*x)")
+    raises(SymbolsError, "Poly(x, 2)")
+    raises(SymbolsError, "Poly(x, 2*x)")
 
-    py.test.raises(SymbolsError, "Poly(x, 2, x)")
-    py.test.raises(SymbolsError, "Poly(x, 2*x, x)")
+    raises(SymbolsError, "Poly(x, 2, x)")
+    raises(SymbolsError, "Poly(x, 2*x, x)")
 
-    py.test.raises(SymbolsError, "Poly(x, x, 2)")
-    py.test.raises(SymbolsError, "Poly(x, x, 2*x)")
+    raises(SymbolsError, "Poly(x, x, 2)")
+    raises(SymbolsError, "Poly(x, x, 2*x)")
 
     A, B = symbols('AB', commutative=False)
 
-    py.test.raises(SymbolsError, "Poly(x + A**2 + B**2, x, A, B)")
+    raises(SymbolsError, "Poly(x + A**2 + B**2, x, A, B)")
 
 def test_poly_internals():
     p = Poly(x**2*y*z + x*y*z**3 + x*y + y*z, x, y, z)
@@ -176,7 +174,7 @@ def test_poly_cancel():
 
     assert Poly.cancel(f) == -2 + sqrt(2)
 
-    py.test.raises(SymbolsError, "Poly.cancel((x**2-y**2, x-y))")
+    raises(SymbolsError, "Poly.cancel((x**2-y**2, x-y))")
 
 def test_poly_characteristics():
     f = -3*x**5*y*z**4 + 2*x**2*y**8 - x*y**4 + x*y*z**3
@@ -378,7 +376,7 @@ def test_as_integer():
     assert Poly(x**2 + x/2, x).as_integer() == \
         (Integer(2), Poly(2*x**2 + x, x))
 
-    py.test.raises(CoefficientError, "Poly(x**2 + t*x, x).as_integer()")
+    raises(CoefficientError, "Poly(x**2 + t*x, x).as_integer()")
 
 def test_poly_add():
     f = -Rational(1,6)*x**2-Rational(5,36)+Rational(17,18)
@@ -626,7 +624,7 @@ def test_map_coeffs():
 
     assert q.as_basic() == x**2*(I*im(u) + re(u)) + x*y*(I*im(v) + re(v))
 
-    py.test.raises(PolynomialError, "p.map_coeffs(lambda c: x*c)")
+    raises(PolynomialError, "p.map_coeffs(lambda c: x*c)")
 
 def test_coeff():
     p = Poly(3*x**2*y + 4*x*y**2 + 1, x, y)
@@ -655,7 +653,7 @@ def test_mul_div_term():
     assert f.mul_term(1) == Poly(x*y**2 + 2*y, x, y)
     assert f.mul_term(1, (0, 1)) == Poly(x*y**3 + 2*y**2, x, y)
 
-    py.test.raises(ZeroDivisionError, "f.div_term(0)")
+    raises(ZeroDivisionError, "f.div_term(0)")
 
     assert f.div_term(1) == Poly(x*y**2 + 2*y, x, y)
     assert f.div_term(1, (0, 1)) == Poly(x*y + 2, x, y)
@@ -780,7 +778,7 @@ def test_evaluate():
     assert p.evaluate({y: 0}) == \
         Poly(x**2, x, order='lex')
 
-    py.test.raises(PolynomialError, "Poly(x + y, x, y).evaluate({x: y})")
+    raises(PolynomialError, "Poly(x + y, x, y).evaluate({x: y})")
 
 def test_subs():
     p = Poly(t*x*y**2 + x*y + t**2, x, y)
@@ -917,8 +915,8 @@ def test_number_of_real_roots():
     assert number_of_real_roots(f, x, sup=0) == 1
     assert number_of_real_roots(f, x, inf=-1, sup=1) == 0
 
-    py.test.raises(ValueError, "number_of_real_roots(f, x, inf=t)")
-    py.test.raises(ValueError, "number_of_real_roots(f, x, sup=t)")
+    raises(ValueError, "number_of_real_roots(f, x, inf=t)")
+    raises(ValueError, "number_of_real_roots(f, x, sup=t)")
 
 def test_roots():
     assert roots_linear(Poly(2*x+1, x)) == [-Rational(1, 2)]

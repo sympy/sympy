@@ -1,8 +1,8 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
-        sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, integrate, oo
+        sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, \
+        integrate, oo, raises
 from sympy.matrices.matrices import ShapeError, MatrixError
 from sympy.printing import srepr
-import py
 from sympy.utilities.pytest import XFAIL
 
 def test_division():
@@ -67,7 +67,7 @@ def test_power():
     assert eye(2)**10000000 == eye(2)
 
 def test_creation():
-    py.test.raises(MatrixError, 'Matrix(5,5,range(20))')
+    raises(MatrixError, 'Matrix(5,5,range(20))')
 
     x = Symbol("x")
     a = Matrix([[x, 0], [0, 0]])
@@ -802,7 +802,7 @@ def test_conjugate():
                            [5,0]])
 
 def test_conj_dirac():
-    py.test.raises(ShapeError, "eye(3).D")
+    raises(ShapeError, "eye(3).D")
 
     M = Matrix([ [1,I,I,I],
                  [0,1,I,I],

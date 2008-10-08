@@ -1,8 +1,7 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
         I, S, erf, tan, asin, asinh, Function, Derivative, diff, trim
 from sympy.integrals.risch import heurisch, components
-from sympy.utilities.pytest import XFAIL
-from py.test import skip
+from sympy.utilities.pytest import XFAIL, skip
 
 x, y, z = symbols('xyz')
 f = Function('f')

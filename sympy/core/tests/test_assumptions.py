@@ -1,6 +1,5 @@
-import py
 from sympy.core import Symbol, S, Rational, Integer
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
 def test_symbol_unset():
     x = Symbol('x',real=True, integer=True)
@@ -390,7 +389,7 @@ def test_other_symbol():
     assert x.is_integer == True
     assert x.is_nonpositive == True
 
-    py.test.raises(AttributeError, "x.is_real = False")
+    raises(AttributeError, "x.is_real = False")
 
 
 def test_other_symbol_fail1():

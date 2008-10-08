@@ -1,8 +1,7 @@
-import py
 from sympy.utilities.pytest import XFAIL
 
 from sympy import pi, symbols, Symbol, Rational, \
-    S, Integer, I, cos, sin, Real, sqrt, sympify
+    S, Integer, I, cos, sin, Real, sqrt, sympify, raises
 
 from sympy.polynomials import Polynomial, PolynomialException,  \
     sqf_part, sqf, solve_system, roots, resultant, lcm, factor, \
@@ -60,8 +59,8 @@ def test_Polynomial():
                       var=[z, x, y], order='1-el').coeffs \
            == ((1, 1, 1, 0), (1, 0, 3, 1), (1, 0, 2, 2))
 
-    py.test.raises(PolynomialException, "Polynomial(sqrt(x),var=x)")
-    py.test.raises(PolynomialException, "Polynomial(sin(x),var=x)")
+    raises(PolynomialException, "Polynomial(sqrt(x),var=x)")
+    raises(PolynomialException, "Polynomial(sin(x),var=x)")
 
     assert 3*x**2 == Polynomial(coeffs=((Integer(3), Integer(2)),),
                                 var=x).sympy_expr

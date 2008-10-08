@@ -1,7 +1,6 @@
-import py
-
 from sympy import symbols, Rational, Symbol, Integral, log, diff, sin, exp, \
-        Function, factorial, floor, ceiling, abs, re, im, conjugate, gamma, Order
+        Function, factorial, floor, ceiling, abs, re, im, conjugate, gamma, \
+        Order
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL

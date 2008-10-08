@@ -1,4 +1,3 @@
-import py
 import sympy
 
 # polynomials/fast/modint.py

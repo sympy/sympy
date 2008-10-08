@@ -1,5 +1,4 @@
-import py
-from sympy import Symbol, Rational, sqrt, pi, cos, oo, simplify, Real
+from sympy import Symbol, Rational, sqrt, pi, cos, oo, simplify, Real, raises
 from sympy.geometry import Point, Polygon, convex_hull, Segment, \
         RegularPolygon, Circle, Ellipse, GeometryError, Line, intersection, \
         Ray, Triangle, are_similar
@@ -184,7 +183,7 @@ def test_ellipse():
     # Test creation with three points
     cen,rad = Point(3*half, 2), 5*half
     assert Circle(Point(0,0), Point(3,0), Point(0,4)) == Circle(cen, rad)
-    py.test.raises(GeometryError, "Circle(Point(0,0), Point(1,1), Point(2,2))")
+    raises(GeometryError, "Circle(Point(0,0), Point(1,1), Point(2,2))")
 
     # Basic Stuff
     assert e1 == c1

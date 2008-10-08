@@ -2,8 +2,7 @@ from sympy import Basic, S, Symbol, Real, Integer, Rational,  \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
     WildFunction, Poly, Function, Derivative, Number, pi, var
 
-import py
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
 class DummyNumber(object):
     """
@@ -139,7 +138,7 @@ def test_ibasic():
 def test_basic_nostr():
     for obj in basic_objs:
         for op in ['+','-','*','/','**']:
-            py.test.raises(TypeError, "obj %s '1'" % op)
+            raises(TypeError, "obj %s '1'" % op)
 
 def test_leadterm():
     assert (3+2*x**(log(3)/log(2)-1)).leadterm(x) == (3,0)
@@ -255,7 +254,7 @@ def test_SAGE1():
     e = Rational(2)*m
     assert e == 10
 
-    py.test.raises(TypeError, "Rational(2)*MyInt")
+    raises(TypeError, "Rational(2)*MyInt")
 
 def test_SAGE2():
     class MyInt(object):
@@ -265,7 +264,7 @@ def test_SAGE2():
     e = Rational(2)*MyInt()
     assert e == 10
 
-    py.test.raises(TypeError, "Rational(2)*MyInt")
+    raises(TypeError, "Rational(2)*MyInt")
 
 def test_SAGE3():
     class MySymbol:
@@ -302,9 +301,9 @@ def test_is_number():
     assert (1+x**2/x-x).is_number
 
 def test_attribute_error():
-    py.test.raises(AttributeError, "x.cos()")
-    py.test.raises(AttributeError, "x.sin()")
-    py.test.raises(AttributeError, "x.exp()")
+    raises(AttributeError, "x.cos()")
+    raises(AttributeError, "x.sin()")
+    raises(AttributeError, "x.exp()")
 
 def test_args():
     assert (x*y).args[:] in ((x, y), (y, x))

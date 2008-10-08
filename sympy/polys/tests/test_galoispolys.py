@@ -17,9 +17,7 @@ from sympy.polys.galoispolys import (
     gf_ddf_shoup, gf_edf_shoup,
     gf_factor, gf_factor_sqf)
 
-from sympy import pi, nextprime
-
-import py.test
+from sympy import pi, nextprime, raises
 
 def test_gf_degree():
     assert gf_degree([]) == -1
@@ -155,11 +153,11 @@ def test_gf_arith():
     assert gf_sqr([2,0,0,1,7], 11) == [4,0,0,4,6,0,1,3,5]
 
 def test_gf_division():
-    py.test.raises(ZeroDivisionError, "gf_div_classic([1,2,3], [], 11)")
-    py.test.raises(ZeroDivisionError, "gf_quo_classic([1,2,3], [], 11)")
+    raises(ZeroDivisionError, "gf_div_classic([1,2,3], [], 11)")
+    raises(ZeroDivisionError, "gf_quo_classic([1,2,3], [], 11)")
 
-    py.test.raises(ZeroDivisionError, "gf_div_newton([1,2,3], [], 11)")
-    py.test.raises(ZeroDivisionError, "gf_quo_newton([1,2,3], [], 11)")
+    raises(ZeroDivisionError, "gf_div_newton([1,2,3], [], 11)")
+    raises(ZeroDivisionError, "gf_quo_newton([1,2,3], [], 11)")
 
     f, g, q, r = [5,4,3,2,1,0], [1,2,3], [5,1,0,6], [3,3]
 

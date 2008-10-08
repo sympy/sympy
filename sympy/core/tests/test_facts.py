@@ -1,8 +1,7 @@
 from sympy.core.facts import deduce_alpha_implications, apply_beta_to_alpha_route, \
         rules_2prereq, split_rules_tt_tf_ft_ff, FactRules
 from sympy.core.logic import And
-from sympy.utilities.pytest import XFAIL
-import py
+from sympy.utilities.pytest import XFAIL, raises
 
 T = True
 F = False
@@ -30,9 +29,9 @@ def test_deduce_alpha_implications():
     assert D([('a','b'), ('b','a')]) == ({'a': ['b'], 'b': ['a']},  {'a': ['b'], 'b': ['a']})
 
     # see if it catches inconsistency
-    py.test.raises(ValueError, "D([('a','!a')])")
-    py.test.raises(ValueError, "D([('a','b'), ('b','!a')])")
-    py.test.raises(ValueError, "D([('a','b'), ('b','c'), ('b','na'), ('na','!a')])")
+    raises(ValueError, "D([('a','!a')])")
+    raises(ValueError, "D([('a','b'), ('b','!a')])")
+    raises(ValueError, "D([('a','b'), ('b','c'), ('b','na'), ('na','!a')])")
 
 
     # something related to real-world
@@ -181,7 +180,7 @@ def test_FactRules_parse():
 
 
 def test_FactRules_parse2():
-    py.test.raises(ValueError, "FactRules('a -> !a')")
+    raises(ValueError, "FactRules('a -> !a')")
 
 
 def test_FactRules_deduce():

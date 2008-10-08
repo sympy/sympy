@@ -1,9 +1,8 @@
 from sympy import Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh, \
         sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, Integer, \
-        PoleError, floor, ceiling
+        PoleError, floor, ceiling, raises
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
-import py
 
 def test_simple_1():
     assert x.nseries(x, 0, 5) == x
@@ -347,9 +346,9 @@ def test_issue1016():
 
 def test_pole():
     x = Symbol("x")
-    py.test.raises(PoleError, "sin(1/x).series(x, 0, 5)")
-    py.test.raises(PoleError, "sin(1+1/x).series(x, 0, 5)")
-    py.test.raises(PoleError, "(x*sin(1/x)).series(x, 0, 5)")
+    raises(PoleError, "sin(1/x).series(x, 0, 5)")
+    raises(PoleError, "sin(1+1/x).series(x, 0, 5)")
+    raises(PoleError, "(x*sin(1/x)).series(x, 0, 5)")
 
 def test_expsinbug():
     x = Symbol("x")

@@ -1,5 +1,5 @@
 from sympy.core.logic import fuzzy_not, name_not, Logic, And, Or, Not
-import py
+from sympy.utilities.pytest import raises
 
 T = True
 F = False
@@ -31,8 +31,8 @@ def test_logic_cmp():
 
 
 def test_logic_onearg():
-    py.test.raises(TypeError, 'And()')
-    py.test.raises(TypeError, 'Or ()')
+    raises(TypeError, 'And()')
+    raises(TypeError, 'Or ()')
 
     assert And(T)   == T
     assert And(F)   == F
@@ -101,12 +101,12 @@ def test_logic_fromstring():
     assert S('a & b & c')   == And('a','b','c')
     assert S('a | b | c')   == Or ('a','b','c')
 
-    py.test.raises(ValueError, "S('| a')")
-    py.test.raises(ValueError, "S('& a')")
-    py.test.raises(ValueError, "S('a | | b')")
-    py.test.raises(ValueError, "S('a | & b')")
-    py.test.raises(ValueError, "S('a & & b')")
-    py.test.raises(ValueError, "S('a |')")
+    raises(ValueError, "S('| a')")
+    raises(ValueError, "S('& a')")
+    raises(ValueError, "S('a | | b')")
+    raises(ValueError, "S('a | & b')")
+    raises(ValueError, "S('a & & b')")
+    raises(ValueError, "S('a |')")
 
 
 
