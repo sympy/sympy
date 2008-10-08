@@ -1,5 +1,5 @@
 from sympy import Symbol, exp, Integer, Real, sin, cos, log, Poly, Lambda, \
-        Function, I, raises
+        Function, I, S, sqrt,  raises
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, _sympifyit, SympifyError
 
@@ -233,3 +233,7 @@ def test_issue1034():
 
     assert a == Integer(4)
     assert a.is_Integer
+
+def test_S_sympify():
+    assert S(1)/2 == sympify(1)/2
+    assert (-2)**(S(1)/2) == sqrt(2)*I

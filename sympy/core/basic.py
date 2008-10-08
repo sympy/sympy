@@ -2227,6 +2227,9 @@ class SingletonFactory:
 
 S = SingletonFactory()
 
+# S(...) = sympify(...)
+S.__call__ = sympify
+
 class ClassesRegistry:
     """Namespace for SymPy classes
 
