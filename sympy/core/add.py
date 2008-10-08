@@ -291,21 +291,20 @@ class Add(AssocOp):
         return S.One,(self,)
 
     def _eval_subs(self, old, new):
-        if self==old: return new
+        if self == old: return new
         if isinstance(old, FunctionClass):
             return self.__class__(*[s.subs(old, new) for s in self.args ])
-        coeff1,factors1 = self.as_coeff_factors()
-        coeff2,factors2 = old.as_coeff_factors()
-        if factors1==factors2: # (2+a).subs(3+a,y) -> 2-3+y
-            return new + coeff1 - coeff2
+        coeff_self, factors_self = self.as_coeff_factors()
+        coeff_old, factors_old = old.as_coeff_factors()
+        if factors_self == factors_old: # (2+a).subs(3+a,y) -> 2-3+y
+            return Add(new, coeff_self, -coeff_old)
         if old.is_Add:
-            l1,l2 = len(factors1),len(factors2)
-            if l2<l1: # (a+b+c+d).subs(b+c,x) -> a+x+d
-                for i in xrange(l1-l2+1):
-                    if factors2==factors1[i:i+l2]:
-                        factors1 = list(factors1)
-                        factors2 = list(factors2)
-                        return Add(*([coeff1-coeff2]+factors1[:i]+[new]+factors1[i+l2:]))
+            if len(factors_old) < len(factors_self): # (a+b+c+d).subs(b+c,x) -> a+x+d
+                self_set = set(factors_self)
+                old_set = set(factors_old)
+                if old_set < self_set:
+                    ret_set = self_set - old_set
+                    return Add(new, coeff_self, -coeff_old, *[s.subs(old, new) for s in ret_set])
         return self.__class__(*[s.subs(old, new) for s in self.args])
 
     @cacheit

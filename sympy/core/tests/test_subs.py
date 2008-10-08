@@ -134,10 +134,14 @@ def test_add():
     assert (a**2 - c).subs(a**2 - c, d) == d
     assert (a**2 - b - c).subs(a**2 - c, d) in [d - b, a**2 - b - c]
     assert (a**2 - x - c).subs(a**2 - c, d) in [d - x, a**2 - x - c]
+    assert (a**2 - b - sqrt(a)).subs(a**2 - sqrt(a), c) == c - b
+    assert (a+b+exp(a+b)).subs(a+b,c) == c + exp(c)
+    assert (c+b+exp(c+b)).subs(c+b,a) == a + exp(a)
 
     # this should work everytime:
     e = a**2 - b - c
     assert e.subs(Add(*e.args[:2]), d) == d + e.args[2]
+    assert e.subs(a**2 - c, d) == d - b
 
 def test_subs_issue910():
     assert (I*Symbol("a")).subs(1, 2) == I*Symbol("a")
