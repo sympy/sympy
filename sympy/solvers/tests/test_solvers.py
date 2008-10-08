@@ -1,10 +1,10 @@
-from sympy import *
-from sympy.utilities.pytest import XFAIL
-
-from sympy.matrices import Matrix
+from sympy import Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq, \
+        sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, \
+        symbols, S
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, deriv_degree
 
+from sympy.utilities.pytest import XFAIL
 import py
 
 def test_solve():
