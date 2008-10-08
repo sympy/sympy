@@ -1,52 +1,54 @@
-from sympy import *
+
+from sympy.core.basic import Basic
+from sympy.core.function import Function, diff
 
 
 class Piecewise(Function):
     """
-    > Container for a Piecewise Function
-    -- Piecewise represents a piecewise function within the SymPy context.
+    Represents a piecewise function.
 
-    Example Usage:
+    Usage
+    =====
+      Piecewise(x, (-1, 0, f(x)), (0, oo, g(x))) -> Returns piecewise function
+        - The first argument is the variable of the intervals.
+        - The subsequent arguments are tuples defining each piece
+          (begin, end, function)
 
-    from sympy import Piecewise, oo, log, symbols
-    x = symbols('x')
-    p = Piecewise(x, [[(-oo, -1), 1], [(1, 2), x*x], [(3, oo), log(x)]])
-
-    Explanation:
-    - The first argument is the variable of the piecewise function.
-    - The second argument is a Python list of sublists.
-    - The first entry in the sublist is a tuple with the range of a function.
-    - The second entry is the actual function over the specified range.
+    Examples
+    ========
+      >>> from sympy import *
+      >>> x = Symbol('x')
+      >>> f = x**2
+      >>> g = log(x)
+      >>> p = Piecewise(x, (-1,0,f), (0,oo,g))
+      >>> p.diff(x)
+      Piecewise(x, (-1, 0, 2*x), (0, oo, 1/x))
+      >>> f*p
+      x**2*Piecewise(x, (-1, 0, x**2), (0, oo, log(x)))
     """
+
     nargs=1
 
-    def __new__(cls, *args, **options):
-        if cls is Function:
-            if len(args) == 1 and isinstance(args[0], str):
-                return FunctionClass(Function, *args)
-            else:
-                print args
-                print type(args[0])
-                raise Exception("You need to specify exactly one string")
-                args = map(Basic.sympify, args)
-        return Basic.__new__(cls, *args, **options)
+    @classmethod
+    def canonize(cls, *args):
+        if not args[0].is_Symbol:
+            raise TypeError, "First argument must be symbol"
+        for piece in args[1:]:
+            if not isinstance(piece,tuple) or len(piece) != 3:
+                raise TypeError, "Must use 3-tuples for intervals"
+        return None
 
-    def fdiff(self, arg=1):
-        """ Returns the differentiated piecewise function """
-        e = self.args[1]
+    def _eval_derivative(self, s):
+        new_pieces = []
+        for start, end, f in self.args[1:]:
+            t = (start, end, diff(f, s))
+            new_pieces.append( t )
+        return Piecewise(self.args[0], *new_pieces)
 
-        for i in range(0, len(self.args[1])):
-            e[i][1] = diff(e[i][1], self.args[0])
-
-    def canonize(self, arg, elems):
-        arg = Basic.sympify(arg)
-        for x in self.elems:
-            cond = x[0]
-            if isinstance(cond, (Basic.Number, Basic.Number)):
-                if cond[0] <= arg and arg <= cond[1]:
-                    return x[1]
-            else:
-                cond = Basic.sympify(cond)
-                if isinstance(cond, Bool):
-                    if cond:
-                        return x[1]
+    def _eval_subs(self, old, new):
+        if self == old:
+            return new
+        new_pieces = []
+        for start, end, f in self.args[1:]:
+            new_pieces.append( (start, end, f.subs(old,new)) )
+        return Piecewise(self.args[0], *new_pieces)
