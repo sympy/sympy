@@ -28,9 +28,12 @@ class LatexPrinter(Printer):
             return expr
 
     def _print_Add(self, expr):
-        tex = str(self._print(expr.args[0]))
+        args = list(expr.args)
+        args.sort(Basic._compare_pretty)
 
-        for term in expr.args[1:]:
+        tex = str(self._print(args[0]))
+
+        for term in args[1:]:
             coeff = term.as_coeff_terms()[0]
 
             if coeff.is_negative:

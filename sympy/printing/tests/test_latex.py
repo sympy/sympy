@@ -10,14 +10,15 @@ x,y = symbols('xy')
 k,n = symbols('kn', integer=True)
 
 def test_latex_basic():
-    assert latex(1+x) in ["$1 + x$", '$x + 1$']
+    assert latex(1+x) == "$1 + x$"
     assert latex(x**2) == "${x}^{2}$"
-    assert latex(x**(1+x)) in ["${x}^{1 + x}$", '${x}^{x + 1}$']
+    assert latex(x**(1+x)) == "${x}^{1 + x}$"
+    assert latex(x**3+x+1+x**2) == "$1 + x + {x}^{2} + {x}^{3}$"
 
 def test_latex_symbols():
     Gamma, lmbda, rho = map(Symbol, ('Gamma', 'lambda', 'rho'))
     mass, volume = map(Symbol, ('mass', 'volume'))
-    assert latex(Gamma + lmbda) in [r"$\Gamma + \lambda$", '$\lambda + \Gamma$']
+    assert latex(Gamma + lmbda) == r"$\Gamma + \lambda$"
     assert latex(Gamma * lmbda) == r"$\Gamma \lambda$"
     assert latex(Symbol('q21')) == r"$q_{21}$"
     assert latex(Symbol('epsilon0')) == r"$\epsilon_{0}$"
@@ -31,7 +32,7 @@ def test_latex_symbols():
 
 def test_latex_functions():
     assert latex(exp(x)) == "${e}^{x}$"
-    assert latex(exp(1)+exp(2)) in ["${e}^{2} + e$", '$e + {e}^{2}$']
+    assert latex(exp(1)+exp(2)) == "$e + {e}^{2}$"
 
     f = Function('f')
     assert latex(f(x)) == '$\\operatorname{f}\\left(x\\right)$'
@@ -56,9 +57,8 @@ def test_latex_functions():
 def test_latex_derivatives():
     assert latex(diff(x**3, x, evaluate=False)) == \
     r"$\frac{\partial}{\partial x} {x}^{3}$"
-    assert latex(diff(sin(x)+x**2, x, evaluate=False)) in [
-        r"$\frac{\partial}{\partial x}\left({x}^{2} + \operatorname{sin}\left(x\right)\right)$",
-        r'$\frac{\partial}{\partial x}\left(\operatorname{sin}\left(x\right) + {x}^{2}\right)$']
+    assert latex(diff(sin(x)+x**2, x, evaluate=False)) == \
+    r"$\frac{\partial}{\partial x}\left(\operatorname{sin}\left(x\right) + {x}^{2}\right)$"
 
 def test_latex_integrals():
     assert latex(Integral(log(x), x)) == r"$\int \operatorname{log}\left(x\right)\,dx$"
