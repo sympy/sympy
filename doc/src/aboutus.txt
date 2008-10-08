@@ -60,6 +60,7 @@ more details what they do and what they are interested in.
 #. Boris Timokhin: matrix fixes
 #. Robert (average.programmer): initial piecewise function patch
 #. Andy R. Terrel: piecewise function polishing
+#. Hubert Tsang: LaTeX printing fixes
 
 Uptodate list in the order of the first contribution is given in the `README
 <http://hg.sympy.org/sympy/file/tip/README>`_
