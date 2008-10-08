@@ -1,6 +1,6 @@
 from sympy import Symbol, Rational, cos, sin, tan, cot, exp, log
 
-def testdiff():
+def test_diff():
     a = Symbol("a")
     b = Symbol("b")
     c = Symbol("c")
@@ -21,7 +21,7 @@ def testdiff():
     e = a*b*c
     assert e.diff(c) == a*b
 
-def testdiff2():
+def test_diff2():
     n3 = Rational(3)
     n2 = Rational(2)
     n6 = Rational(6)

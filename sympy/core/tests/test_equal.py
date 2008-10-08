@@ -1,6 +1,6 @@
 from sympy import Symbol, Rational, exp
 
-def testequal():
+def test_equal():
     b = Symbol("b")
     a = Symbol("a")
     c = Symbol("c")

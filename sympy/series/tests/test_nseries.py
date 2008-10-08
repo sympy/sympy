@@ -82,7 +82,7 @@ def test_log3():
     assert e.nseries(x, 0, 4) == -1/log(x) - pi*I*log(x)**(-2) + \
         pi**2*log(x)**(-3) + O(log(x)**(-4))
 
-def testseries1():
+def test_series1():
     x = Symbol("x")
     e = sin(x)
     assert e.nseries(x,0,0) != 0
@@ -99,12 +99,12 @@ def testseries1():
     #assert x.nseries(x,0,1) == O(x, x)
     assert x.nseries(x,0,2) == x
 
-def testseriesbug1():
+def test_seriesbug1():
     x = Symbol("x")
     assert (1/x).nseries(x,0,3) == 1/x
     assert (x+1/x).nseries(x,0,3) == x+1/x
 
-def testseries2():
+def test_series2x():
     x = Symbol("x")
     assert ((x+1)**(-2)).nseries(x,0,4) == 1-2*x+3*x**2-4*x**3+O(x**4, x)
     assert ((x+1)**(-1)).nseries(x,0,4) == 1-x+x**2-x**3+O(x**4, x)

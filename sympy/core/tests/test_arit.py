@@ -70,7 +70,7 @@ def test_arit0():
     e = Rational(1,2)*(1+a)
     assert e == Rational(1,2) + a/2
 
-def testdiv():
+def test_div():
     e=a/b
     assert e == a*b**(-1)
     e=a/b+c/2
@@ -78,7 +78,7 @@ def testdiv():
     e=(1-b)/(b-1)
     assert e == (1+-b)*((-1)+b)**(-1)
 
-def testpow():
+def test_pow():
     n1 = Rational(1)
     n2 = Rational(2)
     n5 = Rational(5)
