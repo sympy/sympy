@@ -128,6 +128,11 @@ def test_subs_dict2():
     assert e.subs(r) == r[a]/r[b] * sin(r[b]*x)
     assert e.subs(r) == 3 * sin(4*x) / 4
 
+def test_mul():
+    x, y, z = map(Symbol, 'xyz')
+    assert (x*y*z).subs(z*x,y) == y**2
+    assert (2*x*y).subs(5*x*y,z) == 2*z/5
+
 def test_add():
     a, b, c, d, x = abc.a, abc.b, abc.c, abc.d, abc.x
     assert (a**2 - b - c).subs(a**2 - b, d) in [d - c, a**2 - b - c]
