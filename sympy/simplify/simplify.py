@@ -220,6 +220,8 @@ def together(expr, deep=False):
        It also perfect possible to work with symbolic powers or
        exponential functions or combinations of both:
 
+       >>> x = Symbol('x', positive=True)
+       >>> y = Symbol('y', real=True)
        >>> together(1/x**y + 1/x**(y-1))
        x**(-y)*(1 + x)
 
