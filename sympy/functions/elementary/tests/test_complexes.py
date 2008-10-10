@@ -97,7 +97,6 @@ def test_abs():
     n = Symbol('n',integer=True)
     assert x**(2*n) == abs(x)**(2*n)
 
-@XFAIL
 def test_abs_real():
     x = Symbol('x', complex=True)
     assert sqrt(x**2) != abs(x)

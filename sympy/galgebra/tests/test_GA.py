@@ -11,7 +11,7 @@ except ImportError:
 if not disabled:
     from sympy.galgebra.GAsympy import set_main, MV, make_symbols, types, ZERO, ONE, HALF
     import sympy
-    from sympy import collect
+    from sympy import collect, sympify
 
     import sys
     set_main(sys.modules[__name__])
@@ -101,7 +101,7 @@ def test_noneuclidian():
     W = collect(W,[C**2,C],evaluate=False)
     #print 'W =',W
     a = W[C**2]
-    b = W[abs(C)]
+    b = W[(C**2)**(sympify(1)/2)]
     c = W[ONE]
     #print 'a =',a
     #print 'b =',b

@@ -104,10 +104,12 @@ def test_heurisch_special():
 def test_heurisch_symbolic_coeffs():
     assert heurisch(1/(x+y), x)         == log(x+y)
     assert heurisch(1/(x+sqrt(2)), x)   == log(x+sqrt(2))
+    assert trim(diff(heurisch(log(x+y+z), y), y)) == log(x+y+z)
+
+@XFAIL
+def test_heurisch_symbolic_coeffs_1130():
     assert heurisch(1/(x**2+y), x)      == I*y**(-S.Half)*log(x + (-y)**S.Half)/2 - \
                                            I*y**(-S.Half)*log(x - (-y)**S.Half)/2
-
-    assert trim(diff(heurisch(log(x+y+z), y), y)) == log(x+y+z)
 
 def test_heurisch_hacking():
     assert heurisch(sqrt(1 + 7*x**2), x, hints=[]) == \

@@ -220,7 +220,7 @@ def test_issue159():
     assert a.nseries(x,0,6) == 1 - x/2 - x**4/720 + x**2/12 + O(x**5)
 
 def test_issue105():
-    x = Symbol("x")
+    x = Symbol("x", nonnegative=True)
     f = sin(x**3)**Rational(1,3)
     assert f.nseries(x,0,17) == x - x**7/18 - x**13/3240 + O(x**17)
 

@@ -225,7 +225,6 @@ def test_issue324():
     assert sqrt(x-1) == (x-1)**Rational(1,2)
     assert sqrt(x-1) != I*(1-x)**Rational(1,2)
 
-@XFAIL
 def test_issue350():
     x = Symbol("x", real=True)
     assert sqrt(x**2) == abs(x)
