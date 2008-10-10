@@ -135,8 +135,8 @@ class Relational(Basic):
     def rhs(self):
         return self._args[1]
 
-    def subs(self, old, new):
-        return self.__class__(self.lhs.subs(old, new), self.rhs.subs(old, new))
+    def _eval_subs(self, old, new):
+        return self.__class__(self.lhs._eval_subs(old, new), self.rhs._eval_subs(old, new))
 
 class Equality(Relational):
 

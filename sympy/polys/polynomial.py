@@ -2074,10 +2074,10 @@ class Poly(Basic):
                 else:
                     return self.evaluate((old, new))
         elif not new.has_any_symbols(*symbols):
-            coeffs = [ sympify(coeff).subs(old, new) for coeff in self.coeffs ]
+            coeffs = [ sympify(coeff)._eval_subs(old, new) for coeff in self.coeffs ]
             return self.__class__((coeffs, self.monoms), *symbols, **self.flags)
 
-        result = self.as_basic().subs(old, new)
+        result = self.as_basic()._eval_subs(old, new)
 
         try:
             return self.__class__(result, *symbols, **self.flags)

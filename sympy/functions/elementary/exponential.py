@@ -145,12 +145,12 @@ class exp(Function):
                 old_al = []
                 coeff2,terms2 = oarg.as_coeff_terms()
                 for a in arg.args:
-                    a = a.subs(old, new)
+                    a = a._eval_subs(old, new)
                     coeff1,terms1 = a.as_coeff_terms()
                     if terms1==terms2:
                         new_l.append(new**(coeff1/coeff2))
                     else:
-                        old_al.append(a.subs(old, new))
+                        old_al.append(a._eval_subs(old, new))
                 if new_l:
                     new_l.append(self.func(C.Add(*old_al)))
                     r = C.Mul(*new_l)
@@ -466,12 +466,12 @@ class log(Function):
 # MrvLog is used by limit.py
 class MrvLog(log):
 
-    def subs(self, old, new):
+    def _eval_subs(self, old, new):
         old = sympify(old)
         if old==self.func:
             arg = self.args[0]
             new = sympify(new)
-            return new(arg.subs(old, new))
+            return new(arg._eval_subs(old, new))
         return self
 
 

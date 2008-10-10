@@ -293,7 +293,7 @@ class Add(AssocOp):
     def _eval_subs(self, old, new):
         if self == old: return new
         if isinstance(old, FunctionClass):
-            return self.__class__(*[s.subs(old, new) for s in self.args ])
+            return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
         coeff_self, factors_self = self.as_coeff_factors()
         coeff_old, factors_old = old.as_coeff_factors()
         if factors_self == factors_old: # (2+a).subs(3+a,y) -> 2-3+y
@@ -304,8 +304,8 @@ class Add(AssocOp):
                 old_set = set(factors_old)
                 if old_set < self_set:
                     ret_set = self_set - old_set
-                    return Add(new, coeff_self, -coeff_old, *[s.subs(old, new) for s in ret_set])
-        return self.__class__(*[s.subs(old, new) for s in self.args])
+                    return Add(new, coeff_self, -coeff_old, *[s._eval_subs(old, new) for s in ret_set])
+        return self.__class__(*[s._eval_subs(old, new) for s in self.args])
 
     @cacheit
     def extract_leading_order(self, *symbols):

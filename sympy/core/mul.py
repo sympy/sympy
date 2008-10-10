@@ -608,7 +608,7 @@ class Mul(AssocOp):
         if self == old:
             return new
         if isinstance(old, FunctionClass):
-            return self.__class__(*[s.subs(old, new) for s in self.args ])
+            return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
         coeff_self,terms_self = self.as_coeff_terms()
         coeff_old,terms_old = old.as_coeff_terms()
         if terms_self == terms_old: # (2*a).subs(3*a,y) -> 2/3*y
@@ -616,7 +616,7 @@ class Mul(AssocOp):
         l1, l2 = len(terms_self), len(terms_old)
         if l2 == 0:
             # if old is just a number, go through the self.args one by one
-            return Mul(*[x.subs(old, new) for x in self.args])
+            return Mul(*[x._eval_subs(old, new) for x in self.args])
         elif l2 < l1:
             # old is some something more complex, like:
             # (a*b*c*d).subs(b*c,x) -> a*x*d
@@ -626,8 +626,8 @@ class Mul(AssocOp):
             old_set = set(terms_old)
             if old_set < self_set:
                 ret_set = self_set - old_set
-                return Mul(new, coeff_self/coeff_old, *[s.subs(old, new) for s in ret_set])
-        return self.__class__(*[s.subs(old, new) for s in self.args])
+                return Mul(new, coeff_self/coeff_old, *[s._eval_subs(old, new) for s in ret_set])
+        return self.__class__(*[s._eval_subs(old, new) for s in self.args])
 
     def _eval_nseries(self, x, x0, n):
         terms = [t.nseries(x, x0, n) for t in self.args]

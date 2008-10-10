@@ -509,7 +509,7 @@ class Derivative(Basic):
     def _eval_subs(self, old, new):
         if self==old:
             return new
-        return Derivative(self.args[0].subs(old, new), *self.args[1:], **{'evaluate': True})
+        return Derivative(self.args[0]._eval_subs(old, new), *self.args[1:], **{'evaluate': True})
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         # this method needs a cleanup.

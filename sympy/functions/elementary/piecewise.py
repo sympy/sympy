@@ -50,5 +50,5 @@ class Piecewise(Function):
             return new
         new_pieces = []
         for start, end, f in self.args[1:]:
-            new_pieces.append( (start, end, f.subs(old,new)) )
+            new_pieces.append( (start, end, f._eval_subs(old,new)) )
         return Piecewise(self.args[0], *new_pieces)

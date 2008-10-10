@@ -263,9 +263,9 @@ class Order(Basic):
         if isinstance(old, C.Symbol) and old in self.symbols:
             i = list(self.symbols).index(old)
             if isinstance(new, C.Symbol):
-                return Order(self.expr.subs(old, new), *(self.symbols[:i]+(new,)+self.symbols[i+1:]))
-            return Order(self.expr.subs(old, new), *(self.symbols[:i]+self.symbols[i+1:]))
-        return Order(self.expr.subs(old, new), *self.symbols)
+                return Order(self.expr._eval_subs(old, new), *(self.symbols[:i]+(new,)+self.symbols[i+1:]))
+            return Order(self.expr._eval_subs(old, new), *(self.symbols[:i]+self.symbols[i+1:]))
+        return Order(self.expr._eval_subs(old, new), *self.symbols)
 
     def _sage_(self):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.

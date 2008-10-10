@@ -189,7 +189,7 @@ class Pow(Basic):
             coeff1,terms1 = old.args[0].as_coeff_terms()
             coeff2,terms2 = (self.exp * C.log(self.base)).as_coeff_terms()
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(exp(3*y*log(x)),z) -> z**(2/3*y)
-        return self.base.subs(old, new) ** self.exp.subs(old, new)
+        return self.base._eval_subs(old, new) ** self.exp._eval_subs(old, new)
 
     def as_powers_dict(self):
         return { self.base : self.exp }

@@ -34,7 +34,7 @@ class Sub(AssocOp):
         if self==old:
             return new
         else:
-            return self.__class__(*[s.subs(old, new) for s in self.args ])
+            return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
 
 def sub_pre(e):
     """ Replace Add(x, Mul(NegativeOne(-1), y)) with Sub(x, y).
