@@ -68,6 +68,40 @@ def test(*paths, **kwargs):
         t.add_paths(["sympy"])
     return t.test()
 
+def doctest(*paths, **kwargs):
+    """
+    Runs the doctests specified by paths, or all tests if paths=[].
+
+    Note: paths are specified relative to the sympy root directory in a unix
+    format (on all platforms including windows).
+
+    Examples:
+
+    Run all tests:
+    >> import sympy
+    >> sympy.doctest()
+
+    Run one file:
+    >> import sympy
+    >> sympy.doctest("sympy/core/tests/test_basic.py")
+
+    Run all tests in sympy/functions/ and some particular file:
+    >> import sympy
+    >> sympy.doctest("sympy/core/tests/test_basic.py", "sympy/functions")
+    """
+    if "verbose" in kwargs:
+        verbose = kwargs["verbose"]
+    else:
+        verbose = False
+    r = PyTestReporter(verbose)
+    t = SymPyDocTests(r)
+    if len(paths) > 0:
+        t.add_paths(paths)
+    else:
+        t.add_paths(["sympy"])
+    return t.test()
+
+
 class SymPyTests(object):
 
     def __init__(self, reporter, kw="", post_mortem=False):
@@ -198,6 +232,148 @@ class SymPyTests(object):
         if self._kw == "":
             return True
         return x.__name__.find(self._kw) != -1
+
+    def get_paths(self, dir="", level=15):
+        """
+        Generates a set of paths for testfiles searching.
+
+        Example:
+        >> get_paths(2)
+        ['sympy/test_*.py', 'sympy/*/test_*.py', 'sympy/*/*/test_*.py']
+        >> get_paths(6)
+        ['sympy/test_*.py', 'sympy/*/test_*.py', 'sympy/*/*/test_*.py',
+        'sympy/*/*/*/test_*.py', 'sympy/*/*/*/*/test_*.py',
+        'sympy/*/*/*/*/*/test_*.py', 'sympy/*/*/*/*/*/*/test_*.py']
+        """
+        wildcards = [dir]
+        for i in range(level):
+            wildcards.append(os.path.join(wildcards[-1], "*"))
+        p = [os.path.join(x, "test_*.py") for x in wildcards]
+        return p
+
+    def get_tests(self, dir):
+        """
+        Returns the list of tests.
+        """
+        g = []
+        for x in self.get_paths(dir):
+            g.extend(glob(x))
+        g = list(set(g))
+        g.sort()
+        return g
+
+class SymPyDocTests(object):
+
+    def __init__(self, reporter):
+        self._count = 0
+        self._root_dir = self.get_sympy_dir()
+        self._reporter = reporter
+        self._reporter.root_dir(self._root_dir)
+        self._tests = []
+
+    def add_paths(self, paths):
+        for path in paths:
+            path2 = os.path.join(self._root_dir, *path.split("/"))
+            if path2.endswith(".py"):
+                self._tests.append(path2)
+            else:
+                self._tests.extend(self.get_tests(path2))
+
+    def test(self):
+        """
+        Runs the tests.
+
+        Returns True if all tests pass, otherwise False.
+        """
+        self._reporter.start()
+        for f in self._tests:
+            try:
+                self.test_file(f)
+            except KeyboardInterrupt:
+                print " interrupted by user"
+                break
+        return self._reporter.finish()
+
+    def test_file(self, filename):
+        import doctest
+        print filename
+        doctest.testfile(filename)
+        return
+        import sympy
+        import imp
+        name = "test%d" % self._count
+        name = os.path.splitext(os.path.basename(filename))[0]
+        self._count += 1
+        try:
+            #module = __import__(filename, globals(), locals())
+            module = imp.load_source(name, filename)
+        except ImportError:
+            self._reporter.import_error(filename, sys.exc_info())
+            return
+        disabled = getattr(module, "disabled", False)
+        if disabled:
+            funcs = []
+        else:
+            funcs = sorted(module.__dict__.keys())
+            # we need to filter only those functions that begin with 'test_'
+            funcs = [f for f in funcs if f.startswith("test_")]
+            # and also that are defined in this module (i.e. not imported from
+            # other modules using the import statemet, like "from sympy import
+            # *"). This is tricky to achieve. The easiest is to compare m1 and
+            # m2 below, if they are equal, we are sure that the "f" is from
+            # module. However, when one uses the XFAIL decorator, the m1
+            # appears from "sympy.utilities.pytest", so we check this one
+            # explicitely. This is not robust, as it will stop working when we
+            # move XFAIL to another module, or if we use some decorator defined
+            # elsewhere. Any help with this is welcomed.
+            funcs2 = []
+            m2 = module.__name__
+            for f in funcs:
+                f = module.__dict__[f]
+                m1 = f.__module__
+                if m1 == m2 or m1 == "sympy.utilities.pytest":
+                    if isgeneratorfunction(f):
+                        for fg in f():
+                            func = fg[0]
+                            args = fg[1:]
+                            fgw = lambda: func(*args)
+                            funcs2.append((fgw, inspect.getsourcelines(f)[1]))
+                    else:
+                        funcs2.append((f, inspect.getsourcelines(f)[1]))
+            funcs2.sort(key=lambda x: x[1])
+            funcs = [x[0] for x in funcs2]
+        self._reporter.entering_filename(filename, len(funcs))
+        for f in funcs:
+            self._reporter.entering_test(f)
+            try:
+                f()
+            except KeyboardInterrupt:
+                raise
+            except:
+                t, v, tr = sys.exc_info()
+                if t is AssertionError:
+                    self._reporter.test_fail((t, v, tr))
+                elif t.__name__ == "Skipped":
+                    self._reporter.test_skip()
+                elif t.__name__ == "XFail":
+                    self._reporter.test_xfail()
+                elif t.__name__ == "XPass":
+                    self._reporter.test_xpass()
+                else:
+                    self._reporter.test_exception((t, v, tr))
+            else:
+                self._reporter.test_pass()
+        self._reporter.leaving_filename()
+
+    def get_sympy_dir(self):
+        """
+        Returns the root sympy directory.
+        """
+        this_file = os.path.abspath(__file__)
+        sympy_dir = os.path.join(os.path.dirname(this_file), "..", "..")
+        sympy_dir = os.path.normpath(sympy_dir)
+        return sympy_dir
+
 
     def get_paths(self, dir="", level=15):
         """

@@ -15,7 +15,7 @@ from source import source
 
 from decorator import threaded
 
-from runtests import test
+from runtests import test, doctest
 
 from pytest import raises
 
