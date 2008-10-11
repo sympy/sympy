@@ -165,6 +165,8 @@ def test_together():
 
     assert together(Rational(1,2) + x/2) == (x+1)/2
 
+    assert together(1/x**y + 1/x**(y-1)) == x**(-y)*(1 + x)
+
 def test_separate():
     x, y, z = map(Symbol, 'xyz')
 

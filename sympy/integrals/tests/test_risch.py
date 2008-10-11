@@ -106,7 +106,6 @@ def test_heurisch_symbolic_coeffs():
     assert heurisch(1/(x+sqrt(2)), x)   == log(x+sqrt(2))
     assert trim(diff(heurisch(log(x+y+z), y), y)) == log(x+y+z)
 
-@XFAIL
 def test_heurisch_symbolic_coeffs_1130():
     assert heurisch(1/(x**2+y), x)      == I*y**(-S.Half)*log(x + (-y)**S.Half)/2 - \
                                            I*y**(-S.Half)*log(x - (-y)**S.Half)/2

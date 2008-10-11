@@ -1003,7 +1003,7 @@ def N(x, n=15, **options):
 
     Example:
     >>> from sympy import Sum, Symbol, oo
-    >>> k = Symbol("k", integer=True)
+    >>> k = Symbol("k")
     >>> Sum(1/k**k, (k, 1, oo))
     Sum(k**(-k), (k, 1, oo))
     >>> N(Sum(1/k**k, (k, 1, oo)), 4)

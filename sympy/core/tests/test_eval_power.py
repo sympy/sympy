@@ -55,3 +55,8 @@ def test_issue350():
 
 def test_issue767():
     assert --sqrt(sqrt(5)-1)==sqrt(sqrt(5)-1)
+
+def test_negative_one():
+    x = Symbol('x', complex=True)
+    y = Symbol('y', complex=True)
+    assert 1/x**y == x**(-y)
