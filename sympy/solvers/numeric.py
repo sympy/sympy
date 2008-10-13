@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # TODO: * calculate J numerically
 #       * better exceptions for bad input
 #       * solving overdetermined systems with Gauss-Newton algorithm

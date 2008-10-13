@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
     Limited tests of the elliptic functions module.  A full suite of
     extensive testing can be found in elliptic_torture_tests.py
