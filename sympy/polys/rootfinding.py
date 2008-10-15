@@ -238,43 +238,43 @@ def roots(f, *symbols, **flags):
             else:
                 return {}
         else:
-            if multiple:
-                return [S.Zero] * f.degree
-            else:
-                return { S.Zero : f.degree }
-
-    (k,), f = f.as_reduced()
-
-    if k == 0:
-        result = {}
+            result = { S.Zero : f.degree }
     else:
-        result = { S.Zero : k }
+        (k,), f = f.as_reduced()
 
-    factors = poly_decompose(f)
+        if k == 0:
+            result = {}
+        else:
+            result = { S.Zero : k }
 
-    zeros, g = {}, factors[0]
+        if f.degree == 1:
+            result[roots_linear(f)[0]] = 1
+        else:
+            factors = poly_decompose(f)
 
-    for i, h in enumerate(poly_sqf(g)):
-        for zero in roots_trivial(h):
-            if zeros.has_key(zero):
-                zeros[zero] += i+1
-            else:
-                zeros[zero] = i+1
+            zeros, g = {}, factors[0]
 
-    for factor in factors[1:]:
-        previous, zeros = zeros.copy(), {}
-
-        for zero, i in previous.iteritems():
-            g = factor.sub_term(zero, (0,))
-
-            for j, h in enumerate(poly_sqf(g)):
+            for i, h in enumerate(poly_sqf(g)):
                 for zero in roots_trivial(h):
                     if zeros.has_key(zero):
-                        zeros[zero] += i*(j+1)
+                        zeros[zero] += i+1
                     else:
-                        zeros[zero] = i*(j+1)
+                        zeros[zero] = i+1
 
-    result.update(zeros)
+            for factor in factors[1:]:
+                previous, zeros = zeros.copy(), {}
+
+                for zero, i in previous.iteritems():
+                    g = factor.sub_term(zero, (0,))
+
+                    for j, h in enumerate(poly_sqf(g)):
+                        for zero in roots_trivial(h):
+                            if zeros.has_key(zero):
+                                zeros[zero] += i*(j+1)
+                            else:
+                                zeros[zero] = i*(j+1)
+
+            result.update(zeros)
 
     domain = flags.get('domain', None)
 

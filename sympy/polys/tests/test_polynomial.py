@@ -6,7 +6,7 @@ from sympy.polys.polynomial import *
 from sympy.polys.algorithms import *
 from sympy.polys.rootfinding import *
 
-a,b,c,x,y,z,u,v,t = symbols('abcxyzuvt')
+a,b,c,d,x,y,z,u,v,t = symbols('abcdxyzuvt')
 
 def test_monomial_cmp():
     assert monomial_lex_cmp((3,2,1), (1,2,4)) == 1
@@ -996,6 +996,9 @@ def test_roots():
         -2**S.Half/2 - I*2**S.Half/2: 1,
         S.One: 1, -S.One: 1, I: 1, -I: 1
     }
+
+    assert roots((a+b+c)*x + a+b+c+d, x) == \
+        { (-a-b-c-d) / (a+b+c) : 1 }
 
     assert roots(x**3+x**2-x+1, x, cubics=False) == {}
 
