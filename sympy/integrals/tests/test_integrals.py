@@ -32,7 +32,7 @@ def test_basics():
     assert integrate(t**2, (t,x,2*x)).diff(x) == 7*x**2
 
     assert sorted(list( Integral(x,x).atoms() )) == [x]
-    assert sorted(list( Integral(f(x),(x,0,1)).atoms() )) == [0,1,x]
+    assert sorted(list( Integral(f(x),(x,0,1)).atoms() )) == sorted([0,1,x])
 
 def test_basics_multiple():
 

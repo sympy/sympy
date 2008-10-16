@@ -153,12 +153,12 @@ def test_leadterm():
 
 def test_atoms():
    assert sorted(list(x.atoms())) == [x]
-   assert sorted(list((1+x).atoms())) == [1, x]
+   assert sorted(list((1+x).atoms())) == sorted([1, x])
 
    assert sorted(list((1+2*cos(x)).atoms(Symbol))) == [x]
-   assert sorted(list((1+2*cos(x)).atoms(Symbol,Number))) == [1, 2, x]
+   assert sorted(list((1+2*cos(x)).atoms(Symbol,Number))) == sorted([1, 2, x])
 
-   assert sorted(list((2*(x**(y**x))).atoms())) == [2, x, y]
+   assert sorted(list((2*(x**(y**x))).atoms())) == sorted([2, x, y])
 
    assert sorted(list(Rational(1,2).atoms())) == [S.Half]
    assert sorted(list(Rational(1,2).atoms(Symbol))) == []
@@ -167,11 +167,12 @@ def test_atoms():
 
    assert sorted(list(Poly(0, x).atoms())) == [S.Zero]
    assert sorted(list(Poly(1, x).atoms())) == [S.One]
-   assert sorted(list(Poly(x, x).atoms())) == [S.One, x]
-   assert sorted(list(Poly(x, x, y).atoms())) == [S.One, x]
-   assert sorted(list(Poly(x + y, x, y).atoms())) == [S.One, x, y]
-   assert sorted(list(Poly(x + y, x, y, z).atoms())) == [S.One, x, y]
-   assert sorted(list(Poly(x + y*t, x, y, z).atoms())) == [S.One, t, x, y]
+   assert sorted(list(Poly(x, x).atoms())) == sorted([S.One, x])
+   assert sorted(list(Poly(x, x, y).atoms())) == sorted([S.One, x])
+   assert sorted(list(Poly(x + y, x, y).atoms())) == sorted([S.One, x, y])
+   assert sorted(list(Poly(x + y, x, y, z).atoms())) == sorted([S.One, x, y])
+   assert sorted(list(Poly(x + y*t, x, y, z).atoms())) == \
+           sorted([S.One, t, x, y])
 
 def test_is_polynomial():
     z = Symbol('z')
