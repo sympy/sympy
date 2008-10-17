@@ -2105,8 +2105,7 @@ class Basic(AssumeMeths):
         assert x.is_Symbol, `x`
         if not self.has(x):
             return self
-        expr = self.expand(trig=True)
-        obj = expr._eval_as_leading_term(x)
+        obj = self._eval_as_leading_term(x)
         if obj is not None:
             return obj
         raise NotImplementedError('as_leading_term(%s, %s)' % (self, x))
