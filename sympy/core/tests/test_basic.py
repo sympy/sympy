@@ -169,6 +169,10 @@ def test_as_leading_term2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).as_leading_term(x) == \
             sin(1 + sin(1))
 
+def test_as_leading_term3():
+    assert (2+pi+x).as_leading_term(x) == 2 + pi
+    assert (2*x+pi*x+x**2).as_leading_term(x) == 2*x + pi*x
+
 def test_atoms():
    assert sorted(list(x.atoms())) == [x]
    assert sorted(list((1+x).atoms())) == sorted([1, x])

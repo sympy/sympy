@@ -1,4 +1,4 @@
-from sympy import Symbol, Rational, Order, C, exp, ln, log, O, var, nan
+from sympy import Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import w, x, y, z
 
@@ -166,6 +166,11 @@ def test_leading_order():
     assert (1+x**2).extract_leading_order(x) == ((1, O(1, x)),)
     assert (2+x**2).extract_leading_order(x) == ((2, O(1, x)),)
     assert (x+x**2).extract_leading_order(x) == ((x, O(x)),)
+
+def test_leading_order2():
+    assert (2+pi+x**2).extract_leading_order(x) == ((pi, O(1, x)), (2, O(1, x)))
+    assert (2*x+pi*x+x**2).extract_leading_order(x) == ((2*x, O(x)),
+            (x*pi, O(x)))
 
 def test_order_leadterm():
     assert O(x**2)._eval_as_leading_term(x) == O(x**2)
