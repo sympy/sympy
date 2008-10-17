@@ -151,6 +151,16 @@ def test_leadterm():
     assert (x+x**2).leadterm(x)[1] == 1
     assert (x**2).leadterm(x)[1] == 2
 
+def test_as_leading_term():
+    assert (3+2*x**(log(3)/log(2)-1)).as_leading_term(x) == 3
+    assert (1/x**2+1+x+x**2).as_leading_term(x) == 1/x**2
+    assert (1/x+1+x+x**2).as_leading_term(x) == 1/x
+    assert (x**2+1/x).as_leading_term(x) == 1/x
+    assert (1+x**2).as_leading_term(x) == 1
+    assert (x+1).as_leading_term(x) == 1
+    assert (x+x**2).as_leading_term(x) == x
+    assert (x**2).as_leading_term(x) == x**2
+
 def test_atoms():
    assert sorted(list(x.atoms())) == [x]
    assert sorted(list((1+x).atoms())) == sorted([1, x])
