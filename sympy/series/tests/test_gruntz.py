@@ -75,6 +75,15 @@ def test_sign1():
     assert sign(3-1/x, x) == 1
     assert sign(-3-1/x, x) == -1
 
+def test_sign2():
+    assert sign(x, x) == 1
+    assert sign(-x, x) == -1
+    y = Symbol("y", positive=True)
+    assert sign(y, x) == 1
+    assert sign(-y, x) == -1
+    assert sign(y*x, x) == 1
+    assert sign(-y*x, x) == -1
+
 def test_mrv1():
     assert mrv(x, x) == set([x])
     assert mrv(x+1/x, x) == set([x])

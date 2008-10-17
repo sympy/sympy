@@ -276,8 +276,7 @@ def sign(e, x):
         else:
             return -1
     elif not e.has(x):
-        f= e.evalf()
-        if f > 0:
+        if e.is_positive:
             return 1
         else:
             return -1
