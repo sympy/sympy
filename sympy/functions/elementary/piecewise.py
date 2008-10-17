@@ -1,6 +1,5 @@
 
 from sympy.core.basic import Basic, S
-from sympy.core.cache import cacheit
 from sympy.core.function import Function, FunctionClass, diff
 from sympy.core.numbers import Number
 from sympy.core.relational import Relational
@@ -36,7 +35,6 @@ class Piecewise(Function):
 
     nargs=None
 
-    @cacheit
     def __new__(cls, *args, **options):
         for opt in ["nargs", "dummy", "comparable", "noncommutative", "commutative"]:
             if opt in options:
@@ -171,6 +169,7 @@ class Piecewise(Function):
                               ", ".join([str((h[0],h[1])) for h in holes])
 
         # Finally run through the intervals and sum the evaluation.
+        # TODO: Either refactor this code or Integral.doit to call _eval_interval
         ret_fun = 0
         for int_a, int_b, expr in int_expr:
             B = expr.subs(sym, min(b,int_b))
@@ -207,8 +206,11 @@ class Piecewise(Function):
 
     @classmethod
     def __eval_cond(cls, cond):
-        """Returns if the condition is True or False.
-           If it is undeterminable, returns None."""
+        """
+        Returns if the condition is True or False.
+
+        If it is undeterminable, returns None.
+        """
         if type(cond) == bool:
             return cond
         arg0 = cond.args[0]
