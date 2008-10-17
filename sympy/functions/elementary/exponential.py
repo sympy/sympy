@@ -401,7 +401,7 @@ class log(Function):
             o = C.Order(z, x)
             if o is S.Zero:
                 return ln(1+z)+ ln(arg0)
-            if o.expr==1:
+            if o.expr.is_number:
                 e = ln(order.expr*x)/ln(x)
             else:
                 e = ln(order.expr)/ln(o.expr)

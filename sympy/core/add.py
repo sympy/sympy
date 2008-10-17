@@ -325,14 +325,14 @@ class Add(AssocOp):
         seq = [(f, C.Order(f, *symbols)) for f in self.args]
         for ef,of in seq:
             for e,o in lst:
-                if o.contains(of):
+                if o.contains(of) and o != of:
                     of = None
                     break
             if of is None:
                 continue
             new_lst = [(ef,of)]
             for e,o in lst:
-                if of.contains(o):
+                if of.contains(o) and o != of:
                     continue
                 new_lst.append((e,o))
             lst = new_lst

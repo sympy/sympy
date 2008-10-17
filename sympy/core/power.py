@@ -502,7 +502,10 @@ class Pow(Basic):
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
                 rest = ((base-prefactor)/prefactor).expand()
                 if rest == 0:
-                    return 1/prefactor
+                    # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
+                    # factor the w**4 out using collect:
+                    from sympy import collect
+                    return 1/collect(prefactor, x)
                 if rest.is_Order:
                     return ((1+rest)/prefactor).expand()
                 if not rest.has(x):
@@ -580,7 +583,7 @@ class Pow(Basic):
         if o is S.Zero:
             r = (1+z)
         else:
-            if o.expr==1:
+            if o.expr.is_number:
                 e2 = ln(o2.expr*x)/ln(x)
             else:
                 e2 = ln(o2.expr)/ln(o.expr)
