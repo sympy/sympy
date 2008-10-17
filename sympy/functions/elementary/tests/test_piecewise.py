@@ -59,3 +59,26 @@ def test_piecewise():
     assert p + f == f + p
     assert p + dp == dp + p
     assert p - dp == -(dp - p)
+
+    # Test _eval_interval
+    f1 = x*y + 2
+    f2 = x*y**2 + 3
+    peval = Piecewise( (f1, x<0), (f2, x>0))
+    peval_interval = f1.subs(x,0) - f1.subs(x,-1) + f2.subs(x,1) - f2.subs(x,0)
+    assert peval._eval_interval(x,(-1,1)) == peval_interval
+
+    # Test integration
+    p_int =  Piecewise((-x,x < -1), (x**3/3.0, x < 0), (-x + x*log(x), x >= 0))
+    assert integrate(p,x) == p_int
+    p = Piecewise((x, x < 1),(x**2, -1 <= x),(x,3<x))
+    assert integrate(p,(x,-2,2)) == 5.0/6.0
+    assert integrate(p,(x,2,-2)) == -5.0/6.0
+    p = Piecewise((0, x < 0), (1,x < 1), (0, x < 2), (1, x < 3), (0, True))
+    assert integrate(p, (x,-oo,oo)) == 2
+    p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
+    exception_called = False
+    try:
+        integrate(p,(x,-2,2))
+    except ValueError:
+        exception_called = True
+    assert exception_called

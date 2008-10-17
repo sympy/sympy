@@ -103,6 +103,89 @@ class Piecewise(Function):
             new_ecpairs.append( (new_expr, new_cond) )
         return Piecewise(*new_ecpairs)
 
+    def _eval_integral(self,x):
+        from sympy.integrals import integrate
+        return  Piecewise(*[(integrate(expr, x),cond) \
+                                for expr, cond in self.args])
+
+    def _eval_interval(self, sym, ab):
+        """Evaluates the function along the sym in a given interval ab"""
+        # FIXME: Currently only supports conds of type sym < Num, or Num < sym
+        int_expr = []
+        a, b = ab
+        mul = 1
+        if a > b:
+            a = ab[1]; b = ab[0]; mul = -1
+        default = None
+
+        # Determine what intervals the expr,cond pairs affect.
+        # 1) If cond is True, then log it as default
+        # 1.1) Currently if cond can't be evaluated, throw NotImplentedError.
+        # 2) For each inequality, if previous cond defines part of the interval
+        #    update the new conds interval.
+        #    -  eg x < 1, x < 3 -> [oo,1],[1,3] instead of [oo,1],[oo,3]
+        # 3) Sort the intervals to make it easier to find correct exprs
+        for expr, cond in self.args:
+            if type(cond) == bool:
+                if cond:
+                    default = expr
+                    break
+                else:
+                    continue
+            curr = list(cond.args)
+            if cond.args[0] == sym:
+                curr[0] = S.NegativeInfinity
+            elif cond.args[1] == sym:
+                curr[1] = S.Infinity
+            else:
+                raise NotImplementedError, \
+                    "Currently only supporting evaluation with only "\
+                    "sym on one side fo the relation."
+            curr = [max(a,curr[0]),min(b,curr[1])]
+            for n in xrange(len(int_expr)):
+                if self.__eval_cond(curr[0] < int_expr[n][1]) and \
+                        self.__eval_cond(curr[0] >= int_expr[n][0]):
+                    curr[0] = int_expr[n][1]
+                if self.__eval_cond(curr[1] > int_expr[n][0]) and \
+                        self.__eval_cond(curr[1] <= int_expr[n][1]):
+                    curr[1] = int_expr[n][0]
+            if self.__eval_cond(curr[0] < curr[1]):
+                int_expr.append(curr+[expr])
+        int_expr.sort(lambda x,y:1 if x[0] > y[0] else -1)
+
+        # Add holes to list of intervals if there is a default value,
+        # otherwise raise a ValueError.
+        holes = []
+        curr_low = a
+        for int_a, int_b, expr in int_expr:
+            if curr_low < int_a:
+                holes.append([curr_low, min(b,int_a), default])
+            curr_low = int_b
+            if curr_low > b:
+                break
+        if holes and default != None:
+            int_expr.extend(holes)
+        elif holes and default == None:
+            raise ValueError, "Called interval evaluation over piecewise "\
+                              "function on undefined intervals %s" %\
+                              ", ".join([str((h[0],h[1])) for h in holes])
+
+        # Finally run through the intervals and sum the evaluation.
+        ret_fun = 0
+        for int_a, int_b, expr in int_expr:
+            B = expr.subs(sym, min(b,int_b))
+            if B is S.NaN:
+                B = limit(expr, sym, min(b,int_b))
+            if B is S.NaN:
+                return self
+            A = expr.subs(sym, max(a,int_a))
+            if A is S.NaN:
+                A = limit(expr, sym, max(a,int_a))
+            if A is S.NaN:
+                return self
+            ret_fun += B - A
+        return mul * ret_fun
+
     def _eval_derivative(self, s):
         return Piecewise(*[(diff(expr,s),cond) for expr, cond in self.args])
 
