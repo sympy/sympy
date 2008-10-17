@@ -89,6 +89,20 @@ class Piecewise(Function):
             cls.narg = nargs
         return None
 
+    def doit(self, **hints):
+        new_ecpairs = []
+        for expr, cond in self.args:
+            if hasattr(expr,'doit'):
+                new_expr = expr.doit(**hints)
+            else:
+                new_expr = expr
+            if hasattr(cond,'doit'):
+                new_cond = cond.doit(**hints)
+            else:
+                new_cond = cond
+            new_ecpairs.append( (new_expr, new_cond) )
+        return Piecewise(*new_ecpairs)
+
     def _eval_derivative(self, s):
         return Piecewise(*[(diff(expr,s),cond) for expr, cond in self.args])
 
