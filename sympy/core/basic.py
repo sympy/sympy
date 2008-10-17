@@ -2078,6 +2078,22 @@ class Basic(AssumeMeths):
 
     @cacheit
     def as_leading_term(self, *symbols):
+        """
+        Returns the leading term.
+
+        Example:
+
+        >>> x = Symbol("x")
+        >>> (1+x+x**2).as_leading_term(x)
+        1
+        >>> (1/x**2+x+x**2).as_leading_term(x)
+        1/x**2
+
+        Note:
+
+        self is assumed to be the result returned by Basic.series().
+        """
+
         if len(symbols)>1:
             c = self
             for x in symbols:
@@ -2113,6 +2129,22 @@ class Basic(AssumeMeths):
         return self, S.Zero
 
     def leadterm(self, x):
+        """
+        Returns the leading term a*x**b as a tuple (a, b).
+
+        Example:
+
+        >>> x = Symbol("x")
+        >>> (1+x+x**2).leadterm(x)
+        (1, 0)
+        >>> (1/x**2+x+x**2).leadterm(x)
+        (1, -2)
+
+        Note:
+
+        self is assumed to be the result returned by Basic.series().
+        """
+
         x = sympify(x)
         c,e = self.as_leading_term(x).as_coeff_exponent(x)
         if not c.has(x):
