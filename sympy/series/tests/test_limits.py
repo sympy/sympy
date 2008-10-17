@@ -119,6 +119,7 @@ def test_heuristic():
     assert limit(log(2+sqrt(atan(x)*sin(1/x))), x, 0) == log(2)
 
 def test_issue772():
+    z = Symbol("z", positive=True)
     f = -1/z*exp(-z*x)
     assert limit(f, x, oo) == 0
     assert f.limit(x, oo) == 0
