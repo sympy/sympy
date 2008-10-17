@@ -135,3 +135,6 @@ def test_exponential():
 def test_exponential2():
     n = Symbol('n')
     assert limit((1+x/(n+sin(n)))**n,n,oo) == exp(x)
+
+def test_bug693a():
+    assert sin(sin(x+1)+1).limit(x,0) == sin(sin(1)+1)
