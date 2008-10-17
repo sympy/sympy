@@ -87,6 +87,42 @@ the bugs are usually in the series expansion (i.e. in SymPy) or in rewrite.
 
 This code is almost exact rewrite of the Maple code inside the Gruntz thesis.
 
+Debugging
+---------
+
+Because the gruntz algorithm is highly recursive, it's difficult to figure out
+what went wrong inside a debugger. Instead, turn on nice debug prints by
+applying the following patch:
+
+@@ -101,7 +108,7 @@ def debug(func):
+     It will print a nice execution tree with arguments and results
+     of all decorated functions.
+     ""
+-    if 1:
++    if 0:
+         #normal mode - do nothing
+         return func
+
+Then start isympy and type the failing limit. For example:
+
+In [1]: limit(sin(x)/x, x, 0)
+limitinf(_x*sin(1/_x), _x) = 1
++-mrv_leadterm(_x*sin(1/_x), _x) = (1, 0)
+| +-mrv(_x*sin(1/_x), _x) = set([_x])
+| | +-mrv(_x, _x) = set([_x])
+| | +-mrv(sin(1/_x), _x) = set([_x])
+| |   +-mrv(1/_x, _x) = set([_x])
+| |     +-mrv(_x, _x) = set([_x])
+| +-mrv_leadterm(exp(_x)*sin(exp(-_x)), _x, set([exp(_x)])) = (1, 0)
+|   +-rewrite(exp(_x)*sin(exp(-_x)), set([exp(_x)]), _x, _w) = (1/_w*sin(_w), -_x)
+|     +-sign(_x, _x) = 1
+|     +-mrv_leadterm(1, _x) = (1, 0)
++-sign(0, _x) = 0
++-limitinf(1, _x) = 1
+
+And check manually which line is wrong. Then go to the source code and debug
+this function to figure out the exact problem.
+
 """
 
 from sympy.core import Basic, S, Add, Mul, Pow, Function, oo, Symbol, \
