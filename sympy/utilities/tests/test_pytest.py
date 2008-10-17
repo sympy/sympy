@@ -9,10 +9,10 @@ def test_raises():
         raises(My, "1+1")
         assert False
     except Exception, e:
-        assert e.message == "DID NOT RAISE"
+        assert str(e) == "DID NOT RAISE"
 
     try:
         raises(My, "raise Exception('my text123')")
         assert False
     except Exception, e:
-        assert e.message == "my text123"
+        assert str(e) == "my text123"
