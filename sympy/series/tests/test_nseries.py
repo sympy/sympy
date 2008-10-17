@@ -1,8 +1,7 @@
 from sympy import Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh, \
         sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, Integer, \
-        PoleError, floor, ceiling, raises
+        PoleError, floor, ceiling, raises, asin
 from sympy.abc import x, y, z
-from sympy.utilities.pytest import XFAIL
 
 def test_simple_1():
     assert x.nseries(x, 0, 5) == x
@@ -406,3 +405,8 @@ def test_dir():
     assert floor(x+2).series(x,0,dir='-') == 1
     assert floor(x+2.2).series(x,0,dir='-') == 2
     assert sin(x+y).series(x,0,dir='-') == sin(x+y).series(x,0,dir='+')
+
+def test_issue405():
+    a = Symbol("a")
+    e = asin(a*x)/x
+    assert e.series(x, 4) == a + a**3*x**2/6 + 3*a**5*x**4/40 + O(x**5)
