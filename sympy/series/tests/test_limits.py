@@ -1,5 +1,5 @@
 from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, \
-        atan, Symbol
+        atan, Symbol, S
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
 
@@ -138,3 +138,8 @@ def test_exponential2():
 
 def test_bug693a():
     assert sin(sin(x+1)+1).limit(x,0) == sin(sin(1)+1)
+
+def test_issue693():
+    assert limit( (1-cos(x))/x**2, x, S(1)/2) == 4 - 4*cos(S(1)/2)
+    assert limit(sin(sin(x+1)+1), x, 0) == sin(1 + sin(1))
+    assert limit(abs(sin(x+1)+1), x, 0) == 1 + sin(1)
