@@ -1,6 +1,5 @@
 from sympy import limit, Symbol, oo, sqrt, Rational, log, exp, cos, sin, tan, \
-    pi, asin
-from sympy.utilities.pytest import XFAIL
+    pi, asin, together
 
 """
 (*) in problem number means that the number is relative to the book "Anti-demidovich,
@@ -39,11 +38,11 @@ def test_Limits_simple_2():
     assert limit(sqrt3(x**2+1)/(x+1),x,oo)==0  #189
     assert limit(sqrt(x)/sqrt(x+sqrt(x+sqrt(x))),x,oo)==1  #190
 
-@XFAIL
 def test_Limits_simple_3a():
     a = Symbol('a', real=True)
     #issue 414
-    assert limit((x**2-(a+1)*x+a)/(x**3-a**3),x,a)==(a-1)/(3*a**2)  #196
+    assert together(limit((x**2-(a+1)*x+a)/(x**3-a**3),x,a)) == \
+            (a-1)/(3*a**2)  #196
 
 def test_Limits_simple_3b():
     h = Symbol("h")
