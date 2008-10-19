@@ -646,11 +646,11 @@ def do_integral(expr, prec, options):
                 raise ValueError("An integrand of the form sin(A*x+B)*f(x) "
                   "or cos(A*x+B)*f(x) is required for oscillatory quadrature")
             period = as_mpmath(2*S.Pi/m[A], prec+15, options)
-            result = quadosc(f, xlow, xhigh, period=period)
+            result = quadosc(f, [xlow, xhigh], period=period)
             # XXX: quadosc does not do error detection yet
             quadrature_error = MINUS_INF
         else:
-            result, quadrature_error = quadts(f, xlow, xhigh, error=1)
+            result, quadrature_error = quadts(f, [xlow, xhigh], error=1)
             quadrature_error = fastlog(quadrature_error._mpf_)
 
     finally:

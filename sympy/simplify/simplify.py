@@ -1049,9 +1049,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False):
                 mpmath.mp.dps = 15
                 rat = mpmath.findpoly(xv, 1)
                 if rat is not None:
-                    # XXX: will need to reverse rat coefficients when
-                    # updating mpmath in sympy
-                    return Rational(-int(rat[0]), int(rat[1]))
+                    return Rational(-int(rat[1]), int(rat[0]))
             mpmath.mp.dps = prec
             newexpr = mpmath.identify(xv, constants=constants_dict,
                 tolerance=tolerance, full=full)
