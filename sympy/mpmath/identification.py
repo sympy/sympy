@@ -334,8 +334,8 @@ def identify(x, constants=[], full=False, maxcoeff=1000, tolerance=None,
     if isinstance(constants, dict):
         constants = [(mpf(v), name) for (name, v) in constants.items()]
     else:
-        import mpmath
-        constants = [(eval(p, mpmath.__dict__), p) for p in constants]
+        import sympy.mpmath
+        constants = [(eval(p, sympy.mpmath.__dict__), p) for p in constants]
 
     # We always want to find at least rational terms
     if 1 not in [value for (name, value) in constants]:
