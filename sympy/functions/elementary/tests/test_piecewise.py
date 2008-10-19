@@ -31,6 +31,10 @@ def test_piecewise():
     assert p.subs(x,-1) == 1
     assert p.subs(x,1) == log(1)
 
+    # Test doit
+    f_int = Piecewise((Integral(x,(x,0,1)), x < 1))
+    assert f_int.doit() == Piecewise( (1.0/2.0, x < 1) )
+
     # Test differentiation
     f = x
     fp = x*p
