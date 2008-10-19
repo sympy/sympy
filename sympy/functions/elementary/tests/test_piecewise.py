@@ -35,11 +35,7 @@ def test_piecewise():
     dp = Piecewise((0, x < -1), (2*x, x < 0), (1/x, x >= 0))
     fp_dx = x*dp + p
     assert diff(p,x) == dp
-    # FIXME: Seems that the function derivatives are flipping the args.
-    # assert diff(f*p,x) == fp_dx
-    # Test args for now.
-    assert fp_dx.args[0] == diff(f*p,x).args[1]
-    assert fp_dx.args[1] == diff(f*p,x).args[0]
+    assert diff(f*p,x) == fp_dx
 
     # Test simple arithmetic
     assert x*p == fp
