@@ -1,7 +1,6 @@
 """sympify -- convert objects SymPy internal format"""
 # from basic import Basic, BasicType, S
 # from numbers  import Integer, Real
-# from interval import Interval
 import decimal
 
 class SympifyError(ValueError):
@@ -15,7 +14,7 @@ class SympifyError(ValueError):
         return "Sympify of expression '%s' failed, because of exception being raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__, str(self.base_exc))
 
 
-def sympify(a, sympify_lists=False, locals= {}):
+def sympify(a, locals= {}):
     """Converts an arbitrary expression to a type that can be used
        inside sympy. For example, it will convert python int's into
        instance of sympy.Rational, floats into intances of sympy.Real,
@@ -73,11 +72,8 @@ def sympify(a, sympify_lists=False, locals= {}):
         return real + S.ImaginaryUnit * imag
     elif isinstance(a, bool):
         raise NotImplementedError("bool support")
-    elif (a.__class__ in [list,tuple]) and len(a) == 2:
-        # isinstance causes problems in the issue #432, so we use .__class__
-        return Interval(*a)
-    elif isinstance(a, (list,tuple,set)) and sympify_lists:
-        return type(a)([sympify(x, True) for x in a])
+    elif isinstance(a, (list,tuple,set)):
+        return type(a)([sympify(x) for x in a])
 
     # let's see if 'a' implements conversion methods such as '_sympy_' or
     # '__int__', that returns a SymPy (by definition) or SymPy compatible

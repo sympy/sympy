@@ -234,6 +234,12 @@ def test_issue1034():
     assert a == Integer(4)
     assert a.is_Integer
 
+def test_issue883():
+    a = [3,2.0]
+    assert sympify(a) == [Integer(3), Real(2.0)]
+    assert sympify(tuple(a)) == (Integer(3), Real(2.0))
+    assert sympify(set(a)) == set([Integer(3), Real(2.0)])
+
 def test_S_sympify():
     assert S(1)/2 == sympify(1)/2
     assert (-2)**(S(1)/2) == sqrt(2)*I

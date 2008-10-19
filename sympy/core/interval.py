@@ -16,8 +16,3 @@ class Interval(Basic):
     @property
     def end(self):
         return self._args[1]
-
-# /cyclic/
-import sympify as _
-_.Interval  = Interval
-del _
