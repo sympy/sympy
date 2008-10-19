@@ -623,7 +623,7 @@ def do_integral(expr, prec, options):
         max_imag_term = [MINUS_INF]
 
         def f(t):
-            re, im, re_acc, im_acc = evalf(func, prec+15, {'subs':{x:t}})
+            re, im, re_acc, im_acc = evalf(func, mp.prec, {'subs':{x:t}})
 
             have_part[0] = re or have_part[0]
             have_part[1] = im or have_part[1]
