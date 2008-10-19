@@ -1,8 +1,8 @@
-from mpmath import *
-from mpmath.settings import round_up
+from sympy.mpmath import *
+from sympy.mpmath.settings import round_up
 
-from mpmath.libmpf import from_float
-from mpmath.gammazeta import mpf_zeta_int
+from sympy.mpmath.libmpf import from_float
+from sympy.mpmath.gammazeta import mpf_zeta_int
 
 def test_zeta_int_bug():
     assert mpf_zeta_int(0, 10) == from_float(-0.5)

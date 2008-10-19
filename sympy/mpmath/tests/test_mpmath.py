@@ -1,8 +1,8 @@
 # TODO: there are too many tests in this file. they should be separated.
 
-from mpmath.libmpf import *
-from mpmath.libelefun import *
-from mpmath import *
+from sympy.mpmath.libmpf import *
+from sympy.mpmath.libelefun import *
+from sympy.mpmath import *
 import random
 import time
 import math

@@ -2,10 +2,10 @@
 
 from __future__ import division
 
-from mpmath.matrices import matrix, norm_p, mnorm_1, mnorm_oo, mnorm_F, \
+from sympy.mpmath.matrices import matrix, norm_p, mnorm_1, mnorm_oo, mnorm_F, \
     randmatrix, eye, zeros
-from mpmath.linalg import * # TODO: absolute imports
-from mpmath.mptypes import *
+from sympy.mpmath.linalg import * # TODO: absolute imports
+from sympy.mpmath.mptypes import *
 
 A1 = matrix([[3, 1, 6],
              [2, 1, 3],

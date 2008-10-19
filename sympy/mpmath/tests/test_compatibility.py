@@ -1,4 +1,4 @@
-from mpmath import *
+from sympy.mpmath import *
 from random import seed, randint, random
 import math
 

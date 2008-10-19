@@ -1,4 +1,4 @@
-from mpmath import *
+from sympy.mpmath import *
 
 def test_diff():
     assert diff(cos, 1).ae(-sin(1))

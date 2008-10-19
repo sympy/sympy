@@ -1,5 +1,5 @@
-from mpmath.libmpf import *
-from mpmath import mpf
+from sympy.mpmath.libmpf import *
+from sympy.mpmath import mpf
 
 from random import randint, choice, seed
 

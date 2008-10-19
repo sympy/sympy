@@ -2,7 +2,7 @@ import os
 import tempfile
 import pickle
 
-from mpmath import *
+from sympy.mpmath import *
 
 def pickler(obj):
     fn = tempfile.mktemp()

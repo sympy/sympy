@@ -1,4 +1,4 @@
-from mpmath import *
+from sympy.mpmath import *
 
 def test_type_compare():
     assert mpf(2) == mpc(2,0)

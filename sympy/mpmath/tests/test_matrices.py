@@ -1,7 +1,7 @@
-from mpmath.matrices import matrix, eye, swap_row, diag, mnorm_1, mnorm_oo, \
+from sympy.mpmath.matrices import matrix, eye, swap_row, diag, mnorm_1, mnorm_oo, \
     mnorm_F, norm_p, zeros, ones, randmatrix, extend
-from mpmath.linalg import inverse
-from mpmath import inf, mpf, sqrt, mpi
+from sympy.mpmath.linalg import inverse
+from sympy.mpmath import inf, mpf, sqrt, mpi
 
 with_numpy = False
 try:

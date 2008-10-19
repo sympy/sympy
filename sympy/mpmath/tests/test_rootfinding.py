@@ -1,5 +1,5 @@
-from mpmath import *
-from mpmath.optimization import *
+from sympy.mpmath import *
+from sympy.mpmath.optimization import *
 
 def test_findroot():
     # old tests, assuming secant

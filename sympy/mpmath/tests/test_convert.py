@@ -1,6 +1,6 @@
 import random
-from mpmath import *
-from mpmath.libmpf import *
+from sympy.mpmath import *
+from sympy.mpmath.libmpf import *
 
 
 def test_basic_string():
@@ -95,10 +95,10 @@ def test_conversion_methods():
     class SomethingRandom:
         pass
     class SomethingReal:
-        def _mpmath_(self, prec, rounding):
+        def _sympy.mpmath_(self, prec, rounding):
             return make_mpf(from_str('1.3', prec, rounding))
     class SomethingComplex:
-        def _mpmath_(self, prec, rounding):
+        def _sympy.mpmath_(self, prec, rounding):
             return make_mpc((from_str('1.3', prec, rounding), \
                 from_str('1.7', prec, rounding)))
     x = mpf(3)
