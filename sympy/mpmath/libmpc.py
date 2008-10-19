@@ -2,46 +2,76 @@
 Low-level functions for complex arithmetic.
 """
 
-from lib import *
+from settings import (\
+    MP_BASE, MP_ZERO, MP_ONE, MP_TWO,
+    round_floor, round_ceiling, round_down, round_up,
+    round_nearest, round_fast
+)
+
+from libmpf import (\
+    bctable, normalize, reciprocal_rnd, rshift, lshift, giant_steps,
+    to_str, to_fixed, from_man_exp, from_float, from_int, to_int,
+    fzero, fone, ftwo, fhalf, finf, fninf, fnan,
+    mpf_abs, mpf_pos, mpf_neg, mpf_add, mpf_sub, mpf_mul,
+    mpf_div, mpf_mul_int, mpf_shift, mpf_sqrt, mpf_hypot,
+    mpf_rdiv_int, mpf_floor, mpf_ceil
+)
+
+from libelefun import (\
+    mpf_pi, mpf_exp, mpf_log, cos_sin, cosh_sinh, mpf_tan,
+    mpf_atan, mpf_atan2, mpf_cosh, mpf_sinh, mpf_tanh,
+    mpf_asin, mpf_acos, mpf_acosh
+)
+
 
 # An mpc value is a (real, imag) tuple
 mpc_one = fone, fzero
 mpc_zero = fzero, fzero
 mpc_two = ftwo, fzero
+mpc_half = (fhalf, fzero)
 
 def complex_to_str(re, im, dps):
     rs = to_str(re, dps)
     if im[0]:
-        return rs + " - " + to_str(fneg(im), dps) + "j"
+        return rs + " - " + to_str(mpf_neg(im), dps) + "j"
     else:
         return rs + " + " + to_str(im, dps) + "j"
 
 def mpc_add((a, b), (c, d), prec, rnd=round_fast):
-    return fadd(a, c, prec, rnd), fadd(b, d, prec, rnd)
+    return mpf_add(a, c, prec, rnd), mpf_add(b, d, prec, rnd)
 
 def mpc_add_mpf((a, b), p, prec, rnd=round_fast):
-      return fadd(a, p, prec, rnd), b
+      return mpf_add(a, p, prec, rnd), b
 
 def mpc_sub((a, b), (c, d), prec, rnd=round_fast):
-    return fsub(a, c, prec, rnd), fsub(b, d, prec, rnd)
+    return mpf_sub(a, c, prec, rnd), mpf_sub(b, d, prec, rnd)
 
 def mpc_sub_mpf((a, b), p, prec, rnd=round_fast):
-    return fsub(a, p, prec, rnd), b
+    return mpf_sub(a, p, prec, rnd), b
 
 def mpc_pos((a, b), prec, rnd=round_fast):
-    return fpos(a, prec, rnd), fpos(b, prec, rnd)
+    return mpf_pos(a, prec, rnd), mpf_pos(b, prec, rnd)
+
+def mpc_neg((a, b), prec=None, rnd=round_fast):
+    return mpf_neg(a, prec, rnd), mpf_neg(b, prec, rnd)
 
 def mpc_shift((a, b), n):
-    return fshift(a, n), fshift(b, n)
+    return mpf_shift(a, n), mpf_shift(b, n)
 
 def mpc_abs((a, b), prec, rnd=round_fast):
     """Absolute value of a complex number, |a+bi|.
     Returns an mpf value."""
-    return fhypot(a, b, prec, rnd)
+    return mpf_hypot(a, b, prec, rnd)
 
 def mpc_arg((a, b), prec, rnd=round_fast):
     """Argument of a complex number. Returns an mpf value."""
-    return fatan2(b, a, prec, rnd)
+    return mpf_atan2(b, a, prec, rnd)
+
+def mpc_floor((a, b), prec, rnd=round_fast):
+    return mpf_floor(a, prec, rnd), mpf_floor(b, prec, rnd)
+
+def mpc_ceil((a, b), prec, rnd=round_fast):
+    return mpf_ceil(a, prec, rnd), mpf_ceil(b, prec, rnd)
 
 def mpc_mul((a, b), (c, d), prec, rnd=round_fast):
     """Complex multiplication.
@@ -60,28 +90,28 @@ def mpc_mul((a, b), (c, d), prec, rnd=round_fast):
         if ((not aman) and aexp) or ((not bman) and bexp) or \
             ((not cman) and cexp) or ((not dman) and dexp):
             wp = prec + 10
-            re = fsub(fmul(a,c), fmul(b,d), prec, rnd)
-            im = fadd(fmul(a,d), fmul(b,c), prec, rnd)
+            re = mpf_sub(mpf_mul(a,c), mpf_mul(b,d), prec, rnd)
+            im = mpf_add(mpf_mul(a,d), mpf_mul(b,c), prec, rnd)
             return re, im
         # bi * c = bci
         # bi * di = -bd
         # bi * (c + di) = -bd + bci
         if not aman:
-            if not dman: return fzero, fmul(b, c, prec, rnd)
-            if not cman: return fmul(fneg(b), d, prec, rnd), fzero
-            return fmul(fneg(b), d, prec, rnd), fmul(b, c, prec, rnd)
+            if not dman: return fzero, mpf_mul(b, c, prec, rnd)
+            if not cman: return mpf_mul(mpf_neg(b), d, prec, rnd), fzero
+            return mpf_mul(mpf_neg(b), d, prec, rnd), mpf_mul(b, c, prec, rnd)
         # a * c = ac
         # a * di = adi
         # a * (c + di) = ac + adi
         if not bman:
-            if not dman: return fmul(a, c, prec, rnd), fzero
-            if not cman: return fzero, fmul(a, d, prec, rnd)
-            return fmul(a, c, prec, rnd), fmul(a, d, prec, rnd)
+            if not dman: return mpf_mul(a, c, prec, rnd), fzero
+            if not cman: return fzero, mpf_mul(a, d, prec, rnd)
+            return mpf_mul(a, c, prec, rnd), mpf_mul(a, d, prec, rnd)
         # (a + bi) * c
         if not dman:
-            return fmul(a, c, prec, rnd), fmul(b, c, prec, rnd)
+            return mpf_mul(a, c, prec, rnd), mpf_mul(b, c, prec, rnd)
         # (a + bi) * di = -bd + adi
-        return fmul(fneg(b), d, prec, rnd), fmul(a, d, prec, rnd)
+        return mpf_mul(mpf_neg(b), d, prec, rnd), mpf_mul(a, d, prec, rnd)
 
     # Avoid normalizing the temporary products
     bct = bctable
@@ -118,31 +148,31 @@ def mpc_mul((a, b), (c, d), prec, rnd=round_fast):
     else:       sbc += bct[int(sman>>sbc)]
     s = ssign, sman, sexp, sbc
 
-    return fadd(p, q, prec, rnd), fadd(r, s, prec, rnd)
+    return mpf_add(p, q, prec, rnd), mpf_add(r, s, prec, rnd)
 
 
 def mpc_mul_mpf((a, b), p, prec, rnd=round_fast):
-    re = fmul(a, p, prec, rnd)
-    im = fmul(b, p, prec, rnd)
+    re = mpf_mul(a, p, prec, rnd)
+    im = mpf_mul(b, p, prec, rnd)
     return re, im
 
 def mpc_mul_int((a, b), n, prec, rnd=round_fast):
-    re = fmuli(a, n, prec, rnd)
-    im = fmuli(b, n, prec, rnd)
+    re = mpf_mul_int(a, n, prec, rnd)
+    im = mpf_mul_int(b, n, prec, rnd)
     return re, im
 
 def mpc_div((a, b), (c, d), prec, rnd=round_fast):
     wp = prec + 10
     # mag = c*c + d*d
-    mag = fadd(fmul(c, c), fmul(d, d), wp)
+    mag = mpf_add(mpf_mul(c, c), mpf_mul(d, d), wp)
     # (a*c+b*d)/mag, (b*c-a*d)/mag
-    t = fadd(fmul(a,c), fmul(b,d), wp)
-    u = fsub(fmul(b,c), fmul(a,d), wp)
-    return fdiv(t,mag,prec,rnd), fdiv(u,mag,prec,rnd)
+    t = mpf_add(mpf_mul(a,c), mpf_mul(b,d), wp)
+    u = mpf_sub(mpf_mul(b,c), mpf_mul(a,d), wp)
+    return mpf_div(t,mag,prec,rnd), mpf_div(u,mag,prec,rnd)
 
 def mpc_div_mpf((a, b), p, prec, rnd=round_fast):
-    re = fdiv(a, p, prec, rnd)
-    im = fdiv(b, p, prec, rnd)
+    re = mpf_div(a, p, prec, rnd)
+    im = mpf_div(b, p, prec, rnd)
     return re, im
 
 def complex_int_pow(a, b, n):
@@ -209,30 +239,117 @@ def mpc_sqrt((a, b), prec, rnd=round_fast):
     # When a+bi is a negative real number, we get a real sqrt times i
     if b == fzero:
         if a[0]:
-            im = fsqrt(fneg(a), prec, rnd)
+            im = mpf_sqrt(mpf_neg(a), prec, rnd)
             return (fzero, im)
         else:
-            re = fsqrt(a, prec, rnd)
+            re = mpf_sqrt(a, prec, rnd)
             return (re, fzero)
     wp = prec+20
     if not a[0]:                               # case a positive
-        t  = fadd(mpc_abs((a, b), wp), a, wp)  # t = abs(a+bi) + a
-        u = fshift(t, -1)                      # u = t/2
-        re = fsqrt(u, prec, rnd)               # re = sqrt(u)
-        v = fshift(t, 1)                       # v = 2*t
-        w  = fsqrt(v, wp)                      # w = sqrt(v)
-        im = fdiv(b, w, prec, rnd)             # im = b / w
+        t  = mpf_add(mpc_abs((a, b), wp), a, wp)  # t = abs(a+bi) + a
+        u = mpf_shift(t, -1)                      # u = t/2
+        re = mpf_sqrt(u, prec, rnd)               # re = sqrt(u)
+        v = mpf_shift(t, 1)                       # v = 2*t
+        w  = mpf_sqrt(v, wp)                      # w = sqrt(v)
+        im = mpf_div(b, w, prec, rnd)             # im = b / w
     else:                                      # case a negative
-        t = fsub(mpc_abs((a, b), wp), a, wp)   # t = abs(a+bi) - a
-        u = fshift(t, -1)                      # u = t/2
-        im = fsqrt(u, prec, rnd)               # im = sqrt(u)
-        v = fshift(t, 1)                       # v = 2*t
-        w  = fsqrt(v, wp)                      # w = sqrt(v)
-        re = fdiv(b, w, prec, rnd)             # re = b/w
+        t = mpf_sub(mpc_abs((a, b), wp), a, wp)   # t = abs(a+bi) - a
+        u = mpf_shift(t, -1)                      # u = t/2
+        im = mpf_sqrt(u, prec, rnd)               # im = sqrt(u)
+        v = mpf_shift(t, 1)                       # v = 2*t
+        w  = mpf_sqrt(v, wp)                      # w = sqrt(v)
+        re = mpf_div(b, w, prec, rnd)             # re = b/w
         if b[0]:
-            re = fneg(re)
-            im = fneg(im)
+            re = mpf_neg(re)
+            im = mpf_neg(im)
     return re, im
+
+def mpc_nthroot_fixed(a, b, n, prec):
+    # a, b signed integers at fixed precision prec
+    start = 50
+    a1 = int(rshift(a, prec - n*start))
+    b1 = int(rshift(b, prec - n*start))
+    try:
+        r = (a1 + 1j * b1)**(1.0/n)
+        re = r.real
+        im = r.imag
+        # XXX: workaround bug in gmpy
+        if abs(re) < 0.1: re = 0
+        if abs(im) < 0.1: im = 0
+        re = MP_BASE(re)
+        im = MP_BASE(im)
+    except OverflowError:
+        a1 = from_int(a1, start)
+        b1 = from_int(b1, start)
+        fn = from_int(n)
+        nth = mpf_rdiv_int(1, fn, start)
+        re, im = mpc_pow((a1, b1), (nth, fzero), start)
+        re = to_int(re)
+        im = to_int(im)
+    extra = 10
+    prevp = start
+    extra1 = n
+    for p in giant_steps(start, prec+extra):
+        # this is slow for large n, unlike int_pow_fixed
+        re2, im2 = complex_int_pow(re, im, n-1)
+        re2 = rshift(re2, (n-1)*prevp - p - extra1)
+        im2 = rshift(im2, (n-1)*prevp - p - extra1)
+        r4 = (re2*re2 + im2*im2) >> (p + extra1)
+        ap = rshift(a, prec - p)
+        bp = rshift(b, prec - p)
+        rec = (ap * re2 + bp * im2) >> p
+        imc = (-ap * im2 + bp * re2) >> p
+        reb = (rec << p) // r4
+        imb = (imc << p) // r4
+        re = (reb + (n-1)*lshift(re, p-prevp))//n
+        im = (imb + (n-1)*lshift(im, p-prevp))//n
+        prevp = p
+    return re, im
+
+def mpc_nthroot((a, b), n, prec, rnd=round_fast):
+    """
+    Complex n-th root.
+
+    Use Newton method as in the real case when it is faster,
+    otherwise use z**(1/n)
+    """
+
+    if a[0] == 0 and b == fzero:
+        re = mpf_nthroot(a, n, prec, rnd)
+        return (re, fzero)
+    if n < 2:
+        if n == 0:
+            return mpc_one
+        if n == 1:
+            return mpc_pos((a, b), prec, rnd)
+        if n == -1:
+            return mpc_div(mpc_one, (a, b), prec, rnd)
+        inverse = mpc_nthroot((a, b), -n, prec+5, reciprocal_rnd[rnd])
+        return mpc_div(mpc_one, inverse, prec, rnd)
+    if n > 20:
+        fn = from_int(n)
+        prec2 = prec+10
+        nth = mpf_rdiv_int(1, fn, prec2)
+        re, im = mpc_pow((a, b), (nth, fzero), prec2, rnd)
+        re = normalize(re[0], re[1], re[2], re[3], prec, rnd)
+        im = normalize(im[0], im[1], im[2], im[3], prec, rnd)
+        return re, im
+    prec2 = int(1.2 * (prec + 10))
+    asign, aman, aexp, abc = a
+    bsign, bman, bexp, bbc = b
+    af = to_fixed(a, prec2)
+    bf = to_fixed(b, prec2)
+    re, im = mpc_nthroot_fixed(af, bf, n, prec2)
+    extra = 10
+    re = from_man_exp(re, -prec2-extra, prec2, rnd)
+    im = from_man_exp(im, -prec2-extra, prec2, rnd)
+    return re, im
+
+def mpc_cbrt((a, b), prec, rnd=round_fast):
+    """
+    Complex cubic root.
+    """
+    return mpc_nthroot((a, b), 3, prec, rnd)
 
 def mpc_exp((a, b), prec, rnd=round_fast):
     """
@@ -252,14 +369,14 @@ def mpc_exp((a, b), prec, rnd=round_fast):
     """
     if a == fzero:
         return cos_sin(b, prec, rnd)
-    mag = fexp(a, prec+4, rnd)
+    mag = mpf_exp(a, prec+4, rnd)
     c, s = cos_sin(b, prec+4, rnd)
-    re = fmul(mag, c, prec, rnd)
-    im = fmul(mag, s, prec, rnd)
+    re = mpf_mul(mag, c, prec, rnd)
+    im = mpf_mul(mag, s, prec, rnd)
     return re, im
 
 def mpc_log(z, prec, rnd=round_fast):
-    return flog(mpc_abs(z, prec, rnd), prec, rnd), mpc_arg(z, prec, rnd)
+    return mpf_log(mpc_abs(z, prec, rnd), prec, rnd), mpc_arg(z, prec, rnd)
 
 def mpc_cos((a, b), prec, rnd=round_fast):
     """Complex cosine. The formula used is cos(a+bi) = cos(a)*cosh(b) -
@@ -270,25 +387,25 @@ def mpc_cos((a, b), prec, rnd=round_fast):
     possible. The formula is also efficient since we can compute both
     pairs (cos, sin) and (cosh, sinh) in single stwps."""
     if a == fzero:
-        return fcosh(b, prec, rnd), fzero
+        return mpf_cosh(b, prec, rnd), fzero
     wp = prec + 6
     c, s = cos_sin(a, wp)
     ch, sh = cosh_sinh(b, wp)
-    re = fmul(c, ch, prec, rnd)
-    im = fmul(s, sh, prec, rnd)
-    return re, fneg(im)
+    re = mpf_mul(c, ch, prec, rnd)
+    im = mpf_mul(s, sh, prec, rnd)
+    return re, mpf_neg(im)
 
 def mpc_sin((a, b), prec, rnd=round_fast):
     """Complex sine. We have sin(a+bi) = sin(a)*cosh(b) +
     cos(a)*sinh(b)*i. See the docstring for mpc_cos for additional
     comments."""
     if a == fzero:
-        return fzero, fsinh(b, prec, rnd)
+        return fzero, mpf_sinh(b, prec, rnd)
     wp = prec + 6
     c, s = cos_sin(a, wp)
     ch, sh = cosh_sinh(b, wp)
-    re = fmul(s, ch, prec, rnd)
-    im = fmul(c, sh, prec, rnd)
+    re = mpf_mul(s, ch, prec, rnd)
+    im = mpf_mul(c, sh, prec, rnd)
     return re, im
 
 def mpc_tan(z, prec, rnd=round_fast):
@@ -297,22 +414,22 @@ def mpc_tan(z, prec, rnd=round_fast):
     a, b = z
     asign, aman, aexp, abc = a
     bsign, bman, bexp, bbc = b
-    if b == fzero: return ftan(a, prec, rnd), fzero
-    if a == fzero: return fzero, ftanh(b, prec, rnd)
+    if b == fzero: return mpf_tan(a, prec, rnd), fzero
+    if a == fzero: return fzero, mpf_tanh(b, prec, rnd)
     wp = prec + 15
-    a = fshift(a, 1)
-    b = fshift(b, 1)
+    a = mpf_shift(a, 1)
+    b = mpf_shift(b, 1)
     c, s = cos_sin(a, wp)
     ch, sh = cosh_sinh(b, wp)
     # TODO: handle cancellation when c ~=  -1 and ch ~= 1
-    mag = fadd(c, ch, wp)
-    re = fdiv(s, mag, prec, rnd)
-    im = fdiv(sh, mag, prec, rnd)
+    mag = mpf_add(c, ch, wp)
+    re = mpf_div(s, mag, prec, rnd)
+    im = mpf_div(sh, mag, prec, rnd)
     return re, im
 
 def mpc_cosh((a, b), prec, rnd=round_fast):
     """Complex hyperbolic cosine. Computed as cosh(z) = cos(z*i)."""
-    return mpc_cos((b, fneg(a)), prec, rnd)
+    return mpc_cos((b, mpf_neg(a)), prec, rnd)
 
 def mpc_sinh((a, b), prec, rnd=round_fast):
     """Complex hyperbolic sine. Computed as sinh(z) = -i*sin(z*i)."""
@@ -330,13 +447,13 @@ def mpc_atan((a, b), prec, rnd=round_fast):
     # x = 1-I*z = 1 + b - I*a
     # y = 1+I*z = 1 - b + I*a
     wp = prec + 15
-    x = fadd(fone, b, wp), fneg(a)
-    y = fsub(fone, b, wp), a
+    x = mpf_add(fone, b, wp), mpf_neg(a)
+    y = mpf_sub(fone, b, wp), a
     l1 = mpc_log(x, wp)
     l2 = mpc_log(y, wp)
     a, b = mpc_sub(l1, l2, prec, rnd)
     # (I/2) * (a+b*I) = (-b/2 + a/2*I)
-    return fneg(fshift(b,-1)), fshift(a,-1)
+    return mpf_neg(mpf_shift(b,-1)), mpf_shift(a,-1)
 
 beta_crossover = from_float(0.6417)
 alpha_crossover = from_float(1.5)
@@ -362,51 +479,51 @@ def acos_asin(z, prec, rnd, n):
     wp = prec + 10
     # special cases with real argument
     if b == fzero:
-        am = fsub(fone, fabs(a), wp)
+        am = mpf_sub(fone, mpf_abs(a), wp)
         # case abs(a) <= 1
         if not am[0]:
             if n == 0:
-                return facos(a, prec, rnd), fzero
+                return mpf_acos(a, prec, rnd), fzero
             else:
-                return fasin(a, prec, rnd), fzero
+                return mpf_asin(a, prec, rnd), fzero
         # cases abs(a) > 1
         else:
             # case a < -1
             if a[0]:
-                pi = fpi(prec, rnd)
-                c = facosh(fneg(a), prec, rnd)
+                pi = mpf_pi(prec, rnd)
+                c = mpf_acosh(mpf_neg(a), prec, rnd)
                 if n == 0:
-                    return pi, fneg(c)
+                    return pi, mpf_neg(c)
                 else:
-                    return fneg(fshift(pi, -1)), c
+                    return mpf_neg(mpf_shift(pi, -1)), c
             # case a > 1
             else:
-                c = facosh(a, prec, rnd)
+                c = mpf_acosh(a, prec, rnd)
                 if n == 0:
                     return fzero, c
                 else:
-                    pi = fpi(prec, rnd)
-                    return fshift(pi, -1), fneg(c)
+                    pi = mpf_pi(prec, rnd)
+                    return mpf_shift(pi, -1), mpf_neg(c)
     asign = bsign = 0
     if a[0]:
-        a = fneg(a)
+        a = mpf_neg(a)
         asign = 1
     if b[0]:
-        b = fneg(b)
+        b = mpf_neg(b)
         bsign = 1
-    am = fsub(fone, a, wp)
-    ap = fadd(fone, a, wp)
-    r = fhypot(ap, b, wp)
-    s = fhypot(am, b, wp)
-    alpha = fshift(fadd(r, s, wp), -1)
-    beta = fdiv(a, alpha, wp)
-    b2 = fmul(b,b, wp)
+    am = mpf_sub(fone, a, wp)
+    ap = mpf_add(fone, a, wp)
+    r = mpf_hypot(ap, b, wp)
+    s = mpf_hypot(am, b, wp)
+    alpha = mpf_shift(mpf_add(r, s, wp), -1)
+    beta = mpf_div(a, alpha, wp)
+    b2 = mpf_mul(b,b, wp)
     # case beta <= beta_crossover
-    if not fsub(beta_crossover, beta, wp)[0]:
+    if not mpf_sub(beta_crossover, beta, wp)[0]:
         if n == 0:
-            re = facos(beta, wp)
+            re = mpf_acos(beta, wp)
         else:
-            re = fasin(beta, wp)
+            re = mpf_asin(beta, wp)
     else:
         # to compute the real part in this region use the identity
         # asin(beta) = atan(beta/sqrt(1-beta**2))
@@ -414,65 +531,65 @@ def acos_asin(z, prec, rnd, n):
         # alpha + a is numerically accurate; alpha - a can have
         # cancellations leading to numerical inaccuracies, so rewrite
         # it in differente ways according to the region
-        Ax = fadd(alpha, a, wp)
+        Ax = mpf_add(alpha, a, wp)
         # case a <= 1
         if not am[0]:
             # c = b*b/(r + (a+1)); d = (s + (1-a))
             # alpha - a = (1/2)*(c + d)
             # case n=0: re = atan(sqrt((1/2) * Ax * (c + d))/a)
             # case n=1: re = atan(a/sqrt((1/2) * Ax * (c + d)))
-            c = fdiv(b2, fadd(r, ap, wp), wp)
-            d = fadd(s, am, wp)
-            re = fshift(fmul(Ax, fadd(c, d, wp), wp), -1)
+            c = mpf_div(b2, mpf_add(r, ap, wp), wp)
+            d = mpf_add(s, am, wp)
+            re = mpf_shift(mpf_mul(Ax, mpf_add(c, d, wp), wp), -1)
             if n == 0:
-                re = fatan(fdiv(fsqrt(re, wp), a, wp), wp)
+                re = mpf_atan(mpf_div(mpf_sqrt(re, wp), a, wp), wp)
             else:
-                re = fatan(fdiv(a, fsqrt(re, wp), wp), wp)
+                re = mpf_atan(mpf_div(a, mpf_sqrt(re, wp), wp), wp)
         else:
             # c = Ax/(r + (a+1)); d = Ax/(s - (1-a))
             # alpha - a = (1/2)*(c + d)
             # case n = 0: re = atan(b*sqrt(c + d)/2/a)
             # case n = 1: re = atan(a/(b*sqrt(c + d)/2)
-            c = fdiv(Ax, fadd(r, ap, wp), wp)
-            d = fdiv(Ax, fsub(s, am, wp), wp)
-            re = fshift(fadd(c, d, wp), -1)
-            re = fmul(b, fsqrt(re, wp), wp)
+            c = mpf_div(Ax, mpf_add(r, ap, wp), wp)
+            d = mpf_div(Ax, mpf_sub(s, am, wp), wp)
+            re = mpf_shift(mpf_add(c, d, wp), -1)
+            re = mpf_mul(b, mpf_sqrt(re, wp), wp)
             if n == 0:
-                re = fatan(fdiv(re, a, wp), wp)
+                re = mpf_atan(mpf_div(re, a, wp), wp)
             else:
-                re = fatan(fdiv(a, re, wp), wp)
+                re = mpf_atan(mpf_div(a, re, wp), wp)
     # to compute alpha + sqrt(alpha**2 - 1), if alpha <= alpha_crossover
     # replace it with 1 + Am1 + sqrt(Am1*(alpha+1)))
     # where Am1 = alpha -1
     # if alpha <= alpha_crossover:
-    if not fsub(alpha_crossover, alpha, wp)[0]:
-        c1 = fdiv(b2, fadd(r, ap, wp), wp)
+    if not mpf_sub(alpha_crossover, alpha, wp)[0]:
+        c1 = mpf_div(b2, mpf_add(r, ap, wp), wp)
         # case a < 1
-        if fneg(am)[0]:
+        if mpf_neg(am)[0]:
             # Am1 = (1/2) * (b*b/(r + (a+1)) + b*b/(s + (1-a))
-            c2 = fadd(s, am, wp)
-            c2 = fdiv(b2, c2, wp)
-            Am1 = fshift(fadd(c1, c2, wp), -1)
+            c2 = mpf_add(s, am, wp)
+            c2 = mpf_div(b2, c2, wp)
+            Am1 = mpf_shift(mpf_add(c1, c2, wp), -1)
         else:
             # Am1 = (1/2) * (b*b/(r + (a+1)) + (s - (1-a)))
-            c2 = fsub(s, am, wp)
-            Am1 = fshift(fadd(c1, c2, wp), -1)
+            c2 = mpf_sub(s, am, wp)
+            Am1 = mpf_shift(mpf_add(c1, c2, wp), -1)
         # im = log(1 + Am1 + sqrt(Am1*(alpha+1)))
-        im = fmul(Am1, fadd(alpha, fone, wp), wp)
-        im = flog(fadd(fone, fadd(Am1, fsqrt(im, wp), wp), wp), wp)
+        im = mpf_mul(Am1, mpf_add(alpha, fone, wp), wp)
+        im = mpf_log(mpf_add(fone, mpf_add(Am1, mpf_sqrt(im, wp), wp), wp), wp)
     else:
         # im = log(alpha + sqrt(alpha*alpha - 1))
-        im = fsqrt(fsub(fmul(alpha, alpha, wp), fone, wp), wp)
-        im = flog(fadd(alpha, im, wp), wp)
+        im = mpf_sqrt(mpf_sub(mpf_mul(alpha, alpha, wp), fone, wp), wp)
+        im = mpf_log(mpf_add(alpha, im, wp), wp)
     if asign:
         if n == 0:
-            re = fsub(fpi(wp), re, wp)
+            re = mpf_sub(mpf_pi(wp), re, wp)
         else:
-            re = fneg(re)
+            re = mpf_neg(re)
     if not bsign and n == 0:
-        im = fneg(im)
+        im = mpf_neg(im)
     if bsign and n == 1:
-        im = fneg(im)
+        im = mpf_neg(im)
     re = normalize(re[0], re[1], re[2], re[3], prec, rnd)
     im = normalize(im[0], im[1], im[2], im[3], prec, rnd)
     return re, im
@@ -486,17 +603,17 @@ def mpc_asin(z, prec, rnd=round_fast):
 def mpc_asinh(z, prec, rnd=round_fast):
     # asinh(z) = I * asin(-I z)
     a, b = z
-    a, b =  mpc_asin((b, fneg(a)), prec, rnd)
-    return fneg(b), a
+    a, b =  mpc_asin((b, mpf_neg(a)), prec, rnd)
+    return mpf_neg(b), a
 
 def mpc_acosh(z, prec, rnd=round_fast):
     # acosh(z) = -I * acos(z)   for Im(acos(z)) <= 0
     #            +I * acos(z)   otherwise
     a, b = mpc_acos(z, prec, rnd)
     if b[0] or b == fzero:
-        return fneg(b), a
+        return mpf_neg(b), a
     else:
-        return b, fneg(a)
+        return b, mpf_neg(a)
 
 def mpc_atanh(z, prec, rnd=round_fast):
     # atanh(z) = (log(1+z)-log(1-z))/2

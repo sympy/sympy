@@ -1,4 +1,4 @@
-from sympy.mpmath import *
+from mpmath import *
 from random import seed, randint, random
 import math
 
@@ -23,7 +23,6 @@ uses_x87 = -4.1974624032366689e+117 / -8.4657370748010221e-47 \
 
 def test_double_compatibility():
     mp.prec = 53
-    mp.rounding = 'default'
     for x, y in zip(xs, ys):
         mpx = mpf(x)
         mpy = mpf(y)
@@ -61,7 +60,6 @@ def test_sqrt():
     # that rounds the wrong way, not mpf
     fail = 0
     mp.prec = 53
-    mp.rounding = 'default'
     for x in xs:
         x = abs(x)
         mp.prec = 100

@@ -1,11 +1,18 @@
 # TODO: there are too many tests in this file. they should be separated.
 
-from sympy.mpmath.lib import *
-from sympy.mpmath import *
+from mpmath.libmpf import *
+from mpmath.libelefun import *
+from mpmath import *
 import random
 import time
 import math
 import cmath
+
+def mpc_ae(a, b, eps=eps):
+    res = True
+    res = res and a.real.ae(b.real, eps)
+    res = res and a.imag.ae(b.imag, eps)
+    return res
 
 #----------------------------------------------------------------------------
 # Low-level tests
@@ -14,13 +21,11 @@ import cmath
 # Advanced rounding test
 def test_add_rounding():
     mp.dps = 15
-    mp.rounding = 'up'
-    assert (mpf(1) + 1e-50) - 1 == 2.2204460492503131e-16
-    assert mpf(1) - 1e-50 == 1.0
-    mp.rounding = 'down'
-    assert 1 - (mpf(1) - 1e-50) == 1.1102230246251565e-16
-    assert mpf(1) + 1e-50 == 1.0
-    mp.rounding = 'default'
+    a = from_float(1e-50)
+    assert mpf_sub(mpf_add(fone, a, 53, round_up), fone, 53, round_up) == from_float(2.2204460492503131e-16)
+    assert mpf_sub(fone, a, 53, round_up) == fone
+    assert mpf_sub(fone, mpf_sub(fone, a, 53, round_down), 53, round_down) == from_float(1.1102230246251565e-16)
+    assert mpf_add(fone, a, 53, round_down) == fone
 
 def test_almost_equal():
     assert mpf(1.2).ae(mpf(1.20000001), 1e-7)
@@ -34,26 +39,26 @@ def test_almost_equal():
 
 # Test that integer arithmetic is exact
 def test_aintegers():
+    # XXX: re-fix this so that all operations are tested with all rounding modes
     random.seed(0)
     for prec in [6, 10, 25, 40, 100, 250, 725]:
       for rounding in ['down', 'up', 'floor', 'ceiling', 'nearest']:
-        mp.rounding = rounding
         mp.dps = prec
         M = 10**(prec-2)
         M2 = 10**(prec//2-2)
         for i in range(10):
             a = random.randint(-M, M)
             b = random.randint(-M, M)
-            assert mpf(a) == a
-            assert int(mpf(a)) == a
-            assert int(mpf(str(a))) == a
+            assert mpf(a, rounding=rounding) == a
+            assert int(mpf(a, rounding=rounding)) == a
+            assert int(mpf(str(a), rounding=rounding)) == a
             assert mpf(a) + mpf(b) == a + b
             assert mpf(a) - mpf(b) == a - b
             assert -mpf(a) == -a
             a = random.randint(-M2, M2)
             b = random.randint(-M2, M2)
             assert mpf(a) * mpf(b) == a*b
-    mp.rounding = 'default'
+            assert mpf_mul(from_int(a), from_int(b), mp.prec, rounding) == from_int(a*b)
     mp.dps = 15
 
 def test_exact_sqrts():
@@ -71,20 +76,37 @@ def test_exact_sqrts():
             assert sqrt(mpf((a*a, 2*i))) == mpf((a, i))
             assert sqrt(mpf((a*a, -2*i))) == mpf((a, -i))
 
+
 def test_sqrt_rounding():
     for i in [2, 3, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15]:
+        i = from_int(i)
         for dps in [7, 15, 83, 106, 2000]:
             mp.dps = dps
-            mp.rounding = 'down'
-            assert (mpf(i)**0.5)**2 < i
-            mp.rounding = 'up'
-            assert (mpf(i)**0.5)**2 > i
+            a = mpf_pow_int(mpf_sqrt(i, mp.prec, round_down), 2, mp.prec, round_down)
+            b = mpf_pow_int(mpf_sqrt(i, mp.prec, round_up), 2, mp.prec, round_up)
+            assert mpf_lt(a, i)
+            assert mpf_gt(b, i)
+    random.seed(1234)
+    prec = 100
+    for rnd in [round_down, round_nearest, round_ceiling]:
+        for i in range(100):
+            a = mpf_rand(prec)
+            b = mpf_mul(a, a)
+            assert mpf_sqrt(b, prec, rnd) == a
     mp.dps = 15
-    mp.rounding = 'default'
 
 def test_odd_int_bug():
     assert to_int(from_int(3), round_nearest) == 3
 
+def test_exact_cbrt():
+    for i in range(0, 20000, 200):
+        assert cbrt(mpf(i*i*i)) == i
+    random.seed(1)
+    for prec in [100, 300, 1000, 10000]:
+        mp.dps = prec
+        A = random.randint(10**(prec//2-2), 10**(prec//2-1))
+        assert cbrt(mpf(A*A*A)) == A
+    mp.dps = 15
 
 
 #----------------------------------------------------------------------------
@@ -250,15 +272,15 @@ def test_complex_powers():
 
 def test_complex_sqrt_accuracy():
     def test_mpc_sqrt(lst):
-      for a, b in lst:
-        z = mpc(a + j*b)
-        assert abs(sqrt(z*z) - z) <  10**-dps
-        z = mpc(-a + j*b)
-        assert abs(sqrt(z*z) + z) <  10**-dps
-        z = mpc(a - j*b)
-        assert abs(sqrt(z*z) - z) <  10**-dps
-        z = mpc(-a - j*b)
-        assert abs(sqrt(z*z) + z) <  10**-dps
+        for a, b in lst:
+            z = mpc(a + j*b)
+            assert mpc_ae(sqrt(z*z), z)
+            z = mpc(-a + j*b)
+            assert mpc_ae(sqrt(z*z), -z)
+            z = mpc(a - j*b)
+            assert mpc_ae(sqrt(z*z), z)
+            z = mpc(-a - j*b)
+            assert mpc_ae(sqrt(z*z), -z)
     random.seed(2)
     N = 10
     mp.dps = 30
@@ -397,6 +419,31 @@ def test_aliases():
     assert power(-1,0.5) == j
     assert modf(25,7) == 4.0 and isinstance(modf(25,7), mpf)
 
+def test_arg_sign():
+    assert arg(3) == 0
+    assert arg(-3).ae(pi)
+    assert arg(j).ae(pi/2)
+    assert arg(-j).ae(-pi/2)
+    assert arg(0) == 0
+    assert isnan(atan2(3,nan))
+    assert isnan(atan2(nan,3))
+    assert isnan(atan2(0,nan))
+    assert isnan(atan2(nan,0))
+    assert isnan(atan2(nan,nan))
+    assert arg(inf) == 0
+    assert arg(-inf).ae(pi)
+    assert isnan(arg(nan))
+    #assert arg(inf*j).ae(pi/2)
+    assert sign(0) == 0
+    assert sign(3) == 1
+    assert sign(-3) == -1
+    assert sign(inf) == 1
+    assert sign(-inf) == -1
+    assert isnan(sign(nan))
+    assert sign(j) == j
+    assert sign(-3*j) == -j
+    assert sign(1+j).ae((1+j)/sqrt(2))
+
 def test_misc_bugs():
     # test that this doesn't raise an exception
     mp.dps = 1000
@@ -425,3 +472,150 @@ def test_arange():
     assert arange(0) == []
     assert arange(1000, -1) == []
     assert arange(-1.23, 3.21, -0.0000001) == []
+
+def test_linspace():
+    assert linspace(2, 9, 7) == [mpf('2.0'), mpf('3.166666666666667'),
+        mpf('4.3333333333333339'), mpf('5.5'), mpf('6.666666666666667'),
+        mpf('7.8333333333333339'), mpf('9.0')] == linspace(mpi(2, 9), 7)
+    assert linspace(2, 9, 7, endpoint=0) == [mpf('2.0'), mpf('3.0'), mpf('4.0'),
+        mpf('5.0'), mpf('6.0'), mpf('7.0'), mpf('8.0')]
+    assert linspace(2, 7, 1) == [mpf(2)]
+
+def test_float_cbrt():
+    mp.dps = 30
+    for a in arange(0,10,0.1):
+        assert cbrt(a*a*a).ae(a, eps)
+    assert cbrt(-1).ae(0.5 + j*sqrt(3)/2)
+    one_third = mpf(1)/3
+    for a in arange(0,10,2.7) + [0.1 + 10**5]:
+        a = mpc(a + 1.1j)
+        r1 = cbrt(a)
+        mp.dps += 10
+        r2 = pow(a, one_third)
+        mp.dps -= 10
+        assert r1.ae(r2, eps)
+    mp.dps = 100
+    for n in range(100, 301, 100):
+        w = 10**n + j*10**-3
+        z = w*w*w
+        r = cbrt(z)
+        assert mpc_ae(r, w, eps)
+    mp.dps = 15
+
+def test_root():
+    mp.dps = 30
+    random.seed(1)
+    a = random.randint(0, 10000)
+    p = a*a*a
+    r = nthroot(mpf(p), 3)
+    assert r == a
+    for n in range(4, 10):
+        p = p*a
+        assert nthroot(mpf(p), n) == a
+    mp.dps = 40
+    for n in range(10, 5000, 100):
+        for a in [random.random()*10000, random.random()*10**100]:
+            r = nthroot(a, n)
+            r1 = pow(a, mpf(1)/n)
+            assert r.ae(r1)
+            r = nthroot(a, -n)
+            r1 = pow(a, -mpf(1)/n)
+            assert r.ae(r1)
+    # XXX: this is broken right now
+    # tests for nthroot rounding
+    for rnd in ['nearest', 'up', 'down']:
+        mp.rounding = rnd
+        for n in [-5, -3, 3, 5]:
+            prec = 50
+            for i in xrange(10):
+                mp.prec = prec
+                a = rand()
+                mp.prec = 2*prec
+                b = a**n
+                mp.prec = prec
+                r = nthroot(b, n)
+                assert r == a
+    mp.dps = 30
+    for n in range(3, 21):
+        a = (random.random() + j*random.random())
+        assert nthroot(a, n).ae(pow(a, mpf(1)/n))
+        assert mpc_ae(nthroot(a, n), pow(a, mpf(1)/n))
+        a = (random.random()*10**100 + j*random.random())
+        r = nthroot(a, n)
+        mp.dps += 4
+        r1 = pow(a, mpf(1)/n)
+        mp.dps -= 4
+        assert r.ae(r1)
+        assert mpc_ae(r, r1, eps)
+        r = nthroot(a, -n)
+        mp.dps += 4
+        r1 = pow(a, -mpf(1)/n)
+        mp.dps -= 4
+        assert r.ae(r1)
+        assert mpc_ae(r, r1, eps)
+    mp.dps = 15
+    assert nthroot(4, 1) == 4
+    assert nthroot(4, 0) == 1
+    assert nthroot(4, -1) == 0.25
+    assert nthroot(inf, 1) == inf
+    assert nthroot(inf, 2) == inf
+    assert nthroot(inf, 3) == inf
+    assert nthroot(inf, -1) == 0
+    assert nthroot(inf, -2) == 0
+    assert nthroot(inf, -3) == 0
+    assert nthroot(j, 1) == j
+    assert nthroot(j, 0) == 1
+    assert nthroot(j, -1) == -j
+    assert isnan(nthroot(nan, 1))
+    assert isnan(nthroot(nan, 0))
+    assert isnan(nthroot(nan, -1))
+    assert isnan(nthroot(inf, 0))
+
+def test_perturbation_rounding():
+    mp.dps = 100
+    a = pi/10**50
+    b = -pi/10**50
+    c = 1 + a
+    d = 1 + b
+    mp.dps = 15
+    assert exp(a) == 1
+    assert exp(a, rounding='c') > 1
+    assert exp(b, rounding='c') == 1
+    assert exp(a, rounding='f') == 1
+    assert exp(b, rounding='f') < 1
+    assert cos(a) == 1
+    assert cos(a, rounding='c') == 1
+    assert cos(b, rounding='c') == 1
+    assert cos(a, rounding='f') < 1
+    assert cos(b, rounding='f') < 1
+    for f in [sin, atan]:
+        assert f(a) == +a
+        assert f(a, rounding='c') > a
+        assert f(a, rounding='f') < a
+        assert f(b) == +b
+        assert f(b, rounding='c') > b
+        assert f(b, rounding='f') < b
+    assert ln(c) == +a
+    assert ln(d) == +b
+    assert ln(c, rounding='c') > a
+    assert ln(c, rounding='f') < a
+    assert ln(d, rounding='c') > b
+    assert ln(d, rounding='f') < b
+    assert cosh(a) == 1
+    assert cosh(b) == 1
+    assert cosh(a, rounding='c') > 1
+    assert cosh(b, rounding='c') > 1
+    assert cosh(a, rounding='f') == 1
+    assert cosh(b, rounding='f') == 1
+    assert sinh(a) == +a
+    assert sinh(b) == +b
+    assert sinh(a, rounding='c') > a
+    assert sinh(b, rounding='c') > b
+    assert sinh(a, rounding='f') < a
+    assert sinh(b, rounding='f') < b
+
+def test_integer_parts():
+    assert floor(3.2) == 3
+    assert ceil(3.2) == 4
+    assert floor(3.2+5j) == 3+5j
+    assert ceil(3.2+5j) == 4+5j

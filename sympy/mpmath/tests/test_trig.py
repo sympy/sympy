@@ -1,4 +1,5 @@
-from sympy.mpmath import *
+from mpmath import *
+from mpmath.libmpf import *
 
 def test_trig_misc_hard():
     mp.prec = 150
@@ -23,39 +24,34 @@ def test_trig_misc_hard():
 def test_trig_near_zero():
     mp.dps = 15
 
-    mp.rounding = 'nearest'; assert sin(0) == 0 and cos(0) == 1
-    mp.rounding = 'down';    assert sin(0) == 0 and cos(0) == 1
-    mp.rounding = 'floor';   assert sin(0) == 0 and cos(0) == 1
-    mp.rounding = 'up';      assert sin(0) == 0 and cos(0) == 1
-    mp.rounding = 'ceiling'; assert sin(0) == 0 and cos(0) == 1
-    mp.rounding = 'nearest';
+    for r in [round_nearest, round_down, round_up, round_floor, round_ceiling]:
+        assert sin(0, rounding=r) == 0
+        assert cos(0, rounding=r) == 1
 
     a = mpf('1e-100')
     b = mpf('-1e-100')
 
-    mp.rounding = 'nearest'; assert sin(a) == a
-    mp.rounding = 'down';    assert sin(a) < a
-    mp.rounding = 'floor';   assert sin(a) < a
-    mp.rounding = 'up';      assert sin(a) == a
-    mp.rounding = 'ceiling'; assert sin(a) == a
-    mp.rounding = 'nearest'; assert sin(b) == b
-    mp.rounding = 'down';    assert sin(b) > b
-    mp.rounding = 'floor';   assert sin(b) == b
-    mp.rounding = 'up';      assert sin(b) == b
-    mp.rounding = 'ceiling'; assert sin(b) > b
-    mp.rounding = 'nearest'
+    assert sin(a, rounding=round_nearest) == a
+    assert sin(a, rounding=round_down) < a
+    assert sin(a, rounding=round_floor) < a
+    assert sin(a, rounding=round_up) >= a
+    assert sin(a, rounding=round_ceiling) >= a
+    assert sin(b, rounding=round_nearest) == b
+    assert sin(b, rounding=round_down) > b
+    assert sin(b, rounding=round_floor) <= b
+    assert sin(b, rounding=round_up) <= b
+    assert sin(b, rounding=round_ceiling) > b
 
-    mp.rounding = 'nearest'; assert cos(a) == 1
-    mp.rounding = 'down';    assert cos(a) < 1
-    mp.rounding = 'floor';   assert cos(a) < 1
-    mp.rounding = 'up';      assert cos(a) == 1
-    mp.rounding = 'ceiling'; assert cos(a) == 1
-    mp.rounding = 'nearest'; assert cos(b) == 1
-    mp.rounding = 'down';    assert cos(b) < 1
-    mp.rounding = 'floor';   assert cos(b) < 1
-    mp.rounding = 'up';      assert cos(b) == 1
-    mp.rounding = 'ceiling'; assert cos(b) == 1
-    mp.rounding = 'nearest'
+    assert cos(a, rounding=round_nearest) == 1
+    assert cos(a, rounding=round_down) < 1
+    assert cos(a, rounding=round_floor) < 1
+    assert cos(a, rounding=round_up) == 1
+    assert cos(a, rounding=round_ceiling) == 1
+    assert cos(b, rounding=round_nearest) == 1
+    assert cos(b, rounding=round_down) < 1
+    assert cos(b, rounding=round_floor) < 1
+    assert cos(b, rounding=round_up) == 1
+    assert cos(b, rounding=round_ceiling) == 1
 
 
 def test_trig_near_n_pi():
@@ -76,63 +72,62 @@ def test_trig_near_n_pi():
     assert sin(a[7]) == mpf('3.9087342299491231029e-11')
     assert sin(a[8]) == mpf('-1.369235466754566993528e-36')
 
-    mp.rounding = 'nearest'
-    assert cos(a[0]) == -1
-    assert cos(a[1]) == 1
-    assert cos(a[2]) == 1
-    assert cos(a[3]) == -1
-    assert cos(a[4]) == 1
-    assert cos(a[5]) == -1
-    assert cos(a[6]) == 1
-    assert cos(a[7]) == -1
-    assert cos(a[8]) == 1
+    r = round_nearest
+    assert cos(a[0], rounding=r) == -1
+    assert cos(a[1], rounding=r) == 1
+    assert cos(a[2], rounding=r) == 1
+    assert cos(a[3], rounding=r) == -1
+    assert cos(a[4], rounding=r) == 1
+    assert cos(a[5], rounding=r) == -1
+    assert cos(a[6], rounding=r) == 1
+    assert cos(a[7], rounding=r) == -1
+    assert cos(a[8], rounding=r) == 1
 
-    mp.rounding = 'up'
-    assert cos(a[0]) == -1
-    assert cos(a[1]) == 1
-    assert cos(a[2]) == 1
-    assert cos(a[3]) == -1
-    assert cos(a[4]) == 1
-    assert cos(a[5]) == -1
-    assert cos(a[6]) == 1
-    assert cos(a[7]) == -1
-    assert cos(a[8]) == 1
+    r = round_up
+    assert cos(a[0], rounding=r) == -1
+    assert cos(a[1], rounding=r) == 1
+    assert cos(a[2], rounding=r) == 1
+    assert cos(a[3], rounding=r) == -1
+    assert cos(a[4], rounding=r) == 1
+    assert cos(a[5], rounding=r) == -1
+    assert cos(a[6], rounding=r) == 1
+    assert cos(a[7], rounding=r) == -1
+    assert cos(a[8], rounding=r) == 1
 
-    mp.rounding = 'down'
-    assert cos(a[0]) > -1
-    assert cos(a[1]) < 1
-    assert cos(a[2]) < 1
-    assert cos(a[3]) > -1
-    assert cos(a[4]) < 1
-    assert cos(a[5]) > -1
-    assert cos(a[6]) < 1
-    assert cos(a[7]) > -1
-    assert cos(a[8]) < 1
+    r = round_down
+    assert cos(a[0], rounding=r) > -1
+    assert cos(a[1], rounding=r) < 1
+    assert cos(a[2], rounding=r) < 1
+    assert cos(a[3], rounding=r) > -1
+    assert cos(a[4], rounding=r) < 1
+    assert cos(a[5], rounding=r) > -1
+    assert cos(a[6], rounding=r) < 1
+    assert cos(a[7], rounding=r) > -1
+    assert cos(a[8], rounding=r) < 1
 
-    mp.rounding = 'floor'
-    assert cos(a[0]) == -1
-    assert cos(a[1]) < 1
-    assert cos(a[2]) < 1
-    assert cos(a[3]) == -1
-    assert cos(a[4]) < 1
-    assert cos(a[5]) == -1
-    assert cos(a[6]) < 1
-    assert cos(a[7]) == -1
-    assert cos(a[8]) < 1
+    r = round_floor
+    assert cos(a[0], rounding=r) == -1
+    assert cos(a[1], rounding=r) < 1
+    assert cos(a[2], rounding=r) < 1
+    assert cos(a[3], rounding=r) == -1
+    assert cos(a[4], rounding=r) < 1
+    assert cos(a[5], rounding=r) == -1
+    assert cos(a[6], rounding=r) < 1
+    assert cos(a[7], rounding=r) == -1
+    assert cos(a[8], rounding=r) < 1
 
-    mp.rounding = 'ceiling'
-    assert cos(a[0]) > -1
-    assert cos(a[1]) == 1
-    assert cos(a[2]) == 1
-    assert cos(a[3]) > -1
-    assert cos(a[4]) == 1
-    assert cos(a[5]) > -1
-    assert cos(a[6]) == 1
-    assert cos(a[7]) > -1
-    assert cos(a[8]) == 1
+    r = round_ceiling
+    assert cos(a[0], rounding=r) > -1
+    assert cos(a[1], rounding=r) == 1
+    assert cos(a[2], rounding=r) == 1
+    assert cos(a[3], rounding=r) > -1
+    assert cos(a[4], rounding=r) == 1
+    assert cos(a[5], rounding=r) > -1
+    assert cos(a[6], rounding=r) == 1
+    assert cos(a[7], rounding=r) > -1
+    assert cos(a[8], rounding=r) == 1
 
     mp.dps = 15
-    mp.rounding = 'nearest'
 
 if __name__ == '__main__':
     for f in globals().keys():

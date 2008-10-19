@@ -1,4 +1,4 @@
-from sympy.mpmath.calculus import ODE_step_euler, ODE_step_rk4, odeint, arange
+from mpmath.calculus import ODE_step_euler, ODE_step_rk4, odeint, arange
 
 solvers = [ODE_step_euler, ODE_step_rk4]
 

@@ -4,7 +4,7 @@ mpmath
 A Python library for arbitrary-precision floating-point arithmetic.
 
 Website: http://code.google.com/p/mpmath
-Author: Fredrik Johansson <fredrik.johansson@gmail.com>
+Main author: Fredrik Johansson <fredrik.johansson@gmail.com>
 
 Mpmath is free software released under the New BSD License (see the
 LICENSE file for details)
@@ -15,12 +15,21 @@ LICENSE file for details)
 The following people have contributed patches and new features
 to mpmath:
 
-* Pearu Peterson
-* Mario Pernici
-* Ondrej Certik
+* Pearu Peterson <pearu.peterson@gmail.com>
+* Mario Pernici <mario.pernici@mi.infn.it>
+* Ondrej Certik <ondrej@certik.cz>
+* Vinzent Steinberg <vinzent.steinberg@gmail.com>
+* Nimish Telang <ntelang@gmail.com>
+* Mike Taschuk <mtaschuk@ece.ualberta.ca>
+* Case Van Horsen <casevh@gmail.com>
+
+For a detailed changelog, including individual contributions,
+see the CHANGES file.
 
 Release history:
 
+* Version 0.10 released on October 15, 2008
+* Version 0.9 released on August 23, 2008
 * Version 0.8 released on April 20, 2008
 * Version 0.7 released on March 12, 2008
 * Version 0.6 released on January 13, 2008
@@ -30,13 +39,11 @@ Release history:
 * Version 0.2 released on October 2, 2007
 * Version 0.1 released on September 27, 2007
 
-For a detailed changelog, see the CHANGES file.
-
 1. Download & installation
 --------------------------
 
-Mpmath requires a recent version of Python. It has been tested with
-Python 2.5 and should work with Python 2.4.
+Mpmath requires a recent version of Python. It should work with
+Python 2.4, 2.5 and 2.6.
 
 The latest release of mpmath can be downloaded from the mpmath
 website. It should also be available in the Python Package Index at
@@ -52,6 +59,8 @@ Mpmath can also be installed using
 
 The latest development code is available from
 http://code.google.com/p/mpmath/source/checkout
+
+See the main documentation for more detailed instructions.
 
 2. Running tests
 ----------------

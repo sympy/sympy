@@ -1,5 +1,5 @@
 import math
-from sympy.mpmath import *
+from mpmath import *
 
 def test_bessel():
     mp.dps = 15
@@ -25,16 +25,83 @@ def test_hyper_misc():
     assert hyp2f1((1,3),(2,3),(5,6),mpf(27)/32).ae(1.6)
     assert hyp2f1((1,4),(1,2),(3,4),mpf(80)/81).ae(1.8)
     assert hyp2f1((2,3),(1,1),(3,2),(2+j)/3).ae(1.327531603558679093+0.439585080092769253j)
-    assert ellipk(0).ae(pi/2)
-    assert ellipk(0.5).ae(gamma(0.25)**2/(4*sqrt(pi)))
-    assert ellipk(1) == inf
-    assert ellipe(0).ae(pi/2)
-    assert ellipe(0.5).ae(pi**(mpf(3)/2)/gamma(0.25)**2 +gamma(0.25)**2/(8*sqrt(pi)))
-    assert ellipe(1) == 1
     mp.dps = 25
     v = mpc('1.2282306665029814734863026', '-0.1225033830118305184672133')
     assert hyper([(3,4),2+j,1],[1,5,j/3],mpf(1)/5+j/8).ae(v)
     mp.dps = 15
+
+def test_elliptic_integrals():
+    mp.dps = 15
+    assert ellipk(0).ae(pi/2)
+    assert ellipk(0.5).ae(gamma(0.25)**2/(4*sqrt(pi)))
+    assert ellipk(1) == inf
+    assert ellipk(-1).ae('1.3110287771460599052')
+    assert ellipk(-2).ae('1.1714200841467698589')
+    assert isinstance(ellipk(-2), mpf)
+    assert ellipk(-50).ae('0.47103424540873331679')
+    assert ellipk(fraction(99999,100000)).ae('7.1427724505817781901')
+    assert ellipk(fraction(100001,100000)).ae(mpc('7.1427417367963090109', '-1.5707923998261688019'))
+    assert ellipk(2).ae(mpc('1.3110287771460599052', '-1.3110287771460599052'))
+    assert ellipk(50).ae(mpc('0.22326753950210985451', '-0.47434723226254522087'))
+    assert ellipk(3+4j).ae(mpc('0.91119556380496500866', '0.63133428324134524388'))
+    assert ellipk(3-4j).ae(mpc('0.91119556380496500866', '-0.63133428324134524388'))
+    assert ellipk(-3+4j).ae(mpc('0.95357894880405122483', '0.23093044503746114444'))
+    assert ellipk(-3-4j).ae(mpc('0.95357894880405122483', '-0.23093044503746114444'))
+    assert isnan(ellipk(nan))
+    assert ellipk(inf) == 0
+    assert ellipk(-inf) == 0
+    assert ellipe(0).ae(pi/2)
+    assert ellipe(0.5).ae(pi**(mpf(3)/2)/gamma(0.25)**2 +gamma(0.25)**2/(8*sqrt(pi)))
+    assert ellipe(1) == 1
+
+def test_exp_integrals():
+    mp.dps = 15
+    x = +e
+    z = e + sqrt(3)*j
+    assert ei(x).ae(8.21168165538361560)
+    assert li(x).ae(1.89511781635593676)
+    assert si(x).ae(1.82104026914756705)
+    assert ci(x).ae(0.213958001340379779)
+    assert shi(x).ae(4.11520706247846193)
+    assert chi(x).ae(4.09647459290515367)
+    assert fresnels(x).ae(0.437189718149787643)
+    assert fresnelc(x).ae(0.401777759590243012)
+    assert airyai(x).ae(0.0108502401568586681)
+    assert airybi(x).ae(8.98245748585468627)
+    assert ei(z).ae(3.72597969491314951 + 7.34213212314224421j)
+    assert li(z).ae(2.28662658112562502 + 1.50427225297269364j)
+    assert si(z).ae(2.48122029237669054 + 0.12684703275254834j)
+    assert ci(z).ae(0.169255590269456633 - 0.892020751420780353j)
+    assert shi(z).ae(1.85810366559344468 + 3.66435842914920263j)
+    assert chi(z).ae(1.86787602931970484 + 3.67777369399304159j)
+    assert fresnels(z/3).ae(0.034534397197008182 + 0.754859844188218737j)
+    assert fresnelc(z/3).ae(1.261581645990027372 + 0.417949198775061893j)
+    assert airyai(z).ae(-0.0162552579839056062 - 0.0018045715700210556j)
+    assert airybi(z).ae(-4.98856113282883371 + 2.08558537872180623j)
+    assert li(0) == 0.0
+    assert li(1) == -inf
+    assert li(inf) == inf
+    assert isinstance(li(0.7), mpf)
+    assert si(inf).ae(pi/2)
+    assert si(-inf).ae(-pi/2)
+    assert ci(inf) == 0
+    assert ci(0) == -inf
+    assert isinstance(ei(-0.7), mpf)
+    assert ei(inf) == inf
+    assert ei(-inf) == -0.0
+    assert airyai(inf) == 0
+    assert airybi(inf) == inf
+    assert airyai(-inf) == 0
+    assert airybi(-inf) == 0
+    assert fresnels(inf) == 0.5
+    assert fresnelc(inf) == 0.5
+    assert fresnels(-inf) == -0.5
+    assert fresnelc(-inf) == -0.5
+    assert shi(0) == 0
+    assert shi(inf) == inf
+    assert shi(-inf) == -inf
+    assert chi(0) == -inf
+    assert chi(inf) == inf
 
 def test_hyper_0f1():
     v = 8.63911136507950465
@@ -115,10 +182,14 @@ def test_agm():
     assert agm(1,2).ae(1.4567910310469068692)
     assert agm(1,3).ae(1.8636167832448965424)
     assert agm(1,j).ae(0.599070117367796104+0.599070117367796104j)
+    assert agm(2) == agm(1,2)
 
 def test_incomplete_gamma():
     mp.dps = 15
     assert upper_gamma(-2.5,-0.5).ae(-0.9453087204829418812-5.3164237738936178621j)
+
+def test_erf():
+    mp.dps = 15
     assert erf(0) == 0
     assert erf(1).ae(0.84270079294971486934)
     assert erf(3+4j).ae(-120.186991395079444098 - 27.750337293623902498j)
@@ -130,85 +201,46 @@ def test_incomplete_gamma():
     assert isinstance(erf(-1), mpf)
     assert isinstance(erf(0), mpf)
     assert isinstance(erf(0j), mpc)
-
-def test_gamma():
-    mp.dps = 15
-    assert gamma(0.25).ae(3.6256099082219083119)
-    assert gamma(0.0001).ae(9999.4228832316241908)
-    assert gamma(300).ae('1.0201917073881354535e612')
-    assert gamma(-0.5).ae(-3.5449077018110320546)
-    assert gamma(-7.43).ae(0.00026524416464197007186)
-    #assert gamma(Rational(1,2)) == gamma(0.5)
-    #assert gamma(Rational(-7,3)).ae(gamma(mpf(-7)/3))
-    assert gamma(1+1j).ae(0.49801566811835604271 - 0.15494982830181068512j)
-    assert gamma(-1+0.01j).ae(-0.422733904013474115 + 99.985883082635367436j)
-    assert gamma(20+30j).ae(-1453876687.5534810 + 1163777777.8031573j)
-    # Should always give exact factorials when they can
-    # be represented as mpfs under the current working precision
-    fact = 1
-    for i in range(1, 18):
-        assert gamma(i) == fact
-        fact *= i
-    for dps in [170, 600]:
-        fact = 1
-        mp.dps = dps
-        for i in range(1, 105):
-            assert gamma(i) == fact
-            fact *= i
-    mp.dps = 100
-    assert gamma(0.5).ae(sqrt(pi))
-    mp.dps = 15
-    assert factorial(0) == 1
-    assert factorial(3) == 6
-
-def test_gamma_quotients():
-    mp.dps = 15
-    h = 1e-8
-    ep = 1e-4
-    G = gamma
-    assert gammaprod([-1],[-3,-4]) == 0
-    assert gammaprod([-1,0],[-5]) == inf
-    assert abs(gammaprod([-1],[-2]) - G(-1+h)/G(-2+h)) < 1e-4
-    assert abs(gammaprod([-4,-3],[-2,0]) - G(-4+h)*G(-3+h)/G(-2+h)/G(0+h)) < 1e-4
-    assert rf(3,0) == 1
-    assert rf(2.5,1) == 2.5
-    assert rf(-5,2) == 20
-    assert rf(j,j).ae(gamma(2*j)/gamma(j))
-    assert ff(-2,0) == 1
-    assert ff(-2,1) == -2
-    assert ff(4,3) == 24
-    assert ff(3,4) == 0
-    assert binomial(0,0) == 1
-    assert binomial(1,0) == 1
-    assert binomial(0,-1) == 0
-    assert binomial(3,2) == 3
-    assert binomial(5,2) == 10
-    assert binomial(5,3) == 10
-    assert binomial(5,5) == 1
-    assert binomial(-1,0) == 1
-    assert binomial(-2,-4) == 3
-    assert binomial(4.5, 1.5) == 6.5625
-
-def test_zeta():
-    mp.dps = 15
-    assert zeta(2).ae(pi**2 / 6)
-    assert zeta(2.0).ae(pi**2 / 6)
-    assert zeta(mpc(2)).ae(pi**2 / 6)
-    assert zeta(100).ae(1)
-    assert zeta(0).ae(-0.5)
-    assert zeta(0.5).ae(-1.46035450880958681)
-    assert zeta(-1).ae(-mpf(1)/12)
-    assert zeta(-2).ae(0)
-    assert zeta(-3).ae(mpf(1)/120)
-    assert zeta(-4).ae(0)
-    # Zeros in the critical strip
-    assert zeta(mpc(0.5, 14.1347251417346937904)).ae(0)
-    assert zeta(mpc(0.5, 21.0220396387715549926)).ae(0)
-    assert zeta(mpc(0.5, 25.0108575801456887632)).ae(0)
+    assert erf(inf) == 1
+    assert erf(-inf) == -1
+    assert erfi(0) == 0
+    assert erfi(1/pi).ae(0.371682698493894314)
+    assert erfi(inf) == inf
+    assert erfi(-inf) == -inf
+    assert erf(1+0j) == erf(1)
+    assert erfc(1+0j) == erfc(1)
+    assert erf(0.2+0.5j).ae(1 - erfc(0.2+0.5j))
+    assert erfc(0) == 1
+    assert erfc(1).ae(1-erf(1))
+    assert erfc(-1).ae(1-erf(-1))
+    assert erfc(1/pi).ae(1-erf(1/pi))
+    assert erfc(-10) == 2
+    assert erfc(-1000000) == 2
+    assert erfc(-inf) == 2
+    assert erfc(inf) == 0
+    assert isnan(erfc(nan))
+    assert (erfc(10**4)*mpf(10)**43429453).ae('3.63998738656420')
     mp.dps = 50
-    im = '236.5242296658162058024755079556629786895294952121891237'
-    assert zeta(mpc(0.5, im)).ae(0, 1e-46)
+    # This one does not use the asymptotic series
+    assert (erfc(10)*10**45).ae('2.0884875837625447570007862949577886115608181193212')
+    # This one does
+    assert (erfc(50)*10**1088).ae('2.0709207788416560484484478751657887929322509209954')
     mp.dps = 15
+    assert str(erfc(10**50)) == '3.66744826532555e-4342944819032518276511289189166050822943970058036665661144537831658646492088707747292249493384317534'
+
+def test_pdf():
+    mp.dps = 15
+    assert npdf(-inf) == 0
+    assert npdf(inf) == 0
+    assert npdf(5,0,2).ae(5+4,4,2)
+    assert quadts(lambda x: npdf(x,-0.5,0.8), [-inf, inf]) == 1
+    assert ncdf(0) == 0.5
+    assert ncdf(3,3) == 0.5
+    assert ncdf(-inf) == 0
+    assert ncdf(inf) == 1
+    assert ncdf(10) == 1
+    # Verify that this is computed accurately
+    assert (ncdf(-10)*10**24).ae(7.619853024160526)
 
 def test_lambertw():
     mp.dps = 15
@@ -240,6 +272,7 @@ def test_lambertw():
     assert lambertw(1000,-1).ae(4.91492239981054535-5.44652615979447070j)
     assert lambertw(1000,5).ae(3.5010625305312892+29.9614548941181328j)
     assert lambertw(3+4j).ae(1.281561806123775878+0.533095222020971071j)
+    assert lambertw(-0.4+0.4j).ae(-0.10396515323290657+0.61899273315171632j)
     assert lambertw(3+4j,1).ae(-0.11691092896595324+5.61888039871282334j)
     assert lambertw(3+4j,-1).ae(0.25856740686699742-3.85211668616143559j)
     assert lambertw(-0.5,-1).ae(-0.794023632344689368-0.770111750510379110j)
