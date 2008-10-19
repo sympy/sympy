@@ -40,6 +40,10 @@ class Piecewise(Function):
             if opt in options:
                 del options[opt]
         r = cls.canonize(*args)
+
+        # sympify args
+        args = map(lambda x:(sympify(x[0]), sympify(x[1])), args)
+
         if r is None:
             return Basic.__new__(cls, *args, **options)
         else:
@@ -49,14 +53,15 @@ class Piecewise(Function):
     def canonize(cls, *args):
         # Check types first
         for ec in args:
-            if (not isinstance(ec,tuple)) or len(ec)!=2:
+            if (not isinstance(ec, tuple)) or len(ec)!=2:
                 raise TypeError, "args may only include (expr, cond) pairs"
         for expr, cond in args:
             cond_type = type(ec[1])
-            if cond_type != bool and not issubclass(cond_type,Relational):
+            if cond_type != bool and not issubclass(cond_type, Relational) and\
+                    not issubclass(cond_type, Number):
                 raise TypeError, \
-                    "Cond %s is of type %s, but must be a bool or Relational" \
-                    % (cond, cond_type)
+                    "Cond %s is of type %s, but must be a bool,"\
+                    " Relational or Number" % (cond, cond_type)
 
         # Check for situations where we can evaluate the Piecewise object.
         # 1) Hit an unevaluatable cond (e.g. x<1) -> keep object
@@ -88,23 +93,11 @@ class Piecewise(Function):
         return None
 
     def doit(self, **hints):
-        new_ecpairs = []
-        for expr, cond in self.args:
-            if hasattr(expr,'doit'):
-                new_expr = expr.doit(**hints)
-            else:
-                new_expr = expr
-            if hasattr(cond,'doit'):
-                new_cond = cond.doit(**hints)
-            else:
-                new_cond = cond
-            new_ecpairs.append( (new_expr, new_cond) )
-        return Piecewise(*new_ecpairs)
+        return Piecewise(*[(e.doit(), c.doit()) for e, c in self.args])
 
     def _eval_integral(self,x):
         from sympy.integrals import integrate
-        return  Piecewise(*[(integrate(expr, x),cond) \
-                                for expr, cond in self.args])
+        return  Piecewise(*[(integrate(e, x), c) for e, c in self.args])
 
     def _eval_interval(self, sym, ab):
         """Evaluates the function along the sym in a given interval ab"""
@@ -124,7 +117,7 @@ class Piecewise(Function):
         #    -  eg x < 1, x < 3 -> [oo,1],[1,3] instead of [oo,1],[oo,3]
         # 3) Sort the intervals to make it easier to find correct exprs
         for expr, cond in self.args:
-            if type(cond) == bool:
+            if issubclass(type(cond),Number):
                 if cond:
                     default = expr
                     break
@@ -186,45 +179,24 @@ class Piecewise(Function):
         return mul * ret_fun
 
     def _eval_derivative(self, s):
-        return Piecewise(*[(diff(expr,s),cond) for expr, cond in self.args])
+        return Piecewise(*[(diff(e, s), c) for e, c in self.args])
 
     def _eval_subs(self, old, new):
         if self == old:
             return new
-        new_ecpairs = []
-        for expr, cond in self.args:
-            if hasattr(expr,"subs") and not isinstance(expr,FunctionClass):
-                new_expr = expr.subs(old, new)
-            else:
-                new_expr = expr
-            if hasattr(cond,"subs"):
-                new_cond = cond.subs(old, new)
-            else:
-                new_cond = cond
-            new_ecpairs.append( (new_expr, new_cond) )
-        return Piecewise(*new_ecpairs)
+        return Piecewise(*[(e._eval_subs(old, new), c._eval_subs(old, new)) \
+                                for e, c in self.args])
 
     @classmethod
     def __eval_cond(cls, cond):
-        """
-        Returns if the condition is True or False.
-
-        If it is undeterminable, returns None.
-        """
-        if type(cond) == bool:
-            return cond
+        """Returns S.One if True, S.Zero if False, or None if undecidable."""
+        if issubclass(type(cond), Number) or type(cond) == bool:
+            return sympify(bool(cond))
         arg0 = cond.args[0]
         arg1 = cond.args[1]
         if isinstance(arg0, FunctionClass) or isinstance(arg1, FunctionClass):
             return None
-        if hasattr(arg0,'evalf'):
-            arg0 = arg0.evalf()
-        if not issubclass(type(arg0),Number) and \
-                type(arg0) != int and type(arg0) != float:
+        if not issubclass(type(arg0.evalf()), Number) or \
+                not issubclass(type(arg1.evalf()), Number):
             return None
-        if hasattr(arg1,'evalf'):
-            arg1 = arg1.evalf()
-        if not issubclass(type(arg1),Number) and \
-                type(arg1) != int and type(arg1) != float:
-            return None
-        return bool(cond)
+        return sympify(bool(cond))
