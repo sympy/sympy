@@ -8,7 +8,8 @@ relation eval(srepr(expr))=expr holds in an apropriate environment.
 from printer import Printer
 from sympy.printing.precedence import precedence
 from sympy.core import Basic
-import sympy.mpmath.lib as mlib
+import sympy.mpmath.libmpf as mlib
+from sympy.mpmath.settings import prec_to_dps, repr_dps
 
 class ReprPrinter(Printer):
     def reprify(self, args, sep):
@@ -97,8 +98,8 @@ class ReprPrinter(Printer):
         return '%s(%s, %s)' % (expr.__class__.__name__, self._print(expr.p), self._print(expr.q))
 
     def _print_Real(self, expr):
-        dps = mlib.prec_to_dps(expr._prec)
-        r = mlib.to_str(expr._mpf_, mlib.repr_dps(expr._prec))
+        dps = prec_to_dps(expr._prec)
+        r = mlib.to_str(expr._mpf_, repr_dps(expr._prec))
         return "%s('%s', prec=%i)" % (expr.__class__.__name__, r, dps)
 
     def _print_Sum2(self, expr):

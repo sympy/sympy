@@ -1,6 +1,9 @@
-from sympy.mpmath.lib import (fzero, fadd, fsub, fmul, fsqrt,
-    fdiv, fpi, pi_fixed, from_man_exp, from_int, from_rational, cosh_sinh,
-    fone, fcos, fshift, ftwo, fhalf, bitcount, to_int, to_str)
+from sympy.mpmath.libmpf import (fzero,
+    from_man_exp, from_int, from_rational,
+    fone, ftwo, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
+    mpf_add)
+from sympy.mpmath.libelefun import mpf_sqrt, mpf_pi, cosh_sinh, pi_fixed, \
+        mpf_cos
 from sympy.core.numbers import igcd
 import math
 
@@ -25,7 +28,7 @@ def A(n, j, prec):
                 else:     frac = -((-t) & onemask)
                 g += k*(frac - half)
         g = ((g - 2*h*n*one)*pi//j) >> prec
-        s = fadd(s, fcos(from_man_exp(g, -prec), prec), prec)
+        s = mpf_add(s, mpf_cos(from_man_exp(g, -prec), prec), prec)
     return s
 
 def D(n, j, prec, sq23pi, sqrt8):
@@ -34,14 +37,14 @@ def D(n, j, prec, sq23pi, sqrt8):
     The constants sqrt(2/3*pi) and sqrt(8) must be precomputed.
     """
     j = from_int(j)
-    pi = fpi(prec)
-    a = fdiv(sq23pi, j, prec)
-    b = fsub(from_int(n), from_rational(1,24,prec), prec)
-    c = fsqrt(b, prec)
-    ch, sh = cosh_sinh(fmul(a,c), prec)
-    D = fdiv(fsqrt(j,prec), fmul(fmul(sqrt8,b),pi), prec)
-    E = fsub(fmul(a,ch), fdiv(sh,c,prec), prec)
-    return fmul(D, E)
+    pi = mpf_pi(prec)
+    a = mpf_div(sq23pi, j, prec)
+    b = mpf_sub(from_int(n), from_rational(1,24,prec), prec)
+    c = mpf_sqrt(b, prec)
+    ch, sh = cosh_sinh(mpf_mul(a,c), prec)
+    D = mpf_div(mpf_sqrt(j,prec), mpf_mul(mpf_mul(sqrt8,b),pi), prec)
+    E = mpf_sub(mpf_mul(a,ch), mpf_div(sh,c,prec), prec)
+    return mpf_mul(D, E)
 
 def npartitions(n, verbose=False):
     """
@@ -63,18 +66,18 @@ def npartitions(n, verbose=False):
     prec = p = int(pbits*1.1 + 100)
     s = fzero
     M = max(6, int(0.24*n**0.5+4))
-    sq23pi = fmul(fsqrt(from_rational(2,3,p), p), fpi(p), p)
-    sqrt8 = fsqrt(from_int(8), p)
+    sq23pi = mpf_mul(mpf_sqrt(from_rational(2,3,p), p), mpf_pi(p), p)
+    sqrt8 = mpf_sqrt(from_int(8), p)
     for q in xrange(1, M):
         a = A(n,q,p)
         d = D(n,q,p, sq23pi, sqrt8)
-        s = fadd(s, fmul(a, d), prec)
+        s = mpf_add(s, mpf_mul(a, d), prec)
         if verbose:
             print "step", q, "of", M, to_str(a, 10), to_str(d, 10)
         # On average, the terms decrease rapidly in magnitude. Dynamically
         # reducing the precision greatly improves performance.
         p = bitcount(abs(to_int(d))) + 50
-    np = to_int(fadd(s, fhalf, prec))
+    np = to_int(mpf_add(s, fhalf, prec))
     return int(np)
 
 __all__ = ['npartitions']

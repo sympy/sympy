@@ -3,16 +3,18 @@ Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
 
-from sympy.mpmath.lib import (from_int, from_rational, fpi, fzero, fcmp,
-    normalize, bitcount, round_nearest, to_str, fpow, fone, fpowi, fe,
-    fnone, fhalf, fcos, fsin, flog, fatan, fmul, fneg, to_float, fshift,
-    fabs, fatan2, fadd, fdiv, flt, dps_to_prec, prec_to_dps, fpos, from_float,
-    fnone, to_int, flt, fexp, fsqrt)
+from sympy.mpmath.libmpf import (from_int, from_rational, fzero, normalize,
+        bitcount, round_nearest, to_str, fone, fnone, fhalf, to_float,
+        from_float, fnone, to_int, mpf_lt, mpf_sqrt, mpf_cmp, mpf_abs,
+        mpf_pow_int, mpf_shift, mpf_add, mpf_mul, mpf_neg)
 
 import sympy.mpmath.libmpc as libmpc
+from sympy.mpmath.settings import dps_to_prec
 from sympy.mpmath import mpf, mpc, quadts, quadosc, mp, make_mpf
-from sympy.mpmath.specfun import mpf_gamma
-from sympy.mpmath.lib import MP_BASE, from_man_exp
+from sympy.mpmath.gammazeta import mpf_gamma
+from sympy.mpmath.libelefun import mpf_pi, mpf_log, mpf_pow, mpf_sin, mpf_cos, \
+        mpf_atan, mpf_atan2, mpf_e, mpf_exp
+from sympy.mpmath.libmpf import MP_BASE, from_man_exp
 from sympy.mpmath.calculus import shanks_extrapolation, richardson_extrapolation
 
 
@@ -98,7 +100,7 @@ def get_abs(expr, prec, options):
     if im:
         return libmpc.mpc_abs((re, im), prec), None, re_acc, None
     else:
-        return fabs(re), None, re_acc, None
+        return mpf_abs(re), None, re_acc, None
 
 def get_complex_part(expr, no, prec, options):
     """no = 0 for real part, no = 1 for imaginary part"""
@@ -129,10 +131,10 @@ def finalize_complex(re, im, prec):
     size_im = fastlog(im)
     # Convert fzeros to scaled zeros
     if re == fzero:
-        re = fshift(fone, size_im-prec)
+        re = mpf_shift(fone, size_im-prec)
         size_re = fastlog(re)
     elif im == fzero:
-        im = fshift(fone, size_re-prec)
+        im = mpf_shift(fone, size_re-prec)
         size_im = fastlog(im)
     if size_re > size_im:
         re_acc = prec
@@ -205,7 +207,7 @@ def get_integer_part(expr, no, options, return_ints=False):
         expr = C.Add(expr, -nint, evaluate=False)
         x, _, x_acc, _ = evalf(expr, 10, options)
         check_target(expr, (x, None, x_acc, None), 3)
-        nint += int(no*(fcmp(x or fzero, fzero) == no))
+        nint += int(no*(mpf_cmp(x or fzero, fzero) == no))
         nint = from_int(nint)
         return nint, fastlog(nint) + 10
 
@@ -239,7 +241,7 @@ def add_terms(terms, prec, target_prec):
     if len(terms) == 1:
         if not terms[0]:
             # XXX: this is supposed to represent a scaled zero
-            return fshift(fone, target_prec), -1
+            return mpf_shift(fone, target_prec), -1
         return terms[0]
     sum_man, sum_exp, absolute_error = 0, 0, MINUS_INF
     for x, accuracy in terms:
@@ -266,7 +268,7 @@ def add_terms(terms, prec, target_prec):
         return None, None
     if not sum_man:
         # XXX: this is supposed to represent a scaled zero
-        return fshift(fone, absolute_error), -1
+        return mpf_shift(fone, absolute_error), -1
     if sum_man < 0:
         sum_sign = 1
         sum_man = -sum_man
@@ -314,10 +316,10 @@ def evalf_add(v, prec, options):
 # XXX: should be able to multiply directly, and use complex_accuracy
 # to obtain the final accuracy
 def cmul((a, aacc), (b, bacc), (c, cacc), (d, dacc), prec, target_prec):
-    A, Aacc = fmul(a,c,prec), min(aacc, cacc)
-    B, Bacc = fmul(fneg(b),d,prec), min(bacc, dacc)
-    C, Cacc = fmul(a,d,prec), min(aacc, dacc)
-    D, Dacc = fmul(b,c,prec), min(bacc, cacc)
+    A, Aacc = mpf_mul(a,c,prec), min(aacc, cacc)
+    B, Bacc = mpf_mul(mpf_neg(b),d,prec), min(bacc, dacc)
+    C, Cacc = mpf_mul(a,d,prec), min(aacc, dacc)
+    D, Dacc = mpf_mul(b,c,prec), min(bacc, cacc)
     re, re_accuracy = add_terms([(A, Aacc), (B, Bacc)], prec, target_prec)
     im, im_accuracy = add_terms([(C, Cacc), (D, Cacc)], prec, target_prec)
     return re, im, re_accuracy, im_accuracy
@@ -366,8 +368,8 @@ def evalf_mul(v, prec, options):
     if complex_factors:
         # Multiply first complex number by the existing real scalar
         re, im, re_acc, im_acc = complex_factors[0]
-        re = fmul(re, v, prec)
-        im = fmul(im, v, prec)
+        re = mpf_mul(re, v, prec)
+        im = mpf_mul(im, v, prec)
         re_acc = min(re_acc, acc)
         im_acc = min(im_acc, acc)
         # Multiply consecutive complex factors
@@ -379,7 +381,7 @@ def evalf_mul(v, prec, options):
             print "MUL: obtained accuracy", re_acc, im_acc, "expected", target_prec
         # multiply by i
         if direction & 1:
-            return fneg(im), re, re_acc, im_acc
+            return mpf_neg(im), re, re_acc, im_acc
         else:
             return re, im, re_acc, im_acc
     else:
@@ -408,15 +410,15 @@ def evalf_pow(v, prec, options):
         re, im, re_acc, im_acc = evalf(base, prec+5, options)
         # Real to integer power
         if re and not im:
-            return fpowi(re, p, target_prec), None, target_prec, None
+            return mpf_pow_int(re, p, target_prec), None, target_prec, None
         # (x*I)**n = I**n * x**n
         if im and not re:
             z = fpowi(im, p, target_prec)
             case = p % 4
             if case == 0: return z, None, target_prec, None
             if case == 1: return None, z, None, target_prec
-            if case == 2: return fneg(z), None, target_prec, None
-            if case == 3: return None, fneg(z), None, target_prec
+            if case == 2: return mpf_neg(z), None, target_prec, None
+            if case == 3: return None, mpf_neg(z), None, target_prec
         # General complex number to arbitrary integer power
         re, im = libmpc.mpc_pow_int((re, im), p, prec)
         # Assumes full accuracy in input
@@ -432,10 +434,10 @@ def evalf_pow(v, prec, options):
         if not xre:
             return None, None, None, None
         # Square root of a negative real number
-        if flt(xre, fzero):
-            return None, fsqrt(fneg(xre), prec), None, prec
+        if mpf_lt(xre, fzero):
+            return None, mpf_sqrt(mpf_neg(xre), prec), None, prec
         # Positive square root
-        return fsqrt(xre, prec), None, prec, None
+        return mpf_sqrt(xre, prec), None, prec, None
 
     # We first evaluate the exponent to find its magnitude
     # This determines the working precision that must be used
@@ -453,7 +455,7 @@ def evalf_pow(v, prec, options):
         if yim:
             re, im = libmpc.mpc_exp((yre or fzero, yim), prec)
             return finalize_complex(re, im, target_prec)
-        return fexp(yre, target_prec), None, target_prec, None
+        return mpf_exp(yre, target_prec), None, target_prec, None
 
     xre, xim, xre_acc, yim_acc = evalf(base, prec+5, options)
 
@@ -467,12 +469,12 @@ def evalf_pow(v, prec, options):
         re, im = libmpc.mpc_pow_mpf((xre or fzero, xim), yre, target_prec)
         return finalize_complex(re, im, target_prec)
     # negative ** real
-    elif flt(xre, fzero):
+    elif mpf_lt(xre, fzero):
         re, im = libmpc.mpc_pow_mpf((xre, fzero), yre, target_prec)
         return finalize_complex(re, im, target_prec)
     # positive ** real
     else:
-        return fpow(xre, yre, target_prec), None, target_prec, None
+        return mpf_pow(xre, yre, target_prec), None, target_prec, None
 
 
 
@@ -490,9 +492,9 @@ def evalf_trig(v, prec, options):
     TODO: should also handle tan and complex arguments.
     """
     if v.func is C.cos:
-        func = fcos
+        func = mpf_cos
     elif v.func is C.sin:
-        func = fsin
+        func = mpf_sin
     else:
         raise NotImplementedError
     arg = v.args[0]
@@ -548,24 +550,24 @@ def evalf_log(expr, prec, options):
     if xim:
         # XXX: use get_abs etc instead
         re = evalf_log(C.log(C.abs(arg, evaluate=False), evaluate=False), prec, options)
-        im = fatan2(xim, xre or fzero, prec)
+        im = mpf_atan2(xim, xre or fzero, prec)
         return re[0], im, re[2], prec
 
-    imaginary_term = (fcmp(xre, fzero) < 0)
+    imaginary_term = (mpf_cmp(xre, fzero) < 0)
 
-    re = flog(fabs(xre), prec, round_nearest)
+    re = mpf_log(mpf_abs(xre), prec, round_nearest)
     size = fastlog(re)
     if prec - size > workprec:
         # We actually need to compute 1+x accurately, not x
         arg = C.Add(S.NegativeOne,arg,evaluate=False)
         xre, xim, xre_acc, xim_acc = evalf_add(arg, prec, options)
         prec2 = workprec - fastlog(xre)
-        re = flog(fadd(xre, fone, prec2), prec, round_nearest)
+        re = mpf_log(mpf_add(xre, fone, prec2), prec, round_nearest)
 
     re_acc = prec
 
     if imaginary_term:
-        return re, fpi(prec), re_acc, prec
+        return re, mpf_pi(prec), re_acc, prec
     else:
         return re, None, re_acc, None
 
@@ -574,7 +576,7 @@ def evalf_atan(v, prec, options):
     xre, xim, reacc, imacc = evalf(arg, prec+5, options)
     if xim:
         raise NotImplementedError
-    return fatan(xre, prec, round_nearest), None, prec, None
+    return mpf_atan(xre, prec, round_nearest), None, prec, None
 
 
 #----------------------------------------------------------------------------#
@@ -658,7 +660,7 @@ def do_integral(expr, prec, options):
     if have_part[0]:
         re = result.real._mpf_
         if re == fzero:
-            re = fshift(fone, min(-prec,-max_real_term[0],-quadrature_error))
+            re = mpf_shift(fone, min(-prec,-max_real_term[0],-quadrature_error))
             re_acc = -1
         else:
             re_acc = -max(max_real_term[0]-fastlog(re)-prec, quadrature_error)
@@ -668,7 +670,7 @@ def do_integral(expr, prec, options):
     if have_part[1]:
         im = result.imag._mpf_
         if im == fzero:
-            im = fshift(fone, min(-prec,-max_imag_term[0],-quadrature_error))
+            im = mpf_shift(fone, min(-prec,-max_imag_term[0],-quadrature_error))
             im_acc = -1
         else:
             im_acc = -max(max_imag_term[0]-fastlog(im)-prec, quadrature_error)
@@ -876,8 +878,8 @@ def _create_evalf_table():
     C.Zero : lambda x, prec, options: (None, None, prec, None),
     C.One : lambda x, prec, options: (fone, None, prec, None),
     C.Half : lambda x, prec, options: (fhalf, None, prec, None),
-    C.Pi : lambda x, prec, options: (fpi(prec), None, prec, None),
-    C.Exp1 : lambda x, prec, options: (fe(prec), None, prec, None),
+    C.Pi : lambda x, prec, options: (mpf_pi(prec), None, prec, None),
+    C.Exp1 : lambda x, prec, options: (mpf_e(prec), None, prec, None),
     C.ImaginaryUnit : lambda x, prec, options: (None, fone, None, prec),
     C.NegativeOne : lambda x, prec, options: (fnone, None, prec, None),
 
