@@ -578,6 +578,20 @@ def evalf_atan(v, prec, options):
         raise NotImplementedError
     return mpf_atan(xre, prec, round_nearest), None, prec, None
 
+def evalf_piecewise(expr, prec, options):
+    if 'subs' in options:
+        expr = expr.subs(options['subs'])
+        del options['subs']
+        if hasattr(expr,'func'):
+            return evalf(expr, prec, options)
+        if type(expr) == float:
+            return evalf(C.Real(expr), prec, options)
+        if type(expr) == int:
+            return evalf(C.Integer(expr), prec, options)
+
+    # We still have undefined symbols
+    raise NotImplementedError
+
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -904,6 +918,7 @@ def _create_evalf_table():
 
     C.Integral : evalf_integral,
     C.Sum : evalf_sum,
+    C.Piecewise : evalf_piecewise,
     }
 
 def evalf(x, prec, options):
