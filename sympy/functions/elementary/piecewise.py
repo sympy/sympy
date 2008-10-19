@@ -149,7 +149,7 @@ class Piecewise(Function):
                     curr[1] = int_expr[n][0]
             if self.__eval_cond(curr[0] < curr[1]):
                 int_expr.append(curr+[expr])
-        int_expr.sort(lambda x,y:1 if x[0] > y[0] else -1)
+        int_expr.sort(key=lambda x:x[0])
 
         # Add holes to list of intervals if there is a default value,
         # otherwise raise a ValueError.
