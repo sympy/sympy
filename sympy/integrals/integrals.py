@@ -9,7 +9,7 @@ from sympy.simplify import apart
 from sympy.series import limit
 from sympy.polys import Poly
 from sympy.solvers import solve
-from sympy.functions import DiracDelta, Heaviside
+from sympy.functions import DiracDelta, Heaviside, Piecewise
 
 class Integral(Basic):
     """Represents unevaluated integral."""
@@ -132,6 +132,10 @@ class Integral(Basic):
                 if ab is None:
                     function = antideriv
                 else:
+                    if isinstance(antideriv,Piecewise):
+                        function = antideriv._eval_interval(x,ab)
+                        continue
+
                     a,b = ab
                     A = antideriv.subs(x, a)
 
@@ -241,6 +245,10 @@ class Integral(Basic):
         # see Polynomial for details.
         if isinstance(f, Poly):
             return f.integrate(x)
+
+        # Piecewise antiderivatives need to call special integrate.
+        if isinstance(f,Piecewise):
+            return f._eval_integral(x)
 
         # let's cut it short if `f` does not depend on `x`
         if not f.has(x):
