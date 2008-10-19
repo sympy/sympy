@@ -26,6 +26,10 @@ def sympify(a, locals= {}):
            - standard numeric python types: int, long, float, Decimal
            - strings (like "0.09" or "2e-19")
 
+       If sympify_lists is set to True then sympify will also accept
+       lists, tuples and sets. It will return the same type but with
+       all of the entries sympified.
+
        If the argument is already a type that sympy understands, it will do
        nothing but return that value. This can be used at the begining of a
        function to ensure you are working with the correct type.

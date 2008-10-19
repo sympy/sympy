@@ -388,7 +388,7 @@ def integrate(*args, **kwargs):
        thoroughly the strategy that SymPy uses for integration.
 
     """
-    new_args = [sympify(arg, sympify_lists=True) for arg in args]
+    new_args = [sympify(arg) for arg in args]
     integral = Integral(*new_args, **kwargs)
 
     if isinstance(integral, Integral):
