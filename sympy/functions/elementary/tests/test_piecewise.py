@@ -1,4 +1,4 @@
-from sympy import diff, Integral, integrate, log, oo, Piecewise, symbols
+from sympy import diff, Integral, integrate, log, oo, Piecewise, raises, symbols
 
 x,y = symbols('xy')
 
@@ -8,20 +8,8 @@ def test_piecewise():
     assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
     assert Piecewise((x, x < 1), (0, False), (-1, 1>2)) == Piecewise((x, x < 1))
     assert Piecewise((x, True)) == x
-
-    exception_called = False
-    try:
-        Piecewise(x)
-    except TypeError:
-        exception_called = True
-    assert exception_called
-
-    exception_called = False
-    try:
-        Piecewise((x,x**2))
-    except TypeError:
-        exception_called = True
-    assert exception_called
+    raises(TypeError,"Piecewise(x)")
+    raises(TypeError,"Piecewise((x,x**2))")
 
     # Test subs
     p = Piecewise((-1, x < -1), (x**2, x < 0), (log(x), x >=0))
@@ -76,9 +64,4 @@ def test_piecewise():
     p = Piecewise((0, x < 0), (1,x < 1), (0, x < 2), (1, x < 3), (0, True))
     assert integrate(p, (x,-oo,oo)) == 2
     p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
-    exception_called = False
-    try:
-        integrate(p,(x,-2,2))
-    except ValueError:
-        exception_called = True
-    assert exception_called
+    raises(ValueError, "integrate(p,(x,-2,2))")
