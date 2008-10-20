@@ -179,3 +179,13 @@ def test_evalf_py_methods():
     assert abs(complex(pi+E*I) - (3.1415926535897931+2.7182818284590451j)) < 1e-10
     raises(ValueError, "float(pi+x)")
     raises(ValueError, "complex(pi+x)")
+
+def test_evalf_power_subs_bugs():
+    assert (x**2).evalf(subs={x:0}) == 0
+    assert sqrt(x).evalf(subs={x:0}) == 0
+    assert (x**Rational(2,3)).evalf(subs={x:0}) == 0
+    assert (x**x).evalf(subs={x:0}) == 1
+    assert (3**x).evalf(subs={x:0}) == 1
+    assert exp(x).evalf(subs={x:0}) == 1
+    assert ((2+I)**x).evalf(subs={x:0}) == 1
+    assert (0**x).evalf(subs={x:0}) == 1
