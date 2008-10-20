@@ -17,6 +17,7 @@ from sympy.mpmath.libelefun import mpf_pi, mpf_log, mpf_pow, mpf_sin, mpf_cos, \
 from sympy.mpmath.libmpf import MP_BASE, from_man_exp
 from sympy.mpmath.calculus import shanks_extrapolation, richardson_extrapolation
 
+from sympy.mpmath.gammazeta import mpf_bernoulli
 
 import math
 
@@ -616,6 +617,15 @@ def evalf_piecewise(expr, prec, options):
     # We still have undefined symbols
     raise NotImplementedError
 
+def evalf_bernoulli(expr, prec, options):
+    arg = expr.args[0]
+    if not arg.is_Integer:
+        raise ValueError("Bernoulli number index must be an integer")
+    n = int(arg)
+    b = mpf_bernoulli(n, prec, round_nearest)
+    if b == fzero:
+        return None, None, None, None
+    return b, None, prec, None
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -943,6 +953,8 @@ def _create_evalf_table():
     C.Integral : evalf_integral,
     C.Sum : evalf_sum,
     C.Piecewise : evalf_piecewise,
+
+    C.bernoulli : evalf_bernoulli,
     }
 
 def evalf(x, prec, options):

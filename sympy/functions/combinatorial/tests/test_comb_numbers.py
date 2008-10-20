@@ -21,6 +21,15 @@ def test_bernoulli():
     assert bernoulli(2, x) == x**2-x+Rational(1,6)
     assert bernoulli(3, x) == x**3 - (3*x**2)/2 + x/2
 
+    # Should be fast; computed with mpmath
+    b = bernoulli(1000)
+    assert b.p % 10**10  == 7950421099
+    assert b.q == 342999030
+
+    b = bernoulli(10**6, evaluate=False).evalf()
+    assert str(b) == '-2.23799235765713e+4767529'
+
+
 def test_fibonacci():
     assert [fibonacci(n) for n in range(-3, 5)] == [2, -1, 1, 0, 1, 1, 2, 3]
     assert fibonacci(100) == 354224848179261915075

@@ -11,6 +11,8 @@ from sympy.core import *
 from sympy.core.function import Function
 from sympy.core.basic import S
 
+from sympy.mpmath import bernfrac
+
 def _product(a, b):
     p = 1
     for k in xrange(a, b+1):
@@ -236,6 +238,10 @@ class bernoulli(Function):
                     if n.is_odd:
                         return S.Zero
                     n = int(n)
+                    # Use mpmath for enormous Bernoulli numbers
+                    if n > 500:
+                        p, q = bernfrac(n)
+                        return Rational(int(p), q)
                     case = n % 6
                     highest_cached = cls._highest[case]
                     if n <= highest_cached:
