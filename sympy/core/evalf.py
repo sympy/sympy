@@ -419,6 +419,9 @@ def evalf_pow(v, prec, options):
             if case == 1: return None, z, None, target_prec
             if case == 2: return mpf_neg(z), None, target_prec, None
             if case == 3: return None, mpf_neg(z), None, target_prec
+        # Zero raised to an integer power
+        if not re:
+            return None, None, None, None
         # General complex number to arbitrary integer power
         re, im = libmpc.mpc_pow_int((re, im), p, prec)
         # Assumes full accuracy in input
@@ -443,6 +446,10 @@ def evalf_pow(v, prec, options):
     # This determines the working precision that must be used
     prec += 10
     yre, yim, yre_acc, yim_acc = evalf(exp, prec, options)
+    # Special cases: x**0
+    if not (yre or yim):
+        return fone, None, prec, None
+
     ysize = fastlog(yre)
     # Restart if too big
     # XXX: prec + ysize might exceed maxprec
@@ -458,6 +465,9 @@ def evalf_pow(v, prec, options):
         return mpf_exp(yre, target_prec), None, target_prec, None
 
     xre, xim, xre_acc, yim_acc = evalf(base, prec+5, options)
+    # 0**y
+    if not (xre or xim):
+        return None, None, None, None
 
     # (real ** complex) or (complex ** complex)
     if yim:
