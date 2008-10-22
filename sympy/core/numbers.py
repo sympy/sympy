@@ -487,7 +487,7 @@ class Rational(Number):
 
     is_Rational = True
 
-    @Memoizer(type, (int, long, str), MemoizerArg((int, long, type(None)), name="q"))
+    @Memoizer(type, (int, long, str, 'Integer'), MemoizerArg((int, long, 'Integer', type(None)), name="q"))
     def __new__(cls, p, q = None):
         if q is None:
             if isinstance(p, str):
@@ -512,8 +512,8 @@ class Rational(Number):
         if q==1: return Integer(p)
         if p==1 and q==2: return S.Half
         obj = Basic.__new__(cls)
-        obj.p = p
-        obj.q = q
+        obj.p = int(p)
+        obj.q = int(q)
         #obj._args = (p, q)
         return obj
 
@@ -788,6 +788,12 @@ class Integer(Rational):
             return self
         else:
             return Integer(-self.p)
+
+    def __mod__(self, other):
+        return self.p % other
+
+    def __rmod__(self, other):
+        return other % self.p
 
     # TODO make it decorator + bytecodehacks?
     def __add__(a, b):
