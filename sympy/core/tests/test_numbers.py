@@ -41,6 +41,19 @@ def test_igcdex():
     assert igcdex(10, 12) == (-1, 1, 2)
     assert igcdex(100, 2004) == (-20, 1, 4)
 
+def test_Rational_new():
+    """"
+    Test for Rational constructor
+    """
+    n1 = Rational(1,2)
+    assert n1 == Rational(Integer(1), 2)
+    assert n1 == Rational(Integer(1), Integer(2))
+    assert n1 == Rational(1, Integer(2))
+
+    raises(ValueError, 'Rational(1.2)')
+    raises(ValueError, "Rational(Symbol('x'))")
+    raises(ValueError, 'Rational(Rational(1,2))')
+
 def test_Rational_cmp():
     n1 = Rational(1,4)
     n2 = Rational(1,3)
