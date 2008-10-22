@@ -1,9 +1,30 @@
 
 from sympy.core.basic import Basic, S
-from sympy.core.function import Function, FunctionClass, diff
+from sympy.core.function import Function, diff
 from sympy.core.numbers import Number
 from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
+
+class ExprCondPair(Basic):
+    """Represents an expression, condition pair."""
+
+    def __new__(cls, expr, cond, **assumptions):
+        expr = sympify(expr)
+        cond = sympify(cond)
+        return Basic.__new__(cls, expr, cond, **assumptions)
+
+    @property
+    def expr(self):
+        return self.args[0]
+
+    @property
+    def cond(self):
+        return self.args[1]
+
+    def __iter__(self):
+        yield self.expr
+        yield self.cond
+
 
 class Piecewise(Function):
     """
@@ -36,13 +57,21 @@ class Piecewise(Function):
     nargs=None
 
     def __new__(cls, *args, **options):
-        for opt in ["nargs", "dummy", "comparable", "noncommutative", "commutative"]:
-            if opt in options:
-                del options[opt]
-        r = cls.canonize(*args)
+        # Check types first
+        for ec in args:
+            if not isinstance(ec, tuple) or len(ec) != 2:
+                raise TypeError, "args may only include (expr, cond) pairs"
+            cond_type = type(ec[1])
+            if not (cond_type is bool or issubclass(cond_type, Relational) or \
+                    issubclass(cond_type, Number)):
+                raise TypeError, \
+                    "Cond %s is of type %s, but must be a bool," \
+                    " Relational or Number" % (ec[1], cond_type)
 
         # sympify args
-        args = map(lambda x:(sympify(x[0]), sympify(x[1])), args)
+        args = map(lambda x:ExprCondPair(*x), args)
+
+        r = cls.canonize(*args)
 
         if r is None:
             return Basic.__new__(cls, *args, **options)
@@ -51,18 +80,6 @@ class Piecewise(Function):
 
     @classmethod
     def canonize(cls, *args):
-        # Check types first
-        for ec in args:
-            if (not isinstance(ec, tuple)) or len(ec)!=2:
-                raise TypeError, "args may only include (expr, cond) pairs"
-        for expr, cond in args:
-            cond_type = type(ec[1])
-            if cond_type != bool and not issubclass(cond_type, Relational) and\
-                    not issubclass(cond_type, Number):
-                raise TypeError, \
-                    "Cond %s is of type %s, but must be a bool,"\
-                    " Relational or Number" % (cond, cond_type)
-
         # Check for situations where we can evaluate the Piecewise object.
         # 1) Hit an unevaluatable cond (e.g. x<1) -> keep object
         # 2) Hit a true condition -> return that expr
@@ -117,7 +134,7 @@ class Piecewise(Function):
         #    -  eg x < 1, x < 3 -> [oo,1],[1,3] instead of [oo,1],[oo,3]
         # 3) Sort the intervals to make it easier to find correct exprs
         for expr, cond in self.args:
-            if issubclass(type(cond),Number):
+            if cond.is_Number:
                 if cond:
                     default = expr
                     break
@@ -130,9 +147,9 @@ class Piecewise(Function):
                 curr[1] = S.Infinity
             else:
                 raise NotImplementedError, \
-                    "Currently only supporting evaluation with only "\
-                    "sym on one side fo the relation."
-            curr = [max(a,curr[0]),min(b,curr[1])]
+                    "Currently only supporting evaluation with only " \
+                    "sym on one side of the relation."
+            curr = [max(a, curr[0]), min(b, curr[1])]
             for n in xrange(len(int_expr)):
                 if self.__eval_cond(curr[0] < int_expr[n][1]) and \
                         self.__eval_cond(curr[0] >= int_expr[n][0]):
@@ -141,7 +158,7 @@ class Piecewise(Function):
                         self.__eval_cond(curr[1] <= int_expr[n][1]):
                     curr[1] = int_expr[n][0]
             if self.__eval_cond(curr[0] < curr[1]):
-                int_expr.append(curr+[expr])
+                int_expr.append(curr + [expr])
         int_expr.sort(key=lambda x:x[0])
 
         # Add holes to list of intervals if there is a default value,
@@ -150,16 +167,16 @@ class Piecewise(Function):
         curr_low = a
         for int_a, int_b, expr in int_expr:
             if curr_low < int_a:
-                holes.append([curr_low, min(b,int_a), default])
+                holes.append([curr_low, min(b, int_a), default])
             curr_low = int_b
             if curr_low > b:
                 break
         if holes and default != None:
             int_expr.extend(holes)
         elif holes and default == None:
-            raise ValueError, "Called interval evaluation over piecewise "\
-                              "function on undefined intervals %s" %\
-                              ", ".join([str((h[0],h[1])) for h in holes])
+            raise ValueError, "Called interval evaluation over piecewise " \
+                              "function on undefined intervals %s" % \
+                              ", ".join([str((h[0], h[1])) for h in holes])
 
         # Finally run through the intervals and sum the evaluation.
         # TODO: Either refactor this code or Integral.doit to call _eval_interval
@@ -190,13 +207,8 @@ class Piecewise(Function):
     @classmethod
     def __eval_cond(cls, cond):
         """Returns S.One if True, S.Zero if False, or None if undecidable."""
-        if issubclass(type(cond), Number) or type(cond) == bool:
+        if type(cond) == bool or cond.is_Number:
             return sympify(bool(cond))
-        arg0 = cond.args[0]
-        arg1 = cond.args[1]
-        if isinstance(arg0, FunctionClass) or isinstance(arg1, FunctionClass):
-            return None
-        if not issubclass(type(arg0.evalf()), Number) or \
-                not issubclass(type(arg1.evalf()), Number):
-            return None
-        return sympify(bool(cond))
+        if cond.args[0].is_Number and cond.args[1].is_Number:
+            return sympify(bool(cond))
+        return None
