@@ -116,14 +116,13 @@ class Piecewise(Function):
         from sympy.integrals import integrate
         return  Piecewise(*[(integrate(e, x), c) for e, c in self.args])
 
-    def _eval_interval(self, sym, ab):
+    def _eval_interval(self, sym, a, b):
         """Evaluates the function along the sym in a given interval ab"""
         # FIXME: Currently only supports conds of type sym < Num, or Num < sym
         int_expr = []
-        a, b = ab
         mul = 1
         if a > b:
-            a = ab[1]; b = ab[0]; mul = -1
+            a, b, mul = b, a, -1
         default = None
 
         # Determine what intervals the expr,cond pairs affect.
@@ -179,20 +178,9 @@ class Piecewise(Function):
                               ", ".join([str((h[0], h[1])) for h in holes])
 
         # Finally run through the intervals and sum the evaluation.
-        # TODO: Either refactor this code or Integral.doit to call _eval_interval
         ret_fun = 0
         for int_a, int_b, expr in int_expr:
-            B = expr.subs(sym, min(b,int_b))
-            if B is S.NaN:
-                B = limit(expr, sym, min(b,int_b))
-            if B is S.NaN:
-                return self
-            A = expr.subs(sym, max(a,int_a))
-            if A is S.NaN:
-                A = limit(expr, sym, max(a,int_a))
-            if A is S.NaN:
-                return self
-            ret_fun += B - A
+            ret_fun += expr._eval_interval(sym,  max(a, int_a), min(b, int_b))
         return mul * ret_fun
 
     def _eval_derivative(self, s):

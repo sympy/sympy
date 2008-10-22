@@ -132,26 +132,8 @@ class Integral(Basic):
                 if ab is None:
                     function = antideriv
                 else:
-                    if isinstance(antideriv,Piecewise):
-                        function = antideriv._eval_interval(x,ab)
-                        continue
-
                     a,b = ab
-                    A = antideriv.subs(x, a)
-
-                    if A is S.NaN:
-                        A = limit(antideriv, x, a)
-                    if A is S.NaN:
-                        return self
-
-                    B = antideriv.subs(x, b)
-
-                    if B is S.NaN:
-                        B = limit(antideriv, x, b)
-                    if B is S.NaN:
-                        return self
-
-                    function = B - A
+                    function = antideriv._eval_interval(x, a, b)
 
         return function
 

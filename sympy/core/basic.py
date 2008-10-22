@@ -1124,6 +1124,31 @@ class Basic(AssumeMeths):
                 return True
         return False
 
+    def _eval_interval(self, x, a, b):
+        """
+        Returns evaluation over an interval.  For most funtions this is:
+
+        self.subs(x, b) - self.subs(x, a),
+
+        possibly using limit() if NaN is returned from subs.
+
+        """
+        from sympy.series import limit
+        A = self.subs(x, a)
+
+        if A is S.NaN:
+            A = limit(self, x, a)
+            if A is S.NaN:
+                return self
+
+        B = self.subs(x, b)
+
+        if B is S.NaN:
+            B = limit(self, x, b)
+        if B is S.NaN:
+            return self
+        return B - A
+
     def _eval_power(self, other):
         return None
 
