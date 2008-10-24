@@ -216,7 +216,6 @@ def test_collect_D():
     assert collect(a*D(fx,x) + b*D(fx,x), fx)   == (a + b)*D(fx, x)
     assert collect(a*fxx     + b*fxx    , fx)   == (a + b)*D(fx, x)
 
-@XFAIL
 def test_collect_D_0():
     D = Derivative
     f = Function('f')

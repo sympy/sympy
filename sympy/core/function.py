@@ -461,7 +461,7 @@ class Derivative(Basic):
         expr = sympify(expr)
         if not symbols: return expr
         symbols = Derivative._symbolgen(*symbols)
-        if not assumptions.get("evaluate", False):
+        if not assumptions.get("evaluate", False) and not isinstance(expr, Derivative):
             obj = Basic.__new__(cls, expr, *symbols)
             return obj
         unevaluated_symbols = []

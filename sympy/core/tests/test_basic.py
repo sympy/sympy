@@ -587,7 +587,6 @@ def test_coeff2():
     g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
     assert g.coeff(psi(r).diff(r)) == 2/r
 
-@XFAIL
 def test_coeff2_0():
     var('r, kappa')
     psi = Function("psi")

@@ -142,6 +142,9 @@ def test_derivative_evaluate():
     assert Derivative(sin(x), x) != diff(sin(x), x)
     assert Derivative(sin(x), x).doit() == diff(sin(x), x)
 
+    f = Function('f')
+    assert Derivative(Derivative(f(x), x), x) == diff(f(x), x, x)
+
 @XFAIL
 def test_combine():
     # XXX combine no longer exists
