@@ -56,19 +56,20 @@ class Piecewise(Function):
       log(5)
     """
 
-    nargs=None
+    nargs = None
+    is_Piecewise = True
 
     def __new__(cls, *args, **options):
         # Check types first
         for ec in args:
+            if type(ec) is ExprCondPair:
+                continue
             if not isinstance(ec, tuple) or len(ec) != 2:
                 raise TypeError, "args may only include (expr, cond) pairs"
-            cond_type = type(ec[1])
-            if not (cond_type is bool or issubclass(cond_type, Relational) or \
-                    issubclass(cond_type, Number)):
+            if not isinstance(ec[1], (bool, int, float, Relational, Number)):
                 raise TypeError, \
                     "Cond %s is of type %s, but must be a bool," \
-                    " Relational or Number" % (ec[1], cond_type)
+                    " Relational or Number" % (ec[1], type(ec[1]))
 
         # sympify args
         args = map(lambda x:ExprCondPair(*x), args)
@@ -225,4 +226,32 @@ class Piecewise(Function):
             if cond: return S.One
             return S.Zero
         return None
+
+
+def piecewise_fold(expr):
+    """
+    Takes an expression containing a piecewise function and returns the
+    expression in piecewise form.
+
+    >>> p = Piecewise((x, x < 1), (1, 1 <= x))
+    >>> piecewise_fold(x*p)
+    Piecewise((x**2, x < 1), (x, 1 <= x))
+
+    """
+    if not expr.has_piecewise:
+        return expr
+    new_args = map(piecewise_fold, expr.args)
+    if type(expr) is ExprCondPair:
+        return ExprCondPair(*new_args)
+    piecewise_args = []
+    for n, arg in enumerate(new_args):
+        if type(arg) is Piecewise:
+            piecewise_args.append(n)
+    if len(piecewise_args) > 0:
+        n = piecewise_args[0]
+        new_args = [(expr.__class__(*(new_args[:n] + [e] + new_args[n+1:])), c) \
+                        for e, c in new_args[n].args]
+        if len(piecewise_args) > 1:
+            return piecewise_fold(Piecewise(*new_args))
+    return Piecewise(*new_args)
 
