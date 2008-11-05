@@ -163,7 +163,7 @@ u0 = magnetic_constant = 4*pi * ten**-7 * N/A**2
 e0 = electric_constant = 1/(u0 * c**2)
 Z0 = vacuum_impedance = u0 * c
 
-planck = Rational('6.2606896') * ten**-34 * J*s
+planck = Rational('6.62606896') * ten**-34 * J*s
 hbar = planck / (2*pi)
 
 avogadro = (Rational('6.02214179') * 10**23) / mol
