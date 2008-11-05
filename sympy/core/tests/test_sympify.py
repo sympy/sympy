@@ -29,6 +29,7 @@ def test_sympify2():
 
 def test_sympify3():
     assert sympify("x**3") == x**3
+    assert sympify("x^3") == x**3
     assert sympify("1/2") == Integer(1)/2
 
     raises(SympifyError, "_sympify('x**3')")

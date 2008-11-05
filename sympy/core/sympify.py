@@ -14,7 +14,7 @@ class SympifyError(ValueError):
         return "Sympify of expression '%s' failed, because of exception being raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__, str(self.base_exc))
 
 
-def sympify(a, locals= {}):
+def sympify(a, locals=None, convert_xor=True):
     """Converts an arbitrary expression to a type that can be used
        inside sympy. For example, it will convert python int's into
        instance of sympy.Rational, floats into intances of sympy.Real,
@@ -51,6 +51,8 @@ def sympify(a, locals= {}):
     #
     # When everything settles, let's refactor this.
     #                                      -- kirr
+    if locals is None:
+        locals = {}
     if isinstance(a, Basic):
         return a
     if isinstance(a, BasicType):
@@ -114,6 +116,8 @@ def sympify(a, locals= {}):
             a = str(a)
 
         try:
+            if convert_xor:
+                a = a.replace('^','**')
             import ast_parser
             return ast_parser.SymPyParser(local_dict=locals).parse_expr(a)
         except Exception, exc:
