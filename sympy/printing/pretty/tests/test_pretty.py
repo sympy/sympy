@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sympy import Symbol, Matrix, Integral, log, Rational, Derivative, exp, \
         sqrt, pi, Function, sin, cos, pprint_use_unicode, oo, Eq, Le, \
-        Gt, Ne, Limit, factorial, gamma, conjugate, I
+        Gt, Ne, Limit, factorial, gamma, conjugate, I, Piecewise
 from sympy.printing.pretty import pretty as xpretty
 
 x = Symbol('x')
@@ -222,6 +222,18 @@ def test_pretty_matrix():
 [  y     y + x]\
 """
     assert p in [s1, s2]
+
+def test_pretty_Piecewise():
+    p = pretty(Piecewise((x,x<1),(x**2,True)))
+    s = \
+"""\
+/x   for x < 1
+|             \n\
+< 2           \n\
+|x   otherwise\n\
+\             \
+"""
+    assert p == s
 
 def test_pretty_seq():
     assert pretty([]) == '[]'

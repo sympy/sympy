@@ -295,6 +295,58 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('[',']'))
         return D
 
+    def _print_Piecewise(self, pexpr):
+
+        P = {}
+        for n, ec in enumerate(pexpr.args):
+            P[n,0] = self._print(ec.expr)
+            if ec.cond is S.One:
+                P[n,1] = prettyForm('otherwise')
+            else:
+                P[n,1] = prettyForm(*prettyForm('for ').right(self._print(ec.cond)))
+        hsep = 2
+        vsep = 1
+        len_args = len(pexpr.args)
+
+        # max widths
+        maxw = [max([P[i,j].width() for i in xrange(len_args)]) \
+                    for j in xrange(2)]
+
+        # FIXME: Refactor this code and matrix into some tabular environment.
+        # drawing result
+        D = None
+
+        for i in xrange(len_args):
+            D_row = None
+            for j in xrange(2):
+                p = P[i,j]
+                assert p.width() <= maxw[j]
+
+                wdelta = maxw[j] - p.width()
+                wleft  = wdelta // 2
+                wright = wdelta - wleft
+
+                p = prettyForm(*p.right(' '*wright))
+                p = prettyForm(*p.left (' '*wleft))
+
+                if D_row is None:
+                    D_row = p
+                    continue
+
+                D_row = prettyForm(*D_row.right(' '*hsep))  # h-spacer
+                D_row = prettyForm(*D_row.right(p))
+            if D is None:
+                D = D_row       # first row in a picture
+                continue
+
+            # v-spacer
+            for _ in range(vsep):
+                D = prettyForm(*D.below(' '))
+
+            D = prettyForm(*D.below(D_row))
+
+        D = prettyForm(*D.parens('{',''))
+        return D
 
     def _print_exp(self, e):
         base = prettyForm(pretty_atom('Exp1', 'e'))

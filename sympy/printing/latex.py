@@ -389,6 +389,19 @@ class LatexPrinter(Printer):
         return "%s %s %s" % (self._print(expr.lhs),
             charmap[expr.rel_op], self._print(expr.rhs))
 
+    def _print_Piecewise(self, expr):
+        ecpairs = [r"%s & for %s" % (self._print(e), self._print(c)) \
+                       for e, c in expr.args[:-1]]
+        if expr.args[-1].cond is S.One:
+            ecpairs.append(r"%s & \textrm{otherwise}" % \
+                               self._print(expr.args[-1].expr))
+        else:
+            ecpairs.append(r"%s & for %s" % \
+                           (self._print(expr.args[-1].cond),
+                            self._print(expr.args[-1].expr)))
+        tex = r"\left\{\begin{array}{cl} %s \end{array}\right."
+        return tex % r" \\".join(ecpairs)
+
     def _print_Matrix(self, expr):
         lines = []
 

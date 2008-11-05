@@ -96,6 +96,9 @@ class StrPrinter(Printer):
     def _print_Exp1(self, expr):
         return 'E'
 
+    def _print_ExprCondPair(self, expr):
+        return '(%s, %s)' % (expr.expr, expr.cond)
+
     def _print_Factorial(self, expr):
         return "%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Pow"])
 

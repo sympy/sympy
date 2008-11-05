@@ -1,6 +1,6 @@
 from sympy import symbols, Rational, Symbol, Integral, log, diff, sin, exp, \
         Function, factorial, floor, ceiling, abs, re, im, conjugate, gamma, \
-        Order
+        Order, Piecewise
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL
@@ -117,3 +117,8 @@ def test_latex_DiracDelta():
     assert latex(DiracDelta(x)) == "$\\delta\\left(x\\right)$"
     assert latex(DiracDelta(x,0)) == "$\\delta\\left(x\\right)$"
     assert latex(DiracDelta(x,5)) == "$\\delta^{\\left( 5 \\right)}\\left( x \\right)$"
+
+def test_latex_Piecewise():
+    p = Piecewise((x,x<1),(x**2,True))
+    assert latex(p) == "$\\left\\{\\begin{array}{cl} x & for x < 1 \\\\{x}^{2} &" \
+                       " \\textrm{otherwise} \\end{array}\\right.$"

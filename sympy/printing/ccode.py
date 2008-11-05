@@ -20,6 +20,20 @@ class CCodePrinter(StrPrinter):
     def _print_Exp1(self, expr):
         return "exp(1)"
 
+    def _print_Piecewise(self, expr):
+        ecpairs = ["(%s) {\n%s\n}\n" % (self._print(c), self._print(e)) \
+                       for e, c in expr.args[:-1]]
+        last_line = ""
+        if expr.args[-1].cond is S.One:
+            last_line = "else {\n%s\n}" % self._print(expr.args[-1].expr)
+        else:
+            ecpairs.append("(%s) {\n%s\n" % \
+                           (self._print(expr.args[-1].cond),
+                            self._print(expr.args[-1].expr)))
+        code = "if %s" + last_line
+        return code % "else if ".join(ecpairs)
+
+
 def ccode(expr):
     r"""Converts an expr to a string of c code
 
