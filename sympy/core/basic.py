@@ -231,6 +231,17 @@ class BasicMeta(BasicType):
             return c
         return cmp(i1,i2)
 
+    def __lt__(cls, other):
+        if cls.__cmp__(other)==-1:
+            return True
+        return False
+
+    def __gt__(cls, other):
+        if cls.__cmp__(other)==1:
+            return True
+        return False
+
+
 
 
 class Basic(AssumeMeths):
