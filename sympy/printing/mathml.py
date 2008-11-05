@@ -1,10 +1,12 @@
+"""
+A MathML printer.
+"""
+
 from sympy import Basic, sympify
 from printer import Printer
 
-
 class MathMLPrinter(Printer):
-    """A MathML printer."""
-    printmethod = "__mathml__"
+    printmethod = "_mathml_"
 
     def __init__(self, *args, **kwargs):
         Printer.__init__(self, *args, **kwargs)

@@ -11,7 +11,7 @@ k,n = symbols('kn', integer=True)
 
 def test_printmethod():
     class R(abs):
-        def __latex__(self):
+        def _latex_(self):
             return "foo"
     assert latex(R(x)) == "$foo$"
 

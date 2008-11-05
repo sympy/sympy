@@ -31,7 +31,7 @@ def sT(expr, string):
 
 def test_printmethod():
     class R(oo.__class__):
-        def __sympyrepr__(self):
+        def _sympyrepr_(self):
             return "foo"
     assert srepr(R()) == "foo"
 

@@ -1,12 +1,14 @@
+"""
+A Printer which converts an expression into its LaTeX equivalent.
+"""
+
 from sympy.core import S, C, Basic, Symbol
 from printer import Printer
 from sympy.simplify import fraction
 import re
 
 class LatexPrinter(Printer):
-    """A printer which converts an expression into its LaTeX equivalent."""
-
-    printmethod = "__latex__"
+    printmethod = "_latex_"
 
     def __init__(self, inline=True):
         Printer.__init__(self)

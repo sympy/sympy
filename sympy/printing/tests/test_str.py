@@ -23,7 +23,7 @@ d = Symbol('d', dummy=True)
 
 def test_printmethod():
     class R(abs):
-        def __sympystr__(self):
+        def _sympystr_(self):
             return "foo"
     assert spr(R(x)) == "foo"
 

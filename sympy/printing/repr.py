@@ -12,7 +12,8 @@ import sympy.mpmath.libmpf as mlib
 from sympy.mpmath.settings import prec_to_dps, repr_dps
 
 class ReprPrinter(Printer):
-    printmethod = "__sympyrepr__"
+    printmethod = "_sympyrepr_"
+
     def reprify(self, args, sep):
         return sep.join([self.doprint(item) for item in args])
 
