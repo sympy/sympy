@@ -29,6 +29,11 @@ def sT(expr, string):
     assert srepr(expr) == string
     assert eval(string, ENV) == expr
 
+def test_printmethod():
+    class R(oo.__class__):
+        def __sympyrepr__(self):
+            return "foo"
+    assert srepr(R()) == "foo"
 
 def test_Add():
     sT(x+y, "Add(Symbol('x'), Symbol('y'))")

@@ -21,6 +21,12 @@ spr = StrPrinter.doprint
 x, y, z, w = symbols('xyzw')
 d = Symbol('d', dummy=True)
 
+def test_printmethod():
+    class R(abs):
+        def __sympystr__(self):
+            return "foo"
+    assert spr(R(x)) == "foo"
+
 def test_abs():
     assert str(abs(x)) == "abs(x)"
     assert str(abs(Rational(1,6))) == "1/6"

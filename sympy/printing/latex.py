@@ -6,6 +6,8 @@ import re
 class LatexPrinter(Printer):
     """A printer which converts an expression into its LaTeX equivalent."""
 
+    printmethod = "__latex__"
+
     def __init__(self, inline=True):
         Printer.__init__(self)
         self._inline = inline
@@ -310,6 +312,8 @@ class LatexPrinter(Printer):
                 sign = "- "
                 p = -p
             return r"%s\frac{%d}{%d}" % (sign, p, expr.q)
+        else:
+            return self._print(expr.p)
 
     def _print_Infinity(self, expr):
         return r"\infty"

@@ -14,6 +14,8 @@ import sympy.mpmath.libmpf as mlib
 from sympy.mpmath.settings import prec_to_dps
 
 class StrPrinter(Printer):
+    printmethod = "__sympystr__"
+
     def parenthesize(self, item, level):
         if precedence(item) <= level:
             return "(%s)"%self._print(item)

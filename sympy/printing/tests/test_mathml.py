@@ -6,6 +6,9 @@ from sympy.utilities.pytest import XFAIL
 x = Symbol('x')
 mp = MathMLPrinter()
 
+def test_printmethod():
+    pass #TODO
+
 def test_mathml_core():
     mml_1 = mp._print(1+x)
     assert mml_1.nodeName == 'apply'

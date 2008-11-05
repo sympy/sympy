@@ -36,7 +36,7 @@ class PrettyPrinter(Printer):
             # print atoms like Exp1 or Pi
             return prettyForm(pretty_atom(e.__class__.__name__))
         except KeyError:
-            pass
+            return self.emptyPrinter(e)
 
     # Infinity inherits from Rational, so we have to override _print_XXX order
     _print_Infinity         = _print_Atom
@@ -460,6 +460,8 @@ class PrettyPrinter(Printer):
                 return prettyForm(binding=prettyForm.NEG, *pform.left('- '))
             else:
                 return prettyForm(str(r.p))/prettyForm(str(r.q))
+        else:
+            return self.emptyPrinter(r)
 
 
     def _print_seq(self, seq, left=None, right=None):

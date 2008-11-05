@@ -1,15 +1,84 @@
-"""Printing subsystem driver"""
+"""Printing subsystem driver
+
+Sympy's printing system works the following way: Any expression can be passed to
+a designated Printer who then is responsible to return a adequate representation
+of that expression.
+
+The basic concept is the following:
+  1. Let the object print itself if it knows how.
+  2. Take the best fitting method defined in the printer.
+  3. As fall-back use the emptyPrinter method for the printer.
+
+Some more information how the single concepts work and who should use which:
+
+1. The object prints itself
+
+    This was the original way of doing printing in sympy. Every class had it's
+    own latex, mathml, str and repr methods, but it turned out that it is hard
+    to produce a high quality printer, if all the methods are spread out that
+    far. Therefor all printing code was combined into the different printers,
+    which works great for built-in sympy objects, but not that good for user
+    defined classes where it is inconvenient to patch the printers.
+    To get nevertheless a fitting representation, the printers look for a
+    specific method in every object, that will be called if it's available and
+    is then responsible for the representation. The name of that method depends
+    on the specific printer and is defined under Printer.printmethodname.
+
+
+2. Take the best fitting method defined in the printer.
+
+    The printer loops through expr classes (class + it's bases), and tries to dispatch the
+    work to _print_<EXPR_CLASS>
+
+    e.g., suppose we have the following class hierarchy::
+
+            Basic
+            |
+            Atom
+            |
+            Number
+            |
+        Rational
+
+    then, for expr=Rational(...), in order to dispatch, we will try calling printer methods
+    as shown in the figure below::
+
+        p._print(expr)
+        |
+        |-- p._print_Rational(expr)
+        |
+        |-- p._print_Number(expr)
+        |
+        |-- p._print_Atom(expr)
+        |
+        `-- p._print_Basic(expr)
+
+    if ._print_Rational method exists in the printer, then it is called,
+    and the result is returned back.
+
+    otherwise, we proceed with trying Rational bases in the inheritance
+    order.
+
+3. As fall-back use the emptyPrinter method for the printer.
+
+    As fall-back self.emptyPrinter will be called with the expression. If
+    not defined in the Printer subclass this will be the same as str(expr)
+"""
 
 class Printer(object):
-    """Generic printer driver
+    """Generic printer
 
-    This is a generic printer driver.
     It's job is to provide infrastructure for implementing new printers easily.
 
     Basically, if you want to implement a printer, all you have to do is:
 
     1. Subclass Printer.
-    2. In your subclass, define _print_<CLASS> methods
+
+    2. Define Printer.printmethod in your subclass.
+       If a object has a method with that name, this method will be used
+       for printing.
+
+    3. In your subclass, define _print_<CLASS> methods
 
        For each class you want to provide printing to, define an appropriate
        method how to do it. For example if you want a class FOO to be printed in
@@ -31,15 +100,16 @@ class Printer(object):
        On the other hand, a good printer will probably have to define separate
        routines for Symbol, Atom, Number, Integral, Limit, etc...
 
-    3. If convenient, override self.emptyPrinter
+    4. If convenient, override self.emptyPrinter
 
        This callable will be called to obtain printing result as a last resort,
-       that is when no appropriate _print_<CLASS> was found for an expression.
+       that is when no appropriate print method was found for an expression.
 
     """
     def __init__(self):
-        self._depth = -1
         self._str = str
+        if not hasattr(self, "printmethod"):
+            self.printmethod = None
         if not hasattr(self, "emptyPrinter"):
             self.emptyPrinter = str
 
@@ -48,57 +118,35 @@ class Printer(object):
         return self._str(self._print(expr))
 
     def _print(self, expr, *args):
-        """internal dispatcher
+        """Internal dispatcher
 
-           It's job is to loop through expr classes (class + it's bases), and
-           try to dispatch the work to _print_<EXPR_CLASS>
-
-           e.g., suppose we have the following class hierarchy::
-
-                 Basic
-                   |
-                 Atom
-                   |
-                 Number
-                   |
-                Rational
-
-           then, for expr=Rational(...), in order to dispatch, we will try
-           calling printer methods as shown in the figure below::
-
-               p._print(expr)
-               |
-               |-- p._print_Rational(expr)
-               |
-               |-- p._print_Number(expr)
-               |
-               |-- p._print_Atom(expr)
-               |
-               `-- p._print_Basic(expr)
-
-           if ._print_Rational method exists in the printer, then it is called,
-           and the result is returned back.
-
-           otherwise, we proceed with trying Rational bases in the inheritance
-           order.
-
-           if nothing exists, we just return:
-
-               p.emptyPrinter(expr)
+        Tries the followingc concepts to print an expression:
+            1. Let the object print itself if it knows how.
+            2. Take the best fitting method defined in the printer.
+            3. As fall-back use the emptyPrinter method for the printer.
         """
-        self._depth += 1
+
+        # If the printer defines a name for a printing method (Printer.printmethod) and the
+        # object knows for itself how it should be printed, use that method.
+        if self.printmethod and hasattr(expr, self.printmethod):
+            res = getattr(expr, self.printmethod)()
+            if res is None:
+                raise Exception("Printing method '%s' of an instance of '%s' did return None" %\
+                                    (self.printmethod, expr.__class__.__name__))
+            return res
 
         # See if the class of expr is known, or if one of its super
         # classes is known, and use that print function
-        res = None
         for cls in type(expr).__mro__:
-            if hasattr(self, '_print_'+cls.__name__):
-                res = getattr(self, '_print_'+cls.__name__)(expr, *args)
-                break
+            printmethod = '_print_' + cls.__name__
+            if hasattr(self, printmethod):
+                res = getattr(self, printmethod)(expr, *args)
+                if res is None:
+                    raise Exception("Printing method '%s' did return None" % printmethod)
+                return res
 
-        # Unknown object, just use its string representation
+        # Unknown object, fall back to the emptyPrinter.
+        res = self.emptyPrinter(expr)
         if res is None:
-            res = self.emptyPrinter(expr)
-
-        self._depth -= 1
+            raise Exception("emptyPrinter method of '%s' did return None" % self.__class__.__name__)
         return res

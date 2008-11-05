@@ -4,6 +4,8 @@ from printer import Printer
 
 class MathMLPrinter(Printer):
     """A MathML printer."""
+    printmethod = "__mathml__"
+
     def __init__(self, *args, **kwargs):
         Printer.__init__(self, *args, **kwargs)
         from xml.dom.minidom import Document

@@ -9,6 +9,12 @@ from sympy.functions import DiracDelta
 x,y = symbols('xy')
 k,n = symbols('kn', integer=True)
 
+def test_printmethod():
+    class R(abs):
+        def __latex__(self):
+            return "foo"
+    assert latex(R(x)) == "$foo$"
+
 def test_latex_basic():
     assert latex(1+x) == "$1 + x$"
     assert latex(x**2) == "${x}^{2}$"
