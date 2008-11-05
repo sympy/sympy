@@ -600,3 +600,8 @@ def test_integrate():
     assert (log(x)).integrate((x, 0, 1)) == -1
     assert sin(x).integrate(x) == -cos(x)
     assert sin(x).integrate(('x',0,1)) == 1 - cos(1)
+
+def test_count_ops():
+    f = (x*y + 3/y)**(3 + 2)
+    assert f.count_ops() == Symbol('ADD') + 2*Symbol('MUL') + 2*Symbol('POW')
+    assert f.count_ops(symbolic=False) == 5

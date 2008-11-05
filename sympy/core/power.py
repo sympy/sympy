@@ -373,8 +373,8 @@ class Pow(Basic):
     @cacheit
     def count_ops(self, symbolic=True):
         if symbolic:
-            return Add(*[t.count_ops(symbolic) for t in self[:]]) + Symbol('POW')
-        return Add(*[t.count_ops(symbolic) for t in self.args[:]]) + 1
+            return Add(*[t.count_ops(symbolic) for t in self.args]) + Symbol('POW')
+        return Add(*[t.count_ops(symbolic) for t in self.args]) + 1
 
     def _eval_is_polynomial(self, syms):
         if self.exp.has(*syms):

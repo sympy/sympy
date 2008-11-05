@@ -214,8 +214,10 @@ class Add(AssocOp):
 
     def count_ops(self, symbolic=True):
         if symbolic:
-            return Add(*[t.count_ops(symbolic) for t in self[:]]) + Symbol('ADD') * (len(self[:])-1)
-        return Add(*[t.count_ops(symbolic) for t in self.args[:]]) + (len(self.args[:])-1)
+            return Add(*[t.count_ops(symbolic) for t in self.args]) + \
+                Symbol('ADD') * (len(self.args) - 1)
+        return Add(*[t.count_ops(symbolic) for t in self.args]) + \
+            (len(self.args) - 1)
 
     def _eval_is_polynomial(self, syms):
         for term in self.args:
