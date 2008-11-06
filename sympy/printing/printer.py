@@ -120,7 +120,7 @@ class Printer(object):
     def _print(self, expr, *args):
         """Internal dispatcher
 
-        Tries the followingc concepts to print an expression:
+        Tries the following concepts to print an expression:
             1. Let the object print itself if it knows how.
             2. Take the best fitting method defined in the printer.
             3. As fall-back use the emptyPrinter method for the printer.
