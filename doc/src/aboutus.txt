@@ -61,6 +61,8 @@ more details what they do and what they are interested in.
 #. Robert (average.programmer): initial piecewise function patch
 #. Andy R. Terrel: piecewise function polishing
 #. Hubert Tsang: LaTeX printing fixes
+#. Konrad Meyer: policy patch
+#. Henrik Johansson: matrix zero finder patch
 
 Uptodate list in the order of the first contribution is given in the `README
 <http://hg.sympy.org/sympy/file/tip/README>`_
