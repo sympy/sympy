@@ -938,3 +938,9 @@ def test_issue650():
     assert Matrix([[(exp(x)-1)/x, 2*x + y*x, x**x ],
                     [1/x, abs(x) , abs(sin(x+1))]]).limit(x, 0) == Matrix([[1, 0, 1],[oo, 0, sin(1)]])
     assert a.integrate(x) == Matrix([[Rational(1,3)*x**3, y*x**2/2],[x**2*sin(y)/2, x**2*cos(y)/2]])
+
+def test_inv_iszerofunc():
+    A = eye(4)
+    A.col_swap(0,1)
+    for method in "GE", "LU":
+        assert A.inv(method, iszerofunc=lambda x: x==0) == A.inv("ADJ")

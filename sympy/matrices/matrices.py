@@ -46,6 +46,9 @@ def _dims_to_nm( dims ):
 
     return n, m
 
+def _iszero(x):
+    return x == 0
+
 class Matrix(object):
 
     # Added just for numpy compatibility
@@ -469,7 +472,7 @@ class Matrix(object):
     def __repr__(self):
         return StrPrinter.doprint(self)
 
-    def inv(self, method="GE"):
+    def inv(self, method="GE", iszerofunc=_iszero):
         """
         Calculates the matrix inverse.
 
@@ -479,12 +482,18 @@ class Matrix(object):
           LU .... inverse_LU()
           ADJ ... inverse_ADJ()
 
+        Note, the GE and LU methods may require the matrix to be simplified
+        before it is inverted in order to properly detect zeros during
+        pivoting. In difficult cases a custom zero detection function can
+        be provided by setting the iszerosfunc argument to a function that
+        should return True if its argument is zero.
+
         """
         assert self.cols==self.lines
         if method == "GE":
-            return self.inverse_GE()
+            return self.inverse_GE(iszerofunc=iszerofunc)
         elif method == "LU":
-            return self.inverse_LU()
+            return self.inverse_LU(iszerofunc=iszerofunc)
         elif method == "ADJ":
             return self.inverse_ADJ()
         else:
@@ -756,13 +765,13 @@ class Matrix(object):
             s+="]\n"
         print s
 
-    def LUsolve(self, rhs):
+    def LUsolve(self, rhs, iszerofunc=_iszero):
         """
         Solve the linear system Ax = b.
         self is the coefficient matrix A and rhs is the right side b.
         """
         assert rhs.lines == self.lines
-        A, perm = self.LUdecomposition_Simple()
+        A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
         n = self.lines
         b = rhs.permuteFwd(perm)
         # forward substitution, all diag entries are scaled to 1
@@ -776,11 +785,11 @@ class Matrix(object):
             b.row(i, lambda x,k: x / A[i,i])
         return b
 
-    def LUdecomposition(self):
+    def LUdecomposition(self, iszerofunc=_iszero):
         """
         Returns the decompositon LU and the row swaps p.
         """
-        combined, p = self.LUdecomposition_Simple()
+        combined, p = self.LUdecomposition_Simple(iszerofunc=_iszero)
         L = self.zeros(self.lines)
         U = self.zeros(self.lines)
         for i in range(self.lines):
@@ -793,7 +802,7 @@ class Matrix(object):
                     U[i,j] = combined[i,j]
         return L, U, p
 
-    def LUdecomposition_Simple(self):
+    def LUdecomposition_Simple(self, iszerofunc=_iszero):
         """
         Returns A compused of L,U (L's diag entries are 1) and
         p which is the list of the row swaps (in order).
@@ -812,14 +821,14 @@ class Matrix(object):
                 for k in range(j):
                     A[i,j] = A[i,j] - A[i,k]*A[k,j]
                 # find the first non-zero pivot, includes any expression
-                if pivot == -1 and A[i,j] != 0:
+                if pivot == -1 and not iszerofunc(A[i,j]):
                     pivot = i
             if pivot < 0:
                 raise "Error: non-invertible matrix passed to LUdecomposition_Simple()"
             if pivot != j: # row must be swapped
                 A.row_swap(pivot,j)
                 p.append([pivot,j])
-            assert A[j,j] != 0
+            assert not iszerofunc(A[j,j])
             scale = 1 / A[j,j]
             for i in range(j+1,n):
                 A[i,j] = A[i,j] * scale
@@ -1145,20 +1154,20 @@ class Matrix(object):
         return self.cofactorMatrix(method).T
 
 
-    def inverse_LU(self):
+    def inverse_LU(self, iszerofunc=_iszero):
         """
         Calculates the inverse using LU decomposition.
         """
-        return self.LUsolve(self.eye(self.lines))
+        return self.LUsolve(self.eye(self.lines), iszerofunc=_iszero)
 
-    def inverse_GE(self):
+    def inverse_GE(self, iszerofunc=_iszero):
         """
         Calculates the inverse using Gaussian elimination.
         """
         assert self.lines == self.cols
         assert self.det() != 0
         big = self.row_join(self.eye(self.lines))
-        red = big.rref()
+        red = big.rref(iszerofunc=iszerofunc)
         return red[0][:,big.lines:]
 
     def inverse_ADJ(self):
@@ -1170,7 +1179,7 @@ class Matrix(object):
         assert d != 0
         return self.adjugate()/d
 
-    def rref(self,simplified=False):
+    def rref(self,simplified=False, iszerofunc=_iszero):
         """
         Take any matrix and return reduced row-echelon form and indices of pivot vars
 
@@ -1184,13 +1193,13 @@ class Matrix(object):
                 break
             if simplified:
                 r[pivots,i] = simplify(r[pivots,i])
-            if r[pivots,i] == 0:
+            if iszerofunc(r[pivots,i]):
                 for k in range(pivots, r.lines):
                     if simplified and k>pivots:
                         r[k,i] = simplify(r[k,i])
-                    if r[k,i] != 0:
+                    if not iszerofunc(r[k,i]):
                         break
-                if k == r.lines - 1 and r[k,i] == 0:
+                if k == r.lines - 1 and iszerofunc(r[k,i]):
                     continue
                 r.row_swap(pivots,k)
             scale = r[pivots,i]
