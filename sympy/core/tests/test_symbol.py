@@ -1,5 +1,5 @@
 from sympy import Symbol, Wild, Inequality, StrictInequality, pi, I, Rational, \
-        sympify, raises
+        sympify, raises, symbols
 
 
 def test_Symbol():
@@ -81,3 +81,13 @@ def test_Wild_properties():
                     assert d[A] in goodmatch[A]
                 else:
                     assert d == None
+
+def test_symbols():
+    x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
+    assert symbols('x') == Symbol('x')
+    assert symbols('xyz') == [x, y, z]
+    assert symbols('x y z') == symbols('x,y,z') == (x, y, z)
+    assert symbols('xyz', each_char=False) == Symbol('xyz')
+    x, y = symbols('x y', each_char=False, real=True)
+    assert x.is_real and y.is_real
+

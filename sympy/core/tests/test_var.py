@@ -58,3 +58,8 @@ def test_var_accepts_comma():
 
     assert v1 == v2
     assert v1 == v3
+
+def test_var_keywords():
+    var('x y', real=True)
+    assert x.is_real and y.is_real
+
