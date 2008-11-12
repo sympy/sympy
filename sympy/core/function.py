@@ -57,6 +57,13 @@ class FunctionClass(BasicMeta):
     def __new__(cls, arg1, arg2, arg3=None, **options):
         assert not options,`options`
         if isinstance(arg1, type):
+            # the following code gets executed when one types
+            # FunctionClass(Function, "f")
+            # i.e. cls = FunctionClass, arg1 = Function, arg2 = "f"
+            # and we simply do an equivalent of:
+            # class f(Function):
+            #     ...
+            # return f
             ftype, name, signature = arg1, arg2, arg3
             #XXX this probably needs some fixing:
             assert ftype.__name__.endswith('Function'),`ftype`

@@ -87,13 +87,10 @@ class BasicMeta(BasicType):
     classnamespace = {}
     singleton = {}
 
-    def __init__(cls,*args,**kws):
+    def __init__(cls, *args, **kws):
         n = cls.__name__
         c = BasicMeta.classnamespace.get(n)
-        if c is None:
-            BasicMeta.classnamespace[n] = cls
-        else:
-            print 'Ignoring redefinition of %s: %s defined earlier than %s' % (n, c, cls)
+        BasicMeta.classnamespace[n] = cls
         super(BasicMeta, cls).__init__(cls)
 
         # --- assumptions ---
