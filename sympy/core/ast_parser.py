@@ -1,112 +1,102 @@
-import compiler
-import parser
-from compiler.transformer import Transformer
-from compiler.visitor import ASTVisitor
-from compiler.ast import CallFunc, Name, Const, Tuple
-from compiler.pycodegen import ExpressionCodeGenerator
-import re
+"""
+This module implements the functionality to take any Python expression as a
+string and fix all numbers and other things before evaluating it,
+thus
 
-from basic import Basic
-from function import FunctionClass
-from symbol import Symbol
+1/2
 
-###################################################3
-# HELPERS
-###################################################3
+returns
 
-_is_integer = re.compile(r'\A\d+(l|L)?\Z').match
+Integer(1)/Integer(2)
 
-int_types = (int, long)
-float_types = (float)
-complex_types = (complex)
-string_types = (str) # XXX: unicode?
-classes = Basic
+We use the Python ast module for that, which is in python2.6 and later. It is
+well documented at docs.python.org.
 
-###################################################3
-# CODE
-###################################################3
+Some tips to understand how this works: use dump() to get a nice representation
+of any node. Then write a string of what you want to get, e.g.
+"Integer(1)", parse it, dump it and you'll see that you need to do
+"Call(Name('Integer', Load()), [node], [], None, None)". You don't need to
+bother with lineno and col_offset, just call fix_missing_locations() before
+returning the node.
 
-class SymPyTransformer(Transformer):
-    def __init__(self, local_dict, global_dict):
-        Transformer.__init__(self)
+If the ast module is not available (python2.4 and 2.5), we use the old compiler
+module.
+"""
 
-        self.symbol_class = 'Symbol'
+from sympy import Integer, Real, Basic
 
-        self.local_dict = local_dict
-        self.global_dict = global_dict
+try:
+    import ast
+    ast_enabled = True
+except ImportError:
+    ast_enabled = False
 
-    def atom_number(self, nodelist):
-        n = Transformer.atom_number(self, nodelist)
-        number, lineno = nodelist[0][1:]
-        if _is_integer(number):
-            n = Const(long(number), lineno)
-            return CallFunc(Name('Integer'), [n])
-        if number.endswith('j'):
-            n = Const(complex(number), lineno)
-            return CallFunc(Name('sympify'), [n])
-        n = Const(number, lineno)
-        return CallFunc(Name('Real'), [n])
+if ast_enabled:
+    from ast import parse, NodeTransformer, dump, Call, Name, Load, \
+            fix_missing_locations, Str
 
-    def atom_name(self, nodelist):
-        name, lineno = nodelist[0][1:]
+    class Transform(NodeTransformer):
 
-        if self.local_dict.has_key(name):
-            name_obj = self.local_dict[name]
-            return Const(name_obj, lineno=lineno)
-        elif self.global_dict.has_key(name):
-            name_obj = self.global_dict[name]
+        def __init__(self, local_dict, global_dict):
+            NodeTransformer.__init__(self)
+            self.local_dict = local_dict
+            self.global_dict = global_dict
 
-            if isinstance(name_obj, (Basic, type)) or callable(name_obj):
-                return Const(name_obj, lineno=lineno)
-        elif name in ['True', 'False']:
-            return Const(eval(name), lineno=lineno)
+        def visit_Num(self, node):
+            if isinstance(node.n, int):
+                return fix_missing_locations(Call(Name('Integer', Load()),
+                        [node], [], None, None))
+            elif isinstance(node.n, float):
+                return fix_missing_locations(Call(Name('Real', Load()),
+                    [node], [], None, None))
+            return node
 
-        symbol_obj = Symbol(name)
-        self.local_dict[name] = symbol_obj
+        def visit_Name(self, node):
+            if node.id in self.local_dict:
+                return node
+            elif node.id in self.global_dict:
+                name_obj = self.global_dict[node.id]
 
-        return Const(symbol_obj, lineno=lineno)
+                if isinstance(name_obj, (Basic, type)) or callable(name_obj):
+                    return node
+            elif node.id in ['True', 'False']:
+                return node
+            return fix_missing_locations(Call(Name('Symbol', Load()),
+                    [Str(node.id)], [], None, None))
 
-    def lambdef(self, nodelist):
-        #this is python stdlib symbol, not SymPy symbol:
-        from sympy import stdlib_symbol
-        if nodelist[2][0] == stdlib_symbol.varargslist:
-            names, defaults, flags = self.com_arglist(nodelist[2][1:])
-        else:
-            names = defaults = ()
-            flags = 0
+        def visit_Lambda(self, node):
+            if len(node.args.args) == 0:
+                args = [Str("x")]
+            else:
+                args = node.args.args
+            args = [self.visit(arg) for arg in args]
+            body = self.visit(node.body)
+            n = Call(Name('Lambda', Load()), args + [body], [], None, None)
+            return fix_missing_locations(n)
 
-        lineno = nodelist[1][2]
-        code = self.com_node(nodelist[-1])
+def parse_expr(s, local_dict):
+    """
+    Converts the string "s" to a SymPy expression, in local_dict.
 
-        assert not defaults,`defaults` # sympy.Lambda does not support optional arguments
-        assert len(names) <= 1
-
-        if len(names) > 0:
-            argument = CallFunc( Name('Symbol'), [Const(names[0], lineno=lineno)])
-        else:
-            argument = CallFunc( Name('Symbol'), [Const('x')])
-
-        return CallFunc(Name('Lambda'),[argument, code])
-
-
-class SymPyParser:
-    def __init__(self, local_dict={}): #Contents of local_dict change, but it has proper effect only in global scope
+    It converts all numbers to Integers before feeding it to Python and
+    automatically creates Symbols.
+    """
+    from sympify import SympifyError
+    if ast_enabled:
         global_dict = {}
         exec 'from sympy import *' in global_dict
-
-        self.r_transformer = SymPyTransformer(local_dict, global_dict)
-        self.local_dict = local_dict
-        self.global_dict = global_dict
-
-    def parse_expr(self, ws_expression):
-        expression = ws_expression.strip() #in case of "   x"
-        ast_tree = parser.expr(expression)
-        ast_tree = self.r_transformer.transform(ast_tree)
-
-        compiler.misc.set_filename('<sympify>', ast_tree)
-        code = ExpressionCodeGenerator(ast_tree).getCode()
-
-        parsed_expr = eval(code, self.local_dict, self.global_dict) #Changed order to prefer sympy objects to  user defined
-
-        return parsed_expr
-
+        try:
+            a = parse(s.strip(), mode="eval")
+        except SyntaxError:
+            raise SympifyError("Cannot parse.")
+        a = Transform(local_dict, global_dict).visit(a)
+        e = compile(a, "<string>", "eval")
+        return eval(e, local_dict, global_dict)
+    else:
+        # in python2.4 and 2.5, the "ast" module is not available, so we need
+        # to use our old implementation:
+        from ast_parser_python24 import SymPyParser
+        try:
+            return SymPyParser(local_dict=local_dict).parse_expr(s)
+        except SyntaxError:
+            raise SympifyError("sorry")

@@ -115,13 +115,10 @@ def sympify(a, locals=None, convert_xor=True):
             # return an exception
             a = str(a)
 
-        try:
-            if convert_xor:
-                a = a.replace('^','**')
-            import ast_parser
-            return ast_parser.SymPyParser(local_dict=locals).parse_expr(a)
-        except Exception, exc:
-            raise SympifyError(a, exc)
+        if convert_xor:
+            a = a.replace('^','**')
+        import ast_parser
+        return ast_parser.parse_expr(a, locals)
     raise SympifyError("%r is NOT a valid SymPy expression" % a)
 
 

@@ -45,7 +45,8 @@ if sys.version_info[1] < 4:
 modules = [
     # do docstring # module name # omit those even if the first field is True
     ( True, 'sympy.concrete', [] ),
-    ( True, 'sympy.core', ['add', 'mul', 'relational', 'interval', 'ast_parser'] ),
+    ( True, 'sympy.core', ['add', 'mul', 'relational', 'interval',
+        'ast_parser', 'ast_parser_python24'] ),
     ( True, 'sympy.functions', [] ),
     ( True, 'sympy.functions.combinatorial', [] ),
     ( True, 'sympy.functions.elementary',
