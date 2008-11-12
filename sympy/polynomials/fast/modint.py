@@ -43,6 +43,9 @@ class ModularInteger(object):
         assert g == 1, "Zero division!"
         return self.__class__(self.value * x)
 
+    def __truediv__(self, other):
+        return self.__div__(other)
+
     def __pow__(self, exponent):
         """Repeated squaring."""
         exponent = int(exponent)

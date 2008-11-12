@@ -987,6 +987,9 @@ def test_issue432():
     class MightyNumeric(tuple):
         def __rdiv__(self, other):
             return "something"
+
+        def __rtruediv__(self, other):
+            return "something"
     assert sympify(1)/MightyNumeric((1,2)) == "something"
 
 def test_issue432b():

@@ -22,6 +22,12 @@ class DummyNumber(object):
             return a + self.number
         return NotImplemented
 
+    def __truediv__(a, b):
+        return a.__div__(b)
+
+    def __rtruediv__(a, b):
+        return a.__rdiv__(b)
+
     def __add__(self, a):
         if isinstance(a, (int, float, DummyNumber)):
             return self.number + a

@@ -374,6 +374,9 @@ class prettyForm(stringPict):
             stringPict.LINE,
             den))
 
+    def __truediv__(self, o):
+        return self.__div__(o)
+
     def __mul__(self, *others):
         """Make a pretty multiplication.
         Parentheses are needed around +, - and neg.
