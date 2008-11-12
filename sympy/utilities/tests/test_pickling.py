@@ -20,7 +20,7 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda,\
 from sympy.core.interval import Interval
 from sympy.core.multidimensional import vectorize
 from sympy.core.cache import Memoizer
-from sympy.core.ast_parser import SymPyParser, SymPyTransformer
+#from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
 
 def check(a):
@@ -117,12 +117,13 @@ def test_core_cache():
     for c in (Memoizer, Memoizer()):
         check(c)
 
-@XFAIL
-def test_core_astparser():
-    # This probably fails because of importing the global sympy scope.
-    for c in (SymPyParser, SymPyParser(), SymPyTransformer,
-              SymPyTransformer({},{})):
-        check(c)
+# This doesn't have to be pickable.
+#@XFAIL
+#def test_core_astparser():
+#    # This probably fails because of importing the global sympy scope.
+#    for c in (SymPyParser, SymPyParser(), SymPyTransformer,
+#              SymPyTransformer({},{})):
+#        check(c)
 
 
 #================== functions ===================
