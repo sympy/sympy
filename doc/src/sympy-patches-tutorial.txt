@@ -144,6 +144,15 @@ So, let's clone main repo, and go hacking
 
         $ :input:`hg up 4962f6641827`
 
+.. note::
+
+    We now recommend to use git. This tutorial was written when we still used
+    mercurial. See our `Quick Start`_ for an introduction to git and use our
+    `Git hg rosetta stone <http://wiki.sympy.org/wiki/Git_hg_rosetta_stone>`_
+    wiki page to learn how to translate commands between mercurial and git. The
+    ideas in this tutorial stay correct, the exact commands can be a little
+    different with git though.
+
 I use vim_ editor, and usually it is very handy to navigate by tags, so I build
 tags database first, then invoke my editor [2]_
 
@@ -1003,6 +1012,139 @@ Quick Start
 This section explains how to get you up and running in 5 minutes. However we
 recommend that you read the full tutorial above, at least the introduction and
 then go briefly through the rest.
+
+You can use both git and mercurial with SymPy. Originally we only used
+mercurial, but later several core developers switched to git. Use what you
+prefer, but git is recommended.
+
+**Quick Start with Git**
+
+Edit your ``~/.gitconfig`` (tell git your name and setup colors and some handy
+shortcuts)::
+
+    [user]
+        name = Ondrej Certik
+        email = ondrej@certik.cz
+
+    [color]
+        diff  = auto
+        status= auto
+        branch= auto
+        interactive = true
+
+    [alias]
+        ci = commit
+        di = diff --color-words
+        st = status
+        co = checkout
+
+    [sendemail]
+        to = sympy-patches@googlegroups.com
+
+Download the latest SymPy git and fix something:
+
+.. parsed-literal::
+
+    $ :input:`git clone git://git.sympy.org/sympy.git`
+    Initialized empty Git repository in /tmp/abb/sympy/.git/
+    remote: Counting objects: 15421, done.
+    remote: Compressing objects: 100% (4171/4171), done.
+    remote: Total 15421 (delta 11260), reused 15301 (delta 11140)
+    Receiving objects: 100% (15421/15421), 17.02 MiB | 2019 KiB/s, done.
+    Resolving deltas: 100% (11260/11260), done.
+    $ :input:`cd sympy`
+    $ :input:`vim sympy/matrices/matrices.py`
+
+Check your changes:
+
+.. parsed-literal::
+
+    $ :input:`git di`
+    diff --git a/sympy/matrices/matrices.py b/sympy/matrices/matrices.py
+    index 02b01cc..ae36b31 100644
+    --- a/sympy/matrices/matrices.py
+    +++ b/sympy/matrices/matrices.py
+    @@ -183,7 +183,7 @@ class Matrix(object):
+                     lambda i,j: self[i,j].conjugate())
+             return out
+
+    -    C = property(conjugate,None,None,"By-element conjugation.")
+    +    C = property(conjugate, None, None, "By-element conjugation.")
+
+         @property
+         def H(self):
+
+Commit them:
+
+.. parsed-literal::
+
+    $ :input:`git ci -a -m "Matrices: white space corrected"`
+    Created commit 5b6bf9c: Matrices: white space corrected
+     1 files changed, 1 insertions(+), 1 deletions(-)
+
+Do more changes, commit, etc.:
+
+.. parsed-literal::
+
+    $ :input:`vim sympy/matrices/matrices.py`
+    $ :input:`git ci -a -m "Matrices: more white space corrected"`
+    Created commit 1b8615d: Matrices: more white space corrected
+     1 files changed, 1 insertions(+), 1 deletions(-)
+
+Generate the final patches:
+
+.. parsed-literal::
+
+    $ :input:`git format-patch -n -2`
+    0001-Matrices-white-space-corrected.patch
+    0002-Matrices-more-white-space-corrected.patch
+
+The "-n" means to create a patch series with subjects like [1/2], [2/2] and
+"-2" tells git to generate patches from the latest two commits. Check the
+generated files that all is ok and then either attach them to our issues_, or
+send it to our list, preferably to the `sympy-patches@googlecode.com`_ list.
+
+Tip: to send the patch to the sympy-patches list conveniently from the command
+line, do:
+
+.. parsed-literal::
+
+    $ :input:`git send-email 000*`
+    0001-Matrices-white-space-corrected.patch
+    0002-Matrices-more-white-space-corrected.patch
+    Who should the emails appear to be from? [Ondrej Certik <ondrej@certik.cz>] 
+    Emails will be sent from: Ondrej Certik <ondrej@certik.cz>
+    Message-ID to be used as In-Reply-To for the first email? 
+    (mbox) Adding cc: Ondrej Certik <ondrej@certik.cz> from line 'From: Ondrej Certik <ondrej@certik.cz>'
+    OK. Log says:
+    Sendmail: /usr/sbin/sendmail -i sympy-patches@googlegroups.com ondrej@certik.cz
+    From: Ondrej Certik <ondrej@certik.cz>
+    To: sympy-patches@googlegroups.com
+    Subject: [PATCH 1/2] Matrices: white space corrected
+    Date: Mon, 10 Nov 2008 16:30:35 +0100
+    Message-Id: <1226331036-9550-1-git-send-email-ondrej@certik.cz>
+    X-Mailer: git-send-email 1.5.6.5
+
+    Result: OK
+    (mbox) Adding cc: Ondrej Certik <ondrej@certik.cz> from line 'From: Ondrej Certik <ondrej@certik.cz>'
+    OK. Log says:
+    Sendmail: /usr/sbin/sendmail -i sympy-patches@googlegroups.com ondrej@certik.cz
+    From: Ondrej Certik <ondrej@certik.cz>
+    To: sympy-patches@googlegroups.com
+    Subject: [PATCH 2/2] Matrices: more white space corrected
+    Date: Mon, 10 Nov 2008 16:30:36 +0100
+    Message-Id: <1226331036-9550-2-git-send-email-ondrej@certik.cz>
+    X-Mailer: git-send-email 1.5.6.5
+    In-Reply-To: <1226331036-9550-1-git-send-email-ondrej@certik.cz>
+    References: <1226331036-9550-1-git-send-email-ondrej@certik.cz>
+
+    Result: OK
+
+That's it -- to learn more about git, read our `Git hg rosetta stone
+<http://wiki.sympy.org/wiki/Git_hg_rosetta_stone>`_ wiki page and
+follow links from there.
+
+**Quick Start with Mercurial**
 
 Edit your ``~/.hgrc`` (tell Mercurial your name and use git style diffs)::
 
