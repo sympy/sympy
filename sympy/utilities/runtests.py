@@ -294,6 +294,9 @@ class PyTestReporter(Reporter):
         c_color = '\033[%sm'
 
         if align == "right":
+            if self._write_pos+len(text) > width:
+                # we don't fit on the current line, create a new line
+                self.write("\n")
             self.write(" "*(width-self._write_pos-len(text)))
 
         if color == "":
@@ -306,6 +309,7 @@ class PyTestReporter(Reporter):
             self._write_pos += len(text)
         else:
             self._write_pos = len(text)-l-1
+        self._write_pos %= width
 
     def write_center(self, text, delim="="):
         width = 80
