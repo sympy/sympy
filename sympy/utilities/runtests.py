@@ -299,6 +299,13 @@ class PyTestReporter(Reporter):
                 self.write("\n")
             self.write(" "*(width-self._write_pos-len(text)))
 
+        if not sys.stdout.isatty():
+            # the stdout is not a terminal, this for example happens if the
+            # output is piped to less, e.g. "bin/test | less". In this case,
+            # the terminal control sequences would be printed verbatim, so
+            # don't use any colors.
+            color = ""
+
         if color == "":
             sys.stdout.write(text)
         else:
