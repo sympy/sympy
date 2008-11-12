@@ -770,7 +770,7 @@ class Integer(Rational):
 
             # Also, we seldomly need the following to work:
             # UC: Integer(Integer(4))   <-- sympify('4')
-            elif i.is_Integer:
+            elif isinstance(i, Integer):
                 return i
 
             else:
