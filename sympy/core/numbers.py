@@ -34,7 +34,7 @@ def igcd(a, b):
     """Computes integer greates common divisor of two numbers.
 
        The algorithm is based on the well known Euclid's algorithm. To
-       improve speed igcd() has its own caching mechanizm implemented.
+       improve speed, igcd() has its own caching mechanizm implemented.
     """
     try:
         return _gcdcache[(a,b)]
