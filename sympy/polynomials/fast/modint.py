@@ -8,6 +8,7 @@ class ModularInteger(object):
     modulus = 0
 
     def __init__(self, value):
+        assert isinstance(value, (int, long))
         self.value = value % self.modulus
 
     def __repr__(self):
