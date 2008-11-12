@@ -1,3 +1,15 @@
+"""
+This is our testing framework.
+
+Goals:
+
+* it should behave very similar (or identical) to py.test
+* doesn't require any external dependencies
+* preferably all the functionality should be in this file only
+* no magic, just import the test file and execute the test functions, that's it
+* portable
+
+"""
 import os
 import sys
 import inspect
@@ -105,12 +117,12 @@ class SymPyTests(object):
             # we need to filter only those functions that begin with 'test_'
             funcs = [f for f in funcs if f.startswith("test_")]
             # and also that are defined in this module (i.e. not imported from
-            # other modules using the import statemet, like "from sympy import
+            # other modules using the import statement, like "from sympy import
             # *"). This is tricky to achieve. The easiest is to compare m1 and
             # m2 below, if they are equal, we are sure that the "f" is from
             # module. However, when one uses the XFAIL decorator, the m1
             # appears from "sympy.utilities.pytest", so we check this one
-            # explicitely. This is not robust, as it will stop working when we
+            # explicitly. This is not robust, as it will stop working when we
             # move XFAIL to another module, or if we use some decorator defined
             # elsewhere. Any help with this is welcomed.
             funcs2 = []
@@ -120,6 +132,8 @@ class SymPyTests(object):
                 m1 = f.__module__
                 if m1 == m2 or m1 == "sympy.utilities.pytest":
                     if isgeneratorfunction(f):
+                        # some tests can be generators, that return the actual
+                        # test functions. We unpack it below:
                         for fg in f():
                             func = fg[0]
                             args = fg[1:]
@@ -129,6 +143,8 @@ class SymPyTests(object):
                         funcs2.append((f, inspect.getsourcelines(f)[1]))
             funcs2.sort(key=lambda x: x[1])
             funcs = [x[0] for x in funcs2]
+
+        # 'func' now contains all functions to test.
         self._reporter.entering_filename(filename, len(funcs))
         for f in funcs:
             self._reporter.entering_test(f)
@@ -192,9 +208,15 @@ class SymPyTests(object):
         return g
 
 class Reporter(object):
+    """
+    Parent class for all reporters.
+    """
     pass
 
 class PyTestReporter(Reporter):
+    """
+    Py.test like reporter. Should produce output identical to py.test.
+    """
 
     def __init__(self, verbose=False):
         self._verbose = verbose
