@@ -21,10 +21,13 @@ import sympy
 parser = OptionParser()
 parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
         default=False)
+parser.add_option("-k", dest="kw", help="only run tests matching the given keyword expression", metavar="KEYWORD", default="")
+parser.add_option("--tb", dest="tb", help="traceback verboseness (short/no) [default: %default]", metavar="TBSTYLE", default="short")
 
 options, args = parser.parse_args()
 
-ok = sympy.test(*args, **{"verbose": options.verbose})
+ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
+    "tb": options.tb})
 if ok:
     sys.exit(0)
 else:

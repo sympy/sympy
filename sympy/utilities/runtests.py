@@ -54,12 +54,11 @@ def test(*paths, **kwargs):
     >> import sympy
     >> sympy.test("sympy/core/tests/test_basic.py", "sympy/functions")
     """
-    if "verbose" in kwargs:
-        verbose = kwargs["verbose"]
-    else:
-        verbose = False
-    r = PyTestReporter(verbose)
-    t = SymPyTests(r)
+    verbose = kwargs.get("verbose", False)
+    tb = kwargs.get("tb", "short")
+    kw = kwargs.get("kw", "")
+    r = PyTestReporter(verbose, tb)
+    t = SymPyTests(r, kw)
     if len(paths) > 0:
         t.add_paths(paths)
     else:
@@ -68,7 +67,8 @@ def test(*paths, **kwargs):
 
 class SymPyTests(object):
 
-    def __init__(self, reporter):
+    def __init__(self, reporter, kw=""):
+        self._kw = kw
         self._count = 0
         self._root_dir = self.get_sympy_dir()
         self._reporter = reporter
@@ -142,10 +142,13 @@ class SymPyTests(object):
                             funcs2.append((fgw, inspect.getsourcelines(f)[1]))
                     else:
                         funcs2.append((f, inspect.getsourcelines(f)[1]))
+            # 'func2' now contains all candidates of functions to test.
+            # sort them according to the line of occurence:
             funcs2.sort(key=lambda x: x[1])
             funcs = [x[0] for x in funcs2]
+            # drop functions that are not selected with the keyword expression:
+            funcs = [x for x in funcs if self.matches(x)]
 
-        # 'func' now contains all functions to test.
         self._reporter.entering_filename(filename, len(funcs))
         for f in funcs:
             self._reporter.entering_test(f)
@@ -178,6 +181,15 @@ class SymPyTests(object):
         sympy_dir = os.path.normpath(sympy_dir)
         return sympy_dir
 
+    def matches(self, x):
+        """
+        Does the keyword expression self._kw match "x"? Returns True/False.
+
+        Always returns True if self._kw is "".
+        """
+        if self._kw == "":
+            return True
+        return x.__name__.find(self._kw) != -1
 
     def get_paths(self, dir="", level=15):
         """
@@ -219,8 +231,9 @@ class PyTestReporter(Reporter):
     Py.test like reporter. Should produce output identical to py.test.
     """
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, tb="short"):
         self._verbose = verbose
+        self._tb_style = tb
         self._xfailed = 0
         self._xpassed = []
         self._failed = []
@@ -280,7 +293,7 @@ class PyTestReporter(Reporter):
                 self.write("%s:%s\n" % (e[0], e[1].__name__))
             self.write("\n")
 
-        if len(self._exceptions) > 0:
+        if self._tb_style != "no" and len(self._exceptions) > 0:
             #self.write_center("These tests raised an exception", "_")
             for e in self._exceptions:
                 filename, f, (t, val, tb) = e
@@ -293,7 +306,7 @@ class PyTestReporter(Reporter):
                 self.write_exception(t, val, tb)
             self.write("\n")
 
-        if len(self._failed) > 0:
+        if self._tb_style != "no" and len(self._failed) > 0:
             #self.write_center("Failed", "_")
             for e in self._failed:
                 filename, f, (t, val, tb) = e
