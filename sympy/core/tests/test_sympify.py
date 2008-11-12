@@ -84,9 +84,9 @@ def test_bug496():
 
 def test_lambda():
     x = Symbol('x')
-    assert sympify('lambda : 1')==Lambda(x, 1)
-    assert sympify('lambda x: 2*x')==Lambda(x, 2*x)
-    assert sympify('lambda x, y: 2*x+y')==Lambda([x, y], 2*x+y)
+    assert sympify('lambda : 1') == Lambda(x, 1)
+    assert sympify('lambda x: 2*x') == Lambda(x, 2*x)
+    assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2*x+y)
 
     raises(SympifyError, "_sympify('lambda : 1')")
 
