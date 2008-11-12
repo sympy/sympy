@@ -605,7 +605,7 @@ def poly_resultant(f, g, *symbols):
         else:
             det /= g.LC**(m-n)
 
-        sign = (-1)**(n*(n-1)/2)
+        sign = (-1)**(n*(n-1)//2)
 
         if det.is_Atom:
             return sign * det

@@ -33,7 +33,7 @@ class gamma(Function):
                     return S.ComplexInfinity
             elif arg.is_Rational:
                 if arg.q == 2:
-                    n = abs(arg.p) / arg.q
+                    n = abs(arg.p) // arg.q
 
                     if arg.is_positive:
                         k, coeff = n, S.One
@@ -187,7 +187,7 @@ class polygamma(Function):
                 coeff, terms = z.as_coeff_terms()
 
                 if coeff.is_Integer and coeff.is_positive:
-                    tail = [ polygamma(n, z + i/coeff) for i in xrange(0, int(coeff)) ]
+                    tail = [ polygamma(n, z + i//coeff) for i in xrange(0, int(coeff)) ]
 
                     if n is S.Zero:
                         return log(coeff) + Add(*tail)/coeff**(n+1)

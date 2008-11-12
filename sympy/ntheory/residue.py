@@ -45,7 +45,7 @@ def is_quad_residue(a,p):
     assert igcd(a,p)==1,"The two numbers should be relatively prime"
     if a>p:
         a=a%p
-    rem=(a**((p-1)/2))%p    # a^(p-1 / 2) % p
+    rem=(a**((p-1)//2))%p    # a^(p-1 / 2) % p
     if rem==1: return True
     else : return False
 

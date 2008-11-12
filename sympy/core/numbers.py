@@ -56,7 +56,7 @@ def ilcm(a, b):
     if a == 0 and b == 0:
         return 0
     else:
-        return a * b / igcd(a, b)
+        return a * b // igcd(a, b)
 
 def igcdex(a, b):
     """Returns x, y, g such that g = x*a + y*b = gcd(a, b).
@@ -77,9 +77,9 @@ def igcdex(a, b):
         return (0, 1, 0)
 
     if not a:
-        return (0, b/abs(b), abs(b))
+        return (0, b//abs(b), abs(b))
     if not b:
-        return (a/abs(a), 0, abs(a))
+        return (a//abs(a), 0, abs(a))
 
     if a < 0:
         a, x_sign = -a, -1
@@ -94,7 +94,7 @@ def igcdex(a, b):
     x, y, r, s = 1, 0, 0, 1
 
     while b:
-        (c, q) = (a % b, a / b)
+        (c, q) = (a % b, a // b)
         (a, b, r, s, x, y) = (b, c, x-q*r, y-q*s, r, s)
 
     return (x*x_sign, y*y_sign, a)
@@ -507,8 +507,8 @@ class Rational(Number):
             p = -p
         n = igcd(abs(p), q)
         if n>1:
-            p /= n
-            q /= n
+            p //= n
+            q //= n
         if q==1: return Integer(p)
         if p==1 and q==2: return S.Half
         obj = Basic.__new__(cls)
@@ -929,14 +929,14 @@ class Integer(Rational):
                             return 1/res
                     else:
                         if b > 2**32: #Prevent from factorizing too big integers:
-                            for i in xrange(2, e.q/2 + 1): #OLD CODE
+                            for i in xrange(2, e.q//2 + 1): #OLD CODE
                                 if e.q % i == 0:
                                     x, xexact = integer_nthroot(b.p, i)
                                     if xexact:
                                         return Integer(x)**(e * i)
                             # Try to get some part of the base out, if exponent > 1
                             if e.p > e.q:
-                                i = e.p / e.q
+                                i = e.p // e.q
                                 r = e.p % e.q
                                 return b**i * b**Rational(r, e.q)
                             return
@@ -952,7 +952,7 @@ class Integer(Rational):
 
                         for prime,exponent in dict.iteritems():
                             exponent *= e.p
-                            div_e = exponent / e.q
+                            div_e = exponent // e.q
                             div_m = exponent % e.q
 
                             if div_e > 0:
@@ -967,7 +967,7 @@ class Integer(Rational):
                                 sqr_gcd = igcd(sqr_gcd, ex)
 
                         for k,v in sqr_dict.iteritems():
-                            sqr_int *= k**(v/sqr_gcd)
+                            sqr_int *= k**(v // sqr_gcd)
 
                         if sqr_int == b.p and out_int == 1:
                             return None

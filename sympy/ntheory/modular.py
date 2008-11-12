@@ -17,7 +17,7 @@ def crt(m, v, symmetric=False):
     result = 0
 
     for m_i, v_i in zip(m, v):
-        e = mm / m_i
+        e = mm // m_i
         s, t, g = igcdex(e, m_i)
         c = v_i*s % m_i
         result += c*e
@@ -25,7 +25,7 @@ def crt(m, v, symmetric=False):
     result %= mm
 
     if symmetric:
-        if result <= mm/2:
+        if result <= mm//2:
             return result
         else:
             return result - mm
@@ -40,7 +40,7 @@ def crt1(m):
         mm *= m_i
 
     for m_i in m:
-        e.append(mm / m_i)
+        e.append(mm // m_i)
         s.append(igcdex(e[-1], m_i)[0])
 
     return mm, e, s
@@ -56,7 +56,7 @@ def crt2(m, v, mm, e, s, symmetric=False):
     result %= mm
 
     if symmetric:
-        if result <= mm/2:
+        if result <= mm // 2:
             return result
         else:
             return result - mm

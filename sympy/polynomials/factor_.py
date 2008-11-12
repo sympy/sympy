@@ -337,7 +337,7 @@ def kronecker_mv(f):
     # Trial division with all combinations of factors of g.
     tested = []
     result = []
-    for m in range(1, len(g_factors)/2 + 1):
+    for m in range(1, len(g_factors)//2 + 1):
         for cand in factor_combinations(g_factors, m):
             if cand in tested:
                 continue

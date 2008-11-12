@@ -67,7 +67,7 @@ class Factorial(Function):
                 p, q = 1, n
 
                 while True:
-                    q /= prime
+                    q //= prime
 
                     if q > 0:
                         if q & 1 == 1:
@@ -78,13 +78,13 @@ class Factorial(Function):
                 if p > 1:
                     primes.append(p)
 
-            for prime in sieve.primerange(N+1, n/3 + 1):
-                if (n / prime) & 1 == 1:
+            for prime in sieve.primerange(N+1, n//3 + 1):
+                if (n // prime) & 1 == 1:
                     primes.append(prime)
 
             L_product = R_product = 1
 
-            for prime in sieve.primerange(n/2 + 1, n+1):
+            for prime in sieve.primerange(n//2 + 1, n+1):
                 L_product *= prime
 
             for prime in primes:
@@ -97,7 +97,7 @@ class Factorial(Function):
         if n < 2:
             return 1
         else:
-            return (cls._recursive(n/2)**2)*cls._swing(n)
+            return (cls._recursive(n//2)**2)*cls._swing(n)
 
     @classmethod
     def canonize(cls, n):
@@ -351,7 +351,7 @@ class Binomial(Function):
 
                         if k > r:
                             return S.Zero
-                        elif k > r / 2:
+                        elif k > r // 2:
                             k = r - k
 
                         M, result = int(sqrt(r)), 1
@@ -359,7 +359,7 @@ class Binomial(Function):
                         for prime in sieve.primerange(2, r+1):
                             if prime > r - k:
                                 result *= prime
-                            elif prime > r / 2:
+                            elif prime > r // 2:
                                 continue
                             elif prime > M:
                                 if r % prime < k % prime:
@@ -370,7 +370,7 @@ class Binomial(Function):
 
                                 while R > 0:
                                     a = int((R % prime) < (K % prime + a))
-                                    R, K = R / prime, K / prime
+                                    R, K = R // prime, K // prime
                                     exp = a + exp
 
                                 if exp > 0:

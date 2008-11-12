@@ -32,7 +32,7 @@ def zp_pow(a, n, p):
 
 def zp_int(a, p):
     """Coerce a mod p to an integer in [-p/2, p/2] range. """
-    if a <= p/2:
+    if a <= p // 2:
         return a
     else:
         return a - p
@@ -221,7 +221,7 @@ def gf_sqr(f, p):
 
         n = jmax - jmin + 1
 
-        jmax = jmin + n/2 - 1
+        jmax = jmin + n // 2 - 1
 
         for j in xrange(jmin, jmax+1):
             coeff += f[j]*f[i-j]
@@ -790,7 +790,7 @@ def gf_sqf(f, p):
                 f = g
 
         if not sqf:
-            d = gf_degree(f) / p
+            d = gf_degree(f) // p
 
             for i in xrange(0, d+1):
                 f[i] = f[i*p]
@@ -879,7 +879,7 @@ def gf_edf_zassenhaus(f, n, p):
     if gf_degree(f) <= n:
         return factors
 
-    N = gf_degree(f) / n
+    N = gf_degree(f) // n
 
     while len(factors) < N:
         r = gf_random(2*n-1, p)
@@ -893,7 +893,7 @@ def gf_edf_zassenhaus(f, n, p):
 
             g = gf_gcd(f, h, p)
         else:
-            h = gf_pow_mod(r, (p**n-1) / 2, f, p)
+            h = gf_pow_mod(r, (p**n-1) // 2, f, p)
             g = gf_gcd(f, gf_sub_const(h, 1, p), p)
 
         if g != [1] and g != f:
@@ -935,7 +935,7 @@ def gf_ddf_shoup(f, p):
 
     """
     n = gf_degree(f)
-    k = int(ceil(sqrt(n/2)))
+    k = int(ceil(sqrt(n//2)))
 
     h = gf_pow_mod([1, 0], p, f, p)
 
@@ -1016,7 +1016,7 @@ def gf_edf_shoup(f, n, p):
         factors = gf_edf_shoup(h1, n, p) \
                 + gf_edf_shoup(h2, n, p)
     else:
-        h = gf_pow_mod(H, (p-1)/2, f, p)
+        h = gf_pow_mod(H, (p-1)//2, f, p)
 
         h1 = gf_gcd(f, h, p)
         h2 = gf_gcd(f, gf_sub_const(h, 1, p), p)

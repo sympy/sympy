@@ -18,7 +18,7 @@ class ModularInteger(object):
 
     def __int__(self):
         """Return the unique integer -m/2 < i <= m/2."""
-        if self.value <= self.modulus/2:
+        if self.value <= self.modulus // 2:
             return self.value
         else:
             return self.value - self.modulus

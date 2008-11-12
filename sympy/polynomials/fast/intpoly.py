@@ -43,7 +43,7 @@ class IntPoly(sparse_poly.SparsePolynomial):
         content = reduce(igcd, self.coeffs.itervalues(), 0)
         result_dict = {}
         for e, c in self.coeffs.iteritems():
-            result_dict[e] = c/content
+            result_dict[e] = c//content
         return content, IntPoly(result_dict)
 
     def as_squarefree(self):
@@ -56,7 +56,7 @@ class IntPoly(sparse_poly.SparsePolynomial):
         for e, c in self.coeffs.iteritems():
             cc = c % m
             if cc:
-                if symmetric and cc > m/2:
+                if symmetric and cc > m // 2:
                     result_dict[e] = cc - m
                 else:
                     result_dict[e] = cc
@@ -71,7 +71,7 @@ def div(f, g):
     if not g:
         return q, r
     while r.degree >= g.degree and not (r[r.degree] % g[g.degree]):
-        quot = IntPoly({r.degree - g.degree: r[r.degree]/g[g.degree]})
+        quot = IntPoly({r.degree - g.degree: r[r.degree] // g[g.degree]})
         q += quot
         r -= quot*g
     return q, r
@@ -123,7 +123,7 @@ def gcd_small_primes(f, g):
                     del ff[p]
                     del gg[p]
 
-            if len(S) < l/2: # Forget all primes.
+            if len(S) < l // 2: # Forget all primes.
                 continue
 
             # Replace the unlucky primes.
@@ -264,7 +264,7 @@ def multi_hensel_lift(p, f, f_list, l):
     if r == 1:
         lc_s, lc_t, lc_g = igcdex(lc, p**l)
         return [f.scale(lc_s).mod_int(p**l)]
-    k = int(r/2)
+    k = int(r // 2)
     d = int(math.ceil(math.log(l, 2)))
 
     # Divide and conquer the factors.

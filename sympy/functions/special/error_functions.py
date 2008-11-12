@@ -49,7 +49,7 @@ class erf(Function):
         else:
             x = sympify(x)
 
-            k = (n - 1)/2
+            k = (n - 1)//2
 
             if len(previous_terms) > 2:
                 return -previous_terms[-2] * x**2 * (n-2)/(n*k)

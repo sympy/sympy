@@ -259,7 +259,7 @@ class PyTestReporter(Reporter):
         width = 80
         if text != "":
             text = " %s " % text
-        idx = (width-len(text)) / 2
+        idx = (width-len(text)) // 2
         t = delim*idx + text + delim*(width-idx-len(text))
         self.write(t+"\n")
 

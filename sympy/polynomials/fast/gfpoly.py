@@ -200,7 +200,7 @@ def edf(f, n):
             if modulus == 2:
                 raise NotImplementedError
             else:
-                h = pow_mod(r, (modulus**n-1)/2, f)
+                h = pow_mod(r, (modulus**n-1)//2, f)
 
             g = gcd(f, h-one_poly)
 
