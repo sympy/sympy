@@ -53,13 +53,6 @@ def test(*paths, **kwargs):
         t.add_paths(["sympy"])
     return t.test()
 
-def test_core():
-    """
-    Run just core tests.
-    """
-    return test("sympy/core")
-
-
 class SymPyTests(object):
 
     def __init__(self, reporter):
