@@ -59,7 +59,8 @@ def test(*paths, **kwargs):
     tb = kwargs.get("tb", "short")
     kw = kwargs.get("kw", "")
     post_mortem = kwargs.get("pdb", False)
-    r = PyTestReporter(verbose, tb)
+    colors = kwargs.get("colors", True)
+    r = PyTestReporter(verbose, tb, colors)
     t = SymPyTests(r, kw, post_mortem)
     if len(paths) > 0:
         t.add_paths(paths)
@@ -238,9 +239,10 @@ class PyTestReporter(Reporter):
     Py.test like reporter. Should produce output identical to py.test.
     """
 
-    def __init__(self, verbose=False, tb="short"):
+    def __init__(self, verbose=False, tb="short", colors=True):
         self._verbose = verbose
         self._tb_style = tb
+        self._colors = colors
         self._xfailed = 0
         self._xpassed = []
         self._failed = []
@@ -251,8 +253,36 @@ class PyTestReporter(Reporter):
     def root_dir(self, dir):
         self._root_dir = dir
 
-    def write(self, text):
-        sys.stdout.write(text)
+    def write(self, text, color=""):
+        color_templates = (
+            ("Black"       , "0;30"),
+            ("Red"         , "0;31"),
+            ("Green"       , "0;32"),
+            ("Brown"       , "0;33"),
+            ("Blue"        , "0;34"),
+            ("Purple"      , "0;35"),
+            ("Cyan"        , "0;36"),
+            ("LightGray"   , "0;37"),
+            ("DarkGray"    , "1;30"),
+            ("LightRed"    , "1;31"),
+            ("LightGreen"  , "1;32"),
+            ("Yellow"      , "1;33"),
+            ("LightBlue"   , "1;34"),
+            ("LightPurple" , "1;35"),
+            ("LightCyan"   , "1;36"),
+            ("White"       , "1;37"),  )
+
+        colors = {}
+
+        for name, value in color_templates:
+            colors[name] = value
+        c_normal = '\033[0m'
+        c_color = '\033[%sm'
+
+        if color == "":
+            sys.stdout.write(text)
+        else:
+            sys.stdout.write("%s%s%s" % (c_color % colors[color], text, c_normal))
         sys.stdout.flush()
 
     def write_center(self, text, delim="="):
@@ -331,10 +361,17 @@ class PyTestReporter(Reporter):
     def entering_filename(self, filename, n):
         rel_name = filename[len(self._root_dir)+1:]
         self._active_file = rel_name
+        self._active_file_error = False
         self.write(rel_name)
         self.write("[%d] " % n)
 
     def leaving_filename(self):
+        if self._colors:
+            self.write(" ")
+            if self._active_file_error:
+                self.write("[FAIL]", "Red")
+            else:
+                self.write("[OK]", "Green")
         self.write("\n")
         if self._verbose:
             self.write("\n")
@@ -355,6 +392,7 @@ class PyTestReporter(Reporter):
     def test_fail(self, exc_info):
         self._failed.append((self._active_file, self._active_f, exc_info))
         self.write("F")
+        self._active_file_error = True
 
     def test_pass(self):
         self._passed += 1
@@ -370,7 +408,9 @@ class PyTestReporter(Reporter):
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))
         self.write("E")
+        self._active_file_error = True
 
     def import_error(self, filename, exc_info):
         self._exceptions.append((filename, None, exc_info))
         self.write("Failed to import: %s\n" % filename)
+
