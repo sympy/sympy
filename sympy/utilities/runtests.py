@@ -14,6 +14,7 @@ import os
 import sys
 import inspect
 import traceback
+import pdb
 from glob import glob
 from timeit import default_timer as clock
 
@@ -57,8 +58,9 @@ def test(*paths, **kwargs):
     verbose = kwargs.get("verbose", False)
     tb = kwargs.get("tb", "short")
     kw = kwargs.get("kw", "")
+    post_mortem = kwargs.get("pdb", False)
     r = PyTestReporter(verbose, tb)
-    t = SymPyTests(r, kw)
+    t = SymPyTests(r, kw, post_mortem)
     if len(paths) > 0:
         t.add_paths(paths)
     else:
@@ -67,7 +69,8 @@ def test(*paths, **kwargs):
 
 class SymPyTests(object):
 
-    def __init__(self, reporter, kw=""):
+    def __init__(self, reporter, kw="", post_mortem=False):
+        self._post_mortem = post_mortem
         self._kw = kw
         self._count = 0
         self._root_dir = self.get_sympy_dir()
@@ -160,6 +163,8 @@ class SymPyTests(object):
                 t, v, tr = sys.exc_info()
                 if t is AssertionError:
                     self._reporter.test_fail((t, v, tr))
+                    if self._post_mortem:
+                        pdb.post_mortem(tr)
                 elif t.__name__ == "Skipped":
                     self._reporter.test_skip()
                 elif t.__name__ == "XFail":
@@ -168,6 +173,8 @@ class SymPyTests(object):
                     self._reporter.test_xpass()
                 else:
                     self._reporter.test_exception((t, v, tr))
+                    if self._post_mortem:
+                        pdb.post_mortem(tr)
             else:
                 self._reporter.test_pass()
         self._reporter.leaving_filename()
