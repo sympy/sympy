@@ -250,10 +250,24 @@ class PyTestReporter(Reporter):
         self._skipped = 0
         self._exceptions = []
 
+        # this tracks the x-position of the cursor (useful for positioning
+        # things on the screen), without the need for any readline library:
+        self._write_pos = 0
+
     def root_dir(self, dir):
         self._root_dir = dir
 
-    def write(self, text, color=""):
+    def write(self, text, color="", align="left", width=80):
+        """
+        Prints a text on the screen.
+
+        It uses sys.stdout.write(), so no readline library is necessary.
+
+        color ... choose from the colors below, "" means default color
+        align ... left/right, left is a normal print, right is aligned on the
+                  right hand side of the screen, filled with " " if necessary
+        width ... the screen width
+        """
         color_templates = (
             ("Black"       , "0;30"),
             ("Red"         , "0;31"),
@@ -279,11 +293,19 @@ class PyTestReporter(Reporter):
         c_normal = '\033[0m'
         c_color = '\033[%sm'
 
+        if align == "right":
+            self.write(" "*(width-self._write_pos-len(text)))
+
         if color == "":
             sys.stdout.write(text)
         else:
             sys.stdout.write("%s%s%s" % (c_color % colors[color], text, c_normal))
         sys.stdout.flush()
+        l = text.rfind("\n")
+        if l == -1:
+            self._write_pos += len(text)
+        else:
+            self._write_pos = len(text)-l-1
 
     def write_center(self, text, delim="="):
         width = 80
@@ -369,9 +391,9 @@ class PyTestReporter(Reporter):
         if self._colors:
             self.write(" ")
             if self._active_file_error:
-                self.write("[FAIL]", "Red")
+                self.write("[FAIL]", "Red", align="right")
             else:
-                self.write("[OK]", "Green")
+                self.write("[OK]", "Green", align="right")
         self.write("\n")
         if self._verbose:
             self.write("\n")
