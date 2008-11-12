@@ -48,7 +48,6 @@ def test_Add():
     assert str(sin(x).series(x, 0, 15)) == "x - 1/6*x**3 + 1/120*x**5 - 1/5040*x**7 + 1/362880*x**9 - 1/39916800*x**11 + 1/6227020800*x**13 + O(x**15)"
 
 def test_Catalan():
-    print Catalan
     assert str(Catalan) == "Catalan"
 
 def test_ComplexInfinity():
