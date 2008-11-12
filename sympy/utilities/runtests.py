@@ -13,6 +13,7 @@ Goals:
 import os
 import sys
 import inspect
+import traceback
 from glob import glob
 from timeit import default_timer as clock
 
@@ -236,18 +237,20 @@ class PyTestReporter(Reporter):
 
     def write_center(self, text, delim="="):
         width = 80
-        text = " %s " % text
-        idx = (width-len(text))/2
+        if text != "":
+            text = " %s " % text
+        idx = (width-len(text)) / 2
         t = delim*idx + text + delim*(width-idx-len(text))
         self.write(t+"\n")
 
     def write_exception(self, e, val, tb):
-        old = sys.stderr
-        sys.stderr = sys.stdout
-        try:
-            sys.excepthook(e, val, tb)
-        finally:
-            sys.stderr = old
+        t = traceback.extract_tb(tb)
+        # remove the first item, as that is always runtests.py
+        t = t[1:]
+        t = traceback.format_list(t)
+        self.write("".join(t))
+        t = traceback.format_exception_only(e, val)
+        self.write("".join(t))
 
     def start(self):
         self.write_center("test process starts")
@@ -278,22 +281,25 @@ class PyTestReporter(Reporter):
             self.write("\n")
 
         if len(self._exceptions) > 0:
-            self.write_center("These tests raised an exception", "_")
+            #self.write_center("These tests raised an exception", "_")
             for e in self._exceptions:
-                filename, f, (t, val, traceback) = e
+                filename, f, (t, val, tb) = e
+                self.write_center("", "_")
                 if f is None:
-                    self.write("%s\n" % filename)
+                    s = "%s" % filename
                 else:
-                    self.write("%s:%s\n" % (filename, f.__name__))
-                self.write_exception(t, val, traceback)
+                    s = "%s:%s" % (filename, f.__name__)
+                self.write_center(s, "_")
+                self.write_exception(t, val, tb)
             self.write("\n")
 
         if len(self._failed) > 0:
-            self.write_center("Failed", "_")
+            #self.write_center("Failed", "_")
             for e in self._failed:
-                filename, f, (t, val, traceback) = e
-                self.write("%s:%s\n" % (filename, f.__name__))
-                self.write_exception(t, val, traceback)
+                filename, f, (t, val, tb) = e
+                self.write_center("", "_")
+                self.write_center("%s:%s" % (filename, f.__name__), "_")
+                self.write_exception(t, val, tb)
             self.write("\n")
 
         self.write_center(text)
