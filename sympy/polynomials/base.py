@@ -1,7 +1,7 @@
 """Module providing the class Polynomial and low-level functions"""
 
 from sympy import Basic, Symbol, Pow, Number, Add, Mul, Integer, Rational, \
-        sympify, symbols
+        sympify, symbols, all
 # Use (faster) Singleton comparisons.
 from sympy.core.basic import S
 # Need numbers.gcd, for content.

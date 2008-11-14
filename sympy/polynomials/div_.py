@@ -2,8 +2,8 @@
 
 from sympy.polynomials.base import Polynomial, term_div, merge_var
 from sympy.core import sympify, S, Symbol, Integer, symbols
-
 from sympy.core.numbers import igcd
+from sympy import all
 
 def div(f, g, var=None, order=None, coeff=None):
     """Division with remainder.
