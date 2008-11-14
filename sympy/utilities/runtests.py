@@ -337,7 +337,10 @@ class PyTestReporter(Reporter):
 
     def start(self):
         self.write_center("test process starts")
-        self.write("py.test like reporting.\n\n")
+        executable = sys.executable
+        v = sys.version_info
+        python_version = "%s.%s.%s-%s-%s" % v
+        self.write("executable:   %s  (%s)\n\n" % (executable, python_version))
         self._t_start = clock()
 
     def finish(self):
