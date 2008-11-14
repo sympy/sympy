@@ -23,6 +23,7 @@
 ./differential_equations.py
 #./pidigits.py
 ./differentiation.py
+./gibbs_phenomenon.py
 #./plotting_nice_plot.py
 ./series.py
 ./expansion.py
