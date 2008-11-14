@@ -1,6 +1,7 @@
 """Module providing a user-friendly interface to the polynomial algorithms."""
 
-from sympy.polynomials.base import *
+from sympy import S, Add, Symbol, Mul
+from sympy.polynomials.base import coeff_ring, get_numbers, Polynomial
 from sympy.polynomials import div_
 from sympy.polynomials import factor_
 from sympy.polynomials import groebner_

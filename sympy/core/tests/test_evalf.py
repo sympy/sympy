@@ -1,8 +1,8 @@
-from sympy.core.evalf import *
+from sympy.core.evalf import PrecisionExhausted, complex_accuracy, from_float
 
-from sympy import pi, I, Symbol, Add, Rational, exp, sqrt, sin, cos, fibonacci, \
-    Integral, oo, E, atan, log, integrate, floor, ceiling, factorial, binomial, \
-    Sum, zeta, Catalan, Pow, GoldenRatio
+from sympy import pi, I, Symbol, Add, Rational, exp, sqrt, sin, cos, \
+    fibonacci, Integral, oo, E, atan, log, integrate, floor, ceiling, \
+    factorial, binomial, Sum, zeta, Catalan, Pow, GoldenRatio, sympify
 
 from sympy.utilities.pytest import raises
 

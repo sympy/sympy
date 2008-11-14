@@ -3,7 +3,7 @@
 
 import os.path
 
-from GAsympy import *
+#from GAsympy import *
 
 SYSMOD = sys.modules[__name__]
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import iam_sympy_example
 
-from sympy import *
+from sympy import Symbol, pprint, sin, cos, exp, sqrt
 
 x=Symbol("x")
 y=Symbol("y")

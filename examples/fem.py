@@ -1,7 +1,7 @@
-from sympy import *
+from sympy import symbols, Symbol, factorial, Rational, zeros, div, eye, \
+        integrate
 
-
-x,y,z = symbols('xyz')
+x, y, z = symbols('x y z')
 
 class ReferenceSimplex:
    def __init__(self, nsd):

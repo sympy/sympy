@@ -4,7 +4,7 @@
 Convert GAsympy output to LaTeX format
 """
 
-from string import *
+#from string import *
 import re
 
 vars = re.compile(r'([A-Za-z]+)([0-9]+)')

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import iam_sympy_example
 
-from sympy.numerics import *
-from sympy.numerics.utils_ import *
-from sympy.numerics.constants import pi_float
+#from sympy.numerics import *
+#from sympy.numerics.utils_ import *
+#from sympy.numerics.constants import pi_float
 import math
 from time import clock
 

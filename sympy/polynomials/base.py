@@ -1,14 +1,13 @@
 """Module providing the class Polynomial and low-level functions"""
 
-from sympy.core import *
+from sympy import Basic, Symbol, Pow, Number, Add, Mul, Integer, Rational, \
+        sympify, symbols
 # Use (faster) Singleton comparisons.
 from sympy.core.basic import S
 # Need numbers.gcd, for content.
 from sympy.core.numbers import igcd
 # To determine coefficient type:
 from sympy.core.numbers import NumberSymbol, ImaginaryUnit
-from sympy.utilities import *
-from sympy.core import sympify
 
 from sympy.polynomials import fast
 import sympy.polynomials    # for sympy.polynomials.wrapper  (cyclic)

@@ -1,10 +1,15 @@
 from sympy import symbols, expand, sin, sqrt, re, im, I, Rational, Lambda, \
-        powsimp, raises
+        powsimp, raises, Integer, Symbol, Poly, RootsOf, RootSum, RootOf, S
 
-from sympy.polys.monomial import *
-from sympy.polys.polynomial import *
-from sympy.polys.algorithms import *
-from sympy.polys.rootfinding import *
+from sympy.polys.monomial import monomial_lex_cmp, monomial_grlex_cmp, \
+        monomial_grevlex_cmp, monomial_1_el_cmp
+from sympy.polys.algorithms import poly_groebner, poly_subresultants, \
+        poly_resultant, poly_half_gcdex, poly_gcdex, poly_gcd, poly_lcm, \
+        poly_pdiv
+from sympy.polys.rootfinding import poly_factors, roots_linear, \
+        roots_quadratic, roots_cubic, roots_binomial, roots_rational, roots, \
+        number_of_real_roots, poly_sturm, PolynomialError, poly_decompose, \
+        poly_sqf, poly_div, CoefficientError, SymbolsError
 
 a,b,c,d,x,y,z,u,v,t = symbols('abcdxyzuvt')
 

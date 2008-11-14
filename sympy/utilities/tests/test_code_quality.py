@@ -80,29 +80,6 @@ def test_implicit_imports():
         # these two should be fixed:
         "%(sep)smpmath%(sep)s" % sepd,
         "%(sep)splotting%(sep)s" % sepd,
-
-        # everything below should be fixed soon:
-        "sympy/core/tests/test_evalf.py" % sepd,
-        "sympy/functions/combinatorial/numbers.py" % sepd,
-        "sympy/physics/tests/test_units.py" % sepd,
-        "sympy/polynomials/factor_.py" % sepd,
-        "sympy/polynomials/groebner_.py" % sepd,
-        "sympy/polynomials/wrapper.py" % sepd,
-        "sympy/polynomials/base.py" % sepd,
-        "sympy/polynomials/div_.py" % sepd,
-        "sympy/polynomials/roots_.py" % sepd,
-        "sympy/polys/tests/test_polynomial.py" % sepd,
-        "sympy/solvers/tests/test_solvers.py" % sepd,
-        "sympy/statistics/distributions.py" % sepd,
-        "sympy/examples/fem_test.py" % sepd,
-        "sympy/examples/pidigits.py" % sepd,
-        "sympy/examples/print_gtk.py" % sepd,
-        "sympy/examples/print_pretty.py" % sepd,
-        "sympy/examples/fem.py" % sepd,
-        "sympy/examples/trees.py" % sepd,
-        "sympy/galgebra/GAcalc.py" % sepd,
-        "sympy/galgebra/GAsympy.py" % sepd,
-        "sympy/galgebra/latex_out.py" % sepd,
     ])
     for p in paths:
         assert exists(p)

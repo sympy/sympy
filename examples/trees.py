@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import iam_sympy_example
 
-from sympy import *
+from sympy import Symbol, Poly
 
 def T(x):
     return x+x**2+2*x**3 + 4*x**4 + 9*x**5 + 20*x**6 + 48 * x**7 + \

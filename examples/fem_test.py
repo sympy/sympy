@@ -13,7 +13,8 @@ $ python examples/fem_test.py
 [-1/360, -1/90, -1/360,     0,     0,   1/60]
 """
 
-from fem import *
+from sympy import Symbol, zeros, diff, pprint
+from fem import ReferenceSimplex, Lagrange
 
 t = ReferenceSimplex(2)
 fe = Lagrange(2,2)

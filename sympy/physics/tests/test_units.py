@@ -1,5 +1,6 @@
 from sympy import Rational
-from sympy.physics.units import *
+from sympy.physics.units import m, s, day, km, foot, meter, au, \
+        speed_of_light, minute
 
 def test_units():
     assert (5*m/s * day) / km == 432

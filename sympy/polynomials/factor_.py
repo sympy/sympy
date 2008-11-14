@@ -1,8 +1,9 @@
 """Various algorithms for the factorization of polynomials."""
 
-from sympy import ntheory
+from sympy import ntheory, S, Symbol, symbols, Integer, sympify
 
-from sympy.polynomials.base import *
+from sympy.polynomials.base import Polynomial, Polynomial2IntPoly, \
+        IntPoly2Polynomial
 from sympy.polynomials import div_, fast
 
 def sqf(f, var=None, order=None, coeff=None):

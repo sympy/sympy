@@ -1,9 +1,10 @@
 """Algorithms to determine the roots of polynomials"""
 
-from sympy.polynomials.base import *
+from sympy.polynomials.base import Polynomial, coeff_ring, get_numbers, \
+        merge_var
 from sympy.polynomials import div_, groebner_
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.core import sympify
+from sympy.core import sympify, Symbol, S, Rational, C, symbols
 
 from sympy.core.numbers import igcd
 

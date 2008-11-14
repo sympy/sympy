@@ -1,7 +1,7 @@
 """Polynomial division algorithms for use with class Polynomial"""
 
-from sympy.polynomials.base import *
-from sympy.core import sympify
+from sympy.polynomials.base import Polynomial, term_div, merge_var
+from sympy.core import sympify, S, Symbol, Integer, symbols
 
 from sympy.core.numbers import igcd
 

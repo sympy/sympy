@@ -1,6 +1,8 @@
 """Algorithms for the computation of Groebner bases"""
 
-from sympy.polynomials.base import *
+from sympy import Basic, S, Symbol, symbols
+from sympy.polynomials.base import Polynomial, term_lcm, term_mult, \
+        term_div, term_is_mult, term_cmp, merge_var
 from sympy.polynomials import div_
 
 def groebner(f, var=None, order=None, reduced=True):

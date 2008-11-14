@@ -3,7 +3,7 @@ import iam_sympy_example
 
 """examples for print_gtk. It prints in gtkmathview using mathml"""
 
-from sympy import *
+from sympy import Symbol, integrate, exp
 from sympy.printing import print_gtk
 
 x = Symbol('x')

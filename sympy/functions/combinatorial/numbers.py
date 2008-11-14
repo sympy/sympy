@@ -7,9 +7,7 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
-from sympy.core import *
-from sympy.core.function import Function
-from sympy.core.basic import S
+from sympy import Function, S, Symbol, Rational, oo, Integer, C
 
 from sympy.mpmath import bernfrac
 

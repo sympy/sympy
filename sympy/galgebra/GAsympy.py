@@ -22,7 +22,7 @@ The relevant references for this module are:
 import numpy
 import os,sys,string,types,re,copy
 import sympy
-from latex_out import *
+#from latex_out import *
 
 NUMPAT = re.compile( '([\-0-9])|([\-0-9]/[0-9])')
 """Re pattern for rational number"""
