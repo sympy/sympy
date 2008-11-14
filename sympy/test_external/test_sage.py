@@ -93,6 +93,14 @@ def test_complex():
     check_expression("23+I*4", "x")
     check_expression("x+I*y", "x y")
 
+def test_integer():
+    check_expression("4*x", "x")
+    check_expression("-4*x", "x")
+
+def test_real():
+    check_expression("1.123*x", "x")
+    check_expression("-18.22*x", "x")
+
 def test_E():
     assert sympy.sympify(sage.e) == sympy.E
     assert sage.e == sage.SR(sympy.E)

@@ -409,6 +409,11 @@ class Real(Number):
     def epsilon_eq(self, other, epsilon="10e-16"):
         return abs(self - other) < Real(epsilon)
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.RealNumber(str(self))
+
+
 # this is here to work nicely in Sage
 RealNumber = Real
 
@@ -440,7 +445,6 @@ def _parse_rational(s):
             return p*(10**expt), 1
         else:
             return p, 10**-expt
-
 
 class Rational(Number):
     """Represents integers and rational numbers (p/q) of any size.
