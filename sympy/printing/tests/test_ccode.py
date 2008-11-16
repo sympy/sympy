@@ -6,6 +6,12 @@ from sympy.utilities.pytest import XFAIL
 x, y = symbols('xy')
 g = Function('g')
 
+def test_printmethod():
+    class fabs(abs):
+        def _ccode_(self):
+            return "fabs(%s);" % ccode(self.args[0])
+    assert ccode(fabs(x)) == "fabs(x);"
+
 def test_ccode_Pow():
     assert ccode(x**3) == "pow(x,3)"
     assert ccode(x**(y**3)) == "pow(x,(pow(y,3)))"
