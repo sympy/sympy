@@ -14,10 +14,12 @@
 """
 
 from sympy.core.sympify import sympify
-from sympy.core.basic import Basic, S, C
+from sympy.core.basic import Basic, S, C, Mul, Add
+from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Wild
 from sympy.core.relational import Equality
 from sympy.core.function import Derivative, diff
+from sympy.core.numbers import ilcm
 
 from sympy.functions import sqrt, log, exp, LambertW
 from sympy.simplify import simplify, collect
@@ -29,6 +31,86 @@ from sympy.utilities.lambdify import lambdify
 from sympy.solvers.numeric import newton
 
 from sympy.solvers.polysys import solve_poly_system
+
+# Codes for guess solve strategy
+GS_POLY = 0
+GS_RATIONAL = 1
+GS_POLY_CV_1 = 2 # can be converted to a polynomial equation via the change of variable y -> x**n
+GS_POLY_CV_2 = 3 # can be converted to a polynomial equation multiplying on both sides by x**m
+                 # for example, x + 1/x == 0. Multiplying by x yields x**2 + x == 0
+GS_RATIONAL_CV_1 = 4 # can be converted to a rational equation via the change of variable y -> x**n
+GS_TRASCENDENTAL = 5
+
+def guess_solve_strategy(expr, symbol):
+    """
+    Tries to guess what approach should be used to solve a specific equation
+
+    Returns
+    =======
+       - -1: could not guess
+       - integer > 0: code representing certain type of equation. See GS_* fields
+         on this module for a complete list
+
+    Examples
+    ========
+    >>> from sympy import Symbol, Rational
+    >>> x = Symbol('x')
+    >>> guess_solve_strategy(x**2 + 1, x)
+    0
+    >>> guess_solve_strategy(x**Rational(1,2) + 1, x)
+    2
+    """
+    eq_type = -1
+    if expr.is_Add:
+        items = expr.args
+        for item in items:
+            if item.is_Number or item.is_Symbol:
+                eq_type = max(eq_type, GS_POLY)
+            elif item.is_Mul:
+                for arg in item.args:
+                    eq_type = max(guess_solve_strategy(arg, symbol), eq_type)
+            elif item.is_Pow and item.base.has(symbol):
+                if item.exp.is_Integer:
+                    if item.exp > 0:
+                        eq_type = max(eq_type, GS_POLY)
+                    else:
+                        eq_type = max(eq_type, GS_POLY_CV_2)
+                elif item.exp.is_Rational:
+                    eq_type = max(eq_type, GS_POLY_CV_1)
+            elif item.is_Function:
+                return GS_TRASCENDENTAL
+
+    elif expr.is_Mul:
+        # check for rational functions
+        num, denom = expr.as_numer_denom()
+        if denom != 1 and denom.has(symbol):
+            #we have a quotient
+            m = max(guess_solve_strategy(num, symbol), guess_solve_strategy(denom, symbol))
+            if m == GS_POLY:
+                return GS_RATIONAL
+            elif m == GS_POLY_CV_1:
+                return GS_RATIONAL_CV_1
+            else:
+                raise NotImplementedError
+        else:
+            return max(map(guess_solve_strategy, expr.args, [symbol]))
+
+    elif expr.is_Symbol:
+        return GS_POLY
+
+    elif expr.is_Pow:
+        if expr.exp.has(symbol):
+            return GS_TRASCENDENTAL
+        elif expr.exp.is_Number and expr.base.has(symbol):
+            if expr.exp.is_Integer:
+                eq_type = max(eq_type, GS_POLY)
+            else:
+                eq_type = max(eq_type, GS_POLY_CV_1)
+
+    elif expr.is_Function and expr.has(symbol):
+        return GS_TRASCENDENTAL
+
+    return eq_type
 
 def solve(f, *symbols, **flags):
     """Solves equations and systems of equations.
@@ -81,13 +163,87 @@ def solve(f, *symbols, **flags):
             f = f.lhs - f.rhs
 
         if len(symbols) == 1:
-            poly = f.as_poly(*symbols)
+            symbol = symbols[0]
 
-            if poly is not None:
+            strategy = guess_solve_strategy(f, symbol)
+
+            if strategy == GS_POLY:
+                poly = f.as_poly( symbol )
+                assert poly is not None
                 result = roots(poly, cubics=True, quartics=True).keys()
+
+            elif strategy == GS_RATIONAL:
+                P, Q = f.as_numer_denom()
+                #TODO: check for Q != 0
+                return solve(P, symbol, **flags)
+
+            elif strategy == GS_POLY_CV_1:
+                # we must search for a suitable change of variable
+                # collect exponents
+                exponents_denom = list()
+                args = list(f.args)
+                if isinstance(f, Add):
+                    for arg in args:
+                        if isinstance(arg, Pow):
+                            exponents_denom.append(arg.exp.q)
+                        elif isinstance(arg, Mul):
+                            for mul_arg in arg.args:
+                                if isinstance(mul_arg, Pow):
+                                    exponents_denom.append(mul_arg.exp.q)
+                elif isinstance(f, Mul):
+                    for mul_arg in args:
+                        if isinstance(mul_arg, Pow):
+                            exponents_denom.append(mul_arg.exp.q)
+
+                assert len(exponents_denom) > 0
+                if len(exponents_denom) == 1:
+                    m = exponents_denom[0]
+                else:
+                    # get the GCD of the denominators
+                    m = ilcm(*exponents_denom)
+                # x -> y**m.
+                # we assume positive for simplification purposes
+                t = Symbol('t', positive=True, dummy=True)
+                f_ = f.subs(symbol, t**m)
+                if guess_solve_strategy(f_, t) != GS_POLY:
+                    raise TypeError("Could not convert to a polynomial equation: %s" % f_)
+                cv_sols = solve(f_, t)
+                result = list()
+                for sol in cv_sols:
+                    result.append(sol**(S.One/m))
+
+            elif strategy == GS_POLY_CV_2:
+                m = 0
+                args = list(f.args)
+                if isinstance(f, Add):
+                    for arg in args:
+                        if isinstance(arg, Pow):
+                            m = min(m, arg.exp)
+                        elif isinstance(arg, Mul):
+                            for mul_arg in arg.args:
+                                if isinstance(mul_arg, Pow):
+                                    m = min(m, mul_arg.exp)
+                elif isinstance(f, Mul):
+                    for mul_arg in args:
+                        if isinstance(mul_arg, Pow):
+                            m = min(m, mul_arg.exp)
+                f1 = simplify(f*symbol**(-m))
+                result = solve(f1, symbol)
+                # TODO: we might have introduced unwanted solutions
+                # when multiplied by x**-m
+
+            elif strategy == GS_TRASCENDENTAL:
+                #a, b = f.as_numer_denom()
+                # Let's throw away the denominator for now. When we have robust
+                # assumptions, it should be checked, that for the solution,
+                # b!=0.
+                result = tsolve(f, *symbols)
+            elif strategy == -1:
+                raise Exception('Could not parse expression %s' % f)
             else:
-                result = [tsolve(f, *symbols)]
+                raise NotImplementedError("No algorithms where implemented to solve equation %s" % f)
         else:
+            #TODO: if we do it the other way round we can avoid one nesting
             raise NotImplementedError('multivariate equation')
 
         if flags.get('simplified', True):
@@ -530,10 +686,10 @@ def tsolve(eq, sym):
         >>> x = Symbol('x')
 
         >>> tsolve(3**(2*x+5)-4, x)
-        (-5*log(3) + log(4))/(2*log(3))
+        [(-5*log(3) + log(4))/(2*log(3))]
 
         >>> tsolve(log(x) + 2*x, x)
-        1/2*LambertW(2)
+        [1/2*LambertW(2)]
 
     """
     if patterns is None:
@@ -549,11 +705,11 @@ def tsolve(eq, sym):
     r = Wild('r')
     m = eq2.match((a*x+b)*r)
     if m and m[a]:
-        return (-b/a).subs(m).subs(x, sym)
+        return [(-b/a).subs(m).subs(x, sym)]
     for p, sol in patterns:
         m = eq2.match(p)
         if m:
-            return sol.subs(m).subs(x, sym)
+            return [sol.subs(m).subs(x, sym)]
 
     # let's also try to inverse the equation
     lhs = eq
@@ -587,7 +743,7 @@ def tsolve(eq, sym):
         lhs = lhs.args[0]
 
         sol = solve(lhs-rhs, sym)
-        return sol[0]
+        return sol
 
     elif lhs.is_Add:
         # just a simple case - we do variable substitution for first function,
@@ -610,18 +766,12 @@ def tsolve(eq, sym):
         # if no Functions left, we can proceed with usual solve
         if not (lhs_.is_Function or
                 any(term.is_Function for term in lhs_.args)):
-
-            # FIXME at present solve cannot solve x + 1/x = y
-            # FIXME so we do this:
-            numer, denom = lhs_.as_numer_denom()
-            sol = solve(numer-rhs*denom, t)
-           #sol = solve(lhs_-rhs, t)
-            sol = sol[0]
-
-            sol = tsolve(sol-f1, sym)
-            return sol
-
-
+            cv_sols = solve(lhs_ - rhs, t)
+            cv_inv = solve( t - f1, sym )[0]
+            sols = list()
+            for sol in cv_sols:
+                sols.append(cv_inv.subs(t, sol))
+            return sols
 
 
     raise ValueError("unable to solve the equation")
