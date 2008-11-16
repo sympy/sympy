@@ -9,3 +9,4 @@ build/
 doc/_build/
 doc/sphinx/
 
+.DS_Store
