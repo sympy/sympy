@@ -1,6 +1,31 @@
-This directory contains examples of usage of SymPy.
+This directory contains SymPy example programs.
 
-Some of them were created for older versions of SymPy and may need a slight
-adjustment to run with the current version of SymPy, but most of them should
-work just fine. Those that are known to be running fine are uncommented in the
-"./all" script.
+-------------------------------------------------------------------------------
+DIRECTORY STRUCTURE
+
+The examples are broken up into three categories based on difficulty of both
+the mathematics and programming concepts.  They roughly follow the following
+guide:
+
+beginner :
+  Simple examples appropriate for first steps in using SymPy, for someone
+  with little or no programming experience.
+
+intermediate :
+  Demonstrations of more complex mathematical concepts, but still for
+  someone with little programming experience.
+
+advanced :
+  Larger demonstrations of advanced mathematical topics.
+
+-------------------------------------------------------------------------------
+RUNNING EXAMPLES
+
+To run the examples one needs to have Python version >= 2.4 installed.  Each
+example can be run from the command line python and the name of the example:
+
+  aterrel@lilac:~/sympy/examples$ python beginner/basic.py
+  (3*a*b**2)**c
+
+All the working examples can be run by executing the "./all" script, if an
+example is known to be broken it will be commented out in this script.

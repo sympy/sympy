@@ -16,29 +16,40 @@
 #
 # Obviously, we want to achieve the first result.
 
-# The commented out examples below don't run:
-./basic.py
-#./mplot3d.py
-./relativity.py
-./differential_equations.py
-#./pidigits.py
-./differentiation.py
-./gibbs_phenomenon.py
-#./plotting_nice_plot.py
-./series.py
-./expansion.py
-#./plotting.py
-./substitution.py
-./precision.py
-#./tensors.py
-./fem_test.py
-#./print_gtk.py
-./t.py
-./functions.py
-./print_pretty.py
-./trees.py
-#./print_pygame.py
-./vandermonde.py
-./limits_examples.py
-#./qft.py
-#./mplot2d.py
+# The commented out examples don't run
+
+# Beginner Examples
+./beginner/basic.py
+./beginner/differentiation.py
+./beginner/expansion.py
+./beginner/functions.py
+./beginner/limits_examples.py
+#./beginner/plotting_nice_plot.py
+./beginner/precision.py
+./beginner/print_pretty.py
+./beginner/series.py
+./beginner/substitution.py
+
+# Intermediate Examples
+#./intermediate/differential_equations.py
+#./intermediate/mplot2d.py
+#./intermediate/mplot3d.py
+#./intermediate/print_gtk.py
+./intermediate/trees.py
+./intermediate/vandermonde.py
+
+# Advanced Examples
+./advanced/fem_test.py
+./advanced/gibbs_phenomenon.py
+#./advanced/pidigits.py
+#./advanced/plotting.py
+#./advanced/qft.py
+./advanced/relativity.py
+#./advanced/tensors.py
+
+
+
+
+
+
+
