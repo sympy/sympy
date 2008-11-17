@@ -90,12 +90,10 @@ def doctest(*paths, **kwargs):
     >> import sympy
     >> sympy.doctest("sympy/core/tests/test_basic.py", "sympy/functions")
     """
-    if "verbose" in kwargs:
-        verbose = kwargs["verbose"]
-    else:
-        verbose = False
+    verbose = kwargs.get("verbose", False)
+    blacklist = kwargs.get("blacklist", [])
     r = PyTestReporter(verbose)
-    t = SymPyDocTests(r)
+    t = SymPyDocTests(r, blacklist=blacklist)
     if len(paths) > 0:
         t.add_paths(paths)
     else:
@@ -265,12 +263,13 @@ class SymPyTests(object):
 
 class SymPyDocTests(object):
 
-    def __init__(self, reporter):
+    def __init__(self, reporter, blacklist=[]):
         self._count = 0
         self._root_dir = self.get_sympy_dir()
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
         self._tests = []
+        self._blacklist = blacklist
 
     def add_paths(self, paths):
         for path in paths:
@@ -367,6 +366,15 @@ class SymPyDocTests(object):
         p = [os.path.join(x, "*.py") for x in wildcards]
         return p
 
+    def is_on_blacklist(self, x):
+        """
+        Returns True if "x" is on the blacklist. Otherwise False.
+        """
+        for p in self._blacklist:
+            if x.find(p) != -1:
+                return True
+        return False
+
     def get_tests(self, dir):
         """
         Returns the list of tests.
@@ -380,8 +388,10 @@ class SymPyDocTests(object):
 
             Currently we only test if the __init__.py file exists in the
             directory with the file "x" (in theory we should also test all the
-            parent dirs).
+            parent dirs) and if "x" is not on self._blacklist.
             """
+            if self.is_on_blacklist(x):
+                return False
             init_py = os.path.dirname(x) + os.path.sep + "__init__.py"
             return os.path.exists(init_py)
 

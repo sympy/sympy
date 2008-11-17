@@ -7,6 +7,9 @@ The advantage over py.test is that it only depends on sympy and should just
 work in any circumstances. See "sympy.dotest?" for documentation.
 """
 
+blacklist = [
+        ]
+
 import os
 import sys
 from optparse import OptionParser
@@ -24,7 +27,8 @@ parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
 
 options, args = parser.parse_args()
 
-ok = sympy.doctest(*args, **{"verbose": options.verbose})
+ok = sympy.doctest(*args, **{"verbose": options.verbose,
+    "blacklist": blacklist})
 if ok:
     sys.exit(0)
 else:
