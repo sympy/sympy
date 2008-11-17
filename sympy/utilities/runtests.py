@@ -371,11 +371,27 @@ class SymPyDocTests(object):
         """
         Returns the list of tests.
         """
+        def importable(x):
+            """
+            Checks if given pathname x is an importable module by checking for
+            __init__.py file.
+
+            Returns True/False.
+
+            Currently we only test if the __init__.py file exists in the
+            directory with the file "x" (in theory we should also test all the
+            parent dirs).
+            """
+            init_py = os.path.dirname(x) + os.path.sep + "__init__.py"
+            return os.path.exists(init_py)
+
         g = []
         for x in self.get_paths(dir):
             g.extend(glob(x))
         g = list(set(g))
         g.sort()
+        # skip files that are not importable (i.e. missing __init__.py)
+        g = [x for x in g if importable(x)]
         return g
 
 class Reporter(object):
