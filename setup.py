@@ -264,6 +264,7 @@ tests = [
     'sympy.functions.combinatorial.tests',
     'sympy.functions.elementary.tests',
     'sympy.functions.special.tests',
+    'sympy.galgebra.tests',
     'sympy.geometry.tests',
     'sympy.integrals.tests',
     'sympy.matrices.tests',
