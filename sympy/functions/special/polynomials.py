@@ -72,7 +72,7 @@ class chebyshevt(PolynomialSequence):
         >>> chebyshevt(1, x)
         x
         >>> chebyshevt(2, x)
-        (-1) + 2*x**2
+        -1 + 2*x**2
 
     References
     ==========
@@ -104,7 +104,7 @@ class chebyshevu(PolynomialSequence):
         >>> chebyshevu(1, x)
         2*x
         >>> chebyshevu(2, x)
-        (-1) + 4*x**2
+        -1 + 4*x**2
     """
     @staticmethod
     @recurrence_memo([S.One, 2*_x])
@@ -177,7 +177,7 @@ class legendre(PolynomialSequence):
         >>> legendre(1, x)
         x
         >>> legendre(2, x)
-        (-1/2) + (3/2)*x**2
+        -1/2 + 3*x**2/2
 
     References
     ==========
@@ -206,7 +206,7 @@ class assoc_legendre(PolynomialSequence2):
         >>> assoc_legendre(1,0, x)
         x
         >>> assoc_legendre(1,1, x)
-        -(1-x**2)**(1/2)
+        -(1 - x**2)**(1/2)
 
     References
     ==========
@@ -270,7 +270,7 @@ class hermite(PolynomialSequence):
         >>> hermite(1, x)
         2*x
         >>> hermite(2, x)
-        (-2) + 4*x**2
+        -2 + 4*x**2
 
     References
     ==========
