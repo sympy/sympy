@@ -1,5 +1,10 @@
 #! /usr/bin/python2.5
 
+# See the README in this directory how to generate the documentation.
+
+# This script generates the reference, however, it currently doesn't produce a
+# nicely polished documentation.
+
 # You need to run python2.5 with this, because python2.4 has some weird
 # Exception hierarchy classes that causes Exceptions to be ignored by this
 # script
