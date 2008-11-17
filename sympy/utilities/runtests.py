@@ -111,7 +111,7 @@ class SymPyTests(object):
         try:
             #module = __import__(filename, globals(), locals())
             module = imp.load_source(name, filename)
-        except ImportError:
+        except (ImportError, SyntaxError):
             self._reporter.import_error(filename, sys.exc_info())
             return
         disabled = getattr(module, "disabled", False)
@@ -448,5 +448,10 @@ class PyTestReporter(Reporter):
 
     def import_error(self, filename, exc_info):
         self._exceptions.append((filename, None, exc_info))
-        self.write("Failed to import: %s\n" % filename)
-
+        rel_name = filename[len(self._root_dir)+1:]
+        self.write(rel_name)
+        self.write("[?] Failed to import")
+        if self._colors:
+            self.write(" ")
+            self.write("[FAIL]", "Red", align="right")
+        self.write("\n")
