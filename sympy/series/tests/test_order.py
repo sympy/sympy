@@ -178,3 +178,9 @@ def test_order_leadterm():
 
 def test_nan():
     assert not O(x).contains(nan)
+
+def test_O1():
+    assert O(1) == O(1, x)
+    assert O(1) == O(1, y)
+    assert hash(O(1)) == hash(O(1, x))
+    assert hash(O(1)) == hash(O(1, y))

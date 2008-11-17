@@ -148,6 +148,11 @@ class Order(Basic):
 
         return obj
 
+    def _hashable_content(self):
+        if self.args[0].is_number:
+            return (self.args[0],)
+        return self.args
+
     def oseries(self, order):
         return self
 
