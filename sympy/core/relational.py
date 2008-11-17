@@ -40,7 +40,7 @@ def Ne(a, b):
     Example:
     >>> from sympy import *
     >>> x,y = symbols('xy')
-    >>> Eq(y, x+x**2)
+    >>> Ne(y, x+x**2)
     y != x + x**2
 
     """
@@ -54,7 +54,7 @@ def Lt(a, b):
     Example:
     >>> from sympy import *
     >>> x,y = symbols('xy')
-    >>> Eq(y, x+x**2)
+    >>> Lt(y, x+x**2)
     y < x + x**2
 
     """
@@ -68,7 +68,7 @@ def Le(a, b):
     Example:
     >>> from sympy import *
     >>> x,y = symbols('xy')
-    >>> Eq(y, x+x**2)
+    >>> Le(y, x+x**2)
     y <= x + x**2
 
     """
@@ -82,7 +82,7 @@ def Gt(a, b):
     Example:
     >>> from sympy import *
     >>> x,y = symbols('xy')
-    >>> Eq(y, x+x**2)
+    >>> Gt(y, x+x**2)
     x + x**2 < y
 
     """
@@ -96,7 +96,7 @@ def Ge(a, b):
     Example:
     >>> from sympy import *
     >>> x,y = symbols('xy')
-    >>> Eq(y, x+x**2)
+    >>> Ge(y, x+x**2)
     x + x**2 <= y
 
     """
