@@ -18,6 +18,7 @@ access any SymPy module, or use this contens:
 
    modules/core.txt
    modules/matrices.txt
+   modules/evalf.txt
    modules/mpmath/index.txt
    modules/rewriting.txt
    modules/polynomials.txt
