@@ -12,7 +12,7 @@ wiki pages (if they have one on the page `People
 more details what they do and what they are interested in.
 
 #. `Ondřej Čertík <http://wiki.sympy.org/wiki/Ond%C5%99ej_%C4%8Cert%C3%ADk>`_: project leader
-#. Fabian Seoane: everything, reviewing patches, releases, general advice (issues and mailinglist), not active anymore
+#. Fabian Seoane: everything, reviewing patches, releases, general advice (issues and mailinglist)
 #. Jurjen N.E. Bos: pretty printing and other patches
 #. Mateusz Paprocki: GSoC 2007, concrete math module, integration module, new core integration, a lot of patches, general advice, new polynomial module, improvements to solvers, simplifications
 #. Marc-Etienne M.Leveille: matrix patch
@@ -45,21 +45,22 @@ more details what they do and what they are interested in.
 #. Roberto Nobrega: several pretty printing patches
 #. David Roberts: latex printing patches
 #. Sebastian Krämer: implemented lambdify/numpy/mpmath cooperation, bug fixes, refactoring, lambdifying of matrices, large printing refactoring and bugfixes
-#. Vinzent Steinberg: docstring patches, bug fixes, msolve (nonlinear equation systems solver), compiling functions to machine code
+#. Vinzent Steinberg: docstring patches, a lot of bug fixes, msolve (nonlinear equation systems solver), compiling functions to machine code
 #. Riccardo Gori: improvements and speedups to matrices, many bug fixes
 #. Case Van Horsen: implemented optional support for gmpy in mpmath
-#. Štěpán Roučka: several matrix and simplification fixes
+#. Štěpán Roučka: a lot of bugfixes all over sympy (matrix, simplification,
+limits, series, ...)
 #. Ali Raza Syed: pretty printing/isympy on windows fix
 #. Stefano Maggiolo: many bug fixes, polishings and improvements
 #. Robert Cimrman: matrix patches
 #. Bastian Weber: latex printing patches
 #. Sebastian Krause: match patches
-#. Sebastian Kreft: latex printing patches
+#. Sebastian Kreft: latex printing patches, Dirac delta function, other fixes
 #. Dan (coolg49964): documentation fixes
 #. Alan Bromborsky: geometric algebra modules
 #. Boris Timokhin: matrix fixes
 #. Robert (average.programmer): initial piecewise function patch
-#. Andy R. Terrel: piecewise function polishing
+#. Andy R. Terrel: piecewise function polishing and other patches
 #. Hubert Tsang: LaTeX printing fixes
 #. Konrad Meyer: policy patch
 #. Henrik Johansson: matrix zero finder patch
