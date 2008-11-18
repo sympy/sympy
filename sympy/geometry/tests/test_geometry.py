@@ -1,7 +1,7 @@
 from sympy import Symbol, Rational, sqrt, pi, cos, oo, simplify, Real, raises
 from sympy.geometry import Point, Polygon, convex_hull, Segment, \
         RegularPolygon, Circle, Ellipse, GeometryError, Line, intersection, \
-        Ray, Triangle, are_similar
+        Ray, Triangle, are_similar, Curve
 
 x = Symbol('x', real=True)
 y = Symbol('y', real=True)
@@ -15,6 +15,15 @@ def feq(a, b):
     """Test if two floating point values are 'equal'."""
     t = Real("1.0E-10")
     return -t < a-b < t
+
+def test_curve():
+    t = Symbol('t')
+    z = Symbol('z')
+    C = Curve([2*t, t**2], (z, 0, 2))
+
+    assert C.parameter == z
+    assert C.functions == [2*t, t**2]
+
 
 def test_point():
     p1 = Point(x1, x2)

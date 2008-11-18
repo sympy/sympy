@@ -22,3 +22,4 @@ from sympy.geometry.ellipse import Ellipse, Circle
 from sympy.geometry.polygon import Polygon, RegularPolygon, Triangle
 from sympy.geometry.util import *
 from sympy.geometry.exceptions import *
+from sympy.geometry.curve import Curve

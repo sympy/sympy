@@ -9,7 +9,8 @@ ordering_of_classes = [
     "RegularPolygon",
     "Polygon",
     "Circle",
-    "Ellipse"
+    "Ellipse",
+    "Curve"
 ]
 
 class GeometryEntity(tuple):
