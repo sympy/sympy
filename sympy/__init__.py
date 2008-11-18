@@ -10,7 +10,7 @@ See the webpage for more information and documentation:
     http://code.google.com/p/sympy/
 """
 
-__version__ = "0.6.3.beta1"
+__version__ = "0.6.3.beta2"
 
 import symbol as stdlib_symbol
 from sympy.core import *
