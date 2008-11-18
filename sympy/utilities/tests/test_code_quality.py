@@ -59,11 +59,27 @@ def test_no_trailing_whitespace_and_no_tabs():
     path = split(__file__)[0]
     path = path + sep + pardir + sep + pardir # go to sympy/
     sympy_path = abspath(path)
+    assert exists(sympy_path)
+    check_directory_tree(sympy_path)
     examples_path = abspath(join(path + sep + pardir, "examples"))
-    paths = (sympy_path, examples_path)
-    for p in paths:
-        assert exists(p)
-        check_directory_tree(p)
+    # Remember that this test can be executed when examples are not installed
+    # (e.g. after "./setup.py install"), so don't raise an error if the
+    # examples are not found:
+    if exists(examples_path):
+        check_directory_tree(examples_path)
+
+def check_directory_tree_imports(p, exclude):
+    for root, dirs, files in walk(p):
+        for fname in glob(join(root, "*.py")):
+            if filter(lambda ex: ex in fname, exclude):
+                continue
+            file = open(fname, "r")
+            try:
+                for idx, line in enumerate(file):
+                    if re.match("^\s*from.*import.*\*",line):
+                        assert False, message_implicit % (fname, idx+1)
+            finally:
+                file.close()
 
 def test_implicit_imports():
     """
@@ -73,7 +89,6 @@ def test_implicit_imports():
     path = path + sep + pardir + sep + pardir # go to sympy/
     sympy_path = abspath(path)
     examples_path = abspath(join(path + sep + pardir, "examples"))
-    paths = (sympy_path, examples_path)
     exclude = set([
         "%(sep)sthirdparty%(sep)s" % sepd,
         "%(sep)s__init__.py" % sepd,
@@ -81,16 +96,10 @@ def test_implicit_imports():
         "%(sep)smpmath%(sep)s" % sepd,
         "%(sep)splotting%(sep)s" % sepd,
     ])
-    for p in paths:
-        assert exists(p)
-        for root, dirs, files in walk(p):
-            for fname in glob(join(root, "*.py")):
-                if filter(lambda ex: ex in fname, exclude):
-                    continue
-                file = open(fname, "r")
-                try:
-                    for idx, line in enumerate(file):
-                        if re.match("^\s*from.*import.*\*",line):
-                            assert False, message_implicit % (fname, idx+1)
-                finally:
-                    file.close()
+    assert exists(sympy_path)
+    check_directory_tree_imports(sympy_path, exclude)
+    # Remember that this test can be executed when examples are not installed
+    # (e.g. after "./setup.py install"), so don't raise an error if the
+    # examples are not found:
+    if exists(examples_path):
+        check_directory_tree_imports(examples_path, exclude)
