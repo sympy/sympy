@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-# This script is for testig SymPy in pure Python environment
+# This script is for testig SymPy in pure Python environment (with py.test)
 #
 # Usage
 # -----
@@ -19,7 +19,7 @@
 # $ sudo pbuilder --create --mirror http://ftp.cz.debian.org/debian
 #
 
-apt-get -y install mercurial python2.4
+apt-get -y install mercurial python2.4 python-codespeak-lib
 cd /tmp
 hg clone http://hg.sympy.org/sympy/
 cd sympy
@@ -27,6 +27,4 @@ python2.4 setup.py sdist
 cd dist
 tar xzf *.tar.gz
 cd sympy*
-python2.4 setup.py install
-cd /
-python2.4 -c "import sympy; sympy.test()"
+python2.4 setup.py test
