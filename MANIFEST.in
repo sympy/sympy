@@ -8,3 +8,5 @@ include sympy/utilities/mathml/data/*.xsl
 
 include LICENSE
 include TODO
+include bin/test
+include bin/py.bench
