@@ -48,8 +48,7 @@ more details what they do and what they are interested in.
 #. Vinzent Steinberg: docstring patches, a lot of bug fixes, msolve (nonlinear equation systems solver), compiling functions to machine code
 #. Riccardo Gori: improvements and speedups to matrices, many bug fixes
 #. Case Van Horsen: implemented optional support for gmpy in mpmath
-#. Štěpán Roučka: a lot of bugfixes all over sympy (matrix, simplification,
-limits, series, ...)
+#. Štěpán Roučka: a lot of bugfixes all over sympy (matrix, simplification, limits, series, ...)
 #. Ali Raza Syed: pretty printing/isympy on windows fix
 #. Stefano Maggiolo: many bug fixes, polishings and improvements
 #. Robert Cimrman: matrix patches
