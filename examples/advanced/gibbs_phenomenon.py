@@ -8,9 +8,10 @@ It also calculates the Wilbraham-Gibbs constant by two approaches:
 1) calculating the fourier series of the step function and determining the
 first maximum.
 2) evaluating the integral for si(pi).
-"""
 
-import iam_sympy_example
+See:
+ * http://en.wikipedia.org/wiki/Gibbs_phenomena
+"""
 
 from sympy import var, sqrt, integrate, conjugate, seterr, abs, pprint, I, pi,\
         sin, cos, sign, Plot, msolve, lambdify, Integral, S
@@ -70,24 +71,15 @@ def l2_gram_schmidt(list, lim):
         r.append(v/v_norm)
     return r
 
-#l = l2_gram_schmidt([1, cos(x), sin(x), cos(2*x), sin(2*x)], (x, -pi, pi))
-#l = l2_gram_schmidt([1, cos(x), sin(x)], (x, -pi, pi))
-# the code below is equivalen to l2_gram_schmidt(), but faster:
-l = [1/sqrt(2)]
-for i in range(1, 100):
-    l.append(cos(i*x))
-    l.append(sin(i*x))
-l = [f/sqrt(pi) for f in l]
-
 def integ(f):
     return integrate(f, (x, -pi, 0)) + integrate(-f, (x, 0, pi))
 
-def series(l):
+def series(L):
     """
     Normalizes the series.
     """
     r = 0
-    for b in l:
+    for b in L:
         r += integ(b)*b
     return r
 
@@ -116,16 +108,29 @@ def msolve(f, x):
             x_min = x0
     return x0
 
-f = series(l)
-print "Fourier series of the step function"
-pprint(f)
-#Plot(f.diff(x), [x, -5, 5, 3000])
-x0 = msolve(f.diff(x), x)
+def main():
+    #L = l2_gram_schmidt([1, cos(x), sin(x), cos(2*x), sin(2*x)], (x, -pi, pi))
+    #L = l2_gram_schmidt([1, cos(x), sin(x)], (x, -pi, pi))
+    # the code below is equivalen to l2_gram_schmidt(), but faster:
+    L = [1/sqrt(2)]
+    for i in range(1, 100):
+        L.append(cos(i*x))
+        L.append(sin(i*x))
+    L = [f/sqrt(pi) for f in L]
 
-print "x-value of the maximum:", x0
-max = f.subs(x, x0).evalf()
-print "y-value of the maximum:", max
-g = max*pi/2
-print "Wilbraham-Gibbs constant        :", g.evalf()
-print "Wilbraham-Gibbs constant (exact):", \
-    Integral(sin(x)/x, (x, 0, pi)).evalf()
+    f = series(L)
+    print "Fourier series of the step function"
+    pprint(f)
+    #Plot(f.diff(x), [x, -5, 5, 3000])
+    x0 = msolve(f.diff(x), x)
+
+    print "x-value of the maximum:", x0
+    max = f.subs(x, x0).evalf()
+    print "y-value of the maximum:", max
+    g = max*pi/2
+    print "Wilbraham-Gibbs constant        :", g.evalf()
+    print "Wilbraham-Gibbs constant (exact):", \
+        Integral(sin(x)/x, (x, 0, pi)).evalf()
+
+if __name__ == "__main__":
+    main()

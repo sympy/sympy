@@ -1,8 +1,11 @@
 #!/usr/bin/env python
-import iam_sympy_example
+"""Matplotlib 2D plotting example
 
-from sympy import Symbol, Basic
+Demonstrates plotting with matplotlib.
+"""
+
 from sample import sample
+from sympy import Basic, log, pi, sqrt, sin, Symbol
 
 def mplot2d(f, var, show=True):
     """
@@ -28,10 +31,12 @@ def mplot2d(f, var, show=True):
     if show:
         p.show()
 
-if __name__ == "__main__":
-    from sympy import sqrt, sin, log, pi
+def main():
     x = Symbol('x')
 
     #mplot2d(log(x), (x, 0, 2, 100))
     #mplot2d([sin(x), -sin(x)], (x, float(-2*pi), float(2*pi), 50))
     mplot2d([sqrt(x), -sqrt(x), sqrt(-x), -sqrt(-x)], (x, -40.0, 40.0, 80))
+
+if __name__ == "__main__":
+    main()

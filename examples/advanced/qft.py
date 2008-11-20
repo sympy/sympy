@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-import iam_sympy_example
+"""Quantum field theory example
+
+* http://en.wikipedia.org/wiki/Quantum_field_theory
+"""
 
 from sympy import Basic,exp,Symbol,sin,Rational,I,Mul, Matrix, \
     ones, sqrt, pprint, simplify, trim, Eq, sympify
@@ -59,63 +62,67 @@ def Tr(M):
         t+=M[i,i]
     return t
 
-a=Symbol("a", real=True)
-b=Symbol("b", real=True)
-c=Symbol("c", real=True)
-
-p = (a,b,c)
-
-assert u(p, 1).D * u(p, 2) == Matrix(1, 1, [0])
-assert u(p, 2).D * u(p, 1) == Matrix(1, 1, [0])
-
-p1,p2,p3 =[Symbol(x, real=True) for x in ["p1","p2","p3"]]
-pp1,pp2,pp3 =[Symbol(x, real=True) for x in ["pp1","pp2","pp3"]]
-k1,k2,k3 =[Symbol(x, real=True) for x in ["k1","k2","k3"]]
-kp1,kp2,kp3 =[Symbol(x, real=True) for x in ["kp1","kp2","kp3"]]
-
-p = (p1,p2,p3)
-pp = (pp1,pp2,pp3)
-
-k = (k1,k2,k3)
-kp = (kp1,kp2,kp3)
-
-mu = Symbol("mu")
-
-e = (pslash(p)+m*ones(4))*(pslash(k)-m*ones(4))
-f = pslash(p)+m*ones(4)
-g = pslash(p)-m*ones(4)
-
-
 def xprint(lhs, rhs):
     pprint( Eq(sympify(lhs), rhs ) )
 
-#pprint(e)
-xprint( 'Tr(f*g)', Tr(f*g) )
-#print Tr(pslash(p) * pslash(k)).expand()
+def main():
+    a=Symbol("a", real=True)
+    b=Symbol("b", real=True)
+    c=Symbol("c", real=True)
 
-M0 = [ ( v(pp, 1).D * mgamma(mu) * u(p, 1) ) * ( u(k, 1).D * mgamma(mu,True) * \
-        v(kp, 1) ) for mu in range(4)]
-M = M0[0]+M0[1]+M0[2]+M0[3]
-M = M[0]
-assert isinstance(M, Basic)
-#print M
-#print trim(M)
+    p = (a,b,c)
 
-d=Symbol("d", real=True) #d=E+m
+    assert u(p, 1).D * u(p, 2) == Matrix(1, 1, [0])
+    assert u(p, 2).D * u(p, 1) == Matrix(1, 1, [0])
 
-xprint('M', M)
-print "-"*40
-M = ((M.subs(E,d-m)).expand() * d**2 ).expand()
-xprint('M2', 1/(E+m)**2 * M)
-print "-"*40
-x,y= M.as_real_imag()
-xprint('Re(M)', x)
-xprint('Im(M)', y)
-e = x**2+y**2
-xprint('abs(M)**2', e)
-print "-"*40
-xprint('Expand(abs(M)**2)', e.expand())
+    p1,p2,p3 =[Symbol(x, real=True) for x in ["p1","p2","p3"]]
+    pp1,pp2,pp3 =[Symbol(x, real=True) for x in ["pp1","pp2","pp3"]]
+    k1,k2,k3 =[Symbol(x, real=True) for x in ["k1","k2","k3"]]
+    kp1,kp2,kp3 =[Symbol(x, real=True) for x in ["kp1","kp2","kp3"]]
 
-#print Pauli(1)*Pauli(1)
-#print Pauli(1)**2
-#print Pauli(1)*2*Pauli(1)
+    p = (p1,p2,p3)
+    pp = (pp1,pp2,pp3)
+
+    k = (k1,k2,k3)
+    kp = (kp1,kp2,kp3)
+
+    mu = Symbol("mu")
+
+    e = (pslash(p)+m*ones(4))*(pslash(k)-m*ones(4))
+    f = pslash(p)+m*ones(4)
+    g = pslash(p)-m*ones(4)
+
+
+    #pprint(e)
+    xprint( 'Tr(f*g)', Tr(f*g) )
+    #print Tr(pslash(p) * pslash(k)).expand()
+
+    M0 = [ ( v(pp, 1).D * mgamma(mu) * u(p, 1) ) * ( u(k, 1).D * mgamma(mu,True) * \
+             v(kp, 1) ) for mu in range(4)]
+    M = M0[0]+M0[1]+M0[2]+M0[3]
+    M = M[0]
+    assert isinstance(M, Basic)
+    #print M
+    #print trim(M)
+
+    d=Symbol("d", real=True) #d=E+m
+
+    xprint('M', M)
+    print "-"*40
+    M = ((M.subs(E,d-m)).expand() * d**2 ).expand()
+    xprint('M2', 1/(E+m)**2 * M)
+    print "-"*40
+    x,y= M.as_real_imag()
+    xprint('Re(M)', x)
+    xprint('Im(M)', y)
+    e = x**2+y**2
+    xprint('abs(M)**2', e)
+    print "-"*40
+    xprint('Expand(abs(M)**2)', e.expand())
+
+    #print Pauli(1)*Pauli(1)
+    #print Pauli(1)**2
+    #print Pauli(1)*2*Pauli(1)
+
+if __name__ == "__main__":
+    main()

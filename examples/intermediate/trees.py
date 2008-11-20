@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import iam_sympy_example
 
 from sympy import Symbol, Poly
 
@@ -10,10 +9,13 @@ def T(x):
 def A(x):
     return 1 + T(x) - T(x)**2/2 + T(x**2)/2
 
+def main():
+    x=Symbol("x")
+    s = Poly(A(x), x)
+    num = [s.coeff(n) for n in range(11)]
 
-x=Symbol("x")
-s = Poly(A(x), x)
-num = [s.coeff(n) for n in range(11)]
+    print s.as_basic()
+    print num
 
-print s.as_basic()
-print num
+if __name__ == "__main__":
+    main()

@@ -1,9 +1,18 @@
 #!/usr/bin/env python
-import iam_sympy_example
+"""Expansion Example
+
+Demonstrates how to expand expressions.
+"""
 
 import sympy
-a=sympy.Symbol('a')
-b=sympy.Symbol('b')
-e=(a+b)**5
-print e
-print e.expand()
+
+def main():
+    a = sympy.Symbol('a')
+    b = sympy.Symbol('b')
+    e = (a + b)**5
+
+    print e
+    print e.expand()
+
+if __name__ == "__main__":
+    main()

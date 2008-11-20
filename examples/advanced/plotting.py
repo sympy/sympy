@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import iam_sympy_example
-
 """
 Plotting Examples
 
@@ -17,8 +15,7 @@ from sympy import sin, cos, pi, sqrt, exp
 
 from time import sleep, clock
 
-if __name__ == "__main__":
-
+def main():
     x,y,z = symbols('xyz')
 
     # toggle axes visibility with F5, colors with F6
@@ -219,3 +216,6 @@ if __name__ == "__main__":
         #cProfile.run("p.append(x**2+y**2)", 'plot.profile2')
         #s = Stats('plot.profile2')
         #s.sort_stats('cumulative').print_stats(20)
+
+if __name__ == "__main__":
+    main()

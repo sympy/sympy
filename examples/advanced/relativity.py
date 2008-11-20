@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import iam_sympy_example
 
 """
 This example calculates the Ricci tensor from the metric and does this
@@ -138,6 +137,35 @@ def pprint_Gamma_udd(i,k,l):
 
 def pprint_Rmn_dd(i,j):
     pprint( Eq(Symbol('R_%i%i' % (i,j)), Rmn.dd(i,j))    )
+
+
+# from Differential Equations example
+def eq1():
+    r = Symbol("r")
+    e = Rmn.dd(0,0)
+    e = e.subs(nu(r), -lam(r))
+    print dsolve(e, [lam(r)])
+
+def eq2():
+    r = Symbol("r")
+    e = Rmn.dd(1,1)
+    C = Symbol("CC")
+    e = e.subs(nu(r), -lam(r))
+    print dsolve(e, [lam(r)])
+
+def eq3():
+    r = Symbol("r")
+    e = Rmn.dd(2,2)
+    e = e.subs(nu(r), -lam(r))
+    print dsolve(e, [lam(r)])
+
+def eq4():
+    r = Symbol("r")
+    e = Rmn.dd(3,3)
+    e = e.subs(nu(r), -lam(r))
+    print dsolve(e, [lam(r)])
+
+
 
 def main():
 

@@ -1,14 +1,24 @@
 #!/usr/bin/env python
-import iam_sympy_example
+"""Substitution example
+
+Demonstrates substitution.
+"""
 
 import sympy
-x=sympy.Symbol('x')
-y=sympy.Symbol('y')
-e=1/sympy.cos(x)
-print e
-print e.subs(sympy.cos(x),y)
-print e.subs(sympy.cos(x),y).subs(y,x**2)
-e=1/sympy.log(x)
-e=e.subs(x,sympy.Real("2.71828"))
-print e
-print e.evalf()
+
+def main():
+    x = sympy.Symbol('x')
+    y = sympy.Symbol('y')
+
+    e = 1/sympy.cos(x)
+    print e
+    print e.subs(sympy.cos(x), y)
+    print e.subs(sympy.cos(x), y).subs(y, x**2)
+
+    e = 1/sympy.log(x)
+    e = e.subs(x, sympy.Real("2.71828"))
+    print e
+    print e.evalf()
+
+if __name__ == "__main__":
+    main()

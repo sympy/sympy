@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-import iam_sympy_example
+""" Tensor example
 
-"""
 http://www.lncc.br/~portugal/Canon.html
 http://www.lncc.br/~portugal/Invar.html
 http://www.ginac.de/tutorial/Indexed-objects.html
@@ -50,34 +49,38 @@ class Idx(Symbol):
     def values(self):
         return range(self._dim)
 
-t=Symbol("t")
-r=Symbol("r")
-theta=Symbol(r"\theta")
-phi=Symbol(r"\phi")
+def main():
+    t=Symbol("t")
+    r=Symbol("r")
+    theta=Symbol(r"\theta")
+    phi=Symbol(r"\phi")
 
-class nu(Function):
-    pass
-class lam(Function):
-    pass
+    class nu(Function):
+        pass
+    class lam(Function):
+        pass
 
-gdd=Matrix((
-    (-exp(nu(r)),0,0,0),
-    (0, exp(lam(r)), 0, 0),
-    (0, 0, r**2, 0),
-    (0, 0, 0, r**2*sin(theta)**2)
-    ))
+    gdd=Matrix((
+            (-exp(nu(r)),0,0,0),
+            (0, exp(lam(r)), 0, 0),
+            (0, 0, r**2, 0),
+            (0, 0, 0, r**2*sin(theta)**2)
+            ))
 
-mu = Idx("mu")
-nu = Idx("mu")
-i = Idx("i")
-m = Idx("m")
-k = Idx("k")
-l = Idx("l")
-g = Indexed(Symbol("A"), [mu,nu])
-Chr = g[i.up, m.up]/2 * (g[m.dn, k.dn].diff(l.up) + g[m.dn,l.dn].diff(k.up) \
-        - g[k.dn, l.dn].diff(m.up))
-#G = g.uu(i,m)/2 * (g.dd(m,k).diff(x[l])+g.dd(m,l).diff(x[k]) \
-#                    - g.dd(k,l).diff(x[m]))
+    mu = Idx("mu")
+    nu = Idx("mu")
+    i = Idx("i")
+    m = Idx("m")
+    k = Idx("k")
+    l = Idx("l")
+    g = Indexed(Symbol("A"), [mu,nu])
+    Chr = g[i.up, m.up]/2 * (g[m.dn, k.dn].diff(l.up) + g[m.dn,l.dn].diff(k.up) \
+                                 - g[k.dn, l.dn].diff(m.up))
+    #G = g.uu(i,m)/2 * (g.dd(m,k).diff(x[l])+g.dd(m,l).diff(x[k]) \
+    #                    - g.dd(k,l).diff(x[m]))
 
-print g
-print Chr
+    print g
+    print Chr
+
+if __name__ == "__main__":
+    main()

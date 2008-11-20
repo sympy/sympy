@@ -1,6 +1,14 @@
 #!/usr/bin/env python
-import iam_sympy_example
+"""Precision Example
+
+Demonstrates SymPy's arbitrary precision abilities
+"""
 
 import sympy
-e=sympy.Rational(2)**50/sympy.Rational(10)**50
-print e
+
+def main():
+    e = sympy.Rational(2)**50/sympy.Rational(10)**50
+    print e
+
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-import iam_sympy_example
+"""Pi digits example
+
+Example shows the computation of the digits of pi.
+"""
 
 #from sympy.numerics import *
 #from sympy.numerics.utils_ import *
@@ -68,4 +71,11 @@ def interactive():
     calculateit(pi_float, base, digits, tofile)
     raw_input("\nPress enter to close this script.")
 
-interactive()
+def main():
+    base = 10
+    digits = 10000
+    tofile = None
+    calculateit(pi_float, base, digits, tofile)
+
+if __name__ == "__main__":
+    interactive()

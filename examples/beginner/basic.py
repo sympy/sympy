@@ -1,9 +1,18 @@
 #!/usr/bin/env python
-import iam_sympy_example
+"""Basic example
+
+Demonstrates how to create symbols and print some algebra operations.
+"""
 
 import sympy
-a=sympy.Symbol('a')
-b=sympy.Symbol('b')
-c=sympy.Symbol('c')
-e=( a*b*b+2*b*a*b )**c
-print e
+
+def main():
+    a = sympy.Symbol('a')
+    b = sympy.Symbol('b')
+    c = sympy.Symbol('c')
+    e = ( a*b*b + 2*b*a*b )**c
+
+    print e
+
+if __name__ == "__main__":
+    main()
