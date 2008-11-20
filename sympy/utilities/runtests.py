@@ -253,6 +253,7 @@ class PyTestReporter(Reporter):
         # this tracks the x-position of the cursor (useful for positioning
         # things on the screen), without the need for any readline library:
         self._write_pos = 0
+        self._line_wrap = False
 
     def root_dir(self, dir):
         self._root_dir = dir
@@ -306,6 +307,10 @@ class PyTestReporter(Reporter):
             # don't use any colors.
             color = ""
 
+        if self._line_wrap:
+            if text[0] != "\n":
+                sys.stdout.write("\n")
+
         if color == "":
             sys.stdout.write(text)
         else:
@@ -316,6 +321,7 @@ class PyTestReporter(Reporter):
             self._write_pos += len(text)
         else:
             self._write_pos = len(text)-l-1
+        self._line_wrap = self._write_pos >= width
         self._write_pos %= width
 
     def write_center(self, text, delim="="):
