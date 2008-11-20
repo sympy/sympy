@@ -13,7 +13,7 @@ def test_sqrtdenest():
         assert sqrtdenest(i) == d[i]
 
 # more complex example:
-@XFAIL
+@XFAIL # this fails on amd64
 def test_sqrtdenest2():
     assert sqrtdenest(sqrt(16-2*sqrt(29)+2*sqrt(55-10*sqrt(29)))) == \
             sqrt(5) + sqrt(11-2*sqrt(29))
