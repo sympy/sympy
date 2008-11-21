@@ -6,7 +6,10 @@
 import sys
 
 try:
-    import py
+    # tested with py-lib 0.9.0
+    from py.__.test.outcome import Outcome, Passed, Failed, Skipped
+    from py.__.test.terminal.terminal import TerminalSession
+    from py.test import skip
     disabled = False
 except ImportError:
     disabled = True
@@ -43,11 +46,7 @@ if disabled:
     def skip(str):
         raise Skipped(str)
 else:
-    # tested with py-lib 0.9.0
-    from py.__.test.outcome import Outcome, Passed, Failed, Skipped
-    from py.__.test.terminal.terminal import TerminalSession
     from time import time as now
-    from py.test import skip
 
     __all__ = ['XFAIL']
 
