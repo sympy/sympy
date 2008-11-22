@@ -41,6 +41,7 @@ from random import uniform
 from math import ceil, sqrt, log
 
 def gf_degree(f):
+    """Returns leading degree of f. """
     return len(f)-1
 
 def gf_LC(f):
@@ -98,6 +99,14 @@ def gf_to_dict(f, p):
         if a: result[i] = a
 
     return result
+
+def gf_from_int_poly(f, p):
+    """Create GF(p)[x] polynomial from Z[x]. """
+    return gf_normal(f, p)
+
+def gf_to_int_poly(f, p):
+    """Convert GF(p)[x] polynomial to Z[x]. """
+    return [ zp_int(c, p) for c in f ]
 
 def gf_neg(f, p):
     """Negate a polynomial over GF(p)[x]. """

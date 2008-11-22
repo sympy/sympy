@@ -1,6 +1,8 @@
 
 from sympy.polys.galoispolys import (
-    gf_degree, gf_strip, gf_normal, gf_from_dict, gf_to_dict,
+    gf_degree, gf_strip, gf_normal,
+    gf_from_dict, gf_to_dict,
+    gf_from_int_poly, gf_to_int_poly,
     gf_neg, gf_add_const, gf_sub_const, gf_mul_const, gf_div_const,
     gf_add, gf_sub, gf_add_mul, gf_sub_mul, gf_mul, gf_sqr,
     gf_div_classic, gf_quo_classic, gf_div_newton, gf_quo_newton,
@@ -47,7 +49,7 @@ def test_gf_normal():
     assert gf_normal([11,22,17,1,0], 11) == [6,1,0]
     assert gf_normal([12,23,17,1,0], 11) == [1,1,6,1,0]
 
-def test_gf_from_dict():
+def test_gf_from_to_dict():
     f = {11: 12, 6: 2, 0: 25}
     F = {11: 1, 6: 2, 0: 3}
     g = [1,0,0,0,0,2,0,0,0,0,0,3]
@@ -61,6 +63,10 @@ def test_gf_from_dict():
 
     assert gf_from_dict(f, 11) == g
     assert gf_to_dict(g, 11) == F
+
+def test_gf_from_to_int_poly():
+    assert gf_from_int_poly([1,0,7,2,20], 5) == [1,0,2,2,0]
+    assert gf_to_int_poly([1,0,4,2,3], 5) == [1,0,-1,2,-2]
 
 def test_gf_monic():
     assert gf_LC([]) == 0
@@ -476,3 +482,4 @@ def test_gf_factor():
 
     assert gf_factor_sqf(f, p, method='zassenhaus') == g
     assert gf_factor_sqf(f, p, method='shoup') == g
+
