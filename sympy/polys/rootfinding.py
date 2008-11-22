@@ -312,13 +312,13 @@ def roots(f, *symbols, **flags):
 
         return zeros
 
-def poly_factors(f, *symbols, **flags):
+def poly_root_factors(f, *symbols, **flags):
     """Returns all factors of an univariate polynomial.
 
        >>> from sympy import *
        >>> x,y = symbols('xy')
 
-       >>> factors = poly_factors(x**2-y, x)
+       >>> factors = poly_root_factors(x**2-y, x)
 
        >>> set(f.as_basic() for f in factors)
        set([x + y**(1/2), x - y**(1/2)])
@@ -614,3 +614,4 @@ class RootSum(Basic):
                 result += self.function(root)
 
             return result
+

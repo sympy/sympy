@@ -16,7 +16,7 @@ from sympy.solvers import solve
 from sympy.simplify import simplify, together
 
 from sympy.polynomials import factor, PolynomialException
-from sympy.polys import Poly, quo, gcd, lcm, factors, monomials
+from sympy.polys import Poly, quo, gcd, lcm, root_factors, monomials
 
 def components(f, x):
     """Returns a set of all functional components of the given expression
@@ -331,7 +331,7 @@ def heurisch(f, x, **kwargs):
             else:
                 continue
 
-            irreducibles |= set(factors(poly, z, domain=field))
+            irreducibles |= set(root_factors(poly, z, domain=field))
 
         log_coeffs, log_part = [], []
         B = _symbols('B', len(irreducibles))
@@ -401,3 +401,4 @@ def heurisch(f, x, **kwargs):
                 return indep * result
 
         return None
+

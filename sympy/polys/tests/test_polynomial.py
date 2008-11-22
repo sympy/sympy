@@ -6,7 +6,7 @@ from sympy.polys.monomial import monomial_lex_cmp, monomial_grlex_cmp, \
 from sympy.polys.algorithms import poly_groebner, poly_subresultants, \
         poly_resultant, poly_half_gcdex, poly_gcdex, poly_gcd, poly_lcm, \
         poly_pdiv
-from sympy.polys.rootfinding import poly_factors, roots_linear, \
+from sympy.polys.rootfinding import poly_root_factors, roots_linear, \
         roots_quadratic, roots_cubic, roots_binomial, roots_rational, roots, \
         number_of_real_roots, poly_sturm, PolynomialError, poly_decompose, \
         poly_sqf, poly_div, CoefficientError, SymbolsError
@@ -1076,13 +1076,13 @@ def test_roots():
     assert roots(x**3, x, multiple=True) == [S.Zero, S.Zero, S.Zero]
     assert roots(1234, x, multiple=True) == []
 
-def test_factors():
-    assert poly_factors(1, x) == [Poly(1, x)]
-    assert poly_factors(x, x) == [Poly(x, x)]
+def test_root_factors():
+    assert poly_root_factors(1, x) == [Poly(1, x)]
+    assert poly_root_factors(x, x) == [Poly(x, x)]
 
-    assert poly_factors(x**2-1, x) == [Poly(x-1, x), Poly(x+1, x)]
+    assert poly_root_factors(x**2-1, x) == [Poly(x-1, x), Poly(x+1, x)]
 
-    assert set( poly_factors((x**4 - 1)**2, x) ) == \
+    assert set( poly_root_factors((x**4 - 1)**2, x) ) == \
     set([Poly(((S.One, -I),     ((1,), (0,))), x),
          Poly(((S.One, -I),     ((1,), (0,))), x),
          Poly(((S.One, -S.One), ((1,), (0,))), x),
@@ -1092,7 +1092,7 @@ def test_factors():
          Poly(((S.One, I),      ((1,), (0,))), x),
          Poly(((S.One, I),      ((1,), (0,))), x)])
 
-    assert poly_factors(x**4-1, x, domain='Z') == \
+    assert poly_root_factors(x**4-1, x, domain='Z') == \
         [Poly(x-1, x), Poly(x+1, x), Poly(x**2+1, x)]
 
 def test_RootsOf():
@@ -1123,3 +1123,4 @@ def test_RootsOf():
     assert RootSum(Lambda(x, x), Poly(0, x), evaluate=False) != S.Zero
 
     assert RootSum(Lambda(x, x), Poly(x-1, x), evaluate=False).doit() == S.One
+

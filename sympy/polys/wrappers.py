@@ -9,7 +9,7 @@ from algorithms import poly_div, poly_pdiv, poly_groebner, poly_lcm, poly_gcd, \
     poly_half_gcdex, poly_gcdex, poly_sqf, poly_resultant, poly_subresultants, \
     poly_decompose
 
-from rootfinding import poly_factors, poly_sturm
+from rootfinding import poly_root_factors, poly_sturm
 
 def poly_quo(f, g, *symbols):
     """Wrapper for poly_div() """
@@ -58,7 +58,7 @@ _funcs = {
     'resultant'     : 2,
     'sqf'           : 1,
     'decompose'     : 1,
-    'factors'       : 1,
+    'root_factors'  : 1,
     'sturm'         : 1,
 }
 
@@ -84,3 +84,4 @@ def div(*args, **kwargs):
     return q, r.as_basic()
 
 div.__doc__ = poly_div.__doc__
+
