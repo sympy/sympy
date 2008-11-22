@@ -285,13 +285,6 @@ def gf_div(f, g, p):
        >>> gf_add_mul([1], [1, 1], [1, 1, 0], 2)
        [1, 0, 1, 1]
 
-       Two division methods are implemented:
-
-        1. Classical O(n**2) in-place method due to Monagan (see [1]).
-
-        2. Newton iteration for polynomials of large degree. Complexity
-           of this method is O(M(n)) where M(n) is multiplication time.
-
        For more details on the implemented algorithms refer to:
 
        [1] Michael Monagan, In-place Arithmetic for Polynomials over
@@ -302,10 +295,6 @@ def gf_div(f, g, p):
            First Edition, Cambridge University Press, 1999, pp. 247
 
     """
-    return gf_div_classic(f, g, p)
-
-def gf_div_classic(f, g, p):
-    """Division with remainder over GF(p)[x] using classical method. """
     df = gf_degree(f)
     dg = gf_degree(g)
 
@@ -331,8 +320,8 @@ def gf_div_classic(f, g, p):
 
     return h[:dq+1], gf_strip(h[dq+1:])
 
-def gf_quo_classic(f, g, p):
-    """Computes polynomial quotient over GF(p)[x] using classical method. """
+def gf_quo(f, g, p):
+    """Computes polynomial quotient over GF(p)[x]. """
     df = gf_degree(f)
     dg = gf_degree(g)
 
@@ -354,74 +343,6 @@ def gf_quo_classic(f, g, p):
         h[i] = (coeff * inv) % p
 
     return h[:dq+1]
-
-def gf_inv_newton(f, n, p):
-    """Compute f**(-1) mod x**n using Newton iteration. """
-    g, h = [zp_inv(gf_TC(f), p)], [1,0,0]
-
-    N = int(ceil(log(n, 2)))
-
-    for i in xrange(1, N+1):
-        a = gf_mul_const(g, 2, p)
-        b = gf_mul(f, gf_sqr(g, p), p)
-        g = gf_rem(gf_sub(a, b, p), h, p)
-
-        h = gf_lshift(h, gf_degree(h))
-
-    return g
-
-def gf_div_newton(f, g, p):
-    """Division with remainder over GF(p)[x] using Newton iteration. """
-    df = gf_degree(f)
-    dg = gf_degree(g)
-
-    if not g:
-        raise ZeroDivisionError("polynomial division")
-    elif df < dg:
-        return [], f
-
-    dq = df - dg
-
-    F = gf_reverse(f)
-    G = gf_reverse(g)
-
-    n = dq + 1
-
-    H = gf_inv_newton(G, n, p)
-    Q = gf_rshift(gf_mul(F, H, p), n)[1]
-
-    q = gf_reverse(Q)
-    r = gf_sub_mul(f, g, q, p)
-
-    return q, r
-
-def gf_quo_newton(f, g, p):
-    """Computes polynomial quotient over GF(p)[x] using Newton iteration. """
-    df = gf_degree(f)
-    dg = gf_degree(g)
-
-    if not g:
-        raise ZeroDivisionError("polynomial division")
-    elif df < dg:
-        return [], f
-
-    dq = df - dg
-
-    F = gf_reverse(f)
-    G = gf_reverse(g)
-
-    n = dq + 1
-
-    H = gf_inv_newton(G, n, p)
-    Q = gf_rshift(gf_mul(F, H, p), n)[1]
-
-    q = gf_reverse(Q)
-
-    return q
-
-def gf_quo(f, g, p):
-    """Returns polynomial quotient over GF(p)[x]. """
-    return gf_div(f, g, p)[0]
 
 def gf_rem(f, g, p):
     """Returns polynomial remainder over GF(p)[x]. """

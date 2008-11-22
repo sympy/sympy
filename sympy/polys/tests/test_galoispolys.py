@@ -5,7 +5,6 @@ from sympy.polys.galoispolys import (
     gf_from_int_poly, gf_to_int_poly,
     gf_neg, gf_add_const, gf_sub_const, gf_mul_const, gf_div_const,
     gf_add, gf_sub, gf_add_mul, gf_sub_mul, gf_mul, gf_sqr,
-    gf_div_classic, gf_quo_classic, gf_div_newton, gf_quo_newton,
     gf_div, gf_quo, gf_rem, gf_lshift, gf_rshift,
     gf_pow, gf_pow_mod,
     gf_gcd, gf_gcdex,
@@ -159,27 +158,17 @@ def test_gf_arith():
     assert gf_sqr([2,0,0,1,7], 11) == [4,0,0,4,6,0,1,3,5]
 
 def test_gf_division():
-    raises(ZeroDivisionError, "gf_div_classic([1,2,3], [], 11)")
-    raises(ZeroDivisionError, "gf_quo_classic([1,2,3], [], 11)")
-
-    raises(ZeroDivisionError, "gf_div_newton([1,2,3], [], 11)")
-    raises(ZeroDivisionError, "gf_quo_newton([1,2,3], [], 11)")
+    raises(ZeroDivisionError, "gf_div([1,2,3], [], 11)")
+    raises(ZeroDivisionError, "gf_quo([1,2,3], [], 11)")
+    raises(ZeroDivisionError, "gf_rem([1,2,3], [], 11)")
 
     f, g, q, r = [5,4,3,2,1,0], [1,2,3], [5,1,0,6], [3,3]
 
-    assert gf_div_classic(f, g, 7) == (q, r)
-    assert gf_quo_classic(f, g, 7) == q
-
-    assert gf_div_newton(f, g, 7) == (q, r)
-    assert gf_quo_newton(f, g, 7) == q
+    assert gf_div(f, g, 7) == (q, r)
+    assert gf_quo(f, g, 7) == q
+    assert gf_rem(f, g, 7) == r
 
     f, g, q, r = [5,4,3,2,1,0], [1,2,3,0], [5,1,0], [6,1,0]
-
-    assert gf_div_classic(f, g, 7) == (q, r)
-    assert gf_quo_classic(f, g, 7) == q
-
-    assert gf_div_newton(f, g, 7) == (q, r)
-    assert gf_quo_newton(f, g, 7) == q
 
     assert gf_div(f, g, 7) == (q, r)
     assert gf_quo(f, g, 7) == q
