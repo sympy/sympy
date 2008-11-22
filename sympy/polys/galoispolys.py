@@ -1035,12 +1035,8 @@ def gf_factor(f, p, **flags):
        for i != j. The result is given as a tuple consisting of the leading
        coefficient of f and a list of factors with their multiplicities.
 
-       The algorithm proceeds by iteratively, for i = 1, 2, ...,  computing
-       one step of distinct degree factorization obtaining product g = g_1
-       g_2 ... g_s of all irreducible factors of f, each of degree i, which
-       is then factored into irreducibles using equal degree factorization
-       algorithm. For each factor g_k, its multiplicity e_k is obtained by
-       trial division and then g_k**e_k is removed from f.
+       The algorithm proceeds by first computing square-free decomposition
+       of f and then iteratively factoring each of the square-free factors.
 
        Consider a non square-free polynomial f = (7*x + 1) (x + 2)**2 over
        GF(11)[x]. We obtain its factorization into irreducibles as follows:
@@ -1058,32 +1054,21 @@ def gf_factor(f, p, **flags):
            First Edition, Cambridge University Press, 1999, pp. 365
 
     """
-    i, factors, h = 1, [], [1, 0]
-
     LC, f = gf_monic(f, p)
 
     if gf_degree(f) < 1:
         return LC, []
 
-    while f != [1]:
-        if gf_degree(f) < 2*i:
-            factors.append((f, 1))
-            break
+    factors = []
 
-        h = gf_pow_mod(h, p, f, p)
-        g = gf_gcd(f, gf_sub(h, [1, 0], p), p)
+    for g, k in gf_sqf(f, p)[1]:
+        n = gf_degree(g)
 
-        if g != [1]:
-            for F in gf_edf(g, i, p, **flags):
-                (q, r), e = gf_div(f, F, p), 0
+        if n == 0:
+            continue
 
-                while not r:
-                    f, e = q, e + 1
-                    q, r = gf_div(f, F, p)
-
-                factors.append((F, e))
-
-        i += 1
+        for h in gf_factor_sqf(g, p)[1]:
+            factors.append((h, k))
 
     def compare((f_a, e_a), (f_b, e_b)):
         i = len(f_a) - len(f_b)
@@ -1113,3 +1098,4 @@ def gf_factor_sqf(f, p, **flags):
         factors += gf_edf(factor, n, p, **flags)
 
     return LC, factors
+
