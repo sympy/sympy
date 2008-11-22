@@ -2,7 +2,7 @@
 """
 import sys
 
-from iterables import make_list, flatten
+from iterables import make_list, flatten, subsets
 
 if sys.version_info[1] < 5:
     from iterables import any, all
@@ -18,3 +18,4 @@ from decorator import threaded
 from runtests import test
 
 from pytest import raises
+

@@ -148,3 +148,28 @@ def preorder_traversal(node):
         for subtree in preorder_traversal(arg):
             yield subtree
 
+def subsets(M, k):
+    """Generates all k-subsets of n-element set.
+
+       A k-subset of n-element set is any subset of length exactly k. The
+       number of k-subsets on n elements is given by binom(n, k), whereas
+       there are 2**n subsets all together.
+
+       >>> list(subsets([1, 2, 3], 2))
+       [[1, 2], [1, 3], [2, 3]]
+
+    """
+    def recursion(result, M, k):
+        if k == 0:
+            yield result
+        else:
+            for i, item in enumerate(M[:len(M) + 1 - k]):
+                for elem in recursion(result + [item], M[i + 1:], k - 1):
+                    yield elem
+
+    M = list(M)
+
+    for i, item in enumerate(M[:len(M) + 1 - k]):
+        for elem in recursion([item], M[i + 1:], k - 1):
+            yield elem
+
