@@ -849,6 +849,9 @@ def gf_ddf_shoup(f, p):
        list of pairs (f_i, e_i) where deg(f_i) > 0 and e_i > 0 is
        an argument to the equal degree factorization routine.
 
+       This algorithm is an improved version of Zassenhaus algorithm
+       for large deg(f) and modulus p (especially for deg(f) ~ lg(p)).
+
        For more details on the implemented algorithm refer to:
 
        [1] E. Kaltofen, V. Shoup, Subquadratic-time Factoring of
@@ -910,8 +913,13 @@ def gf_ddf_shoup(f, p):
 def gf_edf_shoup(f, n, p):
     """Gathen-Shoup: Probabilistic Equal Degree Factorization
 
+       Given a monic square-free polynomial f in GF(p)[x] and integer n
+       such that n divides deg(f),  returns all irreducible factors f_1
+       ... f_d of f, each of degree n. This is a complete factorization
+       over Galois fields.
 
-       Given a monic square-free polynomial f in GF(p)[x] ...
+       This algorithm is an improved version of Zassenhaus algorithm
+       for large deg(f) and modulus p (especially for deg(f) ~ lg(p)).
 
        For more details on the implemented algorithm refer to:
 
