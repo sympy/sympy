@@ -63,8 +63,6 @@ modules = [
     ( False, 'sympy.plotting', [] ),
     ( False, 'sympy.thirdparty', [] ),
     ( False, 'sympy.mpmath', [] ),
-    ( True, 'sympy.polynomials', [] ),
-    ( True, 'sympy.polynomials.fast', [] ),
     ( True, 'sympy.polys', ['wrappers'] ),
     ( True, 'sympy.printing', ['gtk', 'tree'] ),
     ( True, 'sympy.printing.pretty', [] ),
@@ -265,7 +263,6 @@ tests = [
     'sympy.parsing.tests',
     'sympy.physics.tests',
     'sympy.plotting.tests',
-    'sympy.polynomials.tests',
     'sympy.polys.tests',
     'sympy.printing.pretty.tests',
     'sympy.printing.tests',
@@ -318,3 +315,4 @@ setup(
                      'clean' : clean,
                      },
       )
+
