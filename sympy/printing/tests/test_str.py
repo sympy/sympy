@@ -5,7 +5,6 @@ from sympy import abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,\
                   WildFunction, zeta, zoo
 from sympy.core.basic import Basic
 from sympy.physics.units import second
-from sympy.polynomials import Polynomial
 from sympy.polys.polynomial import Poly
 from sympy.polys.rootfinding import RootsOf, RootOf, RootSum
 from sympy.statistics.distributions import Normal, Sample, Uniform
@@ -200,10 +199,6 @@ def test_Poly():
     assert str(Poly(x*y*z**2 - 27*x, x, y, z, order='grevlex')) == \
         "Poly(x*y*z**2 - 27*x, x, y, z, order='grevlex')"
 
-def test_Polynomial():
-    f = Polynomial(x+2)
-    assert str(f) == "2 + x"
-
 def test_Pow():
     assert str(x**-1) == "1/x"
     assert str(x**-2) == "x**(-2)"
@@ -366,3 +361,4 @@ def test_sstrrepr():
 
 def test_infinity():
     assert sstr(I*oo) == "(oo)*I"
+
