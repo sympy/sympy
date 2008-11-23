@@ -16,3 +16,5 @@ from wrappers import div, quo, rem, pdiv, pquo, prem, groebner, lcm,  \
     gcd, half_gcdex, gcdex, sqf, resultant, subresultants, decompose, \
     root_factors, sturm, LexPoly
 
+from factortools import poly_factors, factors, factor
+

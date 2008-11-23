@@ -33,7 +33,6 @@ from printing import pretty, pretty_print, pprint, pprint_use_unicode, \
     pprint_try_use_unicode, print_gtk, print_tree
 from printing import ccode, latex, preview, view, pngview, pdfview, dviview
 from printing import python, print_python, srepr, sstr, sstrrepr
-from polynomials import factor
 
 evalf._create_evalf_table()
 
@@ -42,3 +41,4 @@ SYMPY_DEBUG = eval(os.getenv('SYMPY_DEBUG', 'False'))
 
 # This is slow to import:
 #import abc
+

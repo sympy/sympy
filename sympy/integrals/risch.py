@@ -15,8 +15,8 @@ from sympy.functions import sqrt, erf
 from sympy.solvers import solve
 from sympy.simplify import simplify, together
 
-from sympy.polynomials import factor, PolynomialException
-from sympy.polys import Poly, quo, gcd, lcm, root_factors, monomials
+from sympy.polys import Poly, quo, gcd, lcm, root_factors, \
+    monomials, factor, PolynomialError
 
 def components(f, x):
     """Returns a set of all functional components of the given expression
@@ -312,8 +312,8 @@ def heurisch(f, x, **kwargs):
     for poly in polys:
         if poly.has(*V):
             try:
-                factorization = factor(poly, V)
-            except PolynomialException:
+                factorization = factor(poly, *V)
+            except PolynomialError:
                 factorization = poly
 
             if factorization.is_Mul:

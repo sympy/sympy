@@ -3,13 +3,19 @@ from sympy import symbols, expand, sin, sqrt, re, im, I, Rational, Lambda, \
 
 from sympy.polys.monomial import monomial_lex_cmp, monomial_grlex_cmp, \
         monomial_grevlex_cmp, monomial_1_el_cmp
-from sympy.polys.algorithms import poly_groebner, poly_subresultants, \
+
+from sympy.polys.algorithms import poly_groebner, poly_subresultants,    \
         poly_resultant, poly_half_gcdex, poly_gcdex, poly_gcd, poly_lcm, \
-        poly_pdiv
-from sympy.polys.rootfinding import poly_root_factors, roots_linear, \
-        roots_quadratic, roots_cubic, roots_binomial, roots_rational, roots, \
-        number_of_real_roots, poly_sturm, PolynomialError, poly_decompose, \
-        poly_sqf, poly_div, CoefficientError, SymbolsError
+        poly_div, poly_pdiv, poly_decompose, poly_sqf
+
+from sympy.polys.rootfinding import poly_root_factors, roots_linear,  \
+        roots_quadratic, roots_cubic, roots_binomial, roots_rational, \
+        roots, number_of_real_roots, poly_sturm
+
+from sympy.polys.factortools import poly_factors, factors, factor
+
+from sympy.polys.polynomial import Poly, PolynomialError, \
+        CoefficientError, SymbolsError
 
 a,b,c,d,x,y,z,u,v,t = symbols('abcdxyzuvt')
 
@@ -1123,4 +1129,43 @@ def test_RootsOf():
     assert RootSum(Lambda(x, x), Poly(0, x), evaluate=False) != S.Zero
 
     assert RootSum(Lambda(x, x), Poly(x-1, x), evaluate=False).doit() == S.One
+
+def test_factor():
+    assert factor(-2) == -2
+    assert factor(-x) == -x
+
+    assert factor(Rational(3, 8)*x**2 - Rational(3, 2)) == \
+        Rational(3, 8)*((x - 2)*(x + 2))
+
+    assert factor(x**3 - 1) == (x - 1)*(x**2 + x + 1)
+    assert factor(x**3 - x) == x*(x - 1)*(x + 1)
+
+    assert factor(x**2 + 2*x + 1) == (x + 1)**2
+    assert factor(x**2 +   x - 2) == (x - 1)*(x + 2)
+
+    assert factor(2*x**2 + 5*x + 2) == (x + 2)*(2*x + 1)
+
+    assert factor(x**2 + y**2) == x**2 + y**2
+    assert factor(x**5 - y**2) == x**5 - y**2
+
+    assert factor(x*y + x*z + y*z) == x*y + x*z + y*z
+    assert factor(x*y + x*z + x**2) == x*(x + y + z)
+
+    assert poly_factors(-2*x**2 + x, x) == \
+        (-1, [(Poly(x, x), 1),
+              (Poly(2*x - 1, x), 1)])
+
+    assert poly_factors(x**3 - 3*x**2 + 3*x - 1, x) == \
+        (1, [(Poly(x - 1, x), 3)])
+
+    assert poly_factors(x**6 - 1, x) == \
+        (1, [(Poly(x - 1, x), 1),
+             (Poly(x + 1, x), 1),
+             (Poly(x**2 - x + 1, x), 1),
+             (Poly(x**2 + x + 1, x), 1)])
+
+    assert poly_factors(2*x**3*y - 2*a**2*x*y - 3*a**2*x**2 + 3*a**4, a, x, y) == \
+        (1, [(Poly(a - x, a, x, y), 1),
+             (Poly(a + x, a, x, y), 1),
+             (Poly(3*a**2 - 2*x*y, a, x, y), 1)])
 
