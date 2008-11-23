@@ -8,6 +8,7 @@ from sympy.core.numbers import Rational
 from sympy.polys.polynomial import Poly, SymbolsError, \
     PolynomialError, CoefficientError, MultivariatePolyError
 from sympy.polys.algorithms import poly_decompose, poly_sqf, poly_div
+from sympy.polys.factortools import poly_factors
 
 from sympy.ntheory import divisors
 from sympy.functions import exp
@@ -210,18 +211,17 @@ def roots(f, *symbols, **flags):
                 zeros += roots_quadratic(g)
             elif n == 3:
                 if flags.get('cubics', False):
-                    from sympy.polynomials.factor_ import factor
-                    from sympy.polynomials.base import PolynomialException
-
+                    # TODO: now we can used factor() not only
+                    #       for cubic polynomials. See #1158
                     try:
-                        factors = factor(g.as_basic(), g.symbols)
+                        _, factors = poly_factors(g)
 
-                        if len(factors) <= 2:
-                            raise PolynomialException
+                        if len(factors) == 1:
+                            raise PolynomialError
 
-                        for term in factors:
-                            zeros += roots(term.as_poly(x))
-                    except PolynomialException:
+                        for factor, k in factors:
+                            zeros += roots(factor, multiple=True) * k
+                    except PolynomialError:
                         zeros += roots_cubic(g)
             elif n == 4:
                 if flags.get('quartics', False):
