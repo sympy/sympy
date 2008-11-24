@@ -197,6 +197,15 @@ up::
     Out[2]: False
 
 
+Debugging
+---------
+
+Starting with 0.6.4, you can turn on/off debugg messages with the environment variable
+SYMPY_DEBUG, which is expected to have the values True or False. For example, o turn on 
+debugging, you would issue::
+
+    [user@localhost]: SYMPY_DEBUG=True ./bin/isympy
+
 Functionality
 -------------
 

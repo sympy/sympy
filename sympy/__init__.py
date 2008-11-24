@@ -37,5 +37,8 @@ from polynomials import factor
 
 evalf._create_evalf_table()
 
+import os
+SYMPY_DEBUG = eval(os.getenv('SYMPY_DEBUG', 'False'))
+
 # This is slow to import:
 #import abc
