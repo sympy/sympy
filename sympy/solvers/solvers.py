@@ -162,89 +162,88 @@ def solve(f, *symbols, **flags):
         if isinstance(f, Equality):
             f = f.lhs - f.rhs
 
-        if len(symbols) == 1:
-            symbol = symbols[0]
-
-            strategy = guess_solve_strategy(f, symbol)
-
-            if strategy == GS_POLY:
-                poly = f.as_poly( symbol )
-                assert poly is not None
-                result = roots(poly, cubics=True, quartics=True).keys()
-
-            elif strategy == GS_RATIONAL:
-                P, Q = f.as_numer_denom()
-                #TODO: check for Q != 0
-                return solve(P, symbol, **flags)
-
-            elif strategy == GS_POLY_CV_1:
-                # we must search for a suitable change of variable
-                # collect exponents
-                exponents_denom = list()
-                args = list(f.args)
-                if isinstance(f, Add):
-                    for arg in args:
-                        if isinstance(arg, Pow):
-                            exponents_denom.append(arg.exp.q)
-                        elif isinstance(arg, Mul):
-                            for mul_arg in arg.args:
-                                if isinstance(mul_arg, Pow):
-                                    exponents_denom.append(mul_arg.exp.q)
-                elif isinstance(f, Mul):
-                    for mul_arg in args:
-                        if isinstance(mul_arg, Pow):
-                            exponents_denom.append(mul_arg.exp.q)
-
-                assert len(exponents_denom) > 0
-                if len(exponents_denom) == 1:
-                    m = exponents_denom[0]
-                else:
-                    # get the GCD of the denominators
-                    m = ilcm(*exponents_denom)
-                # x -> y**m.
-                # we assume positive for simplification purposes
-                t = Symbol('t', positive=True, dummy=True)
-                f_ = f.subs(symbol, t**m)
-                if guess_solve_strategy(f_, t) != GS_POLY:
-                    raise TypeError("Could not convert to a polynomial equation: %s" % f_)
-                cv_sols = solve(f_, t)
-                result = list()
-                for sol in cv_sols:
-                    result.append(sol**(S.One/m))
-
-            elif strategy == GS_POLY_CV_2:
-                m = 0
-                args = list(f.args)
-                if isinstance(f, Add):
-                    for arg in args:
-                        if isinstance(arg, Pow):
-                            m = min(m, arg.exp)
-                        elif isinstance(arg, Mul):
-                            for mul_arg in arg.args:
-                                if isinstance(mul_arg, Pow):
-                                    m = min(m, mul_arg.exp)
-                elif isinstance(f, Mul):
-                    for mul_arg in args:
-                        if isinstance(mul_arg, Pow):
-                            m = min(m, mul_arg.exp)
-                f1 = simplify(f*symbol**(-m))
-                result = solve(f1, symbol)
-                # TODO: we might have introduced unwanted solutions
-                # when multiplied by x**-m
-
-            elif strategy == GS_TRASCENDENTAL:
-                #a, b = f.as_numer_denom()
-                # Let's throw away the denominator for now. When we have robust
-                # assumptions, it should be checked, that for the solution,
-                # b!=0.
-                result = tsolve(f, *symbols)
-            elif strategy == -1:
-                raise Exception('Could not parse expression %s' % f)
-            else:
-                raise NotImplementedError("No algorithms where implemented to solve equation %s" % f)
-        else:
-            #TODO: if we do it the other way round we can avoid one nesting
+        if len(symbols) != 1:
             raise NotImplementedError('multivariate equation')
+
+        symbol = symbols[0]
+
+        strategy = guess_solve_strategy(f, symbol)
+
+        if strategy == GS_POLY:
+            poly = f.as_poly( symbol )
+            assert poly is not None
+            result = roots(poly, cubics=True, quartics=True).keys()
+
+        elif strategy == GS_RATIONAL:
+            P, Q = f.as_numer_denom()
+            #TODO: check for Q != 0
+            return solve(P, symbol, **flags)
+
+        elif strategy == GS_POLY_CV_1:
+            # we must search for a suitable change of variable
+            # collect exponents
+            exponents_denom = list()
+            args = list(f.args)
+            if isinstance(f, Add):
+                for arg in args:
+                    if isinstance(arg, Pow):
+                        exponents_denom.append(arg.exp.q)
+                    elif isinstance(arg, Mul):
+                        for mul_arg in arg.args:
+                            if isinstance(mul_arg, Pow):
+                                exponents_denom.append(mul_arg.exp.q)
+            elif isinstance(f, Mul):
+                for mul_arg in args:
+                    if isinstance(mul_arg, Pow):
+                        exponents_denom.append(mul_arg.exp.q)
+
+            assert len(exponents_denom) > 0
+            if len(exponents_denom) == 1:
+                m = exponents_denom[0]
+            else:
+                # get the GCD of the denominators
+                m = ilcm(*exponents_denom)
+            # x -> y**m.
+            # we assume positive for simplification purposes
+            t = Symbol('t', positive=True, dummy=True)
+            f_ = f.subs(symbol, t**m)
+            if guess_solve_strategy(f_, t) != GS_POLY:
+                raise TypeError("Could not convert to a polynomial equation: %s" % f_)
+            cv_sols = solve(f_, t)
+            result = list()
+            for sol in cv_sols:
+                result.append(sol**(S.One/m))
+
+        elif strategy == GS_POLY_CV_2:
+            m = 0
+            args = list(f.args)
+            if isinstance(f, Add):
+                for arg in args:
+                    if isinstance(arg, Pow):
+                        m = min(m, arg.exp)
+                    elif isinstance(arg, Mul):
+                        for mul_arg in arg.args:
+                            if isinstance(mul_arg, Pow):
+                                m = min(m, mul_arg.exp)
+            elif isinstance(f, Mul):
+                for mul_arg in args:
+                    if isinstance(mul_arg, Pow):
+                        m = min(m, mul_arg.exp)
+            f1 = simplify(f*symbol**(-m))
+            result = solve(f1, symbol)
+            # TODO: we might have introduced unwanted solutions
+            # when multiplied by x**-m
+
+        elif strategy == GS_TRASCENDENTAL:
+            #a, b = f.as_numer_denom()
+            # Let's throw away the denominator for now. When we have robust
+            # assumptions, it should be checked, that for the solution,
+            # b!=0.
+            result = tsolve(f, *symbols)
+        elif strategy == -1:
+            raise Exception('Could not parse expression %s' % f)
+        else:
+            raise NotImplementedError("No algorithms where implemented to solve equation %s" % f)
 
         if flags.get('simplified', True):
             return map(simplify, result)
