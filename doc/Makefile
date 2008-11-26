@@ -1,12 +1,13 @@
 # Makefile for Sphinx documentation
 #
+PYTHON       = python
 RST2HTML     = rst2html
 
 # You can set these variables from the command line.
 SPHINXOPTS   =
 SPHINXVER    = 0.5
 SPHINXBUILDpy  = sphinx/Sphinx-$(SPHINXVER)/sphinx-build.py
-SPHINXBUILD  = PYTHONPATH=.. python $(SPHINXBUILDpy)
+SPHINXBUILD  = PYTHONPATH=.. $(PYTHON) $(SPHINXBUILDpy)
 PAPER        =
 
 ALLSPHINXOPTS = -d _build/doctrees -D latex_paper_size=$(PAPER) \
