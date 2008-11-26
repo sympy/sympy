@@ -165,15 +165,7 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        try:
-            import py as pylib
-        except ImportError:
-            print """In order to run the tests, you need codespeak's py.lib
-            web page: http://codespeak.net/py/dist/
-            If you are on debian systems, the package is named python-codespeak-lib
-            """
-            sys.exit(-1)
-        pylib.test.cmdline.main(args=["sympy"])
+        sympy.test()
         tdoc = test_sympy_doc(self.args)
         tdoc.run() # run also the doc test suite
 

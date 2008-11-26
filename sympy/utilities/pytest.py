@@ -10,9 +10,10 @@ try:
     from py.__.test.outcome import Outcome, Passed, Failed, Skipped
     from py.__.test.terminal.terminal import TerminalSession
     from py.test import skip
-    disabled = False
+    USE_PYTEST = True
 except ImportError:
-    disabled = True
+    USE_PYTEST = False
+    print "Could not load pylib. Havin pylib is greatly recommended, see http://codespeak.net/py/dist/ for more info"
 
 def raises(ExpectedException, code):
     assert isinstance(code, str)
@@ -24,7 +25,7 @@ def raises(ExpectedException, code):
         return
     raise Exception("DID NOT RAISE")
 
-if disabled:
+if not USE_PYTEST:
     class XFail(Exception):
         pass
 
