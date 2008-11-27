@@ -57,11 +57,19 @@ def test_solve_polynomial():
     assert solve(Eq(x**2, 1), x) in [[-1, 1], [1, -1]]
 
     assert solve( x - y**3, x) == [y**3]
-    assert solve( x - y**3, y) == [
+    assert solve( x - y**3, y) in [
+    [
+            (-x**Rational(1,3))/2 + I*sqrt(3)*x**Rational(1,3)/2,
+            x**Rational(1,3),
+            (-x**Rational(1,3))/2 - I*sqrt(3)*x**Rational(1,3)/2
+    ],
+    [
         (-x**Rational(1,3))/2 + I*sqrt(3)*x**Rational(1,3)/2,
-        x**Rational(1,3),
-        (-x**Rational(1,3))/2 - I*sqrt(3)*x**Rational(1,3)/2
-                                   ]
+        (-x**Rational(1,3))/2 - I*sqrt(3)*x**Rational(1,3)/2,
+        x**Rational(1,3)
+    ]
+    ]
+
 
     a11,a12,a21,a22,b1,b2 = symbols('a11','a12','a21','a22','b1','b2')
 
