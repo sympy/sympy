@@ -22,7 +22,9 @@ more details what they do and what they are interested in.
 #. `Pearu Peterson <http://wiki.sympy.org/wiki/Pearu_Peterson>`_: new core, sympycore project, general advice (issues and mailinglist)
 #. `Fredrik Johansson <http://wiki.sympy.org/wiki/Fredrik_Johansson>`_: mpmath project and its integration in SymPy, number theory, combinatorial functions, products & summation, statistics, units, patches, documentation, general advice (issues and mailinglist)
 #. Chris Wu: GSoC 2007, linear algebra module
-#. `Kirill Smelkov <http://wiki.sympy.org/wiki/Kirill_Smelkov>`_: everything, reviewing patches, releases, general advice (issues and mailinglist)
+#. `Kirill Smelkov <http://wiki.sympy.org/wiki/Kirill_Smelkov>`_: everything,
+reviewing patches, releases, general advice (issues and mailinglist), not
+active anymore
 #. Ulrich Hecht: pattern matching and other patches
 #. Goutham Lakshminarayan: number theory functions
 #. David Lawrence: GHOP, Mathematica parser, square root denesting

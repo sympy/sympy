@@ -162,6 +162,13 @@ competitive by rewriting the core from scratch, that has made it from 10x to
 Fredrik Johansson has wrote mpmath and contributed a lot of patches. Kirill
 Smelkov has joined the development in autumn 2007 and has improved the overall
 quality of SymPy a lot and is currently one of the most active developers.
+Since then, a lot more people have joined the development and some people have
+also left. You can see the full list in doc/src/aboutus.txt, or online at:
+
+http://docs.sympy.org/aboutus.html#sympy-development-team
+
+People who preferred not to be associated with the project anymore have "not
+active anymore" written near their names.
 
 
 7. Citation
