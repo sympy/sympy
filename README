@@ -105,11 +105,9 @@ during the summer 2007 as part of the Google Summer of Code. Pearu Peterson
 joined the development during the summer 2007 and he has made SymPy much more
 competitive by rewriting the core from scratch, that has made it from 10x to
 100x faster. Jurjen N.E. Bos has contributed pretty printing and other patches.
-Fredrik Johansson has wrote mpmath and contributed a lot of patches. Kirill
-Smelkov has joined the development in autumn 2007 and has improved the overall
-quality of SymPy a lot and is currently one of the most active developers.
-Since then, a lot more people have joined the development and some people have
-also left. You can see the full list in doc/src/aboutus.txt, or online at:
+Fredrik Johansson has wrote mpmath and contributed a lot of patches. Since
+then, a lot more people have joined the development and some people have also
+left. You can see the full list in doc/src/aboutus.txt, or online at:
 
 http://docs.sympy.org/aboutus.html#sympy-development-team
 
