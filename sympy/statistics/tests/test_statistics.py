@@ -1,4 +1,4 @@
-from sympy import sqrt, Rational, oo, Symbol, exp
+from sympy import sqrt, Rational, oo, Symbol, exp, pi
 from sympy.functions import erf
 from sympy.statistics import Normal, Uniform
 from sympy.statistics.distributions import PDF
@@ -19,10 +19,13 @@ def test_normal():
     assert N.variance == 16
     assert N.confidence(1) == (-oo, oo)
     assert N.probability(1, 3) == erf(1/sqrt(32))
+    assert N.pdf(1).evalf() == (exp(Rational(-1,32)) / (4*sqrt(2*pi))).evalf()
     for p in [0.1, 0.3, 0.7, 0.9, 0.995]:
         a, b = N.confidence(p)
         assert operator.abs(float(N.probability(a, b).evalf()) - p) < 1e-10
 
+    N = Normal(0, 2/sqrt(2*pi))
+    assert N.pdf(0) == Rational(1,2)
     mp.dps = dps
 
 def test_uniform():
