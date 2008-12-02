@@ -13,7 +13,6 @@ try:
     USE_PYTEST = True
 except ImportError:
     USE_PYTEST = False
-    print "Could not load pylib. Havin pylib is greatly recommended, see http://codespeak.net/py/dist/ for more info"
 
 def raises(ExpectedException, code):
     assert isinstance(code, str)
