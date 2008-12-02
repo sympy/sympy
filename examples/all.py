@@ -36,7 +36,7 @@ WORKING_EXAMPLES = [
     "beginner.series",
     "beginner.substitution",
     "beginner.expansion",
-    #"intermediate.differential_equations",
+    "intermediate.differential_equations",
     #"intermediate.mplot2d",
     #"intermediate.mplot3d",
     #"intermediate.print_gtk",
