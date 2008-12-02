@@ -46,9 +46,8 @@ WORKING_EXAMPLES = [
     "advanced.gibbs_phenomenon",
     "advanced.pidigits",
     #"advanced.plotting",
-    #"advanced.qft",
+    "advanced.qft",
     "advanced.relativity",
-    #"advanced.tensors",
     ]
 
 example_dir = os.path.dirname(__file__)
