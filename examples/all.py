@@ -44,7 +44,7 @@ WORKING_EXAMPLES = [
     "intermediate.vandermonde",
     "advanced.fem",
     "advanced.gibbs_phenomenon",
-    #"advanced.pidigits",
+    "advanced.pidigits",
     #"advanced.plotting",
     #"advanced.qft",
     "advanced.relativity",
