@@ -1,57 +1,78 @@
 #!/usr/bin/env python
-"""Runner script
+"""all.py
 
-Runs all the known working examples.
+Runs all the examples for testing purposes and reports success and failure
+to stderr.  An example is marked successful if the running thread does not
+throw an exception, for threaded examples, such as plotting, one needs to
+check the stderr messages as well.
 
- Usage:
+   $ ./all.py [-hw]
 
- When all examples run:
-   $ ./all > out
-   $
+Options:
+    -h     print this help message and exit
+    -w     Also run examples requiring windowed environment.
 
- When some examples fail:
-   $ ./all > out
-   Traceback (most recent call last):
-     File "./limits_examples.py", line 17, in ?
-   [...]
-   $
+Example Usage:
+   When no examples fail:
+     $ ./all.py > out
+     SUCCESSFUL:
+       - beginner.basic
+       [...]
+     NO FAILED EXAMPLES
+     $
 
- Obviously, we want to achieve the first result.
+   When examples fail:
+     $ ./all.py -W > out
+     Traceback (most recent call last):
+       File "./all.py", line 111, in run_examples
+     [...]
+     SUCCESSFUL:
+       - beginner.basic
+       [...]
+     FAILED:
+       - intermediate.mplot2D
+       [...]
+     $
+
+   Obviously, we want to achieve the first result.
 """
 
 import imp
 import os
 import sys
 import traceback
+import getopt
 
-WORKING_EXAMPLES = [
+TERMINAL_EXAMPLES = [
     "beginner.basic",
     "beginner.differentiation",
     "beginner.expansion",
     "beginner.functions",
     "beginner.limits_examples",
-    #"beginner.plotting_nice_plot",
     "beginner.precision",
     "beginner.print_pretty",
     "beginner.series",
     "beginner.substitution",
     "beginner.expansion",
     "intermediate.differential_equations",
-    #"intermediate.mplot2d",
-    #"intermediate.mplot3d",
-    #"intermediate.print_gtk",
     "intermediate.trees",
     "intermediate.vandermonde",
     "advanced.fem",
     "advanced.gibbs_phenomenon",
     "advanced.pidigits",
-    #"advanced.plotting",
     "advanced.qft",
     "advanced.relativity",
     ]
 
-example_dir = os.path.dirname(__file__)
-example_modules = []
+WINDOWED_EXAMPLES = [
+    "beginner.plotting_nice_plot",
+    #"intermediate.print_gtk",
+    "intermediate.mplot2d",
+    "intermediate.mplot3d",
+    "advanced.plotting",
+    ]
+
+EXAMPLE_DIR = os.path.dirname(__file__)
 
 def __import__(name, globals=None, locals=None, fromlist=None):
     """An alternative to the import function so that we can import
@@ -68,7 +89,7 @@ def __import__(name, globals=None, locals=None, fromlist=None):
     # If any of the following calls raises an exception,
     # there's a problem we can't handle -- let the caller handle it.
     module_name = name.split('.')[-1]
-    module_path = os.path.join(example_dir, *name.split('.')[:-1])
+    module_path = os.path.join(EXAMPLE_DIR, *name.split('.')[:-1])
 
     fp, pathname, description = imp.find_module(module_name, [module_path])
 
@@ -79,37 +100,67 @@ def __import__(name, globals=None, locals=None, fromlist=None):
         if fp:
             fp.close()
 
-def load_example_modules ():
+
+def load_example_module(example):
     """Loads modules based upon the given package name"""
-    global example_modules
+    mod = __import__(example)
+    return mod
 
-    for entry in WORKING_EXAMPLES:
-        mod = __import__(entry)
-        example_modules.append(mod)
 
-def setup_path ():
-    """Put example directories in the path to load easily"""
-    sys.path.insert(0,example_dir)
-
-def run_examples():
+def run_examples(windowed=False):
+    """Run example in list of modules"""
     success = []
     fail = []
-    for mod in example_modules:
+    examples = TERMINAL_EXAMPLES
+    if windowed:
+        examples += WINDOWED_EXAMPLES
+    for example in examples:
         print "="*79
-        print "Running: ", mod.__name__
+        print "Running: ", example
         try:
+            mod = load_example_module(example)
             mod.main()
-            success.append(mod.__name__)
+            success.append(example)
         except:
             traceback.print_exc()
-            fail.append(mod.__name__)
-    print "SUCCESS: ", success
-    print "FAIL: ", fail
+            fail.append(example)
+    if success:
+        print >> sys.stderr, "SUCCESSFUL: "
+        for example in success:
+            print >> sys.stderr, "  -", example
+    else:
+        print >> sys.stderr, "NO SUCCESSFUL EXAMPLES"
+    if fail:
+        print >> sys.stderr, "FAILED: "
+        for example in fail:
+            print >> sys.stderr, "  -", example
+    else:
+        print >> sys.stderr, "NO FAILED EXAMPLES"
+
 
 def main (*args, **kws):
-    setup_path()
-    load_example_modules()
-    run_examples()
+    """Main script runner"""
+
+    use_windowed = False
+    try:
+        opts, remainder = getopt.getopt(args, "hw")
+        print opts
+        for opt_key, opt_val in opts:
+            print opt_key == '-w'
+            if opt_key == '-w':
+                use_windowed = True
+            elif opt_key == "-h":
+                print __doc__
+                sys.exit(0)
+            else:
+                raise getopt.GetoptError, "option %s not processed" % opt_key
+    except getopt.GetoptError, message:
+        print >> sys.stderr, message
+        print >> sys.stderr, "Use -h option for usage.\n"
+        sys.exit(1)
+
+    run_examples(use_windowed)
+
 
 if __name__ == "__main__":
     main(*sys.argv[1:])
