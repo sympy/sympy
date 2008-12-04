@@ -66,7 +66,7 @@ TERMINAL_EXAMPLES = [
 
 WINDOWED_EXAMPLES = [
     "beginner.plotting_nice_plot",
-    #"intermediate.print_gtk",
+    "intermediate.print_gtk",
     "intermediate.mplot2d",
     "intermediate.mplot3d",
     "advanced.plotting",

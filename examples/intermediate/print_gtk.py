@@ -4,17 +4,16 @@
 Demonstrates printing with gtkmathview using mathml
 """
 
-from sympy import Symbol, integrate, exp
-from sympy.printing import print_gtk
+from sympy import Integral, Limit, print_gtk, sin, Symbol
 
 def main():
     x = Symbol('x')
 
-    #l1 = limit(sin(x)/x, x, 0, evaluate=False)
-    #print_gtk(l1)
+    example_limit = Limit(sin(x)/x, x, 0)
+    print_gtk(example_limit)
 
-    l2 = integrate(exp(x), (x,0,1), evaluate=False)
-    print_gtk(l2)
+    example_integral = Integral(x, (x, 0, 1))
+    print_gtk(example_integral)
 
 if __name__ == "__main__":
     main()

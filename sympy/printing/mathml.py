@@ -52,34 +52,40 @@ class MathMLPrinter(Printer):
 
         x_1 = self.dom.createElement('bvar')
         x_2 = self.dom.createElement('lowlimit')
-        x_1.appendChild(self._print(e.x))
-        x_2.appendChild(self._print(e.x0))
+        x_1.appendChild(self._print(e.args[1]))
+        x_2.appendChild(self._print(e.args[2]))
 
         x.appendChild(x_1)
         x.appendChild(x_2)
-        x.appendChild(self._print(e.e))
+        x.appendChild(self._print(e.args[0]))
 
         return x
+
 
     def _print_Integral(self, e):
-        # FIXME doesn't work -- needs to be updated to the new Integral class
-        x = self.dom.createElement('apply')
-        x.appendChild(self.dom.createElement(self.mathml_tag(e)))
+        def lime_recur(limits):
+            x = self.dom.createElement('apply')
+            x.appendChild(self.dom.createElement(self.mathml_tag(e)))
+            bvar_elem = self.dom.createElement('bvar')
+            bvar_elem.appendChild(self._print(limits[0][0]))
+            x.appendChild(bvar_elem)
 
-        x_1 = self.dom.createElement('bvar')
-        x_2 = self.dom.createElement('lowlimit')
-        x_3 = self.dom.createElement('uplimit')
+            if limits[0][1]:
+                low_elem = self.dom.createElement('lowlimit')
+                low_elem.appendChild(self._print(limits[0][1][0]))
+                x.appendChild(low_elem)
+                up_elem = self.dom.createElement('uplimit')
+                up_elem.appendChild(self._print(limits[0][1][1]))
+                x.appendChild(up_elem)
+            if len(limits) == 1:
+                x.appendChild(self._print(e.function))
+            else:
+                x.appendChild(lime_recur(limits[1:]))
+            return x
 
-        #x_1.appendChild(self._print(e.x))
-        #x_2.appendChild(self._print(e.a))
-        #x_3.appendChild(self._print(e.b))
-
-        x.appendChild(x_1)
-        x.appendChild(x_2)
-        x.appendChild(x_3)
-        x.appendChild(self._print(e.f))
-
-        return x
+        limits = list(e.limits)
+        limits.reverse()
+        return lime_recur(limits)
 
     def _print_Symbol(self, sym):
         x = self.dom.createElement(self.mathml_tag(sym))

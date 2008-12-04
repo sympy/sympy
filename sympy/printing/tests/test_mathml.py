@@ -1,7 +1,6 @@
-from sympy import Symbol, sin, diff
+from sympy import diff, Integral, Limit, sin, Symbol
 from sympy.printing.mathml import mathml, MathMLPrinter
 from xml.dom.minidom import parseString
-from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
 mp = MathMLPrinter()
@@ -50,16 +49,23 @@ def test_mathml_functions():
     assert mml_2.childNodes[1].nodeName == 'bvar'
     assert mml_2.childNodes[1].childNodes[0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
 
-@XFAIL
 def test_mathml_limits():
     # XXX No unevaluated limits
-    mml_1 = mp._print(limit(sin(x)/x, x, 0, evaluate=False))
+    lim_fun = sin(x)/x
+    mml_1 = mp._print(Limit(lim_fun, x, 0))
     assert mml_1.childNodes[0].nodeName == 'limit'
     assert mml_1.childNodes[1].nodeName == 'bvar'
-    assert mml_1.childNodes[1].childNodes[0].nodeName == 'ci'
+    assert mml_1.childNodes[2].nodeName == 'lowlimit'
+    assert mml_1.childNodes[3].toxml() == mp._print(lim_fun).toxml()
 
 def test_mathml_integrals():
-    pass #TODO
+    integrand = x
+    mml_1 = mp._print(Integral(integrand, (x, 0, 1)))
+    assert mml_1.childNodes[0].nodeName == 'int'
+    assert mml_1.childNodes[1].nodeName == 'bvar'
+    assert mml_1.childNodes[2].nodeName == 'lowlimit'
+    assert mml_1.childNodes[3].nodeName == 'uplimit'
+    assert mml_1.childNodes[4].toxml() == mp._print(integrand).toxml()
 
 def test_mathml_matrices():
     pass #TODO
