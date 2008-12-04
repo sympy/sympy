@@ -92,18 +92,9 @@ Debugging
 
 Because the gruntz algorithm is highly recursive, it's difficult to figure out
 what went wrong inside a debugger. Instead, turn on nice debug prints by
-applying the following patch:
+defining the environment variable SYMPY_DEBUG. For example:
 
-@@ -101,7 +108,7 @@ def debug(func):
-     It will print a nice execution tree with arguments and results
-     of all decorated functions.
-     ""
--    if 1:
-+    if 0:
-         #normal mode - do nothing
-         return func
-
-Then start isympy and type the failing limit. For example:
+[user@localhost]: SYMPY_DEBUG=True ./bin/isympy
 
 In [1]: limit(sin(x)/x, x, 0)
 limitinf(_x*sin(1/_x), _x) = 1
@@ -124,7 +115,7 @@ And check manually which line is wrong. Then go to the source code and debug
 this function to figure out the exact problem.
 
 """
-
+from sympy import SYMPY_DEBUG
 from sympy.core import Basic, S, Add, Mul, Pow, Function, oo, Symbol, \
         Rational, Real, sympify, C, I
 from sympy.functions import log, exp
@@ -137,7 +128,7 @@ def debug(func):
     It will print a nice execution tree with arguments and results
     of all decorated functions.
     """
-    if 1:
+    if not SYMPY_DEBUG:
         #normal mode - do nothing
         return func
 

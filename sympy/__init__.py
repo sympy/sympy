@@ -12,6 +12,9 @@ See the webpage for more information and documentation:
 
 __version__ = "0.6.3-hg"
 
+import os
+SYMPY_DEBUG = eval(os.getenv('SYMPY_DEBUG', 'False'))
+
 import symbol as stdlib_symbol
 from sympy.core import *
 
@@ -35,9 +38,6 @@ from printing import ccode, latex, preview, view, pngview, pdfview, dviview
 from printing import python, print_python, srepr, sstr, sstrrepr
 
 evalf._create_evalf_table()
-
-import os
-SYMPY_DEBUG = eval(os.getenv('SYMPY_DEBUG', 'False'))
 
 # This is slow to import:
 #import abc
