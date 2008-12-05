@@ -9,7 +9,8 @@ SymPy is a team project and it was developed by a lot of people.
 Here is a list of contributors together with what they do, plus links to their
 wiki pages (if they have one on the page `People
 <http://wiki.sympy.org/wiki/People>`_), where they describe in
-more details what they do and what they are interested in.
+more details what they do and what they are interested in (some people didn't
+want to be mentioned here, so see our repository history for a full list).
 
 #. `Ondřej Čertík <http://wiki.sympy.org/wiki/Ond%C5%99ej_%C4%8Cert%C3%ADk>`_: project leader
 #. Fabian Seoane: everything, reviewing patches, releases, general advice (issues and mailinglist)
