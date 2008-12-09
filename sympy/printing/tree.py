@@ -6,11 +6,12 @@ def pprint_nodes(subtrees):
 
     Example:
 
-    >>> print pprint_nodes(["a", "b1\nb2", "c"])
+    >> print pprint_nodes(["a", "b1\nb2", "c"])
     +-a
     +-b1
     | b2
     +-c
+    >>
 
     """
     def indent(s,type=1):

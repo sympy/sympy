@@ -402,7 +402,7 @@ class tan(Function):
         >>> from sympy import *
         >>> x = Symbol('x')
         >>> tan(x**2).diff(x)
-        2*x*cos(x**2)**(-2)
+        2*x*(1 + tan(x**2)**2)
         >>> tan(1).diff(x)
         0
 
