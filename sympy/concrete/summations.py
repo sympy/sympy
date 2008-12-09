@@ -150,6 +150,9 @@ class Sum(Basic):
             g = g.diff(i, 2)
         return s + iterm, abs(term)
 
+    def _eval_subs(self, old, new):
+        return Sum(self.args[0].subs(old, new), *self.args[1])
+
 
 def sum(*args, **kwargs):
     summation = Sum(*args, **kwargs)
