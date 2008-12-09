@@ -8,6 +8,10 @@ work in any circumstances. See "sympy.dotest?" for documentation.
 """
 
 blacklist = [
+        "sympy/thirdparty/pyglet",
+        "sympy/mpmath",
+        "sympy/plotting",
+        "sympy/utilities/compilef.py",
         ]
 
 import os
