@@ -62,8 +62,8 @@ def factor(f, *symbols, **flags):
        >>> from sympy import *
        >>> x, y = symbols("x y")
 
-       >>> factor(x**2 - y**2)
-       (x - y)*(x + y)
+       >>> factor(x**2 - y**2) == (x - y)*(x + y)
+       True
 
     """
     if not symbols and not isinstance(f, Poly):
