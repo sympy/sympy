@@ -127,6 +127,14 @@ class sin(Function):
                 x = arg.args[0]
                 return x / sqrt(1 + x**2)
 
+            if isinstance(arg, acos):
+                x = arg.args[0]
+                return sqrt(1 - x**2)
+
+            if isinstance(arg, acot):
+                x = arg.args[0];
+                return 1 / (sqrt(1 + 1 / x**2) * x)
+
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
@@ -317,6 +325,14 @@ class cos(Function):
             if isinstance(arg, atan):
                 x = arg.args[0]
                 return 1 / sqrt(1 + x**2)
+
+            if isinstance(arg, asin):
+                x = arg.args[0]
+                return sqrt(1 - x ** 2)
+
+            if isinstance(arg, acot):
+                x = arg.args[0]
+                return 1 / sqrt(1 + 1 / x**2)
 
 
     @staticmethod

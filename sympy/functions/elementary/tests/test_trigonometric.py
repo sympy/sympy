@@ -23,6 +23,8 @@ def test_sin():
     assert sin(-x) == -sin(x)
 
     assert sin(atan(x)) == x / sqrt(1 + x**2)
+    assert sin(acos(x)) == sqrt(1 - x**2)
+    assert sin(acot(x)) == 1 / (sqrt(1 + 1 / x**2) * x)
 
     assert sin(pi*I) == sinh(pi)*I
     assert sin(-pi*I) == -sinh(pi)*I
@@ -92,6 +94,8 @@ def test_cos():
     assert cos(-x) == cos(x)
 
     assert cos(atan(x)) == 1 / sqrt(1 + x**2)
+    assert cos(asin(x)) == sqrt(1 - x**2)
+    assert cos(acot(x)) == 1 / sqrt(1 + 1 / x**2)
 
     assert cos(pi*I) == cosh(pi)
     assert cos(-pi*I) == cosh(pi)
