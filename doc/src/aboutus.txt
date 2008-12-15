@@ -72,9 +72,9 @@ Uptodate list in the order of the first contribution is given in the `README
 Financial and Infrastructure Support
 ------------------------------------
 
-* `Google <http://www.google.com/corporate/>`_: SymPy has received generous financial support from Google in 2007 by financing 5 students through the Google Summer of Code (GSOC 2007) program (`more info <http://code.google.com/p/sympy/wiki/GSoC2007>`_).
+* `Google <http://www.google.com/corporate/>`_: SymPy has received generous financial support from Google in 2007 by financing 5 students through the Google Summer of Code (GSOC 2007) program (`more info <http://code.google.com/p/sympy/wiki/GSoC2007>`_) and 1 student in 2008 (`more info <http://code.google.com/p/sympy/wiki/GSoC2008>`_)
 
-* `Python Software Foundation <http://www.python.org/psf/>`_: PSF hosted 3 GSoC 2007 students (Brian, Robert and Jason)
+* `Python Software Foundation <http://www.python.org/psf/>`_: PSF hosted 3 GSoC 2007 students (Brian, Robert and Jason), and 1 GSoC 2008 student (Fredrik)
 
 * `the Space Telescope Science Institute <http://www.stsci.edu/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
 
