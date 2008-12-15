@@ -66,6 +66,7 @@ active anymore
 #. Konrad Meyer: policy patch
 #. Henrik Johansson: matrix zero finder patch
 #. Priit Laes: line integrals
+#. Freddie Witherden: trigonometric simplifications fixes
 
 Uptodate list in the order of the first contribution is given in the `README
 <http://hg.sympy.org/sympy/file/tip/README>`_
