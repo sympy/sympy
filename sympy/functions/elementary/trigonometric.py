@@ -123,6 +123,9 @@ class sin(Function):
                             return
                         return -cls(-arg)
 
+            if isinstance(arg, atan):
+                x = arg.args[0]
+                return x / sqrt(1 + x**2)
 
     @staticmethod
     @cacheit
@@ -310,6 +313,10 @@ class cos(Function):
                             # sin(-x-1)
                             return
                         return cls(-arg)
+
+            if isinstance(arg, atan):
+                x = arg.args[0]
+                return 1 / sqrt(1 + x**2)
 
 
     @staticmethod
