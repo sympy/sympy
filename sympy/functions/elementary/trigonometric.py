@@ -123,6 +123,9 @@ class sin(Function):
                             return
                         return -cls(-arg)
 
+            if isinstance(arg, asin):
+                return arg.args[0]
+
             if isinstance(arg, atan):
                 x = arg.args[0]
                 return x / sqrt(1 + x**2)
@@ -322,6 +325,9 @@ class cos(Function):
                             return
                         return cls(-arg)
 
+            if isinstance(arg, acos):
+                return arg.args[0]
+
             if isinstance(arg, atan):
                 x = arg.args[0]
                 return 1 / sqrt(1 + x**2)
@@ -497,6 +503,21 @@ class tan(Function):
                 if coeff.is_negative:
                     return -cls(-arg)
 
+        if isinstance(arg, atan):
+            return arg.args[0]
+
+        if isinstance(arg, asin):
+            x = arg.args[0]
+            return x / sqrt(1 - x**2)
+
+        if isinstance(arg, acos):
+            x = arg.args[0]
+            return sqrt(1 - x**2) / x
+
+        if isinstance(arg, acot):
+            x = arg.args[0]
+            return 1 / x
+
 
     @staticmethod
     @cacheit
@@ -626,6 +647,21 @@ class cot(Function):
 
                 if coeff.is_negative:
                     return -cls(-arg)
+
+        if isinstance(arg, acot):
+            return arg.args[0]
+
+        if isinstance(arg, atan):
+            x = arg.args[0]
+            return 1 / x
+
+        if isinstance(arg, asin):
+            x = arg.args[0]
+            return sqrt(1 - x**2) / x
+
+        if isinstance(arg, acos):
+            x = arg.args[0]
+            return x / sqrt(1 - x**2)
 
 
     @staticmethod

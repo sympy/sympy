@@ -22,6 +22,7 @@ def test_sin():
     assert sin(x) == sin(x)
     assert sin(-x) == -sin(x)
 
+    assert sin(asin(x)) == x
     assert sin(atan(x)) == x / sqrt(1 + x**2)
     assert sin(acos(x)) == sqrt(1 - x**2)
     assert sin(acot(x)) == 1 / (sqrt(1 + 1 / x**2) * x)
@@ -93,6 +94,7 @@ def test_cos():
     assert cos(x) == cos(x)
     assert cos(-x) == cos(x)
 
+    assert cos(acos(x)) == x
     assert cos(atan(x)) == 1 / sqrt(1 + x**2)
     assert cos(asin(x)) == sqrt(1 - x**2)
     assert cos(acot(x)) == 1 / sqrt(1 + 1 / x**2)
@@ -165,6 +167,11 @@ def test_tan():
     assert tan(x) == tan(x)
     assert tan(-x) == -tan(x)
 
+    assert tan(atan(x)) == x
+    assert tan(asin(x)) == x / sqrt(1 - x**2)
+    assert tan(acos(x)) == sqrt(1 - x**2) / x
+    assert tan(acot(x)) == 1 / x
+
     assert tan(pi*I) == tanh(pi)*I
     assert tan(-pi*I) == -tanh(pi)*I
 
@@ -229,6 +236,11 @@ def test_cot():
 
     assert cot(x) == cot(x)
     assert cot(-x) == -cot(x)
+
+    assert cot(acot(x)) == x
+    assert cot(atan(x)) == 1 / x
+    assert cot(asin(x)) == sqrt(1 - x**2) / x
+    assert cot(acos(x)) == x / sqrt(1 - x**2)
 
     assert cot(pi*I) == -coth(pi)*I
     assert cot(-pi*I) == coth(pi)*I
