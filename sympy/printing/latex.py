@@ -10,9 +10,11 @@ import re
 class LatexPrinter(Printer):
     printmethod = "_latex_"
 
-    def __init__(self, inline=True):
+    def __init__(self, inline=True, fold_frac_powers=False, fold_func_brackets=False):
         Printer.__init__(self)
         self._inline = inline
+        self._fold_frac_powers = fold_frac_powers
+        self._fold_func_brackets = fold_func_brackets
 
     def doprint(self, expr):
         tex = Printer.doprint(self, expr)
@@ -23,7 +25,44 @@ class LatexPrinter(Printer):
             return r"\begin{equation*}%s\end{equation*}" % tex
 
     def _needs_brackets(self, expr):
+        """
+        Returns True if the expression needs to be wrapped in brackets when
+        printed, False otherwise. For example: a + b => True; a => False;
+        10 => False; -10 => True.
+        """
         return not ((expr.is_Integer and expr.is_nonnegative) or expr.is_Atom)
+
+    def _needs_function_brackets(self, expr):
+        """
+        Returns True if the expression needs to be wrapped in brackets when
+        passed as an argument to a function, False otherwise. This is a more
+        liberal version of _needs_brackets, in that many expressions which need
+        to be wrapped in brackets when added/substracted/raised to a power do
+        not need them when passed to a function. Such an example is a*b.
+        """
+        if not self._needs_brackets(expr):
+            return False
+        else:
+            # Muls of the form a*b*c... can be folded
+            if expr.is_Mul and not self._mul_is_clean(expr):
+                return True
+            # Pows which don't need brackets can be folded
+            elif expr.is_Pow and not self._pow_is_clean(expr):
+                return True
+            # Add and Function always need brackets
+            elif expr.is_Add or expr.is_Function:
+                return True
+            else:
+                return False
+
+    def _mul_is_clean(self, expr):
+        for arg in expr.args:
+            if arg.is_Function:
+                return False
+        return True
+
+    def _pow_is_clean(self, expr):
+        return self._needs_brackets(expr.base)
 
     def _do_exponent(self, expr, exp):
         if exp is not None:
@@ -117,6 +156,9 @@ class LatexPrinter(Printer):
                 return r"\frac{1}{%s}" % tex
             else:
                 return tex
+        elif self._fold_frac_powers and expr.exp.is_Rational and expr.exp.q != 1:
+            base, p, q = self._print(expr.base), expr.exp.p, expr.exp.q
+            return r"%s^{%s/%s}" % (base, p, q)
         else:
             if expr.base.is_Function:
                 return self._print(expr.base, self._print(expr.exp))
@@ -134,7 +176,7 @@ class LatexPrinter(Printer):
                 if self._needs_brackets(expr.base):
                     tex = r"\left(%s\right)^{%s}"
                 else:
-                    tex = r"{%s}^{%s}"
+                    tex = r"%s^{%s}"
 
                 return tex % (self._print(expr.base),
                               self._print(expr.exp))
@@ -211,7 +253,13 @@ class LatexPrinter(Printer):
             else:
                 name = r"\operatorname{%s}" % func
 
-            return name + r"\left(%s\right)" % ",".join(args)
+            if self._fold_func_brackets and len(args) == 1 and \
+               not self._needs_function_brackets(expr.args[0]):
+                name += r"%s"
+            else:
+                name += r"\left(%s\right)"
+
+            return name % ",".join(args)
 
     def _print_floor(self, expr, exp=None):
         tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
@@ -262,7 +310,7 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_exp(self, expr, exp=None):
-        tex = r"{e}^{%s}" % self._print(expr.args[0])
+        tex = r"e^{%s}" % self._print(expr.args[0])
         return self._do_exponent(tex, exp)
 
     def _print_gamma(self, expr, exp=None):
@@ -444,7 +492,7 @@ class LatexPrinter(Printer):
             self._print(expr.args[1]), self._print(expr.args[0]))
         return tex
 
-def latex(expr, inline=True):
+def latex(expr, inline=True, fold_frac_powers=False, fold_func_brackets=False):
     r"""Convert the given expression to LaTeX representation.
 
         You can specify how the generated code will be delimited.
@@ -470,7 +518,7 @@ def latex(expr, inline=True):
 
     """
 
-    return LatexPrinter(inline).doprint(expr)
+    return LatexPrinter(inline, fold_frac_powers, fold_func_brackets).doprint(expr)
 
 def print_latex(expr):
     """Prints LaTeX representation of the given expression."""

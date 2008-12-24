@@ -17,9 +17,15 @@ def test_printmethod():
 
 def test_latex_basic():
     assert latex(1+x) == "$1 + x$"
-    assert latex(x**2) == "${x}^{2}$"
-    assert latex(x**(1+x)) == "${x}^{1 + x}$"
-    assert latex(x**3+x+1+x**2) == "$1 + x + {x}^{2} + {x}^{3}$"
+    assert latex(x**2) == "$x^{2}$"
+    assert latex(x**(1+x)) == "$x^{1 + x}$"
+    assert latex(x**3+x+1+x**2) == "$1 + x + x^{2} + x^{3}$"
+
+    assert latex(x**(Rational(1,2))) == r"$\sqrt{x}$"
+    assert latex(x**(Rational(3,2))) == r"$\sqrt[3]{x}$"
+    assert latex(x**(Rational(3,4))) == r"$x^{\frac{3}{4}}$"
+    assert latex(x**(Rational(3,4)), fold_frac_powers=True) == "$x^{3/4}$"
+
 
 def test_latex_symbols():
     Gamma, lmbda, rho = map(Symbol, ('Gamma', 'lambda', 'rho'))
@@ -37,8 +43,8 @@ def test_latex_symbols():
     #assert latex(mass**3 * volume**3) == r"${\mathrm{mass}}^{3} \cdot {\mathrm{volume}}^{3}$"
 
 def test_latex_functions():
-    assert latex(exp(x)) == "${e}^{x}$"
-    assert latex(exp(1)+exp(2)) == "$e + {e}^{2}$"
+    assert latex(exp(x)) == "$e^{x}$"
+    assert latex(exp(1)+exp(2)) == "$e + e^{2}$"
 
     f = Function('f')
     assert latex(f(x)) == '$\\operatorname{f}\\left(x\\right)$'
@@ -47,6 +53,9 @@ def test_latex_functions():
 
     assert latex(beta(x)) == r"$\operatorname{beta}\left(x\right)$"
     assert latex(sin(x)) == r"$\operatorname{sin}\left(x\right)$"
+    assert latex(sin(x), fold_func_brackets=True) == r"$\operatorname{sin}x$"
+    assert latex(sin(2*x**2), fold_func_brackets=True) == \
+    r"$\operatorname{sin}2 x^{2}$"
 
     assert latex(factorial(k)) == r"$k!$"
     assert latex(factorial(-k)) == r"$\left(- k\right)!$"
@@ -62,15 +71,15 @@ def test_latex_functions():
 
 def test_latex_derivatives():
     assert latex(diff(x**3, x, evaluate=False)) == \
-    r"$\frac{\partial}{\partial x} {x}^{3}$"
+    r"$\frac{\partial}{\partial x} x^{3}$"
     assert latex(diff(sin(x)+x**2, x, evaluate=False)) == \
-    r"$\frac{\partial}{\partial x}\left(\operatorname{sin}\left(x\right) + {x}^{2}\right)$"
+    r"$\frac{\partial}{\partial x}\left(\operatorname{sin}\left(x\right) + x^{2}\right)$"
 
 def test_latex_integrals():
     assert latex(Integral(log(x), x)) == r"$\int \operatorname{log}\left(x\right)\,dx$"
-    assert latex(Integral(x**2, (x,0,1))) == r"$\int_{0}^{1} {x}^{2}\,dx$"
-    assert latex(Integral(x**2, (x,10,20))) == r"$\int_{10}^{20} {x}^{2}\,dx$"
-    assert latex(Integral(y*x**2, (x,0,1), y)) == r"$\int\int_{0}^{1} y {x}^{2}\,dx dy$"
+    assert latex(Integral(x**2, (x,0,1))) == r"$\int_{0}^{1} x^{2}\,dx$"
+    assert latex(Integral(x**2, (x,10,20))) == r"$\int_{10}^{20} x^{2}\,dx$"
+    assert latex(Integral(y*x**2, (x,0,1), y)) == r"$\int\int_{0}^{1} y x^{2}\,dx dy$"
 
 @XFAIL
 def test_latex_limits():
@@ -94,7 +103,7 @@ def test_latex():
 
 def test_latex_dict():
     d = {Rational(1): 1, x**2: 2, x: 3, x**3: 4}
-    assert latex(d) == '$\\begin{Bmatrix}1 : 1, & x : 3, & {x}^{2} : 2, & {x}^{3} : 4\\end{Bmatrix}$'
+    assert latex(d) == '$\\begin{Bmatrix}1 : 1, & x : 3, & x^{2} : 2, & x^{3} : 4\\end{Bmatrix}$'
 
 def test_latex_rational():
     #tests issue 874
@@ -120,5 +129,5 @@ def test_latex_DiracDelta():
 
 def test_latex_Piecewise():
     p = Piecewise((x,x<1),(x**2,True))
-    assert latex(p) == "$\\left\\{\\begin{array}{cl} x & for x < 1 \\\\{x}^{2} &" \
+    assert latex(p) == "$\\left\\{\\begin{array}{cl} x & for x < 1 \\\\x^{2} &" \
                        " \\textrm{otherwise} \\end{array}\\right.$"
