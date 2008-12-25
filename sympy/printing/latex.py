@@ -10,17 +10,23 @@ import re
 class LatexPrinter(Printer):
     printmethod = "_latex_"
 
-    def __init__(self, inline=True, fold_frac_powers=False, fold_func_brackets=False, mul_symbol=None):
+    def __init__(self, profile=None):
         Printer.__init__(self)
-        self._inline = inline
-        self._fold_frac_powers = fold_frac_powers
-        self._fold_func_brackets = fold_func_brackets
-        self._mul_symbol = mul_symbol
+
+        self._settings = {
+            "inline" : True,
+            "fold_frac_powers" : False,
+            "fold_func_brackets" : False,
+            "mul_symbol" : None
+        }
+
+        if profile is not None:
+            self._settings.update(profile)
 
     def doprint(self, expr):
         tex = Printer.doprint(self, expr)
 
-        if self._inline:
+        if self._settings['inline']:
             return r"$%s$" % tex
         else:
             return r"\begin{equation*}%s\end{equation*}" % tex
@@ -105,7 +111,7 @@ class LatexPrinter(Printer):
             "times" : r" \times "
         }
 
-        seperator = mul_symbol_table[self._mul_symbol]
+        seperator = mul_symbol_table[self._settings['mul_symbol']]
 
         def convert(terms):
             product = []
@@ -166,7 +172,9 @@ class LatexPrinter(Printer):
                 return r"\frac{1}{%s}" % tex
             else:
                 return tex
-        elif self._fold_frac_powers and expr.exp.is_Rational and expr.exp.q != 1:
+        elif self._settings['fold_frac_powers'] \
+             and expr.exp.is_Rational \
+             and expr.exp.q != 1:
             base, p, q = self._print(expr.base), expr.exp.p, expr.exp.q
             return r"%s^{%s/%s}" % (base, p, q)
         else:
@@ -230,7 +238,7 @@ class LatexPrinter(Printer):
             tex += r"\int"
 
             if limits is not None:
-                if not self._inline:
+                if not self._settings['inline']:
                     tex += r"\limits"
 
                 tex += "_{%s}^{%s}" % (self._print(limits[0]),
@@ -263,7 +271,7 @@ class LatexPrinter(Printer):
             else:
                 name = r"\operatorname{%s}" % func
 
-            if self._fold_func_brackets and len(args) == 1 and \
+            if self._settings['fold_func_brackets'] and len(args) == 1 and \
                not self._needs_function_brackets(expr.args[0]):
                 name += r"%s"
             else:
@@ -502,9 +510,7 @@ class LatexPrinter(Printer):
             self._print(expr.args[1]), self._print(expr.args[0]))
         return tex
 
-def latex(expr, inline=True, \
-          fold_frac_powers=False, fold_func_brackets=False, \
-          mul_symbol=None):
+def latex(expr, profile=None, **kargs):
     r"""Convert the given expression to LaTeX representation.
 
         You can specify how the generated code will be delimited.
@@ -530,10 +536,12 @@ def latex(expr, inline=True, \
 
     """
 
-    return LatexPrinter(inline, \
-                        fold_frac_powers, \
-                        fold_func_brackets, \
-                        mul_symbol).doprint(expr)
+    if profile is not None:
+        profile.update(kargs)
+    else:
+        profile = kargs
+
+    return LatexPrinter(profile).doprint(expr)
 
 def print_latex(expr):
     """Prints LaTeX representation of the given expression."""
