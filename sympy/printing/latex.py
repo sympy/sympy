@@ -10,11 +10,12 @@ import re
 class LatexPrinter(Printer):
     printmethod = "_latex_"
 
-    def __init__(self, inline=True, fold_frac_powers=False, fold_func_brackets=False):
+    def __init__(self, inline=True, fold_frac_powers=False, fold_func_brackets=False, mul_symbol=None):
         Printer.__init__(self)
         self._inline = inline
         self._fold_frac_powers = fold_frac_powers
         self._fold_func_brackets = fold_func_brackets
+        self._mul_symbol = mul_symbol
 
     def doprint(self, expr):
         tex = Printer.doprint(self, expr)
@@ -97,6 +98,15 @@ class LatexPrinter(Printer):
 
         numer, denom = fraction(C.Mul(*terms))
 
+        mul_symbol_table = {
+            None : r" ",
+            "ldot" : r" \,.\, ",
+            "dot" : r" \cdot ",
+            "times" : r" \times "
+        }
+
+        seperator = mul_symbol_table[self._mul_symbol]
+
         def convert(terms):
             product = []
 
@@ -111,11 +121,11 @@ class LatexPrinter(Printer):
                     else:
                         product.append(str(pretty))
 
-                return r" ".join(product)
+                return seperator.join(product)
 
         if denom is S.One:
             if coeff is not S.One:
-                tex += str(self._print(coeff)) + " "
+                tex += str(self._print(coeff)) + seperator
 
             if numer.is_Add:
                 tex += r"\left(%s\right)" % convert(numer)
@@ -492,7 +502,9 @@ class LatexPrinter(Printer):
             self._print(expr.args[1]), self._print(expr.args[0]))
         return tex
 
-def latex(expr, inline=True, fold_frac_powers=False, fold_func_brackets=False):
+def latex(expr, inline=True, \
+          fold_frac_powers=False, fold_func_brackets=False, \
+          mul_symbol=None):
     r"""Convert the given expression to LaTeX representation.
 
         You can specify how the generated code will be delimited.
@@ -518,7 +530,10 @@ def latex(expr, inline=True, fold_frac_powers=False, fold_func_brackets=False):
 
     """
 
-    return LatexPrinter(inline, fold_frac_powers, fold_func_brackets).doprint(expr)
+    return LatexPrinter(inline, \
+                        fold_frac_powers, \
+                        fold_func_brackets, \
+                        mul_symbol).doprint(expr)
 
 def print_latex(expr):
     """Prints LaTeX representation of the given expression."""

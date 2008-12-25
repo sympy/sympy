@@ -21,6 +21,9 @@ def test_latex_basic():
     assert latex(x**(1+x)) == "$x^{1 + x}$"
     assert latex(x**3+x+1+x**2) == "$1 + x + x^{2} + x^{3}$"
 
+    assert latex(2*x*y) == "$2 x y$"
+    assert latex(2*x*y, mul_symbol='dot') == r"$2 \cdot x \cdot y$"
+
     assert latex(x**(Rational(1,2))) == r"$\sqrt{x}$"
     assert latex(x**(Rational(3,2))) == r"$\sqrt[3]{x}$"
     assert latex(x**(Rational(3,4))) == r"$x^{\frac{3}{4}}$"
