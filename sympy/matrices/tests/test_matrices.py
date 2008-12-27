@@ -401,6 +401,19 @@ def test_wronskian():
         -6*exp(x)*sin(x)*x + 6*cos(x)*exp(x)*x**2 - 6*exp(x)*cos(x)*x - \
         exp(x)*cos(x)*x**3 + exp(x)*sin(x)*x**3
 
+def canonicalize(v):
+    """
+    Takes the output of eigenvects() and makes it canonical, so that we can
+    compare it across platforms.
+
+    It converts Matrices to lists, and uses set() to list the outer list in a
+    platform independent way.
+    """
+    def c(x):
+        a, b, c = x
+        return (S(a), S(b), tuple(c[0]))
+    return tuple(set([c(x) for x in v]))
+
 def test_eigen():
     x,y = symbols('xy')
 
@@ -415,10 +428,10 @@ def test_eigen():
 
     assert M.eigenvals() == {S.One: 3}
 
-    assert M.eigenvects() == \
+    assert canonicalize(M.eigenvects()) == canonicalize(
         [(1, 3, [Matrix([1,0,0]),
                  Matrix([0,1,0]),
-                 Matrix([0,0,1])])]
+                 Matrix([0,0,1])])])
 
     M = Matrix([[0,1,1],
                 [1,0,0],
@@ -426,19 +439,19 @@ def test_eigen():
 
     assert M.eigenvals() == {2*S.One: 1, -S.One: 1, S.Zero: 1}
 
-    assert M.eigenvects() == \
+    assert canonicalize(M.eigenvects()) == canonicalize(
         [( 2, 1, [Matrix([R(2,3), R(1,3), 1])]),
          (-1, 1, [Matrix([-1, 1, 0])]),
-         ( 0, 1, [Matrix([ 0,-1, 1])])]
+         ( 0, 1, [Matrix([ 0,-1, 1])])])
 
     eps = Symbol('eps',real=True)
 
     M = Matrix([[abs(eps), I*eps    ],
                [-I*eps,   abs(eps) ]])
 
-    assert M.eigenvects() ==  \
+    assert canonicalize(M.eigenvects()) == canonicalize(
         [( 2*abs(eps), 1, [ Matrix([[I*eps/abs(eps)],[1]]) ] ),
-         ( 0, 1, [Matrix([[-I*eps/abs(eps)],[1]])]) ]
+         ( 0, 1, [Matrix([[-I*eps/abs(eps)],[1]])]) ])
 
 def test_sparse_matrix():
     return
