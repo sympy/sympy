@@ -65,6 +65,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Henrik Johansson: matrix zero finder patch
 #. Priit Laes: line integrals
 #. Freddie Witherden: trigonometric simplifications fixes
+#. Brian E. Granger: second quantization physics module
 
 Uptodate list in the order of the first contribution is given in the `README
 <http://hg.sympy.org/sympy/file/tip/README>`_
