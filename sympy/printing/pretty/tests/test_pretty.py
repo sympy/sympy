@@ -313,8 +313,8 @@ def test_pretty_class():
     class C: pass   # C has no .__class__ and this was causing problems
     class D(object): pass
 
-    assert pretty( C ) == "test_pretty.C"
-    assert pretty( D ) == "<class 'test_pretty.D'>"
+    assert pretty( C ) == str( C )
+    assert pretty( D ) == str( D )
 
 def test_infinity():
     assert pretty(I*oo) == "oo*I"
