@@ -204,7 +204,7 @@ class SymPyTests(object):
                 elif t.__name__ == "XFail":
                     self._reporter.test_xfail()
                 elif t.__name__ == "XPass":
-                    self._reporter.test_xpass()
+                    self._reporter.test_xpass(v)
                 else:
                     self._reporter.test_exception((t, v, tr))
                     if self._post_mortem:
@@ -548,7 +548,7 @@ class PyTestReporter(Reporter):
         if len(self._xpassed) > 0:
             self.write_center("xpassed tests", "_")
             for e in self._xpassed:
-                self.write("%s:%s\n" % (e[0], e[1].__name__))
+                self.write("%s:%s\n" % (e[0], e[1]))
             self.write("\n")
 
         if self._tb_style != "no" and len(self._exceptions) > 0:
@@ -616,8 +616,8 @@ class PyTestReporter(Reporter):
         self._xfailed += 1
         self.write("f")
 
-    def test_xpass(self):
-        self._xpassed.append((self._active_file, self._active_f))
+    def test_xpass(self, fname):
+        self._xpassed.append((self._active_file, fname))
         self.write("X")
 
     def test_fail(self, exc_info):
