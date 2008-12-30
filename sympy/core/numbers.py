@@ -894,100 +894,107 @@ class Integer(Rational):
     def _eval_is_odd(self):
         return bool(self.p % 2)
 
-    def _eval_power(b, e):
-        if isinstance(e, Number):
-            if e is S.NaN: return S.NaN
-            if isinstance(e, Real):
-                return b._eval_evalf(e._prec) ** e
-            if e.is_negative:
-                # (3/4)**-2 -> (4/3)**2
-                ne = -e
-                if ne is S.One:
-                    return Rational(1, b.p)
-                return Rational(1, b.p) ** ne
-            if e is S.Infinity:
-                if b.p > 1:
-                    # (3)**oo -> oo
-                    return S.Infinity
-                if b.p < -1:
-                    # (-3)**oo -> oo + I*oo
-                    return S.Infinity + S.Infinity * S.ImaginaryUnit
-                return S.Zero
-            if isinstance(e, Integer):
-                # (4/3)**2 -> 4**2 / 3**2
-                return Integer(b.p ** e.p)
-            if isinstance(e, Rational):
-                if b == -1:  # any one has tested this ???
-                    # calculate the roots of -1
-                    if e.q.is_odd:
-                        return -1
-                    r = cos(pi/e.q) + S.ImaginaryUnit*sin(pi/e.q)
-                    return r**e.p
-                if b >= 0:
-                    x, xexact = integer_nthroot(b.p, e.q)
-                    if xexact:
-                        res = Integer(x ** abs(e.p))
-                        if e >= 0:
-                            return res
-                        else:
-                            return 1/res
-                    else:
-                        if b > 2**32: #Prevent from factorizing too big integers:
-                            for i in xrange(2, e.q//2 + 1): #OLD CODE
-                                if e.q % i == 0:
-                                    x, xexact = integer_nthroot(b.p, i)
-                                    if xexact:
-                                        return Integer(x)**(e * i)
-                            # Try to get some part of the base out, if exponent > 1
-                            if e.p > e.q:
-                                i = e.p // e.q
-                                r = e.p % e.q
-                                return b**i * b**Rational(r, e.q)
-                            return
+    def _eval_power(base, exp):
+        """
+        Tries to do some simplifications on base ** exp, where base is
+        an instance of Rational
 
+        Returns None if no further simplifications can be done
 
-                        dict = b.factors()
+        When exponent is a fraction (so we have for example a square root),
+        we try to find the simplest possible representation, so that
+          - 4**Rational(1,2) becomes 2
+          - (-4)**Rational(1,2) becomes 2*I
+        """
 
-                        out_int = 1
-                        sqr_int = 1
-                        sqr_gcd = 0
-
-                        sqr_dict = {}
-
-                        for prime,exponent in dict.iteritems():
-                            exponent *= e.p
-                            div_e = exponent // e.q
-                            div_m = exponent % e.q
-
-                            if div_e > 0:
-                                out_int *= prime**div_e
-                            if div_m > 0:
-                                sqr_dict[prime] = div_m
-
-                        for p,ex in sqr_dict.iteritems():
-                            if sqr_gcd == 0:
-                                sqr_gcd = ex
-                            else:
-                                sqr_gcd = igcd(sqr_gcd, ex)
-
-                        for k,v in sqr_dict.iteritems():
-                            sqr_int *= k**(v // sqr_gcd)
-
-                        if sqr_int == b.p and out_int == 1:
-                            return None
-
-                        return out_int * Pow(sqr_int , Rational(sqr_gcd, e.q))
+        MAX_INT_FACTOR = 4294967296 # Prevent from factorizing too big integers
+        if not isinstance(exp, Number):
+            c,t = base.as_coeff_terms()
+            if exp.is_even and isinstance(c, Number) and c < 0:
+                return (-c * Mul(*t)) ** exp
+        if exp is S.NaN: return S.NaN
+        if isinstance(exp, Real):
+            return base._eval_evalf(exp._prec) ** exp
+        if exp.is_negative:
+            # (3/4)**-2 -> (4/3)**2
+            ne = -exp
+            if ne is S.One:
+                return Rational(1, base.p)
+            return Rational(1, base.p) ** ne
+        if exp is S.Infinity:
+            if base.p > 1:
+                # (3)**oo -> oo
+                return S.Infinity
+            if base.p < -1:
+                # (-3)**oo -> oo + I*oo
+                return S.Infinity + S.Infinity * S.ImaginaryUnit
+            return S.Zero
+        if isinstance(exp, Integer):
+            # (4/3)**2 -> 4**2 / 3**2
+            return Integer(base.p ** exp.p)
+        if exp == S.Half and base.is_negative:
+            # sqrt(-2) -> I*sqrt(2)
+            return S.ImaginaryUnit * ((-base)**exp)
+        if isinstance(exp, Rational):
+            # 4**Rational(1,2) -> 2
+            result = None
+            x, xexact = integer_nthroot(abs(base.p), exp.q)
+            if xexact:
+                res = Integer(x ** abs(exp.p))
+                if exp >= 0:
+                    result = res
                 else:
-                    if e.q == 2:
-                        return S.ImaginaryUnit ** e.p * (-b)**e
+                    result = 1/res
+            else:
+                if base > MAX_INT_FACTOR:
+                    for i in xrange(2, exp.q//2 + 1): #OLD CODE
+                        if exp.q % i == 0:
+                            x, xexact = integer_nthroot(abs(base.p), i)
+                            if xexact:
+                                result = Integer(x)**(e * i)
+                                break
+                    # Try to get some part of the base out, if exponent > 1
+                    if exp.p > exp.q:
+                        i = exp.p // exp.q
+                        r = exp.p % exp.q
+                        result = base**i * b**Rational(r, exp.q)
+                    return
+
+                dict = base.factors()
+                out_int = 1
+                sqr_int = 1
+                sqr_gcd = 0
+                sqr_dict = {}
+                for prime,exponent in dict.iteritems():
+                    exponent *= exp.p
+                    div_e = exponent // exp.q
+                    div_m = exponent % exp.q
+                    if div_e > 0:
+                        out_int *= prime**div_e
+                    if div_m > 0:
+                        sqr_dict[prime] = div_m
+                for p,ex in sqr_dict.iteritems():
+                    if sqr_gcd == 0:
+                        sqr_gcd = ex
                     else:
-                        return None
+                        sqr_gcd = igcd(sqr_gcd, ex)
+                for k,v in sqr_dict.iteritems():
+                    sqr_int *= k**(v // sqr_gcd)
+                if sqr_int == base.p and out_int == 1:
+                    result = None
+                else:
+                    result = out_int * Pow(sqr_int , Rational(sqr_gcd, exp.q))
 
-        c,t = b.as_coeff_terms()
-        if e.is_even and isinstance(c, Number) and c < 0:
-            return (-c * Mul(*t)) ** e
-
-        return
+            if result is not None:
+                if base.is_positive:
+                    return result
+                elif exp.q == 2:
+                    return result * S.ImaginaryUnit
+                else:
+                    return result * ((-1)**exp)
+            else:
+                if exp == S.Half and base.is_negative:
+                    return S.ImaginaryUnit * Pow(-base, exp)
 
     def _eval_is_prime(self):
         if self.p < 0:

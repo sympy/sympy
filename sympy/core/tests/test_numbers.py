@@ -172,10 +172,6 @@ def test_powers():
     assert integer_nthroot(c2+1, 2) == (c, False)
     assert integer_nthroot(c2-1, 2) == (c-1, False)
 
-    assert 64**(Rational(1)/3)==4
-    assert 64**(Rational(2)/3)==16
-    assert 24*64**(-Rational(1)/2)==3
-
     assert Rational(5**3, 8**3)**Rational(4,3) == Rational(5**4, 8**4)
     assert Rational(-4,7)**Rational(1,2) == I*Rational(4,7)**Rational(1,2)
 

@@ -141,9 +141,12 @@ class Pow(Basic):
 
     def _eval_is_integer(self):
         c1 = self.base.is_integer
-        if c1 is None: return
         c2 = self.exp.is_integer
-        if c2 is None: return
+        if c1 is None or c2 is None:
+            return None
+        if not c1:
+            if self.exp.is_nonnegative:
+                return False
         if c1 and c2:
             if self.exp.is_nonnegative or self.exp.is_positive:
                 return True
