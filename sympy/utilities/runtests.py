@@ -136,53 +136,46 @@ class SymPyTests(object):
         return self._reporter.finish()
 
     def test_file(self, filename):
-        import sympy
-        import imp
         name = "test%d" % self._count
         name = os.path.splitext(os.path.basename(filename))[0]
         self._count += 1
+        gl = {'__file__':filename}
         try:
-            #module = __import__(filename, globals(), locals())
-            module = imp.load_source(name, filename)
+            execfile(filename, gl)
         except (ImportError, SyntaxError):
             self._reporter.import_error(filename, sys.exc_info())
             return
-        disabled = getattr(module, "disabled", False)
+        pytestfile = ""
+        if gl.has_key("XFAIL"):
+            pytestfile = inspect.getsourcefile(gl["XFAIL"])
+        disabled = gl.get("disabled", False)
         if disabled:
             funcs = []
         else:
-            funcs = sorted(module.__dict__.keys())
             # we need to filter only those functions that begin with 'test_'
-            funcs = [f for f in funcs if f.startswith("test_")]
-            # and also that are defined in this module (i.e. not imported from
-            # other modules using the import statement, like "from sympy import
-            # *"). This is tricky to achieve. The easiest is to compare m1 and
-            # m2 below, if they are equal, we are sure that the "f" is from
-            # module. However, when one uses the XFAIL decorator, the m1
-            # appears from "sympy.utilities.pytest", so we check this one
-            # explicitly. This is not robust, as it will stop working when we
-            # move XFAIL to another module, or if we use some decorator defined
-            # elsewhere. Any help with this is welcomed.
-            funcs2 = []
-            m2 = module.__name__
-            for f in funcs:
-                f = module.__dict__[f]
-                m1 = f.__module__
-                if m1 == m2 or m1 == "sympy.utilities.pytest":
-                    if isgeneratorfunction(f):
-                        # some tests can be generators, that return the actual
-                        # test functions. We unpack it below:
-                        for fg in f():
-                            func = fg[0]
-                            args = fg[1:]
-                            fgw = lambda: func(*args)
-                            funcs2.append((fgw, inspect.getsourcelines(f)[1]))
-                    else:
-                        funcs2.append((f, inspect.getsourcelines(f)[1]))
-            # 'func2' now contains all candidates of functions to test.
-            # sort them according to the line of occurence:
-            funcs2.sort(key=lambda x: x[1])
-            funcs = [x[0] for x in funcs2]
+            # that are defined in the testing file or in the file where
+            # is defined the XFAIL decorator
+            funcs = [gl[f] for f in gl.keys() if f.startswith("test_") and
+                                                 (inspect.isfunction(gl[f])
+                                                    or inspect.ismethod(gl[f])) and
+                                                 (inspect.getsourcefile(gl[f]) == filename or
+                                                   inspect.getsourcefile(gl[f]) == pytestfile)]
+            # Sorting of XFAILed functions isn't fixed yet :-(
+            funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
+            i = 0
+            while i is not len(funcs):
+                if isgeneratorfunction(funcs[i]):
+                # some tests can be generators, that return the actual
+                # test functions. We unpack it below:
+                    f = funcs.pop(i)
+                    for fg in f():
+                        func = fg[0]
+                        args = fg[1:]
+                        fgw = lambda: func(*args)
+                        funcs.insert(i, fgw)
+                        i += 1
+                else:
+                    i += 1
             # drop functions that are not selected with the keyword expression:
             funcs = [x for x in funcs if self.matches(x)]
 
