@@ -24,7 +24,7 @@ def test_guess_strategy():
     assert guess_solve_strategy( x**2 - 1, x ) == GS_POLY
     assert guess_solve_strategy( x*y + y, x ) == GS_POLY
     assert guess_solve_strategy( x*exp(y) + y, x) == GS_POLY
-    assert guess_solve_strategy( (x - y**3)/(y**2*(1 - y**2)**(1/2)), x) == GS_POLY
+    assert guess_solve_strategy( (x - y**3)/(y**2*(1 - y**2)**(S(1)/2)), x) == GS_POLY
 
     # polynomial equations via a change of variable
     assert guess_solve_strategy( x**Rational(1,2) + 1, x ) == GS_POLY_CV_1
@@ -36,7 +36,7 @@ def test_guess_strategy():
 
     # rational functions
     assert guess_solve_strategy( (x+1)/(x**2 + 2), x) == GS_RATIONAL
-    assert guess_solve_strategy( (x - y**3)/(y**2*(1 - y**2)**(1/2)), y) == GS_RATIONAL
+    assert guess_solve_strategy( (x - y**3)/(y**2*(1 - y**2)**(S(1)/2)), y) == GS_RATIONAL_CV_1
 
     # rational functions via the change of variable y -> x**n
     assert guess_solve_strategy( (x**Rational(1,2) + 1)/(x**Rational(1,3) + x**Rational(1,2) + 1), x ) \
