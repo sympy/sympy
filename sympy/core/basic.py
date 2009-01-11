@@ -201,10 +201,9 @@ class BasicMeta(BasicType):
 
 
     def __cmp__(cls, other):
-        try:
-            other = sympify(other)
-        except ValueError:
-            #if we cannot sympify it, other is definitely not equal to cls
+        # If the other object is not a Basic subclass, then we are not equal to
+        # it.
+        if not isinstance(other, BasicType):
             return -1
         n1 = cls.__name__
         n2 = other.__name__
