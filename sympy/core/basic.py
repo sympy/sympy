@@ -390,7 +390,10 @@ class Basic(AssumeMeths):
 
     # NB: there is no need in protective __setattr__
 
-
+    def __getnewargs__(self):
+        """ Pickling support.
+        """
+        return tuple(self.args)
 
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
@@ -2264,6 +2267,16 @@ class SingletonMeta(BasicMeta):
 
         # inject singletonic __new__
         cls.__new__      = staticmethod(cls_new)
+
+        # Inject pickling support.
+        def cls_getnewargs(self):
+            return ()
+        cls_getnewargs.__name__ = '%s.__getnewargs__' % cls.__name__
+
+        assert not cls.__dict__.has_key('__getnewargs__'), \
+                'Singleton classes are not allowed to redefine __getnewargs__'
+        cls.__getnewargs__ = cls_getnewargs
+
 
         # tag the class appropriately (so we could verify it later when doing
         # S.<something>

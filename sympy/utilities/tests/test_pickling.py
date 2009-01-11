@@ -24,22 +24,26 @@ from sympy.core.cache import Memoizer
 
 
 def check(a):
-    b = pickle.loads(pickle.dumps(a))
+    """ Check that pickling round-trips successfully for all versions of the
+    protocol.
+    """
+    for protocol in [0, 1, 2]:
+        b = pickle.loads(pickle.dumps(a, protocol))
 
-    d1 = dir(a)
-    d2 = dir(b)
-    assert d1==d2
+        d1 = dir(a)
+        d2 = dir(b)
+        assert d1==d2
 
-    def c(a,b,d):
-        for i in d:
-            if not hasattr(a,i):
-                continue
-            attr = getattr(a,i)
-            if not hasattr(attr, "__call__"):
-                assert hasattr(b,i), i
-                assert getattr(b,i)==attr
-    c(a,b,d1)
-    c(b,a,d2)
+        def c(a,b,d):
+            for i in d:
+                if not hasattr(a,i):
+                    continue
+                attr = getattr(a,i)
+                if not hasattr(attr, "__call__"):
+                    assert hasattr(b,i), i
+                    assert getattr(b,i)==attr
+        c(a,b,d1)
+        c(b,a,d2)
 
 
 #================== core =========================

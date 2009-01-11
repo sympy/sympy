@@ -418,6 +418,10 @@ class Poly(Basic):
 
         return Basic.__new__(cls, *args, **flags)
 
+    def __getnewargs__(self):
+        coeffs, monoms, symbols, order = self.args[:4]
+        return ((coeffs,monoms),) + symbols
+
     @staticmethod
     def _permute(poly, *symbols):
         terms, N = {}, len(symbols)

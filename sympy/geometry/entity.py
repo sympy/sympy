@@ -19,6 +19,9 @@ class GeometryEntity(tuple):
     def __new__(cls, *args, **kwargs):
         return tuple.__new__(cls, args)
 
+    def __getnewargs__(self):
+        return tuple(self)
+
     @staticmethod
     def do_intersection(e1, e2):
         """

@@ -240,6 +240,9 @@ class Real(Number):
     __slots__ = ['_mpf_', '_prec']
 
     # mpz can't be pickled
+    def __getnewargs__(self):
+        return (mlib.to_pickable(self._mpf_),)
+
     def __getstate__(self):
         d = Basic.__getstate__(self).copy()
         del d["_mpf_"]
@@ -521,6 +524,9 @@ class Rational(Number):
         #obj._args = (p, q)
         return obj
 
+    def __getnewargs__(self):
+        return (self.p, self.q)
+
     def _hashable_content(self):
         return (self.p, self.q)
 
@@ -779,6 +785,9 @@ class Integer(Rational):
 
             else:
                 raise ValueError('invalid argument for Integer: %r' % (i,))
+
+    def __getnewargs__(self):
+        return (self.p,)
 
     # Arithmetic operations are here for efficiency
     def __int__(self):

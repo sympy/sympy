@@ -56,6 +56,9 @@ class Symbol(Atom):
     __xnew__       = staticmethod(__new_stage2__)            # never cached (e.g. dummy)
     __xnew_cached_ = staticmethod(cacheit(__new_stage2__))   # symbols are always cached
 
+    def __getnewargs__(self):
+        return (self.name, self.is_commutative)
+
     def _hashable_content(self):
         return (self.is_commutative, self.name)
 
@@ -113,6 +116,9 @@ class Temporary(Dummy):
         obj = Dummy.__new__(cls, 'T%i' % Dummy.dummycount, **assumptions)
         return obj
 
+    def __getnewargs__(self):
+        return ()
+
 
 class Wild(Symbol):
     """
@@ -128,6 +134,9 @@ class Wild(Symbol):
             properties = tuple(properties)
 
         return Wild.__xnew__(cls, name, exclude, properties, **assumptions)
+
+    def __getnewargs__(self):
+        return (self.name, self.exclude, self.properties)
 
     @staticmethod
     @cacheit

@@ -56,6 +56,10 @@ class Integral(Basic):
 
         return obj
 
+    def __getnewargs__(self):
+        function, limits = self.args
+        return (function,) + limits
+
     @property
     def function(self):
         return self._args[0]

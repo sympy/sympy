@@ -27,6 +27,9 @@ class Unit(Atom):
         obj.abbrev = abbrev
         return obj
 
+    def __getnewargs__(self):
+        return (self.name, self.abbrev)
+
     def __eq__(self, other):
         return isinstance(other, Unit) and self.name == other.name
 
