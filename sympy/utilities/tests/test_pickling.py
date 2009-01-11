@@ -1,3 +1,4 @@
+import copy
 import pickle
 import types
 from sympy.utilities.pytest import XFAIL
@@ -24,11 +25,16 @@ from sympy.core.cache import Memoizer
 
 
 def check(a):
-    """ Check that pickling round-trips successfully for all versions of the
-    protocol.
+    """ Check that pickling and copying round-trips.
     """
-    for protocol in [0, 1, 2]:
-        b = pickle.loads(pickle.dumps(a, protocol))
+    for protocol in [0, 1, 2, copy.copy, copy.deepcopy]:
+        if callable(protocol):
+            if isinstance(a, BasicType):
+                # Classes can't be copied, but that's okay.
+                return
+            b = protocol(a)
+        else:
+            b = pickle.loads(pickle.dumps(a, protocol))
 
         d1 = dir(a)
         d2 = dir(b)
