@@ -93,7 +93,7 @@ def guess_solve_strategy(expr, symbol):
             else:
                 raise NotImplementedError
         else:
-            return max(map(guess_solve_strategy, expr.args, [symbol]))
+            return max(map(guess_solve_strategy, expr.args, [symbol]*len(expr.args)))
 
     elif expr.is_Symbol:
         return GS_POLY
