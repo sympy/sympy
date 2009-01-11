@@ -9,8 +9,8 @@ from sympy.polys.algorithms import poly_groebner, poly_subresultants,    \
         poly_div, poly_pdiv, poly_decompose, poly_sqf
 
 from sympy.polys.rootfinding import poly_root_factors, roots_linear,  \
-        roots_quadratic, roots_cubic, roots_binomial, roots_rational, \
-        roots, number_of_real_roots, poly_sturm
+        roots_quadratic, roots_cubic, roots_quartic, roots_binomial, \
+        roots_rational, roots, number_of_real_roots, poly_sturm
 
 from sympy.polys.factortools import poly_factors, factors, factor
 
@@ -929,9 +929,10 @@ def test_number_of_real_roots():
     raises(ValueError, "number_of_real_roots(f, x, inf=t)")
     raises(ValueError, "number_of_real_roots(f, x, sup=t)")
 
-def test_roots():
+def test_roots_linear():
     assert roots_linear(Poly(2*x+1, x)) == [-Rational(1, 2)]
 
+def test_roots_quadratic():
     assert roots_quadratic(Poly(2*x**2, x)) == [0, 0]
     assert roots_quadratic(Poly(2*x**2+3*x, x)) == [0, -Rational(3, 2)]
     assert roots_quadratic(Poly(2*x**2+3, x)) == [I*sqrt(6)/2, -I*sqrt(6)/2]
@@ -939,12 +940,30 @@ def test_roots():
     assert roots_quadratic(Poly(2*x**2+4*x+3, x)) == \
         [-1 + I*sqrt(2)/2, -1 - I*sqrt(2)/2]
 
+def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
     assert roots_cubic(Poly(x**3-3*x**2+3*x-1, x)) == [1, 1, 1]
 
     assert roots_cubic(Poly(x**3+1, x)) == \
         [-1, S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2]
 
+def test_roots_quartic():
+    assert roots_quartic(Poly(x**4, x)) == [0, 0, 0, 0]
+    assert roots_quartic(Poly(x**4 + x**3, x)) in [
+        [-1,0,0,0],
+        [0,-1,0,0],
+        [0,0,-1,0],
+        [0,0,0,-1]
+    ]
+    assert roots_quartic(Poly(x**4 - x**3, x)) in [
+        [1,0,0,0],
+        [0,1,0,0],
+        [0,0,1,0],
+        [0,0,0,1]
+    ]
+    assert roots_quartic(Poly(x**4 + x, x)) == [S.Half + I*sqrt(3)/2, S.Half - I*sqrt(3)/2, 0, -1]
+
+def test_roots_binomial():
     assert roots_binomial(Poly(5*x, x)) == [0]
     assert roots_binomial(Poly(5*x**4, x)) == [0, 0, 0, 0]
     assert roots_binomial(Poly(5*x+2, x)) == [-Rational(2, 5)]
@@ -963,6 +982,7 @@ def test_roots():
     assert powsimp(r0[0]) == powsimp(r1[0])
     assert powsimp(r0[1]) == powsimp(r1[1])
 
+def test_roots_rational():
     assert roots_rational(Poly(x**2-1, x)) == [S.One, -S.One]
     assert roots_rational(Poly(x**2-x, x)) == [S.Zero, S.One]
 
@@ -971,6 +991,7 @@ def test_roots():
 
     assert roots_rational(Poly(t*x**2-x, x)) == []
 
+def test_roots():
     assert roots(1, x) == {}
     assert roots(x, x) == {S.Zero: 1}
     assert roots(x**9, x) == {S.Zero: 9}

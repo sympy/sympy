@@ -35,7 +35,10 @@ def roots_quadratic(f):
 
 def roots_cubic(f):
     """Returns a list of  roots of a cubic polynomial."""
-    a, b, c, d = f.iter_all_coeffs()
+    if isinstance(f, (tuple, list)):
+        a, b, c, d = f
+    else:
+        a, b, c, d = f.iter_all_coeffs()
 
     b, c, d = b/a, c/a, d/a
 
@@ -64,14 +67,25 @@ def roots_cubic(f):
     return [ r.expand() for r in roots ]
 
 def roots_quartic(f):
-    """Returns a list of roots of a quartic polynomial."""
+    """Returns a list of roots of a quartic polynomial.
+
+    References:
+      http://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
+    """
     a, b, c, d, e = f.iter_all_coeffs()
+
+    # normalize
+    t = a
+    a = b/t
+    b = c/t
+    c = d/t
+    d = e/t
 
     p = -2*b
     q = b**2 + a*c - 4*d
     r = c**2 + a**2*d - a*b*c
 
-    r = cubic(1, p, q, r)
+    r = roots_cubic((1, p, q, r))
 
     u = r[1] + r[2] - r[0]
     v = (u**2 - 16*d)**S.Half
