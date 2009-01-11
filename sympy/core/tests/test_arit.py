@@ -826,6 +826,7 @@ def test_Pow_is_even_odd():
     assert (k**2).is_even == True
     assert (n**2).is_even == False
     assert (2**k).is_even == None
+    assert (x**2).is_even == None
 
     assert (k**m).is_even == True
     assert (n**m).is_even == False

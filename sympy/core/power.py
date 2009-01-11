@@ -120,7 +120,7 @@ class Pow(Basic):
         if self.exp.is_integer and self.exp.is_positive:
             if self.base.is_even:
                 return True
-            if self.exp.is_integer:
+            if self.base.is_integer:
                 return False
 
     def _eval_is_positive(self):
