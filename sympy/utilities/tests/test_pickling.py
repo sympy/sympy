@@ -156,14 +156,14 @@ def test_functions():
             sign, arg, asin, DiracDelta, re, abs, sinh, cos, cot, acos, acot,
             gamma, bell, harmonic, LambertW, zeta, log, Factorial, asinh,
             acoth, cosh, dirichlet_eta, loggamma, erf, ceiling, im, fibonacci,
-            conjugate, tan, floor, atanh, sqrt, sin, atan, lucas, exp)
+            conjugate, tan, floor, atanh, sin, atan, lucas, exp)
     two_var = (rf, ff, lowergamma, chebyshevu, chebyshevt, binomial, max_,
             min_, atan2, polygamma, hermite, legendre, uppergamma)
     x, y, z = symbols("x y z")
     others = (chebyshevt_root, chebyshevu_root, Eijk(x, y, z),
             # XXX: Piecewise pickling doesn't work:
             #Piecewise( (0, x<-1), (x**2, x<=1), (x**3, True)),
-            assoc_legendre, Ylm, Zlm)
+            assoc_legendre)
     for a in zero_var:
         check(a)
     for cls in one_var:
