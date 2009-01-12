@@ -78,6 +78,13 @@ class Piecewise(Function):
         else:
             return r
 
+    def __getnewargs__(self):
+        # Convert ExprCondPair objects to tuples.
+        args = []
+        for expr, condition in self.args:
+            args.append((expr, condition))
+        return tuple(args)
+
     @classmethod
     def canonize(cls, *args):
         # Check for situations where we can evaluate the Piecewise object.

@@ -161,8 +161,7 @@ def test_functions():
             min_, atan2, polygamma, hermite, legendre, uppergamma)
     x, y, z = symbols("x y z")
     others = (chebyshevt_root, chebyshevu_root, Eijk(x, y, z),
-            # XXX: Piecewise pickling doesn't work:
-            #Piecewise( (0, x<-1), (x**2, x<=1), (x**3, True)),
+            Piecewise( (0, x<-1), (x**2, x<=1), (x**3, True)),
             assoc_legendre)
     for a in zero_var:
         check(a)
