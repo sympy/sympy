@@ -23,6 +23,8 @@ from sympy.core.multidimensional import vectorize
 from sympy.core.cache import Memoizer
 #from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
+from sympy import symbols
+
 
 def check(a):
     """ Check that pickling and copying round-trips.
@@ -137,19 +139,43 @@ def test_core_cache():
 
 
 #================== functions ===================
-# XXX: These tests are not complete.
-from sympy import functions
+from sympy.functions import (Piecewise, lowergamma, acosh,
+        chebyshevu, chebyshevt, ln, chebyshevt_root, Binomial, legendre,
+        Heaviside, Dij, factorial, bernoulli, coth, tanh, assoc_legendre, sign,
+        arg, asin, DiracDelta, re, rf, abs, uppergamma, binomial, sinh, Ylm,
+        oo, cos, cot, acos, acot, gamma, bell, hermite, harmonic,
+        LambertW, zeta, log, Factorial, pi, asinh, acoth, Zlm,
+        cosh, dirichlet_eta, Eijk, loggamma, erf, max_, ceiling, im, fibonacci,
+        conjugate, tan, chebyshevu_root, floor, atanh, nan, sqrt, zoo, min_,
+        RisingFactorial, sin, E, atan, I, ff, FallingFactorial, lucas, atan2,
+        polygamma, exp)
 
 def test_functions():
-    x = Symbol("x")
-    for name, cls in vars(functions).iteritems():
-        if hasattr(cls, "__class__") and not cls.__class__ is types.ModuleType and not name[0]=="_":
-            check(cls)
-            try:
-                c = cls(x)
-            except:
-                continue
-            check(c)
+    zero_var = (pi, oo, nan, zoo, E, I)
+    one_var = (acosh, ln, Heaviside, Dij, factorial, bernoulli, coth, tanh,
+            sign, arg, asin, DiracDelta, re, abs, sinh, cos, cot, acos, acot,
+            gamma, bell, harmonic, LambertW, zeta, log, Factorial, asinh,
+            acoth, cosh, dirichlet_eta, loggamma, erf, ceiling, im, fibonacci,
+            conjugate, tan, floor, atanh, sqrt, sin, atan, lucas, exp)
+    two_var = (rf, ff, lowergamma, chebyshevu, chebyshevt, binomial, max_,
+            min_, atan2, polygamma, hermite, legendre, uppergamma)
+    x, y, z = symbols("x y z")
+    others = (chebyshevt_root, chebyshevu_root, Eijk(x, y, z),
+            # XXX: Piecewise pickling doesn't work:
+            #Piecewise( (0, x<-1), (x**2, x<=1), (x**3, True)),
+            assoc_legendre, Ylm, Zlm)
+    for a in zero_var:
+        check(a)
+    for cls in one_var:
+        check(cls)
+        c = cls(x)
+        check(c)
+    for cls in two_var:
+        check(cls)
+        c = cls(x, y)
+        check(c)
+    for cls in others:
+        check(cls)
 
 #================== geometry ====================
 from sympy.geometry.entity import GeometryEntity
