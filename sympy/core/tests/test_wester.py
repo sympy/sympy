@@ -9,7 +9,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     normal, I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, assoc_legendre, Function, re, im, DiracDelta, chebyshevt, atan,
-    sinh, cosh)
+    sinh, cosh, Symbol)
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL
 from sympy.mpmath import mpi, mpc
@@ -523,7 +523,7 @@ def test_K2():
 @XFAIL
 def test_K3():
     a, b = symbols('a', 'b', real=True)
-    assert abs(1/(a+I/a+I*b)) == 1/sqrt(a**2 + (i/a+b)**2)
+    assert simplify(abs(1/(a+I/a+I*b))) == 1/sqrt(a**2 + (I/a+b)**2)
 
 @XFAIL
 def test_K4():
@@ -552,21 +552,21 @@ def test_K7():
 
 @XFAIL
 def test_K8():
-    z = symbols('z', complex=True)
+    z = Symbol('z', complex=True)
+    # WrongResult!
     assert simplify(sqrt(1/z) - 1/sqrt(z)) != 0
-    z = symbols('z', complex=True, negative=False)
+    z = Symbol('z', complex=True, negative=False)
     assert simplify(sqrt(1/z) - 1/sqrt(z)) == 0
 
 def test_K9():
-    z = symbols('z', real=True, positive=True)
+    z = Symbol('z', real=True, positive=True)
     assert simplify(sqrt(1/z) - 1/sqrt(z)) == 0
 
 @XFAIL
 def test_K10():
-    z = symbols('z', real=True, negative=True)
-    assert sqrt(1/z) + 1/sqrt(z) == 0
-
-
+    # WrongResult!
+    z = Symbol('z', real=True, negative=True)
+    assert simplify(sqrt(1/z) + 1/sqrt(z)) == 0
 
 
 
