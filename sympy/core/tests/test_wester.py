@@ -11,7 +11,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     bernoulli, assoc_legendre, Function, re, im, DiracDelta, chebyshevt, atan,
     sinh, cosh, Symbol)
 from sympy.integrals.deltafunctions import deltaintegrate
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, skip
 from sympy.mpmath import mpi, mpc
 from sympy import mpmath
 
@@ -255,8 +255,9 @@ def test_H3():
 
 @XFAIL
 def test_H4():
-    # Technically, this assertion succeeds, but the point of the test is to get
-    # the 2 factored out, which doesn't happen.
+    expr = factor(6*x - 10)
+    assert type(expr) is Mul
+    assert expr.args[0] == 2
     assert factor(6*x - 10) == 2 * (3*x-5)
 
 p1 = 64*x**34 - 21*x**47 - 126*x**8 - 46*x**5 - 16*x**60 - 81
@@ -271,12 +272,14 @@ def test_H6():
     assert gcd(expand(p1 * q), expand(p2 * q), x) == q
 
 @XFAIL
-def too_slow_H7():
+def test_H7():
+    skip('takes too much time')
     p1 = 24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
     p2 = 34*x**5*y**8*z**13 + 20*x**7*y**7*z**7 + 12*x**9*y**16*z**4 + 80*y**14*z
     assert gcd(p1, p2, x, y, z) == 1
 
-def too_slow_H8():
+def test_H8():
+    skip('takes too much time')
     p1 = 24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
     p2 = 34*x**5*y**8*z**13 + 20*x**7*y**7*z**7 + 12*x**9*y**16*z**4 + 80*y**14*z
     q = 11*x**12*y**7*z**13 - 23*x**2*y**8*z**10 + 47*x**17*y**5*z**8
@@ -294,7 +297,7 @@ def test_H10():
     assert resultant(p1, p2, x) == 0
 
 def test_H11():
-    # This takes a long time, but passes.
+    skip('takes too much time')
     assert resultant(p1 * q, p2 * q, x) == 0
 
 def test_H12():
@@ -336,7 +339,8 @@ def test_H16():
 
 # Takes too long.
 @XFAIL
-def too_slow_H17():
+def test_H17():
+    skip('takes too much time')
     assert factor(expand(p1 * p2)) == p1 * p2
 
 @XFAIL
@@ -479,12 +483,13 @@ def test_J10():
 def test_J11():
     assert assoc_legendre(3,1,x) == sqrt(1 - x**2)*(R(3,2) - R(15,2)*x**2)
 
-def too_slow_J12():
+def test_J12():
+    skip('takes too much time')
     assert simplify(chebyshevt(1008,x) - 2*x*chebyshevt(1007,x) + chebyshevt(1006,x)) == 0
 
 @XFAIL
 def test_J13():
-    a = symbols("a", integer=True, negative=False)
+    a = Symbol("a", integer=True, negative=False)
     assert chebyshevt(a, -1) == (-1)**a
 
 @XFAIL
@@ -543,7 +548,7 @@ def test_K6():
     assert sexpr != sqrt(y)
 
 def test_K7():
-    y = symbols('y', negative=False)
+    y = Symbol('y', negative=False)
     expr = sqrt(x*y*abs(z)**2)/(sqrt(x)*abs(z))
     sexpr = simplify(expr)
     assert sexpr == sqrt(y)
