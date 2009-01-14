@@ -34,7 +34,7 @@ def test_C1():
         30414093201713378043612608166064768844377641568960512000000000000)
 
 def test_C2():
-    assert (factorint(factorial(50)) == [(2, 47), (3, 22), (5, 12), (7, 8), 
+    assert (factorint(factorial(50)) == [(2, 47), (3, 22), (5, 12), (7, 8),
         (11, 4), (13, 3), (17, 2), (19, 2), (23, 2), (29, 1), (31, 1), (37, 1),
         (41, 1), (43, 1), (47, 1)])
 
@@ -270,18 +270,17 @@ def test_H5():
 def test_H6():
     assert gcd(expand(p1 * q), expand(p2 * q), x) == q
 
-# These take too long.
-#@XFAIL
-#def test_H7():
-#    p1 = 24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
-#    p2 = 34*x**5*y**8*z**13 + 20*x**7*y**7*z**7 + 12*x**9*y**16*z**4 + 80*y**14*z
-#    assert gcd(p1, p2, x, y, z) == 1
+@XFAIL
+def too_slow_H7():
+    p1 = 24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
+    p2 = 34*x**5*y**8*z**13 + 20*x**7*y**7*z**7 + 12*x**9*y**16*z**4 + 80*y**14*z
+    assert gcd(p1, p2, x, y, z) == 1
 
-#def test_H8():
-#    p1 = 24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
-#    p2 = 34*x**5*y**8*z**13 + 20*x**7*y**7*z**7 + 12*x**9*y**16*z**4 + 80*y**14*z
-#    q = 11*x**12*y**7*z**13 - 23*x**2*y**8*z**10 + 47*x**17*y**5*z**8
-#    assert gcd(p1 * q, p2 * q, x, y, z) == q
+def too_slow_H8():
+    p1 = 24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
+    p2 = 34*x**5*y**8*z**13 + 20*x**7*y**7*z**7 + 12*x**9*y**16*z**4 + 80*y**14*z
+    q = 11*x**12*y**7*z**13 - 23*x**2*y**8*z**10 + 47*x**17*y**5*z**8
+    assert gcd(p1 * q, p2 * q, x, y, z) == q
 
 @XFAIL
 def test_H9():
@@ -333,12 +332,12 @@ def test_H16():
     assert factor(x**100 - 1) == (-(1 + x)*(1 + x**2)*(1 - x)*(1 + x + x**2
         + x**3 + x**4)*(1 - x + x**2 - x**3 + x**4)*(1 + x**5 + x**10 + x**15
             + x**20)*(1 - x**5 + x**10 - x**15 + x**20)*(1 - x**10 + x**20
-                - x**30 + x**40)*(1 - x**2 + x**4 - x**6 + x**8))    
+                - x**30 + x**40)*(1 - x**2 + x**4 - x**6 + x**8))
 
 # Takes too long.
-#@XFAIL
-#def test_H17():
-#    assert factor(expand(p1 * p2)) == p1 * p2
+@XFAIL
+def too_slow_H17():
+    assert factor(expand(p1 * p2)) == p1 * p2
 
 @XFAIL
 def test_H18():
@@ -480,9 +479,8 @@ def test_J10():
 def test_J11():
     assert assoc_legendre(3,1,x) == sqrt(1 - x**2)*(R(3,2) - R(15,2)*x**2)
 
-# Takes a long time.
-#def test_J12():
-#    assert simplify(chebyshevt(1008,x) - 2*x*chebyshevt(1007,x) + chebyshevt(1006,x)) == 0    
+def too_slow_J12():
+    assert simplify(chebyshevt(1008,x) - 2*x*chebyshevt(1007,x) + chebyshevt(1006,x)) == 0
 
 @XFAIL
 def test_J13():
@@ -550,10 +548,8 @@ def test_K7():
     sexpr = simplify(expr)
     assert sexpr == sqrt(y)
 
-@XFAIL
 def test_K8():
     z = Symbol('z', complex=True)
-    # WrongResult!
     assert simplify(sqrt(1/z) - 1/sqrt(z)) != 0
     z = Symbol('z', complex=True, negative=False)
     assert simplify(sqrt(1/z) - 1/sqrt(z)) == 0
@@ -562,9 +558,7 @@ def test_K9():
     z = Symbol('z', real=True, positive=True)
     assert simplify(sqrt(1/z) - 1/sqrt(z)) == 0
 
-@XFAIL
 def test_K10():
-    # WrongResult!
     z = Symbol('z', real=True, negative=True)
     assert simplify(sqrt(1/z) + 1/sqrt(z)) == 0
 
