@@ -413,10 +413,23 @@ class Pow(Basic):
         base, exp = self.as_base_exp()
         c,t = exp.as_coeff_terms()
         n,d = base.as_numer_denom()
-        if c.is_negative:
+        negate = False
+        if exp.is_integer != True:
+            if d.is_negative == True:
+                # Roots need to take care that negative denominators behave
+                # differently than the rest of the complex plane.
+                negate = True
+            elif d.is_negative is None:
+                # Can make no conclusions.
+                return self, S(1)
+        if c.is_negative == True:
             exp = -exp
             n,d = d,n
-        return n ** exp, d ** exp
+        num = n ** exp
+        den = d ** exp
+        if negate:
+            num = -num
+        return num, den
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         if evaluate:

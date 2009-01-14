@@ -60,3 +60,17 @@ def test_negative_one():
     x = Symbol('x', complex=True)
     y = Symbol('y', complex=True)
     assert 1/x**y == x**(-y)
+
+def test_issue1263():
+    neg = Symbol('neg', negative=True)
+    nonneg = Symbol('nonneg', negative=False)
+    any = Symbol('any')
+    num, den = sqrt(1/neg).as_numer_denom()
+    assert num == -1
+    assert den == sqrt(neg)
+    num, den = sqrt(1/nonneg).as_numer_denom()
+    assert num == 1
+    assert den == sqrt(nonneg)
+    num, den = sqrt(1/any).as_numer_denom()
+    assert num == sqrt(1/any)
+    assert den == 1
