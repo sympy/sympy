@@ -9,7 +9,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     normal, I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, assoc_legendre, Function, re, im, DiracDelta, chebyshevt, atan,
-    sinh, cosh, Symbol)
+    sinh, cosh, Symbol, floor, ceiling)
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, skip
 from sympy.mpmath import mpi, mpc
@@ -146,10 +146,9 @@ def test_D2():
 def test_D3():
     assert exp(pi*sqrt(163)).evalf(50).num.ae(262537412640768744)
 
-@XFAIL
 def test_D4():
-    raise NotImplementedError("floor(-R(5,3)) == -2\n"
-                              "ceil(-R(5,3)) == -1")
+    assert floor(R(-5, 3)) == -2
+    assert ceiling(R(-5, 3)) == -1
 
 @XFAIL
 def test_D5():
