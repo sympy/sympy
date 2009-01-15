@@ -386,6 +386,7 @@ def test_H26():
 
 # I. Trigonometry
 
+@XFAIL
 def test_I1():
     # I'm not sure that nsimplify is the correct thing to try. There ought to be
     # a way to get to the target expression exactly.
