@@ -162,9 +162,9 @@ def roots(f, *symbols, **flags):
 
        Only roots expressible via radicals will be returned.  To get
        a complete set of roots use RootOf class or numerical methods
-       instead. By default cubic and quartic formulas aren't used in
-       the algorithm because of unreadable output. To enable them
-       set cubics=True or quartics=True respectively.
+       instead. By default cubic and quartic formulas are used in
+       the algorithm. To disable them because of unreadable output
+       set cubics=False or quartics=False respectively.
 
        To get roots from a specific domain set the 'domain' flag with
        one of the following specifiers: Z, Q, R, I, C. By default all
@@ -224,7 +224,7 @@ def roots(f, *symbols, **flags):
             elif n == 2:
                 zeros += roots_quadratic(g)
             elif n == 3:
-                if flags.get('cubics', False):
+                if flags.get('cubics', True):
                     # TODO: now we can used factor() not only
                     #       for cubic polynomials. See #1158
                     try:
@@ -238,7 +238,7 @@ def roots(f, *symbols, **flags):
                     except PolynomialError:
                         zeros += roots_cubic(g)
             elif n == 4:
-                if flags.get('quartics', False):
+                if flags.get('quartics', True):
                     zeros += roots_quartic(g)
 
         return zeros

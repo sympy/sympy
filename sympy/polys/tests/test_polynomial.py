@@ -995,6 +995,7 @@ def test_roots():
     assert roots(1, x) == {}
     assert roots(x, x) == {S.Zero: 1}
     assert roots(x**9, x) == {S.Zero: 9}
+    assert roots(((x-2)*(x+3)*(x-4)).expand(), x) == {-S(3): 1, S(2): 1, S(4): 1}
 
     assert roots(2*x+1, x) == {-S.Half: 1}
     assert roots((2*x+1)**2, x) == {-S.Half: 2}
@@ -1084,11 +1085,11 @@ def test_roots():
         S.Half + S.Half*y - S.Half*(1 - 2*y + y**2 + 8*x**2)**S.Half: 1,
     }
 
-    assert roots(x**3 + 2*x**2 + 4*x + 8, x) == {}
+    assert roots(x**3 + 2*x**2 + 4*x + 8, x) == {-S(2): 1, -2*I: 1, 2*I: 1}
     assert roots(x**3 + 2*x**2 + 4*x + 8, x, cubics=True) == \
-        {-2*I: 1, 2*I: 1, -Integer(2): 1}
+        {-2*I: 1, 2*I: 1, -S(2): 1}
 
-    assert roots(a*b*c*x**3 + 2*x**2 + 4*x + 8, x) == {}
+    assert roots(a*b*c*x**3 + 2*x**2 + 4*x + 8, x, cubics=False) == {}
     assert roots(a*b*c*x**3 + 2*x**2 + 4*x + 8, x, cubics=True) != {}
 
     assert roots(x**4-1, x, domain='Z') == {S.One: 1, -S.One: 1}
