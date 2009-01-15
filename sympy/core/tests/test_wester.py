@@ -387,7 +387,9 @@ def test_H26():
 # I. Trigonometry
 
 def test_I1():
-    assert nsimplify(tan(7*pi/10)) == -sqrt(1+2/sqrt(5))
+    # I'm not sure that nsimplify is the correct thing to try. There ought to be
+    # a way to get to the target expression exactly.
+    assert tan(7*pi/10) == -sqrt(1+2/sqrt(5))
 
 @XFAIL
 def test_I2():
@@ -527,17 +529,12 @@ def test_K3():
     a, b = symbols('a', 'b', real=True)
     assert simplify(abs(1/(a+I/a+I*b))) == 1/sqrt(a**2 + (I/a+b)**2)
 
-@XFAIL
 def test_K4():
-    assert nsimplify(re(log(3+4*I))) == log(5)
-    assert nsimplify(im(log(3+4*I))) == atan(R(4,3))
-    assert False, "there should also be a single function that expands it into this form"
+    assert log(3+4*I).expand(complex=True) == log(5) + I*atan(R(4,3))
 
-@XFAIL
 def test_K5():
-    assert re(tan(x+I*y)) == sin(x)*cos(x) / (cos(x)**2 + sinh(y)**2)
-    assert im(tan(x+I*y)) == sinh(y)*cosh(y) / (cos(x)**2 + sinh(y)**2)
-    assert False, "there should also be a single function that expands it into this form"
+    x, y = symbols('x', 'y', real=True)
+    assert tan(x+I*y).expand(complex=True) == sin(x)*cos(x) / (cos(x)**2 + sinh(y)**2) + I*sinh(y)*cosh(y) / (cos(x)**2 + sinh(y)**2)
 
 @XFAIL
 def test_K6():
