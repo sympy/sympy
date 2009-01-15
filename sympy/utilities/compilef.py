@@ -341,7 +341,7 @@ def frange(*args, **kwargs):
     # create array
     a = (ctypes.c_double * length)()
     # generate code
-    vardef = 'int MAX; double x = %f;' % start
+    vardef = 'double* MAX; double x = %f;' % start
     loopbody = '*result = f(x); x += %f;' % step
     code = """
 # include <math.h>
@@ -400,7 +400,7 @@ def evalonarray(lambdastr, array, length=None, **kwargs):
 
 void evalonarray(double *array, int length)
     {
-    int MAX;
+    double* MAX;
     for (MAX = array + length; array < MAX; array++)
         {
         *array = f(*array);
