@@ -49,6 +49,17 @@ def _dims_to_nm( dims ):
 def _iszero(x):
     return x == 0
 
+class DeferredVector(object):
+    def __init__(self,name):
+        self.name=name
+    def __getitem__(self,i):
+        component_name = '%s[%d]'%(self.name,i)
+        return Symbol(component_name)
+    def __str__(self):
+        return StrPrinter.doprint(self)
+    def __repr__(self):
+        return StrPrinter.doprint(self)
+
 class Matrix(object):
 
     # Added just for numpy compatibility

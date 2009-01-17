@@ -147,6 +147,9 @@ class StrPrinter(Printer):
     def _print_Matrix(self, expr):
         return expr._format_str(lambda elem: self._print(elem))
 
+    def _print_DeferredVector(self, expr):
+        return expr.name
+
     def _print_Mul(self, expr):
         coeff, terms = expr.as_coeff_terms()
         if coeff.is_negative:
