@@ -19,8 +19,12 @@ def test_rsolve_ratio():
     solution = rsolve_ratio([-2*n**3+n**2+2*n-1, 2*n**3+n**2-6*n,
         -2*n**3-11*n**2-18*n-9, 2*n**3+13*n**2+22*n+8], 0, n)
 
-    assert solution in [ (-3*C1 + 2*C1*n)/(-2 + 2*n**2),
-                         ( 3*C1 - 2*C1*n)/( 2 - 2*n**2) ]
+    assert solution in [
+            (-3*C1 + 2*C1*n)/(-2 + 2*n**2),
+            ( 3*C1 - 2*C1*n)/( 2 - 2*n**2),
+            (-3*C2 + 2*C2*n)/(-2 + 2*n**2),
+            ( 3*C2 - 2*C2*n)/( 2 - 2*n**2),
+                         ]
 
 def test_rsolve_hyper():
     assert rsolve_hyper([-1, -1, 1], 0, n) == C0*(S.Half + S.Half*sqrt(5))**n + C1*(S.Half - S.Half*sqrt(5))**n
