@@ -192,7 +192,11 @@ def roots(f, *symbols, **flags):
     if f.is_multivariate:
         raise MultivariatePolyError(f)
 
-    def roots_trivial(g):
+    def _roots(g):
+        """Extract roots from a polynomial. Rational roots are extracted
+        using polys.factortools.poly_factors. For polynomials of degree < 5,
+        explicit root finding formulas are used.
+        """
         if g.length == 1:
             if g.is_constant:
                 return []
@@ -219,26 +223,28 @@ def roots(f, *symbols, **flags):
 
             n = g.degree
 
-            if n == 1:
-                zeros += roots_linear(g)
-            elif n == 2:
-                zeros += roots_quadratic(g)
-            elif n == 3:
-                if flags.get('cubics', True):
-                    # TODO: now we can used factor() not only
-                    #       for cubic polynomials. See #1158
-                    try:
-                        _, factors = poly_factors(g)
+            for i in g.coeffs:
+                if not i.is_Number:
+                    factors = [g]
+                    break
+            else:
+                if g.coeff().is_Rational:
+                    [factors] = poly_factors(g)[1:]
 
-                        if len(factors) == 1:
-                            raise PolynomialError
-
-                        for factor, k in factors:
-                            zeros += roots(factor, multiple=True) * k
-                    except PolynomialError:
-                        zeros += roots_cubic(g)
-            elif n == 4:
-                if flags.get('quartics', True):
+            if n > 1 and len(factors) != 1:
+                # extract first rational roots
+                # this decomposes the polynomial into polynomials of
+                # less degree.
+                for factor, k in factors:
+                    zeros += roots(factor, multiple=True) * k
+            else:
+                if n == 1:
+                    zeros += roots_linear(g)
+                elif n == 2:
+                    zeros += roots_quadratic(g)
+                elif n == 3 and flags.get('cubics', True):
+                    zeros += roots_cubic(g)
+                elif n == 4 and flags.get('quartics', True):
                     zeros += roots_quartic(g)
 
         return zeros
@@ -265,11 +271,10 @@ def roots(f, *symbols, **flags):
             result[roots_linear(f)[0]] = 1
         else:
             factors = poly_decompose(f)
-
             zeros, g = {}, factors[0]
 
             for i, h in enumerate(poly_sqf(g)):
-                for zero in roots_trivial(h):
+                for zero in _roots(h):
                     if zeros.has_key(zero):
                         zeros[zero] += i+1
                     else:
@@ -282,7 +287,7 @@ def roots(f, *symbols, **flags):
                     g = factor.sub_term(zero, (0,))
 
                     for j, h in enumerate(poly_sqf(g)):
-                        for zero in roots_trivial(h):
+                        for zero in _roots(h):
                             if zeros.has_key(zero):
                                 zeros[zero] += i*(j+1)
                             else:

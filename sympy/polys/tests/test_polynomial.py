@@ -1030,10 +1030,22 @@ def test_roots():
         S.One: 1, -S.One: 1, I: 1, -I: 1
     }
 
+    assert roots(-2016*x**2 - 5616*x**3 - 2056*x**4 + 3324*x**5 + 2176*x**6 \
+        - 224*x**7 - 384*x**8 - 64*x**9, x) == {S(0): 2, -S(2): 2, S(2): 1, -S(7)/2: 1,\
+                                            -S(3)/2: 1, -S(1)/2: 1, S(3)/2: 1}
+
     assert roots((a+b+c)*x + a+b+c+d, x) == \
         { (-a-b-c-d) / (a+b+c) : 1 }
 
     assert roots(x**3+x**2-x+1, x, cubics=False) == {}
+    assert roots(((x-2)*(x+3)*(x-4)).expand(), x, cubics=False) == {-S(3): 1, S(2): 1, S(4): 1}
+    assert roots(((x-2)*(x+3)*(x-4)*(x-5)).expand(), x, cubics=False) == \
+            {-S(3): 1, S(2): 1, S(4): 1, S(5): 1}
+    assert roots(x**3 + 2*x**2 + 4*x + 8, x) == {-S(2): 1, -2*I: 1, 2*I: 1}
+    assert roots(x**3 + 2*x**2 + 4*x + 8, x, cubics=True) == \
+                {-2*I: 1, 2*I: 1, -S(2): 1}
+    assert roots((x**2 - x)*(x**3 + 2*x**2 + 4*x + 8), x ) == \
+                {S(1): 1, S(0): 1, -S(2): 1, -2*I: 1, 2*I: 1}
 
     r1_2, r1_3, r1_9, r4_9, r19_27 = [ Rational(*r) \
         for r in ((1,2), (1,3), (1,9), (4,9), (19,27)) ]
@@ -1084,10 +1096,6 @@ def test_roots():
         S.Half + S.Half*y + S.Half*(1 - 2*y + y**2 + 8*x**2)**S.Half: 1,
         S.Half + S.Half*y - S.Half*(1 - 2*y + y**2 + 8*x**2)**S.Half: 1,
     }
-
-    assert roots(x**3 + 2*x**2 + 4*x + 8, x) == {-S(2): 1, -2*I: 1, 2*I: 1}
-    assert roots(x**3 + 2*x**2 + 4*x + 8, x, cubics=True) == \
-        {-2*I: 1, 2*I: 1, -S(2): 1}
 
     assert roots(a*b*c*x**3 + 2*x**2 + 4*x + 8, x, cubics=False) == {}
     assert roots(a*b*c*x**3 + 2*x**2 + 4*x + 8, x, cubics=True) != {}
