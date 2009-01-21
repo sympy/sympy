@@ -268,7 +268,7 @@ def factorint(n, limit=None, verbose=False):
         if w is not None:
             # w may be composite
             for f, m in factorint(w, limit):
-                m *= multiplicity(f, n)
+                m = multiplicity(f, n)
                 factors += [(f, m)]
                 n //= f**(m)
 
