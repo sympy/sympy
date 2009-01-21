@@ -67,6 +67,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Freddie Witherden: trigonometric simplifications fixes
 #. Brian E. Granger: second quantization physics module
 #. Andrew Straw: lambdify() improvements
+#. Kaifeng Zhu: factorint() fix
 
 Uptodate list in the order of the first contribution is given in the `README
 <http://hg.sympy.org/sympy/file/tip/README>`_
