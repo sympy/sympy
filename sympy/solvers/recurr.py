@@ -5,6 +5,45 @@
    The solutions are obtained among polynomials, rational functions,
    hypergeometric terms, or combinations of hypergeometric term which
    are pairwise dissimilar.
+
+   Main function on this module is rsolve(), which is not implemented
+   yet, see issue #1271 for more info on this.
+
+   rsolve_X functions were meant as a low level interface for rsolve()
+   which would use Mathematica's syntax.
+
+   Given a recurrence relation:
+
+      a_{k}(n) y(n+k) + a_{k-1}(n) y(n+k-1) + ... + a_{0}(n) y(n) = f(n)
+
+   where k > 0 and a_{i}(n) are polynomials in n. To use rsolve_X we need
+   to put all coefficients in to a list L of k+1 elements the following
+   way:
+
+      L = [ a_{0}(n), ..., a_{k-1}(n), a_{k}(n) ]
+
+   where L[i], for i=0..k, maps to a_{i}(n) y(n+i) (y(n+i) is implicit).
+
+   For example if we would like to compute m-th Bernoulli polynomial up to
+   a constant (example was taken from rsolve_poly docstring), then we would
+   use b(n+1) - b(n) == m*n**(m-1) recurrence, which has solution b(n) = B_m + C.
+
+   Then L = [-1, 1] and f(n) = m*n**(m-1) and finally for m=4:
+
+    >>> from sympy import Symbol, bernoulli
+    >>> n = Symbol('n', integer=True)
+
+    >>> rsolve_poly([-1, 1], 4*n**3, n)
+    C0 + n**2 - 2*n**3 + n**4
+
+    >>> bernoulli(4, n)
+    -1/30 + n**2 - 2*n**3 + n**4
+
+   For the sake of completeness, f(n) can be:
+
+    [1] a polynomial              -> rsolve_poly
+    [2] a rational function       -> rsolve_ratio
+    [3] a hypegeometric function  -> rsolve_hyper
 """
 
 from sympy.core.basic import Basic, S
