@@ -4,6 +4,8 @@ from sympy.core.function import Lambda, Function
 from miscellaneous import sqrt
 from sympy.core.cache import cacheit
 
+from sympy.utilities.decorator import deprecated
+
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
 ###############################################################################
@@ -60,7 +62,12 @@ class sin(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(args)
+
+    @classmethod
+    def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -263,7 +270,12 @@ class cos(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -461,7 +473,12 @@ class tan(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -606,7 +623,12 @@ class cot(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -744,7 +766,12 @@ class asin(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -841,7 +868,12 @@ class acos(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -928,7 +960,12 @@ class atan(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1010,7 +1047,12 @@ class acot(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1088,7 +1130,12 @@ class atan2(Function):
     nargs = 2
 
     @classmethod
+    @deprecated
     def canonize(cls, y, x):
+        return cls.eval(y, x)
+
+    @classmethod
+    def eval(cls, y, x):
         sign_y = C.sign(y)
 
         if y.is_zero:

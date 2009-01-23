@@ -3,6 +3,8 @@ from sympy.core.basic import Basic, S, C, sympify, Wild
 from sympy.core.function import Lambda, Function, Function
 from sympy.core.cache import cacheit
 
+from sympy.utilities.decorator import deprecated
+
 class exp(Function):
 
     nargs = 1
@@ -21,7 +23,12 @@ class exp(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -265,7 +272,12 @@ class log(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg, base=None):
+        return cls.eval(arg, base)
+
+    @classmethod
+    def eval(cls, arg, base=None):
         if base is not None:
             base = sympify(base)
 
@@ -487,7 +499,12 @@ class LambertW(Function):
     nargs = 1
 
     @classmethod
+    @deprecated
     def canonize(cls, x):
+        return cls.eval(x)
+
+    @classmethod
+    def eval(cls, x):
         if x == S.Zero: return S.Zero
         if x == S.Exp1: return S.One
         if x == -1/S.Exp1: return -S.One

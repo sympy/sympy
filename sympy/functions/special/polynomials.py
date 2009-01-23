@@ -10,6 +10,7 @@ from sympy.core.basic import Basic, S, C
 from sympy.core import Rational, Symbol
 from sympy.core.function import Function
 from sympy.utilities.memoization import recurrence_memo, assoc_recurrence_memo
+from sympy.utilities.decorator import deprecated
 
 
 _x = C.Symbol('x', dummy=True)
@@ -23,7 +24,12 @@ class PolynomialSequence(Function):
     nargs = 2
 
     @classmethod
+    @deprecated
     def canonize(cls, n, x):
+        return cls.eval(n, x)
+
+    @classmethod
+    def eval(cls, n, x):
         if n.is_integer and n >= 0:
             return cls.calc(int(n)).subs(_x, x)
         if n.is_negative:
@@ -40,7 +46,12 @@ class PolynomialSequence2(Function):
     nargs = 3
 
     @classmethod
+    @deprecated
     def canonize(cls, n, m, x):
+        return cls.eval(n, m, x)
+
+    @classmethod
+    def eval(cls, n, m, x):
         if n.is_integer and n >= 0 and m.is_integer and abs(m) <= n:
             return cls.calc2(int(n), int(m)).subs(_x, x)
 
@@ -129,7 +140,12 @@ class chebyshevt_root(Function):
     nargs = 2
 
     @classmethod
+    @deprecated
     def canonize(cls, n, k):
+        return cls.eval(n, k)
+
+    @classmethod
+    def eval(cls, n, k):
         if not 0 <= k < n:
             raise ValueError("must have 0 <= k < n")
         return C.cos(S.Pi*(2*k+1)/(2*n))
@@ -151,7 +167,12 @@ class chebyshevu_root(Function):
     nargs = 2
 
     @classmethod
+    @deprecated
     def canonize(cls, n, k):
+        return cls.eval(m, k)
+
+    @classmethod
+    def eval(cls, n, k):
         if not 0 <= k < n:
             raise ValueError("must have 0 <= k < n")
         return C.cos(S.Pi*(k+1)/(n+1))

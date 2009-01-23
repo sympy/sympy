@@ -6,6 +6,8 @@ from sympy.core.cache import cacheit
 import sympy.polys
 from sympy.core import diff
 
+from sympy.utilities.decorator import deprecated
+
 ###############################################################################
 ################################ DELTA FUNCTION ###############################
 ###############################################################################
@@ -40,7 +42,12 @@ class DiracDelta(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
+    @deprecated
     def canonize(cls, arg, k = 0):
+        return cls.eval(arg, k)
+
+    @classmethod
+    def eval(cls, arg, k=0):
         k = sympify(k)
         if not k.is_Integer or k.is_negative:
             raise ValueError("Error: the second argument of DiracDelta must be \
@@ -179,7 +186,12 @@ class Heaviside(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         arg = sympify(arg)
         if arg is S.NaN:
             return S.NaN

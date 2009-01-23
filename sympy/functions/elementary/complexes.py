@@ -3,6 +3,8 @@ from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Function
 from sympy.functions.elementary.miscellaneous import sqrt
 
+from sympy.utilities.decorator import deprecated
+
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
 ###############################################################################
@@ -41,7 +43,12 @@ class re(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         if arg is S.NaN:
             return S.NaN
         elif arg.is_real:
@@ -111,7 +118,12 @@ class im(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         if arg is S.NaN:
             return S.NaN
         elif arg.is_real:
@@ -156,7 +168,12 @@ class sign(Function):
     nargs = 1
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         if arg is S.NaN:
             return S.NaN
         if arg is S.Zero: return S.Zero
@@ -193,7 +210,12 @@ class abs(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         if arg is S.NaN:
             return S.NaN
         if arg.is_zero:     return arg
@@ -252,7 +274,12 @@ class arg(Function):
     is_bounded = True
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         x, y = re(arg), im(arg)
         arg = C.atan2(y, x)
         if arg.is_number:
@@ -274,7 +301,12 @@ class conjugate(Function):
     nargs = 1
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         obj = arg._eval_conjugate()
         if obj is not None:
             return obj

@@ -3,6 +3,7 @@
 
 from sympy import Function, sympify, sin, cos, limit, tanh
 from sympy.abc import x
+from sympy.utilities.decorator import deprecated
 
 def test_function_series1():
     """Create our new "sin" function."""
@@ -14,7 +15,7 @@ def test_function_series1():
             return cos(self.args[0])
 
         @classmethod
-        def canonize(cls, arg):
+        def eval(cls, arg):
             arg = sympify(arg)
             if arg == 0:
                 return sympify(0)
@@ -33,7 +34,7 @@ def test_function_series2():
             return -sin(self.args[0])
 
         @classmethod
-        def canonize(cls, arg):
+        def eval(cls, arg):
             arg = sympify(arg)
             if arg == 0:
                 return sympify(1)
@@ -59,7 +60,7 @@ def test_function_series3():
             return 1-mytanh(self.args[0])**2
 
         @classmethod
-        def canonize(cls, arg):
+        def eval(cls, arg):
             arg = sympify(arg)
             if arg == 0:
                 return sympify(0)

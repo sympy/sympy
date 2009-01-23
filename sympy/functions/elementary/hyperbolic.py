@@ -5,6 +5,8 @@ from sympy.core.cache import cacheit
 
 from sympy.functions.elementary.miscellaneous import sqrt
 
+from sympy.utilities.decorator import deprecated
+
 ###############################################################################
 ########################### HYPERBOLIC FUNCTIONS ##############################
 ###############################################################################
@@ -27,7 +29,12 @@ class sinh(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return eval(cls, arg)
+
+    @classmethod
+    def eval(cls, arg):
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -138,7 +145,12 @@ class cosh(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -247,7 +259,12 @@ class tanh(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -360,7 +377,12 @@ class coth(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -456,7 +478,12 @@ class asinh(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -531,7 +558,12 @@ class acosh(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -610,7 +642,12 @@ class atanh(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -671,7 +708,12 @@ class acoth(Function):
         return
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         arg = sympify(arg)
 
         if arg.is_Number:

@@ -4,6 +4,8 @@ from sympy.core.function import Function
 from sympy.ntheory import sieve
 from math import sqrt
 
+from sympy.utilities.decorator import deprecated
+
 ###############################################################################
 ######################## FACTORIAL and MULTI-FACTORIAL ########################
 ###############################################################################
@@ -100,7 +102,12 @@ class Factorial(Function):
             return (cls._recursive(n//2)**2)*cls._swing(n)
 
     @classmethod
+    @deprecated
     def canonize(cls, n):
+        return cls.eval(n)
+
+    @classmethod
+    def eval(cls, n):
         n = sympify(n)
 
         if n.is_Number:
@@ -180,7 +187,12 @@ class RisingFactorial(Function):
     nargs = 2
 
     @classmethod
+    @deprecated
     def canonize(cls, x, k):
+        return cls.eval(x, k)
+
+    @classmethod
+    def eval(cls, x, k):
         x = sympify(x)
         k = sympify(k)
 
@@ -243,7 +255,12 @@ class FallingFactorial(Function):
     nargs = 2
 
     @classmethod
+    @deprecated
     def canonize(cls, x, k):
+        return cls.eval(x, k)
+
+    @classmethod
+    def eval(cls, x, k):
         x = sympify(x)
         k = sympify(k)
 
@@ -336,7 +353,12 @@ class Binomial(Function):
     nargs = 2
 
     @classmethod
+    @deprecated
     def canonize(cls, r, k):
+        return cls.eval(r, k)
+
+    @classmethod
+    def eval(cls, r, k):
         r, k = map(sympify, (r, k))
 
         if k.is_Number:

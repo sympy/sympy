@@ -3,6 +3,7 @@ from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Lambda, Function
 
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
+from sympy.utilities.decorator import deprecated
 
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################
@@ -13,7 +14,12 @@ class RoundFunction(Function):
     nargs = 1
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         if arg.is_integer:
             return arg
         if arg.is_imaginary:

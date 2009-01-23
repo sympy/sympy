@@ -40,6 +40,7 @@ from add    import Add
 from multidimensional import vectorize
 
 from sympy import mpmath
+from sympy.utilities.decorator import deprecated
 
 class PoleError(Exception):
     pass
@@ -137,7 +138,7 @@ class Function(Basic):
         # up to here.
         if options.get('evaluate') is False:
             return Basic.__new__(cls, *args, **options)
-        r = cls.canonize(*args)
+        r = cls.eval(*args)
         if isinstance(r, Basic):
             return r
         elif r is None:
@@ -156,20 +157,25 @@ class Function(Basic):
         return True
 
     @classmethod
+    @deprecated
     def canonize(cls, *args):
+        return cls.eval(*args)
+
+    @classmethod
+    def eval(cls, *args):
         """
         Returns a canonical form of cls applied to arguments args.
 
-        The canonize() method is called when the class cls is about to be
+        The eval() method is called when the class cls is about to be
         instantiated and it should return either some simplified instance
         (possible of some other class), or if the class cls should be
         unmodified, return None.
 
-        Example of canonize() for the function "sign"
+        Example of eval() for the function "sign"
         ---------------------------------------------
 
         @classmethod
-        def canonize(cls, arg):
+        def eval(cls, arg):
             if arg is S.NaN:
                 return S.NaN
             if arg is S.Zero: return S.Zero
@@ -613,7 +619,12 @@ class Lambda(Function):
         return obj
 
     @classmethod
-    def canonize(cls,*args):
+    @deprecated
+    def canonize(cls, *args):
+        return cls.eval(*args)
+
+    @classmethod
+    def eval(cls,*args):
         obj = Basic.__new__(cls, *args)
         #use dummy variables internally, just to be sure
         nargs = len(args)-1

@@ -5,6 +5,8 @@ from zeta_functions import zeta
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.miscellaneous import sqrt
 
+from sympy.utilities.decorator import deprecated
+
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
 ###############################################################################
@@ -20,7 +22,12 @@ class gamma(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -87,7 +94,12 @@ class lowergamma(Function):
     nargs = 2
 
     @classmethod
+    @deprecated
     def canonize(cls, a, x):
+        return cls.eval(a, x)
+
+    @classmethod
+    def eval(cls, a, x):
         if a.is_Number:
             if a is S.One:
                 return S.One - C.exp(-x)
@@ -111,7 +123,12 @@ class uppergamma(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
+    @deprecated
     def canonize(cls, a, z):
+        return cls.eval(a, z)
+
+    @classmethod
+    def eval(cls, a, z):
         if z.is_Number:
             if z is S.NaN:
                 return S.NaN
@@ -148,6 +165,10 @@ class polygamma(Function):
 
     @classmethod
     def canonize(cls, n, z):
+        return cls.eval(n, z)
+
+    @classmethod
+    def eval(cls, n, z):
         n, z = map(sympify, (n, z))
 
         if n.is_integer:

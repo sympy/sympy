@@ -5,6 +5,8 @@ from sympy.core.numbers import Number
 from sympy.core.relational import Relational
 from sympy.core.sympify import sympify
 
+from sympy.utilities.decorator import deprecated
+
 class ExprCondPair(Basic):
     """Represents an expression, condition pair."""
 
@@ -71,7 +73,7 @@ class Piecewise(Function):
         # sympify args
         args = map(lambda x:ExprCondPair(*x), args)
 
-        r = cls.canonize(*args)
+        r = cls.eval(*args)
 
         if r is None:
             return Basic.__new__(cls, *args, **options)
@@ -86,7 +88,12 @@ class Piecewise(Function):
         return tuple(args)
 
     @classmethod
+    @deprecated
     def canonize(cls, *args):
+        return cls.eval(*args)
+
+    @classmethod
+    def eval(cls, *args):
         # Check for situations where we can evaluate the Piecewise object.
         # 1) Hit an unevaluatable cond (e.g. x<1) -> keep object
         # 2) Hit a true condition -> return that expr

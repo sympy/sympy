@@ -11,6 +11,8 @@ from sympy import Function, S, Symbol, Rational, oo, Integer, C
 
 from sympy.mpmath import bernfrac
 
+from sympy.utilities.decorator import deprecated
+
 def _product(a, b):
     p = 1
     for k in xrange(a, b+1):
@@ -75,7 +77,12 @@ class fibonacci(Function):
         return (prev[-2] + _sym*prev[-1]).expand()
 
     @classmethod
+    @deprecated
     def canonize(cls, n, sym=None):
+        return cls.eval(n, sym)
+
+    @classmethod
+    def eval(cls, n, sym=None):
         if n.is_Integer:
             n = int(n)
             if n < 0:
@@ -117,7 +124,12 @@ class lucas(Function):
     """
 
     @classmethod
+    @deprecated
     def canonize(cls, n):
+        return cls.eval(n)
+
+    @classmethod
+    def eval(cls, n):
         if n.is_Integer:
             return fibonacci(n+1) + fibonacci(n-1)
 
@@ -223,7 +235,12 @@ class bernoulli(Function):
     _highest = {0:0, 2:2, 4:4}
 
     @classmethod
+    @deprecated
     def canonize(cls, n, sym=None):
+        return cls.eval(n, sym)
+
+    @classmethod
+    def eval(cls, n, sym=None):
         if n.is_Number:
             if n.is_Integer and n.is_nonnegative:
                 if n is S.Zero:
@@ -347,7 +364,12 @@ class bell(Function):
         return (_sym * s).expand()
 
     @classmethod
+    @deprecated
     def canonize(cls, n, sym=None):
+        return cls.eval(n, sym)
+
+    @classmethod
+    def eval(cls, n, sym=None):
         if n.is_Integer and n.is_nonnegative:
             if sym is None:
                 return Integer(cls._bell(int(n)))
@@ -406,7 +428,12 @@ class harmonic(Function):
     _functions = {}
 
     @classmethod
+    @deprecated
     def canonize(cls, n, m=None):
+        return cls.eval(n, m)
+
+    @classmethod
+    def eval(cls, n, m=None):
         if m is None:
             m = S.One
         if n == oo:

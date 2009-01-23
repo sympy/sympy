@@ -1,6 +1,7 @@
 
 from sympy.core.function import Function
 from sympy.core import sympify, S
+from sympy.utilities.decorator import deprecated
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -17,7 +18,12 @@ class Dij(Function):
     nargs = (1, 2)
 
     @classmethod
+    @deprecated
     def canonize(cls, i, j=0):
+        return cls.eval(i, j)
+
+    @classmethod
+    def eval(cls, i, j=0):
         i, j = map(sympify, (i, j))
         if i == j:
             return S.One
@@ -31,7 +37,12 @@ class Eijk(Function):
     nargs = 3
 
     @classmethod
+    @deprecated
     def canonize(cls, i, j, k):
+        return cls.eval(i, j, k)
+
+    @classmethod
+    def eval(cls, i, j, k):
         i, j, k = map(sympify, (i, j, k))
         if (i,j,k) in [(1,2,3), (2,3,1), (3,1,2)]:
             return S.One

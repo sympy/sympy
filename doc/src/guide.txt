@@ -264,7 +264,7 @@ How to create a new function of a one variable::
         nargs = 1
 
         @classmethod
-        def canonize(cls, arg):
+        def eval(cls, arg):
             if isinstance(arg, Basic.NaN):
                 return S.NaN
             if isinstance(arg, Basic.Zero): return S.One
@@ -284,7 +284,7 @@ How to create a new function of a one variable::
             return isinstance(self[0], Basic.Zero)
 
 and that's it. The ``_eval_*`` functions are called when something is needed.
-The ``canonize`` is called when the class is about to be instantiated and it
+The ``eval`` is called when the class is about to be instantiated and it
 should return either some simplified instance of some other class or if the
 class should be unmodified, return ``None`` (see ``core/function.py`` in
 ``Function.__new__`` for implementation details). See also tests in
@@ -327,7 +327,7 @@ This is how to create a function of two variables::
         nargs = 2
 
         @classmethod
-        def canonize(cls, n, k):
+        def eval(cls, n, k):
             if not 0 <= k < n:
                 raise ValueError, "must have 0 <= k < n"
             return C.cos(S.Pi*(2*k+1)/(2*n))
@@ -344,7 +344,7 @@ Here it's how to define a derivative of the function::
             return cos(self.args[0])
 
         @classmethod
-        def canonize(cls, arg):
+        def eval(cls, arg):
             arg = sympify(arg)
             if arg == 0:
                 return sympify(0)
@@ -377,7 +377,7 @@ Let's try some more complicated example. Let's define the derivative in terms of
             return 1-what_am_i(self.args[0])**2
 
         @classmethod
-        def canonize(cls, arg):
+        def eval(cls, arg):
             arg = sympify(arg)
             if arg == 0:
                 return sympify(0)

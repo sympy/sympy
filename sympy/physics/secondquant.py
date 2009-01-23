@@ -10,6 +10,8 @@ from sympy import (
     Number, Matrix, zeros, Pow, I
 )
 
+from sympy.utilities.decorator import deprecated
+
 __all__ = [
     'Dagger',
     'KroneckerDelta',
@@ -40,14 +42,19 @@ class Dagger(Basic):
 
     def __new__(cls, arg):
         arg = sympify(arg)
-        r = cls.canonize(arg)
+        r = cls.eval(arg)
         if isinstance(r, Basic):
             return r
         obj = Basic.__new__(cls, arg)
         return obj
 
     @classmethod
+    @deprecated
     def canonize(cls, arg):
+        return cls.eval(arg)
+
+    @classmethod
+    def eval(cls, arg):
         try:
             d = arg._dagger_()
         except:
@@ -82,14 +89,19 @@ class KroneckerDelta(Basic):
 
     def __new__(cls, i, j):
         i, j = map(sympify, (i, j))
-        r = cls.canonize(i, j)
+        r = cls.eval(i, j)
         if isinstance(r, Basic):
             return r
         obj = Basic.__new__(cls, i, j, commutative=True)
         return obj
 
     @classmethod
+    @deprecated
     def canonize(cls, i, j):
+        return cls.eval(i, j)
+
+    @classmethod
+    def eval(cls, i, j):
         diff = i-j
         if diff == 0:
             return Integer(1)
@@ -344,14 +356,19 @@ class InnerProduct(Basic):
     def __new__(cls, bra, ket):
         assert isinstance(bra, FockStateBra), 'must be a bra'
         assert isinstance(ket, FockStateKet), 'must be a key'
-        r = cls.canonize(bra, ket)
+        r = cls.eval(bra, ket)
         if isinstance(r, Basic):
             return r
         obj = Basic.__new__(cls, *(bra, ket), **dict(commutative=True))
         return obj
 
     @classmethod
+    @deprecated
     def canonize(cls, bra, ket):
+        return cls.eval(bra, ket)
+
+    @classmethod
+    def eval(cls, bra, ket):
         result = Integer(1)
         for i,j in zip(bra.args[0], ket.args[0]):
             result *= KroneckerDelta(i,j)

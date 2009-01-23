@@ -1,6 +1,7 @@
 
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Lambda, Function
+from sympy.utilities.decorator import deprecated
 
 ###############################################################################
 ############################# SQUARE ROOT FUNCTION ############################
@@ -19,7 +20,12 @@ class max_(Function):
     nargs = 2
 
     @classmethod
+    @deprecated
     def canonize(cls, x, y):
+        return cls.eval(x, y)
+
+    @classmethod
+    def eval(cls, x, y):
         if x.is_Number and y.is_Number:
             return max(x, y)
         if x.is_positive:
@@ -42,6 +48,11 @@ class min_(Function):
     nargs = 2
 
     @classmethod
+    @deprecated
     def canonize(cls, x, y):
+        return cls.eval(x, y)
+
+    @classmethod
+    def eval(cls, x, y):
         if x.is_Number and y.is_Number:
             return min(x, y)
