@@ -27,6 +27,7 @@ access any SymPy module, or use this contens:
    modules/geometry.txt
    modules/statistics.txt
    modules/concrete.txt
+   modules/solvers.txt
 
 Contributions to docs
 ---------------------

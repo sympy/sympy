@@ -7,9 +7,9 @@
 
     - differential, use dsolve()
 
-    -transcendental, use tsolve()
+    - transcendental, use tsolve()
 
-    -nonlinear (numerically), use msolve() (you will need a good starting point)
+    - nonlinear (numerically), use msolve() (you will need a good starting point)
 
 """
 
@@ -471,12 +471,12 @@ def dsolve(eq, funcs):
     Solves any (supported) kind of differential equation.
 
     Usage
-    =====
+
         dsolve(f, y(x)) -> Solve a differential equation f for the function y
 
 
     Details
-    =======
+
         @param f: ordinary differential equation (either just the left hand
             side, or the Equality class)
 
@@ -498,7 +498,7 @@ def dsolve(eq, funcs):
           how to use dsolve
 
     Examples
-    ========
+
         >>> from sympy import *
         >>> x = Symbol('x')
 
