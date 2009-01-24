@@ -1,6 +1,7 @@
-from sympy import symbols, rsolve_hyper, rsolve_poly, rsolve_ratio, S, sqrt, \
-        rf, factorial
+from sympy import Function, symbols, S, sqrt, rf, factorial
+from sympy.solvers.recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
 
+y = Function('y')
 n, k = symbols('nk', integer=True)
 C0, C1, C2 = symbols('C0', 'C1', 'C2')
 
@@ -68,3 +69,27 @@ def test_rsolve_bulk():
                 yield rsolve_bulk_checker, rsolve_poly, c, q, p
             #if p.is_hypergeometric(n):
             #    yield rsolve_bulk_checker, rsolve_hyper, c, q, p
+
+def test_rsolve():
+    f = y(n+2) - y(n+1) - y(n)
+    g = C0*(S.Half + S.Half*sqrt(5))**n \
+      + C1*(S.Half - S.Half*sqrt(5))**n
+    h = sqrt(5)*(S.Half + S.Half*sqrt(5))**n \
+      - sqrt(5)*(S.Half - S.Half*sqrt(5))**n
+
+    assert rsolve(f, y(n)) == g
+
+    assert rsolve(f, y(n), [      0,      5 ]) == h
+    assert rsolve(f, y(n), {   0 :0,   1 :5 }) == h
+    assert rsolve(f, y(n), { y(0):0, y(1):5 }) == h
+
+    f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
+    g = C0*factorial(n) + C1*2**n
+    h = -3*factorial(n) + 3*2**n
+
+    assert rsolve(f, y(n)) == g
+
+    assert rsolve(f, y(n), [      0,      3 ]) == h
+    assert rsolve(f, y(n), {   0 :0,   1 :3 }) == h
+    assert rsolve(f, y(n), { y(0):0, y(1):3 }) == h
+
