@@ -162,7 +162,6 @@ def separate(expr, deep=False):
 
     if expr.is_Pow:
         terms, expo = [], separate(expr.exp, deep)
-        #print expr, terms, expo, expr.base
 
         if expr.base.is_Mul:
             t = [ separate(C.Pow(t,expo), deep) for t in expr.base.args ]
@@ -512,6 +511,16 @@ def collect(expr, syms, evaluate=True, exact=False):
         return expr, (sym, Rational(order))
 
     def parse_term(expr):
+        """Parses expression expr and outputs tuple (sexpr, rat_expo, sym_expo, deriv)
+        where:
+         - sexpr is the base expression
+         - rat_expo is the rational exponent that sexpr is raised to
+         - sym_expo is the symbolic exponent that sexpr is raised to
+         - deriv contains the derivatives the the expression
+
+         for example, the output of x would be (x, 1, None, None)
+         the output of 2**x would be (2, 1, x, None)
+        """
         rat_expo, sym_expo = S.One, None
         sexpr, deriv = expr, None
 
@@ -546,6 +555,10 @@ def collect(expr, syms, evaluate=True, exact=False):
         return sexpr, rat_expo, sym_expo, deriv
 
     def parse_expression(terms, pattern):
+        """Parse terms searching for a pattern.
+        terms is a list of tuples as returned by parse_terms
+        pattern is an expression
+        """
         pattern = make_list(pattern, Mul)
 
         if len(terms) < len(pattern):
