@@ -101,7 +101,7 @@ def test_noneuclidian():
     W = collect(W,[C**2,C],evaluate=False)
     #print 'W =',W
     a = W[C**2]
-    b = W[(C**2)**(sympify(1)/2)]
+    b = W[C]
     c = W[ONE]
     #print 'a =',a
     #print 'b =',b

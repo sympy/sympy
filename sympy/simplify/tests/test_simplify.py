@@ -1,7 +1,7 @@
 from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
         collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
-        solve, nsimplify, GoldenRatio, sqrt, I, sympify, atan, Derivative
+        solve, nsimplify, GoldenRatio, sqrt, I, sympify, atan, Derivative, S
 
 from sympy.utilities.pytest import XFAIL
 
@@ -199,10 +199,57 @@ def test_powsimp():
     n = Symbol('n', real=True)
     assert powsimp( y**n * (y/x)**(-n) ) == x**n
 
-def test_collect():
-    x,y,n = symbols('xyn')
-    assert collect(2*x**2 + y*x**2 + 3*x*y, [x]) == x**2*(2+y) + 3*x*y
-    assert collect(2*x**2 + y*x**2 + 3*x*y, [y]) == 2*x**2 + y*(x**2+3*x)
+def test_collect_1():
+    """Collect with respect to a Symbol"""
+    x, y, z, n = symbols('xyzn')
+    assert collect( x + y*x, x ) == x * (1 + y)
+    assert collect( x + x**2, x ) == x + x**2
+    assert collect( x**2 + y*x**2, x ) == (x**2)*(1+y)
+    assert collect( x**2 + y*x, x ) == x*y + x**2
+    assert collect( 2*x**2 + y*x**2 + 3*x*y, [x] ) == x**2*(2+y) + 3*x*y
+    assert collect( 2*x**2 + y*x**2 + 3*x*y, [y] ) == 2*x**2 + y*(x**2+3*x)
+
+    assert collect( ((1 + y + x)**4).expand(), x) == ((1 + y)**4).expand() + \
+                x*(4*(1 + y)**3).expand() + x**2*(6*(1 + y)**2).expand() + \
+                x**3*(4*(1 + y)).expand() + x**4
+
+def test_collect_2():
+    """Collect with respect to a sum"""
+    a, b, x = symbols('abx')
+    assert collect(a*(cos(x)+sin(x)) + b*(cos(x)+sin(x)), sin(x)+cos(x)) == (a + b)*(cos(x) + sin(x))
+
+def test_collect_3():
+    """Collect with respect to a product"""
+    a, b, c = symbols('abc')
+    f = Function('f')
+    x,y,z, n = symbols('xyzn')
+
+    assert collect(-x/8 + x*y, -x) == -x*(S.One/8 - y)
+
+    assert collect( 1 + x*(y**2), x*y ) == 1 + x*(y**2)
+    assert collect( x*y + a*x*y, x*y) == x*y*(1 + a)
+    assert collect( 1 + x*y + a*x*y, x*y) == 1 + x*y*(1 + a)
+    assert collect(a*x*f(x) + b*(x*f(x)), x*f(x)) == x*(a + b)*f(x)
+
+    assert collect(a*x*log(x) + b*(x*log(x)), x*log(x)) == x*(a + b)*log(x)
+    assert collect(a*x**2*log(x)**2 + b*(x*log(x))**2, x*log(x)) == x**2*log(x)**2*(a + b)
+
+    # with respect to a product of tree symbols
+    assert collect(y*x*z+a*x*y*z, x*y*z) == (1 + a)*x*y*z
+
+def test_collect_4():
+    """Collect with respect to a power"""
+    a, b, c, x = symbols('abcx')
+
+    assert collect(a*x**c + b*x**c, x**c) == x**c*(a + b)
+    assert collect(a*x**(2*c) + b*x**(2*c), x**c) == (x**2)**c*(a + b)
+
+def test_collect_5():
+    """Collect with respect to a tuple"""
+    a, x, y, z, n = symbols('axyzn')
+    assert collect(x**2*y**4 + z*(x*y**2)**2 + z + a*z, [x*y**2, z]) in [
+                z*(1 + a + x**2*y**4) + x**2*y**4,
+                z*(1 + a) + x**2*y**4*(1 + z) ]
     assert collect((1+ (x+y) + (x+y)**2).expand(), [x,y]) == 1 + y + x*(1 + 2*y) + x**2  + y**2
 
 def test_collect_D():

@@ -1,4 +1,6 @@
 
+from sympy import SYMPY_DEBUG
+
 from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
         Derivative, Wild, Symbol, sympify
 
@@ -393,16 +395,13 @@ def collect(expr, syms, evaluate=True, exact=False):
        >>> collect(x**2 + y*x**2 + x*y + y + a*y, [x, y])
        x*y + y*(1 + a) + x**2*(1 + y)
 
-       >>> collect(x**2*y**4 + z*(x*y**2)**2 + z + a*z, [x*y**2, z])
-       z*(1 + a) + x**2*y**4*(1 + z)
-
        Also more complicated expressions can be used as patterns:
 
        >>> collect(a*sin(2*x) + b*sin(2*x), sin(2*x))
        (a + b)*sin(2*x)
 
-       >>> collect(a*x**2*log(x)**2 + b*(x*log(x))**2, x*log(x))
-       x**2*log(x)**2*(a + b)
+       >>> collect(a*x*log(x) + b*(x*log(x)), x*log(x))
+       x*(a + b)*log(x)
 
        It is also possible to work with symbolic powers, although
        it has more complicated behaviour, because in this case
@@ -418,8 +417,8 @@ def collect(expr, syms, evaluate=True, exact=False):
        However if you incorporate rationals to the exponents, then
        you will get well known behaviour:
 
-       #>>> collect(a*x**(2*c) + b*x**(2*c), x**c)
-       #x**(2*c)*(a + b)
+       >>> collect(a*x**(2*c) + b*x**(2*c), x**c)
+       (x**2)**c*(a + b)
 
        Note also that all previously stated facts about 'collect'
        function apply to the exponential function, so you can get:
@@ -533,7 +532,7 @@ def collect(expr, syms, evaluate=True, exact=False):
             if expr.exp.is_Rational:
                 rat_expo = expr.exp
             elif expr.exp.is_Mul:
-                coeff, tail = term.exp.as_coeff_terms()
+                coeff, tail = expr.exp.as_coeff_terms()
 
                 if coeff.is_Rational:
                     rat_expo, sym_expo = coeff, C.Mul(*tail)
@@ -568,7 +567,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         else:
             pattern = [ parse_term(elem) for elem in pattern ]
 
-            elems, common_expo, has_deriv = [], S.One, False
+            elems, common_expo, has_deriv = [], None, False
 
             for elem, e_rat, e_sym, e_ord in pattern:
                 if e_ord is not None:
@@ -579,20 +578,25 @@ def collect(expr, syms, evaluate=True, exact=False):
                 for j in range(len(terms)):
                     term, t_rat, t_sym, t_ord = terms[j]
 
+                    if elem.is_Number:
+                        # a constant is a match for everything
+                        break
+
                     if elem == term and e_sym == t_sym:
                         if exact == False:
                             # we don't have to exact so find common exponent
                             # for both expression's term and pattern's element
                             expo = t_rat / e_rat
 
-                            if common_expo is S.One:
+                            if common_expo is None:
+                                # first time
                                 common_expo = expo
                             else:
                                 # common exponent was negotiated before so
                                 # teher is no chance for pattern match unless
                                 # common and current exponents are equal
                                 if common_expo != expo:
-                                    return None
+                                    common_expo = 1
                         else:
                             # we ought to be exact so all fields of
                             # interest must match in very details
@@ -605,10 +609,10 @@ def collect(expr, syms, evaluate=True, exact=False):
                         del terms[j]
 
                         break
+
                 else:
                     # pattern element not found
                     return None
-
             return terms, elems, common_expo, has_deriv
 
     if evaluate:
@@ -634,7 +638,13 @@ def collect(expr, syms, evaluate=True, exact=False):
         terms = [ parse_term(i) for i in make_list(product, Mul) ]
 
         for symbol in syms:
+            if SYMPY_DEBUG:
+                print "DEBUG: parsing of expression %s with symbol %s " % (str(terms), str(symbol))
+
             result = parse_expression(terms, symbol)
+
+            if SYMPY_DEBUG:
+                print "DEBUG: returned %s" %  str(result)
 
             if result is not None:
                 terms, elems, common_expo, has_deriv = result
@@ -642,14 +652,18 @@ def collect(expr, syms, evaluate=True, exact=False):
                 # when there was derivative in current pattern we
                 # will need to rebuild its expression from scratch
                 if not has_deriv:
-                    index = Pow(symbol, common_expo)
+                    index = 1
+                    for elem in elems:
+                        index *= Pow(elem[0], elem[1])
+                        if elem[2] is not None:
+                            index **= elem[2]
                 else:
                     index = make_expression(elems)
 
                 terms = separate(make_expression(terms))
                 index = separate(index)
 
-                if index in collected:
+                if index in collected.keys():
                     collected[index] += terms
                 else:
                     collected[index] = terms

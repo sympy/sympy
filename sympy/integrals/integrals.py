@@ -354,7 +354,6 @@ def integrate(*args, **kwargs):
        returned. This is equivalent of integrating f over all it's variables.
 
        Examples
-       --------
 
        >>> from sympy import *
        >>> x, y = symbols('xy')
