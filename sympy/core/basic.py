@@ -1522,15 +1522,21 @@ class Basic(AssumeMeths):
         """
         from sympy import collect
         x = sympify(x)
-        self = self.expand()
+        const = x.as_coeff_terms()[0] # constant multiplying x
+        if const != S.One: # get rid of constants
+            result = self.coeff(x/const)
+            if result is not None:
+                return(result/const)
+            else:
+                return None
         if x.is_Integer:
             return
-        expr = collect(self, x)
-        symbols = list(x.atoms(Symbol))
-        w = Wild("coeff", exclude=symbols)
-        m = expr.match(w*x+Wild("rest"))
-        if m:
-            return m[w]
+        self = self.expand() # collect expects it's arguments in expanded form
+        result = collect(self, x, evaluate=False)
+        if x in result:
+            return result[x]
+        else:
+            return None
 
     def as_coefficient(self, expr):
         """Extracts symbolic coefficient at the given expression. In
