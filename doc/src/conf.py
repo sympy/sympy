@@ -133,3 +133,31 @@ latex_documents = [('index', 'sympy.tex', 'SymPy Documentation',
 
 # If false, no module index is generated.
 #latex_use_modindex = True
+
+default_role = 'math'
+pngmath_divpng_args = ['-gamma 1.5','-D 110']
+pngmath_latex_preamble =  '\\usepackage{amsmath}\n'+\
+              '\\usepackage{bm}\n'+\
+              '\\usepackage{amsfonts}\n'+\
+              '\\usepackage{amssymb}\n'+\
+              '\\setlength{\\parindent}{0pt}\n'+\
+              '\\newcommand{\\bfrac}[2]{\\displaystyle\\frac{#1}{#2}}\n'+\
+              '\\newcommand{\\lp}{\\left (}\n'+\
+              '\\newcommand{\\rp}{\\right )}\n'+\
+              '\\newcommand{\\half}{\\frac{1}{2}}\n'+\
+              '\\newcommand{\\llt}{\\left <}\n'+\
+              '\\newcommand{\\rgt}{\\right >}\n'+\
+              '\\newcommand{\\abs}[1]{\\left |{#1}\\right | }\n'+\
+              '\\newcommand{\\pdiff}[2]{\\bfrac{\\partial {#1}}{\\partial {#2}}}\n'+\
+              '\\newcommand{\\lbrc}{\\left \\{}\n'+\
+              '\\newcommand{\\rbrc}{\\right \\}}\n'+\
+              '\\newcommand{\\W}{\\wedge}\n'+\
+              '\\newcommand{\\R}{\\dagger}\n'+\
+              '\\newcommand{\\lbrk}{\\left [}\n'+\
+              '\\newcommand{\\rbrk}{\\right ]}\n'+\
+              '\\newcommand{\\proj}[2]{\\llt {#1} \\rgt_{#2}}\n'+\
+              '\\newcommand{\\bs}{$\\backslash$}\n'+\
+              '\\newcommand{\\sinf}[1]{\\sin\\lp{#1}\\rp}\n'+\
+              '\\newcommand{\\cosf}[1]{\\cos\\lp{#1}\\rp}\n'+\
+              '\\newcommand{\\ebh}{\\hat{\\bm{e}}}\n'
+

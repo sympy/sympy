@@ -18,13 +18,16 @@ The relevant references for this module are:
     5. "Design of a Python Module for Symbolic Geometric Algebra
        Calculations" by Alan Bromborsky, included as symbolGA.pdf
 """
+import sys
+#if sys.version.find('Stackless') >= 0:
+#    sys.path.append('/usr/lib/python2.5/site-packages')
 
-import numpy
-import os,sys,string,types,re,copy
-import sympy
-#from latex_out import *
+import os,string,types,copy
+import numpy,sympy
+import re as regrep
+import sympy.galgebra.latex_ex
 
-NUMPAT = re.compile( '([\-0-9])|([\-0-9]/[0-9])')
+NUMPAT = regrep.compile( '([\-0-9])|([\-0-9]/[0-9])')
 """Re pattern for rational number"""
 
 ZERO = sympy.Rational(0)
@@ -32,9 +35,49 @@ ONE  = sympy.Rational(1)
 TWO  = sympy.Rational(2)
 HALF = sympy.Rational(1,2)
 
+sym_type = sympy.core.symbol.Symbol
+pow_type = sympy.core.power.Pow
+abs_type = sympy.abs
+mul_type = sympy.core.mul.Mul
+add_type = sympy.core.add.Add
+
 global MAIN_PROGRAM
 
 MAIN_PROGRAM = ''
+
+def is_quasi_unit_numpy_array(array):
+    """
+    Determine if a array is square and diagonal with
+    entries of +1 or -1.
+    """
+    shape = numpy.shape(array)
+    if len(shape) == 2 and (shape[0] == shape[1]):
+        n = shape[0]
+        ix = 0
+        while ix < n:
+            iy = 0
+            while iy < ix:
+                if array[ix][iy] != ZERO:
+                    return(False)
+                iy += 1
+            if sympy.abs(array[ix][ix]) != ONE:
+                return(False)
+            ix += 1
+        return(True)
+    else:
+        return(False)
+
+def TrigSimp(f):
+    """
+    Recursive application of sympy.trigsimp().  Works in many applications
+    where simple application of sympy.trigsimp() does not.
+    """
+    (w,g) = sympy.cse(f)
+    g = sympy.trigsimp(g[0])
+    for sub in reversed(w):
+        g = g.subs(sub[0],sub[1])
+        g = sympy.trigsimp(g)
+    return(g)
 
 def set_main(main_program):
     global MAIN_PROGRAM
@@ -46,7 +89,7 @@ def plist(lst):
         for x in lst:
             plist(x)
     else:
-        print lst
+        sys.stderr.write(lst+'\n')
     return
 
 def numeric(num_str):
@@ -67,7 +110,6 @@ def numeric(num_str):
             a = int(tmp[0])
             b = int(tmp[1])
     return(sympy.Rational(a,b))
-
 
 def symbol(sym_str):
     """
@@ -234,7 +276,176 @@ def cp(A,B):
     """
     return(HALF*(A*B-B*A))
 
-class MV:
+def reduce_base(k,base):
+    """
+    If base is a list of sorted integers [i_1,...,i_R] then reduce_base
+    sorts the list [k,i_1,...,i_R] and calculates whether an odd or even
+    number of permutations is required to sort the list. The sorted list
+    is returned and +1 for even permutations or -1 for odd permutations.
+    """
+    if k in base:
+        return(0,base)
+    grade = len(base)
+    if grade == 1:
+        if k < base[0]:
+            return(1,[k,base[0]])
+        else:
+            return(-1,[base[0],k])
+    ilo = 0
+    ihi = grade-1
+    if k < base[0]:
+        return(1,[k]+base)
+    if k > base[ihi]:
+        if grade%2 == 0:
+            return(1,base+[k])
+        else:
+            return(-1,base+[k])
+    imid = ihi+ilo
+    if grade == 2:
+        return(-1,[base[0],k,base[1]])
+    while True:
+        if ihi-ilo == 1:
+            break
+        if base[imid] > k:
+            ihi = imid
+        else:
+            ilo = imid
+        imid = (ilo+ihi)/2
+    if ilo%2 == 1:
+        return(1,base[:ihi]+[k]+base[ihi:])
+    else:
+        return(-1,base[:ihi]+[k]+base[ihi:])
+
+def sub_base(k,base):
+    """
+    If base is a list of sorted integers [i_1,...,i_R] then sub_base returns
+    a list with the k^th element removed. Note that k=0 removes the first
+    element.  The is no test to see if k is in the range of the list.
+    """
+    n = len(base)
+    if n == 1:
+        return([])
+    if n == 2:
+        if k == base[0]:
+            return([base[1]])
+        else:
+            return([base[0]])
+    return(base[:k]+base[k+1:])
+
+def magnitude(vector):
+    """
+    Calculate magnitude of vector containing trig expressions
+    and simplify.  This is a hack because of way sign of
+    magsq is determined and because of the way absoluted
+    values are removed.
+    """
+    magsq = sympy.expand((vector|vector)())
+    magsq = TrigSimp(magsq)
+    #print magsq
+    magsq_str = sympy.galgebra.latex_ex.LaTeXPrinter()._print(magsq)
+    if magsq_str[0] == '-':
+        magsq = -magsq
+    mag = unabs(sqrt(magsq))
+    #print mag
+    return(mag)
+
+def LaTeX_lst(lst,title=''):
+    """
+    Ouput a list in LaTeX format.
+    """
+    if title != '':
+        LaTeX(title)
+    for x in lst:
+        LaTeX(x)
+    return
+
+def unabs(x):
+    """
+    Remove absolute values from expressions so a = sqrt(a**2).
+    This is a hack.
+    """
+    if type(x) == mul_type:
+        y = unabs(x.args[0])
+        for yi in x.args[1:]:
+            y *= unabs(yi)
+        return(y)
+    if type(x) == pow_type:
+        if x.args[1] == HALF and type(x.args[0]) == add_type:
+            return(x)
+        y = 1/unabs(x.args[0])
+        return(y)
+    if len(x.args) == 0:
+        return(x)
+    if type(x) == abs_type:
+        return(x.args[0])
+    return(x)
+
+def function_lst(fstr,xtuple):
+    sys.stderr.write(fstr+'\n')
+    fct_lst = []
+    for xstr in fstr.split():
+        f = sympy.Function(xstr)(*xtuple)
+        fct_lst.append(f)
+    return(fct_lst)
+
+def vector_fct(Fstr,x):
+    """
+    Create a list of functions of arguments x.  One function is
+    created for each variable in x.  Fstr is a string that is
+    the base name of each function while each fuction in the
+    list is given the name Fstr+'__'+str(x[ix]) so that if
+    Fstr = 'f' and str(x[1]) = 'theta' then the LaTeX output
+    of the second element in the output list would be 'f^{\theta}'.
+    """
+    nx = len(x)
+    Fvec = []
+    for ix in range(nx):
+        ftmp = sympy.Function(Fstr+'__'+sympy.galgebra.latex_ex.LaTeXPrinter.str_basic(x[ix]))(*tuple(x))
+        Fvec.append(ftmp)
+    return(Fvec)
+
+def print_lst(lst):
+    for x in lst:
+        print x
+    return
+
+def normalize(elst,nname_lst):
+    """
+    Normalize a list of vectors and rename the normalized vectors. 'elist' is the list
+    (or array) of vectors to be normalized and nname_lst is a list of the names for the
+    normalized vectors.  The function returns the numpy arrays enlst and mags containing
+    the normalized vectors (enlst) and the magnitudes of the original vectors (mags).
+    """
+    i = 0
+    mags = numpy.array(MV.n*[ZERO],dtype=numpy.object)
+    enlst= numpy.array(MV.n*[ZERO],dtype=numpy.object)
+    for (e,nname) in zip(elst,nname_lst):
+        emag = magnitude(e)
+        emaginv = 1/emag
+        mags[i] = emag
+        enorm = emaginv*e
+        enorm.name = nname
+        enlst[i] = enorm
+        i += 1
+    return(enlst,mags)
+
+def build_base(base_index,base_vectors,reverse=False):
+    base = base_vectors[base_index[0]]
+    if len(base_index) > 1:
+        for i in base_index[1:]:
+            base = base^base_vectors[i]
+    if reverse:
+        base = base.rev()
+    return(base)
+
+class MV(object):
+
+    is_setup = False
+    basislabel_lst = 0
+    curvilinear_flg = False
+    coords = None
+
+    @staticmethod
     def pad_zeros(value,n):
         """
         Pad list with zeros to lenght n. If length is > n
@@ -246,8 +457,8 @@ class MV:
         if nvalue > n:
             value = value[:n]
         return(value)
-    pad_zeros = staticmethod(pad_zeros)
 
+    @staticmethod
     def define_basis(basis):
         """
         Calculates all the MV static variables needed for
@@ -266,6 +477,7 @@ class MV:
         MV.basislabel = (MV.n+1)*[0]
         MV.basis[0]   = []
         MV.basislabel[0] = '1'
+        MV.basislabel_lst = [['1']]
         MV.nbasis = numpy.array((MV.n+1)*[1],dtype=numpy.object)
         for igrade in range(1,MV.n+1):
             tmp = comb(MV.n,igrade)
@@ -274,12 +486,30 @@ class MV:
             MV.nbasis[igrade] = ntmp
             MV.basis[igrade] = tmp
             gradelabels = []
+            gradelabel_lst = []
             for i in range(ntmp):
+                tmp_lst = []
                 bstr = ''
                 for j in tmp[i]:
                     bstr += MV.vbasis[j]
+                    tmp_lst.append(MV.vbasis[j])
+                gradelabel_lst.append(tmp_lst)
                 gradelabels.append(bstr)
+            MV.basislabel_lst.append(gradelabel_lst)
             MV.basislabel[igrade] = gradelabels
+        MV.basis_map = [{'':0}]
+        igrade = 1
+        while igrade <= MV.n:
+            tmpdict = {}
+            bases = MV.gabasis[igrade]
+            nbases = len(bases)
+            ibases = 0
+            for base in bases:
+                tmpdict[str(base)] = ibases
+                ibases += 1
+            MV.basis_map.append(tmpdict)
+            igrade += 1
+
         if MV.debug:
             print 'basis strings =',MV.vbasis
             print 'basis symbols =',MV.vsyms
@@ -288,44 +518,53 @@ class MV:
             print 'grades        =',MV.nbasis
             print 'index         =',MV.index
         return
-    define_basis = staticmethod(define_basis)
 
+    @staticmethod
     def define_metric(metric):
         """
         Calculates all the MV static variables needed for
         metric operations.  See reference 5 section 2.
         """
-        name_flg = False
-        MV.g = []
-        MV.metric = numpy.array(MV.n*[MV.n*[ZERO]],dtype=numpy.object)
-        if not metric:
-            metric = numpy.array(MV.n*[MV.n*['#']],dtype=numpy.object)
-        for i in MV.index:
-            for j in MV.index:
-                gij = metric[i][j]
-                if israt(gij):
-                    MV.metric[i][j] = numeric(gij)
-                else:
-                    if gij == '#':
-                        name_flg = True
-                        if i == j:
-                            gij = '('+MV.vbasis[j]+'**2)'
-                            name = MV.vbasis[j]+'sq'
-                        else:
-                            gij = '('+MV.vbasis[min(i,j)]+'.'+MV.vbasis[max(i,j)]+')'
-                            name = MV.vbasis[min(i,j)]+'dot'+MV.vbasis[max(i,j)]
-                    tmp = symbol(gij)
-                    MV.metric[i][j] = tmp
-                    if i <= j:
-                        MV.g.append(tmp)
-                        if name_flg:
-                            setattr(MAIN_PROGRAM,name,tmp)
-                            name_flg = False
+        if MV.metric_str:
+            name_flg = False
+            MV.g = []
+            MV.metric = numpy.array(MV.n*[MV.n*[ZERO]],dtype=numpy.object)
+            if metric == '':
+                metric = numpy.array(MV.n*[MV.n*['#']],dtype=numpy.object)
+            for i in MV.index:
+                for j in MV.index:
+                    gij = metric[i][j]
+                    if israt(gij):
+                        MV.metric[i][j] = numeric(gij)
+                    else:
+                        if gij == '#':
+                            name_flg = True
+                            if i == j:
+                                gij = '('+MV.vbasis[j]+'**2)'
+                                name = MV.vbasis[j]+'sq'
+                            else:
+                                gij = '('+MV.vbasis[min(i,j)]+'.'+MV.vbasis[max(i,j)]+')'
+                                name = MV.vbasis[min(i,j)]+'dot'+MV.vbasis[max(i,j)]
+                        tmp = symbol(gij)
+                        MV.metric[i][j] = tmp
+                        if i <= j:
+                            MV.g.append(tmp)
+                            if name_flg:
+                                setattr(MAIN_PROGRAM,name,tmp)
+                                name_flg = False
+        else:
+            MV.metric = metric
+            MV.g = []
+            for row in metric:
+                g_row = []
+                for col in metric:
+                    g_row.append(col)
+                    MV.g.append(g_row)
         if MV.debug:
             print 'metric =',MV.metric
         return
-    define_metric = staticmethod(define_metric)
 
+    @staticmethod
     def define_reciprocal_frame():
         """
         Calculates unscaled reciprocal vectors (MV.brecp) and scale
@@ -334,9 +573,6 @@ class MV:
         basis vectors is MV.E.
         """
         if MV.tables_flg:
-            if MV.rframe_flg:
-                return
-            MV.rframe_flg = True
             MV.E = MV.bvec[0]
             MV.brecp = []
             for i in range(1,MV.n):
@@ -355,8 +591,8 @@ class MV:
             for i in range(MV.n):
                 MV.brecp[i] = MV.brecp[i]*MV.Esq_inv
         return
-    define_reciprocal_frame = staticmethod(define_reciprocal_frame)
 
+    @staticmethod
     def reduce_basis_loop(blst):
         """
         Makes one pass through basis product representation for
@@ -391,8 +627,8 @@ class MV:
                 return(a1,blst1,blst1_flg,blst)
             jstep +=1
         return(1)
-    reduce_basis_loop = staticmethod(reduce_basis_loop)
 
+    @staticmethod
     def reduce_basis(blst):
         """
         Repetively applies reduce_basis_loop to basis
@@ -431,8 +667,8 @@ class MV:
                             blst_flg.append(tmp[2])
         (blst_coef,blst_expand) = MV.combine_common_factors(blst_coef,blst_expand)
         return(blst_coef,blst_expand)
-    reduce_basis = staticmethod(reduce_basis)
 
+    @staticmethod
     def combine_common_factors(blst_coef,blst_expand):
         new_blst_coef = []
         new_blst_expand = []
@@ -448,8 +684,8 @@ class MV:
             if len(new_blst_coef[i]) > 1:
                 MV.contract(new_blst_coef[i],new_blst_expand[i])
         return(new_blst_coef,new_blst_expand)
-    combine_common_factors = staticmethod(combine_common_factors)
 
+    @staticmethod
     def contract(coefs,bases):
         dualsort(coefs,bases)
         n = len(bases)-1
@@ -473,8 +709,8 @@ class MV:
             else:
                 i +=1
         return
-    contract = staticmethod(contract)
 
+    @staticmethod
     def convert(coefs,bases):
         mv = MV()
         mv.bladeflg = 0
@@ -492,13 +728,13 @@ class MV:
                     else:
                         mv.mv[igrade] = numpy.array([coef[0]],dtype=numpy.object)
         return(mv)
-    convert = staticmethod(convert)
 
+    @staticmethod
     def set_str_format(str_mode=0):
         MV.str_mode = str_mode
         return
-    set_str_format = staticmethod(set_str_format)
 
+    @staticmethod
     def str_rep(mv,lst_mode=0):
         """
         Converts internal representation of a multivector to a string
@@ -531,9 +767,9 @@ class MV:
                                 xstr = '-'
                         else:
                             if xstr[0] != '+':
-                                xstr = '+{'+xstr+'}'
+                                xstr = '+('+xstr+')'
                             else:
-                                xstr = '+{'+xstr[1:]+'}'
+                                xstr = '+('+xstr[1:]+')'
                         value += xstr+labels[igrade][j]
                         if MV.str_mode and not lst_mode:
                             value += '\n'
@@ -551,17 +787,10 @@ class MV:
                 value = '0'
         else:
             value = outlst
-        if MV.latexflg:
-            value = LaTeXstr(value)
         return(value)
-    str_rep = staticmethod(str_rep)
 
-    def LaTeX():
-        MV.latexflg = not MV.latexflg
-        return
-    LaTeX = staticmethod(LaTeX)
-
-    def setup(basis,metric='',debug=0):
+    @staticmethod
+    def setup(basis,metric='',rframe=False,coords=None,debug=False):
         """
         MV.setup initializes the MV class by calculating the static
         multivector tables required for geometric algebra operations
@@ -569,24 +798,38 @@ class MV:
         basis and metric arguments.
         """
         global MAIN_PROGRAM
-        MV.latexflg = False
+        MV.is_setup = True
+        MV.metric_str = False
         MV.debug = debug
         MV.bladeprint = 0
         MV.tables_flg = 0
         MV.str_mode  = 0
-        MV.rframe_flg = False
+        MV.basisroot = ''
+        if coords == None:
+            MV.coords = None
+        else:
+            MV.coords = tuple(coords)
+            rframe= True
         if type(basis) == types.StringType:
             basislst = basis.split()
+            if len(basislst) == 1:
+                MV.basisroot = basislst[0]
+                basislst = []
+                for coord in coords:
+                    basislst.append(MV.basisroot+'_'+str(coord))
             MV.define_basis(basislst)
-        if len(metric) > 0 and type(metric) == types.StringType:
-            tmps = metric.split(',')
-            metric = []
-            for tmp in tmps:
-                xlst = tmp.split()
-                xtmp = []
-                for x in xlst:
-                    xtmp.append(x)
-                metric.append(xtmp)
+        if type(metric) == types.StringType:
+            MV.metric_str = True
+            if len(metric) > 0:
+                tmps = metric.split(',')
+                metric = []
+                for tmp in tmps:
+                    xlst = tmp.split()
+                    xtmp = []
+                    for x in xlst:
+                        xtmp.append(x)
+                    metric.append(xtmp)
+
         MV.define_metric(metric)
         MV.multiplication_table()
         MV.blade_table()
@@ -600,25 +843,459 @@ class MV:
             MV.bvec.append(bvar)
             setattr(MAIN_PROGRAM,name,bvar)
             isym += 1
+        if rframe:
+            MV.define_reciprocal_frame()
+        MV.I = MV(ONE,'pseudo','I')
         return('Setup of '+basis+' complete!')
-    setup = staticmethod(setup)
 
+    @staticmethod
+    def set_coords(coords):
+        MV.coords = coords
+        return
+
+    @staticmethod
+    def scalar_fct(fct_name):
+        """
+        Create multivector scalar function with name fct_name (string) and
+        independent varibles coords (list of variable).  Default variables are
+        those associated with each dimension of vector space.
+        """
+        phi = sympy.Function(fct_name)(*MV.coords)
+        Phi = MV(phi,'scalar')
+        Phi.name = fct_name
+        return(Phi)
+
+    @staticmethod
+    def vector_fct(fct_name,vars=''):
+        """
+        Create multivector vector function with name fct_name (string) and
+        independent varibles coords (list of variable).  Default variables are
+        those associated with each dimension of vector space.
+        """
+        if isinstance(vars,types.StringType):
+            Acoefs = vector_fct(fct_name,MV.coords)
+        else:
+            Acoefs =numpy.array(MV.n*[ZERO],dtype=numpy.object)
+            x = MV.coords
+            if isinstance(vars,sympy.core.symbol.Symbol):
+                for icoef in MV.nrg:
+                    Acoefs[icoef] = sympy.Function(fct_name+'__'+\
+                                   sympy.galgebra.latex_ex.LaTeXPrinter.str_basic(x[icoef]))(vars)
+            else:
+                for icoef in MV.nrg:
+                    Acoefs[icoef] = sympy.Function(fct_name+'__'+\
+                                   sympy.galgebra.latex_ex.LaTeXPrinter.str_basic(x[icoef]))(*tuple(vars))
+        A = MV(Acoefs,'vector',fct_name)
+        return(A)
+
+    @staticmethod
+    def rebase(x,coords,base_name='',debug=False,debug_level=0):
+        """
+        Define curvilinear coordinates for previously defined vector (multivector) space (MV.setup has been run)
+        with position vector, x, that is a vector function of the independendent coordinates, coords (list of
+        sympy variables equal in length to dimension of vector space), and calculate:
+
+            1. Frame (basis) vectors
+            2. Normalized frame (basis) vectors.
+            3. Metric tensor
+            4. Reciprocal frame vectors
+            5. Reciprocal metric tensor
+            6. Connection multivectors
+
+        The basis vectors are named with the base_name (string) and a subscript derived from the name of each
+        coordinate.  So that if the base name is 'e' and the coordinated are [r,theta,z] the variable names
+        of the frame vectors would be e_r, e_theta, and e_z.  For LaTeX output the names of the frame vectors
+        would be e_{r}, e_{\theta}, and e_{z}.  Everthing needed to compute the geometric, outer, and inner
+        derivatives of multivector functions in curvilinear coordinates is calculated.
+
+        If debug is True all the quatities in the above list are output in LaTeX format.
+
+        Currently rebase works with cylindrical and spherical coordinates in any dimension.  The limitation is the
+        ability to automatically simplify complex sympy expressions generated while calculating the quantities in
+        the above list.  This is why the debug option is included.  The debug_level can equal 0,1,2, or 3 and
+        determines how far in the list to calculate (imput 0 to do the entire list) while debugging.
+        """
+        global MAIN_PROGRAM
+
+        #Form root names for basis, reciprocal basis, normalized basis, and normalized reciprocal basis
+
+        if base_name == '':
+            base_name = MV.basisroot+'prm'
+
+        LaTeX_base = sympy.galgebra.latex_ex.LaTeXPrinter.extended_symbol(base_name)
+        bm = '\\bm{'+LaTeX_base+'}'
+        bmhat = '\\hat{'+bm+'}'
+        bstr = bmhat+'_{[i_{1},\dots, i_{R}]}'
+        base_name += 'bm'
+        base_name_hat = base_name+'hat'
+
+        base_name_lst   = []
+        nbase_name_lst  = []
+        rbase_name_lst  = []
+        rnbase_name_lst = []
+        coords_lst = []
+
+        for coord in coords:
+            coord_str = sympy.galgebra.latex_ex.LaTeXPrinter.str_basic(coord)
+            coords_lst.append(coord_str)
+            base_name_lst.append(base_name+'_'+coord_str)
+            rbase_name_lst.append(base_name+'__'+coord_str)
+            nbase_name_lst.append(base_name_hat+'_'+coord_str)
+            rnbase_name_lst.append(base_name_hat+'__'+coord_str)
+
+        if not (MV.n == len(coords) == len(base_name_lst)):
+            print 'rebaseMV inputs not congruent:'
+            print 'MV.n =',MV.n
+            print 'coords =',coords
+            print 'bases =',base_name
+            sys.exit(1)
+
+        if isinstance(x,MV):
+
+            #Calculate basis vectors from derivatives of position vector x
+
+            bases = numpy.array(MV.n*[ZERO],dtype=numpy.object)
+            i = 0
+            for coord in coords:
+                ei = x.diff(coords[i])
+                ei.set_name(base_name_lst[i])
+                bases[i] = ei
+                i += 1
+
+            #Calculate normalizee basis vectors and basis vector magnitudes
+
+            if debug:
+                print 'Coordinate Generating Vector'
+                print x
+                print 'Basis Vectors'
+                for base in bases:
+                    print base
+
+        else:
+
+            #Input basis vectors as N vector fields
+
+            bases = x
+
+            for (base,name) in zip(bases,base_name_lst):
+                base.set_name(name)
+
+            if debug:
+                print 'Basis Vectors'
+                for base in bases:
+                    print base
+                if debug_level == 1:
+                    return
+
+        if debug_level == 1:
+            return
+
+        #Calculate normalized basis vectors and magnitudes of
+        #unormalized basis vectors
+
+        (nbases,mags) = normalize(bases,nbase_name_lst)
+
+        if debug:
+            print 'Magnitudes'
+            print '\\abs{'+LaTeX_base+'_{i}} = ',mags
+            print 'Normalized Basis Vectors'
+            for nbase in nbases:
+                print nbase
+
+        g =  numpy.array(MV.n*[MV.n*[ZERO]],dtype=numpy.object)
+
+        for irow in MV.nrg:
+            for icol in MV.nrg:
+                magsq = sympy.expand((nbases[irow]|nbases[icol])())
+                g[irow][icol]  = sympy.simplify(TrigSimp(magsq))
+
+        if debug:
+            print 'Metric $\\hat{g}_{ij} = \\hat{'+LaTeX_base+'}_{i}\\cdot \\hat{'+\
+                  LaTeX_base+'}_{j}$'
+            print r'\hat{g}_{ij} =',sympy.galgebra.latex_ex.LaTeX(g)
+
+        if debug_level == 2:
+            return
+
+        #Calculate reciprocal normalized basis vectors
+
+        rnbases = []
+
+        if is_quasi_unit_numpy_array(g):
+            ibasis = 0
+            while ibasis < MV.n:
+                base = g[ibasis][ibasis]*nbases[ibasis]
+                base.set_name(rnbase_name_lst[ibasis])
+                base.simplify()
+                base.trigsimp()
+                rnbases.append(base)
+                ibasis += 1
+        else:
+            rnbases = reciprocal_frame(nbases,rnbase_name_lst)
+            ibase = 0
+            for base in rnbases:
+                base.simplify()
+                base.trigsimp()
+                rnbases[ibase] = base
+                ibase += 1
+
+        if debug:
+            if debug_level != 0:
+                sympy.galgebra.latex_ex.MV_format(1)
+            print 'Reciprocal Normalized Basis Vectors'
+            for rnbase in rnbases:
+                print rnbase
+
+        if debug_level == 3:
+            return
+
+        #Calculate components of inverse vectors
+
+        Acoef = []
+
+        for ibasis in MV.nrg:
+            evec = numpy.array(MV.n*[ZERO],dtype=numpy.object)
+            for jbasis in MV.nrg:
+                evec[jbasis] = (MV.bvec[ibasis]|rnbases[jbasis])()
+            Acoef.append(evec)
+
+
+        #Calculate time derivatives components of basis vectors
+        """
+        if MV.coords[0] == sympy.Symbol('t'):
+            t = MV.coords[0]
+            dedt_coef = []
+            for ebase in nbases:
+                dedt = ebase.diff(t)
+                coefs = numpy.array(MV.n*[ZERO],dtype=numpy.object)
+                for ibasis in MV.nrg:
+                    coefs[ibasis] = (dedt|rnbases[ibasis])()
+                dedt_coef.append(coefs)
+        """
+        #Calculat metric tensors
+
+        gr = numpy.array(MV.n*[MV.n*[ZERO]],dtype=numpy.object)
+
+        for irow in MV.nrg:
+            for icol in MV.nrg:
+                magsq = sympy.expand((rnbases[irow]|rnbases[icol])())
+                gr[irow][icol] = sympy.simplify(TrigSimp(magsq))
+
+        if debug:
+            print 'Metric $\\hat{g}^{ij} = \\hat{'+LaTeX_base+'}^{i}\\cdot \\hat{'+\
+                  LaTeX_base+'}^{j}$'
+            print r'\hat{g}^{ij} =',sympy.galgebra.latex_ex.LaTeX(gr)
+
+        if debug_level == 4:
+            return
+
+        #Calculate bases and reciprocal bases for curvilinear mulitvectors
+
+        MV_bases = [[ONE]]
+        MV_rbases = [[ONE]]
+        igrade = 1
+        while igrade <= MV.n:
+            base_index = MV.gabasis[igrade]
+            nbase_index = len(base_index)
+            grade_bases = []
+            rgrade_bases = []
+            for index in base_index:
+                base = build_base(index,nbases)
+                base.simplify()
+                base.trigsimp()
+                rbase = build_base(index,rnbases,True)
+                rbase.simplify()
+                rbase.trigsimp()
+                grade_bases.append(base)
+                rgrade_bases.append(rbase)
+            igrade += 1
+            MV_bases.append(grade_bases)
+            MV_rbases.append(rgrade_bases)
+
+        #Calculate connection multivectors for geometric derivative
+
+        MV_connect = [[ZERO]]
+        igrade = 1
+        while igrade <= MV.n:
+            grade_connect = []
+            ibase = 0
+            for base in MV_bases[igrade]:
+                sum = MV()
+                itheta = 0
+                for (theta,etheta) in zip(coords,rnbases):
+                    psum = (1/mags[itheta])*etheta*base.diff(theta)
+                    psum.trigsimp()
+                    sum += psum
+                    itheta += 1
+                sum.simplify()
+                sum.trigsimp()
+                grade_connect.append(sum)
+                ibase += 1
+            MV_connect.append(grade_connect)
+            igrade += 1
+
+        if debug:
+            print 'Curvilinear Bases: $'+bstr+' = '+bmhat+'_{i_{1}}\\W\\dots\\W'+bmhat+'_{i_{R}}$'
+            igrade = 1
+            for grade in MV_bases[1:]:
+                ibase = 0
+                for base in grade:
+                    index = MV.gabasis[igrade][ibase]
+                    sub_str = ''
+                    for i in index:
+                        sub_str += sympy.galgebra.latex_ex.LaTeXPrinter.extended_symbol(coords_lst[i])
+                    base_str = bmhat+'_{['+sub_str+']} = '
+                    print base_str,base
+                    ibase += 1
+                igrade += 1
+
+        if debug_level == 5:
+            return
+
+        #Calculate representation of connection multivectors in curvilinear system
+
+        MV_Connect = [[ZERO]]
+        igrade = 1
+        while igrade <= MV.n:
+            grade_connect = []
+            ibase = 0
+            nbase = len(MV_bases[igrade])
+
+            if igrade < MV.n:
+                ibase = 0
+                p1base = len(MV_bases[igrade+1])
+                m1base = len(MV_bases[igrade-1])
+                while ibase < nbase:
+                    Cm1 =  numpy.array(m1base*[ZERO],dtype=numpy.object)
+                    Cp1 =  numpy.array(p1base*[ZERO],dtype=numpy.object)
+                    C = MV_connect[igrade][ibase]
+                    if igrade == 1:
+                        X = C(0)
+                    else:
+                        X = MV()
+                    jbase = 0
+                    while jbase < m1base:
+                        Cm1[jbase] = TrigSimp((MV_rbases[igrade-1][jbase]|C)())
+                        jbase += 1
+                    jbase = 0
+                    while jbase < p1base:
+                        Cp1[jbase] = TrigSimp((MV_rbases[igrade+1][jbase]|C)())
+                        jbase += 1
+                    X += MV((igrade-1,Cm1),'grade')+MV((igrade+1,Cp1),'grade')
+                    X.simplify()
+                    X.trigsimp()
+                    grade_connect.append(X)
+                    ibase += 1
+            else:
+                ibase = 0
+                m1base = len(MV_bases[igrade-1])
+                while ibase < nbase:
+                    Cm1 =  numpy.array(m1base*[ZERO],dtype=numpy.object)
+                    C = MV_connect[igrade][ibase]
+                    jbase = 0
+                    while jbase < m1base:
+                        Cm1[jbase] = TrigSimp((MV_rbases[igrade-1][jbase]|C)())
+                        jbase += 1
+                    X = MV()
+                    X.mv[MV.n-1] = Cm1
+                    X.simplify()
+                    X.trigsimp()
+                    grade_connect.append(X)
+                    ibase += 1
+
+            MV_Connect.append(grade_connect)
+            igrade += 1
+
+        base_str = ''
+        for coord in coords:
+            base_str += base_name+'_'+sympy.galgebra.latex_ex.LaTeXPrinter.str_basic(coord)+' '
+        base_str = base_str[:-1]
+
+        old_names = MV.vbasis
+
+        MV.setup(base_str,g,True,coords)
+
+        MV.curvilinear_flg = True
+        MV.Connect = MV_Connect
+        sympy.galgebra.latex_ex.LaTeXPrinter.latex_bases()
+        MV.Rframe = numpy.array(MV.n*[ZERO],dtype=numpy.object)
+        ibasis = 0
+        while ibasis < MV.n:
+            base = MV()
+            jbasis = 0
+            while jbasis < MV.n:
+                base.add_in_place(gr[ibasis][jbasis]*MV.bvec[jbasis])
+                jbasis += 1
+            base.scalar_mul_inplace(1/mags[ibasis])
+            MV.Rframe[ibasis] = base
+            ibasis += 1
+
+        MV.org_basis = []
+        for ibasis in MV.nrg:
+            evec = MV(Acoef[ibasis],'vector',old_names[ibasis])
+            setattr(MAIN_PROGRAM,evec.name,evec)
+            MV.org_basis.append(evec)
+
+        if MV.coords[0] == sympy.Symbol('t'):
+            MV.dedt = []
+            for coef in dedt_coef:
+                MV.dedt.append(MV(coef,'vector'))
+        else:
+            MV.dedt = None
+
+        if debug:
+            print 'Representation of Original Basis Vectors'
+            for evec in MV.org_basis:
+                 print evec
+
+            print 'Renormalized Reciprocal Vectors '+\
+                  '$\\bfrac{'+bmhat+'^{k}}{\\abs{\\bm{'+LaTeX_base+'}_{k}}}$'
+
+            ibasis = 0
+            while ibasis < MV.n:
+                c_str = sympy.galgebra.latex_ex.LaTeXPrinter.extended_symbol(coords_lst[ibasis])
+                print '\\bfrac{\\bm{\\hat{'+LaTeX_base+\
+                       '}}^{'+c_str+'}}{\\abs{\\bm{'+LaTeX_base+\
+                       '}_{'+c_str+'}}} =',MV.Rframe[ibasis]
+                ibasis += 1
+
+            title_str = 'Connection Multivectors: $C\\lbrc'+bstr+'\\rbrc = '+\
+                        '\\bfrac{'+bmhat+'^{k}}{\\abs{'+bmhat+\
+                        '_{k}}}\\pdiff{'+bstr+'}{\\theta^{k}}$'
+
+            print title_str
+            igrade = 1
+            for grade in MV.Connect[1:]:
+                ibase = 0
+                for base in grade:
+                    index = MV.gabasis[igrade][ibase]
+                    sub_str = ''
+                    for i in index:
+                        sub_str += sympy.galgebra.latex_ex.LaTeXPrinter.extended_symbol(coords_lst[i])
+
+                    base_str = 'C\\lbrc\\hat{'+LaTeX_base+'}_{['+sub_str+']}\\rbrc = '
+                    print base_str,base
+                    ibase += 1
+                igrade += 1
+        return
+
+    @staticmethod
     def print_blades():
         """
         Set multivector output to blade representation.
         """
         MV.bladeprint = 1
         return
-    print_blades=staticmethod(print_blades)
 
+    @staticmethod
     def print_bases():
         """
         Set multivector output to base representation.
         """
         MV.bladeprint = 0
         return
-    print_bases=staticmethod(print_bases)
 
+    @staticmethod
     def multiplication_table():
         """
         Calculate geometric product base multiplication table.
@@ -643,7 +1320,8 @@ class MV:
                         base = base1+base2
                         (coefs,bases) = MV.reduce_basis(base)
                         product = MV.convert(coefs,bases)
-                        product.name = '('+MV.basislabel[igrade][ibase]+')('+MV.basislabel[jgrade][jbase]+')'
+                        product.name = '('+MV.basislabel[igrade][ibase]+')('+\
+                                       MV.basislabel[jgrade][jbase]+')'
                         MV.mtable[igrade][ibase][jgrade].append(product)
         if MV.debug:
             print 'Multiplication Table:'
@@ -653,8 +1331,8 @@ class MV:
                         for mv in level3:
                             mv.printmv()
         return
-    multiplication_table = staticmethod(multiplication_table)
 
+    @staticmethod
     def geometric_product(mv1,mv2):
         """
         MV.geometric_product(mv1,mv2) calculates the geometric
@@ -697,8 +1375,8 @@ class MV:
             else:
                 product = mv2.scalar_mul(mv1)
         return(product)
-    geometric_product = staticmethod(geometric_product)
 
+    @staticmethod
     def wedge(igrade1,blade1,vector2,name=''):
         """
         Calculate the outer product of a multivector blade
@@ -712,8 +1390,8 @@ class MV:
             w = w12+w21
         w.name = name
         return(w*HALF)
-    wedge = staticmethod(wedge)
 
+    @staticmethod
     def blade_table():
         """
         Calculate basis blades in terms of bases. See reference 5
@@ -760,8 +1438,8 @@ class MV:
             print 'Blade Labels:'
             print MV.bladelabel
         return
-    blade_table = staticmethod(blade_table)
 
+    @staticmethod
     def inverse_blade_table():
         """
         Calculate bases in terms of basis blades. See reference 5
@@ -801,8 +1479,8 @@ class MV:
                 for mv in grade:
                     mv.printmv()
         return
-    inverse_blade_table = staticmethod(inverse_blade_table)
 
+    @staticmethod
     def outer_product(mv1,mv2):
         """
         MV.outer_product(mv1,mv2) calculates the outer (exterior,wedge)
@@ -830,8 +1508,8 @@ class MV:
             else:
                 product = mv2.scalar_mul(mv1)
         return(product)
-    outer_product = staticmethod(outer_product)
 
+    @staticmethod
     def inner_product(mv1,mv2):
         """
         MV.inner_product(mv1,mv2) calculates the inner (scalar,dot)
@@ -854,8 +1532,8 @@ class MV:
                             product.add_in_place(pg1pg2.project(igrade))
             return(product)
         return(MV())
-    inner_product = staticmethod(inner_product)
 
+    @staticmethod
     def addition(mv1,mv2):
         """
         MV.addition(mv1,mv2) calculates the sum
@@ -879,7 +1557,7 @@ class MV:
         else:
             if isinstance(mv1,MV):
                 sum = mv1.copy()
-                if isinstance(sum.mv[0],numpy,ndarray):
+                if isinstance(sum.mv[0],numpy.ndarray):
                     sum.mv[0] += numpy.array([mv2],dtype=numpy.object)
                 else:
                     sum.mv[0] = numpy.array([mv2],dtype=numpy.object)
@@ -890,8 +1568,8 @@ class MV:
                 else:
                     sum.mv[0] = numpy.array([mv1],dtype=numpy.object)
         return(sum)
-    addition = staticmethod(addition)
 
+    @staticmethod
     def subtraction(mv1,mv2):
         """
         MV.subtraction(mv1,mv2) calculates the difference
@@ -926,8 +1604,17 @@ class MV:
                 else:
                     diff.mv[0] = +numpy.array([mv1],dtype=numpy.object)
         return(diff)
-    subtraction = staticmethod(subtraction)
 
+    @staticmethod
+    def vdiff(vec,x):
+        dvec = numpy.array(len(vec)*[ZERO])
+        ivec = 0
+        for veci in vec:
+            dvec[ivec] = sympy.diff(veci,x)
+            ivec += 1
+        return(dvec)
+
+    @staticmethod
     def scalar_to_symbol(scalar):
         if isinstance(scalar,MV):
             return(scalar.mv[0][0])
@@ -937,9 +1624,8 @@ class MV:
                 sym.append(MV.scalar_to_symbol(x))
             return(sym)
         return(scalar)
-    scalar_to_symbol = staticmethod(scalar_to_symbol)
 
-    def __init__(self,value='',mvtype='',mvname=''):
+    def __init__(self,value='',mvtype='',mvname='',fct=False):
         """
         Initialization of multivector X. Inputs are as follows
 
@@ -952,9 +1638,15 @@ class MV:
         'grade'         [int i, symbol array A]  X.grade(i) = A
         'vector'        symbol array A           X.grade(1) = A
         'grade2'        symbol array A           X.grade(2) = A
+        'pseudo'        symbol x                 X.grade(n) = x
+        'spinor'        string A                 spinor with coefficients
+                                                 A__indices and name Abm
 
         mvname is name of multivector.
+        If fct is 'True' and MV.coords is defined in MV.setup then a
+        multivector field of MV.coords is instanciated.
         """
+
         self.name      = mvname
         self.mv        = MV.n1*[0]
         self.bladeflg  = 0  #1 for blade expansion
@@ -966,18 +1658,79 @@ class MV:
             self.mv[2] = numpy.array(MV.nbasis[2]*[ZERO],dtype=numpy.object)
             self.mv[2][value] = ONE
         if mvtype == 'scalar':
-            self.mv[0] = numpy.array([value],dtype=numpy.object)
+            if isinstance(value,types.StringType):
+                value = make_symbols(value)
+            self.mv[0] = numpy.array(value,dtype=numpy.object)
+        if mvtype == 'pseudo':
+            self.mv[MV.n] = numpy.array([value],dtype=numpy.object)
         if mvtype == 'grade':
             igrade          = value[0]
             coefs           = value[1]
-            coefs = MV.pad_zeros(coefs,MV.nbasis[igrade])
+            #coefs = MV.pad_zeros(coefs,MV.nbasis[igrade])
             self.mv[igrade] = numpy.array(coefs,dtype=numpy.object)
         if mvtype == 'vector':
-            value = MV.pad_zeros(value,MV.nbasis[1])
-            self.mv[1]    = numpy.array(value,dtype=numpy.object)
+            if isinstance(value,types.StringType):
+                symbol_str = ''
+                for ibase in MV.nrg:
+                    if MV.coords == None:
+                        symbol = value+'__'+str(ibase)
+                        symbol_str += symbol+' '
+                    else:
+                        symbol = value+'__'+(MV.coords[ibase]).name
+                        symbol_str += symbol+' '
+                symbol_lst = make_symbols(symbol_str)
+                self.mv[1] = numpy.array(symbol_lst,dtype=numpy.object)
+                self.name = value
+            else:
+                value = MV.pad_zeros(value,MV.nbasis[1])
+                self.mv[1] = numpy.array(value,dtype=numpy.object)
         if mvtype == 'grade2':
             value = MV.pad_zeros(value,MV.nbasis[2])
             self.mv[2]    = numpy.array(value,dtype=numpy.object)
+        if mvtype == 'base':
+            self.mv[value[0]] = numpy.array(MV.nbasis[value[0]]*[ZERO],dtype=numpy.object)
+            self.mv[value[0]][value[1]] = ONE
+        if mvtype == 'spinor':
+            if isinstance(value,types.StringType):
+                for grade in MV.n1rg:
+                    if grade%2 == 0:
+                        symbol_str = ''
+                        if grade != 0:
+                            for base in MV.basis[grade]:
+                                symbol = value+MV.construct_index(base)
+                                symbol_str += symbol+' '
+                            symbol_lst = make_symbols(symbol_str)
+                            self.mv[grade] = numpy.array(symbol_lst,dtype=numpy.object)
+                        else:
+                            self.mv[0] = numpy.array([value],dtype=numpy.object)
+                self.name = value+'bm'
+        if fct and MV.coords != None:
+            for grade in MV.n1rg:
+                if not isinstance(self.mv[grade],types.IntType):
+                    if grade == 0:
+                        coef = sympy.galgebra.latex_ex.LaTeXPrinter.str_basic(self.mv[0][0])
+                        self.mv[0]= numpy.array([sympy.Function(coef)(*MV.coords)],dtype=numpy.object)
+                    else:
+                        for base in range(MV.nbasis[grade]):
+                            coef = sympy.galgebra.latex_ex.LaTeXPrinter.str_basic(self.mv[grade][base])
+                            self.mv[grade][base] = sympy.Function(coef)(*MV.coords)
+
+    @staticmethod
+    def construct_index(base):
+        index_str = ''
+        if len(base) == 0:
+            return('')
+        if MV.coords == None:
+            for ix in base:
+                index_str += str(ix)
+        else:
+            for ix in base:
+                index_str += (MV.coords[ix]).name
+        return('__'+index_str)
+
+    def set_name(self,namestr):
+        self.name = namestr
+        return
 
     def max_grade(self):
         """
@@ -988,6 +1741,7 @@ class MV:
                 return(i)
         return(-1)
 
+    @staticmethod
     def coord(xname,offset=0):
         xi_str = ''
         for i in MV.nrg:
@@ -995,28 +1749,32 @@ class MV:
         xi = make_symbols(xi_str)
         x = MV(xi,'vector')
         return(x)
-    coord = staticmethod(coord)
 
     def x(self,i):
         if isint(self.mv[1]):
             return(ZERO)
         return(self.mv[1][i])
 
+    def set_coef(self,grade,base,value):
+        if isinstance(self.mv[grade],types.IntType):
+            self.mv[grade] = numpy.array(MV.nbasis[grade]*[ZERO],dtype=numpy.object)
+        self.mv[grade][base] = value
+        return
+
+    @staticmethod
     def named(mvname,value='',mvtype=''):
         name = mvname
         tmp = MV(value=value,mvtype=mvtype,mvname=name)
         setattr(sys.modules[__name__],name,tmp)
         return
-    named=staticmethod(named)
 
+    @staticmethod
     def printnm(tpl):
         for a in tpl:
             print a.name,' =',a.mv
         return
-    printnm = staticmethod(printnm)
 
     def __str__(self):
-        """See MV.str_rep(self)"""
         return(MV.str_rep(self))
 
     def printmv(self,name=''):
@@ -1027,6 +1785,14 @@ class MV:
             if self.name:
                 title += self.name+' = '
         print title+MV.str_rep(self)
+        return
+
+    def set_value(self,igrade,ibase,value):
+        if isinstance(self.mv[igrade],numpy.ndarray):
+            self.mv[igrade][ibase] = value
+        else:
+            self.mv[igrade] = numpy.array(MV.nbasis[igrade]*[ZERO],dtype=numpy.object)
+            self.mv[igrade][ibase] = value
         return
 
     def add_in_place(self,mv):
@@ -1142,7 +1908,7 @@ class MV:
         for i in MV.n1rg:
             if isinstance(self.mv[i],numpy.ndarray):
                 self.mv[i] = self.mv[i]*c
-        return(mv)
+        return
 
     def __mul__(self,mv):
         """See MV.geometric_product(self,mv)"""
@@ -1312,6 +2078,22 @@ class MV:
                     revmv.mv[igrade] = -self.mv[igrade]
         return(revmv)
 
+    def cse(self,grade):
+        cse_lst = []
+        if isinstance(self.mv[grade],numpy.ndarray):
+            for ibase in range(MV.nbasis[grade]):
+                if self.mv[grade][ibase] != ZERO:
+                    cse_lst.append(sympy.cse(self.mv[grade][ibase]))
+        return(cse_lst)
+
+    def div(self,grade,divisor):
+        div_lst = []
+        if isinstance(self.mv[grade],numpy.ndarray):
+            for ibase in range(MV.nbasis[grade]):
+                if self.mv[grade][ibase] != ZERO:
+                    div_lst.append(self.mv[grade][ibase].as_coefficient(divisor))
+        return(div_lst)
+
     def collect(self,lst):
         """
         Applies sympy/sympy collect function to each component
@@ -1322,9 +2104,7 @@ class MV:
                 for ibase in range(MV.nbasis[igrade]):
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
-                        collect(self.mv[igrade][ibase],lst)
-                        self.mv[igrade][ibase] = \
-                        collect(self.mv[igrade][ibase],lst)
+                        sympy.collect(self.mv[igrade][ibase],lst)
         return
 
     def sqrfree(self,lst):
@@ -1339,12 +2119,8 @@ class MV:
                         self.mv[igrade][ibase] = \
                         sqrfree(self.mv[igrade][ibase],lst)
         return
-
+    """
     def collect(self,faclst):
-        """
-        Applies sympy collect_common_factors function
-        to each component of multivector.
-        """
         for igrade in MV.n1rg:
             if isinstance(self.mv[igrade],numpy.ndarray):
                 for ibase in range(MV.nbasis[igrade]):
@@ -1352,6 +2128,17 @@ class MV:
                         self.mv[igrade][ibase] = \
                         sympy.collect(self.mv[igrade][ibase],faclst)
         return
+    """
+
+    def flatten(self):
+        flst = []
+        for igrade in MV.n1rg:
+            if isinstance(self.mv[igrade],types.IntType):
+                flst += MV.nbasis[igrade]*[ZERO]
+            else:
+                for coef in self.mv[igrade]:
+                    flst.append(coef)
+        return(flst)
 
     def subs(self,var,substitute):
         """
@@ -1366,6 +2153,25 @@ class MV:
                         self.mv[igrade][ibase].subs(var,substitute)
         return
 
+    def sub_mv(self,mv1,mv2):
+        mv1_flat = mv1.flatten()
+        mv2_flat = mv2.flatten()
+        self.sub_scalar(mv1_flat,mv2_flat)
+        return
+
+    def sub_scalar(self,expr1,expr2):
+        if (isinstance(expr1,types.ListType) and isinstance(expr2,types.ListType)) or \
+           (isinstance(expr1,types.TupleType) and isinstance(expr2,types.TupleType)):
+            for (var1,var2) in zip(expr1,expr2):
+                self.sub_scalar(var1,var2)
+        else:
+            for igrade in MV.n1rg:
+                if not isinstance(self.mv[igrade],types.IntType):
+                    for ibase in range(MV.nbasis[igrade]):
+                        if expr1 != ZERO:
+                            self.mv[igrade][ibase] = self.mv[igrade][ibase].subs(expr1,expr2)
+        return
+
     def simplify(self):
         """
         Applies sympy subs function
@@ -1377,6 +2183,19 @@ class MV:
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
                         sympy.simplify(self.mv[igrade][ibase])
+        return
+
+    def trigsimp(self):
+        """
+        Applies sympy subs function
+        to each component of multivector.
+        """
+        for igrade in MV.n1rg:
+            if isinstance(self.mv[igrade],numpy.ndarray):
+                for ibase in range(MV.nbasis[igrade]):
+                    if self.mv[igrade][ibase] != ZERO:
+                        self.mv[igrade][ibase] = \
+                        TrigSimp(self.mv[igrade][ibase])
         return
 
     def cancel(self):
@@ -1421,10 +2240,14 @@ class MV:
     def is_pure(self):
         igrade = -1
         ngrade = 0
+        self.compact()
         for i in MV.n1rg:
             if isinstance(self.mv[i],numpy.ndarray):
-                igrade = i
-                ngrade += 1
+                for base in self.mv[i]:
+                    if base != 0:
+                        igrade = i
+                        ngrade += 1
+                        break
                 if ngrade > 1:
                     return(-1)
         return(igrade)
@@ -1447,86 +2270,162 @@ class MV:
                     self.mv[i] = 0
         return
 
-##class LT:
-##    def __init__(self,fct_lst):
-##        """
-##        Initialize linear transformation.  fct_lst is a list of vectors A_{i}
-##        such that A_{i} = LT(a_{i}) where the a_{i} are the basis vectos of
-##        the MV class.
-##        """
-##        self.fct_lst = fct_lst
-##        self.norm = ONE
-##        self.ltblades = [[],self.fct_lst]
-##        for igrade in range(2,MV.n1):
-##            tmp = []
-##            for ibasis in range(MV.nbasis[igrade]):
-##                ilst = MV.basis[igrade][ibasis][:-1]
-##                jlst = MV.basis[igrade-1]
-##                iblade = jlst.index(ilst)
-##                jblade = MV.basis[igrade][ibasis][-1]
-##                tmp.append(self.ltblades[igrade-1][iblade]^self.fct_lst[jblade])
-##            self.ltblades.append(tmp)
-##        return
-##
-##    def Fvector(self,mv):
-##        """
-##        Return the linear transformation of an arbitrary vector.
-##        """
-##        mv.convert_to_blades()
-##        if mv.is_pure() == 1:
-##            fofa = MV()
-##            fofa.bladeflg = 1
-##            for i in range(MV.nbasis[1]):
-##                fofa += mv.mv[1][i]*self.fct_lst[i]
-##            fofa.collect_common_factors()
-##            return(fofa/self.norm)
-##        print 'Error in LT.F, mv =',mv,' not a vector!'
-##        return
-##
-##    def __call__(self,mv):
-##        """
-##        Return the linear transformation of an arbitrary multivector.
-##        """
-##        if mv.is_pure() == 1:
-##            return(self.Fvector(mv))
-##        fofx = MV()
-##        mv.convert_to_blades()
-##        fofx.bladeflg = 1
-##        for igrade in range(1,MV.n1):
-##            if isinstance(mv.mv[igrade],numpy.ndarray):
-##                for ibase in range(MV.nbasis[igrade]):
-##                    if mv.mv[igrade][ibase] != ZERO:
-##                        fofx.add_in_place(mv.mv[igrade][ibase]*self.ltblades[igrade][ibase])
-##        fofx.collect_common_factors()
-##        return(fofx/self.norm)
-##
-##    def __str__(self):
-##        LTstr = ''
-##        for ibasis in range(MV.n):
-##            if self.norm != ONE:
-##                LTstr += 'F('+MV.basislabel[1][ibasis]+') = ('
-##            else:
-##                LTstr += 'F('+MV.basislabel[1][ibasis]+') = '
-##            LTstr += MV.str_rep(self.fct_lst[ibasis])
-##            if self.norm != ONE:
-##                LTstr += ')/('+str(self.norm)+')\n'
-##            else:
-##                LTstr += '\n'
-##        return(LTstr[:-1])
-##
-##    def adj(self):
-##        MV.define_reciprocal()
-##        adj = []
-##        norm = MV.Esq
-##        norm = norm*self.norm
-##        for ibasis in range(MV.n):
-##            tmp = MV()
-##            tmp.bladeflg = 1
-##            for jbasis in range(MV.n):
-##                tmp.add_in_place(MV.brecp[jbasis]*(MV.bvec[ibasis]|self.fct_lst[jbasis]))
-##            tmp.expand()
-##            tmp.sqrfree([])
-##            adj.append(tmp)
-##        adj = LT(adj)
-##        adj.norm = norm
-##        return(adj)
+    def diff(self,x):
+        """
+        Calculate partial derivative of multivector with respect to
+        argument x.
+        """
+        D = MV()
+        igrade = 0
+        for grade in self.mv:
+            if not isinstance(grade,types.IntType):
+                D.mv[igrade] = MV.vdiff(grade,x)
+            igrade += 1
+        return(D)
+
+    def ddt(self):
+        if MV.coords[0] != sympy.Symbol('t'):
+            return(MV())
+        dxdt = self.diff(MV.coords[0])
+        for ibase in MV.nrg:
+            dxdt += self.mv[1][ibase]*MV.dedt[ibase]
+        dxdt.simplify()
+        dxdt.trigsimp()
+        return(dxdt)
+
+    def grad(self):
+        """
+        Calculate geometric (grad) derivative of multivector function
+        """
+        D = []
+        dD = MV()
+        for theta in MV.coords:
+            D.append(self.diff(theta))
+        if MV.curvilinear_flg:
+            recp = MV.Rframe
+        else:
+            recp = MV.brecp
+        for (rbase,iD) in zip(recp,D):
+            dD.add_in_place(rbase*iD)
+        if MV.curvilinear_flg: #Add Connection
+            igrade = 1
+            while igrade <= MV.n:
+                coefs = self.mv[igrade]
+                if type(coefs) != types.IntType:
+                    for (coef,connect) in zip(coefs,MV.Connect[igrade]):
+                        dD.add_in_place(coef*connect)
+                igrade += 1
+        return(dD)
+
+    def grad_ext(self):
+        """
+        Calculate outer (exterior,curl) derivative of multivector function.
+        """
+        D = []
+        dD = MV()
+        for ix in MV.coords:
+            D.append(self.diff(ix))
+        if MV.curvilinear_flg:
+            recp = MV.Rframe
+        else:
+            recp = MV.brecp
+        for (irbase,iD) in zip(recp,D):
+            dD.add_in_place(irbase^iD)
+        if MV.curvilinear_flg: #Add Connection
+            igrade = 1
+            while igrade <= MV.n:
+                coefs = self.mv[igrade]
+                if type(coefs) != types.IntType:
+                    for (coef,connect) in zip(coefs,MV.Connect[igrade]):
+                        if igrade < MV.n:
+                            dD.add_in_place(coef*connect.project(igrade+1))
+                igrade += 1
+        return(dD)
+
+    def grad_int(self):
+        """
+        Calculate inner (interior,div) derivative of multivector function.
+        """
+        D = []
+        dD = MV()
+        for ix in MV.coords:
+            D.append(self.diff(ix))
+        if MV.curvilinear_flg:
+            recp = MV.Rframe
+        else:
+            recp = MV.brecp
+        for (irbase,iD) in zip(recp,D):
+            dD.add_in_place(irbase|iD)
+        if MV.curvilinear_flg: #Add Connection
+            igrade = 1
+            while igrade <= MV.n:
+                coefs = self.mv[igrade]
+                if type(coefs) != types.IntType:
+                    for (coef,connect) in zip(coefs,MV.Connect[igrade]):
+                        dD.add_in_place(coef*connect.project(igrade-1))
+                igrade += 1
+        return(dD)
+
+    def mag2(self):
+        """
+        Calculate scalar component of square of multivector.
+        """
+        return((self|self)())
+
+    def Name(self):
+        """
+        Get LaTeX name of multivector.
+        """
+        return(sympy.galgebra.latex_ex.LaTeXPrinter.extended_symbol(self.name))
+
+def set_names(var_lst,var_str):
+    """
+    Set the names of a list of multivectors (var_lst) for a space delimited
+    string (var_str) containing the names.
+    """
+    var_str_lst = var_str.split()
+    if len(var_lst) == len(var_str_lst):
+        for (var,var_name) in zip(var_lst,var_str_lst):
+            var.set_name(var_name)
+        return
+    sys.stderr.write('Error in set_names. Lists incongruent!\n')
+    sys.exit()
+    return
+
+def reciprocal_frame(vlst,names=''):
+    """
+    Calculate reciprocal frame of list (vlst) of vectors.  If desired name each
+    vector in list of reciprocal vectors with names in space delimited string
+    (names).
+    """
+    E = vlst[0]
+    recp = []
+    if type(names) != types.StringType:
+        name_lst = names
+    else:
+        if names != '':
+            name_lst = names.split()
+    for i in range(1,MV.n):
+        E = E^vlst[i]
+    for i in range(MV.n):
+        tmp = ONE
+        if i%2 != 0:
+            tmp = -ONE
+        for j in range(MV.n):
+            if i != j:
+                tmp = tmp^vlst[j]
+        tmp = tmp*E
+        recp.append(tmp)
+    Esq = TrigSimp(E.mag2())
+    print Esq
+    print sympy.simplify(Esq)
+    Esq_inv = ONE/Esq
+    i = 0
+    for i in range(MV.n):
+        recp[i].trigsimp()
+        recp[i] = recp[i]*Esq_inv
+        if names != '':
+            recp[i].set_name(name_lst[i])
+            i += 1
+    return(recp)
+

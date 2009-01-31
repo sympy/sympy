@@ -1,5 +1,9 @@
 #!/usr/bin/python
-#GAtest.py
+#test_GA.py
+
+"""
+The reference D&L is "Geomertric Algebra for Physicists" by Doran and Lasenby
+"""
 
 try:
     import numpy
@@ -9,7 +13,7 @@ except ImportError:
     disabled = True
 
 if not disabled:
-    from sympy.galgebra.GAsympy import set_main, MV, make_symbols, types, ZERO, ONE, HALF
+    from sympy.galgebra.GA import set_main, MV, make_symbols, types, ZERO, ONE, HALF
     import sympy
     from sympy import collect, sympify
 
@@ -18,7 +22,8 @@ if not disabled:
 
 def F(x):
     """
-    Conformal Mapping Function
+    Conformal Mapping Function from 3D euclidian space to 5D conformal space
+    where the images of all maps are null vectors.
     """
     Fx = HALF*((x*x)*n+2*x-nbar)
     #print 'F(x) =',Fx
@@ -36,7 +41,11 @@ def make_vector(a,n = 3):
     return(F(a))
 
 def test_rmul():
-    #set_main(sys.modules[__name__])
+    """
+    Test for communitive scalar multiplication.  Leftover from when sympy and
+    numpy were not working together and __mul__ and __rmul__ would not give the
+    same answer.
+    """
     MV.setup('x y z')
     make_symbols('a b c')
     assert 5*x == x*5
@@ -44,8 +53,10 @@ def test_rmul():
     assert a*x == x*a
 
 def test_noneuclidian():
-    global s,c,Binv,M,S,C,alpha
-    #set_main(sys.modules[__name__])
+    """
+    Test of complex geometric algebra manipulation to derive distance function
+    for 2-D hyperbolic non-euclidian space.  See D&L Section 10.6.2
+    """
     metric = '0 # #,'+ \
              '# 0 #,'+ \
              '# # 1,'
@@ -55,7 +66,7 @@ def test_noneuclidian():
     B = L*e
     Bsq = (B*B)()
     BeBr =B*e*B.rev()
-    make_symbols('s c Binv M S C alpha')
+    (s,c,Binv,M,S,C,alpha) = sympy.symbols('s','c','Binv','M','S','C','alpha')
     Bhat = Binv*B # Normalize translation generator
     R = c+s*Bhat # Rotor R = exp(alpha*Bhat/2)
     Z = R*X*R.rev()
@@ -112,24 +123,18 @@ def test_noneuclidian():
     C = (-b/(2*a)).expand()
     #print 'C = cosh(alpha) = -b/(2*a) =',C
 
-    """
-    Wd = collect(W,[C,S],evaluate=False)
-    lhs = Wd[ONE]+Wd[C]*C
-    rhs = -Wd[S]*S
-    lhs = lhs**2
-    rhs = rhs**2
-    W = (lhs-rhs).expand()
-    W = (W.subs(S**2,C**2-1)).expand()
-    W = collect(W,[C**2,C],evaluate=False)
-    a = W[C**2]
-    b = W[abs(C)]
-    c = W[ONE]
-    D = (b**2-4*a*c).expand()
-    C = (-b/(2*a)).expand()
-    """
+    #cosh(alpha) = 1-X.Y/((X.e)(Y.e))
+    #alpha is noneuclidian distance
     assert C == 1-XdotY/(Xdote*Ydote)
 
 def test_reciprocal_frame():
+    """
+    Test of fromula for general reciprocal frame of three vectors.
+    Let three independent vectors be e1, e2, and e3. The reciprocal
+    vectors E1, E2, and E3 obey the relations:
+
+    e_i.E_j = delta_ij*(e1^e2^e3)**2
+    """
     metric = '1 # #,'+ \
              '# 1 #,'+ \
              '# # 1,'
@@ -176,11 +181,19 @@ def test_reciprocal_frame():
     assert w/Esq == 1
 
 def test_vector_extraction():
+    """
+    Show that conformal bivector encodes two points. See D&L Section 10.4.1
+    """
     metric = ' 0 -1 #,'+ \
              '-1  0 #,'+ \
              ' #  # #,'
 
     MV.setup('P1 P2 a',metric)
+    """
+    P1 and P2 are null vectors and hence encode points in conformal space.
+    Show that P1 and P2 can be extracted from the bivector B = P1^P2. a is a
+    third vector in the conformal space with a.B not 0.
+    """
     ZERO_MV = MV()
     B = P1^P2
     Bsq = B*B
@@ -203,6 +216,9 @@ def test_vector_extraction():
     assert Am2 == ZERO_MV
 
 def test_geometry():
+    """
+    Test conformal geometric description of circles, lines, spheres, and planes.
+    """
     metric = '1 0 0 0 0,'+ \
              '0 1 0 0 0,'+ \
              '0 0 1 0 0,'+ \
@@ -225,28 +241,36 @@ def test_geometry():
     Sphere = A^B^C^D^X
     Plane = A^B^n^D^X
 
+    #Circle through a, b, and c
     Circle_test = -x2*(e0^e1^e2^n)+x2*(e0^e1^e2^nbar)+HALF*(-1+x0**2+x1**2+x2**2)*(e0^e1^n^nbar)
     diff = Circle-Circle_test
     diff.compact()
     assert diff == ZERO_MV
 
+    #Line through a and b
     Line_test = -x2*(e0^e1^e2^n)+HALF*(-1+x0+x1)*(e0^e1^n^nbar)+(HALF*x2)*(e0^e2^n^nbar)+\
                 (-HALF*x2)*(e1^e2^n^nbar)
     diff = Line-Line_test
     diff.compact()
     assert diff == ZERO_MV
 
+    #Sphere through a, b, c, and d
     Sphere_test = HALF*(1-x0**2-x1**2-x2**2)*(e0^e1^e2^n^nbar)
     diff = Sphere-Sphere_test
     diff.compact()
     assert diff == ZERO_MV
 
+    #Plane through a, b, and d
     Plane_test = HALF*(1-x0-x1-x2)*(e0^e1^e2^n^nbar)
     diff = Plane-Plane_test
     diff.compact()
     assert diff == ZERO_MV
 
 def test_extract_plane_and_line():
+    """
+    Show that conformal trivector encodes planes and lines. See D&L section
+    10.4.2
+    """
     metric = '# # # 0 0,'+ \
              '# # # 0 0,'+ \
              '# # # 0 0,'+ \
@@ -262,6 +286,7 @@ def test_extract_plane_and_line():
     P2 = F(p2)
     P3 = F(p3)
 
+    #Line through p1 and p2
     L = P1^P2^n
     delta = (L|n)|nbar
     delta_test = 2*p1-2*p2
@@ -269,6 +294,7 @@ def test_extract_plane_and_line():
     diff.compact()
     assert diff == ZERO_MV
 
+    #Plane through p1, p2, and p3
     C = P1^P2^P3
     delta = ((C^n)|n)|nbar
     delta_test = 2*(p1^p2)-2*(p1^p3)+2*(p2^p3)
