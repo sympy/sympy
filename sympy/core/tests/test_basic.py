@@ -588,10 +588,10 @@ def test_coeff():
     assert (3+2*x+4*x**2).coeff(x**2) == 4
     assert (3+2*x+4*x**2).coeff(x**3) == None
 
-    assert (-x/8 + x*y).coeff(x) == -S.One/8 + y
-    assert (-x/8 + x*y).coeff(-x) == S.One/8 - y
-    assert (-x/8 + x*y).coeff(2*x) == -S.One/16 + y/2
-    assert (x/8 + x*y).coeff(2*y*x) == S.One/2
+    assert (-x/8 + x*y).coeff(x) == -S(1)/8 + y
+    assert (-x/8 + x*y).coeff(-x) == S(1)/8 - y
+    assert (-x/8 + x*y).coeff(2*x) == -S(1)/16 + y/2
+    assert (x/8 + x*y).coeff(2*y*x) == S(1)/2
     assert (x/8 + x*y).coeff(y*x/2) == 2
 
 def test_coeff2():
