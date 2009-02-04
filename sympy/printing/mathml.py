@@ -6,6 +6,12 @@ from sympy import Basic, sympify
 from printer import Printer
 
 class MathMLPrinter(Printer):
+    """Prints an expression to the MathML markup language
+
+    Whenever possible tries to use Content markup and not Presentation markup.
+
+    References: http://www.w3.org/TR/MathML2/
+    """
     printmethod = "_mathml_"
 
     def __init__(self, *args, **kwargs):
@@ -23,6 +29,7 @@ class MathMLPrinter(Printer):
             'Mul': 'times',
             'Derivative': 'diff',
             'Number': 'cn',
+            'int': 'cn',
             'Pow': 'power',
             'Symbol': 'ci',
             'Integral': 'int'
@@ -137,6 +144,19 @@ class MathMLPrinter(Printer):
         for arg in e.args:
             x.appendChild(self._print(arg))
         return x
+
+    def _print_list(self, seq):
+        """MathML reference for the <list> element:
+        http://www.w3.org/TR/MathML2/chapter4.html#contm.list"""
+        dom_element = self.dom.createElement('list')
+        for item in seq:
+            dom_element.appendChild(self._print(item))
+        return dom_element
+    
+    def _print_int(self, p):
+        dom_element = self.dom.createElement(self.mathml_tag(p))
+        dom_element.appendChild(self.dom.createTextNode(str(p)))
+        return dom_element
 
 def mathml(expr):
     """Returns the MathML representation of expr"""

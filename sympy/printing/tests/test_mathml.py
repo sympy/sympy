@@ -1,4 +1,4 @@
-from sympy import diff, Integral, Limit, sin, Symbol
+from sympy import diff, Integral, Limit, sin, Symbol, Integer
 from sympy.printing.mathml import mathml, MathMLPrinter
 from xml.dom.minidom import parseString
 
@@ -66,6 +66,18 @@ def test_mathml_integrals():
     assert mml_1.childNodes[2].nodeName == 'lowlimit'
     assert mml_1.childNodes[3].nodeName == 'uplimit'
     assert mml_1.childNodes[4].toxml() == mp._print(integrand).toxml()
+
+def test_mathml_tuples():
+    mml_1 = mp._print([2])
+    assert mml_1.nodeName == 'list'
+    assert mml_1.childNodes[0].nodeName == 'cn'
+    assert len(mml_1.childNodes) == 1
+    
+    mml_2 = mp._print([2, Integer(1)])
+    assert mml_2.nodeName == 'list'
+    assert mml_2.childNodes[0].nodeName == 'cn'
+    assert mml_2.childNodes[1].nodeName == 'cn'
+    assert len(mml_2.childNodes) == 2
 
 def test_mathml_matrices():
     pass #TODO
