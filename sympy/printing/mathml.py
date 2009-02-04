@@ -20,7 +20,7 @@ class MathMLPrinter(Printer):
         self.dom = Document()
 
     def doprint(self, e):
-        return self._print(e).toprettyxml()
+        return self._print(e).toxml()
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -181,4 +181,5 @@ def print_mathml(expr):
         </ci>
     </apply>
     """
-    print mathml(expr)
+    s = MathMLPrinter()
+    print s._print(sympify(expr)).toprettyxml()
