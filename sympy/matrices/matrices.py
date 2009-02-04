@@ -272,9 +272,9 @@ class Matrix(object):
                 k = a2idx(key)
                 if k is not None:
                     return self.mat[k]
-        raise IndexError("Invalid index: a[%s]"%repr(key))
+        raise IndexError("Invalid index: a[%s]" % repr(key))
 
-    def __setitem__(self,key,value):
+    def __setitem__(self, key, value):
         """
         >>> from sympy import *
         >>> m=Matrix(((1,2+I),(3,4)))
