@@ -1,4 +1,3 @@
-#!/usr/bin/python
 
 from sympy import *
 from sympy.galgebra.GA import *
@@ -15,7 +14,7 @@ if __name__ == '__main__':
 
     vars = make_symbols('t x y z')
     MV.setup('gamma_t gamma_x gamma_y gamma_z',metric,True,vars)
-    LaTeXPrinter.format(1,1,1,1)
+    LatexPrinter.format(1,1,1,1)
     I = MV(1,'pseudo')
     print '$I$ Pseudo-Scalar'
     print 'I =',I

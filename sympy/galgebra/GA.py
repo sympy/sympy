@@ -342,7 +342,7 @@ def magnitude(vector):
     magsq = sympy.expand((vector|vector)())
     magsq = TrigSimp(magsq)
     #print magsq
-    magsq_str = sympy.galgebra.latex_ex.LaTeXPrinter()._print(magsq)
+    magsq_str = sympy.galgebra.latex_ex.LatexPrinter()._print(magsq)
     if magsq_str[0] == '-':
         magsq = -magsq
     mag = unabs(sqrt(magsq))
@@ -400,7 +400,7 @@ def vector_fct(Fstr,x):
     nx = len(x)
     Fvec = []
     for ix in range(nx):
-        ftmp = sympy.Function(Fstr+'__'+sympy.galgebra.latex_ex.LaTeXPrinter.str_basic(x[ix]))(*tuple(x))
+        ftmp = sympy.Function(Fstr+'__'+sympy.galgebra.latex_ex.LatexPrinter.str_basic(x[ix]))(*tuple(x))
         Fvec.append(ftmp)
     return(Fvec)
 
@@ -880,11 +880,11 @@ class MV(object):
             if isinstance(vars,sympy.core.symbol.Symbol):
                 for icoef in MV.nrg:
                     Acoefs[icoef] = sympy.Function(fct_name+'__'+\
-                                   sympy.galgebra.latex_ex.LaTeXPrinter.str_basic(x[icoef]))(vars)
+                                   sympy.galgebra.latex_ex.LatexPrinter.str_basic(x[icoef]))(vars)
             else:
                 for icoef in MV.nrg:
                     Acoefs[icoef] = sympy.Function(fct_name+'__'+\
-                                   sympy.galgebra.latex_ex.LaTeXPrinter.str_basic(x[icoef]))(*tuple(vars))
+                                   sympy.galgebra.latex_ex.LatexPrinter.str_basic(x[icoef]))(*tuple(vars))
         A = MV(Acoefs,'vector',fct_name)
         return(A)
 
@@ -922,7 +922,7 @@ class MV(object):
         if base_name == '':
             base_name = MV.basisroot+'prm'
 
-        LaTeX_base = sympy.galgebra.latex_ex.LaTeXPrinter.extended_symbol(base_name)
+        LaTeX_base = sympy.galgebra.latex_ex.LatexPrinter.extended_symbol(base_name)
         bm = '\\bm{'+LaTeX_base+'}'
         bmhat = '\\hat{'+bm+'}'
         bstr = bmhat+'_{[i_{1},\dots, i_{R}]}'
@@ -936,7 +936,7 @@ class MV(object):
         coords_lst = []
 
         for coord in coords:
-            coord_str = sympy.galgebra.latex_ex.LaTeXPrinter.str_basic(coord)
+            coord_str = sympy.galgebra.latex_ex.LatexPrinter.str_basic(coord)
             coords_lst.append(coord_str)
             base_name_lst.append(base_name+'_'+coord_str)
             rbase_name_lst.append(base_name+'__'+coord_str)
@@ -1143,7 +1143,7 @@ class MV(object):
                     index = MV.gabasis[igrade][ibase]
                     sub_str = ''
                     for i in index:
-                        sub_str += sympy.galgebra.latex_ex.LaTeXPrinter.extended_symbol(coords_lst[i])
+                        sub_str += sympy.galgebra.latex_ex.LatexPrinter.extended_symbol(coords_lst[i])
                     base_str = bmhat+'_{['+sub_str+']} = '
                     print base_str,base
                     ibase += 1
@@ -1208,7 +1208,7 @@ class MV(object):
 
         base_str = ''
         for coord in coords:
-            base_str += base_name+'_'+sympy.galgebra.latex_ex.LaTeXPrinter.str_basic(coord)+' '
+            base_str += base_name+'_'+sympy.galgebra.latex_ex.LatexPrinter.str_basic(coord)+' '
         base_str = base_str[:-1]
 
         old_names = MV.vbasis
@@ -1217,7 +1217,7 @@ class MV(object):
 
         MV.curvilinear_flg = True
         MV.Connect = MV_Connect
-        sympy.galgebra.latex_ex.LaTeXPrinter.latex_bases()
+        sympy.galgebra.latex_ex.LatexPrinter.latex_bases()
         MV.Rframe = numpy.array(MV.n*[ZERO],dtype=numpy.object)
         ibasis = 0
         while ibasis < MV.n:
@@ -1253,7 +1253,7 @@ class MV(object):
 
             ibasis = 0
             while ibasis < MV.n:
-                c_str = sympy.galgebra.latex_ex.LaTeXPrinter.extended_symbol(coords_lst[ibasis])
+                c_str = sympy.galgebra.latex_ex.LatexPrinter.extended_symbol(coords_lst[ibasis])
                 print '\\bfrac{\\bm{\\hat{'+LaTeX_base+\
                        '}}^{'+c_str+'}}{\\abs{\\bm{'+LaTeX_base+\
                        '}_{'+c_str+'}}} =',MV.Rframe[ibasis]
@@ -1271,7 +1271,7 @@ class MV(object):
                     index = MV.gabasis[igrade][ibase]
                     sub_str = ''
                     for i in index:
-                        sub_str += sympy.galgebra.latex_ex.LaTeXPrinter.extended_symbol(coords_lst[i])
+                        sub_str += sympy.galgebra.latex_ex.LatexPrinter.extended_symbol(coords_lst[i])
 
                     base_str = 'C\\lbrc\\hat{'+LaTeX_base+'}_{['+sub_str+']}\\rbrc = '
                     print base_str,base
@@ -1708,11 +1708,11 @@ class MV(object):
             for grade in MV.n1rg:
                 if not isinstance(self.mv[grade],types.IntType):
                     if grade == 0:
-                        coef = sympy.galgebra.latex_ex.LaTeXPrinter.str_basic(self.mv[0][0])
+                        coef = sympy.galgebra.latex_ex.LatexPrinter.str_basic(self.mv[0][0])
                         self.mv[0]= numpy.array([sympy.Function(coef)(*MV.coords)],dtype=numpy.object)
                     else:
                         for base in range(MV.nbasis[grade]):
-                            coef = sympy.galgebra.latex_ex.LaTeXPrinter.str_basic(self.mv[grade][base])
+                            coef = sympy.galgebra.latex_ex.LatexPrinter.str_basic(self.mv[grade][base])
                             self.mv[grade][base] = sympy.Function(coef)(*MV.coords)
 
     @staticmethod
@@ -2376,7 +2376,7 @@ class MV(object):
         """
         Get LaTeX name of multivector.
         """
-        return(sympy.galgebra.latex_ex.LaTeXPrinter.extended_symbol(self.name))
+        return(sympy.galgebra.latex_ex.LatexPrinter.extended_symbol(self.name))
 
 def set_names(var_lst,var_str):
     """

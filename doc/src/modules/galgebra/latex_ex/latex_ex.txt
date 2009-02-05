@@ -86,36 +86,36 @@ only applies to the character (characters in the case of the string representing
 a greek letter) immediately preceeding the accent command.
 
 
-How LaTeXPrinter Works
+How LatexPrinter Works
 ======================
 
-The actual :class:`LaTeXPrinter` class is hidden with the helper functions
-:func:`Format`,  :func:`LaTeX`, and :func:`xdvi`.  :class:`LaTeXPrinter` is
+The actual :class:`LatexPrinter` class is hidden with the helper functions
+:func:`Format`,  :func:`LaTeX`, and :func:`xdvi`.  :class:`LatexPrinter` is
 setup when :func:`Format` is called.  In addition to setting format switches in
-:class:`LaTeXPrinter`, :func:`Format` does two other critical tasks. Firstly,
+:class:`LatexPrinter`, :func:`Format` does two other critical tasks. Firstly,
 the :mod:`sympy` function :func:`Basic.__str__` is redirected to the
-:class:`LaTeXPrinter` helper function :func:`LaTeX`.  If nothing more that this
+:class:`LatexPrinter` helper function :func:`LaTeX`.  If nothing more that this
 were done the  python print command would output LaTeX code.  Secondly,
 *sys.stdout* is redirected  to a file until :func:`xdvi` is called.  This file
 is then compiled with the :program:`latex` program (if present) and the dvi
 output file is displayed with the :program:`xdvi` program (if present).  Thus
-for :class:`LaTeXPrinter` to display the output in a window both
+for :class:`LatexPrinter` to display the output in a window both
 :program:`latex` and :program:`xdvi` must be installed on your system and in the
 execution path.
 
 
-LaTeXPrinter Functions
+LatexPrinter Functions
 ======================
 
 
-LaTeXPrinter Class Functions for Extending LatexPrinter Class
+LatexPrinter Class Functions for Extending LatexPrinter Class
 -------------------------------------------------------------
 
-The :class:`LaTeXPrinter` class functions are not called directly, but rather
+The :class:`LatexPrinter` class functions are not called directly, but rather
 are called when :func:`print`, :func:`LaTeX`, or :func:`str` are called.  The
 two new functions for extending the :mod:`latex` module are
 :func:`_print_ndarray` and :func:`_print_MV`.  Some other functions in
-:class:`LaTeXPrinter` have been modified to increase their utility.
+:class:`LatexPrinter` have been modified to increase their utility.
 
 
 .. function:: _print_ndarray(self,expr)
@@ -134,7 +134,7 @@ two new functions for extending the :mod:`latex` module are
 .. function:: str_basic(in_str)
 
    :func:`str_basic` returns a string without the latex formatting provided by
-   :class:`LaTeXPrinter`.  This is needed since :class:`LaTeXPrinter` takes over
+   :class:`LatexPrinter`.  This is needed since :class:`LatexPrinter` takes over
    the :func:`str` fuction and there are instances when the unformatted string is
    needed such as during the automatic generation of multivector coefficients and
    the reduction of multivector  coefficients for printing.
@@ -146,10 +146,10 @@ Helper Functions for Extending LatexPrinter Class
 
 .. function:: Format(fmt='1 1 1 1')
 
-   ``Format`` iniailizes ``LaTeXPrinter`` and set the format for ``sympy`` symbols,
-   functions, and  derivatives and for ``GA`` multivectors. The switch are
-   encoded in the text string argument of ``Format`` as follows.  It is assumed
-   that the text string ``fmt`` always contains four integers separated by blanks.
+   ``Format`` iniailizes ``LatexPrinter`` and set the format for ``sympy`` symbols,
+   functions, and  derivatives and for ``GA`` multivectors. The switch are encoded
+   in the text string argument of ``Format`` as follows.  It is assumed that the
+   text string ``fmt`` always contains four integers separated by blanks.
 
    +----------------+-------------+--------------------------------+
    | Position       | Switch      | Values                         |
@@ -196,7 +196,7 @@ Helper Functions for Extending LatexPrinter Class
    :func:`LaTeX` returns the latex formatted string for the :class:`sympy`,
    :class:`GA`, or :class:`numpy`  expression *expr*.  This is needed since
    :class:`numpy` cannot be subclassed and hence cannot be used with the
-   :class:`LaTeXPrinter` modified :func:`print` command. Thus is *A* is a
+   :class:`LatexPrinter` modified :func:`print` command. Thus is *A* is a
    :class:`numpy` array containing :class:`sympy` expressions one cannot simply
    code  ::
 
@@ -213,18 +213,18 @@ Helper Functions for Extending LatexPrinter Class
    latex file with name *filename*.  If the :program:`latex` and :program:`xdvi`
    programs are present on the system they are invoked to display the latex file in
    a  window.  If *debug=True* the associated output of :program:`latex` is sent to
-   *stdout*, otherwise it is sent to  */dev/null*.  If :class:`LaTeXPrinter` has
+   *stdout*, otherwise it is sent to  */dev/null*.  If :class:`LatexPrinter` has
    not been initialized :func:`xdvi` does nothing.
 
 The functions :func:`sym_format`, :func:`fct_format`, :func:`pdiff_format`, and
 :func:`MV_format` allow one to change various formatting aspects of the
-:class:`LaTeXPrinter`.  They do not initialize the class and if the are called
+:class:`LatexPrinter`.  They do not initialize the class and if the are called
 with the class not initialized they have no effect.  These functions and the
-function :func:`xdvi` are designed so that if the :class:`LaTeXPrinter` class is
-not initialized the program output is as if the :class:`LaTeXPrinter` class is
+function :func:`xdvi` are designed so that if the :class:`LatexPrinter` class is
+not initialized the program output is as if the :class:`LatexPrinter` class is
 not used. Thus all one needs to do to get simple ascii output (possibly for
 program debugging) is to comment out the one function call that initializes the
-:class:`LaTeXPrinter` class.  All other :mod:`latex_ex` function calls can
+:class:`LatexPrinter` class.  All other :mod:`latex_ex` function calls can
 remain in the program and have no effect on program output.
 
 
@@ -285,17 +285,17 @@ End of Program Output
 
 The program :program:`latexdemo.py` demonstrates the extended symbol naming
 conventions in :mod:`latex_ex`.   the statment ``Format()`` starts the
-:class:`LaTeXPrinter` driver with default formatting. Note that on the right
+:class:`LatexPrinter` driver with default formatting. Note that on the right
 hand side of the output that *xbm* gives :math:`\bm{x}`, *alpha_1* gives
 :math:`\alpha_{1}` and  *delta__nugamma_r* gives :math:`\delta^{\nu\gamma}_{r}`.
 Also the fraction is  printed correctly.  The statment ``print 'x =',x`` sends
 the string ``'x = '+str(x)`` to the output processor (:func:`xdvi`).  Because
 the string contains an :math:`=` sign the processor treats the string as an
 LaTeX equation (unnumbered).  If ``'x ='``  was not in the print statment a
-LaTeX error would be generated.  In the case of a :class:`GA` multivector
-one does not need the ``'x ='`` if the multivector has been given a name.  In
-the example the :class:`GA` function :func:`make_symbols` has been used to
-create the :class:`sympy` symbols for convenience.  The :class:`sympy` function
+LaTeX error would be generated.  In the case of a :class:`GA` multivector one
+does not need the ``'x ='`` if the multivector has been given a name.  In the
+example the :class:`GA` function :func:`make_symbols` has been used to create
+the :class:`sympy` symbols for convenience.  The :class:`sympy` function
 :func:`Symbol` could have also been used.
 
 
@@ -420,8 +420,8 @@ Curl :math:`E` and Div :math:`B` equations
 End of Program Output
 
 The program :program:`Maxwell.py` demonstrates the use of the
-:class:`LaTeXPrinter` class with the :mod:`GA` module multivector class,
-:class:`MV`.  The :func:`Format` call initializes :class:`LaTeXPrinter`.  The
+:class:`LatexPrinter` class with the :mod:`GA` module multivector class,
+:class:`MV`.  The :func:`Format` call initializes :class:`LatexPrinter`.  The
 only other explicit :mod:`latex_x`  module formatting statement used is
 ``MV_format(3)``.  This statment changes the multivector latex format so that
 instead of printing the entire multivector on one line, which would run off the

@@ -62,7 +62,7 @@ def process_equals(xstr):
     xstr = xstr[:eq1]+xstr[eq2:]
     return(xstr)
 
-class LaTeXPrinter(Printer):
+class LatexPrinter(Printer):
     """
     A printer class which converts an expression into its LaTeX equivalent. This
     class extends the LatexPrinter class currently in sympy in the following ways:
@@ -87,7 +87,7 @@ class LaTeXPrinter(Printer):
            implemented for upto a three dimensional array.
         5. LaTeX formatting for raw LaTeX, eqnarray, and array is available
            in simple output strings.
-            1 - The delimeter for rew LaTeX imput is '%'.  The raw input starts
+            1 - The delimeter for raw LaTeX imput is '%'.  The raw input starts
                 on the line where '%' is first encountered and continues untill
                 the next line where '%' is encountered. It does not matter where
                 '%' is in the line.
@@ -176,25 +176,25 @@ class LaTeXPrinter(Printer):
         Generate LaTeX strings for multivector bases
         """
         if type(sympy.galgebra.GA.MV.basislabel_lst) == types.IntType:
-            sys.stderr.write('MV.setup() must be executed before LaTeXPrinter.format()!\n')
+            sys.stderr.write('MV.setup() must be executed before LatexPrinter.format()!\n')
             sys.exit(1)
-        LaTeXPrinter.latexbasis_lst = [['']]
+        LatexPrinter.latexbasis_lst = [['']]
         for grades in sympy.galgebra.GA.MV.basislabel_lst[1:]:
             grades_lst = []
             for grade in grades:
                 grade_lst = []
                 for base in grade:
-                    latex_base = LaTeXPrinter.extended_symbol(base)
+                    latex_base = LatexPrinter.extended_symbol(base)
                     grade_lst.append(latex_base)
                 grades_lst.append(grade_lst)
-            LaTeXPrinter.latexbasis_lst.append(grades_lst)
+            LatexPrinter.latexbasis_lst.append(grades_lst)
         return
 
     @staticmethod
     def build_base(igrade,iblade,bld_flg):
         if igrade == 0:
             return('')
-        base_lst = LaTeXPrinter.latexbasis_lst[igrade][iblade]
+        base_lst = LatexPrinter.latexbasis_lst[igrade][iblade]
         if len(base_lst) == 1:
             return(base_lst[0])
         base_str = ''
@@ -208,31 +208,31 @@ class LaTeXPrinter(Printer):
 
     @staticmethod
     def format(sym=0,fct=0,pdiff=0,mv=0):
-        LaTeXPrinter.LaTeX_flg = True
-        LaTeXPrinter.fmt_dict['sym']   = sym
-        LaTeXPrinter.fmt_dict['fct']   = fct
-        LaTeXPrinter.fmt_dict['pdiff'] = pdiff
-        LaTeXPrinter.fmt_dict['mv']    = mv
-        LaTeXPrinter.fmt_dict['str'] = 1
+        LatexPrinter.LaTeX_flg = True
+        LatexPrinter.fmt_dict['sym']   = sym
+        LatexPrinter.fmt_dict['fct']   = fct
+        LatexPrinter.fmt_dict['pdiff'] = pdiff
+        LatexPrinter.fmt_dict['mv']    = mv
+        LatexPrinter.fmt_dict['str'] = 1
         if sympy.galgebra.GA.MV.is_setup:
-            LaTeXPrinter.latex_bases()
-        LaTeXPrinter.redirect()
+            LatexPrinter.latex_bases()
+        LatexPrinter.redirect()
         return
 
     @staticmethod
     def str_basic(in_str):
-        if not LaTeXPrinter.LaTeX_flg:
+        if not LatexPrinter.LaTeX_flg:
             return(str(in_str))
-        Basic.__str__ = LaTeXPrinter.Basic__str__
+        Basic.__str__ = LatexPrinter.Basic__str__
         out_str = str(in_str)
         Basic.__str__ = LaTeX
         return(out_str)
 
     @staticmethod
     def redirect():
-        LaTeXPrinter.Basic__str__ = Basic.__str__
-        LaTeXPrinter.MV__str__    = sympy.galgebra.GA.MV.__str__
-        LaTeXPrinter.stdout = sys.stdout
+        LatexPrinter.Basic__str__ = Basic.__str__
+        LatexPrinter.MV__str__    = sympy.galgebra.GA.MV.__str__
+        LatexPrinter.stdout = sys.stdout
         sys.stdout = StringIO.StringIO()
         Basic.__str__ = LaTeX
         sympy.galgebra.GA.MV.__str__ = LaTeX
@@ -240,65 +240,65 @@ class LaTeXPrinter(Printer):
 
     @staticmethod
     def restore():
-        LaTeXPrinter_stdout = sys.stdout
-        LaTeXPrinter_Basic__str__ = Basic.__str__
-        LaTeXPrinter_MV__str__ = sympy.galgebra.GA.MV.__str__
+        LatexPrinter_stdout = sys.stdout
+        LatexPrinter_Basic__str__ = Basic.__str__
+        LatexPrinter_MV__str__ = sympy.galgebra.GA.MV.__str__
 
-        sys.stdout = LaTeXPrinter.stdout
-        Basic.__str__ = LaTeXPrinter.Basic__str__
-        sympy.galgebra.GA.MV.__str__ = LaTeXPrinter.MV__str__
+        sys.stdout = LatexPrinter.stdout
+        Basic.__str__ = LatexPrinter.Basic__str__
+        sympy.galgebra.GA.MV.__str__ = LatexPrinter.MV__str__
 
-        LaTeXPrinter.stdout = LaTeXPrinter_stdout
-        LaTeXPrinter.Basic__str__ = LaTeXPrinter_Basic__str__
-        LaTeXPrinter.MV__str__ = LaTeXPrinter_MV__str__
+        LatexPrinter.stdout = LatexPrinter_stdout
+        LatexPrinter.Basic__str__ = LatexPrinter_Basic__str__
+        LatexPrinter.MV__str__ = LatexPrinter_MV__str__
         return
 
     @staticmethod
     def format_str(fmt='0 0 0 0'):
         fmt_lst = fmt.split()
         if '=' not in fmt:
-            LaTeXPrinter.fmt_dict['sym']   = int(fmt_lst[0])
-            LaTeXPrinter.fmt_dict['fct']   = int(fmt_lst[1])
-            LaTeXPrinter.fmt_dict['pdiff'] = int(fmt_lst[2])
-            LaTeXPrinter.fmt_dict['mv']    = int(fmt_lst[3])
+            LatexPrinter.fmt_dict['sym']   = int(fmt_lst[0])
+            LatexPrinter.fmt_dict['fct']   = int(fmt_lst[1])
+            LatexPrinter.fmt_dict['pdiff'] = int(fmt_lst[2])
+            LatexPrinter.fmt_dict['mv']    = int(fmt_lst[3])
         else:
             for fmt in fmt_lst:
                 x = fmt.split('=')
-                LaTeXPrinter.fmt_dict[x[0]] = int(x[1])
+                LatexPrinter.fmt_dict[x[0]] = int(x[1])
 
-        if LaTeXPrinter.LaTeX_flg == False:
+        if LatexPrinter.LaTeX_flg == False:
             if sympy.galgebra.GA.MV.is_setup:
-                LaTeXPrinter.latex_bases()
-            LaTeXPrinter.redirect()
-            LaTeXPrinter.LaTeX_flg = True
+                LatexPrinter.latex_bases()
+            LatexPrinter.redirect()
+            LatexPrinter.LaTeX_flg = True
         return
 
     @staticmethod
     def append_body(xstr):
-        if LaTeXPrinter.body_flg:
-            LaTeXPrinter.body += xstr
+        if LatexPrinter.body_flg:
+            LatexPrinter.body += xstr
             return('')
         else:
             return(xstr[:-1])
 
     @staticmethod
     def tokenize_greek(name_str):
-        for sym in LaTeXPrinter.greek_keys:
+        for sym in LatexPrinter.greek_keys:
             isym = name_str.find(sym)
             if isym > -1:
-                keystr = '@'+str(LaTeXPrinter.greek_cnt)
-                LaTeXPrinter.greek_cnt += 1
-                LaTeXPrinter.greek_dict[keystr] = sym
+                keystr = '@'+str(LatexPrinter.greek_cnt)
+                LatexPrinter.greek_cnt += 1
+                LatexPrinter.greek_dict[keystr] = sym
                 name_str = name_str.replace(sym,keystr)
         return(name_str)
 
     @staticmethod
     def tokenize_accents(name_str):
-        for sym in LaTeXPrinter.accent_keys:
+        for sym in LatexPrinter.accent_keys:
             if name_str.find(sym) > -1:
-                keystr = '#'+str(LaTeXPrinter.accent_cnt)+'#'
-                LaTeXPrinter.accent_cnt += 1
-                LaTeXPrinter.accent_dict[keystr] = '\\'+sym
+                keystr = '#'+str(LatexPrinter.accent_cnt)+'#'
+                LatexPrinter.accent_cnt += 1
+                LatexPrinter.accent_dict[keystr] = '\\'+sym
                 name_str = name_str.replace(sym,keystr)
         return(name_str)
 
@@ -306,10 +306,10 @@ class LaTeXPrinter(Printer):
     def replace_greek_tokens(name_str):
         if name_str.find('@') == -1:
             return(name_str)
-        for token in LaTeXPrinter.greek_dict.keys():
-            name_str = name_str.replace(token,'{\\'+LaTeXPrinter.greek_dict[token]+'}')
-        LaTeXPrinter.greek_cnt  = 0
-        LaTeXPrinter.greek_dict = {}
+        for token in LatexPrinter.greek_dict.keys():
+            name_str = name_str.replace(token,'{\\'+LatexPrinter.greek_dict[token]+'}')
+        LatexPrinter.greek_cnt  = 0
+        LatexPrinter.greek_dict = {}
         return(name_str)
 
     @staticmethod
@@ -320,30 +320,30 @@ class LaTeXPrinter(Printer):
             return(name_str)
         for x in tmp_lst[1:]:
             if x != '':
-                name_str = '{}'+LaTeXPrinter.accent_dict['#'+x+'#']+'{'+name_str+'}'
-        LaTeXPrinter.accent_cnt  = 0
-        LaTeXPrinter.accent_dict = {}
+                name_str = '{}'+LatexPrinter.accent_dict['#'+x+'#']+'{'+name_str+'}'
+        LatexPrinter.accent_cnt  = 0
+        LatexPrinter.accent_dict = {}
         return(name_str)
 
     @staticmethod
     def extended_symbol(name_str):
-        name_str = LaTeXPrinter.tokenize_greek(name_str)
+        name_str = LatexPrinter.tokenize_greek(name_str)
         tmp_lst = name_str.split('_')
         subsup_str = ''
         sym_str = tmp_lst[0]
-        sym_str = LaTeXPrinter.tokenize_accents(sym_str)
-        sym_str = LaTeXPrinter.replace_accent_tokens(sym_str)
+        sym_str = LatexPrinter.tokenize_accents(sym_str)
+        sym_str = LatexPrinter.replace_accent_tokens(sym_str)
         if len(tmp_lst) > 1:
             imode = 0
             for x in tmp_lst[1:]:
                 if x == '':
                     imode = (imode+1)%2
                 else:
-                    subsup_str += LaTeXPrinter.mode[imode]+'{'+x+'}'
-                    #subsup_str += LaTeXPrinter.mode[imode]+x+' '
+                    subsup_str += LatexPrinter.mode[imode]+'{'+x+'}'
+                    #subsup_str += LatexPrinter.mode[imode]+x+' '
                     imode = (imode+1)%2
         name_str = sym_str+subsup_str
-        name_str = LaTeXPrinter.replace_greek_tokens(name_str)
+        name_str = LatexPrinter.replace_greek_tokens(name_str)
         return(name_str)
 
     def coefficient(self,coef,first_flg):
@@ -375,7 +375,7 @@ class LaTeXPrinter(Printer):
         xstr = ''
 
         if self._inline:
-            if LaTeXPrinter.fmt_dict['fct'] == 1:
+            if LatexPrinter.fmt_dict['fct'] == 1:
                 xstr = r"%s" % tex
             else:
                 xstr = r"$%s$" % tex
@@ -501,7 +501,7 @@ class LaTeXPrinter(Printer):
         dim = len(expr.symbols)
 
         if dim == 1:
-            if LaTeXPrinter.fmt_dict['pdiff'] == 1:
+            if LatexPrinter.fmt_dict['pdiff'] == 1:
                 tex = r'\partial_{%s}' % self._print(expr.symbols[0])
             else:
                 tex = r"\frac{\partial}{\partial %s}" % self._print(expr.symbols[0])
@@ -517,7 +517,7 @@ class LaTeXPrinter(Printer):
             else:
                 multiplicity.append((current, i))
 
-            if LaTeXPrinter.fmt_dict['pdiff'] == 1:
+            if LatexPrinter.fmt_dict['pdiff'] == 1:
                 for x, i in multiplicity:
                     if i == 1:
                         tex += r"\partial_{%s}" % self._print(x)
@@ -572,12 +572,12 @@ class LaTeXPrinter(Printer):
         else:
             args = [ str(self._print(arg)) for arg in expr.args ]
 
-            if LaTeXPrinter.fmt_dict['fct'] == 1:
-                if func in LaTeXPrinter.fct_dict_keys:
+            if LatexPrinter.fmt_dict['fct'] == 1:
+                if func in LatexPrinter.fct_dict_keys:
                     if exp is not None:
-                        name = r"\operatorname{%s}^{%s}" % (LaTeXPrinter.fct_dict[func], exp)
+                        name = r"\operatorname{%s}^{%s}" % (LatexPrinter.fct_dict[func], exp)
                     else:
-                        name = r"\operatorname{%s}" % LaTeXPrinter.fct_dict[func]
+                        name = r"\operatorname{%s}" % LatexPrinter.fct_dict[func]
                     name += r"\left(%s\right)" % ",".join(args)
                     return name
                 else:
@@ -730,8 +730,8 @@ class LaTeXPrinter(Printer):
     def print_Symbol_name(name_str):
         if len(name_str) == 1:
             return (name_str)
-        if LaTeXPrinter.fmt_dict['sym'] == 1:
-            return LaTeXPrinter.extended_symbol(name_str)
+        if LatexPrinter.fmt_dict['sym'] == 1:
+            return LatexPrinter.extended_symbol(name_str)
         else:
             return(name_str)
 
@@ -767,10 +767,10 @@ class LaTeXPrinter(Printer):
                 return name_str
 
     def _print_Symbol(self, expr):
-        return LaTeXPrinter.print_Symbol_name(expr.name)
+        return LatexPrinter.print_Symbol_name(expr.name)
 
     def _print_str(self,expr):
-        if LaTeXPrinter.fmt_dict['str'] > 0:
+        if LatexPrinter.fmt_dict['str'] > 0:
             expr = expr.replace('^','{\\wedge}')
             expr = expr.replace('|','{\\cdot}')
             expr = expr.replace('__','^')
@@ -829,12 +829,12 @@ class LaTeXPrinter(Printer):
                             else:
                                 base_str = base_str.replace('XYZW','1')
                             MV_str += base_str+\
-                                      LaTeXPrinter.build_base(igrade,ibase,expr.bladeflg)
-                            if LaTeXPrinter.fmt_dict['mv'] == 3:
+                                      LatexPrinter.build_base(igrade,ibase,expr.bladeflg)
+                            if LatexPrinter.fmt_dict['mv'] == 3:
                                 line_lst.append(MV_str)
                                 MV_str = ''
                         ibase += 1
-                if LaTeXPrinter.fmt_dict['mv'] == 2:
+                if LatexPrinter.fmt_dict['mv'] == 2:
                     if MV_str != '':
                         line_lst.append(MV_str)
                         MV_str = ''
@@ -849,7 +849,7 @@ class LaTeXPrinter(Printer):
         if n_lines == 1:
             MV_str = line_lst[0]
             n_lines = 0
-        if LaTeXPrinter.fmt_dict['mv'] >= 2:
+        if LatexPrinter.fmt_dict['mv'] >= 2:
             MV_str = '@'+line_lst[0]+' \\\\ \n'
             for line in line_lst[1:-1]:
                 MV_str += '& '+line+' \\\\ \n'
@@ -857,7 +857,7 @@ class LaTeXPrinter(Printer):
         if MV_str == '':
             MV_str = '0'
         if expr.name != '':
-            MV_str = LaTeXPrinter.extended_symbol(expr.name)+' = '+MV_str
+            MV_str = LatexPrinter.extended_symbol(expr.name)+' = '+MV_str
         return(MV_str)
 
     def _print_OMV(self,expr):
@@ -881,12 +881,12 @@ class LaTeXPrinter(Printer):
                             else:
                                 base_str = base_str.replace('XYZW','1')
                             MV_str += base_str+\
-                                      LaTeXPrinter.build_base(igrade,ibase,expr.bladeflg)
-                            if LaTeXPrinter.fmt_dict['mv'] == 3:
+                                      LatexPrinter.build_base(igrade,ibase,expr.bladeflg)
+                            if LatexPrinter.fmt_dict['mv'] == 3:
                                 line_lst.append(MV_str)
                                 MV_str = ''
                         ibase += 1
-                if LaTeXPrinter.fmt_dict['mv'] == 2:
+                if LatexPrinter.fmt_dict['mv'] == 2:
                     if MV_str != '':
                         line_lst.append(MV_str)
                         MV_str = ''
@@ -901,7 +901,7 @@ class LaTeXPrinter(Printer):
         if n_lines == 1:
             MV_str = line_lst[0]
             n_lines = 0
-        if LaTeXPrinter.fmt_dict['mv'] >= 2:
+        if LatexPrinter.fmt_dict['mv'] >= 2:
             MV_str = '@'+line_lst[0]+' \\\\ \n'
             for line in line_lst[1:-1]:
                 MV_str += '& '+line+' \\\\ \n'
@@ -909,7 +909,7 @@ class LaTeXPrinter(Printer):
         if MV_str == '':
             MV_str = '0'
         if expr.name != '':
-            MV_str = LaTeXPrinter.extended_symbol(expr.name)+' = '+MV_str
+            MV_str = LatexPrinter.extended_symbol(expr.name)+' = '+MV_str
         return(MV_str)
 
     def _print_Relational(self, expr):
@@ -989,10 +989,10 @@ def LaTeX(expr, inline=True):
     '$\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}$'
 
     The extended latex printer will also append the output to a
-    string (LaTeXPrinter.body) that will be processed by xdvi()
+    string (LatexPrinter.body) that will be processed by xdvi()
     for immediate display one xdvi() is called.
     """
-    xstr = LaTeXPrinter(inline).doprint(expr)
+    xstr = LatexPrinter(inline).doprint(expr)
     return (xstr)
 
 def print_LaTeX(expr):
@@ -1000,7 +1000,7 @@ def print_LaTeX(expr):
     print LaTeX(expr)
 
 def Format(fmt='1 1 1 1'):
-    LaTeXPrinter.format_str(fmt)
+    LatexPrinter.format_str(fmt)
     return
 
 def xdvi(filename='tmplatex.tex',debug=False):
@@ -1009,10 +1009,10 @@ def xdvi(filename='tmplatex.tex',debug=False):
     postscript, generates tex file, inputs file to latex, displays resulting
     dvi file with xdvi.
     """
-    if not LaTeXPrinter.LaTeX_flg:
+    if not LatexPrinter.LaTeX_flg:
         return
     body = sys.stdout.getvalue()
-    LaTeXPrinter.restore()
+    LatexPrinter.restore()
 
     body_lst = body.split('\n')
     body = ''
@@ -1124,7 +1124,7 @@ def xdvi(filename='tmplatex.tex',debug=False):
                 line = i.next()
             except StopIteration:
                 break
-    body = LaTeXPrinter.preamble+body+LaTeXPrinter.postscript
+    body = LatexPrinter.preamble+body+LatexPrinter.postscript
     latex_file = open(filename,'w')
     latex_file.write(body)
     latex_file.close()
@@ -1138,7 +1138,7 @@ def xdvi(filename='tmplatex.tex',debug=False):
         else: #Works for Linux don't know about Windows
             os.system(latex_str+' '+filename[:-4]+' > /dev/null')
         os.system(xdvi_str+' '+filename[:-4]+' &')
-    LaTeXPrinter.LaTeX_flg = False
+    LatexPrinter.LaTeX_flg = False
     return
 
 def MV_format(mv_fmt):
@@ -1147,8 +1147,8 @@ def MV_format(mv_fmt):
     2      - Print each multivector grade on one line
     3      - Print each multivector base on one line
     """
-    if LaTeXPrinter.LaTeX_flg:
-        LaTeXPrinter.fmt_dict['mv'] = mv_fmt
+    if LatexPrinter.LaTeX_flg:
+        LatexPrinter.fmt_dict['mv'] = mv_fmt
     return
 
 def fct_format(fct_fmt):
@@ -1159,8 +1159,8 @@ def fct_format(fct_fmt):
         Use enhanced symbol nameing for arbitrary functions.
         Use new names for standard functions (acos -> Cos^{-1})
     """
-    if LaTeXPrinter.LaTeX_flg:
-        LaTeXPrinter.fct = fct_fmt
+    if LatexPrinter.LaTeX_flg:
+        LatexPrinter.fct = fct_fmt
     return
 
 def pdiff_format(pdiff_fmt):
@@ -1168,8 +1168,8 @@ def pdiff_format(pdiff_fmt):
     0 - Use default sympy partial derivative format
     1 - Contracted derivative format (no fraction symbols)
     """
-    if LaTeXPrinter.LaTeX_flg:
-        LaTeXPrinter.fmt_dict['pdiff'] = pdiff_fmt
+    if LatexPrinter.LaTeX_flg:
+        LatexPrinter.fmt_dict['pdiff'] = pdiff_fmt
     return
 
 def sym_format(sym_fmt):
@@ -1179,8 +1179,8 @@ def sym_format(sym_fmt):
         basic symbol (symbol precceeding sub and superscripts)and in
         sub and superscripts of basic symbol and accents in basic symbol
     """
-    if LaTeXPrinter.LaTeX_flg:
-        LaTeXPrinter.fmt_dict['sym'] = sym_fmt
+    if LatexPrinter.LaTeX_flg:
+        LatexPrinter.fmt_dict['sym'] = sym_fmt
     return
 
 def str_format(str_fmt):
@@ -1190,9 +1190,9 @@ def str_format(str_fmt):
         basic symbol (symbol precceeding sub and superscripts)and in
         sub and superscripts of basic symbol and accents in basic symbol
     """
-    if LaTeXPrinter.LaTeX_flg:
-        LaTeXPrinter.fmt_dict['str'] = str_fmt
+    if LatexPrinter.LaTeX_flg:
+        LatexPrinter.fmt_dict['str'] = str_fmt
     return
 
 def ext_str(xstr):
-    return(LaTeXPrinter.extended_symbol(xstr))
+    return(LatexPrinter.extended_symbol(xstr))
