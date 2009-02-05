@@ -152,7 +152,7 @@ class MathMLPrinter(Printer):
         for item in seq:
             dom_element.appendChild(self._print(item))
         return dom_element
-    
+
     def _print_int(self, p):
         dom_element = self.dom.createElement(self.mathml_tag(p))
         dom_element.appendChild(self.dom.createTextNode(str(p)))
