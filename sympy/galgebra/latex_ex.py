@@ -976,17 +976,17 @@ def LaTeX(expr, inline=True):
     >>> from sympy.abc import *
 
     >>> latex((2*tau)**Rational(7,2))
-    '$8 \\sqrt{2} \\sqrt[7]{\\tau}$'
+    '$8 \\\\sqrt{2} \\\\sqrt[7]{\\\\tau}$'
 
     >>> latex((2*mu)**Rational(7,2), inline=False)
-    '\\begin{equation*}8 \\sqrt{2} \\sqrt[7]{\\mu}\\end{equation*}'
+    '\\\\begin{equation*}8 \\\\sqrt{2} \\\\sqrt[7]{\\\\mu}\\\\end{equation*}'
 
     Besides all Basic based expressions, you can recursively
     convert Pyhon containers (lists, tuples and dicts) and
     also SymPy matrices:
 
     >>> latex([2/x, y])
-    '$\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}$'
+    '$\\\\begin{bmatrix}\\\\frac{2}{x}, & y\\\\end{bmatrix}$'
 
     The extended latex printer will also append the output to a
     string (LatexPrinter.body) that will be processed by xdvi()
