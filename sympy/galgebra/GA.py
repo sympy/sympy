@@ -22,8 +22,8 @@ import sys
 #if sys.version.find('Stackless') >= 0:
 #    sys.path.append('/usr/lib/python2.5/site-packages')
 
-import os,string,types,copy
-import numpy,sympy
+import os, string, types, copy
+import numpy, sympy
 import re as regrep
 import sympy.galgebra.latex_ex
 
