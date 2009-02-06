@@ -1079,7 +1079,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False):
                     return Rational(-int(rat[1]), int(rat[0]))
             mpmath.mp.dps = prec
             newexpr = mpmath.identify(xv, constants=constants_dict,
-                tolerance=tolerance, full=full)
+                tol=tolerance, full=full)
             if not newexpr:
                 raise ValueError
             if full:

@@ -36,3 +36,29 @@ def test_polyroots():
         assert False
     except ValueError:
         pass
+
+def test_pade():
+    one = mpf(1)
+    mp.dps = 20
+    N = 10
+    a = [one]
+    k = 1
+    for i in range(1, N+1):
+        k *= i
+        a.append(one/k)
+    p, q = pade(a, N/2, N/2)
+    for x in arange(0, 1, 0.1):
+        r = polyval(p[::-1], x)/polyval(q[::-1], x)
+        assert(r.ae(exp(x), 1.0e-10))
+
+def test_fourier():
+    mp.dps = 15
+    c, s = fourier(lambda x: x+1, [-1, 2], 2)
+    #plot([lambda x: x+1, lambda x: fourierval((c, s), [-1, 2], x)], [-1, 2])
+    assert c[0].ae(1.5)
+    assert c[1].ae(-3*sqrt(3)/(2*pi))
+    assert c[2].ae(3*sqrt(3)/(4*pi))
+    assert s[0] == 0
+    assert s[1].ae(3/(2*pi))
+    assert s[2].ae(3/(4*pi))
+    assert fourierval((c, s), [-1, 2], 1).ae(1.9134966715663442)

@@ -27,9 +27,9 @@ MPMATH_TRANSLATIONS = {
     "E":"e",
     "I":"j",
     "ln":"log",
-    "lowergamma":"lower_gamma",
+    #"lowergamma":"lower_gamma",
     "oo":"inf",
-    "uppergamma":"upper_gamma",
+    #"uppergamma":"upper_gamma",
     "LambertW":"lambertw",
 }
 

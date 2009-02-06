@@ -10,9 +10,10 @@ see libmpc and libmpi.
 """
 
 import math
+from bisect import bisect
 
 from settings import (\
-    MP_BASE, MP_ZERO, MP_ONE, MP_FIVE, MODE,
+    MP_BASE, MP_ZERO, MP_ONE, MP_TWO, MP_FIVE, MODE,
     round_floor, round_ceiling, round_down, round_up,
     round_nearest, round_fast,
 )
@@ -20,14 +21,15 @@ from settings import (\
 from libmpf import (\
     ComplexResult,
     bitcount, bctable, lshift, rshift, giant_steps, giant_steps2,
-    sqrt_fixed, sqrt_fixed2,
+    giant_stepsn, sqrt_fixed, sqrt_fixed2,
     from_int, to_int, from_man_exp, to_fixed,
     normalize,
     fzero, fone, fnone, fhalf, finf, fninf, fnan,
-    mpf_cmp, mpf_sign,
+    mpf_cmp, mpf_sign, mpf_abs,
     mpf_pos, mpf_neg, mpf_add, mpf_sub, mpf_mul, mpf_div, mpf_shift,
     mpf_rdiv_int, mpf_pow_int, mpf_sqrt,
-    reciprocal_rnd, negative_rnd, mpf_perturb
+    reciprocal_rnd, negative_rnd, mpf_perturb,
+    isqrt_fast
 )
 
 
@@ -75,28 +77,28 @@ def def_mpf_constant(fixed):
     f.__doc__ = fixed.__doc__
     return f
 
-def acot_fixed(n, prec, hyperbolic):
-    """
-    Compute acot of an integer using fixed-point arithmetic. With
-    hyperbolic=True, compute acoth. The standard Taylor series
-    is used.
-    """
-    n = MP_BASE(n)
-    s = t = (MP_ONE << prec) // n  # 1 / n
-    k = 3
-    while 1:
-        # Repeatedly divide by k * n**2, and add
-        t //= (n*n)
-        term = t // k
-        if not term:
-            break
-        # Alternate signs
-        if hyperbolic or not k & 2:
-            s += term
+def bsp_acot(q, a, b, hyperbolic):
+    if b - a == 1:
+        a1 = MP_BASE(2*a + 3)
+        if hyperbolic or a&1:
+            return MP_ONE, a1 * q**2, a1
         else:
-            s -= term
-        k += 2
-    return s
+            return -MP_ONE, a1 * q**2, a1
+    m = (a+b)//2
+    p1, q1, r1 = bsp_acot(q, a, m, hyperbolic)
+    p2, q2, r2 = bsp_acot(q, m, b, hyperbolic)
+    return q2*p1 + r1*p2, q1*q2, r1*r2
+
+# the acoth(x) series converges like the geometric series for x^2
+# N = ceil(p*log(2)/(2*log(x)))
+def acot_fixed(a, prec, hyperbolic):
+    """
+    Compute acot(a) or acoth(a) for an integer a with binary splitting; see
+    http://numbers.computation.free.fr/Constants/Algorithms/splitting.html
+    """
+    N = int(0.35 * prec/math.log(a) + 20)
+    p, q, r = bsp_acot(a, 0,N, hyperbolic)
+    return ((p+q)<<prec)//(q*a)
 
 def machin(coefs, prec, hyperbolic=False):
     """
@@ -117,7 +119,8 @@ def machin(coefs, prec, hyperbolic=False):
 @constant_memo
 def ln2_fixed(prec):
     """
-    Computes ln(2). This is done with a hyperbolic Machin-type formula.
+    Computes ln(2). This is done with a hyperbolic Machin-type formula,
+    with binary splitting at high precision.
     """
     return machin([(18, 26), (-2, 4801), (8, 8749)], prec, True)
 
@@ -127,6 +130,7 @@ def ln10_fixed(prec):
     Computes ln(10). This is done with a hyperbolic Machin-type formula.
     """
     return machin([(46, 31), (34, 49), (20, 161)], prec, True)
+
 
 """
 For computation of pi, we use the Chudnovsky series:
@@ -196,7 +200,7 @@ def pi_fixed(prec, verbose=False, verbose_base=None):
     if verbose:
         print "binary splitting with N =", N
     g, p, q = bs_chudnovsky(0, N, 0, verbose)
-    sqrtC = sqrt_fixed(CHUD_C<<prec, prec)
+    sqrtC = isqrt_fast(CHUD_C<<(2*prec))
     v = p*CHUD_C*sqrtC//((q+CHUD_A*p)*CHUD_D)
     return v
 
@@ -237,8 +241,7 @@ def phi_fixed(prec):
     Computes the golden ratio, (1+sqrt(5))/2
     """
     prec += 10
-    sqrt = [sqrt_fixed2, sqrt_fixed][prec < 20000]
-    a = sqrt(MP_FIVE<<prec, prec) + (MP_ONE << prec)
+    a = isqrt_fast(MP_FIVE<<(2*prec)) + (MP_ONE << prec)
     return a >> 11
 
 mpf_phi    = def_mpf_constant(phi_fixed)
@@ -419,12 +422,12 @@ def mpf_nthroot(s, n, prec, rnd=round_fast):
     sign1 = 0
     es = exp+shift
     if es < 0:
-      sign1 = 1
-      es = -es
+        sign1 = 1
+        es = -es
     if sign1:
-      shift += es%n
+        shift += es%n
     else:
-      shift -= es%n
+        shift -= es%n
     man = rshift(man, shift)
     extra = 10
     exp1 = ((exp+shift-(n-1)*prec2)//n) - extra
@@ -445,6 +448,299 @@ def mpf_nthroot(s, n, prec, rnd=round_fast):
 def mpf_cbrt(s, prec, rnd=round_fast):
     """cubic root of a positive number"""
     return mpf_nthroot(s, 3, prec, rnd)
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                                Logarithms                                  #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+# Fast sequential integer logarithms are required for various series
+# computations related to zeta functions, so we cache them
+# TODO: can this be done better?
+log_int_cache = {}
+
+def log_int_fixed(n, prec):
+    if n < 2:
+        return MP_ZERO
+    cache = log_int_cache.get(prec)
+    if cache and (n in cache):
+        return cache[n]
+    if cache:
+        L = cache[max(cache)]
+    else:
+        cache = log_int_cache[prec] = {}
+        L = cache[2] = ln2_fixed(prec)
+    one = MP_ONE << prec
+    for p in xrange(max(cache)+1, n+1):
+        s = 0
+        u = one
+        k = 1
+        a = (2*p-1)**2
+        while u:
+            s += u // k
+            u //= a
+            k += 2
+        L += 2*s//(2*p-1)
+        cache[p] = L
+    return cache[n]
+
+# Use Taylor series with caching up to this prec
+LOG_TAYLOR_PREC = 2500
+
+# Cache log values in steps of size 2^-N
+LOG_TAYLOR_SHIFT = 9
+
+# prec/size ratio of x for fastest convergence in AGM formula
+LOG_AGM_MAG_PREC_RATIO = 20
+
+log_taylor_cache = {}
+
+# ~= next power of two + 20
+cache_prec_steps = [22,22]
+for k in xrange(1, bitcount(LOG_TAYLOR_PREC)+1):
+    cache_prec_steps += [min(2**k,LOG_TAYLOR_PREC)+20] * 2**(k-1)
+
+def agm_fixed(a, b, prec):
+    """
+    Fixed-point computation of agm(a,b), assuming
+    a, b both close to unit magnitude.
+    """
+    i = 0
+    while 1:
+        anew = (a+b)>>1
+        if i > 4 and abs(a-anew) < 8:
+            return a
+        b = isqrt_fast(a*b)
+        a = anew
+        i += 1
+    return a
+
+def log_agm(x, prec):
+    """
+    Fixed-point computation of -log(x) = log(1/x), suitable
+    for large precision. It is required that 0 < x < 1. The
+    algorithm used is the Sasaki-Kanada formula
+
+        -log(x) = pi/agm(theta2(x)^2,theta3(x)^2). [1]
+
+    For faster convergence in the theta functions, x should
+    be chosen closer to 0.
+
+    Guard bits must be added by the caller.
+
+    HYPOTHESIS: if x = 2^(-n), n bits need to be added to
+    account for the truncation to a fixed-point number,
+    and this is the only significant cancellation error.
+
+    The number of bits lost to roundoff is small and can be
+    considered constant.
+
+    [1] Richard P. Brent, "Fast Algorithms for High-Precision
+        Computation of Elementary Functions (extended abstract)",
+        http://wwwmaths.anu.edu.au/~brent/pd/RNC7-Brent.pdf
+
+    """
+    x2 = (x*x) >> prec
+    # Compute jtheta2(x)**2
+    s = a = b = x2
+    while a:
+        b = (b*x2) >> prec
+        a = (a*b) >> prec
+        s += a
+    s += (MP_ONE<<prec)
+    s = (s*s)>>(prec-2)
+    s = (s*isqrt_fast(x<<prec))>>prec
+    # Compute jtheta3(x)**2
+    t = a = b = x
+    while a:
+        b = (b*x2) >> prec
+        a = (a*b) >> prec
+        t += a
+    t = (MP_ONE<<prec) + (t<<1)
+    t = (t*t)>>prec
+    # Final formula
+    p = agm_fixed(s, t, prec)
+    return (pi_fixed(prec) << prec) // p
+
+def log_taylor(x, prec, r=0):
+    """
+    Fixed-point calculation of log(x). It is assumed that x is close
+    enough to 1 for the Taylor series to converge quickly. Convergence
+    can be improved by specifying r > 0 to compute
+    log(x^(1/2^r))*2^r, at the cost of performing r square roots.
+
+    The caller must provide sufficient guard bits.
+    """
+    for i in xrange(r):
+        x = isqrt_fast(x<<prec)
+    one = MP_ONE << prec
+    v = ((x-one)<<prec)//(x+one)
+    sign = v < 0
+    if sign:
+        v = -v
+    v2 = (v*v) >> prec
+    v4 = (v2*v2) >> prec
+    s0 = v
+    s1 = v//3
+    v = (v*v4) >> prec
+    k = 5
+    while v:
+        s0 += v // k
+        k += 2
+        s1 += v // k
+        v = (v*v4) >> prec
+        k += 2
+    s1 = (s1*v2) >> prec
+    s = (s0+s1) << (1+r)
+    if sign:
+        return -s
+    return s
+
+def log_taylor_cached(x, prec):
+    """
+    Fixed-point computation of log(x), assuming x in (0.5, 2)
+    and prec <= LOG_TAYLOR_PREC.
+    """
+    n = x >> (prec-LOG_TAYLOR_SHIFT)
+    cached_prec = cache_prec_steps[prec]
+    dprec = cached_prec - prec
+    if (n, cached_prec) in log_taylor_cache:
+        a, log_a = log_taylor_cache[n, cached_prec]
+    else:
+        a = n << (cached_prec - LOG_TAYLOR_SHIFT)
+        log_a = log_taylor(a, cached_prec, 8)
+        log_taylor_cache[n, cached_prec] = (a, log_a)
+    a >>= dprec
+    log_a >>= dprec
+    u = ((x - a) << prec) // a
+    v = (u << prec) // ((MP_TWO << prec) + u)
+    v2 = (v*v) >> prec
+    v4 = (v2*v2) >> prec
+    s0 = v
+    s1 = v//3
+    v = (v*v4) >> prec
+    k = 5
+    while v:
+        s0 += v//k
+        k += 2
+        s1 += v//k
+        v = (v*v4) >> prec
+        k += 2
+    s1 = (s1*v2) >> prec
+    s = (s0+s1) << 1
+    return log_a + s
+
+def mpf_log(x, prec, rnd=round_fast):
+    """
+    Compute the natural logarithm of the mpf value x. If x is negative,
+    ComplexResult is raised.
+    """
+    sign, man, exp, bc = x
+    #------------------------------------------------------------------
+    # Handle special values
+    if not man:
+        if x == fzero: return fninf
+        if x == finf: return finf
+        if x == fnan: return fnan
+    if sign:
+        raise ComplexResult("logarithm of a negative number")
+    wp = prec + 20
+    #------------------------------------------------------------------
+    # Handle log(2^n) = log(n)*2.
+    # Here we catch the only possible exact value, log(1) = 0
+    if man == 1:
+        if not exp:
+            return fzero
+        return from_man_exp(exp*ln2_fixed(wp), -wp, prec, rnd)
+    mag = exp+bc
+    abs_mag = abs(mag)
+    #------------------------------------------------------------------
+    # Handle x = 1+eps, where log(x) ~ x. We need to check for
+    # cancellation when moving to fixed-point math and compensate
+    # by increasing the precision. Note that abs_mag in (0, 1) <=>
+    # 0.5 < x < 2 and x != 1
+    if abs_mag <= 1:
+        # Calculate t = x-1 to measure distance from 1 in bits
+        tsign = 1-abs_mag
+        if tsign:
+            tman = (MP_ONE<<bc) - man
+        else:
+            tman = man - (MP_ONE<<(bc-1))
+        tbc = bitcount(tman)
+        cancellation = bc - tbc
+        if cancellation > wp:
+            t = normalize(tsign, tman, abs_mag-bc, tbc, tbc, 'n')
+            return mpf_perturb(t, tsign, prec, rnd)
+        else:
+            wp += cancellation
+        # TODO: if close enough to 1, we could use Taylor series
+        # even in the AGM precision range, since the Taylor series
+        # converges rapidly
+    #------------------------------------------------------------------
+    # Another special case:
+    # n*log(2) is a good enough approximation
+    if abs_mag > 10000:
+        if bitcount(abs_mag) > wp:
+            return from_man_exp(exp*ln2_fixed(wp), -wp, prec, rnd)
+    #------------------------------------------------------------------
+    # General case.
+    # Perform argument reduction using log(x) = log(x*2^n) - n*log(2):
+    # If we are in the Taylor precision range, choose magnitude 0 or 1.
+    # If we are in the AGM precision range, choose magnitude -m for
+    # some large m; benchmarking on one machine showed m = prec/20 to be
+    # optimal between 1000 and 100,000 digits.
+    if wp <= LOG_TAYLOR_PREC:
+        m = log_taylor_cached(lshift(man, wp-bc), wp)
+        if mag:
+            m += mag*ln2_fixed(wp)
+    else:
+        optimal_mag = -wp//LOG_AGM_MAG_PREC_RATIO
+        n = optimal_mag - mag
+        x = mpf_shift(x, n)
+        wp += (-optimal_mag)
+        m = -log_agm(to_fixed(x, wp), wp)
+        m -= n*ln2_fixed(wp)
+    return from_man_exp(m, -wp, prec, rnd)
+
+def mpf_log_hypot(a, b, prec, rnd):
+    """
+    Computes log(sqrt(a^2+b^2)) accurately.
+    """
+    # If either a or b is inf/nan/0, assume it to be a
+    if not b[1]:
+        a, b = b, a
+    # a is inf/nan/0
+    if not a[1]:
+        # both are inf/nan/0
+        if not b[1]:
+            if a == b == fzero:
+                return fninf
+            if fnan in (a, b):
+                return fnan
+            # at least one term is (+/- inf)^2
+            return finf
+        # only a is inf/nan/0
+        if a == fzero:
+            # log(sqrt(0+b^2)) = log(|b|)
+            return mpf_log(mpf_abs(b), prec, rnd)
+        if a == fnan:
+            return fnan
+        return finf
+    # Exact
+    a2 = mpf_mul(a,a)
+    b2 = mpf_mul(b,b)
+    extra = 20
+    # Not exact
+    h2 = mpf_add(a2, b2, prec+extra)
+    cancelled = mpf_add(h2, fnone, 10)
+    mag_cancelled = cancelled[2]+cancelled[3]
+    # Just redo the sum exactly if necessary (could be smarter
+    # and avoid memory allocation when a or b is precisely 1
+    # and the other is tiny...)
+    if cancelled == fzero or mag_cancelled < -extra//2:
+        h2 = mpf_add(a2, b2, prec+extra-min(a2[2],b2[2]))
+    return mpf_shift(mpf_log(h2, prec, rnd), -1)
 
 
 #----------------------------------------------------------------------------#
@@ -477,21 +773,30 @@ def mpf_cbrt(s, prec, rnd=round_fast):
 # exp(x) as exp(t)*(2**n), using the Maclaurin series for exp(t)
 # (the multiplication by 2**n just amounts to shifting the exponent).
 
+# For very high precision use the newton method to compute exp from
+# log_agm; for |x| very large or very small use
+# exp(x + m) = exp(x) * e**m,  m = int(n * math.log(2))
+
 # Input: x * 2**prec
 # Output: exp(x) * 2**(prec + r)
 def exp_series(x, prec, r):
     x >>= r
-    s = (MP_ONE << prec) + x
-    a = x
+    # 1 + x + x^2/2! + x^3/3! + x^4/4! + ... =
+    # (1 + x^2/2! + ...) + x * (1 + x^2/3! + ...)
+    s0 = s1 = (MP_ONE << prec)
     k = 2
-    # Sum exp(x/2**r)
-    while 1:
-        a = ((a*x) >> prec) // k
-        if not a:
-            break
-        s += a
+    a = x2 = (x * x) >> prec
+    while a:
+        a = a // k
+        s0 += a
+        k += 1
+        a = a // k
+        s1 += a
+        a = (a * x2) >> prec
         k += 1
     # Calculate s**(2**r) by repeated squaring
+    s1 = (s1 * x) >> prec
+    s = s0 + s1
     while r:
         s = (s*s) >> prec
         r -= 1
@@ -504,13 +809,45 @@ def exp_series2(x, prec, r):
         sign = 1
         x = -x
     x2 = (x*x) >> prec
-    s1 = a = x
-    k = 3
-    while a:
-        a = ((a * x2) >> prec) // (k*(k-1))
-        s1 += a
-        k += 2
-    c1 = sqrt_fixed(((s1*s1) >> prec) + (1<<prec), prec)
+    if prec < 1500:
+        s1 = a = x
+        k = 3
+        while a:
+            a = ((a * x2) >> prec) // (k*(k-1))
+            s1 += a
+            k += 2
+    else:
+        # use Smith's method:
+        # reduce the number of multiplication summing concurrently J series
+        # J=4
+        # Sinh(x) =
+        #   (x + x^9/9! + ...) + x^2 * (x/3! + x^9/11! + ...) +
+        #   x^4 * (x/5! + x^9/13! + ...) + x^6 * (x/7! + x^9/15! + ...)
+        J = 4
+        ax = [MP_ONE << prec, x2]
+        px = x2
+        asum = [x, x//6]
+        fact = 6
+        k = 4
+        for j in range(2, J):
+            px = (px * x2) >> prec
+            ax.append(px)
+            fact *= k*(k+1)
+            asum.append(x//fact)
+            k += 2
+        lx = (ax[-1]*x2) >> prec
+        p = asum[-1]
+        while p:
+            p = (p * lx) >> prec
+            for j in range(J):
+                p = p/(k*(k+1))
+                asum[j] += p
+                k += 2
+        s1 = 0
+        for i in range(1, J):
+            s1 += ax[i]*asum[i]
+        s1 = asum[0] + (s1 >> prec)
+    c1 = isqrt_fast((s1*s1) + (MP_ONE<<(2*prec)))
     if sign:
         s = c1 - s1
     else:
@@ -521,6 +858,40 @@ def exp_series2(x, prec, r):
         r -= 1
     return s
 
+# use the fourth order newton method, with step
+# r = r + r * (h + h^2/2 + h^3/6 + h$/24)
+# at each step the precision is quadrupled.
+
+def exp_newton(x, prec):
+    extra = 10
+    r = mpf_exp(x, 60)
+    start = 50
+    prevp = start
+    for p in giant_stepsn(start, prec+extra, 4):
+        h = mpf_sub(x, mpf_log(r, p), p)
+        h2 = mpf_mul(h, h, p)
+        h3 = mpf_mul(h2, h, p)
+        h4 = mpf_mul(h2, h2, p)
+        t = mpf_add(h, mpf_shift(h2, -1), p)
+        t = mpf_add(t, mpf_div(h3, from_int(6, p), p), p)
+        t = mpf_add(t, mpf_div(h4, from_int(24, p), p), p)
+        t = mpf_mul(r, t, p)
+        r = mpf_add(r, t, p)
+    return r
+
+# for precision larger than this limit, for x > 1, use the newton method
+LIM_EXP_SERIES2 = 10000
+# when the newton method is used, if x has mag=exp+bc larger than LIM_MAG
+# shift it
+LIM_MAG = 5
+
+# table of values to determine if exp_series2 or exp_newton is faster,
+# determined with benchmarking on a PC, with gmpy
+ns_exp = [8,9,10,11,12,13,33,66,83,99,132,166,199,232,265,298,332,664]
+precs_exp = [43000, 63000, 64000, 64000, 65000, 66000, 72000, 82000, 99000,
+   115000, 148000, 190000, 218000, 307000, 363000, 528000, 594000, 1650000]
+
+
 def mpf_exp(x, prec, rnd=round_fast):
     sign, man, exp, bc = x
     if not man:
@@ -529,11 +900,12 @@ def mpf_exp(x, prec, rnd=round_fast):
         if x == fninf:
             return fzero
         return x
+    mag = bc+exp
     # Fast handling e**n. TODO: the best cutoff depends on both the
     # size of n and the precision.
     if prec > 600 and exp >= 0:
-        return mpf_pow_int(mpf_e(prec+10), (-1)**sign *(man<<exp), prec, rnd)
-    mag = bc+exp
+        e = mpf_e(prec+10+int(1.45*mag))
+        return mpf_pow_int(e, (-1)**sign *(man<<exp), prec, rnd)
     if mag < -prec-10:
         return mpf_perturb(fone, sign, prec, rnd)
     # extra precision needs to be similar in magnitude to log_2(|x|)
@@ -553,259 +925,56 @@ def mpf_exp(x, prec, rnd=round_fast):
             n = 0
         man = exp_series(t, wp, r)
     else:
-        r = int(0.7 * wp**0.5)
-        if mag < 0:
-            r = max(1, r + mag)
-        wp += r + 20
-        t = to_fixed(x, wp)
-        if mag > 1:
-            lg2 = ln2_fixed(wp)
-            n, t = divmod(t, lg2)
+        use_newton = False
+        # put a bound on exp to avoid infinite recursion in exp_newton
+        # TODO find a good bound
+        if wp > LIM_EXP_SERIES2 and exp < 1000:
+            if mag > 0:
+                use_newton = True
+            elif mag <= 0 and -mag <= ns_exp[-1]:
+                i = bisect(ns_exp, -mag-1)
+                if i < len(ns_exp):
+                    wp0 = precs_exp[i]
+                    if wp > wp0:
+                        use_newton = True
+
+        if not use_newton:
+            r = int(0.7 * wp**0.5)
+            if mag < 0:
+                r = max(1, r + mag)
+            wp += r + 20
+            t = to_fixed(x, wp)
+            if mag > 1:
+                lg2 = ln2_fixed(wp)
+                n, t = divmod(t, lg2)
+            else:
+                n = 0
+            man = exp_series2(t, wp, r)
         else:
-            n = 0
-        man = exp_series2(t, wp, r)
-    bc = wp - 2 + bctable[int(man >> (wp - 2))]
+            # if x is very small or very large use
+            # exp(x + m) = exp(x) * e**m
+            if mag > LIM_MAG:
+                wp += mag*10 + 100
+                n = int(mag * math.log(2)) + 1
+                x = mpf_sub(x, from_int(n, wp), wp)
+            elif mag <= 0:
+                wp += -mag*10 + 100
+                if mag < 0:
+                    n = int(-mag * math.log(2)) + 1
+                    x = mpf_add(x, from_int(n, wp), wp)
+            res = exp_newton(x, wp)
+            sign, man, exp, bc = res
+            if mag < 0:
+                t = mpf_pow_int(mpf_e(wp), n, wp)
+                res = mpf_div(res, t, wp)
+                sign, man, exp, bc = res
+            if mag > LIM_MAG:
+                t = mpf_pow_int(mpf_e(wp), n, wp)
+                res = mpf_mul(res, t, wp)
+                sign, man, exp, bc = res
+            return normalize(sign, man, exp, bc, prec, rnd)
+    bc = bitcount(man)
     return normalize(0, man, int(-wp+n), bc, prec, rnd)
-
-
-#----------------------------------------------------------------------------#
-#                                                                            #
-#                                Logarithms                                  #
-#                                                                            #
-#----------------------------------------------------------------------------#
-
-# Fast sequential integer logarithms are required for various series
-# computations related to zeta functions, so we cache them
-
-log_int_cache = {}
-
-def log_int_fixed(n, prec):
-    if n < 2:
-        return MP_ZERO
-    cache = log_int_cache.get(prec)
-    if cache and (n in cache):
-        return cache[n]
-    if cache:
-        L = cache[max(cache)]
-    else:
-        cache = log_int_cache[prec] = {}
-        L = cache[2] = ln2_fixed(prec)
-    one = MP_ONE << prec
-    for p in xrange(max(cache)+1, n+1):
-        s = 0
-        u = one
-        k = 1
-        a = (2*p-1)**2
-        while u:
-            s += u // k
-            u //= a
-            k += 2
-        L += 2*s//(2*p-1)
-        cache[p] = L
-    return cache[n]
-
-
-
-"""
-The basic idea for evaluating log for an arbitrary floating-point number
-is to write x = t * 2**n (note that n is just the exponent) and compute
-log(x) = n*log(2) + log(t). Of course, log(2) is cached.
-
-Here n should be chosen to make t ~= 1. This allows us to settle for a
-suitable fixed-point approximation close to 1. In particular, we choose
-the normalization 0.5 <= t < 2 and use one of two algorithms:
-
-1. For arbitrary precision, we set r = log(t) and use Newton's method
-   to solve exp(r) = t. To obtain the Newton method one solves
-   exp(r+h) = t, expanding in h which is supposed to be small; one has
-   h = log(t * exp(-r)), which can be expanded in powers of
-   s = (t * exp(-r) - 1) : h = s - s*s/2 + s**3/3 + ...
-
-   The first order approximation is Newton method, the second order is
-   Halley's method. We use the second order approximation.
-
-   We set the initial value r_0 to math.log(t) and then iterate
-
-      r_{n+1} = (r_n + exp(-r_n) - 1) - (r_n + exp(-r_n) - 1)/2
-
-   until convergence. As with square roots, we increase the working
-   precision dynamically during the process so that only one
-   full-precision evaluation of exp is required.
-
-2. For low precision, we use Taylor series. Unfortunately, the Taylor
-   series for log(1+x) converges very slowly unless |x| << 1. We could use
-   the "inverse" of Brent's trick for exp, but this would involve computing
-   compound square roots (as opposed to repeated squaring), which is
-   expensive.
-
-   So instead we use the following trick: up to a fixed precision, we
-   precompute log(k/2^N) for N ~= 8-10. This can be done using standard
-   arbitrary-precision Newton's method above (and on the fly as each value
-   of k is needed). Now, for a given t, we round t to the nearest N-bit
-   number to find a cached log value. Then we use the Taylor series
-
-                          b     b^2     b^3
-     log(a+b) = log(a) + --- - ----- + ----- - ...
-                          a    2 a^2   3 a^3
-
-   where of course a is the cached k/2^N value (t rounded)
-   and b is the difference between t and t rounded.
-
-   On [1/2, 3/2], this gives a series that converges at least N bits per
-   term, as opposed to 1 bit per term in the worst case for the direct
-   series of log(1+x).
-
-There are some further caveats: if x is extremely close to 1,
-the working precision must be increased. We ignore this problem in
-log_newton and log_taylor and instead handle it as needed in
-mpf_log.
-
-"""
-
-# This function performs the Newton iteration using fixed-point
-# arithmetic. x is assumed to have magnitude ~= 1
-def log_newton(x, prec):
-    extra = 10
-    # 40-bit approximation
-    fx = math.log(long(x)) - 0.69314718055994529*prec
-    r = MP_BASE(fx * 2.0**40)
-    prevp = 40
-    for p in giant_steps2(40, prec+extra):
-        rb = lshift(r, p-prevp)
-        # Parameters for exponential series
-        if p < 300:
-            r = int(2 * p**0.4)
-            exp_func = exp_series
-        else:
-            r = int(0.7 * p**0.5)
-            exp_func = exp_series2
-        exp_extra = r + 10
-        e = exp_func((-rb) << exp_extra, p + exp_extra, r)
-        s = ((rshift(x, prec-p)*e)>>(p + exp_extra)) - (1 << p)
-        s1 = -((s*s)>>(p+1))
-        r = rb + s + s1
-        prevp = p
-    return r >> extra
-
-if MODE == 'gmpy':
-    LOG_TAYLOR_PREC = 700
-else:
-    LOG_TAYLOR_PREC = 450
-
-LOG_TAYLOR_WP = LOG_TAYLOR_PREC + 20
-LOG_TAYLOR_SHIFT = 9   # steps of size 2^-N
-
-log_taylor_cache = {}
-
-def log_taylor_get_cached(n, prec):
-    # Taylor series with caching wins up to huge precisions
-    # To avoid unnecessary precomputation at low precision, we
-    # do it in steps
-    # Round to next power of 2
-    prec2 = (1<<(bitcount(prec-1))) + 20
-    dprec = prec2 - prec
-    if (n, prec2) in log_taylor_cache:
-        a, atan_a = log_taylor_cache[n, prec2]
-    else:
-        a = n << (prec2 - LOG_TAYLOR_SHIFT)
-        atan_a = log_newton(a, prec2)
-        log_taylor_cache[n, prec2] = (a, atan_a)
-    return (a >> dprec), (atan_a >> dprec)
-
-def log_taylor(x, prec):
-    n = (x >> (prec-LOG_TAYLOR_SHIFT))
-    a, log_a = log_taylor_get_cached(n, prec)
-    d = a - x
-    u = ((-d) << prec) // a
-    w = (d << prec) // a
-    s = MP_ZERO
-    k = 1
-    while u:
-        s += u // k
-        u = (u * w) >> prec
-        k += 1
-    return log_a + s
-
-def mpf_log(x, prec, rnd=round_fast):
-    """
-    Compute the natural logarithm of the mpf value x. If x is negative,
-    ComplexResult is raised.
-    """
-    sign, man, exp, bc = x
-    if not man:
-        if x == fzero: return fninf
-        if x == finf: return finf
-        if x == fnan: return fnan
-    if sign:
-        raise ComplexResult("logarithm of a negative number")
-
-    # log(2^n)
-    if man == 1:
-        if not exp:
-            return fzero
-        return from_man_exp(exp*ln2_fixed(prec+20), -prec-20, prec, rnd)
-
-    # Assume 20 bits to be sufficient for cancelling rounding errors
-    wp = prec + 20
-    mag = bc + exp
-
-    # Already on the standard interval, (0.5, 1)
-    if not mag:
-        t = rshift(man, bc-wp)
-        log2n = 0
-        # Watch out for "x = 0.9999"
-        # Proceed only if 1-x lost at most 15 bits of accuracy
-        res = (MP_ONE << wp) - t
-        if not (res >> (wp - 15)):
-            # Find out extra precision needed
-            delta = mpf_sub(x, fone, 10)
-            delta_bits = -(delta[2] + delta[3])
-            # O(x^2) term vanishes relatively
-            if delta_bits > wp + 10:
-                xm1 = mpf_sub(x, fone, prec, rnd)
-                return mpf_perturb(xm1, 1, prec, rnd)
-            else:
-                wp += delta_bits
-                t = rshift(man, bc-wp)
-
-    # Already on the standard interval, (1, 2)
-    elif mag == 1:
-        t = rshift(man, bc-wp-1)
-        log2n = 0
-        # Watch out for "x = 1.0001"
-        # Similar to above; note that we flip signs
-        # to obtain a positive residual, ensuring that
-        # the following shift rounds down
-        res = t - (MP_ONE << wp)
-        if not (res >> (wp - 15)):
-            # Find out extra precision needed
-            delta = mpf_sub(x, fone, 10)
-            delta_bits = -(delta[2] + delta[3])
-            # O(x^2) term vanishes relatively
-            if delta_bits > wp + 10:
-                xm1 = mpf_sub(x, fone, prec, rnd)
-                return mpf_perturb(xm1, 1, prec, rnd)
-            else:
-                wp += delta_bits
-                t = rshift(man, bc-wp-1)
-
-    # Rescale
-    else:
-        # Estimated precision needed for n*log(2) to
-        # be accurate relatively
-        wp += int(math.log(1+abs(mag),2))
-        log2n = mag * ln2_fixed(wp)
-        # Rescaled argument as a fixed-point number
-        t = rshift(man, bc-wp)
-
-    # Use the faster method
-    if wp < LOG_TAYLOR_PREC:
-        a = log_taylor(t, wp)
-    else:
-        a = log_newton(t, wp)
-
-    return from_man_exp(a + log2n, -wp, prec, rnd)
-
 
 
 #----------------------------------------------------------------------------#
@@ -840,7 +1009,7 @@ def cos_taylor(x, prec):
 # Output: c * 2**(prec + r), s * 2**(prec + r)
 def expi_series(x, prec, r):
     x >>= r
-    one = 1 << prec
+    one = MP_ONE << prec
     x2 = (x*x) >> prec
     s = x
     a = x
@@ -849,10 +1018,10 @@ def expi_series(x, prec, r):
         a = ((a * x2) >> prec) // (-k*(k+1))
         s += a
         k += 2
-    c = sqrt_fixed(one - ((s*s)>>prec), prec)
+    c = isqrt_fast((MP_ONE<<(2*prec)) - (s*s))
     # Calculate (c + j*s)**(2**r) by repeated squaring
     for j in range(r):
-      c, s =  (c*c-s*s) >> prec, (2*c*s ) >> prec
+        c, s =  (c*c-s*s) >> prec, (2*c*s ) >> prec
     return c, s
 
 def reduce_angle(x, prec):
@@ -1000,7 +1169,7 @@ def calc_cos_sin(which, y, swaps, prec, cos_rnd, sin_rnd):
         if which_compute == 0:
             sin = sin_taylor(y, wp)
             # only need to evaluate one of the series
-            cos = sqrt_fixed((1<<wp) - ((sin*sin)>>wp), wp)
+            cos = isqrt_fast((MP_ONE<<(2*wp)) - sin*sin)
         elif which_compute == 1:
             sin = 0
             cos = cos_taylor(y, wp)
@@ -1074,6 +1243,60 @@ def mpf_tan(x, prec, rnd=round_fast):
     c, s = cos_sin(x, prec+20)
     return mpf_div(s, c, prec, rnd)
 
+# Accurate computation of cos(pi*x) and sin(pi*x) is needed by
+# reflection formulas for gamma, polygamma, zeta, etc
+
+def mpf_cos_sin_pi(x, prec, rnd=round_fast):
+    """Accurate computation of (cos(pi*x), sin(pi*x))
+    for x close to an integer"""
+    sign, man, exp, bc = x
+    if not man:
+        return cos_sin(x, prec, rnd)
+    # Exactly an integer or half-integer?
+    if exp >= -1:
+        if exp == -1:
+            c = fzero
+            s = (fone, fnone)[bool(man & 2) ^ sign]
+        elif exp == 0:
+            c, s = (fnone, fzero)
+        else:
+            c, s = (fone, fzero)
+        return c, s
+    # Close to 0 ?
+    size = exp + bc
+    if size < -(prec+5):
+        c = mpf_perturb(fone, 1, prec, rnd)
+        s = mpf_perturb(mpf_mul(x, mpf_pi(prec)), sign, prec, rnd)
+        return c, s
+    if sign:
+        man = -man
+    # Subtract nearest half-integer (= modulo pi/2)
+    nhint = ((man >> (-exp-2)) + 1) >> 1
+    man = man - (nhint << (-exp-1))
+    x = from_man_exp(man, exp, prec)
+    x = mpf_mul(x, mpf_pi(prec), prec)
+    # XXX: with some more work, could call calc_cos_sin,
+    # to save some time and to get rounding right
+    case = nhint % 4
+    if case == 0:
+        c, s = cos_sin(x, prec, rnd)
+    elif case == 1:
+        s, c = cos_sin(x, prec, rnd)
+        c = mpf_neg(c)
+    elif case == 2:
+        c, s = cos_sin(x, prec, rnd)
+        c = mpf_neg(c)
+        s = mpf_neg(s)
+    else:
+        s, c = cos_sin(x, prec, rnd)
+        s = mpf_neg(s)
+    return c, s
+
+def mpf_cos_pi(x, prec, rnd=round_fast):
+    return mpf_cos_sin_pi(x, prec, rnd)[0]
+
+def mpf_sin_pi(x, prec, rnd=round_fast):
+    return mpf_cos_sin_pi(x, prec, rnd)[1]
 
 
 #----------------------------------------------------------------------
@@ -1095,6 +1318,10 @@ def cosh_sinh(x, prec, rnd=round_fast, tanh=0):
     """Simultaneously compute (cosh(x), sinh(x)) for real x"""
     sign, man, exp, bc = x
     if (not man) and exp:
+        if tanh:
+            if x == finf: return fone
+            if x == fninf: return fnone
+            return fnan
         if x == finf: return (finf, finf)
         if x == fninf: return (finf, fninf)
         return fnan, fnan
@@ -1108,6 +1335,8 @@ def cosh_sinh(x, prec, rnd=round_fast, tanh=0):
     if mag < -3:
         # Extremely close to 0, sinh(x) ~= x and cosh(x) ~= 1
         if mag < -prec-2:
+            if tanh:
+                return mpf_perturb(x, 1-sign, prec, rnd)
             cosh = mpf_perturb(fone, 0, prec, rnd)
             sinh = mpf_perturb(x, sign, prec, rnd)
             return cosh, sinh
@@ -1192,16 +1421,20 @@ def atan_taylor(x, prec):
     n = (x >> (prec-ATAN_TAYLOR_SHIFT))
     a, atan_a = atan_taylor_get_cached(n, prec)
     d = x - a
-    s = u = (d << prec) // ((a**2 >> prec) + (a*d >> prec) + (MP_ONE << prec))
-    u2 = (u**2 >> prec)
-    k = 1
-    while u:
-        u = (u * u2) >> prec
+    s0 = v = (d << prec) // ((a**2 >> prec) + (a*d >> prec) + (MP_ONE << prec))
+    v2 = (v**2 >> prec)
+    v4 = (v2 * v2) >> prec
+    s1 = v//3
+    v = (v * v4) >> prec
+    k = 5
+    while v:
+        s0 += v // k
         k += 2
-        if k & 2:
-            s -= u // k
-        else:
-            s += u // k
+        s1 += v // k
+        v = (v * v4) >> prec
+        k += 2
+    s1 = (s1 * v2) >> prec
+    s = s0 - s1
     return atan_a + s
 
 def atan_inf(sign, prec, rnd):
@@ -1248,13 +1481,21 @@ def mpf_atan2(y, x, prec, rnd=round_fast):
     xsign, xman, xexp, xbc = x
     ysign, yman, yexp, ybc = y
     if not yman:
-        if y == fnan or x == fnan:
-            return fnan
-        if mpf_sign(x) >= 0:
-            return fzero
-        return mpf_pi(prec, rnd)
+        if y == fzero and x != fnan:
+            if mpf_sign(x) >= 0:
+                return fzero
+            return mpf_pi(prec, rnd)
+        if y in (finf, fninf):
+            if x in (finf, fninf):
+                return fnan
+            # pi/2
+            if y == finf:
+                return mpf_shift(mpf_pi(prec, rnd), -1)
+            # -pi/2
+            return mpf_neg(mpf_shift(mpf_pi(prec, negative_rnd[rnd]), -1))
+        return fnan
     if ysign:
-        return mpf_neg(mpf_atan2(mpf_neg(y), x, prec, rnd))
+        return mpf_neg(mpf_atan2(mpf_neg(y), x, prec, negative_rnd[rnd]))
     if not xman:
         if x == fnan:
             return fnan
@@ -1262,7 +1503,7 @@ def mpf_atan2(y, x, prec, rnd=round_fast):
             return fzero
         if x == fninf:
             return mpf_pi(prec, rnd)
-        if not yman:
+        if y == fzero:
             return fzero
         return mpf_shift(mpf_pi(prec, rnd), -1)
     tquo = mpf_atan(mpf_div(y, x, prec+4), prec+4)
@@ -1322,10 +1563,21 @@ def mpf_acos(x, prec, rnd=round_fast):
     return mpf_shift(mpf_atan(c, prec, rnd), 1)
 
 def mpf_asinh(x, prec, rnd=round_fast):
+    wp = prec + 20
+    sign, man, exp, bc = x
+    mag = exp+bc
+    if mag < -8:
+        if mag < -wp:
+            return mpf_perturb(x, 1-sign, prec, rnd)
+        wp += (-mag)
     # asinh(x) = log(x+sqrt(x**2+1))
-    wp = prec + 15
-    q = mpf_sqrt(mpf_add(mpf_mul(x,x), fone, wp), wp)
-    return mpf_log(mpf_add(x, q, wp), prec, rnd)
+    # use reflection symmetry to avoid cancellation
+    q = mpf_sqrt(mpf_add(mpf_mul(x, x), fone, wp), wp)
+    q = mpf_add(mpf_abs(x), q, wp)
+    if sign:
+        return mpf_neg(mpf_log(q, prec, negative_rnd[rnd]))
+    else:
+        return mpf_log(q, prec, rnd)
 
 def mpf_acosh(x, prec, rnd=round_fast):
     # acosh(x) = log(x+sqrt(x**2-1))
@@ -1338,11 +1590,69 @@ def mpf_acosh(x, prec, rnd=round_fast):
 def mpf_atanh(x, prec, rnd=round_fast):
     # atanh(x) = log((1+x)/(1-x))/2
     sign, man, exp, bc = x
+    if (not man) and exp:
+        if x in (fzero, fnan):
+            return x
+        raise ComplexResult("atanh(x) is real only for -1 <= x <= 1")
     mag = bc + exp
     if mag > 0:
-        raise ComplexResult("atanh(x) is real only for -1 < x < 1")
+        if mag == 1 and man == 1:
+            return [finf, fninf][sign]
+        raise ComplexResult("atanh(x) is real only for -1 <= x <= 1")
     wp = prec + 15
+    if mag < -8:
+        if mag < -wp:
+            return mpf_perturb(x, sign, prec, rnd)
+        wp += (-mag)
     a = mpf_add(x, fone, wp)
     b = mpf_sub(fone, x, wp)
     return mpf_shift(mpf_log(mpf_div(a, b, wp), prec, rnd), -1)
 
+
+def ifib(n, _cache={}):
+    """Computes the nth Fibonacci number as an integer, for
+    integer n."""
+    if n < 0:
+        return (-1)**(-n+1) * ifib(-n)
+    if n in _cache:
+        return _cache[n]
+    m = n
+    # Use Dijkstra's logarithmic algorithm
+    # The following implementation is basically equivalent to
+    # http://en.literateprograms.org/Fibonacci_numbers_(Scheme)
+    a, b, p, q = MP_ONE, MP_ZERO, MP_ZERO, MP_ONE
+    while n:
+        if n & 1:
+            aq = a*q
+            a, b = b*q+aq+a*p, b*p+aq
+            n -= 1
+        else:
+            qq = q*q
+            p, q = p*p+qq, qq+2*p*q
+            n >>= 1
+    if m < 250:
+        _cache[m] = b
+    return b
+
+def mpf_fibonacci(x, prec, rnd=round_fast):
+    sign, man, exp, bc = x
+    if not man:
+        if x == fninf:
+            return fnan
+        return x
+    # F(2^n) ~= 2^(2^n)
+    size = abs(exp+bc)
+    if exp >= 0:
+        # Exact
+        if size < 10 or size <= bitcount(prec):
+            return from_int(ifib(to_int(x)), prec, rnd)
+    # Use the modified Binet formula
+    wp = prec + size + 20
+    a = mpf_phi(wp)
+    b = mpf_add(mpf_shift(a, 1), fnone, wp)
+    u = mpf_pow(a, x, wp)
+    v = mpf_cos_pi(x, wp)
+    v = mpf_div(v, u, wp)
+    u = mpf_sub(u, v, wp)
+    u = mpf_div(u, b, prec, rnd)
+    return u

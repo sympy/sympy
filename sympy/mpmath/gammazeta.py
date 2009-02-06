@@ -28,25 +28,26 @@ from libmpf import (\
     mpf_pos, mpf_neg, mpf_abs, mpf_add, mpf_sub,
     mpf_mul, mpf_mul_int, mpf_div, mpf_sqrt, mpf_pow_int,
     mpf_rdiv_int,
-    mpf_perturb, mpf_le, mpf_shift,
+    mpf_perturb, mpf_le, mpf_lt, mpf_shift,
     negative_rnd, reciprocal_rnd,
 )
 
 from libelefun import (\
     constant_memo,
     def_mpf_constant,
-    mpf_pi, pi_fixed, ln2_fixed, log_int_fixed,
-    mpf_exp, mpf_log, mpf_pow,
-    cos_sin, cosh_sinh
+    mpf_pi, pi_fixed, ln2_fixed, log_int_fixed, mpf_ln2,
+    mpf_exp, mpf_log, mpf_pow, mpf_cosh,
+    cos_sin, cosh_sinh, mpf_cos_sin_pi, mpf_cos_pi, mpf_sin_pi,
 )
 
 from libmpc import (\
     mpc_zero, mpc_one, mpc_half, mpc_two,
-    mpc_abs,
+    mpc_abs, mpc_shift, mpc_pos,
     mpc_add, mpc_sub, mpc_mul, mpc_div,
     mpc_add_mpf, mpc_mul_mpf, mpc_div_mpf,
     mpc_mul_int, mpc_pow_int,
-    mpc_log, mpc_exp, mpc_pow
+    mpc_log, mpc_exp, mpc_pow,
+    mpc_cos_pi, mpc_sin_pi,
 )
 
 # Catalan's constant is computed using Lupas's rapidly convergent series
@@ -113,8 +114,8 @@ def khinchin_fixed(prec):
         term = (((zeta2n - ONE) * t) // n) >> wp
         if term < 100:
             break
-        #if not n % 100:
-        #    print n, nstr(ln(term))
+        #if not n % 10:
+        #    print n, math.log(int(abs(term)))
         s += term
         t += ONE//(2*n+1) - ONE//(2*n)
         n += 1
@@ -175,6 +176,7 @@ def glaisher_fixed(prec):
         #print k, N
         s += log_int_fixed(k, wp) // k**2
     logN = log_int_fixed(N, wp)
+    #logN = to_fixed(mpf_log(from_int(N), wp+20), wp)
     # E-M step 2: integral of log(x)/x**2 from N to inf
     s += (ONE + logN) // N
     # E-M step 3: endpoint correction term f(N)/2
@@ -196,8 +198,8 @@ def glaisher_fixed(prec):
         term = to_fixed(term, wp)
         if abs(term) < 100:
             break
-        #if not k % 100:
-        #    print k, nstr(ln(term))
+        #if not k % 10:
+        #    print k, math.log(int(abs(term)), 10)
         s -= term
         # Advance derivative twice
         a, b, pN, j = b-a*j, -j*b, pN*N, j+1
@@ -286,74 +288,6 @@ mpf_khinchin = def_mpf_constant(khinchin_fixed)
 mpf_glaisher = def_mpf_constant(glaisher_fixed)
 mpf_catalan = def_mpf_constant(catalan_fixed)
 
-
-
-
-
-# Note: computation of cos(pi*x) and sin(pi*x) is needed by
-# reflection formulas for gamma, polygamma, zeta, etc
-
-def mpf_cos_sin_pi(x, prec, rnd=round_fast):
-    """Accurate computation of (cos(pi*x), sin(pi*x))
-    for x close to an integer"""
-    sign, man, exp, bc = x
-    if not man:
-        return cos_sin(x, prec, rnd)
-    # Exactly an integer or half-integer?
-    if exp >= -1:
-        if exp == -1:
-            c = fzero
-            s = (fone, fnone)[bool(man & 2) ^ sign]
-        elif exp == 0:
-            c, s = (fnone, fzero)
-        else:
-            c, s = (fone, fzero)
-        return c, s
-    # Close to 0 ?
-    size = exp + bc
-    if size < -(prec+5):
-        return (fone, mpf_mul(x, mpf_pi(wp), prec, rnd))
-    if sign:
-        man = -man
-    # Subtract nearest integer (= modulo pi)
-    nint = ((man >> (-exp-1)) + 1) >> 1
-    man = man - (nint << (-exp))
-    x = from_man_exp(man, exp, prec)
-    x = mpf_mul(x, mpf_pi(prec), prec)
-    # Shifted an odd multiple of pi ?
-    if nint & 1:
-        c, s = cos_sin(x, prec, negative_rnd[rnd])
-        return mpf_neg(c), mpf_neg(s)
-    else:
-        return cos_sin(x, prec, rnd)
-
-def mpf_cos_pi(x, prec, rnd=round_fast):
-    return mpf_cos_sin_pi(x, prec, rnd)[0]
-
-def mpf_sin_pi(x, prec, rnd=round_fast):
-    return mpf_cos_sin_pi(x, prec, rnd)[1]
-
-def mpc_cos_pi((a, b), prec, rnd=round_fast):
-    b = mpf_mul(b, mpf_pi(prec+5), prec+5)
-    if a == fzero:
-        return mpf_cosh(b, prec, rnd), fzero
-    wp = prec + 6
-    c, s = mpf_cos_sin_pi(a, wp)
-    ch, sh = cosh_sinh(b, wp)
-    re = mpf_mul(c, ch, prec, rnd)
-    im = mpf_mul(s, sh, prec, rnd)
-    return re, mpf_neg(im)
-
-def mpc_sin_pi((a, b), prec, rnd=round_fast):
-    b = mpf_mul(b, mpf_pi(prec+5), prec+5)
-    if a == fzero:
-        return fzero, mpf_sinh(b, prec, rnd)
-    wp = prec + 6
-    c, s = mpf_cos_sin_pi(a, wp)
-    ch, sh = cosh_sinh(b, wp)
-    re = mpf_mul(s, ch, prec, rnd)
-    im = mpf_mul(c, sh, prec, rnd)
-    return re, im
 
 #-----------------------------------------------------------------------#
 #                                                                       #
@@ -522,12 +456,72 @@ def list_primes(n):
     return [p for p in sieve if p]
 
 def bernfrac(n):
-    """
-    Computes integers (p,q) such that p/q = B_n exactly, where
-    B_n denotes the nth Bernoulli number.
+    r"""
+    Returns a tuple of integers `(p, q)` such that `p/q = B_n` exactly,
+    where `B_n` denotes the `n`-th Bernoulli number. The fraction is
+    always reduced to lowest terms. Note that for `n > 1` and `n` odd,
+    `B_n = 0`, and `(0, 1)` is returned.
 
-    Use bernoulli(n) to get a floating-point approximation
-    instead of the exact fraction (much faster for large n).
+    **Examples**
+
+    The first few Bernoulli numbers are exactly::
+
+        >>> for n in range(15):
+        ...     p, q = bernfrac(n)
+        ...     print n, "%s/%s" % (p, q)
+        ...
+        0 1/1
+        1 -1/2
+        2 1/6
+        3 0/1
+        4 -1/30
+        5 0/1
+        6 1/42
+        7 0/1
+        8 -1/30
+        9 0/1
+        10 5/66
+        11 0/1
+        12 -691/2730
+        13 0/1
+        14 7/6
+
+    This function works for arbitrarily large `n`::
+
+        >>> p, q = bernfrac(10**4)
+        >>> print q
+        2338224387510
+        >>> print len(str(p))
+        27692
+        >>> mp.dps = 15
+        >>> print mpf(p) / q
+        -9.04942396360948e+27677
+        >>> print bernoulli(10**4)
+        -9.04942396360948e+27677
+
+    Note: :func:`bernoulli` computes a floating-point approximation
+    directly, without computing the exact fraction first.
+    This is much faster for large `n`.
+
+    **Algorithm**
+
+    :func:`bernfrac` works by computing the value of `B_n` numerically
+    and then using the von Staudt-Clausen theorem [1] to reconstruct
+    the exact fraction. For large `n`, this is significantly faster than
+    computing `B_1, B_2, \ldots, B_2` recursively with exact arithmetic.
+    The implementation has been tested for `n = 10^m` up to `m = 6`.
+
+    In practice, :func:`bernfrac` appears to be about three times
+    slower than the specialized program calcbn.exe [2]
+
+    **References**
+
+    1. MathWorld, von Staudt-Clausen Theorem:
+       http://mathworld.wolfram.com/vonStaudt-ClausenTheorem.html
+
+    2. The Bernoulli Number Page:
+       http://www.bernoulli.org/
+
     """
     n = int(n)
     if n < 3:
@@ -1134,24 +1128,40 @@ def mpf_zeta_int(s, prec, rnd=round_fast):
     t = (t << wp) // ((1 << wp) - (1 << (wp+1-s)))
     return from_man_exp(t, -wp-wp, prec, rnd)
 
-def mpf_zeta(s, prec, rnd=round_fast):
+def mpf_zeta(s, prec, rnd=round_fast, alt=0):
     sign, man, exp, bc = s
     if not man:
         if s == fzero:
-            return mpf_neg(fhalf)
+            if alt:
+                return fhalf
+            else:
+                return mpf_neg(fhalf)
         if s == finf:
             return fone
         return fnan
     wp = prec + 20
     # First term vanishes?
     if (not sign) and (exp + bc > (math.log(wp,2) + 2)):
-        if rnd in (round_up, round_ceiling):
-            return mpf_add(fone, mpf_shift(fone,-wp-10), prec, rnd)
-        return fone
+        return mpf_perturb(fone, alt, prec, rnd)
+    # Optimize for integer arguments
     elif exp >= 0:
-        return mpf_zeta_int(to_int(s), prec, rnd)
-    # Less than 0.5?
-    if sign or (exp+bc) < 0:
+        if alt:
+            if s == fone:
+                return mpf_ln2(prec, rnd)
+            z = mpf_zeta_int(to_int(s), wp, negative_rnd[rnd])
+            q = mpf_sub(fone, mpf_pow(ftwo, mpf_sub(fone, s, wp), wp), wp)
+            return mpf_mul(z, q, prec, rnd)
+        else:
+            return mpf_zeta_int(to_int(s), prec, rnd)
+    # Negative: use the reflection formula
+    # Borwein only proves the accuracy bound for x >= 1/2. However, based on
+    # tests, the accuracy without reflection is quite good even some distance
+    # to the left of 1/2. XXX: verify this.
+    if sign:
+        # XXX: could use the separate refl. formula for Dirichlet eta
+        if alt:
+            q = mpf_sub(fone, mpf_pow(ftwo, mpf_sub(fone, s, wp), wp), wp)
+            return mpf_mul(mpf_zeta(s, wp), q, prec, rnd)
         # XXX: -1 should be done exactly
         y = mpf_sub(fone, s, 10*wp)
         a = mpf_gamma(y, wp)
@@ -1182,12 +1192,39 @@ def mpf_zeta(s, prec, rnd=round_fast):
             t += w
     t = t // (-d[n])
     t = from_man_exp(t, -wp, wp)
-    q = mpf_sub(fone, mpf_pow(ftwo, mpf_sub(fone, s, wp), wp), wp)
-    return mpf_div(t, q, prec, rnd)
+    if alt:
+        return mpf_pos(t, prec, rnd)
+    else:
+        q = mpf_sub(fone, mpf_pow(ftwo, mpf_sub(fone, s, wp), wp), wp)
+        return mpf_div(t, q, prec, rnd)
 
-def mpc_zeta(s, prec, rnd):
+def mpc_zeta(s, prec, rnd=round_fast, alt=0):
     re, im = s
+    if im == fzero:
+        return mpf_zeta(re, prec, rnd, alt), fzero
     wp = prec + 20
+    # Reflection formula. To be rigorous, we should reflect to the left of
+    # re = 1/2 (see comments for mpf_zeta), but this leads to unnecessary
+    # slowdown for interesting values of s
+    if mpf_lt(re, fzero):
+        # XXX: could use the separate refl. formula for Dirichlet eta
+        if alt:
+            q = mpc_sub(mpc_one, mpc_pow(mpc_two, mpc_sub(mpc_one, s, wp),
+                wp), wp)
+            return mpc_mul(mpc_zeta(s, wp), q, prec, rnd)
+        # XXX: -1 should be done exactly
+        y = mpc_sub(mpc_one, s, 10*wp)
+        a = mpc_gamma(y, wp)
+        b = mpc_zeta(y, wp)
+        c = mpc_sin_pi(mpc_shift(s, -1), wp)
+        rsign, rman, rexp, rbc = re
+        isign, iman, iexp, ibc = im
+        mag = max(rexp+rbc, iexp+ibc)
+        wp2 = wp + mag
+        pi = mpf_pi(wp+wp2)
+        pi2 = (mpf_shift(pi, 1), fzero)
+        d = mpc_div(mpc_pow(pi2, s, wp2), (pi, fzero), wp2)
+        return mpc_mul(a,mpc_mul(b,mpc_mul(c,d,wp),wp),prec,rnd)
     n = int(wp/2.54 + 5)
     n += int(0.9*abs(to_int(im)))
     d = borwein_coefficients(n)
@@ -1216,5 +1253,14 @@ def mpc_zeta(s, prec, rnd):
     tim //= (-d[n])
     tre = from_man_exp(tre, -wp, wp)
     tim = from_man_exp(tim, -wp, wp)
-    q = mpc_sub(mpc_one, mpc_pow(mpc_two, mpc_sub(mpc_one, s, wp), wp), wp)
-    return mpc_div((tre, tim), q, prec, rnd)
+    if alt:
+        return mpc_pos((tre, tim), prec, rnd)
+    else:
+        q = mpc_sub(mpc_one, mpc_pow(mpc_two, mpc_sub(mpc_one, s, wp), wp), wp)
+        return mpc_div((tre, tim), q, prec, rnd)
+
+def mpf_altzeta(s, prec, rnd=round_fast):
+    return mpf_zeta(s, prec, rnd, 1)
+
+def mpc_altzeta(s, prec, rnd=round_fast):
+    return mpc_zeta(s, prec, rnd, 1)

@@ -4,8 +4,10 @@ def test_interval_identity():
     mp.dps = 15
     assert mpi(2) == mpi(2, 2)
     assert mpi(2) != mpi(-2, 2)
+    assert not (mpi(2) != mpi(2, 2))
     assert mpi(-1, 1) == mpi(-1, 1)
-    assert str(mpi('0.1')) == '[0.099999999999999991673, 0.10000000000000000555]'
+    assert str(mpi('0.1')) == "[0.099999999999999991673, 0.10000000000000000555]"
+    assert repr(mpi('0.1')) == "mpi(mpf('0.099999999999999992'), mpf('0.10000000000000001'))"
     u = mpi(-1, 3)
     assert -1 in u
     assert 2 in u
@@ -44,6 +46,26 @@ def test_interval_arithmetic():
     assert str((mpi(50, 50) * mpi(-10, -10)) / 3) == \
         '[-166.66666666666668561, -166.66666666666665719]'
     assert mpi(0, 4) ** 3 == mpi(0, 64)
+    assert mpi(2,4).mid == 3
+    mp.dps = 30
+    a = mpi(pi)
+    mp.dps = 15
+    b = +a
+    assert b.a < a.a
+    assert b.b > a.b
+    a = mpi(pi)
+    assert a == +a
+    assert abs(mpi(-1,2)) == mpi(0,2)
+    assert abs(mpi(0.5,2)) == mpi(0.5,2)
+    assert abs(mpi(-3,2)) == mpi(0,3)
+    assert abs(mpi(-3,-0.5)) == mpi(0.5,3)
+    assert mpi(0) * mpi(2,3) == mpi(0)
+    assert mpi(2,3) * mpi(0) == mpi(0)
+    assert mpi(1,3).delta == 2
+    assert mpi(1,2) - mpi(3,4) == mpi(-3,-1)
+    assert mpi(-inf,0) - mpi(0,inf) == mpi(-inf,0)
+    assert mpi(-inf,0) - mpi(-inf,inf) == mpi(-inf,inf)
+    assert mpi(0,inf) - mpi(-inf,1) == mpi(-1,inf)
 
 def test_interval_mul():
     assert mpi(-1, 0) * inf == mpi(-inf, 0)
@@ -56,9 +78,15 @@ def test_interval_mul():
     assert mpi(-inf, 0) * mpi(0, 1) == mpi(-inf, 0)
     assert mpi(-inf, 0) * mpi(0, 0) * mpi(-inf, 0)
     assert mpi(-inf, 0) * mpi(-inf, inf) == mpi(-inf, inf)
+    assert mpi(-5,0)*mpi(-32,28) == mpi(-140,160)
+    assert mpi(2,3) * mpi(-1,2) == mpi(-3,6)
     # Should be undefined?
     assert mpi(inf, inf) * 0 == mpi(-inf, inf)
     assert mpi(-inf, -inf) * 0 == mpi(-inf, inf)
+    assert mpi(0) * mpi(-inf,2) == mpi(-inf,inf)
+    assert mpi(0) * mpi(-2,inf) == mpi(-inf,inf)
+    assert mpi(-2,inf) * mpi(0) == mpi(-inf,inf)
+    assert mpi(-inf,2) * mpi(0) == mpi(-inf,inf)
 
 def test_interval_pow():
     assert mpi(3)**2 == mpi(9, 9)
@@ -81,6 +109,7 @@ def test_interval_pow():
     assert mpi(1, inf) ** -inf == mpi(0, 1)
     assert mpi(2, 3) ** 1 == mpi(2, 3)
     assert mpi(2, 3) ** 0 == 1
+    assert mpi(1,3) ** mpi(2) == mpi(1,9)
 
 def test_interval_sqrt():
     assert mpi(4) ** 0.5 == mpi(2)
@@ -191,3 +220,13 @@ def test_interval_cos_sin():
         assert 1 in cos(4*mpi(pi))
         assert 1 in cos(4*10**50*mpi(pi))
     mp.dps = 15
+    assert cos(mpi(2,inf)) == mpi(-1,1)
+    assert sin(mpi(2,inf)) == mpi(-1,1)
+    assert cos(mpi(-inf,2)) == mpi(-1,1)
+    assert sin(mpi(-inf,2)) == mpi(-1,1)
+    u = tan(mpi(0.5,1))
+    assert u.a.ae(tan(0.5))
+    assert u.b.ae(tan(1))
+    v = cot(mpi(0.5,1))
+    assert v.a.ae(cot(1))
+    assert v.b.ae(cot(0.5))

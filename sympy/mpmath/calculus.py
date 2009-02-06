@@ -9,209 +9,1397 @@ High-level, mostly calculus-oriented functions.
 etc
 """
 
-__docformat__ = 'plaintext'
+from itertools import izip
 
 from settings import (mp, extraprec)
-from mptypes import (mpnumeric, convert_lossless, mpf, mpc, j, inf, eps,
-    AS_POINTS, arange, nstr)
-from functions import (ldexp, factorial, exp, cos, pi, bernoulli)
+from mptypes import (mpnumeric, mpmathify, mpf, mpc, j, inf, eps,
+    AS_POINTS, arange, nstr, nprint, isinf, fsum, fprod)
+from functions import (ldexp, factorial, exp, ln, sin, cos, pi, bernoulli,
+    sign)
+from gammazeta import int_fac
 
-from quadrature import quadgl, quadts
+from quadrature import quad, quadgl, quadts
+from matrices import matrix
+from linalg import lu_solve
 
-#----------------------------------------------------------------------------#
-#                       General extrapolation methods                        #
-#----------------------------------------------------------------------------#
+def richardson(seq):
+    r"""
+    Given a list ``seq`` of the first `N` elements of a slowly convergent
+    infinite sequence, :func:`richardson` computes the `N`-term
+    Richardson extrapolate for the limit.
 
-def richardson_extrapolation(f, n, N):
-    if not callable(f):
-        g = f; f = lambda k: g.__getitem__(int(k))
-    orig = mp.prec
-    try:
-        mp.prec = 2*orig
-        s = mpf(0)
-        for j in range(0, N+1):
-            c = (n+j)**N * (-1)**(j+N) / (factorial(j) * factorial(N-j))
-            s += c * f(mpf(n+j))
-    finally:
-        mp.prec = orig
-    return +s
+    :func:`richardson` returns `(v, c)` where `v` is the estimated
+    limit and `c` is the magnitude of the largest weight used during the
+    computation. The weight provides an estimate of the precision
+    lost to cancellation. Due to cancellation effects, the sequence must
+    be typically be computed at a much higher precision than the target
+    accuracy of the extrapolation.
 
-def shanks_extrapolation(f, n, m=1):
-    if not callable(f):
-        g = f; f = lambda k: g.__getitem__(int(k))
-    orig = mp.prec
-    try:
-        mp.prec = 2*orig
-        table = [f(mpf(j)) for j in range(n+m+2)]
-        table2 = table[:]
-        for i in range(1, m+1):
-            for j in range(i, n+m+1):
-                x, y, z = table[j-1], table[j], table[j+1]
-                try:
-                    table2[j] = (z*x - y**2) / (z + x - 2*y)
-                except ZeroDivisionError:
-                    return table2[j-1]
-            table = table2[:]
-    finally:
-        mp.prec = orig
-    return +table[n]
+    **Applicability and issues**
 
-def limit(f, x, direction=-1, n=None, N=None):
-    """Compute lim of f(t) as t -> x using Richardson extrapolation.
-    For infinite x, the function values [f(n), ... f(n+N)] are used.
-    For finite x, [f(x-direction/n)), ... f(x-direction/(n+N))] are
-    used. If x is inf, f can be also be a precomputed sequence
-    with a __getitem__ method."""
-    if callable(f):
-        if not n: n = 3 + int(mp.dps * 0.5)
-        if not N: N = 2*n
+    The `N`-step Richardson extrapolation algorithm used by
+    :func:`richardson` is described in [1].
+
+    Richardson extrapolation only works for a specific type of sequence,
+    namely one converging like partial sums of
+    `P(1)/Q(1) + P(2)/Q(2) + \ldots` where `P` and `Q` are polynomials.
+    When the sequence does not convergence at such a rate
+    :func:`richardson` generally produces garbage.
+
+    Richardson extrapolation has the advantage of being fast: the `N`-term
+    extrapolate requires only `O(N)` arithmetic operations, and usually
+    produces an estimate that is accurate to `O(N)` digits. Contrast with
+    the Shanks transformation (see :func:`shanks`), which requires
+    `O(N^2)` operations.
+
+    :func:`richardson` is unable to produce an estimate for the
+    approximation error. One way to estimate the error is to perform
+    two extrapolations with slightly different `N` and comparing the
+    results.
+
+    Richardson extrapolation does not work for oscillating sequences.
+    As a simple workaround, :func:`richardson` detects if the last
+    three elements do not differ monotonically, and in that case
+    applies extrapolation only to the even-index elements.
+
+    **Example**
+
+    Applying Richardson extrapolation to the Leibniz series for `\pi`::
+
+        >>> from sympy.mpmath import *
+        >>> mp.dps = 30
+        >>> S = [4*sum(mpf(-1)**n/(2*n+1) for n in range(m))
+        ...     for m in range(1,30)]
+        >>> v, c = richardson(S[:10])
+        >>> print v
+        3.2126984126984126984126984127
+        >>> nprint([v-pi, c])
+        [7.11058e-2, 2.0]
+
+        >>> v, c = richardson(S[:30])
+        >>> print v
+        3.14159265468624052829954206226
+        >>> nprint([v-pi, c])
+        [1.09645e-9, 20833.3]
+
+    **References**
+
+    1. C. M. Bender & S. A. Orszag, "Advanced Mathematical Methods for
+       Scientists and Engineers", Springer 1999, pp. 375-376
+
+    """
+    assert len(seq) >= 3
+    if sign(seq[-1]-seq[-2]) != sign(seq[-2]-seq[-3]):
+        seq = seq[::2]
+    N = len(seq)//2-1
+    s = mpf(0)
+    # The general weight is c[k] = (N+k)**N * (-1)**(k+N) / k! / (N-k)!
+    # To avoid repeated factorials, we simplify the quotient
+    # of successive weights to obtain a recurrence relation
+    c = (-1)**N * N**N / mpf(int_fac(N))
+    maxc = 1
+    for k in xrange(N+1):
+        s += c * seq[N+k]
+        maxc = max(abs(c), maxc)
+        c *= (k-N)*mpf(k+N+1)**N
+        c /= ((1+k)*mpf(k+N)**N)
+    return s, maxc
+
+def shanks(seq, table=None, randomized=False):
+    r"""
+    Given a list ``seq`` of the first `N` elements of a slowly
+    convergent infinite sequence `(A_k)`, :func:`shanks` computes the iterated
+    Shanks transformation `S(A), S(S(A)), \ldots, S^{N/2}(A)`. The Shanks
+    transformation often provides strong convergence acceleration,
+    especially if the sequence is oscillating.
+
+    The iterated Shanks transformation is computed using the Wynn
+    epsilon algorithm (see [1]). :func:`shanks` returns the full
+    epsilon table generated by Wynn's algorithm, which can be read
+    off as follows:
+
+    * The table is a list of lists forming a lower triangular matrix,
+      where higher row and column indices correspond to more accurate
+      values.
+    * The columns with even index hold dummy entries (required for the
+      computation) and the columns with odd index hold the actual
+      extrapolates.
+    * The last element in the last row is typically the most
+      accurate estimate of the limit.
+    * The difference to the third last element in the last row
+      provides an estimate of the approximation error.
+    * The magnitude of the second last element provides an estimate
+      of the numerical accuracy lost to cancellation.
+
+    For convenience, so the extrapolation is stopped at an odd index
+    so that ``shanks(seq)[-1][-1]`` always gives an estimate of the
+    limit.
+
+    Optionally, an existing table can be passed to :func:`shanks`.
+    This can be used to efficiently extend a previous computation after
+    new elements have been appended to the sequence. The table will
+    then be updated in-place.
+
+    **The Shanks transformation**
+
+    The Shanks transformation is defined as follows (see [2]): given
+    the input sequence `(A_0, A_1, \ldots)`, the transformed sequence is
+    given by
+
+    .. math ::
+
+        S(A_k) = \frac{A_{k+1}A_{k-1}-A_k^2}{A_{k+1}+A_{k-1}-2 A_k}
+
+    The Shanks transformation gives the exact limit `A_{\infty}` in a
+    single step if `A_k = A + a q^k`. Note in particular that it
+    extrapolates the exact sum of a geometric series in a single step.
+
+    Applying the Shanks transformation once often improves convergence
+    substantially for an arbitrary sequence, but the optimal effect is
+    obtained by applying it iteratively:
+    `S(S(A_k)), S(S(S(A_k))), \ldots`.
+
+    Wynn's epsilon algorithm provides an efficient way to generate
+    the table of iterated Shanks transformations. It reduces the
+    computation of each element to essentially a single division, at
+    the cost of requiring dummy elements in the table. See [1] for
+    details.
+
+    **Precision issues**
+
+    Due to cancellation effects, the sequence must be typically be
+    computed at a much higher precision than the target accuracy
+    of the extrapolation.
+
+    If the Shanks transformation converges to the exact limit (such
+    as if the sequence is a geometric series), then a division by
+    zero occurs. By default, :func:`shanks` handles this case by
+    terminating the iteration and returning the table it has
+    generated so far. With *randomized=True*, it will instead
+    replace the zero by a pseudorandom number close to zero.
+    (TODO: find a better solution to this problem.)
+
+    **Examples**
+
+    We illustrate by applying Shanks transformation to the Leibniz
+    series for `\pi`::
+
+        >>> from sympy.mpmath import *
+        >>> mp.dps = 50
+        >>> S = [4*sum(mpf(-1)**n/(2*n+1) for n in range(m))
+        ...     for m in range(1,30)]
+        >>>
+        >>> T = shanks(S[:7])
+        >>> for row in T:
+        ...     nprint(row)
+        ...
+        [-0.75]
+        [1.25, 3.16667]
+        [-1.75, 3.13333, -28.75]
+        [2.25, 3.14524, 82.25, 3.14234]
+        [-2.75, 3.13968, -177.75, 3.14139, -969.937]
+        [3.25, 3.14271, 327.25, 3.14166, 3515.06, 3.14161]
+
+    The extrapolated accuracy is about 4 digits, and about 4 digits
+    may have been lost due to cancellation::
+
+        >>> L = T[-1]
+        >>> nprint([abs(L[-1] - pi), abs(L[-1] - L[-3]), abs(L[-2])])
+        [2.22532e-5, 4.78309e-5, 3515.06]
+
+    Now we extend the computation::
+
+        >>> T = shanks(S[:25], T)
+        >>> L = T[-1]
+        >>> nprint([abs(L[-1] - pi), abs(L[-1] - L[-3]), abs(L[-2])])
+        [3.75527e-19, 1.48478e-19, 2.96014e+17]
+
+    The value for pi is now accurate to 18 digits. About 18 digits may
+    also have been lost to cancellation.
+
+    Here is an example with a geometric series, where the convergence
+    is immediate (the sum is exactly 1)::
+
+        >>> mp.dps = 15
+        >>> for row in shanks([0.5, 0.75, 0.875, 0.9375, 0.96875]):
+        ...     nprint(row)
+        [4.0]
+        [8.0, 1.0]
+
+    **References**
+
+    1. P. R. Graves-Morris, D. E. Roberts, A. Salam, "The epsilon
+       algorithm and related topics", Journal of Computational and
+       Applied Mathematics, Volume 122, Issue 1-2  (October 2000)
+
+    2. C. M. Bender & S. A. Orszag, "Advanced Mathematical Methods for
+       Scientists and Engineers", Springer 1999, pp. 368-375
+
+    """
+    assert len(seq) >= 2
+    if table:
+        START = len(table)
     else:
-        # If a sequence, take as many terms are are available
-        g = f; f = lambda k: g.__getitem__(int(k))
-        if not N: N = len(g)-1
-        if not n: n = 0
-    if   x == inf:  return richardson_extrapolation(lambda k: f(mpf(k)), n, N)
-    elif x == -inf: return richardson_extrapolation(lambda k: f(mpf(-k)), n, N)
-    direction *= mpf(1)
-    def g(k):
-        return f(x - direction/(1+k))
-    return richardson_extrapolation(g, n, N)
+        START = 0
+        table = []
+    STOP = len(seq) - 1
+    if STOP & 1:
+        STOP -= 1
+    one = mpf(1)
+    if randomized:
+        from random import Random
+        rnd = Random()
+        rnd.seed(START)
+    for i in xrange(START, STOP):
+        row = []
+        for j in xrange(i+1):
+            if j == 0:
+                a, b = 0, seq[i+1]-seq[i]
+            else:
+                if j == 1:
+                    a = seq[i]
+                else:
+                    a = table[i-1][j-2]
+                b = row[j-1] - table[i-1][j-1]
+            if not b:
+                if randomized:
+                    b = rnd.getrandbits(10)*eps
+                elif i & 1:
+                    return table[:-1]
+                else:
+                    return table
+            row.append(a + one/b)
+        table.append(row)
+    return table
+
+def sumem(f, interval, tol=None, reject=10, integral=None,
+    adiffs=None, bdiffs=None, verbose=False, error=False):
+    r"""
+    Uses the Euler-Maclaurin formula to compute an approximation accurate
+    to within ``tol`` (which defaults to the present epsilon) of the sum
+
+    .. math ::
+
+        S = \sum_{k=a}^b f(k)
+
+    where `(a,b)` are given by ``interval`` and `a` or `b` may be
+    infinite. The approximation is
+
+    .. math ::
+
+        S \sim \int_a^b f(x) \,dx + \frac{f(a)+f(b)}{2} +
+        \sum_{k=1}^{\infty} \frac{B_{2k}}{(2k)!}
+        \left(f^{(2k-1)}(b)-f^{(2k-1)}(a)\right).
+
+    The last sum in the Euler-Maclaurin formula is not generally
+    convergent (a notable exception is if `f` is a polynomial, in
+    which case Euler-Maclaurin actually gives an exact result).
+
+    The summation is stopped as soon as the quotient between two
+    consecutive terms falls below *reject*. That is, by default
+    (*reject* = 10), the summation is continued as long as each
+    term adds at least one decimal.
+
+    Although not convergent, convergence to a given tolerance can
+    often be "forced" if `b = \infty` by summing up to `a+N` and then
+    applying the Euler-Maclaurin formula to the sum over the range
+    `(a+N+1, \ldots, \infty)`. This procedure is implemented by
+    :func:`nsum`.
+
+    By default numerical quadrature and differentiation is used.
+    If the symbolic values of the integral and endpoint derivatives
+    are known, it is more efficient to pass the value of the
+    integral explicitly as ``integral`` and the derivatives
+    explicitly as ``adiffs`` and ``bdiffs``. The derivatives
+    should be given as iterables that yield
+    `f(a), f'(a), f''(a), \ldots` (and the equivalent for `b`).
+
+    **Examples**
+
+    Summation of an infinite series, with automatic and symbolic
+    integral and derivative values (the second should be much faster)::
+
+        >>> from sympy.mpmath import *
+        >>> mp.dps = 50
+        >>> print sumem(lambda n: 1/n**2, [32, inf])
+        0.03174336652030209012658168043874142714132886413417
+        >>> I = mpf(1)/32
+        >>> D = adiffs=((-1)**n*fac(n+1)*32**(-2-n) for n in xrange(999))
+        >>> print sumem(lambda n: 1/n**2, [32, inf], integral=I, adiffs=D)
+        0.03174336652030209012658168043874142714132886413417
+
+    An exact evaluation of a finite polynomial sum::
+
+        >>> print sumem(lambda n: n**5-12*n**2+3*n, [-100000, 200000])
+        10500155000624963999742499550000.0
+        >>> print sum(n**5-12*n**2+3*n for n in xrange(-100000, 200001))
+        10500155000624963999742499550000
+
+    """
+    tol = tol or +eps
+    interval = AS_POINTS(interval)
+    a = mpmathify(interval[0])
+    b = mpmathify(interval[-1])
+    err = mpf(0)
+    prev = 0
+    M = 10000
+    if a == -inf: adiffs = (0 for n in xrange(M))
+    else:         adiffs = adiffs or diffs(f, a)
+    if b == inf:  bdiffs = (0 for n in xrange(M))
+    else:         bdiffs = bdiffs or diffs(f, b)
+    orig = mp.prec
+    #verbose = 1
+    try:
+        mp.prec += 10
+        s = mpf(0)
+        for k, (da, db) in enumerate(izip(adiffs, bdiffs)):
+            if k & 1:
+                term = (db-da) * bernoulli(k+1) / factorial(k+1)
+                mag = abs(term)
+                if verbose:
+                    print "term", k, "magnitude =", nstr(mag)
+                if k > 4 and mag < tol:
+                    s += term
+                    break
+                elif k > 4 and abs(prev) / mag < reject:
+                    if verbose:
+                        print "Failed to converge"
+                    err += mag
+                    break
+                else:
+                    s += term
+                prev = term
+        # Endpoint correction
+        if a != -inf: s += f(a)/2
+        if b != inf: s += f(b)/2
+        # Tail integral
+        if verbose:
+            print "Integrating f(x) from x = %s to %s" % (nstr(a), nstr(b))
+        if integral:
+            s += integral
+        else:
+            integral, ierr = quad(f, interval, error=True)
+            if verbose:
+                print "Integration error:", ierr
+            s += integral
+            err += ierr
+    finally:
+        mp.prec = orig
+    if error:
+        return s, err
+    else:
+        return s
+
+def adaptive_extrapolation(update, emfun, kwargs):
+    option = kwargs.get
+    tol = option('tol', eps/2**10)
+    verbose = option('verbose', False)
+    maxterms = option('maxterms', mp.dps*10)
+    method = option('method', 'r+s').split('+')
+    skip = option('skip', 0)
+    steps = iter(option('steps', xrange(10, 10**9, 10)))
+    #steps = (10 for i in xrange(1000))
+    if method in ('d', 'direct'):
+        TRY_RICHARDSON = self.TRY_SHANKS = \
+            TRY_EULER_MACLAURIN = False
+    else:
+        TRY_RICHARDSON = ('r' in method) or ('richardson' in method)
+        TRY_SHANKS = ('s' in method) or ('shanks' in method)
+        TRY_EULER_MACLAURIN = ('e' in method) or \
+            ('euler-maclaurin' in method)
+
+    last_richardson_value = 0
+    shanks_table = []
+    index = 0
+    step = 10
+    partial = []
+    best = mpf(0)
+    orig = mp.prec
+    try:
+        if TRY_RICHARDSON or TRY_SHANKS:
+            mp.prec *= 4
+        else:
+            mp.prec += 30
+        while 1:
+            if index >= maxterms:
+                break
+
+            # Get new batch of terms
+            try:
+                step = steps.next()
+            except StopIteration:
+                pass
+            if verbose:
+                print "-"*70
+                print "Adding terms #%i-#%i" % (index, index+step)
+            update(partial, xrange(index, index+step))
+            index += step
+
+            # Check direct error
+            best = partial[-1]
+            error = abs(best - partial[-2])
+            if verbose:
+                print "Direct error: %s" % nstr(error)
+            if error <= tol:
+                return best
+
+            # Check each extrapolation method
+            if TRY_RICHARDSON:
+                value, maxc = richardson(partial)
+                # Convergence
+                richardson_error = abs(value - last_richardson_value)
+                if verbose:
+                    print "Richardson error: %s" % \
+                        nstr(richardson_error)
+                # Convergence
+                if richardson_error <= tol:
+                    return value
+                last_richardson_value = value
+                # Unreliable due to cancellation
+                if eps*maxc > tol:
+                    if verbose:
+                        print "Ran out of precision for Richardson"
+                    TRY_RICHARDSON = False
+                if richardson_error < error:
+                    error = richardson_error
+                    best = value
+            if TRY_SHANKS:
+                shanks_table = shanks(partial, shanks_table, randomized=True)
+                row = shanks_table[-1]
+                if len(row) == 2:
+                    est1 = row[-1]
+                    shanks_error = 0
+                else:
+                    est1, maxc, est2 = row[-1], abs(row[-2]), row[-3]
+                    shanks_error = abs(est1-est2)
+                if verbose:
+                    print "Shanks error: %s" % nstr(shanks_error)
+                if shanks_error <= tol:
+                    return est1
+                if eps*maxc > tol:
+                    if verbose:
+                        print "Ran out of precision for Shanks"
+                    TRY_SHANKS = False
+                if shanks_error < error:
+                    error = shanks_error
+                    best = est1
+            if TRY_EULER_MACLAURIN:
+                if mpc(sign(partial[-1]) / sign(partial[-2])).ae(-1):
+                    if verbose:
+                        print ("NOT using Euler-Maclaurin: the series appears"
+                            " to be alternating, so numerical\n quadrature"
+                            " will most likely fail")
+                    TRY_EULER_MACLAURIN = False
+                else:
+                    value, em_error = emfun(index+1, tol)
+                    value += partial[-1]
+                    if verbose:
+                        print "Euler-Maclaurin error: %s" % nstr(em_error)
+                    if em_error <= tol:
+                        return value
+                    if em_error < error:
+                        best = value
+    finally:
+        mp.prec = orig
+    if verbose:
+        print "Warning: failed to converge to target accuracy"
+    return best
+
+def nsum(f, interval, **kwargs):
+    r"""
+    Computes the sum
+
+    .. math :: S = \sum_{k=a}^b f(k)
+
+    where `(a, b)` = *interval*, and where `a = -\infty` and/or
+    `b = \infty` are allowed. Two examples of
+    infinite series that can be summed by :func:`nsum`, where the
+    first converges rapidly and the second converges slowly, are::
+
+        >>> from sympy.mpmath import *
+        >>> mp.dps = 15
+        >>> print nsum(lambda n: 1/fac(n), [0, inf])
+        2.71828182845905
+        >>> print nsum(lambda n: 1/n**2, [1, inf])
+        1.64493406684823
+
+    When appropriate, :func:`nsum` applies convergence acceleration to
+    accurately estimate the sums of slowly convergent series.
+    If the sum is finite, :func:`nsum` currently does not
+    attempt to perform any extrapolation, and simply calls
+    :func:`fsum`.
+
+    **Options**
+
+    *tol*
+        Desired maximum final error. Defaults roughly to the
+        epsilon of the working precision.
+
+    *method*
+        Which summation algorithm to use (described below).
+        Default: ``'richardson+shanks'``.
+
+    *maxterms*
+        Cancel after at most this many terms. Default: 10*dps.
+
+    *steps*
+        An iterable giving the number of terms to add between
+        each extrapolation attempt. The default sequence is
+        [10, 20, 30, 40, ...]. For example, if you know that
+        approximately 100 terms will be required, efficiency might be
+        improved by setting this to [100, 10]. Then the first
+        extrapolation will be performed after 100 terms, the second
+        after 110, etc.
+
+    *verbose*
+        Print details about progress.
+
+    **Methods**
+
+    Unfortunately, an algorithm that can efficiently sum any infinite
+    series does not exist. :func:`nsum` implements several different
+    algorithms that each work well in different cases. The *method*
+    keyword argument selects a method.
+
+    The default method is ``'r+s'``, i.e. both Richardson extrapolation
+    and Shanks transformation is attempted. A slower method that
+    handles more cases is ``'r+s+e'``. For very high precision
+    summation, or if the summation needs to be fast (for example if
+    multiple sums need to be evaluated), it is a good idea to
+    investigate which one method works best and only use that.
+
+    ``'richardson'`` / ``'r'``:
+        Uses Richardson extrapolation. Provides useful extrapolation
+        when `f(k) \sim P(k)/Q(k)` or when `f(k) \sim (-1)^k P(k)/Q(k)`
+        for polynomials `P` and `Q`. See :func:`richardson` for
+        additional information.
+
+    ``'shanks'`` / ``'s'``:
+        Uses Shanks transformation. Typically provides useful
+        extrapolation when `f(k) \sim c^k` or when successive terms
+        alternate signs. Is able to sum some divergent series.
+        See :func:`shanks` for additional information.
+
+    ``'euler-maclaurin'`` / ``'e'``:
+        Uses the Euler-Maclaurin summation formula to approximate
+        the remainder sum by an integral. This requires high-order
+        numerical derivatives and numerical integration. The advantage
+        of this algorithm is that it works regardless of the
+        decay rate of `f`, as long as `f` is sufficiently smooth.
+        See :func:`sumem` for additional information.
+
+    ``'direct'`` / ``'d'``:
+        Does not perform any extrapolation. This can be used
+        (and should only be used for) rapidly convergent series.
+        The summation automatically stops when the terms
+        decrease below the target tolerance.
+
+    **Basic examples**
+
+    A finite sum::
+
+        >>> print nsum(lambda k: 1/k, [1, 6])
+        2.45
+
+    Summation of a series going to negative infinity and a doubly
+    infinite series::
+
+        >>> print nsum(lambda k: 1/k**2, [-inf, -1])
+        1.64493406684823
+        >>> print nsum(lambda k: 1/(1+k**2), [-inf, inf])
+        3.15334809493716
+
+    :func:`nsum` handles sums of complex numbers::
+
+        >>> print nsum(lambda k: (0.5+0.25j)**k, [0, inf])
+        (1.6 + 0.8j)
+
+    The following sum converges very rapidly, so it is most
+    efficient to sum it by disabling convergence acceleration::
+
+        >>> mp.dps = 1000
+        >>> a = nsum(lambda k: -(-1)**k * k**2 / fac(2*k), [1, inf],
+        ...     method='direct')
+        >>> b = (cos(1)+sin(1))/4
+        >>> abs(a-b) < mpf('1e-998')
+        True
+
+    **Examples with Richardson extrapolation**
+
+    Richardson extrapolation works well for sums over rational
+    functions, as well as their alternating counterparts::
+
+        >>> mp.dps = 50
+        >>> print nsum(lambda k: 1 / k**3, [1, inf],
+        ...     method='richardson')
+        1.2020569031595942853997381615114499907649862923405
+        >>> print zeta(3)
+        1.2020569031595942853997381615114499907649862923405
+
+        >>> print nsum(lambda n: (n + 3)/(n**3 + n**2), [1, inf],
+        ...     method='richardson')
+        2.9348022005446793094172454999380755676568497036204
+        >>> print pi**2/2-2
+        2.9348022005446793094172454999380755676568497036204
+
+        >>> print nsum(lambda k: (-1)**k / k**3, [1, inf],
+        ...     method='richardson')
+        -0.90154267736969571404980362113358749307373971925537
+        >>> print -3*zeta(3)/4
+        -0.90154267736969571404980362113358749307373971925538
+
+    **Examples with Shanks transformation**
+
+    The Shanks transformation works well for geometric series
+    and typically provides excellent acceleration for Taylor
+    series near the border of their disk of convergence.
+    Here we apply it to a series for `\log(2)`, which can be
+    seen as the Taylor series for `\log(1+x)` with `x = 1`::
+
+        >>> print nsum(lambda k: -(-1)**k/k, [1, inf],
+        ...     method='shanks')
+        0.69314718055994530941723212145817656807550013436025
+        >>> print log(2)
+        0.69314718055994530941723212145817656807550013436025
+
+    Here we apply it to a slowly convergent geometric series::
+
+        >>> print nsum(lambda k: mpf('0.995')**k, [0, inf],
+        ...     method='shanks')
+        200.0
+
+    Finally, Shanks' method works very well for alternating series
+    where `f(k) = (-1)^k g(k)`, and often does so regardless of
+    the exact decay rate of `g(k)`::
+
+        >>> mp.dps = 15
+        >>> print nsum(lambda k: (-1)**(k+1) / k**1.5, [1, inf],
+        ...     method='shanks')
+        0.765147024625408
+        >>> print (2-sqrt(2))*zeta(1.5)/2
+        0.765147024625408
+
+    The following slowly convergent alternating series has no known
+    closed-form value. Evaluating the sum a second time at higher
+    precision indicates that the value is probably correct::
+
+        >>> print nsum(lambda k: (-1)**k / log(k), [2, inf],
+        ...     method='shanks')
+        0.924299897222939
+        >>> mp.dps = 30
+        >>> print nsum(lambda k: (-1)**k / log(k), [2, inf],
+        ...     method='shanks')
+        0.92429989722293885595957018136
+
+    **Examples with Euler-Maclaurin summation**
+
+    The sum in the following example has the wrong rate of convergence
+    for either Richardson or Shanks to be effective.
+
+        >>> f = lambda k: log(k)/k**2.5
+        >>> mp.dps = 15
+        >>> print nsum(f, [1, inf], method='euler-maclaurin')
+        0.38734195032621
+        >>> print -diff(zeta, 2.5)
+        0.38734195032621
+
+    Increasing ``steps`` improves speed at higher precision::
+
+        >>> mp.dps = 50
+        >>> print nsum(f, [1, inf], method='euler-maclaurin', steps=[250])
+        0.38734195032620997271199237593105101319948228874688
+        >>> print -diff(zeta, 2.5)
+        0.38734195032620997271199237593105101319948228874688
+
+    **Divergent series**
+
+    The Shanks transformation is able to sum some *divergent*
+    series. In particular, it is often able to sum Taylor series
+    beyond their radius of convergence (this is due to a relation
+    between the Shanks transformation and Pade approximations;
+    see :func:`pade` for an alternative way to evaluate divergent
+    Taylor series).
+
+    Here we apply it to `\log(1+x)` far outside the region of
+    convergence::
+
+        >>> mp.dps = 50
+        >>> print nsum(lambda k: -(-9)**k/k, [1, inf],
+        ...     method='shanks')
+        2.3025850929940456840179914546843642076011014886288
+        >>> print log(10)
+        2.3025850929940456840179914546843642076011014886288
+
+    A particular type of divergent series that can be summed
+    using the Shanks transformation is geometric series.
+    The result is the same as using the closed-form formula
+    for an infinite geometric series::
+
+        >>> mp.dps = 15
+        >>> for n in arange(-8, 8):
+        ...     if n == 1:
+        ...         continue
+        ...     print n, 1/(1-n), nsum(lambda k: n**k, [0, inf],
+        ...         method='shanks')
+        ...
+        -8.0 0.111111111111111 0.111111111111111
+        -7.0 0.125 0.125
+        -6.0 0.142857142857143 0.142857142857143
+        -5.0 0.166666666666667 0.166666666666667
+        -4.0 0.2 0.2
+        -3.0 0.25 0.25
+        -2.0 0.333333333333333 0.333333333333333
+        -1.0 0.5 0.5
+        0.0 1.0 1.0
+        2.0 -1.0 -1.0
+        3.0 -0.5 -0.5
+        4.0 -0.333333333333333 -0.333333333333333
+        5.0 -0.25 -0.25
+        6.0 -0.2 -0.2
+        7.0 -0.166666666666667 -0.166666666666667
+
+    """
+    a, b = AS_POINTS(interval)
+    if a == -inf:
+        if b == inf:
+            return f(0) + nsum(lambda k: f(-k) + f(k), [1, inf], **kwargs)
+        return nsum(f, [-b, inf], **kwargs)
+    elif b != inf:
+        return fsum(f(mpf(k)) for k in xrange(int(a), int(b)+1))
+
+    a = int(a)
+
+    def update(partial_sums, indices):
+        if partial_sums:
+            psum = partial_sums[-1]
+        else:
+            psum = mpf(0)
+        for k in indices:
+            psum = psum + f(a + mpf(k))
+            partial_sums.append(psum)
+
+    prec = mp.prec
+
+    def emfun(point, tol):
+        workprec = mp.prec
+        mp.prec = prec + 10
+        v = sumem(f, [point, inf], tol, error=1)
+        mp.prec = workprec
+        return v
+
+    return +adaptive_extrapolation(update, emfun, kwargs)
+
+def nprod(f, interval, **kwargs):
+    """
+    Computes the product
+
+    .. math :: P = \prod_{k=a}^b f(k)
+
+    where `(a, b)` = *interval*, and where `a = -\infty` and/or
+    `b = \infty` are allowed.
+
+    This function is essentially equivalent to applying :func:`nsum`
+    to the logarithm of the product (which, of course, becomes a
+    series). All keyword arguments passed to :func:`nprod` are
+    forwarded verbatim to :func:`nsum`.
+
+    **Examples**
+
+    A simple finite product::
+
+        >>> from sympy.mpmath import *
+        >>> mp.dps = 15
+        >>> print nprod(lambda k: k, [1, 4])
+        24.0
+
+    A large number of infinite products have known exact values,
+    and can therefore be used as a reference. Most of the following
+    examples are taken from MathWorld [1].
+
+    A few infinite products with simple values are::
+
+        >>> print 2*nprod(lambda k: (4*k**2)/(4*k**2-1), [1, inf])
+        3.14159265358979
+        >>> print nprod(lambda k: (1+1/k)**2/(1+2/k), [1, inf])
+        2.0
+        >>> print nprod(lambda k: (k**3-1)/(k**3+1), [2, inf])
+        0.666666666666667
+        >>> print nprod(lambda k: (1-1/k**2), [2, inf])
+        0.5
+
+    Next, several more infinite products with more complicated
+    values::
+
+        >>> print nprod(lambda k: exp(1/k**2), [1, inf])
+        5.18066831789712
+        >>> print exp(pi**2/6)
+        5.18066831789712
+
+        >>> print nprod(lambda k: (k**2-1)/(k**2+1), [2, inf])
+        0.272029054982133
+        >>> print pi*csch(pi)
+        0.272029054982133
+
+        >>> print nprod(lambda k: (k**4-1)/(k**4+1), [2, inf])
+        0.8480540493529
+        >>> print pi*sinh(pi)/(cosh(sqrt(2)*pi)-cos(sqrt(2)*pi))
+        0.8480540493529
+
+        >>> print nprod(lambda k: (1+1/k+1/k**2)**2/(1+2/k+3/k**2), [1, inf])
+        1.84893618285824
+        >>> print 3*sqrt(2)*cosh(pi*sqrt(3)/2)**2*csch(pi*sqrt(2))/pi
+        1.84893618285824
+
+        >>> print nprod(lambda k: (1-1/k**4), [2, inf])
+        0.919019477593744
+        >>> print sinh(pi)/(4*pi)
+        0.919019477593744
+
+        >>> print nprod(lambda k: (1-1/k**6), [2, inf])
+        0.982684277742192
+        >>> print (1+cosh(pi*sqrt(3)))/(12*pi**2)
+        0.982684277742192
+
+        >>> print nprod(lambda k: (1+1/k**2), [2, inf])
+        1.83803895518749
+        >>> print sinh(pi)/(2*pi)
+        1.83803895518749
+
+        >>> print nprod(lambda n: (1+1/n)**n * exp(1/(2*n)-1), [1, inf])
+        1.44725592689037
+        >>> print exp(1+euler/2)/sqrt(2*pi)
+        1.44725592689037
+
+    The following two products are equivalent and can be evaluated in
+    terms of a Jacobi theta function. Pi can be replaced by any value
+    (as long as convergence is preserved)::
+
+        >>> print nprod(lambda k: (1-pi**-k)/(1+pi**-k), [1, inf])
+        0.383845120748167
+        >>> print nprod(lambda k: tanh(k*log(pi)/2), [1, inf])
+        0.383845120748167
+        >>> print jtheta(4,0,1/pi)
+        0.383845120748167
+
+    This product does not have a known closed form value::
+
+        >>> print nprod(lambda k: (1-1/2**k), [1, inf])
+        0.288788095086602
+
+    **References**
+
+    1. E. W. Weisstein, "Infinite Product",
+       http://mathworld.wolfram.com/InfiniteProduct.html,
+       MathWorld
+
+    """
+    a, b = AS_POINTS(interval)
+    if a != -inf and b != inf:
+        return fprod(f(mpf(k)) for k in xrange(int(a), int(b)+1))
+
+    orig = mp.prec
+    try:
+        # TODO: we are evaluating log(1+eps) -> eps, which is
+        # inaccurate. This currently works because nsum greatly
+        # increases the working precision. But we should be
+        # more intelligent and handle the precision here.
+        mp.prec += 10
+        v = nsum(lambda n: ln(f(n)), interval, **kwargs)
+    finally:
+        mp.prec = orig
+    return +exp(v)
+
+def limit(f, x, direction=1, exp=False, **kwargs):
+    r"""
+    Computes an estimate of the limit
+
+    .. math ::
+
+        \lim_{t \to x} f(t)
+
+    where `x` may be finite or infinite.
+
+    For finite `x`, :func:`limit` evaluates `f(x + d/n)` for
+    consecutive integer values of `n`, where the approach direction
+    `d` may be specified using the *direction* keyword argument.
+    For infinite `x`, :func:`limit` evaluates values of
+    `f(\mathrm{sign}(x) \cdot n)`.
+
+    If the approach to the limit is not sufficiently fast to give
+    an accurate estimate directly, :func:`limit` attempts to find
+    the limit using Richardson extrapolation or the Shanks
+    transformation. You can select between these methods using
+    the *method* keyword (see documentation of :func:`nsum` for
+    more information).
+
+    **Options**
+
+    The following options are available with essentially the
+    same meaning as for :func:`nsum`: *tol*, *method*, *maxterms*,
+    *steps*, *verbose*.
+
+    If the option *exp=True* is set, `f` will be
+    sampled at exponentially spaced points `n = 2^1, 2^2, 2^3, \ldots`
+    instead of the linearly spaced points `n = 1, 2, 3, \ldots`.
+    This can sometimes improve the rate of convergence so that
+    :func:`limit` may return a more accurate answer (and faster).
+    However, do note that this can only be used if `f`
+    supports fast and accurate evaluation for arguments that
+    are extremely close to the limit point (or if infinite,
+    very large arguments).
+
+    **Examples**
+
+    A basic evaluation of a removable singularity::
+
+        >>> from sympy.mpmath import *
+        >>> mp.dps = 30
+        >>> print limit(lambda x: (x-sin(x))/x**3, 0)
+        0.166666666666666666666666666667
+
+    Computing the exponential function using its limit definition::
+
+        >>> print limit(lambda n: (1+3/n)**n, inf)
+        20.0855369231876677409285296546
+        >>> print exp(3)
+        20.0855369231876677409285296546
+
+    A limit for `\pi`::
+
+        >>> f = lambda n: 2**(4*n+1)*fac(n)**4/(2*n+1)/fac(2*n)**2
+        >>> print limit(f, inf)
+        3.14159265358979323846264338328
+
+    Calculating the coefficient in Stirling's formula::
+
+        >>> print limit(lambda n: fac(n) / (sqrt(n)*(n/e)**n), inf)
+        2.50662827463100050241576528481
+        >>> print sqrt(2*pi)
+        2.50662827463100050241576528481
+
+    Evaluating Euler's constant `\gamma` using the limit representation
+
+    .. math ::
+
+        \gamma = \lim_{n \rightarrow \infty } \left[ \left(
+        \sum_{k=1}^n \frac{1}{k} \right) - \log(n) \right]
+
+    (which converges notoriously slowly)::
+
+        >>> f = lambda n: sum([mpf(1)/k for k in range(1,n+1)]) - log(n)
+        >>> print limit(f, inf)
+        0.577215664901532860606512090082
+        >>> print euler
+        0.577215664901532860606512090082
+
+    With default settings, the following limit converges too slowly
+    to be evaluated accurately. Changing to exponential sampling
+    however gives a perfect result::
+
+        >>> f = lambda x: sqrt(x**3+x**2)/(sqrt(x**3)+x)
+        >>> print limit(f, inf)
+        0.992518488562331431132360378669
+        >>> print limit(f, inf, exp=True)
+        1.0
+
+    """
+
+    if isinf(x):
+        direction = sign(x)
+        g = lambda k: f(mpf(k+1)*direction)
+    else:
+        direction *= mpf(1)
+        g = lambda k: f(x + direction/(k+1))
+    if exp:
+        h = g
+        g = lambda k: h(2**k)
+
+    def update(values, indices):
+        for k in indices:
+            values.append(g(k+1))
+
+    # XXX: steps used by nsum don't work well
+    if not 'steps' in kwargs:
+        kwargs['steps'] = [10]
+
+    return +adaptive_extrapolation(update, None, kwargs)
 
 
 #----------------------------------------------------------------------------#
 #                                Differentiation                             #
 #----------------------------------------------------------------------------#
 
-def diff(f, x, direction=0):
+def difference_delta(s, n):
+    r"""
+    Given a sequence `(s_k)` containing at least `n+1` items, returns the
+    `n`-th forward difference,
+
+    .. math ::
+
+        \Delta^n = \sum_{k=0}^{\infty} (-1)^{k+n} {n \choose k} s_k.
     """
-    Compute f'(x) using a simple finite difference approximation.
+    d = mpf(0)
+    b = (-1) ** (n & 1)
+    for k in xrange(n+1):
+        d += b * s[k]
+        b = (b * (k-n)) // (k+1)
+    return d
 
-    With direction = 0, use the central difference f(x-h), f(x+h)
-    With direction = 1, use the forward difference f(x), f(x+h)
-    With direction = -1, use the backward difference f(x-h), f(x)
+def diff(f, x, n=1, method='step', scale=1, direction=0):
+    r"""
+    Numerically computes the derivative of `f`, `f'(x)`. Optionally,
+    computes the `n`-th derivative, `f^{(n)}(x)`, for any order `n`.
 
-        >>> print diff(cos, 1)
-        -0.841470984807897
-        >>> print diff(abs, 0, 0)
+    **Basic examples**
+
+    Derivatives of a simple function::
+
+        >>> from sympy.mpmath import *
+        >>> mp.dps = 15
+        >>> print diff(lambda x: x**2 + x, 1.0)
+        3.0
+        >>> print diff(lambda x: x**2 + x, 1.0, 2)
+        2.0
+        >>> print diff(lambda x: x**2 + x, 1.0, 3)
         0.0
-        >>> print diff(abs, 0, 1)
+
+    The exponential function is invariant under differentiation::
+
+        >>> nprint([diff(exp, 3, n) for n in range(5)])
+        [20.0855, 20.0855, 20.0855, 20.0855, 20.0855]
+
+    **Method**
+
+    One of two differentiation algorithms can be chosen with the
+    ``method`` keyword argument. The two options are ``'step'``,
+    and ``'quad'``. The default method is ``'step'``.
+
+    ``'step'``:
+
+        The derivative is computed using a finite difference
+        approximation, with a small step h. This requires n+1 function
+        evaluations and must be performed at (n+1) times the target
+        precison. Accordingly, f must support fast evaluation at high
+        precision.
+
+    ``'quad'``:
+
+        The derivative is computed using complex
+        numerical integration. This requires a larger number of function
+        evaluations, but the advantage is that not much extra precision
+        is required. For high order derivatives, this method may thus
+        be faster if f is very expensive to evaluate at high precision.
+
+    With ``'quad'`` the result is likely to have a small imaginary
+    component even if the derivative is actually real::
+
+        >>> print diff(sqrt, 1, method='quad')
+        (0.5 - 9.44048454290863e-27j)
+
+    **Scale**
+
+    The scale option specifies the scale of variation of f. The step
+    size in the finite difference is taken to be approximately
+    eps*scale. Thus, for example if `f(x) = \cos(1000 x)`, the scale
+    should be set to 1/1000 and if `f(x) = \cos(x/1000)`, the scale
+    should be 1000. By default, scale = 1.
+
+    (In practice, the default scale will work even for `\cos(1000 x)` or
+    `\cos(x/1000)`. Changing this parameter is a good idea if the scale
+    is something *preposterous*.)
+
+    If numerical integration is used, the radius of integration is
+    taken to be equal to scale/2. Note that f must not have any
+    singularities within the circle of radius scale/2 centered around
+    x. If possible, a larger scale value is preferable because it
+    typically makes the integration faster and more accurate.
+
+    **Direction**
+
+    By default, :func:`diff` uses a central difference approximation.
+    This corresponds to direction=0. Alternatively, it can compute a
+    left difference (direction=-1) or right difference (direction=1).
+    This is useful for computing left- or right-sided derivatives
+    of nonsmooth functions:
+
+        >>> print diff(abs, 0, direction=0)
+        0.0
+        >>> print diff(abs, 0, direction=1)
         1.0
-        >>> print diff(abs, 0, -1)
+        >>> print diff(abs, 0, direction=-1)
         -1.0
 
-    The step size is taken similar to the epsilon of the precision.
-    To eliminate cancellation errors, diff temporarily doubles the
-    working precision while calculating the function values.
+    More generally, if the direction is nonzero, a right difference
+    is computed where the step size is multiplied by sign(direction).
+    For example, with direction=+j, the derivative from the positive
+    imaginary direction will be computed.
+
+    This option only makes sense with method='step'. If integration
+    is used, it is assumed that f is analytic, implying that the
+    derivative is the same in all directions.
+
     """
-    prec = mp.prec
-    extra = 5
-    h = ldexp(1, -prec-extra)
+    if n == 0:
+        return f(x)
+    orig = mp.prec
     try:
-        mp.prec = 2*(prec+extra)
-        if   direction == 0:  return (f(x+h) - f(x-h)) * ldexp(1, prec+extra-1)
-        elif direction == 1:  return (f(x+h) - f(x)) * ldexp(1, prec+extra)
-        elif direction == -1: return (f(x) - f(x-h)) * ldexp(1, prec+extra)
+        if method == 'step':
+            mp.prec = (orig+20) * (n+1)
+            h = ldexp(scale, -orig-10)
+            # Applying the finite difference formula recursively n times,
+            # we get a step sum weighted by a row of binomial coefficients
+            # Directed: steps x, x+h, ... x+n*h
+            if direction:
+                h *= sign(direction)
+                steps = xrange(n+1)
+                norm = h**n
+            # Central: steps x-n*h, x-(n-2)*h ..., x, ..., x+(n-2)*h, x+n*h
+            else:
+                steps = xrange(-n, n+1, 2)
+                norm = (2*h)**n
+            v = difference_delta([f(x+k*h) for k in steps], n)
+            v = v / norm
+        elif method == 'quad':
+            mp.prec += 10
+            radius = mpf(scale)/2
+            def g(t):
+                rei = radius*exp(j*t)
+                z = x + rei
+                return f(z) / rei**n
+            d = quadts(g, [0, 2*pi])
+            v = d * factorial(n) / (2*pi)
         else:
-            raise ValueError("invalid difference direction: %r" % direction)
+            raise ValueError("unknown method: %r" % method)
     finally:
-        mp.prec = prec
+        mp.prec = orig
+    return +v
 
-def diffc(f, x, n=1, radius=mpf(0.5)):
+def diffs(f, x, n=inf, method='step', scale=1, direction=0):
+    r"""
+    Returns a generator that yields the sequence of derivatives
+
+    .. math ::
+
+        f(x), f'(x), f''(x), \ldots, f^{(k)}(x), \ldots
+
+    With ``method='step'``, :func:`diffs` uses only `O(k)`
+    function evaluations to generate the first `k` derivatives,
+    rather than the roughly `O(k^2)` evaluations
+    required if one calls :func:`diff` `k` separate times.
+
+    With `n < \infty`, the generator stops as soon as the
+    `n`-th derivative has been generated. If the exact number of
+    needed derivatives is known in advance, this is further
+    slightly more efficient.
+
+    **Examples**
+
+        >>> nprint(list(diffs(cos, 1, 5)))
+        [0.540302, -0.841471, -0.540302, 0.841471, 0.540302, -0.841471]
+        >>> for i, d in zip(range(6), diffs(cos, 1)): print i, d
+        ...
+        0 0.54030230586814
+        1 -0.841470984807897
+        2 -0.54030230586814
+        3 0.841470984807897
+        4 0.54030230586814
+        5 -0.841470984807897
+
     """
-    Compute an approximation of the nth derivative of f at the point x
-    using the Cauchy integral formula. This only works for analytic
-    functions. A circular path with the given radius is used.
+    if method != 'step':
+        k = 0
+        while k < n:
+            yield diff(f, x, k)
+            k += 1
+        return
 
-    diffc increases the working precision slightly to avoid simple
-    rounding errors. Note that, especially for large n, differentiation
-    is extremely ill-conditioned, so this precaution does not
-    guarantee a correct result. (Provided there are no singularities
-    in the way, increasing the radius may help.)
+    targetprec = mp.prec
 
-    The returned value will be a complex number; a large imaginary part
-    for a derivative that should be real may indicate a large numerical
-    error.
-    """
-    prec = mp.prec
-    try:
-        mp.prec += 10
-        def g(t):
-            rei = radius*exp(j*t)
-            z = x + rei
-            return f(z) / rei**n
-        d = quadts(g, [0, 2*pi])
-        return d * factorial(n) / (2*pi)
-    finally:
-        mp.prec = prec
-
-
-#----------------------------------------------------------------------------#
-#                           Generic root-finding                             #
-#----------------------------------------------------------------------------#
-
-msg1 = "Cannot perform a step with the secant method because the " \
-  "function values are equal at the two chosen start points. Try " \
-  "different start points."
-
-msg2 = "The derivative cannot be computed. The previous value " \
-  "will be reused for the next iteration."
-
-def secant(f, x0, x1=None, maxsteps=20, verbose=False):
-    """Solve the equation f(x) = 0 using the secant method, starting
-    at the given initial point x0 and performing up to `maxsteps`
-    steps or quitting when the difference between successive x values
-    is smaller than the epsilon of the current working precision.
-
-    The secant method requires a second starting point x1 with both
-    x0 and x1 located close to the root. If only x0 is provided, x1
-    is automatically generated as x0 + 1/4."""
-    weps = 2*eps
-    x = x0 * mpf(1)
-    if x1 is None:
-        xprev = x0 + mpf(0.25)
-    else:
-        xprev = x1 * mpf(1)
-    deriv_prev = None
-    fxprev = f(xprev)
-    for i in xrange(maxsteps):
-        if verbose:
-            print "Step", i
-            print "x =", x
-        fx = f(x)
-        ydiff = fx - fxprev
-        xdiff = x - xprev
-        if verbose:
-            print "f(x) =", fx
-            print "xdiff = ", xdiff
-            print "ydiff = ", ydiff
+    def getvalues(m):
+        callprec = mp.prec
         try:
-            deriv = xdiff / ydiff
-            deriv_prev = deriv
-        except ZeroDivisionError:
-            if deriv_prev is None:
-                raise ZeroDivisionError(msg1)
-            if verbose and abs(xdiff) > weps:
-                print msg2
-            deriv = deriv_prev
-        x, xprev = x - fx*deriv, x
-        fxprev = fx
-        if verbose:
-            print
-        if abs(xdiff) <= weps:
-            break
-    return x
+            mp.prec = workprec = (targetprec+20) * (m+1)
+            h = ldexp(scale, -targetprec-10)
+            if direction:
+                h *= sign(direction)
+                y = [f(x+h*k) for k in xrange(m+1)]
+                hnorm = h
+            else:
+                y = [f(x+h*k) for k in xrange(-m, m+1, 2)]
+                hnorm = 2*h
+            return y, hnorm, workprec
+        finally:
+            mp.prec = callprec
 
+    yield f(x)
+    if n < 1:
+        return
+
+    if n is inf:
+        A, B = 1, 2
+    else:
+        A, B = 1, n+1
+
+    while 1:
+        y, hnorm, workprec = getvalues(B)
+        for k in xrange(A, B):
+            try:
+                callprec = mp.prec
+                mp.prec = workprec
+                d = difference_delta(y, k) / hnorm**k
+            finally:
+                mp.prec = callprec
+            yield +d
+            if k >= n:
+                return
+        A, B = B, int(A*1.4+1)
+        B = min(B, n)
+
+def diffun(f, n=1, **options):
+    """
+    Given a function f, returns a function g(x) that evaluates the nth
+    derivative f^(n)(x)::
+
+        >>> from sympy.mpmath import *
+        >>> mp.dps = 15
+        >>> cos2 = diffun(sin)
+        >>> sin2 = diffun(sin, 4)
+        >>> print cos(1.3), cos2(1.3)
+        0.267498828624587 0.267498828624587
+        >>> print sin(1.3), sin2(1.3)
+        0.963558185417193 0.963558185417193
+
+    The function f must support arbitrary precision evaluation.
+    See :func:`diff` for additional details and supported
+    keyword options.
+    """
+    if n == 0:
+        return f
+    def g(x):
+        return diff(f, x, n, **options)
+    return g
+
+def taylor(f, x, n, **options):
+    r"""
+    Produces a degree-`n` Taylor polynomial around the point `x` of the
+    given function `f`. The coefficients are returned as a list.
+
+        >>> from sympy.mpmath import *
+        >>> mp.dps = 15
+        >>> nprint(chop(taylor(sin, 0, 5)))
+        [0.0, 1.0, 0.0, -0.166667, 0.0, 8.33333e-3]
+
+    The coefficients are computed using high-order numerical
+    differentiation. The function must be possible to evaluate
+    to arbitrary precision. See :func:`diff` for additional details
+    and supported keyword options.
+
+    Note that to evaluate the Taylor polynomial as an approximation
+    of `f`, e.g. with :func:`polyval`, the coefficients must be reversed,
+    and the point of the Taylor expansion must be subtracted from
+    the argument:
+
+        >>> p = taylor(exp, 2.0, 10)
+        >>> print polyval(p[::-1], 2.5 - 2.0)
+        12.1824939606092
+        >>> print exp(2.5)
+        12.1824939607035
+
+    """
+    return [d/factorial(i) for i, d in enumerate(diffs(f, x, n, **options))]
+
+def pade(a, L, M):
+    r"""
+    Computes a Pade approximation of degree `(L, M)` to a function.
+    Given at least `L+M+1` Taylor coefficients `a` approximating
+    a function `A(x)`, :func:`pade` returns coefficients of
+    polynomials `P, Q` satisfying
+
+    .. math ::
+
+        P = \sum_{k=0}^L p_k x^k
+
+        Q = \sum_{k=0}^M q_k x^k
+
+        Q_0 = 1
+
+        A(x) Q(x) = P(x) + O(x^{L+M+1})
+
+    `P(x)/Q(x)` can provide a good approximation to an analytic function
+    beyond the radius of convergence of its Taylor series (example
+    from G.A. Baker 'Essentials of Pade Approximants' Academic Press,
+    Ch.1A)::
+
+        >>> from sympy.mpmath import *
+        >>> mp.dps = 15
+        >>> one = mpf(1)
+        >>> def f(x):
+        ...     return sqrt((one + 2*x)/(one + x))
+        ...
+        >>> a = taylor(f, 0, 6)
+        >>> p, q = pade(a, 3, 3)
+        >>> x = 10
+        >>> print polyval(p[::-1], x)/polyval(q[::-1], x)
+        1.38169105566806
+        >>> print f(x)
+        1.38169855941551
+
+    """
+    # To determine L+1 coefficients of P and M coefficients of Q
+    # L+M+1 coefficients of A must be provided
+    assert(len(a) >= L+M+1)
+
+    if M == 0:
+        if L == 0:
+            return [mpf(1)], [mpf(1)]
+        else:
+            return a[:L+1], [mpf(1)]
+
+    # Solve first
+    # a[L]*q[1] + ... + a[L-M+1]*q[M] = -a[L+1]
+    # ...
+    # a[L+M-1]*q[1] + ... + a[L]*q[M] = -a[L+M]
+    A = matrix(M)
+    for j in range(M):
+        for i in range(min(M, L+j+1)):
+            A[j, i] = a[L+j-i]
+    v = -matrix(a[(L+1):(L+M+1)])
+    x = lu_solve(A, v)
+    q = [mpf(1)] + list(x)
+    # compute p
+    p = [0]*(L+1)
+    for i in range(L+1):
+        s = a[i]
+        for j in range(1, min(M,i) + 1):
+            s += q[j]*a[i-j]
+        p[i] = s
+    return p, q
 
 #----------------------------------------------------------------------------#
 #                                Polynomials                                 #
 #----------------------------------------------------------------------------#
 
 def polyval(coeffs, x, derivative=False):
-    """
-    Given coefficients [cn, ..., c2, c1, c0], evaluate
-    P(x) = cn*x**n + ... + c2*x**2 + c1*x + c0.
+    r"""
+    Given coefficients `[c_n, \ldots, c_2, c_1, c_0]` and a number `x`,
+    :func:`polyval` evaluates the polynomial
 
-    If derivative=True is set, a tuple (P(x), P'(x)) is returned.
+    .. math ::
+
+        P(x) = c_n x^n + \ldots + c_2 x^2 + c_1 x + c_0.
+
+    If *derivative=True* is set, :func:`polyval` simultaneously
+    evaluates `P(x)` with the derivative, `P'(x)`, and returns the
+    tuple `(P(x), P'(x))`.
+
+        >>> from sympy.mpmath import *
+        >>> polyval([3, 0, 2], 0.5)
+        mpf('2.75')
+        >>> polyval([3, 0, 2], 0.5, derivative=True)
+        (mpf('2.75'), mpf('3.0'))
+
+    The coefficients and the evaluation point may be any combination
+    of real or complex numbers.
     """
     if not coeffs:
         return mpf(0)
@@ -228,21 +1416,93 @@ def polyval(coeffs, x, derivative=False):
 
 def polyroots(coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False):
     """
-    Numerically locate all (complex) roots of a polynomial using the
-    Durand-Kerner method.
+    Computes all roots (real or complex) of a given polynomial. The roots are
+    returned as a sorted list, where real roots appear first followed by
+    complex conjugate roots as adjacent elements. The polynomial should be
+    given as a list of coefficients, in the format used by :func:`polyval`.
+    The leading coefficient must be nonzero.
 
-    With error=True, this function returns a tuple (roots, err) where roots
-    is a list of complex numbers sorted by absolute value, and err is an
-    estimate of the maximum error. The polynomial should be given as a list
-    of coefficients, in the same format as accepted by polyval(). The
-    leading coefficient must be nonzero.
+    With *error=True*, :func:`polyroots` returns a tuple *(roots, err)* where
+    *err* is an estimate of the maximum error among the computed roots.
 
-    These are the roots of x^3 - x^2 - 14*x + 24 and 4x^2 + 3x + 2:
+    **Examples**
 
+    Finding the three real roots of `x^3 - x^2 - 14x + 24`::
+
+        >>> from sympy.mpmath import *
+        >>> mp.dps = 15
         >>> nprint(polyroots([1,-1,-14,24]), 4)
         [-4.0, 2.0, 3.0]
-        >>> nprint(polyroots([4,3,2], error=True))
-        ([(-0.375 - 0.599479j), (-0.375 + 0.599479j)], 2.22045e-16)
+
+    Finding the two complex conjugate roots of `4x^2 + 3x + 2`, with an
+    error estimate::
+
+        >>> roots, err = polyroots([4,3,2], error=True)
+        >>> for r in roots:
+        ...     print r
+        ...
+        (-0.375 - 0.59947894041409j)
+        (-0.375 + 0.59947894041409j)
+        >>>
+        >>> print err
+        2.22044604925031e-16
+        >>>
+        >>> print polyval([4,3,2], roots[0])
+        (2.22044604925031e-16 + 0.0j)
+        >>> print polyval([4,3,2], roots[1])
+        (2.22044604925031e-16 + 0.0j)
+
+    The following example computes all the 5th roots of unity; that is,
+    the roots of `x^5 - 1`::
+
+        >>> mp.dps = 20
+        >>> for r in polyroots([1, 0, 0, 0, 0, -1]):
+        ...     print r
+        ...
+        1.0
+        (-0.8090169943749474241 + 0.58778525229247312917j)
+        (-0.8090169943749474241 - 0.58778525229247312917j)
+        (0.3090169943749474241 + 0.95105651629515357212j)
+        (0.3090169943749474241 - 0.95105651629515357212j)
+
+    **Precision and conditioning**
+
+    Provided there are no repeated roots, :func:`polyroots` can typically
+    compute all roots of an arbitrary polynomial to high precision::
+
+        >>> mp.dps = 60
+        >>> for r in polyroots([1, 0, -10, 0, 1]):
+        ...     print r
+        ...
+        -3.14626436994197234232913506571557044551247712918732870123249
+        -0.317837245195782244725757617296174288373133378433432554879127
+        0.317837245195782244725757617296174288373133378433432554879127
+        3.14626436994197234232913506571557044551247712918732870123249
+        >>>
+        >>> print sqrt(3) + sqrt(2)
+        3.14626436994197234232913506571557044551247712918732870123249
+        >>> print sqrt(3) - sqrt(2)
+        0.317837245195782244725757617296174288373133378433432554879127
+
+    **Algorithm**
+
+    :func:`polyroots` implements the Durand-Kerner method [1], which
+    uses complex arithmetic to locate all roots simultaneously.
+    The Durand-Kerner method can be viewed as approximately performing
+    simultaneous Newton iteration for all the roots. In particular,
+    the convergence to simple roots is quadratic, just like Newton's
+    method.
+
+    Although all roots are internally calculated using complex arithmetic,
+    any root found to have an imaginary part smaller than the estimated
+    numerical error is truncated to a real number. Real roots are placed
+    first in the returned list, sorted by value. The remaining complex
+    roots are sorted by real their parts so that conjugate roots end up
+    next to each other.
+
+    **References**
+
+    1. http://en.wikipedia.org/wiki/Durand-Kerner_method
 
     """
     if len(coeffs) <= 1:
@@ -257,14 +1517,15 @@ def polyroots(coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False):
         mp.prec += 10
         deg = len(coeffs) - 1
         # Must be monic
-        lead = convert_lossless(coeffs[0])
+        lead = mpmathify(coeffs[0])
         if lead == 1:
-            coeffs = map(convert_lossless, coeffs)
+            coeffs = map(mpmathify, coeffs)
         else:
             coeffs = [c/lead for c in coeffs]
         f = lambda x: polyval(coeffs, x)
         roots = [mpc((0.4+0.9j)**n) for n in xrange(deg)]
         err = [mpf(1) for n in xrange(deg)]
+        # Durand-Kerner iteration until convergence
         for step in xrange(maxsteps):
             if max(err).ae(0):
                 break
@@ -280,6 +1541,7 @@ def polyroots(coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False):
                                 continue
                     roots[i] = p - x
                     err[i] = abs(x)
+        # Remove small imaginary parts
         if cleanup:
             for i in xrange(deg):
                 if abs(roots[i].imag) < weps:
@@ -296,225 +1558,6 @@ def polyroots(coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False):
     else:
         return [+r for r in roots]
 
-def quadosc(f, interval, period=None, zeros=None, alt=1):
-    """
-    Integrates f(x) over interval = [a, b] where at least one of a and
-    b is infinite and f is a slowly decaying oscillatory function. The
-    zeros of f must be provided, either by specifying a period (suitable
-    when f contains a pure sine or cosine factor) or providing a function
-    that returns the nth zero (suitable when the oscillation is not
-    strictly periodic).
-    """
-    a, b = AS_POINTS(interval)
-    a = convert_lossless(a)
-    b = convert_lossless(b)
-    if period is None and zeros is None:
-        raise ValueError( \
-            "either the period or zeros keyword parameter must be specified")
-    if a == -inf and b == inf:
-        s1 = quadosc(f, [a, 0], zeros=zeros, period=period, alt=alt)
-        s2 = quadosc(f, [0, b], zeros=zeros, period=period, alt=alt)
-        return s1 + s2
-    if a == -inf:
-        if zeros:
-            return quadosc(lambda x:f(-x), [-b,-a], lambda n: zeros(-n), alt=alt)
-        else:
-            return quadosc(lambda x:f(-x), [-b,-a], period=period, alt=alt)
-    if b != inf:
-        raise ValueError("quadosc requires an infinite integration interval")
-    if not zeros:
-        zeros = lambda n: n*period/2
-    for n in range(1,10):
-        p = zeros(n)
-        if p > a:
-            break
-    if n >= 9:
-        raise ValueError("zeros do not appear to be correctly indexed")
-    if alt == 0:
-        s = quadgl(f, [a, zeros(n+1)])
-        s += sumrich(lambda k: quadgl(f, [zeros(2*k), zeros(2*k+2)]), [n, inf])
-    else:
-        s = quadgl(f, [a, zeros(n)])
-        s += sumsh(lambda k: quadgl(f, [zeros(k), zeros(k+1)]), [n, inf])
-    return s
-
-
-##############################################################################
-##############################################################################
-
-#----------------------------------------------------------------------------#
-#                               Numerical summation                          #
-#----------------------------------------------------------------------------#
-
-def sumrich(f, interval, n=None, N=None):
-    """
-    Sum f(k) for k = a, a+1, ..., b where [a, b] = interval,
-    using Richardson extrapolation. This function is essentially
-    equivalent to using limit() on the sequence of partial sums.
-    """
-    a, b = AS_POINTS(interval)
-    assert b == inf
-    if not n: n = 3 + int(mp.dps * 0.5)
-    if not N: N = 2*n
-    orig = mp.prec
-    try:
-        mp.prec = 2*orig
-        s = mpf(0)
-        tbl = []
-        for k in range(a, a+n+N+1):
-            s += f(mpf(k))
-            tbl.append(s)
-        s = richardson_extrapolation(lambda k: tbl[int(k)], n, N)
-    finally:
-        mp.prec = orig
-    return +s
-
-def sumsh(f, interval, n=None, m=None):
-    """
-    Sum f(k) for k = a, a+1, ..., b where [a, b] = interval,
-    using an n-term Shanks transformation. With m > 1, the Shanks
-    transformation is applied recursively m times.
-
-    Shanks summation often works well for slowly convergent and/or
-    alternating Taylor series.
-    """
-    a, b = AS_POINTS(interval)
-    assert b == inf
-    if not n: n = 5 + int(mp.dps * 1.2)
-    if not m: m = 2 + n//3
-    orig = mp.prec
-    try:
-        mp.prec = 2*orig
-        s = mpf(0)
-        tbl = []
-        for k in range(a, a+n+m+2):
-            s += f(mpf(k))
-            tbl.append(s)
-        s = shanks_extrapolation(tbl, n, m)
-    finally:
-        mp.prec = orig
-    return +s
-
-@extraprec(15, normalize_output=True)
-def sumem(f, interval, N=None, integral=None, fderiv=None, error=False,
-    verbose=False):
-    """
-    Sum f(k) for k = a, a+1, ..., b where [a, b] = interval,
-    using Euler-Maclaurin summation. This algorithm is efficient
-    for slowly convergent nonoscillatory sums; the essential condition
-    is that f must be analytic. The method relies on approximating the
-    sum by an integral, so f must be smooth and well-behaved enough
-    to be integrated numerically.
-
-    With error=True, a tuple (s, err) is returned where s is the
-    calculated sum and err is the estimated magnitude of the error.
-    With verbose=True, detailed information about progress and errors
-    is printed.
-
-        >>> mp.dps = 15
-        >>> s, err = sumem(lambda n: 1/n**2, 1, inf, error=True)
-        >>> print s
-        1.64493406684823
-        >>> print pi**2 / 6
-        1.64493406684823
-        >>> nprint(err)
-        2.22045e-16
-
-    N is the number of terms to compute directly before using the
-    Euler-Maclaurin formula to approximate the tail. It must be set
-    high enough; often roughly N ~ dps is the right size.
-
-    High-order derivatives of f are also needed. By default, these
-    are computed using numerical integration, which is the most
-    expensive part of the calculation. The default method assumes
-    that all poles of f are located close to the origin. A custom
-    nth derivative function fderiv(x, n) can be provided as a
-    keyword parameter.
-
-    This is much more efficient:
-
-        >>> f = lambda n: 1/n**2
-        >>> fp = lambda x, n: (-1)**n * factorial(n+1) * x**(-2-n)
-        >>> mp.dps = 50
-        >>> print sumem(lambda n: 1/n**2, 1, inf, fderiv=fp)
-        1.6449340668482264364724151666460251892189499012068
-        >>> print pi**2 / 6
-        1.6449340668482264364724151666460251892189499012068
-
-    If b = inf, f and its derivatives are all assumed to vanish
-    at infinity. It is assumed that a is finite, so doubly
-    infinite sums cannot be evaluated directly.
-    """
-    a, b = AS_POINTS(interval)
-    if N is None:
-        N = 3*mp.dps + 20
-    a, b, N = mpf(a), mpf(b), mpf(N)
-    infinite = (b == inf)
-    weps = eps * 2**8
-    if verbose:
-        print "Summing f(k) from k = %i to %i" % (a, a+N-1)
-    S = sum(f(mpf(k)) for k in xrange(a, a+N))
-    if integral is None:
-        if verbose:
-            print "Integrating f(x) from x = %i to %s" % (a+N, nstr(b))
-        I, ierr = quadts(f, [a+N, b], error=1)
-        # XXX: hack for relative error
-        ierr /= abs(I)
-    else:
-        I, ierr = integral(a+N, b), mpf(0)
-    # There is little hope if the tail cannot be integrated
-    # accurately. Estimate magnitude of tail as the error.
-    if ierr > weps:
-        if verbose:
-            print "Failed to converge to target accuracy (integration failed)"
-        if error:
-            return S+I, abs(I) + ierr
-        else:
-            return S+I
-    if infinite:
-        C = f(a+N) / 2
-    else:
-        C = (f(a+N) + f(b)) / 2
-    # Default (inefficient) approach for derivatives
-    if not fderiv:
-        fderiv = lambda x, n: diffc(f, x, n, radius=N*0.75)
-    k = 1
-    prev = 0
-    if verbose:
-        print "Summing tail"
-    fac = 2
-    while 1:
-        if infinite:
-            D = fderiv(a+N, 2*k-1)
-        else:
-            D = fderiv(a+N, 2*k-1) - fderiv(b, 2*k-1)
-        # B(2*k) / fac(2*k)
-        term = bernoulli(2*k) / fac * D
-        mag = abs(term)
-        if verbose:
-            print "term", k, "magnitude =", nstr(mag)
-        # Error can be estimated as the magnitude of the smallest term
-        if k >= 2:
-            if mag < weps:
-                if verbose:
-                    print "Converged to target accuracy"
-                res, err = I + C + S, eps * 2**15
-                break
-            if mag > abs(prev):
-                if verbose:
-                    print "Failed to converge to target accuracy (N too low)"
-                res, err = I + C + S, abs(term)
-                break
-        S -= term
-        k += 1
-        fac *= (2*k) * (2*k-1)
-        prev = term
-    if isinstance(res, mpc) and not isinstance(I, mpc):
-        res, err = res.real, err
-    if error:
-        return res, err
-    else:
-        return res
 
 #----------------------------------------------------------------------------#
 #                                  ODE solvers                               #
@@ -620,10 +1663,79 @@ def chebT(a=1, b=0):
         Ta, Tb = Tmp, Ta
 
 def chebyfit(f, interval, N, error=False):
-    """
-    Chebyshev approximation: returns coefficients of a degree N-1
-    polynomial that approximates f on the interval [a, b]. With error=True,
-    also returns an estimate of the maximum error.
+    r"""
+    Computes a polynomial of degree `N-1` that approximates the
+    given function `f` on the interval `[a, b]`. With ``error=True``,
+    :func:`chebyfit` also returns an accurate estimate of the
+    maximum absolute error; that is, the maximum value of
+    `|f(x) - P(x)|` for `x \in [a, b]`.
+
+    :func:`chebyfit` uses the Chebyshev approximation formula,
+    which gives a nearly optimal solution: that is, the maximum
+    error of the approximating polynomial is very close to
+    the smallest possible for any polynomial of the same degree.
+
+    Chebyshev approximation is very useful if one needs repeated
+    evaluation of an expensive function, such as function defined
+    implicitly by an integral or a differential equation. (For
+    example, it could be used to turn a slow mpmath function
+    into a fast machine-precision version of the same.)
+
+    **Examples**
+
+    Here we use :func:`chebyfit` to generate a low-degree approximation
+    of `f(x) = \cos(x)`, valid on the interval `[1, 2]`::
+
+        >>> from sympy.mpmath import *
+        >>> mp.dps = 15
+        >>> poly, err = chebyfit(cos, [1, 2], 5, error=True)
+        >>> nprint(poly)
+        [2.91682e-3, 0.146166, -0.732491, 0.174141, 0.949553]
+        >>> nprint(err, 12)
+        1.61351758081e-5
+
+    The polynomial can be evaluated using ``polyval``::
+
+        >>> nprint(polyval(poly, 1.6), 12)
+        -0.0291858904138
+        >>> nprint(cos(1.6), 12)
+        -0.0291995223013
+
+    Sampling the true error at 1000 points shows that the error
+    estimate generated by ``chebyfit`` is remarkably good::
+
+        >>> error = lambda x: abs(cos(x) - polyval(poly, x))
+        >>> nprint(max([error(1+n/1000.) for n in range(1000)]), 12)
+        1.61349954245e-5
+
+    **Choice of degree**
+
+    The degree `N` can be set arbitrarily high, to obtain an
+    arbitrarily good approximation. As a rule of thumb, an
+    `N`-term Chebyshev approximation is good to `N/(b-a)` decimal
+    places on a unit interval (although this depends on how
+    well-behaved `f` is). The cost grows accordingly: ``chebyfit``
+    evaluates the function `(N^2)/2` times to compute the
+    coefficients and an additional `N` times to estimate the error.
+
+    **Possible issues**
+
+    One should be careful to use a sufficiently high working
+    precision both when calling ``chebyfit`` and when evaluating
+    the resulting polynomial, as the polynomial is sometimes
+    ill-conditioned. It is for example difficult to reach
+    15-digit accuracy when evaluating the polynomial using
+    machine precision floats, no matter the theoretical
+    accuracy of the polynomial. (The option to return the
+    coefficients in Chebyshev form should be made available
+    in the future.)
+
+    It is important to note the Chebyshev approximation works
+    poorly if `f` is not smooth. A function containing singularities,
+    rapid oscillation, etc can be approximated more effectively by
+    multiplying it by a weight function that cancels out the
+    nonsmooth features, or by dividing the interval into several
+    segments.
     """
     a, b = AS_POINTS(interval)
     orig = mp.prec
@@ -650,3 +1762,114 @@ def chebyfit(f, interval, N, error=False):
             return d, +err
         else:
             return d
+
+def fourier(f, interval, N):
+    r"""
+    Computes the Fourier series of degree `N` of the given function
+    on the interval `[a, b]`. More precisely, :func:`fourier` returns
+    two lists `(c, s)` of coefficients (the cosine series and sine
+    series, respectively), such that
+
+    .. math ::
+
+        f(x) \sim \sum_{k=0}^N
+            c_k \cos(k m) + s_k \sin(k m)
+
+    where `m = 2 \pi / (b-a)`.
+
+    Note that many texts define the first coefficient as `2 c_0` instead
+    of `c_0`. The easiest way to evaluate the computed series correctly
+    is to pass it to :func:`fourierval`.
+
+    **Examples**
+
+    The function `f(x) = x` has a simple Fourier series on the standard
+    interval `[-\pi, \pi]`. The cosine coefficients are all zero (because
+    the function has odd symmetry), and the sine coefficients are
+    rational numbers::
+
+        >>> from sympy.mpmath import *
+        >>> mp.dps = 15
+        >>> c, s = fourier(lambda x: x, [-pi, pi], 5)
+        >>> nprint(c)
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        >>> nprint(s)
+        [0.0, 2.0, -1.0, 0.666667, -0.5, 0.4]
+
+    This computes a Fourier series of a nonsymmetric function on
+    a nonstandard interval::
+
+        >>> I = [-1, 1.5]
+        >>> f = lambda x: x**2 - 4*x + 1
+        >>> cs = fourier(f, I, 4)
+        >>> nprint(cs[0])
+        [0.583333, 1.12479, -1.27552, 0.904708, -0.441296]
+        >>> nprint(cs[1])
+        [0.0, -2.6255, 0.580905, 0.219974, -0.540057]
+
+    It is instructive to plot a function along with its truncated
+    Fourier series::
+
+        >>> plot([f, lambda x: fourierval(cs, I, x)], I) #doctest: +SKIP
+
+    Fourier series generally converge slowly (and may not converge
+    pointwise). For example, if `f(x) = \cosh(x)`, a 10-term Fourier
+    series gives an `L^2` error corresponding to 2-digit accuracy::
+
+        >>> I = [-1, 1]
+        >>> cs = fourier(cosh, I, 9)
+        >>> g = lambda x: (cosh(x) - fourierval(cs, I, x))**2
+        >>> nprint(sqrt(quad(g, I)))
+        4.67963e-3
+
+    :func:`fourier` uses numerical quadrature. For nonsmooth functions,
+    the accuracy (and speed) can be improved by including all singular
+    points in the interval specification::
+
+        >>> nprint(fourier(abs, [-1, 1], 0), 10)
+        ([0.5000441648], [0.0])
+        >>> nprint(fourier(abs, [-1, 0, 1], 0), 10)
+        ([0.5], [0.0])
+
+    """
+    interval = AS_POINTS(interval)
+    a = interval[0]
+    b = interval[-1]
+    L = b-a
+    cos_series = []
+    sin_series = []
+    cutoff = eps*10
+    for n in xrange(N+1):
+        m = 2*n*pi/L
+        an = 2*quadgl(lambda t: f(t)*cos(m*t), interval)/L
+        bn = 2*quadgl(lambda t: f(t)*sin(m*t), interval)/L
+        if n == 0:
+            an /= 2
+        if abs(an) < cutoff: an = mpf(0)
+        if abs(bn) < cutoff: bn = mpf(0)
+        cos_series.append(an)
+        sin_series.append(bn)
+    return cos_series, sin_series
+
+def fourierval(series, interval, x):
+    """
+    Evaluates a Fourier series (in the format computed by
+    by :func:`fourier` for the given interval) at the point `x`.
+
+    The series should be a pair `(c, s)` where `c` is the
+    cosine series and `s` is the sine series. The two lists
+    need not have the same length.
+    """
+    cs, ss = series
+    ab = AS_POINTS(interval)
+    a = interval[0]
+    b = interval[-1]
+    m = 2*pi/(ab[-1]-ab[0])
+    s = mpf(0)
+    s += sum(cs[n]*cos(m*n*x) for n in xrange(len(cs)) if cs[n])
+    s += sum(ss[n]*sin(m*n*x) for n in xrange(len(ss)) if ss[n])
+    return s
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

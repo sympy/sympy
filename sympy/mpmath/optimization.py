@@ -1,8 +1,9 @@
-# -*- encoding: utf-8 -*-
-
-from mptypes import convert_lossless, extraprec, eps
-from calculus import diff, diffc
-from functions import sqrt, sign
+from mptypes import mpmathify, extraprec, eps, mpf
+from calculus import diff
+from functions import sqrt, sign, ldexp
+from matrices import matrix, norm_p
+from linalg import lu_solve
+from copy import copy
 
 ##############
 # 1D-SOLVERS #
@@ -16,8 +17,11 @@ class Secant:
     x1 defaults to x0 + 0.25.
 
     Pro:
+
     * converges fast
+
     Contra:
+
     * converges slowly for multiple roots
     """
     maxsteps = 30
@@ -59,8 +63,11 @@ class MNewton:
     multiplicity of the root.
 
     Pro:
+
     * converges fast for multiple roots
+
     Contra:
+
     * needs first and second derivative of f
     * 3 function evaluations per iteration
     """
@@ -109,9 +116,12 @@ class Halley:
     Uses Halley's method with cubic convergance rate.
 
     Pro:
+
     * converges even faster the Newton's method
     * useful when computing with *many* digits
+
     Contra:
+
     * needs first and second derivative of f
     * 3 function evaluations per iteration
     * converges slowly for multiple roots
@@ -121,7 +131,7 @@ class Halley:
 
     def __init__(self, f, x0, **kwargs):
         if not len(x0) == 1:
-            raise ValueError('expected 1 starting point, got %i' * len(x0))
+            raise ValueError('expected 1 starting point, got %i' % len(x0))
         self.x0 = x0[0]
         self.f = f
         if not 'df' in kwargs:
@@ -160,13 +170,16 @@ class Muller:
     Uses Muller's method that converges towards complex roots.
 
     Pro:
+
     * converges fast (somewhat faster than secant)
     * can find complex roots
+
     Contra:
+
     * converges slowly for multiple roots
     * may have complex values for real starting points and real roots
 
-    http://en.wikipedia.org/wiki/M%C3%BCller%27s_method
+    http://en.wikipedia.org/wiki/Muller's_method
     """
     maxsteps = 30
 
@@ -232,8 +245,11 @@ class Bisection:
     Might fail for multiple roots (needs sign change).
 
     Pro:
+
     * robust and reliable
+
     Contra:
+
     * converges slowly
     * needs sign change
     """
@@ -251,12 +267,15 @@ class Bisection:
         a = self.a
         b = self.b
         l = b - a
+        fb = f(b)
         while True:
-            m = 0.5 * (a + b) # TODO: ldexp?
-            if f(m) * f(b) < 0:
+            m = ldexp(a + b, -1)
+            fm = f(m)
+            if fm * fb < 0:
                 a = m
             else:
                 b = m
+                fb = fm
             l /= 2
             yield (a + b)/2, abs(l)
 
@@ -291,13 +310,22 @@ class Illinois:
 
     The only difference between the methods is the scaling factor m, which is
     used to ensure convergence (you can choose one using the 'method' keyword):
-    Illinois method ('illinois'):       m = 0.5
-    Pegasus method ('pegasus'):         m = fb/(fb + fz)
-    Anderson-Björk method ('anderson'): m = 1 - fz/fb if positive else 0.5
+
+    Illinois method ('illinois'):
+        m = 0.5
+
+    Pegasus method ('pegasus'):
+        m = fb/(fb + fz)
+
+    Anderson-Bjoerk method ('anderson'):
+        m = 1 - fz/fb if positive else 0.5
 
     Pro:
+
     * converges very fast
+
     Contra:
+
     * has problems with multiple roots
     * needs sign change
     """
@@ -326,6 +354,8 @@ class Illinois:
         m = None
         while True:
             l = b - a
+            if l == 0:
+                break
             s = (fb - fa) / l
             z = a - fa/s
             fz = f(z)
@@ -341,7 +371,7 @@ class Illinois:
                 b = z
                 fb = fz
             else: # root in [a, z]
-                m = getm(fz, fb)
+                m = self.getm(fz, fb)
                 b = z
                 fb = fz
                 fa = m*fa # scale down to ensure convergence
@@ -363,7 +393,7 @@ def Anderson(*args, **kwargs):
     u"""
     1d-solver generating pairs of approximative root and error.
 
-    Uses Anderson-Björk method to find a root of f in [a, b].
+    Uses Anderson-Bjoerk method to find a root of f in [a, b].
     Wrapper for illinois to use method='pegasus'.
     """
     kwargs['method'] = 'anderson'
@@ -378,16 +408,19 @@ class Ridder:
     Is told to perform as well as Brent's method while being simpler.
 
     Pro:
+
     * very fast
     * simpler than Brent's method
+
     Contra:
+
     * two function evaluations per step
     * has problems with multiple roots
     * needs sign change
 
-    http://en.wikipedia.org/wiki/Ridders%27_method
+    http://en.wikipedia.org/wiki/Ridders'_method
     """
-    maxsteps=30
+    maxsteps = 30
 
     def __init__(self, f, x0, **kwargs):
         self.f = f
@@ -429,7 +462,7 @@ class ANewton:
     EXPERIMENTAL 1d-solver generating pairs of approximative root and error.
 
     Uses Newton's method modified to use Steffensens method when convergence is
-    slow. (I. e. for multiple roots.)
+    slow. (I.e. for multiple roots.)
     """
     maxsteps = 20
 
@@ -481,6 +514,117 @@ class ANewton:
 
 # TODO: add Brent
 
+############################
+# MULTIDIMENSIONAL SOLVERS #
+############################
+
+def jacobian(f, x):
+    """
+    Calculate the Jacobian matrix of a function at the point x0.
+
+    This is the first derivative of a vectorial function:
+
+        f : R^m -> R^n with m >= n
+    """
+    x = matrix(x)
+    h = sqrt(eps)
+    fx = matrix(f(*x))
+    m = len(fx)
+    n = len(x)
+    J = matrix(m, n)
+    for j in xrange(n):
+        xj = x.copy()
+        xj[j] += h
+        Jj = (matrix(f(*xj)) - fx) / h
+        for i in xrange(m):
+            J[i,j] = Jj[i]
+    return J
+
+one = mpf(1)
+
+# TODO: support force_type
+class MDNewton:
+    """
+    Find the root of a vector function numerically using Newton's method.
+
+    f is a vector function representing a nonlinear equation system.
+
+    x0 is the starting point close to the root.
+
+    J is a function returning the jacobian matrix for a point.
+
+    Supports overdetermined systems.
+
+    Use the 'norm' keyword to specify which norm to use. Defaults to max-norm.
+    The function to calculate the Jacobian matrix can be given using the
+    keyword 'J'. Otherwise it will be calculated numerically.
+
+    Please note that this method converges only locally. Especially for high-
+    dimensional systems it is not trvial to find a good starting point being
+    close enough to the root.
+
+    It is recommended to use a faster, low-precision solver from SciPy [1] or
+    OpenOpt [2] to get an initial guess. Afterwards you can use this method for
+    root-polishing to any precision.
+
+    [1] http://scipy.org
+
+    [2] http://openopt.org
+    """
+    maxsteps = 10
+
+    def __init__(self, f, x0, **kwargs):
+        self.f = f
+        if isinstance(x0, (tuple, list)):
+            x0 = matrix(x0)
+        assert x0.cols == 1, 'need a vector'
+        self.x0 = x0
+        if 'J' in kwargs:
+            self.J = kwarks['J']
+        else:
+            def J(*x):
+                return jacobian(f, x)
+            self.J = J
+        self.norm = kwargs['norm']
+        self.verbose = kwargs['verbose']
+
+    def __iter__(self):
+        f = self.f
+        x0 = self.x0
+        norm = self.norm
+        J = self.J
+        fx = matrix(f(*x0))
+        fxnorm = norm(fx)
+        cancel = False
+        while not cancel:
+            # get direction of descent
+            fxn = -fx
+            Jx = J(*x0)
+            s = lu_solve(Jx, fxn)
+            if self.verbose:
+                print 'Jx:'
+                print Jx
+                print 's:', s
+            # damping step size TODO: better strategy (hard task)
+            l = one
+            x1 = x0 + s
+            while True:
+                if x1 == x0:
+                    if self.verbose:
+                        print "canceled, won't get more excact"
+                    cancel = True
+                    break
+                fx = matrix(f(*x1))
+                newnorm = norm(fx)
+                if newnorm < fxnorm:
+                    # new x accepted
+                    fxnorm = newnorm
+                    x0 = x1
+                    break
+                l /= 2
+                x1 = x0 + l*s
+            yield (x0, fxnorm)
+
 #############
 # UTILITIES #
 #############
@@ -488,40 +632,208 @@ class ANewton:
 str2solver = {'secant':Secant,'mnewton':MNewton, 'halley':Halley,
               'muller':Muller, 'bisect':Bisection, 'illinois':Illinois,
               'pegasus':Pegasus, 'anderson':Anderson, 'ridder':Ridder,
-              'anewton':ANewton}
+              'anewton':ANewton, 'mdnewton':MDNewton}
 
 @extraprec(20)
 def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
-             force_type=convert_lossless, **kwargs):
-    """
-    Find a root of f using x0 as starting point or interval.
+             force_type=mpmathify, **kwargs):
+    r"""
+    Find a solution to `f(x) = 0`, using *x0* as starting point or
+    interval for *x*.
 
-    If not abs(f(root)) < tol an exception is raised.
+    Multidimensional overdetermined systems are supported.
+    You can specify them using a function or a list of functions.
 
-    Arguments:
-    f : one dimensional function
-    x0 : starting point, several starting points or interval (depends on solver)
-    tol : the returned solution has an error smaller than this
-    verbose : print additional information for each iteration if true
-    verify : verify the solution and raise a ValueError if abs(f(x)) > tol
-    force_type : use specified type constructor on starting points
-    solver : a generator for f and x0 returning approximative solution and error
-    maxsteps : after how many steps the solver will cancel
-    df : first derivative of f (used by some solvers)
-    d2f : second derivative of f (used by some solvers)
+    If the found root does not satisfy `|f(x)^2 < \mathrm{tol}|`,
+    an exception is raised (this can be disabled with *verify=False*).
 
-    solver has to be callable with (f, x0, **kwargs) and return an generator
-    yielding pairs of approximative solution and estimated error.
+    **Arguments**
+
+    *f*
+        one dimensional function
+    *x0*
+        starting point, several starting points or interval (depends on solver)
+    *tol*
+        the returned solution has an error smaller than this
+    *verbose*
+        print additional information for each iteration if true
+    *verify*
+        verify the solution and raise a ValueError if `|f(x) > \mathrm{tol}|`
+    *force_type*
+        use specified type constructor on starting points
+    *solver*
+        a generator for *f* and *x0* returning approximative solution and error
+    *maxsteps*
+        after how many steps the solver will cancel
+    *df*
+        first derivative of *f* (used by some solvers)
+    *d2f*
+        second derivative of *f* (used by some solvers)
+    *multidimensional*
+        force multidimensional solving
+    *J*
+        Jacobian matrix of *f* (used by multidimensional solvers)
+    *norm*
+        used vector norm (used by multidimensional solvers)
+
+    solver has to be callable with ``(f, x0, **kwargs)`` and return an generator
+    yielding pairs of approximative solution and estimated error (which is
+    expected to be positive).
     You can use the following string aliases:
     'secant', 'mnewton', 'halley', 'muller', 'illinois', 'pegasus', 'anderson',
     'ridder', 'anewton', 'bisect'
+
     See mpmath.optimization for their documentation.
+
+    **Examples**
+
+    The function :func:`findroot` locates a root of a given function using the
+    secant method by default. A simple example use of the secant method is to
+    compute `\pi` as the root of `\sin x` closest to `x_0 = 3`::
+
+        >>> from sympy.mpmath import *
+        >>> mp.dps = 30
+        >>> print findroot(sin, 3)
+        3.14159265358979323846264338328
+
+    The secant method can be used to find complex roots of analytic functions,
+    although it must in that case generally be given a nonreal starting value
+    (or else it will never leave the real line)::
+
+        >>> mp.dps = 15
+        >>> print findroot(lambda x: x**3 + 2*x + 1, j)
+        (0.226698825758202 + 1.46771150871022j)
+
+    A nice application is to compute nontrivial roots of the Riemann zeta
+    function with many digits (good initial values are needed for convergence)::
+
+        >>> mp.dps = 30
+        >>> print findroot(zeta, 0.5+14j)
+        (0.5 + 14.1347251417346937904572519836j)
+
+    The secant method can also be used as an optimization algorithm, by passing
+    it a derivative of a function. The following example locates the positive
+    minimum of the gamma function::
+
+        >>> mp.dps = 20
+        >>> print findroot(lambda x: diff(gamma, x), 1)
+        1.4616321449683623413
+
+    Finally, a useful application is to compute inverse functions, such as the
+    Lambert W function which is the inverse of `w e^w`, given the first
+    term of the solution's asymptotic expansion as the initial value. In basic
+    cases, this gives identical results to mpmath's builtin ``lambertw``
+    function::
+
+        >>> def lambert(x):
+        ...     return findroot(lambda w: w*exp(w) - x, log(1+x))
+        ...
+        >>> mp.dps = 15
+        >>> print lambert(1), lambertw(1)
+        0.567143290409784 0.567143290409784
+        >>> print lambert(1000), lambert(1000)
+        5.2496028524016 5.2496028524016
+
+    Multidimensional functions are also supported::
+
+        >>> f = [lambda x1, x2: x1**2 + x2,
+        ...      lambda x1, x2: 5*x1**2 - 3*x1 + 2*x2 - 3]
+        >>> findroot(f, (0, 0))
+        matrix(
+        [['-0.618033988749895'],
+         ['-0.381966011250105']])
+        >>> findroot(f, (10, 10))
+        matrix(
+        [['1.61803398874989'],
+         ['-2.61803398874989']])
+
+    You can verify this by solving the system manually.
+
+    **Multiple roots**
+
+    For multiple roots all methods of the Newtonian family (including secant)
+    converge slowly. Consider this example::
+
+        >>> f = lambda x: (x - 1)**99
+        >>> findroot(f, 0.9, verify=False)
+        mpf('0.91807354244492868')
+
+    Even for a very close starting point the secant method converges very
+    slowly. Use ``verbose=True`` to illustrate this.
+
+    It is possible to modify Newton's method to make it converge regardless of
+    the root's multiplicity::
+
+        >>> findroot(f, -10, solver='mnewton')
+        mpf('1.0')
+
+    This variant uses the first and second derivative of the function, which is
+    not very efficient.
+
+    Alternatively you can use an experimental Newtonian solver that keeps track
+    of the speed of convergence and accelerates it using Steffensen's method if
+    necessary::
+
+        >>> findroot(f, -10, solver='anewton', verbose=True)
+        x: -9.88888888888888888889
+        error: 0.111111111111111111111
+        converging slowly
+        x: -9.77890011223344556678
+        error: 0.10998877665544332211
+        converging slowly
+        x: -9.67002233332199662166
+        error: 0.108877778911448945119
+        converging slowly
+        accelerating convergence
+        x: -9.5622443299551077669
+        error: 0.107778003366888854764
+        converging slowly
+        x: 0.99999999999999999214
+        error: 10.562244329955107759
+        x: 1.0
+        error: 7.8598304758094664213e-18
+        mpf('1.0')
+
+
+    **Complex roots**
+
+    For complex roots it's recommended to use Muller's method as it converges
+    even for real starting points very fast::
+
+        >>> findroot(lambda x: x**4 + x + 1, (0, 1, 2), solver='muller')
+        mpc(real='0.72713608449119684', imag='0.93409928946052944')
+
+    **Intersection methods**
+
+    When you need to find a root in a known interval, it's highly recommended to
+    use an intersection-based solver like ``'anderson'`` or ``'ridder'``.
+    Usually they converge faster and more reliable. They have however problems
+    with multiple roots and usually need a sign change to find a root::
+
+        >>> findroot(lambda x: x**3, (-1, 1), solver='anderson')
+        mpf('0.0')
+
+    Be careful with symmetric functions::
+
+        >>> findroot(lambda x: x**2, (-1, 1), solver='anderson') #doctest:+ELLIPSIS
+        Traceback (most recent call last):
+          ...
+        ZeroDivisionError
+
+    It fails even for better starting points, because there is no sign change::
+
+        >>> findroot(lambda x: x**2, (-1, .5), solver='anderson')
+        Traceback (most recent call last):
+          ...
+        ValueError: Could not find root within given tolerance. (1 > 2.1684e-19)
+        Try another starting point or tweak arguments.
+
     """
     # initialize arguments
     if not force_type:
         force_type = lambda x: x
     elif not tol and (force_type == float or force_type == complex):
-        tol = 2**(-52) # TODO: consider a less strict value
+        tol = 2**(-42)
     kwargs['verbose'] = verbose
     if 'd1f' in kwargs:
         kwargs['df'] = kwargs['d1f']
@@ -537,6 +849,37 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
             solver = str2solver[solver]
         except KeyError:
             raise ValueError('could not recognize solver')
+    # accept list of functions
+    if isinstance(f, (list, tuple)):
+        f2 = copy(f)
+        def tmp(*args):
+            return [fn(*args) for fn in f2]
+        f = tmp
+    # detect multidimensional functions
+    try:
+        fx = f(*x0)
+        multidimensional = isinstance(fx, (list, tuple, matrix))
+    except TypeError:
+        fx = f(x0[0])
+        multidimensional = False
+    if 'multidimensional' in kwargs:
+        multidimensional = kwargs['multidimensional']
+    if multidimensional:
+        # only one multidimensional solver available at the moment
+        solver = MDNewton
+        if not 'norm' in kwargs:
+            norm = lambda x: norm_p(x, mpf('inf'))
+            kwargs['norm'] = norm
+        else:
+            norm = kwargs['norm']
+    else:
+        norm = abs
+    # happily return starting point if it's a root
+    if norm(fx) == 0:
+        if multidimensional:
+            return matrix(x0)
+        else:
+            return x0[0]
     # use solver
     iterations = solver(f, x0, **kwargs)
     if 'maxsteps' in kwargs:
@@ -546,25 +889,34 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
     i = 0
     for x, error in iterations:
         if verbose:
-            print 'x:', x
+            print 'x:    ', x
             print 'error:', error
         i += 1
-        if error < tol or i >= maxsteps:
+        if error < tol * max(1, norm(x)) or i >= maxsteps:
             break
-    if verify and abs(f(x))**2 > tol: # TODO: better condition?
+    if not isinstance(x, (list, tuple, matrix)):
+        xl = [x]
+    else:
+        xl = x
+    if verify and norm(f(*xl))**2 > tol: # TODO: better condition?
         raise ValueError('Could not find root within given tolerance. '
                          '(%g > %g)\n'
                          'Try another starting point or tweak arguments.'
-                         % (abs(f(x)), tol))
+                         % (norm(f(*xl))**2, tol))
     return x
 
 def multiplicity(f, root, tol=eps, maxsteps=10, **kwargs):
     """
     Return the multiplicity of a given root of f.
 
-    Internally, numerical derivatives are used. This is very inefficient for
-    higher order derviatives. You can be specify the n-th derivative using the
-    dnf keyword.
+    Internally, numerical derivatives are used. This might be inefficient for
+    higher order derviatives. Due to this, ``multiplicity`` cancels after
+    evaluating 10 derivatives by default. You can be specify the n-th derivative
+    using the dnf keyword.
+
+    >>> from sympy.mpmath import *
+    >>> multiplicity(lambda x: sin(x) - 1, pi/2)
+    2
     """
     kwargs['d0f'] = f
     for i in xrange(maxsteps):
@@ -572,7 +924,7 @@ def multiplicity(f, root, tol=eps, maxsteps=10, **kwargs):
         if dfstr in kwargs:
             df = kwargs[dfstr]
         else:
-            df = lambda x: diffc(f, x, i)
+            df = lambda x: diff(f, x, i)
         if not abs(df(root)) < tol:
             break
     return i
@@ -588,6 +940,66 @@ def steffensen(f):
 
     Definition:
     F(x) = (x*f(f(x)) - f(x)**2) / (f(f(x)) - 2*f(x) + x)
+
+    Example
+    .......
+
+    You can use Steffensen's method to accelerate a fixpoint iteration of linear
+    (or less) convergence.
+
+    x* is a fixpoint of the iteration x_{k+1} = phi(x_k) if x* = phi(x*). For
+    phi(x) = x**2 there are two fixpoints: 0 and 1.
+
+    Let's try Steffensen's method:
+
+    >>> f = lambda x: x**2
+    >>> from sympy.mpmath.optimization import steffensen
+    >>> F = steffensen(f)
+    >>> for x in [0.5, 0.9, 2.0]:
+    ...     fx = Fx = x
+    ...     for i in xrange(10):
+    ...         try:
+    ...             fx = f(fx)
+    ...         except OverflowError:
+    ...             pass
+    ...         try:
+    ...             Fx = F(Fx)
+    ...         except ZeroDivisionError:
+    ...             pass
+    ...         print '%20g  %20g' % (fx, Fx)
+                    0.25                  -0.5
+                  0.0625                   0.1
+              0.00390625            -0.0011236
+            1.52588e-005          1.41691e-009
+            2.32831e-010         -2.84465e-027
+            5.42101e-020          2.30189e-080
+            2.93874e-039          -1.2197e-239
+            8.63617e-078                     0
+            7.45834e-155                     0
+            5.56268e-309                     0
+                    0.81               1.02676
+                  0.6561               1.00134
+                0.430467                     1
+                0.185302                     1
+               0.0343368                     1
+              0.00117902                     1
+            1.39008e-006                     1
+            1.93233e-012                     1
+            3.73392e-024                     1
+            1.39421e-047                     1
+                       4                   1.6
+                      16                1.2962
+                     256               1.10194
+                   65536               1.01659
+            4.29497e+009               1.00053
+            1.84467e+019                     1
+            3.40282e+038                     1
+            1.15792e+077                     1
+            1.34078e+154                     1
+            1.34078e+154                     1
+
+    Unmodified, the iteration converges only towards 0. Modified it converges
+    not only much faster, it converges even to the repelling fixpoint 1.
     """
     def F(x):
         fx = f(x)

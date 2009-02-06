@@ -1,14 +1,7 @@
 from sympy.mpmath.matrices import matrix, eye, swap_row, diag, mnorm_1, mnorm_oo, \
-    mnorm_F, norm_p, zeros, ones, randmatrix, extend
+    mnorm_F, norm_p, zeros, ones, hilbert, randmatrix, extend
 from sympy.mpmath.linalg import inverse
-from sympy.mpmath import inf, mpf, sqrt, mpi
-
-with_numpy = False
-try:
-    import numpy
-    with_numpy = True
-except ImportError:
-    pass
+from sympy.mpmath import inf, mpf, sqrt, mpi, nstr
 
 def test_matrix_basic():
     A1 = matrix(3)
@@ -37,6 +30,7 @@ def test_matrix_basic():
     assert A6 == eval(repr(A6))
     A6 = matrix(A6, force_type=float)
     assert A6 == eval(repr(A6))
+    assert A6*1j == eval(repr(A6*1j))
     assert A3 * 10 == 10 * A3 == A6
     assert A2.rows == 3
     assert A2.cols == 2
@@ -68,6 +62,7 @@ def test_matrix_basic():
     A11 = matrix(randmatrix(2, 3), force_type=mpi)
     for a in A11:
         assert isinstance(a, mpi)
+    assert nstr(A9)
 
 def test_matrix_power():
     A = matrix([[1, 2], [3, 4]])
@@ -97,6 +92,10 @@ def test_matrix_creation():
     for a in A2:
         assert a == 0
     assert randmatrix(10) != randmatrix(10)
+    one = mpf(1)
+    assert hilbert(3) == matrix([[one, one/2, one/3],
+                                 [one/2, one/3, one/4],
+                                 [one/3, one/4, one/5]])
 
 def test_norms():
     # matrix norms
@@ -130,9 +129,12 @@ def test_matrix_copy():
     B[0,0] = 0
     assert A != B
 
-if with_numpy:
-    def test_matrix_numpy():
-        l = [[1, 2], [3, 4], [5, 6]]
-        a = numpy.matrix(l)
-        assert matrix(l) == matrix(a)
+def test_matrix_numpy():
+    try:
+        import numpy
+    except ImportError:
+        return
+    l = [[1, 2], [3, 4], [5, 6]]
+    a = numpy.matrix(l)
+    assert matrix(l) == matrix(a)
 

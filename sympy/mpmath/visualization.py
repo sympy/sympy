@@ -11,9 +11,10 @@ plot_ignore = (ValueError, ArithmeticError, ZeroDivisionError)
 
 def plot(f, xlim=[-5,5], ylim=None, points=200, file=None, dpi=None,
     singularities=[]):
-    """
-    Shows a simple 2D plot of a function or list of functions over
-    a given interval. Some examples:
+    r"""
+    Shows a simple 2D plot of a function `f(x)` or list of functions
+    `[f_0(x), f_1(x), \ldots, f_n(x)]` over a given interval
+    specified by *xlim*. Some examples::
 
         plot(lambda x: exp(x)*li(x), [1, 4])
         plot([cos, sin], [-4, 4])
@@ -24,6 +25,11 @@ def plot(f, xlim=[-5,5], ylim=None, points=200, file=None, dpi=None,
 
     Points where the function raises a numerical exception or
     returns an infinite value are removed from the graph.
+    Singularities can also be excluded explicitly
+    as follows (useful for removing erroneous vertical lines)::
+
+        plot(cot, ylim=[-5, 5])   # bad
+        plot(cot, ylim=[-5, 5], singularities=[-pi, 0, pi])  # good
 
     For parts where the function assumes complex values, the
     real part is plotted with dashes and the imaginary part
@@ -49,7 +55,7 @@ def plot(f, xlim=[-5,5], ylim=None, points=200, file=None, dpi=None,
                         if x[i-1] <= sing and x[i] >= sing:
                             raise ValueError
                 v = func(x[i])
-                if isnan(v) or abs(v) == inf:
+                if isnan(v) or abs(v) > 1e300:
                     raise ValueError
                 if isinstance(v, complex_types):
                     re = float(v.real)
@@ -108,17 +114,17 @@ def default_color_function(z):
 def cplot(f, re=[-5,5], im=[-5,5], points=2000, color=default_color_function,
     verbose=False, file=None, dpi=None):
     """
-    Plots the given complex-valued function over a rectangular part
-    of the complex plane given by the pairs of intervals re and im.
-    For example:
+    Plots the given complex-valued function *f* over a rectangular part
+    of the complex plane specified by the pairs of intervals *re* and *im*.
+    For example::
 
         cplot(lambda z: z, [-2, 2], [-10, 10])
         cplot(exp)
         cplot(zeta, [0, 1], [0, 50])
 
-    By default, the complex argument (phase) is shown as color and
+    By default, the complex argument (phase) is shown as color (hue) and
     the magnitude is show as brightness. You can also supply a
-    custom color function ('color'). This function should take a
+    custom color function (*color*). This function should take a
     complex number as input and return an RGB 3-tuple containing
     floats in the range 0.0-1.0.
 
@@ -126,6 +132,8 @@ def cplot(f, re=[-5,5], im=[-5,5], points=2000, color=default_color_function,
     increased to 100,000 or thereabout. Since evaluating the
     function that many times is likely to be slow, the 'verbose'
     option is useful to display progress.
+
+    NOTE: This function requires matplotlib (pylab).
     """
     import pylab
     pylab.clf()

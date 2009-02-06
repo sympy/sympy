@@ -7,6 +7,9 @@ python runtests.py -py
 python runtests.py -psyco
   Enable psyco to make tests run about 50% faster
 
+python runtests.py -coverage
+  Generate test coverage report. Statistics are written to /tmp
+
 python runtests.py -profile
   Generate profile stats (this is much slower)
 
@@ -35,6 +38,11 @@ profile = False
 if "-profile" in sys.argv:
     sys.argv.remove('-profile')
     profile = True
+
+coverage = False
+if "-coverage" in sys.argv:
+    sys.argv.remove('-coverage')
+    coverage = True
 
 if "-nogmpy" in sys.argv:
     sys.argv.remove('-nogmpy')
@@ -67,7 +75,7 @@ def testit(importdir='', testdir=''):
     else:
         import glob
         import os.path
-        from time import clock
+        from timeit import default_timer as clock
         modules = []
         args = sys.argv[1:]
         # search for tests in directory of this file if not otherwise specified
@@ -102,6 +110,8 @@ def testit(importdir='', testdir=''):
             print name
             for f in sorted(module.__dict__.keys()):
                 if f.startswith('test_'):
+                    if coverage and ('numpy' in f):
+                        continue
                     print "   ", f[5:].ljust(25),
                     t1 = clock()
                     module.__dict__[f]()
@@ -119,7 +129,14 @@ def testit(importdir='', testdir=''):
 if __name__ == '__main__':
     if profile:
         import cProfile
-        cProfile.run("testit(%s, %s)" % (importdir, testdir), sort=2)
+        cProfile.run("testit('%s', '%s')" % (importdir, testdir), sort=1)
+    elif coverage:
+        import trace
+        tracer = trace.Trace(ignoredirs=[sys.prefix, sys.exec_prefix],
+            trace=0, count=1)
+        tracer.run('testit(importdir, testdir)')
+        r = tracer.results()
+        r.write_results(show_missing=True, summary=True, coverdir="/tmp")
     else:
         testit(importdir, testdir)
 

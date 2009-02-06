@@ -41,14 +41,20 @@ def test_bernoulli():
     assert str(bernoulli(10**5)) == '-5.82229431461335e+376755'
     assert str(bernoulli(10**8+2)) == '1.19570355039953e+676752584'
     assert str(bernoulli(10**100)) == '-2.58183325604736e+987675256497386331227838638980680030172857347883537824464410652557820800494271520411283004120790908623'
+
     mp.dps = 50
     assert str(bernoulli(10)) == '0.075757575757575757575757575757575757575757575757576'
     assert str(bernoulli(234)) == '7.6277279396434392486994969020496121553385863373331e+267'
     assert str(bernoulli(10**5)) == '-5.8222943146133508236497045360612887555320691004308e+376755'
     assert str(bernoulli(10**8+2)) == '1.1957035503995297272263047884604346914602088317782e+676752584'
     assert str(bernoulli(10**100)) == '-2.5818332560473632073252488656039475548106223822913e+987675256497386331227838638980680030172857347883537824464410652557820800494271520411283004120790908623'
+
     mp.dps = 1000
     assert bernoulli(10).ae(mpf(5)/66)
+
+    mp.dps = 50000
+    assert bernoulli(10).ae(mpf(5)/66)
+
     mp.dps = 15
 
 def test_gamma():
@@ -82,6 +88,16 @@ def test_gamma():
     assert factorial(3) == 6
     assert isnan(gamma(nan))
 
+def test_fac2():
+    mp.dps = 15
+    assert [fac2(n) for n in range(10)] == [1,1,2,3,8,15,48,105,384,945]
+    assert fac2(-5).ae(1./3)
+    assert fac2(-11).ae(-1./945)
+    assert fac2(50).ae(5.20469842636666623e32)
+    assert fac2(0.5+0.75j).ae(0.81546769394688069176-0.34901016085573266889j)
+    assert fac2(inf) == inf
+    assert isnan(fac2(-inf))
+
 def test_gamma_quotients():
     mp.dps = 15
     h = 1e-8
@@ -109,6 +125,23 @@ def test_gamma_quotients():
     assert binomial(-1,0) == 1
     assert binomial(-2,-4) == 3
     assert binomial(4.5, 1.5) == 6.5625
+    assert beta(1,1) == 1
+    assert beta(0,0) == inf
+    assert beta(3,0) == inf
+    assert beta(-1,-1) == inf
+    assert beta(1.5,1).ae(2/3.)
+    assert beta(1.5,2.5).ae(pi/16)
+    assert (10**15*beta(10,100)).ae(2.3455339739604649879)
+    assert beta(inf,inf) == 0
+    assert isnan(beta(-inf,inf))
+    assert isnan(beta(-3,inf))
+    assert isnan(beta(0,inf))
+    assert beta(inf,0.5) == beta(0.5,inf) == 0
+    assert beta(inf,-1.5) == inf
+    assert beta(inf,-0.5) == -inf
+    assert beta(1+2j,-1-j/2).ae(1.16396542451069943086+0.08511695947832914640j)
+    assert beta(-0.5,0.5) == 0
+    assert beta(-3,3).ae(-1/3.)
 
 def test_zeta():
     mp.dps = 15
@@ -123,6 +156,7 @@ def test_zeta():
     assert zeta(-3).ae(mpf(1)/120)
     assert zeta(-4) == 0
     assert zeta(-100) == 0
+    assert isnan(zeta(nan))
     # Zeros in the critical strip
     assert zeta(mpc(0.5, 14.1347251417346937904)).ae(0)
     assert zeta(mpc(0.5, 21.0220396387715549926)).ae(0)
@@ -131,7 +165,34 @@ def test_zeta():
     im = '236.5242296658162058024755079556629786895294952121891237'
     assert zeta(mpc(0.5, im)).ae(0, 1e-46)
     mp.dps = 15
-    assert isnan(zeta(nan))
+    # Complex reflection formula
+    assert (zeta(-60+3j) / 10**34).ae(8.6270183987866146+15.337398548226238j)
+
+def test_altzeta():
+    mp.dps = 15
+    assert altzeta(-2) == 0
+    assert altzeta(-4) == 0
+    assert altzeta(-100) == 0
+    assert altzeta(0) == 0.5
+    assert altzeta(-1) == 0.25
+    assert altzeta(-3) == -0.125
+    assert altzeta(-5) == 0.25
+    assert altzeta(-21) == 1180529130.25
+    assert altzeta(1).ae(log(2))
+    assert altzeta(2).ae(pi**2/12)
+    assert altzeta(10).ae(73*pi**10/6842880)
+    assert altzeta(50) < 1
+    assert altzeta(60, rounding='d') < 1
+    assert altzeta(60, rounding='u') == 1
+    assert altzeta(10000, rounding='d') < 1
+    assert altzeta(10000, rounding='u') == 1
+    assert altzeta(3+0j) == altzeta(3)
+    s = 3+4j
+    assert altzeta(s).ae((1-2**(1-s))*zeta(s))
+    s = -3+4j
+    assert altzeta(s).ae((1-2**(1-s))*zeta(s))
+    assert altzeta(-100.5).ae(4.58595480083585913e+108)
+    assert altzeta(1.3).ae(0.73821404216623045)
 
 def test_zeta_huge():
     mp.dps = 15
@@ -178,6 +239,11 @@ def test_polygamma():
     assert psi1(-pi-j).ae(-0.30065008356019703 + 0.01149892486928227j)
     assert (10**6*psi(4,1+10*pi*j)).ae(-6.1491803479004446 - 0.3921316371664063j)
     assert psi0(1+10*pi*j).ae(3.4473994217222650 + 1.5548808324857071j)
+    assert isnan(psi0(nan))
+    assert isnan(psi0(-inf))
+    assert psi0(-100.5).ae(4.615124601338064)
+    assert psi0(3+0j).ae(psi0(3))
+    assert psi0(-100+3j).ae(4.6106071768714086321+3.1117510556817394626j)
 
 def test_polygamma_high_prec():
     mp.dps = 100
@@ -232,6 +298,8 @@ def test_harmonic():
     assert harmonic(10**1000).ae(2303.162308658947)
     assert harmonic(0.5).ae(2-2*log(2))
     assert harmonic(inf) == inf
+    assert harmonic(2+0j) == 1.5+0j
+    assert harmonic(1+2j).ae(1.4918071802755104+0.92080728264223022j)
 
 def test_gamma_huge_1():
     mp.dps = 500
@@ -256,7 +324,7 @@ def test_gamma_huge_2():
 
 def test_gamma_huge_3():
     mp.dps = 500
-    x = 10**80 // 3 + 10**70*j / 7
+    x = 10**80 / 3 + 10**70*j / 7
     mp.dps = 15
     y = gamma(x)
     assert str(y.real) == (\
@@ -336,6 +404,58 @@ def test_stieltjes():
     mp.dps = 15
     assert stieltjes(0).ae(+euler)
     mp.dps = 25
+    assert stieltjes(1).ae('-0.07281584548367672486058637587')
     assert stieltjes(2).ae('-0.009690363192872318484530386035')
+    assert stieltjes(3).ae('0.002053834420303345866160046543')
+    assert stieltjes(4).ae('0.002325370065467300057468170178')
     mp.dps = 15
+    assert stieltjes(1).ae(-0.07281584548367672486058637587)
     assert stieltjes(2).ae(-0.009690363192872318484530386035)
+    assert stieltjes(3).ae(0.002053834420303345866160046543)
+    assert stieltjes(4).ae(0.0023253700654673000574681701775)
+
+def test_barnesg():
+    mp.dps = 15
+    assert barnesg(0) == barnesg(-1) == 0
+    assert [superfac(i) for i in range(8)] == [1, 1, 2, 12, 288, 34560, 24883200, 125411328000]
+    assert str(superfac(1000)) == '3.24570818422368e+1177245'
+    assert isnan(barnesg(nan))
+    assert isnan(superfac(nan))
+    assert isnan(hyperfac(nan))
+    assert barnesg(inf) == inf
+    assert superfac(inf) == inf
+    assert hyperfac(inf) == inf
+    assert isnan(superfac(-inf))
+    assert barnesg(0.7).ae(0.8068722730141471)
+    assert barnesg(2+3j).ae(-0.17810213864082169+0.04504542715447838j)
+    assert [hyperfac(n) for n in range(7)] == [1, 1, 4, 108, 27648, 86400000, 4031078400000]
+    assert [hyperfac(n) for n in range(0,-7,-1)] == [1,1,-1,-4,108,27648,-86400000]
+    a = barnesg(-3+0j)
+    assert a == 0 and isinstance(a, mpc)
+    a = hyperfac(-3+0j)
+    assert a == -4 and isinstance(a, mpc)
+
+def test_polylog():
+    mp.dps = 15
+    zs = [mpmathify(z) for z in [0, 0.5, 0.99, 4, -0.5, -4, 1j, 3+4j]]
+    for z in zs: assert polylog(1, z).ae(-log(1-z))
+    for z in zs: assert polylog(0, z).ae(z/(1-z))
+    for z in zs: assert polylog(-1, z).ae(z/(1-z)**2)
+    for z in zs: assert polylog(-2, z).ae(z*(1+z)/(1-z)**3)
+    for z in zs: assert polylog(-3, z).ae(z*(1+4*z+z**2)/(1-z)**4)
+    assert polylog(3, 7).ae(5.3192579921456754382-5.9479244480803301023j)
+    assert polylog(3, -7).ae(-4.5693548977219423182)
+    assert polylog(2, 0.9).ae(1.2997147230049587252)
+    assert polylog(2, -0.9).ae(-0.75216317921726162037)
+    assert polylog(2, 0.9j).ae(-0.17177943786580149299+0.83598828572550503226j)
+    assert polylog(2, 1.1).ae(1.9619991013055685931-0.2994257606855892575j)
+    assert polylog(2, -1.1).ae(-0.89083809026228260587)
+    assert polylog(2, 1.1*sqrt(j)).ae(0.58841571107611387722+1.09962542118827026011j)
+    assert polylog(-2, 0.9).ae(1710)
+    assert polylog(-2, -0.9).ae(-90/6859.)
+    assert polylog(3, 0.9).ae(1.0496589501864398696)
+    assert polylog(-3, 0.9).ae(48690)
+    assert polylog(-3, -4).ae(-0.0064)
+    assert polylog(0.5+j/3, 0.5+j/2).ae(0.31739144796565650535 + 0.99255390416556261437j)
+    assert polylog(3+4j,1).ae(zeta(3+4j))
+    assert polylog(3+4j,-1).ae(-altzeta(3+4j))

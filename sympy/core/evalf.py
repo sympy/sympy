@@ -15,7 +15,8 @@ from sympy.mpmath.gammazeta import mpf_gamma
 from sympy.mpmath.libelefun import mpf_pi, mpf_log, mpf_pow, mpf_sin, mpf_cos, \
         mpf_atan, mpf_atan2, mpf_e, mpf_exp
 from sympy.mpmath.libmpf import MP_BASE, from_man_exp
-from sympy.mpmath.calculus import shanks_extrapolation, richardson_extrapolation
+from sympy.mpmath.calculus import shanks, richardson, nsum
+from sympy.mpmath import inf as mpmath_inf
 
 from sympy.mpmath.gammazeta import mpf_bernoulli
 
@@ -337,7 +338,7 @@ def evalf_mul(v, prec, options):
     prec = prec + len(args) + 5
     direction = 0
     # Empty product is 1
-    man, exp, bc = 1, 0, 1
+    man, exp, bc = MP_BASE(1), 0, 1
     direction = 0
     complex_factors = []
     # First, we multiply all pure real or pure imaginary numbers.
@@ -791,6 +792,7 @@ def hypsum(expr, n, start, prec):
     if hs is None:
         raise NotImplementedError("a hypergeometric series is required")
     num, den = hs.as_numer_denom()
+
     func1 = lambdify(n, num)
     func2 = lambdify(n, den)
 
@@ -818,40 +820,25 @@ def hypsum(expr, n, start, prec):
             raise ValueError("Sum diverges like (%i)^n" % abs(1/g))
         if p < 1 or (p == 1 and not alt):
             raise ValueError("Sum diverges like n^%i" % (-p))
-        # We have polynomial convergence:
-        # Use Shanks extrapolation for alternating series,
-        # Richardson extrapolation for nonalternating series
-        if alt:
-            # XXX: better parameters for Shanks transformation
-            # This tends to get bad somewhere > 50 digits
-            N = 5 + int(prec*0.36)
-            M = 2 + N//3
-            NTERMS = M + N + 2
-        else:
-            N = 3 + int(prec*0.15)
-            M = 2*N
-            NTERMS = M + N + 2
-        # Need to use at least double precision because a lot of cancellation
+        # We have polynomial convergence: use Richardson extrapolation
+        # Need to use at least quad precision because a lot of cancellation
         # might occur in the extrapolation process
-        prec2 = 2*prec
+        prec2 = 4*prec
         one = MP_BASE(1) << prec2
         term = expr.subs(n, 0)
         term = (MP_BASE(term.p) << prec2) // term.q
-        s = term
-        table = [make_mpf(from_man_exp(s, -prec2))]
-        for k in xrange(1, NTERMS):
-            term *= MP_BASE(func1(k-1))
-            term //= MP_BASE(func2(k-1))
-            s += term
-            table.append(make_mpf(from_man_exp(s, -prec2)))
-            k += 1
+
+        def summand(k, _term=[term]):
+            if k:
+                k = int(k)
+                _term[0] *= MP_BASE(func1(k-1))
+                _term[0] //= MP_BASE(func2(k-1))
+            return make_mpf(from_man_exp(_term[0], -prec2))
+
         orig = mp.prec
         try:
             mp.prec = prec
-            if alt:
-                v = shanks_extrapolation(table, N, M)
-            else:
-                v = richardson_extrapolation(table, N, M)
+            v = nsum(summand, [0, mpmath_inf], method='richardson')
         finally:
             mp.prec = orig
         return v._mpf_
@@ -959,7 +946,8 @@ def _create_evalf_table():
 
 def evalf(x, prec, options):
     try:
-        r = evalf_table[x.func](x, prec, options)
+        rf = evalf_table[x.func]
+        r = rf(x, prec, options)
     except KeyError:
         #r = finalize_complex(x._eval_evalf(prec)._mpf_, fzero, prec)
         try:

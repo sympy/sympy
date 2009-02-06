@@ -13,21 +13,28 @@ from settings import (\
 )
 
 from libmpf import (\
+    ComplexResult,
     negative_rnd, bitcount, to_fixed, from_man_exp, to_int,
     fzero, fone, fnone, ftwo, finf, fninf, fnan,
+    mpf_sign, mpf_add, mpf_abs, mpf_pos,
+    mpf_cmp, mpf_lt, mpf_le,
     mpf_perturb, mpf_neg, mpf_shift, mpf_sub, mpf_mul, mpf_div,
     sqrt_fixed, mpf_sqrt, mpf_rdiv_int
 )
 
 from libelefun import (\
-    mpf_pi, mpf_exp, pi_fixed
+    mpf_pi, mpf_exp, mpf_log, pi_fixed, cos_sin, mpf_cos, mpf_sin,
+    mpf_sqrt, agm_fixed,
 )
 
 from libmpc import (\
-    mpc_one, mpc_sub, mpc_mul_mpf, mpc_mul, mpc_neg, complex_int_pow
+    mpc_one, mpc_sub, mpc_mul_mpf, mpc_mul, mpc_neg, complex_int_pow,
+    mpc_div, mpc_add_mpf, mpc_sub_mpf,
+    mpc_log, mpc_add, mpc_pos, mpc_shift,
+    mpc_is_infnan, mpc_zero, mpc_sqrt, mpc_abs,
 )
 
-from gammazeta import int_fac
+from gammazeta import int_fac, mpf_euler
 
 #-----------------------------------------------------------------------#
 #                                                                       #
@@ -209,8 +216,9 @@ def mpf_hyp0f1_rat((bp, bq), x, prec, rnd):
     x = to_fixed(x, wp)
     s = p = MP_ONE << wp
     n = 1
+    bqx = bq*x
     while 1:
-        p = (p * (bq*x) // (n*bp)) >> wp
+        p = ((p * bqx) >> wp) // (n*bp)
         if -100 < p < 100:
             break
         s += p
@@ -230,8 +238,8 @@ def mpc_hyp0f1_rat((bp, bq), z, prec, rnd):
         r1 = bq
         r2 = n*bp
         pre, pim = pre*zre - pim*zim, pim*zre + pre*zim
-        pre = ((pre * r1) // r2) >> wp
-        pim = ((pim * r1) // r2) >> wp
+        pre = ((pre * r1) >> wp) // r2
+        pim = ((pim * r1) >> wp) // r2
         if -100 < pre < 100 and -100 < pim < 100:
             break
         sre += pre
@@ -248,7 +256,7 @@ def mpf_hyp1f1_rat((ap, aq), (bp, bq), x, prec, rnd):
     s = p = MP_ONE << wp
     n = 1
     while 1:
-        p = (p * (ap*bq*x) // (n*aq*bp)) >> wp
+        p = ((p * (ap*bq*x)) >> wp) // (n*aq*bp)
         if -100 < p < 100:
             break
         s += p
@@ -269,8 +277,8 @@ def mpc_hyp1f1_rat((ap, aq), (bp, bq), z, prec, rnd):
         r1 = ap*bq
         r2 = n*aq*bp
         pre, pim = pre*zre - pim*zim, pim*zre + pre*zim
-        pre = ((pre * r1) // r2) >> wp
-        pim = ((pim * r1) // r2) >> wp
+        pre = ((pre * r1) >> wp) // r2
+        pim = ((pim * r1) >> wp) // r2
         if -100 < pre < 100 and -100 < pim < 100:
             break
         sre += pre
@@ -288,7 +296,7 @@ def mpf_hyp2f1_rat((ap, aq), (bp, bq), (cp, cq), x, prec, rnd):
     s = p = MP_ONE << wp
     n = 1
     while 1:
-        p = (p * (ap*bp*cq*x) // (n*aq*bq*cp)) >> wp
+        p = ((p * (ap*bp*cq*x)) >> wp) // (n*aq*bq*cp)
         if -100 < p < 100:
             break
         s += p
@@ -310,8 +318,8 @@ def mpc_hyp2f1_rat((ap, aq), (bp, bq), (cp, cq), z, prec, rnd):
         r1 = ap*bp*cq
         r2 = n*aq*bq*cp
         pre, pim = pre*zre - pim*zim, pim*zre + pre*zim
-        pre = ((pre * r1) // r2) >> wp
-        pim = ((pim * r1) // r2) >> wp
+        pre = ((pre * r1) >> wp) // r2
+        pim = ((pim * r1) >> wp) // r2
         if -100 < pre < 100 and -100 < pim < 100:
             break
         sre += pre
@@ -444,6 +452,173 @@ def mpc_erfc(z, prec, rnd=round_fast):
     # XXX: cancellation
     return mpc_sub(mpc_one, mpc_erf(z, prec+20, rnd), prec, rnd)
 
+
+#-----------------------------------------------------------------------#
+#                                                                       #
+#                         Exponential integrals                         #
+#                                                                       #
+#-----------------------------------------------------------------------#
+
+def mpf_ci_si_taylor(x, wp, which=0):
+    """
+    0 - Ci(x) - (euler+log(x))
+    1 - Si(x)
+    """
+    x = to_fixed(x, wp)
+    x2 = -(x*x) >> wp
+    if which == 0:
+        s, t, k = 0, (MP_ONE<<wp), 2
+    else:
+        s, t, k = x, x, 3
+    while t:
+        t = (t*x2//(k*(k-1)))>>wp
+        s += t//k
+        k += 2
+    return from_man_exp(s, -wp)
+
+def mpc_ci_si_taylor(re, im, wp, which=0):
+    zre = to_fixed(re, wp)
+    zim = to_fixed(im, wp)
+    z2re = (zim*zim-zre*zre)>>wp
+    z2im = (-2*zre*zim)>>wp
+    tre = zre
+    tim = zim
+    one = MP_ONE<<wp
+    if which == 0:
+        sre, sim, tre, tim, k = 0, 0, (MP_ONE<<wp), 0, 2
+    else:
+        sre, sim, tre, tim, k = zre, zim, zre, zim, 3
+    while max(abs(tre), abs(tim)) > 2:
+        f = k*(k-1)
+        tre, tim = ((tre*z2re-tim*z2im)//f)>>wp, ((tre*z2im+tim*z2re)//f)>>wp
+        sre += tre//k
+        sim += tim//k
+        k += 2
+    return from_man_exp(sre, -wp), from_man_exp(sim, -wp)
+
+def mpf_ci_si(x, prec, rnd=round_fast, which=2):
+    """
+    Calculation of Ci(x), Si(x) for real x.
+
+    which = 0 -- returns (Ci(x), -)
+    which = 1 -- returns (Si(x), -)
+    which = 2 -- returns (Ci(x), Si(x))
+
+    Note: if x < 0, Ci(x) needs an additional imaginary term, pi*i.
+    """
+    wp = prec + 20
+    sign, man, exp, bc = x
+    ci, si = None, None
+    if not man:
+        if x == fzero:
+            return (fninf, fzero)
+        if x == fnan:
+            return (x, x)
+        ci = fzero
+        if which != 0:
+            if x == finf:
+                si = mpf_shift(mpf_pi(prec, rnd), -1)
+            if x == fninf:
+                si = mpf_neg(mpf_shift(mpf_pi(prec, negative_rnd[rnd]), -1))
+        return (ci, si)
+    # For small x: Ci(x) ~ euler + log(x), Si(x) ~ x
+    mag = exp+bc
+    if mag < -wp:
+        if which != 0:
+            si = mpf_perturb(x, 1-sign, prec, rnd)
+        if which != 1:
+            y = mpf_euler(wp)
+            xabs = mpf_abs(x)
+            ci = mpf_add(y, mpf_log(xabs, wp), prec, rnd)
+        return ci, si
+    # For huge x: Ci(x) ~ sin(x)/x, Si(x) ~ pi/2
+    elif mag > wp:
+        if which != 0:
+            if sign:
+                si = mpf_neg(mpf_pi(prec, negative_rnd[rnd]))
+            else:
+                si = mpf_pi(prec, rnd)
+            si = mpf_shift(si, -1)
+        if which != 1:
+            ci = mpf_div(mpf_sin(x, wp), x, prec, rnd)
+        return ci, si
+    else:
+        wp += abs(mag)
+    # Use an asymptotic series? The smallest value of n!/x^n
+    # occurs for n ~ x, where the magnitude is ~ exp(-x).
+    asymptotic = mag-1 > math.log(wp, 2)
+    # Case 1: convergent series near 0
+    if not asymptotic:
+        if which != 0:
+            si = mpf_pos(mpf_ci_si_taylor(x, wp, 1), prec, rnd)
+        if which != 1:
+            ci = mpf_ci_si_taylor(x, wp, 0)
+            ci = mpf_add(ci, mpf_euler(wp), wp)
+            ci = mpf_add(ci, mpf_log(mpf_abs(x), wp), prec, rnd)
+        return ci, si
+    x = mpf_abs(x)
+    # Case 2: asymptotic series for x >> 1
+    xf = to_fixed(x, wp)
+    xr = (MP_ONE<<(2*wp)) // xf   # 1/x
+    s1 = (MP_ONE << wp)
+    s2 = xr
+    t = xr
+    k = 2
+    while t:
+        t = -t
+        t = (t*xr*k)>>wp
+        k += 1
+        s1 += t
+        t = (t*xr*k)>>wp
+        k += 1
+        s2 += t
+    s1 = from_man_exp(s1, -wp)
+    s2 = from_man_exp(s2, -wp)
+    s1 = mpf_div(s1, x, wp)
+    s2 = mpf_div(s2, x, wp)
+    cos, sin = cos_sin(x, wp)
+    # Ci(x) = sin(x)*s1-cos(x)*s2
+    # Si(x) = pi/2-cos(x)*s1-sin(x)*s2
+    if which != 0:
+        si = mpf_add(mpf_mul(cos, s1), mpf_mul(sin, s2), wp)
+        si = mpf_sub(mpf_shift(mpf_pi(wp), -1), si, wp)
+        if sign:
+            si = mpf_neg(si)
+        si = mpf_pos(si, prec, rnd)
+    if which != 1:
+        ci = mpf_sub(mpf_mul(sin, s1), mpf_mul(cos, s2), prec, rnd)
+    return ci, si
+
+def mpf_ci(x, prec, rnd=round_fast):
+    if mpf_sign(x) < 0:
+        raise ComplexResult
+    return mpf_ci_si(x, prec, rnd, 0)[0]
+
+def mpf_si(x, prec, rnd=round_fast):
+    return mpf_ci_si(x, prec, rnd, 1)[1]
+
+def mpc_ci(z, prec, rnd=round_fast):
+    re, im = z
+    if im == fzero:
+        ci = mpf_ci_si(re, prec, rnd, 0)[0]
+        if mpf_sign(re) < 0:
+            return (ci, mpf_pi(prec, rnd))
+        return (ci, fzero)
+    wp = prec + 20
+    cre, cim = mpc_ci_si_taylor(re, im, wp, 0)
+    cre = mpf_add(cre, mpf_euler(wp), wp)
+    ci = mpc_add((cre, cim), mpc_log(z, wp), prec, rnd)
+    return ci
+
+def mpc_si(z, prec, rnd=round_fast):
+    re, im = z
+    if im == fzero:
+        return (mpf_ci_si(re, prec, rnd, 1)[1], fzero)
+    wp = prec + 20
+    z = mpc_ci_si_taylor(re, im, wp, 1)
+    return mpc_pos(z, prec, rnd)
+
+
 #-----------------------------------------------------------------------#
 #                                                                       #
 #                             Bessel functions                          #
@@ -527,3 +702,179 @@ def mpc_besseljn(n, z, prec):
     re = from_man_exp(sre, -prec, origprec, round_nearest)
     im = from_man_exp(sim, -prec, origprec, round_nearest)
     return (re, im)
+
+def mpf_agm(a, b, prec, rnd=round_fast):
+    """
+    Computes the arithmetic-geometric mean agm(a,b) for
+    nonnegative mpf values a, b.
+    """
+    asign, aman, aexp, abc = a
+    bsign, bman, bexp, bbc = b
+    if asign or bsign:
+        raise ComplexResult("agm of a negative number")
+    # Handle inf, nan or zero in either operand
+    if not (aman and bman):
+        if a == fnan or b == fnan:
+            return fnan
+        if a == finf:
+            if b == fzero:
+                return fnan
+            return finf
+        if b == finf:
+            if a == fzero:
+                return fnan
+            return finf
+        # agm(0,x) = agm(x,0) = 0
+        return fzero
+    wp = prec + 20
+    amag = aexp+abc
+    bmag = bexp+bbc
+    mag_delta = amag - bmag
+    # Reduce to roughly the same magnitude using floating-point AGM
+    abs_mag_delta = abs(mag_delta)
+    if abs_mag_delta > 10:
+        while abs_mag_delta > 10:
+            a, b = mpf_shift(mpf_add(a,b,wp),-1), \
+                mpf_sqrt(mpf_mul(a,b,wp),wp)
+            abs_mag_delta //= 2
+        asign, aman, aexp, abc = a
+        bsign, bman, bexp, bbc = b
+        amag = aexp+abc
+        bmag = bexp+bbc
+        mag_delta = amag - bmag
+    #print to_float(a), to_float(b)
+    # Use agm(a,b) = agm(x*a,x*b)/x to obtain a, b ~= 1
+    min_mag = min(amag,bmag)
+    max_mag = max(amag,bmag)
+    n = 0
+    # If too small, we lose precision when going to fixed-point
+    if min_mag < -8:
+        n = -min_mag
+    # If too large, we waste time using fixed-point with large numbers
+    elif max_mag > 20:
+        n = -max_mag
+    if n:
+        a = mpf_shift(a, n)
+        b = mpf_shift(b, n)
+    #print to_float(a), to_float(b)
+    af = to_fixed(a, wp)
+    bf = to_fixed(b, wp)
+    g = agm_fixed(af, bf, wp)
+    return from_man_exp(g, -wp-n, prec, rnd)
+
+def mpf_agm1(a, prec, rnd=round_fast):
+    """
+    Computes the arithmetic-geometric mean agm(1,a) for a nonnegative
+    mpf value a.
+    """
+    return mpf_agm(fone, a, prec, rnd)
+
+def mpc_agm(a, b, prec, rnd=round_fast):
+    """
+    Complex AGM.
+
+    TODO:
+    * check that convergence works as intended
+    * optimize
+    * select a nonarbitrary branch
+    """
+    if mpc_is_infnan(a) or mpc_is_infnan(b):
+        return fnan, fnan
+    if mpc_zero in (a, b):
+        return fzero, fzero
+    if mpc_neg(a) == b:
+        return fzero, fzero
+    wp = prec+20
+    eps = mpf_shift(fone, -wp+10)
+    while 1:
+        a1 = mpc_shift(mpc_add(a, b, wp), -1)
+        b1 = mpc_sqrt(mpc_mul(a, b, wp), wp)
+        a, b = a1, b1
+        size = sorted([mpc_abs(a,10), mpc_abs(a,10)], cmp=mpf_cmp)[1]
+        err = mpc_abs(mpc_sub(a, b, 10), 10)
+        if size == fzero or mpf_lt(err, mpf_mul(eps, size)):
+            return a
+
+def mpc_agm1(a, prec, rnd=round_fast):
+    return mpc_agm(mpc_one, a, prec, rnd)
+
+def mpf_ellipk(x, prec, rnd=round_fast):
+    if not x[1]:
+        if x == fzero:
+            return mpf_shift(mpf_pi(prec, rnd), -1)
+        if x == fninf:
+            return fzero
+        if x == fnan:
+            return x
+    if x == fone:
+        return finf
+    # TODO: for |x| << 1/2, one could use fall back to
+    # pi/2 * hyp2f1_rat((1,2),(1,2),(1,1), x)
+    wp = prec + 15
+    # Use K(x) = pi/2/agm(1,a) where a = sqrt(1-x)
+    # The sqrt raises ComplexResult if x > 0
+    a = mpf_sqrt(mpf_sub(fone, x, wp), wp)
+    v = mpf_agm1(a, wp)
+    r = mpf_div(mpf_pi(wp), v, prec, rnd)
+    return mpf_shift(r, -1)
+
+def mpc_ellipk(z, prec, rnd=round_fast):
+    re, im = z
+    if im == fzero:
+        if re == finf:
+            return mpc_zero
+        if mpf_le(re, fone):
+            return mpf_ellipk(re, prec, rnd), fzero
+    wp = prec + 15
+    a = mpc_sqrt(mpc_sub(mpc_one, z, wp), wp)
+    v = mpc_agm1(a, wp)
+    r = mpc_div((mpf_pi(wp),fzero), v, prec, rnd)
+    return mpc_shift(r, -1)
+
+def mpf_ellipe(x, prec, rnd=round_fast):
+    # http://functions.wolfram.com/EllipticIntegrals/
+    # EllipticK/20/01/0001/
+    # E = (1-m)*(K'(m)*2*m + K(m))
+    sign, man, exp, bc = x
+    if not man:
+        if x == fzero:
+            return mpf_shift(mpf_pi(prec, rnd), -1)
+        if x == fninf:
+            return finf
+        if x == fnan:
+            return x
+        if x == finf:
+            raise ComplexResult
+    if x == fone:
+        return fone
+    wp = prec+20
+    mag = exp+bc
+    if mag < -wp:
+        return mpf_shift(mpf_pi(prec, rnd), -1)
+    # Compute a finite difference for K'
+    p = max(mag, 0) - wp
+    h = mpf_shift(fone, p)
+    K = mpf_ellipk(x, 2*wp)
+    Kh = mpf_ellipk(mpf_sub(x, h), 2*wp)
+    Kdiff = mpf_shift(mpf_sub(K, Kh), -p)
+    t = mpf_sub(fone, x)
+    b = mpf_mul(Kdiff, mpf_shift(x,1), wp)
+    return mpf_mul(t, mpf_add(K, b), prec, rnd)
+
+def mpc_ellipe(z, prec, rnd=round_fast):
+    re, im = z
+    if im == fzero:
+        if re == finf:
+            return (fzero, finf)
+        if mpf_le(re, fone):
+            return mpf_ellipe(re, prec, rnd), fzero
+    wp = prec + 15
+    mag = mpc_abs(z, 1)
+    p = max(mag[2]+mag[3], 0) - wp
+    h = mpf_shift(fone, p)
+    K = mpc_ellipk(z, 2*wp)
+    Kh = mpc_ellipk(mpc_add_mpf(z, h, 2*wp), 2*wp)
+    Kdiff = mpc_shift(mpc_sub(Kh, K, wp), -p)
+    t = mpc_sub(mpc_one, z, wp)
+    b = mpc_mul(Kdiff, mpc_shift(z,1), wp)
+    return mpc_mul(t, mpc_add(K, b, wp), prec, rnd)

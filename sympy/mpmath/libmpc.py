@@ -10,17 +10,21 @@ from settings import (\
 
 from libmpf import (\
     bctable, normalize, reciprocal_rnd, rshift, lshift, giant_steps,
+    negative_rnd,
     to_str, to_fixed, from_man_exp, from_float, from_int, to_int,
-    fzero, fone, ftwo, fhalf, finf, fninf, fnan,
+    fzero, fone, ftwo, fhalf, finf, fninf, fnan, fnone,
     mpf_abs, mpf_pos, mpf_neg, mpf_add, mpf_sub, mpf_mul,
     mpf_div, mpf_mul_int, mpf_shift, mpf_sqrt, mpf_hypot,
-    mpf_rdiv_int, mpf_floor, mpf_ceil
+    mpf_rdiv_int, mpf_floor, mpf_ceil,
+    mpf_sign,
 )
 
 from libelefun import (\
     mpf_pi, mpf_exp, mpf_log, cos_sin, cosh_sinh, mpf_tan,
+    mpf_log_hypot,
+    mpf_cos_sin_pi, mpf_phi,
     mpf_atan, mpf_atan2, mpf_cosh, mpf_sinh, mpf_tanh,
-    mpf_asin, mpf_acos, mpf_acosh
+    mpf_asin, mpf_acos, mpf_acosh, mpf_nthroot, mpf_fibonacci
 )
 
 
@@ -29,6 +33,23 @@ mpc_one = fone, fzero
 mpc_zero = fzero, fzero
 mpc_two = ftwo, fzero
 mpc_half = (fhalf, fzero)
+
+_infs = (finf, fninf)
+_infs_nan = (finf, fninf, fnan)
+
+def mpc_is_inf(z):
+    """Check if either real or imaginary part is infinite"""
+    re, im = z
+    if re in _infs: return True
+    if im in _infs: return True
+    return False
+
+def mpc_is_infnan(z):
+    """Check if either real or imaginary part is infinite or nan"""
+    re, im = z
+    if re in _infs_nan: return True
+    if im in _infs_nan: return True
+    return False
 
 def complex_to_str(re, im, dps):
     rs = to_str(re, dps)
@@ -41,7 +62,7 @@ def mpc_add((a, b), (c, d), prec, rnd=round_fast):
     return mpf_add(a, c, prec, rnd), mpf_add(b, d, prec, rnd)
 
 def mpc_add_mpf((a, b), p, prec, rnd=round_fast):
-      return mpf_add(a, p, prec, rnd), b
+    return mpf_add(a, p, prec, rnd), b
 
 def mpc_sub((a, b), (c, d), prec, rnd=round_fast):
     return mpf_sub(a, c, prec, rnd), mpf_sub(b, d, prec, rnd)
@@ -326,23 +347,25 @@ def mpc_nthroot((a, b), n, prec, rnd=round_fast):
             return mpc_div(mpc_one, (a, b), prec, rnd)
         inverse = mpc_nthroot((a, b), -n, prec+5, reciprocal_rnd[rnd])
         return mpc_div(mpc_one, inverse, prec, rnd)
-    if n > 20:
-        fn = from_int(n)
-        prec2 = prec+10
-        nth = mpf_rdiv_int(1, fn, prec2)
-        re, im = mpc_pow((a, b), (nth, fzero), prec2, rnd)
-        re = normalize(re[0], re[1], re[2], re[3], prec, rnd)
-        im = normalize(im[0], im[1], im[2], im[3], prec, rnd)
-        return re, im
-    prec2 = int(1.2 * (prec + 10))
-    asign, aman, aexp, abc = a
-    bsign, bman, bexp, bbc = b
-    af = to_fixed(a, prec2)
-    bf = to_fixed(b, prec2)
-    re, im = mpc_nthroot_fixed(af, bf, n, prec2)
-    extra = 10
-    re = from_man_exp(re, -prec2-extra, prec2, rnd)
-    im = from_man_exp(im, -prec2-extra, prec2, rnd)
+    if n <= 20:
+        prec2 = int(1.2 * (prec + 10))
+        asign, aman, aexp, abc = a
+        bsign, bman, bexp, bbc = b
+        pf = mpc_abs((a,b), prec)
+        if pf[-2] + pf[-1] > -10  and pf[-2] + pf[-1] < prec:
+            af = to_fixed(a, prec2)
+            bf = to_fixed(b, prec2)
+            re, im = mpc_nthroot_fixed(af, bf, n, prec2)
+            extra = 10
+            re = from_man_exp(re, -prec2-extra, prec2, rnd)
+            im = from_man_exp(im, -prec2-extra, prec2, rnd)
+            return re, im
+    fn = from_int(n)
+    prec2 = prec+10 + 10
+    nth = mpf_rdiv_int(1, fn, prec2)
+    re, im = mpc_pow((a, b), (nth, fzero), prec2, rnd)
+    re = normalize(re[0], re[1], re[2], re[3], prec, rnd)
+    im = normalize(im[0], im[1], im[2], im[3], prec, rnd)
     return re, im
 
 def mpc_cbrt((a, b), prec, rnd=round_fast):
@@ -376,7 +399,9 @@ def mpc_exp((a, b), prec, rnd=round_fast):
     return re, im
 
 def mpc_log(z, prec, rnd=round_fast):
-    return mpf_log(mpc_abs(z, prec, rnd), prec, rnd), mpc_arg(z, prec, rnd)
+    re = mpf_log_hypot(z[0], z[1], prec, rnd)
+    im = mpc_arg(z, prec, rnd)
+    return re, im
 
 def mpc_cos((a, b), prec, rnd=round_fast):
     """Complex cosine. The formula used is cos(a+bi) = cos(a)*cosh(b) -
@@ -427,6 +452,28 @@ def mpc_tan(z, prec, rnd=round_fast):
     im = mpf_div(sh, mag, prec, rnd)
     return re, im
 
+def mpc_cos_pi((a, b), prec, rnd=round_fast):
+    b = mpf_mul(b, mpf_pi(prec+5), prec+5)
+    if a == fzero:
+        return mpf_cosh(b, prec, rnd), fzero
+    wp = prec + 6
+    c, s = mpf_cos_sin_pi(a, wp)
+    ch, sh = cosh_sinh(b, wp)
+    re = mpf_mul(c, ch, prec, rnd)
+    im = mpf_mul(s, sh, prec, rnd)
+    return re, mpf_neg(im)
+
+def mpc_sin_pi((a, b), prec, rnd=round_fast):
+    b = mpf_mul(b, mpf_pi(prec+5), prec+5)
+    if a == fzero:
+        return fzero, mpf_sinh(b, prec, rnd)
+    wp = prec + 6
+    c, s = mpf_cos_sin_pi(a, wp)
+    ch, sh = cosh_sinh(b, wp)
+    re = mpf_mul(s, ch, prec, rnd)
+    im = mpf_mul(c, sh, prec, rnd)
+    return re, im
+
 def mpc_cosh((a, b), prec, rnd=round_fast):
     """Complex hyperbolic cosine. Computed as cosh(z) = cos(z*i)."""
     return mpc_cos((b, mpf_neg(a)), prec, rnd)
@@ -442,7 +489,8 @@ def mpc_tanh((a, b), prec, rnd=round_fast):
     return a, b
 
 # TODO: avoid loss of accuracy
-def mpc_atan((a, b), prec, rnd=round_fast):
+def mpc_atan(z, prec, rnd=round_fast):
+    a, b = z
     # atan(z) = (I/2)*(log(1-I*z) - log(1+I*z))
     # x = 1-I*z = 1 + b - I*a
     # y = 1+I*z = 1 - b + I*a
@@ -453,7 +501,12 @@ def mpc_atan((a, b), prec, rnd=round_fast):
     l2 = mpc_log(y, wp)
     a, b = mpc_sub(l1, l2, prec, rnd)
     # (I/2) * (a+b*I) = (-b/2 + a/2*I)
-    return mpf_neg(mpf_shift(b,-1)), mpf_shift(a,-1)
+    v = mpf_neg(mpf_shift(b,-1)), mpf_shift(a,-1)
+    # Subtraction at infinity gives correct real part but
+    # wrong imaginary part (should be zero)
+    if v[1] == fnan and mpc_is_inf(z):
+        v = (v[0], fzero)
+    return v
 
 beta_crossover = from_float(0.6417)
 alpha_crossover = from_float(1.5)
@@ -622,4 +675,24 @@ def mpc_atanh(z, prec, rnd=round_fast):
     b = mpc_sub(mpc_one, z, wp)
     a = mpc_log(a, wp)
     b = mpc_log(b, wp)
-    return mpc_shift(mpc_sub(a, b, wp), -1)
+    v = mpc_shift(mpc_sub(a, b, wp), -1)
+    # Subtraction at infinity gives correct imaginary part but
+    # wrong real part (should be zero)
+    if v[0] == fnan and mpc_is_inf(z):
+        v = (fzero, v[1])
+    return v
+
+def mpc_fibonacci(z, prec, rnd=round_fast):
+    re, im = z
+    if im == fzero:
+        return (mpf_fibonacci(re, prec, rnd), fzero)
+    size = max(abs(re[2]+re[3]), abs(re[2]+re[3]))
+    wp = prec + size + 20
+    a = mpf_phi(wp)
+    b = mpf_add(mpf_shift(a, 1), fnone, wp)
+    u = mpc_pow((a, fzero), z, wp)
+    v = mpc_cos_pi(z, wp)
+    v = mpc_div(v, u, wp)
+    u = mpc_sub(u, v, wp)
+    u = mpc_div_mpf(u, b, prec, rnd)
+    return u

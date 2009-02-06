@@ -11,15 +11,61 @@ def test_bessel():
     assert j1(pi).ae(0.284615343179752757)
     assert j1(1000).ae(0.00472831190708952392)
     assert j1(-25).ae(0.125350249580289905)
-    assert jv(5,1).ae(0.000249757730211234431)
-    assert jv(5,pi).ae(0.0521411843671184747)
-    assert jv(5,1000).ae(0.00502540694523318607)
-    assert jv(5,-25).ae(0.0660079953984229934)
-    assert jv(-3,2).ae(-0.128943249474402051)
-    assert jv(-4,2).ae(0.0339957198075684341)
-    assert jv(3,3+2j).ae(0.424718794929639595942 + 0.625665327745785804812j)
-    assert jv(0.25,4).ae(-0.374760630804249715)
-    assert jv(1+2j,3+4j).ae(0.319247428741872131 - 0.669557748880365678j)
+    assert besselj(5,1).ae(0.000249757730211234431)
+    assert besselj(5,pi).ae(0.0521411843671184747)
+    assert besselj(5,1000).ae(0.00502540694523318607)
+    assert besselj(5,-25).ae(0.0660079953984229934)
+    assert besselj(-3,2).ae(-0.128943249474402051)
+    assert besselj(-4,2).ae(0.0339957198075684341)
+    assert besselj(3,3+2j).ae(0.424718794929639595942 + 0.625665327745785804812j)
+    assert besselj(0.25,4).ae(-0.374760630804249715)
+    assert besselj(1+2j,3+4j).ae(0.319247428741872131 - 0.669557748880365678j)
+    assert bessely(0,0) == -inf
+    assert bessely(1,0) == -inf
+    assert bessely(2,0) == -inf
+    assert bessely(-1,0) == +inf
+    assert bessely(-2,0) == -inf
+    assert bessely(0,0.5).ae(-0.44451873350670655715)
+    assert bessely(1,0.5).ae(-1.4714723926702430692)
+    assert bessely(-1,0.5).ae(1.4714723926702430692)
+    assert bessely(3.5,0.5).ae(-138.86400867242488443)
+    assert bessely(0,3+4j).ae(4.6047596915010138655-8.8110771408232264208j)
+    assert bessely(0,j).ae(-0.26803248203398854876+1.26606587775200833560j)
+    assert besseli(0,0) == 1
+    assert besseli(1,0) == 0
+    assert besseli(2,0) == 0
+    assert besseli(-1,0) == 0
+    assert besseli(-2,0) == 0
+    assert besseli(0,0.5).ae(1.0634833707413235193)
+    assert besseli(1,0.5).ae(0.25789430539089631636)
+    assert besseli(-1,0.5).ae(0.25789430539089631636)
+    assert besseli(3.5,0.5).ae(0.00068103597085793815863)
+    assert besseli(0,3+4j).ae(-3.3924877882755196097-1.3239458916287264815j)
+    assert besseli(0,j).ae(besselj(0,1))
+    assert besselk(0,0) == inf
+    assert besselk(1,0) == inf
+    assert besselk(2,0) == inf
+    assert besselk(-1,0) == inf
+    assert besselk(-2,0) == inf
+    assert besselk(0,0.5).ae(0.92441907122766586178)
+    assert besselk(1,0.5).ae(1.6564411200033008937)
+    assert besselk(-1,0.5).ae(1.6564411200033008937)
+    assert besselk(3.5,0.5).ae(207.48418747548460607)
+    assert besselk(0,3+4j).ae(-0.007239051213570155013+0.026510418350267677215j)
+    assert besselk(0,j).ae(-0.13863371520405399968-1.20196971531720649914j)
+
+def test_hankel():
+    mp.dps = 15
+    assert hankel1(0,0.5).ae(0.93846980724081290423-0.44451873350670655715j)
+    assert hankel1(1,0.5).ae(0.2422684576748738864-1.4714723926702430692j)
+    assert hankel1(-1,0.5).ae(-0.2422684576748738864+1.4714723926702430692j)
+    assert hankel1(1.5,0.5).ae(0.0917016996256513026-2.5214655504213378514j)
+    assert hankel1(1.5,3+4j).ae(0.0066806866476728165382-0.0036684231610839127106j)
+    assert hankel2(0,0.5).ae(0.93846980724081290423+0.44451873350670655715j)
+    assert hankel2(1,0.5).ae(0.2422684576748738864+1.4714723926702430692j)
+    assert hankel2(-1,0.5).ae(-0.2422684576748738864-1.4714723926702430692j)
+    assert hankel2(1.5,0.5).ae(0.0917016996256513026+2.5214655504213378514j)
+    assert hankel2(1.5,3+4j).ae(14.783528526098567526-7.397390270853446512j)
 
 def test_hyper_misc():
     assert hyp2f1((1,3),(2,3),(5,6),mpf(27)/32).ae(1.6)
@@ -35,12 +81,22 @@ def test_elliptic_integrals():
     assert ellipk(0).ae(pi/2)
     assert ellipk(0.5).ae(gamma(0.25)**2/(4*sqrt(pi)))
     assert ellipk(1) == inf
+    assert ellipk(1+0j) == inf
     assert ellipk(-1).ae('1.3110287771460599052')
     assert ellipk(-2).ae('1.1714200841467698589')
     assert isinstance(ellipk(-2), mpf)
+    assert isinstance(ellipe(-2), mpf)
     assert ellipk(-50).ae('0.47103424540873331679')
-    assert ellipk(fraction(99999,100000)).ae('7.1427724505817781901')
-    assert ellipk(fraction(100001,100000)).ae(mpc('7.1427417367963090109', '-1.5707923998261688019'))
+    mp.dps = 30
+    n1 = +fraction(99999,100000)
+    n2 = +fraction(100001,100000)
+    mp.dps = 15
+    assert ellipk(n1).ae('7.1427724505817781901')
+    assert ellipk(n2).ae(mpc('7.1427417367963090109', '-1.5707923998261688019'))
+    assert ellipe(n1).ae('1.0000332138990829170')
+    v = ellipe(n2)
+    assert v.real.ae('0.999966786328145474069137')
+    assert (v.imag*10**6).ae('7.853952181727432')
     assert ellipk(2).ae(mpc('1.3110287771460599052', '-1.3110287771460599052'))
     assert ellipk(50).ae(mpc('0.22326753950210985451', '-0.47434723226254522087'))
     assert ellipk(3+4j).ae(mpc('0.91119556380496500866', '0.63133428324134524388'))
@@ -48,11 +104,37 @@ def test_elliptic_integrals():
     assert ellipk(-3+4j).ae(mpc('0.95357894880405122483', '0.23093044503746114444'))
     assert ellipk(-3-4j).ae(mpc('0.95357894880405122483', '-0.23093044503746114444'))
     assert isnan(ellipk(nan))
+    assert isnan(ellipe(nan))
     assert ellipk(inf) == 0
+    assert isinstance(ellipk(inf), mpc)
     assert ellipk(-inf) == 0
+    assert ellipk(1+0j) == inf
     assert ellipe(0).ae(pi/2)
     assert ellipe(0.5).ae(pi**(mpf(3)/2)/gamma(0.25)**2 +gamma(0.25)**2/(8*sqrt(pi)))
     assert ellipe(1) == 1
+    assert ellipe(1+0j) == 1
+    assert ellipe(inf) == mpc(0,inf)
+    assert ellipe(-inf) == inf
+    assert ellipe(3+4j).ae(1.4995535209333469543-1.5778790079127582745j)
+    assert ellipe(3-4j).ae(1.4995535209333469543+1.5778790079127582745j)
+    assert ellipe(-3+4j).ae(2.5804237855343377803-0.8306096791000413778j)
+    assert ellipe(-3-4j).ae(2.5804237855343377803+0.8306096791000413778j)
+    assert ellipe(2).ae(0.59907011736779610372+0.59907011736779610372j)
+    assert ellipe('1e-1000000000').ae(pi/2)
+    assert ellipk('1e-1000000000').ae(pi/2)
+    assert ellipe(-pi).ae(2.4535865983838923)
+    mp.dps = 50
+    assert ellipk(1/pi).ae('1.724756270009501831744438120951614673874904182624739673')
+    assert ellipe(1/pi).ae('1.437129808135123030101542922290970050337425479058225712')
+    assert ellipk(-10*pi).ae('0.5519067523886233967683646782286965823151896970015484512')
+    assert ellipe(-10*pi).ae('5.926192483740483797854383268707108012328213431657645509')
+    v = ellipk(pi)
+    assert v.real.ae('0.973089521698042334840454592642137667227167622330325225')
+    assert v.imag.ae('-1.156151296372835303836814390793087600271609993858798016')
+    v = ellipe(pi)
+    assert v.real.ae('0.4632848917264710404078033487934663562998345622611263332')
+    assert v.imag.ae('1.0637961621753130852473300451583414489944099504180510966')
+    mp.dps = 15
 
 def test_exp_integrals():
     mp.dps = 15
@@ -102,6 +184,39 @@ def test_exp_integrals():
     assert shi(-inf) == -inf
     assert chi(0) == -inf
     assert chi(inf) == inf
+    assert ei(0) == -inf
+    assert ei(20+70j).ae(6.1041351911152984397e6 - 2.7324109310519928872e6j)
+
+    # tests for the asymptotic expansion
+    # values checked with Mathematica ExpIntegralEi
+    mp.dps = 50
+    r = ei(20000)
+    s = '3.8781962825045010930273870085501819470698476975019e+8681'
+    assert str(r) == s
+    r = ei(-200)
+    s = '-6.8852261063076355977108174824557929738368086933303e-90'
+    assert str(r) == s
+    r =ei(20000 + 10*j)
+    sre = '-3.255138234032069402493850638874410725961401274106e+8681'
+    sim = '-2.1081929993474403520785942429469187647767369645423e+8681'
+    assert str(r.real) == sre and str(r.imag) == sim
+    mp.dps = 15
+
+def test_trig_integrals():
+    mp.dps = 30
+    assert si(mpf(1)/1000000).ae('0.000000999999999999944444444444446111')
+    assert ci(mpf(1)/1000000).ae('-13.2382948930629912435014366276')
+    assert si(10**10).ae('1.5707963267075846569685111517747537')
+    assert ci(10**10).ae('-4.87506025174822653785729773959e-11')
+    assert si(10**100).ae(pi/2)
+    assert (ci(10**100)*10**100).ae('-0.372376123661276688262086695553')
+    assert si(-3) == -si(3)
+    assert ci(-3).ae(ci(3) + pi*j)
+
+def test_airy():
+    mp.dps = 15
+    assert (airyai(10)*10**10).ae(1.1047532552898687)
+    assert (airybi(10)/10**9).ae(0.45564115354822515)
 
 def test_hyper_0f1():
     v = 8.63911136507950465
@@ -170,6 +285,10 @@ def test_orthpoly():
     assert legendre(j,-j).ae(2.4448182735671431011 + 0.6928881737669934843j)
     assert chebyu(5,1) == 6
     assert chebyt(3,2) == 26
+    assert legendre(3.5,-1) == inf
+    assert legendre(4.5,-1) == -inf
+    assert legendre(3.5+1j,-1) == inf
+    assert legendre(4.5+1j,-1) == -inf
 
 def test_agm():
     mp.dps = 15
@@ -183,10 +302,20 @@ def test_agm():
     assert agm(1,3).ae(1.8636167832448965424)
     assert agm(1,j).ae(0.599070117367796104+0.599070117367796104j)
     assert agm(2) == agm(1,2)
+    assert agm(-3,4).ae(0.63468509766550907+1.3443087080896272j)
 
 def test_incomplete_gamma():
     mp.dps = 15
-    assert upper_gamma(-2.5,-0.5).ae(-0.9453087204829418812-5.3164237738936178621j)
+    assert gammainc(2,5).ae(6*exp(-5))
+    assert gammainc(2,0,5).ae(1-6*exp(-5))
+    assert gammainc(2,3,5).ae(-6*exp(-5)+4*exp(-3))
+    assert gammainc(-2.5,-0.5).ae(-0.9453087204829418812-5.3164237738936178621j)
+    assert gammainc(0,2,4).ae(0.045121158298212213088)
+    assert gammainc(0,3).ae(0.013048381094197037413)
+    assert gammainc(0,2+j,1-j).ae(0.00910653685850304839-0.22378752918074432574j)
+    assert gammainc(0,1-j).ae(0.00028162445198141833+0.17932453503935894015j)
+    assert gammainc(3,4,5,True).ae(0.11345128607046320253)
+    assert gammainc(3.5,0,inf).ae(gamma(3.5))
 
 def test_erf():
     mp.dps = 15
@@ -227,6 +356,18 @@ def test_erf():
     assert (erfc(50)*10**1088).ae('2.0709207788416560484484478751657887929322509209954')
     mp.dps = 15
     assert str(erfc(10**50)) == '3.66744826532555e-4342944819032518276511289189166050822943970058036665661144537831658646492088707747292249493384317534'
+    assert erfinv(0) == 0
+    assert erfinv(0.5).ae(0.47693627620446987338)
+    assert erfinv(-0.5).ae(-0.47693627620446987338)
+    assert erfinv(1) == inf
+    assert erfinv(-1) == -inf
+    assert erf(erfinv(0.95)).ae(0.95)
+    assert erf(erfinv(0.999999999995)).ae(0.999999999995)
+    assert erf(erfinv(-0.999999999995)).ae(-0.999999999995)
+    mp.dps = 50
+    assert erf(erfinv('0.99999999999999999999999999999995')).ae('0.99999999999999999999999999999995')
+    assert erf(erfinv('0.999999999999999999999999999999995')).ae('0.999999999999999999999999999999995')
+    assert erf(erfinv('-0.999999999999999999999999999999995')).ae('-0.999999999999999999999999999999995')
 
 def test_pdf():
     mp.dps = 15
@@ -247,8 +388,11 @@ def test_lambertw():
     assert lambertw(0) == 0
     assert lambertw(0+0j) == 0
     assert lambertw(inf) == inf
-    assert isnan(lambertw(-inf))
     assert isnan(lambertw(nan))
+    assert lambertw(inf,1).real == inf
+    assert lambertw(inf,1).imag.ae(2*pi)
+    assert lambertw(-inf,1).real == inf
+    assert lambertw(-inf,1).imag.ae(3*pi)
     assert lambertw(0,-1) == -inf
     assert lambertw(0,1) == -inf
     assert lambertw(0,3) == -inf

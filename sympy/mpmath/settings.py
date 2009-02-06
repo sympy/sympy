@@ -50,7 +50,7 @@ gmpy = None
 
 MODE = 'python'
 MP_BASE = long
-if not os.environ.has_key('MPMATH_NOGMPY'):
+if 'MPMATH_NOGMPY' not in os.environ:
     try:
         import gmpy
         if gmpy.version() >= '1.03':

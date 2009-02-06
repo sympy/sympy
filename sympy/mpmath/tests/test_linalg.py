@@ -3,7 +3,7 @@
 from __future__ import division
 
 from sympy.mpmath.matrices import matrix, norm_p, mnorm_1, mnorm_oo, mnorm_F, \
-    randmatrix, eye, zeros
+    randmatrix, eye, zeros, diag
 from sympy.mpmath.linalg import * # TODO: absolute imports
 from sympy.mpmath.mptypes import *
 
@@ -187,4 +187,32 @@ def test_LU_cache():
     A[0,0] = -1000
     assert A._LU is None
 
+def test_improve_solution():
+    A = randmatrix(5, min=1e-20, max=1e20)
+    b = randmatrix(5, 1, min=-1000, max=1000)
+    x1 = lu_solve(A, b) + randmatrix(5, 1, min=-1e-5, max=1.e-5)
+    x2 = improve_solution(A, x1, b)
+    assert norm_p(residual(A, x2, b), 2) < norm_p(residual(A, x1, b), 2)
+
+def test_exp_pade():
+    for i in range(3):
+        dps = 15
+        extra = 5
+        mp.dps = dps + extra
+        dm = 0
+        while not dm:
+            m = randmatrix(3)
+            dm = det(m)
+        m = m/dm
+        a = diag([1,2,3])
+        a1 = m**-1 * a * m
+        mp.dps = dps
+        e1 = exp_pade(a1)
+        mp.dps = dps + extra
+        e2 = m * a1 * m**-1
+        d = e2 - a
+        #print d
+        mp.dps = dps
+        assert norm_p(d, inf).ae(0)
+    mp.dps = 15
 

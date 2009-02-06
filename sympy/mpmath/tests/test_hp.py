@@ -201,3 +201,92 @@ def test_hp():
     assert str(log(3))[-20:] == '02166121184001409826'
     mp.dps = 15
 
+# Since str(a) can differ in the last digit from rounded a, and I want
+# to compare the last digits of big numbers with the results in Mathematica,
+# I made this hack to get the last 20 digits of rounded a
+
+def last_digits(a):
+    r = repr(a)
+    s = str(a)
+    #dps = mp.dps
+    #mp.dps += 3
+    m = 10
+    r = r.replace(s[:-m],'')
+    r = r.replace("mpf('",'').replace("')",'')
+    num0 = 0
+    for c in r:
+        if c == '0':
+            num0 += 1
+        else:
+            break
+    b = float(int(r))/10**(len(r) - m)
+    if b >= 10**m - 0.5:
+        raise NotImplementedError
+    n = int(round(b))
+    sn = str(n)
+    s = s[:-m] + '0'*num0 + sn
+    return s[-20:]
+
+# values checked with Mathematica
+def test_log_hp():
+    mp.dps = 2000
+    a = mpf(10)**15000/3
+    r = log(a)
+    res = last_digits(r)
+    # Mathematica N[Log[10^15000/3], 2000]
+    # ...7443804441768333470331
+    assert res == '44380444176833347033'
+
+    # see issue 105
+    r = log(mpf(3)/2)
+    # Mathematica N[Log[3/2], 2000]
+    # ...69653749808140753263288
+    res = last_digits(r)
+    assert res == '53749808140753263288'
+
+    mp.dps = 10000
+    r = log(2)
+    res = last_digits(r)
+    # Mathematica  N[Log[2], 10000]
+    # ...695615913401856601359655561
+    assert res == '91340185660135965556'
+    r = log(mpf(10)**10/3)
+    res = last_digits(r)
+    # Mathematica N[Log[10^10/3], 10000]
+    # ...587087654020631943060007154
+    assert res == '54020631943060007154', res
+    r = log(mpf(10)**100/3)
+    res = last_digits(r)
+    # Mathematica N[Log[10^100/3], 10000]
+    # ,,,59246336539088351652334666
+    assert res == '36539088351652334666', res
+    mp.dps += 10
+    a = 1 - mpf(1)/10**10
+    mp.dps -= 10
+    r = log(a)
+    res = last_digits(r)
+    # ...3310334360482956137216724048322957404
+    # 372167240483229574038733026370
+    # Mathematica N[Log[1 - 10^-10]*10^10, 10000]
+    # ...60482956137216724048322957404
+    assert res == '37216724048322957404', res
+    mp.dps = 10000
+    mp.dps += 100
+    a = 1 + mpf(1)/10**100
+    mp.dps -= 100
+
+    r = log(a)
+    res = last_digits(+r)
+    # Mathematica N[Log[1 + 10^-100]*10^10, 10030]
+    # ...3994733877377412241546890854692521568292338268273 10^-91
+    assert res == '39947338773774122415', res
+
+    mp.dps = 15
+
+def test_exp_hp():
+    mp.dps = 4000
+    r = exp(mpf(1)/10)
+    # IntegerPart[N[Exp[1/10] * 10^4000, 4000]]
+    # ...92167105162069688129
+    assert int(r * 10**mp.dps) % 10**20 == 92167105162069688129
+

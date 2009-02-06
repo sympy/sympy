@@ -96,6 +96,11 @@ def test_convert_special():
     assert not (mpf(3) > float_nan)
     assert not (mpf(3) <= float_nan)
     assert not (mpf(3) >= float_nan)
+    assert float(mpf('1e1000')) == float_inf
+    assert float(mpf('-1e1000')) == float_ninf
+    assert float(mpf('1e100000000000000000')) == float_inf
+    assert float(mpf('-1e100000000000000000')) == float_ninf
+    assert float(mpf('1e-100000000000000000')) == 0.0
 
 def test_div_bug():
     assert isnan(nan/1)

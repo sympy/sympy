@@ -140,7 +140,7 @@ def mpi_mul(s, t, prec):
             if b == fnan: b = finf
         # negative * both signs
         else:
-            a = mpf_mul(sb, tb, prec, round_floor)
+            a = mpf_mul(sa, tb, prec, round_floor)
             b = mpf_mul(sa, ta, prec, round_ceiling)
             if a == fnan: a = fninf
             if b == fnan: b = finf

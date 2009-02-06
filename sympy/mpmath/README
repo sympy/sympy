@@ -26,8 +26,19 @@ to mpmath:
 For a detailed changelog, including individual contributions,
 see the CHANGES file.
 
+Credit also goes to:
+* The authors of the GMP library and the Python wrapper
+  gmpy, enabling mpmath to become much faster at
+  high precision
+* The authors of MPFR, pari/gp, MPFUN, and other arbitrary-
+  precision libraries, whose documentation have proved helpful
+  for implementing many of the algorithms in mpmath
+* George Brandl for developing the Sphinx documentation tool
+  used to build mpmath's documentation
+
 Release history:
 
+* Version 0.11 released on January 26, 2009
 * Version 0.10 released on October 15, 2008
 * Version 0.9 released on August 23, 2008
 * Version 0.8 released on April 20, 2008

@@ -20,7 +20,7 @@ import unittest
 import mpmath
 import random
 
-from mpmath.elliptic import *
+from sympy.mpmath.elliptic import *
 
 class precisemathTests(unittest.TestCase):
 

@@ -1,17 +1,116 @@
+"""
+Linear algebra
+--------------
+
+Linear equations
+................
+
+Basic linear algebra is implemented; you can for example solve the linear
+equation system::
+
+      x + 2*y = -10
+    3*x + 4*y =  10
+
+using ``lu_solve``::
+
+    >>> A = matrix([[1, 2], [3, 4]])
+    >>> b = matrix([-10, 10])
+    >>> x = lu_solve(A, b)
+    >>> x
+    matrix(
+    [['30.0'],
+     ['-20.0']])
+
+If you don't trust the result, use ``residual`` to calculate the residual ||A*x-b||::
+
+    >>> residual(A, x, b)
+    matrix(
+    [['3.46944695195361e-18'],
+     ['3.46944695195361e-18']])
+    >>> str(eps)
+    '2.22044604925031e-16'
+
+As you can see, the solution is quite accurate. The error is caused by the
+inaccuracy of the internal floating point arithmetic. Though, it's even smaller
+than the current machine epsilon, which basically means you can trust the
+result.
+
+If you need more speed, use NumPy. Or choose a faster data type using the
+keyword ``force_type``::
+
+    >>> lu_solve(A, b, force_type=float)
+    matrix(
+    [[29.999999999999996],
+     [-19.999999999999996]])
+
+``lu_solve`` accepts overdetermined systems. It is usually not possible to solve
+such systems, so the residual is minimized instead. Internally this is done
+using Cholesky decomposition to compute a least squares approximation. This means
+that that ``lu_solve`` will square the errors. If you can't afford this, use
+``qr_solve`` instead. It is twice as slow but more accurate, and it calculates
+the residual automatically.
+
+
+Matrix factorization
+....................
+
+The function ``lu`` computes an explicit LU factorization of a matrix::
+
+    >>> P, L, U = lu(matrix([[0,2,3],[4,5,6],[7,8,9]]))
+    >>> print P
+    [0.0  0.0  1.0]
+    [1.0  0.0  0.0]
+    [0.0  1.0  0.0]
+    >>> print L
+    [              1.0                0.0  0.0]
+    [              0.0                1.0  0.0]
+    [0.571428571428571  0.214285714285714  1.0]
+    >>> print U
+    [7.0  8.0                9.0]
+    [0.0  2.0                3.0]
+    [0.0  0.0  0.214285714285714]
+    >>> print P.T*L*U
+    [0.0  2.0  3.0]
+    [4.0  5.0  6.0]
+    [7.0  8.0  9.0]
+
+Interval matrices
+-----------------
+
+Matrices may contain interval elements. This allows one to perform
+basic linear algebra operations such as matrix multiplication
+and equation solving with rigorous error bounds::
+
+    >>> a = matrix([['0.1','0.3','1.0'],
+    ...             ['7.1','5.5','4.8'],
+    ...             ['3.2','4.4','5.6']], force_type=mpi)
+    >>>
+    >>> b = matrix(['4','0.6','0.5'], force_type=mpi)
+    >>> c = lu_solve(a, b)
+    >>> c
+    matrix(
+    [[[5.2582327113062393041, 5.2582327113062749951]],
+     [[-13.155049396267856583, -13.155049396267821167]],
+     [[7.4206915477497212555, 7.4206915477497310922]]])
+    >>> print a*c
+    [  [3.9999999999999866773, 4.0000000000000133227]]
+    [[0.59999999999972430942, 0.60000000000027142733]]
+    [[0.49999999999982236432, 0.50000000000018474111]]
+"""
+
 # TODO:
 # *implement high-level qr()
 # *test unitvector
 # *iterative solving
-# *iterative improving of solution
 
 from __future__ import division
 
-from mptypes import extraprec, absmin, mp, eps
-from functions import sqrt, sign
-from matrices import matrix, eye, swap_row, extend, mnorm_1, norm_p
+from mptypes import extraprec, absmin, mp, eps, mpf, fsum
+from functions import sqrt, sign, log, factorial
+from matrices import matrix, eye, swap_row, extend, mnorm_1, norm_p, mnorm_oo
 from copy import copy
 
-def LU_decomp(A, overwrite=False):
+def LU_decomp(A, overwrite=False, use_cache=True):
     """
     LU-factorization of a n*n matrix using the Gauss algorithm.
     Returns L and U in one matrix and the pivot indices.
@@ -20,8 +119,8 @@ def LU_decomp(A, overwrite=False):
     """
     if not A.rows == A.cols:
         raise ValueError('need n*n matrix')
-    # get from cache if possilbe
-    if isinstance(A, matrix) and A._LU:
+    # get from cache if possible
+    if use_cache and isinstance(A, matrix) and A._LU:
         return A._LU
     if not overwrite:
         orig = A
@@ -33,7 +132,7 @@ def LU_decomp(A, overwrite=False):
         # pivoting, choose max(abs(reciprocal row sum)*abs(pivot element))
         biggest = 0
         for k in xrange(j, n):
-            current = 1/sum([absmin(A[k,l]) for l in xrange(j, n)]) \
+            current = 1/fsum([absmin(A[k,l]) for l in xrange(j, n)]) \
                       * absmin(A[k,j])
             if current > biggest: # TODO: what if equal?
                 biggest = current
@@ -56,7 +155,7 @@ def L_solve(L, b, p=None):
     """
     Solve the lower part of a LU factorized matrix for y.
     """
-    L.rows == L.cols, 'need n*n matrix'
+    assert L.rows == L.cols, 'need n*n matrix'
     n = L.rows
     assert len(b) == n
     b = copy(b)
@@ -112,6 +211,23 @@ def lu_solve(A, b, **kwargs):
         x = U_solve(A, b)
         return x
 
+def improve_solution(A, x, b, maxsteps=1):
+    """
+    Improve a solution to a linear equation system iteratively.
+
+    This re-uses the LU decomposition and is thus cheap.
+    Usually 3 up to 4 iterations are giving the maximal improvement.
+    """
+    assert A.rows == A.cols, 'need n*n matrix' # TODO: really?
+    for _ in xrange(maxsteps):
+        r = residual(A, x, b)
+        if norm_p(r, 2) < 10*eps:
+            break
+        # this uses cached LU decomposition and is thus cheap
+        dx = lu_solve(A, -r)
+        x += dx
+    return x
+
 def lu(A):
     """
     A -> P, L, U
@@ -125,7 +241,7 @@ def lu(A):
     much more memory efficient.
     """
     # get factorization
-    A, p = LU_decomp(A.copy())
+    A, p = LU_decomp(A)
     n = A.rows
     L = matrix(n)
     U = matrix(n)
@@ -195,37 +311,27 @@ def householder(A):
     # calculate Householder matrix
     p = []
     for j in xrange(0, n - 1):
-        s = 0.
-        for i in xrange(j, m):
-            s += (A[i,j])**2
+        s = fsum((A[i,j])**2 for i in xrange(j, m))
         if not abs(s) > eps:
             raise ValueError('matrix is numerically singular')
         p.append(-sign(A[j,j]) * sqrt(s))
         kappa = s - p[j] * A[j,j]
         A[j,j] -= p[j]
         for k in xrange(j+1, n):
-            y = 0.
-            for i in xrange(j, m):
-                y += A[i,j] * A[i,k]
-            y /= kappa
+            y = fsum(A[i,j] * A[i,k] for i in xrange(j, m)) /  kappa
             for i in xrange(j, m):
                 A[i,k] -= A[i,j] * y
     # solve Rx = c1
-    x = []
-    for i in xrange(n - 1):
-        x.append(A[i,n - 1])
+    x = [A[i,n - 1] for i in xrange(n - 1)]
     for i in xrange(n - 2, -1, -1):
-        for j in xrange(i + 1, n - 1):
-            x[i] -= A[i,j] * x[j]
+        x[i] -= fsum(A[i,j] * x[j] for j in xrange(i + 1, n - 1))
         x[i] /= p[i]
     # calculate residual
     if not m == n - 1:
-        r = []
-        for i in xrange(m - n + 1):
-            r.append(A[m-1-i, n-1])
+        r = [A[m-1-i, n-1] for i in xrange(m - n + 1)]
     else:
         # determined system, residual should be 0
-        r = [0]*m
+        r = [0]*m # maybe a bad idea, changing r[i] will change all elements
     return A, p, x, r
 
 #def qr(A):
@@ -292,12 +398,12 @@ def cholesky(A):
     n = A.rows
     L = matrix(n)
     for j in xrange(n):
-        s = A[j,j] - sum((L[j,k]**2 for k in xrange(j)))
+        s = A[j,j] - fsum(L[j,k]**2 for k in xrange(j))
         if s < eps:
             raise ValueError('matrix not positive-definite')
         L[j,j] = sqrt(s)
         for i in xrange(j, n):
-            L[i,j] = (A[i,j] - sum((L[i,k] * L[j,k] for k in xrange(j)))) \
+            L[i,j] = (A[i,j] - fsum(L[i,k] * L[j,k] for k in xrange(j))) \
                      / L[j,j]
     return L
 
@@ -324,7 +430,7 @@ def cholesky_solve(A, b, **kwargs):
     n = L.rows
     assert len(b) == n
     for i in xrange(n):
-        b[i] -= sum((L[i,j] * b[j] for j in xrange(i)))
+        b[i] -= fsum(L[i,j] * b[j] for j in xrange(i))
         b[i] /= L[i,i]
     x = U_solve(L.T, b)
     return x
@@ -365,4 +471,56 @@ def cond(A, norm=mnorm_1):
     """
     return norm(A) * norm(inverse(A))
 
+
+def lu_solve_mat(a, b):
+    """Solve a * x = b  where a and b are matrices."""
+    r = matrix(a.rows, b.cols)
+    for i in range(b.cols):
+        c = lu_solve(a, b.column(i))
+        for j in range(len(c)):
+            r[j, i] = c[j]
+    return r
+
+def exp_pade(a):
+    """Exponential of a matrix using Pade approximants.
+
+       See G. H. Golub, C. F. van Loan 'Matrix Computations',
+         third Ed., page 572
+
+       TODO:
+         - find a good estimate for q
+         - reduce the number of matrix multiplications to improve
+           performance
+    """
+    def eps_pade(p):
+        return mpf(2)**(3-2*p) * factorial(p)**2/(factorial(2*p)**2 * (2*p + 1))
+    q = 4
+    extraq = 8
+    while 1:
+        if eps_pade(q) < eps:
+            break
+        q += 1
+    q += extraq
+    j = max(1, int(log(mnorm_oo(a),2)))
+    extra = q
+    mp.dps += extra
+    try:
+        a = a/2**j
+        na = a.rows
+        den = eye(na)
+        num = eye(na)
+        x = eye(na)
+        c = mpf(1)
+        for k in range(1, q+1):
+            c *= mpf(q - k + 1)/((2*q - k + 1) * k)
+            x = a*x
+            cx = c*x
+            num += cx
+            den += (-1)**k * cx
+        f = lu_solve_mat(den, num)
+        for k in range(j):
+            f = f*f
+    finally:
+        mp.dps -= extra
+    return f
 
