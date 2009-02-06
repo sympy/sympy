@@ -54,6 +54,8 @@ LatexPrinter
 
 This class implements LaTeX printing. See ``sympy.printing.latex``.
 
+See also the extended LatexPrinter: :ref:`Extended LaTeXModule for Sympy <extended-latex>`
+
 Gtk
 ---
 

@@ -1,3 +1,5 @@
+.. _extended-latex:
+
 **********************************
   Extended LaTeXModule for Sympy  
 **********************************

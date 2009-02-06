@@ -25,6 +25,7 @@ access any SymPy module, or use this contens:
    modules/printing.txt
    modules/plotting.txt
    modules/geometry.txt
+   modules/galgebra/GA/GAsympy.txt
    modules/statistics.txt
    modules/concrete.txt
    modules/solvers.txt
