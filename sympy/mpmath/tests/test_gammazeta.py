@@ -324,7 +324,7 @@ def test_gamma_huge_2():
 
 def test_gamma_huge_3():
     mp.dps = 500
-    x = 10**80 / 3 + 10**70*j / 7
+    x = 10**80 // 3 + 10**70*j / 7
     mp.dps = 15
     y = gamma(x)
     assert str(y.real) == (\
