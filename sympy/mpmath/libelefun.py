@@ -840,7 +840,7 @@ def exp_series2(x, prec, r):
         while p:
             p = (p * lx) >> prec
             for j in range(J):
-                p = p/(k*(k+1))
+                p = p//(k*(k+1))
                 asum[j] += p
                 k += 2
         s1 = 0
