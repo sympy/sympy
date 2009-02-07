@@ -12,8 +12,12 @@ See the webpage for more information and documentation:
 
 __version__ = "0.6.3-hg"
 
-import os
-SYMPY_DEBUG = eval(os.getenv('SYMPY_DEBUG', 'False'))
+
+def __sympy_debug():
+    # helper function so we don't import os globally
+    import os
+    return eval(os.getenv('SYMPY_DEBUG', 'False'))
+SYMPY_DEBUG = __sympy_debug()
 
 import symbol as stdlib_symbol
 from sympy.core import *

@@ -312,8 +312,10 @@ class Memoizer_nocache(Memoizer):
 
 
 # SYMPY_USE_CACHE=yes/no/debug
-import os
-usecache = os.getenv('SYMPY_USE_CACHE', 'yes').lower()
+def __usecache():
+    import os
+    return os.getenv('SYMPY_USE_CACHE', 'yes').lower()
+usecache = __usecache()
 
 if usecache=='no':
     Memoizer            = Memoizer_nocache
