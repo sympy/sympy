@@ -24,27 +24,43 @@ def integer_nthroot(y, n):
     >>> integer_nthroot(26,2)
     (5, False)
     """
-    if y < 0: raise ValueError("y must not be negative")
+    if y < 0: raise ValueError("y must be nonnegative")
     if n < 1: raise ValueError("n must be positive")
     if y in (0, 1): return y, True
     if n == 1: return y, True
+    if n == 2:
+        x, rem = mpmath.libmpf.sqrtrem(y)
+        return int(x), not rem
     if n > y: return 1, False
     # Get initial estimate for Newton's method. Care must be taken to
     # avoid overflow
     try:
         guess = int(y ** (1./n)+0.5)
     except OverflowError:
-        try:
-            guess = int(_exp(_log(y)/n)+0.5)
-        except OverflowError:
-            guess = 1 << int(_log(y, 2)/n)
-    # Newton iteration
-    xprev, x = -1, guess
-    while abs(x - xprev) > 1:
-        t = x**(n-1)
-        xprev, x = x, x - (t*x-y)//(n*t)
+        expt = _log(y,2)/n
+        if expt > 53:
+            shift = int(expt-53)
+            guess = int(2.0**(expt-shift)+1) << shift
+        else:
+            guess = int(2.0**expt)
+    #print n
+    if guess > 2**50:
+        # Newton iteration
+        xprev, x = -1, guess
+        while 1:
+            t = x**(n-1)
+            #xprev, x = x, x - (t*x-y)//(n*t)
+            xprev, x = x, ((n-1)*x + y//t)//n
+            #print n, x-xprev, abs(x-xprev) < 2
+            if abs(x - xprev) < 2:
+                break
+    else:
+        x = guess
     # Compensate
     t = x**n
+    while t < y:
+        x += 1
+        t = x**n
     while t > y:
         x -= 1
         t = x**n

@@ -1,5 +1,5 @@
 from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer, \
-        Basic, S
+        Basic, S, factorial
 from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex
@@ -171,6 +171,13 @@ def test_powers():
     assert integer_nthroot(c2, 2) == (c, True)
     assert integer_nthroot(c2+1, 2) == (c, False)
     assert integer_nthroot(c2-1, 2) == (c-1, False)
+    assert integer_nthroot(2,10**10) == (1, False)
+
+    assert integer_nthroot(10**(500*500), 500) == (10**500, True)
+    assert integer_nthroot(10**1000000, 100000) == (10**10, True)
+    p, r = integer_nthroot(int(factorial(10000)), 100)
+    assert p % (10**10) == 5322420655
+    assert not r
 
     assert Rational(5**3, 8**3)**Rational(4,3) == Rational(5**4, 8**4)
     assert Rational(-4,7)**Rational(1,2) == I*Rational(4,7)**Rational(1,2)

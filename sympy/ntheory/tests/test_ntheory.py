@@ -1,12 +1,64 @@
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
         multinomial_coefficients, raises
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
-    is_quad_residue, legendre_symbol, npartitions, totient, trial, \
+    is_quad_residue, legendre_symbol, npartitions, totient, \
     factorint, primefactors, divisors, randprime, nextprime, prevprime, \
-    primerange, primepi, prime, pollard_rho
+    primerange, primepi, prime, pollard_rho, perfect_power, multiplicity, \
+    trailing
 from sympy.ntheory.bbp_pi import pi_hex_digits
+from sympy import factorial as fac
 
 from sympy.ntheory.modular import crt, crt1, crt2
+
+def test_trailing():
+    assert trailing(0) == 0
+    assert trailing(1) == 0
+    assert trailing(-1) == 0
+    assert trailing(2) == 1
+    assert trailing(7) == 0
+    assert trailing(-7) == 0
+    for i in range(100):
+        assert trailing((1<<i)) == i
+        assert trailing((1<<i) * 31337) == i
+    assert trailing((1<<1000001)) == 1000001
+    assert trailing((1<<273956)*7**37) == 273956
+
+def test_multiplicity():
+    for b in range(2,20):
+        for i in range(100):
+            assert multiplicity(b, b**i) == i
+            assert multiplicity(b, (b**i) * 23) == i
+            assert multiplicity(b, (b**i) * 1000249) == i
+    # Should be fast
+    assert multiplicity(10, 10**10023) == 10023
+
+def test_perfect_power():
+    assert perfect_power(0) == None
+    assert perfect_power(1) == None
+    assert perfect_power(2) == None
+    assert perfect_power(3) == None
+    assert perfect_power(4) == (2, 2)
+    assert perfect_power(14) == None
+    assert perfect_power(25) == (5, 2)
+    assert perfect_power(137**(3*5*13)) == (137, 3*5*13)
+    assert perfect_power(137**(3*5*13) + 1) == None
+    assert perfect_power(137**(3*5*13) - 1) == None
+    assert perfect_power(103005006004**7) == (103005006004, 7)
+    assert perfect_power(103005006004**7+1) == None
+    assert perfect_power(103005006004**7-1) == None
+    assert perfect_power(103005006004**12) == (103005006004, 12)
+    assert perfect_power(103005006004**12+1) == None
+    assert perfect_power(103005006004**12-1) == None
+    assert perfect_power(2**10007) == (2, 10007)
+    assert perfect_power(2**10007+1) == None
+    assert perfect_power(2**10007-1) == None
+    assert perfect_power((9**99 + 1)**60) == (9**99 + 1, 60)
+    assert perfect_power((9**99 + 1)**60+1) == None
+    assert perfect_power((9**99 + 1)**60-1) == None
+    assert perfect_power((10**40000)**2, recursive=False) == (10**40000, 2)
+    assert perfect_power(10**100000) == (10, 100000)
+    # This is very slow... should use trial division
+    #perfect_power(10**100001) == (10, 100001)
 
 def test_isprime():
     s = Sieve()
@@ -82,28 +134,83 @@ def test_randprime():
             p = randprime(a, a+b)
             assert a <= p < (a+b) and isprime(p)
 
-def test_factor():
-    assert trial(1) == []
-    assert trial(2) == [(2,1)]
-    assert trial(3) == [(3,1)]
-    assert trial(4) == [(2,2)]
-    assert trial(5) == [(5,1)]
-    assert trial(128) == [(2,7)]
-    assert trial(720) == [(2,4), (3,2), (5,1)]
-    assert factorint(123456) == [(2, 6), (3, 1), (643, 1)]
+def fac_multiplicity(n, p):
+    """Return the power of the prime number p in the
+    factorization of n!"""
+    if p > n: return 0
+    if p > n//2: return 1
+    q, m = n, 0
+    while q >= p:
+        q //= p
+        m += q
+    return m
+
+def multiproduct(seq=(), start=1):
+    """
+    Return the product of a sequence of factors with multiplicities,
+    times the value of the parameter ``start``. The input may be a
+    sequence of (factor, exponent) pairs or a dict of such pairs.
+
+        >>> multiproduct({3:7, 2:5}, 4)
+        279936
+    """
+    if not seq:
+        return start
+    if isinstance(seq, dict):
+        seq = seq.iteritems()
+    units = start
+    multi = []
+    for base, exp in seq:
+        if not exp:
+            continue
+        elif exp == 1:
+            units *= base
+        else:
+            if exp % 2:
+                units *= base
+            multi.append((base, exp//2))
+    return units * multiproduct(multi)**2
+
+def test_factorint():
+    assert sorted(factorint(123456).items()) == [(2, 6), (3, 1), (643, 1)]
     assert primefactors(123456) == [2, 3, 643]
-    assert factorint(-16) == [(-1, 1), (2, 4)]
-    assert factorint(2**(2**6) + 1) == [(274177, 1), (67280421310721, 1)]
-    assert factorint(5951757) == [(3, 1), (7, 1), (29, 2), (337, 1)]
-    assert factorint(64015937) == [(7993, 1), (8009, 1)]
+    assert factorint(-16) == {-1:1, 2:4}
+    assert factorint(2**(2**6) + 1) == {274177:1, 67280421310721:1}
+    assert factorint(5951757) == {3:1, 7:1, 29:2, 337:1}
+    assert factorint(64015937) == {7993:1, 8009:1}
     assert divisors(1) == [1]
     assert divisors(2) == [1, 2]
     assert divisors(3) == [1, 3]
     assert divisors(10) == [1, 2, 5, 10]
     assert divisors(100) == [1, 2, 4, 5, 10, 20, 25, 50, 100]
     assert divisors(101) == [1, 101]
-    assert pollard_rho(2**64+1, max_iters=1, seed=1) == 274177
-    assert pollard_rho(19) is None
+    assert factorint(0) == {0:1}
+    assert factorint(1) == {}
+    assert factorint(-1) == {-1:1}
+    assert factorint(-2) == {-1:1, 2:1}
+    assert factorint(-16) == {-1:1, 2:4}
+    assert factorint(2) == {2:1}
+    assert factorint(126) == {2:1, 3:2, 7:1}
+    assert factorint(123456) == {2:6, 3:1, 643:1}
+    assert factorint(5951757) == {3:1, 7:1, 29:2, 337:1}
+    assert factorint(64015937) == {7993:1, 8009:1}
+    assert factorint(2**(2**6) + 1) == {274177:1, 67280421310721:1}
+    assert multiproduct(factorint(fac(200))) == fac(200)
+    for b, e in factorint(fac(150)).items():
+        assert e == fac_multiplicity(150, b)
+    assert factorint(103005006059**7) == {103005006059:7}
+    assert factorint(31337**191) == {31337:191}
+    assert factorint(2**1000 * 3**500 * 257**127 * 383**60) == \
+        {2:1000, 3:500, 257:127, 383:60}
+    assert len(factorint(fac(10000))) == 1229
+    assert factorint(12932983746293756928584532764589230) == \
+        {2: 1, 5: 1, 73: 1, 727719592270351: 1, 63564265087747: 1, 383: 1}
+    assert factorint(727719592270351) == {727719592270351:1}
+    assert factorint(2**64+1, use_trial=False) == factorint(2**64+1)
+    for n in range(60000):
+        assert multiproduct(factorint(n)) == n
+    assert pollard_rho(2**64+1, seed=1) == 274177
+    assert pollard_rho(19, seed=1) is None
 
 def test_totient():
     assert [totient(k) for k in range(1, 12)] == \
@@ -189,4 +296,4 @@ def test_multinomial_coefficients():
             (2, 0, 1): 3, (1, 2, 0): 3, (1, 1, 1): 6, (0, 0, 3): 1}
 
 def test_issue1257():
-    assert factorint(1030903) == [(53, 2), (367, 1)]
+    assert factorint(1030903) == {53: 2, 367: 1}

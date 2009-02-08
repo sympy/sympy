@@ -3,61 +3,131 @@ Integer factorization
 """
 
 from sympy.core.numbers import igcd
+from sympy.core.power import integer_nthroot
 import random
+import math
 from primetest import isprime
-from generate import sieve, prime
+from generate import sieve, prime, primerange
 
+small_trailing = [i and max(int(not i % 2**j) and j for j in range(1,8)) \
+    for i in range(256)]
+
+def trailing(n):
+    """Count the number of trailing zero digits in the binary
+    representation of n, i.e. determine the largest power of 2
+    that divides n."""
+    if not n:
+        return 0
+    low_byte = n & 0xff
+    if low_byte:
+        return small_trailing[low_byte]
+    t = 0
+    p = 8
+    while not n & 1:
+        while not n & ((1<<p)-1):
+            n >>= p
+            t += p
+            p *= 2
+        p //= 2
+    return t
 
 def multiplicity(p, n):
     """
-    Return the multiplicity of the number p in n; that is, the greatest
-    number m such that p**m divides n.
+    Find the greatest integer m such that p**m divides n.
 
     Example usage
     =============
-        >>> multiplicity(5, 8)
-        0
-        >>> multiplicity(5, 5)
-        1
-        >>> multiplicity(5, 25)
-        2
-        >>> multiplicity(5, 125)
-        3
-        >>> multiplicity(5, 250)
-        3
+        >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
+        [0, 1, 2, 3, 3]
     """
     m = 0
-    quot, rem = divmod(n, p)
-    while rem == 0:
-        quot, rem = divmod(quot, p)
+    n, rem = divmod(n, p)
+    while not rem:
         m += 1
+        if m > 5:
+            # The multiplicity could be very large. Better
+            # to increment in powers of two
+            e = 2
+            while 1:
+                ppow = p**e
+                if ppow < n:
+                    nnew, rem = divmod(n, ppow)
+                    if not rem:
+                        m += e
+                        e *= 2
+                        n = nnew
+                        continue
+                return m + multiplicity(p, n)
+        n, rem = divmod(n, p)
     return m
 
+def perfect_power(n, candidates=None, recursive=True):
+    """
+    Return ``(a, b)`` such that ``n`` == ``a**b`` if ``n`` is a
+    perfect power; otherwise return ``None``.
 
-# Currently unused by factorint()
-def pollard_rho(n, max_iters=5, seed=1234):
-    """Use Pollard's rho method to try to extract a factor of n. The
-    returned factor may be a composite number. A maximum of max_iters
-    iterations are performed; if no factor is found, None is returned.
+    By default, attempts to determine the largest possible ``b``.
+    With ``recursive=False``, the smallest possible ``b`` will
+    be chosen (this will be a prime number).
+    """
+    if n < 3:
+        return None
+    logn = math.log(n,2)
+    max_possible = int(logn)+2
+    if not candidates:
+        candidates = primerange(2, max_possible)
+    for b in candidates:
+        if b > max_possible:
+            break
+        # Weed out downright impossible candidates
+        if logn/b < 40:
+            a = 2.0**(logn/b)
+            if abs(int(a+0.5)-a) > 0.01:
+                continue
+        # print b
+        r, exact = integer_nthroot(n, b)
+        if exact:
+            if recursive:
+                m = perfect_power(r)
+                if m:
+                    return m[0], b*m[1]
+            return r, b
+
+def pollard_rho(n, retries=5, max_steps=None, seed=1234):
+    """Use Pollard's rho method to try to extract a nontrivial factor
+    of ``n``. The returned factor may be a composite number. If no
+    factor is found, ``None`` is returned.
+
+    The algorithm may need to take thousands of steps before
+    it finds a factor or reports failure. If ``max_steps`` is
+    specified, the iteration is cancelled with a failure after
+    the specified number of steps.
+
+    On failure, the algorithm will self-restart (with different
+    parameters) up to ``retries`` number of times.
 
     The rho algorithm is a Monte Carlo method whose outcome can
     be affected by changing the random seed value.
 
     References
     ==========
-    Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-    A Computational Perspective", Springer, 2nd edition, 229-231
+      - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+        A Computational Perspective", Springer, 2nd edition, 229-231
 
     """
-    prng = random.Random(seed + max_iters)
-    for i in range(max_iters):
+    prng = random.Random(seed + retries)
+    for i in range(retries):
         # Alternative good nonrandom choice: a = 1
         a = prng.randint(1, n-3)
         # Alternative good nonrandom choice: s = 2
         s = prng.randint(0, n-1)
         U = V = s
         F = lambda x: (x**2 + a) % n
+        j = 0
         while 1:
+            if max_steps and (j > max_steps):
+                break
+            j += 1
             U = F(U)
             V = F(F(V))
             g = igcd(abs(U-V), n)
@@ -65,15 +135,18 @@ def pollard_rho(n, max_iters=5, seed=1234):
                 continue
             if g == n:
                 break
-            return g
+            return int(g)
     return None
 
-
 def pollard_pm1(n, B=10, seed=1234):
-    """Use Pollard's p-1 method to try to extract a factor of n. The
-    returned factor may be a composite number. The search is performed
-    up to a smoothness bound B; if no factor is found, None is
-    returned.
+    """
+    Use Pollard's p-1 method to try to extract a nontrivial factor
+    of ``n``. The returned factor may be a composite number. If no
+    factor is found, ``None`` is returned.
+
+    The search is performed up to a smoothness bound ``B``.
+    Choosing a larger B increases the likelyhood of finding
+    a large factor.
 
     The p-1 algorithm is a Monte Carlo method whose outcome can
     be affected by changing the random seed value.
@@ -81,211 +154,240 @@ def pollard_pm1(n, B=10, seed=1234):
     Example usage
     =============
     With the default smoothness bound, this number can't be cracked:
+
         >>> pollard_pm1(21477639576571)
 
     Increasing the smoothness bound helps:
-        >>> pollard_pm1(21477639576571, 2000)
+
+        >>> pollard_pm1(21477639576571, B=2000)
         4410317
 
     References
     ==========
-    Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-    A Computational Perspective", Springer, 2nd edition, 236-238
-
+      - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+        A Computational Perspective", Springer, 2nd edition, 236-238
     """
-    from math import log
     prng = random.Random(seed + B)
     a = prng.randint(2, n-1)
     for p in sieve.primerange(2, B):
-        e = int(log(B, p))
+        e = int(math.log(B, p))
         a = pow(a, p**e, n)
     g = igcd(a-1, n)
     if 1 < g < n:
-        return g
+        return int(g)
     else:
         return None
 
-
-def trial(n, candidates=None):
+def _trial(factors, n, candidates=None, verbose=False, force_finalize=False):
     """
-    Factor n as far as possible through trial division, taking
-    candidate factors from the given list. If no list of candidate
-    factors is given, the prime numbers in the interval [2, sqrt(n)]
-    are used, which guarantees a complete factorization.
-
-    The returned value is a list [(p1, e1), ...] such that
-    n = p1**e1 * p2**e2 * ... If n could not be completely factored
-    using numbers in the given range, the last p might be composite.
-
-    Example usage
-    =============
-
-    A complete factorization:
-
-        >>> trial(36960)
-        [(2, 5), (3, 1), (5, 1), (7, 1), (11, 1)]
-
-    This won't find the factors 7 and 11:
-
-        >>> trial(36960, [2, 3, 5])
-        [(2, 5), (3, 1), (5, 1), (77, 1)]
-
+    Helper function for integer factorization. Trial factors ``n`
+    against all integers given in the sequence ``candidates``
+    and updates the dict ``factors`` in-place. Raises
+    ``StopIteration`` if ``n`` becomes equal to 1, otherwise
+    returns the reduced value of ``n`` and a flag indicating
+    whether any factors were found.
     """
-    if n == 1:
-        return []
-    if candidates is None:
-        candidates = sieve.primerange(2, int(n**0.5)+1)
-    factors = []
+    if not candidates:
+        return n, False
+    found_something = False
     for k in candidates:
+        # This check is slightly faster for small n and slightly
+        # slower for large n...
+        if n % k:
+            continue
         m = multiplicity(k, n)
-        if m != 0:
-            n //= k**m
-            factors = factors + [(k, m)]
-        if isprime(n):
-            return factors + [(int(n), 1)]
-        elif n == 1:
-            return factors
-    return factors + [(int(n), 1)]
+        if m:
+            found_something = True
+            if verbose:
+                print "-- %i (multiplicity %i)" % (k, m)
+            n //= (k**m)
+            factors[k] = m
+            if n == 1:
+                raise StopIteration
+    return int(n), found_something
 
-
-def factorint(n, limit=None, verbose=False):
+def _check_termination(factors, n, verbose=False):
     """
-    Given a positive integer n, factorint(n) returns a list
-    [(p_1, m_1), (p_2, m_2), ...] with all p prime and n = p_1**m_1 *
-    p_2**m_2 * ...
+    Helper function for integer factorization. Checks if ``n``
+    is a prime or a perfect power, and in those cases updates
+    the factorization and raises ``StopIteration``.
+    """
+    if verbose:
+        print "Checking if remaining factor terminates the factorization"
+    n = int(n)
+    if n == 1:
+        raise StopIteration
+    p = perfect_power(n)
+    if p:
+        base, exp = p
+        if verbose:
+            print "-- Remaining factor is a perfect power: %i ** %i" % (base, exp)
+        for b, e in factorint(base).iteritems():
+            factors[b] = exp*e
+        raise StopIteration
+    if isprime(n):
+        if verbose:
+            print "Remaining factor", n, "is prime"
+        factors[n] = 1
+        raise StopIteration
 
-    Special cases: 1 factors as [], 0 factors as [(0, 1)], and negative
-    integers factor as [(-1, 1), ...].
+trial_msg = "Trial division with primes between %i and %i"
+rho_msg = "Pollard's rho with retries %i, max_steps %i and seed %i"
+pm1_msg = "Pollard's p-1 with smoothness bound %i and seed %i"
 
-    The function uses a composite algorithm, switching between
-    Pollard's p-1 method and looking for small factors through trial
-    division.
+def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
+    verbose=False):
+    """
+    Given a positive integer ``n``, ``factorint(n)`` returns a dict containing
+    the prime factors of ``n`` as keys and their respective multiplicities
+    as values. For example:
 
-    It is sometimes useful to look only for small factors. If 'limit'
-    is specified, factorint will only perform trial division with
-    candidate factors up to this limit (and p-1 search up to the same
-    smoothness bound). As a result, the last 'prime' in the returned
-    list may be composite.
+        >>> factorint(2000)    # 2000 = (2**4) * (5**3)
+        {2: 4, 5: 3}
+        >>> factorint(65537)   # This number is prime
+        {65537: 1}
 
-    Example usage
-    =============
+    For input less than 2, factorint behaves as follows:
 
-    Here are some simple factorizations (with at most six digits in the
-    second largest factor). They should all complete within a fraction
-    of a second:
+      - ``factorint(1)`` returns the empty factorization, ``{}``
+      - ``factorint(0)`` returns ``{0:1}``
+      - ``factorint(-n)`` adds ``-1:1`` to the factors and then factors ``n``
 
-        >>> factorint(1)
-        []
+    Algorithm
+    =========
 
-        >>> factorint(100)
-        [(2, 2), (5, 2)]
-
-        >>> factorint(17*19)
-        [(17, 1), (19, 1)]
-
-        >>> factorint(prime(100)*prime(1000)*prime(10000))
-        [(541, 1), (7919, 1), (104729, 1)]
-
-        >>> factors = factorint(2**(2**6) + 1)
-        >>> for base, exp in factors: print base, exp
-        ...
-        274177 1
-        67280421310721 1
-
-    Factors on the order of 10 digits can generally be found quickly.
-    The following computations should complete within a few seconds:
-
-        >>> factors = factorint(21477639576571)
-        >>> for base, exp in factors: print base, exp
-        ...
-        4410317 1
-        4869863 1
+    The function switches between multiple algorithms. Trial division
+    quickly finds small factors (of the order 1-5 digits), and finds
+    all large factors if given enough time. The Pollard rho and p-1
+    algorithms are used to find large factors ahead of time; they
+    will often find factors of the order of 10 digits within a few
+    seconds:
 
         >>> factors = factorint(12345678910111213141516)
-        >>> for base, exp in factors: print base, exp
+        >>> for base, exp in sorted(factors.items()):
+        ...     print base, exp
         ...
         2 2
         2507191691 1
         1231026625769 1
 
-        >>> factors = factorint(5715365922033905625269)
-        >>> for base, exp in factors: print base, exp
-        ...
-        74358036521 1
-        76862786989 1
+    Any of these methods can optionally be disabled with the following
+    boolean parameters:
 
-    This number has an enormous semiprime factor that is better
-    ignored:
+      - ``use_trial``: Toggle use of trial division
+      - ``use_rho``: Toggle use of Pollard's rho method
+      - ``use_pm1``: Toggle use of Pollard's p-1 method
+
+    ``factorint`` also periodically checks if the remaining part is
+    a prime number or a perfect power, and in those cases stops.
+
+    Partial factorization
+    =====================
+
+    If ``limit`` is specified, the search is stopped after performing
+    trial division up to the limit (or taking a corresponding number of
+    rho/p-1 steps). This is useful if one has a large number and only
+    is interested in finding small factors (if any). Note that setting
+    a limit does not prevent larger factors from being found early;
+    it simply means that any larger factors returned may be composite.
+
+    This number, for example, has two small factors and a huge
+    semiprime factor that cannot be reduced easily:
 
         >>> a = 1407633717262338957430697921446883
-        >>> factorint(a, limit=10000)
-        [(7, 1), (991, 1), (202916782076162456022877024859, 1)]
-        >>> isprime(_[-1][0])
+        >>> f = factorint(a, limit=10000)
+        >>> print f
+        {991: 1, 202916782076162456022877024859L: 1, 7: 1}
+        >>> isprime(max(f))
         False
 
+    Miscellaneous options
+    =====================
+
+    If ``verbose`` is set to ``True``, detailed progress is printed.
     """
+    assert use_trial or use_rho or use_pm1
     n = int(n)
-
-    if n < 0: return [(-1, 1)] + factorint(-n, limit)
-    if n == 0:
-        return [(0, 1)]
+    if not n:
+        return {0:1}
+    if n < 0:
+        n = -n
+        factors = {-1:1}
+    else:
+        factors = {}
+    # Power of two
+    t = trailing(n)
+    if t:
+        factors[2] = t
+        n >>= t
     if n == 1:
-        return []
-    if isprime(n):
-        return [(n, 1)]
-    if limit is None:
-        limit = int(n**0.5) + 1
+        return factors
 
-    factors = []
-    low, high = 2, 50
+    # It is sufficient to perform trial division up to sqrt(n)
+    try:
+        limit = limit or (int(n**0.5) + 2)
+    except OverflowError:
+        limit = 1e1000
+
+    low, high = 3, 250
+
+    # Setting to True here forces _check_termination if first round of
+    # trial division fails
+    found_trial_previous = True
+
+    if verbose and n < 1e300:
+        print "Factoring", n
 
     while 1:
-        # Trial divide for small factors first
-        tfactors = trial(n, sieve.primerange(low, min(high, limit)))
+        try:
+            high_ = min(high, limit)
 
-        if verbose:
-            print "trial division from", low, "to", \
-                min(high,limit)-1, "gave", tfactors
+            # Trial division
+            if use_trial:
+                if verbose:
+                    print trial_msg % (low, high_)
+                ps = sieve.primerange(low, high_)
+                n, found_trial = _trial(factors, n, ps, verbose)
+            else:
+                found_trial = False
 
-        # If all were primes, we're done
-        if isprime(tfactors[-1][0]):
-            factors += tfactors
-            break
+            if high > limit:
+                factors[n] = 1
+                raise StopIteration
 
-        elif tfactors[-1][0] == 1:
-            factors += tfactors[:-1]
-            break
-        else:
-            factors += tfactors[:-1]
-            n = tfactors[-1][0]
+            # Only used advanced (and more expensive) methods as long as
+            # trial division fails to locate small factors
+            if not found_trial:
+                if found_trial_previous:
+                    _check_termination(factors, n, verbose)
 
-        # If we're lucky, Pollard's p-1 will extract a large factor
-        w = pollard_pm1(n, high)
-        if verbose:
-            print "pollard p-1 with smoothness bound", high, "gave", w
-            print
+                # Pollard p-1
+                if use_pm1 and not found_trial:
+                    B = int(high_**0.7)
+                    if verbose:
+                        print (pm1_msg % (high_, high_))
+                    ps = factorint(pollard_pm1(n, B=high_, seed=high_) or 1, \
+                        limit=limit, verbose=verbose)
+                    n, found_pm1 = _trial(factors, n, ps, verbose)
+                    if found_pm1:
+                        _check_termination(factors, n, verbose)
 
-        if w is not None:
-            # w may be composite
-            for f, m in factorint(w, limit):
-                m = multiplicity(f, n)
-                factors += [(f, m)]
-                n //= f**(m)
+                # Pollard rho
+                if use_rho and not found_trial:
+                    max_steps = int(high_**0.7)
+                    if verbose:
+                        print (rho_msg % (1, max_steps, high_))
+                    ps = factorint(pollard_rho(n, retries=1, max_steps=max_steps, \
+                        seed=high_) or 1, limit=limit, verbose=verbose)
+                    n, found_rho = _trial(factors, n, ps, verbose)
+                    if found_rho:
+                        _check_termination(factors, n, verbose)
 
-        if n == 1:
-            break
+        except StopIteration:
+            return factors
 
-        if isprime(n):
-            factors += [(int(n), 1)]
-            break
-
-        if high > limit:
-            factors += [(int(n), 1)]
-            break
-
-        low, high = high, high*5
-
-    return sorted(factors)
+        found_trial_previous = found_trial
+        low, high = high, high*2
 
 
 def primefactors(n, limit=None, verbose=False):
@@ -302,23 +404,23 @@ def primefactors(n, limit=None, verbose=False):
         >>> primefactors(-5)
         [5]
 
-        >>> factorint(123456)
+        >>> sorted(factorint(123456).items())
         [(2, 6), (3, 1), (643, 1)]
         >>> primefactors(123456)
         [2, 3, 643]
 
-        >>> factorint(10000000001, limit=1000)
+        >>> sorted(factorint(10000000001, limit=200).items())
         [(101, 1), (99009901, 1)]
         >>> isprime(99009901)
         False
-        >>> primefactors(10000000001, limit=1000)
+        >>> primefactors(10000000001, limit=300)
         [101]
 
     """
     n = int(n)
     s = []
-    factors = factorint(n, limit, verbose)
-    for p, _ in factors[:-1]:
+    factors = sorted(factorint(n, limit=limit, verbose=verbose).items())
+    for p, _ in sorted(factors)[:-1:]:
         if p not in [-1, 0, 1]:
             s += [p]
     if isprime(factors[-1][0]):
@@ -358,6 +460,6 @@ def totient(n):
         raise ValueError("n must be a positive integer")
     factors = factorint(n)
     t = 1
-    for p, k in factors:
+    for p, k in factors.iteritems():
         t *= (p-1) * p**(k-1)
     return t
