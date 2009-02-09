@@ -296,8 +296,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
         >>> a = 1407633717262338957430697921446883
         >>> f = factorint(a, limit=10000)
-        >>> print f
-        {991: 1, 202916782076162456022877024859L: 1, 7: 1}
+        >>> f == {991: 1, 202916782076162456022877024859L: 1, 7: 1}
+        True
         >>> isprime(max(f))
         False
 
