@@ -6,8 +6,9 @@ RST2HTML     = rst2html
 # You can set these variables from the command line.
 SPHINXOPTS   =
 SPHINXVER    = 0.5
-SPHINXBUILDpy  = sphinx/Sphinx-$(SPHINXVER)/sphinx-build.py
-SPHINXBUILD  = PYTHONPATH=.. $(PYTHON) $(SPHINXBUILDpy)
+#SPHINXBUILDpy  = sphinx/Sphinx-$(SPHINXVER)/sphinx-build.py
+SPHINXBUILDpy  = sphinx-build
+SPHINXBUILD  = PYTHONPATH=.. $(SPHINXBUILDpy)
 PAPER        =
 
 ALLSPHINXOPTS = -d _build/doctrees -D latex_paper_size=$(PAPER) \
@@ -33,9 +34,9 @@ clean:
 
 $(SPHINXBUILDpy):
 	rm -rf sphinx
-	mkdir sphinx
-	cd sphinx; wget http://pypi.python.org/packages/source/S/Sphinx/Sphinx-$(SPHINXVER).tar.gz;
-	cd sphinx; tar xzf Sphinx-$(SPHINXVER).tar.gz
+#	mkdir sphinx
+#	cd sphinx; wget http://pypi.python.org/packages/source/S/Sphinx/Sphinx-$(SPHINXVER).tar.gz;
+#	cd sphinx; tar xzf Sphinx-$(SPHINXVER).tar.gz
 
 html: $(SPHINXBUILDpy) spt-printable
 	mkdir -p src/.static
