@@ -193,6 +193,20 @@ class sign(Function):
         return (self[0] is S.Zero)
 
 class abs(Function):
+    """Return the absolute value of the argument. This is an extension of the built-in
+    function abs to accept symbolic values
+
+    Examples
+
+        >>> from sympy import abs, Symbol
+        >>> abs(-1)
+        1
+        >>> x = Symbol('x', real=True)
+        >>> abs(-x)
+        abs(x)
+        >>> abs(x**2)
+        x**2
+    """
 
     nargs = 1
 
@@ -228,9 +242,8 @@ class abs(Function):
             return sqrt( (arg * arg.conjugate()).expand() )
         if arg.is_Pow:
             base, exponent = arg.as_base_exp()
-            if exponent.is_Number:
-                if exponent.is_even:
-                    return arg
+            if exponent.is_even and base.is_real:
+                return arg
         return
 
     @classmethod

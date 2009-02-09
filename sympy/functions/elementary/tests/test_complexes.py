@@ -98,14 +98,18 @@ def test_abs():
     assert x**(2*n) == abs(x)**(2*n)
 
 def test_abs_real():
+    # test some properties of abs that only apply
+    # to real numbers
     x = Symbol('x', complex=True)
     assert sqrt(x**2) != abs(x)
+    assert abs(x**2) != x**2
+
     x = Symbol('x', real=True)
     assert sqrt(x**2) == abs(x)
+    assert abs(x**2) == x**2
 
 def test_abs_properties():
     x = Symbol('x')
-
     assert abs(x).is_real == True
     assert abs(x).is_positive == None
     assert abs(x).is_nonnegative == True
