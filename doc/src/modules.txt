@@ -17,15 +17,17 @@ access any SymPy module, or use this contens:
    :maxdepth: 2
 
    modules/core.txt
-   modules/matrices.txt
    modules/evalf.txt
+   modules/functions.txt
+   modules/geometry.txt
+   modules/galgebra/GA/GAsympy.txt
+   modules/integrals.txt
+   modules/matrices.txt
    modules/mpmath/index.txt
    modules/rewriting.txt
    modules/polynomials.txt
    modules/printing.txt
    modules/plotting.txt
-   modules/geometry.txt
-   modules/galgebra/GA/GAsympy.txt
    modules/statistics.txt
    modules/concrete.txt
    modules/solvers.txt

@@ -164,6 +164,11 @@ class im(Function):
 ###############################################################################
 
 class sign(Function):
+    """Return the sign of an expression, that is:
+        -1 if expr <  0
+         0 if expr == 0
+         1 if expr >  0
+    """
 
     nargs = 1
 
@@ -280,6 +285,7 @@ class abs(Function):
         return sage.abs_symbolic(self.args[0]._sage_())
 
 class arg(Function):
+    """Returns the argument (in radians) of a complex number"""
 
     nargs = 1
 
