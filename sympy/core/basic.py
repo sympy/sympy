@@ -1940,9 +1940,11 @@ class Basic(AssumeMeths):
         from sympy.integrals import integrate
         return integrate(self, *args, **kwargs)
 
-    #XXX fix the removeme
-    def __call__(self, *args, **removeme):
-        return Function(self[0])(*args)
+    def __call__(self, subsdict):
+        """Use call as a shortcut for subs, but only support the dictionary version"""
+        if not isinstance(subsdict, dict):
+            raise TypeError("argument must be a dictionary")
+        return self.subs(subsdict)
 
     def __float__(self):
         result = self.evalf()

@@ -401,6 +401,15 @@ def test_subs_list():
     assert (x+y)._subs_list([(x, 3), (y, x**2)]) == 3 + x**2
     assert (x+y)._subs_list([(y, x**2), (x, 3)]) == 12
 
+def test_call():
+    a,b,c,d,e = symbols('abcde')
+
+    assert sin(x)({ x : 1, sin(x) : 2}) == 2
+
+    expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
+
+    assert expr({ sqrt(sin(2*x)) : a, cos(2*x) : b, sin(2*x) : c, x : d, exp(x) : e}) == c + a*b*sin(d*e)
+
 def test_has():
     x, y = symbols("xy")
     f = Function("f")
