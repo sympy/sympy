@@ -17,7 +17,7 @@ covers all files in the sympy repository unless stated otherwise.
 0. Download
 -----------
 
-$ hg clone http://hg.sympy.org/sympy/
+$ git clone git://git.sympy.org/sympy.git
 
 For other options (tarballs, debs, etc.), see the web page of SymPy.
 
