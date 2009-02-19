@@ -22,7 +22,7 @@ Example Usage:
      $
 
    When examples fail:
-     $ ./all.py -W > out
+     $ ./all.py -w > out
      Traceback (most recent call last):
        File "./all.py", line 111, in run_examples
      [...]
@@ -144,9 +144,7 @@ def main (*args, **kws):
     use_windowed = False
     try:
         opts, remainder = getopt.getopt(args, "hw")
-        print opts
         for opt_key, opt_val in opts:
-            print opt_key == '-w'
             if opt_key == '-w':
                 use_windowed = True
             elif opt_key == "-h":
