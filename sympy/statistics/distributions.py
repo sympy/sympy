@@ -9,17 +9,18 @@ class Sample(tuple):
     Sample([x1, x2, x3, ...]) represents a collection of samples.
     Sample parameters like mean, variance and stddev can be accessed as
     properties.
+    The sample will be sorted.
     """
     def __new__(cls, sample):
-        s = tuple.__new__(cls, sample)
+        s = tuple.__new__(cls, sorted(sample))
         s.mean = mean = sum(s) / Integer(len(s))
         s.variance = sum([(x-mean)**2 for x in s]) / Integer(len(s))
         s.stddev = sqrt(s.variance)
+        if len(s) % 2:
+            s.median = s[len(s)//2]
+        else:
+            s.median = sum(s[len(s)//2-1:len(s)//2+1]) / Integer(2)
         return s
-
-    @property
-    def median(self):
-        raise NotImplementedError
 
     def __repr__(self):
         return StrPrinter.doprint(self)

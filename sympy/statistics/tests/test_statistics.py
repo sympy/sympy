@@ -53,6 +53,12 @@ def test_sample():
     from sympy.statistics.distributions import Sample
     s = Sample([0,1])
     assert s.mean == Rational(1,2)
+    assert s.median == Rational(1,2)
+    s = Sample([4,2,3])
+    assert s == Sample([2, 3, 4])
+    assert s.median == 3
+    s = Sample([4,2,3,1])
+    assert s.median == Rational(5,2)
 
 def test_PDF():
     a = Symbol('a', positive=True)
