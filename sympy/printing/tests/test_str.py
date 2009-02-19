@@ -278,7 +278,14 @@ def test_Roots():
     assert str(RootSum(Lambda(z, z**2), f)) == "RootSum(Lambda(_z, _z**2), x**17 + 2*x - 1, x)"
 
 def test_Sample():
-    assert str(Sample([x, y, 1])) == "Sample([x, y, 1])"
+    assert str(Sample([x, y, 1])) in [
+            "Sample([x, y, 1])",
+            "Sample([y, 1, x])",
+            "Sample([1, x, y])",
+            "Sample([y, x, 1])",
+            "Sample([x, 1, y])",
+            "Sample([1, y, x])",
+            ]
 
 def test_set():
     assert spr(set())       == 'set()'
