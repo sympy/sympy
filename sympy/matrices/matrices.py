@@ -932,7 +932,7 @@ class Matrix(object):
                 tmp = self[i].diff(varlist[0])   # check differentiability
                 J[i,0] = tmp
             except AttributeError:
-                raise "Function %d is not differentiable" % i
+                raise ValueError("Function %d is not differentiable" % i)
             for j in range(1,n):
                 J[i,j] = self[i].diff(varlist[j])
         return J
