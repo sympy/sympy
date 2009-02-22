@@ -1,6 +1,6 @@
 from sympy import symbols, Rational, Symbol, Integral, log, diff, sin, exp, \
         Function, factorial, floor, ceiling, abs, re, im, conjugate, gamma, \
-        Order, Piecewise, Matrix
+        Order, Piecewise, Matrix, asin
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL
@@ -61,6 +61,14 @@ def test_latex_functions():
     r"$\operatorname{sin}2 x^{2}$"
     assert latex(sin(x**2), fold_func_brackets=True) == \
     r"$\operatorname{sin}x^{2}$"
+
+    assert latex(asin(x)**2) == r"$\operatorname{asin}^{2}\left(x\right)$"
+    assert latex(asin(x)**2,inv_trig_style="full") == \
+        r"$\operatorname{arcsin}^{2}\left(x\right)$"
+    assert latex(asin(x)**2,inv_trig_style="power") == \
+        r"$\operatorname{sin}^{-1}\left(x\right)^{2}$"
+    assert latex(asin(x**2),inv_trig_style="power",fold_func_brackets=True) == \
+        r"$\operatorname{sin}^{-1}x^{2}$"
 
     assert latex(factorial(k)) == r"$k!$"
     assert latex(factorial(-k)) == r"$\left(- k\right)!$"
