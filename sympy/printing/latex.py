@@ -17,7 +17,8 @@ class LatexPrinter(Printer):
             "inline" : True,
             "fold_frac_powers" : False,
             "fold_func_brackets" : False,
-            "mul_symbol" : None
+            "mul_symbol" : None,
+            "inv_trig_style" : "abbreviated"
         }
 
         if profile is not None:
@@ -265,17 +266,46 @@ class LatexPrinter(Printer):
             return getattr(self, '_print_' + func)(expr, exp)
         else:
             args = [ str(self._print(arg)) for arg in expr.args ]
+            # How inverse trig functions should be displayed, formats are:
+            # abbreviated: asin, full: arcsin, power: sin^-1
+            inv_trig_style = self._settings['inv_trig_style']
+            # If we are dealing with a power-style inverse trig function
+            inv_trig_power_case = False
+            # If it is applicable to fold the argument brackets
+            can_fold_brackets = self._settings['fold_func_brackets'] and \
+                                len(args) == 1 and \
+                                not self._needs_function_brackets(expr.args[0])
 
-            if exp is not None:
+            inv_trig_table = ["asin", "acos", "atan", "acot"]
+
+            # If the function is an inverse trig function, handle the style
+            if func in inv_trig_table:
+                if inv_trig_style == "abbreviated":
+                    func = func
+                elif inv_trig_style == "full":
+                    func = "arc" + func[1:]
+                elif inv_trig_style == "power":
+                    func = func[1:]
+                    inv_trig_power_case = True
+
+                    # Can never fold brackets if we're raised to a power
+                    if exp is not None:
+                        can_fold_brackets = False
+
+            if inv_trig_power_case:
+                name = r"\operatorname{%s}^{-1}" % func
+            elif exp is not None:
                 name = r"\operatorname{%s}^{%s}" % (func, exp)
             else:
                 name = r"\operatorname{%s}" % func
 
-            if self._settings['fold_func_brackets'] and len(args) == 1 and \
-               not self._needs_function_brackets(expr.args[0]):
+            if can_fold_brackets:
                 name += r"%s"
             else:
                 name += r"\left(%s\right)"
+
+            if inv_trig_power_case and exp is not None:
+                name += r"^{%s}" % exp
 
             return name % ",".join(args)
 
