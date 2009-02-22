@@ -69,7 +69,7 @@ class LatexPrinter(Printer):
         return True
 
     def _pow_is_clean(self, expr):
-        return self._needs_brackets(expr.base)
+        return not self._needs_brackets(expr.base)
 
     def _do_exponent(self, expr, exp):
         if exp is not None:

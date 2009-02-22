@@ -59,6 +59,8 @@ def test_latex_functions():
     assert latex(sin(x), fold_func_brackets=True) == r"$\operatorname{sin}x$"
     assert latex(sin(2*x**2), fold_func_brackets=True) == \
     r"$\operatorname{sin}2 x^{2}$"
+    assert latex(sin(x**2), fold_func_brackets=True) == \
+    r"$\operatorname{sin}x^{2}$"
 
     assert latex(factorial(k)) == r"$k!$"
     assert latex(factorial(-k)) == r"$\left(- k\right)!$"
