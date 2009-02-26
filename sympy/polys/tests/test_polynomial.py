@@ -185,6 +185,10 @@ def test_poly_cancel():
 
     assert Poly.cancel(f) == -2 + sqrt(2)
 
+    a, b = x, 1/(1/y + 1/(x+y))
+
+    assert Poly.cancel(y/(x+y) * b/(a+b), x, y) == y**2/(x**2 + 3*x*y + y**2 )
+
     raises(SymbolsError, "Poly.cancel((x**2-y**2, x-y))")
 
 def test_poly_characteristics():

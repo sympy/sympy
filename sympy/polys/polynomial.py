@@ -642,6 +642,15 @@ class Poly(Basic):
         p = sympy.polys.algorithms.poly_div(p, g)[0]
         q = sympy.polys.algorithms.poly_div(q, g)[0]
 
+        pc = int(p.content)
+        qc = int(q.content)
+
+        cont = igcd(pc, qc)
+
+        if cont != 1:
+            p = p.div_term(cont)
+            q = q.div_term(cont)
+
         return p.as_basic() / q.as_basic()
 
     def as_basic(self):
@@ -2157,3 +2166,4 @@ def multinomial_as_basic(multinomial, *symbols):
         l.append(Mul(*term))
     result = Add(*l)
     return result
+
