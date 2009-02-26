@@ -210,7 +210,7 @@ def heurisch(f, x, **kwargs):
     def substitute(expr):
         return expr.subs(mapping)
 
-    diffs = [ substitute(g.diff(x)) for g in terms ]
+    diffs = [ substitute(simplify(g.diff(x))) for g in terms ]
 
     denoms = [ g.as_numer_denom()[1] for g in diffs ]
     denom = reduce(lambda p, q: lcm(p, q, V), denoms)

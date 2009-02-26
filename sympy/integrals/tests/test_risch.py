@@ -124,6 +124,12 @@ def test_heurisch_hacking():
     assert heurisch(exp(-7*x**2),x,hints=[]) == \
         sqrt(7*pi)*erf(sqrt(7)*x)/14
 
+    assert heurisch(1/sqrt(9 - 4*x**2), x, hints=[]) == \
+        asin(2*x/3)/2
+
+    assert heurisch(1/sqrt(9 + 4*x**2), x, hints=[]) == \
+        asinh(2*x/3)/2
+
 def test_heurisch_function():
     df = diff(f(x), x)
 
