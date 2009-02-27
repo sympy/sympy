@@ -6,7 +6,7 @@ from sympy.polys.monomial import monomial_lex_cmp, monomial_grlex_cmp, \
 
 from sympy.polys.algorithms import poly_groebner, poly_subresultants,    \
         poly_resultant, poly_half_gcdex, poly_gcdex, poly_gcd, poly_lcm, \
-        poly_div, poly_pdiv, poly_decompose, poly_sqf
+        poly_div, poly_pdiv, poly_decompose, poly_sqf, poly_reduce
 
 from sympy.polys.rootfinding import poly_root_factors, roots_linear,  \
         roots_quadratic, roots_cubic, roots_quartic, roots_binomial, \
@@ -770,6 +770,15 @@ def test_decompose():
     assert poly_decompose(f.subs(x, g), x) == [Poly(f, x), Poly(g, x)]
     assert poly_decompose(2*f.subs(x, g), x) == [Poly(2*f, x), Poly(g, x)]
     assert poly_decompose(f.subs(x, g-2), x) == [Poly(f.subs(x, x-2), x), Poly(g, x)]
+
+def test_reduce():
+    f = Poly(2930944*x**6 + 2198208*x**4 + 549552*x**2 + 45796, x)
+    g = Poly(17585664*x**5 + 8792832*x**3 + 1099104*x, x)
+
+    F, G = poly_reduce(f, g)
+
+    assert F == Poly(64*x**6 + 48*x**4 + 12*x**2 + 1, x)
+    assert G == Poly(384*x**5 + 192*x**3 + 24*x, x)
 
 def test_evaluate():
     f = x**2*y*z + 2*x*y*z**3 + 3*x*y + 4*y*z

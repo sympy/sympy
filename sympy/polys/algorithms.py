@@ -882,3 +882,39 @@ def poly_decompose(f, *symbols):
             break
 
     return [f] + F
+
+def poly_reduce(f, g, *symbols):
+    """Removes common content from a pair of polynomials.
+
+       >>> from sympy import *
+       >>> x = Symbol('x')
+
+       >>> f = Poly(2930944*x**6 + 2198208*x**4 + 549552*x**2 + 45796, x)
+       >>> g = Poly(17585664*x**5 + 8792832*x**3 + 1099104*x, x)
+
+       >>> F, G = poly_reduce(f, g)
+
+       >>> F
+       Poly(64*x**6 + 48*x**4 + 12*x**2 + 1, x)
+       >>> G
+       Poly(384*x**5 + 192*x**3 + 24*x, x)
+
+    """
+    if not isinstance(f, Poly):
+        f = Poly(f, *symbols)
+    elif symbols:
+        raise SymbolsError("Redundant symbols were given")
+
+    f, g = f.unify_with(g)
+
+    fc = int(f.content)
+    gc = int(g.content)
+
+    cont = igcd(fc, gc)
+
+    if cont != 1:
+        f = f.div_term(cont)
+        g = g.div_term(cont)
+
+    return f, g
+
