@@ -753,6 +753,18 @@ def test_squarefree():
     assert poly_sqf(x**8+6*x**6+12*x**4+8*x**2, x) == \
         [Poly(1, x), Poly(x, x), Poly(x**2+2, x)]
 
+    # Bronstein, Symbolic Integration, pp. 52
+
+    A = Poly(x**4 - 3*x**2 + 6, x)
+    D = Poly(x**6 - 5*x**4 + 5*x**2 + 4, x)
+
+    f, g = D, A - D.diff(x)*t
+
+    R = poly_subresultants(f, g)
+    S = poly_sqf(Poly(R[-1], t))
+
+    assert S == [Poly(45796, t), Poly(1, t), Poly(4*t**2 + 1, t)]
+
 def test_decompose():
     assert poly_decompose(1, x) == [Poly(1, x)]
     assert poly_decompose(x, x) == [Poly(x, x)]

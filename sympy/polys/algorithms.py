@@ -742,6 +742,8 @@ def poly_sqf(f, *symbols):
     p = poly_div(f, g)[0]
     q = poly_div(h, g)[0]
 
+    p, q = poly_reduce(p, q)
+
     while True:
         h = q - p.diff()
 
@@ -754,6 +756,8 @@ def poly_sqf(f, *symbols):
 
         p = poly_div(p, g)[0]
         q = poly_div(h, g)[0]
+
+        p, q = poly_reduce(p, q)
 
     sqf.append(p)
 
