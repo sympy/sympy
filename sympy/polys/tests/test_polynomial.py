@@ -949,6 +949,9 @@ def test_sturm():
          Poly(Rational(-3303,100), x)]
 
 def test_number_of_real_roots():
+    assert number_of_real_roots(0, x) == 0
+    assert number_of_real_roots(7, x) == 0
+
     f = Poly(x - 1, x)
 
     assert number_of_real_roots(f) == 1

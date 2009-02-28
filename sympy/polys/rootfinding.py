@@ -445,6 +445,17 @@ def number_of_real_roots(f, *symbols, **flags):
 
         return count
 
+    if not isinstance(f, Poly):
+        f = Poly(f, *symbols)
+    elif symbols:
+        raise SymbolsError("Redundant symbols were given")
+
+    if f.is_multivariate:
+        raise MultivariatePolyError(f)
+
+    if f.degree < 1:
+        return 0
+
     inf = flags.get('inf', None)
 
     if inf is not None:
@@ -465,7 +476,7 @@ def number_of_real_roots(f, *symbols, **flags):
         elif abs(sup) is S.Infinity:
             sup = None
 
-    sturm = poly_sturm(f, *symbols)
+    sturm = poly_sturm(f)
 
     if inf is None:
         signs_inf = sign_changes([ s.LC * (-1)**s.LM[0] for s in sturm ])
