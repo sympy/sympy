@@ -564,14 +564,14 @@ def test_poly_gcdex():
     g = x**3 + x**2 - 4*x - 4
 
     assert poly_half_gcdex(f, g, x) == \
-        (Poly(-x+3, x), Poly(5*x+5, x))
+        (Poly(-x/5+Rational(3,5), x), Poly(x+1, x))
     assert poly_half_gcdex(Poly(f, x), Poly(g, x)) == \
-        (Poly(-x+3, x), Poly(5*x+5, x))
+        (Poly(-x/5+Rational(3,5), x), Poly(x+1, x))
 
     assert poly_gcdex(f, g, x) == \
-        (Poly(-x+3, x), Poly(x**2-6*x+10, x), Poly(5*x+5, x))
+        (Poly(-x/5+Rational(3,5), x), Poly(x**2/5-6*x/5+2, x), Poly(x+1, x))
     assert poly_gcdex(Poly(f, x), Poly(g, x)) == \
-        (Poly(-x+3, x), Poly(x**2-6*x+10, x), Poly(5*x+5, x))
+        (Poly(-x/5+Rational(3,5), x), Poly(x**2/5-6*x/5+2, x), Poly(x+1, x))
 
     f = x**4 + 4*x**3 - x + 1
     g = x**3 - x + 1
@@ -581,6 +581,9 @@ def test_poly_gcdex():
 
     assert s*f + t*g == h
     assert S*g + T*f == H
+
+    assert poly_gcdex(2*x, x**2-16, x) == \
+        (Poly(x/32, x), Poly(-Rational(1,16), x), Poly(1, x))
 
 def test_poly_resultant():
     assert poly_resultant(x**2-1, x**3-x**2+2, x) == 0

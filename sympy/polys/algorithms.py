@@ -526,7 +526,7 @@ def poly_half_gcdex(f, g, *symbols):
         c = a - q*b
         a, b = b, c
 
-    return a, f
+    return a.div_term(f.LC), f.as_monic()
 
 def poly_resultant(f, g, *symbols):
     """Computes resultant of two univariate polynomials.
