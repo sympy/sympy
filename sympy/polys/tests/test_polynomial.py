@@ -853,6 +853,13 @@ def test_subs():
     assert p.subs(x, sin(x)) == \
         t*y**2*sin(x) + y*sin(x) + t**2
 
+    coeffs = [ Symbol('a' + str(i)) for i in [3,2,1,0] ]
+    values = [ 4, 0, 0, 1 ]
+
+    f = Poly(zip(coeffs, [3,2,1,0]), x)
+
+    assert f.subs(dict(zip(coeffs, values))) == Poly(4*x**3+1, x)
+
 def test_unify():
     p = Poly(x**2+x*y, x, y)
     q = Poly(x**2+2*x*y+1, x)
