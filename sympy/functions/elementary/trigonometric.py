@@ -87,22 +87,41 @@ class sin(Function):
                     if pi_coeff.is_integer:
                         return S.Zero
                     elif pi_coeff.is_Rational:
-                        cst_table = {
+                        cst_table_some = {
                             2 : S.One,
                             3 : S.Half*sqrt(3),
                             4 : S.Half*sqrt(2),
                             6 : S.Half,
                         }
 
-                        try:
-                            result = cst_table[pi_coeff.q]
+                        cst_table_more = {
+                            (1, 5) : sqrt((5 - sqrt(5)) / 8),
+                            (2, 5) : sqrt((5 + sqrt(5)) / 8)
+                        }
 
-                            if (pi_coeff.p // pi_coeff.q) % 2 == 1:
-                                return -result
-                            else:
-                                return result
+                        p = pi_coeff.p
+                        q = pi_coeff.q
+
+                        Q, P = p // q, p % q
+
+                        try:
+                            result = cst_table_some[q]
                         except KeyError:
-                            pass
+                            if abs(P) > q // 2:
+                                P = q - P
+
+                            try:
+                                result = cst_table_more[(P, q)]
+                            except KeyError:
+                                if P != p:
+                                    result = cls(C.Rational(P, q)*S.Pi)
+                                else:
+                                    return None
+
+                        if Q % 2 == 1:
+                            return -result
+                        else:
+                            return result
 
                 if arg.is_Mul and arg.args[0].is_negative:
                     return -cls(-arg)
@@ -293,7 +312,7 @@ class cos(Function):
 
                 if pi_coeff is not None:
                     if pi_coeff.is_Rational:
-                        cst_table = {
+                        cst_table_some = {
                             1 : S.One,
                             2 : S.Zero,
                             3 : S.Half,
@@ -301,15 +320,34 @@ class cos(Function):
                             6 : S.Half*sqrt(3),
                         }
 
-                        try:
-                            result = cst_table[pi_coeff.q]
+                        cst_table_more = {
+                            (1, 5) : (sqrt(5) + 1)/4,
+                            (2, 5) : (sqrt(5) - 1)/4
+                        }
 
-                            if (2*pi_coeff.p // pi_coeff.q) % 4 in (1, 2):
-                                return -result
-                            else:
-                                return result
+                        p = pi_coeff.p
+                        q = pi_coeff.q
+
+                        Q, P = 2*p // q, p % q
+
+                        try:
+                            result = cst_table_some[q]
                         except KeyError:
-                            pass
+                            if abs(P) > q // 2:
+                                P = q - P
+
+                            try:
+                                result = cst_table_more[(P, q)]
+                            except KeyError:
+                                if P != p:
+                                    result = cls(C.Rational(P, q)*S.Pi)
+                                else:
+                                    return None
+
+                        if Q % 4 in (1, 2):
+                            return -result
+                        else:
+                            return result
 
                 if arg.is_Mul and arg.args[0].is_negative:
                     return cls(-arg)
@@ -1159,3 +1197,4 @@ class atan2(Function):
 
     def _eval_is_real(self):
         return self.args[0].is_real and self.args[1].is_real
+

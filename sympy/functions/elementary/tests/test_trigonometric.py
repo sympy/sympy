@@ -58,8 +58,23 @@ def test_sin():
     assert sin(7*pi/6) == -S.Half
     assert sin(-5*pi/6) == -S.Half
 
+    assert sin(1*pi/5) == sqrt((5 - sqrt(5)) / 8)
+    assert sin(2*pi/5) == sqrt((5 + sqrt(5)) / 8)
+    assert sin(3*pi/5) == sin(2*pi/5)
+    assert sin(4*pi/5) == sin(1*pi/5)
+    assert sin(6*pi/5) == -sin(1*pi/5)
+    assert sin(8*pi/5) == -sin(2*pi/5)
+
+    assert sin(-1273*pi/5) == -sin(2*pi/5)
+
     assert sin(pi/105) == sin(pi/105)
     assert sin(-pi/105) == -sin(pi/105)
+
+    assert sin(104*pi/105) == sin(pi/105)
+    assert sin(106*pi/105) == -sin(pi/105)
+
+    assert sin(-104*pi/105) == -sin(pi/105)
+    assert sin(-106*pi/105) == sin(pi/105)
 
     assert sin(2 + 3*I) == sin(2 + 3*I)
 
@@ -131,8 +146,23 @@ def test_cos():
     assert cos(7*pi/6) == -S.Half*sqrt(3)
     assert cos(-5*pi/6) == -S.Half*sqrt(3)
 
+    assert cos(1*pi/5) == (sqrt(5) + 1)/4
+    assert cos(2*pi/5) == (sqrt(5) - 1)/4
+    assert cos(3*pi/5) == -cos(2*pi/5)
+    assert cos(4*pi/5) == -cos(1*pi/5)
+    assert cos(6*pi/5) == -cos(1*pi/5)
+    assert cos(8*pi/5) == cos(2*pi/5)
+
+    assert cos(-1273*pi/5) == -cos(2*pi/5)
+
     assert cos(pi/105) == cos(pi/105)
     assert cos(-pi/105) == cos(pi/105)
+
+    assert cos(104*pi/105) == -cos(pi/105)
+    assert cos(106*pi/105) == -cos(pi/105)
+
+    assert cos(-104*pi/105) == -cos(pi/105)
+    assert cos(-106*pi/105) == -cos(pi/105)
 
     assert cos(2 + 3*I) == cos(2 + 3*I)
 
@@ -376,3 +406,4 @@ def test_sincos_rewrite():
     assert sin(y-x) == sin(y-x)
     assert cos(y-x) == cos(y-x)
     assert cos(x-y) == cos(x-y)
+
