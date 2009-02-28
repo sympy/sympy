@@ -222,6 +222,8 @@ class Poly(Basic):
           [9.10] [U-] diff          --> efficient polynomial differentiation
           [9.11] [U-] integrate     --> efficient polynomial integration
 
+          [9.12] [U-] invert        --> computes multiplicative inverse in K[t]
+
        [10] Operations on terms:
 
           [10.1] [U-] add_term --> add a term to a polynomial
@@ -1704,6 +1706,21 @@ class Poly(Basic):
                 poly = new_poly
 
         return self.__class__(poly, *self.symbols, **self.flags)
+
+    def invert(self, modulus):
+        """Compute multiplicative inverse in K[x]. """
+        self, modulus = self.unify_with(modulus)
+
+        if self.is_multivariate:
+            raise PolynomialError("only univariate polynomials can be inverted")
+
+        s, g = sympy.polys.algorithms.poly_half_gcdex(self, modulus)
+
+        if g.is_one:
+            return sympy.polys.algorithms.poly_div(s, modulus)[1]
+        else:
+            raise ZeroDivisionError("polynomial division")
+
 
     def add_term(self, coeff, monom):
         """Efficiently add a single term to 'self'.

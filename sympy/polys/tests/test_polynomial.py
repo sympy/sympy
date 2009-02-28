@@ -896,6 +896,9 @@ def test_diff():
 
     assert g.diff() == g
 
+def test_invert():
+    assert Poly(2*x, x).invert(x**2-16) == Poly(x/32, x)
+
 def test_eq_ne():
     p = Poly(x**2+x*y, x, y)
     q = Poly(x**2+x*y+1, x, y)
