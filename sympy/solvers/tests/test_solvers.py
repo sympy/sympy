@@ -110,7 +110,9 @@ def test_solve_polynomial_cv_2():
 
     x = Symbol('x')
 
-    assert solve( x + 1/x - 1, x) == [Rational(1,2) + I*sqrt(3)/2, Rational(1,2) - I*sqrt(3)/2]
+    assert solve(x + 1/x - 1, x) in \
+        [[ Rational(1,2) + I*sqrt(3)/2, Rational(1,2) - I*sqrt(3)/2],
+         [ Rational(1,2) - I*sqrt(3)/2, Rational(1,2) + I*sqrt(3)/2]]
 
 def test_solve_rational():
     x = Symbol('x')
@@ -225,3 +227,4 @@ def test_tsolve():
 
     assert tsolve(exp(x)+exp(-x)-y, x)== [log(y/2 + Rational(1,2)*(-4 + y**2)**Rational(1,2)),
                                           log(y/2 - Rational(1,2)*(-4 + y**2)**Rational(1,2))]
+
