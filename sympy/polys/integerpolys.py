@@ -411,9 +411,9 @@ def zzx_heu_gcd(f, g, **flags):
 
     B = 2*min(f_norm, g_norm) + 29
 
-    x = max(min(B, 99*sqrt(B)),
+    x = int(max(min(B, 99*sqrt(B)),
             2*min(f_norm // abs(zzx_LC(f)),
-                  g_norm // abs(zzx_LC(g))) + 2)
+                  g_norm // abs(zzx_LC(g))) + 2))
 
     for i in xrange(0, 6):
         length_x = int(floor(log(x, 2)) + 1)
