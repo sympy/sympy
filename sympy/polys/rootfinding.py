@@ -31,7 +31,9 @@ def roots_quadratic(f):
         (-b - d) / (2*a),
     ]
 
-    return [ r.expand() for r in roots ]
+    from sympy.simplify import simplify
+
+    return [ simplify(r) for r in roots ]
 
 def roots_cubic(f):
     """Returns a list of  roots of a cubic polynomial."""
@@ -192,62 +194,67 @@ def roots(f, *symbols, **flags):
     if f.is_multivariate:
         raise MultivariatePolyError(f)
 
-    def _roots(g):
-        """Extract roots from a polynomial. Rational roots are extracted
-        using polys.factortools.poly_factors. For polynomials of degree < 5,
-        explicit root finding formulas are used.
-        """
-        if g.length == 1:
-            if g.is_constant:
+    def _update_dict(result, root, k):
+        if result.has_key(root):
+            result[root] += k
+        else:
+            result[root] = k
+
+    def _try_decompose(f):
+        """Find roots using functional decomposition. """
+        factors = poly_decompose(f)
+        result, g = {}, factors[0]
+
+        for i, h in enumerate(poly_sqf(g)):
+            for r in _try_heuristics(h):
+                _update_dict(result, r, i+1)
+
+        for factor in factors[1:]:
+            last, result = result.copy(), {}
+
+            for last_r, i in last.iteritems():
+                g = factor.sub_term(last_r, (0,))
+
+                for j, h in enumerate(poly_sqf(g)):
+                    for r in _try_heuristics(h):
+                        _update_dict(result, r, i*(j+1))
+
+        return result
+
+    def _try_heuristics(f):
+        """Find roots using formulas and some tricks. """
+        if f.length == 1:
+            if f.is_constant:
                 return []
             else:
-                return [S.Zero] * g.degree
+                return [S(0)] * f.degree
 
-        (k,), g = g.as_reduced()
-
-        if k == 0:
-            zeros = []
-        else:
-            zeros = [S.Zero] * k
-
-        if g.length == 2:
-            zeros += roots_binomial(g)
-        else:
-            x = g.symbols[0]
-
-            for i in [S.NegativeOne, S.One]:
-                if g(i).expand() is S.Zero:
-                    g = poly_div(g, x-i)[0]
-                    zeros.append(i)
-                    break
-
-            n = g.degree
-
-            for i in g.coeffs:
-                if not i.is_Number:
-                    factors = [g]
-                    break
+        if f.length == 2:
+            if f.degree == 1:
+                return roots_linear(f)
             else:
-                if g.coeff().is_Rational:
-                    [factors] = poly_factors(g)[1:]
+                return roots_binomial(f)
 
-            if n > 1 and len(factors) != 1:
-                # extract first rational roots
-                # this decomposes the polynomial into polynomials of
-                # less degree.
-                for factor, k in factors:
-                    zeros += roots(factor, multiple=True) * k
-            else:
-                if n == 1:
-                    zeros += roots_linear(g)
-                elif n == 2:
-                    zeros += roots_quadratic(g)
-                elif n == 3 and flags.get('cubics', True):
-                    zeros += roots_cubic(g)
-                elif n == 4 and flags.get('quartics', True):
-                    zeros += roots_quartic(g)
+        x, result = f.symbols[0], []
 
-        return zeros
+        for i in [S(-1), S(1)]:
+            if f(i).expand().is_zero:
+                f = poly_div(f, x-i)[0]
+                result.append(i)
+                break
+
+        n = f.degree
+
+        if n == 1:
+            result += roots_linear(f)
+        elif n == 2:
+            result += roots_quadratic(f)
+        elif n == 3 and flags.get('cubics', True):
+            result += roots_cubic(f)
+        elif n == 4 and flags.get('quartics', False):
+            result += roots_quartic(f)
+
+        return result
 
     multiple = flags.get('multiple', False)
 
@@ -258,42 +265,40 @@ def roots(f, *symbols, **flags):
             else:
                 return {}
         else:
-            result = { S.Zero : f.degree }
+            result = { S(0) : f.degree }
     else:
         (k,), f = f.as_reduced()
 
         if k == 0:
-            result = {}
+            zeros = {}
         else:
-            result = { S.Zero : k }
+            zeros = { S(0) : k }
 
-        if f.degree == 1:
-            result[roots_linear(f)[0]] = 1
+        result = {}
+
+        if f.length == 2:
+            if f.degree == 1:
+                result[roots_linear(f)[0]] = 1
+            else:
+                for r in roots_binomial(f):
+                    _update_dict(result, r, 1)
+        elif f.degree == 2:
+            for r in roots_quadratic(f):
+                _update_dict(result, r, 1)
         else:
-            factors = poly_decompose(f)
-            zeros, g = {}, factors[0]
+            try:
+                _, factors = poly_factors(f)
 
-            for i, h in enumerate(poly_sqf(g)):
-                for zero in _roots(h):
-                    if zeros.has_key(zero):
-                        zeros[zero] += i+1
-                    else:
-                        zeros[zero] = i+1
+                if len(factors) == 1 and factors[0][1] == 1:
+                    raise CoefficientError
 
-            for factor in factors[1:]:
-                previous, zeros = zeros.copy(), {}
+                for factor, k in factors:
+                    for r in _try_heuristics(factor):
+                        _update_dict(result, r, k)
+            except CoefficientError:
+                result = _try_decompose(f)
 
-                for zero, i in previous.iteritems():
-                    g = factor.sub_term(zero, (0,))
-
-                    for j, h in enumerate(poly_sqf(g)):
-                        for zero in _roots(h):
-                            if zeros.has_key(zero):
-                                zeros[zero] += i*(j+1)
-                            else:
-                                zeros[zero] = i*(j+1)
-
-            result.update(zeros)
+        result.update(zeros)
 
     domain = flags.get('domain', None)
 
