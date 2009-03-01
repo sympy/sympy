@@ -799,8 +799,10 @@ def test_Pow_is_real():
     assert (x**x).is_real   == None
     assert (y**x).is_real   == True
 
-    assert (x**Rational(1,3)).is_real   == None
-    assert (y**Rational(1,3)).is_real   == True
+    assert (x**Rational(1,3)).is_real  == None
+    assert (y**Rational(1,3)).is_real  == True
+
+    assert sqrt(-1 - sqrt(2)).is_real == False
 
 @XFAIL
 def test_Pow_is_bounded():
