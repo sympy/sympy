@@ -3,6 +3,7 @@ from sympy.core import Basic, S, C, Symbol, Wild, Pow, sympify, diff
 
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
+from sympy.integrals.rationaltools import ratint
 from sympy.integrals.risch import heurisch
 from sympy.utilities import threaded
 from sympy.simplify import apart
@@ -288,6 +289,7 @@ class Integral(Basic):
             if g.is_fraction(x):
                 h = self._eval_integral(apart(g, x), x)
                 parts.append(coeff * h)
+                #parts.append(coeff * ratint(g, x))
                 continue
 
             # g(x) = Mul(trig)
@@ -425,3 +427,4 @@ def line_integrate(field, curve, vars):
 
     integral = Integral(Ft, curve.limits).doit()
     return integral
+
