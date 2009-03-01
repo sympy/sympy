@@ -1,7 +1,7 @@
 """General purpose factorization routines. """
 
 from sympy.polys.integerpolys import zzx_degree, zzx_from_dict, zzx_factor, zzx_mul
-from sympy.polys.polynomial import Poly, PolynomialError
+from sympy.polys.polynomial import Poly, PolynomialError, SymbolsError
 from sympy.polys.monomial import monomial_div
 
 from sympy.core import Integer, Rational, Symbol, sympify
