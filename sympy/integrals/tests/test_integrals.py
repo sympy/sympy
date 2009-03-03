@@ -1,4 +1,4 @@
-from sympy import (symbols, integrate, Integral, Derivative, exp, oo, Symbol,
+from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
         Matrix, sympify, sqrt, atan, DiracDelta, Heaviside, raises)
 from sympy.utilities.pytest import XFAIL, skip
@@ -60,8 +60,7 @@ def test_integration():
 def test_multiple_integration():
     assert integrate((x**2)*(y**2), (x,0,1), (y,-1,2)) == Rational(1)
     assert integrate((y**2)*(x**2), x, y) == Rational(1,9)*(x**3)*(y**3)
-    assert integrate(1/(x+3)/(1+x)**3, x) == \
-        -(1 + x)**(-2)/4 - log(3 + x)/8 + 1/(1 + x)/4 + log(1 + x)/8
+    assert integrate(1/(x+3)/(1+x)**3, x) == -S(1)/8*log(3 + x) + S(1)/8*log(1 + x) + x/4/(1 + 2*x + x**2)
 
 def test_issue433():
     assert integrate(exp(-x), (x,0,oo)) == 1

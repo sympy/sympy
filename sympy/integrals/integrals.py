@@ -287,9 +287,7 @@ class Integral(Basic):
             # g(x) = -------
             #        poly(x)
             if g.is_fraction(x):
-                h = self._eval_integral(apart(g, x), x)
-                parts.append(coeff * h)
-                #parts.append(coeff * ratint(g, x))
+                parts.append(coeff * ratint(g, x))
                 continue
 
             # g(x) = Mul(trig)
