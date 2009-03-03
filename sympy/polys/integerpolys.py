@@ -416,11 +416,6 @@ def zzx_heu_gcd(f, g, **flags):
                   g_norm // abs(zzx_LC(g))) + 2))
 
     for i in xrange(0, 6):
-        length_x = int(floor(log(x, 2)) + 1)
-
-        if length_x * max(df, dg) > 4000:
-            raise HeuristicGCDFailed
-
         ff = zzx_eval(f, x)
         gg = zzx_eval(g, x)
 
