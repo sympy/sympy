@@ -1,6 +1,6 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
-        Matrix, sympify, sqrt, atan, DiracDelta, Heaviside, raises)
+        Matrix, sympify, sqrt, atan, asin, acos, DiracDelta, Heaviside, raises)
 from sympy.utilities.pytest import XFAIL, skip
 from sympy.physics.units import m, s
 
@@ -205,6 +205,12 @@ def test_transform():
     assert a.transform(x, 2*x) == Integral(2*exp(-4*x**2), (x, -oo, oo))
     raises(ValueError, "a.transform(x, 1/x)")
     raises(ValueError, "a.transform(x, 1/x)")
+
+def test_issue953():
+    f = S(1)/2*asin(x) + x*(1 - x**2)**(S(1)/2)/2
+
+    assert integrate(cos(asin(x)), x) == f
+    assert integrate(sin(acos(x)), x) == f
 
 def NS(e, n=15, **options):
     return str(sympify(e).evalf(n, **options))
