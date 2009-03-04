@@ -1283,24 +1283,26 @@ class Poly(Basic):
            (2, Poly(6*x**2 + x, x))
 
         """
-        denom = 1
+        denom, coeffs = 1, []
 
         for coeff in self.iter_coeffs():
             if coeff.is_Rational:
+                coeffs.append(coeff)
+
                 if not coeff.is_Integer:
                     denom = ilcm(denom, coeff.q)
+            elif coeff.is_Real and int(coeff) == coeff:
+                coeffs.append(Integer(int(coeff)))
             else:
                 raise CoefficientError("%s is not a rational number" % coeff)
 
         denom = sympify(denom)
 
-        if denom is S.One:
-            return denom, self
-        else:
+        if denom is not S(1):
             coeffs = [ coeff * denom for coeff in self.iter_coeffs() ]
 
-            return denom, self.__class__((coeffs, self.monoms),
-                *self.symbols, **self.flags)
+        return denom, self.__class__((coeffs, self.monoms),
+            *self.symbols, **self.flags)
 
     @property
     def content(self):

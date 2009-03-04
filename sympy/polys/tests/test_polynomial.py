@@ -391,7 +391,11 @@ def test_as_integer():
     assert Poly(x**2 + x/2, x).as_integer() == \
         (Integer(2), Poly(2*x**2 + x, x))
 
+    assert Poly(25.0*x**7 + 5.0*x**2, x).as_integer() == \
+        (Integer(1), Poly(25*x**7 + 5*x**2, x))
+
     raises(CoefficientError, "Poly(x**2 + t*x, x).as_integer()")
+    raises(CoefficientError, "Poly(x**2 + 0.1, x).as_integer()")
 
 def test_poly_add():
     f = -Rational(1,6)*x**2-Rational(5,36)+Rational(17,18)
