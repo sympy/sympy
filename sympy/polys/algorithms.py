@@ -101,6 +101,14 @@ def poly_div(f, g, *symbols):
     else:
         return q[0], r
 
+def poly_quo(f, g, *symbols):
+    """Returns polynomial quotient. """
+    return poly_div(f, g, *symbols)[0]
+
+def poly_rem(f, g, *symbols):
+    """Returns polynomial remainder. """
+    return poly_div(f, g, *symbols)[1]
+
 def poly_pdiv(f, g, *symbols):
     """Univariate polynomial pseudo-division with remainder.
 
@@ -144,6 +152,14 @@ def poly_pdiv(f, g, *symbols):
             r = r.mul_term(coeff)-g.mul_term(*T)
 
     return (q.mul_term(coeff**N), r.mul_term(coeff**N))
+
+def poly_pquo(f, g, *symbols):
+    """Returns polynomial pseudo-quotient. """
+    return poly_pdiv(f, g, *symbols)[0]
+
+def poly_prem(f, g, *symbols):
+    """Returns polynomial pseudo-remainder. """
+    return poly_pdiv(f, g, *symbols)[1]
 
 def poly_groebner(f, *symbols, **flags):
     """Computes reduced Groebner basis for a set of polynomials.

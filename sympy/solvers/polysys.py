@@ -1,6 +1,7 @@
 
 from sympy.polys import Poly, LexPoly, roots, \
-    poly_groebner, SymbolsError, PolynomialError
+    SymbolsError, PolynomialError
+from sympy.polys.algorithms import poly_groebner
 
 from sympy.utilities import any, all
 
@@ -117,3 +118,4 @@ def solve_poly_system(system, *symbols):
         return None
     else:
         return sorted(tuple(s) for s in solutions)
+

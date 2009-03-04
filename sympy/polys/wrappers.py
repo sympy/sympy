@@ -7,25 +7,9 @@ def LexPoly(*args):
 
 from algorithms import poly_div, poly_pdiv, poly_groebner, poly_lcm, poly_gcd, \
     poly_half_gcdex, poly_gcdex, poly_sqf, poly_resultant, poly_subresultants, \
-    poly_decompose
+    poly_decompose, poly_quo, poly_rem, poly_pquo, poly_prem
 
 from rootfinding import poly_root_factors, poly_sturm
-
-def poly_quo(f, g, *symbols):
-    """Wrapper for poly_div() """
-    return poly_div(f, g, *symbols)[0]
-
-def poly_rem(f, g, *symbols):
-    """Wrapper for poly_div() """
-    return poly_div(f, g, *symbols)[1]
-
-def poly_pquo(f, g, *symbols):
-    """Wrapper for poly_pdiv() """
-    return poly_pdiv(f, g, *symbols)[0]
-
-def poly_prem(f, g, *symbols):
-    """Wrapper for poly_pdiv() """
-    return poly_pdiv(f, g, *symbols)[1]
 
 def _conv_args(n, args):
     symbols = args[n:]
