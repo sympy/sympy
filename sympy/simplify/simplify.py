@@ -251,7 +251,6 @@ def together(expr, deep=False):
                     expo = S.One
                     coeff = S.One
 
-
                     if term.is_Pow:
                         if term.exp.is_Rational:
                             term, expo = term.base, term.exp
@@ -262,8 +261,8 @@ def together(expr, deep=False):
                                 term, expo = Pow(term.base, tail), coeff
                         coeff = S.One
                     elif term.func is C.exp:
-                        if term[0].is_Rational:
-                            term, expo = C.E, term[0]
+                        if term.args[0].is_Rational:
+                            term, expo = S.Exp1, term.args[0]
                         elif term[0].is_Mul:
                             coeff, tail = term[0].as_coeff_terms()
                             if coeff.is_Rational:

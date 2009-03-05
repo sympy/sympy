@@ -1,7 +1,7 @@
 from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
         collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
-        solve, nsimplify, GoldenRatio, sqrt, I, sympify, atan, Derivative, S
+        solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative, S
 
 from sympy.utilities.pytest import XFAIL
 
@@ -112,6 +112,11 @@ def test_simplify():
 
     assert simplify(solutions[y]) == \
         (a*i+c*d+f*g-a*f-c*g-d*i)/(a*e*i+b*f*g+c*d*h-a*f*h-b*d*i-c*e*g)
+
+    # bug 1308
+    assert simplify(exp(-1/Rational(2)) + exp(-3/Rational(2))) == \
+        (1 + E)*exp(-3/Rational(2))
+
 
 def test_simplify_fail1():
     x = Symbol('x')
