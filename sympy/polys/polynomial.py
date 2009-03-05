@@ -1078,7 +1078,7 @@ class Poly(Basic):
             N, Q = abs(int(other)), self
 
             while True:
-                N, M = N/2, N
+                N, M = N//2, N
 
                 if M & 1:
                     P *= Q

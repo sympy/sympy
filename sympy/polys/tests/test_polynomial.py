@@ -426,6 +426,14 @@ def test_poly_mul():
 
     assert p.symbols == (x, y, z)
 
+def test_poly_pow():
+    assert Poly(x**3-12*x**2-42, x)**2 == \
+        Poly(x**6 - 24*x**5 + 144*x**4 - 84*x**3 + 1008*x**2 + 1764, x)
+
+    assert Poly(x**3*y-2*x*y**2-3*z+1, x)**2 == \
+        Poly(y**2*x**6 - 4*y**3*x**4 + (2*y - 6*y*z)*x**3 + \
+        4*y**4*x**2 + (-4*y**2 + 12*z*y**2)*x + 1 - 6*z + 9*z**2, x)
+
 def test_poly_div():
     f = Poly(x**3-12*x**2-42, x)
     g = Poly(x**2+x-3, x)
