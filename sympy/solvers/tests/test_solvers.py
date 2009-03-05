@@ -50,7 +50,6 @@ def test_guess_strategy():
 def test_solve_polynomial():
     x, y = map(Symbol, 'xy')
 
-
     assert solve(3*x-2, x) == [Rational(2,3)]
     assert solve(Eq(3*x, 2), x) == [Rational(2,3)]
 
@@ -58,19 +57,11 @@ def test_solve_polynomial():
     assert solve(Eq(x**2, 1), x) in [[-1, 1], [1, -1]]
 
     assert solve( x - y**3, x) == [y**3]
-    assert solve( x - y**3, y) in [
-    [
-            (-x**Rational(1,3))/2 + I*sqrt(3)*x**Rational(1,3)/2,
-            x**Rational(1,3),
-            (-x**Rational(1,3))/2 - I*sqrt(3)*x**Rational(1,3)/2
-    ],
-    [
+    assert sorted(solve( x - y**3, y)) == sorted([
         (-x**Rational(1,3))/2 + I*sqrt(3)*x**Rational(1,3)/2,
+        x**Rational(1,3),
         (-x**Rational(1,3))/2 - I*sqrt(3)*x**Rational(1,3)/2,
-        x**Rational(1,3)
-    ]
-    ]
-
+    ])
 
     a11,a12,a21,a22,b1,b2 = symbols('a11','a12','a21','a22','b1','b2')
 
