@@ -101,6 +101,14 @@ def poly_div(f, g, *symbols):
     else:
         return q[0], r
 
+def poly_quo(f, g, *symbols):
+    """Returns polynomial quotient. """
+    return poly_div(f, g, *symbols)[0]
+
+def poly_rem(f, g, *symbols):
+    """Returns polynomial remainder. """
+    return poly_div(f, g, *symbols)[1]
+
 def poly_pdiv(f, g, *symbols):
     """Univariate polynomial pseudo-division with remainder.
 
@@ -144,6 +152,14 @@ def poly_pdiv(f, g, *symbols):
             r = r.mul_term(coeff)-g.mul_term(*T)
 
     return (q.mul_term(coeff**N), r.mul_term(coeff**N))
+
+def poly_pquo(f, g, *symbols):
+    """Returns polynomial pseudo-quotient. """
+    return poly_pdiv(f, g, *symbols)[0]
+
+def poly_prem(f, g, *symbols):
+    """Returns polynomial pseudo-remainder. """
+    return poly_pdiv(f, g, *symbols)[1]
 
 def poly_groebner(f, *symbols, **flags):
     """Computes reduced Groebner basis for a set of polynomials.
@@ -526,7 +542,7 @@ def poly_half_gcdex(f, g, *symbols):
         c = a - q*b
         a, b = b, c
 
-    return a, f
+    return a.div_term(f.LC), f.as_monic()
 
 def poly_resultant(f, g, *symbols):
     """Computes resultant of two univariate polynomials.
@@ -742,6 +758,8 @@ def poly_sqf(f, *symbols):
     p = poly_div(f, g)[0]
     q = poly_div(h, g)[0]
 
+    p, q = poly_reduce(p, q)
+
     while True:
         h = q - p.diff()
 
@@ -754,6 +772,8 @@ def poly_sqf(f, *symbols):
 
         p = poly_div(p, g)[0]
         q = poly_div(h, g)[0]
+
+        p, q = poly_reduce(p, q)
 
     sqf.append(p)
 
@@ -882,3 +902,39 @@ def poly_decompose(f, *symbols):
             break
 
     return [f] + F
+
+def poly_reduce(f, g, *symbols):
+    """Removes common content from a pair of polynomials.
+
+       >>> from sympy import *
+       >>> x = Symbol('x')
+
+       >>> f = Poly(2930944*x**6 + 2198208*x**4 + 549552*x**2 + 45796, x)
+       >>> g = Poly(17585664*x**5 + 8792832*x**3 + 1099104*x, x)
+
+       >>> F, G = poly_reduce(f, g)
+
+       >>> F
+       Poly(64*x**6 + 48*x**4 + 12*x**2 + 1, x)
+       >>> G
+       Poly(384*x**5 + 192*x**3 + 24*x, x)
+
+    """
+    if not isinstance(f, Poly):
+        f = Poly(f, *symbols)
+    elif symbols:
+        raise SymbolsError("Redundant symbols were given")
+
+    f, g = f.unify_with(g)
+
+    fc = int(f.content)
+    gc = int(g.content)
+
+    cont = igcd(fc, gc)
+
+    if cont != 1:
+        f = f.div_term(cont)
+        g = g.div_term(cont)
+
+    return f, g
+

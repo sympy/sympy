@@ -960,13 +960,14 @@ class Integer(Rational):
                         if exp.q % i == 0:
                             x, xexact = integer_nthroot(abs(base.p), i)
                             if xexact:
-                                result = Integer(x)**(e * i)
+                                result = Integer(x)**(exp * i)
                                 break
                     # Try to get some part of the base out, if exponent > 1
                     if exp.p > exp.q:
                         i = exp.p // exp.q
                         r = exp.p % exp.q
-                        result = base**i * b**Rational(r, exp.q)
+                        result = base**i * base**Rational(r, exp.q)
+
                     return
 
                 dict = base.factors()
@@ -1611,3 +1612,4 @@ Basic.singleton['zoo'] = ComplexInfinity
 Basic.singleton['GoldenRatio'] = GoldenRatio
 Basic.singleton['EulerGamma'] = EulerGamma
 Basic.singleton['Catalan'] = Catalan
+

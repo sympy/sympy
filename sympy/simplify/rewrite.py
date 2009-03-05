@@ -15,8 +15,9 @@ from sympy.utilities import threaded
 from sympy.simplify import together
 from sympy.functions import exp
 
-from sympy.polys import Poly, RootSum, poly_quo, poly_rem, \
-    poly_sqf, poly_gcd, poly_half_gcdex, div, quo, gcd
+from sympy.polys import Poly, RootSum, div, quo, gcd
+from sympy.polys.algorithms import poly_quo, poly_rem, \
+    poly_sqf, poly_gcd, poly_half_gcdex
 
 @threaded()
 def cancel(f, *symbols):
@@ -290,3 +291,4 @@ def apart(f, z, **flags):
             partial += RootSum(Lambda(a, expr), D, **flags)
 
     return partial
+

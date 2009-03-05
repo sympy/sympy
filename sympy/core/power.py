@@ -177,10 +177,12 @@ class Pow(Basic):
         if c1 and c2:
             if self.base.is_positive:
                 return True
-
             else:   # negative or zero (or positive)
                 if self.exp.is_integer:
                     return True
+                elif self.base.is_negative:
+                    if self.exp.is_Rational:
+                        return False
 
     def _eval_is_odd(self):
         if not (self.base.is_integer and self.exp.is_nonnegative): return
@@ -654,3 +656,4 @@ del _
 import numbers as _
 _.Pow =     Pow
 del _
+

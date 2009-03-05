@@ -222,6 +222,8 @@ class Poly(Basic):
           [9.10] [U-] diff          --> efficient polynomial differentiation
           [9.11] [U-] integrate     --> efficient polynomial integration
 
+          [9.12] [U-] invert        --> computes multiplicative inverse in K[t]
+
        [10] Operations on terms:
 
           [10.1] [U-] add_term --> add a term to a polynomial
@@ -1281,24 +1283,26 @@ class Poly(Basic):
            (2, Poly(6*x**2 + x, x))
 
         """
-        denom = 1
+        denom, coeffs = 1, []
 
         for coeff in self.iter_coeffs():
             if coeff.is_Rational:
+                coeffs.append(coeff)
+
                 if not coeff.is_Integer:
                     denom = ilcm(denom, coeff.q)
+            elif coeff.is_Real and int(coeff) == coeff:
+                coeffs.append(Integer(int(coeff)))
             else:
                 raise CoefficientError("%s is not a rational number" % coeff)
 
         denom = sympify(denom)
 
-        if denom is S.One:
-            return denom, self
-        else:
+        if denom is not S(1):
             coeffs = [ coeff * denom for coeff in self.iter_coeffs() ]
 
-            return denom, self.__class__((coeffs, self.monoms),
-                *self.symbols, **self.flags)
+        return denom, self.__class__((coeffs, self.monoms),
+            *self.symbols, **self.flags)
 
     @property
     def content(self):
@@ -1705,6 +1709,21 @@ class Poly(Basic):
 
         return self.__class__(poly, *self.symbols, **self.flags)
 
+    def invert(self, modulus):
+        """Compute multiplicative inverse in K[x]. """
+        self, modulus = self.unify_with(modulus)
+
+        if self.is_multivariate:
+            raise PolynomialError("only univariate polynomials can be inverted")
+
+        s, g = sympy.polys.algorithms.poly_half_gcdex(self, modulus)
+
+        if g.is_one:
+            return sympy.polys.algorithms.poly_div(s, modulus)[1]
+        else:
+            raise ZeroDivisionError("polynomial division")
+
+
     def add_term(self, coeff, monom):
         """Efficiently add a single term to 'self'.
 
@@ -2088,7 +2107,7 @@ class Poly(Basic):
                     return self.evaluate((old, new))
         elif not new.has_any_symbols(*symbols):
             coeffs = [ sympify(coeff)._eval_subs(old, new) for coeff in self.coeffs ]
-            return self.__class__((coeffs, self.monoms), *symbols, **self.flags)
+            return self.__class__(zip(coeffs, self.monoms), *symbols, **self.flags)
 
         result = self.as_basic()._eval_subs(old, new)
 

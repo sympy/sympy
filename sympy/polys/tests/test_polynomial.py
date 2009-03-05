@@ -6,7 +6,7 @@ from sympy.polys.monomial import monomial_lex_cmp, monomial_grlex_cmp, \
 
 from sympy.polys.algorithms import poly_groebner, poly_subresultants,    \
         poly_resultant, poly_half_gcdex, poly_gcdex, poly_gcd, poly_lcm, \
-        poly_div, poly_pdiv, poly_decompose, poly_sqf
+        poly_div, poly_pdiv, poly_decompose, poly_sqf, poly_reduce
 
 from sympy.polys.rootfinding import poly_root_factors, roots_linear,  \
         roots_quadratic, roots_cubic, roots_quartic, roots_binomial, \
@@ -391,7 +391,11 @@ def test_as_integer():
     assert Poly(x**2 + x/2, x).as_integer() == \
         (Integer(2), Poly(2*x**2 + x, x))
 
+    assert Poly(25.0*x**7 + 5.0*x**2, x).as_integer() == \
+        (Integer(1), Poly(25*x**7 + 5*x**2, x))
+
     raises(CoefficientError, "Poly(x**2 + t*x, x).as_integer()")
+    raises(CoefficientError, "Poly(x**2 + 0.1, x).as_integer()")
 
 def test_poly_add():
     f = -Rational(1,6)*x**2-Rational(5,36)+Rational(17,18)
@@ -564,14 +568,14 @@ def test_poly_gcdex():
     g = x**3 + x**2 - 4*x - 4
 
     assert poly_half_gcdex(f, g, x) == \
-        (Poly(-x+3, x), Poly(5*x+5, x))
+        (Poly(-x/5+Rational(3,5), x), Poly(x+1, x))
     assert poly_half_gcdex(Poly(f, x), Poly(g, x)) == \
-        (Poly(-x+3, x), Poly(5*x+5, x))
+        (Poly(-x/5+Rational(3,5), x), Poly(x+1, x))
 
     assert poly_gcdex(f, g, x) == \
-        (Poly(-x+3, x), Poly(x**2-6*x+10, x), Poly(5*x+5, x))
+        (Poly(-x/5+Rational(3,5), x), Poly(x**2/5-6*x/5+2, x), Poly(x+1, x))
     assert poly_gcdex(Poly(f, x), Poly(g, x)) == \
-        (Poly(-x+3, x), Poly(x**2-6*x+10, x), Poly(5*x+5, x))
+        (Poly(-x/5+Rational(3,5), x), Poly(x**2/5-6*x/5+2, x), Poly(x+1, x))
 
     f = x**4 + 4*x**3 - x + 1
     g = x**3 - x + 1
@@ -581,6 +585,9 @@ def test_poly_gcdex():
 
     assert s*f + t*g == h
     assert S*g + T*f == H
+
+    assert poly_gcdex(2*x, x**2-16, x) == \
+        (Poly(x/32, x), Poly(-Rational(1,16), x), Poly(1, x))
 
 def test_poly_resultant():
     assert poly_resultant(x**2-1, x**3-x**2+2, x) == 0
@@ -753,6 +760,18 @@ def test_squarefree():
     assert poly_sqf(x**8+6*x**6+12*x**4+8*x**2, x) == \
         [Poly(1, x), Poly(x, x), Poly(x**2+2, x)]
 
+    # Bronstein, Symbolic Integration, pp. 52
+
+    A = Poly(x**4 - 3*x**2 + 6, x)
+    D = Poly(x**6 - 5*x**4 + 5*x**2 + 4, x)
+
+    f, g = D, A - D.diff(x)*t
+
+    R = poly_subresultants(f, g)
+    S = poly_sqf(Poly(R[-1], t))
+
+    assert S == [Poly(45796, t), Poly(1, t), Poly(4*t**2 + 1, t)]
+
 def test_decompose():
     assert poly_decompose(1, x) == [Poly(1, x)]
     assert poly_decompose(x, x) == [Poly(x, x)]
@@ -770,6 +789,15 @@ def test_decompose():
     assert poly_decompose(f.subs(x, g), x) == [Poly(f, x), Poly(g, x)]
     assert poly_decompose(2*f.subs(x, g), x) == [Poly(2*f, x), Poly(g, x)]
     assert poly_decompose(f.subs(x, g-2), x) == [Poly(f.subs(x, x-2), x), Poly(g, x)]
+
+def test_reduce():
+    f = Poly(2930944*x**6 + 2198208*x**4 + 549552*x**2 + 45796, x)
+    g = Poly(17585664*x**5 + 8792832*x**3 + 1099104*x, x)
+
+    F, G = poly_reduce(f, g)
+
+    assert F == Poly(64*x**6 + 48*x**4 + 12*x**2 + 1, x)
+    assert G == Poly(384*x**5 + 192*x**3 + 24*x, x)
 
 def test_evaluate():
     f = x**2*y*z + 2*x*y*z**3 + 3*x*y + 4*y*z
@@ -832,6 +860,13 @@ def test_subs():
     assert p.subs(x, sin(x)) == \
         t*y**2*sin(x) + y*sin(x) + t**2
 
+    coeffs = [ Symbol('a' + str(i)) for i in [3,2,1,0] ]
+    values = [ 4, 0, 0, 1 ]
+
+    f = Poly(zip(coeffs, [3,2,1,0]), x)
+
+    assert f.subs(dict(zip(coeffs, values))) == Poly(4*x**3+1, x)
+
 def test_unify():
     p = Poly(x**2+x*y, x, y)
     q = Poly(x**2+2*x*y+1, x)
@@ -864,6 +899,9 @@ def test_diff():
     assert g.diff(b) == Poly(x*y, x, y)
 
     assert g.diff() == g
+
+def test_invert():
+    assert Poly(2*x, x).invert(x**2-16) == Poly(x/32, x)
 
 def test_eq_ne():
     p = Poly(x**2+x*y, x, y)
@@ -915,6 +953,9 @@ def test_sturm():
          Poly(Rational(-3303,100), x)]
 
 def test_number_of_real_roots():
+    assert number_of_real_roots(0, x) == 0
+    assert number_of_real_roots(7, x) == 0
+
     f = Poly(x - 1, x)
 
     assert number_of_real_roots(f) == 1
@@ -1083,14 +1124,14 @@ def test_roots():
 
     f = (x**2+2*x+3).subs(x, 2*x**2 + 3*x).subs(x, 5*x-4)
 
-    r1_2, r2_25, r13_20, r1_100 = [ Rational(*r) \
-        for r in ((1,2), (2,25), (13,20), (1,100)) ]
+    r1_2, r13_20, r1_100 = [ Rational(*r) \
+        for r in ((1,2), (13,20), (1,100)) ]
 
     assert roots(f, x) == {
-        r13_20 + r1_2*(r1_100 - r2_25*I*2**r1_2)**r1_2: 1,
-        r13_20 - r1_2*(r1_100 - r2_25*I*2**r1_2)**r1_2: 1,
-        r13_20 + r1_2*(r1_100 + r2_25*I*2**r1_2)**r1_2: 1,
-        r13_20 - r1_2*(r1_100 + r2_25*I*2**r1_2)**r1_2: 1,
+        r13_20 + r1_100*(25 - 200*I*2**r1_2)**r1_2: 1,
+        r13_20 - r1_100*(25 - 200*I*2**r1_2)**r1_2: 1,
+        r13_20 + r1_100*(25 + 200*I*2**r1_2)**r1_2: 1,
+        r13_20 - r1_100*(25 + 200*I*2**r1_2)**r1_2: 1,
     }
 
     p = Poly(z**3 + (-2 - y)*z**2 + (1 + 2*y - 2*x**2)*z - y + 2*x**2, z)

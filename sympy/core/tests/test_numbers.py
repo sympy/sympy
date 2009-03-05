@@ -189,6 +189,9 @@ def test_powers():
     assert sqrt((3-sqrt(pi))**2) == 3 - sqrt(pi)
     assert sqrt(Rational(1,2)) == Rational(1,2) * sqrt(2)
 
+    assert (2**64+1)**Rational(4, 3)
+    assert (2**64+1)**Rational(17,25)
+
     # Test that this is fast
     assert integer_nthroot(2,10**10) == (1, False)
 
@@ -328,3 +331,4 @@ def test_IntegerInteger():
     b = Integer(a)
 
     assert a == b
+
