@@ -263,8 +263,8 @@ def together(expr, deep=False):
                     elif term.func is C.exp:
                         if term.args[0].is_Rational:
                             term, expo = S.Exp1, term.args[0]
-                        elif term[0].is_Mul:
-                            coeff, tail = term[0].as_coeff_terms()
+                        elif term.args[0].is_Mul:
+                            coeff, tail = term.args[0].as_coeff_terms()
                             if coeff.is_Rational:
                                 tail = C.Mul(*tail)
                                 term, expo = C.exp(tail), coeff
@@ -297,7 +297,7 @@ def together(expr, deep=False):
                 basis[term] = (total, total-maxi)
 
                 if term.func is C.exp:
-                    denominator.append(C.exp(maxi*term[:]))
+                    denominator.append(C.exp(maxi*term.args[0]))
                 else:
                     if maxi is S.One:
                         denominator.append(term)
@@ -325,7 +325,7 @@ def together(expr, deep=False):
                         expo = total-sub
 
                     if term.func is C.exp:
-                        expr.append(C.exp(expo*term[:]))
+                        expr.append(C.exp(expo*term.args[0]))
                     else:
                         if expo is S.One:
                             expr.append(term)
