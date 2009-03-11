@@ -1,6 +1,6 @@
 from sympy import symbols, Rational, Symbol, Integral, log, diff, sin, exp, \
         Function, factorial, floor, ceiling, abs, re, im, conjugate, gamma, \
-        Order, Piecewise
+        Order, Piecewise, Matrix
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL
@@ -136,3 +136,9 @@ def test_latex_Piecewise():
     p = Piecewise((x,x<1),(x**2,True))
     assert latex(p) == "$\\left\\{\\begin{array}{cl} x & for x < 1 \\\\x^{2} &" \
                        " \\textrm{otherwise} \\end{array}\\right.$"
+
+def test_latex_Matrix():
+    M = Matrix([[1+x, y],[y, x-1]])
+    print latex(M)
+    assert latex(M) == '$\\left(\\begin{smallmatrix}1 + x & y\\\\y & -1 + '\
+                       'x\\end{smallmatrix}\\right)$'

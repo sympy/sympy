@@ -476,7 +476,7 @@ class LatexPrinter(Printer):
         for line in range(expr.lines): # horrible, should be 'rows'
             lines.append(" & ".join([ self._print(i) for i in expr[line,:] ]))
 
-        if self._inline:
+        if self._settings['inline']:
             tex = r"\left(\begin{smallmatrix}%s\end{smallmatrix}\right)"
         else:
             tex = r"\begin{pmatrix}%s\end{pmatrix}"
