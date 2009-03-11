@@ -1,6 +1,7 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
-        Matrix, sympify, sqrt, atan, asin, acos, DiracDelta, Heaviside, raises)
+        Matrix, sympify, sqrt, atan, asin, acos, atan, DiracDelta, Heaviside,
+        raises)
 from sympy.utilities.pytest import XFAIL, skip
 from sympy.physics.units import m, s
 
@@ -155,6 +156,10 @@ def test_rational_functions():
         (Rational(1,6) - I*3**half/6)*log(half - x - I*3**half/2) - \
         (Rational(1,6) + I*3**half/6)*log(half - x + I*3**half/2)
 
+def test_issue580():
+    # definite integration of rational functions gives wrong answers
+    assert NS(Integral(1/(x**2-8*x+17), (x, 2, 4))) == '1.10714871779409'
+
 def test_issue587(): # remove this when fresnel itegrals are implemented
     assert integrate(sin(x**2), x) == Integral(sin(x**2), x)
 
@@ -168,6 +173,9 @@ def test_issue641():
     f=4*log(x)-2*log(x)**2
     fid=diff(integrate(f,x),x)
     assert abs(f.subs(x,42).evalf() - fid.subs(x,42).evalf()) < 1e-10
+
+def test_issue689():
+    assert integrate(1/(1+x**2), x) == atan(x)
 
 def test_issue853():
     f = sin(x)
