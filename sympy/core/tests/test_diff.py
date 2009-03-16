@@ -1,4 +1,4 @@
-from sympy import Symbol, Rational, cos, sin, tan, cot, exp, log
+from sympy import Symbol, Rational, cos, sin, tan, cot, exp, log, Function
 
 def test_diff():
     a = Symbol("a")
@@ -62,3 +62,10 @@ def test_speed():
     # this should return in 0.0s. If it takes forever, it's wrong.
     x = Symbol("x")
     assert x.diff(x, 10**8) == 0
+
+def test_deriv_noncommutative():
+    A = Symbol("A", commutative=False)
+    f = Function("f")
+    x = Symbol("x")
+    assert A*f(x)*A == f(x)*A**2
+    assert A*f(x).diff(x)*A == f(x).diff(x) * A**2

@@ -617,6 +617,7 @@ def solve_ODE_second_order(eq, f):
     #other cases of the second order odes will be implemented here
 
     #special equations, that we know how to solve
+    a = Wild('a')
     t = x*C.exp(f(x))
     tt = a*t.diff(x, x)/t
     r = eq.match(tt.expand())

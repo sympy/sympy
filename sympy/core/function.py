@@ -474,8 +474,15 @@ class Derivative(Basic):
         expr = sympify(expr)
         if not symbols: return expr
         symbols = Derivative._symbolgen(*symbols)
-        if not assumptions.get("evaluate", False) and not isinstance(expr, Derivative):
-            obj = Basic.__new__(cls, expr, *symbols)
+        if expr.is_commutative:
+            assumptions["commutative"] = True
+        if assumptions.has_key("evaluate"):
+            evaluate = assumptions["evaluate"]
+            del assumptions["evaluate"]
+        else:
+            evaluate = False
+        if not evaluate and not isinstance(expr, Derivative):
+            obj = Basic.__new__(cls, expr, *symbols, **assumptions)
             return obj
         unevaluated_symbols = []
         for s in symbols:
@@ -494,7 +501,7 @@ class Derivative(Basic):
 
         if not unevaluated_symbols:
             return expr
-        return Basic.__new__(cls, expr, *unevaluated_symbols)
+        return Basic.__new__(cls, expr, *unevaluated_symbols, **assumptions)
 
     def _eval_derivative(self, s):
         #print

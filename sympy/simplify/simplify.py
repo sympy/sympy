@@ -454,8 +454,9 @@ def collect(expr, syms, evaluate=True, exact=False):
 
        Or you can even match both derivative order and exponent at time:
 
-       >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
-       (a + b)*D(f(x), x, x)**2
+       >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x)) == \
+           (a + b)*D(D(f,x),x)**2
+       True
 
 
     Notes

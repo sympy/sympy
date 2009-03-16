@@ -161,12 +161,14 @@ def test_derivative1():
     assert (fd+1).match(p+1) == {p: fd}
     assert (fd).match(fd) == {}
     assert (3*fd).match(p*fd) != None
+    p = Wild("p", exclude=[x])
+    q = Wild("q", exclude=[x])
     assert (3*fd-1).match(p*fd + q) == {p: 3, q: -1}
 
 def test_derivative_bug1():
     f = Function("f")
     x = Symbol("x")
-    a = Wild("a", exclude=[f])
+    a = Wild("a", exclude=[f, x])
     b = Wild("b", exclude=[f])
     pattern = a * Derivative(f(x), x, x) + b
     expr = Derivative(f(x), x)+x**2
@@ -177,7 +179,7 @@ def test_derivative_bug1():
 def test_derivative2():
     f = Function("f")
     x = Symbol("x")
-    a = Wild("a", exclude=[f])
+    a = Wild("a", exclude=[f, x])
     b = Wild("b", exclude=[f])
     e = Derivative(f(x), x)
     assert e.match(Derivative(f(x), x)) == {}
