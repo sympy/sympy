@@ -139,6 +139,5 @@ def test_latex_Piecewise():
 
 def test_latex_Matrix():
     M = Matrix([[1+x, y],[y, x-1]])
-    print latex(M)
     assert latex(M) == '$\\left(\\begin{smallmatrix}1 + x & y\\\\y & -1 + '\
                        'x\\end{smallmatrix}\\right)$'
