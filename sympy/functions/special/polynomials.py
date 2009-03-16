@@ -133,7 +133,7 @@ class chebyshevt_root(Function):
     ========
 
     >>> chebyshevt_root(3, 2)
-    -1/2*3**(1/2)
+    -3**(1/2)/2
     >>> chebyshevt(3, chebyshevt_root(3, 2))
     0
     """
@@ -160,7 +160,7 @@ class chebyshevu_root(Function):
     ========
 
         >>> chebyshevu_root(3, 2)
-        -1/2*2**(1/2)
+        -2**(1/2)/2
         >>> chebyshevu(3, chebyshevu_root(3, 2))
         0
     """

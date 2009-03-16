@@ -67,7 +67,7 @@ class Normal(ContinuousProbability):
         >>> N.probability(-oo, oo)
         1
         >>> N.probability(-1, 3)
-        erf(1/2*2**(1/2))
+        erf(2**(1/2)/2)
         >>> _.evalf()
         0.682689492137086
 
@@ -224,7 +224,7 @@ class PDF(ContinuousProbability):
 
         >>> exponential = PDF(exp(-x/a)/a, (x,0,oo))
         >>> exponential.pdf(x)
-        1/a*exp(-x/a)
+        exp(-x/a)/a
         >>> exponential.cdf(x)
         1 - exp(-x/a)
         >>> exponential.mean
@@ -260,7 +260,7 @@ class PDF(ContinuousProbability):
 
             >>> exponential = PDF(exp(-x/a), (x,0,oo))
             >>> exponential.normalize().pdf(x)
-            1/a*exp(-x/a)
+            exp(-x/a)/a
         """
 
         norm = self.probability(*self.domain)

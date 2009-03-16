@@ -108,7 +108,7 @@ class Limit(Basic):
     >>> from sympy import limit, sin, Symbol
     >>> x = Symbol('x')
     >>> Limit(sin(x)/x, x, 0)
-    Limit(1/x*sin(x), x, 0)
+    Limit(sin(x)/x, x, 0)
     >>> Limit(1/x, x, 0, dir="-")
     Limit(1/x, x, 0, dir='-')
     """

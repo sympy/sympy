@@ -36,7 +36,7 @@ def test_Add():
     assert str(x+1) == "1 + x"
     assert str(x+x**2) == "x + x**2"
     assert str(5+x+y+x*y+x**2+y**2) == "5 + x + y + x*y + x**2 + y**2"
-    assert str(1+x+x**2/2+x**3/3) == "1 + x + 1/2*x**2 + 1/3*x**3"
+    assert str(1+x+x**2/2+x**3/3) == "1 + x + x**2/2 + x**3/3"
     assert str(2*x-7*x**2 + 2 + 3*y) == "2 + 2*x + 3*y - 7*x**2"
     assert str(x-y) == "x - y"
     assert str(2-x) == "2 - x"
@@ -44,7 +44,7 @@ def test_Add():
     assert str(x-y-z-w) == "x - w - y - z"
     assert str(x-z*y**2*z*w) == "x - w*y**2*z**2"
     assert str(x-1*y*x*y) == "x - x*y**2"
-    assert str(sin(x).series(x, 0, 15)) == "x - 1/6*x**3 + 1/120*x**5 - 1/5040*x**7 + 1/362880*x**9 - 1/39916800*x**11 + 1/6227020800*x**13 + O(x**15)"
+    assert str(sin(x).series(x, 0, 15)) == "x - x**3/6 + x**5/120 - x**7/5040 + x**9/362880 - x**11/39916800 + x**13/6227020800 + O(x**15)"
 
 def test_Catalan():
     assert str(Catalan) == "Catalan"
@@ -55,7 +55,7 @@ def test_ComplexInfinity():
 def test_Derivative():
     assert str(Derivative(x, y)) == "D(x, y)"
     assert str(Derivative(x**2, x, evaluate=False)) == "D(x**2, x)"
-    assert str(Derivative(x**2/y, x, y, evaluate=False)) == "D(1/y*x**2, x, y)"
+    assert str(Derivative(x**2/y, x, y, evaluate=False)) == "D(x**2/y, x, y)"
 
 def test_dict():
     assert str({1: 1+x}) == spr({1: 1+x}) == "{1: 1 + x}"
@@ -119,9 +119,9 @@ def test_Lambda():
     assert str(Lambda(d, d**2)) == "Lambda(_d, _d**2)"
 
 def test_Limit():
-    assert str(Limit(sin(x)/x, x, y)) == "Limit(1/x*sin(x), x, y)"
+    assert str(Limit(sin(x)/x, x, y)) == "Limit(sin(x)/x, x, y)"
     assert str(Limit(1/x, x, 0)) == "Limit(1/x, x, 0)"
-    assert str(Limit(sin(x)/x, x, y, dir="-")) == "Limit(1/x*sin(x), x, y, dir='-')"
+    assert str(Limit(sin(x)/x, x, y, dir="-")) == "Limit(sin(x)/x, x, y, dir='-')"
 
 def test_list():
     assert str([x]) == spr([x]) == "[x]"

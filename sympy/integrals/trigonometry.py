@@ -32,7 +32,7 @@ def trigintegrate(f, x):
        >>> x = Symbol('x')
 
        >>> trigintegrate(sin(x)*cos(x), x)
-       1/2*sin(x)**2
+       sin(x)**2/2
 
        >>> trigintegrate(sin(x)**2, x)
        x/2 - cos(x)*sin(x)/2

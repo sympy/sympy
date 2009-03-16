@@ -698,7 +698,7 @@ def tsolve(eq, sym):
         [(-5*log(3) + log(4))/(2*log(3))]
 
         >>> tsolve(log(x) + 2*x, x)
-        [1/2*LambertW(2)]
+        [LambertW(2)/2]
 
     """
     if patterns is None:

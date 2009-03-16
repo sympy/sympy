@@ -186,7 +186,7 @@ class StrPrinter(Printer):
             return sign + '*'.join(a_str)
         elif len(b)==1:
             if len(a)==1 and not (a[0].is_Atom or a[0].is_Add):
-                return sign + "1/%s*"%b_str[0] + '*'.join(a_str)
+                return sign + "%s/"%a_str[0] + '*'.join(b_str)
             else:
                 return sign + '*'.join(a_str) + "/%s"%b_str[0]
         else:

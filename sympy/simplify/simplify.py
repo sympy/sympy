@@ -877,7 +877,7 @@ def radsimp(expr):
     =========
         >>> from sympy import *
         >>> radsimp(1/(2+sqrt(2)))
-        1 - 1/2*2**(1/2)
+        1 - 2**(1/2)/2
         >>> x,y = map(Symbol, 'xy')
         >>> e = ( (2+2*sqrt(2))*x+(2+sqrt(8))*y )/( 2+sqrt(2) )
         >>> radsimp(e)
@@ -1080,7 +1080,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False):
         >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
         -2 + 2*GoldenRatio
         >>> nsimplify((1/(exp(3*pi*I/5)+1)))
-        1/2 - I*(1/4 + 1/10*5**(1/2))**(1/2)
+        1/2 - I*(1/4 + 5**(1/2)/10)**(1/2)
         >>> nsimplify(I**I, [pi])
         exp(-pi/2)
         >>> nsimplify(pi, tolerance=0.01)

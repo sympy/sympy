@@ -77,12 +77,12 @@ class DiracDelta(Function):
            >>> x, y = symbols('xy')
 
            >>> DiracDelta(x*y).simplify(x)
-           1/abs(y)*DiracDelta(x)
+           DiracDelta(x)/abs(y)
            >>> DiracDelta(x*y).simplify(y)
-           1/abs(x)*DiracDelta(y)
+           DiracDelta(y)/abs(x)
 
            >>> DiracDelta(x**2+x-2).simplify(x)
-           1/3*DiracDelta(-1 + x) + 1/3*DiracDelta(2 + x)
+           DiracDelta(-1 + x)/3 + DiracDelta(2 + x)/3
 
         """
         if not self.args[0].has(x) or (len(self.args)>1 and self.args[1] != 0 ):

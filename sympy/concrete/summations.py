@@ -109,9 +109,9 @@ class Sum(Basic):
         Euler-Maclaurin formula becomes exact (and e = 0 is returned):
 
             >>> Sum(k, (k, 2, b)).euler_maclaurin()
-            (-1 + b/2 + 1/2*b**2, 0)
+            (-1 + b/2 + b**2/2, 0)
             >>> Sum(k, (k, 2, b)).doit()
-            -1 + b/2 + 1/2*b**2
+            -1 + b/2 + b**2/2
 
         With a nonzero eps specified, the summation is ended
         as soon as the remainder term is less than the epsilon.
