@@ -587,7 +587,7 @@ def solve_ODE_first_order(eq, f):
 def solve_ODE_second_order(eq, f):
     """
     solves many kinds of second order odes, different methods are used
-    depending on the form of the given equation. Now the constanst
+    depending on the form of the given equation. So far the constants
     coefficients case and a special case are implemented.
     """
     x = f.args[0]
