@@ -31,6 +31,7 @@ access any SymPy module, or use this contens:
    modules/statistics.txt
    modules/concrete.txt
    modules/solvers.txt
+   modules/utilities/index.txt
 
 Contributions to docs
 ---------------------

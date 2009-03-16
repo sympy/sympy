@@ -1,6 +1,6 @@
 from sympy import symbols
 from sympy.utilities.iterables import postorder_traversal, \
-    preorder_traversal, flatten, subsets
+    preorder_traversal, flatten, subsets, variations
 
 
 w,x,y,z= symbols('wxyz')
@@ -31,3 +31,7 @@ def test_subsets():
     assert list(subsets([1, 2, 3], 2)) == [[1, 2], [1,3], [2, 3]]
     assert list(subsets([1, 2, 3], 3)) == [[1, 2, 3]]
 
+def test_variations():
+    assert variations([1,2,3], 2) == [[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]
+    assert variations([1,2,3], 2, True) == [[1, 1], [1, 2], [1, 3], [2, 1], [2, 2], [2, 3], \
+                        [3,1], [3,2], [3,3]]

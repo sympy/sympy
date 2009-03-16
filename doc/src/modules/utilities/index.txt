@@ -1,0 +1,11 @@
+Utilities
+=========
+
+This module contains some general purpose utilities that are used across SymPy
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   iterables.txt

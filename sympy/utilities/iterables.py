@@ -173,3 +173,48 @@ def subsets(M, k):
         for elem in recursion([item], M[i + 1:], k - 1):
             yield elem
 
+
+def cartes(seq0, seq1, modus='pair'):
+    """Return the cartesian product of two sequences
+
+    >>> cartes([1,2], [3,4])
+    [[1, 3], [1, 4], [2, 3], [2, 4]]
+    """
+    if  modus == 'pair':
+        return [[item0, item1] for item0 in seq0 for item1 in seq1]
+    elif modus == 'triple':
+        return [item0 + [item1] for item0 in seq0 for item1 in seq1]
+
+def variations(seq, n, repetition=False):
+    """Returns all the variations of the list of size n.
+
+    variations(seq, n, True) will return all the variations of the list of
+        size n with repetitions
+
+    variations(seq, n, False) will return all the variations of the list of
+        size n without repetitions
+
+    >>> variations([1,2,3], 2)
+    [[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]
+    >>> variations([1,2,3], 2, repetition=True)
+    [[1, 1], [1, 2], [1, 3], [2, 1], [2, 2], [2, 3], [3, 1], [3, 2], [3, 3]]
+    """
+    def setrep(seq):  # remove sets with duplicates (repetition is relevant)
+        def delrep(seq):  # remove duplicates while maintaining order
+            result = []
+            for item in seq:
+                if item not in result:
+                    result.append(item)
+            return result
+        return [item for item in seq if item == delrep(item)]
+
+    if n == 1:
+        return [[item] for item in seq]
+    result = range(len(seq))
+    cartesmodus = 'pair'
+    for i in range(n-1):
+        result = cartes(result, range(len(seq)), cartesmodus)
+        if not repetition:
+            result = setrep(result)
+        cartesmodus = 'triple'
+    return [[seq[index] for index in indices] for indices in result]
