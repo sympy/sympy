@@ -5,6 +5,10 @@ A Printer which converts an expression into its LaTeX equivalent.
 from sympy.core import S, C, Basic, Symbol
 from printer import Printer
 from sympy.simplify import fraction
+
+import sympy.mpmath.libmpf as mlib
+from sympy.mpmath.settings import prec_to_dps
+
 import re
 
 class LatexPrinter(Printer):
@@ -12,6 +16,13 @@ class LatexPrinter(Printer):
 
     def __init__(self, profile=None):
         Printer.__init__(self)
+
+        mul_symbol_table = {
+            None : r" ",
+            "ldot" : r" \,.\, ",
+            "dot" : r" \cdot ",
+            "times" : r" \times "
+        }
 
         self._settings = {
             "inline" : True,
@@ -23,6 +34,9 @@ class LatexPrinter(Printer):
 
         if profile is not None:
             self._settings.update(profile)
+
+        self._settings['mul_symbol_latex'] = \
+            mul_symbol_table[self._settings['mul_symbol']]
 
     def doprint(self, expr):
         tex = Printer.doprint(self, expr)
@@ -94,6 +108,31 @@ class LatexPrinter(Printer):
 
         return tex
 
+    def _print_Real(self, expr):
+        # Based off of that in StrPrinter
+        dps = prec_to_dps(expr._prec)
+        str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=True)
+
+        # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
+        seperator = r" \times "
+
+        if self._settings['mul_symbol'] is not None:
+            seperator = self._settings['mul_symbol_latex']
+
+        if 'e' in str_real:
+            (mant, exp) = str_real.split('e')
+
+            if exp[0] == '+':
+                exp = exp[1:]
+
+            return r"%s%s10^{%s}" % (mant, seperator, exp)
+        elif str_real == "+inf":
+            return r"\infty"
+        elif str_real == "-inf":
+            return r"- \intfy"
+        else:
+            return str_real
+
     def _print_Mul(self, expr):
         coeff, terms = expr.as_coeff_terms()
 
@@ -104,15 +143,7 @@ class LatexPrinter(Printer):
             tex = "- "
 
         numer, denom = fraction(C.Mul(*terms))
-
-        mul_symbol_table = {
-            None : r" ",
-            "ldot" : r" \,.\, ",
-            "dot" : r" \cdot ",
-            "times" : r" \times "
-        }
-
-        seperator = mul_symbol_table[self._settings['mul_symbol']]
+        seperator = self._settings['mul_symbol_latex']
 
         def convert(terms):
             product = []
