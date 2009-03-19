@@ -5,13 +5,13 @@ from sympy.physics.secondquant import (
         )
 
 from sympy import (
-    var, Symbol, sympify,
+    symbols, Symbol, sympify,
     sqrt, Rational, Sum, I, simplify,
     expand
 )
 
 def test_dagger():
-    i, j, n, m = var('i j n m')
+    i, j, n, m = symbols('i j n m')
     assert Dagger(1) == 1
     assert Dagger(1.0) == 1.0
     assert Dagger(2*I) == -2*I
@@ -27,7 +27,7 @@ def test_dagger():
     assert Dagger(B(n)**10) == Dagger(B(n))**10
 
 def test_operator():
-    i, j = var('i j')
+    i, j = symbols('i j')
     o = BosonicOperator(i)
     assert o.state == i
     assert o.is_symbolic
@@ -36,7 +36,7 @@ def test_operator():
     assert not o.is_symbolic
 
 def test_create():
-    i, j, n, m = var('i j n m')
+    i, j, n, m = symbols('i j n m')
     o = Bd(i)
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
@@ -47,7 +47,7 @@ def test_create():
     assert o.apply_operator(Ket([n])) == o*Ket([n])
 
 def test_annihilate():
-    i, j, n, m = var('i j n m')
+    i, j, n, m = symbols('i j n m')
     o = B(i)
     assert isinstance(o, AnnihilateBoson)
     o = o.subs(i, j)
@@ -58,7 +58,7 @@ def test_annihilate():
     assert o.apply_operator(Ket([n])) == o*Ket([n])
 
 def test_basic_state():
-    i, j, n, m = var('i j n m')
+    i, j, n, m = symbols('i j n m')
     s = FockState([0,1,2,3,4])
     assert len(s) == 5
     assert s.args[0] == tuple(range(5))
@@ -74,7 +74,7 @@ def test_basic_state():
     assert s.up(0) == FockState([n+1,m])
 
 def test_kronecker_delta():
-    i, j, k = var('i j k')
+    i, j, k = symbols('i j k')
     assert KroneckerDelta(i, i) == 1
     assert KroneckerDelta(i, i + 1) == 0
     assert KroneckerDelta(0, 0) == 1
@@ -85,24 +85,26 @@ def test_kronecker_delta():
     assert KroneckerDelta(i, j).subs(dict(i=1, j=0)) == 0
 
 # def Xtest_move1():
-#     i, j = var('i j')
+#     i, j = symbols('i j')
 #     o = A(i)*C(j)
 #     # This almost works, but has a minus sign wrong
 #     assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
 #
 # def Xtest_move2():
-#     i, j = var('i j')
+#     i, j = symbols('i j')
 #     o = C(j)*A(i)
 #     # This almost works, but has a minus sign wrong
 #     assert move(o, 0, 1) == -KroneckerDelta(i, j) + A(i)*C(j)
 
 def test_basic_apply():
+    n = symbols("n")
     e = B(0)*Ket([n])
     assert apply_operators(e) == sqrt(n)*Ket([n-1])
     e = Bd(0)*Ket([n])
     assert apply_operators(e) == sqrt(n+1)*Ket([n+1])
 
 def test_commutation():
+    n, m = symbols("n m")
     c = commutator(B(0), Bd(0))
     e = simplify(apply_operators(c*Ket([n])))
     assert e == Ket([n])
@@ -111,18 +113,20 @@ def test_commutation():
     assert e == 0
 
 def test_complex_apply():
+    n, m = symbols("n m")
     o = Bd(0)*B(0)*Bd(1)*B(0)
     e = apply_operators(o*Ket([n,m]))
     answer = sqrt(n)*sqrt(m+1)*(-1+n)*Ket([-1+n,1+m])
     assert expand(e) == expand(answer)
 
 def test_number_operator():
+    n = symbols("n")
     o = Bd(0)*B(0)
     e = apply_operators(o*Ket([n]))
     assert e == n*Ket([n])
 
 def test_inner_product():
-    i, j, k, l = var('i j k l')
+    i, j, k, l = symbols('i j k l')
     s1 = Bra([0])
     s2 = Ket([1])
     assert InnerProduct(s1, Dagger(s1)) == 1
@@ -133,7 +137,7 @@ def test_inner_product():
     assert r == KroneckerDelta(i, k)*KroneckerDelta(j, l)
 
 def test_symbolic_matrix_elements():
-    n, m = var('n m')
+    n, m = symbols('n m')
     s1 = Bra([n])
     s2 = Ket([m])
     o = B(0)
@@ -152,7 +156,7 @@ def test_matrix_elements():
         assert m[i+1, i] == sqrt(i+1)
 
 def test_sho():
-    n, m = var('n m')
+    n, m = symbols('n m')
     h_n = Bd(n)*B(n)*(n + Rational(1, 2))
     H = Sum(h_n, (n, 0, 5))
     o = H.doit()
