@@ -1,43 +1,82 @@
-"""Univariate polynomials with coefficients in the ring of integers. """
+"""Univariate and multivariate polynomials with coefficients in the integer ring. """
 
 from sympy.polys.galoispolys import gf_from_int_poly, gf_to_int_poly, gf_degree, \
     gf_from_dict, gf_mul, gf_quo, gf_gcd, gf_gcdex, gf_sqf_p, gf_factor_sqf
 
-from sympy.ntheory import randprime, isprime
-
 from sympy.utilities.iterables import subsets
 from sympy.ntheory.modular import crt1, crt2
+from sympy.ntheory import randprime, isprime
+
+from sympy.core.numbers import Integer
+
+from math import floor, ceil, log, sqrt
+from random import randint
+
 from sympy.core.numbers import igcd, igcdex
 
-from math import floor, ceil, sqrt, log
+INT_TYPE = int
+INT_ZERO = 0
+INT_ONE  = 1
+
+try:
+    from gmpy import sqrt as isqrt
+except ImportError:
+    from math import sqrt as isqrt
 
 class HeuristicGCDFailed(Exception):
     pass
 
-def zzx_degree(f):
-    """Returns leading degree of f. """
-    return len(f) - 1
+class ExactQuotientFailed(Exception):
+    pass
 
-def zzx_LC(f):
+def poly_LC(f):
     """Returns leading coefficient of f. """
     if not f:
-        return 0
+        return INT_ZERO
     else:
         return f[0]
 
-def zzx_TC(f):
+def poly_TC(f):
     """Returns trailing coefficient of f. """
     if not f:
-        return 0
+        return INT_ZERO
     else:
         return f[-1]
 
-def zzx_nth(f, n):
+def poly_nth(f, n):
     """Returns n-th coefficient of f. """
-    return f[zzx_degree(f)-n]
+    if n < 0 or n > len(f)-1:
+        raise IndexError
+    else:
+        return f[zzx_degree(f)-n]
+
+def poly_level(f):
+    """Return the number of nested lists in f. """
+    if poly_univariate_p(f):
+        return 1
+    else:
+        return 1 + poly_level(poly_LC(f))
+
+def poly_univariate_p(f):
+    """Returns True if f is univariate. """
+    if not f:
+        return True
+    else:
+        return type(f[0]) is not list
+
+def zzx_degree(f):
+    """Returns leading degree of f in Z[x]. """
+    return len(f) - 1
+
+def zzX_degree(f):
+    """Returns leading degree of f in Z[X]. """
+    if zzX_zero_p(f):
+        return -1
+    else:
+        return len(f) - 1
 
 def zzx_strip(f):
-    """Remove leading zeros from f. """
+    """Remove leading zeros from f in Z[x]. """
     if not f or f[0]:
         return f
 
@@ -51,14 +90,161 @@ def zzx_strip(f):
 
     return f[k:]
 
+def zzX_strip(f):
+    """Remove leading zeros from f in Z[X]. """
+    if zzX_zero_p(f):
+        return f
+
+    k = 0
+
+    for coeff in f:
+        if not zzX_zero_p(coeff):
+            break
+        else:
+            k += 1
+
+    if k == len(f):
+        return zzX_zero_of(f)
+    else:
+        return f[k:]
+
+def zzX_zz_LC(f):
+    """Returns integer leading coefficient. """
+    if poly_univariate_p(f):
+        return poly_LC(f)
+    else:
+        return zzX_zz_LC(poly_LC(f))
+
+def zzX_zz_TC(f):
+    """Returns integer trailing coefficient. """
+    if poly_univariate_p(f):
+        return poly_TC(f)
+    else:
+        return zzX_zz_TC(poly_TC(f))
+
+def zzX_zero(l):
+    """Returns multivariate zero. """
+    if not l:
+        return INT_ZERO
+    elif l == 1:
+        return []
+    else:
+        return [zzX_zero(l-1)]
+
+def zzX_zero_of(f, d=0):
+    """Returns multivariate zero of f. """
+    return zzX_zero(poly_level(f)-d)
+
+def zzX_const(l, c):
+    """Returns multivariate constant. """
+    if not c:
+        return zzX_zero(l)
+    else:
+        if not l:
+            return INT_TYPE(c)
+        elif l == 1:
+            return [INT_TYPE(c)]
+        else:
+            return [zzX_const(l-1, c)]
+
+def zzX_const_of(f, c, d=0):
+    """Returns multivariate constant of f. """
+    return zzX_const(poly_level(f)-d, c)
+
+def zzX_zeros_of(f, k, d=0):
+    """Returns a list of multivariate zeros of f. """
+    if poly_univariate_p(f):
+        return [INT_ZERO]*k
+
+    l = poly_level(f)-d
+
+    if not k:
+        return []
+    else:
+        return [ zzX_zero(l) for i in xrange(k) ]
+
+def zzX_zero_p(f):
+    """Returns True if f is zero in Z[X]. """
+    if poly_univariate_p(f):
+        return not f
+    else:
+        if len(f) == 1:
+            return zzX_zero_p(f[0])
+        else:
+            return False
+
+def zzx_one_p(f):
+    """Returns True if f is one in Z[x]. """
+    return f == [INT_ONE]
+
+def zzX_one_p(f):
+    """Returns True if f is one in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_one_p(f)
+    else:
+        if len(f) == 1:
+            return zzX_one_p(f[0])
+        else:
+            return False
+
+def zzX_value(l, f):
+    """Returns multivariate value nested l-levels. """
+    if type(f) is not list:
+        return zzX_const(l, f)
+    else:
+        if not l:
+            return f
+        else:
+            return [zzX_value(l-1, f)]
+
+def zzX_lift(l, f):
+    """Returns multivariate polynomial lifted l-levels. """
+    if poly_univariate_p(f):
+        if not f:
+            return zzX_zero(l+1)
+        else:
+            return [ zzX_const(l, c) for c in f ]
+    else:
+        return [ zzX_lift(l, c) for c in f ]
+
 def zzx_from_dict(f):
     """Create Z[x] polynomial from a dict. """
     n, h = max(f.iterkeys()), []
 
     for k in xrange(n, -1, -1):
-        h.append(f.get(k, 0))
+        h.append(INT_TYPE(int(f.get(k, 0))))
 
     return zzx_strip(h)
+
+def zzX_from_dict(f, l):
+    """Create Z[X] polynomial from a dict. """
+    if l == 1:
+        return zzx_from_dict(f)
+
+    coeffs = {}
+
+    for monom, coeff in f.iteritems():
+        head, tail = monom[0], monom[1:]
+
+        if len(tail) == 1:
+            tail = tail[0]
+
+        if coeffs.has_key(head):
+            coeffs[head][tail] = INT_TYPE(int(coeff))
+        else:
+            coeffs[head] = { tail : INT_TYPE(int(coeff)) }
+
+    n, h = max(coeffs.iterkeys()), []
+
+    for k in xrange(n, -1, -1):
+        coeff = coeffs.get(k)
+
+        if coeff is not None:
+            h.append(zzX_from_dict(coeff, l-1))
+        else:
+            h.append(zzX_zero(l-1))
+
+    return zzX_strip(h)
 
 def zzx_to_dict(f):
     """Convert Z[x] polynomial to a dict. """
@@ -70,8 +256,78 @@ def zzx_to_dict(f):
 
     return result
 
-def zzx_add_term(f, c, k):
-    """Add c*x**k to f over Z[x]. """
+def zzX_to_dict(f):
+    """Convert Z[X] polynomial to a dict. """
+    if poly_univariate_p(f):
+        return zzx_to_dict(f)
+
+    n, result = zzX_degree(f), {}
+
+    for i in xrange(0, n+1):
+        h = zzX_to_dict(f[n-i])
+
+        for exp, coeff in h.iteritems():
+            if type(exp) is not tuple:
+                exp = (exp,)
+
+            result[(i,)+exp] = coeff
+
+    return result
+
+def zzx_from_poly(f):
+    """Convert Poly instance to a recursive dense polynomial in Z[x]. """
+    return zzx_from_dict(dict(zip([ m for (m,) in f.monoms ], f.coeffs)))
+
+def zzX_from_poly(f):
+    """Convert Poly instance to a recursive dense polynomial in Z[X]. """
+    return zzX_from_dict(dict(zip(f.monoms, f.coeffs)), len(f.symbols))
+
+def zzx_to_poly(f, *symbols):
+    """Convert recursive dense polynomial to a Poly in Z[x]. """
+    from sympy.polys import Poly
+
+    terms = {}
+
+    for monom, coeff in zzx_to_dict(f).iteritems():
+        terms[(monom,)] = Integer(int(coeff))
+
+    return Poly(terms, *symbols)
+
+def zzX_to_poly(f, *symbols):
+    """Convert recursive dense polynomial to a Poly in Z[X]. """
+    from sympy.polys import Poly
+
+    terms = {}
+
+    for monom, coeff in zzX_to_dict(f).iteritems():
+        terms[monom] = Integer(int(coeff))
+
+    return Poly(terms, *symbols)
+
+def zzx_abs(f):
+    """Make all coefficients positive in Z[x]. """
+    return [ abs(coeff) for coeff in f ]
+
+def zzX_abs(f):
+    """Make all coefficients positive in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_abs(f)
+    else:
+        return [ zzX_abs(coeff) for coeff in f ]
+
+def zzx_neg(f):
+    """Negate a polynomial in Z[x]. """
+    return [ -coeff for coeff in f ]
+
+def zzX_neg(f):
+    """Negate a polynomial in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_neg(f)
+    else:
+        return [ zzX_neg(coeff) for coeff in f ]
+
+def zzx_add_term(f, c, k=0):
+    """Add c*x**k to f in Z[x]. """
     if not c:
         return f
 
@@ -82,12 +338,31 @@ def zzx_add_term(f, c, k):
         return zzx_strip([f[0]+c] + f[1:])
     else:
         if k >= n:
-            return [c] + [0] * (k-n) + f
+            return [c] + [INT_ZERO]*(k-n) + f
         else:
             return f[:m] + [f[m]+c] + f[m+1:]
 
-def zzx_sub_term(f, c, k):
-    """Subtract c*x**k from f over Z[x]. """
+def zzX_add_term(f, c, k=0):
+    """Add c*x**k to f in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_add_term(f, c, k)
+
+    if zzX_zero_p(c):
+        return f
+
+    n = len(f)
+    m = n-k-1
+
+    if k == n-1:
+        return zzX_strip([zzX_add(f[0], c)] + f[1:])
+    else:
+        if k >= n:
+            return [c] + zzX_zeros_of(f, k-n, 1) + f
+        else:
+            return f[:m] + [zzX_add(f[m], c)] + f[m+1:]
+
+def zzx_sub_term(f, c, k=0):
+    """Subtract c*x**k from f in Z[x]. """
     if not c:
         return f
 
@@ -98,27 +373,72 @@ def zzx_sub_term(f, c, k):
         return zzx_strip([f[0]-c] + f[1:])
     else:
         if k >= n:
-            return [-c] + [0] * (k-n) + f
+            return [-c] + [INT_ZERO]*(k-n) + f
         else:
             return f[:m] + [f[m]-c] + f[m+1:]
 
+def zzX_sub_term(f, c, k=0):
+    """Subtract c*x**k from f in Z[X]. """
+    return zzX_add_term(f, zzX_neg(c), k)
+
 def zzx_mul_term(f, c, k):
-    """Multiply f with c*x**k over Z[x]. """
+    """Multiply f by c*x**k in Z[x]. """
     if not c or not f:
         return []
     else:
-        return [ c * cc for cc in f ] + [0] * k
+        return [ c * coeff for coeff in f ] + [INT_ZERO]*k
 
-def zzx_abs(f):
-    """Make all coefficients positive. """
-    return [ abs(coeff) for coeff in f ]
+def zzX_mul_term(f, c, k):
+    """Multiply f by c*x**k in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_mul_term(f, c, k)
+    elif zzX_zero_p(f):
+        return f
+    elif zzX_zero_p(c):
+        return zzX_zero_of(f)
+    else:
+        return [ zzX_mul(c, coeff) for coeff in f ] + zzX_zeros_of(f, k, 1)
 
-def zzx_neg(f):
-    """Negate a polynomial over Z[x]. """
-    return [ -coeff for coeff in f ]
+def zzx_mul_const(f, c):
+    """Multiply f by constant value in Z[x]. """
+    if not c or not f:
+        return []
+    else:
+        return [ c * coeff for coeff in f ]
+
+def zzX_mul_const(f, c):
+    """Multiply f by constant value in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_mul_const(f, c)
+    else:
+        return [ zzX_mul_const(coeff, c) for coeff in f ]
+
+def zzx_quo_const(f, c):
+    """Exact quotient by a constant in Z[x]. """
+    if not c:
+        raise ZeroDivisionError('polynomial division')
+    elif not f:
+        return f
+    else:
+        h = []
+
+        for coeff in f:
+            if coeff % c:
+                raise ExactQuotientFailed('%s does not divide %s' % (c, coeff))
+            else:
+                h.append(coeff // c)
+
+        return h
+
+def zzX_quo_const(f, c):
+    """Exact quotient by a constant in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_quo_const(f, c)
+    else:
+        return [ zzX_quo_const(coeff, c) for coeff in f ]
 
 def zzx_add(f, g):
-    """Add polynomials over Z[x]. """
+    """Add polynomials in Z[x]. """
     if not f:
         return g
     if not g:
@@ -139,8 +459,33 @@ def zzx_add(f, g):
 
         return h + [ a + b for a, b in zip(f, g) ]
 
+def zzX_add(f, g):
+    """Add polynomials in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_add(f, g)
+
+    if zzX_zero_p(f):
+        return g
+    if zzX_zero_p(g):
+        return f
+
+    df = zzX_degree(f)
+    dg = zzX_degree(g)
+
+    if df == dg:
+        return zzX_strip([ zzX_add(a, b) for a, b in zip(f, g) ])
+    else:
+        k = abs(df - dg)
+
+        if df > dg:
+            h, f = f[:k], f[k:]
+        else:
+            h, g = g[:k], g[k:]
+
+        return h + [ zzX_add(a, b) for a, b in zip(f, g) ]
+
 def zzx_sub(f, g):
-    """Subtract polynomials over Z[x]. """
+    """Subtract polynomials in Z[x]. """
     if not g:
         return f
     if not f:
@@ -161,41 +506,104 @@ def zzx_sub(f, g):
 
         return h + [ a - b for a, b in zip(f, g) ]
 
+def zzX_sub(f, g):
+    """Subtract polynomials in Z[x]. """
+    if poly_univariate_p(f):
+        return zzx_sub(f, g)
+
+    if zzX_zero_p(g):
+        return f
+    if zzX_zero_p(f):
+        return zzX_neg(g)
+
+    df = zzX_degree(f)
+    dg = zzX_degree(g)
+
+    if df == dg:
+        return zzX_strip([ zzX_sub(a, b) for a, b in zip(f, g) ])
+    else:
+        k = abs(df - dg)
+
+        if df > dg:
+            h, f = f[:k], f[k:]
+        else:
+            h, g = zzX_neg(g[:k]), g[k:]
+
+        return h + [ zzX_sub(a, b) for a, b in zip(f, g) ]
+
 def zzx_add_mul(f, g, h):
     """Returns f + g*h where f, g, h in Z[x]. """
     return zzx_add(f, zzx_mul(g, h))
+
+def zzX_add_mul(f, g, h):
+    """Returns f + g*h where f, g, h in Z[X]. """
+    return zzX_add(f, zzX_mul(g, h))
 
 def zzx_sub_mul(f, g, h):
     """Returns f - g*h where f, g, h in Z[x]. """
     return zzx_sub(f, zzx_mul(g, h))
 
+def zzX_sub_mul(f, g, h):
+    """Returns f - g*h where f, g, h in Z[X]. """
+    return zzX_sub(f, zzX_mul(g, h))
+
 def zzx_mul(f, g):
-    """Multiply polynomials over Z[x]. """
+    """Multiply polynomials in Z[x]. """
+    if f == g:
+        return zzx_sqr(f)
+
+    if not (f and g):
+        return []
+
     df = zzx_degree(f)
     dg = zzx_degree(g)
 
-    dh = df + dg
-    h = [0]*(dh+1)
+    h = []
 
-    for i in xrange(0, dh+1):
+    for i in xrange(0, df+dg+1):
         coeff = 0
 
-        for j in xrange(max(0, i-dg), min(i, df)+1):
+        for j in xrange(max(0, i-dg), min(df, i)+1):
             coeff += f[j]*g[i-j]
 
-        h[i] = coeff
+        h.append(coeff)
 
-    return zzx_strip(h)
+    return h
+
+def zzX_mul(f, g):
+    """Multiply polynomials in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_mul(f, g)
+
+    if f == g:
+        return zzX_sqr(f)
+
+    if zzX_zero_p(f):
+        return f
+    if zzX_zero_p(g):
+        return g
+
+    df = zzX_degree(f)
+    dg = zzX_degree(g)
+
+    h, l = [], poly_level(f)-1
+
+    for i in xrange(0, df+dg+1):
+        coeff = zzX_zero(l)
+
+        for j in xrange(max(0, i-dg), min(df, i)+1):
+            coeff = zzX_add(coeff, zzX_mul(f[j], g[i-j]))
+
+        h.append(coeff)
+
+    return h
 
 def zzx_sqr(f):
-    """Square polynomials over Z[x]. """
-    df = zzx_degree(f)
+    """Square polynomials in Z[x]. """
+    df, h = zzx_degree(f), []
 
-    dh = 2*df
-    h = [0]*(dh+1)
-
-    for i in xrange(0, dh+1):
-        coeff = 0
+    for i in xrange(0, 2*df+1):
+        coeff = INT_ZERO
 
         jmin = max(0, i-df)
         jmax = min(i, df)
@@ -213,12 +621,48 @@ def zzx_sqr(f):
             elem = f[jmax+1]
             coeff += elem**2
 
-        h[i] = coeff
+        h.append(coeff)
 
-    return zzx_strip(h)
+    return h
+
+def zzX_sqr(f):
+    """Square polynomials in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_sqr(f)
+
+    if zzX_zero_p(f):
+        return f
+
+    df = zzX_degree(f)
+    l = poly_level(f)-1
+
+    h = []
+
+    for i in xrange(0, 2*df+1):
+        coeff = zzX_zero(l)
+
+        jmin = max(0, i-df)
+        jmax = min(i, df)
+
+        n = jmax - jmin + 1
+
+        jmax = jmin + n // 2 - 1
+
+        for j in xrange(jmin, jmax+1):
+            coeff = zzX_add(coeff, zzX_mul(f[j], f[i-j]))
+
+        coeff = zzX_mul_const(coeff, 2)
+
+        if n & 1:
+            elem = zzX_sqr(f[jmax+1])
+            coeff = zzX_add(coeff, elem)
+
+        h.append(coeff)
+
+    return h
 
 def zzx_div(f, g):
-    """Returns quotient and remainder over Z[x]. """
+    """Returns quotient and remainder in Z[x]. """
     df = zzx_degree(f)
     dg = zzx_degree(g)
 
@@ -230,20 +674,18 @@ def zzx_div(f, g):
     q, r = [], f
 
     while True:
-        deg_r = zzx_degree(r)
-        deg_g = zzx_degree(g)
+        dr = zzx_degree(r)
 
-        if deg_r < deg_g:
+        if dr < dg:
             break
 
-        lc_r = zzx_LC(r)
-        lc_g = zzx_LC(g)
+        lc_r = poly_LC(r)
+        lc_g = poly_LC(g)
 
         if lc_r % lc_g != 0:
             break
 
-        c = lc_r // lc_g
-        k = deg_r - deg_g
+        c, k = lc_r // lc_g, dr - dg
 
         q = zzx_add_term(q, c, k)
         h = zzx_mul_term(g, c, k)
@@ -251,30 +693,90 @@ def zzx_div(f, g):
 
     return q, r
 
+def zzX_div(f, g):
+    """Returns quotient and remainder in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_div(f, g)
+
+    df = zzX_degree(f)
+    dg = zzX_degree(g)
+
+    if dg < 0:
+        raise ZeroDivisionError("polynomial division")
+
+    q, r = zzX_zero_of(f), f
+
+    if df < dg:
+        return q, r
+
+    while True:
+        dr = zzX_degree(r)
+
+        if dr < dg:
+            break
+
+        lc_r = poly_LC(r)
+        lc_g = poly_LC(g)
+
+        c, R = zzX_div(lc_r, lc_g)
+
+        if not zzX_zero_p(R):
+            break
+
+        k = dr - dg
+
+        q = zzX_add_term(q, c, k)
+        h = zzX_mul_term(g, c, k)
+        r = zzX_sub(r, h)
+
+    return q, r
+
 def zzx_quo(f, g):
-    """Returns polynomial remainder over Z[x]. """
+    """Returns polynomial remainder in Z[x]. """
     return zzx_div(f, g)[0]
 
+def zzX_quo(f, g):
+    """Returns polynomial remainder in Z[X]. """
+    return zzX_div(f, g)[0]
+
 def zzx_rem(f, g):
-    """Returns polynomial remainder over Z[x]. """
+    """Returns polynomial remainder in Z[x]. """
     return zzx_div(f, g)[1]
 
+def zzX_rem(f, g):
+    """Returns polynomial remainder in Z[X]. """
+    return zzX_div(f, g)[1]
+
 def zzx_max_norm(f):
-    """Returns maximum norm of a polynomial. """
+    """Returns maximum norm of a polynomial in Z[x]. """
     if not f:
-        return 0
+        return INT_ZERO
     else:
         return max(zzx_abs(f))
 
+def zzX_max_norm(f):
+    """Returns maximum norm of a polynomial in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_max_norm(f)
+    else:
+        return max([ zzX_max_norm(coeff) for coeff in f ])
+
 def zzx_l1_norm(f):
-    """Returns l1 norm of a polynomial. """
+    """Returns l1 norm of a polynomial in Z[x]. """
     if not f:
-        return 0
+        return INT_ZERO
     else:
         return sum(zzx_abs(f))
 
+def zzX_l1_norm(f):
+    """Returns l1 norm of a polynomial in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_l1_norm(f)
+    else:
+        return sum([ zzX_l1_norm(coeff) for coeff in f ])
+
 def zzx_diff(f):
-    """Differentiate polynomial over Z[x]. """
+    """Differentiate polynomial in Z[x]. """
     n, deriv = zzx_degree(f), []
 
     for coeff in f[:-1]:
@@ -283,15 +785,61 @@ def zzx_diff(f):
 
     return deriv
 
+def zzX_diff(f):
+    """Differentiate polynomial in Z[X]. """
+    n, deriv = zzX_degree(f), []
+
+    if n <= 0:
+        return zzX_zero_of(f)
+
+    for coeff in f[:-1]:
+        h = zzX_mul_const(coeff, n)
+        deriv.append(h)
+        n -= 1
+
+    return deriv
+
 def zzx_eval(f, x):
-    """Evaluate f(x) using Horner scheme. """
-    result = 0
+    """Evaluate f(x) in Z[x] using Horner scheme. """
+    result = INT_ZERO
+
+    if not x:
+        return poly_TC(f)
 
     for a in f:
         result *= x
         result += a
 
     return result
+
+def zzX_eval(f, x):
+    """Evaluate f(x) in Z[X] using Horner scheme. """
+    if poly_univariate_p(f):
+        return zzx_eval(f, x)
+
+    if not x:
+        return poly_TC(f)
+
+    result = poly_LC(f)
+
+    for coeff in f[1:]:
+        result = zzX_mul_const(result, x)
+        result = zzX_add(result, coeff)
+
+    return result
+
+def zzX_eval_coeffs(f, A):
+    """Evaluate polynomial coefficients in Z[X]. """
+    def rec_eval(g, k):
+        if poly_univariate_p(g):
+            return zzx_eval(g, A[k])
+        else:
+            return zzx_eval([ rec_eval(h, k+1) for h in g ], A[k])
+
+    if zzX_zero_p(f):
+        return []
+    else:
+        return zzx_strip([ rec_eval(g, 0) for g in f ])
 
 def zzx_trunc(f, m):
     """Reduce Z[x] polynomial modulo m. """
@@ -307,9 +855,16 @@ def zzx_trunc(f, m):
 
     return zzx_strip(g)
 
+def zzX_trunc(f, m):
+    """Reduce Z[X] polynomial modulo m. """
+    if poly_univariate_p(f):
+        return zzx_trunc(f, m)
+    else:
+        return zzX_strip([ zzX_trunc(g, m) for g in f ])
+
 def zzx_content(f):
-    """Returns integer GCD of coefficients. """
-    cont = 0
+    """Returns integer GCD of coefficients in Z[x]. """
+    cont = INT_ZERO
 
     for coeff in f:
         cont = igcd(cont, coeff)
@@ -319,8 +874,36 @@ def zzx_content(f):
 
     return cont
 
+def zzX_content(f):
+    """Returns polynomial GCD of coefficients in Z[X]. """
+    cont = poly_LC(f)
+
+    for g in f[1:]:
+        cont = zzX_gcd(cont, g)
+
+        if zzX_one_p(cont):
+            break
+
+    return cont
+
+def zzX_zz_content(f):
+    """Returns integer GCD of coefficients in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_content(f)
+
+    cont = INT_ZERO
+
+    for g in f:
+        gc = zzX_zz_content(g)
+        cont = igcd(cont, gc)
+
+        if cont == 1:
+            break
+
+    return cont
+
 def zzx_primitive(f):
-    """Divides all coefficients by content. """
+    """Divides all coefficients by integer content. """
     cont = zzx_content(f)
 
     if cont == 1:
@@ -328,20 +911,57 @@ def zzx_primitive(f):
     else:
         return cont, [ coeff // cont for coeff in f ]
 
+def zzX_primitive(f):
+    """Divides all coefficients by polynomial content. """
+    cont = zzX_content(f)
+
+    if zzX_one_p(cont):
+        return cont, f
+    else:
+        return cont, [ zzX_quo(coeff, cont) for coeff in f ]
+
+def zzX_zz_primitive(f):
+    """Divides all coefficients by integer content in Z[X]. """
+    cont = zzX_zz_content(f)
+
+    if cont == 1:
+        return 1, f
+    else:
+        return cont, zzX_quo_const(f, cont)
+
 def zzx_sqf_part(f):
-    """Returns square-free part of a polynomial over Z[x]. """
+    """Returns square-free part of a polynomial in Z[x]. """
     quo = zzx_quo(f, zzx_gcd(f, zzx_diff(f)))
     return zzx_primitive(quo)[1]
 
-def zzx_gcd(f, g, **flags):
-    """Polynomial GCD over Z[x]. """
-    if flags.get("heu", True):
-        try:
-            return zzx_heu_gcd(f, g)[0]
-        except HeuristicGCDFailed:
-            pass
+def zzX_sqf_part(f):
+    """Returns square-free part of a polynomial in Z[X]. """
+    quo = zzX_quo(f, zzX_gcd(f, zzX_diff(f)))
+    return zzX_primitive(quo)[1]
 
-    return zzx_mod_gcd(f, g)[0]
+def zzx_sqf_p(f):
+    """Returns True if f is a square-free polynomial in Z[x]. """
+    return zzx_one_p(zzx_gcd(zzx_primitive(f)[1], zzx_diff(f)))
+
+def zzX_sqf_p(f):
+    """Returns True if f is a square-free polynomial in Z[X]. """
+    return zzX_one_p(zzX_gcd(zzX_primitive(f)[1], zzX_diff(f)))
+
+def zzx_gcd(f, g, **flags):
+    """Returns polynomial GCD in Z[x]. """
+    return zzx_cofactors(f, g, **flags)[0]
+
+def zzx_cofactors(f, g, **flags):
+    """Returns polynomial GCD and its co-factors in Z[x]. """
+    return zzx_heu_gcd(f, g, **flags)
+
+def zzX_gcd(f, g, **flags):
+    """Returns polynomial GCD in Z[X]. """
+    return zzX_cofactors(f, g, **flags)[0]
+
+def zzX_cofactors(f, g, **flags):
+    """Returns polynomial GCD and its co-factors in Z[X]. """
+    return zzX_heu_gcd(f, g, **flags)
 
 def zzx_heu_gcd(f, g, **flags):
     """Heuristic polynomial GCD over Z[x].
@@ -352,22 +972,15 @@ def zzx_heu_gcd(f, g, **flags):
               h = gcd(f, g), cff = quo(f, h) and cfg = quo(g, h)
 
        The algorithm is purely heuristic which means it may fail to compute
-       the GCD. In this case an exception is raised. However it seems that
-       this algorithm fails very rarely. In case of failure one can switch
-       to modular GCD algorithm (zzx_mod_gcd). In high-level code, instead
-       of direct application of heuristic GCD method, use zzx_gcd function
-       which will do the switch automatically when necessary.
+       the GCD. This will be signaled by raising an exception. In this case
+       you will need to switch to another GCD method.
 
        The algorithm computes the polynomial GCD by evaluating polynomials
        f and g at certain points and computing (fast) integer GCD of those
        evaluations. The polynomial GCD is recovered from the integer image
-       by interpolation. The final step is to verify correctness of the
-       result. By default the algorithm will perform at most six tries
-       to compute the GCD.
-
-       Note this method can be easily adapted to multivariate case.  The
-       only things to change is to modify interpolation function and add
-       recursive invocation of the heuristic gcd algorithm.
+       by interpolation.  The final step is to verify if the result is the
+       correct GCD. This gives cofactors of input polynomials as a side
+       effect (see zzX_cofactors).
 
        For more details on the implemented algorithm refer to:
 
@@ -376,19 +989,30 @@ def zzx_heu_gcd(f, g, **flags):
            (ISSAC), ACM Press, Montreal, Quebec, Canada, 1995, pp. 240--247
 
     """
-    def sp_interpolate(h, c):
+    def interpolate(h, x):
         f = []
 
         while h:
-            rem = h % c
+            g = h % x
 
-            if rem > c // 2:
-                rem -= c
+            if g > x // 2:
+                g -= x
 
-            f.insert(0, rem)
-            h = (h-rem) // c
+            f.insert(0, g)
+            h = (h-g) // x
 
-        return zzx_strip(f)
+        return f
+
+    def finalize(h, cff, cfg, gcd):
+        h = zzx_mul_const(h, gcd)
+        return h, cff, cfg
+
+    if not (f or g):
+        return [], [], []
+    elif not f:
+        return g, [], [1]
+    elif not g:
+        return f, [1], []
 
     df = zzx_degree(f)
     dg = zzx_degree(g)
@@ -396,24 +1020,27 @@ def zzx_heu_gcd(f, g, **flags):
     cf = zzx_content(f)
     cg = zzx_content(g)
 
-    h = igcd(cf, cg)
+    gcd = igcd(cf, cg)
 
-    f = [ c // h for c in f ]
-    g = [ c // h for c in g ]
+    f = [ c // gcd for c in f ]
+    g = [ c // gcd for c in g ]
 
-    if df <= 0 or dg <= 0:
-        return zzx_strip([h]), f, g
-    else:
-        gcd = h
+    if df == 0 or dg == 0:
+        return [gcd], f, g
 
     f_norm = zzx_max_norm(f)
     g_norm = zzx_max_norm(g)
 
     B = 2*min(f_norm, g_norm) + 29
 
-    x = int(max(min(B, 99*sqrt(B)),
-            2*min(f_norm // abs(zzx_LC(f)),
-                  g_norm // abs(zzx_LC(g))) + 2))
+    try:
+        C = INT_TYPE(isqrt(B))
+    except OverflowError:
+        raise HeuristicGCDFailed('need GMPY')
+
+    x = max(min(B, 99*C),
+            2*min(f_norm // abs(poly_LC(f)),
+                  g_norm // abs(poly_LC(g))) + 2)
 
     for i in xrange(0, 6):
         ff = zzx_eval(f, x)
@@ -424,7 +1051,7 @@ def zzx_heu_gcd(f, g, **flags):
         cff = ff // h
         cfg = gg // h
 
-        h = sp_interpolate(h, x)
+        h = interpolate(h, x)
         h = zzx_primitive(h)[1]
 
         cff_, r = zzx_div(f, h)
@@ -433,10 +1060,9 @@ def zzx_heu_gcd(f, g, **flags):
             cfg_, r = zzx_div(g, h)
 
             if not r:
-                h = zzx_mul_term(h, gcd, 0)
-                return h, cff_, cfg_
+                return finalize(h, cff_, cfg_, gcd)
 
-        cff = sp_interpolate(cff, x)
+        cff = interpolate(cff, x)
 
         h, r = zzx_div(f, cff)
 
@@ -444,10 +1070,9 @@ def zzx_heu_gcd(f, g, **flags):
             cfg_, r = zzx_div(g, h)
 
             if not r:
-                h = zzx_mul_term(h, gcd, 0)
-                return h, cff, cfg_
+                return finalize(h, cff, cfg_, gcd)
 
-        cfg = sp_interpolate(cfg, x)
+        cfg = interpolate(cfg, x)
 
         h, r = zzx_div(g, cfg)
 
@@ -455,13 +1080,142 @@ def zzx_heu_gcd(f, g, **flags):
             cff_, r = zzx_div(f, h)
 
             if not r:
-                h = zzx_mul_term(h, gcd, 0)
-                return h, cff_, cfg
+                return finalize(h, cff_, cfg, gcd)
 
-        x = int(2.7319*x*sqrt(sqrt(x)))
+        x = INT_TYPE(2.7319*x*isqrt(isqrt(x)))
 
-    raise HeuristicGCDFailed
+    raise HeuristicGCDFailed('no luck')
 
+def zzX_heu_gcd(f, g, **flags):
+    """Heuristic polynomial GCD in Z[X].
+
+       Given univariate polynomials f and g in Z[X], returns their GCD
+       and cofactors, i.e. polynomials h, cff and cfg such that:
+
+              h = gcd(f, g), cff = quo(f, h) and cfg = quo(g, h)
+
+       The algorithm is purely heuristic which means it may fail to compute
+       the GCD. This will be signaled by raising an exception. In this case
+       you will need to switch to another GCD method.
+
+       The algorithm computes the polynomial GCD by evaluating polynomials
+       f and g at certain points and computing (fast) integer GCD of those
+       evaluations. The polynomial GCD is recovered from the integer image
+       by interpolation. The evaluation proces reduces f and g variable by
+       variable into a large integer.  The final step  is to verify if the
+       interpolated polynomial is the correct GCD. This gives cofactors of
+       the input polynomials as a side effect (see zzX_cofactors).
+
+       For more details on the implemented algorithm refer to:
+
+       [1] Hsin-Chao Liao, R. Fateman, Evaluation of the heuristic polynomial
+           GCD, International Symposium on Symbolic and Algebraic Computation
+           (ISSAC), ACM Press, Montreal, Quebec, Canada, 1995, pp. 240--247
+    """
+    if poly_univariate_p(f):
+        return zzx_heu_gcd(f, g, **flags)
+
+    def interpolate(h, x):
+        f = []
+
+        while not zzX_zero_p(h):
+            g = zzX_trunc(h, x)
+            f.insert(0, g)
+            h = zzX_sub(h, g)
+            h = zzX_quo_const(h, x)
+
+        return f
+
+    def finalize(h, cff, cfg, gcd):
+        if zzX_zz_LC(h) > 0:
+            h = zzX_mul_const(h, gcd)
+        else:
+            h = zzX_mul_const(h, -gcd)
+            cff = zzX_neg(cff)
+            cfg = zzX_neg(cfg)
+
+        return h, cff, cfg
+
+    zero_f = zzX_zero_p(f)
+    zero_g = zzX_zero_p(g)
+
+    l = poly_level(f)
+    z = zzX_zero(l)
+
+    if zero_f and zero_g:
+        return z, z, z
+    elif zero_f:
+        return g, z, zzX_const(l, 1)
+    elif zero_g:
+        return f, zzX_const(l, 1), z
+
+    df = zzX_degree(f)
+    dg = zzX_degree(g)
+
+    cf = zzX_zz_content(f)
+    cg = zzX_zz_content(g)
+
+    gcd = igcd(cf, cg)
+
+    f = zzX_quo_const(f, gcd)
+    g = zzX_quo_const(g, gcd)
+
+    f_norm = zzX_max_norm(f)
+    g_norm = zzX_max_norm(g)
+
+    B = 2*min(f_norm, g_norm) + 29
+
+    try:
+        C = INT_TYPE(isqrt(B))
+    except OverflowError:
+        raise HeuristicGCDFailed('need GMPY')
+
+    x = max(min(B, 99*C),
+            2*min(f_norm // abs(zzX_zz_LC(f)),
+                  g_norm // abs(zzX_zz_LC(g))) + 2)
+
+    for i in xrange(0, 6):
+        ff = zzX_eval(f, x)
+        gg = zzX_eval(g, x)
+
+        h, cff, cfg = zzX_heu_gcd(ff, gg, **flags)
+
+        h = interpolate(h, x)
+        h = zzX_zz_primitive(h)[1]
+
+        cff_, r = zzX_div(f, h)
+
+        if zzX_zero_p(r):
+            cfg_, r = zzX_div(g, h)
+
+            if zzX_zero_p(r):
+                return finalize(h, cff_, cfg_, gcd)
+
+        cff = interpolate(cff, x)
+
+        h, r = zzX_div(f, cff)
+
+        if zzX_zero_p(r):
+            cfg_, r = zzX_div(g, h)
+
+            if zzX_zero_p(r):
+                return finalize(h, cff, cfg_, gcd)
+
+        cfg = interpolate(cfg, x)
+
+        h, r = zzX_div(g, cfg)
+
+        if zzX_zero_p(r):
+            cff_, r = zzX_div(f, h)
+
+            if zzX_zero_p(r):
+                return finalize(h, cff_, cfg, gcd)
+
+        x = INT_TYPE(2.7319*x*isqrt(isqrt(x)))
+
+    raise HeuristicGCDFailed('no luck')
+
+# XXX: this is completely broken
 def zzx_mod_gcd(f, g, **flags):
     """Modular small primes polynomial GCD over Z[x].
 
@@ -485,26 +1239,31 @@ def zzx_mod_gcd(f, g, **flags):
            First Edition, Cambridge University Press, 1999, pp. 158
 
     """
+    if not (f or g):
+        return [], [], []
+    elif not f:
+        return g, [], [1]
+    elif not g:
+        return f, [1], []
+
     n = zzx_degree(f)
     m = zzx_degree(g)
 
     cf = zzx_content(f)
     cg = zzx_content(g)
 
-    h = igcd(cf, cg)
+    gcd = igcd(cf, cg)
 
-    f = [ c // h for c in f ]
-    g = [ c // h for c in g ]
+    f = [ c // gcd for c in f ]
+    g = [ c // gcd for c in g ]
 
-    if n <= 0 or m <= 0:
-        return zzx_strip([h]), f, g
-    else:
-        gcd = h
+    if n == 0 or m == 0:
+        return [gcd], f, g
 
     A = max(zzx_abs(f) + zzx_abs(g))
-    b = igcd(zzx_LC(f), zzx_LC(g))
+    b = igcd(poly_LC(f), poly_LC(g))
 
-    B = int(ceil(2**n*A*b*sqrt(n + 1)))
+    B = int(ceil(2**n*A*b*int(sqrt(n + 1))))
     k = int(ceil(2*b*log((n + 1)**n*A**(2*n), 2)))
     l = int(ceil(log(2*B + 1, 2)))
 
@@ -520,7 +1279,7 @@ def zzx_mod_gcd(f, g, **flags):
             while len(primes) < l:
                 p = randprime(3, prime_max+1)
 
-                if (p in primes) and (b % p == 0):
+                if (p in primes) or (b % p == 0):
                     continue
 
                 F = gf_from_int_poly(f, p)
@@ -581,7 +1340,7 @@ def zzx_mod_gcd(f, g, **flags):
         crt_mm, crt_e, crt_s = crt1(primes)
 
         for i in xrange(0, e + 1):
-            C = [ b * zzx_nth(hh[p], i) for p in primes ]
+            C = [ b * poly_nth(hh[p], i) for p in primes ]
             c = crt2(primes, C, crt_mm, crt_e, crt_s, True)
 
             H.insert(0, c)
@@ -589,13 +1348,13 @@ def zzx_mod_gcd(f, g, **flags):
         H = zzx_strip(H)
 
         for i in xrange(0, zzx_degree(f) - e + 1):
-            C = [ zzx_nth(fff[p], i) for p in primes ]
+            C = [ poly_nth(fff[p], i) for p in primes ]
             c = crt2(primes, C, crt_mm, crt_e, crt_s, True)
 
             F.insert(0, c)
 
         for i in xrange(0, zzx_degree(g) - e + 1):
-            C = [ zzx_nth(ggg[p], i) for p in primes ]
+            C = [ poly_nth(ggg[p], i) for p in primes ]
             c = crt2(primes, C, crt_mm, crt_e, crt_s, True)
 
             G.insert(0, c)
@@ -608,7 +1367,7 @@ def zzx_mod_gcd(f, g, **flags):
         if H_norm*F_norm <= B and H_norm*G_norm <= B:
             break
 
-    return zzx_mul_term(H, gcd, 0), F, G
+    return zzx_mul_const(H, gcd), F, G
 
 def zzx_hensel_step(m, f, g, h, s, t):
     """One step in Hensel lifting.
@@ -687,10 +1446,10 @@ def zzx_hensel_lift(p, f, f_list, l):
 
     """
     r = len(f_list)
-    lc = zzx_LC(f)
+    lc = poly_LC(f)
 
     if r == 1:
-        F = zzx_mul_term(f, igcdex(lc, p**l)[0], 0)
+        F = zzx_mul_const(f, igcdex(lc, p**l)[0])
         return [ zzx_trunc(F, p**l) ]
 
     m = p
@@ -721,15 +1480,15 @@ def zzx_hensel_lift(p, f, f_list, l):
          + zzx_hensel_lift(p, h, f_list[k:], l)
 
 def zzx_zassenhaus(f):
-    """Factor square-free polynomials over Z[x]. """
+    """Factor primitive square-free polynomials in Z[x]. """
     n = zzx_degree(f)
 
     if n == 1:
         return [f]
 
     A = zzx_max_norm(f)
-    b = zzx_LC(f)
-    B = abs(int(sqrt(n+1)*2**n*A*b))
+    b = poly_LC(f)
+    B = abs(int(sqrt(n+1))*2**n*A*b)
     C = (n+1)**(2*n)*A**(2*n-1)
     gamma = int(ceil(2*log(C, 2)))
     prime_max = int(2*gamma*log(gamma))
@@ -779,7 +1538,7 @@ def zzx_zassenhaus(f):
                 f = zzx_primitive(H)[1]
 
                 factors.append(G)
-                b = zzx_LC(f)
+                b = poly_LC(f)
 
                 break
         else:
@@ -788,9 +1547,9 @@ def zzx_zassenhaus(f):
     return factors + [f]
 
 def zzx_factor(f):
-    """Factor (non square-free) polynomials over Z[x].
+    """Factor (non square-free) polynomials in Z[x].
 
-       Given a univariate polynomial f over Z[x] computes its complete
+       Given a univariate polynomial f in Z[x] computes its complete
        factorization f_1, ..., f_n into irreducibles over integers:
 
                     f = content(f) f_1**k_1 ... f_n**k_n
@@ -826,7 +1585,7 @@ def zzx_factor(f):
     if zzx_degree(g) < 1:
         return cont, []
 
-    if zzx_LC(g) < 0:
+    if poly_LC(g) < 0:
         g = zzx_neg(g)
         cont = -cont
 
