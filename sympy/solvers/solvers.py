@@ -563,7 +563,7 @@ def solve_ODE_first_order(eq, f):
     """
     solves many kinds of first order odes, different methods are used
     depending on the form of the given equation. Now the linear
-    case is implemented.
+    and Bernoulli cases are implemented.
     """
     from sympy.integrals.integrals import integrate
     x = f.args[0]
@@ -579,6 +579,15 @@ def solve_ODE_first_order(eq, f):
         t = C.exp(integrate(r[b]/r[a], x))
         tt = integrate(t*(-r[c]/r[a]), x)
         return (tt + Symbol("C1"))/t
+
+    #Bernoulli case: a(x)*f'(x)+b(x)*f(x)+c(x)*f(x)^n = 0
+    n = Wild('n', exclude=[f(x)])
+
+    r = eq.match(a*diff(f(x),x) + b*f(x) + c*f(x)**n)
+    if r:
+        t = C.exp((1-r[n])*integrate(r[b]/r[a],x))
+        tt = (r[n]-1)*integrate(t*r[c]/r[a],x)
+        return ((tt + Symbol("C1"))/t)**(1/(1-r[n]))
 
     #other cases of first order odes will be implemented here
 

@@ -142,6 +142,7 @@ def test_ODE_first_order():
     x = Symbol('x')
     assert dsolve(3*f(x).diff(x) -1, f(x)) == x/3 + Symbol("C1")
     assert dsolve(x*f(x).diff(x) -1, f(x)) == log(x) + Symbol("C1")
+    assert dsolve(x*f(x).diff(x)+f(x)-f(x)**2,f(x)) == 1/(x*(Symbol("C1") + 1/x))
 
 def test_ODE_second_order():
     f = Function('f')
