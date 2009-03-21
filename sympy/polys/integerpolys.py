@@ -3,9 +3,9 @@
 from sympy.polys.galoispolys import gf_from_int_poly, gf_to_int_poly, gf_degree, \
     gf_from_dict, gf_mul, gf_quo, gf_gcd, gf_gcdex, gf_sqf_p, gf_factor_sqf
 
-from sympy.utilities.iterables import subsets
+from sympy.ntheory import randprime, isprime, factorint
 from sympy.ntheory.modular import crt1, crt2
-from sympy.ntheory import randprime, isprime
+from sympy.utilities import any, all, subsets
 
 from sympy.core.numbers import Integer
 
@@ -436,6 +436,21 @@ def zzX_quo_const(f, c):
         return zzx_quo_const(f, c)
     else:
         return [ zzX_quo_const(coeff, c) for coeff in f ]
+
+def zzx_compose_term(f, n):
+    """Map x -> x**n in polynomial f in Z[x]. """
+    if n <= 0:
+        raise ValueError("'n' must be positive, got %s" % n)
+    if n == 1 or not f:
+        return f
+
+    result = [f[0]]
+
+    for coeff in f[1:]:
+        result.extend([0]*(n-1))
+        result.append(coeff)
+
+    return result
 
 def zzx_add(f, g):
     """Add polynomials in Z[x]. """
@@ -1546,7 +1561,7 @@ def zzx_zassenhaus(f):
 
     return factors + [f]
 
-def zzx_factor(f):
+def zzx_factor(f, **flags):
     """Factor (non square-free) polynomials in Z[x].
 
        Given a univariate polynomial f in Z[x] computes its complete
@@ -1575,6 +1590,10 @@ def zzx_factor(f):
        Note that this is a complete factorization over integers,
        however over Gaussian integers we can factor the last term.
 
+       By default, polynomials x**n - 1 and x**n + 1 are factored
+       using cyclotomic decomposition to speedup computations. To
+       disable this behaviour set cyclotomic=False.
+
        For more details on the implemented algorithm refer to:
 
        [1] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
@@ -1582,18 +1601,26 @@ def zzx_factor(f):
     """
     cont, g = zzx_primitive(f)
 
-    if zzx_degree(g) < 1:
+    if zzx_degree(g) <= 0:
         return cont, []
 
     if poly_LC(g) < 0:
         g = zzx_neg(g)
         cont = -cont
 
+    if zzx_degree(g) == 1:
+        return cont, [(g, 1)]
+
     g = zzx_sqf_part(g)
+    H, factors = None, []
 
-    factors = []
+    if flags.get('cyclotomic', True):
+        H = zzx_cyclotomic_factor(g)
 
-    for h in zzx_zassenhaus(g):
+    if H is None:
+        H = zzx_zassenhaus(g)
+
+    for h in H:
         k = 0
 
         while True:
@@ -1620,4 +1647,58 @@ def zzx_factor(f):
             return i
 
     return cont, sorted(factors, compare)
+
+def zzx_cyclotomic_factor(f):
+    """Efficiently factor polynomials x**n - 1 and x**n + 1 in Z[x].
+
+       Given a univariate polynomial f in Z[x] returns a list of factors
+       of f, provided that f is in form x**n - 1 or x**n + 1 for n >= 1.
+       Otherwise returns None.
+
+       Factorization is performed using using cyclotomic decomposition
+       of f, which makes this method much faster that any other direct
+       factorization approach (e.g. Zassenhaus's).
+
+       For more details on the implemented algorithm refer to:
+
+       [1] Eric W. Weisstein, Cyclotomic Polynomial, From MathWorld - A Wolfram
+           Web Resource, http://mathworld.wolfram.com/CyclotomicPolynomial.html
+    """
+    lc_f, tc_f = poly_LC(f), poly_TC(f)
+
+    if zzx_degree(f) <= 0:
+        return None
+
+    if lc_f != 1 or tc_f not in [-1, 1]:
+        return None
+
+    if any([ bool(cf) for cf in f[1:-1] ]):
+        return None
+
+    def decompose(n):
+        H = [[1,-1]]
+
+        for p, k in factorint(n).iteritems():
+            Q = [ zzx_quo(zzx_compose_term(h, p), h) for h in H ]
+            H.extend(Q)
+
+            for i in xrange(1, k):
+                Q = [ zzx_compose_term(q, p) for q in Q ]
+                H.extend(Q)
+
+        return H
+
+    n = zzx_degree(f)
+    F = decompose(n)
+
+    if tc_f != 1:
+        return F
+    else:
+        H = []
+
+        for h in decompose(2*n):
+            if h not in F:
+                H.append(h)
+
+        return H
 

@@ -26,6 +26,7 @@ from sympy.polys.integerpolys import (
     zzx_mul_term, zzX_mul_term,
     zzx_mul_const, zzX_mul_const,
     zzx_quo_const, zzX_quo_const,
+    zzx_compose_term,
     zzx_add, zzX_add,
     zzx_sub, zzX_sub,
     zzx_add_mul, zzX_add_mul,
@@ -50,7 +51,7 @@ from sympy.polys.integerpolys import (
     zzx_heu_gcd, zzX_heu_gcd,
     zzx_mod_gcd,
     zzx_hensel_step, zzx_hensel_lift,
-    zzx_zassenhaus, zzx_factor)
+    zzx_zassenhaus, zzx_factor, zzx_cyclotomic_factor)
 
 from sympy.polys.integerpolys import (
     HeuristicGCDFailed, ExactQuotientFailed)
@@ -380,6 +381,16 @@ def test_zzx_quo_const():
 
 def test_zzX_quo_const():
     raises(ExactQuotientFailed, 'zzX_quo_const(f_0, 17)')
+
+def test_zzx_compose_term():
+    assert zzx_compose_term([], 17) == []
+
+    assert zzx_compose_term([1,2,3], 1) == [1, 2, 3]
+    assert zzx_compose_term([1,2,3], 2) == [1, 0, 2, 0, 3]
+    assert zzx_compose_term([1,2,3], 3) == [1, 0, 0, 2, 0, 0, 3]
+    assert zzx_compose_term([1,2,3], 4) == [1, 0, 0, 0, 2, 0, 0, 0, 3]
+
+    raises(ValueError, 'zzx_compose_term([1,2,3], 0)')
 
 def test_zzx_abs():
     assert zzx_abs([]) == []
@@ -951,9 +962,65 @@ def test_zzx_factor():
                            ([10000, -3000, 400, -20, 1], 2),
                            ([10000,  2000, 400,  30, 1], 2)])
 
-    assert zzx_factor(zzx_from_dict({10:1, 0:-1})) == \
+    f = zzx_from_dict({10:1, 0:-1})
+
+    F_0 = zzx_factor(f, cyclotomic=True)
+    F_1 = zzx_factor(f, cyclotomic=False)
+
+    assert F_0 == F_1 == \
         (1, [([1,-1], 1),
              ([1, 1], 1),
              ([1,-1, 1,-1, 1], 1),
              ([1, 1, 1, 1, 1], 1)])
+
+    f = zzx_from_dict({10:1, 0:1})
+
+    F_0 = zzx_factor(f, cyclotomic=True)
+    F_1 = zzx_factor(f, cyclotomic=False)
+
+    assert F_0 == F_1 == \
+        (1, [([1, 0, 1], 1),
+             ([1, 0, -1, 0, 1, 0, -1, 0, 1], 1)])
+
+def test_zzx_cyclotomic_factor():
+    assert zzx_cyclotomic_factor([]) is None
+    assert zzx_cyclotomic_factor([1]) is None
+
+    f = zzx_from_dict({10:2, 0:-1})
+    assert zzx_cyclotomic_factor(f) is None
+    f = zzx_from_dict({10:1, 0:-3})
+    assert zzx_cyclotomic_factor(f) is None
+    f = zzx_from_dict({10:1, 5:1, 0:-1})
+    assert zzx_cyclotomic_factor(f) is None
+
+    f = zzx_from_dict({1:1,0:1})
+    assert zzx_cyclotomic_factor(f) == \
+         [[1, 1]]
+
+    f = zzx_from_dict({1:1,0:-1})
+    assert zzx_cyclotomic_factor(f) == \
+        [[1, -1]]
+
+    f = zzx_from_dict({2:1,0:1})
+    assert zzx_cyclotomic_factor(f) == \
+        [[1, 0, 1]]
+
+    f = zzx_from_dict({2:1,0:-1})
+    assert zzx_cyclotomic_factor(f) == \
+        [[1,-1],
+         [1, 1]]
+
+    f = zzx_from_dict({27:1,0:1})
+    assert zzx_cyclotomic_factor(f) == \
+        [[1, 1],
+         [1, -1, 1],
+         [1, 0, 0, -1, 0, 0, 1],
+         [1, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1]]
+
+    f = zzx_from_dict({27:1,0:-1})
+    assert zzx_cyclotomic_factor(f) == \
+        [[1, -1],
+         [1, 1, 1],
+         [1, 0, 0, 1, 0, 0, 1],
+         [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]]
 
