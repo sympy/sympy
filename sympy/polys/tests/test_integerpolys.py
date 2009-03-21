@@ -26,7 +26,9 @@ from sympy.polys.integerpolys import (
     zzx_mul_term, zzX_mul_term,
     zzx_mul_const, zzX_mul_const,
     zzx_quo_const, zzX_quo_const,
-    zzx_compose_term,
+    zzx_compose_term, zzX_compose_term,
+    zzx_reduce, zzX_reduce,
+    zzx_multi_reduce, zzX_multi_reduce,
     zzx_add, zzX_add,
     zzx_sub, zzX_sub,
     zzx_add_mul, zzX_add_mul,
@@ -392,6 +394,98 @@ def test_zzx_compose_term():
 
     raises(ValueError, 'zzx_compose_term([1,2,3], 0)')
 
+def test_zzX_compose_term():
+    assert zzX_compose_term([[]], (3, 7)) == [[]]
+    assert zzX_compose_term([[2]], (1, 2)) == [[2]]
+
+    assert zzX_compose_term([[2,0]], (1, 1)) == [[2,0]]
+    assert zzX_compose_term([[2,0]], (1, 2)) == [[2,0,0]]
+    assert zzX_compose_term([[2,0]], (1, 3)) == [[2,0,0,0]]
+
+    assert zzX_compose_term([[1, 0, 0], [1], [1, 0]], (2, 1)) == \
+        [[1, 0, 0], [], [1], [], [1, 0]]
+
+def test_zzx_reduce():
+    assert zzx_reduce([]) == (1, [])
+    assert zzx_reduce([2]) == (1, [2])
+    assert zzx_reduce([1,2,3]) == (1, [1,2,3])
+    assert zzx_reduce([1,0,2,0,3]) == (2, [1,2,3])
+    assert zzx_reduce([1,0,2,0,3]) == (2, [1,2,3])
+
+    assert zzx_reduce(zzx_from_dict({7:1,1:1})) == \
+        (1, [1, 0, 0, 0, 0, 0, 1, 0])
+    assert zzx_reduce(zzx_from_dict({7:1,0:1})) == \
+        (7, [1, 1])
+    assert zzx_reduce(zzx_from_dict({7:1,3:1})) == \
+        (1, [1, 0, 0, 0, 1, 0, 0, 0])
+
+    assert zzx_reduce(zzx_from_dict({7:1,4:1})) == \
+        (1, [1, 0, 0, 1, 0, 0, 0, 0])
+    assert zzx_reduce(zzx_from_dict({8:1,4:1})) == \
+        (4, [1, 1, 0])
+
+    assert zzx_reduce(zzx_from_dict({8:1})) == \
+        (8, [1, 0])
+    assert zzx_reduce(zzx_from_dict({7:1})) == \
+        (7, [1, 0])
+    assert zzx_reduce(zzx_from_dict({1:1})) == \
+        (1, [1, 0])
+
+def test_zzX_reduce():
+    assert zzX_reduce([[]]) == ((1, 1), [[]])
+    assert zzX_reduce([[2]]) == ((1, 1), [[2]])
+
+    f = [[1, 0, 0], [], [1, 0], [], [1]]
+
+    assert zzX_reduce(f) == \
+        ((2, 1), [[1, 0, 0], [1, 0], [1]])
+
+def test_zzx_multi_reduce():
+    assert zzx_multi_reduce([], []) == (1, ([], []))
+    assert zzx_multi_reduce([2]) == (1, ([2],))
+
+    assert zzx_multi_reduce([1,2,3]) == (1, ([1,2,3],))
+    assert zzx_multi_reduce([1,0,2,0,3]) == (2, ([1,2,3],))
+
+    assert zzx_multi_reduce([1,0,2,0,3], [2,0,0]) == \
+        (2, ([1,2,3], [2,0]))
+    assert zzx_multi_reduce([1,0,2,0,3], [2,1,0]) == \
+        (1, ([1,0,2,0,3], [2,1,0]))
+
+def test_zzX_multi_reduce():
+    assert zzX_multi_reduce([[]]) == \
+        ((1, 1), ([[]],))
+    assert zzX_multi_reduce([[]], [[]]) == \
+        ((1, 1), ([[]], [[]]))
+
+    assert zzX_multi_reduce([[1]], [[]]) == \
+        ((1, 1), ([[1]], [[]]))
+    assert zzX_multi_reduce([[1]], [[2]]) == \
+        ((1, 1), ([[1]], [[2]]))
+    assert zzX_multi_reduce([[1]], [[2,0]]) == \
+        ((1, 1), ([[1]], [[2, 0]]))
+
+    assert zzX_multi_reduce([[2,0]], [[2,0]]) == \
+        ((1, 1), ([[2, 0]], [[2, 0]]))
+
+    assert zzX_multi_reduce([[2]], [[2,0,0]]) == \
+        ((1, 1), ([[2]], [[2, 0, 0]]))
+    assert zzX_multi_reduce([[2,0,0]], [[2,0,0]]) == \
+        ((1, 2), ([[2, 0]], [[2, 0]]))
+
+    assert zzX_multi_reduce([2,0,0], [1,0,4,0,1]) == \
+        ((2,), ([2, 0], [1, 4, 1]))
+
+    f = [[1, 0, 0], [], [1, 0], [], [1]]
+    g = [[1, 0, 1, 0], [], [1]]
+
+    assert zzX_multi_reduce(f) == \
+        ((2, 1), ([[1, 0, 0], [1, 0], [1]],))
+
+    assert zzX_multi_reduce(f, g) == \
+        ((2, 1), ([[1, 0, 0], [1, 0], [1]],
+                  [[1, 0, 1, 0], [1]]))
+
 def test_zzx_abs():
     assert zzx_abs([]) == []
     assert zzx_abs([1]) == [1]
@@ -584,6 +678,12 @@ def test_zzx_gcd():
 
     assert zzx_gcd(f, g) == h
     assert zzx_cofactors(f, g) == (h, cff, cfg)
+
+    f,g,h = zzX_fateman_poly_F_3(4)
+    H, cff, cfg = zzX_cofactors(f, g)
+
+    assert H == h and zzX_mul(H, cff) == f \
+                  and zzX_mul(H, cfg) == g
 
 def test_zzx_heu_gcd():
     f = [-352518131239247345597970242177235495263669787845475025293906825864749649589178600387510272,

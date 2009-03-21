@@ -437,20 +437,166 @@ def zzX_quo_const(f, c):
     else:
         return [ zzX_quo_const(coeff, c) for coeff in f ]
 
-def zzx_compose_term(f, n):
-    """Map x -> x**n in polynomial f in Z[x]. """
-    if n <= 0:
-        raise ValueError("'n' must be positive, got %s" % n)
-    if n == 1 or not f:
+def zzx_compose_term(f, k):
+    """Map y -> x**k in a polynomial in Z[x]. """
+    if k <= 0:
+        raise ValueError("'k' must be positive, got %s" % k)
+    if k == 1 or not f:
         return f
 
     result = [f[0]]
 
     for coeff in f[1:]:
-        result.extend([0]*(n-1))
+        result.extend([0]*(k-1))
         result.append(coeff)
 
     return result
+
+def zzX_compose_term(f, K):
+    """Map y_i -> x_i**k_i in a polynomial in Z[X]. """
+    def rec_compose(g, l):
+        if poly_univariate_p(g):
+            return zzx_compose_term(g, K[l])
+
+        if K[l] <= 0:
+            raise ValueError("All 'K[i]' must be positive, got %s" % K[l])
+
+        g = [ rec_compose(c, l+1) for c in g ]
+        result, L = [g[0]], poly_level(g) - 1
+
+        for coeff in g[1:]:
+            for i in xrange(1, K[l]):
+                result.append(zzX_zero(L))
+
+            result.append(coeff)
+
+        return result
+
+    if all([ k == 1 for k in K ]):
+        return f
+    else:
+        return rec_compose(f, 0)
+
+def zzx_reduce(f):
+    """Map x**k -> y in a polynomial in Z[x]. """
+    if zzx_degree(f) <= 0:
+        return 1, f
+
+    g = INT_ZERO
+
+    for i in xrange(len(f)):
+        if not f[-i-1]:
+            continue
+
+        g = igcd(g, i)
+
+        if g == 1:
+            return 1, f
+
+    return g, f[::g]
+
+def zzX_reduce(f):
+    """Map x_i**k_i -> y_i in a polynomial in Z[X]. """
+    if zzX_zero_p(f):
+        return (1,)*poly_level(f), f
+
+    F, H = zzX_to_dict(f), {}
+
+    def ilgcd(M):
+        g = 0
+
+        for m in M:
+            g = igcd(g, m)
+
+            if g == 1:
+                break
+
+        return g or 1
+
+    M = tuple(map(lambda *row: ilgcd(row), *F.keys()))
+
+    if all([ b == 1 for b in M ]):
+        return M, f
+
+    for m, coeff in F.iteritems():
+        N = [ a // b for a, b in zip(m, M) ]
+        H[tuple(N)] = coeff
+
+    return M, zzX_from_dict(H, len(M))
+
+def zzx_multi_reduce(*polys):
+    """Map x**k -> y in a set of polynomials in Z[x]. """
+    G = INT_ZERO
+
+    for p in polys:
+        if zzx_degree(p) <= 0:
+            return 1, polys
+
+        g = INT_ZERO
+
+        for i in xrange(len(p)):
+            if not p[-i-1]:
+                continue
+
+            g = igcd(g, i)
+
+            if g == 1:
+                return 1, polys
+
+        G = igcd(G, g)
+
+        if G == 1:
+            return 1, polys
+
+    return G, tuple([ p[::G] for p in polys ])
+
+def zzX_multi_reduce(*polys):
+    """Map x_i**k_i -> y_i in a set of polynomials in Z[X]. """
+    def ilgcd(M):
+        g = 0
+
+        for m in M:
+            g = igcd(g, m)
+
+            if g == 1:
+                break
+
+        return g or 1
+
+    l = poly_level(polys[0])
+
+    if l == 1:
+        M, H = zzx_multi_reduce(*polys)
+        return (M,), H
+
+    F, M, H = [], [], []
+
+    for p in polys:
+        f = zzX_to_dict(p)
+
+        if zzX_zero_p(p):
+            m = (0,)*l
+        else:
+            m = map(lambda *row: ilgcd(row), *f.keys())
+
+        F.append(f)
+        M.append(m)
+
+    M = tuple(map(lambda *row: ilgcd(row), *M))
+
+    if all([ b == 1 for b in M ]):
+        return M, polys
+
+    for f in F:
+        h = {}
+
+        for m, coeff in f.iteritems():
+            N = [ a // b for a, b in zip(m, M) ]
+            h[tuple(N)] = coeff
+
+        H.append(zzX_from_dict(h, len(m)))
+
+    return M, tuple(H)
 
 def zzx_add(f, g):
     """Add polynomials in Z[x]. """
@@ -976,7 +1122,16 @@ def zzX_gcd(f, g, **flags):
 
 def zzX_cofactors(f, g, **flags):
     """Returns polynomial GCD and its co-factors in Z[X]. """
-    return zzX_heu_gcd(f, g, **flags)
+    if poly_univariate_p(f):
+        return zzx_heu_gcd(f, g, **flags)
+
+    if not flags.get('reduced', True):
+        return zzX_heu_gcd(f, g, **flags)
+    else:
+        K, (f, g) = zzX_multi_reduce(f, g)
+
+        return [ zzX_compose_term(h, K)
+            for h in zzX_heu_gcd(f, g, **flags) ]
 
 def zzx_heu_gcd(f, g, **flags):
     """Heuristic polynomial GCD over Z[x].
