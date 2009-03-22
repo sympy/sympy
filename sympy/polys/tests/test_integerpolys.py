@@ -8,17 +8,20 @@ from sympy.polys.integerpolys import (
 
 from sympy.polys.integerpolys import (
     zzx_degree, zzX_degree,
+    zzX_degree_for, zzX_degree_all,
     zzx_strip, zzX_strip,
+    zzX_valid_p,
     zzX_zz_LC, zzX_zz_TC,
     zzX_zero, zzX_zero_of,
     zzX_const, zzX_const_of,
-    zzX_value, zzX_lift,
-    zzX_zeros_of,
+    zzX_zeros_of, zzX_consts_of,
     zzX_zero_p, zzX_one_p,
+    zzX_value, zzX_lift,
     zzx_from_dict, zzX_from_dict,
     zzx_from_poly, zzX_from_poly,
     zzx_to_dict, zzX_to_dict,
     zzx_to_poly, zzX_to_poly,
+    zzX_swap,
     zzx_abs, zzX_abs,
     zzx_neg, zzX_neg,
     zzx_add_term, zzX_add_term,
@@ -35,15 +38,18 @@ from sympy.polys.integerpolys import (
     zzx_sub_mul, zzX_sub_mul,
     zzx_mul, zzX_mul,
     zzx_sqr, zzX_sqr,
+    zzx_pow, zzX_pow,
+    zzx_expand, zzX_expand,
     zzx_div, zzX_div,
     zzx_quo, zzX_quo,
     zzx_rem, zzX_rem,
     zzx_max_norm, zzX_max_norm,
     zzx_l1_norm, zzX_l1_norm,
-    zzx_diff, zzX_diff,
-    zzx_eval, zzX_eval,
-    zzX_eval_coeffs,
-    zzx_trunc, zzX_trunc,
+    zzx_mignotte_bound, zzX_mignotte_bound,
+    zzx_diff, zzX_diff, zzX_diff_for,
+    zzx_eval, zzX_eval, zzX_eval_for,
+    zzX_eval_list, zzX_diff_eval,
+    zzx_trunc, zzX_trunc, zzX_zz_trunc,
     zzx_content, zzX_content, zzX_zz_content,
     zzx_primitive, zzX_primitive, zzX_zz_primitive,
     zzx_sqf_part, zzX_sqf_part,
@@ -216,6 +222,12 @@ def test_zzX_values():
     assert zzX_zeros_of(f_0, 2, 0) == [[[[]]], [[[]]]]
     assert zzX_zeros_of(f_0, 3, 1) == [[[]],[[]],[[]]]
 
+    assert zzX_consts_of([1,2,3], 7, 4) == [7,7,7,7]
+
+    assert zzX_consts_of(f_0, 7, 0, 0) == []
+    assert zzX_consts_of(f_0, 7, 2, 0) == [[[[7]]], [[[7]]]]
+    assert zzX_consts_of(f_0, 7, 3, 1) == [[[7]],[[7]],[[7]]]
+
     assert zzX_lift(2, []) == [[[]]]
     assert zzX_lift(2, [[1,2,3], [], [2,3]]) == \
         [[[[1]],[[2]],[[3]]], [[[]]], [[[2]],[[3]]]]
@@ -247,6 +259,36 @@ def test_zzX_degree():
     assert zzX_degree(f_1) == 3
     assert zzX_degree(f_2) == 5
 
+def test_zzX_degree_for():
+    assert zzX_degree_for([[[]]], 1) == -1
+    assert zzX_degree_for([[[]]], 2) == -1
+    assert zzX_degree_for([[[]]], 3) == -1
+
+    assert zzX_degree_for([[[1]]], 1) == 0
+    assert zzX_degree_for([[[1]]], 2) == 0
+    assert zzX_degree_for([[[1]]], 3) == 0
+
+    assert zzX_degree_for(f_4, 1) == 9
+    assert zzX_degree_for(f_4, 2) == 12
+    assert zzX_degree_for(f_4, 3) == 8
+
+    assert zzX_degree_for(f_6, 1) == 4
+    assert zzX_degree_for(f_6, 2) == 4
+    assert zzX_degree_for(f_6, 3) == 6
+    assert zzX_degree_for(f_6, 4) == 3
+
+def test_zzX_degree_all():
+    assert zzX_degree_all([[[[]]]]) == (-1, -1, -1, -1)
+    assert zzX_degree_all([[[[1]]]]) == (0, 0, 0, 0)
+
+    assert zzX_degree_all(f_0) == (2, 2, 2)
+    assert zzX_degree_all(f_1) == (3, 3, 3)
+    assert zzX_degree_all(f_2) == (5, 3, 3)
+    assert zzX_degree_all(f_3) == (5, 4, 7)
+    assert zzX_degree_all(f_4) == (9, 12, 8)
+    assert zzX_degree_all(f_5) == (3, 3, 3)
+    assert zzX_degree_all(f_6) == (4, 4, 6, 3)
+
 def test_zzx_strip():
     assert zzx_strip([]) == []
     assert zzx_strip([0]) == []
@@ -261,6 +303,8 @@ def test_zzx_strip():
     assert zzx_strip([0,0,0,1,2,0]) == [1,2,0]
 
 def test_zzX_strip():
+    assert zzX_strip([0,1,0]) == [1,0]
+
     assert zzX_strip([[]]) == [[]]
     assert zzX_strip([[], []]) == [[]]
     assert zzX_strip([[], [], []]) == [[]]
@@ -273,7 +317,20 @@ def test_zzX_strip():
     assert zzX_strip([[[]], [[1]]]) == [[[1]]]
     assert zzX_strip([[[]], [[1]], [[]]]) == [[[1]], [[]]]
 
+def test_zzX_valid_p():
+    assert zzX_valid_p([]) == True
+    assert zzX_valid_p([1]) == True
+    assert zzX_valid_p([0]) == False
+
+    assert zzX_valid_p([[[]]]) == True
+    assert zzX_valid_p([[[1]]]) == True
+
+    assert zzX_valid_p([[[]], []]) == False
+    assert zzX_valid_p([[[]], [[1]]]) == False
+
 def test_zzx_from_to():
+    assert zzx_from_dict({}) == []
+
     f = [3,0,0,2,0,0,0,0,8]
 
     g = {8: 3, 5: 2, 0: 8}
@@ -287,6 +344,14 @@ def test_zzx_from_to():
     assert zzx_to_poly(f, x) == g
 
 def test_zzX_from_to():
+    assert zzX_from_dict({}, 2) == [[]]
+
+    f = [3,0,0,2,0,0,0,0,8]
+    g = (3*x**8 + 2*x**5 + 8).as_poly(x)
+
+    assert zzX_from_poly(g) == f
+    assert zzX_to_poly(f, x) == g
+
     assert zzX_from_poly(F_0) == f_0
     assert zzX_from_poly(F_1) == f_1
     assert zzX_from_poly(F_2) == f_2
@@ -302,6 +367,13 @@ def test_zzX_from_to():
     assert zzX_to_poly(f_4, x,y,z) == F_4
     assert zzX_to_poly(f_5, x,y,z) == F_5
     assert zzX_to_poly(f_6, x,y,z,t) == F_6
+
+def test_zzX_swap():
+    f = [[1, 0, 0], [], [1, 0], [], [1]]
+    g = [[1, 0, 0, 0, 0], [1, 0, 0], [1]]
+
+    assert zzX_swap(f) == g
+    assert zzX_swap(g) == f
 
 def test_zzx_add_term():
     assert zzx_add_term([], 0, 0) == []
@@ -586,6 +658,47 @@ def test_zzX_sqr():
     assert zzX_sqr([[[]]]) == [[[]]]
     assert zzX_sqr([[[2]]]) == [[[4]]]
 
+def test_zzx_pow():
+    assert zzx_pow([], 0) == [1]
+    assert zzx_pow([], 1) == []
+    assert zzx_pow([], 7) == []
+
+    assert zzx_pow([1], 0) == [1]
+    assert zzx_pow([1], 1) == [1]
+    assert zzx_pow([1], 7) == [1]
+
+    assert zzx_pow([3], 0) == [1]
+    assert zzx_pow([3], 1) == [3]
+    assert zzx_pow([3], 7) == [2187]
+
+    assert zzx_pow([2,0,0,1,7], 0) == [1]
+    assert zzx_pow([2,0,0,1,7], 1) == [2,0,0,1,7]
+    assert zzx_pow([2,0,0,1,7], 2) == [4,0,0,4,28,0,1,14,49]
+    assert zzx_pow([2,0,0,1,7], 3) == [8,0,0,12,84,0,6,84,294,1,21,147,343]
+
+def test_zzX_pow():
+    assert zzX_pow([[]], 0) == [[1]]
+    assert zzX_pow([[]], 1) == [[]]
+    assert zzX_pow([[]], 7) == [[]]
+
+    assert zzX_pow([[1]], 0) == [[1]]
+    assert zzX_pow([[1]], 1) == [[1]]
+    assert zzX_pow([[1]], 7) == [[1]]
+
+    assert zzX_pow([[3]], 0) == [[1]]
+    assert zzX_pow([[3]], 1) == [[3]]
+    assert zzX_pow([[3]], 7) == [[2187]]
+
+    assert zzX_pow([2,0,0,1,7], 2) == [4,0,0,4,28,0,1,14,49]
+
+    assert zzX_pow([[[-1]], [[-1], [1,0]]], 3) == f_5
+
+def test_zzx_expand():
+    zzx_expand([1,2,3], [1,2], [7,5,4,3]) == zzx_mul([1,2,3], zzx_mul([1,2], [7,5,4,3]))
+
+def test_zzX_expand():
+    zzX_expand(f_0, f_1, f_2) == zzX_mul(f_0, zzX_mul(f_1, f_2))
+
 def test_zzx_div():
     raises(ZeroDivisionError, "zzx_div([1,2,3], [])")
     raises(ZeroDivisionError, "zzx_quo([1,2,3], [])")
@@ -782,6 +895,12 @@ def test_zzx_diff():
     assert zzx_diff([1,2,3,4]) == [3,4,3]
     assert zzx_diff([1,-1,0,0,2]) == [4,-3,0,0]
 
+    f = [17,34,56,-345,23,76,0,0,12,3,7]
+
+    assert zzx_diff(f, 2) ==                   zzX_diff(zzX_diff(f))
+    assert zzx_diff(f, 3) ==          zzX_diff(zzX_diff(zzX_diff(f)))
+    assert zzx_diff(f, 4) == zzX_diff(zzX_diff(zzX_diff(zzX_diff(f))))
+
 def test_zzX_diff():
     assert zzX_diff([]) == []
 
@@ -792,6 +911,19 @@ def test_zzX_diff():
 
     assert zzX_diff([[[1]], [[]]]) == [[[1]]]
     assert zzX_diff([[[3]], [[1]], [[]]]) == [[[6]], [[1]]]
+
+    assert zzX_diff([1,-1,0,0,2]) == [4,-3,0,0]
+
+    f = zzX_from_poly(W_1)
+
+    assert zzX_diff(f, 2) ==                   zzX_diff(zzX_diff(f))
+    assert zzX_diff(f, 3) ==          zzX_diff(zzX_diff(zzX_diff(f)))
+    assert zzX_diff(f, 4) == zzX_diff(zzX_diff(zzX_diff(zzX_diff(f))))
+
+    assert zzX_diff_for(f, 2, 2) == zzX_swap(zzX_diff(zzX_swap(f, 1, 2), 2), 1, 2)
+    assert zzX_diff_for(f, 2, 3) == zzX_swap(zzX_diff(zzX_swap(f, 1, 2), 3), 1, 2)
+    assert zzX_diff_for(f, 3, 2) == zzX_swap(zzX_diff(zzX_swap(f, 1, 3), 2), 1, 3)
+    assert zzX_diff_for(f, 3, 3) == zzX_swap(zzX_diff(zzX_swap(f, 1, 3), 3), 1, 3)
 
 def test_zzx_eval():
     assert zzx_eval([], 7) == 0
@@ -812,28 +944,46 @@ def test_zzX_eval():
     assert zzX_eval([[3, 2], [1, 2]], 3) == [10, 8]
     assert zzX_eval([[[3, 2]], [[1, 2]]], 3) == [[10, 8]]
 
-    assert zzX_eval_coeffs([], []) == []
-    assert zzX_eval_coeffs([[]], []) == []
-    assert zzX_eval_coeffs([[[]]], []) == []
+    f = zzX_from_poly(W_1)
 
-    assert zzX_eval_coeffs(f_0, [-17, 8]) == [-1409, 3, 85902]
-    assert zzX_eval_coeffs(f_1, [-17, 8]) == [-136, 15699, 9166, -27144]
+    assert zzX_eval_for(f, 2,-2) == zzX_from_poly(W_1.subs(y,-2))
+    assert zzX_eval_for(f, 2, 7) == zzX_from_poly(W_1.subs(y, 7))
+    assert zzX_eval_for(f, 3,-2) == zzX_from_poly(W_1.subs(z,-2))
+    assert zzX_eval_for(f, 3, 7) == zzX_from_poly(W_1.subs(z, 7))
 
-    assert zzX_eval_coeffs(f_2, [-12, 3]) == [-1377, 0, -702, -1224, 0, -624]
-    assert zzX_eval_coeffs(f_3, [-12, 3]) == [144, 82, -5181, -28872, -14868, -540]
+    assert zzX_diff_eval(f, 3, 2, 7) == zzX_from_poly(W_1.diff(z, 2).subs(z, 7))
 
-    assert zzX_eval_coeffs(f_4, [25, -1]) == [152587890625, 9765625, -59605407714843750,
+    assert zzX_eval_list(f_0, []) == f_0
+
+    assert zzX_eval_list([[]], [1]) == []
+    assert zzX_eval_list([[[]]], [1]) == [[]]
+    assert zzX_eval_list([[[]]], [1, 2]) == []
+
+    assert zzX_eval_list(f_0, [1,-17,8]) == 84496
+    assert zzX_eval_list(f_0, [-17, 8]) == [-1409, 3, 85902]
+    assert zzX_eval_list(f_0, [8]) == [[83, 2], [3], [302, 81, 1]]
+
+    assert zzX_eval_list(f_1, [-17, 8]) == [-136, 15699, 9166, -27144]
+
+    assert zzX_eval_list(f_2, [-12, 3]) == [-1377, 0, -702, -1224, 0, -624]
+    assert zzX_eval_list(f_3, [-12, 3]) == [144, 82, -5181, -28872, -14868, -540]
+
+    assert zzX_eval_list(f_4, [25, -1]) == [152587890625, 9765625, -59605407714843750,
         -3839159765625, -1562475, 9536712644531250, 610349546750, -4, 24414375000, 1562520]
-    assert zzX_eval_coeffs(f_5, [25, -1]) == [-1, -78, -2028, -17576]
+    assert zzX_eval_list(f_5, [25, -1]) == [-1, -78, -2028, -17576]
 
-    assert zzX_eval_coeffs(f_6, [0, 2, 4]) == [5040, 0, 0, 4480]
+    assert zzX_eval_list(f_6, [0, 2, 4]) == [5040, 0, 0, 4480]
 
 def test_zzx_trunc():
     assert zzx_trunc([1,2,3,4,5,6], 3) == [1, -1, 0, 1, -1, 0]
     assert zzx_trunc([6,5,4,3,2,1], 3) ==    [-1, 1, 0, -1, 1]
 
 def test_zzX_trunc():
-    assert zzX_trunc(f_0, 3) == \
+    assert zzX_trunc([[]], [1,2]) == [[]]
+    assert zzX_trunc([[1,2], [1,4,1], [1]], [1,2]) == [[-3], [1]]
+
+def test_zzX_zz_trunc():
+    assert zzX_zz_trunc(f_0, 3) == \
         [[[1, -1, 0], [-1]], [[]], [[1, -1, 0], [1, -1, 1], [1]]]
 
 def test_zzX_zz_LC_TC():

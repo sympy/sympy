@@ -69,11 +69,42 @@ def zzx_degree(f):
     return len(f) - 1
 
 def zzX_degree(f):
-    """Returns leading degree of f in Z[X]. """
+    """Returns leading degree of f in x_1 in Z[X]. """
     if zzX_zero_p(f):
         return -1
     else:
         return len(f) - 1
+
+def zzX_degree_for(f, k):
+    """Returns leading degree of f in x_k in Z[X]. """
+    if k < 0:
+        k += poly_level(f) + 1
+
+    if k == 1:
+        return zzX_degree(f)
+
+    def rec_degree(g, l):
+        if l == k:
+            return zzX_degree(g)
+        else:
+            return max([ rec_degree(coeff, l+1) for coeff in g ])
+
+    return rec_degree(f, 1)
+
+def zzX_degree_all(f):
+    """Returns total degree of f in Z[X]. """
+    degs = [-1]*poly_level(f)
+
+    def rec_degree(g, l):
+        degs[l-1] = max(degs[l-1], zzX_degree(g))
+
+        if not poly_univariate_p(g):
+            for coeff in g:
+                rec_degree(coeff, l+1)
+
+    rec_degree(f, 1)
+
+    return tuple(degs)
 
 def zzx_strip(f):
     """Remove leading zeros from f in Z[x]. """
@@ -92,6 +123,9 @@ def zzx_strip(f):
 
 def zzX_strip(f):
     """Remove leading zeros from f in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_strip(f)
+
     if zzX_zero_p(f):
         return f
 
@@ -107,6 +141,20 @@ def zzX_strip(f):
         return zzX_zero_of(f)
     else:
         return f[k:]
+
+def zzX_valid_p(f):
+    """Returns True if f is a valid polynomial in Z[x]. """
+    levels = []
+
+    def rec_valid(g, l):
+        if poly_univariate_p(g):
+            levels.append(l)
+            return zzx_strip(g) == g
+        else:
+            return zzX_strip(g) == g and \
+                all([ rec_valid(h, l+1) for h in g ])
+
+    return rec_valid(f, 1) and len(set(levels)) == 1
 
 def zzX_zz_LC(f):
     """Returns integer leading coefficient. """
@@ -163,6 +211,18 @@ def zzX_zeros_of(f, k, d=0):
     else:
         return [ zzX_zero(l) for i in xrange(k) ]
 
+def zzX_consts_of(f, c, k, d=0):
+    """Returns a list of multivariate constants of f. """
+    if poly_univariate_p(f):
+        return [INT_TYPE(c)]*k
+
+    l = poly_level(f)-d
+
+    if not k:
+        return []
+    else:
+        return [ zzX_const(l, c) for i in xrange(k) ]
+
 def zzX_zero_p(f):
     """Returns True if f is zero in Z[X]. """
     if poly_univariate_p(f):
@@ -209,6 +269,9 @@ def zzX_lift(l, f):
 
 def zzx_from_dict(f):
     """Create Z[x] polynomial from a dict. """
+    if not f:
+        return []
+
     n, h = max(f.iterkeys()), []
 
     for k in xrange(n, -1, -1):
@@ -220,6 +283,8 @@ def zzX_from_dict(f, l):
     """Create Z[X] polynomial from a dict. """
     if l == 1:
         return zzx_from_dict(f)
+    elif not f:
+        return zzX_zero(l)
 
     coeffs = {}
 
@@ -280,7 +345,10 @@ def zzx_from_poly(f):
 
 def zzX_from_poly(f):
     """Convert Poly instance to a recursive dense polynomial in Z[X]. """
-    return zzX_from_dict(dict(zip(f.monoms, f.coeffs)), len(f.symbols))
+    if f.is_univariate:
+        return zzx_from_poly(f)
+    else:
+        return zzX_from_dict(dict(zip(f.monoms, f.coeffs)), len(f.symbols))
 
 def zzx_to_poly(f, *symbols):
     """Convert recursive dense polynomial to a Poly in Z[x]. """
@@ -303,6 +371,26 @@ def zzX_to_poly(f, *symbols):
         terms[monom] = Integer(int(coeff))
 
     return Poly(terms, *symbols)
+
+def zzX_swap(f, i=1, j=2):
+    """Transform Z[..x_i..x_j..] to Z[..x_j..x_i..]. """
+    l = poly_level(f)
+
+    if i < 1 or j < 1 or i > l or j > l:
+        raise ValueError("1 <= i < j <= lev(f) expected")
+    elif i == j:
+        return f
+    else:
+        i, j = i-1, j-1
+
+    F, H = zzX_to_dict(f), {}
+
+    for exp, coeff in F.iteritems():
+        H[exp[:i]    + (exp[j],) +
+          exp[i+1:j] +
+          (exp[i],)  + exp[j+1:]] = coeff
+
+    return zzX_from_dict(H, l)
 
 def zzx_abs(f):
     """Make all coefficients positive in Z[x]. """
@@ -822,6 +910,70 @@ def zzX_sqr(f):
 
     return h
 
+def zzx_pow(f, n):
+    """Raise f to the n-th power in Z[x]. """
+    if not n:
+        return [INT_ONE]
+    if n == 1 or f == [] or f == [1]:
+        return f
+
+    g = [INT_ONE]
+
+    while True:
+        n, m = n//2, n
+
+        if m & 1:
+            g = zzx_mul(g, f)
+
+            if n == 0:
+                break
+
+        f = zzx_sqr(f)
+
+    return g
+
+def zzX_pow(f, n):
+    """Raise f to the n-th power in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_pow(f, n)
+    if not n:
+        return zzX_const_of(f, 1)
+    if n == 1 or zzX_zero_p(f) or zzX_one_p(f):
+        return f
+
+    g = zzX_const_of(f, 1)
+
+    while True:
+        n, m = n//2, n
+
+        if m & 1:
+            g = zzX_mul(g, f)
+
+            if n == 0:
+                break
+
+        f = zzX_sqr(f)
+
+    return g
+
+def zzx_expand(*polys):
+    """Multiply together several polynomials in Z[x]. """
+    f = polys[0]
+
+    for g in polys[1:]:
+        f = zzx_mul(f, g)
+
+    return f
+
+def zzX_expand(*polys):
+    """Multiply together several polynomials in Z[X]. """
+    f = polys[0]
+
+    for g in polys[1:]:
+        f = zzX_mul(f, g)
+
+    return f
+
 def zzx_div(f, g):
     """Returns quotient and remainder in Z[x]. """
     df = zzx_degree(f)
@@ -936,29 +1088,79 @@ def zzX_l1_norm(f):
     else:
         return sum([ zzX_l1_norm(coeff) for coeff in f ])
 
-def zzx_diff(f):
-    """Differentiate polynomial in Z[x]. """
+def zzx_mignotte_bound(f):
+    """Mignotte bound for univariate polynomials. """
+    a = zzx_max_norm(f)
+    b = abs(poly_LC(f))
+    n = zzx_degree(f)
+
+    return INT_TYPE(isqrt(n+1))*2**n*a*b
+
+def zzX_mignotte_bound(f):
+    """Mignotte bound for multivariate polynomials. """
+    a = zzX_max_norm(f)
+    b = abs(zzX_zz_LC(f))
+    n = sum(zzX_degree_all(f))
+
+    return INT_TYPE(isqrt(n+1))*2**n*a*b
+
+def zzx_diff(f, m=1):
+    """m-th order derivative of a polynomial in Z[x]. """
     n, deriv = zzx_degree(f), []
 
-    for coeff in f[:-1]:
-        deriv.append(n*coeff)
-        n -= 1
+    n = zzX_degree(f)
+
+    if n < m:
+        return []
+
+    deriv, c = [], INT_ONE
+
+    for i in xrange(0, m):
+        c, n = c*n, n-1
+
+    for coeff in f[:-m]:
+        deriv.append(coeff*c)
+        c, n = n*(c//(n+m)), n-1
 
     return deriv
 
-def zzX_diff(f):
-    """Differentiate polynomial in Z[X]. """
-    n, deriv = zzX_degree(f), []
+def zzX_diff(f, m=1):
+    """m-th order derivative in x_0 of a polynomial in Z[X]. """
+    if poly_univariate_p(f):
+        return zzx_diff(f, m)
 
-    if n <= 0:
+    n = zzX_degree(f)
+
+    if n < m:
         return zzX_zero_of(f)
 
-    for coeff in f[:-1]:
-        h = zzX_mul_const(coeff, n)
+    deriv, c = [], INT_ONE
+
+    for i in xrange(0, m):
+        c, n = c*n, n-1
+
+    for coeff in f[:-m]:
+        h = zzX_mul_const(coeff, c)
+        c, n = n*(c//(n+m)), n-1
         deriv.append(h)
-        n -= 1
 
     return deriv
+
+def zzX_diff_for(f, k, m=1):
+    """m-th order derivative in x_k of a polynomial in Z[X]. """
+    if k < 0:
+        k += poly_level(f) + 1
+
+    if k == 1:
+        return zzX_diff(f, m)
+
+    def rec_diff(g, l):
+        if l == k:
+            return zzX_diff(g, m)
+        else:
+            return zzX_strip([ rec_diff(coeff, l+1) for coeff in g ])
+
+    return rec_diff(f, 1)
 
 def zzx_eval(f, x):
     """Evaluate f(x) in Z[x] using Horner scheme. """
@@ -974,7 +1176,10 @@ def zzx_eval(f, x):
     return result
 
 def zzX_eval(f, x):
-    """Evaluate f(x) in Z[X] using Horner scheme. """
+    """Evaluate f in Z[X] in variable x_1, using Horner scheme. """
+    if hasattr(x, '__iter__'):
+        return zzX_eval_list(f, x)
+
     if poly_univariate_p(f):
         return zzx_eval(f, x)
 
@@ -989,39 +1194,90 @@ def zzX_eval(f, x):
 
     return result
 
-def zzX_eval_coeffs(f, A):
-    """Evaluate polynomial coefficients in Z[X]. """
-    def rec_eval(g, k):
-        if poly_univariate_p(g):
-            return zzx_eval(g, A[k])
+def zzX_eval_for(f, k, x):
+    """Evaluate f in Z[X] in variable x_k, using Horner scheme. """
+    if k < 0:
+        k += poly_level(f) + 1
+
+    if k == 1:
+        return zzX_eval(f, x)
+
+    def rec_eval(g, l):
+        if l == k:
+            return zzX_eval(g, x)
         else:
-            return zzx_eval([ rec_eval(h, k+1) for h in g ], A[k])
+            return zzX_strip([ rec_eval(coeff, l+1) for coeff in g ])
+
+    return rec_eval(f, 1)
+
+def zzX_eval_list(f, A):
+    """Evaluate f(x_j,...,x_n) polynomial in Z[X]. """
+    def rec_eval(g, l, L):
+        if l == L:
+            return zzx_eval(g, A[-1])
+        else:
+            h = [ rec_eval(h, l+1, L) for h in g ]
+
+            if l <= L - len(A):
+                return h
+            else:
+                return zzx_eval(h, A[-L+l-1])
+
+    if not A:
+        return f
+
+    L = poly_level(f)
 
     if zzX_zero_p(f):
-        return []
-    else:
-        return zzx_strip([ rec_eval(g, 0) for g in f ])
+        return zzX_zero(L - len(A))
 
-def zzx_trunc(f, m):
-    """Reduce Z[x] polynomial modulo m. """
+    e = rec_eval(f, 1, L)
+
+    if L == len(A):
+        return e
+    else:
+        return zzX_strip(e)
+
+def zzX_diff_eval(f, k, m, x):
+    """Differentiate and evaluate f in Z[X] in variable x_k. """
+    if k < 0:
+        k += poly_level(f) + 1
+
+    if k == 1:
+        return zzX_eval(zzX_diff(f, m), x)
+
+    def rec_eval(g, l):
+        if l == k:
+            return zzX_eval(zzX_diff(g, m), x)
+        else:
+            return zzX_strip([ rec_eval(coeff, l+1) for coeff in g ])
+
+    return rec_eval(f, 1)
+
+def zzx_trunc(f, p):
+    """Reduce Z[x] polynomial modulo integer p. """
     g = []
 
     for coeff in f:
-        coeff %= m
+        coeff %= p
 
-        if coeff > m // 2:
-            g.append(coeff - m)
+        if coeff > p // 2:
+            g.append(coeff - p)
         else:
             g.append(coeff)
 
     return zzx_strip(g)
 
-def zzX_trunc(f, m):
-    """Reduce Z[X] polynomial modulo m. """
+def zzX_trunc(f, p):
+    """Reduce Z[X] polynomial modulo polynomial p. """
+    return zzX_strip([ zzX_rem(g, p) for g in f ])
+
+def zzX_zz_trunc(f, p):
+    """Reduce Z[X] polynomial modulo integer p. """
     if poly_univariate_p(f):
-        return zzx_trunc(f, m)
+        return zzx_trunc(f, p)
     else:
-        return zzX_strip([ zzX_trunc(g, m) for g in f ])
+        return zzX_strip([ zzX_zz_trunc(g, p) for g in f ])
 
 def zzx_content(f):
     """Returns integer GCD of coefficients in Z[x]. """
@@ -1289,7 +1545,7 @@ def zzX_heu_gcd(f, g, **flags):
         f = []
 
         while not zzX_zero_p(h):
-            g = zzX_trunc(h, x)
+            g = zzX_zz_trunc(h, x)
             f.insert(0, g)
             h = zzX_sub(h, g)
             h = zzX_quo_const(h, x)
