@@ -909,33 +909,43 @@ class Matrix(object):
         else:
             return -1 * self.minorEntry(i, j, method)
 
-    def jacobian(self, varlist):
+    def jacobian(self, X):
         """
         Calculates the Jacobian matrix (derivative of a vectorial function).
 
-        self is a vector of expression representing functions f_i(x_1, ...,
-        x_n).  varlist is the set of x_i's in order.
+        self ... a vector of expressions representing functions f_i(x_1, ...,
+                        x_n).
+        X ...... is the set of x_i's in order, it can be a list or a Matrix
+
+        Both self and X can be a row or a column matrix in any order
+        (jacobian() should always work).
+
+        Example:
+        >>> from sympy import symbols, sin, cos
+        >>> rho, phi = symbols("rho phi")
+        >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
+        >>> Y = Matrix([rho, phi])
+        >>> X.jacobian(Y)
+        [cos(phi), -rho*sin(phi)]
+        [sin(phi),  rho*cos(phi)]
         """
-        assert self.lines == 1
-        m = self.cols
-        if isinstance(varlist, Matrix):
-            assert varlist.lines == 1
-            n = varlist.cols
-        elif isinstance(varlist, (list, tuple)):
-            n = len(varlist)
-        assert n > 0 # need to diff by something
-        J = self.zeros((m, n)) # maintain subclass type
-        for i in range(m):
-            if isinstance(self[i], (float, int)):
-                continue    # constant function, jacobian row is zero
-            try:
-                tmp = self[i].diff(varlist[0])   # check differentiability
-                J[i,0] = tmp
-            except AttributeError:
-                raise ValueError("Function %d is not differentiable" % i)
-            for j in range(1,n):
-                J[i,j] = self[i].diff(varlist[j])
-        return J
+        if not isinstance(X, Matrix):
+            X = Matrix(X)
+        # Both X and self can be a row or a column matrix, so we need to make
+        # sure all valid combinations work, but everything else fails:
+        assert len(self.shape) == 2
+        assert len(X.shape) == 2
+        if self.shape[0] == 1:
+            n = self.shape[1]
+        else:
+            n = self.shape[0]
+        if X.shape[0] == 1:
+            assert X.shape[1] == n
+        else:
+            assert X.shape[0] == n
+
+        # n is the dimension of the matrix, computing the Jacobian is now easy:
+        return Matrix(n, n, lambda j, i: self[j].diff(X[i]))
 
     def QRdecomposition(self):
         """

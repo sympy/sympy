@@ -1,6 +1,6 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
         sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, \
-        integrate, oo, raises
+        integrate, oo, raises, trigsimp
 from sympy.matrices.matrices import ShapeError, MatrixError
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL
@@ -957,3 +957,15 @@ def test_inv_iszerofunc():
     A.col_swap(0,1)
     for method in "GE", "LU":
         assert A.inv(method, iszerofunc=lambda x: x==0) == A.inv("ADJ")
+
+def test_jacobian_metrics():
+    rho, phi = symbols("rho phi")
+    X = Matrix([rho*cos(phi), rho*sin(phi)])
+    Y = Matrix([rho, phi])
+    J = X.jacobian(Y)
+    assert J == X.jacobian(Y.T)
+    assert J == (X.T).jacobian(Y)
+    assert J == (X.T).jacobian(Y.T)
+    g = J.T*eye(J.shape[0])*J
+    g = g.applyfunc(trigsimp)
+    assert g == Matrix([[1, 0], [0, rho**2]])
