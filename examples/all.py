@@ -62,6 +62,7 @@ TERMINAL_EXAMPLES = [
     "advanced.pidigits",
     "advanced.qft",
     "advanced.relativity",
+    "advanced.curvilinear_coordinates",
     ]
 
 WINDOWED_EXAMPLES = [
