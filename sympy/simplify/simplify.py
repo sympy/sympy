@@ -1,4 +1,3 @@
-
 from sympy import SYMPY_DEBUG
 
 from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
@@ -9,9 +8,9 @@ from sympy.core.numbers import igcd
 from sympy.utilities import make_list, all
 from sympy.functions import gamma, exp, sqrt
 
-from sympy.polys import Poly
+from sympy.simplify.cse_main import cse
 
-from sys import maxint
+from sympy.polys import Poly
 
 import sympy.mpmath as mpmath
 
@@ -738,15 +737,56 @@ def ratsimp(expr):
 
     return num/denum
 
-def trigsimp(expr, deep=False):
+def trigsimp(expr, deep=False, recursive=False):
     """
     Usage
     =====
-        trig(expr) -> reduces expression by using known trig identities
+        trigsimp(expr) -> reduces expression by using known trig identities
 
     Notes
     =====
 
+    deep ........ apply trigsimp inside functions
+    recursive ... use common subexpression elimination (cse()) and apply
+                  trigsimp recursively (recursively==True is quite expensive
+                  operation of the expression is large)
+
+    Examples
+    ========
+        >>> from sympy import *
+        >>> x = Symbol('x')
+        >>> y = Symbol('y')
+        >>> e = 2*sin(x)**2 + 2*cos(x)**2
+        >>> trigsimp(e)
+        2
+        >>> trigsimp(log(e))
+        log(2*cos(x)**2 + 2*sin(x)**2)
+        >>> trigsimp(log(e), deep=True)
+        log(2)
+    """
+    if recursive:
+        w, g = cse(expr)
+        g = trigsimp_nonrecursive(g[0])
+        for sub in reversed(w):
+            g = g.subs(sub[0], sub[1])
+            g = trigsimp_nonrecursive(g)
+        return(g)
+    else:
+        return trigsimp_nonrecursive(expr, deep)
+
+def trigsimp_nonrecursive(expr, deep=False):
+    """
+    A nonrecursive trig simplifier, used from trigsimp.
+
+    Usage
+    =====
+        trigsimp_nonrecursive(expr) -> reduces expression by using known trig
+                                       identities
+
+    Notes
+    =====
+
+    deep ........ apply trigsimp inside functions
 
     Examples
     ========

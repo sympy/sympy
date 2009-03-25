@@ -27,7 +27,7 @@ def laplace(f, g_inv, g_det, X):
                 f.diff(X[alpha]) / (2*g_det)
     return r
 
-def transform(name, X, Y, g_correct=None):
+def transform(name, X, Y, g_correct=None, recursive=False):
     """
     Transforms from cartesian coordinates X to any curvilinear coordinates Y.
 
@@ -40,6 +40,9 @@ def transform(name, X, Y, g_correct=None):
                   calculation. Leave it as None, only if the metric that
                   transform() prints is not simplified, you can help it by
                   specifying the correct one.
+
+    recursive ... apply recursive trigonometric simplification (use only when
+                  needed, as it is an expensive operation)
     """
     print "_"*80
     print "Transformation:", name
@@ -49,7 +52,7 @@ def transform(name, X, Y, g_correct=None):
     print "Jacobian:"
     pprint(J)
     g = J.T*eye(J.shape[0])*J
-    g = g.applyfunc(trigsimp)
+    g = g.applyfunc(lambda x: trigsimp(x, recursive=recursive))
     print "metric tensor g_{ij}:"
     pprint(g)
     if g_correct is not None:
@@ -80,9 +83,7 @@ def main():
             Matrix([rho*sin(theta)*cos(phi), rho*sin(theta)*sin(phi),
                 rho*cos(theta)]),
             [rho, theta, phi],
-            # spherical metric needs a little help:
-            g_correct=Matrix([[1, 0, 0], [0, rho**2, 0],
-                [0, 0, rho**2*sin(theta)**2]])
+            recursive=True
             )
 
     transform("rotating disk",

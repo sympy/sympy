@@ -34,7 +34,7 @@ def test_ratsimp_X2():
     assert ratsimp(e) == 1
 
 def test_trigsimp():
-    x,y = map(Symbol, 'xy')
+    x, y = symbols('x y')
 
     assert trigsimp(1 - sin(x)**2) == cos(x)**2
     assert trigsimp(1 - cos(x)**2) == sin(x)**2
@@ -53,6 +53,10 @@ def test_trigsimp():
     assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1
     e = 2*sin(x)**2 + 2*cos(x)**2
     assert trigsimp(log(e), deep=True) == log(2)
+    assert trigsimp(cos(x)**2*sin(y)**2 + cos(x)**2*cos(y)**2 + sin(x)**2,
+            recursive=True) == 1
+    assert trigsimp(sin(x)**2*sin(y)**2 + sin(x)**2*cos(y)**2 + cos(x)**2,
+            recursive=True) == 1
 
 @XFAIL
 def test_factorial_simplify():
