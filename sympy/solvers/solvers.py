@@ -266,7 +266,7 @@ def solve(f, *symbols, **flags):
                 if poly is not None:
                     polys.append(poly)
                 else:
-                    raise NotImplementedError
+                    raise NotImplementedError()
 
             if all(p.is_linear for p in polys):
                 n, m = len(f), len(symbols)
@@ -776,6 +776,9 @@ def tsolve(eq, sym):
         if not (lhs_.is_Function or
                 any(term.is_Function for term in lhs_.args)):
             cv_sols = solve(lhs_ - rhs, t)
+            for sol in cv_sols:
+                if sol.has(sym):
+                    raise NotImplementedError("Unable to solve the equation")
             cv_inv = solve( t - f1, sym )[0]
             sols = list()
             for sol in cv_sols:
@@ -783,7 +786,7 @@ def tsolve(eq, sym):
             return sols
 
 
-    raise ValueError("unable to solve the equation")
+    raise NotImplementedError("Unable to solve the equation.")
 
 
 def msolve(args, f, x0, tol=None, maxsteps=None, verbose=False, norm=None,
