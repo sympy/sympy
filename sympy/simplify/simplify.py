@@ -63,10 +63,6 @@ def fraction(expr, exact=False):
     """
     expr = sympify(expr)
 
-    #XXX this only works sometimes (caching bug?)
-    if expr == exp(-Symbol("x")) and exact:
-        return (expr, 1)
-
     numer, denom = [], []
 
     for term in make_list(expr, Mul):
