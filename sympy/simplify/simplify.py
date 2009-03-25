@@ -745,7 +745,7 @@ def trigsimp(expr, deep=False, recursive=False):
     deep ........ apply trigsimp inside functions
     recursive ... use common subexpression elimination (cse()) and apply
                   trigsimp recursively (recursively==True is quite expensive
-                  operation of the expression is large)
+                  operation if the expression is large)
 
     Examples
     ========
