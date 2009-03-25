@@ -94,6 +94,11 @@ def __import__(name, globals=None, locals=None, fromlist=None):
 
     fp, pathname, description = imp.find_module(module_name, [module_path])
 
+    this_file = os.path.abspath(__file__)
+    sympy_dir = os.path.join(os.path.dirname(this_file), "..")
+    sympy_dir = os.path.normpath(sympy_dir)
+    sys.path.insert(0, sympy_dir)
+
     try:
         return imp.load_module(module_name, fp, pathname, description)
     finally:
