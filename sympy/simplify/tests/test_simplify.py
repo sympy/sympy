@@ -33,7 +33,7 @@ def test_ratsimp_X2():
     assert e != 1
     assert ratsimp(e) == 1
 
-def test_trigsimp():
+def test_trigsimp1():
     x, y = symbols('x y')
 
     assert trigsimp(1 - sin(x)**2) == cos(x)**2
@@ -53,6 +53,9 @@ def test_trigsimp():
     assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1
     e = 2*sin(x)**2 + 2*cos(x)**2
     assert trigsimp(log(e), deep=True) == log(2)
+
+def test_trigsimp2():
+    x, y = symbols('x y')
     assert trigsimp(cos(x)**2*sin(y)**2 + cos(x)**2*cos(y)**2 + sin(x)**2,
             recursive=True) == 1
     assert trigsimp(sin(x)**2*sin(y)**2 + sin(x)**2*cos(y)**2 + cos(x)**2,
@@ -61,6 +64,19 @@ def test_trigsimp():
 def test_issue1274():
     x = Symbol("x")
     assert abs(trigsimp(2.0*sin(x)**2+2.0*cos(x)**2)-2.0) < 1e-10
+
+def test_trigsimp3():
+    x, y = symbols('x y')
+    assert trigsimp(sin(x)/cos(x)) == tan(x)
+    assert trigsimp(sin(x)**2/cos(x)**2) == tan(x)**2
+    assert trigsimp(sin(x)**3/cos(x)**3) == tan(x)**3
+    assert trigsimp(sin(x)**10/cos(x)**10) == tan(x)**10
+
+    assert trigsimp(cos(x)/sin(x)) == 1/tan(x)
+    assert trigsimp(cos(x)**2/sin(x)**2) == 1/tan(x)**2
+    assert trigsimp(cos(x)**10/sin(x)**10) == 1/tan(x)**10
+
+    assert trigsimp(tan(x)) == trigsimp(sin(x)/cos(x))
 
 @XFAIL
 def test_factorial_simplify():

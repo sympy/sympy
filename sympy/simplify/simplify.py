@@ -764,15 +764,39 @@ def trigsimp(expr, deep=False, recursive=False):
         >>> trigsimp(log(e), deep=True)
         log(2)
     """
+    from sympy.core.basic import S
+    sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
     if recursive:
         w, g = cse(expr)
         g = trigsimp_nonrecursive(g[0])
         for sub in reversed(w):
             g = g.subs(sub[0], sub[1])
             g = trigsimp_nonrecursive(g)
-        return(g)
+        result = g
     else:
-        return trigsimp_nonrecursive(expr, deep)
+        result = trigsimp_nonrecursive(expr, deep)
+
+    # do some final simplifications like sin/cos -> tan:
+    a,b,c = map(Wild, 'abc')
+    matchers = (
+            (a*sin(b)**c/cos(b)**c, a*tan(b)**c),
+    )
+    for pattern, simp in matchers:
+        res = result.match(pattern)
+        if res is not None:
+            # if c is missing or zero, do nothing:
+            if (not c in res) or res[c] == 0:
+                continue
+            # if "a" contains the argument of sin/cos "b", skip the
+            # simplification:
+            if res[a].has(res[b]):
+                continue
+            # simplify and finish:
+            result = simp.subs(res)
+            break
+
+    return result
+
 
 def trigsimp_nonrecursive(expr, deep=False):
     """
@@ -796,28 +820,26 @@ def trigsimp_nonrecursive(expr, deep=False):
         >>> e = 2*sin(x)**2 + 2*cos(x)**2
         >>> trigsimp(e)
         2
-        >>> trigsimp(log(e))
+        >>> trigsimp_nonrecursive(log(e))
         log(2*cos(x)**2 + 2*sin(x)**2)
-        >>> trigsimp(log(e), deep=True)
+        >>> trigsimp_nonrecursive(log(e), deep=True)
         log(2)
     """
     from sympy.core.basic import S
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
 
-    #XXX this stopped working:
-    if expr == 1/cos(Symbol("x"))**2 - 1:
-        return tan(Symbol("x"))**2
-
     if expr.is_Function:
         if deep:
-            return expr.func( trigsimp(expr.args[0], deep) )
+            return expr.func( trigsimp_nonrecursive(expr.args[0], deep) )
     elif expr.is_Mul:
         ret = S.One
         for x in expr.args:
-            ret *= trigsimp(x, deep)
+            ret *= trigsimp_nonrecursive(x, deep)
+
         return ret
     elif expr.is_Pow:
-        return Pow(trigsimp(expr.base, deep), trigsimp(expr.exp, deep))
+        return Pow(trigsimp_nonrecursive(expr.base, deep),
+                trigsimp_nonrecursive(expr.exp, deep))
     elif expr.is_Add:
         # TODO this needs to be faster
 
@@ -832,7 +854,7 @@ def trigsimp_nonrecursive(expr, deep=False):
         # Scan for the terms we need
         ret = S.Zero
         for term in expr.args:
-            term = trigsimp(term, deep)
+            term = trigsimp_nonrecursive(term, deep)
             res = None
             for pattern, result in matchers:
                 res = term.match(pattern)
