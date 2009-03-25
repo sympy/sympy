@@ -547,13 +547,15 @@ class Pow(Basic):
                 n2 = getn(rest)
                 if n2 is not None:
                     n = n2
-                term2 = rest.as_leading_term(x)
+
+                from sympy import collect
+                term2 = collect(rest.as_leading_term(x), x)
                 k, l = Wild("k"), Wild("l")
                 r = term2.match(k*x**l)
                 k, l = r[k], r[l]
-                if l.is_Integer:
+                if l.is_Integer and l>0:
                     l = int(l)
-                elif l.is_number:
+                elif l.is_number and l>0:
                     l = float(l)
                 else:
                     raise Exception("Not implemented")
