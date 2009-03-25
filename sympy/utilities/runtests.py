@@ -92,6 +92,17 @@ def doctest(*paths, **kwargs):
     """
     verbose = kwargs.get("verbose", False)
     blacklist = kwargs.get("blacklist", [])
+    blacklist.extend([
+        "sympy/thirdparty/pyglet", # segfaults
+        "sympy/mpmath", # needs to be fixed upstream
+        "sympy/plotting", # generates live plots
+        "sympy/utilities/compilef.py", # needs tcc
+        "sympy/galgebra/GA.py", # needs numpy
+        "sympy/galgebra/latex_ex.py", # needs numpy
+        "sympy/conftest.py", # needs py.test
+        "sympy/utilities/benchmarking.py", # needs py.test
+        ])
+
     r = PyTestReporter(verbose)
     t = SymPyDocTests(r, blacklist=blacklist)
     if len(paths) > 0:

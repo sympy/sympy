@@ -7,16 +7,7 @@ The advantage over py.test is that it only depends on sympy and should just
 work in any circumstances. See "sympy.dotest?" for documentation.
 """
 
-blacklist = [
-        "sympy/thirdparty/pyglet", # segfaults
-        "sympy/mpmath", # needs to be fixed upstream
-        "sympy/plotting", # generates live plots
-        "sympy/utilities/compilef.py", # needs tcc
-        "sympy/galgebra/GA.py", # needs numpy
-        "sympy/galgebra/latex_ex.py", # needs numpy
-        "sympy/conftest.py", # needs py.test
-        "sympy/utilities/benchmarking.py", # needs py.test
-        ]
+blacklist = []
 
 import os
 import sys

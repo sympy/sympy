@@ -163,9 +163,10 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        sympy.test()
-        tdoc = test_sympy_doc(self.args)
-        tdoc.run() # run also the doc test suite
+        if sympy.test():
+            # all regular tests run successfuly, so let's also run doctests
+            # (if some regular test fails, the doctests are not run)
+            sympy.doctest()
 
 class test_sympy_doc(Command):
 
@@ -179,43 +180,7 @@ class test_sympy_doc(Command):
         pass
 
     def run(self):
-        import unittest
-        import doctest
-
-        import glob
-
-        print "Testing docstrings."
-
-        def setup_pprint():
-            from sympy import pprint_use_unicode
-            # force pprint to be in ascii mode in doctests
-            pprint_use_unicode(False)
-
-            # hook our nice, hash-stable strprinter
-            from sympy.interactive import init_printing
-            from sympy.printing import sstrrepr
-            init_printing(sstrrepr)
-
-        suite = unittest.TestSuite()
-
-        for perform, module, specific in modules:
-            if perform == True:
-                path = module.replace('.', '/')
-
-                items = glob.glob(path + '/[a-z][a-z0-9_]*.py')
-                items = [ i.replace('\\', '/') for i in items ]
-
-                for omit in specific:
-                    items.remove(path + '/' + omit + '.py')
-
-                for item in items:
-                    module = item.replace('/', '.')[:-3]
-                    suite.addTest(doctest.DocTestSuite(module))
-
-        setup_pprint()
-
-        runner = unittest.TextTestRunner()
-        runner.run(suite)
+        sympy.doctest()
 
 
 class run_benchmarks(Command):
