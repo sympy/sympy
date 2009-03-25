@@ -1165,6 +1165,13 @@ def test_roots():
     assert roots(x**3, x, multiple=True) == [S.Zero, S.Zero, S.Zero]
     assert roots(1234, x, multiple=True) == []
 
+def test_roots2():
+    a, b, c, d, x = symbols("a b c d x")
+    f1 = x**2*c + (a/b) + x*c*d - a
+    f2 = x**2*(a + b*(c-d)*a) + x*a*b*c/(b*d-d) + (a*d-c/d)
+    assert roots(f1, x).values() == [1, 1]
+    assert roots(f2, x).values() == [1, 1]
+
 def test_root_factors():
     assert poly_root_factors(1, x) == [Poly(1, x)]
     assert poly_root_factors(x, x) == [Poly(x, x)]
