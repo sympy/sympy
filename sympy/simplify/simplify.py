@@ -858,6 +858,8 @@ def trigsimp_nonrecursive(expr, deep=False):
             a_t = Wild('a', exclude=[ex])
             pattern = pattern.subs(a, a_t)
             result = result.subs(a, a_t)
+            if expr.is_number:
+                continue
 
             m = expr.match(pattern)
             while m is not None:

@@ -58,6 +58,10 @@ def test_trigsimp():
     assert trigsimp(sin(x)**2*sin(y)**2 + sin(x)**2*cos(y)**2 + cos(x)**2,
             recursive=True) == 1
 
+def test_issue1274():
+    x = Symbol("x")
+    assert abs(trigsimp(2.0*sin(x)**2+2.0*cos(x)**2)-2.0) < 1e-10
+
 @XFAIL
 def test_factorial_simplify():
     # There are more tests in test_factorials.py. These are just to
