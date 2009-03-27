@@ -332,6 +332,17 @@ class Integral(Basic):
         else:
             return integrate(arg.removeO(), x) + arg.getO()*x
 
+    def _eval_subs(self, old, new):
+        arg0 = self.args[0].subs(old, new)
+        arg1 = []
+        for sym, limits in self.args[1]:
+            if limits is not None:
+                a, b, = limits
+                arg1.append((sym, a.subs(old, new), b.subs(old, new)))
+            else:
+                arg1.append((sym, limits))
+        return Integral(arg0, *arg1)
+
 @threaded(use_add=False)
 def integrate(*args, **kwargs):
     """integrate(f, var, ...)
