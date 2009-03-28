@@ -58,8 +58,8 @@ from sympy.polys.integerpolys import (
     zzx_cofactors, zzX_cofactors,
     zzx_heu_gcd, zzX_heu_gcd,
     zzx_mod_gcd,
-    zzx_hensel_step, zzx_hensel_lift,
-    zzx_zassenhaus, zzx_factor, zzx_cyclotomic_factor)
+    zzx_hensel_step, zzx_hensel_lift, zzx_zassenhaus,
+    zzx_eisenstein, zzx_factor, zzx_factor_sqf, zzx_cyclotomic_factor)
 
 from sympy.polys.integerpolys import (
     HeuristicGCDFailed, ExactQuotientFailed)
@@ -1162,6 +1162,13 @@ def test_zzx_hensel_lift():
     assert zzx_to_dict(ff_list[2]) == {0:  182, 1: 1}
     assert zzx_to_dict(ff_list[3]) == {0:  1,   1: 1}
 
+def test_zzx_eisenstein():
+    assert zzx_eisenstein([3, 2, 6, 8, 7]) is None
+    assert zzx_eisenstein([3, 2, 6, 8, 4]) is None
+
+    assert zzx_eisenstein([3, 2, 6, 8, 10]) == True
+    assert zzx_eisenstein([3, 2, 6, 8, 14]) == True
+
 def test_zzx_factor():
     assert zzx_factor([ ]) == (0, [])
     assert zzx_factor([7]) == (7, [])
@@ -1174,6 +1181,9 @@ def test_zzx_factor():
     assert zzx_factor([2,4]) == \
         (2, [([1, 2], 1)])
 
+    assert zzx_factor([1,2,2]) == \
+        (1, [([1,2,2], 1)])
+
     assert zzx_factor([18,12,2]) == \
         (2, [([3, 1], 2)])
 
@@ -1181,10 +1191,19 @@ def test_zzx_factor():
         (-1, [([3,-1], 1),
               ([3, 1], 1)])
 
+    assert zzx_factor_sqf([-9,0,1]) == \
+        (-1, [[3,-1],
+              [3, 1]])
+
     assert zzx_factor([1,-6,11,-6]) == \
         (1, [([1,-3], 1),
              ([1,-2], 1),
              ([1,-1], 1)])
+
+    assert zzx_factor_sqf([1,-6,11,-6]) == \
+        (1, [[1,-3],
+             [1,-2],
+             [1,-1]])
 
     assert zzx_factor([-1,0,0,0,1,0,0]) == \
         (-1, [([1,-1], 1),

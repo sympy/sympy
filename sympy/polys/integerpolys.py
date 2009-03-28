@@ -1974,13 +1974,29 @@ def zzx_zassenhaus(f):
 
     return factors + [f]
 
+def zzx_eisenstein(f):
+    """Eisenstein's irreducibility criterion. """
+    lc = poly_LC(f)
+    tc = poly_TC(f)
+
+    e_fc = zzx_content(f[1:])
+
+    if not e_fc:
+        return
+
+    e_ff = factorint(e_fc)
+
+    for p in e_ff.iterkeys():
+        if (lc % p) and (tc % p**2):
+            return True
+
 def zzx_factor(f, **flags):
     """Factor (non square-free) polynomials in Z[x].
 
        Given a univariate polynomial f in Z[x] computes its complete
        factorization f_1, ..., f_n into irreducibles over integers:
 
-                    f = content(f) f_1**k_1 ... f_n**k_n
+                   f = content(f) f_1**k_1 ... f_n**k_n
 
        The factorization is computed by reducing the input polynomial
        into a primitive square-free polynomial and factoring it using
@@ -1991,7 +2007,7 @@ def zzx_factor(f, **flags):
 
                  (content(f), [(f_1, k_1), ..., (f_n, k_n))
 
-       Consider polynomial f = x**4 - 1:
+       Consider polynomial f = 2*x**4 - 2:
 
        >>> zzx_factor([2, 0, 0, 0, -2])
        (2, [([1, -1], 1), ([1, 1], 1), ([1, 0, 1], 1)])
@@ -2014,14 +2030,15 @@ def zzx_factor(f, **flags):
     """
     cont, g = zzx_primitive(f)
 
-    if zzx_degree(g) <= 0:
+    n = zzx_degree(g)
+
+    if n <= 0:
         return cont, []
 
     if poly_LC(g) < 0:
-        g = zzx_neg(g)
-        cont = -cont
+        cont, g = -cont, zzx_neg(g)
 
-    if zzx_degree(g) == 1:
+    if n == 1 or zzx_eisenstein(g):
         return cont, [(g, 1)]
 
     g = zzx_sqf_part(g)
@@ -2056,6 +2073,39 @@ def zzx_factor(f, **flags):
                 return cmp(f_a, f_b)
             else:
                 return j
+        else:
+            return i
+
+    return cont, sorted(factors, compare)
+
+def zzx_factor_sqf(f, **flags):
+    """Factor square-free (non-primitive) polyomials in Z[x].  """
+    cont, g = zzx_primitive(f)
+
+    n = zzx_degree(g)
+
+    if n <= 0:
+        return cont, []
+
+    if poly_LC(g) < 0:
+        cont, g = -cont, zzx_neg(g)
+
+    if n == 1 or zzx_eisenstein(g):
+        return cont, [(g, 1)]
+
+    factors = []
+
+    if flags.get('cyclotomic', True):
+        factors = zzx_cyclotomic_factor(g)
+
+    if factors is None:
+        factors = zzx_zassenhaus(g)
+
+    def compare(f_a, f_b):
+        i = len(f_a) - len(f_b)
+
+        if not i:
+            return cmp(f_a, f_b)
         else:
             return i
 
