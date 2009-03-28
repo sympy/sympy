@@ -1166,6 +1166,9 @@ def test_roots():
     assert roots(1234, x, multiple=True) == []
 
 def test_roots2():
+    """Just test that calculating these roots does not hang
+    (final result is not checked)
+    """
     a, b, c, d, x = symbols("a b c d x")
     f1 = x**2*c + (a/b) + x*c*d - a
     f2 = x**2*(a + b*(c-d)*a) + x*a*b*c/(b*d-d) + (a*d-c/d)
