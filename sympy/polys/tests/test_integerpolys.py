@@ -767,6 +767,11 @@ def test_zzx_gcd():
     assert zzx_heu_gcd([1,1], [2,4,2]) == ([1, 1], [1], [2, 2])
     assert zzx_mod_gcd([1,1], [2,4,2]) == ([1, 1], [1], [2, 2])
 
+    f, g = [1, -31], [1, 0]
+
+    assert zzx_heu_gcd(f, g) == ([1], f, g)
+    assert zzx_mod_gcd(f, g) == ([1], f, g)
+
     f = [1,8,21,22,8]
     g = [1,6,11,6]
 

@@ -1472,41 +1472,42 @@ def zzx_heu_gcd(f, g, **flags):
         ff = zzx_eval(f, x)
         gg = zzx_eval(g, x)
 
-        h = igcd(ff, gg)
+        if ff and gg:
+            h = igcd(ff, gg)
 
-        cff = ff // h
-        cfg = gg // h
+            cff = ff // h
+            cfg = gg // h
 
-        h = interpolate(h, x)
-        h = zzx_primitive(h)[1]
+            h = interpolate(h, x)
+            h = zzx_primitive(h)[1]
 
-        cff_, r = zzx_div(f, h)
-
-        if not r:
-            cfg_, r = zzx_div(g, h)
-
-            if not r:
-                return finalize(h, cff_, cfg_, gcd)
-
-        cff = interpolate(cff, x)
-
-        h, r = zzx_div(f, cff)
-
-        if not r:
-            cfg_, r = zzx_div(g, h)
-
-            if not r:
-                return finalize(h, cff, cfg_, gcd)
-
-        cfg = interpolate(cfg, x)
-
-        h, r = zzx_div(g, cfg)
-
-        if not r:
             cff_, r = zzx_div(f, h)
 
             if not r:
-                return finalize(h, cff_, cfg, gcd)
+                cfg_, r = zzx_div(g, h)
+
+                if not r:
+                    return finalize(h, cff_, cfg_, gcd)
+
+            cff = interpolate(cff, x)
+
+            h, r = zzx_div(f, cff)
+
+            if not r:
+                cfg_, r = zzx_div(g, h)
+
+                if not r:
+                    return finalize(h, cff, cfg_, gcd)
+
+            cfg = interpolate(cfg, x)
+
+            h, r = zzx_div(g, cfg)
+
+            if not r:
+                cff_, r = zzx_div(f, h)
+
+                if not r:
+                    return finalize(h, cff_, cfg, gcd)
 
         x = INT_TYPE(2.7319*x*isqrt(isqrt(x)))
 
@@ -1604,38 +1605,39 @@ def zzX_heu_gcd(f, g, **flags):
         ff = zzX_eval(f, x)
         gg = zzX_eval(g, x)
 
-        h, cff, cfg = zzX_heu_gcd(ff, gg, **flags)
+        if not (zzX_zero_p(ff) or zzX_zero_p(gg)):
+            h, cff, cfg = zzX_heu_gcd(ff, gg, **flags)
 
-        h = interpolate(h, x)
-        h = zzX_zz_primitive(h)[1]
+            h = interpolate(h, x)
+            h = zzX_zz_primitive(h)[1]
 
-        cff_, r = zzX_div(f, h)
-
-        if zzX_zero_p(r):
-            cfg_, r = zzX_div(g, h)
-
-            if zzX_zero_p(r):
-                return finalize(h, cff_, cfg_, gcd)
-
-        cff = interpolate(cff, x)
-
-        h, r = zzX_div(f, cff)
-
-        if zzX_zero_p(r):
-            cfg_, r = zzX_div(g, h)
-
-            if zzX_zero_p(r):
-                return finalize(h, cff, cfg_, gcd)
-
-        cfg = interpolate(cfg, x)
-
-        h, r = zzX_div(g, cfg)
-
-        if zzX_zero_p(r):
             cff_, r = zzX_div(f, h)
 
             if zzX_zero_p(r):
-                return finalize(h, cff_, cfg, gcd)
+                cfg_, r = zzX_div(g, h)
+
+                if zzX_zero_p(r):
+                    return finalize(h, cff_, cfg_, gcd)
+
+            cff = interpolate(cff, x)
+
+            h, r = zzX_div(f, cff)
+
+            if zzX_zero_p(r):
+                cfg_, r = zzX_div(g, h)
+
+                if zzX_zero_p(r):
+                    return finalize(h, cff, cfg_, gcd)
+
+            cfg = interpolate(cfg, x)
+
+            h, r = zzX_div(g, cfg)
+
+            if zzX_zero_p(r):
+                cff_, r = zzX_div(f, h)
+
+                if zzX_zero_p(r):
+                    return finalize(h, cff_, cfg, gcd)
 
         x = INT_TYPE(2.7319*x*isqrt(isqrt(x)))
 
