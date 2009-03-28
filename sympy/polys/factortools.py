@@ -1,7 +1,7 @@
 """General purpose factorization routines. """
 
-from sympy.polys.integerpolys import zzx_degree, zzx_from_dict, zzx_factor, zzx_mul
-from sympy.polys.polynomial import Poly, PolynomialError, SymbolsError
+from sympy.polys.integerpolys import zzX_from_poly, zzX_to_poly, zzX_factor
+from sympy.polys.polynomial import Poly, PolynomialError, SymbolsError, CoefficientError
 from sympy.polys.monomial import monomial_div
 
 from sympy.core import Integer, Rational, Symbol, sympify
@@ -21,27 +21,32 @@ def poly_factors(f, *symbols, **flags):
     elif symbols:
         raise SymbolsError("Redundant symbols were given")
 
-    denom, f = f.as_integer()
+    symbols = list(f.symbols)
 
-    if f.is_univariate:
-        coeffs = map(int, f.iter_all_coeffs())
-        content, factors = zzx_factor(coeffs)
+    try:
+        denom, F = f.as_integer()
+    except CoefficientError:
+        other = set([])
 
-        for i in xrange(len(factors)):
-            factor, k = factors[i]
-            n = zzx_degree(factor)
+        for coeff in f.iter_coeffs():
+            other |= coeff.atoms(Symbol)
 
-            terms = {}
+        symbols += sorted(other)
 
-            for j, coeff in enumerate(factor):
-                if coeff != 0:
-                    terms[(n-j,)] = Integer(coeff)
+        F = Poly(f, *symbols)
+        denom, F = F.as_integer()
 
-            factors[i] = Poly(terms, *f.symbols), k
-    else:
-        content, factors = kronecker_mv(f, **flags)
+    cont, factors = zzX_factor(zzX_from_poly(F))
 
-    return Rational(content, denom), factors
+    for i, (h, k) in enumerate(factors):
+        h = zzX_to_poly(h, *symbols)
+
+        if f.symbols != symbols:
+            h = h.as_poly(*f.symbols)
+
+        factors[i] = (h, k)
+
+    return Rational(cont, denom), factors
 
 def factors(f, *symbols, **flags):
     """Factor polynomials over rationals.

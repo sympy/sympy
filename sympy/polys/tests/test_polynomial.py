@@ -1244,6 +1244,15 @@ def test_factor():
     assert factor(x*y + x*z + y*z) == x*y + x*z + y*z
     assert factor(x*y + x*z + x**2) == x*(x + y + z)
 
+    assert poly_factors((a*x - b)**5, x) == \
+        (1, [(Poly(a*x - b, x), 5)])
+
+    assert poly_factors((a*x - b)**5, x, a) == \
+        (1, [(Poly(x*a - b, x, a), 5)])
+
+    assert poly_factors((a*x - b)**5, x, a, b) == \
+        (1, [(Poly(x*a - b, x, a, b), 5)])
+
     assert poly_factors(-2*x**2 + x, x) == \
         (-1, [(Poly(x, x), 1),
               (Poly(2*x - 1, x), 1)])
@@ -1261,4 +1270,8 @@ def test_factor():
         (1, [(Poly(a - x, a, x, y), 1),
              (Poly(a + x, a, x, y), 1),
              (Poly(3*a**2 - 2*x*y, a, x, y), 1)])
+
+    assert poly_factors(x**20 - z**5*y**20, x, y, z) == \
+        (1, [(Poly(-y**4*z + x**4, x, y, z), 1),
+             (Poly(y**16*z**4 + x**4*y**12*z**3 + x**8*y**8*z**2 + x**12*y**4*z + x**16, x, y, z) , 1)])
 
