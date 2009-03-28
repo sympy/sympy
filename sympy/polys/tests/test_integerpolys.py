@@ -59,7 +59,11 @@ from sympy.polys.integerpolys import (
     zzx_heu_gcd, zzX_heu_gcd,
     zzx_mod_gcd,
     zzx_hensel_step, zzx_hensel_lift, zzx_zassenhaus,
-    zzx_eisenstein, zzx_factor, zzx_factor_sqf, zzx_cyclotomic_factor)
+    zzx_eisenstein, zzx_factor, zzx_factor_sqf, zzx_cyclotomic_factor,
+    zzX_wang_non_divisors, zzX_wang_test_points,
+    zzX_wang_lead_coeffs, zzX_wang_more_coeffs,
+    zzx_diophantine, zzX_diophantine,
+    zzX_wang_hensel_lifting, zzX_wang, zzX_factor)
 
 from sympy.polys.integerpolys import (
     HeuristicGCDFailed, ExactQuotientFailed)
@@ -67,7 +71,7 @@ from sympy.polys.integerpolys import (
 from sympy.polys.specialpolys import (
     zzX_fateman_poly_F_1, zzX_fateman_poly_F_2, zzX_fateman_poly_F_3)
 
-from sympy import raises, symbols
+from sympy import raises, symbols, nextprime
 
 x, y, z, t = symbols('x,y,z,t')
 
@@ -141,17 +145,17 @@ f_6 = [
     ]
 ]
 
-g_0 = [
-    [[24], [48], [], []],
-    [[24], [], [], [-72], [], []],
-    [[25], [2], [], [4], [8]],
-    [[1], [], [], [1], [], [], [-12]],
-    [[1], [-1], [-2], [292], [], []],
-    [[-1], [], [], [3], [], [], []],
-    [[-1], [], [12], [], [], [48]],
-    [[]],
-    [[-12], [], [], []]
-]
+W_1 = ((4*z**2*y**4 + 4*z**3*y**3 - 4*z**4*y**2 - 4*z**5*y)*x**6 + \
+        (z**3*y**4 + 12*z*y**3 + (12*z**2 - z**5)*y**2 - 12*z**3*y - 12*z**4)*x**5 + \
+        (8*y**4 + (6*z**2 + 8*z)*y**3 + (-4*z**4 + 4*z**3 - 8*z**2)*y**2 + (-4*z**5 - 2*z**4 - 8*z**3)*y)*x**4 + \
+        (2*z*y**4 + z**3*y**3 + (-z**5 - 2*z**3 + 9*z)*y**2 + (-12*z**3 + 12*z**2)*y - 12*z**4 + 3*z**3)*x**3 + \
+        (6*y**3 + (-6*z**2 + 8*z)*y**2 + (-2*z**4 - 8*z**3 + 2*z**2)*y)*x**2 + \
+        (2*z*y**3 - 2*z**3*y**2 - 3*z*y + 3*z**3)*x + \
+        (-2*y**2 + 2*z**2*y)).as_poly(x,y,z)
+
+W_2 = ((24*y**3 + 48*y**2)*x**8 + (24*y**5 - 72*y**2)*x**7 + (25*y**4 + 2*y**3 + 4*y + 8)*x**6 + \
+        (y**6 + y**3 - 12)*x**5 + (y**5 - y**4 - 2*y**3 + 292*y**2)*x**4 + (-y**6 + 3*y**3)*x**3 + \
+        (-y**5 + 12*y**3 + 48)*x**2 - 12*y**3).as_poly(x,y)
 
 def test_poly_LC():
     assert poly_LC([]) == 0
@@ -1297,4 +1301,124 @@ def test_zzx_cyclotomic_factor():
          [1, 1, 1],
          [1, 0, 0, 1, 0, 0, 1],
          [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]]
+
+def test_zzX_wang():
+    f = zzX_from_poly(W_1)
+    p = nextprime(zzX_mignotte_bound(f))
+
+    assert p == 6291469
+
+    V_1, k_1, E_1 = [[1],[]], 1, -14
+    V_2, k_2, E_2 = [[1, 0]], 2, 3
+    V_3, k_3, E_3 = [[1],[ 1, 0]], 2, -11
+    V_4, k_4, E_4 = [[1],[-1, 0]], 1, -17
+
+    V = [V_1, V_2, V_3, V_4]
+    K = [k_1, k_2, k_3, k_4]
+    E = [E_1, E_2, E_3, E_4]
+
+    V = zip(V, K)
+
+    A = [-14, 3]
+
+    U = zzX_eval_list(f, A)
+    cu, u = zzx_primitive(U)
+
+    assert cu == 1 and u == U == \
+        [1036728, 915552, 55748, 105621, -17304, -26841, -644]
+
+    assert zzX_wang_non_divisors(E, cu, 4) == [7, 3, 11, 17]
+    assert zzx_sqf_p(u) and zzx_degree(u) == zzX_degree(f)
+
+    _, H = zzx_factor_sqf(u)
+
+    h_1 = [44,  42,   1]
+    h_2 = [126, -9,  28]
+    h_3 = [187,  0, -23]
+
+    assert H == [h_1, h_2, h_3]
+
+    LC_1 = [[-4], [-4,0]]
+    LC_2 = [[-1,0,0], []]
+    LC_3 = [[1], [], [-1,0,0]]
+
+    LC = [LC_1, LC_2, LC_3]
+
+    assert zzX_wang_lead_coeffs(f, V, cu, E, H, A) == (f, H, LC)
+
+    H_1 = [[44L, 42L, 1L], [126L, -9L, 28L], [187L, 0L, -23L]]
+    C_1 = [-70686, -5863, -17826, 2009, 5031, 74]
+
+    H_2 = [[[-4, -12], [-3, 0], [1]], [[-9, 0], [-9], [-2, 0]], [[1, 0, -9], [], [1, -9]]]
+    C_2 = [[9, 12, -45, -108, -324], [18, -216, -810, 0], [2, 9, -252, -288, -945], [-30, -414, 0], [2, -54, -3, 81], [12, 0]]
+
+    H_3 = [[[-4, -12], [-3, 0], [1]], [[-9, 0], [-9], [-2, 0]], [[1, 0, -9], [], [1, -9]]]
+    C_3 = [[-36, -108, 0], [-27, -36, -108], [-8, -42, 0], [-6, 0, 9], [2, 0]]
+
+    T_1 = [[-3, 0], [-2], [1]]
+    T_2 = [[[-1, 0], []], [[-3], []], [[-6]]]
+    T_3 = [[[]], [[]], [[-1]]]
+
+    assert zzX_diophantine(H_1, C_1,    [], 5, p) == T_1
+    assert zzX_diophantine(H_2, C_2, [-14], 5, p) == T_2
+    assert zzX_diophantine(H_3, C_3, [-14], 5, p) == T_3
+
+    factors = zzX_wang_hensel_lifting(f, H, LC, A, p)
+
+    f_1 = zzX_to_poly(factors[0], x, y, z)
+    f_2 = zzX_to_poly(factors[1], x, y, z)
+    f_3 = zzX_to_poly(factors[2], x, y, z)
+
+    assert f_1 == -(4*(y + z)*x**2 + x*y*z - 1).as_poly(x, y, z)
+    assert f_2 == -(y*z**2*x**2 + 3*x*z + 2*y).as_poly(x, y, z)
+    assert f_3 ==  ((y**2 - z**2)*x**2 + y - z**2).as_poly(x, y, z)
+
+    assert f_1*f_2*f_3 == W_1
+
+def test_zzX_factor():
+    assert zzX_factor([]) == (0, [])
+    assert zzX_factor([7]) == (7, [])
+    assert zzX_factor([[7]]) == (7, [])
+
+    assert zzX_factor([[1], []]) == \
+        (1, [([[1], []], 1)])
+
+    assert zzX_factor([[4], []]) == \
+        (4, [([[1], []], 1)])
+
+    assert zzX_factor([[4], [2]]) == \
+        (2, [([[2], [1]], 1)])
+
+    assert zzX_factor([[1,0,1]]) == \
+        (1, [([[1, 0, 1]], 1)])
+
+    assert zzX_factor([[1,0,-1]]) == \
+        (1, [([[1,-1]], 1),
+             ([[1, 1]], 1)])
+
+    assert zzX_factor(f_1) == \
+        (1, [([[[1]], [[1, 0], [20]]], 1),
+             ([[[1], []], [[1, 10]]],  1),
+             ([[[1, 0]], [[1], [30]]], 1)])
+
+    assert zzX_factor(f_2) == \
+        (1, [([[[1], [], [1, 0, 0]], [[]], [[1], [90]]], 1),
+             ([[[1], [1, 0]], [[]], [[]], [[1, -11]]],   1)])
+
+    assert zzX_factor(f_3) == \
+        (1, [([[[1], [], []], [[1, 0, 0, 0, 1]], [[1, 0]]], 1),
+             ([[[1]], [[]], [[1, 0], []], [[1], [1, 0, 0, 0], []]], 1)])
+
+    assert zzX_factor(f_4) == \
+        (-1, [([[[1], [], [], []], [[1, 0, 0]]], 1),
+              ([[[1, 0]], [[]], [[1, 0, 0], [], [], [], [5]]], 1),
+              ([[[1], []], [[]], [[]], [[-1, 0, -3]]], 1),
+              ([[[1], [], [], [], []], [[]], [[]], [[1, 0, 0]]], 1)])
+
+    assert zzX_factor(f_5) == \
+        (-1, [([[[1]], [[1], [-1, 0]]], 3)])
+
+    assert zzX_factor(f_6) == \
+        (1, [([[[[47]], [[]]], [[[1, 0, 0], [], [], [-1, 0, 0]]]], 1),
+             ([[[[45]]], [[[]]], [[[]]], [[[-9]], [[-1]], [[]], [[3], [], [2, 0], []]]], 1)])
 

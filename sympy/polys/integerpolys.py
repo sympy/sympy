@@ -1,9 +1,11 @@
 """Univariate and multivariate polynomials with coefficients in the integer ring. """
 
-from sympy.polys.galoispolys import gf_from_int_poly, gf_to_int_poly, gf_degree, \
-    gf_from_dict, gf_mul, gf_quo, gf_gcd, gf_gcdex, gf_sqf_p, gf_factor_sqf
+from sympy.polys.galoispolys import (
+    gf_from_int_poly, gf_to_int_poly, gf_degree, gf_from_dict,
+    gf_lshift, gf_add_mul, gf_mul, gf_div, gf_quo, gf_rem,
+    gf_gcd, gf_gcdex, gf_sqf_p, gf_factor_sqf)
 
-from sympy.ntheory import randprime, isprime, factorint
+from sympy.ntheory import randprime, nextprime, isprime, factorint
 from sympy.ntheory.modular import crt1, crt2
 from sympy.utilities import any, all, subsets
 
@@ -23,10 +25,24 @@ try:
 except ImportError:
     from math import sqrt as isqrt
 
+from copy import deepcopy
+
+def factorial(m):
+    k = m
+
+    while m > 1:
+        m -= 1
+        k *= m
+
+    return k
+
+class ExactQuotientFailed(Exception):
+    pass
+
 class HeuristicGCDFailed(Exception):
     pass
 
-class ExactQuotientFailed(Exception):
+class ExtraneousFactors(Exception):
     pass
 
 def poly_LC(f):
@@ -2164,4 +2180,475 @@ def zzx_cyclotomic_factor(f):
                 H.append(h)
 
         return H
+
+def zzX_wang_non_divisors(E, cu, cv):
+    """EEZ: Compute a set of valid divisors.  """
+    result = [ cu*cv ]
+
+    for q in E:
+        q = abs(q)
+
+        for r in reversed(result):
+            while r != 1:
+                r = igcd(r, q)
+                q = q // r
+
+            if q == 1:
+                return None
+
+        result.append(q)
+
+    return result[1:]
+
+def zzX_wang_test_points(f, V, cv, A):
+    """EEZ: Test evaluation points for suitability. """
+    if not zzX_eval(poly_LC(f), A):
+        return None
+
+    U = zzX_eval(f, A)
+
+    if not zzx_sqf_p(U):
+        return None
+
+    cu, u = zzx_primitive(U)
+
+    if poly_LC(u) < 0:
+        cu, u = -cu, zzx_neg(u)
+
+    E = [ zzX_eval(v, A) for v, _ in V ]
+    D = zzX_wang_non_divisors(E, cu, cv)
+
+    if D is not None:
+        return cu, u, E, D
+    else:
+        return None
+
+def zzX_wang_lead_coeffs(f, V, cu, E, H, A):
+    """EEZ: Compute correct leading coefficients. """
+    l = poly_level(f) - 1
+    C, K = [], [0]*len(E)
+
+    for h in H:
+        c = zzX_const(l, 1)
+        d = poly_LC(h)*cu
+
+        for i in reversed(xrange(len(E))):
+            k, e, (v, _) = 0, E[i], V[i]
+
+            while not (d % e):
+                d, k = d//e, k+1
+
+            if k != 0:
+                c, K[i] = zzX_mul(c, zzX_pow(v, k)), 1
+
+        C.append(c)
+
+    if any([ not k for k in K ]):
+        raise ExtraneousFactors
+
+    CC, HH = [], []
+
+    for c, h in zip(C, H):
+        d = zzX_eval(c, A)
+        lc = poly_LC(h)
+
+        if cu == 1:
+            cc = lc//d
+        else:
+            g = igcd(lc, d)
+            d, cc = d//g, lc//g
+            h, cu = zzx_mul_const(h, d), cu//d
+
+        c = zzX_mul_const(c, cc)
+
+        CC.append(c)
+        HH.append(h)
+
+    if cu == 1:
+        return f, HH, CC
+
+    CCC, HHH = [], []
+
+    for c, h in zip(CC, HH):
+        CCC.append(zzX_mul_const(c, cu))
+        HHH.append(zzX_mul_const(h, cu))
+
+    f = zzX_mul_const(f, cu**(len(H)-1))
+
+    return f, HHH, CCC
+
+def zzX_wang_more_coeffs(f, C, H):
+    pass # XXX: to be done
+
+def zzx_diophantine(F, m, p):
+    """Solve univariate Diophantine equations. """
+    if len(F) == 2:
+        a, b = F
+
+        f = gf_from_int_poly(a, p)
+        g = gf_from_int_poly(b, p)
+
+        s, t, G = gf_gcdex(g, f, p)
+
+        s = gf_lshift(s, m)
+        t = gf_lshift(t, m)
+
+        q, s = gf_div(s, f, p)
+
+        t = gf_add_mul(t, q, g, p)
+
+        s = gf_to_int_poly(s, p)
+        t = gf_to_int_poly(t, p)
+
+        result = [s, t]
+    else:
+        G = [F[-1]]
+
+        for f in reversed(F[1:-1]):
+            G.insert(0, zzx_mul(f, G[0]))
+
+        S, T = [], [[1]]
+
+        for f, g in zip(F, G):
+            t, s = zzX_diophantine([g, f], T[-1], [], 0, p)
+            T.append(t)
+            S.append(s)
+
+        result, S = [], S + [T[-1]]
+
+        for s, f in zip(S, F):
+            s = gf_from_int_poly(s, p)
+            f = gf_from_int_poly(f, p)
+
+            r = gf_rem(gf_lshift(s, m), f, p)
+            s = gf_to_int_poly(r, p)
+
+            result.append(s)
+
+    return result
+
+def zzX_diophantine(F, c, A, d, p):
+    """Solve multivariate Diophantine equations. """
+    if not A:
+        S = [ [] for _ in F ]
+        n = zzx_degree(c)
+
+        for i, coeff in enumerate(c):
+            if not coeff:
+                continue
+
+            T = zzx_diophantine(F, n-i, p)
+
+            for j, (s, t) in enumerate(zip(S, T)):
+                t = zzx_mul_const(t, coeff)
+                S[j] = zzx_trunc(zzx_add(s, t), p)
+    else:
+        n = len(A) + 1
+        e = zzX_expand(*F)
+
+        a, A = A[-1], A[:-1]
+        B, G = [], []
+
+        for f in F:
+            B.append(zzX_quo(e, f))
+            G.append(zzX_eval_for(f, n, a))
+
+        C = zzX_eval_for(c, n, a)
+
+        S = zzX_diophantine(G, C, A, d, p)
+        S = [ zzX_lift(1, s) for s in S ]
+
+        for s, b in zip(S, B):
+            c = zzX_sub_mul(c, s, b)
+
+        c = zzX_zz_trunc(c, p)
+
+        m = zzX_value(n-1, [1, -a])
+        M = zzX_const(n, 1)
+
+        for k in xrange(0, d):
+            if zzX_zero_p(c):
+                break
+
+            M = zzX_mul(M, m)
+            C = zzX_diff_eval(c, n, k+1, a)
+
+            if not zzX_zero_p(C):
+                C = zzX_quo_const(C, factorial(k+1))
+                T = zzX_diophantine(G, C, A, d, p)
+
+                for i, t in enumerate(T):
+                    T[i] = zzX_mul(zzX_lift(1, t), M)
+
+                for i, (s, t) in enumerate(zip(S, T)):
+                    S[i] = zzX_add(s, t)
+
+                for t, b in zip(T, B):
+                    c = zzX_sub_mul(c, t, b)
+
+                c = zzX_zz_trunc(c, p)
+
+        S = [ zzX_zz_trunc(s, p) for s in S ]
+
+    return S
+
+def zzX_wang_hensel_lifting(f, H, LC, A, p):
+    """EEZ: Parallel Hensel lifting algorithm. """
+    U, n = [f], len(A)+1
+
+    H = deepcopy(H)
+
+    for i, a in enumerate(reversed(A[1:])):
+        u = zzX_eval_for(U[0], n-i, a)
+        U.insert(0, zzX_zz_trunc(u, p))
+
+    d = max(zzX_degree_all(f)[1:])
+
+    for j, u, a in zip(xrange(2, n+1), U, A):
+        G = deepcopy(H)
+
+        I, J = A[:j-2], A[j-1:]
+
+        for i, (h, lc) in enumerate(zip(H, LC)):
+            lc = zzX_zz_trunc(zzX_eval(lc, J), p)
+            H[i] = [lc] + zzX_lift(1, h[1:])
+
+        m = zzX_value(j-1, [1, -a])
+        M = zzX_const(j, 1)
+
+        c = zzX_sub(u, zzX_expand(*H))
+
+        dj = zzX_degree_for(u, j)
+
+        for k in xrange(0, dj):
+            if zzX_zero_p(c):
+                break
+
+            M = zzX_mul(M, m)
+            C = zzX_diff_eval(c, j, k+1, a)
+
+            if not zzX_zero_p(C):
+                C = zzX_quo_const(C, factorial(k+1))
+                T = zzX_diophantine(G, C, I, d, p)
+
+                for i, (h, t) in enumerate(zip(H, T)):
+                    h = zzX_add_mul(h, zzX_lift(1, t), M)
+                    H[i] = zzX_zz_trunc(h, p)
+
+                h = zzX_sub(u, zzX_expand(*H))
+                c = zzX_zz_trunc(h, p)
+
+    if zzX_expand(*H) != f:
+        raise ExtraneousFactors
+    else:
+        return H
+
+EEZ_NUM_OK    = 3
+EEZ_NUM_TRY   = 20
+EEZ_MOD_STEP  = 50
+
+def zzX_wang(f):
+    """Factor primitive square-free polynomials in Z[X].
+
+       Given a multivariate polynomial f in Z[x_1,...,x_n], which is
+       primitive and square-free in x_1, computes its factorization
+       of f into irreducibles over integers.
+
+       The procedure is based on Wang's Enhanced Extended Zassenhaus
+       algorithm. The algorithm works by viewing f as a univariate
+       polynomial in Z[x_2,...,x_n][x_1], for which an evaluation
+       mapping is computed:
+
+                       x_2 -> a_2, ..., x_n -> a_n
+
+       where a_i, for i=2,...,n, are carefully chosen integers. The
+       mapping is used to transform f into a univariate polynomial
+       in Z[x_1], which can be factored efficiently using Zassenhaus
+       algorithm. The last step is to lift univariate factors to
+       obtain true multivariate factors. For this purpose a parallel
+       Hensel lifting procedure is used.
+
+       For more details on the implemented algorithm refer to:
+
+       [1] P. S. Wang, An Improved Multivariate Polynomial Factoring
+           Algorithm, Math. of Computation 32, 1978, pp. 1215--1231
+
+       [2] K. Geddes, S. R. Czapor, G. Labahn, Algorithms for
+           Computer Algebra, Springer, 1992, pp. 264--272
+    """
+    cv, V = zzX_factor(poly_LC(f))
+
+    b = zzX_mignotte_bound(f)
+    p = nextprime(b)
+
+    l = poly_level(f)
+
+    bad_points = set([])
+    r, mod = None, 5
+
+    while True:
+        configs = []
+
+        while len(configs) < EEZ_NUM_OK:
+            for i in xrange(EEZ_NUM_TRY):
+                A = []
+
+                for j in xrange(0, l-1):
+                    A.append(randint(-mod, mod))
+
+                if tuple(A) not in bad_points:
+                    bad_points.add(tuple(A))
+                else:
+                    continue
+
+                R = zzX_wang_test_points(f, V, cv, A)
+
+                if R is not None:
+                    cu, u, E, _ = R
+
+                    _, H = zzx_factor_sqf(u)
+
+                    rr = len(H)
+
+                    if r is not None:
+                        if rr <= r:
+                            if rr < r:
+                                configs, r = [], rr
+                        else:
+                            continue
+                    else:
+                        r = rr
+
+                    configs.append((u, cu, E, H, A))
+
+                    if len(configs) == EEZ_NUM_OK:
+                        break
+            else:
+                mod += EEZ_MOD_STEP
+
+        if r == 1:
+            return 1, [f] # irreducible
+
+        u_norm, u_arg, i = None, 0, 0
+
+        for u, _, _, _, _ in configs:
+            _u_norm = zzx_max_norm(u)
+
+            if u_norm is not None:
+                if _u_norm < u_norm:
+                    u_norm = _u_norm
+                    u_arg = i
+            else:
+                u_norm = _u_norm
+
+            i += 1
+
+        _, cu, E, H, A = configs[u_arg]
+
+        try:
+            f, H, LC = zzX_wang_lead_coeffs(f, V, cu, E, H, A)
+            factors = zzX_wang_hensel_lifting(f, H, LC, A, p)
+        except ExtraneousFactors:
+            continue
+
+        negative, H = 0, []
+
+        for h in factors:
+            _, h = zzX_zz_primitive(h)
+
+            if zzX_zz_LC(h) < 0:
+                h = zzX_neg(h)
+                negative += 1
+
+            H.append(h)
+
+        if not (negative % 2):
+            return  1, H
+        else:
+            return -1, H
+
+def zzX_factor(f):
+    """Factor (non square-free) polynomials in Z[X].
+
+       Given a multivariate polynomial f in Z[x] computes its complete
+       factorization f_1, ..., f_n into irreducibles over integers:
+
+                    f = content(f) f_1**k_1 ... f_n**k_n
+
+       The factorization is computed by reducing the input polynomial
+       into a primitive square-free polynomial and factoring it using
+       Enhanced Extended Zassenhaus (EEZ) algorithm. Trial division is
+       used to recover the multiplicities of factors.
+
+       The result is returned as a tuple consisting of:
+
+                (content(f), [(f_1, k_1), ..., (f_n, k_n))
+
+       Consider polynomial f = 2*(x**2 - y**2):
+
+       >>> f = [[2], [], [-2, 0, 0]]
+
+       >>> zzX_factor(f)
+       (2, [([[1], [-1, 0]], 1), ([[1], [1, 0]], 1)])
+
+       In result we got the following factorization:
+
+                       f = 2 (x - y) (x + y)
+
+       For more details on the implemented algorithm refer to:
+
+       [1] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
+           First Edition, Cambridge University Press, 1999, pp. 427
+    """
+    if poly_univariate_p(f):
+        return zzx_factor(f)
+
+    cont, g = zzX_zz_primitive(f)
+
+    if zzX_degree(g) < 0:
+        return cont, []
+
+    if zzX_zz_LC(g) < 0:
+        cont, g = -cont, zzX_neg(g)
+
+    G, g = zzX_primitive(g)
+
+    factors = []
+
+    if zzX_degree(g) > 0:
+        g = zzX_sqf_part(g)
+        s, H = zzX_wang(g)
+
+        cont *= s
+
+        for h in H:
+            k = 0
+
+            while True:
+                q, r = zzX_div(f, h)
+
+                if zzX_zero_p(r):
+                    f, k = q, k+1
+                else:
+                    break
+
+            factors.append((h, k))
+
+    for g, k in zzX_factor(G)[1]:
+        factors.insert(0, ([g], k))
+
+    def compare((f_a, e_a), (f_b, e_b)):
+        i = len(f_a) - len(f_b)
+
+        if not i:
+            j = e_a - e_b
+
+            if not j:
+                return cmp(f_a, f_b)
+            else:
+                return j
+        else:
+            return i
+
+    return cont, sorted(factors, compare)
 
