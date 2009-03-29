@@ -210,7 +210,7 @@ def solve(f, *symbols, **flags):
                 cv_sols = solve(f_, t)
                 result = list()
                 for sol in cv_sols:
-                    result.append(sol**(S.One/m))
+                    result.append(sol**m)
 
             elif isinstance(f, Mul):
                 result = []
