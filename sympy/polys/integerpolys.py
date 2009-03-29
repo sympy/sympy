@@ -23,7 +23,7 @@ INT_ONE  = 1
 try:
     from gmpy import sqrt as isqrt
 except ImportError:
-    from math import sqrt as isqrt
+    from sympy.mpmath import sqrt as isqrt
 
 from copy import deepcopy
 

@@ -867,15 +867,10 @@ def test_zzX_heu_gcd():
 
     f,g,h = zzX_fateman_poly_F_1(8)
 
-    try:
-        import gmpy
+    H, cff, cfg = zzX_heu_gcd(f, g)
 
-        H, cff, cfg = zzX_heu_gcd(f, g)
-
-        assert H == h and zzX_mul(H, cff) == f \
-                      and zzX_mul(H, cfg) == g
-    except ImportError:
-        raises(HeuristicGCDFailed, 'zzX_heu_gcd(f, g)')
+    assert H == h and zzX_mul(H, cff) == f \
+                  and zzX_mul(H, cfg) == g
 
 def test_zzx_norm():
     assert zzx_max_norm([]) == 0
