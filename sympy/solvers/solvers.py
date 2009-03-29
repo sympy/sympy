@@ -183,11 +183,11 @@ def solve(f, *symbols, **flags):
             return solve(P, symbol, **flags)
 
         elif strategy == GS_POLY_CV_1:
-            # we must search for a suitable change of variable
-            # collect exponents
-            exponents_denom = list()
             args = list(f.args)
             if isinstance(f, Add):
+                # we must search for a suitable change of variable
+                # collect exponents
+                exponents_denom = list()
                 for arg in args:
                     if isinstance(arg, Pow):
                         exponents_denom.append(arg.exp.q)
@@ -195,27 +195,27 @@ def solve(f, *symbols, **flags):
                         for mul_arg in arg.args:
                             if isinstance(mul_arg, Pow):
                                 exponents_denom.append(mul_arg.exp.q)
-            elif isinstance(f, Mul):
-                for mul_arg in args:
-                    if isinstance(mul_arg, Pow):
-                        exponents_denom.append(mul_arg.exp.q)
+                assert len(exponents_denom) > 0
+                if len(exponents_denom) == 1:
+                    m = exponents_denom[0]
+                else:
+                    # get the GCD of the denominators
+                    m = ilcm(*exponents_denom)
+                # x -> y**m.
+                # we assume positive for simplification purposes
+                t = Symbol('t', positive=True, dummy=True)
+                f_ = f.subs(symbol, t**m)
+                if guess_solve_strategy(f_, t) != GS_POLY:
+                    raise TypeError("Could not convert to a polynomial equation: %s" % f_)
+                cv_sols = solve(f_, t)
+                result = list()
+                for sol in cv_sols:
+                    result.append(sol**(S.One/m))
 
-            assert len(exponents_denom) > 0
-            if len(exponents_denom) == 1:
-                m = exponents_denom[0]
-            else:
-                # get the GCD of the denominators
-                m = ilcm(*exponents_denom)
-            # x -> y**m.
-            # we assume positive for simplification purposes
-            t = Symbol('t', positive=True, dummy=True)
-            f_ = f.subs(symbol, t**m)
-            if guess_solve_strategy(f_, t) != GS_POLY:
-                raise TypeError("Could not convert to a polynomial equation: %s" % f_)
-            cv_sols = solve(f_, t)
-            result = list()
-            for sol in cv_sols:
-                result.append(sol**(S.One/m))
+            elif isinstance(f, Mul):
+                result = []
+                for mul_arg in args:
+                    result.extend(solve(mul_arg, symbol))
 
         elif strategy == GS_POLY_CV_2:
             m = 0

@@ -48,7 +48,7 @@ def test_guess_strategy():
     assert guess_solve_strategy( 2*cos(x)-y, x ) == GS_TRASCENDENTAL
     assert guess_solve_strategy( exp(x) + exp(-x) - y, x ) == GS_TRASCENDENTAL
 
-def test_solve_polynomial():
+def test_solve_polynomial1():
     x, y = map(Symbol, 'xy')
 
     assert solve(3*x-2, x) == [Rational(2,3)]
@@ -83,7 +83,11 @@ def test_solve_polynomial():
     raises(TypeError, "solve(x**2-pi, pi)")
     raises(ValueError, "solve(x**2-pi)")
 
-def test_solve_polynomial_cv_1():
+def test_solve_polynomial2():
+    x = Symbol('x')
+    assert solve(4, x) == []
+
+def test_solve_polynomial_cv_1a():
     """
     Test for solving on equations that can be converted to a polynomial equation
     using the change of variable y -> x**Rational(p, q)
@@ -93,6 +97,12 @@ def test_solve_polynomial_cv_1():
 
     assert solve( x**Rational(1,2) - 1, x) == [1]
     assert solve( x**Rational(1,2) - 2, x) == [sqrt(2)]
+
+def test_solve_polynomial_cv_1b():
+    x, a = symbols('x a')
+
+    assert set(solve(4*x*(1 - a*x**(S(1)/2)), x)) == \
+            set([S(0), (1/a)**(S(1)/2)])
 
 def test_solve_polynomial_cv_2():
     """
