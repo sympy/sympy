@@ -16,6 +16,7 @@ def test_guess_strategy():
     x, y = symbols('xy')
 
     # polynomial equations
+    assert guess_solve_strategy( S(4), x ) == GS_POLY
     assert guess_solve_strategy( x, x ) == GS_POLY
     assert guess_solve_strategy( 2*x, x ) == GS_POLY
     assert guess_solve_strategy( x + sqrt(2), x) == GS_POLY

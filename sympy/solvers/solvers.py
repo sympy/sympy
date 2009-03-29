@@ -110,6 +110,9 @@ def guess_solve_strategy(expr, symbol):
     elif expr.is_Function and expr.has(symbol):
         return GS_TRASCENDENTAL
 
+    elif not expr.has(symbol):
+        return GS_POLY
+
     return eq_type
 
 def solve(f, *symbols, **flags):
