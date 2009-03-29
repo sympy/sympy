@@ -1,7 +1,7 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
         Matrix, sympify, sqrt, atan, asin, acos, atan, DiracDelta, Heaviside,
-        raises, Lambda)
+        raises, Lambda, sstr)
 from sympy.utilities.pytest import XFAIL, skip
 from sympy.physics.units import m, s
 
@@ -221,7 +221,7 @@ def test_issue953():
     assert integrate(sin(acos(x)), x) == f
 
 def NS(e, n=15, **options):
-    return str(sympify(e).evalf(n, **options))
+    return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
 def test_evalf_integrals():
     assert NS(Integral(x, (x, 2, 5)), 15) == '10.5000000000000'

@@ -148,7 +148,7 @@ def test_Mul():
     cc2 = CustomClass2(commutative=True)
     assert str(Rational(2)*cc1) == '2*CustomClass1()'
     assert str(cc1*Rational(2)) == '2*CustomClass1()'
-    assert str(cc1*Real("1.5")) == '1.50000000000000*CustomClass1()'
+    assert str(cc1*Real("1.5")) == '1.5*CustomClass1()'
     assert str(cc2*Rational(2)) == '2*CustomClass2()'
     assert str(cc2*Rational(2)*cc1) == '2*CustomClass1()*CustomClass2()'
     assert str(cc1*Rational(2)*cc2) == '2*CustomClass1()*CustomClass2()'
@@ -369,3 +369,19 @@ def test_sstrrepr():
 def test_infinity():
     assert sstr(I*oo) == "(oo)*I"
 
+def test_full_prec():
+    assert sstr(S("0.3"), full_prec=True) == "0.300000000000000"
+    assert sstr(S("0.3"), full_prec="auto") == "0.300000000000000"
+    assert sstr(S("0.3"), full_prec=False) == "0.3"
+    assert sstr(S("0.3")*x, full_prec=True) in [
+            "0.300000000000000*x",
+            "x*0.300000000000000"
+            ]
+    assert sstr(S("0.3")*x, full_prec="auto") in [
+            "0.3*x",
+            "x*0.3"
+            ]
+    assert sstr(S("0.3")*x, full_prec=False) in [
+            "0.3*x",
+            "x*0.3"
+            ]

@@ -93,7 +93,8 @@ class Sum(Basic):
             >>> s, e = Sum(1/k, (k, 2, 5)).euler_maclaurin()
             >>> s
             7/20 - log(2) + log(5)
-            >>> s.evalf(), e.evalf()
+            >>> from sympy import sstr
+            >>> print sstr((s.evalf(), e.evalf()), full_prec=True)
             (1.26629073187416, 0.0175000000000000)
 
         The endpoints may be symbolic:

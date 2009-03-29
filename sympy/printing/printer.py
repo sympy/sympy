@@ -113,6 +113,10 @@ class Printer(object):
         if not hasattr(self, "emptyPrinter"):
             self.emptyPrinter = str
 
+        # _print_level is the number of times self._print() was recursively
+        # called. See StrPrinter._print_Real() for an example of usage
+        self._print_level = 0
+
     def doprint(self, expr):
         """Returns printer's representation for expr (as a string)"""
         return self._str(self._print(expr))
@@ -125,28 +129,34 @@ class Printer(object):
             2. Take the best fitting method defined in the printer.
             3. As fall-back use the emptyPrinter method for the printer.
         """
-
-        # If the printer defines a name for a printing method (Printer.printmethod) and the
-        # object knows for itself how it should be printed, use that method.
-        if self.printmethod and hasattr(expr, self.printmethod):
-            res = getattr(expr, self.printmethod)()
-            if res is None:
-                raise Exception("Printing method '%s' of an instance of '%s' did return None" %\
-                                    (self.printmethod, expr.__class__.__name__))
-            return res
-
-        # See if the class of expr is known, or if one of its super
-        # classes is known, and use that print function
-        for cls in type(expr).__mro__:
-            printmethod = '_print_' + cls.__name__
-            if hasattr(self, printmethod):
-                res = getattr(self, printmethod)(expr, *args)
+        self._print_level += 1
+        try:
+            # If the printer defines a name for a printing method
+            # (Printer.printmethod) and the object knows for itself how it
+            # should be printed, use that method.
+            if self.printmethod and hasattr(expr, self.printmethod):
+                res = getattr(expr, self.printmethod)()
                 if res is None:
-                    raise Exception("Printing method '%s' did return None" % printmethod)
+                    raise Exception("Printing method '%s' of an instance of '%s' did return None" %\
+                                    (self.printmethod, expr.__class__.__name__))
                 return res
 
-        # Unknown object, fall back to the emptyPrinter.
-        res = self.emptyPrinter(expr)
-        if res is None:
-            raise Exception("emptyPrinter method of '%s' did return None" % self.__class__.__name__)
-        return res
+            # See if the class of expr is known, or if one of its super
+            # classes is known, and use that print function
+            for cls in type(expr).__mro__:
+                printmethod = '_print_' + cls.__name__
+                if hasattr(self, printmethod):
+                    res = getattr(self, printmethod)(expr, *args)
+                    if res is None:
+                        raise Exception("Printing method '%s' did return None"%\
+                                        printmethod)
+                    return res
+
+            # Unknown object, fall back to the emptyPrinter.
+            res = self.emptyPrinter(expr)
+            if res is None:
+                raise Exception("emptyPrinter method of '%s' did return None" %\
+                                self.__class__.__name__)
+            return res
+        finally:
+            self._print_level -= 1

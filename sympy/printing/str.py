@@ -16,6 +16,16 @@ from sympy.mpmath.settings import prec_to_dps
 class StrPrinter(Printer):
     printmethod = "_sympystr_"
 
+    def __init__(self, profile=None):
+        Printer.__init__(self)
+
+        self._settings = {
+                "full_prec" : "auto",
+        }
+
+        if profile is not None:
+            self._settings.update(profile)
+
     def parenthesize(self, item, level):
         if precedence(item) <= level:
             return "(%s)"%self._print(item)
@@ -297,7 +307,13 @@ class StrPrinter(Printer):
             dps = 0
         else:
             dps = prec_to_dps(expr._prec)
-        return mlib.to_str(expr._mpf_, dps, strip_zeros=False)
+        if self._settings["full_prec"] == True:
+            strip = False
+        elif self._settings["full_prec"] == False:
+            strip = True
+        elif self._settings["full_prec"] == "auto":
+            strip = self._print_level > 1
+        return mlib.to_str(expr._mpf_, dps, strip_zeros=strip)
 
     def _print_Relational(self, expr):
         return '%s %s %s'%(self.parenthesize(expr.lhs, precedence(expr)),
@@ -368,10 +384,15 @@ class StrPrinter(Printer):
         return "0"
 
 
-def sstr(expr):
+def sstr(expr, profile=None, **kargs):
     """return expr in str form"""
 
-    p = StrPrinter()
+    if profile is not None:
+        profile.update(kargs)
+    else:
+        profile = kargs
+
+    p = StrPrinter(profile)
     s = p.doprint(expr)
 
     return s
