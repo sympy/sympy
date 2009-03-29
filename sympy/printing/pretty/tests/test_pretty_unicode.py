@@ -9,7 +9,7 @@ th  = Symbol('theta')
 ph  = Symbol('phi')
 
 def upretty(expr):
-    return pretty(expr, True)
+    return pretty(expr, use_unicode=True)
 
 def test_upretty_greek():
     assert upretty( oo ) == u'∞'

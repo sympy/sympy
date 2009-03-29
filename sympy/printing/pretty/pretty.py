@@ -1,5 +1,6 @@
 from sympy.core import S, C, Basic
 from sympy.printing.printer import Printer
+from sympy.printing.str import sstr
 from stringpict import prettyForm, stringPict
 
 from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol,\
@@ -13,9 +14,17 @@ pprint_try_use_unicode = pretty_try_use_unicode
 class PrettyPrinter(Printer):
     """Printer, which converts an expression into 2D ascii-art figure."""
 
-    def __init__(self, use_unicode=None):
+    def __init__(self, profile=None):
         Printer.__init__(self)
         self.emptyPrinter = lambda x : prettyForm(xstr(x))
+
+        self._settings = {
+                "full_prec" : "auto",
+                "use_unicode" : True,
+        }
+
+        if profile is not None:
+            self._settings.update(profile)
 
     def doprint(self, expr):
         return self._print(expr).terminal_string()
@@ -30,6 +39,14 @@ class PrettyPrinter(Printer):
     def _print_Symbol(self, e):
         symb = pretty_symbol(e.name)
         return prettyForm(symb)
+
+    def _print_Real(self, e):
+        # we will use StrPrinter's Real printer, but we need to handle the
+        # full_prec ourselves, according to the self._print_level
+        full_prec = self._settings["full_prec"]
+        if  full_prec == "auto":
+            full_prec = self._print_level == 1
+        return prettyForm(sstr(e, full_prec=full_prec))
 
     def _print_Atom(self, e):
         try:
@@ -572,15 +589,19 @@ class PrettyPrinter(Printer):
     _print_frozenset = __print_set
 
 
-def pretty(expr, use_unicode=None):
+def pretty(expr, profile=None, **kargs):
     """
     Returns a string containing the prettified form of expr. If use_unicode
     is set to True then certain expressions will use unicode characters,
     such as the greek letter pi for Pi instances.
     """
-    uflag = pretty_use_unicode(use_unicode)
+    if profile is not None:
+        profile.update(kargs)
+    else:
+        profile = kargs
+    uflag = pretty_use_unicode(kargs.get("use_unicode", None))
     try:
-        pp = PrettyPrinter()
+        pp = PrettyPrinter(profile)
         return pp.doprint(expr)
     finally:
         pretty_use_unicode(uflag)

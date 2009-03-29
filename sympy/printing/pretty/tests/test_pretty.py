@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sympy import Symbol, Matrix, Integral, log, Rational, Derivative, exp, \
         sqrt, pi, Function, sin, cos, pprint_use_unicode, oo, Eq, Le, \
-        Gt, Ne, Limit, factorial, gamma, conjugate, I, Piecewise
+        Gt, Ne, Limit, factorial, gamma, conjugate, I, Piecewise, S
 from sympy.printing.pretty import pretty as xpretty
 
 x = Symbol('x')
@@ -11,7 +11,7 @@ ph  = Symbol('phi')
 
 def pretty(expr):
     # ascii-pretty by default
-    return xpretty(expr, False)
+    return xpretty(expr, use_unicode=False)
 
 def test_pretty_str():
     assert pretty( 'xxx' ) == "'xxx'"
@@ -81,14 +81,14 @@ def test_pretty_relational():
 
 
 def test_pretty_unicode():
-    assert xpretty( oo, True ) == u'\u221e'
-    assert xpretty( pi, True ) == u'\u03c0'
-    assert xpretty( pi+2*x, True ) in [u'\u03c0 + 2⋅x', u'2⋅x + \u03c0']
-    assert xpretty( pi**2+exp(x), True ) in [
+    assert xpretty( oo, use_unicode=True ) == u'\u221e'
+    assert xpretty( pi, use_unicode=True ) == u'\u03c0'
+    assert xpretty( pi+2*x, use_unicode=True ) in [u'\u03c0 + 2⋅x', u'2⋅x + \u03c0']
+    assert xpretty( pi**2+exp(x), use_unicode=True ) in [
             u' 2    x\n\u03c0  + \u212f ',
             u' x    2\n\u212f  + \u03c0 ']
-    assert xpretty( Ne(x, y), True ) == u'x \u2260 y'
-    assert xpretty( gamma(x), True ) == u'\u0393(x)'
+    assert xpretty( Ne(x, y), use_unicode=True ) == u'x \u2260 y'
+    assert xpretty( gamma(x), use_unicode=True ) == u'\u0393(x)'
 
 def test_pretty_unicode_defaults():
     use_unicode = pprint_use_unicode(True)
@@ -318,3 +318,20 @@ def test_pretty_class():
 
 def test_infinity():
     assert pretty(I*oo) == "oo*I"
+
+def test_full_prec():
+    assert xpretty(S("0.3"), full_prec=True) == "0.300000000000000"
+    assert xpretty(S("0.3"), full_prec="auto") == "0.300000000000000"
+    assert xpretty(S("0.3"), full_prec=False) == "0.3"
+    assert xpretty(S("0.3")*x, full_prec=True, use_unicode=False) in [
+            "0.300000000000000*x",
+            "x*0.300000000000000"
+            ]
+    assert xpretty(S("0.3")*x, full_prec="auto", use_unicode=False) in [
+            "0.3*x",
+            "x*0.3"
+            ]
+    assert xpretty(S("0.3")*x, full_prec=False, use_unicode=False) in [
+            "0.3*x",
+            "x*0.3"
+            ]
