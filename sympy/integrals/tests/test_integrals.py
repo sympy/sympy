@@ -335,3 +335,7 @@ def test_subs5():
     e = Integral(exp(-x**2+y), (y, -oo, oo), (x, -oo, oo))
     assert e.subs(x, 5) == e
     assert e.subs(y, 5) == e
+
+def test_integration_variable():
+    raises(ValueError, "Integral(exp(-x**2), 3)")
+    raises(ValueError, "Integral(exp(-x**2), (3, -oo, oo))")
