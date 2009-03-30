@@ -2,6 +2,7 @@
 
 import sympy
 from sympy.core import Symbol, Wild, S
+from sympy.core.numbers import Rational
 from sympy.functions import sin, cos, binomial
 from sympy.core.cache import cacheit
 
@@ -41,8 +42,11 @@ def trigintegrate(f, x):
     """
 
     pat, a,n,m = _pat_sincos(x)
+    ##m - cos
+    ##n - sin
 
     M = f.match(pat)
+
     if M is None:
         return
 
@@ -52,7 +56,7 @@ def trigintegrate(f, x):
 
     a = M[a]
 
-    if n.is_integer and n.is_integer:
+    if n.is_integer and m.is_integer:
 
         if n.is_odd or m.is_odd:
             u = _u
@@ -94,81 +98,167 @@ def trigintegrate(f, x):
             # then S   is integrated with recursive formula
 
             # take largest n or m -- to choose simplest substitution
-            n_ =     (n > m)    # NB: careful here, one of the
-            m_ = not (n > m)    #     conditions *must* be true
-
+            n_ =  (abs(n) > abs(m))
+            m_ =  (abs(m) > abs(n))
             res = S.Zero
 
             if n_:
                 #  2k       2 k             i            2i
                 # C   = (1-S )  = sum(i, (-) * B(k,i) * S  )
-                for i in range(0,m/2+1):
-                    res += (-1)**i * binomial(m/2,i) * Sin_2k_integrate(n/2+i, x)
+                if m > 0 :
+                    for i in range(0,m/2+1):
+                        res += (-1)**i * binomial(m/2,i) * sin_pow_integrate(n+2*i, x)
+
+                elif m == 0:
+                    res=sin_pow_integrate(n,x)
+                else:
+                    # m < 0 , |n| > |m|
+                    #  /                                                           /
+                    # |                                                           |
+                    # |    m       n            -1        m+1     n-1     n - 1   |     m+2     n-2
+                    # | cos (x) sin (x) dx =  ________ cos (x) sin (x) + _______  |  cos (x) sin (x) dx
+                    # |                                                           |
+                    # |                         m + 1                     m + 1   |
+                    #/                                                           /
+                    #
+                    #
+                    res=Rational(-1,m+1)*cos(x)**(m+1)*sin(x)**(n-1) + Rational(n-1,m+1)*trigintegrate(cos(x)**(m+2)*sin(x)**(n-2),x)
+
 
             elif m_:
                 #  2k        2 k            i            2i
                 # S   = (1 -C ) = sum(i, (-) * B(k,i) * C  )
-                for i in range(0,n/2+1):
-                    res += (-1)**i * binomial(n/2,i) * Cos_2k_integrate(m/2+i, x)
+                if n > 0:
+                    #      /                            /
+                    #     |                            |
+                    #     |    m       n               |    -m         n
+                    #     | cos (x)*sin (x) dx  or     | cos (x) * sin (x) dx
+                    #     |                            |
+                    #    /                            /
+                    #
+                    #    |m| > |n| ; m,n >0 ; m,n belong to Z - {0}
+                    #       n                                        2
+                    #    sin (x) term is expanded here interms of cos (x), and then integrated.
+                    for i in range(0,n/2+1):
+                        res += (-1)**i * binomial(n/2,i) * cos_pow_integrate(m+2*i, x)
 
+                elif n == 0 :
+                    ##  /
+                    ## |
+                    #  |  1
+                    #  | _ _ _
+                    #  |    m
+                    #  | cos (x)
+                    # /
+                    res= cos_pow_integrate(m,x)
+                else:
+                    # n < 0 , |m| > |n|
+                    #  /                                                         /
+                    # |                                                         |
+                    # |    m       n           1        m-1     n+1     m - 1   |     m-2     n+2
+                    # | cos (x) sin (x) dx = _______ cos (x) sin (x) + _______  |  cos (x) sin (x) dx
+                    # |                                                         |
+                    # |                       n + 1                     n + 1   |
+                    #/                                                         /
+                    #
+                    #
+                    res= Rational(1,(n+1))*cos(x)**(m-1)*sin(x)**(n+1) + Rational(m-1,n+1)*trigintegrate(cos(x)**(m-2)*sin(x)**(n+2),x)
+
+            else :
+                if m == n:
+                    ##Substitute sin(2x)/2 for sin(x)cos(x) and then Integrate.
+                    res=sympy.integrals.integrate((Rational(1,2)*sin(2*x))**m,x)
+                elif (m == -n):
+                    if n < 0:
+                        ##Same as the scheme described above.
+                        res= Rational(1,(n+1))*cos(x)**(m-1)*sin(x)**(n+1) + Rational(m-1,n+1)*sympy.integrals.integrate(cos(x)**(m-2)*sin(x)**(n+2),x) ##the function argument to integrate in the end will be 1 , this cannot be integrated by trigintegrate. Hence use sympy.integrals.integrate.
+                    else:
+                        res=Rational(-1,m+1)*cos(x)**(m+1)*sin(x)**(n-1) + Rational(n-1,m+1)*sympy.integrals.integrate(cos(x)**(m+2)*sin(x)**(n-2),x)
             return res.subs(x, a*x) / a
 
-            # XXX maybe use another scheme? subst:
-            #
-            #  2                         2
-            # S(x) = 1/2 * (1-C(2x))    C(x) = 1/2 * (1+C(2x))
+def sin_pow_integrate(n,x):
+    if n > 0 :
+        if n == 1:
+            #Recursion break
+            return -cos(x)
+        #
+        # n > 0
+        #  /                                                 /
+        # |                                                 |
+        # |    n           -1               n-1     n - 1   |     n-2
+        # | sin (x) dx =  ______ cos (x) sin (x) + _______  |  sin (x) dx
+        # |                                                 |
+        # |                 n                         n     |
+        #/                                                 /
+        #
+        #
+
+        return Rational(-1,n)*cos(x)*sin(x)**(n-1)+Rational(n-1,n)*sin_pow_integrate(n-2,x)
+
+    if n < 0:
+        if n == -1:
+            ##Make sure this does not come back here again.
+            ##Recursion breaks here or at n==0.
+            return trigintegrate(1/sin(x),x)
+        #
+        # n < 0
+        #  /                                                 /
+        # |                                                 |
+        # |    n            1               n+1     n + 2   |     n+2
+        # | sin (x) dx = _______ cos (x) sin (x) + _______  |  sin (x) dx
+        # |                                                 |
+        # |               n + 1                     n + 1   |
+        #/                                                 /
+        #
+        #
+        return Rational(1,n+1)*cos(x)*sin(x)**(n+1) + Rational(n+2,n+1) * sin_pow_integrate(n+2,x)
+
+    else:
+        #n == 0
+        #Recursion break.
+        return x
+
+def cos_pow_integrate(n,x):
+    if n > 0 :
+        if n==1:
+            #Recursion break.
+            return sin(x)
+
+        # n > 0
+        #  /                                                 /
+        # |                                                 |
+        # |    n            1               n-1     n - 1   |     n-2
+        # | sin (x) dx =  ______ sin (x) cos (x) + _______  |  cos (x) dx
+        # |                                                 |
+        # |                 n                         n     |
+        #/                                                 /
+        #
+        #
+
+        return Rational(1,n)*sin(x)*cos(x)**(n-1)+Rational(n-1,n)*cos_pow_integrate(n-2,x)
+
+    if n < 0:
+        if n == -1:
+            ##Recursion break
+            return trigintegrate(1/cos(x),x)
+        #
+        # n < 0
+        #  /                                                 /
+        # |                                                 |
+        # |    n            -1              n+1     n + 2   |     n+2
+        # | cos (x) dx = _______ sin (x) cos (x) + _______  |  cos (x) dx
+        # |                                                 |
+        # |               n + 1                     n + 1   |
+        #/                                                 /
+        #
+        #
+
+
+        return Rational(-1,n+1)*sin(x)*cos(x)**(n+1) + Rational(n+2,n+1) * cos_pow_integrate(n+2,x)
+    else :
+        # n == 0
+        #Recursion Break.
+        return x
 
 
 
-
-# NB: PolynomialSequence in fact should be named FunctionSequence (it can
-# handly all functions, not neccessary polynomials)
-from sympy.functions.special.polynomials import PolynomialSequence, _x
-from sympy.utilities.memoization import recurrence_memo
-
-class Sin_2k_integrate(PolynomialSequence):
-    """efficient integrate(sin(x)**2k, x)"""
-
-    @staticmethod
-    @recurrence_memo([_x])
-    def calc(k, prev):
-        """recursively calculate \int(sin(x)**2k, x)
-
-        formula used:
-
-        ⌠             n-1                ⌠
-        ⎮ n          S (x)*C(x)    n-1   ⎮  n-2
-        ⎮S (x)  = - ──────────── + ─── * ⎮ S (x)
-        ⌡                 n         n    ⌡
-
-        see: http://en.wikipedia.org/wiki/List_of_integrals_of_trigonometric_functions
-
-                           n-1
-        XXX maybe combine S (x)*C(x)  ->  S(n*x) + ...?
-        """
-        n = 2*k
-        return -(sin(_x))**(n-1) * cos(_x) / n  +  prev[k-1] * (n-1)/n
-
-
-class Cos_2k_integrate(PolynomialSequence):
-    """efficient integrate(cos(x)**2k, x)"""
-
-    @staticmethod
-    @recurrence_memo([_x])
-    def calc(k, prev):
-        """recursively calculate \int(cos(x)**2k, x)
-
-        formula used:
-
-        ⌠             n-1                ⌠
-        ⎮ n          C (x)*S(x)    n-1   ⎮  n-2
-        ⎮C (x)  =   ──────────── + ─── * ⎮ C (x)
-        ⌡                 n         n    ⌡
-
-        see: http://en.wikipedia.org/wiki/List_of_integrals_of_trigonometric_functions
-
-                           n-1
-        XXX maybe combine C (x)*S(x)  ->  C(n*x) + ...?
-        """
-        n = 2*k
-        return (cos(_x))**(n-1) * sin(_x) / n  +  prev[k-1] * (n-1)/n

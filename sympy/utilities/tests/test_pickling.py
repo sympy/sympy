@@ -200,12 +200,10 @@ def test_geometry():
 
 #================== integrals ====================
 from sympy.integrals.integrals import Integral
-from sympy.integrals.trigonometry import Cos_2k_integrate, Sin_2k_integrate
 
 def test_integrals():
     x = Symbol("x")
-    for c in (Integral, Integral(x), Cos_2k_integrate, Cos_2k_integrate(x, 3),
-              Sin_2k_integrate, Sin_2k_integrate(x, 2)):
+    for c in (Integral, Integral(x)):
         check(c)
 
 #================== matrices ====================
