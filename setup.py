@@ -40,38 +40,36 @@ if sys.version_info[1] < 4:
           sys.version_info[:2]
     sys.exit(-1)
 
-#Check that this list is uptodate against the result of the command:
-#$ find * -name __init__.py |sort
+# Check that this list is uptodate against the result of the command (you can
+# omit the thirdparty/ dir):
+# $ find * -name __init__.py |sort
 modules = [
-    # do docstring # module name # omit those even if the first field is True
-    ( True, 'sympy.concrete', [] ),
-    ( True, 'sympy.core', ['add', 'mul', 'relational', 'interval',
-        'ast_parser', 'ast_parser_python24'] ),
-    ( True, 'sympy.functions', [] ),
-    ( True, 'sympy.functions.combinatorial', [] ),
-    ( True, 'sympy.functions.elementary',
-        ['miscellaneous', 'trigonometric', 'hyperbolic', 'exponential'] ),
-    ( False, 'sympy.functions.special', [] ),
-    ( True, 'sympy.galgebra', [] ),
-    ( True, 'sympy.geometry', [] ),
-    ( True, 'sympy.integrals', [] ),
-    ( True, 'sympy.interactive', [] ),
-    ( True, 'sympy.matrices', [] ),
-    ( True, 'sympy.ntheory', [] ),
-    ( False, 'sympy.parsing', [] ),
-    ( True, 'sympy.physics', [] ),
-    ( False, 'sympy.plotting', [] ),
-    ( False, 'sympy.thirdparty', [] ),
-    ( False, 'sympy.mpmath', [] ),
-    ( True, 'sympy.polys', ['wrappers'] ),
-    ( True, 'sympy.printing', ['gtk', 'tree'] ),
-    ( True, 'sympy.printing.pretty', [] ),
-    ( True, 'sympy.series', ["limits"] ),
-    ( True, 'sympy.simplify', [] ),
-    ( True, 'sympy.solvers', [] ),
-    ( True, 'sympy.statistics', [] ),
-    ( True, 'sympy.utilities', ["compilef"] ),
-    ( True, 'sympy.utilities.mathml', [] ),
+    'sympy.concrete',
+    'sympy.core',
+    'sympy.functions',
+    'sympy.functions.combinatorial',
+    'sympy.functions.elementary',
+    'sympy.functions.special',
+    'sympy.galgebra',
+    'sympy.geometry',
+    'sympy.integrals',
+    'sympy.interactive',
+    'sympy.matrices',
+    'sympy.ntheory',
+    'sympy.parsing',
+    'sympy.physics',
+    'sympy.plotting',
+    'sympy.thirdparty',
+    'sympy.mpmath',
+    'sympy.polys',
+    'sympy.printing',
+    'sympy.printing.pretty',
+    'sympy.series',
+    'sympy.simplify',
+    'sympy.solvers',
+    'sympy.statistics',
+    'sympy.utilities',
+    'sympy.utilities.mathml',
     ]
 
 class clean(Command):
@@ -267,8 +265,7 @@ setup(
       description = 'Computer algebra system (CAS) in Python',
       license = 'BSD',
       url = 'http://code.google.com/p/sympy',
-      packages = ['sympy'] + [ m[1] for m in modules ] + tests + \
-        pyglet_packages,
+      packages = ['sympy'] + modules + tests + pyglet_packages,
       scripts = ['bin/isympy'],
       ext_modules = [],
       package_data = { 'sympy.utilities.mathml' : ['data/*.xsl'] },
