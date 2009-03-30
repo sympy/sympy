@@ -336,6 +336,8 @@ class Integral(Basic):
         arg0 = self.args[0].subs(old, new)
         arg1 = []
         for sym, limits in self.args[1]:
+            if sym == old:
+                return self
             if limits is not None:
                 a, b, = limits
                 arg1.append((sym, a.subs(old, new), b.subs(old, new)))

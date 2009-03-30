@@ -322,3 +322,16 @@ def test_subs4():
     f = Lambda(x, exp(-x**2))
     conv = Integral(f(y)*f(y), (y, -oo, oo), (t, x, 1))
     assert conv.subs({x:0}) == Integral(exp(-2*y**2), (y, -oo, oo), (t, 0, 1))
+
+def test_subs5():
+    e = Integral(exp(-x**2), x)
+    assert e.subs(x, 5) == e
+    e = Integral(exp(-x**2), (x, -oo, oo))
+    assert e.subs(x, 5) == e
+    e = Integral(exp(-x**2+y), x)
+    assert e.subs(x, 5) == e
+    assert e.subs(y, 5) != e
+    assert e.subs(y, 5) == Integral(exp(-x**2+5), x)
+    e = Integral(exp(-x**2+y), (y, -oo, oo), (x, -oo, oo))
+    assert e.subs(x, 5) == e
+    assert e.subs(y, 5) == e
