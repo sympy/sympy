@@ -1,5 +1,6 @@
 from sympy.utilities.pytest import XFAIL
-from sympy import symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Real, Matrix
+from sympy import (symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Real,
+        Matrix, Lambda, exp, Integral, oo)
 from sympy import mpmath
 import math, sympy
 
@@ -216,3 +217,8 @@ def test_matrix():
     assert f(1,2,3) == sol
     f = lambdify((x,y,z), (A, [A]), modules="sympy")
     assert f(1,2,3) == (sol,[sol])
+
+def test_integral():
+    f = Lambda(x, exp(-x**2))
+    l = lambdify(x, Integral(f(x), (x, -oo, oo)), modules="sympy")
+    assert l(x) == Integral(exp(-x**2), (x, -oo, oo))

@@ -59,7 +59,8 @@ MODULES = {
     "mpmath":(MPMATH, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
     "numpy":(NUMPY, NUMPY_TRANSLATIONS, ("from numpy import *",)),
     "sympy":(SYMPY, {}, ("from sympy.functions import *",
-                         "from sympy.matrices import Matrix"))
+                         "from sympy.matrices import Matrix",
+                         "from sympy import Integral"))
 }
 
 def _import(module, reload="False"):
