@@ -15,15 +15,11 @@ from math import floor, ceil, log, sqrt
 from random import randint
 
 from sympy.core.numbers import igcd, igcdex
+from sympy.mpmath.libmpf import isqrt
 
 INT_TYPE = int
 INT_ZERO = 0
 INT_ONE  = 1
-
-try:
-    from gmpy import sqrt as isqrt
-except ImportError:
-    from sympy.mpmath import sqrt as isqrt
 
 from copy import deepcopy
 
@@ -1475,12 +1471,7 @@ def zzx_heu_gcd(f, g, **flags):
 
     B = 2*min(f_norm, g_norm) + 29
 
-    try:
-        C = INT_TYPE(isqrt(B))
-    except OverflowError:
-        raise HeuristicGCDFailed('need GMPY')
-
-    x = max(min(B, 99*C),
+    x = max(min(B, 99*INT_TYPE(isqrt(B))),
             2*min(f_norm // abs(poly_LC(f)),
                   g_norm // abs(poly_LC(g))) + 2)
 
@@ -1608,12 +1599,7 @@ def zzX_heu_gcd(f, g, **flags):
 
     B = 2*min(f_norm, g_norm) + 29
 
-    try:
-        C = INT_TYPE(isqrt(B))
-    except OverflowError:
-        raise HeuristicGCDFailed('need GMPY')
-
-    x = max(min(B, 99*C),
+    x = max(min(B, 99*INT_TYPE(isqrt(B))),
             2*min(f_norm // abs(zzX_zz_LC(f)),
                   g_norm // abs(zzX_zz_LC(g))) + 2)
 
