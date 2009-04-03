@@ -982,7 +982,7 @@ class atan(Function):
     """
     Usage
     =====
-      tan(x) -> Returns the arc tangent of x (measured in radians)
+      atan(x) -> Returns the arc tangent of x (measured in radians)
     """
 
     nargs = 1
@@ -1160,8 +1160,8 @@ class acot(Function):
 
 class atan2(Function):
     """
-    Returns the atan(y/x) taking two arguments y and x. Signs of
-    both y and x are considered to determine the appropriate
+    atan2(y,x) -> Returns the atan(y/x) taking two arguments y and x.
+    Signs of both y and x are considered to determine the appropriate
     quadrant of atan(y/x). The range is (-pi, pi].
     """
 

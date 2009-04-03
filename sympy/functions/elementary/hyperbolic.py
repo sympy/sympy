@@ -12,7 +12,11 @@ from sympy.utilities.decorator import deprecated
 ###############################################################################
 
 class sinh(Function):
-
+    """
+    Usage
+    =====
+      sinh(x) -> Returns the hyperbolic sine of x
+    """
     nargs = 1
 
     def fdiff(self, argindex=1):
@@ -128,7 +132,11 @@ class sinh(Function):
         return sage.sinh(self.args[0]._sage_())
 
 class cosh(Function):
-
+    """
+    Usage
+    =====
+      cosh(x) -> Returns the hyperbolic cosine of x
+    """
     nargs = 1
 
     def fdiff(self, argindex=1):
@@ -242,7 +250,11 @@ class cosh(Function):
         return sage.cosh(self.args[0]._sage_())
 
 class tanh(Function):
-
+    """
+    Usage
+    =====
+      tanh(x) -> Returns the hyperbolic tangent of x
+    """
     nargs = 1
 
     def fdiff(self, argindex=1):
@@ -360,7 +372,11 @@ class tanh(Function):
         return sage.tanh(self.args[0]._sage_())
 
 class coth(Function):
-
+    """
+    Usage
+    =====
+      coth(x) -> Returns the hyperbolic cotangent of x
+    """
     nargs = 1
 
     def fdiff(self, argindex=1):
@@ -464,7 +480,11 @@ class coth(Function):
 ###############################################################################
 
 class asinh(Function):
-
+    """
+    Usage
+    =====
+      asinh(x) -> Returns the inverse hyperbolic sine of x
+    """
     nargs = 1
 
     def fdiff(self, argindex=1):
@@ -544,7 +564,11 @@ class asinh(Function):
         return sage.asinh(self.args[0]._sage_())
 
 class acosh(Function):
-
+    """
+    Usage
+    =====
+      acosh(x) -> Returns the inverse hyperbolic cosine of x
+    """
     nargs = 1
 
     def fdiff(self, argindex=1):
@@ -628,7 +652,11 @@ class acosh(Function):
         return sage.acosh(self.args[0]._sage_())
 
 class atanh(Function):
-
+    """
+    Usage
+    =====
+      atanh(x) -> Returns the inverse hyperbolic tangent of x
+    """
     nargs = 1
 
     def fdiff(self, argindex=1):
@@ -694,7 +722,11 @@ class atanh(Function):
         return sage.atanh(self.args[0]._sage_())
 
 class acoth(Function):
-
+    """
+    Usage
+    =====
+      acoth(x) -> Returns the inverse hyperbolic cotangent of x
+    """
     nargs = 1
 
     def fdiff(self, argindex=1):
