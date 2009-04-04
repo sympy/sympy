@@ -1,4 +1,9 @@
-To make the html documentation, do:
+To make the html documentation, install the prerequisites, e.g. on
+Debian/Ubuntu (similarly for other distributions):
+
+apt-get install python-sphinx texlive-latex-recommended dvipng
+
+and do:
 
 $ make html
 
