@@ -1,0 +1,24 @@
+Series Expansions
+=================
+
+.. module:: sympy.series
+
+The series module implements series expansions as a function. This is achieved 
+by creating a wrapper around Basic.series(). This allows for the use of 
+series(x*cos(x),x), which is possibly more intuative than (x*cos(x)).series(x).
+
+Examples
+--------
+    >>> from sympy import cos, series
+    >>> from sympy.series import series
+    >>> series(cos(x),x)
+    1 - x**2/2 + x**4/24 + O(x**6)
+
+TODO and Bugs
+-------------
+The series expansion about a point other than x=0 does not work:
+    >>> series(cos(x),x,10)
+    1 - x**2/2 + x**4/24 + O(x**6)
+
+This is a bug in Basic.series() (issue 1334). When fixed there, the bug will 
+also be automatically fixed here.

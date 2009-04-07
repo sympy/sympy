@@ -3,5 +3,6 @@
 from order import Order
 from limits import limit, Limit
 from gruntz import gruntz
+from series import series
 
 O = Order
