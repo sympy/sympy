@@ -1,6 +1,5 @@
-from sympy import var, sin, cos, exp, E
-
-var("x")
+from sympy import sin, cos, exp, E
+from sympy.abc import x
 
 def test_sin():
     e = sin(x).lseries(x, 0)
