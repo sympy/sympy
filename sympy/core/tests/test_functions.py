@@ -285,5 +285,6 @@ def test_function_evalf():
     assert eq(sin(2).evalf(25), Real("0.9092974268256816953960199",25), 1e-23)
     assert eq(sin(1+I).evalf(15), Real("1.29845758141598") + Real("0.634963914784736")*I, 1e-13)
     assert eq(exp(1+I).evalf(15), Real("1.46869393991588") + Real("2.28735528717884239")*I, 1e-13)
+    assert eq(exp(-0.5+1.5*I).evalf(15), Real("0.0429042815937374") + Real("0.605011292285002")*I, 1e-13)
     assert eq(log(pi+sqrt(2)*I).evalf(15), Real("1.23699044022052") + Real("0.422985442737893")*I, 1e-13)
     assert eq(cos(100).evalf(15), Real("0.86231887228768"), 1e-13)
