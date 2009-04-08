@@ -580,7 +580,7 @@ class MDNewton:
         assert x0.cols == 1, 'need a vector'
         self.x0 = x0
         if 'J' in kwargs:
-            self.J = kwarks['J']
+            self.J = kwargs['J']
         else:
             def J(*x):
                 return jacobian(f, x)
