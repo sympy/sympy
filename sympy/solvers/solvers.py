@@ -9,7 +9,8 @@
 
     - transcendental, use tsolve()
 
-    - nonlinear (numerically), use msolve() (you will need a good starting point)
+    - nonlinear (numerically), use nsolve()
+      (you will need a good starting point)
 
 """
 
@@ -28,9 +29,11 @@ from sympy.polys import roots
 
 from sympy.utilities import any, all
 from sympy.utilities.lambdify import lambdify
-from sympy.solvers.numeric import newton
+from sympy.mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
+
+from warnings import warn
 
 # Codes for guess solve strategy
 GS_POLY = 0
@@ -791,57 +794,101 @@ def tsolve(eq, sym):
 
     raise NotImplementedError("Unable to solve the equation.")
 
-
-def msolve(args, f, x0, tol=None, maxsteps=None, verbose=False, norm=None,
-           modules=['mpmath', 'sympy']):
+def msolve(*args, **kwargs):
     """
-    Solves a nonlinear equation system numerically.
+    Compatibility wrapper pointing to nsolve().
+
+    msolve() has been renamed to nsolve(), please use nsolve() directly."""
+    warn('msolve() is has been renamed, please use nsolve() instead',
+         DeprecationWarning)
+    args[0], args[1] = args[1], args[0]
+    return nsolve(*args, **kwargs)
+
+# TODO: option for calculating J numerically
+def nsolve(*args, **kwargs):
+    """
+    Solve a nonlinear equation system numerically.
+
+    nsolve(f, [args,] x0, modules=['mpmath'], **kwargs)
 
     f is a vector function of symbolic expressions representing the system.
-    args are the variables.
+    args are the variables. If there is only one variable, this argument can be
+    omitted.
     x0 is a starting vector close to a solution.
 
-    Be careful with x0, not using floats might give unexpected results.
+    Use the modules keyword to specify which modules should be used to evaluate
+    the function and the Jacobian matrix. Make sure to use a module that
+    supports matrices. For more information on the syntax, please see the
+    docstring of lambdify.
 
-    Use modules to specify which modules should be used to evaluate the
-    function and the Jacobian matrix. Make sure to use a module that supports
-    matrices. For more information on the syntax, please see the docstring
-    of lambdify.
+    Overdetermined systems are supported.
 
-    Currently only fully determined systems are supported.
-
-    >>> from sympy import Symbol, Matrix
+    >>> from sympy import Symbol, nsolve
+    >>> import sympy
+    >>> sympy.mpmath.mp.dps = 15
     >>> x1 = Symbol('x1')
     >>> x2 = Symbol('x2')
     >>> f1 = 3 * x1**2 - 2 * x2**2 - 1
     >>> f2 = x1**2 - 2 * x1 + x2**2 + 2 * x2 - 8
-    >>> msolve((x1, x2), (f1, f2), (-1., 1.))
+    >>> print nsolve((f1, f2), (x1, x2), (-1, 1))
     [-1.19287309935246]
     [ 1.27844411169911]
+
+    For onedimensional functions the syntax is simplified:
+
+    >>> from sympy import sin
+    >>> nsolve(sin(x), x, 2)
+    mpf('3.1415926535897932')
+    >>> nsolve(sin(x), 2)
+    mpf('3.1415926535897932')
+
+    mpmath.findroot is used, you can find there more extensive documentation,
+    especially concerning keyword parameters and available solvers.
     """
+    # interpret arguments
+    if len(args) == 3:
+        f = args[0]
+        fargs = args[1]
+        x0 = args[2]
+    elif len(args) == 2:
+        f = args[0]
+        fargs = None
+        x0 = args[1]
+    elif len(args) < 2:
+        raise TypeError('nsolve expected at least 2 arguments, got %i'
+                        % len(args))
+    else:
+        raise TypeError('nsolve expected at most 3 arguments, got %i'
+                        % len(args))
+    modules = kwargs.get('modules', ['mpmath'])
     if isinstance(f,  (list,  tuple)):
         f = Matrix(f).T
-    if len(args) != f.cols:
-        raise NotImplementedError('need exactly as many variables as equations')
+    if not isinstance(f, Matrix):
+        # assume it's a sympy expression
+        if isinstance(f, Equality):
+            f = f.lhs - f.rhs
+        f = f.evalf()
+        atoms = set(s for s in f.atoms() if isinstance(s, Symbol))
+        if fargs is None:
+            fargs = atoms.copy().pop()
+        if not (len(atoms) == 1 and (fargs in atoms or fargs[0] in atoms)):
+            raise ValueError('expected a onedimensional and numerical function')
+        f = lambdify(fargs, f, modules)
+        return findroot(f, x0, **kwargs)
+    if len(fargs) > f.cols:
+        raise NotImplementedError('need at least as many equations as variables')
+    verbose = kwargs.get('verbose', False)
     if verbose:
         print 'f(x):'
         print f
     # derive Jacobian
-    J = f.jacobian(args)
+    J = f.jacobian(fargs)
     if verbose:
         print 'J(x):'
         print J
     # create functions
-    f = lambdify(args, f.T, modules)
-    J = lambdify(args, J, modules)
-    # solve system using Newton's method
-    kwargs = {}
-    if tol:
-        kwargs['tol'] = tol
-    if maxsteps:
-        kwargs['maxsteps'] = maxsteps
-    kwargs['verbose'] = verbose
-    if norm:
-        kwargs['norm'] = norm
-    x = newton(f, x0, J, **kwargs)
+    f = lambdify(fargs, f.T, modules)
+    J = lambdify(fargs, J, modules)
+    # solve the system numerically
+    x = findroot(f, x0, J=J, **kwargs)
     return x

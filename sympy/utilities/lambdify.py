@@ -31,6 +31,7 @@ MPMATH_TRANSLATIONS = {
     "oo":"inf",
     #"uppergamma":"upper_gamma",
     "LambertW":"lambertw",
+    "Matrix":"matrix",
 }
 
 NUMPY_TRANSLATIONS = {
