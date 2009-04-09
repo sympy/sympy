@@ -71,6 +71,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Ted Horst: Basic.__call__() fix
 #. Akshay Srinivasan: Printing fix
 #. Aaron Meurer: Bernoulli ODE solver
+#. Barry Wardell: implement series as function
 
 Uptodate list in the order of the first contribution is given in the `README
 <http://hg.sympy.org/sympy/file/tip/README>`_
