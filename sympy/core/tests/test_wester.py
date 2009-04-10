@@ -2,6 +2,8 @@
 capabilities".
 
 http://www.math.unm.edu/~wester/cas/book/Wester.pdf
+See also http://math.unm.edu/~wester/cas_review.html for detailed output of each
+tested system.
 """
 
 from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
@@ -593,9 +595,23 @@ def test_L7():
 
 @XFAIL
 def test_L8():
-    assert (4*x+4*sqrt(x)+1)**(sqrt(x)/(2*sqrt(x)+1))*(2*sqrt(x)+1)**(1/(2*sqrt(x)+1)) == 2*sqrt(x)+1 # The paper isn't specific on this one (it has elipses), but I think this is what this should simplify to.  Not sure how this is zero equivalence.
+    assert (4*x+4*sqrt(x)+1)**(sqrt(x)/(2*sqrt(x)+1))*(2*sqrt(x)+1)**(1/(2*sqrt(x)+1))-2*sqrt(x)-1 == 0
 
 @XFAIL
 def test_L9():
     z = symbols('z', complex=True)
     assert 2**(1-z)*gamma(z)*zeta(z)*cos(z*pi/2)-pi**2*zeta(1-z) == 0
+
+# M. Equations
+
+@XFAIL
+def test_M1():
+    assert Equality(x,2)/2 + Equality(1,1) == Equality(x/2+1,2)
+
+def test_M2():
+    # This takes a bit or work, but SymPy is capable of recognizing that all the
+    # roots of this equation are real.
+    sol = solve(3*x**3-18*x**2+33*x-19,x)
+    for i in sol:
+        assert re(i.as_real_imag()) == i.as_real.imag()
+
