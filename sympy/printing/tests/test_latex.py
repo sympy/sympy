@@ -29,6 +29,9 @@ def test_latex_basic():
     assert latex(x**(Rational(3,4))) == r"$x^{\frac{3}{4}}$"
     assert latex(x**(Rational(3,4)), fold_frac_powers=True) == "$x^{3/4}$"
 
+    assert latex(1.5e20*x) == r"$1.5 \times 10^{20} x$"
+    assert latex(1.5e20*x, mul_symbol='dot') == r"$1.5 \cdot 10^{20} \cdot x$"
+
 
 def test_latex_symbols():
     Gamma, lmbda, rho = map(Symbol, ('Gamma', 'lambda', 'rho'))
