@@ -73,6 +73,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Aaron Meurer: Bernoulli ODE solver
 #. Barry Wardell: implement series as function
 #. Tomasz Buchert: ccode printing fixes
+#. Vinay Kumar: polygamma tests
 
 Uptodate list in the order of the first contribution is given in the `README
 <http://hg.sympy.org/sympy/file/tip/README>`_
