@@ -64,7 +64,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Konrad Meyer: policy patch
 #. Henrik Johansson: matrix zero finder patch
 #. Priit Laes: line integrals
-#. Freddie Witherden: trigonometric simplifications fixes
+#. Freddie Witherden: trigonometric simplifications fixes, LaTeX printer improvements
 #. Brian E. Granger: second quantization physics module
 #. Andrew Straw: lambdify() improvements
 #. Kaifeng Zhu: factorint() fix
