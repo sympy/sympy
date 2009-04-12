@@ -1,5 +1,5 @@
 from sympy import Symbol, gamma, oo, nan, zoo, factorial, sqrt, Rational, log,\
-        polygamma, EulerGamma, pi, uppergamma
+        polygamma, EulerGamma, pi, uppergamma, S
 
 x = Symbol('x')
 y = Symbol('y')
@@ -90,8 +90,9 @@ def test_polygamma_expand_func():
     assert polygamma(1, x + y).expand(func = True, basic = False) == polygamma(1, x + y)
     assert polygamma(1, 3 + 4*x + y).expand(func = True,basic = False) == -12 - 12*x - 3*y + polygamma(1, y + 4*x)
     assert polygamma(3, 3 + 4*x + y).expand(func = True,basic = False) == -72 - 72*x -  18*y + polygamma(3, y + 4*x)
-    assert polygamma(3, 4*x + y + 3/2).expand(func = True, basic = False) == -6 - 24*x - 6*y + polygamma(3, y + 4*x)
-    assert polygamma(3, x + y + Rational(3,4)).expand(func = True, basic = False) == polygamma(3, Rational(3,4) + x + y)
+    assert polygamma(3, 4*x + y + 1).expand(func = True, basic = False) == -6 - 24*x - 6*y + polygamma(3, y + 4*x)
+    assert polygamma(3, 4*x + y + S(3)/2).expand(func = True, basic = False) == polygamma(3, S(3)/2 + y + 4*x)
+    assert polygamma(3, x + y + S(3)/4).expand(func = True, basic = False) == polygamma(3, S(3)/4 + x + y)
 
 def test_loggamma():
     pass
