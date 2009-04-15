@@ -38,6 +38,8 @@ def test_C1():
 def test_C2():
     assert factorint(factorial(50)) == {2: 47, 3: 22, 5: 12, 7: 8, 
     11: 4, 13: 3, 17: 2, 19: 2, 23: 2, 29: 1, 31: 1, 37: 1, 41: 1, 43: 1, 47: 1}
+    # We technically want this to return a prime factorization, but whatever
+
 @XFAIL
 def test_C3():
     raise NotImplementedError("10!! == 3840\n"
@@ -564,6 +566,7 @@ def test_K10():
     z = Symbol('z', real=True, negative=True)
     assert simplify(sqrt(1/z) + 1/sqrt(z)) == 0
 
+# This goes up to K25
 
 # L. Determining Zero Equivalence
 
@@ -606,10 +609,22 @@ def test_L9():
 def test_M1():
     assert Equality(x,2)/2 + Equality(1,1) == Equality(x/2+1,2)
 
+@XFAIL
 def test_M2():
-    # This takes a bit or work, but SymPy is capable of recognizing that all the
-    # roots of this equation are real.
+    # The roots of this equation should all be real. Note that this doesn't test
+    # that they are correct.
     sol = solve(3*x**3-18*x**2+33*x-19,x)
     for i in sol:
-        assert re(i.as_real_imag()) == i.as_real.imag()
+        assert im(i) == 0
 
+def test_M3():
+    solve(x**4+x**3+x**2+x+1)
+    # This produces horrible output now.  Hopefully someone will fix this so
+    # that I don't have to mark this as an XFAIL.  Same for M4.
+
+@XFAIL
+def test_M5():
+    assert solve(x**6-9*x**4-4*x**3+27*x**2-36*x-23,x) = [2**(1/3) + sqrt(3), 2**(1/3) - sqrt(3), + sqrt(3) - 1/2^(2/3) + i sqrt(3)/2^(2/3), + sqrt(3) - 1/2^(2/3) - i sqrt(3)/2^(2/3), - sqrt(3) - 1/2^(2/3) + i sqrt(3)/2^(2/3), - sqrt(3) - 1/2^(2/3) - i sqrt(3)/2^(2/3)]
+
+def test_M6():
+    assert solve(x**7-1,x) == [-I*sin(2*pi/7) + cos(2*pi/7), -cos(3*pi/7) - I*sin(3*pi/7), -cos(pi/7) + I*sin(pi/7), 1, -cos(3*pi/7) + I*sin(3*pi/7), -cos(pi/7) - I*sin(pi/7), I*sin(2*pi/7) + cos(2*pi/7)]
