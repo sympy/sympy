@@ -246,7 +246,7 @@ def solve(f, *symbols, **flags):
         elif strategy == -1:
             raise Exception('Could not parse expression %s' % f)
         else:
-            raise NotImplementedError("No algorithms where implemented to solve equation %s" % f)
+            raise NotImplementedError("No algorithms are implemented to solve equation %s" % f)
 
         if flags.get('simplified', True):
             return map(simplify, result)
