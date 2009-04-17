@@ -631,3 +631,12 @@ def test_M6():
 
 def test_M7():
     assert solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 + 226*x**2 - 140*x + 46,x) == [1 + (-6 + 2*(-3 - 4*3**(1/2))**(1/2))**(1/2)/2, 1 + (-6 - 2*(-3 + 4*3**(1/2))**(1/2))**(1/2)/2, 1 + (-6 + 2*(-3 + 4*3**(1/2))**(1/2))**(1/2)/2, 1 - (-6 - 2*(-3 + 4*3**(1/2))**(1/2))**(1/2)/2, 1 - (-6 + 2*(-3 + 4*3**(1/2))**(1/2))**(1/2)/2, 1 - (-6 - 2*(-3 - 4*3**(1/2))**(1/2))**(1/2)/2, 1 - (-6 + 2*(-3 - 4*3**(1/2))**(1/2))**(1/2)/2, 1 + (-6 - 2*(-3 - 4*3**(1/2))**(1/2))**(1/2)/2]
+
+def test_M8():
+    assert solve(exp(2*x)+2*exp(x)+1-z,x) == [log(1 + z - 2*z**(1/2))/2, log(1 + z + 2*z**(1/2))/2]
+    # This one could be simplified better (the 1/2 could be pulled into the log
+    # as a sqrt, and the function inside the log can be factored as a square,
+    # giving [log(sqrt(z) - 1), log(sqrt(z) + 1)]). Also, there should be an
+    # infinite number of solutions.
+    # x = {log(sqrt(z) - 1), log(sqrt(z) + 1) + i pi} [+ n 2 pi i, + n 2 pi i]
+    # where n is an arbitrary integer.  See url of detailed output above.
