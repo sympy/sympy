@@ -36,8 +36,7 @@ def test_C1():
         30414093201713378043612608166064768844377641568960512000000000000)
 
 def test_C2():
-    assert factorint(factorial(50)) == {2: 47, 3: 22, 5: 12, 7: 8, 
-    11: 4, 13: 3, 17: 2, 19: 2, 23: 2, 29: 1, 31: 1, 37: 1, 41: 1, 43: 1, 47: 1}
+    assert factorint(factorial(50)) == {2: 47, 3: 22, 5: 12, 7: 8, 11: 4, 13: 3, 17: 2, 19: 2, 23: 2, 29: 1, 31: 1, 37: 1, 41: 1, 43: 1, 47: 1}
     # We technically want this to return a prime factorization, but whatever
 
 @XFAIL
@@ -624,7 +623,7 @@ def test_M3():
 
 @XFAIL
 def test_M5():
-    assert solve(x**6-9*x**4-4*x**3+27*x**2-36*x-23,x) = [2**(1/3) + sqrt(3), 2**(1/3) - sqrt(3), + sqrt(3) - 1/2^(2/3) + i sqrt(3)/2^(2/3), + sqrt(3) - 1/2^(2/3) - i sqrt(3)/2^(2/3), - sqrt(3) - 1/2^(2/3) + i sqrt(3)/2^(2/3), - sqrt(3) - 1/2^(2/3) - i sqrt(3)/2^(2/3)]
+    assert solve(x**6-9*x**4-4*x**3+27*x**2-36*x-23,x) == [2**(1/3)+sqrt(3), 2**(1/3)-sqrt(3),+sqrt(3)-1/2**(2/3)+I*sqrt(3)/2**(2/3), +sqrt(3)-1/2**(2/3)-I*sqrt(3)/2**(2/3), -sqrt(3)-1/2**(2/3)+I*sqrt(3)/2**(2/3), -sqrt(3)-1/2**(2/3)-I*sqrt(3)/2**(2/3)]
 
 def test_M6():
     assert solve(x**7-1,x) == [-I*sin(2*pi/7) + cos(2*pi/7), -cos(3*pi/7) - I*sin(3*pi/7), -cos(pi/7) + I*sin(pi/7), 1, -cos(3*pi/7) + I*sin(3*pi/7), -cos(pi/7) - I*sin(pi/7), I*sin(2*pi/7) + cos(2*pi/7)]
