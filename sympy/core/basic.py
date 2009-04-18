@@ -381,7 +381,7 @@ class Basic(AssumeMeths):
     # new-style classes + __getattr__ is *very* slow!
 
     # def __getattr__(self, name):
-    #     raise 'no way, *all* attribute access will be 2.5x slower'
+    #     raise Exception('no way, *all* attribute access will be 2.5x slower')
 
     # here is what we do instead:
     for k in AssumeMeths._assume_defined:

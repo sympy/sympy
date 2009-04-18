@@ -23,7 +23,7 @@ def msigma(i):
             (0, -1)
             ) )
     else:
-        raise "Invalid Pauli index"
+        raise IndexError("Invalid Pauli index")
     return Matrix(mat)
 
 def mgamma(mu,lower=False):
@@ -43,7 +43,7 @@ def mgamma(mu,lower=False):
 
     """
     if not mu in [0,1,2,3,5]:
-        raise "Invalid Dirac index"
+        raise IndexError("Invalid Dirac index")
     if mu == 0:
         mat = (
                 (1,0,0,0),

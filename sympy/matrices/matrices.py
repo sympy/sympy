@@ -508,7 +508,7 @@ class Matrix(object):
         elif method == "ADJ":
             return self.inverse_ADJ()
         else:
-            raise Exception("Inversion method unrecognized")
+            raise ValueError("Inversion method unrecognized")
 
 
     def __mathml__(self):
@@ -835,7 +835,7 @@ class Matrix(object):
                 if pivot == -1 and not iszerofunc(A[i,j]):
                     pivot = i
             if pivot < 0:
-                raise "Error: non-invertible matrix passed to LUdecomposition_Simple()"
+                raise ValueError("Error: non-invertible matrix passed to LUdecomposition_Simple()")
             if pivot != j: # row must be swapped
                 A.row_swap(pivot,j)
                 p.append([pivot,j])
@@ -867,7 +867,7 @@ class Matrix(object):
                     else:
                         kpivot = kpivot + 1
                 if kpivot == n+1:
-                    raise "Matrix is not full rank"
+                    raise ValueError("Matrix is not full rank")
                 else:
                     swap = U[k, k:]
                     U[k,k:] = U[kpivot,k:]
@@ -988,7 +988,7 @@ class Matrix(object):
                 self.lines == 3 and self.cols == 1 ) and \
                 (b.lines == 1 and b.cols == 3 or \
                 b.lines == 3 and b.cols == 1):
-            raise "Dimensions incorrect for cross product"
+            raise ValueError("Dimensions incorrect for cross product")
         else:
             return Matrix(1,3,((self[1]*b[2] - self[2]*b[1]),
                                (self[2]*b[0] - self[0]*b[2]),
@@ -1107,7 +1107,7 @@ class Matrix(object):
         elif method == "berkowitz":
             return self.berkowitz_det()
         else:
-            raise Exception("Determinant method unrecognized")
+            raise ValueError("Determinant method unrecognized")
 
     def det_bareis(self):
         """Compute matrix determinant using Bareis' fraction-free
@@ -1312,7 +1312,7 @@ class Matrix(object):
 
         """
         if not self.is_square:
-            raise MatrixError
+            raise NonSquareMatrixException()
 
         A, N = self, self.lines
         transforms = [0] * (N-1)
@@ -1488,12 +1488,12 @@ def hessian(f, varlist):
         m = varlist.cols
         assert varlist.lines == 1
     else:
-        raise "Improper variable list in hessian function"
+        raise ValueError("Improper variable list in hessian function")
     assert m > 0
     try:
         f.diff(varlist[0])   # check differentiability
     except AttributeError:
-        raise "Function %d is not differentiable" % i
+        raise ValueError("Function %d is not differentiable" % i)
     out = zeros(m)
     for i in range(m):
         for j in range(i,m):
@@ -1511,7 +1511,7 @@ def GramSchmidt(vlist, orthog=False):
         for j in range(i):
             tmp -= vlist[i].project(out[j])
         if tmp == Matrix([[0,0,0]]):
-            raise "GramSchmidt: vector set not linearly independent"
+            raise ValueError("GramSchmidt: vector set not linearly independent")
         out.append(tmp)
     if orthog:
         for i in range(len(out)):
@@ -1763,7 +1763,7 @@ class SMatrix(Matrix):
                 self.lines == 3 and self.cols == 1 ) and \
                 (b.lines == 1 and b.cols == 3 or \
                 b.lines == 3 and b.cols == 1):
-            raise "Dimensions incorrect for cross product"
+            raise ValueError("Dimensions incorrect for cross product")
         else:
             return SMatrix(1,3,((self[1]*b[2] - self[2]*b[1]),
                                (self[2]*b[0] - self[0]*b[2]),

@@ -321,7 +321,7 @@ def sign(e, x):
         return sign(e.args[0] -1, x)
     elif e.is_Add:
         return sign(limitinf(e, x), x)
-    raise "cannot determine the sign of %s"%e
+    raise ValueError("Cannot determine the sign of %s" % e)
 
 @debug
 def limitinf(e, x):

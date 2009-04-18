@@ -43,7 +43,7 @@ class Pauli(Symbol):
 
     def __new__(cls, i):
         if not i in [1,2,3]:
-            raise "Invalid Pauli index"
+            raise IndexError("Invalid Pauli index")
         obj = Symbol.__new__(cls, "sigma%d"%i, commutative=False)
         obj.i=i
         return obj
