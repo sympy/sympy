@@ -72,7 +72,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Akshay Srinivasan: Printing fix
 #. Aaron Meurer: Bernoulli ODE solver
 #. Barry Wardell: implement series as function
-#. Tomasz Buchert: ccode printing fixes
+#. Tomasz Buchert: ccode printing fixes, code quality concerning exceptions
 #. Vinay Kumar: polygamma tests
 #. Johann Cohen-Tanugi: commutative diff tests
 
