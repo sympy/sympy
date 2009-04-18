@@ -18,6 +18,8 @@ message_space = "File contains trailing whitespace: %s, line %s."
 message_implicit = "File contains an implicit import: %s, line %s."
 message_tabs = "File contains tabs instead of spaces: %s, line %s."
 message_carriage = "File contains carriage returns at end of line: %s, line %s"
+message_str_raise = "File contains string exception: %s, line %s"
+message_gen_raise = "File contains generic exception: %s, line %s"
 
 def get_whitespace(s):
     """Returns all whitespace at the beginning of the line."""
@@ -31,6 +33,8 @@ def check_directory_tree(base_path):
     Checks all files in the directory tree (with base_path as starting point)
     for bad coding style.
     """
+    strRaise = re.compile(r'raise(\s+(\'|\")|\s*(\(\s*)+(\'|\"))')
+    genRaise = re.compile(r'raise(\s+Exception|\s*(\(\s*)+Exception)')
     for root, dirs, files in walk(base_path):
         for fname in glob(join(root, "*.py")):
             if filter(lambda ex: ex in fname, EXCLUDE):
@@ -46,6 +50,10 @@ def check_directory_tree(base_path):
                     w = get_whitespace(line)
                     if w.expandtabs() != w:
                         assert False, message_tabs % (fname, idx+1)
+                    if strRaise.search(line):
+                        assert False, message_str_raise % (fname, idx+1)
+                    if genRaise.search(line):
+                        assert False, message_gen_raise % (fname, idx+1)
             finally:
                 file.close()
 
