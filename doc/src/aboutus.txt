@@ -76,9 +76,10 @@ want to be mentioned here, so see our repository history for a full list).
 #. Vinay Kumar: polygamma tests
 #. Johann Cohen-Tanugi: commutative diff tests
 
-Uptodate list in the order of the first contribution is given in the `README
-<http://hg.sympy.org/sympy/file/tip/README>`_
-(you can also find a brief history of SymPy in the README).
+Uptodate list in the order of the first contribution is given in the `AUTHORS
+<http://git.sympy.org/?p=sympy.git;f=AUTHORS;hb=HEAD>`_ file.
+
+You can find a brief history of SymPy in the README.
 
 Financial and Infrastructure Support
 ------------------------------------
