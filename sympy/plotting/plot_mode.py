@@ -206,7 +206,7 @@ class PlotMode(PlotObject):
         cls._init_mode()
 
         #except Exception, e:
-        #    raise Exception( ("Failed to initialize "
+        #    raise RuntimeError( ("Failed to initialize "
         #                      "plot mode %s. Reason: %s")
         #                       % (name, (str(e))) )
 
@@ -228,7 +228,7 @@ class PlotMode(PlotObject):
                 PlotMode._mode_default_map[d][i] = cls
 
         except Exception, e:
-            raise Exception( ("Failed to register "
+            raise RuntimeError( ("Failed to register "
                               "plot mode %s. Reason: %s")
                                % (name, (str(e))) )
 

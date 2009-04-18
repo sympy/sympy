@@ -381,7 +381,7 @@ class Basic(AssumeMeths):
     # new-style classes + __getattr__ is *very* slow!
 
     # def __getattr__(self, name):
-    #     raise Exception('no way, *all* attribute access will be 2.5x slower')
+    #     raise Warning('no way, *all* attribute access will be 2.5x slower')
 
     # here is what we do instead:
     for k in AssumeMeths._assume_defined:
@@ -929,7 +929,7 @@ class Basic(AssumeMeths):
             old, new = args
             return self._subs_old_new(old, new)
         else:
-            raise Exception("subs accept either 1 or 2 arguments")
+            raise TypeError("subs accepts either 1 or 2 arguments")
 
     @cacheit
     def _subs_old_new(self, old, new):

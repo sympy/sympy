@@ -504,7 +504,7 @@ class Rational(Number):
         if q==0:
             if p==0:
                 if _errdict["divide"]:
-                    raise Exception("Indeterminate 0/0")
+                    raise ValueError("Indeterminate 0/0")
                 else:
                     return S.NaN
             if p<0: return S.NegativeInfinity

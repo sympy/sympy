@@ -244,7 +244,7 @@ def solve(f, *symbols, **flags):
             # b!=0.
             result = tsolve(f, *symbols)
         elif strategy == -1:
-            raise Exception('Could not parse expression %s' % f)
+            raise ValueError('Could not parse expression %s' % f)
         else:
             raise NotImplementedError("No algorithms are implemented to solve equation %s" % f)
 

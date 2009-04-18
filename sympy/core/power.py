@@ -499,7 +499,7 @@ class Pow(Basic):
                     if n.is_Pow:
                         return n.args[1]
 
-            raise Exception("Unimplemented")
+            raise NotImplementedError()
 
         base, exp = self.args
         if exp.is_Integer:
@@ -558,7 +558,7 @@ class Pow(Basic):
                 elif l.is_number and l>0:
                     l = float(l)
                 else:
-                    raise Exception("Not implemented")
+                    raise NotImplementedError()
 
                 s = 1
                 m = 1

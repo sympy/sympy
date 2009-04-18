@@ -125,7 +125,7 @@ class Function(Basic):
             else:
                 print args
                 print type(args[0])
-                raise Exception("You need to specify exactly one string")
+                raise TypeError("You need to specify exactly one string")
 
         # (2) create new instance of a class created in (1)
         #     UC: Function('f')(x)

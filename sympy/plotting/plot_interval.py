@@ -8,7 +8,7 @@ class PlotInterval(object):
     def require_all_args(f):
         def check(self, *args, **kwargs):
             for g in [self._v, self._v_min, self._v_max, self._v_steps]:
-                if g is None: raise Exception("PlotInterval is incomplete.")
+                if g is None: raise ValueError("PlotInterval is incomplete.")
             return f(self, *args, **kwargs)
         return check
 

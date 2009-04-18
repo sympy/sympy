@@ -203,7 +203,7 @@ class Point(GeometryEntity):
             if len(other) == len(self):
                 return Point( [simplify(a+b) for a,b in zip(self, other)] )
             else:
-                raise Exception("Points must have the same number of dimensions")
+                raise TypeError("Points must have the same number of dimensions")
         else:
             other = sympify(other)
             return Point( [simplify(a+other) for a in self] )

@@ -15,7 +15,7 @@ def test_no_args():
     f = lambdify([], 1)
     try:
         f(-1)
-        raise Exception()
+        assert False
     except TypeError:
         pass
     assert f() == 1
@@ -35,7 +35,7 @@ def test_str_args():
     # make sure correct number of args required
     try:
         f(0)
-        raise Exception()
+        assert False
     except TypeError:
         pass
 
@@ -51,7 +51,7 @@ def test_own_module():
     f = lambdify(x, sympy.ceiling(x), math)
     try:
         f(4.5)
-        raise Exception
+        assert False
     except NameError:
         pass
 
@@ -59,13 +59,13 @@ def test_bad_args():
     try:
         # no vargs given
         f = lambdify(1)
-        raise Exception()
+        assert False
     except TypeError:
         pass
     try:
         # same with vector exprs
         f = lambdify([1,2])
-        raise Exception()
+        assert False
     except TypeError:
         pass
 
@@ -78,7 +78,7 @@ def test_sympy_lambda():
     try:
         # arctan is in numpy module and should not be available
         f = lambdify(x, arctan(x), "sympy")
-        raise Exception
+        assert False
     except NameError:
         pass
 
@@ -88,7 +88,7 @@ def test_math_lambda():
     assert -prec < f(0.2) - sin02 < prec
     try:
         f(x) # if this succeeds, it can't be a python math function
-        raise Exception
+        assert False
     except ValueError:
         pass
 
@@ -98,7 +98,7 @@ def test_mpmath_lambda():
     assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
     try:
         f(x) # if this succeeds, it can't be a mpmath function
-        raise Exception
+        assert False
     except TypeError:
         pass
 
@@ -143,7 +143,7 @@ def test_sqrt():
     assert f(6.25) == 2.5
     try:
         f(-1)
-        raise Exception()
+        assert False
     except ValueError: pass
 
 def test_trig():
@@ -165,14 +165,14 @@ def test_vector_simple():
     # make sure correct number of args required
     try:
         f(0)
-        raise Exception()
+        assert False
     except TypeError: pass
 
 def test_vector_discontinuous():
     f = lambdify(x, (-1/x, 1/x))
     try:
         f(0)
-        raise Exception()
+        assert False
     except ZeroDivisionError: pass
     assert f(1) == (-1.0, 1.0)
     assert f(2) == (-0.5, 0.5)

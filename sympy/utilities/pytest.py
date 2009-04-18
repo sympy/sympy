@@ -22,7 +22,7 @@ def raises(ExpectedException, code):
         exec code in frame.f_globals, loc
     except ExpectedException:
         return
-    raise Exception("DID NOT RAISE")
+    raise AssertionError("DID NOT RAISE")
 
 if not USE_PYTEST:
     class XFail(Exception):

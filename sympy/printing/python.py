@@ -38,7 +38,7 @@ class PythonPrinter(ReprPrinter, StrPrinter):
         return StrPrinter._print_Symbol(self, expr)
 
     def _print_module(self, expr):
-        raise Exception('Modules in the expression are unacceptable')
+        raise ValueError('Modules in the expression are unacceptable')
 
 
 def python(expr):

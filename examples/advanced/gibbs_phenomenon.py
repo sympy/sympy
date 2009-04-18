@@ -67,7 +67,7 @@ def l2_gram_schmidt(list, lim):
             v = a - l2_projection(a, r, lim)
         v_norm = l2_norm(v, lim)
         if v_norm == 0:
-            raise Exception("The sequence is not linearly independent.")
+            raise ValueError("The sequence is not linearly independent.")
         r.append(v/v_norm)
     return r
 

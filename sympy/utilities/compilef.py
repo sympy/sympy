@@ -226,7 +226,7 @@ def __run(cmd):
     Checks the exit code of a ran command.
     """
     if not cmd == 0:
-        raise Exception('could not run libtcc command')
+        raise RuntimeError('could not run libtcc command')
 
 def _compile(code, argcount=None, fname='f', fprototype=None):
     """

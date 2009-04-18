@@ -546,7 +546,7 @@ class FixedBosonicBasis(BosonicBasis):
 #     elif isinstance(e, Add):
 #         a, b = e.as_two_terms()
 #         return move(a, i, d) + move(b, i, d)
-#     raise Exception("Not implemented.")
+#     raise NotImplementedError()
 
 def commutator(a, b):
     """

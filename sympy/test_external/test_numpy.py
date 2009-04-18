@@ -196,7 +196,7 @@ def test_lambdify():
     assert -prec < f(0.2) - sin02 < prec
     try:
         f(x) # if this succeeds, it can't be a numpy function
-        raise Exception
+        assert False
     except AttributeError:
         pass
 

@@ -3,6 +3,8 @@ from sympy.utilities.pytest import raises
 def test_raises():
     class My(Exception):
         pass
+    class My2(Exception):
+        pass
     raises(My, "raise My()")
 
     try:
@@ -12,7 +14,7 @@ def test_raises():
         assert str(e) == "DID NOT RAISE"
 
     try:
-        raises(My, "raise Exception('my text123')")
+        raises(My, "raise My2('my text123')")
         assert False
-    except Exception, e:
+    except My2, e:
         assert str(e) == "my text123"

@@ -91,7 +91,7 @@ class Ellipse(GeometryEntity):
 
         hr, vr = self.hradius, self.vradius
         if hr.atoms(C.Symbol) or vr.atoms(C.Symbol):
-            raise Exception("foci can only be determined on non-symbolic radii")
+            raise ValueError("foci can only be determined on non-symbolic radii")
 
         v = sqrt(abs(vr**2 - hr**2))
         if hr < vr:

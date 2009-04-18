@@ -137,7 +137,7 @@ class Printer(object):
             if self.printmethod and hasattr(expr, self.printmethod):
                 res = getattr(expr, self.printmethod)()
                 if res is None:
-                    raise Exception("Printing method '%s' of an instance of '%s' did return None" %\
+                    raise RuntimeError("Printing method '%s' of an instance of '%s' did return None" %\
                                     (self.printmethod, expr.__class__.__name__))
                 return res
 
@@ -148,14 +148,14 @@ class Printer(object):
                 if hasattr(self, printmethod):
                     res = getattr(self, printmethod)(expr, *args)
                     if res is None:
-                        raise Exception("Printing method '%s' did return None"%\
+                        raise RuntimeError("Printing method '%s' did return None"%\
                                         printmethod)
                     return res
 
             # Unknown object, fall back to the emptyPrinter.
             res = self.emptyPrinter(expr)
             if res is None:
-                raise Exception("emptyPrinter method of '%s' did return None" %\
+                raise RuntimeError("emptyPrinter method of '%s' did return None" %\
                                 self.__class__.__name__)
             return res
         finally:
