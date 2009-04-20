@@ -268,8 +268,7 @@ class stringPict(object):
         if svals[-1] == '':
             del svals[-1] #  Get rid of the last spacer
 
-        _str = type(self.picture[0])
-        return _str.join(_str("\n"), svals)
+        return "\n".join(svals)
 
     def terminal_width(self):
         """Return the terminal width if possible, otherwise return 0.
