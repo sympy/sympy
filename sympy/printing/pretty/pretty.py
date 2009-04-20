@@ -35,7 +35,7 @@ class PrettyPrinter(Printer):
         return e
 
     def _print_basestring(self, e):
-        return prettyForm(repr(e))
+        return prettyForm(e)
 
     def _print_Symbol(self, e):
         symb = pretty_symbol(e.name)

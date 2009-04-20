@@ -342,3 +342,6 @@ def test_pretty_no_wrap_line():
         huge_expr += i*sin(i+x)
     assert xpretty(huge_expr            ).find('\n') != -1
     assert xpretty(huge_expr, wrap_line=False).find('\n') == -1
+
+def test_pretty_str():
+    assert xpretty('a\nb') == 'a\nb'
