@@ -230,10 +230,15 @@ class stringPict(object):
         root.baseline = result.baseline-result.height()+root.height()
         return result.left(root)
 
-    def terminal_string(self):
-        """Return the string form of self such that it can be printed
+    def render(self, * args, **kwargs):
+        """Return the string form of self.
+
+           Unless the argument line_break is set to False, it will
+           break the expression in a form that can be printed
            on the terminal without being broken up.
-        """
+         """
+        if not kwargs["wrap_line"]:
+            return "\n".join(self.picture)
 
         # Attempt to get a terminal width
         ncols = self.terminal_width()
