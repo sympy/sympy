@@ -1,0 +1,38 @@
+"""Definitions of common exceptions for `polys` module. """
+
+class OperationNotSupported(Exception):
+
+    def __init__(self, poly, func):
+        self.poly = poly
+        self.func = func
+
+    def __str__(self):
+        return "`%s` operation not supported by %s representation" % (self.func, self.poly.rep.__class__.__name__)
+
+class ExactQuotientFailed(Exception):
+    pass
+
+class HeuristicGCDFailed(Exception):
+    pass
+
+class ExtraneousFactors(Exception):
+    pass
+
+class UnificationFailed(Exception):
+    pass
+
+class GeneratorsNeeded(Exception):
+    pass
+
+class PolynomialError(Exception):
+    pass
+
+class CoercionFailed(Exception):
+    pass
+
+class NotInvertible(Exception):
+    pass
+
+class DomainError(Exception):
+    pass
+

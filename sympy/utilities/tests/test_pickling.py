@@ -279,16 +279,71 @@ def test_plotting2():
     check(PlotAxes())
 
 #================== polys =======================
-from sympy.polys.polynomial import IntegerPoly, Poly
+from sympy.polys.polytools import Poly
+from sympy.polys.polyclasses import GFP, DUP, DMP, DMF, ANP
 from sympy.polys.rootfinding import RootOf, RootsOf, RootSum
 
+from sympy.polys.algebratools import (
+    ZZ_python, ZZ_sympy, QQ_sympy,
+    PolynomialRing,
+    FractionField,
+    ExpressionDomain,
+)
+
+@XFAIL
 def test_polys():
     x = Symbol("x")
     f = Poly(x, x)
     g = lambda x: x
+    ZZ = ZZ_python()
+    QQ = QQ_sympy()
 
-    for c in (IntegerPoly, IntegerPoly(x, x), Poly, Poly(x, x)):
+    for c in (Poly, Poly(x, x)):
         check(c)
+
+    for c in (GFP, GFP([ZZ(1),ZZ(2),ZZ(3)], ZZ(7), ZZ)):
+        check(c)
+    for c in (DUP, DUP([ZZ(1),ZZ(2),ZZ(3)], ZZ(7), ZZ)):
+        check(c)
+    for c in (DMP, DMP([ZZ(1),ZZ(2),ZZ(3)], 0, ZZ)):
+        check(c)
+    for c in (DMF, DMF(([ZZ(1),ZZ(2)],[ZZ(1),ZZ(3)], ZZ))):
+        check(c)
+    for c in (ANP, ANP([QQ(1),QQ(2)], [QQ(1),QQ(2),QQ(3)], QQ)):
+        check(c)
+
+    for c in (ZZ_python, ZZ_python()):
+        check(c)
+    for c in (ZZ_sympy, ZZ_sympy()):
+        check(c)
+    for c in (QQ_sympy, QQ_sympy()):
+        check(c)
+
+    for c in (PolynomialRing, PolynomialRing(ZZ, 'x', 'y')):
+        check(c)
+    for c in (FractionField, FractionField(ZZ, 'x', 'y')):
+        check(c)
+
+    for c in (ExpressionDomain, ExpressionDomain()):
+        check(c)
+
+    try:
+        from sympy.polys.algebratools import QQ_python
+
+        for c in (QQ_python, QQ_python()):
+            check(c)
+    except ImportError:
+        pass
+
+    try:
+        from sympy.polys.algebratools import QQ_python
+
+        for c in (ZZ_gmpy, ZZ_gmpy()):
+            check(c)
+        for c in (QQ_gmpy, QQ_gmpy()):
+            check(c)
+    except ImportError:
+        pass
 
     for c in (RootOf, RootOf(f, 0), RootsOf, RootsOf(x, x), RootSum, RootSum(g, f)):
         check(c)
@@ -346,3 +401,4 @@ def test_concrete():
     for c in (Product, Product(1,2), Sum, Sum(1), Sum2, Sum2(x,(x,2,4)),
               _BigOperator):
         check(c)
+

@@ -1,0 +1,1467 @@
+"""Classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
+
+from sympy.core import Basic, sympify
+
+from sympy.polys.polyerrors import (
+    ExactQuotientFailed,
+    UnificationFailed,
+    GeneratorsNeeded,
+    CoercionFailed,
+    NotInvertible,
+)
+
+def factorial(m):
+    """Returns `m!`. """
+    k = m
+
+    while m > 1:
+        m -= 1
+        k *= m
+
+    return k
+
+class Algebra(object):
+    """Represents an abstract domain. """
+
+    dtype = None
+    zero  = None
+    one   = None
+
+    has_Ring  = False
+    has_Field = False
+
+    is_ZZ = False
+    is_QQ = False
+
+    is_Poly = False
+    is_Frac = False
+
+    is_Algebraic = False
+    is_Composite = False
+
+    has_CharacteristicZero = False
+
+    is_EX = False
+
+    rep = None
+
+    def __init__(self):
+        raise NotImplementedError
+
+    def __str__(self):
+        return self.rep
+
+    def __repr__(self):
+        return str(self)
+
+    def __hash__(self):
+        return hash((self.__class__.__name__, self.dtype))
+
+    def __call__(self, *args):
+        """Construct an element of `self` domain from `args`. """
+        return self.dtype(*args)
+
+    def convert(K1, a, K0=None):
+        """Convert an object `a` from `K0` to `K1`. """
+        if K0 is not None:
+            _convert = getattr(K1, "from_" + K0.__class__.__name__)
+
+            if _convert is not None:
+                result = _convert(a, K0)
+
+                if result is not None:
+                    return result
+
+            raise CoercionFailed("can't convert %s of type %s to %s" % (a, K0, K1))
+        else:
+            try:
+                if type(a) is K1.dtype:
+                    return a
+
+                if type(a) is int:
+                    return K1(a)
+
+                if type(a) is long:
+                    return K1(a)
+
+                a = sympify(a)
+
+                if isinstance(a, Basic):
+                    return K1.from_sympy(a)
+            except (TypeError, ValueError):
+                pass
+
+            raise CoercionFailed("can't convert %s to type %s" % (a, K1))
+
+    def to_sympy(self, a):
+        """Convert `a` to a SymPy object. """
+        raise NotImplementedError
+
+    def from_sympy(self, a):
+        """Convert a SymPy object to `dtype`. """
+        raise NotImplementedError
+
+    def from_ZZ_python(K1, a, K0):
+        """Convert a Python `int` object to `dtype`. """
+        return None
+
+    def from_QQ_python(K1, a, K0):
+        """Convert a Python `Fraction` object to `dtype`. """
+        return None
+
+    def from_ZZ_sympy(K1, a, K0):
+        """Convert a SymPy `Integer` object to `dtype`. """
+        return None
+
+    def from_QQ_sympy(K1, a, K0):
+        """Convert a SymPy `Rational` object to `dtype`. """
+        return None
+
+    def from_ZZ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpz` object to `dtype`. """
+        return None
+
+    def from_QQ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpq` object to `dtype`. """
+        return None
+
+    def from_PolynomialRing(K1, a, K0):
+        """Convert a `DMP` object to `dtype`. """
+        if a.degree() <= 0:
+            return K1.convert(a.LC(), K0.dom)
+
+    def from_FractionField(K1, a, K0):
+        """Convert a `DMF` object to `dtype`. """
+        return None
+
+    def from_ExpressionDomain(K1, a, K0):
+        """Convert a `EX` object to `dtype`. """
+        return K1.from_sympy(a.ex)
+
+    def unify(K0, K1):
+        """Returns a maximal domain containg `K0` and `K1`. """
+        if K0 == K1:
+            return K0
+
+        if K0.is_EX:
+            return K0
+        if K1.is_EX:
+            return K1
+
+        if K0.is_Composite:
+            if K1.is_Composite:
+                if K0.gens == K1.gens:
+                    if K0.has_Field and K1.has_Field:
+                        if K0.dom.has_Field:
+                            return K0
+                        else:
+                            return K1
+                    elif K0.has_Field:
+                        if K0.dom == K1.dom:
+                            return K0
+                    elif K1.has_Field:
+                        if K0.dom == K1.dom:
+                            return K1
+                    else:
+                        if K0.dom.has_Field:
+                            return K0
+                        else:
+                            return K1
+                else:
+                    gens = set(K0.gens + K1.gens)
+
+                    try:
+                        gens = sorted(gens)
+                    except TypeError:
+                        gens = list(gens)
+
+                    if K0.has_Field and K1.has_Field:
+                        if K0.dom.has_Field:
+                            return K0.__class__(K0.dom, *gens)
+                        else:
+                            return K1.__class__(K1.dom, *gens)
+                    elif K0.has_Field:
+                        if K0.dom == K1.dom:
+                            return K0.__class__(K0.dom, *gens)
+                    elif K1.has_Field:
+                        if K0.dom == K1.dom:
+                            return K1.__class__(K1.dom, *gens)
+                    else:
+                        if K0.dom.has_Field:
+                            return K0.__class__(K0.dom, *gens)
+                        else:
+                            return K1.__class__(K1.dom, *gens)
+            else:
+                if K0.has_Field:
+                    if K0.dom == K1:
+                        return K0
+                else:
+                    if K0.dom.has_Field:
+                        return K0
+                    else:
+                        return K0.__class__(K1, *K0.gens)
+        elif K0.is_Algebraic:
+            pass # XXX: to be done
+        else:
+            if K1.is_Composite:
+                if K1.has_Field:
+                    if K0 == K1.dom:
+                        return K1
+                else:
+                    if K1.dom.has_Field:
+                        return K1
+                    else:
+                        return K1.__class__(K0, *K1.gens)
+            else:
+                if K0.has_Field:
+                    return K0
+                else:
+                    return K1
+
+        return ExpressionDomain()
+
+    def __eq__(self, other):
+        """Returns `True` if two algebras are equivalent. """
+        return self.dtype == other.dtype
+
+    def __ne__(self, other):
+        """Returns `False` if two algebras are equivalent. """
+        return self.dtype != other.dtype
+
+    def get_ring(self):
+        """Returns a ring associated with `self`. """
+        raise NotImplementedError
+
+    def get_field(self):
+        """Returns a field associated with `self`. """
+        raise NotImplementedError
+
+    def __getitem__(self, gens):
+        """The mathematical way do make a polynomial ring. """
+        return self.poly_ring(*gens)
+
+    def poly_ring(self, *gens):
+        """Returns a polynomial ring, i.e. `K[X]`. """
+        return PolynomialRing(self, *gens)
+
+    def frac_field(self, *gens):
+        """Returns a fraction field, i.e. `K(X)`. """
+        return FractionField(self, *gens)
+
+    def is_zero(self, a):
+        """Returns True if `a` is zero. """
+        return not a
+
+    def is_one(self, a):
+        """Returns True if `a` is one. """
+        return a == self.one
+
+    def is_positive(self, a):
+        """Returns True if `a` is positive. """
+        return a > 0
+
+    def is_negative(self, a):
+        """Returns True if `a` is negative. """
+        return a < 0
+
+    def is_nonpositive(self, a):
+        """Returns True if `a` is non-positive. """
+        return a <= 0
+
+    def is_nonnegative(self, a):
+        """Returns True if `a` is non-negative. """
+        return a >= 0
+
+    def abs(self, a):
+        """Absolute value of `a`, implies `__abs__`. """
+        return abs(a)
+
+    def neg(self, a):
+        """Returns `a` negated, implies `__neg__`. """
+        return -a
+
+    def pos(self, a):
+        """Returns `a` positive, implies `__pos__`. """
+        return +a
+
+    def add(self, a, b):
+        """Sum of `a` and `b`, implies `__add__`.  """
+        return a + b
+
+    def sub(self, a, b):
+        """Difference of `a` and `b`, implies `__sub__`.  """
+        return a - b
+
+    def mul(self, a, b):
+        """Product of `a` and `b`, implies `__mul__`.  """
+        return a * b
+
+    def pow(self, a, b):
+        """Raise `a` to power `b`, implies `__pow__`.  """
+        return a ** b
+
+    def exquo(self, a, b):
+        """Exact quotient of `a` and `b`, implies something. """
+        raise NotImplementedError
+
+    def quo(self, a, b):
+        """Quotient of `a` and `b`, implies something.  """
+        raise NotImplementedError
+
+    def rem(self, a, b):
+        """Remainder of `a` and `b`, implies `__mod__`.  """
+        raise NotImplementedError
+
+    def div(self, a, b):
+        """Division of `a` and `b`, implies something. """
+        raise NotImplementedError
+
+    def invert(self, a, b):
+        """Returns inversion of `a mod b`, implies something. """
+        raise NotImplementedError
+
+    def numer(self, a):
+        """Returns numerator of `a`. """
+        raise NotImplementedError
+
+    def denom(self, a):
+        """Returns denominator of `a`. """
+        raise NotImplementedError
+
+    def gcdex(self, a, b):
+        """Extended GCD of `a` and `b`. """
+        raise NotImplementedError
+
+    def gcd(self, a, b):
+        """Returns GCD of `a` and `b`. """
+        raise NotImplementedError
+
+    def lcm(self, a, b):
+        """Returns LCM of `a` and `b`. """
+        raise NotImplementedError
+
+    def sqrt(self, a):
+        """Returns square root of `a`. """
+        raise NotImplementedError
+
+    def factorial(self, a):
+        """Returns factorial of `a`. """
+        return self.dtype(factorial(a))
+
+class Ring(Algebra):
+    """Represents a ring domain. """
+
+    has_Ring = True
+
+    def get_ring(self):
+        """Returns a ring associated with `self`. """
+        return self
+
+    def exquo(self, a, b):
+        """Exact quotient of `a` and `b`, implies `__floordiv__`.  """
+        return a // b
+
+    def quo(self, a, b):
+        """Quotient of `a` and `b`, implies `__floordiv__`. """
+        if a % b:
+            raise ExactQuotientFailed('%s does not divide %s in %s' % (b, a, self))
+        else:
+            return a // b
+
+    def rem(self, a, b):
+        """Remainder of `a` and `b`, implies `__mod__`.  """
+        return a % b
+
+    def div(self, a, b):
+        """Division of `a` and `b`, implies `__divmod__`. """
+        return divmod(a, b)
+
+    def invert(self, a, b):
+        """Returns inversion of `a mod b`. """
+        s, t, h = self.gcdex(a, b)
+
+        if self.is_one(h):
+            return s % b
+        else:
+            raise NotInvertible("zero divisor")
+
+    def numer(self, a):
+        """Returns numerator of `a`. """
+        return a
+
+    def denom(self, a):
+        """Returns denominator of `a`. """
+        return self.one
+
+class Field(Ring):
+    """Represents a field domain. """
+
+    has_Field = True
+
+    def get_field(self):
+        """Returns a field associated with `self`. """
+        return self
+
+    def exquo(self, a, b):
+        """Exact quotient of `a` and `b`, implies `__div__`.  """
+        return a / b
+
+    def quo(self, a, b):
+        """Quotient of `a` and `b`, implies `__div__`. """
+        return a / b
+
+    def rem(self, a, b):
+        """Remainder of `a` and `b`, implies nothing.  """
+        return self.zero
+
+    def div(self, a, b):
+        """Division of `a` and `b`, implies `__div__`. """
+        return a / b, self.zero
+
+    def gcd(self, a, b):
+        """Returns GCD of `a` and `b`. """
+        return self.one
+
+    def lcm(self, a, b):
+        """Returns LCM of `a` and `b`. """
+        return a*b
+
+class IntegerRing(Ring):
+    """General class for integer rings. """
+
+    is_ZZ = True
+    rep   = 'ZZ'
+
+    has_CharacteristicZero = True
+
+class RationalField(Field):
+    """General class for rational fields. """
+
+    is_QQ = True
+    rep   = 'QQ'
+
+    has_CharacteristicZero = True
+
+class ZZ_python(IntegerRing):
+    pass
+class QQ_python(RationalField):
+    pass
+class ZZ_sympy(IntegerRing):
+    pass
+class QQ_sympy(RationalField):
+    pass
+class ZZ_gmpy(IntegerRing):
+    pass
+class QQ_gmpy(RationalField):
+    pass
+
+class PolynomialRing(Ring):
+    pass
+class FractionField(Field):
+    pass
+
+class ExpressionDomain(Field):
+    pass
+
+HAS_FRACTION = True
+
+try:
+    import fractions
+except ImportError:
+    HAS_FRACTION = False
+
+HAS_GMPY = True
+
+try:
+    import gmpy
+except ImportError:
+    HAS_GMPY = False
+
+from sympy.core.numbers import (
+    igcdex as python_gcdex,
+    igcd as python_gcd,
+    ilcm as python_lcm,
+)
+
+from sympy.mpmath.libmpf import (
+    isqrt as python_sqrt,
+)
+
+from __builtin__ import (
+    int as python_int,
+)
+
+if HAS_FRACTION:
+    from fractions import (
+        Fraction as python_rat,
+    )
+
+class ZZ_python(IntegerRing):
+    """Integer ring based on Python int class. """
+
+    dtype = python_int
+    zero  = dtype(0)
+    one   = dtype(1)
+
+    def __init__(self):
+        pass
+
+    def to_sympy(self, a):
+        """Convert `a` to a SymPy object. """
+        return sympy_int(a)
+
+    def from_sympy(self, a):
+        """Convert SymPy's Integer to `dtype`. """
+        if a.is_Rational:
+            if a.is_Integer or a.q == 1:
+                return python_int(a.p)
+
+        raise CoercionFailed("expected `Integer` object, got %s" % a)
+
+    def from_ZZ_python(K1, a, K0):
+        """Convert a Python `int` object to `dtype`. """
+        return a
+
+    def from_QQ_python(K1, a, K0):
+        """Convert a Python `Fraction` object to `dtype`. """
+        if a.denominator == 1:
+            return a.numerator
+
+    def from_ZZ_sympy(K1, a, K0):
+        """Convert a SymPy `Integer` object to `dtype`. """
+        return a.p
+
+    def from_QQ_sympy(K1, a, K0):
+        """Convert a SymPy `Rational` object to `dtype`. """
+        if a.q == 1:
+            return a.p
+
+    def from_ZZ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpz` object to `dtype`. """
+        return python_int(a)
+
+    def from_QQ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpq` object to `dtype`. """
+        if a.denom() == 1:
+            return python_int(a.numer())
+
+    def get_field(self):
+        """Returns a field associated with `self`. """
+        if HAS_FRACTION:
+            return QQ_python()
+        elif HAS_GMPY:
+            return QQ_gmpy()
+        else:
+            return QQ_sympy()
+
+    def gcdex(self, a, b):
+        """Extended GCD of `a` and `b`. """
+        return python_gcdex(a, b)
+
+    def gcd(self, a, b):
+        """Returns GCD of `a` and `b`. """
+        return python_gcd(a, b)
+
+    def lcm(self, a, b):
+        """Returns LCM of `a` and `b`. """
+        return python_lcm(a, b)
+
+    def sqrt(self, a):
+        """Returns square root of `a`. """
+        return python_int(python_sqrt(a))
+
+if HAS_FRACTION:
+    class QQ_python(RationalField):
+        """Rational field based on Python Fraction class. """
+
+        dtype = python_rat
+        zero  = dtype(0)
+        one   = dtype(1)
+
+        def __init__(self):
+            pass
+
+        def to_sympy(self, a):
+            """Convert `a` to a SymPy object. """
+            return sympy_rat(a.numerator, a.denominator)
+
+        def from_sympy(self, a):
+            """Convert SymPy's Rational to `dtype`. """
+            if a.is_Rational:
+                return python_rat(a.p, a.q)
+            else:
+                raise CoercionFailed("expected `Rational` object, got %s" % a)
+
+        def from_ZZ_python(K1, a, K0):
+            """Convert a Python `int` object to `dtype`. """
+            return python_rat(a)
+
+        def from_QQ_python(K1, a, K0):
+            """Convert a Python `Fraction` object to `dtype`. """
+            return a
+
+        def from_ZZ_sympy(K1, a, K0):
+            """Convert a SymPy `Integer` object to `dtype`. """
+            return python_rat(a.p)
+
+        def from_QQ_sympy(K1, a, K0):
+            """Convert a SymPy `Rational` object to `dtype`. """
+            return python_rat(a.p, a.q)
+
+        def from_ZZ_gmpy(K1, a, K0):
+            """Convert a GMPY `mpz` object to `dtype`. """
+            return python_rat(python_int(a))
+
+        def from_QQ_gmpy(K1, a, K0):
+            """Convert a GMPY `mpq` object to `dtype`. """
+            return python_rat(python_int(a.numer()),
+                              python_int(a.denom()))
+
+        def get_ring(self):
+            """Returns a ring associated with `self`. """
+            return ZZ_python()
+
+        def numer(self, a):
+            """Returns numerator of `a`. """
+            return a.numerator
+
+        def denom(self, a):
+            """Returns denominator of `a`. """
+            return a.denominator
+
+from sympy import (
+    Integer as sympy_int,
+    Rational as sympy_rat,
+)
+
+from sympy.core.numbers import (
+    igcdex as sympy_gcdex,
+    igcd as sympy_gcd,
+    ilcm as sympy_lcm,
+)
+
+from sympy.mpmath.libmpf import (
+    isqrt as sympy_sqrt,
+)
+
+class ZZ_sympy(IntegerRing):
+    """Integer ring based on SymPy Integer class. """
+
+    dtype = sympy_int
+    zero  = dtype(0)
+    one   = dtype(1)
+
+    def __init__(self):
+        pass
+
+    def to_sympy(self, a):
+        """Convert `a` to a SymPy object. """
+        return a
+
+    def from_sympy(self, a):
+        """Convert SymPy's Integer to `dtype`. """
+        if a.is_Integer:
+            return a
+        else:
+            raise CoercionFailed("expected Integer object, got %s" % a)
+
+    def from_ZZ_python(K1, a, K0):
+        """Convert a Python `int` object to `dtype`. """
+        return sympy_int(a)
+
+    def from_QQ_python(K1, a, K0):
+        """Convert a Python `Fraction` object to `dtype`. """
+        if a.denominator == 1:
+            return sympy_int(a.numerator)
+
+    def from_ZZ_sympy(K1, a, K0):
+        """Convert a SymPy `Integer` object to `dtype`. """
+        return a
+
+    def from_QQ_sympy(K1, a, K0):
+        """Convert a SymPy `Rational` object to `dtype`. """
+        if a.q == 1:
+            return sympy_int(a.p)
+
+    def from_ZZ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpz` object to `dtype`. """
+        return sympy_int(python_int(a))
+
+    def from_QQ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpq` object to `dtype`. """
+        if a.denom() == 1:
+            return sympy_int(python_int(a.numer()))
+
+    def get_field(self):
+        """Returns a field associated with `self`. """
+        return QQ_sympy()
+
+    def gcdex(self, a, b):
+        """Extended GCD of `a` and `b`. """
+        return map(sympy_int, sympy_gcdex(int(a), int(b)))
+
+    def gcd(self, a, b):
+        """Returns GCD of `a` and `b`. """
+        return sympy_int(sympy_gcd(int(a), int(b)))
+
+    def lcm(self, a, b):
+        """Returns LCM of `a` and `b`. """
+        return sympy_int(sympy_lcm(int(a), int(b)))
+
+    def sqrt(self, a):
+        """Returns square root of `a`. """
+        return sympy_int(int(sympy_sqrt(int(a))))
+
+class QQ_sympy(RationalField):
+    """Rational field based on SymPy Rational class. """
+
+    dtype = sympy_rat
+    zero  = dtype(0)
+    one   = dtype(1)
+
+    def __init__(self):
+        pass
+
+    def to_sympy(self, a):
+        """Convert `a` to a SymPy object. """
+        return a
+
+    def from_sympy(self, a):
+        """Convert SymPy's Rational to `dtype`. """
+        if a.is_Rational:
+            return a
+        else:
+            raise CoercionFailed("expected `Rational` object, got %s" % a)
+
+    def from_ZZ_python(K1, a, K0):
+        """Convert a Python `int` object to `dtype`. """
+        return sympy_rat(a)
+
+    def from_QQ_python(K1, a, K0):
+        """Convert a Python `Fraction` object to `dtype`. """
+        return sympy_rat(a.numerator, a.denominator)
+
+    def from_ZZ_sympy(K1, a, K0):
+        """Convert a SymPy `Integer` object to `dtype`. """
+        return sympy_rat(a.p)
+
+    def from_QQ_sympy(K1, a, K0):
+        """Convert a SymPy `Rational` object to `dtype`. """
+        return a
+
+    def from_ZZ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpz` object to `dtype`. """
+        return sympy_rat(python_int(a))
+
+    def from_QQ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpq` object to `dtype`. """
+        return sympy_rat(python_int(a.numer()),
+                         python_int(a.denom()))
+
+    def get_ring(self):
+        """Returns a ring associated with `self`. """
+        return ZZ_sympy()
+
+    def numer(self, a):
+        """Returns numerator of `a`. """
+        return sympy_int(a.p)
+
+    def denom(self, a):
+        """Returns denominator of `a`. """
+        return sympy_int(a.q)
+
+if HAS_GMPY:
+    from gmpy import (
+        mpz as gmpy_int,
+        mpq as gmpy_rat,
+        numer as gmpy_numer,
+        denom as gmpy_denom,
+        gcdext as gmpy_gcdex,
+        gcd as gmpy_gcd,
+        lcm as gmpy_lcm,
+        sqrt as gmpy_sqrt,
+        fac as gmpy_factorial,
+    )
+
+    class ZZ_gmpy(IntegerRing):
+        """Integer ring based on GMPY mpz class. """
+
+        dtype = gmpy_int
+        zero  = dtype(0)
+        one   = dtype(1)
+
+        def __init__(self):
+            pass
+
+        def to_sympy(self, a):
+            """Convert `a` to a SymPy object. """
+            return sympy_int(int(a))
+
+        def from_sympy(self, a):
+            """Convert SymPy's Integer to `dtype`. """
+            if a.is_Integer:
+                return gmpy_int(a.p)
+            else:
+                raise CoercionFailed("expected Integer object, got %s" % a)
+
+        def from_ZZ_python(K1, a, K0):
+            """Convert a Python `int` object to `dtype`. """
+            return gmpy_int(a)
+
+        def from_QQ_python(K1, a, K0):
+            """Convert a Python `Fraction` object to `dtype`. """
+            if a.denominator == 1:
+                return gmpy_int(a.numerator)
+
+        def from_ZZ_sympy(K1, a, K0):
+            """Convert a SymPy `Integer` object to `dtype`. """
+            return gmpy_int(a.p)
+
+        def from_QQ_sympy(K1, a, K0):
+            """Convert a SymPy `Rational` object to `dtype`. """
+            if a.q == 1:
+                return gmpy_int(a.p)
+
+        def from_ZZ_gmpy(K1, a, K0):
+            """Convert a GMPY `mpz` object to `dtype`. """
+            return a
+
+        def from_QQ_gmpy(K1, a, K0):
+            """Convert a GMPY `mpq` object to `dtype`. """
+            if a.denom() == 1:
+                return a.numer()
+
+        def get_field(self):
+            """Returns a field associated with `self`. """
+            return QQ_gmpy()
+
+        def gcdex(self, a, b):
+            """Extended GCD of `a` and `b`. """
+            h, s, t = gmpy_gcdex(a, b)
+            return s, t, h
+
+        def gcd(self, a, b):
+            """Returns GCD of `a` and `b`. """
+            return gmpy_gcd(a, b)
+
+        def lcm(self, a, b):
+            """Returns LCM of `a` and `b`. """
+            return gmpy_lcm(a, b)
+
+        def sqrt(self, a):
+            """Returns square root of `a`. """
+            return gmpy_sqrt(a)
+
+        def factorial(self, a):
+            """Returns factorial of `a`. """
+            return gmpy_factorial(int(a))
+
+    class QQ_gmpy(RationalField):
+        """Rational field based on GMPY mpq class. """
+
+        dtype = gmpy_rat
+        zero  = dtype(0)
+        one   = dtype(1)
+
+        def __init__(self):
+            pass
+
+        def to_sympy(self, a):
+            """Convert `a` to a SymPy object. """
+            return sympy_rat(int(gmpy_numer(a)),
+                             int(gmpy_denom(a)))
+
+        def from_sympy(self, a):
+            """Convert SymPy's Integer to `dtype`. """
+            if a.is_Rational:
+                return gmpy_rat(a.p, a.q)
+            else:
+                raise CoercionFailed("expected `Rational` object, got %s" % a)
+
+        def from_ZZ_python(K1, a, K0):
+            """Convert a Python `int` object to `dtype`. """
+            return gmpy_rat(a)
+
+        def from_QQ_python(K1, a, K0):
+            """Convert a Python `Fraction` object to `dtype`. """
+            return gmpy_rat(a.numerator, a.denominator)
+
+        def from_ZZ_sympy(K1, a, K0):
+            """Convert a SymPy `Integer` object to `dtype`. """
+            return gmpy_rat(a.p)
+
+        def from_QQ_sympy(K1, a, K0):
+            """Convert a SymPy `Rational` object to `dtype`. """
+            return gmpy_rat(a.p, a.q)
+
+        def from_ZZ_gmpy(K1, a, K0):
+            """Convert a GMPY `mpz` object to `dtype`. """
+            return gmpy_rat(a)
+
+        def from_QQ_gmpy(K1, a, K0):
+            """Convert a GMPY `mpq` object to `dtype`. """
+            return a
+
+        def get_ring(self):
+            """Returns a ring associated with `self`. """
+            return ZZ_gmpy()
+
+        def exquo(self, a, b):
+            """Exact quotient of `a` and `b`, implies `__div__`.  """
+            return gmpy_rat(a.qdiv(b))
+
+        def quo(self, a, b):
+            """Quotient of `a` and `b`, implies `__div__`. """
+            return gmpy_rat(a.qdiv(b))
+
+        def rem(self, a, b):
+            """Remainder of `a` and `b`, implies nothing.  """
+            return self.zero
+
+        def div(self, a, b):
+            """Division of `a` and `b`, implies `__div__`. """
+            return gmpy_rat(a.qdiv(b)), self.zero
+
+        def numer(self, a):
+            """Returns numerator of `a`. """
+            return gmpy_numer(a)
+
+        def denom(self, a):
+            """Returns denominator of `a`. """
+            return gmpy_denom(a)
+
+        def factorial(self, a):
+            """Returns factorial of `a`. """
+            return gmpy_rat(gmpy_factorial(int(a)))
+
+def _getenv(key, default=None):
+    from os import getenv
+    return getenv(key, default)
+
+GROUND_TYPES = _getenv('SYMPY_GROUND_TYPES', 'python').lower()
+
+if GROUND_TYPES == 'python':  # XXX: needs 2.6 or better (at least for now)
+    ZZ = ZZ_python()
+
+    if HAS_FRACTION:
+        QQ = QQ_python()
+    elif HAS_GMPY:
+        QQ = QQ_gmpy()
+    else:
+        QQ = QQ_sympy()
+elif GROUND_TYPES == 'sympy': # XXX: this is *very* slow, guess why ;)
+    ZZ = ZZ_sympy()
+    QQ = QQ_sympy()
+elif GROUND_TYPES == 'gmpy':  # XXX: should be fine? sorry, but no, try -Qnew, damn
+    if HAS_GMPY:
+        ZZ = ZZ_gmpy()
+        QQ = QQ_gmpy()
+    else:
+        ZZ = ZZ_python()
+
+        if HAS_FRACTION:
+            QQ = QQ_python()
+        else:
+            QQ = QQ_sympy()
+else:
+    raise ValueError("invalid ground types: %s" % GROUND_TYPES)
+
+from sympy.polys.polyclasses import DMP, DMF, ANP
+
+from sympy.polys.polyutils import (
+    dict_from_basic,
+    basic_from_dict,
+    _dict_reorder,
+)
+
+class AlgebraicField(Field):
+    """A class for representing algebraic number fields. """
+
+    dtype        = ANP
+    is_Algebraic = True
+
+    has_CharacteristicZero = True
+
+    def __init__(self, dom, *gens):
+        #if not dom.has
+
+        lev = len(gens) - 1
+
+        self.zero = self.dtype.zero(lev, dom)
+        self.one  = self.dtype.one(lev, dom)
+
+        self.dom  = dom
+
+class PolynomialRing(Ring):
+    """A class for representing multivariate polynomial rings. """
+
+    dtype        = DMP
+    is_Poly      = True
+    is_Composite = True
+
+    has_CharacteristicZero = True
+
+    def __init__(self, dom, *gens):
+        if not gens:
+            raise GeneratorsNeeded("generators not specified")
+
+        lev = len(gens) - 1
+
+        self.zero = self.dtype.zero(lev, dom)
+        self.one  = self.dtype.one(lev, dom)
+
+        self.dom  = dom
+        self.gens = gens
+
+    def __str__(self):
+        return str(self.dom) + '[' + ','.join(map(str, self.gens)) + ']'
+
+    def __hash__(self):
+        return hash((self.__class__.__name__, self.dtype, self.dom, self.gens))
+
+    def __call__(self, a):
+        """Construct an element of `self` domain from `a`. """
+        return DMP(a, self.dom, len(self.gens)-1)
+
+    def __eq__(self, other):
+        """Returns `True` if two algebras are equivalent. """
+        if self.dtype == other.dtype:
+            return self.gens == other.gens
+        else:
+            return False
+
+    def __ne__(self, other):
+        """Returns `False` if two algebras are equivalent. """
+        if self.dtype == other.dtype:
+            return self.gens != other.gens
+        else:
+            return True
+
+    def to_sympy(self, a):
+        """Convert `a` to a SymPy object. """
+        return basic_from_dict(a.to_sympy_dict(), *self.gens)
+
+    def from_sympy(self, a):
+        """Convert SymPy's expression to `dtype`. """
+        rep = dict_from_basic(a, self.gens)
+
+        for k, v in rep.iteritems():
+            rep[k] = self.dom.from_sympy(v)
+
+        return self(rep)
+
+    def from_ZZ_python(K1, a, K0):
+        """Convert a Python `int` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_QQ_python(K1, a, K0):
+        """Convert a Python `Fraction` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_ZZ_sympy(K1, a, K0):
+        """Convert a SymPy `Integer` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_QQ_sympy(K1, a, K0):
+        """Convert a SymPy `Rational` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_ZZ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpz` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_QQ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpq` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_PolynomialRing(K1, a, K0):
+        """Convert a `DMP` object to `dtype`. """
+        if K1.gens == K0.gens:
+            if K1.dom == K0.dom:
+                return a
+            else:
+                return a.convert(K1.dom)
+        else:
+            monoms, coeffs = _dict_reorder(a.to_dict(), K0.gens, K1.gens)
+
+            if K1.dom != K0.dom:
+                coeffs = [ K1.dom.convert(c, K0.dom) for c in coeffs ]
+
+            return K1(dict(zip(monoms, coeffs)))
+
+    def from_FractionField(K1, a, K0):
+        """Convert a `DMF` object to `dtype`. """
+        return
+
+    def get_field(self):
+        """Returns a field associated with `self`. """
+        return FractionField(self.dom, *self.gens)
+
+    def poly_ring(self, *gens):
+        """Returns a polynomial ring, i.e. `K[X]`. """
+        raise NotImplementedError('nested domains not allowed')
+
+    def frac_field(self, *gens):
+        """Returns a fraction field, i.e. `K(X)`. """
+        raise NotImplementedError('nested domains not allowed')
+
+    def is_positive(self, a):
+        """Returns True if `LC(a)` is positive. """
+        return self.dom.is_positive(a.LC())
+
+    def is_negative(self, a):
+        """Returns True if `LC(a)` is negative. """
+        return self.dom.is_negative(a.LC())
+
+    def is_nonpositive(self, a):
+        """Returns True if `LC(a)` is non-positive. """
+        return self.dom.is_nonpositive(a.LC())
+
+    def is_nonnegative(self, a):
+        """Returns True if `LC(a)` is non-negative. """
+        return self.dom.is_nonnegative(a.LC())
+
+    def gcdex(self, a, b):
+        """Extended GCD of `a` and `b`. """
+        return a.gcdex(b)
+
+    def gcd(self, a, b):
+        """Returns GCD of `a` and `b`. """
+        return a.gcd(b)
+
+    def lcm(self, a, b):
+        """Returns LCM of `a` and `b`. """
+        return a.lcm(b)
+
+    def factorial(self, a):
+        """Returns factorial of `a`. """
+        return self.dtype(self.dom.factorial(a))
+
+class FractionField(Field):
+    """A class for representing rational function fields. """
+
+    dtype        = DMF
+    is_Frac      = True
+    is_Composite = True
+
+    has_CharacteristicZero = True
+
+    def __init__(self, dom, *gens):
+        if not gens:
+            raise GeneratorsNeeded("generators not specified")
+
+        lev = len(gens) - 1
+
+        self.zero = self.dtype.zero(lev, dom)
+        self.one  = self.dtype.one(lev, dom)
+
+        self.dom  = dom
+        self.gens = gens
+
+    def __str__(self):
+        return str(self.dom) + '(' + ','.join(map(str, self.gens)) + ')'
+
+    def __hash__(self):
+        return hash((self.__class__.__name__, self.dtype, self.dom, self.gens))
+
+    def __call__(self, a):
+        """Construct an element of `self` domain from `a`. """
+        return DMF(a, self.dom, len(self.gens)-1)
+
+    def __eq__(self, other):
+        """Returns `True` if two algebras are equivalent. """
+        if self.dtype == other.dtype:
+            return self.gens == other.gens
+        else:
+            return False
+
+    def __ne__(self, other):
+        """Returns `False` if two algebras are equivalent. """
+        if self.dtype == other.dtype:
+            return self.gens != other.gens
+        else:
+            return True
+
+    def to_sympy(self, a):
+        """Convert `a` to a SymPy object. """
+        return (basic_from_dict(a.numer().to_sympy_dict(), *self.gens) /
+                basic_from_dict(a.denom().to_sympy_dict(), *self.gens))
+
+    def from_sympy(self, a):
+        """Convert SymPy's expression to `dtype`. """
+        p, q = a.as_numer_denom()
+
+        num = dict_from_basic(p, self.gens)
+        den = dict_from_basic(q, self.gens)
+
+        for k, v in num.iteritems():
+            num[k] = self.dom.from_sympy(v)
+
+        for k, v in den.iteritems():
+            den[k] = self.dom.from_sympy(v)
+
+        return self((num, den)).cancel()
+
+    def from_ZZ_python(K1, a, K0):
+        """Convert a Python `int` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_QQ_python(K1, a, K0):
+        """Convert a Python `Fraction` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_ZZ_sympy(K1, a, K0):
+        """Convert a SymPy `Integer` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_QQ_sympy(K1, a, K0):
+        """Convert a SymPy `Rational` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_ZZ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpz` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_QQ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpq` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_PolynomialRing(K1, a, K0):
+        """Convert a `DMP` object to `dtype`. """
+        if K1.gens == K0.gens:
+            if K1.dom == K0.dom:
+                return K1(a.rep)
+            else:
+                return K1(a.convert(K1.dom).rep)
+
+    def from_FractionField(K1, a, K0):
+        """Convert a `DMF` object to `dtype`. """
+        if K1.gens == K0.gens:
+            if K1.dom == K0.dom:
+                return a
+            else:
+                return K1(a.numer().convert(K1.dom).rep,
+                          a.denom().convert(K1.dom).rep)
+
+    def get_ring(self):
+        """Returns a ring associated with `self`. """
+        return PolynomialRing(self.dom, *self.gens)
+
+    def poly_ring(self, *gens):
+        """Returns a polynomial ring, i.e. `K[X]`. """
+        raise NotImplementedError('nested domains not allowed')
+
+    def frac_field(self, *gens):
+        """Returns a fraction field, i.e. `K(X)`. """
+        raise NotImplementedError('nested domains not allowed')
+
+    def is_positive(self, a):
+        """Returns True if `a` is positive. """
+        return self.dom.is_positive(a.numer().LC())
+
+    def is_negative(self, a):
+        """Returns True if `a` is negative. """
+        return self.dom.is_negative(a.numer().LC())
+
+    def is_nonpositive(self, a):
+        """Returns True if `a` is non-positive. """
+        return self.dom.is_nonpositive(a.numer().LC())
+
+    def is_nonnegative(self, a):
+        """Returns True if `a` is non-negative. """
+        return self.dom.is_nonnegative(a.numer().LC())
+
+    def numer(self, a):
+        """Returns numerator of `a`. """
+        return a.numer()
+
+    def denom(self, a):
+        """Returns denominator of `a`. """
+        return a.denom()
+
+    def factorial(self, a):
+        """Returns factorial of `a`. """
+        return self.dtype(self.dom.factorial(a))
+
+class ExpressionDomain(Field):
+    """A class for arbitrary expressions. """
+
+    is_EX = True
+
+    class Expression(object):
+        """An arbitrary expression. """
+
+        __slots__ = ['ex']
+
+        def __init__(self, ex):
+            if not isinstance(ex, self.__class__):
+                self.ex = sympify(ex)
+            else:
+                self.ex = ex.ex
+
+        def __repr__(f):
+            return 'EX(%s)' % repr(f.ex)
+
+        def __str__(f):
+            return 'EX(%s)' %str(f.ex)
+
+        def __hash__(self):
+            return hash((self.__class__.__name__, self.ex))
+
+        def as_basic(f):
+            return f.ex
+
+        def numer(f):
+            return EX(f.ex.as_numer_denom()[0])
+
+        def denom(f):
+            return EX(f.ex.as_numer_denom()[1])
+
+        def simplify(f, ex):
+            from sympy import cancel
+            return f.__class__(cancel(ex))
+
+        def __abs__(f):
+            return f.__class__(abs(f.ex))
+
+        def __neg__(f):
+            return f.__class__(-f.ex)
+
+        def __add__(f, g):
+            return f.simplify(f.ex+f.__class__(g).ex)
+
+        def __radd__(f, g):
+            return f.simplify(f.__class__(g).ex+f.ex)
+
+        def __sub__(f, g):
+            return f.simplify(f.ex-f.__class__(g).ex)
+
+        def __rsub__(f, g):
+            return f.simplify(f.__class__(g).ex-f.ex)
+
+        def __mul__(f, g):
+            return f.simplify(f.ex*f.__class__(g).ex)
+
+        def __rmul__(f, g):
+            return f.simplify(f.__class__(g).ex*f.ex)
+
+        def __pow__(f, n):
+            return f.simplify(f.ex**n)
+
+        def __div__(f, g):
+            return f.simplify(f.ex/f.__class__(g).ex)
+
+        def __rdiv__(f, g):
+            return f.simplify(f.__class__(g).ex/f.ex)
+
+        def __truediv__(f, g):
+            return f.simplify(f.ex/f.__class__(g).ex)
+
+        def __rtruediv__(f, g):
+            return f.simplify(f.__class__(g).ex/f.ex)
+
+        def __eq__(f, g):
+            return f.ex == f.__class__(g).ex
+
+        def __req__(f, g):
+            return f.__class__(g).ex == f.ex
+
+        def __ne__(f, g):
+            return f.ex != f.__class__(g).ex
+
+        def __rne__(f, g):
+            return f.__class__(g).ex != f.ex
+
+        def __nonzero__(f):
+            return f.ex != 0
+
+    dtype = Expression
+
+    zero  = Expression(0)
+    one   = Expression(1)
+
+    rep   = 'EX'
+
+    has_CharacteristicZero = True
+
+    def __init__(self):
+        pass
+
+    def to_sympy(self, a):
+        """Convert `a` to a SymPy object. """
+        return a.as_basic()
+
+    def from_sympy(self, a):
+        """Convert SymPy's expression to `dtype`. """
+        return self.dtype(a)
+
+    def from_ZZ_python(K1, a, K0):
+        """Convert a Python `int` object to `dtype`. """
+        return K1(K0.to_sympy(a))
+
+    def from_QQ_python(K1, a, K0):
+        """Convert a Python `Fraction` object to `dtype`. """
+        return K1(K0.to_sympy(a))
+
+    def from_ZZ_sympy(K1, a, K0):
+        """Convert a SymPy `Integer` object to `dtype`. """
+        return K1(K0.to_sympy(a))
+
+    def from_QQ_sympy(K1, a, K0):
+        """Convert a SymPy `Rational` object to `dtype`. """
+        return K1(K0.to_sympy(a))
+
+    def from_ZZ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpz` object to `dtype`. """
+        return K1(K0.to_sympy(a))
+
+    def from_QQ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpq` object to `dtype`. """
+        return K1(K0.to_sympy(a))
+
+    def from_PolynomialRing(K1, a, K0):
+        """Convert a `DMP` object to `dtype`. """
+        return K1(K0.to_sympy(a))
+
+    def from_FractionField(K1, a, K0):
+        """Convert a `DMF` object to `dtype`. """
+        return K1(K0.to_sympy(a))
+
+    def from_ExpressionDomain(K1, a, K0):
+        """Convert a `EX` object to `dtype`. """
+        return a
+
+    def get_ring(self):
+        """Returns a ring associated with `self`. """
+        raise DomainError('there is no ring associated with EX')
+
+    def get_field(self):
+        """Returns a field associated with `self`. """
+        return self
+
+    def is_positive(self, a):
+        """Returns True if `a` is positive. """
+        return a.ex.as_coeff_terms()[0].is_positive
+
+    def is_negative(self, a):
+        """Returns True if `a` is negative. """
+        return a.ex.as_coeff_terms()[0].is_negative
+
+    def is_nonpositive(self, a):
+        """Returns True if `a` is non-positive. """
+        return a.ex.as_coeff_terms()[0].is_nonpositive
+
+    def is_nonnegative(self, a):
+        """Returns True if `a` is non-negative. """
+        return a.ex.as_coeff_terms()[0].is_nonnegative
+
+    def numer(self, a):
+        """Returns numerator of `a`. """
+        return a.numer()
+
+    def denom(self, a):
+        """Returns denominator of `a`. """
+        return a.denom()
+
+EX = ExpressionDomain()
+
