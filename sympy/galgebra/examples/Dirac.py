@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/python
 #Dirac.py
 
 import sympy.galgebra.GA as GA

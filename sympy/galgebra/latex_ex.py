@@ -15,6 +15,10 @@ import sympy.galgebra.GA
 #import sympy.galgebra.OGA
 import numpy
 
+def debug(txt):
+    sys.stderr.write(txt+'\n')
+    return
+
 def find_executable(executable, path=None):
     """Try to find 'executable' in the directories listed in 'path' (a
     string listing directories separated by 'os.pathsep'; defaults to
@@ -1007,7 +1011,7 @@ def xdvi(filename='tmplatex.tex',debug=False):
     """
     Post processes LaTeX output (see comments below), adds preamble and
     postscript, generates tex file, inputs file to latex, displays resulting
-    dvi file with xdvi.
+    dvi file with xdvi or yap.
     """
     if not LatexPrinter.LaTeX_flg:
         return
@@ -1023,9 +1027,11 @@ def xdvi(filename='tmplatex.tex',debug=False):
     iline = 0
     i = iter(body_lst)
     line = i.next()
+
     while True:
         if '$' in line: #Inline math expression(s)
-            line += '\\newline \n'
+            if len(line) > 0:
+                line += '\\newline \n'
             body += line
             try:
                 line = i.next()
@@ -1115,9 +1121,13 @@ def xdvi(filename='tmplatex.tex',debug=False):
 
         else:
             if '=' in line: #Single line equation
-                line = '\\begin{equation*}\n'+line+'\n\\end{equation*}\n'
-            else: #Text with no math expression(s)
-                line += '\\newline \n'
+                line = '\\begin{equation*}\n'+line+'\n\\end{equation*}'
+            else: #Text with no math expression(s)unless \ or _ in line
+                if '\\' in line or '_' in line or '^' in line:
+                    line = '\\begin{equation*}\n'+line+'\n\\end{equation*}'
+                else:
+                    if len(line) > 0:
+                        line += '\\newline \n'
             line = process_equals(line)
             body += line
             try:
@@ -1129,14 +1139,26 @@ def xdvi(filename='tmplatex.tex',debug=False):
     latex_file.write(body)
     latex_file.close()
 
-    latex_str = find_executable('latex')
-    xdvi_str = find_executable('xdvi')
+    latex_str = None
+    xdvi_str  = None
+
+    if find_executable('latex') != None:
+        latex_str = 'latex'
+
+    if find_executable('xdvi') != None:
+        xdvi_str = 'xdvi'
+
+    if find_executable('yap') != None:
+        xdvi_str = 'yap'
 
     if latex_str != None and xdvi_str != None:
         if debug: #Display latex excution output for debugging purposes
             os.system(latex_str+' '+filename[:-4])
         else: #Works for Linux don't know about Windows
-            os.system(latex_str+' '+filename[:-4]+' > /dev/null')
+            if sys.platform == 'linux2':
+                os.system(latex_str+' '+filename[:-4]+' > /dev/null')
+            else:
+                os.system(latex_str+' '+filename[:-4]+' > NUL')
         os.system(xdvi_str+' '+filename[:-4]+' &')
     LatexPrinter.LaTeX_flg = False
     return
@@ -1196,3 +1218,4 @@ def str_format(str_fmt):
 
 def ext_str(xstr):
     return(LatexPrinter.extended_symbol(xstr))
+

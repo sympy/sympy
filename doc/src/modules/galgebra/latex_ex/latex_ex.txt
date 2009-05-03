@@ -50,8 +50,9 @@
    :mod:`latex` (while preserving the  current capabilities) to geometric algebra
    multivectors, :mod:`numpy` array's, and extends the ascii formatting of greek
    symbols, accents, and subscripts and superscripts.   Additionally the module is
-   configured to use the print command to  generate a LaTeX output file and display
-   it using xdvi.
+   configured to use the print command to generate a LaTeX output file and display
+   it using xdvi in Linux and yap in Windows.  To get LaTeX displayed text latex and 
+   xdvi must be installed on a Linux system and MikTex on a Windows system.
 
 
 Extended Symbol Coding
@@ -70,15 +71,15 @@ follows::
 *Gammavec__1_rho*, and *delta__j_k*.  If these symbols are printed with the
 :mod:`latex_ex` modules the results are
 
-+---------------------+---------------------+---------------------------------+
-| Ascii String        |                     | LaTeX Output                    |
-+=====================+=====================+=================================+
-| ``xalpha``          | :math:`\rightarrow` | :math:`x\alpha`                 |
-+---------------------+---------------------+---------------------------------+
-| ``Gammavec__1_rho`` | :math:`\rightarrow` | :math:`\vec{\Gamma}^{1}_{\rho}` |
-+---------------------+---------------------+---------------------------------+
-| ``delta__j_k``      | :math:`\rightarrow` | :math:`\delta^{j}_{k}`          |
-+---------------------+---------------------+---------------------------------+
+
+.. csv-table:: 
+	:header: " Ascii String ", " LaTeX Output "
+	:widths: 15, 15
+
+	 " ``xalpha`` ", " :math:`x\alpha` "   
+	 " ``Gammavec__1_rho`` ", " :math:`\vec{\Gamma}^{1}_{\rho}` "
+	 " ``delta__j_k`` ", " :math:`\delta^{j}_{k}` " 
+
 
 A single underscore denotes a subscript and a double undscore a superscript.
 
@@ -104,6 +105,13 @@ output file is displayed with the :program:`xdvi` program (if present).  Thus
 for :class:`LatexPrinter` to display the output in a window both
 :program:`latex` and :program:`xdvi` must be installed on your system and in the
 execution path.
+
+One problem for :class:`LatexPrinter` is determining when equation mode should be
+use in the output formatting.  To allow for printing output not in equation mode the
+program attemps to determine from the output string context when to use equation mode.  
+The current test is to use equation mode if the string contains an =, \_, \^, or \\. 
+This is not a foolproof method.  The safest thing to do if you wish to print an object, *X*,
+in math mode is to use *print 'X =',X* so the = sign triggers math mode.
 
 
 LatexPrinter Functions
@@ -153,44 +161,19 @@ Helper Functions for Extending LatexPrinter Class
    in the text string argument of ``Format`` as follows.  It is assumed that the
    text string ``fmt`` always contains four integers separated by blanks.
 
-   +----------------+-------------+--------------------------------+
-   | Position       | Switch      | Values                         |
-   +================+=============+================================+
-   | :math:`1^{st}` | symbol      | 0: Use symbol encoding in      |
-   |                |             | ``latex.py``                   |
-   +----------------+-------------+--------------------------------+
-   |                |             | 1: Use extended symbol         |
-   |                |             | encoding in ``latex_ex.py``    |
-   +----------------+-------------+--------------------------------+
-   | :math:`2^{nd}` | function    | 0: Use symbol encoding in      |
-   |                |             | ``latex.py``. Print functions  |
-   |                |             | args,  use ``\operator{ }``    |
-   |                |             | format.                        |
-   +----------------+-------------+--------------------------------+
-   |                |             | 1: Do not print function args. |
-   |                |             | Do not use ``\operator{}``     |
-   |                |             | format.                        |
-   +----------------+-------------+--------------------------------+
-   |                |             | Suppress printing of function  |
-   |                |             | arguments.                     |
-   +----------------+-------------+--------------------------------+
-   | :math:`3^{d}`  | partial     | 0: Use partial derivative      |
-   |                |             | format in ``latex.py``.        |
-   +----------------+-------------+--------------------------------+
-   |                | derivative  | 1: Use format                  |
-   |                |             | :math:`\partial_{x}` instead   |
-   |                |             | of                             |
-   |                |             | :math:`\partial/\partial x`.   |
-   +----------------+-------------+--------------------------------+
-   | :math:`4^{th}` | multivector | 1: Print entire multivector on |
-   |                |             | one line.                      |
-   +----------------+-------------+--------------------------------+
-   |                |             | 2: Print each grade of         |
-   |                |             | multivector on one line.       |
-   +----------------+-------------+--------------------------------+
-   |                |             | 3: Print each base of          |
-   |                |             | multivector on one line.       |
-   +----------------+-------------+--------------------------------+
+   .. csv-table:: 
+	:header: " Position ", " Switch ", " Values "    
+	:widths: 4, 6, 40
+
+	"   :math:`1^{st}` ", " symbol ", " 0: Use symbol encoding in ``latex.py`` "
+	"   ", "   ", " 1: Use extended symbol encoding in ``latex_ex.py`` " 
+	"   :math:`2^{nd}` ", " function ", " 0: Use symbol encoding in  ``latex.py``. Print functions args,  use ``\operator{ }`` format. "
+	"   ", "   ", " 1: Do not print function args. Do not use ``\operator{}`` format. Suppress printing of function arguments. "
+	"   :math:`3^{d}` ", " partial derivative", " 0: Use partial derivative format in ``latex.py``.  "
+	"   ", "   ", " 1: Use format :math:`\partial_{x}` instead of :math:`\partial/\partial x`. "
+	"   :math:`4^{th}` ", " multivector ", " 1: Print entire multivector on one line. "
+	"   ", "   ", " 2: Print each grade of multivector on one line. " 
+	"   ", "   ", " 3: Print each base of multivector on one line. "
 
 
 .. function:: LaTeX(expr, inline=True)
@@ -215,8 +198,10 @@ Helper Functions for Extending LatexPrinter Class
    latex file with name *filename*.  If the :program:`latex` and :program:`xdvi`
    programs are present on the system they are invoked to display the latex file in
    a  window.  If *debug=True* the associated output of :program:`latex` is sent to
-   *stdout*, otherwise it is sent to  */dev/null*.  If :class:`LatexPrinter` has
-   not been initialized :func:`xdvi` does nothing.
+   *stdout*, otherwise it is sent to  */dev/null* for linux and *NUL* for Windows.  
+   If :class:`LatexPrinter` has not been initialized :func:`xdvi` does nothing.  After the
+   .dvi file is generated it is displayed with :program:`xdvi` for linux (if latex and xdvi
+   are installed ) and :program:`yap` for Windows (if MikTex is installed). 
 
 The functions :func:`sym_format`, :func:`fct_format`, :func:`pdiff_format`, and
 :func:`MV_format` allow one to change various formatting aspects of the
