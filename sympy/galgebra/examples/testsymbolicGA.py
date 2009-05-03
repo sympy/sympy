@@ -1,7 +1,6 @@
-import sys
-if sys.version.find('Stackless') >= 0:
-    sys.path.append('/usr/lib/python2.5/site-packages')
+#!/usr/bin/python
 
+import sys
 import os,sympy,time
 from sympy.galgebra.GA import set_main, make_symbols, types, MV, ZERO, ONE, HALF
 from sympy import collect

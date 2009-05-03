@@ -1,4 +1,4 @@
-#!/usrlocal/bin/python
+#!/usr/bin/python
 #EandM.py
 
 import sys

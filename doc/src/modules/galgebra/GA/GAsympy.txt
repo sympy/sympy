@@ -96,30 +96,29 @@ python module  :mod:`sympy`.
 
 The basic geometic algebra operations will be implemented in python by defining
 a multivector  class, MV, and overloading the python operators in Table
-:ref:`1 <table1>` where ``A`` and ``B``  are any two multivectors.
+:ref:`1 <table1>` where ``A`` and ``B``  are any two multivectors (In the case of 
+``+``, ``-``, ``*``, ``^``, and ``|`` the operation is also defined if ``A`` or 
+``B`` is a sympy symbol or a sympy real number).
 
 .. _table1:
 
-+-----------+-----------------------------------------------+
-| Operation | Result                                        |
-+===========+===============================================+
-| ``A+B``   | sum of multivectors or multivector and scalar |
-+-----------+-----------------------------------------------+
-| ``A-B``   | difference of multivectors  or multivector    |
-|           | and scalar                                    |
-+-----------+-----------------------------------------------+
-| ``A*B``   | geometric product or multiplication by scalar |
-+-----------+-----------------------------------------------+
-| ``A^B``   | outer product of multivectors                 |
-+-----------+-----------------------------------------------+
-| ``A|B``   | inner product of multivectors                 |
-+-----------+-----------------------------------------------+
+.. csv-table:: 
+	:header: " Operation ", " Result "
+	:widths: 10, 40
+
+	" ``A+B`` ", " sum of multivectors "
+ 	" ``A-B`` ", " difference of multivectors " 
+	" ``A*B`` ", " geometric product "  
+	" ``A^B`` ", " outer product of multivectors  "
+	" ``A|B`` ", " inner product of multivectors "
+	" ``A<B`` ", " left contraction of multivectors "
+	" ``A>B``  ", " right contraction of multivectors "
 
 Table :ref:`1 <table1>`. Multivector operations for symbolicGA
 
 Note that the operator order precedence is determined by python and is not
 neccessarily that used by  geometric algebra. Always use parenthesis in python
-expressions containing ``:math:`\W``` and/or ``|``.
+expressions containing ``^``, ``|``, ``<``, and/or ``>``.
 
 
 .. _vbm:
@@ -168,8 +167,7 @@ products of the basis vectors. Note that the symbols are named so that
 Note that the strings shown in equation :ref:`1 <eq1>` are only used when the values
 of :math:`g_{ij}` are output (printed).   In the :mod:`GA` module (library)
 the :math:`g_{ij}` symbols are stored in a static member list of the multivector
-class :class:`MV` as the double list *MV.metric* (:math:`g_{ij} = `
-*MV.metric[i][j]*).
+class :class:`MV` as the double list *MV.metric* (:math:`g_{ij}` = *MV.metric[i][j]*).
 
 The default definition of :math:`g` can be overwritten by specifying a string
 that will define :math:`g`. As an example  consider a symbolic representation
@@ -181,7 +179,7 @@ and for a metric
 
 ``metric = '# # # 0 0, # # # 0 0, # # # 0 0, 0 0 0 0 2, 0 0 0 2 0'``
 
-then calling :func:`MV.setup(basis,metric)` would initialize
+then calling `MV.setup(basis,metric)` would initialize
 
 
 
@@ -232,7 +230,7 @@ Representation and Reduction of Multivector Bases
 =================================================
 
 In our symbolic geometric algebra we assume that all multivectors of interest to
-us can be obtained from the symbolic bases vectors we have input, via the
+us can be obtained from the symbolic basis vectors we have input, via the
 different operations available to geometric algebra. The first problem we have
 is representing the general multivector in terms terms of the basis vectors.  To
 do this we  form the ordered geometric products of the basis vectors and develop
@@ -289,11 +287,9 @@ element of the lists as follows:
 * ``revision``: Consider a basis list :math:`B` with element
   :math:`B[j] = \lbrk i_{1},\dots,i_{l},i_{l+1},\dots,i_{s}\rbrk` where
   :math:`i_{l} > i_{l+1}`. Then the :math:`l` and :math:`l+1` elements must be
-  reversed to be put in normal order, but we have
-  :math:`a_{i_{l}}a_{i_{l+1}} = 2g_{i_{l}i_{l+1}}-
-						 a_{i_{l+1}}a_{i_{l}}`
+  reversed to be put in normal order, but we have :math:`a_{i_{l}}a_{i_{l+1}} = 2g_{i_{l}i_{l+1}}-a_{i_{l+1}}a_{i_{l}}`
   (From the geometric  algebra definition of the dot product of two vectors). Thus
-  we append the list representing the reduced element ,
+  we append the list representing the reduced element,
   :math:`\lbrk i_{1},\dots,i_{l-1},i_{l+2},\dots,i_{s}\rbrk`, to the pseudo bases
   list, :math:`B`, and append :math:`2g_{i{l}i_{l+1}}C[j]` to the coefficients
   list, then  we replace :math:`B[j]` with
@@ -301,7 +297,7 @@ element of the lists as follows:
   :math:`-C[j]`. Both lists are increased by one element if
   :math:`g_{i_{l}i_{l+1}} \ne 0`.
 
-These processes are repeated untill every bases list in :math:`B` is in normal
+These processes are repeated untill every basis list in :math:`B` is in normal
 (ascending) order with no repeated elements.  Then the coefficents of equivalent
 bases are summed and the bases sorted according to psuedograde and ascending
 order.  We now have a way of calculating the geometric product of any two bases
@@ -407,7 +403,7 @@ giving Table :ref:`4 <table4>`.
    a1a2 = {(a1.a2)}1+a1^a2
    a0a1a2 = {(a1.a2)}a0+{-(a0.a2)}a1+{(a0.a1)}a2+a0^a1^a2
 
-Table :ref:`4 <table4>`. Bases in terms of bases blades.
+Table :ref:`4 <table4>`. Bases in terms of basis blades.
 
 Using Table :ref:`4 <table4>` and simple substitution we can convert from a base
 multivector representation to a blade representation.  Likewise, using Table
@@ -423,8 +419,8 @@ representation is in use since various multivector operations require conversion
 from one representation to the other.
 
 
-Outer and Inner Product
-=======================
+Outer and Inner Products, Left and Right Contractions
+=====================================================
 
 In geometric algebra any general multivector :math:`A` can be decomposed into
 pure grade  multivectors (a linear combination of blades of all the same order)
@@ -482,12 +478,51 @@ and
 
 
 
-
 .. math::
   :nowrap:
 
   \begin{equation*}
   A\wedge B = \sum_{r,s}A_{r}\wedge B_{s}
+  \end{equation*}
+
+
+Likewise the right (:math:`\lfloor`) and left (:math:`\rfloor`) contractions are defined as 
+
+
+.. math::
+  :nowrap:
+
+  \begin{equation*}
+  A_{r}\lfloor B_{s} = \left \{ \begin{array}{cc}
+     \proj{A_{r}B_{s}}{r-s} &  r \ge s \\
+               0            &  r < s \end{array} \right \}
+  \end{equation*}
+
+.. math::
+  :nowrap:
+
+  \begin{equation*}
+  A_{r}\rfloor B_{s} = \left \{ \begin{array}{cc}
+     \proj{A_{r}B_{s}}{s-r} &  s \ge r \\
+               0            &  s < r \end{array} \right \}
+  \end{equation*}
+
+
+and
+
+.. math::
+  :nowrap:
+
+  \begin{equation*}
+  A\lfloor B = \sum_{r,s}A_{r}\lfloor B_{s}
+  \end{equation*}
+
+
+.. math::
+  :nowrap:
+
+  \begin{equation*}
+  A\rfloor B = \sum_{r,s}A_{r}\rfloor B_{s}
   \end{equation*}
 
 
@@ -526,7 +561,7 @@ The steps for calculating the outer product are:
 
 #. Project the ``i1+i2`` grade from ``pg1*pg2``.
 
-#. Accumulate the results for each pair of grades in the imput multivectors.
+#. Accumulate the results for each pair of grades in the input multivectors.
 
 For the inner product of the multivectors ``mv1`` and ``mv2`` the ``MV`` class
 function is  ::
@@ -537,10 +572,10 @@ function is  ::
        product.bladeflg = 1
        mv1.convert_to_blades()
        mv2.convert_to_blades()
-       for igrade1 in range(1,MV.n1):
+       for igrade1 in range(MV.n1):
            if not isint(mv1.mv[igrade1]):
                pg1 = mv1.project(igrade1)
-               for igrade2 in range(1,MV.n1):
+               for igrade2 in range(MV.n1):
                    igrade = abs(igrade1-igrade2)
                    if not isint(mv2.mv[igrade2]):
                        pg2 = mv2.project(igrade2)
@@ -606,7 +641,7 @@ but
   \end{equation*}
 
 
-which is proved by expanding the blade bases in terms of orthongonal vectors and
+which is proved by expanding the blade bases in terms of orthogonal vectors and
 showing that equation :ref:`2 <eq14>` holds for the geometric product of orthogonal
 vectors.
 
@@ -667,7 +702,7 @@ the reciprocal vector is denoted with a superscript. The multivector setup
 function ``MV.setup(basis,metric,rframe)`` has the argument ``rframe`` with a
 default value of ``False``.  If it is set to ``True`` the reciprocal frame of
 the basis vectors is  calculated. Additionaly there is the function
-``MV.reciprocal_frame(vlst,names='')`` external to the ``MV`` class that will
+``reciprocal_frame(vlst,names='')`` external to the ``MV`` class that will
 calculate the reciprocal frame of a list, ``vlst``, of vectors.  If the argument
 ``names`` is set to a space delimited string of names for the vectors the
 reciprocal vectors will be given these names.
@@ -941,7 +976,7 @@ Initializing Multivector Class
 The multivector class is initialized with:
 
 
-.. function:: MV.setup(basis,metric='',rframe=False,coords=None,debug=False)
+.. function:: MV.setup(basis,metric='',rframe=False,coords=None,debug=False,offset=0)
 
    The *basis* and *metric* parameters were described in section :ref:`vbm`. If
    *rframe=True* the  reciprocal frame of the symbolic bases vectors is calculated.
@@ -950,7 +985,11 @@ The multivector class is initialized with:
    the number of basis vectors.  These symbols are used as the arguments of a
    multivector field as a function of position and for calculating the derivatives
    of a multivector field (if *coords* is defined then *rframe* is automatically
-   set equal to *True*).
+   set equal to *True*). *offset* is an integer that is added to the multivector 
+   coefficient index. For example if one wishes to start labeling vector coefficient
+   indexes at one instead of zero then set *offset=1*.  Additionally, :func:`MV.setup`
+   calculates the pseudo scalar, :math:`I` and its inverse, :math:`I^{-1}` and makes
+   them available to the programmer as *MV.I* and *MV.Iinv*.
 
 After :func:`MV.setup` is run one can reinialize the :class:`MV` class with
 curvilinear coordinates using:
@@ -975,14 +1014,14 @@ curvilinear coordinates using:
 
 *  ``coords``: List of sympy symbols for curvilinear coordinates
 
-*  ``debug``: If ``True`` printout (LaTeX) all quantities required for
-     derivative calculation
+*  ``debug``: If ``True`` printout (LaTeX) all quantities required for derivative calculation
 
-*  ``debug_level``: Set to 0,1,2, or 3 to stop curvilinear calculation before
-     all quatities are  calculated.  This is done when debugging new curvilinear
-     coordinate systems since simplification of expressions is not sufficiently
-     automated to insure success of process of any coordinate system  defined by
-     vector function ``x``
+*  ``debug_level``: Set to 0,1,2, or 3 to stop curvilinear calculation before all quatities are 
+   calculated.  This is done when debugging new curvilinear coordinate systems since simplification
+   of expressions is not sufficiently automated to insure success of process of any coordinate system
+   defined by vector function ``x``
+
+
 
    To date ``MV.rebase`` works for cylindrical and spherical coordinate systems in
    any number of dimensions  (until the execution time becomes too long).  To make
@@ -1025,45 +1064,38 @@ or with the multivector class constructor:
    switch that will convert the symbolic coefficients of a multivector to functions
    if coordinate variables have been defined when :func:`MV.setup` is called:
 
-   +-----------------+----------------------------+-----------------------------+
-   | mvtype          | value                      | result                      |
-   +=================+============================+=============================+
-   | default         | default                    | Zero multivector            |
-   +-----------------+----------------------------+-----------------------------+
-   | 'basisvector'   | int i                      | :math:`\mbox{i}^{th}` basis |
-   |                 |                            | vector                      |
-   +-----------------+----------------------------+-----------------------------+
-   | 'basisbivector' | int i                      | :math:`\mbox{i}^{th}` basis |
-   |                 |                            | bivector                    |
-   +-----------------+----------------------------+-----------------------------+
-   | 'scalar'        | symbol x or string s       | scalar of value x           |
-   +-----------------+----------------------------+-----------------------------+
-   | 'grade'         | [int i, symbol array A]    | X.grade(i) = A              |
-   +-----------------+----------------------------+-----------------------------+
-   | 'vector'        | symbol array A or string s | X.grade(1) = A              |
-   +-----------------+----------------------------+-----------------------------+
-   | 'grade2'        | symbol array A             | X.grade(2) = A              |
-   +-----------------+----------------------------+-----------------------------+
-   | 'pseudo'        | symbol x                   | X.grade(n) = x              |
-   +-----------------+----------------------------+-----------------------------+
-   | 'spinor'        | string s                   | even multivector            |
-   +-----------------+----------------------------+-----------------------------+
+	.. csv-table:: 
+		:header: " mvtype ", " value ", " result " 
+		:widths: 10, 30, 30
 
-   The *value* argument has the option of being a string for *mvtype*'s of scalars,
-   vectors, or spinors.  This option is valid if coordinate variables have been
-   defined when :func:`MV.setup` is called.  The names of the  multivector
-   coefficients are formed from the string input for *value* and from the
-   coordinates.  The *value* string forms a base string while superscripts to the
-   base string are formed by concatenating coordinates corresponding to the
-   indicies of the multivector base for the particular coeffient.  For example if
-   the base string is :math:`A` and the  coordinates :math:`(x,y,z)` then the
-   coefficients of a spinor in 3d space would be :math:`A`, :math:`A^{xy}`,
-   :math:`A^{xz}`, and :math:`A^{yz}`  (when printed with the :mod:`latex_ex`
-   module).
+		" default ", " default ", " Zero multivector "
+		" 'basisvector' ", " int i ", " :math:`\mbox{i}^{th}` basis vector "
+		" 'basisbivector' ", " int i ", " :math:`\mbox{i}^{th}` basis bivector "
+		" 'scalar' ", " symbol x ", " symbolic scalar of value x "
+		"   ", " string s ", " symbolic scalar of value Symbol(s) "
+		" 'grade' ", " [int r, 1-D symbol array A] ", " X.grade(r) = A "
+		"   ", " [int r, string s] ", " symbolic grade r multivector "
+		" 'vector' ", " 1-D symbol array A ", " X.grade(1) = A "
+		"   ", " string s ", " symbolic vector "
+		" 'grade2' ", " 1-D symbol array A ", " X.grade(2) = A "
+		" 'pseudo' ", " symbol x ", " X.grade(n) = x "
+		" 'spinor' ", " string s ", " symbolic even multivector "
 
-   The coefficients of the multivector bases could be functions as well as symbols
-   so that one could just as easily define a multivector value function as a simple
-   symbolic multivector.
+
+   If the *value* argument has the option of being a string s then a general symbolic
+   multivector will be constructed constrained by the value of *mvtype*.  The string
+   s will be the base name of the multivector symbolic coefficients.  If *coords* is
+   not defined in :func:`MV.setup` the indices of the multivector bases are appended to
+   the base name with a double underscore (superscript notation).  If *coords* is defined
+   the coordinate names will replace the indices in the coefficient names.  For example if
+   the base string is *A* and the  coordinates *(x,y,z)* then the
+   coefficients of a spinor in 3d space would be *A*, *A__xy*, *A__xz*, and *A__yz*.  If
+   the :mod:`latex_ex` is used to print the multivector the coefficients would print as
+   :math:`A`, :math:`A^{xy}`, :math:`A^{xz}`, and :math:`A^{yz}`.
+
+   If the *fct* argrument of :func:`MV` is set to *True* and the *coords* argument in 
+   :func:`MV.setup` is defined the symbolic coefficients of the multivector are functions 
+   of the coordinates.
 
 
 Basic Multivector Class Functions
@@ -1159,7 +1191,7 @@ documentation on :func:`TrigSimp`).
 .. function:: sqrfree(self,lst)
 
 
-.. function:: subs(self,var,substitute)
+.. function:: subs(self,*args)
 
 
 .. function:: simplify(self)
