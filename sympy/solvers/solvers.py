@@ -838,9 +838,9 @@ def nsolve(*args, **kwargs):
 
     >>> from sympy import sin
     >>> nsolve(sin(x), x, 2)
-    mpf('3.1415926535897932')
+    3.14159265358979
     >>> nsolve(sin(x), 2)
-    mpf('3.1415926535897932')
+    3.14159265358979
 
     mpmath.findroot is used, you can find there more extensive documentation,
     especially concerning keyword parameters and available solvers.
