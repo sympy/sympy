@@ -38,11 +38,11 @@ from warnings import warn
 # Codes for guess solve strategy
 GS_POLY = 0
 GS_RATIONAL = 1
-GS_POLY_CV_1 = 2 # can be converted to a polynomial equation via the change of variable y -> x**n
+GS_POLY_CV_1 = 2 # can be converted to a polynomial equation via the change of variable y -> x**a, a real
 GS_POLY_CV_2 = 3 # can be converted to a polynomial equation multiplying on both sides by x**m
                  # for example, x + 1/x == 0. Multiplying by x yields x**2 + x == 0
 GS_RATIONAL_CV_1 = 4 # can be converted to a rational equation via the change of variable y -> x**n
-GS_TRASCENDENTAL = 5
+GS_TRANSCENDENTAL = 5
 
 def guess_solve_strategy(expr, symbol):
     """
@@ -65,23 +65,7 @@ def guess_solve_strategy(expr, symbol):
     """
     eq_type = -1
     if expr.is_Add:
-        items = expr.args
-        for item in items:
-            if item.is_Number or item.is_Symbol:
-                eq_type = max(eq_type, GS_POLY)
-            elif item.is_Mul:
-                for arg in item.args:
-                    eq_type = max(guess_solve_strategy(arg, symbol), eq_type)
-            elif item.is_Pow and item.base.has(symbol):
-                if item.exp.is_Integer:
-                    if item.exp > 0:
-                        eq_type = max(eq_type, GS_POLY)
-                    else:
-                        eq_type = max(eq_type, GS_POLY_CV_2)
-                elif item.exp.is_Rational:
-                    eq_type = max(eq_type, GS_POLY_CV_1)
-            elif item.is_Function:
-                return GS_TRASCENDENTAL
+        return max([guess_solve_strategy(i, symbol) for i in expr.args])
 
     elif expr.is_Mul:
         # check for rational functions
@@ -96,22 +80,26 @@ def guess_solve_strategy(expr, symbol):
             else:
                 raise NotImplementedError
         else:
-            return max(map(guess_solve_strategy, expr.args, [symbol]*len(expr.args)))
+            return max([guess_solve_strategy(i, symbol) for i in expr.args])
 
     elif expr.is_Symbol:
         return GS_POLY
 
     elif expr.is_Pow:
         if expr.exp.has(symbol):
-            return GS_TRASCENDENTAL
-        elif expr.exp.is_Number and expr.base.has(symbol):
-            if expr.exp.is_Integer:
+            return GS_TRANSCENDENTAL
+        elif not expr.exp.has(symbol) and expr.base.has(symbol):
+            if expr.exp.is_Integer and expr.exp > 0:
                 eq_type = max(eq_type, GS_POLY)
-            else:
+            elif expr.exp.is_Integer and expr.exp < 0:
+                eq_type = max(eq_type, GS_POLY_CV_2)
+            elif expr.exp.is_Rational:
                 eq_type = max(eq_type, GS_POLY_CV_1)
+            else:
+                return GS_TRANSCENDENTAL
 
     elif expr.is_Function and expr.has(symbol):
-        return GS_TRASCENDENTAL
+        return GS_TRANSCENDENTAL
 
     elif not expr.has(symbol):
         return GS_POLY
@@ -158,6 +146,7 @@ def solve(f, *symbols, **flags):
             symbols = symbols[0]
 
     symbols = map(sympify, symbols)
+    result = list()
 
     if any(not s.is_Symbol for s in symbols):
         raise TypeError('not a Symbol')
@@ -211,12 +200,10 @@ def solve(f, *symbols, **flags):
                 if guess_solve_strategy(f_, t) != GS_POLY:
                     raise TypeError("Could not convert to a polynomial equation: %s" % f_)
                 cv_sols = solve(f_, t)
-                result = list()
                 for sol in cv_sols:
                     result.append(sol**m)
 
             elif isinstance(f, Mul):
-                result = []
                 for mul_arg in args:
                     result.extend(solve(mul_arg, symbol))
 
@@ -240,7 +227,7 @@ def solve(f, *symbols, **flags):
             # TODO: we might have introduced unwanted solutions
             # when multiplied by x**-m
 
-        elif strategy == GS_TRASCENDENTAL:
+        elif strategy == GS_TRANSCENDENTAL:
             #a, b = f.as_numer_denom()
             # Let's throw away the denominator for now. When we have robust
             # assumptions, it should be checked, that for the solution,
