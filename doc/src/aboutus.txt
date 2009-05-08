@@ -75,6 +75,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Tomasz Buchert: ccode printing fixes, code quality concerning exceptions
 #. Vinay Kumar: polygamma tests
 #. Johann Cohen-Tanugi: commutative diff tests
+#. Jochen Voss: a test for the @cachit decorator
 
 Uptodate list in the order of the first contribution is given in the `AUTHORS
 <http://git.sympy.org/?p=sympy.git;f=AUTHORS;hb=HEAD>`_ file.
