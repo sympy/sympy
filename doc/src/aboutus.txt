@@ -13,7 +13,7 @@ more details what they do and what they are interested in (some people didn't
 want to be mentioned here, so see our repository history for a full list).
 
 #. `Ondřej Čertík <http://wiki.sympy.org/wiki/Ond%C5%99ej_%C4%8Cert%C3%ADk>`_: project leader
-#. Fabian Seoane: everything, reviewing patches, releases, general advice (issues and mailinglist)
+#. Fabian Pedregosa: everything, reviewing patches, releases, general advice (issues and mailinglist)
 #. Jurjen N.E. Bos: pretty printing and other patches
 #. Mateusz Paprocki: GSoC 2007, concrete math module, integration module, new core integration, a lot of patches, general advice, new polynomial module, improvements to solvers, simplifications
 #. Marc-Etienne M.Leveille: matrix patch
