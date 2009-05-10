@@ -209,8 +209,9 @@ class Piecewise(Function):
     @classmethod
     def __eval_cond(cls, cond):
         """Returns S.One if True, S.Zero if False, or None if undecidable."""
-        if type(cond) == bool or cond.is_Number:
+        if type(cond) == bool or cond.is_number:
             return sympify(bool(cond))
         if cond.args[0].is_Number and cond.args[1].is_Number:
             return sympify(bool(cond))
         return None
+

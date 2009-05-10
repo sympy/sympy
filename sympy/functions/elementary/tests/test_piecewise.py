@@ -1,4 +1,5 @@
-from sympy import diff, Integral, integrate, log, oo, Piecewise, raises, symbols
+from sympy import diff, Integral, integrate, log, oo, Piecewise, raises, \
+                  symbols, pi
 
 x,y = symbols('xy')
 
@@ -18,6 +19,12 @@ def test_piecewise():
     assert p.subs(x,-5) == -1
     assert p.subs(x,-1) == 1
     assert p.subs(x,1) == log(1)
+
+    # More subs test
+    p2 = Piecewise((1, x < pi), (-1, x < 2*pi), (0, x > 2*pi))
+    assert p2.subs(x,2) == 1
+    assert p2.subs(x,4) == -1
+    assert p2.subs(x,10) == 0
 
     # Test evalf
     assert p.evalf() == p
