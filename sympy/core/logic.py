@@ -314,7 +314,7 @@ class Not(Logic):
             return obj
 
         else:
-            raise ValueError('Not: unknow argument %r' % (arg,))
+            raise ValueError('Not: unknown argument %r' % (arg,))
 
 
 
