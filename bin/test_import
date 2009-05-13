@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/env python
 
 """
 Tests the speed of "import sympy" by measuring it many times in a row and
