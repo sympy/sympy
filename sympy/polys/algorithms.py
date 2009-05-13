@@ -483,7 +483,7 @@ def poly_gcd(f, g, *symbols):
     if f.is_multivariate:
         h = poly_div(f*g, poly_lcm(f, g))[0]
     else:
-        h = poly_subresultants(f, g)[-1]
+        h = poly_subresultants(f, g, res=False)[-1]
 
     if gcd != 1:
         return h.mul_term(gcd / h.LC)
@@ -628,7 +628,7 @@ def poly_resultant(f, g, *symbols):
         else:
             return sign * Poly.cancel(det)
 
-def poly_subresultants(f, g, *symbols):
+def poly_subresultants(f, g, *symbols, **flags):
     """Computes subresultant PRS of two univariate polynomials.
 
        Polynomial remainder sequence (PRS) is a fundamental tool in
@@ -654,6 +654,13 @@ def poly_subresultants(f, g, *symbols):
        remainder sequence where R_0 = f, R_1 = g, R_k != 0 and R_k
        is similar to gcd(f, g).
 
+       The result is returned as tuple (res, R) where R is the PRS
+       sequence and res is the resultant of the input polynomials.
+
+       If only polynomial remainder sequence is important,  then by
+       setting res=False in keyword arguments expensive computation
+       of the resultant can be avoided (only PRS is returned).
+
        For more information on the implemented algorithm refer to:
 
        [1] M. Bronstein, Symbolic Integration I: Transcendental
@@ -673,8 +680,8 @@ def poly_subresultants(f, g, *symbols):
 
     if f.is_multivariate:
         raise MultivariatePolyError(f)
-
-    symbols, flags = f.symbols, f.flags
+    else:
+        symbols = f.symbols
 
     n, m = f.degree, g.degree
 
@@ -682,36 +689,65 @@ def poly_subresultants(f, g, *symbols):
         f, g = g, f
         n, m = m, n
 
-    prs = [f, g]
+    R = [f, g]
 
     d = n - m
 
-    b = (-1)**(d + 1)
+    b = S(-1)**(d + 1)
+    c = S(-1)
 
-    h = poly_pdiv(f, g)[1]
+    B, D = [b], [d]
+
+    h = poly_prem(f, g)
     h = h.mul_term(b)
 
-    k = h.degree
-
-    c = S.NegativeOne
-
     while not h.is_zero:
-        prs.append(h)
+        k = h.degree
+        R.append(h)
 
-        coeff = g.LC
+        lc = g.LC
 
-        c = (-coeff)**d / c**(d-1)
+        C = (-lc)**d / c**(d-1)
+        c = Poly.cancel(C)
 
-        b = -coeff * c**(m-k)
+        b = -lc * c**(m-k)
 
         f, g, m, d = g, h, k, m-k
 
-        h = poly_pdiv(f, g)[1]
+        B.append(b)
+        D.append(d)
+
+        h = poly_prem(f, g)
         h = h.div_term(b)
 
-        k = h.degree
+    if not flags.get('res', True):
+        return R
 
-    return prs
+    if R[-1].degree > 0:
+        return (Poly((), *symbols), R)
+    if R[-2].is_one:
+        return (R[-1], R)
+
+    s, c, i = 1, S(1), 1
+
+    for b, d in zip(B, D)[:-1]:
+        u = R[i-1].degree
+        v = R[i  ].degree
+        w = R[i+1].degree
+
+        if u % 2 and v % 2:
+            s = -s
+
+        lc = R[i].LC
+
+        C = c*(b/lc**(1 + d))**v * lc**(u - w)
+        c = Poly.cancel(C)
+
+        i += 1
+
+    j = R[-2].degree
+
+    return (R[-1]**j*s*c, R)
 
 def poly_sqf(f, *symbols):
     """Compute square-free decomposition of an univariate polynomial.

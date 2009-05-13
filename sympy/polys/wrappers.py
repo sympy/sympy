@@ -38,7 +38,6 @@ _funcs = {
     'gcd'           : 2,
     'gcdex'         : 2,
     'half_gcdex'    : 2,
-    'subresultants' : 2,
     'resultant'     : 2,
     'sqf'           : 1,
     'decompose'     : 1,
@@ -68,4 +67,21 @@ def div(*args, **kwargs):
     return q, r.as_basic()
 
 div.__doc__ = poly_div.__doc__
+
+def subresultants(*args, **kwargs):
+    result = poly_subresultants(*_conv_args(2, args), **kwargs)
+
+    if type(result) is tuple:
+        res, R = result
+    else:
+        res, R = None, result
+
+    R = [ r.as_basic() for r in R ]
+
+    if res is None:
+        return R
+    else:
+        return res.as_basic(), R
+
+subresultants.__doc__ = poly_subresultants.__doc__
 

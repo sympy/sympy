@@ -615,14 +615,24 @@ def test_poly_subresultants():
     g = 3*x**6+5*x**4-4*x**2-9*x+21
 
     assert poly_subresultants(f, g, x) == \
-        [Poly(f, x), Poly(g, x),
-         Poly(15*x**4 - 3*x**2 + 9,  x),
-         Poly(65*x**2 + 125*x - 245, x),
-         Poly(9326*x - 12300, x),
-         Poly(260708, x)]
+        (Poly(260708, x), [Poly(f, x), Poly(g, x),
+                           Poly(15*x**4 - 3*x**2 + 9,  x),
+                           Poly(65*x**2 + 125*x - 245, x),
+                           Poly(9326*x - 12300, x),
+                           Poly(260708, x)])
 
     assert poly_subresultants((x-1)**2, x**2-1, x) == \
-        [Poly((x-1)**2, x), Poly(x**2-1, x), Poly(2*x - 2, x)]
+        (Poly(0, x), [Poly((x-1)**2, x),
+                      Poly(x**2-1, x),
+                      Poly(2*x - 2, x)])
+
+    f = Poly(-x**3 + 5, x)
+    g = Poly((1 + 3*t)*x**2, x)
+
+    assert poly_subresultants(f, g) == \
+        (Poly(25 + 225*t + 675*t**2 + 675*t**3, x), [Poly(-x**3 + 5, x),
+                                                     Poly((1 + 3*t)*x**2, x),
+                                                     Poly(5 + 30*t + 45*t**2, x)])
 
 def test_poly_groebner():
     assert poly_groebner(0, x) == [Poly((), x)]
@@ -773,10 +783,10 @@ def test_squarefree():
     A = Poly(x**4 - 3*x**2 + 6, x)
     D = Poly(x**6 - 5*x**4 + 5*x**2 + 4, x)
 
-    f, g = D, A - D.diff(x)*t
+    f, g = D, A - D.diff(x).mul_term(t)
 
-    R = poly_subresultants(f, g)
-    S = poly_sqf(Poly(R[-1], t))
+    res, R = poly_subresultants(f, g)
+    S = poly_sqf(Poly(res, t))
 
     assert S == [Poly(45796, t), Poly(1, t), Poly(4*t**2 + 1, t)]
 

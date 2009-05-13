@@ -40,12 +40,16 @@ def ratint(f, x, **flags):
 
     result, p = poly_div(p, q)
 
+    result = result.integrate(x).as_basic()
+
+    if p.is_zero:
+        return result
+
     g, h = ratint_ratpart(p, q, x)
 
     P, Q = h.as_numer_denom()
     q, r = poly_div(P, Q, x)
 
-    result = result.integrate(x).as_basic()
     result += g + q.integrate(x).as_basic()
 
     if not r.is_zero:
@@ -150,8 +154,8 @@ def ratint_logpart(f, g, x, t=None):
     t = t or Symbol('t', dummy=True)
     a, b = g, f - g.diff().mul_term(t)
 
-    R = poly_subresultants(a, b)
-    Q = poly_sqf(Poly(R[-1], t))
+    res, R = poly_subresultants(a, b)
+    Q = poly_sqf(Poly(res, t))
 
     R_map, H, i = {}, [], 1
 
