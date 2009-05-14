@@ -240,7 +240,7 @@ def poly_groebner(f, *symbols, **flags):
         if h.is_zero:
             return None
         else:
-            if not F.has_key(h):
+            if not h in F:
                 F[h] = len(f)
                 f.append(h)
 
@@ -274,7 +274,7 @@ def poly_groebner(f, *symbols, **flags):
                 else:
                    k = (j, i)
 
-                if not B.has_key(k):
+                if k not in B:
                     B[k] = monomial_lcm(f[i].LM, f[j].LM)
 
         G = set([ normal(f[g], G - set([g]))[0] for g in G ])
@@ -306,10 +306,10 @@ def poly_groebner(f, *symbols, **flags):
             if g == i or g == j:
                 continue
 
-            if not B.has_key((min(i, g), max(i, g))):
+            if (min(i, g), max(i, g)) not in B:
                 continue
 
-            if not B.has_key((min(j, g), max(j, g))):
+            if (min(j, g), max(j, g)) not in B:
                 continue
 
             if not monomial_div(M, f[g].LM):
@@ -597,10 +597,10 @@ def poly_resultant(f, g, *symbols):
 
     for i in xrange(N):
         for j in xrange(i, N):
-            if p.has_key(i) and q.has_key(j+1):
+            if i in p and j+1 in q:
                 B[i, j] += p[i] * q[j+1]
 
-            if p.has_key(j+1) and q.has_key(i):
+            if j+1 in p and i in q:
                 B[i, j] -= p[j+1] * q[i]
 
     for i in xrange(1, N-1):
@@ -878,10 +878,10 @@ def poly_decompose(f, *symbols):
             coeff = S.Zero
 
             for j in xrange(0, k):
-                if not f.has_key(n+j-k):
+                if not n+j-k in f:
                     continue
 
-                if not q.has_key(s-j):
+                if not s-j in q:
                     continue
 
                 fc, qc = f[n+j-k], q[s-j]

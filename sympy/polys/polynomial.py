@@ -363,7 +363,7 @@ class Poly(Basic):
                     if not coeff:
                         continue
 
-                    if terms.has_key(monom):
+                    if monom in terms:
                         coeff += terms[monom]
 
                         if not coeff:
@@ -436,7 +436,7 @@ class Poly(Basic):
 
                 monom = monom[:N]
 
-                if terms.has_key(monom):
+                if monom in terms:
                     coeff += terms[monom]
 
                     if not coeff:
@@ -468,7 +468,7 @@ class Poly(Basic):
 
                 monom = tuple(exponents)
 
-                if terms.has_key(monom):
+                if monom in terms:
                     coeff += terms[monom]
 
                     if not coeff:
@@ -548,7 +548,7 @@ class Poly(Basic):
 
                 monom = tuple(monom)
 
-            if result.has_key(monom):
+            if monom in result:
                 coeff += result[monom]
 
                 if not coeff:
@@ -796,7 +796,7 @@ class Poly(Basic):
             terms = self.as_uv_dict()
 
             for i in xrange(self.degree, -1, -1):
-                if terms.has_key(i):
+                if i in terms:
                     yield terms[i]
                 else:
                     yield S.Zero
@@ -815,7 +815,7 @@ class Poly(Basic):
             terms = self.as_uv_dict()
 
             for i in xrange(self.degree, -1, -1):
-                if terms.has_key(i):
+                if i in terms:
                     yield terms[i], (i,)
                 else:
                     yield S.Zero, (i,)
@@ -883,7 +883,7 @@ class Poly(Basic):
         terms = self.as_dict()
 
         for coeff, monom in poly.iter_terms():
-            if terms.has_key(monom):
+            if monom in terms:
                 coeff += terms[monom]
 
                 coeff = Poly.cancel(coeff)
@@ -917,7 +917,7 @@ class Poly(Basic):
         terms = self.as_dict()
 
         for coeff, monom in poly.iter_terms():
-            if terms.has_key(monom):
+            if monom in terms:
                 coeff -= terms[monom]
 
                 coeff = Poly.cancel(coeff)
@@ -1003,7 +1003,7 @@ class Poly(Basic):
                 coeff = 0
 
                 for i in xrange(k+1):
-                    if p.has_key(i) and q.has_key(k-i):
+                    if i in p and k-i in q:
                         coeff += Poly.cancel(p[i] * q[k-i])
 
                 if coeff:
@@ -1033,7 +1033,7 @@ class Poly(Basic):
                     coeff = coeff_p * coeff_q
                     coeff = Poly.cancel(coeff)
 
-                    if terms.has_key(monom):
+                    if monom in terms:
                         coeff += terms[monom]
 
                         if not coeff:
@@ -1600,7 +1600,7 @@ class Poly(Basic):
                         for j in xrange(n, M[i]):
                             coeff *= j+1
 
-                        if new_poly.has_key(monom):
+                        if monom in new_poly:
                             coeff += new_poly[monom]
 
                             if not coeff:
@@ -1690,7 +1690,7 @@ class Poly(Basic):
                     for j in xrange(M[i], n):
                         coeff /= j+1
 
-                    if new_poly.has_key(monom):
+                    if monom in new_poly:
                         coeff += new_poly[monom]
 
                         if not coeff:
@@ -1960,7 +1960,7 @@ class Poly(Basic):
             for k in xrange(self.degree, -1, -1):
                 result *= point
 
-                if terms.has_key(k):
+                if k in terms:
                     result += terms[k]
 
             return result
@@ -2041,7 +2041,7 @@ class Poly(Basic):
 
                 coeff = Poly.cancel(coeff)
 
-                if terms.has_key(monom):
+                if monom in terms:
                     coeff += terms[monom]
 
                     if not coeff:
@@ -2081,7 +2081,7 @@ class Poly(Basic):
                         else:
                             monom = M[:j]+(m+n,)+M[j+1:i]+M[i+1:]
 
-                        if terms.has_key(monom):
+                        if monom in terms:
                             coeff += terms[monom]
 
                             if not coeff:

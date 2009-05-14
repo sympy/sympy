@@ -73,7 +73,7 @@ def _import(module, reload="False"):
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
-    if not MODULES.has_key(module):
+    if not module in MODULES:
         raise NameError("This module can't be used for lambdification.")
     namespace, translations, import_commands = MODULES[module]
     # Clear namespace or exit

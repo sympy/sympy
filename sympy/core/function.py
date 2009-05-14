@@ -471,7 +471,7 @@ class Derivative(Basic):
         symbols = Derivative._symbolgen(*symbols)
         if expr.is_commutative:
             assumptions["commutative"] = True
-        if assumptions.has_key("evaluate"):
+        if "evaluate" in assumptions:
             evaluate = assumptions["evaluate"]
             del assumptions["evaluate"]
         else:

@@ -679,7 +679,7 @@ class Rational(Number):
             try: f[p] += -e
             except KeyError: f[p] = -e
 
-        if len(f)>1 and f.has_key(1): del f[1]
+        if len(f)>1 and 1 in f: del f[1]
         return f
 
     def as_numer_denom(self):

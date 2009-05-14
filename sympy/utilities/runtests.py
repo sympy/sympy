@@ -157,7 +157,7 @@ class SymPyTests(object):
             self._reporter.import_error(filename, sys.exc_info())
             return
         pytestfile = ""
-        if gl.has_key("XFAIL"):
+        if "XFAIL" in gl:
             pytestfile = inspect.getsourcefile(gl["XFAIL"])
         disabled = gl.get("disabled", False)
         if disabled:

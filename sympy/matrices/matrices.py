@@ -1388,7 +1388,7 @@ class Matrix(object):
     def eigenvects(self, **flags):
         """Return list of triples (eigenval, multiplicty, basis)."""
 
-        if flags.has_key('multiple'):
+        if 'multiple' in flags:
             del flags['multiple']
 
         out, vlist = [], self.eigenvals(**flags)
@@ -1714,7 +1714,7 @@ class SMatrix(Matrix):
         assert len(key) == 2
         if isinstance(key[0], int) and isinstance(key[1], int):
             i,j=self.key2ij(key)
-            if self.mat.has_key((i,j)):
+            if (i, j) in self.mat:
                 return self.mat[(i,j)]
             else:
                 return 0
@@ -1778,7 +1778,7 @@ class SMatrix(Matrix):
             c = []
             l.append(c)
             for j in range(self.cols):
-                if self.mat.has_key((i, j)):
+                if (i, j) in self.mat:
                     c.append(self[i, j])
                 else:
                     c.append(0)

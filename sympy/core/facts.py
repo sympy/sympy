@@ -168,7 +168,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
     # empty) in the table.
     for bidx, (bcond,bimpl) in enumerate(beta_rules):
         for bk in bcond.args:
-            if x_impl.has_key(bk):
+            if bk in x_impl:
                 continue
 
             x_impl[bk] = ([], [])

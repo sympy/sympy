@@ -673,7 +673,7 @@ def rsolve(f, y, init=None):
                 coeff *= h
 
         if kspec is not None:
-            if h_part.has_key(kspec):
+            if kspec in h_part:
                 h_part[kspec] += coeff
             else:
                 h_part[kspec] = coeff
@@ -722,7 +722,7 @@ def rsolve(f, y, init=None):
     coeffs = []
 
     for i in xrange(0, K_max+1):
-        if H_part.has_key(i):
+        if i in H_part:
             coeffs.append(H_part[i])
         else:
             coeffs.append(S.Zero)

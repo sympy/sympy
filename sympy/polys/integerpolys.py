@@ -306,7 +306,7 @@ def zzX_from_dict(f, l):
         if len(tail) == 1:
             tail = tail[0]
 
-        if coeffs.has_key(head):
+        if head in coeffs:
             coeffs[head][tail] = INT_TYPE(int(coeff))
         else:
             coeffs[head] = { tail : INT_TYPE(int(coeff)) }

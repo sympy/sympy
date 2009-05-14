@@ -1451,7 +1451,7 @@ class Basic(AssumeMeths):
                 if func is not None:
                     expr = func()
 
-        if not hints.has_key('basic'):
+        if not 'basic' in hints:
             if not expr.is_Atom:
                 result = expr._eval_expand_basic()
 
@@ -1946,7 +1946,7 @@ class Basic(AssumeMeths):
 
     def diff(self, *symbols, **assumptions):
         new_symbols = map(sympify, symbols)
-        if not assumptions.has_key("evaluate"):
+        if not "evaluate" in assumptions:
             assumptions["evaluate"] = True
         ret = Derivative(self, *new_symbols, **assumptions)
         return ret

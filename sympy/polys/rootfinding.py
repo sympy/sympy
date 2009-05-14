@@ -195,7 +195,7 @@ def roots(f, *symbols, **flags):
         raise MultivariatePolyError(f)
 
     def _update_dict(result, root, k):
-        if result.has_key(root):
+        if root in result:
             result[root] += k
         else:
             result[root] = k
@@ -357,7 +357,7 @@ def poly_root_factors(f, *symbols, **flags):
     else:
         x = f.symbols[0]
 
-    if flags.has_key('multiple'):
+    if 'multiple' in flags:
         del flags['multiple']
 
     zeros = roots(f, **flags)
@@ -498,7 +498,7 @@ def number_of_real_roots(f, *symbols, **flags):
 _exact_roots_cache = {}
 
 def _exact_roots(f):
-    if _exact_roots_cache.has_key(f):
+    if f in _exact_roots_cache:
         zeros = _exact_roots_cache[f]
     else:
         exact, zeros = roots(f), []

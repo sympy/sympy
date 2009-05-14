@@ -198,7 +198,7 @@ def telescopic(L, R, (i, a, b)):
     #Maybe this should go inside solve
     k = Wild("k")
     sol = (-R).match(L.subs(i, i + k))
-    if sol and sol.has_key(k):
+    if sol and k in sol:
         if L.subs(i,i + sol[k]) == -R:
             #sometimes match fail(f(x+2).match(-f(x+k))->{k: -2 - 2x}))
             s = sol[k]
