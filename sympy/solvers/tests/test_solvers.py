@@ -167,6 +167,7 @@ def test_ODE_first_order():
     assert dsolve(3*f(x).diff(x) -1, f(x)) == x/3 + C1
     assert dsolve(x*f(x).diff(x) -1, f(x)) == log(x) + C1
     assert dsolve(x*f(x).diff(x)+f(x)-f(x)**2,f(x)) == 1/(x*(C1 + 1/x))
+    assert dsolve(f(x).diff(x)+x*f(x)-f(x),f(x)) == C1*exp(x - x**2/2)
 
 def test_ODE_second_order():
     f = Function('f')
