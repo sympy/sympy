@@ -287,7 +287,7 @@ class Integral(Basic):
             #        poly(x)
             # g(x) = -------
             #        poly(x)
-            if g.is_fraction(x):
+            if g.is_rational_function(x):
                 parts.append(coeff * ratint(g, x))
                 continue
 

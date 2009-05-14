@@ -686,7 +686,7 @@ def rsolve(f, y, init=None):
     common = S.One
 
     for coeff in h_part.itervalues():
-        if coeff.is_fraction(n):
+        if coeff.is_rational_function(n):
             if not coeff.is_polynomial(n):
                 common = lcm(common, coeff.as_numer_denom()[1], n)
         else:

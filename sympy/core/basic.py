@@ -818,7 +818,26 @@ class Basic(AssumeMeths):
         """Iterates arguments of 'self' with are Basic instances. """
         return iter(self.args)
 
-    def is_fraction(self, *syms):
+    def is_rational_function(self, *syms):
+        """
+        Test whether function is rational function - ratio of two polynomials.
+        When no arguments are present, Basic.atoms(Symbol) is used instead.
+
+        Example:
+
+        >>> from sympy import symbols, sin
+        >>> x, y = symbols('xy')
+
+        >>> (x/y).is_rational_function()
+        True
+
+        >>> (x**2).is_rational_function()
+        True
+
+        >>> (x/sin(y)).is_rational_function(y)
+        False
+
+        """
         p, q = self.as_numer_denom()
 
         if p.is_polynomial(*syms):

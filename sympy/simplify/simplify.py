@@ -1039,7 +1039,7 @@ def hypersimp(f, k):
     g = g.rewrite(gamma)
     g = g.expand(func=True, basic=False)
 
-    if g.is_fraction(k):
+    if g.is_rational_function(k):
         return Poly.cancel(g, k)
     else:
         return None
@@ -1059,7 +1059,7 @@ def hypersimilar(f, g, k):
     h = (f/g).rewrite(gamma)
     h = h.expand(func=True, basic=False)
 
-    return h.is_fraction(k)
+    return h.is_rational_function(k)
 
 def combsimp(expr):
     return expr

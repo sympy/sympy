@@ -252,30 +252,30 @@ def test_is_polynomial():
     assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(2)).is_polynomial(x, y) == True
     assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) == False
 
-def test_is_fraction():
+def test_is_rational_function():
     x,y = symbols('xy')
 
-    assert Integer(1).is_fraction() == True
-    assert Integer(1).is_fraction(x) == True
+    assert Integer(1).is_rational_function() == True
+    assert Integer(1).is_rational_function(x) == True
 
-    assert Rational(17,54).is_fraction() == True
-    assert Rational(17,54).is_fraction(x) == True
+    assert Rational(17,54).is_rational_function() == True
+    assert Rational(17,54).is_rational_function(x) == True
 
-    assert (12/x).is_fraction() == True
-    assert (12/x).is_fraction(x) == True
+    assert (12/x).is_rational_function() == True
+    assert (12/x).is_rational_function(x) == True
 
-    assert (x/y).is_fraction() == True
-    assert (x/y).is_fraction(x) == True
-    assert (x/y).is_fraction(x, y) == True
+    assert (x/y).is_rational_function() == True
+    assert (x/y).is_rational_function(x) == True
+    assert (x/y).is_rational_function(x, y) == True
 
-    assert (x**2+1/x/y).is_fraction() == True
-    assert (x**2+1/x/y).is_fraction(x) == True
-    assert (x**2+1/x/y).is_fraction(x, y) == True
+    assert (x**2+1/x/y).is_rational_function() == True
+    assert (x**2+1/x/y).is_rational_function(x) == True
+    assert (x**2+1/x/y).is_rational_function(x, y) == True
 
-    assert (sin(y)/x).is_fraction() == False
-    assert (sin(y)/x).is_fraction(y) == False
-    assert (sin(y)/x).is_fraction(x) == True
-    assert (sin(y)/x).is_fraction(x, y) == False
+    assert (sin(y)/x).is_rational_function() == False
+    assert (sin(y)/x).is_rational_function(y) == False
+    assert (sin(y)/x).is_rational_function(x) == True
+    assert (sin(y)/x).is_rational_function(x, y) == False
 
 def test_SAGE1():
     #see http://code.google.com/p/sympy/issues/detail?id=247
