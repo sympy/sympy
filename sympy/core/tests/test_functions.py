@@ -290,3 +290,10 @@ def test_function_evalf():
     assert eq(exp(-0.5+1.5*I).evalf(15), Real("0.0429042815937374") + Real("0.605011292285002")*I, 1e-13)
     assert eq(log(pi+sqrt(2)*I).evalf(15), Real("1.23699044022052") + Real("0.422985442737893")*I, 1e-13)
     assert eq(cos(100).evalf(15), Real("0.86231887228768"), 1e-13)
+
+def test_extensibility_eval():
+    class MyFunc(Function):
+        @classmethod
+        def eval(cls, *args):
+            return (0,0,0)
+    assert MyFunc(0) == (0,0,0)

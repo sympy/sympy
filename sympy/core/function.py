@@ -138,18 +138,13 @@ class Function(Basic):
         # up to here.
         if options.get('evaluate') is False:
             return Basic.__new__(cls, *args, **options)
-        r = cls.eval(*args)
-        if isinstance(r, Basic):
+        evaluated = cls.eval(*args)
+        if evaluated is not None: return evaluated
+        # Just undefined functions have nargs == None
+        if not cls.nargs and hasattr(cls, 'undefined_Function'):
+            r = Basic.__new__(cls, *args, **options)
+            r.nargs = len(args)
             return r
-        elif r is None:
-            # Just undefined functions have nargs == None
-            if not cls.nargs and hasattr(cls, 'undefined_Function'):
-                r = Basic.__new__(cls, *args, **options)
-                r.nargs = len(args)
-                return r
-            pass
-        elif not isinstance(r, tuple):
-            args = (r,)
         return Basic.__new__(cls, *args, **options)
 
     @property
