@@ -201,9 +201,8 @@ def test_deriv_degree():
 # should be expected to break if the implementation of the solver changes
 # in such a way that a different branch is chosen
 def test_tsolve_1():
-    x = Symbol('x')
-    y = Symbol('y')
-    z = Symbol('z')
+    a, b = symbols('ab')
+    x, y, z = symbols('xyz')
     assert solve(exp(x)-3, x) == [log(3)]
     assert solve(cos(x)-y, x) == [acos(y)]
     assert solve(2*cos(x)-y,x)== [acos(y/2)]
@@ -247,7 +246,17 @@ def test_tsolve_1():
 
     assert solve(exp(x)+exp(-x)-y, x)== [-log(4) + log(2*y + 2*(-4 + y**2)**(Rational(1, 2))),
                                           -log(4) + log(2*y - 2*(-4 + y**2)**(Rational(1, 2)))]
-
+    # issue #1409
+    assert solve(y - b*x/(a+x), x) == [-a*y/(y - b)]
+    assert solve(y - b*exp(a/x), x) == [-a/(-log(y) + log(b))]
+    # issue #1408
+    assert solve(y-b/(1+a*x),x) == [(b - y)/(a*y)]
+    # issue #1407
+    assert solve(y-a*x**b , x) == [y**(1/b)*(1/a)**(1/b)]
+    # issue #1406
+    assert solve(z**x - y, x) == [log(y)/log(z)]
+    # issue #1405
+    assert solve(2**x - 10, x) == [log(10)/log(2)]
 
 def test_tsolve_2():
     x, y, a, b = symbols('xyab')
