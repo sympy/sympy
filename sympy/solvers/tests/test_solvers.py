@@ -60,7 +60,7 @@ def test_guess_transcendental():
     assert guess_solve_strategy(a*x**b-y, x) == GS_TRANSCENDENTAL
 
 def test_solve_polynomial1():
-    x, y = map(Symbol, 'xy')
+    x, y = symbols('xy')
 
     assert solve(3*x-2, x) == [Rational(2,3)]
     assert solve(Eq(3*x, 2), x) == [Rational(2,3)]
@@ -136,7 +136,7 @@ def test_solve_rational():
     assert solve(y-b/(1+a*x), x) == [(b - y)/(a*y)]
 
 def test_linear_system():
-    x, y, z, t, n = map(Symbol, 'xyztn')
+    x, y, z, t, n = symbols('xyztn')
 
     assert solve([x-1, x-y, x-2*y, y-1], [x,y]) is None
 
@@ -153,7 +153,7 @@ def test_linear_system():
            {y: 0, z: (-t-t*n)/n, x: (-t-t*n)/n}
 
 def test_linear_systemLU():
-    x, y, z, n = map(Symbol, 'xyzn')
+    x, y, z, n = symbols('xyzn')
 
     M = Matrix([[1,2,0,1],[1,3,2*n,1],[4,-1,n**2,1]])
 
@@ -163,14 +163,14 @@ def test_linear_systemLU():
 
 def test_ODE_first_order():
     f = Function('f')
-    x = Symbol('x')
-    assert dsolve(3*f(x).diff(x) -1, f(x)) == x/3 + Symbol("C1")
-    assert dsolve(x*f(x).diff(x) -1, f(x)) == log(x) + Symbol("C1")
-    assert dsolve(x*f(x).diff(x)+f(x)-f(x)**2,f(x)) == 1/(x*(Symbol("C1") + 1/x))
+    x, C1 = symbols('x C1')
+    assert dsolve(3*f(x).diff(x) -1, f(x)) == x/3 + C1
+    assert dsolve(x*f(x).diff(x) -1, f(x)) == log(x) + C1
+    assert dsolve(x*f(x).diff(x)+f(x)-f(x)**2,f(x)) == 1/(x*(C1 + 1/x))
 
 def test_ODE_second_order():
     f = Function('f')
-    x, C1, C2 = map(Symbol, ['x', 'C1', 'C2'])
+    x, C1, C2 = symbols('x C1 C2')
     assert dsolve(Derivative(f(x),x,x) + 9*f(x), [f(x)]) in \
         [sin(3*x)*C1 + cos(3*x)*C2, sin(3*x)*C2 + cos(3*x)*C1]
 

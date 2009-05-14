@@ -569,7 +569,7 @@ def solve_ODE_first_order(eq, f):
 
     r = eq.match(a*diff(f(x),x) + b*f(x) + c)
     if r:
-        t = C.exp(integrate(r[b]/r[a], x))
+        t = exp(integrate(r[b]/r[a], x))
         tt = integrate(t*(-r[c]/r[a]), x)
         return (tt + Symbol("C1"))/t
 
@@ -578,7 +578,7 @@ def solve_ODE_first_order(eq, f):
 
     r = eq.match(a*diff(f(x),x) + b*f(x) + c*f(x)**n)
     if r:
-        t = C.exp((1-r[n])*integrate(r[b]/r[a],x))
+        t = exp((1-r[n])*integrate(r[b]/r[a],x))
         tt = (r[n]-1)*integrate(t*r[c]/r[a],x)
         return ((tt + Symbol("C1"))/t)**(1/(1-r[n]))
 
@@ -620,13 +620,13 @@ def solve_ODE_second_order(eq, f):
 
     #special equations, that we know how to solve
     a = Wild('a')
-    t = x*C.exp(f(x))
+    t = x*exp(f(x))
     tt = a*t.diff(x, x)/t
     r = eq.match(tt.expand())
     if r:
         return -solve_ODE_1(f(x), x)
 
-    t = x*C.exp(-f(x))
+    t = x*exp(-f(x))
     tt = a*t.diff(x, x)/t
     r = eq.match(tt.expand())
     if r:
@@ -634,7 +634,7 @@ def solve_ODE_second_order(eq, f):
         #assert ( r[a]*t.diff(x,2)/t ) == eq.subs(f, t)
         return solve_ODE_1(f(x), x)
 
-    neq = eq*C.exp(f(x))/C.exp(-f(x))
+    neq = eq*exp(f(x))/exp(-f(x))
     r = neq.match(tt.expand())
     if r:
         #check, that we've rewritten the equation correctly:
