@@ -1,4 +1,4 @@
-from sympy import jn, yn, symbols, sin, cos
+from sympy import jn, yn, symbols, sin, cos, pi, S
 
 def test_jn():
     z = symbols("z")
@@ -18,3 +18,7 @@ def test_yn():
     assert yn(0, z) == -cos(z)/z
     assert yn(1, z) == -cos(z)/z**2-sin(z)/z
     assert yn(2, z) == -((3/z**3-1/z)*cos(z)+(3/z**2)*sin(z))
+
+def test_sympify_yn():
+    assert S(15) in yn(3, pi).atoms()
+    assert yn(3, pi) == 15/pi**4 - 6/pi**2

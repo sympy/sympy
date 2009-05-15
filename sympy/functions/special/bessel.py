@@ -1,3 +1,4 @@
+from sympy.core import sympify
 from sympy.functions.elementary.trigonometric import sin, cos
 
 def fn(n, z):
@@ -43,9 +44,10 @@ def jn(n, z):
 
     where fn(n, z) are the coefficients, see fn()'s sourcecode for more
     information.
-
-
     """
+
+    n = sympify(n)
+    z = sympify(z)
     return fn(n, z) * sin(z) + (-1)**(n+1) * fn(-n-1, z) * cos(z)
 
 def yn(n, z):
@@ -65,4 +67,7 @@ def yn(n, z):
 
     yn(n, z) == (-1)**(n+1) * jn(-n-1, z)
     """
+
+    n = sympify(n)
+    z = sympify(z)
     return (-1)**(n+1) * jn(-n-1, z)
