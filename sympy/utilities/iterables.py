@@ -65,7 +65,7 @@ def make_list(expr, kind):
         return [expr]
 
 
-def flatten(iterable):
+def flatten(iterable, cls=None):
     """Recursively denest iterable containers.
 
        >>> flatten([1, 2, 3])
@@ -77,13 +77,30 @@ def flatten(iterable):
        >>> flatten( (1,2, (1, None)) )
        [1, 2, 1, None]
 
+       If cls argument is specif, it will only flatten instances of that
+       class, for example:
+
+       >>> from sympy.core import Basic
+       >>> class MyOp(Basic):
+       ...     pass
+       ...
+       >>> flatten([MyOp(1, MyOp(2, 3))], cls=MyOp)
+       [1, 2, 3]
+
+
+
     adapted from http://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
     """
-
+    if cls is None:
+        reducible = lambda x: hasattr(x, "__iter__") and not isinstance(x, basestring)
+    else:
+        reducible = lambda x: isinstance(x, cls)
     result = []
     for el in iterable:
-        if hasattr(el, "__iter__") and not isinstance(el, basestring):
-            result.extend(flatten(el))
+        if reducible(el):
+            if hasattr(el, 'args'):
+                el = el.args
+            result.extend(flatten(el, cls=cls))
         else:
             result.append(el)
     return result

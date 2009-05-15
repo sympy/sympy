@@ -25,6 +25,12 @@ def test_flatten():
     assert flatten( (1,(1,)) ) == [1,1]
     assert flatten( (x,(x,)) ) == [x,x]
 
+    from sympy.core.basic import Basic
+    class MyOp(Basic):
+        pass
+    assert flatten( [MyOp(x, y), z]) == [MyOp(x, y), z]
+    assert flatten( [MyOp(x, y), z], cls=MyOp) == [x, y, z]
+
 
 def test_subsets():
     assert list(subsets([1, 2, 3], 1)) == [[1], [2], [3]]
