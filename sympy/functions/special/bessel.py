@@ -1,3 +1,5 @@
+from math import pi
+
 from sympy.core import sympify
 from sympy.functions.elementary.trigonometric import sin, cos
 
@@ -71,3 +73,56 @@ def yn(n, z):
     n = sympify(n)
     z = sympify(z)
     return (-1)**(n+1) * jn(-n-1, z)
+
+def jn_zeros(n, k, method="sympy"):
+    """
+    Zeros of the spherical Bessel function of the first kind.
+
+    This returns an array of zeros of jn up to the k-th zero.
+
+    method = "sympy": uses the sympy's jn and findroot to find all roots
+    method = "scipy": uses the scipy's sph_jn and newton to find all roots,
+            which if faster than method="sympy", but it requires scipy and only
+            works with low precision floating point numbers
+
+    Examples:
+
+        >>> from sympy.mpmath import nprint
+        >>> nprint(jn_zeros(2, 4))
+        [5.76345919689, 9.09501133048, 12.3229409706, 15.5146030109]
+
+    """
+    if method == "sympy":
+        from sympy.mpmath import findroot
+        f = lambda x: jn(n, x).n()
+    elif method == "scipy":
+        from scipy.special import sph_jn
+        from scipy.optimize import newton
+        f  = lambda x: sph_jn(n, x)[0][-1]
+    else:
+        raise NotImplementedError("Unknown method.")
+    def solver(f, x):
+        if method == "sympy":
+            # The findroot() is fragile, it sometimes returns complex numbers,
+            # so we chop all complex parts (that are small anyway). Also we
+            # need to set the tolerance, as it sometimes fail without it.
+            def f_real(x):
+                return f(complex(x).real)
+            root = findroot(f_real, x, solver="muller", tol=1e-9)
+            root = complex(root).real
+        elif method == "scipy":
+            root = newton(f, x)
+        else:
+            raise NotImplementedError("Unknown method.")
+        return root
+
+    # we need to approximate the position of the first root:
+    root = n+pi
+    # determine the first root exactly:
+    root = solver(f, root)
+    roots = [root]
+    for i in range(k-1):
+        # estimate the position of the next root using the last root + pi:
+        root = solver(f, root+pi)
+        roots.append(root)
+    return roots
