@@ -34,7 +34,7 @@ from special.spherical_harmonics import Ylm, Zlm
 from special.tensor_functions import Dij, Eijk
 from special.delta_functions import DiracDelta, Heaviside
 from special.bsplines import bspline_basis, bspline_basis_set
-from special.bessel import jn
+from special.bessel import jn, yn
 
 ln = log
 

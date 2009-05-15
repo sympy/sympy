@@ -24,7 +24,7 @@ def fn(n, z):
 
 def jn(n, z):
     """
-    Spherical Bessel function.
+    Spherical Bessel function of the first kind.
 
     Examples:
 
@@ -47,3 +47,22 @@ def jn(n, z):
 
     """
     return fn(n, z) * sin(z) + (-1)**(n+1) * fn(-n-1, z) * cos(z)
+
+def yn(n, z):
+    """
+    Spherical Bessel function of the second kind.
+
+    Examples:
+
+        >>> from sympy import Symbol
+        >>> z = Symbol("z")
+        >>> print yn(0, z)
+        -cos(z)/z
+        >>> yn(1, z) == -cos(z)/z**2-sin(z)/z
+        True
+
+    yn is calculated using the formula:
+
+    yn(n, z) == (-1)**(n+1) * jn(-n-1, z)
+    """
+    return (-1)**(n+1) * jn(-n-1, z)

@@ -1,4 +1,4 @@
-from sympy import jn, symbols, sin, cos
+from sympy import jn, yn, symbols, sin, cos
 
 def test_jn():
     z = symbols("z")
@@ -12,3 +12,9 @@ def test_jn():
                 (-1/z - 945/z**5 + 105/z**3)*cos(z)
     assert jn(6, z) == (-1/z + 10395/z**7 - 4725/z**5 + 210/z**3)*sin(z) + \
                 (-10395/z**6 + 1260/z**4 - 21/z**2)*cos(z)
+
+def test_yn():
+    z = symbols("z")
+    assert yn(0, z) == -cos(z)/z
+    assert yn(1, z) == -cos(z)/z**2-sin(z)/z
+    assert yn(2, z) == -((3/z**3-1/z)*cos(z)+(3/z**2)*sin(z))
