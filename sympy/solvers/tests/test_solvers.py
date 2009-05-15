@@ -1,6 +1,7 @@
 from sympy import Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq, \
         sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, \
         symbols, S, raises, sympify, var, simplify, Integral
+
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, deriv_degree
 
@@ -168,11 +169,13 @@ def test_linear_systemLU():
 
 def test_ODE_first_order():
     f = Function('f')
-    x, C1 = symbols('x C1')
+    x = Symbol('x')
+    C1 = Symbol('C1')
     assert dsolve(3*f(x).diff(x) -1, f(x)) == x/3 + C1
     assert dsolve(x*f(x).diff(x) -1, f(x)) == log(x) + C1
     assert dsolve(x*f(x).diff(x)+f(x)-f(x)**2,f(x)) == 1/(x*(C1 + 1/x))
-    assert dsolve(f(x).diff(x)+x*f(x)-f(x),f(x)) == C1*exp(x - x**2/2)
+    assert dsolve(cos(f(x))-(x*sin(f(x))-f(x)**2)*f(x).diff(x),f(x)) == \
+    Equality(x*cos(f(x))+f(x)**3/3,C1)
 
 def test_ODE_second_order():
     f = Function('f')

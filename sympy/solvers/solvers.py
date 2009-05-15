@@ -650,6 +650,16 @@ def solve_ODE_first_order(eq, f):
         tt = (r[n]-1)*integrate(t*r[c]/r[a],x)
         return ((tt + C1)/t)**(1/(1-r[n]))
 
+    a = Wild('a', exclude=[f(x).diff(x)])
+    b = Wild('b', exclude=[f(x).diff(x)])
+    r = eq.match(a*diff(f(x),x)+b)
+    y = Symbol('y')
+    r[a] = r[a].subs(f(x),y)
+    r[b] = r[b].subs(f(x),y)
+    if r and a.diff(y) == b.diff(x):
+        sol = integrate(r[a].subs(x,0),(y,0,y))+integrate(r[b],(x,0,x))
+        return Equality(sol.subs(y,f(x)),C1)
+
     #other cases of first order odes will be implemented here
 
     raise NotImplementedError("solve_ODE_first_order: Cannot solve " + str(eq))
