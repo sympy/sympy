@@ -167,25 +167,11 @@ def test_linear_systemLU():
                                                   x: 1-12*n/(n**2+18*n),
                                                   y: 6*n/(n**2+18*n)}
 
-def test_ODE_first_order():
-    f = Function('f')
-    x = Symbol('x')
-    C1 = Symbol('C1')
-    assert dsolve(3*f(x).diff(x) -1, f(x)) == x/3 + C1
-    assert dsolve(x*f(x).diff(x) -1, f(x)) == log(x) + C1
-    assert dsolve(x*f(x).diff(x)+f(x)-f(x)**2,f(x)) == 1/(x*(C1 + 1/x))
-    assert dsolve(cos(f(x))-(x*sin(f(x))-f(x)**2)*f(x).diff(x),f(x)) == \
-    Equality(x*cos(f(x))+f(x)**3/3,C1)
-    assert dsolve(sin(x)*cos(f(x))+cos(x)*sin(f(x))*f(x).diff(x),f(x)) == \
-    Equality(f(x),acos((-C1)/cos(x)))
-    assert dsolve((2*x*f(x)+1)/f(x)+(f(x)-x)/f(x)**2*f(x).diff(x),f(x)) == \
-    Equality(log(f(x))+x/f(x)+x**2,C1)
-
 def test_ODE_second_order():
     f = Function('f')
     x, C1, C2 = symbols('x C1 C2')
     assert dsolve(Derivative(f(x),x,x) + 9*f(x), [f(x)]) in \
-        [sin(3*x)*C1 + cos(3*x)*C2, sin(3*x)*C2 + cos(3*x)*C1]
+        [Equality(f(x),sin(3*x)*C1 + cos(3*x)*C2), Equality(f(x),sin(3*x)*C2 + cos(3*x)*C1)]
 
 def test_ODE_1():
     l = Function('l')
@@ -194,11 +180,11 @@ def test_ODE_1():
     e = Derivative(l(r),r)/r+Derivative(l(r),r,r)/2- \
         Derivative(l(r),r)**2/2
     sol = dsolve(e, [l(r)])
-    assert (e.subs(l(r), sol)).expand() == 0
+    assert (e.subs(l(r), sol.rhs)).expand() == 0
 
     e = e*exp(-l(r))/exp(l(r))
     sol = dsolve(e, [l(r)])
-    assert (e.subs(l(r), sol)).expand() == 0
+    assert (e.subs(l(r), sol.rhs)).expand() == 0
 
 def test_deriv_degree():
     f = Function('f')
