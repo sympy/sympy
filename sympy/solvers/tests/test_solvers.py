@@ -177,7 +177,9 @@ def test_ODE_first_order():
     assert dsolve(cos(f(x))-(x*sin(f(x))-f(x)**2)*f(x).diff(x),f(x)) == \
     Equality(x*cos(f(x))+f(x)**3/3,C1)
     assert dsolve(sin(x)*cos(f(x))+cos(x)*sin(f(x))*f(x).diff(x),f(x)) == \
-    Equality(f(x),acos((1-C1)/cos(x)))
+    Equality(f(x),acos((-C1)/cos(x)))
+    assert dsolve((2*x*f(x)+1)/f(x)+(f(x)-x)/f(x)**2*f(x).diff(x),f(x)) == \
+    Equality(log(f(x))+x/f(x)+x**2,C1)
 
 def test_ODE_second_order():
     f = Function('f')

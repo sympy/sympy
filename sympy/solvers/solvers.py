@@ -653,11 +653,20 @@ def solve_ODE_first_order(eq, f):
     b = Wild('b', exclude=[f(x).diff(x)])
     r = eq.match(a*diff(f(x),x)+b)
     y = Symbol('y', dummy=True)
+    x0 = Symbol('x0')
+    y0 = Symbol('y0')
     r[a] = r[a].subs(f(x),y)
     r[b] = r[b].subs(f(x),y)
-    if r and a.diff(y) == b.diff(x):
-        sol = integrate(r[a].subs(x,0),(y,0,y))+integrate(r[b],(x,0,x))
+    if r and a.diff(y) == b.diff(x) and r[b]!=0:
+        tmpsol = integrate(r[a].subs(x,x0),(y,y0,y))+integrate(r[b],(x,x0,x))
+        sol = 0
+        assert tmpsol.is_Add
+        for i in tmpsol.args:
+            if x0 not in i and y0 not in i:
+                sol += i
+        assert sol != 0
         sol = Equality(sol,C1)
+
         try:
             # See if the equation can be solved explicitly for f
             sol1 = solve(sol,y)
