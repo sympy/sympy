@@ -1,7 +1,15 @@
 from sympy import Function, dsolve, Symbol, sin, cos, sinh, cosh, I, exp, log, \
         simplify, normal, together, ratsimp, powsimp, fraction, radsimp, Eq, \
-        sqrt, pi, erf, diff
+        sqrt, pi, erf, diff, acos
 from sympy.abc import x
+
+C1 = Symbol('C1')
+C2 = Symbol('C2')
+f = Function('f')
+
+# Note that if the ODE solver changes, these tests could fail but still be
+# correct because the arbitrary constants could represent different constants.
+# See issue 1336.
 
 def checksol(eq, func, sol):
     """Substitutes sol for func in eq and checks, that the result is 0
@@ -11,96 +19,132 @@ def checksol(eq, func, sol):
     """
     s = eq.subs(func, sol)
     if isinstance(s, bool):
-        assert s
+        return s
     elif s:
-        return
+        return s
     else:
-        assert s.rhs == 0
+        test1 = (s.rhs == 0)
         s = simplify(s.lhs)
-        assert s == 0
+        test2 = (s == 0)
+        return test1 and test2
 
 
 def test_ode1():
-    f = Function("f")
     eq = Eq(f(x).diff(x), 0)
-    assert dsolve(eq.lhs, f(x)) == Symbol("C1")
-    assert dsolve(eq, f(x)) == Symbol("C1")
-    checksol(eq, f(x), dsolve(eq, f(x)))
+    sol1 = dsolve(eq.lhs, f(x))
+    sol2 = dsolve(eq, f(x))
+    assert sol1 == C1
+    assert sol2 == C1
+    assert checksol(eq, f(x), sol2)
 
 def test_ode2():
-    f = Function("f")
     eq = Eq(3*f(x).diff(x) - 5, 0)
-    assert dsolve(eq.lhs, f(x)) == Symbol("C1")+5*x/3
-    assert dsolve(eq, f(x)) == Symbol("C1")+5*x/3
-    checksol(eq, f(x), dsolve(eq, f(x)))
+    sol1 = dsolve(eq.lhs, f(x))
+    sol2 = dsolve(eq, f(x))
+    assert sol1 == C1+5*x/3
+    assert sol2 == C1+5*x/3
+    assert checksol(eq, f(x), sol2)
 
 def test_ode3():
-    f = Function("f")
     eq = Eq(3*f(x).diff(x), 5)
-    assert dsolve(eq, f(x)) == Symbol("C1")+5*x/3
-    checksol(eq, f(x), dsolve(eq, f(x)))
+    sol = dsolve(eq, f(x))
+    assert sol == C1+5*x/3
+    assert checksol(eq, f(x), sol)
 
 def test_ode4():
-    f = Function("f")
     eq = Eq(9*f(x).diff(x, x) + f(x), 0)
-    assert dsolve(eq, f(x)) == Symbol("C1")*sin(x/3) + Symbol("C2")*cos(x/3)
-    checksol(eq, f(x), dsolve(eq, f(x)))
+    sol = dsolve(eq, f(x))
+    assert sol == C1*sin(x/3) + C2*cos(x/3)
+    assert checksol(eq, f(x), sol)
 
 def test_ode5():
-    f = Function("f")
     eq = Eq(9*f(x).diff(x, x), f(x))
-    assert dsolve(eq, f(x)) == I*Symbol("C1")*sinh(x/3) + Symbol("C2")*cosh(x/3)
-    checksol(eq, f(x), dsolve(eq, f(x)))
+    sol = dsolve(eq, f(x))
+    assert sol == I*C1*sinh(x/3) + C2*cosh(x/3)
+    assert checksol(eq, f(x), sol)
 
 def test_ode6():
-    f = Function("f")
-    # type: (x*exp(-f(x)))'' == 0
+    # Type: (x*exp(-f(x)))'' == 0
     eq = Eq((x*exp(-f(x))).diff(x, x), 0)
-    assert dsolve(eq, f(x)) == -log(Symbol("C1")+Symbol("C2")/x)
-    checksol(eq, f(x), dsolve(eq, f(x)))
+    sol = dsolve(eq, f(x))
+    assert sol == -log(C1+C2/x)
+    assert checksol(eq, f(x), sol)
 
 def test_ode7():
-    f = Function("f")
-    # type: (x*exp(f(x)))'' == 0
+    # Type: (x*exp(f(x)))'' == 0
     eq = Eq((x*exp(f(x))).diff(x, x), 0)
-    assert dsolve(eq, f(x)) == log(Symbol("C1")+Symbol("C2")/x)
-    checksol(eq, f(x), dsolve(eq, f(x)))
+    sol = dsolve(eq, f(x))
+    assert sol == log(C1+C2/x)
+    assert checksol(eq, f(x), sol)
 
 def test_ode8():
-    f = Function("f")
-    # type: a(x)f'(x)+b(x)*f(x)+c(x)=0
+    # Type: a(x)f'(x)+b(x)*f(x)+c(x)=0
     eq = Eq(x**2*f(x).diff(x) + 3*x*f(x) - sin(x)/x, 0)
-    assert dsolve(eq, f(x)) == (Symbol("C1")-cos(x))/x**3
-    checksol(eq, f(x), dsolve(eq, f(x)))
+    sol = dsolve(eq, f(x))
+    assert sol == (C1-cos(x))/x**3
+    assert checksol(eq, f(x), sol)
 
 def test_ode9():
-    f = Function("f")
-    # type:first order linear form f'(x)+p(x)f(x)=q(x)
+    # Type: first order linear form f'(x)+p(x)f(x)=q(x)
     eq = Eq(f(x).diff(x) + x*f(x), x**2)
-    assert dsolve(eq, f(x)) == exp(-x**2/2)*(sqrt(2)*sqrt(pi)*I*erf(I*x/sqrt(2))/2 + x*exp(x**2/2) + Symbol("C1"))
-    checksol(eq, f(x), dsolve(eq, f(x)))
+    sol = dsolve(eq, f(x))
+    assert sol == exp(-x**2/2)*(sqrt(2)*sqrt(pi)*I*erf(I*x/sqrt(2))/2 \
+    + x*exp(x**2/2) + C1)
+    assert checksol(eq, f(x), sol)
 
 def test_ode10():
-    f = Function("f")
-    #type:2nd order, constant coefficients (two real different roots)
+    # Type: 2nd order, constant coefficients (two real different roots)
     eq = Eq(f(x).diff(x,x) - 3*diff(f(x),x) + 2*f(x), 0)
-    assert dsolve(eq, f(x)) in [
-        Symbol("C1")*exp(2*x) + Symbol("C2")*exp(x),
-        Symbol("C1")*exp(x) + Symbol("C2")*exp(2*x),
+    sol = dsolve(eq, f(x))
+    assert sol in [
+        C1*exp(2*x) + C2*exp(x),
+        C1*exp(x) + C2*exp(2*x),
     ]
-    checksol(eq, f(x), dsolve(eq, f(x)))
+    assert checksol(eq, f(x), sol)
 
 def test_ode11():
-    f = Function("f")
-    #type:2nd order, constant coefficients (two real equal roots)
+    # Type: 2nd order, constant coefficients (two real equal roots)
     eq = Eq(f(x).diff(x,x) - 4*diff(f(x),x) + 4*f(x), 0)
-    assert dsolve(eq, f(x)) == (Symbol("C1") + Symbol("C2")*x)*exp(2*x)
-    checksol(eq, f(x), dsolve(eq, f(x)))
+    sol = dsolve(eq, f(x))
+    assert sol == (C1 + C2*x)*exp(2*x)
+    assert checksol(eq, f(x), sol)
 
 def test_ode12():
-    f = Function("f")
-    #type:2nd order, constant coefficients (two complex roots)
+    # Type: 2nd order, constant coefficients (two complex roots)
     eq = Eq(f(x).diff(x,x)+2*diff(f(x),x)+3*f(x), 0)
-    assert dsolve(eq, f(x)) == (Symbol("C1")*sin(x*sqrt(2))+Symbol("C2")*cos(x*sqrt(2)))*exp(-x)
-    checksol(eq, f(x), dsolve(eq, f(x)))
+    sol = dsolve(eq, f(x))
+    assert sol == (C1*sin(x*sqrt(2))+C2*cos(x*sqrt(2)))*exp(-x)
+    assert checksol(eq, f(x), sol)
 
+def test_ode13():
+    eq1 = Eq(3*f(x).diff(x) -1,0)
+    eq2 = Eq(x*f(x).diff(x) -1,0)
+    sol1 = dsolve(eq1, f(x))
+    sol2 = dsolve(eq2, f(x))
+    assert sol1 == x/3 + C1
+    assert sol2 == log(x) + C1
+    assert checksol(eq1, f(x), sol1)
+    assert checksol(eq2, f(x), sol2)
+
+def test_ode14():
+    # Type: Bernoulli, f'(x)+p(x)f(x)=q(x)f(x)**n
+    eq = Eq(x*f(x).diff(x)+f(x)-f(x)**2,0)
+    sol = dsolve(eq,f(x))
+    assert sol == 1/(x*(C1 + 1/x))
+    assert checksol(eq, f(x), sol)
+
+def test_ode15():
+    # Type: Exact differential equation, p(x,f)+q(x,f)f'=0,
+    # where dp/dy == dq/dx
+    eq1 = cos(f(x))-(x*sin(f(x))-f(x)**2)*f(x).diff(x)
+    eq2 = sin(x)*cos(f(x))+cos(x)*sin(f(x))*f(x).diff(x)
+    eq3 = (2*x*f(x)+1)/f(x)+(f(x)-x)/f(x)**2*f(x).diff(x)
+    sol1 =  dsolve(eq1,f(x))
+    sol2 = dsolve(eq2,f(x))
+    sol3 = dsolve(eq3,f(x))
+    assert sol1 == Eq(x*cos(f(x))+f(x)**3/3,C1)
+    assert sol2 == Eq(f(x),acos((-C1)/cos(x)))
+    assert sol3 == Eq(log(f(x))+x/f(x)+x**2,C1)
+    assert checksol(eq1, f(x), sol1)
+    assert checksol(eq2, f(x), sol2)
+    assert checksol(eq3, f(x), sol3)
