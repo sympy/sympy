@@ -69,7 +69,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Andrew Straw: lambdify() improvements
 #. Kaifeng Zhu: factorint() fix
 #. Ted Horst: Basic.__call__() fix
-#. Akshay Srinivasan: Printing fix
+#. Akshay Srinivasan: Printing fix, improvements to integration
 #. Aaron Meurer: Bernoulli ODE solver
 #. Barry Wardell: implement series as function
 #. Tomasz Buchert: ccode printing fixes, code quality concerning exceptions
