@@ -2,6 +2,7 @@ from sympy import Function, dsolve, Symbol, sin, cos, sinh, cosh, I, exp, log, \
         simplify, normal, together, ratsimp, powsimp, fraction, radsimp, Eq, \
         sqrt, pi, erf, diff, acos
 from sympy.abc import x
+from sympy.solvers import deriv_degree
 
 C1 = Symbol('C1')
 C2 = Symbol('C2')
@@ -12,12 +13,29 @@ f = Function('f')
 # See issue 1336.
 
 def checksol(eq, func, sol):
-    """Substitutes sol for func in eq and checks, that the result is 0
+    """Substitutes sol for func in eq and checks that the result is 0.
 
     Only works when func is one function, like f(x) and sol just one
     solution like A*sin(x)+B*cos(x).
+
+    It attempts to substitute the solution for f in the original equation.
+    If it can't do that, it takes n derivatives of the solution, where eq is of
+    order n and checks to see if that is equal to the solution.
+
+    Returns True if the solution checks and False otherwise.
     """
-    s = eq.subs(func, sol)
+
+    if sol.lhs == func:
+            s = eq.subs(func,sol.rhs)
+    elif sol.rhs == func:
+            s = eq.subs(func,sol.lhs)
+    else:
+        # If we cannot substitute f, try seeing if the nth derivative is equal
+        n = deriv_degree(eq, func)
+        return simplify(diff(sol.lhs,x,n)-diff(sol.rhs,x,n)) == \
+        simplify(eq)
+    if s == 0:
+        return True
     if isinstance(s, bool):
         return s
     elif s:
