@@ -638,22 +638,21 @@ def solve_ODE_first_order(eq, f):
         tt = integrate(t*(-r[c]/r[a]), x)
         return (tt + C1)/t
 
-    #Bernoulli case: a(x)*f'(x)+b(x)*f(x)+c(x)*f(x)^n = 0
+    # Bernoulli case: a(x)*f'(x)+b(x)*f(x)+c(x)*f(x)^n = 0
     n = Wild('n', exclude=[f(x)])
 
     r = eq.match(a*diff(f(x),x) + b*f(x) + c*f(x)**n)
-    if r:
-        if r[n] == 1:
-            return C1*exp(integrate(-(r[b]+r[c]), x))
-        # r[n] != 1 ie, the real bernoulli case
-        t = exp((1-r[n])*integrate(r[b]/r[a],x))
+
+    if r and r[n] != 1:
+        t = C.exp((1-r[n])*integrate(r[b]/r[a],x))
         tt = (r[n]-1)*integrate(t*r[c]/r[a],x)
         return ((tt + C1)/t)**(1/(1-r[n]))
 
+    # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
     a = Wild('a', exclude=[f(x).diff(x)])
     b = Wild('b', exclude=[f(x).diff(x)])
     r = eq.match(a*diff(f(x),x)+b)
-    y = Symbol('y')
+    y = Symbol('y', dummy=True)
     r[a] = r[a].subs(f(x),y)
     r[b] = r[b].subs(f(x),y)
     if r and a.diff(y) == b.diff(x):
