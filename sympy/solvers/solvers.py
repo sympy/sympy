@@ -657,9 +657,19 @@ def solve_ODE_first_order(eq, f):
     r[b] = r[b].subs(f(x),y)
     if r and a.diff(y) == b.diff(x):
         sol = integrate(r[a].subs(x,0),(y,0,y))+integrate(r[b],(x,0,x))
-        return Equality(sol.subs(y,f(x)),C1)
+        sol = Equality(sol,C1)
+        try:
+            # See if the equation can be solved explicitly for f
+            sol1 = solve(sol,y)
+        except (NotImplementedError, AssertionError):
+            return sol.subs(y,f(x))
+        else:
+            if len(sol1) !=1:
+                return sol.subs(y,f(x))
+            else:
+                return Equality(f(x),sol1[0].subs(y,f(x)))
 
-    #other cases of first order odes will be implemented here
+    # Other cases of first order odes will be implemented here
 
     raise NotImplementedError("solve_ODE_first_order: Cannot solve " + str(eq))
 
