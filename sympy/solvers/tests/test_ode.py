@@ -3,6 +3,7 @@ from sympy import Function, dsolve, Symbol, sin, cos, sinh, cosh, I, exp, log, \
         sqrt, pi, erf, diff, acos
 from sympy.abc import x
 from sympy.solvers import deriv_degree
+from sympy.utilities.pytest import XFAIL
 
 C1 = Symbol('C1')
 C2 = Symbol('C2')
@@ -169,3 +170,12 @@ def test_ode15():
     assert checksol(eq1, f(x), sol1)
     assert checksol(eq2, f(x), sol2)
     assert checksol(eq3, f(x), sol3)
+    assert checksol(eq4, f(x), sol4)
+
+@XFAIL
+def test_ode16():
+    # This exact equation fails, but it should be caught by first order
+    # homogeneous when those are implemented.
+    eq = x*sqrt(x**2+f(x)**2)-(x**2*f(x)/(f(x)-sqrt(x**2+f(x)**2)))*f(x).diff(x)
+    sol = dsolve(eq, f(x))
+    assert sol == Eq((x**2+y**2)**(3/2)/3+y**3/3,C1)
