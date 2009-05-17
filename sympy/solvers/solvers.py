@@ -537,10 +537,9 @@ def dsolve(eq, funcs):
 
         @param y: indeterminate function of one variable
 
-        - you can declare the derivative of an unknown function this way:
-          >>> from sympy import *
-          >>> x = Symbol('x') # x is the independent variable
-
+        - You can declare the derivative of an unknown function this way:
+        >>> from sympy import *
+        >>> x = Symbol('x') # x is the independent variable
         >>> f = Function("f")(x) # f is a function of x
         >>> f_ = Derivative(f, x) # f_ will be the derivative of
         f with respect to x
@@ -551,8 +550,12 @@ def dsolve(eq, funcs):
         the coefficients.
         - "eq" can be either an Equality, or just the left hand side (in which
           case the right hand side is assumed to be 0)
-        - see test_ode.py for many tests, which serve also as a set of examples
+        - See test_ode.py for many tests, which serve also as a set of examples
           how to use dsolve
+        - dsolve always returns an equality class.  If possible, it solves the
+          solution explicitly for the function being solved for. Otherwise, it
+          returns an implicit solution.
+        - Arbitrary constants are symbols named C1, C2, and so on.
 
     Examples
 
@@ -561,9 +564,9 @@ def dsolve(eq, funcs):
 
         >>> f = Function('f')
         >>> dsolve(Derivative(f(x),x,x)+9*f(x), f(x))
-        C1*sin(3*x) + C2*cos(3*x)
+        f(x) = C1*sin(3*x) + C2*cos(3*x)
         >>> dsolve(Eq(Derivative(f(x),x,x)+9*f(x)+1, 1), f(x))
-        C1*sin(3*x) + C2*cos(3*x)
+        f(x) = C1*sin(3*x) + C2*cos(3*x)
 
     """
 
@@ -654,8 +657,8 @@ def solve_ODE_first_order(eq, f):
     b = Wild('b', exclude=[f(x).diff(x)])
     r = eq.match(a*diff(f(x),x)+b)
     y = Symbol('y', dummy=True)
-    x0 = Symbol('x0')
-    y0 = Symbol('y0')
+    x0 = Symbol('x0', dummy=True)
+    y0 = Symbol('y0', dummy=True)
     r[a] = r[a].subs(f(x),y)
     r[b] = r[b].subs(f(x),y)
     if r and a.diff(y) == b.diff(x) and r[b]!=0:
