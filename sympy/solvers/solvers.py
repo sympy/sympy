@@ -24,7 +24,7 @@ from sympy.core.function import Derivative, diff, Function
 from sympy.core.numbers import ilcm
 
 from sympy.functions import sqrt, log, exp, LambertW
-from sympy.simplify import simplify, collect
+from sympy.simplify import simplify, collect, logcombine
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots
 
@@ -750,6 +750,121 @@ def solve_ODE_1(f, x):
     C1 = Symbol("C1")
     C2 = Symbol("C2")
     return -log(C1+C2/x)
+
+
+def homogeneous_order(eq, f):
+    """
+    Determines if a function f(x,y) is homogeneous and if so of what order.
+    A function f(x,y) is homogeneous of order n if f(xt,yt) == t**n*f(x,y).
+    It works recursively.
+
+    This only works for a function g(f(x),x), such as the kind dsolve accepts.
+
+    Returns the order n if g is homogeneous and None if it is not homogeneous.
+    Examples:
+    >>> from sympy import *
+    >>> x = Symbol('x')
+    >>> f = Function('f')
+    >>> homogeneous_order(x**2*f(x)/sqrt(x**2+f(x)**2), f(x))
+    2
+    >>> homogeneous_order(x**2+f(x), f(x)) == None
+    True
+    """
+    if eq.has(log):
+        eq = logcombine(eq, assumePosReal=True)
+    # This runs as a seperate function call so that logcombine doesn't endlessly
+    # put back together what homogeneous_order is trying to take apart.
+    return _homogeneous_order(eq, f)
+
+def _homogeneous_order(eq, f):
+    assert len(f.args) == 1, "This only works on expressions g(f(x),x)"
+    x = f.args[0]
+    n = set()
+
+    # The following are not supported
+    if eq.is_Order or eq.is_Derivative:
+        return None
+
+    # These are all constants
+    if type(eq) in (int, float) or eq.is_Number or eq.is_Integer or \
+    eq.is_Rational or eq.is_NumberSymbol or eq.is_Real:
+        return 0
+
+    # Break the equation into additive parts
+    if eq.is_Add:
+        s = set()
+        for i in eq.args:
+            s.add(_homogeneous_order(i, f))
+        if len(s) != 1:
+            return None
+        else:
+            n = s
+
+    if eq.is_Pow:
+        if not eq.args[1].is_Number:
+            return None
+        n.add(_homogeneous_order(eq.args[0], f)*eq.args[1])
+
+    y = Symbol('y', dummy=True)
+    t = Symbol('t', dummy=True, positive=True) # It is sufficient that t > 0
+    r = Wild('r', exclude=[t])
+    a = Wild('a', exclude=[t])
+    eqs = eq.subs({f:y*t,x:x*t})
+
+    if eqs.is_Mul:
+        if t not in eqs:
+            n.add(0)
+        else:
+            m = eqs.match(r*t**a)
+            if m:
+                n.add(m[a])
+            else:
+                s = 0
+                for i in eq.args:
+                    o = _homogeneous_order(i, f)
+                    if o == None:
+                        return None
+                    else:
+                        s += o
+                n.add(s)
+
+    if eq.is_Function:
+        if eq.func == f.func:
+            return 1
+        if eq.func == log:
+            # The only possiblilty to pull a t out of a function is a power in
+            # a logarithm.  This is very likely due to calling of logcombine.
+            if eq.args[0].is_Pow:
+                return _homogeneous_order(eq.args[0].args[1]*log(eq.args[0].args[0]), f)
+            elif eq.args[0].is_Mul and all(i.is_Pow for i in iter(eq.args[0].args)):
+                arg = 1
+                pows = set()
+                for i in eq.args[0].args:
+                    if i.args[1].args[0] == -1:
+                        arg *= 1/i.args[0]
+                        pows.add(-1*i.args[1])
+                    else:
+                        arg *= i.args[0]
+                        pows.add(i.args[1])
+                if len(pows) != 1:
+                    return None
+                else:
+                    return _homogeneous_order(pows.pop()*log(arg), f)
+            else:
+                if _homogeneous_order(eq.args[0], f) == 0:
+                    return 0
+                else:
+                    return None
+        else:
+            if _homogeneous_order(eq.args[0], f) == 0:
+                return 0
+            else:
+                return None
+
+    if len(n) != 1 or n == None:
+        return None
+    else:
+        return n.pop()
 
 x = Symbol('x', dummy=True)
 a,b,c,d,e,f,g,h = [Wild(t, exclude=[x]) for t in 'abcdefgh']
