@@ -688,7 +688,8 @@ def ratsimp(expr):
         >>> from sympy import *
         >>> x = Symbol('x')
         >>> y = Symbol('y')
-        >>> e = ratsimp(1/x + 1/y)
+        >>> ratsimp(1/x + 1/y)
+        (x + y)/(x*y)
     """
     expr = sympify(expr)
     if expr.is_Pow:
