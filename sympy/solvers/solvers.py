@@ -663,7 +663,7 @@ def solve_ODE_first_order(eq, f):
     y0 = Symbol('y0', dummy=True)
     r[a] = r[a].subs(f(x),y)
     r[b] = r[b].subs(f(x),y)
-    if r and a.diff(y) == b.diff(x) and r[b]!=0:
+    if r and simplify(r[a].diff(x)) == simplify(r[b].diff(y)) and r[b]!=0:
         tmpsol = integrate(r[a].subs(x,x0),(y,y0,y))+integrate(r[b],(x,x0,x))
         sol = 0
         assert tmpsol.is_Add
@@ -675,6 +675,7 @@ def solve_ODE_first_order(eq, f):
 
         try:
             # See if the equation can be solved explicitly for f
+            # This part of the code will change when solve returns RootOf.
             sol1 = solve(sol,y)
         except (NotImplementedError, AssertionError):
             return sol.subs(y,f(x))
