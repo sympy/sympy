@@ -125,7 +125,7 @@ def denom_expand(expr):
 
 def separate(expr, deep=False):
     """Rewrite or separate a power of product to a product of powers
-       but without any expanding, ie. rewriting products to summations.
+       but without any expanding, i.e., rewriting products to summations.
 
        >>> from sympy import *
        >>> x, y, z = symbols('x', 'y', 'z')
@@ -145,8 +145,8 @@ def separate(expr, deep=False):
        >>> separate((sin(x)*cos(x))**y)
        cos(x)**y*sin(x)**y
 
-       Notice that summations are left un touched. If this is not the
-       requested behaviour, apply 'expand' to input expression before:
+       Notice that summations are left untouched. If this is not the
+       requested behavior, apply 'expand' to input expression before:
 
        >>> separate(((x+y)*z)**2)
        z**2*(x + y)**2
@@ -184,12 +184,12 @@ def together(expr, deep=False):
        to reduce the total order of both numerator and denominator
        and minimize the number of terms.
 
-       Densting is done recursively on fractions level. However this
+       Denesting is done recursively on fractions level. However this
        function will not attempt to rewrite composite objects, like
        functions, interior unless 'deep' flag is set.
 
        By definition, 'together' is a complement to 'apart', so
-       apart(together(expr)) should left expression unhanged.
+       apart(together(expr)) should left expression unchanged.
 
        >>> from sympy import *
        >>> x, y, z = symbols('x', 'y', 'z')
@@ -398,7 +398,7 @@ def collect(expr, syms, evaluate=True, exact=False):
        x*(a + b)*log(x)
 
        It is also possible to work with symbolic powers, although
-       it has more complicated behaviour, because in this case
+       it has more complicated behavior, because in this case
        power's base and symbolic part of the exponent are treated
        as a single symbol:
 
@@ -409,7 +409,7 @@ def collect(expr, syms, evaluate=True, exact=False):
        x**c*(a + b)
 
        However if you incorporate rationals to the exponents, then
-       you will get well known behaviour:
+       you will get well known behavior:
 
        >>> collect(a*x**(2*c) + b*x**(2*c), x**c)
        (x**2)**c*(a + b)
@@ -430,7 +430,7 @@ def collect(expr, syms, evaluate=True, exact=False):
        x**7*(a + b)
 
        You can also apply this function to differential equations, where
-       derivatives of arbitary order can be collected:
+       derivatives of arbitrary order can be collected:
 
        >>> from sympy import Derivative as D
        >>> f = Function('f') (x)
@@ -587,7 +587,7 @@ def collect(expr, syms, evaluate=True, exact=False):
                                 common_expo = expo
                             else:
                                 # common exponent was negotiated before so
-                                # teher is no chance for pattern match unless
+                                # there is no chance for pattern match unless
                                 # common and current exponents are equal
                                 if common_expo != expo:
                                     common_expo = 1
@@ -681,7 +681,7 @@ def ratsimp(expr):
         ratsimp(expr) -> joins two rational expressions and returns the simples form
 
     == Notes ==
-        Currently can simplify only simple expressions, for this to be really usefull
+        Currently can simplify only simple expressions, for this to be really useful
         multivariate polynomial algorithms are needed
 
     == Examples ==
@@ -1133,7 +1133,7 @@ def hypersimp(f, k):
 def hypersimilar(f, g, k):
     """Returns True if 'f' and 'g' are hyper-similar.
 
-       Similarity in hypergeometric sens means that a quotient of
+       Similarity in hypergeometric sense means that a quotient of
        f(k) and g(k) is a rational function in k.  This procedure
        is useful in solving recurrence relations.
 

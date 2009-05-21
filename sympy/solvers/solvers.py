@@ -344,14 +344,14 @@ def solve_linear_system(system, *symbols, **flags):
        both Cramer and over defined systems are supported. The possible
        number of solutions is zero, one or infinite. Respectively this
        procedure will return None or dictionary with solutions. In the
-       case of over definend system all arbitrary parameters are skiped.
+       case of over defined system all arbitrary parameters are skipped.
        This may cause situation in with empty dictionary is returned.
-       In this case it means all symbols can be assigne arbitray values.
+       In this case it means all symbols can be assigned arbitrary values.
 
        Input to this functions is a Nx(M+1) matrix, which means it has
        to be in augmented form. If you are unhappy with such setting
        use 'solve' method instead, where you can input equations
-       explicitely. And don't worry aboute the matrix, this function
+       explicitly. And don't worry about the matrix, this function
        is persistent and will make a local copy of it.
 
        The algorithm used here is fraction free Gaussian elimination,
@@ -389,7 +389,7 @@ def solve_linear_system(system, *symbols, **flags):
 
         if not matrix[i, i]:
             # there is no pivot in current column
-            # so try to find one in other colums
+            # so try to find one in other columns
             for k in xrange(i+1, m):
                 if matrix[i, k]:
                     break
@@ -422,7 +422,7 @@ def solve_linear_system(system, *symbols, **flags):
 
         i += 1
 
-    # if there weren't any problmes, augmented matrix is now
+    # if there weren't any problems, augmented matrix is now
     # in row-echelon form so we can check how many solutions
     # there are and extract them using back substitution
 
@@ -479,7 +479,7 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     """Solve equation of a type p(x; a_1, ..., a_k) == q(x) where both
        p, q are univariate polynomials and f depends on k parameters.
        The result of this functions is a dictionary with symbolic
-       values of those parameters with respect to coefficiens in q.
+       values of those parameters with respect to coefficients in q.
 
        This functions accepts both Equations class instances and ordinary
        SymPy expressions. Specification of parameters and variable is
@@ -505,7 +505,7 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     if not any([ equ.has(sym) for equ in system ]):
         # consecutive powers in the input expressions have
         # been successfully collected, so solve remaining
-        # system using Gaussian ellimination algorithm
+        # system using Gaussian elimination algorithm
         return solve(system, *coeffs, **flags)
     else:
         return None # no solutions
@@ -541,7 +541,7 @@ def dsolve(eq, funcs):
         >>> from sympy import *
         >>> x = Symbol('x') # x is the independent variable
         >>> f = Function("f")(x) # f is a function of x
-        >>> f_ = Derivative(f, x) # f_ will be the derivative of
+        >>> f_ = Derivative(f, x) # f_ will be the derivative of \
         f with respect to x
 
         - This function just parses the equation "eq" and determines the type of
@@ -564,9 +564,9 @@ def dsolve(eq, funcs):
 
         >>> f = Function('f')
         >>> dsolve(Derivative(f(x),x,x)+9*f(x), f(x))
-        f(x) = C1*sin(3*x) + C2*cos(3*x)
+        f(x) == C1*sin(3*x) + C2*cos(3*x)
         >>> dsolve(Eq(Derivative(f(x),x,x)+9*f(x)+1, 1), f(x))
-        f(x) = C1*sin(3*x) + C2*cos(3*x)
+        f(x) == C1*sin(3*x) + C2*cos(3*x)
 
     """
 
@@ -622,11 +622,10 @@ def deriv_degree(expr, func):
 def solve_ODE_first_order(eq, f):
     """
     solves many kinds of first order odes, different methods are used
-    depending on the form of the given equation. Now the linear
-    and Bernoulli cases are implemented.
+    depending on the form of the given equation. Now the linear,
+    Bernoulli, and exact cases are implemented.
     """
     from sympy.integrals.integrals import integrate
-    C1 = Symbol("C1")
     x = f.args[0]
     f = f.func
     C1 = Symbol('C1')
@@ -647,10 +646,13 @@ def solve_ODE_first_order(eq, f):
 
     r = eq.match(a*diff(f(x),x) + b*f(x) + c*f(x)**n)
 
-    if r and r[n] != 1:
-        t = C.exp((1-r[n])*integrate(r[b]/r[a],x))
-        tt = (r[n]-1)*integrate(t*r[c]/r[a],x)
-        return Equality(f(x),((tt + C1)/t)**(1/(1-r[n])))
+    if r:
+        if r[n] != 1:
+            t = C.exp((1-r[n])*integrate(r[b]/r[a],x))
+            tt = (r[n]-1)*integrate(t*r[c]/r[a],x)
+            return Equality(f(x),((tt + C1)/t)**(1/(1-r[n])))
+        if r[n] == 1:
+            return Equality(f(x),C1*exp(integrate(-(r[b]+r[c]), x)))
 
     # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
     a = Wild('a', exclude=[f(x).diff(x)])
@@ -674,7 +676,7 @@ def solve_ODE_first_order(eq, f):
         try:
             # See if the equation can be solved explicitly for f
             sol1 = solve(sol,y)
-        except (NotImplementedError, AssertionError, TypeError):
+        except (NotImplementedError, AssertionError):
             return sol.subs(y,f(x))
         else:
             if len(sol1) !=1:
@@ -747,8 +749,8 @@ def solve_ODE_second_order(eq, f):
 
 def solve_ODE_1(f, x):
     """ (x*exp(-f(x)))'' = 0 """
-    C1 = Symbol("C1")
-    C2 = Symbol("C2")
+    C1 = Symbol('C1')
+    C2 = Symbol('C2')
     return -log(C1+C2/x)
 
 
@@ -772,7 +774,7 @@ def homogeneous_order(eq, f):
     """
     if eq.has(log):
         eq = logcombine(eq, assumePosReal=True)
-    # This runs as a seperate function call so that logcombine doesn't endlessly
+    # This runs as a separate function call so that logcombine doesn't endlessly
     # put back together what homogeneous_order is trying to take apart.
     return _homogeneous_order(eq, f)
 
@@ -832,7 +834,7 @@ def _homogeneous_order(eq, f):
         if eq.func == f.func:
             return 1
         if eq.func == log:
-            # The only possiblilty to pull a t out of a function is a power in
+            # The only possibility to pull a t out of a function is a power in
             # a logarithm.  This is very likely due to calling of logcombine.
             if eq.args[0].is_Pow:
                 return _homogeneous_order(eq.args[0].args[1]*log(eq.args[0].args[0]), f)
@@ -871,7 +873,8 @@ a,b,c,d,e,f,g,h = [Wild(t, exclude=[x]) for t in 'abcdefgh']
 patterns = None
 
 def _generate_patterns():
-    """Generates patterns for transcendental equations.
+    """
+    Generates patterns for transcendental equations.
 
     This is lazily calculated (called) in the tsolve() function and stored in
     the patterns global variable.
@@ -1039,7 +1042,7 @@ def nsolve(*args, **kwargs):
     [-1.19287309935246]
     [ 1.27844411169911]
 
-    For onedimensional functions the syntax is simplified:
+    For one-dimensional functions the syntax is simplified:
 
     >>> from sympy import sin
     >>> nsolve(sin(x), x, 2)
@@ -1077,7 +1080,7 @@ def nsolve(*args, **kwargs):
         if fargs is None:
             fargs = atoms.copy().pop()
         if not (len(atoms) == 1 and (fargs in atoms or fargs[0] in atoms)):
-            raise ValueError('expected a onedimensional and numerical function')
+            raise ValueError('expected a one-dimensional and numerical function')
         f = lambdify(fargs, f, modules)
         return findroot(f, x0, **kwargs)
     if len(fargs) > f.cols:

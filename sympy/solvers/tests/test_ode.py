@@ -160,7 +160,7 @@ def test_ode15():
     eq2 = sin(x)*cos(f(x))+cos(x)*sin(f(x))*f(x).diff(x)
     eq3 = (2*x*f(x)+1)/f(x)+(f(x)-x)/f(x)**2*f(x).diff(x)
     eq4 = 2*x+f(x)*cos(x)+(2*f(x)+sin(x)-sin(f(x)))*f(x).diff(x)
-    sol1 =  dsolve(eq1,f(x))
+    sol1 = dsolve(eq1,f(x))
     sol2 = dsolve(eq2,f(x))
     sol3 = dsolve(eq3,f(x))
     sol4 = dsolve(eq4,f(x))
@@ -176,7 +176,8 @@ def test_ode15():
 @XFAIL
 def test_ode16():
     # This exact equation fails, but it should be caught by first order
-    # homogeneous when those are implemented.
+    # homogeneous when those are implemented.  I think it fails because of
+    # a poorly simplified integral of q(0,y)dy.
     eq = x*sqrt(x**2+f(x)**2)-(x**2*f(x)/(f(x)-sqrt(x**2+f(x)**2)))*f(x).diff(x)
     sol = dsolve(eq, f(x))
     assert sol == Eq((x**2+y**2)**(3/2)/3+y**3/3,C1)

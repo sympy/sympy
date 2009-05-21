@@ -441,7 +441,6 @@ def test_logcombine_1():
         assume_pos_real=True) == log(x**2)+3*I*log(x) + \
         Integral((sin(x**2)+cos(x**3))/x,x)
 
-
 @XFAIL
 def test_logcombine_2():
     # The same as one of the tests above, but with Rational(a,b) replaced with a/b.
