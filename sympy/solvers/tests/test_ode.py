@@ -1,7 +1,7 @@
 from sympy import Function, dsolve, Symbol, sin, cos, sinh, cosh, I, exp, log, \
         simplify, normal, together, ratsimp, powsimp, fraction, radsimp, Eq, \
-        sqrt, pi, erf, diff, acos, tan, Rational
-from sympy.abc import x
+        sqrt, pi, erf, diff, acos, tan, Rational, asinh
+from sympy.abc import x, y, z
 from sympy.solvers import deriv_degree
 from sympy.solvers.solvers import homogeneous_order
 from sympy.utilities.pytest import XFAIL
@@ -183,11 +183,13 @@ def test_ode16():
     assert sol == Eq((x**2+y**2)**(3/2)/3+y**3/3,C1)
 
 def test_homogeneous_order():
-    assert homogeneous_order(exp(f(x)/x)+tan(f(x)/x), f(x)) == 0
-    assert homogeneous_order(x**2 + sin(x)*cos(f(x)), f(x)) == None
-    assert homogeneous_order(x-f(x)-x*sin(f(x)/x),f(x)) == 1
-    assert homogeneous_order((x*f(x)+sqrt(x**4+f(x)**4)+x**2*(log(x)-log(f(x))))/(pi*x**Rational(2,3)*f(x)**Rational(3,2)),f(x)) == Rational(-1,6)
-    assert homogeneous_order(f(x)/x*cos(f(x)/x)-x/f(x)*sin(f(x)/x)+cos(f(x)/x), f(x)) == 0
-    assert homogeneous_order(f(x), f(x)) == 1
+    assert homogeneous_order(exp(y/x)+tan(y/x), x, y) == 0
+    assert homogeneous_order(x**2 + sin(x)*cos(y), x, y) == None
+    assert homogeneous_order(x-y-x*sin(y/x), x, y) == 1
+    assert homogeneous_order((x*y+sqrt(x**4+y**4)+x**2*(log(x)-log(y)))/(pi*x**Rational(2,3)*y**Rational(3,2)), x, y) == Rational(-1,6)
+    assert homogeneous_order(y/x*cos(y/x)-x/y*sin(y/x)+cos(y/x), x, y) == 0
+    assert homogeneous_order(f(x), x, f(x)) == 1
+    assert homogeneous_order(x*y*z, x, y) == 2
+    assert homogeneous_order(x*y*z, x, y, z) == 3
 
 
