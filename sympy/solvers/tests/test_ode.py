@@ -1,10 +1,10 @@
-from sympy import Function, dsolve, Symbol, sin, cos, sinh, cosh, I, exp, log, \
-        simplify, normal, together, ratsimp, powsimp, fraction, radsimp, Eq, \
-        sqrt, pi, erf, diff, acos, tan, Rational, asinh
+from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
+        I, exp, log, simplify, normal, together, ratsimp, powsimp, \
+        fraction, radsimp, Eq, sqrt, pi, erf, diff, Rational, asinh, trigsimp
 from sympy.abc import x, y, z
 from sympy.solvers import deriv_degree
 from sympy.solvers.solvers import homogeneous_order
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, skip
 
 C1 = Symbol('C1')
 C2 = Symbol('C2')
@@ -178,9 +178,22 @@ def test_ode16():
     # This exact equation fails, but it should be caught by first order
     # homogeneous when those are implemented.  I think it fails because of
     # a poorly simplified integral of q(0,y)dy.
+@XFAIL
+def test_ode_exact():
+    """
+    This is an exact equation that fails under the exact engine. It is caught
+    by first order homogeneous albiet with a much contorted solution.  The
+    exact engine fails because of a poorly simplified integral of q(0,y)dy,
+    where q is the function multiplying f'.  The solutions should be
+    Eq((x**2+f(x)**2)**Rational(3,2)+y**3, C1).  The equation below is
+    equivalent, but it is so complex that checksol fails, and takes a long
+    to do so.
+    """
+    skip("takes too much time")
     eq = x*sqrt(x**2+f(x)**2)-(x**2*f(x)/(f(x)-sqrt(x**2+f(x)**2)))*f(x).diff(x)
     sol = dsolve(eq, f(x))
-    assert sol == Eq((x**2+y**2)**(3/2)/3+y**3/3,C1)
+    assert sol == Eq(log(x),C1 - 9*(1 + f(x)**2/x**2)**Rational(1,2)*asinh(f(x)/x)/(-27*f(x)/x + 27*(1 + f(x)**2/x**2)**Rational(1,2)) - 9*(1 + f(x)**2/x**2)**Rational(1,2)*log(1 - (1 + f(x)**2/x**2)**Rational(1,2)*f(x)/x + 2*f(x)**2/x**2)/(-27*f(x)/x + 27*(1 + f(x)**2/x**2)**Rational(1,2)) + 9*asinh(f(x)/x)*f(x)/(x*(-27*f(x)/x + 27*(1 + f(x)**2/x**2)**Rational(1,2))) + 9*f(x)*log(1 - (1 + f(x)**2/x**2)**Rational(1,2)*f(x)/x + 2*f(x)**2/x**2)/(x*(-27*f(x)/x + 27*(1 + f(x)**2/x**2)**Rational(1,2))))
+    assert checksol(eq, f(x), sol)
 
 def test_homogeneous_order():
     assert homogeneous_order(exp(y/x)+tan(y/x), x, y) == 0
@@ -189,7 +202,26 @@ def test_homogeneous_order():
     assert homogeneous_order((x*y+sqrt(x**4+y**4)+x**2*(log(x)-log(y)))/(pi*x**Rational(2,3)*y**Rational(3,2)), x, y) == Rational(-1,6)
     assert homogeneous_order(y/x*cos(y/x)-x/y*sin(y/x)+cos(y/x), x, y) == 0
     assert homogeneous_order(f(x), x, f(x)) == 1
+    assert homogeneous_order(f(x)**2, x, f(x)) == 2
     assert homogeneous_order(x*y*z, x, y) == 2
     assert homogeneous_order(x*y*z, x, y, z) == 3
+    assert homogeneous_order(x**2*f(x)/sqrt(x**2+f(x)**2), f(x)) == None
+    assert homogeneous_order(f(x,y)**2, x, f(x,y), y) == 2
+    assert homogeneous_order(f(x,y)**2, x, f(x), y) == None
+    assert homogeneous_order(f(x,y)**2, x, f(x,y)) == None
 
-
+@XFAIL
+def test_homogeneous_order_ode1():
+    # Type: First order homogeneous, y'=f(y/x)
+    # The checksol fails, but it is the correct solution.
+    eq = f(x)/x*cos(f(x)/x)-(x/f(x)*sin(f(x)/x)+cos(f(x)/x))*f(x).diff(x)
+    sol = Eq(f(x)*sin(f(x)/x), C1)
+    assert dsolve(eq, f(x)) == sol
+    assert checksol(eq, f(x), sol)
+@XFAIL
+def test_homogeneous_order_ode2():
+    # This also produces the correct result but fails because of checksol.
+    eq1 = x*f(x).diff(x)-f(x)-x*sin(f(x)/x)
+    sol1 = Eq(x/tan(f(x)/(2*x)), C1)
+    assert dsolve(eq1, f(x)) == sol1
+    assert checksol(eq1, f(x), sol1)

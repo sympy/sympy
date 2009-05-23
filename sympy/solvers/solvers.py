@@ -657,33 +657,98 @@ def solve_ODE_first_order(eq, f):
     # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
     a = Wild('a', exclude=[f(x).diff(x)])
     b = Wild('b', exclude=[f(x).diff(x)])
-    r = eq.match(a*diff(f(x),x)+b)
-    y = Symbol('y', dummy=True)
-    x0 = Symbol('x0', dummy=True)
-    y0 = Symbol('y0', dummy=True)
-    r[a] = r[a].subs(f(x),y)
-    r[b] = r[b].subs(f(x),y)
-    if r and simplify(r[a].diff(x)) == simplify(r[b].diff(y)) and r[b]!=0:
-        tmpsol = integrate(r[a].subs(x,x0),(y,y0,y))+integrate(r[b],(x,x0,x))
-        sol = 0
-        assert tmpsol.is_Add
-        for i in tmpsol.args:
-            if x0 not in i and y0 not in i:
-                sol += i
-        assert sol != 0
-        sol = Equality(sol,C1)
+    r = eq.match(a+b*diff(f(x),x))
+    if r:
+        y = Symbol('y', dummy=True)
+        r[a] = r[a].subs(f(x),y)
+        r[b] = r[b].subs(f(x),y)
 
-        try:
-            # See if the equation can be solved explicitly for f
-            # This part of the code will change when solve returns RootOf.
-            sol1 = solve(sol,y)
-        except (NotImplementedError, AssertionError):
-            return sol.subs(y,f(x))
-        else:
-            if len(sol1) !=1:
+        if simplify(r[a].diff(y)) == simplify(r[b].diff(x)) and r[a]!=0:
+            x0 = Symbol('x0', dummy=True)
+            y0 = Symbol('y0', dummy=True)
+            tmpsol = integrate(r[b].subs(x,x0),(y,y0,y))+integrate(r[a],(x,x0,x))
+            sol = 0
+            assert tmpsol.is_Add
+            for i in tmpsol.args:
+                if x0 not in i and y0 not in i:
+                    sol += i
+            assert sol != 0
+            sol = Equality(sol,C1)
+
+            try:
+                # See if the equation can be solved explicitly for f
+                # This part of the code will change when solve returns RootOf.
+                sol1 = solve(sol,y)
+            except NotImplementedError:
                 return sol.subs(y,f(x))
             else:
-                return Equality(f(x),sol1[0].subs(y,f(x)))
+                if len(sol1) !=1:
+                    return sol.subs(y,f(x))
+                else:
+                    return Equality(f(x),sol1[0].subs(y,f(x)))
+
+    # First order equation with homogeneous coefficients.
+        # This uses the same match from Exact above.
+        ordera = homogeneous_order(r[a], x, y)
+        orderb = homogeneous_order(r[b], x, y)
+        if ordera == orderb and ordera != None:
+            # There are two substitutions that solve the equation, u=x/y and u=y/x
+            # They produce different integrals, so try them both and see which
+            # one is easier.
+            u1 = Symbol('u1', dummy=True) # u1 == y/x
+            u2 = Symbol('u2', dummy=True) # u2 == x/y
+            sol1 = Equality(log(x), integrate((-r[b]/(r[a]+u1*r[b])).subs({x:1, y:u1}), u1)+log(C1))
+            sol2 = Equality(log(y), integrate((-r[a]/(r[b]+u2*r[a])).subs({x:u2, y:1}), u2)+log(C1))
+            sol1 = logcombine(sol1, assumePosReal=True)
+            sol2 = logcombine(sol2, assumePosReal=True)
+            if sol1.lhs.is_Function and sol1.lhs.func == log and sol1.rhs == 0:
+                sol1 = Equality(sol1.lhs.args[0]*C1,C1)
+            if sol2.lhs.is_Function and sol2.lhs.func == log and sol2.rhs == 0:
+                sol2 = Equality(sol2.lhs.args[0]*C1,C1)
+            sol1r = sol1.subs({u1:f(x)/x, y:f(x)})
+            sol2r = sol2.subs({u2:x/f(x), y:f(x)})
+            # There are two solutions.  We need to determine which one to use
+            # First, if they are the same, don't bother testing which one to use
+            if sol1r == sol2r:
+                return sol1r
+            # Second, try to return an evaluated integral:
+            if isinstance(sol1.lhs, C.Integral) or isinstance(sol1.rhs, C.Integral):
+                return sol2r
+            if isinstance(sol2.lhs, C.Integral) or isinstance(sol2.rhs, C.Integral):
+                return sol1r
+            # Next, try to return an explicit solution.  This code will change
+            # when RootOf is implemented.
+            try:
+                sol1s = solve(sol1r.subs(f(x),y), y).subs(y, f(x))
+                if sol1s == []:
+                    raise NotImplementedError
+            except NotImplementedError:
+                pass
+            else:
+                sol1sr = map((lambda t: Equality(f(x), t.subs({u1:f(x)/x, y:f(x)}))), sol1s)
+                if len(sol1sr) == 1:
+                    return sol1sr[0]
+                else:
+                    return sol1sr
+            try:
+                sol2s = solve(sol2r.subs(f(x), y), y).subs(y, f(x))
+                if sol2s == []:
+                    raise NotImplementedError
+            except NotImplementedError:
+                pass
+            else:
+                sol2sr = map((lambda t: Equality(f(x), t.subs({u2:x/f(x), y:f(x)}))), sol2s)
+                if len(sol2sr) == 1:
+                    return sol2sr[0]
+                else:
+                    return sol2srs
+            # Finaly, try to return the shortest expression, naively computed
+            # based on the length of the string version of the expression.  This
+            # may favor combined fractions because they will not have duplicate
+            # denominators, and may slightly favor expressions with fewer
+            # additions and subtractions, as those are seperated by spaces by
+            # the printer.
+            return min(sol1r, sol2r, key=(lambda x: len(str(x))))
 
     # Other cases of first order odes will be implemented here
 
