@@ -34,8 +34,8 @@ def checksol(eq, func, sol):
     else:
         # If we cannot substitute f, try seeing if the nth derivative is equal
         n = deriv_degree(eq, func)
-        return simplify(diff(sol.lhs,x,n)-diff(sol.rhs,x,n)) == \
-        simplify(eq)
+        return simplify(diff(sol.lhs,x,n)-diff(sol.rhs,x,n) - eq) == 0\
+        or simplify(trigsimp(diff(sol.lhs,x,n)-diff(sol.rhs,x,n)) - trigsimp(eq)) == 0
     if s == 0:
         return True
     if isinstance(s, bool):
@@ -156,28 +156,26 @@ def test_ode14():
 def test_ode15():
     # Type: Exact differential equation, p(x,f)+q(x,f)f'=0,
     # where dp/dy == dq/dx
-    eq1 = cos(f(x))-(x*sin(f(x))-f(x)**2)*f(x).diff(x)
-    eq2 = sin(x)*cos(f(x))+cos(x)*sin(f(x))*f(x).diff(x)
-    eq3 = (2*x*f(x)+1)/f(x)+(f(x)-x)/f(x)**2*f(x).diff(x)
-    eq4 = 2*x+f(x)*cos(x)+(2*f(x)+sin(x)-sin(f(x)))*f(x).diff(x)
+    eq1 = sin(x)*cos(f(x))+cos(x)*sin(f(x))*f(x).diff(x)
+    eq2 = (2*x*f(x)+1)/f(x)+(f(x)-x)/f(x)**2*f(x).diff(x)
+    eq3 = 2*x+f(x)*cos(x)+(2*f(x)+sin(x)-sin(f(x)))*f(x).diff(x)
     sol1 = dsolve(eq1,f(x))
     sol2 = dsolve(eq2,f(x))
     sol3 = dsolve(eq3,f(x))
-    sol4 = dsolve(eq4,f(x))
-    assert sol1 == Eq(x*cos(f(x))+f(x)**3/3,C1)
-    assert sol2 == Eq(f(x),acos((-C1)/cos(x)))
-    assert sol3 == Eq(log(f(x))+x/f(x)+x**2,C1)
-    assert sol4 == Eq(f(x)*sin(x)+cos(f(x))+x**2+f(x)**2,C1)
+    assert sol1 == Eq(f(x),acos((-C1)/cos(x)))
+    assert sol2 == Eq(log(f(x))+x/f(x)+x**2,C1)
+    assert sol3 == Eq(f(x)*sin(x)+cos(f(x))+x**2+f(x)**2,C1)
     assert checksol(eq1, f(x), sol1)
     assert checksol(eq2, f(x), sol2)
     assert checksol(eq3, f(x), sol3)
-    assert checksol(eq4, f(x), sol4)
-
 @XFAIL
 def test_ode16():
-    # This exact equation fails, but it should be caught by first order
-    # homogeneous when those are implemented.  I think it fails because of
-    # a poorly simplified integral of q(0,y)dy.
+    # This relates to Issue 1425.  The error is in solve, not dsolve.
+    eq = cos(f(x))-(x*sin(f(x))-f(x)**2)*f(x).diff(x)
+    sol = dsolve(eq1,f(x))
+    assert sol == Eq(x*cos(f(x))+f(x)**3/3,C1)
+    assert checksol(eq, f(x), sol)
+
 @XFAIL
 def test_ode_exact():
     """
