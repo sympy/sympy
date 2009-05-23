@@ -207,6 +207,9 @@ def test_homogeneous_order():
     assert homogeneous_order(f(x,y)**2, x, f(x,y), y) == 2
     assert homogeneous_order(f(x,y)**2, x, f(x), y) == None
     assert homogeneous_order(f(x,y)**2, x, f(x,y)) == None
+    assert homogeneous_order(f(y,x)**2, x, y, f(x, y)) == None
+    assert homogeneous_order(f(y), f(x), x) == None
+    assert homogeneous_order(-f(x)/x+1/sin(f(x)/ x), f(x), x) == 0
 
 @XFAIL
 def test_homogeneous_order_ode1():
