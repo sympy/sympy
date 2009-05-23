@@ -822,20 +822,18 @@ def solve_ODE_1(f, x):
 
 def homogeneous_order(eq, *symbols):
     """
-    Determines if a function f(x,y) is homogeneous and if so of what order.
-    A function f(x,y) is homogeneous of order n if f(xt,yt) == t**n*f(x,y).
-    It works recursively.
-
-    This only works for a function g(f(x),x), such as the kind dsolve accepts.
+    Determines if a function is homogeneous and if so of what order.
+    A function f(x,y,...) is homogeneous of order n if
+    f(xt,yt,t*...) == t**n*f(x,y,...).  It is implemented recursively.
 
     Returns the order n if g is homogeneous and None if it is not homogeneous.
     Examples:
     >>> from sympy import *
     >>> x = Symbol('x')
     >>> f = Function('f')
-    >>> homogeneous_order(x**2*f(x)/sqrt(x**2+f(x)**2), f(x))
+    >>> homogeneous_order(x**2*f(x)/sqrt(x**2+f(x)**2), x, f(x))
     2
-    >>> homogeneous_order(x**2+f(x), f(x)) == None
+    >>> homogeneous_order(x**2+f(x), x, f(x)) == None
     True
     """
     if eq.has(log):
@@ -849,6 +847,23 @@ def _homogeneous_order(eq, *symbols):
         raise ValueError, "homogeneous_order: no symbols were given."
 
     n = set()
+
+    # Replace all functions with dummy variables
+    if any(getattr(i, 'is_Function') for i in symbols):
+        dummyiter = (Symbol('d%d' % i, dummy=True) for i in xrange(256))
+        for i in symbols:
+            if i.is_Function:
+                if not all(map((lambda i: i in symbols), i.args)):
+                    return None
+                elif i not in symbols:
+                    pass
+                else:
+                    dummyvar = dummyiter.next()
+                    eq = eq.subs(i, dummyvar)
+                    symbols = list(symbols)
+                    symbols.remove(i)
+                    symbols.append(dummyvar)
+                    symbols = tuple(symbols)
 
     # The following are not supported
     if eq.is_Order or eq.is_Derivative:
@@ -872,7 +887,11 @@ def _homogeneous_order(eq, *symbols):
     if eq.is_Pow:
         if not eq.args[1].is_Number:
             return None
-        n.add(_homogeneous_order(eq.args[0], *symbols)*eq.args[1])
+        o = _homogeneous_order(eq.args[0], *symbols)
+        if o == None:
+            return None
+        else:
+            n.add(o*eq.args[1])
 
     t = Symbol('t', dummy=True, positive=True) # It is sufficient that t > 0
     r = Wild('r', exclude=[t])
@@ -897,8 +916,6 @@ def _homogeneous_order(eq, *symbols):
                 n.add(s)
 
     if eq.is_Function:
-        if eq.func in (getattr(i, 'func') for i in  symbols):
-            return 1
         if eq.func == log:
             # The only possibility to pull a t out of a function is a power in
             # a logarithm.  This is very likely due to calling of logcombine.
