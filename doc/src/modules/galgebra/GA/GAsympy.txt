@@ -45,8 +45,8 @@
    python  that utilizes the :mod:`sympy` symbolic algebra library.  The   python
    module :mod:`GA` has been developed for coordinate free calculations using
    the operations (geometric, outer, and inner products etc.) of geometric algebra.
-   The operations can be defined using a completely arbitrary pseudometric defined
-   by the inner products of a set of arbitrary vectors or the pseudometric  can be
+   The operations can be defined using a completely arbitrary metric defined
+   by the inner products of a set of arbitrary vectors or the metric  can be
    restricted to enforce orthogonality and signature constraints on the set of
    vectors.  In addition the module includes the geometric, outer (curl) and inner
    (div) derivatives and the ability to define a curvilinear coordinate  system.
@@ -85,10 +85,10 @@ Several software packages for numerical geometric algebra calculations are
 available from Doran-Lazenby group and the Dorst group. Symbolic packages for
 Clifford algebra using orthongonal bases such as
 :math:`e_{i}e_{j}+e_{j}e_{i} = 2\eta_{ij}`, where :math:`\eta_{ij}` is a numeric
-array are available from the  Doran-Lazenby group. The symbolic algebra module,
+array are available in Maple and Mathematica. The symbolic algebra module,
 :mod:`GA`, developed for python does not depend on an orthogonal basis
 representation, but rather is generated from a set of :math:`n` arbitrary
-symbolic vectors,  :math:`a_{1},a_{2},\dots,a_{n}` and a symbolic pseudo-metric
+symbolic vectors,  :math:`a_{1},a_{2},\dots,a_{n}` and a symbolic metric
 tensor :math:`g_{ij} = a_{i}\cdot a_{j}`.
 
 In order not to reinvent the wheel all scalar symbolic algebra is handled by the
@@ -97,7 +97,7 @@ python module  :mod:`sympy`.
 The basic geometic algebra operations will be implemented in python by defining
 a multivector  class, MV, and overloading the python operators in Table
 :ref:`1 <table1>` where ``A`` and ``B``  are any two multivectors (In the case of 
-``+``, ``-``, ``*``, ``^``, and ``|`` the operation is also defined if ``A`` or 
+``+``, ``-``, ``*``, ``^``, ``|``, ``<<``, and ``>>`` the operation is also defined if ``A`` or 
 ``B`` is a sympy symbol or a sympy real number).
 
 .. _table1:
@@ -111,14 +111,36 @@ a multivector  class, MV, and overloading the python operators in Table
 	" ``A*B`` ", " geometric product "  
 	" ``A^B`` ", " outer product of multivectors  "
 	" ``A|B`` ", " inner product of multivectors "
-	" ``A<B`` ", " left contraction of multivectors "
-	" ``A>B``  ", " right contraction of multivectors "
+	" ``A<B`` or ``A<<B`` ", " left contraction of multivectors "
+	" ``A>B`` or ``A>>B`` ", " right contraction of multivectors "
 
 Table :ref:`1 <table1>`. Multivector operations for symbolicGA
 
-Note that the operator order precedence is determined by python and is not
-neccessarily that used by  geometric algebra. Always use parenthesis in python
-expressions containing ``^``, ``|``, ``<``, and/or ``>``.
+The option to use ``<`` or ``<<`` for left contraction and ``>`` or ``>>`` is given since the ``<`` and
+``>`` operators do not have r-forms (there are no *__rlt__()* and *__rlt__()* functions to overload) while
+``<<`` and ``>>`` do have r-forms so that *x << A* and *x >> A* are allowed where *x* is a scalar (symbol or integer) 
+and *A* is a multivector. With ``<`` and ``>`` we can only have mixed modes (scalars and multivectors) if the 
+multivector is the first operand.
+
+.. note::
+
+    Except for ``<`` and ``>`` all the multivector operators have r-forms so that as long as one of the
+    operands, left or right, is a multivector the other can be a multivector or a scalar (sympy symbol or integer).
+
+.. warning::
+
+    Note that the operator order precedence is determined by python and is not
+    neccessarily that used by  geometric algebra. It is **absolutely essential** to 
+    use parenthesis in multivector
+    expressions containing ``^``, ``|``, ``<``, ``>``, ``<<`` and/or ``>>``.  As an example let
+    ``A`` and ``B`` be any two multivectors. Then ``A + A*B = A +(A*B)``, but
+    ``A+A^B = (2*A)^B`` since in python the ``^`` operator has a lower precedence
+    than the '+' operator.  In geometric algebra the outer and inner products and
+    the left and right contractions have a higher precedence than the geometric
+    product and the geometric product has a higher precedence than addition and
+    subtraction.  In python the ``^``, ``|``, ``<``, ``>``, ``<<`` and ``>>`` all have a lower
+    precedence than ``+`` and ``-`` while ``*`` has a higher precedence than
+    ``+`` and ``-``.
 
 
 .. _vbm:
@@ -127,7 +149,7 @@ Vector Basis and Metric
 =======================
 
 The two structures that define the :class:`MV` (multivector) class are the
-symbolic basis vectors and the  symbolic pseudometric.  The symbolic basis
+symbolic basis vectors and the  symbolic metric.  The symbolic basis
 vectors are input as a string with the symbol name separated by spaces.  For
 example if we are calculating the geometric algebra of a system with three
 vectors that we wish to denote as ``a0``, ``a1``, and ``a2`` we would define the
@@ -136,8 +158,8 @@ string variable:
 ``basis = 'a0 a1 a2'``
 
 that would be input into the multivector setup function.  The next step would be
-to define the symbolic  pseudometric for the geometric algebra of the basis we
-have defined. The default pseudometric is the most general and is the matrix of
+to define the symbolic  metric for the geometric algebra of the basis we
+have defined. The default metric is the most general and is the matrix of
 the following symbols
 
 .. _eq1:
@@ -244,7 +266,11 @@ purpose of output display, with strings that are concatenations of the strings
 representing the basis vectors.  So that in our example  ``[1,2]`` would be
 labeled with the string ``'a1a2'`` and represents the geometric product
 ``a1*a2``. Thus the list ``[0,1,2]`` represents ``a0*a1*a2``.For our example the
-complete set of bases and labels are shown in Table :ref:`2 <table2>` [#]_
+complete set of bases and labels are shown in Table :ref:`2 <table2>`
+
+.. note::
+
+	The empty list, ``[]``, represents the scalar 1.
 
 .. _table2:
 
@@ -418,6 +444,15 @@ and 1 for a blade representation.  One needs to keep track of which
 representation is in use since various multivector operations require conversion
 from one representation to the other.
 
+.. warning::
+
+    When the geometric product of two multivectors is calculated the module looks to 
+    see if either multivector is in blade representation.  If either is the result of
+    the geometric product is converted to a blade representation.  One result of this
+    is that if either of the multivectors is a simple vector (which is automatically a
+    blade) the result will be in a blade representation.  If ``a`` and ``b`` are vectors
+    then the result ``a*b`` will be ``(a.b)+a^b`` or simply ``a^b`` if ``(a.b) = 0``. 
+
 
 Outer and Inner Products, Left and Right Contractions
 =====================================================
@@ -547,9 +582,7 @@ The ``MV`` class function for the outer product of the multivectors ``mv1`` and
                             product.add_in_place(pg1pg2.project(igrade))
         return(product)
 
-In the  ``MV`` class we have overloaded the ``^`` operator so that instead of
-calling the function we can write ``mv1^ mv2``.  Due to the precedence rules for
-python we should ``always`` enclose outer and inner products in parenthesis.
+
 The steps for calculating the outer product are:
 
 #. Convert ``mv1`` and ``mv2`` to blade representation if they are not already
@@ -563,30 +596,71 @@ The steps for calculating the outer product are:
 
 #. Accumulate the results for each pair of grades in the input multivectors.
 
+.. warning::
+
+    In the  ``MV`` class we have overloaded the ``^`` operator to represent the outer 
+    product so that instead of calling the outer product function we can write ``mv1^ mv2``.
+    Due to the precedence rules for python it is **absolutely essential** to enclose outer products
+    in parenthesis.
+
 For the inner product of the multivectors ``mv1`` and ``mv2`` the ``MV`` class
 function is  ::
 
-   @staticmethod
-   def inner_product(mv1,mv2):
-       product = MV()
-       product.bladeflg = 1
-       mv1.convert_to_blades()
-       mv2.convert_to_blades()
-       for igrade1 in range(MV.n1):
-           if not isint(mv1.mv[igrade1]):
-               pg1 = mv1.project(igrade1)
-               for igrade2 in range(MV.n1):
-                   igrade = abs(igrade1-igrade2)
-                   if not isint(mv2.mv[igrade2]):
-                       pg2 = mv2.project(igrade2)
-                       pg1pg2 = pg1*pg2
-                       product.add_in_place(pg1pg2.project(igrade))
-       return(product) 
+    @staticmethod
+    def inner_product(mv1,mv2,mode='s'):
+        """
+        MV.inner_product(mv1,mv2) calculates the inner
 
-In the ``MV`` class we have overloaded the ``|`` operator so that instead  of
-calling the function we can write ``mv1|mv2``. The inner product is calculated
-the same way  as the outer product except that in step 4, ``i1+i2`` is replaced
-by ``abs(i1-i2)``.
+        mode = 's' - symmetic (Doran & Lasenby)
+        mode = 'l' - left contraction (Dorst)
+        mode = 'r' - right contraction (Dorst)
+        """
+        if isinstance(mv1,MV) and isinstance(mv2,MV):
+            product = MV()
+            product.bladeflg = 1
+            mv1.convert_to_blades()
+            mv2.convert_to_blades()
+            for igrade1 in range(MV.n1):
+                if isinstance(mv1.mv[igrade1],numpy.ndarray):
+                    pg1 = mv1.project(igrade1)
+                    for igrade2 in range(MV.n1):
+                        igrade = igrade1-igrade2
+                        if mode == 's':
+                            igrade = igrade.__abs__()
+                        else:
+                            if mode == 'l':
+                                igrade = -igrade
+                        if igrade >= 0:
+                            if isinstance(mv2.mv[igrade2],numpy.ndarray):
+                                pg2 = mv2.project(igrade2)
+                                pg1pg2 = pg1*pg2
+                                product.add_in_place(pg1pg2.project(igrade))
+            return(product)
+        else:
+            if mode == 's':
+                if isinstance(mv1,MV):
+                    product = mv1.scalar_mul(mv2)
+                if isinstance(mv2,MV):
+                    product = mv2.scalar_mul(mv1)
+            else:
+                product = None
+        return(product)
+
+
+The inner product is calculated the same way as the outer product except that in
+step 4, ``i1+i2`` is replaced by ``abs(i1-i2)`` or ``i1-i2`` for the right contraction or
+``i2-i1`` for the left contraction.  If ``i1-i2`` is less than zero there is no contribution
+to the right contraction.  If ``i2-i1`` is less than zero there is no contribution to the 
+left contraction. 
+
+.. warning::
+
+    In the ``MV`` class we have overloaded the ``|`` operator for the inner product,
+    ``>`` operator for the right contraction, and ``<`` operator for the left contraction.
+    Instead of calling the inner product function we can write ``mv1|mv2``, ``mv1>mv2``, or
+    ``mv1<mv2`` respectively for the inner product, right contraction, or left contraction.
+    Again, due to the precedence rules for python it is **absolutely essential** to enclose inner
+    products and/or contractions in parenthesis.
 
 
 .. _reverse:
@@ -1034,10 +1108,26 @@ curvilinear coordinates using:
 
    If ``str_mode=0`` the string representation of the multivector contains no
    newline characters (prints on one line).   If ``str_mode=1`` the string
+   representation of the multivector places a newline after each grade of the
+   multivector  (prints one grade per line).  If ``str_mode=2`` the string
    representation of the multivector places a newline after each base of the
-   multivector  (prints one base per line).  In both cases bases with zero
+   multivector  (prints one base per line). In both cases bases with zero
    coefficients are not printed.
 
+	.. note::
+
+		This function directly affects the way multivectors are printed with the
+		print command since it interacts with the :func:`__str__` function for the
+		multivector class which is used by the ``print`` command. 
+ 
+
+		.. csv-table:: 
+			:header: " ``str_mode`` ", " Effect on print " 
+			:widths: 10, 50
+
+			" 0 ","One multivector per line"
+			" 1 ","One grade per line"
+			" 2 ","One base per line"
 
 Instantiating a Multivector
 ---------------------------
@@ -1045,7 +1135,14 @@ Instantiating a Multivector
 Now that grades and bases have been described we can show all the ways that a
 multivector can be instantiated. As an example assume that the multivector space
 is initialized with ``MV.setup('e1 e2 e3')``. Then the vectors ``e1``, ``e2``,
-and ``e3`` are available for use in the program [#]_. So that  multivectors
+and ``e3`` are made available (broadcast) for use in the program . 
+
+.. warning::
+
+	This is only true if the statement  ``set_main(sys.modules[__name__])`` appears
+	immediately after the ``from sympy.galgebra.GA import *`` statement.
+
+So that  multivectors
 could be instantiated with statements such as (``a1``, ``a2``, and ``a3`` are
 ``sympy`` symbols)::
 
@@ -1071,8 +1168,9 @@ or with the multivector class constructor:
 		" default ", " default ", " Zero multivector "
 		" 'basisvector' ", " int i ", " :math:`\mbox{i}^{th}` basis vector "
 		" 'basisbivector' ", " int i ", " :math:`\mbox{i}^{th}` basis bivector "
-		" 'scalar' ", " symbol x ", " symbolic scalar of value x "
+		" 'scalar' ", " symbol x ", " symbolic scalar of value x"
 		"   ", " string s ", " symbolic scalar of value Symbol(s) "
+		"  ", " int i ", " sympy integer of value i"
 		" 'grade' ", " [int r, 1-D symbol array A] ", " X.grade(r) = A "
 		"   ", " [int r, string s] ", " symbolic grade r multivector "
 		" 'vector' ", " 1-D symbol array A ", " X.grade(1) = A "
@@ -1080,6 +1178,7 @@ or with the multivector class constructor:
 		" 'grade2' ", " 1-D symbol array A ", " X.grade(2) = A "
 		" 'pseudo' ", " symbol x ", " X.grade(n) = x "
 		" 'spinor' ", " string s ", " symbolic even multivector "
+		" default "," string s ", " symbolic general multivector "
 
 
    If the *value* argument has the option of being a string s then a general symbolic
@@ -1158,20 +1257,27 @@ Basic Multivector Class Functions
 
 .. function:: grad_ext(self)
 
-   Return the outer (curl) derivative of the multivector function.
+   Return the outer (curl) derivative of the multivector function. Equivalent to 
+   :func:`curl`.
 
 
 .. function:: grad_int(self)
 
-   Return the inner (div) derivative of the multivector function.
+   Return the inner (div) derivative of the multivector function. Equivalent to 
+   :func:`div`.
 
+.. warning::
+
+	If *A* is a vector field in three dimensions :math:`\nabla\cdot {\bf A}` = A.grad_int() = A.div(), but
+	:math:`\nabla\times {\bf A}` = -MV.I*A.grad_ext() = -MV.I*A.curl(). Note that grad_int() lowers the grade
+	of all blades by one grade and grad_ext() raises the grade of all blades by one.
 
 .. function:: set_coef(self,grade,base,value)
 
-   Set the multivector coefficient of index (*grade*,*base*) to *value*.
+   Set the multivector coefficient of index *(grade,base)* to *value*.
 
 
-Sumpy Functions Applied Inplace to Multivector Coefficients
+Sympy Functions Applied Inplace to Multivector Coefficients
 -----------------------------------------------------------
 
 All the following fuctions belong to the :class:`MV` class and apply the
@@ -1238,6 +1344,11 @@ class.
    Not only will *syms* contain the symbols, but you can also directly use *x*,
    *y*, and *ab* as symbols in your program.
 
+	.. warning::
+
+		You can only directly use *x*, *y*, and *ab* as symbols in your program if 
+		the statement  ``set_main(sys.modules[__name__])`` appears immediately after
+		the ``from sympy.galgebra.GA import *`` statement.
 
 .. function:: set_names(var_lst,var_str)
 
@@ -1620,10 +1731,4 @@ Div and Curl of Vector Function :math:`A`
       ``Geometric Algebra for Physicists`` by  C. Doran and A. Lasenby, Cambridge
       University Press, 2003.
 
-.. rubric:: Footnotes
-
-.. [#] The empty list, ``[]``, represents the scalar 1.
-
-.. [#] This is only true if the statement  ``set_main(sys.modules[__name__])`` appears
-   immediately after the ``from sympy import *`` statement.
 

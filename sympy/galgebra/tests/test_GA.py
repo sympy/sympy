@@ -262,3 +262,12 @@ def test_derivative():
     assert (X*X*X).grad() == 5*X*X
     assert X.grad_int() == 3
 
+def test_str():
+    MV.setup('e_1 e_2 e_3','1 0 0, 0 1 0, 0 0 1')
+
+    X = MV('x')
+    assert str(X) == 'x+x__0*e_1+x__1*e_2+x__2*e_3+x__01*e_1e_2+x__02*e_1e_3+x__12*e_2e_3+x__012*e_1e_2e_3'
+    Y = MV('y','spinor')
+    assert str(Y) == 'y+y__01*e_1e_2+y__02*e_1e_3+y__12*e_2e_3'
+    Z = X+Y
+    assert str(Z) == 'x+y+x__0*e_1+x__1*e_2+x__2*e_3+(x__01+y__01)*e_1e_2+(x__02+y__02)*e_1e_3+(x__12+y__12)*e_2e_3+x__012*e_1e_2e_3'

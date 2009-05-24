@@ -730,13 +730,63 @@ class MV(object):
         return
 
     @staticmethod
-    def str_rep(mv,lst_mode=0):
+    def str_rep(mv):
         """
-        Converts internal representation of a multivector to a string
-        for outputing.  If lst_mode = 1, str_rep outputs a list of
-        strings where each string contains one multivector coefficient
-        concatenated with the corressponding base or blade symbol.
+         Converts internal representation of a multivector to a string
+         for outputing.  If lst_mode = 1, str_rep outputs a list of
+         strings where each string contains one multivector coefficient
+         concatenated with the corresponding base or blade symbol.
+
+            MV.str_mode     Effect
+                0           Print entire multivector on one line (default)
+                1           Print each grade on a single line
+                2           Print each base on a single line
+         """
+
+        if MV.bladeprint:
+            mv.convert_to_blades()
+            labels = MV.bladelabel
+        else:
+            if not mv.bladeflg:
+                labels = MV.basislabel
+            else:
+                labels = MV.bladelabel
+        if isinstance(mv.mv[0],types.IntType):
+            value = ''
+        else:
+            value = (mv.mv[0][0]).__str__()
+        dummy = sympy.Symbol('dummy')
+        for igrade in MV.n1rg[1:]:
+            if isinstance(mv.mv[igrade],numpy.ndarray):
+                j = 0
+                for x in mv.mv[igrade]:
+                    if x != ZERO:
+                        xstr = (x*dummy).__str__()
+                        if xstr[0] != '-' and len(value) > 0:
+                            xstr = '+'+xstr
+                        if xstr.find('dummy') < 2 and xstr[-5:] != 'dummy':
+                            xstr = xstr.replace('dummy*','')+'*'+labels[igrade][j]
+                        else:
+                            xstr = xstr.replace('dummy',labels[igrade][j])
+                        if MV.str_mode == 2:
+                            xstr += '\n'
+                        value += xstr
+                    j += 1
+                if MV.str_mode == 1:
+                    value += '\n'
+        if value == '':
+            value = '0'
+        value = value.replace(' ','')
+        return(value)
+
+    @staticmethod
+    def xstr_rep(mv,lst_mode=0):
         """
+         Converts internal representation of a multivector to a string
+         for outputing.  If lst_mode = 1, str_rep outputs a list of
+         strings where each string contains one multivector coefficient
+         concatenated with the corressponding base or blade symbol.
+         """
         if lst_mode:
             outlst = []
         if MV.bladeprint:
@@ -752,22 +802,23 @@ class MV(object):
             tmp = []
             if isinstance(mv.mv[igrade],numpy.ndarray):
                 j = 0
+                xsum = 0
                 for x in mv.mv[igrade]:
                     if x != ZERO:
                         xstr = x.__str__()
                         if xstr == '+1' or xstr == '1' or xstr == '-1':
-                            if xstr == '+1' or xstr == '1':
-                                xstr = '+'
-                            else:
-                                xstr = '-'
+                           if xstr == '+1' or xstr == '1':
+                               xstr = '+'
+                           else:
+                               xstr = '-'
                         else:
-                            if xstr[0] != '+':
-                                xstr = '+('+xstr+')'
-                            else:
-                                xstr = '+('+xstr[1:]+')'
+                           if xstr[0] != '+':
+                               xstr = '+('+xstr+')'
+                           else:
+                               xstr = '+('+xstr[1:]+')'
                         value += xstr+labels[igrade][j]
                         if MV.str_mode and not lst_mode:
-                            value += '\n'
+                            value += value+'\n'
                         if lst_mode:
                             tmp.append(value)
                     j += 1
@@ -1570,20 +1621,12 @@ class MV(object):
                     else:
                         if isinstance(mv2.mv[i],numpy.ndarray) and not isinstance(mv1.mv[i],numpy.ndarray):
                             sum.mv[i] = +mv2.mv[i]
+            return(sum)
         else:
             if isinstance(mv1,MV):
-                sum = mv1.copy()
-                if isinstance(sum.mv[0],numpy.ndarray):
-                    sum.mv[0] += numpy.array([mv2],dtype=numpy.object)
-                else:
-                    sum.mv[0] = numpy.array([mv2],dtype=numpy.object)
+                return(mv1+MV(mv2,'scalar'))
             else:
-                sum = mv2.copy()
-                if isinstance(sum.mv[0],numpy.ndarray):
-                    sum.mv[0] += numpy.array([mv1],dtype=numpy.object)
-                else:
-                    sum.mv[0] = numpy.array([mv1],dtype=numpy.object)
-        return(sum)
+                return(MV(mv1,'scalar')+mv2)
 
     @staticmethod
     def subtraction(mv1,mv2):
@@ -1606,20 +1649,12 @@ class MV(object):
                     else:
                         if not isinstance(mv1.mv[i],numpy.ndarray) and isinstance(mv2.mv[i],numpy.ndarray):
                             diff.mv[i] = -mv2.mv[i]
+            return(diff)
         else:
             if isinstance(mv1,MV):
-                diff = mv1.copy()
-                if isinstandce(diff.mv[0],numpy.ndarray):
-                    diff.mv[0] -= numpy.array([mv2],dtype=numpy.object)
-                else:
-                    diff.mv[0] = -numpy.array([mv2],dtype=numpy.object)
+                return(mv1-MV(mv2,'scalar'))
             else:
-                diff = mv2.copy(1)
-                if isinstance(diff.mv[0],numpy.ndarray):
-                    diff.mv[0] += numpy.array([mv1],dtype=numpy.object)
-                else:
-                    diff.mv[0] = +numpy.array([mv1],dtype=numpy.object)
-        return(diff)
+                return(MV(mv1,'scalar')-mv2)
 
     @staticmethod
     def vdiff(vec,x):
@@ -1681,6 +1716,8 @@ class MV(object):
         if mvtype == 'scalar':
             if isinstance(value,types.StringType):
                 value = sympy.Symbol(value)
+            if isinstance(value,types.IntType):
+                value = sympy.Rational(value)
             self.mv[0] = numpy.array([value],dtype=numpy.object)
         if mvtype == 'pseudo':
             if isinstance(value,types.StringType):
@@ -1737,7 +1774,20 @@ class MV(object):
                             symbol_lst = make_symbols(symbol_str)
                             self.mv[grade] = numpy.array(symbol_lst,dtype=numpy.object)
                         else:
-                            self.mv[0] = numpy.array([value],dtype=numpy.object)
+                            self.mv[0] = numpy.array([sympy.Symbol(value)],dtype=numpy.object)
+                self.name = value+'bm'
+        if value != '' and mvtype == '': #Most general multivector
+            if isinstance(value,types.StringType):
+                for grade in MV.n1rg:
+                    symbol_str = ''
+                    if grade != 0:
+                        for base in MV.basis[grade]:
+                            symbol = value+MV.construct_index(base)
+                            symbol_str += symbol+' '
+                        symbol_lst = make_symbols(symbol_str)
+                        self.mv[grade] = numpy.array(symbol_lst,dtype=numpy.object)
+                    else:
+                        self.mv[0] = numpy.array([sympy.Symbol(value)],dtype=numpy.object)
                 self.name = value+'bm'
         if fct and MV.coords != None:
             for grade in MV.n1rg:
@@ -1927,12 +1977,28 @@ class MV(object):
         """See MV.inner_product(self,mv)"""
         return(MV.inner_product(self,mv,'l'))
 
+    def __lshift__(self,mv):
+        """See MV.inner_product(self,mv)"""
+        return(MV.inner_product(self,mv,'l'))
+
+    def __rlshift__(self,mv):
+        """See MV.inner_product(self,mv)"""
+        return(MV.inner_product(mv,self,'l'))
+
     def lc(self,mv):
         return(MV.inner_product(self,mv,'l'))
 
     def __gt__(self,mv):
         """See MV.inner_product(self,mv)"""
         return(MV.inner_product(self,mv,'r'))
+
+    def __rshift__(self,mv):
+        """See MV.inner_product(self,mv)"""
+        return(MV.inner_product(self,mv,'r'))
+
+    def __rrshift__(self,mv):
+        """See MV.inner_product(self,mv)"""
+        return(MV.inner_product(mv,self,'r'))
 
     def rc(self,mv):
         return(MV.inner_product(self,mv,'r'))
@@ -1947,6 +2013,8 @@ class MV(object):
         mv.puregrade = self.puregrade
         for i in MV.n1rg:
             if isinstance(self.mv[i],numpy.ndarray):
+                #print self.mv[i]
+                #print c,type(c)
                 mv.mv[i] = self.mv[i]*c
         return(mv)
 
@@ -2403,6 +2471,9 @@ class MV(object):
                 igrade += 1
         return(dD)
 
+    def curl(self):
+        return(self.grad_ext())
+
     def grad_int(self):
         """
         Calculate inner (interior,div) derivative of multivector function.
@@ -2426,6 +2497,9 @@ class MV(object):
                         dD.add_in_place(coef*connect.project(igrade-1))
                 igrade += 1
         return(dD)
+
+    def div(self):
+        return(self.grad_int())
 
     def mag2(self):
         """

@@ -2,9 +2,6 @@
 #EandM.py
 
 import sys
-if sys.version.find('Stackless') >= 0:
-    sys.path.append('/usr/lib/python2.5/site-packages')
-
 import sympy.galgebra.GA as GA
 import sympy.galgebra.latex_ex as tex
 import sympy,numpy,time
@@ -15,8 +12,6 @@ if __name__ == '__main__':
     metric = '1 0 0,'+\
              '0 1 0,'+\
              '0 0 1'
-
-    ti = time.time()
 
     GA.MV.setup('gamma_x gamma_y gamma_z',metric,True)
     tex.Format()
@@ -47,8 +42,4 @@ if __name__ == '__main__':
     tex.MV_format(3)
     print '-I\\lp\\nabla \\W A\\rp =',curlA
 
-    tf = time.time()
-
     tex.xdvi(filename='coords.tex')
-
-    print 1000.0*(tf-ti)
