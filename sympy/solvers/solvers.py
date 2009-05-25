@@ -19,7 +19,7 @@ from sympy.core.basic import Basic, S, C, Mul, Add
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Wild
 from sympy.core.relational import Equality
-from sympy.core.function import Derivative, diff
+from sympy.core.function import Derivative, diff, Function
 from sympy.core.numbers import ilcm
 
 from sympy.functions import sqrt, log, exp, LambertW
@@ -148,11 +148,49 @@ def solve(f, *symbols, **flags):
     symbols = map(sympify, symbols)
     result = list()
 
-    if any(not s.is_Symbol for s in symbols):
-        raise TypeError('not a Symbol')
+    # Begin code handling for Function and Derivative instances
+    # Basic idea:  store all the passed symbols in symbols_passed, check to see
+    # if any of them are Function or Derivative types, if so, use a dummy
+    # symbol in their place, and set symbol_swapped = True so that other parts
+    # of the code can be aware of the swap.  Once all swapping is done, the
+    # continue on with regular solving as usual, and swap back at the end of
+    # the routine, so that whatever was passed in symbols is what is returned.
+    symbols_new = []
+    symbol_swapped = False
+
+    if isinstance(symbols, (list, tuple)):
+        symbols_passed = symbols[:]
+    elif isinstance(symbols, set):
+        symbols_passed = list(symbols)
+
+    i = 0
+    for s in symbols:
+        if s.is_Symbol:
+            s_new = s
+        elif s.is_Function:
+            symbol_swapped = True
+            s_new = Symbol('F%d' % i, dummy=True)
+        elif s.is_Derivative:
+            symbol_swapped = True
+            s_new = Symbol('D%d' % i, dummy=True)
+        else:
+            raise TypeError('not a Symbol or a Function')
+        symbols_new.append(s_new)
+        i += 1
+
+        if symbol_swapped:
+            swap_back_dict = dict(zip(symbols_new, symbols))
+    # End code for handling of Function and Derivative instances
 
     if not isinstance(f, (tuple, list, set)):
         f = sympify(f)
+
+        # Create a swap dictionary for storing the passed symbols to be solved
+        # for, so that they may be swapped back.
+        if symbol_swapped:
+            swap_dict = zip(symbols, symbols_new)
+            f = f.subs(swap_dict)
+            symbols = symbols_new
 
         if isinstance(f, Equality):
             f = f.lhs - f.rhs
@@ -246,6 +284,13 @@ def solve(f, *symbols, **flags):
         if not f:
             return {}
         else:
+            # Create a swap dictionary for storing the passed symbols to be
+            # solved for, so that they may be swapped back.
+            if symbol_swapped:
+                swap_dict = zip(symbols, symbols_new)
+                f = [fi.subs(swap_dict) for fi in f]
+                symbols = symbols_new
+
             polys = []
 
             for g in f:
@@ -273,9 +318,22 @@ def solve(f, *symbols, **flags):
                         except ValueError:
                             matrix[i, m] = -coeff
 
-                return solve_linear_system(matrix, *symbols, **flags)
+                soln = solve_linear_system(matrix, *symbols, **flags)
             else:
-                return solve_poly_system(polys)
+                soln = solve_poly_system(polys)
+
+            # Use swap_dict to ensure we return the same type as what was
+            # passed
+            if symbol_swapped:
+                if isinstance(soln, dict):
+                    res = {}
+                    for k in soln.keys():
+                        res.update({swap_back_dict[k]: soln[k]})
+                    return res
+                else:
+                    return soln
+            else:
+                return soln
 
 def solve_linear_system(system, *symbols, **flags):
     """Solve system of N linear equations with M variables, which means
