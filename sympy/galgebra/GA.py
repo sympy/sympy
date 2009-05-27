@@ -1802,7 +1802,6 @@ class MV(object):
 
     @staticmethod
     def construct_index(base):
-        print
         index_str = ''
         if len(base) == 0:
             return('')
