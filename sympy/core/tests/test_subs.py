@@ -16,6 +16,9 @@ def test_subs():
     e=e.subs(x,n3)
     assert e == Rational(6)
 
+def test_trigonometric():
+    x = Symbol('x')
+    n3 = Rational(3)
     e=(sin(x)**2).diff(x)
     assert e == 2*sin(x)*cos(x)
     e=e.subs(x,n3)
@@ -28,6 +31,14 @@ def test_subs():
 
     assert exp(pi).subs(exp, sin) == 0
     assert cos(exp(pi)).subs(exp, sin) == 1
+
+def test_powers():
+    x = Symbol('x')
+    assert sqrt(1 - sqrt(x)).subs(x, 4) == I
+    assert (sqrt(1-x**2)**3).subs(x, 2) == - 3 * I * sqrt(3)
+    assert (x ** Rational(1,3)).subs(x, 27) == 3
+    assert (x ** Rational(1,3)).subs(x, -27) == 3 * (-1) ** Rational(1,3)
+    assert ((-x) ** Rational(1,3)).subs(x, 27) == 3 * (-1) ** Rational(1,3)
 
 def test_logexppow():   # no eval()
     x = Symbol("x")

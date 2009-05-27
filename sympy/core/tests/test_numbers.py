@@ -1,9 +1,9 @@
 from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer, \
-        Basic, S, factorial
+        S, factorial
 from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 
 
 def test_igcd():
@@ -177,21 +177,83 @@ def test_powers():
     assert p % (10**10) == 5322420655
     assert not r
 
-    assert Rational(5**3, 8**3)**Rational(4,3) == Rational(5**4, 8**4)
-    assert Rational(-4,7)**Rational(1,2) == I*Rational(4,7)**Rational(1,2)
-
-    assert sqrt(6) + sqrt(24) == 3*sqrt(6)
-    assert sqrt(2) * sqrt(3) == sqrt(6)
-    x = Symbol("x")
-    assert sqrt(49*x) == 7*sqrt(x)
-    assert sqrt((3-sqrt(pi))**2) == 3 - sqrt(pi)
-    assert sqrt(Rational(1,2)) == Rational(1,2) * sqrt(2)
-
-    assert (2**64+1)**Rational(4, 3)
-    assert (2**64+1)**Rational(17,25)
-
     # Test that this is fast
     assert integer_nthroot(2,10**10) == (1, False)
+
+def test_powers_Integer():
+    """Test Integer._eval_power"""
+    # check inifinity
+    assert S(1) ** S.Infinity == 1
+    assert S(-1)** S.Infinity == S.NaN
+    assert S(2) ** S.Infinity == S.Infinity
+    assert S(-2)** S.Infinity == S.Infinity + S.Infinity * S.ImaginaryUnit
+    assert S(0) ** S.Infinity == 0
+
+    # check Nan
+    assert S(1)  ** S.NaN == S.NaN
+    assert S(-1) ** S.NaN == S.NaN
+
+    # check for exact roots
+    assert S(-1)  ** Rational(6, 5) == - (-1)**(S(1)/5)
+    assert S(4)   ** Rational(1, 2) == 2
+    assert S(-4)  ** Rational(1, 2) == I * 2
+    assert S(16)  ** Rational(1, 4) == 2
+    assert S(-16) ** Rational(1, 4) == 2 * (-1)**Rational(1,4)
+    assert S(9)   ** Rational(3, 2) == 27
+    assert S(-9)  ** Rational(3, 2) == -27*I
+
+    # not exact roots
+    assert (-3) ** (S(1)/2)  == sqrt(-3)
+    assert (3)  ** (S(3)/2)  == 3 * sqrt(3)
+    assert (-3) ** (S(3)/2)  == - 3 * sqrt(-3)
+    assert (-3) ** (S(5)/2)  ==  9 * I * sqrt(3)
+    assert (-3) ** (S(7)/2)  == - I * 27 * sqrt(3)
+    assert (2)  ** (S(3)/2)  == 2 * sqrt(2)
+    assert (2)  ** (S(-3)/2) == sqrt(2) / 4
+
+    # join roots
+    assert sqrt(6) + sqrt(24) == 3*sqrt(6)
+    assert sqrt(2) * sqrt(3)  == sqrt(6)
+
+    # separate sybols & constansts
+    x = Symbol("x")
+    assert sqrt(49 * x) == 7 * sqrt(x)
+    assert sqrt((3 - sqrt(pi)) ** 2) == 3 - sqrt(pi)
+
+    # check that it is fast for big numbers
+    assert (2**64+1) ** Rational(4, 3)
+    assert (2**64+1) ** Rational(17,25)
+
+def test_powers_Rational():
+    """Test Rational._eval_power"""
+    # check inifinity
+    assert Rational(1,2) ** S.Infinity == 0
+    assert Rational(3,2) ** S.Infinity == S.Infinity
+    assert Rational(-1,2) ** S.Infinity == 0
+    assert Rational(-3,2)** S.Infinity == S.Infinity + S.Infinity * S.ImaginaryUnit
+
+    # check Nan
+    assert Rational(3,4)  ** S.NaN == S.NaN
+    assert Rational(-2,3) ** S.NaN == S.NaN
+
+    # exact roots on numerator
+    assert Rational(4,3)  ** Rational(1,2) == 2 * sqrt(3) / 3
+    assert Rational(4,3)  ** Rational(3,2) == 8 * sqrt(3) / 9
+    assert Rational(-4,3) ** Rational(1,2) == I * 2 * sqrt(3) / 3
+    assert Rational(-4,3) ** Rational(3,2) == - I * 8 * sqrt(3) / 9
+    assert Rational(27,2) ** Rational(1,3) == 3 * (2 ** Rational(2,3)) / 2
+    assert Rational(5**3, 8**3) ** Rational(4,3) == Rational(5**4, 8**4)
+
+    # exact root on denominator
+    assert Rational(1,4)  ** Rational(1,2) == Rational(1,2)
+    assert Rational(1,-4) ** Rational(1,2) == I * Rational(1,2)
+    assert Rational(3,4)  ** Rational(1,2) == sqrt(3) / 2
+    assert Rational(3,-4) ** Rational(1,2) == I * sqrt(3) / 2
+    assert Rational(5,27) ** Rational(1,3) == (5 ** Rational(1,3)) / 3
+
+    # not exact roots
+    assert Rational(1,2)  ** Rational(1,2) == sqrt(2) / 2
+    assert Rational(-4,7) ** Rational(1,2) == I * Rational(4,7) ** Rational(1,2)
 
 def test_abs1():
     assert Rational(1,6) != Rational(-1,6)

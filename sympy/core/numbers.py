@@ -1,7 +1,5 @@
-import math
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmpf as mlib
-from sympy.mpmath.libmpf import mpf_abs
 import sympy.mpmath.libmpc as mlibc
 from sympy.mpmath.libelefun import mpf_pow, mpf_pi, phi_fixed
 import decimal
@@ -568,8 +566,8 @@ class Rational(Number):
         return Number.__add__(self, other)
 
     def _eval_power(b, e):
+        if (e is S.NaN): return S.NaN
         if isinstance(e, Number):
-            if (e is S.NaN): return S.NaN
             if isinstance(e, Real):
                 return b._eval_evalf(e._prec) ** e
             if e.is_negative:
@@ -906,7 +904,7 @@ class Integer(Rational):
     def _eval_power(base, exp):
         """
         Tries to do some simplifications on base ** exp, where base is
-        an instance of Rational
+        an instance of Integer
 
         Returns None if no further simplifications can be done
 
@@ -914,97 +912,68 @@ class Integer(Rational):
         we try to find the simplest possible representation, so that
           - 4**Rational(1,2) becomes 2
           - (-4)**Rational(1,2) becomes 2*I
+        We will
         """
-
-        MAX_INT_FACTOR = 4294967296 # Prevent from factorizing too big integers
+        if exp is S.NaN: return S.NaN
+        if base is S.One: return S.One
+        if base is S.NegativeOne: return
+        if exp is S.Infinity:
+            if base.p > S.One: return S.Infinity
+            if base.p == -1: return S.NaN
+            # cases 0, 1 are done in their respective classes
+            return S.Infinity + S.ImaginaryUnit * S.Infinity
         if not isinstance(exp, Number):
+            # simplify when exp is even
+            # (-2) ** k --> 2 ** k
             c,t = base.as_coeff_terms()
             if exp.is_even and isinstance(c, Number) and c < 0:
                 return (-c * Mul(*t)) ** exp
-        if exp is S.NaN: return S.NaN
-        if isinstance(exp, Real):
-            return base._eval_evalf(exp._prec) ** exp
-        if exp.is_negative:
-            # (3/4)**-2 -> (4/3)**2
-            ne = -exp
-            if ne is S.One:
-                return Rational(1, base.p)
-            return Rational(1, base.p) ** ne
-        if exp is S.Infinity:
-            if base.p > 1:
-                # (3)**oo -> oo
-                return S.Infinity
-            if base.p < -1:
-                # (-3)**oo -> oo + I*oo
-                return S.Infinity + S.Infinity * S.ImaginaryUnit
-            return S.Zero
-        if isinstance(exp, Integer):
-            # (4/3)**2 -> 4**2 / 3**2
-            return Integer(base.p ** exp.p)
-        if exp == S.Half and base.is_negative:
-            # sqrt(-2) -> I*sqrt(2)
-            return S.ImaginaryUnit * ((-base)**exp)
-        if isinstance(exp, Rational):
-            # 4**Rational(1,2) -> 2
+        if not isinstance(exp, Rational): return
+        if exp is S.Half and base < 0:
+            # we extract I for this special case since everyone is doing so
+            return S.ImaginaryUnit * Pow(-base, exp)
+        result = None
+        if exp < 0:
+            # invert base and change sign on exponent
+            return Rational(1, base.p) ** (-exp)
+        # see if base is a perfect root, sqrt(4) --> 2
+        x, xexact = integer_nthroot(abs(base.p), exp.q)
+        if xexact:
+            # if it's a perfect root we've finished
+            result = Integer(x ** abs(exp.p))
+            if exp < 0: result = 1/result
+            if base < 0: result *= (-1)**exp
+            return result
+        # The following is an algorithm where we collect perfect roots
+        # from the factors of base
+        if base > 4294967296:
+            # Prevent from factorizing too big integers
+            return None
+        dict = base.factors()
+        out_int = 1
+        sqr_int = 1
+        sqr_gcd = 0
+        sqr_dict = {}
+        for prime,exponent in dict.iteritems():
+            exponent *= exp.p
+            div_e = exponent // exp.q
+            div_m = exponent % exp.q
+            if div_e > 0:
+                out_int *= prime**div_e
+            if div_m > 0:
+                sqr_dict[prime] = div_m
+        for p,ex in sqr_dict.iteritems():
+            if sqr_gcd == 0:
+                sqr_gcd = ex
+            else:
+                sqr_gcd = igcd(sqr_gcd, ex)
+        for k,v in sqr_dict.iteritems():
+            sqr_int *= k**(v // sqr_gcd)
+        if sqr_int == base.p and out_int == 1:
             result = None
-            x, xexact = integer_nthroot(abs(base.p), exp.q)
-            if xexact:
-                res = Integer(x ** abs(exp.p))
-                if exp >= 0:
-                    result = res
-                else:
-                    result = 1/res
-            else:
-                if base > MAX_INT_FACTOR:
-                    for i in xrange(2, exp.q//2 + 1): #OLD CODE
-                        if exp.q % i == 0:
-                            x, xexact = integer_nthroot(abs(base.p), i)
-                            if xexact:
-                                result = Integer(x)**(exp * i)
-                                break
-                    # Try to get some part of the base out, if exponent > 1
-                    if exp.p > exp.q:
-                        i = exp.p // exp.q
-                        r = exp.p % exp.q
-                        result = base**i * base**Rational(r, exp.q)
-
-                    return
-
-                dict = base.factors()
-                out_int = 1
-                sqr_int = 1
-                sqr_gcd = 0
-                sqr_dict = {}
-                for prime,exponent in dict.iteritems():
-                    exponent *= exp.p
-                    div_e = exponent // exp.q
-                    div_m = exponent % exp.q
-                    if div_e > 0:
-                        out_int *= prime**div_e
-                    if div_m > 0:
-                        sqr_dict[prime] = div_m
-                for p,ex in sqr_dict.iteritems():
-                    if sqr_gcd == 0:
-                        sqr_gcd = ex
-                    else:
-                        sqr_gcd = igcd(sqr_gcd, ex)
-                for k,v in sqr_dict.iteritems():
-                    sqr_int *= k**(v // sqr_gcd)
-                if sqr_int == base.p and out_int == 1:
-                    result = None
-                else:
-                    result = out_int * Pow(sqr_int , Rational(sqr_gcd, exp.q))
-
-            if result is not None:
-                if base.is_positive:
-                    return result
-                elif exp.q == 2:
-                    return result * S.ImaginaryUnit
-                else:
-                    return result * ((-1)**exp)
-            else:
-                if exp == S.Half and base.is_negative:
-                    return S.ImaginaryUnit * Pow(-base, exp)
+        else:
+            result = out_int * Pow(sqr_int , Rational(sqr_gcd, exp.q))
+        return result
 
     def _eval_is_prime(self):
         if self.p < 0:
@@ -1081,9 +1050,6 @@ class One(Integer):
     @staticmethod
     def __neg__():
         return S.NegativeOne
-
-    def _eval_power(b, e):
-        return b
 
     def _eval_order(self, *symbols):
         return
