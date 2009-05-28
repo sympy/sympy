@@ -765,11 +765,12 @@ def tsolve(eq, sym):
     eq2 = eq.subs(sym, x)
     # First see if the equation has a linear factor
     # In that case, the other factor can contain x in any way (as long as it
-    # is finite), and we have a direct solution
+    # is finite), and we have a direct solution to which we add others that
+    # may be found for the remaining portion.
     r = Wild('r')
     m = eq2.match((a*x+b)*r)
     if m and m[a]:
-        return [(-b/a).subs(m).subs(x, sym)]
+        return [(-b/a).subs(m).subs(x, sym)] + solve(m[r], x)
     for p, sol in patterns:
         m = eq2.match(p)
         if m:

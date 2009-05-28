@@ -204,6 +204,7 @@ def test_tsolve_1():
     a, b = symbols('ab')
     x, y, z = symbols('xyz')
     assert solve(exp(x)-3, x) == [log(3)]
+    assert solve((a*x+b)*(exp(x)-3), x) == [-b/a, log(3)]
     assert solve(cos(x)-y, x) == [acos(y)]
     assert solve(2*cos(x)-y,x)== [acos(y/2)]
     raises(NotImplementedError, "solve(Eq(cos(x), sin(x)), x)")
@@ -227,7 +228,7 @@ def test_tsolve_1():
     assert solve(2*x+5+log(3*x-2), x) == \
         [Rational(2,3) + LambertW(2*exp(-Rational(19,3))/3)/2]
     assert solve(3*x+log(4*x), x) == [LambertW(Rational(3,4))/3]
-    assert solve((2*x+8)*(8+exp(x)), x) == [-4]
+    assert solve((2*x+8)*(8+exp(x)), x) == [-4, log(8) + pi*I]
     assert solve(2*exp(3*x+4)-3, x) in [ [-Rational(4,3)+log(Rational(3,2))/3],\
                                          [Rational(-4, 3) - log(2)/3 + log(3)/3]]
     assert solve(2*log(3*x+4)-3, x) == [(exp(Rational(3,2))-4)/3]
