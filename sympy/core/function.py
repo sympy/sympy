@@ -406,7 +406,7 @@ class WildFunction(Function, Atom):
                 if v==expr: return repl_dict
                 return None
         if pattern.nargs is not None:
-            if pattern.nargs != expr.nargs:
+            if not hasattr(expr,'nargs') or pattern.nargs != expr.nargs:
                 return None
         repl_dict = repl_dict.copy()
         repl_dict[pattern] = expr

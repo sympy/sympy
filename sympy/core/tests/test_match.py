@@ -130,8 +130,10 @@ def test_functions():
     q = Wild('q')
 
     f = cos(5*x)
+    notf = x
     assert f.match(p*cos(q*x)) == {p: 1, q: 5}
     assert f.match(p*g) == {p: 1, g: cos(5*x)}
+    assert notf.match(g) == None
 
 @XFAIL
 def test_functions_X1():
