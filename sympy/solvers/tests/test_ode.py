@@ -211,18 +211,95 @@ def test_homogeneous_order():
     assert homogeneous_order(f(y), f(x), x) == None
     assert homogeneous_order(-f(x)/x+1/sin(f(x)/ x), f(x), x) == 0
 
-@XFAIL
 def test_homogeneous_order_ode1():
     # Type: First order homogeneous, y'=f(y/x)
-    # The checksol fails, but it is the correct solution.
-    eq = f(x)/x*cos(f(x)/x)-(x/f(x)*sin(f(x)/x)+cos(f(x)/x))*f(x).diff(x)
-    sol = Eq(f(x)*sin(f(x)/x), C1)
+    eq1 = f(x)/x*cos(f(x)/x)-(x/f(x)*sin(f(x)/x)+cos(f(x)/x))*f(x).diff(x)
+    eq2 = x*f(x).diff(x)-f(x)-x*sin(f(x)/x)
+    eq3 = f(x)+(x*log(f(x)/x)-2*x)*diff(f(x),x)
+    eq4 = 2*f(x)*exp(x/f(x))+f(x)*f(x).diff(x)-2*x*exp(x/f(x))*f(x).diff(x)
+    eq5 = 2*x**2*f(x)+f(x)**3+(x*f(x)**2-2*x**3)*f(x).diff(x)
+    eq6 = x*exp(f(x)/x)-f(x)*sin(f(x)/x)+x*sin(f(x)/x)*f(x).diff(x)
+    eq7 = (x+sqrt(f(x)**2-x*f(x)))*f(x).diff(x)-f(x)
+    sol1 = Eq(f(x)*sin(f(x)/x), C1)
+    sol2 = Eq(x/tan(f(x)/(2*x)), C1)
+    sol3 = Eq(-f(x)/(1+log(x/f(x))),C1)
+    sol4 = Eq(log(f(x)/C1) + 2*exp(x/f(x)), 0)
+    sol5 = Eq(log(x*2**Rational(1,2)*(1/x)**Rational(1,2)*f(x)**Rational(1,2)/C1) + x**2/(2*f(x)**2), 0)
+    sol6 = Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(x/C1) - cos(f(x)/x)*exp(-f(x)/x)/2, 0)
+    sol7 = Eq(log(f(x)/C1) + 2*(1 - x/f(x))**Rational(1,2), 0)
+    assert dsolve(eq1, f(x)) == sol1
+    assert dsolve(eq2, f(x)) == sol2
+    assert dsolve(eq3, f(x)) == sol3
+    assert dsolve(eq4, f(x)) == sol4
+    assert dsolve(eq5, f(x)) == sol5
+    assert dsolve(eq6, f(x)) == sol6
+    assert dsolve(eq7, f(x)) == sol7
+
+@XFAIL
+def test_homogeneous_order_ode1_sol():
+    # These are the checksols from test_homogeneous_order_ode1, which fail.
+    eq1 = f(x)/x*cos(f(x)/x)-(x/f(x)*sin(f(x)/x)+cos(f(x)/x))*f(x).diff(x)
+    eq2 = x*f(x).diff(x)-f(x)-x*sin(f(x)/x)
+    eq3 = f(x)+(x*log(f(x)/x)-2*x)*diff(f(x),x)
+    eq4 = 2*f(x)*exp(x/f(x))+f(x)*f(x).diff(x)-2*x*exp(x/f(x))*f(x).diff(x)
+    eq5 = 2*x**2*f(x)+f(x)**3+(x*f(x)**2-2*x**3)*f(x).diff(x)
+    eq6 = x*exp(f(x)/x)-f(x)*sin(f(x)/x)+x*sin(f(x)/x)*f(x).diff(x)
+    eq7 = (x+sqrt(f(x)**2-x*f(x)))*f(x).diff(x)-f(x)
+    eq8 = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
+    sol1 = Eq(f(x)*sin(f(x)/x), C1)
+    sol2 = Eq(x/tan(f(x)/(2*x)), C1)
+    sol3 = Eq(-f(x)/(1+log(x/f(x))),C1)
+    sol4 = Eq(log(f(x)/C1) + 2*exp(x/f(x)), 0)
+    sol5 = Eq(log(x*2**Rational(1,2)*(1/x)**Rational(1,2)*f(x)**Rational(1,2)/C1) + x**2/(2*f(x)**2), 0)
+    sol6 = Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(x/C1) - cos(f(x)/x)*exp(-f(x)/x)/2, 0)
+    sol7 = Eq(log(f(x)/C1) + 2*(1 - x/f(x))**Rational(1,2), 0)
+    sol8 =  Eq(-Integral(-1/((1 - u2**2)**Rational(1,2)*u2), (u2, _a, x/f(x))) + log(f(x)/C1), 0)
+    assert checksol(eq1, f(x), sol1)
+    assert checksol(eq2, f(x), sol2)
+    assert checksol(eq3, f(x), sol3)
+    assert checksol(eq4, f(x), sol4)
+    assert checksol(eq5, f(x), sol5)
+    assert checksol(eq6, f(x), sol6)
+    assert checksol(eq7, f(x), sol7)
+    assert checksol(eq8, f(x), sol8)
+
+def test_homogeneous_order_ode2():
+    eq1 = f(x).diff(x)-f(x)/x+1/sin(f(x)/x)
+    eq2 = x**2+f(x)**2-2*x*f(x)*f(x).diff(x)
+    eq3 = x*exp(f(x)/x)+f(x)-x*f(x).diff(x)
+    sol1 = Eq(f(x), x*acos(log(x/C1)))
+    sol2 = [Eq(f(x), (-C1*x + x**2)**Rational(1,2)), Eq(f(x), -(-C1*x + x**2)**Rational(1,2))]
+    sol3 = Eq(f(x), -x*log(-log(x) + log(C1)))
+    assert dsolve(eq1, f(x)) == sol1
+    assert dsolve(eq2, f(x)) == sol2
+    assert dsolve(eq3, f(x)) == sol3
+    assert checksol(eq1, f(x), sol1)
+    assert checksol(eq2, f(x), sol2[0])
+    assert checksol(eq2, f(x), sol2[1])
+    assert checksol(eq3, f(x), sol3)
+
+@XFAIL
+def test_homogeneous_order_ode3():
+    # This fails because of issue 1429
+    eq = x+f(x)-(x-f(x))*f(x).diff(x)
+    sol = Eq(f(x), 2*x*atan(C1*x))
     assert dsolve(eq, f(x)) == sol
     assert checksol(eq, f(x), sol)
+
+def test_homogeneous_order_ode5():
+    # This can be solved explicitly, but the the integration engine cannot handle
+    # it (see issue 1452).  The explicit solution is included in an XFAIL test
+    # below. checksol fails for this equation, so its test is in
+    # test_homogeneous_order_ode1_sol above. It has to compare string
+    # expressions because u2 and _a are dummy variables.
+    eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
+    solstr =  "-Integral(-1/((1 - _u2**2)**(1/2)*_u2), (_u2, __a, x/f(x))) + log(f(x)/C1) == 0"
+    assert str(dsolve(eq, f(x))) == solstr
+
+
 @XFAIL
-def test_homogeneous_order_ode2():
-    # This also produces the correct result but fails because of checksol.
-    eq1 = x*f(x).diff(x)-f(x)-x*sin(f(x)/x)
-    sol1 = Eq(x/tan(f(x)/(2*x)), C1)
-    assert dsolve(eq1, f(x)) == sol1
-    assert checksol(eq1, f(x), sol1)
+def test_homogeneous_order_ode5_explicit():
+    eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
+    sol = Eq(f(x)**2-C1*x, f(x)*sqrt(f(x)**2-x**2))
+    assert dsolve(eq, f(x)) == sol
+    assert checksol(eq, f(x)) == sol

@@ -1,4 +1,4 @@
-
+﻿
 """ This module contain solvers for all kinds of equations:
 
     - algebraic, use solve()
@@ -585,6 +585,8 @@ def dsolve(eq, funcs):
         x = f.args[0]
         f = f.func
 
+        # Collect diff(f(x),x) terms so that match will work correctly
+        eq = collect(eq, f(x).diff(x))
         #We first get the order of the equation, so that we can choose the
         #corresponding methods. Currently, only first and second
         #order odes can be handled.
@@ -621,9 +623,10 @@ def deriv_degree(expr, func):
 
 def solve_ODE_first_order(eq, f):
     """
-    solves many kinds of first order odes, different methods are used
-    depending on the form of the given equation. Now the linear,
-    Bernoulli, and exact cases are implemented.
+    Solves many kinds of first order odes.
+    Different methods are used depending on the form of the given equation.
+    Now the linear, Bernoulli, exact, and first order homogeneous cases are
+    implemented.
     """
     from sympy.integrals.integrals import integrate
     x = f.args[0]
@@ -697,47 +700,75 @@ def solve_ODE_first_order(eq, f):
             # one is easier.
             u1 = Symbol('u1', dummy=True) # u1 == y/x
             u2 = Symbol('u2', dummy=True) # u2 == x/y
-            sol1 = Equality(log(x), integrate((-r[b]/(r[a]+u1*r[b])).subs({x:1, y:u1}), u1)+log(C1))
-            sol2 = Equality(log(y), integrate((-r[a]/(r[b]+u2*r[a])).subs({x:u2, y:1}), u2)+log(C1))
-            sol1 = logcombine(sol1, assumePosReal=True)
-            sol2 = logcombine(sol2, assumePosReal=True)
+            _a = Symbol('_a', dummy=True)
+            #print ((-r[b]/(r[a]+u1*r[b])).subs({x:1, y:u1}), (-r[a]/(r[b]+u2*r[a])).subs({x:u2, y:1}))
+            int1 = integrate((-r[b]/(r[a]+u1*r[b])).subs({x:1, y:u1}), u1)
+            int2 = integrate((-r[a]/(r[b]+u2*r[a])).subs({x:u2, y:1}), u2)
+            # Substitute back in for u1 and u2.
+            if int1.has(C.Integral):
+                int1 = C.Integral(int1.args[0],(u1,_a,f(x)/x))
+            else:
+                int1 = int1.subs(u1,f(x)/x)
+            if int2.has(C.Integral):
+                int2 = C.Integral(int2.args[0],(u2,_a,x/f(x)))
+            else:
+                int2 = int2.subs(u2,x/f(x))
+            sol1 = logcombine(Equality(log(x), int1 + log(C1)), assumePosReal=True)
+            sol2 = logcombine(Equality(log(f(x)), int2 + log(C1)), assumePosReal=True)
             if sol1.lhs.is_Function and sol1.lhs.func == log and sol1.rhs == 0:
                 sol1 = Equality(sol1.lhs.args[0]*C1,C1)
             if sol2.lhs.is_Function and sol2.lhs.func == log and sol2.rhs == 0:
                 sol2 = Equality(sol2.lhs.args[0]*C1,C1)
-            sol1r = sol1.subs({u1:f(x)/x, y:f(x)})
-            sol2r = sol2.subs({u2:x/f(x), y:f(x)})
+
             # There are two solutions.  We need to determine which one to use
             # First, if they are the same, don't bother testing which one to use
-            if sol1r == sol2r:
-                return sol1r
+            if sol1 == sol2:
+                # But still try to solve for f
+                try:
+                    sol1s = map((lambda t: t.subs(y, f(x))),\
+                    solve(sol1.lhs.subs(f(x),y)-sol1.rhs.subs(f(x),y), y))
+                    if sol1s == []:
+                        raise NotImplementedError
+                except NotImplementedError:
+                    return sol1
+                else:
+                    sol1sr = map((lambda t: Equality(f(x), t.subs({u1:f(x)/x,\
+                    y:f(x)}))), sol1s)
+                    if len(sol1sr) == 1:
+                        return sol1sr[0]
+                    else:
+                        return sol1sr
             # Second, try to return an evaluated integral:
-            if isinstance(sol1.lhs, C.Integral) or isinstance(sol1.rhs, C.Integral):
-                return sol2r
-            if isinstance(sol2.lhs, C.Integral) or isinstance(sol2.rhs, C.Integral):
-                return sol1r
+            if sol1.has(C.Integral):
+                return sol2
+            if sol2.has(C.Integral):
+                return sol1
             # Next, try to return an explicit solution.  This code will change
-            # when RootOf is implemented.
+            # when RootOf is implemented in Solve.
             try:
-                sol1s = solve(sol1r.subs(f(x),y), y).subs(y, f(x))
+                sol1s = map((lambda t: t.subs(y, f(x))),\
+                solve(sol1.lhs.subs(f(x),y)-sol1.rhs.subs(f(x),y), y))
                 if sol1s == []:
                     raise NotImplementedError
             except NotImplementedError:
                 pass
             else:
-                sol1sr = map((lambda t: Equality(f(x), t.subs({u1:f(x)/x, y:f(x)}))), sol1s)
+                sol1sr = map((lambda t: Equality(f(x), t.subs({u1:f(x)/x,\
+                y:f(x)}))), sol1s)
                 if len(sol1sr) == 1:
                     return sol1sr[0]
                 else:
                     return sol1sr
             try:
-                sol2s = solve(sol2r.subs(f(x), y), y).subs(y, f(x))
+                sol2s = map((lambda t: t.subs(y, f(x))),\
+                solve(sol2.lhs.subs(f(x),y)-sol2.rhs.subs(f(x),y), y))
                 if sol2s == []:
                     raise NotImplementedError
             except NotImplementedError:
                 pass
             else:
-                sol2sr = map((lambda t: Equality(f(x), t.subs({u2:x/f(x), y:f(x)}))), sol2s)
+                sol2sr = map((lambda t: Equality(f(x), t.subs({u2:x/f(x),\
+                y:f(x)}))), sol2s)
                 if len(sol2sr) == 1:
                     return sol2sr[0]
                 else:
@@ -748,7 +779,7 @@ def solve_ODE_first_order(eq, f):
             # denominators, and may slightly favor expressions with fewer
             # additions and subtractions, as those are seperated by spaces by
             # the printer.
-            return min(sol1r, sol2r, key=(lambda x: len(str(x))))
+            return min(sol1, sol2, key=(lambda x: len(str(x))))
 
     # Other cases of first order odes will be implemented here
 
