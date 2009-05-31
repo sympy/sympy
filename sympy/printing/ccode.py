@@ -45,7 +45,7 @@ class CCodePrinter(StrPrinter):
         ecpairs = ["(%s) {\n%s\n}\n" % (self._print(c), self._print(e)) \
                        for e, c in expr.args[:-1]]
         last_line = ""
-        if expr.args[-1].cond is S.One:
+        if expr.args[-1].cond == True:
             last_line = "else {\n%s\n}" % self._print(expr.args[-1].expr)
         else:
             ecpairs.append("(%s) {\n%s\n" % \

@@ -147,7 +147,7 @@ class Piecewise(Function):
         #    -  eg x < 1, x < 3 -> [oo,1],[1,3] instead of [oo,1],[oo,3]
         # 3) Sort the intervals to make it easier to find correct exprs
         for expr, cond in self.args:
-            if cond.is_Number:
+            if isinstance(cond, bool) or cond.is_Number:
                 if cond:
                     default = expr
                     break
@@ -203,15 +203,19 @@ class Piecewise(Function):
     def _eval_subs(self, old, new):
         if self == old:
             return new
-        return Piecewise(*[(e._eval_subs(old, new), c._eval_subs(old, new)) \
-                                for e, c in self.args])
+        new_args = []
+        for e, c in self.args:
+            if isinstance(c, bool):
+                new_args.append((e._eval_subs(old, new), c))
+            else:
+                new_args.append((e._eval_subs(old, new), c._eval_subs(old, new)))
+        return Piecewise( *new_args )
 
     @classmethod
     def __eval_cond(cls, cond):
         """Returns S.One if True, S.Zero if False, or None if undecidable."""
-        if type(cond) == bool or cond.is_number:
-            return sympify(bool(cond))
-        if cond.args[0].is_Number and cond.args[1].is_Number:
-            return sympify(bool(cond))
+        if type(cond) == bool or cond.is_number or (cond.args[0].is_Number and cond.args[1].is_Number):
+            if cond: return S.One
+            return S.Zero
         return None
 

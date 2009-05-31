@@ -542,7 +542,7 @@ class LatexPrinter(Printer):
     def _print_Piecewise(self, expr):
         ecpairs = [r"%s & for %s" % (self._print(e), self._print(c)) \
                        for e, c in expr.args[:-1]]
-        if expr.args[-1].cond is S.One:
+        if expr.args[-1].cond == True:
             ecpairs.append(r"%s & \textrm{otherwise}" % \
                                self._print(expr.args[-1].expr))
         else:
