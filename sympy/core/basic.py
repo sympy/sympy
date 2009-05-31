@@ -680,8 +680,30 @@ class Basic(AssumeMeths):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
+    # *******************
+    # * Logic operators *
+    # *******************
 
-
+    def __and__(self, other):
+        """Overloading for & operator"""
+        from sympy.logic.boolalg import And
+        return And(self, other)
+    def __or__(self, other):
+        """Overloading for |"""
+        from sympy.logic.boolalg import Or
+        return Or(self, other)
+    def __invert__(self):
+        """Overloading for ~"""
+        from sympy.logic.boolalg import Not
+        return Not(self)
+    def __rshift__(self, other):
+        """Overloading for >>"""
+        from sympy.logic.boolalg import Implies
+        return Implies(self, other)
+    def __lshift__(self, other):
+        """Overloading for <<"""
+        from sympy.logic.boolalg import Implies
+        return Implies(other, self)
 
 
     def __repr__(self):
