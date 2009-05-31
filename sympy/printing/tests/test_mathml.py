@@ -1,4 +1,4 @@
-from sympy import diff, Integral, Limit, sin, Symbol, Integer
+from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, pi, GoldenRatio, EulerGamma
 from sympy.printing.mathml import mathml, MathMLPrinter
 from xml.dom.minidom import parseString
 
@@ -81,6 +81,76 @@ def test_mathml_tuples():
 
 def test_mathml_matrices():
     pass #TODO
+
+def test_mathml_add():
+    mml = mp._print(x**5 - x**4 + x)
+    assert mml.childNodes[0].nodeName == 'plus'
+    assert mml.childNodes[1].childNodes[0].nodeName == 'minus'
+    assert mml.childNodes[1].childNodes[1].nodeName == 'ci'
+    assert mml.childNodes[2].childNodes[0].nodeName == 'power'
+
+def test_mathml_Rational():
+    mml_1 = mp._print(Rational(1,1))
+    """should just return a number"""
+    assert mml_1.nodeName == 'cn'
+
+    mml_2 = mp._print(Rational(2,5))
+    assert mml_2.childNodes[0].nodeName == 'divide'
+
+def test_mathml_constants():
+    mml = mp._print(I)
+    assert mml.nodeName == 'imaginaryi'
+
+    mml = mp._print(E)
+    assert mml.nodeName == 'exponentiale'
+
+    mml = mp._print(oo)
+    assert mml.nodeName == 'infinity'
+
+    mml = mp._print(pi)
+    assert mml.nodeName == 'pi'
+
+    assert mathml(GoldenRatio) == '<cn>\xcf\x86</cn>'
+
+    mml = mathml(EulerGamma)
+    assert mml == '<eulergamma/>'
+
+def test_mathml_trig():
+    mml = mp._print(sin(x))
+    assert mml.childNodes[0].nodeName == 'sin'
+
+    mml = mp._print(cos(x))
+    assert mml.childNodes[0].nodeName == 'cos'
+
+    mml = mp._print(tan(x))
+    assert mml.childNodes[0].nodeName == 'tan'
+
+    mml = mp._print(asin(x))
+    assert mml.childNodes[0].nodeName == 'arcsin'
+
+    mml = mp._print(acos(x))
+    assert mml.childNodes[0].nodeName == 'arccos'
+
+    mml = mp._print(atan(x))
+    assert mml.childNodes[0].nodeName == 'arctan'
+
+    mml = mp._print(sinh(x))
+    assert mml.childNodes[0].nodeName == 'sinh'
+
+    mml = mp._print(cosh(x))
+    assert mml.childNodes[0].nodeName == 'cosh'
+
+    mml = mp._print(tanh(x))
+    assert mml.childNodes[0].nodeName == 'tanh'
+
+    mml = mp._print(asinh(x))
+    assert mml.childNodes[0].nodeName == 'arcsinh'
+
+    mml = mp._print(atanh(x))
+    assert mml.childNodes[0].nodeName == 'arctanh'
+
+    mml = mp._print(acosh(x))
+    assert mml.childNodes[0].nodeName == 'arccosh'
 
 def test_c2p():
     """This tests some optional routines that depend on libxslt1 (which is optional)"""

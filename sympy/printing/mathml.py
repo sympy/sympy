@@ -2,8 +2,10 @@
 A MathML printer.
 """
 
-from sympy import Basic, sympify
+from sympy import Basic, sympify, C, S
+from sympy.simplify import fraction
 from printer import Printer
+
 
 class MathMLPrinter(Printer):
     """Prints an expression to the MathML markup language
@@ -20,7 +22,8 @@ class MathMLPrinter(Printer):
         self.dom = Document()
 
     def doprint(self, e):
-        return self._print(e).toxml()
+        mathML = Printer.doprint(self,expr)
+        return mathML.toxml()
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -32,17 +35,91 @@ class MathMLPrinter(Printer):
             'int': 'cn',
             'Pow': 'power',
             'Symbol': 'ci',
-            'Integral': 'int'
+            'Integral': 'int',
+            'sin': 'sin',
+            'cos': 'cos',
+            'tan': 'tan',
+            'cot': 'cot',
+            'asin': 'arcsin',
+            'asinh': 'arcsinh',
+            'acos': 'arccos',
+            'acosh': 'arccosh',
+            'atan': 'arctan',
+            'atanh': 'arctanh',
+            'acot': 'arccot',
+            'atan2': 'arctan',
+            'log': 'ln'
         }
 
         for cls in e.__class__.__mro__:
             n = cls.__name__
             if n in translate:
                 return translate[n]
-
         # Not found in the MRO set
         n = e.__class__.__name__
         return n.lower()
+
+    def _print_Mul(self, expr):
+        coeff, terms  = expr.as_coeff_terms()
+
+        if coeff.is_negative:
+            x = self.dom.createElement('apply')
+            x.appendChild(self.dom.createElement('minus'))
+            x.appendChild(self._print_Mul(-expr))
+            return x
+
+        numer, denom = fraction(expr)
+
+        if not denom is S.One:
+            x = self.dom.createElement('apply')
+            x.appendChild(self.dom.createElement('divide'))
+            x.appendChild(self._print(numer))
+            x.appendChild(self._print(denom))
+            return x
+
+        if coeff == 1 and len(terms) == 1:
+            return self._print(terms[0])
+        x = self.dom.createElement('apply')
+        x.appendChild(self.dom.createElement('times'))
+        if(coeff != 1):
+            x.appendChild(self._print(coeff))
+        for term in terms:
+            x.appendChild(self._print(term))
+        return x
+
+    # This is complicated because we attempt to order then results in order of Basic._compare_pretty
+    # and use minus instead of negative
+    def _print_Add(self, e):
+        args = list(e.args)
+        args.sort(Basic._compare_pretty)
+        lastProcessed = self._print(args[0])
+        args.pop(0)
+        plusNodes = list()
+        for i in range(0,len(args)):
+            arg = args[i]
+            coeff, terms = arg.as_coeff_terms()
+            if(coeff.is_negative):
+                #use minus
+                x = self.dom.createElement('apply')
+                x.appendChild(self.dom.createElement('minus'))
+                x.appendChild(lastProcessed)
+                x.appendChild(self._print(-arg))
+                #invert expression  since this is now minused
+                lastProcessed = x;
+                if(arg == args[-1]):
+                    plusNodes.append(lastProcessed)
+            else:
+                plusNodes.append(lastProcessed)
+                lastProcessed = self._print(arg)
+                if(arg == args[-1]):
+                    plusNodes.append(self._print(arg))
+        if len(plusNodes) == 1:
+            return lastProcessed
+        x = self.dom.createElement('apply')
+        x.appendChild(self.dom.createElement('plus'))
+        while len(plusNodes) > 0:
+            x.appendChild(plusNodes.pop(0))
+        return x
 
     def _print_Matrix(self, m):
         x = self.dom.createElement('matrix')
@@ -51,6 +128,24 @@ class MathMLPrinter(Printer):
             for j in range(m.cols):
                 x_r.appendChild(self._print(m[i,j]))
             x.appendChild(x_r)
+        return x
+
+    def _print_Rational(self, e):
+        if e.q == 1:
+            #don't divide
+            x = self.dom.createElement('cn')
+            x.appendChild(self.dom.createTextNode(str(e.p)))
+            return x
+        x = self.dom.createElement('apply')
+        x.appendChild(self.dom.createElement('divide'))
+        #numerator
+        xnum = self.dom.createElement('cn')
+        xnum.appendChild(self.dom.createTextNode(str(e.p)))
+        #denomenator
+        xdenom = self.dom.createElement('cn')
+        xdenom.appendChild(self.dom.createTextNode(str(e.q)))
+        x.appendChild(xnum)
+        x.appendChild(xdenom)
         return x
 
     def _print_Limit(self, e):
@@ -65,9 +160,35 @@ class MathMLPrinter(Printer):
         x.appendChild(x_1)
         x.appendChild(x_2)
         x.appendChild(self._print(e.args[0]))
-
         return x
 
+    def _print_ImaginaryUnit(self,e):
+        return self.dom.createElement('imaginaryi')
+
+    def _print_EulerGamma(self,e):
+        return self.dom.createElement('eulergamma')
+
+    def _print_GoldenRatio(self,e):
+        """We use unicode #x3c6 for greek letter phi as defined here
+        http://www.w3.org/Math/characters/"""
+        x = self.dom.createElement('cn')
+        x.appendChild(self.dom.createTextNode(u"\u03c6"))
+        return x
+
+    def _print_Exp1(self,e):
+        return self.dom.createElement('exponentiale')
+
+    def _print_Pi(self, e):
+        return self.dom.createElement('pi')
+
+    def _print_Infinity(self, e):
+        return self.dom.createElement('infinity')
+
+    def _print_Negative_Infinity(self,e):
+        x = self.dom.createElement('apply')
+        x.appendChild(self.dom.createElement('minus'))
+        x.appendChild(self.dom.createElement('infinity'))
+        return x
 
     def _print_Integral(self, e):
         def lime_recur(limits):
@@ -100,6 +221,19 @@ class MathMLPrinter(Printer):
         return x
 
     def _print_Pow(self, e):
+        #Here we use root instead of power if the exponent is the reciprocal of an integer
+        if e.exp.is_Rational and e.exp.p == 1:
+            x = self.dom.createElement('apply')
+            x.appendChild(self.dom.createElement('root'))
+            if e.exp.q != 2:
+                xmldeg = self.dom.createElement('degree')
+                xmlci = self.dom.createElement('ci')
+                xmlci.appendChild(self.dom.createTextNode(str(e.exp.q)))
+                xmldeg.appendChild(xmlci)
+                x.appendChild(xmldeg)
+            x.appendChild(self._print(e.base))
+            return x
+
         x = self.dom.createElement('apply')
         x_1 = self.dom.createElement(self.mathml_tag(e))
         x.appendChild(x_1)
@@ -161,7 +295,7 @@ class MathMLPrinter(Printer):
 def mathml(expr):
     """Returns the MathML representation of expr"""
     s = MathMLPrinter()
-    return s.doprint(sympify(expr))
+    return s._print(sympify(expr)).toxml(encoding="utf-8")
 
 def print_mathml(expr):
     """
@@ -182,4 +316,4 @@ def print_mathml(expr):
     </apply>
     """
     s = MathMLPrinter()
-    print s._print(sympify(expr)).toprettyxml()
+    print s._print(sympify(expr)).toprettyxml(encoding="utf-8")
