@@ -751,10 +751,12 @@ class MV(object):
                 labels = MV.basislabel
             else:
                 labels = MV.bladelabel
+        mv.compact()
         if isinstance(mv.mv[0],types.IntType):
             value = ''
         else:
             value = (mv.mv[0][0]).__str__()
+            value = value.replace(' ','')
         dummy = sympy.Symbol('dummy')
         for igrade in MV.n1rg[1:]:
             if isinstance(mv.mv[igrade],numpy.ndarray):
@@ -762,6 +764,7 @@ class MV(object):
                 for x in mv.mv[igrade]:
                     if x != ZERO:
                         xstr = (x*dummy).__str__()
+                        xstr = xstr.replace(' ','')
                         if xstr[0] != '-' and len(value) > 0:
                             xstr = '+'+xstr
                         if xstr.find('dummy') < 2 and xstr[-5:] != 'dummy':
@@ -776,7 +779,8 @@ class MV(object):
                     value += '\n'
         if value == '':
             value = '0'
-        value = value.replace(' ','')
+        #value = value.replace(' ','')
+        value = value.replace('dummy','1')
         return(value)
 
     @staticmethod
