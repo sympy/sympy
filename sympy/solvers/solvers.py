@@ -889,14 +889,21 @@ def homogeneous_order(eq, *symbols):
     return _homogeneous_order(eq, *symbols)
 
 def _homogeneous_order(eq, *symbols):
+    def _dummyiter():
+        i = 0
+        while True:
+            yield Symbol('d%d' % i, dummmy=True)
+            i += 1
+
+
     if not symbols:
         raise ValueError, "homogeneous_order: no symbols were given."
 
     n = set()
 
     # Replace all functions with dummy variables
+
     if any(getattr(i, 'is_Function') for i in symbols):
-        dummyiter = (Symbol('d%d' % i, dummy=True) for i in xrange(256))
         for i in symbols:
             if i.is_Function:
                 if not all(map((lambda i: i in symbols), i.args)):
@@ -904,7 +911,7 @@ def _homogeneous_order(eq, *symbols):
                 elif i not in symbols:
                     pass
                 else:
-                    dummyvar = dummyiter.next()
+                    dummyvar = _dummyiter().next()
                     eq = eq.subs(i, dummyvar)
                     symbols = list(symbols)
                     symbols.remove(i)
