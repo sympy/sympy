@@ -713,8 +713,8 @@ def solve_ODE_first_order(eq, f):
                 int2 = C.Integral(int2.args[0],(u2,_a,x/f(x)))
             else:
                 int2 = int2.subs(u2,x/f(x))
-            sol1 = logcombine(Equality(log(x), int1 + log(C1)), assumePosReal=True)
-            sol2 = logcombine(Equality(log(f(x)), int2 + log(C1)), assumePosReal=True)
+            sol1 = logcombine(Equality(log(x), int1 + log(C1)), assume_pos_real=True)
+            sol2 = logcombine(Equality(log(f(x)), int2 + log(C1)), assume_pos_real=True)
             if sol1.lhs.is_Function and sol1.lhs.func == log and sol1.rhs == 0:
                 sol1 = Equality(sol1.lhs.args[0]*C1,C1)
             if sol2.lhs.is_Function and sol2.lhs.func == log and sol2.rhs == 0:
@@ -883,7 +883,7 @@ def homogeneous_order(eq, *symbols):
     True
     """
     if eq.has(log):
-        eq = logcombine(eq, assumePosReal=True)
+        eq = logcombine(eq, assume_pos_real=True)
     # This runs as a separate function call so that logcombine doesn't endlessly
     # put back together what homogeneous_order is trying to take apart.
     return _homogeneous_order(eq, *symbols)
