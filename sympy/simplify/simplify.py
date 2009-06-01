@@ -457,7 +457,7 @@ def collect(expr, syms, evaluate=True, exact=False):
     Notes
     =====
         - arguments are expected to be in expanded form, so you might have to call
-           .expand prior to calling this function.
+           .expand() prior to calling this function.
     """
     def make_expression(terms):
         product = []
