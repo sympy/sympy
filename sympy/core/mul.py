@@ -31,6 +31,7 @@ class Mul(AssocOp):
 
     @classmethod
     def flatten(cls, seq):
+
         # apply associativity, separate commutative part of seq
         c_part = []         # out: commutative factors
         nc_part = []        # out: non-commutative factors
@@ -40,13 +41,17 @@ class Mul(AssocOp):
         coeff = S.One       # standalone term
                             # e.g. 3 * ...
 
-        c_powers = {}       # base -> exp                      z
-                            # e.g. (x+y) -> z  for  ... * (x+y)  * ...
+        cnum_powers = {}    # base:num-exp                  2
+                            # e.g. (x+y):2  for  ... * (x+y)  * ...
 
-        exp_dict = {}       # num-base -> exp           y
-                            # e.g.  3 -> y  for  ... * 3  * ...
+        c_powers = []       # (base,exp)      z
+                            # e.g. (x,z) for x
+
+        num_exp = []     # (num-base, exp)           y
+                            # e.g.  (3, y)  for  ... * 3  * ...
 
         order_symbols = None
+
 
 
         # --- PART 1 ---
@@ -98,11 +103,9 @@ class Mul(AssocOp):
                 # 3
                 if o.is_Pow and b.is_Number:
 
-                    # let's collect factors with numeric base
-                    if b in exp_dict:
-                        exp_dict[b] += e
-                    else:
-                        exp_dict[b]  = e
+                    # get all the factors with numberic base so they can be
+                    # combined below
+                    num_exp.append((b,e))
                     continue
 
 
@@ -127,13 +130,17 @@ class Mul(AssocOp):
                         b = t[0]
                     #else: c is One, so pass
 
-                # let's collect factors with the same base, so e.g.
-                #  y    z     y+z
+                # let's collect factors with the same base if the exponent is
+                # a number, so e.g.
+                #  2    3     5
                 # x  * x  -> x
-                if b in c_powers:
-                    c_powers[b] += e
+                if e.is_Number:
+                    if b in cnum_powers:
+                        cnum_powers[b] += e
+                    else:
+                        cnum_powers[b] = e
                 else:
-                    c_powers[b] = e
+                    c_powers.append((b,e))
 
 
             # NON-COMMUTATIVE
@@ -167,22 +174,50 @@ class Mul(AssocOp):
                     else:
                         nc_part.append(o1)
                         nc_part.append(o)
+        # We do want a combined exponent if it would not be an Add, such as
+        #  y    2y     3y
+        # x  * x   -> x
 
+        new_c_powers = []
+        common_b = {} # b:e
+        for b, e in c_powers:
+            # If the exponent is already an Add, we can skip it
+            if e.is_Add:
+                new_c_powers.append((b,e))
+                continue
+
+            if b in common_b:
+                if (e+common_b[b]).is_Add:
+                    new_c_powers.append((b,e))
+                else:
+                    common_b[b] += e # Only add exponents if the sum is not an Add
+            else:
+                common_b[b] = e
+
+        for b,e, in common_b.items():
+            new_c_powers.append((b,e))
+
+        c_powers = new_c_powers
+
+
+        #
 
         # --- PART 2 ---
         #
         # o process collected powers  (x**0 -> 1; x**1 -> x; otherwise Pow)
         # o combine collected powers  (2**x * 3**x -> 6**x)
+        #   with numeric base
 
         # ................................
         # now we have:
         # - coeff:
-        # - c_powers:   b -> e
-        # - exp_dict:   3 -> e
+        # - cnum_powers:  b:3
+        # - c_powers:    (b, e)
+        # - num_exp:     (2, e)
 
         #  0             1
         # x  -> 1       x  -> x
-        for b, e in c_powers.items():
+        for b, e in cnum_powers.items() + c_powers:
             if e is S.Zero:
                 continue
 
@@ -198,9 +233,9 @@ class Mul(AssocOp):
 
         #  x    x     x
         # 2  * 3  -> 6
-        inv_exp_dict = {}   # exp -> Mul(num-bases)     x    x
+        inv_exp_dict = {}   # exp:Mul(num-bases)     x    x
                             # e.g.  x -> 6  for  ... * 2  * 3  * ...
-        for b,e in exp_dict.items():
+        for b,e in num_exp:
             if e in inv_exp_dict:
                 inv_exp_dict[e] *= b
             else:
@@ -255,7 +290,7 @@ class Mul(AssocOp):
             if coeff == Real(0):
                 c_part, nc_part = [coeff], []
             elif coeff == Real(1):
-                # change it to One, so it don't get inserted to slot0
+                # change it to One, so it doesn't get inserted to slot0
                 coeff = S.One
 
 

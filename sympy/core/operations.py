@@ -83,6 +83,7 @@ class AssocOp(Basic):
                 seq = list(o[:]) + seq
                 continue
             new_seq.append(o)
+        # c_part, nc_part, order_symbols
         return [], new_seq, None
 
     _eval_subs = Basic._seq_subs
