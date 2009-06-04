@@ -26,7 +26,7 @@ arg
 ---
 
 Returns the argument (in radians) of a complex number. For a real
-number, the arguement is always 0.
+number, the argument is always 0.
 
 Examples::
     >>> from sympy.functions import arg
@@ -48,7 +48,7 @@ conjugate
 ---------
 
 Returns the 'complex conjugate <http://en.wikipedia.org/wiki/Complex_conjugation>'_
-of the argument. In mathematics, the complex conjugate of a complex number is given
+of an argument. In mathematics, the complex conjugate of a complex number is given
 by changing the sign of the imaginary part. Thus, the conjugate of the complex number
 
     a + ib
@@ -69,7 +69,7 @@ Examples::
 
 
 min_
----
+----
 
 Returns the minimum of two (comparable) expressions.
 
@@ -87,8 +87,8 @@ It is named min_ and not min to avoid conflicts with built-in function min.
 .. autoclass:: sympy.functions.elementary.min_
 
 
-max
----
+max_
+----
 
 Returns the maximum of two (comparable) expressions
 
@@ -144,7 +144,7 @@ Returns the sign of an expression, that is:
 Combinatorial
 =============
 
-This moduel implement's some combinatorial functions.
+This module implements various combinatorial functions.
 
 
 Binomial
@@ -160,19 +160,19 @@ Factorial
 
 
 FallingFactorial
----------------
+----------------
 
 .. autoclass:: sympy.functions.combinatorial.factorials.FallingFactorial
 
 
 MultiFactorial
------------
+--------------
 
 .. autoclass:: sympy.functions.combinatorial.factorials.MultiFactorial
 
 
 RisingFactorial
--------------
+---------------
 
 .. autoclass:: sympy.functions.combinatorial.factorials.RisingFactorial
 
@@ -181,7 +181,7 @@ Special
 =======
 
 DiracDelta
------------
+----------
 .. autoclass:: sympy.functions.special.delta_functions.DiracDelta
 
 Heaviside
@@ -189,17 +189,17 @@ Heaviside
 .. autoclass:: sympy.functions.special.delta_functions.Heaviside
 
 gamma
-------
+-----
 .. autoclass:: sympy.functions.special.gamma_functions.gamma
 
 loggamma
-------
+--------
 .. autoclass:: sympy.functions.special.gamma_functions.loggamma
 
 polygamma
-------
+---------
 .. autoclass:: sympy.functions.special.gamma_functions.polygamma
 
 uppergamma
--------
+----------
 .. autoclass:: sympy.functions.special.gamma_functions.uppergamma
