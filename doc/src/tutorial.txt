@@ -20,7 +20,7 @@ to know more, read the
 :ref:`SymPy User's Guide <guide>`,
 :ref:`SymPy Modules Reference <module-docs>`.
 or the `sources
-<http://hg.sympy.org/sympy/file/tip>`_ directly.
+<http://git.sympy.org/?p=sympy.git;a=tree;hb=HEAD>`_ directly.
 
 First Steps with SymPy
 ======================
@@ -292,7 +292,7 @@ you can also calculate the limit at infinity::
 
 for some non-trivial examples on limits, you can read the test file
 `test_demidovich.py
-<http://hg.sympy.org/sympy/file/tip/sympy/series/tests/test_demidovich.py>`_
+<http://git.sympy.org/?p=sympy.git;a=blob;f=sympy/series/tests/test_demidovich.py>`_
 
 .. index:: differentiation, diff
 
