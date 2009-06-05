@@ -147,7 +147,10 @@ class Function(Basic):
 
     @property
     def is_commutative(self):
-        return True
+        if all(getattr(t, 'is_commutative') for t in self.args):
+            return True
+        else:
+            return False
 
     @classmethod
     @deprecated

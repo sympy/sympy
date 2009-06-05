@@ -296,3 +296,12 @@ def test_extensibility_eval():
         def eval(cls, *args):
             return (0,0,0)
     assert MyFunc(0) == (0,0,0)
+
+def test_function_non_commutative():
+    x = Symbol('x', commutative=False)
+    f = Function('f')
+    assert f(x).is_commutative == False
+    assert sin(x).is_commutative == False
+    assert exp(x).is_commutative == False
+    assert log(x).is_commutative == False
+
