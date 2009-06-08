@@ -284,7 +284,7 @@ class LinearEntity(GeometryEntity):
             px = simplify((b1*c2 - c1*b2) / t)
             py = simplify((a2*c1 - a1*c2) / t)
             inter = Point(px, py)
-            if inter in self and inter in o:
+            if (inter in self) and (inter in o):
                 return [inter]
             return []
         raise NotImplementedError()
@@ -511,13 +511,9 @@ class Segment(LinearEntity):
             return ((o.p1 in self) and (o.p2 in self))
         elif isinstance(o, Point):
             if Point.is_collinear(self.p1, self.p2, o):
-                x1,x2 = self.p1[0], self.p2[0]
-                if not (x1.atoms(C.Symbol)) or (x2.atoms(C.Symbol)):
-                    return (min(x1,x2) <= o[0]) and (o[0] <= max(x1,x2))
-                else:
+                d = self.length
+                if (Point.distance(self.p1,o) <= d) and (Point.distance(self.p2,o) <= d):
                     return True
-            else:
-                return False
 
         # No other known entity can be contained in a Ray
         return False
