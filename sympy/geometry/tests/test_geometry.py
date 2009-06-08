@@ -175,6 +175,11 @@ def test_line():
     assert intersection(r1, l1) == [r1]
     assert intersection(s1, l1) == [s1]
 
+    entity1 = Segment(Point(-10,10), Point(10,10))
+    entity2 = Segment(Point(-5,-5), Point(-5,5))
+    assert intersection(entity1, entity2) == []
+
+
 def test_ellipse():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
