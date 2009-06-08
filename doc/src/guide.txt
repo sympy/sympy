@@ -238,7 +238,7 @@ All objects in the sympy are immutable - in the sense, that any operation just
 returns a new instance (it can return the same instance only if it didn't
 change). This is a common mistake to change the current instance, like
 ``self.arg=self.arg +1`` (wrong!). Use ``arg=self.arg + 1;return arg`` instead.
-The object in immutable in the
+The object is immutable in the
 sense of the symbolic expression it represents. It can modify itself to keep
 track of for example its hash. Or it can precalculate anything regarding the
 expression it contains. But the expression cannot be changed. So you can pass
