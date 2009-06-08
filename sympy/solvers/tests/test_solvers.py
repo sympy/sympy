@@ -263,7 +263,7 @@ def test_tsolve_2():
     x, y, a, b = symbols('xyab')
     assert solve(y-a*x**b, x) == [y**(1/b)*(1/a)**(1/b)]
 
-def test_solveForFunctionsDerivatives():
+def test_solve_for_functions_derivatives():
     t = Symbol('t')
     x = Function('x')(t)
     y = Function('y')(t)
