@@ -140,8 +140,7 @@ def test_simplify():
 def test_simplify_issue_1308():
     assert simplify(exp(-Rational(1,2)) + exp(-Rational(3,2))) == \
         (1 + E)*exp(-Rational(3,2))
-    assert simplify(exp(1)+exp(-exp(1))) == \
-        (1 + exp(1 + E))*exp(-E)
+    assert simplify(exp(1)+exp(-exp(1))) == (1 + exp(1 + E))*exp(-E)
 
 
 def test_simplify_fail1():
@@ -219,16 +218,40 @@ def test_separate_X1():
     assert separate((exp(x)*exp(y))**z) == exp(x*z)*exp(y*z)
 
 def test_powsimp():
-    x,y,n = symbols('xyn')
+    x,y,z,n = symbols('xyzn')
     f = Function('f')
     assert powsimp( 4**x * 2**(-x) * 2**(-x) ) == 1
     assert powsimp( (-4)**x * (-2)**(-x) * 2**(-x) ) == 1
 
     assert powsimp( f(4**x * 2**(-x) * 2**(-x)) )   == f(4**x * 2**(-x) * 2**(-x))
     assert powsimp( f(4**x * 2**(-x) * 2**(-x)), deep = True )  == f(1)
+    assert exp(x)*exp(y) == exp(x)*exp(y)
+    assert powsimp(exp(x)*exp(y)) == exp(x+y)
+    assert powsimp(exp(x)*exp(y)*2**x*2**y) == (2*E)**(x + y)
+    assert powsimp(exp(x)*exp(y)*2**x*2**y, combine='exp') == exp(x+y)*2**(x+y)
+    assert powsimp(exp(x)*exp(y)*exp(2)*sin(x)+sin(y)+2**x*2**y) == exp(2+x+y)*sin(x)+sin(y)+2**(x+y)
+    assert powsimp(sin(exp(x)*exp(y))) == sin(exp(x)*exp(y))
+    assert powsimp(sin(exp(x)*exp(y)), deep=True) == sin(exp(x+y))
+    assert powsimp(x**2*x**y) == x**(2+y)
+    # This should remain factored, because 'exp' with deep=True is supposed
+    # to act like old automatic exponent combining.
+    assert powsimp((1 + E*exp(E))*exp(-E), combine='exp', deep=True) == (1 + exp(1 + E))*exp(-E)
+    assert powsimp((1 + E*exp(E))*exp(-E), deep=True) == exp(1) + exp(-E)
+    # This should not change without deep.  Otherwise, simplify() will fail.
+    assert powsimp((1 + E*exp(E))*exp(-E)) == (1 + E*exp(E))*exp(-E)
+    assert powsimp((1 + E*exp(E))*exp(-E), combine='exp') == (1 + E*exp(E))*exp(-E)
+    assert powsimp((1 + E*exp(E))*exp(-E), combine='base') == (1 + E*exp(E))*exp(-E)
     x,y = symbols('xy', nonnegative=True)
     n = Symbol('n', real=True)
     assert powsimp( y**n * (y/x)**(-n) ) == x**n
+    assert powsimp(x**(x**(x*y)*y**(x*y))*y**(x**(x*y)*y**(x*y)),deep=True) == (x*y)**(x*y)**(x*y)
+    assert powsimp(2**(2**(2*x)*x), deep=False) == 2**(2**(2*x)*x)
+    assert powsimp(2**(2**(2*x)*x), deep=True) == 2**(x*4**x)
+    assert powsimp(exp(-x + exp(-x)*exp(-x*log(x))), deep=False, combine='exp') == exp(-x + exp(-x)*exp(-x*log(x)))
+    assert powsimp(exp(-x + exp(-x)*exp(-x*log(x))), deep=False, combine='exp') == exp(-x + exp(-x)*exp(-x*log(x)))
+    assert powsimp((x+y)/(3*z), deep=False, combine='exp') == (x+y)/(3*z)
+    assert powsimp((x/3+y/3)/z, deep=True, combine='exp') == (x/3+y/3)/z
+
 
 def test_collect_1():
     """Collect with respect to a Symbol"""

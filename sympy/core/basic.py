@@ -2150,7 +2150,7 @@ class Basic(AssumeMeths):
     def _eval_nseries(self, x, x0, n):
         """
         This is a method that should be overriden in subclasses. Users should
-        never call this method directl (use .nseries() instead), so you don't
+        never call this method directly (use .nseries() instead), so you don't
         have to write docstrings for _eval_nseries().
         """
         raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, x0, n))
@@ -2178,7 +2178,7 @@ class Basic(AssumeMeths):
 
         self is assumed to be the result returned by Basic.series().
         """
-
+        from sympy import powsimp
         if len(symbols)>1:
             c = self
             for x in symbols:
@@ -2192,7 +2192,7 @@ class Basic(AssumeMeths):
             return self
         obj = self._eval_as_leading_term(x)
         if obj is not None:
-            return obj
+            return powsimp(obj, deep=True, combine='exp')
         raise NotImplementedError('as_leading_term(%s, %s)' % (self, x))
 
     def _eval_as_leading_term(self, x):
@@ -2228,9 +2228,10 @@ class Basic(AssumeMeths):
 
         self is assumed to be the result returned by Basic.series().
         """
-
+        from sympy import powsimp
         x = sympify(x)
         c,e = self.as_leading_term(x).as_coeff_exponent(x)
+        c = powsimp(c, deep=True, combine='exp')
         if not c.has(x):
             return c,e
         raise ValueError("cannot compute leadterm(%s, %s), got c=%s" % (self, x, c))

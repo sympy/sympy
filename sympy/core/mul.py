@@ -103,7 +103,7 @@ class Mul(AssocOp):
                 # 3
                 if o.is_Pow and b.is_Number:
 
-                    # get all the factors with numberic base so they can be
+                    # get all the factors with numeric base so they can be
                     # combined below
                     num_exp.append((b,e))
                     continue
@@ -177,15 +177,9 @@ class Mul(AssocOp):
         # We do want a combined exponent if it would not be an Add, such as
         #  y    2y     3y
         # x  * x   -> x
-
         new_c_powers = []
         common_b = {} # b:e
         for b, e in c_powers:
-            # If the exponent is already an Add, we can skip it
-            if e.is_Add:
-                new_c_powers.append((b,e))
-                continue
-
             if b in common_b:
                 if (e+common_b[b]).is_Add:
                     new_c_powers.append((b,e))
@@ -196,10 +190,23 @@ class Mul(AssocOp):
 
         for b,e, in common_b.items():
             new_c_powers.append((b,e))
-
         c_powers = new_c_powers
 
+        # And the same for numeric bases
+        new_num_exp = []
+        common_b = {} # b:e
+        for b, e in num_exp:
+            if b in common_b:
+                if (e+common_b[b]).is_Add:
+                    new_num_exp.append((b,e))
+                else:
+                    common_b[b] += e # Only add exponents if the sum is not an Add
+            else:
+                common_b[b] = e
 
+        for b,e, in common_b.items():
+            new_num_exp.append((b,e))
+        num_exp = new_num_exp
         #
 
         # --- PART 2 ---
@@ -667,8 +674,9 @@ class Mul(AssocOp):
         return self.__class__(*[s._eval_subs(old, new) for s in self.args])
 
     def _eval_nseries(self, x, x0, n):
+        from sympy import powsimp
         terms = [t.nseries(x, x0, n) for t in self.args]
-        return Mul(*terms).expand()
+        return powsimp(Mul(*terms).expand(), combine='exp', deep=True)
 
 
     def _eval_as_leading_term(self, x):

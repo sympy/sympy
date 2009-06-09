@@ -138,9 +138,8 @@ def separate(expr, deep=False):
        >>> separate((x*sin(x))**y + (x*cos(x))**y)
        x**y*cos(x)**y + x**y*sin(x)**y
 
-       #this does not work because of exp combining
-       #>>> separate((exp(x)*exp(y))**x)
-       #exp(x*y)*exp(x**2)
+       >>> separate((exp(x)*exp(y))**x)
+       exp(x**2)*exp(x*y)
 
        >>> separate((sin(x)*cos(x))**y)
        cos(x)**y*sin(x)**y
@@ -199,11 +198,11 @@ def together(expr, deep=False):
        and denominator of all expressions involved and perform
        needed simplifications:
 
-       #>>> together(1/x + 1/y)
-       #(x + y)/(y*x)
+       >>> together(1/x + 1/y)
+       (x + y)/(x*y)
 
-       #>>> together(1/x + 1/y + 1/z)
-       #(z*x + x*y + z*y)/(y*x*z)
+       >>> together(1/x + 1/y + 1/z)
+       (x*y + x*z + y*z)/(x*y*z)
 
        >>> together(1/(x*y) + 1/y**2)
        (x + y)/(x*y**2)
@@ -305,7 +304,7 @@ def together(expr, deep=False):
             else:
                 common = S.One
 
-            product = reduce(lambda x, y: x*y, coeffs) / common
+            product = Mul(*coeffs) / common
 
             for ((numer, denom), coeff) in zip(items, coeffs):
 
@@ -919,18 +918,27 @@ def radsimp(expr):
 
     return n/d
 
-def powsimp(expr, deep=False):
+def powsimp(expr, deep=False, combine='all'):
     """
     Usage
     =====
-        powsimp(expr, deep) -> reduces expression by combining powers with
-            similar bases and exponents.
+        Reduces expression by combining powers with similar bases and exponents.
 
     Notes
     =====
         If deep is True then powsimp() will also simplify arguments of
         functions. By default deep is set to False.
+        You can make powsimp() only combine bases or only combine exponents by
+        changing combine='base' or combine='exp'.  By default, combine='all',
+        which does both.  combine='base' will only combine
+         a   a          a                          2x      x
+        x * y  =>  (x*y)   as well as things like 2   =>  4
+        and combine='exp' will only combine
+         a   b      (a + b)
+        x * x  =>  x
 
+        combine='exp' will strictly only combine exponents in the way that used
+        to be automatic.  Also use deep=True if you need the old behavior.
 
     Examples
     ========
@@ -945,65 +953,144 @@ def powsimp(expr, deep=False):
 
         >>> powsimp(log(e), deep=True)
         log(n**(1 - n))
+
+        >>> powsimp(e, combine='exp')
+        n*x**n*(n*x)**(-n)
+        >>> powsimp(e, combine='base')
+        n*(1/n)**n
+
+        >>> y, z = symbols('yz')
+        >>> a = x**y*x**z*n**z*n**y
+        >>> powsimp(a, combine='exp')
+        n**(y + z)*x**(y + z)
+        >>> powsimp(a, combine='base')
+        (n*x)**y*(n*x)**z
+        >>> powsimp(a, combine='all')
+        (n*x)**(y + z)
     """
-    def _powsimp(expr):
-        if expr.is_Pow:
+    if combine not in ['all', 'exp', 'base']:
+            raise ValueError, "combine must be one of ('all', 'exp', 'base')."
+    if combine in ('all', 'base'):
+        expr = separate(expr, deep)
+    y = Symbol('y', dummy=True)
+    if expr.is_Pow:
             if deep:
-                return C.Pow(powsimp(expr.base), powsimp(expr.exp))
+                return powsimp(y*powsimp(expr.base, deep, combine)**powsimp(\
+                expr.exp, deep, combine), deep, combine)/y
+            else:
+                return powsimp(y*expr, deep, combine)/y # Trick it into being a Mul
+    elif expr.is_Function:
+        if expr.func == exp and deep:
+            # Exp should really be like Pow
+            return powsimp(y*exp(powsimp(expr.args[0], deep, combine)), deep, combine)/y
+        elif expr.func == exp and not deep:
+            return powsimp(y*expr, deep, combine)/y
+        elif deep:
+            return expr.func(*[powsimp(t, deep, combine) for t in expr.args])
+        else:
             return expr
-        elif expr.is_Function and deep:
-            return expr.func(*[powsimp(t) for t in expr.args])
-        elif expr.is_Add:
-            return C.Add(*[powsimp(t) for t in expr.args])
-        elif expr.is_Mul:
+    elif expr.is_Add:
+        return C.Add(*[powsimp(t, deep, combine) for t in expr.args])
+
+    elif expr.is_Mul:
+        if combine in ('exp', 'all'):
             # Collect base/exp data, while maintaining order in the
             # non-commutative parts of the product
             c_powers = {}
             nc_part = []
+            newexpr = sympify(1)
             for term in expr.args:
-                if term.is_commutative:
-                    b,e = term.as_base_exp()
-                    c_powers[b] = c_powers.get(b, 0) + e
+                if term.is_Add and deep:
+                    newexpr *= powsimp(term, deep, combine)
                 else:
-                    nc_part.append(term)
+                    if term.is_commutative:
+                        b, e = term.as_base_exp()
+                        c_powers[b] = c_powers.get(b, 0) + e
+                    else:
+                        nc_part.append(term)
+            newexpr = Mul(newexpr,Mul(*(Pow(b,e) for b, e in c_powers.items())))
+            if combine is 'exp':
+                return Mul(newexpr,Mul(*nc_part))
+            else:
+                # combine is 'all', get stuff ready for 'base'
+                if deep:
+                    newexpr = distribute(newexpr)
+                if newexpr.is_Add:
+                    return powsimp(Mul(*nc_part), deep, combine='base')*Add(*(powsimp(i, deep, combine='base') for i in newexpr.args))
+                else:
+                    return powsimp(Mul(*nc_part), deep, combine='base')*\
+                    powsimp(newexpr, deep, combine='base')
+
+
+        else:
+            # combine is 'base'
+            if deep:
+                expr = distribute(expr)
+            if expr.is_Add:
+                return Add(*(powsimp(i, deep, combine) for i in expr.args))
+            else:
+                # Build c_powers and nc_part.  These must both be lists not
+                # dicts because exp's are not combined.
+                c_powers = []
+                nc_part = []
+                for term in expr.args:
+                    if term.is_commutative:
+                        c_powers.append(list(term.as_base_exp()))
+                    else:
+                        nc_part.append(term)
+
 
             # Pull out numerical coefficients from exponent
-            for b,e in c_powers.items():
+            # e.g., 2**(2*x) => 4**x
+            for i in xrange(len(c_powers)):
+                b, e = c_powers[i]
                 exp_c, exp_t = e.as_coeff_terms()
                 if not (exp_c is S.One) and exp_t:
-                    del c_powers[b]
-                    new_base = C.Pow(b, exp_c)
-                    if new_base in c_powers:
-                        c_powers[new_base] += C.Mul(*exp_t)
-                    else:
-                        c_powers[new_base] = C.Mul(*exp_t)
+                    c_powers[i] = [C.Pow(b, exp_c), C.Mul(*exp_t)]
+
 
             # Combine bases whenever they have the same exponent which is
             # not numeric
             c_exp = {}
-            for b, e in c_powers.items():
+            for b, e in c_powers:
                 if e in c_exp:
                     c_exp[e].append(b)
                 else:
                     c_exp[e] = [b]
-
             # Merge back in the results of the above to form a new product
             for e in c_exp:
                 bases = c_exp[e]
+                if deep:
+                    simpe = powsimp(e, deep, combine)
+                    c_exp = {}
+                    for b, ex in c_powers:
+                        if ex in c_exp:
+                            c_exp[ex].append(b)
+                        else:
+                            c_exp[ex] = [b]
+                    del c_exp[e]
+                    c_exp[simpe] = bases
+
+                else:
+                    simpe = e
                 if len(bases) > 1:
                     for b in bases:
-                        del c_powers[b]
+                        c_powers.remove([b,e])
                     new_base = Mul(*bases)
-                    if new_base in c_powers:
-                        c_powers[new_base] += e
-                    else:
-                        c_powers[new_base] = e
-
-            c_part = [ C.Pow(b,e) for b,e in c_powers.items() ]
+                    in_c_powers = False
+                    for i in xrange(len(c_powers)):
+                        if c_powers[i][0] == new_base:
+                            if combine == 'all':
+                                c_powers[i][1] += simpe
+                            else:
+                                c_powers.append([new_base, simpe])
+                            in_c_powers = True
+                    if not in_c_powers:
+                        c_powers.append([new_base, simpe])
+            c_part = [ C.Pow(b,e) for b,e in c_powers ]
             return C.Mul(*(c_part + nc_part))
+    else:
         return expr
-
-    return _powsimp(separate(expr, deep=deep))
 
 def hypersimp(f, k):
     """Given combinatorial term f(k) simplify its consecutive term ratio
@@ -1070,14 +1157,14 @@ def simplify(expr):
        Simplification is not a well defined term and the exact strategies
        this function tries can change in the future versions of SymPy. If
        your algorithm relies on "simplification" (whatever it is), try to
-       determine what you need exactly  -  is it powsimp(), or radsimp(),
-       or together(), or something else? And use this particular function
-       directly, because those are well defined and thus your algorithm
+       determine what you need exactly  -  is it powsimp()? radsimp()?
+       together()?, combine()?, or something else? And use this particular
+       function directly, because those are well defined and thus your algorithm
        will be robust.
 
     """
     expr = Poly.cancel(powsimp(expr))
-    return together(expr.expand())
+    return powsimp(together(expr.expand()), combine='exp', deep=True)
 
 def nsimplify(expr, constants=[], tolerance=None, full=False):
     """

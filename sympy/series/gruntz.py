@@ -1,3 +1,4 @@
+from sympy.simplify import powsimp
 """
 Limits
 ======
@@ -195,6 +196,7 @@ def compare(a,b,x):
 @debug
 def mrv(e, x):
     "Returns a python set of  most rapidly varying (mrv) subexpressions of 'e'"
+    e = powsimp(e, deep=True, combine='exp')
     assert isinstance(e, Basic)
     if not e.has(x):
         return set([])

@@ -460,6 +460,8 @@ class Pow(Basic):
         return d
 
     def _eval_nseries(self, x, x0, n):
+        from sympy import powsimp, collect
+
         def geto(e):
             "Returns the O(..) symbol, or None if there is none."
             if e.is_Order:
@@ -534,21 +536,18 @@ class Pow(Basic):
                         return p
                 prefactor = base.as_leading_term(x)
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
-                rest = ((base-prefactor)/prefactor).expand()
+                rest = powsimp(((base-prefactor)/prefactor).expand(),\
+                deep=True, combine='exp')
                 if rest == 0:
                     # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
                     # factor the w**4 out using collect:
-                    from sympy import collect
                     return 1/collect(prefactor, x)
                 if rest.is_Order:
                     return ((1+rest)/prefactor).expand()
-                if not rest.has(x):
-                    return 1/(prefactor*(rest+1))
                 n2 = getn(rest)
                 if n2 is not None:
                     n = n2
 
-                from sympy import collect
                 term2 = collect(rest.as_leading_term(x), x)
                 k, l = Wild("k"), Wild("l")
                 r = term2.match(k*x**l)
@@ -570,7 +569,7 @@ class Pow(Basic):
                     # Append O(...) because it is not included in "r"
                     from sympy import O
                     r += O(x**n)
-                return r
+                return powsimp(r, deep=True, combine='exp')
             else:
                 # negative powers are rewritten to the cases above, for example:
                 # sin(x)**(-4) = 1/( sin(x)**4) = ...
@@ -586,7 +585,7 @@ class Pow(Basic):
             return sympy.exp(exp*sympy.log(base)).nseries(x, x0, n)
 
         if base == x:
-            return self
+            return powsimp(self, deep=True, combine='exp')
 
         order = C.Order(x**n, x)
         x = order.symbols[0]
@@ -596,7 +595,8 @@ class Pow(Basic):
         exp = C.exp
         if e.has(x):
             return exp(e * ln(b)).nseries(x, x0, n)
-        if b==x: return self
+        if b==x:
+            return self
         b0 = b.limit(x,0)
         if b0 is S.Zero or b0.is_unbounded:
             lt = b.as_leading_term(x)
@@ -608,6 +608,7 @@ class Pow(Basic):
                 # bs -> lt + rest -> lt * (1 + (bs/lt - 1))
                 return (lt**e * ((bs/lt).expand()**e).nseries(x,
                         x0, n-e)).expand() + order
+
             return bs**e+order
         o2 = order * (b0**-e)
         # b -> b0 + (b-b0) -> b0 * (1 + (b/b0-1))

@@ -199,11 +199,11 @@ class exp(Function):
             yield term
 
     def _eval_nseries(self, x, x0, n):
+        from sympy import limit, Symbol, oo, powsimp
         arg = self.args[0]
         arg_series = arg.nseries(x, x0, n)
         if arg_series.is_Order:
             return 1+arg_series
-        from sympy import limit, Symbol, oo
         arg0 = limit(arg_series, x, x0)
         if arg0 in [-oo, oo]:
             return self
@@ -211,7 +211,7 @@ class exp(Function):
         exp_series = exp(s)._taylor(s, x0, n)
         r = exp(arg0)*exp_series.subs(s, arg_series-arg0)
         r = r.expand()
-        return r
+        return powsimp(r, deep=True, combine='exp')
 
     def _taylor(self, x, x0, n):
         l = []
@@ -380,6 +380,7 @@ class log(Function):
         return (self.func(n) - self.func(d)).as_numer_denom()
 
     def _eval_nseries(self, x, x0, n):
+        from sympy import powsimp
         arg = self.args[0]
         k, l = Wild("k"), Wild("l")
         r = arg.match(k*x**l)
@@ -443,6 +444,7 @@ class log(Function):
         if r==self:
             return self
         return r + order
+
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
