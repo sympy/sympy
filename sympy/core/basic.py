@@ -386,7 +386,7 @@ class Basic(AssumeMeths):
     # here is what we do instead:
     for k in AssumeMeths._assume_defined:
         exec "is_%s  = property(make__get_assumption('Basic', '%s'))" % (k,k)
-
+    del k
 
     # NB: there is no need in protective __setattr__
 
