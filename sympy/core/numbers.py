@@ -1162,6 +1162,23 @@ class Infinity(Rational):
         import sage.all as sage
         return sage.oo
 
+    def __gt__(a, b):
+        if b is S.Infinity:
+            return False
+        return True
+
+    def __lt__(a, b):
+        return False
+
+    def __ge__(a, b):
+        return True
+
+    def __le__(a, b):
+        if b is S.Infinity:
+            return True
+        return False
+
+
 class NegativeInfinity(Rational):
     __metaclass__ = SingletonMeta
 
@@ -1211,6 +1228,23 @@ class NegativeInfinity(Rational):
 
     def _as_mpf_val(self, prec):
         return mlib.fninf
+
+    def __gt__(a, b):
+        return False
+
+    def __lt__(a, b):
+        if b is S.NegativeInfinity:
+            return False
+        return True
+
+    def __ge__(a, b):
+        if b is S.NegativeInfinity:
+            return True
+        return False
+
+    def __le__(a, b):
+        return True
+
 
 class NaN(Rational):
     __metaclass__ = SingletonMeta
