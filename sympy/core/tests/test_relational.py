@@ -1,4 +1,4 @@
-from sympy import symbols
+from sympy import symbols, oo
 from sympy.core.relational import Relational, Equality, StrictInequality, \
     Rel, Eq, Lt, Le, Gt, Ge, Ne
 
@@ -51,3 +51,29 @@ def test_Eq():
 
     assert Eq(x**2) == Eq(x**2, 0)
     assert Eq(x**2) != Eq(x**2, 1)
+
+def test_rel_Infinity():
+    assert (oo > oo) is False
+    assert (oo > -oo) is True
+    assert (oo > 1) is True
+    assert (oo < oo) is False
+    assert (oo < -oo) is False
+    assert (oo < 1) is False
+    assert (oo >= oo) is True
+    assert (oo >= -oo) is True
+    assert (oo >= 1) is True
+    assert (oo <= oo) is True
+    assert (oo <= -oo) is False
+    assert (oo <= 1) is False
+    assert (-oo > oo) is False
+    assert (-oo > -oo) is False
+    assert (-oo > 1) is False
+    assert (-oo < oo) is True
+    assert (-oo < -oo) is False
+    assert (-oo < 1) is True
+    assert (-oo >= oo) is False
+    assert (-oo >= -oo) is True
+    assert (-oo >= 1) is False
+    assert (-oo <= oo) is True
+    assert (-oo <= -oo) is True
+    assert (-oo <= 1) is True
