@@ -152,3 +152,12 @@ def test_latex_Matrix():
     M = Matrix([[1+x, y],[y, x-1]])
     assert latex(M) == '$\\left(\\begin{smallmatrix}1 + x & y\\\\y & -1 + '\
                        'x\\end{smallmatrix}\\right)$'
+
+def test_latex_mul_symbol():
+    assert latex(4*4**x, mul_symbol='times') == "$4 \\times 4^{x}$"
+    assert latex(4*4**x, mul_symbol='dot') == "$4 \\cdot 4^{x}$"
+    assert latex(4*4**x, mul_symbol='ldot') == "$4 \,.\, 4^{x}$"
+
+    assert latex(4*x, mul_symbol='times') == "$4 \\times x$"
+    assert latex(4*x, mul_symbol='dot') == "$4 \\cdot x$"
+    assert latex(4*x, mul_symbol='ldot') == "$4 \,.\, x$"
