@@ -146,29 +146,50 @@ class LatexPrinter(Printer):
         seperator = self._settings['mul_symbol_latex']
 
         def convert(terms):
-            product = []
-
             if not terms.is_Mul:
                 return str(self._print(terms))
             else:
+                _tex = last_term_tex = ""
                 for term in terms.args:
                     pretty = self._print(term)
 
                     if term.is_Add:
-                        product.append(r"\left(%s\right)" % pretty)
+                        term_tex = (r"\left(%s\right)" % pretty)
                     else:
-                        product.append(str(pretty))
+                        term_tex = str(pretty)
 
-                return seperator.join(product)
+                    # between two digits, \times must always be used,
+                    # to avoid confusion
+                    if seperator == " " and \
+                            re.search("[0-9][} ]*$", last_term_tex) and \
+                            re.match("[{ ]*[-+0-9]", term_tex):
+                        _tex += r" \times "
+                    elif _tex:
+                        _tex += seperator
+
+                    _tex += term_tex
+                    last_term_tex = term_tex
+                return _tex
 
         if denom is S.One:
-            if coeff is not S.One:
-                tex += str(self._print(coeff)) + seperator
-
             if numer.is_Add:
-                tex += r"\left(%s\right)" % convert(numer)
+                _tex = r"\left(%s\right)" % convert(numer)
             else:
-                tex += r"%s" % convert(numer)
+                _tex = r"%s" % convert(numer)
+
+            if coeff is not S.One:
+                tex += str(self._print(coeff))
+
+                # between two digits, \times must always be used, to avoid
+                # confusion
+                if seperator == " " and re.search("[0-9][} ]*$", tex) and \
+                        re.match("[{ ]*[-+0-9]", _tex):
+                    tex +=  r" \times " + _tex
+                else:
+                    tex += seperator + _tex
+            else:
+                tex += _tex
+
         else:
             if numer is S.One:
                 if coeff.is_Integer:

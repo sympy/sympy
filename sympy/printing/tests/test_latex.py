@@ -161,3 +161,8 @@ def test_latex_mul_symbol():
     assert latex(4*x, mul_symbol='times') == "$4 \\times x$"
     assert latex(4*x, mul_symbol='dot') == "$4 \\cdot x$"
     assert latex(4*x, mul_symbol='ldot') == "$4 \,.\, x$"
+
+def test_latex_issue1282():
+    y = 4*4**log(2)
+    assert latex(y) == '$4 \\times 4^{\\operatorname{log}\\left(2\\right)}$'
+    assert latex(1/y) == '$\\frac{1}{4 \\times 4^{\\operatorname{log}\\left(2\\right)}}$'
