@@ -1,5 +1,5 @@
 
-from sympy.core import Basic, S, C, Symbol, Wild, Pow, sympify, diff
+from sympy.core import Basic, S, C, Symbol, Wild, Pow, sympify, diff, oo
 
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -353,6 +353,83 @@ class Integral(Basic):
             else:
                 arg1.append((sym, limits))
         return Integral(arg0, *arg1)
+
+    def as_sum(self, n, method="midpoint"):
+        """
+        Approximates the integral by a sum.
+
+        method ... one of: left, right, midpoint
+
+        This is basically just the rectangle method [1], the only difference is
+        where the function value is taken in each interval.
+
+        [1] http://en.wikipedia.org/wiki/Rectangle_method
+
+        method=midpoint
+        ---------------
+        Uses the n-order midpoint rule to evaluate the integral.
+
+        Midpoint rule uses rectangles approximation for the given area (e.g.
+        definite integral) of the function with heights equal to the point on
+        the curve exactly in the middle of each interval (thus midpoint
+        method). See [1] for more information.
+
+        Examples:
+        >>> from sympy import sqrt, symbols
+        >>> x = symbols("x")
+        >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
+        >>> e
+        Integral((1 + x**3)**(1/2), (x, 2, 10))
+        >>> e.as_sum(4, method="midpoint")
+        2*730**(1/2) + 4*7**(1/2) + 4*86**(1/2) + 6*14**(1/2)
+        >>> e.as_sum(4, method="midpoint").n()
+        124.164447891310
+        >>> e.n()
+        124.616199194723
+
+        method=left
+        ---------------
+        Uses the n-order rectangle rule to evaluate the integral, at each
+        interval the function value is taken at the left hand side of the
+        interval.
+
+        Examples:
+        >>> from sympy import sqrt, symbols
+        >>> x = symbols("x")
+        >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
+        >>> e
+        Integral((1 + x**3)**(1/2), (x, 2, 10))
+        >>> e.as_sum(4, method="left")
+        6 + 2*65**(1/2) + 2*217**(1/2) + 6*57**(1/2)
+        >>> e.as_sum(4, method="left").n()
+        96.8853618335341
+        >>> e.n()
+        124.616199194723
+
+        """
+
+        if len(self.args[1]) > 1:
+            raise NotImplementedError("Multidimensional midpoint rule not implemented yet")
+        if n <= 0:
+            raise ValueError("n must be > 0")
+        if n == oo:
+            raise NotImplementedError("Infinite summation not yet implemented")
+        sym, limits = self.args[1][0]
+        dx = (limits[1]-limits[0])/n
+        result = 0.
+        for i in range(n):
+            if method == "midpoint":
+                xi = limits[0] + i*dx + dx/2
+            elif method == "left":
+                xi = limits[0] + i*dx
+            elif method == "right":
+                xi = limits[0] + i*dx + dx
+            else:
+                raise NotImplementedError("Unknown method %s" % method)
+            result += self.args[0].subs(sym, xi)
+        return result*dx
+
+
 
 @threaded(use_add=False)
 def integrate(*args, **kwargs):
