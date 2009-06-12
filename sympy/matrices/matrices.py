@@ -920,11 +920,17 @@ class Matrix(object):
         Both self and X can be a row or a column matrix in any order
         (jacobian() should always work).
 
-        Example:
+        Examples::
         >>> from sympy import symbols, sin, cos
         >>> rho, phi = symbols("rho phi")
-        >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
+        >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
         >>> Y = Matrix([rho, phi])
+        >>> X.jacobian(Y)
+        [cos(phi), -rho*sin(phi)]
+        [sin(phi),  rho*cos(phi)]
+        [   2*rho,             0]
+
+        >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
         >>> X.jacobian(Y)
         [cos(phi), -rho*sin(phi)]
         [sin(phi),  rho*cos(phi)]
@@ -936,16 +942,21 @@ class Matrix(object):
         assert len(self.shape) == 2
         assert len(X.shape) == 2
         if self.shape[0] == 1:
-            n = self.shape[1]
+            m = self.shape[1]
+        elif self.shape[1] == 1:
+            m = self.shape[0]
         else:
-            n = self.shape[0]
+            raise TypeError("self must be a row or a column matrix")
         if X.shape[0] == 1:
-            assert X.shape[1] == n
+            n = X.shape[1]
+        elif X.shape[1] == 1:
+            n = X.shape[0]
         else:
-            assert X.shape[0] == n
+            raise TypeError("X must be a row or a column matrix")
 
-        # n is the dimension of the matrix, computing the Jacobian is now easy:
-        return Matrix(n, n, lambda j, i: self[j].diff(X[i]))
+        # m is the number of functions and n is the number of variables
+        # computing the Jacobian is now easy:
+        return Matrix(m, n, lambda j, i: self[j].diff(X[i]))
 
     def QRdecomposition(self):
         """

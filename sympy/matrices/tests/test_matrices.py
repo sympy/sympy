@@ -969,3 +969,38 @@ def test_jacobian_metrics():
     g = J.T*eye(J.shape[0])*J
     g = g.applyfunc(trigsimp)
     assert g == Matrix([[1, 0], [0, rho**2]])
+
+def test_jacobian2():
+    rho, phi = symbols("rho phi")
+    X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
+    Y = Matrix([rho, phi])
+    J = Matrix([
+            [cos(phi), -rho*sin(phi)],
+            [sin(phi),  rho*cos(phi)],
+            [   2*rho,             0],
+        ])
+    assert X.jacobian(Y) == J
+
+def test_issue1465():
+    x, y, z = symbols('x', 'y', 'z')
+    X = Matrix([exp(x + y + z), exp(x + y + z), exp(x + y + z)])
+    Y = Matrix([x, y, z])
+    for i in range(1, 3):
+        for j in range(1, 3):
+            X_slice = X[:i,:]
+            Y_slice = Y[:j,:]
+            J = X_slice.jacobian(Y_slice)
+            assert J.lines == i
+            assert J.cols == j
+            for k in range(j):
+                assert J[:,k] == X_slice
+
+def test_nonvectorJacobian():
+    x, y, z = symbols('x', 'y', 'z')
+    X = Matrix([ [exp(x + y + z), exp(x + y + z)],
+                 [exp(x + y + z), exp(x + y + z)] ])
+    Y = Matrix([x, y, z])
+    raises(TypeError, 'X.jacobian(Y)')
+    X = X[0,:]
+    Y = Matrix([ [x, y], [x,z] ])
+    raises(TypeError, 'X.jacobian(Y)')
