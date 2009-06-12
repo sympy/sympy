@@ -1418,6 +1418,62 @@ class Matrix(object):
         else:
             raise AttributeError()
 
+    def vec(self):
+        """
+        Return the Matrix converted into a one column matrix by stacking columns
+
+        >>> from sympy import Matrix
+        >>> m=Matrix([ [1,3], [2,4] ])
+        >>> m
+        [1, 3]
+        [2, 4]
+        >>> m.vec()
+        [1]
+        [2]
+        [3]
+        [4]
+        """
+        return Matrix(self.cols*self.lines, 1, self.transpose().mat)
+
+    def vech(self, diagonal=True):
+        """
+        Return the unique elements of a symmetric Matrix as a one column matrix by stacking
+        the elements in the lower triangle
+
+        diagonal ...... include the diagonal cells of self or not
+
+        >>> from sympy import Matrix
+        >>> m=Matrix([ [1,2], [2,3] ])
+        >>> m
+        [1, 2]
+        [2, 3]
+        >>> m.vech()
+        [1]
+        [2]
+        [3]
+        >>> m.vech(diagonal=False)
+        [2]
+        """
+        c = self.cols
+        if c != self.lines:
+            raise TypeError("Matrix must be square")
+        if self != self.transpose():
+            raise TypeError("Matrix must be symmetric")
+        count = 0
+        if diagonal:
+            v = zeros( (c * (c + 1) // 2, 1) )
+            for j in xrange(c):
+                for i in xrange(j,c):
+                    v[count] = self[i,j]
+                    count += 1
+        else:
+            v = zeros( (c * (c - 1) // 2, 1) )
+            for j in xrange(c):
+                for i in xrange(j+1,c):
+                    v[count] = self[i,j]
+                    count += 1
+        return v
+
 def matrix_multiply(A,B):
     """
     Return  A*B.

@@ -1004,3 +1004,26 @@ def test_nonvectorJacobian():
     X = X[0,:]
     Y = Matrix([ [x, y], [x,z] ])
     raises(TypeError, 'X.jacobian(Y)')
+
+def test_vec():
+    m = Matrix([ [1,3], [2,4] ])
+    m_vec = m.vec()
+    assert m_vec.cols == 1
+    for i in xrange(4):
+        assert m_vec[i] == i + 1
+
+def test_vech():
+    m = Matrix([ [1,2], [2,3] ])
+    m_vech = m.vech()
+    assert m_vech.cols == 1
+    for i in xrange(3):
+        assert m_vech[i] == i + 1
+    m_vech = m.vech(diagonal = False)
+    assert m_vech[0] == 2
+
+def test_vech_TypeError():
+    m = Matrix([ [1,3] ])
+    raises(TypeError, 'm.vech()')
+    m = Matrix([ [1,3], [2,4] ])
+    raises(TypeError, 'm.vech()')
+
