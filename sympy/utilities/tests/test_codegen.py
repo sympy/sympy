@@ -1,6 +1,7 @@
 
 from sympy import symbols
-from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result
+from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
+    codegen
 from StringIO import StringIO
 import sys
 
@@ -51,4 +52,22 @@ def test_simple_c_header():
     )
     assert source == expected
 
+
+def test_simple_c_codegen():
+    expr = (x+y)*z
+    result = codegen(("test", (x+y)*z), "C", "file", header=False, empty=False)
+    expected = [
+       ("file.c",
+        "#include \"file.h\"\n"
+        "#include <math.h>\n"
+        "double test(double x, double y, double z) {\n"
+        "  return z*(x + y);\n"
+        "}\n"),
+       ("file.h",
+        "#ifndef PROJECT__FILE__H\n"
+        "#define PROJECT__FILE__H\n"
+        "double test(double x, double y, double z);\n"
+        "#endif\n")
+    ]
+    assert result == expected
 

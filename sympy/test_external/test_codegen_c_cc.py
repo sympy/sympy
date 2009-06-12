@@ -67,10 +67,10 @@ def run_cc_test(label, routines, numerical_tests, friendly=True):
     if friendly:
         # interpret the routines as a name_expr list and call the friendly
         # function codegen
-        codegen(routines, 'C', "codegen")
+        codegen(routines, 'C', "codegen", to_files=True)
     else:
         code_gen = CCodeGen()
-        code_gen.write(routines, "codegen")
+        code_gen.write(routines, "codegen", to_files=True)
     # 3) write a simple main program that links to the generated code, and that
     #    includes the numerical tests
     test_strings = []

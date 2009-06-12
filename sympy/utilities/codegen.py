@@ -47,7 +47,10 @@ from sympy.core.symbol import Symbol
 from sympy.core.basic import Basic
 from sympy.utilities.iterables import postorder_traversal
 from sympy.printing.ccode import ccode
+
+from StringIO import StringIO
 import sympy, os
+
 
 __all__ = [
     # description of routines
@@ -186,15 +189,25 @@ class CodeGen(object):
         """
         self.project = project
 
-    def write(self, routines, prefix):
+    def write(self, routines, prefix, to_files=False, header=True, empty=True):
         """Writes all the source code files for the given routines.
 
            Appropriate extensions are appended to given prefix.
         """
-        for dump_fn in self.dump_fns:
-            f = file("%s.%s" % (prefix, dump_fn.extension), "w")
-            dump_fn(self, routines, f, prefix)
-            f.close()
+        if to_files:
+            for dump_fn in self.dump_fns:
+                filename = "%s.%s" % (prefix, dump_fn.extension)
+                f = file(filename, "w")
+                dump_fn(self, routines, f, prefix, header, empty)
+                f.close()
+        else:
+            result = []
+            for dump_fn in self.dump_fns:
+                filename = "%s.%s" % (prefix, dump_fn.extension)
+                contents = StringIO()
+                dump_fn(self, routines, contents, prefix, header, empty)
+                result.append((filename, contents.getvalue()))
+            return result
 
 
 class CodeGenError(Exception):
@@ -304,7 +317,7 @@ class CCodeGen(CodeGen):
 #
 
 
-def codegen(name_expr, language, prefix, project="project"):
+def codegen(name_expr, language, prefix, project="project", to_files=False, header=True, empty=True):
     """Write source code for the given expressions in the given language.
 
        Mandatory Arguments:
@@ -320,7 +333,36 @@ def codegen(name_expr, language, prefix, project="project"):
 
        Optional Arguments:
          project  --  A project name, used for making unique preprocessor
-                      instructions.
+                      instructions. [DEFAULT="project"]
+         to_files  --  Whens True, the code will be written to one or more files
+                       with the given prefix, otherwise strings with the names
+                       and contents of these files are returned. [DEFAULT=False]
+         header  --  When True, a header is written on top of each source file.
+                     [DEFAULT=True]
+         empty  --  When True, empty lines are used to structure the code.
+                    [DEFAULT=True]
+
+       >>> from sympy import symbols
+       >>> from sympy.utilities.codegen import codegen
+       >>> x, y, z = symbols('xyz')
+       >>> [(c_name, c_code), (h_name, c_header)] = \\
+       ...     codegen(("f", x+y*z), "C", "test", header=False, empty=False)
+       >>> print c_name
+       test.c
+       >>> print c_code,
+       #include "test.h"
+       #include <math.h>
+       double f(double x, double y, double z) {
+         return x + y*z;
+       }
+       >>> print h_name
+       test.h
+       >>> print c_header,
+       #ifndef PROJECT__TEST__H
+       #define PROJECT__TEST__H
+       double f(double x, double y, double z);
+       #endif
+
     """
 
     # Initialize the code generator.
@@ -343,5 +385,5 @@ def codegen(name_expr, language, prefix, project="project"):
         routines.append(Routine(name, [InputArgument(symbol) for symbol in sorted(symbols)], [Result(expr)]))
 
     # Write the code.
-    code_gen.write(routines, prefix)
+    return code_gen.write(routines, prefix, to_files, header, empty)
 
