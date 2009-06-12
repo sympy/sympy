@@ -3,10 +3,14 @@
 # is removed after the test. By default the test directory is always removed,
 # but this behavior can be changed by setting the environment variable
 # SYMPY_TEST_CLEAN_TEMP to:
-#   'always': the default behavior
-#   'success': only remove the directories of working tests
+#   'always': the default behavior.
+#   'success': only remove the directories of working tests.
+#   'never': never remove the directories with the test code.
 # When a directory is not removed, the necessary information is printed on
-# screen to find the files that belong to the (failed) tests.
+# screen to find the files that belong to the (failed) tests. If a test does
+# not fail, py.test captures all the output and you will not see the directories
+# corresponding to the successful tests. Use the --nocapture option to see all
+# the output.
 
 # All tests below have a counterpart in utilities/test/test_codegen.py. In the
 # latter file, the resulting code is compared with predefined strings, without
@@ -92,8 +96,8 @@ def run_cc_test(label, routines, numerical_tests, friendly=True):
         executed = False
     # 6) Clean up stuff
     clean = os.getenv('SYMPY_TEST_CLEAN_TEMP', 'always').lower()
-    if clean not in ('always', 'success'):
-        raise ValueError("SYMPY_TEST_CLEAN_TEMP must be one of the following: always or success.")
+    if clean not in ('always', 'success', 'never'):
+        raise ValueError("SYMPY_TEST_CLEAN_TEMP must be one of the following: 'always', 'success' or 'never'.")
     if clean == 'always' or (clean == 'success' and compiled and executed):
         def safe_remove(filename):
             if os.path.isfile(filename):
