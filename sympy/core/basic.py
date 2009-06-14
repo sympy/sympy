@@ -2219,7 +2219,7 @@ class Basic(AssumeMeths):
 
 class Atom(Basic):
     """
-    A parent class for atomic things.
+    A parent class for atomic things. An atom is an expression with no subexpressions.
 
     Examples: Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
