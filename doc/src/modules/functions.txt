@@ -4,39 +4,49 @@ Functions Module
 .. module:: sympy.functions
 
 Elementary
---------
+==========
+
 This module implements elementary functions (abs, max, etc.)
+
 
 abs
 ---
+
 Returns the absolute value of the argument.
 
 Examples::
     >>> from sympy.functions import abs
+    >>> abs(-1)
+    1
+
 .. autoclass:: sympy.functions.elementary.abs
+
 
 arg
 ---
+
 Returns the argument (in radians) of a complex number. For a real
 number, the arguement is always 0.
 
 Examples::
     >>> from sympy.functions import arg
+    >>> from sympy import I, sqrt
     >>> arg(2.0)
     0
     >>> arg(I)
     pi
     --
-    2
+    2 
     >>> arg(sqrt(2) + I*sqrt(2))
     pi
     --
-    4
+    4 
 
 .. autoclass:: sympy.functions.elementary.arg
 
 conjugate
 ---------
+
 Returns the 'complex conjugate <http://en.wikipedia.org/wiki/Complex_conjugation>'_
 of the argument. In mathematics, the complex conjugate of a complex number is given
 by changing the sign of the imaginary part. Thus, the conjugate of the complex number
@@ -49,6 +59,7 @@ by changing the sign of the imaginary part. Thus, the conjugate of the complex n
 
 Examples::
     >>> from sympy.functions import conjugate
+    >>> from sympy import I
     >>> conjugate(2)
     2
     >>> conjugate(I)
@@ -56,8 +67,10 @@ Examples::
 
 .. autoclass:: sympy.functions.elementary.conjugate
 
+
 min_
 ---
+
 Returns the minimum of two (comparable) expressions.
 
 Examples::
@@ -67,22 +80,26 @@ Examples::
     >>> from sympy import Symbol
     >>> x = Symbol('x')
     >>> min_(1,x)
-    min_(1,x)
+    min_(1, x)
 
 It is named min_ and not min to avoid conflicts with built-in function min.
 
 .. autoclass:: sympy.functions.elementary.min_
 
+
 max
 ---
+
 Returns the maximum of two (comparable) expressions
 
 It is named max_ and not max to avoid conflicts with built-in function min.
 
 .. autoclass:: sympy.functions.elementary.max_
 
+
 re
 --
+
 Return the real part of an expression
 
 Examples::
@@ -90,10 +107,13 @@ Examples::
     >>> from sympy import I
     >>> re(2+3*I)
     2
+
 .. autoclass:: sympy.functions.elementary.re
+
 
 sqrt
 ----
+
 Returns the square root of an expression. It is equivalent to raise to Rational(1,2)
 
     >>> from sympy.functions import sqrt
@@ -102,6 +122,7 @@ Returns the square root of an expression. It is equivalent to raise to Rational(
     True
 
 .. autoclass:: sympy.functions.elementary.sqrt
+
 
 sign
 ----
@@ -112,7 +133,7 @@ Returns the sign of an expression, that is:
      1 if expr is positive
 
      >>> from sympy.functions import sign
-     >>> sign(-oo)
+     >>> sign(-1)
      -1
      >>> sign(0)
      0
@@ -121,32 +142,43 @@ Returns the sign of an expression, that is:
 
 
 Combinatorial
---------
+=============
+
 This moduel implement's some combinatorial functions.
+
 
 Binomial
 --------
+
 .. autoclass:: sympy.functions.combinatorial.factorials.Binomial
+
 
 Factorial
 ---------
+
 .. autoclass:: sympy.functions.combinatorial.factorials.Factorial
+
 
 FallingFactorial
 ---------------
+
 .. autoclass:: sympy.functions.combinatorial.factorials.FallingFactorial
+
 
 MultiFactorial
 -----------
+
 .. autoclass:: sympy.functions.combinatorial.factorials.MultiFactorial
+
 
 RisingFactorial
 -------------
+
 .. autoclass:: sympy.functions.combinatorial.factorials.RisingFactorial
 
 
 Special
-------
+=======
 
 DiracDelta
 -----------

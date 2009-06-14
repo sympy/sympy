@@ -18,11 +18,15 @@ of more general functions is possible. Below are listed all currently available
 expand rules.
 
 Expanding of arithmetic expressions involving products and powers:
+    >>> from sympy import *
+    >>> x, y, z = symbols('xyz')
     >>> ((x + y)*(x - y)).expand(basic=True)
-    x**2 - y**2
-
+     2    2
+    x  - y 
     >>> ((x + y + z)**2).expand(basic=True)
-    x**2 + y**2 + z**2 + 2*x*y + 2*x*z + 2*y*z
+                             2    2    2
+    2*x*y + 2*x*z + 2*y*z + x  + y  + z 
+
 
 Arithmetic expand is done by default in `expand()` so the keyword `basic` can
 be omitted. However you can set `basic=False` to avoid this type of expand if
@@ -34,10 +38,11 @@ them into a normal form. For this `complex` keyword is used. Note that it will
 always perform arithmetic expand to obtain the desired normal form:
 
     >>> (x + I*y).expand(complex=True)
-    -im(y) + I*re(y) + I*im(x) + re(x)
+    -im(y) + I*im(x) + I*re(y) + re(x)
 
     >>> sin(x + I*y).expand(complex=True)
-    sin(-im(y) + re(x))*cosh(re(y) + im(x)) + I*cos(-im(y) + re(x))*sinh(re(y) + im(x))
+    cosh(im(x) + re(y))*sin(-im(y) + re(x)) + I*cos(-im(y) + re(x))*sinh(im(x) + r
+    e(y))
 
 Note also that the same behavior can be obtained by using `as_real_imag()`
 method. However it will return a tuple containing the real part in the first
@@ -45,10 +50,10 @@ place and the imaginary part in the other. This can be also done in a two step
 process by using `collect` function:
 
     >>> (x + I*y).as_real_imag()
-    (-im(y) + re(x), re(y) + im(x))
+    (-im(y) + re(x), im(x) + re(y))
 
     >>> collect((x + I*y).expand(complex=True), I, evaluate=False)
-    {I: re(y) + im(x), 1: -im(y) + re(x)}
+    {1: -im(y) + re(x), I: im(x) + re(y)}
 
 There is also possibility for expanding expressions in terms of expressions of
 different kind. This is very general type of expanding and usually you would

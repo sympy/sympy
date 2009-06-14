@@ -28,6 +28,7 @@ access any SymPy module, or use this contens:
    modules/polynomials.txt
    modules/printing.txt
    modules/plotting.txt
+   modules/query.txt
    modules/statistics.txt
    modules/concrete.txt
    modules/solvers.txt

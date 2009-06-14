@@ -9,16 +9,16 @@ series(x*cos(x),x), which is possibly more intuative than (x*cos(x)).series(x).
 
 Examples
 --------
-    >>> from sympy import cos, series
-    >>> from sympy.series import series
+    >>> from sympy import Symbol, cos, series
+    >>> x = Symbol('x')
     >>> series(cos(x),x)
-    1 - x**2/2 + x**4/24 + O(x**6)
+         2    4          
+        x    x           
+    1 - -- + -- + O(x**6)
+        2    24          
+
 
 TODO and Bugs
 -------------
-The series expansion about a point other than x=0 does not work:
-    >>> series(cos(x),x,10)
-    1 - x**2/2 + x**4/24 + O(x**6)
-
-This is a bug in Basic.series() (issue 1334). When fixed there, the bug will 
+The series expansion about a point other than x=0 does not work. This is a bug in Basic.series() (issue 1334). When fixed there, the bug will 
 also be automatically fixed here.

@@ -109,7 +109,18 @@ def doctest(*paths, **kwargs):
         t.add_paths(paths)
     else:
         t.add_paths(["sympy"])
-    return t.test()
+    dtest = t.test()
+
+    # test documentation under doc/src/
+    import doctest
+    excluded = ['doc/src/modules/plotting.txt']
+    doc_files = glob('doc/src/*.txt') + glob('doc/src/modules/*.txt')
+    for ex in excluded:
+        doc_files.remove(ex)
+    for doc_file in doc_files:
+        print "Testing ", doc_file
+        print "Failed %s, tested %s" % doctest.testfile(doc_file, module_relative=False)
+    return dtest
 
 
 class SymPyTests(object):

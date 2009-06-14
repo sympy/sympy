@@ -29,4 +29,6 @@ Contents:
 If something cannot be easily accesible from this page, it's a bug (`please
 report it`_).
 
+This documentation is maintaned with doctutils, so you might see some comments in the form #doctest:... . You can safely ignore them.
+
 .. _please report it: http://code.google.com/p/sympy/issues/list

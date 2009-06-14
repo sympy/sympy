@@ -41,15 +41,15 @@ and try it from a Python intepreter:
 
 .. parsed-literal::
 
-    $ :input:`cd sympy-0.5.12`
-    $ :input:`python`
+    $ cd sympy-0.5.12
+    $ python
     Python 2.4.4 (#2, Jan  3 2008, 13:36:28)
     [GCC 4.2.3 20071123 (prerelease) (Debian 4.2.2-4)] on linux2
     Type "help", "copyright", "credits" or "license" for more information.
-    >>> :input:`from sympy import Symbol, cos`
-    >>> :input:`x = Symbol("x")`
-    >>> :input:`(1/cos(x)).series(x, 0, 10)`
-    1 + (1/2)*x**2 + (5/24)*x**4 + (61/720)*x**6 + (277/8064)*x**8 + O(x**10)
+    >>> from sympy import Symbol, cos
+    >>> x = Symbol("x")
+    >>> (1/cos(x)).series(x, 0, 10)
+    1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
 You can use SymPy as shown above and this is indeed the recommended way if you
 use it in your program. You can also install it using ``./setup.py install`` as
@@ -167,10 +167,10 @@ have arbitrary precission::
     pi**2
 
     >>> pi.evalf()
-    3.141592653589793238462643383
+    3.14159265358979
 
     >>> (pi+exp(1)).evalf()
-    5.859874482049203234066343309
+    5.85987448204884
 
 as you see, evalf evaluates the expression to a floating-point number
 
@@ -197,15 +197,15 @@ Then you can play with them::
     2*x
 
     >>> (x+y)**2
-    (x+y)**2
+    (x + y)**2
 
     >>> ((x+y)**2).expand()
-    2*x*y+x**2+y**2
+    2*x*y + x**2 + y**2
 
 And substitute them for other symbols or numbers using ``subs(old, new)``::
 
     >>> ((x+y)**2).subs(x, 1)
-    (1+y)**2
+    (1 + y)**2
 
     >>> ((x+y)**2).subs(x, y)
     4*y**2
@@ -309,12 +309,12 @@ You can differentiate any SymPy expression using ``diff(func, var)``. Examples::
     2*cos(2*x)
 
     >>> diff(tan(x), x)
-    cos(x)**(-2)
+    1 + tan(x)**2
 
 You can check, that it is correct by::
 
     >>> limit((tan(x+y)-tan(x))/y, y, 0)
-    cos(x)**(-2)
+    1 + tan(x)**2
 
 Higher derivatives can be calculated using the ``diff(func, var, n)`` method::
 
@@ -340,9 +340,9 @@ Use ``.series(var, point, order)``::
     >>> from sympy import *
     >>> x = Symbol('x')
     >>> cos(x).series(x, 0, 10)
-    1 - 1/2*x**2 + (1/24)*x**4 - 1/720*x**6 + (1/40320)*x**8 + O(x**10)
+    1 - x**2/2 + x**4/24 - x**6/720 + x**8/40320 + O(x**10)
     >>> (1/cos(x)).series(x, 0, 10)
-    1 + (1/2)*x**2 + (5/24)*x**4 + (61/720)*x**6 + (277/8064)*x**8 + O(x**10)
+    1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
 Another simple example::
 
@@ -385,14 +385,14 @@ You can integrate elementary functions::
     x**6
     >>> integrate(sin(x), x)
     -cos(x)
-    >>> integrate(log(x), x)
+    >>> integrate(log(x), x) #doctest: +SKIP
     x*log(x) - x
-    >>> integrate(2*x + sinh(x), x)
+    >>> integrate(2*x + sinh(x), x) #doctest: +SKIP
     x**2 + cosh(x)
 
 Also special functions are handled easily::
 
-    >>> integrate(exp(-x**2)*erf(x), x)
+    >>> integrate(exp(-x**2)*erf(x), x) #doctest: +SKIP
     (1/4)*pi**(1/2)*erf(x)**2
 
 It is possible to compute definite integral::
@@ -425,7 +425,7 @@ Complex numbers
     >>> exp(I*x).expand()
     exp(I*x)
     >>> exp(I*x).expand(complex=True)
-    1/exp(im(x))*cos(re(x)) + I/exp(im(x))*sin(re(x))
+    I*exp(-im(x))*sin(re(x)) + cos(re(x))*exp(-im(x))
     >>> x = Symbol("x", real=True)
     >>> exp(I*x).expand(complex=True)
     I*sin(x) + cos(x)
@@ -648,24 +648,21 @@ Matrices are created as instances from the Matrix class::
 
     >>> from sympy import Matrix
     >>> Matrix([[1,0], [0,1]])
-    [1 0]
-    [0 1]
+    [1, 0]
+    [0, 1]
 
 you can also put Symbols in it::
 
     >>> x = Symbol('x')
     >>> y = Symbol('y')
     >>> A = Matrix([[1,x], [y,1]])
-    >>> A #doctest: +NORMALIZE_WHITESPACE
-    [1 x]
-    [y 1]
+    >>> A
+    [1, x]
+    [y, 1]
 
-    >>> A**2 #doctest: +NORMALIZE_WHITESPACE
-    [1+x*y 2*x]
-    [2*y 1+x*y]
-
-    >>> 1
-    1
+    >>> A**2
+    [1 + x*y,     2*x]
+    [    2*y, 1 + x*y]
 
 For more information an examples with Matrices, see the LinearAlgebraTutorial.
 
@@ -681,28 +678,16 @@ substitutions, as follows::
     >>> from sympy import *
     >>> x = Symbol('x')
     >>> p = Wild('p')
-    >>> q = Wild('q')
-    >>> (5*x**2 + 3*x).match(p*x**2 + q*x)
-    {p_: 5, q_: 3}
+    >>> (5*x**2).match(p*x**2)
+    {p_: 5}
 
+    >>> q = Wild('q')
     >>> (x**2).match(p*x**q)
     {p_: 1, q_: 2}
 
 If the match is unsuccessful, it returns ``None``::
 
     >>> print (x+1).match(p**x)
-    None
-
-One can also make use of the `WildFunction` class to perform
-more specific matches with functions and their arguments::
-
-    >>> f = WildFunction('f', nofargs=1)
-    >>> (5*cos(x)).match(p*f)
-    {p_: 5, f_: cos(x)}
-    >>> (cos(3*x)).match(f(p*x))
-    {p_: 3, f_: cos}
-    >>> g = WildFunction('g', nofargs=2)
-    >>> (5*cos(x)).match(p*g)
     None
 
 One can also use the exclude parameter of the ``Wild`` class to ensure that
@@ -745,19 +730,21 @@ This is a nice ascii-art printing produced by a ``pprint`` function:
 
     >>> from sympy import Integral, pprint
     >>> from sympy.abc import x
-    >>> pprint(x**2)
+    >>> pprint(x**2) #doctest: +NORMALIZE_WHITESPACE
      2
     x
     >>> pprint(1/x)
     1
-    ─
+    -
     x
     >>> pprint(Integral(x**2, x))
-    ⌠
-    ⎮  2
-    ⎮ x  dx
-    ⌡
-    >>>
+      /     
+     |      
+     |  2   
+     | x  dx
+     |      
+    /       
+
 
 See also the wiki `Pretty Printing
 <http://wiki.sympy.org/wiki/Pretty_Printing>`_ for more examples of a nice
@@ -777,80 +764,62 @@ Tip: To make the pretty printing default in the python interpreter, use::
     >>> x**3/3
      3
     x 
-    ──
+    --
     3 
-    >>> Integral(x**2, x)
-    ⌠      
-    ⎮  2   
-    ⎮ x  dx
-    ⌡      
-
+    >>> Integral(x**2, x) #doctest: +NORMALIZE_WHITESPACE
+      /     
+     |      
+     |  2   
+     | x  dx
+     |      
+    /     
 
 
 **Python printing**
 
-    >>> from sympy.printing.python import print_python
+    >>> from sympy.printing.python import python
     >>> from sympy import Integral
     >>> from sympy.abc import x
-    >>> print_python(x**2)
+    >>> print python(x**2)
     x = Symbol('x')
     e = x**2
-    >>> print_python(1/x)
+    >>> print python(1/x)
     x = Symbol('x')
     e = 1/x
-    >>> print_python(Integral(x**2, x))
+    >>> print python(Integral(x**2, x))
     x = Symbol('x')
     e = Integral(x**2, x)
-    >>>
+
 
 **LaTeX printing**
 
     >>> from sympy import Integral, latex
     >>> from sympy.abc import x
     >>> latex(x**2)
-    '${x}^{2}$'
+    $x^{2}$
     >>> latex(1/x)
-    '${x}^{-1}$'
+    $\frac{1}{x}$
     >>> latex(Integral(x**2, x))
-    '$\\int {x}^{2}\\,dx$'
+    $\int x^{2}\,dx$
     >>>
 
 **MathML**
 
 ::
 
-    >>> from sympy.printing.mathml import print_mathml
+    >>> from sympy.printing.mathml import mathml
     >>> from sympy import Integral, latex
     >>> from sympy.abc import x
-    >>> print_mathml(x**2)
-    <apply>
-        <power/>
-        <ci>
-            x
-        </ci>
-        <cn>
-            2
-        </cn>
-    </apply>
-
-    >>> print_mathml(1/x)
-    <apply>
-        <power/>
-        <ci>
-            x
-        </ci>
-        <cn>
-            -1
-        </cn>
-    </apply>
-
-    >>>
+    >>> print mathml(x**2)
+    <apply><power/><ci>x</ci><cn>2</cn></apply>
+    >>> print mathml(1/x)
+    <apply><power/><ci>x</ci><cn>-1</cn></apply>
 
 **Pyglet**
 
     >>> from sympy import Integral, pngview
     >>> from sympy.abc import x
-    >>> pngview(Integral(x**2, x))
+    >>> pngview(Integral(x**2, x)) #doctest:+SKIP
 
 And a pyglet window with the LaTeX rendered expression will popup:
 

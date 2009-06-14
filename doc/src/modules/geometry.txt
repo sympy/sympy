@@ -39,6 +39,7 @@ Example Usage
 The following Python session gives one an idea of how to work with some of the
 geometry module.
 
+    >>> from sympy import *
     >>> from sympy.geometry import *
     >>> x = Point(0, 0)
     >>> y = Point(1, 1)
@@ -52,10 +53,12 @@ geometry module.
     >>> t.area
     1/2
     >>> t.medians[x]
-    >>> Segment(Point(1, 1/2), Point(0, 0))
+    ((0, 0), (1, 1/2))
+    >>> Segment(Point(1, S(1)/2), Point(0, 0))
+    ((0, 0), (1, 1/2))
     >>> m = t.medians
     >>> intersection(m[x], m[y], m[zp])
-    [Point(2/3, 1/3)]
+    [(2/3, 1/3)]
     >>> c = Circle(x, 5)
     >>> l = Line(Point(5, -5), Point(5, 5))
     >>> c.is_tangent(l) # is l tangent to c?
@@ -64,7 +67,10 @@ geometry module.
     >>> c.is_tangent(l) # is l tangent to c?
     False
     >>> intersection(c, l)
-    [Point(-25/2*2/25**(1/2), -25/2*2/25**(1/2)), Point(25/2*2/25**(1/2), 25/2*2/25**(1/2))]
+           ___       ___        ___      ___  
+      -5*\/ 2   -5*\/ 2     5*\/ 2   5*\/ 2   
+    [(--------, --------), (-------, -------)]
+         2         2           2        2     
 
 Intersection of medians
 -----------------------
@@ -108,11 +114,11 @@ An in-depth example: Pappus' Theorem
     >>> l2 = Line(Point(0, 0), Point(2, -2))
     >>> 
     >>> def subs_point(l, val):
-    >>>     """Take an arbitrary point and make it a fixed point."""
-    >>>     t = Symbol('t')
-    >>>     ap = l.arbitrary_point()
-    >>>     return Point(ap[0].subs(t, val), ap[1].subs(t, val))
-    >>> 
+    ...    """Take an arbitrary point and make it a fixed point."""
+    ...    t = Symbol('t')
+    ...    ap = l.arbitrary_point()
+    ...    return Point(ap[0].subs(t, val), ap[1].subs(t, val))
+    ... 
     >>> p11 = subs_point(l1, 5)
     >>> p12 = subs_point(l1, 6)
     >>> p13 = subs_point(l1, 11)
