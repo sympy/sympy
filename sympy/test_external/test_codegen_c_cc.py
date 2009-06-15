@@ -156,6 +156,64 @@ def test_basic_codegen():
         ("test", (1.0, 6.0, 3.0), 21.0, 1e-15),
         ("test", (-1.0, 2.0, -2.5), -2.5, 1e-15),
     ]
-    run_cc_test("is_feasible", [("test", (x+y)*z)], numerical_tests)
+    run_cc_test("basic_codegen", [("test", (x+y)*z)], numerical_tests)
+
+def test_ansi_math1_codegen():
+    # not included: log10
+    from sympy import acos, asin, atan, ceiling, cos, cosh, floor, log, ln, \
+        sin, sinh, sqrt, tan, tanh, N
+    x = symbols('x')
+    name_expr = [
+        ("test_fabs", abs(x)),
+        ("test_acos", acos(x)),
+        ("test_asin", asin(x)),
+        ("test_atan", atan(x)),
+        ("test_ceil", ceiling(x)),
+        ("test_cos", cos(x)),
+        ("test_cosh", cosh(x)),
+        ("test_floor", floor(x)),
+        ("test_log", log(x)),
+        ("test_ln", ln(x)),
+        ("test_sin", sin(x)),
+        ("test_sinh", sinh(x)),
+        ("test_sqrt", sqrt(x)),
+        ("test_tan", tan(x)),
+        ("test_tanh", tanh(x)),
+    ]
+    numerical_tests = []
+    for name, expr in name_expr:
+        for xval in 0.2, 0.5, 0.8:
+            expected = N(expr.subs(x, xval))
+            numerical_tests.append((name, (xval,), expected, 1e-14))
+    run_cc_test("ansi_math1", name_expr, numerical_tests)
+
+def test_ansi_math2_codegen():
+    # not included: frexp, ldexp, modf, fmod
+    from sympy import atan2, N
+    x, y = symbols('xy')
+    name_expr = [
+        ("test_atan2", atan2(x,y)),
+        ("test_pow", x**y),
+    ]
+    numerical_tests = []
+    for name, expr in name_expr:
+        for xval,yval in (0.2, 1.3), (0.5, -0.2), (0.8, 0.8):
+            expected = N(expr.subs(x, xval).subs(y, yval))
+            numerical_tests.append((name, (xval,yval), expected, 1e-14))
+    run_cc_test("ansi_math2", name_expr, numerical_tests)
+
+def test_complicated_codegen():
+    from sympy import sin, cos, tan, N
+    x,y,z = symbols('xyz')
+    name_expr = [
+        ("test1", ((sin(x)+cos(y)+tan(z))**7).expand()),
+        ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x+y+z))))))))),
+    ]
+    numerical_tests = []
+    for name, expr in name_expr:
+        for xval,yval,zval in (0.2, 1.3, -0.3), (0.5, -0.2, 0.0), (0.8, 2.1, 0.8):
+            expected = N(expr.subs(x, xval).subs(y, yval).subs(z, zval))
+            numerical_tests.append((name, (xval,yval,zval), expected, 1e-12))
+    run_cc_test("complicated_codegen", name_expr, numerical_tests)
 
 
