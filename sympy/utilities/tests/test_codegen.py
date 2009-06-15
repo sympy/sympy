@@ -5,7 +5,6 @@ from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
 from StringIO import StringIO
 import sys
 
-x,y,z = symbols('xyz')
 
 
 def get_string(dump_fn, routines, prefix="file"):
@@ -26,6 +25,7 @@ def test_empty_c_header():
     assert source == "#ifndef PROJECT__FILE__H\n#define PROJECT__FILE__H\n#endif\n"
 
 def test_simple_c_code():
+    x,y,z = symbols('xyz')
     expr = (x+y)*z
     routine = Routine("test", [InputArgument(symbol) for symbol in x,y,z], [Result(expr)])
     code_gen = CCodeGen()
@@ -40,6 +40,7 @@ def test_simple_c_code():
     assert source == expected
 
 def test_simple_c_header():
+    x,y,z = symbols('xyz')
     expr = (x+y)*z
     routine = Routine("test", [InputArgument(symbol) for symbol in x,y,z], [Result(expr)])
     code_gen = CCodeGen()
@@ -54,6 +55,7 @@ def test_simple_c_header():
 
 
 def test_simple_c_codegen():
+    x,y,z = symbols('xyz')
     expr = (x+y)*z
     result = codegen(("test", (x+y)*z), "C", "file", header=False, empty=False)
     expected = [

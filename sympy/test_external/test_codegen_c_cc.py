@@ -26,7 +26,6 @@ from sympy.utilities.codegen import codegen, CCodeGen, Routine, InputArgument, \
     Result
 import sys, os, tempfile
 
-x,y,z = symbols('xyz')
 
 main_template = """
 #include "codegen.h"
@@ -120,6 +119,7 @@ def run_cc_test(label, routines, numerical_tests, friendly=True):
 
 def is_feasible():
     # This test should always work, otherwise the cc compiler is not present.
+    x,y,z = symbols('xyz')
     expr = (x+y)*z
     routine = Routine("test", [InputArgument(symbol) for symbol in x,y,z], [Result(expr)])
     numerical_tests = [
@@ -140,6 +140,7 @@ def test_basic():
 
 
 def test_basic_codegen():
+    x,y,z = symbols('xyz')
     numerical_tests = [
         ("test", (1.0, 6.0, 3.0), 21.0, 1e-15),
         ("test", (-1.0, 2.0, -2.5), -2.5, 1e-15),
