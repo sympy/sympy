@@ -1,28 +1,55 @@
 """
 module for generating C, C++, Fortran77, Fortran90 and python routines that
-evaluate sympy expressions.
+evaluate sympy expressions. This module is work in progress. Only the
+milestones with a '+' character in the list below have been completed.
 
-Basic assumptions:
+
+--- How is sympy.utilities.codegen different from sympy.printing.ccode? ---
+
+We considered the idea to extend the printing routines for sympy functions in
+such a way that it prints complete compilable code, but this leads to a few
+unsurmountable issues that can only be tackled with dedicated code generator:
+
+- For C, one needs both a code and a header file, while the printing routines
+generate just one string. This code generator can be extended to support .pyf
+files for f2py.
+
+- Sympy functions are not concerned with programming-technical issues, such as
+input, output and input-output arguments. Other examples are contiguous or
+non-contiguous arrays, including headers of other libraries such as gsl or others.
+
+- It is highly interesting to evaluate several sympy functions in one C routine,
+eventually sharing common intermediate results with the help of the cse routine.
+This is more than just printing.
+
+- From the programming perspective, expressions with constants should be
+evaluated in the code generator as much as possible. This is different for
+printing.
+
+
+--- Basic assumptions ---
 
 * A generic Routine data structure describes the routine that must be translated
   into C/Fortran/... code. This data structure covers all features present in
   one or more of the supported languages.
 
 * Descendants from the CodeGen class transform multiple Routine instances into
-  compilable code.
+  compilable code. Each derived class translates into a specific language.
 
-* In many cases, one wants a simple way to get results. The friendly functions
-  in the last part are a simple api on top of the Routine/CodeGen stuff. They
-  are easier to use, but are less powerful.
+* In many cases, one wants a simple workflow. The friendly functions in the last
+  part are a simple api on top of the Routine/CodeGen stuff. They are easier to
+  use, but are less powerful.
 
-Milestones:
+
+--- Milestones ---
 
 + First working version with scalar input arguments, generating C code, tests
 + Friendly functions that are easier to use than the rigorous Routine/CodeGen
   workflow.
++ Integer and Real numbers as input and output
 - Optional extra include lines for libraries/objects that can eval special
   functions
-- Other C compilers and libraries: gcc, tcc, libtcc, gcc+gsl, ...
+- Test other C compilers and libraries: gcc, tcc, libtcc, gcc+gsl, ...
 - Output arguments
 - InputOutput arguments
 - Sort input/output arguments properly
@@ -30,8 +57,10 @@ Milestones:
 - Non-contiguous array arguments (sympy matrices)
 - ccode must raise an error when it encounters something that can not be
   translated into c. ccode(integrate(sin(x)/x, x)) does not make sense.
+- Complex numbers as input and output
 - Also generate .pyf code for f2py
 - A default complex datatype
+- Include extra information in the header: date, user, hostname, sha1 hash, ...
 - Isolate constants and evaluate them beforehand in double precission
 - Common Subexpression Elimination
 - User defined comments in the generated code
@@ -77,10 +106,6 @@ class Routine(object):
        are not present in the target language. For example, multiple return
        values are possible in Python, but not in C or Fortran. Another example:
        Fortran and Python support complex numbers, while C does not.
-
-       The args list contains the input and output arguments and the return
-       values. Return values are treated with the same kind of data structures
-       since most of their machinery is identical to output arguments.
     """
     def __init__(self, name, arguments, results):
         """Initialize a Routine instance.
@@ -192,7 +217,22 @@ class CodeGen(object):
     def write(self, routines, prefix, to_files=False, header=True, empty=True):
         """Writes all the source code files for the given routines.
 
-           Appropriate extensions are appended to given prefix.
+           The generate source is returned as a list of (filename, contents)
+           tuples, or is written to files (see options). Each filename consists
+           of the given prefix, appended with an appropriate extension.
+
+           Arguments:
+             routines  --  A list of Routine instances to be written
+             prefix  --  The prefix for the output files
+
+           Optional arguments:
+             to_files  --  When True, the output is effectively written to
+                           files. [DEFAULT=False] Otherwise, a list of
+                           (filename, contents) tuples is returned.
+             header  --  When True, a header comment is included on top of each
+                         source file. [DEFAULT=True]
+             empty  --  When True, empty lines are included to structure the
+                        source files. [DEFAULT=True]
         """
         if to_files:
             for dump_fn in self.dump_fns:
@@ -235,6 +275,9 @@ class CCodeGen(CodeGen):
         """Returns a string for the function prototype for the given routine and
            a single result object, which can be None.
 
+           If the routine has multiple result objects, an CodeGenError is
+           raised.
+
            See: http://en.wikipedia.org/wiki/Function_prototype
         """
         prototype = []
@@ -262,6 +305,14 @@ class CCodeGen(CodeGen):
            Arguments:
              routines  --  a list of Routine instances
              f  --  a file-like object to write the file to
+             prefix  --  the filename prefix, used to refer to the proper header
+                         file. Only the basename of the prefix is used.
+
+           Optional arguments:
+             header  --  When True, a header comment is included on top of each
+                         source file. [DEFAULT=True]
+             empty  --  When True, empty lines are included to structure the
+                        source files. [DEFAULT=True]
         """
         if header:
             self._dump_header(f)
@@ -290,6 +341,14 @@ class CCodeGen(CodeGen):
            Arguments:
              routines  --  a list of Routine instances
              f  --  a file-like object to write the file to
+             prefix  --  the filename prefix, used to construct the include
+                         guards.
+
+           Optional arguments:
+             header  --  When True, a header comment is included on top of each
+                         source file. [DEFAULT=True]
+             empty  --  When True, empty lines are included to structure the
+                        source files. [DEFAULT=True]
         """
         if header:
             self._dump_header(f)
@@ -309,6 +368,8 @@ class CCodeGen(CodeGen):
         if empty: print >> f
     dump_h.extension = "h"
 
+    # This list of dump functions is used by CodeGen.write to know which dump
+    # functions it has to call.
     dump_fns = [dump_c, dump_h]
 
 
@@ -334,7 +395,7 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
        Optional Arguments:
          project  --  A project name, used for making unique preprocessor
                       instructions. [DEFAULT="project"]
-         to_files  --  Whens True, the code will be written to one or more files
+         to_files  --  When True, the code will be written to one or more files
                        with the given prefix, otherwise strings with the names
                        and contents of these files are returned. [DEFAULT=False]
          header  --  When True, a header is written on top of each source file.

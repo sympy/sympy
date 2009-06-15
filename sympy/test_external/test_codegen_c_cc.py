@@ -27,6 +27,8 @@ from sympy.utilities.codegen import codegen, CCodeGen, Routine, InputArgument, \
 import sys, os, tempfile
 
 
+# templates for the main program that will test the generated code.
+
 main_template = """
 #include "codegen.h"
 #include <stdio.h>
@@ -49,6 +51,7 @@ numerical_test_template = """
 
 
 def try_run(commands):
+    """Run a series of commands and only return True if all ran fine."""
     for command in commands:
         retcode = os.system(command)
         if retcode != 0:
@@ -57,6 +60,14 @@ def try_run(commands):
 
 
 def run_cc_test(label, routines, numerical_tests, friendly=True):
+    """A driver for the codegen tests.
+
+       This driver assumes that a compiler cc is present in the PATH and that
+       cc is (at least) an ANSI C compiler. The generated code is written in
+       a temporary directory, toghether with a main program that validates the
+       generated code. The test passes when the compilation and the validation
+       run correctly.
+    """
     # Do all the magic to compile, run and validate the test code
     # 1) prepare the temporary working directory, swith to that dir
     work = tempfile.mkdtemp("sympy_cc_test", label)
