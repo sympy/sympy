@@ -3,9 +3,9 @@
 # is removed after the test. By default the test directory is always removed,
 # but this behavior can be changed by setting the environment variable
 # SYMPY_TEST_CLEAN_TEMP to:
-#   'always': the default behavior.
-#   'success': only remove the directories of working tests.
-#   'never': never remove the directories with the test code.
+#   export SYMPY_TEST_CLEAN_TEMP=always   : the default behavior.
+#   export SYMPY_TEST_CLEAN_TEMP=success  : only remove the directories of working tests.
+#   export SYMPY_TEST_CLEAN_TEMP=never    : never remove the directories with the test code.
 # When a directory is not removed, the necessary information is printed on
 # screen to find the files that belong to the (failed) tests. If a test does
 # not fail, py.test captures all the output and you will not see the directories
@@ -70,7 +70,7 @@ def run_cc_test(label, routines, numerical_tests, friendly=True):
     """
     # Do all the magic to compile, run and validate the test code
     # 1) prepare the temporary working directory, swith to that dir
-    work = tempfile.mkdtemp("sympy_cc_test", label)
+    work = tempfile.mkdtemp("_sympy_cc_test", "%s_" % label)
     oldwork = os.getcwd()
     os.chdir(work)
     # 2) write the generated code
