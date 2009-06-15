@@ -1,4 +1,4 @@
-from sympy import sin, cos, abs, exp, pi, oo, symbols
+from sympy import sin, cos, abs, exp, pi, oo, symbols, ceiling
 from sympy import Function, Piecewise, Rational, Integer
 
 from sympy.printing import ccode
@@ -37,6 +37,10 @@ def test_ccode_Integer():
 
 def test_ccode_functions():
     assert ccode(sin(x) ** cos(x)) == "pow(sin(x),cos(x))"
+
+def test_ccode_exceptions():
+    assert ccode(ceiling(x)) == "ceil(x)"
+    assert ccode(abs(x)) == "fabs(x)"
 
 def test_ccode_Piecewise():
     p = ccode(Piecewise((x,x<1),(x**2,True)))
