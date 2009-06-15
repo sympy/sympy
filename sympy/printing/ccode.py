@@ -54,6 +54,14 @@ class CCodePrinter(StrPrinter):
         code = "if %s" + last_line
         return code % "else if ".join(ecpairs)
 
+    def _print_Function(self, expr):
+        if expr.func.__name__ == "ceiling":
+            return "ceil(%s)" % self.stringify(expr.args, ", ")
+        elif expr.func.__name__ == "abs" and not expr.args[0].is_integer:
+            return "fabs(%s)" % self.stringify(expr.args, ", ")
+        else:
+            return StrPrinter._print_Function(self, expr)
+
 
 def ccode(expr):
     r"""Converts an expr to a string of c code
