@@ -1,11 +1,7 @@
-
-from sympy import symbols
+from sympy import symbols, raises
 from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
     codegen, CodeGenError
 from StringIO import StringIO
-import sys, py
-
-
 
 def get_string(dump_fn, routines, prefix="file"):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
@@ -89,11 +85,11 @@ def test_multiple_results_c():
         [Result(expr1),Result(expr2)]
     )
     code_gen = CCodeGen()
-    py.test.raises(CodeGenError, get_string, code_gen.dump_h, [routine])
+    raises(CodeGenError, 'get_string(code_gen.dump_h, [routine])')
 
 def test_no_results_c():
     x = symbols('x')
-    py.test.raises(ValueError, Routine, "test", [InputArgument(x)], [])
+    raises(ValueError, 'Routine("test", [InputArgument(x)], [])')
 
 def test_ansi_math1_codegen():
     # not included: log10
