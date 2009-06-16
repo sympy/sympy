@@ -82,6 +82,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Florian Mickler: reimplementation of convex_hull, several geometry module fixes
 #. Nicolas Pourcelot: Infinity comparison fixes, latex fixes
 #. Ben Goodrich: Matrix.jacobian() function improvements and fixes
+#. Toon Verstraelen: code generation module
 
 
 Uptodate list in the order of the first contribution is given in the `AUTHORS
