@@ -226,7 +226,6 @@ def test_complicated_codegen():
         '}\n'
     )
     assert result[1][0] == "file.h"
-    print result[1][1]
     assert result[1][1] == (
         '#ifndef PROJECT__FILE__H\n'
         '#define PROJECT__FILE__H\n'
