@@ -29,7 +29,7 @@ class matrix(object):
     The most basic way to create one is to use the ``matrix`` class directly.
     You can create an empty matrix specifying the dimensions:
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> matrix(2)
         matrix(
@@ -73,7 +73,7 @@ class matrix(object):
         >>> A
         matrix(
         [['0.0', '0.0'],
-         ['0.0', mpc(real='1.0', imag='1.0')]])
+         ['0.0', '(1.0 + 1.0j)']])
 
     You can use the keyword ``force_type`` to change the function which is
     called on every new element:
@@ -188,9 +188,7 @@ class matrix(object):
          ['-2.0', '-5.0']])
         >>> A + ones(3) # doctest:+ELLIPSIS
         Traceback (most recent call last):
-        File "<stdin>", line 1, in <module>
-        File "...", line 238, in __add__
-            raise ValueError('incompatible dimensions for addition')
+          ...
         ValueError: incompatible dimensions for addition
 
     It is possible to multiply or add matrices and scalars. In the latter case the
@@ -235,8 +233,8 @@ class matrix(object):
          ['1.5', '-0.5']])
         >>> A * A**-1
         matrix(
-        [['1.0', '0.0'],
-         ['0.0', '1.0']])
+        [['1.0', '1.0842021724855e-19'],
+         ['-2.16840434497101e-19', '1.0']])
 
     Matrix transposition is straightforward::
 
@@ -263,11 +261,11 @@ class matrix(object):
     used.
 
         >>> x = matrix([-10, 2, 100])
-        >>> norm_p(x, 1)
+        >>> norm(x, 1)
         mpf('112.0')
-        >>> norm_p(x, 2)
+        >>> norm(x, 2)
         mpf('100.5186549850325')
-        >>> norm_p(x, inf)
+        >>> norm(x, inf)
         mpf('100.0')
 
     Please note that the 2-norm is the most used one, though it is more expensive
@@ -276,11 +274,11 @@ class matrix(object):
     It is possible to generalize some vector norms to matrix norm::
 
         >>> A = matrix([[1, -1000], [100, 50]])
-        >>> mnorm_1(A)
+        >>> mnorm(A, 1)
         mpf('1050.0')
-        >>> mnorm_oo(A)
+        >>> mnorm(A, inf)
         mpf('1001.0')
-        >>> mnorm_F(A)
+        >>> mnorm(A, 'F')
         mpf('1006.2310867787777')
 
     The last norm (the "Frobenius-norm") is an approximation for the 2-norm, which
@@ -401,7 +399,7 @@ class matrix(object):
         return s
 
     def __getitem__(self, key):
-        if isinstance(key, int):
+        if type(key) is int:
             # only sufficent for vectors
             if self.__rows == 1:
                 key = (0, key)
@@ -420,7 +418,7 @@ class matrix(object):
                 return 0
 
     def __setitem__(self, key, value):
-        if isinstance(key, int):
+        if type(key) is int:
             # only sufficent for vectors
             if self.__rows == 1:
                 key = (0, key)
@@ -609,7 +607,7 @@ def diag(diagonal, **kwargs):
     Create square diagonal matrix using given list.
 
     Example:
-    >>> from sympy.mpmath import diag
+    >>> from mpmath import diag
     >>> diag([1, 2, 3])
     matrix(
     [['1.0', '0.0', '0.0'],
@@ -627,7 +625,7 @@ def zeros(*args, **kwargs):
     One given dimension will create square matrix n x n.
 
     Example:
-    >>> from sympy.mpmath import zeros
+    >>> from mpmath import zeros
     >>> zeros(2)
     matrix(
     [['0.0', '0.0'],
@@ -652,7 +650,7 @@ def ones(*args, **kwargs):
     One given dimension will create square matrix n x n.
 
     Example:
-    >>> from sympy.mpmath import ones
+    >>> from mpmath import ones
     >>> ones(2)
     matrix(
     [['1.0', '1.0'],
@@ -695,7 +693,7 @@ def randmatrix(m, n=None, min=0, max=1, **kwargs):
     n defaults to m.
 
     Example:
-    >>> from sympy.mpmath import randmatrix
+    >>> from mpmath import randmatrix
     >>> randmatrix(2) # doctest:+SKIP
     matrix(
     [['0.53491598236191806', '0.57195669543302752'],
@@ -735,45 +733,109 @@ def extend(A, b):
         A[i, A.cols-1] = b[i]
     return A
 
-def mnorm_1(A):
-    """
-    Calculate the 1-norm (maximal column sum) of a matrix.
-    """
-    assert isinstance(A, matrix)
-    m, n = A.rows, A.cols
-    return max(fsum(absmax(A[i,j]) for i in xrange(m)) for j in xrange(n))
+def norm(x, p=2):
+    r"""
+    Gives the entrywise `p`-norm of an iterable *x*, i.e. the vector norm
+    `\left(\sum_k |x_k|^p\right)^{1/p}`, for any given `1 \le p \le \infty`.
 
-def mnorm_oo(A):
-    """
-    Calculate the oo-norm (maximal row sum) of a matrix.
-    """
-    assert isinstance(A, matrix)
-    m, n = A.rows, A.cols
-    return max(fsum(absmax(A[i,j]) for j in xrange(n)) for i in xrange(m))
+    Special cases:
 
-def mnorm_F(A):
-    """
-    Calculate the Frobenius norm (root of sum of squares) of a matrix.
+    If *x* is not iterable, this just returns ``absmax(x)``.
 
-    It can be useful for estimating the spectral norm (which is difficult to
-    calculate):
-    mnorm_F(A) / sqrt(rank(A)) <= mnorm_2(A) <= mnorm_F(A)
-    """
-    return norm_p(A, 2)
+    ``p=1`` gives the sum of absolute values.
 
-def norm_p(x, p=2):
-    """
-    Calculate the p-norm of a vector.
-    0 < p <= oo
+    ``p=2`` is the standard Euclidean vector norm.
 
-    Note: you may want to use float('inf') or mpmath's equivalent to specify oo.
+    ``p=inf`` gives the magnitude of the largest element.
+
+    For *x* a matrix, ``p=2`` is the Frobenius norm.
+    For operator matrix norms, use :func:`mnorm` instead.
+
+    You can use the string 'inf' as well as float('inf') or mpf('inf')
+    to specify the infinity norm.
+
+    **Examples**
+
+        >>> from mpmath import *
+        >>> mp.dps = 15
+        >>> x = matrix([-10, 2, 100])
+        >>> norm(x, 1)
+        mpf('112.0')
+        >>> norm(x, 2)
+        mpf('100.5186549850325')
+        >>> norm(x, inf)
+        mpf('100.0')
+
     """
+    try:
+        iter(x)
+    except TypeError:
+        return absmax(x)
+    if type(p) is not int:
+        p = mpmathify(p)
     if p == inf:
         return max(absmax(i) for i in x)
+    elif p == 1:
+        return fsum(x, absolute=1)
+    elif p == 2:
+        return sqrt(fsum(x, absolute=1, squared=1))
     elif p > 1:
         return nthroot(fsum(abs(i)**p for i in x), p)
-    elif p == 1:
-        return fsum(abs(i) for i in x)
     else:
-        raise ValueError('p has to be an integer greater than 0')
+        raise ValueError('p has to be >= 1')
 
+def mnorm(A, p=1):
+    r"""
+    Gives the matrix (operator) `p`-norm of A. Currently ``p=1`` and ``p=inf``
+    are supported:
+
+    ``p=1`` gives the 1-norm (maximal column sum)
+
+    ``p=inf`` gives the `\infty`-norm (maximal row sum).
+    You can use the string 'inf' as well as float('inf') or mpf('inf')
+
+    ``p=2`` (not implemented) for a square matrix is the usual spectral
+    matrix norm, i.e. the largest singular value.
+
+    ``p='f'`` (or 'F', 'fro', 'Frobenius, 'frobenius') gives the
+    Frobenius norm, which is the elementwise 2-norm. The Frobenius norm is an
+    approximation of the spectral norm and satisfies
+
+    .. math ::
+
+        \frac{1}{\sqrt{\mathrm{rank}(A)}} \|A\|_F \le \|A\|_2 \le \|A\|_F
+
+    The Frobenius norm lacks some mathematical properties that might
+    be expected of a norm.
+
+    For general elementwise `p`-norms, use :func:`norm` instead.
+
+    **Examples**
+
+        >>> from mpmath import *
+        >>> mp.dps = 15
+        >>> A = matrix([[1, -1000], [100, 50]])
+        >>> mnorm(A, 1)
+        mpf('1050.0')
+        >>> mnorm(A, inf)
+        mpf('1001.0')
+        >>> mnorm(A, 'F')
+        mpf('1006.2310867787777')
+
+    """
+    A = matrix(A)
+    if type(p) is not int:
+        if type(p) is str and 'frobenius'.startswith(p.lower()):
+            return norm(A, 2)
+        p = mpmathify(p)
+    m, n = A.rows, A.cols
+    if p == 1:
+        return max(fsum((A[i,j] for i in xrange(m)), absolute=1) for j in xrange(n))
+    elif p == inf:
+        return max(fsum((A[i,j] for j in xrange(n)), absolute=1) for i in xrange(m))
+    else:
+        raise NotImplementedError("matrix p-norm for arbitrary p")
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

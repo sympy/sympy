@@ -89,7 +89,8 @@ def testit(importdir='', testdir=''):
         # look for tests (respecting specified filter)
         for f in glob.glob(pattern):
             name = os.path.splitext(os.path.basename(f))[0]
-            if args:
+            # If run as a script, only run tests given as args, if any are given
+            if args and __name__ == "__main__":
                 ok = False
                 for arg in args:
                     if arg in name:

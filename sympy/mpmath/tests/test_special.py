@@ -26,9 +26,12 @@ def test_special():
 
     assert inf > 3
     assert 3 < inf
-
     assert 3 > -inf
     assert -inf < 3
+    assert inf > mpf(3)
+    assert mpf(3) < inf
+    assert mpf(3) > -inf
+    assert -inf < mpf(3)
 
     assert not (nan < 3)
     assert not (nan > 3)

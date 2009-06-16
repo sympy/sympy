@@ -1,13 +1,55 @@
-from mptypes import mpmathify, extraprec, eps, mpf
+from mptypes import mpmathify, extraprec, eps, mpf, MultiPrecisionArithmetic
 from calculus import diff
 from functions import sqrt, sign, ldexp
-from matrices import matrix, norm_p
+from matrices import matrix, norm as norm_
 from linalg import lu_solve
 from copy import copy
 
 ##############
 # 1D-SOLVERS #
 ##############
+
+class Newton:
+    """
+    1d-solver generating pairs of approximative root and error.
+
+    Needs starting points x0 close to the root.
+
+    Pro:
+
+    * converges fast
+    * sometimes more robust than secant with bad second starting point
+
+    Contra:
+
+    * converges slowly for multiple roots
+    * needs first derivative
+    * 2 function evaluations per iteration
+    """
+    maxsteps = 20
+
+    def __init__(self, f, x0, **kwargs):
+        if len(x0) == 1:
+            self.x0 = x0[0]
+        else:
+            raise ValueError('expected 1 starting point, got %i' * len(x0))
+        self.f = f
+        if not 'df' in kwargs:
+            def df(x):
+                return diff(f, x)
+        else:
+            df = kwargs['df']
+        self.df = df
+
+    def __iter__(self):
+        f = self.f
+        df = self.df
+        x0 = self.x0
+        while True:
+            x1 = x0 - f(x0) / df(x0)
+            error = abs(x1 - x0)
+            x0 = x1
+            yield (x1, error)
 
 class Secant:
     """
@@ -542,7 +584,7 @@ def jacobian(f, x):
 
 one = mpf(1)
 
-# TODO: support force_type
+# TODO: test with user-specified jacobian matrix, support force_type
 class MDNewton:
     """
     Find the root of a vector function numerically using Newton's method.
@@ -629,10 +671,10 @@ class MDNewton:
 # UTILITIES #
 #############
 
-str2solver = {'secant':Secant,'mnewton':MNewton, 'halley':Halley,
-              'muller':Muller, 'bisect':Bisection, 'illinois':Illinois,
-              'pegasus':Pegasus, 'anderson':Anderson, 'ridder':Ridder,
-              'anewton':ANewton, 'mdnewton':MDNewton}
+str2solver = {'newton':Newton, 'secant':Secant,'mnewton':MNewton,
+              'halley':Halley, 'muller':Muller, 'bisect':Bisection,
+              'illinois':Illinois, 'pegasus':Pegasus, 'anderson':Anderson,
+              'ridder':Ridder, 'anewton':ANewton, 'mdnewton':MDNewton}
 
 @extraprec(20)
 def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
@@ -691,7 +733,7 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
     secant method by default. A simple example use of the secant method is to
     compute `\pi` as the root of `\sin x` closest to `x_0 = 3`::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 30
         >>> print findroot(sin, 3)
         3.14159265358979323846264338328
@@ -749,6 +791,17 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
 
     You can verify this by solving the system manually.
 
+    Please note that the following (more general) syntax also works::
+
+        >>> def f(x1, x2):
+        ...     return x1**2 + x2, 5*x1**2 - 3*x1 + 2*x2 - 3
+        ...
+        >>> findroot(f, (0, 0))
+        matrix(
+        [['-0.618033988749895'],
+         ['-0.381966011250105']])
+
+
     **Multiple roots**
 
     For multiple roots all methods of the Newtonian family (including secant)
@@ -802,6 +855,7 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
 
         >>> findroot(lambda x: x**4 + x + 1, (0, 1, 2), solver='muller')
         mpc(real='0.72713608449119684', imag='0.93409928946052944')
+
 
     **Intersection methods**
 
@@ -868,7 +922,7 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
         # only one multidimensional solver available at the moment
         solver = MDNewton
         if not 'norm' in kwargs:
-            norm = lambda x: norm_p(x, mpf('inf'))
+            norm = lambda x: norm_(x, mpf('inf'))
             kwargs['norm'] = norm
         else:
             norm = kwargs['norm']
@@ -914,7 +968,7 @@ def multiplicity(f, root, tol=eps, maxsteps=10, **kwargs):
     evaluating 10 derivatives by default. You can be specify the n-th derivative
     using the dnf keyword.
 
-    >>> from sympy.mpmath import *
+    >>> from mpmath import *
     >>> multiplicity(lambda x: sin(x) - 1, pi/2)
     2
     """
@@ -953,7 +1007,7 @@ def steffensen(f):
     Let's try Steffensen's method:
 
     >>> f = lambda x: x**2
-    >>> from sympy.mpmath.optimization import steffensen
+    >>> from mpmath.optimization import steffensen
     >>> F = steffensen(f)
     >>> for x in [0.5, 0.9, 2.0]:
     ...     fx = Fx = x
@@ -1006,3 +1060,9 @@ def steffensen(f):
         ffx = f(fx)
         return (x*ffx - fx**2) / (ffx - 2*fx + x)
     return F
+
+MultiPrecisionArithmetic.findroot = staticmethod(findroot)
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

@@ -1,4 +1,4 @@
-__version__ = '0.11'
+__version__ = '0.12'
 
 from mptypes import (
     mpnumeric, mpf, mpc, mpi, mpmathify,
@@ -8,12 +8,14 @@ from mptypes import (
     nstr, nprint, fraction, almosteq,
     arange, linspace, rand, absmin, absmax,
     fsum, fprod, fdot,
-    chop, monitor, timing
+    chop
 )
+
+from usertools import monitor, timing
 
 from functions import (
     pi, degree, e, ln2, ln10, phi, euler,
-    catalan, khinchin, glaisher, apery,
+    catalan, khinchin, glaisher, apery, mertens, twinprime,
     sqrt, cbrt, exp, ln, log, log10, power,
     cos, sin, tan, cosh, sinh, tanh,
     acos, asin, atan, asinh, acosh, atanh,
@@ -39,7 +41,10 @@ from functions import (
     besselj, j0, j1, besseli, bessely, besselk, hankel1, hankel2,
     lambertw,
     barnesg, superfac, hyperfac,
-    loggamma, siegeltheta, siegelz, grampoint
+    loggamma, siegeltheta, siegelz, grampoint,
+    zetazero, riemannr, primepi, primepi2, primezeta,
+    bell, polyexp,
+    expm1
 )
 
 from elliptic import jtheta, djtheta, jsn, jcn, jdn
@@ -58,7 +63,7 @@ from quadrature import quad, quadgl, quadts, quadosc, TanhSinh, GaussLegendre
 from identification import pslq, identify, findpoly
 
 from matrices import matrix, eye, diag, zeros, ones, hilbert, randmatrix, \
-    mnorm_1, mnorm_oo, mnorm_F, norm_p
+    norm, mnorm
 from linalg import lu_solve, inverse, residual, qr_solve, cholesky_solve, det, \
     cond, lu
 

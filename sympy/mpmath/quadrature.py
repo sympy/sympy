@@ -460,7 +460,7 @@ def quad(f, *points, **kwargs):
     Computes a single, double or triple integral over a given
     1D interval, 2D rectangle, or 3D cuboid. A basic example::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> print quad(sin, [0, pi])
         2.0
@@ -749,6 +749,9 @@ def quad(f, *points, **kwargs):
         return +v, err
     return +v
 
+# XXX
+type(mp).quad = staticmethod(quad)
+
 def quadts(*args, **kwargs):
     """
     Performs tanh-sinh quadrature. The call
@@ -828,7 +831,7 @@ def quadosc(f, interval, omega=None, period=None, zeros=None):
     specify the `n`-th zero by providing the *zeros* arguments.
     Below is an example of each::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> f = lambda x: sin(3*x)/(x**2+1)
         >>> print quadosc(f, [0,inf], omega=3)

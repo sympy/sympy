@@ -15,13 +15,11 @@
         Cambridge Univeristy Press
 
 """
-import sys
-
 from mptypes import (mpf, mpc, mp, mpmathify, eps, one, zero, j)
 from functions import (pi, sqrt, cos, sin, exp, log, tanh, ellipk,
                        sech, nthroot)
 from libmpf import to_fixed, MP_ZERO, mpf_shift, from_man_exp
-from sympy.mpmath.libelefun import cos_sin
+from libelefun import cos_sin
 
 # The series for the Jacobi theta functions converge for |q| < 1;
 # in the current implementation they throw a ValueError for
@@ -56,16 +54,17 @@ def calculate_nome(k):
         nome = exp(argument)
         return nome
 
+# XXX: unused
 def calculate_k(q):
     """
     Calculates the value of k for a particular nome, q,
-    using jacobi theta functions.
+    using Jacobi theta functions.
     """
 
     q = mpmathify(q)
 
-    v2 = jacobi_theta(2, 0, q)
-    v3 = jacobi_theta(3, 0, q)
+    v2 = jtheta(2, 0, q)
+    v3 = jtheta(3, 0, q)
     m = v2**2/v3**2
     return m
 
@@ -1049,7 +1048,7 @@ def jtheta(n, z, q):
     viewed as generalizations of the ordinary trigonometric functions
     cos and sin. They are periodic functions::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> print jtheta(1, 0.1, 1/5.)
         0.117756191842059
@@ -1193,7 +1192,7 @@ def djtheta(n, z, q, nd=1):
     For an integer `nd \ge 1`, computes the `nd`:th derivative with
     respect to `z` of the Jacobi theta function `\vartheta_n(z,q)`::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> print djtheta(3, 7, 0.2)
         -0.795947847483158
@@ -1270,7 +1269,7 @@ def jsn(u, m):
     plane with periods `4 K(m)` and `2 i K(1-m)`
     (see :func:`ellipk`)::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 25
         >>> print jsn(2, 0.25)
         0.9628981775982774425751399
@@ -1313,7 +1312,7 @@ def jcn(u, m):
     plane with periods `4 K(m)` and `4 i K(1-m)`
     (see :func:`ellipk`)::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 25
         >>> print jcn(2, 0.25)
         -0.2698649654510865792581416
@@ -1358,7 +1357,7 @@ def jdn(u, m):
     plane with periods `2 K(m)` and `4 i K(1-m)`
     (see :func:`ellipk`)::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 25
         >>> print jdn(2, 0.25)
         0.8764740583123262286931578

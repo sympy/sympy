@@ -21,6 +21,8 @@ from settings import (\
     round_nearest, round_fast
 )
 
+from libintmath import list_primes, int_fac, moebius
+
 from libmpf import (\
     lshift, sqrt_fixed,
     fzero, fone, fnone, fhalf, ftwo, finf, fninf, fnan,
@@ -44,10 +46,11 @@ from libmpc import (\
     mpc_zero, mpc_one, mpc_half, mpc_two,
     mpc_abs, mpc_shift, mpc_pos,
     mpc_add, mpc_sub, mpc_mul, mpc_div,
-    mpc_add_mpf, mpc_mul_mpf, mpc_div_mpf,
+    mpc_add_mpf, mpc_mul_mpf, mpc_div_mpf, mpc_mpf_div,
     mpc_mul_int, mpc_pow_int,
     mpc_log, mpc_exp, mpc_pow,
     mpc_cos_pi, mpc_sin_pi,
+    mpc_reciprocal, mpc_square
 )
 
 # Catalan's constant is computed using Lupas's rapidly convergent series
@@ -282,11 +285,60 @@ def euler_fixed(prec):
         k += 1
     return (U<<(prec-extra))//V
 
+# Use zeta accelerated formulas for the Mertens and twin
+# prime constants; see
+# http://mathworld.wolfram.com/MertensConstant.html
+# http://mathworld.wolfram.com/TwinPrimesConstant.html
+
+@constant_memo
+def mertens_fixed(prec):
+    wp = prec + 20
+    m = 2
+    s = mpf_euler(wp)
+    while 1:
+        t = mpf_zeta_int(m, wp)
+        if t == fone:
+            break
+        t = mpf_log(t, wp)
+        t = mpf_mul_int(t, moebius(m), wp)
+        t = mpf_div(t, from_int(m), wp)
+        s = mpf_add(s, t)
+        m += 1
+    return to_fixed(s, prec)
+
+@constant_memo
+def twinprime_fixed(prec):
+    def I(n):
+        return sum(moebius(d)<<(n//d) for d in xrange(1,n+1) if not n%d)//n
+    wp = 2*prec + 30
+    res = fone
+    primes = [from_rational(1,p,wp) for p in [2,3,5,7]]
+    ppowers = [mpf_mul(p,p,wp) for p in primes]
+    n = 2
+    while 1:
+        a = mpf_zeta_int(n, wp)
+        for i in range(4):
+            a = mpf_mul(a, mpf_sub(fone, ppowers[i]), wp)
+            ppowers[i] = mpf_mul(ppowers[i], primes[i], wp)
+        a = mpf_pow_int(a, -I(n), wp)
+        if mpf_pos(a, prec+10, 'n') == fone:
+            break
+        #from libmpf import to_str
+        #print n, to_str(mpf_sub(fone, a), 6)
+        res = mpf_mul(res, a, wp)
+        n += 1
+    res = mpf_mul(res, from_int(3*15*35), wp)
+    res = mpf_div(res, from_int(4*16*36), wp)
+    return to_fixed(res, prec)
+
+
 mpf_euler = def_mpf_constant(euler_fixed)
 mpf_apery = def_mpf_constant(apery_fixed)
 mpf_khinchin = def_mpf_constant(khinchin_fixed)
 mpf_glaisher = def_mpf_constant(glaisher_fixed)
 mpf_catalan = def_mpf_constant(catalan_fixed)
+mpf_mertens = def_mpf_constant(mertens_fixed)
+mpf_twinprime = def_mpf_constant(twinprime_fixed)
 
 
 #-----------------------------------------------------------------------#
@@ -295,26 +347,8 @@ mpf_catalan = def_mpf_constant(catalan_fixed)
 #                                                                       #
 #-----------------------------------------------------------------------#
 
-MAX_FACTORIAL_CACHE = 1000
 MAX_BERNOULLI_CACHE = 3000
 
-def int_fac(n, memo={0:1, 1:1}):
-    """Return n factorial (for integers n >= 0 only)."""
-    f = memo.get(n)
-    if f:
-        return f
-    k = len(memo)
-    p = memo[k-1]
-    MAX = MAX_FACTORIAL_CACHE
-    while k <= n:
-        p *= k
-        if k <= MAX:
-            memo[k] = p
-        k += 1
-    return p
-
-if MODE == "gmpy":
-    int_fac = gmpy.fac
 
 """
 Small Bernoulli numbers and factorials are used in numerous summations,
@@ -445,16 +479,6 @@ def mpf_bernoulli_huge(n, prec, rnd=None):
         v = mpf_neg(v)
     return mpf_pos(v, prec, rnd or round_fast)
 
-def list_primes(n):
-    n = n + 1
-    sieve = range(n)
-    sieve[:2] = [0, 0]
-    for i in xrange(2, int(n**0.5)+1):
-        if sieve[i]:
-            for j in xrange(i**2, n, i):
-                sieve[j] = 0
-    return [p for p in sieve if p]
-
 def bernfrac(n):
     r"""
     Returns a tuple of integers `(p, q)` such that `p/q = B_n` exactly,
@@ -466,6 +490,7 @@ def bernfrac(n):
 
     The first few Bernoulli numbers are exactly::
 
+        >>> from mpmath import *
         >>> for n in range(15):
         ...     p, q = bernfrac(n)
         ...     print n, "%s/%s" % (p, q)
@@ -601,7 +626,7 @@ def get_spouge_coefficients(prec):
     if prec in spouge_cache:
         return spouge_cache[prec]
     for p in spouge_cache:
-        if 0.8 <= float(p)/prec < 1:
+        if 0.8 <= prec/float(p) < 1:
             return spouge_cache[p]
     # Here we estimate the value of a based on Spouge's inequality for
     # the relative error
@@ -691,14 +716,14 @@ def mpf_gamma(x, prec, rounding=round_fast, p1=1):
     reflect = sign or exp+bc < -1
     if p1:
         # Should be done exactly!
-        x = mpf_sub(x, fone, bc-exp+2)
+        x = mpf_sub(x, fone)
     # x < 0.25
     if reflect:
         # gamma = pi / (sin(pi*x) * gamma(1-x))
         wp += 15
         pix = mpf_mul(x, mpf_pi(wp), wp)
         t = mpf_sin_pi(x, wp)
-        g = mpf_gamma(mpf_sub(fone, x, wp), wp)
+        g = mpf_gamma(mpf_sub(fone, x), wp)
         return mpf_div(pix, mpf_mul(t, g, wp), prec, rounding)
     sprec, a, c = get_spouge_coefficients(wp)
     s = spouge_sum_real(x, sprec, a, c)
@@ -907,7 +932,7 @@ def mpc_psi0(z, prec, rnd=round_fast):
     if sign and exp+bc > 3:
         c = mpc_cos_pi(z, wp)
         s = mpc_sin_pi(z, wp)
-        q = mpc_mul(mpc_div(c, s, wp), (mpf_pi(wp), fzero), wp)
+        q = mpc_mul_mpf(mpc_div(c, s, wp), mpf_pi(wp), wp)
         p = mpc_psi0(mpc_sub(mpc_one, z, wp), wp)
         return mpc_sub(p, q, prec, rnd)
     # Just the logarithmic term
@@ -919,14 +944,14 @@ def mpc_psi0(z, prec, rnd=round_fast):
     s = mpc_zero
     if w < n:
         for k in xrange(w, n):
-            s = mpc_sub(s, mpc_div(mpc_one, z, wp), wp)
+            s = mpc_sub(s, mpc_reciprocal(z, wp), wp)
             z = mpc_add_mpf(z, fone, wp)
     z = mpc_sub(z, mpc_one, wp)
     # Logarithmic and endpoint term
     s = mpc_add(s, mpc_log(z, wp), wp)
     s = mpc_add(s, mpc_div(mpc_half, z, wp), wp)
     # Euler-Maclaurin remainder sum
-    z2 = mpc_mul(z, z, wp)
+    z2 = mpc_square(z, wp)
     t = mpc_one
     prev = mpc_zero
     k = 1
@@ -934,7 +959,7 @@ def mpc_psi0(z, prec, rnd=round_fast):
     while 1:
         t = mpc_mul(t, z2, wp)
         bern = mpf_bernoulli(2*k, wp)
-        term = mpc_div((bern, fzero), mpc_mul_int(t, 2*k, wp), wp)
+        term = mpc_mpf_div(bern, mpc_mul_int(t, 2*k, wp), wp)
         s = mpc_sub(s, term, wp)
         szterm = mpc_abs(term, 10)
         if k > 2 and mpf_le(szterm, eps):
@@ -1223,7 +1248,7 @@ def mpc_zeta(s, prec, rnd=round_fast, alt=0):
         wp2 = wp + mag
         pi = mpf_pi(wp+wp2)
         pi2 = (mpf_shift(pi, 1), fzero)
-        d = mpc_div(mpc_pow(pi2, s, wp2), (pi, fzero), wp2)
+        d = mpc_div_mpf(mpc_pow(pi2, s, wp2), pi, wp2)
         return mpc_mul(a,mpc_mul(b,mpc_mul(c,d,wp),wp),prec,rnd)
     n = int(wp/2.54 + 5)
     n += int(0.9*abs(to_int(im)))

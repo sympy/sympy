@@ -1,5 +1,5 @@
-from sympy.mpmath.matrices import matrix, eye, swap_row, diag, mnorm_1, mnorm_oo, \
-    mnorm_F, norm_p, zeros, ones, hilbert, randmatrix, extend
+from sympy.mpmath.matrices import matrix, eye, swap_row, diag, mnorm, \
+    norm, zeros, ones, hilbert, randmatrix, extend
 from sympy.mpmath.linalg import inverse
 from sympy.mpmath import inf, mpf, sqrt, mpi, nstr
 
@@ -100,15 +100,16 @@ def test_matrix_creation():
 def test_norms():
     # matrix norms
     A = matrix([[1, -2], [-3, -1], [2, 1]])
-    assert mnorm_1(A) == 6
-    assert mnorm_oo(A) == 4
-    assert mnorm_F(A) == sqrt(20)
+    assert mnorm(A,1) == 6
+    assert mnorm(A,inf) == 4
+    assert mnorm(A,'F') == sqrt(20)
     # vector norms
+    assert norm(-3) == 3
     x = [1, -2, 7, -12]
-    assert norm_p(x, 1) == 22
-    assert round(norm_p(x, 2), 10) == 14.0712472795
-    assert round(norm_p(x, 10), 10) == 12.0054633727
-    assert norm_p(x, inf) == 12
+    assert norm(x, 1) == 22
+    assert round(norm(x, 2), 10) == 14.0712472795
+    assert round(norm(x, 10), 10) == 12.0054633727
+    assert norm(x, inf) == 12
 
 def test_vector():
     x = matrix([0, 1, 2, 3, 4])

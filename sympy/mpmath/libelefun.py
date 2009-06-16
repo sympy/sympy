@@ -12,17 +12,16 @@ see libmpc and libmpi.
 import math
 from bisect import bisect
 
-from settings import (\
+from settings import (
     MP_BASE, MP_ZERO, MP_ONE, MP_TWO, MP_FIVE, MODE,
     round_floor, round_ceiling, round_down, round_up,
     round_nearest, round_fast,
 )
 
-from libmpf import (\
+from libmpf import (
     ComplexResult,
-    bitcount, bctable, lshift, rshift, giant_steps, giant_steps2,
-    giant_stepsn, sqrt_fixed, sqrt_fixed2,
-    from_int, to_int, from_man_exp, to_fixed,
+    bitcount, bctable, lshift, rshift, giant_steps, sqrt_fixed,
+    from_int, to_int, from_man_exp, to_fixed, to_float, from_float,
     normalize,
     fzero, fone, fnone, fhalf, finf, fninf, fnan,
     mpf_cmp, mpf_sign, mpf_abs,
@@ -31,6 +30,8 @@ from libmpf import (\
     reciprocal_rnd, negative_rnd, mpf_perturb,
     isqrt_fast
 )
+
+from libintmath import ifib
 
 
 #----------------------------------------------------------------------------#
@@ -49,13 +50,13 @@ def constant_memo(f):
     f.memo_prec = -1
     f.memo_val = None
     def g(prec, **kwargs):
-        if prec == f.memo_prec:
-            return f.memo_val
-        if prec < f.memo_prec:
-            return f.memo_val >> (f.memo_prec-prec)
-        f.memo_val = f(prec, **kwargs)
-        f.memo_prec = prec
-        return f.memo_val
+        memo_prec = f.memo_prec
+        if prec <= memo_prec:
+            return f.memo_val >> (memo_prec-prec)
+        newprec = int(prec*1.05+10)
+        f.memo_val = f(newprec, **kwargs)
+        f.memo_prec = newprec
+        return f.memo_val >> (newprec-prec)
     g.__name__ = f.__name__
     g.__doc__ = f.__doc__
     return g
@@ -344,7 +345,7 @@ def nthroot_fixed(y, n, prec, exp1):
     start = 50
     try:
         y1 = rshift(y, prec - n*start)
-        r = MP_BASE(y1**(1.0/n))
+        r = MP_BASE(int(y1**(1.0/n)))
     except OverflowError:
         y1 = from_int(y1, start)
         fn = from_int(n)
@@ -867,7 +868,7 @@ def exp_newton(x, prec):
     r = mpf_exp(x, 60)
     start = 50
     prevp = start
-    for p in giant_stepsn(start, prec+extra, 4):
+    for p in giant_steps(start, prec+extra, 4):
         h = mpf_sub(x, mpf_log(r, p), p)
         h2 = mpf_mul(h, h, p)
         h3 = mpf_mul(h2, h, p)
@@ -1607,32 +1608,6 @@ def mpf_atanh(x, prec, rnd=round_fast):
     a = mpf_add(x, fone, wp)
     b = mpf_sub(fone, x, wp)
     return mpf_shift(mpf_log(mpf_div(a, b, wp), prec, rnd), -1)
-
-
-def ifib(n, _cache={}):
-    """Computes the nth Fibonacci number as an integer, for
-    integer n."""
-    if n < 0:
-        return (-1)**(-n+1) * ifib(-n)
-    if n in _cache:
-        return _cache[n]
-    m = n
-    # Use Dijkstra's logarithmic algorithm
-    # The following implementation is basically equivalent to
-    # http://en.literateprograms.org/Fibonacci_numbers_(Scheme)
-    a, b, p, q = MP_ONE, MP_ZERO, MP_ZERO, MP_ONE
-    while n:
-        if n & 1:
-            aq = a*q
-            a, b = b*q+aq+a*p, b*p+aq
-            n -= 1
-        else:
-            qq = q*q
-            p, q = p*p+qq, qq+2*p*q
-            n >>= 1
-    if m < 250:
-        _cache[m] = b
-    return b
 
 def mpf_fibonacci(x, prec, rnd=round_fast):
     sign, man, exp, bc = x

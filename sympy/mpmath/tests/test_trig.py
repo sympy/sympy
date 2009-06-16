@@ -2,6 +2,12 @@ from sympy.mpmath import *
 from sympy.mpmath.libmpf import *
 
 def test_trig_misc_hard():
+    mp.prec = 53
+    # Worst-case input for an IEEE double, from a paper by Kahan
+    x = ldexp(6381956970095103,797)
+    assert cos(x) == mpf('-4.6871659242546277e-19')
+    assert sin(x) == 1
+
     mp.prec = 150
     a = mpf(10**50)
     mp.prec = 53

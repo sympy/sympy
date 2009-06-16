@@ -11,7 +11,7 @@ from settings import (\
 from libmpf import (\
     bctable, normalize, reciprocal_rnd, rshift, lshift, giant_steps,
     negative_rnd,
-    to_str, to_fixed, from_man_exp, from_float, from_int, to_int,
+    to_str, to_fixed, from_man_exp, from_float, to_float, from_int, to_int,
     fzero, fone, ftwo, fhalf, finf, fninf, fnan, fnone,
     mpf_abs, mpf_pos, mpf_neg, mpf_add, mpf_sub, mpf_mul,
     mpf_div, mpf_mul_int, mpf_shift, mpf_sqrt, mpf_hypot,
@@ -26,7 +26,6 @@ from libelefun import (\
     mpf_atan, mpf_atan2, mpf_cosh, mpf_sinh, mpf_tanh,
     mpf_asin, mpf_acos, mpf_acosh, mpf_nthroot, mpf_fibonacci
 )
-
 
 # An mpc value is a (real, imag) tuple
 mpc_one = fone, fzero
@@ -51,138 +50,132 @@ def mpc_is_infnan(z):
     if im in _infs_nan: return True
     return False
 
-def complex_to_str(re, im, dps):
+def mpc_to_str(z, dps, **kwargs):
+    re, im = z
     rs = to_str(re, dps)
     if im[0]:
-        return rs + " - " + to_str(mpf_neg(im), dps) + "j"
+        return rs + " - " + to_str(mpf_neg(im), dps, **kwargs) + "j"
     else:
-        return rs + " + " + to_str(im, dps) + "j"
+        return rs + " + " + to_str(im, dps, **kwargs) + "j"
 
-def mpc_add((a, b), (c, d), prec, rnd=round_fast):
+def mpc_to_complex(z, strict=False):
+    re, im = z
+    return complex(to_float(re, strict), to_float(im, strict))
+
+def mpc_hash(z):
+    try:
+        return hash(mpc_to_complex(z, strict=True))
+    except OverflowError:
+        return hash(z)
+
+def mpc_conjugate(z, prec, rnd=round_fast):
+    re, im = z
+    return re, mpf_neg(im, prec, rnd)
+
+def mpc_is_nonzero(z):
+    return z != mpc_zero
+
+def mpc_add(z, w, prec, rnd=round_fast):
+    a, b = z
+    c, d = w
     return mpf_add(a, c, prec, rnd), mpf_add(b, d, prec, rnd)
 
-def mpc_add_mpf((a, b), p, prec, rnd=round_fast):
-    return mpf_add(a, p, prec, rnd), b
+def mpc_add_mpf(z, x, prec, rnd=round_fast):
+    a, b = z
+    return mpf_add(a, x, prec, rnd), b
 
-def mpc_sub((a, b), (c, d), prec, rnd=round_fast):
+def mpc_sub(z, w, prec, rnd=round_fast):
+    a, b = z
+    c, d = w
     return mpf_sub(a, c, prec, rnd), mpf_sub(b, d, prec, rnd)
 
-def mpc_sub_mpf((a, b), p, prec, rnd=round_fast):
+def mpc_sub_mpf(z, p, prec, rnd=round_fast):
+    a, b = z
     return mpf_sub(a, p, prec, rnd), b
 
-def mpc_pos((a, b), prec, rnd=round_fast):
+def mpc_pos(z, prec, rnd=round_fast):
+    a, b = z
     return mpf_pos(a, prec, rnd), mpf_pos(b, prec, rnd)
 
-def mpc_neg((a, b), prec=None, rnd=round_fast):
+def mpc_neg(z, prec=None, rnd=round_fast):
+    a, b = z
     return mpf_neg(a, prec, rnd), mpf_neg(b, prec, rnd)
 
-def mpc_shift((a, b), n):
+def mpc_shift(z, n):
+    a, b = z
     return mpf_shift(a, n), mpf_shift(b, n)
 
-def mpc_abs((a, b), prec, rnd=round_fast):
+def mpc_abs(z, prec, rnd=round_fast):
     """Absolute value of a complex number, |a+bi|.
     Returns an mpf value."""
+    a, b = z
     return mpf_hypot(a, b, prec, rnd)
 
-def mpc_arg((a, b), prec, rnd=round_fast):
+def mpc_arg(z, prec, rnd=round_fast):
     """Argument of a complex number. Returns an mpf value."""
+    a, b = z
     return mpf_atan2(b, a, prec, rnd)
 
-def mpc_floor((a, b), prec, rnd=round_fast):
+def mpc_floor(z, prec, rnd=round_fast):
+    a, b = z
     return mpf_floor(a, prec, rnd), mpf_floor(b, prec, rnd)
 
-def mpc_ceil((a, b), prec, rnd=round_fast):
+def mpc_ceil(z, prec, rnd=round_fast):
+    a, b = z
     return mpf_ceil(a, prec, rnd), mpf_ceil(b, prec, rnd)
 
-def mpc_mul((a, b), (c, d), prec, rnd=round_fast):
-    """Complex multiplication.
+def mpc_mul(z, w, prec, rnd=round_fast):
+    """
+    Complex multiplication.
 
     Returns the real and imaginary part of (a+bi)*(c+di), rounded to
     the specified precision. The rounding mode applies to the real and
-    imaginary parts separately."""
+    imaginary parts separately.
+    """
+    a, b = z
+    c, d = w
+    p = mpf_mul(a, c)
+    q = mpf_mul(b, d)
+    r = mpf_mul(a, d)
+    s = mpf_mul(b, c)
+    re = mpf_sub(p, q, prec, rnd)
+    im = mpf_add(r, s, prec, rnd)
+    return re, im
 
-    asign, aman, aexp, abc = a
-    bsign, bman, bexp, bbc = b
-    csign, cman, cexp, cbc = c
-    dsign, dman, dexp, dbc = d
+def mpc_square(z, prec, rnd=round_fast):
+    # (a+b*I)**2 == a**2 - b**2 + 2*I*a*b
+    a, b = z
+    p = mpf_mul(a,a)
+    q = mpf_mul(b,b)
+    r = mpf_mul(a,b, prec, rnd)
+    re = mpf_sub(p, q, prec, rnd)
+    im = mpf_shift(r, 1)
+    return re, im
 
-    if 0 in (aman, bman, cman, dman):
-        # TODO: use a better strategy for complex infs
-        if ((not aman) and aexp) or ((not bman) and bexp) or \
-            ((not cman) and cexp) or ((not dman) and dexp):
-            wp = prec + 10
-            re = mpf_sub(mpf_mul(a,c), mpf_mul(b,d), prec, rnd)
-            im = mpf_add(mpf_mul(a,d), mpf_mul(b,c), prec, rnd)
-            return re, im
-        # bi * c = bci
-        # bi * di = -bd
-        # bi * (c + di) = -bd + bci
-        if not aman:
-            if not dman: return fzero, mpf_mul(b, c, prec, rnd)
-            if not cman: return mpf_mul(mpf_neg(b), d, prec, rnd), fzero
-            return mpf_mul(mpf_neg(b), d, prec, rnd), mpf_mul(b, c, prec, rnd)
-        # a * c = ac
-        # a * di = adi
-        # a * (c + di) = ac + adi
-        if not bman:
-            if not dman: return mpf_mul(a, c, prec, rnd), fzero
-            if not cman: return fzero, mpf_mul(a, d, prec, rnd)
-            return mpf_mul(a, c, prec, rnd), mpf_mul(a, d, prec, rnd)
-        # (a + bi) * c
-        if not dman:
-            return mpf_mul(a, c, prec, rnd), mpf_mul(b, c, prec, rnd)
-        # (a + bi) * di = -bd + adi
-        return mpf_mul(mpf_neg(b), d, prec, rnd), mpf_mul(a, d, prec, rnd)
-
-    # Avoid normalizing the temporary products
-    bct = bctable
-
-    psign = asign ^ csign
-    pman = aman * cman
-    pexp = aexp + cexp
-    pbc = abc + cbc - 4
-    if pbc < 4: pbc = bct[int(pman)]
-    else:       pbc += bct[int(pman>>pbc)]
-    p = psign, pman, pexp, pbc
-
-    qsign = (bsign ^ dsign) ^ 1
-    qman = bman * dman
-    qexp = bexp + dexp
-    qbc = bbc + dbc - 4
-    if qbc < 4: qbc = bct[int(qman)]
-    else:       qbc += bct[int(qman>>qbc)]
-    q = qsign, qman, qexp, qbc
-
-    rsign = bsign ^ csign
-    rman = bman * cman
-    rexp = bexp + cexp
-    rbc = bbc + cbc - 4
-    if rbc < 4: rbc = bct[int(rman)]
-    else:       rbc += bct[int(rman>>rbc)]
-    r = rsign, rman, rexp, rbc
-
-    ssign = asign ^ dsign
-    sman = aman * dman
-    sexp = aexp + dexp
-    sbc = abc + dbc - 4
-    if sbc < 4: sbc = bct[int(sman)]
-    else:       sbc += bct[int(sman>>sbc)]
-    s = ssign, sman, sexp, sbc
-
-    return mpf_add(p, q, prec, rnd), mpf_add(r, s, prec, rnd)
-
-
-def mpc_mul_mpf((a, b), p, prec, rnd=round_fast):
+def mpc_mul_mpf(z, p, prec, rnd=round_fast):
+    a, b = z
     re = mpf_mul(a, p, prec, rnd)
     im = mpf_mul(b, p, prec, rnd)
     return re, im
 
-def mpc_mul_int((a, b), n, prec, rnd=round_fast):
+def mpc_mul_imag_mpf(z, x, prec, rnd=round_fast):
+    """
+    Multiply the mpc value z by I*x where x is an mpf value.
+    """
+    a, b = z
+    re = mpf_neg(mpf_mul(b, x, prec, rnd))
+    im = mpf_mul(a, x, prec, rnd)
+    return re, im
+
+def mpc_mul_int(z, n, prec, rnd=round_fast):
+    a, b = z
     re = mpf_mul_int(a, n, prec, rnd)
     im = mpf_mul_int(b, n, prec, rnd)
     return re, im
 
-def mpc_div((a, b), (c, d), prec, rnd=round_fast):
+def mpc_div(z, w, prec, rnd=round_fast):
+    a, b = z
+    c, d = w
     wp = prec + 10
     # mag = c*c + d*d
     mag = mpf_add(mpf_mul(c, c), mpf_mul(d, d), wp)
@@ -191,9 +184,27 @@ def mpc_div((a, b), (c, d), prec, rnd=round_fast):
     u = mpf_sub(mpf_mul(b,c), mpf_mul(a,d), wp)
     return mpf_div(t,mag,prec,rnd), mpf_div(u,mag,prec,rnd)
 
-def mpc_div_mpf((a, b), p, prec, rnd=round_fast):
+def mpc_div_mpf(z, p, prec, rnd=round_fast):
+    """Calculate z/p where p is real"""
+    a, b = z
     re = mpf_div(a, p, prec, rnd)
     im = mpf_div(b, p, prec, rnd)
+    return re, im
+
+def mpc_reciprocal(z, prec, rnd=round_fast):
+    """Calculate 1/z efficiently"""
+    a, b = z
+    m = mpf_add(mpf_mul(a,a),mpf_mul(b,b),prec+10)
+    re = mpf_div(a, m, prec, rnd)
+    im = mpf_neg(mpf_div(b, m, prec, rnd))
+    return re, im
+
+def mpc_mpf_div(p, z, prec, rnd=round_fast):
+    """Calculate p/z where p is real efficiently"""
+    a, b = z
+    m = mpf_add(mpf_mul(a,a),mpf_mul(b,b), prec+10)
+    re = mpf_div(mpf_mul(a,p), m, prec, rnd)
+    im = mpf_div(mpf_neg(mpf_mul(b,p)), m, prec, rnd)
     return re, im
 
 def complex_int_pow(a, b, n):
@@ -226,9 +237,9 @@ def mpc_pow_mpf(z, p, prec, rnd=round_fast):
 def mpc_pow_int(z, n, prec, rnd=round_fast):
     if n == 0: return mpc_one
     if n == 1: return mpc_pos(z, prec, rnd)
-    if n == 2: return mpc_mul(z, z, prec, rnd)
-    if n == -1: return mpc_div(mpc_one, z, prec, rnd)
-    if n < 0: return mpc_div(mpc_one, mpc_pow_int(z, -n, prec+4), prec, rnd)
+    if n == 2: return mpc_square(z, prec, rnd)
+    if n == -1: return mpc_reciprocal(z, prec, rnd)
+    if n < 0: return mpc_reciprocal(mpc_pow_int(z, -n, prec+4), prec, rnd)
     a, b = z
     asign, aman, aexp, abc = a
     bsign, bman, bexp, bbc = b
@@ -250,15 +261,16 @@ def mpc_pow_int(z, n, prec, rnd=round_fast):
         return re, im
     return mpc_exp(mpc_mul_int(mpc_log(z, prec+10), n, prec+10), prec, rnd)
 
-def mpc_sqrt((a, b), prec, rnd=round_fast):
+def mpc_sqrt(z, prec, rnd=round_fast):
     """Complex square root (principal branch).
 
     We have sqrt(a+bi) = sqrt((r+a)/2) + b/sqrt(2*(r+a))*i where
     r = abs(a+bi), when a+bi is not a negative real number."""
-    if a == b == fzero:
-        return (a, b)
-    # When a+bi is a negative real number, we get a real sqrt times i
+    a, b = z
     if b == fzero:
+        if a == fzero:
+            return (a, b)
+        # When a+bi is a negative real number, we get a real sqrt times i
         if a[0]:
             im = mpf_sqrt(mpf_neg(a), prec, rnd)
             return (fzero, im)
@@ -294,11 +306,8 @@ def mpc_nthroot_fixed(a, b, n, prec):
         r = (a1 + 1j * b1)**(1.0/n)
         re = r.real
         im = r.imag
-        # XXX: workaround bug in gmpy
-        if abs(re) < 0.1: re = 0
-        if abs(im) < 0.1: im = 0
-        re = MP_BASE(re)
-        im = MP_BASE(im)
+        re = MP_BASE(int(re))
+        im = MP_BASE(int(im))
     except OverflowError:
         a1 = from_int(a1, start)
         b1 = from_int(b1, start)
@@ -327,14 +336,14 @@ def mpc_nthroot_fixed(a, b, n, prec):
         prevp = p
     return re, im
 
-def mpc_nthroot((a, b), n, prec, rnd=round_fast):
+def mpc_nthroot(z, n, prec, rnd=round_fast):
     """
     Complex n-th root.
 
     Use Newton method as in the real case when it is faster,
     otherwise use z**(1/n)
     """
-
+    a, b = z
     if a[0] == 0 and b == fzero:
         re = mpf_nthroot(a, n, prec, rnd)
         return (re, fzero)

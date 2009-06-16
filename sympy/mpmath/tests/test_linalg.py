@@ -2,8 +2,7 @@
 
 from __future__ import division
 
-from sympy.mpmath.matrices import matrix, norm_p, mnorm_1, mnorm_oo, mnorm_F, \
-    randmatrix, eye, zeros, diag
+from sympy.mpmath.matrices import matrix, norm, mnorm, randmatrix, eye, zeros, diag
 from sympy.mpmath.linalg import * # TODO: absolute imports
 from sympy.mpmath.mptypes import *
 
@@ -88,9 +87,10 @@ def test_LU_decomp():
 def test_inverse():
     for A in [A1, A2, A5]:
         inv = inverse(A)
-        assert mnorm_1(A*inv - eye(A.rows)) < 1.e-14
+        assert mnorm(A*inv - eye(A.rows), 1) < 1.e-14
 
 def test_householder():
+    mp.dps = 15
     A, b = A8, b8
     H, p, x, r = householder(extend(A, b))
     assert H == matrix(
@@ -101,7 +101,7 @@ def test_householder():
      [1.0, mpf('-1.3333333333333333'),mpf('-0.20000000000000018'),
       mpf('4.2426406871192857')]])
     assert p == [-2, -2, mpf('-1.4142135623730949')]
-    assert round(norm_p(r, 2), 10) == 4.2426406870999998
+    assert round(norm(r, 2), 10) == 4.2426406870999998
 
     y = [102.102, 58.344, 36.463, 24.310, 17.017, 12.376, 9.282, 7.140, 5.610,
          4.488, 3.6465, 3.003]
@@ -120,33 +120,48 @@ def test_householder():
         H, p, x, r = householder(extend(A, y))
         x = matrix(x)
         y = matrix(y)
-        residuals.append(norm_p(r, 2))
-        refres.append(norm_p(residual(A, x, y), 2))
+        residuals.append(norm(r, 2))
+        refres.append(norm(residual(A, x, y), 2))
     assert [round(res, 10) for res in residuals] == [15.1733888877,
            0.82378073210000002, 0.302645887, 0.0260109244,
            0.00058653999999999998]
-    assert norm_p(matrix(residuals) - matrix(refres), inf) < 1.e-13
+    assert norm(matrix(residuals) - matrix(refres), inf) < 1.e-13
 
 def test_factorization():
     A = randmatrix(5)
     P, L, U = lu(A)
-    assert mnorm_1(P*A - L*U) < 1.e-15
+    assert mnorm(P*A - L*U, 1) < 1.e-15
 
 def test_solve():
-    assert norm_p(residual(A6, lu_solve(A6, b6), b6), inf) < 1.e-10
-    assert norm_p(residual(A7, lu_solve(A7, b7), b7), inf) < 1.5
-    assert norm_p(residual(A8, lu_solve(A8, b8), b8), inf) <= 3 + 1.e-10
-    assert norm_p(residual(A6, qr_solve(A6, b6)[0], b6), inf) < 1.e-10
-    assert norm_p(residual(A7, qr_solve(A7, b7)[0], b7), inf) < 1.5
-    assert norm_p(residual(A8, qr_solve(A8, b8)[0], b8), 2) <= 4.3
-    assert norm_p(residual(A10, lu_solve(A10, b10), b10), 2) < 1.e-10
-    assert norm_p(residual(A10, qr_solve(A10, b10)[0], b10), 2) < 1.e-10
+    assert norm(residual(A6, lu_solve(A6, b6), b6), inf) < 1.e-10
+    assert norm(residual(A7, lu_solve(A7, b7), b7), inf) < 1.5
+    assert norm(residual(A8, lu_solve(A8, b8), b8), inf) <= 3 + 1.e-10
+    assert norm(residual(A6, qr_solve(A6, b6)[0], b6), inf) < 1.e-10
+    assert norm(residual(A7, qr_solve(A7, b7)[0], b7), inf) < 1.5
+    assert norm(residual(A8, qr_solve(A8, b8)[0], b8), 2) <= 4.3
+    assert norm(residual(A10, lu_solve(A10, b10), b10), 2) < 1.e-10
+    assert norm(residual(A10, qr_solve(A10, b10)[0], b10), 2) < 1.e-10
+
+def test_singular():
+    mp.dps = 15
+    A = [[5.6, 1.2], [7./15, .1]]
+    B = repr(zeros(2))
+    b = [1, 2]
+    def _assert_ZeroDivisionError(statement):
+        try:
+            eval(statement)
+            assert False
+        except (ZeroDivisionError, ValueError):
+            pass
+    for i in ['lu_solve(%s, %s)' % (A, b), 'lu_solve(%s, %s)' % (B, b),
+              'qr_solve(%s, %s)' % (A, b), 'qr_solve(%s, %s)' % (B, b)]:
+        _assert_ZeroDivisionError(i)
 
 def test_cholesky():
     A9.force_type = float
     assert cholesky(A9) == matrix([[2, 0, 0], [1, 2, 0], [-1, -3/2, 3/2]])
     x = cholesky_solve(A9, b9)
-    assert norm_p(residual(A9, x, b9), inf) == 0
+    assert norm(residual(A9, x, b9), inf) == 0
 
 def test_det():
     assert det(A1) == 1
@@ -158,15 +173,16 @@ def test_det():
     assert det(zeros(3)) == 0
 
 def test_cond():
+    mp.dps = 15
     A = matrix([[1.2969, 0.8648], [0.2161, 0.1441]])
-    assert cond(A, mnorm_1) == mpf('327065209.73817754')
-    assert cond(A, mnorm_oo) == mpf('327065209.73817748')
-    assert cond(A, mnorm_F) == mpf('249729266.80008656')
+    assert cond(A, lambda x: mnorm(x,1)) == mpf('327065209.73817754')
+    assert cond(A, lambda x: mnorm(x,inf)) == mpf('327065209.73817754')
+    assert cond(A, lambda x: mnorm(x,'F')) == mpf('249729266.80008656')
 
 @extradps(50)
 def test_precision():
     A = randmatrix(10, 10)
-    assert mnorm_1(inverse(inverse(A)) - A) < 1.e-45
+    assert mnorm(inverse(inverse(A)) - A, 1) < 1.e-45
 
 def test_interval_matrix():
     a = matrix([['0.1','0.3','1.0'],['7.1','5.5','4.8'],['3.2','4.4','5.6']],
@@ -192,7 +208,7 @@ def test_improve_solution():
     b = randmatrix(5, 1, min=-1000, max=1000)
     x1 = lu_solve(A, b) + randmatrix(5, 1, min=-1e-5, max=1.e-5)
     x2 = improve_solution(A, x1, b)
-    assert norm_p(residual(A, x2, b), 2) < norm_p(residual(A, x1, b), 2)
+    assert norm(residual(A, x2, b), 2) < norm(residual(A, x1, b), 2)
 
 def test_exp_pade():
     for i in range(3):
@@ -213,6 +229,6 @@ def test_exp_pade():
         d = e2 - a
         #print d
         mp.dps = dps
-        assert norm_p(d, inf).ae(0)
+        assert norm(d, inf).ae(0)
     mp.dps = 15
 

@@ -87,6 +87,7 @@ def test_gamma():
     assert factorial(0) == fac(0) == 1
     assert factorial(3) == 6
     assert isnan(gamma(nan))
+    assert gamma(1100).ae('4.8579168073569433667e2866')
 
 def test_fac2():
     mp.dps = 15
@@ -125,6 +126,8 @@ def test_gamma_quotients():
     assert binomial(-1,0) == 1
     assert binomial(-2,-4) == 3
     assert binomial(4.5, 1.5) == 6.5625
+    assert binomial(1100,1) == 1100
+    assert binomial(1100,2) == 604450
     assert beta(1,1) == 1
     assert beta(0,0) == inf
     assert beta(3,0) == inf
@@ -459,3 +462,49 @@ def test_polylog():
     assert polylog(0.5+j/3, 0.5+j/2).ae(0.31739144796565650535 + 0.99255390416556261437j)
     assert polylog(3+4j,1).ae(zeta(3+4j))
     assert polylog(3+4j,-1).ae(-altzeta(3+4j))
+
+def test_bell_polyexp():
+    mp.dps = 15
+    # TODO: more tests for polyexp
+    assert (polyexp(0,1e-10)*10**10).ae(1.00000000005)
+    assert (polyexp(1,1e-10)*10**10).ae(1.0000000001)
+    assert polyexp(5,3j).ae(-607.7044517476176454+519.962786482001476087j)
+    assert polyexp(-1,3.5).ae(12.09537536175543444)
+    # bell(0,x) = 1
+    assert bell(0,0) == 1
+    assert bell(0,1) == 1
+    assert bell(0,2) == 1
+    assert bell(0,inf) == 1
+    assert bell(0,-inf) == 1
+    assert isnan(bell(0,nan))
+    # bell(1,x) = x
+    assert bell(1,4) == 4
+    assert bell(1,0) == 0
+    assert bell(1,inf) == inf
+    assert bell(1,-inf) == -inf
+    assert isnan(bell(1,nan))
+    # bell(2,x) = x*(1+x)
+    assert bell(2,-1) == 0
+    assert bell(2,0) == 0
+    # large orders / arguments
+    assert bell(10) == 115975
+    assert bell(10,1) == 115975
+    assert bell(10, -8) == 11054008
+    assert bell(5,-50) == -253087550
+    assert bell(50,-50).ae('3.4746902914629720259e74')
+    mp.dps = 80
+    assert bell(50,-50) == 347469029146297202586097646631767227177164818163463279814268368579055777450
+    assert bell(40,50) == 5575520134721105844739265207408344706846955281965031698187656176321717550
+    assert bell(74) == 5006908024247925379707076470957722220463116781409659160159536981161298714301202
+    mp.dps = 15
+    assert bell(10,20j) == 7504528595600+15649605360020j
+    # continuity of the generalization
+    assert bell(0.5,0).ae(sinc(pi*0.5))
+
+def test_primezeta():
+    mp.dps = 15
+    assert primezeta(0.9).ae(1.8388316154446882243 + 3.1415926535897932385j)
+    assert primezeta(4).ae(0.076993139764246844943)
+    assert primezeta(1) == inf
+    assert primezeta(inf) == 0
+    assert isnan(primezeta(nan))

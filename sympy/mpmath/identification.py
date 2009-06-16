@@ -31,7 +31,7 @@ def pslq(x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
 
     Find rational approximations for `\pi`::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> pslq([pi, 1], tol=0.01)
         [-7, 22]
@@ -322,7 +322,7 @@ def findpoly(x, n=1, **kwargs):
     By default (degree `n = 1`), :func:`findpoly` simply finds a linear
     polynomial with a rational root::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> findpoly(0.7)
         [-10, 7]
@@ -531,7 +531,7 @@ def identify(x, constants=[], tol=None, maxcoeff=1000, full=False,
     As a simple example, :func:`identify` will find an algebraic
     formula for the golden ratio::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> identify(phi)
         '((1+sqrt(5))/2)'
@@ -700,14 +700,14 @@ def identify(x, constants=[], tol=None, maxcoeff=1000, full=False,
         >>> from sympy import simplify
         >>> x = sympify('-1/(-3/2+(1/2)*5**(1/2))*(3/2-1/2*5**(1/2))**(1/2)')
         >>> x
-        (3/2 - 1/2*5**(1/2))**(-1/2)
+        (3/2 - 5**(1/2)/2)**(-1/2)
         >>> x = simplify(x)
         >>> x
         2/(6 - 2*5**(1/2))**(1/2)
         >>> mp.dps = 30
         >>> x = sympify(identify(x.evalf(30)))
         >>> x
-        1/2 + 1/2*5**(1/2)
+        1/2 + 5**(1/2)/2
 
     (In fact, this functionality is available directly in SymPy as the
     function :func:`nsimplify`, which is essentially a wrapper for
@@ -763,8 +763,8 @@ def identify(x, constants=[], tol=None, maxcoeff=1000, full=False,
     if isinstance(constants, dict):
         constants = [(mpf(v), name) for (name, v) in constants.items()]
     else:
-        import sympy.mpmath as mpmath
-        constants = [(eval(p, mpmath.__dict__), p) for p in constants]
+        import sympy.mpmath
+        constants = [(eval(p, sympy.mpmath.__dict__), p) for p in constants]
 
     # We always want to find at least rational terms
     if 1 not in [value for (name, value) in constants]:

@@ -38,6 +38,10 @@ tapery = "1.2020569031595942853997381615114499907649862923404988817922715553\
 4183820578631309018645587360933525815"
 tphi = "1.618033988749894848204586834365638117720309179805762862135448622705\
 26046281890244970720720418939113748475"
+tmertens = "0.26149721284764278375542683860869585905156664826119920619206421\
+3924924510897368209714142631434246651052"
+ttwinprime = "0.660161815846869573927812110014555778432623360284733413319448\
+423335405642304495277143760031413839867912"
 
 def test_constants():
     for prec in [3, 7, 10, 15, 20, 37, 80, 100, 29]:
@@ -52,6 +56,9 @@ def test_constants():
         assert khinchin == mpf(tkhinchin)
         assert glaisher == mpf(tglaisher)
         assert phi == mpf(tphi)
+        if prec < 50:
+            assert mertens == mpf(tmertens)
+            assert twinprime == mpf(ttwinprime)
     mp.dps = 15
 
 def test_exact_sqrts():
@@ -345,6 +352,11 @@ def test_areal_inverses():
         x = random.uniform(-1, 1)
         assert atanh(mpf(x)).ae(cmath.atanh(x).real)
         assert isinstance(atanh(mpf(x)), mpf)
+
+    dps = mp.dps
+    mp.dps = 300
+    assert isinstance(asin(0.5), mpf)
+    mp.dps = dps
 
 def test_invhyperb_inaccuracy():
     mp.dps = 15

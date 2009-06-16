@@ -11,8 +11,8 @@ etc
 
 from itertools import izip
 
-from settings import (mp, extraprec)
-from mptypes import (mpnumeric, mpmathify, mpf, mpc, j, inf, eps,
+from mptypes import (mp, extraprec)
+from mptypes import (mpmathify, mpf, mpc, j, inf, eps,
     AS_POINTS, arange, nstr, nprint, isinf, fsum, fprod)
 from functions import (ldexp, factorial, exp, ln, sin, cos, pi, bernoulli,
     sign)
@@ -66,7 +66,7 @@ def richardson(seq):
 
     Applying Richardson extrapolation to the Leibniz series for `\pi`::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 30
         >>> S = [4*sum(mpf(-1)**n/(2*n+1) for n in range(m))
         ...     for m in range(1,30)]
@@ -184,7 +184,7 @@ def shanks(seq, table=None, randomized=False):
     We illustrate by applying Shanks transformation to the Leibniz
     series for `\pi`::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 50
         >>> S = [4*sum(mpf(-1)**n/(2*n+1) for n in range(m))
         ...     for m in range(1,30)]
@@ -319,7 +319,7 @@ def sumem(f, interval, tol=None, reject=10, integral=None,
     Summation of an infinite series, with automatic and symbolic
     integral and derivative values (the second should be much faster)::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 50
         >>> print sumem(lambda n: 1/n**2, [32, inf])
         0.03174336652030209012658168043874142714132886413417
@@ -399,9 +399,8 @@ def adaptive_extrapolation(update, emfun, kwargs):
     skip = option('skip', 0)
     steps = iter(option('steps', xrange(10, 10**9, 10)))
     #steps = (10 for i in xrange(1000))
-    if method in ('d', 'direct'):
-        TRY_RICHARDSON = self.TRY_SHANKS = \
-            TRY_EULER_MACLAURIN = False
+    if 'd' in method or 'direct' in method:
+        TRY_RICHARDSON = TRY_SHANKS = TRY_EULER_MACLAURIN = False
     else:
         TRY_RICHARDSON = ('r' in method) or ('richardson' in method)
         TRY_SHANKS = ('s' in method) or ('shanks' in method)
@@ -491,7 +490,7 @@ def adaptive_extrapolation(update, emfun, kwargs):
                             " will most likely fail")
                     TRY_EULER_MACLAURIN = False
                 else:
-                    value, em_error = emfun(index+1, tol)
+                    value, em_error = emfun(index, tol)
                     value += partial[-1]
                     if verbose:
                         print "Euler-Maclaurin error: %s" % nstr(em_error)
@@ -516,7 +515,7 @@ def nsum(f, interval, **kwargs):
     infinite series that can be summed by :func:`nsum`, where the
     first converges rapidly and the second converges slowly, are::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> print nsum(lambda n: 1/fac(n), [0, inf])
         2.71828182845905
@@ -783,7 +782,7 @@ def nsum(f, interval, **kwargs):
     def emfun(point, tol):
         workprec = mp.prec
         mp.prec = prec + 10
-        v = sumem(f, [point, inf], tol, error=1)
+        v = sumem(f, [a+point, inf], tol, error=1)
         mp.prec = workprec
         return v
 
@@ -807,7 +806,7 @@ def nprod(f, interval, **kwargs):
 
     A simple finite product::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> print nprod(lambda k: k, [1, 4])
         24.0
@@ -952,7 +951,7 @@ def limit(f, x, direction=1, exp=False, **kwargs):
 
     A basic evaluation of a removable singularity::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 30
         >>> print limit(lambda x: (x-sin(x))/x**3, 0)
         0.166666666666666666666666666667
@@ -1054,7 +1053,7 @@ def diff(f, x, n=1, method='step', scale=1, direction=0):
 
     Derivatives of a simple function::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> print diff(lambda x: x**2 + x, 1.0)
         3.0
@@ -1260,7 +1259,7 @@ def diffun(f, n=1, **options):
     Given a function f, returns a function g(x) that evaluates the nth
     derivative f^(n)(x)::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> cos2 = diffun(sin)
         >>> sin2 = diffun(sin, 4)
@@ -1284,7 +1283,7 @@ def taylor(f, x, n, **options):
     Produces a degree-`n` Taylor polynomial around the point `x` of the
     given function `f`. The coefficients are returned as a list.
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> nprint(chop(taylor(sin, 0, 5)))
         [0.0, 1.0, 0.0, -0.166667, 0.0, 8.33333e-3]
@@ -1330,7 +1329,7 @@ def pade(a, L, M):
     from G.A. Baker 'Essentials of Pade Approximants' Academic Press,
     Ch.1A)::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> one = mpf(1)
         >>> def f(x):
@@ -1392,7 +1391,7 @@ def polyval(coeffs, x, derivative=False):
     evaluates `P(x)` with the derivative, `P'(x)`, and returns the
     tuple `(P(x), P'(x))`.
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> polyval([3, 0, 2], 0.5)
         mpf('2.75')
         >>> polyval([3, 0, 2], 0.5, derivative=True)
@@ -1403,7 +1402,7 @@ def polyval(coeffs, x, derivative=False):
     """
     if not coeffs:
         return mpf(0)
-    p = mpnumeric(coeffs[0])
+    p = mpmathify(coeffs[0])
     q = mpf(0)
     for c in coeffs[1:]:
         if derivative:
@@ -1429,7 +1428,7 @@ def polyroots(coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False):
 
     Finding the three real roots of `x^3 - x^2 - 14x + 24`::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> nprint(polyroots([1,-1,-14,24]), 4)
         [-4.0, 2.0, 3.0]
@@ -1686,7 +1685,7 @@ def chebyfit(f, interval, N, error=False):
     Here we use :func:`chebyfit` to generate a low-degree approximation
     of `f(x) = \cos(x)`, valid on the interval `[1, 2]`::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> poly, err = chebyfit(cos, [1, 2], 5, error=True)
         >>> nprint(poly)
@@ -1788,7 +1787,7 @@ def fourier(f, interval, N):
     the function has odd symmetry), and the sine coefficients are
     rational numbers::
 
-        >>> from sympy.mpmath import *
+        >>> from mpmath import *
         >>> mp.dps = 15
         >>> c, s = fourier(lambda x: x, [-pi, pi], 5)
         >>> nprint(c)

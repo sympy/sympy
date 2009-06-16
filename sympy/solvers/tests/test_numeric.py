@@ -1,4 +1,4 @@
-from sympy.mpmath import mnorm_1
+from sympy.mpmath import mnorm
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
 from sympy import Symbol, Matrix, sqrt, Eq
@@ -18,7 +18,7 @@ def test_nsolve():
     F = lambdify((x1, x2), f.T, modules='mpmath')
     for x0 in [(-1, 1), (1, -2), (4, 4), (-4, -4)]:
         x = nsolve(f, (x1, x2), x0, tol=1.e-8)
-        assert mnorm_1(F(*x)) <= 1.e-10
+        assert mnorm(F(*x),1) <= 1.e-10
     # The Chinese mathematician Zhu Shijie was the very first to solve this
     # nonlinear system 700 years ago (z was added to make it 3-dimensional)
     x = Symbol('x')
@@ -31,6 +31,6 @@ def test_nsolve():
     F = lambdify((x,  y,  z), f.T, modules='mpmath')
     def getroot(x0):
         root = nsolve((f1,  f2,  f3), (x,  y,  z), x0)
-        assert mnorm_1(F(*root)) <= 1.e-8
+        assert mnorm(F(*root),1) <= 1.e-8
         return root
     assert map(round,  getroot((1,  1,  1))) == [2.0,  1.0,  0.0]

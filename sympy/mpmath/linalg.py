@@ -107,7 +107,7 @@ from __future__ import division
 
 from mptypes import extraprec, absmin, mp, eps, mpf, fsum
 from functions import sqrt, sign, log, factorial
-from matrices import matrix, eye, swap_row, extend, mnorm_1, norm_p, mnorm_oo
+from matrices import matrix, eye, swap_row, extend, norm, mnorm
 from copy import copy
 
 def LU_decomp(A, overwrite=False, use_cache=True):
@@ -125,27 +125,31 @@ def LU_decomp(A, overwrite=False, use_cache=True):
     if not overwrite:
         orig = A
         A = A.copy()
-    tol = absmin(mnorm_1(A) * eps) # each pivot element has to be bigger
+    tol = absmin(mnorm(A,1) * eps) # each pivot element has to be bigger
     n = A.rows
     p = [None]*(n - 1)
     for j in xrange(n - 1):
         # pivoting, choose max(abs(reciprocal row sum)*abs(pivot element))
         biggest = 0
         for k in xrange(j, n):
-            current = 1/fsum([absmin(A[k,l]) for l in xrange(j, n)]) \
-                      * absmin(A[k,j])
+            s = fsum([absmin(A[k,l]) for l in xrange(j, n)])
+            if absmin(s) <= tol:
+                raise ZeroDivisionError('matrix is numerically singular')
+            current = 1/s * absmin(A[k,j])
             if current > biggest: # TODO: what if equal?
                 biggest = current
                 p[j] = k
         # swap rows according to p
         swap_row(A, j, p[j])
-        if absmin(A[j,j]) < tol:
+        if absmin(A[j,j]) <= tol:
             raise ZeroDivisionError('matrix is numerically singular')
         # calculate elimination factors and add rows
         for i in xrange(j + 1, n):
             A[i,j] /= A[j,j]
             for k in xrange(j + 1, n):
                 A[i,k] -= A[i,j]*A[j,k]
+    if absmin(A[n - 1,n - 1]) <= tol:
+        raise ZeroDivisionError('matrix is numerically singular')
     # cache decomposition
     if not overwrite and isinstance(orig, matrix):
         orig._LU = (A, p)
@@ -221,7 +225,7 @@ def improve_solution(A, x, b, maxsteps=1):
     assert A.rows == A.cols, 'need n*n matrix' # TODO: really?
     for _ in xrange(maxsteps):
         r = residual(A, x, b)
-        if norm_p(r, 2) < 10*eps:
+        if norm(r, 2) < 10*eps:
             break
         # this uses cached LU decomposition and is thus cheap
         dx = lu_solve(A, -r)
@@ -361,7 +365,7 @@ def residual(A, x, b, **kwargs):
         mp.prec = oldprec
 
 @extraprec(10)
-def qr_solve(A, b, norm=lambda x: norm_p(x, 2), **kwargs):
+def qr_solve(A, b, norm=norm, **kwargs):
     """
     Ax = b => x, ||Ax - b||
 
@@ -455,7 +459,7 @@ def det(A):
         z *= R[i,i]
     return z
 
-def cond(A, norm=mnorm_1):
+def cond(A, norm=lambda x: mnorm(x,1)):
     """
     Calculate the condition number of a matrix using a specified matrix norm.
 
@@ -501,7 +505,7 @@ def exp_pade(a):
             break
         q += 1
     q += extraq
-    j = max(1, int(log(mnorm_oo(a),2)))
+    j = max(1, int(log(mnorm(a,'inf'),2)))
     extra = q
     mp.dps += extra
     try:

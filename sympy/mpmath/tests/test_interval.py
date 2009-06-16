@@ -1,4 +1,5 @@
 from sympy.mpmath import *
+from sympy.mpmath.mptypes import mpi_to_str, mpi_from_str
 
 def test_interval_identity():
     mp.dps = 15
@@ -230,3 +231,32 @@ def test_interval_cos_sin():
     v = cot(mpi(0.5,1))
     assert v.a.ae(cot(1))
     assert v.b.ae(cot(0.5))
+
+def test_mpi_to_str():
+    mp.dps = 30
+    x = mpi(1, 2)
+    # FIXME: error_dps should not be necessary
+    assert mpi_to_str(x, mode='plusminus', error_dps=6) == '1.5 +- 0.5'
+    assert mpi_to_str(x, mode='plusminus', use_spaces=False, error_dps=6
+           ) == '1.5+-0.5'
+    assert mpi_to_str(x, mode='percent') == '1.5 (33.33%)'
+    assert mpi_to_str(x, mode='brackets', use_spaces=False) == '[1.0,2.0]'
+    assert mpi_to_str(x, mode='brackets' , brackets=('<', '>')) == '<1.0, 2.0>'
+    x = mpi('5.2582327113062393041', '5.2582327113062749951')
+    assert (mpi_to_str(x, mode='diff') ==
+            '5.2582327113062[393041, 749951]')
+    assert (mpi_to_str(cos(mpi(1)), mode='diff', use_spaces=False) ==
+            '0.54030230586813971740093660744[2955,3053]')
+    assert (mpi_to_str(mpi('1e123', '1e129'), mode='diff') ==
+            '[1.0e+123, 1.0e+129]')
+    assert (mpi_to_str(exp(mpi('5000.1')), mode='diff') ==
+            '3.2797365856787867069110487[0926, 1191]e+2171')
+
+def test_mpi_from_str():
+    assert mpi_from_str('1.5 +- 0.5') == mpi(mpf('1.0'), mpf('2.0'))
+    assert (mpi_from_str('1.5 (33.33333333333333333333333333333%)') ==
+            mpi(mpf(1), mpf(2)))
+    assert mpi_from_str('[1, 2]') == mpi(1, 2)
+    assert mpi_from_str('1[2, 3]') == mpi(12, 13)
+    assert mpi_from_str('1.[23,46]e-8') == mpi('1.23e-8', '1.46e-8')
+    assert mpi_from_str('12[3.4,5.9]e4') == mpi('123.4e+4', '125.9e4')

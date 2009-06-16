@@ -31,13 +31,28 @@ def test_basic_string():
     assert str(mpf(-1.2344e-15)) == '-1.2344e-15'
     assert repr(mpf(-1.2344e-15)) == "mpf('-1.2343999999999999e-15')"
 
+def test_str_whitespace():
+    assert mpf('1.26 ') == 1.26
+
 def test_unicode():
     mp.dps = 15
     assert mpf(u'2.76') == 2.76
     assert mpf(u'inf') == inf
 
-def test_keep_zeros():
+def test_str_format():
     assert to_str(from_float(0.1),15,strip_zeros=False) == '0.100000000000000'
+    assert to_str(from_float(0.0),15,show_zero_exponent=True) == '0.0e+0'
+    assert to_str(from_float(0.0),0,show_zero_exponent=True) == '.0e+0'
+    assert to_str(from_float(0.0),0,show_zero_exponent=False) == '.0'
+    assert to_str(from_float(0.0),1,show_zero_exponent=True) == '0.0e+0'
+    assert to_str(from_float(0.0),1,show_zero_exponent=False) == '0.0'
+    assert to_str(from_float(1.23),3,show_zero_exponent=True) == '1.23e+0'
+    assert to_str(from_float(1.23456789000000e-2),15,strip_zeros=False,min_fixed=0,max_fixed=0) == '1.23456789000000e-2'
+    assert to_str(from_float(1.23456789000000e+2),15,strip_zeros=False,min_fixed=0,max_fixed=0) == '1.23456789000000e+2'
+    assert to_str(from_float(2.1287e14), 15, max_fixed=1000) == '212870000000000.0'
+    assert to_str(from_float(2.1287e15), 15, max_fixed=1000) == '2128700000000000.0'
+    assert to_str(from_float(2.1287e16), 15, max_fixed=1000) == '21287000000000000.0'
+    assert to_str(from_float(2.1287e30), 15, max_fixed=1000) == '2128700000000000000000000000000.0'
 
 def test_tight_string_conversion():
     mp.dps = 15

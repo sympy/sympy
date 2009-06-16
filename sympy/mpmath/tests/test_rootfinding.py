@@ -10,7 +10,7 @@ def test_findroot():
     assert findroot(lambda x: x*x+1, mpc(2+2j)).ae(1j)
     # test all solvers with 1 starting point
     f = lambda x: cos(x)
-    for solver in [Secant, MNewton, Muller, ANewton]:
+    for solver in [Newton, Secant, MNewton, Muller, ANewton]:
         x = findroot(f, 2., solver=solver)
         assert abs(f(x)) < eps
     # test all solvers with interval of 2 points
@@ -47,11 +47,11 @@ def test_multiplicity():
 def test_multidimensional():
     def f(*x):
         return [3*x[0]**2-2*x[1]**2-1, x[0]**2-2*x[0]+x[1]**2+2*x[1]-8]
-    assert mnorm_1(jacobian(f, (1,-2)) - matrix([[6,8],[0,-2]])) < 1.e-7
+    assert mnorm(jacobian(f, (1,-2)) - matrix([[6,8],[0,-2]]),1) < 1.e-7
     for x, error in MDNewton(f, (1,-2), verbose=0,
-                             norm=lambda x: norm_p(x, inf)):
+                             norm=lambda x: norm(x, inf)):
         pass
-    assert norm_p(f(*x), 2) < 1e-14
+    assert norm(f(*x), 2) < 1e-14
     # The Chinese mathematician Zhu Shijie was the very first to solve this
     # nonlinear system 700 years ago
     f1 = lambda x, y: -x + 2*y

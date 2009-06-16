@@ -120,3 +120,14 @@ def test_complex_zeros():
         for c in [0,4]:
           for d in [0,5]:
             assert mpc(a,b)*mpc(c,d) == complex(a,b)*complex(c,d)
+
+def test_hash():
+    for i in range(-256, 256):
+        assert hash(mpf(i)) == hash(i)
+    assert hash(mpf(0.5)) == hash(0.5)
+    assert hash(mpc(2,3)) == hash(2+3j)
+    # Check that this doesn't fail
+    assert hash(inf)
+    # Check that overflow doesn't assign equal hashes to large numbers
+    assert hash(mpf('1e1000')) != hash('1e10000')
+    assert hash(mpc(100,'1e1000')) != hash(mpc(200,'1e1000'))

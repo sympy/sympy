@@ -13,7 +13,7 @@ References:
 
 """
 
-import sympy.mpmath as mpmath
+import sympy.mpmath
 import random
 from sympy.mpmath.mptypes import (mpc, mp, eps, j, zero, one)
 from sympy.mpmath.elliptic import *
