@@ -412,11 +412,43 @@ class Mul(AssocOp):
                 terms = [added]
         return terms
 
-    def _eval_expand_basic(self):
-        plain, sums, rewrite = [], [], False
+    def _eval_expand_basic(self, deep=True, **hints):
+        sargs, terms = self.args[:], []
+        for term in sargs:
+            if hasattr(term, '_eval_expand_basic'):
+                newterm = term._eval_expand_basic(deep=deep, **hints)
+            else:
+                newterm = term
+            terms.append(newterm)
+        return self.new(*terms)
 
+    def _eval_expand_power_exp(self, deep=True, **hints):
+        sargs, terms = self.args[:], []
+        for term in sargs:
+            if hasattr(term, '_eval_expand_power_exp'):
+                newterm = term._eval_expand_power_exp(deep=deep, **hints)
+            else:
+                newterm = term
+            terms.append(newterm)
+        return self.new(*terms)
+
+    def _eval_expand_power_base(self, deep=True, **hints):
+        sargs, terms = self.args[:], []
+        for term in sargs:
+            if hasattr(term, '_eval_expand_power_base'):
+                newterm = term._eval_expand_power_base(deep=deep, **hints)
+            else:
+                newterm = term
+            terms.append(newterm)
+        return self.new(*terms)
+
+    def _eval_expand_mul(self, deep=True, **hints):
+        plain, sums, rewrite = [], [], False
         for factor in self.args:
-            terms = factor._eval_expand_basic()
+            if deep:
+                terms = factor.expand(deep=deep, **hints)
+            else:
+                terms = factor
 
             if terms is not None:
                 factor = terms
@@ -447,6 +479,56 @@ class Mul(AssocOp):
                 return Add(*(Mul(plain, term) for term in terms), **self.assumptions0)
             else:
                 return Mul(*plain, **self.assumptions0)
+
+    def _eval_expand_multinomial(self, deep=True, **hints):
+        sargs, terms = self.args[:], []
+        for term in sargs:
+            if hasattr(term, '_eval_expand_multinomial'):
+                newterm = term._eval_expand_multinomial(deep=deep, **hints)
+            else:
+                newterm = term
+            terms.append(newterm)
+        return self.new(*terms)
+
+    def _eval_expand_log(self, deep=True, **hints):
+        sargs, terms = self.args[:], []
+        for term in sargs:
+            if hasattr(term, '_eval_expand_log'):
+                newterm = term._eval_expand_log(deep=deep, **hints)
+            else:
+                newterm = term
+            terms.append(newterm)
+        return self.new(*terms)
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        sargs, terms = self.args[:], []
+        for term in sargs:
+            if hasattr(term, '_eval_expand_complex'):
+                newterm = term._eval_expand_complex(deep=deep, **hints)
+            else:
+                newterm = term
+            terms.append(newterm)
+        return self.new(*terms)
+
+    def _eval_expand_trig(self, deep=True, **hints):
+        sargs, terms = self.args[:], []
+        for term in sargs:
+            if hasattr(term, '_eval_expand_trig'):
+                newterm = term._eval_expand_trig(deep=deep, **hints)
+            else:
+                newterm = term
+            terms.append(newterm)
+        return self.new(*terms)
+
+    def _eval_expand_func(self, deep=True, **hints):
+        sargs, terms = self.args[:], []
+        for term in sargs:
+            if hasattr(term, '_eval_expand_func'):
+                newterm = term._eval_expand_func(deep=deep, **hints)
+            else:
+                newterm = term
+            terms.append(newterm)
+        return self.new(*terms)
 
     def _eval_derivative(self, s):
         terms = list(self.args)

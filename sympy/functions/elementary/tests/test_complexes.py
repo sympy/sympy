@@ -1,5 +1,5 @@
 from sympy import symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log, \
-        pi, arg, conjugate, expand
+        pi, arg, conjugate, expand, exp, sin, cos
 from sympy.utilities.pytest import XFAIL
 
 
@@ -158,3 +158,4 @@ def test_issue936():
     assert abs(x).expand(trig=True)     == abs(x)
     assert sign(x).expand(trig=True)    == sign(x)
     assert arg(x).expand(trig=True)     == arg(x)
+

@@ -1,6 +1,6 @@
 
 from sympy.core.basic import Basic, S, C, sympify, Wild
-from sympy.core.function import Lambda, Function, Function
+from sympy.core.function import Lambda, Function, Function, expand_log
 from sympy.core.cache import cacheit
 
 from sympy.utilities.decorator import deprecated
@@ -110,8 +110,11 @@ class exp(Function):
                 return p * x / n
         return x**n/C.Factorial()(n)
 
-    def _eval_expand_complex(self, *args):
+    def _eval_expand_complex(self, deep=True, **hints):
         re, im = self.args[0].as_real_imag()
+        if deep:
+            re = re.expand(deep, **hints)
+            im = im.expand(deep, **hints)
         cos, sin = C.cos(im), C.sin(im)
         return exp(re) * cos + S.ImaginaryUnit * exp(re) * sin
 
@@ -231,12 +234,17 @@ class exp(Function):
             return S.One
         return exp(arg)
 
-    def _eval_expand_basic(self, *args):
-        arg = self.args[0].expand()
+    def _eval_expand_power_exp(self, deep=True, **hints):
+        if deep:
+            arg = self.args[0].expand(deep=deep, **hints)
+        else:
+            arg = self.args[0]
         if arg.is_Add:
             expr = 1
             for x in arg.args:
-                expr *= self.func(x).expand()
+                if deep:
+                    x = x.expand(deep=deep, **hints)
+                expr *= self.func(x)
             return expr
         return self.func(arg)
 
@@ -337,19 +345,59 @@ class log(Function):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms): # of log(1+x)
+        from sympy import powsimp
         if n<0: return S.Zero
         x = sympify(x)
         if n==0: return x
         if previous_terms:
             p = previous_terms[-1]
             if p is not None:
-                return (-n) * p * x / (n+1)
+                return powsimp((-n) * p * x / (n+1), deep=True, combine='exp')
         return (1-2*(n%2)) * x**(n+1)/(n+1)
 
-    def _eval_expand_complex(self, *args):
-        abs = C.abs(self.args[0])
-        arg = C.arg(self.args[0])
-        return log(abs) + S.ImaginaryUnit * arg
+    def _eval_expand_log(self, deep=True, **hints):
+        if deep:
+            arg = self.args[0].expand(deep=deep, **hints)
+        else:
+            arg = self.args[0]
+        if arg.is_Mul:
+            expr = sympify(0)
+            nonpos = sympify(1)
+            for x in arg.args:
+                if deep:
+                    x = x.expand(deep=deep, **hints)
+                if x.is_positive:
+                    expr += self.func(x)._eval_expand_log(deep=deep, **hints)
+                else:
+                    nonpos *= x
+            return expr + log(nonpos)
+        elif arg.is_Pow:
+            if arg.exp.is_real:# and arg.base.is_positive:
+                # This should only run when base.is_positive, but it breaks
+                # nseries, so it will have to wait for the new assumptions system.
+                # See the variable obj2 in log._eval_nseries.
+                if deep:
+                    b = arg.base.expand(deep=deep, **hints)
+                    e = arg.exp.expand(deep=deep, **hints)
+                else:
+                    b = arg.base
+                    e = arg.exp
+                return e * self.func(b)._eval_expand_log(deep=deep,\
+                **hints)
+        return self.func(arg)
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        if deep:
+            abs = C.abs(self.args[0].expand(deep, **hints))
+            arg = C.arg(self.args[0].expand(deep, **hints))
+        else:
+            abs = C.abs(self.args[0])
+            arg = C.arg(self.args[0])
+        if hints['log']: # Expand the log
+            hints['complex'] = False
+            return log(abs).expand(deep, **hints) + S.ImaginaryUnit * arg
+        else:
+            return log(abs) + S.ImaginaryUnit * arg
 
     def _eval_is_real(self):
         return self.args[0].is_positive
@@ -436,12 +484,12 @@ class log(Function):
                 g = g.nseries(x, x0, n)
                 l.append(g)
             obj = C.Add(*l) + ln(arg0)
-        obj2 = obj.expand()
+        obj2 = expand_log(powsimp(obj, deep=True, combine='exp'))
         if obj2 != obj:
             r = obj2.nseries(x, x0, n)
         else:
             r = obj
-        if r==self:
+        if r == self:
             return self
         return r + order
 
@@ -451,18 +499,6 @@ class log(Function):
         if arg is S.One:
             return (self.args[0] - 1).as_leading_term(x)
         return self.func(arg)
-
-    def _eval_expand_basic(self, *args):
-        arg = self.args[0]
-        if arg.is_Mul and arg.is_real:
-            expr = 0
-            for x in arg.args:
-                expr += self.func(x).expand()
-            return expr
-        elif arg.is_Pow:
-            if arg.exp.is_number or arg.exp.is_NumberSymbol:
-                return arg.exp * self.func(arg.base).expand()
-        return self
 
     #this is a lot faster:
     @classmethod

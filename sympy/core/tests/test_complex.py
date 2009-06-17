@@ -1,5 +1,5 @@
 from sympy import Symbol, sqrt, I, Integer, Rational, cos, atan, sin, im, re, \
-        exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi
+        exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi, expand_complex
 
 
 def test_complex():
@@ -49,7 +49,7 @@ def test_evalc():
     y=Symbol("y", real=True)
     z=Symbol("z")
     assert ((x+I*y)**2).expand(complex=True) == x**2+2*I*x*y - y**2
-    assert (z**(2*I)).expand(complex=True) == I*im(z**(2*I)) + re(z**(2*I))
+    assert expand_complex(z**(2*I)) == I*im(z**(2*I)) + re(z**(2*I))
 
     assert exp(I*x) != cos(x)+I*sin(x)
     assert exp(I*x).expand(complex=True) == cos(x)+I*sin(x)

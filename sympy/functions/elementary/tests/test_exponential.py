@@ -1,5 +1,5 @@
 from sympy import symbols, log, Real, nan, oo, I, pi, E, exp, Symbol, \
-        LambertW, sqrt, Rational, sin
+        LambertW, sqrt, Rational, sin, expand_log
 from sympy.utilities.pytest import XFAIL
 
 def test_exp():
@@ -74,7 +74,8 @@ def test_log():
     assert log(x,exp(1)) == log(x)
     assert log(x*y) != log(x) + log(y)
 
-    #assert log(x**2) != 2*log(x)
+    assert log(x**2) != 2*log(x)
+    x = Symbol('x', positive=True)
     assert log(x**2).expand() == 2*log(x)
     assert log(x**y) != y*log(x)
 
@@ -83,7 +84,7 @@ def test_log():
     #simplification. --Ondrej
     #assert log(exp(x)) != x
 
-    x, y = symbols('xy', real=True)
+    x, y = symbols('xy', positive=True)
 
     assert log(x) == log(x)
     #assert log(x*y) != log(x) + log(y)
@@ -126,14 +127,20 @@ def test_lambertw():
         Real("0.701338383413663009202120278965",30),1e-29)
 
 def test_log_expand():
-    w = Symbol("w", real=True)
+    w = Symbol("w", positive=True)
     e = log(w**(log(5)/log(3)))
     assert e.expand() == log(5)/log(3) * log(w)
+    x, y, z = symbols('xyz', positive=True)
+    assert log(x*(y+z)).expand(mul=False) == log(x)+log(y+z)
+    assert log(log(x**2)*log(y*z)).expand() == log(2*log(x)*log(y) + 2*log(x)*log(z))
+    assert log(x**log(x**2)).expand(deep=False) == log(x)*log(x**2)
+    assert log(x**log(x**2)).expand() == 2*log(x)**2
+    assert (log(x*(y+z))*(x+y)),expand(mul=True, log=True) == y*log(x) + y*log(y + z) + z*log(x) + z*log(y + z)
 
 def test_log_simplify():
-    x = Symbol("x", real=True)
+    x = Symbol("x", positive=True)
     assert log(x**2).expand() == 2*log(x)
-    assert log(x**(2+log(2))).expand() == (2+log(2))*log(x)
+    assert expand_log(log(x**(2+log(2)))) == (2+log(2))*log(x)
 
 
 def test_exp__as_base_exp():

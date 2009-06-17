@@ -2,8 +2,9 @@ from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Real, re, pi, \
         sympify, sqrt, Add, Mul, Pow, I
 from sympy.utilities.pytest import XFAIL
 
-x = Symbol("x")
+x = Symbol('x')
 y = Symbol('y')
+z = Symbol('z')
 
 def test_bug1():
     assert re(x) != x
@@ -137,6 +138,10 @@ def test_pow():
     assert (x**5*(3*x)**(-3)).expand() == Rational(1,27) * x**2
     assert (x**5*(-3*x)**(-3)).expand() == -Rational(1,27) * x**2
 
+    # expand_power_exp
+    assert (x**(y**(x+exp(x+y))+z)).expand(deep=False) == x**z*x**(y**(x + exp(x + y)))
+    assert (x**(y**(x+exp(x+y))+z)).expand() == x**z*x**(y**x*y**(exp(x)*exp(y)))
+
     n = Symbol('k', even=False)
     k = Symbol('k', even=True)
 
@@ -185,6 +190,12 @@ def test_expand():
     s=exp(x*x)-1
     e=s.series(x,0,3)/x**2
     assert e.expand() ==  1+x**2/2+O(x**4)
+
+    e = (x*(y+z))**(x*(y+z))*(x+y)
+    assert e.expand(power_exp=False, power_base=False) == x*(x*y + x*z)**(x*y + x*z) + y*(x*y + x*z)**(x*y + x*z)
+    assert e.expand(power_exp=False, power_base=False, deep=False) == x*(x*(y + z))**(x*(y + z)) + y*(x*(y + z))**(x*(y + z))
+    e = (x*(y+z))**z
+    assert e.expand(power_base=True, mul=True, deep=True) in [x**z*(y + z)**z, (x*y + x*z)**z]
 
     # Check that this isn't too slow
     x = Symbol('x')

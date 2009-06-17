@@ -16,8 +16,8 @@ def test_exp_log():
     assert exp(log(x)) == x
 
 def test_log_expansion():
-    x = Symbol("x", real=True)
-    y = Symbol("y", real=True)
+    x = Symbol("x", positive=True)
+    y = Symbol("y", positive=True)
 
     # ok in interactive, fails in py.test
     #assert log(x*y) != log(x)+log(y)
@@ -58,8 +58,7 @@ def test_exp_expand():
 
     e = exp(log(Rational(2))*(1+x)-log(Rational(2))*x)
     assert e.expand() == 2
-    # XXX The RHS is automatically combined so that it equals the LHS
-    #assert exp(x+y) != exp(x)*exp(y)
+    assert exp(x+y) != exp(x)*exp(y)
     assert exp(x+y).expand() == exp(x)*exp(y)
 
 

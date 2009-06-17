@@ -120,11 +120,12 @@ def roots_binomial(f):
     if alpha.is_number:
         alpha = alpha.expand(complex=True)
 
+
     roots, I = [], S.ImaginaryUnit
 
     for k in xrange(n):
         zeta = exp(2*k*S.Pi*I/n).expand(complex=True)
-        roots.append((alpha*zeta).expand())
+        roots.append((alpha*zeta).expand(power_base=False))
 
     return roots
 

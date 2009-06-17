@@ -333,3 +333,6 @@ def test_integration_variable():
     raises(ValueError, "Integral(exp(-x**2), 3)")
     raises(ValueError, "Integral(exp(-x**2), (3, -oo, oo))")
 
+def test_expand_integral():
+    assert Integral(cos(x**2)*(sin(x**2)+1),(x, 0, 1)).expand() == Integral(cos(x**2)*sin(x**2) + cos(x**2), (x, 0, 1))
+    assert Integral(cos(x**2)*(sin(x**2)+1),x).expand() == Integral(cos(x**2)*sin(x**2) + cos(x**2), x)

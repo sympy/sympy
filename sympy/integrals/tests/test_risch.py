@@ -46,7 +46,7 @@ def test_heurisch_fractions():
 
 def test_heurisch_log():
     assert heurisch(log(x), x) == x*log(x) - x
-    assert heurisch(log(3*x), x) == x*log(3*x) - x
+    assert heurisch(log(3*x), x) == -x + x*log(3) + x*log(x)
     assert heurisch(log(x**2), x) in [x*log(x**2) - 2*x, 2*x*log(x) - 2*x]
 
 def test_heurisch_exp():
@@ -107,8 +107,10 @@ def test_heurisch_symbolic_coeffs():
     assert trim(diff(heurisch(log(x+y+z), y), y)) == log(x+y+z)
 
 def test_heurisch_symbolic_coeffs_1130():
-    assert heurisch(1/(x**2+y), x)      == I*y**(-S.Half)*log(x + (-y)**S.Half)/2 - \
-                                           I*y**(-S.Half)*log(x - (-y)**S.Half)/2
+    assert heurisch(1/(x**2+y), x) in [I*y**(-S.Half)*log(x + (-y)**S.Half)/2 - \
+    I*y**(-S.Half)*log(x - (-y)**S.Half)/2, I*log(x + I*y**Rational(1,2)) / \
+    (2*y**Rational(1,2)) - I*log(x - I*y**Rational(1,2))/(2*y**Rational(1,2))]
+
 
 def test_heurisch_hacking():
     assert heurisch(sqrt(1 + 7*x**2), x, hints=[]) == \

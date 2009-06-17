@@ -226,39 +226,67 @@ class Pow(Basic):
         from sympy.functions.elementary.complexes import conjugate as c
         return c(self.base)**self.exp
 
-    def _eval_expand_complex(self, *args):
-        if self.exp.is_Integer:
-            exp = self.exp
-            re, im = self.base.as_real_imag()
-            if exp >= 0:
-                base = re + S.ImaginaryUnit*im
+    def _eval_expand_basic(self, deep=True, **hints):
+        sargs, terms = self.args[:], []
+        for term in sargs:
+            if hasattr(term, '_eval_expand_basic'):
+                newterm = term._eval_expand_basic(deep=deep, **hints)
             else:
-                mag = re**2 + im**2
-                base = re/mag - S.ImaginaryUnit*(im/mag)
-                exp = -exp
-            return (base**exp).expand()
-        elif self.exp.is_Rational:
-            # NOTE: This is not totally correct since for x**(p/q) with
-            #       x being imaginary there are actually q roots, but
-            #       only a single one is returned from here.
-            re, im = self.base.as_real_imag()
+                newterm = term
+            terms.append(newterm)
+        return self.new(*terms)
 
-            r = (re**2 + im**2)**S.Half
-            t = C.atan2(im, re)
-
-            rp, tp = r**self.exp, t*self.exp
-
-            return rp*C.cos(tp) + rp*C.sin(tp)*S.ImaginaryUnit
+    def _eval_expand_power_exp(self, deep=True, *args, **hints):
+        """a**(n+m) -> a**n*a**m"""
+        if deep:
+            b = self.base.expand(deep=deep, **hints)
+            e = self.exp.expand(deep=deep, **hints)
         else:
-            return C.re(self) + S.ImaginaryUnit*C.im(self)
+            b = self.base
+            e = self.exp
+        if e.is_Add:
+            expr = 1
+            for x in e.args:
+                if deep:
+                    x = x.expand(deep=deep, **hints)
+                expr *= (self.base**x)
+            return expr
+        return b**e
 
-    def _eval_expand_basic(self):
-        """
-        (a*b)**n -> a**n * b**n
-        (a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is positive integer
-        """
-        b = self.base._eval_expand_basic()
-        e = self.exp._eval_expand_basic()
+    def _eval_expand_power_base(self, deep=True, **hints):
+        """(a*b)**n -> a**n * b**n"""
+        b = self.base
+        if deep:
+            e = self.exp.expand(deep=deep, **hints)
+        else:
+            e = self.exp
+        if b.is_Mul:
+            if deep:
+                return Mul(*(Pow(t.expand(deep=deep, **hints), e)\
+                for t in b.args))
+            else:
+                return Mul(*(Pow(t, e) for t in b.args))
+        else:
+            return b**e
+
+    def _eval_expand_mul(self, deep=True, **hints):
+        sargs, terms = self.args[:], []
+        for term in sargs:
+            if hasattr(term, '_eval_expand_mul'):
+                newterm = term._eval_expand_mul(deep=deep, **hints)
+            else:
+                newterm = term
+            terms.append(newterm)
+        return self.new(*terms)
+
+    def _eval_expand_multinomial(self, deep=True, **hints):
+        """(a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is positive integer"""
+        if deep:
+            b = self.base.expand(deep=deep, **hints)
+            e = self.exp.expand(deep=deep, **hints)
+        else:
+            b = self.base
+            e = self.exp
 
         if b is None:
             base = self.base
@@ -375,6 +403,68 @@ class Pow(Basic):
             return coeff * base**tail
         else:
             return result
+
+    def _eval_expand_log(self, deep=True, **hints):
+        sargs, terms = self.args[:], []
+        for term in sargs:
+            if hasattr(term, '_eval_expand_log'):
+                newterm = term._eval_expand_log(deep=deep, **hints)
+            else:
+                newterm = term
+            terms.append(newterm)
+        return self.new(*terms)
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        if self.exp.is_Integer:
+            exp = self.exp
+            re, im = self.base.as_real_imag()
+            if exp >= 0:
+                base = re + S.ImaginaryUnit*im
+            else:
+                mag = re**2 + im**2
+                base = re/mag - S.ImaginaryUnit*(im/mag)
+                exp = -exp
+            return (base**exp).expand()
+        elif self.exp.is_Rational:
+            # NOTE: This is not totally correct since for x**(p/q) with
+            #       x being imaginary there are actually q roots, but
+            #       only a single one is returned from here.
+            re, im = self.base.as_real_imag()
+
+            r = (re**2 + im**2)**S.Half
+            t = C.atan2(im, re)
+
+            rp, tp = r**self.exp, t*self.exp
+
+            return rp*C.cos(tp) + rp*C.sin(tp)*S.ImaginaryUnit
+        else:
+            if deep:
+                hints['complex'] = False
+                return C.re(self.expand(deep, **hints)) + \
+                S.ImaginaryUnit*C.im(self. expand(deep, **hints))
+            else:
+                return C.re(self) + S.ImaginaryUnit*C.im(self)
+            return C.re(self) + S.ImaginaryUnit*C.im(self)
+
+    def _eval_expand_trig(self, deep=True, **hints):
+        sargs, terms = self.args[:], []
+        for term in sargs:
+            if hasattr(term, '_eval_expand_trig'):
+                newterm = term._eval_expand_trig(deep=deep, **hints)
+            else:
+                newterm = term
+            terms.append(newterm)
+        return self.new(*terms)
+
+    def _eval_expand_func(self, deep=True, **hints):
+        sargs, terms = self.args[:], []
+        for term in sargs:
+            if hasattr(term, '_eval_expand_func'):
+                newterm = term._eval_expand_func(deep=deep, **hints)
+            else:
+                newterm = term
+            terms.append(newterm)
+        return self.new(*terms)
 
     def _eval_derivative(self, s):
         dbase = self.base.diff(s)

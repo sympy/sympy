@@ -1391,88 +1391,59 @@ class Basic(AssumeMeths):
         return self.new(*terms)
 
     ###########################################################################
-    ################# EXPRESSION REPRESENTATION METHODS #######################
+    ###################### EXPRESSION EXPANSION METHODS #######################
     ###########################################################################
 
-    def _eval_expand_basic(self):
-        terms, rewrite = [], False
+    # These should be overridden in subclasses
 
-        for term in self.args:
-            if not isinstance(term, Basic) or \
-                   isinstance(term, Atom):
-                terms.append(term)
-            else:
-                T = term._eval_expand_basic()
+    def _eval_expand_basic(self, deep=True, **hints):
+        return self
 
-                if T is None:
-                    terms.append(term)
-                else:
-                    terms.append(T)
-                    rewrite = True
+    def _eval_expand_power_exp(self, deep=True, **hints):
+        return self
 
-        if rewrite:
-            return self.new(*terms)
-        else:
-            return None
+    def _eval_expand_power_base(self, deep=True, **hints):
+        return self
 
-    def _eval_expand_power(self, *args):
-        if self.is_Atom:
-            return self
-        if not isinstance(self, C.Apply):   # FIXME Apply -> Function
-            sargs = self[:]
-        else:
-            sargs = (self.func,)+self[:]
-        terms = [ term._eval_expand_power(*args) for term in sargs ]
-        return self.new(*terms)
+    def _eval_expand_mul(self, deep=True, **hints):
+        return self
 
-    def _eval_expand_complex(self, *args):
-        if self.is_Atom:
-            return self
-        sargs = self.args[:]
-        terms = [ term._eval_expand_complex(*args) for term in sargs ]
-        return self.new(*terms)
+    def _eval_expand_multinomial(self, deep=True, **hints):
+        return self
 
-    def _eval_expand_trig(self, *args):
-        if self.is_Atom:
-            return self
-        sargs = self.args[:]
-        terms = [ term._eval_expand_trig(*args) for term in sargs ]
-        return self.new(*terms)
+    def _eval_expand_log(self, deep=True, **hints):
+        return self
 
-    def _eval_expand_func(self, *args):
-        if self.is_Atom:
-            return self
-        sargs = self.args
-        terms = [ term._eval_expand_func(*args) for term in sargs ]
-        return self.new(*terms)
+    def _eval_expand_complex(self, deep=True, **hints):
+        return self
 
-    def expand(self, **hints):
-        """Expand an expression using hints.
+    def _eval_expand_trig(self, deep=True, **hints):
+        return self
 
-           Currently supported hints are basic, power, complex, trig
-           and func.  Hints are applied with arbitrary order so your
-           code shouldn't depend on the way hints are passed to this
-           method. Expand 'basic' is the default and run always,
-           provided that it isn't turned off by the user.
+    def _eval_expand_func(self, deep=True, **hints):
+        return self
 
-           >>> from sympy import *
-           >>> x,y = symbols('xy')
-
-           >>> (y*(x + y)**2).expand()
-           y*x**2 + 2*x*y**2 + y**3
-
-           >>> (x+y).expand(complex=True)
-           I*im(x) + I*im(y) + re(x) + re(y)
-
+    def expand(self, deep=True, power_base=True, power_exp=True, mul=True, \
+           log=True, multinomial=True, basic=True, **hints):
         """
+        Expand an expression using hints.
+
+        See the docstring in function.expand for more information.
+        """
+        hints['power_base'] = power_base
+        hints['power_exp'] = power_exp
+        hints['mul'] = mul
+        hints['log'] = log
+        hints['multinomial'] = multinomial
+        hints['basic'] = basic
+
         expr = self
 
         for hint in hints:
             if hints[hint] == True:
                 func = getattr(expr, '_eval_expand_'+hint, None)
-
                 if func is not None:
-                    expr = func()
+                    expr = func(deep=deep, **hints)
 
         if not 'basic' in hints:
             if not expr.is_Atom:
@@ -1687,7 +1658,7 @@ class Basic(AssumeMeths):
            (-im(w) + re(z), im(z) + re(w))
 
         """
-        expr = self.expand(complex=True)
+        expr = self.expand(complex=True, deep=False)
 
         if not expr.is_Add:
             expr = [expr]

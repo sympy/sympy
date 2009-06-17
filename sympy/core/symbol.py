@@ -68,8 +68,8 @@ class Symbol(Atom):
     def __call__(self, *args):
         return Function(self.name, nargs=len(args))(*args, **self.assumptions0)
 
-    def _eval_expand_complex(self, *args):
-        return C.re(self) + C.im(self)*S.ImaginaryUnit
+    def _eval_expand_complex(self, deep=True, **hints):
+            return C.re(self) + C.im(self)*S.ImaginaryUnit
 
     def _sage_(self):
         import sage.all as sage

@@ -1,7 +1,7 @@
 from sympy import SYMPY_DEBUG
 
 from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
-        Derivative, Wild, Symbol, sympify
+        Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func
 
 from sympy.core.numbers import igcd
 
@@ -1008,13 +1008,13 @@ def powsimp(expr, deep=False, combine='all'):
                         c_powers[b] = c_powers.get(b, 0) + e
                     else:
                         nc_part.append(term)
-            newexpr = Mul(newexpr,Mul(*(Pow(b,e) for b, e in c_powers.items())))
+            newexpr = Mul(newexpr, Mul(*(Pow(b,e) for b, e in c_powers.items())))
             if combine is 'exp':
-                return Mul(newexpr,Mul(*nc_part))
+                return Mul(newexpr, Mul(*nc_part))
             else:
                 # combine is 'all', get stuff ready for 'base'
                 if deep:
-                    newexpr = distribute(newexpr)
+                    newexpr = expand_mul(newexpr, deep=False)
                 if newexpr.is_Add:
                     return powsimp(Mul(*nc_part), deep, combine='base')*Add(*(powsimp(i, deep, combine='base') for i in newexpr.args))
                 else:
@@ -1025,7 +1025,7 @@ def powsimp(expr, deep=False, combine='all'):
         else:
             # combine is 'base'
             if deep:
-                expr = distribute(expr)
+                expr = expand_mul(expr, deep=False)
             if expr.is_Add:
                 return Add(*(powsimp(i, deep, combine) for i in expr.args))
             else:
@@ -1124,7 +1124,7 @@ def hypersimp(f, k):
     g = f.subs(k, k+1) / f
 
     g = g.rewrite(gamma)
-    g = g.expand(func=True, basic=False)
+    g = expand_func(g)
 
     if g.is_rational_function(k):
         return Poly.cancel(g, k)
@@ -1241,5 +1241,4 @@ def nsimplify(expr, constants=[], tolerance=None, full=False):
         return expr
 
     return re + im*S.ImaginaryUnit
-
 
