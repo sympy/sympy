@@ -33,7 +33,7 @@ def test_basic3():
     assert limit(1/x, x, 0, dir="+") == oo
     assert limit(1/x, x, 0, dir="-") == -oo
 
-def test_basic3():
+def test_basic4():
     assert limit(2*x + y*x, x, 0) == 0
     assert limit(2*x + y*x, x, 1) == 2+y
     assert limit(2*x**8 + y*x**(-3), x, -2) == 512-y/8
@@ -107,6 +107,7 @@ def test_ceiling():
 def test_atan():
     x = Symbol("x", real=True)
     assert limit(atan(x)*sin(1/x), x, 0) == 0
+    assert limit(atan(x) + sqrt(x+1) - sqrt(x), x, oo) == pi/2
 
 def test_abs():
     assert limit(abs(x), x, 0) == 0

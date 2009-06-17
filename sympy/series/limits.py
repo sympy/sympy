@@ -69,9 +69,23 @@ def limit(e, z, z0, dir="+"):
             # this is a case like limit(x*y+x*z, z, 2) == x*y+2*x
             # but we need to make sure, that the general gruntz() algorithm is
             # executed for a case like "limit(sqrt(x+1)-sqrt(x),x,oo)==0"
-            r = e.subs(z, z0)
-            if r is not S.NaN:
-                return r
+            unbounded = []; unbounded_result=[]
+            finite = []
+            for term in e.args:
+                result = term.subs(z, z0)
+                if result.is_unbounded or result is S.NaN:
+                    unbounded.append(term)
+                    unbounded_result.append(result)
+                else:
+                    finite.append(result)
+            if unbounded:
+                inf_limit = Add(*unbounded_result)
+                if inf_limit is not S.NaN:
+                    return inf_limit
+                if finite:
+                    return Add(*finite) + limit(Add(*unbounded), z, z0, dir)
+            else:
+                return Add(*finite)
 
     try:
         r = gruntz(e, z, z0, dir)
