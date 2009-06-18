@@ -1,6 +1,6 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
         sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, \
-        integrate, oo, raises, trigsimp
+        integrate, oo, raises, trigsimp, Integer
 from sympy.matrices.matrices import ShapeError, MatrixError
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL
@@ -65,6 +65,7 @@ def test_power():
     assert A**1 == A
     assert (Matrix([[2]]) ** 100)[0,0] == 2**100
     assert eye(2)**10000000 == eye(2)
+    assert Matrix([[1, 2], [3, 4]])**Integer(2) == Matrix([[7, 10], [15, 22]])
 
 def test_creation():
     raises(MatrixError, 'Matrix(5,5,range(20))')
