@@ -486,6 +486,7 @@ def test_misc_bugs():
     mp.dps = 15
 
 def test_arange():
+    mp.dps = 15
     assert arange(10) == [mpf('0.0'), mpf('1.0'), mpf('2.0'), mpf('3.0'),
                           mpf('4.0'), mpf('5.0'), mpf('6.0'), mpf('7.0'),
                           mpf('8.0'), mpf('9.0')]
