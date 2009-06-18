@@ -78,4 +78,3 @@ hypergeometric:
                  2
     2 + 6*n + 4*n 
     >>> hypersimp(factorial(n**2), n)
-    None
