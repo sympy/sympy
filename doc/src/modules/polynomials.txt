@@ -1,7 +1,6 @@
 Polynomials Module
 ==================
 
-.. module:: sympy.polynomials
 .. module:: sympy.polys
 
 Introduction
@@ -215,6 +214,7 @@ Solving Equations
 We have (incomplete) methods to find the complex or even symbolic roots of
 polynomials and to solve some systems of polynomial equations.
 ::
+
     >>> from sympy import roots, solve_poly_system
     >>> solve(x**3 + 2*x + 3, x)
                ____                ____ 
@@ -242,27 +242,9 @@ polynomials and to solve some systems of polynomial equations.
     [(0, I), (0, -I), (1, 0), (-1/2 + -------, 0), (-1/2 - -------, 0)]
                                          2                    2        
 
-
-The Poly and Polynomial class
------------------------------
-
-There are currently two classes. Recommended ``Poly`` and the old and
-deprecated ``Polynomial``. Both are documented below.
-
-Historical remark: ``Polynomial`` was the first class implemented by Robert
-Schwarz as part of his GSoC 2007. ``Poly`` was later reimplemented from scratch
-by Mateusz Paprocki, because ``Polynomial`` was not robust/fast/general enough
-for the integration code.
-
 Poly
 ~~~~
 
 .. autoclass:: Poly
    :members:
 
-Polynomial
-~~~~~~~~~~
-
-.. currentmodule:: sympy.polynomials
-.. autoclass:: Polynomial
-   :members:
