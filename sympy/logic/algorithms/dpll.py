@@ -41,7 +41,6 @@ def dpll(clauses, symbols, model):
         model.update({P: value})
         syms = [x for x in symbols if x != P]
         return dpll(clauses, syms, model)
-  #  if len(symbols) == 0: return model # XXX this should never occur
     P = symbols.pop()
     model_1, model_2 = model.copy(), model.copy()
     model_1.update({P: True})

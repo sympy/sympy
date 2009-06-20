@@ -1,2 +1,2 @@
-from boolalg import *
-from inference import *
+from boolalg import to_cnf
+from inference import satisfiable

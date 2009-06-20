@@ -13,33 +13,27 @@ def test_overloading():
     assert A << B == Implies(B, A)
     assert ~A == Not(A)
 
-def test_bool_unary():
-    """Test boolean functions with one argument
-    Only Not is well defined in this case.
-    All other functions should raise a ValueError
-    """
-    A = symbols('A')
-    assert Not(True ) == False
-    assert Not(False) == True
-    raises(ValueError, "And(True)")
-    raises(ValueError, "And(False)")
-    raises(ValueError, "And(A)")
-    raises(ValueError, "Or(True)")
-    raises(ValueError, "Or(False)")
-    raises(ValueError, "Or(A)")
-
-def test_And_bool_2():
-    """Test And with two boolean arguments"""
+def test_And():
+    A, B, C = symbols('ABC')
+    assert And() == True
+    assert And(A)== A
+    assert And(True) == True
+    assert And(False) == False
     assert And(True,  True ) == True
     assert And(True,  False) == False
     assert And(False, False) == False
 
-def test_Or_bool():
+def test_Or():
+    A, B, C = symbols('ABC')
+    assert Or() == False
+    assert Or(A) == A
+    assert Or(True) == True
+    assert Or(False) == False
     assert Or(True,  True ) == True
     assert Or(True,  False) == True
     assert Or(False, False) == False
 
-def test_Not_bool():
+def test_Not():
     assert Not(True, True ) == [False, False]
     assert Not(True, False) == [False, True ]
     assert Not(False,False) == [True,  True ]
@@ -49,6 +43,12 @@ def test_Implies():
     raises(ValueError, "Implies()")
     raises(ValueError, "Implies(A)")
     raises(ValueError, "Implies(A, B, C)")
+    assert A >> B == B << A
+
+@XFAIL
+def test_Equivalent():
+    A, B, C = symbols('ABC')
+    assert Equivalent(A, B) == Equivalent(B, A)
 
 def test_bool_symbol():
     """Test that mixing symbols with boolean values
@@ -107,7 +107,6 @@ def test_De_Morgan():
     assert ~(A & B) == (~A) | (~B)
     assert ~(A | B) == (~A) & (~B)
     assert ~(A | B | C) == ~A & ~B  & ~C
-
 
 # test methods
 def test_eliminate_implications():

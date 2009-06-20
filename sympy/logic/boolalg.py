@@ -22,7 +22,6 @@ class And(BooleanFunction):
     """
     @classmethod
     def eval(cls, *args):
-        if len(args) < 2: raise ValueError("And must have at least two arguments")
         out_args = []
         for arg in args: # we iterate over a copy or args
             if isinstance(arg, bool):
@@ -38,7 +37,6 @@ class Or(BooleanFunction):
     """Logical OR function"""
     @classmethod
     def eval(cls, *args):
-        if len(args) < 2: raise ValueError("Or must have at least two arguments")
         out_args = []
         for arg in args: # we iterate over a copy or args
             if isinstance(arg, bool):

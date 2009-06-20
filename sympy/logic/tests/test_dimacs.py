@@ -9,16 +9,13 @@ from sympy.logic.boolalg import And
 
 def test_f1():
     # satisfiable
-    e = And(*load(f1))
-    assert bool(dpll_satisfiable(e))
+    assert bool(dpll_satisfiable(load(f1)))
 
 def test_f2():
-    e = And(*load(f2))
-    assert bool(dpll_satisfiable(e))
+    assert bool(dpll_satisfiable(load(f2)))
 
 def test_f3():
-    e = And(*load(f3))
-    assert not bool(dpll_satisfiable(e))
+    assert not bool(dpll_satisfiable(load(f3)))
 
 
 f1 = """c  simple example

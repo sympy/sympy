@@ -4,7 +4,7 @@ www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps
 
 """
 from sympy.core import Symbol
-from sympy.logic.boolalg import Or
+from sympy.logic.boolalg import And, Or
 import re
 
 def load(s):
@@ -46,4 +46,8 @@ def load(s):
                 if len(list) > 0:
                     clauses.append(Or(*list))
 
-    return clauses
+    return And(*clauses)
+
+def load_file(location):
+    s = open(location).read()
+    return load(s)
