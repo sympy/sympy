@@ -22,13 +22,13 @@ access any SymPy module, or use this contens:
    modules/geometry.txt
    modules/galgebra/GA/GAsympy.txt
    modules/integrals.txt
+   modules/logic.txt
    modules/matrices.txt
    modules/mpmath/index.txt
    modules/rewriting.txt
    modules/polynomials.txt
    modules/printing.txt
    modules/plotting.txt
-   modules/query.txt
    modules/statistics.txt
    modules/concrete.txt
    modules/solvers.txt
