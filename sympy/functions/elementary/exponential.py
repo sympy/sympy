@@ -448,7 +448,7 @@ class log(Function):
         if use_lt: # singularity, #example: self = log(sin(x))
             # arg = (arg / lt) * lt
             lt = arg.as_leading_term(x) # arg = sin(x); lt = x
-            a = (arg/lt).expand() # a = sin(x)/x
+            a = powsimp((arg/lt).expand(), deep=True, combine='exp') # a = sin(x)/x
             # the idea is to recursively call ln(a).series(), but one needs to
             # make sure that ln(sin(x)/x) doesn't get "simplified" to
             # -log(x)+ln(sin(x)) and an infinite recursion occurs, see also the

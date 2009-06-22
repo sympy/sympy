@@ -1,4 +1,3 @@
-
 from basic import Basic, S, sympify
 from operations import AssocOp
 from cache import cacheit
@@ -41,13 +40,10 @@ class Mul(AssocOp):
         coeff = S.One       # standalone term
                             # e.g. 3 * ...
 
-        cnum_powers = {}    # base:num-exp                  2
-                            # e.g. (x+y):2  for  ... * (x+y)  * ...
+        c_powers = []       # (base,exp)      n
+                            # e.g. (x,n) for x
 
-        c_powers = []       # (base,exp)      z
-                            # e.g. (x,z) for x
-
-        num_exp = []     # (num-base, exp)           y
+        num_exp = []        # (num-base, exp)           y
                             # e.g.  (3, y)  for  ... * 3  * ...
 
         order_symbols = None
@@ -60,7 +56,7 @@ class Mul(AssocOp):
         #
         # o coeff
         # o c_powers
-        # o exp_dict
+        # o num_exp
         #
         # NOTE: this is optimized for all-objects-are-commutative case
 
@@ -102,7 +98,6 @@ class Mul(AssocOp):
                 #  y
                 # 3
                 if o.is_Pow and b.is_Number:
-
                     # get all the factors with numeric base so they can be
                     # combined below
                     num_exp.append((b,e))
@@ -130,20 +125,11 @@ class Mul(AssocOp):
                         b = t[0]
                     #else: c is One, so pass
 
-                # let's collect factors with the same base if the exponent is
-                # a number, so e.g.
-                #  2    3     5
-                # x  * x  -> x
-                if e.is_Number:
-                    if b in cnum_powers:
-                        cnum_powers[b] += e
-                    else:
-                        cnum_powers[b] = e
-                else:
-                    c_powers.append((b,e))
+                c_powers.append((b,e))
 
 
             # NON-COMMUTATIVE
+            # TODO: Make non-commutative exponents not combine automatically
             else:
                 if o is not NC_Marker:
                     nc_seq.append(o)
@@ -177,37 +163,53 @@ class Mul(AssocOp):
         # We do want a combined exponent if it would not be an Add, such as
         #  y    2y     3y
         # x  * x   -> x
+        # We determine this if two exponents have the same term in as_coeff_terms
+        #
+        # Unfortunately, this isn't smart enough to consider combining into
+        # exponents that might already be adds, so thing like:
+        #  y + z    y
+        # x      * x  will be left alone.  This is because checking every possible
+        # combination can slow things down.
+        #                                  a - b    b     a
+        # However, we do want things like x      * x  -> x , so we combine
+        # whenever the exponent would not
         new_c_powers = []
         common_b = {} # b:e
+
+        # First gather exponents of common bases
         for b, e in c_powers:
+            co = e.as_coeff_terms()
             if b in common_b:
-                if (e+common_b[b]).is_Add:
-                    new_c_powers.append((b,e))
+                if  co[1] in common_b[b]:
+                    common_b[b][co[1]] += co[0]
                 else:
-                    common_b[b] += e # Only add exponents if the sum is not an Add
+                    common_b[b][co[1]] = co[0]
             else:
-                common_b[b] = e
+                common_b[b] = {co[1]:co[0]}
 
         for b,e, in common_b.items():
-            new_c_powers.append((b,e))
+            for t, c in e.items():
+                new_c_powers.append((b,c*Mul(*t)))
         c_powers = new_c_powers
 
         # And the same for numeric bases
         new_num_exp = []
         common_b = {} # b:e
         for b, e in num_exp:
+            co = e.as_coeff_terms()
             if b in common_b:
-                if (e+common_b[b]).is_Add:
-                    new_num_exp.append((b,e))
+                if  co[1] in common_b[b]:
+                    common_b[b][co[1]] += co[0]
                 else:
-                    common_b[b] += e # Only add exponents if the sum is not an Add
+                    common_b[b][co[1]] = co[0]
             else:
-                common_b[b] = e
+                common_b[b] = {co[1]:co[0]}
 
         for b,e, in common_b.items():
-            new_num_exp.append((b,e))
+            for t, c in e.items():
+                new_num_exp.append((b,c*Mul(*t)))
         num_exp = new_num_exp
-        #
+
 
         # --- PART 2 ---
         #
@@ -218,13 +220,12 @@ class Mul(AssocOp):
         # ................................
         # now we have:
         # - coeff:
-        # - cnum_powers:  b:3
         # - c_powers:    (b, e)
         # - num_exp:     (2, e)
 
         #  0             1
         # x  -> 1       x  -> x
-        for b, e in cnum_powers.items() + c_powers:
+        for b, e in c_powers:
             if e is S.Zero:
                 continue
 
@@ -241,7 +242,7 @@ class Mul(AssocOp):
         #  x    x     x
         # 2  * 3  -> 6
         inv_exp_dict = {}   # exp:Mul(num-bases)     x    x
-                            # e.g.  x -> 6  for  ... * 2  * 3  * ...
+                            # e.g.  x:6  for  ... * 2  * 3  * ...
         for b,e in num_exp:
             if e in inv_exp_dict:
                 inv_exp_dict[e] *= b

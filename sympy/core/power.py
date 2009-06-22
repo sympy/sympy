@@ -613,6 +613,7 @@ class Pow(Basic):
                         p = p.nseries(y, x0, n)
                         p = p.subs(y, -1/log(x))
                         return p
+
                 base = base.nseries(x, x0, n)
                 if base.has(log(x)):
                     # we need to handle the log(x) singularity:

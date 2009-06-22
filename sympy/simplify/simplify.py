@@ -336,7 +336,7 @@ def together(expr, deep=False):
         else:
             return expr
 
-    return _together(separate(expr))
+    return powsimp(_together(separate(expr)), deep=True, combine='exp')
 
 #apart -> partial fractions decomposition (will be here :)
 
@@ -996,6 +996,10 @@ def powsimp(expr, deep=False, combine='all'):
         if combine in ('exp', 'all'):
             # Collect base/exp data, while maintaining order in the
             # non-commutative parts of the product
+            if combine is 'all' and deep and any((t.is_Add for t in expr.args)):
+                # Once we get to 'base', there is no more 'exp', so we need to
+                # distribute here.
+                return powsimp(expand_mul(expr, deep=False), deep, combine)
             c_powers = {}
             nc_part = []
             newexpr = sympify(1)
@@ -1125,6 +1129,7 @@ def hypersimp(f, k):
 
     g = g.rewrite(gamma)
     g = expand_func(g)
+    g = powsimp(g, deep=True, combine='exp')
 
     if g.is_rational_function(k):
         return Poly.cancel(g, k)

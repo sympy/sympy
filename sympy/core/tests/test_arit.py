@@ -1,5 +1,5 @@
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Real, re, pi, \
-        sympify, sqrt, Add, Mul, Pow, I
+        sympify, sqrt, Add, Mul, Pow, I, log
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
@@ -91,10 +91,6 @@ def test_pow():
     assert e == a**9
     e=a*a*a*a**Rational(6)-a**Rational(9)
     assert e == Rational(0)
-    e=a**(b+c)*a**(-b)
-    assert e == a**c
-    e=a**(b+c)*a*a**(-b)*a**(-c)/a
-    assert e == Rational(1)
     e=a**(b-b)
     assert e == Rational(1)
     e=(a-a)**b
@@ -281,6 +277,7 @@ def test_Mul_doesnt_expand_exp():
     assert 2**Rational(1,2)*2**Rational(1,2) == 2
     assert 2**x*2**(2*x) == 2**(3*x)
     assert 2**Rational(1,2)*2**Rational(1,4)*5**Rational(3,4) == 10**Rational(3,4)
+    assert (x**(-log(5)/log(3))*x)/(x*x**( - log(5)/log(3))) == sympify(1)
 
 def test_Add_Mul_is_integer():
     x = Symbol('x')
