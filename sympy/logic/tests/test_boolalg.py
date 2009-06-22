@@ -1,5 +1,6 @@
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, to_cnf, \
-    eliminate_implications, distribute_and_over_or
+    eliminate_implications, distribute_and_over_or, compile_rule, conjuncts, \
+    disjuncts
 from sympy import symbols
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -16,12 +17,17 @@ def test_overloading():
 def test_And():
     A, B, C = symbols('ABC')
     assert And() == True
-    assert And(A)== A
+    assert And(A) == A
     assert And(True) == True
     assert And(False) == False
     assert And(True,  True ) == True
     assert And(True,  False) == False
     assert And(False, False) == False
+    assert And(True,  A) == A
+    assert And(False, A) == False
+    assert And(True, True, True) == True
+    assert And(True, True , A) == A
+    assert And(True, False, A) == False
 
 def test_Or():
     A, B, C = symbols('ABC')
@@ -32,8 +38,15 @@ def test_Or():
     assert Or(True,  True ) == True
     assert Or(True,  False) == True
     assert Or(False, False) == False
+    assert Or(True, A) == True
+    assert Or(False, A) == A
+    assert Or(True, False, False) == True
+    assert Or(True, False, A) == True
+    assert Or(False, False, A) == A
 
 def test_Not():
+    assert Not(True) == False
+    assert Not(False) == True
     assert Not(True, True ) == [False, False]
     assert Not(True, False) == [False, True ]
     assert Not(False,False) == [True,  True ]
@@ -110,6 +123,14 @@ def test_eliminate_implications():
     assert eliminate_implications( A >> B) == (~A) | B
     assert eliminate_implications(A >> (C >>Not(B))) \
         == Or(Or(Not(B), Not(C)), Not(A))
+
+def test_conjuncts():
+    A, B, C = symbols('ABC')
+    assert conjuncts(A & B & C) == [A, B, C]
+
+def test_disjuncts():
+    A, B, C = symbols('ABC')
+    assert disjuncts(A | B | C) == [A, B, C]
 
 def test_distribute():
     A, B, C = symbols('ABC')
