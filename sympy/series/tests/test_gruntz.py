@@ -1,7 +1,7 @@
 from sympy import Symbol, exp, log, oo, Rational, I, sin
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, skip
 
 """
 This test suite is testing the limit algoritm using the bottom up approach.
@@ -196,6 +196,7 @@ def test_limit3():
 
 @XFAIL
 def test_limit4():
+    skip("Takes too long")
     #issue 364
     assert gruntz((3**x+5**x)**(1/x), x, oo) == 5
     #issue 364
