@@ -280,6 +280,10 @@ def rewrite(e,Omega,x,wsym):
     #Remember that Omega contains subexpressions of "e". So now we find
     #them in "e" and substitute them for our rewriting, stored in O2
     f = e
+    # the following powsimp is necessary to automatically combine exponentials,
+    # so that the .subs() below succeeds:
+    from sympy import powsimp
+    f = powsimp(f, deep=True, combine='exp')
     for a, b in zip(Omega, O2):
         f = f.subs(a, b)
 
