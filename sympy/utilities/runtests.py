@@ -18,7 +18,6 @@ import traceback
 import pdb
 from glob import glob
 from timeit import default_timer as clock
-import doctest as python_doctest
 
 def isgeneratorfunction(object):
     """
@@ -110,197 +109,19 @@ def doctest(*paths, **kwargs):
         t.add_paths(paths)
     else:
         t.add_paths(["sympy"])
-    #dtest = t.test()
+    dtest = t.test()
 
+    # test documentation under doc/src/
+    import doctest
     excluded = ['doc/src/modules/plotting.txt']
     doc_files = glob('doc/src/*.txt') + glob('doc/src/modules/*.txt')
-    global SKIP, IGNORE_EXCEPTION_DETAIL
-    SKIP = python_doctest.register_optionflag('SKIP')
-    IGNORE_EXCEPTION_DETAIL  = python_doctest.register_optionflag('IGNORE_EXCEPTION_DETAIL')
     for ex in excluded:
         doc_files.remove(ex)
     for doc_file in doc_files:
         print "Testing ", doc_file
-        runner = SympyDocTestRunner(verbose=verbose)
-        parser = python_doctest.DocTestParser()
-        s = open(doc_file).read()
-        test = parser.get_doctest(s, {}, None, doc_file, 0)
-        runner.run(test)
-        print "Failed %s, tested %s" % (runner.failures, runner.tries)
-    #return dtest
+        print "Failed %s, tested %s" % doctest.testfile(doc_file, module_relative=False)
+    return dtest
 
-class SympyDocTestRunner(python_doctest.DocTestRunner):
-    """Backport some features from python2.5. This was done in order to make optionflag SKIP
-    work under python2.4.
-
-    Most of this class is copied from module doctest in python2.5
-    """
-
-    #/////////////////////////////////////////////////////////////////
-    # DocTest Running
-    #/////////////////////////////////////////////////////////////////
-
-    def run(self, test, compileflags=None, out=None, clear_globs=True):
-        """
-        Run the examples in `test`, and display the results using the
-        writer function `out`.
-
-        The examples are run in the namespace `test.globs`.  If
-        `clear_globs` is true (the default), then this namespace will
-        be cleared after the test runs, to help with garbage
-        collection.  If you would like to examine the namespace after
-        the test completes, then use `clear_globs=False`.
-
-        `compileflags` gives the set of flags that should be used by
-        the Python compiler when running the examples.  If not
-        specified, then it will default to the set of future-import
-        flags that apply to `globs`.
-
-        The output of each example is checked using
-        `DocTestRunner.check_output`, and the results are formatted by
-        the `DocTestRunner.report_*` methods.
-        """
-        self.test = test
-
-        save_stdout = sys.stdout
-        if out is None:
-            out = save_stdout.write
-        sys.stdout = self._fakeout
-
-        try:
-            from sympy.printing import pretty
-            from sympy.interactive import init_printing
-            init_printing(pretty)
-
-            return self.__run(test, compileflags, out)
-        finally:
-            sys.stdout = save_stdout
-            if clear_globs:
-                test.globs.clear()
-
-    def __run(self, test, compileflags, out):
-        """
-        Run the examples in `test`.  Write the outcome of each example
-        with one of the `DocTestRunner.report_*` methods, using the
-        writer function `out`.  `compileflags` is the set of compiler
-        flags that should be used to execute examples.  Return a tuple
-        `(f, t)`, where `t` is the number of examples tried, and `f`
-        is the number of examples that failed.  The examples are run
-        in the namespace `test.globs`.
-        """
-        # Keep track of the number of failures and tries.
-        failures = tries = 0
-
-        # Save the option flags (since option directives can be used
-        # to modify them).
-        original_optionflags = self.optionflags
-
-        SUCCESS, FAILURE, BOOM = range(3) # `outcome` state
-
-        check = self._checker.check_output
-
-        # Process each example.
-        for examplenum, example in enumerate(test.examples):
-
-            # Merge in the example's options.
-            self.optionflags = original_optionflags
-            if example.options:
-                for (optionflag, val) in example.options.items():
-                    if val:
-                        self.optionflags |= optionflag
-                    else:
-                        self.optionflags &= ~optionflag
-
-            # If 'SKIP' is set, then skip this example.
-            if self.optionflags & SKIP:
-                continue
-
-            if compileflags is None: compileflags = 0
-            # Record that we started this example.
-            tries += 1
-            self.report_start(out, test, example)
-
-            # Use a special filename for compile(), so we can retrieve
-            # the source code during interactive debugging (see
-            # __patched_linecache_getlines).
-            filename = '<doctest %s[%d]>' % (test.name, examplenum)
-
-            # Run the example in the given context (globs), and record
-            # any exception that gets raised.  (But don't intercept
-            # keyboard interrupts.)
-            try:
-                # Don't blink!  This is where the user's code gets run.
-                exec compile(example.source, filename, "single", compileflags, 1) in test.globs
-                #self.debugger.set_continue() # ==== Example Finished ====
-                exception = None
-            except KeyboardInterrupt:
-                raise
-            except:
-                exception = sys.exc_info()
-                #self.debugger.set_continue() # ==== Example Finished ====
-
-            got = self._fakeout.getvalue()  # the actual output
-            self._fakeout.truncate(0)
-            outcome = FAILURE   # guilty until proved innocent or insane
-
-            # If the example executed without raising any exceptions,
-            # verify its output.
-            if exception is None:
-                if check(example.want, got, self.optionflags):
-                    outcome = SUCCESS
-
-            # The example raised an exception:  check if it was expected.
-            else:
-                exc_info = sys.exc_info()
-                exc_msg = traceback.format_exception_only(*exc_info[:2])[-1]
-                got += python_doctest._exception_traceback(exc_info)
-
-                # If `example.exc_msg` is None, then we weren't expecting
-                # an exception.
-                if example.exc_msg is None:
-                    outcome = BOOM
-
-                # We expected an exception:  see whether it matches.
-                elif check(example.exc_msg, exc_msg, self.optionflags):
-                    outcome = SUCCESS
-
-                # Another chance if they didn't care about the detail.
-                elif self.optionflags & IGNORE_EXCEPTION_DETAIL:
-                    m1 = re.match(r'[^:]*:', example.exc_msg)
-                    m2 = re.match(r'[^:]*:', exc_msg)
-                    if m1 and m2 and check(m1.group(0), m2.group(0),
-                                           self.optionflags):
-                        outcome = SUCCESS
-
-            # Report the outcome.
-            if outcome is SUCCESS:
-                self.report_success(out, test, example, got)
-            elif outcome is FAILURE:
-                self.report_failure(out, test, example, got)
-                failures += 1
-            elif outcome is BOOM:
-                self.report_unexpected_exception(out, test, example,
-                                                     exc_info)
-                failures += 1
-            else:
-                assert False, ("unknown outcome", outcome)
-
-        # Restore the option flags (in case they were modified)
-        self.optionflags = original_optionflags
-
-        # Record and return the number of failures and tries.
-        self.__record_outcome(test, failures, tries)
-        return failures, tries
-
-    def __record_outcome(self, test, f, t):
-        """
-        Record the fact that the given DocTest (`test`) generated `f`
-        failures out of `t` tried examples.
-        """
-        f2, t2 = self._name2ft.get(test.name, (0,0))
-        self._name2ft[test.name] = (f+f2, t+t2)
-        self.failures += f
-        self.tries += t
 
 class SymPyTests(object):
 

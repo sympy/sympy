@@ -49,11 +49,7 @@ and try it from a Python intepreter:
     >>> from sympy import Symbol, cos
     >>> x = Symbol("x")
     >>> (1/cos(x)).series(x, 0, 10)
-         2      4       6        8           
-        x    5*x    61*x    277*x            
-    1 + -- + ---- + ----- + ------ + O(x**10)
-        2     24     720     8064            
-
+    1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
 You can use SymPy as shown above and this is indeed the recommended way if you
 use it in your program. You can also install it using ``./setup.py install`` as
@@ -168,9 +164,7 @@ We also have some special constants, like e and pi, that are treated as symbols
 have arbitrary precission::
 
     >>> pi**2
-      2
-    pi 
-
+    pi**2
 
     >>> pi.evalf()
     3.14159265358979
@@ -203,26 +197,18 @@ Then you can play with them::
     2*x
 
     >>> (x+y)**2
-           2
-    (x + y) 
-
+    (x + y)**2
 
     >>> ((x+y)**2).expand()
-             2    2
-    2*x*y + x  + y 
-
+    2*x*y + x**2 + y**2
 
 And substitute them for other symbols or numbers using ``subs(old, new)``::
 
     >>> ((x+y)**2).subs(x, 1)
-           2
-    (1 + y) 
-
+    (1 + y)**2
 
     >>> ((x+y)**2).subs(x, y)
-       2
-    4*y 
-
+    4*y**2
 
 Algebra
 =======
@@ -323,16 +309,12 @@ You can differentiate any SymPy expression using ``diff(func, var)``. Examples::
     2*cos(2*x)
 
     >>> diff(tan(x), x)
-           2   
-    1 + tan (x)
-
+    1 + tan(x)**2
 
 You can check, that it is correct by::
 
     >>> limit((tan(x+y)-tan(x))/y, y, 0)
-           2   
-    1 + tan (x)
-
+    1 + tan(x)**2
 
 Higher derivatives can be calculated using the ``diff(func, var, n)`` method::
 
@@ -358,19 +340,9 @@ Use ``.series(var, point, order)``::
     >>> from sympy import *
     >>> x = Symbol('x')
     >>> cos(x).series(x, 0, 10)
-         2    4     6      8            
-        x    x     x      x             
-    1 - -- + -- - --- + ----- + O(x**10)
-        2    24   720   40320           
-
-
+    1 - x**2/2 + x**4/24 - x**6/720 + x**8/40320 + O(x**10)
     >>> (1/cos(x)).series(x, 0, 10)
-         2      4       6        8           
-        x    5*x    61*x    277*x            
-    1 + -- + ---- + ----- + ------ + O(x**10)
-        2     24     720     8064            
-
-
+    1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
 Another simple example::
 
@@ -410,8 +382,7 @@ matching::
 You can integrate elementary functions::
 
     >>> integrate(6*x**5, x)
-     6
-    x 
+    x**6
     >>> integrate(sin(x), x)
     -cos(x)
     >>> integrate(log(x), x) #doctest: +SKIP
@@ -452,11 +423,9 @@ Complex numbers
     >>> from sympy import Symbol, exp, I
     >>> x = Symbol("x")
     >>> exp(I*x).expand()
-     I*x
-    e   
+    exp(I*x)
     >>> exp(I*x).expand(complex=True)
-       -im(x)                          -im(x)
-    I*e      *sin(re(x)) + cos(re(x))*e      
+    I*exp(-im(x))*sin(re(x)) + cos(re(x))*exp(-im(x))
     >>> x = Symbol("x", real=True)
     >>> exp(I*x).expand(complex=True)
     I*sin(x) + cos(x)
@@ -679,9 +648,8 @@ Matrices are created as instances from the Matrix class::
 
     >>> from sympy import Matrix
     >>> Matrix([[1,0], [0,1]])
-    [1  0]
-    [    ]
-    [0  1]
+    [1, 0]
+    [0, 1]
 
 you can also put Symbols in it::
 
@@ -689,15 +657,12 @@ you can also put Symbols in it::
     >>> y = Symbol('y')
     >>> A = Matrix([[1,x], [y,1]])
     >>> A
-    [1  x]
-    [    ]
-    [y  1]
+    [1, x]
+    [y, 1]
 
     >>> A**2
-    [1 + x*y    2*x  ]
-    [                ]
-    [  2*y    1 + x*y]
-
+    [1 + x*y,     2*x]
+    [    2*y, 1 + x*y]
 
 For more information an examples with Matrices, see the LinearAlgebraTutorial.
 
@@ -714,10 +679,11 @@ substitutions, as follows::
     >>> x = Symbol('x')
     >>> p = Wild('p')
     >>> (5*x**2).match(p*x**2)
-    {p: 5}
+    {p_: 5}
+
     >>> q = Wild('q')
     >>> (x**2).match(p*x**q)
-    {p: 1, q: 2}
+    {p_: 1, q_: 2}
 
 If the match is unsuccessful, it returns ``None``::
 
