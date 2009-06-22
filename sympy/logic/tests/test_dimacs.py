@@ -5,18 +5,21 @@ ftp://dimacs.rutgers.edu/pub/challenge/satisfiability/benchmarks/cnf/
 
 from sympy.logic.utilities.dimacs import load
 from sympy.logic.algorithms.dpll import dpll_satisfiable
-from sympy.logic.boolalg import And
+from sympy.utilities.pytest import skip
 
 def test_f1():
-    # satisfiable
     assert bool(dpll_satisfiable(load(f1)))
 
 def test_f2():
     assert bool(dpll_satisfiable(load(f2)))
 
 def test_f3():
-    assert not bool(dpll_satisfiable(load(f3)))
+    assert bool(dpll_satisfiable(load(f3)))
 
+def test_f4():
+    # re-enable this when dpll is efficient
+    skip('Takes too much time')
+    assert not bool(dpll_satisfiable(load(f4)))
 
 f1 = """c  simple example
 c Resolution: SATISFIABLE
@@ -52,6 +55,19 @@ p cnf 16 18
 """
 
 f3 = """c
+p cnf 6 9
+-1 0
+-3 0
+2 -1 0
+2 -4 0
+5 -4 0
+-1 -3 0
+-4 -6 0
+1 3 -2 0
+4 6 -2 -5 0
+"""
+
+f4 = """c
 c
 c SOURCE: John Hooker (jh38+@andrew.cmu.edu)
 c

@@ -33,14 +33,16 @@ def dpll(clauses, symbols, model):
         return model
     P, value = find_pure_symbol(symbols, unknown_clauses)
     if P:
-        model.update({P: value})
+        model_1 = model.copy()
+        model_1.update({P: value})
         syms = [x for x in symbols if x != P]
-        return dpll(clauses, syms, model)
-    P, value = find_unit_clause(clauses, model)
+        return dpll(clauses, syms, model_1)
+    P, value = find_unit_clause(unknown_clauses, model)
     if P:
-        model.update({P: value})
+        model_1 = model.copy()
+        model_1.update({P: value})
         syms = [x for x in symbols if x != P]
-        return dpll(clauses, syms, model)
+        return dpll(clauses, syms, model_1)
     P = symbols.pop()
     model_1, model_2 = model.copy(), model.copy()
     model_1.update({P: True})
