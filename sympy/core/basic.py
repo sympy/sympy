@@ -1003,7 +1003,8 @@ class Basic(AssumeMeths):
             raise TypeError("Not an iterable container")
         result = self
         for old, new in sequence:
-            result = result.subs(old, new)
+            if hasattr(result, 'subs'):
+                result = result.subs(old, new)
         return result
 
     def _subs_dict(self, sequence):

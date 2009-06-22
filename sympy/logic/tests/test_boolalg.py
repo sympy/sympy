@@ -72,10 +72,6 @@ def test_subs():
     assert (A | B).subs(A, False) == B
     assert (A | B).subs(B, True) == True
     assert (A | B).subs(B, False) == A
-
-@XFAIL
-def test_subs_xfail():
-    A, B, C = symbols('ABC')
     assert (A | B).subs({A: True, B:True}) == True
 
 """
