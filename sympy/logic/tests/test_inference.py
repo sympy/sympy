@@ -9,13 +9,20 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable
 
 def test_find_pure_symbol():
     A, B, C = symbols('ABC')
+    assert find_pure_symbol([A], [A]) == (A, True)
     assert find_pure_symbol([A, B, C], [ A | ~B, ~B | ~C, C | A]) == (A, True)
     assert find_pure_symbol([A, B, C], [~A |  B,  B | ~C, C | A]) == (B, True)
     assert find_pure_symbol([A, B, C], [~A | ~B, ~B | ~C, C | A]) == (B, False)
+    assert find_pure_symbol([A, B, C], [~A | B, ~B | ~C, C | A]) == (None, None)
 
 def test_unit_clause():
     A, B, C = symbols('ABC')
+    assert find_unit_clause([A], {}) == (A, True)
+    assert find_unit_clause([A | B], {A: True}) == (B, True)
+    assert find_unit_clause([A | B], {B: True}) == (A, True)
     assert find_unit_clause([A | B | C, B | ~C, A | ~B], {A:True}) == (B, False)
+    assert find_unit_clause([A | B | C, B | ~C, A | B], {A:True})  == (B, True)
+    assert find_unit_clause([A | B | C, B | ~C, A ], {}) == (A, True)
 
 def test_dpll():
     """This is also tested in test_dimacs"""
