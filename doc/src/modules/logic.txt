@@ -16,7 +16,7 @@ You can build boolean expressions with the standard python operators & (And),
 |(Or), ~ (Not):
 
     >>> from sympy import *
-    >>> x, y = smbols('xy')
+    >>> x, y = symbols('x y')
     >>> y | (x & y)
     Or(y, And(x, y))
     >>> x | y
@@ -55,7 +55,7 @@ any value of x would do.
     >>> from sympy.logic.inference import satisfiable
     >>> from sympy import Symbol
     >>> x = Symbol('x')
-    >>> satisifiable(x & ~x)
+    >>> satisfiable(x & ~x)
     False
     >>> satisfiable(x | ~x)
     {x: True}
