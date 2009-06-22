@@ -235,6 +235,7 @@ class Order(Basic):
         Return None if the inclusion relation cannot be determined (e.g. when self and
         expr have different symbols).
         """
+        from sympy import powsimp
         if expr is S.Zero:
             return True
         if expr is S.NaN:
@@ -252,7 +253,8 @@ class Order(Basic):
                 return None
             r = None
             for s in common_symbols:
-                l = Order.find_limit(self.expr/expr.expr, s) != 0
+                l = Order.find_limit(powsimp(self.expr/expr.expr, deep=True,\
+                combine='exp'), s) != 0
                 if r is None:
                     r = l
                 else:

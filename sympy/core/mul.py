@@ -170,9 +170,6 @@ class Mul(AssocOp):
         #  y + z    y
         # x      * x  will be left alone.  This is because checking every possible
         # combination can slow things down.
-        #                                  a - b    b     a
-        # However, we do want things like x      * x  -> x , so we combine
-        # whenever the exponent would not
         new_c_powers = []
         common_b = {} # b:e
 
