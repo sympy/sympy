@@ -36,7 +36,7 @@ def display_fraction(digits, skip=0, colwidth=10, columns=5):
 def calculateit(func, base, n, tofile):
     """Writes first n base-digits of a mpmath function to file"""
     prec = 100
-    intpart = libmpf.small_numeral(int(float(func(prec))), base)
+    intpart = libmpf.numeral(3, base)
     if intpart == 0:
         skip = 0
     else:
