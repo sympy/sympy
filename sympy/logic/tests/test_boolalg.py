@@ -53,9 +53,8 @@ def test_Not():
 
 def test_Implies():
     A, B, C = symbols('ABC')
-    raises(ValueError, "Implies()")
-    raises(ValueError, "Implies(A)")
-    raises(ValueError, "Implies(A, B, C)")
+    Implies(True, True) == True
+    Implies(False, False) == False
     assert A >> B == B << A
 
 @XFAIL

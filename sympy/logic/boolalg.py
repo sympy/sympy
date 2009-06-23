@@ -68,9 +68,7 @@ class Not(BooleanFunction):
             return arg.args
 
 class Implies(BooleanFunction):
-    def __init__(self, *args, **kwargs):
-        if len(args) != 2: raise ValueError("Wrong set of arguments")
-        return super(BooleanFunction, self).__init__(*args, **kwargs)
+    pass
 
 class Equivalent(BooleanFunction):
     pass
