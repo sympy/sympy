@@ -81,9 +81,7 @@ class Not(BooleanFunction):
         if isinstance(arg, Or):
             return And(*[Not(a) for a in arg.args])
         if isinstance(arg, bool): return not arg
-        if isinstance(arg, Not):
-            if len(arg.args) == 1: return arg.args[0]
-            return arg.args
+        if isinstance(arg, Not): return arg.args[0]
 
 class Implies(BooleanFunction):
     pass
@@ -126,11 +124,6 @@ def distribute_and_over_or(expr):
     of literals, return an equivalent sentence in CNF.
     """
     if isinstance(expr, Or):
-        expr = Or(*expr.args)
-        if len(expr.args) == 0:
-            return False
-        if len(expr.args) == 1:
-            return distribute_and_over_or(expr.args[0])
         for arg in expr.args:
             if isinstance(arg, And):
                 conj = arg

@@ -1,7 +1,7 @@
 """Inference in propositional logic"""
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, disjuncts, \
     to_cnf
-from sympy.core import Symbol
+from sympy.core import Symbol, sympify
 
 def find_pure_symbol(symbols, unknown_clauses):
     """Find a symbol and its value if it appears only as a positive literal
@@ -83,11 +83,16 @@ def pl_true(expr, model={}):
     >>> pl_true( A & B, {A: True, B : True})
     True
     """
-    args = expr.args
+
     if isinstance(expr, bool):
         return expr
-    if expr.is_Atom: return model.get(expr)
-    elif isinstance(expr, Not):
+
+    expr = sympify(expr)
+    if expr.is_Atom:
+        return model.get(expr)
+
+    args = expr.args
+    if isinstance(expr, Not):
         p = pl_true(args[0], model)
         if p is None: return None
         else: return not p
@@ -105,14 +110,19 @@ def pl_true(expr, model={}):
             if p == False: return False
             if p == None: result = None
         return result
-    p, q = args
-    if isinstance(expr, Implies):
+
+    elif isinstance(expr, Implies):
+        p, q = args
         return pl_true(Or(Not(p), q), model)
-    pt = pl_true(p, model)
-    if pt == None: return None
-    qt = pl_true(q, model)
-    if qt == None: return None
-    if isinstance(expr, Equivalent):
+
+    elif isinstance(expr, Equivalent):
+        p, q = args
+        pt = pl_true(p, model)
+        if pt == None:
+            return None
+        qt = pl_true(q, model)
+        if qt == None:
+            return None
         return pt == qt
     else:
-        raise ValueError, "Illegal operator in logic expression" + str(exp)
+        raise ValueError, "Illegal operator in logic expression" + str(expr)

@@ -147,8 +147,9 @@ def test_disjuncts():
     assert disjuncts(A | B | C) == [A, B, C]
 
 def test_distribute():
-    A, B, C = symbols('ABC')
+    A, B, C, D = symbols('ABCD')
     assert distribute_and_over_or(Or(And(A, B), C)) == And(Or(A, C), Or(B, C))
+    assert distribute_and_over_or((A & B) | C | D) == (A | C | D) & (B | C | D)
 
 def test_to_cnf():
     A, B, C = symbols('ABC')
@@ -161,3 +162,7 @@ def test_to_cnf():
     assert to_cnf(Equivalent(A, B & C)) == (~A | B) & (~A | C) & (~B | ~C | A)
     assert to_cnf(Equivalent(A, B | C)) == \
     And(Or(Not(B), A), Or(Not(C), A), Or(B, C, Not(A)))
+
+def test_compile_rule():
+    from sympy import sympify
+    assert compile_rule("A & B") == sympify("A & B")
