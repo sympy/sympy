@@ -83,6 +83,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Nicolas Pourcelot: Infinity comparison fixes, latex fixes
 #. Ben Goodrich: Matrix.jacobian() function improvements and fixes
 #. Toon Verstraelen: code generation module
+#. Ronan Lamy: test coverage script, limit fixes
 
 
 Uptodate list in the order of the first contribution is given in the `AUTHORS
