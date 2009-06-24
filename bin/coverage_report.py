@@ -6,7 +6,8 @@ Usage:
 
 $ bin/coverage_report.py
 
-To restrict the analysis to a directory, you just need to pass its name as
+This will create a directory covhtml with the coverage reports.To restrict the analysis 
+to a directory, you just need to pass its name as
 argument. For example:
 
 $ bin/coverage_report.py sympy/logic
@@ -21,7 +22,11 @@ $ bin/coverage_report.py -c
 import os, sys, re
 from optparse import OptionParser
 
-import coverage
+try:
+    import coverage
+except ImportError:
+    print "You need to install module coverage. See http://nedbatchelder.com/code/coverage/"
+    sys.exit(-1)
 
 REPORT_DIR = "covhtml"
 REFRESH = False
