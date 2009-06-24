@@ -1,3 +1,5 @@
+#!/bin/sh -e
+
 # This script is for testig SymPy plotting in pure Python environment
 #
 # Usage
@@ -16,11 +18,12 @@
 # $ sudo apt-get install cowdancer
 # $ sudo pbuilder --create --mirror http://ftp.cz.debian.org/debian
 #
+# Note: this will only work in Debian (or derivative) systems.
 
-apt-get -y install mercurial python2.4 python-codespeak-lib python-ctypes
+apt-get -y install git-core python2.4 python-codespeak-lib python-ctypes
 apt-get -y install libgl1-mesa-dev libglu1-mesa-dev libfreetype6-dev libfontconfig1-dev
 cd /tmp
-hg clone http://hg.sympy.org/sympy/
+git clone git://git.sympy.org/sympy.git
 cd sympy
 python2.4 setup.py sdist
 cd dist
