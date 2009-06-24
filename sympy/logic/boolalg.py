@@ -119,7 +119,12 @@ class Implies(BooleanFunction):
     pass
 
 class Equivalent(BooleanFunction):
-    pass
+    """Equivalence relation.
+    Equivalent(A, B) is True if and only if A and B are both True or both False
+    """
+    @classmethod
+    def eval(cls, *args):
+        return Basic.__new__(cls, *sorted(args))
 
 ### end class definitions. Some useful methods
 

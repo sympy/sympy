@@ -102,7 +102,6 @@ def test_Implies():
     Implies(False, False) == False
     assert A >> B == B << A
 
-@XFAIL
 def test_Equivalent():
     A, B, C = symbols('ABC')
     assert Equivalent(A, B) == Equivalent(B, A)
