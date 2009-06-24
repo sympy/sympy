@@ -62,7 +62,7 @@ is extended with a product of vectors (geometric product) that is associative,
 left and right distributive, and yields a real number for the square (geometric
 product) of any vector [Hestenes,Lasenby].  The elements of the geometric
 algebra are called multivectors and consist of the linear combination of
-scalars, vectros, and the geometric product of two or more vectors. The
+scalars, vectors, and the geometric product of two or more vectors. The
 additional axioms  for the geometric algebra are that for any vectors :math:`a`,
 :math:`b`, and :math:`c` in the base vector space: 
 
@@ -83,7 +83,7 @@ By induction these also apply to any multivectors.
 
 Several software packages for numerical geometric algebra calculations are
 available from Doran-Lazenby group and the Dorst group. Symbolic packages for
-Clifford algebra using orthongonal bases such as
+Clifford algebra using orthogonal bases such as
 :math:`e_{i}e_{j}+e_{j}e_{i} = 2\eta_{ij}`, where :math:`\eta_{ij}` is a numeric
 array are available in Maple and Mathematica. The symbolic algebra module,
 :mod:`GA`, developed for python does not depend on an orthogonal basis
@@ -94,7 +94,7 @@ tensor :math:`g_{ij} = a_{i}\cdot a_{j}`.
 In order not to reinvent the wheel all scalar symbolic algebra is handled by the
 python module  :mod:`sympy`.
 
-The basic geometic algebra operations will be implemented in python by defining
+The basic geometric algebra operations will be implemented in python by defining
 a multivector  class, MV, and overloading the python operators in Table
 :ref:`1 <table1>` where ``A`` and ``B``  are any two multivectors (In the case of 
 ``+``, ``-``, ``*``, ``^``, ``|``, ``<<``, and ``>>`` the operation is also defined if ``A`` or 
@@ -221,7 +221,7 @@ then calling `MV.setup(basis,metric)` would initialize
   \end{equation*}
 
 
-Here we have specified that :math:`n` and :math:`nbar` are orthonal to all the
+Here we have specified that :math:`n` and :math:`nbar` are orthogonal to all the
 :math:`a`'s, :math:`n**2 = nbar**2 = 0`, and :math:`(n.nbar) = 2`. Using
 :math:`\#` in the metric definition string just tells the program to use the
 default symbol for that value.
@@ -234,10 +234,10 @@ to the programmer for future calculations.
 In addition to the basis vectors the :math:`g_{ij}` are also made available to
 the programer with the following convention. If ``a0`` and ``a1`` are basis
 vectors, then their dot products are denoted by  ``a0sq``, ``a2sq``, and
-``a0dota1`` for use as python program varibles. If you print  ``a0sq`` the
+``a0dota1`` for use as python program variables. If you print  ``a0sq`` the
 output would be ``a0**2`` and the output for ``a0dota1`` would be ``(a0.a1)`` as
 shown in equation :ref:`1 <eq1>`.  If the default value are overridden the new
-values are output by print.  For examle if :math:`g_{00} = 0` then "``print
+values are output by print.  For example if :math:`g_{00} = 0` then "``print
 a0sq``" would output "0."
 
 More generally, if ``metric`` is not a string, but a list of lists or a two
@@ -289,7 +289,7 @@ geometric algebra we will call the collections of bases of equal length
 ``psuedogrades``.
 
 The critical operation in setting up the geometric algebra module is reducing
-the geomertric product of any two bases to a linear combination of bases so that
+the geometric product of any two bases to a linear combination of bases so that
 we can calculate a multiplication table for the bases.   First we represent the
 product as the concatenation of two base lists.  For example ``a1a2*a0a1`` is
 represented by the list ``[1,2]+[0,1] = [1,2,0,1]``. The representation of the
@@ -323,10 +323,10 @@ element of the lists as follows:
   :math:`-C[j]`. Both lists are increased by one element if
   :math:`g_{i_{l}i_{l+1}} \ne 0`.
 
-These processes are repeated untill every basis list in :math:`B` is in normal
-(ascending) order with no repeated elements.  Then the coefficents of equivalent
-bases are summed and the bases sorted according to psuedograde and ascending
-order.  We now have a way of calculating the geometric product of any two bases
+These processes are repeated until every bases list in :math:`B` is in normal
+(ascending) order with no repeated elements.  Then the coefficients of equivalent
+bases are summed and the bases sorted according to pseudograde and ascending 
+rder.  We now have a way of calculating the geometric product of any two bases
 as a symbolic linear combination of all the bases with the coefficients
 determined by :math:`g`. The base multiplication table for our simple example of
 three vectors is given by (the coefficient of each psuedo base is enclosed with
@@ -347,7 +347,7 @@ with :math:`n+1` integers all zero.   Each zero is a placeholder for an array of
 python objects (in this case the objects will be sympy  symbol objects). If
 ``self.mv[r] = numpy.array([list of symbol objects])`` each entry in the
 ``numpy.array`` will be a coefficient of the corresponding psuedo base.
-``self.mv[r] = 0`` indicates that the coefficients of every base of psuedo grade
+``self.mv[r] = 0`` indicates that the coefficients of every base of psuedograde
 :math:`r` are 0.  The length of the array ``self.mv[r]`` is :math:`n \choose r`
 the binomial coefficient. For example the psuedo basis vector ``a1`` would be
 represented as a multivector by the list:
@@ -363,7 +363,7 @@ that we can perform symbolically manipulate sympy expressions that consist of
 scalar algebraic symbols and exact rational numbers which sympy can also
 represent.
 
-The ``numpy.array`` is used because operations of addition, substraction, and
+The ``numpy.array`` is used because operations of addition, subtraction, and
 multiplication by an object are defined for the array if they are defined for
 the objects making up the array, which they are by sympy.  We call this
 representation a base type because the ``r`` index is not a grade index since
@@ -413,7 +413,7 @@ Table :ref:`3 <table3>`. Bases blades in terms of bases.
 
 The important thing to notice about Table :ref:`3 <table3>` is that it is a
 triagonal (lower triangular) system of equations so that using a simple back
-substitution algorithym we can solve for the psuedo bases in terms of the blades
+substitution algorithm we can solve for the psuedo bases in terms of the blades
 giving Table :ref:`4 <table4>`.
 
 .. _table4:
@@ -775,7 +775,7 @@ the product.  In the standard notation if a vector is denoted with a subscript
 the reciprocal vector is denoted with a superscript. The multivector setup
 function ``MV.setup(basis,metric,rframe)`` has the argument ``rframe`` with a
 default value of ``False``.  If it is set to ``True`` the reciprocal frame of
-the basis vectors is  calculated. Additionaly there is the function
+the basis vectors is  calculated. Additionally there is the function
 ``reciprocal_frame(vlst,names='')`` external to the ``MV`` class that will
 calculate the reciprocal frame of a list, ``vlst``, of vectors.  If the argument
 ``names`` is set to a space delimited string of names for the vectors the
@@ -840,7 +840,7 @@ and
 
 
 For a general multivector function :math:`F` the inner and outer derivatives are
-just the sum of the inner and outer  dervatives of each grade of the multivector
+just the sum of the inner and outer  derivatives of each grade of the multivector
 function.
 
 Curvilinear coordinates are derived from a vector function
@@ -1090,7 +1090,7 @@ curvilinear coordinates using:
 
 *  ``debug``: If ``True`` printout (LaTeX) all quantities required for derivative calculation
 
-*  ``debug_level``: Set to 0,1,2, or 3 to stop curvilinear calculation before all quatities are 
+*  ``debug_level``: Set to 0,1,2, or 3 to stop curvilinear calculation before all quantities are 
    calculated.  This is done when debugging new curvilinear coordinate systems since simplification
    of expressions is not sufficiently automated to insure success of process of any coordinate system
    defined by vector function ``x``
@@ -1664,7 +1664,7 @@ Spin measured with respect to :math:`z` axis
 Spherical Coordinates
 ^^^^^^^^^^^^^^^^^^^^^
 
-Curvilinear coodinates are implemented as shown in section :ref:`deriv`.  The
+Curvilinear coordinates are implemented as shown in section :ref:`deriv`.  The
 gradient of a scalar function and the divergence and curl of a vector function
 (:math:`-I\lp\nabla\W A\rp` is the curl in three dimensions in the notation of
 geometric algebra) to demonstrate the formulas derived in section :ref:`deriv`.
