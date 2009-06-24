@@ -1,4 +1,4 @@
-from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, to_cnf, \
+from sympy.logic.boolalg import And, Or, Xor, Not, Implies, Equivalent, to_cnf, \
     eliminate_implications, distribute_and_over_or, compile_rule, conjuncts, \
     disjuncts
 from sympy import symbols
@@ -43,6 +43,21 @@ def test_Or():
     assert Or(True, False, False) == True
     assert Or(True, False, A) == True
     assert Or(False, False, A) == A
+
+def test_Xor():
+    A, B, C = symbols('ABC')
+    assert Xor() == False
+    assert Xor(A) == A
+    assert Xor(True) == True
+    assert Xor(False) == False
+    assert Xor(True,  True ) == False
+    assert Xor(True,  False) == True
+    assert Xor(False, False) == False
+    assert Xor(True, A) == ~A
+    assert Xor(False, A) == A
+    assert Xor(True, False, False) == True
+    assert Xor(True, False, A) == ~A
+    assert Xor(False, False, A) == A
 
 def test_Not():
     assert Not(True) == False

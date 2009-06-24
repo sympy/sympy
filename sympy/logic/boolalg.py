@@ -34,7 +34,10 @@ class And(BooleanFunction):
         return Basic.__new__(cls, *sargs)
 
 class Or(BooleanFunction):
-    """Logical OR function"""
+    """Logical OR function
+     It evaluates its arguments in order, giving True immediately if any of them are
+     True, and False if they are all False.
+     """
     @classmethod
     def eval(cls, *args):
         out_args = []
@@ -47,6 +50,21 @@ class Or(BooleanFunction):
         if len(out_args) == 1: return out_args[0]
         sargs = sorted(flatten(out_args, cls=cls))
         return Basic.__new__(cls, *sargs)
+
+class Xor(BooleanFunction):
+    """Logical XOR (exclusive OR) function.
+    returns True if an odd number of the arguments are True, and the rest are False.
+    returns False if an even number of the arguments are True, and the rest are False.
+    """
+    @classmethod
+    def eval(cls, *args):
+        if not args: return False
+        args = list(args)
+        A = args.pop()
+        while args:
+            B = args.pop()
+            A = Or(A & Not(B), (Not(A) & B))
+        return A
 
 class Not(BooleanFunction):
     """Logical Not function (negation)
