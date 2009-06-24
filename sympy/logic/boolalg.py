@@ -82,8 +82,7 @@ class Not(BooleanFunction):
             return And(*[Not(a) for a in arg.args])
         if isinstance(arg, bool): return not arg
         if isinstance(arg, Not):
-            if len(arg.args) == 1: return arg.args[0]
-            return arg.args
+            return arg.args[0]
 
 class Nand(BooleanFunction):
     """Logical NAND function.
@@ -161,21 +160,12 @@ def distribute_and_over_or(expr):
     of literals, return an equivalent sentence in CNF.
     """
     if isinstance(expr, Or):
-        expr = Or(*expr.args)
-        if len(expr.args) == 0:
-            return False
-        if len(expr.args) == 1:
-            return distribute_and_over_or(expr.args[0])
         for arg in expr.args:
             if isinstance(arg, And):
                 conj = arg
                 break
         else: return type(expr)(*expr.args)
-        others = [a for a in expr.args if a is not conj]
-        if len(others) == 1:
-            rest = others[0]
-        else:
-            rest = Or(*others)
+        rest = Or(*[a for a in expr.args if a is not conj])
         return And(*map(distribute_and_over_or,
                    [Or(c, rest) for c in conj.args]))
     elif isinstance(expr, And):

@@ -190,3 +190,7 @@ def test_to_cnf():
     assert to_cnf(Equivalent(A, B & C)) == (~A | B) & (~A | C) & (~B | ~C | A)
     assert to_cnf(Equivalent(A, B | C)) == \
     And(Or(Not(B), A), Or(Not(C), A), Or(B, C, Not(A)))
+
+def test_compile_rule():
+    from sympy import sympify
+    assert compile_rule("A & B") == sympify("A & B")
