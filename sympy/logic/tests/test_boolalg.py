@@ -1,4 +1,4 @@
-from sympy.logic.boolalg import And, Or, Xor, Not, Implies, Equivalent, to_cnf, \
+from sympy.logic.boolalg import And, Or, Xor, Not, Nand, Nor, Implies, Equivalent, to_cnf, \
     eliminate_implications, distribute_and_over_or, compile_rule, conjuncts, \
     disjuncts
 from sympy import symbols
@@ -65,6 +65,36 @@ def test_Not():
     assert Not(True, True ) == [False, False]
     assert Not(True, False) == [False, True ]
     assert Not(False,False) == [True,  True ]
+
+def test_Nand():
+    A, B, C = symbols('ABC')
+    assert Nand() == False
+    assert Nand(A) == ~A
+    assert Nand(True) == False
+    assert Nand(False) == True
+    assert Nand(True,  True ) == False
+    assert Nand(True,  False) == True
+    assert Nand(False, False) == True
+    assert Nand(True,  A) == ~A
+    assert Nand(False, A) == True
+    assert Nand(True, True, True) == False
+    assert Nand(True, True , A) == ~A
+    assert Nand(True, False, A) == True
+
+def test_Nor():
+    A, B, C = symbols('ABC')
+    assert Nor() == False
+    assert Nor(A) == ~A
+    assert Nor(True) == False
+    assert Nor(False) == True
+    assert Nor(True,  True ) == False
+    assert Nor(True,  False) == False
+    assert Nor(False, False) == True
+    assert Nor(True,  A) == False
+    assert Nor(False, A) == ~A
+    assert Nor(True, True, True) == False
+    assert Nor(True, True , A) == False
+    assert Nor(True, False, A) == False
 
 def test_Implies():
     A, B, C = symbols('ABC')
@@ -147,9 +177,8 @@ def test_disjuncts():
     assert disjuncts(A | B | C) == [A, B, C]
 
 def test_distribute():
-    A, B, C, D = symbols('ABCD')
+    A, B, C = symbols('ABC')
     assert distribute_and_over_or(Or(And(A, B), C)) == And(Or(A, C), Or(B, C))
-    assert distribute_and_over_or((A & B) | C | D) == (A | C | D) & (B | C | D)
 
 def test_to_cnf():
     A, B, C = symbols('ABC')
@@ -162,7 +191,3 @@ def test_to_cnf():
     assert to_cnf(Equivalent(A, B & C)) == (~A | B) & (~A | C) & (~B | ~C | A)
     assert to_cnf(Equivalent(A, B | C)) == \
     And(Or(Not(B), A), Or(Not(C), A), Or(B, C, Not(A)))
-
-def test_compile_rule():
-    from sympy import sympify
-    assert compile_rule("A & B") == sympify("A & B")

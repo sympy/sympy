@@ -81,7 +81,39 @@ class Not(BooleanFunction):
         if isinstance(arg, Or):
             return And(*[Not(a) for a in arg.args])
         if isinstance(arg, bool): return not arg
-        if isinstance(arg, Not): return arg.args[0]
+        if isinstance(arg, Not):
+            if len(arg.args) == 1: return arg.args[0]
+            return arg.args
+
+class Nand(BooleanFunction):
+    """Logical NAND function.
+    It evaluates its arguments in order, giving True immediately if any
+    of them are False, and False if they are all True.
+    """
+    @classmethod
+    def eval(cls, *args):
+        if not args: return False
+        args = list(args)
+        A = Not(args.pop())
+        while args:
+            B = args.pop()
+            A = Or(A, Not(B))
+        return A
+
+class Nor(BooleanFunction):
+    """Logical NOR function.
+    It evaluates its arguments in order, giving False immediately if any
+    of them are True, and True if they are all False.
+    """
+    @classmethod
+    def eval(cls, *args):
+        if not args: return False
+        args = list(args)
+        A = Not(args.pop())
+        while args:
+            B = args.pop()
+            A = And(A, Not(B))
+        return A
 
 class Implies(BooleanFunction):
     pass
@@ -124,6 +156,11 @@ def distribute_and_over_or(expr):
     of literals, return an equivalent sentence in CNF.
     """
     if isinstance(expr, Or):
+        expr = Or(*expr.args)
+        if len(expr.args) == 0:
+            return False
+        if len(expr.args) == 1:
+            return distribute_and_over_or(expr.args[0])
         for arg in expr.args:
             if isinstance(arg, And):
                 conj = arg
