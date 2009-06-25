@@ -1,5 +1,5 @@
 **************************************
-  Geometric Algebra Module for Sympy  
+  Geometric Algebra Module for Sympy
 **************************************
 
 :Author: Alan Bromborsky
@@ -10,7 +10,7 @@
 .. % documentation is available in ``Documenting Python'', which is part
 .. % of the standard documentation for Python.  It may be found online
 .. % at:
-.. % 
+.. %
 .. % http://www.python.org/doc/current/doc/doc.html
 .. % \lstset{language=Python}
 .. % \input{macros}
@@ -28,7 +28,7 @@
 
 .. % This makes the Abstract go on a separate page in the HTML version;
 .. % if a copyright notice is used, it should go immediately after this.
-.. % 
+.. %
 .. % \ifhtml
 .. % \chapter*{Front Matter\label{front}}
 .. % \fi
@@ -62,9 +62,9 @@ is extended with a product of vectors (geometric product) that is associative,
 left and right distributive, and yields a real number for the square (geometric
 product) of any vector [Hestenes,Lasenby].  The elements of the geometric
 algebra are called multivectors and consist of the linear combination of
-scalars, vectors, and the geometric product of two or more vectors. The
+scalars, vectros, and the geometric product of two or more vectors. The
 additional axioms  for the geometric algebra are that for any vectors :math:`a`,
-:math:`b`, and :math:`c` in the base vector space: 
+:math:`b`, and :math:`c` in the base vector space:
 
 .. math::
   :nowrap:
@@ -83,7 +83,7 @@ By induction these also apply to any multivectors.
 
 Several software packages for numerical geometric algebra calculations are
 available from Doran-Lazenby group and the Dorst group. Symbolic packages for
-Clifford algebra using orthogonal bases such as
+Clifford algebra using orthongonal bases such as
 :math:`e_{i}e_{j}+e_{j}e_{i} = 2\eta_{ij}`, where :math:`\eta_{ij}` is a numeric
 array are available in Maple and Mathematica. The symbolic algebra module,
 :mod:`GA`, developed for python does not depend on an orthogonal basis
@@ -94,32 +94,32 @@ tensor :math:`g_{ij} = a_{i}\cdot a_{j}`.
 In order not to reinvent the wheel all scalar symbolic algebra is handled by the
 python module  :mod:`sympy`.
 
-The basic geometric algebra operations will be implemented in python by defining
+The basic geometic algebra operations will be implemented in python by defining
 a multivector  class, MV, and overloading the python operators in Table
-:ref:`1 <table1>` where ``A`` and ``B``  are any two multivectors (In the case of 
-``+``, ``-``, ``*``, ``^``, ``|``, ``<<``, and ``>>`` the operation is also defined if ``A`` or 
+:ref:`1 <table1>` where ``A`` and ``B``  are any two multivectors (In the case of
+``+``, ``-``, ``*``, ``^``, ``|``, ``<<``, and ``>>`` the operation is also defined if ``A`` or
 ``B`` is a sympy symbol or a sympy real number).
 
 .. _table1:
 
-.. csv-table:: 
-	:header: " Operation ", " Result "
-	:widths: 10, 40
+.. csv-table::
+    :header: " Operation ", " Result "
+    :widths: 10, 40
 
-	" ``A+B`` ", " sum of multivectors "
- 	" ``A-B`` ", " difference of multivectors " 
-	" ``A*B`` ", " geometric product "  
-	" ``A^B`` ", " outer product of multivectors  "
-	" ``A|B`` ", " inner product of multivectors "
-	" ``A<B`` or ``A<<B`` ", " left contraction of multivectors "
-	" ``A>B`` or ``A>>B`` ", " right contraction of multivectors "
+    " ``A+B`` ", " sum of multivectors "
+    " ``A-B`` ", " difference of multivectors "
+    " ``A*B`` ", " geometric product "
+    " ``A^B`` ", " outer product of multivectors  "
+    " ``A|B`` ", " inner product of multivectors "
+    " ``A<B`` or ``A<<B`` ", " left contraction of multivectors "
+    " ``A>B`` or ``A>>B`` ", " right contraction of multivectors "
 
 Table :ref:`1 <table1>`. Multivector operations for symbolicGA
 
 The option to use ``<`` or ``<<`` for left contraction and ``>`` or ``>>`` is given since the ``<`` and
 ``>`` operators do not have r-forms (there are no *__rlt__()* and *__rlt__()* functions to overload) while
-``<<`` and ``>>`` do have r-forms so that *x << A* and *x >> A* are allowed where *x* is a scalar (symbol or integer) 
-and *A* is a multivector. With ``<`` and ``>`` we can only have mixed modes (scalars and multivectors) if the 
+``<<`` and ``>>`` do have r-forms so that *x << A* and *x >> A* are allowed where *x* is a scalar (symbol or integer)
+and *A* is a multivector. With ``<`` and ``>`` we can only have mixed modes (scalars and multivectors) if the
 multivector is the first operand.
 
 .. note::
@@ -130,7 +130,7 @@ multivector is the first operand.
 .. warning::
 
     Note that the operator order precedence is determined by python and is not
-    neccessarily that used by  geometric algebra. It is **absolutely essential** to 
+    neccessarily that used by  geometric algebra. It is **absolutely essential** to
     use parenthesis in multivector
     expressions containing ``^``, ``|``, ``<``, ``>``, ``<<`` and/or ``>>``.  As an example let
     ``A`` and ``B`` be any two multivectors. Then ``A + A*B = A +(A*B)``, but
@@ -173,9 +173,9 @@ the following symbols
   \begin{equation*}
   g = \lbrk
   \begin{array}{ccc}
-  	a0**2 & (a0.a1)  & (a0.a2) \\ 
-  	(a0.a1) & a1**2  & (a1.a2) \\
-  	(a0.a2) & (a1.a2) & a2**2 \\
+    a0**2 & (a0.a1)  & (a0.a2) \\
+    (a0.a1) & a1**2  & (a1.a2) \\
+    (a0.a2) & (a1.a2) & a2**2 \\
   \end{array}
   \rbrk
   \end{equation*}
@@ -211,17 +211,17 @@ then calling `MV.setup(basis,metric)` would initialize
   \begin{equation*}
   g = \lbrk
   \begin{array}{ccccc}
-  	a0**2 & (a0.a1)  & (a0.a2) & 0 & 0\\ 
-  	(a0.a1) & a1**2  & (a1.a2) & 0 & 0\\
-  	(a0.a2) & (a1.a2) & a2**2 & 0 & 0 \\
-  	0 & 0 & 0 & 0 & 2 \\
-  	0 & 0 & 0 & 2 & 0
+    a0**2 & (a0.a1)  & (a0.a2) & 0 & 0\\
+    (a0.a1) & a1**2  & (a1.a2) & 0 & 0\\
+    (a0.a2) & (a1.a2) & a2**2 & 0 & 0 \\
+    0 & 0 & 0 & 0 & 2 \\
+    0 & 0 & 0 & 2 & 0
   \end{array}
   \rbrk
   \end{equation*}
 
 
-Here we have specified that :math:`n` and :math:`nbar` are orthogonal to all the
+Here we have specified that :math:`n` and :math:`nbar` are orthonal to all the
 :math:`a`'s, :math:`n**2 = nbar**2 = 0`, and :math:`(n.nbar) = 2`. Using
 :math:`\#` in the metric definition string just tells the program to use the
 default symbol for that value.
@@ -234,10 +234,10 @@ to the programmer for future calculations.
 In addition to the basis vectors the :math:`g_{ij}` are also made available to
 the programer with the following convention. If ``a0`` and ``a1`` are basis
 vectors, then their dot products are denoted by  ``a0sq``, ``a2sq``, and
-``a0dota1`` for use as python program variables. If you print  ``a0sq`` the
+``a0dota1`` for use as python program varibles. If you print  ``a0sq`` the
 output would be ``a0**2`` and the output for ``a0dota1`` would be ``(a0.a1)`` as
 shown in equation :ref:`1 <eq1>`.  If the default value are overridden the new
-values are output by print.  For example if :math:`g_{00} = 0` then "``print
+values are output by print.  For examle if :math:`g_{00} = 0` then "``print
 a0sq``" would output "0."
 
 More generally, if ``metric`` is not a string, but a list of lists or a two
@@ -246,6 +246,18 @@ variable so that the :math:`g_{ij}` could be defined as symbolic functions as
 well as variables. For example instead of letting :math:`g_{01} = (a0.a1)` we
 could have  :math:`g_{01} = cos(theta)` where we use a symbolic :math:`\cos`
 function.
+
+.. note::
+
+    Additionally ``MV.setup`` has an option for an othogonal basis where the signature
+    of the metric space is defined by a string.  For example if the signature of the
+    vector space is :math:`(1,1,1)` (Euclidian 3-space) set
+
+    ``metric = [1,1,1]``
+
+    Likewise if the signature is that of spacetime, :math:`(1,-1,-1,-1)` then define
+
+    ``metric = [1,-1,-1,-1]``.
 
 
 Representation and Reduction of Multivector Bases
@@ -270,15 +282,15 @@ complete set of bases and labels are shown in Table :ref:`2 <table2>`
 
 .. note::
 
-	The empty list, ``[]``, represents the scalar 1.
+    The empty list, ``[]``, represents the scalar 1.
 
 .. _table2:
 
 ::
 
-   MV.basislabel = ['1', ['a0', 'a1', 'a2'], ['a0a1', 'a0a2', 'a1a2'], 
+   MV.basislabel = ['1', ['a0', 'a1', 'a2'], ['a0a1', 'a0a2', 'a1a2'],
                     ['a0a1a2']]
-   MV.basis      = [[], [[0], [1], [2]], [[0, 1], [0, 2], [1, 2]], 
+   MV.basis      = [[], [[0], [1], [2]], [[0, 1], [0, 2], [1, 2]],
                     [[0, 1, 2]]]
 
 Table :ref:`2 <table2>`. Multivector basis labels and internal basis representation.
@@ -289,7 +301,7 @@ geometric algebra we will call the collections of bases of equal length
 ``psuedogrades``.
 
 The critical operation in setting up the geometric algebra module is reducing
-the geometric product of any two bases to a linear combination of bases so that
+the geomertric product of any two bases to a linear combination of bases so that
 we can calculate a multiplication table for the bases.   First we represent the
 product as the concatenation of two base lists.  For example ``a1a2*a0a1`` is
 represented by the list ``[1,2]+[0,1] = [1,2,0,1]``. The representation of the
@@ -323,10 +335,10 @@ element of the lists as follows:
   :math:`-C[j]`. Both lists are increased by one element if
   :math:`g_{i_{l}i_{l+1}} \ne 0`.
 
-These processes are repeated until every bases list in :math:`B` is in normal
-(ascending) order with no repeated elements.  Then the coefficients of equivalent
-bases are summed and the bases sorted according to pseudograde and ascending 
-rder.  We now have a way of calculating the geometric product of any two bases
+These processes are repeated untill every basis list in :math:`B` is in normal
+(ascending) order with no repeated elements.  Then the coefficents of equivalent
+bases are summed and the bases sorted according to psuedograde and ascending
+order.  We now have a way of calculating the geometric product of any two bases
 as a symbolic linear combination of all the bases with the coefficients
 determined by :math:`g`. The base multiplication table for our simple example of
 three vectors is given by (the coefficient of each psuedo base is enclosed with
@@ -347,7 +359,7 @@ with :math:`n+1` integers all zero.   Each zero is a placeholder for an array of
 python objects (in this case the objects will be sympy  symbol objects). If
 ``self.mv[r] = numpy.array([list of symbol objects])`` each entry in the
 ``numpy.array`` will be a coefficient of the corresponding psuedo base.
-``self.mv[r] = 0`` indicates that the coefficients of every base of psuedograde
+``self.mv[r] = 0`` indicates that the coefficients of every base of psuedo grade
 :math:`r` are 0.  The length of the array ``self.mv[r]`` is :math:`n \choose r`
 the binomial coefficient. For example the psuedo basis vector ``a1`` would be
 represented as a multivector by the list:
@@ -363,7 +375,7 @@ that we can perform symbolically manipulate sympy expressions that consist of
 scalar algebraic symbols and exact rational numbers which sympy can also
 represent.
 
-The ``numpy.array`` is used because operations of addition, subtraction, and
+The ``numpy.array`` is used because operations of addition, substraction, and
 multiplication by an object are defined for the array if they are defined for
 the objects making up the array, which they are by sympy.  We call this
 representation a base type because the ``r`` index is not a grade index since
@@ -383,13 +395,13 @@ Blade Representation of Multivectors
 
 Since we can now calculate the symbolic geometric product of any two
 multivectors we can also calculate the blades corresponding to the product of
-the symbolic basis vectors using the formula 
+the symbolic basis vectors using the formula
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  	A_{r}\W b = \half\lp A_{r}b-\lp -1 \rp^{r}bA_{r} \rp,
+    A_{r}\W b = \half\lp A_{r}b-\lp -1 \rp^{r}bA_{r} \rp,
   \end{equation*}
 
 
@@ -413,7 +425,7 @@ Table :ref:`3 <table3>`. Bases blades in terms of bases.
 
 The important thing to notice about Table :ref:`3 <table3>` is that it is a
 triagonal (lower triangular) system of equations so that using a simple back
-substitution algorithm we can solve for the psuedo bases in terms of the blades
+substitution algorithym we can solve for the psuedo bases in terms of the blades
 giving Table :ref:`4 <table4>`.
 
 .. _table4:
@@ -446,12 +458,12 @@ from one representation to the other.
 
 .. warning::
 
-    When the geometric product of two multivectors is calculated the module looks to 
+    When the geometric product of two multivectors is calculated the module looks to
     see if either multivector is in blade representation.  If either is the result of
     the geometric product is converted to a blade representation.  One result of this
     is that if either of the multivectors is a simple vector (which is automatically a
     blade) the result will be in a blade representation.  If ``a`` and ``b`` are vectors
-    then the result ``a*b`` will be ``(a.b)+a^b`` or simply ``a^b`` if ``(a.b) = 0``. 
+    then the result ``a*b`` will be ``(a.b)+a^b`` or simply ``a^b`` if ``(a.b) = 0``.
 
 
 Outer and Inner Products, Left and Right Contractions
@@ -459,7 +471,7 @@ Outer and Inner Products, Left and Right Contractions
 
 In geometric algebra any general multivector :math:`A` can be decomposed into
 pure grade  multivectors (a linear combination of blades of all the same order)
-so that in a :math:`n`-dimensional vector space 
+so that in a :math:`n`-dimensional vector space
 
 .. math::
   :nowrap:
@@ -470,7 +482,7 @@ so that in a :math:`n`-dimensional vector space
 
 
 The geometric product of two pure grade multivectors :math:`A_{r}` and
-:math:`B_{s}` has the form 
+:math:`B_{s}` has the form
 
 .. math::
   :nowrap:
@@ -482,7 +494,7 @@ The geometric product of two pure grade multivectors :math:`A_{r}` and
 
 where :math:`\proj{}{t}` projects the :math:`t` grade components of the
 multivector argument.  The   inner and outer products of :math:`A_{r}` and
-:math:`B_{s}` are then defined to be 
+:math:`B_{s}` are then defined to be
 
 .. math::
   :nowrap:
@@ -502,7 +514,7 @@ multivector argument.  The   inner and outer products of :math:`A_{r}` and
   \end{equation*}
 
 
-and 
+and
 
 .. math::
   :nowrap:
@@ -521,7 +533,7 @@ and
   \end{equation*}
 
 
-Likewise the right (:math:`\lfloor`) and left (:math:`\rfloor`) contractions are defined as 
+Likewise the right (:math:`\lfloor`) and left (:math:`\rfloor`) contractions are defined as
 
 
 .. math::
@@ -598,7 +610,7 @@ The steps for calculating the outer product are:
 
 .. warning::
 
-    In the  ``MV`` class we have overloaded the ``^`` operator to represent the outer 
+    In the  ``MV`` class we have overloaded the ``^`` operator to represent the outer
     product so that instead of calling the outer product function we can write ``mv1^ mv2``.
     Due to the precedence rules for python it is **absolutely essential** to enclose outer products
     in parenthesis.
@@ -650,8 +662,8 @@ function is  ::
 The inner product is calculated the same way as the outer product except that in
 step 4, ``i1+i2`` is replaced by ``abs(i1-i2)`` or ``i1-i2`` for the right contraction or
 ``i2-i1`` for the left contraction.  If ``i1-i2`` is less than zero there is no contribution
-to the right contraction.  If ``i2-i1`` is less than zero there is no contribution to the 
-left contraction. 
+to the right contraction.  If ``i2-i1`` is less than zero there is no contribution to the
+left contraction.
 
 .. warning::
 
@@ -668,35 +680,35 @@ left contraction.
 Reverse of Multivector
 ======================
 
-If :math:`A` is the geometric product of :math:`r` vectors 
+If :math:`A` is the geometric product of :math:`r` vectors
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  	A = a_{1}\dots a_{r}
+    A = a_{1}\dots a_{r}
   \end{equation*}
 
 
-then the reverse of :math:`A` designated :math:`A^{\R}` is defined by 
+then the reverse of :math:`A` designated :math:`A^{\R}` is defined by
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  	A^{\R} \equiv a_{r}\dots a_{1}.
+    A^{\R} \equiv a_{r}\dots a_{1}.
   \end{equation*}
 
 
 The reverse is simply the product with the order of terms reversed.  The reverse
 of a sum of products is defined as the sum of the reverses so that for a general
-multivector A we have 
+multivector A we have
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  	A^{\R} = \sum_{i=0}^{N} \proj{A}{i}^{\R}
+    A^{\R} = \sum_{i=0}^{N} \proj{A}{i}^{\R}
   \end{equation*}
 
 
@@ -711,7 +723,7 @@ but
   :nowrap:
 
   \begin{equation*}
-  	\proj{A}{i}^{\R} = \lp -1\rp^{\frac{i\lp i-1\rp}{2}}\proj{A}{i}
+    \proj{A}{i}^{\R} = \lp -1\rp^{\frac{i\lp i-1\rp}{2}}\proj{A}{i}
   \end{equation*}
 
 
@@ -740,13 +752,13 @@ If we have :math:`M` linearly independent vectors (a frame),
 :math:`a_{1},\dots,a_{M}`, then the reciprocal frame is
 :math:`a^{1},\dots,a^{M}` where :math:`a_{i}\cdot a^{j} = \delta_{i}^{j}`,
 :math:`\delta_{i}^{j}` is the Kronecker delta (zero if :math:`i \ne j` and one
-if :math:`i = j`). The reciprocal frame is constructed as follows: 
+if :math:`i = j`). The reciprocal frame is constructed as follows:
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  	E_{M} = a_{1}\W\dots\W a_{M}
+    E_{M} = a_{1}\W\dots\W a_{M}
   \end{equation*}
 
 
@@ -756,17 +768,17 @@ if :math:`i = j`). The reciprocal frame is constructed as follows:
   :nowrap:
 
   \begin{equation*}
-  	E_{M}^{-1} = \bfrac{E_{M}}{E_{M}^{2}}
+    E_{M}^{-1} = \bfrac{E_{M}}{E_{M}^{2}}
   \end{equation*}
 
 
-Then 
+Then
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  	a^{i} = \lp -1\rp^{i-1}\lp a_{1}\W\dots\W \breve{a}_{i} \W\dots\W a_{M}\rp E_{M}^{-1}
+    a^{i} = \lp -1\rp^{i-1}\lp a_{1}\W\dots\W \breve{a}_{i} \W\dots\W a_{M}\rp E_{M}^{-1}
   \end{equation*}
 
 
@@ -775,7 +787,7 @@ the product.  In the standard notation if a vector is denoted with a subscript
 the reciprocal vector is denoted with a superscript. The multivector setup
 function ``MV.setup(basis,metric,rframe)`` has the argument ``rframe`` with a
 default value of ``False``.  If it is set to ``True`` the reciprocal frame of
-the basis vectors is  calculated. Additionally there is the function
+the basis vectors is  calculated. Additionaly there is the function
 ``reciprocal_frame(vlst,names='')`` external to the ``MV`` class that will
 calculate the reciprocal frame of a list, ``vlst``, of vectors.  If the argument
 ``names`` is set to a space delimited string of names for the vectors the
@@ -791,25 +803,25 @@ If :math:`F` is a multivector field that is a function of a vector
 :math:`x = x^{i}\bm{\gamma}_{i}` (we are using the summation convention that
 pairs of subscripts and superscripts are summed over the dimension of the vector
 space) then the geometric derivative :math:`\nabla F` is given by (in this
-section the summation convention is used): 
+section the summation convention is used):
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  	\nabla F = \bm{\gamma}^{i}\bfrac{\partial F}{\partial x^{i}}
+    \nabla F = \bm{\gamma}^{i}\bfrac{\partial F}{\partial x^{i}}
   \end{equation*}
 
 
 If :math:`F_{R}` is a grade-:math:`R` multivector and
 :math:`F_{R} = F_{R}^{i_{1}\dots i_{R}}\bm{\gamma}_{i_{1}}\W\dots\W \bm{\gamma}_{i_{R}}`
-then 
+then
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  	\nabla F_{R} = \bfrac{\partial F_{R}^{i_{1}\dots i_{R}}}{\partial x^{j}}\bm{\gamma}^{j}\lp\bm{\gamma}_{i_{1}}\W
+    \nabla F_{R} = \bfrac{\partial F_{R}^{i_{1}\dots i_{R}}}{\partial x^{j}}\bm{\gamma}^{j}\lp\bm{\gamma}_{i_{1}}\W
                  \dots\W \bm{\gamma}_{i_{R}} \rp
   \end{equation*}
 
@@ -829,7 +841,7 @@ also can only contain those grades. For a grade-:math:`R` multivector
   \end{equation*}
 
 
-and 
+and
 
 .. math::
   :nowrap:
@@ -840,7 +852,7 @@ and
 
 
 For a general multivector function :math:`F` the inner and outer derivatives are
-just the sum of the inner and outer  derivatives of each grade of the multivector
+just the sum of the inner and outer  dervatives of each grade of the multivector
 function.
 
 Curvilinear coordinates are derived from a vector function
@@ -848,7 +860,7 @@ Curvilinear coordinates are derived from a vector function
 :math:`\bm{\theta} = \lp\theta_{1},\dots,\theta_{N}\rp` where the number of
 coordinates is equal to the dimension of the  vector space.  In the case of
 3-dimensional spherical coordinates :math:`\bm{\theta} = \lp r,\theta,\phi \rp`
-and the coordinate generating function :math:`x(\bm{\theta})` is 
+and the coordinate generating function :math:`x(\bm{\theta})` is
 
 .. math::
   :nowrap:
@@ -860,7 +872,7 @@ and the coordinate generating function :math:`x(\bm{\theta})` is
 
 A coordinate frame is derived from :math:`x` by
 :math:`\bm{e}_{i} = \pdiff{x}{\theta^{i}}`.  The following show the frame for
-spherical coordinates. 
+spherical coordinates.
 
 .. math::
   :nowrap:
@@ -891,7 +903,7 @@ spherical coordinates.
 
 
 The coordinate frame generated in this manner is not necessarily normalized so
-define a normalized frame by 
+define a normalized frame by
 
 .. math::
   :nowrap:
@@ -903,7 +915,7 @@ define a normalized frame by
 
 This works for all :math:`\bm{e}_{i}^{2} \neq 0` since we have defined
 :math:`\abs{\bm{e}_{i}} = \sqrt{\abs{\bm{e}_{i}^{2}}}`.   For spherical
-coordinates the normalized frame vectors are 
+coordinates the normalized frame vectors are
 
 .. math::
   :nowrap:
@@ -933,13 +945,13 @@ coordinates the normalized frame vectors are
   \end{equation*}
 
 
-The geometric derivative in curvilinear coordinates is given by 
+The geometric derivative in curvilinear coordinates is given by
 
 .. math::
   :nowrap:
 
   \begin{align*}
-  	\nabla F_{R} & =  \bm{\gamma}^{i}\pdiff{}{x^{i}}\lp F_{R}^{i_{1}\dots i_{R}}
+    \nabla F_{R} & =  \bm{\gamma}^{i}\pdiff{}{x^{i}}\lp F_{R}^{i_{1}\dots i_{R}}
                      \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp  \\
                    & =  \bm{e^{j}}\pdiff{}{\theta^{j}}\lp F_{R}^{i_{1}\dots i_{R}}
                      \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp  \\
@@ -949,11 +961,11 @@ The geometric derivative in curvilinear coordinates is given by
                      \pdiff{}{\theta^{j}}\lp\bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp \\
                    & =   \lp\pdiff{}{\theta^{j}} F_{R}^{i_{1}\dots i_{R}}\rp
                      \bm{e^{j}}\lp\bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp+
-                     F_{R}^{i_{1}\dots i_{R}}C\lbrc \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rbrc                 
+                     F_{R}^{i_{1}\dots i_{R}}C\lbrc \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rbrc
   \end{align*}
 
 
-where 
+where
 
 .. math::
   :nowrap:
@@ -965,7 +977,7 @@ where
 
 
 are the connection multivectors for the curvilinear coordinate system. For a
-spherical coordinate system they are 
+spherical coordinate system they are
 
 .. math::
   :nowrap:
@@ -1013,7 +1025,7 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{r}\W\bm{\hat{e}}_{\phi}\rbrc = \frac{1}{r}\bm{\hat{e}}_{{\phi}} 
+  C\lbrc\bm{\hat{e}}_{r}\W\bm{\hat{e}}_{\phi}\rbrc = \frac{1}{r}\bm{\hat{e}}_{{\phi}}
                       - \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}\bm{\hat{e}}_{r}\W\bm{\hat{e}}_{{\theta}}\W\bm{\hat{e}}_{{\phi}}
   \end{equation*}
 
@@ -1059,7 +1071,7 @@ The multivector class is initialized with:
    the number of basis vectors.  These symbols are used as the arguments of a
    multivector field as a function of position and for calculating the derivatives
    of a multivector field (if *coords* is defined then *rframe* is automatically
-   set equal to *True*). *offset* is an integer that is added to the multivector 
+   set equal to *True*). *offset* is an integer that is added to the multivector
    coefficient index. For example if one wishes to start labeling vector coefficient
    indexes at one instead of zero then set *offset=1*.  Additionally, :func:`MV.setup`
    calculates the pseudo scalar, :math:`I` and its inverse, :math:`I^{-1}` and makes
@@ -1090,7 +1102,7 @@ curvilinear coordinates using:
 
 *  ``debug``: If ``True`` printout (LaTeX) all quantities required for derivative calculation
 
-*  ``debug_level``: Set to 0,1,2, or 3 to stop curvilinear calculation before all quantities are 
+*  ``debug_level``: Set to 0,1,2, or 3 to stop curvilinear calculation before all quatities are
    calculated.  This is done when debugging new curvilinear coordinate systems since simplification
    of expressions is not sufficiently automated to insure success of process of any coordinate system
    defined by vector function ``x``
@@ -1114,20 +1126,20 @@ curvilinear coordinates using:
    multivector  (prints one base per line). In both cases bases with zero
    coefficients are not printed.
 
-	.. note::
+    .. note::
 
-		This function directly affects the way multivectors are printed with the
-		print command since it interacts with the :func:`__str__` function for the
-		multivector class which is used by the ``print`` command. 
- 
+        This function directly affects the way multivectors are printed with the
+        print command since it interacts with the :func:`__str__` function for the
+        multivector class which is used by the ``print`` command.
 
-		.. csv-table:: 
-			:header: " ``str_mode`` ", " Effect on print " 
-			:widths: 10, 50
 
-			" 0 ","One multivector per line"
-			" 1 ","One grade per line"
-			" 2 ","One base per line"
+        .. csv-table::
+            :header: " ``str_mode`` ", " Effect on print "
+            :widths: 10, 50
+
+            " 0 ","One multivector per line"
+            " 1 ","One grade per line"
+            " 2 ","One base per line"
 
 Instantiating a Multivector
 ---------------------------
@@ -1135,12 +1147,12 @@ Instantiating a Multivector
 Now that grades and bases have been described we can show all the ways that a
 multivector can be instantiated. As an example assume that the multivector space
 is initialized with ``MV.setup('e1 e2 e3')``. Then the vectors ``e1``, ``e2``,
-and ``e3`` are made available (broadcast) for use in the program . 
+and ``e3`` are made available (broadcast) for use in the program .
 
 .. warning::
 
-	This is only true if the statement  ``set_main(sys.modules[__name__])`` appears
-	immediately after the ``from sympy.galgebra.GA import *`` statement.
+    This is only true if the statement  ``set_main(sys.modules[__name__])`` appears
+    immediately after the ``from sympy.galgebra.GA import *`` statement.
 
 So that  multivectors
 could be instantiated with statements such as (``a1``, ``a2``, and ``a3`` are
@@ -1161,24 +1173,26 @@ or with the multivector class constructor:
    switch that will convert the symbolic coefficients of a multivector to functions
    if coordinate variables have been defined when :func:`MV.setup` is called:
 
-	.. csv-table:: 
-		:header: " mvtype ", " value ", " result " 
-		:widths: 10, 30, 30
+    .. csv-table::
+        :header: " mvtype ", " value ", " result "
+        :widths: 10, 30, 30
 
-		" default ", " default ", " Zero multivector "
-		" 'basisvector' ", " int i ", " :math:`\mbox{i}^{th}` basis vector "
-		" 'basisbivector' ", " int i ", " :math:`\mbox{i}^{th}` basis bivector "
-		" 'scalar' ", " symbol x ", " symbolic scalar of value x"
-		"   ", " string s ", " symbolic scalar of value Symbol(s) "
-		"  ", " int i ", " sympy integer of value i"
-		" 'grade' ", " [int r, 1-D symbol array A] ", " X.grade(r) = A "
-		"   ", " [int r, string s] ", " symbolic grade r multivector "
-		" 'vector' ", " 1-D symbol array A ", " X.grade(1) = A "
-		"   ", " string s ", " symbolic vector "
-		" 'grade2' ", " 1-D symbol array A ", " X.grade(2) = A "
-		" 'pseudo' ", " symbol x ", " X.grade(n) = x "
-		" 'spinor' ", " string s ", " symbolic even multivector "
-		" default "," string s ", " symbolic general multivector "
+        " default ", " default ", " Zero multivector "
+        " 'basisvector' ", " int i ", " :math:`\mbox{i}^{th}` basis vector "
+        " 'basisbivector' ", " int i ", " :math:`\mbox{i}^{th}` basis bivector "
+        " 'scalar' ", " symbol x ", " symbolic scalar of value x"
+        "   ", " string s ", " symbolic scalar of value Symbol(s) "
+        "  ", " int i ", " sympy integer of value i"
+        " 'grade' ", " [int r, 1-D symbol array A] ", " X.grade(r) = A "
+        "   ", " [int r, string s] ", " symbolic grade r multivector "
+        " 'vector' ", " 1-D symbol array A ", " X.grade(1) = A "
+        "   ", " string s ", " symbolic vector "
+        " 'grade2' ", " 1-D symbol array A ", " X.grade(2) = A "
+        " 'pseudo' ", " symbol x ", " X.grade(n) = x "
+        " 'spinor' ", " string s ", " symbolic even multivector "
+
+
+        " default "," string s ", " symbolic general multivector "
 
 
    If the *value* argument has the option of being a string s then a general symbolic
@@ -1192,8 +1206,8 @@ or with the multivector class constructor:
    the :mod:`latex_ex` is used to print the multivector the coefficients would print as
    :math:`A`, :math:`A^{xy}`, :math:`A^{xz}`, and :math:`A^{yz}`.
 
-   If the *fct* argrument of :func:`MV` is set to *True* and the *coords* argument in 
-   :func:`MV.setup` is defined the symbolic coefficients of the multivector are functions 
+   If the *fct* argrument of :func:`MV` is set to *True* and the *coords* argument in
+   :func:`MV.setup` is defined the symbolic coefficients of the multivector are functions
    of the coordinates.
 
 
@@ -1221,7 +1235,11 @@ Basic Multivector Class Functions
 
 .. function:: project(self,r)
 
-   Return the grade-:math:`r` components of the multivector.
+   If r is a integer return the grade-:math:`r` components of the multivector. If
+   r is a multivector return the grades of the multivector that correspond to the
+   non-zero grades of r. For example if one is projecting a general multivector and
+   r is a spinor, ``A.project(r)`` will return only the even grades of the multivector
+   A since a spinor only has even grades that are non-zero.
 
 
 .. function:: even(self)
@@ -1257,20 +1275,20 @@ Basic Multivector Class Functions
 
 .. function:: grad_ext(self)
 
-   Return the outer (curl) derivative of the multivector function. Equivalent to 
+   Return the outer (curl) derivative of the multivector function. Equivalent to
    :func:`curl`.
 
 
 .. function:: grad_int(self)
 
-   Return the inner (div) derivative of the multivector function. Equivalent to 
+   Return the inner (div) derivative of the multivector function. Equivalent to
    :func:`div`.
 
 .. warning::
 
-	If *A* is a vector field in three dimensions :math:`\nabla\cdot {\bf A}` = A.grad_int() = A.div(), but
-	:math:`\nabla\times {\bf A}` = -MV.I*A.grad_ext() = -MV.I*A.curl(). Note that grad_int() lowers the grade
-	of all blades by one grade and grad_ext() raises the grade of all blades by one.
+    If *A* is a vector field in three dimensions :math:`\nabla\cdot {\bf A}` = A.grad_int() = A.div(), but
+    :math:`\nabla\times {\bf A}` = -MV.I*A.grad_ext() = -MV.I*A.curl(). Note that grad_int() lowers the grade
+    of all blades by one grade and grad_ext() raises the grade of all blades by one.
 
 .. function:: set_coef(self,grade,base,value)
 
@@ -1344,11 +1362,11 @@ class.
    Not only will *syms* contain the symbols, but you can also directly use *x*,
    *y*, and *ab* as symbols in your program.
 
-	.. warning::
+    .. warning::
 
-		You can only directly use *x*, *y*, and *ab* as symbols in your program if 
-		the statement  ``set_main(sys.modules[__name__])`` appears immediately after
-		the ``from sympy.galgebra.GA import *`` statement.
+        You can only directly use *x*, *y*, and *ab* as symbols in your program if
+        the statement  ``set_main(sys.modules[__name__])`` appears immediately after
+        the ``from sympy.galgebra.GA import *`` statement.
 
 .. function:: set_names(var_lst,var_str)
 
@@ -1382,6 +1400,13 @@ class.
               g = sympy.trigsimp(g)
           return(g)
 
+.. function:: S(x)
+
+    :func:`S` instanciates a scaler multivector of value *x*, where *x* can be a
+    :mod:`sympy` variable or integer.  This is just a shorthand method for
+    constructing scalar multivectors and can be used when there is any ambiguity
+    in a multivector expression as to whether a symbol or constant should be
+    treated as a scalar multivector or not.
 
 Examples
 ========
@@ -1487,7 +1512,7 @@ correctly  (in our units:math:`c=1`) [Lasenby,pp229-231].
 
 ``Begin Program Output``
 
-:math:`I` Pseudo-Scalar  
+:math:`I` Pseudo-Scalar
 
 .. math::
   :nowrap:
@@ -1497,7 +1522,7 @@ correctly  (in our units:math:`c=1`) [Lasenby,pp229-231].
   \end{equation*}
 
 
-:math:`B` Magnetic Field Bi-Vector 
+:math:`B` Magnetic Field Bi-Vector
 
 .. math::
   :nowrap:
@@ -1507,7 +1532,7 @@ correctly  (in our units:math:`c=1`) [Lasenby,pp229-231].
   \end{equation*}
 
 
-:math:`F` Electric Field Bi-Vector 
+:math:`F` Electric Field Bi-Vector
 
 .. math::
   :nowrap:
@@ -1517,7 +1542,7 @@ correctly  (in our units:math:`c=1`) [Lasenby,pp229-231].
   \end{equation*}
 
 
-:math:`E+IB` Electo-Magnetic Field Bi-Vector 
+:math:`E+IB` Electo-Magnetic Field Bi-Vector
 
 .. math::
   :nowrap:
@@ -1527,7 +1552,7 @@ correctly  (in our units:math:`c=1`) [Lasenby,pp229-231].
   \end{equation*}
 
 
-:math:`J` Four Current 
+:math:`J` Four Current
 
 .. math::
   :nowrap:
@@ -1537,7 +1562,7 @@ correctly  (in our units:math:`c=1`) [Lasenby,pp229-231].
   \end{equation*}
 
 
-Geometric Derivative of Electo-Magnetic Field Bi-Vector  
+Geometric Derivative of Electo-Magnetic Field Bi-Vector
 
 .. math::
   :nowrap:
@@ -1546,7 +1571,7 @@ Geometric Derivative of Electo-Magnetic Field Bi-Vector
   \nabla F & =   \left(\partial_{z} {E^{z}} + \partial_{y} {E^{y}} + \partial_{x} {E^{x}}\right){\gamma}_{t} \\ & + \left(-\partial_{t} {E^{x}} + \partial_{y} {B^{z}} -\partial_{z} {B^{y}}\right){\gamma}_{x} \\ & + \left(\partial_{z} {B^{x}} -\partial_{t} {E^{y}} -\partial_{x} {B^{z}}\right){\gamma}_{y} \\ & + \left(-\partial_{y} {B^{x}} -\partial_{t} {E^{z}} + \partial_{x} {B^{y}}\right){\gamma}_{z} \\ & + \left(-\partial_{x} {E^{y}} -\partial_{t} {B^{z}} + \partial_{y} {E^{x}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{y} \\ & + \left(-\partial_{x} {E^{z}} + \partial_{t} {B^{y}} + \partial_{z} {E^{x}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{z} \\ & + \left(-\partial_{t} {B^{x}} -\partial_{y} {E^{z}} + \partial_{z} {E^{y}}\right){\gamma}_{t}{\gamma}_{y}{\gamma}_{z} \\ & + \left(\partial_{y} {B^{y}} + \partial_{z} {B^{z}} + \partial_{x} {B^{x}}\right){\gamma}_{x}{\gamma}_{y}{\gamma}_{z}\end{align*}
 
 
-All Maxwell Equations are 
+All Maxwell Equations are
 
 .. math::
   :nowrap:
@@ -1556,7 +1581,7 @@ All Maxwell Equations are
   \end{equation*}
 
 
-Div :math:`E` and Curl :math:`H` Equations 
+Div :math:`E` and Curl :math:`H` Equations
 
 .. math::
   :nowrap:
@@ -1575,7 +1600,7 @@ Div :math:`E` and Curl :math:`H` Equations
   \end{equation*}
 
 
-Curl :math:`E` and Div :math:`B` equations  
+Curl :math:`E` and Div :math:`B` equations
 
 .. math::
   :nowrap:
@@ -1617,7 +1642,7 @@ real equation are explined  in Doran and Lasenby [Lasenby,pp281-283].
 
 ``Begin Program Output``
 
-:math:`A` is 4-vector potential  
+:math:`A` is 4-vector potential
 
 .. math::
   :nowrap:
@@ -1627,7 +1652,7 @@ real equation are explined  in Doran and Lasenby [Lasenby,pp281-283].
   \end{equation*}
 
 
-:math:`\bm{\psi}` is 8-component real spinor (even multi-vector)  
+:math:`\bm{\psi}` is 8-component real spinor (even multi-vector)
 
 .. math::
   :nowrap:
@@ -1639,7 +1664,7 @@ real equation are explined  in Doran and Lasenby [Lasenby,pp281-283].
 
 Dirac equation in terms of real geometric algebra/calculus
 :math:`\lp\nabla \bm{\psi} I \sigma_{z}-eA\bm{\psi} = m\bm{\psi}\gamma_{t}\rp`
-Spin measured with respect to :math:`z` axis  
+Spin measured with respect to :math:`z` axis
 
 .. math::
   :nowrap:
@@ -1664,7 +1689,7 @@ Spin measured with respect to :math:`z` axis
 Spherical Coordinates
 ^^^^^^^^^^^^^^^^^^^^^
 
-Curvilinear coordinates are implemented as shown in section :ref:`deriv`.  The
+Curvilinear coodinates are implemented as shown in section :ref:`deriv`.  The
 gradient of a scalar function and the divergence and curl of a vector function
 (:math:`-I\lp\nabla\W A\rp` is the curl in three dimensions in the notation of
 geometric algebra) to demonstrate the formulas derived in section :ref:`deriv`.
@@ -1679,7 +1704,7 @@ geometric algebra) to demonstrate the formulas derived in section :ref:`deriv`.
 
 ``Begin Program Output``
 
-Gradient of Scalar Function :math:`\psi`  
+Gradient of Scalar Function :math:`\psi`
 
 .. math::
   :nowrap:
@@ -1689,7 +1714,7 @@ Gradient of Scalar Function :math:`\psi`
   \end{equation*}
 
 
-Div and Curl of Vector Function :math:`A`  
+Div and Curl of Vector Function :math:`A`
 
 .. math::
   :nowrap:

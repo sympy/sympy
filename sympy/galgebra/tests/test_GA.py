@@ -5,6 +5,8 @@
 The reference D&L is "Geomertric Algebra for Physicists" by Doran and Lasenby
 """
 
+import sys
+
 try:
     import numpy
     disabled = False
@@ -13,11 +15,12 @@ except ImportError:
     disabled = True
 
 if not disabled:
-    from sympy.galgebra.GA import set_main, MV, make_symbols, types, ZERO, ONE, HALF
+    sys.path.append('../')
+    from sympy.galgebra.GA import set_main, MV, make_symbols, types, ZERO, ONE, HALF, S
     import sympy
     from sympy import collect, sympify
 
-    import sys
+
     set_main(sys.modules[__name__])
 
 def F(x):
@@ -272,3 +275,25 @@ def test_str():
     Z = X+Y
     assert str(Z) == 'x+y+x__0*e_1+x__1*e_2+x__2*e_3+(x__01+y__01)*e_1e_2+(x__02+y__02)*e_1e_3+(x__12+y__12)*e_2e_3+x__012*e_1e_2e_3'
     assert str(e_1|e_1) == '1'
+
+def test_metric():
+    MV.setup('e_1 e_2 e_3','[1,1,1]')
+    assert str(MV.metric) == '[[1 0 0]\n [0 1 0]\n [0 0 1]]'
+
+def test_constructor():
+    """
+    Test various multivector constructors
+    """
+    MV.setup('e_1 e_2 e_3','[1,1,1]')
+    make_symbols('x')
+    assert str(S(1)) == '1'
+    assert str(S(x)) == 'x'
+    assert str(MV('a','scalar')) == 'a'
+    assert str(MV('a','vector')) == 'a__0*e_1+a__1*e_2+a__2*e_3'
+    assert str(MV('a','pseudo')) == 'a*e_1e_2e_3'
+    assert str(MV('a','spinor')) == 'a+a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
+    assert str(MV('a')) == 'a+a__0*e_1+a__1*e_2+a__2*e_3+a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3+a__012*e_1e_2e_3'
+    assert str(MV([2,'a'],'grade')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
+    assert str(MV('a','grade2')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
+
+
