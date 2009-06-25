@@ -279,9 +279,9 @@ def rewrite(e,Omega,x,wsym):
         O2.append(exp((f.args[0]-c[0]*g.args[0]).expand())*wsym**c[0])
     #Remember that Omega contains subexpressions of "e". So now we find
     #them in "e" and substitute them for our rewriting, stored in O2
-    f=e
-    for a,b in zip(Omega,O2):
-        f=f.subs(a,b)
+    f = e
+    for a, b in zip(Omega, O2):
+        f = f.subs(a, b)
 
     #finally compute the logarithm of w (logw).
     logw=g.args[0]
