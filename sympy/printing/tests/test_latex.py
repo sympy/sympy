@@ -183,3 +183,13 @@ def test_latex_issue1477():
     assert latex(Symbol("alpha_11")) == r"$\alpha_{11}$"
     assert latex(Symbol("alpha_11_11")) == r"$\alpha_{11,11}$"
 
+def test_mainvar():
+    expr = 3*x*y**3+x**2*y+x**3+y**4
+    profile_y = {'mainvar' : y}
+    assert latex(expr, profile_y) == '$x^{3} + y x^{2} + 3 x y^{3} + y^{4}$'
+    profile_x = {'mainvar' : x}
+    assert latex(expr, profile_x) == '$y^{4} + 3 x y^{3} + y x^{2} + x^{3}$'
+    profile_y['descending'] = True
+    assert latex(expr, profile_y) == '$y^{4} + 3 x y^{3} + y x^{2} + x^{3}$'
+    profile_x['descending'] = True
+    assert latex(expr, profile_x) == '$x^{3} + y x^{2} + 3 x y^{3} + y^{4}$'

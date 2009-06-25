@@ -2,7 +2,7 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from sympy.core import S, C, Basic, Symbol
+from sympy.core import S, C, Basic, Symbol, Wild, var
 from printer import Printer
 from sympy.simplify import fraction
 
@@ -26,6 +26,8 @@ class LatexPrinter(Printer):
 
         self._settings = {
             "inline" : True,
+            "descending" : False,
+            "mainvar" : None,
             "fold_frac_powers" : False,
             "fold_func_brackets" : False,
             "mul_symbol" : None,
@@ -94,7 +96,37 @@ class LatexPrinter(Printer):
 
     def _print_Add(self, expr):
         args = list(expr.args)
-        args.sort(Basic._compare_pretty)
+
+        if self._settings['mainvar'] is not None:
+            mainvar = self._settings['mainvar']
+            if type(mainvar) == str:
+                mainvar = var(mainvar)
+
+            def compare_exponents(a, b):
+               p1, p2 = Wild("p1"), Wild("p2")
+               r_a = a.match(p1 * mainvar**p2)
+               r_b = b.match(p1 * mainvar**p2)
+               if r_a is None and r_b is None:
+                   c = Basic._compare_pretty(a,b)
+                   return c
+               elif r_a is not None:
+                   if r_b is None:
+                       return 1
+                   else:
+                       c = Basic.compare(r_a[p2], r_b[p2])
+                       if c!=0:
+                           return c
+                       else:
+                           c = Basic._compare_pretty(a,b)
+                           return c
+               elif r_b is not None and r_a is None:
+                    return -1
+
+            args.sort(compare_exponents)
+        else:
+            args.sort(Basic._compare_pretty)
+        if self._settings['descending']:
+            args.reverse()
 
         tex = str(self._print(args[0]))
 
