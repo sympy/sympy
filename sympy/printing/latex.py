@@ -31,10 +31,20 @@ class LatexPrinter(Printer):
             "fold_frac_powers" : False,
             "fold_func_brackets" : False,
             "mul_symbol" : None,
-            "inv_trig_style" : "abbreviated"
+            "inv_trig_style" : "abbreviated",
+            "mat_str" : "smallmatrix",
+            "mat_delim" : "(",
         }
 
+        self._delim_dict = {'(':')','[':']'}
+
         if profile is not None:
+            if profile.has_key('inline'):
+                if not profile['inline']:
+                    #change to "good" defaults for inline=False before
+                    #updating with the settings from profile
+                    self._settings['mat_str'] = 'bmatrix'
+                    self._settings['mat_delim'] = None
             self._settings.update(profile)
 
         self._settings['mul_symbol_latex'] = \
@@ -608,12 +618,14 @@ class LatexPrinter(Printer):
         for line in range(expr.lines): # horrible, should be 'rows'
             lines.append(" & ".join([ self._print(i) for i in expr[line,:] ]))
 
-        if self._settings['inline']:
-            tex = r"\left(\begin{smallmatrix}%s\end{smallmatrix}\right)"
-        else:
-            tex = r"\begin{pmatrix}%s\end{pmatrix}"
-
-        return tex % r"\\".join(lines)
+        out_str = r'\begin{%MATSTR%}%s\end{%MATSTR%}'
+        out_str = out_str.replace('%MATSTR%', self._settings['mat_str'])
+        if self._settings['mat_delim']:
+            left_delim = self._settings['mat_delim']
+            right_delim = self._delim_dict[left_delim]
+            out_str = r'\left' + left_delim + out_str + \
+                      r'\right' + right_delim
+        return out_str % r"\\".join(lines)
 
     def _print_tuple(self, expr):
         return r"\begin{pmatrix}%s\end{pmatrix}" % \

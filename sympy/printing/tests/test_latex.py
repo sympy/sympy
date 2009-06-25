@@ -152,6 +152,12 @@ def test_latex_Matrix():
     M = Matrix([[1+x, y],[y, x-1]])
     assert latex(M) == '$\\left(\\begin{smallmatrix}1 + x & y\\\\y & -1 + '\
                        'x\\end{smallmatrix}\\right)$'
+    profile = {'mat_str' : 'bmatrix'}
+    assert latex(M, profile) == '$\\left(\\begin{bmatrix}1 + x & y\\\\y & -1 + '+ \
+           'x\\end{bmatrix}\\right)$'
+    profile['mat_delim'] = None
+    assert latex(M, profile) == '$\\begin{bmatrix}1 + x & y\\\\y & -1 + '\
+                       'x\\end{bmatrix}$'
 
 def test_latex_mul_symbol():
     assert latex(4*4**x, mul_symbol='times') == "$4 \\times 4^{x}$"
