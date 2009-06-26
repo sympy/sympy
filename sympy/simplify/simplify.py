@@ -5,7 +5,7 @@ from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
 
 from sympy.core.numbers import igcd
 
-from sympy.utilities import make_list, all
+from sympy.utilities import make_list, all, any
 from sympy.functions import gamma, exp, sqrt
 
 from sympy.simplify.cse_main import cse
