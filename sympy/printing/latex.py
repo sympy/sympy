@@ -494,25 +494,37 @@ class LatexPrinter(Printer):
             self._print(expr.args[0])
 
     def _print_Symbol(self, expr):
-        if len(expr.name) == 1:
-            return expr.name
+        pos = 0
+        name = None
+        supers = []
+        subs = []
+        while pos < len(expr.name):
+            pos_hat = expr.name.find("^", pos+1)
+            if pos_hat < 0: pos_hat = len(expr.name)
+            pos_usc = expr.name.find("_", pos+1)
+            if pos_usc < 0: pos_usc = len(expr.name)
+            pos_next = min(pos_hat, pos_usc)
+            #if pos_next == len(expr.name):
+            part = expr.name[pos:pos_next]
+            #print pos, pos_next, part
+            if name is None:
+                name = part
+            elif part.startswith("^"):
+                supers.append(part[1:])
+            elif part.startswith("_"):
+                subs.append(part[1:])
+            else:
+                raise RuntimeError("This should never happen.")
+            pos = pos_next
 
-        #convert trailing digits to subscript
-        m = re.match('(^[a-zA-Z]+)([0-9]+)$', expr.name)
+        # make a little exception when a name ends with digits, i.e. treat them
+        # as a subscript too.
+        m = re.match('(^[a-zA-Z]+)([0-9]+)$', name)
         if m is not None:
-            name, sub=m.groups()
-            tex=self._print_Symbol(Symbol(name))
-            tex="%s_{%s}" %(tex, sub)
-            return tex
+            name, sub = m.groups()
+            subs.append(sub)
 
-        # insert braces to expresions containing '_' or '^'
-        m = re.match('(^[a-zA-Z0-9]+)([_\^]{1})([a-zA-Z0-9]+)$', expr.name)
-        if m is not None:
-            name, sep, rest=m.groups()
-            tex=self._print_Symbol(Symbol(name))
-            tex="%s%s{%s}" %(tex, sep, rest)
-            return tex
-
+        # make a nice name
         greek = set([ 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
                       'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu',
                       'xi', 'omicron', 'pi', 'rho', 'sigma', 'tau', 'upsilon',
@@ -521,12 +533,18 @@ class LatexPrinter(Printer):
         other = set( ['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth',
                       'hbar', 'hslash', 'mho' ])
 
-        if expr.name.lower() in greek:
-            return "\\" + expr.name
+        if name.lower() in greek:
+            name = "\\" + name
         elif expr.name in other:
-            return "\\" + expr.name
-        else:
-            return expr.name
+            name = "\\" + name
+
+        # glue all items together:
+        if len(supers) > 0:
+            name += "^{%s}" % ",".join(supers)
+        if len(subs) > 0:
+            name += "_{%s}" % ",".join(subs)
+
+        return name
 
     def _print_Relational(self, expr):
         charmap = {

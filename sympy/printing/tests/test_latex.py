@@ -166,3 +166,20 @@ def test_latex_issue1282():
     y = 4*4**log(2)
     assert latex(y) == '$4 \\times 4^{\\operatorname{log}\\left(2\\right)}$'
     assert latex(1/y) == '$\\frac{1}{4 \\times 4^{\\operatorname{log}\\left(2\\right)}}$'
+
+def test_latex_issue1477():
+    assert latex(Symbol("beta_13_2")) == r"$\beta_{13,2}$"
+    assert latex(Symbol("beta_132_20")) == r"$\beta_{132,20}$"
+    assert latex(Symbol("beta_13")) == r"$\beta_{13}$"
+    assert latex(Symbol("x_a_b")) == r"$x_{a,b}$"
+    assert latex(Symbol("x_1_2_3")) == r"$x_{1,2,3}$"
+    assert latex(Symbol("x_a_b1")) == r"$x_{a,b1}$"
+    assert latex(Symbol("x_a_1")) == r"$x_{a,1}$"
+    assert latex(Symbol("x_1_a")) == r"$x_{1,a}$"
+    assert latex(Symbol("x_1^aa")) == r"$x^{aa}_{1}$"
+    assert latex(Symbol("x_11^a")) == r"$x^{a}_{11}$"
+    assert latex(Symbol("x_a_a_a_a")) == r"$x_{a,a,a,a}$"
+    assert latex(Symbol("x_a_a^a^a")) == r"$x^{a,a}_{a,a}$"
+    assert latex(Symbol("alpha_11")) == r"$\alpha_{11}$"
+    assert latex(Symbol("alpha_11_11")) == r"$\alpha_{11,11}$"
+
