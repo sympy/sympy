@@ -1,7 +1,7 @@
 from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
         collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
-        solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative, S, diff
+        solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative, S, diff, oo
 
 from sympy.utilities.pytest import XFAIL
 
@@ -376,6 +376,19 @@ def test_nsimplify():
     assert nsimplify(0.33333, tolerance=1e-4) == Rational(1,3)
     assert nsimplify(2.0**(1/3.), tolerance=0.001) == Rational(635,504)
     assert nsimplify(2.0**(1/3.), tolerance=0.001, full=True) == 2**Rational(1,3)
+
+def test_extract_minus_sign():
+    x = Symbol("x")
+    y = Symbol("y")
+    a = Symbol("a")
+    b = Symbol("b")
+    assert simplify(-x/-y) == x/y
+    assert simplify(-x/y) == -x/y
+    assert simplify(x/y) == x/y
+    assert simplify(x/-y) == -x/y
+    assert simplify(-x/0) == -oo*x
+    assert simplify(S(-5)/0) == -oo
+    assert simplify(-a*x/(-y-b)) == a*x/(b + y)
 
 def test_diff():
     x = Symbol("x")

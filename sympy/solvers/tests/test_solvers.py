@@ -150,7 +150,7 @@ def test_linear_system():
                 [-1, 0, 1, 0, 0]])
 
     assert solve_linear_system(M, x, y, z, t) == \
-           {y: 0, z: (-t-t*n)/n, x: (-t-t*n)/n}
+           {y: 0, z: -((t+t*n)/n), x: -((t+t*n)/n)}
 
 def test_linear_systemLU():
     x, y, z, n = symbols('xyzn')
@@ -237,7 +237,8 @@ def test_tsolve_1():
     assert solve(x**3 - 3**x, x) == [-3/log(3)*LambertW(-log(3)/3)]
     assert solve(2*(3*x+4)**5 - 6*7**(3*x+9), x) in \
         [[Rational(-4,3) - 5/log(7)/3*LambertW(-7*2**Rational(4,5)*6**Rational(1,5)*log(7)/10)],\
-         [(-5*LambertW(-7*2**(Rational(4, 5))*6**(Rational(1, 5))*log(7)/10) - 4*log(7))/(3*log(7))]]
+         [(-5*LambertW(-7*2**(Rational(4, 5))*6**(Rational(1, 5))*log(7)/10) - 4*log(7))/(3*log(7))], \
+         [-((4*log(7) + 5*LambertW(-7*2**Rational(4,5)*6**Rational(1,5)*log(7)/10))/(3*log(7)))]]
 
     assert solve(z*cos(x)-y, x)      == [acos(y/z)]
     assert solve(z*cos(2*x)-y, x)    == [acos(y/z)/2]
@@ -248,8 +249,8 @@ def test_tsolve_1():
     assert solve(exp(x)+exp(-x)-y, x)== [-log(4) + log(2*y + 2*(-4 + y**2)**(Rational(1, 2))),
                                           -log(4) + log(2*y - 2*(-4 + y**2)**(Rational(1, 2)))]
     # issue #1409
-    assert solve(y - b*x/(a+x), x) == [-a*y/(y - b)]
-    assert solve(y - b*exp(a/x), x) == [-a/(-log(y) + log(b))]
+    assert solve(y - b*x/(a+x), x) == [a*y/(b - y)]
+    assert solve(y - b*exp(a/x), x) == [a/(-log(b) + log(y))]
     # issue #1408
     assert solve(y-b/(1+a*x),x) == [(b - y)/(a*y)]
     # issue #1407

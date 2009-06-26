@@ -1157,7 +1157,12 @@ def simplify(expr):
 
     """
     expr = Poly.cancel(powsimp(expr))
-    return powsimp(together(expr.expand()), combine='exp', deep=True)
+    expr = powsimp(together(expr.expand()), combine='exp', deep=True)
+    if expr.could_extract_minus_sign():
+        n, d = expr.as_numer_denom()
+        if d != 0:
+            expr = -n/(-d)
+    return expr
 
 def nsimplify(expr, constants=[], tolerance=None, full=False):
     """
