@@ -589,6 +589,10 @@ def test_extractions():
     assert (x-y).could_extract_minus_sign() != (-x+y).could_extract_minus_sign()
     assert (1-x-y).could_extract_minus_sign() == True
     assert (1-x+y).could_extract_minus_sign() == False
+    assert ((-x-x*y)/y).could_extract_minus_sign() == True
+    assert (-(x+x*y)/y).could_extract_minus_sign() ==  True
+    assert ((x+x*y)/(-y)).could_extract_minus_sign() == True
+    assert ((x+x*y)/y).could_extract_minus_sign() == False
 
 def test_coeff():
     assert (3+2*x+4*x**2).coeff(1) == None

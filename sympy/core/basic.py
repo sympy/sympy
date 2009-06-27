@@ -1930,6 +1930,10 @@ class Basic(AssumeMeths):
                     return False
                 elif positive_args < negative_args:
                     return True
+            elif self.is_Mul:
+                num, den = self.as_numer_denom()
+                if den != 0:
+                    return num.could_extract_minus_sign()
 
             # As a last resort, we choose the one with greater hash
             return hash(self) < hash(negative_self)
