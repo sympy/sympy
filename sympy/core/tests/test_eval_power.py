@@ -74,3 +74,13 @@ def test_issue1263():
     num, den = sqrt(1/any).as_numer_denom()
     assert num == sqrt(1/any)
     assert den == 1
+
+def test_issue1496():
+    x = Symbol('x')
+    y = Symbol('y')
+    n = Symbol('n', even=True)
+    assert (3-y)**2 == (y-3)**2
+    assert (3-y)**n == (y-3)**n
+    assert (-3+y-x)**2 == (3-y+x)**2
+    assert (y-3)**3 == -(3-y)**3
+
