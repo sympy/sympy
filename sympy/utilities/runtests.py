@@ -38,6 +38,13 @@ def isgeneratorfunction(object):
         return True
     return False
 
+def convert_to_native_paths(lst):
+    """
+    Converts a list of '/' separated paths into a list of
+    native (os.sep separated) paths.
+    """
+    return [os.path.join(*x.split("/")) for x in lst]
+
 def test(*paths, **kwargs):
     """
     Runs the tests specified by paths, or all tests if paths=[].
@@ -115,8 +122,10 @@ def doctest(*paths, **kwargs):
     dtest = t.test()
 
     # test documentation under doc/src/
-    excluded = ['doc/src/modules/plotting.txt']
-    doc_files = glob('doc/src/*.txt') + glob('doc/src/modules/*.txt')
+    excluded = convert_to_native_paths(['doc/src/modules/plotting.txt'])
+    doc_globs = convert_to_native_paths(['doc/src/*.txt',
+            'doc/src/modules/*.txt'])
+    doc_files = sum([glob(x) for x in doc_globs], [])
     for ex in excluded:
         doc_files.remove(ex)
     for doc_file in doc_files:
@@ -306,7 +315,7 @@ class SymPyDocTests(object):
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
         self._tests = []
-        self._blacklist = blacklist
+        self._blacklist = convert_to_native_paths(blacklist)
 
     def add_paths(self, paths):
         for path in paths:
@@ -347,7 +356,7 @@ class SymPyDocTests(object):
         from StringIO import StringIO
 
         rel_name = filename[len(self._root_dir)+1:]
-        module = rel_name.replace('/', '.')[:-3]
+        module = rel_name.replace(os.sep, '.')[:-3]
         setup_pprint()
         try:
             module = doctest._normalize_module(module)
@@ -519,6 +528,9 @@ class PyTestReporter(Reporter):
             # output is piped to less, e.g. "bin/test | less". In this case,
             # the terminal control sequences would be printed verbatim, so
             # don't use any colors.
+            color = ""
+        if sys.platform == "win32":
+            # Windows consoles don't support ANSI escape sequences
             color = ""
 
         if self._line_wrap:
