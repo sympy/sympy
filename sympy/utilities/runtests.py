@@ -20,7 +20,7 @@ from glob import glob
 from timeit import default_timer as clock
 import doctest as pdoctest # avoid clashing with our doctest() function
 
-SKIP = pdoctest.register_optionflag('SKIP')
+SKIP = pdoctest.register_optionflag('SKIP') # for python2.4 compatility
 
 def isgeneratorfunction(object):
     """
