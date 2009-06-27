@@ -3,8 +3,7 @@
 from sympy import symbols
 from sympy.logic.boolalg import Equivalent, Implies
 from sympy.logic.inference import pl_true, satisfiable, find_pure_symbol, \
-        find_unit_clause
-from sympy.logic.kb import PropKB
+        find_unit_clause, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable
 from sympy.utilities.pytest import raises, XFAIL
 
