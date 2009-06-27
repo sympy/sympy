@@ -2,7 +2,7 @@ from sympy import Symbol, symbols, together, hypersimp, factorial, binomial, \
         collect, Function, powsimp, separate, sin, exp, Rational, fraction, \
         simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate, \
         solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative, \
-        S, diff, oo, logcombine, Eq, Integer, gamma, acos, Integral
+        S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, separatevars
 
 from sympy.utilities.pytest import XFAIL
 
@@ -327,6 +327,16 @@ def test_collect_D_0():
     # collect does not distinguish nested derivatives, so it returns
     #                                           -- (a + b)*D(D(f,x), x)
     assert collect(a*fxx     + b*fxx    , fxx)  == (a + b)*fxx
+
+def test_separatevars():
+    x,y,z,n = symbols('xyzn')
+    assert separatevars(2*n*x*z+2*x*y*z) == 2*x*z*(n+y)
+    assert separatevars(x*z+x*y*z) == x*z*(1+y)
+    assert separatevars(pi*x*z+pi*x*y*z) == pi*x*z*(1+y)
+    assert separatevars(x*y**2*sin(x) + x*sin(x)*sin(y)) == x*(sin(y) + y**2)*sin(x)
+    assert separatevars(x*exp(x+y)+x*exp(x)) == x*(1 + exp(y))*exp(x)
+    assert separatevars((x*(y+1))**z) == x**z*(1 + y)**z
+    assert separatevars(1+x+y+x*y) == (x+1)*(y+1)
 
 def test_hypersimp():
     n, k = symbols('nk', integer=True)

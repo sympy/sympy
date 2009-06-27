@@ -11,7 +11,7 @@ from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse
 
-from sympy.polys import Poly
+from sympy.polys import Poly, factor, PolynomialError
 
 import sympy.mpmath as mpmath
 
@@ -674,6 +674,111 @@ def collect(expr, syms, evaluate=True, exact=False):
         return Add(*[ a*b for a, b in collected.iteritems() ])
     else:
         return collected
+
+def separatevars(expr, dict=False, symbols=[]):
+    """
+    Separates variables in an expression, if possible.  By default, it separates
+    with respect to all symbols in an expression.  Add symbols to the arguments
+    to only attempt to separate with respect to those symbols.  Note that this
+    pulls out constant coeficients.  It treats all atoms in an expression as
+    symbols to separate.
+
+    Note that if the expression is not really separable, or is only paritially
+    seperable it will do the best it can to separate it.  It does not throw any
+    errors if the expression is not separable.  It just returns the expression.
+
+    Also, note that the order of the factors is determined by Mul, so that the
+    separated expressions may not necessarily be grouped together.
+
+    Use dict=True and include symbols as arguments to return a dictionary of
+    separate parts in the symbols.  Any part that has none of the symbols is
+    returned as _coeff in the dictionary. If the expression is not separable,
+    it returns None.
+
+    Examples:
+    >>> from sympy import *
+    >>> x, y, z = symbols('xyz')
+    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2)
+    2*z*x**2*(1 + sin(y))
+    >>> separatevars(2*x+y*sin(x))
+    2*x + y*sin(x)
+    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, dict=True, symbols=(x, y, z))
+    {'coeff': 2, x: x**2, y: 1 + sin(y), z: z}
+    >>> separatevars(2*x+y*sin(x), dict=True, symbols=(x, y)) == None
+    True
+    """
+    if dict:
+        return _separatevars_dict(_separatevars(expr), *symbols)
+    else:
+        return _separatevars(expr)
+
+def _separatevars(expr):
+    # First try other expansion methods
+    expr = expr.expand(mul=False, multinomial=False)
+    try:
+        expr = factor(expr)
+    except PolynomialError:
+        pass
+
+    _coeff = Symbol('_coeff', dummy=True)
+
+    if expr.is_Add:
+
+        nonsepar = sympify(0)
+        # Find any common coeficients to pull out
+        commoncsetlist = []
+        for i in expr.args:
+            if i.is_Mul:
+                commoncsetlist.append(set(i.args))
+            else:
+                commoncsetlist.append(set((i,)))
+        commoncset = set(flatten(commoncsetlist))
+        commonc = sympify(1)
+
+        for i in commoncsetlist:
+            commoncset = commoncset.intersection(i)
+        commonc = Mul(*commoncset)
+
+        for i in expr.args:
+            coe = i.extract_multiplicatively(commonc)
+            if coe == None:
+                nonsepar += sympify(1)
+            else:
+                nonsepar += coe
+        if nonsepar == 0:
+            return commonc
+        else:
+            return commonc*nonsepar
+
+    else:
+        return expr
+
+def _separatevars_dict(expr, *symbols):
+    if symbols:
+        assert all((t.is_Atom for t in symbols)), "symbols must be Atoms."
+    ret = dict(((i,sympify(1)) for i in symbols))
+    ret['coeff'] = sympify(1)
+    if expr.is_Mul:
+        for i in expr.args:
+            expsym = i.atoms(Symbol)
+            if len(set(symbols).intersection(expsym)) > 1:
+                return None
+            if len(set(symbols).intersection(expsym)) == 0:
+                # There are no symbols, so it is part of the coefficient
+                ret['coeff'] *= i
+            else:
+                ret[expsym.pop()] *= i
+    else:
+        expsym = expr.atoms(Symbol)
+        if len(set(symbols).intersection(expsym)) > 1:
+            return None
+        if len(set(symbols).intersection(expsym)) == 0:
+            # There are no symbols, so it is part of the coefficient
+            ret['coeff'] *= expr
+        else:
+            ret[expsym.pop()] *= expr
+
+    return ret
 
 def ratsimp(expr):
     """
