@@ -3,40 +3,6 @@ from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, disjuncts, \
     conjuncts, to_cnf
 from sympy.core import Symbol, sympify
 
-def find_pure_symbol(symbols, unknown_clauses):
-    """Find a symbol and its value if it appears only as a positive literal
-    (or only as a negative) in clauses.
-    >>> from sympy import symbols
-    >>> A, B, C = symbols('ABC')
-    >>> find_pure_symbol([A, B, C], [A|~B,~B|~C,C|A])
-    (A, True)
-    """
-    for sym in symbols:
-        found_pos, found_neg = False, False
-        for c in unknown_clauses:
-            if not found_pos and sym in disjuncts(c): found_pos = True
-            if not found_neg and Not(sym) in disjuncts(c): found_neg = True
-        if found_pos != found_neg: return sym, found_pos
-    return None, None
-
-def find_unit_clause(clauses, model):
-    """A unit clause has only 1 variable that is not bound in the model.
-    >>> from sympy import symbols
-    >>> A, B, C = symbols('ABC')
-    >>> find_unit_clause([A | B | C, B | ~C, A | ~B], {A:True})
-    (B, False)
-    """
-    for clause in clauses:
-        num_not_in_model = 0
-        for literal in disjuncts(clause):
-            sym = literal_symbol(literal)
-            if sym not in model:
-                num_not_in_model += 1
-                P, value = sym, not (isinstance(literal, Not))
-        if num_not_in_model == 1:
-            return P, value
-    return None, None
-
 def literal_symbol(literal):
     """The symbol in this literal (without the negation).
     >>> from sympy import Symbol

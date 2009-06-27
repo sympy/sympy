@@ -17,8 +17,6 @@ def test_f3():
     assert bool(dpll_satisfiable(load(f3)))
 
 def test_f4():
-    # re-enable this when dpll is efficient
-    skip('Takes too much time')
     assert not bool(dpll_satisfiable(load(f4)))
 
 f1 = """c  simple example

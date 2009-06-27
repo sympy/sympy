@@ -201,6 +201,8 @@ def compile_rule(s):
     """Transforms a rule into a sympy expression
     A rule is a string of the form "symbol1 & symbol2 | ..."
     See sympy.assumptions.known_facts for examples of rules
+
+    TODO: can this be replaced by sympify ?
     """
     import re
     return eval(re.sub(r'([a-zA-Z0-9_.]+)', r'Symbol("\1")', s), {'Symbol' : Symbol})
