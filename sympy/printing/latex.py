@@ -539,7 +539,7 @@ class LatexPrinter(Printer):
     def _print_Symbol(self, expr):
         name, supers, subs = split_super_sub(expr.name)
 
-        # make a nice name
+        # translate name, supers and subs to tex keywords
         greek = set([ 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
                       'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu',
                       'xi', 'omicron', 'pi', 'rho', 'sigma', 'tau', 'upsilon',
@@ -548,10 +548,16 @@ class LatexPrinter(Printer):
         other = set( ['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth',
                       'hbar', 'hslash', 'mho' ])
 
-        if name.lower() in greek:
-            name = "\\" + name
-        elif expr.name in other:
-            name = "\\" + name
+        def translate(s):
+            tmp = s.lower()
+            if tmp in greek or tmp in other:
+                return "\\" + s
+            else:
+                return s
+
+        name = translate(name)
+        supers = [translate(sup) for sup in supers]
+        subs = [translate(sub) for sub in subs]
 
         # glue all items together:
         if len(supers) > 0:

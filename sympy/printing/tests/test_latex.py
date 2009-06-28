@@ -188,6 +188,9 @@ def test_latex_issue1477():
     assert latex(Symbol("x_a_a^a^a")) == r"$x^{a,a}_{a,a}$"
     assert latex(Symbol("alpha_11")) == r"$\alpha_{11}$"
     assert latex(Symbol("alpha_11_11")) == r"$\alpha_{11,11}$"
+    assert latex(Symbol("alpha_alpha")) == r"$\alpha_{\alpha}$"
+    assert latex(Symbol("alpha^aleph")) == r"$\alpha^{\aleph}$"
+
 
 def test_mainvar():
     expr = 3*x*y**3+x**2*y+x**3+y**4
