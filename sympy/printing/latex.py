@@ -4,6 +4,7 @@ A Printer which converts an expression into its LaTeX equivalent.
 
 from sympy.core import S, C, Basic, Symbol, Wild, var
 from printer import Printer
+from conventions import split_super_sub
 from sympy.simplify import fraction
 
 import sympy.mpmath.libmpf as mlib
@@ -536,35 +537,7 @@ class LatexPrinter(Printer):
             self._print(expr.args[0])
 
     def _print_Symbol(self, expr):
-        pos = 0
-        name = None
-        supers = []
-        subs = []
-        while pos < len(expr.name):
-            pos_hat = expr.name.find("^", pos+1)
-            if pos_hat < 0: pos_hat = len(expr.name)
-            pos_usc = expr.name.find("_", pos+1)
-            if pos_usc < 0: pos_usc = len(expr.name)
-            pos_next = min(pos_hat, pos_usc)
-            #if pos_next == len(expr.name):
-            part = expr.name[pos:pos_next]
-            #print pos, pos_next, part
-            if name is None:
-                name = part
-            elif part.startswith("^"):
-                supers.append(part[1:])
-            elif part.startswith("_"):
-                subs.append(part[1:])
-            else:
-                raise RuntimeError("This should never happen.")
-            pos = pos_next
-
-        # make a little exception when a name ends with digits, i.e. treat them
-        # as a subscript too.
-        m = re.match('(^[a-zA-Z]+)([0-9]+)$', name)
-        if m is not None:
-            name, sub = m.groups()
-            subs.append(sub)
+        name, supers, subs = split_super_sub(expr.name)
 
         # make a nice name
         greek = set([ 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
