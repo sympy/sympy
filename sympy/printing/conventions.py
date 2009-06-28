@@ -15,10 +15,10 @@ def split_super_sub(text):
        return values are the actual name, a list with superscripts and a list
        with subscripts.
 
-       >>> split_super_sub("a_x^1")
-       ("a", ["1"], ["x"])
-       >>> split_super_sub("var_sub1^sup_sub2")
-       ("var", ["sup"], ["sub1", "sub2"]
+       >>> split_super_sub('a_x^1')
+       ('a', ['1'], ['x'])
+       >>> split_super_sub('var_sub1^sup_sub2')
+       ('var', ['sup'], ['sub1', 'sub2'])
     """
     pos = 0
     name = None
