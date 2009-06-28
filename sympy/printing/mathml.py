@@ -221,40 +221,40 @@ class MathMLPrinter(Printer):
 
         def join(items):
             if len(items) > 1:
-                mrow = self.dom.createElement('mrow')
+                mrow = self.dom.createElement('mml:mrow')
                 for i, item in enumerate(items):
                     if i>0:
-                        mo = self.dom.createElement('mo')
+                        mo = self.dom.createElement('mml:mo')
                         mo.appendChild(self.dom.createTextNode(","))
                         mrow.appendChild(mo)
-                    mi = self.dom.createElement('mi')
+                    mi = self.dom.createElement('mml:mi')
                     mi.appendChild(self.dom.createTextNode(item))
                     mrow.appendChild(mi)
                 return mrow
             else:
-                mi = self.dom.createElement('mi')
+                mi = self.dom.createElement('mml:mi')
                 mi.appendChild(self.dom.createTextNode(items[0]))
                 return mi
 
         name, supers, subs = split_super_sub(sym.name)
-        mname = self.dom.createElement('mi')
+        mname = self.dom.createElement('mml:mi')
         mname.appendChild(self.dom.createTextNode(name))
         if len(supers) == 0:
             if len(subs) == 0:
                 ci.appendChild(self.dom.createTextNode(name))
             else:
-                msub = self.dom.createElement('msub')
+                msub = self.dom.createElement('mml:msub')
                 msub.appendChild(mname)
                 msub.appendChild(join(subs))
                 ci.appendChild(msub)
         else:
             if len(subs) == 0:
-                msup = self.dom.createElement('msup')
+                msup = self.dom.createElement('mml:msup')
                 msup.appendChild(mname)
                 msup.appendChild(join(supers))
                 ci.appendChild(msup)
             else:
-                msubsup = self.dom.createElement('msubsup')
+                msubsup = self.dom.createElement('mml:msubsup')
                 msubsup.appendChild(mname)
                 msubsup.appendChild(join(subs))
                 msubsup.appendChild(join(supers))
