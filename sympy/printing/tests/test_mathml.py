@@ -159,3 +159,62 @@ def test_c2p():
         #assert c2p(f.mathml) == result
     except ImportError:
         pass
+
+def test_symbol():
+    mml_0 = mp._print(Symbol("x"))
+    assert mml_0.nodeName == 'ci'
+    assert mml_0.childNodes[0].nodeValue == 'x'
+
+    mml_1 = mp._print(Symbol("x^2"))
+    assert mml_1.nodeName == 'ci'
+    assert mml_1.childNodes[0].nodeName == 'msup'
+    assert mml_1.childNodes[0].childNodes[0].nodeName == 'mi'
+    assert mml_1.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
+    assert mml_1.childNodes[0].childNodes[1].nodeName == 'mi'
+    assert mml_1.childNodes[0].childNodes[1].childNodes[0].nodeValue == '2'
+
+    mml_2 = mp._print(Symbol("x_2"))
+    assert mml_2.nodeName == 'ci'
+    assert mml_2.childNodes[0].nodeName == 'msub'
+    assert mml_2.childNodes[0].childNodes[0].nodeName == 'mi'
+    assert mml_2.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
+    assert mml_2.childNodes[0].childNodes[1].nodeName == 'mi'
+    assert mml_2.childNodes[0].childNodes[1].childNodes[0].nodeValue == '2'
+
+    mml_3 = mp._print(Symbol("x^3_2"))
+    assert mml_3.nodeName == 'ci'
+    assert mml_3.childNodes[0].nodeName == 'msubsup'
+    assert mml_3.childNodes[0].childNodes[0].nodeName == 'mi'
+    assert mml_3.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
+    assert mml_3.childNodes[0].childNodes[1].nodeName == 'mi'
+    assert mml_3.childNodes[0].childNodes[1].childNodes[0].nodeValue == '2'
+    assert mml_3.childNodes[0].childNodes[2].nodeName == 'mi'
+    assert mml_3.childNodes[0].childNodes[2].childNodes[0].nodeValue == '3'
+
+    mml_4 = mp._print(Symbol("x_2_a"))
+    assert mml_4.nodeName == 'ci'
+    assert mml_4.childNodes[0].nodeName == 'msub'
+    assert mml_4.childNodes[0].childNodes[0].nodeName == 'mi'
+    assert mml_4.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
+    assert mml_4.childNodes[0].childNodes[1].nodeName == 'mrow'
+    assert mml_4.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mi'
+    assert mml_4.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
+    assert mml_4.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mo'
+    assert mml_4.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ','
+    assert mml_4.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mi'
+    assert mml_4.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
+
+    mml_5 = mp._print(Symbol("x^2^a"))
+    assert mml_5.nodeName == 'ci'
+    assert mml_5.childNodes[0].nodeName == 'msup'
+    assert mml_5.childNodes[0].childNodes[0].nodeName == 'mi'
+    assert mml_5.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
+    assert mml_5.childNodes[0].childNodes[1].nodeName == 'mrow'
+    assert mml_5.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mi'
+    assert mml_5.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
+    assert mml_5.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mo'
+    assert mml_5.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ','
+    assert mml_5.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mi'
+    assert mml_5.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
+
+

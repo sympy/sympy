@@ -5,6 +5,7 @@ A MathML printer.
 from sympy import Basic, sympify, C, S
 from sympy.simplify import fraction
 from printer import Printer
+from conventions import split_super_sub
 
 
 class MathMLPrinter(Printer):
@@ -216,9 +217,49 @@ class MathMLPrinter(Printer):
         return lime_recur(limits)
 
     def _print_Symbol(self, sym):
-        x = self.dom.createElement(self.mathml_tag(sym))
-        x.appendChild(self.dom.createTextNode(sym.name))
-        return x
+        ci = self.dom.createElement(self.mathml_tag(sym))
+
+        def join(items):
+            if len(items) > 1:
+                mrow = self.dom.createElement('mrow')
+                for i, item in enumerate(items):
+                    if i>0:
+                        mo = self.dom.createElement('mo')
+                        mo.appendChild(self.dom.createTextNode(","))
+                        mrow.appendChild(mo)
+                    mi = self.dom.createElement('mi')
+                    mi.appendChild(self.dom.createTextNode(item))
+                    mrow.appendChild(mi)
+                return mrow
+            else:
+                mi = self.dom.createElement('mi')
+                mi.appendChild(self.dom.createTextNode(items[0]))
+                return mi
+
+        name, supers, subs = split_super_sub(sym.name)
+        mname = self.dom.createElement('mi')
+        mname.appendChild(self.dom.createTextNode(name))
+        if len(supers) == 0:
+            if len(subs) == 0:
+                ci.appendChild(self.dom.createTextNode(name))
+            else:
+                msub = self.dom.createElement('msub')
+                msub.appendChild(mname)
+                msub.appendChild(join(subs))
+                ci.appendChild(msub)
+        else:
+            if len(subs) == 0:
+                msup = self.dom.createElement('msup')
+                msup.appendChild(mname)
+                msup.appendChild(join(supers))
+                ci.appendChild(msup)
+            else:
+                msubsup = self.dom.createElement('msubsup')
+                msubsup.appendChild(mname)
+                msubsup.appendChild(join(subs))
+                msubsup.appendChild(join(supers))
+                ci.appendChild(msubsup)
+        return ci
 
     def _print_Pow(self, e):
         #Here we use root instead of power if the exponent is the reciprocal of an integer
