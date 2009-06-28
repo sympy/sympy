@@ -22,6 +22,17 @@ def test_upretty_multiindex():
     assert upretty( Symbol('Y_00') )    == u'Y₀₀'
     assert upretty( Symbol('F^+-') )    == u'F⁺⁻'
 
+def test_upretty_sub_super():
+    assert upretty( Symbol('beta_1_2') )  == u'β₁,₂'
+    assert upretty( Symbol('beta^1^2') )  == u'β¹˒²'
+    assert upretty( Symbol('beta_1^2') )  == u'β²₁'
+    assert upretty( Symbol('beta_10_20') )  == u'β₁₀,₂₀'
+    assert upretty( Symbol('beta_ax_gamma^i') )  == u'βⁱₐₓ,ᵧ'
+    assert upretty( Symbol("F^1^2_3_4") )  == u'F¹˒²₃,₄'
+    assert upretty( Symbol("F_1_2^3^4") )  == u'F³˒⁴₁,₂'
+    assert upretty( Symbol("F_1_2_3_4") )  == u'F₁,₂,₃,₄'
+    assert upretty( Symbol("F^1^2^3^4") )  == u'F¹˒²˒³˒⁴'
+
 def test_upretty_subs_missingin_24():
     assert upretty( Symbol('F_beta') )  == u'Fᵦ'
     assert upretty( Symbol('F_gamma') ) == u'Fᵧ'

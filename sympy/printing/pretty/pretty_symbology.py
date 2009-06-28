@@ -46,6 +46,7 @@ except ImportError:
     warnings += 'W: no unicodedata available\n'
     U = lambda name: None
 
+from sympy.printing.conventions import split_super_sub
 import re
 
 
@@ -203,6 +204,10 @@ for d in [str(i) for i in range(10)]:
 for s in '+-=()':
     sub[s] = SSUB(s)
     sup[s] = SSUP(s)
+
+# abusing characters as sub or superscripts
+sub[','] = ','
+sup[','] = U('MODIFIER LETTER CENTRED RIGHT HALF RING')
 
 
 # VERTICAL OBJECTS
@@ -440,53 +445,55 @@ def pretty_symbol(symb_name):
     if not _use_unicode:
         return symb_name
 
-        #          name       ^        sup     _    sub or digit
-    m = re.match('([^^_\d]+)(\^)?((?(2)[^_]+))(_)?((?(4).+|\d*))$', symb_name)
-    if m is None:
-        #print 'DON\'T MATCH'
-        return symb_name
-
-    #print m.groups()
-    name, ssup, isup, ssub, isub = m.groups('')
+    name, sups, subs = split_super_sub(symb_name)
 
     # let's prettify name
     gG = greek.get(name.lower())
     if gG is not None:
-        greek_name = name.islower() and gG[0] or gG[1]
-
-        # some lettrs may not be available
+        if name.islower():
+            greek_name = greek.get(name.lower())[0]
+        else:
+            greek_name = greek.get(name.lower())[1]
+        # some letters may not be available
         if greek_name is not None:
             name = greek_name
 
-    # let's pretty sup/sub
-    psup = sup.get(isup)    # exact match
-    if psup is None:
-        try:                # match by separate characters
-            psup = ''.join( [sup[c] for c in isup] )
-        except KeyError:
-            pass
+    # Let's prettify sups/subs. If it fails at one of them, pretty sups/subs are
+    # not used at all.
+    def pretty_list(l, mapping):
+        result = []
+        for s in l:
+            pretty = mapping.get(s)
+            if pretty is None:
+                try: # match by separate characters
+                    pretty = ''.join([mapping[c] for c in s])
+                except KeyError:
+                    return None
+            result.append(pretty)
+        return result
 
-    psub = sub.get(isub)
-    if psub is None:
-        try:
-            psub = ''.join( [sub[c] for c in isub] )
-        except KeyError:
-            pass
-
-    res = name
-    if psup is not None:
-        res += psup
+    pretty_sups = pretty_list(sups, sup)
+    if pretty_sups is not None:
+        pretty_subs = pretty_list(subs, sub)
     else:
-        res += '%s%s' % (ssup, isup)
+        pretty_subs = None
 
-    if psub is not None:
-        res += psub
+    # glue the results into one string
+    if pretty_subs is None: # nice formatting of sups/subs did not work
+        if len(sups) > 0:
+            sups_result = '^' + '^'.join(sups)
+        else:
+            sups_result = ''
+        if len(subs) > 0:
+            subs_result = '_' + '_'.join(subs)
+        else:
+            subs_result = ''
     else:
-        res += '%s%s' % (ssub, isub)
+        sups_result = sup[','].join(pretty_sups)
+        subs_result = sub[','].join(pretty_subs)
 
-    return res
 
-
+    return ''.join([name, sups_result, subs_result])
 
 
 # final fixup
