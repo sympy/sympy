@@ -6,7 +6,74 @@ Equations (PDEs)
 from sympy import Derivative, diff, Eq, Equality, Mul
 from sympy.simplify import simplify
 
-def pde_separate_add(eqn, func, sep_list):
+def pde_separate(eq, fun, sep, strategy='mul'):
+    """Separate variable in Partial Differential equations.
+    You can choose between two strategies:
+
+      * additive - F(x, y, z) = X(x) + Y(y) + Z(z) (strategy='add')
+      * multiplicative - F(x, y, z) = X(x) * Y(y) * Z(z) (strategy='mul')
+    """
+
+
+    do_add = False
+    if strategy == 'add':
+        do_add = True
+    elif strategy == 'mul':
+        do_add = False
+    else:
+        assert ValueError('Unknown strategy: %s' % strategy)
+
+    if isinstance(eq, Equality):
+        if eq.rhs != 0:
+            return pde_separate(Eq(eq.lhs - eq.rhs), fun, sep, strategy)
+    assert eq.rhs == 0
+
+    # Handle arguments
+    subs_args = []
+    orig_args = list(fun.args)
+
+    if do_add:
+        functions = 0
+        for s in sep:
+            if not s.is_Function:
+                raise ValueError("Expecting functions as arguments")
+            functions += s
+            for j in range(0, len(s.args)):
+                subs_args.append(s.args[j])
+    else:
+        functions = 1
+        for s in sep:
+            if not s.is_Function:
+                raise ValueError("Expecting functions as arguments")
+            functions = functions * s
+            for j in range(0, len(s.args)):
+                subs_args.append(s.args[j])
+
+    # Check whether variables match
+    if len(subs_args) != len(orig_args):
+        raise ValueError("Variable counts do not match")
+    # Check for duplicate arguments like  [X(x), u(x, y)]
+    if len(subs_args) != len(set(subs_args)):
+        raise ValueError("Duplicate substitution arguments detected")
+    # Check whether the variables match
+    if set(orig_args) != set(subs_args):
+        raise ValueError("Arguments do not match")
+
+    # Substitute original function with separated...
+    result = eq.lhs.subs(fun, functions)
+
+    # Divide by terms when doing multiplicative separation
+    if not do_add:
+        eq = 0
+        for i in result.args:
+            eq += i/functions
+        result = eq
+
+    svar = subs_args[0]
+    dvar = subs_args[1:]
+    return _separate(result, svar, dvar)
+
+def pde_separate_add(eq, fun, sep):
     """
     Helper function for searching additive separable solutions.
 
@@ -27,41 +94,7 @@ def pde_separate_add(eqn, func, sep_list):
     [D(X(x), x)*exp(-X(x)), D(T(t), t)*exp(T(t))]
 
     """
-    if isinstance(eqn, Equality):
-        if eqn.rhs != 0:
-            return pde_separate_add(Eq(eqn.lhs - eqn.rhs), func, sep_list)
-    assert eqn.rhs == 0
-
-    functions = 0
-    subs_args = []
-    orig_args = list(func.args)
-
-    # FIXME: Check whether we are dealing with functions in func and sep_list
-    for sep in sep_list:
-        functions += sep
-        for j in range(0, len(sep.args)):
-            subs_args.append(sep.args[j])
-    # FIXME!
-    # Check whether first depends on only one variable
-
-    # Check whether variables match
-    if len(subs_args) != len(orig_args):
-        raise ValueError("Variable counts do not match")
-    # Check for duplicate arguments like  [X(x), u(x, y)]
-    if len(subs_args) != len(set(subs_args)):
-        raise ValueError("Duplicate substitution arguments detected")
-    # Check whether the variables match
-    if set(orig_args) != set(subs_args):
-        raise ValueError("Arguments do not match")
-
-    # Substitute...
-    result = eqn.lhs.subs(func, functions)
-
-    # Variable for which we separate
-
-    svar = subs_args[0]
-    dvar = subs_args[1:]
-    return _separate(result, svar, dvar)
+    return pde_separate(eq, fun, sep, strategy='add')
 
 def pde_separate_mul(eq, fun, sep):
     """
@@ -84,43 +117,7 @@ def pde_separate_mul(eq, fun, sep):
     [D(X(x), x, x)/X(x), D(Y(y), y, y)/Y(y)]
 
     """
-
-    if isinstance(eq, Equality):
-        if eq.rhs != 0:
-            return pde_separate_mul(Eq(eq.lhs - eq.rhs), fun, sep)
-    assert eq.rhs == 0
-
-    # Deal with function arguments
-    subs_args = []
-    orig_args = list(fun.args)
-
-    # FIXME: Check whether there are functions in fun and sep
-    functions = 1
-    for s in sep:
-        functions = functions * s
-        for j in range(0, len(s.args)):
-            subs_args.append(s.args[j])
-
-    # Check whether variables match
-    if len(subs_args) != len(orig_args):
-        raise ValueError("Variable counts do not match")
-    # Check for duplicate arguments like  [X(x), u(x, y)]
-    if len(subs_args) != len(set(subs_args)):
-        raise ValueError("Duplicate substitution arguments detected")
-    # Check whether the variables match
-    if set(orig_args) != set(subs_args):
-        raise ValueError("Arguments do not match")
-
-    # Substitute original function with separated...
-    eq = eq.lhs.subs(fun, functions)
-
-    result = 0
-    for i in eq.args:
-        result += i/functions
-
-    svar = subs_args[0]
-    dvar = subs_args[1:]
-    return _separate(result, svar, dvar)
+    return pde_separate(eq, fun, sep, strategy='mul')
 
 def _separate(eq, dep, others):
     """Separate expression into two parts based on dependencies of variables."""
