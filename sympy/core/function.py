@@ -812,8 +812,8 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
     all to false.
 
     basic is a generic keyword for methods that want to be expanded
-    automatically.  Currently, no class that is part of SymPy uses
-    basic.  If you want your class expand methods to run automatically and
+    automatically.  For example, Integral uses expand_basic to expand the
+    integrand.  If you want your class expand methods to run automatically and
     they don't fit one of the already automatic methods, wrap it around
     _eval_expand_basic.
 
@@ -824,7 +824,7 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
     method.
 
     If deep is set to True, things like arguments of functions are
-    recursively expanded.  User deep=False to only expand on the top
+    recursively expanded.  Use deep=False to only expand on the top
     level.
 
     >>> from sympy import *

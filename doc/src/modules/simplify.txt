@@ -1,0 +1,88 @@
+Simplify
+========
+
+.. currentmodule:: sympy.simplify.simplify
+
+simplify
+--------
+.. autofunction:: simplify
+
+collect
+-------
+.. autofunction:: collect
+
+separate
+--------
+.. autofunction:: separate
+
+together
+--------
+.. autofunction:: together
+
+radsimp
+-------
+.. autofunction:: radsimp
+
+ratsimp
+-------
+.. autofunction:: ratsimp
+
+fraction
+--------
+.. autofunction:: fraction
+
+trigsimp
+--------
+.. autofunction:: trigsimp
+
+powsimp
+-------
+.. autofunction:: powsimp
+
+combsimp
+--------
+.. autofunction:: combsimp
+
+hypersimp
+---------
+.. autofunction:: hypersimp
+
+hypersimilar
+------------
+.. autofunction:: hypersimilar
+
+nsimplify
+---------
+.. autofunction:: nsimplify
+
+Rewrite
+=======
+.. module:: sympy.simplify.rewrite
+
+cancel
+------
+.. autofunction:: cancel
+
+trim
+----
+.. autofunction:: trim
+
+apart
+-----
+.. autofunction:: apart
+
+Square Root Denest
+==================
+.. module:: sympy.simplify.sqrtdenest
+
+sqrtdenest
+----------
+.. autofunction:: sqrtdenest
+
+Common Subexpresion Elimination
+================================
+.. module:: sympy.simplify.cse_main
+
+cse
+---
+.. autofunction:: cse

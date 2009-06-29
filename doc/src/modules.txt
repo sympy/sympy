@@ -21,6 +21,7 @@ access any SymPy module, or use this contens:
    modules/functions.txt
    modules/geometry.txt
    modules/galgebra/GA/GAsympy.txt
+   modules/galgebra/latex_ex/latex_ex.txt
    modules/integrals.txt
    modules/logic.txt
    modules/matrices.txt
@@ -29,6 +30,8 @@ access any SymPy module, or use this contens:
    modules/polynomials.txt
    modules/printing.txt
    modules/plotting.txt
+   modules/series.txt
+   modules/simplify.txt
    modules/statistics.txt
    modules/concrete.txt
    modules/solvers.txt

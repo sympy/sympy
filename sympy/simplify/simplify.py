@@ -453,10 +453,9 @@ def collect(expr, syms, evaluate=True, exact=False):
        True
 
 
-    Notes
-    =====
-        - arguments are expected to be in expanded form, so you might have to call
-           .expand() prior to calling this function.
+    == Notes ==
+        - arguments are expected to be in expanded form, so you might have tos
+          call expand() prior to calling this function.
     """
     def make_expression(terms):
         product = []
@@ -677,17 +676,14 @@ def collect(expr, syms, evaluate=True, exact=False):
 
 def ratsimp(expr):
     """
-    Usage
-    =====
+    == Usage ==
         ratsimp(expr) -> joins two rational expressions and returns the simples form
 
-    Notes
-    =====
+    == Notes ==
         Currently can simplify only simple expressions, for this to be really usefull
         multivariate polynomial algorithms are needed
 
-    Examples
-    ========
+    == Examples ==
         >>> from sympy import *
         >>> x = Symbol('x')
         >>> y = Symbol('y')
@@ -734,20 +730,19 @@ def ratsimp(expr):
 
 def trigsimp(expr, deep=False, recursive=False):
     """
-    Usage
-    =====
-        trigsimp(expr) -> reduces expression by using known trig identities
+    == Usage ==
+    trigsimp(expr) -> reduces expression by using known trig identities
 
-    Notes
-    =====
+    == Notes ==
 
-    deep ........ apply trigsimp inside functions
-    recursive ... use common subexpression elimination (cse()) and apply
-                  trigsimp recursively (recursively==True is quite expensive
-                  operation if the expression is large)
+    deep:
+    - Apply trigsimp inside functions
+    recursive:
+    - Use common subexpression elimination (cse()) and apply
+    trigsimp recursively (recursively==True is quite expensive
+    operation if the expression is large)
 
-    Examples
-    ========
+    == Examples ==
         >>> from sympy import *
         >>> x = Symbol('x')
         >>> y = Symbol('y')
@@ -797,18 +792,15 @@ def trigsimp_nonrecursive(expr, deep=False):
     """
     A nonrecursive trig simplifier, used from trigsimp.
 
-    Usage
-    =====
+    == Usage ==
         trigsimp_nonrecursive(expr) -> reduces expression by using known trig
                                        identities
 
-    Notes
-    =====
+    == Notes ==
 
     deep ........ apply trigsimp inside functions
 
-    Examples
-    ========
+    == Examples ==
         >>> from sympy import *
         >>> x = Symbol('x')
         >>> y = Symbol('y')
@@ -893,7 +885,6 @@ def radsimp(expr):
     Rationalize the denominator.
 
     Examples:
-    =========
         >>> from sympy import *
         >>> radsimp(1/(2+sqrt(2)))
         1 - 2**(1/2)/2
@@ -920,28 +911,25 @@ def radsimp(expr):
 
 def powsimp(expr, deep=False, combine='all'):
     """
-    Usage
-    =====
+    == Usage ==
         Reduces expression by combining powers with similar bases and exponents.
 
-    Notes
-    =====
+    == Notes ==
         If deep is True then powsimp() will also simplify arguments of
         functions. By default deep is set to False.
         You can make powsimp() only combine bases or only combine exponents by
         changing combine='base' or combine='exp'.  By default, combine='all',
         which does both.  combine='base' will only combine
-         a   a          a                          2x      x
-        x * y  =>  (x*y)   as well as things like 2   =>  4
+        |  a   a          a                          2x      x
+        | x * y  =>  (x*y)   as well as things like 2   =>  4
         and combine='exp' will only combine
-         a   b      (a + b)
-        x * x  =>  x
+        |  a   b      (a + b)
+        | x * x  =>  x
 
         combine='exp' will strictly only combine exponents in the way that used
         to be automatic.  Also use deep=True if you need the old behavior.
 
-    Examples
-    ========
+    == Examples ==
         >>> from sympy import *
         >>> x,n = map(Symbol, 'xn')
         >>> e = x**n * (x*n)**(-n) * n
@@ -1163,7 +1151,7 @@ def simplify(expr):
        this function tries can change in the future versions of SymPy. If
        your algorithm relies on "simplification" (whatever it is), try to
        determine what you need exactly  -  is it powsimp()? radsimp()?
-       together()?, combine()?, or something else? And use this particular
+       together()?, logcombine()?, or something else? And use this particular
        function directly, because those are well defined and thus your algorithm
        will be robust.
 

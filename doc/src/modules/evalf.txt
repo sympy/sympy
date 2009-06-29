@@ -1,3 +1,5 @@
+.. _evalf-label:
+
 Numerical evaluation
 ====================
 
