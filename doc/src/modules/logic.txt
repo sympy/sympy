@@ -38,10 +38,21 @@ Like most types in SymPy, Boolean expressions inherit from sympy.core.Basic:
     >>> (x | y).atoms()
     set(x, y)
 
+Other boolean functions
+-----------------------
+
+.. automethod:: sympy.logic.boolalg.Xor
+
+.. automethod:: sympy.logic.boolalg.Nand
+
+.. automethod:: sympy.logic.boolalg.Nor
+
+.. automethod:: sympy.logic.boolalg.Equivalent
+
 Inference
 ---------
 
-.. module sympy.logic.inference
+.. module: sympy.logic.inference
 
 This module implements some inference routines in propositional logic.
 
@@ -63,6 +74,6 @@ any value of x would do.
 As you see, when a sentence is satisfiable, it returns a model that makes that
 sentence True. If it is not satisfiable it will return False
 
-.. automethod: sympy.logic.inference.satisfiable
+.. automethod:: sympy.logic.inference.satisfiable
 
 .. TODO: write about CNF file format
