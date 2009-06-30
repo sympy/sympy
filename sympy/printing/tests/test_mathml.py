@@ -161,91 +161,99 @@ def test_c2p():
         pass
 
 def test_symbol():
-    mml_0 = mp._print(Symbol("x"))
-    assert mml_0.nodeName == 'ci'
-    assert mml_0.childNodes[0].nodeValue == 'x'
+    mml = mp._print(Symbol("x"))
+    assert mml.nodeName == 'ci'
+    assert mml.childNodes[0].nodeValue == 'x'
+    del mml
 
-    mml_1 = mp._print(Symbol("x^2"))
-    assert mml_1.nodeName == 'ci'
-    assert mml_1.childNodes[0].nodeName == 'mml:msup'
-    assert mml_1.childNodes[0].childNodes[0].nodeName == 'mml:mi'
-    assert mml_1.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
-    assert mml_1.childNodes[0].childNodes[1].nodeName == 'mml:mi'
-    assert mml_1.childNodes[0].childNodes[1].childNodes[0].nodeValue == '2'
+    mml = mp._print(Symbol("x^2"))
+    assert mml.nodeName == 'ci'
+    assert mml.childNodes[0].nodeName == 'mml:msup'
+    assert mml.childNodes[0].childNodes[0].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
+    assert mml.childNodes[0].childNodes[1].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].nodeValue == '2'
+    del mml
 
-    mml_1 = mp._print(Symbol("x__2"))
-    assert mml_1.nodeName == 'ci'
-    assert mml_1.childNodes[0].nodeName == 'mml:msup'
-    assert mml_1.childNodes[0].childNodes[0].nodeName == 'mml:mi'
-    assert mml_1.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
-    assert mml_1.childNodes[0].childNodes[1].nodeName == 'mml:mi'
-    assert mml_1.childNodes[0].childNodes[1].childNodes[0].nodeValue == '2'
+    mml = mp._print(Symbol("x__2"))
+    assert mml.nodeName == 'ci'
+    assert mml.childNodes[0].nodeName == 'mml:msup'
+    assert mml.childNodes[0].childNodes[0].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
+    assert mml.childNodes[0].childNodes[1].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].nodeValue == '2'
+    del mml
 
-    mml_2 = mp._print(Symbol("x_2"))
-    assert mml_2.nodeName == 'ci'
-    assert mml_2.childNodes[0].nodeName == 'mml:msub'
-    assert mml_2.childNodes[0].childNodes[0].nodeName == 'mml:mi'
-    assert mml_2.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
-    assert mml_2.childNodes[0].childNodes[1].nodeName == 'mml:mi'
-    assert mml_2.childNodes[0].childNodes[1].childNodes[0].nodeValue == '2'
+    mml = mp._print(Symbol("x_2"))
+    assert mml.nodeName == 'ci'
+    assert mml.childNodes[0].nodeName == 'mml:msub'
+    assert mml.childNodes[0].childNodes[0].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
+    assert mml.childNodes[0].childNodes[1].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].nodeValue == '2'
+    del mml
 
-    mml_3 = mp._print(Symbol("x^3_2"))
-    assert mml_3.nodeName == 'ci'
-    assert mml_3.childNodes[0].nodeName == 'mml:msubsup'
-    assert mml_3.childNodes[0].childNodes[0].nodeName == 'mml:mi'
-    assert mml_3.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
-    assert mml_3.childNodes[0].childNodes[1].nodeName == 'mml:mi'
-    assert mml_3.childNodes[0].childNodes[1].childNodes[0].nodeValue == '2'
-    assert mml_3.childNodes[0].childNodes[2].nodeName == 'mml:mi'
-    assert mml_3.childNodes[0].childNodes[2].childNodes[0].nodeValue == '3'
+    mml = mp._print(Symbol("x^3_2"))
+    assert mml.nodeName == 'ci'
+    assert mml.childNodes[0].nodeName == 'mml:msubsup'
+    assert mml.childNodes[0].childNodes[0].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
+    assert mml.childNodes[0].childNodes[1].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].nodeValue == '2'
+    assert mml.childNodes[0].childNodes[2].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[2].childNodes[0].nodeValue == '3'
+    del mml
 
-    mml_3 = mp._print(Symbol("x__3_2"))
-    assert mml_3.nodeName == 'ci'
-    assert mml_3.childNodes[0].nodeName == 'mml:msubsup'
-    assert mml_3.childNodes[0].childNodes[0].nodeName == 'mml:mi'
-    assert mml_3.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
-    assert mml_3.childNodes[0].childNodes[1].nodeName == 'mml:mi'
-    assert mml_3.childNodes[0].childNodes[1].childNodes[0].nodeValue == '2'
-    assert mml_3.childNodes[0].childNodes[2].nodeName == 'mml:mi'
-    assert mml_3.childNodes[0].childNodes[2].childNodes[0].nodeValue == '3'
+    mml = mp._print(Symbol("x__3_2"))
+    assert mml.nodeName == 'ci'
+    assert mml.childNodes[0].nodeName == 'mml:msubsup'
+    assert mml.childNodes[0].childNodes[0].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
+    assert mml.childNodes[0].childNodes[1].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].nodeValue == '2'
+    assert mml.childNodes[0].childNodes[2].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[2].childNodes[0].nodeValue == '3'
+    del mml
 
-    mml_4 = mp._print(Symbol("x_2_a"))
-    assert mml_4.nodeName == 'ci'
-    assert mml_4.childNodes[0].nodeName == 'mml:msub'
-    assert mml_4.childNodes[0].childNodes[0].nodeName == 'mml:mi'
-    assert mml_4.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
-    assert mml_4.childNodes[0].childNodes[1].nodeName == 'mml:mrow'
-    assert mml_4.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
-    assert mml_4.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
-    assert mml_4.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
-    assert mml_4.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ','
-    assert mml_4.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
-    assert mml_4.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
+    mml = mp._print(Symbol("x_2_a"))
+    assert mml.nodeName == 'ci'
+    assert mml.childNodes[0].nodeName == 'mml:msub'
+    assert mml.childNodes[0].childNodes[0].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
+    assert mml.childNodes[0].childNodes[1].nodeName == 'mml:mrow'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
+    assert mml.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
+    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ','
+    assert mml.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
+    del mml
 
-    mml_5 = mp._print(Symbol("x^2^a"))
-    assert mml_5.nodeName == 'ci'
-    assert mml_5.childNodes[0].nodeName == 'mml:msup'
-    assert mml_5.childNodes[0].childNodes[0].nodeName == 'mml:mi'
-    assert mml_5.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
-    assert mml_5.childNodes[0].childNodes[1].nodeName == 'mml:mrow'
-    assert mml_5.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
-    assert mml_5.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
-    assert mml_5.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
-    assert mml_5.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ','
-    assert mml_5.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
-    assert mml_5.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
+    mml = mp._print(Symbol("x^2^a"))
+    assert mml.nodeName == 'ci'
+    assert mml.childNodes[0].nodeName == 'mml:msup'
+    assert mml.childNodes[0].childNodes[0].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
+    assert mml.childNodes[0].childNodes[1].nodeName == 'mml:mrow'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
+    assert mml.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
+    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ','
+    assert mml.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
+    del mml
 
-    mml_5 = mp._print(Symbol("x__2__a"))
-    assert mml_5.nodeName == 'ci'
-    assert mml_5.childNodes[0].nodeName == 'mml:msup'
-    assert mml_5.childNodes[0].childNodes[0].nodeName == 'mml:mi'
-    assert mml_5.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
-    assert mml_5.childNodes[0].childNodes[1].nodeName == 'mml:mrow'
-    assert mml_5.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
-    assert mml_5.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
-    assert mml_5.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
-    assert mml_5.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ','
-    assert mml_5.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
-    assert mml_5.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
-
+    mml = mp._print(Symbol("x__2__a"))
+    assert mml.nodeName == 'ci'
+    assert mml.childNodes[0].nodeName == 'mml:msup'
+    assert mml.childNodes[0].childNodes[0].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[0].childNodes[0].nodeValue == 'x'
+    assert mml.childNodes[0].childNodes[1].nodeName == 'mml:mrow'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
+    assert mml.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
+    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ','
+    assert mml.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
+    assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
+    del mml
 
