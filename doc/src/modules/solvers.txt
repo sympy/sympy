@@ -24,10 +24,18 @@ is the symbol that we want to solve the equation for.
 .. automethod:: sympy.solvers.solve
 
 
-Differential equations
------------------------
+Ordinary Differential equations (ODEs)
+--------------------------------------
 
 Use dsolve() to solve differential equations.
 
 .. automethod:: sympy.solvers.dsolve
 
+Partial Differential Equations (PDEs)
+-------------------------------------
+
+.. automethod:: sympy.solvers.pde.pde_separate
+
+.. automethod:: sympy.solvers.pde.pde_separate_add
+
+.. automethod:: sympy.solvers.pde.pde_separate_mul

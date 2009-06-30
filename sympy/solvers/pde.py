@@ -1,5 +1,7 @@
-"""This module contains various helpers for working with Partial Differential
-Equations (PDEs)
+"""
+Analytical methods for solving Partial Differential Equations
+Currently implemented methods:
+    - separation of variables - pde_separate
 
 """
 
@@ -7,11 +9,20 @@ from sympy import Derivative, diff, Eq, Equality, Mul
 from sympy.simplify import simplify
 
 def pde_separate(eq, fun, sep, strategy='mul'):
-    """Separate variable in Partial Differential equations.
-    You can choose between two strategies:
+    """Separate variables in partial differential equation either by additive
+    or multiplicative separation approach. It tries to rewrite an equation so
+    that one of the specified variables occurs on a different side of the
+    equation than the others.
 
-      * additive - F(x, y, z) = X(x) + Y(y) + Z(z) (strategy='add')
-      * multiplicative - F(x, y, z) = X(x) * Y(y) * Z(z) (strategy='mul')
+    :param eq: Partial differential equation
+
+    :param fun: Original function F(x, y, z)
+
+    :param sep: List of separated functions [X(x), u(y, z)]
+
+    :param strategy: Separation strategy. You can choose between additive
+        separation ('add') and multiplicative separation ('mul') which is
+        default.
     """
 
 
@@ -81,9 +92,9 @@ def pde_separate_add(eq, fun, sep):
     variable w, we look for the product of two functions depending on different
     arguments:
 
-    w(x,t) = f(x) + g(t)
+    `w(x, y, z) = X(x) + y(y, z)`
 
-    Examples
+    Examples:
 
     >>> from sympy import *
     >>> x, t = symbols('xt')
@@ -104,9 +115,9 @@ def pde_separate_mul(eq, fun, sep):
     variable w, we look for the product of two functions depending on different
     arguments:
 
-    w(x,t) = f(x)*g(t)
+    `w(x, y, z) = X(x)*u(y, z)`
 
-    Examples
+    Examples:
 
     >>> from sympy import *
     >>> x, y = symbols('xy')
