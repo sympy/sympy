@@ -55,6 +55,7 @@ TERMINAL_EXAMPLES = [
     "beginner.substitution",
     "beginner.expansion",
     "intermediate.differential_equations",
+    "intermediate.partial_differential_eqs",
     "intermediate.trees",
     "intermediate.vandermonde",
     "advanced.fem",
