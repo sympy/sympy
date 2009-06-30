@@ -183,13 +183,17 @@ def test_latex_issue1477():
     assert latex(Symbol("x_a_1")) == r"$x_{a,1}$"
     assert latex(Symbol("x_1_a")) == r"$x_{1,a}$"
     assert latex(Symbol("x_1^aa")) == r"$x^{aa}_{1}$"
+    assert latex(Symbol("x_1__aa")) == r"$x^{aa}_{1}$"
     assert latex(Symbol("x_11^a")) == r"$x^{a}_{11}$"
+    assert latex(Symbol("x_11__a")) == r"$x^{a}_{11}$"
     assert latex(Symbol("x_a_a_a_a")) == r"$x_{a,a,a,a}$"
     assert latex(Symbol("x_a_a^a^a")) == r"$x^{a,a}_{a,a}$"
+    assert latex(Symbol("x_a_a__a__a")) == r"$x^{a,a}_{a,a}$"
     assert latex(Symbol("alpha_11")) == r"$\alpha_{11}$"
     assert latex(Symbol("alpha_11_11")) == r"$\alpha_{11,11}$"
     assert latex(Symbol("alpha_alpha")) == r"$\alpha_{\alpha}$"
     assert latex(Symbol("alpha^aleph")) == r"$\alpha^{\aleph}$"
+    assert latex(Symbol("alpha__aleph")) == r"$\alpha^{\aleph}$"
 
 
 def test_mainvar():
