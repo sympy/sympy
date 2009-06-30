@@ -1,5 +1,5 @@
 from sympy import (Symbol, Sum, oo, Real, Rational, sum, pi, cos, zeta,
-    Catalan, log, factorial, sqrt, E, sympify, binomial, EulerGamma, Function)
+Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma, Function)
 from sympy.concrete.summations import getab
 from sympy.utilities.pytest import XFAIL
 
@@ -164,3 +164,6 @@ def test_telescopic_sums():
     assert Sum(f(k)-f(k+2),(k,m,n)).doit() == -f(1+n) - f(2+n) + f(m) + f(1+m)
     assert Sum(cos(k)-cos(k+3),(k,1,n)).doit() == -cos(1 + n) - cos(2 + n) - \
                                            cos(3 + n) + cos(1) + cos(2) + cos(3)
+
+def test_Sum_limit_subs():
+    assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b,2)

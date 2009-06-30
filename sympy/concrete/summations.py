@@ -152,7 +152,9 @@ class Sum(Basic):
         return s + iterm, abs(term)
 
     def _eval_subs(self, old, new):
-        return Sum(self.args[0].subs(old, new), *self.args[1])
+        newargs = (self.args[1][0][0], self.args[1][0][1].subs(old,new),
+                   self.args[1][0][2].subs(old,new))
+        return Sum(self.args[0].subs(old, new), newargs)
 
 
 def sum(*args, **kwargs):
