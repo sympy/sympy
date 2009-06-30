@@ -201,6 +201,8 @@ def test_powers_Integer():
     assert S(-16) ** Rational(1, 4) == 2 * (-1)**Rational(1,4)
     assert S(9)   ** Rational(3, 2) == 27
     assert S(-9)  ** Rational(3, 2) == -27*I
+    assert S(27)  ** Rational(2, 3) == 9
+    assert S(-27) ** Rational(2, 3) == 9 * (S(-1) ** Rational(2, 3))
 
     # not exact roots
     assert (-3) ** (S(1)/2)  == sqrt(-3)
@@ -210,6 +212,9 @@ def test_powers_Integer():
     assert (-3) ** (S(7)/2)  == - I * 27 * sqrt(3)
     assert (2)  ** (S(3)/2)  == 2 * sqrt(2)
     assert (2)  ** (S(-3)/2) == sqrt(2) / 4
+    assert (81) ** (S(2)/3)  == 9 * (S(3) ** (S(2)/3))
+    assert (-81) ** (S(2)/3)  == 9 * (S(-3) ** (S(2)/3))
+
 
     # join roots
     assert sqrt(6) + sqrt(24) == 3*sqrt(6)
