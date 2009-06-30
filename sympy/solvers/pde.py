@@ -7,6 +7,7 @@ Currently implemented methods:
 
 from sympy import Derivative, diff, Eq, Equality, Mul
 from sympy.simplify import simplify
+import operator
 
 def pde_separate(eq, fun, sep, strategy='mul'):
     """Separate variables in partial differential equation either by additive
@@ -40,25 +41,16 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     assert eq.rhs == 0
 
     # Handle arguments
-    subs_args = []
     orig_args = list(fun.args)
+    subs_args = []
+    for s in sep:
+        for j in range(0, len(s.args)):
+            subs_args.append(s.args[j])
 
     if do_add:
-        functions = 0
-        for s in sep:
-            if not s.is_Function:
-                raise ValueError("Expecting functions as arguments")
-            functions += s
-            for j in range(0, len(s.args)):
-                subs_args.append(s.args[j])
+        functions = reduce(operator.add, sep)
     else:
-        functions = 1
-        for s in sep:
-            if not s.is_Function:
-                raise ValueError("Expecting functions as arguments")
-            functions = functions * s
-            for j in range(0, len(s.args)):
-                subs_args.append(s.args[j])
+        functions = reduce(operator.mul, sep)
 
     # Check whether variables match
     if len(subs_args) != len(orig_args):
@@ -181,9 +173,7 @@ def _separate(eq, dep, others):
         div.add(sep)
         rhs -= term.expand()
     # Do the division
-    fulldiv = 0
-    for d in div:
-        fulldiv += d
+    fulldiv = reduce(operator.add, div)
     lhs = simplify(lhs/fulldiv).expand()
     rhs = simplify(rhs/fulldiv).expand()
     # ...and check whether we were successful :)
