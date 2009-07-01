@@ -121,7 +121,8 @@ def doctest(*paths, **kwargs):
         t.add_paths(["sympy"])
     dtest = t.test()
 
-    if len(paths) == 0:
+    # testing sphinx doc is disabled until #1502 is fixed:
+    if 0 and len(paths) == 0:
         # test documentation under doc/src/ only if we are running the full
         # test suite:
         excluded = convert_to_native_paths(['doc/src/modules/plotting.txt'])
