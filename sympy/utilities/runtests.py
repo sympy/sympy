@@ -150,7 +150,7 @@ class SymPyDocTestRunner(pdoctest.DocTestRunner):
         is the number of examples that failed.  The examples are run
         in the namespace `test.globs`.
         """
-        if SKIP: return
+        if self.optionflags & SKIP: return
         return pdoctest.DocTestRunner.run(self, test, \
                      compileflags, out, clear_globs)
 
