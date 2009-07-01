@@ -337,15 +337,29 @@ class Basic(AssumeMeths):
     # XXX better name?
     @property
     def assumptions0(self):
-        """return object `type` assumptions
+        """
+        Return object `type` assumptions.
 
-           For example:
+        For example:
 
-             Symbol('x', real=True)
-             Symbol('x', integer=True)
+          Symbol('x', real=True)
+          Symbol('x', integer=True)
 
-          are different objects, and besides Python type (Symbol), initial
-          assumptions, are too forming their typeinfo.
+        are different objects, and besides Python type (Symbol), initial
+        assumptions, are too forming their typeinfo.
+
+        Example:
+
+        >>> from sympy import Symbol
+        >>> x = Symbol("x")
+        >>> x.assumptions0
+        {}
+        >>> x = Symbol("x", positive=True)
+        >>> x.assumptions0
+        {'commutative': True, 'complex': True, 'imaginary': False,
+        'negative': False, 'nonnegative': True, 'nonpositive': False,
+        'nonzero': True, 'positive': True, 'real': True, 'zero': False}
+
         """
 
         cls = type(self)
@@ -361,15 +375,21 @@ class Basic(AssumeMeths):
 
 
     def new(self, *args):
-        """create new 'similar' object
+        """
+        Create new 'similar' object.
 
-           this is conceptually equivalent to:
+        this is conceptually equivalent to:
 
-             type(self) (*args)
+          type(self) (*args)
 
-           but takes type assumptions into account.
+        but takes type assumptions into account. See also: assumptions0
 
-           see: assumptions0
+        Example:
+
+        >>> x = Symbol("x")
+        >>> x.new("x")
+        x
+
         """
         obj = type(self) (*args, **self.assumptions0)
         return obj
@@ -462,10 +482,23 @@ class Basic(AssumeMeths):
 
     def compare(self, other):
         """
-        Return -1,0,1 if the object is smaller, equal, or greater than other
-        (not always in mathematical sense).
-        If the object is of different type from other then their classes
-        are ordered according to sorted_classes list.
+        Return -1,0,1 if the object is smaller, equal, or greater than other.
+
+        Not always in mathematical sense. If the object is of different type
+        from other then their classes are ordered according to sorted_classes
+        list.
+
+        Example:
+
+        >>> from sympy import *
+        >>> x, y = symbols("x y")
+        >>> x.compare(y)
+        -1
+        >>> x.compare(x)
+        0
+        >>> y.compare(x)
+        1
+
         """
         # all redefinitions of __cmp__ method should start with the
         # following three lines:
@@ -522,6 +555,16 @@ class Basic(AssumeMeths):
         expression and returns the "sane" ordering such as:
 
         1 < x < x**2 < x**3 < O(x**4) etc.
+
+        Example:
+
+        >>> x = Symbol("x")
+        >>> Basic.compare_pretty(x, x**2)
+        -1
+        >>> Basic.compare_pretty(x**2, x**2)
+        0
+        >>> Basic.compare_pretty(x**3, x**2)
+        1
 
         """
         try:
@@ -805,6 +848,19 @@ class Basic(AssumeMeths):
 
             >> x == x.func(*x.args)
 
+        Example:
+
+        >>> x = Symbol("x")
+        >>> a = 2*x
+        >>> a.func
+        <class 'sympy.core.mul.Mul'>
+        >>> a.args
+        (2, x)
+        >>> a.func(*a.args)
+        2*x
+        >>> a == a.func(*a.args)
+        True
+
         """
         return self.__class__
 
@@ -837,7 +893,19 @@ class Basic(AssumeMeths):
         return self._args[:]
 
     def iter_basic_args(self):
-        """Iterates arguments of 'self' with are Basic instances. """
+        """
+        Iterates arguments of 'self'.
+
+        Example:
+
+        >>> x = Symbol("x")
+        >>> a = 2*x
+        >>> a.iter_basic_args()
+        <tupleiterator object at 0x...>
+        >>> list(a.iter_basic_args())
+        [2, x]
+
+        """
         return iter(self.args)
 
     def is_rational_function(self, *syms):
@@ -1144,6 +1212,14 @@ class Basic(AssumeMeths):
     def has(self, *patterns):
         """
         Return True if self has any of the patterns.
+
+        Example:
+        >>> x = Symbol("x")
+        >>> (2*x).has(x)
+        True
+        >>> (2*x/x).has(x)
+        False
+
         """
         if len(patterns)>1:
             for p in patterns:
@@ -1334,6 +1410,24 @@ class Basic(AssumeMeths):
         with pattern. Otherwise return a dictionary such that
 
           pattern.subs(self.match(pattern)) == self
+
+        Example:
+
+        >>> from sympy import symbols
+        >>> x, y = symbols("x y")
+        >>> p = Wild("p")
+        >>> q = Wild("q")
+        >>> r = Wild("r")
+        >>> e = (x+y)**(x+y)
+        >>> e.match(p**p)
+        {p_: x + y}
+        >>> e.match(p**q)
+        {p_: x + y, q_: x + y}
+        >>> e = (2*x)**2
+        >>> e.match(p*q**r)
+        {p_: 4, q_: x, r_: 2}
+        >>> (p*q**r).subs(e.match(p*q**r))
+        4*x**2
 
         """
         pattern = sympify(pattern)
