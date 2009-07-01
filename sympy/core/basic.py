@@ -345,8 +345,8 @@ class Basic(AssumeMeths):
           Symbol('x', real=True)
           Symbol('x', integer=True)
 
-        are different objects, and besides Python type (Symbol), initial
-        assumptions, are too forming their typeinfo.
+        are different objects. In other words, besides Python type (Symbol in
+        this case), the initial assumptions are also forming their typeinfo.
 
         Example:
 
@@ -484,9 +484,9 @@ class Basic(AssumeMeths):
         """
         Return -1,0,1 if the object is smaller, equal, or greater than other.
 
-        Not always in mathematical sense. If the object is of different type
-        from other then their classes are ordered according to sorted_classes
-        list.
+        Not in the mathematical sense. If the object is of a different type
+        from the "other" then their classes are ordered according to
+        the sorted_classes list.
 
         Example:
 
