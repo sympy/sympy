@@ -20,8 +20,6 @@ from glob import glob
 from timeit import default_timer as clock
 import doctest as pdoctest # avoid clashing with our doctest() function
 
-SKIP = pdoctest.register_optionflag('SKIP') # for python2.4 compatility
-
 def isgeneratorfunction(object):
     """
     Return true if the object is a user-defined generator function.
@@ -37,6 +35,16 @@ def isgeneratorfunction(object):
         object.func_code.co_flags & CO_GENERATOR:
         return True
     return False
+
+def setup_pprint():
+    from sympy import pprint_use_unicode
+    # force pprint to be in ascii mode in doctests
+    pprint_use_unicode(False)
+
+    # hook our nice, hash-stable strprinter
+    from sympy.interactive import init_printing
+    from sympy.printing import sstrrepr
+    init_printing(sstrrepr)
 
 def convert_to_native_paths(lst):
     """
@@ -121,41 +129,21 @@ def doctest(*paths, **kwargs):
         t.add_paths(["sympy"])
     dtest = t.test()
 
-    # testing sphinx doc is disabled until #1502 is fixed:
-    if 0 and len(paths) == 0:
+    if len(paths) == 0 and sys.version_info[:2] > (2,4):
         # test documentation under doc/src/ only if we are running the full
-        # test suite:
+        # test suite and this is python2.5 or newer:
         excluded = convert_to_native_paths(['doc/src/modules/plotting.txt'])
         doc_globs = convert_to_native_paths(['doc/src/*.txt',
                 'doc/src/modules/*.txt'])
         doc_files = sum([glob(x) for x in doc_globs], [])
+        setup_pprint()
         for ex in excluded:
             doc_files.remove(ex)
         for doc_file in doc_files:
-            runner = SymPyDocTestRunner(verbose=None, optionflags=0)
-            parser = pdoctest.DocTestParser()
-            text = open(doc_file).read()
-            test = parser.get_doctest(text, {}, doc_file, doc_file, 0)
-            runner.run(test)
+            out = pdoctest.testfile(doc_file, module_relative=False)
             print "Testing ", doc_file
-            print "Failed %s, tested %s" % (runner.failures, runner.tries)
+            print "Failed %s, tested %s" % out
     return dtest
-
-class SymPyDocTestRunner(pdoctest.DocTestRunner):
-
-    def run(self, test, compileflags=None, out=None, clear_globs=True):
-        """
-        Run the examples in `test`.  Write the outcome of each example
-        with one of the `DocTestRunner.report_*` methods, using the
-        writer function `out`.  `compileflags` is the set of compiler
-        flags that should be used to execute examples.  Return a tuple
-        `(f, t)`, where `t` is the number of examples tried, and `f`
-        is the number of examples that failed.  The examples are run
-        in the namespace `test.globs`.
-        """
-        if self.optionflags & SKIP: return
-        return pdoctest.DocTestRunner.run(self, test, \
-                     compileflags, out, clear_globs)
 
 class SymPyTests(object):
 
@@ -344,15 +332,6 @@ class SymPyDocTests(object):
         return self._reporter.finish()
 
     def test_file(self, filename):
-        def setup_pprint():
-            from sympy import pprint_use_unicode
-            # force pprint to be in ascii mode in doctests
-            pprint_use_unicode(False)
-
-            # hook our nice, hash-stable strprinter
-            from sympy.interactive import init_printing
-            from sympy.printing import sstrrepr
-            init_printing(sstrrepr)
 
         import doctest
         import unittest
