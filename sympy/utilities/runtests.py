@@ -352,7 +352,8 @@ class SymPyDocTests(object):
         self._reporter.entering_filename(filename, len(tests))
         for test in tests:
             assert len(test.examples) != 0
-            runner = doctest.DocTestRunner()
+            runner = doctest.DocTestRunner(optionflags=doctest.ELLIPSIS | \
+                    doctest.NORMALIZE_WHITESPACE)
             old = sys.stdout
             new = StringIO()
             sys.stdout = new
