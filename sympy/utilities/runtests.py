@@ -121,21 +121,23 @@ def doctest(*paths, **kwargs):
         t.add_paths(["sympy"])
     dtest = t.test()
 
-    # test documentation under doc/src/
-    excluded = convert_to_native_paths(['doc/src/modules/plotting.txt'])
-    doc_globs = convert_to_native_paths(['doc/src/*.txt',
-            'doc/src/modules/*.txt'])
-    doc_files = sum([glob(x) for x in doc_globs], [])
-    for ex in excluded:
-        doc_files.remove(ex)
-    for doc_file in doc_files:
-        runner = SymPyDocTestRunner(verbose=None, optionflags=0)
-        parser = pdoctest.DocTestParser()
-        text = open(doc_file).read()
-        test = parser.get_doctest(text, {}, doc_file, doc_file, 0)
-        runner.run(test)
-        print "Testing ", doc_file
-        print "Failed %s, tested %s" % (runner.failures, runner.tries)
+    if len(paths) == 0:
+        # test documentation under doc/src/ only if we are running the full
+        # test suite:
+        excluded = convert_to_native_paths(['doc/src/modules/plotting.txt'])
+        doc_globs = convert_to_native_paths(['doc/src/*.txt',
+                'doc/src/modules/*.txt'])
+        doc_files = sum([glob(x) for x in doc_globs], [])
+        for ex in excluded:
+            doc_files.remove(ex)
+        for doc_file in doc_files:
+            runner = SymPyDocTestRunner(verbose=None, optionflags=0)
+            parser = pdoctest.DocTestParser()
+            text = open(doc_file).read()
+            test = parser.get_doctest(text, {}, doc_file, doc_file, 0)
+            runner.run(test)
+            print "Testing ", doc_file
+            print "Failed %s, tested %s" % (runner.failures, runner.tries)
     return dtest
 
 class SymPyDocTestRunner(pdoctest.DocTestRunner):
