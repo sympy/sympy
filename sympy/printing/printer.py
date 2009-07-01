@@ -105,6 +105,71 @@ class Printer(object):
        This callable will be called to obtain printing result as a last resort,
        that is when no appropriate print method was found for an expression.
 
+    Example of overloading StrPrinter::
+
+        from sympy import Basic, Function, Symbol
+        from sympy.printing.str import StrPrinter
+
+        class CustomStrPrinter(StrPrinter):
+            \"\"\"
+            Example of how to customize the StrPrinter for both a Sympy class and a
+            user defined class subclassed from the Sympy Basic class.
+            \"\"\"
+
+            def _print_Derivative(self, expr):
+                \"\"\"
+                Custom printing of the Sympy Derivative class.
+
+                Instead of:
+
+                D(x(t), t) or D(x(t), t, t)
+
+                We will print:
+
+                x'     or     x''
+
+                In this example, expr.args == (x(t), t), and expr.args[0] == x(t), and
+                expr.args[0].func == x
+                \"\"\"
+                return str(expr.args[0].func) + "'"*len(expr.args[1:])
+
+            def _print_MyClass(self, expr):
+                \"\"\"
+                Print the characters of MyClass.s alternatively lower case and upper
+                case
+                \"\"\"
+                s = ""
+                i = 0
+                for char in expr.s:
+                    if i % 2 == 0:
+                        s += char.lower()
+                    else:
+                        s += char.upper()
+                    i += 1
+                return s
+
+        # Overide the __str__ method of to use CustromStrPrinter
+        Basic.__str__ = lambda self: CustomStrPrinter().doprint(self)
+        # Demonstration of CustomStrPrinter:
+        t = Symbol('t')
+        x = Function('x')(t)
+        dxdt = x.diff(t)            # dxdt is a Derivative instance
+        d2xdt2 = dxdt.diff(t)       # dxdt2 is a Derivative instance
+        ex = MyClass('I like both lowercase and upper case')
+
+        print dxdt
+        print d2xdt2
+        print ex
+
+    The output of the above code is::
+
+        x'
+        x''
+        i lIkE BoTh lOwErCaSe aNd uPpEr cAsE
+
+    By overriding Basic.__str__, we can customize the printing of anything that
+    is subclassed from Basic.
+
     """
     def __init__(self):
         self._str = str
