@@ -5,6 +5,24 @@ from sympy.core.power import integer_nthroot
 from sympy.core.numbers import igcd, ilcm, igcdex
 from sympy.utilities.pytest import raises
 
+def test_mod():
+    x = Rational(1, 2)
+    y = Rational(3, 4)
+    z = Rational(5, 18043)
+    assert x % x == 0
+    assert x % y == 1/S(2)
+    assert x % z == 3/S(36086)
+    assert y % x == 1/S(4)
+    assert y % y == 0
+    assert y % z == 9/S(72172)
+    assert z % x == 5/S(18043)
+    assert z % y == 5/S(18043)
+    assert z % z == 0
+    a = Real('2.6')
+    assert round(a % Real('0.2'), 15) == 0.2
+    assert round(a % 2, 15) == 0.6
+    assert round(a % 0.5, 15) == 0.1
+    assert Rational(3,4) % Real(1.1) == 0.75
 
 def test_igcd():
     assert igcd(0, 0) == 0

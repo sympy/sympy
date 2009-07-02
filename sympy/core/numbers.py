@@ -14,6 +14,7 @@ from power import integer_nthroot
 # from power import Pow /cyclic/
 # from function import FunctionClass    /cyclic/
 
+# TODO: we should use the warnings module
 _errdict = {"divide": False}
 def seterr(divide=False):
     """
@@ -308,21 +309,22 @@ class Real(Number):
     def __neg__(self):
         return Real._new(mlib.mpf_neg(self._mpf_), self._prec)
 
+    @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return NotImplemented
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
             return Real._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mul__(self, other)
 
+    @_sympifyit('other', NotImplemented)
+    def __mod__(self, other):
+        if isinstance(other, Number):
+            rhs, prec = other._as_mpf_op(self._prec)
+            return Real._new(mlib.mpf_mod(self._mpf_, rhs, prec, rnd), prec)
+        return Number.__mod__(self, other)
+
+    @_sympifyit('other', NotImplemented)
     def __add__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return NotImplemented
         if (other is S.NaN) or (self is NaN):
             return S.NaN
         if isinstance(other, Number):
@@ -545,6 +547,15 @@ class Rational(Number):
         if isinstance(other, Rational):
             return Rational(self.p * other.p, self.q * other.q)
         return Number.__mul__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __mod__(self, other):
+        if isinstance(other, Rational):
+            n = (self.p*other.q) // (other.p*self.q)
+            return Rational(self.p*other.q - n*other.p*self.q, self.q*other.q)
+        if isinstance(other, Real):
+            return self.evalf() % other
+        return Number.__mod__(self, other)
 
     # TODO reorder
     @_sympifyit('other', NotImplemented)
