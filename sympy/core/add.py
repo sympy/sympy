@@ -1,11 +1,7 @@
 from basic import Basic, S, C
 from operations import AssocOp
 from cache import cacheit
-
 from symbol import Symbol, Wild, Temporary
-# from numbers import Number    /cyclic/
-# from mul import Mul    /cyclic/
-# from function import FunctionClass    /cyclic/
 
 class Add(AssocOp):
 
@@ -464,20 +460,5 @@ class Add(AssocOp):
             s += x._sage_()
         return s
 
-
-# /cyclic/
-import basic as _
-_.Add       = Add
-del _
-
-import mul as _
-_.Add       = Add
-del _
-
-import power as _
-_.Add       = Add
-del _
-
-import operations as _
-_.Add       = Add
-del _
+from mul import Mul
+from function import FunctionClass

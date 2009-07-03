@@ -160,6 +160,7 @@ class MemoizerArg:
         self.name = name
 
     def fix_allowed_types(self, have_been_here={}):
+        from basic import C
         i = id(self)
         if have_been_here.get(i): return
         allowed_types = self._allowed_types

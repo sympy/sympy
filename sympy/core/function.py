@@ -29,18 +29,17 @@ Example:
     (x,)
 """
 
-from basic import Basic, Atom, S, C, sympify
+from basic import Basic, Atom, S, C
 from basic import BasicType, BasicMeta
 from operations import AssocOp
 from cache import cacheit
 from itertools import repeat
 from numbers import Rational, Integer
 from symbol import Symbol
-from add    import Add
 from multidimensional import vectorize
+from sympy.utilities.decorator import deprecated
 
 from sympy import mpmath
-from sympy.utilities.decorator import deprecated
 
 class PoleError(Exception):
     pass
@@ -998,32 +997,5 @@ def expand_complex(expr, deep=True):
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
 
-
-# /cyclic/
-import basic as _
-_.Derivative    = Derivative
-_.FunctionClass = FunctionClass
-del _
-
-import add as _
-_.FunctionClass = FunctionClass
-del _
-
-import mul as _
-_.FunctionClass = FunctionClass
-_.WildFunction  = WildFunction
-del _
-
-import operations as _
-_.Lambda        = Lambda
-_.WildFunction  = WildFunction
-del _
-
-import symbol as _
-_.Function      = Function
-_.WildFunction  = WildFunction
-del _
-
-import numbers as _
-_.FunctionClass = FunctionClass
-del _
+from sympify import sympify
+from add    import Add

@@ -2,20 +2,9 @@
 
 import sympy.mpmath as mpmath
 
+from decorators import _sympifyit
 from assumptions import AssumeMeths, make__get_assumption
-from sympify import _sympify, _sympifyit, sympify, SympifyError
 from cache import cacheit, Memoizer, MemoizerArg
-
-# from numbers  import Number, Integer, Rational, Real /cyclic/
-# from interval import Interval /cyclic/
-# from symbol   import Symbol, Wild, Temporary /cyclic/
-# from add      import Add  /cyclic/
-# from mul      import Mul  /cyclic/
-# from power    import Pow  /cyclic/
-# from function import Derivative, FunctionClass   /cyclic/
-# from relational import Equality, Unequality, Inequality, StrictInequality /cyclic/
-# from sympy.functions.elementary.complexes import abs as abs_   /cyclic/
-# from sympy.printing import StrPrinter
 
 # used for canonical ordering of symbolic sequences
 # via __cmp__ method:
@@ -2424,7 +2413,6 @@ class SingletonFactory:
 S = SingletonFactory()
 
 # S(...) = sympify(...)
-S.__call__ = sympify
 
 class ClassesRegistry:
     """Namespace for SymPy classes
@@ -2451,14 +2439,12 @@ class ClassesRegistry:
 
 C = ClassesRegistry()
 
-# XXX this is ugly, but needed for Memoizer('str', ...) to work
-import cache
-cache.C = C
-del cache
-
-# /cyclic/
-import sympify as _
-_.Basic     = Basic
-_.BasicType = BasicType
-_.S         = S
-del _
+from symbol import Wild, Symbol
+from sympify import _sympify, sympify, SympifyError
+S.__call__ = sympify
+from mul import Mul
+from power import Pow
+from add import Add
+from relational import Inequality, StrictInequality
+from function import FunctionClass, Derivative
+from numbers import Rational, Integer

@@ -15,7 +15,8 @@
 """
 
 from sympy.core.sympify import sympify
-from sympy.core.basic import Basic, S, C, Mul, Add
+from sympy.core.basic import Basic, S, C, Mul
+from sympy.core.add import Add
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Wild
 from sympy.core.relational import Equality

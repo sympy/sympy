@@ -1,14 +1,10 @@
 
-from basic import Basic, S, C
+from basic import Basic
 from sympify import _sympify
 from cache import cacheit
+from symbol import Symbol, Wild, Temporary
 
 from sympy import mpmath
-
-from symbol import Symbol, Wild, Temporary
-# from numbers import Number, Rational, Integer     /cyclic/
-# from add import Add   /cyclic/
-# from mul import Mul   /cyclic/
 
 from math import exp as _exp
 from math import log as _log
@@ -751,16 +747,7 @@ class Pow(Basic):
         return self.args[0]._sage_() ** self.args[1]._sage_()
 
 
-# /cyclic/
-import basic as _
-_.Pow =     Pow
-del _
-
-import mul as _
-_.Pow =     Pow
-del _
-
-import numbers as _
-_.Pow =     Pow
-del _
-
+from basic import Basic, S, C
+from add import Add
+from numbers import Integer
+from mul import Mul

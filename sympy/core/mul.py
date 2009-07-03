@@ -1,14 +1,10 @@
-from basic import Basic, S, sympify
+from basic import Basic, S
 from operations import AssocOp
 from cache import cacheit
 
 from logic import fuzzy_not
 
 from symbol import Symbol, Wild
-# from function import FunctionClass, WildFunction /cyclic/
-# from numbers import Number, Integer, Real /cyclic/
-# from add   import Add /cyclic/
-# from power import Pow /cyclic/
 
 import sympy.mpmath as mpmath
 
@@ -772,23 +768,8 @@ class Mul(AssocOp):
         return s
 
 
-# /cyclic/
-import basic as _
-_.Mul       = Mul
-del _
-
-import add as _
-_.Mul       = Mul
-del _
-
-import power as _
-_.Mul       = Mul
-del _
-
-import numbers as _
-_.Mul       = Mul
-del _
-
-import operations as _
-_.Mul       = Mul
-del _
+from power import Pow
+from numbers import Real
+from function import FunctionClass
+from sympify import sympify
+from add import Add

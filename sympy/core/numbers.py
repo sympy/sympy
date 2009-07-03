@@ -1,3 +1,6 @@
+from basic import Atom, SingletonMeta, S, Basic
+from decorators import _sympifyit
+from cache import Memoizer, MemoizerArg
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmpf as mlib
 import sympy.mpmath.libmpc as mlibc
@@ -6,13 +9,6 @@ import decimal
 
 rnd = mlib.round_nearest
 
-from basic import Basic, Atom, S, C, SingletonMeta, Memoizer, MemoizerArg
-from sympify import _sympify, SympifyError, _sympifyit
-from power import integer_nthroot
-
-# from mul import Mul   /cyclic/
-# from power import Pow /cyclic/
-# from function import FunctionClass    /cyclic/
 
 # TODO: we should use the warnings module
 _errdict = {"divide": False}
@@ -1577,37 +1573,6 @@ class ImaginaryUnit(Atom):
         import sage.all as sage
         return sage.I
 
-# /cyclic/
-import basic as _
-_.Number    = Number
-_.Integer   = Integer
-_.Rational  = Rational
-_.Real      = Real
-del _
-
-import add as _
-_.Number    = Number
-del _
-
-import mul as _
-_.Number    = Number
-_.Integer   = Integer
-_.Real      = Real
-del _
-
-import power as _
-_.Number    = Number
-_.Rational  = Rational
-_.Integer   = Integer
-del _
-
-import sympify as _
-_.Integer   = Integer
-_.Real      = Real
-del _
-
-# ----
-
 _intcache[0] = S.Zero
 _intcache[1] = S.One
 _intcache[-1]= S.NegativeOne
@@ -1624,3 +1589,8 @@ Basic.singleton['GoldenRatio'] = GoldenRatio
 Basic.singleton['EulerGamma'] = EulerGamma
 Basic.singleton['Catalan'] = Catalan
 
+from basic import Basic, Atom, S, C, SingletonMeta, Memoizer, MemoizerArg
+from sympify import _sympify, SympifyError
+from function import FunctionClass
+from power import Pow, integer_nthroot
+from mul import Mul

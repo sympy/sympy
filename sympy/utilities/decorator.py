@@ -1,5 +1,4 @@
 import warnings
-from sympy.core.add import Add
 from sympy.core.sympify import sympify
 from sympy.core.relational import Relational
 
@@ -51,6 +50,7 @@ def threaded(**flags):
                     rhs = func(expr.rhs, *args, **kwargs)
                     return Relational(lhs, rhs, expr.rel_op)
                 elif expr.is_Add and use_add:
+                    from sympy.core.add import Add
                     return Add(*[ func(f, *args, **kwargs) for f in expr.args ])
                 else:
                     return func(expr, *args, **kwargs)
