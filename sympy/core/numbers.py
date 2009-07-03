@@ -1,7 +1,7 @@
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmpf as mlib
 import sympy.mpmath.libmpc as mlibc
-from sympy.mpmath.libelefun import mpf_pow, mpf_pi, phi_fixed
+from sympy.mpmath.libelefun import mpf_pow, mpf_pi, mpf_e, phi_fixed
 import decimal
 
 rnd = mlib.round_nearest
@@ -1411,7 +1411,7 @@ class Exp1(NumberSymbol):
         return S.Exp1
 
     def _as_mpf_val(self, prec):
-        return mlib.fe(prec)
+        return mpf_e(prec)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls,Integer):
