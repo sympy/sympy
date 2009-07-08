@@ -365,8 +365,8 @@ class Integral(Basic):
 
         [1] http://en.wikipedia.org/wiki/Rectangle_method
 
-        method=midpoint
-        ---------------
+        **method = midpoint**:
+
         Uses the n-order midpoint rule to evaluate the integral.
 
         Midpoint rule uses rectangles approximation for the given area (e.g.
@@ -375,36 +375,38 @@ class Integral(Basic):
         method). See [1] for more information.
 
         Examples:
-        >>> from sympy import sqrt, symbols
-        >>> x = symbols("x")
-        >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
-        >>> e
-        Integral((1 + x**3)**(1/2), (x, 2, 10))
-        >>> e.as_sum(4, method="midpoint")
-        2*730**(1/2) + 4*7**(1/2) + 4*86**(1/2) + 6*14**(1/2)
-        >>> e.as_sum(4, method="midpoint").n()
-        124.164447891310
-        >>> e.n()
-        124.616199194723
 
-        method=left
-        ---------------
+            >>> from sympy import sqrt, symbols
+            >>> x = symbols("x")
+            >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
+            >>> e
+            Integral((1 + x**3)**(1/2), (x, 2, 10))
+            >>> e.as_sum(4, method="midpoint")
+            2*730**(1/2) + 4*7**(1/2) + 4*86**(1/2) + 6*14**(1/2)
+            >>> e.as_sum(4, method="midpoint").n()
+            124.164447891310
+            >>> e.n()
+            124.616199194723
+
+        **method=left**:
+
         Uses the n-order rectangle rule to evaluate the integral, at each
         interval the function value is taken at the left hand side of the
         interval.
 
         Examples:
-        >>> from sympy import sqrt, symbols
-        >>> x = symbols("x")
-        >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
-        >>> e
-        Integral((1 + x**3)**(1/2), (x, 2, 10))
-        >>> e.as_sum(4, method="left")
-        6 + 2*65**(1/2) + 2*217**(1/2) + 6*57**(1/2)
-        >>> e.as_sum(4, method="left").n()
-        96.8853618335341
-        >>> e.n()
-        124.616199194723
+
+            >>> from sympy import sqrt, symbols
+            >>> x = symbols("x")
+            >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
+            >>> e
+            Integral((1 + x**3)**(1/2), (x, 2, 10))
+            >>> e.as_sum(4, method="left")
+            6 + 2*65**(1/2) + 2*217**(1/2) + 6*57**(1/2)
+            >>> e.as_sum(4, method="left").n()
+            96.8853618335341
+            >>> e.n()
+            124.616199194723
 
         """
 
