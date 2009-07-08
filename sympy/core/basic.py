@@ -1515,28 +1515,15 @@ class Basic(AssumeMeths):
 
         See the docstring in function.expand for more information.
         """
-        hints['power_base'] = power_base
-        hints['power_exp'] = power_exp
-        hints['mul'] = mul
-        hints['log'] = log
-        hints['multinomial'] = multinomial
-        hints['basic'] = basic
+        hints.update(power_base=power_base, power_exp=power_exp, mul=mul, \
+           log=log, multinomial=multinomial, basic=basic)
 
         expr = self
-
-        for hint in hints:
-            if hints[hint] == True:
+        for hint, use_hint in hints.iteritems():
+            if use_hint:
                 func = getattr(expr, '_eval_expand_'+hint, None)
                 if func is not None:
                     expr = func(deep=deep, **hints)
-
-        if not 'basic' in hints:
-            if not expr.is_Atom:
-                result = expr._eval_expand_basic()
-
-                if result is not None:
-                    expr = result
-
         return expr
 
     def _eval_rewrite(self, pattern, rule, **hints):

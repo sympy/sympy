@@ -378,30 +378,24 @@ class Mul(AssocOp):
 
     @staticmethod
     def _expandsums(sums):
+        """
+        Helper function for _eval_expand_mul.
+
+        sums must be a list of instances of Basic.
+        """
         L = len(sums)
-        if len(sums) == 1:
-            return sums[0]
+        if L == 1:
+            return sums[0].args
         terms = []
         left = Mul._expandsums(sums[:L//2])
         right = Mul._expandsums(sums[L//2:])
-        if isinstance(right, Basic):
-            right = right.args
-        if isinstance(left, Basic):
-            left = left.args
 
-        if len(left) == 1 and len(right) == 1:
-            # no expansion needed, bail out now to avoid infinite recursion
-            return [Mul(left[0], right[0])]
-
-        terms = []
-        for a in left:
-            for b in right:
-                terms.append(Mul(a,b).expand())
-            added = Add(*terms)
-            if added.is_Add:
-                terms = list(added.args)
-            else:
-                terms = [added]
+        terms = [Mul(a, b) for a in left for b in right]
+        added = Add(*terms)
+        if added.is_Add:
+            terms = list(added.args)
+        else:
+            terms = [added]
         return terms
 
     def _eval_expand_basic(self, deep=True, **hints):
@@ -438,12 +432,10 @@ class Mul(AssocOp):
         plain, sums, rewrite = [], [], False
         for factor in self.args:
             if deep:
-                terms = factor.expand(deep=deep, **hints)
-            else:
-                terms = factor
-
-            if terms is not None:
-                factor = terms
+                term = factor.expand(deep=deep, **hints)
+                if term != factor:
+                    factor = term
+                    rewrite = True
 
             if factor.is_Add:
                 sums.append(factor)
@@ -452,22 +444,15 @@ class Mul(AssocOp):
                 if factor.is_commutative:
                     plain.append(factor)
                 else:
-                    sums.append([factor])
-
-                if terms is not None:
-                    rewrite = True
+                    Wrapper = Basic
+                    sums.append(Wrapper(factor))
 
         if not rewrite:
-            return None
+            return self
         else:
             if sums:
                 terms = Mul._expandsums(sums)
-
-                if isinstance(terms, Basic):
-                    terms = terms.args
-
                 plain = Mul(*plain)
-
                 return Add(*(Mul(plain, term) for term in terms), **self.assumptions0)
             else:
                 return Mul(*plain, **self.assumptions0)

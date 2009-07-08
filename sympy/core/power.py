@@ -382,7 +382,11 @@ class Pow(Basic):
                 if n == 2:
                     return Add(*[f*g for f in base.args for g in base.args])
                 else:
-                    return Mul(base, Pow(base, n-1).expand()).expand()
+                    multi = (base**(n-1))._eval_expand_multinomial(deep=False)
+                    if multi.is_Add:
+                        return Add(*[f*g for f in base.args for g in base.args])
+                    else:
+                        return Add(*[f*multi for f in base.args])
         elif exp.is_Add and base.is_Number:
             #  a + b      a  b
             # n      --> n  n  , where n, a, b are Numbers
@@ -593,7 +597,7 @@ class Pow(Basic):
             if exp > 0:
                 # positive integer powers are easy to expand, e.g.:
                 # sin(x)**4 = (x-x**3/3+...)**4 = ...
-                return (base.nseries(x, x0, n) ** exp).expand()
+                return (base.nseries(x, x0, n) ** exp)._eval_expand_multinomial(deep = False)
             elif exp == -1:
                 # this is also easy to expand using the formula:
                 # 1/(1 + x) = 1 + x + x**2 + x**3 ...
@@ -622,14 +626,13 @@ class Pow(Basic):
                         return p
                 prefactor = base.as_leading_term(x)
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
-                rest = powsimp(((base-prefactor)/prefactor).expand(),\
-                deep=True, combine='exp')
+                rest = ((base-prefactor)/prefactor)._eval_expand_mul()
                 if rest == 0:
                     # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
                     # factor the w**4 out using collect:
                     return 1/collect(prefactor, x)
                 if rest.is_Order:
-                    return ((1+rest)/prefactor).expand()
+                    return (1+rest)/prefactor
                 n2 = getn(rest)
                 if n2 is not None:
                     n = n2
@@ -638,19 +641,23 @@ class Pow(Basic):
                 k, l = Wild("k"), Wild("l")
                 r = term2.match(k*x**l)
                 k, l = r[k], r[l]
-                if l.is_Integer and l>0:
-                    l = int(l)
+                if l.is_Rational and l>0:
+                    pass
                 elif l.is_number and l>0:
-                    l = float(l)
+                    l = l.evalf()
                 else:
                     raise NotImplementedError()
 
-                s = 1
-                m = 1
-                while l * m < n:
-                    s += ((-rest)**m).expand()
-                    m += 1
-                r = (s/prefactor).expand()
+                from sympy.functions import ceiling
+                terms = [1/prefactor]
+                for m in xrange(1,ceiling(n/l)):
+                    new_term = terms[-1]*(-rest)
+                    if new_term.is_Pow:
+                        new_term = new_term._eval_expand_multinomial(deep = False)
+                    else:
+                        new_term = new_term._eval_expand_mul(deep = False)
+                    terms.append(new_term)
+                r = Add(*terms)
                 if n2 is None:
                     # Append O(...) because it is not included in "r"
                     from sympy import O
