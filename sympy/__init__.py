@@ -27,6 +27,7 @@ from series import *
 from functions import *
 from ntheory import *
 from concrete import *
+from refine import refine
 from simplify import *
 from solvers import *
 from matrices import *

@@ -69,6 +69,7 @@ modules = [
     'sympy.polys',
     'sympy.printing',
     'sympy.printing.pretty',
+    'sympy.refine',
     'sympy.series',
     'sympy.simplify',
     'sympy.solvers',
