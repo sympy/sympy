@@ -39,6 +39,8 @@ if __name__ == '__main__':
 
     print (a^b)|(c^d)
 
+    # FIXME: currently broken
+    """
     print 'Example: non-euclidian distance calculation'
 
     metric = '0 # #,# 0 #,# # 1'
@@ -120,7 +122,7 @@ if __name__ == '__main__':
     print 'Descriminant D = b^2-4*a*c =',D
     C = (-b/(2*a)).expand()
     print 'C = cosh(alpha) = -b/(2*a) =',C
-
+    """
     print '\nExample: Conformal representations of circles, lines, spheres, and planes'
 
     metric = '1 0 0 0 0,0 1 0 0 0,0 0 1 0 0,0 0 0 0 2,0 0 0 2 0'

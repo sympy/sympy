@@ -253,11 +253,11 @@ function.
     of the metric space is defined by a string.  For example if the signature of the
     vector space is :math:`(1,1,1)` (Euclidian 3-space) set
 
-    ``metric = [1,1,1]``
+    ``metric = '[1,1,1]'``
 
     Likewise if the signature is that of spacetime, :math:`(1,-1,-1,-1)` then define
 
-    ``metric = [1,-1,-1,-1]``.
+    ``metric = '[1,-1,-1,-1]'``.
 
 
 Representation and Reduction of Multivector Bases

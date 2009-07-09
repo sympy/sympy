@@ -62,18 +62,6 @@ def is_quasi_unit_numpy_array(array):
     else:
         return(False)
 
-def TrigSimp(f):
-    """
-    Recursive application of sympy.trigsimp().  Works in many applications
-    where simple application of sympy.trigsimp() does not.
-    """
-    (w,g) = sympy.cse(f)
-    g = sympy.trigsimp(g[0])
-    for sub in reversed(w):
-        g = g.subs(sub[0],sub[1])
-        g = sympy.trigsimp(g)
-    return(g)
-
 def set_main(main_program):
     global MAIN_PROGRAM
     MAIN_PROGRAM = main_program
@@ -106,38 +94,12 @@ def numeric(num_str):
             b = int(tmp[1])
     return(sympy.Rational(a,b))
 
-def symbol(sym_str):
-    """
-    Symbol converts a string to a sympy/sympy symbol.
-    """
-    sym = sympy.Symbol(sym_str)
-    return(sym)
-
-def expand(expr):
-    return(sympy.expand(expr))
-
-
 def collect(expr,lst):
     """
-    Wrapper for sympy.collect and sympy.collect.
-    See references 2, 3, and 4.
+    Wrapper for sympy.collect.
     """
     lst = MV.scalar_to_symbol(lst)
     return(sympy.collect(expr,lst))
-
-def sqrfree(expr,lst):
-    """
-    Wrapper for sympy.sqrfree and sympy.factor.
-    See references 2, 3, and 4.
-    """
-    return(sympy.sqrfree(expr,lst))
-
-def collect_common_factors(expr):
-    """
-    Wrapper for sympy.collect_common_factors and sympy.factor.
-    See references 2, 3, and 4.
-    """
-    return(sympy.collect_common_factors(expr))
 
 def sqrt(expr):
     return(sympy.sqrt(expr))
@@ -219,7 +181,7 @@ def make_scalars(symnamelst):
     scalar_lst = []
     isym = 0
     for name in symnamelst:
-        tmp = symbol(name)
+        tmp = sympy.Symbol(name)
         tmp = MV(tmp,'scalar')
         scalar_lst.append(tmp)
         setattr(MAIN_PROGRAM,name,tmp)
@@ -239,7 +201,7 @@ def make_symbols(symnamelst):
     sym_lst = []
     isym = 0
     for name in symnamelst:
-        tmp = symbol(name)
+        tmp = sympy.Symbol(name)
         sym_lst.append(tmp)
         setattr(MAIN_PROGRAM,name,tmp)
         isym += 1
@@ -335,7 +297,7 @@ def magnitude(vector):
     values are removed.
     """
     magsq = sympy.expand((vector|vector)())
-    magsq = TrigSimp(magsq)
+    magsq = sympy.trigsimp(magsq,deep=True,recursive=True)
     #print magsq
     magsq_str = sympy.galgebra.latex_ex.LatexPrinter()._print(magsq)
     if magsq_str[0] == '-':
@@ -540,7 +502,7 @@ class MV(object):
                             else:
                                 gij = '('+MV.vbasis[min(i,j)]+'.'+MV.vbasis[max(i,j)]+')'
                                 name = MV.vbasis[min(i,j)]+'dot'+MV.vbasis[max(i,j)]
-                        tmp = symbol(gij)
+                        tmp = sympy.Symbol(gij)
                         MV.metric[i][j] = tmp
                         if i <= j:
                             MV.g.append(tmp)
@@ -1072,7 +1034,7 @@ class MV(object):
         for irow in MV.nrg:
             for icol in MV.nrg:
                 magsq = sympy.expand((nbases[irow]|nbases[icol])())
-                g[irow][icol]  = sympy.simplify(TrigSimp(magsq))
+                g[irow][icol]  = sympy.simplify(sympy.trigsimp(magsq,deep=True,recursive=True))
 
         if debug:
             print 'Metric $\\hat{g}_{ij} = \\hat{'+LaTeX_base+'}_{i}\\cdot \\hat{'+\
@@ -1124,19 +1086,6 @@ class MV(object):
                 evec[jbasis] = (MV.bvec[ibasis]|rnbases[jbasis])()
             Acoef.append(evec)
 
-
-        #Calculate time derivatives components of basis vectors
-        """
-        if MV.coords[0] == sympy.Symbol('t'):
-            t = MV.coords[0]
-            dedt_coef = []
-            for ebase in nbases:
-                dedt = ebase.diff(t)
-                coefs = numpy.array(MV.n*[ZERO],dtype=numpy.object)
-                for ibasis in MV.nrg:
-                    coefs[ibasis] = (dedt|rnbases[ibasis])()
-                dedt_coef.append(coefs)
-        """
         #Calculat metric tensors
 
         gr = numpy.array(MV.n*[MV.n*[ZERO]],dtype=numpy.object)
@@ -1144,7 +1093,7 @@ class MV(object):
         for irow in MV.nrg:
             for icol in MV.nrg:
                 magsq = sympy.expand((rnbases[irow]|rnbases[icol])())
-                gr[irow][icol] = sympy.simplify(TrigSimp(magsq))
+                gr[irow][icol] = sympy.simplify(sympy.trigsimp(magsq,deep=True,recursive=True))
 
         if debug:
             print 'Metric $\\hat{g}^{ij} = \\hat{'+LaTeX_base+'}^{i}\\cdot \\hat{'+\
@@ -1240,11 +1189,11 @@ class MV(object):
                         X = MV()
                     jbase = 0
                     while jbase < m1base:
-                        Cm1[jbase] = TrigSimp((MV_rbases[igrade-1][jbase]|C)())
+                        Cm1[jbase] = sympy.trigsimp((MV.inner_product(MV_rbases[igrade-1][jbase],C))(),deep=True,recursive=True)
                         jbase += 1
                     jbase = 0
                     while jbase < p1base:
-                        Cp1[jbase] = TrigSimp((MV_rbases[igrade+1][jbase]|C)())
+                        Cp1[jbase] = sympy.trigsimp((MV.inner_product(MV_rbases[igrade+1][jbase],C))(),deep=True,recursive=True)
                         jbase += 1
                     X += MV((igrade-1,Cm1),'grade')+MV((igrade+1,Cp1),'grade')
                     X.simplify()
@@ -1259,7 +1208,7 @@ class MV(object):
                     C = MV_connect[igrade][ibase]
                     jbase = 0
                     while jbase < m1base:
-                        Cm1[jbase] = TrigSimp((MV_rbases[igrade-1][jbase]|C)())
+                        Cm1[jbase] = sympy.trigsimp((MV.inner_product(MV_rbases[igrade-1][jbase],C))(),deep=True,recursive=True)
                         jbase += 1
                     X = MV()
                     X.mv[MV.n-1] = Cm1
@@ -2282,7 +2231,7 @@ class MV(object):
 
     def collect(self,lst):
         """
-        Applies sympy/sympy collect function to each component
+        Applies sympy collect function to each component
         of multivector.
         """
         for igrade in MV.n1rg:
@@ -2295,7 +2244,7 @@ class MV(object):
 
     def sqrfree(self,lst):
         """
-        Applies sympy/sympy sqrfree function to each component
+        Applies sympy sqrfree function to each component
         of multivector.
         """
         for igrade in MV.n1rg:
@@ -2303,18 +2252,8 @@ class MV(object):
                 for ibase in range(MV.nbasis[igrade]):
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
-                        sqrfree(self.mv[igrade][ibase],lst)
+                        sympy.sqrfree(self.mv[igrade][ibase],lst)
         return
-    """
-    def collect(self,faclst):
-        for igrade in MV.n1rg:
-            if isinstance(self.mv[igrade],numpy.ndarray):
-                for ibase in range(MV.nbasis[igrade]):
-                    if self.mv[igrade][ibase] != ZERO:
-                        self.mv[igrade][ibase] = \
-                        sympy.collect(self.mv[igrade][ibase],faclst)
-        return
-    """
 
     def flatten(self):
         flst = []
@@ -2356,7 +2295,7 @@ class MV(object):
 
     def simplify(self):
         """
-        Applies sympy subs function
+        Applies sympy simplify function
         to each component of multivector.
         """
         for igrade in MV.n1rg:
@@ -2369,7 +2308,7 @@ class MV(object):
 
     def trigsimp(self):
         """
-        Applies sympy subs function
+        Applies sympy trigsimp function
         to each component of multivector.
         """
         for igrade in MV.n1rg:
@@ -2377,12 +2316,12 @@ class MV(object):
                 for ibase in range(MV.nbasis[igrade]):
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
-                        TrigSimp(self.mv[igrade][ibase])
+                        sympy.trigsimp(self.mv[igrade][ibase],deep=True,recursive=True)
         return
 
     def cancel(self):
         """
-        Applies sympy cancle function
+        Applies sympy cancel function
         to each component of multivector.
         """
         for igrade in MV.n1rg:
@@ -2395,7 +2334,7 @@ class MV(object):
 
     def trim(self):
         """
-        Applies sympy cancle function
+        Applies sympy trim function
         to each component of multivector.
         """
         for igrade in MV.n1rg:
@@ -2408,7 +2347,7 @@ class MV(object):
 
     def expand(self):
         """
-        Applies sympy/sympy expand function to each component
+        Applies sympy expand function to each component
         of multivector.
         """
         for igrade in MV.n1rg:
@@ -2611,7 +2550,7 @@ def reciprocal_frame(vlst,names=''):
                 tmp = tmp^vlst[j]
         tmp = tmp*E
         recp.append(tmp)
-    Esq = TrigSimp(E.mag2())
+    Esq = sympy.trigsimp(E.mag2(),deep=True,recursive=True)
     print Esq
     print sympy.simplify(Esq)
     Esq_inv = ONE/Esq
