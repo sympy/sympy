@@ -4,18 +4,17 @@ for mathematical functions.
 """
 
 from sympy.mpmath.libmpf import (from_int, from_rational, fzero, normalize,
-        bitcount, round_nearest, to_str, fone, fnone, fhalf, to_float,
-        from_float, fnone, to_int, mpf_lt, mpf_sqrt, mpf_cmp, mpf_abs,
+        bitcount, round_nearest, to_str, fone, fnone, fhalf, from_float,
+        to_float, fnone, to_int, mpf_lt, mpf_sqrt, mpf_cmp, mpf_abs,
         mpf_pow_int, mpf_shift, mpf_add, mpf_mul, mpf_neg)
 
 import sympy.mpmath.libmpc as libmpc
 from sympy.mpmath.settings import dps_to_prec
 from sympy.mpmath import mpf, mpc, quadts, quadosc, mp, make_mpf
-from sympy.mpmath.gammazeta import mpf_gamma
 from sympy.mpmath.libelefun import mpf_pi, mpf_log, mpf_pow, mpf_sin, mpf_cos, \
         mpf_atan, mpf_atan2, mpf_e, mpf_exp
 from sympy.mpmath.libmpf import MP_BASE, from_man_exp
-from sympy.mpmath.calculus import shanks, richardson, nsum
+from sympy.mpmath.calculus import nsum
 from sympy.mpmath import inf as mpmath_inf
 
 from sympy.mpmath.gammazeta import mpf_bernoulli
@@ -23,7 +22,6 @@ from sympy.mpmath.gammazeta import mpf_bernoulli
 import math
 
 from basic import Basic, C, S
-from function import Function
 from sympify import sympify
 
 LG10 = math.log(10,2)

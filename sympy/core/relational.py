@@ -1,8 +1,6 @@
 
-from basic import Basic, C
+from basic import Basic
 from sympify import _sympify
-
-from numbers import Number
 
 def Rel(a, b, op):
     """

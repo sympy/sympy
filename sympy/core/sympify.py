@@ -2,7 +2,6 @@
 # from basic import Basic, BasicType, S
 # from numbers  import Integer, Real
 import decimal
-from decorators import _sympifyit
 
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):

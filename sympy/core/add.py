@@ -1,7 +1,7 @@
 from basic import Basic, S, C
 from operations import AssocOp
 from cache import cacheit
-from symbol import Symbol, Wild, Temporary
+from symbol import Symbol
 
 class Add(AssocOp):
 

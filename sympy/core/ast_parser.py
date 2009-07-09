@@ -23,7 +23,7 @@ If the ast module is not available (python2.4 and 2.5), we use the old compiler
 module.
 """
 
-from sympy import Integer, Real, Basic
+from sympy import Basic
 
 try:
     import ast
@@ -32,7 +32,7 @@ except ImportError:
     ast_enabled = False
 
 if ast_enabled:
-    from ast import parse, NodeTransformer, dump, Call, Name, Load, \
+    from ast import parse, NodeTransformer, Call, Name, Load, \
             fix_missing_locations, Str
 
     class Transform(NodeTransformer):

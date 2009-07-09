@@ -30,8 +30,7 @@ Example:
 """
 
 from basic import Basic, Atom, S, C
-from basic import BasicType, BasicMeta
-from operations import AssocOp
+from basic import BasicMeta
 from cache import cacheit
 from itertools import repeat
 from numbers import Rational, Integer

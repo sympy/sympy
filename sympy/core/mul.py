@@ -4,9 +4,7 @@ from cache import cacheit
 
 from logic import fuzzy_not
 
-from symbol import Symbol, Wild
-
-import sympy.mpmath as mpmath
+from symbol import Symbol
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to processe them"

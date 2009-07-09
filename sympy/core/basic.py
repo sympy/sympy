@@ -4,7 +4,7 @@ import sympy.mpmath as mpmath
 
 from decorators import _sympifyit
 from assumptions import AssumeMeths, make__get_assumption
-from cache import cacheit, Memoizer, MemoizerArg
+from cache import cacheit
 
 # used for canonical ordering of symbolic sequences
 # via __cmp__ method:

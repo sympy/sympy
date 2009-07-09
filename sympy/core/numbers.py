@@ -1589,7 +1589,8 @@ Basic.singleton['GoldenRatio'] = GoldenRatio
 Basic.singleton['EulerGamma'] = EulerGamma
 Basic.singleton['Catalan'] = Catalan
 
-from basic import Basic, Atom, S, C, SingletonMeta, Memoizer, MemoizerArg
+from basic import Basic, Atom, S, C, SingletonMeta
+from cache import Memoizer, MemoizerArg
 from sympify import _sympify, SympifyError
 from function import FunctionClass
 from power import Pow, integer_nthroot

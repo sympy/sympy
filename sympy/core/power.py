@@ -2,11 +2,10 @@
 from basic import Basic
 from sympify import _sympify
 from cache import cacheit
-from symbol import Symbol, Wild, Temporary
+from symbol import Symbol, Wild
 
 from sympy import mpmath
 
-from math import exp as _exp
 from math import log as _log
 
 def integer_nthroot(y, n):
