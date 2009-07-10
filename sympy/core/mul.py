@@ -161,7 +161,7 @@ class Mul(AssocOp):
         #
         # Unfortunately, this isn't smart enough to consider combining into
         # exponents that might already be adds, so thing like:
-        #  y + z    y
+        #  z - y    y
         # x      * x  will be left alone.  This is because checking every possible
         # combination can slow things down.
         new_c_powers = []

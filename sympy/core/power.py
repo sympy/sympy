@@ -68,19 +68,19 @@ class Pow(Basic):
     __slots__ = ['is_commutative']
 
     @cacheit
-    def __new__(cls, a, b, **assumptions):
-        a = _sympify(a)
+    def __new__(cls, b, e, **assumptions):
         b = _sympify(b)
+        e = _sympify(e)
         if assumptions.get('evaluate') is False:
-            return Basic.__new__(cls, a, b, **assumptions)
-        if b is S.Zero:
+            return Basic.__new__(cls, b, e, **assumptions)
+        if e is S.Zero:
             return S.One
-        if b is S.One:
-            return a
-        obj = a._eval_power(b)
+        if e is S.One:
+            return b
+        obj = b._eval_power(e)
         if obj is None:
-            obj = Basic.__new__(cls, a, b, **assumptions)
-            obj.is_commutative = (a.is_commutative and b.is_commutative)
+            obj = Basic.__new__(cls, b, e, **assumptions)
+            obj.is_commutative = (b.is_commutative and e.is_commutative)
         return obj
 
     @property
