@@ -205,10 +205,6 @@ for s in '+-=()':
     sub[s] = SSUB(s)
     sup[s] = SSUP(s)
 
-# abusing characters as sub or superscripts
-sub[','] = ','
-sup[','] = U('MODIFIER LETTER CENTRED RIGHT HALF RING')
-
 
 # VERTICAL OBJECTS
 HUP = lambda symb: U('%s UPPER HOOK'    % symb_2txt[symb])
@@ -489,8 +485,8 @@ def pretty_symbol(symb_name):
         else:
             subs_result = ''
     else:
-        sups_result = sup[','].join(pretty_sups)
-        subs_result = sub[','].join(pretty_subs)
+        sups_result = ' '.join(pretty_sups)
+        subs_result = ' '.join(pretty_subs)
 
 
     return ''.join([name, sups_result, subs_result])

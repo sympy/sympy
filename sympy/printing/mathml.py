@@ -225,7 +225,7 @@ class MathMLPrinter(Printer):
                 for i, item in enumerate(items):
                     if i>0:
                         mo = self.dom.createElement('mml:mo')
-                        mo.appendChild(self.dom.createTextNode(","))
+                        mo.appendChild(self.dom.createTextNode(" "))
                         mrow.appendChild(mo)
                     mi = self.dom.createElement('mml:mi')
                     mi.appendChild(self.dom.createTextNode(item))

@@ -561,9 +561,9 @@ class LatexPrinter(Printer):
 
         # glue all items together:
         if len(supers) > 0:
-            name += "^{%s}" % ",".join(supers)
+            name += "^{%s}" % " ".join(supers)
         if len(subs) > 0:
-            name += "_{%s}" % ",".join(subs)
+            name += "_{%s}" % " ".join(subs)
 
         return name
 

@@ -224,7 +224,7 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
     assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
     assert mml.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
-    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ','
+    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ' '
     assert mml.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
     assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
     del mml
@@ -238,7 +238,7 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
     assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
     assert mml.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
-    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ','
+    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ' '
     assert mml.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
     assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
     del mml
@@ -252,7 +252,7 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[1].childNodes[0].nodeName == 'mml:mi'
     assert mml.childNodes[0].childNodes[1].childNodes[0].childNodes[0].nodeValue == '2'
     assert mml.childNodes[0].childNodes[1].childNodes[1].nodeName == 'mml:mo'
-    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ','
+    assert mml.childNodes[0].childNodes[1].childNodes[1].childNodes[0].nodeValue == ' '
     assert mml.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
     assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
     del mml
