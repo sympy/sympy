@@ -4,9 +4,10 @@ from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
         Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func
 
 from sympy.core.numbers import igcd
+from sympy.core.relational import Equality
 
-from sympy.utilities import make_list, all, any
-from sympy.functions import gamma, exp, sqrt
+from sympy.utilities import make_list, all, any, flatten
+from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse
 
@@ -1244,4 +1245,145 @@ def nsimplify(expr, constants=[], tolerance=None, full=False):
         return expr
 
     return re + im*S.ImaginaryUnit
+
+def logcombine(expr, assume_pos_real=False):
+    """
+    Takes logarithms and combines them using the following rules:
+
+    - log(x)+log(y) == log(x*y)
+    - a*log(x) == log(x**a)
+
+    These identities are only valid if x and y are positive and if a is real, so
+    the function will not combine the terms unless the arguments have the proper
+    assumptions on them.  Use logcombine(func, assume_pos_real=True) to
+    automatically assume that the arguments of logs are positive and that
+    coefficients are real.  Note that this will not change any assumptions
+    already in place, so if the coefficient is imaginary or the argument
+    negative, combine will still not combine the equations.  Change the
+    assumptions on the variables to make them combine.
+
+    Examples:
+    >>> from sympy import *
+    >>> a,x,y,z = symbols('axyz')
+    >>> logcombine(a*log(x)+log(y)-log(z))
+    -log(z) + a*log(x) + log(y)
+    >>> logcombine(a*log(x)+log(y)-log(z), assume_pos_real=True)
+    log(y*x**a/z)
+    >>> x,y,z = symbols('xyz', positive=True)
+    >>> a = Symbol('a', real=True)
+    >>> logcombine(a*log(x)+log(y)-log(z))
+    log(y*x**a/z)
+    """
+    # Try to make (a+bi)*log(x) == a*log(x)+bi*log(x).  This needs to be a
+    # separate function call to avoid infinite recursion.
+    expr = expand_mul(expr, deep=False)
+    return _logcombine(expr, assume_pos_real)
+
+def _logcombine(expr, assume_pos_real=False):
+    def _getlogargs(expr):
+        """
+        Returns the arguments of the logarithm in an expression.
+        Example:
+        _getlogargs(a*log(x*y))
+        x*y
+        """
+        if isinstance(expr, log):
+            return [expr.args[0]]
+        else:
+            args = []
+            for i in expr.args:
+                if i.has(log):
+                    args.append(_getlogargs(i))
+            return flatten(args)
+        return None
+
+    if type(expr) in (int, float) or expr.is_Number or expr.is_Rational or \
+        expr.is_NumberSymbol or type(expr) == C.Integral:
+            return expr
+
+    if isinstance(expr, Equality):
+        retval = Equality(_logcombine(expr.lhs-expr.rhs, assume_pos_real),\
+        Integer(0))
+        # If logcombine couldn't do much with the equality, try to make it like
+        # it was.  Hopefully extract_additively won't become smart enought to
+        # take logs apart :)
+        right = retval.lhs.extract_additively(expr.lhs)
+        if right:
+            return Equality(expr.lhs, _logcombine(-right, assume_pos_real))
+        else:
+            return retval
+
+    if expr.is_Add:
+        argslist = 1
+        notlogs = 0
+        coeflogs = 0
+        for i in expr.args:
+            if isinstance(i, log):
+                if (i.args[0].is_positive or (assume_pos_real and not \
+                i.args[0].is_nonpositive)):
+                    argslist *= _logcombine(i.args[0], assume_pos_real)
+                else:
+                    notlogs += i
+            elif i.is_Mul and any(map(lambda t: getattr(t,'func', False)==log,\
+            i.args)):
+                largs = _getlogargs(i)
+                assert len(largs) != 0
+                loglargs = 1
+                for j in largs:
+                    loglargs *= log(j)
+
+                if  all(getattr(t,'is_positive') for t in largs)\
+                    and getattr(i.extract_multiplicatively(loglargs),'is_real', False)\
+                    or (assume_pos_real\
+                        and not all(getattr(t,'is_nonpositive') for t in largs)\
+                        and not getattr(i.extract_multiplicatively(loglargs),\
+                        'is_real')==False):
+
+                            coeflogs += _logcombine(i, assume_pos_real)
+                else:
+                    notlogs += i
+            elif i.has(log):
+                notlogs += _logcombine(i, assume_pos_real)
+            else:
+                notlogs += i
+        alllogs = _logcombine(log(argslist)+coeflogs, assume_pos_real)
+        return notlogs + alllogs
+
+    if expr.is_Mul:
+        a = Wild('a', exclude=[log], dummy=True)
+        x = Wild('x', dummy=True)
+        coef = expr.match(a*log(x))
+        if coef and coef[a].has(log):
+            largs = _getlogargs(coef[a])
+            assert len(largs) != 0
+            loglargs = 1
+            for j in largs:
+                loglargs *= log(j)
+        if coef\
+            and (coef[a].is_real\
+                or expr.is_Number\
+                or expr.is_NumberSymbol\
+                or type(coef[a]) in (int, float)\
+                or (assume_pos_real\
+                and not coef[a].is_imaginary))\
+            and (not coef[a].has(log)\
+                or assume_pos_real\
+                or (not getattr(coef[a],'is_real')==False\
+                    and getattr(x, 'is_positive'))):
+
+                        return log(coef[x]**coef[a])
+        else:
+            return _logcombine(expr.args[0], assume_pos_real)*reduce(lambda x, y:\
+             _logcombine(x, assume_pos_real)*_logcombine(y, assume_pos_real),\
+             expr.args[1:], 1)
+
+    if expr.is_Function:
+        return apply(expr.func,map(lambda t: _logcombine(t, assume_pos_real)\
+        , expr.args))
+
+    if expr.is_Pow:
+        return _logcombine(expr.args[0], assume_pos_real)**\
+        _logcombine(expr.args[1], assume_pos_real)
+
+    return expr
 
