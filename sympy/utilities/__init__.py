@@ -4,7 +4,7 @@ import sys
 
 from iterables import make_list, flatten, subsets
 
-if sys.version_info[1] < 5:
+if sys.version_info[0] <= 2 and sys.version_info[1] < 5:
     from iterables import any, all
 else:
     any = any
