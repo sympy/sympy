@@ -10,7 +10,7 @@ See the webpage for more information and documentation:
     http://code.google.com/p/sympy/
 """
 
-__version__ = "0.6.5.beta4-git"
+__version__ = "0.6.5.rc1"
 
 
 def __sympy_debug():
