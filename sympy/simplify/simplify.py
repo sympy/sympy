@@ -446,11 +446,11 @@ def collect(expr, syms, evaluate=True, exact=False):
        >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x) + a*D(f,x) + b*D(f,x), D(f,x))
        (a + b)*D(f(x), x) + (a + b)*D(f(x), x, x)
 
-       Or you can even match both derivative order and exponent at time:
+       Or you can even match both derivative order and exponent at time::
 
-       >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x)) == \
-           (a + b)*D(D(f,x),x)**2
-       True
+           >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x)) == \\
+           ...     (a + b)*D(D(f,x),x)**2
+           True
 
 
     == Notes ==
@@ -731,6 +731,7 @@ def ratsimp(expr):
 def trigsimp(expr, deep=False, recursive=False):
     """
     == Usage ==
+
     trigsimp(expr) -> reduces expression by using known trig identities
 
     == Notes ==
@@ -919,12 +920,16 @@ def powsimp(expr, deep=False, combine='all'):
         functions. By default deep is set to False.
         You can make powsimp() only combine bases or only combine exponents by
         changing combine='base' or combine='exp'.  By default, combine='all',
-        which does both.  combine='base' will only combine
-        |  a   a          a                          2x      x
-        | x * y  =>  (x*y)   as well as things like 2   =>  4
+        which does both.  combine='base' will only combine::
+
+             a   a          a                          2x      x
+            x * y  =>  (x*y)   as well as things like 2   =>  4
+
         and combine='exp' will only combine
-        |  a   b      (a + b)
-        | x * x  =>  x
+        ::
+
+             a   b      (a + b)
+            x * x  =>  x
 
         combine='exp' will strictly only combine exponents in the way that used
         to be automatic.  Also use deep=True if you need the old behavior.
