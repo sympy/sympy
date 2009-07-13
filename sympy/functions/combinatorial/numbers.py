@@ -256,7 +256,7 @@ class bernoulli(Function):
                     # Use mpmath for enormous Bernoulli numbers
                     if n > 500:
                         p, q = bernfrac(n)
-                        return Rational(int(p), q)
+                        return Rational(int(p), int(q))
                     case = n % 6
                     highest_cached = cls._highest[case]
                     if n <= highest_cached:
