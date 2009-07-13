@@ -56,7 +56,9 @@ def test_basics():
     check_expression("1/(x+y)**2-x**3/4", "x y")
 
 def test_complex():
+    check_expression("I", "")
     check_expression("23+I*4", "x")
+    check_expression("I*y", "y")
     check_expression("x+I*y", "x y")
 
 def test_integer():
