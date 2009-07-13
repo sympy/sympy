@@ -889,7 +889,7 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
     power_base from expanding them.  Also, if mul is applied before multinomial,
     the expression might not be fully distributed.  The solution is to expand
     with mul=False first, then run expand_mul if you need further expansion.
-    
+
     Examples:
     >>> x, y, z = symbols('xyz', positive=True)
     #>>> expand(log(x*(y+z))) # could be either one below

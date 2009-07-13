@@ -200,7 +200,7 @@ class Printer(object):
             # (Printer.printmethod) and the object knows for itself how it
             # should be printed, use that method.
             if self.printmethod and hasattr(expr, self.printmethod):
-                res = getattr(expr, self.printmethod)()
+                res = getattr(expr, self.printmethod)(self, *args)
                 if res is None:
                     raise RuntimeError("Printing method '%s' of an instance of '%s' did return None" %\
                                     (self.printmethod, expr.__class__.__name__))
