@@ -389,3 +389,9 @@ def test_full_prec():
             "0.3*x",
             "x*0.3"
             ]
+
+def test_empty_printer():
+    assert StrPrinter.emptyPrinter("foo") == "foo"
+    assert StrPrinter.emptyPrinter(x*y) == "x*y"
+    assert StrPrinter.emptyPrinter(32) == "32"
+

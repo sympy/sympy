@@ -39,7 +39,7 @@ class StrPrinter(Printer):
         if isinstance(expr, str):
             return expr
         elif isinstance(expr, Basic):
-            if hasattr(expr, args):
+            if hasattr(expr, "args"):
                 return repr(expr)
             else:
                 raise
