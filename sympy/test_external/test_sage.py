@@ -1,5 +1,8 @@
 # This testfile tests SymPy <-> Sage compatibility
 
+# Execute this test inside Sage, e.g. with:
+# sage -python bin/test sympy/test_external/test_sage.py
+
 # Don't test any SymPy features here. Just pure interaction with Sage.
 # Always write regular SymPy tests for anything, that can be tested in pure
 # Python (without Sage). Here we test everything, that a user may need when
@@ -8,43 +11,6 @@
 import os
 import re
 import sys
-
-# unfortunately the below paths hack is needed. Adjust the root path to your
-# Sage installation and execute the tests like this:
-#
-# LD_LIBRARY_PATH=/home/ondra/ext/sage/local/lib py.test sympy/test_external/test_sage.py
-#
-# We should make this more polished.
-
-def set_paths(root="/home/ondra/ext/sage"):
-    """
-    Set paths necessary to import sage.
-    root ... the path to your Sage installation
-    """
-    python_path = [
-        root+"/local/lib/python",
-        root+"/local/lib/python2.5/lib-dynload",
-        root+"/local/lib/python2.5/site-packages",
-            ]
-    sys.path = python_path + sys.path
-    paths = {
-            "SAGE_ROOT": root,
-            "SAGE_LOCAL": root+"/local",
-            "DOT_SAGE": "/tmp/dot_sage/",
-            "SAGE_SERVER": "http://www.sagemath.org/",
-            "PATH": root+"/local/bin:"+os.environ["PATH"],
-            }
-    os.environ.update(paths)
-
-set_paths()
-
-# This hack is needed, otherwise Sage fails to import. See this thread for more
-# info:
-#http://groups.google.com/group/sage-devel/browse_thread/thread/cf21fab7e612112b
-import sys
-if not hasattr(sys.stdin, "write"):
-    sys.stdin.write = 1
-    sys.stdin.flush = 1
 
 try:
     import sage.all as sage
