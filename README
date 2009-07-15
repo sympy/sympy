@@ -66,34 +66,18 @@ to execute tests, run
 
 ./setup.py test
 
-in the current directory.  You need to have py.test installed.
+in the current directory.
 
 
-4. How to install py.test
--------------------------
-
-If you use Debian, just install the python-codespeak-lib. Otherwise:
-
-Execute in your home directory:
-
-svn co http://codespeak.net/svn/py/dist py-dist
-
-This will create a "py-dist" directory in you home dir. Add this line to
-your .bashrc:
-
-eval `python ~/py-dist/py/env.py`
-
-Now you can call "py.test" from anywhere.
-
-5. Clean
+4. Clean
 --------
 
-To clean everything (thus getting the same tree as in the svn):
+To clean everything (thus getting the same tree as in the repository):
 
 ./setup.py clean
 
 
-6. Brief History
+5. Brief History
 ----------------
 
 SymPy was started by Ondrej Certik in 2005, he wrote some code during the
@@ -115,7 +99,7 @@ People who preferred not to be associated with the project anymore have "not
 active anymore" written near their names.
 
 
-7. Citation
+6. Citation
 -----------
 
 To cite SymPy in publications use::
