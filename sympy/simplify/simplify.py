@@ -1,7 +1,8 @@
 from sympy import SYMPY_DEBUG
 
 from sympy.core import Basic, S, C, Add, Mul, Pow, Rational, Integer, \
-        Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func
+        Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func, \
+        Function, Equality
 
 from sympy.core.numbers import igcd
 from sympy.core.relational import Equality
@@ -1262,7 +1263,7 @@ def simplify(expr):
        Simplification is not a well defined term and the exact strategies
        this function tries can change in the future versions of SymPy. If
        your algorithm relies on "simplification" (whatever it is), try to
-       determine what you need exactly  -  is it powsimp()? radsimp()?
+       determine what you need exactly  -  is it powsimp()?, radsimp()?,
        together()?, logcombine()?, or something else? And use this particular
        function directly, because those are well defined and thus your algorithm
        will be robust.
@@ -1275,6 +1276,7 @@ def simplify(expr):
         if d != 0:
             expr = -n/(-d)
     return expr
+
 
 def nsimplify(expr, constants=[], tolerance=None, full=False):
     """
@@ -1351,6 +1353,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False):
         return expr
 
     return re + im*S.ImaginaryUnit
+
 
 def logcombine(expr, assume_pos_real=False):
     """

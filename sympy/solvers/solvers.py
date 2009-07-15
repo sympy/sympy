@@ -594,14 +594,14 @@ def dsolve(eq, funcs):
         #order odes can be handled.
         order = deriv_degree(eq, f(x))
 
-        #if order > 1:
-         #   return solve_ODE_higher_order(eq, f(x), order)
+        if order > 1:
+            return constantsimp(solve_ODE_higher_order(eq, f(x), order), x, order)
         if  order > 2:
            raise NotImplementedError("dsolve: Cannot solve " + str(eq))
         elif order == 2:
             return solve_ODE_second_order(eq, f(x))
         elif order == 1:
-            return solve_ODE_first_order(eq, f(x))
+            return constantsimp(solve_ODE_first_order(eq, f(x)), x, 1)
         else:
             raise NotImplementedError("Not a differential equation.")
 
@@ -642,6 +642,166 @@ def classify_ode(expr, func):
 
     # This will have to wait for nth order homogeneous because I will need to
     # clean up solve_ODE_second_order and solve_ODE_1 first.
+
+def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
+    symbolname='C'):
+    """
+    Simplifies an expression with arbitrary constants in it.
+
+    This function is written specifically to work with dsolve(), and is not
+    indented for general use.
+
+    This is done by "absorbing" the arbitrary constants in to other arbitrary
+    constants, numbers, and symbols for which they are not independent of.
+
+    The symbols must all have the same name with numbers after it, for example,
+    C1, C2, C3.  The symbolname here would be 'C', the startnumber would be 1,
+    and the end number would be 3.  If the arbitrary constants are independent
+    of the variable x, then the independentsymbol would be x.
+
+    Because terms are "absorbed" into arbitrary constants and because constants
+    are renumbered after simplifying, the arbitrary constants in expr are not
+    necessarily equal to the ones of the same name in the returned result.
+
+    If two or more arbitrary constants are added, multiplied, or raised to the
+    power of each other, they are first absorbed together into a single
+    arbitrary constant.  Then the new constant is combined into other terms
+    if necessary.
+
+    Absorption is done naively.  constantsimp() does not attempt to expand
+    or simplify the expression first to obtain better absorption.
+
+    Constants are renumbered after simplification so that they are sequential,
+    such as C1, C2, C3, and so on.
+
+    Example:
+    >>> from sympy import *
+    >>> C1, C2, C3, x, y = symbols('C1 C2 C3 x y')
+    >>> constantsimp(2*C1*x, x, 3)
+    C1*x
+    >>> constantsimp(C1 + 2 + x + y, x, 3)
+    C1 + x
+    >>> constantsimp(C1*C2 + 2 + x + y + C3*x, x, 3)
+    C1 + x + C2*x
+    """
+    # We need to have an internal recursive function so that newstartnumber
+    # maintains its values throughout recursive calls
+
+    global newstartnumber
+    newstartnumber = 1
+
+    def _constantsimp(expr, independentsymbol, endnumber, startnumber=1,
+    symbolname='C'):
+        """
+        The function works recursively.  The idea is that, for Mul, Add, Pow, and
+        Function, if the class has a constant in it, then we can simplify it,
+        which we do by recursing down and simplifying up.  Otherwise, we can skip
+        that part of the expression.
+        """
+        constantsymbols = [Symbol(symbolname+"%d" % t) for t in range(startnumber,
+        endnumber + 1)]
+        x = independentsymbol
+
+        if isinstance(expr, Equality):
+            return Equality(_constantsimp(expr.lhs, x, endnumber, startnumber,
+                symbolname), _constantsimp(expr.rhs, x, endnumber, startnumber,
+                symbolname))
+
+        if type(expr) not in (Mul, Add, Pow) and not expr.is_Function:
+            # We don't know how to handle other classes
+            # This also serves as the base case for the recursion
+            return expr
+        elif not any(t in expr for t in constantsymbols):
+            return expr
+        else:
+            newargs = []
+            hasconst = False
+            isPowExp = False
+            reeval = False
+            for i in expr.args:
+                if i not in constantsymbols:
+                    newargs.append(i)
+                else:
+                    newconst = i
+                    hasconst = True
+                    if expr.is_Pow and i == expr.exp:
+                        isPowExp = True
+
+            for i in range(len(newargs)):
+                isimp = _constantsimp(newargs[i], x, endnumber, startnumber,
+                symbolname)
+                if isimp in constantsymbols:
+                    reeval = True
+                    hasconst = True
+                    newconst = isimp
+                    if expr.is_Pow and i == 1:
+                        isPowExp = True
+                newargs[i] = isimp
+            if hasconst:
+                newargs = filter(lambda i: i.has(x), newargs)
+                if isPowExp:
+                    newargs = newargs + [newconst] # Order matters in this case
+                else:
+                    newargs = [newconst] + newargs
+            if expr.is_Pow and len(newargs) == 1:
+                newargs.append(S.One)
+            if expr.is_Function:
+                if (len(newargs) == 0 or hasconst and len(newargs) == 1):
+                    return newconst
+                else:
+                    newfuncargs = [_constantsimp(t, x, endnumber, startnumber,
+                    symbolname) for t in expr.args]
+                    return expr.new(*newfuncargs)
+            else:
+                newexpr = expr.new(*newargs)
+                if reeval:
+                    return _constantsimp(newexpr, x, endnumber, startnumber,
+                    symbolname)
+                else:
+                    return newexpr
+
+    def _renumber(expr, symbolname, startnumber, endnumber):
+        """
+        Renumber arbitrary constants in expr.
+
+        This is a simple function that goes through and renumbers any Symbol
+        with a name in the form symbolname + num where num is in the range
+        from startnumber to endnumber.
+
+        Symbols are renumbered in the order that they are encountered via
+        a depth first search through args, so they should be numbered roughly
+        in the order that they appear in the final, printed expression.
+
+        The structure of the function is very similar to _constantsimp().
+        """
+        constantsymbols = [Symbol(symbolname+"%d" % t) for t in range(startnumber,
+        endnumber + 1)]
+        global newstartnumber
+
+        if isinstance(expr, Equality):
+            return Equality(_renumber(expr.lhs, symbolname, startnumber, endnumber),
+            _renumber(expr.rhs, symbolname, startnumber, endnumber))
+
+        if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and\
+        not any(t in expr for t in constantsymbols):
+            # Base case, as above.  We better hope there aren't constants inside
+            # of some other class, because they won't be simplified.
+            return expr
+        elif expr in constantsymbols:
+            # Renumbering happens here
+            newconst = Symbol(symbolname + str(newstartnumber))
+            newstartnumber += 1
+            return newconst
+        else:
+            return expr.new(*map(lambda x: _renumber(x, symbolname, startnumber,
+            endnumber), expr.args))
+
+
+    simpexpr = _constantsimp(expr, independentsymbol, endnumber, startnumber,
+    symbolname)
+
+    return _renumber(simpexpr, symbolname, startnumber, endnumber)
+
 
 
 def deriv_degree(expr, func):
