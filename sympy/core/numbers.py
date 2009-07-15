@@ -582,7 +582,10 @@ class Rational(Number):
                 ne = -e
                 if (ne is S.One):
                     return Rational(b.q, b.p)
-                return Rational(b.q, b.p) ** ne
+                if b < 0:
+                    return -(S.NegativeOne) ** ((e.p % e.q) / S(e.q)) * Rational(b.q, -b.p) ** ne
+                else:
+                    return Rational(b.q, b.p) ** ne
             if (e is S.Infinity):
                 if b.p > b.q:
                     # (3/2)**oo -> oo
@@ -939,10 +942,12 @@ class Integer(Rational):
         if exp is S.Half and base < 0:
             # we extract I for this special case since everyone is doing so
             return S.ImaginaryUnit * Pow(-base, exp)
-        result = None
         if exp < 0:
             # invert base and change sign on exponent
-            return Rational(1, base.p) ** (-exp)
+            if base < 0:
+                return -(S.NegativeOne) ** ((exp.p % exp.q) / S(exp.q)) * Rational(1, -base) ** (-exp)
+            else:
+                return Rational(1, base.p) ** (-exp)
         # see if base is a perfect root, sqrt(4) --> 2
         x, xexact = integer_nthroot(abs(base.p), exp.q)
         if xexact:
