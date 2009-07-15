@@ -84,6 +84,8 @@ want to be mentioned here, so see our repository history for a full list).
 #. Ben Goodrich: Matrix.jacobian() function improvements and fixes
 #. Toon Verstraelen: code generation module
 #. Ronan Lamy: test coverage script, limit fixes
+#. James Abbatiello: fixes tests on windows
+#. Ryan Krauss: fixes could_extract_minus_sign() and latex fixes
 
 
 Uptodate list in the order of the first contribution is given in the `AUTHORS
