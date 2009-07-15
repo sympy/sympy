@@ -98,7 +98,7 @@ To clean everything (thus getting the same tree as in the svn):
 
 SymPy was started by Ondrej Certik in 2005, he wrote some code during the
 summer, then he wrote some more code during the summer 2006. In February 2007,
-Fabian Seoane joined the project and helped fixed many things, contributed
+Fabian Pedregosa joined the project and helped fixed many things, contributed
 documentation and made it alive again. 5 students (Mateusz Paprocki, Brian
 Jorgensen, Jason Gedge, Robert Schwarz and Chris Wu) improved SymPy incredibly
 during the summer 2007 as part of the Google Summer of Code. Pearu Peterson
