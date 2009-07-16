@@ -133,6 +133,8 @@ def test_Infinity():
     assert 1/oo  == 0
     assert 1/(-oo)  == 0
     assert 8/oo  == 0
+    assert oo % 2 == nan
+    assert 2 % oo == nan
 
 def test_Infinity_2():
     x = Symbol('x')
