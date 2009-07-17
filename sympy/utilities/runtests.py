@@ -128,7 +128,6 @@ def doctest(*paths, **kwargs):
     else:
         t.add_paths(["sympy"])
     dtest = t.test()
-    return dtest # skip testing docs under doc/. See issue 1521
 
     if len(paths) == 0 and sys.version_info[:2] > (2,4):
         # test documentation under doc/src/ only if we are running the full
