@@ -822,11 +822,13 @@ class Basic(AssumeMeths):
            True
 
         """
+        result = False
         for obj in self.iter_basic_args():
-            if not obj.is_number:
+            if obj.is_number:
+                result = True
+            else:
                 return False
-        else:
-            return True
+        return result
 
     @property
     def func(self):

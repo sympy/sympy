@@ -325,13 +325,6 @@ def test_doit():
 
     assert (2*Integral(x, x)).doit() == x**2
 
-def test_is_number():
-    assert Rational(8).is_number
-    assert not x.is_number
-    assert (8+log(2)).is_number
-    assert not (8+log(2)+x).is_number
-    assert (1+x**2/x-x).is_number
-
 def test_attribute_error():
     raises(AttributeError, "x.cos()")
     raises(AttributeError, "x.sin()")
@@ -525,19 +518,25 @@ def test_is_number():
     assert Real(3.14).is_number == True
     assert Integer(737).is_number == True
     assert Rational(3, 2).is_number == True
-
+    assert Rational(8).is_number == True
     assert x.is_number == False
     assert (2*x).is_number == False
-
     assert (x + y).is_number == False
-
     assert log(2).is_number == True
     assert log(x).is_number == False
-
     assert (2 + log(2)).is_number == True
+    assert (8+log(2)).is_number == True
     assert (2 + log(x)).is_number == False
-
+    assert (8+log(2)+x).is_number == False
     assert (2*g).is_number == False
+    assert (1+x**2/x-x).is_number == True
+
+    # test extensibility of .is_number
+    # on subinstances of Basic
+    class A(Basic):
+        pass
+    a = A()
+    assert a.is_number == False
 
 
 # TODO write more tests for as_coeff_factors
