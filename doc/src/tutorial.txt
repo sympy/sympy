@@ -796,11 +796,17 @@ Tip: To make the pretty printing default in the python interpreter, use::
     >>> from sympy import Integral, latex
     >>> from sympy.abc import x
     >>> latex(x**2)
+    x^{2}
+    >>> latex(x**2, mode='inline')
     $x^{2}$
+    >>> latex(x**2, mode='equation')
+    \begin{equation}x^{2}\end{equation}
+    >>> latex(x**2, mode='equation*')
+    \begin{equation*}x^{2}\end{equation*}
     >>> latex(1/x)
-    $\frac{1}{x}$
+    \frac{1}{x}
     >>> latex(Integral(x**2, x))
-    $\int x^{2}\,dx$
+    \int x^{2}\,dx
     >>>
 
 **MathML**

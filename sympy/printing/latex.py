@@ -11,7 +11,7 @@ from sympy import Interval
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
 
-import re
+import re, warnings
 
 class LatexPrinter(Printer):
     printmethod = "_latex_"
@@ -27,10 +27,10 @@ class LatexPrinter(Printer):
         }
 
         self._settings = {
-            "inline" : True,
-            "itex" : False,
+            "itex": False,
             "descending" : False,
             "mainvar" : None,
+            "mode" : 'plain',
             "fold_frac_powers" : False,
             "fold_func_brackets" : False,
             "mul_symbol" : None,
@@ -43,11 +43,20 @@ class LatexPrinter(Printer):
 
         if profile is not None:
             if profile.has_key('inline'):
-                if not profile['inline']:
-                    #change to "good" defaults for inline=False before
-                    #updating with the settings from profile
-                    self._settings['mat_str'] = 'bmatrix'
-                    self._settings['mat_delim'] = None
+                warnings.warn("'inline' is deprecated, please use 'mode'. "
+                    "'mode' can be one of 'inline', 'plain', 'equation', or "
+                    "'equation*'.")
+                if profile['inline']:
+                    profile['mode'] = 'inline'
+                else:
+                    profile['mode'] = 'equation*'
+            if profile.has_key('mode'):
+                valid_modes = ['inline', 'plain', 'equation', \
+                               'equation*']
+                if profile['mode'] not in valid_modes:
+                    msg = "'mode' must be one of 'inline', 'plain', \n" + \
+                          "'equation' or 'equation*'"
+                    raise ValueError, msg
             self._settings.update(profile)
 
         self._settings['mul_symbol_latex'] = \
@@ -56,12 +65,15 @@ class LatexPrinter(Printer):
     def doprint(self, expr):
         tex = Printer.doprint(self, expr)
 
-        if self._settings['inline']:
+        if self._settings['mode'] == 'plain':
+            return tex
+        elif self._settings['mode'] == 'inline':
             return r"$%s$" % tex
         elif self._settings['itex']:
             return r"$$%s$$" % tex
         else:
-            return r"\begin{equation*}%s\end{equation*}" % tex
+            env_str = self._settings['mode']
+            return r"\begin{%s}%s\end{%s}" % (env_str, tex, env_str)
 
     def _needs_brackets(self, expr):
         """
@@ -363,7 +375,7 @@ class LatexPrinter(Printer):
             tex += r"\int"
 
             if limits is not None:
-                if not self._settings['inline'] \
+                if self._settings['mode'] in ['equation','equation*'] \
                    and not self._settings['itex']:
                     tex += r"\limits"
 
@@ -718,30 +730,42 @@ class LatexPrinter(Printer):
 def latex(expr, profile=None, **kargs):
     r"""Convert the given expression to LaTeX representation.
 
-        You can specify how the generated code will be delimited.
-        If the 'inline' keyword is set then inline LaTeX $ $ will
-        be used. Otherwise the resulting code will be enclosed in
-        'equation*' environment (remember to import 'amsmath'),
-        unless the 'itex' keyword is set in which case the itex
-        $$ $$ syntax will be used.
+        You can specify how the generated code will be delimited using
+        the 'mode' keyword. 'mode' can be one of 'plain', 'inline',
+        'equation' or 'equation*'.  If 'mode' is set to 'plain', then
+        the resulting code will not be delimited at all (this is the
+        default). If 'mode' is set to 'inline' then inline LaTeX $ $ will be
+        used.  If 'mode' is set to 'equation' or 'equation*', the resulting
+        code will be enclosed in the 'equation' or 'equation*' environment
+        (remember to import 'amsmath' for 'equation*'), unless the 'itex'
+        option is set. In the latter case, the $$ $$ syntax is used.
 
         >>> from sympy import latex, Rational
         >>> from sympy.abc import x, y, mu, tau
 
         >>> latex((2*tau)**Rational(7,2))
+        '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
+
+        >>> latex((2*mu)**Rational(7,2), mode='plain')
+        '8 \\sqrt{2} \\mu^{\\frac{7}{2}}'
+
+        >>> latex((2*tau)**Rational(7,2), mode='inline')
         '$8 \\sqrt{2} \\tau^{\\frac{7}{2}}$'
 
-        >>> latex((2*mu)**Rational(7,2), inline=False)
+        >>> latex((2*mu)**Rational(7,2), mode='equation*')
         '\\begin{equation*}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation*}'
 
-        >>> latex((2*mu)**Rational(7,2), inline=False, itex=True)
+        >>> latex((2*mu)**Rational(7,2), mode='equation')
+        '\\begin{equation}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation}'
+
+        >>> latex((2*mu)**Rational(7,2), mode='equation', itex=True)
         '$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$'
 
         Besides all Basic based expressions, you can recursively
         convert Python containers (lists, tuples and dicts) and
         also SymPy matrices:
 
-        >>> latex([2/x, y])
+        >>> latex([2/x, y], mode='inline')
         '$\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}$'
 
     """
