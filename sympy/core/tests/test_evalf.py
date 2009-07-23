@@ -139,6 +139,7 @@ def test_evalf_bugs():
     assert NS(sin(1)+Rational(1,10**100)*I,15) == '0.841470984807897 + 1.00000000000000e-100*I'
     assert x.evalf() == x
     assert NS(((-I-sqrt(2)*I)**2).evalf()) == '-5.82842712474619'
+    assert NS((1+I)**2*I,15) == '-2.00000000000000 + .0e-19*I'
 
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)

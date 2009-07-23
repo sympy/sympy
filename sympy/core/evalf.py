@@ -381,7 +381,7 @@ def evalf_mul(v, prec, options):
             print "MUL: obtained accuracy", re_acc, im_acc, "expected", target_prec
         # multiply by i
         if direction & 1:
-            return mpf_neg(im), re, re_acc, im_acc
+            return mpf_neg(im), re, im_acc, re_acc
         else:
             return re, im, re_acc, im_acc
     else:
