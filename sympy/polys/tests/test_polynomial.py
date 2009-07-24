@@ -6,7 +6,8 @@ from sympy.polys.monomial import monomial_lex_cmp, monomial_grlex_cmp, \
 
 from sympy.polys.algorithms import poly_groebner, poly_subresultants,    \
         poly_resultant, poly_half_gcdex, poly_gcdex, poly_gcd, poly_lcm, \
-        poly_div, poly_pdiv, poly_decompose, poly_sqf, poly_reduce
+        poly_div, poly_pdiv, poly_decompose, poly_sqf, poly_reduce, \
+        poly_discriminant
 
 from sympy.polys.rootfinding import poly_root_factors, roots_linear,  \
         roots_quadratic, roots_cubic, roots_quartic, roots_binomial, \
@@ -16,6 +17,8 @@ from sympy.polys.factortools import poly_factors, factors, factor
 
 from sympy.polys.polynomial import Poly, PolynomialError, \
         CoefficientError, SymbolsError
+
+from sympy.utilities.pytest import skip
 
 a,b,c,d,x,y,z,u,v,t = symbols('abcdxyzuvt')
 
@@ -1295,4 +1298,50 @@ def test_factor():
     assert poly_factors(x**20 - z**5*y**20, x, y, z) == \
         (1, [(Poly(-y**4*z + x**4, x, y, z), 1),
              (Poly(y**16*z**4 + x**4*y**12*z**3 + x**8*y**8*z**2 + x**12*y**4*z + x**16, x, y, z) , 1)])
+
+def test_discriminant():
+    e = Symbol('e')
+    assert poly_discriminant(Poly(a, x)) == S(0)
+    assert poly_discriminant(Poly(a*x + b, x)) == S(1)
+    assert poly_discriminant(Poly(a*x**2 + b*x + c, x)) == -4*a*c + b**2
+    assert poly_discriminant(Poly(a*x**3 + b*x**2 + c*x + d, x)) == 18*a*b*c*d + \
+    b**2*c**2 - 27*a**2*d**2 - 4*a*c**3 - 4*d*b**3
+    assert poly_discriminant(Poly(a*x**4 + b*x**3 + c*x**2 + d*x + e, x)) == \
+    -27*b**4*e**2 + b**2*c**2*d**2 - 128*a**2*c**2*e**2 - 4*a*c**3*d**2 - \
+    192*b*d*a**2*e**2 - 6*a*e*b**2*d**2 + 144*a*c*b**2*e**2 + 144*c*e*a**2*d**2 \
+    - 80*a*b*d*e*c**2 - 4*b**3*d**3 + 256*a**3*e**3 - 4*e*b**2*c**3 + \
+    18*a*b*c*d**3 + 18*c*d*e*b**3 - 27*a**2*d**4 + 16*a*e*c**4
+    assert poly_discriminant(Poly(5*x**5 + x**3 + 2, x)) == 31252160
+    assert poly_discriminant(Poly(12*x**7 + 15*x**4 + 30*x**3 + x**2 + 1, x)) \
+    == S(-220289699947514112)
+    # (x - 1)**2*(x + 2 - 3*I)*(x + 2 + 3*I)
+    assert poly_discriminant(Poly(13 - 22*x + 6*x**2 + 2*x**3 + x**4, x)) == S(0)
+    # (x - 1)*(x + 2 - 3*I)*(x + 2 + 3*I)
+    assert poly_discriminant(Poly(-13 + 9*x + 3*x**2 + x**3, x)) == S(-11664)
+    raises(NotImplementedError, "poly_discriminant(Poly(x*y, x, y))")
+
+def test_discriminant_5th():
+    skip('takes too much time')
+    # but the result is correct nonetheless
+    e, f = symbols('ef')
+    assert poly_discriminant(Poly(a*x**5 + b*x**4 + c*x**3 + d*x**2 + e*x + f, x)) \
+    == -128*b**4*d**2*f**2 - 27*a**2*d**4*e**2 - 27*b**2*c**4*f**2 - \
+    4*b**3*d**3*e**2 + 108*a*c**5*f**2 + b**2*c**2*d**2*e**2 - \
+    900*b*a**2*d**3*f**2 - 900*e*a**2*c**3*f**2 - 192*c*e*b**4*f**2 - \
+    50*a**2*b**2*e**2*f**2 - 6*f*b**3*c**2*e**2 - 4*a*c**3*d**2*e**2 + \
+    144*d*f*b**4*e**2 + 144*d*b**3*c**2*f**2 + 825*a**2*c**2*d**2*f**2 + \
+    2000*c*a**3*e**2*f**2 + 2250*e*a**3*d**2*f**2 - 630*a*b*d*c**3*f**2 - \
+    80*c*e*f*b**3*d**2 + 18*a*b*c*d**3*e**2 + 24*a*b*f*c**3*e**2 + \
+    160*a*d*e*b**3*f**2 + 560*a*c*b**2*d**2*f**2 + 560*d*f*a**2*c**2*e**2 + \
+    1020*a*e*b**2*c**2*f**2 + 1020*b*f*a**2*d**2*e**2 - 2050*b*c*d*e*a**2*f**2\
+    - 746*a*c*d*f*b**2*e**2 + 356*a*b*e*f*c**2*d**2 + 256*b**5*f**3 - \
+    4*b**2*c**3*e**3 + 16*a*c**4*e**3 - 3750*c*d*a**3*f**3 - 2500*b*e*a**3*f**3\
+    - 1600*a*c*b**3*f**3 - 1600*d*f*a**3*e**3 - 36*a*f*b**3*e**3 - \
+    6*a*b**2*d**2*e**3 - 4*f*b**2*c**2*d**3 + 16*a*f*c**3*d**3 + \
+    18*c*d*b**3*e**3 + 144*c*a**2*d**2*e**3 + 2000*d*a**2*b**2*f**3 + \
+    2250*b*a**2*c**2*f**3 - 630*c*e*f*a**2*d**3 - 80*a*b*d*c**2*e**3 + \
+    18*d*e*f*b**2*c**3 + 24*a*e*f*b**2*d**3 + 160*b*c*f*a**2*e**3 - \
+    27*b**4*e**4 + 3125*a**4*f**4 - 128*a**2*c**2*e**4 + 16*f*b**3*d**4 - \
+    192*b*d*a**2*e**4 + 144*a*c*b**2*e**4 - 72*a*b*c*f*d**4 - 72*a*d*e*f*c**4 + \
+    256*a**3*e**5 + 108*f*a**2*d**5
 

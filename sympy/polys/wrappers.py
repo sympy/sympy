@@ -7,7 +7,7 @@ def LexPoly(*args):
 
 from algorithms import poly_div, poly_pdiv, poly_groebner, poly_lcm, poly_gcd, \
     poly_half_gcdex, poly_gcdex, poly_sqf, poly_resultant, poly_subresultants, \
-    poly_decompose, poly_quo, poly_rem, poly_pquo, poly_prem
+    poly_decompose, poly_quo, poly_rem, poly_pquo, poly_prem, poly_discriminant
 
 from rootfinding import poly_root_factors, poly_sturm
 
@@ -43,6 +43,7 @@ _funcs = {
     'decompose'     : 1,
     'root_factors'  : 1,
     'sturm'         : 1,
+    'discriminant'  : 1,
 }
 
 _func_def = \
@@ -82,6 +83,7 @@ def subresultants(*args, **kwargs):
         return R
     else:
         return res.as_basic(), R
+
 
 subresultants.__doc__ = poly_subresultants.__doc__
 

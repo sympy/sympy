@@ -974,3 +974,40 @@ def poly_reduce(f, g, *symbols):
 
     return f, g
 
+def poly_discriminant(p):
+    """
+    Returns the discriminant of a polynomial.
+
+    The discriminant of a univariate polynomial p of degree n is defined as
+    n**(n*(n-1)/2)/a_n*resultant(p, p'), where p' is the derivative of p and a_n
+    is the leading coefficient of p.  Because the resultant of two polynomials
+    vanishes identically whenever the two polynomials share a root, and a
+    polynomial shares a root with its derivative if and only if the root is a
+    repeated root, it follows that the discriminant of a polynomial vanishes
+    identically if and only if the polynomial has a repeated root.
+
+    See also:
+    <http://en.wikipedia.org/wiki/Discriminant>
+
+    Example:
+    >>> from sympy import *
+    >>> a, b, c, x = symbols('abcx')
+    >>> discriminant(Poly(a*x**2 + b*x + c, x))
+    -4*a*c + b**2
+    >>> discriminant(Poly(2*x**5 + x**2 + 10, x))
+    500004320
+    >>> discriminant(Poly((x-1)*(x+1), x))
+    4
+    >>> discriminant(Poly((x-1)**2*(x+1), x))
+    0
+    """
+    if len(p.symbols) != 1:
+        raise NotImplementedError("Only univariate polynomials are supported.")
+    def negonetox(x):
+        """(-1)**x"""
+        return -2*(x%2) + 1
+    if p.degree == 0:
+        return S(0)
+    return (negonetox(S(p.degree)*(S(p.degree) - 1)/2)/p.lead_coeff*\
+    poly_resultant(p, p.diff(p.symbols[0]))).expand()
+
