@@ -974,9 +974,9 @@ def poly_reduce(f, g, *symbols):
 
     return f, g
 
-def poly_discriminant(p):
+def poly_discriminant(p, symbol):
     """
-    Returns the discriminant of a polynomial.
+    Returns the discriminant of a polynomial with respect to symbol.
 
     The discriminant of a univariate polynomial p of degree n is defined as
     n**(n*(n-1)/2)/a_n*resultant(p, p'), where p' is the derivative of p and a_n
@@ -992,22 +992,22 @@ def poly_discriminant(p):
     Example:
     >>> from sympy import *
     >>> a, b, c, x = symbols('abcx')
-    >>> discriminant(Poly(a*x**2 + b*x + c, x))
+    >>> discriminant(Poly(a*x**2 + b*x + c, x), x)
     -4*a*c + b**2
-    >>> discriminant(Poly(2*x**5 + x**2 + 10, x))
+    >>> discriminant(Poly(2*x**5 + x**2 + 10, x), x)
     500004320
-    >>> discriminant(Poly((x-1)*(x+1), x))
+    >>> discriminant(Poly((x-1)*(x+1), x), x)
     4
-    >>> discriminant(Poly((x-1)**2*(x+1), x))
+    >>> discriminant(Poly((x-1)**2*(x+1), x), x)
     0
     """
-    if len(p.symbols) != 1:
-        raise NotImplementedError("Only univariate polynomials are supported.")
-    def negonetox(x):
-        """(-1)**x"""
-        return -2*(x%2) + 1
+    if not isinstance(p, Poly):
+        p = Poly(p, symbol)
+    if not p.is_univariate:
+        # We need to make p univariate for poly_resultant to work
+        p = Poly(p.as_basic(), symbol) # Is there a better way to do this?
     if p.degree == 0:
-        return S(0)
-    return (negonetox(S(p.degree)*(S(p.degree) - 1)/2)/p.lead_coeff*\
-    poly_resultant(p, p.diff(p.symbols[0]))).expand()
+        return S.Zero
+    return (S(int((-1)**((p.degree)*(S(p.degree) - 1)/2)))/p.lead_coeff*\
+    poly_resultant(p, p.diff(symbol))).expand()
 
