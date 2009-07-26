@@ -465,6 +465,9 @@ def integrate(*args, **kwargs):
        >>> integrate(log(x), x)
        -x + x*log(x)
 
+       >>> integrate(log(x), (x, 1, a))
+       1 - a + a*log(a)
+
        >>> integrate(x)
        (1/2)*x**2
 
