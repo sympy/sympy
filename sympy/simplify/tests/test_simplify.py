@@ -213,8 +213,8 @@ def test_separate():
     assert separate((exp((x*y)**z)*exp(y))**2) == exp(2*(x*y)**z)*exp(2*y)
     assert separate((exp((x*y)**z)*exp(y))**2, deep=True) == exp(2*x**z*y**z)*exp(2*y)
 
-@XFAIL
 def test_separate_X1():
+    x, y, z = map(Symbol, 'xyz')
     assert separate((exp(x)*exp(y))**z) == exp(x*z)*exp(y*z)
 
 def test_powsimp():
