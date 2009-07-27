@@ -53,27 +53,29 @@ def convert_to_native_paths(lst):
     """
     return [os.path.join(*x.split("/")) for x in lst]
 
-def test(*paths, **kwargs):
+def test(*args, **kwargs):
     """
-    Runs the tests specified by paths, or all tests if paths=[].
+    Run all tests containing any of the given strings in their path.
 
-    Note: paths are specified relative to the sympy root directory in a unix
-    format (on all platforms including windows).
+    Warning: Tests in *very* deeply nested directories are not found.
 
     Examples:
 
-    Run all tests:
     >> import sympy
+
+    Run all tests:
     >> sympy.test()
 
     Run one file:
-    >> import sympy
     >> sympy.test("sympy/core/tests/test_basic.py")
 
     Run all tests in sympy/functions/ and some particular file:
-    >> import sympy
     >> sympy.test("sympy/core/tests/test_basic.py", "sympy/functions")
+
+    Run all tests in sympy/core and sympy/utilities:
+    >> sympy.test("core", "util")
     """
+    from glob import glob
     verbose = kwargs.get("verbose", False)
     tb = kwargs.get("tb", "short")
     kw = kwargs.get("kw", "")
@@ -81,10 +83,13 @@ def test(*paths, **kwargs):
     colors = kwargs.get("colors", True)
     r = PyTestReporter(verbose, tb, colors)
     t = SymPyTests(r, kw, post_mortem)
-    if len(paths) > 0:
-        t.add_paths(paths)
-    else:
+    if len(args) == 0:
         t.add_paths(["sympy"])
+    else:
+        mypaths = []
+        for p in t.get_paths(dir='sympy'):
+            mypaths.extend(glob(p))
+        t.add_paths([p for p in mypaths if any(a in p for a in args)])
     return t.test()
 
 def doctest(*paths, **kwargs):
