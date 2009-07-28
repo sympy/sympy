@@ -24,8 +24,8 @@ from sympy.core.numbers import ilcm
 from sympy.core.multidimensional import vectorize
 
 from sympy.functions import sqrt, log, exp, LambertW, sin, cos, re, im
-from sympy.simplify import simplify, collect, logcombine, separatevars
-from sympy.matrices import Matrix, zeros
+from sympy.simplify import simplify, collect, logcombine, separatevars, trigsimp
+from sympy.matrices import Matrix, zeros, wronskian
 from sympy.polys import roots, RootsOf, discriminant
 
 from sympy.utilities import any, all, numbered_symbols
@@ -1009,6 +1009,7 @@ def solve_ODE_first_order(eq, f):
     raise NotImplementedError("solve_ODE_first_order: Cannot solve " + str(eq))
 
 def solve_ODE_higher_order(eq, f, order):
+    from sympy.integrals.integrals import integrate
     x = f.args[0]
     f = f.func
     b = Wild('b', exclude=[f(x)])
@@ -1057,7 +1058,8 @@ def solve_ODE_higher_order(eq, f, order):
                     charroots[i] += 1
                 else:
                     charroots[i] = 1
-            sol = S(0)
+            gsol = S(0)
+            psol = S(0)
             # We need keep track of terms so we can run collect() at the end.
             # This is necessary for constantsimp to work properly.
             collectterms = []
@@ -1065,23 +1067,50 @@ def solve_ODE_higher_order(eq, f, order):
                 for i in range(multiplicity):
                     reroot = re(root)
                     imroot = im(root)
-                    sol += x**i*exp(reroot*x)*(constants.next()*sin(abs(imroot)*x) \
+                    gsol += x**i*exp(reroot*x)*(constants.next()*sin(abs(imroot)*x) \
                     + constants.next()*cos(imroot*x))
                     collectterms = [(i, reroot, imroot)] + collectterms
-            sol = expand_mul(sol, deep=False)
-
+            gsol = expand_mul(gsol, deep=False)
             for i, reroot, imroot in collectterms:
-                sol = collect(sol, x**i*exp(reroot*x)*sin(abs(imroot)*x))
-                sol = collect(sol, x**i*exp(reroot*x)*cos(imroot*x))
+                gsol = collect(gsol, x**i*exp(reroot*x)*sin(abs(imroot)*x))
+                gsol = collect(gsol, x**i*exp(reroot*x)*cos(imroot*x))
             for i, reroot, imroot in collectterms:
-                sol = collect(sol, x**i*exp(reroot*x))
-            if r[b] == 0:
-                return Equality(f(x), sol)
-#            else:
+                gsol = collect(gsol, x**i*exp(reroot*x))
+            if r[b] != 0:
                 # Variation of Paramters
-                homsols = []
-#                for i in collectterms:
-#                    if
+                gensols = []
+                # Keep track of when to use sin or cos for nonzero imroot
+                trigdict = {}
+                if len(collectterms) != order:
+                    raise NotImplementedError("Cannot find " + str(order) + \
+                    " solutions to homogeneous equation to apply variation " + \
+                    "of parameters to " + str(eq))
+                for i, reroot, imroot in collectterms:
+                    if imroot == 0:
+                        gensols.append(x**i*exp(reroot*x))
+                    else:
+                        if x**i*exp(reroot*x)*sin(abs(imroot)*x) in gensols:
+                            gensols.append(x**i*exp(reroot)*cos(imroot*x))
+                        else:
+                            gensols.append(x**i*exp(reroot*x)*sin(abs(imroot)*x))
+                wr = wronskian(gensols, x)
+                wr = trigsimp(wr) # to reduce sin(x)**2 + cos(x)**2 to 1
+                print 'wr', wr
+                if not wr:
+                    raise NotImplementedError("Cannot find " + str(order) + \
+                    " solutions to homogeneous equation to apply variation " + \
+                    "of parameters to " + str(eq) + " (Wronskian == 0)")
+                negoneterm = (-1)**(order)
+                for i in gensols:
+                    psol += negoneterm*C.Integral(wronskian(filter(lambda x: x != i, \
+                    gensols), x)*r[b]/wr, x)*i/r[wilds[-1]]
+                    negoneterm *= -1
+            psol = simplify(psol)
+            psol = trigsimp(psol, deep=True)
+            from sympy import pprint
+            pprint(psol)
+            return Equality(f(x), gsol + psol)
+
 
 
     # special equations, that we know how to solve
