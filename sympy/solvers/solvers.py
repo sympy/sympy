@@ -794,8 +794,14 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             newstartnumber += 1
             return newconst
         else:
-            return expr.new(*map(lambda x: _renumber(x, symbolname, startnumber,
-            endnumber), expr.args))
+            sortedargs = list(expr.args)
+            sortedargs.sort(Basic._compare_pretty)
+            if expr.is_Function or expr.is_Pow:
+                return expr.new(*map(lambda x: _renumber(x, symbolname, \
+                startnumber, endnumber), expr.args))
+            else:
+                return expr.new(*map(lambda x: _renumber(x, symbolname, \
+                startnumber, endnumber), sortedargs))
 
 
     simpexpr = _constantsimp(expr, independentsymbol, endnumber, startnumber,
@@ -1019,7 +1025,7 @@ def solve_ODE_higher_order(eq, f, order):
     s += b
 
     r = eq.match(s)
-    if r and r[b] == 0:
+    if r:
         # The ODE is homogeneous
         if all([not r[i].has(x) for i in wilds]):
             # First, set up characteristic equation.
@@ -1069,7 +1075,14 @@ def solve_ODE_higher_order(eq, f, order):
                 sol = collect(sol, x**i*exp(reroot*x)*cos(imroot*x))
             for i, reroot, imroot in collectterms:
                 sol = collect(sol, x**i*exp(reroot*x))
-            return Equality(f(x), sol)
+            if r[b] == 0:
+                return Equality(f(x), sol)
+#            else:
+                # Variation of Paramters
+                homsols = []
+#                for i in collectterms:
+#                    if
+
 
     # special equations, that we know how to solve
     # TODO: refactor into substitution u = f' (divide out exp(-f(x))

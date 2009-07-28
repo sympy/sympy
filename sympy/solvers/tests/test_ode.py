@@ -83,7 +83,7 @@ def test_ode4():
 def test_ode5():
     eq = Eq(9*f(x).diff(x, x), f(x))
     sol = dsolve(eq, f(x))
-    assert sol == Eq(f(x),C2*exp(-x/3) + C1*exp(x/3))
+    assert sol == Eq(f(x),C1*exp(-x/3) + C2*exp(x/3))
     assert checksol(eq, f(x), sol)
 
 def test_ode6():
@@ -136,7 +136,7 @@ def test_ode12():
     # Type: 2nd order, constant coefficients (two complex roots)
     eq = Eq(f(x).diff(x,x)+2*diff(f(x),x)+3*f(x), 0)
     sol = dsolve(eq, f(x))
-    assert sol == Eq(f(x),(C1*cos(x*sqrt(2)) + C2*sin(x*sqrt(2)))*exp(-x))
+    assert sol == Eq(f(x), (C1*sin(x*sqrt(2)) + C2*cos(x*sqrt(2)))*exp(-x))
     assert checksol(eq, f(x), sol)
 
 def test_ode13():
@@ -354,38 +354,37 @@ def test_homogeneous_norder():
     eq29 = f(x).diff(x, 4) + 4*f(x).diff(x, 2)
     eq30 = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x)
     sol1 = Eq(f(x), C1 + C2*exp(-2*x))
-    sol2 = Eq(f(x), C2*exp(x) + C1*exp(2*x))
+    sol2 = Eq(f(x), C1*exp(x) + C2*exp(2*x))
     sol3 = Eq(f(x), C1*exp(x) + C2*exp(-x))
     sol4 = Eq(f(x), C1 + C2*exp(-3*x) + C3*exp(2*x))
-    sol5 = Eq(f(x), C2*exp(x/2) + C1*exp(4*x/3))
+    sol5 = Eq(f(x), C1*exp(x/2) + C2*exp(4*x/3))
     sol6 = Eq(f(x), C1*exp(-x*(1 + sqrt(2))) + C2*exp(-x*(1 - sqrt(2))))
-    sol7 = Eq(f(x), C2*exp(3*x) + C1*exp(-x*(2 + sqrt(2))) + C3*exp(-x*(2 - sqrt(2))))
-    sol8 = Eq(f(x), C1 + C3*exp(x) + C4*exp(-2*x) + C2*exp(2*x))
-    sol9 = Eq(f(x), C3*exp(x) + C4*exp(-x) + C1*exp(-x*(2 + sqrt(2))) + C2*exp(-x*(2 - \
+    sol7 = Eq(f(x), C1*exp(3*x) + C2*exp(-x*(2 + sqrt(2))) + C3*exp(-x*(2 - sqrt(2))))
+    sol8 = Eq(f(x), C1 + C2*exp(x) + C3*exp(-2*x) + C4*exp(2*x))
+    sol9 = Eq(f(x), C1*exp(x) + C2*exp(-x) + C3*exp(-x*(2 + sqrt(2))) + C4*exp(-x*(2 - \
         sqrt(2))))
-    sol10 = Eq(f(x), C3*sin(x*sqrt(a)) + C4*cos(x*sqrt(a)) + C2*exp(x*sqrt(a)) + \
-        C1*exp(-x*sqrt(a)))
-    sol11 = Eq(f(x), C2*exp(x*(k - sqrt(8 + 4*k**2)/2)) + C1*exp(x*(k + sqrt(8 + \
+    sol10 = Eq(f(x), C1*sin(x*sqrt(a)) + C2*cos(x*sqrt(a)) + C3*exp(x*sqrt(a)) + \
+        C4*exp(-x*sqrt(a)))
+    sol11 = Eq(f(x), C1*exp(x*(k + sqrt(8 + 4*k**2)/2)) + C2*exp(x*(k - sqrt(8 + \
         4*k**2)/2)))
-    sol12 = Eq(f(x), C2*exp(x*(-4*abs(k) - 2*k)) + C1*exp(x*(-2*k + 4*abs(k))))
-    sol13 = Eq(f(x), C1 + C4*x + C3*x**2 + C2*x**3)
+    sol12 = Eq(f(x), C1*exp(x*(-4*abs(k) - 2*k)) + C2*exp(x*(-2*k + 4*abs(k))))
+    sol13 = Eq(f(x), C1 + C2*x + C3*x**2 + C4*x**3)
     sol14 = Eq(f(x), (C1 + C2*x)*exp(-2*x))
-    sol15 = Eq(f(x), (C2 + C3*x)*exp(-x) + C1*exp(x/3))
-    sol16 = Eq(f(x), (C1 + C3*x + C2*x**2)*exp(2*x))
+    sol15 = Eq(f(x), (C1 + C2*x)*exp(-x) + C3*exp(x/3))
+    sol16 = Eq(f(x), (C1 + C2*x + C3*x**2)*exp(2*x))
     sol17 = Eq(f(x), (C1 + C2*x)*exp(a*x))
-    sol18 = Eq(f(x), C1 + C4*x + C3*x**2 + C2*exp(-3*x))
-    sol19 = Eq(f(x), C1 + C3*x + C2*exp(x*sqrt(2)) + C4*exp(-x*sqrt(2)))
-    sol20 = Eq(f(x), (C3 + C4*x)*exp(-3*x) + (C1 + C2*x)*exp(2*x))
-    sol21 = Eq(f(x), C3*exp(x/2) + C1*exp(-x) + C2*exp(-x/3) + C4*exp(5*x/6))
+    sol18 = Eq(f(x), C1 + C2*x + C3*x**2 + C4*exp(-3*x))
+    sol19 = Eq(f(x), C1 + C2*x + C3*exp(x*sqrt(2)) + C4*exp(-x*sqrt(2)))
+    sol20 = Eq(f(x), (C1 + C2*x)*exp(-3*x) + (C3 + C4*x)*exp(2*x))
+    sol21 = Eq(f(x), C1*exp(x/2) + C2*exp(-x) + C3*exp(-x/3) + C4*exp(5*x/6))
     sol22 = Eq(f(x), (C1 + C2*x)*exp(-2*x) + (C3 + C4*x)*exp(2*x))
     sol23 = Eq(f(x), (C1*sin(2*x) + C2*cos(2*x))*exp(x))
     sol24 = Eq(f(x), (C1*sin(x*sqrt(3)/2) + C2*cos(x*sqrt(3)/2))*exp(x/2))
-    sol25 = Eq(f(x), C1*sin(x*sqrt(3)) + C2*cos(x*sqrt(2)) + C3*sin(x*sqrt(2)) + \
-    C4*cos(x*sqrt(3)))
-    sol26 = Eq(f(x), (C1*cos(4*x) + C2*sin(4*x))*exp(2*x))
-    sol27 = Eq(f(x), (C1 + C2*x)*cos(x*sqrt(2)) + (C3 + C4*x)*sin(x*sqrt(2)))
+    sol25 = Eq(f(x), C1*cos(x*sqrt(3)) + C2*sin(x*sqrt(3)) + C3*sin(x*sqrt(2)) + C4*cos(x*sqrt(2)))
+    sol26 = Eq(f(x), (C1*sin(4*x) + C2*cos(4*x))*exp(2*x))
+    sol27 = Eq(f(x), (C1 + C2*x)*sin(x*sqrt(2)) + (C3 + C4*x)*cos(x*sqrt(2)))
     sol28 = Eq(f(x), (C1*sin(x*sqrt(3)) + C2*cos(x*sqrt(3)))*exp(x) + C3*exp(-2*x))
-    sol29 = Eq(f(x), C1 + C2*x + C3*sin(2*x) + C4*cos(2*x))
+    sol29 = Eq(f(x), C1 + C2*sin(2*x) + C3*cos(2*x) + C4*x)
     sol30 = Eq(f(x), C1 + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))
     assert dsolve(eq1, f(x)) == sol1
     assert dsolve(eq2, f(x)) == sol2
