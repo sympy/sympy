@@ -143,7 +143,7 @@ Symbols are variables, and like all other variables, they need to be assigned be
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
     NameError: name 'z' is not defined
-    >>> var('z') # This is the easiest way to define x as a standard symbol
+    >>> var('z') # This is the easiest way to define z as a standard symbol
     z
     >>> z**2
     z**2
@@ -173,7 +173,7 @@ You can also import common symbol names from :mod:`sympy.abc`.
 
 If you want control over the assumptions of the variables, use :func:`Symbol` and :func:`symbols`.  See :ref:`Keyword Arguments<keyword-arguments>` below.
 
-Lastly, it is recomended that you not use :obj:`I`, :obj:`E`, :obj:`S`, :obj:`N`, :obj:`C`, or :obj:`O` for variable or symbol names, as those are used for the imaginary unit (:math:`i`), the base of the natural logarithm (:math:`e`), the :func:`sympify` function (see :ref:`Symbolic Expressions<symbolic-expressions>` below), evaluation (:func:`N` is equivalent to :ref:`evalf()<evalf-label>` ), the class registry (for things like :func:`C.cos`, to prevent cyclic imports in some code), and the `big O <http://en.wikipedia.org/wiki/Big_O_notation>`_ order symbol (as in :math:`O(n\log{n})`), respectively.  Python will not prevent you from overriding default SymPy names or functions, so be careful.
+Lastly, it is recomended that you not use :obj:`I`, :obj:`E`, :obj:`S`, :obj:`N`, :obj:`C`, or :obj:`O` for variable or symbol names, as those are used for the imaginary unit (:math:`i`), the base of the natural logarithm (:math:`e`), the :func:`sympify` function (see :ref:`Symbolic Expressions<symbolic-expressions>` below), evaluation (:func:`N` is equivalent to :ref:`evalf()<evalf-label>` ), the class registry (for things like :func:`C.cos`, to prevent cyclic imports in some code), and the `big O <http://en.wikipedia.org/wiki/Big_O_notation>`_ order symbol (as in :math:`O(n\log{n})`), respectively.  You can use the mnemonic ``COSINE`` to remember what Symbols are defined by default in SymPy.  Or better yet, always use lowercase letters for Symbol names.  Python will not prevent you from overriding default SymPy names or functions, so be careful.
 
     >>> from sympy import *
     >>> cos(pi) # cos and pi are a built-in sympy names.
