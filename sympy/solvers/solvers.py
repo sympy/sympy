@@ -26,7 +26,7 @@ from sympy.core.multidimensional import vectorize
 from sympy.functions import sqrt, log, exp, LambertW, sin, cos, re, im
 from sympy.simplify import simplify, collect, logcombine, separatevars, trigsimp
 from sympy.matrices import Matrix, zeros, wronskian
-from sympy.polys import roots, RootsOf, discriminant
+from sympy.polys import roots, RootsOf, discriminant, RootOf
 
 from sympy.utilities import any, all, numbered_symbols
 from sympy.utilities.lambdify import lambdify
@@ -1065,11 +1065,18 @@ def solve_ODE_higher_order(eq, f, order):
             collectterms = []
             for root, multiplicity in charroots.items():
                 for i in range(multiplicity):
-                    reroot = re(root)
-                    imroot = im(root)
-                    gsol += x**i*exp(reroot*x)*(constants.next()*sin(abs(imroot)*x) \
-                    + constants.next()*cos(imroot*x))
-                    collectterms = [(i, reroot, imroot)] + collectterms
+                    if isinstance(root, RootOf):
+                        # re and im do not work with RootOf, so the work around is
+                        # to put solution in non (complex) expanded form.
+                        # See issue 1563.
+                        gsol += exp(root*x)*constants.next()
+                        assert multiplicity == 1
+                    else:
+                        reroot = re(root)
+                        imroot = im(root)
+                        gsol += x**i*exp(reroot*x)*(constants.next()*sin(abs(imroot)*x) \
+                        + constants.next()*cos(imroot*x))
+                        collectterms = [(i, reroot, imroot)] + collectterms
             gsol = expand_mul(gsol, deep=False)
             for i, reroot, imroot in collectterms:
                 gsol = collect(gsol, x**i*exp(reroot*x)*sin(abs(imroot)*x))
