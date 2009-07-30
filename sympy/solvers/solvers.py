@@ -739,7 +739,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                         isPowExp = True
                 newargs[i] = isimp
             if hasconst:
-                newargs = filter(lambda i: i.has(x), newargs)
+                newargs = [i for i in newargs if i.has(x)]
                 if isPowExp:
                     newargs = newargs + [newconst] # Order matters in this case
                 else:
