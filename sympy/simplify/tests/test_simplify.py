@@ -258,6 +258,10 @@ def test_powsimp():
     assert powsimp(exp(-x + exp(-x)*exp(-x*log(x))), deep=False, combine='exp') == exp(-x + exp(-x)*exp(-x*log(x)))
     assert powsimp((x+y)/(3*z), deep=False, combine='exp') == (x+y)/(3*z)
     assert powsimp((x/3+y/3)/z, deep=True, combine='exp') == (x/3+y/3)/z
+    assert powsimp(exp(x)/(1 + exp(x)*exp(y)), deep=True) == exp(x)/(1 + exp(x + y))
+    assert powsimp(x*y**(z**x*z**y), deep=True) == x*y**(z**(x + y))
+    assert powsimp((z**x*z**y)**x, deep=True) == (z**(x + y))**x
+    assert powsimp(x*(z**x*z**y)**x, deep=True) == x*(z**(x + y))**x
 
 
 def test_collect_1():

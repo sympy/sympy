@@ -1,5 +1,5 @@
 from sympy import symbols, expand, sin, sqrt, re, im, I, Rational, Lambda, \
-        powsimp, raises, Integer, Symbol, Poly, RootsOf, RootSum, RootOf, S
+        separate, raises, Integer, Symbol, Poly, RootsOf, RootSum, RootOf, S
 
 from sympy.polys.monomial import monomial_lex_cmp, monomial_grlex_cmp, \
         monomial_grevlex_cmp, monomial_1_el_cmp
@@ -1056,8 +1056,8 @@ def test_roots_binomial():
     r0 = roots_quadratic(Poly(a1*x**2 + b1, x))
     r1 = roots_binomial(Poly(a1*x**2 + b1, x))
 
-    assert powsimp(r0[0]) == powsimp(r1[0])
-    assert powsimp(r0[1]) == powsimp(r1[1])
+    assert separate(r0[0]) == separate(r1[0])
+    assert separate(r0[1]) == separate(r1[1])
 
 def test_roots_rational():
     assert roots_rational(Poly(x**2-1, x)) == [S.One, -S.One]

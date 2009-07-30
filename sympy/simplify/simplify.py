@@ -1046,44 +1046,43 @@ def powsimp(expr, deep=False, combine='all'):
         combine='exp' will strictly only combine exponents in the way that used
         to be automatic.  Also use deep=True if you need the old behavior.
 
+        When combine='all', 'exp' is evaluated first.  Consider the first
+        example below for when there could be an ambiguity relating to this.
+        This is done so things like the second example can be completely
+        combined.  If you want 'base' combined first, do something like
+        powsimp(powsimp(expr, combine='base'), combine='exp').
+
     == Examples ==
         >>> from sympy import *
-        >>> x,n = symbols('xn')
-        >>> e = x**n * (x*n)**(-n) * n
-        >>> powsimp(e)
-        n**(1 - n)
+        >>> x, y, z, n = symbols('xyzn')
+        >>> powsimp(x**y*x**z*y**z, combine='all')
+        x**(y + z)*y**z
+        >>> powsimp(x**y*x**z*y**z, combine='exp')
+        x**(y + z)*y**z
+        >>> powsimp(x**y*x**z*y**z, combine='base')
+        x**y*(x*y)**z
 
-        >>> powsimp(log(e))
-        log(n*x**n*(n*x)**(-n))
-
-        >>> powsimp(log(e), deep=True)
-        log(n**(1 - n))
-
-        >>> powsimp(e, combine='exp')
-        n*x**n*(n*x)**(-n)
-        >>> powsimp(e, combine='base')
-        n*(1/n)**n
-
-        >>> y, z = symbols('yz')
-        >>> a = x**y*x**z*n**z*n**y
-        >>> powsimp(a, combine='exp')
-        n**(y + z)*x**(y + z)
-        >>> powsimp(a, combine='base')
-        (n*x)**y*(n*x)**z
-        >>> powsimp(a, combine='all')
+        >>> powsimp(x**z*x**y*n**z*n**y, combine='all')
         (n*x)**(y + z)
+        >>> powsimp(x**z*x**y*n**z*n**y, combine='exp')
+        n**(y + z)*x**(y + z)
+        >>> powsimp(x**z*x**y*n**z*n**y, combine='base')
+        (n*x)**y*(n*x)**z
+
+        >>> powsimp(log(exp(x)*exp(y)))
+        log(exp(x)*exp(y))
+        >>> powsimp(log(exp(x)*exp(y)), deep=True)
+        x + y
     """
     if combine not in ['all', 'exp', 'base']:
             raise ValueError, "combine must be one of ('all', 'exp', 'base')."
-    if combine in ('all', 'base'):
-        expr = separate(expr, deep)
     y = Symbol('y', dummy=True)
     if expr.is_Pow:
-            if deep:
-                return powsimp(y*powsimp(expr.base, deep, combine)**powsimp(\
-                expr.exp, deep, combine), deep, combine)/y
-            else:
-                return powsimp(y*expr, deep, combine)/y # Trick it into being a Mul
+        if deep:
+            return powsimp(y*powsimp(expr.base, deep, combine)**powsimp(\
+            expr.exp, deep, combine), deep, combine)/y
+        else:
+            return powsimp(y*expr, deep, combine)/y # Trick it into being a Mul
     elif expr.is_Function:
         if expr.func == exp and deep:
             # Exp should really be like Pow
@@ -1114,6 +1113,8 @@ def powsimp(expr, deep=False, combine='all'):
                 else:
                     if term.is_commutative:
                         b, e = term.as_base_exp()
+                        if deep:
+                            b, e = powsimp(b, deep, combine), powsimp(e, deep, combine)
                         c_powers[b] = c_powers.get(b, 0) + e
                     else:
                         nc_part.append(term)
@@ -1129,7 +1130,6 @@ def powsimp(expr, deep=False, combine='all'):
                 else:
                     return powsimp(Mul(*nc_part), deep, combine='base')*\
                     powsimp(newexpr, deep, combine='base')
-
 
         else:
             # combine is 'base'
