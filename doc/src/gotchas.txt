@@ -267,6 +267,14 @@ Also, if you do not use :command:`isympy`, you should do ``from __future__ impor
     >>> sqrt(x) == x**(S(1)/2)
     True
 
+:mod:`Rational` only works for number/number and is only meant for rational numbers.  If you want a fraction with symbols or expressions in it, just use ``/``.  If you do number/expression or expression/number, then the number will automatically be converted in to a SymPy Number.  You only need to be careful with number/number.
+
+    >>> Rational(2, x) #doctest: +SKIP
+    ValueError: ./sympy/core/numbers.py:493:function __new__ 2-th argument must be of type (<type 'int'>, <type 'long'>, <class 'sympy.core.numbers.Integer'>, <type 'NoneType'>) but got x
+    >>> 2/x
+    2/x
+
+
 Mathematical Operators
 ----------------------
 SymPy uses the same default operators as Python.  Most of these, like ``*/+-``, are
