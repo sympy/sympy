@@ -37,7 +37,7 @@ def checksol(eq, func, sol):
     else:
         # If we cannot substitute f, try seeing if the nth derivative is equal
         n = deriv_degree(eq, func)
-        return simplify(diff(sol.lhs,x,n)-diff(sol.rhs,x,n) - eq) == 0\
+        return simplify(diff(sol.lhs,x,n)-diff(sol.rhs,x,n) - eq) == 0 \
         or simplify(trigsimp(diff(sol.lhs,x,n)-diff(sol.rhs,x,n)) - trigsimp(eq)) == 0
     if s == 0:
         return True
@@ -84,20 +84,6 @@ def test_ode5():
     eq = Eq(9*f(x).diff(x, x), f(x))
     sol = dsolve(eq, f(x))
     assert sol == Eq(f(x),C1*exp(-x/3) + C2*exp(x/3))
-    assert checksol(eq, f(x), sol)
-
-def test_ode6():
-    # Type: (x*exp(-f(x)))'' == 0
-    eq = Eq((x*exp(-f(x))).diff(x, x), 0)
-    sol = dsolve(eq, f(x))
-    assert sol == Eq(f(x),-log(C1+C2/x))
-    assert checksol(eq, f(x), sol)
-
-def test_ode7():
-    # Type: (x*exp(f(x)))'' == 0
-    eq = Eq((x*exp(f(x))).diff(x, x), 0)
-    sol = dsolve(eq, f(x))
-    assert sol == Eq(f(x),log(C1+C2/x))
     assert checksol(eq, f(x), sol)
 
 def test_ode8():
@@ -447,4 +433,34 @@ def test_homogeneous_norder():
     assert checksol(eq29, f(x), sol29)
     assert checksol(eq30, f(x), sol30)
 
+def test_Liouville_ODE():
+    # First part used to be test_ODE_1() from test_solvers.py
+    eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
+    eq1a = diff(x*exp(-f(x)), x, x)
+    eq2 = eq1*exp(-f(x))/exp(f(x))
+    eq3 = diff(f(x), x, x) + 1/f(x)*(diff(f(x), x))**2 + 1/x*diff(f(x), x)
+    eq4 = x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2 + x*diff(f(x), x)
+    eq5 = Eq((x*exp(f(x))).diff(x, x), 0)
+    sol1 = Eq(C1 + C2/x - exp(-f(x)), 0)
+    # If solve() is ever improved, this is a better solution
+    sol1a = Eq(f(x), -log((C1*x+C2)/x))
+    sol2 = Eq(f(x), -log(C1 + C2/x))
+    sol3 = [Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))]
+    sol4 = [Eq(f(x), sqrt(C1 + C2*exp(-x))), Eq(f(x), -sqrt(C1 + C2*exp(-x)))]
+    sol5 = Eq(f(x), -log(x) + log(C1 + C2*x))
+    assert dsolve(eq1, f(x)) == sol1
+    assert dsolve(eq1a, f(x)) == sol1
+    assert dsolve(eq2, f(x)) == sol2
+    assert dsolve(eq3, f(x)) == sol3
+    assert dsolve(eq4, f(x)) == sol4
+    assert dsolve(eq5, f(x)) == sol5
+    assert checksol(sol1, f(x), sol1a)
+    assert checksol(eq1, f(x), sol1a)
+    assert checksol(eq1a, f(x), sol1a)
+    assert checksol(eq2, f(x), sol2)
+    assert checksol(eq3, f(x), sol3[0])
+    assert checksol(eq3, f(x), sol3[1])
+    assert checksol(eq4, f(x), sol4[0])
+    assert checksol(eq4, f(x), sol4[1])
+    assert checksol(eq5, f(x), sol5)
 

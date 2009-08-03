@@ -966,7 +966,7 @@ def solve_ODE_first_order(eq, f):
             if sol2.has(C.Integral):
                 return sol1
             # Next, try to return an explicit solution.  This code will change
-            # when RootOf is implemented in Solve.
+            # when RootOf is implemented in solve().
             try:
                 sol1s = map((lambda t: t.subs(y, f(x))),\
                 solve(sol1.lhs.subs(f(x),y)-sol1.rhs.subs(f(x),y), y))
@@ -1017,6 +1017,7 @@ def solve_ODE_higher_order(eq, f, order):
     s = S(0)
     wilds = []
     constants = numbered_symbols(prefix='C', function=Symbol, start=1)
+    # Build a match expression for a homogeneous nth order ode
     for i in numbered_symbols(prefix='a', function=Wild, exclude=[f(x)]):
         if j == order+1:
             break
@@ -1102,26 +1103,61 @@ def solve_ODE_higher_order(eq, f, order):
                             gensols.append(x**i*exp(reroot*x)*sin(abs(imroot)*x))
                 wr = wronskian(gensols, x)
                 wr = trigsimp(wr) # to reduce sin(x)**2 + cos(x)**2 to 1
-                print 'wr', wr
                 if not wr:
                     raise NotImplementedError("Cannot find " + str(order) + \
-                    " solutions to homogeneous equation to apply variation " + \
-                    "of parameters to " + str(eq) + " (Wronskian == 0)")
+                    " solutions to the homogeneous equation nessesary to apply " + \
+                    "variation of parameters to " + str(eq) + " (Wronskian == 0)")
                 negoneterm = (-1)**(order)
                 for i in gensols:
-                    psol += negoneterm*C.Integral(wronskian(filter(lambda x: x != i, \
+                    psol += negoneterm*integrate(wronskian(filter(lambda x: x != i, \
                     gensols), x)*r[b]/wr, x)*i/r[wilds[-1]]
                     negoneterm *= -1
             psol = simplify(psol)
             psol = trigsimp(psol, deep=True)
-            from sympy import pprint
-            pprint(psol)
             return Equality(f(x), gsol + psol)
 
 
-
+    # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x, 2))**2 + h(x)*f(x).diff(x)
+    # See Goldstein and Braun, "Advanced Methods for the Solution of
+    # Differential Equations", pg. 98
+    a = Wild('a', exclude=[f(x).diff(x)])
+    b = Wild('b', exclude=[f(x).diff(x)])
+    c = Wild('c', exclude=[f(x).diff(x)])
+    y = Symbol('y', dummy=True)
+    C1 = Symbol('C1')
+    C2 = Symbol('C2')
+    s = a*f(x).diff(x, 2) + b*f(x).diff(x)**2 + c*f(x).diff(x)
+    r = eq.match(s)
+    if r:
+        g = simplify(r[b]/r[a]).subs(f(x), y)
+        h = simplify(r[c]/r[a])
+        if h.has(f(x)) or g.has(x):
+            pass
+        else:
+            int1 = integrate(exp(integrate(g, y)), y)
+            if isinstance(int1, C.Integral):
+                # integral cannot be solved, set f(x) as upper limit
+                a = Symbol('_a', dummy=True)
+                int1 = C.Integral(int1.function, (y, a, f(x)))
+                # We already know that we cannot solve for f
+                return Equality(int1 + C1*integrate(exp(-integrate(h, x)), x) + C2, 0)
+            else:
+                int1 = int1.subs(y, f(x))
+            # Try solving for f
+            try:
+                sol = solve(Equality(int1 + C1*integrate(exp(-integrate(h, x)), x) + \
+                C2, 0), f(x))
+                if sol == []:
+                    raise NotImplementedError
+            except NotImplementedError:
+                return Equality(int1 + C1*integrate(exp(-integrate(h, x)), x) + C2, 0)
+            else:
+                sol = map(lambda t: Equality(f(x), t), sol)
+                if len(sol) == 1:
+                    return sol[0]
+                else:
+                    return sol
     # special equations, that we know how to solve
-    # TODO: refactor into substitution u = f' (divide out exp(-f(x))
     a = Wild('a')
     t = x*exp(f(x))
     tt = a*t.diff(x, x)/t
@@ -1299,7 +1335,7 @@ def _homogeneous_order(eq, *symbols):
     if eq.is_Function:
         if eq.func == log:
             # The only possibility to pull a t out of a function is a power in
-            # a logarithm.  This is very likely due to calling of logcombine.
+            # a logarithm.  This is very likely due to calling of logcombine().
             if eq.args[0].is_Pow:
                 return _homogeneous_order(eq.args[0].args[1]*log(eq.args[0].args[0]), *symbols)
             elif eq.args[0].is_Mul and all(i.is_Pow for i in iter(eq.args[0].args)):
