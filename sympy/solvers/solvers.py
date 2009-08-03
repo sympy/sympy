@@ -605,43 +605,222 @@ def dsolve(eq, funcs):
         else:
             raise NotImplementedError("Not a differential equation.")
 
-def classify_ode(expr, func):
+def classify_ode(eq, func, match=False):
     """
-    Returns a tuple of possible dsolve classifications.
+    Returns a tuple of possible dsolve() classifications for an ODE.
 
     The first item in the tuple is the classification that dsolve uses to solve
     the ode by default.  To make dsolve use a different classification, use
-    dsolve(ode, func, hint=<classification>).  To make dsolve apply all relevant
-    classification hints, use dsolve(ode, func, hint="all").  This will return
-    a dictionary of each method with its corresponding solution.  To have dsolve
-    try all methods and return the simplest one, use dsolve(ode, func,
-    hint="best").   This takes into account whether the solution is solvable in
-    the function, whether it contains any Integral classes, and which one is the
-    shortest in size.
+    dsolve(ode, func, hint=<classification>).
 
-    Some classifications are duplicated with the word _alt at the end.  This
-    means that the dsolve method for that classification can produce more than
-    one solution.  Use the _alt classification to obtain the non-default
-    solution.  For example, first order differential equations with homogeneous
-    coefficients will return both "1st_homogeneous_coeff" and
-    "1st_homogeneous_coeff_alt".
+    == Meta-Hints ==
+    Aside from the various methods, there are also some meta-hints that you can
+    pass to dsolve():
+    "default":
+            This uses whatever hint is returned first by classify_ode().
+            This is the default argument to dsolve().
+    "all":
+            To make dsolve apply all relevant classification hints, use
+            dsolve(ode, func, hint="all").  This will return a dictionary of
+            hint:solution terms.  If a hint causes dsolve to raise an exception,
+            value of that hint's key will be the exception object raised.
+    "all_Integral":
+            This is the same as "all", except if a hint also has a corresponding
+            "_Integral" hint, it only returns the "_Integral" hint.  This is
+            useful if "all" causes dsolve() to hang because of a difficult
+            or impossible integral.  This meta-hint will also be much faster
+            than "all", because integrate() is an expensive routine.
+    "best":
+            To have dsolve() try all methods and return the simplest one, use
+            dsolve(ode, func, hint="best").  This takes into account whether
+            the solution is solvable in the function, whether it contains any
+            Integral classes (i.e. unevaluatable integrals), and which one
+            is the shortest in size.
+    "_best":
+            Hints with coresponding "_alt" classifications will also have a
+            "_best" meta-classification.  This will evaluate both hints
+            and return the best of the two, using the same considerations as the
+            normal "best" meta-hint.
 
+    == Notes on Hint Names ==
+    === "_Integral" ===
+    If a classification has "_Integral" at the end, it will return the
+    expression with an unevaluated Integral class in it.  Note that a hint may
+    do this anyway if integrate cannot do the integral.  An Integral hint will
+    always be faster than its corresponding hint without Integral because
+    integrate() is an expensive routine.  If dsolve() hangs, it is probably
+    because integrate() is hanging on a tough or impossible integral.  Try
+    using an "_Integral" hint to get it return something.
+    Note that some hints do not have "_Integral" counterparts.  This is because
+    integrate() is not used in solving the ode.  For example, nth order linear
+    homogeneous ODEs with constant coefficients do not require integration to
+    solve, so there is no "nth_linear_homogeneous_constant_coeff_Integrate" hint.
+    You can easliy evaluate any Integrals in an expression by doing expr.doit().
+
+    === Ordinals ===
+    Some hints contain an ordinal such as "1st_linear".  This is to help
+    differentiate them from other hints. If a hint has "nth" in it, such as the
+    "nth_linear" hints, this means that the method used to applies to any order
+    of ODE.
+
+    === "indep" and "dep" ===
+    Some hints contain the words "indep" or "dep".  These reference the
+    independent variable and the dependent function, respectively. For example,
+    if an ODE is in terms of f(x), then "indep" will refer to x and "dep" will
+    refer to f.
+
+    === "subs" ===
+    If a hints has the word "subs" in it, it means the the ODE is solved by
+    substituting the expression given after the word "subs" for a single dummy
+    variable.  This is usually in terms of "indep" and "dep" as above.
+
+    == Note ==
     Because all solutions should be mathematically equivalent, some dsolve hints
     may return the exact same result for an ode.  Often, though, two different
     hints will return the same solution formatted differently.  The two should
     be equivalent.
+
+    == Examples ==
+
     """
+    # TODO: Add examples to the docstring
+
     # A list of hints in the order that they should be applied.  That means
     # that, in general, hints earlier in the list should produce simpler results
     # than those later for odes that fit both.  This is just based on my own
     # empirical observations, so if you find that *in general*, a hint later in
     # the list is better than one before it, fell free to modify the list.  Note
-    # however that you can easily override in dsolve (see the docstring).
-    hints = ("separable", "exact", "1st_linear", "Bernoulli",\
-    "1st_homogeneous_coeff", "1st_homogeneous_coeff_alt", "nth_homogeneous")
+    # however that you can easily override in dsolve for a specific ODE
+    # (see the docstring).  In general, "_Integral" hints should be grouped
+    # at the end of the list, unless there is a method that returns an unevaluatable
+    # integral most of the time (which should surely go near the end of the list
+    # anyway).
+    # "default", "all", "best", and "all_Integral" meta-hints should not be
+    # included in list, but "_best" meta hints should be included.
+    allhints = ("separable", "exact", "1st_linear", "Bernoulli",
+    "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep/dep",
+    "1st_homogeneous_coeff_dep/indep", "nth_linear_homogeneous_constant_coeff",
+    "nth_linear_constant_coeff_undetermined_coefficients",
+    "nth_linear_constant_coeff_variation_of_paramters",
+    "Liouville", "seperable_Integral", "exact_Integral", "1st_linear_Integral",
+    "Bernoulli_Integral", "1st_homogeneous_coeff_best_Integral",
+    "1st_homogeneous_coeff_subs_indep/dep_Integral",
+    "1st_homogeneous_coeff_subs_dep/indep_Integral",
+    "nth_linear_constant_coeff_variation_of_parameters_Integral",
+    "Liouville_Integral")
 
-    # This will have to wait for nth order homogeneous because I will need to
-    # clean up solve_ODE_second_order and solve_ODE_1 first.
+    x = f.args[0]
+    f = f.func
+    y = Symbol('y', dummy=True)
+    if isinstance(eq, Equality):
+        if eq.rhs != 0:
+            return dsolve(eq.lhs-eq.rhs, funcs)
+        eq = eq.lhs
+    # Currently only solve for one function
+    if isinstance(funcs, Basic) or len(funcs) == 1:
+        if isinstance(funcs, (list, tuple)): # normalize args
+            f = funcs[0]
+        else:
+            f = funcs
+        if len(f.args) != 1:
+            raise ValueError("dsolve() and classify_ode() only with functions " + \
+            "of one variable")
+        # Collect diff(f(x),x) terms so that match will work correctly
+        eq = collect(eq, f(x).diff(x))
+        order = deriv_degree(eq, f(x))
+
+    matching_hints = {} # hint:matchdict or hint:(tuple of matchdicts)
+    a = Wild('a', exclude=[f(x)])
+    b = Wild('b', exclude=[f(x)])
+    c = Wild('c', exclude=[f(x)])
+    d = Wild('d', exclude=[f(x).diff(x)])
+    e = Wild('e', exclude=[f(x).diff(x)])
+    g = Wild('g', exclude=[f(x).diff(x)])
+    n = Wild('n', exclude=[f(x)])
+
+
+
+    if order == 1:
+        # We can save a lot of time by skipping these if the ODE isn't 1st order
+
+        # Linear case: a(x)*y'+b(x)*y+c(x) == 0
+        r = eq.match(a*diff(f(x),x) + b*f(x) + c)
+        if r:
+            matching_hints["1st_linear"] = r
+            matching_hints["1st_linear_Integral"] = r
+
+        # Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
+        r = eq.match(a*diff(f(x),x) + b*f(x) + c*f(x)**n)
+        if r:
+            matching_hints["Bernioulli"] = r
+            matching_hints["Bernioulli_Integral"] = r
+
+        # This match is used for several cases below.
+        r = eq.match(d+e*diff(f(x),x))
+        if r:
+            r[d] = r[d].subs(f(x),y)
+            r[e] = r[e].subs(f(x),y)
+
+            # Separable Case: y' == P(y)*Q(x)
+            r[d] = separatevars(r[d])
+            r[e] = separatevars(r[e])
+            # m1[coeff]*m1[x]*m1[y] + m2[coeff]*m2[x]*m2[y]*y'
+            m1 = separatevars(r[d], dict=True, symbols=(x, y))
+            m2 = separatevars(r[e], dict=True, symbols=(x, y))
+            if m1 and m2:
+                matching_hints["seperable"] = (m1, m2)
+                matching_hints["seperable_Integral"] = (m1, m2)
+
+            # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
+            if simplify(r[d].diff(y)) == simplify(r[e].diff(x)) and r[d] != 0:
+                matching_hints["exact"] = r
+                matching_hints["exact_Integral"] = r
+
+            # First order equation with homogeneous coefficients:
+            # dy/dx == F(y/x) or dy/dx == F(x/y)
+            ordera = homogeneous_order(r[d], x, y)
+            orderb = homogeneous_order(r[e], x, y)
+            if ordera == orderb and ordera != None:
+                matching_hints["1st_homogeneous_coeff_best"] = r
+                matching_hints["1st_homogeneous_coeff_subs_indep/dep"] = r
+                matching_hints["1st_homogeneous_coeff_dep/indep"] = r
+                matching_hints["1st_homogeneous_coeff_best_Integral"] = r
+                matching_hints["1st_homogeneous_coeff_subs_indep/dep_Integral"] = r
+                matching_hints["1st_homogeneous_coeff_dep/indep_Integral"] = r
+
+    # nth order linear ODE
+    # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x)
+    j = 0
+    s = S(0)
+    wilds = []
+    # Build a match expression for a nth order linear ode
+    for i in numbered_symbols(prefix='a', function=Wild, exclude=[f(x)]):
+        if j == order+1:
+            break
+        wilds.append(i)
+        s += i*f(x).diff(x,j)
+        j += 1
+    s += b
+
+    r = eq.match(s)
+    if r and all([not r[i].has(x) for i in wilds]):
+        # Inhomogeneous case: F(x) is not identically 0
+        if r[b]:
+            matching_hints["nth_linear_constant_coeff_undetermined_coefficients"] = r
+            matching_hints["nth_linear_constant_coeff_variation_of_paramters"] = r
+            matching_hints["nth_linear_constant_coeff_variation_of_paramters_Integral"] = r
+        # Homogeneous case: F(x) is identically 0
+        else:
+            matching_hints["nth_linear_homogeneous_constant_coeff"] = r
+
+    s = d*f(x).diff(x, 2) + e*f(x).diff(x)**2 + g*f(x).diff(x)
+    r = eq.match(s)
+    if r:
+        matching_hints["Liouville"] = r
+        matching_hints["Liouville_Integral"] = r
+
+
+
 
 @vectorize(0)
 def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
@@ -1028,7 +1207,7 @@ def solve_ODE_higher_order(eq, f, order):
 
     r = eq.match(s)
     if r:
-        # The ODE is homogeneous
+        # The ODE is linear
         if all([not r[i].has(x) for i in wilds]):
             # First, set up characteristic equation.
             m = Symbol('m', dummy=True)
