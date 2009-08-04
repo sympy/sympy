@@ -187,9 +187,16 @@ class PrettyPrinter(Printer):
 
 
             if ab is not None:
-                # Create pretty forms for endpoints, if definite integral
-                prettyA = self._print(ab[0])
-                prettyB = self._print(ab[1])
+                # Create pretty forms for endpoints, if definite integral.
+                # Do not print empty endpoints.
+                if ab[0] is None:
+                    prettyA = prettyForm("")
+                else:
+                    prettyA = self._print(ab[0])
+                if ab[1] is None:
+                    prettyB = prettyForm("")
+                else:
+                    prettyB = self._print(ab[1])
 
                 if ascii_mode:  # XXX hack
                     # Add spacing so that endpoint can more easily be

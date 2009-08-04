@@ -204,6 +204,12 @@ def test_pretty_integrals():
     f_6 = Integral(x**2*y**2, x,y)
     assert pretty(f_6) == '  /  /           \n |  |            \n |  |  2  2      \n |  | x *y  dx dy\n |  |            \n/  /             '
 
+    # Upper and lower limit only
+    f_7 = Integral(x**2, (x, None, 1))
+    assert pretty(f_7) == '  1      \n  /      \n |       \n |   2   \n |  x  dx\n |       \n/        \n         '
+
+    f_8 = Integral(x**2, (x, 1, None))
+    assert pretty(f_8) == '         \n  /      \n |       \n |   2   \n |  x  dx\n |       \n/        \n1        '
 
 def test_pretty_matrix():
     p = pretty( Matrix([[x**2+1, 1], [y, x+y]]) )

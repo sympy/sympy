@@ -1252,16 +1252,24 @@ class Basic(AssumeMeths):
 
         possibly using limit() if NaN is returned from subs.
 
+        If b or a is None, it only evaluates -self.subs(x, a) or self.subs(b, x),
+        respectively.
+
         """
         from sympy.series import limit
-        A = self.subs(x, a)
+        if a is None:
+            A = 0
+        else:
+            A = self.subs(x, a)
 
         if A is S.NaN:
             A = limit(self, x, a)
             if A is S.NaN:
                 return self
-
-        B = self.subs(x, b)
+        if b is None:
+            B = 0
+        else:
+            B = self.subs(x, b)
 
         if B is S.NaN:
             B = limit(self, x, b)

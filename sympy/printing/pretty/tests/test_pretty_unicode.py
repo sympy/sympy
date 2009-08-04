@@ -212,6 +212,15 @@ u"""\
 """
     assert u == s
 
+    u = upretty( Integral(sin(x), (x, None, 1)) )
+    s = \
+u"""1          \n\
+⌠          \n\
+⎮ sin(x) dx\n\
+⌡          \n\
+           \
+"""
+    assert u == s
 
 def test_upretty_limit():
     u = upretty( Limit(x, x, oo) )

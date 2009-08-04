@@ -38,6 +38,10 @@ class Integral(Basic):
                     if len(V) == 3:
                         if isinstance(V[0], Symbol):
                             nlim = map(sympify, V[1:])
+                            if V[1] is None:
+                                nlim[0] = None
+                            if V[2] is None:
+                                nlim[1] = None
                             limits.append( (V[0], tuple(nlim) ))
                             continue
                     elif len(V) == 1 or (len(V) == 2 and V[1] is None):
@@ -348,8 +352,15 @@ class Integral(Basic):
             if sym == old:
                 return self
             if limits is not None:
-                a, b, = limits
-                arg1.append((sym, a.subs(old, new), b.subs(old, new)))
+                if limits[0] is None:
+                    b = limits[1]
+                    arg1.append((sym, None, b.subs(old, new)))
+                elif limits[1] is None:
+                    a = limits[0]
+                    arg1.append((sym, a.subs(old, new), None))
+                else:
+                    a, b, = limits
+                    arg1.append((sym, a.subs(old, new), b.subs(old, new)))
             else:
                 arg1.append((sym, limits))
         return Integral(arg0, *arg1)
