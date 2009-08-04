@@ -1045,3 +1045,4 @@ def _homogeneous_order(eq, *symbols):
         return n.pop()
 
     return None
+

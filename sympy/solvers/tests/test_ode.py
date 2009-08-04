@@ -50,6 +50,20 @@ def checksol(eq, func, sol):
         test2 = (s == 0)
         return test1 and test2
 
+def test_deriv_degree():
+    f = Function('f')
+    g = Function('g')
+    x = Symbol('x')
+    assert deriv_degree(3*x*exp(f(x)), f(x)) == 0
+    assert deriv_degree(x*diff(f(x),x)+3*x*f(x)-sin(x)/x, f(x)) == 1
+    assert deriv_degree(x**2*f(x).diff(x,x)+x*diff(f(x),x)-f(x),f(x)) == 2
+    assert deriv_degree(diff(x*exp(f(x)),x,x), f(x)) == 2
+    assert deriv_degree(diff(x*diff(x*exp(f(x)), x,x), x), f(x)) == 3
+    assert deriv_degree(diff(f(x), x, x), g(x)) == 0
+    assert deriv_degree(diff(f(x), x, x)*diff(g(x), x), f(x)) == 2
+    assert deriv_degree(diff(f(x), x, x)*diff(g(x), x), g(x)) == 1
+    assert deriv_degree(diff(x*diff(x*exp(f(x)), x,x), x), g(x)) == 0
+
 
 def test_ode1():
     eq = Eq(f(x).diff(x), 0)
@@ -84,6 +98,14 @@ def test_ode5():
     sol = dsolve(eq, f(x))
     assert sol == Eq(f(x),C1*exp(-x/3) + C2*exp(x/3))
     assert checksol(eq, f(x), sol)
+
+def test_ode6():
+    f = Function('f')
+    x, C1, C2 = symbols('x C1 C2')
+    assert dsolve(Derivative(f(x),x,x) + 9*f(x), [f(x)]) in \
+        [Equality(f(x),sin(3*x)*C1 + cos(3*x)*C2), Equality(f(x),sin(3*x)*C2 + \
+        cos(3*x)*C1)]
+
 
 def test_ode8():
     # Type: a(x)f'(x)+b(x)*f(x)+c(x)=0
@@ -365,7 +387,8 @@ def test_homogeneous_norder():
     sol22 = Eq(f(x), (C1 + C2*x)*exp(-2*x) + (C3 + C4*x)*exp(2*x))
     sol23 = Eq(f(x), (C1*sin(2*x) + C2*cos(2*x))*exp(x))
     sol24 = Eq(f(x), (C1*sin(x*sqrt(3)/2) + C2*cos(x*sqrt(3)/2))*exp(x/2))
-    sol25 = Eq(f(x), C1*cos(x*sqrt(3)) + C2*sin(x*sqrt(3)) + C3*sin(x*sqrt(2)) + C4*cos(x*sqrt(2)))
+    sol25 = Eq(f(x), C1*cos(x*sqrt(3)) + C2*sin(x*sqrt(3)) + C3*sin(x*sqrt(2)) + \
+    C4*cos(x*sqrt(2)))
     sol26 = Eq(f(x), (C1*sin(4*x) + C2*cos(4*x))*exp(2*x))
     sol27 = Eq(f(x), (C1 + C2*x)*sin(x*sqrt(2)) + (C3 + C4*x)*cos(x*sqrt(2)))
     sol28 = Eq(f(x), (C1*sin(x*sqrt(3)) + C2*cos(x*sqrt(3)))*exp(x) + C3*exp(-2*x))
