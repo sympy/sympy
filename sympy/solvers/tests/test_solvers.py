@@ -173,27 +173,20 @@ def test_ODE_second_order():
     assert dsolve(Derivative(f(x),x,x) + 9*f(x), [f(x)]) in \
         [Equality(f(x),sin(3*x)*C1 + cos(3*x)*C2), Equality(f(x),sin(3*x)*C2 + cos(3*x)*C1)]
 
-def test_ODE_1():
-    l = Function('l')
-    r = Symbol('r')
-
-    e = Derivative(l(r),r)/r+Derivative(l(r),r,r)/2- \
-        Derivative(l(r),r)**2/2
-    sol = dsolve(e, [l(r)])
-    assert (e.subs(l(r), sol.rhs)).expand() == 0
-
-    e = e*exp(-l(r))/exp(l(r))
-    sol = dsolve(e, [l(r)])
-    assert (e.subs(l(r), sol.rhs)).expand() == 0
 
 def test_deriv_degree():
     f = Function('f')
+    g = Function('g')
     x = Symbol('x')
     assert deriv_degree(3*x*exp(f(x)), f(x)) == 0
     assert deriv_degree(x*diff(f(x),x)+3*x*f(x)-sin(x)/x, f(x)) == 1
     assert deriv_degree(x**2*f(x).diff(x,x)+x*diff(f(x),x)-f(x),f(x)) == 2
     assert deriv_degree(diff(x*exp(f(x)),x,x), f(x)) == 2
     assert deriv_degree(diff(x*diff(x*exp(f(x)), x,x), x), f(x)) == 3
+    assert deriv_degree(diff(f(x), x, x), g(x)) == 0
+    assert deriv_degree(diff(f(x), x, x)*diff(g(x), x), f(x)) == 2
+    assert deriv_degree(diff(f(x), x, x)*diff(g(x), x), g(x)) == 1
+    assert deriv_degree(diff(x*diff(x*exp(f(x)), x,x), x), g(x)) == 0
 
 # Note: multiple solutions exist for some of these equations, so the tests
 # should be expected to break if the implementation of the solver changes

@@ -14,21 +14,19 @@
 """
 
 from sympy.core.sympify import sympify
-from sympy.core.basic import Basic, S, C, Mul
+from sympy.core.basic import S, Mul
 from sympy.core.add import Add
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Wild
 from sympy.core.relational import Equality
-from sympy.core.function import Derivative, diff, Function, expand_mul
 from sympy.core.numbers import ilcm
-from sympy.core.multidimensional import vectorize
 
-from sympy.functions import sqrt, log, exp, LambertW, sin, cos, re, im
-from sympy.simplify import simplify, collect, logcombine, separatevars, trigsimp
-from sympy.matrices import Matrix, zeros, wronskian
-from sympy.polys import roots, RootsOf, discriminant, RootOf
+from sympy.functions import sqrt, log, exp, LambertW
+from sympy.simplify import simplify, collect
+from sympy.matrices import Matrix, zeros
+from sympy.polys import roots
 
-from sympy.utilities import any, all, numbered_symbols
+from sympy.utilities import any, all
 from sympy.utilities.lambdify import lambdify
 from sympy.mpmath import findroot
 

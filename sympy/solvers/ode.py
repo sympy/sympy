@@ -5,6 +5,21 @@ dsolve() solves ordinary differential equations
 See the docstring on the various functions for their uses.
 """
 
+from sympy.core.basic import Add, Basic, C, Mul, Pow, S
+from sympy.core.function import Derivative, diff, expand_mul, Function
+from sympy.core.multidimensional import vectorize
+from sympy.core.relational import Equality, Eq
+from sympy.core.symbol import Symbol, Wild
+from sympy.core.sympify import sympify
+
+from sympy.functions import sqrt # TODO: remove with old second order code
+from sympy.functions import cos, exp, im, log, re, sin
+from sympy.matrices import wronskian
+from sympy.polys import RootsOf, discriminant, RootOf
+from sympy.simplify import collect, logcombine, separatevars, simplify, trigsimp
+from sympy.solvers import solve
+
+from sympy.utilities import all, any, numbered_symbols
 
 def dsolve(eq, funcs):
     """
@@ -193,37 +208,30 @@ def classify_ode(eq, func, match=False):
     "1st_homogeneous_coeff_subs_dep/indep_Integral",
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "Liouville_Integral")
-
-    x = f.args[0]
-    f = f.func
+    if len(func.args) != 1:
+        raise ValueError("dsolve() and classify_ode() only with functions " + \
+            "of one variable")
+    x = func.args[0]
+    f = func.func
     y = Symbol('y', dummy=True)
     if isinstance(eq, Equality):
         if eq.rhs != 0:
-            return dsolve(eq.lhs-eq.rhs, funcs)
+            return classify_ode(eq.lhs-eq.rhs, func)
         eq = eq.lhs
-    # Currently only solve for one function
-    if isinstance(funcs, Basic) or len(funcs) == 1:
-        if isinstance(funcs, (list, tuple)): # normalize args
-            f = funcs[0]
-        else:
-            f = funcs
-        if len(f.args) != 1:
-            raise ValueError("dsolve() and classify_ode() only with functions " + \
-            "of one variable")
-        # Collect diff(f(x),x) terms so that match will work correctly
-        eq = collect(eq, f(x).diff(x))
-        order = deriv_degree(eq, f(x))
+    # Collect diff(f(x),x) terms so that match will work correctly
+    eq = collect(eq, f(x).diff(x))
+    order = deriv_degree(eq, f(x))
 
     matching_hints = {} # hint:matchdict or hint:(tuple of matchdicts)
     a = Wild('a', exclude=[f(x)])
     b = Wild('b', exclude=[f(x)])
     c = Wild('c', exclude=[f(x)])
-    d = Wild('d', exclude=[f(x).diff(x)])
+    d = Wild('d', exclude=[f(x).diff(x), f(x).diff(x, 2)])
     e = Wild('e', exclude=[f(x).diff(x)])
     g = Wild('g', exclude=[f(x).diff(x)])
     n = Wild('n', exclude=[f(x)])
 
-
+    print order, f
 
     if order == 1:
         # We can save a lot of time by skipping these if the ODE isn't 1st order
@@ -253,8 +261,8 @@ def classify_ode(eq, func, match=False):
             m1 = separatevars(r[d], dict=True, symbols=(x, y))
             m2 = separatevars(r[e], dict=True, symbols=(x, y))
             if m1 and m2:
-                matching_hints["seperable"] = (m1, m2)
-                matching_hints["seperable_Integral"] = (m1, m2)
+                matching_hints["separable"] = (m1, m2)
+                matching_hints["separable_Integral"] = (m1, m2)
 
             # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
             if simplify(r[d].diff(y)) == simplify(r[e].diff(x)) and r[d] != 0:
@@ -298,12 +306,16 @@ def classify_ode(eq, func, match=False):
         else:
             matching_hints["nth_linear_homogeneous_constant_coeff"] = r
 
+    # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x, 2))**2 + h(x)*f(x).diff(x)
+    # See Goldstein and Braun, "Advanced Methods for the Solution of
+    # Differential Equations", pg. 98
     s = d*f(x).diff(x, 2) + e*f(x).diff(x)**2 + g*f(x).diff(x)
     r = eq.match(s)
-    if r:
+    if r and r[d] != 0:
         matching_hints["Liouville"] = r
         matching_hints["Liouville_Integral"] = r
 
+    return matching_hints
 
 
 
@@ -368,7 +380,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
         x = independentsymbol
 
         if isinstance(expr, Equality):
-            return Equality(_constantsimp(expr.lhs, x, endnumber, startnumber,
+            return Eq(_constantsimp(expr.lhs, x, endnumber, startnumber,
                 symbolname), _constantsimp(expr.rhs, x, endnumber, startnumber,
                 symbolname))
 
@@ -444,7 +456,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
         global newstartnumber
 
         if isinstance(expr, Equality):
-            return Equality(_renumber(expr.lhs, symbolname, startnumber, endnumber),
+            return Eq(_renumber(expr.lhs, symbolname, startnumber, endnumber),
             _renumber(expr.rhs, symbolname, startnumber, endnumber))
 
         if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and\
@@ -481,11 +493,11 @@ def deriv_degree(expr, func):
     a = Wild('a', exclude=[func])
 
     order = 0
-    if isinstance(expr, Derivative):
+    if isinstance(expr, Derivative) and expr.args[0] == func:
         order = len(expr.symbols)
     else:
         for arg in expr.args:
-            if isinstance(arg, Derivative):
+            if isinstance(arg, Derivative) and arg.args[0] == func:
                 order = max(order, len(arg.symbols))
             elif expr.match(a):
                 order = 0
@@ -516,7 +528,7 @@ def solve_ODE_first_order(eq, f):
     if r:
         t = exp(integrate(r[b]/r[a], x))
         tt = integrate(t*(-r[c]/r[a]), x)
-        return Equality(f(x),(tt + C1)/t)
+        return Eq(f(x),(tt + C1)/t)
 
     # Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
     n = Wild('n', exclude=[f(x)])
@@ -527,9 +539,9 @@ def solve_ODE_first_order(eq, f):
         if r[n] != 1:
             t = C.exp((1-r[n])*integrate(r[b]/r[a],x))
             tt = (r[n]-1)*integrate(t*r[c]/r[a],x)
-            return Equality(f(x),((tt + C1)/t)**(1/(1-r[n])))
+            return Eq(f(x),((tt + C1)/t)**(1/(1-r[n])))
         #if r[n] == 1:
-         #   return Equality(f(x),C1*exp(integrate(-(r[b]+r[c]), x)))
+         #   return Eq(f(x),C1*exp(integrate(-(r[b]+r[c]), x)))
 
     a = Wild('a', exclude=[f(x).diff(x)])
     b = Wild('b', exclude=[f(x).diff(x)])
@@ -548,7 +560,7 @@ def solve_ODE_first_order(eq, f):
         m2 = separatevars(r[b], dict=True, symbols=(x, y))
 
         if m1 and m2:
-            return Equality(integrate(m2['coeff']*m2[y]/m1[y], y).subs(y, f(x)),\
+            return Eq(integrate(m2['coeff']*m2[y]/m1[y], y).subs(y, f(x)),\
             integrate(-m1['coeff']*m1[x]/m2[x], x)+C1)
         # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
         if simplify(r[a].diff(y)) == simplify(r[b].diff(x)) and r[a]!=0:
@@ -561,7 +573,7 @@ def solve_ODE_first_order(eq, f):
                 if x0 not in i and y0 not in i:
                     sol += i
             assert sol != 0
-            sol = Equality(sol,C1)
+            sol = Eq(sol,C1)
 
             try:
                 # See if the equation can be solved explicitly for f
@@ -573,7 +585,7 @@ def solve_ODE_first_order(eq, f):
                 if len(sol1) !=1:
                     return sol.subs(y,f(x))
                 else:
-                    return Equality(f(x),sol1[0].subs(y,f(x)))
+                    return Eq(f(x),sol1[0].subs(y,f(x)))
 
         # First order equation with homogeneous coefficients:
         # dy/dx == F(y/x) or dy/dx == F(x/y)
@@ -599,12 +611,12 @@ def solve_ODE_first_order(eq, f):
                 int2 = C.Integral(int2.args[0],(u2,_a,x/f(x)))
             else:
                 int2 = int2.subs(u2,x/f(x))
-            sol1 = logcombine(Equality(log(x), int1 + log(C1)), assume_pos_real=True)
-            sol2 = logcombine(Equality(log(f(x)), int2 + log(C1)), assume_pos_real=True)
+            sol1 = logcombine(Eq(log(x), int1 + log(C1)), assume_pos_real=True)
+            sol2 = logcombine(Eq(log(f(x)), int2 + log(C1)), assume_pos_real=True)
             if sol1.lhs.is_Function and sol1.lhs.func == log and sol1.rhs == 0:
-                sol1 = Equality(sol1.lhs.args[0]*C1,C1)
+                sol1 = Eq(sol1.lhs.args[0]*C1,C1)
             if sol2.lhs.is_Function and sol2.lhs.func == log and sol2.rhs == 0:
-                sol2 = Equality(sol2.lhs.args[0]*C1,C1)
+                sol2 = Eq(sol2.lhs.args[0]*C1,C1)
 
             # There are two solutions.  We need to determine which one to use
             # First, if they are the same, don't bother testing which one to use
@@ -618,7 +630,7 @@ def solve_ODE_first_order(eq, f):
                 except NotImplementedError:
                     return sol1
                 else:
-                    sol1sr = map((lambda t: Equality(f(x), t.subs({u1:f(x)/x,\
+                    sol1sr = map((lambda t: Eq(f(x), t.subs({u1:f(x)/x,\
                     y:f(x)}))), sol1s)
                     if len(sol1sr) == 1:
                         return logcombine(sol1sr[0], assume_pos_real=True)
@@ -639,7 +651,7 @@ def solve_ODE_first_order(eq, f):
             except NotImplementedError:
                 pass
             else:
-                sol1sr = map((lambda t: Equality(f(x), t.subs({u1:f(x)/x,\
+                sol1sr = map((lambda t: Eq(f(x), t.subs({u1:f(x)/x,\
                 y:f(x)}))), sol1s)
                 if len(sol1sr) == 1:
                     return logcombine(sol1sr[0], assume_pos_real=True)
@@ -653,7 +665,7 @@ def solve_ODE_first_order(eq, f):
             except NotImplementedError:
                 pass
             else:
-                sol2sr = map((lambda t: Equality(f(x), t.subs({u2:x/f(x),\
+                sol2sr = map((lambda t: Eq(f(x), t.subs({u2:x/f(x),\
                 y:f(x)}))), sol2s)
                 if len(sol2sr) == 1:
                     return logcombine(sol2sr[0], assume_pos_real=True)
@@ -778,7 +790,7 @@ def solve_ODE_higher_order(eq, f, order):
                     negoneterm *= -1
             psol = simplify(psol)
             psol = trigsimp(psol, deep=True)
-            return Equality(f(x), gsol + psol)
+            return Eq(f(x), gsol + psol)
 
 
     # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x, 2))**2 + h(x)*f(x).diff(x)
@@ -804,19 +816,19 @@ def solve_ODE_higher_order(eq, f, order):
                 a = Symbol('_a', dummy=True)
                 int1 = C.Integral(int1.function, (y, a, f(x)))
                 # We already know that we cannot solve for f
-                return Equality(int1 + C1*integrate(exp(-integrate(h, x)), x) + C2, 0)
+                return Eq(int1 + C1*integrate(exp(-integrate(h, x)), x) + C2, 0)
             else:
                 int1 = int1.subs(y, f(x))
             # Try solving for f
             try:
-                sol = solve(Equality(int1 + C1*integrate(exp(-integrate(h, x)), x) + \
+                sol = solve(Eq(int1 + C1*integrate(exp(-integrate(h, x)), x) + \
                 C2, 0), f(x))
                 if sol == []:
                     raise NotImplementedError
             except NotImplementedError:
-                return Equality(int1 + C1*integrate(exp(-integrate(h, x)), x) + C2, 0)
+                return Eq(int1 + C1*integrate(exp(-integrate(h, x)), x) + C2, 0)
             else:
-                sol = map(lambda t: Equality(f(x), t), sol)
+                sol = map(lambda t: Eq(f(x), t), sol)
                 if len(sol) == 1:
                     return sol[0]
                 else:
@@ -827,7 +839,7 @@ def solve_ODE_higher_order(eq, f, order):
     tt = a*t.diff(x, x)/t
     r = eq.match(tt.expand())
     if r:
-        return Equality(f(x),log(constants.next()+constants.next()/x))
+        return Eq(f(x),log(constants.next()+constants.next()/x))
 
     t = x*exp(-f(x))
     tt = a*t.diff(x, x)/t
@@ -835,14 +847,14 @@ def solve_ODE_higher_order(eq, f, order):
     if r:
         #check, that we've rewritten the equation correctly:
         #assert ( r[a]*t.diff(x,2)/t ) == eq.subs(f, t)
-        return Equality(f(x),-log(constants.next()+constants.next()/x))
+        return Eq(f(x),-log(constants.next()+constants.next()/x))
 
     neq = eq*exp(f(x))/exp(-f(x))
     r = neq.match(tt.expand())
     if r:
         #check, that we've rewritten the equation correctly:
         #assert ( t.diff(x,2)*r[a]/t ).expand() == eq
-        return Equality(f(x),-log(constants.next()+constants.next()/x))
+        return Eq(f(x),-log(constants.next()+constants.next()/x))
 
 
     raise NotImplementedError("solve_ODE_higher_order: Cannot solve " + str(eq)) # Yet!
@@ -867,19 +879,19 @@ def solve_ODE_second_order(eq, f):
 
     r = eq.match(a*f(x).diff(x,x) + c*f(x))
     if r:
-        return Equality(f(x),C1*C.sin(sqrt(r[c]/r[a])*x)+C2*C.cos(sqrt(r[c]/r[a])*x))
+        return Eq(f(x),C1*C.sin(sqrt(r[c]/r[a])*x)+C2*C.cos(sqrt(r[c]/r[a])*x))
 
     r = eq.match(a*f(x).diff(x,x) + b*diff(f(x),x) + c*f(x))
     if r:
         r1 = solve(r[a]*x**2 + r[b]*x + r[c], x)
         if r1[0].is_real:
             if len(r1) == 1:
-                return Equality(f(x),(C1 + C2*x)*exp(r1[0]*x))
+                return Eq(f(x),(C1 + C2*x)*exp(r1[0]*x))
             else:
-                return Equality(f(x),C1*exp(r1[0]*x) + C2*exp(r1[1]*x))
+                return Eq(f(x),C1*exp(r1[0]*x) + C2*exp(r1[1]*x))
         else:
             r2 = abs((r1[0] - r1[1])/(2*S.ImaginaryUnit))
-            return Equality(f(x),(C2*C.cos(r2*x) + C1*C.sin(r2*x))*exp((r1[0] + r1[1])*x/2))
+            return Eq(f(x),(C2*C.cos(r2*x) + C1*C.sin(r2*x))*exp((r1[0] + r1[1])*x/2))
 
     #other cases of the second order odes will be implemented here
 

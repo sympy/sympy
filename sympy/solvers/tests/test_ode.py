@@ -2,8 +2,7 @@ from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         I, exp, log, simplify, normal, together, ratsimp, powsimp, \
         fraction, radsimp, Eq, sqrt, pi, erf, diff, Rational, asinh, trigsimp
 from sympy.abc import x, y, z
-from sympy.solvers import deriv_degree
-from sympy.solvers.solvers import homogeneous_order
+from sympy.solvers.ode import deriv_degree, homogeneous_order
 from sympy.utilities.pytest import XFAIL, skip
 
 C1 = Symbol('C1')
