@@ -25,6 +25,17 @@ def test_monomial_cmp():
     assert monomial_grevlex_cmp((1,3,1), (1,2,2)) == 1
     assert monomial_1_el_cmp((2,0,1), (1,2,0)) == 1
 
+def test_poly_has():
+    f = x*y**2*z + I*x*y + x + 1
+    assert Poly(f, x).has(x) == True
+    assert Poly(f, x, y).has(x) == True
+    assert Poly(f, y).has(x) == True
+    assert Poly(f, x, y).has(z) == True
+    assert Poly(f, x, y).has(t) == False
+    assert Poly(f, x, y).has(I) == True
+    assert Poly(f, y).has(I) == True
+    assert Poly(f, x).has(I) == True
+
 def test_poly_basics():
     f = x*y**2*z + x*y + x + 1
 

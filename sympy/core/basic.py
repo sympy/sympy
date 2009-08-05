@@ -1212,6 +1212,7 @@ class Basic(AssumeMeths):
         False
 
         """
+        from sympy.utilities.iterables import flatten
         if len(patterns)>1:
             for p in patterns:
                 if self.has(p):
@@ -1238,8 +1239,8 @@ class Basic(AssumeMeths):
             args = self.args[:]
         else:
             args = (self.func,)+self.args[:]
-        for e in args:
-            if e.has(p):
+        for e in flatten(args):
+            if isinstance(e, Basic) and e.has(p):
                 return True
         return False
 
