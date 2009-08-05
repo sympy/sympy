@@ -1,6 +1,7 @@
 """
 AskHandlers related to order relations: positive, negative, etc.
 """
+from sympy.utilities import all # python2.4 compatibility
 from sympy.queries import Q, ask
 from sympy.queries.handlers import CommonHandler
 
