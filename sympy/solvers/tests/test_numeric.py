@@ -1,4 +1,4 @@
-from sympy.mpmath import mnorm
+from sympy.mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
 from sympy import Symbol, Matrix, sqrt, Eq
@@ -28,9 +28,12 @@ def test_nsolve():
     f2 = (x**2 + x*(y**2 - 2) - 4*y)  /  (x + 4)
     f3 = sqrt(x**2 + y**2)*z
     f = Matrix((f1, f2, f3)).T
-    F = lambdify((x,  y,  z), f.T, modules='mpmath')
+    F = lambdify((x, y, z), f.T, modules='mpmath')
     def getroot(x0):
-        root = nsolve((f1,  f2,  f3), (x,  y,  z), x0)
+        root = nsolve((f1, f2, f3), (x, y, z), x0)
         assert mnorm(F(*root),1) <= 1.e-8
         return root
-    assert map(round,  getroot((1,  1,  1))) == [2.0,  1.0,  0.0]
+    assert map(round, getroot((1, 1, 1))) == [2.0, 1.0, 0.0]
+    a = Symbol('a')
+    assert nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3).ae(
+        mpf('0.31883011387318591'))
