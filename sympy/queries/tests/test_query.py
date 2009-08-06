@@ -1,7 +1,6 @@
 from sympy.core import Symbol, symbols, S, Rational, Integer
 from sympy.functions import exp, log, sin, cos, sign, re, im, sqrt
-from sympy.assumptions import Assume, register_global_assumptions, \
-    clean_global_assumptions
+from sympy.assumptions import Assume, global_assumptions
 from sympy.queries import Q, ask, register_handler, remove_handler
 from sympy.queries.handlers import AskHandler
 from sympy.utilities.pytest import raises, XFAIL
@@ -907,9 +906,9 @@ def test_global():
     """Test ask with global assumptions"""
     x = symbols('x')
     assert ask(x, Q.integer) == None
-    register_global_assumptions(Assume(x, Q.integer))
+    global_assumptions.add(Assume(x, Q.integer))
     assert ask(x, Q.integer) == True
-    clean_global_assumptions()
+    global_assumptions.clear()
     assert ask(x, Q.integer) == None
 
 def test_incompatible_resolutors():

@@ -2,74 +2,36 @@
 from sympy.core import Basic, Symbol
 from sympy.core.relational import Relational
 
-__global_assumptions = []
+class AssumptionsContext(set):
+    """Set representing assumptions.
 
-def register_global_assumptions(*assump):
-    """Register an assumption as global
-
-    Examples:
-        >>> from sympy import *
-        >>> list_global_assumptions()
-        []
-        >>> x = Symbol('x')
-        >>> register_global_assumptions(Assume(x, Q.real))
-        >>> list_global_assumptions()
-        [Assume(x, 'real', True)]
-        >>> clean_global_assumptions()
-    """
-    __global_assumptions.extend(assump)
-
-def list_global_assumptions():
-    """List all global assumptions
+    This is used to represent global assumptions, but you can also use this
+    class to create your own local assumptions contexts. It is basically a thin
+    wrapper to Python's set, so see its documentation for advanced usage.
 
     Examples:
         >>> from sympy import *
+        >>> global_assumptions
+        set([])
         >>> x = Symbol('x')
-        >>> list_global_assumptions()
-        []
-        >>> register_global_assumptions(Assume(x>0))
-        >>> list_global_assumptions()
-        [Assume(0 < x, 'relational', True)]
-        >>> clean_global_assumptions()
+        >>> global_assumptions.add(Assume(x, Q.real))
+        >>> global_assumptions
+        set([Assume(x, 'real', True)])
+        >>> global_assumptions.remove(Assume(x, Q.real))
+        >>> global_assumptions
+        set([])
+        >>> global_assumptions.clear()
     """
-    return __global_assumptions[:] # make a copy
+    def add(self, *assumptions):
+        """Add an assumption."""
+        for a in assumptions:
+            assert isinstance(a, Assume), 'can only store instances of Assume'
+            super(AssumptionsContext, self).add(a)
 
-def remove_global_assumptions(*assump):
-    """Remove a global assumption. If argument is not
-    a global assumption, it will raise  ValueError
-
-    Examples:
-        >>> from sympy import *
-        >>> x = Symbol('x')
-        >>> register_global_assumptions(Assume(x, Q.even))
-        >>> list_global_assumptions()
-        [Assume(x, 'even', True)]
-        >>> remove_global_assumptions(Assume(x, Q.even))
-        >>> list_global_assumptions()
-        []
-    """
-    for assumption in assump:
-        __global_assumptions.remove(assumption)
-
-def clean_global_assumptions():
-    """
-    Remove all global assumptions
-
-    Examples:
-        >>> from sympy import *
-        >>> x = Symbol('x')
-        >>> register_global_assumptions(Assume(x, Q.integer))
-        >>> list_global_assumptions()
-        [Assume(x, 'integer', True)]
-        >>> clean_global_assumptions()
-        >>> list_global_assumptions()
-        []
-    """
-    global __global_assumptions
-    __global_assumptions = []
+global_assumptions = AssumptionsContext()
 
 class Assume(Basic):
-    """New-style assumptions
+    """New-style assumptions.
 
     >>> from sympy import *
     >>> x = Symbol('x')
@@ -88,7 +50,7 @@ class Assume(Basic):
     @property
     def expr(self):
         """
-        Returns the expression used by this assumption
+        Return the expression used by this assumption.
 
         Examples:
             >>> from sympy import *
@@ -102,7 +64,7 @@ class Assume(Basic):
     @property
     def key(self):
         """
-        Returns the key used by this assumption.
+        Return the key used by this assumption.
         It is a string, e.g. 'integer', 'rational', etc.
 
         Examples:
@@ -117,7 +79,7 @@ class Assume(Basic):
     @property
     def value(self):
         """
-        Returns the value stored by this assumptions.
+        Return the value stored by this assumptions.
         It's a boolean. True means that the assumption
         holds always, and False means the assumption
         does not hold
@@ -141,8 +103,9 @@ class Assume(Basic):
 
 def eliminate_assume(expr, symbol=None):
     """
-    Will convert an expression with assumptions to an equivalent with all assumptions
-    replaced by symbols
+    Convert an expression with assumptions to an equivalent with all assumptions
+    replaced by symbols.
+
     Assume(x, integer=True) --> integer
     Assume(x, integer=False) --> ~integer
 

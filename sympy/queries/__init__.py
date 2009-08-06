@@ -1,7 +1,7 @@
 import inspect
 from sympy.core import Symbol, sympify
 from sympy.utilities.source import get_class
-from sympy.assumptions import list_global_assumptions
+from sympy.assumptions import global_assumptions
 from sympy.assumptions.assume import eliminate_assume
 from sympy.logic.boolalg import to_cnf, conjuncts, \
     compile_rule, Equivalent, And
@@ -27,6 +27,7 @@ class Q:
     real = 'real'
     odd = 'odd'
 
+# TODO: maybe this should be moved to another file?
 def ask(expr, key, assumptions=[]):
     """
     Method for inferring properties about objects.
@@ -58,10 +59,10 @@ def ask(expr, key, assumptions=[]):
     """
     expr = sympify(expr)
 
-    global_assump = list_global_assumptions()
     if assumptions:
-        assumptions = And(assumptions, And(*global_assump))
-    elif global_assump: assumptions = And(*global_assump)
+        assumptions = And(assumptions, And(*global_assumptions))
+    elif global_assumptions:
+        assumptions = And(*global_assumptions)
     if not isinstance(assumptions, (list, tuple)):
         assumptions = conjuncts(to_cnf(assumptions))
 
