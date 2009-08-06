@@ -1152,7 +1152,13 @@ class Basic(AssumeMeths):
             return True
         else:
             def search(expr):
-                if expr.is_Atom:
+                if type(expr) in (tuple, set, list):
+                    for i in expr:
+                        if search(i):
+                            return True
+                elif not isinstance(expr, Basic):
+                    pass
+                elif expr.is_Atom:
                     if expr.is_Symbol:
                         return expr in syms
                     else:
@@ -1186,7 +1192,12 @@ class Basic(AssumeMeths):
             return True
         else:
             def search(expr):
-                if expr.is_Atom:
+                if type(expr) in (tuple, set, list):
+                    for i in expr:
+                        search(i)
+                elif not isinstance(expr, Basic):
+                    pass
+                elif expr.is_Atom:
                     if expr.is_Symbol and expr in syms:
                         syms.remove(expr)
                 else:
