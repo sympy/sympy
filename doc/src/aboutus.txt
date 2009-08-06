@@ -83,7 +83,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Nicolas Pourcelot: Infinity comparison fixes, latex fixes
 #. Ben Goodrich: Matrix.jacobian() function improvements and fixes
 #. Toon Verstraelen: code generation module
-#. Ronan Lamy: test coverage script, limit fixes
+#. Ronan Lamy: test coverage script, limit and expansion fixes
 #. James Abbatiello: fixes tests on windows
 #. Ryan Krauss: fixes could_extract_minus_sign() and latex fixes
 
