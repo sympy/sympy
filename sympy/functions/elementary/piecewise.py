@@ -124,7 +124,14 @@ class Piecewise(Function):
         return None
 
     def doit(self, **hints):
-        return Piecewise(*[(e.doit(), c.doit()) for e, c in self.args])
+        newargs = []
+        for e, c in self.args:
+            if isinstance(e, Basic):
+                e = e.doit()
+            if isinstance(c, Basic):
+                c = c.doit()
+            newargs.append((e, c))
+        return Piecewise(*newargs)
 
     def _eval_integral(self,x):
         from sympy.integrals import integrate

@@ -720,6 +720,9 @@ class Poly(Basic):
         else:
             raise MultivariatePolyError(self)
 
+    def doit(self):
+        return self
+
     @property
     def coeffs(self):
         return self._args[0]

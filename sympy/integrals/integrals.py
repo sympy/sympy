@@ -64,7 +64,13 @@ class Integral(Basic):
 
     def __getnewargs__(self):
         function, limits = self.args
-        return (function,) + limits
+        newlimits = []
+        for i in limits:
+            if i[1] == None:
+                newlimits.append((i[0]))
+            else:
+                newlimits.append((i[0], i[1][0], i[1][1]))
+        return (function,) + tuple(newlimits)
 
     @property
     def function(self):
@@ -132,13 +138,14 @@ class Integral(Basic):
         if not hints.get('integrals', True):
             return self
 
-        function = self.function
+        function = self.function.doit()
 
         for x,ab in self.limits:
             antideriv = self._eval_integral(function, x)
 
             if antideriv is None:
-                return self
+                newargs = (function, self.__getnewargs__()[1])
+                return self.new(*newargs)
             else:
                 if ab is None:
                     function = antideriv

@@ -378,6 +378,11 @@ def test_as_sum_raises():
     raises(NotImplementedError, "e.as_sum(oo)")
     raises(NotImplementedError, "e.as_sum(3, method='xxxx2')")
 
+def test_nested_doit():
+    e = Integral(Integral(x, x), x)
+    f = Integral(x, x, x)
+    assert e.doit() == f.doit()
+
 def test_issue1566():
     # Allow only upper or lower limit evaluation
     e = Integral(x**2, (x, None, 1))
