@@ -203,7 +203,9 @@ def solve(f, *symbols, **flags):
 
         if strategy == GS_POLY:
             poly = f.as_poly( symbol )
-            assert poly is not None
+            if poly is None:
+                raise NotImplementedError("Cannot solve equation " + str(f) + " for "
+                    + str(symbol))
             result = roots(poly, cubics=True, quartics=True).keys()
 
         elif strategy == GS_RATIONAL:
@@ -235,7 +237,7 @@ def solve(f, *symbols, **flags):
                 t = Symbol('t', positive=True, dummy=True)
                 f_ = f.subs(symbol, t**m)
                 if guess_solve_strategy(f_, t) != GS_POLY:
-                    raise TypeError("Could not convert to a polynomial equation: %s" % f_)
+                    raise NotImplementedError("Could not convert to a polynomial equation: %s" % f_)
                 cv_sols = solve(f_, t)
                 for sol in cv_sols:
                     result.append(sol**m)
@@ -634,7 +636,8 @@ def tsolve(eq, sym):
             if f1.is_Function:
                 break
         else:
-            assert False, 'tsolve: at least one Function expected at this point'
+            raise NotImplementedError("Unable to solve the equation" + \
+                "(tsolve: at least one Function expected at this point")
 
         # perform the substitution
         lhs_ = lhs.subs(f1, t)
