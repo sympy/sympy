@@ -12,14 +12,14 @@ class AssumptionsContext(set):
     Examples:
         >>> from sympy import *
         >>> global_assumptions
-        set([])
+        AssumptionsContext()
         >>> x = Symbol('x')
         >>> global_assumptions.add(Assume(x, Q.real))
         >>> global_assumptions
-        set([Assume(x, 'real', True)])
+        AssumptionsContext([Assume(x, 'real', True)])
         >>> global_assumptions.remove(Assume(x, Q.real))
         >>> global_assumptions
-        set([])
+        AssumptionsContext()
         >>> global_assumptions.clear()
     """
     def add(self, *assumptions):
