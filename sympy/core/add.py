@@ -487,5 +487,10 @@ class Add(AssocOp):
             s += x._sage_()
         return s
 
+    def as_Add(self):
+        """Returns `self` as it was `Add` instance. """
+        return list(self.args)
+
 from mul import Mul
 from function import FunctionClass
+

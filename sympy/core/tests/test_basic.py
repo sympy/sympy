@@ -700,6 +700,23 @@ def test_contains():
     assert g in p
     assert not h in p
 
+def test_as_Something():
+    assert x.as_Add() == [x]
+    assert x.as_Mul() == [x]
+    assert x.as_Pow() == (x, S.One)
+
+    assert (x*y*z).as_Add() == [x*y*z]
+    assert sorted((x*y*z).as_Mul()) == [x, y, z]
+    assert (x*y*z).as_Pow() == (x*y*z, S.One)
+
+    assert sorted((x+y+z).as_Add()) == [x, y, z]
+    assert (x+y+z).as_Mul() == [x+y+z]
+    assert (x+y+z).as_Pow() == (x+y+z, S.One)
+
+    assert ((x+y)**z).as_Add() == [(x+y)**z]
+    assert ((x+y)**z).as_Mul() == [(x+y)**z]
+    assert ((x+y)**z).as_Pow() == (x+y, z)
+
 ################# Tests involving only Basic instances ########
 b1 = Basic(); b2 = Basic(b1); b3 = Basic(b2)
 b21 = Basic(b2, b1)
@@ -724,3 +741,4 @@ def test_subs():
     assert b21.subs(b2, b1) == Basic(b1, b1)
     assert b21.subs(b2, b21) == Basic(b21, b1)
     assert b3.subs(b2, b1) == b2
+

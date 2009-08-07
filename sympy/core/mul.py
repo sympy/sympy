@@ -949,9 +949,13 @@ class Mul(AssocOp):
             s *= x._sage_()
         return s
 
+    def as_Mul(self):
+        """Returns `self` as it was `Mul` instance. """
+        return list(self.args)
 
 from power import Pow
 from numbers import Real
 from function import FunctionClass
 from sympify import sympify
 from add import Add
+

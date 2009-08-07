@@ -757,8 +757,12 @@ class Pow(Basic):
     def _sage_(self):
         return self.args[0]._sage_() ** self.args[1]._sage_()
 
+    def as_Pow(self):
+        """Returns `self` as it was `Pow` instance. """
+        return (self.base, self.exp)
 
 from basic import Basic, S, C
 from add import Add
 from numbers import Integer
 from mul import Mul
+
