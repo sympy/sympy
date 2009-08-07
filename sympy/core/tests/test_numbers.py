@@ -481,6 +481,39 @@ def test_IntegerInteger():
 
     assert a == b
 
+def test_Integer_methods():
+    assert Integer(100).half_gcdex(2004) == \
+        (Integer(-20), Integer(4))
+    assert Integer(100).half_gcdex(Integer(2004)) == \
+        (Integer(-20), Integer(4))
+    assert Integer(100).gcdex(2004) == \
+        (Integer(-20), Integer(1), Integer(4))
+    assert Integer(100).gcdex(Integer(2004)) == \
+        (Integer(-20), Integer(1), Integer(4))
+
+    raises(ValueError, "Integer(3).half_gcdex(Rational(1,2))")
+    raises(ValueError, "Integer(3).gcdex(Rational(1,2))")
+
+    assert Integer(3).invert(7) == Integer(5)
+    assert Integer(3).invert(Integer(7)) == Integer(5)
+
+    raises(ValueError, "Integer(3).invert(Rational(1,2))")
+
+    assert Integer(4).cofactors(2) == \
+        (Integer(2), Integer(2), Integer(1))
+    assert Integer(4).cofactors(Integer(2)) == \
+        (Integer(2), Integer(2), Integer(1))
+
+    raises(ValueError, "Integer(4).cofactors(Rational(1,2))")
+
+    assert Integer(4).gcd(2) == Integer(2)
+    assert Integer(4).lcm(2) == Integer(4)
+    assert Integer(4).gcd(Integer(2)) == Integer(2)
+    assert Integer(4).lcm(Integer(2)) == Integer(4)
+
+    raises(ValueError, "Integer(4).gcd(Rational(1,2))")
+    raises(ValueError, "Integer(4).lcm(Rational(1,2))")
+
 def test_issue1512():
     assert abs(pi._evalf(50) - 3.14159265358979) < 1e-10
     assert abs(E._evalf(50) - 2.71828182845905) < 1e-10

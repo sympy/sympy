@@ -216,7 +216,6 @@ class Number(Atom):
         # a -> c * t
         return self, tuple()
 
-
 class Real(Number):
     """
     Represents a floating point number. It is capable of representing
@@ -1035,6 +1034,80 @@ class Integer(Rational):
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
 
+    def half_gcdex(a, b):
+        """Half Extended Euclidean Algorithm. """
+        s, _, h = a.gcdex(b)
+        return s, h
+
+    def gcdex(a, b):
+        """Extended Euclidean Algorithm. """
+        if type(b) is int:
+            return tuple(map(Integer, igcdex(int(a), b)))
+        else:
+            b = _sympify(b)
+
+            if b.is_Integer:
+                return tuple(map(Integer, igcdex(int(a), int(b))))
+            else:
+                raise ValueError("expected an integer, got %s" % b)
+
+    def invert(a, b):
+        """Invert `a` modulo `b`, if possible. """
+        if type(b) is int:
+            a = int(a)
+        else:
+            b = _sympify(b)
+
+            if b.is_Integer:
+                a, b = int(a), int(b)
+            else:
+                raise ValueError("expected an integer, got %s" % b)
+
+        s, _, h = igcdex(a, b)
+
+        if h == 1:
+            return Integer(s % b)
+        else:
+            raise ZeroDivisionError("zero divisor")
+
+    def cofactors(a, b):
+        """Returns GCD and cofactors of input arguments. """
+        if type(b) is int:
+            gcd = Integer(igcd(int(a), b))
+            return gcd, a//gcd, Integer(b)//gcd
+        else:
+            b = _sympify(b)
+
+            if b.is_Integer:
+                gcd = Integer(igcd(int(a), int(b)))
+                return gcd, a//gcd, b//gcd
+            else:
+                raise ValueError("expected an integer, got %s" % b)
+
+    def gcd(a, b):
+        """Returns greates common divisor of input arguments. """
+        if type(b) is int:
+            return Integer(igcd(int(a), b))
+        else:
+            b = _sympify(b)
+
+            if b.is_Integer:
+                return Integer(igcd(int(a), int(b)))
+            else:
+                raise ValueError("expected an integer, got %s" % b)
+
+    def lcm(a, b):
+        """Returns least common multiple of input arguments. """
+        if type(b) is int:
+            return Integer(ilcm(int(a), b))
+        else:
+            b = _sympify(b)
+
+            if b.is_Integer:
+                return Integer(ilcm(int(a), int(b)))
+            else:
+                raise ValueError("expected an integer, got %s" % b)
+
 class Zero(Integer):
     __metaclass__ = SingletonMeta
 
@@ -1641,3 +1714,4 @@ from sympify import _sympify, SympifyError
 from function import FunctionClass
 from power import Pow, integer_nthroot
 from mul import Mul
+
