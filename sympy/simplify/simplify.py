@@ -373,7 +373,7 @@ def collect(expr, syms, evaluate=True, exact=False):
        >>> collect(a*x**2 + b*x**2 + a*x - b*x + c, x)
        c + x*(a - b) + x**2*(a + b)
 
-       The same result can achieved in dictionary form:
+       The same result can be achieved in dictionary form:
 
        >>> d = collect(a*x**2 + b*x**2 + a*x - b*x + c, x, evaluate=False)
        >>> d[x**2]

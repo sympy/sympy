@@ -17,7 +17,8 @@ f = Function('f')
 # See issue 1336.
 
 def checksol(eq, func, sol):
-    """Substitutes sol for func in eq and checks that the result is 0.
+    """
+    Substitutes sol for func in eq and checks that the result is 0.
 
     Only works when func is one function, like f(x) and sol just one
     solution like A*sin(x)+B*cos(x).
@@ -101,9 +102,8 @@ def test_ode5():
 
 def test_ode6():
     f = Function('f')
-    x, C1, C2 = symbols('x C1 C2')
-    assert dsolve(Derivative(f(x),x,x) + 9*f(x), [f(x)]) in \
-        [Equality(f(x),sin(3*x)*C1 + cos(3*x)*C2), Equality(f(x),sin(3*x)*C2 + \
+    assert dsolve(diff(f(x),x,x) + 9*f(x), f(x)) in \
+        [Eq(f(x),sin(3*x)*C1 + cos(3*x)*C2), Eq(f(x),sin(3*x)*C2 + \
         cos(3*x)*C1)]
 
 
@@ -159,7 +159,7 @@ def test_ode13():
 def test_ode14():
     # Type: Bernoulli, f'(x) + p(x)*f(x) == q(x)*f(x)**n
     eq = Eq(x*f(x).diff(x) + f(x) - f(x)**2,0)
-    sol = dsolve(eq,f(x))
+    sol = dsolve(eq,f(x), hint='Bernoulli')
     assert sol == Eq(f(x),1/(x*(C1 + 1/x)))
     assert checksol(eq, f(x), sol)
 
@@ -228,7 +228,7 @@ def test_homogeneous_order():
     assert homogeneous_order(f(y), f(x), x) == None
     assert homogeneous_order(-f(x)/x + 1/sin(f(x)/ x), f(x), x) == 0
 
-def test_homogeneous_coeff_ode1():
+def test_1st_homogeneous_coeff_ode1():
     # Type: First order homogeneous, y'=f(y/x)
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
     eq2 = x*f(x).diff(x) - f(x) - x*sin(f(x)/x)
@@ -238,19 +238,19 @@ def test_homogeneous_coeff_ode1():
     eq6 = x*exp(f(x)/x) - f(x)*sin(f(x)/x) + x*sin(f(x)/x)*f(x).diff(x)
     eq7 = (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x)
     sol1 = Eq(f(x)*sin(f(x)/x), C1)
-    sol2 = Eq(x/tan(f(x)/(2*x)), C1)
+    sol2 = Eq(x*sqrt(1 + cos(f(x)/x))/sqrt(-1 + cos(f(x)/x)), C1)
     sol3 = Eq(-f(x)/(1+log(x/f(x))),C1)
     sol4 = Eq(log(C1*f(x)) + 2*exp(x/f(x)), 0)
     sol5 = Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
     sol6 = Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(C1*x) - cos(f(x)/x)*exp(-f(x)/x)/2, 0)
     sol7 = Eq(log(C1*f(x)) + 2*sqrt(1 - x/f(x)), 0)
-    assert dsolve(eq1, f(x)) == sol1
-    assert dsolve(eq2, f(x)) == sol2
-    assert dsolve(eq3, f(x)) == sol3
-    assert dsolve(eq4, f(x)) == sol4
-    assert dsolve(eq5, f(x)) == sol5
-#    assert dsolve(eq6, f(x)) == sol6
-    assert dsolve(eq7, f(x)) == sol7
+    assert dsolve(eq1, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol1
+    assert dsolve(eq2, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol2
+    assert dsolve(eq3, f(x), hint='1st_homogeneous_coeff_best') == sol3
+    assert dsolve(eq4, f(x), hint='1st_homogeneous_coeff_best') == sol4
+    assert dsolve(eq5, f(x), hint='1st_homogeneous_coeff_best') == sol5
+    assert dsolve(eq6, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol6
+    assert dsolve(eq7, f(x), hint='1st_homogeneous_coeff_best') == sol7
 
 @XFAIL
 def test_homogeneous_coeff_ode1_sol():
@@ -459,14 +459,14 @@ def test_Liouville_ODE():
     # First part used to be test_ODE_1() from test_solvers.py
     eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
     eq1a = diff(x*exp(-f(x)), x, x)
-    eq2 = eq1*exp(-f(x))/exp(f(x))
+    eq2 = (eq1*exp(-f(x))/exp(f(x))).expand() # see test_unexpanded_Liouville_ODE() below
     eq3 = diff(f(x), x, x) + 1/f(x)*(diff(f(x), x))**2 + 1/x*diff(f(x), x)
     eq4 = x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2 + x*diff(f(x), x)
     eq5 = Eq((x*exp(f(x))).diff(x, x), 0)
     sol1 = Eq(C1 + C2/x - exp(-f(x)), 0)
     # If solve() is ever improved, this is a better solution
     sol1a = Eq(f(x), -log((C1*x+C2)/x))
-    sol2 = Eq(f(x), -log(C1 + C2/x))
+    sol2 = Eq(C1 + C2/x - exp(-f(x)), 0) # This is equivalent to sol1
     sol3 = [Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))]
     sol4 = [Eq(f(x), sqrt(C1 + C2*exp(-x))), Eq(f(x), -sqrt(C1 + C2*exp(-x)))]
     sol5 = Eq(f(x), -log(x) + log(C1 + C2*x))
@@ -479,10 +479,21 @@ def test_Liouville_ODE():
     assert checksol(sol1, f(x), sol1a)
     assert checksol(eq1, f(x), sol1a)
     assert checksol(eq1a, f(x), sol1a)
-    assert checksol(eq2, f(x), sol2)
+    assert checksol(sol2, f(x), sol1a)
+    assert checksol(eq2, f(x), sol1a)
     assert checksol(eq3, f(x), sol3[0])
     assert checksol(eq3, f(x), sol3[1])
     assert checksol(eq4, f(x), sol4[0])
     assert checksol(eq4, f(x), sol4[1])
     assert checksol(eq5, f(x), sol5)
 
+@XFAIL
+def test_unexpanded_Liouville_ODE():
+    # This fails because collect() collecting of derivatives is not good enough
+    # for classify_ode to call expand_mul on the expression.
+    # It is the same as from test_Liouville_ODE() above.
+    eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
+    eq2 = eq1*exp(-f(x))/exp(f(x)).expand()
+    sol2 = Eq(f(x), -log(C1 + C2/x))
+    assert dsolve(eq2, f(x)) == sol2
+    assert checksol(eq2, f(x), sol2)
