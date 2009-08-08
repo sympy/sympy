@@ -31,11 +31,11 @@ clean_global_assumptions()
 
      >>> from sympy import *
      >>> x = Symbol('x')
-     >>> register_global_assumptions(Assume(x, Q.positive))
+     >>> global_assumptions.add(Assume(x, Q.positive))
      None
      >>> ask(x, Q.positive)
      True
-     >>> clean_global_assumptions()
+     >>> global_assumptions.clear()
      None
 
 
