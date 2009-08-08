@@ -1,5 +1,5 @@
 from sympy import abc, Function, Symbol, Wild, Derivative, sin, cos, Real, \
-        Rational, exp, I, Integer, diff, Mul, var, oo
+        Rational, exp, I, Integer, diff, Mul, var, oo, S, Add
 from sympy.utilities.pytest import XFAIL
 
 
@@ -335,3 +335,6 @@ def test_combine_inverse():
     assert Mul._combine_inverse(x*I*y, y*I) == x
     assert Mul._combine_inverse(oo*I*y, y*I) == oo
     assert Mul._combine_inverse(oo*I*y, oo*I) == y
+    assert Add._combine_inverse(oo, oo) == S(0)
+    assert Add._combine_inverse(oo*I, oo*I) == S(0)
+

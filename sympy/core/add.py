@@ -191,6 +191,13 @@ class Add(AssocOp):
 
     @staticmethod
     def _combine_inverse(lhs, rhs):
+        """
+        Returns lhs - rhs, but treats arguments like symbols, so things like
+        oo - oo return 0, instead of a nan.
+        """
+        from sympy import oo, I
+        if lhs == oo and rhs == oo or lhs == oo*I and rhs == oo*I:
+            return S.Zero
         return lhs - rhs
 
     @cacheit
