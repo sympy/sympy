@@ -33,8 +33,7 @@ If the expression contains symbols or for some other reason cannot be evaluated 
 
     >>> x = Symbol('x')
     >>> (pi*x**2 + x/3).evalf()
-                                            2
-    0.333333333333333*x + 3.14159265358979*x 
+    0.333333333333333*x + 3.14159265358979*x**2
 
 
 You can also use the standard Python functions ``float()``, ``complex()`` to convert SymPy expressions to regular Python numbers:
@@ -208,6 +207,9 @@ It can be dealt with much more efficiently by telling ``evalf`` or ``N`` to use 
 
 Oscillatory quadrature requires an integrand containing a factor cos(ax+b) or sin(ax+b). Note that many other oscillatory integrals can be transformed to this form with a change of variables:
 
+    >>> from sympy import pprint
+    >>> import sys
+    >>> sys.displayhook = pprint
     >>> intgrl = Integral(sin(1/x), (x, 0, 1)).transform(x, 1/x)
     >>> intgrl
      oo          

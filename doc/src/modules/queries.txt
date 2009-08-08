@@ -32,11 +32,9 @@ clean_global_assumptions()
      >>> from sympy import *
      >>> x = Symbol('x')
      >>> global_assumptions.add(Assume(x, Q.positive))
-     None
      >>> ask(x, Q.positive)
      True
      >>> global_assumptions.clear()
-     None
 
 
 Supported queries
@@ -364,7 +362,6 @@ to accept this type (and return True)
     ...         return True
     >>> a = MyType()
     >>> register_handler('prime', MyAskHandler)
-    None
     >>> ask(a, Q.prime)
     True
 

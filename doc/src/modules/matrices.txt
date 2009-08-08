@@ -9,6 +9,9 @@ Creating Matrices
 The linear algebra module is designed to be as simple as possible. First, we
 import and declare our first Matrix object:
 
+    >>> from sympy import pprint
+    >>> import sys
+    >>> sys.displayhook = pprint
     >>> from sympy.matrices import *
     >>> Matrix([[1,0], [0,1]])
     [1  0]

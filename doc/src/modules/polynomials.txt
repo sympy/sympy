@@ -27,6 +27,9 @@ is, for polynomials f and g, it computes q and r, such that f == g*q + r and
 degree(r) < q. For polynomials in one variables with coefficients in a field,
 say, the rational numbers, q and r are uniquely defined this way.
 
+    >>> from sympy import pprint
+    >>> import sys
+    >>> sys.displayhook = pprint
     >>> f = 5*x**2 + 10*x + 3
     >>> g = 2*x + 2
     >>> q, r = div(f, g, x, y)

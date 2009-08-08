@@ -21,11 +21,9 @@ Expanding of arithmetic expressions involving products and powers:
     >>> from sympy import *
     >>> x, y, z = symbols('xyz')
     >>> ((x + y)*(x - y)).expand(basic=True)
-     2    2
-    x  - y 
+    x**2 - y**2
     >>> ((x + y + z)**2).expand(basic=True)
-                             2    2    2
-    2*x*y + 2*x*z + 2*y*z + x  + y  + z 
+    2*x*y + 2*x*z + 2*y*z + x**2 + y**2 + z**2
 
 
 Arithmetic expand is done by default in `expand()` so the keyword `basic` can
@@ -41,8 +39,7 @@ always perform arithmetic expand to obtain the desired normal form:
     -im(y) + I*im(x) + I*re(y) + re(x)
 
     >>> sin(x + I*y).expand(complex=True)
-    cosh(im(x) + re(y))*sin(-im(y) + re(x)) + I*cos(-im(y) + re(x))*sinh(im(x) + r
-    e(y))
+    cosh(im(x) + re(y))*sin(-im(y) + re(x)) + I*cos(-im(y) + re(x))*sinh(im(x) + re(y))
 
 Note also that the same behavior can be obtained by using `as_real_imag()`
 method. However it will return a tuple containing the real part in the first

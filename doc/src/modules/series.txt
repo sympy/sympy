@@ -12,10 +12,7 @@ Examples
     >>> from sympy import Symbol, cos, series
     >>> x = Symbol('x')
     >>> series(cos(x),x)
-         2    4          
-        x    x           
-    1 - -- + -- + O(x**6)
-        2    24          
+    1 - x**2/2 + x**4/24 + O(x**6)
 
 
 TODO and Bugs

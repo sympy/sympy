@@ -34,13 +34,9 @@ Examples::
     >>> arg(2.0)
     0
     >>> arg(I)
-    pi
-    --
-    2 
+    pi/2
     >>> arg(sqrt(2) + I*sqrt(2))
-    pi
-    --
-    4 
+    pi/4
 
 .. autoclass:: sympy.functions.elementary.arg
 
