@@ -385,15 +385,15 @@ You can integrate elementary functions::
     x**6
     >>> integrate(sin(x), x)
     -cos(x)
-    >>> integrate(log(x), x) #doctest: +SKIP
-    x*log(x) - x
-    >>> integrate(2*x + sinh(x), x) #doctest: +SKIP
-    x**2 + cosh(x)
+    >>> integrate(log(x), x)
+    -x + x*log(x)
+    >>> integrate(2*x + sinh(x), x)
+    cosh(x) + x**2
 
 Also special functions are handled easily::
 
-    >>> integrate(exp(-x**2)*erf(x), x) #doctest: +SKIP
-    (1/4)*pi**(1/2)*erf(x)**2
+    >>> integrate(exp(-x**2)*erf(x), x)
+    pi**(1/2)*erf(x)**2/4
 
 It is possible to compute definite integral::
 
