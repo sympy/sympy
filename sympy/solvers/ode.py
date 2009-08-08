@@ -16,7 +16,8 @@ from sympy.functions import sqrt # TODO: remove with old second order code
 from sympy.functions import cos, exp, im, log, re, sin
 from sympy.matrices import wronskian
 from sympy.polys import RootsOf, discriminant, RootOf
-from sympy.simplify import collect, logcombine, separatevars, simplify, trigsimp
+from sympy.simplify import collect, logcombine, powsimp, separatevars, \
+    simplify, trigsimp
 from sympy.solvers import solve
 
 from sympy.utilities import numbered_symbols
@@ -43,7 +44,7 @@ allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli",
 "Liouville", "separable_Integral", "1st_exact_Integral", "1st_linear_Integral",
 "Bernoulli_Integral", "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
 "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
-"nth_linear_constant_coeff_variation_of_parameters_Integral",
+"nth_linear_constant_coeff_variation_of_paramters_Integral",
 "Liouville_Integral")
 
 
@@ -123,8 +124,6 @@ def dsolve(eq, func, hint="default", **kwargs):
     elif hint == 'best':
         return dsolve(eq, func, hint='all', classify=False, order=hints['order'],
             hints = hints)['best']
-        # TODO: write and use here compare_ode_sol function
-        # use secret kwarg classify=False
     elif hint in ('all', 'all_Integral'):
         retdict = {}
         gethints = set(hints) - set(['order', 'default'])
@@ -347,7 +346,7 @@ def classify_ode(eq, func, dict=False):
             r['b'] = b
         # Inhomogeneous case: F(x) is not identically 0
         if r[b]:
-            matching_hints["nth_linear_constant_coeff_undetermined_coefficients"] = r
+#            matching_hints["nth_linear_constant_coeff_undetermined_coefficients"] = r
             matching_hints["nth_linear_constant_coeff_variation_of_paramters"] = r
             matching_hints["nth_linear_constant_coeff_variation_of_paramters_Integral"] = r
         # Homogeneous case: F(x) is identically 0
@@ -634,7 +633,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             # We don't know how to handle other classes
             # This also serves as the base case for the recursion
             return expr
-        elif not any(t in expr for t in constantsymbols):
+        elif not any(expr.has(t) for t in constantsymbols):
             return expr
         else:
             newargs = []
@@ -707,7 +706,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             _renumber(expr.rhs, symbolname, startnumber, endnumber))
 
         if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and\
-        not any(t in expr for t in constantsymbols):
+        not any(expr.has(t) for t in constantsymbols):
             # Base case, as above.  We better hope there aren't constants inside
             # of some other class, because they won't be simplified.
             return expr
@@ -758,6 +757,8 @@ def _handle_Integral(expr, func, order, hint):
         y = exactvars['y']
         sol = expr.subs(y, f(x))
         del exactvars
+    elif hint == "nth_linear_constant_coeff_homogeneous":
+        sol = expr
     elif hint[-9:] != "_Integral":
         sol = expr.doit()
     else:
@@ -878,13 +879,73 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
     # TODO: implement undetermined coefficients
     return
 
+def _undetermined_coefficients_match(expr, x, returns='matches'):
+    """
+    Returns a trial function match if undetermined coefficients can be applied
+    to expr, and None other.
+
+    An trial expression can be found for an expression for use with the method of
+    undetermined coefficients if the expression is an additive/multiplicative
+    combination of polynomials in x (the independent variable of expr),
+    sin(a*x + b), cos(a*x + b), and exp(a*x) terms.
+
+    Note that you may still need to multiply each term returned here by
+    sufficient x to make it linearly independent with the solutions to the
+    homogeneous equation.
+
+    This is intended for internal use by undetermined_coefficients hints.
+
+    SymPy currently has no way to convert sin(x)**n*cos(y)**m into a sum of only
+    sin(a*x), cos(b*x), sin(c*y), and cos(d*y) terms, so these are not
+    implemented.  So, for example, you will need to manually convert sin(x)**2
+    into (1 + cos(2*x))/2 to properly apply the method of undetermined
+    coefficients on it.
+    """
+    # TODO: write examples
+    a = Wild('a', exclude=[x])
+    b = Wild('b', exclude=[x])
+    expr = powsimp(expr, combine='exp')
+    def _test_term(expr, x):
+        """
+        Test if expr fits the proper form for undetermined coefficients.
+        """
+        if expr.is_Add:
+            return all([_test_term(i, x) for i in expr.args])
+        elif expr.is_Mul:
+            if expr.has(sin) and expr.has(cos): # sin*cos no good, see docstring
+                return False
+            else:
+                return all([_test_term(i, x) for i in expr.args])
+        elif expr.is_Function:
+            if expr.func in (sin, cos, exp):
+                if expr.args[0].match(a*x + b):
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        elif expr.is_Pow and expr.base.is_Symbol and expr.exp.is_Integer:
+            return True
+        elif expr.is_Symbol or expr.is_Number:
+            return True
+        else:
+            return False
+    if returns == 'matches':
+        return _test_term(expr, x)
+    elif returns == 'trial func':
+        raise NotImplementedError
+    else:
+        raise ValueError("returns can be 'matches' or 'trial func', not " + str(returns))
+
+
 def ode_nth_linear_constant_coeff_variation_of_paramters(eq, func, order, match):
     x = func.args[0]
     f = func.func
     r = match
     # If we ever implement more linear methods, this function will need to be
     # consolidated (wrapped around) and this line made more general.
-    gensol = ode_nth_linear_constant_coeff(eq, func, order, match, returns='both')
+    gensol = ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
+        returns='both')
     gensols = gensol['list']
     gsol = gensol['sol']
     wr = wronskian(gensols, x)
@@ -939,7 +1000,6 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     chareqroots = RootsOf(chareq, m)
     charroots_exact = list(chareqroots.exact_roots())
     charroots_formal = list(chareqroots.formal_roots())
-    # TODO: this fails because of issue 1563
     if charroots_formal and discriminant(chareq, m) == 0:
         # If Poly cannot find the roots explicitly, we can only return
         # an expression in terms of RootOf's if we know the roots
@@ -970,6 +1030,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
                 # See issue 1563.
                 gsol += exp(root*x)*constants.next()
                 assert multiplicity == 1
+                collectterms = [(0, root, 0)] + collectterms
             else:
                 reroot = re(root)
                 imroot = im(root)

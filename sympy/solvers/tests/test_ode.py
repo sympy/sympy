@@ -1,8 +1,10 @@
 from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         I, exp, log, simplify, normal, together, ratsimp, powsimp, \
-        fraction, radsimp, Eq, sqrt, pi, erf, diff, Rational, asinh, trigsimp
+        fraction, radsimp, Eq, sqrt, pi, erf,  diff, Rational, asinh, trigsimp, \
+        S, RootOf, Poly
 from sympy.abc import x, y, z
-from sympy.solvers.ode import deriv_degree, homogeneous_order
+from sympy.solvers.ode import deriv_degree, homogeneous_order, \
+        _undetermined_coefficients_match
 from sympy.utilities.pytest import XFAIL, skip
 
 C1 = Symbol('C1')
@@ -320,12 +322,16 @@ def test_homogeneous_coeff_ode4():
 @XFAIL
 def test_homogeneous_order_ode4_explicit():
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
-    sol = Eq(f(x)**2-C1*x, f(x)*sqrt(f(x)**2-x**2))
-    assert dsolve(eq, f(x)) == sol
-    assert checksol(eq, f(x)) == sol
+    sol = Eq(f(x)**2+C1*x, f(x)*sqrt(f(x)**2-x**2))
+    # If this XPASSES, it means the integral engine has improved!  Please
+    # uncomment the real tests below.
+    assert not dsolve(eq, f(x)).has(Integral)
+#    assert dsolve(eq, f(x)) == sol
+#    assert checksol(eq, f(x)) == sol
 
-def test_homogeneous_norder():
+def test_nth_linear_constant_coeff_homogeneous():
     # From Exercise 20, in Ordinary Differential Equations, Tenenbaum and Pollard
+    # pg. 220
     a = Symbol('a', positive=True)
     k = Symbol('k', real=True)
     eq1 = f(x).diff(x, 2) + 2*f(x).diff(x)
@@ -455,6 +461,19 @@ def test_homogeneous_norder():
     assert checksol(eq29, f(x), sol29)
     assert checksol(eq30, f(x), sol30)
 
+def test_nth_linear_constant_coeff_homogeneous_RootOf():
+    _m = Symbol('_m')
+    eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
+    sol = Eq(f(x), C1*exp(x*RootOf(Poly(_m**5 + 11*_m - 2, _m), index=0)) + \
+        C2*exp(x*RootOf(Poly(_m**5 + 11*_m - 2, _m), index=1)) + \
+        C3*exp(x*RootOf(Poly(_m**5 + 11*_m - 2, _m), index=2)) + \
+        C4*exp(x*RootOf(Poly(_m**5 + 11*_m - 2, _m), index=3)) + \
+        C5*exp(x*RootOf(Poly(_m**5 + 11*_m - 2, _m), index=4)))
+    print dsolve(eq, f(x))
+    print sol
+    assert dsolve(eq, f(x)) == sol
+    assert checksol(eq, f(x), sol)
+
 def test_Liouville_ODE():
     # First part used to be test_ODE_1() from test_solvers.py
     eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
@@ -497,3 +516,78 @@ def test_unexpanded_Liouville_ODE():
     sol2 = Eq(f(x), -log(C1 + C2/x))
     assert dsolve(eq2, f(x)) == sol2
     assert checksol(eq2, f(x), sol2)
+
+def test_undetermined_coefficients_match():
+    assert _undetermined_coefficients_match(sin(2*x + sqrt(5)), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(sin(x)*cos(x), x,
+        returns='matches') == False
+    assert _undetermined_coefficients_match(sin(x)*(x**2 + x + 1), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(sin(x)*x**2 + sin(x)*x + sin(x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(exp(2*x)*sin(x)*(x**2 + x + 1), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(1/sin(x), x,
+        returns='matches') == False
+    assert _undetermined_coefficients_match(log(x), x,
+        returns='matches') == False
+    assert _undetermined_coefficients_match(2**(x)*(x**2 + x + 1), x,
+        returns='matches') == False
+    assert _undetermined_coefficients_match(x**y, x,
+        returns='matches') == False
+    assert _undetermined_coefficients_match(exp(x)*exp(2*x + 1), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(sin(x)*(x**2 + x + 1), x,
+        returns='matches') == True
+    # From Ordinary Differential Equations, Tenenbaum and Pollard, pg. 231
+    assert _undetermined_coefficients_match(S(4), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(12*exp(x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(exp(I*x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(sin(x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(cos(x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(8 + 6*exp(x) + 2*sin(x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(x**2, x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(2*exp(2*x)*sin(x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(x - sin(x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(x**2 + 2*x, x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(4*x*sin(x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(x*sin(2*x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(x**2*exp(-x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(2*exp(-x) - x**2*exp(-x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(exp(-2*x) + x**2, x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(x*exp(-x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(x + exp(2*x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(sin(x) + exp(-x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(exp(x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(S(1)/2 - cos(2*x)/2, x,
+        returns='matches') == True # converted from sin(x)**2
+    assert _undetermined_coefficients_match(exp(2*x)*(S(1)/2 + cos(2*x)/2), x,
+        returns='matches') == True # converted from exp(2*x)*sin(x)**2
+    assert _undetermined_coefficients_match(2*x + sin(x) + cos(x), x,
+        returns='matches') == True
+    assert _undetermined_coefficients_match(cos(x)/2 - cos(3*x)/2, x,
+        returns='matches') == True # converted from sin(2*x)*sin(x)
+
+

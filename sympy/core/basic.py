@@ -1353,9 +1353,9 @@ class Basic(AssumeMeths):
         # weed out negative one prefixes
         sign = 1
         if pattern.is_Mul and pattern.args[0] == -1:
-          pattern = -pattern; sign = -sign
+            pattern = -pattern; sign = -sign
         if expr.is_Mul and expr.args[0] == -1:
-          expr = -expr; sign = -sign
+            expr = -expr; sign = -sign
 
         if evaluate:
             pat = pattern
