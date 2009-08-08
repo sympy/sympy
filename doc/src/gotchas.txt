@@ -117,17 +117,21 @@ If you define a circular relationship, you will get a :WARNING: document isn't i
     >>> def b():
     ...     return a()
     ... 
-    >>> a() # doctest: +SKIP
-      Traceback (most recent call last):
-    File "<console>", line 1, in <module>
-    File "<console>", line 2, in a
-    File "<console>", line 2, in b
-    File "<console>", line 2, in a
-    File "<console>", line 2, in b
-    .
-    .                               # Continues for several lines
-    .
+    >>> a()
+    Traceback (most recent call last):
+      File "...", line ..., in ...
+        compileflags, 1) in test.globs
+      File "<...>", line 1, in <module>
+        a()
+      File "<...>", line 2, in a
+        return b()
+      File "<...>", line 2, in b
+        return a()
+      File "<...>", line 2, in a
+        return b()
+    ...
     RuntimeError: maximum recursion depth exceeded
+
 
 .. note::
     See also `Why doesn't changing one variable change another that depends on it? <http://wiki.sympy.org/wiki/FAQ#Why_doesn.27t_changing_one_variable_change_another_that_depends_it.3F>`_ in the FAQ.
@@ -164,12 +168,14 @@ You can also import common symbol names from :mod:`sympy.abc`.
     w
     >>> import sympy
     >>> dir(sympy.abc) #doctest: +SKIP
-    [A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, Symbol, T, U, V,
-    W, X, Y, Z, __builtins__, __doc__, __file__, __name__, __package__,
-    _greek, _latin, a, alpha, b, beta, c, chi, d, delta, e, epsilon, eta, f, g,
-    gamma, h, i, iota, j, k, kappa, l, m, mu, n, nu, o, omega, omicron,
-    p, phi, pi, psi, q, r, rho, s, sigma, t, tau, theta, u, upsilon, v, w, x,
-    xi, y, z, zeta]
+    ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+    'P', 'Q', 'R', 'S', 'Symbol', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    '__builtins__', '__doc__', '__file__', '__name__', '__package__', '_greek',
+    '_latin', 'a', 'alpha', 'b', 'beta', 'c', 'chi', 'd', 'delta', 'e',
+    'epsilon', 'eta', 'f', 'g', 'gamma', 'h', 'i', 'iota', 'j', 'k', 'kappa',
+    'l', 'm', 'mu', 'n', 'nu', 'o', 'omega', 'omicron', 'p', 'phi', 'pi',
+    'psi', 'q', 'r', 'rho', 's', 'sigma', 't', 'tau', 'theta', 'u', 'upsilon',
+    'v', 'w', 'x', 'xi', 'y', 'z', 'zeta']
 
 If you want control over the assumptions of the variables, use :func:`Symbol` and :func:`symbols`.  See :ref:`Keyword Arguments<keyword-arguments>` below.
 
@@ -269,8 +275,16 @@ Also, if you do not use :command:`isympy`, you should do ``from __future__ impor
 
 :mod:`Rational` only works for number/number and is only meant for rational numbers.  If you want a fraction with symbols or expressions in it, just use ``/``.  If you do number/expression or expression/number, then the number will automatically be converted in to a SymPy Number.  You only need to be careful with number/number.
 
-    >>> Rational(2, x) #doctest: +SKIP
-    ValueError: ./sympy/core/numbers.py:493:function __new__ 2-th argument must be of type (<type 'int'>, <type 'long'>, <class 'sympy.core.numbers.Integer'>, <type 'NoneType'>) but got x
+    >>> Rational(2, x)
+    Traceback (most recent call last):
+      File "...", line ..., in ...
+        compileflags, 1) in test.globs
+      File "<...>", line 1, in <module>
+        Rational(2, x)
+      ...
+    ValueError: ...:function __new__ 2-th argument must be of type (<type
+    'int'>, <type 'long'>, <class 'sympy.core.numbers.Integer'>, <type
+    'NoneType'>) but got x
     >>> 2/x
     2/x
 
@@ -286,24 +300,22 @@ use.  Parentheses ``()`` change operator precedence as you would normally expect
 
 In :command:`isympy`, with the :command:`ipython` shell::
 
-    >>> 2x # not allowed #doctest: +SKIP
-      File "<console>", line 1
-        2x # not allowed
-         ^
+    >>> 2x
+    Traceback (most recent call last):
+    ...
     SyntaxError: invalid syntax
-    >>> 2*x #doctest: +SKIP
-    2⋅x
+    >>> 2*x
+    2*x
     >>> x^2 # This is not power.  Use ** instead.
     Traceback (most recent call last):
       File "<console>", line 1, in <module>
     TypeError: unsupported operand type(s) for ^: 'Symbol' and 'int'
-    >>> x**2 #doctest: +SKIP
-     2
-    x 
-    >>> 3 - x**(2*x)/(x + 1) #doctest: +SKIP
-          2⋅x
+    >>> x**2
+    x**2
+    >>> pprint(3 - x**(2*x)/(x + 1))
+          2*x
          x   
-    3 - ─────
+    3 - -----
         1 + x
 
 
@@ -399,28 +411,26 @@ Aside from the usage described :ref:`above <equals-signs>`, equals signs (``=``)
 
     >>> # sqrt(x**2) doesn't auto simplify to x because x is assumed to be
     >>> # complex by default, and, for example, sqrt((-1)**2) == sqrt(1) == 1 != -1.
-    >>> sqrt(x**2) #doctest: +SKIP
-       ____
-      /  2 
-    \/  x  
+    >>> sqrt(x**2)
+    (x**2)**(1/2)
     >>> x = Symbol('x', positive=True) # One example of keyword arguments is assumptions for Symbols
     >>> sqrt(x**2) # only == x if x >= 0
     x
-    >>> powsimp((x*y)**(n + m)) # powsimp has a default argument, combine='all' #doctest: +SKIP
+    >>> pprint(powsimp((x*y)**(n + m))) # powsimp has a default argument, combine='all'
          m + n
-    (x⋅y)
+    (x*y)
     >>> # Setting combine to the default value is the same as not setting it.
-    >>> powsimp(x**n*x**m*y**n*y**m, combine='all') #doctest: +SKIP
+    >>> pprint(powsimp(x**n*x**m*y**n*y**m, combine='all'))
          m + n
-    (x⋅y)
+    (x*y)
     >>> # The non-default options are 'exp', which combines exponenents...
-    >>> powsimp(x**n*x**m*y**n*y**m, combine='exp') #doctest: +SKIP
+    >>> pprint(powsimp(x**n*x**m*y**n*y**m, combine='exp'))
      m + n  m + n
-    x     ⋅y
+    x     *y
     >>> # ...and 'base', which combines bases.
-    >>> powsimp(x**n*x**m*y**n*y**m, combine='base') #doctest: +SKIP
+    >>> pprint(powsimp(x**n*x**m*y**n*y**m, combine='base'))
          m      n
-    (x⋅y) ⋅(x⋅y)
+    (x*y) *(x*y)
 
 .. note::
 
