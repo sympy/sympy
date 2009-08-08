@@ -156,7 +156,9 @@ def doctest(*paths, **kwargs):
     for doc_file in doc_files:
         old_displayhook = sys.displayhook
         try:
-            out = pdoctest.testfile(doc_file, module_relative=False)
+            out = pdoctest.testfile(doc_file, module_relative=False,
+                    optionflags=pdoctest.ELLIPSIS | \
+                    pdoctest.NORMALIZE_WHITESPACE)
         finally:
             # make sure we return to the original displayhook in case some
             # doctest has changed that
