@@ -621,6 +621,15 @@ def test_coeff2_0():
 
     assert g.coeff(psi(r).diff(r, 2)) == 1
 
+def test_coeff_expand():
+    x, y, z = symbols('x y z')
+    expr = z*(x+y)**2
+    expr2 = z*(x+y)**2 + z*(2*x + 2*y)**2
+    assert expr.coeff(z) == 2*x*y + x**2 + y**2
+    assert expr.coeff(z, expand=False) == (x+y)**2
+    assert expr2.coeff(z) == 10*x*y + 5*x**2 + 5*y**2
+    assert expr2.coeff(z, expand=False) == (x+y)**2 + (2*x + 2*y)**2
+
 def test_integrate():
     assert (log(x)).integrate((x, 0, 1)) == -1
     assert sin(x).integrate(x) == -cos(x)

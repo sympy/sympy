@@ -1589,20 +1589,29 @@ class Basic(AssumeMeths):
                 else:
                     return self
 
-    def coeff(self, x):
+    def coeff(self, x, expand=True):
         """
         Returns the coefficient of the term "x" or None if there is no "x".
 
+        Optional expand keyword argument allows one to control whether the
+        expression is expanded before terms are collected, which can be useful
+        if the term "x" isn't nested inside of terms and you don't want the
+        returned coefficient to be expanded.
+
         Example:
 
-        >>> x = Symbol('x')
-
+        >>> from sympy import symbols
+        >>> x, y, z = symbols('x y z')
         >>> (3+2*x+4*x**2).coeff(1)
         >>> (3+2*x+4*x**2).coeff(x)
         2
         >>> (3+2*x+4*x**2).coeff(x**2)
         4
         >>> (3+2*x+4*x**2).coeff(x**3)
+        >>> (z*(x+y)**2).coeff(z)
+        2*x*y + x**2 + y**2
+        >>> (z*(x+y)**2).coeff(z, expand=False)
+        (x + y)**2
         >>>
         """
         from sympy import collect
@@ -1616,7 +1625,9 @@ class Basic(AssumeMeths):
                 return None
         if x.is_Integer:
             return
-        self = self.expand() # collect expects it's arguments in expanded form
+
+        if expand:
+            self = self.expand() # collect expects it's arguments in expanded form
         result = collect(self, x, evaluate=False)
         if x in result:
             return result[x]
