@@ -97,8 +97,8 @@ and 3 standard deviations:
 
 Plug the interval back in to see that the value is correct:
 
-    >>> N.probability(*N.confidence(0.95)).evalf() #doctest: +SKIP
-    0.95
+    >>> N.probability(*N.confidence(0.95)).evalf()
+    0.950000000000000
 
 Other distributions
 -------------------
