@@ -211,7 +211,7 @@ def solve(f, *symbols, **flags):
         elif strategy == GS_RATIONAL:
             P, Q = f.as_numer_denom()
             #TODO: check for Q != 0
-            return solve(P, symbol, **flags)
+            result = solve(P, symbol, **flags)
 
         elif strategy == GS_POLY_CV_1:
             args = list(f.args)
@@ -277,7 +277,10 @@ def solve(f, *symbols, **flags):
         else:
             raise NotImplementedError("No algorithms are implemented to solve equation %s" % f)
 
-        if flags.get('simplified', True):
+        if symbol_swapped:
+            result = [ri.subs(swap_back_dict) for ri in result]
+
+        if flags.get('simplified', True) and strategy != GS_RATIONAL:
             return map(simplify, result)
         else:
             return result

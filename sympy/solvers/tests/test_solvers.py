@@ -1,6 +1,6 @@
 from sympy import Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq, \
         sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, \
-        symbols, S, raises, sympify, var, simplify
+        symbols, S, raises, sympify, var, simplify, Integral
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, deriv_degree
 
@@ -8,6 +8,11 @@ from sympy.solvers.solvers import guess_solve_strategy, GS_POLY, GS_POLY_CV_1, G
     GS_TRANSCENDENTAL, GS_RATIONAL, GS_RATIONAL_CV_1
 
 from sympy.utilities.pytest import XFAIL
+
+def test_swap_back():
+    x=var('x');f=Function('f',dummy=True)
+    assert solve(Eq(log(f(x)), Integral(x, (x, 1, f(x)))), f(x)) == \
+    [exp(Integral(x, (x, 1, f(x))))]
 
 def test_guess_poly():
     """
