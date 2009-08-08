@@ -133,22 +133,41 @@ def doctest(*paths, **kwargs):
     else:
         t.add_paths(["sympy"])
     dtest = t.test()
+    if not dtest:
+        return False
 
-    if len(paths) == 0 and sys.version_info[:2] > (2,4):
+    if sys.version_info[:2] <= (2,4):
+        return True
+
+    if len(paths) == 0:
         # test documentation under doc/src/ only if we are running the full
         # test suite and this is python2.5 or newer:
         excluded = convert_to_native_paths(['doc/src/modules/plotting.txt'])
         doc_globs = convert_to_native_paths(['doc/src/*.txt',
                 'doc/src/modules/*.txt'])
         doc_files = sum([glob(x) for x in doc_globs], [])
-        setup_pprint()
         for ex in excluded:
             doc_files.remove(ex)
-        for doc_file in doc_files:
+    else:
+        doc_files = paths
+
+    setup_pprint()
+    doc_tests_succeeded = True
+    for doc_file in doc_files:
+        old_displayhook = sys.displayhook
+        try:
             out = pdoctest.testfile(doc_file, module_relative=False)
-            print "Testing ", doc_file
-            print "Failed %s, tested %s" % out
-    return dtest
+        finally:
+            # make sure we return to the original displayhook in case some
+            # doctest has changed that
+            sys.displayhook = old_displayhook
+        print "Testing ", doc_file
+        print "Failed %s, tested %s" % out
+        if out[0] != 0:
+            doc_tests_succeeded = False
+    if not doc_tests_succeeded:
+        print("DO *NOT* COMMIT!")
+    return doc_tests_succeeded
 
 class SymPyTests(object):
 
