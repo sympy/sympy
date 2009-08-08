@@ -8,7 +8,7 @@ SPHINXOPTS   =
 SPHINXVER    = 0.5
 #SPHINXBUILDpy  = sphinx/Sphinx-$(SPHINXVER)/sphinx-build.py
 SPHINXBUILDpy  = sphinx-build
-SPHINXBUILD  = PYTHONPATH=.. $(SPHINXBUILDpy)
+SPHINXBUILD  = PYTHONPATH=..:$(PYTHONPATH) $(SPHINXBUILDpy)
 PAPER        =
 
 ALLSPHINXOPTS = -d _build/doctrees -D latex_paper_size=$(PAPER) \
