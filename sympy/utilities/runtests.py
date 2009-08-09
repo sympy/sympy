@@ -154,6 +154,8 @@ def doctest(*paths, **kwargs):
     setup_pprint()
     doc_tests_succeeded = True
     for doc_file in doc_files:
+        if not os.path.isfile(doc_file):
+            continue
         old_displayhook = sys.displayhook
         try:
             out = pdoctest.testfile(doc_file, module_relative=False,
