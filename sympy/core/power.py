@@ -275,7 +275,7 @@ class Pow(Basic):
         return self.new(*terms)
 
     def _eval_expand_multinomial(self, deep=True, **hints):
-        """(a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is positive integer"""
+        """(a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is nonzero integer"""
         if deep:
             b = self.base.expand(deep=deep, **hints)
             e = self.exp.expand(deep=deep, **hints)
@@ -387,6 +387,8 @@ class Pow(Basic):
                         return Add(*[f*g for f in base.args for g in base.args])
                     else:
                         return Add(*[f*multi for f in base.args])
+        elif exp.is_Integer and exp.p < 0 and base.is_Add:
+            return 1 / Pow(base, -exp.p).expand(deep=deep, **hints)
         elif exp.is_Add and base.is_Number:
             #  a + b      a  b
             # n      --> n  n  , where n, a, b are Numbers
