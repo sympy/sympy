@@ -195,10 +195,10 @@ class Add(AssocOp):
         Returns lhs - rhs, but treats arguments like symbols, so things like
         oo - oo return 0, instead of a nan.
         """
-        from sympy import oo, I
+        from sympy import oo, I, expand_mul
         if lhs == oo and rhs == oo or lhs == oo*I and rhs == oo*I:
             return S.Zero
-        return lhs - rhs
+        return expand_mul(lhs - rhs)
 
     @cacheit
     def as_two_terms(self):
