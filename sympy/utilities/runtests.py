@@ -89,6 +89,8 @@ def test(*args, **kwargs):
         mypaths = []
         for p in t.get_paths(dir='sympy'):
             mypaths.extend(glob(p))
+        mypaths = list(set(mypaths))
+        mypaths.sort()
         t.add_paths([p for p in mypaths if any(a in p for a in args)])
     return t.test()
 
