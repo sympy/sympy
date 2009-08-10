@@ -57,6 +57,8 @@ def test(*args, **kwargs):
     """
     Run all tests containing any of the given strings in their path.
 
+    If sort=False, run them in random order (not default).
+
     Warning: Tests in *very* deeply nested directories are not found.
 
     Examples:
@@ -81,6 +83,7 @@ def test(*args, **kwargs):
     kw = kwargs.get("kw", "")
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
+    sort = kwargs.get("sort", True)
     r = PyTestReporter(verbose, tb, colors)
     t = SymPyTests(r, kw, post_mortem)
     if len(args) == 0:
@@ -89,10 +92,9 @@ def test(*args, **kwargs):
         mypaths = []
         for p in t.get_paths(dir='sympy'):
             mypaths.extend(glob(p))
-        mypaths = list(set(mypaths))
-        mypaths.sort()
+        mypaths = set(mypaths)
         t.add_paths([p for p in mypaths if any(a in p for a in args)])
-    return t.test()
+    return t.test(sort=sort)
 
 def doctest(*paths, **kwargs):
     """
@@ -194,12 +196,19 @@ class SymPyTests(object):
             else:
                 self._tests.extend(self.get_tests(path2))
 
-    def test(self):
+    def test(self, sort=False):
         """
         Runs the tests.
 
+        If sort=False run tests in random order.
+
         Returns True if all tests pass, otherwise False.
         """
+        if sort:
+            self._tests.sort()
+        else:
+            from random import shuffle
+            shuffle(self._tests)
         self._reporter.start()
         for f in self._tests:
             try:

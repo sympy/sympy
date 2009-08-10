@@ -25,13 +25,20 @@ parser.add_option("--pdb", action="store_true", dest="pdb",
         default=False, help="Run post mortem pdb on each failure")
 parser.add_option("--no-colors", action="store_false", dest="colors",
         default=True, help="Do not report colored [OK] and [FAIL]")
-parser.add_option("-k", dest="kw", help="only run tests matching the given keyword expression", metavar="KEYWORD", default="")
-parser.add_option("--tb", dest="tb", help="traceback verboseness (short/no) [default: %default]", metavar="TBSTYLE", default="short")
+parser.add_option("-k", dest="kw",
+        help="only run tests matching the given keyword expression",
+        metavar="KEYWORD", default="")
+parser.add_option("--tb", dest="tb",
+        help="traceback verboseness (short/no) [default: %default]",
+        metavar="TBSTYLE", default="short")
+parser.add_option("--random", action="store_false", dest="sort", default=True,
+        help="Run tests in random order instead of sorting them")
 
 options, args = parser.parse_args()
 
 ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
-    "tb": options.tb, "pdb": options.pdb, "colors": options.colors})
+    "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
+    "sort": options.sort})
 if ok:
     sys.exit(0)
 else:
