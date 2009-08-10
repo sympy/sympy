@@ -76,12 +76,12 @@ class Not(BooleanFunction):
             return map(cls, args)
         arg = args[0]
         # apply De Morgan Rules
-        if isinstance(arg, And):
+        if type(arg) is  And:
             return Or( *[Not(a) for a in arg.args])
-        if isinstance(arg, Or):
+        if type(arg) is Or:
             return And(*[Not(a) for a in arg.args])
-        if isinstance(arg, bool): return not arg
-        if isinstance(arg, Not):
+        if type(arg) is bool: return not arg
+        if type(arg) is Not:
             return arg.args[0]
 
 class Nand(BooleanFunction):
@@ -127,6 +127,23 @@ class Equivalent(BooleanFunction):
 
 ### end class definitions. Some useful methods
 
+def fuzzy_not(arg):
+    """
+    Not in fuzzy logic
+
+    will return Not if arg is a boolean value, and None if argument
+    is None
+
+    >>> from sympy import *
+    >>> fuzzy_not(True)
+    False
+    >>> fuzzy_not(None)
+    >>> fuzzy_not(False)
+    True
+    """
+    if arg is None: return
+    return not arg
+
 def conjuncts(expr):
     """Return a list of the conjuncts in the expr s.
     >>> from sympy import symbols
@@ -136,10 +153,11 @@ def conjuncts(expr):
     >>> conjuncts(A | B)
     [Or(A, B)]
     """
-    if isinstance(expr, And):
-        return list(expr.args)
-    else:
+    if expr:
+        if type(expr) is And:
+            return list(expr.args)
         return [expr]
+    return []
 
 def disjuncts(expr):
     """Return a list of the disjuncts in the sentence s.
