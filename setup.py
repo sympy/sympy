@@ -44,6 +44,7 @@ if sys.version_info[1] < 4:
 # omit the thirdparty/ dir):
 # $ find * -name __init__.py |sort
 modules = [
+    'sympy.assumptions',
     'sympy.concrete',
     'sympy.core',
     'sympy.functions',
@@ -59,6 +60,7 @@ modules = [
     'sympy.parsing',
     'sympy.physics',
     'sympy.plotting',
+    'sympy.queries',
     'sympy.thirdparty',
     'sympy.logic',
     'sympy.logic.algorithms',
