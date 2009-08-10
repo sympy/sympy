@@ -413,7 +413,7 @@ def evalf_pow(v, prec, options):
             return mpf_pow_int(re, p, target_prec), None, target_prec, None
         # (x*I)**n = I**n * x**n
         if im and not re:
-            z = fpowi(im, p, target_prec)
+            z = mpf_pow_int(im, p, target_prec)
             case = p % 4
             if case == 0: return z, None, target_prec, None
             if case == 1: return None, z, None, target_prec
@@ -1020,13 +1020,13 @@ def Basic_evalf(x, n=15, **options):
     re, im, re_acc, im_acc = result
     if re:
         p = max(min(prec, re_acc), 1)
-        #re = fpos(re, p, round_nearest)
+        #re = mpf_pos(re, p, round_nearest)
         re = C.Real._new(re, p)
     else:
         re = S.Zero
     if im:
         p = max(min(prec, im_acc), 1)
-        #im = fpos(im, p, round_nearest)
+        #im = mpf_pos(im, p, round_nearest)
         im = C.Real._new(im, p)
         return re + im*S.ImaginaryUnit
     else:
