@@ -61,6 +61,8 @@ def get_sympy_dir():
                         os.path.isdir(sympy_dir.upper()))
     return sys_normcase(sympy_dir)
 
+from sympy.utilities import any, all
+
 def isgeneratorfunction(object):
     """
     Return true if the object is a user-defined generator function.
@@ -927,3 +929,4 @@ class PyTestReporter(Reporter):
         self.write("\n")
 
 sympy_dir = get_sympy_dir()
+
