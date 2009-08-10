@@ -160,7 +160,7 @@ class AskEvenHandler(CommonHandler):
 
     @staticmethod
     def Integer(expr, assumptions):
-        return expr % 2 == 0
+        return not bool(expr.p & 1)
 
     @staticmethod
     def Rational(expr, assumptions):

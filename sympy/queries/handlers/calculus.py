@@ -2,6 +2,7 @@
 This module contains query handlers resposible for calculus queries:
 infinitesimal, bounded, etc.
 """
+from sympy.logic.boolalg import conjuncts
 from sympy.queries import Q, ask
 from sympy.queries.handlers import CommonHandler
 
@@ -60,7 +61,8 @@ class AskBoundedHandler(CommonHandler):
 
     @staticmethod
     def Symbol(expr, assumptions):
-        for assump in assumptions:
+        if assumptions is True: return False
+        for assump in conjuncts(assumptions):
             if assump.expr == expr and assump.key == 'bounded':
                 return assump.value
         return False

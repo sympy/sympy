@@ -1,3 +1,4 @@
+from sympy.logic.boolalg import conjuncts
 from sympy.queries import Q, ask
 
 class AskHandler(object):
@@ -19,7 +20,8 @@ class AskCommutativeHandler(CommonHandler):
     @staticmethod
     def Symbol(expr, assumptions):
         """Objects are expected to be commutative unless otherwise stated"""
-        for assump in assumptions:
+        if assumptions is True: return True
+        for assump in conjuncts(assumptions):
             if assump.expr == expr and assump.key == 'commutative':
                 return assump.value
         return True

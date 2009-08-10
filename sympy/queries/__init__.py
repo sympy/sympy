@@ -28,7 +28,7 @@ class Q:
     odd = 'odd'
 
 # TODO: maybe this should be moved to another file?
-def ask(expr, key, assumptions=[]):
+def ask(expr, key, assumptions=True):
     """
     Method for inferring properties about objects.
 
@@ -58,13 +58,7 @@ def ask(expr, key, assumptions=[]):
         the official release
     """
     expr = sympify(expr)
-
-    if assumptions:
-        assumptions = And(assumptions, And(*global_assumptions))
-    elif global_assumptions:
-        assumptions = And(*global_assumptions)
-    if not isinstance(assumptions, (list, tuple)):
-        assumptions = conjuncts(to_cnf(assumptions))
+    assumptions = And(assumptions, And(*global_assumptions))
 
     # direct resolution method, no logic
     resolutors = []
@@ -82,8 +76,7 @@ def ask(expr, key, assumptions=[]):
     if res is not None:
         return res
 
-    if assumptions: pass
-    else: return
+    if assumptions is True: return
 
     # use logic inference
     if not expr.is_Atom: return
@@ -91,8 +84,8 @@ def ask(expr, key, assumptions=[]):
     for k, values in known_facts_dict.iteritems():
         for v in values:
             clauses.append(Equivalent(compile_rule(k), compile_rule(v)))
-    result = None
 
+    assumptions = conjuncts(to_cnf(assumptions))
     # add assumptions to the knowledge base
     for assump in assumptions:
         conj = eliminate_assume(assump, symbol=expr)

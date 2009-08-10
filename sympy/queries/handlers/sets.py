@@ -44,7 +44,7 @@ class AskIntegerHandler(CommonHandler):
                 if arg.is_Rational:
                     if arg.q == 2:
                         return ask(2*expr, Q.even, assumptions)
-                    if arg.q % 2 == 1:
+                    if ~(arg.q & 1):
                         return None
                 elif ask(arg, Q.irrational, assumptions):
                     if _output:

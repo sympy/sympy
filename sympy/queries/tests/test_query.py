@@ -687,6 +687,7 @@ def test_integer():
     assert ask(2*x, Q.integer, Assume(x, Q.prime)) == True
     assert ask(2*x, Q.integer, Assume(x, Q.rational)) == None
     assert ask(2*x, Q.integer, Assume(x, Q.real)) == None
+    assert ask(sqrt(2)*x, Q.integer, Assume(x, Q.integer)) == False
 
     assert ask(x/2, Q.integer, Assume(x, Q.odd)) == False
     assert ask(x/2, Q.integer, Assume(x, Q.even)) == True
@@ -711,6 +712,10 @@ def test_negative():
     assert ask(x+y, Q.negative, Assume(x, Q.negative)) == None
     assert ask(x+y, Q.negative, Assume(x, Q.negative) &\
                      Assume(y, Q.negative)) == True
+
+    assert ask(x**2, Q.negative) == None
+    assert ask(x**2, Q.negative, Assume(x, Q.real)) == False
+    assert ask(x**1.4, Q.negative, Assume(x, Q.real)) == None
 
     assert ask(x*y, Q.negative) == None
     assert ask(x*y, Q.negative, Assume(x, Q.positive) & \

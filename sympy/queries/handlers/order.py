@@ -8,8 +8,17 @@ from sympy.queries.handlers import CommonHandler
 
 class AskNegativeHandler(CommonHandler):
     """
-    Handler for key 'negative'
-    Test that an expression is less (strict) than zero
+    This is called by ask() when key='negative'
+
+    Test that an expression is less (strict) than zero.
+
+    Examples:
+
+    >>> from sympy import *
+    >>> ask(pi+1, Q.negative) # this calls AskNegativeHandler.Add
+    False
+    >>> ask(pi**2, Q.negative) # this calls AskNegativeHandler.Pow
+    False
     """
 
     @staticmethod
@@ -54,16 +63,20 @@ class AskNegativeHandler(CommonHandler):
 
     @staticmethod
     def Pow(expr, assumptions):
+        """
+        Real ** Even -> NonNegative
+        Real ** Odd  -> same_as_base
+        NonNegative ** Positive -> NonNegative
+        """
         if expr.is_number:
             return AskNegativeHandler._number(expr, assumptions)
-        if ask(expr.base, Q.negative, assumptions):
-            if ask(expr.exp, Q.odd, assumptions):
-                return True
+        if ask(expr.base, Q.real, assumptions):
+            if ask(expr.base, Q.positive, assumptions):
+                return False
             if ask(expr.exp, Q.even, assumptions):
                 return False
-        elif ask(expr.base, Q.positive, assumptions):
-            if ask(expr.exp, Q.real, assumptions):
-                return False
+            if ask(expr.exp, Q.odd, assumptions):
+                return ask(expr.base, Q.negative, assumptions)
 
     @staticmethod
     def ImaginaryUnit(expr, assumptions):
