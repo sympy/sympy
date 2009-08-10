@@ -1,7 +1,7 @@
 from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         I, exp, log, simplify, normal, together, ratsimp, powsimp, \
         fraction, radsimp, Eq, sqrt, pi, erf,  diff, Rational, asinh, trigsimp, \
-        S, RootOf, Poly
+        S, RootOf, Poly, Integral
 from sympy.abc import x, y, z
 from sympy.solvers.ode import deriv_degree, homogeneous_order, \
         _undetermined_coefficients_match
@@ -291,9 +291,10 @@ def test_homogeneous_coeff_ode2():
     sol1 = Eq(f(x), x*acos(log(C1*x)))
     sol2 = [Eq(f(x), sqrt(C1*x + x**2)), Eq(f(x), -sqrt(C1*x + x**2))]
     sol3 = Eq(f(x), log(log(C1/x)**(-x)))
-    assert dsolve(eq1, f(x)) == sol1
+    # specific hints are applied for speed reasons
+    assert dsolve(eq1, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol1
     assert dsolve(eq2, f(x)) == sol2
-    assert dsolve(eq3, f(x)) == sol3
+    assert dsolve(eq3, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol3
     assert checksol(eq1, f(x), sol1)
     assert checksol(eq2, f(x), sol2[0])
     assert checksol(eq2, f(x), sol2[1])
@@ -312,11 +313,11 @@ def test_homogeneous_coeff_ode4():
     # it (see issue 1452).  The explicit solution is included in an XFAIL test
     # below. checksol fails for this equation, so its test is in
     # test_homogeneous_order_ode1_sol above. It has to compare string
-    # expressions because u2 and _a are dummy variables.
+    # expressions because u2 is a dummy variable.
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
-    solstr =  "-Integral(-1/(-(1 - (1 - _u2**2)**(1/2))*_u2 + _u2), (_u2, " + \
-    "__a, x/f(x))) + log(C1*f(x)) == 0"
-    assert str(dsolve(eq, f(x))) == solstr
+    solstr = "f(x) == C1*exp(Integral(-1/((1 - _u2**2)**(1/2)*_u2), (_u2, None, x/f(x))))"
+    assert str(dsolve(eq, f(x), hint='1st_homogeneous_coeff_subs_indep_div_dep')) == solstr
+
 
 
 @XFAIL
@@ -462,6 +463,7 @@ def test_nth_linear_constant_coeff_homogeneous():
     assert checksol(eq30, f(x), sol30)
 
 def test_nth_linear_constant_coeff_homogeneous_RootOf():
+    # We have to test strings because _m is a dummy variable
     _m = Symbol('_m')
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
     sol = Eq(f(x), C1*exp(x*RootOf(Poly(_m**5 + 11*_m - 2, _m), index=0)) + \
@@ -469,9 +471,12 @@ def test_nth_linear_constant_coeff_homogeneous_RootOf():
         C3*exp(x*RootOf(Poly(_m**5 + 11*_m - 2, _m), index=2)) + \
         C4*exp(x*RootOf(Poly(_m**5 + 11*_m - 2, _m), index=3)) + \
         C5*exp(x*RootOf(Poly(_m**5 + 11*_m - 2, _m), index=4)))
-    print dsolve(eq, f(x))
-    print sol
-    assert dsolve(eq, f(x)) == sol
+    solstr = "f(x) == C1*exp(x*RootOf(_m**5 + 11*_m - 2, _m, index=0)) + C2" + \
+        "*exp(x*RootOf(_m**5 + 11*_m - 2, _m, index=1)) + C3*exp(x*RootOf(_" + \
+        "m**5 + 11*_m - 2, _m, index=2)) + C4*exp(x*RootOf(_m**5 + 11*_m - " + \
+        "2, _m, index=3)) + C5*exp(x*RootOf(_m**5 + 11*_m - 2, _m, index=4))"
+    assert str(dsolve(eq, f(x))) == solstr
+#    assert str(sol) == solstr # str(sol) fails
     assert checksol(eq, f(x), sol)
 
 def test_Liouville_ODE():

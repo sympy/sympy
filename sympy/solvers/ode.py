@@ -812,13 +812,10 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     # There are two substitutions that solve the equation, u=x/y and u=y/x
     # They produce different integrals, so try them both and see which
     # one is easier.
-#    print 'start indep_div_dep'
     sol1 = odesimp(ode_1st_homogeneous_coeff_subs_indep_div_dep(eq,
     func, order, match), func, order, "1st_homogeneous_coeff_subs_indep_div_dep")
-#    print 'start dep_div_indep'
     sol2 = odesimp(ode_1st_homogeneous_coeff_subs_dep_div_indep(eq,
     func, order, match), func, order, "1st_homogeneous_coeff_subs_dep_div_indep")
-#    print 'finish'
     return sorted([sol1, sol2], cmp=lambda x, y: compare_ode_sol(x, y, func))[0]
 
 def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
