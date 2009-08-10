@@ -79,23 +79,6 @@ class ReprPrinter(Printer):
     def _print_One(self, expr):
         return "One"
 
-    def _print_Poly(self, expr):
-        terms = []
-
-        for coeff, monom in expr.iter_terms():
-            terms.append("(%s, %s)" % (self._print(coeff), monom))
-
-        format = expr.__class__.__name__ + "([%s], %s, order='%s')"
-
-        symbols = [ self._print(s) for s in expr.symbols ]
-
-        return format % (', '.join(terms),
-            ', '.join(symbols), expr.order)
-
-    def _print_Polynomial(self, expr):
-        return "Polynomial(%s, %s, %s, '%s')" % (self._print(expr.sympy_expr),
-                  self._print(expr.coeffs), self._print(expr.var), self._print(expr.order))
-
     def _print_Rational(self, expr):
         return '%s(%s, %s)' % (expr.__class__.__name__, self._print(expr.p), self._print(expr.q))
 
@@ -131,3 +114,4 @@ RPrinter = ReprPrinter()
 def srepr(expr):
     """return expr in repr form"""
     return RPrinter.doprint(expr)
+

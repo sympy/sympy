@@ -5,8 +5,7 @@ from sympy import abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,\
                   WildFunction, zeta, zoo
 from sympy.core.basic import Basic
 from sympy.physics.units import second
-from sympy.polys.polynomial import Poly
-from sympy.polys.rootfinding import RootsOf, RootOf, RootSum
+from sympy.polys import Poly, RootsOf, RootOf, RootSum
 from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
 from sympy.utilities.pytest import XFAIL
@@ -187,27 +186,30 @@ def test_Pi():
     assert str(pi) == "pi"
 
 def test_Poly():
-    assert str(Poly(0, x)) == "Poly(0, x)"
-    assert str(Poly(1, x)) == "Poly(1, x)"
-    assert str(Poly(x, x)) == "Poly(x, x)"
-    assert str(Poly(2*x + 1, x)) == "Poly(2*x + 1, x)"
-    assert str(Poly(2*x - 1, x)) == "Poly(2*x - 1, x)"
-    assert str(Poly(-1, x)) == "Poly(-1, x)"
-    assert str(Poly(-x, x)) == "Poly(-x, x)"
-    assert str(Poly(-2*x + 1, x)) == "Poly(-2*x + 1, x)"
-    assert str(Poly(-2*x - 1, x)) == "Poly(-2*x - 1, x)"
-    assert str(Poly(x - 1, x, order='lex')) == "Poly(x - 1, x)"
-    assert str(Poly(x**2 + 1 + y, x)) == "Poly(x**2 + 1 + y, x)"
-    assert str(Poly(x**2 - 1 + y, x)) == "Poly(x**2 - 1 + y, x)"
-    assert str(Poly(-x*y*z + x*y - 1, x, y, z)) == "Poly(-x*y*z + x*y - 1, x, y, z)"
+    assert str(Poly(0, x)) == "Poly(0, x, domain='ZZ')"
+    assert str(Poly(1, x)) == "Poly(1, x, domain='ZZ')"
+    assert str(Poly(x, x)) == "Poly(x, x, domain='ZZ')"
+
+    assert str(Poly(2*x + 1, x)) == "Poly(2*x + 1, x, domain='ZZ')"
+    assert str(Poly(2*x - 1, x)) == "Poly(2*x - 1, x, domain='ZZ')"
+
+    assert str(Poly(-1, x)) == "Poly(-1, x, domain='ZZ')"
+    assert str(Poly(-x, x)) == "Poly(-x, x, domain='ZZ')"
+
+    assert str(Poly(-2*x + 1, x)) == "Poly(-2*x + 1, x, domain='ZZ')"
+    assert str(Poly(-2*x - 1, x)) == "Poly(-2*x - 1, x, domain='ZZ')"
+
+    assert str(Poly(x - 1, x)) == "Poly(x - 1, x, domain='ZZ')"
+
+    assert str(Poly(x**2 + 1 + y, x)) == "Poly(x**2 + 1 + y, x, domain='ZZ[y]')"
+    assert str(Poly(x**2 - 1 + y, x)) == "Poly(x**2 - 1 + y, x, domain='ZZ[y]')"
+
+    assert str(Poly(-x*y*z + x*y - 1, x, y, z)) == "Poly(-x*y*z + x*y - 1, x, y, z, domain='ZZ')"
     assert str(Poly(-w*x**21*y**7*z + (1 + w)*z**3 - 2*x*z + 1, x, y, z)) == \
-        "Poly(-w*x**21*y**7*z + (1 + w)*z**3 - 2*x*z + 1, x, y, z)"
-    assert str(Poly(x*y*z**2 - 27*x, x, y, z, order='lex')) == \
-        "Poly(x*y*z**2 - 27*x, x, y, z, order='lex')"
-    assert str(Poly(x*y*z**2 - 27*x, x, y, z, order='grlex')) == \
-        "Poly(x*y*z**2 - 27*x, x, y, z)"
-    assert str(Poly(x*y*z**2 - 27*x, x, y, z, order='grevlex')) == \
-        "Poly(x*y*z**2 - 27*x, x, y, z, order='grevlex')"
+        "Poly(-w*x**21*y**7*z - 2*x*z + (1 + w)*z**3 + 1, x, y, z, domain='ZZ[w]')"
+
+    assert str(Poly(x**2 + 1, x, modulus=2)) == "Poly(x**2 + 1, x, modulus=2)"
+    assert str(Poly(2*x**2 + 3*x + 4, x, modulus=17)) == "Poly(2*x**2 + 3*x + 4, x, modulus=17)"
 
 def test_Pow():
     assert str(x**-1) == "1/x"
@@ -283,9 +285,9 @@ def test_Relational():
 
 def test_Roots():
     f = Poly(x**17 + 2*x - 1, x)
-    assert str(RootsOf(f)) == "RootsOf(x**17 + 2*x - 1, x)"
-    assert str(RootOf(f, 0)) == "RootOf(x**17 + 2*x - 1, x, index=0)"
-    assert str(RootSum(Lambda(z, z**2), f)) == "RootSum(Lambda(_z, _z**2), x**17 + 2*x - 1, x)"
+    assert str(RootsOf(f)) == "RootsOf(x**17 + 2*x - 1, x, domain='ZZ')"
+    assert str(RootOf(f, 0)) == "RootOf(x**17 + 2*x - 1, x, domain='ZZ', index=0)"
+    assert str(RootSum(Lambda(z, z**2), f)) == "RootSum(Lambda(_z, _z**2), x**17 + 2*x - 1, x, domain='ZZ')"
 
 def test_Sample():
     assert str(Sample([x, y, 1])) in [

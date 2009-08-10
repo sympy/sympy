@@ -250,17 +250,17 @@ class StrPrinter(Printer):
         return 'pi'
 
     def _print_Poly(self, expr):
-        terms, symbols = [], [ self._print(s) for s in expr.symbols ]
+        terms, gens = [], [ self._print(s) for s in expr.gens ]
 
-        for coeff, monom in expr.iter_terms():
+        for monom, coeff in expr.terms():
             s_monom = []
 
             for i, exp in enumerate(monom):
                 if exp > 0:
                     if exp == 1:
-                        s_monom.append(symbols[i])
+                        s_monom.append(gens[i])
                     else:
-                        s_monom.append(symbols[i] + "**%d" % exp)
+                        s_monom.append(gens[i] + "**%d" % exp)
 
             s_monom = "*".join(s_monom)
 
@@ -298,15 +298,16 @@ class StrPrinter(Printer):
 
         format = expr.__class__.__name__ + "(%s, %s"
 
-        if expr.is_multivariate and expr.order != 'grlex':
-            format += ", order='%s')" % expr.order
+        modulus = expr.get_modulus()
+
+        if modulus is not None:
+            format += ", modulus=%s" % modulus
         else:
-            format += ")"
+            format += ", domain='%s'" % expr.get_domain()
 
-        return format % (' '.join(terms), ', '.join(symbols))
+        format += ")"
 
-    def _print_Polynomial(self, expr):
-        return self._print(expr.sympy_expr)
+        return format % (' '.join(terms), ', '.join(gens))
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
@@ -441,3 +442,4 @@ def sstrrepr(expr):
     s = p.doprint(expr)
 
     return s
+
