@@ -1707,6 +1707,8 @@ def wronskian(functions, var):
     for index in xrange(0, len(functions)):
         functions[index] = sympify(functions[index])
     n = len(functions)
+    if n == 0:
+        return 1
     W = Matrix(n, n, lambda i,j: functions[i].diff(var, j) )
     return W.det()
 
