@@ -784,18 +784,18 @@ def check_convergence(numer, denom, n):
     """
     npol = C.Poly(numer, n)
     dpol = C.Poly(denom, n)
-    p = npol.degree
-    q = dpol.degree
+    p = npol.degree()
+    q = dpol.degree()
     rate = q - p
     if rate:
         return rate, None, None
-    constant = dpol.lead_term[0] / npol.lead_term[0]
+    constant = dpol.LC() / npol.LC()
     if abs(constant) != 1:
         return rate, constant, None
-    if npol.degree == dpol.degree == 0:
+    if npol.degree() == dpol.degree() == 0:
         return rate, constant, 0
-    pc = list(npol.iter_all_terms())[1][0]
-    qc = list(dpol.iter_all_terms())[1][0]
+    pc = npol.all_coeffs()[1]
+    qc = dpol.all_coeffs()[1]
     return rate, constant, qc-pc
 
 def hypsum(expr, n, start, prec):
@@ -1073,3 +1073,4 @@ def N(x, n=15, **options):
 
     """
     return sympify(x).evalf(n, **options)
+

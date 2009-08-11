@@ -12,6 +12,7 @@ class NC_Marker:
     is_Order    = False
     is_Mul      = False
     is_Number   = False
+    is_Poly     = False
 
     is_commutative = False
 

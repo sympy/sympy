@@ -996,26 +996,17 @@ class Basic(AssumeMeths):
         else:
             return self._eval_is_polynomial(syms)
 
-    def as_poly(self, *symbols, **flags):
-        """Converts 'self' to a polynomial or returns None.
-
-           When constructing a polynomial an exception will be raised in
-           case the input expression is not convertible to a polynomial.
-           There are situations when it is easier (simpler or prettier)
-           to receive None on failure.
-
-           If no symbols were given and 'self' isn't already a polynomial
-           then all  available symbols will be collected and used to form
-           a new polynomial.
+    def as_poly(self, *gens, **args):
+        """Converts `self` to a polynomial or returns `None`.
 
            >>> from sympy import Poly, sin
            >>> from sympy.abc import x, y
 
            >>> print (x**2 + x*y).as_poly()
-           Poly(x**2 + x*y, x, y)
+           Poly(x**2 + x*y, x, y, domain='ZZ')
 
            >>> print (x**2 + x*y).as_poly(x, y)
-           Poly(x**2 + x*y, x, y)
+           Poly(x**2 + x*y, x, y, domain='ZZ')
 
            >>> print (x**2 + sin(y)).as_poly(x, y)
            None
@@ -1024,13 +1015,12 @@ class Basic(AssumeMeths):
         from sympy.polys import Poly, PolynomialError
 
         try:
-            if not symbols:
-                if isinstance(self, Poly):
-                    return self
-                else:
-                    symbols = sorted(self.atoms(Symbol))
+            poly = Poly(self, *gens, **args)
 
-            return Poly(self, *symbols, **flags)
+            if not poly.is_Poly:
+                return None
+            else:
+                return poly
         except PolynomialError:
             return None
 

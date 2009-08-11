@@ -377,8 +377,8 @@ class Pow(Basic):
                 #    b[k] = Integer(expansion_dict[k])
                 #return Poly(b, *p).as_basic()
 
-                from sympy.polys.polynomial import multinomial_as_basic
-                result = multinomial_as_basic(expansion_dict, *p)
+                from sympy.polys.polyutils import basic_from_dict
+                result = basic_from_dict(expansion_dict, *p)
                 return result
             else:
                 if n == 2:
