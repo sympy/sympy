@@ -96,6 +96,8 @@ def dsolve(eq, func, hint="default", **kwargs):
         f(x) == C1*sin(3*x) + C2*cos(3*x)
 
     """
+    # TODO: rewrite dsolve docstring
+    # And note best_hint key
     if isinstance(eq, Equality):
         if eq.rhs != 0:
             return dsolve(eq.lhs-eq.rhs, func)
@@ -126,19 +128,26 @@ def dsolve(eq, func, hint="default", **kwargs):
             hints = hints)['best']
     elif hint in ('all', 'all_Integral'):
         retdict = {}
-        gethints = set(hints) - set(['order', 'default'])
+        gethints = set(hints) - set(['order', 'default', 'ordered_hints'])
         if hint == 'all_Integral':
             for i in hints:
                 if i[-9:] == '_Integral':
                     gethints.remove(i[:-9])
+            # special case
+            gethints.remove("1st_homogeneous_coeff_best")
         for i in gethints:
             retdict[i] = dsolve(eq, func, hint=i, classify=False,
                order=hints['order'], match=hints[i])
         retdict['best'] = sorted(retdict.values(), cmp=lambda x, y:\
             compare_ode_sol(x, y, func))[0]
+        for i in hints['ordered_hints']:
+            if retdict['best'] == retdict.get(i, None):
+                retdict['best_hint'] = i
+                break
         retdict['default'] = hints['default']
+        retdict['order'] = sympify(hints['order'])
         return retdict
-    elif hint not in allhints and hint != 'default':
+    elif hint not in allhints:# and hint not in ('default', 'ordered_hints'):
         raise ValueError("Hint not recognized: " + hint)
     elif hint not in hints:
         raise ValueError("ODE " + str(eq) + " does not match hint " + hint)
@@ -319,11 +328,18 @@ def classify_ode(eq, func, dict=False):
             ordera = homogeneous_order(r[d], x, y)
             orderb = homogeneous_order(r[e], x, y)
             if ordera == orderb and ordera != None:
-                matching_hints["1st_homogeneous_coeff_best"] = r
-                matching_hints["1st_homogeneous_coeff_subs_indep_div_dep"] = r
-                matching_hints["1st_homogeneous_coeff_subs_dep_div_indep"] = r
-                matching_hints["1st_homogeneous_coeff_subs_indep_div_dep_Integral"] = r
-                matching_hints["1st_homogeneous_coeff_subs_dep_div_indep_Integral"] = r
+                # u1=y/x and u2=x/y
+                u1 = Symbol('u1', dummy=True)
+                u2 = Symbol('u2', dummy=True)
+                if simplify((r[d]+u1*r[e]).subs({x:1, y:u1})) != 0:
+                    matching_hints["1st_homogeneous_coeff_subs_dep_div_indep"] = r
+                    matching_hints["1st_homogeneous_coeff_subs_dep_div_indep_Integral"] = r
+                if simplify((r[e]+u2*r[d]).subs({x:u2, y:1})) != 0:
+                    matching_hints["1st_homogeneous_coeff_subs_indep_div_dep"] = r
+                    matching_hints["1st_homogeneous_coeff_subs_indep_div_dep_Integral"] = r
+                if matching_hints.has_key("1st_homogeneous_coeff_subs_dep_div_indep") \
+                and matching_hints.has_key("1st_homogeneous_coeff_subs_indep_div_dep"):
+                    matching_hints["1st_homogeneous_coeff_best"] = r
 
     # nth order linear ODE
     # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x)
@@ -369,23 +385,25 @@ def classify_ode(eq, func, dict=False):
             matching_hints["Liouville"] = r
             matching_hints["Liouville_Integral"] = r
 
+    # Order keys based on allhints.
+    retlist = []
+    for i in allhints:
+        if i in matching_hints:
+            retlist.append(i)
+
+
     if dict:
         # Dictionaries are ordered arbitrarily, so we need to make note of which
         # hint would come first for dsolve().  In Python 3, this should be replaced
         # with an ordered dictionary.
         matching_hints["default"] = None
+        matching_hints["ordered_hints"] = tuple(retlist)
         for i in allhints:
             if i in matching_hints:
                 matching_hints["default"] = i
                 break
         return matching_hints
     else:
-        # Order keys based on allhints.
-        retlist = []
-        for i in allhints:
-            if i in matching_hints:
-                retlist.append(i)
-
         return tuple(retlist)
 
 @vectorize(0)
@@ -809,7 +827,7 @@ def ode_1st_exact(eq, func, order, match):
 
 
 def ode_1st_homogeneous_coeff_best(eq, func, order, match):
-    # There are two substitutions that solve the equation, u=x/y and u=y/x
+    # There are two substitutions that solve the equation, u1=y/x and u2=x/y
     # They produce different integrals, so try them both and see which
     # one is easier.
     sol1 = odesimp(ode_1st_homogeneous_coeff_subs_indep_div_dep(eq,
@@ -939,6 +957,7 @@ def ode_nth_linear_constant_coeff_variation_of_paramters(eq, func, order, match)
     x = func.args[0]
     f = func.func
     r = match
+    psol = 0
     # If we ever implement more linear methods, this function will need to be
     # consolidated (wrapped around) and this line made more general.
     gensol = ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
@@ -951,7 +970,7 @@ def ode_nth_linear_constant_coeff_variation_of_paramters(eq, func, order, match)
 
     # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
     wr = trigsimp(wr, deep=True, recursive=True)
-    if not wr or len(collectterms) != order:
+    if not wr or len(gensol['list']) != order:
         # The wronskian will be 0 iff the solutions are not linearly independent.
         raise NotImplementedError("Cannot find " + str(order) + \
         " solutions to the homogeneous equation nessesary to apply " + \
@@ -959,11 +978,11 @@ def ode_nth_linear_constant_coeff_variation_of_paramters(eq, func, order, match)
     negoneterm = (-1)**(order)
     for i in gensols:
         psol += negoneterm*C.Integral(wronskian(filter(lambda x: x != i, \
-        gensols), x)*r[b]/wr, x)*i/r[wilds[-1]]
+        gensols), x)*r[r['b']]/wr, x)*i/r[r['a' + str(order) + '_']]
         negoneterm *= -1
     psol = simplify(psol)
     psol = trigsimp(psol, deep=True)
-    return Eq(f(x), gsol + psol)
+    return Eq(f(x), gsol.rhs + psol)
 
 
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='sol'):

@@ -1,10 +1,10 @@
 from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         I, exp, log, simplify, normal, together, ratsimp, powsimp, \
         fraction, radsimp, Eq, sqrt, pi, erf,  diff, Rational, asinh, trigsimp, \
-        S, RootOf, Poly, Integral
+        S, RootOf, Poly, Integral, atan
 from sympy.abc import x, y, z
 from sympy.solvers.ode import deriv_degree, homogeneous_order, \
-        _undetermined_coefficients_match
+        _undetermined_coefficients_match, classify_ode
 from sympy.utilities.pytest import XFAIL, skip
 
 C1 = Symbol('C1')
@@ -18,6 +18,7 @@ f = Function('f')
 # correct because the arbitrary constants could represent different constants.
 # See issue 1336.
 
+# TODO: write classify_ode tests
 def checksol(eq, func, sol):
     """
     Substitutes sol for func in eq and checks that the result is 0.
@@ -211,6 +212,19 @@ def test_ode_exact():
     (x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))))
     assert checksol(eq, f(x), sol)
 
+# TODO: test separable equations (pg. 55)
+def test_separable():
+    eq1 = f(x).diff(x) - f(x)
+    eq2 = x*f(x).diff(x) - f(x)
+    eq3 = f(x).diff(x) + sin(x)
+    eq4 = f(x)**2 + 1 - (x**2 + 1)*f(x).diff(x)
+    eq5 = f(x).diff(x)/tan(x) - f(x) - 2
+    sol1 = Eq(f(x), exp(C1 + x))
+    sol2 =  Eq(f(x), C1*x)
+    sol3 = Eq(f(x), C1 + cos(x))
+    sol4 = Eq(atan(f(x)), C1 + atan(x))
+
+
 def test_homogeneous_order():
     assert homogeneous_order(exp(y/x) + tan(y/x), x, y) == 0
     assert homogeneous_order(x**2 + sin(x)*cos(y), x, y) == None
@@ -239,6 +253,7 @@ def test_1st_homogeneous_coeff_ode1():
     eq5 = 2*x**2*f(x) + f(x)**3 + (x*f(x)**2 - 2*x**3)*f(x).diff(x)
     eq6 = x*exp(f(x)/x) - f(x)*sin(f(x)/x) + x*sin(f(x)/x)*f(x).diff(x)
     eq7 = (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x)
+    eq8 = x+f(x)-(x-f(x))*f(x).diff(x)
     sol1 = Eq(f(x)*sin(f(x)/x), C1)
     sol2 = Eq(x*sqrt(1 + cos(f(x)/x))/sqrt(-1 + cos(f(x)/x)), C1)
     sol3 = Eq(-f(x)/(1+log(x/f(x))),C1)
@@ -246,16 +261,19 @@ def test_1st_homogeneous_coeff_ode1():
     sol5 = Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
     sol6 = Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(C1*x) - cos(f(x)/x)*exp(-f(x)/x)/2, 0)
     sol7 = Eq(log(C1*f(x)) + 2*sqrt(1 - x/f(x)), 0)
+    sol8 = Eq(-atan(f(x)/x) + log(C1*x*sqrt(1 + f(x)**2/x**2)), 0)
     assert dsolve(eq1, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol1
+    # indep_div_dep actually has a simpler solution for eq2, but it runs slower
     assert dsolve(eq2, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol2
     assert dsolve(eq3, f(x), hint='1st_homogeneous_coeff_best') == sol3
     assert dsolve(eq4, f(x), hint='1st_homogeneous_coeff_best') == sol4
     assert dsolve(eq5, f(x), hint='1st_homogeneous_coeff_best') == sol5
     assert dsolve(eq6, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol6
     assert dsolve(eq7, f(x), hint='1st_homogeneous_coeff_best') == sol7
+    assert dsolve(eq8, f(x), hint='1st_homogeneous_coeff_best') == sol8
 
 @XFAIL
-def test_homogeneous_coeff_ode1_sol():
+def test_1st_homogeneous_coeff_ode1_sol():
     # These are the checksols from test_homogeneous_coeff_ode1, which fail.
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
     eq2 = x*f(x).diff(x) - f(x) - x*sin(f(x)/x)
@@ -264,8 +282,9 @@ def test_homogeneous_coeff_ode1_sol():
     eq5 = 2*x**2*f(x) + f(x)**3 + (x*f(x)**2 - 2*x**3)*f(x).diff(x)
     eq6 = x*exp(f(x)/x) - f(x)*sin(f(x)/x) + x*sin(f(x)/x)*f(x).diff(x)
     eq7 = (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x)
-    # test_homogeneous_coeff_ode4
-    eq8 = f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x)
+    eq8 = x+f(x)-(x-f(x))*f(x).diff(x)
+    # test_1st_homogeneous_coeff_ode3
+    eq9 = f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x)
     sol1 = Eq(f(x)*sin(f(x)/x), C1)
     sol2 = Eq(x/tan(f(x)/(2*x)), C1)
     sol3 = Eq(-f(x)/(1+log(x/f(x))),C1)
@@ -273,7 +292,8 @@ def test_homogeneous_coeff_ode1_sol():
     sol5 = Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
     sol6 = Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(C1*x) - cos(f(x)/x)*exp(-f(x)/x)/2, 0)
     sol7 = Eq(log(C1*f(x)) + 2*sqrt(1 - x/f(x)), 0)
-    sol8 =  Eq(-Integral(-1/(-(1 - (1 - _u2**2)**(1/2))*_u2 + _u2), (_u2, __a, \
+    sol8 = Eq(-atan(f(x)/x) + log(C1*x*sqrt(1 + f(x)**2/x**2)), 0)
+    sol8 = Eq(-Integral(-1/(-(1 - (1 - _u2**2)**(1/2))*_u2 + _u2), (_u2, __a, \
     x/f(x))) + log(C1*f(x)), 0)
     assert checksol(eq1, f(x), sol1)
     assert checksol(eq2, f(x), sol2)
@@ -283,8 +303,9 @@ def test_homogeneous_coeff_ode1_sol():
     assert checksol(eq6, f(x), sol6)
     assert checksol(eq7, f(x), sol7)
     assert checksol(eq8, f(x), sol8)
+    assert checksol(eq9, f(x), sol9)
 
-def test_homogeneous_coeff_ode2():
+def test_1st_homogeneous_coeff_ode2():
     eq1 = f(x).diff(x) - f(x)/x+1/sin(f(x)/x)
     eq2 = x**2 + f(x)**2 - 2*x*f(x)*f(x).diff(x)
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
@@ -293,22 +314,15 @@ def test_homogeneous_coeff_ode2():
     sol3 = Eq(f(x), log(log(C1/x)**(-x)))
     # specific hints are applied for speed reasons
     assert dsolve(eq1, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol1
-    assert dsolve(eq2, f(x)) == sol2
+    assert dsolve(eq2, f(x), hint='1st_homogeneous_coeff_best') == sol2
     assert dsolve(eq3, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol3
     assert checksol(eq1, f(x), sol1)
     assert checksol(eq2, f(x), sol2[0])
     assert checksol(eq2, f(x), sol2[1])
     assert checksol(eq3, f(x), sol3)
 
-@XFAIL
-def test_homogeneous_coeff_ode3():
-    # This fails because of issue 1429
-    eq = x+f(x)-(x-f(x))*f(x).diff(x)
-    sol = Eq(f(x), 2*x*atan(C1*x))
-    assert dsolve(eq, f(x)) == sol
-    assert checksol(eq, f(x), sol)
 
-def test_homogeneous_coeff_ode4():
+def test_1st_homogeneous_coeff_ode3():
     # This can be solved explicitly, but the the integration engine cannot handle
     # it (see issue 1452).  The explicit solution is included in an XFAIL test
     # below. checksol fails for this equation, so its test is in
@@ -321,7 +335,7 @@ def test_homogeneous_coeff_ode4():
 
 
 @XFAIL
-def test_homogeneous_order_ode4_explicit():
+def test_1st_homogeneous_order_ode4_explicit():
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
     sol = Eq(f(x)**2+C1*x, f(x)*sqrt(f(x)**2-x**2))
     # If this XPASSES, it means the integral engine has improved!  Please
@@ -329,6 +343,14 @@ def test_homogeneous_order_ode4_explicit():
     assert not dsolve(eq, f(x)).has(Integral)
 #    assert dsolve(eq, f(x)) == sol
 #    assert checksol(eq, f(x)) == sol
+
+def test_1st_homogeneous_order_corner_case():
+    eq1 = f(x).diff(x) - f(x)/x
+    eq2 = x*f(x).diff(x) - f(x)
+    assert "1st_homogeneous_coeff_subs_dep_div_indep" not in classify_ode(eq1, f(x))
+    assert "1st_homogeneous_coeff_subs_indep_div_dep" not in classify_ode(eq1, f(x))
+    assert "1st_homogeneous_coeff_subs_dep_div_indep" not in classify_ode(eq2, f(x))
+    assert "1st_homogeneous_coeff_subs_indep_div_dep" not in classify_ode(eq2, f(x))
 
 def test_nth_linear_constant_coeff_homogeneous():
     # From Exercise 20, in Ordinary Differential Equations, Tenenbaum and Pollard
