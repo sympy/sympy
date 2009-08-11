@@ -676,9 +676,8 @@ def test_coeff_expand():
     assert expr2.coeff(z, expand=False) == (x+y)**2 + (2*x + 2*y)**2
 
 def test_integrate():
-    assert (log(x)).integrate((x, 0, 1)) == -1
-    assert sin(x).integrate(x) == -cos(x)
-    assert sin(x).integrate(('x',0,1)) == 1 - cos(1)
+    assert x.integrate(x) == x**2/2
+    assert x.integrate((x, 0, 1)) == S(1)/2
 
 def test_count_ops():
     f = (x*y + 3/y)**(3 + 2)
