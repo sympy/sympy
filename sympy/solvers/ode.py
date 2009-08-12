@@ -134,7 +134,8 @@ def dsolve(eq, func, hint="default", **kwargs):
                 if i[-9:] == '_Integral':
                     gethints.remove(i[:-9])
             # special case
-            gethints.remove("1st_homogeneous_coeff_best")
+            if "1st_homogeneous_coeff_best" in gethints:
+                gethints.remove("1st_homogeneous_coeff_best")
         for i in gethints:
             retdict[i] = dsolve(eq, func, hint=i, classify=False,
                order=hints['order'], match=hints[i])
@@ -441,15 +442,21 @@ def odesimp(eq, func, order, hint=None):
     # Lastly, now that we have cleaned up the expression, try solving for func.
     # When RootOf is implemented in solve(), we will want to return a RootOf
     # everytime instead of an Equality.
-    # First, check to see if it is already solved
+
     if hint[:21] == "1st_homogeneous_coeff":
+        # Solutions from this hint can almost always be logcombined
         eq = logcombine(eq, assume_pos_real=True)
         if eq.lhs.is_Function and eq.lhs.func == log and eq.rhs == 0:
             eq = Eq(eq.lhs.args[0]/C1,C1)
-    if eq.lhs == func and not eq.rhs.has(func) or \
-        eq.rhs == func and not eq.lhs.has(func):
-            pass
+
+    if eq.lhs == func and not eq.rhs.has(func):
+        # The solution is already solved
+        pass
+    elif eq.rhs == func and not eq.lhs.has(func):
+        # The solution is solved, but in reverse, so switch it
+        eq = Eq(eq.rhs, eq.lhs)
     else:
+        # The solution is not solved, so try to solve it
         try:
             eqsol = solve(eq, func)
             if eqsol == []:
@@ -478,6 +485,9 @@ def odesimp(eq, func, order, hint=None):
 
     return eq
 
+# FIXME: rewrite this as a key function, so it works in Python 3
+# Python 3 removes the cmp key from sorted.  key should be better, because you
+# can use it with min(), but I have no idea how to convert this into a key function
 def compare_ode_sol(sol1, sol2, func, *args):
     """
     Return -1 if eq1 is simpler than eq2, 0 if they are equally complex, 1 otherwise.
@@ -771,10 +781,18 @@ def _handle_Integral(expr, func, order, hint):
         assert sol != 0
         sol = Eq(sol.subs(y, f(x)),expr.rhs) # expr.rhs == C1
         del exactvars
-    elif hint == "1st_exact_Integral": # We still need to back substitute y
-        y = exactvars['y']
-        sol = expr.subs(y, f(x))
+    elif hint == "1st_exact_Integral":
+        # FIXME: We still need to back substitute y
+        # TODO: make note of use of y in exact docstring
+        # y = exactvars['y']
+        # sol = expr.subs(y, f(x))
+        # For now, we are going to have to return an expression with f(x) replaced
+        # with y.  Substituting results in the y's in the second integral
+        # becoming f(x), which prevents the integral from being evaluatable.
+        # For example, Integral(cos(f(x)), (x, x0, x)).  If there were a way to
+        # to inert substitution, that could maybe be used here instead.
         del exactvars
+        sol = expr
     elif hint == "nth_linear_constant_coeff_homogeneous":
         sol = expr
     elif hint[-9:] != "_Integral":

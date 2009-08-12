@@ -159,39 +159,37 @@ def test_ode13():
     assert checksol(eq1, f(x), sol1)
     assert checksol(eq2, f(x), sol2)
 
-def test_ode14():
+def test_Bernoulli():
     # Type: Bernoulli, f'(x) + p(x)*f(x) == q(x)*f(x)**n
     eq = Eq(x*f(x).diff(x) + f(x) - f(x)**2,0)
     sol = dsolve(eq,f(x), hint='Bernoulli')
     assert sol == Eq(f(x),1/(x*(C1 + 1/x)))
     assert checksol(eq, f(x), sol)
 
-def test_ode15():
+def test_1st_exact1():
     # Type: Exact differential equation, p(x,f) + q(x,f)*f' == 0,
     # where dp/df == dq/dx
     eq1 = sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x)
     eq2 = (2*x*f(x) + 1)/f(x) + (f(x) - x)/f(x)**2*f(x).diff(x)
     eq3 = 2*x + f(x)*cos(x) + (2*f(x) + sin(x) - sin(f(x)))*f(x).diff(x)
-    sol1 = dsolve(eq1,f(x))
-    sol2 = dsolve(eq2,f(x))
-    sol3 = dsolve(eq3,f(x))
-#    assert sol1 == Eq(f(x),acos((C1)/cos(x))) # refator into hints engine (separable)
-    assert sol2 == Eq(log(f(x))+x/f(x)+x**2,C1)
-    assert sol3 == Eq(f(x)*sin(x)+cos(f(x))+x**2+f(x)**2,C1)
-#    assert checksol(eq1, f(x), sol1)
+    sol1 = Eq(f(x),acos((C1)/cos(x)))
+    sol2 = Eq(log(f(x))+x/f(x)+x**2,C1)
+    sol3 = Eq(f(x)*sin(x)+cos(f(x))+x**2+f(x)**2,C1)
+    assert dsolve(eq1,f(x), hint='1st_exact') == sol1
+    assert dsolve(eq2,f(x), hint='1st_exact') == sol2
+    assert dsolve(eq3,f(x), hint='1st_exact') == sol3
+    assert checksol(eq1, f(x), sol1)
     assert checksol(eq2, f(x), sol2)
     assert checksol(eq3, f(x), sol3)
 
-@XFAIL
-def test_ode16():
-    # This relates to Issue 1425.  The error is in solve, not dsolve.
+def test_1st_exact_Integral():
     eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
-    sol = dsolve(eq1,f(x))
-    assert sol == Eq(x*cos(f(x))+f(x)**3/3,C1)
+    sol = Eq(x*cos(f(x))+f(x)**3/3,C1)
+    assert dsolve(eq, f(x)) == sol
     assert checksol(eq, f(x), sol)
 
 @XFAIL
-def test_ode_exact():
+def test_1st_exact2():
     """
     This is an exact equation that fails under the exact engine. It is caught
     by first order homogeneous albiet with a much contorted solution.  The
@@ -212,17 +210,135 @@ def test_ode_exact():
     (x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))))
     assert checksol(eq, f(x), sol)
 
-# TODO: test separable equations (pg. 55)
-def test_separable():
+def test_separable1():
+    # test_separable1-5 are from Ordinary Differential Equations, Tenenbaum and
+    # Pollard, pg. 55
     eq1 = f(x).diff(x) - f(x)
     eq2 = x*f(x).diff(x) - f(x)
     eq3 = f(x).diff(x) + sin(x)
     eq4 = f(x)**2 + 1 - (x**2 + 1)*f(x).diff(x)
     eq5 = f(x).diff(x)/tan(x) - f(x) - 2
     sol1 = Eq(f(x), exp(C1 + x))
-    sol2 =  Eq(f(x), C1*x)
+    sol2 = Eq(f(x), C1*x)
     sol3 = Eq(f(x), C1 + cos(x))
     sol4 = Eq(atan(f(x)), C1 + atan(x))
+    sol5 = Eq(f(x), -2 + C1*sqrt(1 + tan(x)**2))
+    assert dsolve(eq1, f(x), hint='separable') == sol1
+    assert dsolve(eq2, f(x), hint='separable') == sol2
+    assert dsolve(eq3, f(x), hint='separable') == sol3
+    assert dsolve(eq4, f(x), hint='separable') == sol4
+    assert dsolve(eq5, f(x), hint='separable') == sol5
+    assert checksol(eq1, f(x), sol1)
+    assert checksol(eq2, f(x), sol2)
+    assert checksol(eq3, f(x), sol3)
+    assert checksol(eq5, f(x), sol5)
+
+def test_separable2():
+    a = Symbol('a')
+    eq6 = f(x)*x**2*f(x).diff(x) - f(x)**3 - 2*x**2*f(x).diff(x)
+    eq7 = f(x)**2 - 1 - (2*f(x) + x*f(x))*f(x).diff(x)
+    eq8 = x*log(x)*f(x).diff(x) + sqrt(1 + f(x)**2)
+    eq9 = exp(x + 1)*tan(f(x)) + cos(f(x))*f(x).diff(x)
+    eq10 = x*cos(f(x)) + x**2*sin(f(x))*f(x).diff(x) - a**2*sin(f(x))*f(x).diff(x)
+    # solve() messes this one up a little bit, so lets test _Integral here
+    # We have to test strings with _Integral because y is a dummy variable.
+    sol6str = "Integral(-(2 - _y)/_y**3, (_y, None, f(x))) == C1 + Integral(x**(-2), x)"
+    sol7 = Eq(log(1 - f(x)**2)/2, C1 + log(2 + x))
+    sol8 = Eq(asinh(f(x)), C1 - log(log(x)))
+    # integrate cannot handle the integral on the lhs (cos/tan)
+    sol9str = "Integral(cos(_y)/tan(_y), (_y, None, f(x))) == C1 + Integral(-E*exp(x), x)"
+    sol10 = Eq(-log(1 - sin(f(x))**2)/2, C1 - log(x**2 - a**2)/2)
+    assert str(dsolve(eq6, f(x), hint='separable_Integral')) == sol6str
+    assert dsolve(eq7, f(x), hint='separable') == sol7
+    assert dsolve(eq8, f(x), hint='separable') == sol8
+    assert str(dsolve(eq9, f(x), hint='separable_Integral')) == sol9str
+    assert dsolve(eq10, f(x), hint='separable') == sol10
+
+def test_separable3():
+    eq11 = f(x).diff(x) - f(x)*tan(x)
+    eq12 = (x - 1)*cos(f(x))*f(x).diff(x) - 2*x*sin(f(x))
+    eq13 = f(x).diff(x) - f(x)*log(f(x))/tan(x)
+    sol11 = Eq(f(x), C1*sqrt(1 + tan(x)**2))
+    sol12 = Eq(-log(1 - cos(f(x))**2)/2, C1 - 2*x - 2*log(1 - x))
+    sol13 = Eq(log(log(f(x))), C1 - log(1 + tan(x)**2)/2 + log(tan(x)))
+    assert dsolve(eq11, f(x), hint='separable') == sol11
+    assert dsolve(eq12, f(x), hint='separable') == sol12
+    assert dsolve(eq13, f(x), hint='separable') == sol13
+    assert checksol(eq11, f(x), sol11)
+
+def test_separable4():
+    # This has a slow integral (1/((1 + y**2)*atan(y))), so we isolate it.
+    eq14 = x*f(x).diff(x) + (1 + f(x)**2)*atan(f(x))
+    sol14 = Eq(log(atan(f(x))), C1 - log(x))
+    assert dsolve(eq14, f(x), hint='separable') == sol14
+
+def test_separable5():
+    eq15 = f(x).diff(x) + x*(f(x) + 1)
+    eq16 = exp(f(x)**2)*(x**2 + 2*x + 1) + (x*f(x) + f(x))*f(x).diff(x)
+    eq17 = f(x).diff(x) + f(x)
+    eq18 = sin(x)*cos(2*f(x)) + cos(x)*sin(2*f(x))*f(x).diff(x)
+    eq19 = (1 - x)*f(x).diff(x) - x*(f(x) + 1)
+    eq20 = f(x)*diff(f(x), x) + x - 3*x*f(x)**2
+    eq21 = f(x).diff(x) - exp(x + f(x))
+    sol15 = Eq(f(x), -1 + exp(C1 - x**2/2))
+    sol16 = Eq(-exp(-f(x)**2)/2, C1 - x - x**2/2)
+    sol17 = Eq(f(x), exp(C1 - x))
+    sol18 = Eq(-log(1 - sin(2*f(x))**2)/4, C1 + log(1 - sin(x)**2)/2)
+    sol19 = Eq(f(x), -(1 - x - exp(C1 - x))/(1 - x))
+    sol20 = Eq(-log(1 - 3*f(x)**2)/6, C1 - x**2/2)
+    sol21 = Eq(-exp(-f(x)), C1 + exp(x))
+    assert dsolve(eq15, f(x), hint='separable') == sol15
+    assert dsolve(eq16, f(x), hint='separable') == sol16
+    assert dsolve(eq17, f(x), hint='separable') == sol17
+    assert dsolve(eq18, f(x), hint='separable') == sol18
+    assert dsolve(eq19, f(x), hint='separable') == sol19
+    assert dsolve(eq20, f(x), hint='separable') == sol20
+    assert dsolve(eq21, f(x), hint='separable') == sol21
+    assert checksol(eq15, f(x), sol15)
+    assert checksol(eq17, f(x), sol17)
+    assert checksol(eq19, f(x), sol19)
+
+@XFAIL
+def test_separable_1_5_checksol():
+    # Basically, checksol cannot handle implicit solutions.  Some of these could
+    # be solved with a better solve().  For the rest, we need to just improve
+    # checksol.  If you know a better way to test implicit solutions to odes,
+    # please improve checksol.  I think an improved simplify() would help too.
+    a = Symbol('a')
+    eq4 = f(x)**2 + 1 - (x**2 + 1)*f(x).diff(x)
+    sol4 = Eq(atan(f(x)), C1 + atan(x))
+    eq7 = f(x)**2 - 1 - (2*f(x) + x*f(x))*f(x).diff(x)
+    eq8 = x*log(x)*f(x).diff(x) + sqrt(1 + f(x)**2)
+    eq10 = x*cos(f(x)) + x**2*sin(f(x))*f(x).diff(x) - a**2*sin(f(x))*f(x).diff(x)
+    eq12 = (x - 1)*cos(f(x))*f(x).diff(x) - 2*x*sin(f(x))
+    eq13 = f(x).diff(x) - f(x)*log(f(x))/tan(x)
+    eq14 = x*f(x).diff(x) + (1 + f(x)**2)*atan(f(x))
+    eq16 = exp(f(x)**2)*(x**2 + 2*x + 1) + (x*f(x) + f(x))*f(x).diff(x)
+    eq18 = sin(x)*cos(2*f(x)) + cos(x)*sin(2*f(x))*f(x).diff(x)
+    eq20 = f(x)*diff(f(x), x) + x - 3*x*f(x)**2
+    eq21 = f(x).diff(x) - exp(x + f(x))
+    sol7 = Eq(log(1 - f(x)**2)/2, C1 + log(2 + x))
+    sol8 = Eq(asinh(f(x)), C1 - log(log(x)))
+    sol10 = Eq(-log(1 - sin(f(x))**2)/2, C1 - log(x**2 - a**2)/2)
+    sol12 = Eq(-log(1 - cos(f(x))**2)/2, C1 - 2*x - 2*log(1 - x))
+    sol13 = Eq(log(log(f(x))), C1 - log(1 + tan(x)**2)/2 + log(tan(x)))
+    sol14 = Eq(log(atan(f(x))), C1 - log(x))
+    sol16 = Eq(-exp(-f(x)**2)/2, C1 - x - x**2/2)
+    sol18 = Eq(-log(1 - sin(2*f(x))**2)/4, C1 + log(1 - sin(x)**2)/2)
+    sol20 = Eq(-log(1 - 3*f(x)**2)/6, C1 - x**2/2)
+    sol21 = Eq(-exp(-f(x)), C1 + exp(x))
+    assert checksol(eq4, f(x), sol4)
+    assert checksol(eq7, f(x), sol7)
+    assert checksol(eq8, f(x), sol8)
+    assert checksol(eq10, f(x), sol10)
+    assert checksol(eq12, f(x), sol12)
+    assert checksol(eq13, f(x), sol13)
+    assert checksol(eq14, f(x), sol14)
+    assert checksol(eq16, f(x), sol16)
+    assert checksol(eq18, f(x), sol18)
+    assert checksol(eq20, f(x), sol20)
+    assert checksol(eq21, f(x), sol21)
+
 
 
 def test_homogeneous_order():
