@@ -12,7 +12,7 @@ from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse
 
-from sympy.polys import Poly, factor, PolynomialError
+from sympy.polys import Poly, cancel, factor
 
 import sympy.mpmath as mpmath
 
@@ -744,10 +744,7 @@ def _separatevars(expr):
 
     # First try other expansion methods
     expr = expr.expand(mul=False, multinomial=False)
-    try:
-        expr = factor(expr)
-    except PolynomialError:
-        pass
+    expr = factor(expr, expand=False)
 
     _coeff = Symbol('_coeff', dummy=True)
 
@@ -1272,7 +1269,7 @@ def hypersimp(f, k):
     g = powsimp(g, deep=True, combine='exp')
 
     if g.is_rational_function(k):
-        return Poly.cancel(g, k)
+        return simplify(g)
     else:
         return None
 
@@ -1308,12 +1305,31 @@ def simplify(expr):
        will be robust.
 
     """
-    expr = Poly.cancel(powsimp(expr))
-    expr = powsimp(together(expr.expand()), combine='exp', deep=True)
+    expr = together(cancel(powsimp(expr)).expand())
+    expr = powsimp(expr, combine='exp', deep=True)
+
+    numer, denom = expr.as_numer_denom()
+
+    if denom.is_Add:
+        a, b, c = map(Wild, 'abc')
+
+        r = denom.match(a + b*c**S.Half)
+
+        if r is not None and r[b]:
+            a, b, c = r[a], r[b], r[c]
+
+            numer *= a-b*c**S.Half
+            numer = numer.expand()
+
+            denom = a**2 - c*b**2
+
+            expr = numer/denom
+
     if expr.could_extract_minus_sign():
         n, d = expr.as_numer_denom()
         if d != 0:
             expr = -n/(-d)
+
     return expr
 
 
