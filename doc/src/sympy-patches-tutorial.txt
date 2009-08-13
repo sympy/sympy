@@ -1001,6 +1001,40 @@ And of course
     | *See You, and*
     | *Patches Welcome!*
 
+How to Write Docstrings
+=======================
+
+Execute the code that you want to add into the docstrings by::
+
+    $ bin/isympy -c python -p no
+    [...]
+    Documentation can be found at http://sympy.org/
+
+    >>> x = Symbol("x", positive=True)  # doctest: +SKIP
+    >>> x.assumptions0   # doctest: +SKIP
+    {'commutative': True, 'complex': True, 'imaginary': False, 'negative':
+    False, 'nonnegative': True, 'nonpositive': False, 'nonzero': True,
+    'positive': True, 'real': True, 'zero': False}
+    >>>
+
+This is important, because doctests use ``sstrrepr`` printer, which orders
+dictionaries in a hash *independent* way, and so does ``bin/isympy -c
+python -p no``, so you can just copy & paste the output from there into
+the docstring. Then check the docstring with (assuming you changed
+``basic.py``)::
+
+    $ bin/doctest sympy/core/basic.py
+    ============================= test process starts ==============================
+    executable:   /usr/bin/python  (2.6.2-final-0)
+
+    sympy/core/basic.py[30] ..............................                      [OK]
+
+    ================== tests finished: 30 passed in 0.14 seconds ===================
+
+
+and that's it.
+
+
 Appendix
 ========
 
