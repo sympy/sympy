@@ -1,10 +1,9 @@
-from sympy.polys import Poly, LexPoly, roots, \
-    SymbolsError, PolynomialError
-from sympy.polys.algorithms import poly_groebner
 
+from sympy.polys import Poly, groebner, roots
+from sympy.simplify import simplify
 from sympy.utilities import any, all
 
-def solve_poly_system(system, *symbols):
+def solve_poly_system(system, *gens):
     """Solves a system of polynomial equations.
 
        Returns all possible solutions over C[x_1, x_2, ..., x_m] of a
@@ -47,30 +46,31 @@ def solve_poly_system(system, *symbols):
     """
     def is_univariate(f):
         """Returns True if 'f' is univariate in its last variable. """
-        for monom in f.iter_monoms():
-            if any(exp > 0 for exp in monom[:-1]):
+        for monom in f.monoms():
+            if any(m > 0 for m in monom[:-1]):
                 return False
 
         return True
 
-    def solve_reduced_system(system, entry=False):
+    def solve_reduced_system(system, gens, entry=False):
         """Recursively solves reduced polynomial systems. """
-        basis = poly_groebner(system)
+        basis = groebner(system, *gens, polys=True)
 
-        if len(basis) == 1 and basis[0].is_one:
+        if len(basis) == 1 and basis[0].is_ground:
             if not entry:
                 return []
             else:
                 return None
 
         univariate = filter(is_univariate, basis)
+        basis = [ b.as_basic() for b in basis ]
 
         if len(univariate) == 1:
-            f = univariate.pop()
+            f = univariate.pop().as_basic()
         else:
-            raise PolynomialError("Not a zero-dimensional system")
+            raise ValueError("only zero-dimensional systems supported")
 
-        zeros = roots(Poly(f, f.symbols[-1])).keys()
+        zeros = roots(f, gens[-1]).keys()
 
         if not zeros:
             return []
@@ -82,14 +82,15 @@ def solve_poly_system(system, *symbols):
 
         for zero in zeros:
             new_system = []
+            new_gens = gens[:-1]
 
-            for poly in basis[:-1]:
-                eq = poly.evaluate((poly.symbols[-1], zero))
+            for b in basis[:-1]:
+                eq = b.subs(gens[-1], zero).expand()
 
                 if not eq.is_zero:
                     new_system.append(eq)
 
-            for solution in solve_reduced_system(new_system):
+            for solution in solve_reduced_system(new_system, new_gens):
                 solutions.append(solution + [zero])
 
         return solutions
@@ -97,23 +98,18 @@ def solve_poly_system(system, *symbols):
     if hasattr(system, "__iter__"):
         system = list(system)
     else:
-        raise TypeError("Expected iterable container, got %s" % system)
+        raise TypeError("expected iterable container, got %s" % system)
 
-    f = system.pop(0)
-
-    if not isinstance(f, Poly):
-        f = LexPoly(f, *symbols)
-    else:
-        if not symbols:
-            f = LexPoly(f)
-        else:
-            raise SymbolsError("Redundant symbols were given")
-
-    head, tail = f.unify_with(system)
-
-    solutions = solve_reduced_system([head] + tail, True)
+    solutions = solve_reduced_system(system, gens, entry=True)
 
     if solutions is None:
         return None
     else:
-        return sorted(tuple(s) for s in solutions)
+        for i, s in enumerate(solutions):
+            solutions[i] = tuple(map(simplify, s))
+
+        try:
+            return sorted(solutions)
+        except TypeError:
+            return solutions
+

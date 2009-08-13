@@ -1,5 +1,6 @@
-from sympy import S, symbols, Integer, Rational, Poly, \
-    PolynomialError, sqrt, I, solve_poly_system, raises
+
+from sympy import S, symbols, Integer, Rational, \
+    sqrt, I, solve_poly_system, raises
 
 x, y, z = symbols('xyz')
 
@@ -24,4 +25,5 @@ def test_solve_poly_system():
     assert solve_poly_system([x**2+y+z-1, x+y**2+z-1, x+y+z**2-1], x, y, z) == \
         [(a, a, a), (0, 0, 1), (0, 1, 0), (b, b, b), (1, 0, 0)]
 
-    raises(PolynomialError, "solve_poly_system([x**3-y**3], x, y)")
+    raises(ValueError, "solve_poly_system([x**3-y**3], x, y)")
+
