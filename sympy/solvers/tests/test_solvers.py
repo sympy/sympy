@@ -240,7 +240,7 @@ def test_tsolve_1():
     assert solve(exp(x)+exp(-x)-y, x)== [-log(4) + log(2*y + 2*(-4 + y**2)**(Rational(1, 2))),
                                           -log(4) + log(2*y - 2*(-4 + y**2)**(Rational(1, 2)))]
     # issue #1409
-    assert solve(y - b*x/(a+x), x) == [a*y/(b - y)]
+    assert solve(y - b*x/(a+x), x) in [[-a*y/(y - b)], [a*y/(b - y)]]
     assert solve(y - b*exp(a/x), x) == [a/(-log(b) + log(y))]
     # issue #1408
     assert solve(y-b/(1+a*x),x) == [(b - y)/(a*y)]
@@ -298,3 +298,4 @@ def test_issue626():
     F = x**2 + f(x)**2 - 4*x - 1
     e = F.diff(x)
     assert solve(e, f(x).diff(x)) == [(2-x)/f(x)]
+

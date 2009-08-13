@@ -373,7 +373,7 @@ def solve(f, *symbols, **flags):
                 matrix = zeros((n, m + 1))
 
                 for i, poly in enumerate(polys):
-                    for coeff, monom in poly.iter_terms():
+                    for monom, coeff in poly.terms():
                         try:
                             j = list(monom).index(1)
                             matrix[i, j] = coeff
@@ -818,3 +818,4 @@ def nsolve(*args, **kwargs):
     # solve the system numerically
     x = findroot(f, x0, J=J, **kwargs)
     return x
+
