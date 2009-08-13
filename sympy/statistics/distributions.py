@@ -313,10 +313,10 @@ class PDF(ContinuousProbability):
         if self._variance is not None:
             return self._variance
         else:
-            from sympy import integrate, trim, together
+            from sympy import integrate, simplify, together
             w = Symbol('w', real=True, dummy=True)
             self._variance = integrate(self.pdf(w)*w**2,(w,self.domain[0],self.domain[1])) - self.mean**2
-            self._variance = trim(self._variance)
+            self._variance = simplify(self._variance)
             return self._variance
 
     def _get_stddev(self):
@@ -352,3 +352,4 @@ class PDF(ContinuousProbability):
             newPdf += (self.pdf(var)/abs(funcdiff)).subs(var,x)
 
         return PDF(newPdf, (w, func.subs(var, self.domain[0]), func.subs(var, self.domain[1])))
+
