@@ -38,11 +38,11 @@ def normal(f, g, n=None):
     """
     f, g = map(sympify, (f, g))
 
-    p = f.as_poly(n)
-    q = g.as_poly(n)
+    p = f.as_poly(n, field=True)
+    q = g.as_poly(n, field=True)
 
-    a, p = p.LC, p.as_monic()
-    b, q = q.LC, q.as_monic()
+    a, p = p.LC(), p.monic()
+    b, q = q.LC(), q.monic()
 
     A = p.as_basic()
     B = q.as_basic()
@@ -53,7 +53,7 @@ def normal(f, g, n=None):
 
     res = resultant(A, B.subs(n, n+h), n)
 
-    nni_roots = roots(res, h, domain='Z',
+    nni_roots = roots(res, h, filter='Z',
         predicate=lambda r: r >= 0).keys()
 
     if not nni_roots:
@@ -98,3 +98,4 @@ def gosper(term, k, a, n):
             return simplify(Z.subs(k, n+1) - Z.subs(k, a))
         else:
             return None
+
