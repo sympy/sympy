@@ -121,7 +121,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     coeffs = [ Poly(coeff, n) for coeff in coeffs ]
 
-    polys = [ Poly((), n) ] * (r+1)
+    polys = [ Poly(0, n) ] * (r+1)
     terms = [ (S.Zero, S.NegativeInfinity) ] *(r+1)
 
     for i in xrange(0, r+1):
@@ -129,7 +129,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             polys[i] += coeffs[j]*Binomial(j, i)
 
         if not polys[i].is_zero:
-            coeff, (exp,) = polys[i].LT
+            (exp,), coeff = polys[i].LT()
             terms[i] = (coeff, exp)
 
     d = b = terms[0][1]
@@ -151,7 +151,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         if terms[i][1] - i == b:
             degree_poly += terms[i][0]*FallingFactorial(x, i)
 
-    nni_roots = roots(degree_poly, x, domain='Z',
+    nni_roots = roots(degree_poly, x, filter='Z',
         predicate=lambda r: r >= 0).keys()
 
     if nni_roots:
@@ -162,7 +162,7 @@ def rsolve_poly(coeffs, f, n, **hints):
     if homogeneous:
         N += [-b-1]
     else:
-        N += [f.as_poly(n).degree - b, -b-1]
+        N += [f.as_poly(n).degree() - b, -b-1]
 
     N = int(max(N))
 
@@ -197,7 +197,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         A = r
         U = N+A+b+1
 
-        nni_roots = roots(polys[r], domain='Z',
+        nni_roots = roots(polys[r], filter='Z',
             predicate=lambda r: r >= 0).keys()
 
         if nni_roots != []:
@@ -392,7 +392,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
         p, q = res.as_numer_denom()
         res = quo(p, q, h)
 
-    nni_roots = roots(res, h, domain='Z',
+    nni_roots = roots(res, h, filter='Z',
         predicate=lambda r: r >= 0).keys()
 
     if not nni_roots:
@@ -561,12 +561,12 @@ def rsolve_hyper(coeffs, f, n, **hints):
             polys.append(poly.as_poly(n))
 
             if not poly.is_zero:
-                degrees.append(polys[i].degree)
+                degrees.append(polys[i].degree())
 
         d, poly = max(degrees), S.Zero
 
         for i in xrange(0, r+1):
-            coeff = polys[i].coeff(d)
+            coeff = polys[i].nth(d)
 
             if coeff is not S.Zero:
                 poly += coeff * Z**i
