@@ -35,6 +35,8 @@ def test_exp():
     assert exp(x*log(x)) != x**x
     assert exp(sin(x)*log(x)) != x
 
+    assert exp(x).as_Pow() == (E, x)
+    assert exp(-x).as_Pow() == (E, -x)
 
 def test_log():
 
@@ -168,3 +170,4 @@ def test_infinity():
     assert exp(I*y) != nan
     assert exp(I*oo) == nan
     assert exp(y*I*oo) == nan
+
