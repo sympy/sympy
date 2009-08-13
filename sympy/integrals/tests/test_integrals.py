@@ -61,7 +61,7 @@ def test_integration():
 def test_multiple_integration():
     assert integrate((x**2)*(y**2), (x,0,1), (y,-1,2)) == Rational(1)
     assert integrate((y**2)*(x**2), x, y) == Rational(1,9)*(x**3)*(y**3)
-    assert integrate(1/(x+3)/(1+x)**3, x) == -S(1)/8*log(3 + x) + S(1)/8*log(1 + x) + x/4/(1 + 2*x + x**2)
+    assert integrate(1/(x+3)/(1+x)**3, x) == -S(1)/8*log(3 + x) + S(1)/8*log(1 + x) + x/(4 + 8*x + 4*x**2)
 
 def test_issue433():
     assert integrate(exp(-x), (x,0,oo)) == 1
@@ -80,8 +80,8 @@ def test_integrate_poly():
     assert isinstance(qx, Poly) == True
     assert isinstance(qy, Poly) == True
 
-    assert qx.symbols == (x, y)
-    assert qy.symbols == (x, y)
+    assert qx.gens == (x, y)
+    assert qy.gens == (x, y)
 
     assert qx.as_basic() == x**2/2 + x**3*y/3 + x*y**3
     assert qy.as_basic() == x*y + x**2*y**2/2 + y**4/4
@@ -95,8 +95,8 @@ def test_integrate_poly_defined():
     assert isinstance(Qx, Poly) == True
     assert isinstance(Qy, Poly) == True
 
-    assert Qx.symbols == (y,)
-    assert Qy.symbols == (x,)
+    assert Qx.gens == (y,)
+    assert Qy.gens == (x,)
 
     assert Qx.as_basic() == Rational(1,2) + y/3 + y**3
     assert Qy.as_basic() == pi**4/4 + pi*x + pi**2*x**2/2
@@ -252,6 +252,7 @@ def test_evalf_integrals():
     assert NS(Integral(sin(x)/x**2, (x, 1, oo)), quad='osc') == '0.504067061906928'
     assert NS(Integral(cos(pi*x+1)/x, (x, -oo, -1)), quad='osc') == '0.276374705640365'
 
+@XFAIL
 def test_evalf_issue_939():
     # http://code.google.com/p/sympy/issues/detail?id=939
 
@@ -399,7 +400,6 @@ def test_integral_reconstruct():
     e = Integral(x**2, (x, -1, 1))
     assert e == Integral(*e.args)
 
-
 def test_doit():
     e = Integral(Integral(2*x), (x, 0, 1))
     assert e.doit() == Rational(1, 3)
@@ -417,3 +417,4 @@ def issue_1785():
 @XFAIL
 def issue_1785_fail():
     assert integrate(x**x*(1+log(x)).expand(mul=True)) is None
+

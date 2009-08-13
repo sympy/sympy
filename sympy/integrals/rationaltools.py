@@ -1,10 +1,9 @@
 """This module implements tools for integrating rational functions. """
 
-from sympy import S, Symbol, symbols, I, log, atan, Poly, \
-    div, quo, resultant, roots, collect, solve, RootSum, Lambda
+from sympy import S, Add, Symbol, symbols, I, log, atan, \
+    div, quo, resultant, roots, collect, solve, RootSum, Lambda, cancel
 
-from sympy.polys.algorithms import poly_div, poly_gcd, \
-    poly_gcdex, poly_sqf, poly_subresultants
+from sympy.polys import Poly, subresultants, resultant
 from sympy.polys.rootfinding import number_of_real_roots
 
 def ratint(f, x, **flags):
@@ -33,14 +32,12 @@ def ratint(f, x, **flags):
 
     p, q = Poly(p, x), Poly(q, x)
 
-    g = poly_gcd(p, q)
+    c, p, q = p.cancel(q)
+    poly, p = p.div(q)
 
-    p = poly_div(p, g)[0]
-    q = poly_div(q, g)[0]
+    poly = poly.to_field()
 
-    result, p = poly_div(p, q)
-
-    result = result.integrate(x).as_basic()
+    result = c*poly.integrate(x).as_basic()
 
     if p.is_zero:
         return result
@@ -48,7 +45,11 @@ def ratint(f, x, **flags):
     g, h = ratint_ratpart(p, q, x)
 
     P, Q = h.as_numer_denom()
-    q, r = poly_div(P, Q, x)
+
+    P = Poly(P, x)
+    Q = Poly(Q, x)
+
+    q, r = P.div(Q)
 
     result += g + q.integrate(x).as_basic()
 
@@ -108,30 +109,27 @@ def ratint_ratpart(f, g, x):
     """
     f, g = Poly(f, x), Poly(g, x)
 
-    u = poly_gcd(g, g.diff())
-    v = poly_div(g, u)[0]
+    u, v, _ = g.cofactors(g.diff())
 
-    n = u.degree - 1
-    m = v.degree - 1
-    d = g.degree
+    n = u.degree() - 1
+    m = v.degree() - 1
+    d = g.degree()
 
     A_coeff = [ Symbol('a' + str(n-i), dummy=True) for i in xrange(0, n+1) ]
     B_coeff = [ Symbol('b' + str(m-i), dummy=True) for i in xrange(0, m+1) ]
 
-    symbols = A_coeff + B_coeff
+    A = Poly(dict(zip(xrange(n, -1, -1), A_coeff)), x)
+    B = Poly(dict(zip(xrange(m, -1, -1), B_coeff)), x)
 
-    A = Poly(zip(A_coeff, xrange(n, -1, -1)), x)
-    B = Poly(zip(B_coeff, xrange(m, -1, -1)), x)
+    H = f - A.diff()*v + A*(u.diff()*v).exquo(u) - B*u
 
-    H = f - A.diff()*v + A*poly_div(u.diff()*v, u)[0] - B*u
+    result = solve(H.coeffs(), A_coeff + B_coeff)
 
-    result = solve(H.coeffs, symbols)
+    A = A.as_basic().subs(result) # A = A.eval_ground(result)
+    B = B.as_basic().subs(result) # B = B.eval_ground(result)
 
-    A = A.subs(result)
-    B = B.subs(result)
-
-    rat_part = Poly.cancel((A, u), x)
-    log_part = Poly.cancel((B, v), x)
+    rat_part = cancel(A/u.as_basic(), x)
+    log_part = cancel(B/v.as_basic(), x)
 
     return rat_part, log_part
 
@@ -152,42 +150,48 @@ def ratint_logpart(f, g, x, t=None):
     f, g = Poly(f, x), Poly(g, x)
 
     t = t or Symbol('t', dummy=True)
-    a, b = g, f - g.diff().mul_term(t)
+    a, b = g, f - g.diff()*Poly(t, x)
 
-    res, R = poly_subresultants(a, b)
-    Q = poly_sqf(Poly(res, t))
+    R = subresultants(a, b)
+    res = Poly(resultant(a, b), t)
 
-    R_map, H, i = {}, [], 1
+    R_map, H = {}, []
 
     for r in R:
-        R_map[r.degree] = r
+        R_map[r.degree()] = r
 
-    for q in Q:
-        if q.degree > 0:
-            _, q = q.as_primitive()
+    def _include_sign(c, sqf):
+        if c < 0:
+            h, k = sqf[0]
+            sqf[0] = h*c, k
 
-            if g.degree == i:
-                H.append((g, q))
-            else:
-                h = R_map[i]
-                A = poly_sqf(h.LC, t)
+    C, res_sqf = res.sqf_list()
+    _include_sign(C, res_sqf)
 
-                for j in xrange(0, len(A)):
-                    T = poly_gcd(A[j], q)**(j+1)
-                    h = poly_div(h, Poly(T, x))[0]
+    for q, i in res_sqf:
+        _, q = q.primitive()
 
-                # NOTE: h.LC is always invertible in K[t]
-                inv, coeffs = Poly(h.LC, t).invert(q), [S(1)]
+        if g.degree() == i:
+            H.append((g, q))
+        else:
+            h = R_map[i]
+            h_lc = Poly(h.LC(), t, field=True)
 
-                for coeff in h.coeffs[1:]:
-                    T = poly_div(inv*coeff, q)[1]
-                    coeffs.append(T.as_basic())
+            c, h_lc_sqf = h_lc.sqf_list(all=True)
+            _include_sign(c, h_lc_sqf)
 
-                h = Poly(zip(coeffs, h.monoms), x)
+            for a, j in h_lc_sqf:
+                h = h.exquo(Poly(a.gcd(q)**j, x))
 
-                H.append((h, q))
+            inv, coeffs = h_lc.invert(q), [S(1)]
 
-        i += 1
+            for coeff in h.coeffs()[1:]:
+                T = (inv*coeff).rem(q)
+                coeffs.append(T.as_basic())
+
+            h = Poly(dict(zip(h.monoms(), coeffs)), x)
+
+            H.append((h, q))
 
     return H
 
@@ -202,16 +206,17 @@ def log_to_atan(f, g):
                        dx   dx        f - I g
 
     """
-    if f.degree < g.degree:
+    if f.degree() < g.degree():
         f, g = -g, f
 
-    p, q = poly_div(f, g)
+    p, q = f.div(g)
 
     if q.is_zero:
         return 2*atan(p.as_basic())
     else:
-        s, t, h = poly_gcdex(g, -f)
-        A = 2*atan(quo(f*s+g*t, h))
+        s, t, h = g.gcdex(-f)
+        u = (f*s+g*t).exquo(h)
+        A = 2*atan(u.as_basic())
 
         return A + log_to_atan(s, t)
 
@@ -229,8 +234,8 @@ def log_to_real(h, q, x, t):
     """
     u, v = symbols('u v')
 
-    H = h.subs({t:u+I*v}).as_basic().expand()
-    Q = q.subs({t:u+I*v}).as_basic().expand()
+    H = h.as_basic().subs({t:u+I*v}).expand()
+    Q = q.as_basic().subs({t:u+I*v}).expand()
 
     H_map = collect(H, I, evaluate=False)
     Q_map = collect(Q, I, evaluate=False)
@@ -240,7 +245,7 @@ def log_to_real(h, q, x, t):
 
     R = Poly(resultant(c, d, v), u)
 
-    R_u = roots(R, domain='R')
+    R_u = roots(R, filter='R')
 
     if len(R_u) != number_of_real_roots(R):
         return None
@@ -249,7 +254,7 @@ def log_to_real(h, q, x, t):
 
     for r_u in R_u.iterkeys():
         C = Poly(c.subs({u:r_u}), v)
-        R_v = roots(C, domain='R')
+        R_v = roots(C, filter='R')
 
         if len(R_v) != number_of_real_roots(C):
             return None
@@ -270,12 +275,12 @@ def log_to_real(h, q, x, t):
 
             result += r_u*log(AB) + r_v*log_to_atan(A, B)
 
-    R_q = roots(q, domain='R')
+    R_q = roots(q, filter='R')
 
     if len(R_q) != number_of_real_roots(q):
         return None
 
     for r in R_q.iterkeys():
-        result += r*log(h.subs(t, r).as_basic())
+        result += r*log(h.as_basic().subs(t, r))
 
     return result

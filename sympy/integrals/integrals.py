@@ -161,12 +161,23 @@ class Integral(Basic):
                     function = antideriv
                 else:
                     a, b = ab
+
                     if deep:
                         if isinstance(a, Basic):
                             a = a.doit(**hints)
                         if isinstance(b, Basic):
                             b = b.doit(**hints)
-                    function = antideriv._eval_interval(x, a, b)
+
+                    if antideriv.is_Poly:
+                        gens = list(antideriv.gens)
+                        gens.remove(x)
+
+                        antideriv = antideriv.as_basic()
+
+                        function = antideriv._eval_interval(x, a, b)
+                        function = Poly(function, *gens)
+                    else:
+                        function = antideriv._eval_interval(x, a, b)
 
         return function
 
@@ -281,7 +292,7 @@ class Integral(Basic):
         poly = f.as_poly(x)
 
         if poly is not None:
-            return poly.integrate(x).as_basic()
+            return poly.integrate().as_basic()
 
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,
@@ -574,3 +585,4 @@ def line_integrate(field, curve, vars):
 
     integral = Integral(Ft, curve.limits).doit(deep = False)
     return integral
+

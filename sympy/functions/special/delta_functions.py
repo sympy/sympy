@@ -132,7 +132,7 @@ class DiracDelta(Function):
         """
         p = self.args[0].as_poly(x)
         if p:
-            return p.degree == 1
+            return p.degree() == 1
         return False
 ###############################################################################
 ############################## HEAVISIDE FUNCTION #############################
@@ -190,3 +190,4 @@ class Heaviside(Function):
             return S.Half
         elif arg.is_positive:
             return S.One
+
