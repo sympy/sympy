@@ -33,7 +33,21 @@ def refine(expr, assumptions=True):
     return refine(new_expr, assumptions)
 
 def refine_abs(expr, assumptions):
-    """handler for the absolute value"""
+    """
+    Handler for the absolute value.
+
+    Examples:
+
+    >>> from sympy import Symbol, Assume, Q
+    >>> from sympy.refine import refine_abs
+    >>> x = Symbol("x")
+    >>> refine_abs(abs(x), Assume(x, Q.real))
+    >>> refine_abs(abs(x), Assume(x, Q.positive))
+    x
+    >>> refine_abs(abs(x), Assume(x, Q.negative))
+    -x
+
+    """
     arg = expr.args[0]
     if ask(arg, Q.real, assumptions) and \
             fuzzy_not(ask(arg, Q.negative, assumptions)):
@@ -43,7 +57,19 @@ def refine_abs(expr, assumptions):
         return -arg
 
 def refine_Pow(expr, assumptions):
-    """handler for instances of Pow"""
+    """
+    Handler for instances of Pow.
+
+    >>> from sympy import Symbol, Assume, Q
+    >>> from sympy.refine import refine_Pow
+    >>> x = Symbol("x")
+    >>> refine_Pow((-1)**x, Assume(x, Q.real))
+    >>> refine_Pow((-1)**x, Assume(x, Q.even))
+    1
+    >>> refine_Pow((-1)**x, Assume(x, Q.odd))
+    -1
+
+    """
     from sympy.core import Pow, Rational
     from sympy.functions import sign
     if ask(expr.base, Q.real, assumptions):
@@ -57,7 +83,17 @@ def refine_Pow(expr, assumptions):
                 return abs(expr.base.base) ** (expr.base.exp * expr.exp)
 
 def refine_exp(expr, assumptions):
-    """handler for exponential function"""
+    """
+    Handler for exponential function.
+
+    >>> from sympy import Symbol, Assume, Q, exp, I, pi
+    >>> from sympy.refine import refine_exp
+    >>> x = Symbol("x")
+    >>> refine_exp(exp(pi*I*2*x), Assume(x, Q.real))
+    >>> refine_exp(exp(pi*I*2*x), Assume(x, Q.integer))
+    1
+
+    """
     arg = expr.args[0]
     if arg.is_Mul:
         coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
