@@ -98,9 +98,10 @@ def dsolve(eq, func, hint="default", **kwargs):
     """
     # TODO: rewrite dsolve docstring
     # And note best_hint key
+    # TODO: if there is time, implement initial conditions
     if isinstance(eq, Equality):
         if eq.rhs != 0:
-            return dsolve(eq.lhs-eq.rhs, func)
+            return dsolve(eq.lhs-eq.rhs, func, hint, **kwargs)
         eq = eq.lhs
 
     # Magic that should only be used internally.  Prevents classify_ode from
@@ -897,7 +898,8 @@ def ode_Bernoulli(eq, func, order, match):
 def ode_Liouville(eq, func, order, match):
     # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x, 2))**2 + h(x)*f(x).diff(x)
     # See Goldstein and Braun, "Advanced Methods for the Solution of
-    # Differential Equations", pg. 98
+    # Differential Equations", pg. 98, as well as
+    # http://www.maplesoft.com/support/help/view.aspx?path=odeadvisor/Liouville
     x = func.args[0]
     f = func.func
     r = match # f(x).diff(x, 2) + g*f(x).diff(x)**2 + h*f(x).diff(x)
@@ -912,7 +914,7 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
     # TODO: implement undetermined coefficients
     return
 
-def _undetermined_coefficients_match(expr, x, returns='matches'):
+def _undetermined_coefficients_match(expr, x):
     """
     Returns a trial function match if undetermined coefficients can be applied
     to expr, and None other.
@@ -929,15 +931,17 @@ def _undetermined_coefficients_match(expr, x, returns='matches'):
     This is intended for internal use by undetermined_coefficients hints.
 
     SymPy currently has no way to convert sin(x)**n*cos(y)**m into a sum of only
-    sin(a*x), cos(b*x), sin(c*y), and cos(d*y) terms, so these are not
+    sin(a*x) and cos(b*x) terms, so these are not
     implemented.  So, for example, you will need to manually convert sin(x)**2
     into (1 + cos(2*x))/2 to properly apply the method of undetermined
     coefficients on it.
     """
     # TODO: write examples
+    from sympy import S
     a = Wild('a', exclude=[x])
     b = Wild('b', exclude=[x])
-    expr = powsimp(expr, combine='exp')
+    expr = powsimp(expr, combine='exp') # exp(x)*exp(2*x + 1) => exp(3*x + 1)
+    retdict = {}
     def _test_term(expr, x):
         """
         Test if expr fits the proper form for undetermined coefficients.
@@ -945,10 +949,17 @@ def _undetermined_coefficients_match(expr, x, returns='matches'):
         if expr.is_Add:
             return all([_test_term(i, x) for i in expr.args])
         elif expr.is_Mul:
-            if expr.has(sin) and expr.has(cos): # sin*cos no good, see docstring
-                return False
-            else:
-                return all([_test_term(i, x) for i in expr.args])
+            if expr.has(sin) or expr.has(cos):
+                foundtrig = False
+                # Make sure that there is only on trig function in the args.
+                # See the docstring.
+                for i in expr.args:
+                    if i.has(sin) or i.has(cos):
+                        if foundtrig:
+                            return False
+                        else:
+                            foundtrig = True
+            return all([_test_term(i, x) for i in expr.args])
         elif expr.is_Function:
             if expr.func in (sin, cos, exp):
                 if expr.args[0].match(a*x + b):
@@ -959,17 +970,80 @@ def _undetermined_coefficients_match(expr, x, returns='matches'):
                 return False
         elif expr.is_Pow and expr.base.is_Symbol and expr.exp.is_Integer:
             return True
+        elif expr.is_Pow and expr.base.is_number:
+            if expr.exp.match(a*x + b):
+                return True
+            else:
+                return False
         elif expr.is_Symbol or expr.is_Number:
             return True
         else:
             return False
-    if returns == 'matches':
-        return _test_term(expr, x)
-    elif returns == 'trial func':
-        raise NotImplementedError
-    else:
-        raise ValueError("returns can be 'matches' or 'trial func', not " + str(returns))
 
+    def _get_trial_set(expr, x, exprs=set([])):
+        """
+        Return a set of trial terms for undetermined coefficients.
+
+        The idea behing undetermined coefficients is that the terms expression
+        repeat themselves after a finite number of derivatives, except for the
+        coefficients.  So if we collect these, we should have the terms of our
+        trial function.
+        """
+        def _remove_coefficient(expr, x):
+            """
+            Returns the expression without a coefficient.
+            """
+            # I was using the below match, but it doesn't always put all of the
+            # coefficient in c.  c.f. 2**x*6*exp(x)*log(2)
+            # The below code is probably cleaner anyway.
+#            c = Wild('c', exclude=[x])
+#            t = Wild('t')
+#            r = expr.match(c*t)
+            term = S.One
+            if expr.is_Mul:
+                for i in expr.args:
+                    if i.has(x):
+                        term *= i
+            elif expr.has(x):
+                term = expr
+            return term
+
+        expr = expand_mul(expr)
+        if expr.is_Add:
+            for term in expr.args:
+                if _remove_coefficient(term, x) in exprs:
+                    pass
+                else:
+                    exprs.add(_remove_coefficient(term, x))
+                    exprs = exprs.union(_get_trial_set(term, x, exprs))
+        else:
+            term = _remove_coefficient(expr, x)
+            tmpset = exprs.union(set([term]))
+            oldset = set([])
+            while tmpset != oldset:
+                # If you get stuck in this loop, then _test_term is probably broken
+                oldset = tmpset.copy()
+                expr = expr.diff(x)
+                term = _remove_coefficient(expr, x)
+                if term.is_Add:
+                    tmpset = tmpset.union(_get_trial_set(term, x, tmpset))
+                else:
+                    tmpset.add(term)
+            exprs = tmpset
+        return exprs
+
+
+
+    retdict['test'] = _test_term(expr, x)
+    if retdict['test']:
+        # Try to generate a list of trial solutions that will have the undetermined
+        # coefficients.  Note that if any of these are not linearly independent
+        # with any of the solutions to the homogeneous equation, then they will
+        # need to be multiplied by sufficient x to make them so.  This function
+        # DOES NOT do that (it doesn't even look at the homogeneous equation).
+        retdict['trialset'] = _get_trial_set(expr, x)
+
+    return retdict
 
 def ode_nth_linear_constant_coeff_variation_of_paramters(eq, func, order, match):
     x = func.args[0]

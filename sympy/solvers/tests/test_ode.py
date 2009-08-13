@@ -1,7 +1,7 @@
 from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         I, exp, log, simplify, normal, together, ratsimp, powsimp, \
         fraction, radsimp, Eq, sqrt, pi, erf,  diff, Rational, asinh, trigsimp, \
-        S, RootOf, Poly, Integral, atan
+        S, RootOf, Poly, Integral, atan, Equality, solve
 from sympy.abc import x, y, z
 from sympy.solvers.ode import deriv_degree, homogeneous_order, \
         _undetermined_coefficients_match, classify_ode
@@ -661,76 +661,95 @@ def test_unexpanded_Liouville_ODE():
     assert checksol(eq2, f(x), sol2)
 
 def test_undetermined_coefficients_match():
-    assert _undetermined_coefficients_match(sin(2*x + sqrt(5)), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(sin(x)*cos(x), x,
-        returns='matches') == False
-    assert _undetermined_coefficients_match(sin(x)*(x**2 + x + 1), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(sin(x)*x**2 + sin(x)*x + sin(x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(exp(2*x)*sin(x)*(x**2 + x + 1), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(1/sin(x), x,
-        returns='matches') == False
-    assert _undetermined_coefficients_match(log(x), x,
-        returns='matches') == False
-    assert _undetermined_coefficients_match(2**(x)*(x**2 + x + 1), x,
-        returns='matches') == False
-    assert _undetermined_coefficients_match(x**y, x,
-        returns='matches') == False
-    assert _undetermined_coefficients_match(exp(x)*exp(2*x + 1), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(sin(x)*(x**2 + x + 1), x,
-        returns='matches') == True
-    # From Ordinary Differential Equations, Tenenbaum and Pollard, pg. 231
-    assert _undetermined_coefficients_match(S(4), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(12*exp(x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(exp(I*x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(sin(x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(cos(x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(8 + 6*exp(x) + 2*sin(x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(x**2, x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(2*exp(2*x)*sin(x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(x - sin(x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(x**2 + 2*x, x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(4*x*sin(x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(x*sin(2*x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(x**2*exp(-x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(2*exp(-x) - x**2*exp(-x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(exp(-2*x) + x**2, x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(x*exp(-x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(x + exp(2*x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(sin(x) + exp(-x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(exp(x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(S(1)/2 - cos(2*x)/2, x,
-        returns='matches') == True # converted from sin(x)**2
-    assert _undetermined_coefficients_match(exp(2*x)*(S(1)/2 + cos(2*x)/2), x,
-        returns='matches') == True # converted from exp(2*x)*sin(x)**2
-    assert _undetermined_coefficients_match(2*x + sin(x) + cos(x), x,
-        returns='matches') == True
-    assert _undetermined_coefficients_match(cos(x)/2 - cos(3*x)/2, x,
-        returns='matches') == True # converted from sin(2*x)*sin(x)
+    assert _undetermined_coefficients_match(sin(2*x + sqrt(5)), x) == \
+        {'test': True, 'trialset': set([cos(2*x + sqrt(5)), sin(2*x + sqrt(5))])}
+    assert _undetermined_coefficients_match(sin(x)*cos(x), x) == {'test': False}
+    assert _undetermined_coefficients_match(sin(x)*(x**2 + x + 1), x) == \
+        {'test': True, 'trialset': set([cos(x), x*cos(x), x**2*sin(x), x**2*cos(x),
+        x*sin(x), sin(x)])}
+    assert _undetermined_coefficients_match(sin(x)*x**2 + sin(x)*x + sin(x), x) == \
+        {'test': True, 'trialset': set([x*cos(x), x*sin(x), x**2*cos(x), x**2*sin(x),
+        cos(x), sin(x)])}
+    assert _undetermined_coefficients_match(exp(2*x)*sin(x)*(x**2 + x + 1), x) == \
+        {'test': True, 'trialset': set([exp(2*x)*sin(x), x**2*exp(2*x)*sin(x),
+        cos(x)*exp(2*x), x**2*cos(x)*exp(2*x), x*cos(x)*exp(2*x),
+        x*exp(2*x)*sin(x)])}
+    assert _undetermined_coefficients_match(1/sin(x), x) == {'test': False}
+    assert _undetermined_coefficients_match(log(x), x) == {'test': False}
+    assert _undetermined_coefficients_match(2**(x)*(x**2 + x + 1), x) == \
+        {'test': True, 'trialset': set([2**x, x*2**x, x**2*2**x])}
+    assert _undetermined_coefficients_match(x**y, x) == {'test': False}
+    assert _undetermined_coefficients_match(exp(x)*exp(2*x + 1), x) == \
+        {'test': True, 'trialset': set([exp(1 + 3*x)])}
+    assert _undetermined_coefficients_match(sin(x)*(x**2 + x + 1), x) == \
+        {'test': True, 'trialset': set([x*cos(x), x*sin(x), x**2*cos(x),
+        x**2*sin(x), cos(x), sin(x)])}
+    assert _undetermined_coefficients_match(sin(x)*(x + sin(x)), x) == {'test': False}
+    assert _undetermined_coefficients_match(sin(x)*(x + sin(2*x)), x) == {'test': False}
+    assert _undetermined_coefficients_match(sin(x)*tan(x), x) == {'test': False}
+    assert _undetermined_coefficients_match(x**2*sin(x)*exp(x) + x*sin(x) + x, x) == \
+        {'test': True, 'trialset': set([x**2*cos(x)*exp(x), x, cos(x), S(1),
+        exp(x)*sin(x), sin(x), x*exp(x)*sin(x), x*cos(x), x*cos(x)*exp(x),
+        x*sin(x), cos(x)*exp(x), x**2*exp(x)*sin(x)])}
+    assert _undetermined_coefficients_match(4*x*sin(x - 2), x) == \
+        {'test': True, 'trialset': set([x*cos(2 - x), x*sin(2 - x), cos(2 - x),
+        sin(2 - x)])}
+    assert _undetermined_coefficients_match(2**x*x, x) == \
+        {'test': True, 'trialset': set([2**x, x*2**x])}
+    assert _undetermined_coefficients_match(2**x*exp(2*x), x) == \
+        {'test': True, 'trialset': set([2**x*exp(2*x)])}
+    # Below are from Ordinary Differential Equations, Tenenbaum and Pollard, pg. 231
+    assert _undetermined_coefficients_match(S(4), x) == \
+        {'test': True, 'trialset': set([S(1)])}
+    assert _undetermined_coefficients_match(12*exp(x), x) == \
+        {'test': True, 'trialset': set([exp(x)])}
+    assert _undetermined_coefficients_match(exp(I*x), x) == \
+        {'test': True, 'trialset': set([exp(I*x)])}
+    assert _undetermined_coefficients_match(sin(x), x) == \
+        {'test': True, 'trialset': set([cos(x), sin(x)])}
+    assert _undetermined_coefficients_match(cos(x), x) == \
+        {'test': True, 'trialset': set([cos(x), sin(x)])}
+    assert _undetermined_coefficients_match(8 + 6*exp(x) + 2*sin(x), x) == \
+        {'test': True, 'trialset': set([S(1), cos(x), sin(x), exp(x)])}
+    assert _undetermined_coefficients_match(x**2, x) == \
+        {'test': True, 'trialset': set([S(1), x, x**2])}
+    assert _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x) == \
+        {'test': True, 'trialset': set([x*exp(x), exp(x), exp(-x)])}
+    assert _undetermined_coefficients_match(2*exp(2*x)*sin(x), x) == \
+        {'test': True, 'trialset': set([exp(2*x)*sin(x), cos(x)*exp(2*x)])}
+    assert _undetermined_coefficients_match(x - sin(x), x) == \
+        {'test': True, 'trialset': set([S(1), x, cos(x), sin(x)])}
+    assert _undetermined_coefficients_match(x**2 + 2*x, x) == \
+        {'test': True, 'trialset': set([S(1), x, x**2])}
+    assert _undetermined_coefficients_match(4*x*sin(x), x) == \
+        {'test': True, 'trialset': set([x*cos(x), x*sin(x), cos(x), sin(x)])}
+    assert _undetermined_coefficients_match(x*sin(2*x), x) == \
+        {'test': True, 'trialset': set([x*cos(2*x), x*sin(2*x), cos(2*x), sin(2*x)])}
+    assert _undetermined_coefficients_match(x**2*exp(-x), x) == \
+        {'test': True, 'trialset': set([x*exp(-x), x**2*exp(-x), exp(-x)])}
+    assert _undetermined_coefficients_match(2*exp(-x) - x**2*exp(-x), x) == \
+        {'test': True, 'trialset': set([x*exp(-x), x**2*exp(-x), exp(-x)])}
+    assert _undetermined_coefficients_match(exp(-2*x) + x**2, x) == \
+        {'test': True, 'trialset': set([S(1), x, x**2, exp(-2*x)])}
+    assert _undetermined_coefficients_match(x*exp(-x), x) == \
+        {'test': True, 'trialset': set([x*exp(-x), exp(-x)])}
+    assert _undetermined_coefficients_match(x + exp(2*x), x) == \
+        {'test': True, 'trialset': set([S(1), x, exp(2*x)])}
+    assert _undetermined_coefficients_match(sin(x) + exp(-x), x) == \
+        {'test': True, 'trialset': set([cos(x), sin(x), exp(-x)])}
+    assert _undetermined_coefficients_match(exp(x), x) == \
+        {'test': True, 'trialset': set([exp(x)])}
+    # converted from sin(x)**2
+    assert _undetermined_coefficients_match(S(1)/2 - cos(2*x)/2, x) == \
+    {'test': True, 'trialset': set([S(1), cos(2*x), sin(2*x)])}
+    # converted from exp(2*x)*sin(x)**2
+    assert _undetermined_coefficients_match(exp(2*x)*(S(1)/2 + cos(2*x)/2), x) == \
+        {'test': True, 'trialset': set([exp(2*x)*sin(2*x), cos(2*x)*exp(2*x),
+        exp(2*x)])}
+    assert _undetermined_coefficients_match(2*x + sin(x) + cos(x), x) == \
+        {'test': True, 'trialset': set([S(1), x, cos(x), sin(x)])}
+    # converted from sin(2*x)*sin(x)
+    assert _undetermined_coefficients_match(cos(x)/2 - cos(3*x)/2, x) == \
+        {'test': True, 'trialset': set([cos(x), cos(3*x), sin(x), sin(3*x)])}
 
 
