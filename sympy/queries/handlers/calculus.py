@@ -55,12 +55,40 @@ class AskInfinitesimalHandler(CommonHandler):
 
 class AskBoundedHandler(CommonHandler):
     """
-    Handler for key 'bounded'
-    Test that an expression is bounded respect to all its variables
+    Handler for key 'bounded'.
+
+    Test that an expression is bounded respect to all its variables.
+
+    Example of usage:
+
+    >>> from sympy import Symbol, Assume
+    >>> from sympy.queries.handlers.calculus import AskBoundedHandler
+    >>> x = Symbol("x")
+    >>> a = AskBoundedHandler()
+    >>> a.Symbol(x, Assume(x, Q.positive))
+    False
+    >>> a.Symbol(x, Assume(x, Q.bounded))
+    True
+
     """
 
     @staticmethod
     def Symbol(expr, assumptions):
+        """
+        Handles Symbol.
+
+        Example:
+
+        >>> from sympy import Symbol, Assume
+        >>> from sympy.queries.handlers.calculus import AskBoundedHandler
+        >>> x = Symbol("x")
+        >>> a = AskBoundedHandler()
+        >>> a.Symbol(x, Assume(x, Q.positive))
+        False
+        >>> a.Symbol(x, Assume(x, Q.bounded))
+        True
+
+        """
         if assumptions is True: return False
         for assump in conjuncts(assumptions):
             if assump.expr == expr and assump.key == 'bounded':
