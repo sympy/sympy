@@ -490,7 +490,8 @@ class Rational(Number):
 
     is_Rational = True
 
-    @Memoizer(type, (int, long, str, 'Integer'), MemoizerArg((int, long, 'Integer', type(None)), name="q"))
+    @Memoizer(type, (int, long, str, 'Integer'),
+              MemoizerArg((int, long, 'Integer', type(None)), name="q"))
     def __new__(cls, p, q = None):
         if q is None:
             if isinstance(p, str):
@@ -614,6 +615,9 @@ class Rational(Number):
 
     def _as_mpf_val(self, prec):
         return mlib.from_rational(self.p, self.q, prec, rnd)
+
+    def _mpmath_(self, prec, rnd):
+        return mpmath.make_mpf(mlib.from_rational(self.p, self.q, prec, rnd))
 
     def __abs__(self):
         return Rational(abs(self.p), self.q)
@@ -771,6 +775,9 @@ class Integer(Rational):
 
     def _as_mpf_val(self, prec):
         return mlib.from_int(self.p)
+
+    def _mpmath_(self, prec, rnd):
+        return mpmath.make_mpf(self._as_mpf_val(prec))
 
     # TODO caching with decorator, but not to degrade performance
     @int_trace

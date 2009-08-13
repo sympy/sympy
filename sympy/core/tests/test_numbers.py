@@ -4,6 +4,7 @@ from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex
 from sympy.utilities.pytest import raises
+from sympy import mpmath
 
 def test_mod():
     x = Rational(1, 2)
@@ -437,4 +438,9 @@ def test_issue1512():
     assert (Catalan+x).evalf() == Catalan.evalf()+x
     assert (EulerGamma+x).evalf() == EulerGamma.evalf()+x
     assert (GoldenRatio+x).evalf() == GoldenRatio.evalf()+x
+
+def test_conversion_to_mpmath():
+    assert mpmath.mpmathify(Integer(1)) == mpmath.mpf(1)
+    assert mpmath.mpmathify(Rational(1, 2)) == mpmath.mpf(0.5)
+    assert mpmath.mpmathify(Real('1.23')) == mpmath.mpf('1.23')
 
