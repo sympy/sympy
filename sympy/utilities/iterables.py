@@ -236,7 +236,7 @@ def variations(seq, n, repetition=False):
         cartesmodus = 'triple'
     return [[seq[index] for index in indices] for indices in result]
 
-def numbered_symbols(prefix='x', function=Symbol, start=0, **assumptions):
+def numbered_symbols(prefix='x', function=Symbol, start=0, *args, **assumptions):
     """ Generate an infinite stream of Symbols consisting of a prefix and
     increasing subscripts.
 
@@ -246,6 +246,13 @@ def numbered_symbols(prefix='x', function=Symbol, start=0, **assumptions):
         The prefix to use. By default, this function will generate symbols of
         the form "x0", "x1", etc.
 
+    function : function, optional
+        The function to use. By default, it uses Symbol, but you can also use
+        Wild.
+
+    start : int, optional
+        The start number.  By default, it is 0.
+
     Yields
     ------
     sym : Symbol
@@ -253,5 +260,5 @@ def numbered_symbols(prefix='x', function=Symbol, start=0, **assumptions):
     """
     while True:
         name = '%s%s' % (prefix, start)
-        yield function(name, **assumptions)
+        yield function(name, *args, **assumptions)
         start += 1
