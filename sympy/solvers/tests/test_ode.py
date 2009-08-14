@@ -68,16 +68,16 @@ def checksol(eq, func, sol, order):
             # Thanks to Chris Smith for suggesting this method.  Many of the
             # comments below are his too.
             # TODO: Try expanding nth order, using the following:
-            # - Take each of nth derivatives of the solution.
-            # - Solve each nth derivative for d^n(f)/dx^n
+            # - Take each of 1..n derivatives of the solution.
+            # - Solve each nth derivative for d^n(f)/dx^n (the differential of that order)
             # - Back substitute into the ode in decreasing order (i.e., n, n-1, ...)
-            # - Check result for zero equivalence
+            # - Check the result for zero equivalence
             if order != 1:
                 testnum += 1
                 continue
             ds = sol.lhs.diff(x) - sol.rhs.diff(x)
             # This is what the solution says df/dx should be.
-            # Differentiation is linear, so there should always be 1 solution.
+            # Differentiation is a linear operator, so there should always be 1 solution.
             sdf = solve(ds,func.diff(x))
             if sdf:
                 sdf = sdf[0]
@@ -633,49 +633,6 @@ def test_nth_linear_constant_coeff_homogeneous_RootOf_sol():
     assert str(sol) == solstr # str(sol) fails
     assert checksol(eq, f(x), sol, 5)
 
-def test_Liouville_ODE():
-    # First part used to be test_ODE_1() from test_solvers.py
-    eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
-    eq1a = diff(x*exp(-f(x)), x, x)
-    eq2 = (eq1*exp(-f(x))/exp(f(x))).expand() # see test_unexpanded_Liouville_ODE() below
-    eq3 = diff(f(x), x, x) + 1/f(x)*(diff(f(x), x))**2 + 1/x*diff(f(x), x)
-    eq4 = x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2 + x*diff(f(x), x)
-    eq5 = Eq((x*exp(f(x))).diff(x, x), 0)
-    sol1 = Eq(C1 + C2/x - exp(-f(x)), 0)
-    # If solve() is ever improved, this is a better solution
-    sol1a = Eq(f(x), -log((C1*x+C2)/x))
-    sol2 = Eq(C1 + C2/x - exp(-f(x)), 0) # This is equivalent to sol1
-    sol3 = [Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))]
-    sol4 = [Eq(f(x), sqrt(C1 + C2*exp(-x))), Eq(f(x), -sqrt(C1 + C2*exp(-x)))]
-    sol5 = Eq(f(x), -log(x) + log(C1 + C2*x))
-    assert dsolve(eq1, f(x)) == sol1
-    assert dsolve(eq1a, f(x)) == sol1
-    assert dsolve(eq2, f(x)) == sol2
-    assert dsolve(eq3, f(x)) == sol3
-    assert dsolve(eq4, f(x)) == sol4
-    assert dsolve(eq5, f(x)) == sol5
-    assert checksol(sol1, f(x), sol1a, 2)
-    assert checksol(eq1, f(x), sol1a, 2)
-    assert checksol(eq1a, f(x), sol1a, 2)
-    assert checksol(sol2, f(x), sol1a, 2)
-    assert checksol(eq2, f(x), sol1a, 2)
-    assert checksol(eq3, f(x), sol3[0], 2)
-    assert checksol(eq3, f(x), sol3[1], 2)
-    assert checksol(eq4, f(x), sol4[0], 2)
-    assert checksol(eq4, f(x), sol4[1], 2)
-    assert checksol(eq5, f(x), sol5, 2)
-
-@XFAIL
-def test_unexpanded_Liouville_ODE():
-    # This fails because collect() collecting of derivatives is not good enough
-    # for classify_ode to call expand_mul on expressions.
-    # It is the same as from test_Liouville_ODE() above.
-    eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
-    eq2 = eq1*exp(-f(x))/exp(f(x)).expand()
-    sol2 = Eq(f(x), -log(C1 + C2/x))
-    assert dsolve(eq2, f(x)) == sol2
-    assert checksol(eq2, f(x), sol2, 2)
-
 def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(sin(2*x + sqrt(5)), x) == \
         {'test': True, 'trialset': set([cos(2*x + sqrt(5)), sin(2*x + sqrt(5))])}
@@ -768,4 +725,185 @@ def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(cos(x)/2 - cos(3*x)/2, x) == \
         {'test': True, 'trialset': set([cos(x), cos(3*x), sin(x), sin(3*x)])}
 
+def test_nth_linear_constant_coeff_undetermined_coefficients():
+    hint = 'nth_linear_constant_coeff_undetermined_coefficients'
+    eq1 = 3*f(x).diff(x, 3) + 5*f(x).diff(x, 2) + f(x).diff(x) - f(x) - x*exp(-x) - x
+    eq2 = 3*f(x).diff(x, 3) + 5*f(x).diff(x, 2) + f(x).diff(x) - f(x) - exp(-x) - x
+    # 3-27 below are from Ordinary Differential Equations, Tenenbaum and Pollard, pg. 231
+    eq3 = f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4
+    eq4 = f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 12*exp(x)
+    eq5 = f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - exp(I*x)
+    eq6 = f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - sin(x)
+    eq7 = f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - cos(x)
+    eq8 = f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - (8 + 6*exp(x) + 2*sin(x))
+    eq9 = f(x).diff(x, 2) + f(x).diff(x) + f(x) - x**2
+    eq10 = f(x).diff(x, 2) - 2*f(x).diff(x) - 8*f(x) - 9*x*exp(x) - 10*exp(-x)
+    eq11 = f(x).diff(x, 2) - 3*f(x).diff(x) - 2*exp(2*x)*sin(x)
+    eq12 = f(x).diff(x, 4) - 2*f(x).diff(x, 2) + f(x) - x + sin(x)# Skip eq12 for now, match bug
+    eq13 = f(x).diff(x, 2) + f(x).diff(x) - x**2 + 2*x # Skip eq13 for now, match bug
+    eq14 = f(x).diff(x, 2) + f(x).diff(x) - x - sin(2*x) # Skip eq14 for now, match bug
+    eq15 = f(x).diff(x, 2) + f(x) - 4*x*sin(x)
+    eq16 = f(x).diff(x, 2) + 4*f(x) - x*sin(2*x)
+    eq17 = f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) - x**2*exp(-x)
+    eq18 = f(x).diff(x, 3) + 3*f(x).diff(x, 2) + 3*f(x).diff(x) + f(x) - 2*exp(-x) + x**2*exp(-x)
+    eq19 = f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - exp(-2*x) - x**2
+    eq20 = f(x).diff(x, 2) - 3*f(x).diff(x) + 2*f(x) - x*exp(-x)
+    eq21 = f(x).diff(x, 2) + f(x).diff(x) - 6*f(x) - x - exp(2*x)
+    eq22 = f(x).diff(x, 2) + f(x) - sin(x) - exp(-x) # Skip eq22 for now, match bug
+    eq23 = f(x).diff(x, 3) - 3*f(x).diff(x, 2) + 3*f(x).diff(x) - f(x) - exp(x)
+    eq24 = f(x).diff(x, 2) + f(x) - S(1)/2 - cos(2*x)/2 # sin(x)**2, skip eq24 for now, match bug
+    eq25 = f(x).diff(x, 3) - f(x).diff(x) - exp(2*x)*(S(1)/2 - cos(2*x)/2) # exp(2*x)*sin(x)**2
+    eq26 = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - sin(x) - cos(x) # skip eq26 for now, match bug
+    eq26a = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - exp(I*x) # skip eq26a for now, match bug
+    eq27 = f(x).diff(x, 2) + f(x) - cos(x)/2 + cos(3*x)/2 # sin(2*x)*sin(x), skip 3127 for now, match bug
+    eq28 = f(x).diff(x) - 1
+    sol1 = Eq(f(x), -1 - x + (C1 + C2*x - 3*x**2/32 - x**3/24)*exp(-x) + C3*exp(x/3))
+    sol2 = Eq(f(x), -1 - x + (C1 + C2*x - x**2/8)*exp(-x) + C3*exp(x/3))
+    sol3 = Eq(f(x), 2 + C1*exp(-x) + C2*exp(-2*x))
+    sol4 = Eq(f(x), 2*exp(x) + C1*exp(-x) + C2*exp(-2*x))
+    sol5 = Eq(f(x), C1*exp(-x) + C2*exp(-2*x) + exp(I*x)/10 - 3*I*exp(I*x)/10)
+    sol6 = Eq(f(x), -3*cos(x)/10 + sin(x)/10 + C1*exp(-x) + C2*exp(-2*x))
+    sol7 = Eq(f(x), cos(x)/10 + 3*sin(x)/10 + C1*exp(-x) + C2*exp(-2*x))
+    sol8 = Eq(f(x), 4 - 3*cos(x)/5 + sin(x)/5 + exp(x) + C1*exp(-x) + C2*exp(-2*x))
+    sol9 = Eq(f(x), -2*x + x**2 + (C1*sin(x*sqrt(3)/2) + C2*cos(x*sqrt(3)/2))*exp(-x/2))
+    sol10 = Eq(f(x), -x*exp(x) - 2*exp(-x) + C1*exp(-2*x) + C2*exp(4*x))
+    sol11 = Eq(f(x), C1 + (-3*sin(x)/5 - cos(x)/5)*exp(2*x) + C2*exp(3*x))
+
+    sol15 = Eq(f(x), (C1 + x)*sin(x) + (C2 - x**2)*cos(x))
+    sol16 = Eq(f(x), (C1 + x/16)*sin(2*x) + (C2 - x**2/8)*cos(2*x))
+    sol17 = Eq(f(x), (C1 + C2*x + x**4/12)*exp(-x))
+    sol18 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/3 - x**5/60)*exp(-x))
+    sol19 = Eq(f(x), S(7)/4 - 3*x/2 + x**2/2 + C1*exp(-x) + (C2 - x)*exp(-2*x))
+    sol20 = Eq(f(x), C1*exp(x) + (S(5)/36 + x/6)*exp(-x) + C2*exp(2*x))
+    sol21 = Eq(f(x), -S(1)/36 - x/6 + C1*exp(-3*x) + (C2 + x/5)*exp(2*x))
+
+    sol23 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
+
+    sol25 = Eq(f(x), C1 + C2*exp(x) + C3*exp(-x) + (S(1)/12 - 7*sin(2*x)/520 + \
+        9*cos(2*x)/520)*exp(2*x))
+
+    sol28 = Eq(f(x), C1 + x)
+    assert dsolve(eq1, f(x), hint=hint) == sol1
+    assert dsolve(eq2, f(x), hint=hint) == sol2
+    assert dsolve(eq3, f(x), hint=hint) == sol3
+    assert dsolve(eq4, f(x), hint=hint) == sol4
+    assert dsolve(eq5, f(x), hint=hint) == sol5
+    assert dsolve(eq6, f(x), hint=hint) == sol6
+    assert dsolve(eq7, f(x), hint=hint) == sol7
+    assert dsolve(eq8, f(x), hint=hint) == sol8
+    assert dsolve(eq9, f(x), hint=hint) == sol9
+    assert dsolve(eq10, f(x), hint=hint) == sol10
+    assert dsolve(eq11, f(x), hint=hint) == sol11
+#    assert dsolve(eq12, f(x), hint=hint) == sol12
+#    assert dsolve(eq13, f(x), hint=hint) == sol13
+#    assert dsolve(eq14, f(x), hint=hint) == sol14
+    assert dsolve(eq15, f(x), hint=hint) == sol15
+    assert dsolve(eq16, f(x), hint=hint) == sol16
+    assert dsolve(eq17, f(x), hint=hint) == sol17
+    assert dsolve(eq18, f(x), hint=hint) == sol18
+    assert dsolve(eq19, f(x), hint=hint) == sol19
+    assert dsolve(eq20, f(x), hint=hint) == sol20
+    assert dsolve(eq21, f(x), hint=hint) == sol21
+#    assert dsolve(eq22, f(x), hint=hint) == sol22
+    assert dsolve(eq23, f(x), hint=hint) == sol23
+#    assert dsolve(eq24, f(x), hint=hint) == sol24
+    assert dsolve(eq25, f(x), hint=hint) == sol25
+#    assert dsolve(eq26, f(x), hint=hint) == sol26
+#    assert dsolve(eq27, f(x), hint=hint) == sol27
+    assert dsolve(eq28, f(x), hint=hint) == sol28
+    assert checksol(eq1, f(x), sol1, 3)
+    assert checksol(eq2, f(x), sol2, 3)
+    assert checksol(eq3, f(x), sol3, 2)
+    assert checksol(eq4, f(x), sol4, 2)
+    assert checksol(eq5, f(x), sol5, 2)
+    assert checksol(eq6, f(x), sol6, 2)
+    assert checksol(eq7, f(x), sol7, 2)
+    assert checksol(eq8, f(x), sol8, 2)
+    assert checksol(eq9, f(x), sol9, 2)
+    assert checksol(eq10, f(x), sol10, 2)
+    assert checksol(eq11, f(x), sol11, 2)
+
+    assert checksol(eq19, f(x), sol19, 2)
+
+    assert checksol(eq28, f(x), sol28, 1)
+
+
+# TODO: Add more varation of parameters tests
+# Including Integral tests
+def test_nth_linear_constant_coeff_variation_of_parameters():
+    hint = 'nth_linear_constant_coeff_variation_of_parameters'
+    eq1 = 3*f(x).diff(x, 3) + 5*f(x).diff(x, 2) + f(x).diff(x) - f(x) - x*exp(-x) - x
+    eq2 = 3*f(x).diff(x, 3) + 5*f(x).diff(x, 2) + f(x).diff(x) - f(x) - exp(-x) - x
+    eq3 = f(x).diff(x) - 1
+    eq4 = f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4
+    eq5 = f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 12*exp(x)
+    eq6 = f(x).diff(x, 2) - 2*f(x).diff(x) - 8*f(x) - 9*x*exp(x) - 10*exp(-x)
+    eq7 = f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) - x**2*exp(-x)
+    eq8 = f(x).diff(x, 2) - 3*f(x).diff(x) + 2*f(x) - x*exp(-x)
+    eq9 = f(x).diff(x, 3) - 3*f(x).diff(x, 2) + 3*f(x).diff(x) - f(x) - exp(x)
+
+    sol1 = Eq(f(x), -1 - x - (C1 + C2*x + 3*x**2/32 + x**3/24)*exp(-x) + C3*exp(x/3))
+    sol2 = Eq(f(x), -1 - x - (C1 + C2*x + x**2/8)*exp(-x) + C3*exp(x/3))
+    sol3 = Eq(f(x), C1 + x)
+    sol4 = Eq(f(x), 2 + C1*exp(-x) + C2*exp(-2*x))
+    sol5 = Eq(f(x), 2*exp(x) + C1*exp(-x) + C2*exp(-2*x))
+    sol6 = Eq(f(x), -x*exp(x) - 2*exp(-x) + C1*exp(-2*x) + C2*exp(4*x))
+    sol7 = Eq(f(x), (C1 + C2*x + x**4/12)*exp(-x))
+    sol8 = Eq(f(x), C1*exp(x) + (S(5)/36 + x/6)*exp(-x) + C2*exp(2*x))
+    sol9 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
+
+    assert dsolve(eq1, f(x), hint=hint) == sol1
+    assert dsolve(eq2, f(x), hint=hint) == sol2
+    assert dsolve(eq3, f(x), hint=hint) == sol3
+    assert dsolve(eq4, f(x), hint=hint) == sol4
+    assert dsolve(eq5, f(x), hint=hint) == sol5
+
+
+    assert checksol(eq1, f(x), sol1, 3)
+    assert checksol(eq2, f(x), sol2, 3)
+    assert checksol(eq3, f(x), sol3, 1)
+
+
+def test_Liouville_ODE():
+    # First part used to be test_ODE_1() from test_solvers.py
+    eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
+    eq1a = diff(x*exp(-f(x)), x, x)
+    eq2 = (eq1*exp(-f(x))/exp(f(x))).expand() # see test_unexpanded_Liouville_ODE() below
+    eq3 = diff(f(x), x, x) + 1/f(x)*(diff(f(x), x))**2 + 1/x*diff(f(x), x)
+    eq4 = x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2 + x*diff(f(x), x)
+    eq5 = Eq((x*exp(f(x))).diff(x, x), 0)
+    sol1 = Eq(C1 + C2/x - exp(-f(x)), 0)
+    # If solve() is ever improved, this is a better solution
+    sol1a = Eq(f(x), -log((C1*x+C2)/x))
+    sol2 = Eq(C1 + C2/x - exp(-f(x)), 0) # This is equivalent to sol1
+    sol3 = [Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))]
+    sol4 = [Eq(f(x), sqrt(C1 + C2*exp(-x))), Eq(f(x), -sqrt(C1 + C2*exp(-x)))]
+    sol5 = Eq(f(x), -log(x) + log(C1 + C2*x))
+    assert dsolve(eq1, f(x)) == sol1
+    assert dsolve(eq1a, f(x)) == sol1
+    assert dsolve(eq2, f(x)) == sol2
+    assert dsolve(eq3, f(x)) == sol3
+    assert dsolve(eq4, f(x)) == sol4
+    assert dsolve(eq5, f(x)) == sol5
+    assert checksol(sol1, f(x), sol1a, 2)
+    assert checksol(eq1, f(x), sol1a, 2)
+    assert checksol(eq1a, f(x), sol1a, 2)
+    assert checksol(sol2, f(x), sol1a, 2)
+    assert checksol(eq2, f(x), sol1a, 2)
+    assert checksol(eq3, f(x), sol3[0], 2)
+    assert checksol(eq3, f(x), sol3[1], 2)
+    assert checksol(eq4, f(x), sol4[0], 2)
+    assert checksol(eq4, f(x), sol4[1], 2)
+    assert checksol(eq5, f(x), sol5, 2)
+
+@XFAIL
+def test_unexpanded_Liouville_ODE():
+    # This fails because collect() collecting of derivatives is not good enough
+    # for classify_ode to call expand_mul on expressions.
+    # It is the same as from test_Liouville_ODE() above.
+    eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
+    eq2 = eq1*exp(-f(x))/exp(f(x)).expand()
+    sol2 = Eq(f(x), -log(C1 + C2/x))
+    assert dsolve(eq2, f(x)) == sol2
+    assert checksol(eq2, f(x), sol2, 2)
 

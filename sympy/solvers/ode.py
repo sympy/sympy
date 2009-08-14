@@ -40,11 +40,11 @@ allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli",
 "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
 "1st_homogeneous_coeff_subs_dep_div_indep", "nth_linear_constant_coeff_homogeneous",
 "nth_linear_constant_coeff_undetermined_coefficients",
-"nth_linear_constant_coeff_variation_of_paramters",
+"nth_linear_constant_coeff_variation_of_parameters",
 "Liouville", "separable_Integral", "1st_exact_Integral", "1st_linear_Integral",
 "Bernoulli_Integral", "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
 "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
-"nth_linear_constant_coeff_variation_of_paramters_Integral",
+"nth_linear_constant_coeff_variation_of_parameters_Integral",
 "Liouville_Integral")
 
 
@@ -252,7 +252,7 @@ def classify_ode(eq, func, dict=False):
     from sympy.core import S
     from sympy.utilities import all
     if len(func.args) != 1:
-        raise ValueError("dsolve() and classify_ode() only with functions " + \
+        raise ValueError("dsolve() and classify_ode() only work with functions " + \
             "of one variable")
     x = func.args[0]
     f = func.func
@@ -358,15 +358,19 @@ def classify_ode(eq, func, dict=False):
     s += b
 
     r = eq.match(s)
+
     if r and all([not r[i].has(x) for i in wilds]):
         for i in wilds:
             r[str(i)] = i
             r['b'] = b
         # Inhomogeneous case: F(x) is not identically 0
         if r[b]:
-#            matching_hints["nth_linear_constant_coeff_undetermined_coefficients"] = r
-            matching_hints["nth_linear_constant_coeff_variation_of_paramters"] = r
-            matching_hints["nth_linear_constant_coeff_variation_of_paramters_Integral"] = r
+            undetcoeff = _undetermined_coefficients_match(r[b], x)
+            matching_hints["nth_linear_constant_coeff_variation_of_parameters"] = r
+            matching_hints["nth_linear_constant_coeff_variation_of_parameters_Integral"] = r
+            if undetcoeff['test']:
+                r['trialset'] = undetcoeff['trialset']
+                matching_hints["nth_linear_constant_coeff_undetermined_coefficients"] = r
         # Homogeneous case: F(x) is identically 0
         else:
             matching_hints["nth_linear_constant_coeff_homogeneous"] = r
@@ -478,6 +482,21 @@ def odesimp(eq, func, order, hint=None):
                 eq = neweq
             if len(eq) == 1:
                 eq = eq[0] # We only want a list if there are multiple solutions
+
+    if hint[:25] == "nth_linear_constant_coeff":
+        # Collect termms to make the solution look nice.
+        # This is also necessary for constantsimp to remove unnecessary terms
+        # from the particular solution from variation of parameters
+        global collectterms
+        sol = eq.rhs
+        sol = expand_mul(sol, deep=False)
+        for i, reroot, imroot in collectterms:
+            sol = collect(sol, x**i*exp(reroot*x)*sin(abs(imroot)*x))
+            sol = collect(sol, x**i*exp(reroot*x)*cos(imroot*x))
+        for i, reroot, imroot in collectterms:
+            sol = collect(sol, x**i*exp(reroot*x))
+        del collectterms
+        eq = Eq(f(x), sol)
 
     # We cleaned up the costants before solving to help the solve engine with
     # a simpler expression, but the solved expression could have introduced
@@ -912,7 +931,83 @@ def ode_Liouville(eq, func, order, match):
 
 def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, match):
     # TODO: implement undetermined coefficients
-    return
+    x = func.args[0]
+    f = func.func
+    r = match
+    coeffs = numbered_symbols('a', dummy=True)
+    coefflist = []
+    gensol = ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
+        returns='both')
+    gensols = gensol['list']
+    gsol = gensol['sol']
+    trialset = r['trialset']
+    notneedset = set([])
+    newtrialset = set([])
+    global collectterms
+    issin = True
+    mult = 0 # The multiplicity of the root
+    getmult = True
+    for i, reroot, imroot in collectterms:
+        if getmult:
+            mult = i + 1
+            getmult = False
+        if i == 0:
+            getmult = True
+        if imroot:
+            if issin:
+                check = x**i*exp(reroot*x)*sin(abs(imroot)*x)
+            else:
+                check = x**i*exp(reroot*x)*cos(imroot*x)
+            issin ^= True # Alternate between sin and cos
+        else:
+            check = x**i*exp(reroot*x)
+
+        if check in trialset:
+            # If an element of the trial function is already part of the homogeneous
+            # solution, we need to multiply by sufficient x to make it linearly
+            # independent.  We also don't need to bother checking for the coefficients
+            # on those elements, since we already know it will be 0.
+            while True:
+                if check*x**mult in trialset:
+                    mult += 1
+                else:
+                    break
+            trialset.add(check*x**mult)
+            notneedset.add(check)
+
+    newtrialset = trialset - notneedset
+
+    trialfunc = 0
+    for i in newtrialset:
+        c = coeffs.next()
+        coefflist.append(c)
+        trialfunc += c*i
+
+    eqs = eq.subs(f(x), trialfunc)
+    coeffsdict = dict(zip(trialset, [0 for i in range(len(trialset) + 1)]))
+    if eqs.is_Add:
+        eqs = expand_mul(eqs)
+        for i in eqs.args:
+            s = separatevars(i, dict=True, symbols=[x])
+            if coeffsdict.has_key(s[x]):
+                coeffsdict[s[x]] += s['coeff']
+            else:
+                # We removed that term above because we already know its coeff
+                # will be 0
+                pass
+    else:
+        s = separatevars(eqs, dict=True, symbols=[x])
+        coeffsdict[s[x]] += s['coeff']
+
+    coeffvals = solve(coeffsdict.values(), coefflist)
+
+    if not coeffvals:
+        raise NotImplementedError("Could not solve " + str(eq) + " using the " + \
+            " method of undetermined coefficients (unable to solve for coefficients).")
+
+    psol = trialfunc.subs(coeffvals)
+
+    return Eq(f(x), gsol.rhs + psol)
 
 def _undetermined_coefficients_match(expr, x):
     """
@@ -922,7 +1017,8 @@ def _undetermined_coefficients_match(expr, x):
     An trial expression can be found for an expression for use with the method of
     undetermined coefficients if the expression is an additive/multiplicative
     combination of polynomials in x (the independent variable of expr),
-    sin(a*x + b), cos(a*x + b), and exp(a*x) terms.
+    sin(a*x + b), cos(a*x + b), and exp(a*x) terms (in otherwords, it has a
+    finite number of linearlly independent derivatives).
 
     Note that you may still need to multiply each term returned here by
     sufficient x to make it linearly independent with the solutions to the
@@ -931,10 +1027,9 @@ def _undetermined_coefficients_match(expr, x):
     This is intended for internal use by undetermined_coefficients hints.
 
     SymPy currently has no way to convert sin(x)**n*cos(y)**m into a sum of only
-    sin(a*x) and cos(b*x) terms, so these are not
-    implemented.  So, for example, you will need to manually convert sin(x)**2
-    into (1 + cos(2*x))/2 to properly apply the method of undetermined
-    coefficients on it.
+    sin(a*x) and cos(b*x) terms, so these are not implemented.  So, for example,
+    you will need to manually convert sin(x)**2 into (1 + cos(2*x))/2 to properly
+    apply the method of undetermined coefficients on it.
     """
     # TODO: write examples
     from sympy import S
@@ -984,7 +1079,7 @@ def _undetermined_coefficients_match(expr, x):
         """
         Return a set of trial terms for undetermined coefficients.
 
-        The idea behing undetermined coefficients is that the terms expression
+        The idea behind undetermined coefficients is that the terms expression
         repeat themselves after a finite number of derivatives, except for the
         coefficients.  So if we collect these, we should have the terms of our
         trial function.
@@ -1045,7 +1140,7 @@ def _undetermined_coefficients_match(expr, x):
 
     return retdict
 
-def ode_nth_linear_constant_coeff_variation_of_paramters(eq, func, order, match):
+def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match):
     x = func.args[0]
     f = func.func
     r = match
@@ -1091,6 +1186,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     returns = 'both', return a dictionary {'sol':solution to ODE, 'list': list
     of linearly independent solutions}.
     """
+    #TODO: finish nth linear homogeneous docstring
     from sympy.core.basic import S
     x = func.args[0]
     f = func.func
@@ -1129,13 +1225,11 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     gsol = S(0)
     # We need keep track of terms so we can run collect() at the end.
     # This is necessary for constantsimp to work properly.
+    global collectterms
     collectterms = []
     for root, multiplicity in charroots.items():
         for i in range(multiplicity):
             if isinstance(root, RootOf):
-                # re and im do not work with RootOf, so the work around is
-                # to put solution in non (complex) expanded form.
-                # See issue 1563.
                 gsol += exp(root*x)*constants.next()
                 assert multiplicity == 1
                 collectterms = [(0, root, 0)] + collectterms
@@ -1144,13 +1238,8 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
                 imroot = im(root)
                 gsol += x**i*exp(reroot*x)*(constants.next()*sin(abs(imroot)*x) \
                 + constants.next()*cos(imroot*x))
+                # This ordering is important
                 collectterms = [(i, reroot, imroot)] + collectterms
-    gsol = expand_mul(gsol, deep=False)
-    for i, reroot, imroot in collectterms:
-        gsol = collect(gsol, x**i*exp(reroot*x)*sin(abs(imroot)*x))
-        gsol = collect(gsol, x**i*exp(reroot*x)*cos(imroot*x))
-    for i, reroot, imroot in collectterms:
-        gsol = collect(gsol, x**i*exp(reroot*x))
     if returns == 'sol':
         return Eq(f(x), gsol)
     elif returns == 'list' or returns == 'both':
@@ -1163,7 +1252,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
                 gensols.append(x**i*exp(reroot*x))
             else:
                 if x**i*exp(reroot*x)*sin(abs(imroot)*x) in gensols:
-                    gensols.append(x**i*exp(reroot)*cos(imroot*x))
+                    gensols.append(x**i*exp(reroot*x)*cos(imroot*x))
                 else:
                     gensols.append(x**i*exp(reroot*x)*sin(abs(imroot)*x))
         if returns == 'list':
@@ -1171,7 +1260,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
         else:
             return {'sol':Eq(f(x), gsol), 'list':gensols}
     else:
-        raise ValueError('Unknown value for key "returns"')
+        raise ValueError('Unknown value for key "returns".')
 
 def ode_separable(eq, func, order, match):
     x = func.args[0]
