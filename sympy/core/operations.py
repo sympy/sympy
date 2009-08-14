@@ -91,6 +91,57 @@ class AssocOp(Basic):
     _eval_subs = Basic._seq_subs
 
     def _matches_commutative(pattern, expr, repl_dict={}, evaluate=False):
+        """
+        Matches Add/Mul "pattern" to an expression "expr".
+
+        repl_dict ... a dictionary of (wild: expression) pairs, that get
+                      returned with the results
+        evaluate .... if True, then repl_dict is first substituted into the
+                      pattern, and then _matches_commutative is run
+
+        This function is the main workhorse for Add/Mul.
+
+        For instance:
+
+        >>> from sympy import symbols, Wild, sin
+        >>> a = Wild("a")
+        >>> b = Wild("b")
+        >>> c = Wild("c")
+        >>> x, y, z = symbols("x y z")
+        >>> (a+b*c)._matches_commutative(x+y*z)
+        {a_: x, b_: y, c_: z}
+
+        In the example above, "a+b*c" is the pattern, and "x+y*z" is the
+        expression. Some more examples:
+
+        >>> (a+b*c)._matches_commutative(sin(x)+y*z)
+        {a_: sin(x), b_: y, c_: z}
+        >>> (a+sin(b)*c)._matches_commutative(x+sin(y)*z)
+        {a_: x, b_: y, c_: z}
+
+        The repl_dict contains parts, that were already matched, and the
+        "evaluate=True" kwarg tells _matches_commutative to substitute this
+        repl_dict into pattern. For example here:
+
+        >>> (a+b*c)._matches_commutative(x+y*z, repl_dict={a: x}, evaluate=True)
+        {a_: x, b_: y, c_: z}
+
+        _matches_commutative substitutes "x" for "a" in the pattern and calls
+        itself again with the new pattern "x+b*c" and evaluate=False (default):
+
+        >>> (x+b*c)._matches_commutative(x+y*z, repl_dict={a: x})
+        {a_: x, b_: y, c_: z}
+
+        the only function of the repl_dict now is just to return it in the
+        result, e.g. if you omit it:
+
+        >>> (x+b*c)._matches_commutative(x+y*z)
+        {b_: y, c_: z}
+
+        the "a: x" is not returned in the result, but otherwise it is
+        equivalent.
+
+        """
         # apply repl_dict to pattern to eliminate fixed wild parts
         if evaluate:
             pat = pattern
