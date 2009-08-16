@@ -10,6 +10,67 @@ from sympy.polys.polyerrors import (
     ExactQuotientFailed,
 )
 
+def gf_crt(U, M, K):
+    """Chinese Remainder Theorem.
+
+       Given a set of integer residues `u_0,...,u_n` and a set of
+       co-prime integer moduli `m_0,...,m_n`, returns an integer
+       `u`, such that `u = u_i mod m_i` for `i = `0,...,n`.
+
+       As an example consider a set of residues `U = [49, 76, 65]`
+       and a set of moduli `M = [99, 97, 95]`. Then we have::
+
+           >>> from sympy.polys.algebratools import ZZ
+
+           >>> gf_crt([49, 76, 65], [99, 97, 95], ZZ)
+           639985
+
+       This is correct result because::
+
+           >>> 639985 % 99
+           49
+
+           >>> 639985 % 97
+           76
+
+           >>> 639985 % 95
+           65
+
+    """
+    p, v = K.one, K.zero
+
+    for m in M:
+        p *= m
+
+    for u, m in zip(U, M):
+        e = p // m
+        s, _, _ = K.gcdex(e, m)
+        v += e*(u*s % m)
+
+    return v % p
+
+def gf_crt1(M, K):
+    """First part of Chines Remainder Theorem. """
+    p, E, S = K.one, [], []
+
+    for m in M:
+        p *= m
+
+    for m in M:
+        E.append(p // m)
+        S.append(K.gcdex(E[-1], m)[0])
+
+    return p, E, S
+
+def gf_crt2(U, M, p, E, S, K):
+    """Second part of Chinese Remainder Theorem. """
+    v = K.zero
+
+    for u, m, e, s in zip(U, M, E, S):
+        v += e*(u*s % m)
+
+    return v % p
+
 def gf_int(a, p):
     """Coerce `a mod p` to an integer in `[-p/2, p/2]` range. """
     if a <= p // 2:

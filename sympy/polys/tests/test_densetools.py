@@ -19,6 +19,9 @@ from sympy.polys.densetools import (
     dmp_eval_tail, dmp_diff_eval_in,
     dup_gcdex, dup_half_gcdex, dup_invert,
     dup_subresultants, dmp_subresultants,
+    dup_prs_resultant, dmp_prs_resultant,
+    dmp_zz_collins_resultant,
+    dmp_qq_collins_resultant,
     dup_resultant, dmp_resultant,
     dup_discriminant, dmp_discriminant,
     dup_rr_prs_gcd, dmp_rr_prs_gcd,
@@ -334,9 +337,18 @@ def test_dup_subresultants():
 
 def test_dmp_subresultants():
     assert dmp_resultant([[]], [[]], 1, ZZ) == []
+    assert dmp_prs_resultant([[]], [[]], 1, ZZ)[0] == []
+    assert dmp_zz_collins_resultant([[]], [[]], 1, ZZ) == []
+    assert dmp_qq_collins_resultant([[]], [[]], 1, ZZ) == []
 
     assert dmp_resultant([[ZZ(1)]], [[]], 1, ZZ) == []
+    assert dmp_resultant([[ZZ(1)]], [[]], 1, ZZ) == []
+    assert dmp_resultant([[ZZ(1)]], [[]], 1, ZZ) == []
+
     assert dmp_resultant([[]], [[ZZ(1)]], 1, ZZ) == []
+    assert dmp_prs_resultant([[]], [[ZZ(1)]], 1, ZZ)[0] == []
+    assert dmp_zz_collins_resultant([[]], [[ZZ(1)]], 1, ZZ) == []
+    assert dmp_qq_collins_resultant([[]], [[ZZ(1)]], 1, ZZ) == []
 
     f = dmp_normal([[3,0],[],[-1,0,0,-4]], 1, ZZ)
     g = dmp_normal([[1],[1,0,0,0],[-9]], 1, ZZ)
@@ -344,8 +356,14 @@ def test_dmp_subresultants():
     a = dmp_normal([[3,0,0,0,0],[1,0,-27,4]], 1, ZZ)
     b = dmp_normal([[-3,0,0,-12,1,0,-54,8,729,-216,16]], 1, ZZ)
 
+    r = dmp_LC(b, ZZ)
+
     assert dmp_subresultants(f, g, 1, ZZ) == [f, g, a, b]
-    assert dmp_resultant(f, g, 1, ZZ) == dmp_LC(b, ZZ)
+
+    assert dmp_resultant(f, g, 1, ZZ) == r
+    assert dmp_prs_resultant(f, g, 1, ZZ)[0] == r
+    assert dmp_zz_collins_resultant(f, g, 1, ZZ) == r
+    assert dmp_qq_collins_resultant(f, g, 1, ZZ) == r
 
     f = dmp_normal([[-1],[],[],[5]], 1, ZZ)
     g = dmp_normal([[3,1],[],[]], 1, ZZ)
@@ -353,17 +371,42 @@ def test_dmp_subresultants():
     a = dmp_normal([[45,30,5]], 1, ZZ)
     b = dmp_normal([[675,675,225,25]], 1, ZZ)
 
+    r = dmp_LC(b, ZZ)
+
     assert dmp_subresultants(f, g, 1, ZZ) == [f, g, a]
-    assert dmp_resultant(f, g, 1, ZZ) == dmp_LC(b, ZZ)
+    assert dmp_resultant(f, g, 1, ZZ) == r
+    assert dmp_prs_resultant(f, g, 1, ZZ)[0] == r
+    assert dmp_zz_collins_resultant(f, g, 1, ZZ) == r
+    assert dmp_qq_collins_resultant(f, g, 1, ZZ) == r
+
+    f = [[[[[6]]]], [[[[-3]]], [[[-2]], [[]]]], [[[[1]], [[]]], [[[]]]]]
+    g = [[[[[1]]]], [[[[-1], [-1, 0]]]], [[[[1, 0], []]]]]
+
+    r = [[[[1]], [[-3], [-3, 0]], [[9, 0], []]], [[[-2], [-2, 0]], [[6],
+         [12, 0], [6, 0, 0]], [[-18, 0], [-18, 0, 0], []]], [[[4, 0],
+         []], [[-12, 0], [-12, 0, 0], []], [[36, 0, 0], [], []]]]
+
+    assert dmp_zz_collins_resultant(f, g, 4, ZZ) == r
+
+    f = [[[[[QQ(1,1)]]]], [[[[QQ(-1,2)]]], [[[QQ(-1,3)]], [[]]]], [[[[QQ(1,6)]], [[]]], [[[]]]]]
+    g = [[[[[QQ(1,1)]]]], [[[[QQ(-1,1)], [QQ(-1,1), QQ(0, 1)]]]], [[[[QQ(1,1), QQ(0,1)], []]]]]
+
+    r = [[[[QQ(1,36)]], [[QQ(-1,12)], [QQ(-1,12), QQ(0,1)]], [[QQ(1,4), QQ(0,1)], []]],
+         [[[QQ(-1,18)], [QQ(-1,18), QQ(0,1)]], [[QQ(1,6)], [QQ(1,3), QQ(0,1)], [QQ(1,6),
+            QQ(0,1), QQ(0,1)]], [[QQ(-1,2), QQ(0,1)], [QQ(-1,2), QQ(0,1), QQ(0,1)], []]],
+         [[[QQ(1,9), QQ(0,1)], []], [[QQ(-1,3), QQ(0,1)], [QQ(-1,3), QQ(0,1), QQ(0,1)], []],
+          [[QQ(1,1), QQ(0,1), QQ(0,1)], [], []]]]
+
+    assert dmp_qq_collins_resultant(f, g, 4, QQ) == r
 
 def test_dup_discriminant():
-    assert dmp_discriminant([], 0, ZZ) == 0
-    assert dmp_discriminant([1,0], 0, ZZ) == 1
+    assert dup_discriminant([], ZZ) == 0
+    assert dup_discriminant([1,0], ZZ) == 1
 
-    assert dmp_discriminant([1,3,9,-13], 0, ZZ) == -11664
-    assert dmp_discriminant([5,0,1,0,0,2], 0, ZZ) == 31252160
-    assert dmp_discriminant([1,2,6,-22,13], 0, ZZ) == 0
-    assert dmp_discriminant([12,0,0,15,30,1,0,1], 0, ZZ) == -220289699947514112
+    assert dup_discriminant([1,3,9,-13], ZZ) == -11664
+    assert dup_discriminant([5,0,1,0,0,2], ZZ) == 31252160
+    assert dup_discriminant([1,2,6,-22,13], ZZ) == 0
+    assert dup_discriminant([12,0,0,15,30,1,0,1], ZZ) == -220289699947514112
 
 def test_dmp_discriminant():
     assert dmp_discriminant([], 0, ZZ) == 0

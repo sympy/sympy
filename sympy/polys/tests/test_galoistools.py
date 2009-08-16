@@ -1,6 +1,7 @@
 
 from sympy.polys.galoistools import (
-    gf_int, gf_degree, gf_strip, gf_reduce, gf_normal,
+    gf_crt, gf_crt1, gf_crt2, gf_int,
+    gf_degree, gf_strip, gf_reduce, gf_normal,
     gf_from_dict, gf_to_dict,
     gf_from_int_poly, gf_to_int_poly,
     gf_neg, gf_add_ground, gf_sub_ground, gf_mul_ground, gf_exquo_ground,
@@ -29,6 +30,21 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.algebratools import ZZ
 from sympy import pi, nextprime, raises
+
+def test_gf_crt():
+    U = [49, 76, 65]
+    M = [99, 97, 95]
+
+    p = 912285
+    u = 639985
+
+    assert gf_crt(U, M, ZZ) == u
+
+    E = [9215, 9405, 9603]
+    S = [-37, 24, 12]
+
+    assert gf_crt1(M, ZZ) == (p, E, S)
+    assert gf_crt2(U, M, p, E, S, ZZ) == u
 
 def test_gf_int():
     assert gf_int(0, 5) == 0

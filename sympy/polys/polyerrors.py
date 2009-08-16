@@ -15,6 +15,9 @@ class ExactQuotientFailed(Exception):
 class HeuristicGCDFailed(Exception):
     pass
 
+class HomomorphismFailed(Exception):
+    pass
+
 class ExtraneousFactors(Exception):
     pass
 

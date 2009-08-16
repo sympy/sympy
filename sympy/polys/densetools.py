@@ -3,13 +3,14 @@
 from sympy.polys.densebasic import (
     dup_strip, dmp_strip,
     dup_convert, dmp_convert,
-    dup_degree, dmp_degree,
+    dup_degree, dmp_degree, dmp_degree_in,
     dup_LC, dmp_LC, dmp_ground_LC,
     dup_TC, dmp_TC, dmp_ground_TC,
     dmp_zero, dmp_one, dmp_ground,
     dmp_zero_p, dmp_one_p,
     dmp_multi_deflate, dmp_inflate,
     dup_to_raw_dict, dup_from_raw_dict,
+    dmp_raise, dmp_apply_pairs,
     dmp_zeros,
 )
 
@@ -33,11 +34,18 @@ from sympy.polys.densearith import (
     dup_max_norm, dmp_max_norm,
 )
 
+from sympy.polys.galoistools import (
+    gf_int, gf_crt,
+)
+
 from sympy.polys.polyerrors import (
     HeuristicGCDFailed,
+    HomomorphismFailed,
     NotInvertible,
     DomainError,
 )
+
+from sympy.ntheory import nextprime
 
 def dup_ground_to_ring(f, K0, K1):
     """Clear denominators, i.e. transform `K_0` to `K_1`, but don't normalize. """
@@ -355,7 +363,7 @@ def dup_subresultants(f, g, K):
     """Computes subresultant PRS of two polynomials in `K[x]`. """
     return dup_inner_subresultants(f, g, K)[0]
 
-def dup_inner_resultant(f, g, K):
+def dup_prs_resultant(f, g, K):
     """Resultant algorithm in `K[x]` using subresultant PRS. """
     if not f or not g:
         return (K.zero, [])
@@ -395,7 +403,7 @@ def dup_inner_resultant(f, g, K):
 
 def dup_resultant(f, g, K):
     """Computes resultant of two polynomials in `K[x]`. """
-    return dup_inner_resultant(f, g, K)[0]
+    return dup_prs_resultant(f, g, K)[0]
 
 def dmp_inner_subresultants(f, g, u, K):
     """Subresultant PRS algorithm in `K[X]`. """
@@ -455,10 +463,10 @@ def dmp_subresultants(f, g, u, K):
     """Computes subresultant PRS of two polynomials in `K[X]`. """
     return dmp_inner_subresultants(f, g, u, K)[0]
 
-def dmp_inner_resultant(f, g, u, K):
+def dmp_prs_resultant(f, g, u, K):
     """Resultant algorithm in `K[X]` using subresultant PRS. """
     if not u:
-        return dup_inner_resultant(f, g, K)
+        return dup_prs_resultant(f, g, K)
 
     if dmp_zero_p(f, u) or dmp_zero_p(g, u):
         return (dmp_zero(u-1), [])
@@ -501,9 +509,143 @@ def dmp_inner_resultant(f, g, u, K):
 
     return res, R
 
+def dmp_zz_modular_resultant(f, g, p, u, K):
+    """Compute resultant of `f` and `g` modulo a prime `p`. """
+    if not u:
+        return gf_int(dup_prs_resultant(f, g, K)[0] % p, p)
+
+    v = u - 1
+
+    n = dmp_degree(f, u)
+    m = dmp_degree(g, u)
+
+    N = dmp_degree_in(f, 1, u)
+    M = dmp_degree_in(g, 1, u)
+
+    B = n*M + m*N
+
+    D, a = [K.one], -K.one
+    r = dmp_zero(v)
+
+    while dup_degree(D) <= B:
+        while True:
+            a += K.one
+
+            if a == p:
+                raise HomomorphismFailed('no luck')
+
+            F = dmp_eval_in(f, gf_int(a, p), 1, u, K)
+
+            if dmp_degree(F, v) == n:
+                G = dmp_eval_in(g, gf_int(a, p), 1, u, K)
+
+                if dmp_degree(G, v) == m:
+                    break
+
+        R = dmp_zz_modular_resultant(F, G, p, v, K)
+        e = dmp_eval(r, a, v, K)
+
+        if not v:
+            R = dup_strip([R])
+            e = dup_strip([e])
+        else:
+            R = [R]
+            e = [e]
+
+        d = K.invert(dup_eval(D, a, K), p)
+        d = dup_mul_ground(D, d, K)
+        d = dmp_raise(d, v, 0, K)
+
+        c = dmp_mul(d, dmp_sub(R, e, v, K), v, K)
+        r = dmp_add(r, c, v, K)
+
+        r = dmp_ground_trunc(r, p, v, K)
+
+        D = dup_mul(D, [K.one, -a], K)
+        D = dup_trunc(D, p, K)
+
+    return r
+
+def dmp_zz_collins_resultant(f, g, u, K):
+    """Collins's modular resultant algorithm in `Z[X]`. """
+    def crt(r, R, P, p):
+        return gf_int(gf_crt([r, R], [P, p], K), P*p)
+
+    n = dmp_degree(f, u)
+    m = dmp_degree(g, u)
+
+    if n < 0 or m < 0:
+        return dmp_zero(u-1)
+
+    A = dmp_max_norm(f, u, K)
+    B = dmp_max_norm(g, u, K)
+
+    a = dmp_ground_LC(f, u, K)
+    b = dmp_ground_LC(g, u, K)
+
+    v = u - 1
+
+    B = K(2)*K.factorial(n+m)*A**m*B**n
+    r, p, P = dmp_zero(v), K.one, K.one
+
+    while P <= B:
+        p = nextprime(p)
+
+        while not (a % p) or not (b % p):
+            p = nextprime(p)
+
+        F = dmp_ground_trunc(f, p, u, K)
+        G = dmp_ground_trunc(g, p, u, K)
+
+        try:
+            R = dmp_zz_modular_resultant(F, G, p, u, K)
+        except HomomorphismFailed:
+            continue
+
+        if K.is_one(P):
+            r = R
+        else:
+            r = dmp_apply_pairs(r, R, crt, (P, p), v, K)
+
+        P *= p
+
+    return r
+
+def dmp_qq_collins_resultant(f, g, u, K0):
+    """Collins's modular resultant algorithm in `Q[X]`. """
+    K1 = K0.get_ring()
+
+    cf, f = dmp_ground_to_ring(f, u, K0, K1)
+    cg, g = dmp_ground_to_ring(g, u, K0, K1)
+
+    n = dmp_degree(f, u)
+    m = dmp_degree(g, u)
+
+    f = dmp_convert(f, u, K0, K1)
+    g = dmp_convert(g, u, K0, K1)
+
+    r = dmp_zz_collins_resultant(f, g, u, K1)
+    r = dmp_convert(r, u-1, K1, K0)
+
+    c = K0.convert(cf**m * cg**n, K1)
+
+    return dmp_exquo_ground(r, c, u-1, K0)
+
+USE_COLLINS_RESULTANT = 0
+
 def dmp_resultant(f, g, u, K):
     """Computes resultant of two polynomials in `K[X]`. """
-    return dmp_inner_resultant(f, g, u, K)[0]
+    if not u:
+        return dup_resultant(f, g, K)
+
+    if K.has_Field:
+        if USE_COLLINS_RESULTANT and K.is_QQ:
+            return dmp_qq_collins_resultant(f, g, u, K)
+    else:
+        if USE_COLLINS_RESULTANT and K.is_ZZ:
+            return dmp_zz_collins_resultant(f, g, u, K)
+
+    return dmp_prs_resultant(f, g, u, K)[0]
 
 def dup_discriminant(f, K):
     """Computes discriminant of a polynomial in `K[x]`. """
