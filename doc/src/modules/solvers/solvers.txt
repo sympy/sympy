@@ -3,13 +3,13 @@ Solvers
 
 .. module:: sympy.solvers
 
-The *solvers* module in SymPy implements methods for solving equations. 
+The *solvers* module in SymPy implements methods for solving equations.
 
 
 Algebraic equations
 --------------------
 
-Use :func:`solve` to solve algebraic equations. We suppose all equations are equaled to 0, 
+Use :func:`solve` to solve algebraic equations. We suppose all equations are equaled to 0,
 so solving x**2 == 1 translates into the following code::
 
     >>> from sympy.solvers import solve

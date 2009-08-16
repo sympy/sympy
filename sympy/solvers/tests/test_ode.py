@@ -13,6 +13,7 @@ C3 = Symbol('C3')
 C4 = Symbol('C4')
 C5 = Symbol('C5')
 f = Function('f')
+g = Function('g')
 
 # Note that if the ODE solver, the integral engine, or solve() changes, these
 # tests could fail but still be correct, only written differently.
@@ -67,7 +68,7 @@ def checksol(eq, func, sol, order):
             # Try solving for df/dx and substituting that into the ode.
             # Thanks to Chris Smith for suggesting this method.  Many of the
             # comments below are his too.
-            # TODO: Try expanding nth order, using the following:
+            # TODO: Try expanding checksol to nth order, using the following:
             # - Take each of 1..n derivatives of the solution.
             # - Solve each nth derivative for d^n(f)/dx^n (the differential of that order)
             # - Back substitute into the ode in decreasing order (i.e., n, n-1, ...)
@@ -191,18 +192,22 @@ def test_1st_exact1():
     eq2 = (2*x*f(x) + 1)/f(x) + (f(x) - x)/f(x)**2*f(x).diff(x)
     eq3 = 2*x + f(x)*cos(x) + (2*f(x) + sin(x) - sin(f(x)))*f(x).diff(x)
     eq4 = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
+    eq5 = 2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x)
     sol1 = Eq(f(x),acos((C1)/cos(x)))
     sol2 = Eq(log(f(x))+x/f(x)+x**2,C1)
     sol3 = Eq(f(x)*sin(x)+cos(f(x))+x**2+f(x)**2,C1)
     sol4 = Eq(x*cos(f(x))+f(x)**3/3,C1)
+    sol5 = Eq(x**2*f(x) + f(x)**3/3, C1)
     assert dsolve(eq1,f(x), hint='1st_exact') == sol1
     assert dsolve(eq2,f(x), hint='1st_exact') == sol2
     assert dsolve(eq3,f(x), hint='1st_exact') == sol3
     assert dsolve(eq4, f(x), hint='1st_exact') == sol4
+    assert dsolve(eq5, f(x), hint='1st_exact', simplify=False) == sol5
     assert checksol(eq1, f(x), sol1, 1)
     assert checksol(eq2, f(x), sol2, 1)
     assert checksol(eq3, f(x), sol3, 1)
     assert checksol(eq4, f(x), sol4, 1)
+    assert checksol(eq5, f(x), sol5, 1)
 
 @XFAIL
 def test_1st_exact2():
@@ -372,7 +377,7 @@ def test_1st_homogeneous_coeff_ode1():
     sol7 = Eq(log(C1*f(x)) + 2*sqrt(1 - x/f(x)), 0)
     sol8 = Eq(-atan(f(x)/x) + log(C1*x*sqrt(1 + f(x)**2/x**2)), 0)
     assert dsolve(eq1, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol1
-    # indep_div_dep actually has a simpler solution for eq2, but it runs slower
+    # indep_div_dep actually has a simpler solution for eq2, but it runs too slow
     assert dsolve(eq2, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol2
     assert dsolve(eq3, f(x), hint='1st_homogeneous_coeff_best') == sol3
     assert dsolve(eq4, f(x), hint='1st_homogeneous_coeff_best') == sol4
@@ -381,7 +386,7 @@ def test_1st_homogeneous_coeff_ode1():
     assert dsolve(eq7, f(x), hint='1st_homogeneous_coeff_best') == sol7
     assert dsolve(eq8, f(x), hint='1st_homogeneous_coeff_best') == sol8
 
-#TODO: skip test_1st_homogeneous_coeff_ode1_sol before release
+#TODO: skip test_1st_homogeneous_coeff_ode1_sol before release (too slow)
 def test_1st_homogeneous_coeff_ode1_sol():
     # These are the checksols from test_homogeneous_coeff_ode1.
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
@@ -634,6 +639,7 @@ def test_nth_linear_constant_coeff_homogeneous_RootOf_sol():
     assert checksol(eq, f(x), sol, 5)
 
 def test_undetermined_coefficients_match():
+    assert _undetermined_coefficients_match(g(x), x) == {'test': False}
     assert _undetermined_coefficients_match(sin(2*x + sqrt(5)), x) == \
         {'test': True, 'trialset': set([cos(2*x + sqrt(5)), sin(2*x + sqrt(5))])}
     assert _undetermined_coefficients_match(sin(x)*cos(x), x) == {'test': False}
