@@ -20,7 +20,6 @@ g = Function('g')
 # Also not that in differently formatted solutions, the arbitrary constants
 # might not be equal.
 
-# TODO: write classify_ode tests
 def checksol(eq, func, sol, order):
     """
     Substitutes sol for func in eq and checks that the result is 0.
@@ -99,6 +98,68 @@ def checksol(eq, func, sol, order):
             break
 
     return not s
+
+def test_dsolve_options():
+    eq = x*f(x).diff(x) + f(x)
+    a = dsolve(eq, f(x), hint='all')
+    b = dsolve(eq, f(x), hint='all', simplify=False)
+    keys = ['1st_exact', '1st_exact_Integral', '1st_homogeneous_coeff_best', \
+        '1st_homogeneous_coeff_subs_dep_div_indep', \
+        '1st_homogeneous_coeff_subs_dep_div_indep_Integral', \
+        '1st_homogeneous_coeff_subs_indep_div_dep', \
+        '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear', \
+        '1st_linear_Integral', 'best', 'best_hint', 'default', 'order', \
+        'separable', 'separable_Integral']
+    assert sorted(a.keys()) == keys
+    assert a['order'] == deriv_degree(eq, f(x))
+    assert a['best'] == Eq(f(x), C1/x)
+    assert a['default'] == 'separable'
+    assert a['best_hint'] == 'separable'
+    assert not a['1st_exact'].has(Integral)
+    assert not a['separable'].has(Integral)
+    assert not a['1st_homogeneous_coeff_best'].has(Integral)
+    assert not a['1st_homogeneous_coeff_subs_dep_div_indep'].has(Integral)
+    assert not a['1st_homogeneous_coeff_subs_indep_div_dep'].has(Integral)
+    assert not a['1st_linear'].has(Integral)
+    assert a['1st_linear_Integral'].has(Integral)
+    assert a['1st_exact_Integral'].has(Integral)
+    assert a['1st_homogeneous_coeff_subs_dep_div_indep_Integral'].has(Integral)
+    assert a['1st_homogeneous_coeff_subs_indep_div_dep_Integral'].has(Integral)
+    assert a['separable_Integral'].has(Integral)
+    assert sorted(b.keys()) == keys
+    assert b['order'] == deriv_degree(eq, f(x))
+    assert b['best'] == Eq(f(x), C1/x)
+    assert b['default'] == 'separable'
+    assert b['best_hint'] == '1st_linear'
+    assert a['separable'] != b['separable']
+    assert a['1st_homogeneous_coeff_subs_dep_div_indep'] != \
+        b['1st_homogeneous_coeff_subs_dep_div_indep']
+    assert a['1st_homogeneous_coeff_subs_indep_div_dep'] != \
+        b['1st_homogeneous_coeff_subs_indep_div_dep']
+    assert not b['1st_exact'].has(Integral)
+    assert not b['separable'].has(Integral)
+    assert not b['1st_homogeneous_coeff_best'].has(Integral)
+    assert not b['1st_homogeneous_coeff_subs_dep_div_indep'].has(Integral)
+    assert not b['1st_homogeneous_coeff_subs_indep_div_dep'].has(Integral)
+    assert not b['1st_linear'].has(Integral)
+    assert b['1st_linear_Integral'].has(Integral)
+    assert b['1st_exact_Integral'].has(Integral)
+    assert b['1st_homogeneous_coeff_subs_dep_div_indep_Integral'].has(Integral)
+    assert b['1st_homogeneous_coeff_subs_indep_div_dep_Integral'].has(Integral)
+    assert b['separable_Integral'].has(Integral)
+
+
+def test_classify_ode():
+    assert classify_ode(f(x).diff(x, 2), f(x)) == \
+        ('nth_linear_constant_coeff_homogeneous', 'Liouville', 'Liouville_Integral')
+    assert classify_ode(f(x), f(x)) == ()
+    assert classify_ode(f(x).diff(x), f(x)) == ('separable', '1st_linear', \
+        '1st_homogeneous_coeff_best', '1st_homogeneous_coeff_subs_indep_div_dep', \
+        '1st_homogeneous_coeff_subs_dep_div_indep', \
+        'nth_linear_constant_coeff_homogeneous', 'separable_Integral', \
+        '1st_linear_Integral', '1st_homogeneous_coeff_subs_indep_div_dep_Integral', \
+        '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
+    assert classify_ode(f(x).diff(x)**2, f(x)) == ()
 
 
 def test_deriv_degree():
@@ -448,7 +509,6 @@ def test_1st_homogeneous_coeff_ode2_eq3sol():
     sol3 = Eq(f(x), log(log(C1/x)**(-x)))
     assert checksol(eq3, f(x), sol3, 1)
 
-
 def test_1st_homogeneous_coeff_ode3():
     # This can be solved explicitly, but the the integration engine cannot handle
     # it (see issue 1452).  The explicit solution is included in an XFAIL test
@@ -458,8 +518,6 @@ def test_1st_homogeneous_coeff_ode3():
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
     solstr = "f(x) == C1*exp(Integral(-1/((1 - _u2**2)**(1/2)*_u2), (_u2, None, x/f(x))))"
     assert str(dsolve(eq, f(x), hint='1st_homogeneous_coeff_subs_indep_div_dep')) == solstr
-
-
 
 @XFAIL
 def test_1st_homogeneous_coeff_ode4_explicit():
@@ -905,7 +963,7 @@ def test_Liouville_ODE():
 @XFAIL
 def test_unexpanded_Liouville_ODE():
     # This fails because collect() collecting of derivatives is not good enough
-    # for classify_ode to call expand_mul on expressions.
+    # to warrant classify_ode calling expand_mul on expressions.
     # It is the same as from test_Liouville_ODE() above.
     eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
     eq2 = eq1*exp(-f(x))/exp(f(x)).expand()

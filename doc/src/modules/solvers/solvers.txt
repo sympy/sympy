@@ -27,9 +27,7 @@ is the symbol that we want to solve the equation for.
 Ordinary Differential equations (ODEs)
 --------------------------------------
 
-Use :func:`dsolve` to solve differential equations.
-
-.. automethod:: sympy.solvers.dsolve
+See :ref:`ode-docs`.
 
 Partial Differential Equations (PDEs)
 -------------------------------------

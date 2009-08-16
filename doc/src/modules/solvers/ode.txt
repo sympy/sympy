@@ -1,0 +1,74 @@
+.. _ode-docs:
+
+ODE
+===
+
+.. module::sympy.solvers.ode
+
+User Functions
+--------------
+These are functions that are imported into the global namespace with ``from sympy import *``.  They are intended for user use.
+
+:func:`dsolve`
+^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.dsolve
+
+:func:`classify_ode`
+^^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.classify_ode
+
+:func:`deriv_degree`
+^^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.deriv_degree
+
+:func:`homogeneous_order`
+^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.homogeneous_order
+
+Hint Methods
+------------
+These functions are intended for internal use by :func:`dsolve` and others.  Nonetheless, they contain useful information in their docstrings on the various ODE solving methods.
+
+:obj:`1st_exact`
+^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.ode_1st_exact
+
+:obj:`1st_homogeneous_coeff_best`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.ode_1st_homogeneous_coeff_best
+
+:obj:`1st_homogeneous_coeff_subs_dep_div_indep`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_dep_div_indep
+
+:obj:`1st_homogeneous_coeff_subs_indep_div_dep`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.ode_1st_homogeneous_coeff_subs_indep_div_dep
+
+:obj:`1st_linear`
+^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.ode_1st_linear
+
+:obj:`Bernoulli`
+^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.ode_Bernoulli
+
+:obj:`Liouville`
+^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.ode_Liouville
+
+:obj:`nth_linear_constant_coeff_homogeneous`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.ode_nth_linear_constant_coeff_homogeneous
+
+:obj:`nth_linear_constant_coeff_undetermined_coefficients`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.ode_nth_linear_constant_coeff_undetermined_coefficients
+
+:obj:`nth_linear_constant_coeff_variation_of_parameters`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.ode_nth_linear_constant_coeff_variation_of_parameters
+
+:obj:`separable`
+^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.ode_separable

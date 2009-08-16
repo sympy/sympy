@@ -35,7 +35,8 @@ access any SymPy module, or use this contens:
    modules/series.txt
    modules/simplify.txt
    modules/statistics.txt
-   modules/solvers.txt
+   modules/solvers/ode.txt
+   modules/solvers/solvers.txt
    modules/utilities/index.txt
 
 Contributions to docs
