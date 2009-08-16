@@ -12,6 +12,9 @@ from sympy.polys.polyerrors import (
 
 def factorial(m):
     """Returns `m!`. """
+    if not m:
+        return 1
+
     k = m
 
     while m > 1:

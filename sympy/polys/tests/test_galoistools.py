@@ -16,9 +16,11 @@ from sympy.polys.galoistools import (
     gf_irreducible,
     gf_diff, gf_random,
     gf_sqf_list, gf_sqf_part, gf_sqf_p,
-    gf_ddf, gf_ddf_zassenhaus, gf_ddf_shoup,
-    gf_edf, gf_edf_zassenhaus, gf_edf_shoup,
-    gf_factor, gf_factor_sqf,
+    gf_Qmatrix, gf_Qbasis,
+    gf_ddf_zassenhaus, gf_ddf_shoup,
+    gf_edf_zassenhaus, gf_edf_shoup,
+    gf_berlekamp, gf_zassenhaus, gf_shoup,
+    gf_factor_sqf, gf_factor,
 )
 
 from sympy.polys.polyerrors import (
@@ -379,6 +381,47 @@ def test_gf_squarefree():
              ([1, 1], 3),
              ([1, 2], 6)])
 
+def test_gf_berlekamp():
+    f = gf_from_int_poly([1,-3,1,-3,-1,-3,1], 11)
+
+    Q = [[1, 0, 0, 0, 0, 0],
+         [3, 5, 8, 8, 6, 5],
+         [3, 6, 6, 1,10, 0],
+         [9, 4,10, 3, 7, 9],
+         [7, 8,10, 0, 0, 8],
+         [8,10, 7, 8,10, 8]]
+
+    V = [[1, 0, 0, 0, 0, 0],
+         [0, 1, 1, 1, 1, 0],
+         [0, 0, 7, 9, 0, 1]]
+
+    assert gf_Qmatrix(f, 11, ZZ) == Q
+    assert gf_Qbasis(Q, 11, ZZ) == V
+
+    assert gf_berlekamp(f, 11, ZZ) == \
+        [[1, 1], [1, 5, 3], [1, 2, 3, 4]]
+
+    f = [1,0,1,0,10,10,8,2,8]
+
+    Q = [[1, 0, 0, 0, 0, 0, 0, 0],
+         [2, 1, 7,11,10,12, 5,11],
+         [3, 6, 4, 3, 0, 4, 7, 2],
+         [4, 3, 6, 5, 1, 6, 2, 3],
+         [2,11, 8, 8, 3, 1, 3,11],
+         [6,11, 8, 6, 2, 7,10, 9],
+         [5,11, 7,10, 0,11, 7,12],
+         [3, 3,12, 5, 0,11, 9,12]]
+
+    V = [[1, 0, 0, 0, 0, 0, 0, 0],
+         [0, 5, 5, 0, 9, 5, 1, 0],
+         [0, 9,11, 9,10,12, 0, 1]]
+
+    assert gf_Qmatrix(f, 13, ZZ) == Q
+    assert gf_Qbasis(Q, 13, ZZ) == V
+
+    assert gf_berlekamp(f, 13, ZZ) == \
+        [[1, 3], [1, 8, 4, 12], [1, 2, 3, 4, 6]]
+
 def test_gf_ddf():
     f = gf_from_dict({15: 1, 0: -1}, 11)
     g = [([1, 0, 0, 0, 0, 10], 1),
@@ -386,11 +429,6 @@ def test_gf_ddf():
 
     assert gf_ddf_zassenhaus(f, 11, ZZ) == g
     assert gf_ddf_shoup(f, 11, ZZ) == g
-
-    assert gf_ddf(f, 11, ZZ, method='zassenhaus') == g
-    assert gf_ddf(f, 11, ZZ, method='shoup') == g
-
-    raises(ValueError, "gf_ddf(f, 11, ZZ, method='')")
 
     f = gf_from_dict({63: 1, 0: 1}, 2)
     g = [([1, 1], 1),
@@ -433,11 +471,6 @@ def test_gf_edf():
     assert gf_edf_zassenhaus(f, 2, 3, ZZ) == g
     assert gf_edf_shoup(f, 2, 3, ZZ) == g
 
-    assert gf_edf(f, 2, 3, ZZ, method='zassenhaus') == g
-    assert gf_edf(f, 2, 3, ZZ, method='shoup') == g
-
-    raises(ValueError, "gf_edf(f, 2, 3, ZZ, method='')")
-
 def test_gf_factor():
     assert gf_factor([], 11, ZZ) == (0, [])
     assert gf_factor([1], 11, ZZ) == (1, [])
@@ -447,12 +480,25 @@ def test_gf_factor():
     assert gf_factor_sqf([1], 11, ZZ) == (1, [])
     assert gf_factor_sqf([1,1], 11, ZZ) == (1, [[1, 1]])
 
+    assert gf_factor_sqf([], 11, ZZ, method='berlekamp') == (0, [])
+    assert gf_factor_sqf([1], 11, ZZ, method='berlekamp') == (1, [])
+    assert gf_factor_sqf([1,1], 11, ZZ, method='berlekamp') == (1, [[1, 1]])
+
+    assert gf_factor_sqf([], 11, ZZ, method='zassenhaus') == (0, [])
+    assert gf_factor_sqf([1], 11, ZZ, method='zassenhaus') == (1, [])
+    assert gf_factor_sqf([1,1], 11, ZZ, method='zassenhaus') == (1, [[1, 1]])
+
+    assert gf_factor_sqf([], 11, ZZ, method='shoup') == (0, [])
+    assert gf_factor_sqf([1], 11, ZZ, method='shoup') == (1, [])
+    assert gf_factor_sqf([1,1], 11, ZZ, method='shoup') == (1, [[1, 1]])
+
     f, p = [1,0,0,1,0], 2
 
     g = (1, [([1, 0], 1),
              ([1, 1], 1),
              ([1, 1, 1], 1)])
 
+    assert gf_factor(f, p, ZZ, method='berlekamp') == g
     assert gf_factor(f, p, ZZ, method='zassenhaus') == g
     assert gf_factor(f, p, ZZ, method='shoup') == g
 
@@ -460,21 +506,48 @@ def test_gf_factor():
              [1, 1],
              [1, 1, 1]])
 
+    assert gf_factor_sqf(f, p, ZZ, method='berlekamp') == g
     assert gf_factor_sqf(f, p, ZZ, method='zassenhaus') == g
     assert gf_factor_sqf(f, p, ZZ, method='shoup') == g
 
-    assert gf_factor([1, 5, 8, 4], 11, ZZ) == \
-        (1, [([1, 1], 1), ([1, 2], 2)])
+    f, p = gf_from_int_poly([1,-3,1,-3,-1,-3,1], 11), 11
 
-    assert gf_factor([1, 1, 10, 1, 0, 10, 10, 10, 0, 0], 11, ZZ) == \
-        (1, [([1, 0], 2), ([1, 9, 5], 1), ([1, 3, 0, 8, 5, 2], 1)])
+    g = (1, [([1, 1], 1),
+             ([1, 5, 3], 1),
+             ([1, 2, 3, 4], 1)])
 
-    assert gf_factor(gf_from_dict({32: 1, 0: 1}, 11), 11, ZZ) == \
-        (1, [([1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 10], 1),
+    assert gf_factor(f, p, ZZ, method='berlekamp') == g
+    assert gf_factor(f, p, ZZ, method='zassenhaus') == g
+    assert gf_factor(f, p, ZZ, method='shoup') == g
+
+    f, p = [1, 5, 8, 4], 11
+
+    g = (1, [([1, 1], 1), ([1, 2], 2)])
+
+    assert gf_factor(f, p, ZZ, method='berlekamp') == g
+    assert gf_factor(f, p, ZZ, method='zassenhaus') == g
+    assert gf_factor(f, p, ZZ, method='shoup') == g
+
+    f, p = [1, 1, 10, 1, 0, 10, 10, 10, 0, 0], 11
+
+    g = (1, [([1, 0], 2), ([1, 9, 5], 1), ([1, 3, 0, 8, 5, 2], 1)])
+
+    assert gf_factor(f, p, ZZ, method='berlekamp') == g
+    assert gf_factor(f, p, ZZ, method='zassenhaus') == g
+    assert gf_factor(f, p, ZZ, method='shoup') == g
+
+    f, p = gf_from_dict({32: 1, 0: 1}, 11), 11
+
+    g = (1, [([1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 10], 1),
              ([1, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 10], 1)])
 
-    assert gf_factor(gf_from_dict({32: 8, 0: 5}, 11), 11, ZZ) == \
-        (8, [([1, 3], 1),
+    assert gf_factor(f, p, ZZ, method='berlekamp') == g
+    assert gf_factor(f, p, ZZ, method='zassenhaus') == g
+    assert gf_factor(f, p, ZZ, method='shoup') == g
+
+    f, p = gf_from_dict({32: 8, 0: 5}, 11), 11
+
+    g = (8, [([1, 3], 1),
              ([1, 8], 1),
              ([1, 0, 9], 1),
              ([1, 2, 2], 1),
@@ -484,8 +557,13 @@ def test_gf_factor():
              ([1, 0, 0, 0, 1, 0, 0, 0, 6], 1),
              ([1, 0, 0, 0, 10, 0, 0, 0, 6], 1)])
 
-    assert gf_factor(gf_from_dict({63: 8, 0: 5}, 11), 11, ZZ) == \
-        (8, [([1, 7], 1),
+    assert gf_factor(f, p, ZZ, method='berlekamp') == g
+    assert gf_factor(f, p, ZZ, method='zassenhaus') == g
+    assert gf_factor(f, p, ZZ, method='shoup') == g
+
+    f, p = gf_from_dict({63: 8, 0: 5}, 11), 11
+
+    g = (8, [([1, 7], 1),
              ([1, 4, 5], 1),
              ([1, 6, 8, 2], 1),
              ([1, 9, 9, 2], 1),
@@ -498,6 +576,10 @@ def test_gf_factor():
              ([1, 6, 2, 7, 9, 8, 4], 1),
              ([1, 10, 4, 7, 10, 7, 4], 1),
              ([1, 10, 10, 1, 4, 9, 4], 1)])
+
+    assert gf_factor(f, p, ZZ, method='berlekamp') == g
+    assert gf_factor(f, p, ZZ, method='zassenhaus') == g
+    assert gf_factor(f, p, ZZ, method='shoup') == g
 
     # Gathen polynomials: x**n + x + 1 (mod p > 2**n * pi)
 

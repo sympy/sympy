@@ -1,7 +1,10 @@
 """Dense univariate polynomials with coefficients in Galois fields. """
 
+from copy import deepcopy
 from random import uniform
 from math import ceil, sqrt, log
+
+from sympy.utilities import any, all
 
 from sympy.polys.polyerrors import (
     ExactQuotientFailed,
@@ -618,7 +621,7 @@ def gf_random(n, p, K):
     """Generate a random polynomial in `GF(p)[x]` of degree `n`. """
     return [K.one] + [ K(int(uniform(0, p))) for i in xrange(0, n) ]
 
-def gf_irreducible(n, p, K, monic=True):
+def gf_irreducible(n, p, K):
     """Generate random irreducible polynomial of degree `n` in `GF(p)[x]`. """
     while True:
         f = gf_random(n, p, K)
@@ -734,6 +737,112 @@ def gf_sqf_list(f, p, K):
 
     return lc, factors
 
+def gf_Qmatrix(f, p, K):
+    """Calculate Berlekamp's `Q` matrix. """
+    n = gf_degree(f)
+
+    q = [K.one] + [K.zero]*(n-1)
+    Q = [list(q)] + [[]]*(n-1)
+
+    for i in xrange(1, (n-1)*p + 1):
+        qq, c = [(-q[-1]*f[-1]) % p], q[-1]
+
+        for j in xrange(1, n):
+            qq.append((q[j-1] - c*f[-j-1]) % p)
+
+        if not (i % p):
+            Q[i//p] = list(qq)
+
+        q = qq
+
+    return Q
+
+def gf_Qbasis(Q, p, K):
+    """Compute a basis of the kernel of `Q`. """
+    Q, n = deepcopy(Q), len(Q)
+
+    for k in xrange(0, n):
+        Q[k][k] = (Q[k][k] - K.one) % p
+
+    for k in xrange(0, n):
+        for i in xrange(k, n):
+            if Q[k][i]:
+                break
+        else:
+            continue
+
+        inv = K.invert(Q[k][i], p)
+
+        for j in xrange(0, n):
+            Q[j][i] = (Q[j][i]*inv) % p
+
+        for j in xrange(0, n):
+            t = Q[j][k]
+            Q[j][k] = Q[j][i]
+            Q[j][i] = t
+
+        for i in xrange(0, n):
+            if i != k:
+                q = Q[k][i]
+
+                for j in xrange(0, n):
+                    Q[j][i] = (Q[j][i] - Q[j][k]*q) % p
+
+    for i in xrange(0, n):
+        for j in xrange(0, n):
+            if i == j:
+                Q[i][j] = (K.one - Q[i][j]) % p
+            else:
+                Q[i][j] = (-Q[i][j]) % p
+
+    basis = []
+
+    for q in Q:
+        if any(q):
+            basis.append(q)
+
+    return basis
+
+def cmp_factors(f, g):
+    """Comparizon function for factors (no multiplicites). """
+    k = len(f) - len(g)
+
+    if not k:
+        return cmp(f, g)
+    else:
+        return k
+
+def gf_berlekamp(f, p, K):
+    """Factor a square-free `f` in `GF(p)[x]` for small `p`. """
+    Q = gf_Qmatrix(f, p, K)
+    V = gf_Qbasis(Q, p, K)
+
+    for i, v in enumerate(V):
+        V[i] = gf_strip(list(reversed(v)))
+
+    factors, k = [f], 1
+
+    for k in xrange(1, len(V)):
+        for f in list(factors):
+            s = K.zero
+
+            while s < p:
+                g = gf_sub_ground(V[k], s, p, K)
+                h = gf_gcd(f, g, p, K)
+
+                if h != [K.one] and h != f:
+                    factors.remove(f)
+
+                    f = gf_exquo(f, h, p, K)
+                    factors.extend([f, h])
+
+                if len(factors) == len(V):
+                    return sorted(factors, cmp_factors)
+
+                s += K.one
+
+    return sorted(factors, cmp_factors)
+
 def gf_ddf_zassenhaus(f, p, K):
     """Cantor-Zassenhaus: Deterministic Distinct Degree Factorization
 
@@ -838,7 +947,7 @@ def gf_edf_zassenhaus(f, n, p, K):
             factors = gf_edf_zassenhaus(g, n, p, K) \
                     + gf_edf_zassenhaus(gf_exquo(f, g, p, K), n, p, K)
 
-    return sorted(factors)
+    return sorted(factors, cmp_factors)
 
 def gf_ddf_shoup(f, p, K):
     """Kaltofen-Shoup: Deterministic Distinct Degree Factorization
@@ -966,53 +1075,47 @@ def gf_edf_shoup(f, n, p, K):
                 + gf_edf_shoup(h2, n, p, K) \
                 + gf_edf_shoup(h3, n, p, K)
 
-    return sorted(factors)
+    return sorted(factors, cmp_factors)
 
-_ddf_methods = {
-    'zassenhaus' : gf_ddf_zassenhaus,
-    'shoup'      : gf_ddf_shoup,
+def gf_zassenhaus(f, p, K):
+    """Factor a square-free `f` in `GF(p)[x]` for medium `p`. """
+    factors = []
+
+    for factor, n in gf_ddf_zassenhaus(f, p, K):
+        factors += gf_edf_zassenhaus(factor, n, p, K)
+
+    return sorted(factors, cmp_factors)
+
+def gf_shoup(f, p, K):
+    """Factor a square-free `f` in `GF(p)[x]` for large `p`. """
+    factors = []
+
+    for factor, n in gf_ddf_shoup(f, p, K):
+        factors += gf_edf_shoup(factor, n, p, K)
+
+    return sorted(factors, cmp_factors)
+
+_factor_methods = {
+    'berlekamp'  : gf_berlekamp,  # `p` : small
+    'zassenhaus' : gf_zassenhaus, # `p` : medium
+    'shoup'      : gf_shoup,      # `p` : large
 }
 
-def gf_ddf(f, p, K, **args):
-    """Distinct Degree Factorization in `GF(p)[x]`. """
-    method = args.get('ddf')
+def gf_factor_sqf(f, p, K, **args):
+    """Factor a square-free polynomial `f` in `GF(p)[x]`. """
+    lc, f = gf_monic(f, p, K)
 
-    if method is None:
-        method = args.get('method')
+    if gf_degree(f) < 1:
+        return lc, []
 
-    try:
-        if method is not None:
-            ddf_method = _ddf_methods[method.lower()]
-        else:
-            # TODO: use cross-over
-            ddf_method = gf_ddf_zassenhaus
-    except KeyError:
-        raise ValueError("'%s' is not a valid DDF method" % method)
+    method = args.get('method')
 
-    return ddf_method(f, p, K)
+    if method is not None:
+        factors = _factor_methods[method](f, p, K)
+    else:
+        factors = gf_zassenhaus(f, p, K)
 
-_edf_methods = {
-    'zassenhaus' : gf_edf_zassenhaus,
-    'shoup'      : gf_edf_shoup,
-}
-
-def gf_edf(f, n, p, K, **args):
-    """Equal Degree Factorization in `GF(p)[x]`. """
-    method = args.get('edf')
-
-    if method is None:
-        method = args.get('method')
-
-    try:
-        if method is not None:
-            edf_method = _edf_methods[method.lower()]
-        else:
-            # TODO: use cross-over
-            edf_method = gf_edf_zassenhaus
-    except KeyError:
-        raise ValueError("'%s' is not a valid EDF method" % method)
-
-    return edf_method(f, n, p, K)
+    return lc, factors
 
 def gf_factor(f, p, K, **args):
     """Factor (non square-free) polynomials in `GF(p)[x]`.
@@ -1020,7 +1123,7 @@ def gf_factor(f, p, K, **args):
        Given a possibly non square-free polynomial `f` in `GF(p)[x]`, returns
        its complete factorization into irreducibles::
 
-                   f_1(x)**e_1 f_2(x)**e_2 ... f_d(x)**e_d
+                     f_1(x)**e_1 f_2(x)**e_2 ... f_d(x)**e_d
 
        where each `f_i` is a monic polynomial and `gcd(f_i, f_j) == 1`, for
        `i != j`.  The result is given as a tuple consisting of the leading
@@ -1041,6 +1144,17 @@ def gf_factor(f, p, K, **args):
        recover exact form of the input polynomial because we requested to
        get monic factors of `f` and its leading coefficient separately.
 
+       Square-free factors of `f` can be factored into irreducibles over
+       `GF(p)` using three very different methods:
+
+       1. Berlekamp - efficient for very small values of `p` (usually `p < 25`)
+       2. Cantor-Zassenhaus - efficient on average input and with "typical" `p`
+       3. Shoup-Kaltofen-Gathen - efficient with very large inputs and modulus
+
+       If you want to use a specific factorization method, instead of relying,
+       on the algorithm to choose one for you, specify `method` keyword and
+       set it to one of `berlekamp`, `zassenhaus` or `shoup` values.
+
        References
        ==========
 
@@ -1056,35 +1170,21 @@ def gf_factor(f, p, K, **args):
     factors = []
 
     for g, k in gf_sqf_list(f, p, K)[1]:
-        for h in gf_factor_sqf(g, p, K)[1]:
+        for h in gf_factor_sqf(g, p, K, **args)[1]:
             factors.append((h, k))
 
-    def compare((f_a, e_a), (f_b, e_b)):
-        i = len(f_a) - len(f_b)
+    def compare((f, n), (g, m)):
+        i = len(f) - len(g)
 
         if not i:
-            j = e_a - e_b
+            j = n - m
 
             if not j:
-                return cmp(f_a, f_b)
+                return cmp(f, g)
             else:
                 return j
         else:
             return i
 
     return lc, sorted(factors, compare)
-
-def gf_factor_sqf(f, p, K, **args):
-    """Factor square-free polynomials in `GF(p)[x]`. """
-    lc, f = gf_monic(f, p, K)
-
-    if gf_degree(f) < 1:
-        return lc, []
-
-    factors = []
-
-    for factor, n in gf_ddf(f, p, K, **args):
-        factors += gf_edf(factor, n, p, K, **args)
-
-    return lc, factors
 

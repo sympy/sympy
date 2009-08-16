@@ -90,8 +90,7 @@ from sympy.polys.galoistools import (
     gf_gcd, gf_gcdex,
     gf_monic, gf_diff, gf_eval, gf_compose,
     gf_sqf_p, gf_sqf_part, gf_sqf_list,
-    gf_ddf, gf_edf,
-    gf_factor, gf_factor_sqf,
+    gf_factor,
 )
 
 from sympy.polys.groebnertools import (
