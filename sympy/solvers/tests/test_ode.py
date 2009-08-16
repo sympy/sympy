@@ -447,8 +447,8 @@ def test_1st_homogeneous_coeff_ode1():
     assert dsolve(eq7, f(x), hint='1st_homogeneous_coeff_best') == sol7
     assert dsolve(eq8, f(x), hint='1st_homogeneous_coeff_best') == sol8
 
-#TODO: skip test_1st_homogeneous_coeff_ode1_sol before release (too slow)
 def test_1st_homogeneous_coeff_ode1_sol():
+    skip("This test passes, but it takes too long")
     # These are the checksols from test_homogeneous_coeff_ode1.
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
     eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x),x)
@@ -735,6 +735,8 @@ def test_undetermined_coefficients_match():
         {'test': True, 'trialset': set([2**x, x*2**x])}
     assert _undetermined_coefficients_match(2**x*exp(2*x), x) == \
         {'test': True, 'trialset': set([2**x*exp(2*x)])}
+    assert _undetermined_coefficients_match(exp(-x)/x, x) == \
+        {'test': False}
     # Below are from Ordinary Differential Equations, Tenenbaum and Pollard, pg. 231
     assert _undetermined_coefficients_match(S(4), x) == \
         {'test': True, 'trialset': set([S(1)])}
@@ -873,6 +875,7 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
 #    assert dsolve(eq24, f(x), hint=hint) == sol24
     assert dsolve(eq25, f(x), hint=hint) == sol25
 #    assert dsolve(eq26, f(x), hint=hint) == sol26
+#    assert dsolve(eq26a, f(x), hint=hint) == sol26
 #    assert dsolve(eq27, f(x), hint=hint) == sol27
     assert dsolve(eq28, f(x), hint=hint) == sol28
     assert checksol(eq1, f(x), sol1, 3)
@@ -886,14 +889,24 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     assert checksol(eq9, f(x), sol9, 2)
     assert checksol(eq10, f(x), sol10, 2)
     assert checksol(eq11, f(x), sol11, 2)
-
+#    assert checksol(eq12, f(x), sol12, 4)
+#    assert checksol(eq13, f(x), sol13, 2)
+#    assert checksol(eq14, f(x), sol14, 2)
+    assert checksol(eq15, f(x), sol15, 2)
+    assert checksol(eq16, f(x), sol16, 2)
+    assert checksol(eq17, f(x), sol17, 2)
+    assert checksol(eq18, f(x), sol18, 3)
     assert checksol(eq19, f(x), sol19, 2)
-
+    assert checksol(eq20, f(x), sol20, 2)
+    assert checksol(eq21, f(x), sol21, 2)
+#    assert checksol(eq22, f(x), sol22, 2)
+    assert checksol(eq23, f(x), sol23, 3)
+#    assert checksol(eq24, f(x), sol24, 2)
+    assert checksol(eq25, f(x), sol25, 3)
+#    assert checksol(eq26, f(x), sol26, 5)
+#    assert checksol(eq27, f(x), sol27, 2)
     assert checksol(eq28, f(x), sol28, 1)
 
-
-# TODO: Add more varation of parameters tests
-# Including Integral tests
 def test_nth_linear_constant_coeff_variation_of_parameters():
     hint = 'nth_linear_constant_coeff_variation_of_parameters'
     eq1 = 3*f(x).diff(x, 3) + 5*f(x).diff(x, 2) + f(x).diff(x) - f(x) - x*exp(-x) - x
@@ -905,6 +918,9 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     eq7 = f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) - x**2*exp(-x)
     eq8 = f(x).diff(x, 2) - 3*f(x).diff(x) + 2*f(x) - x*exp(-x)
     eq9 = f(x).diff(x, 3) - 3*f(x).diff(x, 2) + 3*f(x).diff(x) - f(x) - exp(x)
+    eq10 = f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) - exp(-x)/x
+    eq11 = f(x).diff(x, 2) + f(x) - 1/sin(x)*1/cos(x)
+    eq12 = f(x).diff(x, 4)  - 1/x
 
     sol1 = Eq(f(x), -1 - x - (C1 + C2*x + 3*x**2/32 + x**3/24)*exp(-x) + C3*exp(x/3))
     sol2 = Eq(f(x), -1 - x - (C1 + C2*x + x**2/8)*exp(-x) + C3*exp(x/3))
@@ -915,18 +931,34 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     sol7 = Eq(f(x), (C1 + C2*x + x**4/12)*exp(-x))
     sol8 = Eq(f(x), C1*exp(x) + (S(5)/36 + x/6)*exp(-x) + C2*exp(2*x))
     sol9 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
+    sol10 = Eq(f(x), (C1 - x*(C2 - log(x)))*exp(-x))
+    sol11 = Eq(f(x), cos(x)*(C1 - Integral(1/cos(x), x)) + sin(x)*(C2 + \
+        Integral(1/sin(x), x)))
+    sol12 = Eq(f(x), C1 + C2*x - x**3*(C3 - log(x)/6) + C4*x**2)
 
     assert dsolve(eq1, f(x), hint=hint) == sol1
     assert dsolve(eq2, f(x), hint=hint) == sol2
     assert dsolve(eq3, f(x), hint=hint) == sol3
     assert dsolve(eq4, f(x), hint=hint) == sol4
     assert dsolve(eq5, f(x), hint=hint) == sol5
-
-
+    assert dsolve(eq6, f(x), hint=hint) == sol6
+    assert dsolve(eq7, f(x), hint=hint) == sol7
+    assert dsolve(eq8, f(x), hint=hint) == sol8
+    assert dsolve(eq9, f(x), hint=hint) == sol9
+    assert dsolve(eq10, f(x), hint=hint) == sol10
+    assert dsolve(eq11, f(x), hint=hint+'_Integral') == sol11
+    assert dsolve(eq12, f(x), hint=hint) == sol12
     assert checksol(eq1, f(x), sol1, 3)
     assert checksol(eq2, f(x), sol2, 3)
     assert checksol(eq3, f(x), sol3, 1)
-
+    assert checksol(eq4, f(x), sol4, 2)
+    assert checksol(eq5, f(x), sol5, 2)
+    assert checksol(eq6, f(x), sol6, 2)
+    assert checksol(eq7, f(x), sol7, 2)
+    assert checksol(eq8, f(x), sol8, 2)
+    assert checksol(eq9, f(x), sol9, 3)
+    assert checksol(eq10, f(x), sol10, 2)
+    assert checksol(eq12, f(x), sol12, 4)
 
 def test_Liouville_ODE():
     # First part used to be test_ODE_1() from test_solvers.py

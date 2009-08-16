@@ -714,7 +714,8 @@ def odesimp(eq, func, order, hint):
            /
 
         >>> pprint(odesimp(eq, f(x), 1,
-        ... hint='1st_homogeneous_coeff_subs_indep_div_dep'))
+        ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
+        ... )) # (this is slow, so we skip) # doctest: +SKIP
             x
         --------- = C1
            /f(x)\
@@ -2155,8 +2156,9 @@ def _undetermined_coefficients_match(expr, x):
                     return False
             else:
                 return False
-        elif expr.is_Pow and expr.base.is_Symbol and expr.exp.is_Integer:
-            return True
+        elif expr.is_Pow and expr.base.is_Symbol and expr.exp.is_Integer and \
+            expr.exp >= 0:
+                return True
         elif expr.is_Pow and expr.base.is_number:
             if expr.exp.match(a*x + b):
                 return True
