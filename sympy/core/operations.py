@@ -114,7 +114,7 @@ class AssocOp(Basic):
         In the example above, "a+b*c" is the pattern, and "x+y*z" is the
         expression. Some more examples:
 
-        >>> (a+b*c)._matches_commutative(sin(x)+y*z)
+        >>> (a+b*c)._matches_commutative(sin(x)+y*z) #doctest: +SKIP
         {a_: sin(x), b_: y, c_: z}
         >>> (a+sin(b)*c)._matches_commutative(x+sin(y)*z)
         {a_: x, b_: y, c_: z}
