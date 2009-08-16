@@ -216,13 +216,15 @@ def dmp_add(f, g, u, K):
     if not u:
         return dup_add(f, g, K)
 
-    if dmp_zero_p(f, u):
-        return g
-    if dmp_zero_p(g, u):
-        return f
-
     df = dmp_degree(f, u)
+
+    if df < 0:
+        return g
+
     dg = dmp_degree(g, u)
+
+    if dg < 0:
+        return f
 
     v = u-1
 
@@ -240,10 +242,10 @@ def dmp_add(f, g, u, K):
 
 def dup_sub(f, g, K):
     """Subtract dense polynomials in `K[x]`. """
-    if not g:
-        return f
     if not f:
         return dup_neg(g, K)
+    if not g:
+        return f
 
     df = dup_degree(f)
     dg = dup_degree(g)
@@ -265,13 +267,15 @@ def dmp_sub(f, g, u, K):
     if not u:
         return dup_sub(f, g, K)
 
-    if dmp_zero_p(g, u):
-        return f
-    if dmp_zero_p(f, u):
+    df = dmp_degree(f, u)
+
+    if df < 0:
         return dmp_neg(g, u, K)
 
-    df = dmp_degree(f, u)
     dg = dmp_degree(g, u)
+
+    if dg < 0:
+        return f
 
     v = u-1
 
@@ -334,13 +338,15 @@ def dmp_mul(f, g, u, K):
     if f == g:
         return dmp_sqr(f, u, K)
 
-    if dmp_zero_p(f, u):
-        return f
-    if dmp_zero_p(g, u):
-        return g
-
     df = dmp_degree(f, u)
+
+    if df < 0:
+        return f
+
     dg = dmp_degree(g, u)
+
+    if dg < 0:
+        return g
 
     h, v = [], u-1
 
@@ -386,10 +392,11 @@ def dmp_sqr(f, u, K):
     if not u:
         return dup_sqr(f, K)
 
-    if dmp_zero_p(f, u):
+    df = dmp_degree(f, u)
+
+    if df < 0:
         return f
 
-    df = dmp_degree(f, u)
     h, v = [], u-1
 
     for i in xrange(0, 2*df+1):
