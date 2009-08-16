@@ -9,24 +9,26 @@ for internal use.  Use dsolve(ode, func, hint=hint) to solve an ode
 using a specific hint.  See also the docstring on dsolve().
 
 == Methods currently implemented ==
+
 The following methods are implemented for solving ordinary differential
 equations.  See the docstrings of the various ode_hint() functions for
 more information on each (run help(ode)):
-- 1st order separable differential equations
-- 1st order differential equations whose coefficients or dx and dy are
-functions homogeneous of the same order.
-- 1st order exact differential equations.
-- 1st order linear differential equations
-- 1st order Bernoulli differential equations.
-- 2nd order Liouville differential equations.
-- nth order linear homogeneous differential equation with constant
-  coefficients.
-- nth order linear inhomogeneous differential equation with constant
-coefficients using the method of undetermined coefficients.
-- nth order linear inhomogeneous differential equation with constant
-coefficients using the method of variation of parameters.
+    - 1st order separable differential equations
+    - 1st order differential equations whose coefficients or dx and dy
+      are functions homogeneous of the same order.
+    - 1st order exact differential equations.
+    - 1st order linear differential equations
+    - 1st order Bernoulli differential equations.
+    - 2nd order Liouville differential equations.
+    - nth order linear homogeneous differential equation with constant
+      coefficients.
+    - nth order linear inhomogeneous differential equation with constant
+      coefficients using the method of undetermined coefficients.
+    - nth order linear inhomogeneous differential equation with constant
+      coefficients using the method of variation of parameters.
 
 == Philosophy behind this module ==
+
 This module is designed to make it easy to add new ODE solving methods
 without having to mess with the code of other methods too much.  The
 idea is that there is a classify_ode() function, which takes in an ODE
@@ -43,6 +45,7 @@ solving for), simplify the arbitrary constants in the expression, and
 evaluate any integrals, if the hint allows it.
 
 == How to add new solution methods ==
+
 If you have an ODE that you want dsolve() to be able to solve, try to
 avoid adding special case code here.  Instead, try finding a general
 method that will solve your ODE, as well as others.  This way, the ode
@@ -142,18 +145,11 @@ consider common ways that you can rearrange your solution to have
 constantsimp() take better advantage of it.
 
 Feel free to refactor existing hints to avoid duplicating code or
-creating inconsistencies.  For example, currently the main variation of
-parameters algorithm is in
-ode_nth_linear_constant_coeff_variation_of_parameters() because constant
-coefficients is the only case of nth linear currently implemented, but
-if more linear cases are implemented that could take advantage of
-variation of parameters, then the code should probably be moved into an
-external function that is called from
-ode_nth_linear_constant_coeff_variation_of_parameters and whatever
-additional hint method is implemented.  And if you can show that your
-method exactly duplicates an existing method, including in the
-simplicity and speed of the solutions, then you can remove the old, less
-general method.
+creating inconsistencies.  If you can show that your method exactly
+duplicates an existing method, including in the simplicity and speed of
+obtaining the solutions, then you can remove the old, less general
+method.  The existing code is tested extensively in test_ode.py, so if
+anything is broken, one of those tests will surely fail.
 
 """
 from sympy.core.basic import Add, Basic, C, Mul, Pow
@@ -306,7 +302,6 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         >>> from sympy import *
         >>> x = Symbol('x')
         >>> f = Function('f')
-
         >>> dsolve(Derivative(f(x),x,x)+9*f(x), f(x))
         f(x) == C1*sin(3*x) + C2*cos(3*x)
         >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
@@ -421,6 +416,7 @@ def classify_ode(eq, func, dict=False):
     where hintname is the name of the hint without "_Integral".
 
     == Notes on Hint Names ==
+
     === "_Integral" ===
 
         If a classification has "_Integral" at the end, it will return
@@ -489,7 +485,6 @@ def classify_ode(eq, func, dict=False):
         >>> from sympy import *
         >>> x = Symbol('x')
         >>> f = Function('f')
-
         >>> classify_ode(Eq(f(x).diff(x), 0), f(x))
         ('separable', '1st_linear', '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',

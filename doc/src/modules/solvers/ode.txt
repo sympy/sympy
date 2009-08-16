@@ -72,3 +72,8 @@ These functions are intended for internal use by :func:`dsolve` and others.  Non
 :obj:`separable`
 ^^^^^^^^^^^^^^^^
 .. automethod:: sympy.solvers.ode.ode_separable
+
+Information on the ode module
+-----------------------------
+
+.. automodule:: sympy.solvers.ode
