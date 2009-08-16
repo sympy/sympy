@@ -27,7 +27,7 @@ from sympy.polys.densebasic import (
     dmp_exclude, dmp_include,
     dmp_inject, dmp_eject,
     dup_terms_gcd, dmp_terms_gcd,
-    dmp_list_terms,
+    dmp_list_terms, dmp_apply_pairs,
 )
 
 from sympy.polys.specialpolys import (
@@ -540,4 +540,17 @@ def test_dmp_list_terms():
 
     assert dmp_list_terms([[1],[2,4],[3,5,0]], 1, ZZ) == \
         [((2, 0), 1), ((1, 1), 2), ((1, 0), 4), ((0, 2), 3), ((0, 1), 5)]
+
+def test_dmp_apply_pairs():
+    h = lambda a, b: a*b
+
+    assert dmp_apply_pairs([1,2,3], [4,5,6], h, [], 0, ZZ) == [4,10,18]
+
+    assert dmp_apply_pairs([2,3], [4,5,6], h, [], 0, ZZ) == [10,18]
+    assert dmp_apply_pairs([1,2,3], [5,6], h, [], 0, ZZ) == [10,18]
+
+    assert dmp_apply_pairs([[1,2],[3]], [[4,5],[6]], h, [], 1, ZZ) == [[4,10],[18]]
+
+    assert dmp_apply_pairs([[1,2],[3]], [[4],[5,6]], h, [], 1, ZZ) == [[8],[18]]
+    assert dmp_apply_pairs([[1],[2,3]], [[4,5],[6]], h, [], 1, ZZ) == [[5],[18]]
 

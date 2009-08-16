@@ -736,3 +736,40 @@ def dmp_list_terms(f, u, K):
     else:
         return terms
 
+def dup_apply_pairs(f, g, h, args, K):
+    """Apply `h` to pairs of coefficients of `f` and `g`. """
+    n, m = len(f), len(g)
+
+    if n != m:
+        if n > m:
+            g = [K.zero]*(n-m) + g
+        else:
+            f = [K.zero]*(m-n) + f
+
+    result = []
+
+    for a, b in zip(f, g):
+        result.append(h(a, b, *args))
+
+    return dup_strip(result)
+
+def dmp_apply_pairs(f, g, h, args, u, K):
+    """Apply `h` to pairs of coefficients of `f` and `g`. """
+    if not u:
+        return dup_apply_pairs(f, g, h, args, K)
+
+    n, m, v = len(f), len(g), u-1
+
+    if n != m:
+        if n > m:
+            g = dmp_zeros(n-m, v, K) + g
+        else:
+            f = dmp_zeros(m-n, v, K) + f
+
+    result = []
+
+    for a, b in zip(f, g):
+        result.append(dmp_apply_pairs(a, b, h, args, v, K))
+
+    return dmp_strip(result, u)
+
