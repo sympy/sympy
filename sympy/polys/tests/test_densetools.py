@@ -720,7 +720,7 @@ def test_dup_content():
 
     assert dup_content([QQ(2,3),QQ(4,5)], QQ) == QQ(1)
 
-def _test_dmp_content():
+def test_dmp_content():
     assert dmp_content([[-2]], 1, ZZ) == [2]
 
     f, g, F = [ZZ(3),ZZ(2),ZZ(1)], [ZZ(1)], []
@@ -731,9 +731,9 @@ def _test_dmp_content():
 
     assert dmp_content(F, 1, ZZ) == f
 
-    assert dmp_one_p(dmp_content(f_4, 2, ZZ))
-    assert dmp_one_p(dmp_content(f_5, 2, ZZ))
-    assert dmp_one_p(dmp_content(f_6, 3, ZZ))
+    assert dmp_one_p(dmp_content(f_4, 2, ZZ), 1, ZZ)
+    assert dmp_one_p(dmp_content(f_5, 2, ZZ), 1, ZZ)
+    assert dmp_one_p(dmp_content(f_6, 3, ZZ), 2, ZZ)
 
 def test_dmp_ground_content():
     assert dmp_ground_content([[]], 1, ZZ) == ZZ(0)
