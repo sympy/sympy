@@ -21,6 +21,10 @@ These are functions that are imported into the global namespace with ``from symp
 ^^^^^^^^^^^^^^^^^^^^
 .. automethod:: sympy.solvers.ode.deriv_degree
 
+:func:`checkodesol`
+^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.checkodesol
+
 :func:`homogeneous_order`
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: sympy.solvers.ode.homogeneous_order

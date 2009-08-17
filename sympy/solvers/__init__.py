@@ -8,7 +8,8 @@ from solvers import solve, solve_linear_system, solve_linear_system_LU, \
 
 from recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
 
-from ode import classify_ode, dsolve, deriv_degree, homogeneous_order
+from ode import checkodesol, classify_ode, deriv_degree, dsolve, \
+    homogeneous_order
 
 from polysys import solve_poly_system
 

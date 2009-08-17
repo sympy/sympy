@@ -30,7 +30,7 @@ more information on each (run help(ode)):
 == Philosophy behind this module ==
 
 This module is designed to make it easy to add new ODE solving methods
-without having to mess with the code of other methods too much.  The
+without having to mess with the solving code for other methods.  The
 idea is that there is a classify_ode() function, which takes in an ODE
 and tells you what hints, if any, will solve the ODE.  It does this
 without attempting to solve the ODE, so it is fast.  Each solving method
@@ -324,7 +324,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         eq = eq.lhs
 
     # Magic that should only be used internally.  Prevents classify_ode from
-    # being called more than it needs to be by sending its results through
+    # being called more than it needs to be by passing its results through
     # recursive calls.
     if not kwargs.has_key('classify') or kwargs['classify']:
         hints = classify_ode(eq, func, dict=True)
@@ -792,6 +792,153 @@ def odesimp(eq, func, order, hint):
     eq = constantsimp(eq, x, 2*order)
 
     return eq
+
+@vectorize(2)
+def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
+    """
+    Substitutes sol for func in ode and checks that the result is 0.
+
+    This only works when func is one function, like f(x).  sol can be a
+    single solution or a list of solutions.  Either way, each solution
+    must be an Equality instance (e.g., Eq(f(x), C1*cos(x) +
+    C2*sin(x))).  If it is a list of solutions, it will return a list of
+    the checkodesol() result for each solution.
+
+    It tries the following methods, in order, until it finds zero
+    equivalence:
+
+        1. Substitute the solution for f in the original equation.  This
+           only works if the ode is solved for f.  It will attempt to solve
+           it first unless solve_for_func == False
+        2. Take n derivatives of the solution, where n is the order of
+           ode, and check to see if that is equal to the solution.  This
+           only works on exact odes.
+        3. Take the 1st, 2nd, ..., nth derivatives of the solution, each
+           time solving for the derivative of f of that order (this will
+           always be possible because f is a linear operator).  Then back
+           substitute each derivative into ode in reverse order.
+
+    This function returns True if the solution checks. Otherwise, it
+    returns the result of the third test above.  Note that sometimes
+    this function will return an expression that is identically equal to
+    0 instead of returning True.  This is because simplify() cannot
+    reduce the expression to 0.  If an expression returned by this
+    function vanishes identically, then sol really is a solution to ode.
+
+    If this function seems to hang, it is probably because of a hard
+    simplification.
+
+    Note that the boolean value of the result of checkodesol should
+    always be True. To test, use "is True" and "is not True"
+
+    == Examples ==
+        >>> from sympy import *
+        >>> x = Symbol('x')
+        >>> f = Function('f')
+        >>> assert checkodesol(f(x).diff(x), f(x), Eq(f(x), C1)) is True
+        >>> assert checkodesol(f(x).diff(x), f(x), Eq(f(x), x)) is not True
+        >>> checkodesol(f(x).diff(x, 2), f(x), Eq(f(x), x**2))
+        2
+
+    """
+    if not isinstance(func, Function) or len(func.args) != 1:
+        raise ValueError("func must be a function of one variable, not " + str(func))
+    x = func.args[0]
+    s = True
+    testnum = 0
+    if not isinstance(ode, Equality):
+        ode = Eq(ode, 0)
+    if not isinstance(sol, Equality):
+        raise ValueError("sol must be an Equality, got " + str(sol))
+    if order == 'auto':
+        order = deriv_degree(ode, func)
+    if solve_for_func and not (sol.lhs == func and not sol.rhs.has(func)) and not \
+        (sol.rhs == func and not sol.lhs.has(func)):
+            try:
+                solved = solve(sol, func)
+                if solved == []:
+                    raise NotImplementedError
+            except NotImplementedError:
+                pass
+            else:
+                result = checkodesol(ode, func, map(lambda t: Eq(func, t), solved), \
+                    order=order, solve_for_func=False)
+                if all(i is True for i in result):
+                    return True
+                else:
+                    return filter(lambda t: t is not True, result)
+    while s:
+        if testnum == 0:
+            # First pass, try substituting a solved solution directly into the ode
+            # This has the highest chance of succeeding.
+            if sol.lhs == func:
+                    s = ode.subs(func, sol.rhs)
+            elif sol.rhs == func:
+                    s = ode.subs(func, sol.lhs)
+            else:
+                testnum += 1
+                continue
+            s = simplify(s.lhs - s.rhs)
+            testnum += 1
+        elif testnum == 1:
+            # If we cannot substitute f, try seeing if the nth derivative is equal
+            # This will only work for odes that are exact, by definition.
+            s = simplify(trigsimp(diff(sol.lhs, x, order) - diff(sol.rhs, x, order)) - \
+                trigsimp(ode.lhs) + trigsimp(ode.rhs))
+ #           s2 = simplify(diff(sol.lhs, x, order) - diff(sol.rhs, x, order) - \
+#                ode.lhs + ode.rhs)
+            testnum += 1
+        elif testnum == 2:
+            # Try solving for df/dx and substituting that into the ode.
+            # Thanks to Chris Smith for suggesting this method.  Many of the
+            # comments below are his too.
+            # The method:
+            # - Take each of 1..n derivatives of the solution.
+            # - Solve each nth derivative for d^(n)f/dx^(n)
+            #   (the differential of that order)
+            # - Back substitute into the ode in decreasing order
+            #   (i.e., n, n-1, ...)
+            # - Check the result for zero equivalence
+            sol = sol.lhs - sol.rhs
+            diffsols = {0: sol}
+            for i in range(1, order + 1):
+                # This is what the solution says df/dx should be.
+                ds = diffsols[i - 1].diff(x)
+
+                # Differentiation is a linear operator, so there should always
+                # be 1 solution. Nonetheless, we test just to make sure.
+                # We only need to solve once.  After that, we will automatically
+                # have the solution to the differential in the order we want.
+                if i == 1:
+                    try:
+                        sdf = solve(ds,func.diff(x, i))
+                        if len(sdf) != 1:
+                            raise NotImplementedError
+                    except NotImplementedError:
+                        testnum += 1
+                        break
+                    else:
+                        diffsols[i] = sdf[0]
+                else:
+                    diffsols[i] = ds
+            # Make sure the above didn't fail.
+            if testnum > 2:
+                continue
+            else:
+                # Substitute it into ode to check for self consistency
+                for i in range(order, 0, -1):
+                    # It may help if we simplify as we go
+                    ode = simplify(ode.subs(func.diff(x, i), diffsols[i]))
+                # No sense in overworking simplify--just prove the numerator goes to zero
+                s = simplify(trigsimp((ode.lhs-ode.rhs).as_numer_denom()[0]))
+                testnum += 1
+        else:
+            break
+
+    if not s:
+        return True
+    else:
+        return s
 
 # FIXME: rewrite this as a key function, so it works in Python 3
 # Python 3 removes the cmp key from sorted.  key should be better, because you
@@ -2381,5 +2528,4 @@ def ode_separable(eq, func, order, match):
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
         (r['y'], None, f(x))), C.Integral(-r['m1']['coeff']*r['m1'][x]/
         r['m2'][x], x)+C1)
-
 
