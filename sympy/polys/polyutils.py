@@ -47,27 +47,33 @@ def _analyze_extension(args):
         return set([])
 
 def _analyze_power(base, exp):
-    """Extract non-rational part of `exp` to the `base`. """
-    if exp.is_Rational:
-        if not exp.is_Integer:
-            base = Pow(base, Rational(1, exp.q))
-
-        exp = exp.p
-    else:
-        exp, tail = exp.as_coeff_terms()
-
+    """Extract non-integer part of `exp` to the `base`. """
+    if exp.is_Number:
         if exp.is_Rational:
             if not exp.is_Integer:
-                tail += (Rational(1, exp.q),)
+                base = Pow(base, Rational(1, exp.q))
 
             exp = exp.p
         else:
-            raise PolynomialError("%s is not a valid polynomial term" % term)
+            base, exp = Pow(base, exp), 1
+    else:
+        exp, tail = exp.as_coeff_terms()
+
+        if exp.is_Number:
+            if exp.is_Rational:
+                if not exp.is_Integer:
+                    tail += (Rational(1, exp.q),)
+
+                exp = exp.p
+            else:
+                tail, exp = (exp,) + tail, 1
+        else:
+            raise PolynomialError("got invalid polynomial term")
 
         base = Pow(base, Mul(*tail))
 
     if exp < 0:
-        exp, base = -exp, Pow(base, S(-1))
+        exp, base = -exp, Pow(base, -S.One)
 
     return base, exp
 
