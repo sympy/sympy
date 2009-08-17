@@ -748,23 +748,26 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     eq9 = f(x).diff(x, 2) + f(x).diff(x) + f(x) - x**2
     eq10 = f(x).diff(x, 2) - 2*f(x).diff(x) - 8*f(x) - 9*x*exp(x) - 10*exp(-x)
     eq11 = f(x).diff(x, 2) - 3*f(x).diff(x) - 2*exp(2*x)*sin(x)
-    eq12 = f(x).diff(x, 4) - 2*f(x).diff(x, 2) + f(x) - x + sin(x)# Skip eq12 for now, match bug
-    eq13 = f(x).diff(x, 2) + f(x).diff(x) - x**2 + 2*x # Skip eq13 for now, match bug
-    eq14 = f(x).diff(x, 2) + f(x).diff(x) - x - sin(2*x) # Skip eq14 for now, match bug
+    eq12 = f(x).diff(x, 4) - 2*f(x).diff(x, 2) + f(x) - x + sin(x)
+    eq13 = f(x).diff(x, 2) + f(x).diff(x) - x**2 - 2*x
+    eq14 = f(x).diff(x, 2) + f(x).diff(x) - x - sin(2*x)
     eq15 = f(x).diff(x, 2) + f(x) - 4*x*sin(x)
     eq16 = f(x).diff(x, 2) + 4*f(x) - x*sin(2*x)
     eq17 = f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) - x**2*exp(-x)
-    eq18 = f(x).diff(x, 3) + 3*f(x).diff(x, 2) + 3*f(x).diff(x) + f(x) - 2*exp(-x) + x**2*exp(-x)
+    eq18 = f(x).diff(x, 3) + 3*f(x).diff(x, 2) + 3*f(x).diff(x) + f(x) - 2*exp(-x) + \
+        x**2*exp(-x)
     eq19 = f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - exp(-2*x) - x**2
     eq20 = f(x).diff(x, 2) - 3*f(x).diff(x) + 2*f(x) - x*exp(-x)
     eq21 = f(x).diff(x, 2) + f(x).diff(x) - 6*f(x) - x - exp(2*x)
-    eq22 = f(x).diff(x, 2) + f(x) - sin(x) - exp(-x) # Skip eq22 for now, match bug
+    eq22 = f(x).diff(x, 2) + f(x) - sin(x) - exp(-x)
     eq23 = f(x).diff(x, 3) - 3*f(x).diff(x, 2) + 3*f(x).diff(x) - f(x) - exp(x)
-    eq24 = f(x).diff(x, 2) + f(x) - S(1)/2 - cos(2*x)/2 # sin(x)**2, skip eq24 for now, match bug
-    eq25 = f(x).diff(x, 3) - f(x).diff(x) - exp(2*x)*(S(1)/2 - cos(2*x)/2) # exp(2*x)*sin(x)**2
-    eq26 = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - sin(x) - cos(x) # skip eq26 for now, match bug
-    eq26a = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - exp(I*x) # skip eq26a for now, match bug
-    eq27 = f(x).diff(x, 2) + f(x) - cos(x)/2 + cos(3*x)/2 # sin(2*x)*sin(x), skip 3127 for now, match bug
+    # sin(x)**2
+    eq24 = f(x).diff(x, 2) + f(x) - S(1)/2 - cos(2*x)/2
+    # exp(2*x)*sin(x)**2
+    eq25 = f(x).diff(x, 3) - f(x).diff(x) - exp(2*x)*(S(1)/2 - cos(2*x)/2)
+    eq26 = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - sin(x) - cos(x)
+    # sin(2*x)*sin(x), skip 3127 for now, match bug
+    eq27 = f(x).diff(x, 2) + f(x) - cos(x)/2 + cos(3*x)/2
     eq28 = f(x).diff(x) - 1
     sol1 = Eq(f(x), -1 - x + (C1 + C2*x - 3*x**2/32 - x**3/24)*exp(-x) + C3*exp(x/3))
     sol2 = Eq(f(x), -1 - x + (C1 + C2*x - x**2/8)*exp(-x) + C3*exp(x/3))
@@ -777,7 +780,9 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     sol9 = Eq(f(x), -2*x + x**2 + (C1*sin(x*sqrt(3)/2) + C2*cos(x*sqrt(3)/2))*exp(-x/2))
     sol10 = Eq(f(x), -x*exp(x) - 2*exp(-x) + C1*exp(-2*x) + C2*exp(4*x))
     sol11 = Eq(f(x), C1 + (-3*sin(x)/5 - cos(x)/5)*exp(2*x) + C2*exp(3*x))
-
+    sol12 = Eq(f(x), x - sin(x)/4 + (C1 + C2*x)*exp(x) + (C3 + C4*x)*exp(-x))
+    sol13 = Eq(f(x), C1 + x**3/3 + C2*exp(-x))
+    sol14 = Eq(f(x), C1 - x - sin(2*x)/5 - cos(2*x)/10 + x**2/2 + C2*exp(-x))
     sol15 = Eq(f(x), (C1 + x)*sin(x) + (C2 - x**2)*cos(x))
     sol16 = Eq(f(x), (C1 + x/16)*sin(2*x) + (C2 - x**2/8)*cos(2*x))
     sol17 = Eq(f(x), (C1 + C2*x + x**4/12)*exp(-x))
@@ -785,12 +790,13 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     sol19 = Eq(f(x), S(7)/4 - 3*x/2 + x**2/2 + C1*exp(-x) + (C2 - x)*exp(-2*x))
     sol20 = Eq(f(x), C1*exp(x) + (S(5)/36 + x/6)*exp(-x) + C2*exp(2*x))
     sol21 = Eq(f(x), -S(1)/36 - x/6 + C1*exp(-3*x) + (C2 + x/5)*exp(2*x))
-
+    sol22 = Eq(f(x), C1*sin(x) + (C2 - x/2)*cos(x) + exp(-x)/2)
     sol23 = Eq(f(x), (C1 + C2*x + C3*x**2 + x**3/6)*exp(x))
-
+    sol24 = Eq(f(x), S(1)/2 - cos(2*x)/6 + C1*sin(x) + C2*cos(x))
     sol25 = Eq(f(x), C1 + C2*exp(x) + C3*exp(-x) + (S(1)/12 - 7*sin(2*x)/520 + \
         9*cos(2*x)/520)*exp(2*x))
-
+    sol26 = Eq(f(x), C1 + (C2 + C3*x - x**2/8)*sin(x) + (C4 + C5*x + x**2/8)*cos(x) + x**2)
+    sol27 = Eq(f(x), cos(3*x)/16 + C1*cos(x) + (C2 + x/4)*sin(x))
     sol28 = Eq(f(x), C1 + x)
     assert dsolve(eq1, f(x), hint=hint) == sol1
     assert dsolve(eq2, f(x), hint=hint) == sol2
@@ -803,9 +809,9 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     assert dsolve(eq9, f(x), hint=hint) == sol9
     assert dsolve(eq10, f(x), hint=hint) == sol10
     assert dsolve(eq11, f(x), hint=hint) == sol11
-#    assert dsolve(eq12, f(x), hint=hint) == sol12
-#    assert dsolve(eq13, f(x), hint=hint) == sol13
-#    assert dsolve(eq14, f(x), hint=hint) == sol14
+    assert dsolve(eq12, f(x), hint=hint) == sol12
+    assert dsolve(eq13, f(x), hint=hint) == sol13
+    assert dsolve(eq14, f(x), hint=hint) == sol14
     assert dsolve(eq15, f(x), hint=hint) == sol15
     assert dsolve(eq16, f(x), hint=hint) == sol16
     assert dsolve(eq17, f(x), hint=hint) == sol17
@@ -813,13 +819,12 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     assert dsolve(eq19, f(x), hint=hint) == sol19
     assert dsolve(eq20, f(x), hint=hint) == sol20
     assert dsolve(eq21, f(x), hint=hint) == sol21
-#    assert dsolve(eq22, f(x), hint=hint) == sol22
+    assert dsolve(eq22, f(x), hint=hint) == sol22
     assert dsolve(eq23, f(x), hint=hint) == sol23
-#    assert dsolve(eq24, f(x), hint=hint) == sol24
+    assert dsolve(eq24, f(x), hint=hint) == sol24
     assert dsolve(eq25, f(x), hint=hint) == sol25
-#    assert dsolve(eq26, f(x), hint=hint) == sol26
-#    assert dsolve(eq26a, f(x), hint=hint) == sol26
-#    assert dsolve(eq27, f(x), hint=hint) == sol27
+    assert dsolve(eq26, f(x), hint=hint) == sol26
+    assert dsolve(eq27, f(x), hint=hint) == sol27
     assert dsolve(eq28, f(x), hint=hint) == sol28
     assert checkodesol(eq1, f(x), sol1, order=3, solve_for_func=False) is True
     assert checkodesol(eq2, f(x), sol2, order=3, solve_for_func=False) is True
@@ -832,9 +837,9 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     assert checkodesol(eq9, f(x), sol9, order=2, solve_for_func=False) is True
     assert checkodesol(eq10, f(x), sol10, order=2, solve_for_func=False) is True
     assert checkodesol(eq11, f(x), sol11, order=2, solve_for_func=False) is True
-#    assert checkodesol(eq12, f(x), sol12, order=4, solve_for_func=False) is True
-#    assert checkodesol(eq13, f(x), sol13, order=2, solve_for_func=False) is True
-#    assert checkodesol(eq14, f(x), sol14, order=2, solve_for_func=False) is True
+    assert checkodesol(eq12, f(x), sol12, order=4, solve_for_func=False) is True
+    assert checkodesol(eq13, f(x), sol13, order=2, solve_for_func=False) is True
+    assert checkodesol(eq14, f(x), sol14, order=2, solve_for_func=False) is True
     assert checkodesol(eq15, f(x), sol15, order=2, solve_for_func=False) is True
     assert checkodesol(eq16, f(x), sol16, order=2, solve_for_func=False) is True
     assert checkodesol(eq17, f(x), sol17, order=2, solve_for_func=False) is True
@@ -842,13 +847,24 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     assert checkodesol(eq19, f(x), sol19, order=2, solve_for_func=False) is True
     assert checkodesol(eq20, f(x), sol20, order=2, solve_for_func=False) is True
     assert checkodesol(eq21, f(x), sol21, order=2, solve_for_func=False) is True
-#    assert checkodesol(eq22, f(x), sol22, order=2, solve_for_func=False) is True
+    assert checkodesol(eq22, f(x), sol22, order=2, solve_for_func=False) is True
     assert checkodesol(eq23, f(x), sol23, order=3, solve_for_func=False) is True
-#    assert checkodesol(eq24, f(x), sol24, order=2, solve_for_func=False) is True
+    assert checkodesol(eq24, f(x), sol24, order=2, solve_for_func=False) is True
     assert checkodesol(eq25, f(x), sol25, order=3, solve_for_func=False) is True
-#    assert checkodesol(eq26, f(x), sol26, order=5, solve_for_func=False) is True
-#    assert checkodesol(eq27, f(x), sol27, order=2, solve_for_func=False) is True
+    assert checkodesol(eq26, f(x), sol26, order=5, solve_for_func=False) is True
+    assert checkodesol(eq27, f(x), sol27, order=2, solve_for_func=False) is True
     assert checkodesol(eq28, f(x), sol28, order=1, solve_for_func=False) is True
+
+@XFAIL
+def test_nth_linear_constant_coeff_undetermined_coefficients_imaginary_exp():
+    # Equivalent to eq26, in test_nth_linear_constant_coeff_undetermined_coefficients
+    # above.  This fails because the algorithm for undetermined coefficients
+    # doesn't know to multiply exp(I*x) by sufficient x because it is linearly
+    # dependent on sin(x) and cos(x).
+    eq26a = f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x - exp(I*x)
+    sol26 = Eq(f(x), C1 + (C2 + C3*x - x**2/8)*sin(x) + (C4 + C5*x + x**2/8)*cos(x) + x**2)
+    assert dsolve(eq26a, f(x), hint=hint) == sol26
+    assert checkodesol(eq26a, f(x), sol26, order=5, solve_for_func=False) is True
 
 def test_nth_linear_constant_coeff_variation_of_parameters():
     hint = 'nth_linear_constant_coeff_variation_of_parameters'
@@ -864,7 +880,6 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     eq10 = f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) - exp(-x)/x
     eq11 = f(x).diff(x, 2) + f(x) - 1/sin(x)*1/cos(x)
     eq12 = f(x).diff(x, 4)  - 1/x
-
     sol1 = Eq(f(x), -1 - x - (C1 + C2*x + 3*x**2/32 + x**3/24)*exp(-x) + C3*exp(x/3))
     sol2 = Eq(f(x), -1 - x - (C1 + C2*x + x**2/8)*exp(-x) + C3*exp(x/3))
     sol3 = Eq(f(x), C1 + x)
@@ -878,7 +893,6 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     sol11 = Eq(f(x), cos(x)*(C1 - Integral(1/cos(x), x)) + sin(x)*(C2 + \
         Integral(1/sin(x), x)))
     sol12 = Eq(f(x), C1 + C2*x - x**3*(C3 - log(x)/6) + C4*x**2)
-
     assert dsolve(eq1, f(x), hint=hint) == sol1
     assert dsolve(eq2, f(x), hint=hint) == sol2
     assert dsolve(eq3, f(x), hint=hint) == sol3
@@ -902,6 +916,15 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     assert checkodesol(eq9, f(x), sol9, order=3, solve_for_func=False) is True
     assert checkodesol(eq10, f(x), sol10, order=2, solve_for_func=False) is True
     assert checkodesol(eq12, f(x), sol12, order=4, solve_for_func=False) is True
+
+def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
+    # solve_variation_of_parameters should attempt to simplify the Wronskian
+    # if simplify=False.  This test will run considerably slower if this
+    # isn't working.
+    hint = 'nth_linear_constant_coeff_variation_of_parameters'
+    assert len(str(dsolve(f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) -
+        2*x - exp(I*x), f(x), hint + "_Integral", simplify=False))) == 2522
+
 
 def test_Liouville_ODE():
     # First part used to be test_ODE_1() from test_solvers.py

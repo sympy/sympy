@@ -386,13 +386,15 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         solvefunc = globals()['ode_' + hint] # convert the string into a function
     # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
     # attempt to solve for func, and apply any other hint specific simplifications
-    solution = solvefunc(eq, func, order=hints['order'],
-        match=hints[hint])
     if simplify:
-        return odesimp(solution, func, hints['order'], hint)
+        return odesimp(solvefunc(eq, func, order=hints['order'],
+            match=hints[hint]), func, hints['order'], hint)
     else:
         # We still want to integrate (you can disable it separately with the hint)
-        return _handle_Integral(solution, func, hints['order'], hint)
+        r = hints[hint]
+        r['simplify'] = False # Some hints can take advantage of this option
+        return _handle_Integral(solvefunc(eq, func, order=hints['order'],
+            match=hints[hint]), func, hints['order'], hint)
 
 
 def classify_ode(eq, func, dict=False):
@@ -613,33 +615,39 @@ def classify_ode(eq, func, dict=False):
 
     if order > 0:
         # nth order linear ODE
+
+        # I used to use the below match, but bugs in match would prevent
+        # it from matching in all cases, so I wrote _match_nth_linear instead.
+        # See issues 1429 and 1601.
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x)
-        j = 0
-        s = S(0)
-        wilds = []
-        # Build a match expression for a nth order linear ode
-        for i in numbered_symbols(prefix='a', function=Wild, exclude=[f(x)]):
-            if j == order+1:
-                break
-            wilds.append(i)
-            s += i*f(x).diff(x,j)
-            j += 1
-        s += b
+#        j = 0
+#        s = S(0)
+#        wilds = []
+#        # Build a match expression for a nth order linear ode
+#        for i in numbered_symbols(prefix='a', function=Wild, exclude=[f(x)]):
+#            if j == order+1:
+#                break
+#            wilds.append(i)
+#            s += i*f(x).diff(x,j)
+#            j += 1
+#        s += b
 
-        r = eq.match(s)
+#        r = eq.match(s)
 
-        if r and all([not r[i].has(x) for i in wilds]):
-            for i in wilds:
-                r[str(i)] = i
-                r['b'] = b
+        r = _nth_linear_match(eq, func, order) # Alternate matching function
+
+        # Constant coefficient case (a_i is constant for all i)
+        if r and all([not r[i].has(x) for i in range(order + 1)]):
             # Inhomogeneous case: F(x) is not identically 0
-            if r[b]:
-                undetcoeff = _undetermined_coefficients_match(r[b], x)
+            if r['b']:
+                undetcoeff = _undetermined_coefficients_match(r['b'], x)
                 matching_hints["nth_linear_constant_coeff_variation_of_parameters"] = r
-                matching_hints["nth_linear_constant_coeff_variation_of_parameters_Integral"] = r
+                matching_hints["nth_linear_constant_coeff_variation_of_parameters" + \
+                    "_Integral"] = r
                 if undetcoeff['test']:
                     r['trialset'] = undetcoeff['trialset']
-                    matching_hints["nth_linear_constant_coeff_undetermined_coefficients"] = r
+                    matching_hints["nth_linear_constant_coeff_undetermined_" + \
+                        "coefficients"] = r
             # Homogeneous case: F(x) is identically 0
             else:
                 matching_hints["nth_linear_constant_coeff_homogeneous"] = r
@@ -1597,6 +1605,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     sol = logcombine(Eq(log(f(x)), int + log(C1)), assume_pos_real=True)
     return sol
 
+# XXX: Should this function maybe go somewhere else?
 def homogeneous_order(eq, *symbols):
     """
     Returns the order n if g is homogeneous and None if it is not
@@ -1937,6 +1946,84 @@ def ode_Liouville(eq, func, order, match):
     sol = Eq(int + C1*C.Integral(exp(-C.Integral(r['h'], x)), x) + C2, 0)
     return sol
 
+
+def _nth_linear_match(eq, func, order):
+    """
+    Matches a differential equation to the linear form:
+
+    a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y + B(x) = 0
+
+    Returns a dict of order:coeff terms, where order is the order of the
+    derivative on each term, and coeff is the coefficient of that
+    derivative.  The key 'b' holds the function B(x). Returns None if
+    the ode is not linear.  This function assumes that func has already
+    been checked to be good.
+
+    == Examples ==
+        >>> from sympy.solvers.ode import _nth_linear_match
+        >>> x = Symbol('x')
+        >>> f = Function('f')
+        >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
+        ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
+        ... sin(x), f(x), 3)
+        {'b': x - sin(x), 1: 2 + cos(x), 0: -1, 2: x, 3: 1}
+        >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
+        ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
+        ... sin(f(x)), f(x), 3) == None
+        True
+
+    """
+    from sympy import S
+    x = func.args[0]
+    terms={'b': S.Zero}
+    for i in range(order + 1):
+        terms[i] = S.Zero
+    if eq.is_Add:
+        for i in eq.args:
+            if not i.has(func):
+                terms['b'] += i
+            else:
+                 # .coeff(func) gets func and all derivatives of func
+                c = i.coeff(func)
+                if not c:
+                    return None
+                else:
+                    t = i.extract_multiplicatively(c)
+                    if t == func:
+                        terms[0] += c
+                    elif isinstance(t, Derivative):
+                        # Make sure every symbol is x
+                        if not all(map(lambda t: t == x, t.symbols)) or \
+                            not t.expr == func:
+                                return None
+                        else:
+                            terms[len(t.symbols)] += c
+                    else:
+                        return None
+    else:
+        # FIXME: use .as_Add() here, when the new polys module is merged in
+        if not eq.has(func):
+            terms['b'] += eq
+        else:
+             # .coeff(func) gets func and all derivatives of func
+            c = eq.coeff(func)
+            if not c:
+                return None
+            else:
+                t = eq.extract_multiplicatively(c)
+                if t == func:
+                    terms[0] += c
+                elif isinstance(t, Derivative):
+                    # Make sure every symbol is x
+                    if not all(map(lambda t: t == x, t.symbols)) or \
+                        not t.expr == func:
+                            return None
+                    else:
+                        terms[len(t.symbols)] += c
+                else:
+                    return None
+    return terms
+
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='sol'):
     """
     Solves an nth order linear homogeneous differential equation with
@@ -2015,11 +2102,11 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     # First, set up characteristic equation.
     m = Symbol('m', dummy=True)
     chareq = S.Zero
-    for i in r:
-        if i == r['b'] or type(i) == str:
+    for i in r.keys():
+        if type(i) == str:
             pass
         else:
-            chareq += r[i]*m**S(i.name[1:])
+            chareq += r[i]*m**i
     chareqroots = RootsOf(chareq, m)
     charroots_exact = list(chareqroots.exact_roots())
     charroots_formal = list(chareqroots.formal_roots())
@@ -2167,7 +2254,7 @@ def solve_undetermined_coefficients(eq, func, order, match):
         raise NotImplementedError("Cannot find " + str(order) + \
         " solutions to the homogeneous equation nessesary to apply " + \
         "undetermined coefficients to " + str(eq) + "(number of terms != order)")
-    issin = True
+    usedsin = set([])
     mult = 0 # The multiplicity of the root
     getmult = True
     for i, reroot, imroot in collectterms:
@@ -2177,11 +2264,12 @@ def solve_undetermined_coefficients(eq, func, order, match):
         if i == 0:
             getmult = True
         if imroot:
-            if issin:
-                check = x**i*exp(reroot*x)*sin(abs(imroot)*x)
-            else:
+            # Alternate between sin and cos
+            if (i, reroot) in usedsin:
                 check = x**i*exp(reroot*x)*cos(imroot*x)
-            issin ^= True # Alternate between sin and cos
+            else:
+                check = x**i*exp(reroot*x)*sin(abs(imroot)*x)
+                usedsin.add((i, reroot))
         else:
             check = x**i*exp(reroot*x)
 
@@ -2408,6 +2496,15 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     applies, because it doesn't use integration, making it faster and
     more reliable.
 
+    Warning, using simplify=False with
+    'nth_linear_constant_coeff_variation_of_parameters' in dsolve()
+    may cause it to hang, because it will not attempt to simplify
+    the Wronskian before integrating.  It is recommended that you only
+    use simplify=False with
+    'nth_linear_constant_coeff_variation_of_parameters_Integral' for
+    this method, especially if the solution to the homogeneous
+    equation has trigonometric functions in it.
+
     == Example ==
         >>> from sympy import *
         >>> x = Symbol('x')
@@ -2445,6 +2542,7 @@ def solve_variation_of_parameters(eq, func, order, match):
     'sol' - The general solution, such as the solution returned by
         ode_nth_linear_constant_coeff_homogeneous(returns='sol')
 
+
     """
     x = func.args[0]
     f = func.func
@@ -2453,11 +2551,13 @@ def solve_variation_of_parameters(eq, func, order, match):
     gensols = r['list']
     gsol = r['sol']
     wr = wronskian(gensols, x)
-    wr = simplify(wr) # We need much better simplification for some ODEs.
-                      # See issue 1563, for example.
 
-    # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
-    wr = trigsimp(wr, deep=True, recursive=True)
+    if r.get('simplify', True):
+        wr = simplify(wr) # We need much better simplification for some ODEs.
+                          # See issue 1563, for example.
+
+        # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
+        wr = trigsimp(wr, deep=True, recursive=True)
     if not wr:
         # The wronskian will be 0 iff the solutions are not linearly independent.
         raise NotImplementedError("Cannot find " + str(order) + \
@@ -2470,10 +2570,12 @@ def solve_variation_of_parameters(eq, func, order, match):
     negoneterm = (-1)**(order)
     for i in gensols:
         psol += negoneterm*C.Integral(wronskian(filter(lambda x: x != i, \
-        gensols), x)*r[r['b']]/wr, x)*i/r[r['a' + str(order) + '_']]
+        gensols), x)*r['b']/wr, x)*i/r[order]
         negoneterm *= -1
-    psol = simplify(psol)
-    psol = trigsimp(psol, deep=True)
+
+    if r.get('simplify', True):
+        psol = simplify(psol)
+        psol = trigsimp(psol, deep=True)
     return Eq(f(x), gsol.rhs + psol)
 
 def ode_separable(eq, func, order, match):
