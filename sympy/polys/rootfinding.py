@@ -12,6 +12,7 @@ from sympy.polys.factortools import poly_factors
 
 from sympy.ntheory import divisors
 from sympy.functions import exp
+from sympy.core.symbol import Symbol
 
 def roots_linear(f):
     """Returns a list of roots of a linear polynomial."""
@@ -36,79 +37,112 @@ def roots_quadratic(f):
     return [ simplify(r) for r in roots ]
 
 def roots_cubic(f):
-    """Returns a list of  roots of a cubic polynomial."""
-    if isinstance(f, (tuple, list)):
-        a, b, c, d = f
-    else:
-        a, b, c, d = f.iter_all_coeffs()
+    """Returns a list of roots of a cubic polynomial."""
+    one, a, b, c = f.as_monic().iter_all_coeffs()
 
-    b, c, d = b/a, c/a, d/a
+    if c is S.Zero:
+        x1, x2 = roots([1,a,b], multiple = True)
+        return [x1, S.Zero, x2]
 
-    p = c - b**2 / 3
-    q = d + (2*b**3 - 9*b*c) / 27
+    p = b - a**2/3
+    q = c - a*b/3 + 2*a**3/27
+
+    pon3 = p/3
+    aon3 = a/3
 
     if p is S.Zero:
         if q is S.Zero:
-            return [-b/3] * 3
+            return [-aon3] * 3
         else:
             u1 = q**Rational(1, 3)
+    elif q is S.Zero:
+        y1, y2 = roots([1, 0, p], multiple=True)
+        return [tmp - aon3 for tmp in [y1, S.Zero, y2]]
     else:
-        u1 = (q/2 + (q**2/4 + p**3/27)**S.Half)**Rational(1, 3)
+        u1 = (q/2 + (q**2/4 + pon3**3)**S.Half)**Rational(1, 3)
 
     coeff = S.ImaginaryUnit*3**S.Half / 2
 
     u2 = u1*(-S.Half + coeff)
     u3 = u1*(-S.Half - coeff)
 
-    roots = [
-        (p/(3*u1) - u1 - b/3),
-        (p/(3*u2) - u2 - b/3),
-        (p/(3*u3) - u3 - b/3),
+    soln = [
+        -u1 + pon3/u1 - aon3,
+        -u2 + pon3/u2 - aon3,
+        -u3 + pon3/u3 - aon3
     ]
 
-    return [ r.expand() for r in roots ]
+    return soln
 
 def roots_quartic(f):
     """Returns a list of roots of a quartic polynomial.
 
+    There are many references for solving quartic expressions available [1-6].
+    This reviewer has found that many of them require one to select from among
+    2 or more possible sets of solutions and that some solutions work when one
+    is searching for real roots but don't work when searching for complex roots
+    (though this is not always stated clearly). The following routine has been
+    tested and found to be correct for 0, 2 or 4 complex roots.
+
+    Example::
+    >>> from sympy import *
+    >>> x = var('x')
+    >>> r = rootfinding.roots_quartic(Poly(x**4 -6*x**3 +17*x**2 -26*x +20, x))
+    >>> [tmp.evalf(n=2) for tmp in r] # 4 complex roots
+    [1.0 + 1.7*I, 1.0 - 1.7*I, 2.0 + I, 2.0 - 1.0*I] #1+-I*sqrt(3), 2+-I
+
     References:
-      http://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
+      [1] http://mathforum.org/dr.math/faq/faq.cubic.equations.html
+      [2] http://en.wikipedia.org/wiki/Quartic_formula#Solving_a_quartic_equation
+      [3] http://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
+      [4] Maxima 0.7.3a solution to z**4+e*z**2+f*z+g=0 where
+          x=z-a/4 and x^4+a^x^3+b^x^2+c*x+d=0
+      [5] http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
+      [6] http://www.albmath.org/files/Math_5713.pdf
+
     """
-    a, b, c, d, e = f.iter_all_coeffs()
 
-    # normalize
-    t = a
-    a = b/t
-    b = c/t
-    c = d/t
-    d = e/t
+    #normalized coefficients
+    one, a, b, c, d = f.as_monic().iter_all_coeffs()
 
-    p = -2*b
-    q = b**2 + a*c - 4*d
-    r = c**2 + a**2*d - a*b*c
+    if d is S.Zero:
+        return [S.Zero] + roots([1, a, b, c], multiple = True)
+    else:
+        a2 = a ** 2
+        e = b - 3 * a2 / 8
+        f = c + a * (a2 / 8 - b / 2)
+        g = d - a * (a * (3 * a2 / 256 - b / 16) + c / 4)
+        aon4 = a / 4
 
-    r = roots_cubic((1, p, q, r))
+        if f is S.Zero:
+            y1, y2 = [tmp ** S.Half for tmp in
+                      roots([1, e, g], multiple = True)]
+            return [tmp - aon4 for tmp in [-y1, -y2, y1, y2]]
+        elif g is S.Zero:
+            y = [S.Zero] + roots([1, 0, e, f], multiple = True)
+            return [tmp - aon4 for tmp in y]
+        else:
+            e2, f2 = e**2, f**2
+            a0 = (3 ** (-S(3) / 2) *\
+                  (16 * g * (8 * g * (-2 * g + e2) - e * (9 * f2 + e * e2)) +\
+                   f2 * (27 * f2 + 4 * e * e2)) ** S.Half) / 2
+            a1 = (a0 + (2 * e * (-36 * g + e2) + 27 * f2) / 54) ** (S(1) / 3)
+            a2 = e * 6 * a1
+            a3 = 9 * a1 * a1 + 12 * g + e2
+            a4 = ((a3 - a2) / a1) ** S.Half
+            a5 = (a3 + 2 * a2)
+            a6 = a1 * f * 54
+            a54 = a5 * a4
+            a7 = (-(a54 - a6) / a1) ** S.Half / (6 * a4 ** S.Half)
+            a8 = (-(a54 + a6) / a1 / a4) ** S.Half / 6
+            a4on6 = a4 / 6
+            ans = [-a7 - a4on6 - aon4,
+                      a7 - a4on6 - aon4,
+                     -a8 + a4on6 - aon4,
+                      a8 + a4on6 - aon4
+            ]
 
-    u = r[1] + r[2] - r[0]
-    v = (u**2 - 16*d)**S.Half
-    w = (a**2 - 4*r[0])**S.Half
-
-    A = (u + v) / 4
-    B = (u - v) / 4
-    C = (-a + w) / 2
-    D = (-a - w) / 2
-
-    E = (C**2 - 4*A)**S.Half
-    F = (D**2 - 4*B)**S.Half
-
-    roots = [
-        (C + E) / 2,
-        (C - E) / 2,
-        (D + F) / 2,
-        (D - F) / 2,
-    ]
-
-    return [ r.expand() for r in roots ]
+    return ans
 
 def roots_binomial(f):
     """Returns a list of roots of a binomial polynomial."""
@@ -160,8 +194,9 @@ def roots_rational(f):
 def roots(f, *symbols, **flags):
     """Computes symbolic roots of a univariate polynomial.
 
-       Given an univariate  polynomial f with symbolic coefficients,
-       returns a dictionary with its roots and their multiplicities.
+       The polynomial, f, may be given as
+       * a sympy expression
+       * an instance of Poly or a list containing its coefficients
 
        Only roots expressible via radicals will be returned.  To get
        a complete set of roots use RootOf class or numerical methods
@@ -183,18 +218,43 @@ def roots(f, *symbols, **flags):
        >>> roots(x**2 - 1, x)
        {1: 1, -1: 1}
 
+       >>> p = Poly(x**2-1, x)
+       >>> roots(p)
+       {1: 1, -1: 1}
+
+       >>> m = Poly(x**2-y, x, y) #multivariate
+       >>> roots(Poly(m, x)) #same expr, but now univariate
+       {1: 1, -1: 1}
+
+       >>> roots([1, 0, -1]) # LIST of coefficients
+       {1: 1, -1: 1}
+
        >>> roots(x**2 - y, x)
        {y**(1/2): 1, -y**(1/2): 1}
 
     """
+
+    if isinstance(f, list):
+        if symbols:
+            raise SymbolsError("Redundant symbol(s) given.")
+        f = Poly(f, Symbol('x', dummy=True))
+
     if not isinstance(f, Poly):
-        f = Poly(f, *symbols)
-    elif symbols:
-        raise SymbolsError("Redundant symbols were given")
+        if len(symbols) > 1:
+            raise SymbolsError("Too many symbols given.")
+        f = Poly(f, *(symbols or S(f).atoms(Symbol)))
+
+    if len(symbols) > 1:
+       raise SymbolsError("Too many symbols given.")
 
     if f.is_multivariate:
-        raise MultivariatePolyError(f)
+        if len(symbols) == 1:
+            f = Poly(f, *symbols)
+        else:
+            raise MultivariatePolyError(f)
 
+    assert f.is_univariate    
+    
     def _update_dict(result, root, k):
         if root in result:
             result[root] += k
@@ -252,7 +312,7 @@ def roots(f, *symbols, **flags):
             result += roots_quadratic(f)
         elif n == 3 and flags.get('cubics', True):
             result += roots_cubic(f)
-        elif n == 4 and flags.get('quartics', False):
+        elif n == 4 and flags.get('quartics', True):
             result += roots_quartic(f)
 
         return result

@@ -74,41 +74,72 @@ class Poly(Basic):
        you can use Basic.as_poly to avoid exception handling.
 
        By default ordering of monomials can be omitted. In this case
-       graded lexicographic order will be used. Anyway remember that
+       graded lexicographic order will be used. Anyway, remember that
        'order' is a keyword argument.
 
-       Currently there are supported four standard orderings:
+       Currently, four standard orderings are supported:
 
            [1] lex       -> lexicographic order
            [2] grlex     -> graded lex order
            [3] grevlex   -> reversed grlex order
            [4] 1-el      -> first elimination order
 
-       Polynomial can be also constructed explicitly by specifying
-       a collection of coefficients and monomials. This can be done
-       in at least three different ways:
+       Polynomials can also be constructed explicitly by passing a
+       collection of coefficients and monomials in as an expression.
+       Interpretation of the collection depends on the type of the
+       collection according to the following semantics:
 
-           [1] [(c_1, M_1), (c_2, M_2), ..., (c_1, M_1)]
+           [1] expression is a LIST
+               a) [(c_1, M_1), (c_2, M_2), ..., (c_n, M_n)]
+               b) [(c_1, m_1), (c_2, m_2), ..., (c_n, m_n)]
+               c) [ c_1, c_2, ..., c_n ]
 
-           [2] (c_1, c2, ..., c_n), (M_1, M_2, ..., M_n)
+                >>> a, x, y = var('a x y')
+                >>> # a) M is a tuple (m_1, m_2, ..., m_3)
+                >>> Poly([(4, (2,2)), (3, (1,2))], x, y)
+                Poly(4*x**2*y**2 + 3*x*y**2, x, y)
+                >>> # b) m_i are integers
+                >>> Poly([(1, 2), (a, 0)], x)
+                Poly(x**2 + a, x)
+                >>> # c) only coefficients
+                >>> Poly([1, 0, a], x)
+                Poly(x**2 + a, x)
 
-           [3] { M_1 : c_1, M_2 : c_2, ..., M_n : c_n }
+           [2] expression is a TUPLE:
+               ((c_1, c2, ..., c_n), (M_1, M_2, ..., M_n))
 
-       Although all three representation look similar, they are
-       designed for different tasks and have specific properties:
+                >>> Poly( ((S(1), S(2)), ((3,), (4,))), x)
+                Poly(x**3 + 2*x**4, x)
 
-           [1] All coefficients and monomials  are validated before
+           [3] expression is a DICTIONARY
+               { M_1 : c_1, M_2 : c_2, ..., M_n : c_n }
+
+                >>> Poly( {(1, 2): S(3), (4, 5): S(6)} ,x ,y)
+                Poly(6*x**4*y**5 + 3*x*y**2, x, y)
+
+       These initialization methods are not just conveniences for creating
+       polynomials. They are designed for different tasks and the resulting
+       polynomials have specific properties:
+
+           [1] All coefficients and monomials are validated before
                polynomial instance is created. Monomials are sorted
-               with respect to the given order.
+               with respect to the given order. 
 
            [2] No validity checking, no sorting, just a raw copy.
 
-           [3] Also no validity checking however monomials are
-               sorted with respect to the given order.
+           [3] No validity checking, but monomials are sorted with
+               respect to the given order.
 
        For interactive usage choose [1] as it's safe and relatively
-       fast. Use [2] or [3] internally for time critical algorithms,
-       when you know that coefficients and monomials will be valid.
+       fast.
+
+       CAUTION:
+       Use [2] or [3] internally for time critical algorithms, when you know
+       that coefficients and monomials will be valid sympy expressions. Use
+       them with caution! If the coefficients are integers instead of sympy
+       integers (e.g. 1 instead of S(1)) the polynomial will be created but
+       you may run into problems if you try to print the polynomial. If the
+       monomials are not given as tuples of integers you will have problems.
 
        Implemented methods:
 
@@ -340,11 +371,14 @@ class Poly(Basic):
                     raise PolynomialError("Invalid arguments," \
                         " should get '(coeffs, monoms)' tuple")
 
-        # [ (c1,M1), (c2,M2), ... ]
+        # [ (c1,M1), (c2,M2), ... ] or [ c1, c2, ... ]
         elif type(poly) is list:
             if not poly:
                 coeffs = (S.Zero,)
                 monoms = ((0,) * N,)
+            elif not isinstance(poly[0], (tuple,list)) and len(symbols) == 1:
+                return Poly([(c, i) for i, c in enumerate(reversed(poly))], \
+                            symbols[0])
             else:
                 for coeff, monom in poly:
                     coeff = sympify(coeff)
