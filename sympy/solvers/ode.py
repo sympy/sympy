@@ -8,7 +8,22 @@ docstrings describing their various methods, but they are intended
 for internal use.  Use dsolve(ode, func, hint=hint) to solve an ode
 using a specific hint.  See also the docstring on dsolve().
 
-== Methods currently implemented ==
+== Functions in this module ==
+
+    These are the user functions in this module:
+
+    - dsolve() - Solves ODEs.
+    - classify_ode() - Classifies ODEs into possible hints for dsolve().
+    - checkodesol() - Checks if an equation is the solution to an ODE.
+    - deriv_degree() - Returns the degree (order) of an ODE.
+    - homogeneous_order() - Returns the homogeneous order of an
+      expression.
+
+    See also the docstrings of these functions.  There are also quite
+    a few functions that are not imported into the global namespace.
+    See the docstrings of those functions for more info.
+
+== Solving methods currently implemented ==
 
 The following methods are implemented for solving ordinary differential
 equations.  See the docstrings of the various ode_hint() functions for
@@ -1978,39 +1993,21 @@ def _nth_linear_match(eq, func, order):
     terms={'b': S.Zero}
     for i in range(order + 1):
         terms[i] = S.Zero
+    # FIXME: use .as_Add() here, when the new polys module is merged in.
     if eq.is_Add:
-        for i in eq.args:
-            if not i.has(func):
-                terms['b'] += i
-            else:
-                 # .coeff(func) gets func and all derivatives of func
-                c = i.coeff(func)
-                if not c:
-                    return None
-                else:
-                    t = i.extract_multiplicatively(c)
-                    if t == func:
-                        terms[0] += c
-                    elif isinstance(t, Derivative):
-                        # Make sure every symbol is x
-                        if not all(map(lambda t: t == x, t.symbols)) or \
-                            not t.expr == func:
-                                return None
-                        else:
-                            terms[len(t.symbols)] += c
-                    else:
-                        return None
+        eqargs = eq.args
     else:
-        # FIXME: use .as_Add() here, when the new polys module is merged in
-        if not eq.has(func):
-            terms['b'] += eq
+        eqargs = [eq]
+    for i in eqargs:
+        if not i.has(func):
+            terms['b'] += i
         else:
              # .coeff(func) gets func and all derivatives of func
-            c = eq.coeff(func)
+            c = i.coeff(func)
             if not c:
                 return None
             else:
-                t = eq.extract_multiplicatively(c)
+                t = i.extract_multiplicatively(c)
                 if t == func:
                     terms[0] += c
                 elif isinstance(t, Derivative):

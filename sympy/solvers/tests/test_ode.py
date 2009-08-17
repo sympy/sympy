@@ -20,12 +20,10 @@ g = Function('g')
 # Also not that in differently formatted solutions, the arbitrary constants
 # might not be equal.  Using specific hints in tests can help avoid this.
 
-# TODO: fix all checkodesol tests
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
-    # TODO: uncomment below when checkodesol is moved into the global namespace
-#    assert raises(ValueError, "checkodesol(f(x).diff(x), f(x), x)")
+    raises(ValueError, "checkodesol(f(x).diff(x), f(x), x)")
     assert checkodesol(f(x).diff(x), f(x), Eq(f(x), x)) is not True
     assert checkodesol(f(x).diff(x), f(x), Eq(f(x), x)) == 1
     sol1 = Eq(f(x)**5 + 11*f(x) - 2*f(x) + x, 0)
@@ -924,7 +922,6 @@ def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
     hint = 'nth_linear_constant_coeff_variation_of_parameters'
     assert len(str(dsolve(f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) -
         2*x - exp(I*x), f(x), hint + "_Integral", simplify=False))) == 2522
-
 
 def test_Liouville_ODE():
     # First part used to be test_ODE_1() from test_solvers.py
