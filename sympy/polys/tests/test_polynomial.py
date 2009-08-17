@@ -16,7 +16,7 @@ from sympy.polys.rootfinding import poly_root_factors, roots_linear,  \
 from sympy.polys.factortools import poly_factors, factors, factor
 
 from sympy.polys.polynomial import Poly, PolynomialError, \
-        CoefficientError, SymbolsError
+        CoefficientError, SymbolsError, MultivariatePolyError
 
 from sympy.utilities.pytest import skip
 
@@ -42,6 +42,12 @@ def test_poly_has():
 def test_poly_basics():
     f = x*y**2*z + x*y + x + 1
 
+    raises(SymbolsError, "Poly(f, x, x)")
+    raises(PolynomialError, "Poly(((1, 2), (3, 4), (5, 6)), x)")
+    raises(CoefficientError, "Poly([(x, 3)], x)")
+    raises(PolynomialError, "Poly([(1, (3,2))], x)")
+    assert Poly([(1, (2,)), (2, (2,))], x) == Poly(3*x**2, x)
+    assert Poly([(1, (2,)), (-1, (2,))], x) == Poly(0, x)
     assert Poly(f, x).as_basic().expand() == f
     assert Poly(f, x, y).as_basic().expand() == f
     assert Poly(f, x, y, z).as_basic().expand() == f
@@ -59,6 +65,8 @@ def test_poly_basics():
         x, y, z).as_basic() == 17*x**2*y**5*z**4
 
     p = Poly(x**2 + x + 1, x)
+
+    assert Poly([1,1,1], x) == p
 
     assert Poly(p, y) == \
         Poly(((1 + x + x**2,), ((0,),)), y, order='grlex')
@@ -1018,27 +1026,54 @@ def test_roots_quadratic():
         [-1 + I*sqrt(2)/2, -1 - I*sqrt(2)/2]
 
 def test_roots_cubic():
-    assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
-    assert roots_cubic(Poly(x**3-3*x**2+3*x-1, x)) == [1, 1, 1]
-
-    assert roots_cubic(Poly(x**3+1, x)) == \
-        [-1, S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2]
+    #normalized cubic,  x**3+a*x**2+b*x+c, is changed to y**3+p*y+q
+    #check c==0
+    assert roots_cubic(Poly(x**3+2*x**2+3*x+0, x)) == [-1 + I*2**S.Half, 0, -1 - I*2**S.Half]
+    #p==0 and q == 0
+    assert roots_cubic(Poly((x+2)**3,x)) == [-2, -2, -2]
+    #p==0 and q!=0
+    assert set(roots_cubic(Poly(x**3+1, x))) == \
+           set([-S.One, S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2])
+    #p!=0 and q==0
+    assert set(roots_cubic(Poly(x**3 + 3*x**2 + 4*x + 2, x))) == \
+           set([-S.One - I, -S.One, -S.One + I])
+    #p!=0 and q!=0
+    p = Poly(x**3 - 6*x**2 + 13*x - 8, x)
+    ans = roots_cubic(p)
+    assert [[str(round(tmp.evalf().as_real_imag()[j],2)) for tmp in ans]
+            for j in [0,1]] == [['1.0', '2.5', '2.5'],
+                                ['0.0', '-1.32', '1.32']]
 
 def test_roots_quartic():
-    assert roots_quartic(Poly(x**4, x)) == [0, 0, 0, 0]
-    assert roots_quartic(Poly(x**4 + x**3, x)) in [
-        [-1,0,0,0],
-        [0,-1,0,0],
-        [0,0,-1,0],
-        [0,0,0,-1]
-    ]
-    assert roots_quartic(Poly(x**4 - x**3, x)) in [
-        [1,0,0,0],
-        [0,1,0,0],
-        [0,0,1,0],
-        [0,0,0,1]
-    ]
-    assert roots_quartic(Poly(x**4 + x, x)) == [S.Half + I*sqrt(3)/2, S.Half - I*sqrt(3)/2, 0, -1]
+    assert sorted(roots_quartic(Poly(x**4 + x**3, x))) == [-1, 0, 0, 0]
+    assert sorted(roots_quartic(Poly(x**4 - x**3, x))) == [0, 0, 0, 1]
+    assert roots_quartic(Poly(x**4, x)) == [0]*4
+    # x**4+a*x**3+b*x**2+c*x+d=0 reduces to y^4+e*y^2+f*y+g when
+    # replacing x with y-a/4. Check different types of solutions:
+    # check for homogeneous in x (d=0)
+    set(roots_quartic(Poly(x**4 - 6*x**3 + 11*x**2 - 6*x, x))) == \
+                            set([0, 1, 2, 3])
+    # check for homogeneous in y (g=0)
+    set(roots_quartic(Poly(x**4 +4*x**3 + 7*x**2 + 8*x + 4, x))) == \
+          set([-1, -2, -S.Half - I*7**S.Half/2, -1/2 + I*7**S.Half/2])
+    # no real roots and f=0
+    assert roots_quartic(Poly(10 + 14*x + 11*x**2 + 4*x**3 + x**4, x)) == \
+           [-1 - I, -1 - 2*I, -1 + I, -1 + 2*I]
+    # no real roots, but f!=0
+    p = Poly(10 + 14*x + 11*x**2 + 4*x**3 + x**4, x)
+    assert set(roots_quartic(p)) == \
+           set([-1 - 2*I, -1 + 2*I, -1 - I, -1 + I])
+    # 2 real roots
+    p = Poly(x**4 - 9*x**3 + 30*x**2 - 42*x + 20, x)
+    ans = roots_quartic(p)
+    assert [[round(tmp.evalf().as_real_imag()[j],2) for tmp in ans] for j in [0,1]] == \
+           [[1.0, 2.0, 3.0, 3.0],
+            [0.0, 0.0, -1.0, 1.0]]
+    # 4 real roots
+    p = Poly(x**4 + -11*x**3 + 41*x**2 - 61*x + 30, x)
+    ans = roots_quartic(p)
+    assert [[round(tmp.evalf().as_real_imag()[j],2) for tmp in ans] for j in [0,1]] == \
+           [[1.0, 2.0, 3.0, 5.0], [0.0, -0.0, 0.0, -0.0]]
 
 def test_roots_binomial():
     assert roots_binomial(Poly(5*x, x)) == [0]
@@ -1070,11 +1105,25 @@ def test_roots_rational():
 
 def test_roots():
     assert roots(1, x) == {}
+    assert roots([1]) == {}
+    assert roots(x) == {S.Zero: 1}
     assert roots(x, x) == {S.Zero: 1}
+    uv = Poly(x, x)
+    mv = Poly(x + y, x, y)
+    assert roots(uv) == {S.Zero: 1}
+    assert roots(uv, x) == {S.Zero: 1}
+    assert roots(mv, x) == {-y: 1}
+    raises(SymbolsError,"roots([1],x)")
+    raises(SymbolsError,"roots(x+y, x, y)")
+    raises(SymbolsError,"roots(uv, x, y)")
+    raises(SymbolsError,"roots(mv, x, y)")
+    raises(MultivariatePolyError,"roots(mv)")
+
     assert roots(x**9, x) == {S.Zero: 9}
     assert roots(((x-2)*(x+3)*(x-4)).expand(), x) == {-S(3): 1, S(2): 1, S(4): 1}
 
-    assert roots(2*x+1, x) == {-S.Half: 1}
+    assert roots(2*x+1, x) == roots([2, 1])
+    assert roots([2, 1]) == {-S.Half: 1}
     assert roots((2*x+1)**2, x) == {-S.Half: 2}
     assert roots((2*x+1)**5, x) == {-S.Half: 5}
     assert roots((2*x+1)**10, x) == {-S.Half: 10}
@@ -1127,52 +1176,42 @@ def test_roots():
     r1_2, r1_3, r1_9, r4_9, r19_27 = [ Rational(*r) \
         for r in ((1,2), (1,3), (1,9), (4,9), (19,27)) ]
 
-    assert roots(x**3+x**2-x+1, x, cubics=True) in [
-            {
+    assert set(tmp.evalf() for tmp in roots(x**3+x**2-x+1, x, cubics=True)) == \
+           set(tmp.evalf() for tmp in [
         -r1_3 - (r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3 - \
-        r4_9*(r19_27 + r1_9*3**r1_2*11**r1_2)**(-r1_3): 1,
+        r4_9*(r19_27 + r1_9*3**r1_2*11**r1_2)**(-r1_3),
 
         -r1_3 + r1_2*(r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3 + \
         r4_9/(r1_2 + r1_2*I*3**r1_2)*(r19_27 + r1_9*3**r1_2*11**r1_2)**(-r1_3) + \
-        r1_2*I*3**r1_2*(r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3: 1,
+        r1_2*I*3**r1_2*(r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3,
 
         -r1_3 + r1_2*(r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3 + \
         r4_9/(r1_2 - r1_2*I*3**r1_2)*(r19_27 + r1_9*3**r1_2*11**r1_2)**(-r1_3) - \
-        r1_2*I*3**r1_2*(r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3: 1,
-            },
-            {
-        -r1_3 - (r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3 - \
-        r4_9*(r19_27 + r1_9*3**r1_2*11**r1_2)**(-r1_3): 1,
-
-        -r1_3 + r1_2*(r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3 - \
-        r4_9/(-r1_2 - r1_2*I*3**r1_2)*(r19_27 + r1_9*3**r1_2*11**r1_2)**(-r1_3) + \
-        r1_2*I*3**r1_2*(r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3: 1,
-
-        -r1_3 + r1_2*(r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3 + \
-        r4_9/(r1_2 - r1_2*I*3**r1_2)*(r19_27 + r1_9*3**r1_2*11**r1_2)**(-r1_3) - \
-        r1_2*I*3**r1_2*(r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3: 1,
-            },
-            ]
+        r1_2*I*3**r1_2*(r19_27 + r1_9*3**r1_2*11**r1_2)**r1_3
+            ])
 
     f = (x**2+2*x+3).subs(x, 2*x**2 + 3*x).subs(x, 5*x-4)
 
     r1_2, r13_20, r1_100 = [ Rational(*r) \
         for r in ((1,2), (13,20), (1,100)) ]
-
-    assert roots(f, x) == {
+    ans = {
         r13_20 + r1_100*(25 - 200*I*2**r1_2)**r1_2: 1,
         r13_20 - r1_100*(25 - 200*I*2**r1_2)**r1_2: 1,
         r13_20 + r1_100*(25 + 200*I*2**r1_2)**r1_2: 1,
         r13_20 - r1_100*(25 + 200*I*2**r1_2)**r1_2: 1,
     }
 
-    p = Poly(z**3 + (-2 - y)*z**2 + (1 + 2*y - 2*x**2)*z - y + 2*x**2, z)
+    assert set(tmp.evalf() for tmp in roots(f, x).keys()) == \
+           set(tmp.evalf() for tmp in ans.keys())
 
-    assert roots(p) == {
+    p = Poly(z**3 + (-2 - y)*z**2 + (1 + 2*y - 2*x**2)*z - y + 2*x**2, z)
+    ans = {
         S.One: 1,
         S.Half + S.Half*y + S.Half*(1 - 2*y + y**2 + 8*x**2)**S.Half: 1,
         S.Half + S.Half*y - S.Half*(1 - 2*y + y**2 + 8*x**2)**S.Half: 1,
-    }
+    }.keys()
+
+    assert all(tmp.expand() in ans for tmp in roots(p).keys())
 
     assert roots(a*b*c*x**3 + 2*x**2 + 4*x + 8, x, cubics=False) == {}
     assert roots(a*b*c*x**3 + 2*x**2 + 4*x + 8, x, cubics=True) != {}
