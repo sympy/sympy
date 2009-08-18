@@ -90,14 +90,14 @@ defeat the purpose of "all_Integral"), you will need to remove it
 manually in the dsolve() code.  See also the classify_ode() docstring
 for guidelines on writing a hint name.
 
-Determine **in general** how the solutions returned by your method compare
-with other methods that can potentially solve the same ODEs.  Then, put
-your hints in the allhints tuple in the order that they should be
-called.  The ordering of this tuple determines which hints are default.
-Note that exceptions are ok, because it is easy for the user to choose
-individual hints with dsolve().  In general, "_Integral" variants should
-go at the end of the list, and "_best" variants should go before the
-various hints they apply to.  For example, the
+Determine **in general** how the solutions returned by your method
+compare with other methods that can potentially solve the same ODEs.
+Then, put your hints in the allhints tuple in the order that they should
+be called.  The ordering of this tuple determines which hints are
+default. Note that exceptions are ok, because it is easy for the user to
+choose individual hints with dsolve().  In general, "_Integral" variants
+should go at the end of the list, and "_best" variants should go before
+the various hints they apply to.  For example, the
 "undetermined_coefficients" hint comes before the
 "variation_of_parameters" hint because, even though variation of
 parameters can be used to solve all ODEs that undetermined coefficients
@@ -133,10 +133,10 @@ the "all" meta-hint, rather than causing the whole routine to fail.
 Add a docstring to your function that describes the method employed.
 Like with anything else in SymPy, you will need to add a doctest to the
 docstring, in addition to real tests in test_ode.py.  Try to maintain
-consistancy with the other hint functions' docstrings.  Add your method
+consistency with the other hint functions' docstrings.  Add your method
 to the list at the top of this docstring.  Also, add your method to
-ode.txt in the docs/src directory, so that the Sphinx docs will pull
-its docstring into the main SymPy documentation.
+ode.txt in the docs/src directory, so that the Sphinx docs will pull its
+docstring into the main SymPy documentation.
 
 If your solution method involves integrating, use C.Integral() instead
 of integrate().  This allows the user to bypass hard/slow integration by
@@ -157,7 +157,12 @@ the "1st_homogeneous_coeff" hints often have many log() terms, so
 odesimp() calls logcombine() on them (it also helps to write the
 arbitrary constant as log(C1) instead of C1 in this case).  Also
 consider common ways that you can rearrange your solution to have
-constantsimp() take better advantage of it.
+constantsimp() take better advantage of it.  It is better to put
+simplification in odesimp() than in your method, because it can then be
+turned off with the simplify flag in dsolve(). If you have any
+extraneous simplification in your function, be sure to only run it using
+"if match.get('simplify', True):", especially if it can be slow or if it
+can reduce the domain of the solution.
 
 Feel free to refactor existing hints to avoid duplicating code or
 creating inconsistencies.  If you can show that your method exactly
@@ -1466,10 +1471,13 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     # There are two substitutions that solve the equation, u1=y/x and u2=x/y
     # They produce different integrals, so try them both and see which
     # one is easier.
-    sol1 = odesimp(ode_1st_homogeneous_coeff_subs_indep_div_dep(eq,
-    func, order, match), func, order, "1st_homogeneous_coeff_subs_indep_div_dep")
-    sol2 = odesimp(ode_1st_homogeneous_coeff_subs_dep_div_indep(eq,
-    func, order, match), func, order, "1st_homogeneous_coeff_subs_dep_div_indep")
+    sol1 = ode_1st_homogeneous_coeff_subs_indep_div_dep(eq,
+    func, order, match)
+    sol2 = ode_1st_homogeneous_coeff_subs_dep_div_indep(eq,
+    func, order, match)
+    if match.get('simplify', True):
+        sol1 = odesimp(sol1, func, order, "1st_homogeneous_coeff_subs_indep_div_dep")
+        sol2 = odesimp(sol2, func, order, "1st_homogeneous_coeff_subs_dep_div_indep")
     return sorted([sol1, sol2], cmp=lambda x, y: compare_ode_sol(x, y, func))[0]
 
 def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
