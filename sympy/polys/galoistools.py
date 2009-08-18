@@ -1,6 +1,5 @@
 """Dense univariate polynomials with coefficients in Galois fields. """
 
-from copy import deepcopy
 from random import uniform
 from math import ceil, sqrt, log
 
@@ -123,12 +122,12 @@ def gf_convert(f, p, K0, K1):
     """Normalize all coefficients in `K`. """
     return gf_reduce([ K1.convert(c, K0) for c in f ], p)
 
-def gf_from_dict(f, p):
+def gf_from_dict(f, p, K):
     """Create `GF(p)[x]` polynomial from a dict. """
     n, h = max(f.iterkeys()), []
 
     for k in xrange(n, -1, -1):
-        h.append(f.get(k, 0) % p)
+        h.append(f.get(k, K.zero) % p)
 
     return gf_reduce(h, p)
 
@@ -731,7 +730,7 @@ def gf_sqf_list(f, p, K):
        Consider polynomial `f = x**11 + 1` over `GF(11)[x]`::
 
            >>> from sympy.polys.algebratools import ZZ
-           >>> f = gf_from_dict({11: 1, 0: 1}, 11)
+           >>> f = gf_from_dict({11: 1, 0: 1}, 11, ZZ)
 
        Note that `f'(x) = 0`::
 
@@ -820,7 +819,7 @@ def gf_Qmatrix(f, p, K):
 
 def gf_Qbasis(Q, p, K):
     """Compute a basis of the kernel of `Q`. """
-    Q, n = deepcopy(Q), len(Q)
+    Q, n = [ list(q) for q in Q ], len(Q)
 
     for k in xrange(0, n):
         Q[k][k] = (Q[k][k] - K.one) % p
@@ -916,7 +915,7 @@ def gf_ddf_zassenhaus(f, p, K):
        Consider polynomial `x**15 - 1` in `GF(11)[x]`::
 
            >>> from sympy.polys.algebratools import ZZ
-           >>> f = gf_from_dict({15: 1, 0: -1}, 11)
+           >>> f = gf_from_dict({15: 1, 0: -1}, 11, ZZ)
 
        Distinct degree factorization gives::
 

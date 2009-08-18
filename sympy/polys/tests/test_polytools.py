@@ -16,7 +16,7 @@ from sympy.polys.polytools import (
     groebner,
 )
 
-from sympy import S, symbols, sqrt, exp
+from sympy import S, symbols, sqrt, exp, expand
 
 x,y,z,p,q,r,s,t,u,v,w = symbols('x,y,z,p,q,r,s,t,u,v,w')
 
@@ -145,7 +145,9 @@ def test_factor_list():
     pass
 
 def test_factor():
-    pass
+    f = expand(((x+y+z)**3+1)*((x+y+z)**3+2))
+
+    assert expand(factor(f)) == f
 
 def test_sturm():
     pass

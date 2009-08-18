@@ -63,9 +63,7 @@ from sympy.polys.polyerrors import (
 from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import any, all, subsets
 
-from copy import deepcopy
 from math import ceil, log
-
 from random import randint
 
 def dup_zz_mignotte_bound(f, K):
@@ -683,7 +681,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
     """Wang/EEZ: Parallel Hensel lifting algorithm. """
     S, n, v = [f], len(A), u-1
 
-    H = deepcopy(H)
+    H = list(H)
 
     for i, a in enumerate(reversed(A[1:])):
         s = dmp_eval_in(S[0], a, n-i, u-i, K)
@@ -692,7 +690,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
     d = max(dmp_degree_list(f, u)[1:])
 
     for j, s, a in zip(xrange(2, n+2), S, A):
-        G, w = deepcopy(H), j-1
+        G, w = list(H), j-1
 
         I, J = A[:j-2], A[j-1:]
 

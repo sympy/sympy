@@ -78,7 +78,7 @@ class Algebra(object):
             raise CoercionFailed("can't convert %s of type %s to %s" % (a, K0, K1))
         else:
             try:
-                if type(a) is K1.dtype:
+                if K1.of_type(a):
                     return a
 
                 if type(a) is int:
@@ -95,6 +95,16 @@ class Algebra(object):
                 pass
 
             raise CoercionFailed("can't convert %s to type %s" % (a, K1))
+
+    def of_type(self, a):
+        """Check if `a` is of type `dtype`. """
+        if type(a) is not type(self.one):
+            try:
+                return isinstance(a, self.dtype)
+            except TypeError:
+                return False
+        else:
+            return True
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """

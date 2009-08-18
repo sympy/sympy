@@ -114,12 +114,15 @@ def dmp_strip(f, u):
     else:
         return f[i:]
 
-def dmp_validate(f):
+def dmp_validate(f, K=None):
     """Returns number of levels in `f` and recursively strips it. """
     levels = set([])
 
     def rec_validate(g, i):
         if type(g) is not list:
+            if K is not None and not K.of_type(g):
+                raise TypeError("%s in %s in not of type %s" % (g, f, K.dtype))
+
             levels.add(i-1)
         elif not g:
             levels.add(i)
@@ -140,6 +143,17 @@ def dmp_validate(f):
         return rec_strip(f, u), u
     else:
         raise ValueError("invalid data structure for a multivariate polynomial")
+
+def dup_copy(f):
+    """Create a new copy of a polynomial `f` in `K[x]`. """
+    return list(f)
+
+def dmp_copy(f, u):
+    """Create a new copy of a polynomial `f` in `K[X]`. """
+    if not u:
+        return list(f)
+    else:
+        return [ dmp_copy(c, u-1) for c in f ]
 
 def dup_normal(f, K):
     """Normalize univariate polynomial in the given domain. """

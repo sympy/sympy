@@ -90,14 +90,14 @@ def test_gf_from_to_dict():
     F = {11: 1, 6: 2, 0: 3}
     g = [1,0,0,0,0,2,0,0,0,0,0,3]
 
-    assert gf_from_dict(f, 11) == g
+    assert gf_from_dict(f, 11, ZZ) == g
     assert gf_to_dict(g, 11) == F
 
     f = {11: -5, 4: 0, 3: 1, 0: 12}
     F = {11: -5, 3: 1, 0: 1}
     g = [6,0,0,0,0,0,0,0,1,0,0,1]
 
-    assert gf_from_dict(f, 11) == g
+    assert gf_from_dict(f, 11, ZZ) == g
     assert gf_to_dict(g, 11) == F
 
 def test_gf_from_to_int_poly():
@@ -373,7 +373,7 @@ def test_gf_squarefree():
     assert gf_sqf_p([1], 11, ZZ) == True
     assert gf_sqf_p([1,1], 11, ZZ) == True
 
-    f = gf_from_dict({11: 1, 0: 1}, 11)
+    f = gf_from_dict({11: 1, 0: 1}, 11, ZZ)
 
     assert gf_sqf_p(f, 11, ZZ) == False
 
@@ -439,14 +439,14 @@ def test_gf_berlekamp():
         [[1, 3], [1, 8, 4, 12], [1, 2, 3, 4, 6]]
 
 def test_gf_ddf():
-    f = gf_from_dict({15: 1, 0: -1}, 11)
+    f = gf_from_dict({15: 1, 0: -1}, 11, ZZ)
     g = [([1, 0, 0, 0, 0, 10], 1),
          ([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 2)]
 
     assert gf_ddf_zassenhaus(f, 11, ZZ) == g
     assert gf_ddf_shoup(f, 11, ZZ) == g
 
-    f = gf_from_dict({63: 1, 0: 1}, 2)
+    f = gf_from_dict({63: 1, 0: 1}, 2, ZZ)
     g = [([1, 1], 1),
          ([1, 1, 1], 2),
          ([1, 1, 1, 1, 1, 1, 1], 3),
@@ -457,7 +457,7 @@ def test_gf_ddf():
     assert gf_ddf_zassenhaus(f, 2, ZZ) == g
     assert gf_ddf_shoup(f, 2, ZZ) == g
 
-    f = gf_from_dict({6: 1, 5: -1, 4: 1, 3: 1, 1: -1}, 3)
+    f = gf_from_dict({6: 1, 5: -1, 4: 1, 3: 1, 1: -1}, 3, ZZ)
     g = [([1, 1, 0], 1),
          ([1, 1, 0, 1, 2], 2)]
 
@@ -471,8 +471,8 @@ def test_gf_ddf():
     assert gf_ddf_zassenhaus(f, 809, ZZ) == g
     assert gf_ddf_shoup(f, 809, ZZ) == g
 
-    p = nextprime(int((2**15 * pi).evalf()))
-    f = gf_from_dict({15: 1, 1: 1, 0: 1}, p)
+    p = ZZ(nextprime(int((2**15 * pi).evalf())))
+    f = gf_from_dict({15: 1, 1: 1, 0: 1}, p, ZZ)
     g = [([1, 22730, 68144], 2),
          ([1, 64876, 83977, 10787, 12561, 68608, 52650, 88001, 84356], 4),
          ([1, 15347, 95022, 84569, 94508, 92335], 5)]
@@ -552,7 +552,7 @@ def test_gf_factor():
     assert gf_factor(f, p, ZZ, method='zassenhaus') == g
     assert gf_factor(f, p, ZZ, method='shoup') == g
 
-    f, p = gf_from_dict({32: 1, 0: 1}, 11), 11
+    f, p = gf_from_dict({32: 1, 0: 1}, 11, ZZ), 11
 
     g = (1, [([1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 10], 1),
              ([1, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 10], 1)])
@@ -561,7 +561,7 @@ def test_gf_factor():
     assert gf_factor(f, p, ZZ, method='zassenhaus') == g
     assert gf_factor(f, p, ZZ, method='shoup') == g
 
-    f, p = gf_from_dict({32: 8, 0: 5}, 11), 11
+    f, p = gf_from_dict({32: 8, 0: 5}, 11, ZZ), 11
 
     g = (8, [([1, 3], 1),
              ([1, 8], 1),
@@ -577,7 +577,7 @@ def test_gf_factor():
     assert gf_factor(f, p, ZZ, method='zassenhaus') == g
     assert gf_factor(f, p, ZZ, method='shoup') == g
 
-    f, p = gf_from_dict({63: 8, 0: 5}, 11), 11
+    f, p = gf_from_dict({63: 8, 0: 5}, 11, ZZ), 11
 
     g = (8, [([1, 7], 1),
              ([1, 4, 5], 1),
@@ -599,8 +599,8 @@ def test_gf_factor():
 
     # Gathen polynomials: x**n + x + 1 (mod p > 2**n * pi)
 
-    p = nextprime(int((2**15 * pi).evalf()))
-    f = gf_from_dict({15: 1, 1: 1, 0: 1}, p)
+    p = ZZ(nextprime(int((2**15 * pi).evalf())))
+    f = gf_from_dict({15: 1, 1: 1, 0: 1}, p, ZZ)
 
     assert gf_sqf_p(f, p, ZZ) == True
 
@@ -623,7 +623,7 @@ def test_gf_factor():
     # Shoup polynomials: f = a_0 x**n + a_1 x**(n-1) + ... + a_n
     # (mod p > 2**(n-2) * pi), where a_n = a_{n-1}**2 + 1, a_0 = 1
 
-    p = nextprime(int((2**4 * pi).evalf()))
+    p = ZZ(nextprime(int((2**4 * pi).evalf())))
     f = [1, 2, 5, 26, 41, 39, 38]  # deg(f) = 6
 
     assert gf_sqf_p(f, p, ZZ) == True

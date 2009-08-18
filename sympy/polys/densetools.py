@@ -589,10 +589,10 @@ def dmp_zz_collins_resultant(f, g, u, K):
     r, p, P = dmp_zero(v), K.one, K.one
 
     while P <= B:
-        p = nextprime(p)
+        p = K(nextprime(p))
 
         while not (a % p) or not (b % p):
-            p = nextprime(p)
+            p = K(nextprime(p))
 
         F = dmp_ground_trunc(f, p, u, K)
         G = dmp_ground_trunc(g, p, u, K)
@@ -613,13 +613,16 @@ def dmp_zz_collins_resultant(f, g, u, K):
 
 def dmp_qq_collins_resultant(f, g, u, K0):
     """Collins's modular resultant algorithm in `Q[X]`. """
+    n = dmp_degree(f, u)
+    m = dmp_degree(g, u)
+
+    if n < 0 or m < 0:
+        return dmp_zero(u-1)
+
     K1 = K0.get_ring()
 
     cf, f = dmp_ground_to_ring(f, u, K0, K1)
     cg, g = dmp_ground_to_ring(g, u, K0, K1)
-
-    n = dmp_degree(f, u)
-    m = dmp_degree(g, u)
 
     f = dmp_convert(f, u, K0, K1)
     g = dmp_convert(g, u, K0, K1)
