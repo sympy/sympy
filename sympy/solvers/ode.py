@@ -847,7 +847,8 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
            substitute each derivative into ode in reverse order.
 
     This function returns True if the solution checks. Otherwise, it
-    returns the result of the third test above.  Note that sometimes
+    returns the result of the third test above.  If it cannot apply any of
+    the tests, it will return False.  Note that sometimes
     this function will return an expression that is identically equal to
     0 instead of returning True.  This is because simplify() cannot
     reduce the expression to 0.  If an expression returned by this
@@ -965,6 +966,8 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
 
     if not s:
         return True
+    elif s is True: # The code above never was able to change s
+        return False
     else:
         return s
 
