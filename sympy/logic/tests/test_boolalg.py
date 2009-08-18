@@ -1,6 +1,6 @@
-from sympy.logic.boolalg import And, Or, Xor, Not, Nand, Nor, Implies, Equivalent, to_cnf, \
-    eliminate_implications, distribute_and_over_or, compile_rule, conjuncts, \
-    disjuncts
+from sympy.logic.boolalg import And, Or, Xor, Not, Nand, Nor, Implies, \
+    Equivalent, to_cnf, eliminate_implications, distribute_and_over_or, \
+    compile_rule, conjuncts, disjuncts, to_int_repr
 from sympy import symbols
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -194,3 +194,9 @@ def test_to_cnf():
 def test_compile_rule():
     from sympy import sympify
     assert compile_rule("A & B") == sympify("A & B")
+
+def test_to_int_repr():
+    x, y, z = symbols('x y z')
+    assert to_int_repr([x | y, z | x], [x, y, z]) == [[1, 2], [1, 3]]
+    assert to_int_repr([x | y, z | ~x], [x, y, z]) == [[1, 2], [3, -1]]
+

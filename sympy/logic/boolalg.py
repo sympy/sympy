@@ -174,7 +174,8 @@ def disjuncts(expr):
         return [expr]
 
 def distribute_and_over_or(expr):
-    """Given a sentence s consisting of conjunctions and disjunctions
+    """
+    Given a sentence s consisting of conjunctions and disjunctions
     of literals, return an equivalent sentence in CNF.
     """
     if isinstance(expr, Or):
@@ -194,6 +195,13 @@ def distribute_and_over_or(expr):
 def to_cnf(expr):
     """Convert a propositional logical sentence s to conjunctive normal form.
     That is, of the form ((A | ~B | ...) & (B | C | ...) & ...)
+
+    Examples:
+
+        >>> from sympy import symbols
+        >>> A, B, C = symbols('A B C')
+        >>> to_cnf(~(A | B) | C)
+        And(Or(C, Not(A)), Or(C, Not(B)))
     """
     expr = sympify(expr)
     expr = eliminate_implications(expr)
@@ -224,3 +232,29 @@ def compile_rule(s):
     """
     import re
     return eval(re.sub(r'([a-zA-Z0-9_.]+)', r'Symbol("\1")', s), {'Symbol' : Symbol})
+
+
+def to_int_repr(clauses, symbols):
+    """
+    takes clauses in CNF puts them into integer representation
+
+    Examples:
+        >>> from sympy import symbols
+        >>> x, y = symbols('x y')
+        >>> to_int_repr([x | y, y], [x, y])
+        [[1, 2], [2]]
+    """
+    def append_symbol(arg, symbols):
+        if type(arg) is Not: return -(symbols.index(arg.args[0])+1)
+        else: return symbols.index(arg)+1
+
+    output = []
+    for c in clauses:
+        if type(c) is Or:
+            t = []
+            for arg in c.args:
+                t.append(append_symbol(arg, symbols))
+            output.append(t)
+        else:
+            output.append([append_symbol(c, symbols)])
+    return output

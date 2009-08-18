@@ -58,11 +58,11 @@ def pl_true(expr, model={}):
         return model.get(expr)
 
     args = expr.args
-    if isinstance(expr, Not):
+    if type(expr) is Not:
         p = pl_true(args[0], model)
         if p is None: return None
         else: return not p
-    elif isinstance(expr, Or):
+    elif type(expr) is Or:
         result = False
         for arg in args:
             p = pl_true(arg, model)
