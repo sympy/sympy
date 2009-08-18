@@ -4,6 +4,93 @@ from sympy import S, sympify, Integer, Rational, Symbol, Add, Mul, Pow
 
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
 
+_gens_order = {
+    'a': 301, 'b': 302, 'c': 303, 'd': 304,
+    'e': 305, 'f': 306, 'g': 307, 'h': 308,
+    'i': 309, 'j': 310, 'k': 311, 'l': 312,
+    'm': 313, 'n': 314, 'o': 315, 'p': 216,
+    'q': 217, 'r': 218, 's': 219, 't': 220,
+    'u': 221, 'v': 222, 'w': 223, 'x': 124,
+    'y': 125, 'z': 126,
+}
+
+def _sort_gens(gens, **args):
+    """Sort generators in a reasonably intelligent way. """
+    sort = args.get('sort')
+    wrt = args.get('wrt')
+
+    gens_order = {}
+
+    if sort is not None:
+        for i, elt in enumerate(sort.split('<')):
+            gens_order[elt.strip()] = i
+
+    if wrt is not None:
+        wrt = str(wrt)
+
+    def compare(a, b):
+        a, b = str(a), str(b)
+
+        if a == b:
+            return 0
+
+        if a == wrt:
+            return -1
+        if b == wrt:
+            return +1
+
+        try:
+            return gens_order[a] - gens_order[b]
+        except KeyError:
+            pass
+
+        try:
+            return _gens_order[a] - _gens_order[b]
+        except KeyError:
+            pass
+
+        return cmp(a, b)
+
+    try:
+        gens = sorted(gens, compare)
+    except TypeError:
+        gens = list(gens)
+
+    return gens
+
+def _unify_gens(f_gens, g_gens):
+    """Unify generators in a reasonably intelligent way. """
+    f_gens = list(f_gens)
+    g_gens = list(g_gens)
+
+    gens, common, k = [], [], 0
+
+    for gen in f_gens:
+        if gen in g_gens:
+            common.append(gen)
+
+    for i, gen in enumerate(g_gens):
+        if gen in common:
+            g_gens[i], k = common[k], k+1
+
+    for gen in common:
+        i = f_gens.index(gen)
+
+        gens.extend(f_gens[:i])
+        f_gens = f_gens[i+1:]
+
+        i = g_gens.index(gen)
+
+        gens.extend(g_gens[:i])
+        g_gens = g_gens[i+1:]
+
+        gens.append(gen)
+
+    gens.extend(f_gens)
+    gens.extend(g_gens)
+
+    return gens
+
 def _update_args(args, key, value):
     """Add a new `(key, value)` pair to arguments dict. """
     args = dict(args)
@@ -134,12 +221,9 @@ def _dict_from_basic_no_gens(ex, **args):
         terms.append((coeff, elements))
 
     if not gens:
-        raise GeneratorsNeeded("specify generators to give %s meaning" % ex)
+        raise GeneratorsNeeded("specify generators to give %s a meaning" % ex)
 
-    try:
-        gens = sorted(gens)
-    except TypeError:
-        gens = list(gens)
+    gens = _sort_gens(gens, **args)
 
     k, indices = len(gens), {}
 

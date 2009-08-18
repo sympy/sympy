@@ -15,6 +15,8 @@ from sympy.polys.polyclasses import (
 from sympy.polys.polyutils import (
     dict_from_basic,
     basic_from_dict,
+    _sort_gens,
+    _unify_gens,
     _dict_reorder,
     _update_args,
     _analyze_gens,
@@ -152,10 +154,7 @@ def _find_out_domain(rep, **args):
                     gens.update(d_gens)
                     has_fractions = True
 
-            try:
-                gens = sorted(gens)
-            except TypeError:
-                gens = list(gens)
+            gens = _sort_gens(gens, **args)
 
             if any(gen.is_Pow for gen in gens): # or I in gens
                 # XXX: this should really go into algebraic function fields
@@ -252,7 +251,7 @@ def _poly_reorder_if_subset(f, g, dom):
 
 def _poly_reorder_no_subset(f, g, dom):
     """Both `f` and `g` are reordered, as there's no relation between generators. """
-    gens = sorted(set(f.gens) | set(g.gens))
+    gens = _unify_gens(f.gens, g.gens)
 
     f_monoms, f_coeffs = _dict_reorder(f.rep.to_dict(), f.gens, gens)
     g_monoms, g_coeffs = _dict_reorder(g.rep.to_dict(), g.gens, gens)
@@ -485,7 +484,7 @@ class Poly(Basic):
                     if set(g.gens).issuperset(f.gens):
                         gens, G, F = _poly_reorder_if_subset(g, f, dom)
                     else:
-                        gens, G, F = _poly_reorder_no_subset(g, f, dom)
+                        gens, F, G = _poly_reorder_no_subset(f, g, dom)
         elif isinstance(f.rep, GFP) and isinstance(g.rep, GFP):
             if f.gens != g.gens or f.mod != g.mod:
                 raise UnificationFailed("can't unify %s with %s" % (f, g))
