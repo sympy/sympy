@@ -1,6 +1,6 @@
 """Methods for creating interesting polynomials, e.g. for benchmarking. """
 
-from sympy import Add, Integer, Symbol
+from sympy import Add, Integer, Symbol, Add, Mul, sqrt, nextprime
 
 from sympy.polys.densebasic import (
     dmp_zero, dmp_one, dup_from_raw_dict,
@@ -12,6 +12,29 @@ from sympy.polys.densearith import (
 )
 
 from sympy.polys.algebratools import ZZ
+
+def swinnerton_dyer_poly(n, x):
+    """Generates n-th Swinnerton-Dyer polynomial.  """
+    p, elts = 2, [[x, -sqrt(2)], [x, sqrt(2)]]
+
+    for i in xrange(2, n+1):
+        p, _elts = nextprime(p), []
+
+        n_sqrt_p = -sqrt(p)
+        p_sqrt_p = +sqrt(p)
+
+        for elt in elts:
+            _elts.append(elt + [n_sqrt_p])
+            _elts.append(elt + [p_sqrt_p])
+
+        elts = _elts
+
+    poly = []
+
+    for elt in elts:
+        poly.append(Add(*elt))
+
+    return Mul(*poly).as_poly(x)
 
 def fateman_poly_F_1(n):
     """Fateman's GCD benchmark: trivial GCD """
