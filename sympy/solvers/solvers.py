@@ -603,6 +603,45 @@ def dsolve(eq, funcs):
         else:
             raise NotImplementedError("Not a differential equation!")
 
+def classify_ode(expr, func):
+    """
+    Returns a tuple of possible dsolve classifications.
+
+    The first item in the tuple is the classification that dsolve uses to solve
+    the ode by default.  To make dsolve use a different classification, use
+    dsolve(ode, func, hint=<classification>).  To make dsolve apply all relevant
+    classification hints, use dsolve(ode, func, hint="all").  This will return
+    a dictionary of each method with its corresponding solution.  To have dsolve
+    try all methods and return the simplest one, use dsolve(ode, func,
+    hint="best").   This takes into account whether the solution is solvable in
+    the function, whether it contains any Integral classes, and which one is the
+    shortest in size.
+
+    Some classifications are duplicated with the word _alt at the end.  This
+    means that the dsolve method for that classification can produce more than
+    one solution.  Use the _alt classification to obtain the non-default
+    solution.  For example, first order differential equations with homogeneous
+    coefficients will return both "1st_homogeneous_coeff" and
+    "1st_homogeneous_coeff_alt".
+
+    Because all solutions should be mathematically equivalent, some dsolve hints
+    may return the exact same result for an ode.  Often, though, two different
+    hints will return the same solution formatted differently.  The two should
+    be equivalent.
+    """
+    # A list of hints in the order that they should be applied.  That means
+    # that, in general, hints earlier in the list should produce simpler results
+    # than those later for odes that fit both.  This is just based on my own
+    # empirical observations, so if you find that *in general*, a hint later in
+    # the list is better than one before it, fell free to modify the list.  Note
+    # however that you can easily override in dsolve (see the docstring).
+    hints = ("separable", "exact", "1st_linear", "Bernoulli",\
+    "1st_homogeneous_coeff", "1st_homogeneous_coeff_alt", "nth_homogeneous")
+
+    # This will have to wait for nth order homogeneous because I will need to
+    # clean up solve_ODE_second_order and solve_ODE_1 first.
+
+
 def deriv_degree(expr, func):
     """ get the order of a given ode, the function is implemented
     recursively """
