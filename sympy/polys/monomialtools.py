@@ -6,6 +6,8 @@ from sympy.core.basic import S
 from sympy.functions import factorial
 from sympy.utilities import all, any
 
+from sympy.utilities import cythonized
+
 def monomials(variables, degree):
     """Generate a set of monomials of the given total degree or less.
 
@@ -94,7 +96,8 @@ def monomial_cmp(order):
     except KeyError:
         raise ValueError("Unknown monomial order: %s" % order)
 
-def monomial_mul(a, b):
+@cythonized("a,b")
+def monomial_mul(A, B):
     """Multiplication of tuples representing monomials.
 
        Lets multiply `x**3*y**4*z` with `x*y**2`::
@@ -105,9 +108,10 @@ def monomial_mul(a, b):
        which gives `x**4*y**5*z`.
 
     """
-    return tuple([ x + y for x, y in zip(a, b) ])
+    return tuple([ a + b for a, b in zip(A, B) ])
 
-def monomial_div(a, b):
+@cythonized("a,b,c")
+def monomial_div(A, B):
     """Division of tuples representing monomials.
 
        Lets divide `x**3*y**4*z` by `x*y**2`::
@@ -123,14 +127,15 @@ def monomial_div(a, b):
        `x*y**2*z**2` does not divide `x**3*y**4*z`.
 
     """
-    result = [ x - y for x, y in zip(a, b) ]
+    C = [ a - b for a, b in zip(A, B) ]
 
-    if all(e >= 0 for e in result):
-        return tuple(result)
+    if all([ c >= 0 for c in C ]):
+        return tuple(C)
     else:
         return None
 
-def monomial_gcd(a, b):
+@cythonized("a,b")
+def monomial_gcd(A, B):
     """Greatest common divisor of tuples representing monomials.
 
        Lets compute GCD of `x**3*y**4*z` and `x*y**2`::
@@ -141,9 +146,10 @@ def monomial_gcd(a, b):
        which gives `x*y**2`.
 
     """
-    return tuple([ min(x, y) for x, y in zip(a, b) ])
+    return tuple([ min(a, b) for a, b in zip(A, B) ])
 
-def monomial_lcm(a, b):
+@cythonized("a,b")
+def monomial_lcm(A, B):
     """Least common multiple of tuples representing monomials.
 
        Lets compute LCM of `x**3*y**4*z` and `x*y**2`::
@@ -154,8 +160,9 @@ def monomial_lcm(a, b):
        which gives `x**3*y**4*z`.
 
     """
-    return tuple([ max(x, y) for x, y in zip(a, b) ])
+    return tuple([ max(a, b) for a, b in zip(A, B) ])
 
+@cythonized("i,n")
 def monomial_max(*monoms):
     """Returns maximal degree for each variable in a set of monomials.
 
@@ -167,8 +174,15 @@ def monomial_max(*monoms):
            (6, 5, 9)
 
     """
-    return tuple(map(lambda *row: max(row), *monoms))
+    M = list(monoms[0])
 
+    for N in monoms[1:]:
+        for i, n in enumerate(N):
+            M[i] = max(M[i], n)
+
+    return tuple(M)
+
+@cythonized("i,n")
 def monomial_min(*monoms):
     """Returns minimal degree for each variable in a set of monomials.
 
@@ -180,5 +194,11 @@ def monomial_min(*monoms):
            (0, 3, 1)
 
     """
-    return tuple(map(lambda *row: min(row), *monoms))
+    M = list(monoms[0])
+
+    for N in monoms[1:]:
+        for i, n in enumerate(N):
+            M[i] = min(M[i], n)
+
+    return tuple(M)
 

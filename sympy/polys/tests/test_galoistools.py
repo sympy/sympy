@@ -624,7 +624,7 @@ def test_gf_factor():
     # (mod p > 2**(n-2) * pi), where a_n = a_{n-1}**2 + 1, a_0 = 1
 
     p = ZZ(nextprime(int((2**4 * pi).evalf())))
-    f = [1, 2, 5, 26, 41, 39, 38]  # deg(f) = 6
+    f = [1, 2, 5, 26, 41, 39, 38]
 
     assert gf_sqf_p(f, p, ZZ) == True
 
