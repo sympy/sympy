@@ -572,7 +572,7 @@ def test_even():
     assert ask(im(x),  Q.even, Assume(x, Q.even)) == True
     assert ask(im(x),  Q.even, Assume(x, Q.real)) == True
 
-def test_xtended_real():
+def test_extended_real():
     x = symbols('x')
     assert ask(x, Q.extended_real, Assume(x, Q.positive)) == True
     assert ask(-x, Q.extended_real, Assume(x, Q.positive)) == True
@@ -681,6 +681,7 @@ def test_integer():
     assert ask(x, Q.integer, Assume(x, Q.integer, False)) == False
     assert ask(x, Q.integer, Assume(x, Q.real, False)) == False
     assert ask(x, Q.integer, Assume(x, Q.positive, False)) == None
+    assert ask(x, Q.integer, Assume(x, Q.even) | Assume(x, Q.odd)) == True
 
     assert ask(2*x, Q.integer, Assume(x, Q.integer)) == True
     assert ask(2*x, Q.integer, Assume(x, Q.even)) == True
@@ -741,6 +742,7 @@ def test_nonzero():
     assert ask(x, Q.nonzero, Assume(x, Q.real)) == None
     assert ask(x, Q.nonzero, Assume(x, Q.positive)) == True
     assert ask(x, Q.nonzero, Assume(x, Q.negative)) == True
+    assert ask(x, Q.nonzero, Assume(x, Q.negative) | Assume(x, Q.positive)) == True
 
     assert ask(x+y, Q.nonzero) == None
     assert ask(x+y, Q.nonzero, Assume(x, Q.positive) & Assume(y, Q.positive)) == True

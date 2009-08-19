@@ -1,11 +1,13 @@
 import inspect
+import copy
 from sympy.core import Symbol, sympify
 from sympy.utilities.source import get_class
 from sympy.assumptions import global_assumptions
 from sympy.assumptions.assume import eliminate_assume
-from sympy.logic.boolalg import to_cnf, conjuncts, \
-    compile_rule, Equivalent, And
-from sympy.logic.algorithms.dpll import dpll_satisfiable
+from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, \
+    Equivalent, And, Or, Not
+from sympy.logic.inference import literal_symbol
+from sympy.logic.algorithms.dpll import dpll_int_repr
 
 class Q:
     """Supported ask keys"""
@@ -17,6 +19,7 @@ class Q:
     extended_real = 'extended_real'
     imaginary = 'imaginary'
     infinitesimal = 'infinitesimal'
+    infinity = 'infinity'
     integer = 'integer'
     irrational = 'irrational'
     rational = 'rational'
@@ -80,26 +83,31 @@ def ask(expr, key, assumptions=True):
 
     # use logic inference
     if not expr.is_Atom: return
-    clauses = []
-    for k, values in known_facts_dict.iteritems():
-        for v in values:
-            clauses.append(Equivalent(compile_rule(k), compile_rule(v)))
+    clauses = copy.deepcopy(known_facts_compiled)
 
     assumptions = conjuncts(to_cnf(assumptions))
     # add assumptions to the knowledge base
     for assump in assumptions:
         conj = eliminate_assume(assump, symbol=expr)
-        if conj: clauses.append(conj)
+        if conj:
+            out = []
+            for sym in conjuncts(to_cnf(conj)):
+                lit, pos = literal_symbol(sym), type(sym) is not Not
+                if pos:
+                    out.extend([known_facts_keys.index(str(l))+1 for l in disjuncts(lit)])
+                else:
+                    out.extend([-(known_facts_keys.index(str(l))+1) for l in disjuncts(lit)])
+            clauses.append(out)
 
-    clauses.append(Symbol(key))
-    # TODO: call dpll and avoid creating this object
-    if not dpll_satisfiable(And(*clauses)):
+    n = len(known_facts_keys)
+    clauses.append([known_facts_keys.index(key)+1])
+    if not dpll_int_repr(clauses, range(1, n+1), {}):
         return False
-    clauses[-1] = ~clauses[-1]
-    if not dpll_satisfiable(And(*clauses)):
+    clauses[-1][0] = -clauses[-1][0]
+    if not dpll_int_repr(clauses, range(1, n+1), {}):
         # if the negation is satisfiable, it is entailed
         return True
-    clauses.pop(-1)
+    del clauses
 
 
 def register_handler(key, handler):
@@ -148,17 +156,56 @@ handlers_dict = {
     'odd'            : ['sympy.queries.handlers.ntheory.AskOddHandler'],
 }
 
-known_facts_dict = {
-    'complex'       : ['real | complex_number_re_0'],
-    'even'          : ['integer & ~odd'],
-    'extended_real' : ['real | infinity'],
-    'odd'           : ['integer & ~even'],
-    'prime'         : ['integer & positive & ~composite'],
-    'integer'       : ['rational & denominator_one'],
-    'imaginary'     : ['complex & ~real'],
-    'negative'      : ['real & ~positive & ~zero'],
-    'nonzero'       : ['positive | negative'],
-    'positive'      : ['real & ~negative & ~zero'],
-    'rational'      : ['real & ~irrational'],
-    'real'          : ['rational | irrational' ],
-}
+known_facts_keys = []
+
+for k in Q.__dict__.keys():
+    if k.startswith('__'): continue
+    known_facts_keys.append(k)
+
+"""
+known_facts_compiled gets generated from the above. known_facts_compiled
+is in CNF form and efficient integer representation.
+
+known_facts = [
+    Implies   (real, complex),
+    Equivalent(even, integer & ~odd),
+    Equivalent(extended_real, real | infinity),
+    Equivalent(odd, integer & ~even),
+    Equivalent(prime, integer & positive & ~composite),
+    Implies   (integer, rational),
+    Implies   (imaginary, complex & ~real),
+    Equivalent(negative, nonzero & ~positive),
+    Equivalent(positive, nonzero & ~negative),
+    Equivalent(rational, real & ~irrational),
+    Equivalent(real, rational | irrational),
+    Implies   (nonzero, real),
+    Equivalent(nonzero, positive | negative),
+]
+
+To generate known_facts_compiled, use the following script.
+
+from sympy import var
+from sympy.queries import Q
+from sympy.logic.boolalg import *
+
+syms = []
+
+for k in Q.__dict__.keys():
+    if k.startswith('__'): continue
+    syms.append(var(k))
+print syms
+out = []
+
+for _c in known_facts:
+    _c = conjuncts(to_cnf(_c))
+    c = to_int_repr(_c, syms)
+    for l in c:
+        out.append(l)
+print out
+"""
+known_facts_compiled = [[11, -14], [15, -1], [-1, -17], [1, 17, -15], [3, -4], [3, -14], [4, 14, -3], [15, -17], [-1, -17], [1, 17, -15], [15, -10], [7, -10], [-6, -10], [6, 10, -15, -7], [13, -15], [11, -16], [-16, -14], [2, -9], [-9, -7], [9, 7, -2], [2, -7], [-9, -7], [9, 7, -2], [14, -13], [-18, -13], [18, 13, -14], [14, -18], [14, -13], [18, 13, -14], [14, -2], [2, -9], [2, -7], [9, 7, -2]]
+
+
+
+
+
