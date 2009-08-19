@@ -2,7 +2,7 @@
 """
 import sys
 
-from iterables import make_list, flatten, subsets
+from iterables import make_list, flatten, subsets, numbered_symbols
 
 if sys.version_info[0] <= 2 and sys.version_info[1] < 5:
     from iterables import any, all

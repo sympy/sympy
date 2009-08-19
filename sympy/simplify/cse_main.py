@@ -1,8 +1,8 @@
 """ Tools for doing common subexpression elimination.
 """
 
-from sympy import Symbol, Basic
-from sympy.utilities.iterables import postorder_traversal
+from sympy import Basic
+from sympy.utilities.iterables import postorder_traversal, numbered_symbols
 
 import cse_opts
 
@@ -18,27 +18,6 @@ import cse_opts
 # `None` can be used to specify no transformation for either the preprocessor or
 # postprocessor.
 cse_optimizations = list(cse_opts.default_optimizations)
-
-def numbered_symbols(prefix='x'):
-    """ Generate an infinite stream of Symbols consisting of a prefix and
-    increasing subscripts.
-
-    Parameters
-    ----------
-    prefix : str, optional
-        The prefix to use. By default, this function will generate symbols of
-        the form "x0", "x1", etc.
-
-    Yields
-    ------
-    sym : Symbol
-        The subscripted symbols.
-    """
-    i = 0
-    while True:
-        name = '%s%s' % (prefix, i)
-        yield Symbol(name)
-        i += 1
 
 def preprocess_for_cse(expr, optimizations):
     """ Preprocess an expression to optimize for common subexpression

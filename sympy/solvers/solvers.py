@@ -28,7 +28,7 @@ from sympy.simplify import simplify, collect, logcombine
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots
 
-from sympy.utilities import any, all
+from sympy.utilities import any, all, numbered_symbols
 from sympy.utilities.lambdify import lambdify
 from sympy.mpmath import findroot
 
@@ -889,12 +889,6 @@ def homogeneous_order(eq, *symbols):
     return _homogeneous_order(eq, *symbols)
 
 def _homogeneous_order(eq, *symbols):
-    def _dummyiter():
-        i = 0
-        while True:
-            yield Symbol('d%d' % i, dummmy=True)
-            i += 1
-
 
     if not symbols:
         raise ValueError, "homogeneous_order: no symbols were given."
@@ -911,7 +905,7 @@ def _homogeneous_order(eq, *symbols):
                 elif i not in symbols:
                     pass
                 else:
-                    dummyvar = _dummyiter().next()
+                    dummyvar = numbered_symbols(prefix='d', dummy=True).next()
                     eq = eq.subs(i, dummyvar)
                     symbols = list(symbols)
                     symbols.remove(i)

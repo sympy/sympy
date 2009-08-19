@@ -1,4 +1,4 @@
-
+from sympy.core.symbol import Symbol, Wild
 def all(iterable):
     """Return True if all elements are set to True. This
        function does not support predicates explicitely,
@@ -235,3 +235,24 @@ def variations(seq, n, repetition=False):
             result = setrep(result)
         cartesmodus = 'triple'
     return [[seq[index] for index in indices] for indices in result]
+
+def numbered_symbols(prefix='x', function=Symbol, **assumptions):
+    """ Generate an infinite stream of Symbols consisting of a prefix and
+    increasing subscripts.
+
+    Parameters
+    ----------
+    prefix : str, optional
+        The prefix to use. By default, this function will generate symbols of
+        the form "x0", "x1", etc.
+
+    Yields
+    ------
+    sym : Symbol
+        The subscripted symbols.
+    """
+    i = 0
+    while True:
+        name = '%s%s' % (prefix, i)
+        yield function(name, **assumptions)
+        i += 1
