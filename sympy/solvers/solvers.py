@@ -592,7 +592,9 @@ def dsolve(eq, funcs):
         #order odes can be handled.
         order = deriv_degree(eq, f(x))
 
-        if  order > 2 :
+        #if order > 1:
+         #   return solve_ODE_higher_order(eq, f(x), order)
+        if  order > 2:
            raise NotImplementedError("dsolve: Cannot solve " + str(eq))
         elif order == 2:
             return solve_ODE_second_order(eq, f(x))
@@ -797,6 +799,46 @@ def solve_ODE_first_order(eq, f):
     # Other cases of first order odes will be implemented here
 
     raise NotImplementedError("solve_ODE_first_order: Cannot solve " + str(eq))
+
+def solve_ODE_higher_order(eq, f, order):
+    x = f.args[0]
+    f = f.func
+    b = Wild('b', exclude=[f(x)])
+    j = 0
+    s = S(0)
+    wilds = []
+    constants = [numbered_symbols(prefix='C', function=Symbol) for i in\
+                 range(1, order + 1)]
+    for i in numbered_symbols(prefix='a', function=Wild, exclude=[f(x)]):
+        if j == order+1:
+            break
+        wilds.append(i)
+        s += i*f(x).diff(x,j)
+        j += 1
+    s += b
+
+    r = eq.match(s)
+    if r:
+        # The ODE is homogeneous
+        if all([not r[i].has(x) for i in wilds]):
+            # First, set up characteristic equation.
+            m = Symbol('m', dummy=True)
+            chareq = S(0)
+            for i in r:
+                if i == b:
+                    pass
+                else:
+                    chareq += r[i]*m**S(i.name[1:])
+            charroots = roots(chareq, m)
+            sol = S(0)
+            c = 0
+            for root, multiplicity in charroots.items():
+                for i in range(multiplicity):
+                    if i is complex:
+                        if im(i).could_extact_minus_sign():
+                            sol += x**i*exp(root[0]*x)*(sin(abs(root[1])*x)+cos(root[1]*x))
+            return sol
+
 
 def solve_ODE_second_order(eq, f):
     """
