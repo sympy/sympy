@@ -2228,9 +2228,9 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
     gensol = ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
         returns='both')
     match.update(gensol)
-    return solve_undetermined_coefficients(eq, func, order, match)
+    return _solve_undetermined_coefficients(eq, func, order, match)
 
-def solve_undetermined_coefficients(eq, func, order, match):
+def _solve_undetermined_coefficients(eq, func, order, match):
     """
     Helper function for the method of undetermined coefficients.
 
@@ -2534,9 +2534,9 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     gensol = ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
         returns='both')
     match.update(gensol)
-    return solve_variation_of_parameters(eq, func, order, match)
+    return _solve_variation_of_parameters(eq, func, order, match)
 
-def solve_variation_of_parameters(eq, func, order, match):
+def _solve_variation_of_parameters(eq, func, order, match):
     """
     Helper function for the method of variation of parameters.
 
