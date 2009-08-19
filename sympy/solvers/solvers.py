@@ -633,7 +633,7 @@ def solve_ODE_first_order(eq, f):
     f = f.func
     C1 = Symbol('C1')
 
-    #linear case: a(x)*f'(x)+b(x)*f(x)+c(x) = 0
+    # Linear case: a(x)*y'+b(x)*y+c(x) == 0
     a = Wild('a', exclude=[f(x)])
     b = Wild('b', exclude=[f(x)])
     c = Wild('c', exclude=[f(x)])
@@ -644,7 +644,7 @@ def solve_ODE_first_order(eq, f):
         tt = integrate(t*(-r[c]/r[a]), x)
         return Equality(f(x),(tt + C1)/t)
 
-    # Bernoulli case: a(x)*f'(x)+b(x)*f(x)+c(x)*f(x)^n = 0
+    # Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
     n = Wild('n', exclude=[f(x)])
 
     r = eq.match(a*diff(f(x),x) + b*f(x) + c*f(x)**n)
@@ -690,8 +690,8 @@ def solve_ODE_first_order(eq, f):
                 else:
                     return Equality(f(x),sol1[0].subs(y,f(x)))
 
-    # First order equation with homogeneous coefficients.
-        # This uses the same match from Exact above.
+        # First order equation with homogeneous coefficients:
+        # dy/dx == F(y/x) or dy/dx == F(x/y)
         ordera = homogeneous_order(r[a], x, y)
         orderb = homogeneous_order(r[b], x, y)
         if ordera == orderb and ordera != None:
@@ -770,14 +770,15 @@ def solve_ODE_first_order(eq, f):
                 sol2sr = map((lambda t: Equality(f(x), t.subs({u2:x/f(x),\
                 y:f(x)}))), sol2s)
                 if len(sol2sr) == 1:
-                    return sol2sr[0]
+                    return logcombine(sol2sr[0], assume_pos_real=True)
                 else:
-                    return sol2srs
-            # Finaly, try to return the shortest expression, naively computed
+                    return [logcombine(t, assume_pos_real=True) for t in sol2srs]
+
+            # Finally, try to return the shortest expression, naively computed
             # based on the length of the string version of the expression.  This
             # may favor combined fractions because they will not have duplicate
             # denominators, and may slightly favor expressions with fewer
-            # additions and subtractions, as those are seperated by spaces by
+            # additions and subtractions, as those are separated by spaces by
             # the printer.
             return min(sol1, sol2, key=(lambda x: len(str(x))))
 
@@ -850,12 +851,11 @@ def solve_ODE_1(f, x):
     C2 = Symbol('C2')
     return -log(C1+C2/x)
 
-
 def homogeneous_order(eq, *symbols):
     """
     Determines if a function is homogeneous and if so of what order.
     A function f(x,y,...) is homogeneous of order n if
-    f(xt,yt,t*...) == t**n*f(x,y,...).  It is implemented recursively.
+    f(t*x,t*y,t*...) == t**n*f(x,y,...).  It is implemented recursively.
 
     Functions can be symbols, but every argument of the function must also be
     a symbol, and the arguments of the function that appear in the expression

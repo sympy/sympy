@@ -289,7 +289,7 @@ def test_collect_3():
     assert collect(a*x*log(x) + b*(x*log(x)), x*log(x)) == x*(a + b)*log(x)
     assert collect(a*x**2*log(x)**2 + b*(x*log(x))**2, x*log(x)) == x**2*log(x)**2*(a + b)
 
-    # with respect to a product of tree symbols
+    # with respect to a product of three symbols
     assert collect(y*x*z+a*x*y*z, x*y*z) == (1 + a)*x*y*z
 
 def test_collect_4():
