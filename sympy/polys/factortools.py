@@ -59,7 +59,7 @@ from sympy.polys.densetools import (
 )
 
 from sympy.polys.polyerrors import (
-    ExtraneousFactors, DomainError
+    ExtraneousFactors, DomainError, EvaluationFailed
 )
 
 from sympy.ntheory import nextprime, isprime, factorint
@@ -479,12 +479,12 @@ def dmp_zz_wang_non_divisors(E, cs, ct, K):
 def dmp_zz_wang_test_points(f, T, ct, A, u, K):
     """Wang/EEZ: Test evaluation points for suitability. """
     if not dmp_eval_tail(dmp_LC(f, K), A, u-1, K):
-        return None
+        raise EvaluationFailed('no luck')
 
     g = dmp_eval_tail(f, A, u, K)
 
     if not dup_sqf_p(g, K):
-        return None
+        raise EvaluationFailed('no luck')
 
     c, h = dup_primitive(g, K)
 
@@ -497,9 +497,9 @@ def dmp_zz_wang_test_points(f, T, ct, A, u, K):
     D = dmp_zz_wang_non_divisors(E, c, ct, K)
 
     if D is not None:
-        return c, h, E, D
+        return c, h, E
     else:
-        return None
+        raise EvaluationFailed('no luck')
 
 @cythonized("u,v,i,j,k")
 def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
@@ -724,8 +724,8 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
         return H
 
 EEZ_NUM_OK    = 3
-EEZ_NUM_TRY   = 20
-EEZ_MOD_STEP  = 25
+EEZ_NUM_TRY   = 5
+EEZ_MOD_STEP  = 2
 
 @cythonized("u,mod,i,j,s_arg,negative")
 def dmp_zz_wang(f, u, K):
@@ -763,89 +763,104 @@ def dmp_zz_wang(f, u, K):
     b = dmp_zz_mignotte_bound(f, u, K)
     p = K(nextprime(b))
 
-    bad_points = set([])
-    r, mod = None, 3
+    history, configs = set([]), []
 
-    while True:
-        configs = []
+    if u == 1:
+        mod = 2
+    else:
+        mod = 1
 
-        while len(configs) < EEZ_NUM_OK:
-            for i in xrange(EEZ_NUM_TRY):
-                A = []
+    A = [K.zero]*u
 
-                for j in xrange(0, u):
-                    A.append(K(randint(-mod, mod)))
+    try:
+        cs, s, E = dmp_zz_wang_test_points(f, T, ct, A, u, K)
 
-                if tuple(A) not in bad_points:
-                    bad_points.add(tuple(A))
+        _, H = dup_zz_factor_sqf(s, K)
+
+        r = len(H)
+
+        if r == 1:
+            return K.one, [f]
+
+        bad_points = set([tuple(A)])
+        configs = [(s, cs, E, H, A)]
+    except EvaluationFailed:
+        r = None
+
+    while len(configs) < EEZ_NUM_OK:
+        for _ in xrange(EEZ_NUM_TRY):
+            A = [ K(randint(-mod, mod)) for _ in xrange(u) ]
+
+            if tuple(A) not in history:
+                history.add(tuple(A))
+            else:
+                continue
+
+            try:
+                cs, s, E = dmp_zz_wang_test_points(f, T, ct, A, u, K)
+            except EvaluationFailed:
+                continue
+
+            _, H = dup_zz_factor_sqf(s, K)
+
+            rr = len(H)
+
+            if r is not None:
+                if rr <= r:
+                    if rr < r:
+                        configs, r = [], rr
                 else:
                     continue
-
-                R = dmp_zz_wang_test_points(f, T, ct, A, u, K)
-
-                if R is not None:
-                    cs, s, E, _ = R
-
-                    _, H = dup_zz_factor_sqf(s, K)
-
-                    rr = len(H)
-
-                    if r is not None:
-                        if rr <= r:
-                            if rr < r:
-                                configs, r = [], rr
-                        else:
-                            continue
-                    else:
-                        r = rr
-
-                    if r == 1:
-                        return K.one, [f]
-
-                    configs.append((s, cs, E, H, A))
-
-                    if len(configs) == EEZ_NUM_OK:
-                        break
             else:
-                mod += EEZ_MOD_STEP
+                r = rr
 
-        s_norm, s_arg, i = None, 0, 0
+            if r == 1:
+                return K.one, [f]
 
-        for s, _, _, _, _ in configs:
-            _s_norm = dup_max_norm(s, K)
+            configs.append((s, cs, E, H, A))
 
-            if s_norm is not None:
-                if _s_norm < s_norm:
-                    s_norm = _s_norm
-                    s_arg = i
-            else:
-                s_norm = _s_norm
-
-            i += 1
-
-        _, cs, E, H, A = configs[s_arg]
-
-        try:
-            f, H, LC = dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K)
-            factors = dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K)
-        except ExtraneousFactors:
-            raise NotImplementedError("if this happened we need an extra loop here")
-
-        negative, F = 0, []
-
-        for f in factors:
-            _, f = dmp_ground_primitive(f, u, K)
-
-            if K.is_negative(dmp_ground_LC(f, u, K)):
-                f = dmp_neg(f, u, K)
-                negative += 1
-
-            F.append(f)
-
-        if not (negative % 2):
-            return  K.one, F
+            if len(configs) == EEZ_NUM_OK:
+                break
         else:
-            return -K.one, F
+            mod += EEZ_MOD_STEP
+
+    s_norm, s_arg, i = None, 0, 0
+
+    for s, _, _, _, _ in configs:
+        _s_norm = dup_max_norm(s, K)
+
+        if s_norm is not None:
+            if _s_norm < s_norm:
+                s_norm = _s_norm
+                s_arg = i
+        else:
+            s_norm = _s_norm
+
+        i += 1
+
+    _, cs, E, H, A = configs[s_arg]
+
+    try:
+        f, H, LC = dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K)
+        factors = dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K)
+    except ExtraneousFactors:
+        raise NotImplementedError("if this happened we need an extra loop here")
+
+    negative, F = 0, []
+
+    for f in factors:
+        _, f = dmp_ground_primitive(f, u, K)
+
+        if K.is_negative(dmp_ground_LC(f, u, K)):
+            f = dmp_neg(f, u, K)
+            negative += 1
+
+        F.append(f)
+
+    if not (negative % 2):
+        return  K.one, F
+    else:
+        return -K.one, F
 
 @cythonized("u,d,k")
 def dmp_zz_factor(f, u, K):

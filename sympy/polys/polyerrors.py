@@ -27,6 +27,9 @@ class UnificationFailed(Exception):
 class GeneratorsNeeded(Exception):
     pass
 
+class EvaluationFailed(Exception):
+    pass
+
 class PolynomialError(Exception):
     pass
 
