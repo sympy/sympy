@@ -269,7 +269,7 @@ def test_homogeneous_order_ode2():
     eq3 = x*exp(f(x)/x)+f(x)-x*f(x).diff(x)
     sol1 = Eq(f(x), x*acos(log(x/C1)))
     sol2 = [Eq(f(x), (-C1*x + x**2)**Rational(1,2)), Eq(f(x), -(-C1*x + x**2)**Rational(1,2))]
-    sol3 = Eq(f(x), -x*log(-log(x) + log(C1)))
+    sol3 = Eq(f(x), log(log(C1/x)**(-x)))
     assert dsolve(eq1, f(x)) == sol1
     assert dsolve(eq2, f(x)) == sol2
     assert dsolve(eq3, f(x)) == sol3
@@ -286,7 +286,7 @@ def test_homogeneous_order_ode3():
     assert dsolve(eq, f(x)) == sol
     assert checksol(eq, f(x), sol)
 
-def test_homogeneous_order_ode5():
+def test_homogeneous_order_ode4():
     # This can be solved explicitly, but the the integration engine cannot handle
     # it (see issue 1452).  The explicit solution is included in an XFAIL test
     # below. checksol fails for this equation, so its test is in
@@ -298,7 +298,7 @@ def test_homogeneous_order_ode5():
 
 
 @XFAIL
-def test_homogeneous_order_ode5_explicit():
+def test_homogeneous_order_ode4_explicit():
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
     sol = Eq(f(x)**2-C1*x, f(x)*sqrt(f(x)**2-x**2))
     assert dsolve(eq, f(x)) == sol

@@ -582,6 +582,8 @@ def dsolve(eq, funcs):
         else:
             f = funcs
 
+        if len(f.args) != 1:
+            raise NotImplementedError("Only functions of one variable are supported")
         x = f.args[0]
         f = f.func
 
@@ -601,7 +603,7 @@ def dsolve(eq, funcs):
         elif order == 1:
             return solve_ODE_first_order(eq, f(x))
         else:
-            raise NotImplementedError("Not a differential equation!")
+            raise NotImplementedError("Not a differential equation.")
 
 def classify_ode(expr, func):
     """
@@ -788,9 +790,9 @@ def solve_ODE_first_order(eq, f):
                     sol1sr = map((lambda t: Equality(f(x), t.subs({u1:f(x)/x,\
                     y:f(x)}))), sol1s)
                     if len(sol1sr) == 1:
-                        return sol1sr[0]
+                        return logcombine(sol1sr[0], assume_pos_real=True)
                     else:
-                        return sol1sr
+                        return [logcombine(t, assume_pos_real=True) for t in sol1sr]
             # Second, try to return an evaluated integral:
             if sol1.has(C.Integral):
                 return sol2
@@ -809,9 +811,9 @@ def solve_ODE_first_order(eq, f):
                 sol1sr = map((lambda t: Equality(f(x), t.subs({u1:f(x)/x,\
                 y:f(x)}))), sol1s)
                 if len(sol1sr) == 1:
-                    return sol1sr[0]
+                    return logcombine(sol1sr[0], assume_pos_real=True)
                 else:
-                    return sol1sr
+                    return [logcombine(t, assume_pos_real=True) for t in sol1sr]
             try:
                 sol2s = map((lambda t: t.subs(y, f(x))),\
                 solve(sol2.lhs.subs(f(x),y)-sol2.rhs.subs(f(x),y), y))
