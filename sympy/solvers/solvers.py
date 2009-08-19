@@ -23,8 +23,8 @@ from sympy.core.relational import Equality
 from sympy.core.function import Derivative, diff, Function
 from sympy.core.numbers import ilcm
 
-from sympy.functions import sqrt, log, exp, LambertW
-from sympy.simplify import simplify, collect, logcombine
+from sympy.functions import sqrt, log, exp, LambertW, sin, cos
+from sympy.simplify import simplify, collect, logcombine, separatevars
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots
 
@@ -654,18 +654,30 @@ def solve_ODE_first_order(eq, f):
             t = C.exp((1-r[n])*integrate(r[b]/r[a],x))
             tt = (r[n]-1)*integrate(t*r[c]/r[a],x)
             return Equality(f(x),((tt + C1)/t)**(1/(1-r[n])))
-        if r[n] == 1:
-            return Equality(f(x),C1*exp(integrate(-(r[b]+r[c]), x)))
+        #if r[n] == 1:
+         #   return Equality(f(x),C1*exp(integrate(-(r[b]+r[c]), x)))
 
-    # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
     a = Wild('a', exclude=[f(x).diff(x)])
     b = Wild('b', exclude=[f(x).diff(x)])
     r = eq.match(a+b*diff(f(x),x))
+    # This match is used for several cases below.
     if r:
         y = Symbol('y', dummy=True)
         r[a] = r[a].subs(f(x),y)
         r[b] = r[b].subs(f(x),y)
 
+        # Separable Case: y' == P(y)*Q(x)
+        r[a] = separatevars(r[a])
+        r[b] = separatevars(r[b])
+        # m1[coeff]*m1[x]*m1[y] + m2[coeff]*m2[x]*m2[y]*y'
+        m1 = separatevars(r[a], dict=True, symbols=(x, y))
+        m2 = separatevars(r[b], dict=True, symbols=(x, y))
+
+        if m1 and m2:
+            print 'separable'
+            return Equality(integrate(m2['coeff']*m2[y]/m1[y], y).subs(y, f(x)),\
+            integrate(-m1['coeff']*m1[x]/m2[x], x)+C1)
+        # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
         if simplify(r[a].diff(y)) == simplify(r[b].diff(x)) and r[a]!=0:
             x0 = Symbol('x0', dummy=True)
             y0 = Symbol('y0', dummy=True)
