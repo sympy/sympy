@@ -1,6 +1,6 @@
 from sympy import sin, exp, Function, Symbol, S, Pow, Eq, I, sinh, cosh, acos,\
 cos, log, Rational, sqrt, Integral
-from sympy.simplify.simplify import constantsimp
+from sympy.solvers.solvers import constantsimp
 from sympy.utilities.pytest import XFAIL
 
 
