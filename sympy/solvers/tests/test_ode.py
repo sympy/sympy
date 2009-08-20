@@ -520,16 +520,16 @@ def test_nth_linear_constant_coeff_homogeneous():
     sol3 = Eq(f(x), C1*exp(x) + C2*exp(-x))
     sol4 = Eq(f(x), C1 + C2*exp(-3*x) + C3*exp(2*x))
     sol5 = Eq(f(x), C1*exp(x/2) + C2*exp(4*x/3))
-    sol6 = Eq(f(x), C1*exp(-x*(1 + sqrt(2))) + C2*exp(-x*(1 - sqrt(2))))
-    sol7 = Eq(f(x), C1*exp(3*x) + C2*exp(-x*(2 + sqrt(2))) + C3*exp(-x*(2 - sqrt(2))))
+    sol6 = Eq(f(x), C1*exp(-x + x*sqrt(2)) + C2*exp(-x - x*sqrt(2)))
+    sol7 = Eq(f(x), C1*exp(3*x) + C2*exp(-2*x + x*sqrt(2)) + C3*exp(-2*x - x*sqrt(2)))
     sol8 = Eq(f(x), C1 + C2*exp(x) + C3*exp(-2*x) + C4*exp(2*x))
-    sol9 = Eq(f(x), C1*exp(x) + C2*exp(-x) + C3*exp(-x*(2 + sqrt(2))) + C4*exp(-x*(2 - \
-        sqrt(2))))
+    sol9 = Eq(f(x), C1*exp(x) + C2*exp(-x) + C3*exp(-2*x + x*sqrt(2)) + \
+        C4*exp(-2*x - x*sqrt(2)))
     sol10 = Eq(f(x), C1*sin(x*sqrt(a)) + C2*cos(x*sqrt(a)) + C3*exp(x*sqrt(a)) + \
         C4*exp(-x*sqrt(a)))
-    sol11 = Eq(f(x), C1*exp(x*(k + sqrt(8 + 4*k**2)/2)) + C2*exp(x*(k - sqrt(8 + \
-        4*k**2)/2)))
-    sol12 = Eq(f(x), C1*exp(x*(-4*abs(k) - 2*k)) + C2*exp(x*(-2*k + 4*abs(k))))
+    sol11 = Eq(f(x), C1*exp(k*x + x*sqrt(8 + 4*k**2)/2) + \
+        C2*exp(k*x - x*sqrt(8 + 4*k**2)/2))
+    sol12 = Eq(f(x), C1*exp(-4*x*abs(k) - 2*k*x) + C2*exp(-2*k*x + 4*x*abs(k)))
     sol13 = Eq(f(x), C1 + C2*x + C3*x**2 + C4*x**3)
     sol14 = Eq(f(x), (C1 + C2*x)*exp(-2*x))
     sol15 = Eq(f(x), (C1 + C2*x)*exp(-x) + C3*exp(x/3))

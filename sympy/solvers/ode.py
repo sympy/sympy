@@ -382,7 +382,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
             try:
                 sol = dsolve(eq, func, hint=i, simplify=simplify, classify=False,
                    order=hints['order'], match=hints[i])
-            except NotImplementedError as detail:
+            except NotImplementedError, detail: # except NotImplementedError as detail:
                 failedhints[i] = detail
             else:
                 retdict[i] = sol
@@ -805,7 +805,7 @@ def odesimp(eq, func, order, hint):
         # from the particular solution from variation of parameters
         global collectterms
         sol = eq.rhs
-        sol = expand_mul(sol, deep=False)
+        sol = expand_mul(sol)
         for i, reroot, imroot in collectterms:
             sol = collect(sol, x**i*exp(reroot*x)*sin(abs(imroot)*x))
             sol = collect(sol, x**i*exp(reroot*x)*cos(imroot*x))
