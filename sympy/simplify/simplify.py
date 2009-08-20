@@ -1280,6 +1280,10 @@ def logcombine(expr, assume_pos_real=False):
     return _logcombine(expr, assume_pos_real)
 
 def _logcombine(expr, assume_pos_real=False):
+    """
+    Does the main work for logcombine, it's a separate function to avoid an
+    infinite recursion. See the docstrings of logcombine() for help.
+    """
     def _getlogargs(expr):
         """
         Returns the arguments of the logarithm in an expression.
