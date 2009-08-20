@@ -846,28 +846,30 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
            always be possible because f is a linear operator).  Then back
            substitute each derivative into ode in reverse order.
 
-    This function returns True if the solution checks. Otherwise, it
-    returns the result of the third test above.  If it cannot apply any of
-    the tests, it will return False.  Note that sometimes
-    this function will return an expression that is identically equal to
-    0 instead of returning True.  This is because simplify() cannot
-    reduce the expression to 0.  If an expression returned by this
-    function vanishes identically, then sol really is a solution to ode.
+    This function returns a tuple.  The first item in the tuple is True
+    if the substitution results in 0, and False otherwise. The second
+    item in the tuple is what the substitution results in.  It should
+    always be 0 if the first item is True. Note that sometimes this
+    function will False, but with an expression that is identically
+    equal to 0, instead of returning True.  This is because simplify()
+    cannot reduce the expression to 0.  If an expression returned by
+    this function vanishes identically, then sol really is a solution to
+    ode.
 
     If this function seems to hang, it is probably because of a hard
     simplification.
 
-    Note that the boolean value of the result of checkodesol should
-    always be True. To test, use "is True" and "is not True"
-
+    To use this function to test, test the first item of the tuple.
     == Examples ==
         >>> from sympy import *
         >>> x = Symbol('x')
         >>> f = Function('f')
-        >>> assert checkodesol(f(x).diff(x), f(x), Eq(f(x), C1)) is True
-        >>> assert checkodesol(f(x).diff(x), f(x), Eq(f(x), x)) is not True
+        >>> checkodesol(f(x).diff(x), f(x), Eq(f(x), C1))
+        (True, 0)
+        >>> assert checkodesol(f(x).diff(x), f(x), Eq(f(x), C1))[0]
+        >>> assert not checkodesol(f(x).diff(x), f(x), Eq(f(x), x))[0]
         >>> checkodesol(f(x).diff(x, 2), f(x), Eq(f(x), x**2))
-        2
+        (False, 2)
 
     """
     if not isinstance(func, Function) or len(func.args) != 1:
@@ -890,12 +892,14 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
             except NotImplementedError:
                 pass
             else:
-                result = checkodesol(ode, func, map(lambda t: Eq(func, t), solved), \
-                    order=order, solve_for_func=False)
-                if all(i is True for i in result):
-                    return True
+                if len(solved) == 1:
+                    result = checkodesol(ode, func, Eq(func, solved[0]), \
+                        order=order, solve_for_func=False)
                 else:
-                    return filter(lambda t: t is not True, result)
+                    result = checkodesol(ode, func, map(lambda t: Eq(func, t), \
+                        solved), order=order, solve_for_func=False)
+
+                return result
     while s:
         if testnum == 0:
             # First pass, try substituting a solved solution directly into the ode
@@ -965,11 +969,12 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
             break
 
     if not s:
-        return True
+        return (True, s)
     elif s is True: # The code above never was able to change s
-        return False
+        raise NotImplementedError("Unable to test if " + str(sol) + \
+            " is a solution to " + str(ode) + ".")
     else:
-        return s
+        return (False, s)
 
 # FIXME: rewrite this as a key function, so it works in Python 3
 # Python 3 removes the cmp key from sorted.  key should be better, because you
