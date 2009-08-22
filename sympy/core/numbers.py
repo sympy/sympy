@@ -584,7 +584,10 @@ class Rational(Number):
                 if (ne is S.One):
                     return Rational(b.q, b.p)
                 if b < 0:
-                    return -(S.NegativeOne) ** ((e.p % e.q) / S(e.q)) * Rational(b.q, -b.p) ** ne
+                    if e.q != 1:
+                        return -(S.NegativeOne) ** ((e.p % e.q) / S(e.q)) * Rational(b.q, -b.p) ** ne
+                    else:
+                        return S.NegativeOne ** ne * Rational(b.q, -b.p) ** ne
                 else:
                     return Rational(b.q, b.p) ** ne
             if (e is S.Infinity):
@@ -654,7 +657,7 @@ class Rational(Number):
         if other.is_comparable and not isinstance(other, Rational): other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Real):
-                return bool(not mlib.feq(self._as_mpf_val(other._prec), other._mpf_))
+                return bool(not mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_))
             return bool(self.p!=other.p or self.q!=other.q)
 
         return True     # Rational != non-Number
@@ -918,9 +921,9 @@ class Integer(Rational):
     def _eval_is_odd(self):
         return bool(self.p % 2)
 
-    def _eval_power(base, exp):
+    def _eval_power(b, e):
         """
-        Tries to do some simplifications on base ** exp, where base is
+        Tries to do some simplifications on b ** e, where base is
         an instance of Integer
 
         Returns None if no further simplifications can be done
@@ -931,52 +934,55 @@ class Integer(Rational):
           - (-4)**Rational(1,2) becomes 2*I
         We will
         """
-        if exp is S.NaN: return S.NaN
-        if base is S.One: return S.One
-        if base is S.NegativeOne: return
-        if exp is S.Infinity:
-            if base.p > S.One: return S.Infinity
-            if base.p == -1: return S.NaN
+        if e is S.NaN: return S.NaN
+        if b is S.One: return S.One
+        if b is S.NegativeOne: return
+        if e is S.Infinity:
+            if b.p > S.One: return S.Infinity
+            if b.p == -1: return S.NaN
             # cases 0, 1 are done in their respective classes
             return S.Infinity + S.ImaginaryUnit * S.Infinity
-        if not isinstance(exp, Number):
+        if not isinstance(e, Number):
             # simplify when exp is even
             # (-2) ** k --> 2 ** k
-            c,t = base.as_coeff_terms()
-            if exp.is_even and isinstance(c, Number) and c < 0:
-                return (-c * Mul(*t)) ** exp
-        if not isinstance(exp, Rational): return
-        if exp is S.Half and base < 0:
+            c,t = b.as_coeff_terms()
+            if e.is_even and isinstance(c, Number) and c < 0:
+                return (-c * Mul(*t)) ** e
+        if not isinstance(e, Rational): return
+        if e is S.Half and b < 0:
             # we extract I for this special case since everyone is doing so
-            return S.ImaginaryUnit * Pow(-base, exp)
-        if exp < 0:
-            # invert base and change sign on exponent
-            if base < 0:
-                return -(S.NegativeOne) ** ((exp.p % exp.q) / S(exp.q)) * Rational(1, -base) ** (-exp)
+            return S.ImaginaryUnit * Pow(-b, e)
+        if e < 0:
+            ne = -e
+            if b < 0:
+                if e.q != 1:
+                    return -(S.NegativeOne) ** ((e.p % e.q) / S(e.q)) * Rational(1, -b) ** (-e)
+                else:
+                    return (S.NegativeOne) ** ne * Rational(1, -b) ** ne
             else:
-                return Rational(1, base.p) ** (-exp)
+                return Rational(1, b.p) ** (-e)
         # see if base is a perfect root, sqrt(4) --> 2
-        x, xexact = integer_nthroot(abs(base.p), exp.q)
+        x, xexact = integer_nthroot(abs(b.p), e.q)
         if xexact:
             # if it's a perfect root we've finished
-            result = Integer(x ** abs(exp.p))
-            if exp < 0: result = 1/result
-            if base < 0: result *= (-1)**exp
+            result = Integer(x ** abs(e.p))
+            if e < 0: result = 1/result
+            if b < 0: result *= (-1)**e
             return result
         # The following is an algorithm where we collect perfect roots
         # from the factors of base
-        if base > 4294967296:
+        if b > 4294967296:
             # Prevent from factorizing too big integers
             return None
-        dict = base.factors()
+        dict = b.factors()
         out_int = 1
         sqr_int = 1
         sqr_gcd = 0
         sqr_dict = {}
         for prime,exponent in dict.iteritems():
-            exponent *= exp.p
-            div_e = exponent // exp.q
-            div_m = exponent % exp.q
+            exponent *= e.p
+            div_e = exponent // e.q
+            div_m = exponent % e.q
             if div_e > 0:
                 out_int *= prime**div_e
             if div_m > 0:
@@ -988,10 +994,10 @@ class Integer(Rational):
                 sqr_gcd = igcd(sqr_gcd, ex)
         for k,v in sqr_dict.iteritems():
             sqr_int *= k**(v // sqr_gcd)
-        if sqr_int == base.p and out_int == 1:
+        if sqr_int == b.p and out_int == 1:
             result = None
         else:
-            result = out_int * Pow(sqr_int , Rational(sqr_gcd, exp.q))
+            result = out_int * Pow(sqr_int , Rational(sqr_gcd, e.q))
         return result
 
     def _eval_is_prime(self):

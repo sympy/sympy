@@ -110,6 +110,7 @@ def test_Real():
     assert eq((pi ** -1).evalf(), Real("0.31830988618379067"))
     a = Real(2) ** Real(4)
     assert eq(a.evalf(), Real(16))
+    assert (S(.3) == S(.5)) is False
 
 
 def test_Real_eval():
@@ -224,6 +225,7 @@ def test_powers_Integer():
     assert S(-9)  ** Rational(3, 2) == -27*I
     assert S(27)  ** Rational(2, 3) == 9
     assert S(-27) ** Rational(2, 3) == 9 * (S(-1) ** Rational(2, 3))
+    assert (-2) ** Rational(-2, 1) == Rational(1, 4)
 
     # not exact roots
     assert (-3) ** (S(1)/2)  == sqrt(-3)
@@ -235,7 +237,8 @@ def test_powers_Integer():
     assert (2)  ** (S(-3)/2) == sqrt(2) / 4
     assert (81) ** (S(2)/3)  == 9 * (S(3) ** (S(2)/3))
     assert (-81) ** (S(2)/3)  == 9 * (S(-3) ** (S(2)/3))
-
+    assert (-3) ** Rational(-7, 3) == -(-3) ** Rational(2, 3) / 27
+    assert (-3) ** Rational(-2, 3) == -(-3) ** Rational(1, 3) / 3
 
     # join roots
     assert sqrt(6) + sqrt(24) == 3*sqrt(6)
@@ -253,10 +256,11 @@ def test_powers_Integer():
     # negative rational power and negative base
     assert (-3) ** Rational(-7, 3) == -(-3) ** Rational(2, 3) / 27
     assert (-3) ** Rational(-2, 3) == -(-3) ** (S(1) / 3) / 3
+    assert (-2) ** Rational(-2, 1) == Rational(1, 4)
 
 def test_powers_Rational():
     """Test Rational._eval_power"""
-    # check inifinity
+    # check infinity
     assert Rational(1,2) ** S.Infinity == 0
     assert Rational(3,2) ** S.Infinity == S.Infinity
     assert Rational(-1,2) ** S.Infinity == 0
@@ -290,6 +294,9 @@ def test_powers_Rational():
            -4 * (-3) ** Rational(2, 3)*2 ** Rational(1, 3)/27
     assert Rational(-3, 2)**Rational(-2, 3) == \
            -(-3) ** (S(1) / 3) * 2 ** (S(2) / 3) / 3
+
+    # negative integer power and negative rational base
+    assert Rational(-2, 3) ** Rational(-2, 1) == Rational(9, 4)
 
 def test_abs1():
     assert Rational(1,6) != Rational(-1,6)
@@ -445,4 +452,3 @@ def test_conversion_to_mpmath():
     assert mpmath.mpmathify(Integer(1)) == mpmath.mpf(1)
     assert mpmath.mpmathify(Rational(1, 2)) == mpmath.mpf(0.5)
     assert mpmath.mpmathify(Real('1.23')) == mpmath.mpf('1.23')
-

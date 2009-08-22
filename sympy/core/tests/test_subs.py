@@ -142,7 +142,133 @@ def test_subs_dict2():
 def test_mul():
     x, y, z = map(Symbol, 'xyz')
     assert (x*y*z).subs(z*x,y) == y**2
-    assert (2*x*y).subs(5*x*y,z) == 2*z/5
+    #assert (2*x*y).subs(5*x*y,z) == 2*z/5
+
+def test_subs_simple():
+    # Define symbols
+    a = symbols('a', commutative = True)
+    x = symbols('x', commutative = False)
+
+    """ SIMPLE TESTS """
+    assert (2*a ).subs(1,3) == 2*a
+    assert (2*a ).subs(2,3) == 3*a
+    assert (2*a ).subs(a,3) == 6
+    assert sin(2).subs(1,3) == sin(2)
+    assert sin(2).subs(2,3) == sin(3)
+    assert sin(a).subs(a,3) == sin(3)
+
+    assert (2*x ).subs(1,3) == 2*x
+    assert (2*x ).subs(2,3) == 3*x
+    assert (2*x ).subs(x,3) == 6
+    assert sin(x).subs(x,3) == sin(3)
+
+def test_subs_constants():
+    # Define symbols
+    a,b = symbols('ab', commutative = True)
+    x,y = symbols('xy', commutative = False)
+
+    """ CONSTANTS TESTS """
+    assert (a*b  ).subs(2*a,1) == a*b
+    assert (1.5*a*b).subs(a,1) == 1.5*b
+    assert (2*a*b).subs(2*a,1) == b
+    assert (2*a*b).subs(4*a,1) == 2*a*b
+
+    assert (x*y  ).subs(2*x,1) == x*y
+    assert (1.5*x*y).subs(x,1) == 1.5*y
+    assert (2*x*y).subs(2*x,1) == y
+    assert (2*x*y).subs(4*x,1) == 2*x*y
+
+def test_subs_commutative():
+    # Define symbols
+    a,b,c,d,K = symbols('abcdK', commutative = True)
+
+    """ COMMUTATIVE TESTS """
+    assert (a*b    ).subs(a*b,K) == K
+    assert (a*b*a*b).subs(a*b,K) == K**2
+    assert (a*a*b*b).subs(a*b,K) == K**2
+    assert (a*b*c*d).subs(a*b*c,K) == d*K
+    assert (a*b**c ).subs(a,K) == K*b**c
+    assert (a*b**c ).subs(b,K) == a*K**c
+    assert (a*b**c ).subs(c,K) == a*b**K
+    assert (a*b*c*b*a  ).subs(a*b,K) == c*K**2
+    assert (a**3*b**2*a).subs(a*b,K) == a**2*K**2
+
+def test_subs_noncommutative():
+    # Define symbols
+    w,x,y,z,L = symbols('wxyzL', commutative = False)
+
+    """ NONCOMMUTATIVE TESTS """
+    assert (x*y    ).subs(x*y,L) == L
+    assert (w*y*x  ).subs(x*y,L) == w*y*x
+    assert (w*x*y*z).subs(x*y,L) == w*L*z
+    assert (x*y*x*y).subs(x*y,L) == L**2
+    assert (x*x*y  ).subs(x*y,L) == x*L
+    assert (x*x*y*y).subs(x*y,L) == x*L*y
+    assert (w*x*y  ).subs(x*y*z,L) == w*x*y
+    assert (x*y**z     ).subs(x,L) == L*y**z
+    assert (x*y**z     ).subs(y,L) == x*L**z
+    assert (x*y**z     ).subs(z,L) == x*y**L
+    assert (w*x*y*z*x*y).subs(x*y*z,L) == w*L*x*y
+    assert (w*x*y*y*w*x*x*y*x*y*y*x*y).subs(x*y,L) == w*L*y*w*x*L**2*y*L
+
+def test_subs_basic_funcs():
+    # Define symbols
+    a,b,c,d,K = symbols('abcdK', commutative = True)
+    w,x,y,z,L = symbols('wxyzL', commutative = False)
+
+    """ OTHER OPERATION TESTS"""
+    assert (x+y  ).subs(x+y,L) == L
+    assert (x-y  ).subs(x-y,L) == L
+    assert (x/y  ).subs(x,L) == L/y
+    assert (x**y ).subs(x,L) == L**y
+    assert (x**y ).subs(y,L) == x**L
+    assert ( (a-c)/b  ).subs(b,K) == (a-c)/K
+    assert (exp(x*y-z)).subs(x*y,L) == exp(L-z)
+    assert (a*exp(x*y-w*z)+b*exp(x*y+w*z)).subs(z,0) == a*exp(x*y)+b*exp(x*y)
+    assert ((a-b)/(c*d-a*b)).subs(c*d-a*b,K) == (a-b)/K
+    assert (w*exp(a*b-c)*x*y/4).subs(x*y,L) == w*exp(a*b-c)*L/4
+    #assert (a/(b*c)).subs(b*c,K) == a/K,'Failed'; print '.' #FAILS DIVISION
+
+def test_subs_wild():
+    # Define symbols
+    R = Wild('R'); S = Wild('S'); T = Wild('T'); U = Wild('U')
+
+    """ WILD TESTS """
+    assert (R*S ).subs(R*S,T) == T
+    assert (S*R ).subs(R*S,T) == T
+    assert (R+S ).subs(R+S,T) == T
+    assert (R**S).subs(R,T) == T**S
+    assert (R**S).subs(S,T) == R**T
+    assert (R*S**T).subs(R,U) == U*S**T
+    assert (R*S**T).subs(S,U) == R*U**T
+    assert (R*S**T).subs(T,U) == R*S**U
+
+def test_subs_mixed():
+    # Define symbols
+    a,b,c,d,K = symbols('abcdK', commutative = True)
+    w,x,y,z,L = symbols('wxyzL', commutative = False)
+    R,S,T,U = Wild('R'), Wild('S'), Wild('T'), Wild('U')
+
+    """ MIXED TESTS """
+    assert (    a*x*y     ).subs(x*y,L) == a*L
+    assert (  a*b*x*y*x   ).subs(x*y,L) == a*b*L*x
+    assert (R*x*y*exp(x*y)).subs(x*y,L) == R*L*exp(L)
+    assert (     a*x*y*y*x-x*y*z*exp(a*b)   ).subs(x*y,L) == a*L*y*x-L*z*exp(a*b)
+    assert (c*y*x*y*x**(R*S-a*b)-T*(a*R*b*S)).subs(x*y,L).subs(a*b,K).subs(R*S,U) == c*y*L*x**(U-K)-T*(U*K)
+
+def test_division():
+    a,b,c = symbols('abc', commutative = True)
+    x,y,z = symbols('xyz', commutative = True)
+    assert (    1/a   ).subs(a,c)  == 1/c
+    assert (   1/a**2 ).subs(a,c)  == 1/c**2
+    assert (   1/a**2 ).subs(a,-2) == Rational(1,4)
+    assert ( -(1/a**2)).subs(a,-2) == -Rational(1,4)
+
+    assert (    1/x   ).subs(x,z)  == 1/z
+    assert (   1/x**2 ).subs(x,z)  == 1/z**2
+    assert (   1/x**2 ).subs(x,-2) == Rational(1,4)
+    assert ( -(1/x**2)).subs(x,-2) == -Rational(1,4)
+
 
 def test_add():
     a, b, c, d, x = abc.a, abc.b, abc.c, abc.d, abc.x
@@ -162,13 +288,7 @@ def test_add():
 def test_subs_issue910():
     assert (I*Symbol("a")).subs(1, 2) == I*Symbol("a")
 
-def test_subs_subs_nums():
-    x = Symbol("x")
-    assert sin(1).subs(1, 2) == sin(2)
-    assert sin(2).subs(1, 3) == sin(2)
-    assert (2*x).subs(1, 3) == 2*x
-    assert (2*x).subs(2, 3) == 3*x
-    assert (2*x).subs(x, 3) == 6
+
 
 def test_functions_subs():
     x, y = map(Symbol, 'xy')

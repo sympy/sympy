@@ -1,9 +1,8 @@
 from basic import Basic, S
 from operations import AssocOp
 from cache import cacheit
-
 from logic import fuzzy_not
-
+from numbers import Integer, Rational
 from symbol import Symbol
 
 # internal marker to indicate:
@@ -708,28 +707,116 @@ class Mul(AssocOp):
             return False
 
     def _eval_subs(self, old, new):
+        # base cases
+        # simpliest
         if self == old:
             return new
+        # pass it off to its own class
         if isinstance(old, FunctionClass):
             return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
+
+        # break up self and old into terms
         coeff_self,terms_self = self.as_coeff_terms()
         coeff_old,terms_old = old.as_coeff_terms()
-        if terms_self == terms_old: # (2*a).subs(3*a,y) -> 2/3*y
-            return new * coeff_self/coeff_old
-        l1, l2 = len(terms_self), len(terms_old)
-        if l2 == 0:
-            # if old is just a number, go through the self.args one by one
-            return Mul(*[x._eval_subs(old, new) for x in self.args])
-        elif l2 < l1:
-            # old is some something more complex, like:
-            # (a*b*c*d).subs(b*c,x) -> a*x*d
-            # then we need to search where in self.args the "old" is, and then
-            # correctly substitute both terms and coefficients.
-            self_set = set(terms_self)
-            old_set = set(terms_old)
-            if old_set < self_set:
-                ret_set = self_set - old_set
-                return Mul(new, coeff_self/coeff_old, *[s._eval_subs(old, new) for s in ret_set])
+
+        # NEW - implementation of strict substitution
+        # if the coefficients are not the same, do not substitute.
+        # the only exception is if old has a coefficient of 1, then always to the sub.
+        if coeff_self != coeff_old and coeff_old != 1:
+            return self.__class__(*[s._eval_subs(old, new) for s in self.args])
+
+        # break up powers, i.e., x**2 -> x*x
+        otemp, stemp = [], []
+        for o in terms_old:
+            if isinstance(o,Pow) and isinstance(o.exp, Integer):
+                if o.exp.is_positive:
+                    for i in range(o.exp): otemp.append(o.base)
+                elif o.exp.is_negative:
+                    for i in range(abs(o.exp)): otemp.append(1/s.base)
+            else: otemp.append(o)
+        for s in terms_self:
+            if isinstance(s,Pow) and isinstance(s.exp, Integer):
+                if s.exp.is_positive:
+                    for i in range(s.exp): stemp.append(s.base)
+                elif s.exp.is_negative:
+                    for i in range(abs(s.exp)): stemp.append(1/s.base)
+            else: stemp.append(s)
+        terms_old = otemp
+        terms_self = stemp
+
+        # break up old and self terms into commutative and noncommutative lists
+        comm_old = []; noncomm_old = []
+        comm_self = []; noncomm_self = []
+        for o in terms_old:
+            if o.is_commutative:
+                comm_old.append(o)
+            else:
+                noncomm_old.append(o)
+        for s in terms_self:
+            if s.is_commutative:
+                comm_self.append(s)
+            else:
+                noncomm_self.append(s)
+        comm_old_len, noncomm_old_len = len(comm_old), len(noncomm_old)
+        comm_self_len, noncomm_self_len = len(comm_self), len(noncomm_self)
+
+        # if the noncommutative part of the 'to-be-replaced' expression is smaller
+        # than the noncommutative part of the whole expression, scan to see if the
+        # whole thing is there
+        if noncomm_old_len <= noncomm_self_len and noncomm_old_len > 0:
+            for i in range(noncomm_self_len):
+                if noncomm_self[i] == noncomm_old[0]:
+                    for j in range(noncomm_old_len):
+                        # make sure each noncommutative term matches in order
+                        if (i+j) < noncomm_self_len and noncomm_self[i+j] == noncomm_old[j]:
+                            # we only care once we've reached the end of old's noncommutative part.
+                            if j == noncomm_old_len-1:
+                                # get rid of noncommutative terms and substitute new expression into total expression
+                                noncomms_final = noncomm_self[:i]+noncomm_self[i+j+1:]
+                                noncomms_final.insert(i,new)
+
+                                myFlag = True
+                                comms_final = comm_self[:]
+                                # check commutative terms
+                                for ele in comm_old:
+                                    # flag to make sure all the commutative terms in old are in self
+                                    if ele not in comm_self:
+                                        myFlag = False
+                                    # collect commutative terms
+                                    else:
+                                        comms_final.remove(ele)
+
+                                # continue only if all commutative terms in old are present
+                                if myFlag == True:
+                                    expr = comms_final+noncomms_final
+                                    return Mul(coeff_self/coeff_old, Mul(*expr)._eval_subs(old,new))#*[e._eval_subs(old,new) for e in expr])
+
+            return self.__class__(*[s._eval_subs(old, new) for s in self.args])
+
+        # but what if the noncommutative lists subexpression and the whole expression are both empty
+        elif noncomm_old_len == noncomm_self_len == 0:
+            # just check commutative parts then.
+            if comm_old_len > 0 and comm_old_len<=comm_self_len:
+                if comm_self == comm_old:
+                    return Mul(coeff_self/coeff_old*new)
+                myFlag = True
+                comms_final = comm_self[:]
+                # check commutative terms
+                for ele in comm_old:
+                    # flag to make sure all the commutative terms in old are in self
+                    if ele not in comm_self:
+                        myFlag = False
+                    # collect commutative terms
+                    else:
+                        comms_final.remove(ele)
+
+                # continue only if all commutative terms in old are present
+                if myFlag == True:
+                    return Mul(coeff_self/coeff_old,  new, Mul(*comms_final)._eval_subs(old,new))#*[c._eval_subs(old,new) for c in comms_final])
+                else:
+                    return self.__class__(*[s._eval_subs(old, new) for s in self.args])
+
+        # else the subexpression isn't in the totaly expression
         return self.__class__(*[s._eval_subs(old, new) for s in self.args])
 
     def _eval_nseries(self, x, x0, n):
