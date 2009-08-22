@@ -103,39 +103,39 @@ class AssocOp(Basic):
 
         For instance:
 
-        >>> from sympy import symbols, Wild, sin
-        >>> a = Wild("a")
-        >>> b = Wild("b")
-        >>> c = Wild("c")
-        >>> x, y, z = symbols("x y z")
-        >>> (a+b*c)._matches_commutative(x+y*z)
+        >> from sympy import symbols, Wild, sin
+        >> a = Wild("a")
+        >> b = Wild("b")
+        >> c = Wild("c")
+        >> x, y, z = symbols("x y z")
+        >> (a+b*c)._matches_commutative(x+y*z)
         {a_: x, b_: y, c_: z}
 
         In the example above, "a+b*c" is the pattern, and "x+y*z" is the
         expression. Some more examples:
 
-        >>> (a+b*c)._matches_commutative(sin(x)+y*z) #doctest: +SKIP
+        >> (a+b*c)._matches_commutative(sin(x)+y*z)
         {a_: sin(x), b_: y, c_: z}
-        >>> (a+sin(b)*c)._matches_commutative(x+sin(y)*z)
+        >> (a+sin(b)*c)._matches_commutative(x+sin(y)*z)
         {a_: x, b_: y, c_: z}
 
         The repl_dict contains parts, that were already matched, and the
         "evaluate=True" kwarg tells _matches_commutative to substitute this
         repl_dict into pattern. For example here:
 
-        >>> (a+b*c)._matches_commutative(x+y*z, repl_dict={a: x}, evaluate=True)
+        >> (a+b*c)._matches_commutative(x+y*z, repl_dict={a: x}, evaluate=True)
         {a_: x, b_: y, c_: z}
 
         _matches_commutative substitutes "x" for "a" in the pattern and calls
         itself again with the new pattern "x+b*c" and evaluate=False (default):
 
-        >>> (x+b*c)._matches_commutative(x+y*z, repl_dict={a: x})
+        >> (x+b*c)._matches_commutative(x+y*z, repl_dict={a: x})
         {a_: x, b_: y, c_: z}
 
         the only function of the repl_dict now is just to return it in the
         result, e.g. if you omit it:
 
-        >>> (x+b*c)._matches_commutative(x+y*z)
+        >> (x+b*c)._matches_commutative(x+y*z)
         {b_: y, c_: z}
 
         the "a: x" is not returned in the result, but otherwise it is
