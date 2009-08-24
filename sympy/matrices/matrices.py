@@ -1690,7 +1690,7 @@ def GramSchmidt(vlist, orthog=False):
             out[i] = out[i].normalized()
     return out
 
-def wronskian(functions, var):
+def wronskian(functions, var, method='bareis'):
     """Compute wronskian for [] of functions
 
                    | f1    f2     ...   fn  |
@@ -1710,7 +1710,7 @@ def wronskian(functions, var):
     if n == 0:
         return 1
     W = Matrix(n, n, lambda i,j: functions[i].diff(var, j) )
-    return W.det()
+    return W.det(method)
 
 def casoratian(seqs, n, zero=True):
     """Given linear difference operator L of order 'k' and homogeneous
