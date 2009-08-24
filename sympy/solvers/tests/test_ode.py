@@ -3,7 +3,7 @@ from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         fraction, radsimp, Eq, sqrt, pi, erf,  diff, Rational, asinh, trigsimp, \
         S, RootOf, Poly, Integral, atan, Equality, solve
 from sympy.abc import x, y, z
-from sympy.solvers.ode import deriv_degree, homogeneous_order, \
+from sympy.solvers.ode import ode_order, homogeneous_order, \
         _undetermined_coefficients_match, classify_ode, checkodesol
 from sympy.utilities.pytest import XFAIL, skip, raises
 
@@ -56,7 +56,7 @@ def test_dsolve_options():
         '1st_linear_Integral', 'best', 'best_hint', 'default', 'order', \
         'separable', 'separable_Integral']
     assert sorted(a.keys()) == keys
-    assert a['order'] == deriv_degree(eq, f(x))
+    assert a['order'] == ode_order(eq, f(x))
     assert a['best'] == Eq(f(x), C1/x)
     assert a['default'] == 'separable'
     assert a['best_hint'] == 'separable'
@@ -72,7 +72,7 @@ def test_dsolve_options():
     assert a['1st_homogeneous_coeff_subs_indep_div_dep_Integral'].has(Integral)
     assert a['separable_Integral'].has(Integral)
     assert sorted(b.keys()) == keys
-    assert b['order'] == deriv_degree(eq, f(x))
+    assert b['order'] == ode_order(eq, f(x))
     assert b['best'] == Eq(f(x), C1/x)
     assert b['default'] == 'separable'
     assert b['best_hint'] == '1st_linear'
@@ -107,22 +107,22 @@ def test_classify_ode():
     assert classify_ode(f(x).diff(x)**2, f(x)) == ()
 
 
-def test_deriv_degree():
+def test_ode_order():
     f = Function('f')
     g = Function('g')
     x = Symbol('x')
-    assert deriv_degree(3*x*exp(f(x)), f(x)) == 0
-    assert deriv_degree(x*diff(f(x),x)+3*x*f(x)-sin(x)/x, f(x)) == 1
-    assert deriv_degree(x**2*f(x).diff(x,x)+x*diff(f(x),x)-f(x),f(x)) == 2
-    assert deriv_degree(diff(x*exp(f(x)),x,x), f(x)) == 2
-    assert deriv_degree(diff(x*diff(x*exp(f(x)), x,x), x), f(x)) == 3
-    assert deriv_degree(diff(f(x), x, x), g(x)) == 0
-    assert deriv_degree(diff(f(x), x, x)*diff(g(x), x), f(x)) == 2
-    assert deriv_degree(diff(f(x), x, x)*diff(g(x), x), g(x)) == 1
-    assert deriv_degree(diff(x*diff(x*exp(f(x)), x,x), x), g(x)) == 0
+    assert ode_order(3*x*exp(f(x)), f(x)) == 0
+    assert ode_order(x*diff(f(x),x)+3*x*f(x)-sin(x)/x, f(x)) == 1
+    assert ode_order(x**2*f(x).diff(x,x)+x*diff(f(x),x)-f(x),f(x)) == 2
+    assert ode_order(diff(x*exp(f(x)),x,x), f(x)) == 2
+    assert ode_order(diff(x*diff(x*exp(f(x)), x,x), x), f(x)) == 3
+    assert ode_order(diff(f(x), x, x), g(x)) == 0
+    assert ode_order(diff(f(x), x, x)*diff(g(x), x), f(x)) == 2
+    assert ode_order(diff(f(x), x, x)*diff(g(x), x), g(x)) == 1
+    assert ode_order(diff(x*diff(x*exp(f(x)), x,x), x), g(x)) == 0
 
 # In all tests below, checkodesol has the order option set to prevent superfluous
-# calls to deriv_degree(), and the solve_for_func flag set to False because
+# calls to ode_order(), and the solve_for_func flag set to False because
 # dsolve() already tries to solve for the function, unless the simplify=False
 # option is set.
 def test_old_ode_tests():

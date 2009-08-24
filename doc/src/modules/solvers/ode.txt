@@ -17,9 +17,9 @@ These are functions that are imported into the global namespace with ``from symp
 ^^^^^^^^^^^^^^^^^^^^
 .. automethod:: sympy.solvers.ode.classify_ode
 
-:func:`deriv_degree`
+:func:`ode_order`
 ^^^^^^^^^^^^^^^^^^^^
-.. automethod:: sympy.solvers.ode.deriv_degree
+.. automethod:: sympy.solvers.ode.ode_order
 
 :func:`checkodesol`
 ^^^^^^^^^^^^^^^^^^^

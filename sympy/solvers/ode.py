@@ -15,7 +15,7 @@ using a specific hint.  See also the docstring on dsolve().
     - dsolve() - Solves ODEs.
     - classify_ode() - Classifies ODEs into possible hints for dsolve().
     - checkodesol() - Checks if an equation is the solution to an ODE.
-    - deriv_degree() - Returns the degree (order) of an ODE.
+    - ode_order() - Returns the order (degree) of an ODE.
     - homogeneous_order() - Returns the homogeneous order of an
       expression.
 
@@ -262,7 +262,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
                 hint's key will be the exception object raised.  The
                 dictionary will also include some special keys:
 
-                - order: The order of the ODE.  See also deriv_degree().
+                - order: The order of the ODE.  See also ode_order().
                 - best: The simplest hint; what would be returned by
                   "best" below.
                 - best_hint: The hint that would produce the solution
@@ -536,7 +536,7 @@ def classify_ode(eq, func, dict=False):
     # Collect diff(f(x),x) terms so that match will work correctly
     # collect() needs to be improved, as this doesn't always work.
     eq = collect(eq, f(x).diff(x))
-    order = deriv_degree(eq, f(x))
+    order = ode_order(eq, f(x))
 
     # hint:matchdict or hint:(tuple of matchdicts)
     # Also will contain "default":<default hint> and "order":order items.
@@ -882,7 +882,7 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
     if not isinstance(sol, Equality):
         raise ValueError("sol must be an Equality, got " + str(sol))
     if order == 'auto':
-        order = deriv_degree(ode, func)
+        order = ode_order(ode, func)
     if solve_for_func and not (sol.lhs == func and not sol.rhs.has(func)) and not \
         (sol.rhs == func and not sol.lhs.has(func)):
             try:
@@ -1342,9 +1342,9 @@ def _handle_Integral(expr, func, order, hint):
         sol = expr
     return sol
 
-def deriv_degree(expr, func):
+def ode_order(expr, func):
     """
-    Get the order of a given ODE with respect to func.
+    Returns the order of a given ODE with respect to func.
 
     This function is implemented recursively.
 
@@ -1352,12 +1352,12 @@ def deriv_degree(expr, func):
         >>> from sympy import *
         >>> x = Symbol('x')
         >>> f, g = map(Function, ['f', 'g'])
-        >>> deriv_degree(f(x).diff(x, 2) + f(x).diff(x)**2 +
+        >>> ode_order(f(x).diff(x, 2) + f(x).diff(x)**2 +
         ... f(x).diff(x), f(x))
         2
-        >>> deriv_degree(f(x).diff(x, 2) + g(x).diff(x, 3), f(x))
+        >>> ode_order(f(x).diff(x, 2) + g(x).diff(x, 3), f(x))
         2
-        >>> deriv_degree(f(x).diff(x, 2) + g(x).diff(x, 3), g(x))
+        >>> ode_order(f(x).diff(x, 2) + g(x).diff(x, 3), g(x))
         3
 
     """
@@ -1374,7 +1374,7 @@ def deriv_degree(expr, func):
                 order = 0
             else :
                 for arg1 in arg.args:
-                    order = max(order, deriv_degree(arg1, func))
+                    order = max(order, ode_order(arg1, func))
 
     return order
 

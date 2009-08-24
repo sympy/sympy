@@ -3,7 +3,7 @@ from sympy import Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq, \
         symbols, S, raises, sympify, var, simplify, Integral
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
-     tsolve, deriv_degree
+     tsolve
 
 from sympy.solvers.solvers import guess_solve_strategy, GS_POLY, GS_POLY_CV_1, GS_POLY_CV_2,\
     GS_TRANSCENDENTAL, GS_RATIONAL, GS_RATIONAL_CV_1
