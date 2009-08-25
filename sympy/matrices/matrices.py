@@ -5,6 +5,7 @@ from sympy.core import sympify
 from sympy.core.basic import S, C
 from sympy.polys import Poly, roots
 from sympy.simplify import simplify
+from sympy.utilities import any
 
 # from sympy.printing import StrPrinter /cyclic/
 
