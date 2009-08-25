@@ -1,6 +1,6 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
         sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, \
-        integrate, oo, raises, trigsimp, Integer
+        integrate, oo, raises, trigsimp, Integer, block_diag
 from sympy.matrices.matrices import ShapeError, MatrixError
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL
@@ -1028,3 +1028,71 @@ def test_vech_TypeError():
     m = Matrix([ [1,3], [2,4] ])
     raises(TypeError, 'm.vech()')
 
+def test_block_diag1():
+    x, y, z = symbols("x y z")
+    a = Matrix([[1, 2], [2, 3]])
+    b = Matrix([[3, x], [y, 3]])
+    c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
+    assert block_diag([a, b, b]) == Matrix([
+            [1, 2, 0, 0, 0, 0],
+            [2, 3, 0, 0, 0, 0],
+            [0, 0, 3, x, 0, 0],
+            [0, 0, y, 3, 0, 0],
+            [0, 0, 0, 0, 3, x],
+            [0, 0, 0, 0, y, 3],
+            ])
+    assert block_diag([a, b, c]) == Matrix([
+            [1, 2, 0, 0, 0, 0, 0],
+            [2, 3, 0, 0, 0, 0, 0],
+            [0, 0, 3, x, 0, 0, 0],
+            [0, 0, y, 3, 0, 0, 0],
+            [0, 0, 0, 0, 3, x, 3],
+            [0, 0, 0, 0, y, 3, z],
+            [0, 0, 0, 0, x, y, z],
+            ])
+    assert block_diag([a, c, b]) == Matrix([
+            [1, 2, 0, 0, 0, 0, 0],
+            [2, 3, 0, 0, 0, 0, 0],
+            [0, 0, 3, x, 3, 0, 0],
+            [0, 0, y, 3, z, 0, 0],
+            [0, 0, x, y, z, 0, 0],
+            [0, 0, 0, 0, 0, 3, x],
+            [0, 0, 0, 0, 0, y, 3],
+            ])
+
+def test_get_diag_blocks1():
+    x, y, z = symbols("x y z")
+    a = Matrix([[1, 2], [2, 3]])
+    b = Matrix([[3, x], [y, 3]])
+    c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
+    a.get_diag_blocks() == [a]
+    b.get_diag_blocks() == [b]
+    c.get_diag_blocks() == [c]
+
+def test_get_diag_blocks2():
+    x, y, z = symbols("x y z")
+    a = Matrix([[1, 2], [2, 3]])
+    b = Matrix([[3, x], [y, 3]])
+    c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
+    assert block_diag([a, b, b]).get_diag_blocks() == [a, b, b]
+    assert block_diag([a, b, c]).get_diag_blocks() == [a, b, c]
+    assert block_diag([a, c, b]).get_diag_blocks() == [a, c, b]
+    assert block_diag([c, c, b]).get_diag_blocks() == [c, c, b]
+
+def test_inv_block():
+    x, y, z = symbols("x y z")
+    a = Matrix([[1, 2], [2, 3]])
+    b = Matrix([[3, x], [y, 3]])
+    c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
+    A = block_diag([a, b, b])
+    assert A.inv(try_block_diag=True) == block_diag([a.inv(), b.inv(), b.inv()])
+    A = block_diag([a, b, c])
+    assert A.inv(try_block_diag=True) == block_diag([a.inv(), b.inv(), c.inv()])
+    A = block_diag([a, c, b])
+    assert A.inv(try_block_diag=True) == block_diag([a.inv(), c.inv(), b.inv()])
+    A = block_diag([a, a, b, a, c, a])
+    assert A.inv(try_block_diag=True) == block_diag([
+        a.inv(), a.inv(), b.inv(), a.inv(), c.inv(), a.inv()])
+    assert A.inv(try_block_diag=True, method="ADJ") == block_diag([
+        a.inv(method="ADJ"), a.inv(method="ADJ"), b.inv(method="ADJ"),
+        a.inv(method="ADJ"), c.inv(method="ADJ"), a.inv(method="ADJ")])
