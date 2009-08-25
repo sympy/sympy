@@ -808,7 +808,11 @@ class Mul(AssocOp):
                         myFlag = False
                     # collect commutative terms
                     else:
-                        comms_final.remove(ele)
+                        # needed if old has an element to an integer power
+                        if ele in comms_final:
+                            comms_final.remove(ele)
+                        else:
+                            myFlag = False
 
                 # continue only if all commutative terms in old are present
                 if myFlag == True:
