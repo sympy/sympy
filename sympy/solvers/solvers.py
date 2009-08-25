@@ -374,7 +374,7 @@ def solve_linear_system(system, *symbols, **flags):
 
     i, m = 0, matrix.cols-1  # don't count augmentation
 
-    while i < matrix.lines:
+    while i < matrix.rows:
         if i == m:
             # an overdetermined system
             if any(matrix[i:,m]):
@@ -409,7 +409,7 @@ def solve_linear_system(system, *symbols, **flags):
         # divide all elements in the current row by the pivot
         matrix.row(i, lambda x, _: x * pivot_inv)
 
-        for k in xrange(i+1, matrix.lines):
+        for k in xrange(i+1, matrix.rows):
             if matrix[k, i]:
                 coeff = matrix[k, i]
 
@@ -425,7 +425,7 @@ def solve_linear_system(system, *symbols, **flags):
 
     simplified = flags.get('simplified', True)
 
-    if len(syms) == matrix.lines:
+    if len(syms) == matrix.rows:
         # this system is Cramer equivalent so there is
         # exactly one solution to this system of equations
         k, solutions = i-1, {}
@@ -445,7 +445,7 @@ def solve_linear_system(system, *symbols, **flags):
             k -= 1
 
         return solutions
-    elif len(syms) > matrix.lines:
+    elif len(syms) > matrix.rows:
         # this system will have infinite number of solutions
         # dependent on exactly len(syms) - i parameters
         k, solutions = i-1, {}
@@ -509,12 +509,12 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
 
 def solve_linear_system_LU(matrix, syms):
     """ LU function works for invertible only """
-    assert matrix.lines == matrix.cols-1
-    A = matrix[:matrix.lines,:matrix.lines]
+    assert matrix.rows == matrix.cols-1
+    A = matrix[:matrix.rows,:matrix.rows]
     b = matrix[:,matrix.cols-1:]
     soln = A.LUsolve(b)
     solutions = {}
-    for i in range(soln.lines):
+    for i in range(soln.rows):
         solutions[syms[i]] = soln[i,0]
     return solutions
 

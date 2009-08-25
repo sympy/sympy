@@ -251,7 +251,7 @@ class PrettyPrinter(Printer):
     def _print_Matrix(self, e):
         M = e   # matrix
         S = {}  # i,j -> pretty(M[i,j])
-        for i in range(M.lines):
+        for i in range(M.rows):
             for j in range(M.cols):
                 S[i,j] = self._print(M[i,j])
 
@@ -263,13 +263,13 @@ class PrettyPrinter(Printer):
         maxw = [-1] * M.cols
 
         for j in range(M.cols):
-            maxw[j] = max([S[i,j].width()  for i in range(M.lines)])
+            maxw[j] = max([S[i,j].width()  for i in range(M.rows)])
 
 
         # drawing result
         D = None
 
-        for i in range(M.lines):
+        for i in range(M.rows):
 
             D_row = None
             for j in range(M.cols):

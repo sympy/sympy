@@ -73,12 +73,12 @@ def test_creation():
     x = Symbol("x")
     a = Matrix([[x, 0], [0, 0]])
     m = a
-    assert m.cols == m.lines
+    assert m.cols == m.rows
     assert m.cols == 2
     assert m[:] == [x,0,0,0]
     b = Matrix(2,2, [x, 0, 0, 0])
     m = b
-    assert m.cols == m.lines
+    assert m.cols == m.rows
     assert m.cols == 2
     assert m[:] == [x,0,0,0]
 
@@ -354,7 +354,7 @@ def test_QR():
 
     A = Matrix([[1,1,1],[1,1,3],[2,3,4]])
     Q, R = A.QRdecomposition()
-    assert Q*Q.T == eye(Q.lines)
+    assert Q*Q.T == eye(Q.rows)
     assert R.is_upper()
     assert A == Q*R
 
@@ -458,7 +458,7 @@ def test_sparse_matrix():
     return
     def eye(n):
         tmp = SMatrix(n,n,lambda i,j:0)
-        for i in range(tmp.lines):
+        for i in range(tmp.rows):
             tmp[i,i] = 1
         return tmp
     def zeros(n):
@@ -511,12 +511,12 @@ def test_sparse_matrix():
     x = Symbol("x")
     a = SMatrix([x, 0], [0, 0])
     m = a
-    assert m.cols == m.lines
+    assert m.cols == m.rows
     assert m.cols == 2
     assert m[:] == [x,0,0,0]
     b = SMatrix(2,2, [x, 0, 0, 0])
     m = b
-    assert m.cols == m.lines
+    assert m.cols == m.rows
     assert m.cols == 2
     assert m[:] == [x,0,0,0]
 
@@ -940,7 +940,7 @@ def test_zeros_ones_fill():
     b = 5 * ones( (n, m) )
 
     assert a == b
-    assert a.lines == b.lines == 3
+    assert a.rows == b.rows == 3
     assert a.cols == b.cols == 5
     assert a.shape == b.shape == (3, 5)
 
@@ -991,7 +991,7 @@ def test_issue1465():
             X_slice = X[:i,:]
             Y_slice = Y[:j,:]
             J = X_slice.jacobian(Y_slice)
-            assert J.lines == i
+            assert J.rows == i
             assert J.cols == j
             for k in range(j):
                 assert J[:,k] == X_slice

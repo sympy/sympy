@@ -61,7 +61,7 @@ class ReprPrinter(Printer):
 
     def _print_Matrix(self, expr):
         l = []
-        for i in range(expr.lines):
+        for i in range(expr.rows):
             l.append([])
             for j in range(expr.cols):
                 l[-1].append(expr[i,j])
