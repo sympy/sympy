@@ -86,6 +86,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Ronan Lamy: test coverage script, limit and expansion fixes
 #. James Abbatiello: fixes tests on windows
 #. Ryan Krauss: fixes could_extract_minus_sign() and latex fixes
+#. Bill Flynn: substitution fixes
 
 
 Uptodate list in the order of the first contribution is given in the `AUTHORS
