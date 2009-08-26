@@ -63,9 +63,9 @@ def preview(expr, output='ps', viewer=None, euler=True):
             # sorted in order from most pretty to most ugly
             # very discussable, but indeed 'gv' looks awful :)
             candidates = {
-                "dvi" : [ "evince", "kdvi", "xdvi" ],
-                "ps"  : [ "evince", "gsview", "gv" ],
-                "pdf" : [ "evince", "kpdf", "acroread", "xpdf", "gv" ],
+                "dvi" : [ "evince", "okular", "kdvi", "xdvi" ],
+                "ps"  : [ "evince", "okular", "gsview", "gv" ],
+                "pdf" : [ "evince", "okular", "kpdf", "acroread", "xpdf", "gv" ],
             }
 
             try:
