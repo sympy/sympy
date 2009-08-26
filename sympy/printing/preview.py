@@ -5,7 +5,7 @@ import tempfile
 
 from latex import latex
 
-def preview(expr, output='ps', viewer=None, euler=True):
+def preview(expr, output='png', viewer=None, euler=True):
     """View expression in PNG, DVI, PostScript or PDF form.
 
        This will generate LaTeX representation of the given expression
@@ -13,7 +13,7 @@ def preview(expr, output='ps', viewer=None, euler=True):
        run appropriate viewer for the given output format or use the
        user defined one. If you prefer not to use external viewer
        then you can use combination of 'png' output and 'pyglet'
-       viewer. By default PostScript output is generated.
+       viewer. By default png output is generated.
 
        By default pretty Euler fonts are used for typesetting (they
        were used to typeset the well known "Concrete Mathematics"
