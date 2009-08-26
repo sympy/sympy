@@ -199,30 +199,3 @@ def preview(expr, output='ps', viewer=None, euler=True):
     os.remove(src)
     os.chdir(cwd)
 
-# some convenience wrappers for 'preview'
-
-view = preview
-
-def pngview(expr, viewer=None, euler=True):
-    """Calls preview(expr, output="png", ...)
-
-    This is a convenience function. See the docstring of preview for more
-    information.
-    """
-    return preview(expr, output="png", viewer=viewer, euler=euler)
-
-def pdfview(expr, viewer=None, euler=True):
-    """Calls preview(expr, output="pdf", ...)
-
-    This is a convenience function. See the docstring of preview for more
-    information.
-    """
-    return preview(expr, output="pdf", viewer=viewer, euler=euler)
-
-def dviview(expr, viewer=None, euler=True):
-    """Calls preview(expr, output="dvi", ...)
-
-    This is a convenience function. See the docstring of preview for more
-    information.
-    """
-    return preview(expr, output="dvi", viewer=viewer, euler=euler)
