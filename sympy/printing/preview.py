@@ -48,6 +48,7 @@ def preview(expr, output='ps', viewer=None, euler=True):
        'superior-dvi-viwer'. If 'view' fails to find it on
        your system it will gracefully raise an exception.
 
+       Currently this depends on pexpect, which is not available for windows.
     """
 
     # we don't want to depend on anything not in the
@@ -115,10 +116,7 @@ def preview(expr, output='ps', viewer=None, euler=True):
     cwd = os.getcwd()
     os.chdir(tempfile.gettempdir())
 
-    def execute(cmd):
-        return pexpect.run(cmd, withexitstatus=True)[1]
-
-    if execute("latex -halt-on-error %s.tex" % tmp) != 0:
+    if os.system("latex -halt-on-error %s.tex" % tmp) != 0:
         raise SystemError("Failed to generate DVI output.")
 
     os.remove(tmp + ".tex")
@@ -134,7 +132,7 @@ def preview(expr, output='ps', viewer=None, euler=True):
         }
 
         try:
-            if execute(command[output] % (tmp, tmp)) != 0:
+            if os.system(command[output] % (tmp, tmp)) != 0:
                 raise SystemError("Failed to generate '%s' output." % output)
             else:
                 os.remove(tmp + ".dvi")
