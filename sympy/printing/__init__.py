@@ -7,7 +7,7 @@ from python import python, print_python
 from ccode import ccode, print_ccode
 from gtk import *
 
-from preview import preview, view, pngview, pdfview, dviview
+from preview import preview
 
 from str import StrPrinter, sstr, sstrrepr
 _StrPrinter = StrPrinter()
