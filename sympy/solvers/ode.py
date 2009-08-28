@@ -738,9 +738,9 @@ def odesimp(eq, func, order, hint):
             |
            /
 
-        >>> pprint(odesimp(eq, f(x), 1,
+        >>  pprint(odesimp(eq, f(x), 1,
         ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
-        ... )) # (this is slow, so we skip) # doctest: +SKIP
+        ... )) # (this is slow, so we skip)
             x
         --------- = C1
            /f(x)\
@@ -1866,8 +1866,9 @@ def ode_Bernoulli(eq, func, order, match):
         >>> from sympy import *
         >>> x, n = symbols('x n')
         >>> f, P, Q = map(Function, ['f', 'P', 'Q'])
-        >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)**n),
-        ... f(x), hint='Bernoulli_Integral')) # doctest: +SKIP
+
+        >> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)**n),
+        ... f(x), hint='Bernoulli_Integral'))
                                                                                        1
                                                                                       ----
                                                                                      1 - n
@@ -1902,8 +1903,9 @@ def ode_Bernoulli(eq, func, order, match):
         >>> from sympy import *
         >>> x = Symbol('x')
         >>> f = Function('f')
-        >>> pprint(dsolve(Eq(x*f(x).diff(x) + f(x), log(x)*f(x)**2),
-        ... f(x), hint='Bernoulli')) # doctest: +SKIP
+
+        >> pprint(dsolve(Eq(x*f(x).diff(x) + f(x), log(x)*f(x)**2),
+        ... f(x), hint='Bernoulli'))
                         1
         f(x) = -------------------
                  /     log(x)   1\
