@@ -186,7 +186,7 @@ from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp
 from sympy.solvers import solve
 
-from sympy.utilities import numbered_symbols
+from sympy.utilities import numbered_symbols, all
 
 import sympy.solvers
 # This is a list of hints in the order that they should be applied.  That means
