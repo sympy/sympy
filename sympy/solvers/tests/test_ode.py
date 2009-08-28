@@ -4,7 +4,7 @@ from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         S, RootOf, Poly, Integral, atan, Equality, solve
 from sympy.abc import x, y, z
 from sympy.solvers.ode import ode_order, homogeneous_order, \
-        _undetermined_coefficients_match, classify_ode, checkodesol
+        _undetermined_coefficients_match, classify_ode, checkodesol, ode_renumber
 from sympy.utilities.pytest import XFAIL, skip, raises
 
 C1 = Symbol('C1')
@@ -20,6 +20,9 @@ g = Function('g')
 # Also not that in differently formatted solutions, the arbitrary constants
 # might not be equal.  Using specific hints in tests can help avoid this.
 
+# Tests order higher than 1 should run the solutions through ode_renumber
+# because it will normalize it (ode_renumber causes dsolve() to return different
+# results on different machines)
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
@@ -556,36 +559,66 @@ def test_nth_linear_constant_coeff_homogeneous():
     sol28 = Eq(f(x), (C1*sin(x*sqrt(3)) + C2*cos(x*sqrt(3)))*exp(x) + C3*exp(-2*x))
     sol29 = Eq(f(x), C1 + C2*sin(2*x) + C3*cos(2*x) + C4*x)
     sol30 = Eq(f(x), C1 + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))
-    assert dsolve(eq1, f(x)) == sol1
-    assert dsolve(eq2, f(x)) == sol2
-    assert dsolve(eq3, f(x)) == sol3
-    assert dsolve(eq4, f(x)) == sol4
-    assert dsolve(eq5, f(x)) == sol5
-    assert dsolve(eq6, f(x)) == sol6
-    assert dsolve(eq7, f(x)) == sol7
-    assert dsolve(eq8, f(x)) == sol8
-    assert dsolve(eq9, f(x)) == sol9
-    assert dsolve(eq10, f(x)) == sol10
-    assert dsolve(eq11, f(x)) == sol11
-    assert dsolve(eq12, f(x)) == sol12
-    assert dsolve(eq13, f(x)) == sol13
-    assert dsolve(eq14, f(x)) == sol14
-    assert dsolve(eq15, f(x)) == sol15
-    assert dsolve(eq16, f(x)) == sol16
-    assert dsolve(eq17, f(x)) == sol17
-    assert dsolve(eq18, f(x)) == sol18
-    assert dsolve(eq19, f(x)) == sol19
-    assert dsolve(eq20, f(x)) == sol20
-    assert dsolve(eq21, f(x)) == sol21
-    assert dsolve(eq22, f(x)) == sol22
-    assert dsolve(eq23, f(x)) == sol23
-    assert dsolve(eq24, f(x)) == sol24
-    assert dsolve(eq25, f(x)) == sol25
-    assert dsolve(eq26, f(x)) == sol26
-    assert dsolve(eq27, f(x)) == sol27
-    assert dsolve(eq28, f(x)) == sol28
-    assert dsolve(eq29, f(x)) == sol29
-    assert dsolve(eq30, f(x)) == sol30
+    sol1s = ode_renumber(sol1, 'C', 1, 2)
+    sol2s = ode_renumber(sol2, 'C', 1, 2)
+    sol3s = ode_renumber(sol3, 'C', 1, 2)
+    sol4s = ode_renumber(sol4, 'C', 1, 3)
+    sol5s = ode_renumber(sol5, 'C', 1, 2)
+    sol6s = ode_renumber(sol6, 'C', 1, 2)
+    sol7s = ode_renumber(sol7, 'C', 1, 3)
+    sol8s = ode_renumber(sol8, 'C', 1, 4)
+    sol9s = ode_renumber(sol9, 'C', 1, 4)
+    sol10s = ode_renumber(sol10, 'C', 1, 4)
+    sol11s = ode_renumber(sol11, 'C', 1, 2)
+    sol12s = ode_renumber(sol12, 'C', 1, 2)
+    sol13s = ode_renumber(sol13, 'C', 1, 4)
+    sol14s = ode_renumber(sol14, 'C', 1, 2)
+    sol15s = ode_renumber(sol15, 'C', 1, 3)
+    sol16s = ode_renumber(sol16, 'C', 1, 3)
+    sol17s = ode_renumber(sol17, 'C', 1, 2)
+    sol18s = ode_renumber(sol18, 'C', 1, 4)
+    sol19s = ode_renumber(sol19, 'C', 1, 4)
+    sol20s = ode_renumber(sol20, 'C', 1, 4)
+    sol21s = ode_renumber(sol21, 'C', 1, 4)
+    sol22s = ode_renumber(sol22, 'C', 1, 4)
+    sol23s = ode_renumber(sol23, 'C', 1, 2)
+    sol24s = ode_renumber(sol24, 'C', 1, 2)
+    sol25s = ode_renumber(sol25, 'C', 1, 4)
+    sol26s = ode_renumber(sol26, 'C', 1, 2)
+    sol27s = ode_renumber(sol27, 'C', 1, 4)
+    sol28s = ode_renumber(sol28, 'C', 1, 3)
+    sol29s = ode_renumber(sol29, 'C', 1, 4)
+    sol30s = ode_renumber(sol30, 'C', 1, 5)
+    assert dsolve(eq1, f(x)) in (sol1, sol1s)
+    assert dsolve(eq2, f(x)) in (sol2, sol2s)
+    assert dsolve(eq3, f(x)) in (sol3, sol3s)
+    assert dsolve(eq4, f(x)) in (sol4, sol4s)
+    assert dsolve(eq5, f(x)) in (sol5, sol5s)
+    assert dsolve(eq6, f(x)) in (sol6, sol6s)
+    assert dsolve(eq7, f(x)) in (sol7, sol7s)
+    assert dsolve(eq8, f(x)) in (sol8, sol8s)
+    assert dsolve(eq9, f(x)) in (sol9, sol9s)
+    assert dsolve(eq10, f(x)) in (sol10, sol10s)
+    assert dsolve(eq11, f(x)) in (sol11, sol11s)
+    assert dsolve(eq12, f(x)) in (sol12, sol12s)
+    assert dsolve(eq13, f(x)) in (sol13, sol13s)
+    assert dsolve(eq14, f(x)) in (sol14, sol14s)
+    assert dsolve(eq15, f(x)) in (sol15, sol15s)
+    assert dsolve(eq16, f(x)) in (sol16, sol16s)
+    assert dsolve(eq17, f(x)) in (sol17, sol17s)
+    assert dsolve(eq18, f(x)) in (sol18, sol18s)
+    assert dsolve(eq19, f(x)) in (sol19, sol19s)
+    assert dsolve(eq20, f(x)) in (sol20, sol20s)
+    assert dsolve(eq21, f(x)) in (sol21, sol21s)
+    assert dsolve(eq22, f(x)) in (sol22, sol22s)
+    assert dsolve(eq23, f(x)) in (sol23, sol23s)
+    assert dsolve(eq24, f(x)) in (sol24, sol24s)
+    assert dsolve(eq25, f(x)) in (sol25, sol25s)
+    assert dsolve(eq26, f(x)) in (sol26, sol26s)
+    assert dsolve(eq27, f(x)) in (sol27, sol27s)
+    assert dsolve(eq28, f(x)) in (sol28, sol28s)
+    assert dsolve(eq29, f(x)) in (sol29, sol29s)
+    assert dsolve(eq30, f(x)) in (sol30, sol30s)
     assert checkodesol(eq1, f(x), sol1, order=2, solve_for_func=False)[0]
     assert checkodesol(eq2, f(x), sol2, order=2, solve_for_func=False)[0]
     assert checkodesol(eq3, f(x), sol3, order=2, solve_for_func=False)[0]
@@ -803,33 +836,60 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     sol26 = Eq(f(x), C1 + (C2 + C3*x - x**2/8)*sin(x) + (C4 + C5*x + x**2/8)*cos(x) + x**2)
     sol27 = Eq(f(x), cos(3*x)/16 + C1*cos(x) + (C2 + x/4)*sin(x))
     sol28 = Eq(f(x), C1 + x)
-    assert dsolve(eq1, f(x), hint=hint) == sol1
-    assert dsolve(eq2, f(x), hint=hint) == sol2
-    assert dsolve(eq3, f(x), hint=hint) == sol3
-    assert dsolve(eq4, f(x), hint=hint) == sol4
-    assert dsolve(eq5, f(x), hint=hint) == sol5
-    assert dsolve(eq6, f(x), hint=hint) == sol6
-    assert dsolve(eq7, f(x), hint=hint) == sol7
-    assert dsolve(eq8, f(x), hint=hint) == sol8
-    assert dsolve(eq9, f(x), hint=hint) == sol9
-    assert dsolve(eq10, f(x), hint=hint) == sol10
-    assert dsolve(eq11, f(x), hint=hint) == sol11
-    assert dsolve(eq12, f(x), hint=hint) == sol12
-    assert dsolve(eq13, f(x), hint=hint) == sol13
-    assert dsolve(eq14, f(x), hint=hint) == sol14
-    assert dsolve(eq15, f(x), hint=hint) == sol15
-    assert dsolve(eq16, f(x), hint=hint) == sol16
-    assert dsolve(eq17, f(x), hint=hint) == sol17
-    assert dsolve(eq18, f(x), hint=hint) == sol18
-    assert dsolve(eq19, f(x), hint=hint) == sol19
-    assert dsolve(eq20, f(x), hint=hint) == sol20
-    assert dsolve(eq21, f(x), hint=hint) == sol21
-    assert dsolve(eq22, f(x), hint=hint) == sol22
-    assert dsolve(eq23, f(x), hint=hint) == sol23
-    assert dsolve(eq24, f(x), hint=hint) == sol24
-    assert dsolve(eq25, f(x), hint=hint) == sol25
-    assert dsolve(eq26, f(x), hint=hint) == sol26
-    assert dsolve(eq27, f(x), hint=hint) == sol27
+    sol1s = ode_renumber(sol1, 'C', 1, 3)
+    sol2s = ode_renumber(sol2, 'C', 1, 3)
+    sol3s = ode_renumber(sol3, 'C', 1, 2)
+    sol4s = ode_renumber(sol4, 'C', 1, 2)
+    sol5s = ode_renumber(sol5, 'C', 1, 2)
+    sol6s = ode_renumber(sol6, 'C', 1, 2)
+    sol7s = ode_renumber(sol7, 'C', 1, 2)
+    sol8s = ode_renumber(sol8, 'C', 1, 2)
+    sol9s = ode_renumber(sol9, 'C', 1, 2)
+    sol10s = ode_renumber(sol10, 'C', 1, 2)
+    sol11s = ode_renumber(sol11, 'C', 1, 2)
+    sol12s = ode_renumber(sol12, 'C', 1, 2)
+    sol13s = ode_renumber(sol13, 'C', 1, 4)
+    sol14s = ode_renumber(sol14, 'C', 1, 2)
+    sol15s = ode_renumber(sol15, 'C', 1, 2)
+    sol16s = ode_renumber(sol16, 'C', 1, 2)
+    sol17s = ode_renumber(sol17, 'C', 1, 2)
+    sol18s = ode_renumber(sol18, 'C', 1, 3)
+    sol19s = ode_renumber(sol19, 'C', 1, 2)
+    sol20s = ode_renumber(sol20, 'C', 1, 2)
+    sol21s = ode_renumber(sol21, 'C', 1, 2)
+    sol22s = ode_renumber(sol22, 'C', 1, 2)
+    sol23s = ode_renumber(sol23, 'C', 1, 3)
+    sol24s = ode_renumber(sol24, 'C', 1, 2)
+    sol25s = ode_renumber(sol25, 'C', 1, 3)
+    sol26s = ode_renumber(sol26, 'C', 1, 5)
+    sol27s = ode_renumber(sol27, 'C', 1, 2)
+    assert dsolve(eq1, f(x), hint=hint) in (sol1, sol1s)
+    assert dsolve(eq2, f(x), hint=hint) in (sol2, sol2s)
+    assert dsolve(eq3, f(x), hint=hint) in (sol3, sol3s)
+    assert dsolve(eq4, f(x), hint=hint) in (sol4, sol4s)
+    assert dsolve(eq5, f(x), hint=hint) in (sol5, sol5s)
+    assert dsolve(eq6, f(x), hint=hint) in (sol6, sol6s)
+    assert dsolve(eq7, f(x), hint=hint) in (sol7, sol7s)
+    assert dsolve(eq8, f(x), hint=hint) in (sol8, sol8s)
+    assert dsolve(eq9, f(x), hint=hint) in (sol9, sol9s)
+    assert dsolve(eq10, f(x), hint=hint) in (sol10, sol10s)
+    assert dsolve(eq11, f(x), hint=hint) in (sol11, sol11s)
+    assert dsolve(eq12, f(x), hint=hint) in (sol12, sol12s)
+    assert dsolve(eq13, f(x), hint=hint) in (sol13, sol13s)
+    assert dsolve(eq14, f(x), hint=hint) in (sol14, sol14s)
+    assert dsolve(eq15, f(x), hint=hint) in (sol15, sol15s)
+    assert dsolve(eq16, f(x), hint=hint) in (sol16, sol16s)
+    assert dsolve(eq17, f(x), hint=hint) in (sol17, sol17s)
+    assert dsolve(eq18, f(x), hint=hint) in (sol18, sol18s)
+    assert dsolve(eq19, f(x), hint=hint) in (sol19, sol19s)
+    assert dsolve(eq20, f(x), hint=hint) in (sol20, sol20s)
+    assert dsolve(eq21, f(x), hint=hint) in (sol21, sol21s)
+    assert dsolve(eq22, f(x), hint=hint) in (sol22, sol22s)
+    assert dsolve(eq23, f(x), hint=hint) in (sol23, sol23s)
+    assert dsolve(eq24, f(x), hint=hint) in (sol24, sol24s)
+    assert dsolve(eq25, f(x), hint=hint) in (sol25, sol25s)
+    assert dsolve(eq26, f(x), hint=hint) in (sol26, sol26s)
+    assert dsolve(eq27, f(x), hint=hint) in (sol27, sol27s)
     assert dsolve(eq28, f(x), hint=hint) == sol28
     assert checkodesol(eq1, f(x), sol1, order=3, solve_for_func=False)[0]
     assert checkodesol(eq2, f(x), sol2, order=3, solve_for_func=False)[0]
@@ -898,18 +958,30 @@ def test_nth_linear_constant_coeff_variation_of_parameters():
     sol11 = Eq(f(x), cos(x)*(C1 - Integral(1/cos(x), x)) + sin(x)*(C2 + \
         Integral(1/sin(x), x)))
     sol12 = Eq(f(x), C1 + C2*x - x**3*(C3 - log(x)/6) + C4*x**2)
-    assert dsolve(eq1, f(x), hint=hint) == sol1
-    assert dsolve(eq2, f(x), hint=hint) == sol2
-    assert dsolve(eq3, f(x), hint=hint) == sol3
-    assert dsolve(eq4, f(x), hint=hint) == sol4
-    assert dsolve(eq5, f(x), hint=hint) == sol5
-    assert dsolve(eq6, f(x), hint=hint) == sol6
-    assert dsolve(eq7, f(x), hint=hint) == sol7
-    assert dsolve(eq8, f(x), hint=hint) == sol8
-    assert dsolve(eq9, f(x), hint=hint) == sol9
-    assert dsolve(eq10, f(x), hint=hint) == sol10
-    assert dsolve(eq11, f(x), hint=hint+'_Integral') == sol11
-    assert dsolve(eq12, f(x), hint=hint) == sol12
+    sol1s = ode_renumber(sol1, 'C', 1, 3)
+    sol2s = ode_renumber(sol2, 'C', 1, 3)
+    sol3s = ode_renumber(sol3, 'C', 1, 2)
+    sol4s = ode_renumber(sol4, 'C', 1, 2)
+    sol5s = ode_renumber(sol5, 'C', 1, 2)
+    sol6s = ode_renumber(sol6, 'C', 1, 2)
+    sol7s = ode_renumber(sol7, 'C', 1, 2)
+    sol8s = ode_renumber(sol8, 'C', 1, 2)
+    sol9s = ode_renumber(sol9, 'C', 1, 3)
+    sol10s = ode_renumber(sol10, 'C', 1, 2)
+    sol11s = ode_renumber(sol11, 'C', 1, 2)
+    sol12s = ode_renumber(sol12, 'C', 1, 4)
+    assert dsolve(eq1, f(x), hint=hint) in (sol1, sol1s)
+    assert dsolve(eq2, f(x), hint=hint) in (sol2, sol2s)
+    assert dsolve(eq3, f(x), hint=hint) in (sol3, sol3s)
+    assert dsolve(eq4, f(x), hint=hint) in (sol4, sol4s)
+    assert dsolve(eq5, f(x), hint=hint) in (sol5, sol5s)
+    assert dsolve(eq6, f(x), hint=hint) in (sol6, sol6s)
+    assert dsolve(eq7, f(x), hint=hint) in (sol7, sol7s)
+    assert dsolve(eq8, f(x), hint=hint) in (sol8, sol8s)
+    assert dsolve(eq9, f(x), hint=hint) in (sol9, sol9s)
+    assert dsolve(eq10, f(x), hint=hint) in (sol10, sol10s)
+    assert dsolve(eq11, f(x), hint=hint+'_Integral') in (sol11, sol11s)
+    assert dsolve(eq12, f(x), hint=hint) in (sol12, sol12s)
     assert checkodesol(eq1, f(x), sol1, order=3, solve_for_func=False)[0]
     assert checkodesol(eq2, f(x), sol2, order=3, solve_for_func=False)[0]
     assert checkodesol(eq3, f(x), sol3, order=1, solve_for_func=False)[0]
@@ -945,12 +1017,17 @@ def test_Liouville_ODE():
     sol3 = [Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))]
     sol4 = [Eq(f(x), sqrt(C1 + C2*exp(-x))), Eq(f(x), -sqrt(C1 + C2*exp(-x)))]
     sol5 = Eq(f(x), -log(x) + log(C1 + C2*x))
-    assert dsolve(eq1, f(x)) == sol1
-    assert dsolve(eq1a, f(x)) == sol1
-    assert dsolve(eq2, f(x)) == sol2
-    assert dsolve(eq3, f(x)) == sol3
-    assert dsolve(eq4, f(x)) == sol4
-    assert dsolve(eq5, f(x)) == sol5
+    sol1s = ode_renumber(sol1, 'C', 1, 2)
+    sol2s = ode_renumber(sol2, 'C', 1, 2)
+    sol3s = ode_renumber(sol3, 'C', 1, 2)
+    sol4s = ode_renumber(sol4, 'C', 1, 2)
+    sol5s = ode_renumber(sol5, 'C', 1, 2)
+    assert dsolve(eq1, f(x)) in (sol1, sol1s)
+    assert dsolve(eq1a, f(x)) in (sol1, sol1s)
+    assert dsolve(eq2, f(x)) in (sol2, sol2s)
+    assert dsolve(eq3, f(x)) in (sol3, sol3s)
+    assert dsolve(eq4, f(x)) in (sol4, sol4s)
+    assert dsolve(eq5, f(x)) in (sol5, sol5s)
     assert checkodesol(sol1, f(x), sol1a, order=2, solve_for_func=False)[0]
     assert checkodesol(eq1, f(x), sol1a, order=2, solve_for_func=False)[0]
     assert checkodesol(eq1a, f(x), sol1a, order=2, solve_for_func=False)[0]
@@ -970,6 +1047,7 @@ def test_unexpanded_Liouville_ODE():
     eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
     eq2 = eq1*exp(-f(x))/exp(f(x)).expand()
     sol2 = Eq(f(x), -log(C1 + C2/x))
-    assert dsolve(eq2, f(x)) == sol2
+    sol2s = ode_renumber(sol2, 'C', 1, 2)
+    assert dsolve(eq2, f(x)) in (sol2, sol2s)
     assert checkodesol(eq2, f(x), sol2, order=2, solve_for_func=False)[0]
 

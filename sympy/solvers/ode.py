@@ -225,34 +225,36 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
 
     == Details ==
 
-        eq can be any supported ordinary differential equation (see the
-            ode docstring for supported methods).  This can either be an
-            Equality, or an expression, which is assumed to be equal to 0.
+        ``eq`` can be any supported ordinary differential equation (see
+            the ode docstring for supported methods).  This can either
+            be an Equality, or an expression, which is assumed to be
+            equal to 0.
 
-        f(x) is a function of one variable whose derivatives in that
+        ``f(x)`` is a function of one variable whose derivatives in that
             variable make up the ordinary differential equation eq.
 
-        hint is the solving method that you want dsolve to use.  Use
+        ``hint`` is the solving method that you want dsolve to use.  Use
             classify_ode(eq, f(x)) to get all of the possible hints for
-            an ODE.  The default hint, 'default', will use whatever
-            hint is returned first by classify_ode().  See Hints below
-            for more options that you can use for hint.
-        simplify enables simplification by odesimp().  See its docstring
-            for more information.  Turn this off, for example, to
-            disable solving of solutions for func or simplification of
-            arbitrary constants.  It will still integrate with this hint.
-            Note that the solution may contain more arbitrary constants
-            than the order of the ODE with this option enabled.
+            an ODE.  The default hint, 'default', will use whatever hint
+            is returned first by classify_ode().  See Hints below for
+            more options that you can use for hint.
+        ``simplify`` enables simplification by odesimp().  See its
+            docstring for more information.  Turn this off, for example,
+            to disable solving of solutions for func or simplification
+            of arbitrary constants.  It will still integrate with this
+            hint. Note that the solution may contain more arbitrary
+            constants than the order of the ODE with this option
+            enabled.
 
     == Hints ==
 
         Aside from the various solving methods, there are also some
-        meta-hints that you can
-        pass to dsolve():
+        meta-hints that you can pass to dsolve():
 
         "default":
                 This uses whatever hint is returned first by
-                classify_ode(). This is the default argument to dsolve().
+                classify_ode(). This is the default argument to
+                dsolve().
 
         "all":
                 To make dsolve apply all relevant classification hints,
@@ -307,9 +309,9 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
           for. Otherwise, it returns an implicit solution.
         - Arbitrary constants are symbols named C1, C2, and so on.
         - Because all solutions should be mathematically equivalent,
-          some hints may return the exact same result for an ODE.  Often,
+          some hints may return the exact same result for an ODE. Often,
           though, two different hints will return the same solution
-          formatted differently.  The two should be equivalent.  Also
+          formatted differently.  The two should be equivalent. Also
           note that sometimes the values of the arbitrary constants in
           two different solutions may not be the same, because one
           constant may have "absorbed" other constants into it.
@@ -817,7 +819,7 @@ def odesimp(eq, func, order, hint):
     # We cleaned up the costants before solving to help the solve engine with
     # a simpler expression, but the solved expression could have introduced
     # things like -C1, so rerun constantsimp() one last time before returning.
-    eq = constantsimp(eq, x, 2*order)
+    eq = ode_renumber(constantsimp(eq, x, 2*order), 'C', 1, 2*order)
 
     return eq
 
@@ -1118,11 +1120,9 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     So for example, exp(C1)*exp(x) will be simplified to C1*exp(x), but
     exp(C1 + x) will be left alone.
 
-    Constants are renumbered after simplification so that they are
-    sequential, such as C1, C2, C3, and so on.  They are renumbered in
-    the order that they are printed, using Basic._compare_pretty(), so
-    they should be numbered in the order that they appear in an
-    expression.
+    Use ode_renumber() to renumber constants after simplification.
+    Without using that function, simplified constants may end up
+    having any numbering to them.
 
     In rare cases, a single constant can be "simplified" into two
     constants.  Every differential equation solution should have as many
@@ -1141,128 +1141,131 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
         >>> constantsimp(C1 + 2 + x + y, x, 3)
         C1 + x
         >>> constantsimp(C1*C2 + 2 + x + y + C3*x, x, 3)
-        C1 + x + C2*x
+        C2 + x + C3*x
 
     """
-    # We need to have an internal recursive function so that newstartnumber
-    # maintains its values throughout recursive calls
+    # This function works recursively.  The idea is that, for Mul,
+    # Add, Pow, and Function, if the class has a constant in it, then
+    # we can simplify it, which we do by recursing down and
+    # simplifying up.  Otherwise, we can skip that part of the
+    # expression.
+
+    from sympy.core import S
+    from sympy.utilities import any
+    constantsymbols = [Symbol(symbolname+"%d" % t) for t in range(startnumber,
+    endnumber + 1)]
+    x = independentsymbol
+
+    if isinstance(expr, Equality):
+        # For now, only treat the special case where one side of the equation
+        # is a constant
+        if expr.lhs in constantsymbols:
+            return Eq(expr.lhs, constantsimp(expr.rhs + expr.lhs, x, endnumber,
+            startnumber, symbolname) - expr.lhs)
+            # this could break if expr.lhs is absorbed into another constant,
+            # but for now, the only solutions that return Eq's with a constant
+            # on one side are first order.  At any rate, it will still be
+            # technically correct.  The expression will just have too many
+            # constants in it
+        elif expr.rhs in constantsymbols:
+            return Eq(constantsimp(expr.lhs + expr.rhs, x, endnumber,
+            startnumber, symbolname) - expr.rhs, expr.rhs)
+        else:
+            return Eq(constantsimp(expr.lhs, x, endnumber, startnumber,
+                symbolname), constantsimp(expr.rhs, x, endnumber,
+                startnumber, symbolname))
+
+    if type(expr) not in (Mul, Add, Pow) and not expr.is_Function:
+        # We don't know how to handle other classes
+        # This also serves as the base case for the recursion
+        return expr
+    elif not any(expr.has(t) for t in constantsymbols):
+        return expr
+    else:
+        newargs = []
+        hasconst = False
+        isPowExp = False
+        reeval = False
+        for i in expr.args:
+            if i not in constantsymbols:
+                newargs.append(i)
+            else:
+                newconst = i
+                hasconst = True
+                if expr.is_Pow and i == expr.exp:
+                    isPowExp = True
+
+        for i in range(len(newargs)):
+            isimp = constantsimp(newargs[i], x, endnumber, startnumber,
+            symbolname)
+            if isimp in constantsymbols:
+                reeval = True
+                hasconst = True
+                newconst = isimp
+                if expr.is_Pow and i == 1:
+                    isPowExp = True
+            newargs[i] = isimp
+        if hasconst:
+            newargs = [i for i in newargs if i.has(x)]
+            if isPowExp:
+                newargs = newargs + [newconst] # Order matters in this case
+            else:
+                newargs = [newconst] + newargs
+        if expr.is_Pow and len(newargs) == 1:
+            newargs.append(S.One)
+        if expr.is_Function:
+            if (len(newargs) == 0 or hasconst and len(newargs) == 1):
+                return newconst
+            else:
+                newfuncargs = [constantsimp(t, x, endnumber, startnumber,
+                symbolname) for t in expr.args]
+                return expr.new(*newfuncargs)
+        else:
+            newexpr = expr.new(*newargs)
+            if reeval:
+                return constantsimp(newexpr, x, endnumber, startnumber,
+                symbolname)
+            else:
+                return newexpr
+
+@vectorize(0)
+def ode_renumber(expr, symbolname, startnumber, endnumber):
+    """
+    Renumber arbitrary constants in expr.
+
+    This is a simple function that goes through and renumbers any Symbol
+    with a name in the form symbolname + num where num is in the range
+    from startnumber to endnumber.
+
+    Symbols are renumbered based on Basic._compare_pretty, so they
+    should be numbered roughly in the order that they appear in the
+    final, printed expression.  Note that this ordering is based in part
+    on hashes, so it can produce different results on different
+    machines.
+
+    The structure of this function is very similar to that of
+    constantsimp().
+
+    == Example ==
+        >>> from sympy import *
+        >>> from sympy.solvers.ode import ode_renumber
+        >>> x, C1, C2, C3 = symbols('x C1 C2 C3')
+        >>> pprint(C2 + C1*x + C3*x**2)
+                        2
+        C2 + C1*x + C3*x
+        >>> pprint(ode_renumber(C2 + C1*x + C3*x**2, 'C', 1, 3))
+                        2
+        C1 + C2*x + C3*x
+
+    """
 
     global newstartnumber
     newstartnumber = 1
 
-    def _constantsimp(expr, independentsymbol, endnumber, startnumber=1,
-    symbolname='C'):
+    def _ode_renumber(expr, symbolname, startnumber, endnumber):
         """
-        This function works recursively.  The idea is that, for Mul,
-        Add, Pow, and Function, if the class has a constant in it, then
-        we can simplify it, which we do by recursing down and
-        simplifying up.  Otherwise, we can skip that part of the
-        expression.
-
-        """
-        from sympy.core import S
-        from sympy.utilities import any
-        constantsymbols = [Symbol(symbolname+"%d" % t) for t in range(startnumber,
-        endnumber + 1)]
-        x = independentsymbol
-
-        if isinstance(expr, Equality):
-            # For now, only treat the special case where one side of the equation
-            # is a constant
-            if expr.lhs in constantsymbols:
-                return Eq(expr.lhs, _constantsimp(expr.rhs + expr.lhs, x, endnumber,
-                startnumber, symbolname) - expr.lhs)
-                # this could break if expr.lhs is absorbed into another constant,
-                # but for now, the only solutions that return Eq's with a constant
-                # on one side are first order.  At any rate, it will still be
-                # technically correct.  The expression will just have too many
-                # constants in it
-            elif expr.rhs in constantsymbols:
-                return Eq(_constantsimp(expr.lhs + expr.rhs, x, endnumber,
-                startnumber, symbolname) - expr.rhs, expr.rhs)
-            else:
-                return Eq(_constantsimp(expr.lhs, x, endnumber, startnumber,
-                    symbolname), _constantsimp(expr.rhs, x, endnumber,
-                    startnumber, symbolname))
-
-        if type(expr) not in (Mul, Add, Pow) and not expr.is_Function:
-            # We don't know how to handle other classes
-            # This also serves as the base case for the recursion
-            return expr
-        elif not any(expr.has(t) for t in constantsymbols):
-            return expr
-        else:
-            newargs = []
-            hasconst = False
-            isPowExp = False
-            reeval = False
-            for i in expr.args:
-                if i not in constantsymbols:
-                    newargs.append(i)
-                else:
-                    newconst = i
-                    hasconst = True
-                    if expr.is_Pow and i == expr.exp:
-                        isPowExp = True
-
-            for i in range(len(newargs)):
-                isimp = _constantsimp(newargs[i], x, endnumber, startnumber,
-                symbolname)
-                if isimp in constantsymbols:
-                    reeval = True
-                    hasconst = True
-                    newconst = isimp
-                    if expr.is_Pow and i == 1:
-                        isPowExp = True
-                newargs[i] = isimp
-            if hasconst:
-                newargs = [i for i in newargs if i.has(x)]
-                if isPowExp:
-                    newargs = newargs + [newconst] # Order matters in this case
-                else:
-                    newargs = [newconst] + newargs
-            if expr.is_Pow and len(newargs) == 1:
-                newargs.append(S.One)
-            if expr.is_Function:
-                if (len(newargs) == 0 or hasconst and len(newargs) == 1):
-                    return newconst
-                else:
-                    newfuncargs = [_constantsimp(t, x, endnumber, startnumber,
-                    symbolname) for t in expr.args]
-                    return expr.new(*newfuncargs)
-            else:
-                newexpr = expr.new(*newargs)
-                if reeval:
-                    return _constantsimp(newexpr, x, endnumber, startnumber,
-                    symbolname)
-                else:
-                    return newexpr
-
-    def _renumber(expr, symbolname, startnumber, endnumber):
-        """
-        Renumber arbitrary constants in expr.
-
-        This is a simple function that goes through and renumbers any
-        Symbol with a name in the form symbolname + num where num is in
-        the range from startnumber to endnumber.
-
-        Symbols are renumbered based on Basic._compare_pretty, so they
-        should be numbered roughly in the order that they appear in the
-        final, printed expression.
-
-        The structure of the function is very similar to that of
-        _constantsimp().
-
-        == Example ==
-            >>> from sympy import *
-            >>> from sympy.solvers.ode import constantsimp
-            >>> x, C1, C2 = symbols('x C1 C2')
-            >>> pprint(C2*exp(x) + C1*exp(-x))
-                x       -x
-            C2*e  + C1*e
-            >>> pprint(constantsimp(C2*exp(x) + C1*exp(-x), x, 2))
-                x       -x
-            C1*e  + C2*e
+        We need to have an internal recursive function so that
+        newstartnumber maintains its values throughout recursive calls.
 
         """
         from sympy.utilities import any
@@ -1271,13 +1274,13 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
         global newstartnumber
 
         if isinstance(expr, Equality):
-            return Eq(_renumber(expr.lhs, symbolname, startnumber, endnumber),
-            _renumber(expr.rhs, symbolname, startnumber, endnumber))
+            return Eq(_ode_renumber(expr.lhs, symbolname, startnumber, endnumber),
+            _ode_renumber(expr.rhs, symbolname, startnumber, endnumber))
 
         if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and\
         not any(expr.has(t) for t in constantsymbols):
             # Base case, as above.  We better hope there aren't constants inside
-            # of some other class, because they won't be simplified.
+            # of some other class, because they won't be renumbered.
             return expr
         elif expr in constantsymbols:
             # Renumbering happens here
@@ -1285,20 +1288,18 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             newstartnumber += 1
             return newconst
         else:
-            sortedargs = list(expr.args)
-            sortedargs.sort(Basic._compare_pretty)
             if expr.is_Function or expr.is_Pow:
-                return expr.new(*map(lambda x: _renumber(x, symbolname, \
+                return expr.new(*map(lambda x: _ode_renumber(x, symbolname, \
                 startnumber, endnumber), expr.args))
             else:
-                return expr.new(*map(lambda x: _renumber(x, symbolname, \
+                sortedargs = list(expr.args)
+                sortedargs.sort(Basic._compare_pretty)
+                return expr.new(*map(lambda x: _ode_renumber(x, symbolname, \
                 startnumber, endnumber), sortedargs))
 
 
-    simpexpr = _constantsimp(expr, independentsymbol, endnumber, startnumber,
-    symbolname)
+    return _ode_renumber(expr, symbolname, startnumber, endnumber)
 
-    return _renumber(simpexpr, symbolname, startnumber, endnumber)
 
 def _handle_Integral(expr, func, order, hint):
     """
@@ -2096,7 +2097,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
         ... 2*f(x).diff(x, 2) - 6*f(x).diff(x) + 5*f(x), f(x),
         ... hint='nth_linear_constant_coeff_homogeneous'))
                             x                            -2*x
-        f(x) = (C1 + C2*x)*e  + (C3*cos(x) + C4*sin(x))*e
+        f(x) = (C1 + C2*x)*e  + (C3*sin(x) + C4*cos(x))*e
 
 
     == References ==
