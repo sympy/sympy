@@ -37,6 +37,7 @@ from numbers import Rational, Integer
 from symbol import Symbol
 from multidimensional import vectorize
 from sympy.utilities.decorator import deprecated
+from sympy.utilities import all
 
 from sympy import mpmath
 

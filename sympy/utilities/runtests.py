@@ -19,6 +19,7 @@ import pdb
 from glob import glob
 from timeit import default_timer as clock
 import doctest as pdoctest # avoid clashing with our doctest() function
+from sympy.utilities import any
 
 def isgeneratorfunction(object):
     """
