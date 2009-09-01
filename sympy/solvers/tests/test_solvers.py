@@ -12,6 +12,10 @@ from sympy.utilities.pytest import XFAIL
 
 def test_swap_back():
     x=var('x');f=Function('f',dummy=True)
+    # this is coming back from solve even though it shouldn't be: f(x) is in the
+    # solution's Integral as the upper limit. When solve is fixed this test should
+    # be removed. For now, since there are ode's that come back with these sorts of
+    # solutions, the swap_back feature is performed in solve and tested here.
     assert solve(Eq(log(f(x)), Integral(x, (x, 1, f(x)))), f(x)) == \
     [exp(Integral(x, (x, 1, f(x))))]
 

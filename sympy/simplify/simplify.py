@@ -1405,7 +1405,7 @@ def _logcombine(expr, assume_pos_real=False):
         else:
             args = []
             for i in expr.args:
-                if i.has(log):
+                if isinstance(i, log):
                     args.append(_getlogargs(i))
             return flatten(args)
         return None
@@ -1459,19 +1459,16 @@ def _logcombine(expr, assume_pos_real=False):
                 notlogs += _logcombine(i, assume_pos_real)
             else:
                 notlogs += i
-        alllogs = _logcombine(log(argslist)+coeflogs, assume_pos_real)
-        return notlogs + alllogs
+        if notlogs + log(argslist) + coeflogs == expr:
+            return expr
+        else:
+            alllogs = _logcombine(log(argslist) + coeflogs, assume_pos_real)
+            return notlogs + alllogs
 
     if expr.is_Mul:
-        a = Wild('a', exclude=[log], dummy=True)
+        a = Wild('a', dummy=True)
         x = Wild('x', dummy=True)
         coef = expr.match(a*log(x))
-        if coef and coef[a].has(log):
-            largs = _getlogargs(coef[a])
-            assert len(largs) != 0
-            loglargs = 1
-            for j in largs:
-                loglargs *= log(j)
         if coef\
             and (coef[a].is_real\
                 or expr.is_Number\
@@ -1479,7 +1476,7 @@ def _logcombine(expr, assume_pos_real=False):
                 or type(coef[a]) in (int, float)\
                 or (assume_pos_real\
                 and not coef[a].is_imaginary))\
-            and (not coef[a].has(log)\
+            and (not isinstance(coef[a], log)\
                 or assume_pos_real\
                 or (not getattr(coef[a],'is_real')==False\
                     and getattr(x, 'is_positive'))):

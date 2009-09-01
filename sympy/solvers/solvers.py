@@ -162,8 +162,7 @@ def solve(f, *symbols, **flags):
     elif isinstance(symbols, set):
         symbols_passed = list(symbols)
 
-    i = 0
-    for s in symbols:
+    for i,s in enumerate(symbols):
         if s.is_Symbol:
             s_new = s
         elif s.is_Function:
@@ -175,7 +174,6 @@ def solve(f, *symbols, **flags):
         else:
             raise TypeError('not a Symbol or a Function')
         symbols_new.append(s_new)
-        i += 1
 
         if symbol_swapped:
             swap_back_dict = dict(zip(symbols_new, symbols))
@@ -277,6 +275,10 @@ def solve(f, *symbols, **flags):
         else:
             raise NotImplementedError("No algorithms are implemented to solve equation %s" % f)
 
+        # This symbol swap should not be necessary for the single symbol case: if you've
+        # solved for the symbol the it will not appear in the solution. Right now, however
+        # ode's are getting solutions for solve (even though they shouldn't be -- see the
+        # swap_back test in test_solvers).
         if symbol_swapped:
             result = [ri.subs(swap_back_dict) for ri in result]
 

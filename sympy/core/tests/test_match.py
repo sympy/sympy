@@ -277,6 +277,9 @@ def test_exclude():
     q = Wild('q', exclude=[x])
     r = Wild('r', exclude=[sin,y])
 
+    assert sin(x).match(r) == None
+    assert cos(y).match(r) == None
+
     e = 3*x**2 + y*x + a
     assert e.match(p*x**2 + q*x + r) == {p: 3, q: y, r: a}
 

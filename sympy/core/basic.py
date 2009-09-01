@@ -1123,7 +1123,7 @@ class Basic(AssumeMeths):
         return self.__class__(*[s.subs(old, new) for s in args])
 
     def __contains__(self, what):
-        if self == what: return True
+        if self == what or self.is_Function and self.func == what: return True
         for x in self._args:
             if what in x:
                 return True
@@ -1232,25 +1232,13 @@ class Basic(AssumeMeths):
         elif not patterns:
             raise TypeError("has() requires at least 1 argument (got none)")
         p = sympify(patterns[0])
-        if p.is_Symbol and not isinstance(p, Wild): # speeds up
+        if p.is_Atom and not isinstance(p, Wild):
             return p in self.atoms(p.__class__)
         if isinstance(p, BasicType):
-            #XXX this is very fragile:
-            if str(self).find(str(p.__name__)) == -1:
-                #didn't find p in self, let's try corner cases
-                if p is Derivative:
-                    if str(self).find("D(") != -1:
-                        return True
-                return False
-            else:
-                return True
+            return bool(self.atoms(p))
         if p.matches(self) is not None:
             return True
-        if not False:
-            args = self.args[:]
-        else:
-            args = (self.func,)+self.args[:]
-        for e in flatten(args):
+        for e in flatten(self.args):
             if isinstance(e, Basic) and e.has(p):
                 return True
         return False
