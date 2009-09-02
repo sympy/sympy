@@ -388,7 +388,7 @@ class Pow(Basic):
                     else:
                         return Add(*[f*multi for f in base.args])
         elif exp.is_Integer and exp.p < 0 and base.is_Add:
-            return 1 / Pow(base, -exp.p).expand(deep=deep, **hints)
+            return 1 / Pow(base, -exp.p)._eval_expand_multinomial(deep=False)
         elif exp.is_Add and base.is_Number:
             #  a + b      a  b
             # n      --> n  n  , where n, a, b are Numbers
