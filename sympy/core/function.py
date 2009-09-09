@@ -574,6 +574,11 @@ class Derivative(Basic):
         else:
             evaluate = False
         if not evaluate and not isinstance(expr, Derivative):
+            symbols = list(symbols)
+            if len(symbols) == 0:
+                # We make a special case for 0th derivative, because there
+                # is no good way to unambiguously print this.
+                return expr
             obj = Basic.__new__(cls, expr, *symbols, **assumptions)
             return obj
         unevaluated_symbols = []
