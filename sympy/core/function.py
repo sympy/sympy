@@ -797,17 +797,78 @@ class Lambda(Function):
            #     return True
         return False
 
-@vectorize(0,1,2)
-def diff(f, x, times = 1, evaluate=True):
-    """Differentiate f with respect to x
+@vectorize(0)
+def diff(f, *symbols, **kwargs):
+    """
+    Differentiate f with respect to symbols.
 
     It's just a wrapper to unify .diff() and the Derivative class,
-    it's interface is similar to that of integrate()
+    it's interface is similar to that of integrate().  You can use the same
+    shortcuts for multiple variables as with Derivative.  For example,
+    diff(f(x), x, x, x) and diff(f(x), x, 3) both return the third derivative
+    of f(x).
 
-    see http://documents.wolfram.com/v5/Built-inFunctions/AlgebraicComputation/Calculus/D.html
+    You can pass evaluate=False to get an unevaluated Derivative class.  Note
+    that if there are 0 symbols (such as diff(f(x), x, 0), then the result be
+    the function (the zeroth derivative), even if evaluate=False.
+
+    This function is vectorized, so you can pass a list for the arguments and
+    each argument will be mapped to each element of the list.  For a single
+    symbol, you can just pass the symbol normally.  For multiple symbols,
+    pass each group in a tuple.  For example, do diff(f(x, y), [x, y]) to get
+    the derivatives of f(x, y) with respect to x and with respect to y, and
+    diff(f(x, y), [(x, x), (y, y)]) to get the derivatives of f(x, y) with
+    respect to x twice and with respect to y twice.  You can also mix tuples
+    and single symbols.
+
+    Examples:
+    >>> from sympy import *
+    >>> x, y = symbols('x y')
+    >>> f = Function('f')
+
+    >>> diff(sin(x), x)
+    cos(x)
+    >>> diff(f(x), x, x, x)
+    D(f(x), x, x, x)
+    >>> diff(f(x), x, 3)
+    D(f(x), x, x, x)
+    >>> diff(sin(x)*cos(y), x, 2, y, 2)
+    cos(y)*sin(x)
+
+    >>> diff(f(x, y), [x, y])
+    [D(f(x, y), x), D(f(x, y), y)]
+    >>> diff(f(x, y), [(x, x), (y, y)])
+    [D(f(x, y), x, x), D(f(x, y), y, y)]
+    >>> diff(f(x, y), [(x, 2), y])
+    [D(f(x, y), x, x), D(f(x, y), y)]
+
+    >>> type(diff(sin(x), x))
+    cos
+    >>> type(diff(sin(x), x, evaluate=False))
+    <class 'sympy.core.function.Derivative'>
+    >>> type(diff(sin(x), x, 0))
+    sin
+    >>> type(diff(sin(x), x, 0, evaluate=False))
+    sin
+
+    See Also
+    http://documents.wolfram.com/v5/Built-inFunctions/AlgebraicComputation/Calculus/D.html
+
     """
 
-    return Derivative(f,x,times, **{'evaluate':evaluate})
+    # @vectorize(1) won't handle symbols in the way that we want, so we have to
+    # write the for loop manually.
+    if hasattr(symbols[0], '__iter__'):
+        retlist = []
+        for i in symbols[0]:
+            if hasattr(i, '__iter__'):
+                retlist.append(Derivative(f, *i, **kwargs))
+            else:
+                retlist.append(Derivative(f, i, **kwargs))
+        return retlist
+
+    kwargs.setdefault('evaluate', True)
+    return Derivative(f,*symbols, **kwargs)
 
 @vectorize(0)
 def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \

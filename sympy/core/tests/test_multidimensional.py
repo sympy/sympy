@@ -33,9 +33,14 @@ def test_diffmulti():
             [Derivative(f(*r), x), Derivative(f(*r), y), Derivative(f(*r), z)],
             [Derivative(g(*r), x), Derivative(g(*r), y), Derivative(g(*r), z)],
             [Derivative(h(*r), x), Derivative(h(*r), y), Derivative(h(*r), z)]]
-    assert diff(f(x),x,[0,1,2,3])==[diff(f(x),x,0), diff(f(x),x,1), diff(f(x),x,2), diff(f(x),x,3)]
+    assert diff(f(x), [(x, 0),(x, 1), (x, 2), (x, 3)]) == \
+            [diff(f(x),x,0), diff(f(x),x,1), diff(f(x),x,2), diff(f(x),x,3)]
+    assert diff(f(*r), [(x, y), (y, z) , (z, x), x]) == \
+            [Derivative(f(x, y, z), x, y), Derivative(f(x, y, z), y, z),
+                Derivative(f(x, y, z), z, x), Derivative(f(x, y, z), x)]
 
 def test_expandmulti():
     x = Symbol("x")
     y = Symbol("y")
     assert expand([(x+y)**2, (x-1)**2])==[expand((x+y)**2), expand((x-1)**2)]
+

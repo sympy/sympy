@@ -145,6 +145,28 @@ def test_derivative_evaluate():
 
     f = Function('f')
     assert Derivative(Derivative(f(x), x), x) == diff(f(x), x, x)
+    assert Derivative(sin(x), x, 0) == sin(x)
+
+def test_diff_symbols():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    f = Function('f')
+    g = Function('g')
+
+    assert diff(f(x, y, z), x, y, z) == Derivative(f(x, y, z), x, y, z)
+    assert diff(f(x, y, z), x, x, x) == Derivative(f(x, y, z), x, x, x)
+    assert diff(f(x, y, z), x, 3) == Derivative(f(x, y, z), x, 3)
+    assert diff([f(x, y, z), g(x, y, z)], [x, y, z, (x, x), (y, 2), (z, 3),
+    (x, y, z, 2), (x, x, x)]) == \
+        [[Derivative(f(x, y, z), x), Derivative(f(x, y, z), y),
+          Derivative(f(x, y, z), z), Derivative(f(x, y, z), x, x),
+          Derivative(f(x, y, z), y, y), Derivative(f(x, y, z), z, z, z),
+          Derivative(f(x, y, z), x, y, z, z), Derivative(f(x, y, z), x, x, x)],
+        [Derivative(g(x, y, z), x), Derivative(g(x, y, z), y),
+          Derivative(g(x, y, z), z), Derivative(g(x, y, z), x, x),
+          Derivative(g(x, y, z), y, y), Derivative(g(x, y, z), z, z, z),
+          Derivative(g(x, y, z), x, y, z, z), Derivative(g(x, y, z), x, x, x)]]
 
 @XFAIL
 def test_combine():
