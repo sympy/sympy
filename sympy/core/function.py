@@ -27,6 +27,7 @@ Example:
     Function('f')
     >>> f(x).args
     (x,)
+
 """
 
 from basic import Basic, Atom, S, C
@@ -520,6 +521,7 @@ class Derivative(Basic):
 
     Derivative(Derivative(expr, x), y) -> Derivative(expr, x, y)
     Derivative(expr, x, 3)  -> Derivative(expr, x, x, x)
+
     """
 
     is_Derivative   = True
@@ -538,6 +540,7 @@ class Derivative(Basic):
         The second example shows why we don't return a list, but a generator,
         so that the code that calls _symbolgen can return earlier for special
         cases, like x.diff(x, 10**6).
+
         """
         last_s = sympify(symbols[len(symbols)-1])
         for i in xrange(len(symbols)):
@@ -848,7 +851,7 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
     2**x*2**y
 
     power_base - Split powers of multiplied bases.
-    >>> ((x*y)**z)).expand(power_base=True)
+    >>> ((x*y)**z).expand(power_base=True)
     x**z*y**z
 
     log - Pull out power of an argument as a coefficient and split logs products
@@ -856,10 +859,10 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
     function have the proper assumptions: the arguments must be positive and the
     exponents must be real.
     >>> log(x**2*y).expand(log=True)
-    log(x**2*y)
+    log(y*x**2)
     >>> x, y = symbols('xy', positive=True)
     >>> log(x**2*y).expand(log=True)
-    2*log(x)+log(y)
+    2*log(x) + log(y)
 
     trig - Do trigonometric expansions.
     >>> cos(x+y).expand(trig=True)
@@ -896,28 +899,37 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
 
     Examples:
     >>> x, y, z = symbols('xyz', positive=True)
-    #>>> expand(log(x*(y+z))) # could be either one below
+
+    >> expand(log(x*(y+z))) # could be either one below
     log(x*y + x*z)
     log(x) + log(y + z)
+
     >>> expand_log(log(x*y+x*z))
-    log(x*y+x*z)
-    >>> expand(log(x*(y+z), mul=False)
+    log(x*y + x*z)
+
+    >> expand(log(x*(y+z)), mul=False)
     log(x) + log(y + z)
 
-    #>>> expand((x*(y+z))**x) # could be either one below
+
+    >> expand((x*(y+z))**x) # could be either one below
     (x*y + x*z)**x
     x**x*(y + z)**x
+
     >>> expand((x*(y+z))**x, mul=False)
     x**x*(y + z)**x
 
-    #>>> expand(x*(y+z)**2) # could be either one below
+
+    >> expand(x*(y+z)**2) # could be either one below
     2*x*y*z + x*y**2 + x*z**2
     x*(y + z)**2
-    >>> expand(x*(y+z)**2, mul=False
+
+    >>> expand(x*(y+z)**2, mul=False)
     x*(2*y*z + y**2 + z**2)
+
     >>> expand_mul(_)
     2*x*y*z + x*y**2 + x*z**2
-       """
+
+    """
     hints['power_base'] = power_base
     hints['power_exp'] = power_exp
     hints['mul'] = mul
@@ -938,6 +950,7 @@ def expand_mul(expr, deep=True):
     >>> x, y = symbols('xy', positive=True)
     >>> expand_mul(exp(x+y)*(x+y)*log(x*y**2))
     x*exp(x + y)*log(x*y**2) + y*exp(x + y)*log(x*y**2)
+
     """
     return sympify(expr).expand(deep=deep, mul=True, power_exp=False,\
     power_base=False, basic=False, multinomial=False, log=False)
@@ -952,6 +965,7 @@ def expand_log(expr, deep=True):
     >>> x, y = symbols('xy', positive=True)
     >>> expand_log(exp(x+y)*(x+y)*log(x*y**2))
     (x + y)*(2*log(y) + log(x))*exp(x + y)
+
     """
     return sympify(expr).expand(deep=deep, log=True, mul=False,\
     power_exp=False, power_base=False, multinomial=False, basic=False)
@@ -966,6 +980,7 @@ def expand_func(expr, deep=True):
     >>> x = Symbol('x')
     >>> expand_func(gamma(x + 2))
     x*(1 + x)*gamma(x)
+
     """
     return sympify(expr).expand(deep=deep, func=True, basic=False,\
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
@@ -980,6 +995,7 @@ def expand_trig(expr, deep=True):
     >>> x, y = symbols('xy')
     >>> expand_trig(sin(x+y)*(x+y))
     (x + y)*(cos(x)*sin(y) + cos(y)*sin(x))
+
     """
     return sympify(expr).expand(deep=deep, trig=True, basic=False,\
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
@@ -994,6 +1010,7 @@ def expand_complex(expr, deep=True):
     >>> z = Symbol('z')
     >>> expand_complex(z**(2*I))
     I*im(z**(2*I)) + re(z**(2*I))
+
     """
     return sympify(expr).expand(deep=deep, complex=True, basic=False,\
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
