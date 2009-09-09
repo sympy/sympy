@@ -1067,6 +1067,9 @@ def test_Add_as_coeff_terms():
     assert (n-2).as_coeff_terms()   == (-1, (2-n,) )
     assert (n-3).as_coeff_terms()   == (-1, (3-n,) )
 
+def test_Pow_as_coeff_terms_doesnt_expand():
+    assert exp(x + y).as_coeff_terms() == (1, (exp(x + y),))
+    assert exp(x + exp(x + y)) != exp(x + exp(x)*exp(y))
 
 def test_issue974():
     assert -1/(-1-x)    == 1/(1+x)
