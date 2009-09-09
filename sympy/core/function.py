@@ -608,7 +608,7 @@ class Derivative(Basic):
         if s not in self.symbols:
             obj = self.expr.diff(s)
             if isinstance(obj, Derivative):
-                return Derivative(obj.expr, *(obj.symbols+self.symbols))
+                return Derivative(obj.expr, *(self.symbols+obj.symbols))
             return Derivative(obj, *self.symbols)
         return Derivative(self.expr, *((s,)+self.symbols), **{'evaluate': False})
 
