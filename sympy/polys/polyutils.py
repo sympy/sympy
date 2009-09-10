@@ -63,6 +63,9 @@ def _unify_gens(f_gens, g_gens):
     f_gens = list(f_gens)
     g_gens = list(g_gens)
 
+    if f_gens == g_gens:
+        return f_gens
+
     gens, common, k = [], [], 0
 
     for gen in f_gens:

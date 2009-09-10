@@ -238,37 +238,6 @@ def _gen_to_level(f, gen):
         except ValueError:
             raise PolynomialError("a valid generator expected, got %s" % gen)
 
-def _poly_reorder_if_subset(f, g, dom):
-    """Only `g` needs to be reordered, provided `g.gens` are in `f.gens`. """
-    g_monoms, g_coeffs = _dict_reorder(g.rep.to_dict(), g.gens, f.gens)
-
-    if g.rep.dom != dom:
-        g_coeffs = [ dom.convert(c) for c in g_coeffs ]
-
-    G = dict(zip(g_monoms, g_coeffs))
-
-    return (f.gens, f.rep.convert(dom), DMP(G, dom, f.rep.lev))
-
-def _poly_reorder_no_subset(f, g, dom):
-    """Both `f` and `g` are reordered, as there's no relation between generators. """
-    gens = _unify_gens(f.gens, g.gens)
-
-    f_monoms, f_coeffs = _dict_reorder(f.rep.to_dict(), f.gens, gens)
-    g_monoms, g_coeffs = _dict_reorder(g.rep.to_dict(), g.gens, gens)
-
-    if f.rep.dom != dom:
-        f_coeffs = [ dom.convert(c) for c in f_coeffs ]
-
-    if g.rep.dom != dom:
-        g_coeffs = [ dom.convert(c) for c in g_coeffs ]
-
-    F = dict(zip(f_monoms, f_coeffs))
-    G = dict(zip(g_monoms, g_coeffs))
-
-    lev = len(gens) - 1
-
-    return (gens, DMP(F, dom, lev), DMP(G, dom, lev))
-
 def _init_poly_from_dict(rep, *gens, **args):
     """Initialize a Poly given a ... Poly instance. """
     domain = args.get('domain')
@@ -459,49 +428,49 @@ class Poly(Basic):
         return [self.as_basic()]
 
     def unify(f, g):
-        """Make `f` and `g` belong to the same domain, e.g. have same generators. """
-        if not g.is_Poly:
+        """Make `f` and `g` belong to the same domain. """
+        if not f.is_Poly or not g.is_Poly:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
-        dom = f.rep.dom.unify(g.rep.dom)
-
         if isinstance(f.rep, DMP) and isinstance(g.rep, DMP):
-            if f.rep.lev == g.rep.lev:
-                if f.gens == g.gens:
-                    F = f.rep.convert(dom)
-                    G = g.rep.convert(dom)
+            gens = _unify_gens(f.gens, g.gens)
 
-                    gens = f.gens
-                else:
-                    gens, F, G = _poly_reorder_no_subset(f, g, dom)
+            dom, lev = f.rep.dom.unify(g.rep.dom, gens), len(gens)-1
+
+            if f.gens != gens:
+                f_monoms, f_coeffs = _dict_reorder(f.rep.to_dict(), f.gens, gens)
+
+                if f.rep.dom != dom:
+                    f_coeffs = [ dom.convert(c, f.rep.dom) for c in f_coeffs ]
+
+                F = DMP(dict(zip(f_monoms, f_coeffs)), dom, lev)
             else:
-                if f.rep.lev > g.rep.lev:
-                    if set(f.gens).issuperset(g.gens):
-                        gens, F, G = _poly_reorder_if_subset(f, g, dom)
-                    else:
-                        gens, F, G = _poly_reorder_no_subset(f, g, dom)
-                else:
-                    if set(g.gens).issuperset(f.gens):
-                        gens, G, F = _poly_reorder_if_subset(g, f, dom)
-                    else:
-                        gens, F, G = _poly_reorder_no_subset(f, g, dom)
+                F = f.rep.convert(dom)
+
+            if g.gens != gens:
+                g_monoms, g_coeffs = _dict_reorder(g.rep.to_dict(), g.gens, gens)
+
+                if g.rep.dom != dom:
+                    g_coeffs = [ dom.convert(c, g.rep.dom) for c in g_coeffs ]
+
+                G = DMP(dict(zip(g_monoms, g_coeffs)), dom, lev)
+            else:
+                G = g.rep.convert(dom)
         elif isinstance(f.rep, GFP) and isinstance(g.rep, GFP):
             if f.gens != g.gens or f.mod != g.mod:
                 raise UnificationFailed("can't unify %s with %s" % (f, g))
             else:
-                F, G, gens = f.rep.convert(dom), g.rep.convert(dom), f.gens
+                F, G, gens = f.rep, g.rep, f.gens
         elif isinstance(f.rep, GFP) and isinstance(g.rep, DMP):
             if f.gens != g.gens:
                 raise UnificationFailed("can't unify %s with %s" % (f, g))
             else:
-                G, F, gens = (GFP(g.rep.convert(dom), f.mod, dom),
-                                  f.rep.convert(dom), f.gens)
+                G, F, gens = GFP(g.rep.convert(f.rep.dom), f.mod, g.rep.dom), f.rep, f.gens
         elif isinstance(f.rep, DMP) and isinstance(g.rep, GFP):
             if f.gens != g.gens:
                 raise UnificationFailed("can't unify %s with %s" % (f, g))
             else:
-                F, G, gens = (GFP(f.rep.convert(dom), g.mod, dom),
-                                  g.rep.convert(dom), g.gens)
+                F, G, gens = GFP(f.rep.convert(g.rep.dom), g.mod, g.rep.dom), g.rep, g.gens
         else:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
@@ -647,7 +616,7 @@ class Poly(Basic):
         except AttributeError:
             raise OperationNotSupported(f, 'add')
 
-        return f.per(result)
+        return per(result)
 
     def sub(f, g):
         """Subtract two polynomials `f` and `g`. """
@@ -658,7 +627,7 @@ class Poly(Basic):
         except AttributeError:
             raise OperationNotSupported(f, 'sub')
 
-        return f.per(result)
+        return per(result)
 
     def mul(f, g):
         """Multiply two polynomials `f` and `g`. """
@@ -669,7 +638,7 @@ class Poly(Basic):
         except AttributeError:
             raise OperationNotSupported(f, 'mul')
 
-        return f.per(result)
+        return per(result)
 
     def sqr(f):
         """Square a polynomial `f`. """
@@ -682,8 +651,10 @@ class Poly(Basic):
 
     def pow(f, n):
         """Raise `f` to a non-negative power `n`. """
+        n = int(n)
+
         try:
-            result = f.rep.pow(int(n))
+            result = f.rep.pow(n)
         except AttributeError:
             raise OperationNotSupported(f, 'pow')
 
@@ -1086,7 +1057,7 @@ class Poly(Basic):
 
     def sturm(f, **args):
         """Computes the Sturm sequence of `f`. """
-        if args.get('auto', True) and not f.rep.dom.has_Field:
+        if args.get('auto', True):
             f = f.to_field()
 
         try:

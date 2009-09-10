@@ -16,7 +16,7 @@ from sympy.polys.polytools import (
     groebner,
 )
 
-from sympy import S, symbols, sqrt, exp, expand
+from sympy import S, Integer, symbols, sqrt, exp, expand
 
 x,y,z,p,q,r,s,t,u,v,w = symbols('x,y,z,p,q,r,s,t,u,v,w')
 
@@ -65,6 +65,45 @@ def test__init_poly_from_basic():
 
     assert Poly(0, x).is_Poly == True
     assert Poly(1, x).is_Poly == True
+
+def test_add():
+    assert Poly(0, x).add(Poly(0, x)) == Poly(0, x)
+    assert Poly(0, x) + Poly(0, x) == Poly(0, x)
+
+    assert Poly(1, x).add(Poly(0, x)) == Poly(1, x)
+    assert Poly(1, x, y) + Poly(0, x) == Poly(1, x, y)
+    assert Poly(0, x).add(Poly(1, x, y)) == Poly(1, x, y)
+    assert Poly(0, x, y) + Poly(1, x, y) == Poly(1, x, y)
+
+def test_sub():
+    assert Poly(0, x).sub(Poly(0, x)) == Poly(0, x)
+    assert Poly(0, x) - Poly(0, x) == Poly(0, x)
+
+    assert Poly(1, x).sub(Poly(0, x)) == Poly(1, x)
+    assert Poly(1, x, y) - Poly(0, x) == Poly(1, x, y)
+    assert Poly(0, x).sub(Poly(1, x, y)) == Poly(-1, x, y)
+    assert Poly(0, x, y) - Poly(1, x, y) == Poly(-1, x, y)
+
+def test_mul():
+    assert Poly(0, x).mul(Poly(0, x)) == Poly(0, x)
+    assert Poly(0, x) * Poly(0, x) == Poly(0, x)
+
+    assert Poly(2, x).mul(Poly(4, x)) == Poly(8, x)
+    assert Poly(2, x, y) * Poly(4, x) == Poly(8, x, y)
+    assert Poly(4, x).mul(Poly(2, x, y)) == Poly(8, x, y)
+    assert Poly(4, x, y) * Poly(2, x, y) == Poly(8, x, y)
+
+def test_sqr():
+    assert Poly(x*y, x, y).sqr() == Poly(x**2*y**2, x, y)
+
+def test_pow():
+    assert Poly(x, x).pow(10) == Poly(x**10, x)
+    assert Poly(x, x).pow(Integer(10)) == Poly(x**10, x)
+
+    assert Poly(2*y, x, y).pow(4) == Poly(16*y**4, x, y)
+    assert Poly(2*y, x, y).pow(Integer(4)) == Poly(16*y**4, x, y)
+
+    assert Poly(7*x*y, x, y)**3 == Poly(343*x**3*y**3, x, y)
 
 def test_pdiv():
     pass

@@ -1,6 +1,6 @@
 """Tests for useful utilities for higher level polynomial classes. """
 
-from sympy import S, I, sqrt, symbols
+from sympy import S, I, Integer, sqrt, symbols, raises
 
 from sympy.polys.polyutils import (
     _sort_gens,
@@ -14,6 +14,7 @@ from sympy.polys.polyutils import (
 
 from sympy.polys.polyerrors import (
     GeneratorsNeeded,
+    PolynomialError,
 )
 
 x,y,z,p,q,r,s,t,u,v,w = symbols('x,y,z,p,q,r,s,t,u,v,w')
@@ -98,4 +99,50 @@ def test__analyze_power():
     assert _analyze_power(x, S(2.0)*y) == (x**(S(2.0)*y), S(1))
     assert _analyze_power(x, -S(1.0)*y) == (x**(-S(1.0)*y), S(1))
     assert _analyze_power(x, -S(2.0)*y) == (x**(-S(2.0)*y), S(1))
+
+def test__dict_from_basic_if_gens():
+    assert _dict_from_basic_if_gens(Integer(17), (x,)) == {(0,): Integer(17)}
+    assert _dict_from_basic_if_gens(Integer(17), (x,y)) == {(0,0): Integer(17)}
+    assert _dict_from_basic_if_gens(Integer(17), (x,y,z)) == {(0,0,0): Integer(17)}
+
+    assert _dict_from_basic_if_gens(Integer(-17), (x,)) == {(0,): Integer(-17)}
+    assert _dict_from_basic_if_gens(Integer(-17), (x,y)) == {(0,0): Integer(-17)}
+    assert _dict_from_basic_if_gens(Integer(-17), (x,y,z)) == {(0,0,0): Integer(-17)}
+
+    assert _dict_from_basic_if_gens(Integer(17)*x, (x,)) == {(1,): Integer(17)}
+    assert _dict_from_basic_if_gens(Integer(17)*x, (x,y)) == {(1,0): Integer(17)}
+    assert _dict_from_basic_if_gens(Integer(17)*x, (x,y,z)) == {(1,0,0): Integer(17)}
+
+    assert _dict_from_basic_if_gens(Integer(17)*x**7, (x,)) == {(7,): Integer(17)}
+    assert _dict_from_basic_if_gens(Integer(17)*x**7*y, (x,y)) == {(7,1): Integer(17)}
+    assert _dict_from_basic_if_gens(Integer(17)*x**7*y*z**12, (x,y,z)) == {(7,1,12): Integer(17)}
+
+    assert _dict_from_basic_if_gens(x+2*y+3*z, (x,)) == \
+        {(1,): Integer(1), (0,): 2*y+3*z}
+    assert _dict_from_basic_if_gens(x+2*y+3*z, (x,y)) == \
+        {(1,0): Integer(1), (0,1): Integer(2), (0,0): 3*z}
+    assert _dict_from_basic_if_gens(x+2*y+3*z, (x,y,z)) == \
+        {(1,0,0): Integer(1), (0,1,0): Integer(2), (0,0,1): Integer(3)}
+
+    assert _dict_from_basic_if_gens(x*y+2*x*z+3*y*z, (x,)) == \
+        {(1,): y+2*z, (0,): 3*y*z}
+    assert _dict_from_basic_if_gens(x*y+2*x*z+3*y*z, (x,y)) == \
+        {(1,1): Integer(1), (1,0): 2*z, (0,1): 3*z}
+    assert _dict_from_basic_if_gens(x*y+2*x*z+3*y*z, (x,y,z)) == \
+        {(1,1,0): Integer(1), (1,0,1): Integer(2), (0,1,1): Integer(3)}
+
+    assert _dict_from_basic_if_gens(2**y*x, (x,)) == {(1,): 2**y}
+    raises(PolynomialError, "_dict_from_basic_if_gens(2**y*x, (x,y))")
+
+def test__dict_from_basic_no_gens():
+    raises(GeneratorsNeeded, "_dict_from_basic_no_gens(Integer(17))")
+
+    assert _dict_from_basic_no_gens(x) == ({(1,): Integer(1)}, (x,))
+    assert _dict_from_basic_no_gens(y) == ({(1,): Integer(1)}, (y,))
+
+    assert _dict_from_basic_no_gens(x*y) == ({(1,1): Integer(1)}, (x,y))
+    assert _dict_from_basic_no_gens(x+y) == ({(1,0): Integer(1), (0,1): Integer(1)}, (x,y))
+
+    assert _dict_from_basic_no_gens(sqrt(2)) == ({(1,): Integer(1)}, (sqrt(2),))
+    raises(GeneratorsNeeded, "_dict_from_basic_no_gens(sqrt(2), greedy=False)")
 

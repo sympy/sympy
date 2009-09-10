@@ -151,9 +151,12 @@ class Algebra(object):
         """Convert a `EX` object to `dtype`. """
         return K1.from_sympy(a.ex)
 
-    def unify(K0, K1):
+    def unify(K0, K1, gens=None):
         """Returns a maximal domain containg `K0` and `K1`. """
-        if K0 == K1:
+        if gens is not None:
+            if (K0.is_Composite and (set(K0.gens) & set(gens))) or (K1.is_Composite and (set(K1.gens) & set(gens))):
+                raise UnificationFailed("can't unify %s with %s, given %s generators" % (K0, K1, tuple(gens)))
+        elif K0 == K1:
             return K0
 
         if K0.is_EX:
