@@ -732,7 +732,7 @@ class Mul(AssocOp):
                 if o.exp.is_positive:
                     for i in range(o.exp): otemp.append(o.base)
                 elif o.exp.is_negative:
-                    for i in range(abs(o.exp)): otemp.append(1/s.base)
+                    for i in range(abs(o.exp)): otemp.append(1/o.base)
             else: otemp.append(o)
         for s in terms_self:
             if isinstance(s,Pow) and isinstance(s.exp, Integer):
