@@ -111,7 +111,17 @@ def test_Real():
     a = Real(2) ** Real(4)
     assert eq(a.evalf(), Real(16))
     assert (S(.3) == S(.5)) is False
-
+    x_str = Real((0, '13333333333333L', -52, 53))
+    x2_str = Real((0, '26666666666666L', -53, 53))
+    x_hex = Real((0, 0x13333333333333L, -52, 53))
+    x_dec = Real((0, 5404319552844595L, -52, 53))
+    x2_hex = Real((0, 0x13333333333333L*2, -53, 53))
+    assert x_str == x_hex == x_dec == x2_hex == Real(1.2)
+    # x2_str and 1.2 are superficially the same
+    assert str(x2_str) == str(Real(1.2))
+    # but are different at the mpf level
+    assert Real(1.2)._mpf_ == (0, 5404319552844595L, -52, 53)
+    assert x2_str._mpf_ == (0, 10808639105689190L, -53, 53)
 
 def test_Real_eval():
     a = Real(3.2)

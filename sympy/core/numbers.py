@@ -274,7 +274,15 @@ class Real(Number):
         if isinstance(num, (str, decimal.Decimal)):
             _mpf_ = mlib.from_str(str(num), prec, rnd)
         elif isinstance(num, tuple) and len(num) == 4:
-            _mpf_ = num
+            if type(num[1]) is str:
+                # it's a hexadecimal (coming from a pickled object)
+                # assume that it is in standard form
+                num = list(num)
+                num[1] = long(num[1], 16)
+                _mpf_ = tuple(num)
+            else:
+                _mpf_ = mpmath.mpf(
+                    S.NegativeOne ** num[0] * num[1] * 2 ** num[2])._mpf_
         else:
             _mpf_ = mpmath.mpf(num)._mpf_
         if not num:

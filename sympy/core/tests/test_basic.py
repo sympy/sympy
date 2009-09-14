@@ -606,6 +606,9 @@ def test_coeff():
     assert (x/8 + x*y).coeff(2*y*x) == S(1)/2
     assert (x/8 + x*y).coeff(y*x/2) == 2
 
+    f = Function('f')
+    assert (2*f(x) + 3*f(x).diff(x)).coeff(f(x)) == 2
+
 def test_coeff2():
     var('r, kappa')
     psi = Function("psi")

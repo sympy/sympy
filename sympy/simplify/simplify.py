@@ -579,7 +579,7 @@ def collect(expr, syms, evaluate=True, exact=False):
 
                     if elem == term and e_sym == t_sym:
                         if exact == False:
-                            # we don't have to exact so find common exponent
+                            # we don't have to be exact so find common exponent
                             # for both expression's term and pattern's element
                             expo = t_rat / e_rat
 

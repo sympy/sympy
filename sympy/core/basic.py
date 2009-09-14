@@ -1636,7 +1636,7 @@ class Basic(AssumeMeths):
 
         if expand:
             self = self.expand() # collect expects it's arguments in expanded form
-        result = collect(self, x, evaluate=False)
+        result = collect(self, x, evaluate=False, exact=True)
         if x in result:
             return result[x]
         else:
@@ -1790,7 +1790,22 @@ class Basic(AssumeMeths):
         return S.Zero, (self,)
 
     def as_numer_denom(self):
-        # a/b -> a,b
+        """ a/b -> a,b
+
+        Note: the following is a possible way to modify Eq which are now
+        just returned as (Eq(), 1). It is not a trivial change...,
+        however, and it causes many failures.
+
+        from sympy.core.relational import Equality
+        from sympy import Eq
+        if isinstance(self, Equality):
+            l = Symbol('l', dummy=True)
+            r = Symbol('r', dummy=True)
+            n, d = (l*self.lhs - r*self.rhs).as_numer_denom()
+            return Eq(n.subs({l: 1, r: 0}),
+                      n.subs({l: 0, r: -1})), d.subs({l: 1, r: 1})
+        """
+
         base, exp = self.as_base_exp()
         coeff, terms = exp.as_coeff_terms()
         if coeff.is_negative:
