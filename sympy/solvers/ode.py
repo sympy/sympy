@@ -524,6 +524,7 @@ def classify_ode(eq, func, dict=False):
         'nth_linear_constant_coeff_variation_of_parameters_Integral')
 
     """
+    from sympy import expand
     from sympy.core import S
     from sympy.utilities import all
     if len(func.args) != 1:
@@ -566,6 +567,12 @@ def classify_ode(eq, func, dict=False):
             matching_hints["1st_linear_Integral"] = r
 
         # Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
+        #  precondition to remove f(x) from derivative
+        deriv_coef = eq.coeff(f(x).diff(x))
+        if deriv_coef and deriv_coef.is_Mul:
+            ind, dep = deriv_coef.as_independent(f(x))
+            if dep == f(x) or dep.is_Pow and dep.base == f(x):
+                eq = expand(eq/dep)
         r = eq.match(a*diff(f(x),x) + b*f(x) + c*f(x)**n)
         if r and r[c] != 0 and r[n] != 1: # See issue 1577
             r['a'] = a
