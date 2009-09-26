@@ -280,11 +280,6 @@ class Union(Set):
         >>> Union(Interval(1, 2), Interval(2, 3))
         [1, 3]
 
-        however:
-
-        >>> Union(Interval(1, 2, False, True), Interval(2, 3, True, False))
-        Union([1, 2), (2, 3])
-
     """
 
     def __new__(cls, *args, **assumptions):
