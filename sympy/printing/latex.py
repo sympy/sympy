@@ -6,6 +6,7 @@ from sympy.core import S, C, Basic, Symbol, Wild, var
 from printer import Printer
 from conventions import split_super_sub
 from sympy.simplify import fraction
+from sympy import Interval
 
 import sympy.mpmath.libmpf as mlib
 from sympy.mpmath.settings import prec_to_dps
@@ -632,6 +633,48 @@ class LatexPrinter(Printer):
             tex = r"\delta^{\left( %s \right)}\left( %s \right)" % (\
             self._print(expr.args[1]), self._print(expr.args[0]))
         return tex
+
+    def _print_Interval(self, i):
+        if i.start == i.end:
+            return r"\left{%s\right}" % self._print(i.start)
+
+        else:
+            if i.left_open:
+                left = '('
+            else:
+                left = '['
+
+            if i.right_open:
+                right = ')'
+            else:
+                right = ']'
+
+            return r"\left%s%s, %s\right%s" % \
+                   (left, self._print(i.start), self._print(i.end), right)
+
+    def _print_Union(self, u):
+        other_sets, singletons = [], []
+        for set in u.args:
+            if isinstance(set, Interval) and set.measure == 0:
+                singletons.append(set.start)
+            else:
+                other_sets.append(set)
+
+        S2 = r"%s" % \
+             r" \cup ".join([ self._print_Interval(i) for i in other_sets ])
+
+        if len(singletons) > 0:
+            S1 = r"\left{%s\right}" % \
+                 r", ".join([ self._print(i) for i in singletons ])
+
+            S = r"%s \cup %s" % (S1, S2)
+        else:
+            S = S2
+
+        return S
+
+    def _print_EmptySet(self, e):
+        return r"\emptyset"
 
 def latex(expr, profile=None, **kargs):
     r"""Convert the given expression to LaTeX representation.

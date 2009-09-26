@@ -117,7 +117,12 @@ def test_Integral():
     assert str(Integral(sin(x), (y, 0, 1))) == "Integral(sin(x), (y, 0, 1))"
 
 def test_Interval():
-    assert str(Interval(0, x)) == "[0, x]"
+    a = Symbol('a', real=True)
+    assert str(Interval(0, a)) == "[0, a]"
+    assert str(Interval(0, a, False, False)) == "[0, a]"
+    assert str(Interval(0, a, True, False)) == "(0, a]"
+    assert str(Interval(0, a, False, True)) == "[0, a)"
+    assert str(Interval(0, a, True, True)) == "(0, a)"
 
 def test_Lambda():
     assert str(Lambda(d, d**2)) == "Lambda(_d, _d**2)"

@@ -420,6 +420,8 @@ atoms_table = {
     #'ImaginaryUnit'     :   U('GREEK SMALL LETTER IOTA'),
     #'ImaginaryUnit'     :   U('MATHEMATICAL ITALIC SMALL I'),
     'ImaginaryUnit'     :   U('DOUBLE-STRUCK ITALIC SMALL I'),
+    'EmptySet'          :   U('EMPTY SET'),
+    'Union'             :   U('UNION')
 }
 
 def pretty_atom(atom_name, default=None):

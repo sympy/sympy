@@ -2,6 +2,7 @@ from sympy.core import S, C, Basic
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
 from stringpict import prettyForm, stringPict
+from sympy import Interval
 
 from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol,\
         pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek
@@ -59,6 +60,7 @@ class PrettyPrinter(Printer):
     # Infinity inherits from Rational, so we have to override _print_XXX order
     _print_Infinity         = _print_Atom
     _print_NegativeInfinity = _print_Atom
+    _print_EmptySet         = _print_Atom
 
     def _print_Factorial(self, e):
         x = e.args[0]
@@ -540,8 +542,46 @@ class PrettyPrinter(Printer):
         else:
             return self.emptyPrinter(r)
 
+    def _print_Interval(self, i):
+        if i.start == i.end:
+            return self._print_seq(i.args[:1], '{', '}')
 
-    def _print_seq(self, seq, left=None, right=None):
+        else:
+            if i.left_open:
+                left = '('
+            else:
+                left = '['
+
+            if i.right_open:
+                right = ')'
+            else:
+                right = ']'
+
+            return self._print_seq(i.args[:2], left, right)
+
+    def _print_Union(self, u):
+        other_sets, singletons = [], []
+        for set in u.args:
+            if isinstance(set, Interval) and set.measure == 0:
+                singletons.append(set.start)
+            else:
+                other_sets.append(set)
+
+        union_delimiter = ' %s ' % pretty_atom('Union')
+
+        S2 = self._print_seq(other_sets, None, None, union_delimiter)
+
+        if len(singletons) > 0:
+            S1 = self._print_seq(singletons, '{', '}')
+
+            S = prettyForm(*stringPict.next(S1, union_delimiter))
+            S = prettyForm(*stringPict.next(S, S2))
+        else:
+            S = S2
+
+        return S
+
+    def _print_seq(self, seq, left=None, right=None, delimiter=', '):
         S = None
 
         for item in seq:
@@ -551,7 +591,7 @@ class PrettyPrinter(Printer):
                 # first element
                 S = pform
             else:
-                S = prettyForm(*stringPict.next(S, ', '))
+                S = prettyForm(*stringPict.next(S, delimiter))
                 S = prettyForm(*stringPict.next(S, pform))
 
         if S is None:

@@ -141,8 +141,19 @@ class StrPrinter(Printer):
         L = ', '.join([_xab_tostr(l) for l in expr.limits])
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
 
-    def _print_Interval(self, expr):
-        return '[%s, %s]'%(expr.start, expr.end)
+    def _print_Interval(self, i):
+        if i.left_open:
+            left = '('
+        else:
+            left = '['
+
+        if i.right_open:
+            right = ')'
+        else:
+            right = ']'
+
+        return "%s%s, %s%s" % \
+               (left, self._print(i.start), self._print(i.end), right)
 
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args

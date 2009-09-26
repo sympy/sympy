@@ -14,7 +14,7 @@ from multidimensional import vectorize
 from function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
     Function, expand, PoleError, expand_mul, expand_log, expand_func,\
     expand_trig, expand_complex
-from interval import Interval
+from interval import Set, Interval, Union, EmptySet
 from evalf import PrecisionExhausted, N
 
 # expose singletons like exp, log, oo, I, etc.

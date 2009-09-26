@@ -18,3 +18,19 @@ Add
 .. module:: sympy.core.add
 .. autoclass:: Add
    :members:
+
+.. module:: sympy.core.interval
+Set
+---
+.. autoclass:: Set
+   :members:
+
+Interval
+--------
+.. autoclass:: Interval
+   :members:
+
+Union
+-----
+.. autoclass:: Union
+   :members:

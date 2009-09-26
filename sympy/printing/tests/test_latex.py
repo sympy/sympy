@@ -1,6 +1,6 @@
 from sympy import symbols, Rational, Symbol, Integral, log, diff, sin, exp, \
         Function, factorial, floor, ceiling, abs, re, im, conjugate, gamma, \
-        Order, Piecewise, Matrix, asin
+        Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL
@@ -100,6 +100,20 @@ def test_latex_integrals():
     assert latex(Integral(x**2, (x,0,1))) == r"$\int_{0}^{1} x^{2}\,dx$"
     assert latex(Integral(x**2, (x,10,20))) == r"$\int_{10}^{20} x^{2}\,dx$"
     assert latex(Integral(y*x**2, (x,0,1), y)) == r"$\int\int_{0}^{1} y x^{2}\,dx dy$"
+
+def test_latex_intervals():
+    a = Symbol('a', real=True)
+    assert latex(Interval(0, a)) == r"$\left[0, a\right]$"
+    assert latex(Interval(0, a, False, False)) == r"$\left[0, a\right]$"
+    assert latex(Interval(0, a, True, False)) == r"$\left(0, a\right]$"
+    assert latex(Interval(0, a, False, True)) == r"$\left[0, a\right)$"
+    assert latex(Interval(0, a, True, True)) == r"$\left(0, a\right)$"
+
+def test_latex_emptyset():
+    assert latex(S.EmptySet) == r"$\emptyset$"
+
+def test_latex_union():
+    assert latex(Union(Interval(0, 1), Interval(2, 3))) == r"$\left[0, 1\right] \cup \left[2, 3\right]$"
 
 @XFAIL
 def test_latex_limits():
