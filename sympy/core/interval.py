@@ -1,5 +1,6 @@
-from basic import Basic, SingletonMeta, S, Symbol
+from basic import Basic, SingletonMeta, S
 from sympify import _sympify
+from mpmath import mpi
 
 class Set(Basic):
     """
@@ -15,6 +16,8 @@ class Set(Basic):
         Returns the union of 'self' and 'other'. As a shortcut it is possible
         to use the '+' operator:
 
+        >>> from sympy import *
+
         >>> Interval(0, 1).union(Interval(2, 3))
         Union([0, 1], [2, 3])
         >>> Interval(0, 1) + Interval(2, 3)
@@ -25,6 +28,7 @@ class Set(Basic):
 
         >>> Interval(0, 2) - Interval(0, 1)
         (1, 2]
+
         """
         return Union(self, other)
 
@@ -39,12 +43,15 @@ class Set(Basic):
 
         As a shortcut it is possible to use the '~' or '-' operators:
 
+        >>> from sympy import *
+
         >>> Interval(0, 1).complement
         Union((-oo, 0), (1, oo))
         >>> ~Interval(0, 1)
         Union((-oo, 0), (1, oo))
         >>> -Interval(0, 1)
         Union((-oo, 0), (1, oo))
+
         """
         raise NotImplementedError("(%s).complement" % self)
 
@@ -64,10 +71,13 @@ class Set(Basic):
 
         As a shortcut it is possible to use the 'in' operator:
 
+        >>> from sympy import *
+
         >>> Interval(0, 1).contains(0.5)
         True
         >>> 0.5 in Interval(0, 1)
         True
+
         """
         raise NotImplementedError("(%s).contains(%s)" % (self, other))
 
@@ -122,6 +132,8 @@ class Interval(Set):
         will be open on the right.
 
     Examples:
+        >>> from sympy import *
+
         >>> Interval(0, 1)
         [0, 1]
         >>> Interval(0, 1, False, True)
@@ -271,6 +283,8 @@ class Union(Set):
     Represents a union of sets as a Set.
 
     Examples:
+        >>> from sympy import *
+
         >>> Union(Interval(1, 2), Interval(3, 4))
         Union([1, 2], [3, 4])
 
@@ -417,11 +431,14 @@ class EmptySet(Set):
     as S.EmptySet.
 
     Examples:
+        >>> from sympy import *
+
         >>> S.EmptySet
         EmptySet()
 
         >>> Interval(1, 2).intersect(S.EmptySet)
         EmptySet()
+
     """
 
     __metaclass__ = SingletonMeta
