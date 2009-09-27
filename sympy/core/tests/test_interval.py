@@ -1,4 +1,5 @@
 from sympy import Symbol, Union, Interval, oo, S, Inequality, max_, min_
+from sympy.mpmath import mpi
 
 def test_union():
     assert Union(Interval(1, 2), Interval(2, 3)) == Interval(1, 3)
@@ -37,7 +38,7 @@ def test_intersect():
     assert Interval(0, 2, True, True).intersect(Interval(1, 2)) == \
            Interval(1, 2, False, True)
 
-def test_symbolic_end_points():
+def test_interval_symbolic_end_points():
     a = Symbol('a', real=True)
 
     assert Union(Interval(0, a), Interval(0, 3)).sup == max_(a, 3)
@@ -45,7 +46,7 @@ def test_symbolic_end_points():
 
     assert Interval(0, a).contains(1) == Inequality(1, a)
 
-def test_measure():
+def test_interval_measure():
     a = Symbol('a', real=True)
 
     assert Interval(1, 3).measure == 2
@@ -53,3 +54,7 @@ def test_measure():
     assert Interval(1, a).measure == a - 1
 
     assert Union(Interval(1, 2), Interval(3, 4)).measure == 2
+
+def test_interval_evalf():
+    assert Interval(0, 1).evalf() == mpi(0, 1)
+    assert Interval(0, 1, True, False).evalf() == mpi(0, 1)

@@ -1,6 +1,6 @@
 from basic import Basic, SingletonMeta, S
 from sympify import _sympify
-from mpmath import mpi
+from sympy.mpmath import mpi
 
 class Set(Basic):
     """
@@ -146,6 +146,8 @@ class Interval(Set):
     Notes:
         - Only real end points are supported
         - Interval(a, b) with a > b will return the empty set
+        - Use the evalf() method to turn an Interval into an mpmath
+          'mpi' interval instance
     """
 
     def __new__(cls, start, end,
@@ -269,6 +271,9 @@ class Interval(Set):
     @property
     def measure(self):
         return self.end - self.start
+
+    def _eval_evalf(self, prec):
+        return mpi(self.start.evalf(prec), self.end.evalf(prec))
 
     def _is_comparable(self, other):
         is_comparable = self.start.is_comparable
