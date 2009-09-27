@@ -1,6 +1,6 @@
 
 from sympy.core.basic import Basic, S, C, sympify
-from sympy.core.function import Function
+from sympy.core.function import Function, Derivative
 from sympy.functions.elementary.miscellaneous import sqrt
 
 from sympy.utilities.decorator import deprecated
@@ -338,6 +338,10 @@ class conjugate(Function):
     def _eval_conjugate(self):
         return self.args[0]
 
+    def _eval_derivative(self, x):
+        if not self.has(x):
+            return S.Zero
+        return conjugate(Derivative(self.args[0], x, **{'evaluate': True}))
 
 # /cyclic/
 from sympy.core import basic as _

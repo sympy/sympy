@@ -1,5 +1,5 @@
 from sympy import symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log, \
-        pi, arg, conjugate, expand, exp, sin, cos
+        pi, arg, conjugate, expand, exp, sin, cos, Function
 from sympy.utilities.pytest import XFAIL
 
 
@@ -159,3 +159,7 @@ def test_issue936():
     assert sign(x).expand(trig=True)    == sign(x)
     assert arg(x).expand(trig=True)     == arg(x)
 
+def test_issue1655_derivative_conjugate():
+    x = Symbol('x')
+    f = Function('f')
+    assert (f(x).conjugate()).diff(x) == (f(x).diff(x)).conjugate()
