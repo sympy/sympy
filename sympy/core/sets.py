@@ -33,7 +33,15 @@ class Set(Basic):
         return Union(self, other)
 
     def intersect(self, other):
-        """ Returns the intersection of 'self' and 'other'. """
+        """
+        Returns the intersection of 'self' and 'other'.
+
+        >>> from sympy import *
+
+        >>> Interval(1, 3).intersect(Interval(1, 2))
+        [1, 2]
+
+        """
         raise NotImplementedError("(%s).intersect(%s)" % (self, other))
 
     @property
@@ -57,12 +65,31 @@ class Set(Basic):
 
     @property
     def inf(self):
-        """ The infimum of 'self'. """
+        """
+        The infimum of 'self'.
+
+        >>> from sympy import *
+
+        >>> Interval(0, 1).inf
+        0
+        >>> Union(Interval(0, 1), Interval(2, 3)).inf
+        0
+
+        """
         raise NotImplementedError("(%s).inf" % self)
 
     @property
     def sup(self):
-        """ The supremum of 'self'. """
+        """ The supremum of 'self'.
+
+        >>> from sympy import *
+
+        >>> Interval(0, 1).sup
+        1
+        >>> Union(Interval(0, 1), Interval(2, 3)).sup
+        3
+
+        """
         raise NotImplementedError("(%s).sup" % self)
 
     def contains(self, other):
@@ -82,7 +109,17 @@ class Set(Basic):
         raise NotImplementedError("(%s).contains(%s)" % (self, other))
 
     def subset(self, other):
-        """ Returns True if 'other' is a subset of 'self'. """
+        """
+        Returns True if 'other' is a subset of 'self'.
+
+        >>> from sympy import *
+
+        >>> Interval(0, 1).contains(0)
+        True
+        >>> Interval(0, 1, left_open=True).contains(0)
+        False
+
+        """
         if isinstance(other, Set):
             return self.intersect(other) == other
         else:
@@ -90,7 +127,17 @@ class Set(Basic):
 
     @property
     def measure(self):
-        """ The (Lebesgue) measure of 'self'. """
+        """
+        The (Lebesgue) measure of 'self'.
+
+        >>> from sympy import *
+
+        >>> Interval(0, 1).measure
+        1
+        >>> Union(Interval(0, 1), Interval(2, 3)).measure
+        2
+
+        """
         raise NotImplementedError("(%s).measure" % self)
 
     def __add__(self, other):
@@ -179,26 +226,64 @@ class Interval(Set):
 
     @property
     def start(self):
-        """ Returns the left end point of 'self'. """
+        """
+        The left end point of 'self'. This property takes the same value as the
+        'inf' property.
+
+        >>> from sympy import *
+
+        >>> Interval(0, 1).start
+        0
+
+        """
         return self._args[0]
 
     inf = start
 
     @property
     def end(self):
-        """ Returns the right end point of 'self'. """
+        """
+        The right end point of 'self'. This property takes the same value as the
+        'sup' property.
+
+        >>> from sympy import *
+
+        >>> Interval(0, 1).end
+        1
+
+        """
         return self._args[1]
 
     sup = end
 
     @property
     def left_open(self):
-        """ True if 'self' is left-open. """
+        """
+        True if 'self' is left-open.
+
+        >>> from sympy import *
+
+        >>> Interval(0, 1, left_open=True).left_open
+        True
+        >>> Interval(0, 1, left_open=False).left_open
+        False
+
+        """
         return self._args[2]
 
     @property
     def right_open(self):
-        """ True if 'self' is right-open. """
+        """
+        True if 'self' is right-open.
+
+        >>> from sympy import *
+
+        >>> Interval(0, 1, right_open=True).right_open
+        True
+        >>> Interval(0, 1, right_open=False).right_open
+        False
+
+        """
         return self._args[3]
 
     def intersect(self, other):
