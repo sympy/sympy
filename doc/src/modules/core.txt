@@ -19,7 +19,7 @@ Add
 .. autoclass:: Add
    :members:
 
-.. module:: sympy.core.interval
+.. module:: sympy.core.sets
 Set
 ---
 .. autoclass:: Set
