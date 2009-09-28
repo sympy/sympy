@@ -664,7 +664,7 @@ class LatexPrinter(Printer):
              r" \cup ".join([ self._print_Interval(i) for i in other_sets ])
 
         if len(singletons) > 0:
-            S1 = r"\left{%s\right}" % \
+            S1 = r"\left\{%s\right\}" % \
                  r", ".join([ self._print(i) for i in singletons ])
 
             S = r"%s \cup %s" % (S1, S2)
