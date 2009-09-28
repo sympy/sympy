@@ -42,7 +42,10 @@ class Set(Basic):
         [1, 2]
 
         """
-        raise NotImplementedError("(%s).intersect(%s)" % (self, other))
+        return self._intersect(other)
+
+    def _intersect(self, other):
+        raise NotImplementedError("(%s)._intersect(%s)" % (self, other))
 
     @property
     def complement(self):
@@ -61,7 +64,11 @@ class Set(Basic):
         Union((-oo, 0), (1, oo))
 
         """
-        raise NotImplementedError("(%s).complement" % self)
+        return self._complement
+
+    @property
+    def _complement(self):
+        raise NotImplementedError("(%s)._complement" % self)
 
     @property
     def inf(self):
@@ -76,7 +83,11 @@ class Set(Basic):
         0
 
         """
-        raise NotImplementedError("(%s).inf" % self)
+        return self._inf
+
+    @property
+    def _inf(self):
+        raise NotImplementedError("(%s)._inf" % self)
 
     @property
     def sup(self):
@@ -90,7 +101,11 @@ class Set(Basic):
         3
 
         """
-        raise NotImplementedError("(%s).sup" % self)
+        return self._sup
+
+    @property
+    def _sup(self):
+        raise NotImplementedError("(%s)._sup" % self)
 
     def contains(self, other):
         """
@@ -106,7 +121,10 @@ class Set(Basic):
         True
 
         """
-        raise NotImplementedError("(%s).contains(%s)" % (self, other))
+        return self._contains(other)
+
+    def _contains(self, other):
+        raise NotImplementedError("(%s)._contains(%s)" % (self, other))
 
     def subset(self, other):
         """
@@ -138,7 +156,11 @@ class Set(Basic):
         2
 
         """
-        raise NotImplementedError("(%s).measure" % self)
+        return self._measure
+
+    @property
+    def _measure(self):
+        raise NotImplementedError("(%s)._measure" % self)
 
     def __add__(self, other):
         return self.union(other)
@@ -238,7 +260,7 @@ class Interval(Set):
         """
         return self._args[0]
 
-    inf = start
+    _inf = start
 
     @property
     def end(self):
@@ -254,7 +276,7 @@ class Interval(Set):
         """
         return self._args[1]
 
-    sup = end
+    _sup = end
 
     @property
     def left_open(self):
@@ -286,7 +308,7 @@ class Interval(Set):
         """
         return self._args[3]
 
-    def intersect(self, other):
+    def _intersect(self, other):
         if not isinstance(other, Interval):
             return other.intersect(self)
 
@@ -329,12 +351,12 @@ class Interval(Set):
         return self.__class__(start, end, left_open, right_open)
 
     @property
-    def complement(self):
+    def _complement(self):
         a = Interval(S.NegativeInfinity, self.start, True, not self.left_open)
         b = Interval(self.end, S.Infinity, not self.right_open, True)
         return Union(a, b)
 
-    def contains(self, other):
+    def _contains(self, other):
         # We use the logic module here so that this method is meaningful
         # when used with symbolic end points.
         from sympy.logic.boolalg import And
@@ -354,7 +376,7 @@ class Interval(Set):
         return expr
 
     @property
-    def measure(self):
+    def _measure(self):
         return self.end - self.start
 
     def _eval_evalf(self, prec):
@@ -456,7 +478,7 @@ class Union(Set):
         return Basic.__new__(cls, *(intervals + other_sets), **assumptions)
 
     @property
-    def inf(self):
+    def _inf(self):
         # We use min_ so that sup is meaningful in combination with symbolic
         # interval end points.
         from sympy.functions.elementary.miscellaneous import min_
@@ -467,7 +489,7 @@ class Union(Set):
         return inf
 
     @property
-    def sup(self):
+    def _sup(self):
         # We use max_ so that sup is meaningful in combination with symbolic
         # end points.
         from sympy.functions.elementary.miscellaneous import max_
@@ -477,7 +499,7 @@ class Union(Set):
             sup = max_(sup, set.sup)
         return sup
 
-    def intersect(self, other):
+    def _intersect(self, other):
         # Distributivity.
         if isinstance(other, Interval):
             intersections = []
@@ -495,21 +517,21 @@ class Union(Set):
             return other.intersect(self)
 
     @property
-    def complement(self):
+    def _complement(self):
         # De Morgan's formula.
         complement = self.args[0].complement
         for set in self.args[1:]:
             complement = complement.intersect(set.complement)
         return complement
 
-    def contains(self, other):
+    def _contains(self, other):
         for set in self.args:
             if other in set:
                 return True
         return False
 
     @property
-    def measure(self):
+    def _measure(self):
         measure = 0
         for set in self.args:
             measure += set.measure
@@ -533,16 +555,16 @@ class EmptySet(Set):
 
     __metaclass__ = SingletonMeta
 
-    def intersect(self, other):
+    def _intersect(self, other):
         return S.EmptySet
 
     @property
-    def complement(self):
+    def _complement(self):
         return Interval(S.NegativeInfinity, S.Infinity)
 
     @property
-    def measure(self):
+    def _measure(self):
         return 0
 
-    def contains(self, other):
+    def _contains(self, other):
         return False
