@@ -1,4 +1,4 @@
-from sympy import Symbol, Union, Interval, oo, S, Inequality, max_, min_
+from sympy import Symbol, Union, Interval, oo, S, Inequality, max_, min_, raises
 from sympy.mpmath import mpi
 
 def test_union():
@@ -9,10 +9,19 @@ def test_union():
 
 def test_infinite_intervals():
     assert Interval(0, oo) == Interval(0, oo, False, True)
+    assert Interval(0, oo).right_open == True
     assert Interval(-oo, 0) == Interval(-oo, 0, True, False)
+    assert Interval(-oo, 0).left_open == True
 
-def test_interval_argument_order():
+def test_interval_arguments():
+    assert isinstance(Interval(1, 1), Interval)
+
     assert Interval(1, 0) == S.EmptySet
+
+    raises(ValueError, "Interval(0, S.ImaginaryUnit)")
+    raises(ValueError, "Interval(0, Symbol('z'))")
+
+    assert isinstance(Interval(1, Symbol('a', real=True)), Interval)
 
 def test_complement():
     assert Interval(0, 1).complement == \
