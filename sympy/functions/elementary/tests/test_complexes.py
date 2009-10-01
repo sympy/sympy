@@ -104,10 +104,10 @@ def test_abs():
     assert abs(0) == 0
     assert abs(1) == 1
     assert abs(-1)== 1
-    assert abs(x).diff(x) == sign(x)
     x = Symbol('x',real=True)
     n = Symbol('n',integer=True)
     assert x**(2*n) == abs(x)**(2*n)
+    assert abs(x).diff(x) == sign(x)
 
 def test_abs_real():
     # test some properties of abs that only apply
@@ -175,3 +175,13 @@ def test_issue1655_derivative_conjugate():
     x = Symbol('x')
     f = Function('f')
     assert (f(x).conjugate()).diff(x) == (f(x).diff(x)).conjugate()
+
+def test_derivatives_issue1658():
+    x = Symbol('x')
+    f = Function('f')
+    assert re(f(x)).diff(x) == re(f(x).diff(x))
+    assert im(f(x)).diff(x) == im(f(x).diff(x))
+
+    x = Symbol('x', real=True)
+    assert abs(f(x)).diff(x).subs(f(x), 1+I*x) == x/sqrt(1 + x**2)
+    assert arg(f(x)).diff(x).subs(f(x), 1+I*x**2) == 2*x/(1+x**4)
