@@ -86,6 +86,11 @@ class re(Function):
 #        else:
         return self.args[0].as_real_imag()[0]
 
+    def _eval_derivative(self, x):
+        if not self.has(x):
+            return S.Zero
+        return re(Derivative(self.args[0], x, **{'evaluate': True}))
+
 class im(Function):
     """Returns imaginary part of expression. This function performs
        only elementary analysis and so it will fail to decompose
@@ -159,6 +164,11 @@ class im(Function):
 #        if deep:
 #            return self.args[0].expand(deep, **hints).as_real_imag()[1]
         return self.args[0].as_real_imag()[1]
+
+    def _eval_derivative(self, x):
+        if not self.has(x):
+            return S.Zero
+        return im(Derivative(self.args[0], x, **{'evaluate': True}))
 
 ###############################################################################
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################
@@ -295,6 +305,15 @@ class abs(Function):
         import sage.all as sage
         return sage.abs_symbolic(self.args[0]._sage_())
 
+    def _eval_derivative(self, x):
+        if not self.has(x):
+            return S.Zero
+        if self.args[0].is_real:
+            return Derivative(self.args[0], x, **{'evaluate': True}) * sign(self.args[0])
+        return (re(self.args[0]) * re(Derivative(self.args[0], x,
+            **{'evaluate': True})) + im(self.args[0]) * im(Derivative(self.args[0],
+                x, **{'evaluate': True}))) / abs(self.args[0])
+
 class arg(Function):
     """Returns the argument (in radians) of a complex number"""
 
@@ -317,6 +336,13 @@ class arg(Function):
 
     def _eval_conjugate(self):
         return self
+
+    def _eval_derivative(self, t):
+        x, y = re(self.args[0]), im(self.args[0])
+        if not self.has(t):
+            return S.Zero
+        return (x * Derivative(y, t, **{'evaluate': True}) - y *
+                Derivative(x, t, **{'evaluate': True})) / (x**2 + y**2)
 
 class conjugate(Function):
     """Changes the sign of the imaginary part of a complex number.
