@@ -243,6 +243,7 @@ def add_terms(terms, prec, target_prec):
             # XXX: this is supposed to represent a scaled zero
             return mpf_shift(fone, target_prec), -1
         return terms[0]
+    max_extra_prec = 2*prec
     sum_man, sum_exp, absolute_error = 0, 0, MINUS_INF
     for x, accuracy in terms:
         if not x:
@@ -253,16 +254,22 @@ def add_terms(terms, prec, target_prec):
         absolute_error = max(absolute_error, bc+exp-accuracy)
         delta = exp - sum_exp
         if exp >= sum_exp:
-            if delta > 4*prec:
+            # x much larger than existing sum?
+            # first: quick test
+            if (delta > max_extra_prec) and \
+                ((not sum_man) or delta-bitcount(abs(sum_man)) > max_extra_prec):
                 sum_man = man
                 sum_exp = exp
             else:
-                sum_man += man << delta
+                sum_man += (man << delta)
         else:
-            if (-delta) > 4*prec:
-                pass
+            delta = -delta
+            # x much smaller than existing sum?
+            if delta-bc > max_extra_prec:
+                if not sum_man:
+                    sum_man, sum_exp = man, exp
             else:
-                sum_man = (sum_man << (-delta)) + man
+                sum_man = (sum_man << delta) + man
                 sum_exp = exp
     if absolute_error == MINUS_INF:
         return None, None
