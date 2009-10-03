@@ -18,7 +18,7 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.function import Derivative, Function, FunctionClass, Lambda,\
         WildFunction
-from sympy.core.interval import Interval
+from sympy.core.sets import Interval
 from sympy.core.multidimensional import vectorize
 from sympy.core.cache import Memoizer
 #from sympy.core.ast_parser import SymPyParser, SymPyTransformer
