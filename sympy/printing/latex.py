@@ -28,6 +28,7 @@ class LatexPrinter(Printer):
 
         self._settings = {
             "inline" : True,
+            "itex" : False,
             "descending" : False,
             "mainvar" : None,
             "fold_frac_powers" : False,
@@ -57,6 +58,8 @@ class LatexPrinter(Printer):
 
         if self._settings['inline']:
             return r"$%s$" % tex
+        elif self._settings['itex']:
+            return r"$$%s$$" % tex
         else:
             return r"\begin{equation*}%s\end{equation*}" % tex
 
@@ -682,7 +685,9 @@ def latex(expr, profile=None, **kargs):
         You can specify how the generated code will be delimited.
         If the 'inline' keyword is set then inline LaTeX $ $ will
         be used. Otherwise the resulting code will be enclosed in
-        'equation*' environment (remember to import 'amsmath').
+        'equation*' environment (remember to import 'amsmath'),
+        unless the 'itex' keyword is set in which case the itex
+        $$ $$ syntax will be used.
 
         >>> from sympy import *
         >>> from sympy.abc import *
@@ -692,6 +697,9 @@ def latex(expr, profile=None, **kargs):
 
         >>> latex((2*mu)**Rational(7,2), inline=False)
         '\\begin{equation*}8 \\sqrt{2} \\sqrt[7]{\\mu}\\end{equation*}'
+
+        >>> latex((2*mu)**Rational(7,2), inline=False, itex=True)
+        '$$8 \\sqrt{2} \\sqrt[7]{\\mu}$$'
 
         Besides all Basic based expressions, you can recursively
         convert Pyhon containers (lists, tuples and dicts) and
