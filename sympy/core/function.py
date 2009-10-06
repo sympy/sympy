@@ -616,7 +616,8 @@ class Derivative(Basic):
         expr = self.expr
         if hints.get('deep', True):
             expr = expr.doit(**hints)
-        return Derivative(expr, *self.symbols,**{'evaluate': True})
+        hints['evaluate'] = True
+        return Derivative(expr, *self.symbols, **hints)
 
     @property
     def expr(self):
