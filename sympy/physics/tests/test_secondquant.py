@@ -1,7 +1,10 @@
 from sympy.physics.secondquant import (
-        Dagger, Bd, VarBosonicBasis, Bra, B, Ket, FixedBosonicBasis,
-        matrix_rep, apply_operators, InnerProduct, commutator, KroneckerDelta,
-        FockState, AnnihilateBoson, CreateBoson, BosonicOperator
+        Dagger, Bd, VarBosonicBasis, BBra, B, BKet, FixedBosonicBasis,
+        matrix_rep, apply_operators, InnerProduct, Commutator, KroneckerDelta,
+        FockState, AnnihilateBoson, CreateBoson, BosonicOperator,
+	F, Fd, FKet, FBra, BosonState, CreateFermion, AnnihilateFermion,
+	evaluate_deltas, AntiSymmetricTensor, SymmetricTensor,
+	contraction, NO, Wicks
         )
 
 from sympy import (
@@ -16,7 +19,7 @@ def test_dagger():
     assert Dagger(1.0) == 1.0
     assert Dagger(2*I) == -2*I
     assert Dagger(Rational(1,2)*I/3.0) == -Rational(1,2)*I/3.0
-    assert Dagger(Ket([n])) == Bra([n])
+    assert Dagger(BKet([n])) == BBra([n])
     assert Dagger(B(0)) == Bd(0)
     assert Dagger(Bd(0)) == B(0)
     assert Dagger(B(n)) == Bd(n)
@@ -42,9 +45,9 @@ def test_create():
     o = o.subs(i, j)
     assert o.atoms(Symbol) == set([j])
     o = Bd(0)
-    assert o.apply_operator(Ket([n])) == sqrt(n+1)*Ket([n+1])
+    assert o.apply_operator(BKet([n])) == sqrt(n+1)*BKet([n+1])
     o = Bd(n)
-    assert o.apply_operator(Ket([n])) == o*Ket([n])
+    assert o.apply_operator(BKet([n])) == o*BKet([n])
 
 def test_annihilate():
     i, j, n, m = symbols('i j n m')
@@ -53,25 +56,25 @@ def test_annihilate():
     o = o.subs(i, j)
     assert o.atoms(Symbol) == set([j])
     o = B(0)
-    assert o.apply_operator(Ket([n])) == sqrt(n)*Ket([n-1])
+    assert o.apply_operator(BKet([n])) == sqrt(n)*BKet([n-1])
     o = B(n)
-    assert o.apply_operator(Ket([n])) == o*Ket([n])
+    assert o.apply_operator(BKet([n])) == o*BKet([n])
 
 def test_basic_state():
     i, j, n, m = symbols('i j n m')
-    s = FockState([0,1,2,3,4])
+    s = BosonState([0,1,2,3,4])
     assert len(s) == 5
     assert s.args[0] == tuple(range(5))
-    assert s.up(0) == FockState([1,1,2,3,4])
-    assert s.down(4) == FockState([0,1,2,3,3])
+    assert s.up(0) == BosonState([1,1,2,3,4])
+    assert s.down(4) == BosonState([0,1,2,3,3])
     for i in range(5):
         assert s.up(i).down(i) == s
     assert s.down(0) == 0
     for i in range(5):
         assert s[i] == i
-    s = FockState([n,m])
-    assert s.down(0) == FockState([n-1,m])
-    assert s.up(0) == FockState([n+1,m])
+    s = BosonState([n,m])
+    assert s.down(0) == BosonState([n-1,m])
+    assert s.up(0) == BosonState([n+1,m])
 
 def test_kronecker_delta():
     i, j, k = symbols('i j k')
@@ -98,10 +101,10 @@ def test_kronecker_delta():
 
 def test_basic_apply():
     n = symbols("n")
-    e = B(0)*Ket([n])
-    assert apply_operators(e) == sqrt(n)*Ket([n-1])
-    e = Bd(0)*Ket([n])
-    assert apply_operators(e) == sqrt(n+1)*Ket([n+1])
+    e = B(0)*BKet([n])
+    assert apply_operators(e) == sqrt(n)*BKet([n-1])
+    e = Bd(0)*BKet([n])
+    assert apply_operators(e) == sqrt(n+1)*BKet([n+1])
 
 def test_commutation():
     n, m = symbols("n m")
@@ -115,31 +118,31 @@ def test_commutation():
 def test_complex_apply():
     n, m = symbols("n m")
     o = Bd(0)*B(0)*Bd(1)*B(0)
-    e = apply_operators(o*Ket([n,m]))
-    answer = sqrt(n)*sqrt(m+1)*(-1+n)*Ket([-1+n,1+m])
+    e = apply_operators(o*BKet([n,m]))
+    answer = sqrt(n)*sqrt(m+1)*(-1+n)*BKet([-1+n,1+m])
     assert expand(e) == expand(answer)
 
 def test_number_operator():
     n = symbols("n")
     o = Bd(0)*B(0)
-    e = apply_operators(o*Ket([n]))
-    assert e == n*Ket([n])
+    e = apply_operators(o*BKet([n]))
+    assert e == n*BKet([n])
 
 def test_inner_product():
     i, j, k, l = symbols('i j k l')
-    s1 = Bra([0])
-    s2 = Ket([1])
+    s1 = BBra([0])
+    s2 = BKet([1])
     assert InnerProduct(s1, Dagger(s1)) == 1
     assert InnerProduct(s1, s2) == 0
-    s1 = Bra([i, j])
-    s2 = Ket([k, l])
+    s1 = BBra([i, j])
+    s2 = BKet([k, l])
     r = InnerProduct(s1, s2)
     assert r == KroneckerDelta(i, k)*KroneckerDelta(j, l)
 
 def test_symbolic_matrix_elements():
     n, m = symbols('n m')
-    s1 = Bra([n])
-    s2 = Ket([m])
+    s1 = BBra([n])
+    s2 = BKet([m])
     o = B(0)
     e = apply_operators(s1*o*s2)
     assert e == sqrt(m)*KroneckerDelta(n, m-1)

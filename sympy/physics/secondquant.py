@@ -7,7 +7,7 @@ of Many-Particle Systems."
 
 from sympy import (
     Basic, Function, var, Mul, sympify, Integer, Add, sqrt,
-    Number, Matrix, zeros, Pow, I
+    Number, Matrix, zeros, Pow, I, S,Symbol, latex
 )
 
 from sympy.utilities.decorator import deprecated
@@ -21,8 +21,12 @@ __all__ = [
     'FockState',
     'FockStateBra',
     'FockStateKet',
-    'Bra',
-    'Ket',
+    'BBra',
+    'BKet',
+    # 'FBra',
+    # 'FKet',
+    'F',
+    'Fd',
     'B',
     'Bd',
     'apply_operators',
@@ -81,47 +85,126 @@ class Dagger(Basic):
     def _dagger_(self):
         return self.args[0]
 
-
-class KroneckerDelta(Basic):
+class KroneckerDelta(Function):
     """
     Discrete delta function.
     """
 
-    def __new__(cls, i, j):
-        i, j = map(sympify, (i, j))
-        r = cls.eval(i, j)
-        if isinstance(r, Basic):
-            return r
-        obj = Basic.__new__(cls, i, j, commutative=True)
-        return obj
-
-    @classmethod
-    @deprecated
-    def canonize(cls, i, j):
-        return cls.eval(i, j)
+    nargs = 2
+    is_commutative=True
 
     @classmethod
     def eval(cls, i, j):
+        if i > j:
+            return cls(j,i)
         diff = i-j
         if diff == 0:
             return Integer(1)
         elif diff.is_number:
-            return Integer(0)
+            return S.Zero
+
+        if i.assumptions0.get("below_fermi") and j.assumptions0.get("above_fermi"):
+            return S.Zero
+        if j.assumptions0.get("below_fermi") and i.assumptions0.get("above_fermi"):
+            return S.Zero
 
     def _eval_subs(self, old, new):
         r = KroneckerDelta(self.args[0].subs(old, new), self.args[1].subs(old, new))
         return r
 
-    def _dagger_():
+    @property
+    def is_above_fermi(self):
+        """
+        True if Delta can be non-zero above fermi
+        """
+        if self.args[0].assumptions0.get("below_fermi"):
+            return False
+        if self.args[1].assumptions0.get("below_fermi"):
+            return False
+        return True
+    @property
+    def is_below_fermi(self):
+        """
+        True if Delta can be non-zero below fermi
+        """
+        if self.args[0].assumptions0.get("above_fermi"):
+            return False
+        if self.args[1].assumptions0.get("above_fermi"):
+            return False
+        return True
+
+    @property
+    def indices_contain_equal_information(self):
+        if (self.args[0].assumptions0.get("below_fermi") and
+                self.args[1].assumptions0.get("below_fermi")):
+            return True
+        if (self.args[0].assumptions0.get("above_fermi")
+                and self.args[1].assumptions0.get("above_fermi")):
+            return True
+
+        # if both indices are general we are True, else false
+        return self.is_below_fermi and self.is_above_fermi
+
+
+    @property
+    def preffered_index(self):
+        if self._get_preffered_index():
+            return self.args[1]
+        else:
+            return self.args[0]
+
+    @property
+    def killable_index(self):
+        if self._get_preffered_index():
+            return self.args[0]
+        else:
+            return self.args[1]
+
+    def _get_preffered_index(self):
+        """
+        Returns the index which is preffered to keep in the final expression.
+
+        The preffered index is the index with more information regarding fermi
+        level.  If indices contain same information, index 0 is returned.
+        """
+        if not self.is_above_fermi:
+            if self.args[0].assumptions0.get("below_fermi"):
+                return 0
+            else:
+                return 1
+        elif not self.is_below_fermi:
+            if self.args[0].assumptions0.get("above_fermi"):
+                return 0
+            else:
+                return 1
+        else:
+            return 0
+
+    def _dagger_(self):
         return self
 
+    def _latex_(self,printer):
+        return "\\delta_{%s%s}"% (self.args[0].name,self.args[1].name)
 
-class BosonicOperator(Basic):
+    def __repr__(self):
+        return "KroneckerDelta(%s,%s)"% (self.args[0],self.args[1])
+
+    def __str__(self):
+        if not self.is_above_fermi:
+            return 'd<(%s,%s)'% (self.args[0],self.args[1])
+        elif not self.is_below_fermi:
+            return 'd>(%s,%s)'% (self.args[0],self.args[1])
+        else:
+            return 'd(%s,%s)'% (self.args[0],self.args[1])
+
+
+
+class SqOperator(Basic):
     """
-    Base class for bosonic operators.
+    Base class for Second Quantization operators.
     """
 
-    op_symbol = 'bo'
+    op_symbol = 'sq'
 
     def __new__(cls, k):
         obj = Basic.__new__(cls, sympify(k), commutative=False)
@@ -142,17 +225,32 @@ class BosonicOperator(Basic):
         else:
             return True
 
+    def doit(self,**kw_args):
+        """
+        FIXME: hack to prevent crash further up...
+        """
+        return self
+
     def __repr__(self):
-        return "%s(%r)" % (self.op_symbol, self.state)
+        return NotImplemented
 
     def __str__(self):
-        return self.__repr__()
+        return "%s(%r)" % (self.op_symbol, self.state)
 
     def apply_operator(self, state):
         raise NotImplementedError('implement apply_operator in a subclass')
 
+class BosonicOperator(SqOperator):
+    pass
 
-class AnnihilateBoson(BosonicOperator):
+class Annihilator(SqOperator):
+    pass
+
+class Creator(SqOperator):
+    pass
+
+
+class AnnihilateBoson(BosonicOperator, Annihilator):
     """
     Bosonic annihilation operator
     """
@@ -170,8 +268,10 @@ class AnnihilateBoson(BosonicOperator):
         else:
             return Mul(self,state)
 
+    def __repr__(self):
+        return "AnnihilateBoson(%s)"%self.state
 
-class CreateBoson(BosonicOperator):
+class CreateBoson(BosonicOperator, Creator):
     """
     Bosonic creation operator
     """
@@ -189,6 +289,9 @@ class CreateBoson(BosonicOperator):
         else:
             return Mul(self,state)
 
+    def __repr__(self):
+        return "CreateBoson(%s)"%self.state
+
 B = AnnihilateBoson
 Bd = CreateBoson
 
@@ -202,6 +305,16 @@ class FockState(Basic):
     """
 
     def __new__(cls, occupations):
+        """
+        occupations is a list with two possible meanings:
+
+        - For bosons it is a list of occupation numbers.
+          Element i is the number of particles in state i.
+
+        - For fermions it is a list of occupied orbits.
+          Element 0 is the state that was occupied first, element i
+          is the i'th occupied state.
+        """
         o = map(sympify, occupations)
         obj = Basic.__new__(cls, tuple(o), commutative=False)
         return obj
@@ -210,6 +323,29 @@ class FockState(Basic):
         r = self.__class__([o.subs(old, new) for o in self.args[0]])
         return r
 
+
+    def __getitem__(self, i):
+        i = int(i)
+        return self.args[0][i]
+
+    def __repr__(self):
+        return ("FockState(%r)") % (self.args)
+
+    def __str__(self):
+        return "%s%r%s" % (self.lbracket,self._labels(),self.rbracket)
+
+    def _labels(self):
+        return self.args[0]
+
+    def __len__(self):
+        return len(self.args[0])
+
+class BosonState(FockState):
+    """
+    Many particle Fock state with a sequence of occupation numbers.
+
+    occupation numbers can be any integer >= 0
+    """
     def up(self, i):
         i = int(i)
         new_occs = list(self.args[0])
@@ -225,36 +361,20 @@ class FockState(Basic):
             new_occs[i] = new_occs[i]-Integer(1)
             return self.__class__(new_occs)
 
-    def __getitem__(self, i):
-        i = int(i)
-        return self.args[0][i]
-
-    def __repr__(self):
-        return ("FockState(%r)") % (self.args)
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __len__(self):
-        return len(self.args[0])
 
 
 class FockStateKet(FockState):
 
-    def _dagger_(self):
-        return FockStateBra(*self.args)
-
-    def __repr__(self):
-        return ("|%r>") % (self.args)
+    lbracket = '|'
+    rbracket = '>'
 
 
 class FockStateBra(FockState):
 
-    def _dagger_(self):
-        return FockStateKet(*self.args)
 
-    def __repr__(self):
-        return ("<%r|") % (self.args)
+    lbracket = '<'
+    rbracket = '|'
+
 
     def __mul__(self, other):
         if isinstance(other, FockStateKet):
@@ -262,10 +382,17 @@ class FockStateBra(FockState):
         else:
             return Basic.__mul__(self, other)
 
+class FockStateBosonKet(BosonState,FockStateKet):
+    def _dagger_(self):
+        return FockStateBosonBra(*self.args)
 
-Bra = FockStateBra
-Ket = FockStateKet
+class FockStateBosonBra(BosonState,FockStateBra):
+    def _dagger_(self):
+        return FockStateBosonKet(*self.args)
 
+
+BBra = FockStateBosonBra
+BKet = FockStateBosonKet
 
 def split_commutative_parts(m):
     c_part = [p for p in m.args if p.is_commutative]
@@ -297,7 +424,7 @@ def apply_Mul(m):
         last = nc_part[-1]
         next_to_last = nc_part[-2]
         if isinstance(last, FockStateKet):
-            if isinstance(next_to_last, BosonicOperator):
+            if isinstance(next_to_last, SqOperator):
                 if next_to_last.is_symbolic:
                     return m
                 else:
@@ -307,7 +434,7 @@ def apply_Mul(m):
                     else:
                         return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
             elif isinstance(next_to_last, Pow):
-                if isinstance(next_to_last.base, BosonicOperator) and \
+                if isinstance(next_to_last.base, SqOperator) and \
                     next_to_last.exp.is_Integer:
                     if next_to_last.base.is_symbolic:
                         return m
@@ -426,7 +553,7 @@ class VarBosonicBasis(object):
     def _build_states(self):
         self.basis = []
         for i in range(self.n_max):
-            self.basis.append(FockStateKet([i]))
+            self.basis.append(FockStateBosonKet([i]))
         self.n_basis = len(self.basis)
 
     def index(self, state):
@@ -478,7 +605,7 @@ class FixedBosonicBasis(BosonicBasis):
             occ_numbers = self.n_levels*[0]
             for level in tuple_of_indices:
                 occ_numbers[level] += 1
-            self.basis.append(FockStateKet(occ_numbers))
+            self.basis.append(FockStateBosonKet(occ_numbers))
         self.n_basis = len(self.basis)
 
     def index(self, state):
@@ -553,3 +680,6 @@ def commutator(a, b):
     Return the commutator:  [a, b] = a*b - b*a
     """
     return a*b - b*a
+
+
+
