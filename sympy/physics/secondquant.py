@@ -7,10 +7,13 @@ of Many-Particle Systems."
 
 from sympy import (
     Basic, Function, var, Mul, sympify, Integer, Add, sqrt,
-    Number, Matrix, zeros, Pow, I, S,Symbol, latex
+    Number, Matrix, zeros, Pow, I, S,Symbol, latex, cache
 )
 
 from sympy.utilities.decorator import deprecated
+
+from sympy.core.cache import cacheit
+
 
 __all__ = [
     'Dagger',
@@ -18,13 +21,15 @@ __all__ = [
     'BosonicOperator',
     'AnnihilateBoson',
     'CreateBoson',
+    'AnnihilateFermion',
+    'CreateFermion',
     'FockState',
     'FockStateBra',
     'FockStateKet',
     'BBra',
     'BKet',
-    # 'FBra',
-    # 'FKet',
+    'FBra',
+    'FKet',
     'F',
     'Fd',
     'B',
@@ -34,10 +39,30 @@ __all__ = [
     'BosonicBasis',
     'VarBosonicBasis',
     'FixedBosonicBasis',
-    'commutator',
-    'matrix_rep'
+    'Commutator',
+    'matrix_rep',
+    'contraction',
+    'Wicks',
+    'NO',
+    'evaluate_deltas',
+    'SymTuple',
+    'AntiSymmetricTensor',
+    'substitute_dummies',
+    'PermutationOperator',
+    'simplifyIndexPermutations',
 ]
 
+class AppliesOnlyToSymbolicIndex(Exception):
+    pass
+
+class ContractionAppliesOnlyToFermionsException(Exception):
+    pass
+
+class ViolationOfPauliPrinciple(Exception):
+    pass
+
+class SubstitutionOfAmbigousOperatorFailed(Exception):
+    pass
 
 class Dagger(Basic):
     """
@@ -84,6 +109,127 @@ class Dagger(Basic):
 
     def _dagger_(self):
         return self.args[0]
+
+
+class TensorSymbol(Function):
+
+    is_commutative = True
+
+
+class SymTuple(Basic):
+
+    def __new__(cls, arg_tuple, **kw_args):
+        """
+        the wrapped tuple is available as self.args
+        """
+        obj = Basic.__new__(cls,*arg_tuple, **kw_args)
+        return obj
+
+    def __getitem__(self,i):
+        if isinstance(i,slice):
+            indices = i.indices(len(self))
+            return SymTuple(tuple([self.args[i] for i in range(*indices)]))
+        return self.args[i]
+
+    def __len__(self):
+        return len(self.args)
+
+    def __contains__(self,item):
+        return item in self.args
+
+    def _eval_subs(self,old,new):
+        if self==old:
+            return new
+        t=tuple([ el._eval_subs(old,new)  for el in self.args])
+        return self.__class__(t)
+
+
+def _tuple_wrapper(method):
+    """
+    Decoreator that makes any tuple in arguments into SymTuple
+    """
+    def wrap_tuples(*args, **kw_args):
+        newargs=[]
+        for arg in args:
+            if type(arg) is tuple:
+                newargs.append(SymTuple(arg))
+            else:
+                newargs.append(arg)
+        return method(*newargs, **kw_args)
+    return wrap_tuples
+
+
+class AntiSymmetricTensor(TensorSymbol):
+
+    nargs = 3
+
+    @_tuple_wrapper
+    def __new__(cls, symbol, upper, lower):
+        return TensorSymbol.__new__(cls, symbol, upper, lower)
+
+    @classmethod
+    def eval(cls,symbol, upper, lower):
+        """
+        upper and lower are tuples with indices
+        """
+        try:
+            upper,sign = _sort_anticommuting_fermions(upper)
+            if sign%2:
+                upper = tuple(upper)
+                return -cls(symbol,upper,lower)
+            if sign:
+                upper = tuple(upper)
+                return cls(symbol,upper,lower)
+
+            lower,sign = _sort_anticommuting_fermions(lower)
+            if sign%2:
+                upper = tuple(upper)
+                lower = tuple(lower)
+                return -cls(symbol,upper,lower)
+            if sign:
+                upper = tuple(upper)
+                lower = tuple(lower)
+                return cls(symbol,upper,lower)
+
+        except ViolationOfPauliPrinciple:
+            return S.Zero
+
+    def _latex_(self,printer):
+        return "%s^{%s}_{%s}" %(
+                self.symbol,
+                "".join([ i.name for i in self.args[1]]),
+                "".join([ i.name for i in self.args[2]])
+                )
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def upper(self):
+        return self.args[1]
+
+    @property
+    def lower(self):
+        return self.args[2]
+
+    def __str__(self):
+        return "%s(%s,%s)" %self.args
+
+    def doit(self, **kw_args):
+        return self
+
+    def _eval_subs(self, old, new):
+        if old == self:
+            return new
+        if old in self.upper:
+            return self.__class__(self.symbol,
+                    self.args[1]._eval_subs(old,new),self.args[2])
+        if old in self.lower:
+            return self.__class__(self.symbol,
+                    self.args[1], self.args[2]._eval_subs(old,new))
+        return self
+
+
 
 class KroneckerDelta(Function):
     """
@@ -132,6 +278,26 @@ class KroneckerDelta(Function):
         if self.args[1].assumptions0.get("above_fermi"):
             return False
         return True
+
+    @property
+    def is_only_above_fermi(self):
+        """
+        True if Delta is restricted to above fermi
+        """
+        return ( self.args[0].assumptions0.get("above_fermi")
+                or
+                self.args[1].assumptions0.get("above_fermi")
+                )
+
+    @property
+    def is_only_below_fermi(self):
+        """
+        True if Delta is restricted to below fermi
+        """
+        return ( self.args[0].assumptions0.get("below_fermi")
+                or
+                self.args[1].assumptions0.get("below_fermi")
+                )
 
     @property
     def indices_contain_equal_information(self):
@@ -296,6 +462,226 @@ B = AnnihilateBoson
 Bd = CreateBoson
 
 
+class FermionicOperator(SqOperator):
+
+
+    @property
+    def is_restricted(self):
+        """
+        Is this FermionicOperator restricted with respect to fermi level?
+
+        Return values:
+        1  : restricted to orbits above fermi
+        0  : no restriction
+        -1 : restricted to orbits below fermi
+        """
+        ass = self.args[0].assumptions0
+        if ass.get("below_fermi"): return -1
+        if ass.get("above_fermi"): return  1
+        return 0
+
+
+    @property
+    def is_above_fermi(self):
+        """
+        Does the index of this FermionicOperator allow values above fermi?
+        """
+        return not self.args[0].assumptions0.get("below_fermi")
+
+    @property
+    def is_below_fermi(self):
+        """
+        Does the index of this FermionicOperator allow values below fermi?
+        """
+        return not self.args[0].assumptions0.get("above_fermi")
+
+    @property
+    def is_only_below_fermi(self):
+        """
+        Is the index of this FermionicOperator restricted to values below fermi?
+        """
+        return self.is_below_fermi and not self.is_above_fermi
+
+    @property
+    def is_only_above_fermi(self):
+        """
+        Is the index of this FermionicOperator restricted to values above fermi?
+        """
+        return self.is_above_fermi and not self.is_below_fermi
+
+    def __cmp__(self,other):
+        if self is other: return 0
+
+        # check that we have only FermionicOperator
+        if not isinstance(other, FermionicOperator):
+            return SqOperator.__cmp__(other)
+
+        # only q-creator or only q-annihilator
+        if self.is_only_q_creator and other.is_q_annihilator: return -1
+        if self.is_q_creator and other.is_only_q_annihilator: return -1
+        if other.is_only_q_creator and self.is_q_annihilator: return +1
+        if other.is_q_creator and self.is_only_q_annihilator: return +1
+
+        # push creators to the left by reversing sign of class compare
+        c = cmp(self.__class__, other.__class__)
+        if c: return -c
+
+        # standard hash-sorting from Basic, pasted here for speed
+        st = self._hashable_content()
+        ot = other._hashable_content()
+        c = cmp(len(st),len(ot))
+        if c: return c
+        for l,r in zip(st,ot):
+            if isinstance(l, Basic):
+                c = l.compare(r)
+            else:
+                c = cmp(l, r)
+            if c: return c
+        return 0
+
+    def __lt__(self,other):
+        return self.__cmp__(other) == -1
+
+    def __gt__(self,other):
+        return self.__cmp__(other) ==  1
+
+    def __ge__(self,other):
+        return self.__cmp__(other) >= 0
+
+    def __le__(self,other):
+        return self.__cmp__(other) <= 0
+
+
+class AnnihilateFermion(FermionicOperator, Annihilator):
+    """
+    Fermionic annihilation operator
+    """
+
+    op_symbol = 'f'
+
+    def _dagger_(self):
+        return CreateFermion(self.state)
+
+    def apply_operator(self, state):
+
+        if isinstance(state, FockStateFermionKet):
+            element = self.state
+            return state.down(element)
+
+        elif isinstance(state, Mul):
+            c_part, nc_part = split_commutative_parts(state)
+            if isinstance(nc_part[0], FockStateFermionKet):
+                element = self.state
+                return Mul(*(c_part+[nc_part[0].down(element)]+nc_part[1:]))
+            else:
+                return Mul(self,state)
+
+        else:
+            return Mul(self,state)
+
+    @property
+    def is_q_creator(self):
+        """
+        Can we create a quasi-particle?  (create hole or create particle)
+        """
+        if self.is_below_fermi: return -1
+        return 0
+
+    @property
+    def is_q_annihilator(self):
+        """
+        Can we destroy a quasi-particle?  (annihilate hole or annihilate particle)
+        """
+        if self.is_above_fermi: return 1
+        return 0
+
+    @property
+    def is_only_q_creator(self):
+        """
+        Always create a quasi-particle?  (create hole or create particle)
+        """
+        return self.is_only_below_fermi
+
+    @property
+    def is_only_q_annihilator(self):
+        """
+        Always destroy a quasi-particle?  (annihilate hole or annihilate particle)
+        """
+        return self.is_only_above_fermi
+
+    def __repr__(self):
+        return "AnnihilateFermion(%s)"%self.state
+
+    def _latex_(self,printer):
+        return "a_{%s}"%self.state.name
+
+class CreateFermion(FermionicOperator, Creator):
+    """
+    Fermionic creation operator
+    """
+
+    op_symbol = 'f+'
+
+    def _dagger_(self):
+        return AnnihilateFermion(self.state)
+
+    def apply_operator(self, state):
+        if isinstance(state, FockStateFermionKet):
+            element = self.state
+            return state.up(element)
+
+
+        elif isinstance(state, Mul):
+            c_part, nc_part = split_commutative_parts(state)
+            if isinstance(nc_part[0], FockStateFermionKet):
+                element = self.state
+                return Mul(*(c_part+[nc_part[0].up(element)]+nc_part[1:]))
+            else:
+                return Mul(self,state)
+        else:
+            return Mul(self,state)
+
+    @property
+    def is_q_creator(self):
+        """
+        Can we create a quasi-particle?  (create hole or create particle)
+        """
+        if self.is_above_fermi: return 1
+        return 0
+
+    @property
+    def is_q_annihilator(self):
+        """
+        Can we destroy a quasi-particle?  (annihilate hole or annihilate particle)
+        """
+        if self.is_below_fermi: return -1
+        return 0
+
+    @property
+    def is_only_q_creator(self):
+        """
+        Always create a quasi-particle?  (create hole or create particle)
+        """
+        return self.is_only_above_fermi
+
+    @property
+    def is_only_q_annihilator(self):
+        """
+        Always destroy a quasi-particle?  (annihilate hole or annihilate particle)
+        """
+        return self.is_only_below_fermi
+
+    def __repr__(self):
+        return "CreateFermion(%s)"%self.state
+
+    def _latex_(self,printer):
+        return "a^\\dagger_{%s}"%self.state.name
+
+Fd = CreateFermion
+F = AnnihilateFermion
+
+
+
 class FockState(Basic):
     """
     Many particle Fock state with a sequence of occupation numbers.
@@ -362,6 +748,172 @@ class BosonState(FockState):
             return self.__class__(new_occs)
 
 
+class FermionState(FockState):
+    """
+    Many particle Fock state with a sequence of occupied orbits
+
+    Each state can only have one particle, so we choose to store a list of
+    occupied orbits rather than a tuple with occupation numbers (zeros and ones).
+
+    states below fermi level are holes, and are represented by negative labels
+    in the occuptation list
+
+    For symbolic state labels, the fermi_level caps the number of allowed hole-
+    states
+
+    """
+
+    fermi_level=0
+
+    def __new__(cls, occupations, fermi_level=0):
+        occupations = map(sympify,occupations)
+        if len(occupations) >1:
+            try:
+                (occupations,sign) = _sort_anticommuting_fermions(occupations)
+            except ViolationOfPauliPrinciple:
+                return S.Zero
+        else:
+            sign = 0
+
+        cls.fermi_level = fermi_level
+
+        if cls._count_holes(occupations) > fermi_level:
+            return S.Zero
+
+
+        if sign%2:
+            return S.NegativeOne*FockState.__new__(cls,occupations)
+        else:
+            return FockState.__new__(cls,occupations)
+
+    def up(self, i):
+        """
+        Performes the action of a creation operator.
+
+        If below fermi we try to remove a hole,
+        if above fermi we try to create a particle.
+
+        if general index p we return Kronecker(p,i)*self
+        where i is a new symbol with restriction above or below.
+        """
+        present = i in self.args[0]
+
+        if self.only_above_fermi(i):
+            if present:
+                return S.Zero
+            else:
+                return self._add_orbit(i)
+        elif self.only_below_fermi(i):
+            if present:
+                return self._remove_orbit(i)
+            else:
+                return S.Zero
+        else:
+            if present:
+                hole = Symbol("i",below_fermi=True,dummy=True)
+                return KroneckerDelta(i,hole)*self._remove_orbit(i)
+            else:
+                particle = Symbol("a",above_fermi=True,dummy=True)
+                return KroneckerDelta(i,particle)*self._add_orbit(i)
+
+    def down(self, i):
+        """
+        Performes the action of an annihilation operator.
+
+        If below fermi we try to create a hole,
+        if above fermi we try to remove a particle.
+
+        if general index p we return Kronecker(p,i)*self
+        where i is a new symbol with restriction above or below.
+        """
+        present = i in self.args[0]
+
+        if self.only_above_fermi(i):
+            if present:
+                return self._remove_orbit(i)
+            else:
+                return S.Zero
+
+        elif self.only_below_fermi(i):
+            if present:
+                return S.Zero
+            else:
+                return self._add_orbit(i)
+        else:
+            if present:
+                hole = Symbol("i",below_fermi=True,dummy=True)
+                return KroneckerDelta(i,hole)*self._add_orbit(i)
+            else:
+                particle = Symbol("a",above_fermi=True,dummy=True)
+                return KroneckerDelta(i,particle)*self._remove_orbit(i)
+
+
+
+    @classmethod
+    def only_below_fermi(cls,i):
+        """
+        Tests if given orbit is only below fermi surface.
+
+        If nothing can be concluded we return a conservative False.
+        """
+        if i.is_number:
+            return i<= cls.fermi_level
+        if i.assumptions0.get('below_fermi'):
+            return True
+        return False
+
+
+    @classmethod
+    def only_above_fermi(cls,i):
+        """
+        Tests if given orbit is only above fermi surface.
+
+        If fermi level has not been set we return True.
+        If nothing can be concluded we return a conservative False.
+        """
+        if i.is_number:
+            return i> cls.fermi_level
+        if i.assumptions0.get('above_fermi'):
+            return True
+        return not cls.fermi_level
+
+
+    def _remove_orbit(self,i):
+        """
+        Removes particle/fills hole in orbit i. No input tests performed here.
+        """
+        new_occs = list(self.args[0])
+        pos = new_occs.index(i)
+        del new_occs[pos]
+        if (pos)%2:
+            return S.NegativeOne*self.__class__(new_occs,self.fermi_level)
+        else:
+            return self.__class__(new_occs, self.fermi_level)
+
+    def _add_orbit(self,i):
+        """
+        Adds particle/creates hole in orbit i. No input tests performed here.
+        """
+        return self.__class__((i,)+self.args[0], self.fermi_level)
+
+    @classmethod
+    def _count_holes(cls,list):
+        """
+        returns number of identified hole states in list.
+        """
+        return len([ i for i in list if  cls.only_below_fermi(i)])
+
+    def _negate_holes(self,list):
+        return tuple([ -i if i<=self.fermi_level else i
+                for i in list ])
+
+    def __repr__(self):
+        return "FockStateKet(%r, fermi_level=%s)"%(self.args[0],self.fermi_level)
+
+    def _labels(self):
+        return self._negate_holes(self.args[0])
+
+
 
 class FockStateKet(FockState):
 
@@ -390,9 +942,18 @@ class FockStateBosonBra(BosonState,FockStateBra):
     def _dagger_(self):
         return FockStateBosonKet(*self.args)
 
+class FockStateFermionKet(FermionState,FockStateKet):
+    def _dagger_(self):
+        return FockStateFermionBra(*self.args)
+
+class FockStateFermionBra(FermionState,FockStateBra):
+    def _dagger_(self):
+        return FockStateFermionKet(*self.args)
 
 BBra = FockStateBosonBra
 BKet = FockStateBosonKet
+FBra = FockStateFermionBra
+FKet = FockStateFermionKet
 
 def split_commutative_parts(m):
     c_part = [p for p in m.args if p.is_commutative]
@@ -675,11 +1236,989 @@ class FixedBosonicBasis(BosonicBasis):
 #         return move(a, i, d) + move(b, i, d)
 #     raise NotImplementedError()
 
-def commutator(a, b):
+class Commutator(Function):
     """
-    Return the commutator:  [a, b] = a*b - b*a
+    The Commutator:  [a, b] = a*b - b*a
+
     """
-    return a*b - b*a
+    is_commutative = False
+    nargs = 2
+    @classmethod
+    def eval(cls, a,b):
+        """
+        The Commutator [A,B] is on canonical form if A < B
+
+
+        """
+        if not (a and b): return S.Zero
+        if a == b: return S.Zero
+        if a.is_commutative or b.is_commutative:
+            return S.Zero
+
+        #
+        # [A+B,C]  ->  [A,C] + [B,C]
+        #
+        a = a.expand()
+        if isinstance(a,Add):
+            return Add(*[cls(term,b) for term in a.args])
+        b = b.expand()
+        if isinstance(b,Add):
+            return Add(*[cls(a,term) for term in b.args])
+
+        #
+        # [xA,yB]  ->  xy*[A,B]
+        #
+        c_part = []
+        nc_part = []
+        nc_part2 = []
+        if isinstance(a,Mul):
+            c_part,nc_part = split_commutative_parts(a)
+        if isinstance(b,Mul):
+            c_part2,nc_part2 = split_commutative_parts(b)
+            c_part.extend(c_part2)
+        if c_part:
+            a = nc_part or [a]
+            b = nc_part2 or [b]
+            return Mul(*c_part)*cls(Mul(*a),Mul(*b))
+
+
+        #
+        # single second quantization operators
+        #
+        if isinstance(a, BosonicOperator) and isinstance(b, BosonicOperator):
+            if isinstance(b,CreateBoson) and isinstance(a,AnnihilateBoson):
+                return KroneckerDelta(a.state,b.state)
+            if isinstance(a,CreateBoson) and isinstance(b,AnnihilateBoson):
+                return S.NegativeOne*KroneckerDelta(a.state,b.state)
+            else:
+                return S.Zero
+        if isinstance(a, FermionicOperator) and isinstance(b, FermionicOperator):
+            return Wicks(a*b)- Wicks(b*a)
+
+        #
+        # Canonical ordering of arguments
+        #
+        if a > b:
+            return S.NegativeOne*cls(b,a)
+
+
+
+
+    def doit(self,**hints):
+
+        a = self.args[0]
+        b = self.args[1]
+
+        if not hints.get("wicks"):
+            a = a.doit(**hints)
+            b = b.doit(**hints)
+            return Wicks(a*b) - Wicks(b*a)
+        else:
+            return (a*b - b*a).doit(**hints)
+
+
+    def __repr__(self):
+        return "Commutator(%s,%s)" %(self.args[0],self.args[1])
+
+    def __str__(self):
+        return "[%s,%s]" %(self.args[0],self.args[1])
+
+    def _latex_(self,printer):
+        return "\\left[%s,%s\\right]"%tuple([
+            printer._print(arg) for arg in self.args])
+
+
+
+class NO(Function):
+    """
+    This function is used to represent normal ordering brackets.
+
+    i.e.  {abcd}  sometimes written  :abcd:
+
+    Applying the function NO(arg) to an argument means that all operators in
+    the argument will be assumed to anticommute, and have vanishong
+    contractions.  This allows an immediate reordering to canonical form
+    upon object creation.
+
+    Note:
+    If you want to generate a normal ordered equivalent of an expression, you
+    should use the function Wicks().  This function only indicates that all
+    operators anticommute, and that the operators have only vanishing
+    contractions.  Nothing more, nothing less.
+
+    """
+    nargs = 1
+    is_commutative = False
+
+
+    @classmethod
+    def eval(cls,arg):
+        """
+        Use anticommutation to get canonical form of operators.
+
+        Employ associativity of normal ordered product: {ab{cd}} = {abcd}
+        but note that {ab}{cd} /= {abcd}
+
+        We also employ distributivity: {ab + cd} = {ab} + {cd}
+
+        Canonical form also implies expand() {ab(c+d)} = {abc} + {abd}
+
+        """
+
+        # {ab + cd} = {ab} + {cd}
+        arg = arg.expand()
+        if arg.is_Add:
+            return Add(*[ cls(term) for term in arg.args])
+
+        if arg.is_Mul:
+
+            # take coefficient outside of normal ordering brackets
+            c_part, seq = split_commutative_parts(arg)
+            if c_part:
+                coeff = Mul(*c_part)
+            else:
+                coeff = S.One
+
+            # {ab{cd}} = {abcd}
+            newseq = []
+            foundit = False
+            for fac in seq:
+                if isinstance(fac,NO):
+                    newseq.extend(fac.args)
+                    foundit = True
+                else:
+                    newseq.append(fac)
+            if foundit:
+                return coeff*cls(Mul(*newseq))
+
+            try:
+                newseq,sign = _sort_anticommuting_fermions(seq)
+            except ViolationOfPauliPrinciple:
+                return S.Zero
+
+            if sign%2:
+                return (S.NegativeOne*coeff)*cls(Mul(*newseq))
+            elif sign:
+                return coeff*cls(Mul(*newseq))
+            else:
+                pass #since sign==0, no permutations was necessary
+
+            # if we couldn't do anything with Mul object, we just
+            # mark it as normal ordered
+            if coeff == S.One:
+                return None
+            else:
+                return coeff*cls(Mul(*newseq))
+
+        if isinstance(arg,NO):
+            return arg
+
+        # if object was not Mul or Add, normal ordering does not apply
+        return arg
+
+    @property
+    def has_q_creators(self):
+        """Returns yes or no, fast"""
+        return self.args[0].is_q_creator
+
+    @property
+    def has_q_annihilators(self):
+        """Returns yes or no, fast"""
+        return self.args[-1].is_q_annihilator
+
+    def doit(self, **kw_args):
+        if kw_args.get("remove_brackets", True):
+            return self._remove_brackets()
+        else:
+            return self.__new__(type(self),self.args[0].doit(**kw_args))
+
+    def _remove_brackets(self):
+        """
+        Returns the sorted string without normal order brackets.
+
+        The returned string have the property that no nonzero
+        contractions exist.
+        """
+
+        # check if any creator is also an annihilator
+        subslist=[]
+        for i in self.iter_q_creators():
+            if self[i].is_q_annihilator:
+                assume = self[i].state.assumptions0
+                assume["dummy"]=True
+                Dummy = type(Symbol('x',dummy=True))
+                if isinstance(self[i].state, Dummy):
+                    assume["below_fermi"]=True
+                    below = Symbol('i',**assume)
+                    assume["below_fermi"]=False
+                    assume["above_fermi"]=True
+                    above = Symbol('a',**assume)
+                    cls = type(self[i])
+                    split = (
+                            self[i].__new__(cls,below)
+                            * KroneckerDelta(below,self[i].state)
+                            + self[i].__new__(cls,above)
+                            * KroneckerDelta(above,self[i].state)
+                            )
+                    subslist.append((self[i],split))
+                else:
+                    raise SubstitutionOfAmbigousOperatorFailed(self[i])
+        if subslist:
+            result = NO(self.subs(subslist))
+            if isinstance(result, Add):
+                return Add(*[term.doit() for term in result.args])
+        else:
+            return self.args[0]
+    def _expand_operators(self):
+        """
+        Returns a sum of NO objects that contain no ambigous q-operators.
+
+        If an index q has range both above and below fermi, the operator F(q)
+        is ambigous in the sense that it can be both a q-creator and a q-annihilator.
+        If q is dummy, it is assumed to be a summation variable and this method
+        rewrites it into a sum of NO terms with unambigous operators:
+
+        {Fd(p)*F(q)} = {Fd(a)*F(b)} + {Fd(a)*F(i)} + {Fd(j)*F(b)} -{F(i)*Fd(j)}
+
+        where a,b are above and i,j are below fermi level.
+        """
+        return NO(self._remove_brackets)
+
+
+    def _eval_subs(self,old,new):
+        if self == old:
+            return new
+        ops = self.args[0].args
+        for i in range(len(ops)):
+            if ops[i] == old:
+                l1 = ops[:i]+(new,)+ops[i+1:]
+                return self.__class__(Mul(*l1))
+        return Function._eval_subs(self,old,new)
+
+    def __getitem__(self,i):
+        if isinstance(i,slice):
+            indices = i.indices(len(self))
+            return [self.args[0].args[i] for i in range(*indices)]
+        else:
+            return self.args[0].args[i]
+
+    def __len__(self):
+        return len(self.args[0].args)
+
+    def iter_q_annihilators(self):
+        ops = self.args[0].args
+        iter = xrange(len(ops)-1, -1, -1)
+        for i in iter:
+            if ops[i].is_q_annihilator:
+                yield i
+            else:
+                break
+
+    def iter_q_creators(self):
+        ops = self.args[0].args
+        iter = xrange(0, len(ops))
+        for i in iter:
+            if ops[i].is_q_creator:
+                yield i
+            else:
+                break
+
+    def get_subNO(self, i):
+        """
+        Returns a NO() without FermionicOperator at index i
+        """
+        mul = Mul(*(self.args[0].args[0:i] + self.args[0].args[i+1:]))
+        return NO(mul)
+
+    def _latex_(self,printer):
+        return "\\left\\{%s\\right\\}"%printer._print(self.args[0])
+
+    def __repr__(self):
+        return "NO(%s)"%self.args[0]
+
+    def __str__(self):
+        return ":%s:" % self.args[0]
+
+
+# @cacheit
+def contraction(a,b):
+    """
+    Calculates contraction of Fermionic operators ab
+
+    """
+    if isinstance(b,FermionicOperator) and isinstance(a,FermionicOperator):
+        if isinstance(a,AnnihilateFermion) and isinstance(b,CreateFermion):
+            if b.state.assumptions0.get("below_fermi"):
+                return S.Zero
+            if a.state.assumptions0.get("below_fermi"):
+                return S.Zero
+            if b.state.assumptions0.get("above_fermi"):
+                return KroneckerDelta(a.state,b.state)
+            if a.state.assumptions0.get("above_fermi"):
+                return KroneckerDelta(a.state,b.state)
+
+            return (KroneckerDelta(a.state,b.state)*
+                    KroneckerDelta(b.state,Symbol('i',dummy=True,above_fermi=True)))
+        if isinstance(b,AnnihilateFermion) and isinstance(a,CreateFermion):
+            if b.state.assumptions0.get("above_fermi"):
+                return S.Zero
+            if a.state.assumptions0.get("above_fermi"):
+                return S.Zero
+            if b.state.assumptions0.get("below_fermi"):
+                return KroneckerDelta(a.state,b.state)
+            if a.state.assumptions0.get("below_fermi"):
+                return KroneckerDelta(a.state,b.state)
+
+            return (KroneckerDelta(a.state,b.state)*
+                    KroneckerDelta(b.state,Symbol('i',dummy=True,below_fermi=True)))
+
+        # vanish if 2xAnnihilator or 2xCreator
+        return S.Zero
+
+    else:
+        #not fermion operators
+        t = ( isinstance(i,FermionicOperator) for i in (a,b) )
+        raise ContractionAppliesOnlyToFermionsException(*t)
+
+
+def _sort_anticommuting_fermions(str):
+    """Sort fermionic operators to canonical order, assuming all pairs anticommute.
+
+    Uses a bidirectional bubble sort.  Items in str are not referenced
+    so in principle they may be any comparable objects. Sorting is
+    done according to the >= operator.
+
+    If the Pauli principle is violated, an exception is raised.
+
+    returns a tuple (sorted_str, sign)
+
+    sorted_str -- list containing the sorted operators
+    sign       -- int telling how many times the sign should be changed
+                  (if sign==0 the string was already sorted)
+    """
+
+    verified = False
+    sign = 0
+    rng = range(len(str)-1)
+    rev = range(len(str)-3,-1,-1)
+    str = list(str)
+
+    while not verified:
+        verified = True
+        for i in rng:
+            left = str[i]
+            right = str[i+1]
+            if left == right:
+                raise ViolationOfPauliPrinciple([left,right])
+            if left > right:
+                verified = False
+                str[i:i+2] = [right, left]
+                sign = sign+1
+        if verified:
+            break
+        for i in rev:
+            left = str[i]
+            right = str[i+1]
+            if left == right:
+                raise ViolationOfPauliPrinciple([left,right])
+            if left > right:
+                verified = False
+                str[i:i+2] = [right, left]
+                sign = sign+1
+
+    return (str,sign)
+
+def evaluate_deltas(e):
+    """
+    We evaluate KroneckerDelta symbols in the expression assuming Einsten summation.
+
+    If one index is repeated it is summed over and in effect substituded with
+    the other one. If both indices are repeated we substitute according to what
+    is the preferred index.  this is determined by
+    KroneckerDelta.preffered_index and KroneckerDelta.killable_index.
+
+    In case there are no possible substitutions or if a substitution would
+    imply a loss of information, nothing is done.
+
+    In case an index appears in more than one KroneckerDelta, the resulting
+    final substitution depends on the larger expression.  Behaviour of
+    evaluate_deltas is in that case undefined.
+
+    Examples:  We assume that
+    i,j = symbols('ij',below_fermi=True)
+    a,b = symbols('ab',above_fermi=True)
+    p,q = symbols('pq')
+    The order of preference for these indices according to KroneckerDelta is
+    (a,b,i,j,p,q)  So we get
+
+    ==Trivial cases===
+
+    d_ij f(i) -> f(j)
+    d_ij f(j) -> f(i)
+    d_ip f(p) -> f(i)
+    d_qp f(p) -> f(q)
+    d_qp f(q) -> f(p)
+    d_ap f(p) -> f(a)
+
+    ==more interesting cases===
+
+    d_ip t(ai)*f(pq) -> t(ai)*f(iq)    (implied summation over i)
+    d_ap t(ai)*f(pq) -> t(ai)*f(aq)    (implied summation over a)
+    d_qp f(pq)       -> f(pp)          (implied summation over p)
+
+    == Do nothing ===
+
+    d_ap f(q) -> d_ap f(q)
+    d_ip f(i) -> d_ip f(i)  (nothing done to prevent loss of information)
+
+    """
+
+
+    # We treat Deltas only in mul objects
+
+    # for general function objects we don't evaluate KroneckerDeltas in arguments,
+    # but here we hard code exceptions to this rule
+    accepted_functions = (
+            Add,
+            )
+    if isinstance(e,accepted_functions):
+        return e.new(*[evaluate_deltas(arg) for arg in e.args])
+
+    elif isinstance(e,Mul):
+        # find all occurences of delta function and count each index present in
+        # expression.
+        deltas = []
+        indices = {}
+        for i in e.args:
+            for s in i.atoms():
+                if s in indices:
+                    indices[s] += 1
+                else:
+                    indices[s] = 0  # geek counting simplifies logic below
+            if isinstance(i, KroneckerDelta): deltas.append(i)
+
+        for d in deltas:
+            # If we do something, and there are more deltas, we should recurse
+            # to treat the resulting expression properly
+            if indices[d.killable_index]:
+                e = e.subs(d.killable_index,d.preffered_index)
+                if len(deltas)>1: return evaluate_deltas(e)
+            elif indices[d.preffered_index] and d.indices_contain_equal_information:
+                e = e.subs(d.preffered_index,d.killable_index)
+                if len(deltas)>1: return evaluate_deltas(e)
+            else:
+                pass
+
+        return e
+    # nothing to do, maybe we hit a Symbol or a number
+    else:
+        return e
+
+def substitute_dummies(expr, newIndices=False, reverse_order=True, prettyIndices=True):
+    """
+    Collect terms by substitution of dummy variables.
+
+    This routine allows simplification of Add expressions containing terms
+    which differ only due to dummy variables.
+
+    The idea is to substitute all dummy variables consistently depending on
+    position in the term.  For each term, we collect a sequence of all dummy
+    variables, where the order is determined by index position.  These indices
+    are then substituted consistently in each term.  E.g.
+
+    In [52]: a,b = symbols('ab',dummy=True)
+    In [53]: expr = f(a,b)
+    In [54]: a,b = symbols('ab',dummy=True)
+    In [55]: expr = f(a,b) + expr
+    In [56]: expr
+    Out[56]: f(a, b) + f(a, b)              # two dummy variables are never equal
+    In [57]: substitute_dummies(expr)
+    Out[57]: 2*f(p, q)                      # both a's are now p and equal,
+                                            # both b's are now q and equal.
+
+    In order to simplify as much as possible, the indices related to
+    non-commuting factors have highest priority when approaching canonical
+    indexing.  This is done by giving highest priority to the rightmost
+    dummyindices in each term.  (reverse_order=True by default)
+
+    It is possible to give higest priority to leftmost dummy indices
+    by sepcifying reverse_order=False
+
+
+    """
+
+    # prettyIndices = True    # Prettier
+    # prettyIndices = False   # Easier to debug
+
+
+    if not prettyIndices:
+        def _i(number):
+            return 'i_'+str(number)
+        def _a(number):
+            return 'a_'+str(number)
+        def _p(number):
+            return 'p_'+str(number)
+
+
+    else:
+        def _i(number):
+            if number<5:
+                return "klmno"[number]
+            else:
+                return 'o_'+str(number-5)
+        def _a(number):
+            if number<6:
+                return "cdefgh"[number]
+            else:
+                return 'h_'+str(number-6)
+        def _p(number):
+            if number<7:
+                return "tuvwxyz"[number]
+            else:
+                return 'z_'+str(number-7)
+
+    # reverse iterator for use in _get_dummies()
+    if reverse_order:
+        def _reverse(seq):
+            i=len(seq)
+            while i>0:
+                i += -1
+                yield seq[i]
+    else:
+        def _reverse(seq):
+            for i in xrange(len(seq)):
+                yield seq[i]
+
+
+
+    def _get_dummies(expr, **require):
+        """
+        Collects dummies recursively in predictable order.
+
+        Starting at right end to prioritize indices of non-commuting terms.
+
+        FIXME: A more sophisticated predictable order would work better.
+        Current implementetation does not always work if factors commute. Since
+        commuting factors are sorted also by dummy indices, it may happen that
+        all terms have exactly the same index order, so that no term will
+        obtain a substitution of dummies.
+
+        """
+        result = []
+        for arg in _reverse(expr.args):
+            try:
+                if arg.dummy_index:
+                    # here we check that the dummy matches requirements
+                    for key,val in require.items():
+                        if val != arg.assumptions0.get(key, False):
+                            break
+                    else:
+                        result.append(arg)
+            except AttributeError:
+                try:
+                    if arg.args:
+                       result.extend(_get_dummies(arg, **require))
+                except AttributeError:
+                    pass
+        return result
+
+
+    def _remove_duplicates(list):
+        """
+        Returns list of unique dummies.
+
+        """
+        result = []
+        while list:
+            i = list.pop()
+            if i in result:
+                pass
+            else:
+                result.append(i)
+        result.reverse()
+        return result
+
+    def _get_subslist(chaos,order):
+        """
+        Return list of subs needed to bring list chaos into list order.
+
+        If len(chaos) < len(order), we want chaos to match start of order,
+        thus, chaos might end up with different elements than upon entry.
+
+        If chaos has elements not present in order, we append them to order
+        so that we have a canonical ordering of all elements present in
+        the expression.
+        """
+        for el in chaos:
+            if not el in order:
+                order.append(el)
+
+        subslist = []
+        for i in xrange(len(chaos)):
+            if chaos[i] == order[i]:
+                continue
+            else:
+                if not order[i] in chaos[i:]:
+                    subslist.append((chaos[i],order[i]))
+                else:
+                    tmp = Symbol('x',dummy=True)
+                    subslist.append((order[i], tmp))
+                    subslist.append((chaos[i], order[i]))
+
+                    ind = chaos.index(order[i])
+                    chaos.pop(ind)
+                    chaos.insert(ind,tmp)
+
+        return subslist
+
+
+
+
+
+    def _substitute(expr,ordered_dummies,**require):
+        """
+        Substitute dummies in expr (which should be a Mul object)
+
+        If keyword arguments are given, those dummies that have an identical
+        keyword in .assumptions0 must provide the same value (True or False)
+        to be substituted.
+
+        Dummies without the keyword in .assumptions0 will be default to
+        give the value False.
+
+        Example:
+
+        >>> e.assumptions0['above_fermi'] =True
+        >>> _substitute(e, above_fermi=True)   # will succeed
+        c
+        >>> e.assumptions0 = {}
+        >>> _substitute(e, above_fermi=True)   # will not succeed
+        e
+        >>> e.assumptions0 = {}
+        >>> _substitute(e, above_fermi=False)   # will succeed
+        c
+
+        With no keywords, all dummies are substituted.
+        """
+
+        dummies = _remove_duplicates(_get_dummies(expr, **require))
+
+        subslist = _get_subslist(dummies, ordered_dummies)
+
+        result =  expr.subs(subslist)
+        return result
+
+    expr = expr.expand()
+
+    aboves = []
+    belows = []
+    generals = []
+
+    Dummy = type(Symbol('x',dummy=True))
+    dummies = [ d for d in expr.atoms() if isinstance(d,Dummy) ]
+    dummies.sort()
+
+    a = i = p = 0
+    for d in dummies:
+        assum = d.assumptions0
+        assum["dummy"]=True
+        if assum.get("above_fermi"):
+            sym = _a(a)
+            a +=1
+            l1 = aboves
+        elif assum.get("below_fermi"):
+            sym = _i(i)
+            i +=1
+            l1 = belows
+        else:
+            sym = _p(p)
+            p +=1
+            l1 = generals
+
+        if newIndices:
+            l1.append(Symbol(sym, **assum))
+        else:
+            l1.append(d)
+
+
+
+
+    cases = (
+            ({'above_fermi':True}, aboves),
+            ({'below_fermi':True}, belows),
+            ({'below_fermi':False,'above_fermi':False},generals)
+            )
+
+
+    for req, dummylist in cases:
+        if isinstance(expr,Add):
+            new_dummies = dummylist
+            expr = (Add(*[_substitute(term,new_dummies,**req) for term in expr.args]))
+
+    return expr
+
+@cacheit
+def _get_contractions(str, keepOnlyFullyContracted=False):
+    """
+    Uses recursion to find all contractions. -- Internal helper function --
+
+    Will find nonzero contractions in str between indices given in
+    leftrange and rightrange.
+
+    returns Add-object with contracted terms.
+    """
+
+    # Should we store current level of contraction?
+    if keepOnlyFullyContracted and str:
+        result = []
+    else:
+        result = [NO(Mul(*str))]
+
+    for i in range(len(str)-1):
+        for j in range(i+1,len(str)):
+
+            c = contraction(str[i],str[j])
+
+            if c:
+                # print "found contraction",c
+
+                sign = (j-i+1) %2
+                if sign:
+                    coeff = S.NegativeOne*c
+                else:
+                    coeff = c
+
+                #
+                #  Call next level of recursion
+                #  ============================
+                #
+                # We now need to find more contractions among operators
+                #
+                # oplist = str[:i]+ str[i+1:j] + str[j+1:]
+                #
+                # To prevent overcounting, we don't allow contractions
+                # we have already encountered. i.e. contractions between
+                #       str[:i] <---> str[i+1:j]
+                # and   str[:i] <---> str[j+1:].
+                #
+                # This leaves the case:
+                oplist = str[i+1:j] + str[j+1:]
+
+                if oplist:
+
+                    result.append(coeff*NO(
+                        Mul(*str[:i])*_get_contractions( oplist,
+                            keepOnlyFullyContracted=keepOnlyFullyContracted)))
+
+                else:
+                    result.append(coeff*NO( Mul(*str[:i])))
+
+
+        if keepOnlyFullyContracted:
+            break   # next iteration over i leaves leftmost operator str[0] uncontracted
+
+    return Add(*result)
+
+
+# @cacheit
+def Wicks(e, **kw_args):
+    """
+    Returns the normal ordered equivalent of an expression.
+
+    Employs Wicks Theorem.  With the keyword 'keepOnlyFullyContracted=True',
+    only fully contracted terms are returned.
+
+    By default, the result is simplified in the following order:
+     -- Expression is expanded
+
+    By request, the result can be simplified in the following order:
+     -- KroneckerDelta functions are evaluated
+     -- Dummy variables are substituted consistently across terms
+
+    """
+
+    # break up any NO-objects, and evaluate commutators
+    e = e.doit()
+
+    if not e:
+        return S.Zero
+
+    opts={
+            'simplifyKroneckerDeltas':False,
+            'expand':True,
+            'simplifyDummies':False,
+            'keepOnlyFullyContracted':False
+            }
+    opts.update(kw_args)
+
+
+    # check if we are already normally ordered
+    if isinstance(e,NO):
+        if opts['keepOnlyFullyContracted']:
+            return S.Zero
+        else:
+            return e
+    elif isinstance(e,FermionicOperator):
+        if opts['keepOnlyFullyContracted']:
+            return S.Zero
+        else:
+            return e
+
+
+    # make sure we have only one term to consider
+    e = e.expand()
+    if isinstance(e, Add):
+        if opts['simplifyDummies']:
+            return substitute_dummies(Add(*[ Wicks(term, **kw_args) for term in e.args]))
+        else:
+            return Add(*[ Wicks(term, **kw_args) for term in e.args])
+
+
+    # For Mul-objects we can actually do something
+    if isinstance(e, Mul):
+
+        # we dont want to mess around with commuting part of Mul
+        # so we factorize it out before starting recursion
+        c_part = []
+        str = []
+        for factor in e.args:
+            if factor.is_commutative:
+                c_part.append(factor)
+            else:
+                str.append(factor)
+        n = len(str)
+
+
+        # catch trivial cases
+        if n == 0:
+            result= e
+        elif n==1:
+            if opts['keepOnlyFullyContracted']:
+                return S.Zero
+            else:
+                result = e
+
+        else: # non-trivial
+
+            str = tuple(str)
+
+            # recursion over higher order contractions
+            result = _get_contractions(str,
+                keepOnlyFullyContracted=opts['keepOnlyFullyContracted'] )
+            result =  Mul(*c_part)*result
+
+        if opts['expand']:
+            result = result.expand()
+        if opts['simplifyKroneckerDeltas']:
+            result = evaluate_deltas(result)
+
+        return result
+
+    # It seems there is nothing to do, we are probably called in error.
+    # Instead of silently returning None, we raise exception to prevent
+    # strange errors in applications.
+    else:
+        raise Exception("Wicks() Couldn't' do anything", e)
+
+class PermutationOperator(Basic):
+    """
+    Represents the index permutation operator P(ij)
+
+    P(ij)*f(i)*g(j) = f(i)*g(j) - f(j)*g(i)
+    """
+    is_commutative = True
+    def __new__(cls, i,j):
+        i,j = map(sympify,(i,j))
+        if (i>j):
+            obj =  Basic.__new__(cls,j,i)
+        else:
+            obj =  Basic.__new__(cls,i,j)
+        return obj
+
+
+
+    def get_permuted(self,expr):
+        """
+        Returns -expr with permuted indices.
+        """
+        tmp = Symbol('t',dummy=True)
+        i = self.args[0]
+        j = self.args[1]
+
+        expr = expr.subs(i,tmp)
+        expr = expr.subs(j,i)
+        expr = expr.subs(tmp,j)
+
+        return S.NegativeOne*expr
+
+    def _latex_(self, printer):
+        return "P(%s%s)"%self.args
+
+
+
+def simplifyIndexPermutations(expr, permutation_operators):
+    """
+    Performs simplification by introducing PermutationOperators where appropriate.
+
+    Schematically:
+        [abij] - [abji] - [baij] + [baji] ->  P(ab)*P(ij)*[abij]
+
+    permutation_operators is a list of PermutationOperators to consider.
+
+    If permutation_operators=[P(ab),P(ij)] we will try to introduce the
+    permutation operators P(ij) and P(ab) in the expression.  If there are other
+    possible simplifications, we ignore them.
+    """
+
+    def _get_indices(expr, ind):
+        """
+        Collects indices recursively in predictable order.
+        """
+        result = []
+        for arg in expr.args:
+            if arg in ind:
+                result.append(arg)
+            else:
+                try:
+                    if arg.args:
+                       result.extend(_get_indices(arg,ind))
+                except AttributeError:
+                    pass
+        return result
+
+    def _choose_one_to_keep(a,b,ind):
+        # we keep the one where indices in ind are in order ind[0] < ind[1]
+        if _get_indices(a,ind) < _get_indices(b,ind):
+            return a
+        else:
+            return b
+
+
+    expr = expr.expand()
+    if isinstance(expr,Add):
+        terms = set(expr.args)
+
+        for P in permutation_operators:
+            new_terms = set([])
+            while terms:
+                term = terms.pop()
+                permuted = P.get_permuted(term)
+                if permuted in terms:
+                    terms.remove(permuted)
+                    keep = _choose_one_to_keep(term, permuted, P.args)
+                    new_terms.add(P*keep)
+                else:
+                    new_terms.add(term)
+
+            terms = new_terms
+
+        return Add(*terms)
+
+    return expr
+
+
+
+
 
 
 
