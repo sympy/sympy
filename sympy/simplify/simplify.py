@@ -879,6 +879,10 @@ def trigsimp(expr, deep=False, recursive=False):
     a,b,c = map(Wild, 'abc')
     matchers = (
             (a*sin(b)**c/cos(b)**c, a*tan(b)**c),
+            (a*tan(b)**c*cos(b)**c, a*sin(b)**c),
+            (a*cot(b)**c*sin(b)**c, a*cos(b)**c),
+            (a*tan(b)**c/sin(b)**c, a/cos(b)**c),
+            (a*cot(b)**c/cos(b)**c, a/sin(b)**c),
     )
     for pattern, simp in matchers:
         res = result.match(pattern)

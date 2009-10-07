@@ -51,6 +51,12 @@ def test_trigsimp1():
     assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) in \
                 [2 + 3*cos(x/2)**2, 5 - 3*sin(x/2)**2]
 
+    assert trigsimp(sin(x)/cos(x)) == tan(x)
+    assert trigsimp(2*tan(x)*cos(x)) == 2*sin(x)
+    assert trigsimp(cot(x)**3*sin(x)**3) == cos(x)**3
+    assert trigsimp(y*tan(x)**2/sin(x)**2) == y/cos(x)**2
+    assert trigsimp(cot(x)/cos(x)) == 1/sin(x)
+
     assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1
     e = 2*sin(x)**2 + 2*cos(x)**2
     assert trigsimp(log(e), deep=True) == log(2)
