@@ -1,6 +1,6 @@
 from basic import Atom, SingletonMeta, S, Basic
 from decorators import _sympifyit
-from cache import Memoizer, MemoizerArg
+from cache import Memoizer, cacheit
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmpf as mlib
 import sympy.mpmath.libmpc as mlibc
@@ -498,14 +498,17 @@ class Rational(Number):
 
     is_Rational = True
 
-    @Memoizer(type, (int, long, str, 'Integer'),
-              MemoizerArg((int, long, 'Integer', type(None)), name="q"))
+    @cacheit
     def __new__(cls, p, q = None):
         if q is None:
-            if isinstance(p, str):
+            if isinstance(p, basestring):
                 p, q = _parse_rational(p)
+            elif isinstance(p, Rational):
+                return p
             else:
                 return Integer(p)
+        q = int(q)
+        p = int(p)
         if q==0:
             if p==0:
                 if _errdict["divide"]:
@@ -524,8 +527,8 @@ class Rational(Number):
         if q==1: return Integer(p)
         if p==1 and q==2: return S.Half
         obj = Basic.__new__(cls)
-        obj.p = int(p)
-        obj.q = int(q)
+        obj.p = p
+        obj.q = q
         #obj._args = (p, q)
         return obj
 
@@ -796,21 +799,18 @@ class Integer(Rational):
         try:
             return _intcache[i]
         except KeyError:
-            # The most often situation is when Integers are created from Python
-            # int or long
-            if isinstance(i, (int, long)):
-                obj = Basic.__new__(cls)
-                obj.p = i
-                _intcache[i] = obj
-                return obj
-
-            # Also, we seldomly need the following to work:
-            # UC: Integer(Integer(4))   <-- sympify('4')
-            elif isinstance(i, Integer):
-                return i
-
+            # We only work with well-behaved integer types. This converts, for
+            # example, numpy.int32 instances.
+            ival = int(i)
+            if ival == 0: obj = S.Zero
+            elif ival == 1: obj = S.One
+            elif ival == -1: obj = S.NegativeOne
             else:
-                raise ValueError('invalid argument for Integer: %r' % (i,))
+                obj = Basic.__new__(cls)
+                obj.p = ival
+
+            _intcache[i] = obj
+            return obj
 
     def __getnewargs__(self):
         return (self.p,)
@@ -1621,7 +1621,7 @@ Basic.singleton['EulerGamma'] = EulerGamma
 Basic.singleton['Catalan'] = Catalan
 
 from basic import Basic, Atom, S, C, SingletonMeta
-from cache import Memoizer, MemoizerArg
+from cache import Memoizer
 from sympify import _sympify, SympifyError
 from function import FunctionClass
 from power import Pow, integer_nthroot

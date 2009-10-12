@@ -60,18 +60,51 @@ def test_igcdex():
     assert igcdex(10, 12) == (-1, 1, 2)
     assert igcdex(100, 2004) == (-20, 1, 4)
 
+def _strictly_equal(a, b):
+    return (a.p, a.q, type(a.p), type(a.q)) == \
+           (b.p, b.q, type(b.p), type(b.q))
+
+def _test_rational_new(cls):
+    """
+    Tests that are common between Integer and Rational.
+    """
+    assert cls(0) is S.Zero
+    assert cls(1) is S.One
+    assert cls(-1) is S.NegativeOne
+    # These look odd, but are similar to int():
+    assert cls(0.9) is S.Zero
+    assert cls('1') is S.One
+    assert cls(u'-1') is S.NegativeOne
+
+    i = Integer(10)
+    assert _strictly_equal(i, cls('10'))
+    assert _strictly_equal(i, cls(u'10'))
+    assert _strictly_equal(i, cls(10L))
+    assert _strictly_equal(i, cls(10.5))
+    assert _strictly_equal(i, cls(i))
+
+    raises(TypeError, "cls(Symbol('x'))")
+
+def test_Integer_new():
+    """
+    Test for Integer constructor
+    """
+    _test_rational_new(Integer)
+
+    raises(ValueError, 'Integer("10.5")')
+
 def test_Rational_new():
     """"
     Test for Rational constructor
     """
+    _test_rational_new(Rational)
+
     n1 = Rational(1,2)
     assert n1 == Rational(Integer(1), 2)
     assert n1 == Rational(Integer(1), Integer(2))
     assert n1 == Rational(1, Integer(2))
-
-    raises(ValueError, 'Rational(1.2)')
-    raises(ValueError, "Rational(Symbol('x'))")
-    raises(ValueError, 'Rational(Rational(1,2))')
+    assert n1 == Rational(Rational(1,2))
+    assert n1 == Rational(1.2,2)
 
 def test_Rational_cmp():
     n1 = Rational(1,4)

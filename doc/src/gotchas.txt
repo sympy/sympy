@@ -282,9 +282,7 @@ Also, if you do not use :command:`isympy`, you should do ``from __future__ impor
       File "<...>", line 1, in <module>
         Rational(2, x)
       ...
-    ValueError: ...:function __new__ 2-th argument must be of type (<type
-    'int'>, <type 'long'>, <class 'sympy.core.numbers.Integer'>, <type
-    'NoneType'>) but got x
+    TypeError: int() argument must be a string or a number, not 'Symbol'
     >>> 2/x
     2/x
 
