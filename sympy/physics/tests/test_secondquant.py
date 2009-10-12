@@ -385,7 +385,6 @@ def test_wicks():
 
 
     expr = Wicks(Fd(i)*NO(Fd(j)*F(k))*F(l))
-    print expr
     assert (expr ==
            -KroneckerDelta(i,k)*NO(Fd(j)*F(l)) -
             KroneckerDelta(j,l)*NO(Fd(i)*F(k)) -
@@ -427,7 +426,6 @@ def test_NO():
 
 
     expr = NO(Fd(p)*F(q))._remove_brackets()
-    print expr
     assert Wicks(expr) == NO(expr)
 
     assert NO(Fd(a)*F(b)) == - NO(F(b)*Fd(a))
