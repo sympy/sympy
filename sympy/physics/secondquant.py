@@ -64,6 +64,9 @@ class ViolationOfPauliPrinciple(Exception):
 class SubstitutionOfAmbigousOperatorFailed(Exception):
     pass
 
+class WicksTheoremDoesNotApply(Exception):
+    pass
+
 class Dagger(Basic):
     """
     Hermitian conjugate of creation/annihilation operators.
@@ -2118,7 +2121,7 @@ def Wicks(e, **kw_args):
     # Instead of silently returning None, we raise exception to prevent
     # strange errors in applications.
     else:
-        raise Exception("Wicks() Couldn't' do anything", e)
+        raise WicksTheoremDoesNotApply
 
 class PermutationOperator(Basic):
     """
