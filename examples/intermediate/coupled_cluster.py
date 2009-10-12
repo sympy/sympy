@@ -1,4 +1,6 @@
-from sympy.physics.secondquant import *
+from sympy.physics.secondquant import (AntiSymmetricTensor, Wicks,
+        F, Fd, NO, evaluate_deltas, substitute_dummies, Commutator,
+        simplifyIndexPermutations, PermutationOperator)
 from sympy import (
     symbols, expand, pprint, Number, latex
 )
