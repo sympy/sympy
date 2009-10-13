@@ -365,7 +365,10 @@ class StrPrinter(Printer):
         return self._print(expr.toMatrix())
 
     def _print_Sum(self, expr):
-        return 'Sum(%s, (%s))'%(self._print(expr.function), self.stringify(expr.limits[0], ', '))
+        limits = str.join(', ', \
+            tuple([ '(%s)' % self.stringify(l, ', ') for l in expr.limits ]))
+
+        return 'Sum(%s, %s)' % (self._print(expr.function), limits)
 
     def _print_Sum2(self, expr):
         return "Sum2(%r, (%r, %r, %r))" % (expr.f, expr.i, expr.a, expr.b)

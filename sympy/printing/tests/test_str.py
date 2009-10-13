@@ -1,7 +1,7 @@
 from sympy import abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,\
                   Function, GoldenRatio, I, Integer, Integral, Interval, Lambda,\
                   Limit, log, Matrix, nan, O, oo, pi, Rational, Real, Rel, S,\
-                  sin, SMatrix, sqrt, sum, Sum2, Symbol, symbols, Wild,\
+                  sin, SMatrix, sqrt, sum, Sum, Sum2, Symbol, symbols, Wild,\
                   WildFunction, zeta, zoo
 from sympy.core.basic import Basic
 from sympy.physics.units import second
@@ -309,6 +309,8 @@ def test_SMatrix():
 
 def test_Sum():
     assert str(sum(cos(3*z), (z, x, y))) == "Sum(cos(3*z), (z, x, y))"
+    assert str(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \
+        "Sum(x*y**2, (x, -2, 2), (y, -5, 5))"
 
 def test_Sum2():
     assert str(Sum2(cos(3*z), (z, x, y))) == "Sum2(cos(3*z), (z, x, y))"
@@ -399,4 +401,3 @@ def test_empty_printer():
     assert StrPrinter.emptyPrinter("foo") == "foo"
     assert StrPrinter.emptyPrinter(x*y) == "x*y"
     assert StrPrinter.emptyPrinter(32) == "32"
-
