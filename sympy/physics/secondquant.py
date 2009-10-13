@@ -1891,12 +1891,18 @@ class NO(Function):
                 assume = self[i].state.assumptions0
                 assume["dummy"]=True
                 Dummy = type(Symbol('x',dummy=True))
+
+                # only operators with a dummy index can be split in two terms
                 if isinstance(self[i].state, Dummy):
+
+                    # create indices with fermi restriction
+                    assume.pop("above_fermi", None)
                     assume["below_fermi"]=True
                     below = Symbol('i',**assume)
-                    assume["below_fermi"]=False
+                    assume.pop("below_fermi", None)
                     assume["above_fermi"]=True
                     above = Symbol('a',**assume)
+
                     cls = type(self[i])
                     split = (
                             self[i].__new__(cls,below)
