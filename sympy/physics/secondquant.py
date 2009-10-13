@@ -1119,7 +1119,7 @@ class FermionState(FockState):
         >>> p = Symbol('p')
 
         >>> FKet([]).up(a)
-        FockStateKet((a,))
+        FockStateFermionKet((a,))
 
         A creator acting on vacuum below fermi vanishes
         >>> FKet([]).up(i)
@@ -1171,7 +1171,7 @@ class FermionState(FockState):
         >>> FKet([]).down(i)
         0
         >>> FKet([],4).down(i)
-        FockStateKet((i,), fermi_level=4)
+        FockStateFermionKet((i,))
 
         """
         present = i in self.args[0]
@@ -1602,7 +1602,7 @@ class Commutator(Function):
     Evaluate the commutator with .doit()
 
     >>> comm = Commutator(A,B); comm
-    Commutator(A,B)
+    Commutator(A, B)
     >>> comm.doit()
     A*B - B*A
 
@@ -1622,7 +1622,7 @@ class Commutator(Function):
     a call to .doit()
 
     >>> comm = Commutator(Fd(p)*Fd(q),F(i)); comm
-    Commutator(CreateFermion(p)*CreateFermion(q),f(i))
+    Commutator(CreateFermion(p)*CreateFermion(q), AnnihilateFermion(i))
     >>> comm.doit()
     KroneckerDelta(i, q)*CreateFermion(p) - KroneckerDelta(i, p)*CreateFermion(q)
 
@@ -2013,9 +2013,9 @@ def contraction(a,b):
     quasi-annihilator:
 
     >>> contraction(F(a),Fd(b))
-    KroneckerDelta(a,b)
+    KroneckerDelta(a, b)
     >>> contraction(Fd(i),F(j))
-    KroneckerDelta(i,j)
+    KroneckerDelta(i, j)
 
     For general indices a non-zero result restricts the indices to below/above
     the fermi surface:
@@ -2557,7 +2557,7 @@ def Wicks(e, **kw_args):
 
     >>> p,q,r = symbols('pqr', dummy=True)
     >>> Wicks(Fd(p)*(F(q)+F(r)), keepOnlyFullyContracted=True)
-    KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)
+    KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r) + KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q)
     >>> Wicks(Fd(p)*(F(q)+F(r)), keepOnlyFullyContracted=True, simplifyKroneckerDeltas=True)
     KroneckerDelta(_i, _p) + KroneckerDelta(_i, _p)
     >>> Wicks(Fd(p)*(F(q)+F(r)), keepOnlyFullyContracted=True, simplifyKroneckerDeltas=True, simplifyDummies=True)
