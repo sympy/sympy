@@ -1104,22 +1104,37 @@ class FermionState(FockState):
 
     def up(self, i):
         """
-        Performes the action of a creation operator.
+        Performs the action of a creation operator.
 
         If below fermi we try to remove a hole,
         if above fermi we try to create a particle.
 
         if general index p we return Kronecker(p,i)*self
         where i is a new symbol with restriction above or below.
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import FKet
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+
+        >>> FKet([]).up(a)
+        FockStateKet((a,))
+
+        A creator acting on vacuum below fermi vanishes
+        >>> FKet([]).up(i)
+        0
+
+
         """
         present = i in self.args[0]
 
-        if self.only_above_fermi(i):
+        if self._only_above_fermi(i):
             if present:
                 return S.Zero
             else:
                 return self._add_orbit(i)
-        elif self.only_below_fermi(i):
+        elif self._only_below_fermi(i):
             if present:
                 return self._remove_orbit(i)
             else:
@@ -1141,16 +1156,33 @@ class FermionState(FockState):
 
         if general index p we return Kronecker(p,i)*self
         where i is a new symbol with restriction above or below.
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import FKet
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+
+        An annihilator acting on vacuum above fermi vanishes
+        >>> FKet([]).down(a)
+        0
+
+        Also below fermi, it vanishes, unless we specify a fermi level > 0
+        >>> FKet([]).down(i)
+        0
+        >>> FKet([],4).down(i)
+        FockStateKet((i,), fermi_level=4)
+
         """
         present = i in self.args[0]
 
-        if self.only_above_fermi(i):
+        if self._only_above_fermi(i):
             if present:
                 return self._remove_orbit(i)
             else:
                 return S.Zero
 
-        elif self.only_below_fermi(i):
+        elif self._only_below_fermi(i):
             if present:
                 return S.Zero
             else:
@@ -1166,7 +1198,7 @@ class FermionState(FockState):
 
 
     @classmethod
-    def only_below_fermi(cls,i):
+    def _only_below_fermi(cls,i):
         """
         Tests if given orbit is only below fermi surface.
 
@@ -1180,7 +1212,7 @@ class FermionState(FockState):
 
 
     @classmethod
-    def only_above_fermi(cls,i):
+    def _only_above_fermi(cls,i):
         """
         Tests if given orbit is only above fermi surface.
 
@@ -1217,14 +1249,17 @@ class FermionState(FockState):
         """
         returns number of identified hole states in list.
         """
-        return len([ i for i in list if  cls.only_below_fermi(i)])
+        return len([ i for i in list if  cls._only_below_fermi(i)])
 
     def _negate_holes(self,list):
         return tuple([ -i if i<=self.fermi_level else i
                 for i in list ])
 
     def __repr__(self):
-        return "FockStateKet(%r, fermi_level=%s)"%(self.args[0],self.fermi_level)
+        if self.fermi_level:
+            return "FockStateKet(%r, fermi_level=%s)"%(self.args[0],self.fermi_level)
+        else:
+            return "FockStateKet(%r)"%(self.args[0],)
 
     def _labels(self):
         return self._negate_holes(self.args[0])
