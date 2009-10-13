@@ -2,7 +2,7 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from sympy.core import S, C, Basic, Symbol, Wild, var
+from sympy.core import S, C, Basic, Add, Symbol, Wild, var
 from printer import Printer
 from conventions import split_super_sub
 from sympy.simplify import fraction
@@ -298,6 +298,25 @@ class LatexPrinter(Printer):
 
                 return tex % (self._print(expr.base),
                               self._print(expr.exp))
+
+    def _print_Sum(self, expr):
+        if len(expr.limits) == 1:
+            tex = r"\sum_{%s=%s}^{%s} " % \
+                tuple([ self._print(i) for i in expr.limits[0] ])
+        else:
+            def _format_ineq(l):
+                return r"%s \leq %s \leq %s" % \
+                    tuple([self._print(s) for s in l[1], l[0], l[2]])
+
+            tex = r"\sum_{\substack{%s}} " % \
+                str.join('\\\\', [ _format_ineq(l) for l in expr.limits ])
+
+        if isinstance(expr.function, Add):
+            tex += r"\left(%s\right)" % self._print(expr.function)
+        else:
+            tex += self._print(expr.function)
+
+        return tex
 
     def _print_Derivative(self, expr):
         dim = len(expr.symbols)

@@ -1,6 +1,6 @@
 from sympy import symbols, Rational, Symbol, Integral, log, diff, sin, exp, \
         Function, factorial, floor, ceiling, abs, re, im, conjugate, gamma, \
-        Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S
+        Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL
@@ -121,6 +121,14 @@ def test_latex_union():
         r"$\left[0, 1\right] \cup \left[2, 3\right]$"
     assert latex(Union(Interval(1, 1), Interval(2, 2), Interval(3, 4))) == \
         r"$\left\{1, 2\right\} \cup \left[3, 4\right]$"
+
+def test_latex_sum():
+    assert latex(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \
+        r"$\sum_{\substack{-2 \leq x \leq 2\\-5 \leq y \leq 5}} x y^{2}$"
+    assert latex(Sum(x**2, (x, -2, 2))) == \
+        r"$\sum_{x=-2}^{2} x^{2}$"
+    assert latex(Sum(x**2 + y, (x, -2, 2))) == \
+        r"$\sum_{x=-2}^{2} \left(y + x^{2}\right)$"
 
 @XFAIL
 def test_latex_limits():
