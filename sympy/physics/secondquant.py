@@ -2045,7 +2045,7 @@ def contraction(a,b):
                 return KroneckerDelta(a.state,b.state)
 
             return (KroneckerDelta(a.state,b.state)*
-                    KroneckerDelta(b.state,Symbol('i',dummy=True,above_fermi=True)))
+                    KroneckerDelta(b.state,Symbol('a',dummy=True,above_fermi=True)))
         if isinstance(b,AnnihilateFermion) and isinstance(a,CreateFermion):
             if b.state.assumptions0.get("above_fermi"):
                 return S.Zero
