@@ -1554,7 +1554,42 @@ class FixedBosonicBasis(BosonicBasis):
 
 class Commutator(Function):
     """
-    The Commutator:  [a, b] = a*b - b*a
+    The Commutator:  [A, B] = A*B - B*A
+
+    The arguments are ordered according to .__cmp__()
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.secondquant import Commutator
+    >>> A,B = symbols('AB',commutative=False)
+    >>> Commutator(B,A)
+    -Commutator(A, B)
+
+    Evaluate the commutator with .doit()
+
+    >>> comm = Commutator(A,B); comm
+    Commutator(A,B)
+    >>> comm.doit()
+    A*B - B*A
+
+
+    For two second quantization operators the commutator is evaluated
+    immediately:
+
+    >>> from sympy.physics.secondquant import Fd, F
+    >>> a = symbols('a',above_fermi=True)
+    >>> i = symbols('i',below_fermi=True)
+    >>> p,q = symbols('pq')
+
+    >>> Commutator(Fd(a),Fd(i))
+    2*NO(CreateFermion(a)*CreateFermion(i))
+
+    But for more complicated expressions, the evaluation is triggered by
+    a call to .doit()
+
+    >>> comm = Commutator(Fd(p)*Fd(q),F(i)); comm
+    Commutator(CreateFermion(p)*CreateFermion(q),f(i))
+    >>> comm.doit()
+    KroneckerDelta(i, q)*CreateFermion(p) - KroneckerDelta(i, p)*CreateFermion(q)
 
     """
     is_commutative = False
@@ -1628,9 +1663,14 @@ class Commutator(Function):
         if not hints.get("wicks"):
             a = a.doit(**hints)
             b = b.doit(**hints)
-            return Wicks(a*b) - Wicks(b*a)
-        else:
-            return (a*b - b*a).doit(**hints)
+            try:
+                return Wicks(a*b) - Wicks(b*a)
+            except ContractionAppliesOnlyToFermionsException:
+                pass
+            except WicksTheoremDoesNotApply:
+                pass
+
+        return (a*b - b*a).doit(**hints)
 
 
     def __repr__(self):
