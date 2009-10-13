@@ -265,6 +265,20 @@ class KroneckerDelta(Function):
     def is_above_fermi(self):
         """
         True if Delta can be non-zero above fermi
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> from sympy import Symbol
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+        >>> q = Symbol('q')
+        >>> KroneckerDelta(p,a).is_above_fermi
+        True
+        >>> KroneckerDelta(p,i).is_above_fermi
+        False
+        >>> KroneckerDelta(p,q).is_above_fermi
+        True
+
         """
         if self.args[0].assumptions0.get("below_fermi"):
             return False
@@ -275,6 +289,20 @@ class KroneckerDelta(Function):
     def is_below_fermi(self):
         """
         True if Delta can be non-zero below fermi
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> from sympy import Symbol
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+        >>> q = Symbol('q')
+        >>> KroneckerDelta(p,a).is_below_fermi
+        False
+        >>> KroneckerDelta(p,i).is_below_fermi
+        True
+        >>> KroneckerDelta(p,q).is_below_fermi
+        True
+
         """
         if self.args[0].assumptions0.get("above_fermi"):
             return False
@@ -286,21 +314,49 @@ class KroneckerDelta(Function):
     def is_only_above_fermi(self):
         """
         True if Delta is restricted to above fermi
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> from sympy import Symbol
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+        >>> q = Symbol('q')
+        >>> KroneckerDelta(p,a).is_only_above_fermi
+        True
+        >>> KroneckerDelta(p,q).is_only_above_fermi
+        False
+        >>> KroneckerDelta(p,i).is_only_above_fermi
+        False
+
         """
         return ( self.args[0].assumptions0.get("above_fermi")
                 or
                 self.args[1].assumptions0.get("above_fermi")
-                )
+                ) or False
 
     @property
     def is_only_below_fermi(self):
         """
         True if Delta is restricted to below fermi
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> from sympy import Symbol
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+        >>> q = Symbol('q')
+        >>> KroneckerDelta(p,i).is_only_below_fermi
+        True
+        >>> KroneckerDelta(p,q).is_only_below_fermi
+        False
+        >>> KroneckerDelta(p,a).is_only_below_fermi
+        False
+
         """
         return ( self.args[0].assumptions0.get("below_fermi")
                 or
                 self.args[1].assumptions0.get("below_fermi")
-                )
+                ) or False
 
     @property
     def indices_contain_equal_information(self):
@@ -317,6 +373,27 @@ class KroneckerDelta(Function):
 
     @property
     def preffered_index(self):
+        """
+        Returns the index which is preffered to keep in the final expression.
+
+        The preffered index is the index with more information regarding fermi
+        level.  If indices contain same information, 'a' is preffered before
+        'b'.
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> from sympy import Symbol
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> j = Symbol('j',below_fermi=True)
+        >>> p = Symbol('p')
+        >>> KroneckerDelta(p,i).preffered_index
+        i
+        >>> KroneckerDelta(p,a).preffered_index
+        a
+        >>> KroneckerDelta(i,j).preffered_index
+        i
+
+        """
         if self._get_preffered_index():
             return self.args[1]
         else:
@@ -324,6 +401,27 @@ class KroneckerDelta(Function):
 
     @property
     def killable_index(self):
+        """
+        Returns the index which is preffered to substitute in the final expression.
+
+        The index to substitute is the index with less information regarding fermi
+        level.  If indices contain same information, 'a' is preffered before
+        'b'.
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> from sympy import Symbol
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> j = Symbol('j',below_fermi=True)
+        >>> p = Symbol('p')
+        >>> KroneckerDelta(p,i).killable_index
+        p
+        >>> KroneckerDelta(p,a).killable_index
+        p
+        >>> KroneckerDelta(i,j).killable_index
+        j
+
+        """
         if self._get_preffered_index():
             return self.args[0]
         else:
@@ -385,6 +483,21 @@ class SqOperator(Basic):
 
     @property
     def state(self):
+        """
+        Returns the state index related to this operator.
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import F, Fd, B, Bd
+        >>> p = Symbol('p')
+        >>> F(p).state
+        p
+        >>> Fd(p).state
+        p
+        >>> B(p).state
+        p
+        >>> Bd(p).state
+        p
+        """
         return self.args[0]
 
     @property
@@ -477,6 +590,26 @@ class FermionicOperator(SqOperator):
         1  : restricted to orbits above fermi
         0  : no restriction
         -1 : restricted to orbits below fermi
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import F, Fd
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+
+        >>> F(a).is_restricted
+        1
+        >>> Fd(a).is_restricted
+        1
+        >>> F(i).is_restricted
+        -1
+        >>> Fd(i).is_restricted
+        -1
+        >>> F(p).is_restricted
+        0
+        >>> Fd(p).is_restricted
+        0
+
         """
         ass = self.args[0].assumptions0
         if ass.get("below_fermi"): return -1
@@ -488,6 +621,23 @@ class FermionicOperator(SqOperator):
     def is_above_fermi(self):
         """
         Does the index of this FermionicOperator allow values above fermi?
+
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import F
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+
+        >>> F(a).is_above_fermi
+        True
+        >>> F(i).is_above_fermi
+        False
+        >>> F(p).is_above_fermi
+        True
+
+        The same applies to creation operators Fd
+
         """
         return not self.args[0].assumptions0.get("below_fermi")
 
@@ -495,6 +645,22 @@ class FermionicOperator(SqOperator):
     def is_below_fermi(self):
         """
         Does the index of this FermionicOperator allow values below fermi?
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import F
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+
+        >>> F(a).is_below_fermi
+        False
+        >>> F(i).is_below_fermi
+        True
+        >>> F(p).is_below_fermi
+        True
+
+        The same applies to creation operators Fd
+
         """
         return not self.args[0].assumptions0.get("above_fermi")
 
@@ -502,6 +668,21 @@ class FermionicOperator(SqOperator):
     def is_only_below_fermi(self):
         """
         Is the index of this FermionicOperator restricted to values below fermi?
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import F
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+
+        >>> F(a).is_only_below_fermi
+        False
+        >>> F(i).is_only_below_fermi
+        True
+        >>> F(p).is_only_below_fermi
+        False
+
+        The same applies to creation operators Fd
         """
         return self.is_below_fermi and not self.is_above_fermi
 
@@ -509,6 +690,21 @@ class FermionicOperator(SqOperator):
     def is_only_above_fermi(self):
         """
         Is the index of this FermionicOperator restricted to values above fermi?
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import F
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+
+        >>> F(a).is_only_above_fermi
+        True
+        >>> F(i).is_only_above_fermi
+        False
+        >>> F(p).is_only_above_fermi
+        False
+
+        The same applies to creation operators Fd
         """
         return self.is_above_fermi and not self.is_below_fermi
 
@@ -586,6 +782,21 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
     def is_q_creator(self):
         """
         Can we create a quasi-particle?  (create hole or create particle)
+        If so, would that be above or below the fermi surface?
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import F
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+
+        >>> F(a).is_q_creator
+        0
+        >>> F(i).is_q_creator
+        -1
+        >>> F(p).is_q_creator
+        -1
+
         """
         if self.is_below_fermi: return -1
         return 0
@@ -594,6 +805,21 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
     def is_q_annihilator(self):
         """
         Can we destroy a quasi-particle?  (annihilate hole or annihilate particle)
+        If so, would that be above or below the fermi surface?
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import F
+        >>> a = Symbol('a',above_fermi=1)
+        >>> i = Symbol('i',below_fermi=1)
+        >>> p = Symbol('p')
+
+        >>> F(a).is_q_annihilator
+        1
+        >>> F(i).is_q_annihilator
+        0
+        >>> F(p).is_q_annihilator
+        1
+
         """
         if self.is_above_fermi: return 1
         return 0
@@ -602,6 +828,21 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
     def is_only_q_creator(self):
         """
         Always create a quasi-particle?  (create hole or create particle)
+
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import F
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+
+        >>> F(a).is_only_q_creator
+        False
+        >>> F(i).is_only_q_creator
+        True
+        >>> F(p).is_only_q_creator
+        False
+
         """
         return self.is_only_below_fermi
 
@@ -609,6 +850,20 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
     def is_only_q_annihilator(self):
         """
         Always destroy a quasi-particle?  (annihilate hole or annihilate particle)
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import F
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+
+        >>> F(a).is_only_q_annihilator
+        True
+        >>> F(i).is_only_q_annihilator
+        False
+        >>> F(p).is_only_q_annihilator
+        False
+
         """
         return self.is_only_above_fermi
 
@@ -648,6 +903,21 @@ class CreateFermion(FermionicOperator, Creator):
     def is_q_creator(self):
         """
         Can we create a quasi-particle?  (create hole or create particle)
+        If so, would that be above or below the fermi surface?
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import Fd
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+
+        >>> Fd(a).is_q_creator
+        1
+        >>> Fd(i).is_q_creator
+        0
+        >>> Fd(p).is_q_creator
+        1
+
         """
         if self.is_above_fermi: return 1
         return 0
@@ -656,6 +926,21 @@ class CreateFermion(FermionicOperator, Creator):
     def is_q_annihilator(self):
         """
         Can we destroy a quasi-particle?  (annihilate hole or annihilate particle)
+        If so, would that be above or below the fermi surface?
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import Fd
+        >>> a = Symbol('a',above_fermi=1)
+        >>> i = Symbol('i',below_fermi=1)
+        >>> p = Symbol('p')
+
+        >>> Fd(a).is_q_annihilator
+        0
+        >>> Fd(i).is_q_annihilator
+        -1
+        >>> Fd(p).is_q_annihilator
+        -1
+
         """
         if self.is_below_fermi: return -1
         return 0
@@ -664,6 +949,20 @@ class CreateFermion(FermionicOperator, Creator):
     def is_only_q_creator(self):
         """
         Always create a quasi-particle?  (create hole or create particle)
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import Fd
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+
+        >>> Fd(a).is_only_q_creator
+        True
+        >>> Fd(i).is_only_q_creator
+        False
+        >>> Fd(p).is_only_q_creator
+        False
+
         """
         return self.is_only_above_fermi
 
@@ -671,6 +970,20 @@ class CreateFermion(FermionicOperator, Creator):
     def is_only_q_annihilator(self):
         """
         Always destroy a quasi-particle?  (annihilate hole or annihilate particle)
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import Fd
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+
+        >>> Fd(a).is_only_q_annihilator
+        False
+        >>> Fd(i).is_only_q_annihilator
+        True
+        >>> Fd(p).is_only_q_annihilator
+        False
+
         """
         return self.is_only_below_fermi
 
@@ -1339,15 +1652,24 @@ class NO(Function):
     i.e.  {abcd}  sometimes written  :abcd:
 
     Applying the function NO(arg) to an argument means that all operators in
-    the argument will be assumed to anticommute, and have vanishong
+    the argument will be assumed to anticommute, and have vanishing
     contractions.  This allows an immediate reordering to canonical form
     upon object creation.
 
+    >>> from sympy import symbols
+    >>> from sympy.physics.secondquant import NO, F, Fd
+    >>> p,q = symbols('pq')
+    >>> NO(Fd(p)*F(q))
+    NO(CreateFermion(p)*AnnihilateFermion(q))
+    >>> NO(F(q)*Fd(p))
+    -NO(CreateFermion(p)*AnnihilateFermion(q))
+
+
     Note:
     If you want to generate a normal ordered equivalent of an expression, you
-    should use the function Wicks().  This function only indicates that all
-    operators anticommute, and that the operators have only vanishing
-    contractions.  Nothing more, nothing less.
+    should use the function Wicks().  This class only indicates that all
+    operators inside the brackets anticommute, and have vanishing contractions.
+    Nothing more, nothing less.
 
     """
     nargs = 1
@@ -1421,13 +1743,57 @@ class NO(Function):
 
     @property
     def has_q_creators(self):
-        """Returns yes or no, fast"""
-        return self.args[0].is_q_creator
+        """
+        Returns yes or no, fast
+
+        Also, in case of yes, we indicate whether leftmost operator is a
+        creator above or below fermi.
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.secondquant import NO, F, Fd
+
+        >>> p,q = symbols('pq')
+        >>> no_pq = NO(Fd(p)*Fd(q))
+        >>> no_pq.has_q_creators
+        1
+        >>> no_pq = NO(F(p)*F(q))
+        >>> no_pq.has_q_creators
+        -1
+
+        >>> i,j = symbols('ij',below_fermi=True)
+        >>> no_pq = NO(Fd(i)*Fd(j))
+        >>> no_pq.has_q_creators
+        0
+
+        """
+        return self.args[0].args[0].is_q_creator
 
     @property
     def has_q_annihilators(self):
-        """Returns yes or no, fast"""
-        return self.args[-1].is_q_annihilator
+        """
+        Returns yes or no, fast
+
+        Also, in case of yes, we indicate whether rightmost operator is an
+        annihilator above or below fermi.
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.secondquant import NO, F, Fd
+
+        >>> p,q = symbols('pq')
+        >>> no_pq = NO(Fd(p)*Fd(q))
+        >>> no_pq.has_q_annihilators
+        -1
+        >>> no_pq = NO(F(p)*F(q))
+        >>> no_pq.has_q_annihilators
+        1
+
+        >>> a,b = symbols('ab',above_fermi=True)
+        >>> no_pq = NO(Fd(a)*Fd(b))
+        >>> no_pq.has_q_annihilators
+        0
+
+        """
+        return self.args[0].args[-1].is_q_annihilator
 
     def doit(self, **kw_args):
         if kw_args.get("remove_brackets", True):
@@ -1529,6 +1895,14 @@ class NO(Function):
     def get_subNO(self, i):
         """
         Returns a NO() without FermionicOperator at index i
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.secondquant import F, NO
+        >>> p,q,r = symbols('pqr')
+
+        >>> NO(F(p)*F(q)*F(r)).get_subNO(1)
+        NO(AnnihilateFermion(p)*AnnihilateFermion(r))
+
         """
         mul = Mul(*(self.args[0].args[0:i] + self.args[0].args[i+1:]))
         return NO(mul)
@@ -1547,6 +1921,35 @@ class NO(Function):
 def contraction(a,b):
     """
     Calculates contraction of Fermionic operators ab
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.secondquant import F, Fd, contraction
+    >>> p,q = symbols('pq')
+    >>> a,b = symbols('ab',above_fermi=True)
+    >>> i,j = symbols('ij',below_fermi=True)
+
+    A contraction is non-zero only if a quasi-creator is to the right of a
+    quasi-annihilator:
+
+    >>> contraction(F(a),Fd(b))
+    KroneckerDelta(a,b)
+    >>> contraction(Fd(i),F(j))
+    KroneckerDelta(i,j)
+
+    For general indices a non-zero result restricts the indices to below/above
+    the fermi surface:
+
+    >>> contraction(Fd(p),F(q))
+    KroneckerDelta(p, q)*KroneckerDelta(q, _i)
+    >>> contraction(F(p),Fd(q))
+    KroneckerDelta(p, q)*KroneckerDelta(q, _a)
+
+    Two creators or two annihilators always vanishes:
+
+    >>> contraction(F(p),F(q))
+    0
+    >>> contraction(Fd(p),Fd(q))
+    0
 
     """
     if isinstance(b,FermionicOperator) and isinstance(a,FermionicOperator):
@@ -1648,31 +2051,49 @@ def evaluate_deltas(e):
     evaluate_deltas is in that case undefined.
 
     Examples:  We assume that
-    i,j = symbols('ij',below_fermi=True)
-    a,b = symbols('ab',above_fermi=True)
-    p,q = symbols('pq')
+    >>> from sympy import symbols, Function
+    >>> from sympy.physics.secondquant import evaluate_deltas, KroneckerDelta
+    >>> i,j = symbols('ij',below_fermi=True, dummy=True)
+    >>> a,b = symbols('ab',above_fermi=True, dummy=True)
+    >>> p,q = symbols('pq', dummy=True)
+    >>> f = Function('f')
+    >>> t = Function('t')
+
     The order of preference for these indices according to KroneckerDelta is
     (a,b,i,j,p,q)  So we get
 
     ==Trivial cases===
 
-    d_ij f(i) -> f(j)
-    d_ij f(j) -> f(i)
-    d_ip f(p) -> f(i)
-    d_qp f(p) -> f(q)
-    d_qp f(q) -> f(p)
-    d_ap f(p) -> f(a)
+    >>> evaluate_deltas(KroneckerDelta(i,j)*f(i))       # d_ij f(i) -> f(j)
+    f(_j)
+    >>> evaluate_deltas(KroneckerDelta(i,j)*f(j))       # d_ij f(j) -> f(i)
+    f(_i)
+    >>> evaluate_deltas(KroneckerDelta(i,p)*f(p))       # d_ip f(p) -> f(i)
+    f(_i)
+    >>> evaluate_deltas(KroneckerDelta(q,p)*f(p))       # d_qp f(p) -> f(q)
+    f(_q)
+    >>> evaluate_deltas(KroneckerDelta(q,p)*f(q))       # d_qp f(q) -> f(p)
+    f(_p)
+
 
     ==more interesting cases===
 
-    d_ip t(ai)*f(pq) -> t(ai)*f(iq)    (implied summation over i)
-    d_ap t(ai)*f(pq) -> t(ai)*f(aq)    (implied summation over a)
-    d_qp f(pq)       -> f(pp)          (implied summation over p)
+    >>> evaluate_deltas(KroneckerDelta(i,p)*t(a,i)*f(p,q))
+    f(_i, _q)*t(_a, _i)
+    >>> evaluate_deltas(KroneckerDelta(a,p)*t(a,i)*f(p,q))
+    f(_a, _q)*t(_a, _i)
+    >>> evaluate_deltas(KroneckerDelta(p,q)*f(p,q))
+    f(_p, _p)
 
-    == Do nothing ===
 
-    d_ap f(q) -> d_ap f(q)
-    d_ip f(i) -> d_ip f(i)  (nothing done to prevent loss of information)
+    == Do nothing to prevent loss of information ===
+
+    >>> evaluate_deltas(KroneckerDelta(i,p)*f(q))
+    KroneckerDelta(_i, _p)*f(_q)
+
+    >>> evaluate_deltas(KroneckerDelta(i,p)*f(i))
+    KroneckerDelta(_i, _p)*f(_i)
+
 
     """
 
@@ -1729,24 +2150,29 @@ def substitute_dummies(expr, newIndices=False, reverse_order=True, prettyIndices
     variables, where the order is determined by index position.  These indices
     are then substituted consistently in each term.  E.g.
 
-    In [52]: a,b = symbols('ab',dummy=True)
-    In [53]: expr = f(a,b)
-    In [54]: a,b = symbols('ab',dummy=True)
-    In [55]: expr = f(a,b) + expr
-    In [56]: expr
-    Out[56]: f(a, b) + f(a, b)              # two dummy variables are never equal
-    In [57]: substitute_dummies(expr)
-    Out[57]: 2*f(p, q)                      # both a's are now p and equal,
-                                            # both b's are now q and equal.
+    >>> from sympy import symbols, Function
+    >>> from sympy.physics.secondquant import substitute_dummies
+    >>> a,b = symbols('ab',dummy=True)
+    >>> c,d = symbols('cd',dummy=True)
+    >>> f = Function('f')
+
+    >>> expr = f(a,b) + f(c,d); expr
+    f(_a, _b) + f(_c, _d)
+
+    Since a, b, c and d are summation indices, this can be simplified to a
+    single summation term with a factor 2
+
+    >>> substitute_dummies(expr, reverse_order=False)
+    2*f(_a, _b)
 
     In order to simplify as much as possible, the indices related to
     non-commuting factors have highest priority when approaching canonical
     indexing.  This is done by giving highest priority to the rightmost
-    dummyindices in each term.  (reverse_order=True by default)
+    dummyindices in each term.  (reverse_order=True by default)  The default
+    substitution gives:
 
-    It is possible to give higest priority to leftmost dummy indices
-    by sepcifying reverse_order=False
-
+    >>> substitute_dummies(expr, reverse_order=True)
+    2*f(_b, _a)
 
     """
 
@@ -1889,17 +2315,18 @@ def substitute_dummies(expr, newIndices=False, reverse_order=True, prettyIndices
         Dummies without the keyword in .assumptions0 will be default to
         give the value False.
 
-        Example:
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import substitute_dummies
+        >>> q = Symbol('q', dummy=True)
+        >>> i = Symbol('i', below_fermi=True, dummy=True)
+        >>> a = Symbol('a', above_fermi=True, dummy=True)
 
-        >>> e.assumptions0['above_fermi'] =True
-        >>> _substitute(e, above_fermi=True)   # will succeed
-        c
-        >>> e.assumptions0 = {}
-        >>> _substitute(e, above_fermi=True)   # will not succeed
-        e
-        >>> e.assumptions0 = {}
-        >>> _substitute(e, above_fermi=False)   # will succeed
-        c
+        >>> _substitute(a, [q], above_fermi=True)   # will succeed
+        q
+        >>> _substitute(i, [q],above_fermi=True)   # will not succeed
+        i
+        >>> _substitute(i, [q],above_fermi=False)  # will succeed
+        q
 
         With no keywords, all dummies are substituted.
         """
@@ -2026,17 +2453,34 @@ def _get_contractions(str, keepOnlyFullyContracted=False):
 # @cacheit
 def Wicks(e, **kw_args):
     """
-    Returns the normal ordered equivalent of an expression.
+    Returns the normal ordered equivalent of an expression using Wicks Theorem.
 
-    Employs Wicks Theorem.  With the keyword 'keepOnlyFullyContracted=True',
-    only fully contracted terms are returned.
 
-    By default, the result is simplified in the following order:
-     -- Expression is expanded
+    >>> from sympy import symbols, Function
+    >>> from sympy.physics.secondquant import Wicks, F, Fd, NO
+    >>> p,q,r = symbols('pqr')
+    >>> Wicks(Fd(p)*F(q))
+    KroneckerDelta(p, q)*KroneckerDelta(q, _i) + NO(CreateFermion(p)*AnnihilateFermion(q))
+
+    By default, the expression is expanded:
+
+    >>> Wicks(F(p)*(F(q)+F(r)))
+    NO(AnnihilateFermion(p)*AnnihilateFermion(q)) + NO(AnnihilateFermion(p)*AnnihilateFermion(r))
+
+    With the keyword 'keepOnlyFullyContracted=True', only fully contracted
+    terms are returned.
 
     By request, the result can be simplified in the following order:
      -- KroneckerDelta functions are evaluated
      -- Dummy variables are substituted consistently across terms
+
+    >>> p,q,r = symbols('pqr', dummy=True)
+    >>> Wicks(Fd(p)*(F(q)+F(r)), keepOnlyFullyContracted=True)
+    KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)
+    >>> Wicks(Fd(p)*(F(q)+F(r)), keepOnlyFullyContracted=True, simplifyKroneckerDeltas=True)
+    KroneckerDelta(_i, _p) + KroneckerDelta(_i, _p)
+    >>> Wicks(Fd(p)*(F(q)+F(r)), keepOnlyFullyContracted=True, simplifyKroneckerDeltas=True, simplifyDummies=True)
+    2*KroneckerDelta(_i, _p)
 
     """
 
@@ -2143,6 +2587,14 @@ class PermutationOperator(Basic):
     def get_permuted(self,expr):
         """
         Returns -expr with permuted indices.
+
+        >>> from sympy import symbols, Function
+        >>> from sympy.physics.secondquant import PermutationOperator
+        >>> p,q = symbols('pq')
+        >>> f = Function('f')
+        >>> PermutationOperator(p,q).get_permuted(f(p,q))
+        -f(q, p)
+
         """
         tmp = Symbol('t',dummy=True)
         i = self.args[0]
@@ -2171,6 +2623,24 @@ def simplifyIndexPermutations(expr, permutation_operators):
     If permutation_operators=[P(ab),P(ij)] we will try to introduce the
     permutation operators P(ij) and P(ab) in the expression.  If there are other
     possible simplifications, we ignore them.
+
+    >>> from sympy import symbols, Function
+    >>> from sympy.physics.secondquant import simplifyIndexPermutations
+    >>> from sympy.physics.secondquant import PermutationOperator
+    >>> p,q,r,s = symbols('pqrs')
+    >>> f = Function('f')
+    >>> g = Function('g')
+
+    >>> expr = f(p)*g(q) - f(q)*g(p); expr
+    f(p)*g(q) - f(q)*g(p)
+    >>> simplifyIndexPermutations(expr,[PermutationOperator(p,q)])
+    PermutationOperator(p, q)*f(p)*g(q)
+
+    >>> PermutList = [PermutationOperator(p,q),PermutationOperator(r,s)]
+    >>> expr = f(p,r)*g(q,s) - f(q,r)*g(p,s) + f(q,s)*g(p,r) - f(p,s)*g(q,r)
+    >>> simplifyIndexPermutations(expr,PermutList)
+    PermutationOperator(p, q)*PermutationOperator(r, s)*f(p, r)*g(q, s)
+
     """
 
     def _get_indices(expr, ind):
