@@ -451,6 +451,11 @@ def test_eigen():
          (-1, 1, [Matrix([-1, 1, 0])]),
          ( 0, 1, [Matrix([ 0,-1, 1])])])
 
+    M = Matrix([ [1, -1],
+                 [1,  3]])
+    assert canonicalize(M.eigenvects()) == canonicalize(
+        [[2, 2, [Matrix(1,2,[-1,1])]]])
+
     eps = Symbol('eps',real=True)
 
     M = Matrix([[abs(eps), I*eps    ],

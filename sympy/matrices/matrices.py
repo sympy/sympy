@@ -1423,7 +1423,7 @@ class Matrix(object):
             basis = tmp.nullspace()
             # check if basis is right size, don't do it if symbolic - too many solutions
             if not tmp.is_symbolic():
-                assert len(basis) == k
+                assert len(basis) <= k
             elif len(basis) != k:
                 # The nullspace routine failed, try it again with simplification
                 basis = tmp.nullspace(simplified=True)
