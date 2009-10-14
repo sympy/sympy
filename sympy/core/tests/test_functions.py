@@ -1,8 +1,9 @@
 from sympy import Lambda, Symbol, Function, WildFunction, Derivative, sqrt, \
         log, exp, Rational, Real, sign, Basic, sin, cos, diff, I, re, im, \
-        oo, zoo, nan, E, expand, pi
+        oo, zoo, nan, E, expand, pi, raises, O
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import x, y
+from sympy.core.function import PoleError
 
 
 def test_log():
@@ -327,3 +328,9 @@ def test_function_non_commutative():
     assert exp(x).is_commutative == False
     assert log(x).is_commutative == False
 
+def test_function__eval_nseries():
+    x = Symbol('x')
+    assert sin(x)._eval_nseries(x,0,2) == x + O(x**2)
+    assert sin(x+1)._eval_nseries(x,0,2) == x*cos(1) + sin(1) + O(x**2)
+    assert sin(pi*(1-x))._eval_nseries(x,0,2) == pi*x + O(x**2)
+    raises(PoleError,'sin(1/x)._eval_nseries(x,0,2)')

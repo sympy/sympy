@@ -289,9 +289,9 @@ class Function(Basic):
         if arg0 in [-oo, oo]:
             raise PoleError("Cannot expand around %s" % (arg))
         if arg0 is not S.Zero:
-            e = self.func(arg)
+            e = self
             e1 = e.expand()
-            if e==e1:
+            if e == e1:
                 #for example when e = sin(x+1) or e = sin(cos(x))
                 #let's try the general algorithm
                 term = e.subs(x, S.Zero)
@@ -305,7 +305,7 @@ class Function(Basic):
                     term = term.expand()
                     series += term
                 return series + C.Order(x**n, x)
-            return self.nseries(x, x0, n)
+            return e1.nseries(x, x0, n)
         l = []
         g = None
         for i in xrange(n+2):
