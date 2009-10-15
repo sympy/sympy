@@ -139,7 +139,7 @@ class Product(_BigOperator):
                 return lp * rp
 
         if f.is_Pow:
-            base, exp = f[:]
+            base, exp = f.args
             if not base.has(i):
                 s = Sum(exp, (i, a, b))
                 if not isinstance(s, Sum):

@@ -1,6 +1,7 @@
 from sympy import (Symbol, Sum, oo, Real, Rational, sum, pi, cos, zeta,
 Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma, Function)
 from sympy.concrete.summations import getab
+from sympy.concrete.sums_products import Sum2
 from sympy.utilities.pytest import XFAIL
 
 a, b, c, d, m, k = map(Symbol, 'abcdmk')
@@ -167,3 +168,8 @@ def test_telescopic_sums():
 
 def test_Sum_limit_subs():
     assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b,2)
+
+def test_Sum2():
+    x = Symbol('x')
+    y = Symbol('y')
+    assert Sum2(x**y, (x, 1, 3)) == 1 + 2**y + 3**y
