@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -200,7 +200,7 @@ class CarbonGlyphRenderer(base.GlyphRenderer):
             kATSUFromTextBeginning,
             kATSUToTextEnd,
             text_len)
-        carbon.ATSUSetRunStyle(layout, self.font.atsu_style, 
+        carbon.ATSUSetRunStyle(layout, self.font.atsu_style,
             kATSUFromTextBeginning, kATSUToTextEnd)
 
         # Turning on transient font matching screws up font layout
@@ -209,7 +209,7 @@ class CarbonGlyphRenderer(base.GlyphRenderer):
 
         # Get bitmap dimensions required
         rect = Rect()
-        carbon.ATSUMeasureTextImage(layout, 
+        carbon.ATSUMeasureTextImage(layout,
             kATSUFromTextBeginning,
             kATSUToTextEnd,
             0, 0,
@@ -218,14 +218,14 @@ class CarbonGlyphRenderer(base.GlyphRenderer):
         image_height = rect.bottom - rect.top + 2
         baseline = rect.bottom + 1
         lsb = rect.left
-        
+
         # Resize Quartz context if necessary
         if (image_width > self._bitmap_rect.size.width or
             image_height > self._bitmap_rect.size.height):
             self._create_bitmap_context(
                 int(max(image_width, self._bitmap_rect.size.width)),
                 int(max(image_height, self._bitmap_rect.size.height)))
-            
+
             set_layout_attributes(layout, {
                 kATSUCGContextTag: self._bitmap_context})
 
@@ -248,13 +248,13 @@ class CarbonGlyphRenderer(base.GlyphRenderer):
         carbon.ATSUDrawText(layout,
             0,
             kATSUToTextEnd,
-            fixed(-lsb + 1), fixed(baseline)) 
-        
+            fixed(-lsb + 1), fixed(baseline))
+
         # A negative pitch is required, but it is much faster to load the
         # glyph upside-down and flip the tex_coords.  Note region used
         # to start at top of glyph image.
         pitch = int(4 * self._bitmap_rect.size.width)
-        image = pyglet.image.ImageData(image_width, 
+        image = pyglet.image.ImageData(image_width,
             self._bitmap_rect.size.height, 'RGBA', self._bitmap, pitch)
         skip_rows = int(self._bitmap_rect.size.height - image_height)
         image = image.get_region(0, skip_rows, image.width, image_height)
@@ -262,7 +262,7 @@ class CarbonGlyphRenderer(base.GlyphRenderer):
         glyph.set_bearings(baseline, lsb - 1, int(advance))
         t = list(glyph.tex_coords)
         glyph.tex_coords = t[9:12] + t[6:9] + t[3:6] + t[:3]
-        
+
         return glyph
 
     def _create_bitmap_context(self, width, height):
@@ -273,8 +273,8 @@ class CarbonGlyphRenderer(base.GlyphRenderer):
         pitch = width * components
         self._bitmap = (c_ubyte * (pitch * height))()
         color_space = carbon.CGColorSpaceCreateDeviceRGB()
-        context = carbon.CGBitmapContextCreate(self._bitmap, 
-            width, height, 8, pitch, 
+        context = carbon.CGBitmapContextCreate(self._bitmap,
+            width, height, 8, pitch,
             color_space, kCGImageAlphaPremultipliedLast)
         carbon.CGColorSpaceRelease(color_space)
 
@@ -283,13 +283,13 @@ class CarbonGlyphRenderer(base.GlyphRenderer):
         carbon.CGContextSetShouldSmoothFonts(context, False)
         carbon.CGContextSetShouldAntialias(context, True)
 
-        self._bitmap_context = context 
+        self._bitmap_context = context
         self._bitmap_rect = CGRect()
         self._bitmap_rect.origin.x = 0
         self._bitmap_rect.origin.y = 0
         self._bitmap_rect.size.width = width
         self._bitmap_rect.size.height = height
-        
+
 
 class CarbonFont(base.Font):
     glyph_renderer_class = CarbonGlyphRenderer
@@ -337,7 +337,7 @@ class CarbonFont(base.Font):
             kFontNoPlatformCode,
             kFontNoScriptCode,
             kFontNoLanguageCode,
-            byref(font_id)) 
+            byref(font_id))
         return r != kATSUInvalidFontErr
 
     def calculate_metrics(self):
@@ -351,14 +351,14 @@ class CarbonFont(base.Font):
         carbon.ATSUCreateTextLayout(byref(layout))
         carbon.ATSUSetTextPointerLocation(layout, text,
             kATSUFromTextBeginning, kATSUToTextEnd, 1)
-        carbon.ATSUSetRunStyle(layout, self.atsu_style, 
+        carbon.ATSUSetRunStyle(layout, self.atsu_style,
             kATSUFromTextBeginning, kATSUToTextEnd)
 
         # determine the metrics for this font only
         carbon.ATSUSetTransientFontMatching(layout, False)
 
         value = ATSUTextMeasurement()
-        carbon.ATSUGetLineControl(layout, 0, kATSULineAscentTag, 
+        carbon.ATSUGetLineControl(layout, 0, kATSULineAscentTag,
             sizeof(value), byref(value), None)
         self.ascent = int(math.ceil(fix2float(value)))
         carbon.ATSUGetLineControl(layout, 0, kATSULineDescentTag,

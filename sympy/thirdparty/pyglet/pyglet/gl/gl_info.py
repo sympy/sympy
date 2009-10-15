@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -35,7 +35,7 @@
 '''Information about version and extensions of current GL implementation.
 
 Usage::
-    
+
     from pyglet.gl import gl_info
 
     if gl_info.have_extension('GL_NV_register_combiners'):
@@ -67,7 +67,7 @@ class GLInfo(object):
     '''Information interface for a single GL context.
 
     A default instance is created automatically when the first OpenGL context
-    is created.  You can use the module functions as a convenience for 
+    is created.  You can use the module functions as a convenience for
     this default instance's methods.
 
     If you are using more than one context, you must call `set_active_context`
@@ -139,7 +139,7 @@ class GLInfo(object):
             `minor` : int
                 The minor revision number.
             `release` : int
-                The release number.  
+                The release number.
 
         :rtype: bool
         :return: True if the requested or a later version is supported.
@@ -172,7 +172,7 @@ class GLInfo(object):
         return self.vendor
 
 # Single instance useful for apps with only a single context (or all contexts
-# have same GL driver, common case). 
+# have same GL driver, common case).
 _gl_info = GLInfo()
 
 set_active_context = _gl_info.set_active_context

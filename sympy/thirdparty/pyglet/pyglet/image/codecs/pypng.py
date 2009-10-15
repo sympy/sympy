@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -33,7 +33,7 @@
 # ----------------------------------------------------------------------------
 # png.py - PNG encoder in pure Python
 # Copyright (C) 2006 Johann C. Rocholl <johann@browsershots.org>
-# <ah> Modifications for pyglet by Alex Holkner <alex.holkner@gmail.com> 
+# <ah> Modifications for pyglet by Alex Holkner <alex.holkner@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files

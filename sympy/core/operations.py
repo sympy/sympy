@@ -190,6 +190,7 @@ class AssocOp(Basic):
                     d2 = pattern.matches(expr, d1, evaluate=True)
                     if d2 is not None:
                         return d2
+
         return
 
     def _eval_template_is_attr(self, is_attr):

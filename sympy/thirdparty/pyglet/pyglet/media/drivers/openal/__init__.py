@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -64,9 +64,9 @@ def _split_nul_strings(s):
 def get_version():
     major = alc.ALCint()
     minor = alc.ALCint()
-    alc.alcGetIntegerv(_device, alc.ALC_MAJOR_VERSION, 
+    alc.alcGetIntegerv(_device, alc.ALC_MAJOR_VERSION,
                        ctypes.sizeof(major), major)
-    alc.alcGetIntegerv(_device, alc.ALC_MINOR_VERSION, 
+    alc.alcGetIntegerv(_device, alc.ALC_MINOR_VERSION,
                        ctypes.sizeof(minor), minor)
     return major.value, minor.value
 
@@ -151,12 +151,12 @@ class OpenALAudioPlayer(AudioPlayer):
     def write(self, audio_data):
         buffer = al.ALuint()
         al.alGenBuffers(1, buffer)
-        al.alBufferData(buffer, 
+        al.alBufferData(buffer,
                         self._al_format,
                         audio_data.data,
                         audio_data.length,
                         self.audio_format.sample_rate)
-        al.alSourceQueueBuffers(self._al_source, 1, ctypes.byref(buffer)) 
+        al.alSourceQueueBuffers(self._al_source, 1, ctypes.byref(buffer))
 
         self._buffered_time += audio_data.duration
         self._timestamps.append((audio_data.timestamp, audio_data.duration))
@@ -303,7 +303,7 @@ class OpenALListener(Listener):
     def _set_position(self, position):
         x, y, z = position
         al.alListener3f(al.AL_POSITION, x, y, z)
-        self._position = position 
+        self._position = position
 
     def _set_forward_orientation(self, orientation):
         val = (al.ALfloat * 6)(*(orientation + self._up_orientation))

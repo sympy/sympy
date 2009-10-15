@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -43,11 +43,11 @@ __version__ = '$Id: __init__.py 1558 2007-12-29 00:54:05Z Alex.Holkner $'
 import os
 import sys
 
-#: The release version of this pyglet installation.  
+#: The release version of this pyglet installation.
 #:
 #: Valid only if pyglet was installed from a source or binary distribution
 #: (i.e. not in a checked-out copy from SVN).
-#: 
+#:
 #: Use setuptools if you need to check for a specific release version, e.g.::
 #:
 #:    >>> import pyglet
@@ -81,7 +81,7 @@ if getattr(sys, 'frozen', None):
 #: ``PYGLET_``.  For example, in Bash you can set the ``debug_gl`` option with::
 #:
 #:      PYGLET_DEBUG_GL=True; export PYGLET_DEBUG_GL
-#: 
+#:
 #: For options requiring a tuple of values, separate each value with a comma.
 #:
 #: The non-development options are:
@@ -91,7 +91,7 @@ if getattr(sys, 'frozen', None):
 #:     order of preference.  Valid driver names are:
 #:
 #:     * directsound, the Windows DirectSound audio module (Windows only)
-#:     * alsa, the ALSA audio module (Linux only) 
+#:     * alsa, the ALSA audio module (Linux only)
 #:     * openal, the OpenAL audio module
 #:     * silent, no audio
 #: debug_gl

@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -35,7 +35,7 @@
 '''Windowing and user-interface events.
 
 This module allows applications to create and display windows with an
-OpenGL context.  Windows can be created with a variety of border styles 
+OpenGL context.  Windows can be created with a variety of border styles
 or set fullscreen.
 
 You can register event handlers for keyboard, mouse and window events.
@@ -82,7 +82,7 @@ Working with multiple windows
 
 You can open any number of windows and render to them individually.  Each
 window must have the event handlers set on it that you are interested in
-(i.e., each window will have its own mouse event handler).  
+(i.e., each window will have its own mouse event handler).
 
 You must call `Window.dispatch_events` for each window.  Before rendering
 to a window, you must call `Window.switch_to` to set the active GL context.
@@ -95,7 +95,7 @@ Here is an example run loop for a list of windows::
             if win.has_exit:
                 win.close()
         windows = [w for w in windows if not w.has_exit]
-   
+
         for win in windows:
             win.switch_to()
             # ... drawing commands for this window ...
@@ -228,7 +228,7 @@ class Display(object):
 
         :rtype: list of `Screen`
         '''
-        raise NotImplementedError('abstract')    
+        raise NotImplementedError('abstract')
 
     def get_default_screen(self):
         '''Get the default screen as specified by the user's operating system
@@ -256,8 +256,8 @@ class Screen(object):
     The `width` and `height` attributes of a screen give the current
     resolution of the screen.  The `x` and `y` attributes give the global
     location of the top-left corner of the screen.  This is useful for
-    determining if screens arranged above or next to one another.  
-    
+    determining if screens arranged above or next to one another.
+
     You cannot always rely on the origin to give the placement of monitors.
     For example, an X server with two displays without Xinerama enabled
     will present two logically separate screens with no relation to each
@@ -337,8 +337,8 @@ class MouseCursor(object):
         '''Abstract render method.
 
         The cursor should be drawn with the "hot" spot at the given
-        coordinates.  The projection is set to the pyglet default (i.e., 
-        orthographic in window-space), however no other aspects of the 
+        coordinates.  The projection is set to the pyglet default (i.e.,
+        orthographic in window-space), however no other aspects of the
         state can be assumed.
 
         :Parameters:
@@ -387,8 +387,8 @@ class ImageMouseCursor(MouseCursor):
         gl.glPopAttrib()
 
 def _PlatformEventHandler(data):
-    '''Decorator for platform event handlers.  
-    
+    '''Decorator for platform event handlers.
+
     Apply giving the platform-specific data needed by the window to associate
     the method with an event.  See platform-specific subclasses of this
     decorator for examples.
@@ -459,7 +459,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     #: The window style for tool windows.
     WINDOW_STYLE_TOOL = 'tool'
     #: A window style without any decoration.
-    WINDOW_STYLE_BORDERLESS = 'borderless' 
+    WINDOW_STYLE_BORDERLESS = 'borderless'
 
     #: The default mouse cursor.
     CURSOR_DEFAULT = None
@@ -479,19 +479,19 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     #: A mouse cursor indicating the element can be resized from the
     #: upper-right corner.
     CURSOR_SIZE_UP_RIGHT = 'size_up_right'
-    #: A mouse cursor indicating the element can be resized from the right 
+    #: A mouse cursor indicating the element can be resized from the right
     #: border.
     CURSOR_SIZE_RIGHT = 'size_right'
     #: A mouse cursor indicating the element can be resized from the lower-right
     #: corner.
     CURSOR_SIZE_DOWN_RIGHT = 'size_down_right'
-    #: A mouse cursor indicating the element can be resized from the bottom 
+    #: A mouse cursor indicating the element can be resized from the bottom
     #: border.
     CURSOR_SIZE_DOWN = 'size_down'
     #: A mouse cursor indicating the element can be resized from the lower-left
     #: corner.
     CURSOR_SIZE_DOWN_LEFT = 'size_down_left'
-    #: A mouse cursor indicating the element can be resized from the left 
+    #: A mouse cursor indicating the element can be resized from the left
     #: border.
     CURSOR_SIZE_LEFT = 'size_left'
     #: A mouse cursor indicating the element can be resized from the upper-left
@@ -542,7 +542,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     _default_width = 640
     _default_height = 480
 
-    def __init__(self, 
+    def __init__(self,
                  width=None,
                  height=None,
                  caption=None,
@@ -561,7 +561,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         where they are not specified.
 
         The `display`, `screen`, `config` and `context` parameters form
-        a hierarchy of control: there is no need to specify more than 
+        a hierarchy of control: there is no need to specify more than
         one of these.  For example, if you specify `screen` the `display`
         will be inferred, and a default `config` and `context` will be
         created.
@@ -690,7 +690,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
             `changes` : list of str
                 List of attribute names that were changed since the last
                 `_create` or `_recreate`.  For example, ``['fullscreen']``
-                is given if the window is to be toggled to or from fullscreen. 
+                is given if the window is to be toggled to or from fullscreen.
         '''
         raise NotImplementedError('abstract')
 
@@ -795,8 +795,8 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         '''Draw the custom mouse cursor.
 
         If the current mouse cursor has ``drawable`` set, this method
-        is called before the buffers are flipped to render it.  
-        
+        is called before the buffers are flipped to render it.
+
         This method always leaves the ``GL_MODELVIEW`` matrix as current,
         regardless of what it was set to previously.  No other GL state
         is affected.
@@ -806,8 +806,8 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         '''
         # Draw mouse cursor if set and visible.
         # XXX leaves state in modelview regardless of starting state
-        if (self._mouse_cursor.drawable and 
-            self._mouse_visible and 
+        if (self._mouse_cursor.drawable and
+            self._mouse_visible and
             self._mouse_in_window):
             gl.glMatrixMode(gl.GL_PROJECTION)
             gl.glPushMatrix()
@@ -842,23 +842,23 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     style = property(lambda self: self._style,
         doc='''The window style; one of the ``WINDOW_STYLE_*`` constants.
         Read-only.
-        
+
         :type: int
         ''')
     fullscreen = property(lambda self: self._fullscreen,
         doc='''True if the window is currently fullscreen.  Read-only.
-        
+
         :type: bool
         ''')
     visible = property(lambda self: self._visible,
         doc='''True if the window is currently visible.  Read-only.
-        
+
         :type: bool
         ''')
     vsync = property(lambda self: self._vsync,
         doc='''True if buffer flips are synchronised to the screen's vertical
         retrace.  Read-only.
-        
+
         :type: bool
         ''')
     display = property(lambda self: self._display,
@@ -868,17 +868,17 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         ''')
     screen = property(lambda self: self._screen,
         doc='''The screen this window is fullscreen in.  Read-only.
-        
+
         :type: `Screen`
         ''')
     config = property(lambda self: self._config,
         doc='''A GL config describing the context of this window.  Read-only.
-        
+
         :type: `pyglet.gl.Config`
         ''')
     context = property(lambda self: self._context,
         doc='''The OpenGL context attached to this window.  Read-only.
-        
+
         :type: `pyglet.gl.Context`
         ''')
 
@@ -886,14 +886,14 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     width = property(lambda self: self.get_size()[0],
                      lambda self, width: self.set_size(width, self.height),
          doc='''The width of the window, in pixels.  Read-write.
-         
+
          :type: int
          ''')
 
     height = property(lambda self: self.get_size()[1],
                       lambda self, height: self.set_size(self.width, height),
          doc='''The height of the window, in pixels.  Read-write.
-         
+
          :type: int
          ''')
 
@@ -955,7 +955,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
 
     def set_size(self, width, height):
         '''Resize the window.
-        
+
         The behaviour is undefined if the window is not resizable, or if
         it is currently fullscreen.
 
@@ -1013,7 +1013,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         '''
         raise NotImplementedError('abstract')
 
-    def set_visible(self, visible=True):    
+    def set_visible(self, visible=True):
         '''Show or hide the window.
 
         :Parameters:
@@ -1164,7 +1164,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     def set_icon(self, *images):
         '''Set the window icon.
 
-        If multiple images are provided, one with an appropriate size 
+        If multiple images are provided, one with an appropriate size
         will be selected (if the correct size is not provided, the image
         will be scaled).
 
@@ -1174,7 +1174,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         :Parameters:
             `images` : sequence of `pyglet.image.AbstractImage`
                 List of images to use for the window icon.
-        
+
         '''
         pass
 
@@ -1185,7 +1185,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         buffer.  The window must be the active context (see `switch_to`).
         '''
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-    
+
     def dispatch_event(self, *args):
         if self._allow_dispatch_event:
             EventDispatcher.dispatch_event(self, *args)
@@ -1209,7 +1209,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
                     The key symbol pressed.
                 `modifiers` : int
                     Bitwise combination of the key modifiers active.
-            
+
             :event:
             '''
 
@@ -1368,7 +1368,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
                 `modifiers` : int
                     Bitwise combination of any keyboard modifiers currently
                     active.
-                
+
             :event:
             '''
 
@@ -1388,7 +1388,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
 
             :event:
             '''
-                
+
         def on_mouse_scroll(x, y, scroll_x, scroll_y):
             '''The mouse wheel was scrolled.
 
@@ -1533,7 +1533,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
 
         def on_context_lost():
             '''The window's GL context was lost.
-            
+
             When the context is lost no more GL methods can be called until it
             is recreated.  This is a rare event, triggered perhaps by the user
             switching to an incompatible video mode.  When it occurs, an

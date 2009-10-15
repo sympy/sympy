@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -122,7 +122,7 @@ class RIFFForm(object):
 class RIFFType(RIFFChunk):
     def __init__(self, *args, **kwargs):
         super(RIFFType, self).__init__(*args, **kwargs)
-        
+
         self.file.seek(self.offset)
         form = self.file.read(4)
         if form != 'WAVE':
@@ -149,7 +149,7 @@ class RIFFFile(RIFFForm):
 class WaveFormatChunk(RIFFChunk):
     def __init__(self, *args, **kwargs):
         super(WaveFormatChunk, self).__init__(*args, **kwargs)
-        
+
         fmt = '<HHLLHH'
         if struct.calcsize(fmt) != self.length:
             raise RIFFFormatException('Size of format chunk is incorrect.')
@@ -174,7 +174,7 @@ class WaveForm(RIFFForm):
         for chunk in self.get_chunks():
             if isinstance(chunk, WaveFormatChunk):
                 return chunk
-        
+
     def get_data_chunk(self):
         for chunk in self.get_chunks():
             if isinstance(chunk, WaveDataChunk):

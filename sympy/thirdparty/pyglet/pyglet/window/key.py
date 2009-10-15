@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -125,7 +125,7 @@ def symbol_string(symbol):
     '''Return a string describing a key symbol.
 
     Example::
-        
+
         >>> symbol_string(BACKSPACE)
         'BACKSPACE'
 
@@ -144,7 +144,7 @@ def motion_string(motion):
     '''Return a string describing a text motion.
 
     Example::
-        
+
         >>> motion_string(MOTION_NEXT_WORD):
         'MOTION_NEXT_WORD'
 
@@ -157,8 +157,8 @@ def motion_string(motion):
     return _motion_names.get(motion, str(motion))
 
 def user_key(scancode):
-    '''Return a key symbol for a key not supported by pyglet.  
-    
+    '''Return a key symbol for a key not supported by pyglet.
+
     This can be used to map virtual keys or scancodes from unsupported
     keyboard layouts into a machine-specific symbol.  The symbol will
     be meaningless on any other machine, or under a different keyboard layout.

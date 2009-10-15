@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -111,7 +111,7 @@ kernel32.GlobalLock.restype = c_void_p
 
 class GDIPlusDecoder(ImageDecoder):
     def get_file_extensions(self):
-        return ['.bmp', '.gif', '.jpg', '.jpeg', '.exif', '.png', '.tif', 
+        return ['.bmp', '.gif', '.jpg', '.jpeg', '.exif', '.png', '.tif',
                 '.tiff']
 
     def decode(self, file, filename):
@@ -169,13 +169,13 @@ class GDIPlusDecoder(ImageDecoder):
         rect.Width = width
         rect.Height = height
         bitmap_data = BitmapData()
-        gdiplus.GdipBitmapLockBits(bitmap, 
+        gdiplus.GdipBitmapLockBits(bitmap,
             byref(rect), ImageLockModeRead, pf, byref(bitmap_data))
-        
+
         # Create buffer for RawImage
         buffer = create_string_buffer(bitmap_data.Stride * height)
         memmove(buffer, bitmap_data.Scan0, len(buffer))
-        
+
         # Unlock data
         gdiplus.GdipBitmapUnlockBits(bitmap, byref(bitmap_data))
 

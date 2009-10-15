@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -73,7 +73,7 @@ class GdkPixbuf2ImageDecoder(ImageDecoder):
             raise ImageDecodeException(filename)
         if not pixbuf:
             raise ImageDecodeException('Unable to load pixbuf: %s' % filename)
-        
+
         # Get format and dimensions
         width = gdkpixbuf.gdk_pixbuf_get_width(pixbuf)
         height = gdkpixbuf.gdk_pixbuf_get_height(pixbuf)

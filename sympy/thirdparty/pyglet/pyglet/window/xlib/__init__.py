@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -135,9 +135,9 @@ class XlibDisplayDevice(Display):
         x_screen = xlib.XDefaultScreen(self._display)
         if _have_xinerama and xinerama.XineramaIsActive(self._display):
             number = c_int()
-            infos = xinerama.XineramaQueryScreens(self._display, 
+            infos = xinerama.XineramaQueryScreens(self._display,
                                                   byref(number))
-            infos = cast(infos, 
+            infos = cast(infos,
                  POINTER(xinerama.XineramaScreenInfo * number.value)).contents
             result = []
             for info in infos:
@@ -157,7 +157,7 @@ class XlibDisplayDevice(Display):
             for i in range(screen_count):
                 screen = xlib.XScreenOfDisplay(self._display, i)
                 result.append(XlibScreen(self,
-                                         i, 
+                                         i,
                                          0, 0,
                                          screen.contents.width,
                                          screen.contents.height,
@@ -173,7 +173,7 @@ class XlibScreen(Screen):
         self.display = display
         self._x_screen_id = x_screen_id
         self._xinerama = xinerama
- 
+
     def get_matching_configs(self, template):
         x_display = self.display._display
 
@@ -185,7 +185,7 @@ class XlibScreen(Screen):
                 config_class = XlibGLConfig10ATI
             else:
                 config_class = XlibGLConfig10
-        
+
         # Construct array of attributes
         attrs = []
         for name, value in template.get_gl_attributes():
@@ -211,7 +211,7 @@ class XlibScreen(Screen):
             if not configs:
                 return []
 
-            configs = cast(configs, 
+            configs = cast(configs,
                            POINTER(glx.GLXFBConfig * elements.value)).contents
 
             result = [config_class(self, c) for c in configs]
@@ -260,7 +260,7 @@ class XlibGLConfig(gl.Config):
         elif context == glx.GLXBadFBConfig:
             raise gl.ContextException('Invalid GL configuration')
         elif context < 0:
-            raise gl.ContextException('Could not create GL context') 
+            raise gl.ContextException('Could not create GL context')
 
         return XlibGLContext(self, context, share)
 
@@ -391,7 +391,7 @@ class XlibWindow(BaseWindow):
     _lost_context = False
     _lost_context_state = False
 
-    _default_event_mask = (0x1ffffff 
+    _default_event_mask = (0x1ffffff
         & ~xlib.PointerMotionHintMask
         & ~xlib.ResizeRedirectMask)
 
@@ -403,10 +403,10 @@ class XlibWindow(BaseWindow):
                 continue
             func = getattr(self, name)
             for message in func._platform_event_data:
-                self._event_handlers[message] = func 
+                self._event_handlers[message] = func
 
         super(XlibWindow, self).__init__(*args, **kwargs)
-        
+
     def _recreate(self, changes):
         # If flipping to/from fullscreen and using override_redirect (we
         # always are, _NET_WM_FULLSCREEN doesn't work), need to recreate the
@@ -425,7 +425,7 @@ class XlibWindow(BaseWindow):
                 glx.glXDestroyWindow(self._x_display, self._glx_window)
             xlib.XDestroyWindow(self._x_display, self._window)
             self._glx_window = None
-            self._window = None 
+            self._window = None
             self._mapped = False
 
         # TODO: detect state loss only by examining context share.
@@ -459,7 +459,7 @@ class XlibWindow(BaseWindow):
         # 2. GLX_SGI_video_sync (does not work on Intel 945GM, but that has
         #    MESA)
         # 3. GLX_SGI_swap_control (cannot be disabled once enabled).
-        self._use_video_sync = (self._have_SGI_video_sync and 
+        self._use_video_sync = (self._have_SGI_video_sync and
                                 not self._have_MESA_swap_control)
 
         # Create X window if not already existing.
@@ -482,7 +482,7 @@ class XlibWindow(BaseWindow):
                     self._x_display, self._x_screen_id)
             self._window = xlib.XCreateWindow(self._x_display, root,
                 0, 0, self._width, self._height, 0, visual_info.depth,
-                xlib.InputOutput, visual, xlib.CWColormap, 
+                xlib.InputOutput, visual, xlib.CWColormap,
                 byref(window_attributes))
 
             # Setting null background pixmap disables drawing the background,
@@ -509,14 +509,14 @@ class XlibWindow(BaseWindow):
         attributes_mask |= xlib.CWOverrideRedirect
 
         if self._fullscreen:
-            xlib.XMoveResizeWindow(self._x_display, self._window, 
-                self.screen.x, self.screen.y, 
+            xlib.XMoveResizeWindow(self._x_display, self._window,
+                self.screen.x, self.screen.y,
                 self.screen.width, self.screen.height)
         else:
-            xlib.XResizeWindow(self._x_display, self._window, 
+            xlib.XResizeWindow(self._x_display, self._window,
                 self._width, self._height)
 
-        xlib.XChangeWindowAttributes(self._x_display, self._window, 
+        xlib.XChangeWindowAttributes(self._x_display, self._window,
             attributes_mask, byref(attributes))
 
         # Set style
@@ -526,7 +526,7 @@ class XlibWindow(BaseWindow):
             self.WINDOW_STYLE_TOOL: '_NET_WM_WINDOW_TYPE_UTILITY',
         }
         if self._style in styles:
-            self._set_atoms_property('_NET_WM_WINDOW_TYPE', 
+            self._set_atoms_property('_NET_WM_WINDOW_TYPE',
                                      (styles[self._style],))
         elif self._style == self.WINDOW_STYLE_BORDERLESS:
             MWM_HINTS_DECORATIONS = 1 << 1
@@ -536,7 +536,7 @@ class XlibWindow(BaseWindow):
             mwmhints.decorations = 0
             name = xlib.XInternAtom(self._x_display, '_MOTIF_WM_HINTS', False)
             xlib.XChangeProperty(self._x_display, self._window,
-                name, name, 32, xlib.PropModeReplace, 
+                name, name, 32, xlib.PropModeReplace,
                 cast(pointer(mwmhints), POINTER(c_ubyte)),
                 PROP_MWM_HINTS_ELEMENTS)
 
@@ -557,7 +557,7 @@ class XlibWindow(BaseWindow):
         if _have_utf8:
             self._x_im = xlib.XOpenIM(self._x_display, None, None, None)
             # TODO select best input style.
-            self._x_ic = xlib.XCreateIC(self._x_im, 
+            self._x_ic = xlib.XCreateIC(self._x_im,
                 'inputStyle', xlib.XIMPreeditNothing|xlib.XIMStatusNothing,
                 None)
             xlib.XSetICFocus(self._x_ic)
@@ -776,7 +776,7 @@ class XlibWindow(BaseWindow):
         else:
             # Restore cursor
             if isinstance(self._mouse_cursor, XlibMouseCursor):
-                xlib.XDefineCursor(self._x_display, self._window, 
+                xlib.XDefineCursor(self._x_display, self._window,
                                    self._mouse_cursor.cursor)
             else:
                 xlib.XUndefineCursor(self._x_display, self._window)
@@ -838,7 +838,7 @@ class XlibWindow(BaseWindow):
     def set_exclusive_keyboard(self, exclusive=True):
         if exclusive == self._keyboard_exclusive:
             return
-        
+
         self._keyboard_exclusive = exclusive
         self._update_exclusivity()
 
@@ -892,7 +892,7 @@ class XlibWindow(BaseWindow):
             image.format = format
             image.pitch = -(image.width * len(image.format))
             s = c_buffer(sizeof(c_ulong) * 2)
-            memmove(s, cast((c_ulong * 2)(image.width, image.height), 
+            memmove(s, cast((c_ulong * 2)(image.width, image.height),
                             POINTER(c_ubyte)), len(s))
             data += s.raw + image.data
         buffer = (c_ubyte * len(data))()
@@ -923,7 +923,7 @@ class XlibWindow(BaseWindow):
         if _have_utf8 and allow_utf8:
             buf = create_string_buffer(value.encode('utf8'))
             result = xlib.Xutf8TextListToTextProperty(self._x_display,
-                cast(pointer(buf), c_char_p), 1, xlib.XStdICCTextStyle, 
+                cast(pointer(buf), c_char_p), 1, xlib.XStdICCTextStyle,
                 byref(property))
             if result < 0:
                 raise XlibException('Could not create UTF8 text property')
@@ -1012,12 +1012,12 @@ class XlibWindow(BaseWindow):
                 event_handler(e)
 
         # Generic events for this window (the window close event).
-        while xlib.XCheckTypedWindowEvent(_x_display, _window, 
+        while xlib.XCheckTypedWindowEvent(_x_display, _window,
                 xlib.ClientMessage, byref(e)):
             event_handler = self._event_handlers.get(e.type)
             if event_handler:
                 event_handler(e)
-        
+
         self._allow_dispatch_event = False
 
     @staticmethod
@@ -1085,7 +1085,7 @@ class XlibWindow(BaseWindow):
             while True:
                 auto_event = xlib.XEvent()
                 result = xlib.XCheckWindowEvent(self._x_display,
-                    self._window, xlib.KeyPress|xlib.KeyRelease, 
+                    self._window, xlib.KeyPress|xlib.KeyRelease,
                     byref(auto_event))
                 if not result:
                     break
@@ -1209,12 +1209,12 @@ class XlibWindow(BaseWindow):
                 self.dispatch_event('on_mouse_scroll', x, y, 0, -1)
             elif ev.xbutton.button < len(self._mouse_buttons):
                 self._mouse_buttons[ev.xbutton.button] = True
-                self.dispatch_event('on_mouse_press', 
+                self.dispatch_event('on_mouse_press',
                     x, y, button, modifiers)
         else:
             if ev.xbutton.button < 4:
                 self._mouse_buttons[ev.xbutton.button] = False
-                self.dispatch_event('on_mouse_release', 
+                self.dispatch_event('on_mouse_release',
                     x, y, button, modifiers)
 
     @XlibEventHandler(xlib.Expose)

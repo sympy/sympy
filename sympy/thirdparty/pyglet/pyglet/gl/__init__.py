@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -39,7 +39,7 @@ functions.  Functions have identical signatures to their C counterparts.  For
 example::
 
     from pyglet.gl import *
-    
+
     # [...omitted: set up a GL context and framebuffer]
     glBegin(GL_QUADS)
     glVertex3f(0, 0, 0)
@@ -47,7 +47,7 @@ example::
     glVertex3f(0.1, 0.2, 0.3)
     glEnd()
 
-OpenGL is documented in full at the `OpenGL Reference Pages`_.  
+OpenGL is documented in full at the `OpenGL Reference Pages`_.
 
 The `OpenGL Programming Guide`_ is a popular reference manual organised by
 topic.  The free online version documents only OpenGL 1.1.  `Later editions`_
@@ -130,7 +130,7 @@ class Config(object):
     Different platforms support a different set of attributes, so these
     are set with a string key and a value which is integer or boolean.
 
-    See also `pyglet.window.Screen.get_best_config` and 
+    See also `pyglet.window.Screen.get_best_config` and
     `pyglet.window.Screen.get_matching_configs`.
 
     :Ivariables:
@@ -243,9 +243,9 @@ class Config(object):
 
     def __repr__(self):
         import pprint
-        return '%s(%s)' % (self.__class__.__name__, 
+        return '%s(%s)' % (self.__class__.__name__,
                            pprint.pformat(self.get_gl_attributes()))
-                                          
+
 
 class ObjectSpace(object):
     def __init__(self):
@@ -276,7 +276,7 @@ class Context(object):
     #: Context share behaviour indicating that objects are shared with
     #: the most recently created context (the default).
     CONTEXT_SHARE_EXISTING = 1
-    
+
     # Used for error checking, True if currently within a glBegin/End block.
     # Ignored if error checking is disabled.
     _gl_begin = False
@@ -302,7 +302,7 @@ class Context(object):
             self.object_space = context_share.object_space
         else:
             self.object_space = ObjectSpace()
-    
+
     def __repr__(self):
         return '%s()' % self.__class__.__name__
 

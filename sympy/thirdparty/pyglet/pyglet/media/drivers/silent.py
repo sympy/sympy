@@ -30,8 +30,8 @@ class SilentAudioPlayer(AudioPlayer):
             self._head_time = 0.0
             self._head_system_time = time.time()
         self._audio_data_list.append(
-            AudioData(None, 
-                      audio_data.length, 
+            AudioData(None,
+                      audio_data.length,
                       audio_data.timestamp,
                       audio_data.duration))
         audio_data.consume(audio_data.length, self.audio_format)
@@ -81,13 +81,13 @@ class SilentAudioPlayer(AudioPlayer):
         if self._playing:
             system_time = time.time()
             head_time = system_time - self._head_system_time
-            return head_time + self._audio_data_list[0].timestamp 
+            return head_time + self._audio_data_list[0].timestamp
         else:
             return self._audio_data_list[0].timestamp + self._head_time
 
     def clear_eos(self):
         if self._eos_count:
-            self._eos_count -= 1 
+            self._eos_count -= 1
             return True
         return False
 

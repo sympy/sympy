@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -83,13 +83,13 @@ class GLXInfo(object):
 
         server = [int(i) for i in server_version.split('.')]
         client = [int(i) for i in client_version.split('.')]
-        return (tuple(server) >= (major, minor) and 
+        return (tuple(server) >= (major, minor) and
                 tuple(client) >= (major, minor))
 
     def get_server_vendor(self):
         self.check_display()
         return glXQueryServerString(self.display, 0, GLX_VENDOR)
-    
+
     def get_server_version(self):
         # glXQueryServerString was introduced in GLX 1.1, so we need to use the
         # 1.0 function here which queries the server implementation for its

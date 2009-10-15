@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -73,7 +73,7 @@ if _debug_win32:
     _FormatMessageA = windll.kernel32.FormatMessageA
 
     _log_win32 = open('debug_win32.log', 'w')
-    
+
     def format_error(err):
         msg = create_string_buffer(256)
         _FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM,
@@ -84,7 +84,7 @@ if _debug_win32:
                           len(msg),
                           c_void_p())
         return msg.value
-    
+
     class DebugLibrary(object):
         def __init__(self, lib):
             self.lib = lib
@@ -103,7 +103,7 @@ if _debug_win32:
             return f
 else:
     DebugLibrary = lambda lib: lib
-            
+
 _gdi32 = DebugLibrary(windll.gdi32)
 _kernel32 = DebugLibrary(windll.kernel32)
 _user32 = DebugLibrary(windll.user32)
@@ -141,7 +141,7 @@ class Win32Platform(Platform):
         if not self._display:
             self._display = Win32Display()
         return self._display
-    
+
 class Win32Display(Display):
     def get_screens(self):
         screens = []
@@ -160,17 +160,17 @@ class Win32Display(Display):
 class Win32Screen(Screen):
     def __init__(self, display, handle, x, y, width, height):
         super(Win32Screen, self).__init__(x, y, width, height)
-        self.display = display        
+        self.display = display
         self._handle = handle
 
     def get_matching_configs(self, template):
-        # Determine which technique should be used for finding matching configs.        
+        # Determine which technique should be used for finding matching configs.
         # Use the builtin PIXELFORMATDESCRIPTOR if possible, otherwise resort
         # to the WGL_ARB_pixel_format extension.
         need_pixel_format_arb = False
         if template.sample_buffers or template.samples:
             need_pixel_format_arb = True
-            
+
         if need_pixel_format_arb:
             # Need a GL context before we can query WGL extensions.
             dummy_window = None
@@ -179,8 +179,8 @@ class Win32Screen(Screen):
                 config = self.get_best_config()
                 context = config.create_context(None)
                 dummy_window = Win32Window(visible=False, context=context)
-            
-            try:            
+
+            try:
                 # Check for required extensions
                 if not wgl_info.have_extension('WGL_ARB_pixel_format'):
                     return []
@@ -209,7 +209,7 @@ class Win32Screen(Screen):
         else:
             pfd.dwFlags |= PFD_STEREO_DONTCARE
 
-        '''Not supported in pyglet API        
+        '''Not supported in pyglet API
         if attributes.get('swap_copy', False):
             pfd.dwFlags |= PFD_SWAP_COPY
         if attributes.get('swap_exchange', False):
@@ -241,13 +241,13 @@ class Win32Screen(Screen):
         if pf:
             return [Win32Config(self, hdc, pf)]
         else:
-            return []                    
-                    
+            return []
+
     def _get_arb_pixel_format_matching_configs(self, template):
         '''Get configs using the WGL_ARB_pixel_format extension.
         This method assumes a (dummy) GL context is already created.'''
-        
-        # Check for required extensions        
+
+        # Check for required extensions
         if template.sample_buffers or template.samples:
             if not gl_info.have_extension('GL_ARB_multisample'):
                 return []
@@ -258,14 +258,14 @@ class Win32Screen(Screen):
             attr = Win32ConfigARB.attribute_ids.get(name, None)
             if attr and value is not None:
                 attrs.extend([attr, int(value)])
-        attrs.append(0)        
+        attrs.append(0)
         attrs = (c_int * len(attrs))(*attrs)
 
-        hdc = _user32.GetDC(0)     
-        
+        hdc = _user32.GetDC(0)
+
         pformats = (c_int * 16)()
         nformats = c_uint(16)
-        wglext_arb.wglChoosePixelFormatARB(hdc, attrs, None, 
+        wglext_arb.wglChoosePixelFormatARB(hdc, attrs, None,
                                            nformats, pformats, nformats)
 
         formats = [Win32ConfigARB(self, hdc, pf) \
@@ -278,7 +278,7 @@ class Win32Config(gl.Config):
         self._hdc = hdc
         self._pf = pf
         self._pfd = PIXELFORMATDESCRIPTOR()
-        _gdi32.DescribePixelFormat(self._hdc, 
+        _gdi32.DescribePixelFormat(self._hdc,
             self._pf, sizeof(PIXELFORMATDESCRIPTOR), byref(self._pfd))
 
         self.double_buffer = bool(self._pfd.dwFlags & PFD_DOUBLEBUFFER)
@@ -309,7 +309,7 @@ class Win32Config(gl.Config):
     def is_complete(self):
         return True
 
-class Win32ConfigARB(Win32Config):    
+class Win32ConfigARB(Win32Config):
     attribute_ids = {
         'double_buffer': wglext_arb.WGL_DOUBLE_BUFFER_ARB,
         'stereo': wglext_arb.WGL_STEREO_ARB,
@@ -332,11 +332,11 @@ class Win32ConfigARB(Win32Config):
         self.screen = screen
         self._hdc = hdc
         self._pf = pf
-        
+
         names, attrs = map(None, *self.attribute_ids.items())
         attrs = (c_int * len(attrs))(*attrs)
         values = (c_int * len(attrs))()
-        
+
         result = wglext_arb.wglGetPixelFormatAttribivARB(hdc,
             pf, 0, len(attrs), attrs, values)
 
@@ -419,11 +419,11 @@ class Win32Window(BaseWindow):
                 self._event_handlers[message] = func
 
         super(Win32Window, self).__init__(*args, **kwargs)
-        
+
     def _recreate(self, changes):
         if 'context' in changes:
             self._wgl_context = None
-        
+
         self._create()
 
     def _create(self):
@@ -463,7 +463,7 @@ class Win32Window(BaseWindow):
             self._window_class.cbClsExtra = 0
             self._window_class.cbWndExtra = 0
             _user32.RegisterClassW(byref(self._window_class))
-        
+
         if not self._hwnd:
             self._hwnd = _user32.CreateWindowExW(
                 self._ex_ws_style,
@@ -559,7 +559,7 @@ class Win32Window(BaseWindow):
 
     def set_location(self, x, y):
         x, y = self._client_to_window_pos(x, y)
-        _user32.SetWindowPos(self._hwnd, 0, x, y, 0, 0, 
+        _user32.SetWindowPos(self._hwnd, 0, x, y, 0, 0,
             (SWP_NOZORDER |
              SWP_NOSIZE |
              SWP_NOOWNERZORDER))
@@ -623,7 +623,7 @@ class Win32Window(BaseWindow):
             platform_visible = (self._mouse_visible and
                                 not self._exclusive_mouse and
                                 not self._mouse_cursor.drawable) or \
-                               (not self._mouse_in_window or 
+                               (not self._mouse_in_window or
                                 not self._has_focus)
 
         if platform_visible and not self._mouse_cursor.drawable:
@@ -665,7 +665,7 @@ class Win32Window(BaseWindow):
         if self._exclusive_mouse == exclusive and \
            self._exclusive_mouse_focus == self._has_focus:
             return
-    
+
         if exclusive and self._has_focus:
             # Move mouse to the center of the window.
             self._reset_exclusive_mouse_screen()
@@ -779,7 +779,7 @@ class Win32Window(BaseWindow):
 
             _gdi32.DeleteObject(mask)
             _gdi32.DeleteObject(bitmap)
-            
+
             return icon
 
         # Set large icon
@@ -844,7 +844,7 @@ class Win32Window(BaseWindow):
                 result = 0
         if not result and msg != WM_CLOSE:
             result = _user32.DefWindowProcW(c_int(hwnd), c_int(msg),
-                c_int(wParam), c_int(lParam)) 
+                c_int(wParam), c_int(lParam))
         return result
 
     # Event handlers
@@ -902,10 +902,10 @@ class Win32Window(BaseWindow):
             symbol = key.RALT
         elif symbol == key.LSHIFT:
             pass # TODO: some magic with getstate to find out if it's the
-                 # right or left shift key. 
+                 # right or left shift key.
 
         modifiers = self._get_modifiers(lParam)
-        
+
         if not repeat:
             self.dispatch_event(ev, symbol, modifiers)
 
@@ -945,7 +945,7 @@ class Win32Window(BaseWindow):
         if self._exclusive_mouse and self._has_focus:
             # Reset mouse position (so we don't hit the edge of the screen).
             _user32.SetCursorPos(*self._exclusive_mouse_screen)
-            
+
         dx = x - self._mouse_x
         dy = y - self._mouse_y
 
@@ -966,7 +966,7 @@ class Win32Window(BaseWindow):
 
         self._mouse_x = x
         self._mouse_y = y
-        
+
         buttons = 0
         if wParam & MK_LBUTTON:
             buttons |= mouse.LEFT
@@ -978,7 +978,7 @@ class Win32Window(BaseWindow):
         if buttons:
             # Drag event
             modifiers = self._get_modifiers()
-            self.dispatch_event('on_mouse_drag', 
+            self.dispatch_event('on_mouse_drag',
                 x, y, dx, dy, buttons, modifiers)
         else:
             # Motion event
@@ -1041,7 +1041,7 @@ class Win32Window(BaseWindow):
     @Win32EventHandler(WM_MOUSEWHEEL)
     def _event_mousewheel(self, msg, wParam, lParam):
         delta = c_short(wParam >> 16).value
-        self.dispatch_event('on_mouse_scroll', 
+        self.dispatch_event('on_mouse_scroll',
             self._mouse_x, self._mouse_y, 0, delta / WHEEL_DELTA)
         return 0
 

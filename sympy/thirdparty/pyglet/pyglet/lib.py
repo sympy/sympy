@@ -15,8 +15,8 @@ import ctypes.util
 
 class LibraryLoader(object):
     def load_library(self, *names, **kwargs):
-        '''Find and load a library.  
-        
+        '''Find and load a library.
+
         More than one name can be specified, they will be tried in order.
         Platform-specific library names (given as kwargs) are tried first.
 
@@ -24,7 +24,7 @@ class LibraryLoader(object):
         '''
         if 'framework' in kwargs and self.platform == 'darwin':
             return self.load_framework(kwargs['framework'])
-        
+
         platform_names = kwargs.get(self.platform, [])
         if type(platform_names) in (str, unicode):
             platform_names = [platform_names]
@@ -76,10 +76,10 @@ class MachOLibraryLoader(LibraryLoader):
                 os.path.expanduser('~/lib'),
                 '/usr/local/lib',
                 '/usr/lib']
- 
+
     def find_library(self, path):
         '''Implements the dylib search as specified in Apple documentation:
-        
+
         http://developer.apple.com/documentation/DeveloperTools/Conceptual/DynamicLibraries/Articles/DynamicLibraryUsageGuidelines.html
         '''
 
@@ -88,7 +88,7 @@ class MachOLibraryLoader(LibraryLoader):
             search_path = (
                 [os.path.join(p, libname) \
                     for p in self.dyld_library_path] +
-                [path] + 
+                [path] +
                 [os.path.join(p, libname) \
                     for p in self.dyld_fallback_library_path])
         else:
@@ -97,7 +97,7 @@ class MachOLibraryLoader(LibraryLoader):
                     for p in self.ld_library_path] +
                 [os.path.join(p, libname) \
                     for p in self.dyld_library_path] +
-                [path] + 
+                [path] +
                 [os.path.join(p, libname) \
                     for p in self.dyld_fallback_library_path])
 
@@ -118,7 +118,7 @@ class MachOLibraryLoader(LibraryLoader):
         # return '/System/Library/Frameworks/OpenGL.framework/OpenGL'
         name = os.path.splitext(os.path.split(path)[1])[0]
 
-        realpath = os.path.join(path, name) 
+        realpath = os.path.join(path, name)
         if os.path.exists(realpath):
             return realpath
 

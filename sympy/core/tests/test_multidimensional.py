@@ -43,4 +43,3 @@ def test_expandmulti():
     x = Symbol("x")
     y = Symbol("y")
     assert expand([(x+y)**2, (x-1)**2])==[expand((x+y)**2), expand((x-1)**2)]
-

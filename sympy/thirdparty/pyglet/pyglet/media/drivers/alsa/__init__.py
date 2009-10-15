@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -64,7 +64,7 @@ class ALSAAudioPlayer(AudioPlayer):
     _device_name = 'default'
     _buffer_time = 0.3
     _min_write_bytes = 10000
-    
+
     def __init__(self, audio_format):
         super(ALSAAudioPlayer, self).__init__(audio_format)
 
@@ -76,10 +76,10 @@ class ALSAAudioPlayer(AudioPlayer):
         }.get(audio_format.sample_size)
         if format is None:
             raise ALSAException('Unsupported audio format.')
-            
+
         self.pcm = ctypes.POINTER(asound.snd_pcm_t)()
         self.hwparams = ctypes.POINTER(asound.snd_pcm_hw_params_t)()
-        self.swparams = ctypes.POINTER(asound.snd_pcm_sw_params_t)() 
+        self.swparams = ctypes.POINTER(asound.snd_pcm_sw_params_t)()
 
         check(asound.snd_pcm_open(ctypes.byref(self.pcm),
                                   self._device_name,
@@ -112,7 +112,7 @@ class ALSAAudioPlayer(AudioPlayer):
         check(asound.snd_pcm_hw_params(self.pcm, self.hwparams))
 
         if alsa_debug:
-            asound.snd_output_printf(debug_output, 
+            asound.snd_output_printf(debug_output,
                 'New device: %s\n' % self._device_name)
             check(asound.snd_pcm_dump(self.pcm, debug_output))
 

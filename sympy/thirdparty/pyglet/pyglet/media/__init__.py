@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -115,13 +115,13 @@ class AudioFormat(object):
         self.channels = channels
         self.sample_size = sample_size
         self.sample_rate = sample_rate
-        
+
         # Convenience
         self.bytes_per_sample = (sample_size >> 3) * channels
         self.bytes_per_second = self.bytes_per_sample * sample_rate
 
     def __eq__(self, other):
-        return (self.channels == other.channels and 
+        return (self.channels == other.channels and
                 self.sample_size == other.sample_size and
                 self.sample_rate == other.sample_rate)
 
@@ -153,7 +153,7 @@ class VideoFormat(object):
             Aspect ratio (width over height) of a single video pixel.
 
     '''
-    
+
     def __init__(self, width, height, sample_aspect=1.0):
         self.width = width
         self.height = height
@@ -220,7 +220,7 @@ class AudioPlayer(object):
     AudioPlayer has no knowledge of sources or eos behaviour.  Once
     created, its audio format cannot be modified.  Behaviour is undefined if
     there is a data underrun.
-    
+
     Applications should not use this class directly, but instead use `Player`.
 
     :Ivariables:
@@ -228,7 +228,7 @@ class AudioPlayer(object):
             The player's audio format (read-only).
 
     '''
-    
+
     def __init__(self, audio_format):
         '''Create a new audio player for the given audio format.
 
@@ -240,11 +240,11 @@ class AudioPlayer(object):
         self.audio_format = audio_format
 
     def get_write_size(self):
-        '''Return the maximum number of bytes that can be written.  
-        
+        '''Return the maximum number of bytes that can be written.
+
         This is used as a hint for preparing data for `write`, not as a strict
         contract.
-        
+
         :rtype: int
         '''
         raise NotImplementedError('abstract')
@@ -253,7 +253,7 @@ class AudioPlayer(object):
         '''Write audio_data to the stream.
 
         This method calls `AudioData.consume` to remove data actually written.
-        
+
         :Parameters:
             `audio_data` : `AudioData`
                 Data to write.
@@ -268,7 +268,7 @@ class AudioPlayer(object):
     def write_end(self):
         '''Mark that there will be no more audio data past the current write
         point.
-        
+
         This does not produce an EOS, but is required to prevent data
         underrun artifacts.
         '''
@@ -306,7 +306,7 @@ class AudioPlayer(object):
 
     def clear_eos(self):
         '''Check if an EOS marker has been passed, and clear it.
-        
+
         This method should be called repeatedly to clear all pending EOS
         markers.
 
@@ -364,7 +364,7 @@ class Source(object):
     '''
 
     _duration = None
-    
+
     audio_format = None
     video_format = None
 
@@ -448,7 +448,7 @@ class StreamingSource(Source):
     '''A source that is decoded as it is being played, and can only be
     queued once.
     '''
-    
+
     _is_queued = False
 
     is_queued = property(lambda self: self._is_queued,
@@ -473,7 +473,7 @@ class StaticSource(Source):
     '''A source that has been completely decoded in memory.  This source can
     be queued onto multiple players any number of times.
     '''
-    
+
     def __init__(self, source):
         '''Construct a `StaticSource` for the data in `source`.
 
@@ -491,14 +491,14 @@ class StaticSource(Source):
         if not self.audio_format:
             return
 
-        # TODO enable time-insensitive playback 
+        # TODO enable time-insensitive playback
         source._play()
 
         # Arbitrary: number of bytes to request at a time.
         buffer_size = 1 << 20 # 1 MB
 
         # Naive implementation.  Driver-specific implementations may override
-        # to load static audio data into device (or at least driver) memory. 
+        # to load static audio data into device (or at least driver) memory.
         data = StringIO.StringIO()
         while True:
             audio_data = source._get_audio_data(buffer_size)
@@ -610,8 +610,8 @@ class Player(event.EventDispatcher):
         self._sources = []
 
     def _create_audio(self):
-        '''Create _audio for sources[0].  
-        
+        '''Create _audio for sources[0].
+
         Reuses existing _audio if it exists and is compatible.
         '''
         if not self._sources:
@@ -743,7 +743,7 @@ class Player(event.EventDispatcher):
         '''
         self._playing = False
         self._pause_seek = False
-        
+
         if self._audio:
             self._audio.stop()
 
@@ -773,7 +773,7 @@ class Player(event.EventDispatcher):
             self._audio.clear()
         else:
             self._last_system_time = time.time()
-        
+
     def next(self):
         '''Move immediately to the next queued source.
 
@@ -866,7 +866,7 @@ class Player(event.EventDispatcher):
     time = property(lambda self: self._get_time(),
                     doc='''Retrieve the current playback time of the current
          source.
-                    
+
          The playback time is a float expressed in seconds, with 0.0 being
          the beginning of the sound.  The playback time returned represents
          the time encoded in the source, and may not reflect actual time
@@ -908,7 +908,7 @@ class Player(event.EventDispatcher):
 
         The `playing` property is irrespective of whether or not there is
         actually a source to play.  If `playing` is True and a source is
-        queued, it will begin playing immediately.  If `playing` is False, 
+        queued, it will begin playing immediately.  If `playing` is False,
         it is implied that the player is paused.  There is no other possible
         state.
 
@@ -930,7 +930,7 @@ class Player(event.EventDispatcher):
 
          The volume level is affected by the distance from the listener (if
          positioned).
-         
+
          :type: float
          ''')
 
@@ -946,7 +946,7 @@ class Player(event.EventDispatcher):
         The position is given as a tuple of floats (x, y, z).  The unit
         defaults to meters, but can be modified with the listener
         properties.
-        
+
         :type: 3-tuple of float
         ''')
 
@@ -964,10 +964,10 @@ class Player(event.EventDispatcher):
         as it moves away from the listener.  The gain is clamped at the
         nominal value within the min distance.  By default the value is
         1.0.
-        
+
         The unit defaults to meters, but can be modified with the listener
         properties.
-        
+
         :type: float
         ''')
 
@@ -981,13 +981,13 @@ class Player(event.EventDispatcher):
                             doc='''The distance at which no further attenuation
         is applied.
 
-        When the distance from the listener to the player is greater than 
+        When the distance from the listener to the player is greater than
         this value, attenuation is calculated as if the distance
         were value.  By default the maximum distance is infinity.
-        
+
         The unit defaults to meters, but can be modified with the listener
         properties.
-        
+
         :type: float
         ''')
 
@@ -1003,7 +1003,7 @@ class Player(event.EventDispatcher):
         The nominal pitch is 1.0.  A pitch of 2.0 will sound one octave
         higher, and play twice as fast.  A pitch of 0.5 will sound one octave
         lower, and play twice as slow.  A pitch of 0.0 is not permitted.
-        
+
         :type: float
         ''')
 
@@ -1015,12 +1015,12 @@ class Player(event.EventDispatcher):
     cone_orientation = property(lambda self: self._cone_orientation,
                                 lambda self, c: self._set_cone_orientation(c),
                                 doc='''The direction of the sound in 3D space.
-                                
+
         The direction is specified as a tuple of floats (x, y, z), and has no
         unit.  The default direction is (0, 0, -1).  Directional effects are
         only noticeable if the other cone properties are changed from their
         default values.
-        
+
         :type: 3-tuple of float
         ''')
 
@@ -1032,11 +1032,11 @@ class Player(event.EventDispatcher):
     cone_inner_angle = property(lambda self: self._cone_inner_angle,
                                 lambda self, a: self._set_cone_inner_angle(a),
                                 doc='''The interior angle of the inner cone.
-                                
+
         The angle is given in degrees, and defaults to 360.  When the listener
         is positioned within the volume defined by the inner cone, the sound
         is played at normal gain (see `volume`).
-        
+
         :type: float
         ''')
 
@@ -1048,12 +1048,12 @@ class Player(event.EventDispatcher):
     cone_outer_angle = property(lambda self: self._cone_outer_angle,
                                 lambda self, a: self._set_cone_outer_angle(a),
                                 doc='''The interior angle of the outer cone.
-                                
+
         The angle is given in degrees, and defaults to 360.  When the listener
         is positioned within the volume defined by the outer cone, but outside
         the volume defined by the inner cone, the gain applied is a smooth
         interpolation between `volume` and `cone_outer_gain`.
-        
+
         :type: float
         ''')
 
@@ -1065,10 +1065,10 @@ class Player(event.EventDispatcher):
     cone_outer_gain = property(lambda self: self._cone_outer_gain,
                                 lambda self, g: self._set_cone_outer_gain(g),
                                 doc='''The gain applied outside the cone.
-                                
+
         When the listener is positioned outside the volume defined by the
         outer cone, this gain is applied instead of `volume`.
-        
+
         :type: float
         ''')
 
@@ -1103,7 +1103,7 @@ class ManagedSoundPlayer(Player):
     There is no need to call `Player.dispatch_events` on this player,
     though you must call `pyglet.media.dispatch_events`.
 
-    Only one source can be queued on the player; the player will be 
+    Only one source can be queued on the player; the player will be
     discarded when the source finishes.
     '''
 
@@ -1117,7 +1117,7 @@ class ManagedSoundPlayer(Player):
         finished.
 
         Read-only.
-        
+
         :type: str
         ''')
 
@@ -1150,7 +1150,7 @@ class Listener(object):
         All sound volumes are multiplied by this master volume before being
         played.  A value of 0 will silence playback (but still consume
         resources).  The nominal volume is 1.0.
-        
+
         :type: float
         ''')
 
@@ -1164,7 +1164,7 @@ class Listener(object):
         The position is given as a tuple of floats (x, y, z).  The unit
         defaults to meters, but can be modified with the listener
         properties.
-        
+
         :type: 3-tuple of float
         ''')
 
@@ -1179,7 +1179,7 @@ class Listener(object):
         The orientation is given as a tuple of floats (x, y, z), and has
         no unit.  The forward orientation should be orthagonal to the
         up orientation.
-        
+
         :type: 3-tuple of float
         ''')
 
@@ -1194,7 +1194,7 @@ class Listener(object):
         The orientation is given as a tuple of floats (x, y, z), and has
         no unit.  The up orientation should be orthagonal to the
         forward orientation.
-        
+
         :type: 3-tuple of float
         ''')
 

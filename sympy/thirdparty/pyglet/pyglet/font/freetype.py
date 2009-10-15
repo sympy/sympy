@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -97,8 +97,8 @@ FT_LOAD_TARGET_LCD_V = FT_LOAD_TARGET_(FT_RENDER_MODE_LCD_V)
 
 (FcTypeVoid,
  FcTypeInteger,
- FcTypeDouble, 
- FcTypeString, 
+ FcTypeDouble,
+ FcTypeString,
  FcTypeBool,
  FcTypeMatrix,
  FcTypeCharSet,
@@ -150,13 +150,13 @@ class FreeTypeGlyphRenderer(base.GlyphRenderer):
 
     def render(self, text):
         face = self.font.face
-        FT_Set_Char_Size(face, 0, self.font._face_size, 
+        FT_Set_Char_Size(face, 0, self.font._face_size,
                          self.font._dpi, self.font._dpi)
         glyph_index = fontconfig.FcFreeTypeCharIndex(byref(face), ord(text[0]))
         error = FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER)
         if error != 0:
             raise base.FontException(
-                'Could not load glyph for "%c"' % text[0], error) 
+                'Could not load glyph for "%c"' % text[0], error)
         glyph_slot = face.glyph.contents
         width = glyph_slot.bitmap.width
         height = glyph_slot.bitmap.rows
@@ -165,11 +165,11 @@ class FreeTypeGlyphRenderer(base.GlyphRenderer):
         advance = int(f26p6_to_float(glyph_slot.advance.x))
         mode = glyph_slot.bitmap.pixel_mode
         pitch = glyph_slot.bitmap.pitch
-        
+
         if mode == FT_PIXEL_MODE_MONO:
             # BCF fonts always render to 1 bit mono, regardless of render
             # flags. (freetype 2.3.5)
-            bitmap_data = cast(glyph_slot.bitmap.buffer, 
+            bitmap_data = cast(glyph_slot.bitmap.buffer,
                                POINTER(c_ubyte * (pitch * height))).contents
             data = (c_ubyte * (pitch * 8 * height))()
             data_i = 0
@@ -193,7 +193,7 @@ class FreeTypeGlyphRenderer(base.GlyphRenderer):
 
         # pitch should be negative, but much faster to just swap tex_coords
         img = image.ImageData(width, height, 'A', data, pitch)
-        glyph = self.font.create_glyph(img) 
+        glyph = self.font.create_glyph(img)
         glyph.set_bearings(baseline, lsb, advance)
         t = list(glyph.tex_coords)
         glyph.tex_coords = t[9:12] + t[6:9] + t[3:6] + t[:3]
@@ -207,7 +207,7 @@ class FreeTypeMemoryFont(object):
 
         ft_library = ft_get_library()
         self.face = FT_Face()
-        r = FT_New_Memory_Face(ft_library, 
+        r = FT_New_Memory_Face(ft_library,
             self.buffer, len(self.buffer), 0, self.face)
         if r != 0:
             raise base.FontException('Could not load font data')
@@ -300,7 +300,7 @@ class FreeTypeFont(base.Font):
         result = FcResult()
         match = fontconfig.FcFontMatch(0, pattern, byref(result))
         fontconfig.FcPatternDestroy(pattern)
-        
+
         return match
 
     @classmethod
@@ -309,7 +309,7 @@ class FreeTypeFont(base.Font):
         match = cls.get_fontconfig_match(name, 12, False, False)
         result = fontconfig.FcPatternGet(match, FC_FAMILY, 0, byref(value))
         return value.u.s == name
-    
+
     @classmethod
     def add_font_data(cls, data):
         font = FreeTypeMemoryFont(data)

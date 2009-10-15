@@ -18,7 +18,7 @@ class ProceduralSource(Source):
         self._bytes_per_sample = sample_size >> 3
         self._bytes_per_second = self._bytes_per_sample * sample_rate
         self._max_offset = int(self._bytes_per_second * self._duration)
-        
+
         if self._bytes_per_sample == 2:
             self._max_offset &= 0xfffffffe
 
@@ -26,7 +26,7 @@ class ProceduralSource(Source):
         bytes = min(bytes, self._max_offset - self._offset)
         if bytes <= 0:
             return None
-        
+
         timestamp = float(self._offset) / self._bytes_per_second
         duration = float(bytes) / self._bytes_per_second
         data = self._generate_data(bytes, self._offset)
@@ -70,7 +70,7 @@ class Sine(ProceduralSource):
     def __init__(self, duration, frequency=440, **kwargs):
         super(Sine, self).__init__(duration, **kwargs)
         self.frequency = frequency
-        
+
     def _generate_data(self, bytes, offset):
         if self._bytes_per_sample == 1:
             start = offset
@@ -93,7 +93,7 @@ class Saw(ProceduralSource):
     def __init__(self, duration, frequency=440, **kwargs):
         super(Saw, self).__init__(duration, **kwargs)
         self.frequency = frequency
-        
+
     def _generate_data(self, bytes, offset):
         # XXX TODO consider offset
         if self._bytes_per_sample == 1:
@@ -124,7 +124,7 @@ class Square(ProceduralSource):
     def __init__(self, duration, frequency=440, **kwargs):
         super(Square, self).__init__(duration, **kwargs)
         self.frequency = frequency
-        
+
     def _generate_data(self, bytes, offset):
         # XXX TODO consider offset
         if self._bytes_per_sample == 1:

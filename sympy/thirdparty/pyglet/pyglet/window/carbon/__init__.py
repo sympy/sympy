@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -121,7 +121,7 @@ class CarbonDisplay(Display):
                                   'Ensure you run "pythonw", not "python"')
 
         self._install_application_event_handlers()
-        
+
     def get_screens(self):
         count = CGDisplayCount()
         carbon.CGGetActiveDisplayList(0, None, byref(count))
@@ -222,7 +222,7 @@ class CarbonDisplay(Display):
 
         if release:
             carbon.ReleaseEvent(ev)
-        
+
         return noErr
 
     def _on_ae_quit(self, ae, reply, refcon):
@@ -241,7 +241,7 @@ class CarbonDisplay(Display):
         '''
         for window in self.get_windows():
             window.has_exit = True
-    
+
 class CarbonScreen(Screen):
     def __init__(self, display, id):
         self.display = display
@@ -294,11 +294,11 @@ class CarbonScreen(Screen):
             return [CarbonGLConfig(self, pformat)]
 
 class CarbonGLConfig(gl.Config):
-    # Valid names for GL attributes, and their corresponding AGL constant. 
+    # Valid names for GL attributes, and their corresponding AGL constant.
     _attribute_ids = {
         'double_buffer': agl.AGL_DOUBLEBUFFER,
         'stereo': agl.AGL_STEREO,
-        'buffer_size': agl.AGL_BUFFER_SIZE, 
+        'buffer_size': agl.AGL_BUFFER_SIZE,
         'sample_buffers': agl.AGL_SAMPLE_BUFFERS_ARB,
         'samples': agl.AGL_SAMPLES_ARB,
         'aux_buffers': agl.AGL_AUX_BUFFERS,
@@ -321,7 +321,7 @@ class CarbonGLConfig(gl.Config):
         'maximum_policy': agl.AGL_MAXIMUM_POLICY,
 
         # Not supported in current pyglet API
-        'level': agl.AGL_LEVEL, 
+        'level': agl.AGL_LEVEL,
         'pixel_size': agl.AGL_PIXEL_SIZE,   # == buffer_size
         'aux_depth_stencil': agl.AGL_AUX_DEPTH_STENCIL,
         'color_float': agl.AGL_COLOR_FLOAT,
@@ -333,7 +333,7 @@ class CarbonGLConfig(gl.Config):
 
     # AGL constants which do not require a value.
     _boolean_attributes = \
-        (agl.AGL_ALL_RENDERERS, 
+        (agl.AGL_ALL_RENDERERS,
          agl.AGL_RGBA,
          agl.AGL_DOUBLEBUFFER,
          agl.AGL_STEREO,
@@ -358,7 +358,7 @@ class CarbonGLConfig(gl.Config):
             result = agl.aglDescribePixelFormat(pformat, attr, byref(value))
             if result:
                 setattr(self, name, value.value)
- 
+
     def create_context(self, share):
         if share:
             context = agl.aglCreateContext(self._pformat, share._context)
@@ -468,7 +468,7 @@ class CarbonWindow(BaseWindow):
             self._height = fs_height.value
             #self._width = self.screen.width
             #self._height = self.screen.height
-            agl.aglSetFullScreen(self._agl_context, 
+            agl.aglSetFullScreen(self._agl_context,
                                  self._width, self._height, 0, 0)
             self._mouse_in_window = True
             self.dispatch_event('on_resize', self._width, self._height)
@@ -526,7 +526,7 @@ class CarbonWindow(BaseWindow):
         self._current_modifiers = carbon.GetCurrentKeyModifiers().value
         self._mapped_modifiers = self._map_modifiers(self._current_modifiers)
 
-        # (re)install Carbon event handlers 
+        # (re)install Carbon event handlers
         self._install_event_handlers()
 
         self._create_track_region()
@@ -547,9 +547,9 @@ class CarbonWindow(BaseWindow):
         track_id.id = 1
         self._track_ref = MouseTrackingRef()
         self._track_region = carbon.NewRgn()
-        carbon.GetWindowRegion(self._window, 
+        carbon.GetWindowRegion(self._window,
             kWindowContentRgn, self._track_region)
-        carbon.CreateMouseTrackingRegion(self._window,  
+        carbon.CreateMouseTrackingRegion(self._window,
             self._track_region, None, kMouseTrackingOptionsGlobalClip,
             track_id, None, None,
             byref(self._track_ref))
@@ -681,7 +681,7 @@ class CarbonWindow(BaseWindow):
             maximum = byref(maximum)
         else:
             maximum = None
-        carbon.SetWindowResizeLimits(self._window, 
+        carbon.SetWindowResizeLimits(self._window,
             byref(minimum), maximum)
 
     def set_maximum_size(self, width, height):
@@ -695,7 +695,7 @@ class CarbonWindow(BaseWindow):
             minimum = byref(minimum)
         else:
             minimum = None
-        carbon.SetWindowResizeLimits(self._window, 
+        carbon.SetWindowResizeLimits(self._window,
             minimum, byref(maximum))
 
     def activate(self):
@@ -723,7 +723,7 @@ class CarbonWindow(BaseWindow):
     def maximize(self):
         # Maximum "safe" value, gets trimmed to screen size automatically.
         p = Point()
-        p.v, p.h = 16000,16000 
+        p.v, p.h = 16000,16000
         if not carbon.IsWindowInStandardState(self._window, byref(p), None):
             carbon.ZoomWindowIdeal(self._window, inZoomOut, byref(p))
 
@@ -853,7 +853,7 @@ class CarbonWindow(BaseWindow):
         self.dispatch_event('on_expose')
 
     def _update_track_region(self):
-        carbon.GetWindowRegion(self._window, 
+        carbon.GetWindowRegion(self._window,
             kWindowContentRgn, self._track_region)
         carbon.ChangeMouseTrackingRegion(self._track_ref,
             self._track_region, None)
@@ -998,7 +998,7 @@ class CarbonWindow(BaseWindow):
             (numLock, key.NUMLOCK)]:
             if deltas & mask:
                 if modifiers & mask:
-                    self.dispatch_event('on_key_press', 
+                    self.dispatch_event('on_key_press',
                         k, self._mapped_modifiers)
                 else:
                     self.dispatch_event('on_key_release',
@@ -1025,12 +1025,12 @@ class CarbonWindow(BaseWindow):
         carbon.GetEventParameter(ev, kEventParamMouseButton,
             typeMouseButton, c_void_p(), sizeof(button), c_void_p(),
             byref(button))
-        
-        if button.value == 1: 
+
+        if button.value == 1:
             button = mouse.LEFT
-        elif button.value == 2: 
+        elif button.value == 2:
             button = mouse.RIGHT
-        elif button.value == 3: 
+        elif button.value == 3:
             button = mouse.MIDDLE
 
         modifiers = c_uint32()
@@ -1045,8 +1045,8 @@ class CarbonWindow(BaseWindow):
         position = Point()
         carbon.GetEventParameter(ev, kEventParamMouseLocation,
             typeQDPoint, c_void_p(), sizeof(position), c_void_p(),
-            byref(position)) 
-        return carbon.FindWindow(position, None) == inContent 
+            byref(position))
+        return carbon.FindWindow(position, None) == inContent
 
     @CarbonEventHandler(kEventClassMouse, kEventMouseDown)
     def _on_mouse_down(self, next_handler, ev, data):
@@ -1086,7 +1086,7 @@ class CarbonWindow(BaseWindow):
                 byref(delta))
 
             # Motion event
-            self.dispatch_event('on_mouse_motion', 
+            self.dispatch_event('on_mouse_motion',
                 x, y, delta.x, -delta.y)
 
         carbon.CallNextEventHandler(next_handler, ev)
@@ -1157,12 +1157,12 @@ class CarbonWindow(BaseWindow):
             typeSInt32, c_void_p(), sizeof(delta), c_void_p(),
             byref(delta))
         if axis.value == kEventMouseWheelAxisX:
-            self.dispatch_event('on_mouse_scroll', 
+            self.dispatch_event('on_mouse_scroll',
                 x, y, delta.value, 0)
         else:
-            self.dispatch_event('on_mouse_scroll', 
+            self.dispatch_event('on_mouse_scroll',
                 x, y, 0, delta.value)
-                
+
         # _Don't_ call the next handler, which is application, as this then
         # calls our window handler again.
         #carbon.CallNextEventHandler(next_handler, ev)
@@ -1173,7 +1173,7 @@ class CarbonWindow(BaseWindow):
         self.dispatch_event('on_close')
 
         # Presumably the next event handler is the one that closes
-        # the window; don't do that here. 
+        # the window; don't do that here.
         #carbon.CallNextEventHandler(next_handler, ev)
         return noErr
 
@@ -1234,7 +1234,7 @@ class CarbonWindow(BaseWindow):
 
         carbon.CallNextEventHandler(next_handler, ev)
         return noErr
-        
+
     @CarbonEventHandler(kEventClassWindow, kEventWindowShown)
     @CarbonEventHandler(kEventClassWindow, kEventWindowExpanded)
     def _on_window_shown(self, next_handler, ev, data):
@@ -1258,11 +1258,11 @@ class CarbonWindow(BaseWindow):
 
         carbon.CallNextEventHandler(next_handler, ev)
         return noErr
-        
 
-       
+
+
 def _create_cfstring(text):
-    return carbon.CFStringCreateWithCString(c_void_p(), 
+    return carbon.CFStringCreateWithCString(c_void_p(),
                                             text.encode('utf8'),
                                             kCFStringEncodingUTF8)
 

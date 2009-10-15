@@ -1,6 +1,5 @@
 """ Tools for doing common subexpression elimination.
 """
-
 from sympy import Basic
 from sympy.utilities.iterables import postorder_traversal, numbered_symbols
 
@@ -17,6 +16,7 @@ import cse_opts
 # opportunities.
 # `None` can be used to specify no transformation for either the preprocessor or
 # postprocessor.
+
 cse_optimizations = list(cse_opts.default_optimizations)
 
 def preprocess_for_cse(expr, optimizations):
@@ -143,3 +143,4 @@ def cse(exprs, symbols=None, optimizations=None):
     reduced_exprs = [postprocess_for_cse(e, optimizations) for e in reduced_exprs]
 
     return replacements, reduced_exprs
+

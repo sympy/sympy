@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -86,7 +86,7 @@ class Glyph(image.TextureRegion):
 
     def draw(self):
         '''Debug method.
-        
+
         Use the higher level APIs for performance and kerning.
         '''
         glBindTexture(GL_TEXTURE_2D, self.owner.id)
@@ -95,7 +95,7 @@ class Glyph(image.TextureRegion):
         glEnd()
 
     def draw_quad_vertices(self):
-        '''Debug method. 
+        '''Debug method.
 
         Use the higher level APIs for performance and kerning.
         '''
@@ -286,7 +286,7 @@ class Font(object):
 
     def get_glyphs_for_width(self, text, width):
         '''Return a list of glyphs for `text` that fit within the given width.
-        
+
         If the entire text is larger than 'width', as much as possible will be
         used while breaking after a space or zero-width space character.  If a
         newline is enountered in text, only text up to that newline will be
@@ -304,7 +304,7 @@ class Font(object):
                 Text to render.
             `width` : int
                 Maximum width of returned glyphs.
-        
+
         :rtype: list of `Glyph`
 
         :see: `GlyphString`
@@ -323,11 +323,11 @@ class Font(object):
                     glyph_renderer = self.glyph_renderer_class(self)
                 self.glyphs[c] = glyph_renderer.render(c)
             glyph = self.glyphs[c]
-            
+
             # Add to holding buffer and measure
             glyph_buffer.append(glyph)
             width -= glyph.advance
-            
+
             # If over width and have some committed glyphs, finish.
             if width <= 0 and len(glyphs) > 0:
                 break

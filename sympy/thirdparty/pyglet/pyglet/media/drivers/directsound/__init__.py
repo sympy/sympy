@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2007 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -63,7 +63,7 @@ class DirectSoundAudioPlayer(AudioPlayer):
 
     _cone_inner_angle = 360
     _cone_outer_angle = 360
-    
+
     def __init__(self, audio_format):
         super(DirectSoundAudioPlayer, self).__init__(audio_format)
 
@@ -91,7 +91,7 @@ class DirectSoundAudioPlayer(AudioPlayer):
 
         dsbdesc = lib.DSBUFFERDESC()
         dsbdesc.dwSize = ctypes.sizeof(dsbdesc)
-        dsbdesc.dwFlags = (lib.DSBCAPS_GLOBALFOCUS | 
+        dsbdesc.dwFlags = (lib.DSBCAPS_GLOBALFOCUS |
                            lib.DSBCAPS_GETCURRENTPOSITION2 |
                            lib.DSBCAPS_CTRLFREQUENCY |
                            lib.DSBCAPS_CTRLVOLUME)
@@ -105,15 +105,15 @@ class DirectSoundAudioPlayer(AudioPlayer):
 
         if audio_format.channels == 1:
             self._buffer3d = lib.IDirectSound3DBuffer()
-            self._buffer.QueryInterface(lib.IID_IDirectSound3DBuffer, 
+            self._buffer.QueryInterface(lib.IID_IDirectSound3DBuffer,
                                         ctypes.byref(self._buffer3d))
         else:
             self._buffer3d = None
-        
+
         self._buffer_size_secs = \
             self._buffer_size / float(audio_format.bytes_per_second)
         self._buffer.SetCurrentPosition(0)
-            
+
     def __del__(self):
         try:
             self._buffer.Stop()
@@ -147,7 +147,7 @@ class DirectSoundAudioPlayer(AudioPlayer):
             return 0
 
         return write_size
- 
+
     def write(self, audio_data, length=None):
         # Pass audio_data=None, length>0 to write silence
         if length is None:
@@ -163,7 +163,7 @@ class DirectSoundAudioPlayer(AudioPlayer):
         l1 = lib.DWORD()
         p2 = ctypes.c_void_p()
         l2 = lib.DWORD()
-        self._buffer.Lock(self._write_cursor, length, 
+        self._buffer.Lock(self._write_cursor, length,
             ctypes.byref(p1), l1, ctypes.byref(p2), l2, 0)
         assert length == l1.value + l2.value
 
@@ -173,7 +173,7 @@ class DirectSoundAudioPlayer(AudioPlayer):
             else:
                 wc = self._write_cursor + self._buffer_size
             self._timestamps.append((wc, audio_data.timestamp))
-            
+
             ctypes.memmove(p1, audio_data.data, l1.value)
             audio_data.consume(l1.value, self.audio_format)
             if l2.value:
@@ -254,7 +254,7 @@ class DirectSoundAudioPlayer(AudioPlayer):
     def stop(self):
         if not self._playing:
             return
-            
+
         self._playing = False
 
         self._buffer.Stop()
@@ -328,7 +328,7 @@ class DirectSoundAudioPlayer(AudioPlayer):
 
 class DirectSoundListener(Listener):
     def _init(self):
-        # Called after driver_init()    
+        # Called after driver_init()
         self._buffer = lib.IDirectSoundBuffer()
         dsbd = lib.DSBUFFERDESC()
         dsbd.dwSize = ctypes.sizeof(dsbd)
@@ -338,7 +338,7 @@ class DirectSoundListener(Listener):
         dsound.CreateSoundBuffer(dsbd, ctypes.byref(self._buffer), None)
 
         self._listener = lib.IDirectSound3DListener()
-        self._buffer.QueryInterface(lib.IID_IDirectSound3DListener, 
+        self._buffer.QueryInterface(lib.IID_IDirectSound3DListener,
                                     ctypes.byref(self._listener))
 
 
@@ -348,7 +348,7 @@ class DirectSoundListener(Listener):
             self._listener.Release()
         except:
             pass
-    
+
     def _set_volume(self, volume):
         self._volume = volume
         self._buffer.SetVolume(_db(volume))
