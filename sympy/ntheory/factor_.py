@@ -8,6 +8,7 @@ import random
 import math
 from primetest import isprime
 from generate import sieve, prime, primerange
+from sympy.utilities.iterables import iff
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1,8)) \
     for i in range(256)]
@@ -40,6 +41,10 @@ def multiplicity(p, n):
         >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
         [0, 1, 2, 3, 3]
     """
+
+    if p == 2:
+        return trailing(n)
+
     m = 0
     n, rem = divmod(n, p)
     while not rem:
@@ -285,11 +290,12 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     =====================
 
     If ``limit`` is specified, the search is stopped after performing
-    trial division up to the limit (or taking a corresponding number of
-    rho/p-1 steps). This is useful if one has a large number and only
-    is interested in finding small factors (if any). Note that setting
-    a limit does not prevent larger factors from being found early;
-    it simply means that any larger factors returned may be composite.
+    trial division up to (but not including) the limit (or taking a
+    corresponding number of rho/p-1 steps). This is useful if one has
+    a large number and only is interested in finding small factors (if
+    any). Note that setting a limit does not prevent larger factors
+    from being found early; it simply means that any larger factors
+    returned may be composite.
 
     This number, for example, has two small factors and a huge
     semiprime factor that cannot be reduced easily:
@@ -323,13 +329,14 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     if n == 1:
         return factors
 
+    low, high = 3, 250
+
     # It is sufficient to perform trial division up to sqrt(n)
     try:
-        limit = limit or (int(n**0.5) + 2)
+        limit = iff(limit, lambda: max(limit, low), lambda: int(n**0.5) + 2)
     except OverflowError:
         limit = 1e1000
 
-    low, high = 3, 250
 
     # Setting to True here forces _check_termination if first round of
     # trial division fails

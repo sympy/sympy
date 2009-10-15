@@ -211,6 +211,9 @@ def test_factorint():
         assert multiproduct(factorint(n)) == n
     assert pollard_rho(2**64+1, seed=1) == 274177
     assert pollard_rho(19, seed=1) is None
+    assert factorint(3,2) == {3: 1}
+    assert factorint(12345) == {3: 1, 5: 1, 823: 1}
+    assert factorint(12345, 3) == {12345: 1} # there are no factors less than 3
 
 def test_totient():
     assert [totient(k) for k in range(1, 12)] == \
