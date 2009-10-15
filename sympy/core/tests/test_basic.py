@@ -1,6 +1,7 @@
 from sympy import Basic, S, Symbol, Real, Integer, Rational,  \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
-    WildFunction, Poly, Function, Derivative, Number, pi, var
+    WildFunction, Poly, Function, Derivative, Number, pi, var, \
+    NumberSymbol, zoo
 
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -353,6 +354,15 @@ def test_noncommutative_expand_issue658():
     assert A*B - B*A != 0
     assert (A*(A+B)*B).expand() == A**2*B + A*B**2
     assert (A*(A+B+C)*B).expand() == A**2*B + A*B**2 + A*C*B
+
+def test_as_numer_denom():
+    assert oo.as_numer_denom() == (1, 0)
+    assert (-oo).as_numer_denom() == (-1, 0)
+    assert zoo.as_numer_denom() == (zoo, 1)
+    assert (-zoo).as_numer_denom() == (zoo, 1)
+    assert (1/x).as_numer_denom() == (1, x)
+    assert x.as_numer_denom() == (x, 1)
+    assert (x/y).as_numer_denom() == (x, y)
 
 def test_as_independent():
     assert (2*x*sin(x)+y+x).as_independent(x) == (y, x + 2*x*sin(x))

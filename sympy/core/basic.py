@@ -1793,8 +1793,8 @@ class Basic(AssumeMeths):
     def as_numer_denom(self):
         """ a/b -> a,b
 
-        Note: the following is a possible way to modify Eq which are now
-        just returned as (Eq(), 1). It is not a trivial change...,
+        The following is a possible way to modify Eq which are now
+        just returned as (Eq(), 1). It is not a trivial change,
         however, and it causes many failures.
 
         from sympy.core.relational import Equality

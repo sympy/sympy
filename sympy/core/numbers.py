@@ -973,20 +973,20 @@ class Integer(Rational):
             # we extract I for this special case since everyone is doing so
             return S.ImaginaryUnit * Pow(-b, e)
         if e < 0:
+            # invert base and change sign on exponent
             ne = -e
             if b < 0:
                 if e.q != 1:
-                    return -(S.NegativeOne) ** ((e.p % e.q) / S(e.q)) * Rational(1, -b) ** (-e)
+                    return -(S.NegativeOne) ** ((e.p % e.q) / S(e.q)) * Rational(1, -b) ** ne
                 else:
                     return (S.NegativeOne) ** ne * Rational(1, -b) ** ne
             else:
-                return Rational(1, b.p) ** (-e)
+                return Rational(1, b.p) ** ne
         # see if base is a perfect root, sqrt(4) --> 2
         x, xexact = integer_nthroot(abs(b.p), e.q)
         if xexact:
             # if it's a perfect root we've finished
             result = Integer(x ** abs(e.p))
-            if e < 0: result = 1/result
             if b < 0: result *= (-1)**e
             return result
         # The following is an algorithm where we collect perfect roots

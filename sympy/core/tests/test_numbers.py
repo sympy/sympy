@@ -299,7 +299,6 @@ def test_powers_Integer():
     # negative rational power and negative base
     assert (-3) ** Rational(-7, 3) == -(-3) ** Rational(2, 3) / 27
     assert (-3) ** Rational(-2, 3) == -(-3) ** (S(1) / 3) / 3
-    assert (-2) ** Rational(-2, 1) == Rational(1, 4)
 
 def test_powers_Rational():
     """Test Rational._eval_power"""
@@ -331,8 +330,6 @@ def test_powers_Rational():
     # not exact roots
     assert Rational(1,2)  ** Rational(1,2) == sqrt(2) / 2
     assert Rational(-4,7) ** Rational(1,2) == I * Rational(4,7) ** Rational(1,2)
-
-    # negative rational power and negative base
     assert Rational(-3, 2)**Rational(-7, 3) == \
            -4 * (-3) ** Rational(2, 3)*2 ** Rational(1, 3)/27
     assert Rational(-3, 2)**Rational(-2, 3) == \

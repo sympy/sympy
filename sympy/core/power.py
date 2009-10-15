@@ -502,25 +502,29 @@ class Pow(Basic):
 
     def as_numer_denom(self):
         base, exp = self.as_base_exp()
-        c,t = exp.as_coeff_terms()
-        n,d = base.as_numer_denom()
-        negate = False
-        if exp.is_integer != True:
-            if d.is_negative == True:
-                # Roots need to take care that negative denominators behave
-                # differently than the rest of the complex plane.
-                negate = True
-            elif d.is_negative is None:
-                # Can make no conclusions.
-                return self, S(1)
-        if c.is_negative == True:
-            exp = -exp
-            n,d = d,n
-        num = n ** exp
-        den = d ** exp
-        if negate:
-            num = -num
-        return num, den
+        n, d = base.as_numer_denom()
+        if exp.is_Integer:
+            if exp.is_negative:
+                n, d = d, n
+                exp = -exp
+            return n ** exp, d ** exp
+        elif exp.is_Rational:
+            if d.is_negative is None:
+                # we won't split up the base
+                if exp.is_negative:
+                    #return d * base ** -exp, n
+                    return S.One, base ** -exp
+                else:
+                    return self, S.One
+            if d.is_negative:
+                n = -n
+                d = -d
+            if exp.is_negative:
+                n, d = d, n
+                exp = -exp
+            return n ** exp, d ** exp
+        # unprocessed Real and NumberSymbol
+        return self, S.One
 
     def matches(pattern, expr, repl_dict={}, evaluate=False):
         if evaluate:

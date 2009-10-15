@@ -922,7 +922,13 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
             else:
                 testnum += 1
                 continue
-            s = simplify(s.lhs - s.rhs)
+            ss = simplify(s.lhs - s.rhs)
+            if ss:
+                # with the new numer_denom in power.py, if we do a simple
+                # expansion then testnum == 0 verifies all solutions.
+                s = (s.lhs - s.rhs).expand()
+            else:
+                s = 0
             testnum += 1
         elif testnum == 1:
             # If we cannot substitute f, try seeing if the nth derivative is equal
