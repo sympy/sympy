@@ -222,7 +222,7 @@ class Pow(Basic):
         return c(self.base)**self.exp
 
     def _eval_expand_basic(self, deep=True, **hints):
-        sargs, terms = self.args[:], []
+        sargs, terms = self.args, []
         for term in sargs:
             if hasattr(term, '_eval_expand_basic'):
                 newterm = term._eval_expand_basic(deep=deep, **hints)
@@ -260,12 +260,12 @@ class Pow(Basic):
                 return Mul(*(Pow(t.expand(deep=deep, **hints), e)\
                 for t in b.args))
             else:
-                return Mul(*(Pow(t, e) for t in b.args))
+                return Mul(*[Pow(t, e) for t in b.args])
         else:
             return b**e
 
     def _eval_expand_mul(self, deep=True, **hints):
-        sargs, terms = self.args[:], []
+        sargs, terms = self.args, []
         for term in sargs:
             if hasattr(term, '_eval_expand_mul'):
                 newterm = term._eval_expand_mul(deep=deep, **hints)
@@ -406,7 +406,7 @@ class Pow(Basic):
             return result
 
     def _eval_expand_log(self, deep=True, **hints):
-        sargs, terms = self.args[:], []
+        sargs, terms = self.args, []
         for term in sargs:
             if hasattr(term, '_eval_expand_log'):
                 newterm = term._eval_expand_log(deep=deep, **hints)
@@ -448,7 +448,7 @@ class Pow(Basic):
             return C.re(self) + S.ImaginaryUnit*C.im(self)
 
     def _eval_expand_trig(self, deep=True, **hints):
-        sargs, terms = self.args[:], []
+        sargs, terms = self.args, []
         for term in sargs:
             if hasattr(term, '_eval_expand_trig'):
                 newterm = term._eval_expand_trig(deep=deep, **hints)
@@ -458,7 +458,7 @@ class Pow(Basic):
         return self.new(*terms)
 
     def _eval_expand_func(self, deep=True, **hints):
-        sargs, terms = self.args[:], []
+        sargs, terms = self.args, []
         for term in sargs:
             if hasattr(term, '_eval_expand_func'):
                 newterm = term._eval_expand_func(deep=deep, **hints)

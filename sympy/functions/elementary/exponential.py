@@ -63,7 +63,7 @@ class exp(Function):
                 return S.NaN
 
         if arg.is_Add:
-            args = arg.args[:]
+            args = arg.args
         else:
             args = [arg]
 

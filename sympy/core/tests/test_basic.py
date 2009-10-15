@@ -331,12 +331,12 @@ def test_attribute_error():
     raises(AttributeError, "x.exp()")
 
 def test_args():
-    assert (x*y).args[:] in ((x, y), (y, x))
-    assert (x+y).args[:] in ((x, y), (y, x))
-    assert (x*y+1).args[:] in ((x*y, 1), (1, x*y))
-    assert sin(x*y).args[:] == (x*y,)
+    assert (x*y).args in ((x, y), (y, x))
+    assert (x+y).args in ((x, y), (y, x))
+    assert (x*y+1).args in ((x*y, 1), (1, x*y))
+    assert sin(x*y).args == (x*y,)
     assert sin(x*y).args[0] == x*y
-    assert (x**y).args[:] == (x,y)
+    assert (x**y).args == (x,y)
     assert (x**y).args[0] == x
     assert (x**y).args[1] == y
 

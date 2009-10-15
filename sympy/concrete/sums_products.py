@@ -80,7 +80,7 @@ class Sum2(_BigOperator):
 
         # Geometric terms
         if f.is_Pow:
-            r, k = f.args[:]
+            r, k = f.args
             if not r.has(i) and k == i:
                 # TODO: Pow should be able to simplify x**oo depending
                 # on whether |x| < 1 or |x| > 1 for non-rational x

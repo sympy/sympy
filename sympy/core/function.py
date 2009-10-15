@@ -197,11 +197,11 @@ class Function(Basic):
         elif old.is_Function and new.is_Function:
             if old == self.func:
                 if self.nargs is new.nargs or not new.nargs:
-                    return new(*self.args[:])
+                    return new(*self.args)
                 # Written down as an elif to avoid a super-long line
                 elif isinstance(new.nargs,tuple) and self.nargs in new.nargs:
-                    return new(*self.args[:])
-        obj = self.func._eval_apply_subs(*(self.args[:] + (old,) + (new,)))
+                    return new(*self.args)
+        obj = self.func._eval_apply_subs(*(self.args + (old,) + (new,)))
         if obj is not None:
             return obj
         return Basic._seq_subs(self, old, new)
@@ -323,7 +323,7 @@ class Function(Basic):
     def _eval_expand_basic(self, deep=True, **hints):
         if not deep:
             return self
-        sargs, terms = self.args[:], []
+        sargs, terms = self.args, []
         for term in sargs:
             if hasattr(term, '_eval_expand_basic'):
                 newterm = term._eval_expand_basic(deep=deep, **hints)
@@ -335,7 +335,7 @@ class Function(Basic):
     def _eval_expand_power_exp(self, deep=True, **hints):
         if not deep:
             return self
-        sargs, terms = self.args[:], []
+        sargs, terms = self.args, []
         for term in sargs:
             if hasattr(term, '_eval_expand_power_exp'):
                 newterm = term._eval_expand_power_exp(deep=deep, **hints)
@@ -347,7 +347,7 @@ class Function(Basic):
     def _eval_expand_power_base(self, deep=True, **hints):
         if not deep:
             return self
-        sargs, terms = self.args[:], []
+        sargs, terms = self.args, []
         for term in sargs:
             if hasattr(term, '_eval_expand_power_base'):
                 newterm = term._eval_expand_power_base(deep=deep, **hints)
@@ -359,7 +359,7 @@ class Function(Basic):
     def _eval_expand_mul(self, deep=True, **hints):
         if not deep:
             return self
-        sargs, terms = self.args[:], []
+        sargs, terms = self.args, []
         for term in sargs:
             if hasattr(term, '_eval_expand_mul'):
                 newterm = term._eval_expand_mul(deep=deep, **hints)
@@ -371,7 +371,7 @@ class Function(Basic):
     def _eval_expand_multinomial(self, deep=True, **hints):
         if not deep:
             return self
-        sargs, terms = self.args[:], []
+        sargs, terms = self.args, []
         for term in sargs:
             if hasattr(term, '_eval_expand_multinomail'):
                 newterm = term._eval_expand_multinomial(deep=deep, **hints)
@@ -383,7 +383,7 @@ class Function(Basic):
     def _eval_expand_log(self, deep=True, **hints):
         if not deep:
             return self
-        sargs, terms = self.args[:], []
+        sargs, terms = self.args, []
         for term in sargs:
             if hasattr(term, '_eval_expand_log'):
                 newterm = term._eval_expand_log(deep=deep, **hints)
@@ -400,7 +400,7 @@ class Function(Basic):
         return C.re(func) + S.ImaginaryUnit * C.im(func)
 
     def _eval_expand_trig(self, deep=True, **hints):
-        sargs, terms = self.args[:], []
+        sargs, terms = self.args, []
         for term in sargs:
             if hasattr(term, '_eval_expand_trig'):
                 newterm = term._eval_expand_trig(deep=deep, **hints)
@@ -410,7 +410,7 @@ class Function(Basic):
         return self.new(*terms)
 
     def _eval_expand_func(self, deep=True, **hints):
-        sargs, terms = self.args[:], []
+        sargs, terms = self.args, []
         for term in sargs:
             if hasattr(term, '_eval_expand_func'):
                 newterm = term._eval_expand_func(deep=deep, **hints)
@@ -423,7 +423,7 @@ class Function(Basic):
         if hints.get('deep', False):
             args = [ a._eval_rewrite(pattern, rule, **hints) for a in self ]
         else:
-            args = self.args[:]
+            args = self.args
 
         if pattern is None or isinstance(self.func, pattern):
             if hasattr(self, rule):

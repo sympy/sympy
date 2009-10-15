@@ -6,6 +6,7 @@ from decorators import _sympifyit
 from assumptions import AssumeMeths, make__get_assumption
 from cache import cacheit
 
+
 # used for canonical ordering of symbolic sequences
 # via __cmp__ method:
 # FIXME this is *so* irrelevant and outdated!
@@ -881,7 +882,7 @@ class Basic(AssumeMeths):
         in the __new__. Don't override .args() from Basic (so that it's
         easy to change the interface in the future if needed).
         """
-        return self._args[:]
+        return self._args
 
     def iter_basic_args(self):
         """
@@ -1117,9 +1118,9 @@ class Basic(AssumeMeths):
             return new
         #new functions are initialized differently, than old functions
         if isinstance(self.func, FunctionClass):
-            args = self.args[:]
+            args = self.args
         else:
-            args = (self.func,)+self[:]
+            args = (self.func,)+self
         return self.__class__(*[s.subs(old, new) for s in args])
 
     def __contains__(self, what):
@@ -1357,14 +1358,14 @@ class Basic(AssumeMeths):
             if pattern.is_Mul and Mul(*pattern.args[1:]) == expr:
                return pattern.args[0].matches(Rational(sign), repl_dict, evaluate)
             # two-factor product: if the 2nd factor matches, the first part must be sign * one
-            if pattern.is_Mul and len(pattern.args[:]) == 2:
+            if pattern.is_Mul and len(pattern.args) == 2:
                dd = pattern.args[1].matches(expr, repl_dict, evaluate)
                if dd == None: return None
                dd = pattern.args[0].matches(Rational(sign), dd, evaluate)
                return dd
             return None
 
-        if len(pattern.args[:])==0:
+        if len(pattern.args)==0:
             if pattern==expr:
                 return repl_dict
             return None
@@ -1463,7 +1464,7 @@ class Basic(AssumeMeths):
         >>> (sin(x)*x+sin(x)**2).count_ops()
         ADD + MUL + POW + 2 * SIN
         """
-        return Integer(len(self[:])-1) + sum([t.count_ops(symbolic=symbolic) for t in self])
+        return Integer(len(self)-1) + sum([t.count_ops(symbolic=symbolic) for t in self])
 
     def doit(self, **hints):
         """Evaluate objects that are not evaluated by default like limits,
@@ -1712,7 +1713,7 @@ class Basic(AssumeMeths):
         indeps, depend = [], []
 
         if self.is_Add or self.is_Mul:
-            for term in self.args[:]:
+            for term in self.args:
                 if term.has(*deps):
                     depend.append(term)
                 else:

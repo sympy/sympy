@@ -235,7 +235,7 @@ class RegularPolygon(Polygon):
     @property
     def vertices(self):
         points = []
-        c, r, n = self[:]
+        c, r, n = self
         v = 2*S.Pi/n
         for k in xrange(0, n):
             points.append( Point(c[0] + r*C.cos(k*v), c[1] + r*C.sin(k*v)) )

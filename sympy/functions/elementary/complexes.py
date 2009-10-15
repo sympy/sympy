@@ -72,7 +72,7 @@ class re(Function):
                 else:
                     included.append(term)
 
-            if len(arg[:]) != len(included):
+            if len(arg) != len(included):
                 a, b, c = map(lambda xs: C.Add(*xs),
                     [included, reverted, excluded])
 
@@ -150,7 +150,7 @@ class im(Function):
                 elif term.has(S.ImaginaryUnit) or not term.is_real:
                     included.append(term)
 
-            if len(arg[:]) != len(included):
+            if len(arg) != len(included):
                 a, b, c = map(lambda xs: C.Add(*xs),
                     [included, reverted, excluded])
 

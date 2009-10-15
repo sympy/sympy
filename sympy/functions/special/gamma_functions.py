@@ -68,7 +68,7 @@ class gamma(Function):
             arg = self.args[0]
 
         if arg.is_Add:
-            for i, coeff in enumerate(arg.args[:]):
+            for i, coeff in enumerate(arg.args):
                 if arg.args[i].is_Number:
                     terms = C.Add(*(arg.args[:i] + arg.args[i+1:]))
 
