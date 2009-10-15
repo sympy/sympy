@@ -1,5 +1,5 @@
 from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer, \
-        S, factorial, Catalan, EulerGamma, GoldenRatio
+        S, factorial, Catalan, EulerGamma, GoldenRatio, cos
 from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex
@@ -247,7 +247,7 @@ def test_powers():
 
 def test_powers_Integer():
     """Test Integer._eval_power"""
-    # check inifinity
+    # check infinity
     assert S(1) ** S.Infinity == 1
     assert S(-1)** S.Infinity == S.NaN
     assert S(2) ** S.Infinity == S.Infinity
@@ -495,3 +495,21 @@ def test_conversion_to_mpmath():
     assert mpmath.mpmathify(Integer(1)) == mpmath.mpf(1)
     assert mpmath.mpmathify(Rational(1, 2)) == mpmath.mpf(0.5)
     assert mpmath.mpmathify(Real('1.23')) == mpmath.mpf('1.23')
+
+def test_relational():
+    # real
+    x = S(.1)
+    assert (x != cos) is True
+    assert (x == cos) is False
+
+    # rational
+    x = Rational(1,3)
+    assert (x != cos) is True
+    assert (x == cos) is False
+
+    # integer defers to rational so these tests are omitted
+
+    # number symbol
+    x = pi
+    assert (x != cos) is True
+    assert (x == cos) is False
