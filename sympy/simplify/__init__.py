@@ -1,4 +1,4 @@
-"""The module helps converting sympy expressions into shroter forms of them.
+"""The module helps converting sympy expressions into shorter forms of them.
 
 for example:
 the expression E**(pi*I) will be converted into -1

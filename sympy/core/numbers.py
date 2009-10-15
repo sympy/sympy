@@ -19,17 +19,19 @@ def seterr(divide=False):
     divide == True .... raise an exception
     divide == False ... return nan
     """
-    _errdict["divide"] = divide
+    if _errdict["divide"] != divide:
+        clear_cache()
+        _errdict["divide"] = divide
 
 # (a,b) -> gcd(a,b)
 _gcdcache = {}
 
 # TODO caching with decorator, but not to degrade performance
 def igcd(a, b):
-    """Computes integer greates common divisor of two numbers.
+    """Computes integer greatest common divisor of two numbers.
 
        The algorithm is based on the well known Euclid's algorithm. To
-       improve speed, igcd() has its own caching mechanizm implemented.
+       improve speed, igcd() has its own caching mechanism implemented.
     """
     try:
         return _gcdcache[(a,b)]
@@ -159,7 +161,8 @@ class Number(Atom):
     is_Number = True
 
     def __new__(cls, *obj):
-        if len(obj)==1: obj=obj[0]
+        if len(obj)==1:
+          obj=obj[0]
         if isinstance(obj, (int, long)):
             return Integer(obj)
         if isinstance(obj,tuple) and len(obj)==2:
@@ -223,6 +226,9 @@ class Real(Number):
     ======
         Real(3.5)   .... 3.5 (the 3.5 was converted from a python float)
         Real("3.0000000000000005")
+
+        Real((1,3,0,2)) # mpmath tuple: (-1)**1 * 3 * 2**0; 3 has 2 bits
+        -3.00000000000000
 
     Notes:
     ======
@@ -931,7 +937,7 @@ class Integer(Rational):
 
     def _eval_power(b, e):
         """
-        Tries to do some simplifications on b ** e, where base is
+        Tries to do some simplifications on b ** e, where b is
         an instance of Integer
 
         Returns None if no further simplifications can be done

@@ -116,12 +116,11 @@ def solve(f, *symbols, **flags):
        more problem specific functions.
 
        By default all solutions are simplified to make the output more
-       readable. If this is not the expected behavior,  eg. because of
-       speed issues, set simplified=False in function arguments.
+       readable. If this is not the expected behavior (e.g., because of
+       speed issues) set simplified=False in function arguments.
 
-       To solve equations and systems of equations of other kind, eg.
-       recurrence relations of differential equations use rsolve() or
-       dsolve() functions respectively.
+       To solve equations and systems of equations like recurrence relations
+       or differential equations, use rsolve() or dsolve(), respectively.
 
        >>> from sympy import *
        >>> x,y = symbols('xy')
@@ -522,8 +521,6 @@ def solve_linear_system_LU(matrix, syms):
     for i in range(soln.rows):
         solutions[syms[i]] = soln[i,0]
     return solutions
-
-
 
 x = Symbol('x', dummy=True)
 a,b,c,d,e,f,g,h = [Wild(t, exclude=[x]) for t in 'abcdefgh']

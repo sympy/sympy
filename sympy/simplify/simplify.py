@@ -185,12 +185,12 @@ def together(expr, deep=False):
        to reduce the total order of both numerator and denominator
        and minimize the number of terms.
 
-       Denesting is done recursively on fractions level. However this
-       function will not attempt to rewrite composite objects, like
-       functions, interior unless 'deep' flag is set.
+       Denesting is done recursively on the fractions level. However this
+       function will not attempt to rewrite the interior of composite
+       objects, like functions, unless 'deep' is True.
 
        By definition, 'together' is a complement to 'apart', so
-       apart(together(expr)) should left expression unchanged.
+       apart(together(expr)) should return expr unchanged.
 
        >>> from sympy import *
        >>> x, y, z = symbols('x', 'y', 'z')
@@ -214,8 +214,8 @@ def together(expr, deep=False):
        >>> together(1/(1 + 1/x))
        x/(1 + x)
 
-       It also perfect possible to work with symbolic powers or
-       exponential functions or combinations of both:
+       together() can also work perfectly well with symbolic powers and/or
+       exponential functions:
 
        >>> together(1/x**y + 1/x**(y-1))
        x**(-y)*(1 + x)
@@ -456,7 +456,7 @@ def collect(expr, syms, evaluate=True, exact=False):
 
 
     == Notes ==
-        - arguments are expected to be in expanded form, so you might have tos
+        - arguments are expected to be in expanded form, so you might have to
           call expand() prior to calling this function.
     """
     def make_expression(terms):
@@ -588,13 +588,13 @@ def collect(expr, syms, evaluate=True, exact=False):
                                 common_expo = expo
                             else:
                                 # common exponent was negotiated before so
-                                # there is no chance for pattern match unless
+                                # there is no chance for a pattern match unless
                                 # common and current exponents are equal
                                 if common_expo != expo:
                                     common_expo = 1
                         else:
                             # we ought to be exact so all fields of
-                            # interest must match in very details
+                            # interest must match in every details
                             if e_rat != t_rat or e_ord != t_ord:
                                 continue
 
@@ -1158,8 +1158,7 @@ def powsimp(expr, deep=False, combine='all'):
                     c_powers[i] = [C.Pow(b, exp_c), C.Mul(*exp_t)]
 
 
-            # Combine bases whenever they have the same exponent which is
-            # not numeric
+            # Combine bases whenever they have the same exponent
             c_exp = {}
             for b, e in c_powers:
                 if e in c_exp:

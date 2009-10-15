@@ -158,7 +158,7 @@ def roots_rational(f):
     return zeros
 
 def roots(f, *symbols, **flags):
-    """Computes symbolic roots of an univariate polynomial.
+    """Computes symbolic roots of a univariate polynomial.
 
        Given an univariate  polynomial f with symbolic coefficients,
        returns a dictionary with its roots and their multiplicities.
@@ -338,7 +338,7 @@ def roots(f, *symbols, **flags):
         return zeros
 
 def poly_root_factors(f, *symbols, **flags):
-    """Returns all factors of an univariate polynomial.
+    """Returns all factors of a univariate polynomial.
 
        >>> from sympy import *
        >>> x,y = symbols('xy')
@@ -381,7 +381,7 @@ def poly_root_factors(f, *symbols, **flags):
 def poly_sturm(f, *symbols):
     """Computes the Sturm sequence of a given polynomial.
 
-       Given an univariate, square-free polynomial f(x) returns an
+       Given a univariate, square-free polynomial f(x) returns an
        associated Sturm sequence f_0(x), ..., f_n(x) defined by:
 
            f_0(x), f_1(x) = f(x), f'(x)
@@ -512,7 +512,7 @@ def _exact_roots(f):
     return zeros
 
 class RootOf(Basic):
-    """Represents n-th root of an univariate polynomial. """
+    """Represents n-th root of a univariate polynomial. """
 
     def __new__(cls, f, index):
         if isinstance(f, RootsOf):
@@ -545,7 +545,7 @@ class RootOf(Basic):
         return self.poly.atoms(*args, **kwargs)
 
 class RootsOf(Basic):
-    """Represents all roots of an univariate polynomial.
+    """Represents all roots of a univariate polynomial.
 
        >>> from sympy import *
        >>> x,y = symbols('xy')
@@ -608,7 +608,7 @@ class RootsOf(Basic):
 
 
 class RootSum(Basic):
-    """Represents a sum of all roots of an univariate polynomial. """
+    """Represents a sum of all roots of a univariate polynomial. """
 
     def __new__(cls, f, *args, **flags):
         if not hasattr(f, '__call__'):
@@ -650,4 +650,3 @@ class RootSum(Basic):
                 result += self.function(root)
 
             return result
-

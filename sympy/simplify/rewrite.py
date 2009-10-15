@@ -140,8 +140,8 @@ def trim(f, *symbols, **flags):
                     if not recursive:
                         result.add(g)
                     else:
-                        g = g.__class__(*[trim(h, *symbols,
-                            **flags) for h in g.args])
+                        g = g.__class__(*[trim(h, *symbols, **flags)
+                                          for h in g.args])
 
                         if is_functional(g):
                             result.add(g)

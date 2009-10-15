@@ -929,7 +929,7 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
             # This will only work for odes that are exact, by definition.
             s = simplify(trigsimp(diff(sol.lhs, x, order) - diff(sol.rhs, x, order)) - \
                 trigsimp(ode.lhs) + trigsimp(ode.rhs))
- #           s2 = simplify(diff(sol.lhs, x, order) - diff(sol.rhs, x, order) - \
+#            s2 = simplify(diff(sol.lhs, x, order) - diff(sol.rhs, x, order) - \
 #                ode.lhs + ode.rhs)
             testnum += 1
         elif testnum == 2:

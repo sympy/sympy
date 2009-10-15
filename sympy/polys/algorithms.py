@@ -634,7 +634,7 @@ def poly_subresultants(f, g, *symbols, **flags):
        Polynomial remainder sequence (PRS) is a fundamental tool in
        computer algebra as it gives as a sub-product the polynomial
        greatest common divisor (GCD), provided that the coefficient
-       domain is an unique factorization domain.
+       domain is a unique factorization domain.
 
        There are several methods for computing PRS, eg.: Euclidean
        PRS, where the most famous algorithm is used, primitive PRS
@@ -750,9 +750,9 @@ def poly_subresultants(f, g, *symbols, **flags):
     return (R[-1]**j*s*c, R)
 
 def poly_sqf(f, *symbols):
-    """Compute square-free decomposition of an univariate polynomial.
+    """Compute square-free decomposition of a univariate polynomial.
 
-       Given an univariate polynomial f over an unique factorization domain
+       Given a univariate polynomial f over a unique factorization domain
        returns tuple (f_1, f_2, ..., f_n),  where all  A_i are co-prime and
        square-free polynomials and f = f_1 * f_2**2 * ... * f_n**n.
 
@@ -819,13 +819,13 @@ def poly_sqf(f, *symbols):
     return [head] + tail
 
 def poly_decompose(f, *symbols):
-    """Computes functional decomposition of an univariate polynomial.
+    """Computes functional decomposition of a univariate polynomial.
 
        Besides factorization and square-free decomposition, functional
        decomposition is another important, but very different,  way of
        breaking down polynomials into simpler parts.
 
-       Formally given an univariate polynomial f with coefficients in a
+       Formally given a univariate polynomial f with coefficients in a
        field of characteristic zero, returns tuple (f_1, f_2, ..., f_n)
        where f = f_1 o f_2 o ... f_n = f_1(f_2(... f_n)) and f_2, ...,
        f_n are monic and homogeneous polynomials of degree at least 2.

@@ -6,7 +6,7 @@ from numbers import Integer, Rational
 from symbol import Symbol
 
 # internal marker to indicate:
-#   "there are still non-commutative objects -- don't forget to processe them"
+#   "there are still non-commutative objects -- don't forget to process them"
 class NC_Marker:
     is_Order    = False
     is_Mul      = False
@@ -159,7 +159,7 @@ class Mul(AssocOp):
         # We determine this if two exponents have the same term in as_coeff_terms
         #
         # Unfortunately, this isn't smart enough to consider combining into
-        # exponents that might already be adds, so thing like:
+        # exponents that might already be adds, so things like:
         #  z - y    y
         # x      * x  will be left alone.  This is because checking every possible
         # combination can slow things down.
@@ -628,8 +628,10 @@ class Mul(AssocOp):
     def _eval_is_irrational(self):
         for t in self.args:
             a = t.is_irrational
-            if a: return True
-            if a is None: return
+            if a:
+                return True
+            if a is None:
+                return
         return False
 
     def _eval_is_positive(self):
@@ -708,7 +710,7 @@ class Mul(AssocOp):
 
     def _eval_subs(self, old, new):
         # base cases
-        # simpliest
+        # simplest
         if self == old:
             return new
         # pass it off to its own class
@@ -760,40 +762,50 @@ class Mul(AssocOp):
         comm_old_len, noncomm_old_len = len(comm_old), len(noncomm_old)
         comm_self_len, noncomm_self_len = len(comm_self), len(noncomm_self)
 
-        # if the noncommutative part of the 'to-be-replaced' expression is smaller
-        # than the noncommutative part of the whole expression, scan to see if the
-        # whole thing is there
+        # if the noncommutative part of the 'to-be-replaced' expression is
+        # smaller than the noncommutative part of the whole expression, scan
+        # to see if the whole thing is there
         if noncomm_old_len <= noncomm_self_len and noncomm_old_len > 0:
             for i in range(noncomm_self_len):
                 if noncomm_self[i] == noncomm_old[0]:
                     for j in range(noncomm_old_len):
                         # make sure each noncommutative term matches in order
-                        if (i+j) < noncomm_self_len and noncomm_self[i+j] == noncomm_old[j]:
-                            # we only care once we've reached the end of old's noncommutative part.
+                        if (i+j) < noncomm_self_len and \
+                           noncomm_self[i+j] == noncomm_old[j]:
+                            # we only care once we've reached the end of old's
+                            # noncommutative part.
                             if j == noncomm_old_len-1:
-                                # get rid of noncommutative terms and substitute new expression into total expression
-                                noncomms_final = noncomm_self[:i]+noncomm_self[i+j+1:]
+                                # get rid of noncommutative terms and
+                                # substitute new expression into total
+                                # expression
+                                noncomms_final = noncomm_self[:i] + \
+                                                 noncomm_self[i+j+1:]
                                 noncomms_final.insert(i,new)
 
                                 myFlag = True
                                 comms_final = comm_self[:]
                                 # check commutative terms
                                 for ele in comm_old:
-                                    # flag to make sure all the commutative terms in old are in self
+                                    # flag to make sure all the commutative
+                                    # terms in old are in self
                                     if ele not in comm_self:
                                         myFlag = False
                                     # collect commutative terms
                                     else:
                                         comms_final.remove(ele)
 
-                                # continue only if all commutative terms in old are present
+                                # continue only if all commutative terms in
+                                # old are present
                                 if myFlag == True:
                                     expr = comms_final+noncomms_final
-                                    return Mul(coeff_self/coeff_old, Mul(*expr)._eval_subs(old,new))#*[e._eval_subs(old,new) for e in expr])
+                                    return Mul(coeff_self/coeff_old,
+                                               Mul(*expr)._eval_subs(old,new))
+                                               #*[e._eval_subs(old,new) for e in expr])
 
             return self.__class__(*[s._eval_subs(old, new) for s in self.args])
 
-        # but what if the noncommutative lists subexpression and the whole expression are both empty
+        # but what if the noncommutative lists subexpression and the whole
+        # expression are both empty
         elif noncomm_old_len == noncomm_self_len == 0:
             # just check commutative parts then.
             if comm_old_len > 0 and comm_old_len<=comm_self_len:
@@ -803,7 +815,8 @@ class Mul(AssocOp):
                 comms_final = comm_self[:]
                 # check commutative terms
                 for ele in comm_old:
-                    # flag to make sure all the commutative terms in old are in self
+                    # flag to make sure all the commutative terms in old are
+                    # in self
                     if ele not in comm_self:
                         myFlag = False
                     # collect commutative terms

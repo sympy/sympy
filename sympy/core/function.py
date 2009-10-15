@@ -279,7 +279,7 @@ class Function(Basic):
 
     def count_ops(self, symbolic=True):
         #      f()             args
-        return 1   + Add(*[t.count_ops(symbolic) for t in self.args])
+        return 1 + Add(*[ t.count_ops(symbolic) for t in self.args ])
 
     def _eval_nseries(self, x, x0, n):
         assert len(self.args) == 1
@@ -802,15 +802,15 @@ def diff(f, *symbols, **kwargs):
     """
     Differentiate f with respect to symbols.
 
-    It's just a wrapper to unify .diff() and the Derivative class,
-    it's interface is similar to that of integrate().  You can use the same
+    This is just a wrapper to unify .diff() and the Derivative class; its
+    interface is similar to that of integrate().  You can use the same
     shortcuts for multiple variables as with Derivative.  For example,
     diff(f(x), x, x, x) and diff(f(x), x, 3) both return the third derivative
     of f(x).
 
     You can pass evaluate=False to get an unevaluated Derivative class.  Note
-    that if there are 0 symbols (such as diff(f(x), x, 0), then the result be
-    the function (the zeroth derivative), even if evaluate=False.
+    that if there are 0 symbols (such as diff(f(x), x, 0), then the result will
+    be the function (the zeroth derivative), even if evaluate=False.
 
     This function is vectorized, so you can pass a list for the arguments and
     each argument will be mapped to each element of the list.  For a single
@@ -1004,7 +1004,7 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
     hints['basic'] = basic
     return sympify(e).expand(deep=deep, **hints)
 
-# These are simple wrappers around single hints.  Fell free to add ones for
+# These are simple wrappers around single hints.  Feel free to add ones for
 # power_exp, power_base, multinomial, or basic if you need them.
 def expand_mul(expr, deep=True):
     """

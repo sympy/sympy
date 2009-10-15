@@ -56,16 +56,16 @@ class MultivariatePolyError(PolynomialError):
 class Poly(Basic):
     """Represents polynomials with symbolic coefficients.
 
-       Polynomials are internally represented as two lists containing
-       coefficients and monomials (tuples of exponents) respectively.
-       Stored are only terms with non-zero coefficients, so generally
-       all polynomials are considered sparse. However algorithms will
-       detect dense polynomials and use the appropriate method to
-       solve the given problem in the most efficient way.
+       Polynomials are internally represented as two lists
+       containing coefficients and monomials (tuples of exponents),
+       respectively. Stored are only terms with non-zero
+       coefficients, so generally all polynomials are considered
+       sparse. However, algorithms will detect dense polynomials and
+       use the appropriate method to solve them in the most efficient way.
 
-       The most common way to initialize a polynomial instance is to
-       provide a valid expression together witch a set of ordered
-       symbols and, additionally, monomial ordering:
+       The most common way to initialize a polynomial
+       instance is to provide a valid expression together with a
+       set of ordered symbols and, additionally, monomial ordering:
 
             Poly(expression, x_1, x_2, ..., x_n, order='grlex')
 
@@ -237,7 +237,7 @@ class Poly(Basic):
 
        [11] Substitution and evaluation:
 
-          [11.1] [U-] __call__    --> evaluates poly a the given point
+          [11.1] [U-] __call__    --> evaluates poly at the given point
           [11.2] [U-] evaluate    --> evaluates poly for specific vars
           [11.3] [--] _eval_subs  --> efficiently substitute variables
 
@@ -351,7 +351,7 @@ class Poly(Basic):
 
                     if coeff.has_any_symbols(*symbols):
                         raise CoefficientError("%s coefficient is dependent" \
-                            " of polynomial's symbols %s" % (coeff, symbols))
+                            " on polynomial's symbols %s" % (coeff, symbols))
 
                     if type(monom) is int:
                         monom = (monom,)
@@ -1046,6 +1046,7 @@ class Poly(Basic):
                     terms[monom] = coeff
 
         return self.__class__(terms, *self.symbols, **self.flags)
+
 
     def __pow__(self, other):
         """Polynomial exponentiation using binary method.

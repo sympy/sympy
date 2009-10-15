@@ -77,8 +77,8 @@ def python_bitcount(n):
     bc = bisect(powers, n)
     if bc != 300:
         return bc
-    bc = int(math.log(n, 2)) - 4
-    return bc + bctable[n>>bc]
+    bc = int(math.log(n, 2)) - 4 # it is 4 or 5 bits off here...
+    return bc + bctable[n>>bc]   # but it's corrected here.
 
 def gmpy_bitcount(n):
     """Calculate bit size of the nonnegative integer n."""

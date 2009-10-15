@@ -31,6 +31,8 @@ def intersection(*entities):
         - It is possible for intersection() to miss intersections that one
           knows exists because the required quantities were not fully
           simplified internally.
+        - Reals should be converted to Rationals, e.g. Rational(str(real_num))
+          or else failures due to floating point issues may result.
     """
     from entity import GeometryEntity
 

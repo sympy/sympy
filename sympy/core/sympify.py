@@ -17,7 +17,7 @@ class SympifyError(ValueError):
 def sympify(a, locals=None, convert_xor=True):
     """Converts an arbitrary expression to a type that can be used
        inside sympy. For example, it will convert python int's into
-       instance of sympy.Rational, floats into intances of sympy.Real,
+       instance of sympy.Rational, floats into instances of sympy.Real,
        etc. It is also able to coerce symbolic expressions which does
        inherit after Basic. This can be useful in cooperation with SAGE.
 
