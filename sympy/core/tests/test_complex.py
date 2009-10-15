@@ -116,3 +116,9 @@ def test_expand():
     assert f.expand() == I/32
     f = (Integer(1)/2 + I)**10
     assert f.expand() == Integer(237)/1024 - 779*I/256
+
+def test_re_im1652():
+    x = Symbol('x')
+    assert re(x) == re(conjugate(x))
+    assert im(x) == - im(conjugate(x))
+    assert im(x)*re(conjugate(x)) + im(conjugate(x)) * re(x) == 0

@@ -154,7 +154,7 @@ In situations where such cancellations are known to occur, the ``chop`` options 
 The ``chop`` option is very useful for cleaning up small real or imaginary parts:
 
     >>> N((E+pi*I)*(E-pi*I))
-    17.25866050002 + .0e-16*I
+    17.25866050002 - 1.30104260698261e-17*I
     >>> N((E+pi*I)*(E-pi*I), chop=True)
     17.2586605000200
 
