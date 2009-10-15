@@ -1,11 +1,12 @@
 
-from sympy.core import Basic, S, C, Symbol, Wild, Pow, sympify, diff, oo
+from sympy.core import Basic, S, C, Symbol, Wild, Pow, Add, sympify, diff, oo
 
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
 from sympy.integrals.risch import heurisch
 from sympy.utilities import threaded
+from sympy.utilities.iterables import make_list
 from sympy.simplify import apart
 from sympy.series import limit
 from sympy.polys import Poly
@@ -271,14 +272,8 @@ class Integral(Basic):
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,
         # if `f` is not Add -- we only have one term
-        if not f.is_Add:
-            f = [f]
-
         parts = []
-
-        if isinstance(f, Basic):
-            f = f.args
-        for g in f:
+        for g in make_list(f, Add):
             coeff, g = g.as_independent(x)
 
             # g(x) = const

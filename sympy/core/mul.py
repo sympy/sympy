@@ -4,6 +4,7 @@ from cache import cacheit
 from logic import fuzzy_not
 from numbers import Integer, Rational
 from symbol import Symbol
+from sympy.utilities.iterables import make_list
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -391,7 +392,7 @@ class Mul(AssocOp):
 
         terms = [Mul(a, b) for a in left for b in right]
         added = Add(*terms)
-        return make_list(added, Add)
+        return make_list(added, Add) #it may have collapsed down to one term
 
     def _eval_expand_basic(self, deep=True, **hints):
         sargs, terms = self.args, []

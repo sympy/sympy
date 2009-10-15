@@ -1118,7 +1118,7 @@ def powsimp(expr, deep=False, combine='all'):
                         c_powers[b] = c_powers.get(b, 0) + e
                     else:
                         nc_part.append(term)
-            newexpr = Mul(newexpr, Mul(*(Pow(b,e) for b, e in c_powers.items())))
+            newexpr = Mul(newexpr, Mul(*[Pow(b,e) for b, e in c_powers.items()]))
             if combine is 'exp':
                 return Mul(newexpr, Mul(*nc_part))
             else:
@@ -1126,7 +1126,9 @@ def powsimp(expr, deep=False, combine='all'):
                 if deep:
                     newexpr = expand_mul(newexpr, deep=False)
                 if newexpr.is_Add:
-                    return powsimp(Mul(*nc_part), deep, combine='base')*Add(*(powsimp(i, deep, combine='base') for i in newexpr.args))
+                    return powsimp(Mul(*nc_part), deep, combine='base') * \
+                           Add(*[powsimp(i, deep, combine='base')
+                                 for i in newexpr.args])
                 else:
                     return powsimp(Mul(*nc_part), deep, combine='base')*\
                     powsimp(newexpr, deep, combine='base')
@@ -1136,7 +1138,7 @@ def powsimp(expr, deep=False, combine='all'):
             if deep:
                 expr = expand_mul(expr, deep=False)
             if expr.is_Add:
-                return Add(*(powsimp(i, deep, combine) for i in expr.args))
+                return Add(*[powsimp(i, deep, combine) for i in expr.args])
             else:
                 # Build c_powers and nc_part.  These must both be lists not
                 # dicts because exp's are not combined.
