@@ -1,6 +1,6 @@
 from sympy import symbols, Matrix, eye, I, Symbol, Rational, wronskian, cos, \
         sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, \
-        integrate, oo, raises, trigsimp, Integer, block_diag
+        integrate, oo, raises, trigsimp, Integer, block_diag, N
 from sympy.matrices.matrices import ShapeError, MatrixError
 from sympy.printing import srepr
 from sympy.utilities.pytest import XFAIL
@@ -455,6 +455,26 @@ def test_eigen():
                  [1,  3]])
     assert canonicalize(M.eigenvects()) == canonicalize(
         [[2, 2, [Matrix(1,2,[-1,1])]]])
+
+    M = Matrix([ [1, 2, 3], [4, 5, 6], [7, 8, 9] ])
+    a=R(15,2)
+    b=3*33**R(1,2)
+    c=R(13,2)
+    d=(R(33,8) + 3*b/8)
+    e=(R(33,8) - 3*b/8)
+    def NS(e, n):
+        return str(N(e, n))
+    r = [
+        (a - b/2, 1, [Matrix([(12 + 24/(c - b/2))/((c - b/2)*e) + 3/(c - b/2),
+                              (6 + 12/(c - b/2))/e,1])]),
+        (      0, 1, [Matrix([1,-2,1])]),
+        (a + b/2, 1, [Matrix([(12 + 24/(c + b/2))/((c + b/2)*d) + 3/(c + b/2),
+                              (6 + 12/(c + b/2))/d,1])]),
+        ]
+    r1 = [(NS(r[i][0],2),NS(r[i][1],2),[NS(j,2) for j in r[i][2][0]]) for i in range(len(r))]
+    r = M.eigenvects()
+    r2=[(NS(r[i][0],2),NS(r[i][1],2),[NS(j,2) for j in r[i][2][0]]) for i in range(len(r))]
+    assert sorted(r1) == sorted(r2)
 
     eps = Symbol('eps',real=True)
 

@@ -1421,10 +1421,10 @@ class Matrix(object):
         for r, k in vlist.iteritems():
             tmp = self - eye(self.rows)*r
             basis = tmp.nullspace()
-            # check if basis is right size, don't do it if symbolic - too many solutions
-            if not tmp.is_symbolic():
-                assert len(basis) <= k
-            elif len(basis) != k:
+            # whether tmp.is_symbolic() is True or False, it is possible that
+            # the basis will come back as [] in which case simplification is
+            # necessary.
+            if not basis:
                 # The nullspace routine failed, try it again with simplification
                 basis = tmp.nullspace(simplified=True)
             out.append((r, k, basis))
