@@ -2022,6 +2022,7 @@ class Basic(AssumeMeths):
            True
 
         """
+        from sympy.utilities.iterables import make_list
         negative_self = -self
         self_has_minus = (self.extract_multiplicatively(-1) != None)
         negative_self_has_minus = ((negative_self).extract_multiplicatively(-1) != None)
@@ -2030,17 +2031,20 @@ class Basic(AssumeMeths):
         else:
             if self.is_Add:
                 # We choose the one with less arguments with minus signs
-                arg_signs = [arg.could_extract_minus_sign() for arg in self.args]
-                positive_args = arg_signs.count(False)
-                negative_args = arg_signs.count(True)
+                all_args = len(self.args)
+                negative_args = len([False for arg in self.args if arg.could_extract_minus_sign()])
+                positive_args = all_args - negative_args
                 if positive_args > negative_args:
                     return False
                 elif positive_args < negative_args:
                     return True
             elif self.is_Mul:
+                # We choose the one with an odd number of minus signs
                 num, den = self.as_numer_denom()
-                if den != 0:
-                    return num.could_extract_minus_sign()
+                args = (make_list(num, Mul)) + (make_list(den, Mul))
+                arg_signs = [arg.could_extract_minus_sign() for arg in args]
+                negative_args = filter(None, arg_signs)
+                return len(negative_args) % 2 == 1
 
             # As a last resort, we choose the one with greater hash
             return hash(self) < hash(negative_self)
