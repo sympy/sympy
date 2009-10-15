@@ -1,14 +1,51 @@
 #!/usr/bin/env python
 
+import os
+
 def strip_file(filename, write, report):
-    lines = enumerate(open(filename).readlines())
-    if write:
-        f = open(filename, "w")
-    for index, line in lines:
-        if report and line.endswith(" \n"):
-            print "%s, line %s" % (filename, index + 1)
+    # .readlines() retains \n chars, while .read().splitlines() does not.
+    # Assuming that whitespace errors will be few, we will thus only need
+    # to re-add \n to a few right-stripped lines. The hit flag will keep us
+    # from unecessarily re-writing files with no changes.
+
+    lines = open(filename).readlines()
+    hit = False
+    for index, line in enumerate(lines):
+        if line.endswith(" \n"):
+            if report:
+                print "%s, line %s" % (filename, index + 1)
+            if write:
+                lines[index] = line.rstrip() + "\n"
+                hit = True
+
+    # correct no newline at eof
+    if lines and not lines[-1].endswith("\n"):
+        lines[-1] += "\n"
+        if report:
+            print "%s, no newline at eof" % filename
         if write:
-            f.write(line.rstrip() + "\n")
+            hit = True
+
+    if write and hit:
+        f = open(filename, "w")
+        f.writelines(lines)
+        f.close()
+
+def go(path, write, report):
+    allowed_ext = [
+            ".cpp",
+            ".cc",
+            ".h",
+            ".py",
+            ]
+    for root, dirs, files in os.walk(path):
+        if ".git" in dirs:
+            dirs.remove(".git")
+        for file in files:
+            if os.path.splitext(file)[1] not in allowed_ext:
+                continue
+            filename = os.path.join(root, file)
+            strip_file(filename, write, report)
 
 def main():
     from optparse import OptionParser
@@ -17,11 +54,16 @@ def main():
                  help="Do not modify files.")
     p.add_option("-v", "--verbose", action="store_true", dest="verbose",
                  help="Report all changes.")
+    p.add_option("-r", "--recursive", action="store_true", dest="recursive",
+                 help="Report all changes.")
     options, args = p.parse_args()
     if options.dry:
         options.verbose = True
     if len(args) == 1:
-        strip_file(args[0], not options.dry, options.verbose)
+        if options.recursive:
+            go(args[0], not options.dry, options.verbose)
+        else:
+            strip_file(args[0], not options.dry, options.verbose)
     else:
         p.print_help()
 
