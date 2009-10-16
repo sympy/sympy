@@ -18,6 +18,8 @@ from sympy.simplify import simplify, together
 from sympy.polys import Poly, quo, gcd, lcm, root_factors, \
     monomials, factor, PolynomialError
 
+from sympy.utilities.iterables import make_list
+
 def components(f, x):
     """Returns a set of all functional components of the given expression
        which includes symbols, function applications and compositions and
@@ -349,12 +351,9 @@ def heurisch(f, x, **kwargs):
 
         numer = h.as_numer_denom()[0].expand()
 
-        if not numer.is_Add:
-            numer = [numer]
-
         equations = {}
 
-        for term in numer.args:
+        for term in make_list(numer, Add):
             coeff, dependent = term.as_independent(*V)
 
             if dependent in equations:

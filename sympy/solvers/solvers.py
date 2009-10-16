@@ -244,7 +244,7 @@ def solve(f, *symbols, **flags):
                     m = exponents_denom[0]
                 else:
                     # get the GCD of the denominators
-                    m = ilcm(*exponents_denom)
+                    m = reduce(ilcm, exponents_denom)
                 # x -> y**m.
                 # we assume positive for simplification purposes
                 t = Symbol('t', positive=True, dummy=True)

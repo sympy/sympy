@@ -34,7 +34,7 @@ def test_heurisch_fractions():
     assert heurisch(1/(2 + x), x) == log(x + 2)
     assert heurisch(1/(x+sin(y)), x) == log(x+sin(y))
 
-    # Up to a constant, where C = 5*pi*I/12, Matematica gives identical
+    # Up to a constant, where C = 5*pi*I/12, Mathematica gives identical
     # result in the first case. The difference is because sympy changes
     # signs of expressions without any care.
     # XXX ^ ^ ^ is this still correct?
