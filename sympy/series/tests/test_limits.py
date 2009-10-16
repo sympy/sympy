@@ -117,7 +117,7 @@ def test_abs():
 
 def test_heuristic():
     x = Symbol("x", real=True)
-    assert limit(log(2+sqrt(atan(x)*sin(1/x))), x, 0) == log(2)
+    assert limit(log(2+sqrt(atan(x))*sqrt(sin(1/x))), x, 0) == log(2)
 
 def test_issue772():
     z = Symbol("z", positive=True)

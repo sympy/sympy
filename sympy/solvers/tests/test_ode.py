@@ -384,7 +384,8 @@ def test_1st_homogeneous_coeff_ode1():
     sol2 = Eq(x*sqrt(1 + cos(f(x)/x))/sqrt(-1 + cos(f(x)/x)), C1)
     sol3 = Eq(-f(x)/(1+log(x/f(x))),C1)
     sol4 = Eq(log(C1*f(x)) + 2*exp(x/f(x)), 0)
-    sol5 = Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
+    #sol5 = Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
+    sol5 = Eq(log(C1*x*sqrt(f(x)/x)) + x**2/(2*f(x)**2), 0)
     sol6 = Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(C1*x) - cos(f(x)/x)*exp(-f(x)/x)/2, 0)
     sol7 = Eq(log(C1*f(x)) + 2*sqrt(1 - x/f(x)), 0)
     sol8 = Eq(-atan(f(x)/x) + log(C1*x*sqrt(1 + f(x)**2/x**2)), 0)
@@ -1050,4 +1051,3 @@ def test_unexpanded_Liouville_ODE():
     sol2s = ode_renumber(sol2, 'C', 1, 2)
     assert dsolve(eq2, f(x)) in (sol2, sol2s)
     assert checkodesol(eq2, f(x), sol2, order=2, solve_for_func=False)[0]
-

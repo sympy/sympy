@@ -319,12 +319,46 @@ class Mul(AssocOp):
 
                 if e.is_rational:
                     coeff, rest = b.as_coeff_terms()
-                    if coeff == -1:
-                        return None
-                    elif coeff < 0:
-                        return (-coeff)**e * Mul(*((S.NegativeOne,) +rest))**e
-                    else:
-                        return coeff**e * Mul(*[s**e for s in rest])
+                    from sympy.functions import sign
+                    unk=[]
+                    nonneg=[]
+                    neg=[]
+                    for bi in rest:
+                        if not bi.is_negative is None: #then we know the sign
+                            if bi.is_negative:
+                                neg.append(bi)
+                            else:
+                                nonneg.append(bi)
+                        else:
+                            unk.append(bi)
+                    if len(unk) == len(rest) or len(neg) == len(rest) == 1:
+                        # if all terms were unknown there is nothing to pull
+                        # out except maybe the coeff OR if there was only a
+                        # single negative term then it shouldn't be pulled out
+                        # either.
+                        if coeff < 0:
+                            coeff = -coeff
+                        if coeff == S.One:
+                            return None
+                        b = b / coeff
+                        return coeff ** e * b ** e
+
+                    # otherwise return the new expression expanding out the
+                    # known terms; those that are not known can be expanded
+                    # out with separate() but this will introduce a lot of
+                    # "garbage" that is needed to keep one on the same branch
+                    # as the unexpanded expression. The negatives are brought
+                    # out with a negative sign added and a negative left behind
+                    # in the unexpanded terms.
+                    if neg:
+                        neg = [-w for w in neg]
+                        if len(neg) % 2 and not coeff.is_negative:
+                            unk.append(S.NegativeOne)
+                        if coeff.is_negative:
+                            coeff = -coeff
+                            unk.append(S.NegativeOne)
+                    return Mul(*[s**e for s in nonneg + neg + [coeff]])* \
+                       Mul(*(unk)) ** e
 
 
                 coeff, rest = b.as_coeff_terms()
