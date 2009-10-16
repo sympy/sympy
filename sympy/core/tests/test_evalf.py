@@ -87,8 +87,8 @@ def test_evalf_complex_cancellation():
     # XXX: the number of returned mantissa digits in the real part could
     # change with the implementation. What matters is that the returned digits are
     # correct.
-    assert NS((A+B*I)*(C+D*I),6) in ('6.45e-6 + 0.892529*I', '6.4e-6 + 0.892529*I')
-    assert NS((A+B*I)*(C+D*I),10) == '6.447100e-6 + 0.8925286452*I'
+    assert NS((A+B*I)*(C+D*I),6) == '6.44862e-6 + 0.892529*I'
+    assert NS((A+B*I)*(C+D*I),10) == '6.447099821e-6 + 0.8925286452*I'
     assert NS((A+B*I)*(C+D*I) - F*I, 5) in ('6.4471e-6 - .0e-15*I', '6.4471e-6 + .0e-15*I')
 
 def test_evalf_logs():
@@ -138,8 +138,11 @@ def test_evalf_bugs():
     assert NS('(sin(x)-x)/x**3', 15, subs={x:'1/10**50'}) == '-0.166666666666667'
     assert NS(sin(1)+Rational(1,10**100)*I,15) == '0.841470984807897 + 1.00000000000000e-100*I'
     assert x.evalf() == x
+    assert NS((1+I)**2*I,6) == '-2.00000 + 2.32831e-10*I'
+    d={n: (-1)**Rational(6,7), y: (-1)**Rational(4,7), x: (-1)**Rational(2,7)}
+    assert NS((x*(1+y*(1 + n))).subs(d).evalf(),6) == '0.346011 + 0.433884*I'
     assert NS(((-I-sqrt(2)*I)**2).evalf()) == '-5.82842712474619'
-    assert NS((1+I)**2*I,15) == '-2.00000000000000 + .0e-19*I'
+    assert NS((1+I)**2*I,15) == '-2.00000000000000 + 2.16840434497101e-19*I'
 
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)

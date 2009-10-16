@@ -308,17 +308,17 @@ def evalf_add(v, prec, options):
     try:
         while 1:
             terms = [evalf(arg, prec+10, options) for arg in args]
-            re, re_accuracy = add_terms([(a[0],a[2]) for a in terms if a[0]], prec, target_prec)
-            im, im_accuracy = add_terms([(a[1],a[3]) for a in terms if a[1]], prec, target_prec)
-            accuracy = complex_accuracy((re, im, re_accuracy, im_accuracy))
+            re, re_acc = add_terms([(a[0],a[2]) for a in terms if a[0]], prec, target_prec)
+            im, im_acc = add_terms([(a[1],a[3]) for a in terms if a[1]], prec, target_prec)
+            accuracy = complex_accuracy((re, im, re_acc, im_acc))
             if accuracy >= target_prec:
                 if options.get('verbose'):
-                    print "ADD: wanted", target_prec, "accurate bits, got", re_accuracy, im_accuracy
-                return re, im, re_accuracy, im_accuracy
+                    print "ADD: wanted", target_prec, "accurate bits, got", re_acc, im_acc
+                return re, im, re_acc, im_acc
             else:
                 diff = target_prec - accuracy
                 if (prec-target_prec) > options.get('maxprec', DEFAULT_MAXPREC):
-                    return re, im, re_accuracy, im_accuracy
+                    return re, im, re_acc, im_acc
 
                 prec = prec + max(10+2**i, diff)
                 options['maxprec'] = min(oldmaxprec, 2*prec)
@@ -327,18 +327,6 @@ def evalf_add(v, prec, options):
             i += 1
     finally:
         options['maxprec'] = oldmaxprec
-
-# Helper for complex multiplication
-# XXX: should be able to multiply directly, and use complex_accuracy
-# to obtain the final accuracy
-def cmul((a, aacc), (b, bacc), (c, cacc), (d, dacc), prec, target_prec):
-    A, Aacc = mpf_mul(a,c,prec), min(aacc, cacc)
-    B, Bacc = mpf_mul(mpf_neg(b),d,prec), min(bacc, dacc)
-    C, Cacc = mpf_mul(a,d,prec), min(aacc, dacc)
-    D, Dacc = mpf_mul(b,c,prec), min(bacc, cacc)
-    re, re_accuracy = add_terms([(A, Aacc), (B, Bacc)], prec, target_prec)
-    im, im_accuracy = add_terms([(C, Cacc), (D, Cacc)], prec, target_prec)
-    return re, im, re_accuracy, im_accuracy
 
 def evalf_mul(v, prec, options):
     args = v.args
@@ -359,16 +347,15 @@ def evalf_mul(v, prec, options):
     # direction tells us that the result should be multiplied by
     # i**direction
     for arg in args:
-        re, im, a, aim = evalf(arg, prec, options)
+        re, im, re_acc, im_acc = evalf(arg, prec, options)
         if re and im:
-            complex_factors.append((re, im, a, aim))
+            complex_factors.append((re, im, re_acc, im_acc))
             continue
         elif re:
-            s, m, e, b = re
+            (s, m, e, b), w_acc = re, re_acc
         elif im:
-            a = aim
+            (s, m, e, b), w_acc = im, im_acc
             direction += 1
-            s, m, e, b = im
         else:
             return None, None, None, None
         direction += 2*s
@@ -378,28 +365,32 @@ def evalf_mul(v, prec, options):
         if bc > 3*prec:
             man >>= prec
             exp += prec
-        acc = min(acc, a)
+        acc = min(acc, w_acc)
     sign = (direction & 2) >> 1
     v = normalize(sign, man, exp, bitcount(man), prec, round_nearest)
     if complex_factors:
-        # Multiply first complex number by the existing real scalar
-        re, im, re_acc, im_acc = complex_factors[0]
-        re = mpf_mul(re, v, prec)
-        im = mpf_mul(im, v, prec)
-        re_acc = min(re_acc, acc)
-        im_acc = min(im_acc, acc)
-        # Multiply consecutive complex factors
-        complex_factors = complex_factors[1:]
+        # make existing real scalar look like an imaginary and
+        # multiply by the remaining complex numbers
+        re, im = v, (0, MP_BASE(0), 0, 0)
         for wre, wim, wre_acc, wim_acc in complex_factors:
-            re, im, re_acc, im_acc = cmul((re, re_acc), (im,im_acc),
-                (wre,wre_acc), (wim,wim_acc), prec, target_prec)
+            # acc is the overall accuracy of the product; we aren't
+            # computing exact accuracies of the product.
+            acc = min(acc,
+                      complex_accuracy((wre, wim, wre_acc, wim_acc)))
+            A = mpf_mul(re, wre, prec)
+            B = mpf_mul(mpf_neg(im), wim, prec)
+            C = mpf_mul(re, wim, prec)
+            D = mpf_mul(im, wre, prec)
+            re, xre_acc = add_terms([(A, acc), (B, acc)], prec, target_prec)
+            im, xim_acc = add_terms([(C, acc), (D, acc)], prec, target_prec)
+
         if options.get('verbose'):
-            print "MUL: obtained accuracy", re_acc, im_acc, "expected", target_prec
+            print "MUL: wanted", target_prec, "accurate bits, got", acc
         # multiply by i
         if direction & 1:
-            return mpf_neg(im), re, im_acc, re_acc
+            return mpf_neg(im), re, acc, acc
         else:
-            return re, im, re_acc, im_acc
+            return re, im, acc, acc
     else:
         # multiply by i
         if direction & 1:
@@ -527,7 +518,7 @@ def evalf_trig(v, prec, options):
     # 20 extra bits is possibly overkill. It does make the need
     # to restart very unlikely
     xprec = prec + 20
-    re, im, re_accuracy, im_accuracy = evalf(arg, xprec, options)
+    re, im, re_acc, im_acc = evalf(arg, xprec, options)
     if im:
         raise NotImplementedError
     if not re:
@@ -548,7 +539,7 @@ def evalf_trig(v, prec, options):
     # Very large
     if xsize >= 10:
         xprec = prec + xsize
-        re, im, re_accuracy, im_accuracy = evalf(arg, xprec, options)
+        re, im, re_acc, im_acc = evalf(arg, xprec, options)
     # Need to repeat in case the argument is very close to a
     # multiple of pi (or pi/2), hitting close to a root
     while 1:
@@ -563,7 +554,7 @@ def evalf_trig(v, prec, options):
             if xprec > options.get('maxprec', DEFAULT_MAXPREC):
                 return y, None, accuracy, None
             xprec += gap
-            re, im, re_accuracy, im_accuracy = evalf(arg, xprec, options)
+            re, im, re_acc, im_acc = evalf(arg, xprec, options)
             continue
         else:
             return y, None, prec, None
@@ -974,7 +965,7 @@ def evalf(x, prec, options):
     if options.get("verbose"):
         print "### input", x
         print "### output", to_str(r[0] or fzero, 50)
-        #print "### raw", r[0], r[2]
+        print "### raw", r#r[0], r[2]
         print
     if options.get("chop"):
         r = chop_parts(r, prec)
