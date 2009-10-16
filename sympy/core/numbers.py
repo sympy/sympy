@@ -1,6 +1,6 @@
 from basic import Atom, SingletonMeta, S, Basic
 from decorators import _sympifyit
-from cache import Memoizer, cacheit
+from cache import Memoizer, cacheit, clear_cache
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmpf as mlib
 import sympy.mpmath.libmpc as mlibc

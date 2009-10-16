@@ -2,9 +2,15 @@ from sympy import Rational, Symbol, Real, I, sqrt, oo, nan, pi, E, Integer, \
         S, factorial, Catalan, EulerGamma, GoldenRatio, cos
 from sympy.core.power import integer_nthroot
 
-from sympy.core.numbers import igcd, ilcm, igcdex
+from sympy.core.numbers import igcd, ilcm, igcdex, seterr
 from sympy.utilities.pytest import raises
 from sympy import mpmath
+
+def test_seterr():
+    seterr(divide = True)
+    raises(ValueError,"S.Zero/S.Zero")
+    seterr(divide = False)
+    S.Zero / S.Zero == S.NaN
 
 def test_mod():
     x = Rational(1, 2)
