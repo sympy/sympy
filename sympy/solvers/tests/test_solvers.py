@@ -1,6 +1,6 @@
 from sympy import Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq, \
         sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, \
-        symbols, S, raises, sympify, var, simplify, Integral
+        symbols, S, raises, sympify, var, simplify, Integral, sstr
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve
@@ -10,12 +10,17 @@ from sympy.solvers.solvers import guess_solve_strategy, GS_POLY, GS_POLY_CV_1, G
 
 from sympy.utilities.pytest import XFAIL
 
+def NS(e, n=15, **options):
+    return sstr(sympify(e).evalf(n, **options), full_prec=True)
+
 def test_swap_back():
-    x=var('x');f=Function('f',dummy=True)
-    # this is coming back from solve even though it shouldn't be: f(x) is in the
-    # solution's Integral as the upper limit. When solve is fixed this test should
-    # be removed. For now, since there are ode's that come back with these sorts of
-    # solutions, the swap_back feature is performed in solve and tested here.
+    # A solution comes back from solve even though it shouldn't be: f(x) is
+    # in the solution's Integral as the upper limit. When solve is fixed this
+    # test should be removed. For now, since there are ode's that come back
+    # with these sorts of solutions, the swap_back feature is performed in
+    # solve and tested here.
+    x = Symbol('x')
+    f = Function('f', dummy = True)
     assert solve(Eq(log(f(x)), Integral(x, (x, 1, f(x)))), f(x)) == \
     [exp(Integral(x, (x, 1, f(x))))]
 
@@ -69,6 +74,19 @@ def test_guess_transcendental():
 
     assert guess_solve_strategy(a*x**b-y, x) == GS_TRANSCENDENTAL
 
+def test_solve_args():
+    x, y = symbols('xy')
+    #implicit symbol to solve for
+    assert set(int(tmp) for tmp in solve(x**2-4)) == set([2,-2])
+    assert solve([x+y-3,x-y-5]) == {x: 4, y: -1}
+    #no symbol to solve for
+    assert solve(42) == []
+    assert solve([1,2]) == None
+    #multiple symbols
+    assert solve(x+y-3,[x,y]) == {x: [3 - y], y: [3 - x]}
+    #symbol is not a symbol or function
+    raises(TypeError, "solve(x**2-pi, pi)")
+
 def test_solve_polynomial1():
     x, y = symbols('xy')
 
@@ -100,9 +118,6 @@ def test_solve_polynomial1():
     assert solve( x**3 - 15*x - 4, x) == [-2 + 3**Rational(1,2),
                                            4,
                                            -2 - 3**Rational(1,2) ]
-
-    raises(TypeError, "solve(x**2-pi, pi)")
-    raises(ValueError, "solve(x**2-pi)")
 
 def test_solve_polynomial2():
     x = Symbol('x')

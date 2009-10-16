@@ -136,14 +136,32 @@ def solve(f, *symbols, **flags):
        {x: -3, y: 1}
 
     """
-    if not symbols:
-        raise ValueError('no symbols were given')
+    def sympit(w):
+        return map(sympify, w if isinstance(w,(list, tuple, set)) else [w])
+    # make f and symbols into lists of sympified quantities
+    # keeping track of how f was passed since if it is a list
+    # a dictionary of results will be returned.
+    bare_f = not isinstance(f, (list, tuple, set))
+    f, symbols = (sympit(w) for w in [f, symbols])
 
+    for i, fi in enumerate(f):
+        if isinstance(fi, Equality):
+            f[i] = fi.lhs - fi.rhs
+
+    if not symbols:
+        #get symbols from equations or supply dummy symbols since
+        #solve(3,x) returns []...though it seems that it should raise some sort of error TODO
+        symbols = set([])
+        for fi in f:
+            symbols |= fi.atoms(Symbol) or set([Symbol('x',dummy=True)])
+        symbols = list(symbols)
+
+    if bare_f:
+        f=f[0]
     if len(symbols) == 1:
         if isinstance(symbols[0], (list, tuple, set)):
             symbols = symbols[0]
 
-    symbols = map(sympify, symbols)
     result = list()
 
     # Begin code handling for Function and Derivative instances
@@ -156,12 +174,9 @@ def solve(f, *symbols, **flags):
     symbols_new = []
     symbol_swapped = False
 
-    if isinstance(symbols, (list, tuple)):
-        symbols_passed = symbols[:]
-    elif isinstance(symbols, set):
-        symbols_passed = list(symbols)
+    symbols_passed = list(symbols)
 
-    for i,s in enumerate(symbols):
+    for i, s in enumerate(symbols):
         if s.is_Symbol:
             s_new = s
         elif s.is_Function:
@@ -179,7 +194,6 @@ def solve(f, *symbols, **flags):
     # End code for handling of Function and Derivative instances
 
     if not isinstance(f, (tuple, list, set)):
-        f = sympify(f)
 
         # Create a swap dictionary for storing the passed symbols to be solved
         # for, so that they may be swapped back.
@@ -188,14 +202,16 @@ def solve(f, *symbols, **flags):
             f = f.subs(swap_dict)
             symbols = symbols_new
 
-        if isinstance(f, Equality):
-            f = f.lhs - f.rhs
-
         if len(symbols) != 1:
-            raise NotImplementedError('multivariate equation')
+            result = {}
+            for s in symbols:
+                result[s] = solve(f, s, **flags)
+            if flags.get('simplified', True):
+                for s, r in result.items():
+                    result[s] = map(simplify, r)
+            return result
 
         symbol = symbols[0]
-
         strategy = guess_solve_strategy(f, symbol)
 
         if strategy == GS_POLY:
@@ -299,10 +315,6 @@ def solve(f, *symbols, **flags):
             polys = []
 
             for g in f:
-                g = sympify(g)
-
-                if isinstance(g, Equality):
-                    g = g.lhs - g.rhs
 
                 poly = g.as_poly(*symbols)
 
