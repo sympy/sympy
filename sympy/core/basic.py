@@ -648,19 +648,31 @@ class Basic(AssumeMeths):
     @_sympifyit('other', False) # sympy >  other
     def __lt__(self, other):
         #return sympify(other) > self
+        dif = self - other
+        if not dif.is_negative is None:
+            return dif.is_negative
         return StrictInequality(self, other)
 
     @_sympifyit('other', True)  # sympy >  other
     def __gt__(self, other):
+        dif = self - other
+        if not dif.is_negative is None:
+            return dif.is_positive
         return StrictInequality(other, self)
         #return sympify(other) < self
 
     @_sympifyit('other', False) # sympy >  other
     def __le__(self, other):
+        dif = self - other
+        if not dif.is_nonpositive is None:
+            return dif.is_nonpositive
         return Inequality(self, other)
 
     @_sympifyit('other', True)  # sympy >  other
     def __ge__(self, other):
+        dif = self - other
+        if not dif.is_nonnegative is None:
+            return dif.is_nonnegative
         return sympify(other) <= self
 
 
@@ -1712,11 +1724,11 @@ class Basic(AssumeMeths):
 
             if coeff is not None:
                 if expr.is_Mul:
-                    expr = expr.args
+                    args = expr.args
                 else:
-                    expr = [expr]
+                    args = [expr]
 
-                if coeff[w].has(*expr):
+                if coeff[w].has(*args):
                     return None
                 else:
                     return coeff[w]
@@ -1789,14 +1801,14 @@ class Basic(AssumeMeths):
         """
         expr = self.expand(complex=True, deep=False)
 
-        if not expr.is_Add:
-            expr = [expr]
 
         re_part, im_part = [], []
-        if isinstance(expr, Basic):
-            expr = expr.args
+        if not expr.is_Add:
+            args = [expr]
+        else:
+            args = expr.args
 
-        for term in expr:
+        for term in args:
             coeff = term.as_coefficient(S.ImaginaryUnit)
 
             if coeff is None:

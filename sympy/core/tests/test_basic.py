@@ -142,6 +142,17 @@ def test_ibasic():
         x /= b
     dotest(s)
 
+def test_relational():
+    assert (pi < 3) == False
+    assert (pi <= 3) == False
+    assert (pi > 3) == True
+    assert (pi >= 3) == True
+    assert (-pi < 3) == True
+    assert (-pi <= 3) == True
+    assert (-pi > 3) == False
+    assert (-pi >= 3) == False
+    assert (x - 2 < x - 3) == False
+
 def test_basic_nostr():
     for obj in basic_objs:
         for op in ['+','-','*','/','**']:
