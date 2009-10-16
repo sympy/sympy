@@ -32,7 +32,7 @@ class Newton:
         if len(x0) == 1:
             self.x0 = x0[0]
         else:
-            raise ValueError('expected 1 starting point, got %i' * len(x0))
+            raise ValueError('expected 1 starting point, got %i' % len(x0))
         self.f = f
         if not 'df' in kwargs:
             def df(x):
@@ -76,7 +76,7 @@ class Secant:
             self.x0 = x0[0]
             self.x1 = x0[1]
         else:
-            raise ValueError('expected 1 or 2 starting points, got %i' * len(x0))
+            raise ValueError('expected 1 or 2 starting points, got %i' % len(x0))
         self.f = f
 
     def __iter__(self):
@@ -117,7 +117,7 @@ class MNewton:
 
     def __init__(self, f, x0, **kwargs):
         if not len(x0) == 1:
-            raise ValueError('expected 1 starting point, got %i' * len(x0))
+            raise ValueError('expected 1 starting point, got %i' % len(x0))
         self.x0 = x0[0]
         self.f = f
         if not 'df' in kwargs:
@@ -299,7 +299,7 @@ class Bisection:
 
     def __init__(self, f, x0, **kwargs):
         if len(x0) != 2:
-            raise ValueError('expected interval of 2 points, got %i' * len(x0))
+            raise ValueError('expected interval of 2 points, got %i' % len(x0))
         self.f = f
         self.a = x0[0]
         self.b = x0[1]
@@ -375,7 +375,7 @@ class Illinois:
 
     def __init__(self, f, x0, **kwargs):
         if len(x0) != 2:
-            raise ValueError('expected interval of 2 points, got %i' * len(x0))
+            raise ValueError('expected interval of 2 points, got %i' % len(x0))
         self.a = x0[0]
         self.b = x0[1]
         self.f = f
@@ -467,7 +467,7 @@ class Ridder:
     def __init__(self, f, x0, **kwargs):
         self.f = f
         if len(x0) != 2:
-            raise ValueError('expected interval of 2 points, got %i' * len(x0))
+            raise ValueError('expected interval of 2 points, got %i' % len(x0))
         self.x1 = x0[0]
         self.x2 = x0[1]
         self.verbose = kwargs['verbose']
@@ -510,7 +510,7 @@ class ANewton:
 
     def __init__(self, f, x0, **kwargs):
         if not len(x0) == 1:
-            raise ValueError('expected 1 starting point, got %i' * len(x0))
+            raise ValueError('expected 1 starting point, got %i' % len(x0))
         self.x0 = x0[0]
         self.f = f
         if not 'df' in kwargs:
