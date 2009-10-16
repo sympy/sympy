@@ -1,4 +1,26 @@
-from sympy.core.symbol import Symbol, Wild
+from sympy.core.symbol import Symbol
+
+def iff(condition, result1, result2):
+    """return result1 if condition else result2
+
+    This is a replacement for the conditional if statement that is part of
+    python 2.5+. If the condition must should not be called unless the
+    condition is met, then wrap the result in a lambda; it will be called
+    to return the result:
+
+    iff(x == 0, x, lambda: 1/x).
+    """
+
+    if condition:
+        rv = result1
+    else:
+        rv = result2
+    # XXX this is fragile; is there a better way to tell if it's a lambda?
+    if '<lambda>' in str(rv):
+        return rv()
+    else:
+        return rv
+
 def all(iterable):
     """Return True if all elements are set to True. This
        function does not support predicates explicitely,
@@ -258,6 +280,7 @@ def numbered_symbols(prefix='x', function=Symbol, start=0, *args, **assumptions)
     sym : Symbol
         The subscripted symbols.
     """
+
     while True:
         name = '%s%s' % (prefix, start)
         yield function(name, *args, **assumptions)
