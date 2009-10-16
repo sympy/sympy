@@ -148,12 +148,13 @@ def test_subs_dict2():
 def test_mul():
     x, y, z, a = map(Symbol, 'xyza')
     assert (x*y*z).subs(z*x,y) == y**2
+    assert (z*x).subs(1/x,z) == z*x
     assert (x*y/z).subs(1/z,a) == a*x*y
     assert (x*y/z).subs(x/z,a) == a*y
     assert (x*y/z).subs(y/z,a) == a*x
     assert (x*y/z).subs(x/z,1/a) == y/a
     assert (x*y/z).subs(x,1/a) == y/(z*a)
-    #assert (2*x*y).subs(5*x*y,z) == 2*z/5
+    assert (2*x*y).subs(5*x*y,z) != 2*z/5
 
 def test_subs_simple():
     # Define symbols

@@ -726,23 +726,19 @@ class Mul(AssocOp):
             return self.__class__(*[s._eval_subs(old, new) for s in self.args])
 
         # break up powers, i.e., x**2 -> x*x
-        otemp, stemp = [], []
-        for o in terms_old:
-            if isinstance(o,Pow) and isinstance(o.exp, Integer):
-                if o.exp.is_positive:
-                    for i in range(o.exp): otemp.append(o.base)
-                elif o.exp.is_negative:
-                    for i in range(abs(o.exp)): otemp.append(1/o.base)
-            else: otemp.append(o)
-        for s in terms_self:
-            if isinstance(s,Pow) and isinstance(s.exp, Integer):
-                if s.exp.is_positive:
-                    for i in range(s.exp): stemp.append(s.base)
-                elif s.exp.is_negative:
-                    for i in range(abs(s.exp)): stemp.append(1/s.base)
-            else: stemp.append(s)
-        terms_old = otemp
-        terms_self = stemp
+        def breakup(terms):
+            temp = []
+            for t in terms:
+                if isinstance(t,Pow) and isinstance(t.exp, Integer):
+                    if t.exp.is_positive:
+                        temp.extend([t.base]*int(t.exp))
+                    elif t.exp.is_negative:
+                        temp.extend([1/t.base]*int(abs(t.exp)))
+                else:
+                    temp.append(t)
+            return temp
+        terms_old = breakup(terms_old)
+        terms_self = breakup(terms_self)
 
         # break up old and self terms into commutative and noncommutative lists
         comm_old = []; noncomm_old = []
@@ -827,9 +823,11 @@ class Mul(AssocOp):
 
                 # continue only if all commutative terms in old are present
                 if myFlag == True:
-                    return Mul(coeff_self/coeff_old,  new, Mul(*comms_final)._eval_subs(old,new))#*[c._eval_subs(old,new) for c in comms_final])
+                    return Mul(coeff_self/coeff_old, new,
+                               Mul(*comms_final)._eval_subs(old,new))#*[c._eval_subs(old,new) for c in comms_final])
                 else:
-                    return self.__class__(*[s._eval_subs(old, new) for s in self.args])
+                    return self.__class__(*[s._eval_subs(old, new) for
+                                            s in self.args])
 
         # else the subexpression isn't in the totaly expression
         return self.__class__(*[s._eval_subs(old, new) for s in self.args])
