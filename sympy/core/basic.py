@@ -747,33 +747,66 @@ class Basic(AssumeMeths):
 
     def atoms(self, *types):
         """Returns the atoms that form the current object.
-           An atom is the smallest piece in which we can divide an
-           expression.
 
+           By default, only objects that are truly atomic and can't
+           be divided into smaller pieces are returned: symbols, numbers,
+           and number symbols like I and pi. It is possible to request
+           atoms of any type, however, as demonstrated below.
 
-           Examples:
+           Examples::
 
            >>> from sympy import *
            >>> x,y = symbols('xy')
+           >>> list((1+x+2*sin(y+I*pi)).atoms())
+           [y, I, 2, x, 1, pi]
 
-           >>> sorted((x+y**2 + 2*x*y).atoms())
-           [2, x, y]
+           If one or more types are given, the results will contain only
+           those types of atoms::
 
-           You can also filter the results by a given type(s) of object:
+           Examples::
 
-           >>> sorted((x+y+2+y**2*sin(x)).atoms(Symbol))
+           >>> sorted((1+x+2*sin(y+I*pi)).atoms(Symbol))
            [x, y]
 
-           >>> sorted((x+y+2+y**3*sin(x)).atoms(Number))
-           [2, 3]
+           >>> sorted((1+x+2*sin(y+I*pi)).atoms(Number))
+           [1, 2]
 
-           >>> sorted((x+y+2+y**2*sin(x)).atoms(Symbol, Number))
-           [2, x, y]
+           >>> sorted((1+x+2*sin(y+I*pi)).atoms(Number, NumberSymbol))
+           [1, 2, pi]
 
-           Or by a type of on object in an impliciy way:
+           >>> sorted((1+x+2*sin(y+I*pi)).atoms(Number, NumberSymbol, I))
+           [1, 2, pi, I]
 
-           >>> sorted((x+y+2+y**2*sin(x)).atoms(x))
+           Note that I (imaginary unit) and zoo (complex infinity) are special
+           types of number symbols and are not part of the NumberSymbol class.
+
+           The type can be given implicitly, too::
+
+           >>> sorted((1+x+2*sin(y+I*pi)).atoms(x)) # x is a Symbol
            [x, y]
+
+           Be careful to check your assumptions when using the implicit option
+           since S(1).is_Integer = True but type(S(1)) is One, a special type
+           of sympy atom, while type(S(2)) is type Integer and will find all
+           integers in an expression::
+
+           >>> sorted((1+x+2*sin(y+I*pi)).atoms(S(1)))
+           [1]
+
+           >>> sorted((1+x+2*sin(y+I*pi)).atoms(S(2)))
+           [1, 2]
+
+           Finally, arguments to atoms() can select more than atomic atoms: any
+           sympy type (loaded in core/__init__.py) can be listed as an argument
+           and those types of "atoms" as found in scanning the arguments of the
+           expression nonrecursively::
+
+           >>> sorted((1+x+2*sin(y+I*pi)).atoms(Function))
+           [sin(y + pi*I)]
+
+           >>> sorted((1+x+2*sin(y+I*pi)).atoms(Mul))
+           [2*sin(y + pi*I)]
+
 
         """
 
@@ -787,8 +820,12 @@ class Basic(AssumeMeths):
                     try:
                         if isinstance(expr, typ): return [expr]
                     except TypeError:
-                        #if type is in implicit form
-                        if isinstance(expr, tuple(map(type, typ))): return [expr]
+                        #one or more types is in implicit form
+                        for t in typ:
+                            if type(type(t)) is type:
+                                if isinstance(expr, t): return [expr]
+                            else:
+                                if isinstance(expr, type(t)): return [expr]
             result = []
             #search for a suitable iterator
             if isinstance(expr, Basic):

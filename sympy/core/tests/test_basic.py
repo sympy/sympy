@@ -205,6 +205,15 @@ def test_atoms():
    assert sorted(list(Poly(x + y, x, y, z).atoms())) == sorted([S.One, x, y])
    assert sorted(list(Poly(x + y*t, x, y, z).atoms())) == \
            sorted([S.One, t, x, y])
+   I=S.ImaginaryUnit
+   assert list((I*pi).atoms(NumberSymbol)) == [pi]
+   assert sorted((I*pi).atoms(NumberSymbol, I)) == \
+          sorted((I*pi).atoms(I,NumberSymbol)) == [pi, I]
+
+   I = S.ImaginaryUnit
+   assert list((I*pi).atoms(NumberSymbol)) == [pi]
+   assert sorted((I*pi).atoms(NumberSymbol, I)) == \
+          sorted((I*pi).atoms(I,NumberSymbol)) == [pi, I]
 
 def test_is_polynomial():
     z = Symbol('z')

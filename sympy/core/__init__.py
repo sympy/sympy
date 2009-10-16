@@ -3,8 +3,8 @@
 
 from basic import Basic, S, C, sympify
 from symbol import Symbol, Wild, symbols, var
-from numbers import Number, Real, Rational, Integer, igcd, ilcm, RealNumber, \
-        seterr
+from numbers import Number, Real, Rational, Integer, NumberSymbol,\
+        RealNumber, igcd, ilcm, seterr
 from power import Pow, integer_nthroot
 from mul import Mul
 from add import Add
