@@ -86,6 +86,18 @@ def test_sign():
     assert sign(1.2) == 1
     assert sign(-1.2) == -1
     assert sign(0) == 0
+    x = Symbol('x')
+    assert sign(x).is_zero == False
+    assert sign(2*x) == sign(x)
+    p = Symbol('p', positive = True)
+    n = Symbol('n', negative = True)
+    m = Symbol('m', negative = True)
+    assert sign(2*p*x) == sign(x)
+    assert sign(n*x) == -sign(x)
+    assert sign(n*m*x) == sign(x)
+    x = 0
+    assert sign(x).is_zero == True
+
 
 def test_abs():
     x, y = symbols('xy')

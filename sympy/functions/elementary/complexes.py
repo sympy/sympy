@@ -4,6 +4,7 @@ from sympy.core.function import Function, Derivative
 from sympy.functions.elementary.miscellaneous import sqrt
 
 from sympy.utilities.decorator import deprecated
+from sympy.utilities.iterables import make_list, iff
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -54,13 +55,9 @@ class re(Function):
         elif arg.is_real:
             return arg
         else:
-            if not arg.is_Add:
-                arg = [arg]
 
             included, reverted, excluded = [], [], []
-
-            if isinstance(arg, Basic):
-                arg = arg.args
+            arg = make_list(arg, C.Add)
             for term in arg:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
@@ -132,13 +129,8 @@ class im(Function):
         elif arg.is_real:
             return S.Zero
         else:
-            if not arg.is_Add:
-                arg = [arg]
-
             included, reverted, excluded = [], [], []
-
-            if isinstance(arg, Basic):
-                arg = arg.args
+            arg = make_list(arg, C.Add)
             for term in arg:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
@@ -189,10 +181,20 @@ class sign(Function):
         if arg is S.Zero: return S.Zero
         if arg.is_positive: return S.One
         if arg.is_negative: return S.NegativeOne
+        if arg.is_Function:
+            if arg.func is sign: return arg
         if arg.is_Mul:
-            coeff, terms = arg.as_coeff_terms()
-            if coeff is not S.One:
-                return cls(coeff) * cls(C.Mul(*terms))
+            c, args = arg.as_coeff_terms()
+            unk = []
+            is_neg = c.is_negative
+            for ai in args:
+                if ai.is_negative == None:
+                    unk.append(ai)
+                elif ai.is_negative:
+                    is_neg = not is_neg
+            if c is S.One and len(unk) == len(args):
+                return None
+            return iff(is_neg, S.NegativeOne, S.One) * cls(C.Mul(*unk))
 
     is_bounded = True
 
@@ -200,7 +202,7 @@ class sign(Function):
         return self
 
     def _eval_is_zero(self):
-        return (self[0] is S.Zero)
+        return (self.args[0] is S.Zero)
 
 class abs(Function):
     """Return the absolute value of the argument. This is an extension of the built-in
