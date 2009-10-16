@@ -5,6 +5,9 @@ from sympy.core.cache import cacheit
 
 from sympy.utilities.decorator import deprecated
 
+from sympy.ntheory import multiplicity
+from sympy.core.basic import Mul
+
 class exp(Function):
 
     nargs = 1
@@ -287,6 +290,12 @@ class log(Function):
         if base is not None:
             base = sympify(base)
 
+            if arg.is_positive and arg.is_Integer and \
+               base.is_positive and base.is_Integer:
+                base = int(base)
+                arg = int(arg)
+                n = multiplicity(base, arg)
+                return S(n) + log(arg // base ** n) / log(base)
             if base is not S.Exp1:
                 return cls(arg)/cls(base)
             else:
@@ -310,7 +319,7 @@ class log(Function):
         elif arg is S.Exp1:
             return S.One
         #this doesn't work due to caching: :(
-        #elif arg.func is exp and arg[0].is_real:
+        #elif arg.func is exp and arg.args[0].is_real:
         #using this one instead:
         elif arg.func is exp:
             return arg.args[0]
@@ -337,8 +346,6 @@ class log(Function):
 
     def as_base_exp(self):
         return self, S.One
-        #why is this here:?
-        return exp, S.NegativeOne
 
     @staticmethod
     @cacheit

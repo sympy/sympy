@@ -68,6 +68,14 @@ def test_log():
 
     assert exp(-log(3))**(-1) == 3
 
+    assert log(1, 2) == 0
+    assert log(2, 2) == 1
+    assert log(3, 2) == log(3)/log(2)
+    assert log(6, 2) == 1 + log(3)/log(2)
+    assert log(6, 3) == 1 + log(2)/log(3)
+    assert log(2**3, 2) == 3
+    assert log(3**3, 3) == 3
+
     x, y = symbols('xy')
 
     assert log(x) == log(x)
