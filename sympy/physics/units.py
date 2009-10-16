@@ -175,6 +175,15 @@ boltzmann = Rational('1.3806505') * ten**-23 * J / K
 gee = gees = Rational('9.80665') * m/s**2
 atmosphere = atmospheres = atm = 101325 * pascal
 
+kPa = kilo*Pa
+bar = bars = 100*kPa
+pound = pounds = 0.45359237 * kg * gee #exact
+psi = pound / inch ** 2
+dHg0 = 13.5951 # approx value at 0 C
+mmHg = dHg0 * 9.80665 * Pa
+amu = amus = gram / avogadro
+quart = quarts = 231 * inch**3
+eV = 1.602176487e-19 * J
 
 # Other convenient units and magnitudes
 
