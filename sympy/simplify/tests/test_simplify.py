@@ -97,6 +97,8 @@ def test_factorial_simplify():
 def test_simplify():
     x,y,z,k,n,m,w,f,s,A = symbols('xyzknmwfsA')
 
+    assert all(simplify(tmp)==tmp for tmp in [I,E,oo,x,-x,-oo,-E,-I])
+
     e = 1/x + 1/y
     assert e != (x+y)/(x*y)
     assert simplify(e) == (x+y)/(x*y)
