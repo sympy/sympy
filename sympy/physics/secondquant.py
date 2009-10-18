@@ -2229,7 +2229,7 @@ def evaluate_deltas(e):
     else:
         return e
 
-def substitute_dummies(expr, newIndices=False, reverse_order=True, prettyIndices=True):
+def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indices=True):
     """
     Collect terms by substitution of dummy variables.
 
@@ -2267,11 +2267,11 @@ def substitute_dummies(expr, newIndices=False, reverse_order=True, prettyIndices
 
     """
 
-    # prettyIndices = True    # Prettier
-    # prettyIndices = False   # Easier to debug
+    # pretty_indices = True    # Prettier
+    # pretty_indices = False   # Easier to debug
 
 
-    if not prettyIndices:
+    if not pretty_indices:
         def _i(number):
             return 'i_'+str(number)
         def _a(number):
@@ -2456,7 +2456,7 @@ def substitute_dummies(expr, newIndices=False, reverse_order=True, prettyIndices
             p +=1
             l1 = generals
 
-        if newIndices:
+        if new_indices:
             l1.append(Symbol(sym, **assum))
         else:
             l1.append(d)
@@ -2479,7 +2479,7 @@ def substitute_dummies(expr, newIndices=False, reverse_order=True, prettyIndices
     return expr
 
 @cacheit
-def _get_contractions(string1, keepOnlyFullyContracted=False):
+def _get_contractions(string1, keep_only_fully_contracted=False):
     """
     Uses recursion to find all contractions. -- Internal helper function --
 
@@ -2490,7 +2490,7 @@ def _get_contractions(string1, keepOnlyFullyContracted=False):
     """
 
     # Should we store current level of contraction?
-    if keepOnlyFullyContracted and string1:
+    if keep_only_fully_contracted and string1:
         result = []
     else:
         result = [NO(Mul(*string1))]
@@ -2529,13 +2529,13 @@ def _get_contractions(string1, keepOnlyFullyContracted=False):
 
                     result.append(coeff*NO(
                         Mul(*string1[:i])*_get_contractions( oplist,
-                            keepOnlyFullyContracted=keepOnlyFullyContracted)))
+                            keep_only_fully_contracted=keep_only_fully_contracted)))
 
                 else:
                     result.append(coeff*NO( Mul(*string1[:i])))
 
 
-        if keepOnlyFullyContracted:
+        if keep_only_fully_contracted:
             break   # next iteration over i leaves leftmost operator string1[0] uncontracted
 
     return Add(*result)
@@ -2558,7 +2558,7 @@ def Wicks(e, **kw_args):
     >>> Wicks(F(p)*(F(q)+F(r)))
     NO(AnnihilateFermion(p)*AnnihilateFermion(q)) + NO(AnnihilateFermion(p)*AnnihilateFermion(r))
 
-    With the keyword 'keepOnlyFullyContracted=True', only fully contracted
+    With the keyword 'keep_only_fully_contracted=True', only fully contracted
     terms are returned.
 
     By request, the result can be simplified in the following order:
@@ -2566,11 +2566,11 @@ def Wicks(e, **kw_args):
      -- Dummy variables are substituted consistently across terms
 
     >>> p,q,r = symbols('pqr', dummy=True)
-    >>> Wicks(Fd(p)*(F(q)+F(r)), keepOnlyFullyContracted=True)
+    >>> Wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True)
     KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r) + KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q)
-    >>> Wicks(Fd(p)*(F(q)+F(r)), keepOnlyFullyContracted=True, simplifyKroneckerDeltas=True)
+    >>> Wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True, simplify_kronecker_deltas=True)
     KroneckerDelta(_i, _p) + KroneckerDelta(_i, _p)
-    >>> Wicks(Fd(p)*(F(q)+F(r)), keepOnlyFullyContracted=True, simplifyKroneckerDeltas=True, simplifyDummies=True)
+    >>> Wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True, simplify_kronecker_deltas=True, simplify_dummies=True)
     2*KroneckerDelta(_i, _p)
 
     """
@@ -2580,22 +2580,22 @@ def Wicks(e, **kw_args):
         return S.Zero
 
     opts={
-            'simplifyKroneckerDeltas':False,
+            'simplify_kronecker_deltas':False,
             'expand':True,
-            'simplifyDummies':False,
-            'keepOnlyFullyContracted':False
+            'simplify_dummies':False,
+            'keep_only_fully_contracted':False
             }
     opts.update(kw_args)
 
 
     # check if we are already normally ordered
     if isinstance(e,NO):
-        if opts['keepOnlyFullyContracted']:
+        if opts['keep_only_fully_contracted']:
             return S.Zero
         else:
             return e
     elif isinstance(e,FermionicOperator):
-        if opts['keepOnlyFullyContracted']:
+        if opts['keep_only_fully_contracted']:
             return S.Zero
         else:
             return e
@@ -2606,7 +2606,7 @@ def Wicks(e, **kw_args):
     # make sure we have only one term to consider
     e = e.expand()
     if isinstance(e, Add):
-        if opts['simplifyDummies']:
+        if opts['simplify_dummies']:
             return substitute_dummies(Add(*[ Wicks(term, **kw_args) for term in e.args]))
         else:
             return Add(*[ Wicks(term, **kw_args) for term in e.args])
@@ -2631,7 +2631,7 @@ def Wicks(e, **kw_args):
         if n == 0:
             result= e
         elif n==1:
-            if opts['keepOnlyFullyContracted']:
+            if opts['keep_only_fully_contracted']:
                 return S.Zero
             else:
                 result = e
@@ -2645,12 +2645,12 @@ def Wicks(e, **kw_args):
 
             # recursion over higher order contractions
             result = _get_contractions(string1,
-                keepOnlyFullyContracted=opts['keepOnlyFullyContracted'] )
+                keep_only_fully_contracted=opts['keep_only_fully_contracted'] )
             result =  Mul(*c_part)*result
 
         if opts['expand']:
             result = result.expand()
-        if opts['simplifyKroneckerDeltas']:
+        if opts['simplify_kronecker_deltas']:
             result = evaluate_deltas(result)
 
         return result

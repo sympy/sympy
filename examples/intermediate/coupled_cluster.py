@@ -44,28 +44,28 @@ C = Commutator
 T1,T2 = get_CC_operators()
 T = T1+ T2
 print "comm1..."
-comm1 = Wicks(C(H,T),simplifyDummies=True, simplifyKroneckerDeltas=True)
+comm1 = Wicks(C(H,T),simplify_dummies=True, simplify_kronecker_deltas=True)
 
 T1,T2 = get_CC_operators()
 T = T1+ T2
 print "comm2..."
-comm2 = Wicks(C(comm1,T),simplifyDummies=True, simplifyKroneckerDeltas=True)
+comm2 = Wicks(C(comm1,T),simplify_dummies=True, simplify_kronecker_deltas=True)
 
 T1,T2 = get_CC_operators()
 T = T1+ T2
 print "comm3..."
-comm3 = Wicks(C(comm2,T),simplifyDummies=True, simplifyKroneckerDeltas=True)
+comm3 = Wicks(C(comm2,T),simplify_dummies=True, simplify_kronecker_deltas=True)
 
 T1,T2 = get_CC_operators()
 T = T1+ T2
 print "comm4..."
-comm4 = Wicks(C(comm3,T),simplifyDummies=True, simplifyKroneckerDeltas=True)
+comm4 = Wicks(C(comm3,T),simplify_dummies=True, simplify_kronecker_deltas=True)
 
 print "construct Hausdoff expansion..."
 eq = H + comm1+comm2/2+comm3/6+comm4/24
 eq = eq.expand()
 eq = evaluate_deltas(eq)
-eq = substitute_dummies(eq, newIndices=True, reverse_order=False)
+eq = substitute_dummies(eq, new_indices=True, reverse_order=False)
 print "*********************"
 print
 
@@ -74,16 +74,16 @@ i,j,k,l = symbols('ijkl',below_fermi=True)
 a,b,c,d = symbols('abcd',above_fermi=True)
 print
 print "CC Energy:"
-print latex(Wicks(eq, simplifyDummies=True,
-    keepOnlyFullyContracted=True))
+print latex(Wicks(eq, simplify_dummies=True,
+    keep_only_fully_contracted=True))
 print
 print "CC T1:"
-eqT1 = Wicks(NO(Fd(i)*F(a))*eq, simplifyKroneckerDeltas=True, keepOnlyFullyContracted=True)
+eqT1 = Wicks(NO(Fd(i)*F(a))*eq, simplify_kronecker_deltas=True, keep_only_fully_contracted=True)
 eqT1 = substitute_dummies(eqT1,reverse_order=False)
 print latex(eqT1)
 print
 print "CC T2:"
-eqT2 = Wicks(NO(Fd(i)*Fd(j)*F(b)*F(a))*eq,simplifyDummies=True, keepOnlyFullyContracted=True, simplifyKroneckerDeltas=True)
+eqT2 = Wicks(NO(Fd(i)*Fd(j)*F(b)*F(a))*eq,simplify_dummies=True, keep_only_fully_contracted=True, simplify_kronecker_deltas=True)
 P = PermutationOperator
 eqT2 = simplifyIndexPermutations(eqT2,[P(a,b),P(i,j)])
 print latex(eqT2)

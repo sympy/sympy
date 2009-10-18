@@ -494,10 +494,10 @@ def test_fully_contracted():
             NO(Fd(p)*Fd(q)*F(s)*F(r)))/4
 
     Fai=Wicks(NO(Fd(i)*F(a))*Fock,
-            keepOnlyFullyContracted=True,
-            simplifyKroneckerDeltas=True)
+            keep_only_fully_contracted=True,
+            simplify_kronecker_deltas=True)
     assert Fai == AntiSymmetricTensor('f',(a,),(i,))
     Vabij=Wicks(NO(Fd(i)*Fd(j)*F(b)*F(a))*V,
-            keepOnlyFullyContracted=True,
-            simplifyKroneckerDeltas=True)
+            keep_only_fully_contracted=True,
+            simplify_kronecker_deltas=True)
     assert Vabij==AntiSymmetricTensor('v',(a,b),(i,j))
