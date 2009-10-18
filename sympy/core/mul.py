@@ -560,7 +560,70 @@ class Mul(AssocOp):
         if self.is_commutative and expr.is_commutative:
             return AssocOp._matches_commutative(self, expr, repl_dict, evaluate)
         # todo for commutative parts, until then use the default matches method for non-commutative products
-        return Basic.matches(self, expr, repl_dict, evaluate)
+        return self._matches(expr, repl_dict, evaluate)
+
+    def _matches(self, expr, repl_dict={}, evaluate=False):
+        # weed out negative one prefixes
+        sign = 1
+        if self.args[0] == -1:
+            self = -self; sign = -sign
+        if expr.is_Mul and expr.args[0] == -1:
+            expr = -expr; sign = -sign
+
+        if evaluate:
+            return self.subs(repl_dict).matches(expr, repl_dict)
+        expr = sympify(expr)
+        if not isinstance(expr, self.__class__):
+            # if we can omit the first factor, we can match it to sign * one
+            if Mul(*self.args[1:]) == expr:
+               return self.args[0].matches(Rational(sign), repl_dict, evaluate)
+            # two-factor product: if the 2nd factor matches, the first part must be sign * one
+            if len(self.args[:]) == 2:
+               dd = self.args[1].matches(expr, repl_dict, evaluate)
+               if dd == None:
+                   return None
+               dd = self.args[0].matches(Rational(sign), dd, evaluate)
+               return dd
+            return None
+
+        if len(self.args[:])==0:
+            if self == expr:
+                return repl_dict
+            return None
+        d = repl_dict.copy()
+
+        # weed out identical terms
+        pp = list(self.args)
+        ee = list(expr.args)
+        for p in self.args:
+            if p in expr.args:
+                ee.remove(p)
+                pp.remove(p)
+
+        # only one symbol left in pattern -> match the remaining expression
+        if len(pp) == 1 and isinstance(pp[0], Wild):
+          if len(ee) == 1:
+              d[pp[0]] = sign * ee[0]
+          else:
+              d[pp[0]] = sign * (type(expr)(*ee))
+          return d
+
+        if len(ee) != len(pp):
+            return None
+
+        i = 0
+        for p, e in zip(pp, ee):
+            if i == 0 and sign != 1:
+              try:
+                  e = sign * e
+              except TypeError:
+                  return None
+            d = p.matches(e, d, evaluate=not i)
+            i += 1
+            if d is None:
+                return None
+        return d
+
 
     @staticmethod
     def _combine_inverse(lhs, rhs):
