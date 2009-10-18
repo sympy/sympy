@@ -1779,8 +1779,11 @@ class NO(Function):
             c_part, seq = split_commutative_parts(arg)
             if c_part:
                 coeff = Mul(*c_part)
+                if not seq:
+                    return coeff
             else:
                 coeff = S.One
+
 
             # {ab{cd}} = {abcd}
             newseq = []
@@ -1793,6 +1796,10 @@ class NO(Function):
                     newseq.append(fac)
             if foundit:
                 return coeff*cls(Mul(*newseq))
+
+            # We assume that the user don't mix B and F operators
+            if isinstance(seq[0], BosonicOperator):
+                raise NotImplementedError
 
             try:
                 newseq,sign = _sort_anticommuting_fermions(seq)
@@ -2568,8 +2575,6 @@ def Wicks(e, **kw_args):
 
     """
 
-    # break up any NO-objects, and evaluate commutators
-    e = e.doit()
 
     if not e:
         return S.Zero
@@ -2595,6 +2600,8 @@ def Wicks(e, **kw_args):
         else:
             return e
 
+    # break up any NO-objects, and evaluate commutators
+    e = e.doit()
 
     # make sure we have only one term to consider
     e = e.expand()
@@ -2630,6 +2637,9 @@ def Wicks(e, **kw_args):
                 result = e
 
         else: # non-trivial
+
+            if isinstance(str[0], BosonicOperator):
+                raise NotImplementedError
 
             str = tuple(str)
 
