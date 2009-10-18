@@ -2078,10 +2078,10 @@ def contraction(a,b):
         raise ContractionAppliesOnlyToFermions(*t)
 
 
-def _sort_anticommuting_fermions(str):
+def _sort_anticommuting_fermions(string1):
     """Sort fermionic operators to canonical order, assuming all pairs anticommute.
 
-    Uses a bidirectional bubble sort.  Items in str are not referenced
+    Uses a bidirectional bubble sort.  Items in string1 are not referenced
     so in principle they may be any comparable objects. Sorting is
     done according to the >= operator.
 
@@ -2096,34 +2096,34 @@ def _sort_anticommuting_fermions(str):
 
     verified = False
     sign = 0
-    rng = range(len(str)-1)
-    rev = range(len(str)-3,-1,-1)
-    str = list(str)
+    rng = range(len(string1)-1)
+    rev = range(len(string1)-3,-1,-1)
+    string1 = list(string1)
 
     while not verified:
         verified = True
         for i in rng:
-            left = str[i]
-            right = str[i+1]
+            left = string1[i]
+            right = string1[i+1]
             if left == right:
                 raise ViolationOfPauliPrinciple([left,right])
             if left > right:
                 verified = False
-                str[i:i+2] = [right, left]
+                string1[i:i+2] = [right, left]
                 sign = sign+1
         if verified:
             break
         for i in rev:
-            left = str[i]
-            right = str[i+1]
+            left = string1[i]
+            right = string1[i+1]
             if left == right:
                 raise ViolationOfPauliPrinciple([left,right])
             if left > right:
                 verified = False
-                str[i:i+2] = [right, left]
+                string1[i:i+2] = [right, left]
                 sign = sign+1
 
-    return (str,sign)
+    return (string1,sign)
 
 def evaluate_deltas(e):
     """
@@ -2479,26 +2479,26 @@ def substitute_dummies(expr, newIndices=False, reverse_order=True, prettyIndices
     return expr
 
 @cacheit
-def _get_contractions(str, keepOnlyFullyContracted=False):
+def _get_contractions(string1, keepOnlyFullyContracted=False):
     """
     Uses recursion to find all contractions. -- Internal helper function --
 
-    Will find nonzero contractions in str between indices given in
+    Will find nonzero contractions in string1 between indices given in
     leftrange and rightrange.
 
     returns Add-object with contracted terms.
     """
 
     # Should we store current level of contraction?
-    if keepOnlyFullyContracted and str:
+    if keepOnlyFullyContracted and string1:
         result = []
     else:
-        result = [NO(Mul(*str))]
+        result = [NO(Mul(*string1))]
 
-    for i in range(len(str)-1):
-        for j in range(i+1,len(str)):
+    for i in range(len(string1)-1):
+        for j in range(i+1,len(string1)):
 
-            c = contraction(str[i],str[j])
+            c = contraction(string1[i],string1[j])
 
             if c:
                 # print "found contraction",c
@@ -2515,28 +2515,28 @@ def _get_contractions(str, keepOnlyFullyContracted=False):
                 #
                 # We now need to find more contractions among operators
                 #
-                # oplist = str[:i]+ str[i+1:j] + str[j+1:]
+                # oplist = string1[:i]+ string1[i+1:j] + string1[j+1:]
                 #
                 # To prevent overcounting, we don't allow contractions
                 # we have already encountered. i.e. contractions between
-                #       str[:i] <---> str[i+1:j]
-                # and   str[:i] <---> str[j+1:].
+                #       string1[:i] <---> string1[i+1:j]
+                # and   string1[:i] <---> string1[j+1:].
                 #
                 # This leaves the case:
-                oplist = str[i+1:j] + str[j+1:]
+                oplist = string1[i+1:j] + string1[j+1:]
 
                 if oplist:
 
                     result.append(coeff*NO(
-                        Mul(*str[:i])*_get_contractions( oplist,
+                        Mul(*string1[:i])*_get_contractions( oplist,
                             keepOnlyFullyContracted=keepOnlyFullyContracted)))
 
                 else:
-                    result.append(coeff*NO( Mul(*str[:i])))
+                    result.append(coeff*NO( Mul(*string1[:i])))
 
 
         if keepOnlyFullyContracted:
-            break   # next iteration over i leaves leftmost operator str[0] uncontracted
+            break   # next iteration over i leaves leftmost operator string1[0] uncontracted
 
     return Add(*result)
 
@@ -2618,13 +2618,13 @@ def Wicks(e, **kw_args):
         # we dont want to mess around with commuting part of Mul
         # so we factorize it out before starting recursion
         c_part = []
-        str = []
+        string1 = []
         for factor in e.args:
             if factor.is_commutative:
                 c_part.append(factor)
             else:
-                str.append(factor)
-        n = len(str)
+                string1.append(factor)
+        n = len(string1)
 
 
         # catch trivial cases
@@ -2638,13 +2638,13 @@ def Wicks(e, **kw_args):
 
         else: # non-trivial
 
-            if isinstance(str[0], BosonicOperator):
+            if isinstance(string1[0], BosonicOperator):
                 raise NotImplementedError
 
-            str = tuple(str)
+            string1 = tuple(string1)
 
             # recursion over higher order contractions
-            result = _get_contractions(str,
+            result = _get_contractions(string1,
                 keepOnlyFullyContracted=opts['keepOnlyFullyContracted'] )
             result =  Mul(*c_part)*result
 
