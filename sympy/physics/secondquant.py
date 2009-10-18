@@ -42,7 +42,7 @@ __all__ = [
     'Commutator',
     'matrix_rep',
     'contraction',
-    'Wicks',
+    'wicks',
     'NO',
     'evaluate_deltas',
     'SymTuple',
@@ -1682,7 +1682,7 @@ class Commutator(Function):
             else:
                 return S.Zero
         if isinstance(a, FermionicOperator) and isinstance(b, FermionicOperator):
-            return Wicks(a*b)- Wicks(b*a)
+            return wicks(a*b)- wicks(b*a)
 
         #
         # Canonical ordering of arguments
@@ -1702,7 +1702,7 @@ class Commutator(Function):
             a = a.doit(**hints)
             b = b.doit(**hints)
             try:
-                return Wicks(a*b) - Wicks(b*a)
+                return wicks(a*b) - wicks(b*a)
             except ContractionAppliesOnlyToFermions:
                 pass
             except WicksTheoremDoesNotApply:
@@ -1745,7 +1745,7 @@ class NO(Function):
 
     Note:
     If you want to generate a normal ordered equivalent of an expression, you
-    should use the function Wicks().  This class only indicates that all
+    should use the function wicks().  This class only indicates that all
     operators inside the brackets anticommute, and have vanishing contractions.
     Nothing more, nothing less.
 
@@ -2542,20 +2542,20 @@ def _get_contractions(string1, keep_only_fully_contracted=False):
 
 
 # @cacheit
-def Wicks(e, **kw_args):
+def wicks(e, **kw_args):
     """
     Returns the normal ordered equivalent of an expression using Wicks Theorem.
 
 
     >>> from sympy import symbols, Function
-    >>> from sympy.physics.secondquant import Wicks, F, Fd, NO
+    >>> from sympy.physics.secondquant import wicks, F, Fd, NO
     >>> p,q,r = symbols('pqr')
-    >>> Wicks(Fd(p)*F(q))
+    >>> wicks(Fd(p)*F(q))
     KroneckerDelta(p, q)*KroneckerDelta(q, _i) + NO(CreateFermion(p)*AnnihilateFermion(q))
 
     By default, the expression is expanded:
 
-    >>> Wicks(F(p)*(F(q)+F(r)))
+    >>> wicks(F(p)*(F(q)+F(r)))
     NO(AnnihilateFermion(p)*AnnihilateFermion(q)) + NO(AnnihilateFermion(p)*AnnihilateFermion(r))
 
     With the keyword 'keep_only_fully_contracted=True', only fully contracted
@@ -2566,11 +2566,11 @@ def Wicks(e, **kw_args):
      -- Dummy variables are substituted consistently across terms
 
     >>> p,q,r = symbols('pqr', dummy=True)
-    >>> Wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True)
+    >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True)
     KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r) + KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q)
-    >>> Wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True, simplify_kronecker_deltas=True)
+    >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True, simplify_kronecker_deltas=True)
     KroneckerDelta(_i, _p) + KroneckerDelta(_i, _p)
-    >>> Wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True, simplify_kronecker_deltas=True, simplify_dummies=True)
+    >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True, simplify_kronecker_deltas=True, simplify_dummies=True)
     2*KroneckerDelta(_i, _p)
 
     """
@@ -2607,9 +2607,9 @@ def Wicks(e, **kw_args):
     e = e.expand()
     if isinstance(e, Add):
         if opts['simplify_dummies']:
-            return substitute_dummies(Add(*[ Wicks(term, **kw_args) for term in e.args]))
+            return substitute_dummies(Add(*[ wicks(term, **kw_args) for term in e.args]))
         else:
-            return Add(*[ Wicks(term, **kw_args) for term in e.args])
+            return Add(*[ wicks(term, **kw_args) for term in e.args])
 
 
     # For Mul-objects we can actually do something

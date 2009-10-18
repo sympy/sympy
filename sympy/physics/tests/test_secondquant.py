@@ -3,7 +3,7 @@ from sympy.physics.secondquant import (
     matrix_rep, apply_operators, InnerProduct, Commutator, KroneckerDelta,
     FockState, AnnihilateBoson, CreateBoson, BosonicOperator,
     F, Fd, FKet, FBra, BosonState, CreateFermion, AnnihilateFermion,
-    evaluate_deltas, AntiSymmetricTensor, contraction, NO, Wicks,
+    evaluate_deltas, AntiSymmetricTensor, contraction, NO, wicks,
     PermutationOperator, simplifyIndexPermutations, SymTuple,
         )
 
@@ -352,13 +352,13 @@ def test_wicks():
     # Testing for particles only
 
     str = F(p)*Fd(q)
-    assert Wicks(str) == NO(F(p)*Fd(q)) + KroneckerDelta(p,q)
+    assert wicks(str) == NO(F(p)*Fd(q)) + KroneckerDelta(p,q)
     str = Fd(p)*F(q)
-    assert Wicks(str) == NO(Fd(p)*F(q))
+    assert wicks(str) == NO(Fd(p)*F(q))
 
 
     str = F(p)*Fd(q)*F(r)*Fd(s)
-    nstr= Wicks(str)
+    nstr= wicks(str)
     fasit = NO(
     KroneckerDelta(p, q)*KroneckerDelta(r, s)
     + KroneckerDelta(p, q)*AnnihilateFermion(r)*CreateFermion(s)
@@ -367,8 +367,8 @@ def test_wicks():
     - AnnihilateFermion(p)*AnnihilateFermion(r)*CreateFermion(q)*CreateFermion(s))
     assert nstr == fasit
 
-    assert (p*q*nstr).expand() == Wicks(p*q*str)
-    assert (nstr*p*q*2).expand() == Wicks(str*p*q*2)
+    assert (p*q*nstr).expand() == wicks(p*q*str)
+    assert (nstr*p*q*2).expand() == wicks(str*p*q*2)
 
 
     # Testing CC equations particles and holes
@@ -376,22 +376,22 @@ def test_wicks():
     a,b,c,d = symbols('abcd',above_fermi=True,dummy=True)
     p,q,r,s = symbols('pqrs',dummy=True)
 
-    assert (Wicks(F(a)*NO(F(i)*F(j))*Fd(b)) ==
+    assert (wicks(F(a)*NO(F(i)*F(j))*Fd(b)) ==
             NO(F(a)*F(i)*F(j)*Fd(b)) +
             KroneckerDelta(a,b)*NO(F(i)*F(j)))
-    assert (Wicks(F(a)*NO(F(i)*F(j)*F(k))*Fd(b)) ==
+    assert (wicks(F(a)*NO(F(i)*F(j)*F(k))*Fd(b)) ==
             NO(F(a)*F(i)*F(j)*F(k)*Fd(b)) -
             KroneckerDelta(a,b)*NO(F(i)*F(j)*F(k)))
 
 
-    expr = Wicks(Fd(i)*NO(Fd(j)*F(k))*F(l))
+    expr = wicks(Fd(i)*NO(Fd(j)*F(k))*F(l))
     assert (expr ==
            -KroneckerDelta(i,k)*NO(Fd(j)*F(l)) -
             KroneckerDelta(j,l)*NO(Fd(i)*F(k)) -
             KroneckerDelta(i,k)*KroneckerDelta(j,l)+
             KroneckerDelta(i,l)*NO(Fd(j)*F(k)) +
             NO(Fd(i)*Fd(j)*F(k)*F(l)))
-    expr = Wicks(F(a)*NO(F(b)*Fd(c))*Fd(d))
+    expr = wicks(F(a)*NO(F(b)*Fd(c))*Fd(d))
     assert (expr ==
            -KroneckerDelta(a,c)*NO(F(b)*Fd(d)) -
             KroneckerDelta(b,d)*NO(F(a)*Fd(c)) -
@@ -426,7 +426,7 @@ def test_NO():
 
 
     expr = NO(Fd(p)*F(q))._remove_brackets()
-    assert Wicks(expr) == NO(expr)
+    assert wicks(expr) == NO(expr)
 
     assert NO(Fd(a)*F(b)) == - NO(F(b)*Fd(a))
 
@@ -493,11 +493,11 @@ def test_fully_contracted():
     V = (AntiSymmetricTensor('v',(p,q),(r,s))*
             NO(Fd(p)*Fd(q)*F(s)*F(r)))/4
 
-    Fai=Wicks(NO(Fd(i)*F(a))*Fock,
+    Fai=wicks(NO(Fd(i)*F(a))*Fock,
             keep_only_fully_contracted=True,
             simplify_kronecker_deltas=True)
     assert Fai == AntiSymmetricTensor('f',(a,),(i,))
-    Vabij=Wicks(NO(Fd(i)*Fd(j)*F(b)*F(a))*V,
+    Vabij=wicks(NO(Fd(i)*Fd(j)*F(b)*F(a))*V,
             keep_only_fully_contracted=True,
             simplify_kronecker_deltas=True)
     assert Vabij==AntiSymmetricTensor('v',(a,b),(i,j))

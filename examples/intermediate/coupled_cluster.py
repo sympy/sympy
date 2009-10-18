@@ -1,4 +1,4 @@
-from sympy.physics.secondquant import (AntiSymmetricTensor, Wicks,
+from sympy.physics.secondquant import (AntiSymmetricTensor, wicks,
         F, Fd, NO, evaluate_deltas, substitute_dummies, Commutator,
         simplifyIndexPermutations, PermutationOperator)
 from sympy import (
@@ -44,22 +44,22 @@ C = Commutator
 T1,T2 = get_CC_operators()
 T = T1+ T2
 print "comm1..."
-comm1 = Wicks(C(H,T),simplify_dummies=True, simplify_kronecker_deltas=True)
+comm1 = wicks(C(H,T),simplify_dummies=True, simplify_kronecker_deltas=True)
 
 T1,T2 = get_CC_operators()
 T = T1+ T2
 print "comm2..."
-comm2 = Wicks(C(comm1,T),simplify_dummies=True, simplify_kronecker_deltas=True)
+comm2 = wicks(C(comm1,T),simplify_dummies=True, simplify_kronecker_deltas=True)
 
 T1,T2 = get_CC_operators()
 T = T1+ T2
 print "comm3..."
-comm3 = Wicks(C(comm2,T),simplify_dummies=True, simplify_kronecker_deltas=True)
+comm3 = wicks(C(comm2,T),simplify_dummies=True, simplify_kronecker_deltas=True)
 
 T1,T2 = get_CC_operators()
 T = T1+ T2
 print "comm4..."
-comm4 = Wicks(C(comm3,T),simplify_dummies=True, simplify_kronecker_deltas=True)
+comm4 = wicks(C(comm3,T),simplify_dummies=True, simplify_kronecker_deltas=True)
 
 print "construct Hausdoff expansion..."
 eq = H + comm1+comm2/2+comm3/6+comm4/24
@@ -74,16 +74,16 @@ i,j,k,l = symbols('ijkl',below_fermi=True)
 a,b,c,d = symbols('abcd',above_fermi=True)
 print
 print "CC Energy:"
-print latex(Wicks(eq, simplify_dummies=True,
+print latex(wicks(eq, simplify_dummies=True,
     keep_only_fully_contracted=True))
 print
 print "CC T1:"
-eqT1 = Wicks(NO(Fd(i)*F(a))*eq, simplify_kronecker_deltas=True, keep_only_fully_contracted=True)
+eqT1 = wicks(NO(Fd(i)*F(a))*eq, simplify_kronecker_deltas=True, keep_only_fully_contracted=True)
 eqT1 = substitute_dummies(eqT1,reverse_order=False)
 print latex(eqT1)
 print
 print "CC T2:"
-eqT2 = Wicks(NO(Fd(i)*Fd(j)*F(b)*F(a))*eq,simplify_dummies=True, keep_only_fully_contracted=True, simplify_kronecker_deltas=True)
+eqT2 = wicks(NO(Fd(i)*Fd(j)*F(b)*F(a))*eq,simplify_dummies=True, keep_only_fully_contracted=True, simplify_kronecker_deltas=True)
 P = PermutationOperator
 eqT2 = simplifyIndexPermutations(eqT2,[P(a,b),P(i,j)])
 print latex(eqT2)
