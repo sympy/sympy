@@ -157,23 +157,22 @@ class Wild(Symbol):
         return (self.name, self.exclude, self.properties )
 
     # TODO add check against another Wild
-    def matches(pattern, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}, evaluate=False):
         for p,v in repl_dict.items():
-            if p==pattern:
-                if v==expr: return repl_dict
+            if p == self:
+                if v == expr:
+                    return repl_dict
                 return None
-        if pattern.exclude:
-            for x in pattern.exclude:
+        if self.exclude:
+            for x in self.exclude:
                 if x in expr:
                     return None
-                #else:
-                #    print x, expr, pattern, expr, pattern.exclude
-        if pattern.properties:
-            for f in pattern.properties:
+        if self.properties:
+            for f in self.properties:
                 if not f(expr):
                     return None
         repl_dict = repl_dict.copy()
-        repl_dict[pattern] = expr
+        repl_dict[self] = expr
         return repl_dict
 
     def __call__(self, *args, **assumptions):

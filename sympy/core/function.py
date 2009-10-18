@@ -487,16 +487,17 @@ class WildFunction(Function, Atom):
         obj.name = name
         return obj
 
-    def matches(pattern, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}, evaluate=False):
         for p,v in repl_dict.items():
-            if p==pattern:
-                if v==expr: return repl_dict
+            if p == self:
+                if v == expr:
+                    return repl_dict
                 return None
-        if pattern.nargs is not None:
-            if not hasattr(expr,'nargs') or pattern.nargs != expr.nargs:
+        if self.nargs is not None:
+            if not hasattr(expr,'nargs') or self.nargs != expr.nargs:
                 return None
         repl_dict = repl_dict.copy()
-        repl_dict[pattern] = expr
+        repl_dict[self] = expr
         return repl_dict
 
     @classmethod
@@ -629,30 +630,30 @@ class Derivative(Basic):
             return new
         return Derivative(*map(lambda x: x._eval_subs(old, new), self.args), **{'evaluate': True})
 
-    def matches(pattern, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}, evaluate=False):
         # this method needs a cleanup.
 
-        #print "?   :",pattern, expr, repl_dict, evaluate
+        #print "?   :",self, expr, repl_dict, evaluate
         #if repl_dict:
         #    return repl_dict
         for p,v in repl_dict.items():
-            if p==pattern:
-                if v==expr: return repl_dict
+            if p == self:
+                if v == expr:
+                    return repl_dict
                 return None
-        assert isinstance(pattern, Derivative)
         if isinstance(expr, Derivative):
-            if len(expr.symbols) == len(pattern.symbols):
-                    #print "MAYBE:",pattern, expr, repl_dict, evaluate
-                    return Basic.matches(pattern, expr, repl_dict, evaluate)
-        #print "NONE:",pattern, expr, repl_dict, evaluate
+            if len(expr.symbols) == len(self.symbols):
+                    #print "MAYBE:",self, expr, repl_dict, evaluate
+                    return Basic.matches(self, expr, repl_dict, evaluate)
+        #print "NONE:",self, expr, repl_dict, evaluate
         return None
-        #print pattern, expr, repl_dict, evaluate
+        #print self, expr, repl_dict, evaluate
         stop
-        if pattern.nargs is not None:
-            if pattern.nargs != expr.nargs:
+        if self.nargs is not None:
+            if self.nargs != expr.nargs:
                 return None
         repl_dict = repl_dict.copy()
-        repl_dict[pattern] = expr
+        repl_dict[self] = expr
         return repl_dict
 
     def _eval_lseries(self, x, x0):

@@ -527,12 +527,12 @@ class Pow(Basic):
         # unprocessed Real and NumberSymbol
         return self, S.One
 
-    def matches(pattern, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}, evaluate=False):
         if evaluate:
-            pat = pattern
-            for old,new in repl_dict.items():
+            pat = self
+            for old, new in repl_dict.items():
                 pat = pat.subs(old, new)
-            if pat!=pattern:
+            if pat != self:
                 return pat.matches(expr, repl_dict)
 
         expr = _sympify(expr)
@@ -541,18 +541,18 @@ class Pow(Basic):
         # special case, pattern = 1 and expr.exp can match to 0
         if expr is S.One:
             d = repl_dict.copy()
-            d = pattern.exp.matches(S.Zero, d, evaluate=False)
+            d = self.exp.matches(S.Zero, d, evaluate=False)
             if d is not None:
                 return d
 
         d = repl_dict.copy()
-        d = pattern.base.matches(b, d, evaluate=False)
+        d = self.base.matches(b, d, evaluate=False)
         if d is None:
             return None
 
-        d = pattern.exp.matches(e, d, evaluate=True)
+        d = self.exp.matches(e, d, evaluate=True)
         if d is None:
-            return Basic.matches(pattern, expr, repl_dict, evaluate)
+            return Basic.matches(self, expr, repl_dict, evaluate)
         return d
 
     def _eval_nseries(self, x, x0, n):

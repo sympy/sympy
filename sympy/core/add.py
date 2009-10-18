@@ -180,9 +180,9 @@ class Add(AssocOp):
         terms = [t.nseries(x, x0, n) for t in self.args]
         return Add(*terms)
 
-    def _matches_simple(pattern, expr, repl_dict):
+    def _matches_simple(self, expr, repl_dict):
         # handle (w+3).matches('x+5') -> {w: x+2}
-        coeff, factors = pattern.as_coeff_factors()
+        coeff, factors = self.as_coeff_factors()
         if len(factors)==1:
             return factors[0].matches(expr - coeff, repl_dict)
         return

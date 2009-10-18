@@ -548,19 +548,19 @@ class Mul(AssocOp):
             factors.append(Mul(*(terms[:i]+[t]+terms[i+1:])))
         return Add(*factors)
 
-    def _matches_simple(pattern, expr, repl_dict):
+    def _matches_simple(self, expr, repl_dict):
         # handle (w*3).matches('x*5') -> {w: x*5/3}
-        coeff, terms = pattern.as_coeff_terms()
+        coeff, terms = self.as_coeff_terms()
         if len(terms)==1:
             return terms[0].matches(expr / coeff, repl_dict)
         return
 
-    def matches(pattern, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}, evaluate=False):
         expr = sympify(expr)
-        if pattern.is_commutative and expr.is_commutative:
-            return AssocOp._matches_commutative(pattern, expr, repl_dict, evaluate)
+        if self.is_commutative and expr.is_commutative:
+            return AssocOp._matches_commutative(self, expr, repl_dict, evaluate)
         # todo for commutative parts, until then use the default matches method for non-commutative products
-        return Basic.matches(pattern, expr, repl_dict, evaluate)
+        return Basic.matches(self, expr, repl_dict, evaluate)
 
     @staticmethod
     def _combine_inverse(lhs, rhs):

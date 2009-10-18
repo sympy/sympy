@@ -90,7 +90,7 @@ class AssocOp(Basic):
 
     _eval_subs = Basic._seq_subs
 
-    def _matches_commutative(pattern, expr, repl_dict={}, evaluate=False):
+    def _matches_commutative(self, expr, repl_dict={}, evaluate=False):
         """
         Matches Add/Mul "pattern" to an expression "expr".
 
@@ -144,14 +144,14 @@ class AssocOp(Basic):
         """
         # apply repl_dict to pattern to eliminate fixed wild parts
         if evaluate:
-            pat = pattern
+            pat = self
             for old,new in repl_dict.items():
                 pat = pat.subs(old, new)
-            if pat != pattern:
+            if pat != self:
                 return pat.matches(expr, repl_dict)
 
         # handle simple patterns
-        d = pattern._matches_simple(expr, repl_dict)
+        d = self._matches_simple(expr, repl_dict)
         if d is not None:
             return d
 
@@ -159,7 +159,7 @@ class AssocOp(Basic):
         wild_part = []
         exact_part = []
         from function import WildFunction
-        for p in pattern.args:
+        for p in self.args:
             if p.atoms(Wild, WildFunction):
                 # not all Wild should stay Wilds, for example:
                 # (w2+w3).matches(w1) -> (w1+w3).matches(w1) -> w3.matches(0)
@@ -170,12 +170,12 @@ class AssocOp(Basic):
             exact_part.append(p)
 
         if exact_part:
-            newpattern = pattern.__class__(*wild_part)
-            newexpr = pattern.__class__._combine_inverse(expr, pattern.__class__(*exact_part))
+            newpattern = self.__class__(*wild_part)
+            newexpr = self.__class__._combine_inverse(expr, self.__class__(*exact_part))
             return newpattern.matches(newexpr, repl_dict)
 
         # now to real work ;)
-        if isinstance(expr, pattern.__class__):
+        if isinstance(expr, self.__class__):
             expr_list = list(expr.args)
         else:
             expr_list = [expr]
@@ -187,7 +187,7 @@ class AssocOp(Basic):
                 w = tmp.pop()
                 d1 = w.matches(last_op, repl_dict)
                 if d1 is not None:
-                    d2 = pattern.matches(expr, d1, evaluate=True)
+                    d2 = self.matches(expr, d1, evaluate=True)
                     if d2 is not None:
                         return d2
 

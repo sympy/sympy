@@ -1391,8 +1391,7 @@ class Basic(AssumeMeths):
                 if x.is_Order:
                     return x
 
-    #@classmethod
-    def matches(pattern, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}, evaluate=False):
         """
         Helper method for match() - switches the pattern and expr.
 
@@ -1407,59 +1406,66 @@ class Basic(AssumeMeths):
 
         # weed out negative one prefixes
         sign = 1
-        if pattern.is_Mul and pattern.args[0] == -1:
-            pattern = -pattern; sign = -sign
+        if self.is_Mul and self.args[0] == -1:
+            self = -self; sign = -sign
         if expr.is_Mul and expr.args[0] == -1:
             expr = -expr; sign = -sign
 
         if evaluate:
-            pat = pattern
-            for old,new in repl_dict.items():
+            pat = self
+            for old, new in repl_dict.items():
                 pat = pat.subs(old, new)
-            if pat!=pattern:
+            if pat != self:
                 return pat.matches(expr, repl_dict)
         expr = sympify(expr)
-        if not isinstance(expr, pattern.__class__):
+        if not isinstance(expr, self.__class__):
             # if we can omit the first factor, we can match it to sign * one
-            if pattern.is_Mul and Mul(*pattern.args[1:]) == expr:
-               return pattern.args[0].matches(Rational(sign), repl_dict, evaluate)
+            if self.is_Mul and Mul(*self.args[1:]) == expr:
+               return self.args[0].matches(Rational(sign), repl_dict, evaluate)
             # two-factor product: if the 2nd factor matches, the first part must be sign * one
-            if pattern.is_Mul and len(pattern.args) == 2:
-               dd = pattern.args[1].matches(expr, repl_dict, evaluate)
-               if dd == None: return None
-               dd = pattern.args[0].matches(Rational(sign), dd, evaluate)
+            if self.is_Mul and len(self.args[:]) == 2:
+               dd = self.args[1].matches(expr, repl_dict, evaluate)
+               if dd == None:
+                   return None
+               dd = self.args[0].matches(Rational(sign), dd, evaluate)
                return dd
             return None
 
-        if len(pattern.args)==0:
-            if pattern==expr:
+        if len(self.args)==0:
+            if self == expr:
                 return repl_dict
             return None
         d = repl_dict.copy()
 
         # weed out identical terms
-        pp = list(pattern.args)
+        pp = list(self.args)
         ee = list(expr.args)
-        for p in pattern.args:
+        for p in self.args:
           for e in expr.args:
             if e == p:
-              if e in ee: ee.remove(e)
-              if p in pp: pp.remove(p)
+              if e in ee:
+                  ee.remove(e)
+              if p in pp:
+                  pp.remove(p)
 
         # only one symbol left in pattern -> match the remaining expression
         if len(pp) == 1 and isinstance(pp[0], Wild):
-          if len(ee) == 1: d[pp[0]] = sign * ee[0]
-          else: d[pp[0]] = sign * (type(expr)(*ee))
+          if len(ee) == 1:
+              d[pp[0]] = sign * ee[0]
+          else:
+              d[pp[0]] = sign * (type(expr)(*ee))
           return d
 
         if len(ee) != len(pp):
             return None
 
         i = 0
-        for p,e in zip(pp, ee):
+        for p, e in zip(pp, ee):
             if i == 0 and sign != 1:
-              try: e = sign * e
-              except TypeError: return None
+              try:
+                  e = sign * e
+              except TypeError:
+                  return None
             d = p.matches(e, d, evaluate=not i)
             i += 1
             if d is None:
@@ -2404,8 +2410,8 @@ class Atom(Basic):
         if self==s: return S.One
         return S.Zero
 
-    def pattern_match(pattern, expr, repl_dict):
-        if pattern==expr:
+    def matches(self, expr, repl_dict, evaluate=False):
+        if self == expr:
             return repl_dict
         return None
 
