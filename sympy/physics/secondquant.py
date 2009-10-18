@@ -52,19 +52,22 @@ __all__ = [
     'simplifyIndexPermutations',
 ]
 
-class AppliesOnlyToSymbolicIndex(Exception):
+class SecondQuantizationError(Exception):
     pass
 
-class ContractionAppliesOnlyToFermionsException(Exception):
+class AppliesOnlyToSymbolicIndex(SecondQuantizationError):
     pass
 
-class ViolationOfPauliPrinciple(Exception):
+class ContractionAppliesOnlyToFermions(SecondQuantizationError):
     pass
 
-class SubstitutionOfAmbigousOperatorFailed(Exception):
+class ViolationOfPauliPrinciple(SecondQuantizationError):
     pass
 
-class WicksTheoremDoesNotApply(Exception):
+class SubstitutionOfAmbigousOperatorFailed(SecondQuantizationError):
+    pass
+
+class WicksTheoremDoesNotApply(SecondQuantizationError):
     pass
 
 class Dagger(Basic):
@@ -1700,7 +1703,7 @@ class Commutator(Function):
             b = b.doit(**hints)
             try:
                 return Wicks(a*b) - Wicks(b*a)
-            except ContractionAppliesOnlyToFermionsException:
+            except ContractionAppliesOnlyToFermions:
                 pass
             except WicksTheoremDoesNotApply:
                 pass
@@ -2065,7 +2068,7 @@ def contraction(a,b):
     else:
         #not fermion operators
         t = ( isinstance(i,FermionicOperator) for i in (a,b) )
-        raise ContractionAppliesOnlyToFermionsException(*t)
+        raise ContractionAppliesOnlyToFermions(*t)
 
 
 def _sort_anticommuting_fermions(str):
