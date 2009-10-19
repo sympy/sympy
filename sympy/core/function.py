@@ -488,10 +488,10 @@ class WildFunction(Function, Atom):
         return obj
 
     def matches(self, expr, repl_dict={}, evaluate=False):
-        for p,v in repl_dict.items():
-            if p == self:
-                if v == expr:
-                    return repl_dict
+        if self in repl_dict:
+            if repl_dict[self] == expr:
+                return repl_dict
+            else:
                 return None
         if self.nargs is not None:
             if not hasattr(expr,'nargs') or self.nargs != expr.nargs:
@@ -633,13 +633,10 @@ class Derivative(Basic):
     def matches(self, expr, repl_dict={}, evaluate=False):
         # this method needs a cleanup.
 
-        #print "?   :",self, expr, repl_dict, evaluate
-        #if repl_dict:
-        #    return repl_dict
-        for p,v in repl_dict.items():
-            if p == self:
-                if v == expr:
-                    return repl_dict
+        if self in repl_dict:
+            if repl_dict[self] == expr:
+                return repl_dict
+            else:
                 return None
         if isinstance(expr, Derivative):
             if len(expr.symbols) == len(self.symbols):

@@ -158,10 +158,10 @@ class Wild(Symbol):
 
     # TODO add check against another Wild
     def matches(self, expr, repl_dict={}, evaluate=False):
-        for p,v in repl_dict.items():
-            if p == self:
-                if v == expr:
-                    return repl_dict
+        if self in repl_dict:
+            if repl_dict[self] == expr:
+                return repl_dict
+            else:
                 return None
         if self.exclude:
             for x in self.exclude:

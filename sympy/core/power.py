@@ -529,11 +529,7 @@ class Pow(Basic):
 
     def matches(self, expr, repl_dict={}, evaluate=False):
         if evaluate:
-            pat = self
-            for old, new in repl_dict.items():
-                pat = pat.subs(old, new)
-            if pat != self:
-                return pat.matches(expr, repl_dict)
+            return self.subs(repl_dict).matches(expr, repl_dict)
 
         expr = _sympify(expr)
         b, e = expr.as_base_exp()
@@ -541,16 +537,16 @@ class Pow(Basic):
         # special case, pattern = 1 and expr.exp can match to 0
         if expr is S.One:
             d = repl_dict.copy()
-            d = self.exp.matches(S.Zero, d, evaluate=False)
+            d = self.exp.matches(S.Zero, d)
             if d is not None:
                 return d
 
         d = repl_dict.copy()
-        d = self.base.matches(b, d, evaluate=False)
+        d = self.base.matches(b, d)
         if d is None:
             return None
 
-        d = self.exp.matches(e, d, evaluate=True)
+        d = self.exp.subs(d).matches(e, d)
         if d is None:
             return Basic.matches(self, expr, repl_dict, evaluate)
         return d
