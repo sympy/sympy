@@ -315,6 +315,7 @@ def re(ctx, x):
         mpf('3.0')
         >>> re(-1+4j)
         mpf('-1.0')
+
     """
     return ctx.convert(x).real
 

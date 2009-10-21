@@ -73,6 +73,7 @@ def ccode(expr):
 
         >>> ccode((2*tau)**Rational(7,2))
         '8*pow(2,(1.0/2.0))*pow(tau,(7.0/2.0))'
+
     """
     return CCodePrinter().doprint(expr)
 

@@ -151,6 +151,7 @@ def postorder_traversal(node):
     >>> x,y,z = symbols('xyz')
     >>> set(postorder_traversal((x+y)*z)) == set([z, y, x, x + y, z*(x + y)])
     True
+
     """
     for arg in node.args:
         for subtree in postorder_traversal(arg):
@@ -181,6 +182,7 @@ def preorder_traversal(node):
     >>> x,y,z = symbols('xyz')
     >>> set(preorder_traversal((x+y)*z)) == set([z, x + y, z*(x + y), x, y])
     True
+
     """
     yield node
     for arg in node.args:
@@ -218,6 +220,7 @@ def cartes(seq0, seq1, modus='pair'):
 
     >>> cartes([1,2], [3,4])
     [[1, 3], [1, 4], [2, 3], [2, 4]]
+
     """
     if  modus == 'pair':
         return [[item0, item1] for item0 in seq0 for item1 in seq1]
@@ -237,6 +240,7 @@ def variations(seq, n, repetition=False):
     [[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]
     >>> variations([1,2,3], 2, repetition=True)
     [[1, 1], [1, 2], [1, 3], [2, 1], [2, 2], [2, 3], [3, 1], [3, 2], [3, 3]]
+
     """
     def setrep(seq):  # remove sets with duplicates (repetition is relevant)
         def delrep(seq):  # remove duplicates while maintaining order

@@ -60,6 +60,7 @@ to radians::
     0.5
     >>> print asin(0.5) / degree
     30.0
+
 """
 
 e = r"""
@@ -110,6 +111,7 @@ Formulas for the golden ratio include the following::
     1.6180339887498948482045868343656381177203091798058
     >>> print limit(lambda n: fib(n+1)/fib(n), inf)
     1.6180339887498948482045868343656381177203091798058
+
 """
 
 euler = r"""
@@ -216,6 +218,7 @@ As well as series representations::
     0.91596559417721901505460351493238411077414937428167
     >>> print 1-nsum(lambda n: n*zeta(2*n+1)/16**n, [1,inf])
     0.91596559417721901505460351493238411077414937428167
+
 """
 
 khinchin = r"""
@@ -241,6 +244,7 @@ implementation of the following series::
     ...     for k in range(1,2*n))
     >>> print exp(nsum(f, [1,inf])/log(2))
     2.6854520010653064453097148354817956938203822939945
+
 """
 
 glaisher = r"""
@@ -319,6 +323,7 @@ This shows digits 9991-10000 of Apery's constant::
     >>> mp.dps = 10000
     >>> str(apery)[-10:]
     '3189504235'
+
 """
 
 mertens = r"""
@@ -440,6 +445,7 @@ does not give a real cube root for negative real numbers::
 
     >>> print cbrt(-1)
     (0.5 + 0.866025403784439j)
+
 """
 
 exp = r"""
@@ -529,6 +535,7 @@ the defining differential equation::
     23.1406926327793
     >>> print odefun(lambda t, x: x, 0, 1)(pi)
     23.1406926327793
+
 """
 
 cosh = r"""
@@ -559,6 +566,7 @@ in the imaginary direction, or `\cosh x = \cos ix`::
     (-3.724545504915322565473971 + 0.5118225699873846088344638j)
     >>> print cos(3-2j)
     (-3.724545504915322565473971 + 0.5118225699873846088344638j)
+
 """
 
 sinh = r"""
@@ -588,6 +596,7 @@ the argument; more precisely, `\sinh x = -i \sin ix`::
     (-3.590564589985779952012565 + 0.5309210862485198052670401j)
     >>> print j*sin(3-2j)
     (-3.590564589985779952012565 + 0.5309210862485198052670401j)
+
 """
 
 tanh = r"""
@@ -618,6 +627,7 @@ the argument; more precisely, `\tanh x = -i \tan ix`::
     (0.9653858790221331242784803 - 0.009884375038322493720314034j)
     >>> print j*tan(3-2j)
     (0.9653858790221331242784803 - 0.009884375038322493720314034j)
+
 """
 
 cos = r"""
@@ -639,6 +649,7 @@ Computes the cosine of `x`, `\cos(x)`.
     [0.540302305868139717400936602301, 1.0]
     >>> print cos(mpi(0,2))
     [-0.41614683654714238699756823214, 1.0]
+
 """
 
 sin = r"""
@@ -660,6 +671,7 @@ Computes the sine of `x`, `\sin(x)`.
     [0.0, 0.841470984807896506652502331201]
     >>> print sin(mpi(0,2))
     [0.0, 1.0]
+
 """
 
 tan = r"""
@@ -684,6 +696,7 @@ cannot be represented exactly using floating-point arithmetic.
     [0.0, 1.55740772465490223050697482944]
     >>> print tan(mpi(0,2))  # Interval includes a singularity
     [-inf, +inf]
+
 """
 
 sec = r"""
@@ -708,6 +721,7 @@ cannot be represented exactly using floating-point arithmetic.
     [1.0, 1.85081571768092561791175324143]
     >>> print sec(mpi(0,2))  # Interval includes a singularity
     [-inf, +inf]
+
 """
 
 csc = r"""
@@ -731,6 +745,7 @@ arithmetic.
     [1.18839510577812121626159945235, +inf]
     >>> print csc(mpi(0,2))
     [1.0, +inf]
+
 """
 
 cot = r"""
@@ -755,6 +770,7 @@ arithmetic.
     [0.642092615934330703006419986575, +inf]
     >>> print cot(mpi(1,2))
     [-inf, +inf]
+
 """
 
 acos = r"""
@@ -918,6 +934,7 @@ Computes `\sin(\pi x)`, more accurately than the expression
     0.0 -2.23936276195592e-6
     >>> print sinpi(10**10+0.5), sin(pi*(10**10+0.5))
     1.0 0.999999999998721
+
 """
 
 cospi = r"""
@@ -930,6 +947,7 @@ Computes `\cos(\pi x)`, more accurately than the expression
     1.0 0.999999999997493
     >>> print cospi(10**10+0.5), cos(pi*(10**10+0.5))
     0.0 1.59960492420134e-6
+
 """
 
 sinc = r"""
@@ -961,6 +979,7 @@ The integral of the sinc function is the sine integral Si::
     0.946083070367183
     >>> print si(1)
     0.946083070367183
+
 """
 
 sincpi = r"""
@@ -989,6 +1008,7 @@ at its roots::
 
     >>> print sincpi(10)
     0.0
+
 """
 
 floor = r"""
@@ -1106,6 +1126,7 @@ The Taylor series expansion of the natural logarithm around
     >>> mp.dps = 25
     >>> print log(3+4j)
     (1.609437912434100374600759 + 0.9272952180016122324285125j)
+
 """
 
 power = r"""
@@ -1123,6 +1144,7 @@ displaying the result in Python would be very slow)::
 
     >>> print power(2, 43112609)-1
     3.16470269330255923143453723949e+12978188
+
 """
 
 modf = r"""
@@ -1148,6 +1170,7 @@ Converts the degree angle `x` to radians::
     >>> mp.dps = 15
     >>> print radians(60)
     1.0471975511966
+
 """
 
 degrees = r"""
@@ -1157,6 +1180,7 @@ Converts the radian angle `x` to a degree angle::
     >>> mp.dps = 15
     >>> print degrees(pi/3)
     60.0
+
 """
 
 atan2 = r"""
@@ -2104,6 +2128,7 @@ Evaluation is supported for arbitrary arguments::
 
     >>> print rf(2+3j, 5.5)
     (-7202.03920483347 - 3777.58810701527j)
+
 """
 
 ff = r"""
@@ -2134,6 +2159,7 @@ Evaluation is supported for arbitrary arguments::
 
     >>> print ff(2+3j, 5.5)
     (-720.41085888203 + 316.101124983878j)
+
 """
 
 fac2 = r"""
@@ -2353,6 +2379,7 @@ arguments::
     0.00377935240984891 0.00377935240984891
     >>> print gammainc(0.5, 0, 2), sqrt(pi)*erf(sqrt(2))
     1.6918067329452 1.6918067329452
+
 """
 
 erf = r"""
@@ -2600,6 +2627,7 @@ function having identical mu and sigma::
     0.107981933026376
     >>> print npdf(0, 1, 0.5)
     0.107981933026376
+
 """
 
 ei = r"""
@@ -3000,6 +3028,7 @@ Comparing with the definition::
     0.4963129989673750360976123
     >>> print quad(lambda t: sin(pi*t**2/2), [0,3])
     0.4963129989673750360976123
+
 """
 
 fresnelc = r"""
@@ -3035,6 +3064,7 @@ Comparing with the definition::
     0.6057207892976856295561611
     >>> print quad(lambda t: cos(pi*t**2/2), [0,3])
     0.6057207892976856295561611
+
 """
 
 airyai = r"""
@@ -3172,6 +3202,7 @@ For `x < 0`, we have::
     >>> p = 2*(x**1.5)/3
     >>> print sqrt(x/3)*(besselj(-1/3.,p) - besselj(1/3.,p))
     -0.198289626374926
+
 """
 
 ellipk = r"""
@@ -3230,6 +3261,7 @@ A definite integral::
 
     >>> print quad(ellipk, [0, 1])
     2.0
+
 """
 
 ellipe = r"""
@@ -3694,6 +3726,7 @@ function `w(x) = \sqrt{1-x^2}`::
     >>> m, n = 4, 4
     >>> print quad(f, [-1, 1])
     1.5707963267949
+
 """
 
 besselj = r"""
@@ -3801,6 +3834,7 @@ Some values of `Y_n(x)`::
     0.3588729167767189594679827
     >>> print bessely(0.5, 3+4j)
     (9.242861436961450520325216 - 3.085042824915332562522402j)
+
 """
 
 besseli = r"""
@@ -3863,6 +3897,7 @@ Some values and limits of `K_n(x)`::
     0.4210244382407083333356274
     >>> print besselk(3.5, 2+3j)
     (-0.02090732889633760668464128 + 0.2464022641351420167819697j)
+
 """
 
 hankel1 = r"""
@@ -3883,6 +3918,7 @@ The Hankel function is generally complex-valued::
     (0.4854339326315091097054957 - 0.0999007139290278787734903j)
     >>> print hankel1(3.5, pi)
     (0.2340002029630507922628888 - 0.6419643823412927142424049j)
+
 """
 
 hankel2 = r"""
@@ -3903,6 +3939,7 @@ The Hankel function is generally complex-valued::
     (0.4854339326315091097054957 + 0.0999007139290278787734903j)
     >>> print hankel2(3.5, pi)
     (0.2340002029630507922628888 + 0.6419643823412927142424049j)
+
 """
 
 lambertw = r"""
@@ -4375,6 +4412,7 @@ for `\theta(t)`, to first order given by::
     5488816.353078403444882823
     >>> print -t*log(2*pi/t)/2-t/2
     5488816.745777464310273645
+
 """
 
 grampoint = r"""
@@ -4692,6 +4730,7 @@ essentially amounts to a small perturbation of the value returned by
     [4.3619719871407024816e+97, 4.3619719871407032404e+97]
     >>> print riemannr(10**100)
     4.3619719871407e+97
+
 """
 
 primezeta = r"""

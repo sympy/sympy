@@ -59,6 +59,7 @@ def ask(expr, key, assumptions=True):
         #>>> ask(x, positive=True, Assume(x>0))
         It is however a work in progress and should be available before
         the official release
+
     """
     expr = sympify(expr)
     assumptions = And(assumptions, And(*global_assumptions))
@@ -124,6 +125,7 @@ def register_handler(key, handler):
         >>> register_handler('mersenne', MersenneHandler)
         >>> ask(7, 'mersenne')
         True
+
     """
     if key in handlers_dict:
         handlers_dict[key].append(handler)

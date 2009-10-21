@@ -153,6 +153,7 @@ def multiproduct(seq=(), start=1):
 
         >>> multiproduct({3:7, 2:5}, 4)
         279936
+
     """
     if not seq:
         return start

@@ -232,6 +232,7 @@ class abs(Function):
         abs(x)
         >>> abs(x**2)
         x**2
+
     """
 
     nargs = 1

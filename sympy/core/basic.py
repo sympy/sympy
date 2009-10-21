@@ -1533,6 +1533,7 @@ class Basic(AssumeMeths):
         POW + 2 * ADD
         >>> (sin(x)*x+sin(x)**2).count_ops()
         ADD + MUL + POW + 2 * SIN
+
         """
         return Integer(len(self)-1) + sum([t.count_ops(symbolic=symbolic) for t in self])
 
@@ -1692,6 +1693,7 @@ class Basic(AssumeMeths):
         >>> (z*(x+y)**2).coeff(z, expand=False)
         (x + y)**2
         >>>
+
         """
         from sympy import collect
         x = sympify(x)

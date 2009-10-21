@@ -37,6 +37,7 @@ class Pauli(Symbol):
     1
     >>> Pauli(1)*Pauli(2)*Pauli(3)
     I
+
     """
 
     __slots__ = ["i"]

@@ -16,6 +16,7 @@ class Symbol(Atom):
        True
        >>> bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative
        True
+
     """
 
     is_comparable = False
@@ -86,6 +87,7 @@ class Dummy(Symbol):
        >>> x2 = Symbol('x', dummy=True)
        >>> bool(x1 == x2)
        False
+
     """
 
     dummycount = 0
@@ -204,6 +206,7 @@ def symbols(*names, **kwargs):
     >>> xx, yy, zz = symbols('xx', 'yy', 'zz', real=True)
     >>> xx.is_real and yy.is_real and zz.is_real
     True
+
     """
     # use new behavior if space or comma in string
     if not 'each_char' in kwargs and len(names) == 1 and \
@@ -261,6 +264,7 @@ def var(*names, **kwargs):
     (x, y)
     >>> x.is_real and y.is_real
     True
+
     """
     import inspect
     frame = inspect.currentframe().f_back

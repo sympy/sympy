@@ -419,6 +419,7 @@ def poly_root_factors(f, *symbols, **flags):
 
        >>> set(f.as_basic() for f in factors)
        set([x + y**(1/2), x - y**(1/2)])
+
     """
     if not isinstance(f, Poly):
         f = Poly(f, *symbols)

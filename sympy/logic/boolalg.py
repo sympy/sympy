@@ -19,6 +19,7 @@ class And(BooleanFunction):
         >>> x, y = symbols('xy')
         >>> x & y
         And(x, y)
+
     """
     @classmethod
     def eval(cls, *args):
@@ -140,6 +141,7 @@ def fuzzy_not(arg):
     >>> fuzzy_not(None)
     >>> fuzzy_not(False)
     True
+
     """
     if arg is None: return
     return not arg
@@ -152,6 +154,7 @@ def conjuncts(expr):
     [A, B]
     >>> conjuncts(A | B)
     [Or(A, B)]
+
     """
     if expr:
         if type(expr) is And:
@@ -167,6 +170,7 @@ def disjuncts(expr):
     [A, B]
     >>> disjuncts(A & B)
     [And(A, B)]
+
     """
     if isinstance(expr, Or):
         return list(expr.args)
@@ -202,6 +206,7 @@ def to_cnf(expr):
         >>> A, B, C = symbols('A B C')
         >>> to_cnf(~(A | B) | C)
         And(Or(C, Not(A)), Or(C, Not(B)))
+
     """
     expr = sympify(expr)
     expr = eliminate_implications(expr)
@@ -243,6 +248,7 @@ def to_int_repr(clauses, symbols):
         >>> x, y = symbols('x y')
         >>> to_int_repr([x | y, y], [x, y])
         [[1, 2], [2]]
+
     """
     def append_symbol(arg, symbols):
         if type(arg) is Not: return -(symbols.index(arg.args[0])+1)

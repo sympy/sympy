@@ -499,6 +499,7 @@ class Rational(Number):
         3
         >>> r.q
         4
+
     """
     is_real = True
     is_integer = False

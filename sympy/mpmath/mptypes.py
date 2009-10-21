@@ -284,6 +284,7 @@ class MultiPrecisionArithmetic(Context):
             '[3.14159, 3.05494e-151]'
             >>> nprint([+pi, ldexp(1,-500)])
             [3.14159, 3.05494e-151]
+
         """
         if isinstance(x, list):
             return "[%s]" % (", ".join(nstr(c, n) for c in x))
@@ -369,6 +370,7 @@ class MultiPrecisionArithmetic(Context):
             >>> from mpmath import *
             >>> isnan(nan), isnan(3)
             (True, False)
+
         """
         if not hasattr(x, '_mpf_'):
             return False
@@ -381,6 +383,7 @@ class MultiPrecisionArithmetic(Context):
             >>> from mpmath import *
             >>> isinf(inf), isinf(-inf), isinf(3)
             (True, True, False)
+
         """
         if not hasattr(x, '_mpf_'):
             return False
@@ -395,6 +398,7 @@ class MultiPrecisionArithmetic(Context):
             >>> from mpmath import *
             >>> isint(3), isint(mpf(3)), isint(3.2)
             (True, True, False)
+
         """
         if isinstance(x, int_types):
             return True
@@ -674,6 +678,7 @@ class MultiPrecisionArithmetic(Context):
             0.01
             0.0100000000000000002081668171172
             >>> mp.dps = 15
+
         """
         return ctx.constant(lambda prec, rnd: from_rational(p, q, prec, rnd),
             '%s/%s' % (p, q))

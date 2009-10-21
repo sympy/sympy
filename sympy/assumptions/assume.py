@@ -21,7 +21,9 @@ class AssumptionsContext(set):
         >>> global_assumptions
         AssumptionsContext()
         >>> global_assumptions.clear()
+
     """
+
     def add(self, *assumptions):
         """Add an assumption."""
         for a in assumptions:
@@ -41,6 +43,7 @@ class Assume(Basic):
     Assume(x, 'integer', False)
     >>> Assume( x > 1 )
     Assume(1 < x, 'relational', True)
+
     """
     def __init__(self, expr, key='relational', value=True):
         self._args = (expr, key, value)
@@ -58,6 +61,7 @@ class Assume(Basic):
             >>> a = Assume(x+1, Q.integer)
             >>> a.expr
             1 + x
+
         """
         return self._args[0]
 
@@ -73,6 +77,7 @@ class Assume(Basic):
             >>> a = Assume(x, Q.integer)
             >>> a.key
             'integer'
+
         """
         return self._args[1]
 
@@ -93,6 +98,7 @@ class Assume(Basic):
             >>> b = Assume(x, Q.integer, False)
             >>> b.value
             False
+
         """
         return self._args[2]
 
@@ -116,6 +122,7 @@ def eliminate_assume(expr, symbol=None):
         positive
         >>> eliminate_assume(Assume(x, Q.positive, False))
         Not(positive)
+
     """
     if type(expr) == Assume:
         if symbol is not None:

@@ -530,6 +530,7 @@ def classify_ode(eq, func, dict=False):
     if len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only work with functions " + \
             "of one variable")
+
     x = func.args[0]
     f = func.func
     y = Symbol('y', dummy=True)

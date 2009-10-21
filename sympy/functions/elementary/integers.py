@@ -97,6 +97,7 @@ class floor(RoundFunction):
         -1
         >>> floor(-I/2)
         -I
+
     """
     _dir = -1
 
@@ -145,6 +146,7 @@ class ceiling(RoundFunction):
         0
         >>> ceiling(I/2)
         I
+
     """
     _dir = 1
 

@@ -20,6 +20,7 @@ def assumed(e, name):
     True
     >>> assumed(x+y, 'is_Mul')
     False
+
     """
     return getattr(e, name, False)
 

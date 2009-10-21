@@ -88,6 +88,7 @@ class stringPict(object):
              1
         10 + -
              2
+
         """
         return stringPict.next(self, *args)
 
@@ -144,6 +145,7 @@ class stringPict(object):
          x+3
          ---
           3
+
          """
          s, baseline = stringPict.stack(self, *args)
          return s, self.baseline

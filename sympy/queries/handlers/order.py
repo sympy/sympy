@@ -19,6 +19,7 @@ class AskNegativeHandler(CommonHandler):
     False
     >>> ask(pi**2, Q.negative) # this calls AskNegativeHandler.Pow
     False
+
     """
 
     @staticmethod

@@ -116,6 +116,7 @@ class chebyshevu(PolynomialSequence):
         2*x
         >>> chebyshevu(2, x)
         -1 + 4*x**2
+
     """
     @staticmethod
     @recurrence_memo([S.One, 2*_x])
@@ -136,6 +137,7 @@ class chebyshevt_root(Function):
     -3**(1/2)/2
     >>> chebyshevt(3, chebyshevt_root(3, 2))
     0
+
     """
     nargs = 2
 
@@ -163,6 +165,7 @@ class chebyshevu_root(Function):
         -2**(1/2)/2
         >>> chebyshevu(3, chebyshevu_root(3, 2))
         0
+
     """
     nargs = 2
 

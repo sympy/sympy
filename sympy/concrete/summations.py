@@ -184,6 +184,7 @@ def telescopic_direct(L, R, n, (i, a, b)):
     >>> k,a,b = symbols('kab')
     >>> telescopic_direct(1/k, -1/(k+2), 2, (k, a, b))
     1/a + 1/(1 + a) - 1/(1 + b) - 1/(2 + b)
+
     '''
     s = 0
     for m in xrange(n):

@@ -34,6 +34,7 @@ def get_mod_func(callback):
     and the name of the class. For example:
         >>> get_mod_func('sympy.core.basic.Basic')
         ('sympy.core.basic', 'Basic')
+
     """
     try:
         dot = callback.rindex('.')

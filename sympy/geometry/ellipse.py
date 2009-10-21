@@ -287,6 +287,7 @@ class Circle(Ellipse):
         >>> c2 = Circle(Point(0, 0), Point(1, 1), Point(1, 0))
         >>> c2.hradius, c2.vradius, c2.radius, c2.center
         (2**(1/2)/2, 2**(1/2)/2, 2**(1/2)/2, Point(1/2, 1/2))
+
     """
     def __new__(cls, *args, **kwargs):
         c, r = None, None

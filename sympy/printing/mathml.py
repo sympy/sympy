@@ -355,6 +355,7 @@ def print_mathml(expr):
                 x
         </ci>
     </apply>
+
     """
     s = MathMLPrinter()
     print s._print(sympify(expr)).toprettyxml(encoding="utf-8")

@@ -324,6 +324,7 @@ class Add(AssocOp):
         ((1, O(1, x)),)
         >>> (x+x**2).extract_leading_order(x)
         ((x, O(x)),)
+
         """
         lst = []
         seq = [(f, C.Order(f, *symbols)) for f in self.args]

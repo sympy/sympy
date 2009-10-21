@@ -268,6 +268,7 @@ def clambdify(args, expr, **kwargs):
     >>> cf = clambdify((x,y), sqrt(x*y))
     >>> cf(0.5, 4)
     1.4142135623730951
+
     """
     # convert function to lambda string
     s = getlambdastr(args, expr.evalf(21))
@@ -303,6 +304,7 @@ def frange(*args, **kwargs):
     1.0
     1.41421356237
     1.73205080757
+
     """
     if len(args) > 4:
         raise TypeError('expected at most 4 arguments, got %i' % len(args))

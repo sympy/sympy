@@ -64,6 +64,7 @@ def guess_solve_strategy(expr, symbol):
     0
     >>> guess_solve_strategy(x**Rational(1,2) + 1, x)
     2
+
     """
     eq_type = -1
     if expr.is_Add:

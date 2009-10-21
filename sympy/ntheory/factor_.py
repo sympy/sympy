@@ -40,6 +40,7 @@ def multiplicity(p, n):
     =============
         >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
         [0, 1, 2, 3, 3]
+
     """
 
     if p == 2:
@@ -443,6 +444,7 @@ def divisors(n):
 
     >>> divisors(24)
     [1, 2, 3, 4, 6, 8, 12, 24]
+
     """
     n = abs(n)
     if isprime(n):

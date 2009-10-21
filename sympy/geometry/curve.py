@@ -17,6 +17,7 @@ class Curve(GeometryEntity):
         (t, 0, 2)
         >>> C.parameter
         t
+
     """
 
     def __new__(cls, function, limits):

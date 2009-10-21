@@ -19,6 +19,7 @@ def refine(expr, assumptions=True):
         abs(x)
         >>> refine(sqrt(x**2), Assume(x, Q.positive))
         x
+
     """
     if not expr.is_Atom:
         args = [refine(arg, assumptions) for arg in expr.args]

@@ -23,6 +23,7 @@ def name_not(k):
 
        >>> name_not('!zero')
        'zero'
+
     """
     if k[:1] != '!':
         return '!'+k

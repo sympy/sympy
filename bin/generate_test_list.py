@@ -42,6 +42,7 @@ def get_paths(level=15):
     ['sympy/test_*.py', 'sympy/*/test_*.py', 'sympy/*/*/test_*.py',
     'sympy/*/*/*/test_*.py', 'sympy/*/*/*/*/test_*.py',
     'sympy/*/*/*/*/*/test_*.py', 'sympy/*/*/*/*/*/*/test_*.py']
+
     """
     wildcards = ["/"]
     for i in range(level):

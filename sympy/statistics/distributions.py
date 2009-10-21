@@ -114,6 +114,7 @@ class Normal(ContinuousProbability):
             (-1.95996398454005, 1.95996398454005)
             >>> N.probability(*_).evalf()
             0.950000000000000
+
         """
 
         if p == 1:
@@ -191,6 +192,7 @@ class Uniform(ContinuousProbability):
         (1, 2)
         >>> U.confidence(Rational(1,2))
         (5/4, 7/4)
+
         """
         p = sympify(p)
         assert p <= 1
@@ -231,6 +233,7 @@ class PDF(ContinuousProbability):
         a
         >>> exponential.variance
         a**2
+
     """
 
     def __init__(self, pdf, var):
@@ -261,6 +264,7 @@ class PDF(ContinuousProbability):
             >>> exponential = PDF(exp(-x/a), (x,0,oo))
             >>> exponential.normalize().pdf(x)
             exp(-x/a)/a
+
         """
 
         norm = self.probability(*self.domain)

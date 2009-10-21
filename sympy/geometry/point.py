@@ -158,6 +158,7 @@ class Point(GeometryEntity):
             >>> p1,p2 = Point(1, 1), Point(4, 5)
             >>> Point.distance(p1, p2)
             5
+
         """
         return sqrt( sum([(a-b)**2 for a,b in zip(p1,p2)]) )
 
@@ -171,6 +172,7 @@ class Point(GeometryEntity):
             >>> p1,p2 = Point(1, 1), Point(13, 5)
             >>> Point.midpoint(p1, p2)
             Point(7, 3)
+
         """
         return Point( [simplify((a + b)*S.Half) for a,b in zip(p1,p2)] )
 
@@ -184,6 +186,7 @@ class Point(GeometryEntity):
             >>> from sympy import *
             >>> Point(Rational(1,2), Rational(3,2)).evalf()
             Point(0.5, 1.5)
+
         """
         return Point([x.evalf() for x in self])
 

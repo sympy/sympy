@@ -11,6 +11,7 @@ def literal_symbol(literal):
     A
     >>> literal_symbol(~A)
     A
+
     """
     if isinstance(literal, Not):
         return literal.args[0]
@@ -28,6 +29,7 @@ def satisfiable(expr, algorithm="dpll"):
     {A: True, B: False}
     >>> satisfiable(A & ~A)
     False
+
     """
     expr = to_cnf(expr)
     if algorithm == "dpll":
@@ -48,6 +50,7 @@ def pl_true(expr, model={}):
     >>> A, B = symbols('AB')
     >>> pl_true( A & B, {A: True, B : True})
     True
+
     """
 
     if isinstance(expr, bool):

@@ -22,6 +22,7 @@ def dpll_satisfiable(expr):
     {A: True, B: False}
     >>> dpll_satisfiable(A & ~A)
     False
+
     """
     symbols = list(expr.atoms(Symbol))
     symbols_int_repr = range(1, len(symbols) + 1)
@@ -43,6 +44,7 @@ def dpll(clauses, symbols, model):
     >>> A, B, C = symbols('A B C')
     >>> dpll([A, B, C], [A, B], {C: False})
     False
+
     """
     # compute DP kernel
     P, value = find_unit_clause(clauses, model)
@@ -85,6 +87,7 @@ def dpll_int_repr(clauses, symbols, model):
 
     >>> dpll_int_repr([[1], [2], [3]], [1, 2], {3: False})
     False
+
     """
     # compute DP kernel
     P, value = find_unit_clause_int_repr(clauses, model)
@@ -131,6 +134,7 @@ def pl_true_int_repr(clause, model={}):
     >>> pl_true_int_repr([1, 2], {1: False})
     >>> pl_true_int_repr([1, 2], {1: False, 2: False})
     False
+
     """
     if len(clause) == 1:
         c = clause[0]
@@ -159,6 +163,7 @@ def unit_propagate(clauses, symbol):
     >>> A, B, C = symbols('A B C')
     >>> unit_propagate([A | B, C | ~B, B], B)
     [C, B]
+
     """
     output = []
     for c in clauses:
@@ -182,6 +187,7 @@ def unit_propagate_int_repr(clauses, symbol):
 
     >>> unit_propagate_int_repr([[1, 2], [3, -2], [2]], 2)
     [[3], [2]]
+
     """
     output = []
     for c in clauses:
@@ -205,6 +211,7 @@ def find_pure_symbol(symbols, unknown_clauses):
     >>> A, B, C = symbols('ABC')
     >>> find_pure_symbol([A, B, C], [A|~B,~B|~C,C|A])
     (A, True)
+
     """
     for sym in symbols:
         found_pos, found_neg = False, False
@@ -221,6 +228,7 @@ def find_pure_symbol_int_repr(symbols, unknown_clauses):
 
     >>> find_pure_symbol_int_repr([1,2,3], [[1, -2], [-2, -3], [3, 1]])
     (1, True)
+
     """
     for sym in symbols:
         found_pos, found_neg = False, False
@@ -238,6 +246,7 @@ def find_unit_clause(clauses, model):
     >>> A, B, C = symbols('ABC')
     >>> find_unit_clause([A | B | C, B | ~C, A | ~B], {A:True})
     (B, False)
+
     """
     for clause in clauses:
         num_not_in_model = 0
@@ -257,6 +266,7 @@ def find_unit_clause_int_repr(clauses, model):
 
     >>> find_unit_clause_int_repr([[1, 2, 3], [2, -3], [1, -2]], {1: True})
     (2, False)
+
     """
     for c in clauses:
         num_not_in_model = False

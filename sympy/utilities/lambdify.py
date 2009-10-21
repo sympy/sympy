@@ -204,6 +204,7 @@ def lambdastr(args, expr):
     'lambda x: (x**2)'
     >>> lambdastr((x,y,z), [z,y,x])
     'lambda x,y,z: ([z, y, x])'
+
     """
 
     #XXX: This has to be done here because of circular imports

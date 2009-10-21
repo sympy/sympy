@@ -65,6 +65,7 @@ class Polygon(GeometryEntity):
             pi/2
             >>> poly.angles[p2]
             acos(-4*17**(1/2)/17)
+
         """
         def tarea(a, b, c):
             return (b[0] - a[0])*(c[1] - a[1]) - (c[0] - a[0])*(b[1] - a[1])
@@ -218,6 +219,7 @@ class RegularPolygon(Polygon):
     ========
         >>> RegularPolygon(Point(0, 0), 5, 5)
         RegularPolygon(Point(0, 0), 5, 5)
+
     """
 
     def __new__(self, c, r, n, **kwargs):
@@ -357,6 +359,7 @@ class Triangle(Polygon):
             >>> t = Triangle(p1, p2, p3)
             >>> t.altitudes[p1]
             Segment(Point(0, 0), Point(1/2, 1/2))
+
         """
         s = self.sides
         v = self.vertices
@@ -400,6 +403,7 @@ class Triangle(Polygon):
             >>> from sympy import sqrt
             >>> t.bisectors[p2] == Segment(Point(0, sqrt(2)-1), Point(1, 0))
             True
+
         """
         s = self.sides
         v = self.vertices
@@ -442,6 +446,7 @@ class Triangle(Polygon):
             >>> t = Triangle(p1, p2, p3)
             >>> t.medians[p1]
             Segment(Point(0, 0), Point(1/2, 1/2))
+
         """
         s = self.sides
         v = self.vertices

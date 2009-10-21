@@ -18,6 +18,7 @@ def integer_nthroot(y, n):
     (4, True)
     >>> integer_nthroot(26,2)
     (5, False)
+
     """
     if y < 0: raise ValueError("y must be nonnegative")
     if n < 1: raise ValueError("n must be positive")
@@ -578,6 +579,7 @@ class Pow(Basic):
             2
             >>> getn(1+x)
             >>>
+
             """
             o = geto(e)
             if o is None:

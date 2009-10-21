@@ -33,6 +33,7 @@ def l2_norm(f, lim):
     2**(1/2)
     >>> l2_norm(x, (x, -1, 1))
     1/3*6**(1/2)
+
     """
     return sqrt(integrate(abs(f)**2, lim))
 
@@ -58,6 +59,7 @@ def l2_gram_schmidt(list, lim):
     Example:
     >>> l2_gram_schmidt([1, x, x**2], (x, -1, 1)]
     [1/2*2**(1/2), x*6**(1/2)/2, -3*10**(1/2)*(1/3 - x**2)/4]
+
     """
     r = []
     for a in list:

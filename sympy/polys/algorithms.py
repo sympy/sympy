@@ -1000,6 +1000,7 @@ def poly_discriminant(p, symbol):
     4
     >>> discriminant(Poly((x-1)**2*(x+1), x), x)
     0
+
     """
     if not isinstance(p, Poly):
         p = Poly(p, symbol)

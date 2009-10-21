@@ -971,6 +971,7 @@ def multiplicity(f, root, tol=eps, maxsteps=10, **kwargs):
     >>> from mpmath import *
     >>> multiplicity(lambda x: sin(x) - 1, pi/2)
     2
+
     """
     kwargs['d0f'] = f
     for i in xrange(maxsteps):
