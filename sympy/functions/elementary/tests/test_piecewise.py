@@ -1,5 +1,6 @@
 from sympy import diff, Integral, integrate, log, oo, Piecewise, \
-    piecewise_fold, raises, symbols
+    piecewise_fold, raises, symbols, pi, solve, Rational
+from sympy.utilities.pytest import XFAIL
 
 x,y = symbols('xy')
 
@@ -68,6 +69,61 @@ def test_piecewise():
     assert integrate(p, (x,-oo,oo)) == 2
     p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
     raises(ValueError, "integrate(p,(x,-2,2))")
+
+def test_piecewise_integrate():
+    # XXX Use '<=' here! '>=' is not yet implemented ..
+    f = Piecewise(((x - 2)**2, 0 <= x), (1, True))
+    assert integrate(f, (x, -2, 2)) == Rational(14, 3)
+
+    g = Piecewise(((x - 5)**5, 4 <= x), (f, True))
+    assert integrate(g, (x, -2, 2)) == Rational(14, 3)
+    assert integrate(g, (x, -2, 5)) == Rational(43, 6)
+
+    g = Piecewise(((x - 5)**5, 4 <= x), (f, x < 4))
+    assert integrate(g, (x, -2, 2)) == Rational(14, 3)
+    assert integrate(g, (x, -2, 5)) == Rational(43, 6)
+
+    g = Piecewise(((x - 5)**5, 2 <= x), (f, x < 2))
+    assert integrate(g, (x, -2, 2)) == Rational(14, 3)
+    assert integrate(g, (x, -2, 5)) == -Rational(701, 6)
+
+    g = Piecewise(((x - 5)**5, 2 <= x), (f, True))
+    assert integrate(g, (x, -2, 2)) == Rational(14, 3)
+    assert integrate(g, (x, -2, 5)) == -Rational(701, 6)
+
+    g = Piecewise(((x - 5)**5, 2 <= x), (2 * f, True))
+    assert integrate(g, (x, -2, 2)) == 2 * Rational(14, 3)
+    assert integrate(g, (x, -2, 5)) == -Rational(673, 6)
+
+def test_piecewise_solve():
+    abs2 = Piecewise((-x, x <= 0), (x, x > 0))
+    f = abs2.subs(x, x - 2)
+    assert solve(f, x) == [2]
+    assert solve(f - 1,x) == [1, 3]
+
+    f = Piecewise(((x - 2)**2, x >= 0), (1, True))
+    assert solve(f, x) == [2]
+
+    g = Piecewise(((x - 5)**5, x >= 4), (f, True))
+    assert solve(g, x) == [2, 5]
+
+    g = Piecewise(((x - 5)**5, x >= 4), (f, x < 4))
+    assert solve(g, x) == [2, 5]
+
+    g = Piecewise(((x - 5)**5, x >= 2), (f, x < 2))
+    assert solve(g, x) == [5]
+
+    g = Piecewise(((x - 5)**5, x >= 2), (f, True))
+    assert solve(g, x) == [5]
+
+    g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False))
+    assert solve(g, x) == [5]
+
+# See issue 1253 (enhance the solver to handle inequalities).
+@XFAIL
+def test_piecewise_solve2():
+    f = Piecewise(((x - 2)**2, x >= 0), (0, True))
+    assert solve(f, x) == [2, Interval(0, oo, True, True)]
 
 def test_piecewise_fold():
 
