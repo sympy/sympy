@@ -1,7 +1,7 @@
 from sympy import Basic, S, Symbol, Real, Integer, Rational,  \
     sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
     WildFunction, Poly, Function, Derivative, Number, pi, var, \
-    NumberSymbol, zoo
+    NumberSymbol, zoo, Piecewise
 
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -679,3 +679,18 @@ def test_count_ops():
     f = (x*y + 3/y)**(3 + 2)
     assert f.count_ops() == Symbol('ADD') + 2*Symbol('MUL') + 2*Symbol('POW')
     assert f.count_ops(symbolic=False) == 5
+
+def test_contains():
+    f = (x*y + 3/y)**(3 + 2)
+    g = Function('g')
+    h = Function('h')
+    p = Piecewise( (g, x<-1), (1, x<=1), (f, True))
+    assert x in p
+    assert y in p
+    assert not z in p
+    assert 1 in p
+    assert 3 in p
+    assert not 4 in p
+    assert f in p
+    assert g in p
+    assert not h in p
