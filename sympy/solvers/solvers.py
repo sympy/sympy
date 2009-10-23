@@ -27,6 +27,7 @@ from sympy.matrices import Matrix, zeros
 from sympy.polys import roots
 
 from sympy.utilities import any, all
+from sympy.utilities.iterables import iff
 from sympy.utilities.lambdify import lambdify
 from sympy.mpmath import findroot
 
@@ -137,7 +138,7 @@ def solve(f, *symbols, **flags):
 
     """
     def sympit(w):
-        return map(sympify, w if isinstance(w,(list, tuple, set)) else [w])
+        return map(sympify, iff(isinstance(w,(list, tuple, set)), w, [w]))
     # make f and symbols into lists of sympified quantities
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
