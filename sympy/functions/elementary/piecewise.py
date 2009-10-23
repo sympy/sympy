@@ -192,6 +192,9 @@ class Piecewise(Function):
             curr_low = int_b
             if curr_low > b:
                 break
+        if curr_low < b:
+            holes.append([curr_low, b, default])
+
         if holes and default != None:
             int_expr.extend(holes)
         elif holes and default == None:
