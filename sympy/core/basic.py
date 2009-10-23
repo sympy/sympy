@@ -1540,7 +1540,8 @@ class Basic(AssumeMeths):
     def doit(self, **hints):
         """Evaluate objects that are not evaluated by default like limits,
            integrals, sums and products. All objects of this kind will be
-           evaluated unless some species were excluded via 'hints'.
+           evaluated recursively, unless some species were excluded via 'hints'
+           or unless the 'deep' hint was set to 'False'.
 
            >>> from sympy import *
            >>> x, y = symbols('xy')
@@ -1551,9 +1552,15 @@ class Basic(AssumeMeths):
            >>> (2*Integral(x, x)).doit()
            x**2
 
+           >>> (2*Integral(x, x)).doit(deep = False)
+           2*Integral(x, x)
+
         """
-        terms = [ term.doit(**hints) for term in self.args ]
-        return self.new(*terms)
+        if hints.get('deep', True):
+            terms = [ term.doit(**hints) for term in self.args ]
+            return self.new(*terms)
+        else:
+            return self
 
     ###########################################################################
     ###################### EXPRESSION EXPANSION METHODS #######################

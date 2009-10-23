@@ -1,5 +1,5 @@
 from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, \
-        atan, Symbol, S, pi
+        atan, Symbol, S, pi, Integral
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
 
@@ -136,6 +136,13 @@ def test_exponential():
 def test_exponential2():
     n = Symbol('n')
     assert limit((1+x/(n+sin(n)))**n,n,oo) == exp(x)
+
+def test_doit():
+    f = Integral(2 * x, x)
+    l = Limit(f, x, oo)
+    assert l.doit() == oo
+    # limit() breaks on the contained Integral.
+    # assert l.doit(deep = False) == l
 
 def test_bug693a():
     assert sin(sin(x+1)+1).limit(x,0) == sin(sin(1)+1)

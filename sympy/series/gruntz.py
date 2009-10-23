@@ -445,8 +445,13 @@ class Limit2(Basic):
     def x0(self):
         return self._args[2]
 
-    def doit(self):
-        return limit(self.e,self.x,self.x0)
+    def doit(self, **hints):
+        if hints.get('deep', True):
+            e = self.e.doit(**hints)
+            z = self.z.doit(**hints)
+            z0 = self.z0.doit(**hints)
+
+        return limit(e, x, x0)
 
     def __mathml__(self):
         if self._mathml:

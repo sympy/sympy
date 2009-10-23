@@ -612,8 +612,11 @@ class Derivative(Basic):
             return Derivative(obj, *self.symbols)
         return Derivative(self.expr, *((s,)+self.symbols), **{'evaluate': False})
 
-    def doit(self):
-        return Derivative(self.expr, *self.symbols,**{'evaluate': True})
+    def doit(self, **hints):
+        expr = self.expr
+        if hints.get('deep', True):
+            expr = expr.doit(**hints)
+        return Derivative(expr, *self.symbols,**{'evaluate': True})
 
     @property
     def expr(self):

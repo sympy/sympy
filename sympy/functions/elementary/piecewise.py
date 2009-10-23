@@ -132,10 +132,11 @@ class Piecewise(Function):
     def doit(self, **hints):
         newargs = []
         for e, c in self.args:
-            if isinstance(e, Basic):
-                e = e.doit()
-            if isinstance(c, Basic):
-                c = c.doit()
+            if hints.get('deep', True):
+                if isinstance(e, Basic):
+                    e = e.doit(**hints)
+                if isinstance(c, Basic):
+                    c = c.doit(**hints)
             newargs.append((e, c))
         return Piecewise(*newargs)
 
@@ -235,7 +236,6 @@ class Piecewise(Function):
             return S.Zero
         return None
 
-
 def piecewise_fold(expr):
     """
     Takes an expression containing a piecewise function and returns the
@@ -264,3 +264,4 @@ def piecewise_fold(expr):
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))
     return Piecewise(*new_args)
+

@@ -136,6 +136,12 @@ class Limit(Basic):
         obj._args = (e, z, z0, dir)
         return obj
 
-    def doit(self):
+    def doit(self, **hints):
         e, z, z0, dir = self.args
+
+        if hints.get('deep', True):
+            e = e.doit(**hints)
+            z = z.doit(**hints)
+            z0 = z0.doit(**hints)
+
         return limit(e, z, z0, dir)

@@ -1,5 +1,5 @@
 from sympy import (Symbol, Sum, oo, Real, Rational, sum, pi, cos, zeta,
-Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma, Function)
+Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma, Function, Integral, Product, product)
 from sympy.concrete.summations import getab
 from sympy.concrete.sums_products import Sum2
 from sympy.utilities.pytest import XFAIL
@@ -177,3 +177,15 @@ def test_Sum2():
     x = Symbol('x')
     y = Symbol('y')
     assert Sum2(x**y, (x, 1, 3)) == 1 + 2**y + 3**y
+
+def test_Sum_doit():
+    assert Sum(n*Integral(a**2), (n, 0, 2)).doit() == a**3
+    assert Sum(n*Integral(a**2), (n, 0, 2)).doit(deep = False) == \
+        3*Integral(a**2)
+    assert sum(n*Integral(a**2), (n, 0, 2)) == 3*Integral(a**2)
+
+def test_Product_doit():
+    assert Product(n*Integral(a**2), (n, 1, 3)).doit() == 2 * a**9 / 9
+    assert Product(n*Integral(a**2), (n, 1, 3)).doit(deep = False) == \
+        6*Integral(a**2)**3
+    assert product(n*Integral(a**2), (n, 1, 3)) == 6*Integral(a**2)**3

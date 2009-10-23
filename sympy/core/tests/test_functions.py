@@ -1,6 +1,6 @@
 from sympy import Lambda, Symbol, Function, WildFunction, Derivative, sqrt, \
         log, exp, Rational, Real, sign, Basic, sin, cos, diff, I, re, im, \
-        oo, zoo, nan, E, expand, pi, raises, O
+        oo, zoo, nan, E, expand, pi, raises, O, Sum
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import x, y
 from sympy.core.function import PoleError
@@ -334,3 +334,10 @@ def test_function__eval_nseries():
     assert sin(x+1)._eval_nseries(x,0,2) == x*cos(1) + sin(1) + O(x**2)
     assert sin(pi*(1-x))._eval_nseries(x,0,2) == pi*x + O(x**2)
     raises(PoleError, 'sin(1/x)._eval_nseries(x,0,2)')
+
+def test_doit():
+    n = Symbol('n', integer = True)
+    f = Sum(2 * n * x, (n, 1, 3))
+    d = Derivative(f, x)
+    assert d.doit() == 12
+    assert d.doit(deep = False) == d

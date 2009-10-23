@@ -71,7 +71,11 @@ class Sum(Basic):
             f = eval_sum(f, (i, a, b))
             if f is None:
                 return self
-        return f
+
+        if hints.get('deep', True):
+            return f.doit(**hints)
+        else:
+            return f
 
     def _eval_summation(self, f, x):
         return
@@ -163,7 +167,7 @@ def sum(*args, **kwargs):
     summation = Sum(*args, **kwargs)
 
     if isinstance(summation, Sum):
-        return summation.doit()
+        return summation.doit(deep=False)
     else:
         return summation
 

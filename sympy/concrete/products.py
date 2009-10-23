@@ -64,21 +64,24 @@ class Product(Basic):
     def upper(self):
         return self._args[3]
 
-    def doit(self):
-        prod = self._eval_product()
+    def doit(self, **hints):
+        term = self.term
+        lower = self.lower
+        upper = self.upper
+        if hints.get('deep', True):
+            term = term.doit(**hints)
+            lower = lower.doit(**hints)
+            upper = upper.doit(**hints)
+
+        prod = self._eval_product(lower, upper, term)
 
         if prod is not None:
             return powsimp(prod)
         else:
             return self
 
-    def _eval_product(self, term=None):
+    def _eval_product(self, a, n, term):
         k = self.index
-        a = self.lower
-        n = self.upper
-
-        if term is None:
-            term = self.term
 
         if not term.has(k):
             return term**(n-a+1)
@@ -101,15 +104,15 @@ class Product(Basic):
         elif term.is_Add:
             p, q = term.as_numer_denom()
 
-            p = self._eval_product(p)
-            q = self._eval_product(q)
+            p = self._eval_product(a, n, p)
+            q = self._eval_product(a, n, q)
 
             return p / q
         elif term.is_Mul:
             exclude, include = [], []
 
             for t in term.args:
-                p = self._eval_product(t)
+                p = self._eval_product(a, n, t)
 
                 if p is not None:
                     exclude.append(p)
@@ -128,7 +131,7 @@ class Product(Basic):
                 if not isinstance(s, Sum):
                     return term.base**s
             elif not term.exp.has(k):
-                p = self._eval_product(term.base)
+                p = self._eval_product(a, n, term.base)
 
                 if p is not None:
                     return p**term.exp
@@ -137,6 +140,6 @@ def product(*args, **kwargs):
     prod = Product(*args, **kwargs)
 
     if isinstance(prod, Product):
-        return prod.doit()
+        return prod.doit(deep=False)
     else:
         return prod

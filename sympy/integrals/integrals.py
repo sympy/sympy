@@ -145,7 +145,11 @@ class Integral(Basic):
         if not hints.get('integrals', True):
             return self
 
-        function = self.function.doit()
+        deep = hints.get('deep', True)
+
+        function = self.function
+        if deep:
+            function = function.doit(**hints)
 
         for x,ab in self.limits:
             antideriv = self._eval_integral(function, x)
@@ -157,7 +161,12 @@ class Integral(Basic):
                 if ab is None:
                     function = antideriv
                 else:
-                    a,b = ab
+                    a, b = ab
+                    if deep:
+                        if isinstance(a, Basic):
+                            a = a.doit(**hints)
+                        if isinstance(b, Basic):
+                            b = b.doit(**hints)
                     function = antideriv._eval_interval(x, a, b)
 
         return function
@@ -500,7 +509,7 @@ def integrate(*args, **kwargs):
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
-        return integral.doit()
+        return integral.doit(deep = False)
     else:
         return integral
 
@@ -545,5 +554,5 @@ def line_integrate(field, curve, vars):
         Ft = Ft.subs(var, _f)
     Ft = Ft * dldt**(S(1)/2)
 
-    integral = Integral(Ft, curve.limits).doit()
+    integral = Integral(Ft, curve.limits).doit(deep = False)
     return integral
