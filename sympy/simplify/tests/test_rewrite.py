@@ -1,6 +1,6 @@
 from sympy import sin, cos, exp, cot, sqrt, S, I, E, pi, symbols, Function, Matrix, Eq, RootSum, Lambda
 from sympy.simplify import cancel, trim, apart, together
-from sympy.integrals import integrate
+from sympy.integrals import integrate, Integral
 from sympy.utilities.pytest import XFAIL
 
 x,y,z,n = symbols('xyzn')
@@ -64,6 +64,9 @@ def test_trim():
 
     assert trim(exp(x)*sin(x)/2 + cos(x)*exp(x)) == \
         exp(x)*(sin(x) + 2*cos(x))/2
+
+def test_trim_nonbasic():
+    assert trim(Integral(x**2, (x, -1, 1))) == Integral(x**2, (x, -1, 1))
 
 @XFAIL  # because of #666
 def test_trim_xfail():

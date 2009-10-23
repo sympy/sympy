@@ -148,7 +148,9 @@ def trim(f, *symbols, **flags):
 
             return g, result
 
-        if f.is_number or not f.has_any_symbols(*symbols):
+        if not isinstance(f, Basic) \
+           or f.is_number \
+           or not f.has_any_symbols(*symbols):
             return f
 
         f = together(f.expand())
@@ -291,4 +293,3 @@ def apart(f, z, **flags):
             partial += RootSum(Lambda(a, expr), D, **flags)
 
     return partial
-
