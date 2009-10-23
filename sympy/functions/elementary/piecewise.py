@@ -54,6 +54,7 @@ class Piecewise(Function):
       1
       >>> p.subs(x,5)
       log(5)
+
     """
 
     nargs = None
@@ -236,6 +237,8 @@ def piecewise_fold(expr):
     Takes an expression containing a piecewise function and returns the
     expression in piecewise form.
 
+    >>> from sympy import *
+    >>> x = Symbol('x')
     >>> p = Piecewise((x, x < 1), (1, 1 <= x))
     >>> piecewise_fold(x*p)
     Piecewise((x**2, x < 1), (x, 1 <= x))
