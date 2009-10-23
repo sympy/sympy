@@ -238,7 +238,7 @@ def piecewise_fold(expr):
     Piecewise((x**2, x < 1), (x, 1 <= x))
 
     """
-    if not expr.has_piecewise:
+    if not isinstance(expr, Basic) or not expr.has_piecewise:
         return expr
     new_args = map(piecewise_fold, expr.args)
     if type(expr) is ExprCondPair:
@@ -254,4 +254,3 @@ def piecewise_fold(expr):
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))
     return Piecewise(*new_args)
-
