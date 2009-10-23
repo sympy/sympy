@@ -137,3 +137,7 @@ def test_piecewise_fold():
 
     p = 4*p1 + 2*p2
     assert integrate(piecewise_fold(p),(x,-oo,oo)) == integrate(2*x + 2, (x, 0, 1))
+
+def test_piecewise_duplicate():
+    p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
+    assert p == Piecewise(*p.args)
