@@ -3,6 +3,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Symbol, Equality, Interval,
     sympify, symbols, Wild)
 from sympy.functions import factorial
 from sympy.solvers import solve
+from sympy.utilities import flatten
 
 class Sum(Basic):
     """Represents unevaluated summation."""
@@ -37,6 +38,7 @@ class Sum(Basic):
 
                         continue
                 elif isinstance(V, (tuple, list)):
+                    V = flatten(V)
                     if len(V) == 1:
                         if isinstance(V[0], Symbol):
                             limits.append(V[0])

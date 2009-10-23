@@ -166,6 +166,10 @@ def test_telescopic_sums():
     assert Sum(cos(k)-cos(k+3),(k,1,n)).doit() == -cos(1 + n) - cos(2 + n) - \
                                            cos(3 + n) + cos(1) + cos(2) + cos(3)
 
+def test_sum_reconstruct():
+    s = Sum(n**2, (n, -1, 1))
+    assert s == Sum(*s.args)
+
 def test_Sum_limit_subs():
     assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b,2)
 
