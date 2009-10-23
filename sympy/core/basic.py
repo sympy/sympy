@@ -1176,8 +1176,17 @@ class Basic(AssumeMeths):
     def __contains__(self, what):
         if self == what or self.is_Function and self.func == what: return True
         for x in self._args:
-            if what in x:
+            # x is not necessarily of type Basic and so 'x in x == True'
+            # may not hold.
+            if x == what:
                 return True
+
+            # Not all arguments implement __contains__.
+            try:
+                if what in x:
+                    return True
+            except TypeError:
+                continue
         return False
 
     @cacheit
