@@ -68,3 +68,7 @@ def test_piecewise():
     assert integrate(p, (x,-oo,oo)) == 2
     p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
     raises(ValueError, "integrate(p,(x,-2,2))")
+
+def test_piecewise_duplicate():
+    p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
+    assert p == Piecewise(*p.args)

@@ -10,9 +10,15 @@ from sympy.utilities.decorator import deprecated
 class ExprCondPair(Basic):
     """Represents an expression, condition pair."""
 
-    def __new__(cls, expr, cond, **assumptions):
-        expr = sympify(expr)
-        cond = sympify(cond)
+    def __new__(cls, *args, **assumptions):
+        if isinstance(args[0], cls):
+            expr = args[0].expr
+            cond = args[0].cond
+        elif len(args) == 2:
+            expr = sympify(args[0])
+            cond = sympify(args[1])
+        else:
+            raise TypeError("args must be a (expr, cond) pair")
         return Basic.__new__(cls, expr, cond, **assumptions)
 
     @property
@@ -59,24 +65,22 @@ class Piecewise(Function):
     nargs=None
 
     def __new__(cls, *args, **options):
-        # Check types first
+        # (Try to) sympify args first
+        newargs = []
         for ec in args:
-            if not isinstance(ec, tuple) or len(ec) != 2:
-                raise TypeError, "args may only include (expr, cond) pairs"
-            cond_type = type(ec[1])
+            pair = ExprCondPair(*ec)
+            cond_type = type(pair.cond)
             if not (cond_type is bool or issubclass(cond_type, Relational) or \
                     issubclass(cond_type, Number)):
                 raise TypeError, \
                     "Cond %s is of type %s, but must be a bool," \
-                    " Relational or Number" % (ec[1], cond_type)
+                    " Relational or Number" % (pair.cond, cond_type)
+            newargs.append(pair)
 
-        # sympify args
-        args = map(lambda x:ExprCondPair(*x), args)
-
-        r = cls.eval(*args)
+        r = cls.eval(*newargs)
 
         if r is None:
-            return Basic.__new__(cls, *args, **options)
+            return Basic.__new__(cls, *newargs, **options)
         else:
             return r
 
