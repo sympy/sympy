@@ -5,7 +5,7 @@ from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
 from sympy.integrals.risch import heurisch
-from sympy.utilities import threaded
+from sympy.utilities import threaded, flatten
 from sympy.utilities.iterables import make_list
 from sympy.simplify import apart
 from sympy.series import limit
@@ -40,6 +40,7 @@ class Integral(Basic):
                     limits.append((V,None))
                     continue
                 elif isinstance(V, (tuple, list)):
+                    V = flatten(V)
                     if len(V) == 3:
                         if isinstance(V[0], Symbol):
                             nlim = map(sympify, V[1:])
