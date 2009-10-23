@@ -41,18 +41,19 @@ class Integral(Basic):
                     continue
                 elif isinstance(V, (tuple, list)):
                     V = flatten(V)
+                    newsymbol = sympify(V[0])
                     if len(V) == 3:
-                        if isinstance(V[0], Symbol):
+                        if isinstance(newsymbol, Symbol):
                             nlim = map(sympify, V[1:])
                             if V[1] is None:
                                 nlim[0] = None
                             if V[2] is None:
                                 nlim[1] = None
-                            limits.append( (V[0], tuple(nlim) ))
+                            limits.append( (newsymbol, tuple(nlim) ))
                             continue
                     elif len(V) == 1 or (len(V) == 2 and V[1] is None):
-                        if isinstance(V[0], Symbol):
-                            limits.append((V[0],None))
+                        if isinstance(newsymbol, Symbol):
+                            limits.append((newsymbol,None))
                             continue
 
                 raise ValueError("Invalid integration variable or limits: %s" % str(symbols))
@@ -496,8 +497,7 @@ def integrate(*args, **kwargs):
        thoroughly the strategy that SymPy uses for integration.
 
     """
-    new_args = [sympify(arg) for arg in args]
-    integral = Integral(*new_args, **kwargs)
+    integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
         return integral.doit()
