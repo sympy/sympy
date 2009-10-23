@@ -338,7 +338,8 @@ class LatexPrinter(Printer):
             tex += r"\int"
 
             if limits is not None:
-                if not self._settings['inline']:
+                if not self._settings['inline'] \
+                   and not self._settings['itex']:
                     tex += r"\limits"
 
                 tex += "_{%s}^{%s}" % (self._print(limits[0]),

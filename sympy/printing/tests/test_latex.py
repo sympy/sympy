@@ -100,6 +100,10 @@ def test_latex_integrals():
     assert latex(Integral(x**2, (x,0,1))) == r"$\int_{0}^{1} x^{2}\,dx$"
     assert latex(Integral(x**2, (x,10,20))) == r"$\int_{10}^{20} x^{2}\,dx$"
     assert latex(Integral(y*x**2, (x,0,1), y)) == r"$\int\int_{0}^{1} y x^{2}\,dx dy$"
+    assert latex(Integral(y*x**2, (x,0,1), y), inline = False) \
+        == r"\begin{equation*}\int\int\limits_{0}^{1} y x^{2}\,dx dy\end{equation*}"
+    assert latex(Integral(y*x**2, (x,0,1), y), inline = False, itex = True) \
+        == r"$$\int\int_{0}^{1} y x^{2}\,dx dy$$"
 
 def test_latex_intervals():
     a = Symbol('a', real=True)
