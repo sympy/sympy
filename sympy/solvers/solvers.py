@@ -114,12 +114,12 @@ def guess_solve_strategy(expr, symbol):
 def solve(f, *symbols, **flags):
     """Solves equations and systems of equations.
 
-       Currently supported are univariate polynomial and transcendental
-       equations and systems of linear and polynomial equations.  Input
-       is formed as a single expression or an equation,  or an iterable
-       container in case of an equation system.  The type of output may
-       vary and depends heavily on the input. For more details refer to
-       more problem specific functions.
+       Currently supported are univariate polynomial, transcendental
+       equations, piecewise combinations thereof and systems of linear
+       and polynomial equations.  Input is formed as a single expression
+       or an equation,  or an iterable container in case of an equation
+       system.  The type of output may vary and depends heavily on the
+       input. For more details refer to more problem specific functions.
 
        By default all solutions are simplified to make the output more
        readable. If this is not the expected behavior (e.g., because of
