@@ -75,94 +75,96 @@ class sin(Function):
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
-        else:
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
-
-            if i_coeff is not None:
-                return S.ImaginaryUnit * C.sinh(i_coeff)
             else:
-                pi_coeff = arg.as_coefficient(S.Pi)
+                return None
 
-                if pi_coeff is not None:
-                    if pi_coeff.is_integer:
-                        return S.Zero
-                    elif pi_coeff.is_Rational:
-                        cst_table_some = {
-                            2 : S.One,
-                            3 : S.Half*sqrt(3),
-                            4 : S.Half*sqrt(2),
-                            6 : S.Half,
-                        }
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        if i_coeff is not None:
+            return S.ImaginaryUnit * C.sinh(i_coeff)
 
-                        cst_table_more = {
-                            (1, 5) : sqrt((5 - sqrt(5)) / 8),
-                            (2, 5) : sqrt((5 + sqrt(5)) / 8)
-                        }
+        pi_coeff = arg.as_coefficient(S.Pi)
+        if pi_coeff is not None:
+            if pi_coeff.is_integer:
+                return S.Zero
+            elif pi_coeff.is_Rational:
+                cst_table_some = {
+                    2 : S.One,
+                    3 : S.Half*sqrt(3),
+                    4 : S.Half*sqrt(2),
+                    6 : S.Half,
+                }
 
-                        p = pi_coeff.p
-                        q = pi_coeff.q
+                cst_table_more = {
+                    (1, 5) : sqrt((5 - sqrt(5)) / 8),
+                    (2, 5) : sqrt((5 + sqrt(5)) / 8)
+                }
 
-                        Q, P = p // q, p % q
+                p = pi_coeff.p
+                q = pi_coeff.q
 
-                        try:
-                            result = cst_table_some[q]
-                        except KeyError:
-                            if abs(P) > q // 2:
-                                P = q - P
+                Q, P = p // q, p % q
 
-                            try:
-                                result = cst_table_more[(P, q)]
-                            except KeyError:
-                                if P != p:
-                                    result = cls(C.Rational(P, q)*S.Pi)
-                                else:
-                                    return None
+                try:
+                    result = cst_table_some[q]
+                except KeyError:
+                    if abs(P) > q // 2:
+                        P = q - P
 
-                        if Q % 2 == 1:
-                            return -result
+                    try:
+                        result = cst_table_more[(P, q)]
+                    except KeyError:
+                        if P != p:
+                            result = cls(C.Rational(P, q)*S.Pi)
                         else:
-                            return result
+                            return None
 
-                if arg.is_Mul and arg.args[0].is_negative:
-                    return -cls(-arg)
-                if arg.is_Add:
-                    x, m = arg.as_independent(S.Pi)
-                    if m in [S.Pi/2, S.Pi]:
-                        return sin(m)*cos(x)+cos(m)*sin(x)
-                    # normalize sin(-x-y) to -sin(x+y)
-                    if arg.args[0].is_Mul:
-                        if arg.args[0].args[0].is_negative:
-                            # e.g. arg = -x - y
-                            if (-arg).args[0].is_Mul:
-                                if (-arg).args[0].args[0].is_negative:
-                                    # This is to prevent infinite recursion in
-                                    # the case sin(-x+y), for which
-                                    # -arg = -y + x. See also #838 for the
-                                    # root of the problem here.
-                                    return
-                            # convert sin(-x-y) to -sin(x+y)
-                            return -cls(-arg)
-                    if arg.args[0].is_negative:
-                        if (-arg).args[0].is_negative:
-                            # This is to avoid infinite recursion in the case
-                            # sin(-x-1)
+                if Q % 2 == 1:
+                    return -result
+                else:
+                    return result
+
+        if arg.is_Mul and arg.args[0].is_negative:
+            return -cls(-arg)
+
+        if arg.is_Add:
+            x, m = arg.as_independent(S.Pi)
+            if m in [S.Pi/2, S.Pi]:
+                return sin(m)*cos(x)+cos(m)*sin(x)
+
+            # normalize sin(-x-y) to -sin(x+y)
+            if arg.args[0].is_Mul:
+                if arg.args[0].args[0].is_negative:
+                    # e.g. arg = -x - y
+                    if (-arg).args[0].is_Mul:
+                        if (-arg).args[0].args[0].is_negative:
+                            # This is to prevent infinite recursion in
+                            # the case sin(-x+y), for which
+                            # -arg = -y + x. See also #838 for the
+                            # root of the problem here.
                             return
-                        return -cls(-arg)
+                    # convert sin(-x-y) to -sin(x+y)
+                    return -cls(-arg)
+            if arg.args[0].is_negative:
+                if (-arg).args[0].is_negative:
+                    # This is to avoid infinite recursion in the case
+                    # sin(-x-1)
+                    return
+                return -cls(-arg)
 
-            if isinstance(arg, asin):
-                return arg.args[0]
+        if isinstance(arg, asin):
+            return arg.args[0]
 
-            if isinstance(arg, atan):
-                x = arg.args[0]
-                return x / sqrt(1 + x**2)
+        if isinstance(arg, atan):
+            x = arg.args[0]
+            return x / sqrt(1 + x**2)
 
-            if isinstance(arg, acos):
-                x = arg.args[0]
-                return sqrt(1 - x**2)
+        if isinstance(arg, acos):
+            x = arg.args[0]
+            return sqrt(1 - x**2)
 
-            if isinstance(arg, acot):
-                x = arg.args[0];
-                return 1 / (sqrt(1 + 1 / x**2) * x)
+        if isinstance(arg, acot):
+            x = arg.args[0];
+            return 1 / (sqrt(1 + 1 / x**2) * x)
 
     @staticmethod
     @cacheit
@@ -312,93 +314,95 @@ class cos(Function):
                 return S.One
             elif arg.is_negative:
                 return cls(-arg)
-        else:
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
-
-            if i_coeff is not None:
-                return C.cosh(i_coeff)
             else:
-                pi_coeff = arg.as_coefficient(S.Pi)
+                return None
 
-                if pi_coeff is not None:
-                    if pi_coeff.is_Rational:
-                        cst_table_some = {
-                            1 : S.One,
-                            2 : S.Zero,
-                            3 : S.Half,
-                            4 : S.Half*sqrt(2),
-                            6 : S.Half*sqrt(3),
-                        }
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        if i_coeff is not None:
+            return C.cosh(i_coeff)
 
-                        cst_table_more = {
-                            (1, 5) : (sqrt(5) + 1)/4,
-                            (2, 5) : (sqrt(5) - 1)/4
-                        }
+        pi_coeff = arg.as_coefficient(S.Pi)
+        if pi_coeff is not None:
+            if pi_coeff.is_Rational:
+                cst_table_some = {
+                    1 : S.One,
+                    2 : S.Zero,
+                    3 : S.Half,
+                    4 : S.Half*sqrt(2),
+                    6 : S.Half*sqrt(3),
+                }
 
-                        p = pi_coeff.p
-                        q = pi_coeff.q
+                cst_table_more = {
+                    (1, 5) : (sqrt(5) + 1)/4,
+                    (2, 5) : (sqrt(5) - 1)/4
+                }
 
-                        Q, P = 2*p // q, p % q
+                p = pi_coeff.p
+                q = pi_coeff.q
 
-                        try:
-                            result = cst_table_some[q]
-                        except KeyError:
-                            if abs(P) > q // 2:
-                                P = q - P
+                Q, P = 2*p // q, p % q
 
-                            try:
-                                result = cst_table_more[(P, q)]
-                            except KeyError:
-                                if P != p:
-                                    result = cls(C.Rational(P, q)*S.Pi)
-                                else:
-                                    return None
+                try:
+                    result = cst_table_some[q]
+                except KeyError:
+                    if abs(P) > q // 2:
+                        P = q - P
 
-                        if Q % 4 in (1, 2):
-                            return -result
+                    try:
+                        result = cst_table_more[(P, q)]
+                    except KeyError:
+                        if P != p:
+                            result = cls(C.Rational(P, q)*S.Pi)
                         else:
-                            return result
+                            return None
 
-                if arg.is_Mul and arg.args[0].is_negative:
-                    return cls(-arg)
-                if arg.is_Add:
-                    x, m = arg.as_independent(S.Pi)
-                    if m in [S.Pi/2, S.Pi]:
-                        return cos(m)*cos(x)-sin(m)*sin(x)
-                    # normalize cos(-x-y) to cos(x+y)
-                    if arg.args[0].is_Mul:
-                        if arg.args[0].args[0].is_negative:
-                            # e.g. arg = -x - y
-                            if (-arg).args[0].is_Mul:
-                                if (-arg).args[0].args[0].is_negative:
-                                    # This is to prevent infinite recursion in
-                                    # the case cos(-x+y), for which
-                                    # -arg = -y + x. See also #838 for the
-                                    # root of the problem here.
-                                    return
-                            # convert cos(-x-y) to cos(x+y)
-                            return cls(-arg)
-                    if arg.args[0].is_negative:
-                        if (-arg).args[0].is_negative:
-                            # This is to avoid infinite recursion in the case
-                            # sin(-x-1)
+                if Q % 4 in (1, 2):
+                    return -result
+                else:
+                    return result
+
+        if arg.is_Mul and arg.args[0].is_negative:
+            return cls(-arg)
+
+        if arg.is_Add:
+            x, m = arg.as_independent(S.Pi)
+            if m in [S.Pi/2, S.Pi]:
+                return cos(m)*cos(x)-sin(m)*sin(x)
+
+            # normalize cos(-x-y) to cos(x+y)
+            if arg.args[0].is_Mul:
+                if arg.args[0].args[0].is_negative:
+                    # e.g. arg = -x - y
+                    if (-arg).args[0].is_Mul:
+                        if (-arg).args[0].args[0].is_negative:
+                            # This is to prevent infinite recursion in
+                            # the case cos(-x+y), for which
+                            # -arg = -y + x. See also #838 for the
+                            # root of the problem here.
                             return
-                        return cls(-arg)
+                    # convert cos(-x-y) to cos(x+y)
+                    return cls(-arg)
+            if arg.args[0].is_negative:
+                if (-arg).args[0].is_negative:
+                    # This is to avoid infinite recursion in the case
+                    # sin(-x-1)
+                    return
+                return cls(-arg)
 
-            if isinstance(arg, acos):
-                return arg.args[0]
+        if isinstance(arg, acos):
+            return arg.args[0]
 
-            if isinstance(arg, atan):
-                x = arg.args[0]
-                return 1 / sqrt(1 + x**2)
+        if isinstance(arg, atan):
+            x = arg.args[0]
+            return 1 / sqrt(1 + x**2)
 
-            if isinstance(arg, asin):
-                x = arg.args[0]
-                return sqrt(1 - x ** 2)
+        if isinstance(arg, asin):
+            x = arg.args[0]
+            return sqrt(1 - x ** 2)
 
-            if isinstance(arg, acot):
-                x = arg.args[0]
-                return 1 / sqrt(1 + 1 / x**2)
+        if isinstance(arg, acot):
+            x = arg.args[0]
+            return 1 / sqrt(1 + 1 / x**2)
 
 
     @staticmethod
@@ -544,39 +548,37 @@ class tan(Function):
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
-        else:
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
-            if i_coeff is not None:
-                return S.ImaginaryUnit * C.tanh(i_coeff)
-            else:
-                pi_coeff = arg.as_coefficient(S.Pi)
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        if i_coeff is not None:
+            return S.ImaginaryUnit * C.tanh(i_coeff)
 
-                if pi_coeff is not None:
-                    if pi_coeff.is_integer:
-                        return S.Zero
-                    elif pi_coeff.is_Rational:
-                        cst_table = {
-                           #2 : S.ComplexInfinity,
-                            3 : sqrt(3),
-                            4 : S.One,
-                            6 : 1 / sqrt(3),
-                        }
+        pi_coeff = arg.as_coefficient(S.Pi)
+        if pi_coeff is not None:
+            if pi_coeff.is_integer:
+                return S.Zero
+            elif pi_coeff.is_Rational:
+                cst_table = {
+                   #2 : S.ComplexInfinity,
+                    3 : sqrt(3),
+                    4 : S.One,
+                    6 : 1 / sqrt(3),
+                }
 
-                        try:
-                            result = cst_table[pi_coeff.q]
+                try:
+                    result = cst_table[pi_coeff.q]
 
-                            if (2*pi_coeff.p // pi_coeff.q) % 4 in (1, 3):
-                                return -result
-                            else:
-                                return result
-                        except KeyError:
-                            pass
+                    if (2*pi_coeff.p // pi_coeff.q) % 4 in (1, 3):
+                        return -result
+                    else:
+                        return result
+                except KeyError:
+                    pass
 
-                coeff, terms = arg.as_coeff_terms()
+        coeff, terms = arg.as_coeff_terms()
 
-                if coeff.is_negative:
-                    return -cls(-arg)
+        if coeff.is_negative:
+            return -cls(-arg)
 
         if isinstance(arg, atan):
             return arg.args[0]
@@ -697,43 +699,36 @@ class cot(Function):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            #elif arg is S.Zero:
-            #    return S.ComplexInfinity
             elif arg.is_negative:
                 return -cls(-arg)
-        else:
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
-            if i_coeff is not None:
-                return -S.ImaginaryUnit * C.coth(i_coeff)
-            else:
-                pi_coeff = arg.as_coefficient(S.Pi)
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        if i_coeff is not None:
+            return -S.ImaginaryUnit * C.coth(i_coeff)
 
-                if pi_coeff is not None:
-                    #if pi_coeff.is_integer:
-                    #    return S.ComplexInfinity
-                    if pi_coeff.is_Rational:
-                        cst_table = {
-                            2 : S.Zero,
-                            3 : 1 / sqrt(3),
-                            4 : S.One,
-                            6 : sqrt(3)
-                        }
+        pi_coeff = arg.as_coefficient(S.Pi)
+        if pi_coeff is not None:
+            if pi_coeff.is_Rational:
+                cst_table = {
+                    2 : S.Zero,
+                    3 : 1 / sqrt(3),
+                    4 : S.One,
+                    6 : sqrt(3)
+                }
 
-                        try:
-                            result = cst_table[pi_coeff.q]
+                try:
+                    result = cst_table[pi_coeff.q]
 
-                            if (2*pi_coeff.p // pi_coeff.q) % 4 in (1, 3):
-                                return -result
-                            else:
-                                return result
-                        except KeyError:
-                            pass
+                    if (2*pi_coeff.p // pi_coeff.q) % 4 in (1, 3):
+                        return -result
+                    else:
+                        return result
+                except KeyError:
+                    pass
 
-                coeff, terms = arg.as_coeff_terms()
-
-                if coeff.is_negative:
-                    return -cls(-arg)
+        coeff, terms = arg.as_coeff_terms()
+        if coeff.is_negative:
+            return -cls(-arg)
 
         if isinstance(arg, acot):
             return arg.args[0]
@@ -874,16 +869,16 @@ class asin(Function):
                 return S.Pi / cst_table[arg]
             elif arg.is_negative:
                 return -cls(-arg)
-        else:
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
-
-            if i_coeff is not None:
-                return S.ImaginaryUnit * C.asinh(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_terms()
+                return None
 
-                if coeff.is_negative:
-                    return -cls(-arg)
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        if i_coeff is not None:
+            return S.ImaginaryUnit * C.asinh(i_coeff)
+
+        coeff, terms = arg.as_coeff_terms()
+        if coeff.is_negative:
+            return -cls(-arg)
 
 
     @staticmethod
@@ -1066,17 +1061,16 @@ class atan(Function):
                 return S.Pi / cst_table[arg]
             elif arg.is_negative:
                 return -cls(-arg)
-
-        else:
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
-
-            if i_coeff is not None:
-                return S.ImaginaryUnit * C.atanh(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_terms()
+                return None
 
-                if coeff.is_negative:
-                    return -cls(-arg)
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        if i_coeff is not None:
+            return S.ImaginaryUnit * C.atanh(i_coeff)
+
+        coeff, terms = arg.as_coeff_terms()
+        if coeff.is_negative:
+            return -cls(-arg)
 
 
     @staticmethod
@@ -1148,22 +1142,20 @@ class acot(Function):
                 sqrt(3)    : 6,
                 -sqrt(3)   : -6,
                 }
-
             if arg in cst_table:
                 return S.Pi / cst_table[arg]
             elif arg.is_negative:
                 return -cls(-arg)
-
-        else:
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
-
-            if i_coeff is not None:
-                return -S.ImaginaryUnit * C.acoth(i_coeff)
             else:
-                coeff, terms = arg.as_coeff_terms()
+                return None
 
-                if coeff.is_negative:
-                    return -cls(-arg)
+        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        if i_coeff is not None:
+            return -S.ImaginaryUnit * C.acoth(i_coeff)
+
+        coeff, terms = arg.as_coeff_terms()
+        if coeff.is_negative:
+            return -cls(-arg)
 
 
     @staticmethod
