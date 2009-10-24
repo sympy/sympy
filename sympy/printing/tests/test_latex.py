@@ -1,6 +1,7 @@
 from sympy import symbols, Rational, Symbol, Integral, log, diff, sin, exp, \
         Function, factorial, floor, ceiling, abs, re, im, conjugate, gamma, \
-        Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum
+        Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum, \
+        Limit, oo
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL
@@ -130,9 +131,8 @@ def test_latex_sum():
     assert latex(Sum(x**2 + y, (x, -2, 2))) == \
         r"$\sum_{x=-2}^{2} \left(y + x^{2}\right)$"
 
-@XFAIL
 def test_latex_limits():
-    assert latex(limit(x, x, oo, evaluate=False)) == r"$\lim_{x \to \infty}x$"
+    assert latex(Limit(x, x, oo)) == r"$\lim_{x \to \infty} x$"
 
 def test_issue469():
     beta = Symbol(r'\beta')

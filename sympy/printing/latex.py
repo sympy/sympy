@@ -369,13 +369,15 @@ class LatexPrinter(Printer):
             str(self._print(expr.function)), " ".join(symbols))
 
     def _print_Limit(self, expr):
-        tex = r"\lim_{%s \to %s}" % (self._print(expr.var),
-                                     self._print(expr.varlim))
+        e, z, z0, dir = expr.args
 
-        if isinstance(expr.expr, C.AssocOp):
-            return r"%s\left(%s\right)" % (tex, self._print(expr.expr))
+        tex = r"\lim_{%s \to %s}" % (self._print(z),
+                                     self._print(z0))
+
+        if isinstance(e, C.AssocOp):
+            return r"%s\left(%s\right)" % (tex, self._print(e))
         else:
-            return r"%s %s" % (tex, self._print(expr.expr))
+            return r"%s %s" % (tex, self._print(e))
 
     def _print_Function(self, expr, exp=None):
         func = expr.func.__name__
