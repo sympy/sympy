@@ -1,7 +1,3 @@
-"""
-
-"""
-
 from sympy.core.basic import Basic, S
 from sympy.core.symbol import Symbol
 from sympy.core.add import Add
@@ -76,10 +72,10 @@ def normal(f, g, n=None):
 def gosper(term, k, a, n):
     from sympy.solvers import rsolve_poly
 
-    if not hyper:
+    if not term:
         return None
     else:
-        p, q = expr.as_numer_denom()
+        p, q = term.as_numer_denom()
         A, B, C = normal(p, q, k)
 
         B = B.subs(k, k-1)
