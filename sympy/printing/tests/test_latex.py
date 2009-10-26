@@ -182,6 +182,8 @@ def test_latex_Piecewise():
     p = Piecewise((x,x<1),(x**2,True))
     assert latex(p) == "$\\begin{cases} x & \\text{for } x < 1 \\\\x^{2} &" \
                        " \\text{otherwise} \\end{cases}$"
+    assert latex(p, itex=True) == "$\\begin{cases} x & \\text{for } x \\lt 1 \\\\x^{2} &" \
+                                  " \\text{otherwise} \\end{cases}$"
 
 def test_latex_Matrix():
     M = Matrix([[1+x, y],[y, x-1]])
