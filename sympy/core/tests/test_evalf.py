@@ -143,6 +143,13 @@ def test_evalf_bugs():
     assert NS((x*(1+y*(1 + n))).subs(d).evalf(),6) == '0.346011 + 0.433884*I'
     assert NS(((-I-sqrt(2)*I)**2).evalf()) == '-5.82842712474619'
     assert NS((1+I)**2*I,15) == '-2.00000000000000 + 2.16840434497101e-19*I'
+    #1659 (1/2):
+    assert NS(pi.evalf(69) - pi) == '-4.43863937855894e-71'
+    #1659 (2/2): With the bug present, this still only fails if the
+    # terms are in the order given here. This is not generally the case,
+    # because the order depends on the hashes of the terms.
+    assert NS(20 - 5008329267844*n**25 - 477638700*n**37 - 19*n,
+              subs={n:.01}) == '19.8100000000000'
 
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
