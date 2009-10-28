@@ -424,6 +424,10 @@ def classify_ode(eq, func, dict=False):
     """
     Returns a tuple of possible dsolve() classifications for an ODE.
 
+    Except for the first-order exact case, the ODE will be reduced to remove
+    any powers of f(x) from the coefficient of the highest order derivative,
+    e.g. f(x)*D(f(x), x) + 1 --> D(f(x), x) + 1/f(x).
+
     The tuple is ordered so that first item is the classification that
     dsolve() uses to solve the ODE by default.  In general,
     classifications at the near the beginning of the list will produce
@@ -527,6 +531,9 @@ def classify_ode(eq, func, dict=False):
     from sympy import expand
     from sympy.core import S
     from sympy.utilities import all
+
+    if not isinstance(func, Basic):
+        raise ValueError("not a SymPy expression: %s" % func)
     if len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only work with functions " + \
             "of one variable")
@@ -538,28 +545,46 @@ def classify_ode(eq, func, dict=False):
         if eq.rhs != 0:
             return classify_ode(eq.lhs-eq.rhs, func)
         eq = eq.lhs
-    # Collect diff(f(x),x) terms so that match will work correctly
-    # collect() needs to be improved, as this doesn't always work.
-    eq = collect(eq, f(x))
     order = ode_order(eq, f(x))
-
     # hint:matchdict or hint:(tuple of matchdicts)
     # Also will contain "default":<default hint> and "order":order items.
     matching_hints = {"order": order}
 
+    if not order:
+        if dict:
+            return matching_hints
+        else:
+            return ()
+
+    df = f(x).diff(x)
     a = Wild('a', exclude=[f(x)])
     b = Wild('b', exclude=[f(x)])
     c = Wild('c', exclude=[f(x)])
-    d = Wild('d', exclude=[f(x).diff(x), f(x).diff(x, 2)])
-    e = Wild('e', exclude=[f(x).diff(x)])
-    k = Wild('k', exclude=[f(x).diff(x)])
+    d = Wild('d', exclude=[df, f(x).diff(x, 2)])
+    e = Wild('e', exclude=[df])
+    k = Wild('k', exclude=[df])
     n = Wild('n', exclude=[f(x)])
+    c1 = Wild('c1', exclude=[x])
+
+    eq = expand(eq)
+
+    # Precondition to remove f(x) from highest order derivative
+    reduced_eq = None
+    if eq.is_Add:
+        deriv_coef = eq.coeff(f(x).diff(x, order))
+        if deriv_coef != 1:
+            r = deriv_coef.match(a*f(x)**c1)
+            if r and r[c1]:
+                den = f(x)**r[c1]
+                reduced_eq = Add(*[arg/den for arg in eq.args])
+    if not reduced_eq:
+        reduced_eq = eq
 
     if order == 1:
         # We can save a lot of time by skipping these if the ODE isn't 1st order
 
         # Linear case: a(x)*y'+b(x)*y+c(x) == 0
-        r = eq.match(a*diff(f(x),x) + b*f(x) + c)
+        r = reduced_eq.match(a*df + b*f(x) + c)
         if r:
             r['a'] = a
             r['b'] = b
@@ -568,13 +593,7 @@ def classify_ode(eq, func, dict=False):
             matching_hints["1st_linear_Integral"] = r
 
         # Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
-        #  precondition to remove f(x) from derivative
-        deriv_coef = eq.coeff(f(x).diff(x))
-        if deriv_coef and deriv_coef.is_Mul:
-            ind, dep = deriv_coef.as_independent(f(x))
-            if dep == f(x) or dep.is_Pow and dep.base == f(x):
-                eq = expand(eq/dep)
-        r = eq.match(a*diff(f(x),x) + b*f(x) + c*f(x)**n)
+        r = collect(reduced_eq, f(x), exact = True).match(a*df + b*f(x) + c*f(x)**n)
         if r and r[c] != 0 and r[n] != 1: # See issue 1577
             r['a'] = a
             r['b'] = b
@@ -583,8 +602,22 @@ def classify_ode(eq, func, dict=False):
             matching_hints["Bernoulli"] = r
             matching_hints["Bernoulli_Integral"] = r
 
-        # This match is used for several cases below.
-        r = eq.match(d+e*diff(f(x),x))
+        # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
+        # WITH NON-REDUCED FORM OF EQUATION
+        r = collect(eq, df, exact = True).match(d + e * df)
+        if r:
+            r['d'] = d
+            r['e'] = e
+            r['y'] = y
+            r[d] = r[d].subs(f(x),y)
+            r[e] = r[e].subs(f(x),y)
+            if r[d] != 0 and simplify(r[d].diff(y)) == simplify(r[e].diff(x)):
+                matching_hints["1st_exact"] = r
+                matching_hints["1st_exact_Integral"] = r
+
+        # This match is used for several cases below; we now collect on
+        # f(x) so the matching works.
+        r = collect(reduced_eq, df, exact = True).match(d+e*df)
         if r:
             r['d'] = d
             r['e'] = e
@@ -602,11 +635,6 @@ def classify_ode(eq, func, dict=False):
                 r1 = {'m1':m1, 'm2':m2, 'y':y}
                 matching_hints["separable"] = r1
                 matching_hints["separable_Integral"] = r1
-
-            # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
-            if simplify(r[d].diff(y)) == simplify(r[e].diff(x)) and r[d] != 0:
-                matching_hints["1st_exact"] = r
-                matching_hints["1st_exact_Integral"] = r
 
             # First order equation with homogeneous coefficients:
             # dy/dx == F(y/x) or dy/dx == F(x/y)
@@ -627,11 +655,12 @@ def classify_ode(eq, func, dict=False):
                     matching_hints["1st_homogeneous_coeff_best"] = r
 
     if order == 2:
-        # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x, 2))**2 + h(x)*f(x).diff(x)
+        # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
         # See Goldstein and Braun, "Advanced Methods for the Solution of
         # Differential Equations", pg. 98
-        s = d*f(x).diff(x, 2) + e*f(x).diff(x)**2 + k*f(x).diff(x)
-        r = eq.match(s)
+
+        s = d*f(x).diff(x, 2) + e*df**2 + k*df
+        r = reduced_eq.match(s)
         if r and r[d] != 0:
             y = Symbol('y', dummy=True)
             g = simplify(r[e]/r[d]).subs(f(x), y)
@@ -659,10 +688,10 @@ def classify_ode(eq, func, dict=False):
 
         # Since multiple constant terms will not always be captured
         # (see issues 1429 and 1601) the constant term is captured here:
-        if eq.is_Add:
-            inde, depe = eq.as_independent(f(x))
+        if reduced_eq.is_Add:
+            inde, depe = reduced_eq.as_independent(f(x))
         else:
-            inde, depe = S.Zero, eq
+            inde, depe = S.Zero, reduced_eq
 
         r = depe.match(s)
         if r:

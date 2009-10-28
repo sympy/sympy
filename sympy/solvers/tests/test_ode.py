@@ -108,7 +108,13 @@ def test_classify_ode():
         '1st_linear_Integral', '1st_homogeneous_coeff_subs_indep_div_dep_Integral', \
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     assert classify_ode(f(x).diff(x)**2, f(x)) == ()
-
+    # 1650: f(x) should be cleared from highest derivative before classifying
+    a = classify_ode(f(x).diff(x) + f(x) - x, f(x))
+    b = classify_ode(f(x).diff(x)*f(x) + f(x)*f(x) - x*f(x), f(x))
+    c = classify_ode(f(x).diff(x)/f(x) + f(x)/f(x) - x/f(x), f(x))
+    assert a == b == c != ()
+    assert classify_ode(2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)) ==\
+        ('Bernoulli', 'Bernoulli_Integral')
 
 def test_ode_order():
     f = Function('f')
