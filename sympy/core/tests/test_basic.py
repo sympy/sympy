@@ -594,6 +594,11 @@ def test_as_coeff_exponent():
     assert (2*x**3+pi*x**3).as_coeff_exponent(x) == (2+pi, 3)
     assert (x*log(2)/(2*x + pi*x)).as_coeff_exponent(x) == \
             (log(2)/(2+pi), 0)
+    # 1685
+    D = Derivative
+    f = Function('f')
+    fx  = D(f(x), x)
+    assert fx.as_coeff_exponent(f(x)) == (fx ,0)
 
 def test_extractions():
     x, y = symbols("xy")

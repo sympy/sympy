@@ -329,6 +329,19 @@ def test_collect_D():
     assert collect(a*fx + b*fx, fx) == (a + b)*fx
     assert collect(a*D(fx,x) + b*D(fx,x), fx)   == (a + b)*D(fx, x)
     assert collect(a*fxx     + b*fxx    , fx)   == (a + b)*D(fx, x)
+    # 1685
+    assert collect(5*f(x)+3*fx, fx) == 5*f(x) + 3*fx
+    assert collect(f(x) + f(x)*diff(f(x), x) + x*diff(f(x), x)*f(x), f(x).diff(x)) ==\
+    (x*f(x) + f(x))*D(f(x), x) + f(x)
+    assert collect(f(x) + f(x)*diff(f(x), x) + x*diff(f(x), x)*f(x), f(x).diff(x), exact=True) ==\
+    (x*f(x) + f(x))*D(f(x), x) + f(x)
+    assert collect(1/f(x) + 1/f(x)*diff(f(x), x) + x*diff(f(x), x)/f(x), f(x).diff(x), exact=True) ==\
+    (1/f(x) + x/f(x))*D(f(x), x) + 1/f(x)
+
+@XFAIL
+def collect_issues():
+    assert collect(1/f(x) + 1/f(x)*diff(f(x), x) + x*diff(f(x), x)/f(x), f(x).diff(x)) !=\
+    (1 + x*D(f(x), x) + D(f(x), x))/f(x)
 
 def test_collect_D_0():
     D = Derivative

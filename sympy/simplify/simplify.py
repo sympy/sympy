@@ -565,13 +565,15 @@ def collect(expr, syms, evaluate=True, exact=False):
             elems, common_expo, has_deriv = [], None, False
 
             for elem, e_rat, e_sym, e_ord in pattern:
-                if e_ord is not None:
-                    # there is derivative in the pattern so
-                    # there will by small performance penalty
-                    has_deriv = True
 
                 for j in range(len(terms)):
                     term, t_rat, t_sym, t_ord = terms[j]
+
+                    # keeping track of whether one of the terms had
+                    # a derivative or not as this will require rebuilding
+                    # the expression later
+                    if t_ord is not None:
+                        has_deriv= True
 
                     if elem.is_Number:
                         # a constant is a match for everything
