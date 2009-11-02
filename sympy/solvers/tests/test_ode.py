@@ -1052,8 +1052,8 @@ def test_unexpanded_Liouville_ODE():
     # to warrant classify_ode calling expand_mul on expressions.
     # It is the same as from test_Liouville_ODE() above.
     eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
-    eq2 = eq1*exp(-f(x))/exp(f(x)).expand()
-    sol2 = Eq(f(x), -log(C1 + C2/x))
+    eq2 = eq1*exp(-f(x))/exp(f(x))
+    sol2 = Eq(C1 + C2/x - exp(-f(x)), 0)
     sol2s = ode_renumber(sol2, 'C', 1, 2)
     assert dsolve(eq2, f(x)) in (sol2, sol2s)
     assert checkodesol(eq2, f(x), sol2, order=2, solve_for_func=False)[0]
