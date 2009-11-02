@@ -66,10 +66,6 @@ def sympify(a, locals=None, convert_xor=True):
         return Real(a)
     elif isinstance(a, complex):
         real, imag = map(sympify, (a.real, a.imag))
-        ireal, iimag = int(real), int(imag)
-
-        if ireal + iimag*1j == a:
-            return ireal + iimag*S.ImaginaryUnit
         return real + S.ImaginaryUnit * imag
     elif isinstance(a, (list,tuple,set)):
         return type(a)([sympify(x) for x in a])

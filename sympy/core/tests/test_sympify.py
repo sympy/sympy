@@ -1,5 +1,5 @@
 from sympy import Symbol, exp, Integer, Real, sin, cos, log, Poly, Lambda, \
-        Function, I, S, sqrt,  raises
+        Function, I, S, sqrt,  raises, srepr
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
 from sympy.core.decorators import _sympifyit
@@ -251,3 +251,7 @@ def test_issue883():
 def test_S_sympify():
     assert S(1)/2 == sympify(1)/2
     assert (-2)**(S(1)/2) == sqrt(2)*I
+
+def test_issue1689():
+    assert srepr(S(1.0+0J)) == srepr(S(1.0)) == srepr(Real(1.0))
+    assert srepr(Real(1)) != srepr(Real(1.0))
