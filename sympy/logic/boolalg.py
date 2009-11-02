@@ -1,6 +1,6 @@
 """Boolean algebra module for SymPy"""
 from sympy.core import Basic, Function, sympify, Symbol
-from sympy.utilities import flatten
+from sympy.utilities import flatten, make_list
 
 
 class BooleanFunction(Function):
@@ -26,11 +26,15 @@ class And(BooleanFunction):
         out_args = []
         for arg in args: # we iterate over a copy or args
             if isinstance(arg, bool):
-                if not arg: return False
-                else: continue
+                if not arg:
+                    return False
+                else:
+                    continue
             out_args.append(arg)
-        if len(out_args) == 0: return True
-        if len(out_args) == 1: return out_args[0]
+        if len(out_args) == 0:
+            return True
+        if len(out_args) == 1:
+            return out_args[0]
         sargs = sorted(flatten(out_args, cls=cls))
         return Basic.__new__(cls, *sargs)
 
@@ -44,11 +48,15 @@ class Or(BooleanFunction):
         out_args = []
         for arg in args: # we iterate over a copy or args
             if isinstance(arg, bool):
-                if arg: return True
-                else: continue
+                if arg:
+                    return True
+                else:
+                    continue
             out_args.append(arg)
-        if len(out_args) == 0: return False
-        if len(out_args) == 1: return out_args[0]
+        if len(out_args) == 0:
+            return False
+        if len(out_args) == 1:
+            return out_args[0]
         sargs = sorted(flatten(out_args, cls=cls))
         return Basic.__new__(cls, *sargs)
 
@@ -81,7 +89,8 @@ class Not(BooleanFunction):
             return Or(*[Not(a) for a in arg.args])
         if type(arg) is Or:
             return And(*[Not(a) for a in arg.args])
-        if type(arg) is bool: return not arg
+        if type(arg) is bool:
+            return not arg
         if type(arg) is Not:
             return arg.args[0]
 
@@ -92,7 +101,8 @@ class Nand(BooleanFunction):
     """
     @classmethod
     def eval(cls, *args):
-        if not args: return False
+        if not args:
+            return False
         args = list(args)
         A = Not(args.pop())
         while args:
@@ -107,7 +117,8 @@ class Nor(BooleanFunction):
     """
     @classmethod
     def eval(cls, *args):
-        if not args: return False
+        if not args:
+            return False
         args = list(args)
         A = Not(args.pop())
         while args:
@@ -143,7 +154,8 @@ def fuzzy_not(arg):
     True
 
     """
-    if arg is None: return
+    if arg is None:
+        return
     return not arg
 
 def conjuncts(expr):
@@ -156,11 +168,7 @@ def conjuncts(expr):
     [Or(A, B)]
 
     """
-    if expr:
-        if type(expr) is And:
-            return list(expr.args)
-        return [expr]
-    return []
+    return make_list(expr, And)
 
 def disjuncts(expr):
     """Return a list of the disjuncts in the sentence s.
@@ -172,10 +180,7 @@ def disjuncts(expr):
     [And(A, B)]
 
     """
-    if isinstance(expr, Or):
-        return list(expr.args)
-    else:
-        return [expr]
+    return make_list(expr, Or)
 
 def distribute_and_over_or(expr):
     """
@@ -187,7 +192,8 @@ def distribute_and_over_or(expr):
             if isinstance(arg, And):
                 conj = arg
                 break
-        else: return type(expr)(*expr.args)
+        else:
+            return type(expr)(*expr.args)
         rest = Or(*[a for a in expr.args if a is not conj])
         return And(*map(distribute_and_over_or,
                    [Or(c, rest) for c in conj.args]))
@@ -218,7 +224,8 @@ def eliminate_implications(expr):
     operators.
     """
     expr = sympify(expr)
-    if expr.is_Atom: return expr     ## (Atoms are unchanged.)
+    if expr.is_Atom:
+        return expr     ## (Atoms are unchanged.)
     args = map(eliminate_implications, expr.args)
     a, b = args[0], args[-1]
     if isinstance(expr, Implies):
@@ -251,8 +258,10 @@ def to_int_repr(clauses, symbols):
 
     """
     def append_symbol(arg, symbols):
-        if type(arg) is Not: return -(symbols.index(arg.args[0])+1)
-        else: return symbols.index(arg)+1
+        if type(arg) is Not:
+            return -(symbols.index(arg.args[0])+1)
+        else:
+            return symbols.index(arg)+1
 
     output = []
     for c in clauses:

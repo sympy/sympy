@@ -1,7 +1,6 @@
-from sympy.logic.boolalg import And, Or, Xor, Not, Nand, Nor, Implies, \
-    Equivalent, to_cnf, eliminate_implications, distribute_and_over_or, \
-    compile_rule, conjuncts, disjuncts, to_int_repr
-from sympy import symbols
+from sympy.logic.boolalg import to_cnf, eliminate_implications, distribute_and_over_or, \
+    compile_rule, conjuncts, disjuncts, to_int_repr, fuzzy_not
+from sympy import symbols, And, Or, Xor, Not, Nand, Nor, Implies, Equivalent
 from sympy.utilities.pytest import raises, XFAIL
 
 def test_overloading():
@@ -169,11 +168,19 @@ def test_eliminate_implications():
 
 def test_conjuncts():
     A, B, C = symbols('ABC')
-    assert conjuncts(A & B & C) == [A, B, C]
+    assert set(conjuncts(A & B & C)) == set([A, B, C])
+    assert set(conjuncts((A | B) & C)) == set([A | B, C])
+    assert conjuncts(A) == [A]
+    assert conjuncts(True) == [True]
+    assert conjuncts(False) == [False]
 
 def test_disjuncts():
     A, B, C = symbols('ABC')
     assert disjuncts(A | B | C) == [A, B, C]
+    assert disjuncts((A | B) & C) == [(A | B) & C]
+    assert disjuncts(A) == [A]
+    assert disjuncts(True) == [True]
+    assert disjuncts(False) == [False]
 
 def test_distribute():
     A, B, C = symbols('ABC')
@@ -200,3 +207,7 @@ def test_to_int_repr():
     assert to_int_repr([x | y, z | x], [x, y, z]) == [[1, 2], [1, 3]]
     assert to_int_repr([x | y, z | ~x], [x, y, z]) == [[1, 2], [3, -1]]
 
+def test_fuzzy_not():
+    assert fuzzy_not(False) == True
+    assert fuzzy_not(True) == False
+    assert fuzzy_not(None) == None
