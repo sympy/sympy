@@ -155,6 +155,10 @@ class StrPrinter(Printer):
         return "%s%s, %s%s" % \
                (left, self._print(i.start), self._print(i.end), right)
 
+    def _print_LatticeOp(self, expr):
+        args = sorted(expr.args, cmp=expr._compare_pretty)
+        return expr.func.__name__ + "(%s)"%", ".join(self._print(arg) for arg in args)
+
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
         if dir == "+":

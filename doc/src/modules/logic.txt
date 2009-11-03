@@ -18,7 +18,7 @@ You can build boolean expressions with the standard python operators & (And),
     >>> from sympy import *
     >>> x, y = symbols('x y')
     >>> y | (x & y)
-    Or(y, And(x, y))
+    Or(And(x, y), y)
     >>> x | y
     Or(x, y)
     >>> ~x

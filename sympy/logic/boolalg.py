@@ -1,6 +1,7 @@
 """Boolean algebra module for SymPy"""
 from sympy.core import Basic, Function, sympify, Symbol
 from sympy.utilities import flatten, make_list
+from sympy.core.operations import LatticeOp
 
 
 class BooleanFunction(Function):
@@ -9,8 +10,10 @@ class BooleanFunction(Function):
     """
     pass
 
-class And(BooleanFunction):
-    """Logical AND function.
+class And(LatticeOp, BooleanFunction):
+    """
+    Logical AND function.
+
     It evaluates its arguments in order, giving False immediately if any of them
     are False, and True if they are all True.
 
@@ -21,44 +24,18 @@ class And(BooleanFunction):
         And(x, y)
 
     """
-    @classmethod
-    def eval(cls, *args):
-        out_args = []
-        for arg in args: # we iterate over a copy or args
-            if isinstance(arg, bool):
-                if not arg:
-                    return False
-                else:
-                    continue
-            out_args.append(arg)
-        if len(out_args) == 0:
-            return True
-        if len(out_args) == 1:
-            return out_args[0]
-        sargs = sorted(flatten(out_args, cls=cls))
-        return Basic.__new__(cls, *sargs)
+    zero = False
+    identity = True
 
-class Or(BooleanFunction):
-    """Logical OR function
-     It evaluates its arguments in order, giving True immediately if any of them are
-     True, and False if they are all False.
-     """
-    @classmethod
-    def eval(cls, *args):
-        out_args = []
-        for arg in args: # we iterate over a copy or args
-            if isinstance(arg, bool):
-                if arg:
-                    return True
-                else:
-                    continue
-            out_args.append(arg)
-        if len(out_args) == 0:
-            return False
-        if len(out_args) == 1:
-            return out_args[0]
-        sargs = sorted(flatten(out_args, cls=cls))
-        return Basic.__new__(cls, *sargs)
+class Or(LatticeOp, BooleanFunction):
+    """
+    Logical OR function
+
+    It evaluates its arguments in order, giving True immediately if any of them are
+    True, and False if they are all False.
+    """
+    zero = True
+    identity = False
 
 class Xor(BooleanFunction):
     """Logical XOR (exclusive OR) function.

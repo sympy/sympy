@@ -204,3 +204,78 @@ class AssocOp(Basic):
 
     _eval_evalf = Basic._seq_eval_evalf
 
+class ShortCircuit(Exception):
+    pass
+
+class LatticeOp(AssocOp):
+    """
+    Join/meet operations of an algebraic lattice[1].
+
+    These binary operations are associative (op(op(a, b), c) = op(a, op(b, c))),
+    commutative (op(a, b) = op(b, a)) and idempotent (op(a, a) = op(a) = a).
+    Common examples are AND, OR, Union, Intersection, max or min. They have an
+    identity element (op(identity, a) = a) and an absorbing element
+    conventionnallly called zero (op(zero, a) = zero).
+
+    This is an abstract base class, concrete derived classes must declare
+    attributes zero and identity. All defining properties are then respected.
+
+    >>> from sympy import Integer
+    >>> from sympy.core.operations import LatticeOp
+    >>> class my_join(LatticeOp):
+    ...     zero = Integer(0)
+    ...     identity = Integer(1)
+    >>> my_join(2, 3) == my_join(3, 2)
+    True
+    >>> my_join(2, my_join(3, 4)) == my_join(2, 3, 4)
+    True
+    >>> my_join(0, 1, 4, 2, 3, 4)
+    0
+    >>> my_join(1, 2)
+    2
+
+    References:
+
+    [1] - http://en.wikipedia.org/wiki/Lattice_(order)
+    """
+
+    is_commutative = True
+
+    def __new__(cls, *args, **assumptions):
+        args = (_sympify(arg) for arg in args)
+        try:
+            _args = frozenset(cls._new_args_filter(args))
+        except ShortCircuit:
+            return cls.zero
+        if not _args:
+            return cls.identity
+        elif len(_args) == 1:
+            return set(_args).pop()
+        else:
+            obj = Basic.__new__(cls, _args, **assumptions)
+            obj._argset = _args
+            return obj
+
+    @classmethod
+    def _new_args_filter(cls, arg_sequence):
+        """Generator filtering args"""
+        for arg in arg_sequence:
+            if arg == cls.zero:
+                raise ShortCircuit(arg)
+            elif arg == cls.identity:
+                continue
+            elif arg.func == cls:
+                for x in arg.iter_basic_args():
+                    yield x
+            else:
+                yield arg
+
+    @property
+    def args(self):
+        return tuple(self._argset)
+
+    @staticmethod
+    def _compare_pretty(a, b):
+        return cmp(str(a), str(b))
+
+
