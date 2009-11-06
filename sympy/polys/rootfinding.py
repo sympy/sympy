@@ -1,4 +1,5 @@
 
+from sympy.core.symbol import Symbol
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.basic import Basic, S
@@ -11,8 +12,7 @@ from sympy.polys.algorithms import poly_decompose, poly_sqf, poly_div
 from sympy.polys.factortools import poly_factors
 
 from sympy.ntheory import divisors
-from sympy.functions import exp
-from sympy.core.symbol import Symbol
+from sympy.functions import exp, sqrt
 
 def roots_linear(f):
     """Returns a list of roots of a linear polynomial."""
@@ -32,9 +32,7 @@ def roots_quadratic(f):
         (-b - d) / (2*a),
     ]
 
-    from sympy.simplify import simplify
-
-    return [ simplify(r) for r in roots ]
+    return roots
 
 def roots_cubic(f):
     """Returns a list of roots of a cubic polynomial."""
@@ -84,12 +82,16 @@ def roots_quartic(f):
     (though this is not always stated clearly). The following routine has been
     tested and found to be correct for 0, 2 or 4 complex roots.
 
+    The quasisymmetric case solution[7] looks for quartics that have the form
+    x**4 + A*x**3 + B*x**2 + C*x + D = 0 where (C/A)**2 = D.
+
     Example::
     >>> from sympy import *
     >>> x = var('x')
     >>> r = rootfinding.roots_quartic(Poly(x**4 -6*x**3 +17*x**2 -26*x +20, x))
-    >>> [tmp.evalf(n=2) for tmp in r] # 4 complex roots
-    [1.0 + 1.7*I, 1.0 - 1.7*I, 2.0 + I, 2.0 - 1.0*I] #1+-I*sqrt(3), 2+-I
+    >>> # 4 complex roots: 1+-I*sqrt(3), 2+-I
+    >>> [tmp.evalf(n=2) for tmp in r]
+    [1.0 + 1.7*I, 1.0 - 1.7*I, 2.0 - 1.0*I, 2.0 + I]
 
     References:
       [1] http://mathforum.org/dr.math/faq/faq.cubic.equations.html
@@ -99,14 +101,24 @@ def roots_quartic(f):
           x=z-a/4 and x^4+a^x^3+b^x^2+c*x+d=0
       [5] http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
       [6] http://www.albmath.org/files/Math_5713.pdf
+      [7] http://www.statemaster.com/encyclopedia/Quartic-equation
+          #Other_particular_case:_Quasi-symmetric_equations
 
     """
 
-    #normalized coefficients
+    # normalized coefficients
     one, a, b, c, d = f.as_monic().iter_all_coeffs()
 
     if d is S.Zero:
         return [S.Zero] + roots([1, a, b, c], multiple = True)
+    elif (c/a)**2 == d:
+        m = sqrt(d)
+        z = Symbol('z', dummy=True)
+        x = f.symbols[0]
+        z1, z2 = roots_quadratic(Poly(z**2+a*z+b-2*m, z))
+        f = Poly(x**2 - z*x + m, x)
+        return roots_quadratic(f.subs(z, z1)) + \
+               roots_quadratic(f.subs(z, z2))
     else:
         a2 = a ** 2
         e = b - 3 * a2 / 8
@@ -194,9 +206,9 @@ def roots_rational(f):
 def roots(f, *symbols, **flags):
     """Computes symbolic roots of a univariate polynomial.
 
-       The polynomial, f, may be given as
-       * a sympy expression
-       * an instance of Poly or a list containing its coefficients
+       Given a univariate polynomial f with symbolic coefficients (or
+       a list of the polynomial's coefficients), returns a dictionary
+       with its roots and their multiplicities.
 
        Only roots expressible via radicals will be returned.  To get
        a complete set of roots use RootOf class or numerical methods
@@ -222,9 +234,9 @@ def roots(f, *symbols, **flags):
        >>> roots(p)
        {1: 1, -1: 1}
 
-       >>> m = Poly(x**2-y, x, y) #multivariate
-       >>> roots(Poly(m, x)) #same expr, but now univariate
-       {1: 1, -1: 1}
+       >>> m = Poly(x**2-y, x, y) # multivariate
+       >>> roots(Poly(m, x)) # same expr, but now univariate
+       {y**(1/2): 1, -y**(1/2): 1}
 
        >>> roots([1, 0, -1]) # LIST of coefficients
        {1: 1, -1: 1}

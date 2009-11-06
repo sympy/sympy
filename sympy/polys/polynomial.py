@@ -27,19 +27,34 @@ class CoefficientError(PolynomialError):
 
 class UnivariatePolyError(PolynomialError):
 
-    def __init__(self, poly):
-        self.message = "%s is an univariate polynomial" % poly
+    def __init__(self, expr, base_exc=None):
+        self.expr = expr
+        self.base_exc = base_exc
 
     def __str__(self):
-        return self.message
+        if self.base_exc is None:
+            return "UnivariatePolyError: %s" % (self.expr,)
+
+        return "Univariate polynomial '%s' unexpected and raised \
+        exception:\n%s: %s" % (self.expr,
+                               self.base_exc.__class__.__name__,
+                               str(self.base_exc))
 
 class MultivariatePolyError(PolynomialError):
 
-    def __init__(self, poly):
-        self.message = "%s is a multivariate polynomial" % poly
+    def __init__(self, expr, base_exc=None):
+        self.expr = expr
+        self.base_exc = base_exc
 
     def __str__(self):
-        return self.message
+        if self.base_exc is None:
+            return "MultivariatePolyError: %s" % (self.expr,)
+
+        return "Multivariate polynomial '%s' unexpected and raised \
+        exception:\n%s: %s" % (self.expr,
+                               self.base_exc.__class__.__name__,
+                               str(self.base_exc))
+
 
 ##
 ## TODO:
@@ -86,15 +101,16 @@ class Poly(Basic):
 
        Polynomials can also be constructed explicitly by passing a
        collection of coefficients and monomials in as an expression.
-       Interpretation of the collection depends on the type of the
-       collection according to the following semantics:
+       Interpretation of the collection depends on the collection's
+       type according to the following semantics:
 
            [1] expression is a LIST
                a) [(c_1, M_1), (c_2, M_2), ..., (c_n, M_n)]
                b) [(c_1, m_1), (c_2, m_2), ..., (c_n, m_n)]
                c) [ c_1, c_2, ..., c_n ]
 
-                >>> a, x, y = var('a x y')
+                >>> from sympy import *
+                >>> a, x, y = symbols('a x y')
                 >>> # a) M is a tuple (m_1, m_2, ..., m_3)
                 >>> Poly([(4, (2,2)), (3, (1,2))], x, y)
                 Poly(4*x**2*y**2 + 3*x*y**2, x, y)
@@ -111,7 +127,7 @@ class Poly(Basic):
                 >>> Poly( ((S(1), S(2)), ((3,), (4,))), x)
                 Poly(x**3 + 2*x**4, x)
 
-           [3] expression is a DICTIONARY
+           [3] expression is a DICTIONARY:
                { M_1 : c_1, M_2 : c_2, ..., M_n : c_n }
 
                 >>> Poly( {(1, 2): S(3), (4, 5): S(6)} ,x ,y)
@@ -327,6 +343,9 @@ class Poly(Basic):
                     poly = poly.as_dict()
                 else:
                     return poly
+            elif isinstance(poly, list):
+                return Poly([(c, i) for i, c in enumerate(reversed(poly))],
+                            Symbol('x'))
             else:
                 raise SymbolsError("No symbols were given")
 
@@ -449,6 +468,7 @@ class Poly(Basic):
 
                 coeffs = [ terms[monom] for monom in monoms ]
 
+        assert isinstance(monoms[0][0],int) #and isinstance(coeffs[0],Basic) #you can get by with the 2nd if you don't print
         args = (tuple(coeffs), tuple(monoms),
                 symbols, order, stamp, None)
 

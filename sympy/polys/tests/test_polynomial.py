@@ -66,7 +66,7 @@ def test_poly_basics():
 
     p = Poly(x**2 + x + 1, x)
 
-    assert Poly([1,1,1], x) == p
+    assert Poly([1, 1, 1], x) == p
 
     assert Poly(p, y) == \
         Poly(((1 + x + x**2,), ((0,),)), y, order='grlex')
@@ -1026,18 +1026,18 @@ def test_roots_quadratic():
         [-1 + I*sqrt(2)/2, -1 - I*sqrt(2)/2]
 
 def test_roots_cubic():
-    #normalized cubic,  x**3+a*x**2+b*x+c, is changed to y**3+p*y+q
-    #check c==0
+    # normalized cubic,  x**3+a*x**2+b*x+c, is changed to y**3+p*y+q
+    # check c==0
     assert roots_cubic(Poly(x**3+2*x**2+3*x+0, x)) == [-1 + I*2**S.Half, 0, -1 - I*2**S.Half]
-    #p==0 and q == 0
+    # p==0 and q == 0
     assert roots_cubic(Poly((x+2)**3,x)) == [-2, -2, -2]
-    #p==0 and q!=0
+    # p==0 and q!=0
     assert set(roots_cubic(Poly(x**3+1, x))) == \
            set([-S.One, S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2])
-    #p!=0 and q==0
+    # p!=0 and q==0
     assert set(roots_cubic(Poly(x**3 + 3*x**2 + 4*x + 2, x))) == \
            set([-S.One - I, -S.One, -S.One + I])
-    #p!=0 and q!=0
+    # p!=0 and q!=0
     p = Poly(x**3 - 6*x**2 + 13*x - 8, x)
     ans = roots_cubic(p)
     assert [[str(round(tmp.evalf().as_real_imag()[j],2)) for tmp in ans]
@@ -1386,4 +1386,3 @@ def test_discriminant_5th():
     27*b**4*e**4 + 3125*a**4*f**4 - 128*a**2*c**2*e**4 + 16*f*b**3*d**4 - \
     192*b*d*a**2*e**4 + 144*a*c*b**2*e**4 - 72*a*b*c*f*d**4 - 72*a*d*e*f*c**4 + \
     256*a**3*e**5 + 108*f*a**2*d**5
-

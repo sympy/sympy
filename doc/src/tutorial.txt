@@ -817,9 +817,9 @@ Tip: To make the pretty printing default in the python interpreter, use::
 
 **Pyglet**
 
-    >>> from sympy import Integral, pngview
+    >>> from sympy import Integral, preview
     >>> from sympy.abc import x
-    >>> pngview(Integral(x**2, x)) #doctest:+SKIP
+    >>> preview(Integral(x**2, x)) #doctest:+SKIP
 
 And a pyglet window with the LaTeX rendered expression will popup:
 
