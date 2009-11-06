@@ -123,7 +123,7 @@ class Poly(Basic):
 
            [1] All coefficients and monomials are validated before
                polynomial instance is created. Monomials are sorted
-               with respect to the given order. 
+               with respect to the given order.
 
            [2] No validity checking, no sorting, just a raw copy.
 
