@@ -253,8 +253,8 @@ def roots(f, *symbols, **flags):
         else:
             raise MultivariatePolyError(f)
 
-    assert f.is_univariate    
-    
+    assert f.is_univariate
+
     def _update_dict(result, root, k):
         if root in result:
             result[root] += k
