@@ -343,116 +343,120 @@ def together(expr, deep=False):
 #apart -> partial fractions decomposition (will be here :)
 
 def collect(expr, syms, evaluate=True, exact=False):
-    """Collect additive terms with respect to a list of symbols up
-       to powers with rational exponents. By the term symbol here
-       are meant arbitrary expressions, which can contain powers,
-       products, sums etc. In other words symbol is a pattern
-       which will be searched for in the expression's terms.
+    """
+        Collect additive terms with respect to a list of symbols up
+        to powers with rational exponents. By the term symbol here
+        are meant arbitrary expressions, which can contain powers,
+        products, sums etc. In other words symbol is a pattern
+        which will be searched for in the expression's terms.
 
-       This function will not apply any redundant expanding to the
-       input expression, so user is assumed to enter expression in
-       final form. This makes 'collect' more predictable as there
-       is no magic behind the scenes. However it is important to
-       note, that powers of products are converted to products of
-       powers using 'separate' function.
+        This function will not apply any redundant expanding to the
+        input expression, so user is assumed to enter expression in
+        final form. This makes 'collect' more predictable as there
+        is no magic behind the scenes. However it is important to
+        note, that powers of products are converted to products of
+        powers using 'separate' function.
 
-       There are two possible types of output. First, if 'evaluate'
-       flag is set, this function will return a single expression
-       or else it will return a dictionary with separated symbols
-       up to rational powers as keys and collected sub-expressions
-       as values respectively.
+        There are two possible types of output. First, if 'evaluate'
+        flag is set, this function will return a single expression
+        or else it will return a dictionary with separated symbols
+        up to rational powers as keys and collected sub-expressions
+        as values respectively.
 
-       >>> from sympy import *
-       >>> x, y, z = symbols('x', 'y', 'z')
-       >>> a, b, c = symbols('a', 'b', 'c')
+        >>> from sympy import *
+        >>> x, y, z = symbols('x', 'y', 'z')
+        >>> a, b, c = symbols('a', 'b', 'c')
 
-       This function can collect symbolic coefficients in polynomial
-       or rational expressions. It will manage to find all integer or
-       rational powers of collection variable:
+        This function can collect symbolic coefficients in polynomial
+        or rational expressions. It will manage to find all integer or
+        rational powers of collection variable:
 
-       >>> collect(a*x**2 + b*x**2 + a*x - b*x + c, x)
-       c + x*(a - b) + x**2*(a + b)
+        >>> collect(a*x**2 + b*x**2 + a*x - b*x + c, x)
+        c + x*(a - b) + x**2*(a + b)
 
-       The same result can be achieved in dictionary form:
+        The same result can be achieved in dictionary form:
 
-       >>> d = collect(a*x**2 + b*x**2 + a*x - b*x + c, x, evaluate=False)
-       >>> d[x**2]
-       a + b
-       >>> d[x]
-       a - b
-       >>> d[sympify(1)]
-       c
+        >>> d = collect(a*x**2 + b*x**2 + a*x - b*x + c, x, evaluate=False)
+        >>> d[x**2]
+        a + b
+        >>> d[x]
+        a - b
+        >>> d[sympify(1)]
+        c
 
-       You can also work with multi-variate polynomials. However
-       remember that this function is greedy so it will care only
-       about a single symbol at time, in specification order:
+        You can also work with multi-variate polynomials. However
+        remember that this function is greedy so it will care only
+        about a single symbol at time, in specification order:
 
-       >>> collect(x**2 + y*x**2 + x*y + y + a*y, [x, y])
-       x*y + y*(1 + a) + x**2*(1 + y)
+        >>> collect(x**2 + y*x**2 + x*y + y + a*y, [x, y])
+        x*y + y*(1 + a) + x**2*(1 + y)
 
-       Also more complicated expressions can be used as patterns:
+        Also more complicated expressions can be used as patterns:
 
-       >>> collect(a*sin(2*x) + b*sin(2*x), sin(2*x))
-       (a + b)*sin(2*x)
+        >>> collect(a*sin(2*x) + b*sin(2*x), sin(2*x))
+        (a + b)*sin(2*x)
 
-       >>> collect(a*x*log(x) + b*(x*log(x)), x*log(x))
-       x*(a + b)*log(x)
+        >>> collect(a*x*log(x) + b*(x*log(x)), x*log(x))
+        x*(a + b)*log(x)
 
-       It is also possible to work with symbolic powers, although
-       it has more complicated behavior, because in this case
-       power's base and symbolic part of the exponent are treated
-       as a single symbol:
+        It is also possible to work with symbolic powers, although
+        it has more complicated behavior, because in this case
+        power's base and symbolic part of the exponent are treated
+        as a single symbol:
 
-       >>> collect(a*x**c + b*x**c, x)
-       a*x**c + b*x**c
+        >>> collect(a*x**c + b*x**c, x)
+        a*x**c + b*x**c
 
-       >>> collect(a*x**c + b*x**c, x**c)
-       x**c*(a + b)
+        >>> collect(a*x**c + b*x**c, x**c)
+        x**c*(a + b)
 
-       However if you incorporate rationals to the exponents, then
-       you will get well known behavior:
+        However if you incorporate rationals to the exponents, then
+        you will get well known behavior:
 
-       >>> collect(a*x**(2*c) + b*x**(2*c), x**c)
-       (x**2)**c*(a + b)
+        >>> collect(a*x**(2*c) + b*x**(2*c), x**c)
+        (x**2)**c*(a + b)
 
-       Note also that all previously stated facts about 'collect'
-       function apply to the exponential function, so you can get:
+        Note also that all previously stated facts about 'collect'
+        function apply to the exponential function, so you can get:
 
-       >>> collect(a*exp(2*x) + b*exp(2*x), exp(x))
-       (a + b)*exp(2*x)
+        >>> collect(a*exp(2*x) + b*exp(2*x), exp(x))
+        (a + b)*exp(2*x)
 
-       If you are interested only in collecting specific powers
-       of some symbols then set 'exact' flag in arguments:
+        If you are interested only in collecting specific powers
+        of some symbols then set 'exact' flag in arguments:
 
-       >>> collect(a*x**7 + b*x**7, x, exact=True)
-       a*x**7 + b*x**7
+        >>> collect(a*x**7 + b*x**7, x, exact=True)
+        a*x**7 + b*x**7
 
-       >>> collect(a*x**7 + b*x**7, x**7, exact=True)
-       x**7*(a + b)
+        >>> collect(a*x**7 + b*x**7, x**7, exact=True)
+        x**7*(a + b)
 
-       You can also apply this function to differential equations, where
-       derivatives of arbitrary order can be collected:
+        You can also apply this function to differential equations, where
+        derivatives of arbitrary order can be collected.  Note that if you
+        collect with respect to a function or a derivative of a function,
+        all derivatives of that function will also be collected. Use
+        exact=True to prevent this from happening:
 
-       >>> from sympy import Derivative as D
-       >>> f = Function('f') (x)
+        >>> from sympy import Derivative as D
+        >>> f = Function('f') (x)
 
-       >>> collect(a*D(f,x) + b*D(f,x), D(f,x))
-       (a + b)*D(f(x), x)
+        >>> collect(a*D(f,x) + b*D(f,x), D(f,x))
+        (a + b)*D(f(x), x)
 
-       >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x))
-       (a + b)*D(f(x), x, x)
+        >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), f)
+        (a + b)*D(f(x), x, x)
 
-       >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x), exact=True)
-       a*D(f(x), x, x) + b*D(f(x), x, x)
+        >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x), exact=True)
+        a*D(f(x), x, x) + b*D(f(x), x, x)
 
-       >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x) + a*D(f,x) + b*D(f,x), D(f,x))
-       (a + b)*D(f(x), x) + (a + b)*D(f(x), x, x)
 
-       Or you can even match both derivative order and exponent at time::
+        >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f,x)
+        (a + b)*D(f(x), x) + (a + b)*f(x)
 
-           >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x)) == \\
-           ...     (a + b)*D(D(f,x),x)**2
-           True
+        Or you can even match both derivative order and exponent at time::
+
+        >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
+        D(f(x), x, x)**2*(a + b)
 
 
     == Notes ==
@@ -709,6 +713,7 @@ def separatevars(expr, dict=False, symbols=[]):
     {'coeff': 2, x: x**2, y: 1 + sin(y), z: z}
     >>> separatevars(2*x+y*sin(x), dict=True, symbols=(x, y)) == None
     True
+
     """
     if dict:
         return _separatevars_dict(_separatevars(expr), *symbols)
@@ -798,6 +803,7 @@ def ratsimp(expr):
         >>> y = Symbol('y')
         >>> ratsimp(1/x + 1/y)
         (x + y)/(x*y)
+
     """
     expr = sympify(expr)
     if expr.is_Pow:
@@ -864,6 +870,7 @@ def trigsimp(expr, deep=False, recursive=False):
         log(2*cos(x)**2 + 2*sin(x)**2)
         >>> trigsimp(log(e), deep=True)
         log(2)
+
     """
     from sympy.core.basic import S
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
@@ -926,6 +933,7 @@ def trigsimp_nonrecursive(expr, deep=False):
         log(2*cos(x)**2 + 2*sin(x)**2)
         >>> trigsimp_nonrecursive(log(e), deep=True)
         log(2)
+
     """
     from sympy.core.basic import S
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
@@ -1007,6 +1015,7 @@ def radsimp(expr):
         >>> e = ( (2+2*sqrt(2))*x+(2+sqrt(8))*y )/( 2+sqrt(2) )
         >>> radsimp(e)
         x*2**(1/2) + y*2**(1/2)
+
     """
     n,d = fraction(expr)
     a,b,c = map(Wild, 'abc')
@@ -1075,6 +1084,7 @@ def powsimp(expr, deep=False, combine='all'):
         log(exp(x)*exp(y))
         >>> powsimp(log(exp(x)*exp(y)), deep=True)
         x + y
+
     """
     if combine not in ['all', 'exp', 'base']:
             raise ValueError, "combine must be one of ('all', 'exp', 'base')."
@@ -1389,6 +1399,7 @@ def logcombine(expr, assume_pos_real=False):
     >>> a = Symbol('a', real=True)
     >>> logcombine(a*log(x)+log(y)-log(z))
     log(y*x**a/z)
+
     """
     # Try to make (a+bi)*log(x) == a*log(x)+bi*log(x).  This needs to be a
     # separate function call to avoid infinite recursion.

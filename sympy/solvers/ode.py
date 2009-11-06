@@ -539,7 +539,7 @@ def classify_ode(eq, func, dict=False):
         eq = eq.lhs
     # Collect diff(f(x),x) terms so that match will work correctly
     # collect() needs to be improved, as this doesn't always work.
-    eq = collect(eq, f(x).diff(x))
+    eq = collect(eq, f(x))
     order = ode_order(eq, f(x))
 
     # hint:matchdict or hint:(tuple of matchdicts)
