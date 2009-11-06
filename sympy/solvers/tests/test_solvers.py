@@ -290,7 +290,6 @@ def test_solve_for_functions_derivatives():
     assert soln == { y.diff(t) : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
             x : (a22*b1 - a12*b2)/(a11*a22 - a12*a21) }
 
-
 def test_issue626():
     x = Symbol("x")
     f = Function("f")

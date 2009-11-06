@@ -24,7 +24,7 @@ from elementary.trigonometric import acot, cot, tan, cos, sin, asin, acos, atan,
 from elementary.exponential import exp, log, LambertW
 from elementary.hyperbolic import sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth
 from elementary.integers import floor, ceiling
-from elementary.piecewise import Piecewise
+from elementary.piecewise import Piecewise, piecewise_fold
 
 from special.error_functions import erf
 from special.gamma_functions import gamma, lowergamma, uppergamma, polygamma, loggamma

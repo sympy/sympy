@@ -25,6 +25,7 @@ from sympy.functions import sqrt, log, exp, LambertW
 from sympy.simplify import simplify, collect
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 
 from sympy.utilities import any, all
 from sympy.utilities.iterables import iff
@@ -42,7 +43,8 @@ GS_POLY_CV_1 = 2 # can be converted to a polynomial equation via the change of v
 GS_POLY_CV_2 = 3 # can be converted to a polynomial equation multiplying on both sides by x**m
                  # for example, x + 1/x == 0. Multiplying by x yields x**2 + x == 0
 GS_RATIONAL_CV_1 = 4 # can be converted to a rational equation via the change of variable y -> x**n
-GS_TRANSCENDENTAL = 5
+GS_PIECEWISE = 5
+GS_TRANSCENDENTAL = 6
 
 def guess_solve_strategy(expr, symbol):
     """
@@ -98,6 +100,9 @@ def guess_solve_strategy(expr, symbol):
             else:
                 return GS_TRANSCENDENTAL
 
+    elif expr.is_Piecewise:
+        return GS_PIECEWISE
+
     elif expr.is_Function and expr.has(symbol):
         return GS_TRANSCENDENTAL
 
@@ -109,12 +114,12 @@ def guess_solve_strategy(expr, symbol):
 def solve(f, *symbols, **flags):
     """Solves equations and systems of equations.
 
-       Currently supported are univariate polynomial and transcendental
-       equations and systems of linear and polynomial equations.  Input
-       is formed as a single expression or an equation,  or an iterable
-       container in case of an equation system.  The type of output may
-       vary and depends heavily on the input. For more details refer to
-       more problem specific functions.
+       Currently supported are univariate polynomial, transcendental
+       equations, piecewise combinations thereof and systems of linear
+       and polynomial equations.  Input is formed as a single expression
+       or an equation,  or an iterable container in case of an equation
+       system.  The type of output may vary and depends heavily on the
+       input. For more details refer to more problem specific functions.
 
        By default all solutions are simplified to make the output more
        readable. If this is not the expected behavior (e.g., because of
@@ -203,6 +208,10 @@ def solve(f, *symbols, **flags):
             f = f.subs(swap_dict)
             symbols = symbols_new
 
+        # Any embedded piecewise functions need to be brought out to the
+        # top level so that the appropriate strategy gets selected.
+        f = piecewise_fold(f)
+
         if len(symbols) != 1:
             result = {}
             for s in symbols:
@@ -279,6 +288,34 @@ def solve(f, *symbols, **flags):
             result = solve(f1, symbol)
             # TODO: we might have introduced unwanted solutions
             # when multiplied by x**-m
+
+        elif strategy == GS_PIECEWISE:
+            result = set()
+            for expr, cond in f.args:
+                candidates = solve(expr, *symbols)
+                if isinstance(cond, bool) or cond.is_Number:
+                    if not cond:
+                        continue
+
+                    # Only include solutions that do not match the condition
+                    # of any of the other pieces.
+                    for candidate in candidates:
+                        matches_other_piece = False
+                        for other_expr, other_cond in f.args:
+                            if isinstance(other_cond, bool) \
+                               or other_cond.is_Number:
+                                continue
+                            if bool(other_cond.subs(symbol, candidate)):
+                                matches_other_piece = True
+                                break
+                        if not matches_other_piece:
+                            result.add(candidate)
+                else:
+                    for candidate in candidates:
+                        if bool(cond.subs(symbol, candidate)):
+                            result.add(candidate)
+
+            result = list(result)
 
         elif strategy == GS_TRANSCENDENTAL:
             #a, b = f.as_numer_denom()

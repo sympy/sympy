@@ -285,7 +285,8 @@ class Basic(AssumeMeths):
     is_Integer = False
     is_NumberSymbol = False
     is_Order = False
-    is_Derivative   = False
+    is_Derivative = False
+    is_Piecewise = False
 
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)
@@ -1230,6 +1231,17 @@ class Basic(AssumeMeths):
                         return False
 
             return search(self)
+
+    @property
+    def has_piecewise(self):
+        """Returns True if any args are Piecewise or has_piecewise"""
+        for a in self.args:
+            if issubclass(type(a),Basic) and a.is_Piecewise:
+                return True
+        for a in self.args:
+            if issubclass(type(a),Basic) and a.has_piecewise:
+                return True
+        return False
 
     @cacheit
     def has_all_symbols(self, *syms):

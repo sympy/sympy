@@ -60,9 +60,11 @@ class Piecewise(Function):
       1
       >>> p.subs(x,5)
       log(5)
+
     """
 
-    nargs=None
+    nargs = None
+    is_Piecewise = True
 
     def __new__(cls, *args, **options):
         # (Try to) sympify args first
@@ -195,6 +197,9 @@ class Piecewise(Function):
             curr_low = int_b
             if curr_low > b:
                 break
+        if curr_low < b:
+            holes.append([curr_low, b, default])
+
         if holes and default != None:
             int_expr.extend(holes)
         elif holes and default == None:
@@ -230,3 +235,32 @@ class Piecewise(Function):
             return S.Zero
         return None
 
+
+def piecewise_fold(expr):
+    """
+    Takes an expression containing a piecewise function and returns the
+    expression in piecewise form.
+
+    >>> from sympy import *
+    >>> x = Symbol('x')
+    >>> p = Piecewise((x, x < 1), (1, 1 <= x))
+    >>> piecewise_fold(x*p)
+    Piecewise((x**2, x < 1), (x, 1 <= x))
+
+    """
+    if not isinstance(expr, Basic) or not expr.has_piecewise:
+        return expr
+    new_args = map(piecewise_fold, expr.args)
+    if type(expr) is ExprCondPair:
+        return ExprCondPair(*new_args)
+    piecewise_args = []
+    for n, arg in enumerate(new_args):
+        if type(arg) is Piecewise:
+            piecewise_args.append(n)
+    if len(piecewise_args) > 0:
+        n = piecewise_args[0]
+        new_args = [(expr.__class__(*(new_args[:n] + [e] + new_args[n+1:])), c) \
+                        for e, c in new_args[n].args]
+        if len(piecewise_args) > 1:
+            return piecewise_fold(Piecewise(*new_args))
+    return Piecewise(*new_args)

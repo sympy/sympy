@@ -13,12 +13,16 @@ from sympy.polys import Poly
 from sympy.solvers import solve
 from sympy.functions import DiracDelta, Heaviside, Piecewise
 from sympy.geometry import Curve
+from sympy.functions.elementary.piecewise import piecewise_fold
 
 class Integral(Basic):
     """Represents unevaluated integral."""
 
     def __new__(cls, function, *symbols, **assumptions):
-        function = sympify(function)
+        # Any embedded piecewise functions need to be brought out to the
+        # top level so that integration can go into piecewise mode at the
+        # earliest possible moment.
+        function = piecewise_fold(sympify(function))
 
         if function.is_Number:
             if function is S.NaN:
@@ -542,4 +546,3 @@ def line_integrate(field, curve, vars):
 
     integral = Integral(Ft, curve.limits).doit()
     return integral
-
