@@ -29,7 +29,7 @@ def test_latex_basic():
     assert latex(2*x*y, mul_symbol='dot') == r"$2 \cdot x \cdot y$"
 
     assert latex(x**(Rational(1,2))) == r"$\sqrt{x}$"
-    assert latex(x**(Rational(3,2))) == r"$\sqrt[3]{x}$"
+    assert latex(x**(Rational(3,2))) == r"$x^{\frac{3}{2}}$"
     assert latex(x**(Rational(3,4))) == r"$x^{\frac{3}{4}}$"
     assert latex(x**(Rational(3,4)), fold_frac_powers=True) == "$x^{3/4}$"
 
@@ -144,11 +144,11 @@ def test_issue469():
     assert latex(y) in [r'$\beta + x$', r'$x + \beta$']
 
 def test_latex():
-    assert latex((2*tau)**Rational(7,2)) == "$8 \\sqrt{2} \\sqrt[7]{\\tau}$"
+    assert latex((2*tau)**Rational(7,2)) == "$8 \\sqrt{2} \\tau^{\\frac{7}{2}}$"
     assert latex((2*mu)**Rational(7,2), inline=False) == \
-            "\\begin{equation*}8 \\sqrt{2} \\sqrt[7]{\\mu}\\end{equation*}"
+            "\\begin{equation*}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation*}"
     assert latex((2*mu)**Rational(7,2), inline=False, itex=True) == \
-            "$$8 \\sqrt{2} \\sqrt[7]{\\mu}$$"
+            "$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$"
     assert latex([2/x, y]) =="$\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}$"
 
 

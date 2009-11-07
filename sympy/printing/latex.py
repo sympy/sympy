@@ -260,13 +260,12 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Pow(self, expr):
-        if expr.exp.is_Rational and expr.exp.q == 2:
-            base, exp = self._print(expr.base), abs(expr.exp.p)
+        if expr.exp.is_Rational \
+           and expr.exp.q == 2 \
+           and abs(expr.exp.p) == 1:
+            base = self._print(expr.base)
 
-            if exp == 1:
-                tex = r"\sqrt{%s}" % base
-            else:
-                tex = r"\sqrt[%s]{%s}" % (exp, base)
+            tex = r"\sqrt{%s}" % base
 
             if expr.exp.is_negative:
                 return r"\frac{1}{%s}" % tex
@@ -713,13 +712,13 @@ def latex(expr, profile=None, **kargs):
         >>> from sympy.abc import *
 
         >>> latex((2*tau)**Rational(7,2))
-        '$8 \\sqrt{2} \\sqrt[7]{\\tau}$'
+        '$8 \\sqrt{2} \\tau^{\\frac{7}{2}}$'
 
         >>> latex((2*mu)**Rational(7,2), inline=False)
-        '\\begin{equation*}8 \\sqrt{2} \\sqrt[7]{\\mu}\\end{equation*}'
+        '\\begin{equation*}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation*}'
 
         >>> latex((2*mu)**Rational(7,2), inline=False, itex=True)
-        '$$8 \\sqrt{2} \\sqrt[7]{\\mu}$$'
+        '$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$'
 
         Besides all Basic based expressions, you can recursively
         convert Pyhon containers (lists, tuples and dicts) and
