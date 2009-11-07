@@ -403,6 +403,9 @@ def test_integral_reconstruct():
 def test_doit():
     e = Integral(Integral(2*x), (x, 0, 1))
     assert e.doit() == Rational(1, 3)
-    # risch currently chokes on the contained integral.
-    #assert e.doit(deep = False) == e
 
+@XFAIL
+def test_doit2():
+    e = Integral(Integral(2*x), (x, 0, 1))
+    # risch currently chokes on the contained integral.
+    assert e.doit(deep = False) == e
