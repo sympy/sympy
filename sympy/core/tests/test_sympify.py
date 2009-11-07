@@ -255,3 +255,7 @@ def test_S_sympify():
 def test_issue1689():
     assert srepr(S(1.0+0J)) == srepr(S(1.0)) == srepr(Real(1.0))
     assert srepr(Real(1)) != srepr(Real(1.0))
+
+def test_issue1699_None():
+    assert S(None) == None
+

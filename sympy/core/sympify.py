@@ -25,7 +25,7 @@ def sympify(a, locals=None, convert_xor=True):
            - any object defined in sympy (except maybe matrices [TODO])
            - standard numeric python types: int, long, float, Decimal
            - strings (like "0.09" or "2e-19")
-           - booleans (will leave them unchanged)
+           - booleans, including None (will leave them unchanged)
 
        If the argument is already a type that sympy understands, it will do
        nothing but return that value. This can be used at the begining of a
@@ -54,11 +54,9 @@ def sympify(a, locals=None, convert_xor=True):
     #                                      -- kirr
     if locals is None:
         locals = {}
-    if isinstance(a, Basic):
+    if isinstance(a, (Basic, BasicType, bool)):
         return a
-    if isinstance(a, BasicType):
-        return a
-    elif isinstance(a, bool):
+    if a is None:
         return a
     elif isinstance(a, (int, long)):
         return Integer(a)
