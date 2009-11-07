@@ -800,8 +800,11 @@ class Matrix(object):
 
     def LUsolve(self, rhs, iszerofunc=_iszero):
         """
-        Solve the linear system Ax = b.
+        Solve the linear system Ax = b for x.
         self is the coefficient matrix A and rhs is the right side b.
+
+        This is for symbolic matrices, for real or complex ones use
+        sympy.mpmath.lu_solve or sympy.mpmath.qr_solve.
         """
         assert rhs.rows == self.rows
         A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
@@ -983,7 +986,7 @@ class Matrix(object):
 
     def QRdecomposition(self):
         """
-        Return Q*R where Q is orthogonal and R is upper triangular.
+        Return Q,R where A = Q*R, Q is orthogonal and R is upper triangular.
 
         Assumes full-rank square (for now).
         """
@@ -1004,10 +1007,42 @@ class Matrix(object):
                 R[i,j] = Q[:,i].dot(self[:,j])
         return Q,R
 
-    # TODO: QRsolve
+    def QRsolve(self, b):
+        """
+        Solve the linear system 'Ax = b'.
+
+        'self' is the matrix 'A', the method argument is the vector
+        'b'.  The method returns the solution vector 'x'.  If 'b' is a
+        matrix, the system is solved for each column of 'b' and the
+        return value is a matrix of the same shape as 'b'.
+
+        This method is slower (approximately by a factor of 2) but
+        more stable for floating-point arithmetic than the LUsolve method.
+        However, LUsolve usually uses an exact arithmetic, so you don't need
+        to use QRsolve.
+
+        This is mainly for educational purposes and symbolic matrices, for real
+        (or complex) matrices use sympy.mpmath.qr_solve.
+        """
+
+        Q, R = self.QRdecomposition()
+        y = Q.T * b
+
+        # back substitution to solve R*x = y:
+        # We build up the result "backwards" in the vector 'x' and reverse it
+        # only in the end.
+        x = []
+        n = R.rows
+        for j in range(n-1, -1, -1):
+            tmp = y[j,:]
+            for k in range(j+1, n):
+                tmp -= R[j,k] * x[n-1-k]
+            x.append(tmp/R[j,j])
+        return Matrix([row.mat for row in reversed(x)])
 
     # Utility functions
     def simplify(self):
+        """Simplify the elements of a matrix in place."""
         for i in xrange(len(self.mat)):
             self.mat[i] = simplify(self.mat[i])
 
