@@ -42,10 +42,10 @@ def preview(expr, output='png', viewer=None, euler=True):
        first, then kdvi and xdvi). If nothing is found you will
        need to set the viewer explicitely::
 
-           >> preview(x + y, output='dvi', viewer='superior-dvi-viwer')
+           >> preview(x + y, output='dvi', viewer='superior-dvi-viewer')
 
        This will skip auto-dection and will run user specified
-       'superior-dvi-viwer'. If 'view' fails to find it on
+       'superior-dvi-viewer'. If 'view' fails to find it on
        your system it will gracefully raise an exception.
 
        Currently this depends on pexpect, which is not available for windows.
