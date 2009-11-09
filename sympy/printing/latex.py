@@ -429,6 +429,9 @@ class LatexPrinter(Printer):
 
             return name % ",".join(args)
 
+    def _print_Poly(self, expr):
+        return self._print(expr.as_basic())
+
     def _print_floor(self, expr, exp=None):
         tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
 

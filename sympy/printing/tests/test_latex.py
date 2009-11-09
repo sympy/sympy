@@ -1,7 +1,7 @@
 from sympy import symbols, Rational, Symbol, Integral, log, diff, sin, exp, \
         Function, factorial, floor, ceiling, abs, re, im, conjugate, gamma, \
         Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum, \
-        Limit, oo
+        Limit, oo, Poly
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL
@@ -204,6 +204,9 @@ def test_latex_mul_symbol():
     assert latex(4*x, mul_symbol='times') == "$4 \\times x$"
     assert latex(4*x, mul_symbol='dot') == "$4 \\cdot x$"
     assert latex(4*x, mul_symbol='ldot') == "$4 \,.\, x$"
+
+def test_latex_Poly():
+    assert latex(Poly(x**2 + 2 * x, x)) == r"$2 x + x^{2}$"
 
 def test_latex_issue1282():
     y = 4*4**log(2)
