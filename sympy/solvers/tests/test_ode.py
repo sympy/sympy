@@ -1055,3 +1055,6 @@ def test_unexpanded_Liouville_ODE():
     assert dsolve(eq2, f(x)) in (sol2, sol2s)
     assert checkodesol(eq2, f(x), sol2, order=2, solve_for_func=False)[0]
 
+def test_1686():
+    eq = x + C1*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
+    assert classify_ode(eq, f(x)) == ('1st_linear', '1st_linear_Integral')

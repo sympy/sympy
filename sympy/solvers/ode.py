@@ -584,8 +584,16 @@ def classify_ode(eq, func, dict=False):
         # We can save a lot of time by skipping these if the ODE isn't 1st order
 
         # Linear case: a(x)*y'+b(x)*y+c(x) == 0
-        r = reduced_eq.match(a*df + b*f(x) + c)
-        if r:
+        if eq.is_Add:
+            ind, dep = reduced_eq.as_independent(f)
+        else:
+            u = Symbol('u', dummy=True)
+            ind, dep = (reduced_eq + u).as_independent(f)
+            ind, dep = [tmp.subs(u, 0) for tmp in [ind, dep]]
+        r = {a: dep.coeff(df, expand=False) or 0,
+             b: dep.coeff(f(x), expand=False) or 0,
+             c: ind}
+        if (r[a]*df + r[b]*f(x) + r[c]).expand() - reduced_eq == 0:
             r['a'] = a
             r['b'] = b
             r['c'] = c
