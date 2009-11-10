@@ -10,10 +10,18 @@ def strip_file(filename, write, report):
 
     lines = open(filename).readlines()
     hit = False
+    cr = False
     for index, line in enumerate(lines):
         if line.endswith(" \n"):
             if report:
                 print "%s, line %s" % (filename, index + 1)
+            if write:
+                lines[index] = line.rstrip() + "\n"
+                hit = True
+        if line.endswith("\r\n"):
+            if report and not cr:
+                print "%s, line %s (crlf now silent)" % (filename, index + 1)
+                cr = True
             if write:
                 lines[index] = line.rstrip() + "\n"
                 hit = True

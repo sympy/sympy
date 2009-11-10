@@ -46,7 +46,7 @@ def check_directory_tree(base_path):
                     if line.endswith(" \n"):
                         assert False, message_space % (fname, idx+1)
                     if line.endswith("\r\n"):
-                        assert False, message_carriagereturn % (fname, idx+1)
+                        assert False, message_carriage % (fname, idx+1)
                     w = get_whitespace(line)
                     if w.expandtabs() != w:
                         assert False, message_tabs % (fname, idx+1)
