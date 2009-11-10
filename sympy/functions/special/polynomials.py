@@ -215,7 +215,11 @@ class legendre(PolynomialSequence):
 
 class assoc_legendre(PolynomialSequence2):
     """
-    assoc_legendre(n,m, x) gives P_nm(x) = mth association to Legendre polynomial P_n(x)
+    assoc_legendre(n,m, x) gives P_nm(x), where n and m are the degree
+    and order or an expression which is related to the nth order
+    Legendre polynomial, P_n(x) in the following manner:
+
+        P_nm(x) = (-1)**m * (1 - x**2)**(m/2) * diff(P_n(x), x, m)
 
     Associated Legende polynomial are orthogonal on [-1, 1] with:
 

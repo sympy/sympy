@@ -118,14 +118,10 @@ def sympify(a, locals=None, convert_xor=True):
 
 
 def _sympify(a):
-    """short version of sympify for internal usage
-
-       When adding and comparing symbolic expressions, it is unwise to allow
-       e.g. strings to mixin. On the other hand Python integers and floats are
-       allowed.
-
-       So we don't use full-featured sympify in __add__ and __eq__ methods, but
-       instead use this small-crafted function there instead.
+    """Short version of sympify for internal usage for __add__ and __eq__
+       methods where it is ok to allow some things (like Python integers
+       and floats) in the expression. This excludes things (like strings)
+       that are unwise to allow into such an expression.
 
        >>> Integer(1) == 1
        True

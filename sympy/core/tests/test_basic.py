@@ -11,7 +11,7 @@ class DummyNumber(object):
 
     If one has a Number class (e.g. Sage Integer, or some other custom class)
     that one wants to work well with SymPy, one has to implement at least the
-    methods of this class DummyNumber, resp. it's subclasses I5 and F1_1.
+    methods of this class DummyNumber, resp. its subclasses I5 and F1_1.
 
     Basically, one just needs to implement either __int__() or __float__() and
     then one needs to make sure that the class works with Python integers and
