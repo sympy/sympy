@@ -16,10 +16,50 @@ import sys
 import inspect
 import traceback
 import pdb
-from glob import glob
+from fnmatch import fnmatch
 from timeit import default_timer as clock
 import doctest as pdoctest # avoid clashing with our doctest() function
 from sympy.utilities import any
+from doctest import DocTestFinder
+import re as pre
+
+def sys_normcase(f):
+    if sys_case_insensitive:
+        return f.lower()
+    return f
+
+def convert_to_native_paths(lst):
+    """
+    Converts a list of '/' separated paths into a list of
+    native (os.sep separated) paths and converts to lowercase
+    if the system is case insensitive.
+    """
+    newlst = []
+    for i, rv in enumerate(lst):
+        rv = os.path.join(*rv.split("/"))
+        # on windows the slash after the colon is dropped
+        if sys.platform == "win32":
+            pos = rv.find(':')
+            if pos != -1:
+                if rv[pos+1] != '\\':
+                    rv = rv[:pos+1] + '\\' + rv[pos+1:]
+        newlst.append(sys_normcase(rv))
+    return newlst
+
+def get_sympy_dir():
+    """
+    Returns the root sympy directory and set the global value
+    indicating whether the system is case sensitive or not.
+    """
+    global sys_case_insensitive
+
+    this_file = os.path.abspath(__file__)
+    sympy_dir = os.path.join(os.path.dirname(this_file), "..", "..")
+    sympy_dir = os.path.normpath(sympy_dir)
+    sys_case_insensitive = (os.path.isdir(sympy_dir) and
+                        os.path.isdir(sympy_dir.lower()) and
+                        os.path.isdir(sympy_dir.upper()))
+    return sys_normcase(sympy_dir)
 
 def isgeneratorfunction(object):
     """
@@ -47,20 +87,15 @@ def setup_pprint():
     from sympy.printing import sstrrepr
     init_printing(sstrrepr)
 
-def convert_to_native_paths(lst):
+def test(*paths, **kwargs):
     """
-    Converts a list of '/' separated paths into a list of
-    native (os.sep separated) paths.
-    """
-    return [os.path.join(*x.split("/")) for x in lst]
+    Run all tests in test_*.py files which match any of the given
+    strings in `paths` or all tests if paths=[].
 
-def test(*args, **kwargs):
-    """
-    Run all tests containing any of the given strings in their path.
-
-    If sort=False, run them in random order (not default).
-
-    Warning: Tests in *very* deeply nested directories are not found.
+    Notes:
+       o if sort=False, tests are run in random order (not default).
+       o paths can be entered in native system format or in unix,
+         forward-slash format.
 
     Examples:
 
@@ -71,14 +106,14 @@ def test(*args, **kwargs):
 
     Run one file:
     >> sympy.test("sympy/core/tests/test_basic.py")
+    >> sympy.test("_basic")
 
     Run all tests in sympy/functions/ and some particular file:
     >> sympy.test("sympy/core/tests/test_basic.py", "sympy/functions")
 
     Run all tests in sympy/core and sympy/utilities:
-    >> sympy.test("core", "util")
+    >> sympy.test("/core", "/util")
     """
-    from glob import glob
     verbose = kwargs.get("verbose", False)
     tb = kwargs.get("tb", "short")
     kw = kwargs.get("kw", "")
@@ -87,94 +122,150 @@ def test(*args, **kwargs):
     sort = kwargs.get("sort", True)
     r = PyTestReporter(verbose, tb, colors)
     t = SymPyTests(r, kw, post_mortem)
-    if len(args) == 0:
-        t.add_paths(["sympy"])
+
+    test_files = t.get_test_files('sympy')
+    if len(paths) == 0:
+        t._tests.extend(test_files)
     else:
-        mypaths = []
-        for p in t.get_paths(dir='sympy'):
-            mypaths.extend(glob(p))
-        mypaths = set(mypaths)
-        t.add_paths([p for p in mypaths if any(a in p for a in args)])
+        paths = convert_to_native_paths(paths)
+        matched = []
+        for f in test_files:
+            basename = os.path.basename(f)
+            for p in paths:
+                if p in f or fnmatch(basename, p):
+                    matched.append(f)
+                    break
+        t._tests.extend(matched)
+
     return t.test(sort=sort)
 
 def doctest(*paths, **kwargs):
     """
-    Runs the doctests specified by paths, or all tests if paths=[].
+    Runs doctests in all *py files in the sympy directory which match
+    any of the given strings in `paths` or all tests if paths=[].
 
-    Note: paths are specified relative to the sympy root directory in a unix
-    format (on all platforms including windows).
+    Note:
+       o paths can be entered in native system format or in unix,
+         forward-slash format.
+       o files that are on the blacklist can be tested by providing
+         their path; they are only excluded if no paths are given.
 
     Examples:
 
-    Run all tests:
     >> import sympy
+
+    Run all tests:
     >> sympy.doctest()
 
     Run one file:
-    >> import sympy
-    >> sympy.doctest("sympy/core/tests/test_basic.py")
+    >> sympy.doctest("sympy/core/basic.py")
+    >> sympy.doctest("polynomial.txt")
 
     Run all tests in sympy/functions/ and some particular file:
-    >> import sympy
-    >> sympy.doctest("sympy/core/tests/test_basic.py", "sympy/functions")
+    >> sympy.doctest("/functions", "basic.py")
+
+    Run any file having polynomial in its name, doc/src/modules/polynomial.txt,
+    sympy\functions\special\polynomials.py, and sympy\polys\polynomial.py:
+    >> sympy.doctest("polynomial")
     """
+    strict = kwargs.get("strict", False)
     verbose = kwargs.get("verbose", False)
     blacklist = kwargs.get("blacklist", [])
     blacklist.extend([
-        "sympy/thirdparty/pyglet", # segfaults
-        "sympy/mpmath", # needs to be fixed upstream
-        "sympy/plotting", # generates live plots
-        "sympy/utilities/compilef.py", # needs tcc
-        "sympy/galgebra/GA.py", # needs numpy
-        "sympy/galgebra/latex_ex.py", # needs numpy
-        "sympy/conftest.py", # needs py.test
-        "sympy/utilities/benchmarking.py", # needs py.test
-        ])
+                    "sympy/thirdparty/pyglet", # segfaults
+                    "doc/src/modules/mpmath", # needs to be fixed upstream
+                    "sympy/mpmath", # needs to be fixed upstream
+                    "doc/src/modules/plotting.txt", # generates live plots
+                    "sympy/plotting", # generates live plots
+                    "sympy/utilities/compilef.py", # needs tcc
+                    "sympy/galgebra/GA.py", # needs numpy
+                    "sympy/galgebra/latex_ex.py", # needs numpy
+                    "sympy/conftest.py", # needs py.test
+                    "sympy/utilities/benchmarking.py", # needs py.test
+                    ])
+    blacklist = convert_to_native_paths(blacklist)
 
     r = PyTestReporter(verbose)
-    t = SymPyDocTests(r, blacklist=blacklist)
-    if len(paths) > 0:
-        t.add_paths(paths)
-    else:
-        t.add_paths(["sympy"])
-    dtest = t.test()
-    if not dtest:
-        return False
+    t = SymPyDocTests(r, strict)
 
-    if sys.version_info[:2] <= (2,4):
-        return True
-
+    test_files = t.get_test_files('sympy')
+    not_blacklisted = [f for f in test_files
+                         if not any(b in f for b in blacklist)]
     if len(paths) == 0:
-        # test documentation under doc/src/ only if we are running the full
-        # test suite and this is python2.5 or newer:
-        excluded = convert_to_native_paths(['doc/src/modules/plotting.txt'])
-        doc_globs = convert_to_native_paths(['doc/src/*.txt',
-                'doc/src/modules/*.txt'])
-        doc_files = sum([glob(x) for x in doc_globs], [])
-        for ex in excluded:
-            doc_files.remove(ex)
+        t._tests.extend(not_blacklisted)
     else:
-        doc_files = paths
+        # take only what was requested...but not blacklisted items
+        # and allow for partial match anywhere or fnmatch of name
+        paths = convert_to_native_paths(paths)
+        matched = []
+        for f in not_blacklisted:
+            basename = os.path.basename(f)
+            for p in paths:
+                if p in f or fnmatch(basename, p):
+                    matched.append(f)
+                    break
+        t._tests.extend(matched)
 
-    setup_pprint()
-    doc_tests_succeeded = True
-    for doc_file in doc_files:
-        if not os.path.isfile(doc_file):
-            continue
-        old_displayhook = sys.displayhook
-        try:
-            out = pdoctest.testfile(doc_file, module_relative=False,
-                    optionflags=pdoctest.ELLIPSIS | \
-                    pdoctest.NORMALIZE_WHITESPACE)
-        finally:
-            # make sure we return to the original displayhook in case some
-            # doctest has changed that
-            sys.displayhook = old_displayhook
-        print "Testing ", doc_file
-        print "Failed %s, tested %s" % out
-        if out[0] != 0:
-            doc_tests_succeeded = False
-    if not doc_tests_succeeded:
+    # run the tests and record the result for this *py portion of the tests
+    if t._tests:
+        doc_tests_succeeded = t.test()
+    else:
+        doc_tests_succeeded = True
+
+    # test *txt files only if we are running python newer than 2.4
+    if sys.version_info[:2] > (2,4):
+
+        # N.B.
+        # --------------------------------------------------------------------
+        # Here we test *.txt files at or below doc/src. Code from these must
+        # be self supporting in terms of imports since there is no importing
+        # of necessary modules by doctest.testfile. If you try to pass *.py
+        # files through this they might fail because they will lack the needed
+        # imports and smarter parsing that can be done with source code.
+        #
+        test_files = t.get_test_files('doc/src', '*.txt', init_only=False)
+        test_files.sort()
+
+        not_blacklisted = [f for f in test_files
+                             if not any(b in f for b in blacklist)]
+
+        if len(paths) == 0:
+            matched = not_blacklisted
+        else:
+            # Take only what was requested as long as it's not on the blacklist.
+            # Paths were already made native in *py tests so don't repeat here.
+            # There's no chance of having a *py file slip through since we
+            # only have *txt files in test_files.
+            matched =  []
+            for f in not_blacklisted:
+                basename = os.path.basename(f)
+                for p in paths:
+                    if p in f or fnmatch(basename, p):
+                        matched.append(f)
+                        break
+
+        setup_pprint()
+        for txt_file in matched:
+            if not os.path.isfile(txt_file):
+                continue
+            old_displayhook = sys.displayhook
+            try:
+                out = pdoctest.testfile(txt_file, module_relative=False,
+                        optionflags=pdoctest.ELLIPSIS | \
+                        pdoctest.NORMALIZE_WHITESPACE)
+            finally:
+                # make sure we return to the original displayhook in case some
+                # doctest has changed that
+                sys.displayhook = old_displayhook
+            print "Testing ", txt_file
+            print "Failed %s, tested %s" % out
+            if out[0] != 0:
+                doc_tests_succeeded = False
+
+    # the doctests for *py will have printed this message already if there was
+    # a failure, so now only print it if there was intervening reporting by
+    # testing the *txt.
+    if matched and not doc_tests_succeeded:
         print("DO *NOT* COMMIT!")
     return doc_tests_succeeded
 
@@ -184,26 +275,16 @@ class SymPyTests(object):
         self._post_mortem = post_mortem
         self._kw = kw
         self._count = 0
-        self._root_dir = self.get_sympy_dir()
+        self._root_dir = sympy_dir
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
         self._tests = []
 
-    def add_paths(self, paths):
-        for path in paths:
-            path2 = os.path.join(self._root_dir, *path.split("/"))
-            if path2.endswith(".py"):
-                self._tests.append(path2)
-            else:
-                self._tests.extend(self.get_tests(path2))
-
     def test(self, sort=False):
         """
-        Runs the tests.
+        Runs the tests returning True if all tests pass, otherwise False.
 
         If sort=False run tests in random order.
-
-        Returns True if all tests pass, otherwise False.
         """
         if sort:
             self._tests.sort()
@@ -290,15 +371,6 @@ class SymPyTests(object):
                 self._reporter.test_pass()
         self._reporter.leaving_filename()
 
-    def get_sympy_dir(self):
-        """
-        Returns the root sympy directory.
-        """
-        this_file = os.path.abspath(__file__)
-        sympy_dir = os.path.join(os.path.dirname(this_file), "..", "..")
-        sympy_dir = os.path.normpath(sympy_dir)
-        return sympy_dir
-
     def matches(self, x):
         """
         Does the keyword expression self._kw match "x"? Returns True/False.
@@ -309,58 +381,33 @@ class SymPyTests(object):
             return True
         return x.__name__.find(self._kw) != -1
 
-    def get_paths(self, dir="", level=15):
+    def get_test_files(self, dir, pat = 'test_*.py'):
         """
-        Generates a set of paths for testfiles searching.
+        Returns the list of test_*.py (default) files at or below directory
+        `dir` relative to the sympy home directory.
+        """
+        dir = os.path.join(self._root_dir, convert_to_native_paths([dir])[0])
 
-        Example:
-        >> get_paths(2)
-        ['sympy/test_*.py', 'sympy/*/test_*.py', 'sympy/*/*/test_*.py']
-        >> get_paths(6)
-        ['sympy/test_*.py', 'sympy/*/test_*.py', 'sympy/*/*/test_*.py',
-        'sympy/*/*/*/test_*.py', 'sympy/*/*/*/*/test_*.py',
-        'sympy/*/*/*/*/*/test_*.py', 'sympy/*/*/*/*/*/*/test_*.py']
-        """
-        wildcards = [dir]
-        for i in range(level):
-            wildcards.append(os.path.join(wildcards[-1], "*"))
-        p = [os.path.join(x, "test_*.py") for x in wildcards]
-        return p
-
-    def get_tests(self, dir):
-        """
-        Returns the list of tests.
-        """
         g = []
-        for x in self.get_paths(dir):
-            g.extend(glob(x))
-        g = list(set(g))
-        g.sort()
-        return g
+        for path, folders, files in os.walk(dir):
+            g.extend([os.path.join(path, f) for f in files if fnmatch(f, pat)])
+
+        return [sys_normcase(gi) for gi in g]
 
 class SymPyDocTests(object):
 
-    def __init__(self, reporter, blacklist=[]):
+    def __init__(self, reporter, strict):
         self._count = 0
-        self._root_dir = self.get_sympy_dir()
+        self._root_dir = sympy_dir
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
-        self._tests = []
-        self._blacklist = convert_to_native_paths(blacklist)
+        self._strict = strict
 
-    def add_paths(self, paths):
-        for path in paths:
-            path2 = os.path.join(self._root_dir, *path.split("/"))
-            if path2.endswith(".py"):
-                self._tests.append(path2)
-            else:
-                self._tests.extend(self.get_tests(path2))
+        self._tests = []
 
     def test(self):
         """
-        Runs the tests.
-
-        Returns True if all tests pass, otherwise False.
+        Runs the tests and returns True if all tests pass, otherwise False.
         """
         self._reporter.start()
         for f in self._tests:
@@ -373,7 +420,6 @@ class SymPyDocTests(object):
 
     def test_file(self, filename):
 
-        import doctest
         import unittest
         from StringIO import StringIO
 
@@ -381,22 +427,37 @@ class SymPyDocTests(object):
         module = rel_name.replace(os.sep, '.')[:-3]
         setup_pprint()
         try:
-            module = doctest._normalize_module(module)
-            tests = doctest.DocTestFinder().find(module)
+            module = pdoctest._normalize_module(module)
+            tests = SymPyDocTestFinder().find(module)
         except:
             self._reporter.import_error(filename, sys.exc_info())
             return
 
-        tests.sort()
+        if sys.version_info[:2] == (2, 4):
+            # From doctest's docs:
+            # "Sort the tests by alpha order of names, for consistency in
+            # verbose-mode output.  This was a feature of doctest in Pythons
+            # <= 2.3 that got lost by accident in 2.4.  It was repaired in
+            # 2.4.4 and 2.5."
+            tests.sort()
         tests = [test for test in tests if len(test.examples) > 0]
         self._reporter.entering_filename(filename, len(tests))
         for test in tests:
             assert len(test.examples) != 0
-            runner = doctest.DocTestRunner(optionflags=doctest.ELLIPSIS | \
-                    doctest.NORMALIZE_WHITESPACE)
+            runner = pdoctest.DocTestRunner(optionflags=pdoctest.ELLIPSIS | \
+                    pdoctest.NORMALIZE_WHITESPACE)
             old = sys.stdout
             new = StringIO()
             sys.stdout = new
+            # the doctests must run on their own; all imports must be
+            # explicit within a function's docstring. Once imported
+            # that import will be available to the rest of the tests in
+            # a given function's docstring (unless clear_globs=True below).
+            if self._strict:
+                test.globs = {}
+                # if this is uncommented then all the test would get is what
+                # comes by default with a "from sympy import *"
+                #exec('from sympy import *') in test.globs
             try:
                 f, t = runner.run(test, out=new.write, clear_globs=False)
             finally:
@@ -407,46 +468,12 @@ class SymPyDocTests(object):
                 self._reporter.test_pass()
         self._reporter.leaving_filename()
 
-    def get_sympy_dir(self):
+    def get_test_files(self, dir, pat='*.py', init_only=True):
         """
-        Returns the root sympy directory.
-        """
-        this_file = os.path.abspath(__file__)
-        sympy_dir = os.path.join(os.path.dirname(this_file), "..", "..")
-        sympy_dir = os.path.normpath(sympy_dir)
-        return sympy_dir
-
-
-    def get_paths(self, dir="", level=15):
-        """
-        Generates a set of paths for testfiles searching.
-
-        Example:
-        >> get_paths(2)
-        ['sympy/test_*.py', 'sympy/*/test_*.py', 'sympy/*/*/test_*.py']
-        >> get_paths(6)
-        ['sympy/test_*.py', 'sympy/*/test_*.py', 'sympy/*/*/test_*.py',
-        'sympy/*/*/*/test_*.py', 'sympy/*/*/*/*/test_*.py',
-        'sympy/*/*/*/*/*/test_*.py', 'sympy/*/*/*/*/*/*/test_*.py']
-        """
-        wildcards = [dir]
-        for i in range(level):
-            wildcards.append(os.path.join(wildcards[-1], "*"))
-        p = [os.path.join(x, "*.py") for x in wildcards]
-        return p
-
-    def is_on_blacklist(self, x):
-        """
-        Returns True if "x" is on the blacklist. Otherwise False.
-        """
-        for p in self._blacklist:
-            if x.find(p) != -1:
-                return True
-        return False
-
-    def get_tests(self, dir):
-        """
-        Returns the list of tests.
+        Returns the list of *py files (default) from which docstrings
+        will be tested which are at or below directory `dir`. By default,
+        only those that have an __init__.py in their parent directory
+        and do not start with `test_` will be included.
         """
         def importable(x):
             """
@@ -457,21 +484,157 @@ class SymPyDocTests(object):
 
             Currently we only test if the __init__.py file exists in the
             directory with the file "x" (in theory we should also test all the
-            parent dirs) and if "x" is not on self._blacklist.
+            parent dirs).
             """
-            if self.is_on_blacklist(x):
-                return False
-            init_py = os.path.dirname(x) + os.path.sep + "__init__.py"
+            init_py = os.path.join(os.path.dirname(x), "__init__.py")
             return os.path.exists(init_py)
 
+        dir = os.path.join(self._root_dir, convert_to_native_paths([dir])[0])
+
         g = []
-        for x in self.get_paths(dir):
-            g.extend(glob(x))
-        g = list(set(g))
-        g.sort()
-        # skip files that are not importable (i.e. missing __init__.py)
-        g = [x for x in g if importable(x)]
-        return g
+        for path, folders, files in os.walk(dir):
+            g.extend([os.path.join(path, f) for f in files
+                      if not f.startswith('test_') and fnmatch(f, pat)])
+        if init_only:
+            # skip files that are not importable (i.e. missing __init__.py)
+            g = [x for x in g if importable(x)]
+
+        return [sys_normcase(gi) for gi in g]
+
+class SymPyDocTestFinder(DocTestFinder):
+    """
+    A class used to extract the DocTests that are relevant to a given
+    object, from its docstring and the docstrings of its contained
+    objects.  Doctests can currently be extracted from the following
+    object types: modules, functions, classes, methods, staticmethods,
+    classmethods, and properties.
+
+    Modified from doctest's version by looking harder for code in the
+    case that it looks like the the code comes from a different module.
+    In the case of decorated functions (e.g. @vectorize) they appear
+    to come from a different module (e.g. multidemensional) even though
+    their code is not there.
+    """
+
+    def _find(self, tests, obj, name, module, source_lines, globs, seen):
+        """
+        Find tests for the given object and any contained objects, and
+        add them to `tests`.
+        """
+        if self._verbose:
+            print 'Finding tests in %s' % name
+
+        # If we've already processed this object, then ignore it.
+        if id(obj) in seen:
+            return
+        seen[id(obj)] = 1
+
+        # Find a test for this object, and add it to the list of tests.
+        test = self._get_test(obj, name, module, globs, source_lines)
+        if test is not None:
+            tests.append(test)
+
+        # Look for tests in a module's contained objects.
+        if inspect.ismodule(obj) and self._recurse:
+            for rawname, val in obj.__dict__.items():
+                # Recurse to functions & classes.
+                if inspect.isfunction(val) or inspect.isclass(val):
+                    in_module = self._from_module(module, val)
+                    if not in_module:
+                        # double check in case this function is decorated
+                        # and just appears to come from a different module.
+                        pat = r'\s*(def|class)\s+%s\s*\(' % rawname
+                        PAT = pre.compile(pat)
+                        in_module = any(PAT.match(line) for line in source_lines)
+                    if in_module:
+                        try:
+                            valname = '%s.%s' % (name, rawname)
+                            self._find(tests, val, valname, module, source_lines, globs, seen)
+                        except:
+                            pass
+
+        # Look for tests in a module's __test__ dictionary.
+        if inspect.ismodule(obj) and self._recurse:
+            for valname, val in getattr(obj, '__test__', {}).items():
+                if not isinstance(valname, basestring):
+                    raise ValueError("SymPyDocTestFinder.find: __test__ keys "
+                                     "must be strings: %r" %
+                                     (type(valname),))
+                if not (inspect.isfunction(val) or inspect.isclass(val) or
+                        inspect.ismethod(val) or inspect.ismodule(val) or
+                        isinstance(val, basestring)):
+                    raise ValueError("SymPyDocTestFinder.find: __test__ values "
+                                     "must be strings, functions, methods, "
+                                     "classes, or modules: %r" %
+                                     (type(val),))
+                valname = '%s.__test__.%s' % (name, valname)
+                self._find(tests, val, valname, module, source_lines,
+                           globs, seen)
+
+        # Look for tests in a class's contained objects.
+        if inspect.isclass(obj) and self._recurse:
+            for valname, val in obj.__dict__.items():
+                # Special handling for staticmethod/classmethod.
+                if isinstance(val, staticmethod):
+                    val = getattr(obj, valname)
+                if isinstance(val, classmethod):
+                    val = getattr(obj, valname).im_func
+
+                # Recurse to methods, properties, and nested classes.
+                if (inspect.isfunction(val) or
+                     inspect.isclass(val) or
+                     isinstance(val, property)):
+                    in_module = self._from_module(module, val)
+                    if not in_module:
+                        # "double check" again
+                        pat = r'\s*(def|class)\s+%s\s*\(' % valname
+                        PAT = pre.compile(pat)
+                        in_module = any(PAT.match(line) for line in source_lines)
+                    if in_module:
+                        valname = '%s.%s' % (name, valname)
+                        self._find(tests, val, valname, module, source_lines,
+                                   globs, seen)
+
+    def _get_test(self, obj, name, module, globs, source_lines):
+        """
+        Return a DocTest for the given object, if it defines a docstring;
+        otherwise, return None.
+        """
+        # Extract the object's docstring.  If it doesn't have one,
+        # then return None (no test for this object).
+        if isinstance(obj, basestring):
+            docstring = obj
+        else:
+            try:
+                if obj.__doc__ is None:
+                    docstring = ''
+                else:
+                    docstring = obj.__doc__
+                    if not isinstance(docstring, basestring):
+                        docstring = str(docstring)
+            except (TypeError, AttributeError):
+                docstring = ''
+
+        # Find the docstring's location in the file.
+        lineno = self._find_lineno(obj, source_lines)
+
+        if not lineno:
+            # if None, then it wasn't really in this source
+            return None
+
+        # Don't bother if the docstring is empty.
+        if self._exclude_empty and not docstring:
+            return None
+
+        # Return a DocTest for this object.
+        if module is None:
+            filename = None
+        else:
+            filename = getattr(module, '__file__', module.__name__)
+            if filename[-4:] in (".pyc", ".pyo"):
+                filename = filename[:-1]
+        return self._parser.get_doctest(docstring, globs, name,
+                                        filename, lineno)
 
 class Reporter(object):
     """
@@ -546,7 +709,7 @@ class PyTestReporter(Reporter):
                 self.write("\n")
             self.write(" "*(width-self._write_pos-len(text)))
 
-        if not sys.stdout.isatty():
+        if hasattr(sys.stdout, 'isatty') and not sys.stdout.isatty():
             # the stdout is not a terminal, this for example happens if the
             # output is piped to less, e.g. "bin/test | less". In this case,
             # the terminal control sequences would be printed verbatim, so
@@ -729,3 +892,5 @@ class PyTestReporter(Reporter):
             self.write(" ")
             self.write("[FAIL]", "Red", align="right")
         self.write("\n")
+
+sympy_dir = get_sympy_dir()

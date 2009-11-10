@@ -20,6 +20,7 @@ message_tabs = "File contains tabs instead of spaces: %s, line %s."
 message_carriage = "File contains carriage returns at end of line: %s, line %s"
 message_str_raise = "File contains string exception: %s, line %s"
 message_gen_raise = "File contains generic exception: %s, line %s"
+message_eof = "File does not end with a newline: %s, line %s"
 
 def get_whitespace(s):
     """Returns all whitespace at the beginning of the line."""
@@ -42,10 +43,9 @@ def check_directory_tree(base_path):
             file = open(fname, "r")
             try:
                 for idx, line in enumerate(file):
-                    #if line.endswith(" \n"):
-                    if line.rstrip()+"\n" != line and line.rstrip() != line:
+                    if line.endswith(" \n"):
                         assert False, message_space % (fname, idx+1)
-                    if "\r\n" in line:
+                    if line.endswith("\r\n"):
                         assert False, message_carriagereturn % (fname, idx+1)
                     w = get_whitespace(line)
                     if w.expandtabs() != w:
@@ -55,14 +55,18 @@ def check_directory_tree(base_path):
                     if genRaise.search(line):
                         assert False, message_gen_raise % (fname, idx+1)
             finally:
+                # eof newline check
+                if not line.endswith('\n'):
+                    assert False, message_eof % (fname, idx+1)
                 file.close()
 
 
 def test_no_trailing_whitespace_and_no_tabs():
     """
-    This test tests all files in sympy and makes sure no lines contains a
-    trailing whitespace at the end, and also that no line uses tabs instead of
-    spaces as the indentation.
+    This test tests all files in sympy and checks that:
+      o no lines contains a trailing whitespace
+      o no line uses tabs instead of spaces as the indentation
+      o that the file ends with a newline
     """
     path = split(__file__)[0]
     path = path + sep + pardir + sep + pardir # go to sympy/

@@ -35,7 +35,7 @@ import sys
 import sympy
 
 # Make sure I have the right Python version.
-if sys.version_info[1] < 4:
+if sys.version_info[:2] < (2,4):
     print "Sympy requires Python 2.4 or newer. Python %d.%d detected" % \
           sys.version_info[:2]
     sys.exit(-1)

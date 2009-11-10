@@ -7,27 +7,32 @@ The advantage over py.test is that it only depends on sympy and should just
 work in any circumstances. See "sympy.dotest?" for documentation.
 """
 
+# files listed here can be in unix forward slash format with paths
+# listed relative to sympy (which contains bin, etc...)
 blacklist = []
 
-import os
 import sys
 from optparse import OptionParser
 
-bintest_dir = os.path.abspath(os.path.dirname(__file__))         # bin/test
-sympy_top  = os.path.split(bintest_dir)[0]      # ../
-sympy_dir  = os.path.join(sympy_top, 'sympy')  # ../sympy/
-if os.path.isdir(sympy_dir):
-   sys.path.insert(0, sympy_top)
+from get_sympy import path_hack
+path_hack()
 import sympy
 
 parser = OptionParser()
 parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
         default=False)
 
+# if you don't see a -s `default=False`;
+# if you do see a -s `store_true` means to store a True value for it;
+# dest is where in options to put it, options.strict will hold the bool;
+# when the user enters -h or --help, print the `help` text
+parser.add_option("-s", "--strict", action="store_true", dest="strict",
+        help="doctests in *py files must explicitly show imports", default=False)
+
 options, args = parser.parse_args()
 
 ok = sympy.doctest(*args, **{"verbose": options.verbose,
-    "blacklist": blacklist})
+    "blacklist": blacklist, "strict": options.strict})
 if ok:
     sys.exit(0)
 else:
