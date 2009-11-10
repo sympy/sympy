@@ -13,7 +13,7 @@ more details what they do and what they are interested in (some people didn't
 want to be mentioned here, so see our repository history for a full list).
 
 #. `Ondřej Čertík <http://wiki.sympy.org/wiki/Ond%C5%99ej_%C4%8Cert%C3%ADk>`_: project leader
-#. Fabian Pedregosa: everything, reviewing patches, releases, general advice (issues and mailinglist)
+#. Fabian Pedregosa: everything, reviewing patches, releases, general advice (issues and mailinglist), GSoC 2009
 #. Jurjen N.E. Bos: pretty printing and other patches
 #. Mateusz Paprocki: GSoC 2007, concrete math module, integration module, new core integration, a lot of patches, general advice, new polynomial module, improvements to solvers, simplifications, patch review
 #. Marc-Etienne M.Leveille: matrix patch
@@ -48,7 +48,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Vinzent Steinberg: docstring patches, a lot of bug fixes, nsolve (nonlinear equation systems solver), compiling functions to machine code, patches review
 #. Riccardo Gori: improvements and speedups to matrices, many bug fixes
 #. Case Van Horsen: implemented optional support for gmpy in mpmath
-#. Štěpán Roučka: a lot of bugfixes all over sympy (matrix, simplification, limits, series, ...)
+#. Štěpán Roučka: a lot of bug fixes all over sympy (matrix, simplification, limits, series, ...)
 #. Ali Raza Syed: pretty printing/isympy on windows fix
 #. Stefano Maggiolo: many bug fixes, polishings and improvements
 #. Robert Cimrman: matrix patches
@@ -70,26 +70,29 @@ want to be mentioned here, so see our repository history for a full list).
 #. Kaifeng Zhu: factorint() fix
 #. Ted Horst: Basic.__call__() fix
 #. Akshay Srinivasan: Printing fix, improvements to integration
-#. Aaron Meurer: Bernoulli ODE solver, other fixes
+#. Aaron Meurer: ODE solvers (GSoC 2009), other fixes
 #. Barry Wardell: implement series as function, several tests added
 #. Tomasz Buchert: ccode printing fixes, code quality concerning exceptions, documentation
 #. Vinay Kumar: polygamma tests
 #. Johann Cohen-Tanugi: commutative diff tests
 #. Jochen Voss: a test for the @cachit decorator and several other fixes
 #. Luke Peterson: improve solve() to handle Derivatives
-#. Chris Smith: improvements to solvers, bug fixes
+#. Chris Smith: improvements to solvers, many bug fixes, documentation and test improvements
 #. Thomas Sidoti: MathML printer improvements
 #. Florian Mickler: reimplementation of convex_hull, several geometry module fixes
 #. Nicolas Pourcelot: Infinity comparison fixes, latex fixes
 #. Ben Goodrich: Matrix.jacobian() function improvements and fixes
 #. Toon Verstraelen: code generation module
-#. Ronan Lamy: test coverage script, limit and expansion fixes
+#. Ronan Lamy: test coverage script; limit, expansion and other fixes
 #. James Abbatiello: fixes tests on windows
 #. Ryan Krauss: fixes could_extract_minus_sign() and latex fixes
 #. Bill Flynn: substitution fixes
+#. Jorn Baayen: improvements to piecewise functions and latex printing, bug fixes
+#. Eh Tan: improve trigonometric simplification
+#. Renato Coutinho: derivative improvements
+#. Oscar Benjamin: latex printer fix
 
-
-Uptodate list in the order of the first contribution is given in the `AUTHORS
+Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <http://git.sympy.org/?p=sympy.git;f=AUTHORS;hb=HEAD>`_ file.
 
 You can find a brief history of SymPy in the README.
