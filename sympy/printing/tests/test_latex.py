@@ -30,7 +30,11 @@ def test_latex_basic():
     assert latex(2*x*y, mul_symbol='dot') == r"$2 \cdot x \cdot y$"
 
     assert latex(x**(Rational(1,2))) == r"$\sqrt{x}$"
+    assert latex(x**(Rational(1,3))) == r"$\sqrt[3]{x}$"
     assert latex(x**(Rational(3,2))) == r"$x^{\frac{3}{2}}$"
+    assert latex(x**(Rational(1,2)),itex=True) == r"$\sqrt{x}$"
+    assert latex(x**(Rational(1,3)),itex=True) == r"$\root{3}{x}$"
+    assert latex(x**(Rational(3,2)),itex=True) == r"$x^{\frac{3}{2}}$"
     assert latex(x**(Rational(3,4))) == r"$x^{\frac{3}{4}}$"
     assert latex(x**(Rational(3,4)), fold_frac_powers=True) == "$x^{3/4}$"
 

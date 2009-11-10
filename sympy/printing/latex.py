@@ -260,12 +260,19 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Pow(self, expr):
-        if expr.exp.is_Rational \
-           and expr.exp.q == 2 \
-           and abs(expr.exp.p) == 1:
+        # Treat x**(Rational(1,n)) as special case
+        if expr.exp.is_Rational\
+           and abs(expr.exp.p) == 1\
+           and expr.exp.q != 1:
             base = self._print(expr.base)
+            expq = expr.exp.q
 
-            tex = r"\sqrt{%s}" % base
+            if expq == 2:
+                tex = r"\sqrt{%s}" % base
+            elif self._settings['itex']:
+                tex = r"\root{%d}{%s}" % (expq,base)
+            else:
+                tex = r"\sqrt[%d]{%s}" % (expq,base)
 
             if expr.exp.is_negative:
                 return r"\frac{1}{%s}" % tex
