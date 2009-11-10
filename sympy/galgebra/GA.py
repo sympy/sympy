@@ -14,7 +14,7 @@ The relevant references for this module are:
 """
 import sys
 import os, string, types, copy
-import numpy,sympy
+import numpy, sympy
 import re as regrep
 import sympy.galgebra.latex_ex
 

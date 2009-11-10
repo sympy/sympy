@@ -17,7 +17,8 @@ def dpll_satisfiable(expr):
     Check satisfiability of a propositional sentence.
     It returns a model rather than True when it succeeds
     >>> from sympy import symbols
-    >>> A, B = symbols('AB')
+    >>> from sympy.abc import A, B
+    >>> from sympy.logic.algorithms.dpll import dpll_satisfiable
     >>> dpll_satisfiable(A & ~B)
     {A: True, B: False}
     >>> dpll_satisfiable(A & ~A)
@@ -40,8 +41,8 @@ def dpll(clauses, symbols, model):
     Compute satisfiability in a partial model.
     Clauses is an array of conjuncts.
 
-    >>> from sympy import symbols
-    >>> A, B, C = symbols('A B C')
+    >>> from sympy.abc import A, B, C
+    >>> from sympy.logic.algorithms.dpll import dpll
     >>> dpll([A, B, C], [A, B], {C: False})
     False
 
@@ -85,6 +86,7 @@ def dpll_int_repr(clauses, symbols, model):
     Compute satisfiability in a partial model.
     Arguments are expected to be in integer representation
 
+    >>> from sympy.logic.algorithms.dpll import dpll_int_repr
     >>> dpll_int_repr([[1], [2], [3]], [1, 2], {3: False})
     False
 
@@ -127,10 +129,11 @@ def dpll_int_repr(clauses, symbols, model):
 
 def pl_true_int_repr(clause, model={}):
     """
-    Lightweith version of pl_true.
+    Lightweight version of pl_true.
     Argument clause represents the args of an Or clause. This is used
     inside dpll_int_repr, it is not meant to be used directly.
 
+    >>> from sympy.logic.algorithms.dpll import pl_true_int_repr
     >>> pl_true_int_repr([1, 2], {1: False})
     >>> pl_true_int_repr([1, 2], {1: False, 2: False})
     False
@@ -160,7 +163,8 @@ def unit_propagate(clauses, symbol):
     Arguments are expected to be in CNF.
 
     >>> from sympy import symbols
-    >>> A, B, C = symbols('A B C')
+    >>> from sympy.abc import A, B, C
+    >>> from sympy.logic.algorithms.dpll import unit_propagate
     >>> unit_propagate([A | B, C | ~B, B], B)
     [C, B]
 
@@ -185,6 +189,7 @@ def unit_propagate_int_repr(clauses, symbol):
     Same as above, but arguments are expected to be in integer
     representation
 
+    >>> from sympy.logic.algorithms.dpll import unit_propagate_int_repr
     >>> unit_propagate_int_repr([[1, 2], [3, -2], [2]], 2)
     [[3], [2]]
 
@@ -208,7 +213,8 @@ def find_pure_symbol(symbols, unknown_clauses):
     (or only as a negative) in clauses.
 
     >>> from sympy import symbols
-    >>> A, B, C = symbols('ABC')
+    >>> from sympy.abc import A, B, C
+    >>> from sympy.logic.algorithms.dpll import find_pure_symbol
     >>> find_pure_symbol([A, B, C], [A|~B,~B|~C,C|A])
     (A, True)
 
@@ -226,6 +232,7 @@ def find_pure_symbol_int_repr(symbols, unknown_clauses):
     Same as find_pure_symbol, but arguments are expected
     to be in integer representation
 
+    >>> from sympy.logic.algorithms.dpll import find_pure_symbol_int_repr
     >>> find_pure_symbol_int_repr([1,2,3], [[1, -2], [-2, -3], [3, 1]])
     (1, True)
 
@@ -243,7 +250,8 @@ def find_unit_clause(clauses, model):
     A unit clause has only 1 variable that is not bound in the model.
 
     >>> from sympy import symbols
-    >>> A, B, C = symbols('ABC')
+    >>> from sympy.abc import A, B, C
+    >>> from sympy.logic.algorithms.dpll import find_unit_clause
     >>> find_unit_clause([A | B | C, B | ~C, A | ~B], {A:True})
     (B, False)
 
@@ -264,6 +272,7 @@ def find_unit_clause_int_repr(clauses, model):
     Same as find_unit_clause, but arguments are expected to be in
     integer representation.
 
+    >>> from sympy.logic.algorithms.dpll import find_unit_clause_int_repr
     >>> find_unit_clause_int_repr([[1, 2, 3], [2, -3], [1, -2]], {1: True})
     (2, False)
 

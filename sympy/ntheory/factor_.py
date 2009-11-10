@@ -38,6 +38,7 @@ def multiplicity(p, n):
 
     Example usage
     =============
+        >>> from sympy.ntheory import multiplicity
         >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
         [0, 1, 2, 3, 3]
 
@@ -161,6 +162,7 @@ def pollard_pm1(n, B=10, seed=1234):
     =============
     With the default smoothness bound, this number can't be cracked:
 
+        >>> from sympy.ntheory import pollard_pm1
         >>> pollard_pm1(21477639576571)
 
     Increasing the smoothness bound helps:
@@ -248,6 +250,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     the prime factors of ``n`` as keys and their respective multiplicities
     as values. For example:
 
+        >>> from sympy.ntheory import factorint
         >>> factorint(2000)    # 2000 = (2**4) * (5**3)
         {2: 4, 5: 3}
         >>> factorint(65537)   # This number is prime
@@ -301,6 +304,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     This number, for example, has two small factors and a huge
     semiprime factor that cannot be reduced easily:
 
+        >>> from sympy.ntheory import isprime
         >>> a = 1407633717262338957430697921446883
         >>> f = factorint(a, limit=10000)
         >>> f == {991: 1, 202916782076162456022877024859L: 1, 7: 1}
@@ -407,6 +411,7 @@ def primefactors(n, limit=None, verbose=False):
     Example usage
     =============
 
+        >>> from sympy.ntheory import primefactors, factorint, isprime
         >>> primefactors(6)
         [2, 3]
         >>> primefactors(-5)
@@ -442,6 +447,7 @@ def divisors(n):
     """
     Return a list of all positive integer divisors of n.
 
+    >>> from sympy.ntheory import divisors
     >>> divisors(24)
     [1, 2, 3, 4, 6, 8, 12, 24]
 
@@ -459,6 +465,7 @@ def divisors(n):
 def totient(n):
     """Calculate the Euler totient function phi(n)
 
+    >>> from sympy.ntheory import totient
     >>> totient(1)
     1
     >>> totient(25)

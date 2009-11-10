@@ -2011,6 +2011,7 @@ def zzx_factor(f, **flags):
 
        Consider polynomial f = 2*x**4 - 2:
 
+       >>> from sympy.polys.integerpolys import zzx_factor
        >>> zzx_factor([2, 0, 0, 0, -2])
        (2, [([1, -1], 1), ([1, 1], 1), ([1, 0, 1], 1)])
 
@@ -2572,6 +2573,7 @@ def zzX_factor(f):
 
        Consider polynomial f = 2*(x**2 - y**2):
 
+       >>> from sympy.polys.integerpolys import zzX_factor
        >>> f = [[2], [], [-2, 0, 0]]
 
        >>> zzX_factor(f)

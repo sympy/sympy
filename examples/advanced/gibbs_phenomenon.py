@@ -57,7 +57,7 @@ def l2_gram_schmidt(list, lim):
     Orthonormalizes the "list" of functions using the Gram-Schmidt process.
 
     Example:
-    >>> l2_gram_schmidt([1, x, x**2], (x, -1, 1)]
+    >>> l2_gram_schmidt([1, x, x**2], (x, -1, 1))
     [1/2*2**(1/2), x*6**(1/2)/2, -3*10**(1/2)*(1/3 - x**2)/4]
 
     """

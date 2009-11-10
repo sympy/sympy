@@ -201,7 +201,7 @@ class Interval(Set):
         will be open on the right.
 
     Examples:
-        >>> from sympy import *
+        >>> from sympy import Symbol, Interval, sets
 
         >>> Interval(0, 1)
         [0, 1]

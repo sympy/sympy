@@ -123,6 +123,7 @@ def _sympify(a):
        and floats) in the expression. This excludes things (like strings)
        that are unwise to allow into such an expression.
 
+       >>> from sympy import Integer
        >>> Integer(1) == 1
        True
 
@@ -130,7 +131,7 @@ def _sympify(a):
        False
 
        >>> from sympy import Symbol
-       >>> x = Symbol('x')
+       >>> from sympy.abc import x
        >>> x + 1
        1 + x
 

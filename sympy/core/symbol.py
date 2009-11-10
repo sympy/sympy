@@ -11,6 +11,7 @@ class Symbol(Atom):
        commutative = True
 
     You can override the default assumptions in the constructor::
+       >>> from sympy import symbols
        >>> A,B = symbols('AB', commutative = False)
        >>> bool(A*B != B*A)
        True
@@ -29,6 +30,7 @@ class Symbol(Atom):
                 **assumptions):
         """if dummy == True, then this Symbol is totally unique, i.e.::
 
+        >>> from sympy import Symbol
         >>> bool(Symbol("x") == Symbol("x")) == True
         True
 
@@ -83,6 +85,7 @@ class Dummy(Symbol):
 
        use this through Symbol:
 
+       >>> from sympy import Symbol
        >>> x1 = Symbol('x', dummy=True)
        >>> x2 = Symbol('x', dummy=True)
        >>> bool(x1 == x2)
@@ -185,11 +188,12 @@ def symbols(*names, **kwargs):
     argument, which can be a string, then each character
     forms a separate symbol, or a sequence of strings.
 
+    >>> from sympy import symbols
     >>> x, y, z = symbols('xyz')
 
     Please note that this syntax is deprecated and will be dropped in a
     future version of sympy. Use comma or whitespace separated characters
-    instead. Currently the old behavoiur is standard, this can be changed
+    instead. Currently the old behavior is standard, this can be changed
     using the 'each_char' keyword:
 
     >>> symbols('xyz', each_char=False)
@@ -253,6 +257,7 @@ def var(*names, **kwargs):
     the parent's *global* namespace.  It's recommended not to use "var" in
     library code, it is better to use symbols() instead.
 
+    >>> from sympy import var
     >>> var('m')
     m
     >>> var('n xx yy zz')

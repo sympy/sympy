@@ -61,9 +61,9 @@ class AskBoundedHandler(CommonHandler):
 
     Example of usage:
 
-    >>> from sympy import Symbol, Assume
+    >>> from sympy import Symbol, Assume, Q
     >>> from sympy.queries.handlers.calculus import AskBoundedHandler
-    >>> x = Symbol("x")
+    >>> from sympy.abc import x
     >>> a = AskBoundedHandler()
     >>> a.Symbol(x, Assume(x, Q.positive))
     False
@@ -79,9 +79,9 @@ class AskBoundedHandler(CommonHandler):
 
         Example:
 
-        >>> from sympy import Symbol, Assume
+        >>> from sympy import Symbol, Assume, Q
         >>> from sympy.queries.handlers.calculus import AskBoundedHandler
-        >>> x = Symbol("x")
+        >>> from sympy.abc import x
         >>> a = AskBoundedHandler()
         >>> a.Symbol(x, Assume(x, Q.positive))
         False

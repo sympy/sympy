@@ -29,7 +29,7 @@ def normal(f, g, n=None):
        This procedure will return return triple containig elements
        of this factorization in the form (Z*A, B, C). For example:
 
-       >>> from sympy import Symbol
+       >>> from sympy import Symbol, normal
        >>> n = Symbol('n', integer=True)
 
        >>> normal(4*n+5, 2*(4*n+1)*(2*n+3), n)

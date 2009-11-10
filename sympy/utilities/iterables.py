@@ -90,6 +90,7 @@ def make_list(expr, kind):
 def flatten(iterable, cls=None):
     """Recursively denest iterable containers.
 
+       >>> from sympy.utilities.iterables import flatten
        >>> flatten([1, 2, 3])
        [1, 2, 3]
        >>> flatten([1, 2, [3]])
@@ -148,7 +149,7 @@ def postorder_traversal(node):
     --------
     >>> from sympy import symbols
     >>> from sympy.utilities.iterables import postorder_traversal
-    >>> x,y,z = symbols('xyz')
+    >>> from sympy.abc import x, y, z
     >>> set(postorder_traversal((x+y)*z)) == set([z, y, x, x + y, z*(x + y)])
     True
 
@@ -179,7 +180,7 @@ def preorder_traversal(node):
     --------
     >>> from sympy import symbols
     >>> from sympy.utilities.iterables import preorder_traversal
-    >>> x,y,z = symbols('xyz')
+    >>> from sympy.abc import x, y, z
     >>> set(preorder_traversal((x+y)*z)) == set([z, x + y, z*(x + y), x, y])
     True
 
@@ -196,6 +197,7 @@ def subsets(M, k):
        number of k-subsets on n elements is given by binom(n, k), whereas
        there are 2**n subsets all together.
 
+       >>> from sympy.utilities.iterables import subsets
        >>> list(subsets([1, 2, 3], 2))
        [[1, 2], [1, 3], [2, 3]]
 
@@ -218,6 +220,7 @@ def subsets(M, k):
 def cartes(seq0, seq1, modus='pair'):
     """Return the cartesian product of two sequences
 
+    >>> from sympy.utilities.iterables import cartes
     >>> cartes([1,2], [3,4])
     [[1, 3], [1, 4], [2, 3], [2, 4]]
 
@@ -236,6 +239,7 @@ def variations(seq, n, repetition=False):
     variations(seq, n, False) will return all the variations of the list of
         size n without repetitions
 
+    >>> from sympy.utilities.iterables import variations
     >>> variations([1,2,3], 2)
     [[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]]
     >>> variations([1,2,3], 2, repetition=True)

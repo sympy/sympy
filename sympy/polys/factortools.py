@@ -9,8 +9,8 @@ from sympy.core import Integer, Rational, Symbol, sympify
 def poly_factors(f, *symbols, **flags):
     """Factor polynomials over rationals.
 
-       >>> from sympy import *
-       >>> x, y = symbols("x y")
+       >>> from sympy.polys.factortools import poly_factors
+       >>> from sympy.abc import x, y
 
        >>> poly_factors(x**2 - y**2, x, y)
        (1, [(Poly(x - y, x, y), 1), (Poly(x + y, x, y), 1)])
@@ -52,7 +52,7 @@ def factors(f, *symbols, **flags):
     """Factor polynomials over rationals.
 
        >>> from sympy import *
-       >>> x, y = symbols("x y")
+       >>> from sympy.abc import x, y
 
        >>> factors(x**2 - y**2, x, y)
        (1, [(x - y, 1), (x + y, 1)])
@@ -65,7 +65,7 @@ def factor(f, *symbols, **flags):
     """Factor polynomials over rationals.
 
        >>> from sympy import *
-       >>> x, y = symbols("x y")
+       >>> from sympy.abc import x, y
 
        >>> factor(x**2 - y**2) == (x - y)*(x + y)
        True

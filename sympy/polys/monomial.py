@@ -19,8 +19,8 @@ def monomials(variables, degree):
        we would need almost 80 GiB of memory! Fortunately most
        polynomials, that we will encounter, are sparse.
 
-       >>> from sympy import *
-       >>> x, y = symbols('xy')
+       >>> from sympy.polys.monomial import monomials
+       >>> from sympy.abc import x, y
 
        >>> sorted(monomials([x, y], 2))
        [1, x, y, x**2, y**2, x*y]
@@ -47,8 +47,8 @@ def monomial_count(V, N):
 
        The number of monomials is given as (#V + N)! / (#V! N!), eg:
 
-       >>> from sympy import *
-       >>> x,y = symbols('xy')
+       >>> from sympy.polys.monomial import monomial_count, monomials
+       >>> from sympy.abc import x, y
 
        >>> monomial_count(2, 2)
        6
@@ -56,7 +56,7 @@ def monomial_count(V, N):
        >>> M = monomials([x, y], 2)
 
        >>> print M
-       [1, x, y, x**2, y**2, x*y]
+       set([1, x, y, x*y, x**2, y**2])
        >>> len(M)
        6
 
@@ -109,10 +109,11 @@ def monomial_mul(a, b):
 
        Lets multiply x**3*y**4*z with x*y**2:
 
+       >>> from sympy.polys.monomial import monomial_mul
        >>> monomial_mul((3, 4, 1), (1, 2, 0))
-       (4, 5, 1)
+       (4, 6, 1)
 
-       which gives x**4*y**5*z.
+       which gives x**4*y**6*z.
 
     """
     return tuple([ x + y for x, y in zip(a, b) ])
@@ -123,16 +124,17 @@ def monomial_div(a, b):
 
        Lets divide x**3*y**4*z by x*y**2:
 
+       >>> from sympy.polys.monomial import monomial_div
        >>> monomial_div((3, 4, 1), (1, 2, 0))
        (2, 2, 1)
 
-       which gives x**2*y**2*z. However
+       which gives x**2*y**2*z. However, nothing is obtained for the
+       following,
 
        >>> monomial_div((3, 4, 1), (1, 2, 2))
-       None
+       <BLANKLINE>
 
-       x*y**2*z**2 does not divide x**3*y**4*z.
-
+       since x*y**2*z**2 does not divide x**3*y**4*z.
     """
     result = [ x - y for x, y in zip(a, b) ]
 
@@ -147,6 +149,7 @@ def monomial_gcd(a, b):
 
        Lets compute GCD of x**3*y**4*z and x*y**2:
 
+       >>> from sympy.polys.monomial import monomial_gcd
        >>> monomial_gcd((3, 4, 1), (1, 2, 0))
        (1, 2, 0)
 
@@ -161,6 +164,7 @@ def monomial_lcm(a, b):
 
        Lets compute LCM of x**3*y**4*z and x*y**2:
 
+       >>> from sympy.polys.monomial import monomial_lcm
        >>> monomial_lcm((3, 4, 1), (1, 2, 0))
        (3, 4, 1)
 
@@ -177,6 +181,7 @@ def monomial_max(*monoms):
        wish to find out what is the maximal degree for each of x, y, z
        variables:
 
+       >>> from sympy.polys.monomial import monomial_max
        >>> monomial_max((3,4,5), (0,5,1), (6,3,9))
        (6, 5, 9)
 
@@ -191,7 +196,8 @@ def monomial_min(*monoms):
        wish to find out what is the maximal degree for each of x, y, z
        variables:
 
-       >>> monomial_max((3,4,5), (0,5,1), (6,3,9))
+       >>> from sympy.polys.monomial import monomial_min
+       >>> monomial_min((3,4,5), (0,5,1), (6,3,9))
        (0, 3, 1)
 
     """
@@ -205,11 +211,11 @@ def monomial_as_basic(monom, *syms):
        the same length, returns a sympy expression representing this
        monomial, eg. consider monomial (3, 2, 1) over (x, y, z):
 
-       >>> from sympy import *
-       >>> x,y,z = symbols('xyz')
+       >>> from sympy.polys.monomial import monomial_as_basic
+       >>> from sympy.abc import x, y, z
 
        >>> monomial_as_basic((3, 2, 1), x, y, z)
-       x**3*y**2*z
+       z*x**3*y**2
 
     """
     return Mul(*[ b**e for b, e in zip(syms, monom) ])

@@ -318,10 +318,11 @@ class Add(AssocOp):
 
         Examples:
 
+        >>> from sympy.abc import x
         >>> (x+1+1/x**5).extract_leading_order(x)
-        ((1/x**5, O(1/x**5)),)
+        ((x**(-5), O(x**(-5))),)
         >>> (1+x).extract_leading_order(x)
-        ((1, O(1, x)),)
+        ((1, O(1)),)
         >>> (x+x**2).extract_leading_order(x)
         ((x, O(x)),)
 

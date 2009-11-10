@@ -20,7 +20,7 @@ works in sympycore, but needs to be ported back to SymPy.
 Example:
     >>> from sympy import *
     >>> f = Function("f")
-    >>> x = Symbol("x")
+    >>> from sympy.abc import x
     >>> f(x)
     f(x)
     >>> print srepr(f(x).func)
@@ -677,23 +677,20 @@ class Lambda(Function):
     Lambda((x, y, ...), expr).
 
     A simple example:
-        >>> from sympy import Symbol
-        >>> x = Symbol('x')
+        >>> from sympy import Lambda
+        >>> from sympy.abc import x
         >>> f = Lambda(x, x**2)
         >>> f(4)
         16
 
     For multivariate functions, use:
-        >>> x = Symbol('x')
-        >>> y = Symbol('y')
-        >>> z = Symbol('z')
-        >>> t = Symbol('t')
-        >>> f2 = Lambda(x,y,z,t,x+y**z+t**z)
-        >>> f2(1,2,3,4)
+        >>> from sympy.abc import y, z, t
+        >>> f2 = Lambda(x, y, z, t, x + y**z + t**z)
+        >>> f2(1, 2, 3, 4)
         73
 
     Multivariate functions can be curries for partial applications:
-        >>> sum2numbers = Lambda(x,y,x+y)
+        >>> sum2numbers = Lambda(x, y, x+y)
         >>> sum2numbers(1,2)
         3
         >>> plus1 = sum2numbers(1)
@@ -701,9 +698,6 @@ class Lambda(Function):
         4
 
     A handy shortcut for lots of arguments:
-        >>> from sympy import *
-        >>> var('x y z')
-        (x, y, z)
         >>> p = x, y, z
         >>> f = Lambda(p, x + y*z)
         >>> f(*p)
@@ -742,9 +736,8 @@ class Lambda(Function):
         This supports partial application.
 
         Example:
-            >>> from sympy import Symbol
-            >>> x = Symbol('x')
-            >>> y = Symbol('y')
+            >>> from sympy import Lambda
+            >>> from sympy.abc import x, y
             >>> f = Lambda(x, x**2)
             >>> f.apply(4)
             16
@@ -817,7 +810,7 @@ def diff(f, *symbols, **kwargs):
 
     Examples:
     >>> from sympy import *
-    >>> x, y = symbols('x y')
+    >>> from sympy.abc import x, y
     >>> f = Function('f')
 
     >>> diff(sin(x), x)
@@ -892,7 +885,7 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
     and expand_func, which are wrappers around those expansion methods.
 
     >>> from sympy import *
-    >>> x,y = symbols('xy')
+    >>> from sympy.abc import x, y, z
 
     mul - Distributes multiplication over addition.
     >>> (y*(x + z)).expand(mul=True)
@@ -1006,7 +999,7 @@ def expand_mul(expr, deep=True):
     docstring for more information.
 
     Example:
-    >>> from sympy import *
+    >>> from sympy import symbols, expand_mul, exp, log
     >>> x, y = symbols('xy', positive=True)
     >>> expand_mul(exp(x+y)*(x+y)*log(x*y**2))
     x*exp(x + y)*log(x*y**2) + y*exp(x + y)*log(x*y**2)
@@ -1021,7 +1014,7 @@ def expand_log(expr, deep=True):
     docstring for more information.
 
     Example:
-    >>> from sympy import *
+    >>> from sympy import symbols, expand_log, exp, log
     >>> x, y = symbols('xy', positive=True)
     >>> expand_log(exp(x+y)*(x+y)*log(x*y**2))
     (x + y)*(2*log(y) + log(x))*exp(x + y)
@@ -1037,7 +1030,7 @@ def expand_func(expr, deep=True):
 
     Example:
     >>> from sympy import *
-    >>> x = Symbol('x')
+    >>> from sympy.abc import x
     >>> expand_func(gamma(x + 2))
     x*(1 + x)*gamma(x)
 
@@ -1052,7 +1045,7 @@ def expand_trig(expr, deep=True):
 
     Example:
     >>> from sympy import *
-    >>> x, y = symbols('xy')
+    >>> from sympy.abc import x, y
     >>> expand_trig(sin(x+y)*(x+y))
     (x + y)*(cos(x)*sin(y) + cos(y)*sin(x))
 
@@ -1067,7 +1060,7 @@ def expand_complex(expr, deep=True):
 
     Example:
     >>> from sympy import *
-    >>> z = Symbol('z')
+    >>> from sympy.abc import z
     >>> expand_complex(z**(2*I))
     I*im(z**(2*I)) + re(z**(2*I))
 

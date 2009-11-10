@@ -40,7 +40,8 @@ $(SPHINXBUILDpy):
 
 html: $(SPHINXBUILDpy) spt-printable
 	mkdir -p src/.static
-	mkdir -p _build/html _build/doctrees
+	mkdir -p _build/html
+	mkdir -p _build/doctrees
 	mkdir -p src/modules
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
 	cp -r src/pics _build/html/

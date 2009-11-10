@@ -26,8 +26,9 @@ def components(f, x):
        non-integer powers. Fractional powers are collected with with
        minimal, positive exponents.
 
-       >>> from sympy import *
-       >>> x, y = symbols('xy')
+       >>> from sympy import cos, sin
+       >>> from sympy.abc import x, y
+       >>> from sympy.integrals.risch import components
 
        >>> components(sin(x)*cos(x)**2, x)
        set([x, cos(x), sin(x)])
@@ -115,8 +116,9 @@ def heurisch(f, x, **kwargs):
        Examples
        ========
 
-       >>> from sympy import *
-       >>> x,y = symbols('xy')
+       >>> from sympy import tan
+       >>> from sympy.integrals.risch import heurisch
+       >>> from sympy.abc import x, y
 
        >>> heurisch(y*tan(x), x)
        y*log(1 + tan(x)**2)/2

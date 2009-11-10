@@ -18,6 +18,7 @@ def fuzzy_not(v):
 def name_not(k):
     """negate a name
 
+       >>> from sympy.core.logic import name_not
        >>> name_not('zero')
        '!zero'
 

@@ -7,7 +7,7 @@ def intersection(*entities):
 
     Examples:
     =========
-        >>> from sympy.geometry import *
+        >>> from sympy.geometry import Point, Line, Circle, intersection
         >>> p1,p2,p3 = Point(0,0), Point(1,1), Point(-1, 5)
         >>> l1, l2 = Line(p1, p2), Line(p3, p2)
         >>> c = Circle(p2, 1)
@@ -58,7 +58,7 @@ def convex_hull(*args):
 
     Example:
     ========
-        >>> from sympy.geometry import Point
+        >>> from sympy.geometry import Point, convex_hull
         >>> points = [ Point(x) for x in [(1,1), (1,2), (3,1), (-5,2), (15,4)] ]
         >>> convex_hull(points)
         Polygon(Point(-5, 2), Point(1, 1), Point(3, 1), Point(15, 4))

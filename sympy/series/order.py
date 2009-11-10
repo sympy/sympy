@@ -40,7 +40,7 @@ class Order(Basic):
     Examples:
     =========
     >>> from sympy import *
-    >>> x = Symbol("x")
+    >>> from sympy.abc import x
     >>> O(x)
     O(x)
     >>> O(x)*x

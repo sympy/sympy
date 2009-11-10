@@ -26,7 +26,7 @@ def epsilon(i,j,k):
 
 class Pauli(Symbol):
     """
-    >>> from sympy import *
+    >>> from sympy.physics.paulialgebra import Pauli
     >>> Pauli(1)
     sigma1
     >>> Pauli(1)*Pauli(2)

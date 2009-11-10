@@ -14,6 +14,7 @@ def integer_nthroot(y, n):
     and a boolean indicating whether the result is exact (that is,
     whether x**n == y).
 
+    >>> from sympy import integer_nthroot
     >>> integer_nthroot(16,2)
     (4, True)
     >>> integer_nthroot(26,2)

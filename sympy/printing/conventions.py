@@ -15,6 +15,7 @@ def split_super_sub(text):
        The three return values are the actual name, a list with superscripts and
        a list with subscripts.
 
+       >>> from sympy.printing.conventions import split_super_sub
        >>> split_super_sub('a_x^1')
        ('a', ['1'], ['x'])
        >>> split_super_sub('var_sub1__sup_sub2')

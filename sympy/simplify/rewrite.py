@@ -36,7 +36,7 @@ def cancel(f, *symbols):
        cancelation more efficiently using only those symbols.
 
        >>> from sympy import *
-       >>> x,y = symbols('xy')
+       >>> from sympy.abc import x, y
 
        >>> cancel((x**2-1)/(x-1))
        1 + x
@@ -68,7 +68,7 @@ def trim(f, *symbols, **flags):
 
        >>> from sympy import *
 
-       >>> x,y = symbols('xy')
+       >>> from sympy.abc import x, y
        >>> f = Function('f')
 
        >>> trim((f(x)**2+f(x))/f(x))
@@ -224,13 +224,13 @@ def apart(f, z, **flags):
        function return a formal decomposition.
 
        >>> from sympy import *
-       >>> x,y = symbols('xy')
+       >>> from sympy.abc import x, y
 
        >>> apart(y/(x+2)/(x+1), x)
        y/(1 + x) - y/(2 + x)
 
        >>> apart(1/(1+x**5), x, evaluate=False)
-       RootSum(Lambda(_a, -1/5/(x - _a)*_a), x**5 + 1, x)
+       RootSum(Lambda(_a, -_a/(5*(x - _a))), x**5 + 1, x)
 
        For more information on the implemented algorithm refer to:
 

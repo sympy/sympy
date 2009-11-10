@@ -30,7 +30,7 @@
 
    Then L = [-1, 1] and f(n) = m*n**(m-1) and finally for m=4:
 
-    >>> from sympy import Symbol, bernoulli
+    >>> from sympy import Symbol, bernoulli, rsolve_poly
     >>> n = Symbol('n', integer=True)
 
     >>> rsolve_poly([-1, 1], 4*n**3, n)
@@ -91,7 +91,7 @@ def rsolve_poly(coeffs, f, n, **hints):
        up to a constant. For this we can use b(n+1) - b(n) == m*n**(m-1)
        recurrence, which has solution b(n) = B_m + C. For example:
 
-       >>> from sympy.core import Symbol
+       >>> from sympy import Symbol, rsolve_poly
        >>> n = Symbol('n', integer=True)
 
        >>> rsolve_poly([-1, 1], 4*n**3, n)
@@ -621,18 +621,17 @@ def rsolve(f, y, init=None):
 
          (n - 1) y(n + 2) - (n**2 + 3 n - 2) y(n + 1) + 2 n (n + 1) y(n) == 0
 
-       >>> from sympy import *
-
+       >>> from sympy import Function, rsolve
+       >>> from sympy.abc import n
        >>> y = Function('y')
-       >>> n = Symbol('n', integer=True)
 
        >>> f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
 
        >>> rsolve(f, y(n))
-       C0*n! + C1*2**n
+       C0*gamma(1 + n) + C1*2**n
 
        >>> rsolve(f, y(n), { y(0):0, y(1):3 })
-       -3*n! + 3*2**n
+       -3*gamma(1 + n) + 3*2**n
 
     """
     if isinstance(f, Equality):

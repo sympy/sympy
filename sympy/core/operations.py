@@ -49,7 +49,7 @@ class AssocOp(Basic):
            This is handy when we want to optimize things, e.g.
 
            >>> from sympy import Mul, symbols
-           >>> x,y = symbols('xy')
+           >>> from sympy.abc import x, y
            >>> e = Mul(3,x,y)
            >>> e.args
            (3, x, y)

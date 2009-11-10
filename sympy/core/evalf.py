@@ -1048,8 +1048,8 @@ def N(x, n=15, **options):
     Both .evalf() and N() are equivalent, use the one that you like better.
 
     Example:
-    >>> from sympy import Sum, Symbol, oo
-    >>> k = Symbol("k")
+    >>> from sympy import Sum, Symbol, oo, N
+    >>> from sympy.abc import k
     >>> Sum(1/k**k, (k, 1, oo))
     Sum(k**(-k), (k, 1, oo))
     >>> N(Sum(1/k**k, (k, 1, oo)), 4)

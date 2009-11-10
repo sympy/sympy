@@ -19,6 +19,7 @@ class Ellipse(GeometryEntity):
 
     Example:
     ========
+        >>> from sympy.geometry import Ellipse, Point
         >>> e = Ellipse(Point(0, 0), 5, 1)
         >>> e.hradius, e.vradius
         (5, 1)
@@ -281,6 +282,7 @@ class Circle(Ellipse):
 
     Example:
     ========
+        >>> from sympy.geometry import Point, Circle
         >>> c1 = Circle(Point(0, 0), 5)
         >>> c1.hradius, c1.vradius, c1.radius
         (5, 5, 5)

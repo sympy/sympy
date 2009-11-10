@@ -22,7 +22,7 @@ def richardson(A, k, n, N):
     This limit converges slowly; n = 100 only produces two accurate
     digits:
 
-        >>> n = Symbol('n')
+        >>> from sympy.abc import n
         >>> e = (1 + 1/n)**n
         >>> print round(e.subs(n, 100).evalf(), 10)
         2.7048138294
@@ -30,6 +30,8 @@ def richardson(A, k, n, N):
     Richardson extrapolation with 11 appropriately chosen terms gives
     a value that is accurate to the indicated precision:
 
+        >>> from sympy import E
+        >>> from sympy.series.acceleration import richardson
         >>> print round(richardson(e, n, 10, 20).evalf(), 10)
         2.7182818285
         >>> print round(E.evalf(), 10)
@@ -39,13 +41,15 @@ def richardson(A, k, n, N):
     Computing 100 terms of the zeta(2) series 1/k**2 yields only
     two accurate digits:
 
-        >>> k = Symbol('k'); n = Symbol('n')
+        >>> from sympy.abc import k, n
+        >>> from sympy import Sum2
         >>> A = Sum2(k**-2, (k, 1, n))
         >>> print round(A.subs(n, 100).evalf(), 10)
         1.6349839002
 
     Richardson extrapolation performs much better:
 
+        >>> from sympy import pi
         >>> print round(richardson(A, n, 10, 20).evalf(), 10)
         1.6449340668
         >>> print round(((pi**2)/6).evalf(), 10)     # Exact value
@@ -68,8 +72,9 @@ def shanks(A, k, n, m=1):
     The Shanks transformation is useful for summing Taylor series that
     converge slowly near a pole or singularity, e.g. for log(2):
 
-        >>> n = Symbol('n')
-        >>> k = Symbol('k')
+        >>> from sympy.abc import k, n
+        >>> from sympy import Sum2, Integer
+        >>> from sympy.series.acceleration import shanks
         >>> A = Sum2(Integer(-1)**(k+1) / k, (k, 1, n))
         >>> print round(A.subs(n, 100).evalf(), 10)
         0.6881721793

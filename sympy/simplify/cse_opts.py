@@ -15,7 +15,8 @@ def assumed(e, name):
     Examples
     --------
     >>> from sympy import symbols
-    >>> x,y = symbols('xy')
+    >>> from sympy.simplify.cse_opts import assumed
+    >>> from sympy.abc import x, y
     >>> assumed(x+y, 'is_Add')
     True
     >>> assumed(x+y, 'is_Mul')

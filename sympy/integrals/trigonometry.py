@@ -30,7 +30,7 @@ def trigintegrate(f, x):
 
        >>> from sympy import Symbol, sin, cos
        >>> from sympy.integrals.trigonometry import trigintegrate
-       >>> x = Symbol('x')
+       >>> from sympy.abc import x
 
        >>> trigintegrate(sin(x)*cos(x), x)
        sin(x)**2/2

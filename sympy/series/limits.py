@@ -13,8 +13,8 @@ def limit(e, z, z0, dir="+"):
 
     Examples:
 
-    >>> from sympy import limit, sin, Symbol
-    >>> x = Symbol('x')
+    >>> from sympy import limit, sin, Symbol, oo
+    >>> from sympy.abc import x
     >>> limit(sin(x)/x, x, 0)
     1
     >>> limit(1/x, x, 0, dir="+")
@@ -119,8 +119,8 @@ class Limit(Basic):
 
     Examples:
 
-    >>> from sympy import limit, sin, Symbol
-    >>> x = Symbol('x')
+    >>> from sympy import Limit, sin, Symbol
+    >>> from sympy.abc import x
     >>> Limit(sin(x)/x, x, 0)
     Limit(sin(x)/x, x, 0)
     >>> Limit(1/x, x, 0, dir="-")

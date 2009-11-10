@@ -9,7 +9,8 @@ class Curve(GeometryEntity):
     Example:
     ========
         >>> from sympy import sin, cos, Symbol
-        >>> t = Symbol("t")
+        >>> from sympy.abc import t
+        >>> from sympy.geometry import Curve
         >>> C = Curve([sin(t), cos(t)], (t, 0, 2))
         >>> C.functions
         [sin(t), cos(t)]

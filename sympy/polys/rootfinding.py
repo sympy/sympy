@@ -265,7 +265,7 @@ def roots(f, *symbols, **flags):
        those roots set the 'multiple' flag to True.
 
        >>> from sympy import *
-       >>> x,y = symbols('xy')
+       >>> from sympy.abc import x, y
 
        >>> roots(x**2 - 1, x)
        {1: 1, -1: 1}
@@ -452,8 +452,8 @@ def roots(f, *symbols, **flags):
 def poly_root_factors(f, *symbols, **flags):
     """Returns all factors of a univariate polynomial.
 
-       >>> from sympy import *
-       >>> x,y = symbols('xy')
+       >>> from sympy.polys.rootfinding import poly_root_factors
+       >>> from sympy.abc import x, y
 
        >>> factors = poly_root_factors(x**2-y, x)
 
@@ -527,8 +527,9 @@ def poly_sturm(f, *symbols):
 def number_of_real_roots(f, *symbols, **flags):
     """Returns the number of distinct real roots of f in (inf, sup].
 
-       >>> from sympy import *
-       >>> x,y = symbols('xy')
+       >>> from sympy.polys.rootfinding import number_of_real_roots
+       >>> from sympy.abc import x, y
+       >>> from sympy import Poly, sqrt
 
        >>> f = Poly(x**2 - 1, x)
 
@@ -661,7 +662,7 @@ class RootsOf(Basic):
     """Represents all roots of a univariate polynomial.
 
        >>> from sympy import *
-       >>> x,y = symbols('xy')
+       >>> from sympy.abc import x, y
 
        >>> roots = RootsOf(x**2 + 2, x)
 

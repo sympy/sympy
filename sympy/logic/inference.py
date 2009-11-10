@@ -6,7 +6,8 @@ from sympy.core import Symbol, sympify
 def literal_symbol(literal):
     """The symbol in this literal (without the negation).
     >>> from sympy import Symbol
-    >>> A = Symbol('A')
+    >>> from sympy.abc import A
+    >>> from sympy.logic.inference import literal_symbol
     >>> literal_symbol(A)
     A
     >>> literal_symbol(~A)
@@ -23,8 +24,8 @@ def satisfiable(expr, algorithm="dpll"):
     Returns a model when it succeeds
 
     Examples
-    >>> from sympy import symbols
-    >>> A, B = symbols('AB')
+    >>> from sympy.abc import A, B
+    >>> from sympy.logic.inference import satisfiable
     >>> satisfiable(A & ~B)
     {A: True, B: False}
     >>> satisfiable(A & ~A)
@@ -46,8 +47,8 @@ def pl_true(expr, model={}):
     The model is implemented as a dict containing the pair symbol, boolean value.
 
     Examples:
-    >>> from sympy import symbols
-    >>> A, B = symbols('AB')
+    >>> from sympy.abc import A, B
+    >>> from sympy.logic.inference import pl_true
     >>> pl_true( A & B, {A: True, B : True})
     True
 

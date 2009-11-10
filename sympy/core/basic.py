@@ -241,7 +241,7 @@ class Basic(AssumeMeths):
     Example:
 
     >>> from sympy import symbols, cot
-    >>> x, y = symbols('xy')
+    >>> from sympy.abc import x, y
 
     >>> cot(x).args
     (x,)
@@ -342,7 +342,7 @@ class Basic(AssumeMeths):
         Example:
 
         >>> from sympy import Symbol
-        >>> x = Symbol("x")
+        >>> from sympy.abc import x
         >>> x.assumptions0
         {}
         >>> x = Symbol("x", positive=True)
@@ -377,7 +377,7 @@ class Basic(AssumeMeths):
 
         Example:
 
-        >>> x = Symbol("x")
+        >>> from sympy.abc import x
         >>> x.new("x")
         x
 
@@ -451,7 +451,7 @@ class Basic(AssumeMeths):
            and sympy expressions is required.
 
            >>> from sympy import *
-           >>> x,y = symbols('xy')
+           >>> from sympy.abc import x, y
 
            >>> bool(0)
            False
@@ -482,7 +482,7 @@ class Basic(AssumeMeths):
         Example:
 
         >>> from sympy import *
-        >>> x, y = symbols("x y")
+        >>> from sympy.abc import x, y
         >>> x.compare(y)
         -1
         >>> x.compare(x)
@@ -533,7 +533,7 @@ class Basic(AssumeMeths):
     @staticmethod
     def compare_pretty(a, b):
         """
-        Is a>b in the sense of ordering in printing?
+        Is a > b in the sense of ordering in printing?
 
         yes ..... return 1
         no ...... return -1
@@ -549,12 +549,13 @@ class Basic(AssumeMeths):
 
         Example:
 
-        >>> x = Symbol("x")
-        >>> Basic.compare_pretty(x, x**2)
+        >>> from sympy.abc import x
+        >>> from sympy import Basic
+        >>> Basic._compare_pretty(x, x**2)
         -1
-        >>> Basic.compare_pretty(x**2, x**2)
+        >>> Basic._compare_pretty(x**2, x**2)
         0
-        >>> Basic.compare_pretty(x**3, x**2)
+        >>> Basic._compare_pretty(x**3, x**2)
         1
 
         """
@@ -769,7 +770,7 @@ class Basic(AssumeMeths):
            Examples::
 
            >>> from sympy import *
-           >>> x,y = symbols('xy')
+           >>> from sympy.abc import x, y
            >>> list((1+x+2*sin(y+I*pi)).atoms())
            [y, I, 2, x, 1, pi]
 
@@ -863,7 +864,7 @@ class Basic(AssumeMeths):
         """Returns True if 'self' is a number.
 
            >>> from sympy import *
-           >>> x,y = symbols('xy')
+           >>> from sympy.abc import x, y
 
            >>> x.is_number
            False
@@ -892,7 +893,7 @@ class Basic(AssumeMeths):
 
         Example:
 
-        >>> x = Symbol("x")
+        >>> from sympy.abc import x
         >>> a = 2*x
         >>> a.func
         <class 'sympy.core.mul.Mul'>
@@ -913,7 +914,7 @@ class Basic(AssumeMeths):
         Example:
 
         >>> from sympy import symbols, cot
-        >>> x, y = symbols('xy')
+        >>> from sympy.abc import x, y
 
         >>> cot(x).args
         (x,)
@@ -940,7 +941,7 @@ class Basic(AssumeMeths):
 
         Example:
 
-        >>> x = Symbol("x")
+        >>> from sympy.abc import x
         >>> a = 2*x
         >>> a.iter_basic_args()
         <tupleiterator object at 0x...>
@@ -958,7 +959,7 @@ class Basic(AssumeMeths):
         Example:
 
         >>> from sympy import symbols, sin
-        >>> x, y = symbols('xy')
+        >>> from sympy.abc import x, y
 
         >>> (x/y).is_rational_function()
         True
@@ -1005,7 +1006,7 @@ class Basic(AssumeMeths):
            a new polynomial.
 
            >>> from sympy import *
-           >>> x,y = symbols('xy')
+           >>> from sympy.abc import x, y
 
            >>> print (x**2 + x*y).as_poly()
            Poly(x**2 + x*y, x, y)
@@ -1034,7 +1035,7 @@ class Basic(AssumeMeths):
         """Converts polynomial to a valid sympy expression.
 
            >>> from sympy import *
-           >>> x,y = symbols('xy')
+           >>> from sympy.abc import x, y
 
            >>> p = (x**2 + x*y).as_poly(x, y)
 
@@ -1059,7 +1060,7 @@ class Basic(AssumeMeths):
         Examples:
 
         >>> from sympy import *
-        >>> x,y = symbols('xy')
+        >>> from sympy.abc import x, y
         >>> (1+x*y).subs(x, pi)
         1 + pi*y
         >>> (1+x*y).subs({x:pi, y:2})
@@ -1103,7 +1104,7 @@ class Basic(AssumeMeths):
         Examples:
 
         >>> from sympy import *
-        >>> x, y = symbols('xy')
+        >>> from sympy.abc import x, y
         >>> (x+y)._subs_list( [(x, 3),     (y, x**2)] )
         3 + x**2
         >>> (x+y)._subs_list( [(y, x**2),  (x, 3)   ] )
@@ -1131,9 +1132,9 @@ class Basic(AssumeMeths):
            fail (depending on the initial order).
 
            >>> from sympy import *
-           >>> x, y = symbols('xy')
+           >>> from sympy.abc import x, y
 
-           >>> a,b,c,d,e = symbols('abcde')
+           >>> from sympy.abc import a, b, c, d, e
 
            >>> A = (sqrt(sin(2*x)), a)
            >>> B = (sin(2*x), b)
@@ -1195,7 +1196,7 @@ class Basic(AssumeMeths):
         """Return True if 'self' has any of the symbols.
 
            >>> from sympy import *
-           >>> x,y,z = symbols('xyz')
+           >>> from sympy.abc import x, y, z
 
            >>> (x**2 + sin(x*y)).has_any_symbols(z)
            False
@@ -1249,7 +1250,7 @@ class Basic(AssumeMeths):
         """Return True if 'self' has all of the symbols.
 
            >>> from sympy import *
-           >>> x,y,z = symbols('xyz')
+           >>> from sympy.abc import x, y, z
 
            >>> (x**2 + sin(x*y)).has_all_symbols(x, y)
            True
@@ -1288,7 +1289,7 @@ class Basic(AssumeMeths):
         Return True if self has any of the patterns.
 
         Example:
-        >>> x = Symbol("x")
+        >>> from sympy.abc import x
         >>> (2*x).has(x)
         True
         >>> (2*x/x).has(x)
@@ -1438,8 +1439,8 @@ class Basic(AssumeMeths):
 
         Example:
 
-        >>> from sympy import symbols
-        >>> x, y = symbols("x y")
+        >>> from sympy import symbols, Wild
+        >>> from sympy.abc import x, y
         >>> p = Wild("p")
         >>> q = Wild("q")
         >>> r = Wild("r")
@@ -1484,10 +1485,12 @@ class Basic(AssumeMeths):
         """ Return the number of operations in expressions.
 
         Examples:
+        >>> from sympy.abc import a, b, x
+        >>> from sympy import sin
         >>> (1+a+b**2).count_ops()
-        POW + 2 * ADD
+        POW + 2*ADD
         >>> (sin(x)*x+sin(x)**2).count_ops()
-        ADD + MUL + POW + 2 * SIN
+        2 + ADD + MUL + POW
 
         """
         return Integer(len(self)-1) + sum([t.count_ops(symbolic=symbolic) for t in self])
@@ -1499,7 +1502,7 @@ class Basic(AssumeMeths):
            or unless the 'deep' hint was set to 'False'.
 
            >>> from sympy import *
-           >>> x, y = symbols('xy')
+           >>> from sympy.abc import x, y
 
            >>> 2*Integral(x, x)
            2*Integral(x, x)
@@ -1592,7 +1595,7 @@ class Basic(AssumeMeths):
            forbid functions to rewrite their contents.
 
            >>> from sympy import *
-           >>> x, y = symbols('xy')
+           >>> from sympy.abc import x, y
 
            >>> sin(x).rewrite(sin, exp)
            -I*(exp(I*x) - exp(-I*x))/2
@@ -1629,7 +1632,7 @@ class Basic(AssumeMeths):
         Example:
 
         >>> from sympy import symbols
-        >>> x, y, z = symbols('x y z')
+        >>> from sympy.abc import x, y, z
         >>> (3+2*x+4*x**2).coeff(1)
         >>> (3+2*x+4*x**2).coeff(x)
         2
@@ -1670,7 +1673,7 @@ class Basic(AssumeMeths):
            is not possible it will return None.
 
            >>> from sympy import *
-           >>> x, y = symbols('xy')
+           >>> from sympy.abc import x, y
 
            >>> E.as_coefficient(E)
            1
@@ -1713,7 +1716,7 @@ class Basic(AssumeMeths):
            SymPy expressions.
 
            >>> from sympy import *
-           >>> x, y = symbols('xy')
+           >>> from sympy.abc import x, y
 
            >>> (2*x*sin(x)+y+x).as_independent(x)
            (y, x + 2*x*sin(x))
@@ -1757,14 +1760,14 @@ class Basic(AssumeMeths):
            functions and get exactly the same results as with
            a single call to this function.
 
-           >>> from sympy import *
+           >>> from sympy import symbols, I
 
            >>> x, y = symbols('xy', real=True)
 
            >>> (x + y*I).as_real_imag()
            (x, y)
 
-           >>> z, w = symbols('zw')
+           >>> from sympy.abc import z, w
 
            >>> (z + w*I).as_real_imag()
            (-im(w) + re(z), im(z) + re(w))
@@ -1845,7 +1848,7 @@ class Basic(AssumeMeths):
            c * something in a nice way, i.e. preserving the properties
            of arguments of self.
 
-           >>> from sympy import *
+           >>> from sympy import symbols, Rational
 
            >>> x, y = symbols('xy', real=True)
 
@@ -1945,7 +1948,7 @@ class Basic(AssumeMeths):
            something + c in a nice way, i.e. preserving the properties
            of arguments of self.
 
-           >>> from sympy import *
+           >>> from sympy import symbols
 
            >>> x, y = symbols('xy', real=True)
 
@@ -2036,7 +2039,7 @@ class Basic(AssumeMeths):
 
            >>> from sympy import *
 
-           >>> x, y = symbols("xy")
+           >>> from sympy.abc import x, y
 
            >>> (x-y).could_extract_minus_sign() != (y-x).could_extract_minus_sign()
            True
@@ -2274,11 +2277,11 @@ class Basic(AssumeMeths):
 
         Example:
 
-        >>> x = Symbol("x")
+        >>> from sympy.abc import x
         >>> (1+x+x**2).as_leading_term(x)
         1
         >>> (1/x**2+x+x**2).as_leading_term(x)
-        1/x**2
+        x**(-2)
 
         Note:
 
@@ -2324,7 +2327,7 @@ class Basic(AssumeMeths):
 
         Example:
 
-        >>> x = Symbol("x")
+        >>> from sympy.abc import x
         >>> (1+x+x**2).leadterm(x)
         (1, 0)
         >>> (1/x**2+x+x**2).leadterm(x)

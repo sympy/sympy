@@ -59,7 +59,8 @@ def guess_solve_strategy(expr, symbol):
     Examples
     ========
     >>> from sympy import Symbol, Rational
-    >>> x = Symbol('x')
+    >>> from sympy.solvers.solvers import guess_solve_strategy
+    >>> from sympy.abc import x
     >>> guess_solve_strategy(x**2 + 1, x)
     0
     >>> guess_solve_strategy(x**Rational(1,2) + 1, x)
@@ -130,7 +131,7 @@ def solve(f, *symbols, **flags):
        or differential equations, use rsolve() or dsolve(), respectively.
 
        >>> from sympy import *
-       >>> x,y = symbols('xy')
+       >>> from sympy.abc import x, y
 
        Solve a polynomial equation:
 
@@ -417,7 +418,7 @@ def solve_linear_system(system, *symbols, **flags):
        is more efficient and compact than the Gauss-Jordan method.
 
        >>> from sympy import *
-       >>> x, y = symbols('xy')
+       >>> from sympy.abc import x, y
 
        Solve the following system:
 
@@ -542,8 +543,9 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
        SymPy expressions. Specification of parameters and variable is
        obligatory for efficiency and simplicity reason.
 
-       >>> from sympy import *
-       >>> a, b, c, x = symbols('a', 'b', 'c', 'x')
+       >>> from sympy import Eq
+       >>> from sympy.abc import a, b, c, x
+       >>> from sympy.solvers import solve_undetermined_coeffs
 
        >>> solve_undetermined_coeffs(Eq(2*a*x + a+b, x), [a, b], x)
        {a: 1/2, b: -1/2}
@@ -615,7 +617,7 @@ def tsolve(eq, sym):
     even though a real solution exists.
 
         >>> from sympy import *
-        >>> x = Symbol('x')
+        >>> from sympy.abc import x
 
         >>> tsolve(3**(2*x+5)-4, x)
         [(-5*log(3) + log(4))/(2*log(3))]
@@ -755,7 +757,8 @@ def nsolve(*args, **kwargs):
 
     For one-dimensional functions the syntax is simplified:
 
-    >>> from sympy import sin
+    >>> from sympy import sin, nsolve
+    >>> from sympy.abc import x
     >>> nsolve(sin(x), x, 2)
     3.14159265358979
     >>> nsolve(sin(x), 2)

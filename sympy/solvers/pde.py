@@ -89,7 +89,7 @@ def pde_separate_add(eq, fun, sep):
     Examples:
 
     >>> from sympy import *
-    >>> x, t = symbols('xt')
+    >>> from sympy.abc import x, t
     >>> u, X, T = map(Function, 'uXT')
 
     >>> eq = Eq(Derivative(u(x, t), x), E**(u(x, t))*Derivative(u(x, t), t))
@@ -112,7 +112,7 @@ def pde_separate_mul(eq, fun, sep):
     Examples:
 
     >>> from sympy import *
-    >>> x, y = symbols('xy')
+    >>> from sympy.abc import x, y
     >>> u, X, Y = map(Function, 'uXY')
 
     >>> eq = Eq(Derivative(u(x, y), x, 2), Derivative(u(x, y), y, 2))

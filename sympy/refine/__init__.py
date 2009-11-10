@@ -14,7 +14,7 @@ def refine(expr, assumptions=True):
     Examples:
 
         >>> from sympy import *
-        >>> x = Symbol('x')
+        >>> from sympy.abc import x
         >>> refine(sqrt(x**2), Assume(x, Q.real))
         abs(x)
         >>> refine(sqrt(x**2), Assume(x, Q.positive))
@@ -41,7 +41,7 @@ def refine_abs(expr, assumptions):
 
     >>> from sympy import Symbol, Assume, Q
     >>> from sympy.refine import refine_abs
-    >>> x = Symbol("x")
+    >>> from sympy.abc import x
     >>> refine_abs(abs(x), Assume(x, Q.real))
     >>> refine_abs(abs(x), Assume(x, Q.positive))
     x
@@ -63,7 +63,7 @@ def refine_Pow(expr, assumptions):
 
     >>> from sympy import Symbol, Assume, Q
     >>> from sympy.refine import refine_Pow
-    >>> x = Symbol("x")
+    >>> from sympy.abc import x
     >>> refine_Pow((-1)**x, Assume(x, Q.real))
     >>> refine_Pow((-1)**x, Assume(x, Q.even))
     1
@@ -89,7 +89,7 @@ def refine_exp(expr, assumptions):
 
     >>> from sympy import Symbol, Assume, Q, exp, I, pi
     >>> from sympy.refine import refine_exp
-    >>> x = Symbol("x")
+    >>> from sympy.abc import x
     >>> refine_exp(exp(pi*I*2*x), Assume(x, Q.real))
     >>> refine_exp(exp(pi*I*2*x), Assume(x, Q.integer))
     1

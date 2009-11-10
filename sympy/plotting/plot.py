@@ -29,7 +29,7 @@ class Plot(object):
 
 
     >>> from sympy import symbols, Plot
-    >>> x,y,z = symbols('xyz')
+    >>> from sympy.abc import x, y, z
 
     >>> Plot(x*y**3-y*x**3)
 
@@ -151,7 +151,7 @@ class Plot(object):
         other words...
 
         >>> from sympy.core import Symbol
-        >>> x = Symbol('x')
+        >>> from sympy.abc import x
         >>> p = Plot(x**2, visible=False)
 
         ...is equivalent to...

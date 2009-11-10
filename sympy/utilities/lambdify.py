@@ -101,8 +101,9 @@ def lambdify(args, expr, modules=None):
     Returns a lambda function for fast calculation of numerical values.
 
     Usage:
-    >>> from sympy import symbols, sqrt, sin
-    >>> x,y,z = symbols('xyz')
+    >>> from sympy import sqrt, sin
+    >>> from sympy.utilities import lambdify
+    >>> from sympy.abc import x, y, z
     >>> f = lambdify(x, x**2)
     >>> f(2)
     4
@@ -198,8 +199,8 @@ def lambdastr(args, expr):
     """
     Returns a string that can be evaluated to a lambda function.
 
-    >>> from sympy import symbols
-    >>> x,y,z = symbols('xyz')
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.utilities.lambdify import lambdastr
     >>> lambdastr(x, x**2)
     'lambda x: (x**2)'
     >>> lambdastr((x,y,z), [z,y,x])

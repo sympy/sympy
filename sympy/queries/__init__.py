@@ -45,7 +45,7 @@ def ask(expr, key, assumptions=True):
 
     Examples
         >>> from sympy import *
-        >>> x, y = symbols('x y')
+        >>> from sympy.abc import x, y
         >>> ask(pi, Q.rational)
         False
         >>> ask(x*y, Q.even, Assume(x, Q.even) & Assume(y, Q.integer))
@@ -115,6 +115,7 @@ def register_handler(key, handler):
     """Register a handler in the ask system. key must be a string and handler a
     class inheriting from AskHandler.
 
+        >>> from sympy.queries import register_handler, ask
         >>> from sympy.queries.handlers import AskHandler
         >>> class MersenneHandler(AskHandler):
         ...     # Mersenne numbers are in the form 2**n + 1, n integer

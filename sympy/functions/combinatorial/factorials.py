@@ -30,7 +30,7 @@ class Factorial(Function):
        known and computes n! via prime factorization of special class
        of numbers, called here the 'Swing Numbers'.
 
-       >>> from sympy import *
+       >>> from sympy import Symbol, factorial
        >>> n = Symbol('n', integer=True)
 
        >>> factorial(-2)
@@ -166,7 +166,7 @@ class RisingFactorial(Function):
        or visit http://mathworld.wolfram.com/RisingFactorial.html page.
 
        >>> from sympy import *
-       >>> x = Symbol('x')
+       >>> from sympy.abc import x
 
        >>> rf(x, 0)
        1
@@ -229,7 +229,7 @@ class FallingFactorial(Function):
        or visit http://mathworld.wolfram.com/FallingFactorial.html page.
 
        >>> from sympy import *
-       >>> x = Symbol('x')
+       >>> from sympy.abc import x
 
        >>> ff(x, 0)
        1
@@ -307,8 +307,8 @@ class Binomial(Function):
        For the sake of convenience for negative 'k' this function
        will return zero no matter what valued is the other argument.
 
-       >>> from sympy import *
-       >>> n = symbols('n', integer=True)
+       >>> from sympy import Symbol, Rational, binomial
+       >>> n = Symbol('n', integer=True)
 
        >>> binomial(15, 8)
        6435

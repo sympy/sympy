@@ -264,7 +264,7 @@ def clambdify(args, expr, **kwargs):
     Supports all standard C math functions, pi and e.
 
     >>> from sympy import symbols, sqrt
-    >>> x, y = symbols('xy')
+    >>> from sympy.abc import x, y
     >>> cf = clambdify((x,y), sqrt(x*y))
     >>> cf(0.5, 4)
     1.4142135623730951

@@ -404,8 +404,9 @@ class Integral(Basic):
 
         Examples:
 
-            >>> from sympy import sqrt, symbols
-            >>> x = symbols("x")
+            >>> from sympy import sqrt
+            >>> from sympy.abc import x
+            >>> from sympy.integrals import Integral
             >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
             >>> e
             Integral((1 + x**3)**(1/2), (x, 2, 10))
@@ -424,8 +425,8 @@ class Integral(Basic):
 
         Examples:
 
-            >>> from sympy import sqrt, symbols
-            >>> x = symbols("x")
+            >>> from sympy import sqrt
+            >>> from sympy.abc import x
             >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
             >>> e
             Integral((1 + x**3)**(1/2), (x, 2, 10))
@@ -485,10 +486,10 @@ def integrate(*args, **kwargs):
        Examples
 
        >>> from sympy import *
-       >>> x, y = symbols('xy')
+       >>> from sympy.abc import a, x, y
 
        >>> integrate(x*y, x)
-       (1/2)*y*x**2
+       y*x**2/2
 
        >>> integrate(log(x), x)
        -x + x*log(x)
@@ -497,10 +498,10 @@ def integrate(*args, **kwargs):
        1 - a + a*log(a)
 
        >>> integrate(x)
-       (1/2)*x**2
+       x**2/2
 
        >>> integrate(x*y)
-       (1/4)*x**2*y**2
+       x**2*y**2/4
 
        See also the doctest of Integral._eval_integral(), which explains
        thoroughly the strategy that SymPy uses for integration.
@@ -523,10 +524,10 @@ def line_integrate(field, curve, vars):
        Examples
        --------
        >>> from sympy import *
-       >>> x, y, t = symbols('xyt')
+       >>> from sympy.abc import x, y, t
        >>> C = Curve([E**t + 1, E**t - 1], (t, 0, ln(2)))
        >>> line_integrate(x + y, C, [x, y])
-       3*sqrt(2)
+       3*2**(1/2)
 
     """
     F = sympify(field)

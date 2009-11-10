@@ -277,6 +277,7 @@ def gf_div(f, g, p):
 
        Consider polynomials x**3 + x + 1 and x**2 + x over GF(2):
 
+       >>> from sympy.polys.galoispolys import gf_div, gf_add_mul
        >>> gf_div([1, 0, 1, 1], [1, 1, 0], 2)
        ([1, 1], [1])
 
@@ -446,6 +447,7 @@ def gf_gcdex(f, g, p):
        Consider polynomials f = (x + 7) (x + 1), g = (x + 7) (x**2 + 1)
        over GF(11)[x]. Application of Extended Euclidean Algorithm gives:
 
+       >>> from sympy.polys.galoispolys import gf_gcdex, gf_mul, gf_add
        >>> s, t, g = gf_gcdex([1,8,7], [1,7,1,7], 11)
        >>> s, t, g
        ([5, 6], [6], [1, 7])
@@ -665,6 +667,7 @@ def gf_sqf(f, p):
 
        Consider polynomial f = x**11 + 1 over GF(11)[x]:
 
+       >>> from sympy.polys.galoispolys import gf_from_dict, gf_diff
        >>> f = gf_from_dict({11: 1, 0: 1}, 11)
 
        Note that f'(x) = 0:
@@ -675,6 +678,7 @@ def gf_sqf(f, p):
        This phenomenon does not happen in characteristic zero. However
        we can still compute square-free decomposition of f using gf_sqf():
 
+       >>> from sympy.polys.galoispolys import gf_sqf, gf_pow
        >>> gf_sqf(f, 11)
        (1, [([1, 1], 11)])
 
@@ -742,6 +746,7 @@ def gf_ddf_zassenhaus(f, p):
 
        Consider polynomial x**15 - 1 over GF(11)[x].
 
+       >>> from sympy.polys.galoispolys import gf_from_dict, gf_ddf_zassenhaus
        >>> f = gf_from_dict({15: 1, 0: -1}, 11)
 
        Distinct degree factorization gives:
@@ -792,6 +797,7 @@ def gf_edf_zassenhaus(f, n, p):
        Consider square-free polynomial f = x**3 + x**2 + x + 1 over
        GF(5)[x]. Lets compute its irreducible factors of degree one:
 
+       >>> from sympy.polys.galoispolys import gf_edf_zassenhaus
        >>> gf_edf_zassenhaus([1,1,1,1], 1, 5)
        [[1, 1], [1, 2], [1, 3]]
 
@@ -1041,6 +1047,7 @@ def gf_factor(f, p, **flags):
        Consider a non square-free polynomial f = (7*x + 1) (x + 2)**2 over
        GF(11)[x]. We obtain its factorization into irreducibles as follows:
 
+       >>> from sympy.polys.galoispolys import gf_factor
        >>> gf_factor([5, 2, 7, 2], 11)
        (5, [([1, 2], 1), ([1, 8], 2)])
 

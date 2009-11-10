@@ -180,8 +180,8 @@ def poly_groebner(f, *symbols, **flags):
        variable at a time, provided that the ideal is zero-dimensional
        (finite number of solutions).
 
-       >>> from sympy import *
-       >>> x,y = symbols('xy')
+       >>> from sympy.polys.algorithms import poly_groebner
+       >>> from sympy.abc import x, y
 
        >>> G = poly_groebner([x**2 + y**3, y**2-x], x, y, order='lex')
 
@@ -555,8 +555,8 @@ def poly_resultant(f, g, *symbols):
        matrices whose entries are computed using O(n**2) additions
        and multiplications where n = max(deg(f), deg(g)).
 
-       >>> from sympy import *
-       >>> x,y = symbols('xy')
+       >>> from sympy.polys.algorithms import poly_resultant
+       >>> from sympy.abc import x, y
 
        Polynomials x**2-1 and (x-1)**2 have common root:
 
@@ -756,8 +756,8 @@ def poly_sqf(f, *symbols):
        returns tuple (f_1, f_2, ..., f_n),  where all  A_i are co-prime and
        square-free polynomials and f = f_1 * f_2**2 * ... * f_n**n.
 
-       >>> from sympy import *
-       >>> x,y = symbols('xy')
+       >>> from sympy.polys.algorithms import poly_sqf
+       >>> from sympy.abc import x, y
 
        >>> p, q = poly_sqf(x*(x+1)**2, x)
 
@@ -839,8 +839,8 @@ def poly_decompose(f, *symbols):
 
        where T_n and T_m are Chebyshev polynomials.
 
-       >>> from sympy import *
-       >>> x,y = symbols('xy')
+       >>> from sympy.polys.algorithms import poly_decompose
+       >>> from sympy.abc import x, y
 
        >>> p, q = poly_decompose(x**4+2*x**2 + y, x)
 
@@ -942,8 +942,9 @@ def poly_decompose(f, *symbols):
 def poly_reduce(f, g, *symbols):
     """Removes common content from a pair of polynomials.
 
-       >>> from sympy import *
-       >>> x = Symbol('x')
+       >>> from sympy import Poly
+       >>> from sympy.abc import x
+       >>> from sympy.polys.algorithms import poly_reduce
 
        >>> f = Poly(2930944*x**6 + 2198208*x**4 + 549552*x**2 + 45796, x)
        >>> g = Poly(17585664*x**5 + 8792832*x**3 + 1099104*x, x)
@@ -991,7 +992,7 @@ def poly_discriminant(p, symbol):
 
     Example:
     >>> from sympy import *
-    >>> a, b, c, x = symbols('abcx')
+    >>> from sympy.abc import a, b, c, x
     >>> discriminant(Poly(a*x**2 + b*x + c, x), x)
     -4*a*c + b**2
     >>> discriminant(Poly(2*x**5 + x**2 + 10, x), x)

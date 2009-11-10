@@ -18,8 +18,8 @@ class And(LatticeOp, BooleanFunction):
     are False, and True if they are all True.
 
     Examples:
-        >>> from sympy import *
-        >>> x, y = symbols('xy')
+        >>> from sympy.core import symbols
+        >>> from sympy.abc import x, y
         >>> x & y
         And(x, y)
 
@@ -123,7 +123,7 @@ def fuzzy_not(arg):
     will return Not if arg is a boolean value, and None if argument
     is None
 
-    >>> from sympy import *
+    >>> from sympy.logic.boolalg import fuzzy_not
     >>> fuzzy_not(True)
     False
     >>> fuzzy_not(None)
@@ -137,8 +137,8 @@ def fuzzy_not(arg):
 
 def conjuncts(expr):
     """Return a list of the conjuncts in the expr s.
-    >>> from sympy import symbols
-    >>> A, B = symbols('AB')
+    >>> from sympy.logic.boolalg import conjuncts
+    >>> from sympy.abc import A, B
     >>> conjuncts(A & B)
     [A, B]
     >>> conjuncts(A | B)
@@ -149,8 +149,8 @@ def conjuncts(expr):
 
 def disjuncts(expr):
     """Return a list of the disjuncts in the sentence s.
-    >>> from sympy import symbols
-    >>> A, B = symbols('AB')
+    >>> from sympy.logic.boolalg import disjuncts
+    >>> from sympy.abc import A, B
     >>> disjuncts(A | B)
     [A, B]
     >>> disjuncts(A & B)
@@ -185,8 +185,8 @@ def to_cnf(expr):
 
     Examples:
 
-        >>> from sympy import symbols
-        >>> A, B, C = symbols('A B C')
+        >>> from sympy.logic.boolalg import to_cnf
+        >>> from sympy.abc import A, B, C
         >>> to_cnf(~(A | B) | C)
         And(Or(C, Not(A)), Or(C, Not(B)))
 
@@ -228,8 +228,8 @@ def to_int_repr(clauses, symbols):
     takes clauses in CNF puts them into integer representation
 
     Examples:
-        >>> from sympy import symbols
-        >>> x, y = symbols('x y')
+        >>> from sympy.logic.boolalg import to_int_repr
+        >>> from sympy.abc import x, y
         >>> to_int_repr([x | y, y], [x, y])
         [[1, 2], [2]]
 

@@ -13,7 +13,7 @@ class AssumptionsContext(set):
         >>> from sympy import *
         >>> global_assumptions
         AssumptionsContext()
-        >>> x = Symbol('x')
+        >>> from sympy.abc import x
         >>> global_assumptions.add(Assume(x, Q.real))
         >>> global_assumptions
         AssumptionsContext([Assume(x, 'real', True)])
@@ -36,7 +36,7 @@ class Assume(Basic):
     """New-style assumptions.
 
     >>> from sympy import *
-    >>> x = Symbol('x')
+    >>> from sympy.abc import x
     >>> Assume(x, Q.integer)
     Assume(x, 'integer', True)
     >>> Assume(x, Q.integer, False)
@@ -57,7 +57,7 @@ class Assume(Basic):
 
         Examples:
             >>> from sympy import *
-            >>> x = Symbol('x')
+            >>> from sympy.abc import x
             >>> a = Assume(x+1, Q.integer)
             >>> a.expr
             1 + x
@@ -73,7 +73,7 @@ class Assume(Basic):
 
         Examples:
             >>> from sympy import *
-            >>> x = Symbol('x')
+            >>> from sympy.abc import x
             >>> a = Assume(x, Q.integer)
             >>> a.key
             'integer'
@@ -91,7 +91,7 @@ class Assume(Basic):
 
         Examples:
             >>> from sympy import *
-            >>> x = Symbol('x')
+            >>> from sympy.abc import x
             >>> a = Assume(x, Q.integer)
             >>> a.value
             True
@@ -116,8 +116,9 @@ def eliminate_assume(expr, symbol=None):
     Assume(x, integer=False) --> ~integer
 
     Examples:
-        >>> from sympy import *
-        >>> x = Symbol('x')
+        >>> from sympy.assumptions.assume import eliminate_assume
+        >>> from sympy import Assume, Q
+        >>> from sympy.abc import x
         >>> eliminate_assume(Assume(x, Q.positive))
         positive
         >>> eliminate_assume(Assume(x, Q.positive, False))

@@ -12,6 +12,7 @@ class Point(GeometryEntity):
 
     Examples:
     ======
+        >>> from sympy.geometry import Point
         >>> Point(1, 2)
         Point(1, 2)
         >>> Point([1, 2])
@@ -40,7 +41,7 @@ class Point(GeometryEntity):
         Examples:
         =========
             >>> from sympy import *
-            >>> x = Symbol('x')
+            >>> from sympy.abc import x
             >>> p1,p2 = Point(0, 0), Point(1, 1)
             >>> p3,p4,p5 = Point(2, 2), Point(x, x), Point(1, 2)
             >>> Point.is_collinear(p1, p2, p3, p4)
@@ -90,6 +91,7 @@ class Point(GeometryEntity):
 
         Example:
         ========
+            >>> from sympy.geometry import Point
             >>> p1,p2 = Point(-1, 0), Point(1, 0)
             >>> p3,p4 = Point(0, 1), Point(-1, 2)
             >>> Point.is_concyclic(p1, p2, p3)
@@ -155,6 +157,7 @@ class Point(GeometryEntity):
 
         Example:
         ========
+            >>> from sympy.geometry import Point
             >>> p1,p2 = Point(1, 1), Point(4, 5)
             >>> Point.distance(p1, p2)
             5
@@ -169,6 +172,7 @@ class Point(GeometryEntity):
 
         Example:
         ========
+            >>> from sympy.geometry import Point
             >>> p1,p2 = Point(1, 1), Point(13, 5)
             >>> Point.midpoint(p1, p2)
             Point(7, 3)
@@ -186,7 +190,6 @@ class Point(GeometryEntity):
             >>> from sympy import *
             >>> Point(Rational(1,2), Rational(3,2)).evalf()
             Point(0.5, 1.5)
-
         """
         return Point([x.evalf() for x in self])
 

@@ -31,7 +31,7 @@ def solve_poly_system(system, *symbols):
        overcome this difficulty use numerical algorithms instead.
 
        >>> from sympy import *
-       >>> x,y = symbols('xy')
+       >>> from sympy.abc import x, y
 
        >>> solve_poly_system([x*y - 2*y, 2*y**2 - x**2], x, y)
        [(0, 0), (2, -2**(1/2)), (2, 2**(1/2))]

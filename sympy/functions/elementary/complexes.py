@@ -18,8 +18,7 @@ class re(Function):
        expansion on instance of this function.
 
        >>> from sympy import *
-
-       >>> x, y = symbols('x', 'y')
+       >>> from sympy.abc import x, y
 
        >>> re(2*E)
        2*E
@@ -90,8 +89,7 @@ class im(Function):
        expansion on instance of this function.
 
        >>> from sympy import *
-
-       >>> x, y = symbols('x', 'y')
+       >>> from sympy.abc import x, y
 
        >>> im(2*E)
        0

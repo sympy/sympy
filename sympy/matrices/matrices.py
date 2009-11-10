@@ -946,8 +946,8 @@ class Matrix(object):
         (jacobian() should always work).
 
         Examples::
-        >>> from sympy import symbols, sin, cos
-        >>> rho, phi = symbols("rho phi")
+        >>> from sympy import sin, cos, Matrix
+        >>> from sympy.abc import rho, phi
         >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
         >>> Y = Matrix([rho, phi])
         >>> X.jacobian(Y)
@@ -1353,7 +1353,7 @@ class Matrix(object):
            algorithm are monic.
 
            >>> from sympy import *
-           >>> x,y,z = symbols('xyz')
+           >>> from sympy.abc import x, y, z
 
            >>> M = Matrix([ [x,y,z], [1,0,0], [y,z,x] ])
 
@@ -1543,7 +1543,7 @@ class Matrix(object):
         Example:
 
         >>> from sympy import Matrix, symbols
-        >>> x, y, z = symbols('x y z')
+        >>> from sympy.abc import x, y, z
         >>> A = Matrix([[1, 3, 0, 0], [y, z*z, 0, 0], [0, 0, x, 0], [0, 0, 0, 0]])
         >>> a1, a2, a3 = A.get_diag_blocks()
         >>> a1
@@ -1765,7 +1765,7 @@ def casoratian(seqs, n, zero=True):
        to a generating set of a recurrence to factor out lineary
        dependent solutions and return a basis.
 
-       >>> from sympy import *
+       >>> from sympy import Symbol, casoratian, factorial
        >>> n = Symbol('n', integer=True)
 
        Exponential and factorial are lineary independent:
@@ -1790,8 +1790,8 @@ def block_diag(matrices):
     Constructs a block diagonal matrix from a list of square matrices.
 
     Example:
-    >>> from sympy import block_diag, symbols
-    >>> x, y, z = symbols("x y z")
+    >>> from sympy import block_diag, symbols, Matrix
+    >>> from sympy.abc import a, b, c, x, y, z
     >>> a = Matrix([[1, 2], [2, 3]])
     >>> b = Matrix([[3, x], [y, 3]])
     >>> block_diag([a, b, b])

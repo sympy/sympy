@@ -1,4 +1,4 @@
-from os import walk, sep, chdir, pardir
+from os import walk, sep, pardir
 from os.path import split, join, abspath, basename
 from glob import glob
 

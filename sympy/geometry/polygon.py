@@ -217,6 +217,7 @@ class RegularPolygon(Polygon):
 
     Example:
     ========
+        >>> from sympy.geometry import RegularPolygon, Point
         >>> RegularPolygon(Point(0, 0), 5, 5)
         RegularPolygon(Point(0, 0), 5, 5)
 

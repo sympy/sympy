@@ -27,8 +27,8 @@ def fraction(expr, exact=False):
        If only one of the numerator/denominator pair is needed then
        use numer(expr) or denom(expr) functions respectively.
 
-       >>> from sympy import *
-       >>> x, y = symbols('x', 'y')
+       >>> from sympy import fraction, Rational, Symbol
+       >>> from sympy.abc import x, y
 
        >>> fraction(x/y)
        (x, y)
@@ -53,6 +53,7 @@ def fraction(expr, exact=False):
        flag is unset, then structure this exponent's structure will
        be analyzed and pretty fraction will be returned:
 
+       >>> from sympy import exp
        >>> fraction(2*x**(-y))
        (2, x**y)
 
@@ -128,8 +129,8 @@ def separate(expr, deep=False):
     """Rewrite or separate a power of product to a product of powers
        but without any expanding, i.e., rewriting products to summations.
 
-       >>> from sympy import *
-       >>> x, y, z = symbols('x', 'y', 'z')
+       >>> from sympy.abc import x, y, z
+       >>> from sympy import separate, sin, cos, exp
 
        >>> separate((x*y)**2)
        x**2*y**2
@@ -192,8 +193,8 @@ def together(expr, deep=False):
        By definition, 'together' is a complement to 'apart', so
        apart(together(expr)) should return expr unchanged.
 
-       >>> from sympy import *
-       >>> x, y, z = symbols('x', 'y', 'z')
+       >>> from sympy.abc import x, y, z
+       >>> from sympy import together
 
        You can work with sums of fractions easily. The algorithm
        used here will, in an iterative style, collect numerators
@@ -364,8 +365,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         as values respectively.
 
         >>> from sympy import *
-        >>> x, y, z = symbols('x', 'y', 'z')
-        >>> a, b, c = symbols('a', 'b', 'c')
+        >>> from sympy.abc import a, b, c, x, y, z
 
         This function can collect symbolic coefficients in polynomial
         or rational expressions. It will manage to find all integer or
@@ -826,8 +826,8 @@ def ratsimp(expr):
 
     == Examples ==
         >>> from sympy import *
-        >>> x = Symbol('x')
-        >>> y = Symbol('y')
+        >>> from sympy.abc import x
+        >>> from sympy.abc import y
         >>> ratsimp(1/x + 1/y)
         (x + y)/(x*y)
 
@@ -887,9 +887,8 @@ def trigsimp(expr, deep=False, recursive=False):
     operation if the expression is large)
 
     == Examples ==
-        >>> from sympy import *
-        >>> x = Symbol('x')
-        >>> y = Symbol('y')
+        >>> from sympy import trigsimp, sin, cos, log
+        >>> from sympy.abc import x, y
         >>> e = 2*sin(x)**2 + 2*cos(x)**2
         >>> trigsimp(e)
         2
@@ -950,9 +949,9 @@ def trigsimp_nonrecursive(expr, deep=False):
     deep ........ apply trigsimp inside functions
 
     == Examples ==
-        >>> from sympy import *
-        >>> x = Symbol('x')
-        >>> y = Symbol('y')
+        >>> from sympy import cos, sin, log
+        >>> from sympy.simplify.simplify import trigsimp, trigsimp_nonrecursive
+        >>> from sympy.abc import x, y
         >>> e = 2*sin(x)**2 + 2*cos(x)**2
         >>> trigsimp(e)
         2
@@ -1092,7 +1091,7 @@ def powsimp(expr, deep=False, combine='all'):
 
     == Examples ==
         >>> from sympy import *
-        >>> x, y, z, n = symbols('xyzn')
+        >>> from sympy.abc import x, y, z, n
         >>> powsimp(x**y*x**z*y**z, combine='all')
         x**(y + z)*y**z
         >>> powsimp(x**y*x**z*y**z, combine='exp')
@@ -1416,8 +1415,8 @@ def logcombine(expr, assume_pos_real=False):
     assumptions on the variables to make them combine.
 
     Examples:
-    >>> from sympy import *
-    >>> a,x,y,z = symbols('axyz')
+    >>> from sympy import Symbol, symbols, log, logcombine
+    >>> from sympy.abc import a, x, y, z
     >>> logcombine(a*log(x)+log(y)-log(z))
     -log(z) + a*log(x) + log(y)
     >>> logcombine(a*log(x)+log(y)-log(z), assume_pos_real=True)

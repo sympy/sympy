@@ -344,7 +344,7 @@ def print_mathml(expr):
 
     >>> from sympy import *
     >>> from sympy.printing.mathml import print_mathml
-    >>> x = Symbol('x')
+    >>> from sympy.abc import x
     >>> print_mathml(x+1) #doctest: +NORMALIZE_WHITESPACE
     <apply>
         <plus/>

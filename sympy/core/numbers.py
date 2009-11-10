@@ -58,6 +58,7 @@ def ilcm(a, b):
 def igcdex(a, b):
     """Returns x, y, g such that g = x*a + y*b = gcd(a, b).
 
+       >>> from sympy.core.numbers import igcdex
        >>> igcdex(2, 3)
        (-1, 1, 1)
        >>> igcdex(10, 12)
@@ -468,6 +469,7 @@ class Rational(Number):
 
     Examples
     ========
+        >>> from sympy import Rational
         >>> Rational(3)
         3
         >>> Rational(1,2)

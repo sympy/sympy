@@ -84,6 +84,7 @@ class stringPict(object):
         """Put pictures next to this one.
         Returns string, baseline arguments for stringPict.
         (Multiline) strings are allowed, and are given a baseline of 0.
+        >>> from sympy.printing.pretty.stringpict import stringPict
         >>> print stringPict("10").right(" + ",stringPict("1\r-\r2",1))[0]
              1
         10 + -
@@ -141,6 +142,7 @@ class stringPict(object):
          """Put pictures under this picture.
          Returns string, baseline arguments for stringPict.
          Baseline is baseline of top picture
+         >>> from sympy.printing.pretty.stringpict import stringPict
          >>> print stringPict("x+3").below(stringPict.LINE, '3')[0] #doctest: +NORMALIZE_WHITESPACE
          x+3
          ---
