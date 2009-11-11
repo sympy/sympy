@@ -433,14 +433,14 @@ class SymPyDocTests(object):
             self._reporter.import_error(filename, sys.exc_info())
             return
 
-        if sys.version_info[:2] == (2, 4):
-            # From doctest's docs:
-            # "Sort the tests by alpha order of names, for consistency in
-            # verbose-mode output.  This was a feature of doctest in Pythons
-            # <= 2.3 that got lost by accident in 2.4.  It was repaired in
-            # 2.4.4 and 2.5."
-            tests.sort()
         tests = [test for test in tests if len(test.examples) > 0]
+        # By default (except for python 2.4 in which it was broken) tests
+        # are sorted by alphanetica; order by function name. We sort by line number
+        # so one can edit the file sequentially from bottom to top...HOWEVER
+        # if there are decorated functions, their line numbers will be too large
+        # and for now one must just search for these by text and function name
+        tests.sort(key=lambda x: -x.lineno)
+
         self._reporter.entering_filename(filename, len(tests))
         for test in tests:
             assert len(test.examples) != 0
