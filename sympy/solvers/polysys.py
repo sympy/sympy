@@ -30,7 +30,7 @@ def solve_poly_system(system, *symbols):
        means only that roots() failed, but the system is solvable. To
        overcome this difficulty use numerical algorithms instead.
 
-       >>> from sympy import *
+       >>> from sympy import solve_poly_system
        >>> from sympy.abc import x, y
 
        >>> solve_poly_system([x*y - 2*y, 2*y**2 - x**2], x, y)

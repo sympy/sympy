@@ -51,7 +51,7 @@ def poly_factors(f, *symbols, **flags):
 def factors(f, *symbols, **flags):
     """Factor polynomials over rationals.
 
-       >>> from sympy import *
+       >>> from sympy import factors
        >>> from sympy.abc import x, y
 
        >>> factors(x**2 - y**2, x, y)
@@ -64,7 +64,7 @@ def factors(f, *symbols, **flags):
 def factor(f, *symbols, **flags):
     """Factor polynomials over rationals.
 
-       >>> from sympy import *
+       >>> from sympy import factor
        >>> from sympy.abc import x, y
 
        >>> factor(x**2 - y**2) == (x - y)*(x + y)

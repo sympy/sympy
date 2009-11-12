@@ -725,8 +725,8 @@ def latex(expr, profile=None, **kargs):
         unless the 'itex' keyword is set in which case the itex
         $$ $$ syntax will be used.
 
-        >>> from sympy import *
-        >>> from sympy.abc import *
+        >>> from sympy import latex, Rational
+        >>> from sympy.abc import x, y, mu, tau
 
         >>> latex((2*tau)**Rational(7,2))
         '$8 \\sqrt{2} \\tau^{\\frac{7}{2}}$'

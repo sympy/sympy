@@ -130,7 +130,7 @@ def solve(f, *symbols, **flags):
        To solve equations and systems of equations like recurrence relations
        or differential equations, use rsolve() or dsolve(), respectively.
 
-       >>> from sympy import *
+       >>> from sympy import I, solve
        >>> from sympy.abc import x, y
 
        Solve a polynomial equation:
@@ -417,7 +417,7 @@ def solve_linear_system(system, *symbols, **flags):
        Then solutions are found using back-substitution. This approach
        is more efficient and compact than the Gauss-Jordan method.
 
-       >>> from sympy import *
+       >>> from sympy import Matrix, solve_linear_system
        >>> from sympy.abc import x, y
 
        Solve the following system:
@@ -616,7 +616,7 @@ def tsolve(eq, sym):
     not unique. In some cases, a complex solution may be returned
     even though a real solution exists.
 
-        >>> from sympy import *
+        >>> from sympy import tsolve, log
         >>> from sympy.abc import x
 
         >>> tsolve(3**(2*x+5)-4, x)

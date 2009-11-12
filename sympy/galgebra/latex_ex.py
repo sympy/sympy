@@ -976,8 +976,8 @@ def LaTeX(expr, inline=True):
     be used. Otherwise the resulting code will be enclosed in
     'equation*' environment (remember to import 'amsmath').
 
-    >>> from sympy import *
-    >>> from sympy.abc import *
+    >>> from sympy import Rational
+    >>> from sympy.abc import tau, mu
 
     >>> latex((2*tau)**Rational(7,2))
     '$8 \\\\sqrt{2} \\\\sqrt[7]{\\\\tau}$'

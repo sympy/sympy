@@ -342,7 +342,7 @@ def print_mathml(expr):
     """
     Print's a pretty representation of the MathML code for expr
 
-    >>> from sympy import *
+    >>> ##
     >>> from sympy.printing.mathml import print_mathml
     >>> from sympy.abc import x
     >>> print_mathml(x+1) #doctest: +NORMALIZE_WHITESPACE

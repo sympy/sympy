@@ -109,7 +109,7 @@ class Poly(Basic):
                b) [(c_1, m_1), (c_2, m_2), ..., (c_n, m_n)]
                c) [ c_1, c_2, ..., c_n ]
 
-                >>> from sympy import *
+                >>> from sympy import Poly, S
                 >>> from sympy.abc import a, x, y
                 >>> # a) M is a tuple (m_1, m_2, ..., m_3)
                 >>> Poly([(4, (2,2)), (3, (1,2))], x, y)
@@ -547,7 +547,7 @@ class Poly(Basic):
            expression to a polynomial use Polynomial constructor
            explicitly or Basic.as_poly method.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y
 
            >>> Poly._decompose(y*x**2 + 3, x)
@@ -632,7 +632,7 @@ class Poly(Basic):
            The input fraction can be given as a single expression or
            as a tuple consisting of the numerator and denominator.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y
 
            >>> Poly.cancel((x**2-y**2)/(x-y), x, y)
@@ -719,7 +719,7 @@ class Poly(Basic):
 
            Note that the result is always returned in expanded form.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y
 
            >>> p = Poly(x**2+3, x)
@@ -742,7 +742,7 @@ class Poly(Basic):
            used in several algorithms which perform best when dicts
            are being used, eg. addition, multiplication etc.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y
 
            >>> p = Poly(x**2+3, x)
@@ -761,7 +761,7 @@ class Poly(Basic):
            dictionary representation with all tuples converted to
            explicit integers.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y
 
            >>> p = Poly(x**2+3, x)
@@ -1259,7 +1259,7 @@ class Poly(Basic):
     def is_squarefree(self):
         """Returns True if 'self' has no factors of multiplicity >= 2.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y
 
            >>> Poly(x-1, x).is_squarefree
@@ -1298,7 +1298,7 @@ class Poly(Basic):
     def as_monic(self):
         """Returns a monic polynomial.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y
 
            >>> Poly(x**2 + 4, x).as_monic()
@@ -1331,7 +1331,7 @@ class Poly(Basic):
            consisting of a common denominator of those coefficients and an
            integer polynomial. Otherwise an exception is being raised.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y
 
            >>> Poly(3*x**2 + x, x).as_integer()
@@ -1366,7 +1366,7 @@ class Poly(Basic):
     def content(self):
         """Returns integer GCD of all the coefficients.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y, z
 
            >>> p = Poly(2*x + 5*x*y, x, y)
@@ -1398,7 +1398,7 @@ class Poly(Basic):
     def as_primitive(self):
         """Returns content and primitive part of a polynomial.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y
 
            >>> p = Poly(4*x**2 + 2*x, x)
@@ -1419,7 +1419,7 @@ class Poly(Basic):
     def as_squarefree(self):
         """Returns square-free part of a polynomial.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y
 
            >>> Poly((x-1)**2, x).as_squarefree()
@@ -1443,7 +1443,7 @@ class Poly(Basic):
     def as_reduced(self):
         """Remove GCD of monomials from 'self'.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y
 
            >>> Poly(x**3 + x, x).as_reduced()
@@ -1477,7 +1477,7 @@ class Poly(Basic):
     def map_coeffs(self, f, *args, **kwargs):
         """Apply a function to all the coefficients.
 
-           >>> from sympy import *
+           >>> from sympy import Poly, expand
            >>> from sympy.abc import x, y, u, v
 
            >>> p = Poly(x**2 + 2*x*y, x, y)
@@ -1509,7 +1509,7 @@ class Poly(Basic):
     def coeff(self, *monom):
         """Returns coefficient of a particular monomial.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y
 
            >>> p = Poly(3*x**2*y + 4*x*y**2 + 1, x, y)
@@ -1596,7 +1596,7 @@ class Poly(Basic):
            positive integer which will indicate the number of times to
            perform differentiation using this symbol.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y, z
 
            >>> p = Poly(x**2*y + z**2, x, y)
@@ -1693,7 +1693,7 @@ class Poly(Basic):
            single positive integer which will indicate the number
            of times to perform integration using this symbol.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y, z
 
            >>> p = Poly(x**2*y + z**2, x, y)
@@ -1987,7 +1987,7 @@ class Poly(Basic):
            symbols use 'evaluate' method instead. Alternatively one can
            use Basic.subs() for this purpose.
 
-           >>> from sympy import *
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y
 
            >>> p = Poly(x**2 + 2*x + 1, x)

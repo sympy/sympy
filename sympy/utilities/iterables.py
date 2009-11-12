@@ -70,7 +70,7 @@ def make_list(expr, kind):
        when it is of sequence type (Add or Mul) or singleton list
        otherwise (Rational, Pow etc.).
 
-       >>> from sympy import *
+       >>> from sympy import Symbol, make_list, Mul, Add
        >>> x, y = map(Symbol, 'xy')
 
        >>> make_list(x*y, Mul)

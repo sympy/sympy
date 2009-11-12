@@ -114,9 +114,10 @@ def roots_quartic(f):
     still gave the same for the tests.
 
     Example::
-    >>> from sympy import *
+    >>> from sympy import var, Poly
+    >>> from sympy.polys.rootfinding import roots_quartic
     >>> x = var('x')
-    >>> r = rootfinding.roots_quartic(Poly(x**4 -6*x**3 +17*x**2 -26*x +20, x))
+    >>> r = roots_quartic(Poly(x**4 -6*x**3 +17*x**2 -26*x +20, x))
     >>> # 4 complex roots: 1+-I*sqrt(3), 2+-I
     >>> sorted(str(tmp.evalf(n=2)) for tmp in r)
     ['1.0 + 1.7*I', '1.0 - 1.7*I', '2.0 + I', '2.0 - 1.0*I']
@@ -264,7 +265,7 @@ def roots(f, *symbols, **flags):
        case of multiple roots.  However to get a tuple containing all
        those roots set the 'multiple' flag to True.
 
-       >>> from sympy import *
+       >>> from sympy import Poly, roots
        >>> from sympy.abc import x, y
 
        >>> roots(x**2 - 1, x)
@@ -661,7 +662,7 @@ class RootOf(Basic):
 class RootsOf(Basic):
     """Represents all roots of a univariate polynomial.
 
-       >>> from sympy import *
+       >>> from sympy import roots, RootsOf
        >>> from sympy.abc import x, y
 
        >>> roots = RootsOf(x**2 + 2, x)

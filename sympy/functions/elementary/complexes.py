@@ -17,7 +17,7 @@ class re(Function):
        is needed then use Basic.as_real_imag() or perform complex
        expansion on instance of this function.
 
-       >>> from sympy import *
+       >>> from sympy import re, im, I, E
        >>> from sympy.abc import x, y
 
        >>> re(2*E)
@@ -88,7 +88,7 @@ class im(Function):
        result is needed then use Basic.as_real_imag() or perform complex
        expansion on instance of this function.
 
-       >>> from sympy import *
+       >>> from sympy import re, im, E, I
        >>> from sympy.abc import x, y
 
        >>> im(2*E)
@@ -309,7 +309,7 @@ class arg(Function):
 class conjugate(Function):
     """Changes the sign of the imaginary part of a complex number.
 
-        >>> from sympy import *
+        >>> from sympy import conjugate, I
 
         >>> conjugate(1 + I)
         1 - I

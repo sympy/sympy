@@ -485,7 +485,7 @@ def integrate(*args, **kwargs):
 
        Examples
 
-       >>> from sympy import *
+       >>> from sympy import integrate, log
        >>> from sympy.abc import a, x, y
 
        >>> integrate(x*y, x)
@@ -523,7 +523,7 @@ def line_integrate(field, curve, vars):
 
        Examples
        --------
-       >>> from sympy import *
+       >>> from sympy import Curve, line_integrate, E, ln
        >>> from sympy.abc import x, y, t
        >>> C = Curve([E**t + 1, E**t - 1], (t, 0, ln(2)))
        >>> line_integrate(x + y, C, [x, y])

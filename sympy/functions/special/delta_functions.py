@@ -68,7 +68,7 @@ class DiracDelta(Function):
            Examples
            --------
 
-           >>> from sympy import *
+           >>> from sympy import DiracDelta
            >>> from sympy.abc import x, y
 
            >>> DiracDelta(x*y).simplify(x)
@@ -116,7 +116,7 @@ class DiracDelta(Function):
            Examples
            --------
 
-           >>> from sympy import *
+           >>> from sympy import DiracDelta, cos
            >>> from sympy.abc import x, y
 
            >>> DiracDelta(x*y).is_simple(x)

@@ -8,7 +8,7 @@ def Rel(a, b, op):
     Rel(a,b, op)
 
     Example:
-    >>> from sympy import *
+    >>> from sympy import Rel
     >>> from sympy.abc import x, y
     >>> Rel(y, x+x**2, '==')
     y == x + x**2
@@ -22,7 +22,7 @@ def Eq(a, b=0):
     Eq(a,b)
 
     Example:
-    >>> from sympy import *
+    >>> from sympy import Eq
     >>> from sympy.abc import x, y
     >>> Eq(y, x+x**2)
     y == x + x**2
@@ -36,7 +36,7 @@ def Ne(a, b):
     Ne(a,b)
 
     Example:
-    >>> from sympy import *
+    >>> from sympy import Ne
     >>> from sympy.abc import x, y
     >>> Ne(y, x+x**2)
     y != x + x**2
@@ -50,7 +50,7 @@ def Lt(a, b):
     Lt(a,b)
 
     Example:
-    >>> from sympy import *
+    >>> from sympy import Lt
     >>> from sympy.abc import x, y
     >>> Lt(y, x+x**2)
     y < x + x**2
@@ -64,7 +64,7 @@ def Le(a, b):
     Le(a,b)
 
     Example:
-    >>> from sympy import *
+    >>> from sympy import Le
     >>> from sympy.abc import x, y
     >>> Le(y, x+x**2)
     y <= x + x**2
@@ -78,7 +78,7 @@ def Gt(a, b):
     Gt(a,b)
 
     Example:
-    >>> from sympy import *
+    >>> from sympy import Gt
     >>> from sympy.abc import x, y
     >>> Gt(y, x+x**2)
     x + x**2 < y
@@ -92,7 +92,7 @@ def Ge(a, b):
     Ge(a,b)
 
     Example:
-    >>> from sympy import *
+    >>> from sympy import Ge
     >>> from sympy.abc import x, y
     >>> Ge(y, x+x**2)
     x + x**2 <= y

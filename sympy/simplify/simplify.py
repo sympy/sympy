@@ -364,7 +364,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         up to rational powers as keys and collected sub-expressions
         as values respectively.
 
-        >>> from sympy import *
+        >>> from sympy import collect, sympify
         >>> from sympy.abc import a, b, c, x, y, z
 
         This function can collect symbolic coefficients in polynomial
@@ -393,6 +393,7 @@ def collect(expr, syms, evaluate=True, exact=False):
 
         Also more complicated expressions can be used as patterns:
 
+        >>> from sympy import sin, log
         >>> collect(a*sin(2*x) + b*sin(2*x), sin(2*x))
         (a + b)*sin(2*x)
 
@@ -419,6 +420,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         Note also that all previously stated facts about 'collect'
         function apply to the exponential function, so you can get:
 
+        >>> from sympy import exp
         >>> collect(a*exp(2*x) + b*exp(2*x), exp(x))
         (a + b)*exp(2*x)
 
@@ -437,7 +439,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         all derivatives of that function will also be collected. Use
         exact=True to prevent this from happening:
 
-        >>> from sympy import Derivative as D
+        >>> from sympy import Derivative as D, collect, Function
         >>> f = Function('f') (x)
 
         >>> collect(a*D(f,x) + b*D(f,x), D(f,x))
@@ -705,6 +707,7 @@ def separatevars(expr, dict=False, symbols=[]):
     >>> from sympy import separatevars, sin
     >>> separatevars(2*x**2*z*sin(y)+2*z*x**2)
     2*z*x**2*(1 + sin(y))
+
     >>> separatevars(2*x+y*sin(x))
     2*x + y*sin(x)
     >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, dict=True, symbols=(x, y))
@@ -825,9 +828,8 @@ def ratsimp(expr):
         multivariate polynomial algorithms are needed
 
     == Examples ==
-        >>> from sympy import *
-        >>> from sympy.abc import x
-        >>> from sympy.abc import y
+        >>> from sympy import ratsimp
+        >>> from sympy.abc import x, y
         >>> ratsimp(1/x + 1/y)
         (x + y)/(x*y)
 
@@ -1034,7 +1036,7 @@ def radsimp(expr):
     Rationalize the denominator.
 
     Examples:
-        >>> from sympy import *
+        >>> from sympy import radsimp, sqrt, Symbol
         >>> radsimp(1/(2+sqrt(2)))
         1 - 2**(1/2)/2
         >>> x,y = map(Symbol, 'xy')
@@ -1090,7 +1092,7 @@ def powsimp(expr, deep=False, combine='all'):
         powsimp(powsimp(expr, combine='base'), combine='exp').
 
     == Examples ==
-        >>> from sympy import *
+        >>> from sympy import powsimp, exp, log
         >>> from sympy.abc import x, y, z, n
         >>> powsimp(x**y*x**z*y**z, combine='all')
         x**(y + z)*y**z
@@ -1338,7 +1340,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False):
 
     Examples:
 
-        >>> from sympy import *
+        >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, exp, pi
         >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
         -2 + 2*GoldenRatio
         >>> nsimplify((1/(exp(3*pi*I/5)+1)))

@@ -35,7 +35,7 @@ def cancel(f, *symbols):
        Additionally you can specify a list of variables to perform
        cancelation more efficiently using only those symbols.
 
-       >>> from sympy import *
+       >>> from sympy import cancel, sqrt
        >>> from sympy.abc import x, y
 
        >>> cancel((x**2-1)/(x-1))
@@ -66,7 +66,7 @@ def trim(f, *symbols, **flags):
        can be also called recursively (to change this behaviour
        unset 'recursive' flag).
 
-       >>> from sympy import *
+       >>> from sympy import Function, trim, sin
 
        >>> from sympy.abc import x, y
        >>> f = Function('f')
@@ -223,7 +223,7 @@ def apart(f, z, **flags):
        by seting the keyword flag evaluate=False, which will make this
        function return a formal decomposition.
 
-       >>> from sympy import *
+       >>> from sympy import apart
        >>> from sympy.abc import x, y
 
        >>> apart(y/(x+2)/(x+1), x)

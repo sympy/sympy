@@ -31,7 +31,7 @@ def sympify(a, locals=None, convert_xor=True):
        nothing but return that value. This can be used at the begining of a
        function to ensure you are working with the correct type.
 
-       >>> from sympy import *
+       >>> from sympy import sympify
 
        >>> sympify(2).is_integer
        True

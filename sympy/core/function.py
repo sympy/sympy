@@ -18,7 +18,7 @@ works in sympycore, but needs to be ported back to SymPy.
 
 
 Example:
-    >>> from sympy import *
+    >>> ##
     >>> f = Function("f")
     >>> from sympy.abc import x
     >>> f(x)
@@ -809,7 +809,7 @@ def diff(f, *symbols, **kwargs):
     and single symbols.
 
     Examples:
-    >>> from sympy import *
+    >>> from sympy import sin, cos, Function, diff
     >>> from sympy.abc import x, y
     >>> f = Function('f')
 
@@ -884,7 +884,7 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
     Also see expand_log, expand_mul, expand_complex, expand_trig,
     and expand_func, which are wrappers around those expansion methods.
 
-    >>> from sympy import *
+    >>> from sympy import cos, exp
     >>> from sympy.abc import x, y, z
 
     mul - Distributes multiplication over addition.
@@ -911,6 +911,7 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
     into sums of logs.  Note that these only work if the arguments of the log
     function have the proper assumptions: the arguments must be positive and the
     exponents must be real.
+    >>> from sympy import log, symbols
     >>> log(x**2*y).expand(log=True)
     log(y*x**2)
     >>> x, y = symbols('xy', positive=True)
@@ -922,6 +923,7 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
     cos(x)*cos(y) - sin(x)*sin(y)
 
     func - Expand other functions.
+    >>> from sympy import gamma
     >>> gamma(x+1).expand(func=True)
     x*gamma(x)
 
@@ -951,6 +953,7 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
     with mul=False first, then run expand_mul if you need further expansion.
 
     Examples:
+    >>> from sympy import expand_log, expand, expand_mul
     >>> x, y, z = symbols('xyz', positive=True)
 
     >> expand(log(x*(y+z))) # could be either one below
@@ -1029,7 +1032,7 @@ def expand_func(expr, deep=True):
     docstring for more information.
 
     Example:
-    >>> from sympy import *
+    >>> from sympy import expand_func, gamma
     >>> from sympy.abc import x
     >>> expand_func(gamma(x + 2))
     x*(1 + x)*gamma(x)
@@ -1044,7 +1047,7 @@ def expand_trig(expr, deep=True):
     docstring for more information.
 
     Example:
-    >>> from sympy import *
+    >>> from sympy import expand_trig, sin, cos
     >>> from sympy.abc import x, y
     >>> expand_trig(sin(x+y)*(x+y))
     (x + y)*(cos(x)*sin(y) + cos(y)*sin(x))
@@ -1059,7 +1062,7 @@ def expand_complex(expr, deep=True):
     docstring for more information.
 
     Example:
-    >>> from sympy import *
+    >>> from sympy import expand_complex, I, im, re
     >>> from sympy.abc import z
     >>> expand_complex(z**(2*I))
     I*im(z**(2*I)) + re(z**(2*I))

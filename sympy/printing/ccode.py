@@ -68,8 +68,8 @@ def ccode(expr):
 
         Works for simple expressions using math.h functions.
 
-        >>> from sympy import *
-        >>> from sympy.abc import *
+        >>> from sympy import ccode, Rational
+        >>> from sympy.abc import tau
 
         >>> ccode((2*tau)**Rational(7,2))
         '8*pow(2,(1.0/2.0))*pow(tau,(7.0/2.0))'

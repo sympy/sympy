@@ -35,7 +35,7 @@ global_assumptions = AssumptionsContext()
 class Assume(Basic):
     """New-style assumptions.
 
-    >>> from sympy import *
+    >>> from sympy import Assume, Q
     >>> from sympy.abc import x
     >>> Assume(x, Q.integer)
     Assume(x, 'integer', True)
@@ -56,7 +56,7 @@ class Assume(Basic):
         Return the expression used by this assumption.
 
         Examples:
-            >>> from sympy import *
+            >>> from sympy import Assume, Q
             >>> from sympy.abc import x
             >>> a = Assume(x+1, Q.integer)
             >>> a.expr
@@ -72,7 +72,7 @@ class Assume(Basic):
         It is a string, e.g. 'integer', 'rational', etc.
 
         Examples:
-            >>> from sympy import *
+            >>> from sympy import Assume, Q
             >>> from sympy.abc import x
             >>> a = Assume(x, Q.integer)
             >>> a.key
@@ -90,7 +90,7 @@ class Assume(Basic):
         does not hold
 
         Examples:
-            >>> from sympy import *
+            >>> from sympy import Assume, Q
             >>> from sympy.abc import x
             >>> a = Assume(x, Q.integer)
             >>> a.value

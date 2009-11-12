@@ -51,7 +51,7 @@ class Piecewise(Function):
 
     Examples
     ========
-      >>> from sympy import *
+      >>> from sympy import Piecewise, log
       >>> from sympy.abc import x
       >>> f = x**2
       >>> g = log(x)
@@ -236,7 +236,7 @@ def piecewise_fold(expr):
     Takes an expression containing a piecewise function and returns the
     expression in piecewise form.
 
-    >>> from sympy import *
+    >>> from sympy import Piecewise, piecewise_fold
     >>> from sympy.abc import x
     >>> p = Piecewise((x, x < 1), (1, 1 <= x))
     >>> piecewise_fold(x*p)

@@ -81,7 +81,7 @@ class floor(RoundFunction):
     More information can be found in "Concrete mathematics" by Graham,
     pp. 87 or visit http://mathworld.wolfram.com/FloorFunction.html.
 
-        >>> from sympy import *
+        >>> from sympy import floor, E, I, Real, Rational
         >>> floor(17)
         17
         >>> floor(Rational(23, 10))
@@ -130,7 +130,7 @@ class ceiling(RoundFunction):
     More information can be found in "Concrete mathematics" by Graham,
     pp. 87 or visit http://mathworld.wolfram.com/CeilingFunction.html.
 
-        >>> from sympy import *
+        >>> from sympy import ceiling, E, I, Real, Rational
         >>> ceiling(17)
         17
         >>> ceiling(Rational(23, 10))

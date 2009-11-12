@@ -40,7 +40,7 @@ class Point(GeometryEntity):
 
         Examples:
         =========
-            >>> from sympy import *
+            >>> from sympy import Point
             >>> from sympy.abc import x
             >>> p1,p2 = Point(0, 0), Point(1, 1)
             >>> p3,p4,p5 = Point(2, 2), Point(x, x), Point(1, 2)
@@ -187,7 +187,7 @@ class Point(GeometryEntity):
 
         Example:
         ========
-            >>> from sympy import *
+            >>> from sympy import Point, Rational
             >>> Point(Rational(1,2), Rational(3,2)).evalf()
             Point(0.5, 1.5)
         """

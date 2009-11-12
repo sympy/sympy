@@ -61,7 +61,7 @@ class AssumeMeths(object):
 
         - True, when we are sure about a property. For example, when we are
         working only with real numbers:
-        >>> from sympy import *
+        >>> from sympy import Symbol
         >>> Symbol('x', real = True)
         x
 

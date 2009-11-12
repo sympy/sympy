@@ -991,7 +991,7 @@ def poly_discriminant(p, symbol):
     <http://en.wikipedia.org/wiki/Discriminant>
 
     Example:
-    >>> from sympy import *
+    >>> from sympy import discriminant, Poly
     >>> from sympy.abc import a, b, c, x
     >>> discriminant(Poly(a*x**2 + b*x + c, x), x)
     -4*a*c + b**2

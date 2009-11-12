@@ -44,7 +44,7 @@ def ask(expr, key, assumptions=True):
             where expression is any SymPy expression
 
     Examples
-        >>> from sympy import *
+        >>> from sympy import ask, Q, Assume, pi
         >>> from sympy.abc import x, y
         >>> ask(pi, Q.rational)
         False
@@ -56,7 +56,7 @@ def ask(expr, key, assumptions=True):
     Remarks
         Relations in assumptions are not implemented (yet), so the following
         will not give a meaningful result.
-        #>>> ask(x, positive=True, Assume(x>0))
+        >> ask(x, positive=True, Assume(x>0))
         It is however a work in progress and should be available before
         the official release
 

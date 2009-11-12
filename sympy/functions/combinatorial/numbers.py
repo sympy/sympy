@@ -43,7 +43,7 @@ class fibonacci(Function):
 
     Examples
     ========
-        >>> from sympy import *
+        >>> from sympy import fibonacci, Symbol
 
         >>> [fibonacci(x) for x in range(11)]
         [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
@@ -100,7 +100,7 @@ class lucas(Function):
 
     Examples
     ========
-        >>> from sympy import *
+        >>> from sympy import lucas
 
         >>> [lucas(x) for x in range(11)]
         [2, 1, 3, 4, 7, 11, 18, 29, 47, 76, 123]
@@ -141,7 +141,7 @@ class bernoulli(Function):
 
     Examples
     ========
-        >>> from sympy import *
+        >>> from sympy import bernoulli
 
         >>> [bernoulli(n) for n in range(11)]
         [1, -1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66]
@@ -285,7 +285,7 @@ class bell(Function):
 
     Examples
     ========
-        >>> from sympy import *
+        >>> from sympy import bell, Symbol
 
         >>> [bell(n) for n in range(11)]
         [1, 1, 2, 5, 15, 52, 203, 877, 4140, 21147, 115975]
@@ -375,7 +375,7 @@ class harmonic(Function):
 
     Examples
     ========
-        >>> from sympy import *
+        >>> from sympy import harmonic, oo
 
         >>> [harmonic(n) for n in range(6)]
         [0, 1, 3/2, 11/6, 25/12, 137/60]

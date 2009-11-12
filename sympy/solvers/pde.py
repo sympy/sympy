@@ -88,11 +88,11 @@ def pde_separate_add(eq, fun, sep):
 
     Examples:
 
-    >>> from sympy import *
+    >>> from sympy import E, Eq, Function, pde_separate_add, Derivative as D
     >>> from sympy.abc import x, t
     >>> u, X, T = map(Function, 'uXT')
 
-    >>> eq = Eq(Derivative(u(x, t), x), E**(u(x, t))*Derivative(u(x, t), t))
+    >>> eq = Eq(D(u(x, t), x), E**(u(x, t))*D(u(x, t), t))
     >>> pde_separate_add(eq, u(x, t), [X(x), T(t)])
     [D(X(x), x)*exp(-X(x)), D(T(t), t)*exp(T(t))]
 
@@ -111,11 +111,11 @@ def pde_separate_mul(eq, fun, sep):
 
     Examples:
 
-    >>> from sympy import *
+    >>> from sympy import Function, Eq, pde_separate_mul, Derivative as D
     >>> from sympy.abc import x, y
     >>> u, X, Y = map(Function, 'uXY')
 
-    >>> eq = Eq(Derivative(u(x, y), x, 2), Derivative(u(x, y), y, 2))
+    >>> eq = Eq(D(u(x, y), x, 2), D(u(x, y), y, 2))
     >>> pde_separate_mul(eq, u(x, y), [X(x), Y(y)])
     [D(X(x), x, x)/X(x), D(Y(y), y, y)/Y(y)]
 

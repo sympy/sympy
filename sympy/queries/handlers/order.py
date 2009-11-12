@@ -14,7 +14,7 @@ class AskNegativeHandler(CommonHandler):
 
     Examples:
 
-    >>> from sympy import *
+    >>> from sympy import ask, Q, pi
     >>> ask(pi+1, Q.negative) # this calls AskNegativeHandler.Add
     False
     >>> ask(pi**2, Q.negative) # this calls AskNegativeHandler.Pow
