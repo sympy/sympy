@@ -232,6 +232,7 @@ If you include numbers in a sympy expression, they will be sympified automatical
 
     A common mistake is copying an expression that is printed and reusing it.  If the expression has a :mod:`Rational` (i.e., ``<number>/<number>``) in it, you will not get the same result.
 
+    >>> x = Symbol('x')
     >>> print solve(x**2-2,x)
     [-2**(1/2), 2**(1/2)]
     >>> [-2**(1/2), 2**(1/2)] # If we just copy and paste, the expression is evaluated by Python #doctest: +SKIP

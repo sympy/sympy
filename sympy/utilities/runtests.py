@@ -168,7 +168,7 @@ def doctest(*paths, **kwargs):
     sympy\functions\special\polynomials.py, and sympy\polys\polynomial.py:
     >> sympy.doctest("polynomial")
     """
-    strict = kwargs.get("strict", False)
+    normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
     blacklist = kwargs.get("blacklist", [])
     blacklist.extend([
@@ -186,7 +186,7 @@ def doctest(*paths, **kwargs):
     blacklist = convert_to_native_paths(blacklist)
 
     r = PyTestReporter(verbose)
-    t = SymPyDocTests(r, strict)
+    t = SymPyDocTests(r, normal)
 
     test_files = t.get_test_files('sympy')
     not_blacklisted = [f for f in test_files
@@ -396,12 +396,12 @@ class SymPyTests(object):
 
 class SymPyDocTests(object):
 
-    def __init__(self, reporter, strict):
+    def __init__(self, reporter, normal):
         self._count = 0
         self._root_dir = sympy_dir
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
-        self._strict = strict
+        self._normal = normal
 
         self._tests = []
 
@@ -435,10 +435,10 @@ class SymPyDocTests(object):
 
         tests = [test for test in tests if len(test.examples) > 0]
         # By default (except for python 2.4 in which it was broken) tests
-        # are sorted by alphanetica; order by function name. We sort by line number
+        # are sorted by alphabetical order by function name. We sort by line number
         # so one can edit the file sequentially from bottom to top...HOWEVER
         # if there are decorated functions, their line numbers will be too large
-        # and for now one must just search for these by text and function name
+        # and for now one must just search for these by text and function name.
         tests.sort(key=lambda x: -x.lineno)
 
         self._reporter.entering_filename(filename, len(tests))
@@ -449,11 +449,13 @@ class SymPyDocTests(object):
             old = sys.stdout
             new = StringIO()
             sys.stdout = new
-            # the doctests must run on their own; all imports must be
-            # explicit within a function's docstring. Once imported
-            # that import will be available to the rest of the tests in
-            # a given function's docstring (unless clear_globs=True below).
-            if self._strict:
+            # If the testing is normal, the doctests get importing magic to
+            # provide the global namespace. If not normal (the default) then
+            # then must run on their own; all imports must be explicit within
+            # a function's docstring. Once imported that import will be
+            # available to the rest of the tests in a given function's
+            # docstring (unless clear_globs=True below).
+            if not self._normal:
                 test.globs = {}
                 # if this is uncommented then all the test would get is what
                 # comes by default with a "from sympy import *"

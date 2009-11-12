@@ -22,17 +22,17 @@ parser = OptionParser()
 parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
         default=False)
 
-# if you don't see a -s `default=False`;
-# if you do see a -s `store_true` means to store a True value for it;
-# dest is where in options to put it, options.strict will hold the bool;
+# if you don't see a -n `default=False`;
+# if you do see a -n `store_true` means to store a True value for it;
+# dest is where in options to put it, options.normal will hold the bool;
 # when the user enters -h or --help, print the `help` text
-parser.add_option("-s", "--strict", action="store_true", dest="strict",
-        help="doctests in *py files must explicitly show imports", default=False)
+parser.add_option("-n", "--normal", action="store_true", dest="normal",
+        help="run normal doctests; do not require explicit imports", default=False)
 
 options, args = parser.parse_args()
 
 ok = sympy.doctest(*args, **{"verbose": options.verbose,
-    "blacklist": blacklist, "strict": options.strict})
+    "blacklist": blacklist, "normal": options.normal})
 if ok:
     sys.exit(0)
 else:
