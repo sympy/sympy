@@ -162,7 +162,7 @@ def separate(expr, deep=False):
         terms, expo = [], separate(expr.exp, deep)
 
         if expr.base.is_Mul:
-            t = [ separate(C.Pow(t,expo), deep) for t in expr.base.args ]
+            t = [separate(C.Pow(t,expo), deep) for t in expr.base.args]
             return C.Mul(*t)
         elif expr.base.func is C.exp:
             if deep == True:
@@ -172,9 +172,9 @@ def separate(expr, deep=False):
         else:
             return C.Pow(separate(expr.base, deep), expo)
     elif expr.is_Add or expr.is_Mul:
-        return type(expr)(*[ separate(t, deep) for t in expr.args ])
+        return type(expr)(*[separate(t, deep) for t in expr.args])
     elif expr.is_Function and deep:
-        return expr.func(*[ separate(t) for t in expr.args])
+        return expr.func(*[separate(t) for t in expr.args])
     else:
         return expr
 
@@ -300,7 +300,7 @@ def together(expr, deep=False):
                     else:
                         denominator.append(Pow(term, maxi))
 
-            if all([ c.is_integer for c in coeffs ]):
+            if all([c.is_integer for c in coeffs]):
                 gcds = lambda x, y: igcd(int(x), int(y))
                 common = Rational(reduce(gcds, coeffs))
             else:
@@ -332,9 +332,9 @@ def together(expr, deep=False):
 
             return Add(*numerator)/(product*Mul(*denominator))
         elif expr.is_Mul or expr.is_Pow:
-            return type(expr)(*[ _together(t) for t in expr.args ])
+            return type(expr)(*[_together(t) for t in expr.args])
         elif expr.is_Function and deep:
-            return expr.func(*[ _together(t) for t in expr.args ])
+            return expr.func(*[_together(t) for t in expr.args])
         else:
             return expr
 
@@ -564,7 +564,7 @@ def collect(expr, syms, evaluate=True, exact=False):
             # so no chance for positive parsing result
             return None
         else:
-            pattern = [ parse_term(elem) for elem in pattern ]
+            pattern = [parse_term(elem) for elem in pattern]
 
             elems, common_expo, has_deriv = [], None, False
 
@@ -626,17 +626,17 @@ def collect(expr, syms, evaluate=True, exact=False):
             b = collect(expr.base, syms, True, exact)
             return C.Pow(b, expr.exp)
 
-    summa = [ separate(i) for i in make_list(sympify(expr), Add) ]
+    summa = [separate(i) for i in make_list(sympify(expr), Add)]
 
     if isinstance(syms, list):
-        syms = [ separate(s) for s in syms ]
+        syms = [separate(s) for s in syms]
     else:
-        syms = [ separate(syms) ]
+        syms = [separate(syms)]
 
     collected, disliked = {}, S.Zero
 
     for product in summa:
-        terms = [ parse_term(i) for i in make_list(product, Mul) ]
+        terms = [parse_term(i) for i in make_list(product, Mul)]
 
         for symbol in syms:
             if SYMPY_DEBUG:
@@ -678,44 +678,69 @@ def collect(expr, syms, evaluate=True, exact=False):
         collected[S.One] = disliked
 
     if evaluate:
-        return Add(*[ a*b for a, b in collected.iteritems() ])
+        return Add(*[a*b for a, b in collected.iteritems()])
     else:
         return collected
 
 def separatevars(expr, dict=False, symbols=[]):
     """
-    Separates variables in an expression, if possible.  By default, it separates
-    with respect to all symbols in an expression.  Add symbols to the arguments
-    to only attempt to separate with respect to those symbols.  Note that this
-    pulls out constant coeficients.  It treats all atoms in an expression as
-    symbols to separate.
+    Separates variables in an expression, if possible.  By
+    default, it separates with respect to all symbols in an
+    expression and collects constant coefficients that are
+    independent of symbols.
 
-    Note that if the expression is not really separable, or is only paritially
-    seperable it will do the best it can to separate it.  It does not throw any
-    errors if the expression is not separable.  It just returns the expression.
+    If dict=True then the separated terms will be returned
+    in a dictionary keyed to their corresponding symbols.
+    By default, all symbols in the expression will appear as
+    keys; if symbols are provided, then all those symbols will
+    be used as keys, and any terms in the expression containing
+    other symbols or non-symbols will be returned keyed to the
+    string 'coeff'.
 
-    Also, note that the order of the factors is determined by Mul, so that the
+    Note: the order of the factors is determined by Mul, so that the
     separated expressions may not necessarily be grouped together.
 
-    Use dict=True and include symbols as arguments to return a dictionary of
-    separate parts in the symbols.  Any part that has none of the symbols is
-    returned as _coeff in the dictionary. If the expression is not separable,
-    it returns None.
-
     Examples:
-    >>> from sympy import *
-    >>> x, y, z = symbols('xyz')
+    >>> from sympy.abc import x, y, z, alpha
+    >>> from sympy import separatevars, sin
     >>> separatevars(2*x**2*z*sin(y)+2*z*x**2)
     2*z*x**2*(1 + sin(y))
     >>> separatevars(2*x+y*sin(x))
     2*x + y*sin(x)
-    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, dict=True, symbols=(x, y, z))
-    {'coeff': 2, x: x**2, y: 1 + sin(y), z: z}
+    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, dict=True, symbols=(x, y))
+    {'coeff': 2*z, x: x**2, y: 1 + sin(y)}
+
+    If symbols are given for `dict` then `dict` will be set to
+    True and those symbols are used for keys (even if they aren't
+    in the expression).
+
+    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, [x, y, alpha])
+    {'coeff': 2*z, alpha: 1, x: x**2, y: 1 + sin(y)}
+
+    If the expression is not really separable, or is only partially
+    separable, separatevars will do the best it can to separate it.
+
+    >>> separatevars(x+x*y-3*(x**2))
+    x*(1 + y - 3*x)
+
+    If the expression is not separable then expr is returned unchanged
+    or (if dict=True) then None is returned.
+
+    >>> eq = 2*x+y*sin(x)
+    >>> separatevars(eq) == eq
+    True
     >>> separatevars(2*x+y*sin(x), dict=True, symbols=(x, y)) == None
     True
 
     """
+
     if dict:
+        if not symbols:
+            try:
+                symbols = list(dict)
+            except TypeError:
+                symbols = expr.atoms(Symbol)
+        symbols = [x for x in symbols if x.is_Symbol]
         return _separatevars_dict(_separatevars(expr), *symbols)
     else:
         return _separatevars(expr)
@@ -769,22 +794,24 @@ def _separatevars_dict(expr, *symbols):
     if expr.is_Mul:
         for i in expr.args:
             expsym = i.atoms(Symbol)
-            if len(set(symbols).intersection(expsym)) > 1:
+            intersection = set(symbols).intersection(expsym)
+            if len(intersection) > 1:
                 return None
-            if len(set(symbols).intersection(expsym)) == 0:
+            if len(intersection) == 0:
                 # There are no symbols, so it is part of the coefficient
                 ret['coeff'] *= i
             else:
-                ret[expsym.pop()] *= i
+                ret[intersection.pop()] *= i
     else:
         expsym = expr.atoms(Symbol)
-        if len(set(symbols).intersection(expsym)) > 1:
+        intersection = set(symbols).intersection(expsym)
+        if len(intersection) > 1:
             return None
-        if len(set(symbols).intersection(expsym)) == 0:
+        if len(intersection) == 0:
             # There are no symbols, so it is part of the coefficient
             ret['coeff'] *= expr
         else:
-            ret[expsym.pop()] *= expr
+            ret[intersection.pop()] *= expr
 
     return ret
 
@@ -811,13 +838,13 @@ def ratsimp(expr):
     elif expr.is_Mul:
         res = []
         for x in expr.args:
-            res.append( ratsimp(x) )
+            res.append(ratsimp(x))
         return Mul(*res)
     elif expr.is_Function:
-        return expr.func(*[ ratsimp(t) for t in expr.args ])
+        return expr.func(*[ratsimp(t) for t in expr.args])
 
     #elif expr.is_Function:
-    #    return type(expr)( ratsimp(expr[0]) )
+    #    return type(expr)(ratsimp(expr[0]))
     elif not expr.is_Add:
         return expr
 
@@ -940,7 +967,7 @@ def trigsimp_nonrecursive(expr, deep=False):
 
     if expr.is_Function:
         if deep:
-            return expr.func( trigsimp_nonrecursive(expr.args[0], deep) )
+            return expr.func(trigsimp_nonrecursive(expr.args[0], deep))
     elif expr.is_Mul:
         ret = S.One
         for x in expr.args:
@@ -1012,7 +1039,7 @@ def radsimp(expr):
         >>> radsimp(1/(2+sqrt(2)))
         1 - 2**(1/2)/2
         >>> x,y = map(Symbol, 'xy')
-        >>> e = ( (2+2*sqrt(2))*x+(2+sqrt(8))*y )/( 2+sqrt(2) )
+        >>> e = ((2+2*sqrt(2))*x+(2+sqrt(8))*y)/(2+sqrt(2))
         >>> radsimp(e)
         x*2**(1/2) + y*2**(1/2)
 
@@ -1028,7 +1055,7 @@ def radsimp(expr):
             b,c = r[b],r[c]
 
         syms = list(n.atoms(Symbol))
-        n = collect( (n*(a-b*sqrt(c))).expand(), syms )
+        n = collect((n*(a-b*sqrt(c))).expand(), syms)
         d = a**2 - c*b**2
 
     return n/d
@@ -1209,7 +1236,7 @@ def powsimp(expr, deep=False, combine='all'):
                             in_c_powers = True
                     if not in_c_powers:
                         c_powers.append([new_base, simpe])
-            c_part = [ C.Pow(b,e) for b,e in c_powers ]
+            c_part = [C.Pow(b,e) for b,e in c_powers]
             return C.Mul(*(c_part + nc_part))
     else:
         return expr

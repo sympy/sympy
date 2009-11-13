@@ -362,6 +362,7 @@ def test_separatevars():
     assert separatevars(x*exp(x+y)+x*exp(x)) == x*(1 + exp(y))*exp(x)
     assert separatevars((x*(y+1))**z) == x**z*(1 + y)**z
     assert separatevars(1+x+y+x*y) == (x+1)*(y+1)
+    assert separatevars(y / pi * exp(-(z - x) / cos(n))) == y * exp((x - z) / cos(n)) / pi
 
 @XFAIL
 def test_separatevars_advanced_factor():
