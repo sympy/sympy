@@ -81,6 +81,7 @@ class Product(Basic):
             return self
 
     def _eval_product(self, a, n, term):
+        from sympy import sum, Sum
         k = self.index
 
         if not term.has(k):
@@ -117,7 +118,7 @@ class Product(Basic):
                 if p is not None:
                     exclude.append(p)
                 else:
-                    include.append(p)
+                    include.append(t)
 
             if not exclude:
                 return None
