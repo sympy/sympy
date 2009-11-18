@@ -39,7 +39,7 @@ always perform arithmetic expand to obtain the desired normal form:
     -im(y) + I*im(x) + I*re(y) + re(x)
 
     >>> sin(x + I*y).expand(complex=True)
-    cosh(im(x) + re(y))*sin(-im(y) + re(x)) + I*cos(-im(y) + re(x))*sinh(im(x) + re(y))
+    -cosh(im(x) + re(y))*sin(-re(x) + im(y)) + I*cos(-re(x) + im(y))*sinh(im(x) + re(y))
 
 Note also that the same behavior can be obtained by using `as_real_imag()`
 method. However it will return a tuple containing the real part in the first
@@ -68,22 +68,22 @@ Before evaluating a large expression, it is often useful to identify common
 subexpressions, collect them and evaluate them at once. This is implemented in the ``cse`` method. Examples::
 
     In [1]: cse(sqrt(sin(x)))
-    Out[1]: 
+    Out[1]:
     ⎛    ⎡  ⎽⎽⎽⎽⎽⎽⎽⎽⎤⎞
     ⎝[], ⎣╲╱ sin(x) ⎦⎠
 
     In [2]: cse(sqrt(sin(x)+5)*sqrt(sin(x)+4))
-    Out[2]: 
+    Out[2]:
     ⎛                ⎡  ⎽⎽⎽⎽⎽⎽⎽⎽   ⎽⎽⎽⎽⎽⎽⎽⎽⎤⎞
     ⎝[(x₀, sin(x))], ⎣╲╱ 4 + x₀ *╲╱ 5 + x₀ ⎦⎠
 
     In [3]: cse(sqrt(sin(x)+5+cos(y))*sqrt(sin(x)+4+cos(y)))
-    Out[3]: 
+    Out[3]:
     ⎛                              ⎡  ⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽   ⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎤⎞
     ⎝[(x₀, cos(y)), (x₁, sin(x))], ⎣╲╱ 4 + x₀ + x₁ *╲╱ 5 + x₀ + x₁ ⎦⎠
 
     In [4]: cse((x-y)*(z-y) + sqrt((x-y)*(z-y)))
-    Out[4]: 
+    Out[4]:
     ⎛                            ⎡          ⎽⎽⎽⎽   ⎽⎽⎽⎽⎤⎞
     ⎝[(x₀, z - y), (x₁, x - y)], ⎣x₀*x₁ + ╲╱ x₀ *╲╱ x₁ ⎦⎠
 

@@ -1,6 +1,6 @@
 import itertools
 
-from sympy import Add, Mul, Pow, Symbol, sin, sqrt, symbols, sympify, cse
+from sympy import Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse
 from sympy.simplify import cse_main, cse_opts
 
 w,x,y,z = symbols('wxyz')
@@ -68,10 +68,10 @@ def test_nested_substitution():
 
 def test_subtraction_opt():
     # Make sure subtraction is optimized.
-    e = (x-y)*(z-y) + sin((x-y)*(z-y))
+    e = (x-y)*(z-y) + exp((x-y)*(z-y))
     substs, reduced = cse([e], optimizations=[(cse_opts.sub_pre,cse_opts.sub_post)])
     assert substs == [(x0, z-y), (x1, x-y), (x2, x0*x1)]
-    assert reduced == [x2 + sin(x2)]
+    assert reduced == [x2 + exp(x2)]
 
 def test_multiple_expressions():
     e1 = (x+y)*z

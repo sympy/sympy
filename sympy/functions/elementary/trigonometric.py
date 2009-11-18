@@ -73,10 +73,11 @@ class sin(Function):
                 return S.NaN
             elif arg is S.Zero:
                 return S.Zero
-            elif arg.is_negative:
-                return -cls(-arg)
-            else:
-                return None
+            elif arg is S.Infinity:
+                return
+
+        if arg.could_extract_minus_sign():
+            return -cls(-arg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -123,33 +124,10 @@ class sin(Function):
                 else:
                     return result
 
-        if arg.is_Mul and arg.args[0].is_negative:
-            return -cls(-arg)
-
         if arg.is_Add:
             x, m = arg.as_independent(S.Pi)
-            if m in [S.Pi/2, S.Pi]:
+            if m in [-S.Pi, -S.Pi/2, S.Pi/2, S.Pi]:
                 return sin(m)*cos(x)+cos(m)*sin(x)
-
-            # normalize sin(-x-y) to -sin(x+y)
-            if arg.args[0].is_Mul:
-                if arg.args[0].args[0].is_negative:
-                    # e.g. arg = -x - y
-                    if (-arg).args[0].is_Mul:
-                        if (-arg).args[0].args[0].is_negative:
-                            # This is to prevent infinite recursion in
-                            # the case sin(-x+y), for which
-                            # -arg = -y + x. See also #838 for the
-                            # root of the problem here.
-                            return
-                    # convert sin(-x-y) to -sin(x+y)
-                    return -cls(-arg)
-            if arg.args[0].is_negative:
-                if (-arg).args[0].is_negative:
-                    # This is to avoid infinite recursion in the case
-                    # sin(-x-1)
-                    return
-                return -cls(-arg)
 
         if isinstance(arg, asin):
             return arg.args[0]
@@ -312,10 +290,9 @@ class cos(Function):
                 return S.NaN
             elif arg is S.Zero:
                 return S.One
-            elif arg.is_negative:
-                return cls(-arg)
-            else:
-                return None
+
+        if arg.could_extract_minus_sign():
+            return cls(-arg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -361,33 +338,10 @@ class cos(Function):
                 else:
                     return result
 
-        if arg.is_Mul and arg.args[0].is_negative:
-            return cls(-arg)
-
         if arg.is_Add:
             x, m = arg.as_independent(S.Pi)
-            if m in [S.Pi/2, S.Pi]:
+            if m in [-S.Pi, -S.Pi/2, S.Pi/2, S.Pi]:
                 return cos(m)*cos(x)-sin(m)*sin(x)
-
-            # normalize cos(-x-y) to cos(x+y)
-            if arg.args[0].is_Mul:
-                if arg.args[0].args[0].is_negative:
-                    # e.g. arg = -x - y
-                    if (-arg).args[0].is_Mul:
-                        if (-arg).args[0].args[0].is_negative:
-                            # This is to prevent infinite recursion in
-                            # the case cos(-x+y), for which
-                            # -arg = -y + x. See also #838 for the
-                            # root of the problem here.
-                            return
-                    # convert cos(-x-y) to cos(x+y)
-                    return cls(-arg)
-            if arg.args[0].is_negative:
-                if (-arg).args[0].is_negative:
-                    # This is to avoid infinite recursion in the case
-                    # sin(-x-1)
-                    return
-                return cls(-arg)
 
         if isinstance(arg, acos):
             return arg.args[0]
@@ -546,8 +500,9 @@ class tan(Function):
                 return S.NaN
             elif arg is S.Zero:
                 return S.Zero
-            elif arg.is_negative:
-                return -cls(-arg)
+
+        if arg.could_extract_minus_sign():
+            return -cls(-arg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -574,11 +529,6 @@ class tan(Function):
                         return result
                 except KeyError:
                     pass
-
-        coeff, terms = arg.as_coeff_terms()
-
-        if coeff.is_negative:
-            return -cls(-arg)
 
         if isinstance(arg, atan):
             return arg.args[0]
@@ -699,8 +649,8 @@ class cot(Function):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg.is_negative:
-                return -cls(-arg)
+        if arg.could_extract_minus_sign():
+            return -cls(-arg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -725,10 +675,6 @@ class cot(Function):
                         return result
                 except KeyError:
                     pass
-
-        coeff, terms = arg.as_coeff_terms()
-        if coeff.is_negative:
-            return -cls(-arg)
 
         if isinstance(arg, acot):
             return arg.args[0]
@@ -853,6 +799,9 @@ class asin(Function):
             elif arg is S.NegativeOne:
                 return -S.Pi / 2
 
+        if arg.could_extract_minus_sign():
+            return -cls(-arg)
+
         if arg.is_number:
             cst_table = {
                 S.Half     : 6,
@@ -867,18 +816,10 @@ class asin(Function):
 
             if arg in cst_table:
                 return S.Pi / cst_table[arg]
-            elif arg.is_negative:
-                return -cls(-arg)
-            else:
-                return None
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
             return S.ImaginaryUnit * C.asinh(i_coeff)
-
-        coeff, terms = arg.as_coeff_terms()
-        if coeff.is_negative:
-            return -cls(-arg)
 
 
     @staticmethod
@@ -1046,6 +987,8 @@ class atan(Function):
                 return S.Pi / 4
             elif arg is S.NegativeOne:
                 return -S.Pi / 4
+        if arg.could_extract_minus_sign():
+            return -cls(-arg)
 
         if arg.is_number:
             cst_table = {
@@ -1059,18 +1002,11 @@ class atan(Function):
 
             if arg in cst_table:
                 return S.Pi / cst_table[arg]
-            elif arg.is_negative:
-                return -cls(-arg)
-            else:
-                return None
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
             return S.ImaginaryUnit * C.atanh(i_coeff)
 
-        coeff, terms = arg.as_coeff_terms()
-        if coeff.is_negative:
-            return -cls(-arg)
 
 
     @staticmethod
@@ -1133,6 +1069,9 @@ class acot(Function):
             elif arg is S.NegativeOne:
                 return -S.Pi / 4
 
+        if arg.could_extract_minus_sign():
+            return -cls(-arg)
+
         if arg.is_number:
             cst_table = {
                 sqrt(3)/3  : 3,
@@ -1142,21 +1081,13 @@ class acot(Function):
                 sqrt(3)    : 6,
                 -sqrt(3)   : -6,
                 }
+
             if arg in cst_table:
                 return S.Pi / cst_table[arg]
-            elif arg.is_negative:
-                return -cls(-arg)
-            else:
-                return None
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
             return -S.ImaginaryUnit * C.acoth(i_coeff)
-
-        coeff, terms = arg.as_coeff_terms()
-        if coeff.is_negative:
-            return -cls(-arg)
-
 
     @staticmethod
     @cacheit

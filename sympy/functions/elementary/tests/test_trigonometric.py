@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, nan, oo, I, sinh, sin, acot, pi, atan, \
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos, \
-        cosh, atan2, exp
+        cosh, atan2, exp, asinh, acoth, atanh
 
 def test_sin():
     x, y = symbols('xy')
@@ -13,14 +13,9 @@ def test_sin():
 
     assert sin(oo*I) == oo*I
     assert sin(-oo*I) == -oo*I
+    assert sin(oo).args[0] == oo
 
     assert sin(0) == 0
-
-    assert sin(1) == sin(1)
-    assert sin(-1) == -sin(1)
-
-    assert sin(x) == sin(x)
-    assert sin(-x) == -sin(x)
 
     assert sin(asin(x)) == x
     assert sin(atan(x)) == x / sqrt(1 + x**2)
@@ -29,9 +24,7 @@ def test_sin():
 
     assert sin(pi*I) == sinh(pi)*I
     assert sin(-pi*I) == -sinh(pi)*I
-
-    assert sin(2**1024 * E) == sin(2**1024 * E)
-    assert sin(-2**1024 * E) == -sin(2**1024 * E)
+    assert sin(-2*I) == -sinh(2)*I
 
     assert sin(pi) == 0
     assert sin(-pi) == 0
@@ -67,16 +60,11 @@ def test_sin():
 
     assert sin(-1273*pi/5) == -sin(2*pi/5)
 
-    assert sin(pi/105) == sin(pi/105)
-    assert sin(-pi/105) == -sin(pi/105)
-
     assert sin(104*pi/105) == sin(pi/105)
     assert sin(106*pi/105) == -sin(pi/105)
 
     assert sin(-104*pi/105) == -sin(pi/105)
     assert sin(-106*pi/105) == sin(pi/105)
-
-    assert sin(2 + 3*I) == sin(2 + 3*I)
 
     assert sin(x*I) == sinh(x)*I
 
@@ -87,7 +75,6 @@ def test_sin():
 
     assert sin(r).is_real == True
 
-    assert sin(exp(10)-1) == sin(-1+exp(10))
 
 def test_cos():
     x, y = symbols('xy')
@@ -103,12 +90,6 @@ def test_cos():
 
     assert cos(0) == 1
 
-    assert cos(1) == cos(1)
-    assert cos(-1) == cos(1)
-
-    assert cos(x) == cos(x)
-    assert cos(-x) == cos(x)
-
     assert cos(acos(x)) == x
     assert cos(atan(x)) == 1 / sqrt(1 + x**2)
     assert cos(asin(x)) == sqrt(1 - x**2)
@@ -116,9 +97,7 @@ def test_cos():
 
     assert cos(pi*I) == cosh(pi)
     assert cos(-pi*I) == cosh(pi)
-
-    assert cos(2**1024 * E) == cos(2**1024 * E)
-    assert cos(-2**1024 * E) == cos(2**1024 * E)
+    assert cos(-2*I) == cosh(2)
 
     assert cos(pi/2) == 0
     assert cos(-pi/2) == 0
@@ -155,27 +134,16 @@ def test_cos():
 
     assert cos(-1273*pi/5) == -cos(2*pi/5)
 
-    assert cos(pi/105) == cos(pi/105)
-    assert cos(-pi/105) == cos(pi/105)
-
     assert cos(104*pi/105) == -cos(pi/105)
     assert cos(106*pi/105) == -cos(pi/105)
 
     assert cos(-104*pi/105) == -cos(pi/105)
     assert cos(-106*pi/105) == -cos(pi/105)
 
-    assert cos(2 + 3*I) == cos(2 + 3*I)
-
     assert cos(x*I) == cosh(x)
-
-    assert cos(k*pi) == cos(k*pi)
-    assert cos(17*k*pi) == cos(17*k*pi)
-
     assert cos(k*pi*I) == cosh(k*pi)
 
     assert cos(r).is_real == True
-
-    assert cos(exp(10)-1) == cos(-1+exp(10))
 
 def test_tan():
     x, y = symbols('xy')
@@ -191,12 +159,6 @@ def test_tan():
 
     assert tan(0) == 0
 
-    assert tan(1) == tan(1)
-    assert tan(-1) == -tan(1)
-
-    assert tan(x) == tan(x)
-    assert tan(-x) == -tan(x)
-
     assert tan(atan(x)) == x
     assert tan(asin(x)) == x / sqrt(1 - x**2)
     assert tan(acos(x)) == sqrt(1 - x**2) / x
@@ -204,21 +166,13 @@ def test_tan():
 
     assert tan(pi*I) == tanh(pi)*I
     assert tan(-pi*I) == -tanh(pi)*I
-
-    assert tan(2**1024 * E) == tan(2**1024 * E)
-    assert tan(-2**1024 * E) == -tan(2**1024 * E)
+    assert tan(-2*I) == -tanh(2)*I
 
     assert tan(pi) == 0
     assert tan(-pi) == 0
     assert tan(2*pi) == 0
     assert tan(-2*pi) == 0
     assert tan(-3*10**73*pi) == 0
-    assert tan(7*10**103*pi) == 0
-
-    assert tan(pi/2) == tan(pi/2)
-    assert tan(-pi/2) == -tan(pi/2)
-    assert tan(5*pi/2) == tan(5*pi/2)
-    assert tan(7*pi/2) == tan(7*pi/2)
 
     assert tan(pi/3) == sqrt(3)
     assert tan(-2*pi/3) == sqrt(3)
@@ -232,11 +186,6 @@ def test_tan():
     assert tan(-pi/6) == -1/sqrt(3)
     assert tan(7*pi/6) == 1/sqrt(3)
     assert tan(-5*pi/6) == 1/sqrt(3)
-
-    assert tan(pi/105) == tan(pi/105)
-    assert tan(-pi/105) == -tan(pi/105)
-
-    assert tan(2 + 3*I) == tan(2 + 3*I)
 
     assert tan(x*I) == tanh(x)*I
 
@@ -259,14 +208,6 @@ def test_cot():
     assert cot(oo*I) == -I
     assert cot(-oo*I) == I
 
-    assert cot(0) == cot(0)
-
-    assert cot(1) == cot(1)
-    assert cot(-1) == -cot(1)
-
-    assert cot(x) == cot(x)
-    assert cot(-x) == -cot(x)
-
     assert cot(acot(x)) == x
     assert cot(atan(x)) == 1 / x
     assert cot(asin(x)) == sqrt(1 - x**2) / x
@@ -274,16 +215,7 @@ def test_cot():
 
     assert cot(pi*I) == -coth(pi)*I
     assert cot(-pi*I) == coth(pi)*I
-
-    assert cot(2**1024 * E) == cot(2**1024 * E)
-    assert cot(-2**1024 * E) == -cot(2**1024 * E)
-
-    assert cot(pi) == cot(pi)
-    assert cot(-pi) == -cot(pi)
-    assert cot(2*pi) == cot(2*pi)
-    assert cot(-2*pi) == -cot(2*pi)
-    assert cot(-3*10**73*pi) == -cot(3*10**73*pi)
-    assert cot(7*10**103*pi) == cot(7*10**103*pi)
+    assert cot(-2*I) == coth(2)*I
 
     assert cot(pi/2) == 0
     assert cot(-pi/2) == 0
@@ -303,23 +235,18 @@ def test_cot():
     assert cot(7*pi/6) == sqrt(3)
     assert cot(-5*pi/6) == sqrt(3)
 
-    assert cot(pi/105) == cot(pi/105)
-    assert cot(-pi/105) == -cot(pi/105)
-
-    assert cot(2 + 3*I) == cot(2 + 3*I)
-
     assert cot(x*I) == -coth(x)*I
-
-    assert cot(k*pi) == cot(k*pi)
-    assert cot(17*k*pi) == cot(17*k*pi)
-
     assert cot(k*pi*I) == -coth(k*pi)*I
 
     assert cot(r).is_real == True
 
-# TODO write me
 def test_asin():
     x = Symbol('x')
+
+    assert asin(nan) == nan
+
+    assert asin(oo) == -I*oo
+    assert asin(-oo) == I*oo
 
     assert asin(0)  == 0
     assert asin(Rational(1,2)) == pi/6
@@ -331,27 +258,37 @@ def test_asin():
     assert asin(0.2).is_real == True
     assert asin(-2).is_real == False
 
-# TODO write me
+    assert asin(-2*I) == -I*asinh(2)
+
 def test_acos():
     x = Symbol('x')
 
     r = Symbol('r', real=True)
 
+    assert acos(nan) == nan
+
+    assert acos(oo) == I*oo
+    assert acos(-oo) == -I*oo
+
     assert acos(0)  == pi/2
     assert acos(Rational(1,2)) == pi/3
     assert acos(1)  == 0
+    assert acos(-1) == pi
     assert acos(sqrt(2)/2) == pi/4
     assert acos(x).diff(x) == -1/sqrt(1-x**2)
 
     assert acos(0.2).is_real == True
     assert acos(-2).is_real == False
 
-
-# TODO write me
 def test_atan():
     x = Symbol('x')
 
     r = Symbol('r', real=True)
+
+    assert atan(nan) == nan
+
+    assert atan(oo) == pi/2
+    assert atan(-oo) == -pi/2
 
     assert atan(0)  == 0
     assert atan(1)  == pi/4
@@ -361,6 +298,8 @@ def test_atan():
 
     assert atan(r).is_real == True
 
+    assert atan(-2*I) == -I*atanh(2)
+
 def test_atan2():
     assert atan2(0, 0) == S.NaN
     assert atan2(0, 1) == 0
@@ -369,26 +308,30 @@ def test_atan2():
     assert atan2(-1, 1) == -pi/4
     assert atan2(0, -1) == pi
 
-# TODO write me
 def test_acot():
     x = Symbol('x')
 
     r = Symbol('r', real=True)
 
+    assert acot(nan) == nan
+
+    assert acot(-oo) == 0
     assert acot(oo) == 0
     assert acot(1)  == pi/4
     assert acot(0)  == pi/2
+    assert acot(sqrt(3)/3) == pi/3
+    assert acot(1/sqrt(3)) == pi/3
+    assert acot(-1/sqrt(3)) == -pi/3
     assert acot(x).diff(x) == -1/(1+x**2)
 
     assert acot(r).is_real == True
 
-
+    assert acot(I*pi) == -I*acoth(pi)
+    assert acot(-2*I) == I*acoth(2)
 
 def test_attributes():
     x = Symbol('x')
-    assert sin(x).args[:] == (x,)
-    assert sin(x).args[0] != sin
-    assert sin(x).args[0] == x
+    assert sin(x).args == (x,)
 
 def test_sincos_rewrite():
     x = Symbol("x")
@@ -398,14 +341,39 @@ def test_sincos_rewrite():
     assert cos(pi/2-x) == sin(x)
     assert cos(pi-x) == -cos(x)
 
-    assert sin(-x-y) == -sin(x+y)
-    assert sin(-x-1) == -sin(x+1)
-    assert cos(-x-y) == cos(x+y)
-    assert cos(-x-1) == cos(x+1)
-    assert sin(x-y) == sin(x-y)
-    assert sin(y-x) == sin(y-x)
-    assert cos(y-x) == cos(y-x)
-    assert cos(x-y) == cos(x-y)
+def _check_even_rewrite(func, arg):
+    """Checks that the expr has been rewritten using f(-x) -> f(x)
+    arg : -x
+    """
+    return func(arg).args[0] == -arg
+
+def _check_odd_rewrite(func, arg):
+    """Checks that the expr has been rewritten using f(-x) -> -f(x)
+    arg : -x
+    """
+    return func(arg).func.is_Mul
+
+def _check_no_rewrite(func, arg):
+    """Checks that the expr is not rewritten"""
+    return func(arg).args[0] == arg
+
+def test_evenodd_rewrite():
+    x, y = symbols('xy')
+    a = cos(2) #negative
+    b = sin(1) #positive
+    even = [cos]
+    odd = [sin, tan, cot, asin, atan, acot]
+    with_minus = [-1, -2**1024 * E, -pi/105, -x*y, -x-y]
+    for func in even:
+        for expr in with_minus:
+            assert _check_even_rewrite(func, expr)
+        assert _check_no_rewrite(func, a*b)
+        assert func(x-y) == func(y-x)   #it doesn't matter which form is canonical
+    for func in odd:
+        for expr in with_minus:
+            assert _check_odd_rewrite(func, expr)
+        assert _check_no_rewrite(func, a*b)
+        assert func(x-y) == -func(y-x)  #it doesn't matter which form is canonical
 
 def test_issue1448():
     x = Symbol('x')
