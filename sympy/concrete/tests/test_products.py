@@ -1,4 +1,4 @@
-from sympy import (symbols, product, factorial, rf, sqrt, cos, 
+from sympy import (symbols, product, factorial, rf, sqrt, cos,
                    Function, Product, Rational)
 
 a, k, n = symbols('akn', integer=True)
@@ -32,7 +32,7 @@ def test_special_products():
 def test__eval_product():
     from sympy.abc import i, n
     # 1710
-    a=Function('a')
-    assert product(2*f(i), (i, 1, n)) == 2**n * Product(a(i), i, 1, n)
+    a = Function('a')
+    assert product(2*a(i), (i, 1, n)) == 2**n * Product(a(i), (i, 1, n))
     # 1711
     assert product(2**i, (i, 1, n)) == 2**(n/2 + n**2/2)

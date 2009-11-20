@@ -216,7 +216,7 @@ def telescopic(L, R, (i, a, b)):
         m = Symbol("m")
         try:
             s = solve(L.subs(i, i + m) + R, m)[0]
-        except ValueError:
+        except IndexError:#(ValueError, IndexError):
             pass
     if s and s.is_Integer:
         if s < 0:
