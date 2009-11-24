@@ -1,5 +1,5 @@
 from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, \
-        atan, Symbol, S, pi, Integral
+        atan, Symbol, S, pi, Integral, cot
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL
 
@@ -162,3 +162,7 @@ def test_issue991():
     assert limit(1/(x+pi), x, 2) == S(1)/(2+pi)
     assert limit(log(x)/(x**2+3), x, 2) == log(2)/7
     assert limit(log(x)/(x**2+pi), x, 2) == log(2)/(4+pi)
+
+def test_issue1448():
+    assert limit(cot(x),x,0,dir='+') == oo
+    assert limit(cot(x),x,pi/2,dir='+') == 0

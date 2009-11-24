@@ -190,7 +190,7 @@ class sin(Function):
         return 2*tan_half/(1 + tan_half**2)
 
     def _eval_rewrite_as_cot(self, arg):
-        cot_half = S.Cot(S.Half*arg)
+        cot_half = cot(S.Half*arg)
         return 2*cot_half/(1 + cot_half**2)
 
     def _eval_conjugate(self):
@@ -427,7 +427,7 @@ class cos(Function):
         return (1-tan_half)/(1+tan_half)
 
     def _eval_rewrite_as_cot(self, arg):
-        cot_half = S.Cot(S.Half*arg)**2
+        cot_half = cot(S.Half*arg)**2
         return (cot_half-1)/(cot_half+1)
 
     def _eval_conjugate(self):
@@ -642,7 +642,7 @@ class tan(Function):
         return -cos(x + S.Pi/2)/cos(x)
 
     def _eval_rewrite_as_cot(self, arg):
-        return 1/S.Cot(arg)
+        return 1/cot(arg)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
@@ -676,12 +676,12 @@ class cot(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return -S.One - S.Cot**2
+            return -S.One - self**2
         else:
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
-        return S.ACot
+        return acot
 
     @classmethod
     def _eval_apply_subs(self, *args):
@@ -761,7 +761,7 @@ class cot(Function):
         else:
             x = sympify(x)
 
-            B = S.Bernoulli(n+1)
+            B = C.bernoulli(n+1)
             F = C.Factorial(n+1)
 
             return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
