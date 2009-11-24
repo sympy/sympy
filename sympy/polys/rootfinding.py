@@ -75,15 +75,43 @@ def roots_cubic(f):
 def roots_quartic(f):
     """Returns a list of roots of a quartic polynomial.
 
-    There are many references for solving quartic expressions available [1-6].
+    There are many references for solving quartic expressions available [1-5].
     This reviewer has found that many of them require one to select from among
     2 or more possible sets of solutions and that some solutions work when one
     is searching for real roots but don't work when searching for complex roots
     (though this is not always stated clearly). The following routine has been
     tested and found to be correct for 0, 2 or 4 complex roots.
 
-    The quasisymmetric case solution[7] looks for quartics that have the form
+    The quasisymmetric case solution[6] looks for quartics that have the form
     x**4 + A*x**3 + B*x**2 + C*x + D = 0 where (C/A)**2 = D.
+
+    NOTE: There is not a single symbolic solution that is valid for all
+    possible values of A, B, C and D. There are 4 sets of solutions possible
+    based on the code below. These solutions (determined by the values of the
+    reduced quartic coefficients, a = B/A, b = C/A, c = D/A, and d = E/A, are:
+      1) f = c + a * (a**2 / 8 - b / 2) == 0
+      2) g = d - a * (a * (3 * a**2 / 256 - b / 16) + c / 4) = 0
+      3) if f != 0 and g !=0 but
+        a) p = -d + a*c/4 - b**2/12 = 0 and
+           q = b*d/3 + a*b*c/24 - c**2/8 - d*a**2/8 - b**3/108 >= 0
+           then u (see code) will be zero, otherwise
+        b) u != 0
+
+            Schematically, it looks like this:
+
+                f = 0    g = 0           f != 0 and g != 0
+                  |        |                   /   \
+                  |        |       p=0 and q>=0     p!=0 or q<0
+                  |        |       (i.e. u = 0     (i.e. u != 0)
+                  |        |            |                |
+                4 solns  4 solns      4 solns          4 solns
+                                             (default symbolic solution)
+
+    These branches do not count the special cases that have a particularly
+    simple form of the roots. Those special cases can often be solved by the
+    general procedure. In the test suite, there are tests for those cases,
+    and each of them marked with "general soln ok, too" in the code below
+    still gave the same for the tests.
 
     Example::
     >>> from sympy import *
@@ -95,13 +123,11 @@ def roots_quartic(f):
 
     References:
       [1] http://mathforum.org/dr.math/faq/faq.cubic.equations.html
-      [2] http://en.wikipedia.org/wiki/Quartic_formula#Solving_a_quartic_equation
+      [2] http://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
       [3] http://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
-      [4] Maxima 0.7.3a solution to z**4+e*z**2+f*z+g=0 where
-          x=z-a/4 and x^4+a^x^3+b^x^2+c*x+d=0
-      [5] http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
-      [6] http://www.albmath.org/files/Math_5713.pdf
-      [7] http://www.statemaster.com/encyclopedia/Quartic-equation
+      [4] http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
+      [5] http://www.albmath.org/files/Math_5713.pdf
+      [6] http://www.statemaster.com/encyclopedia/Quartic-equation
           #Other_particular_case:_Quasi-symmetric_equations
 
     """
@@ -109,9 +135,9 @@ def roots_quartic(f):
     # normalized coefficients
     one, a, b, c, d = f.as_monic().iter_all_coeffs()
 
-    if d is S.Zero:
+    if d is S.Zero: # general soln ok, too
         return [S.Zero] + roots([1, a, b, c], multiple = True)
-    elif (c/a)**2 == d:
+    elif (c/a)**2 == d: # general solution ok, too
         m = sqrt(d)
         z = Symbol('z', dummy=True)
         x = f.symbols[0]
@@ -125,35 +151,49 @@ def roots_quartic(f):
         f = c + a * (a2 / 8 - b / 2)
         g = d - a * (a * (3 * a2 / 256 - b / 16) + c / 4)
         aon4 = a / 4
+        ans = []
 
-        if f is S.Zero:
+        if f.is_zero: # general solution not valid if f = 0.
             y1, y2 = [tmp ** S.Half for tmp in
                       roots([1, e, g], multiple = True)]
             return [tmp - aon4 for tmp in [-y1, -y2, y1, y2]]
-        elif g is S.Zero:
+        if g.is_zero: # general solution not valid if g = 0
             y = [S.Zero] + roots([1, 0, e, f], multiple = True)
             return [tmp - aon4 for tmp in y]
         else:
-            e2, f2 = e**2, f**2
-            a0 = (3 ** (-S(3) / 2) *\
-                  (16 * g * (8 * g * (-2 * g + e2) - e * (9 * f2 + e * e2)) +\
-                   f2 * (27 * f2 + 4 * e * e2)) ** S.Half) / 2
-            a1 = (a0 + (2 * e * (-36 * g + e2) + 27 * f2) / 54) ** (S(1) / 3)
-            a2 = e * 6 * a1
-            a3 = 9 * a1 * a1 + 12 * g + e2
-            a4 = ((a3 - a2) / a1) ** S.Half
-            a5 = (a3 + 2 * a2)
-            a6 = a1 * f * 54
-            a54 = a5 * a4
-            a7 = (-(a54 - a6) / a1) ** S.Half / (6 * a4 ** S.Half)
-            a8 = (-(a54 + a6) / a1 / a4) ** S.Half / 6
-            a4on6 = a4 / 6
-            ans = [-a7 - a4on6 - aon4,
-                      a7 - a4on6 - aon4,
-                     -a8 + a4on6 - aon4,
-                      a8 + a4on6 - aon4
-            ]
-
+            TH = Rational(1, 3)
+            p = -e**2/12 - g
+            q = -e**3/108 + e*g/3 - f**2/8
+            root = sqrt(q**2/4 + p**3/27)
+            rr = [-q/2 + s*root for s in [1]] # in [1,-1], either will do, so pick 1
+            for r in rr:
+                uu = [r**TH] # solve(x**3-r,x), any one will do, so take primary
+                for u in uu:
+                    if u.is_zero:
+                        y = -5*e/6 + u - q**TH
+                    else:
+                        y = -5*e/6 + u - p/u/3
+                    w = sqrt(e + 2*y)
+                    # try to return the real solutions first if the
+                    # sign can be determined. The term tested is the
+                    # argument to `root` below.
+                    arg1 = 3*e + 2*y
+                    arg2 = 2*f/w
+                    if -(arg1 + arg2) > S.Zero:
+                        ss = [-1, 1]
+                    else:
+                        ss= [1, -1]
+                    for s in ss:
+                        root = sqrt(-(arg1 + s*arg2))
+                        # return the more negative root first;
+                        # note that t and s have opposite signs
+                        # in the formula: s=+/-1 while t=-/+1.
+                        if aon4 > S.Zero:
+                            tt = [-1, 1]
+                        else:
+                            tt = [1, -1]
+                        for t in tt:
+                            ans.append((s*w - t*root)/2 - aon4)
     return ans
 
 def roots_binomial(f):

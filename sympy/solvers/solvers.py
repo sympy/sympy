@@ -230,6 +230,11 @@ def solve(f, *symbols, **flags):
             if poly is None:
                 raise NotImplementedError("Cannot solve equation " + str(f) + " for "
                     + str(symbol))
+            # for cubics and quartics, if the flag wasn't set, DON'T do it
+            # by default since the results are quite long. Perhaps one could
+            # base this decision on a certain crtical length of the roots.
+            if poly.degree > 2:
+                flags['simplified'] = flags.get('simplified', False)
             result = roots(poly, cubics=True, quartics=True).keys()
 
         elif strategy == GS_RATIONAL:

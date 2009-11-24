@@ -1053,9 +1053,13 @@ def test_roots_quartic():
     # check for homogeneous in x (d=0)
     set(roots_quartic(Poly(x**4 - 6*x**3 + 11*x**2 - 6*x, x))) == \
                             set([0, 1, 2, 3])
-    # check for homogeneous in y (g=0)
+    # check quasisymmetric (d=(c/a)**2)
     set(roots_quartic(Poly(x**4 +4*x**3 + 7*x**2 + 8*x + 4, x))) == \
           set([-1, -2, -S.Half - I*7**S.Half/2, -1/2 + I*7**S.Half/2])
+    # check for homogeneous in y (g=0)
+    ans = roots_quartic(Poly(x**4 + x**3 - Rational(445, 16)*x**2 + x + 2, x))
+    assert set([str(tmp.evalf(2)) for tmp in ans]) == \
+           set(['-2.5e-1', '-5.8 + .0e-7*I', '2.9e-1 + .0e-7*I', '4.8 + .0e-7*I'])
     # no real roots and f=0
     assert roots_quartic(Poly(10 + 14*x + 11*x**2 + 4*x**3 + x**4, x)) == \
            [-1 - I, -1 - 2*I, -1 + I, -1 + 2*I]
@@ -1066,14 +1070,25 @@ def test_roots_quartic():
     # 2 real roots
     p = Poly(x**4 - 9*x**3 + 30*x**2 - 42*x + 20, x)
     ans = roots_quartic(p)
-    assert [[round(tmp.evalf().as_real_imag()[j],2) for tmp in ans] for j in [0,1]] == \
-           [[1.0, 2.0, 3.0, 3.0],
-            [0.0, 0.0, -1.0, 1.0]]
+    assert [[str(tmp.evalf(2).as_real_imag()[j]) for tmp in ans] for j in [0,1]] == \
+           [['3.0', '3.0', '1.0', '2.0'], ['-1.0', '1', '0', '0']]
+    #issue 1468c
+    p = Poly(-1 + 10*x - 32*x**2 + 54*x**3 - 27*x**4, x)
+    ans = roots_quartic(p)
+    assert [[str(tmp.evalf(2).as_real_imag()[j]) for tmp in ans] for j in [0,1]] == \
+           [['2.8e-1', '2.8e-1', '1.6e-1', '1.3'], ['-3.1e-1', '3.1e-1', '0', '0']]
+    # -- a u=0 case
+    i = I*sqrt(41847)
+    p = Poly(x**4 + x**3 + x**2 + (S(3)/8 + i/72)*x + S(1)/96 + i/288, x)
+    ans = roots_quartic(p)
+    assert [[str(tmp.evalf(2).as_real_imag()[j]) for tmp in ans] for j in [0,1]] == \
+    [['-2.5e-1', '-2.5e-1', '8.5e-1', '-1.3'],
+     ['1.6', '-1.1e-2', '-7.8e-1', '-7.8e-1']]
     # 4 real roots
     p = Poly(x**4 + -11*x**3 + 41*x**2 - 61*x + 30, x)
     ans = roots_quartic(p)
-    assert [[round(tmp.evalf().as_real_imag()[j],2) for tmp in ans] for j in [0,1]] == \
-           [[1.0, 2.0, 3.0, 5.0], [0.0, -0.0, 0.0, -0.0]]
+    assert [[str(tmp.evalf(2).as_real_imag()[j]) for tmp in ans] for j in [0,1]] == \
+           [['1.0', '2.0', '3.0', '5.0'], ['6.0e-8', '6.0e-8', '6.0e-8', '6.0e-8']]
 
 def test_roots_binomial():
     assert roots_binomial(Poly(5*x, x)) == [0]
