@@ -13,7 +13,6 @@ from sympy.functions import log, sinh, cosh, tanh, coth, asinh
 from sympy.functions import sqrt, erf
 
 from sympy.solvers import solve
-from sympy.simplify import simplify, together
 
 from sympy.polys import Poly, quo, gcd, lcm, root_factors, \
     monomials, factor, PolynomialError
@@ -200,7 +199,7 @@ def heurisch(f, x, **kwargs):
             terms |= set(hints)
 
     for g in set(terms):
-        terms |= components(g.diff(x), x)
+        terms |= components(Poly.cancel(g.diff(x)), x)
 
     V = _symbols('x', len(terms))
 
@@ -214,7 +213,7 @@ def heurisch(f, x, **kwargs):
     def substitute(expr):
         return expr.subs(mapping)
 
-    diffs = [ substitute(simplify(g.diff(x))) for g in terms ]
+    diffs = [ substitute(Poly.cancel(g.diff(x))) for g in terms ]
 
     denoms = [ g.as_numer_denom()[1] for g in diffs ]
     denom = reduce(lambda p, q: lcm(p, q, V), denoms)
@@ -349,7 +348,7 @@ def heurisch(f, x, **kwargs):
 
         candidate = poly_part/poly_denom + Add(*log_part)
 
-        h = together(F - derivation(candidate) / denom)
+        h = F - derivation(candidate) / denom
 
         numer = h.as_numer_denom()[0].expand()
 
@@ -388,7 +387,7 @@ def heurisch(f, x, **kwargs):
                 antideriv = antideriv.subs(coeff, S.Zero)
 
         antideriv = antideriv.subs(rev_mapping)
-        antideriv = simplify(antideriv).expand()
+        antideriv = Poly.cancel(antideriv).expand()
 
         if antideriv.is_Add:
             antideriv = antideriv.as_independent(x)[1]

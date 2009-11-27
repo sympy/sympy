@@ -1,5 +1,5 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
-        I, S, erf, tan, asin, asinh, Function, Derivative, diff, trim
+        I, S, erf, tan, asin, asinh, acos, acosh, Function, Derivative, diff, trim
 from sympy.integrals.risch import heurisch, components
 from sympy.utilities.pytest import XFAIL, skip
 
@@ -78,12 +78,17 @@ def test_heurisch_trigonometric():
     assert heurisch(x*sin(7*x), x) == sin(7*x) / 49 - x*cos(7*x) / 7
     assert heurisch(1/pi/4 * x**2*cos(x), x) == 1/pi/4*(x**2*sin(x) - 2*sin(x) + 2*x*cos(x))
 
+    assert heurisch(acos(x/4) * asin(x/4), x) == 2*x - ((16-x**2)**Rational(1,2))*asin(x/4) \
+        + ((16 - x**2)**Rational(1,2))*acos(x/4) + x*asin(x/4)*acos(x/4)
+
 def test_heurisch_hyperbolic():
     assert heurisch(sinh(x), x) == cosh(x)
     assert heurisch(cosh(x), x) == sinh(x)
 
     assert heurisch(x*sinh(x), x) == x*cosh(x) - sinh(x)
     assert heurisch(x*cosh(x), x) == x*sinh(x) - cosh(x)
+
+    assert heurisch(x*asinh(x/2), x) == x**2*asinh(x/2)/2 + asinh(x/2) - x*(4+x**2)**Rational(1,2)/4
 
 def test_heurisch_mixed():
     assert heurisch(sin(x)*exp(x), x) == exp(x)*sin(x)/2 - exp(x)*cos(x)/2
