@@ -1,5 +1,6 @@
 from sympy.core import Symbol, S, Rational, Integer
 from sympy.utilities.pytest import XFAIL, raises
+from sympy import I, sqrt
 
 def test_symbol_unset():
     x = Symbol('x',real=True, integer=True)
@@ -431,6 +432,9 @@ def test_issue726():
     h2 = hash(a2)
     assert h1 == h2
 
+def test_issue1723():
+    z = (-1)**Rational(1,3)*(1-I*sqrt(3))
+    assert z.is_real in [True, None]
 
 def test_hash_vs_typeinfo():
     """seemingly different typeinfo, but in fact equal"""

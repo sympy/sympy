@@ -679,45 +679,47 @@ class Mul(AssocOp):
 
     def _eval_is_real(self):
         im_count = 0
-        re_not   = False
-
+        is_neither = False
         for t in self.args:
             if t.is_imaginary:
                 im_count += 1
                 continue
-
             t_real = t.is_real
             if t_real:
                 continue
-
-            elif fuzzy_not(t_real):
-                re_not = True
-
+            elif t_real is False:
+                if is_neither:
+                    return None
+                else:
+                    is_neither = True
             else:
                 return None
-
-        if re_not:
+        if is_neither:
             return False
 
         return (im_count % 2 == 0)
 
-
     def _eval_is_imaginary(self):
         im_count = 0
-
+        is_neither = False
         for t in self.args:
             if t.is_imaginary:
                 im_count += 1
-
-            elif t.is_real:
                 continue
-
-            # real=F|U
+            t_real = t.is_real
+            if t_real:
+                continue
+            elif t_real is False:
+                if is_neither:
+                    return None
+                else:
+                    is_neither = True
             else:
                 return None
+        if is_neither:
+            return False
 
         return (im_count % 2 == 1)
-
 
 
     def _eval_is_irrational(self):

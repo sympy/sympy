@@ -832,7 +832,6 @@ class FactRules:
            want to spend most of the time just re-deducing base from base
            (e.g. #base=50, #facts=2)
         """
-
         # keep frequently used attributes locally, so we'll avoid extra
         # attribute access overhead
         rels = self.rels
@@ -843,20 +842,15 @@ class FactRules:
         else:
             new_facts = {}
 
-
         # XXX better name ?
         def x_new_facts(keys, v):
-            #print 'x_new_facts(%r,%r)' % (keys, v)
             for k in keys:
-                if k in new_facts:
-                    #print 'seen_fact  %s:\t %s' % (k,v)
-                    assert new_facts[k] == v, ('inconsitency between facts',new_facts,k,v)
+                if k in new_facts and new_facts[k] is not None:
+                    assert new_facts[k] == v, \
+                            ('inconsistency between facts', new_facts, k, v)
                     continue
-
                 else:
-                    #print 'new_fact   %s:\t %s' % (k,v)
                     new_facts[k] = v
-
 
         if type(facts) is dict:
             fseq = facts.iteritems()
@@ -879,19 +873,16 @@ class FactRules:
 
                 #new_fact(k, v)
                 if k in new_facts:
-                    assert new_facts[k] == v, ('inconsitency between facts',new_facts,k,v)
-
+                    assert new_facts[k] == v, \
+                            ('inconsistency between facts', new_facts, k, v)
                     # performance-wise it is important not to fire implied rules
                     # for already-seen fact -- we already did them all.
                     continue
-
                 else:
                     new_facts[k] = v
 
-
                 # some known fact -- let's follow it's implications
                 if v is not None:
-
                     # lookup routing tables
                     try:
                         tt, tf, tbeta,  ft, ff, fbeta = rels[k]
@@ -918,15 +909,11 @@ class FactRules:
                             beta_maytrigger.update(fbeta)
 
 
-
-
             # --- beta chains ---
 
             # if no beta-rules may trigger -- it's an end-of-story
             if not beta_maytrigger:
                 break
-
-
             #print '(β) MayTrigger: %s' % beta_maytrigger
 
             fseq = []
@@ -959,13 +946,8 @@ class FactRules:
                         v = False
                     else:
                         v = True
-
                     fseq.append( (bimpl,v) )
-
-
         return new_facts
-
-
 
 
 ########################################
