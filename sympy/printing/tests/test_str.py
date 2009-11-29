@@ -370,7 +370,7 @@ def test_issue922():
 
 
 def test_sstrrepr():
-    assert sstr('abc')      == "abc"
+    assert sstr('abc')      == 'abc'
     assert sstrrepr('abc')  == "'abc'"
 
     e = ['a', 'b', 'c', x]

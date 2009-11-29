@@ -28,7 +28,7 @@ def test_equal():
 
 def test_pretty():
     x = symbols('x')
-    assert pretty(Assume(x, 'positive', True)) == 'Assume(x, positive, True)'
+    assert pretty(Assume(x, 'positive', True)) == "Assume(x, 'positive', True)"
 
 def test_eliminate_assumptions():
     a, b, x, y = symbols('abxy')

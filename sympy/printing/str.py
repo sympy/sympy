@@ -73,6 +73,9 @@ class StrPrinter(Printer):
             sign = ""
         return sign + ' '.join(l)
 
+    def _print_Assume(self, expr):
+        return 'Assume(%s, %r, %s)' % (expr.expr, expr.key, expr.value)
+
     def _print_Basic(self, expr):
         l = [self._print(o) for o in expr.args]
         return expr.__class__.__name__ + "(%s)"%", ".join(l)
@@ -380,6 +383,9 @@ class StrPrinter(Printer):
     def _print_Symbol(self, expr):
         return expr.name
 
+    def _print_str(self, expr):
+        return expr
+
     def _print_tuple(self, expr):
         if len(expr)==1:
             return "(%s,)"%self._print(expr[0])
@@ -419,7 +425,7 @@ def sstr(expr, profile=None, **kargs):
 class StrReprPrinter(StrPrinter):
     """(internal) -- see sstrrepr"""
 
-    def _print_basestring(self, s):
+    def _print_str(self, s):
         return repr(s)
 
 def sstrrepr(expr):
