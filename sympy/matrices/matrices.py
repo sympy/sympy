@@ -21,12 +21,12 @@ class ShapeError(ValueError):
 class MatrixError(Exception):
     pass
 
-def _dims_to_nm( dims ):
+def _dims_to_nm(dims):
     """Converts dimensions tuple (or any object with length 1 or 2) or scalar
     in dims to matrix dimensions n and m."""
 
     try:
-        l = len( dims )
+        l = len(dims)
     except TypeError:
         dims = (dims,)
         l = 1
@@ -34,14 +34,14 @@ def _dims_to_nm( dims ):
     # This will work for nd-array too when they are added to sympy.
     try:
         for dim in dims:
-            assert (dim > 0) and isinstance( dim, int )
+            assert (dim > 0)
     except AssertionError:
-        raise ValueError("Matrix dimensions should positive integers!")
+        raise ValueError("Matrix dimensions should be positive integers!")
 
     if l == 2:
-        n, m = dims
+        n, m = map(int, dims)
     elif l == 1:
-        n, m = dims[0], dims[0]
+        n = m = int(dims[0])
     else:
         raise ValueError("Matrix dimensions should be a two-element tuple of ints or a single int!")
 
@@ -82,15 +82,13 @@ class Matrix(object):
         """
         if len(args) == 3 and callable(args[2]):
             operation = args[2]
-            assert isinstance(args[0], int) and isinstance(args[1], int)
-            self.rows = args[0]
-            self.cols = args[1]
+            self.rows = int(args[0])
+            self.cols = int(args[1])
             self.mat = []
             for i in range(self.rows):
                 for j in range(self.cols):
                     self.mat.append(sympify(operation(i, j)))
-        elif len(args)==3 and isinstance(args[0],int) and \
-                isinstance(args[1],int) and isinstance(args[2], (list, tuple)):
+        elif len(args)==3 and isinstance(args[2], (list, tuple)):
             self.rows=args[0]
             self.cols=args[1]
             mat = args[2]
@@ -422,7 +420,7 @@ class Matrix(object):
                 self = self * self
                 n = n // 2
             return a
-        raise NotImplementedError('Can only rise to the power of an integer for now')
+        raise NotImplementedError('Can only raise to the power of an integer for now')
 
     def __add__(self,a):
         return matrix_add(self,a)
@@ -1619,8 +1617,8 @@ def zeronm(n,m):
 
 def zeros(dims):
     """Create zero matrix of dimensions dims = (d1,d2)"""
-    n, m = _dims_to_nm( dims )
-    return Matrix(n,m,[S.Zero]*m*n)
+    n, m = _dims_to_nm(dims)
+    return Matrix(n, m, [S.Zero]*m*n)
 
 def one(n):
     """Create square all-one matrix n x n"""
@@ -1630,14 +1628,14 @@ def one(n):
 def ones(dims):
     """Create all-one matrix of dimensions dims = (d1,d2)"""
     n, m = _dims_to_nm( dims )
-    return Matrix(n,m,[S.One]*m*n)
+    return Matrix(n, m, [S.One]*m*n)
 
 def eye(n):
     """Create square identity matrix n x n"""
-    assert n>0
+    n = int(n)
     out = zeros(n)
     for i in range(n):
-        out[i,i]=S.One
+        out[i, i] = S.One
     return out
 
 def randMatrix(r,c,min=0,max=99,seed=[]):

@@ -1127,3 +1127,18 @@ def test_inv_block():
     assert A.inv(try_block_diag=True, method="ADJ") == block_diag([
         a.inv(method="ADJ"), a.inv(method="ADJ"), b.inv(method="ADJ"),
         a.inv(method="ADJ"), c.inv(method="ADJ"), a.inv(method="ADJ")])
+
+def test_creation():
+    """
+    Check that matrix dimensions can be specified using any reasonable type
+    (see issue 1515).
+    """
+    raises(ValueError, 'zeros((3, 0))')
+    raises(ValueError, 'zeros((1,2,3,4))')
+    assert zeros(3L) == zeros(3)
+    assert zeros(Integer(3)) == zeros(3)
+    assert zeros(3.) == zeros(3)
+    assert eye(3L) == eye(3)
+    assert eye(Integer(3)) == eye(3)
+    assert eye(3.) == eye(3)
+    assert ones((3L, Integer(4))) == ones((3, 4))
