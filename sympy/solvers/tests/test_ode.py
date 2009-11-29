@@ -1046,10 +1046,7 @@ def test_Liouville_ODE():
     assert checkodesol(eq4, f(x), sol4[1], order=2, solve_for_func=False)[0]
     assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
 
-@XFAIL
 def test_unexpanded_Liouville_ODE():
-    # This fails because collect() collecting of derivatives is not good enough
-    # to warrant classify_ode calling expand_mul on expressions.
     # It is the same as from test_Liouville_ODE() above.
     eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
     eq2 = eq1*exp(-f(x))/exp(f(x))
@@ -1057,3 +1054,4 @@ def test_unexpanded_Liouville_ODE():
     sol2s = ode_renumber(sol2, 'C', 1, 2)
     assert dsolve(eq2, f(x)) in (sol2, sol2s)
     assert checkodesol(eq2, f(x), sol2, order=2, solve_for_func=False)[0]
+
