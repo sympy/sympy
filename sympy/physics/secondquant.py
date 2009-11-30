@@ -2126,6 +2126,23 @@ class NO(Function):
         return len(self.args[0].args)
 
     def iter_q_annihilators(self):
+        """
+        Iterates over the annihilation operators.
+
+        >>> from sympy import symbols
+        >>> i,j,k,l = symbols('ijkl',below_fermi=True)
+        >>> p,q,r,s = symbols('pqrs', dummy=True)
+        >>> a,b,c,d = symbols('abcd',above_fermi=True)
+        >>> from sympy.physics.secondquant import NO, F, Fd
+        >>> no = NO(Fd(a)*F(i)*Fd(j)*F(b))
+        >>> no.iter_q_creators()
+        <generator object iter_q_creators at 0x...>
+        >>> list(no.iter_q_creators())
+        [0, 1]
+        >>> list(no.iter_q_annihilators())
+        [3, 2]
+
+        """
         ops = self.args[0].args
         iter = xrange(len(ops)-1, -1, -1)
         for i in iter:
@@ -2135,6 +2152,24 @@ class NO(Function):
                 break
 
     def iter_q_creators(self):
+        """
+        Iterates over the creation operators.
+
+        >>> from sympy import symbols
+        >>> i,j,k,l = symbols('ijkl',below_fermi=True)
+        >>> p,q,r,s = symbols('pqrs', dummy=True)
+        >>> a,b,c,d = symbols('abcd',above_fermi=True)
+        >>> from sympy.physics.secondquant import NO, F, Fd
+        >>> no = NO(Fd(a)*F(i)*Fd(j)*F(b))
+        >>> no.iter_q_creators()
+        <generator object iter_q_creators at 0x...>
+        >>> list(no.iter_q_creators())
+        [0, 1]
+        >>> list(no.iter_q_annihilators())
+        [3, 2]
+
+        """
+
         ops = self.args[0].args
         iter = xrange(0, len(ops))
         for i in iter:
@@ -2723,7 +2758,7 @@ def wicks(e, **kw_args):
      -- Dummy variables are substituted consistently across terms
 
     >>> p,q,r = symbols('pqr', dummy=True)
-    >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True)
+    >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True) # doctest: +SKIP
     KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)
     >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True, simplify_kronecker_deltas=True)
     KroneckerDelta(_i, _p) + KroneckerDelta(_i, _p)
