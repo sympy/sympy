@@ -91,6 +91,8 @@ want to be mentioned here, so see our repository history for a full list).
 #. Eh Tan: improve trigonometric simplification
 #. Renato Coutinho: derivative improvements
 #. Oscar Benjamin: latex printer fix
+#. Øyvind Jensen: implemented coupled cluster expansion and wick theorem
+
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <http://git.sympy.org/?p=sympy.git;f=AUTHORS;hb=HEAD>`_ file.
