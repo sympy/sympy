@@ -267,7 +267,6 @@ def test_commutation():
 
     C = Commutator
     X,Y,Z = symbols('XYZ',commutative=False)
-    assert X<Y<Z
     assert C(C(X,Y),Z) != 0
     assert C(C(X,Z),Y) != 0
     assert C(Y,C(X,Z)) != 0
