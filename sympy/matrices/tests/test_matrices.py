@@ -404,9 +404,9 @@ def test_nullspace():
                 [-1,-3,0,1,0,9,3]])
     out, tmp = M.rref()
     assert out == Matrix([[1,3,0,0,2,0,0],
-                               [0,0,0,1,2,0,0],
-                               [0,0,0,0,0,1,R(1)/3],
-                               [0,0,0,0,0,0,0]])
+                          [0,0,0,1,2,0,0],
+                          [0,0,0,0,0,1,R(1)/3],
+                          [0,0,0,0,0,0,0]])
 
     # now check the vectors
     basis = M.nullspace()
@@ -414,6 +414,10 @@ def test_nullspace():
     assert basis[1] == Matrix([0,0,1,0,0,0,0])
     assert basis[2] == Matrix([-2,0,0,-2,1,0,0])
     assert basis[3] == Matrix([0,0,0,0,0,R(-1)/3, 1])
+
+    # issue 1698; just see that we can do it when rows > cols
+    M = Matrix([[1,2],[2,4],[3,6]])
+    assert M.nullspace()
 
 def test_wronskian():
     x = Symbol('x')

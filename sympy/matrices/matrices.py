@@ -1307,7 +1307,6 @@ class Matrix(object):
         """
         Returns list of vectors (Matrix objects) that span nullspace of self
         """
-        assert self.cols >= self.rows
         reduced, pivots = self.rref(simplified)
         basis = []
         # create a set of vectors for the basis
