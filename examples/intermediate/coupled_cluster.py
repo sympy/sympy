@@ -1,6 +1,6 @@
 from sympy.physics.secondquant import (AntiSymmetricTensor, wicks,
         F, Fd, NO, evaluate_deltas, substitute_dummies, Commutator,
-        simplifyIndexPermutations, PermutationOperator)
+        simplify_index_permutations, PermutationOperator)
 from sympy import (
     symbols, expand, pprint, Number, latex
 )
@@ -85,6 +85,6 @@ print
 print "CC T2:"
 eqT2 = wicks(NO(Fd(i)*Fd(j)*F(b)*F(a))*eq,simplify_dummies=True, keep_only_fully_contracted=True, simplify_kronecker_deltas=True)
 P = PermutationOperator
-eqT2 = simplifyIndexPermutations(eqT2,[P(a,b),P(i,j)])
+eqT2 = simplify_index_permutations(eqT2,[P(a,b),P(i,j)])
 print latex(eqT2)
 

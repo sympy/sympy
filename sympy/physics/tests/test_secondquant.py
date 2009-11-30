@@ -4,7 +4,7 @@ from sympy.physics.secondquant import (
     FockState, AnnihilateBoson, CreateBoson, BosonicOperator,
     F, Fd, FKet, FBra, BosonState, CreateFermion, AnnihilateFermion,
     evaluate_deltas, AntiSymmetricTensor, contraction, NO, wicks,
-    PermutationOperator, simplifyIndexPermutations, SymTuple,
+    PermutationOperator, simplify_index_permutations, SymTuple,
         )
 
 from sympy import (
@@ -38,7 +38,7 @@ def test_PermutationOperator():
         - f(p)*g(q)*h(s)*i(r)
         + f(q)*g(p)*h(s)*i(r))
     perms = [P(p,q),P(r,s)]
-    assert (simplifyIndexPermutations(expr,perms) ==
+    assert (simplify_index_permutations(expr,perms) ==
         P(p,q)*P(r,s)*f(p)*g(q)*h(r)*i(s))
 
 

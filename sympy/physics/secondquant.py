@@ -49,7 +49,7 @@ __all__ = [
     'AntiSymmetricTensor',
     'substitute_dummies',
     'PermutationOperator',
-    'simplifyIndexPermutations',
+    'simplify_index_permutations',
 ]
 
 class SecondQuantizationError(Exception):
@@ -1794,6 +1794,7 @@ class Commutator(Function):
 
     is_commutative = False
     nargs = 2
+
     @classmethod
     def eval(cls, a,b):
         """
@@ -2897,7 +2898,7 @@ class PermutationOperator(Basic):
 
 
 
-def simplifyIndexPermutations(expr, permutation_operators):
+def simplify_index_permutations(expr, permutation_operators):
     """
     Performs simplification by introducing PermutationOperators where appropriate.
 
@@ -2911,7 +2912,7 @@ def simplifyIndexPermutations(expr, permutation_operators):
     possible simplifications, we ignore them.
 
     >>> from sympy import symbols, Function
-    >>> from sympy.physics.secondquant import simplifyIndexPermutations
+    >>> from sympy.physics.secondquant import simplify_index_permutations
     >>> from sympy.physics.secondquant import PermutationOperator
     >>> p,q,r,s = symbols('pqrs')
     >>> f = Function('f')
@@ -2919,12 +2920,12 @@ def simplifyIndexPermutations(expr, permutation_operators):
 
     >>> expr = f(p)*g(q) - f(q)*g(p); expr
     f(p)*g(q) - f(q)*g(p)
-    >>> simplifyIndexPermutations(expr,[PermutationOperator(p,q)])
+    >>> simplify_index_permutations(expr,[PermutationOperator(p,q)])
     PermutationOperator(p, q)*f(p)*g(q)
 
     >>> PermutList = [PermutationOperator(p,q),PermutationOperator(r,s)]
     >>> expr = f(p,r)*g(q,s) - f(q,r)*g(p,s) + f(q,s)*g(p,r) - f(p,s)*g(q,r)
-    >>> simplifyIndexPermutations(expr,PermutList)
+    >>> simplify_index_permutations(expr,PermutList)
     PermutationOperator(p, q)*PermutationOperator(r, s)*f(p, r)*g(q, s)
 
     """
