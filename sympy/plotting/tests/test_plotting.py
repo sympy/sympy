@@ -14,6 +14,7 @@ try:
     pyglet = import_thirdparty("pyglet")
 
     import pyglet.gl
+    import pyglet.window
 except:
     disabled = True
 
