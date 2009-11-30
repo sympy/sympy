@@ -73,6 +73,17 @@ class WicksTheoremDoesNotApply(SecondQuantizationError):
 class Dagger(Basic):
     """
     Hermitian conjugate of creation/annihilation operators.
+
+    Example:
+
+    >>> from sympy.physics.secondquant import Dagger, B, Bd
+    >>> Dagger(2*I)
+    -2*I
+    >>> Dagger(B(0))
+    CreateBoson(0)
+    >>> Dagger(Bd(0))
+    AnnihilateBoson(0)
+
     """
 
     def __new__(cls, arg):
@@ -90,6 +101,22 @@ class Dagger(Basic):
 
     @classmethod
     def eval(cls, arg):
+        """
+        Evaluates the Dagger instance.
+
+        Example:
+
+        >>> from sympy.physics.secondquant import Dagger, B, Bd
+        >>> Dagger(2*I)
+        -2*I
+        >>> Dagger(B(0))
+        CreateBoson(0)
+        >>> Dagger(Bd(0))
+        AnnihilateBoson(0)
+
+        The eval() method is called automatically.
+
+        """
         try:
             d = arg._dagger_()
         except:
@@ -174,9 +201,27 @@ class AntiSymmetricTensor(TensorSymbol):
         return TensorSymbol.__new__(cls, symbol, upper, lower)
 
     @classmethod
-    def eval(cls,symbol, upper, lower):
+    def eval(cls, symbol, upper, lower):
         """
-        upper and lower are tuples with indices
+        Simplifies the tensor.
+
+        Upper and lower are tuples with indices.
+
+        Examples:
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.secondquant import AntiSymmetricTensor
+        >>> i, j = symbols('i j', below_fermi=True)
+        >>> a, b = symbols('a b', above_fermi=True)
+        >>> AntiSymmetricTensor('t', (a, b), (i, j))
+        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        >>> AntiSymmetricTensor('t', (b, a), (i, j))
+        -AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        >>> -AntiSymmetricTensor('t', (b, a), (i, j))
+        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+
+        As you can see, the eval() method is automatically called.
+
         """
         try:
             upper,sign = _sort_anticommuting_fermions(upper)
@@ -206,16 +251,63 @@ class AntiSymmetricTensor(TensorSymbol):
                 "".join([ i.name for i in self.args[1]]),
                 "".join([ i.name for i in self.args[2]])
                 )
+
     @property
     def symbol(self):
+        """
+        Returns the symbol of the tensor.
+
+        Example:
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.secondquant import AntiSymmetricTensor
+        >>> i, j = symbols('i j', below_fermi=True)
+        >>> a, b = symbols('a b', above_fermi=True)
+        >>> AntiSymmetricTensor('t', (a, b), (i, j))
+        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        >>> AntiSymmetricTensor('t', (a, b), (i, j)).symbol
+        t
+
+        """
         return self.args[0]
 
     @property
     def upper(self):
+        """
+        Returns the upper indices.
+
+        Example:
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.secondquant import AntiSymmetricTensor
+        >>> i, j = symbols('i j', below_fermi=True)
+        >>> a, b = symbols('a b', above_fermi=True)
+        >>> AntiSymmetricTensor('t', (a, b), (i, j))
+        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        >>> AntiSymmetricTensor('t', (a, b), (i, j)).upper
+        SymTuple(a, b)
+
+
+        """
         return self.args[1]
 
     @property
     def lower(self):
+        """
+        Returns the lower indices.
+
+        Example:
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.secondquant import AntiSymmetricTensor
+        >>> i, j = symbols('i j', below_fermi=True)
+        >>> a, b = symbols('a b', above_fermi=True)
+        >>> AntiSymmetricTensor('t', (a, b), (i, j))
+        AntiSymmetricTensor(t, SymTuple(a, b), SymTuple(i, j))
+        >>> AntiSymmetricTensor('t', (a, b), (i, j)).lower
+        SymTuple(i, j)
+
+        """
         return self.args[2]
 
     def __str__(self):
@@ -240,6 +332,18 @@ class AntiSymmetricTensor(TensorSymbol):
 class KroneckerDelta(Function):
     """
     Discrete delta function.
+
+    >>> from sympy.physics.secondquant import KroneckerDelta
+    >>> i, j, k = symbols('i j k')
+    >>> KroneckerDelta(i, j)
+    KroneckerDelta(i, j)
+    >>> KroneckerDelta(i, i)
+    1
+    >>> KroneckerDelta(i, i+1)
+    0
+    >>> KroneckerDelta(i, i+1+k)
+    KroneckerDelta(i, 1 + i + k)
+
     """
 
     nargs = 2
@@ -247,6 +351,23 @@ class KroneckerDelta(Function):
 
     @classmethod
     def eval(cls, i, j):
+        """
+        Evaluates the discrete delta function.
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> i, j, k = symbols('i j k')
+        >>> KroneckerDelta(i, j)
+        KroneckerDelta(i, j)
+        >>> KroneckerDelta(i, i)
+        1
+        >>> KroneckerDelta(i, i+1)
+        0
+        >>> KroneckerDelta(i, i+1+k)
+        KroneckerDelta(i, 1 + i + k)
+
+        # indirect doctest
+
+        """
         if i > j:
             return cls(j,i)
         diff = i-j
@@ -288,6 +409,7 @@ class KroneckerDelta(Function):
         if self.args[1].assumptions0.get("below_fermi"):
             return False
         return True
+
     @property
     def is_below_fermi(self):
         """
@@ -363,6 +485,25 @@ class KroneckerDelta(Function):
 
     @property
     def indices_contain_equal_information(self):
+        """
+        Returns True if indices are either both above or below fermi.
+
+        Example:
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> from sympy import Symbol
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+        >>> q = Symbol('q')
+        >>> KroneckerDelta(p, q).indices_contain_equal_information
+        True
+        >>> KroneckerDelta(p, q+1).indices_contain_equal_information
+        True
+        >>> KroneckerDelta(i, p).indices_contain_equal_information
+        False
+
+        """
         if (self.args[0].assumptions0.get("below_fermi") and
                 self.args[1].assumptions0.get("below_fermi")):
             return True
@@ -500,11 +641,24 @@ class SqOperator(Basic):
         p
         >>> Bd(p).state
         p
+
         """
         return self.args[0]
 
     @property
     def is_symbolic(self):
+        """
+        Returns True if the state is a symbol (as opposed to a number).
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.secondquant import F
+        >>> p = Symbol('p')
+        >>> F(p).is_symbolic
+        True
+        >>> F(1).is_symbolic
+        False
+
+        """
         if self.state.is_Integer:
             return False
         else:
@@ -523,6 +677,9 @@ class SqOperator(Basic):
         return "%s(%r)" % (self.op_symbol, self.state)
 
     def apply_operator(self, state):
+        """
+        Applies an operator to itself.
+        """
         raise NotImplementedError('implement apply_operator in a subclass')
 
 class BosonicOperator(SqOperator):
@@ -582,7 +739,6 @@ Bd = CreateBoson
 
 
 class FermionicOperator(SqOperator):
-
 
     @property
     def is_restricted(self):
@@ -765,7 +921,6 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         return CreateFermion(self.state)
 
     def apply_operator(self, state):
-
         if isinstance(state, FockStateFermionKet):
             element = self.state
             return state.down(element)
@@ -878,7 +1033,7 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
 
 class CreateFermion(FermionicOperator, Creator):
     """
-    Fermionic creation operator
+    Fermionic creation operator.
     """
 
     op_symbol = 'f+'
@@ -1051,6 +1206,7 @@ class BosonState(FockState):
 
     occupation numbers can be any integer >= 0
     """
+
     def up(self, i):
         i = int(i)
         new_occs = list(self.args[0])
@@ -1394,6 +1550,7 @@ class InnerProduct(Basic):
     KroneckerDeltas.  In the future, we could introduce abstract
     states like |a> and |b>, and leave the inner product unevaluated as
     <a|b>.
+
     """
     def __new__(cls, bra, ket):
         assert isinstance(bra, FockStateBra), 'must be a bra'
@@ -1630,6 +1787,7 @@ class Commutator(Function):
     KroneckerDelta(i, q)*CreateFermion(p) - KroneckerDelta(i, p)*CreateFermion(q)
 
     """
+
     is_commutative = False
     nargs = 2
     @classmethod
@@ -1691,10 +1849,7 @@ class Commutator(Function):
             return S.NegativeOne*cls(b,a)
 
 
-
-
     def doit(self,**hints):
-
         a = self.args[0]
         b = self.args[1]
 
@@ -1929,6 +2084,7 @@ class NO(Function):
                 return Add(*[term.doit() for term in result.args])
         else:
             return self.args[0]
+
     def _expand_operators(self):
         """
         Returns a sum of NO objects that contain no ambigous q-operators.
@@ -2782,10 +2938,3 @@ def simplifyIndexPermutations(expr, permutation_operators):
         return Add(*terms)
 
     return expr
-
-
-
-
-
-
-
