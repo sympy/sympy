@@ -76,6 +76,7 @@ class Dagger(Basic):
 
     Example:
 
+    >>> from sympy import I
     >>> from sympy.physics.secondquant import Dagger, B, Bd
     >>> Dagger(2*I)
     -2*I
@@ -106,6 +107,7 @@ class Dagger(Basic):
 
         Example:
 
+        >>> from sympy import I
         >>> from sympy.physics.secondquant import Dagger, B, Bd
         >>> Dagger(2*I)
         -2*I
@@ -333,6 +335,7 @@ class KroneckerDelta(Function):
     """
     Discrete delta function.
 
+    >>> from sympy import symbols
     >>> from sympy.physics.secondquant import KroneckerDelta
     >>> i, j, k = symbols('i j k')
     >>> KroneckerDelta(i, j)
@@ -354,6 +357,7 @@ class KroneckerDelta(Function):
         """
         Evaluates the discrete delta function.
 
+        >>> from sympy import symbols
         >>> from sympy.physics.secondquant import KroneckerDelta
         >>> i, j, k = symbols('i j k')
         >>> KroneckerDelta(i, j)
@@ -1755,9 +1759,9 @@ class Commutator(Function):
 
     >>> from sympy import symbols
     >>> from sympy.physics.secondquant import Commutator
-    >>> A,B = symbols('AB',commutative=False)
-    >>> Commutator(B,A)
-    -Commutator(A, B)
+    >>> A, B = symbols('A B', commutative=False)
+    >>> Commutator(B, A)
+    Commutator(B, A)
 
     Evaluate the commutator with .doit()
 
@@ -2385,6 +2389,122 @@ def evaluate_deltas(e):
     else:
         return e
 
+def _get_dummies(expr, _reverse, **require):
+    """
+    Collects dummies recursively in predictable order.
+
+    Starting at right end to prioritize indices of non-commuting terms.
+
+    FIXME: A more sophisticated predictable order would work better.
+    Current implementetation does not always work if factors commute. Since
+    commuting factors are sorted also by dummy indices, it may happen that
+    all terms have exactly the same index order, so that no term will
+    obtain a substitution of dummies.
+
+    """
+    result = []
+    for arg in _reverse(expr.args):
+        try:
+            if arg.dummy_index:
+                # here we check that the dummy matches requirements
+                for key,val in require.items():
+                    if val != arg.assumptions0.get(key, False):
+                        break
+                else:
+                    result.append(arg)
+        except AttributeError:
+            try:
+                if arg.args:
+                   result.extend(_get_dummies(arg, _reverse, **require))
+            except AttributeError:
+                pass
+    return result
+
+def _remove_duplicates(list):
+    """
+    Returns list of unique dummies.
+
+    """
+    result = []
+    while list:
+        i = list.pop()
+        if i in result:
+            pass
+        else:
+            result.append(i)
+    result.reverse()
+    return result
+
+def _get_subslist(chaos,order):
+    """
+    Return list of subs needed to bring list chaos into list order.
+
+    If len(chaos) < len(order), we want chaos to match start of order,
+    thus, chaos might end up with different elements than upon entry.
+
+    If chaos has elements not present in order, we append them to order
+    so that we have a canonical ordering of all elements present in
+    the expression.
+    """
+    for el in chaos:
+        if not el in order:
+            order.append(el)
+
+    subslist = []
+    for i in xrange(len(chaos)):
+        if chaos[i] == order[i]:
+            continue
+        else:
+            if not order[i] in chaos[i:]:
+                subslist.append((chaos[i],order[i]))
+            else:
+                tmp = Symbol('x',dummy=True)
+                subslist.append((order[i], tmp))
+                subslist.append((chaos[i], order[i]))
+
+                ind = chaos.index(order[i])
+                chaos.pop(ind)
+                chaos.insert(ind,tmp)
+
+    return subslist
+
+def _substitute(expr, ordered_dummies, _reverse, **require):
+    """
+    Substitute dummies in expr (which should be a Mul object)
+
+    If keyword arguments are given, those dummies that have an identical
+    keyword in .assumptions0 must provide the same value (True or False)
+    to be substituted.
+
+    Dummies without the keyword in .assumptions0 will be default to
+    give the value False.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics.secondquant import substitute_dummies, _substitute
+    >>> q = Symbol('q', dummy=True)
+    >>> i = Symbol('i', below_fermi=True, dummy=True)
+    >>> a = Symbol('a', above_fermi=True, dummy=True)
+
+    >>> reverse = lambda x: reversed(x)
+    >>> _substitute(a, [q], reverse, above_fermi=True)   # will succeed
+    _a
+    >>> _substitute(i, [q], reverse, above_fermi=True)   # will not succeed
+    _i
+    >>> _substitute(i, [q], reverse, above_fermi=False)  # will succeed
+    _i
+
+    With no keywords, all dummies are substituted.
+
+    """
+
+    dummies = _remove_duplicates(_get_dummies(expr, _reverse, **require))
+
+    subslist = _get_subslist(dummies, ordered_dummies)
+
+    result =  expr.subs(subslist)
+    return result
+
+
 def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indices=True):
     """
     Collect terms by substitution of dummy variables.
@@ -2466,125 +2586,6 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
                 yield seq[i]
 
 
-
-    def _get_dummies(expr, **require):
-        """
-        Collects dummies recursively in predictable order.
-
-        Starting at right end to prioritize indices of non-commuting terms.
-
-        FIXME: A more sophisticated predictable order would work better.
-        Current implementetation does not always work if factors commute. Since
-        commuting factors are sorted also by dummy indices, it may happen that
-        all terms have exactly the same index order, so that no term will
-        obtain a substitution of dummies.
-
-        """
-        result = []
-        for arg in _reverse(expr.args):
-            try:
-                if arg.dummy_index:
-                    # here we check that the dummy matches requirements
-                    for key,val in require.items():
-                        if val != arg.assumptions0.get(key, False):
-                            break
-                    else:
-                        result.append(arg)
-            except AttributeError:
-                try:
-                    if arg.args:
-                       result.extend(_get_dummies(arg, **require))
-                except AttributeError:
-                    pass
-        return result
-
-
-    def _remove_duplicates(list):
-        """
-        Returns list of unique dummies.
-
-        """
-        result = []
-        while list:
-            i = list.pop()
-            if i in result:
-                pass
-            else:
-                result.append(i)
-        result.reverse()
-        return result
-
-    def _get_subslist(chaos,order):
-        """
-        Return list of subs needed to bring list chaos into list order.
-
-        If len(chaos) < len(order), we want chaos to match start of order,
-        thus, chaos might end up with different elements than upon entry.
-
-        If chaos has elements not present in order, we append them to order
-        so that we have a canonical ordering of all elements present in
-        the expression.
-        """
-        for el in chaos:
-            if not el in order:
-                order.append(el)
-
-        subslist = []
-        for i in xrange(len(chaos)):
-            if chaos[i] == order[i]:
-                continue
-            else:
-                if not order[i] in chaos[i:]:
-                    subslist.append((chaos[i],order[i]))
-                else:
-                    tmp = Symbol('x',dummy=True)
-                    subslist.append((order[i], tmp))
-                    subslist.append((chaos[i], order[i]))
-
-                    ind = chaos.index(order[i])
-                    chaos.pop(ind)
-                    chaos.insert(ind,tmp)
-
-        return subslist
-
-
-
-
-
-    def _substitute(expr,ordered_dummies,**require):
-        """
-        Substitute dummies in expr (which should be a Mul object)
-
-        If keyword arguments are given, those dummies that have an identical
-        keyword in .assumptions0 must provide the same value (True or False)
-        to be substituted.
-
-        Dummies without the keyword in .assumptions0 will be default to
-        give the value False.
-
-        >>> from sympy import Symbol
-        >>> from sympy.physics.secondquant import substitute_dummies
-        >>> q = Symbol('q', dummy=True)
-        >>> i = Symbol('i', below_fermi=True, dummy=True)
-        >>> a = Symbol('a', above_fermi=True, dummy=True)
-
-        >>> _substitute(a, [q], above_fermi=True)   # will succeed
-        q
-        >>> _substitute(i, [q],above_fermi=True)   # will not succeed
-        i
-        >>> _substitute(i, [q],above_fermi=False)  # will succeed
-        q
-
-        With no keywords, all dummies are substituted.
-        """
-
-        dummies = _remove_duplicates(_get_dummies(expr, **require))
-
-        subslist = _get_subslist(dummies, ordered_dummies)
-
-        result =  expr.subs(subslist)
-        return result
-
     expr = expr.expand()
 
     aboves = []
@@ -2630,7 +2631,7 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
     for req, dummylist in cases:
         if isinstance(expr,Add):
             new_dummies = dummylist
-            expr = (Add(*[_substitute(term,new_dummies,**req) for term in expr.args]))
+            expr = (Add(*[_substitute(term, new_dummies, _reverse, **req) for term in expr.args]))
 
     return expr
 
@@ -2723,7 +2724,7 @@ def wicks(e, **kw_args):
 
     >>> p,q,r = symbols('pqr', dummy=True)
     >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True)
-    KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r) + KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q)
+    KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)
     >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True, simplify_kronecker_deltas=True)
     KroneckerDelta(_i, _p) + KroneckerDelta(_i, _p)
     >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True, simplify_kronecker_deltas=True, simplify_dummies=True)
