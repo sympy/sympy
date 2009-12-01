@@ -1829,7 +1829,7 @@ def _homogeneous_order(eq, *symbols):
                 arg = 1
                 pows = set()
                 for i in eq.args[0].args:
-                    if i.args[1].args[0] == -1:
+                    if i.args[1] == -1:
                         arg *= 1/i.args[0]
                         pows.add(sympify(-1*i.args[1]))
                     else:

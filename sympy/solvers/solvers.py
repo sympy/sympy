@@ -787,11 +787,15 @@ def nsolve(*args, **kwargs):
         if isinstance(f, Equality):
             f = f.lhs - f.rhs
         f = f.evalf()
-        atoms = set(s for s in f.atoms() if isinstance(s, Symbol))
+        atoms = f.atoms(Symbol)
         if fargs is None:
             fargs = atoms.copy().pop()
         if not (len(atoms) == 1 and (fargs in atoms or fargs[0] in atoms)):
             raise ValueError('expected a one-dimensional and numerical function')
+
+        # the function is much better behaved if there is no denominator
+        f = f.as_numer_denom()[0]
+
         f = lambdify(fargs, f, modules)
         return findroot(f, x0, **kwargs)
     if len(fargs) > f.cols:

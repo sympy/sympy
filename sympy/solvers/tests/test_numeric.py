@@ -9,6 +9,8 @@ def test_nsolve():
     x = Symbol('x')
     assert nsolve(sin(x), 2) - pi.evalf() < 1e-16
     assert nsolve(Eq(2*x, 2), x, -10) == nsolve(2*x - 2, -10)
+    # Issue 1730
+    assert nsolve(x**2/(1-x)/(1-2*x)**2-100, x, 0) # doesn't fail
     # multidimensional
     x1 = Symbol('x1')
     x2 = Symbol('x2')
