@@ -1642,22 +1642,8 @@ class Basic(AssumeMeths):
         if self.is_Atom or not args:
             return self
         else:
-            pattern, rule = args[:-1], args[-1]
-
-            if not isinstance(rule, str):
-
-                if rule == C.tan:
-                    rule = "tan"
-                elif rule == C.exp:
-                    rule = "exp"
-                elif isinstance(rule, FunctionClass):   # new-style functions
-                    #print rule
-                    rule = rule.__name__  # XXX proper attribute for name?
-                    #print rule
-                else:
-                    rule = str(rule)
-
-            rule = '_eval_rewrite_as_' + rule
+            pattern = args[:-1]
+            rule = '_eval_rewrite_as_' + str(args[-1])
 
             if not pattern:
                 return self._eval_rewrite(None, rule, **hints)
