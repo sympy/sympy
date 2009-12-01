@@ -29,15 +29,6 @@ class sinh(Function):
         return asinh
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return eval(cls, arg)
-
-    @classmethod
     def eval(cls, arg):
         arg = sympify(arg)
 
@@ -156,15 +147,6 @@ class cosh(Function):
         return acosh
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         arg = sympify(arg)
 
@@ -279,15 +261,6 @@ class tanh(Function):
 
     def inverse(self, argindex=1):
         return atanh
-
-    @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
 
     @classmethod
     def eval(cls, arg):
@@ -410,15 +383,6 @@ class coth(Function):
         return acoth
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         arg = sympify(arg)
 
@@ -521,15 +485,6 @@ class asinh(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         arg = sympify(arg)
 
@@ -603,15 +558,6 @@ class acosh(Function):
             return (self.args[0]**2 - 1)**(-S.Half)
         else:
             raise ArgumentIndexError(self, argindex)
-
-    @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
 
     @classmethod
     def eval(cls, arg):
@@ -693,15 +639,6 @@ class atanh(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         arg = sympify(arg)
 
@@ -761,15 +698,6 @@ class acoth(Function):
             return 1/(1-self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
-
-    @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
 
     @classmethod
     def eval(cls, arg):

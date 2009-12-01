@@ -14,11 +14,6 @@ class RoundFunction(Function):
     nargs = 1
 
     @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         if arg.is_integer:
             return arg

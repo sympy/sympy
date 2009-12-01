@@ -58,15 +58,6 @@ class sin(Function):
         return asin
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(args)
-
-    @classmethod
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
@@ -275,15 +266,6 @@ class cos(Function):
         return acos
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
@@ -485,15 +467,6 @@ class tan(Function):
         return atan
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
@@ -636,15 +609,6 @@ class cot(Function):
         return acot
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
@@ -775,15 +739,6 @@ class asin(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
@@ -872,15 +827,6 @@ class acos(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
@@ -964,15 +910,6 @@ class atan(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
@@ -1049,11 +986,6 @@ class acot(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
@@ -1123,11 +1055,6 @@ class atan2(Function):
     """
 
     nargs = 2
-
-    @classmethod
-    @deprecated
-    def canonize(cls, y, x):
-        return cls.eval(y, x)
 
     @classmethod
     def eval(cls, y, x):

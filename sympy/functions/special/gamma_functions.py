@@ -22,11 +22,6 @@ class gamma(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
@@ -97,11 +92,6 @@ class lowergamma(Function):
     nargs = 2
 
     @classmethod
-    @deprecated
-    def canonize(cls, a, x):
-        return cls.eval(a, x)
-
-    @classmethod
     def eval(cls, a, x):
         if a.is_Number:
             if a is S.One:
@@ -124,11 +114,6 @@ class uppergamma(Function):
             return -C.exp(-z)*z**(a-1)
         else:
             raise ArgumentIndexError(self, argindex)
-
-    @classmethod
-    @deprecated
-    def canonize(cls, a, z):
-        return cls.eval(a, z)
 
     @classmethod
     def eval(cls, a, z):
@@ -165,10 +150,6 @@ class polygamma(Function):
             return polygamma(n+1, z)
         else:
             raise ArgumentIndexError(self, argindex)
-
-    @classmethod
-    def canonize(cls, n, z):
-        return cls.eval(n, z)
 
     @classmethod
     def eval(cls, n, z):

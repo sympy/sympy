@@ -102,11 +102,6 @@ class Factorial(Function):
             return (cls._recursive(n//2)**2)*cls._swing(n)
 
     @classmethod
-    @deprecated
-    def canonize(cls, n):
-        return cls.eval(n)
-
-    @classmethod
     def eval(cls, n):
         n = sympify(n)
 
@@ -187,11 +182,6 @@ class RisingFactorial(Function):
     nargs = 2
 
     @classmethod
-    @deprecated
-    def canonize(cls, x, k):
-        return cls.eval(x, k)
-
-    @classmethod
     def eval(cls, x, k):
         x = sympify(x)
         k = sympify(k)
@@ -253,11 +243,6 @@ class FallingFactorial(Function):
     """
 
     nargs = 2
-
-    @classmethod
-    @deprecated
-    def canonize(cls, x, k):
-        return cls.eval(x, k)
 
     @classmethod
     def eval(cls, x, k):
@@ -351,11 +336,6 @@ class Binomial(Function):
     """
 
     nargs = 2
-
-    @classmethod
-    @deprecated
-    def canonize(cls, r, k):
-        return cls.eval(r, k)
 
     @classmethod
     def eval(cls, r, k):

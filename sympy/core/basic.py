@@ -1365,10 +1365,6 @@ class Basic(AssumeMeths):
     def _eval_eq_nonzero(self, other):
         return
 
-    @classmethod
-    def _eval_apply_subs(cls, *args):
-        return
-
     def _eval_conjugate(self):
         if self.is_real:
             return self

@@ -201,9 +201,6 @@ class Function(Basic):
                 # Written down as an elif to avoid a super-long line
                 elif isinstance(new.nargs,tuple) and self.nargs in new.nargs:
                     return new(*self.args)
-        obj = self.func._eval_apply_subs(*(self.args + (old,) + (new,)))
-        if obj is not None:
-            return obj
         return Basic._seq_subs(self, old, new)
 
     def _eval_evalf(self, prec):
@@ -725,11 +722,6 @@ class Lambda(Function):
         obj = Function.__new__(cls,*args)
         obj.nargs = len(args)-1
         return obj
-
-    @classmethod
-    @deprecated
-    def canonize(cls, *args):
-        return cls.eval(*args)
 
     @classmethod
     def eval(cls,*args):

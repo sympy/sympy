@@ -96,11 +96,6 @@ class Dagger(Basic):
         return obj
 
     @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         """
         Evaluates the Dagger instance.
@@ -1564,11 +1559,6 @@ class InnerProduct(Basic):
             return r
         obj = Basic.__new__(cls, *(bra, ket), **dict(commutative=True))
         return obj
-
-    @classmethod
-    @deprecated
-    def canonize(cls, bra, ket):
-        return cls.eval(bra, ket)
 
     @classmethod
     def eval(cls, bra, ket):

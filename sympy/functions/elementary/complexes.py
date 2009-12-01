@@ -40,15 +40,6 @@ class re(Function):
     is_real = True
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         if arg is S.NaN:
             return S.NaN
@@ -121,15 +112,6 @@ class im(Function):
     is_real = True
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         if arg is S.NaN:
             return S.NaN
@@ -182,11 +164,6 @@ class sign(Function):
     """
 
     nargs = 1
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
 
     @classmethod
     def eval(cls, arg):
@@ -245,15 +222,6 @@ class abs(Function):
             return sign(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
-
-    @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
 
     @classmethod
     def eval(cls, arg):
@@ -324,11 +292,6 @@ class arg(Function):
     is_bounded = True
 
     @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         x, y = re(arg), im(arg)
         arg = C.atan2(y, x)
@@ -356,11 +319,6 @@ class conjugate(Function):
     """
 
     nargs = 1
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
 
     @classmethod
     def eval(cls, arg):

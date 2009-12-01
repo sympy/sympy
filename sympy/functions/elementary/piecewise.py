@@ -94,11 +94,6 @@ class Piecewise(Function):
         return tuple(args)
 
     @classmethod
-    @deprecated
-    def canonize(cls, *args):
-        return cls.eval(*args)
-
-    @classmethod
     def eval(cls, *args):
         # Check for situations where we can evaluate the Piecewise object.
         # 1) Hit an unevaluatable cond (e.g. x<1) -> keep object

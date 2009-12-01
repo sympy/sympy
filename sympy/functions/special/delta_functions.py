@@ -42,11 +42,6 @@ class DiracDelta(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    @deprecated
-    def canonize(cls, arg, k = 0):
-        return cls.eval(arg, k)
-
-    @classmethod
     def eval(cls, arg, k=0):
         k = sympify(k)
         if not k.is_Integer or k.is_negative:
@@ -184,11 +179,6 @@ class Heaviside(Function):
             return DiracDelta(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
 
     @classmethod
     def eval(cls, arg):

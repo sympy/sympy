@@ -20,11 +20,6 @@ class max_(Function):
     nargs = 2
 
     @classmethod
-    @deprecated
-    def canonize(cls, x, y):
-        return cls.eval(x, y)
-
-    @classmethod
     def eval(cls, x, y):
         if x.is_Number and y.is_Number:
             return max(x, y)
@@ -46,11 +41,6 @@ class max_(Function):
 class min_(Function):
 
     nargs = 2
-
-    @classmethod
-    @deprecated
-    def canonize(cls, x, y):
-        return cls.eval(x, y)
 
     @classmethod
     def eval(cls, x, y):

@@ -24,11 +24,6 @@ class PolynomialSequence(Function):
     nargs = 2
 
     @classmethod
-    @deprecated
-    def canonize(cls, n, x):
-        return cls.eval(n, x)
-
-    @classmethod
     def eval(cls, n, x):
         if n.is_integer and n >= 0:
             return cls.calc(int(n)).subs(_x, x)
@@ -44,11 +39,6 @@ class PolynomialSequence2(Function):
     """
 
     nargs = 3
-
-    @classmethod
-    @deprecated
-    def canonize(cls, n, m, x):
-        return cls.eval(n, m, x)
 
     @classmethod
     def eval(cls, n, m, x):
@@ -142,11 +132,6 @@ class chebyshevt_root(Function):
     nargs = 2
 
     @classmethod
-    @deprecated
-    def canonize(cls, n, k):
-        return cls.eval(n, k)
-
-    @classmethod
     def eval(cls, n, k):
         if not 0 <= k < n:
             raise ValueError("must have 0 <= k < n")
@@ -168,11 +153,6 @@ class chebyshevu_root(Function):
 
     """
     nargs = 2
-
-    @classmethod
-    @deprecated
-    def canonize(cls, n, k):
-        return cls.eval(m, k)
 
     @classmethod
     def eval(cls, n, k):

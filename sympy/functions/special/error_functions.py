@@ -20,15 +20,6 @@ class erf(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def _eval_apply_subs(cls, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:

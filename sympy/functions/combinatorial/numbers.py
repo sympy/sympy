@@ -77,11 +77,6 @@ class fibonacci(Function):
         return (prev[-2] + _sym*prev[-1]).expand()
 
     @classmethod
-    @deprecated
-    def canonize(cls, n, sym=None):
-        return cls.eval(n, sym)
-
-    @classmethod
     def eval(cls, n, sym=None):
         if n.is_Integer:
             n = int(n)
@@ -122,11 +117,6 @@ class lucas(Function):
         * http://en.wikipedia.org/wiki/Lucas_number
 
     """
-
-    @classmethod
-    @deprecated
-    def canonize(cls, n):
-        return cls.eval(n)
 
     @classmethod
     def eval(cls, n):
@@ -233,11 +223,6 @@ class bernoulli(Function):
     # case modulo 6 separately
     _cache = {0: S.One, 2:Rational(1,6), 4:Rational(-1,30)}
     _highest = {0:0, 2:2, 4:4}
-
-    @classmethod
-    @deprecated
-    def canonize(cls, n, sym=None):
-        return cls.eval(n, sym)
 
     @classmethod
     def eval(cls, n, sym=None):
@@ -364,11 +349,6 @@ class bell(Function):
         return (_sym * s).expand()
 
     @classmethod
-    @deprecated
-    def canonize(cls, n, sym=None):
-        return cls.eval(n, sym)
-
-    @classmethod
     def eval(cls, n, sym=None):
         if n.is_Integer and n.is_nonnegative:
             if sym is None:
@@ -426,11 +406,6 @@ class harmonic(Function):
     # Generate one memoized Harmonic number-generating function for each
     # order and store it in a dictionary
     _functions = {}
-
-    @classmethod
-    @deprecated
-    def canonize(cls, n, m=None):
-        return cls.eval(n, m)
 
     @classmethod
     def eval(cls, n, m=None):

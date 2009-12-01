@@ -22,15 +22,6 @@ class exp(Function):
         return log
 
     @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg):
-        return cls.eval(arg)
-
-    @classmethod
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
@@ -275,15 +266,6 @@ class log(Function):
 
     def inverse(self, argindex=1):
         return exp
-
-    @classmethod
-    def _eval_apply_subs(self, *args):
-        return
-
-    @classmethod
-    @deprecated
-    def canonize(cls, arg, base=None):
-        return cls.eval(arg, base)
 
     @classmethod
     def eval(cls, arg, base=None):
@@ -540,11 +522,6 @@ class LambertW(Function):
     http://en.wikipedia.org/wiki/Lambert_W_function
     """
     nargs = 1
-
-    @classmethod
-    @deprecated
-    def canonize(cls, x):
-        return cls.eval(x)
 
     @classmethod
     def eval(cls, x):
