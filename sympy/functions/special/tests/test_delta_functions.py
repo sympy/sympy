@@ -8,7 +8,7 @@ def test_DiracDelta():
     assert DiracDelta(5,7) == 0
     assert DiracDelta(0) == oo
     assert DiracDelta(0,5) == oo
-    assert isinstance(DiracDelta(x),DiracDelta)
+    assert DiracDelta(x).func == DiracDelta
 
 def test_heaviside():
     assert Heaviside(0) == 0.5

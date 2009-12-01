@@ -270,8 +270,8 @@ class Integral(Basic):
         if isinstance(f, Poly):
             return f.integrate(x)
 
-        # Piecewise anti-derivatives need to call special integrate.
-        if isinstance(f,Piecewise):
+        # Piecewise antiderivatives need to call special integrate.
+        if f.func == Piecewise:
             return f._eval_integral(x)
 
         # let's cut it short if `f` does not depend on `x`

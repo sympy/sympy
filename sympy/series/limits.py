@@ -108,7 +108,7 @@ def heuristics(e, z, z0, dir):
         for a in e.args:
             r.append(a.limit(z, z0, dir))
         return Add(*r)
-    elif isinstance(e, C.Function):
+    elif e.is_Function:
         return e.subs(e.args[0], heuristics(e.args[0], z, z0, dir))
     msg = "Don't know how to calculate the limit(%s, %s, %s, dir=%s), sorry."
     raise PoleError(msg % (e, z, z0, dir))

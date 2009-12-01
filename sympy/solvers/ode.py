@@ -923,7 +923,7 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
         (False, 2)
 
     """
-    if not isinstance(func, Function) or len(func.args) != 1:
+    if not func.is_Function or len(func.args) != 1:
         raise ValueError("func must be a function of one variable, not " + str(func))
     x = func.args[0]
     s = True

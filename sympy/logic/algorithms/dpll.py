@@ -171,7 +171,7 @@ def unit_propagate(clauses, symbol):
     """
     output = []
     for c in clauses:
-        if not isinstance(c, Or):
+        if c.func != Or:
             output.append(c)
             continue
         for arg in c.args:
@@ -262,7 +262,7 @@ def find_unit_clause(clauses, model):
             sym = literal_symbol(literal)
             if sym not in model:
                 num_not_in_model += 1
-                P, value = sym, not (isinstance(literal, Not))
+                P, value = sym, not (literal.func == Not)
         if num_not_in_model == 1:
             return P, value
     return None, None

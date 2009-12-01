@@ -382,7 +382,7 @@ class Basic(AssumeMeths):
         x
 
         """
-        obj = type(self) (*args, **self.assumptions0)
+        obj = self.func(*args, **self.assumptions0)
         return obj
 
 
@@ -1174,7 +1174,7 @@ class Basic(AssumeMeths):
             args = self.args
         else:
             args = (self.func,)+self
-        return self.__class__(*[s.subs(old, new) for s in args])
+        return self.func(*[s.subs(old, new) for s in args])
 
     def __contains__(self, what):
         if self == what or self.is_Function and self.func == what: return True
@@ -1307,7 +1307,7 @@ class Basic(AssumeMeths):
             raise TypeError("has() requires at least 1 argument (got none)")
         p = sympify(patterns[0])
         if p.is_Atom and not isinstance(p, Wild):
-            return p in self.atoms(p.__class__)
+            return p in self.atoms(p.func)
         if isinstance(p, BasicType):
             return bool(self.atoms(p))
         if p.matches(self) is not None:

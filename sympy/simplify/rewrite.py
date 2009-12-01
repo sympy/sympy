@@ -110,7 +110,7 @@ def trim(f, *symbols, **flags):
                         result |= terms
                         args.append(h)
 
-                    g = g.__class__(*args)
+                    g = g.func(*args)
                 elif g.is_Pow:
                     if recursive:
                         base = trim(g.base, *symbols, **flags)
@@ -140,7 +140,7 @@ def trim(f, *symbols, **flags):
                     if not recursive:
                         result.add(g)
                     else:
-                        g = g.__class__(*[trim(h, *symbols, **flags)
+                        g = g.func(*[trim(h, *symbols, **flags)
                                           for h in g.args])
 
                         if is_functional(g):

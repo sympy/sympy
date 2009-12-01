@@ -173,7 +173,7 @@ def sum(*args, **kwargs):
 
 
 def getab(expr):
-    cls = expr.__class__
+    cls = expr.func
     return cls(expr.args[0]), cls(*expr.args[1:])
 
 def telescopic_direct(L, R, n, (i, a, b)):

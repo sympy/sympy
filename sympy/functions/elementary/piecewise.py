@@ -246,15 +246,15 @@ def piecewise_fold(expr):
     if not isinstance(expr, Basic) or not expr.has_piecewise:
         return expr
     new_args = map(piecewise_fold, expr.args)
-    if type(expr) is ExprCondPair:
+    if expr.func == ExprCondPair:
         return ExprCondPair(*new_args)
     piecewise_args = []
     for n, arg in enumerate(new_args):
-        if type(arg) is Piecewise:
+        if arg.func == Piecewise:
             piecewise_args.append(n)
     if len(piecewise_args) > 0:
         n = piecewise_args[0]
-        new_args = [(expr.__class__(*(new_args[:n] + [e] + new_args[n+1:])), c) \
+        new_args = [(expr.func(*(new_args[:n] + [e] + new_args[n+1:])), c) \
                         for e, c in new_args[n].args]
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))

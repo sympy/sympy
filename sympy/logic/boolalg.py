@@ -61,14 +61,14 @@ class Not(BooleanFunction):
         if len(args) > 1:
             return map(cls, args)
         arg = args[0]
-        # apply De Morgan Rules
-        if type(arg) is  And:
-            return Or(*[Not(a) for a in arg.args])
-        if type(arg) is Or:
-            return And(*[Not(a) for a in arg.args])
         if type(arg) is bool:
             return not arg
-        if type(arg) is Not:
+        # apply De Morgan Rules
+        if arg.func == And:
+            return Or(*[Not(a) for a in arg.args])
+        if arg.func == Or:
+            return And(*[Not(a) for a in arg.args])
+        if arg.func == Not:
             return arg.args[0]
 
 class Nand(BooleanFunction):
@@ -164,17 +164,17 @@ def distribute_and_over_or(expr):
     Given a sentence s consisting of conjunctions and disjunctions
     of literals, return an equivalent sentence in CNF.
     """
-    if isinstance(expr, Or):
+    if expr.func == Or:
         for arg in expr.args:
-            if isinstance(arg, And):
+            if arg.func == And:
                 conj = arg
                 break
         else:
-            return type(expr)(*expr.args)
+            return expr
         rest = Or(*[a for a in expr.args if a is not conj])
         return And(*map(distribute_and_over_or,
                    [Or(c, rest) for c in conj.args]))
-    elif isinstance(expr, And):
+    elif expr.func == And:
         return And(*map(distribute_and_over_or, expr.args))
     else:
         return expr
@@ -205,9 +205,9 @@ def eliminate_implications(expr):
         return expr     ## (Atoms are unchanged.)
     args = map(eliminate_implications, expr.args)
     a, b = args[0], args[-1]
-    if isinstance(expr, Implies):
+    if expr.func == Implies:
         return (~a) | b
-    elif isinstance(expr, Equivalent):
+    elif expr.func == Equivalent:
         return (a | Not(b)) & (b | Not(a))
     else:
         return type(expr)(*args)
@@ -235,14 +235,14 @@ def to_int_repr(clauses, symbols):
 
     """
     def append_symbol(arg, symbols):
-        if type(arg) is Not:
+        if arg.func == Not:
             return -(symbols.index(arg.args[0])+1)
         else:
             return symbols.index(arg)+1
 
     output = []
     for c in clauses:
-        if type(c) is Or:
+        if c.func == Or:
             t = []
             for arg in c.args:
                 t.append(append_symbol(arg, symbols))

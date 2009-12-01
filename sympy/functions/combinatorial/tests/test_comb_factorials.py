@@ -63,5 +63,5 @@ def test_factorials():
     assert factorial(-2) == 0
     assert factorial(0) == 1
     assert factorial(7) == 5040
-    assert isinstance(factorial(n), Factorial)
-    assert isinstance(factorial(2*n), Factorial)
+    assert factorial(n).func == Factorial
+    assert factorial(2*n).func == Factorial

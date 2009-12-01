@@ -54,14 +54,14 @@ class sinh(Function):
                 if coeff.is_negative:
                     return -cls(-arg)
 
-            if isinstance(arg, asinh):
+            if arg.func == asinh:
                 return arg.args[0]
 
-            if isinstance(arg, acosh):
+            if arg.func == acosh:
                 x = arg.args[0]
                 return sqrt(x-1) * sqrt(x+1)
 
-            if isinstance(arg, atanh):
+            if arg.func == atanh:
                 x = arg.args[0]
                 return x/sqrt(1-x**2)
 
@@ -172,13 +172,13 @@ class cosh(Function):
                 if coeff.is_negative:
                     return cls(-arg)
 
-            if isinstance(arg, asinh):
+            if arg.func == asinh:
                 return sqrt(1+arg.args[0]**2)
 
-            if isinstance(arg, acosh):
+            if arg.func == acosh:
                 return arg.args[0]
 
-            if isinstance(arg, atanh):
+            if arg.func == atanh:
                 return 1/sqrt(1-arg.args[0]**2)
 
     @staticmethod
@@ -288,15 +288,15 @@ class tanh(Function):
                 if coeff.is_negative:
                     return -cls(-arg)
 
-            if isinstance(arg, asinh):
+            if arg.func == asinh:
                 x = arg.args[0]
                 return x/sqrt(1+x**2)
 
-            if isinstance(arg, acosh):
+            if arg.func == acosh:
                 x = arg.args[0]
                 return sqrt(x-1) * sqrt(x+1) / x
 
-            if isinstance(arg, atanh):
+            if arg.func == atanh:
                 return arg.args[0]
 
     @staticmethod

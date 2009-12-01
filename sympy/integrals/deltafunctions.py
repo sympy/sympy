@@ -36,14 +36,15 @@ def change_mul(node,x):
     new_args = []
     dirac = None
     for arg in node.args:
-        if isinstance(arg, DiracDelta) and arg.is_simple(x) and (len(arg.args) <= 1 or arg.args[1]==0):
+        if arg.func == DiracDelta and arg.is_simple(x) \
+                and (len(arg.args) <= 1 or arg.args[1]==0):
             dirac = arg
         else:
             new_args.append(change_mul(arg,x))
     if not dirac:#we didn't find any simple dirac
         new_args = []
         for arg in node.args:
-            if isinstance(arg, DiracDelta):
+            if arg.func == DiracDelta:
                 new_args.append(arg.simplify(x))
             else:
                 new_args.append(change_mul(arg,x))
@@ -52,7 +53,7 @@ def change_mul(node,x):
         else:#if the node didn't change there is nothing to do
             nnode = None
         return (None, nnode)
-    return (dirac,node.__class__(*new_args))
+    return (dirac, node.func(*new_args))
 
 
 def deltaintegrate(f, x):
@@ -79,7 +80,7 @@ def deltaintegrate(f, x):
     if not f.has(DiracDelta):
         return None
     # g(x) = DiracDelta(h(x))
-    if isinstance(f,DiracDelta):
+    if f.func == DiracDelta:
         h = f.simplify(x)
         if h == f:#can't simplify the expression
             #FIXME: the second term tells whether is DeltaDirac or Derivative

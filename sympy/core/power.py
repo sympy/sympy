@@ -200,10 +200,11 @@ class Pow(Basic):
                 return True
 
     def _eval_subs(self, old, new):
-        if self==old: return new
-        if isinstance(old, self.__class__) and self.base==old.base:
-            coeff1,terms1 = self.exp.as_coeff_terms()
-            coeff2,terms2 = old.exp.as_coeff_terms()
+        if self == old:
+            return new
+        if old.func == self.func and self.base == old.base:
+            coeff1, terms1 = self.exp.as_coeff_terms()
+            coeff2, terms2 = old.exp.as_coeff_terms()
             if terms1==terms2: return new ** (coeff1/coeff2) # (x**(2*y)).subs(x**(3*y),z) -> z**(2/3*y)
         if old.func is C.exp:
             coeff1,terms1 = old.args[0].as_coeff_terms()
@@ -588,7 +589,7 @@ class Pow(Basic):
                 if o.is_Pow:
                     return o.args[1]
                 n, d = o.as_numer_denom()
-                if isinstance(d, log):
+                if d.func == log:
                     # i.e. o = x**2/log(x)
                     if n.is_Symbol:
                         return Integer(1)

@@ -1447,12 +1447,12 @@ def _logcombine(expr, assume_pos_real=False):
         _getlogargs(a*log(x*y))
         x*y
         """
-        if isinstance(expr, log):
+        if expr.func == log:
             return [expr.args[0]]
         else:
             args = []
             for i in expr.args:
-                if isinstance(i, log):
+                if i.func == log:
                     args.append(_getlogargs(i))
             return flatten(args)
         return None
@@ -1478,7 +1478,7 @@ def _logcombine(expr, assume_pos_real=False):
         notlogs = 0
         coeflogs = 0
         for i in expr.args:
-            if isinstance(i, log):
+            if i.func == log:
                 if (i.args[0].is_positive or (assume_pos_real and not \
                 i.args[0].is_nonpositive)):
                     argslist *= _logcombine(i.args[0], assume_pos_real)
@@ -1523,7 +1523,7 @@ def _logcombine(expr, assume_pos_real=False):
                 or type(coef[a]) in (int, float)\
                 or (assume_pos_real\
                 and not coef[a].is_imaginary))\
-            and (not isinstance(coef[a], log)\
+            and (coef[a].func != log\
                 or assume_pos_real\
                 or (not getattr(coef[a],'is_real')==False\
                     and getattr(x, 'is_positive'))):

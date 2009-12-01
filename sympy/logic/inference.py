@@ -14,7 +14,7 @@ def literal_symbol(literal):
     A
 
     """
-    if isinstance(literal, Not):
+    if literal.func == Not:
         return literal.args[0]
     else:
         return literal
@@ -62,18 +62,18 @@ def pl_true(expr, model={}):
         return model.get(expr)
 
     args = expr.args
-    if type(expr) is Not:
+    if expr.func == Not:
         p = pl_true(args[0], model)
         if p is None: return None
         else: return not p
-    elif type(expr) is Or:
+    elif expr.func == Or:
         result = False
         for arg in args:
             p = pl_true(arg, model)
             if p == True: return True
             if p == None: result = None
         return result
-    elif isinstance(expr, And):
+    elif expr.func == And:
         result = True
         for arg in args:
             p = pl_true(arg, model)
@@ -81,11 +81,11 @@ def pl_true(expr, model={}):
             if p == None: result = None
         return result
 
-    elif isinstance(expr, Implies):
+    elif expr.func == Implies:
         p, q = args
         return pl_true(Or(Not(p), q), model)
 
-    elif isinstance(expr, Equivalent):
+    elif expr.func == Equivalent:
         p, q = args
         pt = pl_true(p, model)
         if pt == None:
