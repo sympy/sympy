@@ -1090,9 +1090,10 @@ class Basic(AssumeMeths):
         return self._eval_subs(old, new)
 
     def _eval_subs(self, old, new):
-        if self==old:
+        if self == old:
             return new
-        return self
+        else:
+            return self.func(*[arg._eval_subs(old, new) for arg in self.args])
 
     def _subs_list(self, sequence):
         """
@@ -2366,6 +2367,12 @@ class Atom(Basic):
         if self == expr:
             return repl_dict
         return None
+
+    def _eval_subs(self, old, new):
+        if self == old:
+            return new
+        else:
+            return self
 
     def as_numer_denom(self):
         return self, S.One

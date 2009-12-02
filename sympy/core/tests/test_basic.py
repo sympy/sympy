@@ -699,3 +699,28 @@ def test_contains():
     assert f in p
     assert g in p
     assert not h in p
+
+################# Tests involving only Basic instances ########
+b1 = Basic(); b2 = Basic(b1); b3 = Basic(b2)
+b21 = Basic(b2, b1)
+
+def test_equality():
+    instances = [b1, b2, b3, b21, Basic(b1,b1,b1)]
+    for i, b_i in enumerate(instances):
+        for j, b_j in enumerate(instances):
+            assert (b_i == b_j) == (i == j)
+
+def test_matches_basic():
+    instances = [Basic(b1,b1,b2), Basic(b1,b2,b1), Basic(b2, b1, b1),
+                    Basic(b1, b2), Basic(b2, b1), b2, b1]
+    for i, b_i in enumerate(instances):
+        for j, b_j in enumerate(instances):
+            if i ==j:
+                assert b_i.matches(b_j) == {}
+            else:
+                assert b_i.matches(b_j) is None
+
+def test_subs():
+    assert b21.subs(b2, b1) == Basic(b1, b1)
+    assert b21.subs(b2, b21) == Basic(b21, b1)
+    assert b3.subs(b2, b1) == b2
