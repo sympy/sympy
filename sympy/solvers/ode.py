@@ -179,14 +179,14 @@ from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild
 from sympy.core.sympify import sympify
 
-from sympy.functions import cos, exp, im, log, re, sin
+from sympy.functions import cos, exp, im, log, re, sin, sign
 from sympy.matrices import wronskian
 from sympy.polys import RootsOf, discriminant, RootOf
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp
 from sympy.solvers import solve
 
-from sympy.utilities import numbered_symbols, all, any
+from sympy.utilities import numbered_symbols, all, any, make_list
 
 import sympy.solvers
 # This is a list of hints in the order that they should be applied.  That means
@@ -1822,23 +1822,21 @@ def _homogeneous_order(eq, *symbols):
         if eq.func == log:
             # The only possibility to pull a t out of a function is a power in
             # a logarithm.  This is very likely due to calling of logcombine().
-            if eq.args[0].is_Pow:
-                return _homogeneous_order(eq.args[0].args[1]*log(eq.args[0].args[0]),\
-                    *symbols)
-            elif eq.args[0].is_Mul and all(i.is_Pow for i in iter(eq.args[0].args)):
-                arg = 1
-                pows = set()
-                for i in eq.args[0].args:
-                    if i.args[1] == -1:
-                        arg *= 1/i.args[0]
-                        pows.add(sympify(-1*i.args[1]))
+            args = make_list(eq.args[0], Mul) # TODO what about log(a, b) which has args[1]?
+            if all(i.is_Pow for i in args):
+                base = 1
+                expos = set()
+                for pow in args:
+                    if sign(pow.exp).is_negative:
+                        s = -1
                     else:
-                        arg *= i.args[0]
-                        pows.add(sympify(i.args[1]))
-                if len(pows) != 1:
+                        s = 1
+                    expos.add(s*pow.exp)
+                    base *= pow.base**s
+                if len(expos) != 1:
                     return None
                 else:
-                    return _homogeneous_order(pows.pop()*log(arg), *symbols)
+                    return _homogeneous_order(expos.pop()*log(base), *symbols)
             else:
                 if _homogeneous_order(eq.args[0], *symbols) == 0:
                     return sympify(0)

@@ -375,6 +375,13 @@ def test_homogeneous_order():
     assert homogeneous_order(f(y,x)**2, x, y, f(x, y)) == None
     assert homogeneous_order(f(y), f(x), x) == None
     assert homogeneous_order(-f(x)/x + 1/sin(f(x)/ x), f(x), x) == 0
+    assert homogeneous_order(log(1/y) + log(x**2), x, y) == None
+    assert homogeneous_order(log(1/y) + log(x), x, y) == 0
+    assert homogeneous_order(log(x/y), x, y) == 0
+    assert homogeneous_order(2*log(1/y) + 2*log(x), x, y) == 0
+    a = Symbol('a')
+    assert homogeneous_order(a*log(1/y) + a*log(x), x, y) == 0
+
 
 def test_1st_homogeneous_coeff_ode1():
     # Type: First order homogeneous, y'=f(y/x)
