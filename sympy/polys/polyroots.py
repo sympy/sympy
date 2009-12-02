@@ -113,10 +113,11 @@ def roots_quartic(f):
 
        Example::
 
-           >>> from sympy import var, Poly
-           >>> from sympy.polys.rootfinding import roots_quartic
-           >>> x = var('x')
-           >>> r = roots_quartic(Poly(x**4 -6*x**3 +17*x**2 -26*x +20, x))
+           >>> from sympy import Poly
+           >>> from sympy.polys.polyroots import roots_quartic
+
+           >>> r = roots_quartic(Poly('x**4-6*x**3+17*x**2-26*x+20'))
+
            >>> # 4 complex roots: 1+-I*sqrt(3), 2+-I
            >>> sorted(str(tmp.evalf(n=2)) for tmp in r)
            ['1.0 + 1.7*I', '1.0 - 1.7*I', '2.0 + I', '2.0 - 1.0*I']

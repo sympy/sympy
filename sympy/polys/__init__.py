@@ -31,7 +31,7 @@ from monomialtools import (
     monomials, monomial_count,
 )
 
-from rootfinding import (
+from polyroots import (
     RootOf, RootsOf, RootSum, roots,
 )
 

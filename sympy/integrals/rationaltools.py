@@ -4,7 +4,7 @@ from sympy import S, Add, Symbol, symbols, I, log, atan, \
     div, quo, resultant, roots, collect, solve, RootSum, Lambda, cancel
 
 from sympy.polys import Poly, subresultants, resultant
-from sympy.polys.rootfinding import number_of_real_roots
+from sympy.polys.polyroots import number_of_real_roots
 
 def ratint(f, x, **flags):
     """Performs indefinite integration of rational functions.

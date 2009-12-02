@@ -4,7 +4,7 @@ from sympy import S, symbols, Symbol, Integer, Rational, \
 
 from sympy.polys import Poly
 
-from sympy.polys.rootfinding import root_factors, roots_linear,  \
+from sympy.polys.polyroots import root_factors, roots_linear,  \
     roots_quadratic, roots_cubic, roots_quartic, roots_binomial, \
     roots_rational, roots, number_of_real_roots, RootOf, RootsOf, RootSum
 

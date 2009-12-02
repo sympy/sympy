@@ -281,7 +281,7 @@ def test_plotting2():
 #================== polys =======================
 from sympy.polys.polytools import Poly
 from sympy.polys.polyclasses import GFP, DUP, DMP, DMF, ANP
-from sympy.polys.rootfinding import RootOf, RootsOf, RootSum
+from sympy.polys.polyroots import RootOf, RootsOf, RootSum
 
 from sympy.polys.algebratools import (
     ZZ_python, ZZ_sympy, QQ_sympy,
