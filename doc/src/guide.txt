@@ -267,9 +267,12 @@ How to create a new function of a one variable::
         def eval(cls, arg):
             if isinstance(arg, Basic.NaN):
                 return S.NaN
-            if isinstance(arg, Basic.Zero): return S.One
-            if arg.is_positive: return S.One
-            if arg.is_negative: return S.NegativeOne
+            if isinstance(arg, Basic.Zero):
+                return S.Zero
+            if arg.is_positive:
+                return S.One
+            if arg.is_negative:
+                return S.NegativeOne
             if isinstance(arg, Basic.Mul):
                 coeff, terms = arg.as_coeff_terms()
                 if not isinstance(coeff, Basic.One):
