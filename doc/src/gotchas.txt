@@ -24,8 +24,7 @@ The equals sign (``=``) is the assignment operator, not an equality.  If you wan
 
 The proper use of the equals sign is to assign expressions to variables.  For example:
 
-    >>> from sympy import *
-    >>> x, y = symbols('x y')
+    >>> from sympy.abc import x, y
     >>> a = x - y
     >>> print a
     x - y
@@ -41,6 +40,7 @@ Double equals signs (``==``) are used to test equality.  However, this tests exp
 
 If you want to test for symbolic equality, one way is to subtract one expression from the other and run it through functions like :func:`expand`, :func:`simplify`, and :func:`trigsimp` and see if the equation reduces to 0.
 
+    >>> from sympy import simplify, cos, sin, expand
     >>> simplify((x + 1)**2 - (x**2 + 2*x + 1))
     0
     >>> simplify(sin(2*x) - 2*sin(x)*cos(x))
@@ -59,6 +59,7 @@ Variables Assignment does not Create a Relation Between Expressions
 -------------------------------------------------------------------
 When you use ``=`` to do assignment, remember that in Python, as in most programming languages, the variable does not change if you change the value you assigned to it.  The equations you are typing use the values present at the time of creation to "fill in" values, just like regular Python definitions. They are not altered by changes made afterwards. Consider the following:
 
+    >>> from sympy import Symbol
     >>> a = Symbol('a') # Create a Symbol named a, that is also stored in the variable "a"
     >>> b = a + 1       # Create another object, b, that refers to 'a'
     >>> print b
@@ -73,6 +74,7 @@ Changing quantity :obj:`a` does not change :obj:`b`; you are not working with a 
 a sympy object is the string that was given to it when it was created; that string does not have to
 be the same as the variable that you assign it to.
 
+    >>> from sympy import var
     >>> r, t, d = var('rate time short_life')
     >>> d = r*t
     >>> print d
@@ -142,12 +144,12 @@ Symbols
 -------
 Symbols are variables, and like all other variables, they need to be assigned before you can use them.  For example:
 
-    >>> from sympy import *
+    >>> import sympy
     >>> z**2 # z is not defined yet #doctest: +SKIP
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
     NameError: name 'z' is not defined
-    >>> var('z') # This is the easiest way to define z as a standard symbol
+    >>> sympy.var('z') # This is the easiest way to define z as a standard symbol
     z
     >>> z**2
     z**2
