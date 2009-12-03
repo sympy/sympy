@@ -1919,13 +1919,11 @@ def init_normal_ANP(rep, mod, dom):
                dup_normal(mod, dom), dom)
 
 class ANP(object):
-    """Dense Algebraic Number Polynomials over `Q`. """
+    """Dense Algebraic Number Polynomials over a field. """
 
     __slots__ = ['rep', 'mod', 'dom']
 
     def __init__(self, rep, mod, dom):
-        assert dom.is_QQ, "domain must be QQ"
-
         if type(rep) is dict:
             self.rep = dup_from_raw_dict(rep, dom)
         else:
@@ -1934,10 +1932,13 @@ class ANP(object):
 
             self.rep = dup_strip(rep)
 
-        if type(mod) is dict:
-            self.mod = dup_from_raw_dict(mod, dom)
+        if isinstance(mod, (DUP, DMP)):
+            self.mod = mod.rep
         else:
-            self.mod = dup_strip(mod)
+            if type(mod) is dict:
+                self.mod = dup_from_raw_dict(mod, dom)
+            else:
+                self.mod = dup_strip(mod)
 
         self.dom = dom
 
@@ -1967,7 +1968,7 @@ class ANP(object):
             G = dup_convert(g.rep, g.dom, dom)
 
             if dom != f.dom and dom != g.dom:
-                H = dup_convert(f.mod, f.dom, dom)
+                mod = dup_convert(f.mod, f.dom, dom)
             else:
                 if dom == f.dom:
                     H = f.mod
@@ -1976,28 +1977,28 @@ class ANP(object):
 
             per = lambda rep: ANP(rep, mod, dom)
 
-        return dom, per, F, G, H
+        return dom, per, F, G, mod
 
     def per(f, rep):
         return ANP(rep, f.mod, f.dom)
 
     @classmethod
-    def zero(cls, dom, mod):
+    def zero(cls, mod, dom):
         return ANP(0, mod, dom)
 
     @classmethod
-    def one(cls, dom, mod):
+    def one(cls, mod, dom):
         return ANP(1, mod, dom)
 
     def neg(f):
         return f.per(dup_neg(f.rep, f.dom))
 
     def add(f, g):
-        dom, per, F, G, H = f.unify(g)
+        dom, per, F, G, mod = f.unify(g)
         return per(dup_add(F, G, dom))
 
     def sub(f, g):
-        dom, per, F, G, H = f.unify(g)
+        dom, per, F, G, mod = f.unify(g)
         return per(dup_sub(F, G, dom))
 
     def mul(f, g):
@@ -2017,18 +2018,26 @@ class ANP(object):
             raise TypeError("`int` expected, got %s" % type(n))
 
     def div(f, g):
-        raise NotImplementedError
+        dom, per, F, G, mod = f.unify(g)
+        return (per(dup_rem(dup_mul(F, dup_invert(G, mod, dom), dom), mod, dom)), self.zero(mod, dom))
 
     def rem(f, g):
-        raise NotImplementedError
+        dom, _, _, _, mod = f.unify(g)
+        return self.zero(mod, dom)
 
     def quo(f, g):
         dom, per, F, G, mod = f.unify(g)
-
-        return per(dup_rem(dup_mul(F,
-            dup_invert(G, mod, dom), dom), mod, dom))
+        return per(dup_rem(dup_mul(F, dup_invert(G, mod, dom), dom), mod, dom))
 
     exquo = quo
+
+    def LC(f):
+        """Returns the leading coefficent of `f`. """
+        return dup_LC(f.rep, f.dom)
+
+    def TC(f):
+        """Returns the trailing coefficent of `f`. """
+        return dup_TC(f.rep, f.dom)
 
     @property
     def is_zero(f):

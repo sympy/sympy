@@ -138,6 +138,10 @@ class Algebra(object):
         """Convert a GMPY `mpq` object to `dtype`. """
         return None
 
+    def from_AlgebraicField(K1, a, K0):
+        """Convert a `ANP` object to `dtype`. """
+        return None
+
     def from_PolynomialRing(K1, a, K0):
         """Convert a `DMP` object to `dtype`. """
         if a.degree() <= 0:
@@ -998,15 +1002,104 @@ class AlgebraicField(Field):
 
     has_CharacteristicZero = True
 
-    def __init__(self, dom, *gens):
-        #if not dom.has
+    def __init__(self, dom, mod):
+        if not dom.has_Field:
+            raise DomainError("ground domain must be a field")
 
-        lev = len(gens) - 1
+        mod = mod.as_poly(domain=dom)
 
-        self.zero = self.dtype.zero(lev, dom)
-        self.one  = self.dtype.one(lev, dom)
+        if not mod.is_Poly or not mod.is_univariate:
+            raise PolynomialError("minimal polynomial must be univariate")
+
+        self.zero = self.dtype.zero(mod.rep, dom)
+        self.one  = self.dtype.one(mod.rep, dom)
 
         self.dom  = dom
+        self.mod  = mod
+
+    def __str__(self):
+        return str(self.dom) + '(' + str(self.mod) + ')'
+
+    def __hash__(self):
+        return hash((self.__class__.__name__, self.dtype, self.dom, self.mod))
+
+    def __call__(self, a):
+        """Construct an element of `self` domain from `a`. """
+        return ANP(a, self.mod.rep, self.dom)
+
+    def __eq__(self, other):
+        """Returns `True` if two algebras are equivalent. """
+        if self.dtype == other.dtype:
+            return self.mod == other.mod
+        else:
+            return False
+
+    def __ne__(self, other):
+        """Returns `False` if two algebras are equivalent. """
+        if self.dtype == other.dtype:
+            return self.mod != other.mod
+        else:
+            return True
+
+    def to_sympy(self, a):
+        """Convert `a` to a SymPy object. """
+        raise NotImplementedError('expression support')
+
+    def from_sympy(self, a):
+        """Convert SymPy's expression to `dtype`. """
+        raise NotImplementedError('expression support')
+
+    def from_ZZ_python(K1, a, K0):
+        """Convert a Python `int` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_QQ_python(K1, a, K0):
+        """Convert a Python `Fraction` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_ZZ_sympy(K1, a, K0):
+        """Convert a SymPy `Integer` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_QQ_sympy(K1, a, K0):
+        """Convert a SymPy `Rational` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_ZZ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpz` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_QQ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpq` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def get_ring(self):
+        """Returns a ring associated with `self`. """
+        raise DomainError("no associated ring")
+
+    def is_positive(self, a):
+        """Returns True if `a` is positive. """
+        return self.dom.is_positive(a.LC())
+
+    def is_negative(self, a):
+        """Returns True if `a` is negative. """
+        return self.dom.is_negative(a.LC())
+
+    def is_nonpositive(self, a):
+        """Returns True if `a` is non-positive. """
+        return self.dom.is_nonpositive(a.LC())
+
+    def is_nonnegative(self, a):
+        """Returns True if `a` is non-negative. """
+        return self.dom.is_nonnegative(a.LC())
+
+    def numer(self, a):
+        """Returns numerator of `a`. """
+        return a
+
+    def denom(self, a):
+        """Returns denominator of `a`. """
+        return self.one
 
 class PolynomialRing(Ring):
     """A class for representing multivariate polynomial rings. """
