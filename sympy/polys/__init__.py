@@ -7,7 +7,7 @@ from polytools import (
     half_gcdex, gcdex, invert,
     subresultants,
     resultant, discriminant,
-    cofactors, gcd, lcm,
+    cofactors, gcd, lcm, terms_gcd,
     monic, content, primitive,
     compose, decompose,
     sqf_part, sqf_list, sqf,

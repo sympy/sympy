@@ -7,7 +7,7 @@ from sympy.polys.polytools import (
     half_gcdex, gcdex, invert,
     subresultants,
     resultant, discriminant,
-    cofactors, gcd, lcm,
+    cofactors, gcd, lcm, terms_gcd,
     monic, content, primitive,
     compose, decompose,
     sqf_part, sqf_list, sqf,
@@ -155,6 +155,13 @@ def test_gcd():
 
 def test_lcm():
     pass
+
+def test_terms_gcd():
+    assert terms_gcd(1) == 1
+    assert terms_gcd(1, x) == 1
+
+    assert terms_gcd(x**3*y - x*y**3) == x*y*(x**2 - y**2)
+    assert terms_gcd(2*x**3*y - 2*x*y**3) == 2*x*y*(x**2 - y**2)
 
 def test_monic():
     pass

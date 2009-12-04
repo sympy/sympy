@@ -1,7 +1,7 @@
 """User-friendly public interface to polynomial functions. """
 
 from sympy.core import (
-    S, Basic, Integer, sympify,
+    S, Basic, Integer, Mul, sympify,
 )
 
 from sympy.core.decorators import (
@@ -1669,6 +1669,22 @@ def lcm(f, g, *gens, **args):
         return result.as_basic()
     else:
         return result
+
+def terms_gcd(f, *gens, **args):
+    """Remove GCD of terms from the polynomial `f`. """
+    F = Poly(f, *_analyze_gens(gens), **args)
+
+    if not F.is_Poly:
+        return f
+
+    J, result = F.terms_gcd()
+
+    if result.get_domain().has_Field:
+        C, result = result.LC(), result.monic()
+    else:
+        C, result = result.primitive()
+
+    return C * Mul(*[ x**j for x, j in zip(F.gens, J) ]) * result.as_basic()
 
 def monic(f, *gens, **args):
     """Divides all coefficients by `LC(f)`. """
