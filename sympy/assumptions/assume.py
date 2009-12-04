@@ -10,7 +10,7 @@ class AssumptionsContext(set):
     wrapper to Python's set, so see its documentation for advanced usage.
 
     Examples:
-        >>> from sympy import *
+        >>> from sympy import global_assumptions, Assume, Q
         >>> global_assumptions
         AssumptionsContext()
         >>> from sympy.abc import x

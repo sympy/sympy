@@ -88,14 +88,15 @@ def check_directory_tree_imports(p, exclude):
             file = open(fname, "r")
             try:
                 for idx, line in enumerate(file):
-                    if re.match("^\s*from.*import.*\*",line):
+                    if re.match("^\s*(>>>)? from .* import .*\*",line):
                         assert False, message_implicit % (fname, idx+1)
             finally:
                 file.close()
 
 def test_implicit_imports():
     """
-    Tests that all files except __init__.py use explicit imports.
+    Tests that all files except __init__.py use explicit imports,
+    even in the docstrings.
     """
     path = split(abspath(__file__))[0]
     path = path + sep + pardir + sep + pardir # go to sympy/
