@@ -1,8 +1,11 @@
+*.patch
+*.rej
 *.pyc
 *.pyo
 *.swp
 tags
 
+my/
 dist/
 build/
 
