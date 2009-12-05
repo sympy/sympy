@@ -946,6 +946,7 @@ class Matrix(object):
         (jacobian() should always work).
 
         Examples::
+
         >>> from sympy import sin, cos, Matrix
         >>> from sympy.abc import rho, phi
         >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
