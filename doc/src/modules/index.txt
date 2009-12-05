@@ -16,28 +16,28 @@ access any SymPy module, or use this contens:
 .. toctree::
    :maxdepth: 2
 
-   modules/core.txt
-   modules/concrete.txt
-   modules/evalf.txt
-   modules/functions.txt
-   modules/geometry.txt
-   modules/galgebra/GA/GAsympy.txt
-   modules/galgebra/latex_ex/latex_ex.txt
-   modules/integrals.txt
-   modules/logic.txt
-   modules/matrices.txt
-   modules/mpmath/index.txt
-   modules/polynomials.txt
-   modules/printing.txt
-   modules/plotting.txt
-   modules/queries.txt
-   modules/rewriting.txt
-   modules/series.txt
-   modules/simplify.txt
-   modules/statistics.txt
-   modules/solvers/ode.txt
-   modules/solvers/solvers.txt
-   modules/utilities/index.txt
+   core.txt
+   concrete.txt
+   evalf.txt
+   functions.txt
+   geometry.txt
+   galgebra/GA/GAsympy.txt
+   galgebra/latex_ex/latex_ex.txt
+   integrals.txt
+   logic.txt
+   matrices.txt
+   mpmath/index.txt
+   polynomials.txt
+   printing.txt
+   plotting.txt
+   queries.txt
+   rewriting.txt
+   series.txt
+   simplify.txt
+   statistics.txt
+   solvers/ode.txt
+   solvers/solvers.txt
+   utilities/index.txt
 
 Contributions to docs
 ---------------------
