@@ -68,7 +68,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Brian E. Granger: second quantization physics module
 #. Andrew Straw: lambdify() improvements
 #. Kaifeng Zhu: factorint() fix
-#. Ted Horst: Basic.__call__() fix
+#. Ted Horst: Basic.__call__() fix, pretty printing fix
 #. Akshay Srinivasan: Printing fix, improvements to integration
 #. Aaron Meurer: ODE solvers (GSoC 2009), other fixes
 #. Barry Wardell: implement series as function, several tests added
@@ -83,7 +83,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Nicolas Pourcelot: Infinity comparison fixes, latex fixes
 #. Ben Goodrich: Matrix.jacobian() function improvements and fixes
 #. Toon Verstraelen: code generation module
-#. Ronan Lamy: test coverage script; limit, expansion and other fixes
+#. Ronan Lamy: test coverage script; limit, expansion and other fixes and improvements; cleanup
 #. James Abbatiello: fixes tests on windows
 #. Ryan Krauss: fixes could_extract_minus_sign() and latex fixes
 #. Bill Flynn: substitution fixes
