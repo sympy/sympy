@@ -14,14 +14,14 @@
 import sys
 
 # If your extensions are in another directory, add it here.
-#sys.path.append('some/directory')
+sys.path.insert(0, '../..')
 
 # General configuration
 # ---------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-#extensions = []
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.pngmath']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = []
@@ -34,15 +34,16 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'mpmath'
-copyright = '2008, Fredrik Johansson'
+copyright = '2009, Fredrik Johansson'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.8'
+import mpmath
+version = mpmath.__version__
 # The full version, including alpha/beta/rc tags.
-release = '0.8'
+release = mpmath.__version__
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -120,7 +121,8 @@ htmlhelp_basename = 'mpmathdoc'
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, document class [howto/manual]).
-#latex_documents = []
+latex_documents = [master_doc, 'main.tex', 'mpmath documentation',
+                   'Fredrik Johansson \and mpmath contributors', 'manual']
 
 # Additional stuff for the LaTeX preamble.
 #latex_preamble = ''
@@ -130,3 +132,6 @@ htmlhelp_basename = 'mpmathdoc'
 
 # If false, no module index is generated.
 #latex_use_modindex = True
+
+default_role = 'math'
+pngmath_dvipng_args = ['-gamma 1.5', '-D 110']

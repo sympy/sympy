@@ -2,21 +2,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-mpmath
-======
+Welcome to mpmath's documentation!
+==================================
 
-Mpmath is a Python library for arbitrary-precision floating-point arithmetic.
-It is used in SymPy for any calculation with floating-point numbers.
-These pages documents mpmath's main features, with extensive use of examples
-that can be run in the interactive Python interpreter.
-
-The features shown apply for version 0.8 of mpmath. You can use it from SymPy
-easily as::
-
-    In [1]: from sympy.mpmath import mpf
-
-    In [2]: mpf("5.5")
-    Out[2]: mpf('5.5')
+Mpmath is a Python library for arbitrary-precision floating-point arithmetic. These pages documents mpmath's main features, with extensive use of examples that can be run in the interactive Python interpreter.
 
 For general information about mpmath, see the main page http://code.google.com/p/mpmath/
 
@@ -27,14 +16,9 @@ Contents:
 
    setup.txt
    basics.txt
-   functions.txt
+   functions/index.txt
+   calculus/index.txt
    intervals.txt
-   integration.txt
-   summation.txt
-   differentiation.txt
-   optimization.txt
-   limits.txt
-   interpolation.txt
+   matrices.txt
    identification.txt
    technical.txt
-   speedtricks.txt

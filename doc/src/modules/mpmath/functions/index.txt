@@ -1,0 +1,22 @@
+Mathematical functions
+======================
+
+Mpmath implements the standard functions from Python's ``math`` and ``cmath`` modules, for both real and complex numbers and with arbitrary precision. Many other functions are also available in mpmath, including commonly-used variants of standard functions (such as the alternative trigonometric functions sec, csc, cot), but also a large number of "special functions" such as the gamma function, the Riemann zeta function, error functions, Bessel functions, etc.
+
+.. toctree::
+   :maxdepth: 2
+
+   constants.txt
+   numberparts.txt
+   powers.txt
+   trigonometric.txt
+   hyperbolic.txt
+   gamma.txt
+   expintegrals.txt
+   bessel.txt
+   orthogonal.txt
+   hypergeometric.txt
+   elliptic.txt
+   zeta.txt
+   numtheory.txt
+

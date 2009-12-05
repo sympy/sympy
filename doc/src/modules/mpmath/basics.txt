@@ -1,14 +1,30 @@
 Mpmath basics
 =============
 
-In all interactive code examples that follow, it will be assumed that the main contents of the ``mpmath`` package have been imported with "``import *``".
+In interactive code examples that follow, it will be assumed that the main contents of the ``mpmath`` package have been imported with "``import *``".
 
     >>> from mpmath import *
 
-Mpmath numbers
---------------
+Number types
+------------
 
-Mpmath provides two main numerical types: ``mpf`` and ``mpc``. The ``mpf`` type is analogous to Python's built-in ``float``. It holds a real number or one of the special values ``inf`` (positive infinity), ``-inf`` (negative infinity) and ``nan`` (not-a-number, indicating an indeterminate result). You can create ``mpf`` instances from strings, integers, floats, and other ``mpf`` instances:
+Mpmath provides the following numerical types:
+
+    +------------+----------------+
+    | Class      | Description    |
+    +============+================+
+    | ``mpf``    | Real float     |
+    +------------+----------------+
+    | ``mpc``    | Complex float  |
+    +------------+----------------+
+    | ``mpi``    | Real interval  |
+    +------------+----------------+
+    | ``matrix`` | Matrix         |
+    +------------+----------------+
+
+The following section will provide a very short introduction to the types ``mpf`` and ``mpc``. Intervals and matrices are described further in the documentation chapters on interval arithmetic and matrices / linear algebra.
+
+The ``mpf`` type is analogous to Python's built-in ``float``. It holds a real number or one of the special values ``inf`` (positive infinity), ``-inf`` (negative infinity) and ``nan`` (not-a-number, indicating an indeterminate result). You can create ``mpf`` instances from strings, integers, floats, and other ``mpf`` instances:
 
     >>> mpf(4)
     mpf('4.0')
@@ -30,36 +46,25 @@ The ``mpc`` type represents a complex number in rectangular form as a pair of ``
 
 You can mix ``mpf`` and ``mpc`` instances with each other and with Python numbers:
 
-    >>> mp.dps = 15
     >>> mpf(3) + 2*mpf('2.5') + 1.0
     mpf('9.0')
+    >>> mp.dps = 15      # Set precision (see below)
     >>> mpc(1j)**0.5
     mpc(real='0.70710678118654757', imag='0.70710678118654757')
 
-Prettier output can be obtained by using ``str()`` or ``print``, which hide the ``mpf`` and ``mpc`` constructor signatures and suppress small rounding artifacts:
-
-    >>> mpf("3.14159")
-    mpf('3.1415899999999999')
-    >>> print mpf("3.14159")
-    3.14159
-    >>> print mpc(1j)**0.5
-    (0.707106781186548 + 0.707106781186548j)
 
 Setting the precision
 ---------------------
 
-Mpmath uses a global working precision; it does not keep track of the precision or accuracy of individual numbers. Performing an arithmetic operation or calling ``mpf()`` rounds the result to the current working precision. The working precision is controlled by a special object called ``mp``, which has the following default state:
+Mpmath uses a global working precision; it does not keep track of the precision or accuracy of individual numbers. Performing an arithmetic operation or calling ``mpf()`` rounds the result to the current working precision. The working precision is controlled by a context object called ``mp``, which has the following default state:
 
-    >>> mp
+    >>> print mp
     Mpmath settings:
       mp.prec = 53                [default: 53]
       mp.dps = 15                 [default: 15]
-      mp.rounding = 'nearest'     [default: 'nearest']
       mp.trap_complex = False     [default: False]
 
 The term **prec** denotes the binary precision (measured in bits) while **dps** (short for *decimal places*) is the decimal precision. Binary and decimal precision are related roughly according to the formula ``prec = 3.33*dps``. For example, it takes a precision of roughly 333 bits to hold an approximation of pi that is accurate to 100 decimal places (actually slightly more than 333 bits is used).
-
-The valid rounding modes are ``"nearest"``, ``"up"``, ``"down"``, ``"floor"``, and ``"ceiling"``. The default rounding mode (round to nearest) is the best setting for most purposes.
 
 Changing either precision property of the ``mp`` object automatically updates the other; usually you just want to change the ``dps`` value:
 
@@ -84,21 +89,9 @@ The precision of complex arithmetic is also controlled by the ``mp`` object:
     >>> mpc(1,2) / 3
     mpc(real='0.3333333333321', imag='0.6666666666642')
 
-The number of digits with which numbers are printed by default is determined by the working precision. To specify the number of digits to show without changing the working precision, use the ``nstr`` and ``nprint`` functions:
-
-    >>> mp.dps = 15
-    >>> a = mpf(1) / 6
-    >>> a
-    mpf('0.16666666666666666')
-    >>> nstr(a, 8)
-    '0.16666667'
-    >>> nprint(a, 8)
-    0.16666667
-    >>> nstr(a, 50)
-    '0.16666666666666665741480812812369549646973609924316'
-
 There is no restriction on the magnitude of numbers. An ``mpf`` can for example hold an approximation of a large Mersenne prime:
 
+    >>> mp.dps = 15
     >>> print mpf(2)**32582657 - 1
     1.24575026015369e+9808357
 
@@ -142,6 +135,29 @@ The ``workprec`` family of functions can also be used as function decorators:
     >>> f()
     mpf('0.33333331346511841')
 
+
+Some functions accept the ``prec`` and ``dps`` keyword arguments and this will override the global working precision. Note that this will not affect the precision at which the result is printed, so to get all digits, you must either use increase precision afterward when printing or use ``nstr``/``nprint``:
+
+    >>> mp.dps = 15
+    >>> print exp(1)
+    2.71828182845905
+    >>> print exp(1, dps=50)      # Extra digits won't be printed
+    2.71828182845905
+    >>> nprint(exp(1, dps=50), 50)
+    2.7182818284590452353602874713526624977572470937
+
+Finally, instead of using the global context object ``mp``, you can create custom contexts and work with methods of those instances instead of global functions. The working precision will be local to each context object:
+
+    >>> mp2 = mp.clone()
+    >>> mp.dps = 10
+    >>> mp2.dps = 20
+    >>> print mp.mpf(1) / 3
+    0.3333333333
+    >>> print mp2.mpf(1) / 3
+    0.33333333333333333333
+
+**Note**: the ability to create multiple contexts is a new feature that is only partially implemented. Not all mpmath functions are yet available as context-local methods. In the present version, you are likely to encounter bugs if you try mixing different contexts.
+
 Providing correct input
 -----------------------
 
@@ -154,5 +170,102 @@ Note that when creating a new ``mpf``, the value will at most be as accurate as 
     mpf('10.8999999999999999999999999999997')
     >>> mpf(109) / mpf(10)   # also good
     mpf('10.8999999999999999999999999999997')
+    >>> mp.dps = 15
 
 (Binary fractions such as 0.5, 1.5, 0.75, 0.125, etc, are generally safe as input, however, since those can be represented exactly by Python floats.)
+
+Printing
+--------
+
+By default, the ``repr()`` of a number includes its type signature. This way ``eval`` can be used to recreate a number from its string representation:
+
+    >>> eval(repr(mpf(2.5)))
+    mpf('2.5')
+
+Prettier output can be obtained by using ``str()`` or ``print``, which hide the ``mpf`` and ``mpc`` signatures and also suppress rounding artifacts in the last few digits:
+
+    >>> mpf("3.14159")
+    mpf('3.1415899999999999')
+    >>> print mpf("3.14159")
+    3.14159
+    >>> print mpc(1j)**0.5
+    (0.707106781186548 + 0.707106781186548j)
+
+Setting the ``mp.pretty`` option will use the ``str()``-style output for ``repr()`` as well:
+
+    >>> mp.pretty = True
+    >>> mpf(0.6)
+    0.6
+    >>> mp.pretty = False
+    >>> mpf(0.6)
+    mpf('0.59999999999999998')
+
+The number of digits with which numbers are printed by default is determined by the working precision. To specify the number of digits to show without changing the working precision, use the ``nstr`` and ``nprint`` functions:
+
+    >>> a = mpf(1) / 6
+    >>> a
+    mpf('0.16666666666666666')
+    >>> nstr(a, 8)
+    '0.16666667'
+    >>> nprint(a, 8)
+    0.16666667
+    >>> nstr(a, 50)
+    '0.16666666666666665741480812812369549646973609924316'
+
+Plotting
+--------
+
+If `matplotlib <http://matplotlib.sourceforge.net/>`_ is available, the functions ``plot`` and ``cplot`` in mpmath can be used to plot functions respectively as x-y graphs and in the complex plane.
+
+.. image:: plot.png
+
+Output of ``plot([cos, sin], [-4, 4])``
+
+.. autofunction:: mpmath.plot
+
+.. image:: cplot.png
+
+Output of ``cplot(gamma, points=10000)``
+
+.. autofunction:: mpmath.cplot
+
+Utility functions
+-----------------
+
+The following convenience functions are provided to simplify common tasks. (Mathematical functions with more specific applications are covered in later sections of the documentation.)
+
+Conversion and utilities for numbers
+....................................
+.. autofunction:: mpmath.mpmathify(x, strings=True)
+.. autofunction:: mpmath.almosteq(s, t, rel_eps=None, abs_eps=None)
+.. autofunction:: mpmath.isint(x)
+.. autofunction:: mpmath.isinf(x)
+.. autofunction:: mpmath.isnan(x)
+.. autofunction:: mpmath.absmin(x)
+.. autofunction:: mpmath.absmax(x)
+
+Arithmetic
+..........
+.. autofunction:: mpmath.fsum(terms, absolute=False, squared=False)
+.. autofunction:: mpmath.fprod(factors)
+.. autofunction:: mpmath.fdot(A, B=None)
+
+Number generation
+.................
+.. autofunction:: mpmath.fraction(p,q)
+.. autofunction:: mpmath.rand()
+.. autofunction:: mpmath.arange(*args)
+.. autofunction:: mpmath.linspace(*args, **kwargs)
+
+Rounding and printing
+.....................
+.. autofunction:: mpmath.chop(x, tol=None)
+.. autofunction:: mpmath.nstr(x, n=6, **kwargs)
+.. autofunction:: mpmath.nprint(x, n=6, **kwargs)
+
+Debugging
+.........
+.. autofunction:: mpmath.monitor
+.. autofunction:: mpmath.timing
+
+

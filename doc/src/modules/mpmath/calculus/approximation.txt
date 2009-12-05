@@ -1,0 +1,23 @@
+Function approximation
+----------------------
+
+Taylor series (``taylor``)
+..........................
+
+.. autofunction:: mpmath.calculus.taylor
+
+Pade approximation (``pade``)
+.............................
+
+.. autofunction:: mpmath.calculus.pade
+
+Chebyshev approximation (``chebyfit``)
+......................................
+
+.. autofunction:: mpmath.calculus.chebyfit
+
+Fourier series (``fourier``, ``fourierval``)
+............................................
+
+.. autofunction:: mpmath.calculus.fourier
+.. autofunction:: mpmath.calculus.fourierval

@@ -1,0 +1,90 @@
+Factorials and gamma functions
+------------------------------
+
+Factorials
+..........
+
+:func:`factorial`/:func:`fac`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: mpmath.functions.factorial(x, **kwargs)
+
+:func:`fac2`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.fac2(x)
+
+Binomial coefficients 
+....................................................
+
+:func:`binomial`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.binomial(n,k)
+
+
+Gamma function
+..............
+
+:func:`gamma`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.gamma(x, **kwargs)
+
+:func:`gammaprod`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.gammaprod(a, b)
+
+:func:`loggamma`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.loggamma(x)
+
+
+Rising and falling factorials
+.............................
+
+:func:`rf`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.rf(x,n)
+
+:func:`ff`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.ff(x,n)
+
+Beta function
+.............
+
+:func:`beta`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.beta(x,y)
+
+:func:`betainc`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.betainc(a,b,x1=0,x2=1,regularized=False)
+
+
+Super- and hyperfactorials
+..........................
+
+:func:`superfac`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.superfac(z)
+
+:func:`hyperfac`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hyperfac(z)
+
+:func:`barnesg`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.barnesg(z)
+
+
+Polygamma functions and harmonic numbers
+........................................
+
+:func:`psi`/:func:`digamma`/:func:`trigamma`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.psi(m, z)
+.. autofunction:: mpmath.functions.digamma(z)
+.. autofunction:: mpmath.functions.trigamma(z)
+
+:func:`harmonic`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.harmonic(z)

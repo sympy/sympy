@@ -1,0 +1,61 @@
+Number-theoretical, combinatorial and integer functions
+-------------------------------------------------------
+
+For factorial-type functions, including binomial coefficients,
+double factorials, etc., see the separate section of the documentation.
+
+
+Fibonacci numbers
+.................
+
+:func:`fibonacci`/:func:`fib`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.fibonacci(n, **kwargs)
+
+
+Bernoulli numbers and polynomials
+.................................
+
+:func:`bernoulli`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.bernoulli(n)
+
+:func:`bernfrac`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.bernfrac(n)
+
+:func:`bernpoly`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.bernpoly(n,z)
+
+
+Bell numbers and polynomials
+...........................................
+
+:func:`bell`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.bell(n,x)
+
+
+Prime counting functions
+........................
+
+:func:`primepi`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.primepi(x)
+
+:func:`primepi2`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.primepi2(x)
+
+:func:`riemannr`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.riemannr(x)
+
+
+Cyclotomic polynomials
+......................
+
+:func:`cyclotomic`
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.cyclotomic(n,x)

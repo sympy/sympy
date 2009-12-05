@@ -1,0 +1,100 @@
+Exponential integrals and error functions
+-----------------------------------------
+
+Incomplete gamma functions
+..........................
+
+:func:`gammainc`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.gammainc(z, a=0, b=inf, regularized=False)
+
+
+Exponential integrals
+.....................
+
+:func:`ei`
+^^^^^^^^^^
+.. autofunction:: mpmath.functions.ei(x, **kwargs)
+
+:func:`e1`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.e1(x, **kwargs)
+
+:func:`expint`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.expint(*args)
+
+
+Logarithmic integral
+....................
+
+:func:`li`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.li(x, **kwargs)
+
+
+Trigonometric integrals
+.......................
+
+:func:`ci`
+^^^^^^^^^^
+.. autofunction:: mpmath.functions.ci(x, **kwargs)
+
+:func:`si`
+^^^^^^^^^^
+.. autofunction:: mpmath.functions.si(x, **kwargs)
+
+
+Hyperbolic integrals
+....................
+
+:func:`chi`
+^^^^^^^^^^^
+.. autofunction:: mpmath.functions.chi(x, **kwargs)
+
+:func:`shi`
+^^^^^^^^^^^
+.. autofunction:: mpmath.functions.shi(x, **kwargs)
+
+
+Error functions
+...............
+
+:func:`erf`
+^^^^^^^^^^^
+.. autofunction:: mpmath.functions.erf(x, **kwargs)
+
+:func:`erfc`
+^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.erfc(x, **kwargs)
+
+:func:`erfi`
+^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.erfi(x)
+
+:func:`erfinv`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.erfinv(x)
+
+The normal distribution
+....................................................
+
+:func:`npdf`
+^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.npdf(x, mu=0, sigma=1)
+
+:func:`ncdf`
+^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.ncdf(x, mu=0, sigma=1)
+
+
+Fresnel integrals
+......................................................
+
+:func:`fresnels`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.fresnels(x)
+
+:func:`fresnelc`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.fresnelc(x)

@@ -1,0 +1,36 @@
+Sums, products, limits and extrapolation
+----------------------------------------
+
+Summation (``fsum``, ``nsum``, ``sumem``)
+.........................................
+
+.. autofunction:: mpmath.calculus.fsum
+.. autofunction:: mpmath.calculus.nsum
+.. autofunction:: mpmath.calculus.sumem
+
+Products (``fprod``, ``nprod``)
+...............................
+
+.. autofunction:: mpmath.calculus.fprod
+.. autofunction:: mpmath.calculus.nprod
+
+Limits (``limit``)
+..................
+
+.. autofunction:: mpmath.calculus.limit
+
+Extrapolation (``richardson``, ``shanks``)
+..........................................
+
+The following functions provide a direct interface to
+extrapolation algorithms. :func:`nsum` and :func:`limit` essentially
+work by calling the following functions with an increasing
+number of terms until the extrapolated limit is accurate enough.
+
+The following functions may be useful to call directly if the
+precise number of terms needed to achieve a desired accuracy is
+known in advance, or if one wishes to study the convergence
+properties of the algorithms.
+
+.. autofunction:: mpmath.calculus.richardson
+.. autofunction:: mpmath.calculus.shanks

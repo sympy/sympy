@@ -1,0 +1,81 @@
+Hypergeometric functions
+------------------------
+
+Common hypergeometric series
+............................
+
+For convenience, most of the hypergeometric series of low order are
+provided as standalone functions. They can equivalently be evaluated using
+:func:`hyper`. As will be demonstrated further in the individual docstrings,
+all the following functions implement analytic continuations and/or asymptotic
+expansions with respect to the argument `z`, thereby permitting evaluation
+anywhere in the complex plane. Functions of higher degree can be computed
+via :func:`hyper`, but generally only in rapidly convergent instances.
+
+:func:`hyp0f1`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hyp0f1(a, z)
+
+:func:`hyp1f1`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hyp1f1(a, b, z)
+
+:func:`hyp1f2`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hyp1f2(a1, b1, b2, z)
+
+:func:`hyp2f0`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hyp2f0(a, b, z)
+
+:func:`hyp2f1`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hyp2f1(a, b, c, z)
+
+:func:`hyp2f2`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hyp2f2(a1, a2, b1, b2, z)
+
+:func:`hyp2f3`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hyp2f3(a1, a2, b1, b2, b3, z)
+
+Generalized hypergeometric functions
+....................................
+
+:func:`hyper`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hyper(a_s, b_s, z)
+
+:func:`hypercomb`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hypercomb
+
+Confluent U and Whittaker functions
+...................................
+
+:func:`hyperu`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hyperu(a, b, z)
+
+:func:`whitm`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.whitm(k,m,z)
+
+:func:`whitw`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.whitw(k,m,z)
+
+Meijer G-function
+...................................
+
+:func:`meijerg`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.meijerg(a_s,b_s,z,r=1,**kwargs)
+
+Appell hypergeometric function of two variables
+...............................................
+
+:func:`appellf1`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.appellf1(a,b1,b2,c,x,y)

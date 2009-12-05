@@ -1,0 +1,100 @@
+Bessel functions and related functions
+--------------------------------------
+
+
+Bessel functions
+...................................................
+
+:func:`besselj` / :func:`j0` / :func:`j1`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: mpmath.functions.besselj(n,x,derivative=0)
+.. autofunction:: mpmath.functions.j0(x)
+.. autofunction:: mpmath.functions.j1(x)
+
+:func:`bessely`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.bessely(n,x,derivative=0)
+
+:func:`besseli`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.besseli(n,x,derivative=0)
+
+:func:`besselk`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.besselk(n,x)
+
+
+Hankel functions
+................
+
+:func:`hankel1`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hankel1(n,x)
+
+:func:`hankel2`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hankel2(n,x)
+
+
+Kelvin functions
+................
+
+:func:`ber`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.ber
+
+:func:`bei`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: mpmath.functions.bei
+
+:func:`ker`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.ker
+
+:func:`kei`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.kei
+
+
+Struve functions
+...................................................
+
+:func:`struveh`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.struveh
+
+:func:`struvel`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.struvel
+
+
+Airy functions
+...............................................
+
+:func:`airyai`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.airyai(x)
+
+:func:`airybi`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.airybi(x)
+
+
+Coulomb wave functions
+...............................................
+
+:func:`coulombf`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.coulombf(l,eta,z)
+
+:func:`coulombg`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.coulombg(l,eta,z)
+
+:func:`coulombc`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.coulombc(l,eta)
+
+

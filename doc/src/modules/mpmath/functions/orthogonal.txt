@@ -1,0 +1,57 @@
+Orthogonal polynomials
+----------------------
+
+Legendre functions
+.......................................
+
+:func:`legendre`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.legendre(n, x)
+
+:func:`legenp`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.legenp(n, m, z)
+
+:func:`legenq`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.legenq(n, m, z, version=2)
+
+Chebyshev polynomials
+.....................
+
+:func:`chebyt`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.chebyt(n, x)
+
+:func:`chebyu`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.chebyu(n, x)
+
+Jacobi polynomials
+..................
+
+:func:`jacobi`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.jacobi(n, a, b, z)
+
+Gegenbauer polynomials
+.....................................
+
+:func:`gegenbauer`
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.gegenbauer(n, a, z)
+
+Hermite polynomials
+.....................................
+
+:func:`hermite`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hermite(n, z)
+
+
+Laguerre polynomials
+.......................................
+
+:func:`laguerre`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.laguerre(n, a, z)

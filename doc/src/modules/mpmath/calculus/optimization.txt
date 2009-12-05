@@ -1,0 +1,29 @@
+Root-finding and optimization
+-----------------------------
+
+Root-finding (``findroot``)
+...........................
+
+.. autofunction:: mpmath.optimization.findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True, force_type=mpmathify, **kwargs)
+
+Solvers
+^^^^^^^
+
+.. autoclass:: mpmath.optimization.Secant
+.. autoclass:: mpmath.optimization.Newton
+.. autoclass:: mpmath.optimization.MNewton
+.. autoclass:: mpmath.optimization.Halley
+.. autoclass:: mpmath.optimization.Muller
+.. autoclass:: mpmath.optimization.Bisection
+.. autoclass:: mpmath.optimization.Illinois
+.. autoclass:: mpmath.optimization.Pegasus
+.. autoclass:: mpmath.optimization.Anderson
+.. autoclass:: mpmath.optimization.Ridder
+.. autoclass:: mpmath.optimization.ANewton
+.. autoclass:: mpmath.optimization.MDNewton
+
+
+.. Minimization and maximization (``findmin``, ``findmax``)
+.. ........................................................
+
+.. (To be added.)

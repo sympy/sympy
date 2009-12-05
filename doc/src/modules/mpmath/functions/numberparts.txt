@@ -1,0 +1,99 @@
+Arithmetic and number parts
+---------------------------
+
+Arithmetic operations
+.....................
+
+:func:`fadd`
+^^^^^^^^^^^^
+.. autofunction:: mpmath.mptypes.fadd
+
+:func:`fsub`
+^^^^^^^^^^^^
+.. autofunction:: mpmath.mptypes.fsub
+
+:func:`fneg`
+^^^^^^^^^^^^
+.. autofunction:: mpmath.mptypes.fneg
+
+:func:`fmul`
+^^^^^^^^^^^^
+.. autofunction:: mpmath.mptypes.fmul
+
+:func:`fdiv`
+^^^^^^^^^^^^
+.. autofunction:: mpmath.mptypes.fdiv
+
+
+Complex components
+..................
+
+:func:`fabs`
+^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.fabs(x)
+
+:func:`re`
+^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.re(x)
+
+:func:`im`
+^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.im(x)
+
+:func:`arg`
+^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.arg(x)
+
+:func:`conj`
+^^^^^^^^^^^^
+
+.. autofunction:: mpmath.functions.conj(x)
+
+
+Floor and ceiling functions
+...........................
+
+:func:`floor`
+^^^^^^^^^^^^^
+
+.. autofunction:: mpmath.functions.floor(x, **kwargs)
+
+:func:`ceil`
+^^^^^^^^^^^^
+
+.. autofunction:: mpmath.functions.ceil(x, **kwargs)
+
+
+Modulo
+....................................
+
+:func:`modf`
+^^^^^^^^^^^^
+
+.. autofunction:: mpmath.functions.modf(x, y)
+
+
+Exponent decomposition
+.....................................................
+
+:func:`ldexp`
+^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.ldexp(x, n)
+
+:func:`frexp`
+^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.frexp(x, n)
+
+
+Vector components
+................................................
+
+:func:`hypot`
+^^^^^^^^^^^^^
+
+.. autofunction:: mpmath.functions.hypot(x, y)
+
+:func:`atan2`
+^^^^^^^^^^^^^
+
+.. autofunction:: mpmath.functions.atan2(y, x)

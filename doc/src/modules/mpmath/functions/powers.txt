@@ -1,0 +1,73 @@
+Powers and logarithms
+---------------------
+
+Nth roots
+.........
+
+:func:`sqrt`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.sqrt(x, **kwargs)
+
+:func:`cbrt`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.cbrt(x, **kwargs)
+
+:func:`root`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.root(z, n, k=0)
+
+:func:`unitroots`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.unitroots(n, primitive=False)
+
+
+Exponentiation
+..............
+
+:func:`exp`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.exp(x, **kwargs)
+
+:func:`power`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.power(x, y)
+
+:func:`expm1`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.expm1(x)
+
+:func:`powm1`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.powm1(x, y)
+
+
+Logarithms
+..........
+
+:func:`log`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.log(x, b=None)
+
+:func:`ln`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.ln(x, **kwargs)
+
+:func:`log10`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.log10(x)
+
+
+Lambert W function
+...................................................
+
+:func:`lambertw`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.lambertw(z, k=0)
+
+
+Arithmetic-geometric mean
+.......................................
+
+:func:`agm`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.agm(a, b=1)

@@ -1,0 +1,93 @@
+Zeta functions, L-series and polylogarithms
+-------------------------------------------
+
+This section includes the Riemann zeta functions
+and associated functions pertaining to analytic number theory.
+
+Riemann zeta function
+.....................
+
+:func:`zeta`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.zeta(s)
+
+
+Hurwitz zeta function
+.....................
+
+:func:`hurwitz`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.hurwitz(s,a,derivative=0)
+
+
+Zeta-type L-functions
+.....................
+
+:func:`altzeta`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.altzeta(s)
+
+:func:`dirichletl`
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.dirichlet(s,chi,derivative=0)
+
+:func:`primezeta`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.primezeta(s)
+
+Zeta function zeros
+......................................
+
+:func:`zetazero`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.zetazero(n, url='http://www.dtc.umn.edu/~odlyzko/zeta_tables/zeros1')
+
+Riemann-Siegel functions and Gram points
+........................................
+
+These functions are used for the study of the Riemann zeta function
+in the critical strip.
+
+:func:`siegelz`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.siegelz(t)
+
+:func:`siegeltheta`
+^^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.siegeltheta(t)
+
+:func:`grampoint`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.grampoint(n)
+
+Stieltjes constants
+...................
+
+:func:`stieltjes`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.stieltjes(n,a=1)
+
+Polylogarithms
+................................
+
+:func:`polylog`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.polylog(s,z)
+
+Clausen functions
+.................
+
+:func:`clsin`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.clsin(s, z)
+
+:func:`clcos`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.clcos(s, z)
+
+Polyexponentials
+..................................
+
+:func:`polyexp`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.polyexp(s,z)

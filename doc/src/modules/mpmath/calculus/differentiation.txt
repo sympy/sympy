@@ -1,0 +1,13 @@
+Differentiation
+---------------
+
+Numerical derivatives (``diff``, ``diffs``)
+...........................................
+
+.. autofunction:: mpmath.calculus.diff
+.. autofunction:: mpmath.calculus.diffs
+
+Fractional derivatives / differintegration (``differint``)
+............................................................
+
+.. autofunction:: mpmath.calculus.differint

@@ -1,0 +1,56 @@
+Hyperbolic functions
+--------------------
+
+Hyperbolic functions
+....................
+
+:func:`cosh`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.cosh(x, **kwargs)
+
+:func:`sinh`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.sinh(x, **kwargs)
+
+:func:`tanh`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.tanh(x, **kwargs)
+
+:func:`sech`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.sech(x)
+
+:func:`csch`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.csch(x)
+
+:func:`coth`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.coth(x)
+
+Inverse hyperbolic functions
+............................
+
+:func:`acosh`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.acosh(x, **kwargs)
+
+:func:`asinh`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.asinh(x, **kwargs)
+
+:func:`atanh`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.atanh(x, **kwargs)
+
+:func:`asech`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.asech(x)
+
+:func:`acsch`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.acsch(x)
+
+:func:`acoth`
+^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.functions.acoth(x)

@@ -1,216 +1,25 @@
 Number identification
 =====================
 
-Almost all function in mpmath are concerned with producing approximations from exact mathematical formulas. It is also useful to consider the inverse problem: given only a decimal approximation for a number, such as 0.7320508075688772935274463, is it possible to find an exact formula?
+Most function in mpmath are concerned with producing approximations from exact mathematical formulas. It is also useful to consider the inverse problem: given only a decimal approximation for a number, such as 0.7320508075688772935274463, is it possible to find an exact formula?
 
-Subject to certain restrictions, such "reverse engineering" is indeed possible thanks to the existence of *integer relation algorithms*. Mpmath implements the PSLQ algorithm (developed by H. Ferguson), which is perhaps the best known integer relation algorithm.
+Subject to certain restrictions, such "reverse engineering" is indeed possible thanks to the existence of *integer relation algorithms*. Mpmath implements the PSLQ algorithm (developed by H. Ferguson), which is one such algorithm.
 
-Automated number recognition based on PSLQ does have limited power. Any occurring transcendental constants (pi, e, etc) must be guessed by the user, and the relation between those constants in the formula must be linear (such as x = 3*pi + 4*e). More complex formulas can be found by combining PSLQ with functional transformations; however, this is only feasible to a limited extent since the computation time grows exponentially with the number of operations that need to be combined.
+Automated number recognition based on PSLQ is not a silver bullet. Any occurring transcendental constants (`\pi`, `e`, etc) must be guessed by the user, and the relation between those constants in the formula must be linear (such as `x = 3 \pi + 4 e`). More complex formulas can be found by combining PSLQ with functional transformations; however, this is only feasible to a limited extent since the computation time grows exponentially with the number of operations that need to be combined.
 
 The number identification facilities in mpmath are inspired by the `Inverse Symbolic Calculator <http://oldweb.cecm.sfu.ca/projects/ISC/ISCmain.html>`_ (ISC). The ISC is more powerful than mpmath, as it uses a lookup table of millions of precomputed constants (thereby mitigating the problem with exponential complexity).
 
 Constant recognition (``identify``)
 -----------------------------------
 
-``identify(x, constants=[])`` attempts to find a formula that expresses ``x`` in terms of the given base constants. It searches for matching formulas of the following types:
-
-1. Fractions
-2. Quadratic algebraic numbers
-3. Rational linear combinations of the base constants
-4. Any of the above after first transforming x into f(x) where f(x) is 1/x, sqrt(x), x^2, log(x) or exp(x), either directly or with x or f(x) multiplied or divided by one of the base constants
-5. Products of fractional powers of the base constants and small integers
-
-The constants should be specified as strings representing valid mpmath expressions.
-
-Simple examples
-...............
-
-Here is one (carefully prepared) example of each type of formula listed above:
-
-    >>> from mpmath import *
-    >>> mp.dps = 25
-    >>> bases = ['pi', 'e']
-    >>> identify('3.14285714285714285714285714286', bases)
-    '(22/7)'
-    >>> identify('1.61803398874989484820458683437', bases)
-    '((1+sqrt(5))/2)'
-    >>> identify('13.049153732048106695868313445', bases)
-    '(3*pi + (4/3)*e)'
-    >>> identify('0.88137358701954302523260932498', bases)
-    'log(((2+sqrt(8))/2))'
-    >>> identify('2.14990849617352175383504427507', bases)
-    '5**(1/3)*pi**(1/5)'
-
-Using a dict of constants:
-
-    >>> identify(pi+e, {'a':pi+2, 'b':2*e})
-    '((-2) + 1*a + (1/2)*b)'
-
-Things to consider
-..................
-
-* The input ``x`` must be a real number. All base constants must be positive real numbers and must not be rationals or rational linear combinations of each other.
-
-* The worst-case computation time grows quickly with the number of base constants. Already with 3 or 4 base constants, ``identify`` may require several seconds to finish; perhaps a minute in the worst case. To search for relations among a larger number of constants, you should consider using ``pslq()`` directly (see below).
-
-* High precision should be used; preferrably at least 25-50 digits. If the precision is too low, ``identify`` will find spurious solutions. Of course, this can be fine if you are just looking for approximate matches.
-
-* The extended transformations are applied to x, not the constants separately. As a result, ``identify`` will for example be able to recognize ``exp(2*pi+3)`` with ``pi`` given as a base constant, but not ``2*exp(pi)+3``. It will be able to recognize the latter if ``exp(pi)`` is given explicitly as a base constant.
-
-* The returned formula can be evaluated as a Python expression. Note, however, that Python will evaluate the formula erroneously if it contains integer fractions.
-
-Finding many solutions
-......................
-
-By default, ``identify`` stops as soon as it finds a match. With ``full=True``, it will continue applying transformations, and return a list of all matches:
-
-    >>> for s in identify('0.1', full=True):
-    ...     print s
-    1/10
-    (1/10)
-    1/(2*5)
-    1/sqrt(100)
-    sqrt((1/100))
-    (sqrt(40)/20)**2
-    1/(sqrt(40)/2)**2
-
-Note that the formulas are sorted by length. Consequentially, the first one in the list will often be the mathematically simplest one. The first formula in the list is *not* necessarily the same one as the formula returned by ``identify`` with ``full=False``.
-
-Finding approximate solutions
-.............................
-
-The ``tolerance`` setting can be changed in order to find approximate matches. We can for example try to generate approximations for pi:
-
-    >>> mp.dps = 15
-    >>> identify(pi, tolerance=1e-2)
-    '(22/7)'
-    >>> identify(pi, tolerance=1e-3)
-    '(355/113)'
-    >>> identify(pi, tolerance=1e-10)
-    '(5**(339/269))/(2**(64/269)*3**(13/269)*7**(92/269))'
-
-With ``full=True``, and by supplying a few base constants, ``identify`` can generate almost endless lists of approximations for any number (the output below has been truncated to show only the first few):
-
-    >>> for p in identify(pi, ['e', 'catalan'], tolerance=1e-5, full=True):
-    ...     print p
-    ...  # doctest: +ELLIPSIS
-    e/log((6 + (-4/3)*e))
-    (3**3*5*e*catalan**2)/(2*7**2)
-    sqrt(((-13) + 1*e + 22*catalan))
-    log(((-6) + 24*e + 4*catalan)/e)
-    exp(catalan*((-1/5) + (8/15)*e))
-    catalan*(6 + (-6)*e + 15*catalan)
-    sqrt((5 + 26*e + (-3)*catalan))/e
-    e*sqrt(((-27) + 2*e + 25*catalan))
-    log(((-1) + (-11)*e + 59*catalan))
-    ((3/20) + (21/20)*e + (3/20)*catalan)
-    ...
-
-The numerical values are roughly as close to pi as permitted by the specified tolerance:
-
-    >>> print e/log(6-4*e/3)
-    3.14157719846001
-    >>> print 135*e*catalan**2/98
-    3.14166950419369
-    >>> print sqrt(e-13+22*catalan)
-    3.14158000062992
-    >>> print log(24*e-6+4*catalan)-1
-    3.14158791577159
-
-Neat examples
-.............
-
-Many transcendental functions can be evaluated in terms of common mathematical constants at special points. Examples include the gamma function at half-integers, its derivative at positive integers, and the Riemann zeta function at even integers:
-
-    >>> mp.dps = 40
-    >>> identify(gamma(2.5), ['pi'])
-    'sqrt(((9/16)*pi))'
-    >>> identify(diff(gamma, 3), ['euler'])
-    '(3 + (-2)*euler)'
-    >>> identify(zeta(6), ['pi'])
-    '(pi**6)/(3**3*5*7)'
-
-Formulas generated by ``identify`` can be parsed by SymPy. This is useful since the raw output from ``identify`` often needs cleanup:
-
-    >>> from sympy import pprint, sympify
-    >>> pprint(sympify(identify(zeta(6), ['pi'])))
-      6
-    pi 
-    ---
-    945
-
-On the other hand, ``identify`` can be used to simplify expressions that are too complicated for SymPy to deal with directly:
-
-    >>> mp.dps = 25
-    >>> x = sympify('-1/(-3/2+(1/2)*5**(1/2))*(3/2-1/2*5**(1/2))**(1/2)')
-    >>> pprint(sympify(identify(str(x.evalf()), full=True)[0]))
-            ___
-          \/ 5 
-    1/2 + -----
-            2  
+.. autofunction:: mpmath.identification.identify
 
 Algebraic identification (``findpoly``)
 ---------------------------------------
 
-``findpoly(x,n)`` returns a list of integer coefficients for a polynomial of degree at most n having x as a root. By default (degree n = 1), it simply finds a linear polynomial with a rational root:
-
-    >>> mp.dps = 15
-    >>> findpoly(0.7)
-    [7, -10]
-
-Numbers of the form ``m + n*sqrt(p)`` are solutions to quadratic equations:
-
-    >>> findpoly(1+sqrt(2), 2)
-    [-1, -2, 1]
-
-The following gives an algebraic approximation of pi (judging from the coefficients, pi is not very good at being an algebraic number):
-
-    >>> findpoly(pi, 3)
-    [-457, -2658, -1734, 836]
-
-The generated coefficient list is valid input to ``polyval`` and ``polyroots``:
-
-    >>> polyval(findpoly(pi,3), pi)
-    mpf('3.205968823749572e-11')
-    >>> for r in polyroots(findpoly(pi, 3)):
-    ...     print r
-    -0.866652458240562
-    -0.200777515923391
-    3.14159265358979
-
-When identifying exact algebraic numbers, the precision must be set very high to avoid false solutions:
-
-    >>> mp.dps = 50
-    >>> findpoly(sqrt(2)+sqrt(3), 4)
-    [-8917, -1498, -6860, 2618]
-    >>> mp.dps = 100
-    >>> findpoly(sqrt(2)+sqrt(3), 4)
-    [1, 0, -10, 0, 1]
+.. autofunction:: mpmath.identification.findpoly
 
 Integer relations (``pslq``)
 ----------------------------
 
-``pslq([x1,x2,...,xn])`` returns a list of integers ``[c1,c2,...,cn]`` such that c1*x1 + x2*x2 + ... + cn*xn = 0 approximately. In other words, it determines whether x1, x2, ..., xn, with coefficients allowed by the working precision, are linearly dependent over the rational numbers. It returns ``None`` on failure.
-
-We can use it to verify Takano's Machin-like formula, which expresses pi using inverse cotangent values as pi/4 = 12*acot(49)+32*acot(57)-5*acot(239)+12*acot(110443):
-
-    >>> mp.dps = 30
-    >>> pslq([pi/4, acot(49), acot(57), acot(239), acot(110443)])
-    [1, -12, -32, 5, -12]
-
-We could try to generate a custom Machin-like formula by running the PSLQ algorithm with a few inverse cotangent values, for example acot(2), acot(3) ... acot(10). Unfortunately, there is a linear independence among these values, resulting in a zero coefficient for pi:
-
-    >>> pslq([pi] + [acot(n) for n in range(2,11)])
-    [0, 1, -1, 0, 0, 0, -1, 0, 0, 0]
-
-We get some better luck by removing a few of them:
-
-    >>> pslq([pi] + [acot(n) for n in range(2,11) if n not in (3, 5)])
-    [1, -8, 0, 0, 4, 0, 0, 0]
-
-In other words, we found the following formula:
-
-    >>> print 8*acot(2) - 4*acot(7)
-    3.14159265358979323846264338328
-    >>> print pi
-    3.14159265358979323846264338328
+.. autofunction:: mpmath.identification.pslq
