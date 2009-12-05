@@ -938,9 +938,10 @@ class Matrix(object):
         """
         Calculates the Jacobian matrix (derivative of a vectorial function).
 
-        self ... a vector of expressions representing functions f_i(x_1, ...,
-                        x_n).
-        X ...... is the set of x_i's in order, it can be a list or a Matrix
+        *self*
+            A vector of expressions representing functions f_i(x_1, ..., x_n).
+        *X*
+            The set of x_i's in order, it can be a list or a Matrix
 
         Both self and X can be a row or a column matrix in any order
         (jacobian() should always work).
@@ -955,7 +956,6 @@ class Matrix(object):
         [cos(phi), -rho*sin(phi)]
         [sin(phi),  rho*cos(phi)]
         [   2*rho,             0]
-
         >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
         >>> X.jacobian(Y)
         [cos(phi), -rho*sin(phi)]
