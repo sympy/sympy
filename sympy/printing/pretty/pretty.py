@@ -666,6 +666,6 @@ def pretty_print(expr, use_unicode=None):
 
     pprint is just a shortcut for this function
     """
-    print pretty(expr, use_unicode)
+    print pretty(expr, use_unicode = use_unicode)
 
 pprint = pretty_print

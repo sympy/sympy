@@ -2,7 +2,7 @@
 
 from sympy import symbols, Symbol, sin, cos, Matrix, Integral, pi, sqrt,\
         Function, Rational, tan, oo, Limit, ceiling, floor, conjugate, exp, I
-from sympy.printing.pretty import pretty
+from sympy.printing.pretty import pretty, pprint
 
 x,y,k = symbols('xyk')
 th  = Symbol('theta')
@@ -406,3 +406,13 @@ u"""\
 """
     assert u == s
 
+def test_upprint():
+    import StringIO, sys
+    fd = StringIO.StringIO()
+    sso = sys.stdout
+    sys.stdout = fd
+    try:
+        pprint(pi, use_unicode=True)
+    finally:
+        sys.stdout = sso
+    assert fd.getvalue() == u'\u03c0\n'

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sympy import Symbol, Matrix, Integral, log, Rational, Derivative, exp, \
         sqrt, pi, Function, sin, cos, pprint_use_unicode, oo, Eq, Le, \
-        Gt, Ne, Limit, factorial, gamma, conjugate, I, Piecewise, S
+        Gt, Ne, Limit, factorial, gamma, conjugate, I, Piecewise, S, pprint
 from sympy.printing.pretty import pretty as xpretty
 
 x = Symbol('x')
@@ -351,3 +351,14 @@ def test_pretty_no_wrap_line():
 
 def test_pretty_str():
     assert xpretty('a\nb') == 'a\nb'
+
+def test_pprint():
+    import StringIO, sys
+    fd = StringIO.StringIO()
+    sso = sys.stdout
+    sys.stdout = fd
+    try:
+        pprint(pi, use_unicode=False)
+    finally:
+        sys.stdout = sso
+    assert fd.getvalue() == 'pi\n'
