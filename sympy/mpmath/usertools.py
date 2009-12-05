@@ -9,7 +9,7 @@ def monitor(f, input='print', output='print'):
     count::
 
         >>> from mpmath import *
-        >>> mp.dps = 5
+        >>> mp.dps = 5; mp.pretty = False
         >>> diff(monitor(exp), 1)   # diff will eval f(x-h) and f(x+h)
         in  0 (mpf('0.99999999906867742538452148'),) {}
         out 0 mpf('2.7182818259274480055282064')

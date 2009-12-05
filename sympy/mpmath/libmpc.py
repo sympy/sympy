@@ -20,7 +20,7 @@ from libmpf import (\
 )
 
 from libelefun import (\
-    mpf_pi, mpf_exp, mpf_log, cos_sin, cosh_sinh, mpf_tan,
+    mpf_pi, mpf_exp, mpf_log, cos_sin, cosh_sinh, mpf_tan, mpf_pow_int,
     mpf_log_hypot,
     mpf_cos_sin_pi, mpf_phi,
     mpf_atan, mpf_atan2, mpf_cosh, mpf_sinh, mpf_tanh,
@@ -235,12 +235,25 @@ def mpc_pow_mpf(z, p, prec, rnd=round_fast):
     return mpc_exp(mpc_mul_mpf(mpc_log(z, prec+10), p, prec+10), prec, rnd)
 
 def mpc_pow_int(z, n, prec, rnd=round_fast):
+    a, b = z
+    if b == fzero:
+        return mpf_pow_int(a, n, prec, rnd), fzero
+    if a == fzero:
+        v = mpf_pow_int(b, n, prec, rnd)
+        n %= 4
+        if n == 0:
+            return v, fzero
+        elif n == 1:
+            return fzero, v
+        elif n == 2:
+            return mpf_neg(v), fzero
+        elif n == 3:
+            return fzero, mpf_neg(v)
     if n == 0: return mpc_one
     if n == 1: return mpc_pos(z, prec, rnd)
     if n == 2: return mpc_square(z, prec, rnd)
     if n == -1: return mpc_reciprocal(z, prec, rnd)
     if n < 0: return mpc_reciprocal(mpc_pow_int(z, -n, prec+4), prec, rnd)
-    a, b = z
     asign, aman, aexp, abc = a
     bsign, bman, bexp, bbc = b
     if asign: aman = -aman

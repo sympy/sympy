@@ -1,40 +1,26 @@
-from mptypes import (mp, mpf, mpmathify, inf,
-   eps, nstr, make_mpf, AS_POINTS, fdot)
-
-from functions import pi, exp, log, ldexp
-
-from libmpf import mpf_neg
-
 import math
 
-def NEG(x):
-    return make_mpf(mpf_neg(x._mpf_))
-
-class Quadrature(object):
+class QuadratureRule(object):
     """
     Quadrature rules are implemented using this class, in order to
     simplify the code and provide a common infrastructure
     for tasks such as error estimation and node caching.
 
     You can implement a custom quadrature rule by subclassing
-    :class:`Quadrature` and implementing the appropriate
+    :class:`QuadratureRule` and implementing the appropriate
     methods. The subclass can then be used by :func:`quad` by
     passing it as the *method* argument.
 
-    :class:`Quadrature` instances are supposed to be singletons.
-    :class:`Quadrature` therefore implements instance caching
+    :class:`QuadratureRule` instances are supposed to be singletons.
+    :class:`QuadratureRule` therefore implements instance caching
     in :func:`__new__`.
     """
 
-    def __new__(cls):
-        if hasattr(cls, "_instance"):
-            return cls._instance
-        self = object.__new__(cls)
+    def __init__(self, ctx):
+        self.ctx = ctx
         self.standard_cache = {}
         self.transformed_cache = {}
         self.interval_count = {}
-        cls._instance = self
-        return self
 
     def clear(self):
         """
@@ -66,9 +52,9 @@ class Quadrature(object):
         key = (a, b, degree, prec)
         if key in self.transformed_cache:
             return self.transformed_cache[key]
-        orig = mp.prec
+        orig = self.ctx.prec
         try:
-            mp.prec = prec+20
+            self.ctx.prec = prec+20
             # Get nodes on standard interval
             if (degree, prec) in self.standard_cache:
                 nodes = self.standard_cache[degree, prec]
@@ -82,7 +68,7 @@ class Quadrature(object):
             else:
                 self.interval_count[key] = True
         finally:
-            mp.prec = orig
+            self.ctx.prec = orig
         return nodes
 
     def transform_nodes(self, nodes, a, b, verbose=False):
@@ -101,15 +87,16 @@ class Quadrature(object):
             [-\infty, \infty] : t = \frac{x}{\sqrt{1-x^2}}
 
         """
-        a = mpmathify(a)
-        b = mpmathify(b)
-        one = mpf(1)
+        ctx = self.ctx
+        a = ctx.convert(a)
+        b = ctx.convert(b)
+        one = ctx.one
         if (a, b) == (-one, one):
             return nodes
-        half = mpf(0.5)
+        half = ctx.mpf(0.5)
         new_nodes = []
-        if (a, b) == (-inf, inf):
-            p05 = mpf(-0.5)
+        if (a, b) == (ctx.ninf, ctx.inf):
+            p05 = -half
             for x, w in nodes:
                 x2 = x*x
                 px1 = one-x2
@@ -117,14 +104,14 @@ class Quadrature(object):
                 x = x*spx1
                 w *= spx1/px1
                 new_nodes.append((x, w))
-        elif a == -inf:
+        elif a == ctx.ninf:
             b1 = b+1
             for x, w in nodes:
                 u = 2/(x+one)
                 x = b1-u
                 w *= half*u**2
                 new_nodes.append((x, w))
-        elif b == inf:
+        elif b == ctx.inf:
             a1 = a-1
             for x, w in nodes:
                 u = 2/(x+one)
@@ -171,7 +158,8 @@ class Quadrature(object):
         experimentation and will sometimes be wrong.
         """
         # Expected degree
-        g = int(4 + max(0, log(prec/30.0, 2)))
+        # XXX: use mag
+        g = int(4 + max(0, self.ctx.log(prec/30.0, 2)))
         # Reasonable "worst case"
         g += 2
         return g
@@ -196,14 +184,14 @@ class Quadrature(object):
             return abs(results[0]-results[1])
         try:
             if results[-1] == results[-2] == results[-3]:
-                return mpf(0)
-            D1 = log(abs(results[-1]-results[-2]), 10)
-            D2 = log(abs(results[-1]-results[-3]), 10)
+                return self.ctx.zero
+            D1 = self.ctx.log(abs(results[-1]-results[-2]), 10)
+            D2 = self.ctx.log(abs(results[-1]-results[-3]), 10)
         except ValueError:
             return epsilon
         D3 = -prec
         D4 = min(0, max(D1**2/D2, 2*D1, D3))
-        return mpf(10) ** int(D4)
+        return self.ctx.mpf(10) ** int(D4)
 
     def summation(self, f, points, prec, epsilon, max_degree, verbose=False):
         """
@@ -215,7 +203,8 @@ class Quadrature(object):
         :func:`summation` transforms each subintegration to
         the standard interval and then calls :func:`sum_next`.
         """
-        I = err = mpf(0)
+        ctx = self.ctx
+        I = err = ctx.zero
         for i in xrange(len(points)-1):
             a, b = points[i], points[i+1]
             if a == b:
@@ -223,23 +212,23 @@ class Quadrature(object):
             # XXX: we could use a single variable transformation,
             # but this is not good in practice. We get better accuracy
             # by having 0 as an endpoint.
-            if (a, b) == (-inf, inf):
+            if (a, b) == (ctx.ninf, ctx.inf):
                 _f = f
-                f = lambda x: _f(NEG(x)) + _f(x)
-                a, b = (mpf(0), inf)
+                f = lambda x: _f(ctx.fneg(x,exact=True)) + _f(x)
+                a, b = (ctx.zero, ctx.inf)
             results = []
             for degree in xrange(1, max_degree+1):
                 nodes = self.get_nodes(a, b, degree, prec, verbose)
                 if verbose:
                     print "Integrating from %s to %s (degree %s of %s)" % \
-                        (nstr(a), nstr(b), degree, max_degree)
+                        (ctx.nstr(a), ctx.nstr(b), degree, max_degree)
                 results.append(self.sum_next(f, nodes, degree, prec, results, verbose))
                 if degree > 1:
                     err = self.estimate_error(results, prec, epsilon)
                     if err <= epsilon:
                         break
                     if verbose:
-                        print "Estimated error:", nstr(err)
+                        print "Estimated error:", ctx.nstr(err)
             I += results[-1]
         if err > epsilon:
             if verbose:
@@ -255,10 +244,10 @@ class Quadrature(object):
         values computed by :func:`sum_next` at previous degrees, in
         case the quadrature rule is able to reuse them.
         """
-        return fdot((w, f(x)) for (x,w) in nodes)
+        return self.ctx.fdot((w, f(x)) for (x,w) in nodes)
 
 
-class TanhSinh(Quadrature):
+class TanhSinh(QuadratureRule):
     r"""
     This class implements "tanh-sinh" or "doubly exponential"
     quadrature. This quadrature rule is based on the Euler-Maclaurin
@@ -299,13 +288,13 @@ class TanhSinh(Quadrature):
         abscissas from degree `m-1`. Thus reusing the result from
         the previous level allows a 2x speedup.
         """
-        h = mpf(2)**(-degree)
+        h = self.ctx.mpf(2)**(-degree)
         # Abscissas overlap, so reusing saves half of the time
         if previous:
             S = previous[-1]/(h*2)
         else:
-            S = mpf(0)
-        S += fdot((w,f(x)) for (x,w) in nodes)
+            S = self.ctx.zero
+        S += self.ctx.fdot((w,f(x)) for (x,w) in nodes)
         return h*S
 
     def calc_nodes(self, degree, prec, verbose=False):
@@ -323,33 +312,34 @@ class TanhSinh(Quadrature):
         list of nodes is actually infinite, but the weights die off so
         rapidly that only a few are needed.
         """
+        ctx = self.ctx
         nodes = []
 
         extra = 20
-        mp.prec += extra
-        eps = ldexp(1, -prec-10)
-        pi4 = pi/4
+        ctx.prec += extra
+        tol = ctx.ldexp(1, -prec-10)
+        pi4 = ctx.pi/4
 
         # For simplicity, we work in steps h = 1/2^n, with the first point
         # offset so that we can reuse the sum from the previous degree
 
         # We define degree 1 to include the "degree 0" steps, including
         # the point x = 0. (It doesn't work well otherwise; not sure why.)
-        t0 = ldexp(1, -degree)
+        t0 = ctx.ldexp(1, -degree)
         if degree == 1:
             #nodes.append((mpf(0), pi4))
             #nodes.append((-mpf(0), pi4))
-            nodes.append((mpf(0), pi/2))
+            nodes.append((ctx.zero, ctx.pi/2))
             h = t0
         else:
             h = t0*2
 
         # Since h is fixed, we can compute the next exponential
         # by simply multiplying by exp(h)
-        expt0 = exp(t0)
+        expt0 = ctx.exp(t0)
         a = pi4 * expt0
         b = pi4 / expt0
-        udelta = exp(h)
+        udelta = ctx.exp(h)
         urdelta = 1/udelta
 
         for k in xrange(0, 20*2**degree+1):
@@ -359,18 +349,18 @@ class TanhSinh(Quadrature):
             # w = pi/2 * cosh(t) / cosh(pi/2 * sinh(t))**2
 
             # Fast implementation. Note that c = exp(pi/2 * sinh(t))
-            c = exp(a-b)
+            c = ctx.exp(a-b)
             d = 1/c
             co = (c+d)/2
             si = (c-d)/2
             x = si / co
             w = (a+b) / co**2
             diff = abs(x-1)
-            if diff <= eps:
+            if diff <= tol:
                 break
 
             nodes.append((x, w))
-            nodes.append((NEG(x), w))
+            nodes.append((ctx.fneg(x,exact=True), w))
 
             a *= udelta
             b *= urdelta
@@ -379,13 +369,13 @@ class TanhSinh(Quadrature):
                 # Note: the number displayed is rather arbitrary. Should
                 # figure out how to print something that looks more like a
                 # percentage
-                print "Calculating nodes:", nstr(-log(diff, 10) / prec)
+                print "Calculating nodes:", ctx.nstr(-ctx.log(diff, 10) / prec)
 
-        mp.prec -= extra
+        ctx.prec -= extra
         return nodes
 
 
-class GaussLegendre(Quadrature):
+class GaussLegendre(QuadratureRule):
     """
     This class implements Gauss-Legendre quadrature, which is
     exceptionally efficient for polynomials and polynomial-like (i.e.
@@ -414,25 +404,26 @@ class GaussLegendre(Quadrature):
         Calculates the abscissas and weights for Gauss-Legendre
         quadrature of degree of given degree (actually `3 \cdot 2^m`).
         """
+        ctx = self.ctx
         # It is important that the epsilon is set lower than the
         # "real" epsilon
-        epsilon = ldexp(1, -prec-8)
+        epsilon = ctx.ldexp(1, -prec-8)
         # Fairly high precision might be required for accurate
         # evaluation of the roots
-        orig = mp.prec
-        mp.prec = int(prec*1.5)
+        orig = ctx.prec
+        ctx.prec = int(prec*1.5)
         if degree == 1:
-            x = mpf(3)/5
-            w = mpf(5)/9
-            nodes = [(-x,w),(mpf(0),mpf(8)/9),(x,w)]
-            mp.prec = orig
+            x = ctx.mpf(3)/5
+            w = ctx.mpf(5)/9
+            nodes = [(-x,w),(ctx.zero,ctx.mpf(8)/9),(x,w)]
+            ctx.prec = orig
             return nodes
         nodes = []
         n = 3*2**(degree-1)
         upto = n//2 + 1
         for j in xrange(1, upto):
             # Asymptotic formula for the roots
-            r = mpf(math.cos(math.pi*(j-0.25)/(n+0.5)))
+            r = ctx.mpf(math.cos(math.pi*(j-0.25)/(n+0.5)))
             # Newton iteration
             while 1:
                 t1, t2 = 1, 0
@@ -451,548 +442,560 @@ class GaussLegendre(Quadrature):
             if verbose  and j % 30 == 15:
                 print "Computing nodes (%i of %i)" % (j, upto)
             nodes.append((x, w))
-            nodes.append((NEG(x), w))
-        mp.prec = orig
+            nodes.append((ctx.fneg(x,exact=True), w))
+        ctx.prec = orig
         return nodes
 
-def quad(f, *points, **kwargs):
-    r"""
-    Computes a single, double or triple integral over a given
-    1D interval, 2D rectangle, or 3D cuboid. A basic example::
+class QuadratureMethods:
 
-        >>> from mpmath import *
-        >>> mp.dps = 15
-        >>> print quad(sin, [0, pi])
-        2.0
+    def __init__(ctx, *args, **kwargs):
+        ctx._gauss_legendre = GaussLegendre(ctx)
+        ctx._tanh_sinh = TanhSinh(ctx)
 
-    A basic 2D integral::
+    def quad(ctx, f, *points, **kwargs):
+        r"""
+        Computes a single, double or triple integral over a given
+        1D interval, 2D rectangle, or 3D cuboid. A basic example::
 
-        >>> f = lambda x, y: cos(x+y/2)
-        >>> print quad(f, [-pi/2, pi/2], [0, pi])
-        4.0
+            >>> from mpmath import *
+            >>> mp.dps = 15; mp.pretty = True
+            >>> quad(sin, [0, pi])
+            2.0
 
-    **Interval format**
+        A basic 2D integral::
 
-    The integration range for each dimension may be specified
-    using a list or tuple. Arguments are interpreted as follows:
+            >>> f = lambda x, y: cos(x+y/2)
+            >>> quad(f, [-pi/2, pi/2], [0, pi])
+            4.0
 
-    ``quad(f, [x1, x2])`` -- calculates
-    `\int_{x_1}^{x_2} f(x) \, dx`
+        **Interval format**
 
-    ``quad(f, [x1, x2], [y1, y2])`` -- calculates
-    `\int_{x_1}^{x_2} \int_{y_1}^{y_2} f(x,y) \, dy \, dx`
+        The integration range for each dimension may be specified
+        using a list or tuple. Arguments are interpreted as follows:
 
-    ``quad(f, [x1, x2], [y1, y2], [z1, z2])`` -- calculates
-    `\int_{x_1}^{x_2} \int_{y_1}^{y_2} \int_{z_1}^{z_2} f(x,y,z)
-    \, dz \, dy \, dx`
+        ``quad(f, [x1, x2])`` -- calculates
+        `\int_{x_1}^{x_2} f(x) \, dx`
 
-    Endpoints may be finite or infinite. An interval descriptor
-    may also contain more than two points. In this
-    case, the integration is split into subintervals, between
-    each pair of consecutive points. This is useful for
-    dealing with mid-interval discontinuities, or integrating
-    over large intervals where the function is irregular or
-    oscillates.
+        ``quad(f, [x1, x2], [y1, y2])`` -- calculates
+        `\int_{x_1}^{x_2} \int_{y_1}^{y_2} f(x,y) \, dy \, dx`
 
-    **Options**
+        ``quad(f, [x1, x2], [y1, y2], [z1, z2])`` -- calculates
+        `\int_{x_1}^{x_2} \int_{y_1}^{y_2} \int_{z_1}^{z_2} f(x,y,z)
+        \, dz \, dy \, dx`
 
-    :func:`quad` recognizes the following keyword arguments:
+        Endpoints may be finite or infinite. An interval descriptor
+        may also contain more than two points. In this
+        case, the integration is split into subintervals, between
+        each pair of consecutive points. This is useful for
+        dealing with mid-interval discontinuities, or integrating
+        over large intervals where the function is irregular or
+        oscillates.
 
-    *method*
-        Chooses integration algorithm (described below).
-    *error*
-        If set to true, :func:`quad` returns `(v, e)` where `v` is the
-        integral and `e` is the estimated error.
-    *maxdegree*
-        Maximum degree of the quadrature rule to try before
-        quitting.
-    *verbose*
-        Print details about progress.
+        **Options**
 
-    **Algorithms**
+        :func:`quad` recognizes the following keyword arguments:
 
-    Mpmath presently implements two integration algorithms: tanh-sinh
-    quadrature and Gauss-Legendre quadrature. These can be selected
-    using *method='tanh-sinh'* or *method='gauss-legendre'* or by
-    passing the classes *method=TanhSinh*, *method=GaussLegendre*.
-    The functions :func:`quadts` and :func:`quadgl` are also available
-    as shortcuts.
+        *method*
+            Chooses integration algorithm (described below).
+        *error*
+            If set to true, :func:`quad` returns `(v, e)` where `v` is the
+            integral and `e` is the estimated error.
+        *maxdegree*
+            Maximum degree of the quadrature rule to try before
+            quitting.
+        *verbose*
+            Print details about progress.
 
-    Both algorithms have the property that doubling the number of
-    evaluation points roughly doubles the accuracy, so both are ideal
-    for high precision quadrature (hundreds or thousands of digits).
+        **Algorithms**
 
-    At high precision, computing the nodes and weights for the
-    integration can be expensive (more expensive than computing the
-    function values). To make repeated integrations fast, nodes
-    are automatically cached.
+        Mpmath presently implements two integration algorithms: tanh-sinh
+        quadrature and Gauss-Legendre quadrature. These can be selected
+        using *method='tanh-sinh'* or *method='gauss-legendre'* or by
+        passing the classes *method=TanhSinh*, *method=GaussLegendre*.
+        The functions :func:`quadts` and :func:`quadgl` are also available
+        as shortcuts.
 
-    The advantages of the tanh-sinh algorithm are that it tends to
-    handle endpoint singularities well, and that the nodes are cheap
-    to compute on the first run. For these reasons, it is used by
-    :func:`quad` as the default algorithm.
+        Both algorithms have the property that doubling the number of
+        evaluation points roughly doubles the accuracy, so both are ideal
+        for high precision quadrature (hundreds or thousands of digits).
 
-    Gauss-Legendre quadrature often requires fewer function
-    evaluations, and is therefore often faster for repeated use, but
-    the algorithm does not handle endpoint singularities as well and
-    the nodes are more expensive to compute. Gauss-Legendre quadrature
-    can be a better choice if the integrand is smooth and repeated
-    integrations are required (e.g. for multiple integrals).
+        At high precision, computing the nodes and weights for the
+        integration can be expensive (more expensive than computing the
+        function values). To make repeated integrations fast, nodes
+        are automatically cached.
 
-    See the documentation for :class:`TanhSinh` and
-    :class:`GaussLegendre` for additional details.
+        The advantages of the tanh-sinh algorithm are that it tends to
+        handle endpoint singularities well, and that the nodes are cheap
+        to compute on the first run. For these reasons, it is used by
+        :func:`quad` as the default algorithm.
 
-    **Examples of 1D integrals**
+        Gauss-Legendre quadrature often requires fewer function
+        evaluations, and is therefore often faster for repeated use, but
+        the algorithm does not handle endpoint singularities as well and
+        the nodes are more expensive to compute. Gauss-Legendre quadrature
+        can be a better choice if the integrand is smooth and repeated
+        integrations are required (e.g. for multiple integrals).
 
-    Intervals may be infinite or half-infinite. The following two
-    examples evaluate the limits of the inverse tangent function
-    (`\int 1/(1+x^2) = \tan^{-1} x`), and the Gaussian integral
-    `\int_{\infty}^{\infty} \exp(-x^2)\,dx = \sqrt{\pi}`::
+        See the documentation for :class:`TanhSinh` and
+        :class:`GaussLegendre` for additional details.
 
-        >>> mp.dps = 15
-        >>> print quad(lambda x: 2/(x**2+1), [0, inf])
-        3.14159265358979
-        >>> print quad(lambda x: exp(-x**2), [-inf, inf])**2
-        3.14159265358979
+        **Examples of 1D integrals**
 
-    Integrals can typically be resolved to high precision.
-    The following computes 50 digits of `\pi` by integrating the
-    area of the half-circle defined by `x^2 + y^2 \le 1`,
-    `-1 \le x \le 1`, `y \ge 0`::
+        Intervals may be infinite or half-infinite. The following two
+        examples evaluate the limits of the inverse tangent function
+        (`\int 1/(1+x^2) = \tan^{-1} x`), and the Gaussian integral
+        `\int_{\infty}^{\infty} \exp(-x^2)\,dx = \sqrt{\pi}`::
 
-        >>> mp.dps = 50
-        >>> print 2*quad(lambda x: sqrt(1-x**2), [-1, 1])
-        3.1415926535897932384626433832795028841971693993751
+            >>> mp.dps = 15
+            >>> quad(lambda x: 2/(x**2+1), [0, inf])
+            3.14159265358979
+            >>> quad(lambda x: exp(-x**2), [-inf, inf])**2
+            3.14159265358979
 
-    One can just as well compute 1000 digits (output truncated)::
+        Integrals can typically be resolved to high precision.
+        The following computes 50 digits of `\pi` by integrating the
+        area of the half-circle defined by `x^2 + y^2 \le 1`,
+        `-1 \le x \le 1`, `y \ge 0`::
 
-        >>> mp.dps = 1000
-        >>> print 2*quad(lambda x: sqrt(1-x**2), [-1, 1])  #doctest:+ELLIPSIS
-        3.141592653589793238462643383279502884...216420198
+            >>> mp.dps = 50
+            >>> 2*quad(lambda x: sqrt(1-x**2), [-1, 1])
+            3.1415926535897932384626433832795028841971693993751
 
-    Complex integrals are supported. The following computes
-    a residue at `z = 0` by integrating counterclockwise along the
-    diamond-shaped path from `1` to `+i` to `-1` to `-i` to `1`::
+        One can just as well compute 1000 digits (output truncated)::
 
-        >>> mp.dps = 15
-        >>> print quad(lambda z: 1/z, [1,j,-1,-j,1])
-        (0.0 + 6.28318530717959j)
+            >>> mp.dps = 1000
+            >>> 2*quad(lambda x: sqrt(1-x**2), [-1, 1])  #doctest:+ELLIPSIS
+            3.141592653589793238462643383279502884...216420198
 
-    **Examples of 2D and 3D integrals**
+        Complex integrals are supported. The following computes
+        a residue at `z = 0` by integrating counterclockwise along the
+        diamond-shaped path from `1` to `+i` to `-1` to `-i` to `1`::
 
-    Here are several nice examples of analytically solvable
-    2D integrals (taken from MathWorld [1]) that can be evaluated
-    to high precision fairly rapidly by :func:`quad`::
+            >>> mp.dps = 15
+            >>> quad(lambda z: 1/z, [1,j,-1,-j,1])
+            (0.0 + 6.28318530717959j)
 
-        >>> mp.dps = 30
-        >>> f = lambda x, y: (x-1)/((1-x*y)*log(x*y))
-        >>> print quad(f, [0, 1], [0, 1])
-        0.577215664901532860606512090082
-        >>> print euler
-        0.577215664901532860606512090082
+        **Examples of 2D and 3D integrals**
 
-        >>> f = lambda x, y: 1/sqrt(1+x**2+y**2)
-        >>> print quad(f, [-1, 1], [-1, 1])
-        3.17343648530607134219175646705
-        >>> print 4*log(2+sqrt(3))-2*pi/3
-        3.17343648530607134219175646705
+        Here are several nice examples of analytically solvable
+        2D integrals (taken from MathWorld [1]) that can be evaluated
+        to high precision fairly rapidly by :func:`quad`::
 
-        >>> f = lambda x, y: 1/(1-x**2 * y**2)
-        >>> print quad(f, [0, 1], [0, 1])
-        1.23370055013616982735431137498
-        >>> print pi**2 / 8
-        1.23370055013616982735431137498
+            >>> mp.dps = 30
+            >>> f = lambda x, y: (x-1)/((1-x*y)*log(x*y))
+            >>> quad(f, [0, 1], [0, 1])
+            0.577215664901532860606512090082
+            >>> +euler
+            0.577215664901532860606512090082
 
-        >>> print quad(lambda x, y: 1/(1-x*y), [0, 1], [0, 1])
-        1.64493406684822643647241516665
-        >>> print pi**2 / 6
-        1.64493406684822643647241516665
+            >>> f = lambda x, y: 1/sqrt(1+x**2+y**2)
+            >>> quad(f, [-1, 1], [-1, 1])
+            3.17343648530607134219175646705
+            >>> 4*log(2+sqrt(3))-2*pi/3
+            3.17343648530607134219175646705
 
-    Multiple integrals may be done over infinite ranges::
+            >>> f = lambda x, y: 1/(1-x**2 * y**2)
+            >>> quad(f, [0, 1], [0, 1])
+            1.23370055013616982735431137498
+            >>> pi**2 / 8
+            1.23370055013616982735431137498
 
-        >>> mp.dps = 15
-        >>> print quad(lambda x,y: exp(-x-y), [0, inf], [1, inf])
-        0.367879441171442
-        >>> print 1/e
-        0.367879441171442
+            >>> quad(lambda x, y: 1/(1-x*y), [0, 1], [0, 1])
+            1.64493406684822643647241516665
+            >>> pi**2 / 6
+            1.64493406684822643647241516665
 
-    For nonrectangular areas, one can call :func:`quad` recursively.
-    For example, we can replicate the earlier example of calculating
-    `\pi` by integrating over the unit-circle, and actually use double
-    quadrature to actually measure the area circle::
+        Multiple integrals may be done over infinite ranges::
 
-        >>> f = lambda x: quad(lambda y: 1, [-sqrt(1-x**2), sqrt(1-x**2)])
-        >>> print quad(f, [-1, 1])
-        3.14159265358979
+            >>> mp.dps = 15
+            >>> print quad(lambda x,y: exp(-x-y), [0, inf], [1, inf])
+            0.367879441171442
+            >>> print 1/e
+            0.367879441171442
 
-    Here is a simple triple integral::
+        For nonrectangular areas, one can call :func:`quad` recursively.
+        For example, we can replicate the earlier example of calculating
+        `\pi` by integrating over the unit-circle, and actually use double
+        quadrature to actually measure the area circle::
 
-        >>> mp.dps = 15
-        >>> f = lambda x,y,z: x*y/(1+z)
-        >>> print quad(f, [0,1], [0,1], [1,2], method='gauss-legendre')
-        0.101366277027041
-        >>> print (log(3)-log(2))/4
-        0.101366277027041
+            >>> f = lambda x: quad(lambda y: 1, [-sqrt(1-x**2), sqrt(1-x**2)])
+            >>> quad(f, [-1, 1])
+            3.14159265358979
 
-    **Singularities**
+        Here is a simple triple integral::
 
-    Both tanh-sinh and Gauss-Legendre quadrature are designed to
-    integrate smooth (infinitely differentiable) functions. Neither
-    algorithm copes well with mid-interval singularities (such as
-    mid-interval discontinuities in `f(x)` or `f'(x)`).
-    The best solution is to split the integral into parts::
+            >>> mp.dps = 15
+            >>> f = lambda x,y,z: x*y/(1+z)
+            >>> quad(f, [0,1], [0,1], [1,2], method='gauss-legendre')
+            0.101366277027041
+            >>> (log(3)-log(2))/4
+            0.101366277027041
 
-        >>> mp.dps = 15
-        >>> print quad(lambda x: abs(sin(x)), [0, 2*pi])   # Bad
-        3.99900894176779
-        >>> print quad(lambda x: abs(sin(x)), [0, pi, 2*pi])  # Good
-        4.0
+        **Singularities**
 
-    The tanh-sinh rule often works well for integrands having a
-    singularity at one or both endpoints::
+        Both tanh-sinh and Gauss-Legendre quadrature are designed to
+        integrate smooth (infinitely differentiable) functions. Neither
+        algorithm copes well with mid-interval singularities (such as
+        mid-interval discontinuities in `f(x)` or `f'(x)`).
+        The best solution is to split the integral into parts::
 
-        >>> mp.dps = 15
-        >>> print quad(log, [0, 1], method='tanh-sinh')  # Good
-        -1.0
-        >>> print quad(log, [0, 1], method='gauss-legendre')  # Bad
-        -0.999932197413801
+            >>> mp.dps = 15
+            >>> quad(lambda x: abs(sin(x)), [0, 2*pi])   # Bad
+            3.99900894176779
+            >>> quad(lambda x: abs(sin(x)), [0, pi, 2*pi])  # Good
+            4.0
 
-    However, the result may still be inaccurate for some functions::
+        The tanh-sinh rule often works well for integrands having a
+        singularity at one or both endpoints::
 
-        >>> print quad(lambda x: 1/sqrt(x), [0, 1], method='tanh-sinh')
-        1.99999999946942
+            >>> mp.dps = 15
+            >>> quad(log, [0, 1], method='tanh-sinh')  # Good
+            -1.0
+            >>> quad(log, [0, 1], method='gauss-legendre')  # Bad
+            -0.999932197413801
 
-    This problem is not due to the quadrature rule per se, but to
-    numerical amplification of errors in the nodes. The problem can be
-    circumvented by temporarily increasing the precision::
+        However, the result may still be inaccurate for some functions::
 
-        >>> mp.dps = 30
-        >>> a = quad(lambda x: 1/sqrt(x), [0, 1], method='tanh-sinh')
-        >>> mp.dps = 15
-        >>> print +a
-        2.0
+            >>> quad(lambda x: 1/sqrt(x), [0, 1], method='tanh-sinh')
+            1.99999999946942
 
-    **Highly variable functions**
+        This problem is not due to the quadrature rule per se, but to
+        numerical amplification of errors in the nodes. The problem can be
+        circumvented by temporarily increasing the precision::
 
-    For functions that are smooth (in the sense of being infinitely
-    differentiable) but contain sharp mid-interval peaks or many
-    "bumps", :func:`quad` may fail to provide full accuracy. For
-    example, with default settings, :func:`quad` is able to integrate
-    `\sin(x)` accurately over an interval of length 100 but not over
-    length 1000::
+            >>> mp.dps = 30
+            >>> a = quad(lambda x: 1/sqrt(x), [0, 1], method='tanh-sinh')
+            >>> mp.dps = 15
+            >>> +a
+            2.0
 
-        >>> print quad(sin, [0, 100]), 1-cos(100)   # Good
-        0.137681127712316 0.137681127712316
-        >>> print quad(sin, [0, 1000]), 1-cos(1000)   # Bad
-        -37.8587612408485 0.437620923709297
+        **Highly variable functions**
 
-    One solution is to break the integration into 10 intervals of
-    length 100::
+        For functions that are smooth (in the sense of being infinitely
+        differentiable) but contain sharp mid-interval peaks or many
+        "bumps", :func:`quad` may fail to provide full accuracy. For
+        example, with default settings, :func:`quad` is able to integrate
+        `\sin(x)` accurately over an interval of length 100 but not over
+        length 1000::
 
-        >>> print quad(sin, linspace(0, 1000, 10))   # Good
-        0.437620923709297
+            >>> quad(sin, [0, 100]); 1-cos(100)   # Good
+            0.137681127712316
+            0.137681127712316
+            >>> quad(sin, [0, 1000]); 1-cos(1000)   # Bad
+            -37.8587612408485
+            0.437620923709297
 
-    Another is to increase the degree of the quadrature::
+        One solution is to break the integration into 10 intervals of
+        length 100::
 
-        >>> print quad(sin, [0, 1000], maxdegree=10)   # Also good
-        0.437620923709297
+            >>> quad(sin, linspace(0, 1000, 10))   # Good
+            0.437620923709297
 
-    Whether splitting the interval or increasing the degree is
-    more efficient differs from case to case. Another example is the
-    function `1/(1+x^2)`, which has a sharp peak centered around
-    `x = 0`::
+        Another is to increase the degree of the quadrature::
 
-        >>> f = lambda x: 1/(1+x**2)
-        >>> print quad(f, [-100, 100])   # Bad
-        3.64804647105268
-        >>> print quad(f, [-100, 100], maxdegree=10)   # Good
-        3.12159332021646
-        >>> print quad(f, [-100, 0, 100])   # Also good
-        3.12159332021646
+            >>> quad(sin, [0, 1000], maxdegree=10)   # Also good
+            0.437620923709297
 
-    **References**
+        Whether splitting the interval or increasing the degree is
+        more efficient differs from case to case. Another example is the
+        function `1/(1+x^2)`, which has a sharp peak centered around
+        `x = 0`::
 
-    1. http://mathworld.wolfram.com/DoubleIntegral.html
+            >>> f = lambda x: 1/(1+x**2)
+            >>> quad(f, [-100, 100])   # Bad
+            3.64804647105268
+            >>> quad(f, [-100, 100], maxdegree=10)   # Good
+            3.12159332021646
+            >>> quad(f, [-100, 0, 100])   # Also good
+            3.12159332021646
 
-    """
-    rule = kwargs.get('method', TanhSinh)
-    if type(rule) is str:
-        rule = {'tanh-sinh':TanhSinh, 'gauss-legendre':GaussLegendre}[rule]
-    rule = rule()
-    verbose = kwargs.get('verbose')
-    dim = len(points)
-    orig = prec = mp.prec
-    epsilon = eps/8
-    m = kwargs.get('maxdegree') or rule.guess_degree(prec)
-    points = [AS_POINTS(p) for p in points]
-    try:
-        mp.prec += 20
-        if dim == 1:
-            v, err = rule.summation(f, points[0], prec, epsilon, m, verbose)
-        elif dim == 2:
-            v, err = rule.summation(lambda x: \
-                    rule.summation(lambda y: f(x,y), \
-                    points[1], prec, epsilon, m)[0],
-                points[0], prec, epsilon, m, verbose)
-        elif dim == 3:
-            v, err = rule.summation(lambda x: \
-                    rule.summation(lambda y: \
-                        rule.summation(lambda z: f(x,y,z), \
-                        points[2], prec, epsilon, m)[0],
-                    points[1], prec, epsilon, m)[0],
-                points[0], prec, epsilon, m, verbose)
+        **References**
+
+        1. http://mathworld.wolfram.com/DoubleIntegral.html
+
+        """
+        rule = kwargs.get('method', TanhSinh)
+        if type(rule) is str:
+            if rule == 'tanh-sinh':
+                rule = ctx._tanh_sinh
+            elif rule == 'gauss-legendre':
+                rule = ctx._gauss_legendre
+            else:
+                raise ValueError("unknown quadrature rule: %s" % rule)
         else:
-            raise NotImplementedError("quadrature must have dim 1, 2 or 3")
-    finally:
-        mp.prec = orig
-    if kwargs.get("error"):
-        return +v, err
-    return +v
+            rule = rule(ctx)
+        verbose = kwargs.get('verbose')
+        dim = len(points)
+        orig = prec = ctx.prec
+        epsilon = ctx.eps/8
+        m = kwargs.get('maxdegree') or rule.guess_degree(prec)
+        points = [ctx.AS_POINTS(p) for p in points]
+        try:
+            ctx.prec += 20
+            if dim == 1:
+                v, err = rule.summation(f, points[0], prec, epsilon, m, verbose)
+            elif dim == 2:
+                v, err = rule.summation(lambda x: \
+                        rule.summation(lambda y: f(x,y), \
+                        points[1], prec, epsilon, m)[0],
+                    points[0], prec, epsilon, m, verbose)
+            elif dim == 3:
+                v, err = rule.summation(lambda x: \
+                        rule.summation(lambda y: \
+                            rule.summation(lambda z: f(x,y,z), \
+                            points[2], prec, epsilon, m)[0],
+                        points[1], prec, epsilon, m)[0],
+                    points[0], prec, epsilon, m, verbose)
+            else:
+                raise NotImplementedError("quadrature must have dim 1, 2 or 3")
+        finally:
+            ctx.prec = orig
+        if kwargs.get("error"):
+            return +v, err
+        return +v
 
-# XXX
-type(mp).quad = staticmethod(quad)
+    def quadts(ctx, *args, **kwargs):
+        """
+        Performs tanh-sinh quadrature. The call
 
-def quadts(*args, **kwargs):
-    """
-    Performs tanh-sinh quadrature. The call
+            quadts(func, *points, ...)
 
-        quadts(func, *points, ...)
+        is simply a shortcut for:
 
-    is simply a shortcut for:
+            quad(func, *points, ..., method=TanhSinh)
 
-        quad(func, *points, ..., method=TanhSinh)
+        For example, a single integral and a double integral:
 
-    For example, a single integral and a double integral:
+            quadts(lambda x: exp(cos(x)), [0, 1])
+            quadts(lambda x, y: exp(cos(x+y)), [0, 1], [0, 1])
 
-        quadts(lambda x: exp(cos(x)), [0, 1])
-        quadts(lambda x, y: exp(cos(x+y)), [0, 1], [0, 1])
+        See the documentation for quad for information about how points
+        arguments and keyword arguments are parsed.
 
-    See the documentation for quad for information about how points
-    arguments and keyword arguments are parsed.
+        See documentation for TanhSinh for algorithmic information about
+        tanh-sinh quadrature.
+        """
+        kwargs['method'] = 'tanh-sinh'
+        return ctx.quad(*args, **kwargs)
 
-    See documentation for TanhSinh for algorithmic information about
-    tanh-sinh quadrature.
-    """
-    kwargs['method'] = TanhSinh
-    return quad(*args, **kwargs)
+    def quadgl(ctx, *args, **kwargs):
+        """
+        Performs Gauss-Legendre quadrature. The call
 
-def quadgl(*args, **kwargs):
-    """
-    Performs Gauss-Legendre quadrature. The call
+            quadgl(func, *points, ...)
 
-        quadgl(func, *points, ...)
+        is simply a shortcut for:
 
-    is simply a shortcut for:
+            quad(func, *points, ..., method=GaussLegendre)
 
-        quad(func, *points, ..., method=TanhSinh)
+        For example, a single integral and a double integral:
 
-    For example, a single integral and a double integral:
+            quadgl(lambda x: exp(cos(x)), [0, 1])
+            quadgl(lambda x, y: exp(cos(x+y)), [0, 1], [0, 1])
 
-        quadgl(lambda x: exp(cos(x)), [0, 1])
-        quadgl(lambda x, y: exp(cos(x+y)), [0, 1], [0, 1])
+        See the documentation for quad for information about how points
+        arguments and keyword arguments are parsed.
 
-    See the documentation for quad for information about how points
-    arguments and keyword arguments are parsed.
+        See documentation for TanhSinh for algorithmic information about
+        tanh-sinh quadrature.
+        """
+        kwargs['method'] = 'gauss-legendre'
+        return ctx.quad(*args, **kwargs)
 
-    See documentation for TanhSinh for algorithmic information about
-    tanh-sinh quadrature.
-    """
-    kwargs['method'] = GaussLegendre
-    return quad(*args, **kwargs)
+    def quadosc(ctx, f, interval, omega=None, period=None, zeros=None):
+        r"""
+        Calculates
 
-def quadosc(f, interval, omega=None, period=None, zeros=None):
-    r"""
-    Calculates
+        .. math ::
 
-    .. math ::
+            I = \int_a^b f(x) dx
 
-        I = \int_a^b f(x) dx
+        where at least one of `a` and `b` is infinite and where
+        `f(x) = g(x) \cos(\omega x  + \phi)` for some slowly
+        decreasing function `g(x)`. With proper input, :func:`quadosc`
+        can also handle oscillatory integrals where the oscillation
+        rate is different from a pure sine or cosine wave.
 
-    where at least one of `a` and `b` is infinite and where
-    `f(x) = g(x) \cos(\omega x  + \phi)` for some slowly
-    decreasing function `g(x)`. With proper input, :func:`quadosc`
-    can also handle oscillatory integrals where the oscillation
-    rate is different from a pure sine or cosine wave.
+        In the standard case when `|a| < \infty, b = \infty`,
+        :func:`quadosc` works by evaluating the infinite series
 
-    In the standard case when `|a| < \infty, b = \infty`,
-    :func:`quadosc` works by evaluating the infinite series
+        .. math ::
 
-    .. math ::
+            I = \int_a^{x_1} f(x) dx +
+            \sum_{k=1}^{\infty} \int_{x_k}^{x_{k+1}} f(x) dx
 
-        I = \int_a^{x_1} f(x) dx +
-        \sum_{k=1}^{\infty} \int_{x_k}^{x_{k+1}} f(x) dx
+        where `x_k` are consecutive zeros (alternatively
+        some other periodic reference point) of `f(x)`.
+        Accordingly, :func:`quadosc` requires information about the
+        zeros of `f(x)`. For a periodic function, you can specify
+        the zeros by either providing the angular frequency `\omega`
+        (*omega*) or the *period* `2 \pi/\omega`. In general, you can
+        specify the `n`-th zero by providing the *zeros* arguments.
+        Below is an example of each::
 
-    where `x_k` are consecutive zeros (alternatively
-    some other periodic reference point) of `f(x)`.
-    Accordingly, :func:`quadosc` requires information about the
-    zeros of `f(x)`. For a periodic function, you can specify
-    the zeros by either providing the angular frequency `\omega`
-    (*omega*) or the *period* `2 \pi/\omega`. In general, you can
-    specify the `n`-th zero by providing the *zeros* arguments.
-    Below is an example of each::
+            >>> from mpmath import *
+            >>> mp.dps = 15; mp.pretty = True
+            >>> f = lambda x: sin(3*x)/(x**2+1)
+            >>> quadosc(f, [0,inf], omega=3)
+            0.37833007080198
+            >>> quadosc(f, [0,inf], period=2*pi/3)
+            0.37833007080198
+            >>> quadosc(f, [0,inf], zeros=lambda n: pi*n/3)
+            0.37833007080198
+            >>> (ei(3)*exp(-3)-exp(3)*ei(-3))/2  # Computed by Mathematica
+            0.37833007080198
 
-        >>> from mpmath import *
-        >>> mp.dps = 15
-        >>> f = lambda x: sin(3*x)/(x**2+1)
-        >>> print quadosc(f, [0,inf], omega=3)
-        0.37833007080198
-        >>> print quadosc(f, [0,inf], period=2*pi/3)
-        0.37833007080198
-        >>> print quadosc(f, [0,inf], zeros=lambda n: pi*n/3)
-        0.37833007080198
-        >>> print (ei(3)*exp(-3)-exp(3)*ei(-3))/2  # Computed by Mathematica
-        0.37833007080198
+        Note that *zeros* was specified to multiply `n` by the
+        *half-period*, not the full period. In theory, it does not matter
+        whether each partial integral is done over a half period or a full
+        period. However, if done over half-periods, the infinite series
+        passed to :func:`nsum` becomes an *alternating series* and this
+        typically makes the extrapolation much more efficient.
 
-    Note that *zeros* was specified to multiply `n` by the
-    *half-period*, not the full period. In theory, it does not matter
-    whether each partial integral is done over a half period or a full
-    period. However, if done over half-periods, the infinite series
-    passed to :func:`nsum` becomes an *alternating series* and this
-    typically makes the extrapolation much more efficient.
+        Here is an example of an integration over the entire real line,
+        and a half-infinite integration starting at `-\infty`::
 
-    Here is an example of an integration over the entire real line,
-    and a half-infinite integration starting at `-\infty`::
+            >>> quadosc(lambda x: cos(x)/(1+x**2), [-inf, inf], omega=1)
+            1.15572734979092
+            >>> pi/e
+            1.15572734979092
+            >>> quadosc(lambda x: cos(x)/x**2, [-inf, -1], period=2*pi)
+            -0.0844109505595739
+            >>> cos(1)+si(1)-pi/2
+            -0.0844109505595738
 
-        >>> print quadosc(lambda x: cos(x)/(1+x**2), [-inf, inf], omega=1)
-        1.15572734979092
-        >>> print pi/e
-        1.15572734979092
-        >>> print quadosc(lambda x: cos(x)/x**2, [-inf, -1], period=2*pi)
-        -0.0844109505595739
-        >>> print cos(1)+si(1)-pi/2
-        -0.0844109505595738
+        Of course, the integrand may contain a complex exponential just as
+        well as a real sine or cosine::
 
-    Of course, the integrand may contain a complex exponential just as
-    well as a real sine or cosine::
+            >>> quadosc(lambda x: exp(3*j*x)/(1+x**2), [-inf,inf], omega=3)
+            (0.156410688228254 + 0.0j)
+            >>> pi/e**3
+            0.156410688228254
+            >>> quadosc(lambda x: exp(3*j*x)/(2+x+x**2), [-inf,inf], omega=3)
+            (0.00317486988463794 - 0.0447701735209082j)
+            >>> 2*pi/sqrt(7)/exp(3*(j+sqrt(7))/2)
+            (0.00317486988463794 - 0.0447701735209082j)
 
-        >>> print quadosc(lambda x: exp(3*j*x)/(1+x**2), [-inf,inf], omega=3)
-        (0.156410688228254 + 0.0j)
-        >>> print pi/e**3
-        0.156410688228254
-        >>> print quadosc(lambda x: exp(3*j*x)/(2+x+x**2), [-inf,inf], omega=3)
-        (0.00317486988463794 - 0.0447701735209082j)
-        >>> print 2*pi/sqrt(7)/exp(3*(j+sqrt(7))/2)
-        (0.00317486988463794 - 0.0447701735209082j)
+        **Non-periodic functions**
 
-    **Non-periodic functions**
+        If `f(x) = g(x) h(x)` for some function `h(x)` that is not
+        strictly periodic, *omega* or *period* might not work, and it might
+        be necessary to use *zeros*.
 
-    If `f(x) = g(x) h(x)` for some function `h(x)` that is not
-    strictly periodic, *omega* or *period* might not work, and it might
-    be necessary to use *zeros*.
+        A notable exception can be made for Bessel functions which, though not
+        periodic, are "asymptotically periodic" in a sufficiently strong sense
+        that the sum extrapolation will work out::
 
-    A notable exception can be made for Bessel functions which, though not
-    periodic, are "asymptotically periodic" in a sufficiently strong sense
-    that the sum extrapolation will work out::
+            >>> quadosc(j0, [0, inf], period=2*pi)
+            1.0
+            >>> quadosc(j1, [0, inf], period=2*pi)
+            1.0
 
-        >>> print quadosc(j0, [0, inf], period=2*pi)
-        1.0
-        >>> print quadosc(j1, [0, inf], period=2*pi)
-        1.0
+        More properly, one should provide the exact Bessel function zeros::
 
-    More properly, one should provide the exact Bessel function zeros::
+            >>> j0zero = lambda n: findroot(j0, pi*(n-0.25))
+            >>> quadosc(j0, [0, inf], zeros=j0zero)
+            1.0
 
-        >>> j0zero = lambda n: findroot(j0, pi*(n-0.25))
-        >>> print quadosc(j0, [0, inf], zeros=j0zero)
-        1.0
+        For an example where *zeros* becomes necessary, consider the
+        complete Fresnel integrals
 
-    For an example where *zeros* becomes necessary, consider the
-    complete Fresnel integrals
+        .. math ::
 
-    .. math ::
+            \int_0^{\infty} \cos x^2\,dx = \int_0^{\infty} \sin x^2\,dx
+            = \sqrt{\frac{\pi}{8}}.
 
-        \int_0^{\infty} \cos x^2\,dx = \int_0^{\infty} \sin x^2\,dx
-        = \sqrt{\frac{\pi}{8}}.
+        Although the integrands do not decrease in magnitude as
+        `x \to \infty`, the integrals are convergent since the oscillation
+        rate increases (causing consecutive periods to asymptotically
+        cancel out). These integrals are virtually impossible to calculate
+        to any kind of accuracy using standard quadrature rules. However,
+        if one provides the correct asymptotic distribution of zeros
+        (`x_n \sim \sqrt{n}`), :func:`quadosc` works::
 
-    Although the integrands do not decrease in magnitude as
-    `x \to \infty`, the integrals are convergent since the oscillation
-    rate increases (causing consecutive periods to asymptotically
-    cancel out). These integrals are virtually impossible to calculate
-    to any kind of accuracy using standard quadrature rules. However,
-    if one provides the correct asymptotic distribution of zeros
-    (`x_n \sim \sqrt{n}`), :func:`quadosc` works::
+            >>> mp.dps = 30
+            >>> f = lambda x: cos(x**2)
+            >>> quadosc(f, [0,inf], zeros=lambda n:sqrt(pi*n))
+            0.626657068657750125603941321203
+            >>> f = lambda x: sin(x**2)
+            >>> quadosc(f, [0,inf], zeros=lambda n:sqrt(pi*n))
+            0.626657068657750125603941321203
+            >>> sqrt(pi/8)
+            0.626657068657750125603941321203
 
-        >>> mp.dps = 30
-        >>> f = lambda x: cos(x**2)
-        >>> print quadosc(f, [0,inf], zeros=lambda n:sqrt(pi*n))
-        0.626657068657750125603941321203
-        >>> f = lambda x: sin(x**2)
-        >>> print quadosc(f, [0,inf], zeros=lambda n:sqrt(pi*n))
-        0.626657068657750125603941321203
-        >>> print sqrt(pi/8)
-        0.626657068657750125603941321203
+        (Interestingly, these integrals can still be evaluated if one
+        places some other constant than `\pi` in the square root sign.)
 
-    (Interestingly, these integrals can still be evaluated if one
-    places some other constant than `\pi` in the square root sign.)
+        In general, if `f(x) \sim g(x) \cos(h(x))`, the zeros follow
+        the inverse-function distribution `h^{-1}(x)`::
 
-    In general, if `f(x) \sim g(x) \cos(h(x))`, the zeros follow
-    the inverse-function distribution `h^{-1}(x)`::
+            >>> mp.dps = 15
+            >>> f = lambda x: sin(exp(x))
+            >>> quadosc(f, [1,inf], zeros=lambda n: log(n))
+            -0.25024394235267
+            >>> pi/2-si(e)
+            -0.250243942352671
 
-        >>> mp.dps = 15
-        >>> f = lambda x: sin(exp(x))
-        >>> print quadosc(f, [1,inf], zeros=lambda n: log(n))
-        -0.25024394235267
-        >>> print pi/2-si(e)
-        -0.250243942352671
+        **Non-alternating functions**
 
-    **Non-alternating functions**
+        If the integrand oscillates around a positive value, without
+        alternating signs, the extrapolation might fail. A simple trick
+        that sometimes works is to multiply or divide the frequency by 2::
 
-    If the integrand oscillates around a positive value, without
-    alternating signs, the extrapolation might fail. A simple trick
-    that sometimes works is to multiply or divide the frequency by 2::
+            >>> f = lambda x: 1/x**2+sin(x)/x**4
+            >>> quadosc(f, [1,inf], omega=1)  # Bad
+            1.28642190869921
+            >>> quadosc(f, [1,inf], omega=0.5)  # Perfect
+            1.28652953559617
+            >>> 1+(cos(1)+ci(1)+sin(1))/6
+            1.28652953559617
 
-        >>> f = lambda x: 1/x**2+sin(x)/x**4
-        >>> print quadosc(f, [1,inf], omega=1)  # Bad
-        1.28642190869921
-        >>> print quadosc(f, [1,inf], omega=0.5)  # Perfect
-        1.28652953559617
-        >>> print 1+(cos(1)+ci(1)+sin(1))/6
-        1.28652953559617
+        **Fast decay**
 
-    **Fast decay**
+        :func:`quadosc` is primarily useful for slowly decaying
+        integrands. If the integrand decreases exponentially or faster,
+        :func:`quad` will likely handle it without trouble (and generally be
+        much faster than :func:`quadosc`)::
 
-    :func:`quadosc` is primarily useful for slowly decaying
-    integrands. If the integrand decreases exponentially or faster,
-    :func:`quad` will likely handle it without trouble (and generally be
-    much faster than :func:`quadosc`)::
+            >>> quadosc(lambda x: cos(x)/exp(x), [0, inf], omega=1)
+            0.5
+            >>> quad(lambda x: cos(x)/exp(x), [0, inf])
+            0.5
 
-        >>> print quadosc(lambda x: cos(x)/exp(x), [0, inf], omega=1)
-        0.5
-        >>> print quad(lambda x: cos(x)/exp(x), [0, inf])
-        0.5
-
-    """
-    a, b = AS_POINTS(interval)
-    a = mpmathify(a)
-    b = mpmathify(b)
-    if [omega, period, zeros].count(None) != 2:
-        raise ValueError( \
-            "must specify exactly one of omega, period, zeros")
-    if a == -inf and b == inf:
-        s1 = quadosc(f, [a, 0], omega=omega, zeros=zeros, period=period)
-        s2 = quadosc(f, [0, b], omega=omega, zeros=zeros, period=period)
-        return s1 + s2
-    if a == -inf:
-        if zeros:
-            return quadosc(lambda x:f(-x), [-b,-a], lambda n: zeros(-n))
-        else:
-            return quadosc(lambda x:f(-x), [-b,-a], omega=omega, period=period)
-    if b != inf:
-        raise ValueError("quadosc requires an infinite integration interval")
-    if not zeros:
-        if omega:
-            period = 2*pi/omega
-        zeros = lambda n: n*period/2
-    #for n in range(1,10):
-    #    p = zeros(n)
-    #    if p > a:
-    #        break
-    #if n >= 9:
-    #    raise ValueError("zeros do not appear to be correctly indexed")
-    n = 1
-    from calculus import nsum
-    s = quadgl(f, [a, zeros(n)])
-    s += nsum(lambda k: quadgl(f, [zeros(k), zeros(k+1)]), [n, inf])
-    return s
+        """
+        a, b = ctx.AS_POINTS(interval)
+        a = ctx.convert(a)
+        b = ctx.convert(b)
+        if [omega, period, zeros].count(None) != 2:
+            raise ValueError( \
+                "must specify exactly one of omega, period, zeros")
+        if a == ctx.ninf and b == ctx.inf:
+            s1 = ctx.quadosc(f, [a, 0], omega=omega, zeros=zeros, period=period)
+            s2 = ctx.quadosc(f, [0, b], omega=omega, zeros=zeros, period=period)
+            return s1 + s2
+        if a == ctx.ninf:
+            if zeros:
+                return ctx.quadosc(lambda x:f(-x), [-b,-a], lambda n: zeros(-n))
+            else:
+                return ctx.quadosc(lambda x:f(-x), [-b,-a], omega=omega, period=period)
+        if b != ctx.inf:
+            raise ValueError("quadosc requires an infinite integration interval")
+        if not zeros:
+            if omega:
+                period = 2*ctx.pi/omega
+            zeros = lambda n: n*period/2
+        #for n in range(1,10):
+        #    p = zeros(n)
+        #    if p > a:
+        #        break
+        #if n >= 9:
+        #    raise ValueError("zeros do not appear to be correctly indexed")
+        n = 1
+        # XXX: use method
+        from calculus import nsum
+        s = ctx.quadgl(f, [a, zeros(n)])
+        s += nsum(lambda k: ctx.quadgl(f, [zeros(k), zeros(k+1)]), [n, ctx.inf])
+        return s
 
 if __name__ == '__main__':
     import doctest

@@ -5,6 +5,8 @@ operating with them.
 __docformat__ = 'plaintext'
 
 import re
+from string import strip
+from operator import gt, lt
 
 from settings import (MP_BASE, MP_ZERO, MP_ONE, int_types, repr_dps,
     round_floor, round_ceiling, dps_to_prec, round_nearest, prec_to_dps)
@@ -18,7 +20,8 @@ from libmpf import (
     mpf_div, mpf_rdiv_int, mpf_pow_int, mpf_mod,
     mpf_eq, mpf_cmp, mpf_lt, mpf_gt, mpf_le, mpf_ge,
     mpf_hash, mpf_rand,
-    mpf_sum
+    mpf_sum,
+    bitcount
 )
 
 from libmpc import (
@@ -37,8 +40,7 @@ from libmpi import (
     mpi_mul, mpi_div, mpi_pow_int, mpi_pow
 )
 
-from string import strip
-from operator import gt, lt
+import quadrature
 
 
 new = object.__new__
@@ -87,7 +89,7 @@ class Context(object):
     pass
 
 
-class MultiPrecisionArithmetic(Context):
+class MultiPrecisionArithmetic(Context, quadrature.QuadratureMethods):
     """
     Context for multiprecision arithmetic with a global precision.
     """
@@ -96,6 +98,7 @@ class MultiPrecisionArithmetic(Context):
         # Settings
         ctx._prec_rounding = [53, round_nearest]
         ctx.trap_complex = False
+        ctx.pretty = False
         ctx.mpf = type('mpf', (_mpf,), {})
         ctx.mpc = type('mpc', (_mpc,), {})
         ctx.mpi = type('mpi', (_mpi,), {})
@@ -112,6 +115,8 @@ class MultiPrecisionArithmetic(Context):
         ctx.mpi.context = ctx
         # Predefined data
         ctx._create_constants({})
+
+        quadrature.QuadratureMethods.__init__(ctx)
 
     # pi, etc
     _constants = []
@@ -146,10 +151,14 @@ class MultiPrecisionArithmetic(Context):
     # TODO: add more of these, make consistent, write docstrings, ...
 
     def is_real_type(ctx, x):
-        return hasattr(x, '_mpf_')
+        if hasattr(x, '_mpc_') or type(x) is complex:
+            return False
+        return True
 
     def is_complex_type(ctx, x):
-        return hasattr(x, '_mpc_')
+        if hasattr(x, '_mpc_') or type(x) is complex:
+            return True
+        return False
 
     def make_mpf(ctx, v):
         a = new(ctx.mpf)
@@ -174,6 +183,9 @@ class MultiPrecisionArithmetic(Context):
             return sign and exp >= 0
         if hasattr(x, '_mpc_'):
             return not x.imag and ctx.isnpint(x.real)
+        if type(x) in (int, long):
+            return x <= 0
+        return ctx.isnpint(ctx.convert(x))
 
     def bad_domain(ctx, msg):
         raise ValueError(msg)
@@ -284,7 +296,6 @@ class MultiPrecisionArithmetic(Context):
             '[3.14159, 3.05494e-151]'
             >>> nprint([+pi, ldexp(1,-500)])
             [3.14159, 3.05494e-151]
-
         """
         if isinstance(x, list):
             return "[%s]" % (", ".join(nstr(c, n) for c in x))
@@ -363,6 +374,358 @@ class MultiPrecisionArithmetic(Context):
             return ctx.convert(x._mpmath_(*prec_rounding))
         raise TypeError("cannot create mpf from " + repr(x))
 
+    mpmathify = convert
+
+    def _parse_prec(ctx, kwargs):
+        if kwargs:
+            if kwargs.get('exact'):
+                return 0, 'f'
+            prec, rounding = ctx._prec_rounding
+            if 'rounding' in kwargs:
+                rounding = kwargs['rounding']
+            if 'prec' in kwargs:
+                prec = kwargs['prec']
+                if prec == ctx.inf:
+                    return 0, 'f'
+            elif 'dps' in kwargs:
+                dps = kwargs['dps']
+                if dps == ctx.inf:
+                    return 0, 'f'
+                prec = dps_to_prec(dps)
+            return prec, rounding
+        return ctx._prec_rounding
+
+    _exact_overflow_msg = "the exact result does not fit in memory"
+
+    def fneg(ctx, x, **kwargs):
+        """
+        Negates the number *x*, giving a floating-point result, optionally
+        using a custom precision and rounding mode.
+
+        See the documentation of :func:`fadd` for a detailed description
+        of how to specify precision and rounding.
+
+        **Examples**
+
+        An mpmath number is returned::
+
+            >>> from mpmath import *
+            >>> mp.dps = 15
+            >>> fneg(2.5)
+            mpf('-2.5')
+            >>> fneg(-5+2j)
+            mpc(real='5.0', imag='-2.0')
+
+        Precise control over rounding is possible::
+
+            >>> x = fadd(2, 1e-100, exact=True)
+            >>> fneg(x)
+            mpf('-2.0')
+            >>> fneg(x, rounding='f')
+            mpf('-2.0000000000000004')
+
+        Negating with and without roundoff::
+
+            >>> n = 200000000000000000000001
+            >>> print int(-mpf(n))
+            -200000000000000016777216
+            >>> print int(fneg(n))
+            -200000000000000016777216
+            >>> print int(fneg(n, prec=log(n,2)+1))
+            -200000000000000000000001
+            >>> print int(fneg(n, dps=log(n,10)+1))
+            -200000000000000000000001
+            >>> print int(fneg(n, prec=inf))
+            -200000000000000000000001
+            >>> print int(fneg(n, dps=inf))
+            -200000000000000000000001
+            >>> print int(fneg(n, exact=True))
+            -200000000000000000000001
+
+        """
+        prec, rounding = ctx._parse_prec(kwargs)
+        x = ctx.convert(x)
+        if hasattr(x, '_mpf_'):
+            return ctx.make_mpf(mpf_neg(x._mpf_, prec, rounding))
+        if hasattr(x, '_mpc_'):
+            return ctx.make_mpc(mpc_neg(x._mpc_, prec, rounding))
+        raise ValueError("Arguments need to be mpf or mpc compatible numbers")
+
+    def fadd(ctx, x, y, **kwargs):
+        """
+        Adds the numbers *x* and *y*, giving a floating-point result,
+        optionally using a custom precision and rounding mode.
+
+        The default precision is the working precision of the context.
+        You can specify a custom precision in bits by passing the *prec* keyword
+        argument, or by providing an equivalent decimal precision with the *dps*
+        keyword argument. If the precision is set to ``+inf``, or if the flag
+        *exact=True* is passed, an exact addition with no rounding is performed.
+
+        When the precision is finite, the optional *rounding* keyword argument
+        specifies the direction of rounding. Valid options are ``'n'`` for
+        nearest (default), ``'f'`` for floor, ``'c'`` for ceiling, ``'d'``
+        for down, ``'u'`` for up.
+
+        **Examples**
+
+        Using :func:`fadd` with precision and rounding control::
+
+            >>> from mpmath import *
+            >>> mp.dps = 15
+            >>> fadd(2, 1e-20)
+            mpf('2.0')
+            >>> fadd(2, 1e-20, rounding='u')
+            mpf('2.0000000000000004')
+            >>> nprint(fadd(2, 1e-20, prec=100), 25)
+            2.00000000000000000001
+            >>> nprint(fadd(2, 1e-20, dps=15), 25)
+            2.0
+            >>> nprint(fadd(2, 1e-20, dps=25), 25)
+            2.00000000000000000001
+            >>> nprint(fadd(2, 1e-20, exact=True), 25)
+            2.00000000000000000001
+
+        Exact addition avoids cancellation errors, enforcing familiar laws
+        of numbers such as `x+y-x = y`, which don't hold in floating-point
+        arithmetic with finite precision::
+
+            >>> x, y = mpf(2), mpf('1e-1000')
+            >>> print x + y - x
+            0.0
+            >>> print fadd(x, y, prec=inf) - x
+            1.0e-1000
+            >>> print fadd(x, y, exact=True) - x
+            1.0e-1000
+
+        Exact addition can be inefficient and may be impossible to perform
+        with large magnitude differences::
+
+            >>> fadd(1, '1e-100000000000000000000', prec=inf)
+            Traceback (most recent call last):
+              ...
+            OverflowError: the exact result does not fit in memory
+
+        """
+        prec, rounding = ctx._parse_prec(kwargs)
+        x = ctx.convert(x)
+        y = ctx.convert(y)
+        try:
+            if hasattr(x, '_mpf_'):
+                if hasattr(y, '_mpf_'):
+                    return ctx.make_mpf(mpf_add(x._mpf_, y._mpf_, prec, rounding))
+                if hasattr(y, '_mpc_'):
+                    return ctx.make_mpc(mpc_add_mpf(y._mpc_, x._mpf_, prec, rounding))
+            if hasattr(x, '_mpc_'):
+                if hasattr(y, '_mpf_'):
+                    return ctx.make_mpc(mpc_add_mpf(x._mpc_, y._mpf_, prec, rounding))
+                if hasattr(y, '_mpc_'):
+                    return ctx.make_mpc(mpc_add(x._mpc_, y._mpc_, prec, rounding))
+        except (ValueError, OverflowError):
+            raise OverflowError(ctx._exact_overflow_msg)
+        raise ValueError("Arguments need to be mpf or mpc compatible numbers")
+
+    def fsub(ctx, x, y, **kwargs):
+        """
+        Subtracts the numbers *x* and *y*, giving a floating-point result,
+        optionally using a custom precision and rounding mode.
+
+        See the documentation of :func:`fadd` for a detailed description
+        of how to specify precision and rounding.
+
+        **Examples**
+
+        Using :func:`fsub` with precision and rounding control::
+
+            >>> from mpmath import *
+            >>> mp.dps = 15
+            >>> fsub(2, 1e-20)
+            mpf('2.0')
+            >>> fsub(2, 1e-20, rounding='d')
+            mpf('1.9999999999999998')
+            >>> nprint(fsub(2, 1e-20, prec=100), 25)
+            1.99999999999999999999
+            >>> nprint(fsub(2, 1e-20, dps=15), 25)
+            2.0
+            >>> nprint(fsub(2, 1e-20, dps=25), 25)
+            1.99999999999999999999
+            >>> nprint(fsub(2, 1e-20, exact=True), 25)
+            1.99999999999999999999
+
+        Exact subtraction avoids cancellation errors, enforcing familiar laws
+        of numbers such as `x-y+y = x`, which don't hold in floating-point
+        arithmetic with finite precision::
+
+            >>> x, y = mpf(2), mpf('1e1000')
+            >>> print x - y + y
+            0.0
+            >>> print fsub(x, y, prec=inf) + y
+            2.0
+            >>> print fsub(x, y, exact=True) + y
+            2.0
+
+        Exact addition can be inefficient and may be impossible to perform
+        with large magnitude differences::
+
+            >>> fsub(1, '1e-100000000000000000000', prec=inf)
+            Traceback (most recent call last):
+              ...
+            OverflowError: the exact result does not fit in memory
+
+        """
+        prec, rounding = ctx._parse_prec(kwargs)
+        x = ctx.convert(x)
+        y = ctx.convert(y)
+        try:
+            if hasattr(x, '_mpf_'):
+                if hasattr(y, '_mpf_'):
+                    return ctx.make_mpf(mpf_sub(x._mpf_, y._mpf_, prec, rounding))
+                if hasattr(y, '_mpc_'):
+                    return ctx.make_mpc(mpc_sub((x._mpf_, fzero), y._mpc_, prec, rounding))
+            if hasattr(x, '_mpc_'):
+                if hasattr(y, '_mpf_'):
+                    return ctx.make_mpc(mpc_sub_mpf(x._mpc_, y._mpf_, prec, rounding))
+                if hasattr(y, '_mpc_'):
+                    return ctx.make_mpc(mpc_sub(x._mpc_, y._mpc_, prec, rounding))
+        except (ValueError, OverflowError):
+            raise OverflowError(ctx._exact_overflow_msg)
+        raise ValueError("Arguments need to be mpf or mpc compatible numbers")
+
+    def fmul(ctx, x, y, **kwargs):
+        """
+        Multiplies the numbers *x* and *y*, giving a floating-point result,
+        optionally using a custom precision and rounding mode.
+
+        See the documentation of :func:`fadd` for a detailed description
+        of how to specify precision and rounding.
+
+        **Examples**
+
+        The result is an mpmath number::
+
+            >>> from mpmath import *
+            >>> mp.dps = 15
+            >>> fmul(2, 5.0)
+            mpf('10.0')
+            >>> fmul(0.5j, 0.5)
+            mpc(real='0.0', imag='0.25')
+
+        Avoiding roundoff::
+
+            >>> x, y = 10**10+1, 10**15+1
+            >>> print x*y
+            10000000001000010000000001
+            >>> print mpf(x) * mpf(y)
+            1.0000000001e+25
+            >>> print int(mpf(x) * mpf(y))
+            10000000001000011026399232
+            >>> print int(fmul(x, y))
+            10000000001000011026399232
+            >>> print int(fmul(x, y, dps=25))
+            10000000001000010000000001
+            >>> print int(fmul(x, y, exact=True))
+            10000000001000010000000001
+
+        Exact multiplication with complex numbers can be inefficient and may
+        be impossible to perform with large magnitude differences between
+        real and imaginary parts::
+
+            >>> x = 1+2j
+            >>> y = mpc(2, '1e-100000000000000000000')
+            >>> fmul(x, y)
+            mpc(real='2.0', imag='4.0')
+            >>> fmul(x, y, rounding='u')
+            mpc(real='2.0', imag='4.0000000000000009')
+            >>> fmul(x, y, exact=True)
+            Traceback (most recent call last):
+              ...
+            OverflowError: the exact result does not fit in memory
+
+        """
+        prec, rounding = ctx._parse_prec(kwargs)
+        x = ctx.convert(x)
+        y = ctx.convert(y)
+        try:
+            if hasattr(x, '_mpf_'):
+                if hasattr(y, '_mpf_'):
+                    return ctx.make_mpf(mpf_mul(x._mpf_, y._mpf_, prec, rounding))
+                if hasattr(y, '_mpc_'):
+                    return ctx.make_mpc(mpc_mul_mpf(y._mpc_, x._mpf_, prec, rounding))
+            if hasattr(x, '_mpc_'):
+                if hasattr(y, '_mpf_'):
+                    return ctx.make_mpc(mpc_mul_mpf(x._mpc_, y._mpf_, prec, rounding))
+                if hasattr(y, '_mpc_'):
+                    return ctx.make_mpc(mpc_mul(x._mpc_, y._mpc_, prec, rounding))
+        except (ValueError, OverflowError):
+            raise OverflowError(ctx._exact_overflow_msg)
+        raise ValueError("Arguments need to be mpf or mpc compatible numbers")
+
+    def fdiv(ctx, x, y, **kwargs):
+        """
+        Divides the numbers *x* and *y*, giving a floating-point result,
+        optionally using a custom precision and rounding mode.
+
+        See the documentation of :func:`fadd` for a detailed description
+        of how to specify precision and rounding.
+
+        **Examples**
+
+        The result is an mpmath number::
+
+            >>> from mpmath import *
+            >>> mp.dps = 15
+            >>> fdiv(3, 2)
+            mpf('1.5')
+            >>> fdiv(2, 3)
+            mpf('0.66666666666666663')
+            >>> fdiv(2+4j, 0.5)
+            mpc(real='4.0', imag='8.0')
+
+        The rounding direction and precision can be controlled::
+
+            >>> fdiv(2, 3, dps=3)    # Should be accurate to at least 3 digits
+            mpf('0.6666259765625')
+            >>> fdiv(2, 3, rounding='d')
+            mpf('0.66666666666666663')
+            >>> fdiv(2, 3, prec=60)
+            mpf('0.66666666666666667')
+            >>> fdiv(2, 3, rounding='u')
+            mpf('0.66666666666666674')
+
+        Checking the error of a division by performing it at higher precision::
+
+            >>> fdiv(2, 3) - fdiv(2, 3, prec=100)
+            mpf('-3.7007434154172148e-17')
+
+        Unlike :func:`fadd`, :func:`fmul`, etc., exact division is not
+        allowed since the quotient of two floating-point numbers generally
+        does not have an exact floating-point representation. (In the
+        future this might be changed to allow the case where the division
+        is actually exact.)
+
+            >>> fdiv(2, 3, exact=True)
+            Traceback (most recent call last):
+              ...
+            ValueError: division is not an exact operation
+
+        """
+        prec, rounding = ctx._parse_prec(kwargs)
+        if not prec:
+            raise ValueError("division is not an exact operation")
+        x = ctx.convert(x)
+        y = ctx.convert(y)
+        if hasattr(x, '_mpf_'):
+            if hasattr(y, '_mpf_'):
+                return ctx.make_mpf(mpf_div(x._mpf_, y._mpf_, prec, rounding))
+            if hasattr(y, '_mpc_'):
+                return ctx.make_mpc(mpc_div((x._mpf_, fzero), y._mpc_, prec, rounding))
+        if hasattr(x, '_mpc_'):
+            if hasattr(y, '_mpf_'):
+                return ctx.make_mpc(mpc_div_mpf(x._mpc_, y._mpf_, prec, rounding))
+            if hasattr(y, '_mpc_'):
+                return ctx.make_mpc(mpc_div(x._mpc_, y._mpc_, prec, rounding))
+        raise ValueError("Arguments need to be mpf or mpc compatible numbers")
+
     def isnan(ctx, x):
         """
         For an ``mpf`` *x*, determines whether *x* is not-a-number (nan)::
@@ -370,7 +733,6 @@ class MultiPrecisionArithmetic(Context):
             >>> from mpmath import *
             >>> isnan(nan), isnan(3)
             (True, False)
-
         """
         if not hasattr(x, '_mpf_'):
             return False
@@ -383,7 +745,6 @@ class MultiPrecisionArithmetic(Context):
             >>> from mpmath import *
             >>> isinf(inf), isinf(-inf), isinf(3)
             (True, True, False)
-
         """
         if not hasattr(x, '_mpf_'):
             return False
@@ -398,7 +759,6 @@ class MultiPrecisionArithmetic(Context):
             >>> from mpmath import *
             >>> isint(3), isint(mpf(3)), isint(3.2)
             (True, True, False)
-
         """
         if isinstance(x, int_types):
             return True
@@ -411,6 +771,99 @@ class MultiPrecisionArithmetic(Context):
                 return False
             return x == int(x)
         return False
+
+    def _mpf_mag(ctx, x):
+        sign, man, exp, bc = x
+        if man:
+            return exp+bc
+        if x == fzero:
+            return ctx.ninf
+        if x == finf or x == fninf:
+            return ctx.inf
+        return ctx.nan
+
+    def mag(ctx, x):
+        if type(x) in int_types:  # XXX: inttypes
+            if x:
+                return bitcount(abs(x))
+            return ctx.ninf
+        # Hack
+        if hasattr(x, "_mpq_"):
+            p, q = x._mpq_
+            if p:
+                return 1 + bitcount(abs(p)) - bitcount(abs(q))
+            return ctx.ninf
+        x = ctx.convert(x)
+        if hasattr(x, "_mpf_"):
+            return ctx._mpf_mag(x._mpf_)
+        if hasattr(x, "_mpc_"):
+            r, i = x._mpc_
+            if r == fzero:
+                return ctx._mpf_mag(i)
+            if i == fzero:
+                return ctx._mpf_mag(r)
+            return 1+max(ctx._mpf_mag(r), ctx._mpf_mag(i))
+        raise ValueError("mag() needed a number")
+
+    def nint_distance(ctx, x):
+        """
+        Returns (n, d) where n is the nearest integer to x and d is the
+        log-2 distance (i.e. distance in bits) of n from x. If d < 0,
+        (-d) gives the bits of cancellation when n is subtracted from x.
+        This function is intended to be used to check for cancellation
+        at poles.
+        """
+        x = ctx.convert(x)
+        if hasattr(x, "_mpf_"):
+            re = x._mpf_
+            im_dist = ctx.ninf
+        elif hasattr(x, "_mpc_"):
+            re, im = x._mpc_
+            isign, iman, iexp, ibc = im
+            if iman:
+                im_dist = iexp + ibc
+            elif im == fzero:
+                im_dist = ctx.ninf
+            else:
+                raise ValueError("requires a finite number")
+        else:
+            raise TypeError("requires an mpf/mpc")
+        sign, man, exp, bc = re
+        shift = exp+bc
+        if sign:
+            man = -man
+        if shift < -1:
+            n = 0
+            re_dist = shift
+        elif man:
+            if exp >= 0:
+                n = man << exp
+                re_dist = ctx.ninf
+            else:
+                if shift >= 0:
+                    xfixed = man << shift
+                else:
+                    xfixed = man >> (-shift)
+                n1 = xfixed >> bc
+                n2 = -((-xfixed) >> bc)
+                dist1 = abs(xfixed - (n1<<bc))
+                dist2 = abs(xfixed - (n2<<bc))
+                if dist1 < dist2:
+                    re_dist = dist1
+                    n = n1
+                else:
+                    re_dist = dist2
+                    n = n2
+                if re_dist:
+                    re_dist = bitcount(re_dist) - bc
+                else:
+                    re_dist = ctx.ninf
+        elif re == fzero:
+            re_dist = ctx.ninf
+            n = 0
+        else:
+            raise ValueError("requires a finite number")
+        return n, max(re_dist, im_dist)
 
     def chop(ctx, x, tol=None):
         """
@@ -678,7 +1131,6 @@ class MultiPrecisionArithmetic(Context):
             0.01
             0.0100000000000000002081668171172
             >>> mp.dps = 15
-
         """
         return ctx.constant(lambda prec, rnd: from_rational(p, q, prec, rnd),
             '%s/%s' % (p, q))
@@ -1051,7 +1503,11 @@ class _mpf(mpnumeric):
     def __getstate__(self): return to_pickable(self._mpf_)
     def __setstate__(self, val): self._mpf_ = from_pickable(val)
 
-    def __repr__(s): return "mpf('%s')" % to_str(s._mpf_, s.context.repr_digits)
+    def __repr__(s):
+        if s.context.pretty:
+            return str(s)
+        return "mpf('%s')" % to_str(s._mpf_, s.context.repr_digits)
+
     def __str__(s): return to_str(s._mpf_, s.context.str_digits)
     def __hash__(s): return mpf_hash(s._mpf_)
     def __int__(s): return int(to_int(s._mpf_))
@@ -1265,6 +1721,8 @@ class _mpc(mpnumeric):
         self._mpc_ = from_pickable(val[0]), from_pickable(val[1])
 
     def __repr__(s):
+        if s.context.pretty:
+            return str(s)
         r = repr(s.real)[4:-1]
         i = repr(s.imag)[4:-1]
         return "%s(real=%s, imag=%s)" % (type(s).__name__, r, i)
@@ -1499,6 +1957,8 @@ class _mpi(mpnumeric):
         return mpi_str(self._mpi_, mp.prec)
 
     def __repr__(self):
+        if self.context.pretty:
+            return str(self)
         return "mpi(%r, %r)" % (self.a, self.b)
 
     def __eq__(self, other):
@@ -1614,7 +2074,6 @@ def AS_POINTS(x):
     if hasattr(x, '_mpi_'):
         return [x.a, x.b]
     return x
-
 
 def def_mp_builtin(name, mpf_f, mpc_f=None, mpi_f=None, doc="<no doc>"):
     """
@@ -1743,12 +2202,22 @@ fraction = mp.fraction
 arange = mp.arange
 linspace = mp.linspace
 
+fneg = mp.fneg
+fadd = mp.fadd
+fsub = mp.fsub
+fmul = mp.fmul
+fdiv = mp.fdiv
+
+mag = mp.mag
+nint_distance = mp.nint_distance
+
 mpi_to_str = mp.mpi_to_str
 mpi_from_str = mp.mpi_from_str
 
 # XXX
 mp.absmin = absmin
 mp.absmax = absmax
+mp.AS_POINTS = AS_POINTS
 
 if __name__ == '__main__':
     import doctest

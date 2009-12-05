@@ -742,11 +742,21 @@ def mpc_gamma(x, prec, rounding=round_fast, p1=1):
     # More precision is needed for enormous x.
     sign, man, exp, bc = re
     isign, iman, iexp, ibc = im
-    size = max(exp+bc, iexp+ibc)
+    if re == fzero:
+        size = iexp+ibc
+    else:
+        size = max(exp+bc, iexp+ibc)
     if size > 5:
         size = int(size * math.log(size,2))
     reflect = sign or (exp+bc < -1)
     wp = prec + max(0, size) + 25
+    # Near x = 0 pole (TODO: other poles)
+    if p1:
+        if size < -prec-5:
+            return mpc_add_mpf(mpc_div(mpc_one, x, 2*prec+10), \
+                mpf_neg(mpf_euler(2*prec+10)), prec, rounding)
+        elif size < -5:
+            wp += (-2*size)
     if p1:
         # Should be done exactly!
         re_orig = re

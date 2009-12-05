@@ -32,7 +32,7 @@ class Newton:
         if len(x0) == 1:
             self.x0 = x0[0]
         else:
-            raise ValueError('expected 1 starting point, got %i' % len(x0))
+            raise ValueError('expected 1 starting point, got %i' * len(x0))
         self.f = f
         if not 'df' in kwargs:
             def df(x):
@@ -76,7 +76,7 @@ class Secant:
             self.x0 = x0[0]
             self.x1 = x0[1]
         else:
-            raise ValueError('expected 1 or 2 starting points, got %i' % len(x0))
+            raise ValueError('expected 1 or 2 starting points, got %i' * len(x0))
         self.f = f
 
     def __iter__(self):
@@ -117,7 +117,7 @@ class MNewton:
 
     def __init__(self, f, x0, **kwargs):
         if not len(x0) == 1:
-            raise ValueError('expected 1 starting point, got %i' % len(x0))
+            raise ValueError('expected 1 starting point, got %i' * len(x0))
         self.x0 = x0[0]
         self.f = f
         if not 'df' in kwargs:
@@ -155,7 +155,7 @@ class Halley:
     1d-solver generating pairs of approximative root and error.
 
     Needs a starting point x0 close to the root.
-    Uses Halley's method with cubic convergance rate.
+    Uses Halley's method with cubic convergence rate.
 
     Pro:
 
@@ -254,7 +254,7 @@ class Muller:
         fx2 = f(x2)
         while True:
             # TODO: maybe refactoring with function for divided differences
-            # calculate divided diffferences
+            # calculate divided differences
             fx2x1 = (fx1 - fx2) / (x1 - x2)
             fx2x0 = (fx0 - fx2) / (x0 - x2)
             fx1x0 = (fx0 - fx1) / (x0 - x1)
@@ -299,7 +299,7 @@ class Bisection:
 
     def __init__(self, f, x0, **kwargs):
         if len(x0) != 2:
-            raise ValueError('expected interval of 2 points, got %i' % len(x0))
+            raise ValueError('expected interval of 2 points, got %i' * len(x0))
         self.f = f
         self.a = x0[0]
         self.b = x0[1]
@@ -346,7 +346,7 @@ class Illinois:
     """
     1d-solver generating pairs of approximative root and error.
 
-    Uses Illinois method or similair to find a root of f in [a, b].
+    Uses Illinois method or similar to find a root of f in [a, b].
     Might fail for multiple roots (needs sign change).
     Combines bisect with secant (improved regula falsi).
 
@@ -375,7 +375,7 @@ class Illinois:
 
     def __init__(self, f, x0, **kwargs):
         if len(x0) != 2:
-            raise ValueError('expected interval of 2 points, got %i' % len(x0))
+            raise ValueError('expected interval of 2 points, got %i' * len(x0))
         self.a = x0[0]
         self.b = x0[1]
         self.f = f
@@ -467,7 +467,7 @@ class Ridder:
     def __init__(self, f, x0, **kwargs):
         self.f = f
         if len(x0) != 2:
-            raise ValueError('expected interval of 2 points, got %i' % len(x0))
+            raise ValueError('expected interval of 2 points, got %i' * len(x0))
         self.x1 = x0[0]
         self.x2 = x0[1]
         self.verbose = kwargs['verbose']
@@ -510,7 +510,7 @@ class ANewton:
 
     def __init__(self, f, x0, **kwargs):
         if not len(x0) == 1:
-            raise ValueError('expected 1 starting point, got %i' % len(x0))
+            raise ValueError('expected 1 starting point, got %i' * len(x0))
         self.x0 = x0[0]
         self.f = f
         if not 'df' in kwargs:
@@ -602,7 +602,7 @@ class MDNewton:
     keyword 'J'. Otherwise it will be calculated numerically.
 
     Please note that this method converges only locally. Especially for high-
-    dimensional systems it is not trvial to find a good starting point being
+    dimensional systems it is not trivial to find a good starting point being
     close enough to the root.
 
     It is recommended to use a faster, low-precision solver from SciPy [1] or
@@ -734,8 +734,8 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
     compute `\pi` as the root of `\sin x` closest to `x_0 = 3`::
 
         >>> from mpmath import *
-        >>> mp.dps = 30
-        >>> print findroot(sin, 3)
+        >>> mp.dps = 30; mp.pretty = True
+        >>> findroot(sin, 3)
         3.14159265358979323846264338328
 
     The secant method can be used to find complex roots of analytic functions,
@@ -743,14 +743,14 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
     (or else it will never leave the real line)::
 
         >>> mp.dps = 15
-        >>> print findroot(lambda x: x**3 + 2*x + 1, j)
+        >>> findroot(lambda x: x**3 + 2*x + 1, j)
         (0.226698825758202 + 1.46771150871022j)
 
     A nice application is to compute nontrivial roots of the Riemann zeta
     function with many digits (good initial values are needed for convergence)::
 
         >>> mp.dps = 30
-        >>> print findroot(zeta, 0.5+14j)
+        >>> findroot(zeta, 0.5+14j)
         (0.5 + 14.1347251417346937904572519836j)
 
     The secant method can also be used as an optimization algorithm, by passing
@@ -758,23 +758,25 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
     minimum of the gamma function::
 
         >>> mp.dps = 20
-        >>> print findroot(lambda x: diff(gamma, x), 1)
+        >>> findroot(lambda x: diff(gamma, x), 1)
         1.4616321449683623413
 
     Finally, a useful application is to compute inverse functions, such as the
     Lambert W function which is the inverse of `w e^w`, given the first
     term of the solution's asymptotic expansion as the initial value. In basic
-    cases, this gives identical results to mpmath's builtin ``lambertw``
+    cases, this gives identical results to mpmath's built-in ``lambertw``
     function::
 
         >>> def lambert(x):
         ...     return findroot(lambda w: w*exp(w) - x, log(1+x))
         ...
         >>> mp.dps = 15
-        >>> print lambert(1), lambertw(1)
-        0.567143290409784 0.567143290409784
-        >>> print lambert(1000), lambert(1000)
-        5.2496028524016 5.2496028524016
+        >>> lambert(1); lambertw(1)
+        0.567143290409784
+        0.567143290409784
+        >>> lambert(1000); lambert(1000)
+        5.2496028524016
+        5.2496028524016
 
     Multidimensional functions are also supported::
 
@@ -809,7 +811,7 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
 
         >>> f = lambda x: (x - 1)**99
         >>> findroot(f, 0.9, verify=False)
-        mpf('0.91807354244492868')
+        0.918073542444929
 
     Even for a very close starting point the secant method converges very
     slowly. Use ``verbose=True`` to illustrate this.
@@ -818,7 +820,7 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
     the root's multiplicity::
 
         >>> findroot(f, -10, solver='mnewton')
-        mpf('1.0')
+        1.0
 
     This variant uses the first and second derivative of the function, which is
     not very efficient.
@@ -845,7 +847,7 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
         error: 10.562244329955107759
         x: 1.0
         error: 7.8598304758094664213e-18
-        mpf('1.0')
+        1.0
 
 
     **Complex roots**
@@ -854,7 +856,7 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
     even for real starting points very fast::
 
         >>> findroot(lambda x: x**4 + x + 1, (0, 1, 2), solver='muller')
-        mpc(real='0.72713608449119684', imag='0.93409928946052944')
+        (0.727136084491197 + 0.934099289460529j)
 
 
     **Intersection methods**
@@ -865,7 +867,7 @@ def findroot(f, x0, solver=Secant, tol=None, verbose=False, verify=True,
     with multiple roots and usually need a sign change to find a root::
 
         >>> findroot(lambda x: x**3, (-1, 1), solver='anderson')
-        mpf('0.0')
+        0.0
 
     Be careful with symmetric functions::
 
@@ -971,7 +973,6 @@ def multiplicity(f, root, tol=eps, maxsteps=10, **kwargs):
     >>> from mpmath import *
     >>> multiplicity(lambda x: sin(x) - 1, pi/2)
     2
-
     """
     kwargs['d0f'] = f
     for i in xrange(maxsteps):

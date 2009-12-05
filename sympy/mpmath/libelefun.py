@@ -1514,40 +1514,15 @@ def mpf_atan2(y, x, prec, rnd=round_fast):
         return mpf_pos(tquo, prec, rnd)
 
 def mpf_asin(x, prec, rnd=round_fast):
-    sign, man, exp, bc = x
-    if bc+exp > 0 and x not in (fone, fnone):
-        raise ComplexResult("asin(x) is real only for -1 <= x <= 1")
-    flag_nr = True
-    if prec < 1000 or exp+bc < -13:
-        flag_nr = False
-    else:
-        ebc = exp + bc
-        if ebc < -13:
-            flag_nr = False
-        elif ebc < -3:
-            if prec < 3000:
-                flag_nr = False
-    if not flag_nr:
-        # asin(x) = 2*atan(x/(1+sqrt(1-x**2)))
-        wp = prec + 15
-        a = mpf_mul(x, x)
-        b = mpf_add(fone, mpf_sqrt(mpf_sub(fone, a, wp), wp), wp)
-        c = mpf_div(x, b, wp)
-        return mpf_shift(mpf_atan(c, prec, rnd), 1)
-    # use Newton's method
-    extra = 10
-    extra_p = 10
-    prec2 = prec + extra
-    r = math.asin(to_float(x))
-    r = from_float(r, 50, rnd)
-    for p in giant_steps(50, prec2):
-        wp = p + extra_p
-        c, s = cos_sin(r, wp, rnd)
-        tmp = mpf_sub(x, s, wp, rnd)
-        tmp = mpf_div(tmp, c, wp, rnd)
-        r = mpf_add(r, tmp, wp, rnd)
-    sign, man, exp, bc = r
-    return normalize(sign, man, exp, bc, prec, rnd)
+  sign, man, exp, bc = x
+  if bc+exp > 0 and x not in (fone, fnone):
+      raise ComplexResult("asin(x) is real only for -1 <= x <= 1")
+  # asin(x) = 2*atan(x/(1+sqrt(1-x**2)))
+  wp = prec + 15
+  a = mpf_mul(x, x)
+  b = mpf_add(fone, mpf_sqrt(mpf_sub(fone, a, wp), wp), wp)
+  c = mpf_div(x, b, wp)
+  return mpf_shift(mpf_atan(c, prec, rnd), 1)
 
 def mpf_acos(x, prec, rnd=round_fast):
     # acos(x) = 2*atan(sqrt(1-x**2)/(1+x))

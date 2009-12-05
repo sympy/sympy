@@ -96,7 +96,6 @@ and equation solving with rigorous error bounds::
     [  [3.9999999999999866773, 4.0000000000000133227]]
     [[0.59999999999972430942, 0.60000000000027142733]]
     [[0.49999999999982236432, 0.50000000000018474111]]
-
 """
 
 # TODO:
@@ -195,7 +194,7 @@ def lu_solve(A, b, **kwargs):
     Solve a determined or overdetermined linear equations system.
     Fast LU decomposition is used, which is less accurate than QR decomposition
     (especially for overdetermined systems), but it's twice as efficient.
-    Use qr_solve if you want more precison or have to solve a very ill-
+    Use qr_solve if you want more precision or have to solve a very ill-
     conditioned system.
     """
     # do not overwrite A nor b
@@ -372,7 +371,7 @@ def qr_solve(A, b, norm=norm, **kwargs):
 
     Solve a determined or overdetermined linear equations system and
     calculate the norm of the residual (error).
-    QR decompostion using Householder factorization is applied, which gives very
+    QR decomposition using Householder factorization is applied, which gives very
     accurate results even for ill-conditioned matrices. qr_solve is twice as
     efficient.
     """
@@ -389,7 +388,7 @@ def qr_solve(A, b, norm=norm, **kwargs):
 
 def cholesky(A):
     """
-    Cholesky decompositon of a symmetric positive-definite matrix.
+    Cholesky decomposition of a symmetric positive-definite matrix.
 
     Can be used to solve linear equation systems twice as efficient compared
     to LU decomposition or to test whether A is positive-definite.
@@ -465,7 +464,7 @@ def cond(A, norm=lambda x: mnorm(x,1)):
     Calculate the condition number of a matrix using a specified matrix norm.
 
     The condition number estimates the sensitivity of a matrix to errors.
-    Example: small input errors for ill-conditionded coefficient matrices
+    Example: small input errors for ill-conditioned coefficient matrices
     alter the solution of the system dramatically.
 
     For ill-conditioned matrices it's recommended to use qr_solve() instead

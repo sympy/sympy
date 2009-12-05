@@ -1049,10 +1049,10 @@ def jtheta(n, z, q):
     cos and sin. They are periodic functions::
 
         >>> from mpmath import *
-        >>> mp.dps = 15
-        >>> print jtheta(1, 0.1, 1/5.)
+        >>> mp.dps = 15; mp.pretty = True
+        >>> jtheta(1, 0.1, 1/5.)
         0.117756191842059
-        >>> print jtheta(1, 0.1 + 2*pi, 1/5.)
+        >>> jtheta(1, 0.1 + 2*pi, 1/5.)
         0.117756191842059
 
     Indeed, the series defining the theta functions are essentially
@@ -1070,9 +1070,9 @@ def jtheta(n, z, q):
         >>> tau = 0.3*j
         >>> q = exp(pi*j*tau)
         >>> z = 10
-        >>> print jtheta(4, z+tau*pi, q)
+        >>> jtheta(4, z+tau*pi, q)
         (-0.682420280786035 + 1.5266839997214j)
-        >>> print -exp(-2*j*z)/q * jtheta(4, z, q)
+        >>> -exp(-2*j*z)/q * jtheta(4, z, q)
         (-0.682420280786035 + 1.5266839997214j)
 
     The Jacobi theta functions satisfy a huge number of other
@@ -1080,9 +1080,9 @@ def jtheta(n, z, q):
     any `q`)::
 
         >>> q = 0.3
-        >>> print jtheta(3,0,q)**4
+        >>> jtheta(3,0,q)**4
         6.82374408935276
-        >>> print jtheta(2,0,q)**4 + jtheta(4,0,q)**4
+        >>> jtheta(2,0,q)**4 + jtheta(4,0,q)**4
         6.82374408935276
 
     Extensive listings of identities satisfied by the Jacobi theta
@@ -1091,19 +1091,19 @@ def jtheta(n, z, q):
     The Jacobi theta functions are related to the gamma function
     for special arguments::
 
-        >>> print jtheta(3, 0, exp(-pi))
+        >>> jtheta(3, 0, exp(-pi))
         1.08643481121331
-        >>> print pi**(1/4.) / gamma(3/4.)
+        >>> pi**(1/4.) / gamma(3/4.)
         1.08643481121331
 
     :func:`jtheta` supports arbitrary precision evaluation and complex
     arguments::
 
         >>> mp.dps = 50
-        >>> print jtheta(4, sqrt(2), 0.5)
+        >>> jtheta(4, sqrt(2), 0.5)
         2.0549510717571539127004115835148878097035750653737
         >>> mp.dps = 25
-        >>> print jtheta(4, 1+2j, (1+j)/5)
+        >>> jtheta(4, 1+2j, (1+j)/5)
         (7.180331760146805926356634 - 1.634292858119162417301683j)
 
     **Possible issues**
@@ -1136,6 +1136,10 @@ def jtheta(n, z, q):
         raise ValueError('abs(q) > Q_LIM = %f' % Q_LIM)
 
     extra = 10
+    if z:
+        M = mp.mag(z)
+        if M > 5 or (n == 1 and M < -5):
+            extra += 2*abs(M)
     cz = 0.5
     extra2 = 50
     prec0 = mp.prec
@@ -1193,10 +1197,10 @@ def djtheta(n, z, q, nd=1):
     respect to `z` of the Jacobi theta function `\vartheta_n(z,q)`::
 
         >>> from mpmath import *
-        >>> mp.dps = 15
-        >>> print djtheta(3, 7, 0.2)
+        >>> mp.dps = 15; mp.pretty = True
+        >>> djtheta(3, 7, 0.2)
         -0.795947847483158
-        >>> print diff(lambda x: jtheta(3, x, 0.2), 7)
+        >>> diff(lambda x: jtheta(3, x, 0.2), 7)
         -0.795947847483158
 
     For additional details, see :func:`jtheta`.
@@ -1208,6 +1212,10 @@ def djtheta(n, z, q, nd=1):
     if abs(q) > Q_LIM:
         raise ValueError('abs(q) > Q_LIM = %f' % Q_LIM)
     extra = 10 + mp.prec * nd // 10
+    if z:
+        M = mp.mag(z)
+        if M > 5 or (n != 1 and M < -5):
+            extra += 2*abs(M)
     cz = 0.5
     extra2 = 50
     prec0 = mp.prec
@@ -1270,12 +1278,12 @@ def jsn(u, m):
     (see :func:`ellipk`)::
 
         >>> from mpmath import *
-        >>> mp.dps = 25
-        >>> print jsn(2, 0.25)
+        >>> mp.dps = 25; mp.pretty = True
+        >>> jsn(2, 0.25)
         0.9628981775982774425751399
-        >>> print jsn(2+4*ellipk(0.25), 0.25)
+        >>> jsn(2+4*ellipk(0.25), 0.25)
         0.9628981775982774425751399
-        >>> print chop(jsn(2+2*j*ellipk(1-0.25), 0.25))
+        >>> chop(jsn(2+2*j*ellipk(1-0.25), 0.25))
         0.9628981775982774425751399
 
     """
@@ -1313,12 +1321,12 @@ def jcn(u, m):
     (see :func:`ellipk`)::
 
         >>> from mpmath import *
-        >>> mp.dps = 25
-        >>> print jcn(2, 0.25)
+        >>> mp.dps = 25; mp.pretty = True
+        >>> jcn(2, 0.25)
         -0.2698649654510865792581416
-        >>> print jcn(2+4*ellipk(0.25), 0.25)
+        >>> jcn(2+4*ellipk(0.25), 0.25)
         -0.2698649654510865792581416
-        >>> print chop(jcn(2+4*j*ellipk(1-0.25), 0.25))
+        >>> chop(jcn(2+4*j*ellipk(1-0.25), 0.25))
         -0.2698649654510865792581416
 
     """
@@ -1358,12 +1366,12 @@ def jdn(u, m):
     (see :func:`ellipk`)::
 
         >>> from mpmath import *
-        >>> mp.dps = 25
-        >>> print jdn(2, 0.25)
+        >>> mp.dps = 25; mp.pretty = True
+        >>> jdn(2, 0.25)
         0.8764740583123262286931578
-        >>> print jdn(2+2*ellipk(0.25), 0.25)
+        >>> jdn(2+2*ellipk(0.25), 0.25)
         0.8764740583123262286931578
-        >>> print chop(jdn(2+4*j*ellipk(1-0.25), 0.25))
+        >>> chop(jdn(2+4*j*ellipk(1-0.25), 0.25))
         0.8764740583123262286931578
 
     """

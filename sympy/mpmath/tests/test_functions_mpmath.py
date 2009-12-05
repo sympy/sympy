@@ -356,6 +356,9 @@ def test_areal_inverses():
     dps = mp.dps
     mp.dps = 300
     assert isinstance(asin(0.5), mpf)
+    mp.dps = 1000
+    assert asin(1).ae(pi/2)
+    assert asin(-1).ae(-pi/2)
     mp.dps = dps
 
 def test_invhyperb_inaccuracy():
@@ -486,7 +489,6 @@ def test_misc_bugs():
     mp.dps = 15
 
 def test_arange():
-    mp.dps = 15
     assert arange(10) == [mpf('0.0'), mpf('1.0'), mpf('2.0'), mpf('3.0'),
                           mpf('4.0'), mpf('5.0'), mpf('6.0'), mpf('7.0'),
                           mpf('8.0'), mpf('9.0')]
@@ -606,6 +608,13 @@ def test_root():
     assert isnan(nthroot(nan, 0))
     assert isnan(nthroot(nan, -1))
     assert isnan(nthroot(inf, 0))
+    assert root(2,3) == nthroot(2,3)
+    assert root(16,4,0) == 2
+    assert root(16,4,1) == 2j
+    assert root(16,4,2) == -2
+    assert root(16,4,3) == -2j
+    assert root(16,4,4) == 2
+    assert root(-125,3,1) == -5
 
 def test_issue_96():
     for dps in [20, 80]:
@@ -797,3 +806,63 @@ def test_atanh():
     assert atanh(mpc(-1,-inf)).ae(-jpi2)
     assert atanh(mpc(0,-inf)).ae(-jpi2)
     assert atanh(mpc(1,-inf)).ae(-jpi2)
+
+def test_expm1():
+    mp.dps = 15
+    assert expm1(0) == 0
+    assert expm1(3).ae(exp(3)-1)
+    assert expm1(inf) == inf
+    assert expm1(1e-10)*1e10
+    assert expm1(1e-50).ae(1e-50)
+    assert (expm1(1e-10)*1e10).ae(1.00000000005)
+
+def test_powm1():
+    mp.dps = 15
+    assert powm1(2,3) == 7
+    assert powm1(-1,2) == 0
+    assert powm1(-1,0) == 0
+    assert powm1(-2,0) == 0
+    assert powm1(3+4j,0) == 0
+    assert powm1(0,1) == -1
+    assert powm1(0,0) == 0
+    assert powm1(1,0) == 0
+    assert powm1(1,2) == 0
+    assert powm1(1,3+4j) == 0
+    assert powm1(1,5) == 0
+    assert powm1(j,4) == 0
+    assert powm1(-j,4) == 0
+    assert (powm1(2,1e-100)*1e100).ae(ln2)
+    assert powm1(2,'1e-100000000000') != 0
+    assert (powm1(fadd(1,1e-100,exact=True), 5)*1e100).ae(5)
+
+def test_unitroots():
+    assert unitroots(1) == [1]
+    assert unitroots(2) == [1, -1]
+    a, b, c = unitroots(3)
+    assert a == 1
+    assert b.ae(-0.5 + 0.86602540378443864676j)
+    assert c.ae(-0.5 - 0.86602540378443864676j)
+    assert unitroots(1, primitive=True) == [1]
+    assert unitroots(2, primitive=True) == [-1]
+    assert unitroots(3, primitive=True) == unitroots(3)[1:]
+    assert unitroots(4, primitive=True) == [j, -j]
+    assert len(unitroots(17, primitive=True)) == 16
+    assert len(unitroots(16, primitive=True)) == 8
+
+def test_cyclotomic():
+    mp.dps = 15
+    assert [cyclotomic(n,1) for n in range(31)] == [1,0,2,3,2,5,1,7,2,3,1,11,1,13,1,1,2,17,1,19,1,1,1,23,1,5,1,3,1,29,1]
+    assert [cyclotomic(n,-1) for n in range(31)] == [1,-2,0,1,2,1,3,1,2,1,5,1,1,1,7,1,2,1,3,1,1,1,11,1,1,1,13,1,1,1,1]
+    assert [cyclotomic(n,j) for n in range(21)] == [1,-1+j,1+j,j,0,1,-j,j,2,-j,1,j,3,1,-j,1,2,1,j,j,5]
+    assert [cyclotomic(n,-j) for n in range(21)] == [1,-1-j,1-j,-j,0,1,j,-j,2,j,1,-j,3,1,j,1,2,1,-j,-j,5]
+    assert cyclotomic(1624,j) == 1
+    assert cyclotomic(33600,j) == 1
+    u = sqrt(j, prec=500)
+    assert cyclotomic(8, u).ae(0)
+    assert cyclotomic(30, u).ae(5.8284271247461900976)
+    assert cyclotomic(2040, u).ae(1)
+    assert cyclotomic(0,2.5) == 1
+    assert cyclotomic(1,2.5) == 2.5-1
+    assert cyclotomic(2,2.5) == 2.5+1
+    assert cyclotomic(3,2.5) == 2.5**2 + 2.5 + 1
+    assert cyclotomic(7,2.5) == 406.234375

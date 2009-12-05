@@ -14,12 +14,13 @@ from settings import (\
 
 from libmpf import (\
     ComplexResult,
-    negative_rnd, bitcount, to_fixed, from_man_exp, to_int,
+    negative_rnd, bitcount, to_fixed, from_man_exp, from_int, to_int,
+    from_rational,
     fzero, fone, fnone, ftwo, finf, fninf, fnan,
     mpf_sign, mpf_add, mpf_abs, mpf_pos,
     mpf_cmp, mpf_lt, mpf_le,
     mpf_perturb, mpf_neg, mpf_shift, mpf_sub, mpf_mul, mpf_div,
-    sqrt_fixed, mpf_sqrt, mpf_rdiv_int
+    sqrt_fixed, mpf_sqrt, mpf_rdiv_int, mpf_pow_int
 )
 
 from libelefun import (\
@@ -32,10 +33,15 @@ from libmpc import (\
     mpc_div, mpc_add_mpf, mpc_sub_mpf,
     mpc_log, mpc_add, mpc_pos, mpc_shift,
     mpc_is_infnan, mpc_zero, mpc_sqrt, mpc_abs,
-    mpc_mpf_div, mpc_square,
+    mpc_mpf_div, mpc_square, mpc_exp
 )
 
-from gammazeta import int_fac, mpf_euler
+from gammazeta import int_fac, mpf_gamma_int, mpf_euler, euler_fixed
+
+
+class NoConvergence(Exception):
+    pass
+
 
 #-----------------------------------------------------------------------#
 #                                                                       #
@@ -54,7 +60,7 @@ TODO:
 
 """
 
-def hypsum_internal(ar, af, ac, br, bf, bc, xre, xim, prec, rnd):
+def hypsum_internal(ar, af, ac, br, bf, bc, xre, xim, prec, rnd, **kwargs):
     """
     Generic hypergeometric summation. This function computes:
 
@@ -86,6 +92,8 @@ def hypsum_internal(ar, af, ac, br, bf, bc, xre, xim, prec, rnd):
     br = [list(b) for b in br]
 
     wp = prec + 25
+
+    MAX = kwargs.get('maxterms', wp*100)
 
     if xim is None:
         x = to_fixed(xre, wp)
@@ -137,6 +145,14 @@ def hypsum_internal(ar, af, ac, br, bf, bc, xre, xim, prec, rnd):
         div = n * aqprod
         for ap, aq in ar: mul *= ap
         for bp, bq in br: div *= bp
+
+        # Ok if denominator is zero, provided numerator
+        # also is zero, and the series is actually a polynomial
+        # XXX: account for degree when doing this
+        if not div:
+            if not mul:
+                break
+            raise ZeroDivisionError
 
         if have_complex:
             # Multiply by rational factors
@@ -190,6 +206,10 @@ def hypsum_internal(ar, af, ac, br, bf, bc, xre, xim, prec, rnd):
 
         # Add 1 to all as and bs
         n += 1
+
+        if n > MAX:
+            raise NoConvergence
+
         for ap_aq in ar: ap_aq[0] += ap_aq[1]
         for bp_bq in br: bp_bq[0] += bp_bq[1]
         if have_float:
@@ -297,7 +317,14 @@ def mpf_hyp2f1_rat((ap, aq), (bp, bq), (cp, cq), x, prec, rnd):
     s = p = MP_ONE << wp
     n = 1
     while 1:
-        p = ((p * (ap*bp*cq*x)) >> wp) // (n*aq*bq*cp)
+        p = ((p * (ap*bp*cq*x)) >> wp)
+        d = (n*aq*bq*cp)
+        if d:
+            p //= d
+        elif p:
+            raise ZeroDivisionError
+        else:
+            break
         if -100 < p < 100:
             break
         s += p
@@ -318,6 +345,10 @@ def mpc_hyp2f1_rat((ap, aq), (bp, bq), (cp, cq), z, prec, rnd):
     while 1:
         r1 = ap*bp*cq
         r2 = n*aq*bq*cp
+        if not r2:
+            if not r1:
+                break
+            raise ZeroDivisionError
         pre, pim = pre*zre - pim*zim, pim*zre + pre*zim
         pre = ((pre * r1) >> wp) // r2
         pim = ((pim * r1) >> wp) // r2
@@ -366,7 +397,7 @@ def mpf_erf(x, prec, rnd=round_fast):
         c = mpf_sqrt(mpf_pi(prec+20), prec+20)
         # TODO: interval rounding
         return mpf_div(x, c, prec, rnd)
-    wp = prec + abs(size) + 20
+    wp = prec + abs(size) + 25
     # Taylor series for erf, fixed-point summation
     t = abs(to_fixed(x, wp))
     t2 = (t*t) >> wp
@@ -382,19 +413,7 @@ def mpf_erf(x, prec, rnd=round_fast):
     s = (s << (wp+1)) // sqrt_fixed(pi_fixed(wp), wp)
     if sign:
         s = -s
-    return from_man_exp(s, -wp, wp, rnd)
-
-def mpc_erf(z, prec, rnd=round_fast):
-    re, im = z
-    if im == fzero:
-        return (mpf_erf(re, prec, rnd), fzero)
-    wp = prec + 20
-    z2 = mpc_square(z, prec+20)
-    v = mpc_hyp1f1_rat((1,2), (3,2), mpc_neg(z2), wp, rnd)
-    sqrtpi = mpf_sqrt(mpf_pi(wp), wp)
-    c = mpf_rdiv_int(2, sqrtpi, wp)
-    c = mpc_mul_mpf(z, c, wp)
-    return mpc_mul(c, v, prec, rnd)
+    return from_man_exp(s, -wp, prec, rnd)
 
 # If possible, we use the asymptotic series for erfc.
 # This is an alternating divergent asymptotic series, so
@@ -423,7 +442,7 @@ def mpf_erfc(x, prec, rnd=round_fast):
         if regular_erf:
             return mpf_sub(fone, mpf_erf(x, prec+10, negative_rnd[rnd]), prec, rnd)
         # 1-erf(x) ~ exp(-x^2), increase prec to deal with cancellation
-        n = to_int(x)
+        n = to_int(x)+1
         return mpf_sub(fone, mpf_erf(x, prec + int(n**2*1.44) + 10), prec, rnd)
     s = term = MP_ONE << wp
     term_prev = 0
@@ -446,19 +465,293 @@ def mpf_erfc(x, prec, rnd=round_fast):
     y = mpf_div(mpf_mul(z, s, wp), x, prec, rnd)
     return y
 
-def mpc_erfc(z, prec, rnd=round_fast):
-    real, imag = z
-    if not imag:
-        return (mpf_erfc(real, prec, rnd), fzero)
-    # XXX: cancellation
-    return mpc_sub(mpc_one, mpc_erf(z, prec+20, rnd), prec, rnd)
-
 
 #-----------------------------------------------------------------------#
 #                                                                       #
 #                         Exponential integrals                         #
 #                                                                       #
 #-----------------------------------------------------------------------#
+
+def ei_taylor(x, prec):
+    s = t = x
+    k = 2
+    while t:
+        t = ((t*x) >> prec) // k
+        s += t // k
+        k += 1
+    return s
+
+def complex_ei_taylor(zre, zim, prec):
+    _abs = abs
+    sre = tre = zre
+    sim = tim = zim
+    k = 2
+    while _abs(tre) + _abs(tim) > 5:
+        tre, tim = ((tre*zre-tim*zim)//k)>>prec, ((tre*zim+tim*zre)//k)>>prec
+        sre += tre // k
+        sim += tim // k
+        k += 1
+    return sre, sim
+
+def ei_asymptotic(x, prec):
+    one = MP_ONE << prec
+    x = t = ((one << prec) // x)
+    s = one + x
+    k = 2
+    while t:
+        t = (k*t*x) >> prec
+        s += t
+        k += 1
+    return s
+
+def complex_ei_asymptotic(zre, zim, prec):
+    _abs = abs
+    one = MP_ONE << prec
+    M = (zim*zim + zre*zre) >> prec
+    # 1 / z
+    xre = tre = (zre << prec) // M
+    xim = tim = ((-zim) << prec) // M
+    sre = one + xre
+    sim = xim
+    k = 2
+    while _abs(tre) + _abs(tim) > 1000:
+        #print tre, tim
+        tre, tim = ((tre*xre-tim*xim)*k)>>prec, ((tre*xim+tim*xre)*k)>>prec
+        sre += tre
+        sim += tim
+        k += 1
+        if k > prec:
+            raise NoConvergence
+    return sre, sim
+
+def mpf_ei(x, prec, rnd=round_fast, e1=False):
+    if e1:
+        x = mpf_neg(x)
+    sign, man, exp, bc = x
+    if e1 and not sign:
+        if x == fzero:
+            return finf
+        raise ComplexResult("E1(x) for x < 0")
+    if man:
+        xabs = 0, man, exp, bc
+        xmag = exp+bc
+        wp = prec + 20
+        can_use_asymp = xmag > wp
+        if not can_use_asymp:
+            if exp >= 0:
+                xabsint = man << exp
+            else:
+                xabsint = man >> (-exp)
+            can_use_asymp = xabsint > int(wp*0.693) + 10
+        if can_use_asymp:
+            if xmag > wp:
+                v = fone
+            else:
+                v = from_man_exp(ei_asymptotic(to_fixed(x, wp), wp), -wp)
+            v = mpf_mul(v, mpf_exp(x, wp), wp)
+            v = mpf_div(v, x, prec, rnd)
+        else:
+            wp += 2*int(to_int(xabs))
+            u = to_fixed(x, wp)
+            v = ei_taylor(u, wp) + euler_fixed(wp)
+            t1 = from_man_exp(v,-wp)
+            t2 = mpf_log(xabs,wp)
+            v = mpf_add(t1, t2, prec, rnd)
+    else:
+        if x == fzero: v = fninf
+        elif x == finf: v = finf
+        elif x == fninf: v = fzero
+        else: v = fnan
+    if e1:
+        v = mpf_neg(v)
+    return v
+
+def mpc_ei(z, prec, rnd=round_fast, e1=False):
+    if e1:
+        z = mpc_neg(z)
+    a, b = z
+    asign, aman, aexp, abc = a
+    bsign, bman, bexp, bbc = b
+    if b == fzero:
+        if e1:
+            x = mpf_neg(mpf_ei(a, prec, rnd))
+            if not asign:
+                y = mpf_neg(mpf_pi(prec, rnd))
+            else:
+                y = fzero
+            return x, y
+        else:
+            return mpf_ei(a, prec, rnd), fzero
+    if a != fzero:
+        if not aman or not bman:
+            return (fnan, fnan)
+    wp = prec + 40
+    amag = aexp+abc
+    bmag = bexp+bbc
+    zmag = max(amag, bmag)
+    can_use_asymp = zmag > wp
+    if not can_use_asymp:
+        zabsint = abs(to_int(a)) + abs(to_int(b))
+        can_use_asymp = zabsint > int(wp*0.693) + 20
+    try:
+        if can_use_asymp:
+            if zmag > wp:
+                v = fone, fzero
+            else:
+                zre = to_fixed(a, wp)
+                zim = to_fixed(b, wp)
+                vre, vim = complex_ei_asymptotic(zre, zim, wp)
+                v = from_man_exp(vre, -wp), from_man_exp(vim, -wp)
+            v = mpc_mul(v, mpc_exp(z, wp), wp)
+            v = mpc_div(v, z, wp)
+            if e1:
+                v = mpc_neg(v, prec, rnd)
+            else:
+                x, y = v
+                if bsign:
+                    v = mpf_pos(x, prec, rnd), mpf_sub(y, mpf_pi(wp), prec, rnd)
+                else:
+                    v = mpf_pos(x, prec, rnd), mpf_add(y, mpf_pi(wp), prec, rnd)
+            return v
+    except NoConvergence:
+        pass
+    #wp += 2*max(0,zmag)
+    wp += 2*int(to_int(mpc_abs(z, 5)))
+    zre = to_fixed(a, wp)
+    zim = to_fixed(b, wp)
+    vre, vim = complex_ei_taylor(zre, zim, wp)
+    vre += euler_fixed(wp)
+    v = from_man_exp(vre,-wp), from_man_exp(vim,-wp)
+    if e1:
+        u = mpc_log(mpc_neg(z),wp)
+    else:
+        u = mpc_log(z,wp)
+    v = mpc_add(v, u, prec, rnd)
+    if e1:
+        v = mpc_neg(v)
+    return v
+
+def mpf_e1(x, prec, rnd=round_fast):
+    return mpf_ei(x, prec, rnd, True)
+
+def mpc_e1(x, prec, rnd=round_fast):
+    return mpc_ei(x, prec, rnd, True)
+
+def mpf_expint(n, x, prec, rnd=round_fast, gamma=False):
+    """
+    E_n(x), n an integer, x real
+
+    With gamma=True, computes Gamma(n,x)   (upper incomplete gamma function)
+
+    Returns (real, None) if real, otherwise (real, imag)
+    The imaginary part is an optional branch cut term
+
+    """
+    sign, man, exp, bc = x
+    if not man:
+        if gamma:
+            if x == fzero:
+                # Actually gamma function pole
+                if n <= 0:
+                    return finf
+                return mpf_gamma_int(n, prec, rnd)
+            if x == finf:
+                return fzero, None
+            # TODO: could return finite imaginary value at -inf
+            return fnan, fnan
+        else:
+            if x == fzero:
+                if n > 1:
+                    return from_rational(1, n-1, prec, rnd), None
+                else:
+                    return finf, None
+            if x == finf:
+                return fzero, None
+            return fnan, fnan
+    n_orig = n
+    if gamma:
+        n = 1-n
+    wp = prec + 20
+    xmag = exp + bc
+    # Beware of near-poles
+    if xmag < -10:
+        raise NotImplementedError
+    nmag = bitcount(abs(n))
+    have_imag = n > 0 and sign
+    negx = mpf_neg(x)
+    # Skip series if direct convergence
+    if n == 0 or 2*nmag - xmag < -wp:
+        if gamma:
+            v = mpf_exp(negx, wp)
+            re = mpf_mul(v, mpf_pow_int(x, n_orig-1, wp), prec, rnd)
+        else:
+            v = mpf_exp(negx, wp)
+            re = mpf_div(v, x, prec, rnd)
+    else:
+        # Finite number of terms, or...
+        can_use_asymptotic_series = -3*wp < n <= 0
+        # ...large enough?
+        if not can_use_asymptotic_series:
+            xi = abs(to_int(x))
+            m = min(max(1, xi-n), 2*wp)
+            siz = -n*nmag + (m+n)*bitcount(abs(m+n)) - m*xmag - (144*m//100)
+            tol = -wp-10
+            can_use_asymptotic_series = siz < tol
+        if can_use_asymptotic_series:
+            r = ((-MP_ONE) << (wp+wp)) // to_fixed(x, wp)
+            m = n
+            t = r*m
+            s = MP_ONE << wp
+            while m and t:
+                s += t
+                m += 1
+                t = (m*r*t) >> wp
+            v = mpf_exp(negx, wp)
+            if gamma:
+                # ~ exp(-x) * x^(n-1) * (1 + ...)
+                v = mpf_mul(v, mpf_pow_int(x, n_orig-1, wp), wp)
+            else:
+                # ~ exp(-x)/x * (1 + ...)
+                v = mpf_div(v, x, wp)
+            re = mpf_mul(v, from_man_exp(s, -wp), prec, rnd)
+        elif n == 1:
+            re = mpf_neg(mpf_ei(negx, prec, rnd))
+        elif n > 0 and n < 3*wp:
+            T1 = mpf_neg(mpf_ei(negx, wp))
+            if gamma:
+                if n_orig & 1:
+                    T1 = mpf_neg(T1)
+            else:
+                T1 = mpf_mul(T1, mpf_pow_int(negx, n-1, wp), wp)
+            r = t = to_fixed(x, wp)
+            facs = [1] * (n-1)
+            for k in range(1,n-1):
+                facs[k] = facs[k-1] * k
+            facs = facs[::-1]
+            s = facs[0] << wp
+            for k in range(1, n-1):
+                if k & 1:
+                    s -= facs[k] * t
+                else:
+                    s += facs[k] * t
+                t = (t*r) >> wp
+            T2 = from_man_exp(s, -wp, wp)
+            T2 = mpf_mul(T2, mpf_exp(negx, wp))
+            if gamma:
+                T2 = mpf_mul(T2, mpf_pow_int(x, n_orig, wp), wp)
+            R = mpf_add(T1, T2)
+            re = mpf_div(R, from_int(int_fac(n-1)), prec, rnd)
+        else:
+            raise NotImplementedError
+    if have_imag:
+        M = from_int(-int_fac(n-1))
+        if gamma:
+            im = mpf_div(mpf_pi(wp), M, prec, rnd)
+        else:
+            im = mpf_div(mpf_mul(mpf_pi(wp), mpf_pow_int(negx, n_orig-1, wp), wp), M, prec, rnd)
+        return re, im
+    else:
+        return re, None
 
 def mpf_ci_si_taylor(x, wp, which=0):
     """
@@ -652,31 +945,37 @@ def mpc_si(z, prec, rnd=round_fast):
 # is very small
 
 def mpf_besseljn(n, x, prec, rounding=round_fast):
+    prec += 50
     negate = n < 0 and n & 1
+    mag = x[2]+x[3]
     n = abs(n)
-    origprec = prec
-    prec += 20 + bitcount(abs(n))
-    x = to_fixed(x, prec)
-    x2 = (x**2) >> prec
+    wp = prec + 20 + n*bitcount(n)
+    if mag < 0:
+        wp -= n * mag
+    x = to_fixed(x, wp)
+    x2 = (x**2) >> wp
     if not n:
-        s = t = MP_ONE << prec
+        s = t = MP_ONE << wp
     else:
-        s = t = (x**n // int_fac(n)) >> ((n-1)*prec + n)
+        s = t = (x**n // int_fac(n)) >> ((n-1)*wp + n)
     k = 1
     while t:
-        t = ((t * x2) // (-4*k*(k+n))) >> prec
+        t = ((t * x2) // (-4*k*(k+n))) >> wp
         s += t
         k += 1
     if negate:
         s = -s
-    return from_man_exp(s, -prec, origprec, rounding)
+    return from_man_exp(s, -wp, prec, rounding)
 
 def mpc_besseljn(n, z, prec, rounding=round_fast):
     negate = n < 0 and n & 1
     n = abs(n)
     origprec = prec
-    prec += 20 + bitcount(abs(n))
     zre, zim = z
+    mag = max(zre[2]+zre[3], zim[2]+zim[3])
+    prec += 20 + n*bitcount(n) + abs(mag)
+    if mag < 0:
+        prec -= n * mag
     zre = to_fixed(zre, prec)
     zim = to_fixed(zim, prec)
     z2re = (zre**2 - zim**2) >> prec

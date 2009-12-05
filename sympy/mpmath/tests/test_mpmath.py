@@ -77,3 +77,23 @@ def test_monitor():
     assert g(4) == 16
     assert a[0] == ((3,), {})
     assert b[0] == 9
+
+def test_nint_distance():
+    nint_distance(mpf(-3)) == (-3, -inf)
+    nint_distance(mpc(-3)) == (-3, -inf)
+    nint_distance(mpf(-3.1)) == (-3, -3)
+    nint_distance(mpf(-3.01)) == (-3, -6)
+    nint_distance(mpf(-3.001)) == (-3, -9)
+    nint_distance(mpf(-3.0001)) == (-3, -13)
+    nint_distance(mpf(-2.9)) == (-3, -3)
+    nint_distance(mpf(-2.99)) == (-3, -6)
+    nint_distance(mpf(-2.999)) == (-3, -9)
+    nint_distance(mpf(-2.9999)) == (-3, -13)
+    nint_distance(mpc(-3+0.1j)) == (-3, -3)
+    nint_distance(mpc(-3+0.01j)) == (-3, -6)
+    nint_distance(mpc(-3.1+0.1j)) == (-3, -3)
+    nint_distance(mpc(-3.01+0.01j)) == (-3, -6)
+    nint_distance(mpc(-3.001+0.001j)) == (-3, -9)
+    nint_distance(mpf(0)) == (0, -inf)
+    nint_distance(mpf(0.01)) == (0, -6)
+    nint_distance(mpf('1e-100')) == (0, -332)

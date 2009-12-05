@@ -77,8 +77,8 @@ def python_bitcount(n):
     bc = bisect(powers, n)
     if bc != 300:
         return bc
-    bc = int(math.log(n, 2)) - 4 # it is 4 or 5 bits off here...
-    return bc + bctable[n>>bc]   # but it's corrected here.
+    bc = int(math.log(n, 2)) - 4
+    return bc + bctable[n>>bc]
 
 def gmpy_bitcount(n):
     """Calculate bit size of the nonnegative integer n."""
@@ -137,7 +137,9 @@ def numeral_python(n, base=10, size=0, digits=stddigits):
     The 'size' parameters specifies the number of digits in n; this
     number is only used to determine splitting points and need not be
     exact."""
-    if n < 0:
+    if n <= 0:
+        if not n:
+            return "0"
         return "-" + numeral(-n, base, size, digits)
     # Fast enough to do directly
     if size < 250:
@@ -379,3 +381,13 @@ def moebius(n):
             if not sum(p % f for f in factors):
                 factors.append(p)
     return (-1)**len(factors)
+
+def gcd(*args):
+    a = 0
+    for b in args:
+        if a:
+            while b:
+                a, b = b, a % b
+        else:
+            a = b
+    return a

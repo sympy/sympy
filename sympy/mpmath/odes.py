@@ -123,7 +123,7 @@ def odefun(F, x0, y0, tol=None, degree=None, method='taylor', verbose=False):
     which has explicit solution `y(x) = \exp(x)`::
 
         >>> from mpmath import *
-        >>> mp.dps = 15
+        >>> mp.dps = 15; mp.pretty = True
         >>> f = odefun(lambda x, y: y, 0, 1)
         >>> for x in [0, 1, 2.5]:
         ...     print f(x), exp(x)
@@ -136,9 +136,9 @@ def odefun(F, x0, y0, tol=None, degree=None, method='taylor', verbose=False):
 
         >>> mp.dps = 50
         >>> f = odefun(lambda x, y: y, 0, 1)
-        >>> print f(1)
+        >>> f(1)
         2.7182818284590452353602874713526624977572470937
-        >>> print exp(1)
+        >>> exp(1)
         2.7182818284590452353602874713526624977572470937
 
     Using the more general vectorized form, the test problem
@@ -146,7 +146,7 @@ def odefun(F, x0, y0, tol=None, degree=None, method='taylor', verbose=False):
 
         >>> mp.dps = 15
         >>> f = odefun(lambda x, y: [y[0]], 0, [1])
-        >>> nprint(f(1), 15)
+        >>> f(1)
         [2.71828182845905]
 
     :func:`odefun` can solve nonlinear ODEs, which are generally
@@ -170,9 +170,9 @@ def odefun(F, x0, y0, tol=None, degree=None, method='taylor', verbose=False):
 
         >>> f = lambda x: (1+x**2)/(1+x**3)
         >>> g = odefun(lambda x, y: f(x), pi, 0)
-        >>> print g(2*pi)
+        >>> g(2*pi)
         0.72128263801696
-        >>> print quad(f, [pi, 2*pi])
+        >>> quad(f, [pi, 2*pi])
         0.72128263801696
 
     **Examples of second-order ODEs**

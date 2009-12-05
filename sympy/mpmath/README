@@ -22,22 +22,39 @@ to mpmath:
 * Nimish Telang <ntelang@gmail.com>
 * Mike Taschuk <mtaschuk@ece.ualberta.ca>
 * Case Van Horsen <casevh@gmail.com>
+* Jorn Baayen <jorn.baayen@gmail.com>
 
 For a detailed changelog, including individual contributions,
 see the CHANGES file.
+
+Fredrik's work on mpmath during summer 2008 was sponsored by Google
+as part of the Google Summer of Code program.
+
+Fredrik's work on mpmath during summer 2009 was sponsored by the
+American Institute of Mathematics under the support of the National Science
+Foundation Grant No. 0757627 (FRG: L-functions and Modular Forms).
+
+Any opinions, findings, and conclusions or recommendations expressed in this
+material are those of the author(s) and do not necessarily reflect the
+views of the sponsors.
 
 Credit also goes to:
 * The authors of the GMP library and the Python wrapper
   gmpy, enabling mpmath to become much faster at
   high precision
 * The authors of MPFR, pari/gp, MPFUN, and other arbitrary-
-  precision libraries, whose documentation have proved helpful
+  precision libraries, whose documentation has been helpful
   for implementing many of the algorithms in mpmath
+* Wikipedia contributors; Abramowitz & Stegun; Gradshteyn & Ryzhik;
+  Wolfram Research for MathWorld and the Wolfram Functions site.
+  These are the main references used for special functions
+  implementations.
 * George Brandl for developing the Sphinx documentation tool
   used to build mpmath's documentation
 
 Release history:
 
+* Version 0.13 released on August 13, 2009
 * Version 0.12 released on June 9, 2009
 * Version 0.11 released on January 26, 2009
 * Version 0.10 released on October 15, 2008

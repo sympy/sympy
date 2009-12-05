@@ -613,7 +613,6 @@ def diag(diagonal, **kwargs):
     [['1.0', '0.0', '0.0'],
      ['0.0', '2.0', '0.0'],
      ['0.0', '0.0', '3.0']])
-
     """
     A = matrix(len(diagonal), **kwargs)
     for i in xrange(len(diagonal)):
@@ -631,7 +630,6 @@ def zeros(*args, **kwargs):
     matrix(
     [['0.0', '0.0'],
      ['0.0', '0.0']])
-
     """
     if len(args) == 1:
         m = n = args[0]
@@ -657,7 +655,6 @@ def ones(*args, **kwargs):
     matrix(
     [['1.0', '1.0'],
      ['1.0', '1.0']])
-
     """
     if len(args) == 1:
         m = n = args[0]
@@ -701,7 +698,6 @@ def randmatrix(m, n=None, min=0, max=1, **kwargs):
     matrix(
     [['0.53491598236191806', '0.57195669543302752'],
      ['0.85589992269513615', '0.82444367501382143']])
-
     """
     if not n:
         n = m

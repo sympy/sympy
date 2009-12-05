@@ -15,10 +15,9 @@ from mptypes import (mp, extraprec)
 from mptypes import (mpmathify, mpf, mpc, j, inf, eps,
     AS_POINTS, arange, nstr, nprint, isinf, fsum, fprod)
 from functions import (ldexp, factorial, exp, ln, sin, cos, pi, bernoulli,
-    sign)
+    sign, ceil, re, gamma)
 from gammazeta import int_fac
 
-from quadrature import quad, quadgl, quadts
 from matrices import matrix
 from linalg import lu_solve
 
@@ -67,17 +66,17 @@ def richardson(seq):
     Applying Richardson extrapolation to the Leibniz series for `\pi`::
 
         >>> from mpmath import *
-        >>> mp.dps = 30
+        >>> mp.dps = 30; mp.pretty = True
         >>> S = [4*sum(mpf(-1)**n/(2*n+1) for n in range(m))
         ...     for m in range(1,30)]
         >>> v, c = richardson(S[:10])
-        >>> print v
+        >>> v
         3.2126984126984126984126984127
         >>> nprint([v-pi, c])
         [7.11058e-2, 2.0]
 
         >>> v, c = richardson(S[:30])
-        >>> print v
+        >>> v
         3.14159265468624052829954206226
         >>> nprint([v-pi, c])
         [1.09645e-9, 20833.3]
@@ -320,17 +319,17 @@ def sumem(f, interval, tol=None, reject=10, integral=None,
     integral and derivative values (the second should be much faster)::
 
         >>> from mpmath import *
-        >>> mp.dps = 50
-        >>> print sumem(lambda n: 1/n**2, [32, inf])
+        >>> mp.dps = 50; mp.pretty = True
+        >>> sumem(lambda n: 1/n**2, [32, inf])
         0.03174336652030209012658168043874142714132886413417
         >>> I = mpf(1)/32
         >>> D = adiffs=((-1)**n*fac(n+1)*32**(-2-n) for n in xrange(999))
-        >>> print sumem(lambda n: 1/n**2, [32, inf], integral=I, adiffs=D)
+        >>> sumem(lambda n: 1/n**2, [32, inf], integral=I, adiffs=D)
         0.03174336652030209012658168043874142714132886413417
 
     An exact evaluation of a finite polynomial sum::
 
-        >>> print sumem(lambda n: n**5-12*n**2+3*n, [-100000, 200000])
+        >>> sumem(lambda n: n**5-12*n**2+3*n, [-100000, 200000])
         10500155000624963999742499550000.0
         >>> print sum(n**5-12*n**2+3*n for n in xrange(-100000, 200001))
         10500155000624963999742499550000
@@ -378,7 +377,7 @@ def sumem(f, interval, tol=None, reject=10, integral=None,
         if integral:
             s += integral
         else:
-            integral, ierr = quad(f, interval, error=True)
+            integral, ierr = mp.quad(f, interval, error=True)
             if verbose:
                 print "Integration error:", ierr
             s += integral
@@ -516,10 +515,10 @@ def nsum(f, interval, **kwargs):
     first converges rapidly and the second converges slowly, are::
 
         >>> from mpmath import *
-        >>> mp.dps = 15
-        >>> print nsum(lambda n: 1/fac(n), [0, inf])
+        >>> mp.dps = 15; mp.pretty = True
+        >>> nsum(lambda n: 1/fac(n), [0, inf])
         2.71828182845905
-        >>> print nsum(lambda n: 1/n**2, [1, inf])
+        >>> nsum(lambda n: 1/n**2, [1, inf])
         1.64493406684823
 
     When appropriate, :func:`nsum` applies convergence acceleration to
@@ -597,20 +596,20 @@ def nsum(f, interval, **kwargs):
 
     A finite sum::
 
-        >>> print nsum(lambda k: 1/k, [1, 6])
+        >>> nsum(lambda k: 1/k, [1, 6])
         2.45
 
     Summation of a series going to negative infinity and a doubly
     infinite series::
 
-        >>> print nsum(lambda k: 1/k**2, [-inf, -1])
+        >>> nsum(lambda k: 1/k**2, [-inf, -1])
         1.64493406684823
-        >>> print nsum(lambda k: 1/(1+k**2), [-inf, inf])
+        >>> nsum(lambda k: 1/(1+k**2), [-inf, inf])
         3.15334809493716
 
     :func:`nsum` handles sums of complex numbers::
 
-        >>> print nsum(lambda k: (0.5+0.25j)**k, [0, inf])
+        >>> nsum(lambda k: (0.5+0.25j)**k, [0, inf])
         (1.6 + 0.8j)
 
     The following sum converges very rapidly, so it is most
@@ -629,22 +628,22 @@ def nsum(f, interval, **kwargs):
     functions, as well as their alternating counterparts::
 
         >>> mp.dps = 50
-        >>> print nsum(lambda k: 1 / k**3, [1, inf],
+        >>> nsum(lambda k: 1 / k**3, [1, inf],
         ...     method='richardson')
         1.2020569031595942853997381615114499907649862923405
-        >>> print zeta(3)
+        >>> zeta(3)
         1.2020569031595942853997381615114499907649862923405
 
-        >>> print nsum(lambda n: (n + 3)/(n**3 + n**2), [1, inf],
+        >>> nsum(lambda n: (n + 3)/(n**3 + n**2), [1, inf],
         ...     method='richardson')
         2.9348022005446793094172454999380755676568497036204
-        >>> print pi**2/2-2
+        >>> pi**2/2-2
         2.9348022005446793094172454999380755676568497036204
 
-        >>> print nsum(lambda k: (-1)**k / k**3, [1, inf],
+        >>> nsum(lambda k: (-1)**k / k**3, [1, inf],
         ...     method='richardson')
         -0.90154267736969571404980362113358749307373971925537
-        >>> print -3*zeta(3)/4
+        >>> -3*zeta(3)/4
         -0.90154267736969571404980362113358749307373971925538
 
     **Examples with Shanks transformation**
@@ -655,15 +654,15 @@ def nsum(f, interval, **kwargs):
     Here we apply it to a series for `\log(2)`, which can be
     seen as the Taylor series for `\log(1+x)` with `x = 1`::
 
-        >>> print nsum(lambda k: -(-1)**k/k, [1, inf],
+        >>> nsum(lambda k: -(-1)**k/k, [1, inf],
         ...     method='shanks')
         0.69314718055994530941723212145817656807550013436025
-        >>> print log(2)
+        >>> log(2)
         0.69314718055994530941723212145817656807550013436025
 
     Here we apply it to a slowly convergent geometric series::
 
-        >>> print nsum(lambda k: mpf('0.995')**k, [0, inf],
+        >>> nsum(lambda k: mpf('0.995')**k, [0, inf],
         ...     method='shanks')
         200.0
 
@@ -672,21 +671,21 @@ def nsum(f, interval, **kwargs):
     the exact decay rate of `g(k)`::
 
         >>> mp.dps = 15
-        >>> print nsum(lambda k: (-1)**(k+1) / k**1.5, [1, inf],
+        >>> nsum(lambda k: (-1)**(k+1) / k**1.5, [1, inf],
         ...     method='shanks')
         0.765147024625408
-        >>> print (2-sqrt(2))*zeta(1.5)/2
+        >>> (2-sqrt(2))*zeta(1.5)/2
         0.765147024625408
 
     The following slowly convergent alternating series has no known
     closed-form value. Evaluating the sum a second time at higher
     precision indicates that the value is probably correct::
 
-        >>> print nsum(lambda k: (-1)**k / log(k), [2, inf],
+        >>> nsum(lambda k: (-1)**k / log(k), [2, inf],
         ...     method='shanks')
         0.924299897222939
         >>> mp.dps = 30
-        >>> print nsum(lambda k: (-1)**k / log(k), [2, inf],
+        >>> nsum(lambda k: (-1)**k / log(k), [2, inf],
         ...     method='shanks')
         0.92429989722293885595957018136
 
@@ -697,17 +696,17 @@ def nsum(f, interval, **kwargs):
 
         >>> f = lambda k: log(k)/k**2.5
         >>> mp.dps = 15
-        >>> print nsum(f, [1, inf], method='euler-maclaurin')
+        >>> nsum(f, [1, inf], method='euler-maclaurin')
         0.38734195032621
-        >>> print -diff(zeta, 2.5)
+        >>> -diff(zeta, 2.5)
         0.38734195032621
 
     Increasing ``steps`` improves speed at higher precision::
 
         >>> mp.dps = 50
-        >>> print nsum(f, [1, inf], method='euler-maclaurin', steps=[250])
+        >>> nsum(f, [1, inf], method='euler-maclaurin', steps=[250])
         0.38734195032620997271199237593105101319948228874688
-        >>> print -diff(zeta, 2.5)
+        >>> -diff(zeta, 2.5)
         0.38734195032620997271199237593105101319948228874688
 
     **Divergent series**
@@ -723,10 +722,10 @@ def nsum(f, interval, **kwargs):
     convergence::
 
         >>> mp.dps = 50
-        >>> print nsum(lambda k: -(-9)**k/k, [1, inf],
+        >>> nsum(lambda k: -(-9)**k/k, [1, inf],
         ...     method='shanks')
         2.3025850929940456840179914546843642076011014886288
-        >>> print log(10)
+        >>> log(10)
         2.3025850929940456840179914546843642076011014886288
 
     A particular type of divergent series that can be summed
@@ -807,8 +806,8 @@ def nprod(f, interval, **kwargs):
     A simple finite product::
 
         >>> from mpmath import *
-        >>> mp.dps = 15
-        >>> print nprod(lambda k: k, [1, 4])
+        >>> mp.dps = 15; mp.pretty = True
+        >>> nprod(lambda k: k, [1, 4])
         24.0
 
     A large number of infinite products have known exact values,
@@ -817,72 +816,72 @@ def nprod(f, interval, **kwargs):
 
     A few infinite products with simple values are::
 
-        >>> print 2*nprod(lambda k: (4*k**2)/(4*k**2-1), [1, inf])
+        >>> 2*nprod(lambda k: (4*k**2)/(4*k**2-1), [1, inf])
         3.14159265358979
-        >>> print nprod(lambda k: (1+1/k)**2/(1+2/k), [1, inf])
+        >>> nprod(lambda k: (1+1/k)**2/(1+2/k), [1, inf])
         2.0
-        >>> print nprod(lambda k: (k**3-1)/(k**3+1), [2, inf])
+        >>> nprod(lambda k: (k**3-1)/(k**3+1), [2, inf])
         0.666666666666667
-        >>> print nprod(lambda k: (1-1/k**2), [2, inf])
+        >>> nprod(lambda k: (1-1/k**2), [2, inf])
         0.5
 
     Next, several more infinite products with more complicated
     values::
 
-        >>> print nprod(lambda k: exp(1/k**2), [1, inf])
+        >>> nprod(lambda k: exp(1/k**2), [1, inf])
         5.18066831789712
-        >>> print exp(pi**2/6)
+        >>> exp(pi**2/6)
         5.18066831789712
 
-        >>> print nprod(lambda k: (k**2-1)/(k**2+1), [2, inf])
+        >>> nprod(lambda k: (k**2-1)/(k**2+1), [2, inf])
         0.272029054982133
-        >>> print pi*csch(pi)
+        >>> pi*csch(pi)
         0.272029054982133
 
-        >>> print nprod(lambda k: (k**4-1)/(k**4+1), [2, inf])
+        >>> nprod(lambda k: (k**4-1)/(k**4+1), [2, inf])
         0.8480540493529
-        >>> print pi*sinh(pi)/(cosh(sqrt(2)*pi)-cos(sqrt(2)*pi))
+        >>> pi*sinh(pi)/(cosh(sqrt(2)*pi)-cos(sqrt(2)*pi))
         0.8480540493529
 
-        >>> print nprod(lambda k: (1+1/k+1/k**2)**2/(1+2/k+3/k**2), [1, inf])
+        >>> nprod(lambda k: (1+1/k+1/k**2)**2/(1+2/k+3/k**2), [1, inf])
         1.84893618285824
-        >>> print 3*sqrt(2)*cosh(pi*sqrt(3)/2)**2*csch(pi*sqrt(2))/pi
+        >>> 3*sqrt(2)*cosh(pi*sqrt(3)/2)**2*csch(pi*sqrt(2))/pi
         1.84893618285824
 
-        >>> print nprod(lambda k: (1-1/k**4), [2, inf])
+        >>> nprod(lambda k: (1-1/k**4), [2, inf])
         0.919019477593744
-        >>> print sinh(pi)/(4*pi)
+        >>> sinh(pi)/(4*pi)
         0.919019477593744
 
-        >>> print nprod(lambda k: (1-1/k**6), [2, inf])
+        >>> nprod(lambda k: (1-1/k**6), [2, inf])
         0.982684277742192
-        >>> print (1+cosh(pi*sqrt(3)))/(12*pi**2)
+        >>> (1+cosh(pi*sqrt(3)))/(12*pi**2)
         0.982684277742192
 
-        >>> print nprod(lambda k: (1+1/k**2), [2, inf])
+        >>> nprod(lambda k: (1+1/k**2), [2, inf])
         1.83803895518749
-        >>> print sinh(pi)/(2*pi)
+        >>> sinh(pi)/(2*pi)
         1.83803895518749
 
-        >>> print nprod(lambda n: (1+1/n)**n * exp(1/(2*n)-1), [1, inf])
+        >>> nprod(lambda n: (1+1/n)**n * exp(1/(2*n)-1), [1, inf])
         1.44725592689037
-        >>> print exp(1+euler/2)/sqrt(2*pi)
+        >>> exp(1+euler/2)/sqrt(2*pi)
         1.44725592689037
 
     The following two products are equivalent and can be evaluated in
     terms of a Jacobi theta function. Pi can be replaced by any value
     (as long as convergence is preserved)::
 
-        >>> print nprod(lambda k: (1-pi**-k)/(1+pi**-k), [1, inf])
+        >>> nprod(lambda k: (1-pi**-k)/(1+pi**-k), [1, inf])
         0.383845120748167
-        >>> print nprod(lambda k: tanh(k*log(pi)/2), [1, inf])
+        >>> nprod(lambda k: tanh(k*log(pi)/2), [1, inf])
         0.383845120748167
-        >>> print jtheta(4,0,1/pi)
+        >>> jtheta(4,0,1/pi)
         0.383845120748167
 
     This product does not have a known closed form value::
 
-        >>> print nprod(lambda k: (1-1/2**k), [1, inf])
+        >>> nprod(lambda k: (1-1/2**k), [1, inf])
         0.288788095086602
 
     **References**
@@ -952,28 +951,28 @@ def limit(f, x, direction=1, exp=False, **kwargs):
     A basic evaluation of a removable singularity::
 
         >>> from mpmath import *
-        >>> mp.dps = 30
-        >>> print limit(lambda x: (x-sin(x))/x**3, 0)
+        >>> mp.dps = 30; mp.pretty = True
+        >>> limit(lambda x: (x-sin(x))/x**3, 0)
         0.166666666666666666666666666667
 
     Computing the exponential function using its limit definition::
 
-        >>> print limit(lambda n: (1+3/n)**n, inf)
+        >>> limit(lambda n: (1+3/n)**n, inf)
         20.0855369231876677409285296546
-        >>> print exp(3)
+        >>> exp(3)
         20.0855369231876677409285296546
 
     A limit for `\pi`::
 
         >>> f = lambda n: 2**(4*n+1)*fac(n)**4/(2*n+1)/fac(2*n)**2
-        >>> print limit(f, inf)
+        >>> limit(f, inf)
         3.14159265358979323846264338328
 
     Calculating the coefficient in Stirling's formula::
 
-        >>> print limit(lambda n: fac(n) / (sqrt(n)*(n/e)**n), inf)
+        >>> limit(lambda n: fac(n) / (sqrt(n)*(n/e)**n), inf)
         2.50662827463100050241576528481
-        >>> print sqrt(2*pi)
+        >>> sqrt(2*pi)
         2.50662827463100050241576528481
 
     Evaluating Euler's constant `\gamma` using the limit representation
@@ -986,9 +985,9 @@ def limit(f, x, direction=1, exp=False, **kwargs):
     (which converges notoriously slowly)::
 
         >>> f = lambda n: sum([mpf(1)/k for k in range(1,n+1)]) - log(n)
-        >>> print limit(f, inf)
+        >>> limit(f, inf)
         0.577215664901532860606512090082
-        >>> print euler
+        >>> +euler
         0.577215664901532860606512090082
 
     With default settings, the following limit converges too slowly
@@ -996,9 +995,9 @@ def limit(f, x, direction=1, exp=False, **kwargs):
     however gives a perfect result::
 
         >>> f = lambda x: sqrt(x**3+x**2)/(sqrt(x**3)+x)
-        >>> print limit(f, inf)
+        >>> limit(f, inf)
         0.992518488562331431132360378669
-        >>> print limit(f, inf, exp=True)
+        >>> limit(f, inf, exp=True)
         1.0
 
     """
@@ -1054,12 +1053,12 @@ def diff(f, x, n=1, method='step', scale=1, direction=0):
     Derivatives of a simple function::
 
         >>> from mpmath import *
-        >>> mp.dps = 15
-        >>> print diff(lambda x: x**2 + x, 1.0)
+        >>> mp.dps = 15; mp.pretty = True
+        >>> diff(lambda x: x**2 + x, 1.0)
         3.0
-        >>> print diff(lambda x: x**2 + x, 1.0, 2)
+        >>> diff(lambda x: x**2 + x, 1.0, 2)
         2.0
-        >>> print diff(lambda x: x**2 + x, 1.0, 3)
+        >>> diff(lambda x: x**2 + x, 1.0, 3)
         0.0
 
     The exponential function is invariant under differentiation::
@@ -1092,7 +1091,7 @@ def diff(f, x, n=1, method='step', scale=1, direction=0):
     With ``'quad'`` the result is likely to have a small imaginary
     component even if the derivative is actually real::
 
-        >>> print diff(sqrt, 1, method='quad')
+        >>> diff(sqrt, 1, method='quad')
         (0.5 - 9.44048454290863e-27j)
 
     **Scale**
@@ -1121,11 +1120,11 @@ def diff(f, x, n=1, method='step', scale=1, direction=0):
     This is useful for computing left- or right-sided derivatives
     of nonsmooth functions:
 
-        >>> print diff(abs, 0, direction=0)
+        >>> diff(abs, 0, direction=0)
         0.0
-        >>> print diff(abs, 0, direction=1)
+        >>> diff(abs, 0, direction=1)
         1.0
-        >>> print diff(abs, 0, direction=-1)
+        >>> diff(abs, 0, direction=-1)
         -1.0
 
     More generally, if the direction is nonzero, a right difference
@@ -1165,7 +1164,7 @@ def diff(f, x, n=1, method='step', scale=1, direction=0):
                 rei = radius*exp(j*t)
                 z = x + rei
                 return f(z) / rei**n
-            d = quadts(g, [0, 2*pi])
+            d = mp.quadts(g, [0, 2*pi])
             v = d * factorial(n) / (2*pi)
         else:
             raise ValueError("unknown method: %r" % method)
@@ -1193,6 +1192,8 @@ def diffs(f, x, n=inf, method='step', scale=1, direction=0):
 
     **Examples**
 
+        >>> from mpmath import *
+        >>> mp.dps = 15
         >>> nprint(list(diffs(cos, 1, 5)))
         [0.540302, -0.841471, -0.540302, 0.841471, 0.540302, -0.841471]
         >>> for i, d in zip(range(6), diffs(cos, 1)): print i, d
@@ -1254,19 +1255,91 @@ def diffs(f, x, n=inf, method='step', scale=1, direction=0):
         A, B = B, int(A*1.4+1)
         B = min(B, n)
 
+def differint(f, x, n=1, x0=0):
+    r"""
+    Calculates the Riemann-Liouville differintegral, or fractional
+    derivative, defined by
+
+    .. math ::
+
+        \,_{x_0}{\mathbb{D}}^n_xf(x) \frac{1}{\Gamma(m-n)} \frac{d^m}{dx^m}
+        \int_{x_0}^{x}(x-t)^{m-n-1}f(t)dt
+
+    where `f` is a given (presumably well-behaved) function,
+    `x` is the evaluation point, `n` is the order, and `x_0` is
+    the reference point of integration (`m` is an arbitrary
+    parameter selected automatically).
+
+    With `n = 1`, this is just the standard derivative `f'(x)`; with `n = 2`,
+    the second derivative `f''(x)`, etc. With `n = -1`, it gives
+    `\int_{x_0}^x f(t) dt`, with `n = -2`
+    it gives `\int_{x_0}^x \left( \int_{x_0}^t f(u) du \right) dt`, etc.
+
+    As `n` is permitted to be any number, this operator generalizes
+    iterated differentiation and iterated integration to a single
+    operator with a continuous order parameter.
+
+    **Examples**
+
+    There is an exact formula for the fractional derivative of a
+    monomial `x^p`, which may be used as a reference. For example,
+    the following gives a half-derivative (order 0.5)::
+
+        >>> from mpmath import *
+        >>> mp.dps = 15; mp.pretty = True
+        >>> x = mpf(3); p = 2; n = 0.5
+        >>> differint(lambda t: t**p, x, n)
+        7.81764019044672
+        >>> gamma(p+1)/gamma(p-n+1) * x**(p-n)
+        7.81764019044672
+
+    Another useful test function is the exponential function, whose
+    integration / differentiation formula easy generalizes
+    to arbitrary order. Here we first compute a third derivative,
+    and then a triply nested integral. (The reference point `x_0`
+    is set to `-\infty` to avoid nonzero endpoint terms.)::
+
+        >>> differint(lambda x: exp(pi*x), -1.5, 3)
+        0.278538406900792
+        >>> exp(pi*-1.5) * pi**3
+        0.278538406900792
+        >>> differint(lambda x: exp(pi*x), 3.5, -3, -inf)
+        1922.50563031149
+        >>> exp(pi*3.5) / pi**3
+        1922.50563031149
+
+    However, for noninteger `n`, the differentiation formula for the
+    exponential function must be modified to give the same result as the
+    Riemann-Liouville differintegral::
+
+        >>> x = mpf(3.5)
+        >>> c = pi
+        >>> n = 1+2*j
+        >>> differint(lambda x: exp(c*x), x, n)
+        (-123295.005390743 + 140955.117867654j)
+        >>> x**(-n) * exp(c)**x * (x*c)**n * gammainc(-n, 0, x*c) / gamma(-n)
+        (-123295.005390743 + 140955.117867654j)
+
+
+    """
+    m = max(int(ceil(re(n)))+1, 1)
+    r = m-n-1
+    g = lambda x: mp.quad(lambda t: (x-t)**r * f(t), [x0, x])
+    return diff(g, x, m) / gamma(m-n)
+
 def diffun(f, n=1, **options):
     """
     Given a function f, returns a function g(x) that evaluates the nth
     derivative f^(n)(x)::
 
         >>> from mpmath import *
-        >>> mp.dps = 15
+        >>> mp.dps = 15; mp.pretty = True
         >>> cos2 = diffun(sin)
         >>> sin2 = diffun(sin, 4)
-        >>> print cos(1.3), cos2(1.3)
-        0.267498828624587 0.267498828624587
-        >>> print sin(1.3), sin2(1.3)
-        0.963558185417193 0.963558185417193
+        >>> cos(1.3), cos2(1.3)
+        (0.267498828624587, 0.267498828624587)
+        >>> sin(1.3), sin2(1.3)
+        (0.963558185417193, 0.963558185417193)
 
     The function f must support arbitrary precision evaluation.
     See :func:`diff` for additional details and supported
@@ -1284,7 +1357,7 @@ def taylor(f, x, n, **options):
     given function `f`. The coefficients are returned as a list.
 
         >>> from mpmath import *
-        >>> mp.dps = 15
+        >>> mp.dps = 15; mp.pretty = True
         >>> nprint(chop(taylor(sin, 0, 5)))
         [0.0, 1.0, 0.0, -0.166667, 0.0, 8.33333e-3]
 
@@ -1299,9 +1372,9 @@ def taylor(f, x, n, **options):
     the argument:
 
         >>> p = taylor(exp, 2.0, 10)
-        >>> print polyval(p[::-1], 2.5 - 2.0)
+        >>> polyval(p[::-1], 2.5 - 2.0)
         12.1824939606092
-        >>> print exp(2.5)
+        >>> exp(2.5)
         12.1824939607035
 
     """
@@ -1330,7 +1403,7 @@ def pade(a, L, M):
     Ch.1A)::
 
         >>> from mpmath import *
-        >>> mp.dps = 15
+        >>> mp.dps = 15; mp.pretty = True
         >>> one = mpf(1)
         >>> def f(x):
         ...     return sqrt((one + 2*x)/(one + x))
@@ -1338,9 +1411,9 @@ def pade(a, L, M):
         >>> a = taylor(f, 0, 6)
         >>> p, q = pade(a, 3, 3)
         >>> x = 10
-        >>> print polyval(p[::-1], x)/polyval(q[::-1], x)
+        >>> polyval(p[::-1], x)/polyval(q[::-1], x)
         1.38169105566806
-        >>> print f(x)
+        >>> f(x)
         1.38169855941551
 
     """
@@ -1392,10 +1465,11 @@ def polyval(coeffs, x, derivative=False):
     tuple `(P(x), P'(x))`.
 
         >>> from mpmath import *
+        >>> mp.pretty = True
         >>> polyval([3, 0, 2], 0.5)
-        mpf('2.75')
+        2.75
         >>> polyval([3, 0, 2], 0.5, derivative=True)
-        (mpf('2.75'), mpf('3.0'))
+        (2.75, 3.0)
 
     The coefficients and the evaluation point may be any combination
     of real or complex numbers.
@@ -1429,7 +1503,7 @@ def polyroots(coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False):
     Finding the three real roots of `x^3 - x^2 - 14x + 24`::
 
         >>> from mpmath import *
-        >>> mp.dps = 15
+        >>> mp.dps = 15; mp.pretty = True
         >>> nprint(polyroots([1,-1,-14,24]), 4)
         [-4.0, 2.0, 3.0]
 
@@ -1443,12 +1517,12 @@ def polyroots(coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False):
         (-0.375 - 0.59947894041409j)
         (-0.375 + 0.59947894041409j)
         >>>
-        >>> print err
+        >>> err
         2.22044604925031e-16
         >>>
-        >>> print polyval([4,3,2], roots[0])
+        >>> polyval([4,3,2], roots[0])
         (2.22044604925031e-16 + 0.0j)
-        >>> print polyval([4,3,2], roots[1])
+        >>> polyval([4,3,2], roots[1])
         (2.22044604925031e-16 + 0.0j)
 
     The following example computes all the 5th roots of unity; that is,
@@ -1478,9 +1552,9 @@ def polyroots(coeffs, maxsteps=50, cleanup=True, extraprec=10, error=False):
         0.317837245195782244725757617296174288373133378433432554879127
         3.14626436994197234232913506571557044551247712918732870123249
         >>>
-        >>> print sqrt(3) + sqrt(2)
+        >>> sqrt(3) + sqrt(2)
         3.14626436994197234232913506571557044551247712918732870123249
-        >>> print sqrt(3) - sqrt(2)
+        >>> sqrt(3) - sqrt(2)
         0.317837245195782244725757617296174288373133378433432554879127
 
     **Algorithm**
@@ -1686,7 +1760,7 @@ def chebyfit(f, interval, N, error=False):
     of `f(x) = \cos(x)`, valid on the interval `[1, 2]`::
 
         >>> from mpmath import *
-        >>> mp.dps = 15
+        >>> mp.dps = 15; mp.pretty = True
         >>> poly, err = chebyfit(cos, [1, 2], 5, error=True)
         >>> nprint(poly)
         [2.91682e-3, 0.146166, -0.732491, 0.174141, 0.949553]
@@ -1788,7 +1862,7 @@ def fourier(f, interval, N):
     rational numbers::
 
         >>> from mpmath import *
-        >>> mp.dps = 15
+        >>> mp.dps = 15; mp.pretty = True
         >>> c, s = fourier(lambda x: x, [-pi, pi], 5)
         >>> nprint(c)
         [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -1840,8 +1914,8 @@ def fourier(f, interval, N):
     cutoff = eps*10
     for n in xrange(N+1):
         m = 2*n*pi/L
-        an = 2*quadgl(lambda t: f(t)*cos(m*t), interval)/L
-        bn = 2*quadgl(lambda t: f(t)*sin(m*t), interval)/L
+        an = 2*mp.quadgl(lambda t: f(t)*cos(m*t), interval)/L
+        bn = 2*mp.quadgl(lambda t: f(t)*sin(m*t), interval)/L
         if n == 0:
             an /= 2
         if abs(an) < cutoff: an = mpf(0)

@@ -50,6 +50,7 @@ def test_pade():
     for x in arange(0, 1, 0.1):
         r = polyval(p[::-1], x)/polyval(q[::-1], x)
         assert(r.ae(exp(x), 1.0e-10))
+    mp.dps = 15
 
 def test_fourier():
     mp.dps = 15
@@ -62,3 +63,7 @@ def test_fourier():
     assert s[1].ae(3/(2*pi))
     assert s[2].ae(3/(4*pi))
     assert fourierval((c, s), [-1, 2], 1).ae(1.9134966715663442)
+
+def test_differint():
+    mp.dps = 15
+    assert differint(lambda t: t, 2, -0.5).ae(8*sqrt(2/pi)/3)

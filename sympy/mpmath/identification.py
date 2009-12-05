@@ -32,7 +32,7 @@ def pslq(x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
     Find rational approximations for `\pi`::
 
         >>> from mpmath import *
-        >>> mp.dps = 15
+        >>> mp.dps = 15; mp.pretty = True
         >>> pslq([pi, 1], tol=0.01)
         [-7, 22]
         >>> pslq([pi, 1], tol=0.001)
@@ -48,7 +48,7 @@ def pslq(x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
 
         >>> pslq([pi, 1], maxcoeff=10**12)
         [-75888275702L, 238410049439L]
-        >>> print mpf(_[1])/_[0]
+        >>> mpf(_[1])/_[0]
         -3.14159265358979
 
     The PSLQ algorithm can be applied to long vectors. For example,
@@ -107,9 +107,9 @@ def pslq(x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
 
     In other words, we found the following formula::
 
-        >>> print 8*acot(2) - 4*acot(7)
+        >>> 8*acot(2) - 4*acot(7)
         3.14159265358979323846264338328
-        >>> print pi
+        >>> +pi
         3.14159265358979323846264338328
 
     **Algorithm**
@@ -222,7 +222,7 @@ def pslq(x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
         szmax = -1
         for i in range(1, n):
             h = H[i,i]
-            sz = (sqrt_fixed((4<<prec)//3, prec)**i * abs(h)) >> (prec*(i-1))
+            sz = (g**i * abs(h)) >> (prec*(i-1))
             if sz > szmax:
                 m = i
                 szmax = sz
@@ -323,7 +323,7 @@ def findpoly(x, n=1, **kwargs):
     polynomial with a rational root::
 
         >>> from mpmath import *
-        >>> mp.dps = 15
+        >>> mp.dps = 15; mp.pretty = True
         >>> findpoly(0.7)
         [-10, 7]
 
@@ -344,7 +344,7 @@ def findpoly(x, n=1, **kwargs):
 
         >>> findpoly(1+sqrt(2), 2)
         [1, -2, -1]
-        >>> print findroot(lambda x: x**2 - 2*x - 1, 1)
+        >>> findroot(lambda x: x**2 - 2*x - 1, 1)
         2.4142135623731
 
     Despite only containing square roots, the following number results
@@ -532,7 +532,7 @@ def identify(x, constants=[], tol=None, maxcoeff=1000, full=False,
     formula for the golden ratio::
 
         >>> from mpmath import *
-        >>> mp.dps = 15
+        >>> mp.dps = 15; mp.pretty = True
         >>> identify(phi)
         '((1+sqrt(5))/2)'
 
@@ -665,13 +665,13 @@ def identify(x, constants=[], tol=None, maxcoeff=1000, full=False,
     The numerical values are roughly as close to pi as permitted by the
     specified tolerance:
 
-        >>> print e/log(6-4*e/3)
+        >>> e/log(6-4*e/3)
         3.14157719846001
-        >>> print 135*e*catalan**2/98
+        >>> 135*e*catalan**2/98
         3.14166950419369
-        >>> print sqrt(e-13+22*catalan)
+        >>> sqrt(e-13+22*catalan)
         3.14158000062992
-        >>> print log(24*e-6+4*catalan)-1
+        >>> log(24*e-6+4*catalan)-1
         3.14158791577159
 
     **Symbolic processing**
@@ -763,8 +763,8 @@ def identify(x, constants=[], tol=None, maxcoeff=1000, full=False,
     if isinstance(constants, dict):
         constants = [(mpf(v), name) for (name, v) in constants.items()]
     else:
-        import sympy.mpmath
-        constants = [(eval(p, sympy.mpmath.__dict__), p) for p in constants]
+        import sympy.mpmath as mpmath
+        constants = [(eval(p, mpmath.__dict__), p) for p in constants]
 
     # We always want to find at least rational terms
     if 1 not in [value for (name, value) in constants]:

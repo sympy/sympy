@@ -1,4 +1,4 @@
-__version__ = '0.12'
+__version__ = '0.13'
 
 from mptypes import (
     mpnumeric, mpf, mpc, mpi, mpmathify,
@@ -7,8 +7,9 @@ from mptypes import (
     eps, j, inf, nan, isnan, isinf, isint,
     nstr, nprint, fraction, almosteq,
     arange, linspace, rand, absmin, absmax,
+    fneg, fadd, fsub, fmul, fdiv,
     fsum, fprod, fdot,
-    chop
+    chop, nint_distance, mag
 )
 
 from usertools import monitor, timing
@@ -23,34 +24,40 @@ from functions import (
     asec, acsc, acot, asech, acsch, acoth,
     cospi, sinpi, sinc, sincpi,
     fabs, re, im, conj, floor, ceil,
-    nthroot, hypot, modf,
+    root, nthroot, hypot, modf,
     ldexp, frexp, sign, arg,
     degrees, radians, atan2,
     fib, fibonacci,
-    zeta, altzeta, gamma, factorial, fac, fac2, beta,
+    zeta, altzeta, gamma, factorial, fac, fac2, beta, betainc,
     psi, psi0, psi1, psi2, psi3,
     polygamma, digamma, trigamma, tetragamma, pentagamma,
     harmonic, bernoulli, bernfrac, stieltjes,
-    bernpoly, polylog,
+    hurwitz, dirichlet, bernpoly, polylog, clsin, clcos,
     gammainc, gammaprod, binomial, rf, ff,
-    hyper, hyp0f1, hyp1f1, hyp2f1,
+    hyper, hyp0f1, hyp1f1, hyp1f2, hyp2f1, hyp2f2, hyp2f0, hyp2f3, hyperu,
+    hypercomb, meijerg,
+    appellf1,
     erf, erfc, erfi, erfinv, npdf, ncdf,
-    ei, li, ci, si, chi, shi,
+    expint, e1, ei, li, ci, si, chi, shi,
     fresnels, fresnelc, airyai, airybi,
-    ellipe, ellipk, agm, jacobi, legendre, chebyt, chebyu,
+    ellipe, ellipk, agm, jacobi, chebyt, chebyu, legendre, legenp, legenq,
+    hermite, gegenbauer, laguerre,
     besselj, j0, j1, besseli, bessely, besselk, hankel1, hankel2,
+    struveh, struvel, whitm, whitw, ber, bei, ker, kei,
+    coulombc, coulombf, coulombg,
     lambertw,
     barnesg, superfac, hyperfac,
     loggamma, siegeltheta, siegelz, grampoint,
     zetazero, riemannr, primepi, primepi2, primezeta,
     bell, polyexp,
-    expm1
+    expm1, powm1,
+    unitroots, cyclotomic
 )
 
 from elliptic import jtheta, djtheta, jsn, jcn, jdn
 
 from calculus import richardson, shanks, nsum, nprod
-from calculus import diff, diffun, diffs, taylor, pade
+from calculus import diff, diffun, diffs, differint, taylor, pade
 from calculus import polyval, polyroots
 from calculus import fourier, fourierval
 from calculus import sumem, chebyfit, limit
@@ -58,7 +65,12 @@ from calculus import odeint
 
 from odes import odefun
 
-from quadrature import quad, quadgl, quadts, quadosc, TanhSinh, GaussLegendre
+from quadrature import TanhSinh, GaussLegendre
+
+quad = mp.quad
+quadgl = mp.quadgl
+quadts = mp.quadts
+quadosc = mp.quadosc
 
 from identification import pslq, identify, findpoly
 
