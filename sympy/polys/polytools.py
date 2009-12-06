@@ -521,7 +521,7 @@ class Poly(Basic):
         """Make the ground domain a field. """
         try:
             result = f.rep.to_ring()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'to_ring')
 
         return f.per(result)
@@ -530,7 +530,7 @@ class Poly(Basic):
         """Make the ground domain a field. """
         try:
             result = f.rep.to_field()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'to_field')
 
         return f.per(result)
@@ -575,7 +575,7 @@ class Poly(Basic):
         """Reduce degree of `f` by mapping `x_i**m` to `y_i`. """
         try:
             J, result = f.rep.deflate()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'deflate')
 
         return J, f.per(result)
@@ -584,7 +584,7 @@ class Poly(Basic):
         """Remove GCD of terms from the polynomial `f`. """
         try:
             J, result = f.rep.terms_gcd()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'terms_gcd')
 
         return J, f.per(result)
@@ -593,7 +593,7 @@ class Poly(Basic):
         """Make all coefficients in `f` positive. """
         try:
             result = f.rep.abs()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'abs')
 
         return f.per(result)
@@ -602,7 +602,7 @@ class Poly(Basic):
         """Negate all cefficients in `f`. """
         try:
             result = f.rep.neg()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'neg')
 
         return f.per(result)
@@ -613,7 +613,7 @@ class Poly(Basic):
 
         try:
             result = F.add(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'add')
 
         return per(result)
@@ -624,7 +624,7 @@ class Poly(Basic):
 
         try:
             result = F.sub(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'sub')
 
         return per(result)
@@ -635,7 +635,7 @@ class Poly(Basic):
 
         try:
             result = F.mul(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'mul')
 
         return per(result)
@@ -644,7 +644,7 @@ class Poly(Basic):
         """Square a polynomial `f`. """
         try:
             result = f.rep.sqr()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'sqr')
 
         return f.per(result)
@@ -655,7 +655,7 @@ class Poly(Basic):
 
         try:
             result = f.rep.pow(n)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'pow')
 
         return f.per(result)
@@ -666,7 +666,7 @@ class Poly(Basic):
 
         try:
             q, r = F.pdiv(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'pdiv')
 
         return per(q), per(r)
@@ -677,7 +677,7 @@ class Poly(Basic):
 
         try:
             result = F.prem(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'prem')
 
         return per(result)
@@ -688,7 +688,7 @@ class Poly(Basic):
 
         try:
             result = F.pquo(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'pquo')
 
         return per(result)
@@ -699,7 +699,7 @@ class Poly(Basic):
 
         try:
             result = F.pexquo(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'pexquo')
 
         return per(result)
@@ -710,7 +710,7 @@ class Poly(Basic):
 
         try:
             q, r = F.div(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'div')
 
         return per(q), per(r)
@@ -721,7 +721,7 @@ class Poly(Basic):
 
         try:
             result = F.rem(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'rem')
 
         return per(result)
@@ -732,7 +732,7 @@ class Poly(Basic):
 
         try:
             result = F.quo(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'quo')
 
         return per(result)
@@ -743,7 +743,7 @@ class Poly(Basic):
 
         try:
             result = F.exquo(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'exquo')
 
         return per(result)
@@ -754,28 +754,28 @@ class Poly(Basic):
 
         try:
             return f.rep.degree(j)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'degree')
 
     def degree_list(f):
         """Returns a list of degrees of `f`. """
         try:
             return f.rep.degree_list()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'degree_list')
 
     def total_degree(f):
         """Returns the total degree of `f`. """
         try:
             return f.rep.total_degree()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'total_degree')
 
     def LC(f):
         """Returns the leading coefficent of `f`. """
         try:
             result = f.rep.LC()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'LC')
 
         return f.rep.dom.to_sympy(result)
@@ -784,7 +784,7 @@ class Poly(Basic):
         """Returns the trailing coefficent of `f`. """
         try:
             result = f.rep.TC()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'TC')
 
         return f.rep.dom.to_sympy(result)
@@ -793,14 +793,14 @@ class Poly(Basic):
         """Returns the last non-zero coefficent of `f`. """
         try:
             return f.coeffs()[-1]
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'EC')
 
     def nth(f, *N):
         """Returns the `n`-th coefficient of `f`. """
         try:
             result = f.rep.nth(*map(int, N))
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'nth')
 
         return f.rep.dom.to_sympy(result)
@@ -825,7 +825,7 @@ class Poly(Basic):
         """Returns maximum norm of `f`. """
         try:
             result = f.rep.max_norm()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'max_norm')
 
         return f.rep.dom.to_sympy(result)
@@ -834,7 +834,7 @@ class Poly(Basic):
         """Returns l1 norm of `f`. """
         try:
             result = f.rep.l1_norm()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'l1_norm')
 
         return f.rep.dom.to_sympy(result)
@@ -843,14 +843,14 @@ class Poly(Basic):
         """Clear denominators, but keep the ground domain. """
         try:
             coeff, result = f.rep.ground_to_ring()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'ground_to_ring')
 
         return f.rep.dom.to_sympy(coeff), f.per(result)
 
     def integrate(f, *specs, **args):
         """Computes indefinite integral of `f`. """
-        if args.get('auto', True) and not f.rep.dom.has_Field:
+        if args.get('auto', True):
             f = f.to_field()
 
         try:
@@ -868,7 +868,7 @@ class Poly(Basic):
                 rep = rep.integrate(int(m), _gen_to_level(f, gen))
 
             return f.per(rep)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'integrate')
 
     def diff(f, *specs):
@@ -888,7 +888,7 @@ class Poly(Basic):
                 rep = rep.diff(int(m), _gen_to_level(f, gen))
 
             return f.per(rep)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'diff')
 
     def eval(f, a, gen=0):
@@ -897,7 +897,7 @@ class Poly(Basic):
 
         try:
             result = f.rep.eval(a, j)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'eval')
 
         return f.per(result, remove=j)
@@ -906,12 +906,12 @@ class Poly(Basic):
         """Half extended Euclidean algorithm of `f` and `g`. """
         dom, per, F, G = f.unify(g)
 
-        if args.get('auto', True) and not dom.has_Field:
+        if args.get('auto', True):
             F, G = F.to_field(), G.to_field()
 
         try:
             s, h = F.half_gcdex(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'half_gcdex')
 
         return per(s), per(h)
@@ -920,12 +920,12 @@ class Poly(Basic):
         """Extended Euclidean algorithm of `f` and `g`. """
         dom, per, F, G = f.unify(g)
 
-        if args.get('auto', True) and not dom.has_Field:
+        if args.get('auto', True):
             F, G = F.to_field(), G.to_field()
 
         try:
             s, t, h = F.gcdex(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'gcdex')
 
         return per(s), per(t), per(h)
@@ -934,12 +934,12 @@ class Poly(Basic):
         """Invert `f` modulo `g`, if possible. """
         dom, per, F, G = f.unify(g)
 
-        if args.get('auto', True) and not dom.has_Field:
+        if args.get('auto', True):
             F, G = F.to_field(), G.to_field()
 
         try:
             result = F.invert(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'invert')
 
         return per(result)
@@ -950,7 +950,7 @@ class Poly(Basic):
 
         try:
             result = F.subresultants(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'subresultants')
 
         return map(per, result)
@@ -961,7 +961,7 @@ class Poly(Basic):
 
         try:
             result = F.resultant(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'resultant')
 
         return per(result, remove=0)
@@ -970,7 +970,7 @@ class Poly(Basic):
         """Computes discriminant of `f`. """
         try:
             result = f.rep.discriminant()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'discriminant')
 
         return f.per(result, remove=0)
@@ -981,7 +981,7 @@ class Poly(Basic):
 
         try:
             h, cff, cfg = F.cofactors(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'cofactors')
 
         return per(h), per(cff), per(cfg)
@@ -992,7 +992,7 @@ class Poly(Basic):
 
         try:
             result = F.gcd(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'gcd')
 
         return per(result)
@@ -1003,7 +1003,7 @@ class Poly(Basic):
 
         try:
             result = F.lcm(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'lcm')
 
         return per(result)
@@ -1012,7 +1012,7 @@ class Poly(Basic):
         """Divides all coefficients by `LC(f)`. """
         try:
             result = f.rep.monic()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'monic')
 
         return f.per(result)
@@ -1020,8 +1020,8 @@ class Poly(Basic):
     def content(f):
         """Returns GCD of polynomial coefficients. """
         try:
-            result = f.rep.monic()
-        except AttributeError:
+            result = f.rep.content()
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'content')
 
         return f.rep.dom.to_sympy(result)
@@ -1030,7 +1030,7 @@ class Poly(Basic):
         """Returns content and a primitive form of `f`. """
         try:
             cont, result = f.rep.primitive()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'primitive')
 
         return f.rep.dom.to_sympy(cont), f.per(result)
@@ -1041,7 +1041,7 @@ class Poly(Basic):
 
         try:
             result = F.compose(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'compose')
 
         return per(result)
@@ -1050,7 +1050,7 @@ class Poly(Basic):
         """Computes functional decomposition of `f`. """
         try:
             result = f.rep.decompose()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'decompose')
 
         return map(f.per, result)
@@ -1062,7 +1062,7 @@ class Poly(Basic):
 
         try:
             result = f.rep.sturm()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'sturm')
 
         return map(f.per, result)
@@ -1071,39 +1071,38 @@ class Poly(Basic):
         """Computes square-free part of `f`. """
         try:
             result = f.rep.sqf_part()
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'sqf_part')
 
         return f.per(result)
+
+    def _perify_factors(f, factors):
+        """Apply `per` functions to `(f_i, k)` factors. """
+        if type(factors) is tuple:
+            return f.rep.dom.to_sympy(factors[0]), \
+                [ (f.per(g), k) for g, k in factors[1] ]
+        else:
+            return [ (f.per(g), k) for g, k in factors ]
 
     def sqf_list(f, **args):
         """Returns a list of square-free factors of `f`. """
         try:
             result = f.rep.sqf_list(**args)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'sqf_list')
 
-        if type(result) is not tuple:
-            return [ (f.per(g), k) for g, k in result ]
-        else:
-            coeff = f.rep.dom.to_sympy(result[0])
-            factors = [ (f.per(g), k) for g, k in result[1] ]
-
-            return coeff, factors
+        return f._perify_factors(result)
 
     def factor_list(f, **args):
         """Returns a list of irreducible factors of `f`. """
         try:
-            coeff, factors = f.rep.factor_list(**args)
+            result = f.rep.factor_list(**args)
         except DomainError:
             return S.One, [(f, 1)]
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'factor_list')
 
-        coeff = f.rep.dom.to_sympy(coeff)
-        factors = [ (f.per(g), k) for g, k in factors ]
-
-        return coeff, factors
+        return f._perify_factors(result)
 
     def cancel(f, g):
         """Cancel common factors in a rational function `f/g`.  """
@@ -1121,7 +1120,7 @@ class Poly(Basic):
 
         try:
             _, P, Q = F.cofactors(G)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'cofactors')
 
         if dom.has_Field:
@@ -1209,7 +1208,7 @@ class Poly(Basic):
         return f.add(g)
 
     @_sympifyit('g', NotImplemented)
-    def __radd__(f, g):
+    def __radd__(f, g): # pragma: no cover
         if not g.is_Poly:
             try:
                 g = Poly(g, *f.gens)
@@ -1229,7 +1228,7 @@ class Poly(Basic):
         return f.sub(g)
 
     @_sympifyit('g', NotImplemented)
-    def __rsub__(f, g):
+    def __rsub__(f, g): # pragma: no cover
         if not g.is_Poly:
             try:
                 g = Poly(g, *f.gens)
@@ -1249,7 +1248,7 @@ class Poly(Basic):
         return f.mul(g)
 
     @_sympifyit('g', NotImplemented)
-    def __rmul__(f, g):
+    def __rmul__(f, g): # pragma: no cover
         if not g.is_Poly:
             try:
                 g = Poly(g, *f.gens)
@@ -1268,60 +1267,42 @@ class Poly(Basic):
     @_sympifyit('g', NotImplemented)
     def __divmod__(f, g):
         if not g.is_Poly:
-            try:
-                g = Poly(g, *f.gens)
-            except PolynomialError:
-                return divmod(f.as_basic(), g)
+            g = Poly(g, *f.gens)
 
         return f.div(g)
 
     @_sympifyit('g', NotImplemented)
-    def __rdivmod__(f, g):
+    def __rdivmod__(f, g): # pragma: no cover
         if not g.is_Poly:
-            try:
-                g = Poly(g, *f.gens)
-            except PolynomialError:
-                return divmod(g, f.as_basic())
+            g = Poly(g, *f.gens)
 
         return g.div(f)
 
     @_sympifyit('g', NotImplemented)
     def __mod__(f, g):
         if not g.is_Poly:
-            try:
-                g = Poly(g, *f.gens)
-            except PolynomialError:
-                return f.as_basic() % g
+            g = Poly(g, *f.gens)
 
         return f.rem(g)
 
     @_sympifyit('g', NotImplemented)
-    def __mod__(f, g):
+    def __rmod__(f, g): # pragma: no cover
         if not g.is_Poly:
-            try:
-                g = Poly(g, *f.gens)
-            except PolynomialError:
-                return g % f.as_basic()
+            g = Poly(g, *f.gens)
 
         return g.rem(f)
 
     @_sympifyit('g', NotImplemented)
     def __floordiv__(f, g):
         if not g.is_Poly:
-            try:
-                g = Poly(g, *f.gens)
-            except PolynomialError:
-                return f.as_basic() // g
+            g = Poly(g, *f.gens)
 
         return f.exquo(g)
 
     @_sympifyit('g', NotImplemented)
-    def __rfloordiv__(f, g):
+    def __rfloordiv__(f, g): # pragma: no cover
         if not g.is_Poly:
-            try:
-                g = Poly(g, *f.gens)
-            except PolynomialError:
-                return g // f.as_basic()
+            g = Poly(g, *f.gens)
 
         return g.exquo(f)
 
@@ -1329,7 +1310,7 @@ class Poly(Basic):
     def __eq__(f, g):
         if not g.is_Poly:
             try:
-                g = Poly(g, *f.gens) # XXX: args
+                g = Poly(g, *f.gens, domain=f.get_domain())
             except PolynomialError:
                 return False
 
@@ -1339,7 +1320,7 @@ class Poly(Basic):
     def __ne__(f, g):
         if not g.is_Poly:
             try:
-                g = Poly(g, *f.gens) # XXX: args
+                g = Poly(g, *f.gens, domain=f.get_domain())
             except PolynomialError:
                 return True
 
@@ -1348,11 +1329,15 @@ class Poly(Basic):
     def __nonzero__(f):
         return not f.is_zero
 
-def poly_coerce(f, g, *gens, **args):
+def _polify_basic(f, g, *gens, **args):
     """Cooperatively make polynomials out of `f` and `g`. """
     if gens:
-        return (Poly(f, *gens, **args),
-                Poly(g, *gens, **args))
+        F, G = Poly(f, *gens, **args), Poly(g, *gens, **args)
+
+        if not F.is_Poly or not G.is_Poly:
+            raise CoercionFailed(F, G) # pragma: no cover
+        else:
+            return F, G
     else:
         F = Poly(f, **args)
         G = Poly(g, **args)
@@ -1368,25 +1353,28 @@ def poly_coerce(f, g, *gens, **args):
             else:
                 raise CoercionFailed(F, G)
 
-def _all_is_poly(*polys):
-    """Returns `True` if given at least one Poly instance. """
-    return all(isinstance(poly, Poly) for poly in polys)
+def _basify_factors(factors):
+    """Convert `(f_i, k)` factors to Basic expressions. """
+    if type(factors) is tuple:
+        return factors[0], [ (g.as_basic(), k) for g, k in factors[1] ]
+    else:
+        return [ (g.as_basic(), k) for g, k in factors ]
 
 def _should_return_basic(*polys, **args):
     """Figure out if results should be returned as basic. """
-    arg = args.get('polys')
+    query = args.get('polys')
 
-    if arg is not None:
-        return not arg
+    if query is not None:
+        return not query
     else:
-        return not _all_is_poly(*polys)
+        return not all(isinstance(poly, Poly) for poly in polys)
 
 def pdiv(f, g, *gens, **args):
     """Polynomial pseudo-division of `f` and `g`. """
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute pseudo division of %s and %s without generators" % (f, g))
 
@@ -1402,7 +1390,7 @@ def prem(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute pseudo remainder of %s and %s without generators" % (f, g))
 
@@ -1418,7 +1406,7 @@ def pquo(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute pseudo quotient of %s and %s without generators" % (f, g))
 
@@ -1434,7 +1422,7 @@ def pexquo(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute pseudo quotient of %s and %s without generators" % (f, g))
 
@@ -1450,7 +1438,7 @@ def div(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute division of %s and %s without generators" % (f, g))
 
@@ -1466,7 +1454,7 @@ def rem(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute remainder of %s and %s without generators" % (f, g))
 
@@ -1482,7 +1470,7 @@ def quo(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute quotient of %s and %s without generators" % (f, g))
 
@@ -1498,7 +1486,7 @@ def exquo(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute quotient of %s and %s without generators" % (f, g))
 
@@ -1515,19 +1503,19 @@ def half_gcdex(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         try:
             return f.half_gcdex(g)
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError): # pragma: no cover
             raise GeneratorsNeeded("can't compute half extended GCD of %s and %s without generators" % (f, g))
 
-    s, t, h = F.half_gcdex(G, **args)
+    s, h = F.half_gcdex(G, **args)
 
     if _should_return_basic(f, g, **args):
-        return q.as_basic(), t.as_basic(), h.as_basic()
+        return s.as_basic(), h.as_basic()
     else:
-        return s, t, h
+        return s, h
 
 def gcdex(f, g, *gens, **args):
     """Extended Euclidean algorithm of `f` and `g`. """
@@ -1535,19 +1523,19 @@ def gcdex(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         try:
             return f.gcdex(g)
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError): # pragma: no cover
             raise GeneratorsNeeded("can't compute extended GCD of %s and %s without generators" % (f, g))
 
-    s, h = F.gcdex(G, **args)
+    s, t, h = F.gcdex(G, **args)
 
     if _should_return_basic(f, g, **args):
-        return s.as_basic(), h.as_basic()
+        return s.as_basic(), t.as_basic(), h.as_basic()
     else:
-        return s, h
+        return s, t, h
 
 def invert(f, g, *gens, **args):
     """Invert `f` modulo `g`, if possible. """
@@ -1555,11 +1543,11 @@ def invert(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         try:
             return f.invert(g)
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError): # pragma: no cover
             raise GeneratorsNeeded("can't compute inversion of %s modulo %s without generators" % (f, g))
 
     h = F.invert(G, **args)
@@ -1574,7 +1562,7 @@ def subresultants(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute subresultants of %s and %s without generators" % (f, g))
 
@@ -1590,7 +1578,7 @@ def resultant(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute resultant of %s and %s without generators" % (f, g))
 
@@ -1603,8 +1591,10 @@ def resultant(f, g, *gens, **args):
 
 def discriminant(f, *gens, **args):
     """Computes discriminant of `f`. """
-    gens = _analyze_gens(gens)
-    F = Poly(f, *gens, **args)
+    F = Poly(f, *_analyze_gens(gens), **args)
+
+    if not F.is_Poly:
+        raise GeneratorsNeeded("can't compute discriminant of %s without generators" % f)
 
     result = F.discriminant()
 
@@ -1618,11 +1608,11 @@ def cofactors(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         try:
             return f.cofactors(g)
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError): # pragma: no cover
             raise GeneratorsNeeded("can't compute cofactors of %s and %s without generators" % (f, g))
 
     h, cff, cfg = F.cofactors(G)
@@ -1637,11 +1627,11 @@ def gcd(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         try:
             return f.gcd(g)
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError): # pragma: no cover
             raise GeneratorsNeeded("can't compute GCD of %s and %s without generators" % (f, g))
 
     result = F.gcd(G)
@@ -1656,11 +1646,11 @@ def lcm(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         try:
             return f.lcm(g)
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError): # pragma: no cover
             raise GeneratorsNeeded("can't compute LCM of %s and %s without generators" % (f, g))
 
     result = F.lcm(G)
@@ -1688,7 +1678,11 @@ def terms_gcd(f, *gens, **args):
 
 def monic(f, *gens, **args):
     """Divides all coefficients by `LC(f)`. """
+    args = _update_args(args, 'field', True)
     F = Poly(f, *_analyze_gens(gens), **args)
+
+    if not F.is_Poly:
+        raise GeneratorsNeeded("can't compute monic polynomial of %s without generators" % f)
 
     if _should_return_basic(f, **args):
         return F.monic().as_basic()
@@ -1697,11 +1691,19 @@ def monic(f, *gens, **args):
 
 def content(f, *gens, **args):
     """Returns GCD of polynomial coefficients. """
-    return Poly(f, *gens, **args).content()
+    F = Poly(f, *_analyze_gens(gens), **args)
+
+    if not F.is_Poly:
+        raise GeneratorsNeeded("can't compute content of %s without generators" % f)
+    else:
+        return F.content()
 
 def primitive(f, *gens, **args):
     """Returns content and a primitive form of `f`. """
     F = Poly(f, *_analyze_gens(gens), **args)
+
+    if not F.is_Poly:
+        raise GeneratorsNeeded("can't compute primitive part of %s without generators" % f)
 
     cont, result = F.primitive()
 
@@ -1715,7 +1717,7 @@ def compose(f, g, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(f, g, *gens, **args)
+        F, G = _polify_basic(f, g, *gens, **args)
     except CoercionFailed, (f, g):
         raise GeneratorsNeeded("can't compute composition of %s and %s without generators" % (f, g))
 
@@ -1779,82 +1781,87 @@ def sqf_list(f, *gens, **args):
     result = F.sqf_list(**args)
 
     if _should_return_basic(f, **args):
-        if type(result) is tuple:
-            return result[0], [ (g.as_basic(), k) for g, k in result[1] ]
-        else:
-            return [ (g.as_basic(), k) for g, k in result ]
+        return _basify_factors(result)
     else:
         return result
 
 def sqf(f, *gens, **args):
     """Returns square-free decomposition of `f`. """
-    F = Poly(f, *_analyze_gens(gens), **args)
+    frac = args.get('frac', False)
+    gens = _analyze_gens(gens)
 
-    if not F.is_Poly:
-        raise GeneratorsNeeded("can't compute square-free decomposition of %s without generators" % f)
+    def _sqf(f):
+        """Squaqre-free factor a true polynomial expression. """
+        F = Poly(f, *gens, **args)
 
-    (coeff, factors), result = F.sqf_list(), S.One
+        if not F.is_Poly:
+            return (S.One, F)
 
-    for g, k in factors:
-        result *= g.as_basic()**k
+        (coeff, factors), result = F.sqf_list(**args), S.One
 
-    return coeff*result
+        for g, k in factors:
+            result *= g.as_basic()**k
+
+        return (coeff, result)
+
+    if not frac:
+        coeff, factors = _sqf(f)
+    else:
+        p, q = cancel(f).as_numer_denom()
+
+        coeff_p, factors_p = _sqf(p)
+        coeff_q, factors_q = _sqf(q)
+
+        coeff = coeff_p / coeff_q
+        factors = factors_p / factors_q
+
+    return coeff * factors
 
 def factor_list(f, *gens, **args):
     """Returns a list of irreducible factors of `f`. """
     F = Poly(f, *_analyze_gens(gens), **args)
 
     if not F.is_Poly:
-        return F, []
+        raise GeneratorsNeeded("can't compute factorization of %s without generators" % f)
 
-    coeff, factors = F.factor_list(**args)
+    result = F.factor_list(**args)
 
     if _should_return_basic(f, **args):
-        return coeff, [ (g.as_basic(), k) for g, k in factors ]
+        return _basify_factors(result)
     else:
-        return coeff, factors
+        return result
 
 def factor(f, *gens, **args):
     """Returns factorization into irreducibles of `f`. """
     frac = args.get('frac', False)
     gens = _analyze_gens(gens)
 
-    f = sympify(f)
-
-    if not frac:
+    def _factor(f):
+        """Factor a true polynomial expression. """
         F = Poly(f, *gens, **args)
 
         if not F.is_Poly:
-            return f
+            return (S.One, F)
 
-        coeff, factors = F.factor_list(**args)
-
-        result = S.One
+        (coeff, factors), result = F.factor_list(**args), S.One
 
         for g, k in factors:
             result *= g.as_basic()**k
 
-        return coeff*result
+        return (coeff, result)
+
+    if not frac:
+        coeff, factors = _factor(f)
     else:
-        p, q = f.as_numer_denom()
+        p, q = cancel(f).as_numer_denom()
 
-        try:
-            p, q = poly_coerce(p, q, *gens, **args)
-        except CoercionFailed:
-            return f
+        coeff_p, factors_p = _factor(p)
+        coeff_q, factors_q = _factor(q)
 
-        coeff_p, factors_p = p.factor_list(**args)
-        coeff_q, factors_q = q.factor_list(**args)
+        coeff = coeff_p / coeff_q
+        factors = factors_p / factors_q
 
-        numer, denom = S.One, S.One
-
-        for g, k in factors_p:
-            numer *= g.as_basic()**k
-
-        for g, k in factors_q:
-            denom *= g.as_basic()**k
-
-        return (coeff_p/coeff_q)*(numer/denom)
+    return coeff * factors
 
 def cancel(f, *gens, **args):
     """Cancel common factors in a rational function `f`.  """
@@ -1871,7 +1878,7 @@ def cancel(f, *gens, **args):
     gens = _analyze_gens(gens)
 
     try:
-        F, G = poly_coerce(p, q, *gens, **args)
+        F, G = _polify_basic(p, q, *gens, **args)
     except CoercionFailed:
         if type(f) is not tuple:
             return f

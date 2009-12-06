@@ -1606,7 +1606,7 @@ def dmp_sqf_part(f, u, K):
     if K.has_Field:
         return dmp_ground_monic(sqf, u, K)
     else:
-        return dmp_primitive(sqf, u, K)[1]
+        return dmp_ground_primitive(sqf, u, K)[1]
 
 @cythonized("i")
 def dup_sqf_list(f, K, **args):
