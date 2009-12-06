@@ -20,7 +20,7 @@ Contents:
    tutorial.txt
    gotchas.txt
    guide.txt
-   modules.txt
+   modules/index.txt
    python-comparisons.txt
    wiki.txt
    sympy-patches-tutorial.txt
