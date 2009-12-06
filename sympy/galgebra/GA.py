@@ -277,7 +277,7 @@ def sub_base(k,base):
     """
     If base is a list of sorted integers [i_1,...,i_R] then sub_base returns
     a list with the k^th element removed. Note that k=0 removes the first
-    element.  The is no test to see if k is in the range of the list.
+    element.  There is no test to see if k is in the range of the list.
     """
     n = len(base)
     if n == 1:

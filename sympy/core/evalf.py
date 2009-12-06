@@ -46,7 +46,13 @@ class PrecisionExhausted(ArithmeticError):
 
 """
 An mpf value tuple is a tuple of integers (sign, man, exp, bc)
-representing a floating-point numbers.
+representing a floating-point number: (-1)**sign*man*2**exp where
+bc should correspond to the number of bits used to represent the
+mantissa (man) in binary notation, e.g. (0,5,1,3) represents 10::
+
+>>> from sympy.core.evalf import bitcount
+>>> n=(-1)**0 * 5 * 2**1; n, bitcount(5)
+(10, 3)
 
 A temporary result is a tuple (re, im, re_acc, im_acc) where
 re and im are nonzero mpf value tuples representing approximate
@@ -69,9 +75,19 @@ def fastlog(x):
     an exact power of 2) that would decrease the speed and is not
     necessary as this is only being used as an approximation for the
     number of bits in x. The correct return value could be written as
-    "x[2] + (x[3] if x[1]!=1 else 0)".
+    "x[2] + (x[3] if x[1] != 1 else 0)".
+        Since mpf tuples always have an odd mantissa, no check is done
+    to see if the mantissa is a multiple of 2 (in which case the
+    result would be too large by 1).
 
+    Example::
+
+    >>> from sympy import log
+    >>> from sympy.core.evalf import fastlog, bitcount
+    >>> n=(-1)**0*5*2**1; n, (log(n)/log(2)).evalf(), fastlog((0,5,1,bitcount(5)))
+    (10, 3.32192809488736, 4)
     """
+
     if not x or x == fzero:
         return MINUS_INF
     return x[2] + x[3]

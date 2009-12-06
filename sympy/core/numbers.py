@@ -175,7 +175,7 @@ class Number(Atom):
         raise TypeError("expected str|int|long|float|Decimal|Number object but got %r" % (obj))
 
     def _as_mpf_val(self, prec):
-        """Evaluate to mpf tuple accurate to at least prec bits"""
+        """Evaluation of mpf tuple accurate to at least prec bits."""
         raise NotImplementedError('%s needs ._as_mpf_val() method' % \
             (self.__class__.__name__))
 

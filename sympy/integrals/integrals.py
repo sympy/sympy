@@ -480,8 +480,8 @@ def integrate(*args, **kwargs):
        Several variables can be specified, in which case the result is multiple
        integration.
 
-       Also, if no var is specified at all, then full-antiderivative of f is
-       returned. This is equivalent of integrating f over all it's variables.
+       Also, if no var is specified at all, then the full-antiderivative of f is
+       returned. This is equivalent to integrating f over all its variables.
 
        Examples
 
