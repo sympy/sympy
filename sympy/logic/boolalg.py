@@ -64,11 +64,11 @@ class Not(BooleanFunction):
         if type(arg) is bool:
             return not arg
         # apply De Morgan Rules
-        if arg.func == And:
+        if arg.func is And:
             return Or(*[Not(a) for a in arg.args])
-        if arg.func == Or:
+        if arg.func is Or:
             return And(*[Not(a) for a in arg.args])
-        if arg.func == Not:
+        if arg.func is Not:
             return arg.args[0]
 
 class Nand(BooleanFunction):
@@ -164,9 +164,9 @@ def distribute_and_over_or(expr):
     Given a sentence s consisting of conjunctions and disjunctions
     of literals, return an equivalent sentence in CNF.
     """
-    if expr.func == Or:
+    if expr.func is Or:
         for arg in expr.args:
-            if arg.func == And:
+            if arg.func is And:
                 conj = arg
                 break
         else:
@@ -174,7 +174,7 @@ def distribute_and_over_or(expr):
         rest = Or(*[a for a in expr.args if a is not conj])
         return And(*map(distribute_and_over_or,
                    [Or(c, rest) for c in conj.args]))
-    elif expr.func == And:
+    elif expr.func is And:
         return And(*map(distribute_and_over_or, expr.args))
     else:
         return expr
@@ -205,9 +205,9 @@ def eliminate_implications(expr):
         return expr     ## (Atoms are unchanged.)
     args = map(eliminate_implications, expr.args)
     a, b = args[0], args[-1]
-    if expr.func == Implies:
+    if expr.func is Implies:
         return (~a) | b
-    elif expr.func == Equivalent:
+    elif expr.func is Equivalent:
         return (a | Not(b)) & (b | Not(a))
     else:
         return type(expr)(*args)
@@ -235,14 +235,14 @@ def to_int_repr(clauses, symbols):
 
     """
     def append_symbol(arg, symbols):
-        if arg.func == Not:
+        if arg.func is Not:
             return -(symbols.index(arg.args[0])+1)
         else:
             return symbols.index(arg)+1
 
     output = []
     for c in clauses:
-        if c.func == Or:
+        if c.func is Or:
             t = []
             for arg in c.args:
                 t.append(append_symbol(arg, symbols))

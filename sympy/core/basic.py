@@ -1177,7 +1177,7 @@ class Basic(AssumeMeths):
         return self.func(*[s.subs(old, new) for s in args])
 
     def __contains__(self, what):
-        if self == what or self.is_Function and self.func == what: return True
+        if self == what or self.is_Function and self.func is what: return True
         for x in self._args:
             # x is not necessarily of type Basic and so 'x in x == True'
             # may not hold.

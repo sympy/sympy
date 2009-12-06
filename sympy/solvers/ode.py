@@ -817,7 +817,7 @@ def odesimp(eq, func, order, hint):
     if hint[:21] == "1st_homogeneous_coeff":
         # Solutions from this hint can almost always be logcombined
         eq = logcombine(eq, assume_pos_real=True)
-        if eq.lhs.is_Function and eq.lhs.func == log and eq.rhs == 0:
+        if eq.lhs.is_Function and eq.lhs.func is log and eq.rhs == 0:
             eq = Eq(eq.lhs.args[0]/C1,C1)
 
     if eq.lhs == func and not eq.rhs.has(func):
@@ -842,7 +842,7 @@ def odesimp(eq, func, order, hint):
                 neweq = []
                 for i in eq:
                     newi = logcombine(i, assume_pos_real=True)
-                    if newi.lhs.is_Function and newi.lhs.func == log and newi.rhs == 0:
+                    if newi.lhs.is_Function and newi.lhs.func is log and newi.rhs == 0:
                         newi = Eq(newi.lhs.args[0]*C1,C1)
                     neweq.append(newi)
                 eq = neweq
@@ -1818,7 +1818,7 @@ def _homogeneous_order(eq, *symbols):
                 n.add(sympify(s))
 
     if eq.is_Function:
-        if eq.func == log:
+        if eq.func is log:
             # The only possibility to pull a t out of a function is a power in
             # a logarithm.  This is very likely due to calling of logcombine().
             args = make_list(eq.args[0], Mul) # TODO what about log(a, b) which has args[1]?

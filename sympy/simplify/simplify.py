@@ -1125,10 +1125,10 @@ def powsimp(expr, deep=False, combine='all'):
         else:
             return powsimp(y*expr, deep, combine)/y # Trick it into being a Mul
     elif expr.is_Function:
-        if expr.func == exp and deep:
+        if expr.func is exp and deep:
             # Exp should really be like Pow
             return powsimp(y*exp(powsimp(expr.args[0], deep, combine)), deep, combine)/y
-        elif expr.func == exp and not deep:
+        elif expr.func is exp and not deep:
             return powsimp(y*expr, deep, combine)/y
         elif deep:
             return expr.func(*[powsimp(t, deep, combine) for t in expr.args])
@@ -1447,12 +1447,12 @@ def _logcombine(expr, assume_pos_real=False):
         _getlogargs(a*log(x*y))
         x*y
         """
-        if expr.func == log:
+        if expr.func is log:
             return [expr.args[0]]
         else:
             args = []
             for i in expr.args:
-                if i.func == log:
+                if i.func is log:
                     args.append(_getlogargs(i))
             return flatten(args)
         return None
@@ -1478,7 +1478,7 @@ def _logcombine(expr, assume_pos_real=False):
         notlogs = 0
         coeflogs = 0
         for i in expr.args:
-            if i.func == log:
+            if i.func is log:
                 if (i.args[0].is_positive or (assume_pos_real and not \
                 i.args[0].is_nonpositive)):
                     argslist *= _logcombine(i.args[0], assume_pos_real)
