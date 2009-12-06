@@ -23,8 +23,8 @@ def monomials(variables, degree):
 
        For example consider monomials in variables `x` and `y`::
 
-           >>> from sympy import *
-           >>> x, y = symbols('xy')
+           >>> from sympy import monomials
+           >>> from sympy.abc import x, y
 
            >>> sorted(monomials([x, y], 2))
            [1, x, y, x**2, y**2, x*y]
@@ -50,8 +50,8 @@ def monomial_count(V, N):
 
        The number of monomials is given as `(#V + N)! / (#V! N!)`, e.g.::
 
-           >>> from sympy import *
-           >>> x,y = symbols('xy')
+           >>> from sympy import monomials, monomial_count
+           >>> from sympy.abc import x, y
 
            >>> monomial_count(2, 2)
            6
@@ -102,6 +102,8 @@ def monomial_mul(A, B):
 
        Lets multiply `x**3*y**4*z` with `x*y**2`::
 
+           >>> from sympy.polys.monomialtools import monomial_mul
+
            >>> monomial_mul((3, 4, 1), (1, 2, 0))
            (4, 6, 1)
 
@@ -115,6 +117,8 @@ def monomial_div(A, B):
     """Division of tuples representing monomials.
 
        Lets divide `x**3*y**4*z` by `x*y**2`::
+
+           >>> from sympy.polys.monomialtools import monomial_div
 
            >>> monomial_div((3, 4, 1), (1, 2, 0))
            (2, 2, 1)
@@ -140,6 +144,8 @@ def monomial_gcd(A, B):
 
        Lets compute GCD of `x**3*y**4*z` and `x*y**2`::
 
+           >>> from sympy.polys.monomialtools import monomial_gcd
+
            >>> monomial_gcd((3, 4, 1), (1, 2, 0))
            (1, 2, 0)
 
@@ -153,6 +159,8 @@ def monomial_lcm(A, B):
     """Least common multiple of tuples representing monomials.
 
        Lets compute LCM of `x**3*y**4*z` and `x*y**2`::
+
+           >>> from sympy.polys.monomialtools import monomial_lcm
 
            >>> monomial_lcm((3, 4, 1), (1, 2, 0))
            (3, 4, 1)
@@ -169,6 +177,8 @@ def monomial_max(*monoms):
        Consider monomials `x**3*y**4*z**5`, `y**5*z` and `x**6*y**3*z**9`.
        We wish to find out what is the maximal degree for each of `x`, `y`
        and `z` variables::
+
+           >>> from sympy.polys.monomialtools import monomial_max
 
            >>> monomial_max((3,4,5), (0,5,1), (6,3,9))
            (6, 5, 9)
@@ -189,6 +199,8 @@ def monomial_min(*monoms):
        Consider monomials `x**3*y**4*z**5`, `y**5*z` and `x**6*y**3*z**9`.
        We wish to find out what is the minimal degree for each of `x`, `y`
        and `z` variables::
+
+           >>> from sympy.polys.monomialtools import monomial_min
 
            >>> monomial_min((3,4,5), (0,5,1), (6,3,9))
            (0, 3, 1)

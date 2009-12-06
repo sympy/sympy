@@ -56,6 +56,7 @@ def gf_crt(U, M, K):
        As an example consider a set of residues `U = [49, 76, 65]`
        and a set of moduli `M = [99, 97, 95]`. Then we have::
 
+           >>> from sympy.polys.galoistools import gf_crt
            >>> from sympy.polys.algebratools import ZZ
 
            >>> gf_crt([49, 76, 65], [99, 97, 95], ZZ)
@@ -364,6 +365,7 @@ def gf_div(f, g, p, K):
 
        Consider polynomials `x**3 + x + 1` and `x**2 + x` in GF(2)::
 
+           >>> from sympy.polys.galoistools import gf_div, gf_add_mul
            >>> from sympy.polys.algebratools import ZZ
 
            >>> gf_div([1, 0, 1, 1], [1, 1, 0], 2, ZZ)
@@ -545,6 +547,7 @@ def gf_gcdex(f, g, p, K):
        Consider polynomials `f = (x + 7) (x + 1)`, `g = (x + 7) (x**2 + 1)`
        in `GF(11)[x]`. Application of Extended Euclidean Algorithm gives::
 
+           >>> from sympy.polys.galoistools import gf_gcdex, gf_mul, gf_add
            >>> from sympy.polys.algebratools import ZZ
 
            >>> s, t, g = gf_gcdex([1,8,7], [1,7,1,7], 11, ZZ)
@@ -777,7 +780,13 @@ def gf_sqf_list(f, p, K):
 
        Consider polynomial `f = x**11 + 1` over `GF(11)[x]`::
 
+           >>> from sympy.polys.galoistools import (
+           ...     gf_from_dict, gf_diff, gf_sqf_list, gf_pow,
+           ... )
+           ... # doctest: +NORMALIZE_WHITESPACE
+
            >>> from sympy.polys.algebratools import ZZ
+
            >>> f = gf_from_dict({11: 1, 0: 1}, 11, ZZ)
 
        Note that `f'(x) = 0`::
@@ -957,10 +966,14 @@ def gf_ddf_zassenhaus(f, p, K):
 
        Consider polynomial `x**15 - 1` in `GF(11)[x]`::
 
+           >>> from sympy.polys.galoistools import gf_from_dict
            >>> from sympy.polys.algebratools import ZZ
+
            >>> f = gf_from_dict({15: 1, 0: -1}, 11, ZZ)
 
        Distinct degree factorization gives::
+
+           >>> from sympy.polys.galoistools import gf_ddf_zassenhaus
 
            >>> gf_ddf_zassenhaus(f, 11, ZZ)
            [([1, 0, 0, 0, 0, 10], 1), ([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], 2)]
@@ -1010,6 +1023,7 @@ def gf_edf_zassenhaus(f, n, p, K):
        Consider square-free polynomial `f = x**3 + x**2 + x + 1` in
        `GF(5)[x]`. Lets compute its irreducible factors of degree one::
 
+           >>> from sympy.polys.galoistools import gf_edf_zassenhaus
            >>> from sympy.polys.algebratools import ZZ
 
            >>> gf_edf_zassenhaus([1,1,1,1], 1, 5, ZZ)
@@ -1244,6 +1258,7 @@ def gf_factor(f, p, K, **args):
        Consider a non square-free polynomial `f = (7*x + 1) (x + 2)**2` in
        `GF(11)[x]`. We obtain its factorization into irreducibles as follows::
 
+           >>> from sympy.polys.galoistools import gf_factor
            >>> from sympy.polys.algebratools import ZZ
 
            >>> gf_factor([5, 2, 7, 2], 11, ZZ)
