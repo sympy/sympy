@@ -35,11 +35,13 @@ from sympy.polys.specialpolys import (
     f_1, f_2, f_3, f_4, f_5, f_6, w_1, w_2,
 )
 
+from sympy.polys.polyerrors import DomainError
+
 from sympy.polys.polyclasses import DMP, DMF
 
-from sympy.polys.algebratools import ZZ, QQ
+from sympy.polys.algebratools import ZZ, QQ, EX
 
-from sympy import raises, nextprime
+from sympy import raises, nextprime, sin
 
 def test_dup_zz_mignotte_bound():
     assert dup_zz_mignotte_bound([2,3,4], ZZ) == 32
@@ -320,12 +322,18 @@ def test_dmp_zz_factor():
     assert dmp_zz_factor([[4], [2]], 1, ZZ) == \
         (2, [([[2], [1]], 1)])
 
+    assert dmp_zz_factor([[1, 0], [1]], 1, ZZ) == \
+        (1, [([[1, 0], [1]], 1)])
+
     assert dmp_zz_factor([[1,0,1]], 1, ZZ) == \
         (1, [([[1, 0, 1]], 1)])
 
     assert dmp_zz_factor([[1,0,-1]], 1, ZZ) == \
         (1, [([[1,-1]], 1),
              ([[1, 1]], 1)])
+
+    assert dmp_zz_factor([[1, 6, 9], [], [-1]], 1, ZZ) == \
+        (1, [([[1, 3], [-1]], 1), ([[1, 3], [1]], 1)])
 
     assert dmp_zz_factor([1, 0, -9], 0, ZZ) == \
         (1, [([1, -3], 1), ([1, 3], 1)])
@@ -400,6 +408,8 @@ def test_dup_factor_list():
                              ([DMP([QQ(1),QQ(0)],QQ)], 1),
                              ([DMP([QQ(1)],QQ),DMP([QQ(1),QQ(0)],QQ)], 1)])
 
+    raises(DomainError, "dup_factor_list([EX(sin(1))], EX)")
+
 def test_dmp_factor_list():
     assert dmp_factor_list([[]], 1, ZZ) == (ZZ(0), [])
     assert dmp_factor_list([[]], 1, QQ) == (QQ(0), [])
@@ -456,4 +466,6 @@ def test_dmp_factor_list():
         (DMP([QQ(1,2)],QQ), [([[DMP([QQ(1)],QQ)],[]], 1),
                              ([[DMP([QQ(1),QQ(0)],QQ)]], 1),
                              ([[DMP([QQ(1)],QQ)],[DMP([QQ(1),QQ(0)],QQ)]], 1)])
+
+    raises(DomainError, "dmp_factor_list([[EX(sin(1))]], 1, EX)")
 

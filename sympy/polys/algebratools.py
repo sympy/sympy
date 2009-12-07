@@ -8,6 +8,7 @@ from sympy.polys.polyerrors import (
     GeneratorsNeeded,
     CoercionFailed,
     NotInvertible,
+    DomainError,
 )
 
 def factorial(m):

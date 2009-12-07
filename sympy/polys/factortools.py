@@ -523,7 +523,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
         C.append(c)
 
     if any([ not j for j in J ]):
-        raise ExtraneousFactors
+        raise ExtraneousFactors # pragma: no cover
 
     CC, HH = [], []
 
@@ -720,7 +720,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
                 c = dmp_ground_trunc(h, p, w, K)
 
     if dmp_expand(H, u, K) != f:
-        raise ExtraneousFactors
+        raise ExtraneousFactors # pragma: no cover
     else:
         return H
 
@@ -781,7 +781,7 @@ def dmp_zz_wang(f, u, K):
         r = len(H)
 
         if r == 1:
-            return K.one, [f]
+            return [f]
 
         bad_points = set([tuple(A)])
         configs = [(s, cs, E, H, A)]
@@ -807,16 +807,16 @@ def dmp_zz_wang(f, u, K):
             rr = len(H)
 
             if r is not None:
-                if rr <= r:
+                if rr != r: # pragma: no cover
                     if rr < r:
                         configs, r = [], rr
-                else:
-                    continue
+                    else:
+                        continue
             else:
                 r = rr
 
             if r == 1:
-                return K.one, [f]
+                return [f]
 
             configs.append((s, cs, E, H, A))
 
@@ -844,24 +844,20 @@ def dmp_zz_wang(f, u, K):
     try:
         f, H, LC = dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K)
         factors = dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K)
-    except ExtraneousFactors:
-        raise NotImplementedError("if this happened we need an extra loop here")
+    except ExtraneousFactors: # pragma: no cover
+        raise NotImplementedError("we need to restart algorithm with better parameters")
 
-    negative, F = 0, []
+    negative, result = 0, []
 
     for f in factors:
         _, f = dmp_ground_primitive(f, u, K)
 
         if K.is_negative(dmp_ground_LC(f, u, K)):
             f = dmp_neg(f, u, K)
-            negative += 1
 
-        F.append(f)
+        result.append(f)
 
-    if not (negative % 2):
-        return  K.one, F
-    else:
-        return -K.one, F
+    return result
 
 @cythonized("u,d,k")
 def dmp_zz_factor(f, u, K):
@@ -920,9 +916,7 @@ def dmp_zz_factor(f, u, K):
 
     if dmp_degree(g, u) > 0:
         g = dmp_sqf_part(g, u, K)
-        sign, H = dmp_zz_wang(g, u, K)
-
-        cont *= sign
+        H = dmp_zz_wang(g, u, K)
 
         for h in H:
             k = 0
@@ -954,7 +948,7 @@ def dmp_ext_factor(f, u, K):
 @cythonized("i,k,u")
 def dup_factor_list(f, K0, **args):
     """Factor polynomials into irreducibles in `K[x]`. """
-    if not K0.has_CharacteristicZero:
+    if not K0.has_CharacteristicZero: # pragma: no cover
         raise DomainError('only characteristic zero allowed')
 
     if K0.has_Field:
@@ -976,7 +970,7 @@ def dup_factor_list(f, K0, **args):
             factors[i] = (dmp_eject(f, u, K), k)
 
         coeff = K.convert(coeff, K.dom)
-    else:
+    else: # pragma: no cover
         raise DomainError('factorization not supported over %s' % K0)
 
     if K0.has_Field:
@@ -1016,7 +1010,7 @@ def dmp_factor_list(f, u, K0, **args):
     if not u:
         return dup_factor_list(f, K0, **args)
 
-    if not K0.has_CharacteristicZero:
+    if not K0.has_CharacteristicZero: # pragma: no cover
         raise DomainError('only characteristic zero allowed')
 
     if K0.has_Field:
@@ -1038,7 +1032,7 @@ def dmp_factor_list(f, u, K0, **args):
             factors[i] = (dmp_eject(f, v, K), k)
 
         coeff = K.convert(coeff, K.dom)
-    else:
+    else: # pragma: no cover
         raise DomainError('factorization not supported over %s' % K0)
 
     if K0.has_Field:
