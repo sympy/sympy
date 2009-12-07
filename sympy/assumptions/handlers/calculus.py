@@ -3,8 +3,8 @@ This module contains query handlers responsible for calculus queries:
 infinitesimal, bounded, etc.
 """
 from sympy.logic.boolalg import conjuncts
-from sympy.queries import Q, ask
-from sympy.queries.handlers import CommonHandler
+from sympy.assumptions import Q, ask
+from sympy.assumptions.handlers import CommonHandler
 
 class AskInfinitesimalHandler(CommonHandler):
     """
@@ -62,7 +62,7 @@ class AskBoundedHandler(CommonHandler):
     Example of usage:
 
     >>> from sympy import Symbol, Assume, Q
-    >>> from sympy.queries.handlers.calculus import AskBoundedHandler
+    >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler
     >>> from sympy.abc import x
     >>> a = AskBoundedHandler()
     >>> a.Symbol(x, Assume(x, Q.positive))
@@ -80,7 +80,7 @@ class AskBoundedHandler(CommonHandler):
         Example:
 
         >>> from sympy import Symbol, Assume, Q
-        >>> from sympy.queries.handlers.calculus import AskBoundedHandler
+        >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler
         >>> from sympy.abc import x
         >>> a = AskBoundedHandler()
         >>> a.Symbol(x, Assume(x, Q.positive))

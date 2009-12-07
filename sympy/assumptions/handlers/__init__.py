@@ -1,5 +1,5 @@
 from sympy.logic.boolalg import conjuncts
-from sympy.queries import Q, ask
+from sympy.assumptions import Q, ask
 
 class AskHandler(object):
     """Base class that all Ask Handlers must inherit"""
@@ -40,3 +40,4 @@ class AskCommutativeHandler(CommonHandler):
     @staticmethod
     def NaN(expr, assumptions):
         return True
+

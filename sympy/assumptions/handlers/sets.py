@@ -1,8 +1,8 @@
 """
 Handlers for keys related to set membership: integer, rational, etc.
 """
-from sympy.queries import Q, ask
-from sympy.queries.handlers import CommonHandler
+from sympy.assumptions import Q, ask
+from sympy.assumptions.handlers import CommonHandler
 
 class AskIntegerHandler(CommonHandler):
     """

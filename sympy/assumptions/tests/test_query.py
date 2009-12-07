@@ -1,8 +1,8 @@
 from sympy.core import Symbol, symbols, S, Rational, Integer
 from sympy.functions import exp, log, sin, cos, sign, re, im, sqrt
-from sympy.assumptions import Assume, global_assumptions
-from sympy.queries import Q, ask, register_handler, remove_handler
-from sympy.queries.handlers import AskHandler
+from sympy.assumptions import (Assume, global_assumptions, Q, ask,
+    register_handler, remove_handler)
+from sympy.assumptions.handlers import AskHandler
 from sympy.utilities.pytest import raises, XFAIL
 
 def test_int_1():

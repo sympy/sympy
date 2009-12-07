@@ -115,8 +115,8 @@ def register_handler(key, handler):
     """Register a handler in the ask system. key must be a string and handler a
     class inheriting from AskHandler.
 
-        >>> from sympy.queries import register_handler, ask
-        >>> from sympy.queries.handlers import AskHandler
+        >>> from sympy.assumptions import register_handler, ask
+        >>> from sympy.assumptions.handlers import AskHandler
         >>> class MersenneHandler(AskHandler):
         ...     # Mersenne numbers are in the form 2**n + 1, n integer
         ...     @staticmethod
@@ -140,23 +140,23 @@ def remove_handler(key, handler):
 # handlers_dict tells us what ask handler we should use
 # for a particular key
 handlers_dict = {
-    'bounded'        : ['sympy.queries.handlers.calculus.AskBoundedHandler'],
-    'commutative'    : ['sympy.queries.handlers.AskCommutativeHandler'],
-    'complex'        : ['sympy.queries.handlers.sets.AskComplexHandler'],
-    'composite'      : ['sympy.queries.handlers.ntheory.AskCompositeHandler'],
-    'even'           : ['sympy.queries.handlers.ntheory.AskEvenHandler'],
-    'extended_real'  : ['sympy.queries.handlers.sets.AskExtendedRealHandler'],
-    'imaginary'      : ['sympy.queries.handlers.sets.AskImaginaryHandler'],
-    'infinitesimal'  : ['sympy.queries.handlers.calculus.AskInfinitesimalHandler'],
-    'integer'        : ['sympy.queries.handlers.sets.AskIntegerHandler'],
-    'irrational'     : ['sympy.queries.handlers.sets.AskIrrationalHandler'],
-    'rational'       : ['sympy.queries.handlers.sets.AskRationalHandler'],
-    'negative'       : ['sympy.queries.handlers.order.AskNegativeHandler'],
-    'nonzero'        : ['sympy.queries.handlers.order.AskNonZeroHandler'],
-    'positive'       : ['sympy.queries.handlers.order.AskPositiveHandler'],
-    'prime'          : ['sympy.queries.handlers.ntheory.AskPrimeHandler'],
-    'real'           : ['sympy.queries.handlers.sets.AskRealHandler'],
-    'odd'            : ['sympy.queries.handlers.ntheory.AskOddHandler'],
+    'bounded'        : ['sympy.assumptions.handlers.calculus.AskBoundedHandler'],
+    'commutative'    : ['sympy.assumptions.handlers.AskCommutativeHandler'],
+    'complex'        : ['sympy.assumptions.handlers.sets.AskComplexHandler'],
+    'composite'      : ['sympy.assumptions.handlers.ntheory.AskCompositeHandler'],
+    'even'           : ['sympy.assumptions.handlers.ntheory.AskEvenHandler'],
+    'extended_real'  : ['sympy.assumptions.handlers.sets.AskExtendedRealHandler'],
+    'imaginary'      : ['sympy.assumptions.handlers.sets.AskImaginaryHandler'],
+    'infinitesimal'  : ['sympy.assumptions.handlers.calculus.AskInfinitesimalHandler'],
+    'integer'        : ['sympy.assumptions.handlers.sets.AskIntegerHandler'],
+    'irrational'     : ['sympy.assumptions.handlers.sets.AskIrrationalHandler'],
+    'rational'       : ['sympy.assumptions.handlers.sets.AskRationalHandler'],
+    'negative'       : ['sympy.assumptions.handlers.order.AskNegativeHandler'],
+    'nonzero'        : ['sympy.assumptions.handlers.order.AskNonZeroHandler'],
+    'positive'       : ['sympy.assumptions.handlers.order.AskPositiveHandler'],
+    'prime'          : ['sympy.assumptions.handlers.ntheory.AskPrimeHandler'],
+    'real'           : ['sympy.assumptions.handlers.sets.AskRealHandler'],
+    'odd'            : ['sympy.assumptions.handlers.ntheory.AskOddHandler'],
 }
 
 known_facts_keys = []
@@ -188,7 +188,7 @@ known_facts = [
 To generate known_facts_compiled, use the following script.
 
 from sympy import var
-from sympy.queries import Q
+from sympy.assumptions import Q
 from sympy.logic.boolalg import *
 
 syms = []

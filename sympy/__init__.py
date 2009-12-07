@@ -27,7 +27,6 @@ from functions import *
 from logic import *
 from ntheory import *
 from concrete import *
-from refine import refine
 from simplify import *
 from solvers import *
 from matrices import *
@@ -41,7 +40,6 @@ from printing import pretty, pretty_print, pprint, pprint_use_unicode, \
     pprint_try_use_unicode, print_gtk, print_tree
 from printing import ccode, latex, preview
 from printing import python, print_python, srepr, sstr, sstrrepr
-from queries import Q, ask
 
 evalf._create_evalf_table()
 

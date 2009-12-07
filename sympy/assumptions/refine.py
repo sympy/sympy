@@ -1,6 +1,6 @@
 from sympy.core import S, Symbol, sympify
 from sympy.utilities.source import get_class
-from sympy.queries import Q, ask
+from sympy.assumptions import Q, ask
 from sympy.logic.boolalg import fuzzy_not
 
 def refine(expr, assumptions=True):
