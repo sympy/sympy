@@ -1,7 +1,7 @@
 """User-friendly public interface to polynomial functions. """
 
 from sympy.core import (
-    S, Basic, Integer, Mul, sympify,
+    S, Basic, I, Integer, Mul, sympify,
 )
 
 from sympy.core.decorators import (
@@ -156,7 +156,7 @@ def _find_out_domain(rep, **args):
 
             gens = _sort_gens(gens, **args)
 
-            if any(gen.is_Pow for gen in gens): # or I in gens
+            if any(gen.is_Pow for gen in gens) or I in gens:
                 # XXX: this should really go into algebraic function fields
                 K, coeffs = EX, []
 
