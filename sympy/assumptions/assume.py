@@ -1,6 +1,5 @@
 # doctests are disabled because of issue #1521
 from sympy.core import Basic, Symbol
-from sympy.core.relational import Relational
 
 class AssumptionsContext(set):
     """Set representing assumptions.
