@@ -2,7 +2,7 @@
 """
 import sys
 
-from iterables import make_list, flatten, subsets, numbered_symbols
+from iterables import iff, make_list, flatten, subsets, numbered_symbols
 
 if sys.version_info[0] <= 2 and sys.version_info[1] < 5:
     from iterables import any, all
@@ -13,7 +13,7 @@ else:
 from lambdify import lambdify
 from source import source
 
-from decorator import threaded
+from decorator import threaded, deprecated
 
 from runtests import test, doctest
 
