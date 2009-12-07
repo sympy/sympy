@@ -1535,7 +1535,7 @@ def zzX_heu_gcd(f, g, **flags):
        The algorithm computes the polynomial GCD by evaluating polynomials
        f and g at certain points and computing (fast) integer GCD of those
        evaluations. The polynomial GCD is recovered from the integer image
-       by interpolation. The evaluation proces reduces f and g variable by
+       by interpolation. The evaluation process reduces f and g variable by
        variable into a large integer.  The final step  is to verify if the
        interpolated polynomial is the correct GCD. This gives cofactors of
        the input polynomials as a side effect (see zzX_cofactors).
@@ -2024,7 +2024,7 @@ def zzx_factor(f, **flags):
 
        By default, polynomials x**n - 1 and x**n + 1 are factored
        using cyclotomic decomposition to speedup computations. To
-       disable this behaviour set cyclotomic=False.
+       disable this behavior set cyclotomic=False.
 
        For more details on the implemented algorithm refer to:
 
@@ -2082,7 +2082,7 @@ def zzx_factor(f, **flags):
     return cont, sorted(factors, compare)
 
 def zzx_factor_sqf(f, **flags):
-    """Factor square-free (non-primitive) polyomials in Z[x].  """
+    """Factor square-free (non-primitive) polynomials in Z[x].  """
     cont, g = zzx_primitive(f)
 
     n = zzx_degree(g)

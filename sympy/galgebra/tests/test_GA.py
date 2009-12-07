@@ -2,7 +2,7 @@
 #test_GA.py
 
 """
-The reference D&L is "Geomertric Algebra for Physicists" by Doran and Lasenby
+The reference D&L is "Geometric Algebra for Physicists" by Doran and Lasenby
 """
 
 import sys
@@ -25,7 +25,7 @@ if not disabled:
 
 def F(x):
     """
-    Conformal Mapping Function from 3D euclidian space to 5D conformal space
+    Conformal Mapping Function from 3D Euclidean space to 5D conformal space
     where the images of all maps are null vectors.
     """
     Fx = HALF*((x*x)*n+2*x-nbar)
@@ -45,7 +45,7 @@ def make_vector(a,n = 3):
 
 def test_rmul():
     """
-    Test for communitive scalar multiplication.  Leftover from when sympy and
+    Test for commutative scalar multiplication.  Leftover from when sympy and
     numpy were not working together and __mul__ and __rmul__ would not give the
     same answer.
     """
@@ -203,7 +203,7 @@ def test_extract_plane_and_line():
 
 def test_reciprocal_frame():
     """
-    Test of fromula for general reciprocal frame of three vectors.
+    Test of formula for general reciprocal frame of three vectors.
     Let three independent vectors be e1, e2, and e3. The reciprocal
     vectors E1, E2, and E3 obey the relations:
 

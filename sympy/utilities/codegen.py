@@ -61,7 +61,7 @@ printing.
 - Also generate .pyf code for f2py
 - A default complex datatype
 - Include extra information in the header: date, user, hostname, sha1 hash, ...
-- Isolate constants and evaluate them beforehand in double precission
+- Isolate constants and evaluate them beforehand in double precision
 - Common Subexpression Elimination
 - User defined comments in the generated code
 - Fortran 77

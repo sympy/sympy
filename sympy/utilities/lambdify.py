@@ -120,7 +120,7 @@ def lambdify(args, expr, modules=None):
     If not specified differently by the user, Sympy functions are replaced as
     far as possible by either python-math, numpy (if available) or mpmath
     functions - exactly in this order.
-    To change this behaviour, the "modules" argument can be used.
+    To change this behavior, the "modules" argument can be used.
     It accepts:
      - the strings "math", "mpmath", "numpy", "sympy"
      - any modules (e.g. math)
@@ -141,7 +141,7 @@ def lambdify(args, expr, modules=None):
         >> import numpy
         >> f = lambdify((x,y), tan(x*y), numpy)
 
-        Attention: There are naming diferences between numpy and sympy. So if
+        Attention: There are naming differences between numpy and sympy. So if
                    you simply take the numpy module, e.g. sympy.atan will not be
                    translated to numpy.arctan. Use the modified module instead
                    by passing the string "numpy".
@@ -183,7 +183,7 @@ def lambdify(args, expr, modules=None):
 
 def _get_namespace(m):
     """
-    This is used by _lambdify to parse it's arguments.
+    This is used by _lambdify to parse its arguments.
     """
     if isinstance(m, str):
         _import(m)

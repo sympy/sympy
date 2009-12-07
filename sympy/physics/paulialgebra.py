@@ -1,7 +1,7 @@
 from sympy import Symbol,I,Integer
 
 """
-This module implements Pauli algebra by subclassing Symbol. Only aglebraic
+This module implements Pauli algebra by subclassing Symbol. Only algebraic
 properties of Pauli matrices are used (we don't use the Matrix class).
 
 See the documentation to the class Pauli for examples.

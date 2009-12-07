@@ -365,7 +365,7 @@ def subexp(e,sub):
 def calculate_series(e, x):
     """ Calculates at least one term of the series of "e" in "x".
 
-    This is a place that fails most often, so it is in it's own function.
+    This is a place that fails most often, so it is in its own function.
     """
 
     f = e

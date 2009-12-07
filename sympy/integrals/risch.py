@@ -78,8 +78,8 @@ def _symbols(name, n):
 def heurisch(f, x, **kwargs):
     """Compute indefinite integral using heuristic Risch algorithm.
 
-       This is a huristic approach to indefinite integration in finite
-       terms using extened heuristic (parallel) Risch algorithm, based
+       This is a heuristic approach to indefinite integration in finite
+       terms using the extended heuristic (parallel) Risch algorithm, based
        on Manuel Bronstein's "Poor Man's Integrator".
 
        The algorithm supports various classes of functions including
@@ -96,7 +96,7 @@ def heurisch(f, x, **kwargs):
        'integrate' function in most cases,  as this procedure needs some
        preprocessing steps and otherwise may fail.
 
-       Specificaion
+       Specification
        ============
 
          heurisch(f, x, rewrite=False, hints=None)
@@ -106,7 +106,7 @@ def heurisch(f, x, **kwargs):
              x : symbol
 
              rewrite -> force rewrite 'f' in terms of 'tan' and 'tanh'
-             hints   -> a list of functions that may appear in antiderivate
+             hints   -> a list of functions that may appear in anti-derivate
 
               - hints = None          --> no suggestions at all
               - hints = [ ]           --> try to figure out
@@ -128,7 +128,7 @@ def heurisch(f, x, **kwargs):
 
        For more information on the implemented algorithm refer to:
 
-       [2] K. Geddes, L.Stefanus, On the Risch-Norman Integration
+       [2] K. Geddes, L. Stefanus, On the Risch-Norman Integration
            Method and its Implementation in Maple, Proceedings of
            ISSAC'89, ACM Press, 212-217.
 

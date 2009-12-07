@@ -15,7 +15,7 @@ def normal(f, g, n=None):
                        g(n)       B(n)  C(n)
 
        where Z is arbitrary constant and A, B, C are monic
-       polynomials in 'n' with follwing properties:
+       polynomials in 'n' with following properties:
 
            (1) gcd(A(n), B(n+h)) = 1 for all 'h' in N
            (2) gcd(B(n), C(n+1)) = 1
@@ -26,7 +26,7 @@ def normal(f, g, n=None):
        equations solving. It can be also used to decide if two
        hypergeometric are similar or not.
 
-       This procedure will return return triple containig elements
+       This procedure will return a tuple containig elements
        of this factorization in the form (Z*A, B, C). For example:
 
        >>> from sympy import Symbol, normal

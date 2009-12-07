@@ -23,7 +23,7 @@ def threaded(**flags):
        example see functions in sympy.simplify module.
 
        By default threading is done on elements of Add instance. To avoid
-       this behaviour set 'use_add' flag  with False in keyword arguments
+       this behavior set 'use_add' flag  with False in keyword arguments
        (see integrate() for details), e.g:
 
           @threaded(use_add=False)

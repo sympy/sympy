@@ -9,7 +9,7 @@ def preview(expr, output='png', viewer=None, euler=True):
     """View expression in PNG, DVI, PostScript or PDF form.
 
        This will generate LaTeX representation of the given expression
-       and compile it using available TeX distribiution. Then it will
+       and compile it using available TeX distribution. Then it will
        run appropriate viewer for the given output format or use the
        user defined one. If you prefer not to use external viewer
        then you can use combination of 'png' output and 'pyglet'
@@ -32,7 +32,7 @@ def preview(expr, output='png', viewer=None, euler=True):
            >> preview(x + y, output='png', viewer='gimp')
 
        The 'png' format is considered special. For all other formats
-       the rules are sligtly different. As an example we will take
+       the rules are slightly different. As an example we will take
        'dvi' output format. If you would run::
 
            >> preview(x + y, output='dvi')
@@ -40,11 +40,11 @@ def preview(expr, output='png', viewer=None, euler=True):
        then 'view' will look for available 'dvi' viewers on your
        system (predefined in the function, so it will try evince,
        first, then kdvi and xdvi). If nothing is found you will
-       need to set the viewer explicitely::
+       need to set the viewer explicitly::
 
            >> preview(x + y, output='dvi', viewer='superior-dvi-viewer')
 
-       This will skip auto-dection and will run user specified
+       This will skip auto-detection and will run user specified
        'superior-dvi-viewer'. If 'view' fails to find it on
        your system it will gracefully raise an exception.
 

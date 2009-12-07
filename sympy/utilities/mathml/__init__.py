@@ -1,7 +1,7 @@
 """Module with some functions for MathML, like transforming MathML
 content in MathML presentation.
 
-To use this module, you will need libxml2 and libxslt, with it's
+To use this module, you will need libxml2 and libxslt, with its
 respective python bindings.
 """
 
@@ -18,7 +18,7 @@ def add_mathml_headers(s):
 def apply_xsl(mml, xsl):
     """Apply a xsl to a MathML string
     @param mml: a string with MathML code
-    @param xsl: a string representing a path to a xsl (xml sylesheet)
+    @param xsl: a string representing a path to a xsl (xml stylesheet)
         file. This file name is relative to the PYTHONPATH
     """
 
@@ -41,7 +41,7 @@ def apply_xsl(mml, xsl):
     return s
 
 def c2p(mml, simple=False):
-    """Transforms a document in MathML content (like the one that sympy preduces)
+    """Transforms a document in MathML content (like the one that sympy produces)
     in one document in MathML presentation, more suitable for printing, and more
     widely accepted
     """

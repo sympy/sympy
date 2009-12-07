@@ -12,7 +12,7 @@ def _sympifyit(arg, retval=None):
        def add(self, other):
            ...
 
-       In add, other can be though as being SymPy object already.
+       In add, other can be thought of as already being a SymPy object.
 
        If it is not, the code is likely to catch an exception, then other will
        be explicitly _sympified, and the whole code restarted.

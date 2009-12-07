@@ -823,7 +823,7 @@ class Matrix(object):
 
     def LUdecomposition(self, iszerofunc=_iszero):
         """
-        Returns the decompositon LU and the row swaps p.
+        Returns the decomposition LU and the row swaps p.
         """
         combined, p = self.LUdecomposition_Simple(iszerofunc=_iszero)
         L = self.zeros(self.rows)
@@ -840,7 +840,7 @@ class Matrix(object):
 
     def LUdecomposition_Simple(self, iszerofunc=_iszero):
         """
-        Returns A compused of L,U (L's diag entries are 1) and
+        Returns A comprised of L,U (L's diag entries are 1) and
         p which is the list of the row swaps (in order).
         """
         assert self.rows == self.cols
@@ -1184,7 +1184,7 @@ class Matrix(object):
            algorithm which is an extension of the well known Gaussian
            elimination method. This approach is best suited for dense
            symbolic matrices and will result in a determinant with
-           minimal numer of fractions. It means that less term
+           minimal number of fractions. It means that less term
            rewriting is needed on resulting formulae.
 
            TODO: Implement algorithm for sparse matrices (SFF).
@@ -1338,11 +1338,11 @@ class Matrix(object):
            its square sub-matrices composed by removing both i-th row
            and column, without division in the ground domain.
 
-           This method is particulary useful for computing determinant,
+           This method is particularly useful for computing determinant,
            principal minors and characteristic polynomial, when 'self'
-           has complicated coefficients eg. polynomials. Semi-direct
+           has complicated coefficients e.g. polynomials. Semi-direct
            usage of this algorithm is also important in computing
-           efficiently subresultant PRS.
+           efficiently sub-resultant PRS.
 
            Assuming that M is a square matrix of dimension N x N and
            I is N x N identity matrix,  then the following following
@@ -1375,7 +1375,7 @@ class Matrix(object):
                parallel time using a small number of processors, ACM,
                Information Processing Letters 18, 1984, pp. 147-150
 
-           [2] M. Keber, Division-Free computation of subresultants
+           [2] M. Keber, Division-Free computation of sub-resultants
                using Bezout matrices, Tech. Report MPI-I-2006-1-006,
                Saarbrucken, 2006
 
@@ -1724,7 +1724,7 @@ def GramSchmidt(vlist, orthog=False):
     return out
 
 def wronskian(functions, var, method='bareis'):
-    """Compute wronskian for [] of functions
+    """Compute Wronskian for [] of functions
 
                    | f1    f2     ...   fn  |
                    | f1'   f2'    ...   fn' |
@@ -1750,7 +1750,7 @@ def casoratian(seqs, n, zero=True):
        equation Ly = 0 we want to compute kernel of L, which is a set
        of 'k' sequences: a(n), b(n), ... z(n).
 
-       Solutions of L are lineary independent iff their Casoratian,
+       Solutions of L are linearly independent iff their Casoratian,
        denoted as C(a, b, ..., z), do not vanish for n = 0.
 
        Casoratian is defined by k x k determinant:
@@ -1763,13 +1763,13 @@ def casoratian(seqs, n, zero=True):
                   +  a(n+k-1) b(n+k-1) . . . z(n+k-1) +
 
        It proves very useful in rsolve_hyper() where it is applied
-       to a generating set of a recurrence to factor out lineary
+       to a generating set of a recurrence to factor out linearly
        dependent solutions and return a basis.
 
        >>> from sympy import Symbol, casoratian, factorial
        >>> n = Symbol('n', integer=True)
 
-       Exponential and factorial are lineary independent:
+       Exponential and factorial are linearly independent:
 
        >>> casoratian([2**n, factorial(n)], n) != 0
        True

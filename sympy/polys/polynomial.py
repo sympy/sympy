@@ -296,7 +296,7 @@ class Poly(Basic):
 
        [13] String representation functions:
 
-          [13.1] [U-] repr      --> returns represantation of 'self'
+          [13.1] [U-] repr      --> returns representation of 'self'
           [13.3] [U-] str       --> returns pretty representation
 
        [14] Other (derived from Basic) functionality:
@@ -740,7 +740,7 @@ class Poly(Basic):
 
            This method creates dictionary efficiently, so it can be
            used in several algorithms which perform best when dicts
-           are being used, eg. addition, multiplication etc.
+           are being used, e.g. addition, multiplication etc.
 
            >>> from sympy import Poly
            >>> from sympy.abc import x, y

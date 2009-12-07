@@ -41,9 +41,9 @@ def dpll(clauses, symbols, model):
     Compute satisfiability in a partial model.
     Clauses is an array of conjuncts.
 
-    >>> from sympy.abc import A, B, C
+    >>> from sympy.abc import A, B, D
     >>> from sympy.logic.algorithms.dpll import dpll
-    >>> dpll([A, B, C], [A, B], {C: False})
+    >>> dpll([A, B, D], [A, B], {D: False})
     False
 
     """
@@ -163,10 +163,10 @@ def unit_propagate(clauses, symbol):
     Arguments are expected to be in CNF.
 
     >>> from sympy import symbols
-    >>> from sympy.abc import A, B, C
+    >>> from sympy.abc import A, B, D
     >>> from sympy.logic.algorithms.dpll import unit_propagate
-    >>> unit_propagate([A | B, C | ~B, B], B)
-    [C, B]
+    >>> unit_propagate([A | B, D | ~B, B], B)
+    [D, B]
 
     """
     output = []
@@ -213,9 +213,9 @@ def find_pure_symbol(symbols, unknown_clauses):
     (or only as a negative) in clauses.
 
     >>> from sympy import symbols
-    >>> from sympy.abc import A, B, C
+    >>> from sympy.abc import A, B, D
     >>> from sympy.logic.algorithms.dpll import find_pure_symbol
-    >>> find_pure_symbol([A, B, C], [A|~B,~B|~C,C|A])
+    >>> find_pure_symbol([A, B, D], [A|~B,~B|~D,D|A])
     (A, True)
 
     """
@@ -250,9 +250,9 @@ def find_unit_clause(clauses, model):
     A unit clause has only 1 variable that is not bound in the model.
 
     >>> from sympy import symbols
-    >>> from sympy.abc import A, B, C
+    >>> from sympy.abc import A, B, D
     >>> from sympy.logic.algorithms.dpll import find_unit_clause
-    >>> find_unit_clause([A | B | C, B | ~C, A | ~B], {A:True})
+    >>> find_unit_clause([A | B | D, B | ~D, A | ~B], {A:True})
     (B, False)
 
     """

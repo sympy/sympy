@@ -194,14 +194,14 @@ class AssumeMeths(object):
            value is.
 
            If we are here, it means that the asked-for fact is not known, and
-           we should try to find a way to find it's value.
+           we should try to find a way to find its value.
 
            For this we use several techniques:
 
            1. _eval_is_<fact>
            ------------------
 
-           first fact-evalation function is tried,  for example
+           first fact-evaluation function is tried,  for example
            _eval_is_integer
 
 
@@ -355,8 +355,8 @@ def make__get_assumption(classname, name):
 
        c = C()
 
-       c.is_xxx()   # note braces -- it's function call
-       c.is_yyy     # no braces   -- it's property
+       c.is_xxx()   # note braces -- it's a function call
+       c.is_yyy     # no braces   -- it's a property
     """
 
     def getit(self):

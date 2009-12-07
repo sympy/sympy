@@ -1064,7 +1064,8 @@ def radsimp(expr):
 def powsimp(expr, deep=False, combine='all'):
     """
     == Usage ==
-        Reduces expression by combining powers with similar bases and exponents.
+        powsimp(expr, deep) -> reduces expression by combining powers with
+        similar bases and exponents.
 
     == Notes ==
         If deep is True then powsimp() will also simplify arguments of
@@ -1244,7 +1245,7 @@ def powsimp(expr, deep=False, combine='all'):
 
 def hypersimp(f, k):
     """Given combinatorial term f(k) simplify its consecutive term ratio
-       ie. f(k+1)/f(k).  The input term can be composed of functions and
+       i.e. f(k+1)/f(k).  The input term can be composed of functions and
        integer sequences which have equivalent representation in terms
        of gamma special function.
 

@@ -4,7 +4,7 @@ from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
 from sympy.utilities.pytest import XFAIL, skip
 
 """
-This test suite is testing the limit algoritm using the bottom up approach.
+This test suite is testing the limit algorithm using the bottom up approach.
 See the documentation in limits2.py. The algorithm itself is highly recursive
 by nature, so "compare" is logically the lowest part of the algorithm, yet in
 some sense it's the most complex part, because it needs to calculate a limit to

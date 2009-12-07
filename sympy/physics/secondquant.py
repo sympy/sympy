@@ -1545,8 +1545,8 @@ class InnerProduct(Basic):
     """
     An unevaluated inner product between a bra and ket.
 
-    Currently this class just reduces things to a prouct of
-    KroneckerDeltas.  In the future, we could introduce abstract
+    Currently this class just reduces things to a product of
+    Kronecker Deltas.  In the future, we could introduce abstract
     states like |a> and |b>, and leave the inner product unevaluated as
     <a|b>.
 

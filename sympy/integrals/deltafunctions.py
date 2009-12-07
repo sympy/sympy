@@ -11,7 +11,7 @@ def change_mul(node,x):
        DiracDelta expression.
 
        If no simple DiracDelta expression was found, then all the DiracDelta
-       expressions are simplified(using DiracDelta.simplify).
+       expressions are simplified (using DiracDelta.simplify).
 
        Return: (dirac,nnode)
        Where:
@@ -56,8 +56,8 @@ def change_mul(node,x):
 
 
 def deltaintegrate(f, x):
-    '''The idea for integration is the following:
-    -If we are dealing with a DiracDelta expresion, ie:
+    """The idea for integration is the following:
+    -If we are dealing with a DiracDelta expression, i.e.:
     DiracDelta(g(x)), we try to simplify it.
     If we could simplify it, then we integrate the resulting expression.
     We already know we can integrate a simplified expression, because only
@@ -65,24 +65,24 @@ def deltaintegrate(f, x):
     If we couldn't simplify it, there are two cases:
     1) The expression is a simple expression, then we return the integral
     Taking care if we are dealing with a Derivative or with a proper DiracDelta
-    2) The expression is not simple(ie. DiracDelta(cos(x))), we can do nothing at all
+    2) The expression is not simple(i.e. DiracDelta(cos(x))), we can do nothing at all
 
     -If the node is a multiplication node having a DiracDelta term
     First we expand it.
     If the expansion did work, the we try to integrate the expansion
-    If not, we try to extrat a simple DiracDelta term, then we have two cases
+    If not, we try to extract a simple DiracDelta term, then we have two cases
     1)We have a simple DiracDelta term, so we return the integral
     2)We didn't have a simple term, but we do have an expression with simplified
-    DiracDelta terms, so we integrate this expresion
+    DiracDelta terms, so we integrate this expression
 
-    '''
+    """
     if not f.has(DiracDelta):
         return None
     # g(x) = DiracDelta(h(x))
     if isinstance(f,DiracDelta):
         h = f.simplify(x)
         if h == f:#can't simplify the expression
-            #FIXME: the second term tells wether is DeltaDirac or Derivative
+            #FIXME: the second term tells whether is DeltaDirac or Derivative
             #For integrating derivatives of DiracDelta we need the chain rule
             if f.is_simple(x):
                 if (len(f.args) <= 1 or f.args[1]==0):

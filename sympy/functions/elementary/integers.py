@@ -75,7 +75,7 @@ class RoundFunction(Function):
 class floor(RoundFunction):
     """
     Floor is a univariate function which returns the largest integer
-    value not greater than its argument. However this implementaion
+    value not greater than its argument. However this implementation
     generalizes floor to complex numbers.
 
     More information can be found in "Concrete mathematics" by Graham,

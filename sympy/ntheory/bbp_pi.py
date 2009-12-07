@@ -1,5 +1,5 @@
 '''
-This implimentation is a heavily modified fixed point implimentation of BBP_formula
+This implementation is a heavily modified fixed point implementation of BBP_formula
 for calculating the nth position of pi. The original hosted at:
 http://en.literateprograms.org/Pi_with_the_BBP_formula_(Python)
 
@@ -7,7 +7,7 @@ http://en.literateprograms.org/Pi_with_the_BBP_formula_(Python)
 # a copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
 # without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to
+# distribute, sub-license, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
 #
@@ -25,21 +25,21 @@ http://en.literateprograms.org/Pi_with_the_BBP_formula_(Python)
 
 Modifications:
 1.Once the nth digit is selected the number of digits of working precision is
-caluclated to ensure that the 14 Hexidecimal representation of that region is
-accurate. This was found eimperically to be int((math.log10(n//1000))+18).
+calculated to ensure that the 14 Hexadecimal representation of that region is
+accurate. This was found empirically to be int((math.log10(n//1000))+18).
 This was found by searching for a value of working precision for the n = 0 and
-n = 1 then n was increased untill the result was less precise, therefore increased again
+n = 1 then n was increased until the result was less precise, therefore increased again
 this was repeated for increasing n and an effective fit was found between n and
 the working precision value.
 
-2. The while loop to evaluate whether the series has convergered has be replaced
+2. The while loop to evaluate whether the series has converged has be replaced
 with a fixed for loop, that option was selected because in a very large number of
-cases the loop convereged to a point where no difference can be detected in less than
+cases the loop converged to a point where no difference can be detected in less than
 15 iterations. (done for more accurate memory and time banking).
 
-3. output hex string constrained to 14 characters (accuarcy assured to n = 10**7)
+3. output hex string constrained to 14 characters (accuracy assured to n = 10**7)
 
-4. pi_hex_digits(n) changed to have coeffiecient to the formula in an array (perhaps just
+4. pi_hex_digits(n) changed to have coefficient to the formula in an array (perhaps just
 a matter of preference).
 
 '''
@@ -66,7 +66,7 @@ def Series(j, n):
 
 def pi_hex_digits(n):
 
-    # main of implimentation arrays holding formulae coefficients
+    # main of implementation arrays holding formulae coefficients
     n -= 1
     a=  [4,2,1,1]
     j = [1,4,5,6]

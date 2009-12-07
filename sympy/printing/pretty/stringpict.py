@@ -336,13 +336,13 @@ class prettyForm(stringPict):
     """Extension of the stringPict class that knows about
     basic math applications, optimizing double minus signs.
     "Binding" is interpreted as follows:
-    ATOM this is an atom: never needs to be parenthesised
-    FUNC this is a function application: parenthesise if added (?)
+    ATOM this is an atom: never needs to be parenthesized
+    FUNC this is a function application: parenthesize if added (?)
     DIV  this is a division: make wider division if divided
-    POW  this is a power: only parenthesise if exponent
-    MUL  this is a multiplication: parenthesise if powered
-    ADD  this is an addition: parenthesise if multiplied or powered
-    NEG  this is a negative number: optimise if added, parenthesise if multiplied or powered
+    POW  this is a power: only parenthesize if exponent
+    MUL  this is a multiplication: parenthesize if powered
+    ADD  this is an addition: parenthesize if multiplied or powered
+    NEG  this is a negative number: optimize if added, parenthesize if multiplied or powered
     """
     ATOM, FUNC, DIV, POW, MUL, ADD, NEG = range(7)
 

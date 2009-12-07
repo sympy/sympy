@@ -1319,7 +1319,7 @@ class Basic(AssumeMeths):
 
     def _eval_interval(self, x, a, b):
         """
-        Returns evaluation over an interval.  For most funtions this is:
+        Returns evaluation over an interval.  For most functions this is:
 
         self.subs(x, b) - self.subs(x, a),
 
@@ -1660,7 +1660,7 @@ class Basic(AssumeMeths):
             return
 
         if expand:
-            self = self.expand() # collect expects it's arguments in expanded form
+            self = self.expand() # collect expects its arguments in expanded form
         result = collect(self, x, evaluate=False, exact=True)
         if x in result:
             return result[x]
@@ -2241,14 +2241,14 @@ class Basic(AssumeMeths):
         Calculates a generalized series expansion.
 
         nseries calculates "n" terms in the innermost expressions and then
-        builds up the final series just by "cross-mutliplying" everything out.
+        builds up the final series just by "cross-multiplying" everything out.
 
         Advantage -- it's fast, because we don't have to determine how many
         terms we need to calculate in advance.
 
-        Disadvantage -- you may endup with less terms than you may have
-        expected, but the O(x**n) term appended will always be correct, so the
-        result is correct, but maybe shorter.
+        Disadvantage -- you may end up with less terms than you may have
+        expected, but the O(x**n) term appended will always be correct and
+        so the result, though perhaps shorter, will also be correct.
 
         See also lseries().
         """
@@ -2256,7 +2256,7 @@ class Basic(AssumeMeths):
 
     def _eval_nseries(self, x, x0, n):
         """
-        This is a method that should be overriden in subclasses. Users should
+        This is a method that should be overridden in subclasses. Users should
         never call this method directly (use .nseries() instead), so you don't
         have to write docstrings for _eval_nseries().
         """

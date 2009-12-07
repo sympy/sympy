@@ -21,7 +21,7 @@ class DiracDelta(Function):
     4) DiracDelta(g(x)) = Sum_i(DiracDelta(x-xi)/abs(g'(xi)))
        Where xis are the roots of g
 
-    Derivatives of k order of DiraDelta have the following property:
+    Derivatives of k order of DiracDelta have the following property:
     5) DiracDelta(x,k) = 0, for all x!=0
 
 
@@ -106,7 +106,7 @@ class DiracDelta(Function):
     def is_simple(self,x):
         """is_simple(self, x)
 
-           Tells wether the argument(args[0]) of DiracDelta is a linear
+           Tells whether the argument(args[0]) of DiracDelta is a linear
            expression in x.
 
            x can be:
@@ -146,7 +146,7 @@ class Heaviside(Function):
                         ( 0, if x<0
     2) Heaviside(x) = < [*]  1/2 if x==0
                         ( 1, if x>0
-    [*]Regarding to the value at 0, Mathemathica adopt the value H(0)=1,
+    [*]Regarding to the value at 0, Mathematica adopt the value H(0)=1,
     and Maple H(0)=undefined
 
     I think is better to have H(0)=1/2, due to the following:

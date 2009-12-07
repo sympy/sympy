@@ -442,7 +442,7 @@ def gf_gcdex(f, g, p):
 
        Given polynomials f and g over GF(p)[x],  computes polynomials
        s, t and h, such that h = gcd(f, g) and s*f + t*g = h. Typical
-       application of EEA is solving polynomial diophantine equations.
+       application of EEA is solving polynomial Diophantine equations.
 
        Consider polynomials f = (x + 7) (x + 1), g = (x + 7) (x**2 + 1)
        over GF(11)[x]. Application of Extended Euclidean Algorithm gives:

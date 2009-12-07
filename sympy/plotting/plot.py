@@ -65,13 +65,13 @@ class Plot(object):
     Plot supports several curvilinear coordinate modes, and
     they independent for each plotted function. You can specify
     a coordinate mode explicitly with the 'mode' named argument,
-    but it can be automatically determined for cartesian or
+    but it can be automatically determined for Cartesian or
     parametric plots, and therefore must only be specified for
     polar, cylindrical, and spherical modes.
 
     Specifically, Plot(function arguments) and Plot[n] =
     (function arguments) will interpret your arguments as a
-    cartesian plot if you provide one function and a parametric
+    Cartesian plot if you provide one function and a parametric
     plot if you provide two or three functions. Similarly, the
     arguments will be interpreted as a curve is one variable is
     used, and a surface if two are used.

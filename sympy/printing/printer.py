@@ -13,7 +13,7 @@ Some more information how the single concepts work and who should use which:
 
 1. The object prints itself
 
-    This was the original way of doing printing in sympy. Every class had it's
+    This was the original way of doing printing in sympy. Every class had its
     own latex, mathml, str and repr methods, but it turned out that it is hard
     to produce a high quality printer, if all the methods are spread out that
     far. Therefor all printing code was combined into the different printers,
@@ -27,7 +27,7 @@ Some more information how the single concepts work and who should use which:
 
 2. Take the best fitting method defined in the printer.
 
-    The printer loops through expr classes (class + it's bases), and tries to dispatch the
+    The printer loops through expr classes (class + its bases), and tries to dispatch the
     work to _print_<EXPR_CLASS>
 
     e.g., suppose we have the following class hierarchy::
@@ -68,7 +68,7 @@ Some more information how the single concepts work and who should use which:
 class Printer(object):
     """Generic printer
 
-    It's job is to provide infrastructure for implementing new printers easily.
+    Its job is to provide infrastructure for implementing new printers easily.
 
     Basically, if you want to implement a printer, all you have to do is:
 
@@ -82,7 +82,7 @@ class Printer(object):
 
        For each class you want to provide printing to, define an appropriate
        method how to do it. For example if you want a class FOO to be printed in
-       it's own way, define _print_FOO:
+       its own way, define _print_FOO:
 
        def _print_FOO(self, e):
            ...

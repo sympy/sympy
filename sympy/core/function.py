@@ -4,26 +4,26 @@ There are two types of functions:
    (in the sense that function can be evaluated).
     e = exp
 2) undefined function with a name but no body. Undefined
-  functions can be defined using a Function class as follows:
-    f = Function('f')
-  (the result will be Function instance)
+   functions can be defined using a Function class as follows:
+       f = Function('f')
+   (the result will be a Function instance)
 3) this isn't implemented yet: anonymous function or lambda function that has
-no name but has body with dummy variables. An anonymous function
-   object creation examples:
-    f = Lambda(x, exp(x)*x)
-    f = Lambda(exp(x)*x)  # free symbols in the expression define the number of arguments
-    f = exp * Lambda(x,x)
+   no name but has body with dummy variables. Examples of anonymous function
+   creation:
+       f = Lambda(x, exp(x)*x)
+       f = Lambda(exp(x)*x)  # free symbols in the expression define the number of arguments
+       f = exp * Lambda(x,x)
 4) isn't implemented yet: composition of functions, like (sin+cos)(x), this
-works in sympycore, but needs to be ported back to SymPy.
+   works in sympy core, but needs to be ported back to SymPy.
 
 
 Example:
-    >>> ##
-    >>> f = Function("f")
+    >>> import sympy
+    >>> f = sympy.Function("f")
     >>> from sympy.abc import x
     >>> f(x)
     f(x)
-    >>> print srepr(f(x).func)
+    >>> print sympy.srepr(f(x).func)
     Function('f')
     >>> f(x).args
     (x,)
@@ -510,10 +510,10 @@ class WildFunction(Function, Atom):
 
 class Derivative(Basic):
     """
-    Carries out differentation of the given expression with respect to symbols.
+    Carries out differentiation of the given expression with respect to symbols.
 
     expr must define ._eval_derivative(symbol) method that returns
-    the differentation result or None.
+    the differentiation result or None.
 
     Examples:
 

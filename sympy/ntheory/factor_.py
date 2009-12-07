@@ -107,7 +107,7 @@ def pollard_rho(n, retries=5, max_steps=None, seed=1234):
 
     The algorithm may need to take thousands of steps before
     it finds a factor or reports failure. If ``max_steps`` is
-    specified, the iteration is cancelled with a failure after
+    specified, the iteration is canceled with a failure after
     the specified number of steps.
 
     On failure, the algorithm will self-restart (with different
@@ -152,7 +152,7 @@ def pollard_pm1(n, B=10, seed=1234):
     factor is found, ``None`` is returned.
 
     The search is performed up to a smoothness bound ``B``.
-    Choosing a larger B increases the likelyhood of finding
+    Choosing a larger B increases the likelihood of finding
     a large factor.
 
     The p-1 algorithm is a Monte Carlo method whose outcome can
@@ -302,7 +302,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     returned may be composite.
 
     This number, for example, has two small factors and a huge
-    semiprime factor that cannot be reduced easily:
+    semi-prime factor that cannot be reduced easily:
 
         >>> from sympy.ntheory import isprime
         >>> a = 1407633717262338957430697921446883

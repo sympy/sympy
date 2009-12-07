@@ -1,5 +1,5 @@
 """Module 'rewrite.py' contains advanced term rewriting methods concerning
-   partial fraction decomposition, combinig together and collecting terms.
+   partial fraction decomposition, combining together and collecting terms.
 """
 
 from sympy.core.add import Add
@@ -33,7 +33,7 @@ def cancel(f, *symbols):
        thread over sums and relational operators.
 
        Additionally you can specify a list of variables to perform
-       cancelation more efficiently using only those symbols.
+       cancellation more efficiently using only those symbols.
 
        >>> from sympy import cancel, sqrt
        >>> from sympy.abc import x, y
@@ -55,7 +55,7 @@ def trim(f, *symbols, **flags):
 
        Given an arbitrary expression, map all functional components
        to temporary symbols, rewriting this expression to rational
-       function form and perform cancelation of common factors.
+       function form and perform cancellation of common factors.
 
        When given a rational function or a list of symbols discards
        all functional components, then this procedure is equivalent
@@ -63,7 +63,7 @@ def trim(f, *symbols, **flags):
 
        Note that this procedure can thread over composite objects
        like big operators, matrices, relational operators etc. It
-       can be also called recursively (to change this behaviour
+       can be also called recursively (to change this behavior
        unset 'recursive' flag).
 
        >>> from sympy import Function, trim, sin
@@ -208,7 +208,7 @@ def apart(f, z, **flags):
     """Compute partial fraction decomposition of a rational function.
 
        Given a rational function 'f', performing only gcd operations
-       over the algebraic closue of the initial field of definition,
+       over the algebraic closure of the initial field of definition,
        compute full partial fraction decomposition with fractions
        having linear denominators.
 
@@ -219,8 +219,8 @@ def apart(f, z, **flags):
        Note that no factorization of the initial denominator of 'f' is
        needed.  The final decomposition is formed in terms of a sum of
        RootSum instances.  By default RootSum tries to compute all its
-       roots to simplify itself. This behaviour can be however avoided
-       by seting the keyword flag evaluate=False, which will make this
+       roots to simplify itself. This behavior can be however avoided
+       by setting the keyword flag evaluate=False, which will make this
        function return a formal decomposition.
 
        >>> from sympy import apart

@@ -48,7 +48,7 @@ class LinearEntity(GeometryEntity):
         ===========================
             Simply take the first two lines and find their intersection.
             If there is no intersection, then the first two lines were
-            parallel and had no intersection so concurrenecy is impossible
+            parallel and had no intersection so concurrency is impossible
             amongst the whole set. Otherwise, check to see if the
             intersection point of the first two lines is a member on
             the rest of the lines. If so, the lines are concurrent.
@@ -381,7 +381,7 @@ class Ray(LinearEntity):
 
     @property
     def source(self):
-        """The point from which the ray eminates."""
+        """The point from which the ray emanates."""
         return self.p1
 
     @property

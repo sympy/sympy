@@ -64,7 +64,7 @@ def run_cc_test(label, routines, numerical_tests, friendly=True):
 
        This driver assumes that a compiler cc is present in the PATH and that
        cc is (at least) an ANSI C compiler. The generated code is written in
-       a temporary directory, toghether with a main program that validates the
+       a temporary directory, together with a main program that validates the
        generated code. The test passes when the compilation and the validation
        run correctly.
     """

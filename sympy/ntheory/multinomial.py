@@ -32,7 +32,7 @@ def multinomial_coefficients(m, n, _tuple=tuple, _zip=zip):
 
     The algorithm is based on the following result:
 
-       Consider a polynomial and it's ``m``-th exponent::
+       Consider a polynomial and its ``m``-th exponent::
 
          P(x) = sum_{i=0}^m p_i x^k
          P(x)^n = sum_{k=0}^{m n} a(n,k) x^k

@@ -58,7 +58,7 @@ class Integral(Basic):
 
                 raise ValueError("Invalid integration variable or limits: %s" % str(symbols))
         else:
-            # no symbols provided -- let's compute full antiderivative
+            # no symbols provided -- let's compute full anti-derivative
             limits = [(symb,None) for symb in function.atoms(Symbol)]
 
             if not limits:
@@ -222,7 +222,7 @@ class Integral(Basic):
                integrate(diff(self.function, sym), (int_var, lower_limit, upper_limit))
 
     def _eval_integral(self, f, x):
-        """Calculate the antiderivative to the function f(x).
+        """Calculate the anti-derivative to the function f(x).
 
         This is a powerful function that should in theory be able to integrate
         everything that can be integrated. If you find something, that it
@@ -230,8 +230,8 @@ class Integral(Basic):
 
         (1) Simple heuristics (based on pattern matching and integral table):
 
-         - most frequently used functions (eg. polynomials)
-         - functions non-integrable by any of the following algorithms (eg.
+         - most frequently used functions (e.g. polynomials)
+         - functions non-integrable by any of the following algorithms (e.g.
            exp(-x**2))
 
         (2) Integration of rational functions:
@@ -270,7 +270,7 @@ class Integral(Basic):
         if isinstance(f, Poly):
             return f.integrate(x)
 
-        # Piecewise antiderivatives need to call special integrate.
+        # Piecewise anti-derivatives need to call special integrate.
         if isinstance(f,Piecewise):
             return f._eval_integral(x)
 
@@ -480,7 +480,7 @@ def integrate(*args, **kwargs):
        Several variables can be specified, in which case the result is multiple
        integration.
 
-       Also, if no var is specified at all, then the full-antiderivative of f is
+       Also, if no var is specified at all, then the full anti-derivative of f is
        returned. This is equivalent to integrating f over all its variables.
 
        Examples

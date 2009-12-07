@@ -2050,7 +2050,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     exp(a*x)*(C1*cos(b*x) + C2*sin(b*x)).
 
     If SymPy cannot find exact roots to the characteristic equation, a
-    RootOf instance will be return in it's stead.
+    RootOf instance will be return in its stead.
 
     >>> from sympy import Function, dsolve, Eq
     >>> from sympy.abc import x

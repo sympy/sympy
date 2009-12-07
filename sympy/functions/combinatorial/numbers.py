@@ -164,7 +164,7 @@ class bernoulli(Function):
         function, which is x/(exp(x) - 1). For odd indices > 1, the
         Bernoulli numbers are zero.
 
-        The Bernoulli polynomials statisfy the analogous formula
+        The Bernoulli polynomials satisfy the analogous formula
                     n
                    ___
                   \      / n \         n-k

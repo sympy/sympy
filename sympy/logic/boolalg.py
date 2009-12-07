@@ -186,9 +186,9 @@ def to_cnf(expr):
     Examples:
 
         >>> from sympy.logic.boolalg import to_cnf
-        >>> from sympy.abc import A, B, C
-        >>> to_cnf(~(A | B) | C)
-        And(Or(C, Not(A)), Or(C, Not(B)))
+        >>> from sympy.abc import A, B, D
+        >>> to_cnf(~(A | B) | D)
+        And(Or(D, Not(A)), Or(D, Not(B)))
 
     """
     expr = sympify(expr)

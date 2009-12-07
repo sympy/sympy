@@ -2,7 +2,7 @@
 A Printer for generating executable code.
 
 The most important function here is srepr that returns a string so that the
-relation eval(srepr(expr))=expr holds in an apropriate environment.
+relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
 from printer import Printer
@@ -47,7 +47,7 @@ class ReprPrinter(Printer):
         return 'Function(%r)'%(expr.__name__)
 
     def _print_GeometryEntity(self, expr):
-        # GeometryEntity is special -- it's base is tuple
+        # GeometryEntity is special -- its base is tuple
         return repr(expr)
 
     def _print_Infinity(self, expr):

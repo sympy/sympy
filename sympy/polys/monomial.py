@@ -16,7 +16,7 @@ def monomials(variables, degree):
        For example if we would like to generate a dense polynomial of
        a total degree N = 50 in 5 variables,  assuming that exponents
        and all of coefficients are 32-bit long and stored in an array
-       we would need almost 80 GiB of memory! Fortunately most
+       we would need almost 80 GB of memory! Fortunately most
        polynomials, that we will encounter, are sparse.
 
        >>> from sympy.polys.monomial import monomials
@@ -209,7 +209,7 @@ def monomial_as_basic(monom, *syms):
 
        Given a monomial and a list of symbols, both tuples must be of
        the same length, returns a sympy expression representing this
-       monomial, eg. consider monomial (3, 2, 1) over (x, y, z):
+       monomial, e.g. consider monomial (3, 2, 1) over (x, y, z):
 
        >>> from sympy.polys.monomial import monomial_as_basic
        >>> from sympy.abc import x, y, z

@@ -206,7 +206,7 @@ class assoc_legendre(PolynomialSequence2):
 
         P_nm(x) = (-1)**m * (1 - x**2)**(m/2) * diff(P_n(x), x, m)
 
-    Associated Legende polynomial are orthogonal on [-1, 1] with:
+    Associated Legendre polynomial are orthogonal on [-1, 1] with:
 
     - weight = 1            for the same m, and different n.
     - weight = 1/(1-x**2)   for the same n, and different m.

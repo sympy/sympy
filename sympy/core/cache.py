@@ -91,7 +91,7 @@ def __cacheit(func):
     return wrapper
 
 def __cacheit_debug(func):
-    """cacheit + code to check cache consitency"""
+    """cacheit + code to check cache consistency"""
     cfunc = __cacheit(func)
 
     def wrapper(*args, **kw_args):
@@ -210,7 +210,7 @@ class Memoizer:
                 ...
                 return_value_converter = <None or converter function, usually makes a copy>
                 )
-      def function(<arguments>, <kw_argumnets>):
+      def function(<arguments>, <kw_arguments>):
           ...
 
     Details:

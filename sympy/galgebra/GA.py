@@ -228,7 +228,7 @@ def dualsort(lst1, lst2):
 
 def cp(A,B):
     """
-    Calculates the comutator product (A*B-B*A)/2 for
+    Calculates the commutator product (A*B-B*A)/2 for
     the objects A and B.
     """
     return(HALF*(A*B-B*A))
@@ -292,8 +292,8 @@ def sub_base(k,base):
 def magnitude(vector):
     """
     Calculate magnitude of vector containing trig expressions
-    and simplify.  This is a hack because of way sign of
-    magsq is determined and because of the way absoluted
+    and simplify.  This is a hack because of way he sign of
+    magsq is determined and because of the way that absolute
     values are removed.
     """
     magsq = sympy.expand((vector|vector)())
@@ -308,7 +308,7 @@ def magnitude(vector):
 
 def LaTeX_lst(lst,title=''):
     """
-    Ouput a list in LaTeX format.
+    Output a list in LaTeX format.
     """
     if title != '':
         LaTeX(title)
@@ -349,7 +349,7 @@ def vector_fct(Fstr,x):
     """
     Create a list of functions of arguments x.  One function is
     created for each variable in x.  Fstr is a string that is
-    the base name of each function while each fuction in the
+    the base name of each function while each function in the
     list is given the name Fstr+'__'+str(x[ix]) so that if
     Fstr = 'f' and str(x[1]) = 'theta' then the LaTeX output
     of the second element in the output list would be 'f^{\theta}'.
@@ -405,7 +405,7 @@ class MV(object):
     @staticmethod
     def pad_zeros(value,n):
         """
-        Pad list with zeros to lenght n. If length is > n
+        Pad list with zeros to length n. If length is > n
         truncate list.  Return padded list.
         """
         nvalue = len(value)
@@ -1532,7 +1532,7 @@ class MV(object):
         """
         MV.inner_product(mv1,mv2) calculates the inner
 
-        mode = 's' - symmetic (Doran & Lasenby)
+        mode = 's' - symmetric (Doran & Lasenby)
         mode = 'l' - left contraction (Dorst)
         mode = 'r' - right contraction (Dorst)
         """
@@ -1672,7 +1672,7 @@ class MV(object):
 
         mvname is name of multivector.
         If fct is 'True' and MV.coords is defined in MV.setup then a
-        multivector field of MV.coords is instanciated.
+        multivector field of MV.coords is instantiated.
         """
 
         self.name      = mvname
@@ -2198,7 +2198,7 @@ class MV(object):
 
     def rev(self):
         """
-        Revisioin operator. For multivector X, X.rev()
+        Revision operator. For multivector X, X.rev()
         returns reversed multivector of X.
         """
         revmv = MV()
@@ -2382,8 +2382,8 @@ class MV(object):
 
     def compact(self):
         """
-        Convert zero numpy arrays to single interge zero place holder
-        in grade list for instanciated multivector. For example if
+        Convert zero numpy arrays to single integer zero place holder
+        in grade list for instantiated multivector. For example if
         numpy array of grade one components is a zero array then replace
         with single integer equal to zero.
         """

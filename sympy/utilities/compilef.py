@@ -35,16 +35,16 @@ Performance
 ===========
 
 Python functions using the math module are *quite* fast. For simple functions
-they are faster than functions compiled to machine code. So you should try
-whether lambdify is fast enough for you.
+they are faster than functions compiled to machine code. So you should test
+to see whether lambdify is fast enough for you.
 
 Iterating is slow in Python (it's probably the biggest bottle neck).
 frange allows you to iterate using machine code. This can result in huge
 speedups. You might want to use NumPy: http://numpy.org/
 For simple functions it's faster, but for big ones frange can be several times
-more efficent.
+more efficient.
 
-You should try which solution is the best for your application.
+You should experiment to see which solution is best for your application.
 
 You can run the included benchmarks to see the real performance on your machine.
 
@@ -57,7 +57,7 @@ You will probably need to compile libtcc on your own. Get the sources of tcc:
 http://bellard.org/tcc/
 
 Currently it only works for a recent development version. So you might want to
-run the following commands (you have to use your own pathes of course):
+run the following commands (you have to use your own paths of course):
 
 $ cvs -z3 -d:pserver:anonymous@cvs.savannah.nongnu.org:/sources/tinycc co tinycc
 $ cd tinycc
@@ -533,7 +533,7 @@ def benchmark():
             psyco.bind(psyf)
         except ImportError:
             pass
-        code = '''for x in (i/1000. for i in xrange(1000)):
+        code = '''for x in (i/1000. for i in range(1000)):
         f(%s)''' % ('x,'*len(var)).rstrip(',')
         t1 = Timer(code, 'from __main__ import cf as f')
         t2 = Timer(code, 'from __main__ import pf as f')

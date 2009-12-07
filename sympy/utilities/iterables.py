@@ -23,8 +23,8 @@ def iff(condition, result1, result2):
 
 def all(iterable):
     """Return True if all elements are set to True. This
-       function does not support predicates explicitely,
-       but this behaviour can be simulated easily using
+       function does not support predicates explicitly,
+       but this behavior can be simulated easily using
        list comprehension.
 
        >>> all( [True, True, True] )
@@ -45,8 +45,8 @@ def all(iterable):
 
 def any(iterable):
     """Return True if at least one element is set to True.
-       This function does not support predicates explicitely,
-       but this behaviour can be simulated easily using
+       This function does not support predicates explicitly,
+       but this behavior can be simulated easily using
        list comprehension.
 
        >>> any( [False, False, False] )
@@ -66,7 +66,7 @@ def any(iterable):
     return False
 
 def make_list(expr, kind):
-    """Returns a list of elements taken from specified expresion
+    """Returns a list of elements taken from specified expression
        when it is of sequence type (Add or Mul) or singleton list
        otherwise (Rational, Pow etc.).
 
@@ -160,11 +160,11 @@ def postorder_traversal(node):
     yield node
 
 def preorder_traversal(node):
-    """ Do a preorder traversal of a tree.
+    """ Do a pre-order traversal of a tree.
 
-    This generator recursively yields nodes that it has visited in a preorder
+    This generator recursively yields nodes that it has visited in a pre-order
     fashion. That is, it yields the current node then descends through the tree
-    breadth-first to yield all of a node's children's preorder traversal.
+    breadth-first to yield all of a node's children's pre-order traversal.
 
     Parameters
     ----------
@@ -218,7 +218,7 @@ def subsets(M, k):
 
 
 def cartes(seq0, seq1, modus='pair'):
-    """Return the cartesian product of two sequences
+    """Return the Cartesian product of two sequences
 
     >>> from sympy.utilities.iterables import cartes
     >>> cartes([1,2], [3,4])

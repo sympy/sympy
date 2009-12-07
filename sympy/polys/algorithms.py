@@ -636,7 +636,7 @@ def poly_subresultants(f, g, *symbols, **flags):
        greatest common divisor (GCD), provided that the coefficient
        domain is a unique factorization domain.
 
-       There are several methods for computing PRS, eg.: Euclidean
+       There are several methods for computing PRS, e.g.: Euclidean
        PRS, where the most famous algorithm is used, primitive PRS
        and, finally, subresultants which are implemented here.
 

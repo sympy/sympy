@@ -277,7 +277,7 @@ class Ellipse(GeometryEntity):
 
 class Circle(Ellipse):
     """
-    A circle in space. Consturcted simply from a center and a radius, or
+    A circle in space. Constructed simply from a center and a radius, or
     from three non-collinear points.
 
     Example:

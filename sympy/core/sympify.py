@@ -16,7 +16,7 @@ class SympifyError(ValueError):
 
 def sympify(a, locals=None, convert_xor=True):
     """Converts an arbitrary expression to a type that can be used
-       inside sympy. For example, it will convert python int's into
+       inside sympy. For example, it will convert python ints into
        instance of sympy.Rational, floats into instances of sympy.Real,
        etc. It is also able to coerce symbolic expressions which does
        inherit after Basic. This can be useful in cooperation with SAGE.
@@ -28,7 +28,7 @@ def sympify(a, locals=None, convert_xor=True):
            - booleans, including None (will leave them unchanged)
 
        If the argument is already a type that sympy understands, it will do
-       nothing but return that value. This can be used at the begining of a
+       nothing but return that value. This can be used at the beginning of a
        function to ensure you are working with the correct type.
 
        >>> from sympy import sympify

@@ -76,7 +76,7 @@ class LatexPrinter(Printer):
         Returns True if the expression needs to be wrapped in brackets when
         passed as an argument to a function, False otherwise. This is a more
         liberal version of _needs_brackets, in that many expressions which need
-        to be wrapped in brackets when added/substracted/raised to a power do
+        to be wrapped in brackets when added/subtracted/raised to a power do
         not need them when passed to a function. Such an example is a*b.
         """
         if not self._needs_brackets(expr):

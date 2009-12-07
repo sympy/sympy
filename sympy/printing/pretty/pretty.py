@@ -13,7 +13,7 @@ pprint_try_use_unicode = pretty_try_use_unicode
 
 
 class PrettyPrinter(Printer):
-    """Printer, which converts an expression into 2D ascii-art figure."""
+    """Printer, which converts an expression into 2D ASCII-art figure."""
 
     def __init__(self, profile=None):
         Printer.__init__(self)
@@ -645,9 +645,9 @@ def pretty(expr, profile=None, **kargs):
     ---------
     expr: the expression to print
     wrap_line: line wrapping enabled/disabled, should be a boolean value (default to True)
-    use_unicode: use unicode characters, such as the greek letter pi instead of
+    use_unicode: use unicode characters, such as the Greek letter pi instead of
         the string pi. Values should be boolean or None
-    full_prec: use full precission. Default to "auto"
+    full_prec: use full precision. Default to "auto"
     """
     if profile is not None:
         profile.update(kargs)

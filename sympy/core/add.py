@@ -99,7 +99,7 @@ class Add(AssocOp):
             # c*s
             else:
                 if s.is_Mul:
-                    # Mul, already keeps it's arguments in perfect order.
+                    # Mul, already keeps its arguments in perfect order.
                     # so we can simply put c in slot0 and go the fast way.
                     cs = s._new_rawargs(*((c,) + s.args))
                     newseq.append(cs)
