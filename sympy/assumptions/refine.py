@@ -40,7 +40,7 @@ def refine_abs(expr, assumptions):
     Examples::
 
     >>> from sympy import Symbol, Assume, Q, refine
-    >>> from sympy.refine import refine_abs
+    >>> from sympy.assumptions.refine import refine_abs
     >>> from sympy.abc import x
     >>> refine_abs(abs(x), Assume(x, Q.real))
     >>> refine_abs(abs(x), Assume(x, Q.positive))
@@ -62,7 +62,7 @@ def refine_Pow(expr, assumptions):
     Handler for instances of Pow.
 
     >>> from sympy import Symbol, Assume, Q
-    >>> from sympy.refine import refine_Pow
+    >>> from sympy.assumptions.refine import refine_Pow
     >>> from sympy.abc import x
     >>> refine_Pow((-1)**x, Assume(x, Q.real))
     >>> refine_Pow((-1)**x, Assume(x, Q.even))
@@ -88,7 +88,7 @@ def refine_exp(expr, assumptions):
     Handler for exponential function.
 
     >>> from sympy import Symbol, Assume, Q, exp, I, pi
-    >>> from sympy.refine import refine_exp
+    >>> from sympy.assumptions.refine import refine_exp
     >>> from sympy.abc import x
     >>> refine_exp(exp(pi*I*2*x), Assume(x, Q.real))
     >>> refine_exp(exp(pi*I*2*x), Assume(x, Q.integer))

@@ -30,7 +30,7 @@ access any SymPy module, or use this contens:
    polynomials.txt
    printing.txt
    plotting.txt
-   queries.txt
+   assumptions.txt
    rewriting.txt
    series.txt
    simplify.txt

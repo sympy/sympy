@@ -1,15 +1,15 @@
-Query module
-************
+Assumptions module
+******************
 
-.. module:: sympy.queries
+.. module:: sympy.assumptions
 
-Queries are used to ask information about expression. Main method in this
-module is ask():
+Queries are used to ask information about expressions. Main method for this
+is ask():
 
-.. automethod:: sympy.queries.ask
+.. automethod:: sympy.assumptions.ask
 
-Assumptions
-===========
+Querying
+========
 
 ask's optional second argument should be a boolean
 expression involving assumptions about objects in expr. Valid values include:
@@ -19,14 +19,14 @@ expression involving assumptions about objects in expr. Valid values include:
     * Assume(x, Q.integer) & Assume(x, Q.positive)
     * etc.
 
-Q is a class in sympy.queries holding valid assumptions.
+Q is a class in sympy.assumptions holding valid assumptions.
 
 See documentation for the logic module for a complete list of valid boolean
 expressions.
 
 You can also define global assumptions so you don't have to pass that argument
 each time to function ask(). This is done calling register_global_assumptions()
-from module sympy.assumptions. You can then clear global assumptions with 
+from module sympy.assumptions. You can then clear global assumptions with
 clean_global_assumptions()
 
      >>> from sympy import *
@@ -310,7 +310,7 @@ Design
 ======
 
 Each time ask is called, the appropriate Handler for the current key is called. This is
-always a subclass of sympy.queries.AskHandler. It's classmethods have the name's of the classes
+always a subclass of sympy.assumptions.AskHandler. It's classmethods have the name's of the classes
 it supports. For example, a (simplified) AskHandler for the ask 'positive' would
 look like this::
 
@@ -336,14 +336,14 @@ would be called when self.expr is an instance of Add and so on.
 Extensibility
 =============
 
-You can define new queries or support new types by subclassing sympy.queries.AskHandler
+You can define new queries or support new types by subclassing sympy.assumptions.AskHandler
  and registering that handler for a particular key by calling register_handler:
 
-.. automethod:: sympy.queries.register_handler
+.. automethod:: sympy.assumptions.register_handler
 
 You can undo this operation by calling remove_handler.
 
-.. automethod:: sympy.queries.remove_handler
+.. automethod:: sympy.assumptions.remove_handler
 
 You can support new types [1]_ by adding a handler to an existing key. In the
 following example, we will create a new type MyType and extend the key 'prime'
@@ -352,8 +352,8 @@ to accept this type (and return True)
 .. parsed-literal::
 
     >>> from sympy.core import Basic
-    >>> from sympy.queries import register_handler
-    >>> from sympy.queries.handlers import AskHandler
+    >>> from sympy.assumptions import register_handler
+    >>> from sympy.assumptions.handlers import AskHandler
     >>> class MyType(Basic):
     ...     pass
     >>> class MyAskHandler(AskHandler):
@@ -380,7 +380,9 @@ system (http://en.wikipedia.org/wiki/Truth_maintenance_system) could be implemen
 Misc
 ====
 
-You can find more examples in the in the form of test under directory sympy/queries/tests/
+You can find more examples in the in the form of test under directory
+sympy/assumptions/tests/
 
 .. [1] New type must inherit from Basic, otherwise an exception will be raised.
    This is a bug and should be fixed.
+
