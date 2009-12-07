@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -50,24 +50,24 @@ VK_OEM_7 = 0xde
 VK_OEM_8 = 0xdf
 VK_OEM_102 = 0xe2
 
-# Copyright (c) 1994-2001, Mark Hammond
+# Copyright (c) 1994-2001, Mark Hammond 
 # All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# 
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions 
 # are met:
-#
-# Redistributions of source code must retain the above copyright notice,
+# 
+# Redistributions of source code must retain the above copyright notice, 
 # this list of conditions and the following disclaimer.
-#
-# Redistributions in binary form must reproduce the above copyright
-# notice, this list of conditions and the following disclaimer in
+# 
+# Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in 
 # the documentation and/or other materials provided with the distribution.
-#
-# Neither name of Mark Hammond nor the name of contributors may be used
-# to endorse or promote products derived from this software without
-# specific prior written permission.
-#
+# 
+# Neither name of Mark Hammond nor the name of contributors may be used 
+# to endorse or promote products derived from this software without 
+# specific prior written permission. 
+# 
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS
 # IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
 # TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
@@ -3577,42 +3577,42 @@ STOCK_LAST = 16
 CLR_INVALID = -1
 
 # Exception/Status codes from winuser.h and winnt.h
-STATUS_WAIT_0                    = 0
-STATUS_ABANDONED_WAIT_0          = 128
-STATUS_USER_APC                  = 192
-STATUS_TIMEOUT                   = 258
-STATUS_PENDING                   = 259
-STATUS_SEGMENT_NOTIFICATION      = 1073741829
-STATUS_GUARD_PAGE_VIOLATION      = -2147483647
-STATUS_DATATYPE_MISALIGNMENT     = -2147483646
-STATUS_BREAKPOINT                = -2147483645
-STATUS_SINGLE_STEP               = -2147483644
-STATUS_ACCESS_VIOLATION          = -1073741819
-STATUS_IN_PAGE_ERROR             = -1073741818
-STATUS_INVALID_HANDLE            = -1073741816
-STATUS_NO_MEMORY                 = -1073741801
-STATUS_ILLEGAL_INSTRUCTION       = -1073741795
-STATUS_NONCONTINUABLE_EXCEPTION  = -1073741787
-STATUS_INVALID_DISPOSITION       = -1073741786
-STATUS_ARRAY_BOUNDS_EXCEEDED     = -1073741684
-STATUS_FLOAT_DENORMAL_OPERAND    = -1073741683
-STATUS_FLOAT_DIVIDE_BY_ZERO      = -1073741682
-STATUS_FLOAT_INEXACT_RESULT      = -1073741681
-STATUS_FLOAT_INVALID_OPERATION   = -1073741680
-STATUS_FLOAT_OVERFLOW            = -1073741679
-STATUS_FLOAT_STACK_CHECK         = -1073741678
-STATUS_FLOAT_UNDERFLOW           = -1073741677
-STATUS_INTEGER_DIVIDE_BY_ZERO    = -1073741676
-STATUS_INTEGER_OVERFLOW          = -1073741675
-STATUS_PRIVILEGED_INSTRUCTION    = -1073741674
-STATUS_STACK_OVERFLOW            = -1073741571
-STATUS_CONTROL_C_EXIT            = -1073741510
+STATUS_WAIT_0                    = 0    
+STATUS_ABANDONED_WAIT_0          = 128    
+STATUS_USER_APC                  = 192    
+STATUS_TIMEOUT                   = 258    
+STATUS_PENDING                   = 259    
+STATUS_SEGMENT_NOTIFICATION      = 1073741829    
+STATUS_GUARD_PAGE_VIOLATION      = -2147483647    
+STATUS_DATATYPE_MISALIGNMENT     = -2147483646    
+STATUS_BREAKPOINT                = -2147483645    
+STATUS_SINGLE_STEP               = -2147483644    
+STATUS_ACCESS_VIOLATION          = -1073741819    
+STATUS_IN_PAGE_ERROR             = -1073741818    
+STATUS_INVALID_HANDLE            = -1073741816    
+STATUS_NO_MEMORY                 = -1073741801    
+STATUS_ILLEGAL_INSTRUCTION       = -1073741795    
+STATUS_NONCONTINUABLE_EXCEPTION  = -1073741787    
+STATUS_INVALID_DISPOSITION       = -1073741786    
+STATUS_ARRAY_BOUNDS_EXCEEDED     = -1073741684    
+STATUS_FLOAT_DENORMAL_OPERAND    = -1073741683    
+STATUS_FLOAT_DIVIDE_BY_ZERO      = -1073741682    
+STATUS_FLOAT_INEXACT_RESULT      = -1073741681    
+STATUS_FLOAT_INVALID_OPERATION   = -1073741680    
+STATUS_FLOAT_OVERFLOW            = -1073741679    
+STATUS_FLOAT_STACK_CHECK         = -1073741678    
+STATUS_FLOAT_UNDERFLOW           = -1073741677    
+STATUS_INTEGER_DIVIDE_BY_ZERO    = -1073741676    
+STATUS_INTEGER_OVERFLOW          = -1073741675    
+STATUS_PRIVILEGED_INSTRUCTION    = -1073741674    
+STATUS_STACK_OVERFLOW            = -1073741571    
+STATUS_CONTROL_C_EXIT            = -1073741510    
 
 
 WAIT_FAILED                      = -1
 WAIT_OBJECT_0                    = STATUS_WAIT_0 + 0
 
-WAIT_ABANDONED                      = STATUS_ABANDONED_WAIT_0 + 0
+WAIT_ABANDONED                      = STATUS_ABANDONED_WAIT_0 + 0 
 WAIT_ABANDONED_0                    = STATUS_ABANDONED_WAIT_0 + 0
 
 WAIT_TIMEOUT                        = STATUS_TIMEOUT
@@ -4199,7 +4199,7 @@ PM_NOREMOVE = 0
 PM_REMOVE = 1
 PM_NOYIELD = 2
 # Name clashes with key.MOD_ALT, key.MOD_CONTROL and key.MOD_SHIFT
-WIN32_MOD_ALT = 1
+WIN32_MOD_ALT = 1 
 WIN32_MOD_CONTROL = 2
 WIN32_MOD_SHIFT = 4
 WIN32_MOD_WIN = 8
@@ -4983,3 +4983,4 @@ MAPVK_VSC_TO_VK = 1
 MAPVK_VK_TO_CHAR = 2
 MAPVK_VSC_TO_VK_EX = 3
 
+USER_TIMER_MAXIMUM = 0x7fffffff

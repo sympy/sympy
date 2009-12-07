@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -93,7 +93,7 @@ kWindowVerticalZoomAttribute = 0x4
 kWindowFullZoomAttribute = kWindowHorizontalZoomAttribute | \
     kWindowVerticalZoomAttribute
 kWindowCollapseBoxAttribute = 0x8
-kWindowResizableAttribute = 0x10
+kWindowResizableAttribute = 0x10 
 kWindowSideTitlebarAttribute = 0x20
 kWindowToolbarAttribute = 0x40
 kWindowMetalAttribute = 1 << 8
@@ -158,7 +158,7 @@ inZoomOut                     = 8
 inCollapseBox                 = 11
 inProxyIcon                   = 12
 inToolbarButton               = 13
-inStructure                   = 15
+inStructure                   = 15 
 
 def _name(name):
     return ord(name[0]) << 24 | \
@@ -235,7 +235,7 @@ typeHISize                    = _name('hisz')
 typeHIRect                    = _name('hirc')
 typeHIShapeRef                = _name('shap')
 typeVoidPtr                   = _name('void')
-typeGDHandle                  = _name('gdev')
+typeGDHandle                  = _name('gdev') 
 
 kCoreEventClass = _name('aevt')
 kEventClassMouse = _name('mous')
@@ -258,6 +258,8 @@ kEventClassAccessibility = _name('acce')
 kEventClassSystem = _name('macs')
 kEventClassInk = _name('ink ')
 kEventClassTSMDocumentAccess = _name('tdac')
+
+kEventDurationForever = -1.0
 
 # Appearance.h
 kThemeArrowCursor             = 0

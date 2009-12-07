@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -36,7 +36,7 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: freetype_lib.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
+__version__ = '$Id: freetype_lib.py 2084 2008-05-27 12:42:19Z Alex.Holkner $'
 
 from ctypes import *
 
@@ -64,10 +64,13 @@ class FT_LibraryRec(Structure):
         ('dummy', c_int),
     ]
 
-    def __del__(self, byref=byref, FT_Done_FreeType=FT_Done_FreeType):
+    def __del__(self):
         global _library
-        FT_Done_FreeType(byref(self))
-        _library = None
+        try:
+            FT_Done_FreeType(byref(self))
+            _library = None
+        except:
+            pass
 FT_Library = POINTER(FT_LibraryRec)
 
 class FT_Glyph_Metrics(Structure):
@@ -373,6 +376,44 @@ FT_Load_Char = _get_function('FT_Load_Char',
 FT_Get_Kerning = _get_function('FT_Get_Kerning',
     [FT_Face, c_uint, c_uint, c_uint, POINTER(FT_Vector)], c_int)
 
+# SFNT interface
+
+class FT_SfntName(Structure):
+    _fields_ = [
+        ('platform_id', c_ushort),
+        ('encoding_id', c_ushort),
+        ('language_id', c_ushort),
+        ('name_id', c_ushort),
+        ('string', POINTER(c_byte)),
+        ('string_len', c_uint)
+    ]
+
+FT_Get_Sfnt_Name_Count = _get_function('FT_Get_Sfnt_Name_Count',
+    [FT_Face], c_uint)
+FT_Get_Sfnt_Name = _get_function('FT_Get_Sfnt_Name',
+    [FT_Face, c_uint, POINTER(FT_SfntName)], c_int)
+
+TT_PLATFORM_MICROSOFT = 3
+TT_MS_ID_UNICODE_CS = 1
+TT_NAME_ID_COPYRIGHT          = 0
+TT_NAME_ID_FONT_FAMILY        = 1
+TT_NAME_ID_FONT_SUBFAMILY     = 2
+TT_NAME_ID_UNIQUE_ID          = 3
+TT_NAME_ID_FULL_NAME          = 4
+TT_NAME_ID_VERSION_STRING     = 5
+TT_NAME_ID_PS_NAME            = 6
+TT_NAME_ID_TRADEMARK          = 7
+TT_NAME_ID_MANUFACTURER       = 8
+TT_NAME_ID_DESIGNER           = 9
+TT_NAME_ID_DESCRIPTION        = 10
+TT_NAME_ID_VENDOR_URL         = 11
+TT_NAME_ID_DESIGNER_URL       = 12
+TT_NAME_ID_LICENSE            = 13
+TT_NAME_ID_LICENSE_URL        = 14
+TT_NAME_ID_PREFERRED_FAMILY   = 16
+TT_NAME_ID_PREFERRED_SUBFAMILY= 17
+TT_NAME_ID_MAC_FULL_NAME      = 18
+TT_NAME_ID_CID_FINDFONT_NAME  = 20
 
 _library = None
 def ft_get_library():

@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -36,12 +36,16 @@
 Generated with:
 ../tools/wraptypes/wrap.py /usr/include/AL/al.h -lopenal -olib_openal.py
 
-.. Hacked to remove non-existant library functions.  TODO add alGetError
-check.
+.. Hacked to remove non-existant library functions.  
+
+TODO add alGetError check.
+
+.. alListener3i and alListeneriv are present in my OS X 10.4 but not another
+10.4 user's installation.  They've also been removed for compatibility.
 '''
 
 __docformat__ =  'restructuredtext'
-__version__ = '$Id: lib_openal.py 1200 2007-08-27 11:59:49Z Alex.Holkner $'
+__version__ = '$Id: lib_openal.py 2270 2008-09-21 08:01:58Z Alex.Holkner $'
 
 import ctypes
 from ctypes import *
@@ -254,14 +258,14 @@ alListeneri.restype = None
 alListeneri.argtypes = [ALenum, ALint]
 
 # /usr/include/AL/al.h:458
-alListener3i = _lib.alListener3i
-alListener3i.restype = None
-alListener3i.argtypes = [ALenum, ALint, ALint, ALint]
+#alListener3i = _lib.alListener3i
+#alListener3i.restype = None
+#alListener3i.argtypes = [ALenum, ALint, ALint, ALint]
 
 # /usr/include/AL/al.h:460
-alListeneriv = _lib.alListeneriv
-alListeneriv.restype = None
-alListeneriv.argtypes = [ALenum, POINTER(ALint)]
+#alListeneriv = _lib.alListeneriv
+#alListeneriv.restype = None
+#alListeneriv.argtypes = [ALenum, POINTER(ALint)]
 
 # /usr/include/AL/al.h:465
 alGetListenerf = _lib.alGetListenerf

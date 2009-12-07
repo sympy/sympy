@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -35,7 +35,7 @@
 '''Windowing and user-interface events.
 
 This module allows applications to create and display windows with an
-OpenGL context.  Windows can be created with a variety of border styles
+OpenGL context.  Windows can be created with a variety of border styles 
 or set fullscreen.
 
 You can register event handlers for keyboard, mouse and window events.
@@ -57,14 +57,17 @@ Attach your own event handlers::
     def on_key_press(symbol, modifiers):
         # ... handle this event ...
 
-Within your main run loop, you must call `Window.dispatch_events` regularly.
-Windows are double-buffered by default, so you must call `Window.flip` to
-update the display::
+Place drawing code for the window within the `Window.on_draw` event handler::
 
-    while not win.has_exit:
-        win.dispatch_events()
-        # ... drawing commands ...
-        win.flip()
+    @win.event
+    def on_draw():
+        # ... drawing code ...
+
+Call `pyglet.app.run` to enter the main event loop (by default, this
+returns when all open windows are closed)::
+
+    from pyglet import app
+    app.run()
 
 Creating a game window
 ----------------------
@@ -76,30 +79,6 @@ window::
 
     win = Window(fullscreen=True)
     win.set_exclusive_mouse()
-
-Working with multiple windows
------------------------------
-
-You can open any number of windows and render to them individually.  Each
-window must have the event handlers set on it that you are interested in
-(i.e., each window will have its own mouse event handler).
-
-You must call `Window.dispatch_events` for each window.  Before rendering
-to a window, you must call `Window.switch_to` to set the active GL context.
-Here is an example run loop for a list of windows::
-
-    windows = # list of Window instances
-    while windows:
-        for win in windows:
-            win.dispatch_events()
-            if win.has_exit:
-                win.close()
-        windows = [w for w in windows if not w.has_exit]
-
-        for win in windows:
-            win.switch_to()
-            # ... drawing commands for this window ...
-            win.flip()
 
 Working with multiple screens
 -----------------------------
@@ -144,7 +123,7 @@ above, "Working with multiple screens")::
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1558 2007-12-29 00:54:05Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 2215 2008-08-24 04:53:34Z Alex.Holkner $'
 
 import pprint
 import sys
@@ -153,7 +132,6 @@ import pyglet
 from pyglet import gl
 from pyglet.gl import gl_info
 from pyglet.event import EventDispatcher
-from pyglet.window.event import WindowExitHandler
 import pyglet.window.key
 
 class WindowException(Exception):
@@ -214,7 +192,8 @@ class Display(object):
     an instance of this class.  Use a display to obtain `Screen` instances.
     '''
     def __init__(self):
-        self._windows = []
+        from pyglet import app
+        app.displays.add(self)
 
     def get_screens(self):
         '''Get the available screens.
@@ -228,7 +207,7 @@ class Display(object):
 
         :rtype: list of `Screen`
         '''
-        raise NotImplementedError('abstract')
+        raise NotImplementedError('abstract')    
 
     def get_default_screen(self):
         '''Get the default screen as specified by the user's operating system
@@ -243,7 +222,8 @@ class Display(object):
 
         :rtype: sequence of `Window`
         '''
-        return self._windows
+        from pyglet import app
+        return [window for window in app.windows if window.display is self]
 
 class Screen(object):
     '''A virtual monitor that supports fullscreen windows.
@@ -256,8 +236,8 @@ class Screen(object):
     The `width` and `height` attributes of a screen give the current
     resolution of the screen.  The `x` and `y` attributes give the global
     location of the top-left corner of the screen.  This is useful for
-    determining if screens arranged above or next to one another.
-
+    determining if screens arranged above or next to one another.  
+    
     You cannot always rely on the origin to give the placement of monitors.
     For example, an X server with two displays without Xinerama enabled
     will present two logically separate screens with no relation to each
@@ -337,8 +317,8 @@ class MouseCursor(object):
         '''Abstract render method.
 
         The cursor should be drawn with the "hot" spot at the given
-        coordinates.  The projection is set to the pyglet default (i.e.,
-        orthographic in window-space), however no other aspects of the
+        coordinates.  The projection is set to the pyglet default (i.e., 
+        orthographic in window-space), however no other aspects of the 
         state can be assumed.
 
         :Parameters:
@@ -362,7 +342,7 @@ class ImageMouseCursor(MouseCursor):
     '''
     drawable = True
 
-    def __init__(self, image, hot_x, hot_y):
+    def __init__(self, image, hot_x=0, hot_y=0):
         '''Create a mouse cursor from an image.
 
         :Parameters:
@@ -370,25 +350,27 @@ class ImageMouseCursor(MouseCursor):
                 Image to use for the mouse cursor.  It must have a
                 valid ``texture`` attribute.
             `hot_x` : int
-                X coordinate of the "hot" spot in the image.
+                X coordinate of the "hot" spot in the image relative to the
+                image's anchor.
             `hot_y` : int
-                Y coordinate of the "hot" spot in the image, measured
-                from the bottom.
+                Y coordinate of the "hot" spot in the image, relative to the
+                image's anchor.
         '''
-        self.texture = image.texture
+        self.texture = image.get_texture()
         self.hot_x = hot_x
         self.hot_y = hot_y
 
     def draw(self, x, y):
-        gl.glPushAttrib(gl.GL_ENABLE_BIT)
+        gl.glPushAttrib(gl.GL_ENABLE_BIT | gl.GL_CURRENT_BIT)
+        gl.glColor4f(1, 1, 1, 1)
         gl.glEnable(gl.GL_BLEND)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
         self.texture.blit(x - self.hot_x, y - self.hot_y, 0)
         gl.glPopAttrib()
 
 def _PlatformEventHandler(data):
-    '''Decorator for platform event handlers.
-
+    '''Decorator for platform event handlers.  
+    
     Apply giving the platform-specific data needed by the window to associate
     the method with an event.  See platform-specific subclasses of this
     decorator for examples.
@@ -424,7 +406,7 @@ class _WindowMetaclass(type):
                 cls._platform_event_names.add(name)
         super(_WindowMetaclass, cls).__init__(name, bases, dict)
 
-class BaseWindow(EventDispatcher, WindowExitHandler):
+class BaseWindow(EventDispatcher):
     '''Platform-independent application window.
 
     A window is a "heavyweight" object occupying operating system resources.
@@ -445,6 +427,15 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     To render into a window, you must first call `switch_to`, to make
     it the current OpenGL context.  If you use only one window in the
     application, there is no need to do this.
+
+    :Ivariables:
+        `has_exit` : bool
+            True if the user has attempted to close the window.
+
+            :deprecated: Windows are closed immediately by the default
+                `on_close` handler when `pyglet.app.event_loop` is being
+                used.
+
     '''
     __metaclass__ = _WindowMetaclass
 
@@ -459,7 +450,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     #: The window style for tool windows.
     WINDOW_STYLE_TOOL = 'tool'
     #: A window style without any decoration.
-    WINDOW_STYLE_BORDERLESS = 'borderless'
+    WINDOW_STYLE_BORDERLESS = 'borderless' 
 
     #: The default mouse cursor.
     CURSOR_DEFAULT = None
@@ -479,19 +470,19 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     #: A mouse cursor indicating the element can be resized from the
     #: upper-right corner.
     CURSOR_SIZE_UP_RIGHT = 'size_up_right'
-    #: A mouse cursor indicating the element can be resized from the right
+    #: A mouse cursor indicating the element can be resized from the right 
     #: border.
     CURSOR_SIZE_RIGHT = 'size_right'
     #: A mouse cursor indicating the element can be resized from the lower-right
     #: corner.
     CURSOR_SIZE_DOWN_RIGHT = 'size_down_right'
-    #: A mouse cursor indicating the element can be resized from the bottom
+    #: A mouse cursor indicating the element can be resized from the bottom 
     #: border.
     CURSOR_SIZE_DOWN = 'size_down'
     #: A mouse cursor indicating the element can be resized from the lower-left
     #: corner.
     CURSOR_SIZE_DOWN_LEFT = 'size_down_left'
-    #: A mouse cursor indicating the element can be resized from the left
+    #: A mouse cursor indicating the element can be resized from the left 
     #: border.
     CURSOR_SIZE_LEFT = 'size_left'
     #: A mouse cursor indicating the element can be resized from the upper-left
@@ -507,6 +498,22 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     CURSOR_WAIT = 'wait'
     #: The "wait" mouse cursor combined with an arrow.
     CURSOR_WAIT_ARROW = 'wait_arrow'
+
+    has_exit = False
+
+    #: Window display contents validity.  The `pyglet.app` event loop
+    #: examines every window each iteration and only dispatches the `on_draw`
+    #: event to windows that have `invalid` set.  By default, windows always
+    #: have `invalid` set to ``True``.
+    #:
+    #: You can prevent redundant redraws by setting this variable to ``False``
+    #: in the window's `on_draw` handler, and setting it to True again in
+    #: response to any events that actually do require a window contents
+    #: update.
+    #:
+    #: :type: bool
+    #: :since: pyglet 1.1
+    invalid = True
 
     # Instance variables accessible only via properties
 
@@ -535,6 +542,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     _mouse_in_window = True
 
     _event_queue = None
+    _enable_event_queue = True    # overridden by EventLoop.
     _allow_dispatch_event = False # controlled by dispatch_events stack frame
 
     # Class attributes
@@ -542,7 +550,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     _default_width = 640
     _default_height = 480
 
-    def __init__(self,
+    def __init__(self, 
                  width=None,
                  height=None,
                  caption=None,
@@ -561,7 +569,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         where they are not specified.
 
         The `display`, `screen`, `config` and `context` parameters form
-        a hierarchy of control: there is no need to specify more than
+        a hierarchy of control: there is no need to specify more than 
         one of these.  For example, if you specify `screen` the `display`
         will be inferred, and a default `config` and `context` will be
         created.
@@ -636,15 +644,22 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
             config = screen.get_best_config(config)
 
         if not context:
-            context = config.create_context(gl.get_current_context())
+            context = config.create_context(gl.current_context)
+
+        # Set these in reverse order to above, to ensure we get user
+        # preference
+        self._context = context
+        self._config = self._context.config
+        self._screen = self._config.screen
+        self._display = self._screen.display
 
         if fullscreen:
             if width is not None or height is not None:
                 raise WindowException(
                     'Width and height cannot be specified with fullscreen.')
             self._windowed_size = self._default_width, self._default_height
-            width = screen.width
-            height = screen.height
+            width = self._screen.width
+            height = self._screen.height
         else:
             if width is None:
                 width = self._default_width
@@ -661,18 +676,13 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         else:
             self._vsync = vsync
 
-        # Set these in reverse order to above, to ensure we get user
-        # preference
-        self._context = context
-        self._config = self._context.config
-        self._screen = self._config.screen
-        self._display = self._screen.display
 
         if caption is None:
             caption = sys.argv[0]
         self._caption = caption
 
-        display._windows.append(self)
+        from pyglet import app
+        app.windows.add(self)
         self._create()
 
         self.switch_to()
@@ -690,7 +700,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
             `changes` : list of str
                 List of attribute names that were changed since the last
                 `_create` or `_recreate`.  For example, ``['fullscreen']``
-                is given if the window is to be toggled to or from fullscreen.
+                is given if the window is to be toggled to or from fullscreen. 
         '''
         raise NotImplementedError('abstract')
 
@@ -701,7 +711,8 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         visible display with the back buffer.  The contents of the back buffer
         is undefined after this operation.
 
-        Windows are double-buffered by default.
+        Windows are double-buffered by default.  This method is called
+        automatically by `EventLoop` after the `on_draw` event.
         '''
         raise NotImplementedError('abstract')
 
@@ -769,34 +780,49 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         Override this event handler with your own to create another
         projection, for example in perspective.
         '''
-        self.switch_to()
         gl.glViewport(0, 0, width, height)
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
         gl.glOrtho(0, width, 0, height, -1, 1)
         gl.glMatrixMode(gl.GL_MODELVIEW)
 
+    def on_close(self):
+        '''Default on_close handler.'''
+        self.has_exit = True
+        from pyglet import app
+        if app.event_loop is not None:
+            self.close()
+
+    def on_key_press(self, symbol, modifiers):
+        '''Default on_key_press handler.'''
+        if symbol == key.ESCAPE:
+            self.dispatch_event('on_close')
+
     def close(self):
         '''Close the window.
 
-        Windows are closed automatically when the process exits, so this
-        method need only be called when multiple windows or console input
-        are being used.
-
         After closing the window, the GL context will be invalid.  The
         window instance cannot be reused once closed (see also `set_visible`).
+
+        The `pyglet.app.EventLoop.on_window_close` event is dispatched on
+        `pyglet.app.event_loop` when this method is called.
         '''
-        self._display._windows.remove(self)
+        from pyglet import app
+        if not self._context:
+            return
+        app.windows.remove(self)
         self._context.destroy()
         self._config = None
         self._context = None
+        if app.event_loop:
+            app.event_loop.dispatch_event('on_window_close', self)
 
     def draw_mouse_cursor(self):
         '''Draw the custom mouse cursor.
 
         If the current mouse cursor has ``drawable`` set, this method
-        is called before the buffers are flipped to render it.
-
+        is called before the buffers are flipped to render it.  
+        
         This method always leaves the ``GL_MODELVIEW`` matrix as current,
         regardless of what it was set to previously.  No other GL state
         is affected.
@@ -806,8 +832,8 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         '''
         # Draw mouse cursor if set and visible.
         # XXX leaves state in modelview regardless of starting state
-        if (self._mouse_cursor.drawable and
-            self._mouse_visible and
+        if (self._mouse_cursor.drawable and 
+            self._mouse_visible and 
             self._mouse_in_window):
             gl.glMatrixMode(gl.GL_PROJECTION)
             gl.glPushMatrix()
@@ -842,23 +868,23 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     style = property(lambda self: self._style,
         doc='''The window style; one of the ``WINDOW_STYLE_*`` constants.
         Read-only.
-
+        
         :type: int
         ''')
     fullscreen = property(lambda self: self._fullscreen,
         doc='''True if the window is currently fullscreen.  Read-only.
-
+        
         :type: bool
         ''')
     visible = property(lambda self: self._visible,
         doc='''True if the window is currently visible.  Read-only.
-
+        
         :type: bool
         ''')
     vsync = property(lambda self: self._vsync,
         doc='''True if buffer flips are synchronised to the screen's vertical
         retrace.  Read-only.
-
+        
         :type: bool
         ''')
     display = property(lambda self: self._display,
@@ -868,17 +894,17 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         ''')
     screen = property(lambda self: self._screen,
         doc='''The screen this window is fullscreen in.  Read-only.
-
+        
         :type: `Screen`
         ''')
     config = property(lambda self: self._config,
         doc='''A GL config describing the context of this window.  Read-only.
-
+        
         :type: `pyglet.gl.Config`
         ''')
     context = property(lambda self: self._context,
         doc='''The OpenGL context attached to this window.  Read-only.
-
+        
         :type: `pyglet.gl.Context`
         ''')
 
@@ -886,14 +912,14 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     width = property(lambda self: self.get_size()[0],
                      lambda self, width: self.set_size(width, self.height),
          doc='''The width of the window, in pixels.  Read-write.
-
+         
          :type: int
          ''')
 
     height = property(lambda self: self.get_size()[1],
                       lambda self, height: self.set_size(self.width, height),
          doc='''The height of the window, in pixels.  Read-write.
-
+         
          :type: int
          ''')
 
@@ -955,7 +981,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
 
     def set_size(self, width, height):
         '''Resize the window.
-
+        
         The behaviour is undefined if the window is not resizable, or if
         it is currently fullscreen.
 
@@ -1013,7 +1039,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         '''
         raise NotImplementedError('abstract')
 
-    def set_visible(self, visible=True):
+    def set_visible(self, visible=True):    
         '''Show or hide the window.
 
         :Parameters:
@@ -1164,7 +1190,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
     def set_icon(self, *images):
         '''Set the window icon.
 
-        If multiple images are provided, one with an appropriate size
+        If multiple images are provided, one with an appropriate size 
         will be selected (if the correct size is not provided, the image
         will be scaled).
 
@@ -1174,7 +1200,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         :Parameters:
             `images` : sequence of `pyglet.image.AbstractImage`
                 List of images to use for the window icon.
-
+        
         '''
         pass
 
@@ -1185,16 +1211,22 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         buffer.  The window must be the active context (see `switch_to`).
         '''
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-
+    
     def dispatch_event(self, *args):
-        if self._allow_dispatch_event:
+        if not self._enable_event_queue or self._allow_dispatch_event:
             EventDispatcher.dispatch_event(self, *args)
         else:
             self._event_queue.append(args)
 
     def dispatch_events(self):
-        '''Process the operating system event queue and call attached
-        event handlers.
+        '''Poll the operating system event queue for new events and call
+        attached event handlers.
+
+        This method is provided for legacy applications targeting pyglet 1.0,
+        and advanced applications that must integrate their event loop
+        into another framework.
+
+        Typical applications should use `pyglet.app.run`.
         '''
         raise NotImplementedError('abstract')
 
@@ -1204,12 +1236,18 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
         def on_key_press(symbol, modifiers):
             '''A key on the keyboard was pressed (and held down).
 
+            In pyglet 1.0 the default handler sets `has_exit` to ``True`` if
+            the ``ESC`` key is pressed.
+
+            In pyglet 1.1 the default handler dispatches the `on_close`
+            event if the ``ESC`` key is pressed.
+
             :Parameters:
                 `symbol` : int
                     The key symbol pressed.
                 `modifiers` : int
                     Bitwise combination of the key modifiers active.
-
+            
             :event:
             '''
 
@@ -1368,7 +1406,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
                 `modifiers` : int
                     Bitwise combination of any keyboard modifiers currently
                     active.
-
+                
             :event:
             '''
 
@@ -1388,7 +1426,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
 
             :event:
             '''
-
+                
         def on_mouse_scroll(x, y, scroll_x, scroll_y):
             '''The mouse wheel was scrolled.
 
@@ -1405,7 +1443,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
                 `scroll_x` : int
                     Number of "clicks" towards the right (left if negative).
                 `scroll_y` : int
-                    Number of "clicks" upwards (downards if negative).
+                    Number of "clicks" upwards (downwards if negative).
 
             :event:
             '''
@@ -1415,6 +1453,10 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
 
             This event can be triggered by clicking on the "X" control box in
             the window title bar, or by some other platform-dependent manner.
+
+            The default handler sets `has_exit` to ``True``.  In pyglet 1.1, if
+            `pyglet.app.event_loop` is being used, `close` is also called,
+            closing the window immediately.
 
             :event:
             '''
@@ -1467,6 +1509,9 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
 
         def on_resize(width, height):
             '''The window was resized.
+
+            The window will have the GL context when this event is dispatched;
+            there is no need to call `switch_to` in this handler.
 
             :Parameters:
                 `width` : int
@@ -1533,7 +1578,7 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
 
         def on_context_lost():
             '''The window's GL context was lost.
-
+            
             When the context is lost no more GL methods can be called until it
             is recreated.  This is a rare event, triggered perhaps by the user
             switching to an incompatible video mode.  When it occurs, an
@@ -1555,6 +1600,27 @@ class BaseWindow(EventDispatcher, WindowExitHandler):
 
             :event:
             '''
+
+        def on_draw():
+            '''The window contents must be redrawn.
+
+            The `EventLoop` will dispatch this event when the window
+            should be redrawn.  This will happen during idle time after
+            any window events and after any scheduled functions were called.
+
+            The window will already have the GL context, so there is no
+            need to call `switch_to`.  The window's `flip` method will
+            be called after this event, so your event handler should not.
+
+            You should make no assumptions about the window contents when
+            this event is triggered; a resize or expose event may have
+            invalidated the framebuffer since the last time it was drawn.
+
+            :since: pyglet 1.1
+
+            :event:
+            '''
+
 BaseWindow.register_event_type('on_key_press')
 BaseWindow.register_event_type('on_key_release')
 BaseWindow.register_event_type('on_text')
@@ -1577,6 +1643,7 @@ BaseWindow.register_event_type('on_show')
 BaseWindow.register_event_type('on_hide')
 BaseWindow.register_event_type('on_context_lost')
 BaseWindow.register_event_type('on_context_state_lost')
+BaseWindow.register_event_type('on_draw')
 
 def get_platform():
     '''Get an instance of the Platform most appropriate for this
@@ -1587,7 +1654,9 @@ def get_platform():
     '''
     return _platform
 
-if hasattr(sys, 'is_epydoc') and sys.is_epydoc:
+_is_epydoc = hasattr(sys, 'is_epydoc') and sys.is_epydoc
+
+if _is_epydoc:
     # We are building documentation
     Window = BaseWindow
     Window.__name__ = 'Window'
@@ -1607,3 +1676,7 @@ else:
         _platform = XlibPlatform()
         Window = XlibWindow
 
+# Create shadow window. (trickery is for circular import)
+if not _is_epydoc:
+    pyglet.window = sys.modules[__name__]
+    gl._create_shadow_window()

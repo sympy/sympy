@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -36,7 +36,7 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: freetype.py 1564 2007-12-31 23:57:48Z Alex.Holkner $'
+__version__ = '$Id: freetype.py 2084 2008-05-27 12:42:19Z Alex.Holkner $'
 
 import ctypes
 from ctypes import *
@@ -97,8 +97,8 @@ FT_LOAD_TARGET_LCD_V = FT_LOAD_TARGET_(FT_RENDER_MODE_LCD_V)
 
 (FcTypeVoid,
  FcTypeInteger,
- FcTypeDouble,
- FcTypeString,
+ FcTypeDouble, 
+ FcTypeString, 
  FcTypeBool,
  FcTypeMatrix,
  FcTypeCharSet,
@@ -150,13 +150,13 @@ class FreeTypeGlyphRenderer(base.GlyphRenderer):
 
     def render(self, text):
         face = self.font.face
-        FT_Set_Char_Size(face, 0, self.font._face_size,
+        FT_Set_Char_Size(face, 0, self.font._face_size, 
                          self.font._dpi, self.font._dpi)
         glyph_index = fontconfig.FcFreeTypeCharIndex(byref(face), ord(text[0]))
         error = FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER)
         if error != 0:
             raise base.FontException(
-                'Could not load glyph for "%c"' % text[0], error)
+                'Could not load glyph for "%c"' % text[0], error) 
         glyph_slot = face.glyph.contents
         width = glyph_slot.bitmap.width
         height = glyph_slot.bitmap.rows
@@ -165,11 +165,11 @@ class FreeTypeGlyphRenderer(base.GlyphRenderer):
         advance = int(f26p6_to_float(glyph_slot.advance.x))
         mode = glyph_slot.bitmap.pixel_mode
         pitch = glyph_slot.bitmap.pitch
-
+        
         if mode == FT_PIXEL_MODE_MONO:
             # BCF fonts always render to 1 bit mono, regardless of render
             # flags. (freetype 2.3.5)
-            bitmap_data = cast(glyph_slot.bitmap.buffer,
+            bitmap_data = cast(glyph_slot.bitmap.buffer, 
                                POINTER(c_ubyte * (pitch * height))).contents
             data = (c_ubyte * (pitch * 8 * height))()
             data_i = 0
@@ -193,7 +193,7 @@ class FreeTypeGlyphRenderer(base.GlyphRenderer):
 
         # pitch should be negative, but much faster to just swap tex_coords
         img = image.ImageData(width, height, 'A', data, pitch)
-        glyph = self.font.create_glyph(img)
+        glyph = self.font.create_glyph(img) 
         glyph.set_bearings(baseline, lsb, advance)
         t = list(glyph.tex_coords)
         glyph.tex_coords = t[9:12] + t[6:9] + t[3:6] + t[:3]
@@ -207,7 +207,7 @@ class FreeTypeMemoryFont(object):
 
         ft_library = ft_get_library()
         self.face = FT_Face()
-        r = FT_New_Memory_Face(ft_library,
+        r = FT_New_Memory_Face(ft_library, 
             self.buffer, len(self.buffer), 0, self.face)
         if r != 0:
             raise base.FontException('Could not load font data')
@@ -216,10 +216,26 @@ class FreeTypeMemoryFont(object):
         self.bold = self.face.contents.style_flags & FT_STYLE_FLAG_BOLD != 0
         self.italic = self.face.contents.style_flags & FT_STYLE_FLAG_ITALIC != 0
 
+        # Replace Freetype's generic family name with TTF/OpenType specific
+        # name if we can find one; there are some instances where Freetype
+        # gets it wrong.
+        if self.face.contents.face_flags & FT_FACE_FLAG_SFNT:
+            name = FT_SfntName()
+            for i in range(FT_Get_Sfnt_Name_Count(self.face)):
+                result = FT_Get_Sfnt_Name(self.face, i, name)
+                if result != 0:
+                    continue
+                if not (name.platform_id == TT_PLATFORM_MICROSOFT and
+                        name.encoding_id == TT_MS_ID_UNICODE_CS):
+                    continue
+                if name.name_id == TT_NAME_ID_FONT_FAMILY:
+                    string = string_at(name.string, name.string_len)
+                    self.name = string.decode('utf-16be', 'ignore')
+
     def __del__(self):
         try:
             FT_Done_Face(self.face)
-        except NameError:
+        except:
             pass
 
 class FreeTypeFont(base.Font):
@@ -232,7 +248,7 @@ class FreeTypeFont(base.Font):
         super(FreeTypeFont, self).__init__()
 
         if dpi is None:
-            dpi = 0  # Select default DPI of 72 by specifying 0.
+            dpi = 96  # as of pyglet 1.1; pyglet 1.0 had 72.
 
         # Check if font name/style matches a font loaded into memory by user
         lname = name and name.lower() or ''
@@ -271,8 +287,20 @@ class FreeTypeFont(base.Font):
 
         FT_Set_Char_Size(self.face, 0, float_to_f26p6(size), dpi, dpi)
         metrics = self.face.size.contents.metrics
-        self.ascent = int(f26p6_to_float(metrics.ascender))
-        self.descent = int(f26p6_to_float(metrics.descender))
+        if metrics.ascender == 0 and metrics.descender == 0:
+            # Workaround broken fonts with no metrics.  Has been observed with
+            # courR12-ISO8859-1.pcf.gz: "Courier" "Regular"
+            #
+            # None of the metrics fields are filled in, so render a glyph and
+            # grab its height as the ascent, and make up an arbitrary
+            # descent.
+            i = fontconfig.FcFreeTypeCharIndex(byref(self.face), ord('X'))
+            FT_Load_Glyph(self.face, i, FT_LOAD_RENDER)
+            self.ascent = self.face.available_sizes.contents.height
+            self.descent = -self.ascent // 4  # arbitrary.
+        else:
+            self.ascent = int(f26p6_to_float(metrics.ascender))
+            self.descent = int(f26p6_to_float(metrics.descender))
 
     @staticmethod
     def get_fontconfig_match(name, size, bold, italic):
@@ -288,6 +316,9 @@ class FreeTypeFont(base.Font):
 
         fontconfig.FcInit()
 
+        if isinstance(name, unicode):
+            name = name.encode('utf8')
+
         pattern = fontconfig.FcPatternCreate()
         fontconfig.FcPatternAddDouble(pattern, FC_SIZE, c_double(size))
         fontconfig.FcPatternAddInteger(pattern, FC_WEIGHT, bold)
@@ -300,7 +331,7 @@ class FreeTypeFont(base.Font):
         result = FcResult()
         match = fontconfig.FcFontMatch(0, pattern, byref(result))
         fontconfig.FcPatternDestroy(pattern)
-
+        
         return match
 
     @classmethod
@@ -308,8 +339,15 @@ class FreeTypeFont(base.Font):
         value = FcValue()
         match = cls.get_fontconfig_match(name, 12, False, False)
         result = fontconfig.FcPatternGet(match, FC_FAMILY, 0, byref(value))
-        return value.u.s == name
-
+        if value.u.s == name:
+            return True
+        else:
+            name = name.lower()
+            for font in cls._memory_fonts.values():
+                if font.name.lower() == name:
+                    return True
+        return False
+    
     @classmethod
     def add_font_data(cls, data):
         font = FreeTypeMemoryFont(data)

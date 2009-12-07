@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -36,9 +36,9 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: avbin.py 1493 2007-12-08 09:20:38Z Alex.Holkner $'
+__version__ = '$Id: avbin.py 2084 2008-05-27 12:42:19Z Alex.Holkner $'
 
-from pyglet.media import (MediaFormatException, StreamingSource,
+from pyglet.media import (MediaFormatException, StreamingSource, 
                           VideoFormat, AudioFormat, AudioData)
 
 import pyglet
@@ -49,8 +49,8 @@ import pyglet.lib
 
 import ctypes
 
-av = pyglet.lib.load_library('avbin',
-                             darwin='/usr/lib/libavbin.dylib')
+av = pyglet.lib.load_library('avbin', 
+                             darwin='/usr/local/lib/libavbin.dylib')
 
 AVBIN_RESULT_ERROR = -1
 AVBIN_RESULT_OK = 0
@@ -166,11 +166,11 @@ av.avbin_close_stream.argtypes = [AVbinStreamP]
 av.avbin_read.argtypes = [AVbinFileP, ctypes.POINTER(AVbinPacket)]
 av.avbin_read.restype = AVbinResult
 av.avbin_decode_audio.restype = ctypes.c_int
-av.avbin_decode_audio.argtypes = [AVbinStreamP,
+av.avbin_decode_audio.argtypes = [AVbinStreamP, 
     ctypes.c_void_p, ctypes.c_size_t,
     ctypes.c_void_p, ctypes.POINTER(ctypes.c_int)]
 av.avbin_decode_video.restype = ctypes.c_int
-av.avbin_decode_video.argtypes = [AVbinStreamP,
+av.avbin_decode_video.argtypes = [AVbinStreamP, 
     ctypes.c_void_p, ctypes.c_size_t,
     ctypes.c_void_p]
 
@@ -222,7 +222,7 @@ class AVbinSource(StreamingSource):
             info.structure_size = ctypes.sizeof(info)
             av.avbin_stream_info(self._file, i, info)
 
-            if (info.type == AVBIN_STREAM_TYPE_VIDEO and
+            if (info.type == AVBIN_STREAM_TYPE_VIDEO and 
                 not self._video_stream):
 
                 stream = av.avbin_open_stream(self._file, i)
@@ -241,7 +241,7 @@ class AVbinSource(StreamingSource):
 
             elif (info.type == AVBIN_STREAM_TYPE_AUDIO and
                   info.u.audio.sample_bits in (8, 16) and
-                  info.u.audio.channels in (1, 2) and
+                  info.u.audio.channels in (1, 2) and 
                   not self._audio_stream):
 
                 stream = av.avbin_open_stream(self._file, i)
@@ -269,7 +269,7 @@ class AVbinSource(StreamingSource):
             self._audio_buffer = \
                 (ctypes.c_uint8 * av.avbin_get_audio_buffer_size())()
             self._buffer_streams.append(self._audio_stream_index)
-
+            
         if self.video_format:
             self._buffer_streams.append(self._video_stream_index)
             self._force_next_video_image = True
@@ -282,7 +282,7 @@ class AVbinSource(StreamingSource):
             if self._audio_stream:
                 av.avbin_close_stream(self._audio_stream)
             av.avbin_close_file(self._file)
-        except (NameError, AttributeError):
+        except:
             pass
 
     def _seek(self, timestamp):
@@ -309,9 +309,9 @@ class AVbinSource(StreamingSource):
                 buffer.pop(0)
         '''
 
-        # Read more packets, buffering each interesting one until we get to
+        # Read more packets, buffering each interesting one until we get to 
         # the one we want or reach end of file.
-        while True:
+        while True: 
             if av.avbin_read(self._file, self._packet) != AVBIN_RESULT_OK:
                 return None
             elif self._packet.stream_index == stream_index:
@@ -329,6 +329,7 @@ class AVbinSource(StreamingSource):
             while self._audio_packet_size > 0:
                 size_out = ctypes.c_int(len(self._audio_buffer))
 
+                #print self._audio_stream, self._audio_packet_ptr, self._audio_packet_size, self._audio_buffer, size_out
                 used = av.avbin_decode_audio(self._audio_stream,
                     self._audio_packet_ptr, self._audio_packet_size,
                     self._audio_buffer, size_out)
@@ -356,6 +357,7 @@ class AVbinSource(StreamingSource):
 
             self._audio_packet_timestamp = \
                 timestamp_from_avbin(packet.timestamp)
+            self._audio_packet = packet # keep from GC
             self._audio_packet_ptr = ctypes.cast(packet.data,
                                                  ctypes.c_void_p)
             self._audio_packet_size = packet.size
@@ -388,8 +390,8 @@ class AVbinSource(StreamingSource):
         height = self.video_format.height
         pitch = width * 3
         buffer = (ctypes.c_uint8 * (pitch * height))()
-        result = av.avbin_decode_video(self._video_stream,
-                                       packet.data, packet.size,
+        result = av.avbin_decode_video(self._video_stream, 
+                                       packet.data, packet.size, 
                                        buffer)
         if result < 0:
             return None
@@ -397,6 +399,43 @@ class AVbinSource(StreamingSource):
         return BufferedImage(
             image.ImageData(width, height, 'RGB', buffer, pitch),
             timestamp)
+
+    def _next_image(self):
+        img = None
+        while not img:
+            packet = self._get_packet_for_stream(self._video_stream_index)
+            if not packet:
+                return
+            img = self._decode_video_packet(packet)
+
+        return img
+
+    def get_next_video_timestamp(self):
+        if not self.video_format:
+            return
+
+        try:
+            img = self._buffered_images[0]
+        except IndexError:
+            img = self._next_image()
+            self._buffered_images.append(img)
+        
+        if img:
+            return img.timestamp
+
+    def get_next_video_frame(self):
+        if not self.video_format:
+            return
+
+        try:
+            img = self._buffered_images.pop(0)
+        except IndexError:
+            img = self._next_image()
+
+        if img:
+            self._last_video_timestamp = img.timestamp
+            self._force_next_video_image = False
+            return img.image
 
     def _update_texture(self, player, timestamp):
         if not self.video_format:
@@ -407,8 +446,8 @@ class AVbinSource(StreamingSource):
 
         img = None
         i = 0
-        while (not img or
-                (img.timestamp < timestamp and
+        while (not img or 
+                (img.timestamp < timestamp and 
                  not self._force_next_video_image) ):
             if self._buffered_images:
                 img = self._buffered_images.pop(0)
@@ -429,8 +468,6 @@ class AVbinSource(StreamingSource):
             self._force_next_video_image = False
 
     def _release_texture(self, player):
-        if player._texture:
-            player._texture.delete()
         player._texture = None
 
 av.avbin_init()

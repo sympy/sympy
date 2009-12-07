@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -121,7 +121,7 @@ class CarbonDisplay(Display):
                                   'Ensure you run "pythonw", not "python"')
 
         self._install_application_event_handlers()
-
+        
     def get_screens(self):
         count = CGDisplayCount()
         carbon.CGGetActiveDisplayList(0, None, byref(count))
@@ -198,7 +198,20 @@ class CarbonDisplay(Display):
             # Mouse down in menu bar.  MenuSelect() takes care of all
             # menu tracking and blocks until the menu is dismissed.
             # Use command events to handle actual menu item invokations.
+
+            # This function blocks, so tell the event loop it needs to install
+            # a timer.
+            from pyglet import app
+            if app.event_loop is not None:
+                app.event_loop._enter_blocking()
+
             carbon.MenuSelect(position)
+
+            if app.event_loop is not None:
+                app.event_loop._exit_blocking()
+
+            # Menu selection has now returned.  Remove highlight from the
+            # menubar.
             carbon.HiliteMenu(0)
 
         carbon.CallNextEventHandler(next_handler, ev)
@@ -222,7 +235,7 @@ class CarbonDisplay(Display):
 
         if release:
             carbon.ReleaseEvent(ev)
-
+        
         return noErr
 
     def _on_ae_quit(self, ae, reply, refcon):
@@ -237,11 +250,16 @@ class CarbonDisplay(Display):
         item.
 
         The default implementation sets `has_exit` to true on all open
-        windows.
+        windows.  In pyglet 1.1 `has_exit` is set on `EventLoop` if it is
+        used instead of the windows.
         '''
-        for window in self.get_windows():
-            window.has_exit = True
-
+        from pyglet import app
+        if app.event_loop is not None:
+            app.event_loop.exit()
+        else:
+            for window in self.get_windows():
+                window.has_exit = True
+    
 class CarbonScreen(Screen):
     def __init__(self, display, id):
         self.display = display
@@ -250,6 +268,14 @@ class CarbonScreen(Screen):
             int(rect.origin.x), int(rect.origin.y),
             int(rect.size.width), int(rect.size.height))
         self.id = id
+
+        mode = carbon.CGDisplayCurrentMode(id)
+        kCGDisplayRefreshRate = _create_cfstring('RefreshRate')
+        number = carbon.CFDictionaryGetValue(mode, kCGDisplayRefreshRate)
+        refresh = c_long()
+        kCFNumberLongType = 10
+        carbon.CFNumberGetValue(number, kCFNumberLongType, byref(refresh))
+        self._refresh_rate = refresh.value
 
     def get_gdevice(self):
         gdevice = GDHandle()
@@ -294,11 +320,11 @@ class CarbonScreen(Screen):
             return [CarbonGLConfig(self, pformat)]
 
 class CarbonGLConfig(gl.Config):
-    # Valid names for GL attributes, and their corresponding AGL constant.
+    # Valid names for GL attributes, and their corresponding AGL constant. 
     _attribute_ids = {
         'double_buffer': agl.AGL_DOUBLEBUFFER,
         'stereo': agl.AGL_STEREO,
-        'buffer_size': agl.AGL_BUFFER_SIZE,
+        'buffer_size': agl.AGL_BUFFER_SIZE, 
         'sample_buffers': agl.AGL_SAMPLE_BUFFERS_ARB,
         'samples': agl.AGL_SAMPLES_ARB,
         'aux_buffers': agl.AGL_AUX_BUFFERS,
@@ -321,7 +347,7 @@ class CarbonGLConfig(gl.Config):
         'maximum_policy': agl.AGL_MAXIMUM_POLICY,
 
         # Not supported in current pyglet API
-        'level': agl.AGL_LEVEL,
+        'level': agl.AGL_LEVEL, 
         'pixel_size': agl.AGL_PIXEL_SIZE,   # == buffer_size
         'aux_depth_stencil': agl.AGL_AUX_DEPTH_STENCIL,
         'color_float': agl.AGL_COLOR_FLOAT,
@@ -333,7 +359,7 @@ class CarbonGLConfig(gl.Config):
 
     # AGL constants which do not require a value.
     _boolean_attributes = \
-        (agl.AGL_ALL_RENDERERS,
+        (agl.AGL_ALL_RENDERERS, 
          agl.AGL_RGBA,
          agl.AGL_DOUBLEBUFFER,
          agl.AGL_STEREO,
@@ -358,7 +384,7 @@ class CarbonGLConfig(gl.Config):
             result = agl.aglDescribePixelFormat(pformat, attr, byref(value))
             if result:
                 setattr(self, name, value.value)
-
+ 
     def create_context(self, share):
         if share:
             context = agl.aglCreateContext(self._pformat, share._context)
@@ -405,6 +431,7 @@ class CarbonWindow(BaseWindow):
 
     _mouse_exclusive = False
     _mouse_platform_visible = True
+    _mouse_ignore_motion = False
 
     def _recreate(self, changes):
         # We can't destroy the window while event handlers are active,
@@ -468,8 +495,9 @@ class CarbonWindow(BaseWindow):
             self._height = fs_height.value
             #self._width = self.screen.width
             #self._height = self.screen.height
-            agl.aglSetFullScreen(self._agl_context,
-                                 self._width, self._height, 0, 0)
+            agl.aglSetFullScreen(self._agl_context, 
+                                 self._width, self._height,
+                                 self.screen._refresh_rate, 0)
             self._mouse_in_window = True
             self.dispatch_event('on_resize', self._width, self._height)
             self.dispatch_event('on_show')
@@ -502,6 +530,7 @@ class CarbonWindow(BaseWindow):
 
             if self._resizable:
                 window_attributes |= (kWindowFullZoomAttribute |
+                                      kWindowLiveResizeAttribute |
                                       kWindowResizableAttribute)
 
             r = carbon.CreateNewWindow(window_class,
@@ -526,7 +555,7 @@ class CarbonWindow(BaseWindow):
         self._current_modifiers = carbon.GetCurrentKeyModifiers().value
         self._mapped_modifiers = self._map_modifiers(self._current_modifiers)
 
-        # (re)install Carbon event handlers
+        # (re)install Carbon event handlers 
         self._install_event_handlers()
 
         self._create_track_region()
@@ -547,9 +576,9 @@ class CarbonWindow(BaseWindow):
         track_id.id = 1
         self._track_ref = MouseTrackingRef()
         self._track_region = carbon.NewRgn()
-        carbon.GetWindowRegion(self._window,
+        carbon.GetWindowRegion(self._window, 
             kWindowContentRgn, self._track_region)
-        carbon.CreateMouseTrackingRegion(self._window,
+        carbon.CreateMouseTrackingRegion(self._window,  
             self._track_region, None, kMouseTrackingOptionsGlobalClip,
             track_id, None, None,
             byref(self._track_ref))
@@ -561,6 +590,8 @@ class CarbonWindow(BaseWindow):
 
     def close(self):
         super(CarbonWindow, self).close()
+        if not self._agl_context:
+            return
         self._agl_context = None
         self._remove_event_handlers()
         self._remove_track_region()
@@ -601,9 +632,6 @@ class CarbonWindow(BaseWindow):
         agl.aglSetInteger(self._agl_context, agl.AGL_SWAP_INTERVAL, byref(swap))
 
     def dispatch_events(self):
-        if self._recreate_deferred:
-            self._recreate_immediate()
-
         self._allow_dispatch_event = True
         while self._event_queue:
             EventDispatcher.dispatch_event(self, *self._event_queue.pop(0))
@@ -628,6 +656,13 @@ class CarbonWindow(BaseWindow):
         # Fixes issue 180.
         if result not in (eventLoopTimedOutErr, eventLoopQuitErr):
             raise 'Error %d' % result
+
+    def dispatch_pending_events(self):
+        while self._event_queue:
+            EventDispatcher.dispatch_event(self, *self._event_queue.pop(0))
+
+        if self._recreate_deferred:
+            self._recreate_immediate()
 
     def set_caption(self, caption):
         self._caption = caption
@@ -681,7 +716,7 @@ class CarbonWindow(BaseWindow):
             maximum = byref(maximum)
         else:
             maximum = None
-        carbon.SetWindowResizeLimits(self._window,
+        carbon.SetWindowResizeLimits(self._window, 
             byref(minimum), maximum)
 
     def set_maximum_size(self, width, height):
@@ -695,7 +730,7 @@ class CarbonWindow(BaseWindow):
             minimum = byref(minimum)
         else:
             minimum = None
-        carbon.SetWindowResizeLimits(self._window,
+        carbon.SetWindowResizeLimits(self._window, 
             minimum, byref(maximum))
 
     def activate(self):
@@ -718,12 +753,14 @@ class CarbonWindow(BaseWindow):
             carbon.HideWindow(self._window)
 
     def minimize(self):
+        self._mouse_in_window = False
+        self.set_mouse_platform_visible()
         carbon.CollapseWindow(self._window, True)
 
     def maximize(self):
         # Maximum "safe" value, gets trimmed to screen size automatically.
         p = Point()
-        p.v, p.h = 16000,16000
+        p.v, p.h = 16000,16000 
         if not carbon.IsWindowInStandardState(self._window, byref(p), None):
             carbon.ZoomWindowIdeal(self._window, inZoomOut, byref(p))
 
@@ -759,6 +796,8 @@ class CarbonWindow(BaseWindow):
             point = CGPoint()
             point.x = (rect.right + rect.left) / 2
             point.y = (rect.bottom + rect.top) / 2
+            # Skip the next motion event, which would return a large delta.
+            self._mouse_ignore_motion = True
             carbon.CGWarpMouseCursorPosition(point)
             carbon.CGAssociateMouseAndMouseCursorPosition(False)
         else:
@@ -815,17 +854,18 @@ class CarbonWindow(BaseWindow):
                 size = img.width * img.height
                 image = img
 
-        image = image.image_data
-        image.format = 'ARGB'
-        image.pitch = -len(image.format) * image.width
+        image = image.get_image_data()
+        format = 'ARGB'
+        pitch = -len(format) * image.width
 
+        data = image.get_data(format, pitch)
         provider = carbon.CGDataProviderCreateWithData(
-            None, image.data, len(image.data), None)
+            None, data, len(data), None)
 
         colorspace = carbon.CGColorSpaceCreateDeviceRGB()
 
         cgi = carbon.CGImageCreate(
-            image.width, image.height, 8, 32, -image.pitch,
+            image.width, image.height, 8, 32, -pitch,
             colorspace,
             kCGImageAlphaFirst,
             provider,
@@ -853,7 +893,7 @@ class CarbonWindow(BaseWindow):
         self.dispatch_event('on_expose')
 
     def _update_track_region(self):
-        carbon.GetWindowRegion(self._window,
+        carbon.GetWindowRegion(self._window, 
             kWindowContentRgn, self._track_region)
         carbon.ChangeMouseTrackingRegion(self._track_ref,
             self._track_region, None)
@@ -998,7 +1038,7 @@ class CarbonWindow(BaseWindow):
             (numLock, key.NUMLOCK)]:
             if deltas & mask:
                 if modifiers & mask:
-                    self.dispatch_event('on_key_press',
+                    self.dispatch_event('on_key_press', 
                         k, self._mapped_modifiers)
                 else:
                     self.dispatch_event('on_key_release',
@@ -1025,13 +1065,15 @@ class CarbonWindow(BaseWindow):
         carbon.GetEventParameter(ev, kEventParamMouseButton,
             typeMouseButton, c_void_p(), sizeof(button), c_void_p(),
             byref(button))
-
-        if button.value == 1:
+        
+        if button.value == 1: 
             button = mouse.LEFT
-        elif button.value == 2:
+        elif button.value == 2: 
             button = mouse.RIGHT
-        elif button.value == 3:
+        elif button.value == 3: 
             button = mouse.MIDDLE
+        else:
+            button = None
 
         modifiers = c_uint32()
         carbon.GetEventParameter(ev, kEventParamKeyModifiers,
@@ -1045,16 +1087,17 @@ class CarbonWindow(BaseWindow):
         position = Point()
         carbon.GetEventParameter(ev, kEventParamMouseLocation,
             typeQDPoint, c_void_p(), sizeof(position), c_void_p(),
-            byref(position))
-        return carbon.FindWindow(position, None) == inContent
+            byref(position)) 
+        return carbon.FindWindow(position, None) == inContent 
 
     @CarbonEventHandler(kEventClassMouse, kEventMouseDown)
     def _on_mouse_down(self, next_handler, ev, data):
         if self._fullscreen or self._get_mouse_in_content(ev):
             button, modifiers = self._get_mouse_button_and_modifiers(ev)
-            x, y = self._get_mouse_position(ev)
-            y = self.height - y
-            self.dispatch_event('on_mouse_press', x, y, button, modifiers)
+            if button is not None:
+                x, y = self._get_mouse_position(ev)
+                y = self.height - y
+                self.dispatch_event('on_mouse_press', x, y, button, modifiers)
 
         carbon.CallNextEventHandler(next_handler, ev)
         return noErr
@@ -1064,16 +1107,18 @@ class CarbonWindow(BaseWindow):
         # Always report mouse up, even out of content area, because it's
         # probably after a drag gesture.
         button, modifiers = self._get_mouse_button_and_modifiers(ev)
-        x, y = self._get_mouse_position(ev)
-        y = self.height - y
-        self.dispatch_event('on_mouse_release', x, y, button, modifiers)
+        if button is not None:
+            x, y = self._get_mouse_position(ev)
+            y = self.height - y
+            self.dispatch_event('on_mouse_release', x, y, button, modifiers)
 
         carbon.CallNextEventHandler(next_handler, ev)
         return noErr
 
     @CarbonEventHandler(kEventClassMouse, kEventMouseMoved)
     def _on_mouse_moved(self, next_handler, ev, data):
-        if self._fullscreen or self._get_mouse_in_content(ev):
+        if ((self._fullscreen or self._get_mouse_in_content(ev))
+            and not self._mouse_ignore_motion):
             x, y = self._get_mouse_position(ev)
             y = self.height - y
 
@@ -1086,29 +1131,31 @@ class CarbonWindow(BaseWindow):
                 byref(delta))
 
             # Motion event
-            self.dispatch_event('on_mouse_motion',
+            self.dispatch_event('on_mouse_motion', 
                 x, y, delta.x, -delta.y)
-
+        elif self._mouse_ignore_motion:
+            self._mouse_ignore_motion = False
         carbon.CallNextEventHandler(next_handler, ev)
         return noErr
 
     @CarbonEventHandler(kEventClassMouse, kEventMouseDragged)
     def _on_mouse_dragged(self, next_handler, ev, data):
         button, modifiers = self._get_mouse_button_and_modifiers(ev)
-        x, y = self._get_mouse_position(ev)
-        y = self.height - y
+        if button is not None:
+            x, y = self._get_mouse_position(ev)
+            y = self.height - y
 
-        self._mouse_x = x
-        self._mouse_y = y
+            self._mouse_x = x
+            self._mouse_y = y
 
-        delta = HIPoint()
-        carbon.GetEventParameter(ev, kEventParamMouseDelta,
-            typeHIPoint, c_void_p(), sizeof(delta), c_void_p(),
-            byref(delta))
+            delta = HIPoint()
+            carbon.GetEventParameter(ev, kEventParamMouseDelta,
+                typeHIPoint, c_void_p(), sizeof(delta), c_void_p(),
+                byref(delta))
 
-        # Drag event
-        self.dispatch_event('on_mouse_drag',
-            x, y, delta.x, -delta.y, button, modifiers)
+            # Drag event
+            self.dispatch_event('on_mouse_drag',
+                x, y, delta.x, -delta.y, button, modifiers)
 
         carbon.CallNextEventHandler(next_handler, ev)
         return noErr
@@ -1157,12 +1204,12 @@ class CarbonWindow(BaseWindow):
             typeSInt32, c_void_p(), sizeof(delta), c_void_p(),
             byref(delta))
         if axis.value == kEventMouseWheelAxisX:
-            self.dispatch_event('on_mouse_scroll',
+            self.dispatch_event('on_mouse_scroll', 
                 x, y, delta.value, 0)
         else:
-            self.dispatch_event('on_mouse_scroll',
+            self.dispatch_event('on_mouse_scroll', 
                 x, y, 0, delta.value)
-
+                
         # _Don't_ call the next handler, which is application, as this then
         # calls our window handler again.
         #carbon.CallNextEventHandler(next_handler, ev)
@@ -1173,29 +1220,70 @@ class CarbonWindow(BaseWindow):
         self.dispatch_event('on_close')
 
         # Presumably the next event handler is the one that closes
-        # the window; don't do that here.
+        # the window; don't do that here. 
         #carbon.CallNextEventHandler(next_handler, ev)
+        return noErr
+
+    _resizing = None
+
+    @CarbonEventHandler(kEventClassWindow, kEventWindowResizeStarted)
+    def _on_window_resize_started(self, next_handler, ev, data):
+        self._resizing = (self.width, self.height)
+
+        from pyglet import app
+        if app.event_loop is not None:
+            app.event_loop._stop_polling()
+
+        carbon.CallNextEventHandler(next_handler, ev)
         return noErr
 
     @CarbonEventHandler(kEventClassWindow, kEventWindowResizeCompleted)
     def _on_window_resize_completed(self, next_handler, ev, data):
+        self._resizing = None
+
         rect = Rect()
         carbon.GetWindowBounds(self._window, kWindowContentRgn, byref(rect))
         width = rect.right - rect.left
         height = rect.bottom - rect.top
 
+        self.switch_to()
         self.dispatch_event('on_resize', width, height)
         self.dispatch_event('on_expose')
 
         carbon.CallNextEventHandler(next_handler, ev)
         return noErr
 
+    _dragging = False
+
+    @CarbonEventHandler(kEventClassWindow, kEventWindowDragStarted)
+    def _on_window_drag_started(self, next_handler, ev, data):
+        self._dragging = True
+
+        from pyglet import app
+        if app.event_loop is not None:
+            app.event_loop._stop_polling()
+
+        carbon.CallNextEventHandler(next_handler, ev)
+        return noErr
+
     @CarbonEventHandler(kEventClassWindow, kEventWindowDragCompleted)
     def _on_window_drag_completed(self, next_handler, ev, data):
+        self._dragging = False
+
         rect = Rect()
         carbon.GetWindowBounds(self._window, kWindowContentRgn, byref(rect))
 
         self.dispatch_event('on_move', rect.left, rect.top)
+
+        carbon.CallNextEventHandler(next_handler, ev)
+        return noErr
+
+    @CarbonEventHandler(kEventClassWindow, kEventWindowBoundsChanging)
+    def _on_window_bounds_changing(self, next_handler, ev, data):
+        from pyglet import app
+        if app.event_loop is not None:
+            carbon.SetEventLoopTimerNextFireTime(app.event_loop._timer,
+                                                 c_double(0.0))
 
         carbon.CallNextEventHandler(next_handler, ev)
         return noErr
@@ -1234,7 +1322,7 @@ class CarbonWindow(BaseWindow):
 
         carbon.CallNextEventHandler(next_handler, ev)
         return noErr
-
+        
     @CarbonEventHandler(kEventClassWindow, kEventWindowShown)
     @CarbonEventHandler(kEventClassWindow, kEventWindowExpanded)
     def _on_window_shown(self, next_handler, ev, data):
@@ -1258,11 +1346,11 @@ class CarbonWindow(BaseWindow):
 
         carbon.CallNextEventHandler(next_handler, ev)
         return noErr
+        
 
-
-
+       
 def _create_cfstring(text):
-    return carbon.CFStringCreateWithCString(c_void_p(),
+    return carbon.CFStringCreateWithCString(c_void_p(), 
                                             text.encode('utf8'),
                                             kCFStringEncodingUTF8)
 

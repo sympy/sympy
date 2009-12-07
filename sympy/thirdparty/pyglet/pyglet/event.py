@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -137,11 +137,11 @@ the particular class documentation.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: event.py 1550 2007-12-25 06:16:59Z Alex.Holkner $'
+__version__ = '$Id: event.py 1824 2008-02-28 09:22:01Z Alex.Holkner $'
 
 import inspect
 
-EVENT_HANDLED = True
+EVENT_HANDLED = True 
 EVENT_UNHANDLED = None
 
 class EventException(Exception):
@@ -186,38 +186,45 @@ class EventDispatcher(object):
         '''
         # Create event stack if necessary
         if type(self._event_stack) is tuple:
-            self._event_stack = [{}]
+            self._event_stack = []
 
         # Place dict full of new handlers at beginning of stack
         self._event_stack.insert(0, {})
         self.set_handlers(*args, **kwargs)
 
-    def set_handlers(self, *args, **kwargs):
-        '''Attach one or more event handlers to the top level of the handler
-        stack.
-
-        See `push_handlers` for the accepted argument types.
+    def _get_handlers(self, args, kwargs):
+        '''Implement handler matching on arguments for set_handlers and
+        remove_handlers.
         '''
-        # Create event stack if necessary
-        if type(self._event_stack) is tuple:
-            self._event_stack = [{}]
-
         for object in args:
             if inspect.isroutine(object):
                 # Single magically named function
                 name = object.__name__
                 if name not in self.event_types:
                     raise EventException('Unknown event "%s"' % name)
-                self.set_handler(name, object)
+                yield name, object
             else:
                 # Single instance with magically named methods
                 for name in dir(object):
                     if name in self.event_types:
-                        self.set_handler(name, getattr(object, name))
+                        yield name, getattr(object, name)
         for name, handler in kwargs.items():
             # Function for handling given event (no magic)
             if name not in self.event_types:
                 raise EventException('Unknown event "%s"' % name)
+            yield name, handler
+
+    def set_handlers(self, *args, **kwargs):
+        '''Attach one or more event handlers to the top level of the handler
+        stack.
+        
+        See `push_handlers` for the accepted argument types.
+        '''
+        # Create event stack if necessary
+        if type(self._event_stack) is tuple:
+            self._event_stack = [{}]
+
+        for name, handler in self._get_handlers(args, kwargs):
             self.set_handler(name, handler)
 
     def set_handler(self, name, handler):
@@ -243,9 +250,74 @@ class EventDispatcher(object):
 
         del self._event_stack[0]
 
+    def remove_handlers(self, *args, **kwargs):
+        '''Remove event handlers from the event stack.
+
+        See `push_handlers` for the accepted argument types.  All handlers
+        are removed from the first stack frame that contains any of the given
+        handlers.  No error is raised if any handler does not appear in that
+        frame, or if no stack frame contains any of the given handlers.
+
+        If the stack frame is empty after removing the handlers, it is 
+        removed from the stack.  Note that this interferes with the expected
+        symmetry of `push_handlers` and `pop_handlers`.
+        '''
+        handlers = list(self._get_handlers(args, kwargs))
+
+        # Find the first stack frame containing any of the handlers
+        def find_frame():
+            for frame in self._event_stack:
+                for name, handler in handlers:
+                    try:
+                        if frame[name] == handler:
+                            return frame
+                    except KeyError:
+                        pass
+        frame = find_frame()
+
+        # No frame matched; no error.
+        if not frame:
+            return
+
+        # Remove each handler from the frame.
+        for name, handler in handlers:
+            try:
+                if frame[name] == handler:
+                    del frame[name]
+            except KeyError:
+                pass
+
+        # Remove the frame if it's empty.
+        if not frame:
+            self._event_stack.remove(frame)
+
+    def remove_handler(self, name, handler):
+        '''Remove a single event handler.
+
+        The given event handler is removed from the first handler stack frame
+        it appears in.  The handler must be the exact same callable as passed
+        to `set_handler`, `set_handlers` or `push_handlers`; and the name
+        must match the event type it is bound to.
+
+        No error is raised if the event handler is not set.
+
+        :Parameters:
+            `name` : str
+                Name of the event type to remove.
+            `handler` : callable
+                Event handler to remove.
+        '''
+        for frame in self._event_stack:
+            try:
+                if frame[name] is handler:
+                    del frame[name]
+                    break
+            except KeyError:
+                pass
+
     def dispatch_event(self, event_type, *args):
         '''Dispatch a single event to the attached handlers.
-
+        
         The event is propogated to all handlers from from the top of the stack
         until one returns `EVENT_HANDLED`.  This method should be used only by
         `EventDispatcher` implementors; applications should call
@@ -261,7 +333,7 @@ class EventDispatcher(object):
         assert event_type in self.event_types
 
         # Search handler stack for matching event handlers
-        for frame in self._event_stack[:]:
+        for frame in list(self._event_stack):
             handler = frame.get(event_type, None)
             if handler:
                 try:
@@ -283,7 +355,7 @@ class EventDispatcher(object):
         # A common problem in applications is having the wrong number of
         # arguments in an event handler.  This is caught as a TypeError in
         # dispatch_event but the error message is obfuscated.
-        #
+        # 
         # Here we check if there is indeed a mismatch in argument count,
         # and construct a more useful exception message if so.  If this method
         # doesn't find a problem with the number of arguments, the error
@@ -305,7 +377,7 @@ class EventDispatcher(object):
             n_handler_args = max(n_handler_args, n_args)
 
         # Allow default values to overspecify arguments
-        if (n_handler_args > n_args and
+        if (n_handler_args > n_args and 
             handler_defaults and
             n_handler_args - len(handler_defaults) <= n_args):
             n_handler_args = n_args
@@ -318,17 +390,17 @@ class EventDispatcher(object):
                     handler.func_code.co_firstlineno)
             else:
                 descr = repr(handler)
-
+            
             raise TypeError(
                 '%s event was dispatched with %d arguments, but '
-                'handler %s has an incompatible function signature' %
+                'handler %s has an incompatible function signature' % 
                 (event_type, len(args), descr))
         else:
             raise
 
     def event(self, *args):
-        '''Function decorator for an event handler.
-
+        '''Function decorator for an event handler.  
+        
         Usage::
 
             win = window.Window()
@@ -347,17 +419,17 @@ class EventDispatcher(object):
         if len(args) == 0:                      # @window.event()
             def decorator(func):
                 name = func.__name__
-                setattr(self, name, func)
+                self.set_handler(name, func)
                 return func
             return decorator
         elif inspect.isroutine(args[0]):        # @window.event
             func = args[0]
             name = func.__name__
-            setattr(self, name, func)
+            self.set_handler(name, func)
             return args[0]
         elif type(args[0]) in (str, unicode):   # @window.event('on_resize')
             name = args[0]
             def decorator(func):
-                setattr(self, name, func)
+                self.set_handler(name, func)
                 return func
             return decorator
