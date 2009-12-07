@@ -17,6 +17,7 @@ In addition, there are some other commands:
     python setup.py clean -> will clean all trash (*.pyc and stuff)
     python setup.py test  -> will run the complete test suite
     python setup.py bench -> will run the complete benchmark suite
+    python setup.py audit -> will run pyflakes checker on source code
 
 To get a full list of avaiable commands, read the output of:
 
@@ -74,6 +75,38 @@ modules = [
     'sympy.utilities',
     'sympy.utilities.mathml',
     ]
+
+class audit(Command):
+    """Audits Sympy's source code for following issues:
+        - Names which are used but not defined or used before they are defined.
+        - Names which are redefined without having been used.
+    """
+
+    description = "Audit Sympy source with PyFlakes"
+    user_options = []
+
+    def initialize_options(self):
+        self.all = None
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        import os
+        try:
+            import pyflakes.scripts.pyflakes as flakes
+        except:
+            print """In order to run the audit, you need to have PyFlakes installed."""
+            sys.exit(-1)
+        dirs = [os.path.join(*i.split('.')) for i in modules]
+        warns = 0
+        for dir in dirs:
+            filenames = os.listdir(dir)
+            for filename in filenames:
+                if filename.endswith('.py') and filename != '__init__.py':
+                    warns += flakes.checkPath(os.path.join(dir, filename))
+        if warns > 0:
+            print ("Audit finished with total %d warnings" % warns)
 
 class clean(Command):
     """Cleans *.pyc and debian trashs, so you should get the same copy as
@@ -223,6 +256,7 @@ setup(
       cmdclass    = {'test': test_sympy,
                      'bench': run_benchmarks,
                      'clean': clean,
+                     'audit' : audit,
                      },
       )
 
