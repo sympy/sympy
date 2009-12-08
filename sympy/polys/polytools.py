@@ -18,9 +18,6 @@ from sympy.polys.polyutils import (
     _sort_gens,
     _unify_gens,
     _dict_reorder,
-    _update_args,
-    _analyze_gens,
-    _analyze_modulus,
     _analyze_extension,
     _dict_from_basic_no_gens,
 )
@@ -39,78 +36,16 @@ from sympy.polys.polyerrors import (
     GeneratorsNeeded, PolynomialError,
 )
 
+from sympy.ntheory import isprime
+
 from sympy.utilities import any, all
 
 import re
 
-re_dom_poly = re.compile("^(Z|ZZ|Q|QQ)\[([^\]]+)\]$")
-re_dom_frac = re.compile("^(Z|ZZ|Q|QQ)\(([^\]]+)\)$")
-re_dom_GFp  = re.compile("^GF\((\d+)\)$")
+_re_dom_poly = re.compile("^(Z|ZZ|Q|QQ)\[([^\]]+)\]$")
+_re_dom_frac = re.compile("^(Z|ZZ|Q|QQ)\(([^\]]+)\)$")
 
 from sympy.polys.algebratools import Algebra, ZZ, QQ, EX
-
-def _analyze_domain(args):
-    """Convert `domain` to an internal representation. """
-    domain = args.get('domain')
-
-    if domain is not None:
-        domain = _parse_domain(domain, args)
-
-    return domain
-
-def _parse_domain(dom, args=None):
-    """Make an instance out of a string representation of an algebra. """
-    if isinstance(dom, Algebra):
-        return dom
-
-    if isinstance(dom, basestring):
-        if dom in ['Z', 'ZZ']:
-            return ZZ
-
-        if dom in ['Q', 'QQ']:
-            return QQ
-
-        if dom == 'EX':
-            return EX
-
-        r = re.match(re_dom_poly, dom)
-
-        if r is not None:
-            ground, gens = r.groups()
-
-            gens = map(sympify, gens.split(','))
-
-            if ground in ['Z', 'ZZ']:
-                return ZZ.poly_ring(*gens)
-            else:
-                return QQ.poly_ring(*gens)
-
-        r = re.match(re_dom_frac, dom)
-
-        if r is not None:
-            ground, gens = r.groups()
-
-            gens = map(sympify, gens.split(','))
-
-            if ground in ['Z', 'ZZ']:
-                return ZZ.frac_field(*gens)
-            else:
-                return QQ.frac_field(*gens)
-
-        r = re.match(re_dom_GFp, dom)
-
-        if r is not None:
-            (modulus,) = r.groups()
-
-            if args is not None:
-                if not args.has_key('modulus'):
-                    args['modulus'] = int(modulus)
-                else:
-                    raise PolynomialError('`modulus` already specified')
-
-            return ZZ
-
-    raise PolynomialError('expected a valid domain specification, got %s' % dom)
 
 def _find_out_domain(rep, **args):
     """Finds the minimal domain that the coefficients of `rep` fit in. """
@@ -227,16 +162,6 @@ def _find_out_domain(rep, **args):
         coeffs.append(K.from_sympy(coeff))
 
     return K, coeffs
-
-def _gen_to_level(f, gen):
-    """Returns level associated with the given generator. """
-    if isinstance(gen, int):
-        return gen
-    else:
-        try:
-            return list(f.gens).index(gen)
-        except ValueError:
-            raise PolynomialError("a valid generator expected, got %s" % gen)
 
 def _init_poly_from_dict(rep, *gens, **args):
     """Initialize a Poly given a ... Poly instance. """
@@ -382,8 +307,8 @@ class Poly(Basic):
             if rep.lev != len(gens)-1 or args:
                 raise PolynomialError("invalid data for a polynomial")
         else:
-            domain = _analyze_domain(args)
-            modulus = _analyze_modulus(args)
+            domain = cls._analyze_domain(args)
+            modulus = cls._analyze_modulus(args)
 
             args = dict(args)
 
@@ -497,28 +422,104 @@ class Poly(Basic):
 
         return Poly(rep, *gens)
 
+    @classmethod
+    def _analyze_domain(cls, args):
+        """Convert `domain` to an internal representation. """
+        domain = args.get('domain')
+
+        if domain is not None:
+            domain = cls._parse_domain(domain)
+
+        return domain
+
+    @classmethod
+    def _parse_domain(cls, dom):
+        """Make an algebra out of a string representation. """
+        if isinstance(dom, Algebra):
+            return dom
+
+        if isinstance(dom, basestring):
+            if dom in ['Z', 'ZZ']:
+                return ZZ
+
+            if dom in ['Q', 'QQ']:
+                return QQ
+
+            if dom == 'EX':
+                return EX
+
+            r = re.match(_re_dom_poly, dom)
+
+            if r is not None:
+                ground, gens = r.groups()
+
+                gens = map(sympify, gens.split(','))
+
+                if ground in ['Z', 'ZZ']:
+                    return ZZ.poly_ring(*gens)
+                else:
+                    return QQ.poly_ring(*gens)
+
+            r = re.match(_re_dom_frac, dom)
+
+            if r is not None:
+                ground, gens = r.groups()
+
+                gens = map(sympify, gens.split(','))
+
+                if ground in ['Z', 'ZZ']:
+                    return ZZ.frac_field(*gens)
+                else:
+                    return QQ.frac_field(*gens)
+
+        raise ValueError('expected a valid domain specification, got %s' % dom)
+
+    def set_domain(f, domain):
+        """Set the ground domain of `f`. """
+        return f.per(f.rep.convert(f._parse_domain(domain)))
+
+    def get_domain(f):
+        """Get the ground domain of `f`. """
+        return f.rep.dom
+
+    @classmethod
+    def _analyze_modulus(cls, args):
+        """Convert `modulus` to an internal representation. """
+        modulus = args.get('modulus')
+
+        if modulus is not None:
+            modulus = cls._parse_modulus(modulus)
+
+        return modulus
+
+    @classmethod
+    def _parse_modulus(cls, modulus):
+        """Check if we were given a valid modulus. """
+        if isinstance(modulus, (int, Integer)) and isprime(modulus):
+            return int(modulus)
+        else:
+            raise ValueError("modulus must be a prime integer, got %s" % modulus)
+
     def set_modulus(f, modulus):
-        """Set modulus of `f`. """
-        raise NotImplementedError
+        """Set the modulus of `f`. """
+        modulus = f._parse_modulus(modulus)
+
+        if isinstance(f.rep, GFP):
+            return f.per(f.rep.reduce(modulus))
+        elif f.rep.dom.is_ZZ and f.is_univariate:
+            return f.per(GFP(f.rep.rep, modulus, f.rep.dom))
+        else:
+            raise PolynomialError("not a polynomial over a Galois field")
 
     def get_modulus(f):
-        """Get modulus of `f`. """
+        """Get the modulus of `f`. """
         if isinstance(f.rep, GFP):
             return Integer(f.rep.mod)
         else:
-            return None
-
-    def set_domain(f, domain):
-        """Set ground domain of `f`. """
-        domain = _parse_domain(domain)
-        return f.per(f.rep.convert(domain))
-
-    def get_domain(f):
-        """Get ground domain of `f`. """
-        return f.rep.dom
+            raise PolynomialError("not a polynomial over a Galois field")
 
     def to_ring(f):
-        """Make the ground domain a field. """
+        """Make the ground domain a ring. """
         try:
             result = f.rep.to_ring()
         except AttributeError: # pragma: no cover
@@ -748,9 +749,27 @@ class Poly(Basic):
 
         return per(result)
 
+    def _gen_to_level(f, gen):
+        """Returns level associated with the given generator. """
+        if isinstance(gen, int):
+            length = len(f.gens)
+
+            if -length <= gen < length:
+                if gen < 0:
+                    return length + gen
+                else:
+                    return gen
+            else:
+                raise PolynomialError("-%s <= gen < %s expected, got %s" % (length, length, gen))
+        else:
+            try:
+                return list(f.gens).index(sympify(gen))
+            except ValueError:
+                raise PolynomialError("a valid generator expected, got %s" % gen)
+
     def degree(f, gen=0):
         """Returns degree of `f` in `x_j`. """
-        j = _gen_to_level(f, gen)
+        j = f._gen_to_level(gen)
 
         try:
             return f.rep.degree(j)
@@ -865,7 +884,7 @@ class Poly(Basic):
                 else:
                     gen, m = spec, 1
 
-                rep = rep.integrate(int(m), _gen_to_level(f, gen))
+                rep = rep.integrate(int(m), f._gen_to_level(gen))
 
             return f.per(rep)
         except AttributeError: # pragma: no cover
@@ -885,7 +904,7 @@ class Poly(Basic):
                 else:
                     gen, m = spec, 1
 
-                rep = rep.diff(int(m), _gen_to_level(f, gen))
+                rep = rep.diff(int(m), f._gen_to_level(gen))
 
             return f.per(rep)
         except AttributeError: # pragma: no cover
@@ -893,7 +912,7 @@ class Poly(Basic):
 
     def eval(f, a, gen=0):
         """Evaluates `f` at `a` in the given variable. """
-        j = _gen_to_level(f, gen)
+        j = f._gen_to_level(gen)
 
         try:
             result = f.rep.eval(a, j)
@@ -1123,18 +1142,17 @@ class Poly(Basic):
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'cofactors')
 
-        if dom.has_Field:
-            if not dom.is_EX:
-                P, Q = P.to_field(), Q.to_field()
+        if dom.has_Field and not dom.is_EX:
+            P, Q = P.to_field(), Q.to_field()
 
-                cF = dom.to_sympy(cF)
-                cG = dom.to_sympy(cG)
+            cF = dom.to_sympy(cF)
+            cG = dom.to_sympy(cG)
 
-                return cG/cF, per(P), per(Q)
-            else:
-                P, Q = P.monic(), Q.monic()
+            coeff = cG/cF
+        else:
+            coeff = S.One
 
-        return S.One, per(P), per(Q)
+        return coeff, per(P), per(Q)
 
     @property
     def is_zero(f):
@@ -1352,6 +1370,22 @@ def _polify_basic(f, g, *gens, **args):
                 return Poly(f, *G.gens, **args), G
             else:
                 raise CoercionFailed(F, G)
+
+def _update_args(args, key, value):
+    """Add a new `(key, value)` pair to arguments dict. """
+    args = dict(args)
+
+    if not args.has_key(key):
+        args[key] = value
+
+    return args
+
+def _analyze_gens(gens):
+    """Support for passing generators as `*gens` and `[gens]`. """
+    if len(gens) == 1 and hasattr(gens[0], '__iter__'):
+        return tuple(gens[0])
+    else:
+        return gens
 
 def _basify_factors(factors):
     """Convert `(f_i, k)` factors to Basic expressions. """
@@ -1879,7 +1913,7 @@ def cancel(f, *gens, **args):
 
     try:
         F, G = _polify_basic(p, q, *gens, **args)
-    except CoercionFailed:
+    except CoercionFailed: # pragma: no cover
         if type(f) is not tuple:
             return f
         else:

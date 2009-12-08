@@ -259,7 +259,10 @@ class Algebra(object):
 
     def __getitem__(self, gens):
         """The mathematical way do make a polynomial ring. """
-        return self.poly_ring(*gens)
+        if type(gens) is tuple:
+            return self.poly_ring(*gens)
+        else:
+            return self.poly_ring(gens)
 
     def poly_ring(self, *gens):
         """Returns a polynomial ring, i.e. `K[X]`. """

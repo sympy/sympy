@@ -206,7 +206,7 @@ class GFP(object):
         if mod == f.mod:
             return f
         else:
-            return GFP(gf_reduce(f.rep, mod), f.mod, dom)
+            return GFP(gf_reduce(f.rep, mod), mod, f.dom)
 
     def convert(f, dom):
         """Convert the ground domain of `f`. """
@@ -220,7 +220,7 @@ class GFP(object):
     def coeffs(f):
         """Returns all non-zero coefficients from `f`. """
         if not f:
-            return [K.zero]
+            return [f.dom.zero]
         else:
             return [ c for c in f.rep if c ]
 
@@ -238,23 +238,32 @@ class GFP(object):
         n = gf_degree(f.rep)
 
         if n < 0:
-            return [((0,), K.zero)]
+            return [((0,), f.dom.zero)]
         else:
             return [ ((n-i,), c) for i, c in enumerate(f.rep) if c ]
 
     def all_coeffs(f):
         """Returns all coefficients from `f`. """
-        return [ c for c in f.rep ]
+        if not f:
+            return [f.dom.zero]
+        else:
+            return [ c for c in f.rep ]
 
     def all_monoms(f):
         """Returns all monomials from `f`. """
-        n = gf_degree(f.rep)
-        return [ (n-i,) for i, c in enumerate(f.rep) ]
+        if n < 0:
+            return [((0,), f.dom.zero)]
+        else:
+            return [ (n-i,) for i, c in enumerate(f.rep) ]
 
     def all_terms(f):
         """Returns all terms from a `f`. """
         n = gf_degree(f.rep)
-        return [ ((n-i,), c) for i, c in enumerate(f.rep) ]
+
+        if n < 0:
+            return [((0,), f.dom.zero)]
+        else:
+            return [ ((n-i,), c) for i, c in enumerate(f.rep) ]
 
     def deflate(f):
         """Reduce degree of `f` by mapping `x**m` to `y`. """
@@ -575,7 +584,7 @@ class DUP(object):
         return rep
 
     def to_ring(f):
-        """Make the ground domain a field. """
+        """Make the ground domain a ring. """
         return f.convert(f.dom.get_ring())
 
     def to_field(f):
@@ -616,17 +625,28 @@ class DUP(object):
 
     def all_coeffs(f):
         """Returns all coefficients from `f`. """
-        return [ c for c in f.rep ]
+        if not f:
+            return [K.zero]
+        else:
+            return [ c for c in f.rep ]
 
     def all_monoms(f):
         """Returns all monomials from `f`. """
         n = dup_degree(f.rep)
-        return [ (n-i,) for i, c in enumerate(f.rep) ]
+
+        if n < 0:
+            return [(0,)]
+        else:
+            return [ (n-i,) for i, c in enumerate(f.rep) ]
 
     def all_terms(f):
         """Returns all terms from a `f`. """
         n = dup_degree(f.rep)
-        return [ ((n-i,), c) for i, c in enumerate(f.rep) ]
+
+        if n < 0:
+            return [((0,), K.zero)]
+        else:
+            return [ ((n-i,), c) for i, c in enumerate(f.rep) ]
 
     def add_term(f, c, i=0):
         """Add a single term of the form `c*x**i` to `f`. """
@@ -1112,23 +1132,34 @@ class DMP(object):
     def all_coeffs(f):
         """Returns all coefficients from `f`. """
         if not f.lev:
-            return [ c for c in f.rep ]
+            if not f:
+                return [f.dom.zero]
+            else:
+                return [ c for c in f.rep ]
         else:
             raise PolynomialError('multivariate polynomials not supported')
 
     def all_monoms(f):
         """Returns all monomials from `f`. """
         if not f.lev:
-            n = dup_degree(f.rep)
-            return [ (n-i,) for i, c in enumerate(f.rep) ]
+            n = gf_degree(f.rep)
+
+            if n < 0:
+                return [(0,)]
+            else:
+                return [ (n-i,) for i, c in enumerate(f.rep) ]
         else:
             raise PolynomialError('multivariate polynomials not supported')
 
     def all_terms(f):
         """Returns all terms from a `f`. """
         if not f.lev:
-            n = dup_degree(f.rep)
-            return [ ((n-i,), c) for i, c in enumerate(f.rep) ]
+            n = gf_degree(f.rep)
+
+            if n < 0:
+                return [((0,), f.dom.zero)]
+            else:
+                return [ ((n-i,), c) for i, c in enumerate(f.rep) ]
         else:
             raise PolynomialError('multivariate polynomials not supported')
 

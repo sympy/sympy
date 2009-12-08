@@ -436,7 +436,7 @@ def test_dmp_multi_deflate():
     assert dmp_multi_deflate(([[2,0]], [[2,0]]), 1, ZZ) == \
         ((1, 1), ([[2, 0]], [[2, 0]]))
 
-    #assert dmp_multi_deflate(([[2]], [[2,0,0]]), 1, ZZ) == ((1, 2), ([[2]], [[2, 0]]))
+    assert dmp_multi_deflate(([[2]], [[2,0,0]]), 1, ZZ) == ((1, 2), ([[2]], [[2, 0]]))
     assert dmp_multi_deflate(([[2,0,0]], [[2,0,0]]), 1, ZZ) == ((1, 2), ([[2, 0]], [[2, 0]]))
 
     assert dmp_multi_deflate(([2,0,0], [1,0,4,0,1]), 0, ZZ) == \

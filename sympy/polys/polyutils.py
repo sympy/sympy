@@ -53,7 +53,7 @@ def _sort_gens(gens, **args):
 
     try:
         gens = sorted(gens, compare)
-    except TypeError:
+    except TypeError: # pragma: no cover
         gens = list(gens)
 
     return gens
@@ -94,36 +94,6 @@ def _unify_gens(f_gens, g_gens):
 
     return gens
 
-def _update_args(args, key, value):
-    """Add a new `(key, value)` pair to arguments dict. """
-    args = dict(args)
-
-    if not args.has_key(key):
-        args[key] = value
-
-    return args
-
-def _analyze_gens(gens):
-    """Support for passing generators as `*gens` and `[gens]`. """
-    if len(gens) == 1 and hasattr(gens[0], '__iter__'):
-        return tuple(gens[0])
-    else:
-        return gens
-
-def _analyze_modulus(args):
-    """Convert `modulus` to an internal representation. """
-    modulus = args.get('modulus')
-
-    if modulus is not None:
-        modulus = sympify(modulus)
-
-        if modulus.is_Integer and modulus >= 2:
-            modulus = int(modulus)
-        else:
-            raise PolynomialError("modulus must be an integer >= 2, got %s" % modulus)
-
-    return modulus
-
 def _analyze_extension(args):
     """Convert `extension` to an internal representation. """
     extension = args.get('extension')
@@ -157,7 +127,7 @@ def _analyze_power(base, exp):
                 exp = exp.p
             else:
                 tail, exp = (exp,) + tail, 1
-        else:
+        else: # pragma: no cover
             raise PolynomialError("got invalid polynomial term")
 
         base = Pow(base, Mul(*tail))

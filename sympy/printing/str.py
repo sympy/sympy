@@ -13,6 +13,8 @@ from sympy.core.basic import Basic
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
 
+from sympy.polys.polyerrors import PolynomialError
+
 class StrPrinter(Printer):
     printmethod = "_sympystr_"
 
@@ -298,11 +300,9 @@ class StrPrinter(Printer):
 
         format = expr.__class__.__name__ + "(%s, %s"
 
-        modulus = expr.get_modulus()
-
-        if modulus is not None:
-            format += ", modulus=%s" % modulus
-        else:
+        try:
+            format += ", modulus=%s" % expr.get_modulus()
+        except PolynomialError:
             format += ", domain='%s'" % expr.get_domain()
 
         format += ")"

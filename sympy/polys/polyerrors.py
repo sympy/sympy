@@ -6,7 +6,7 @@ class OperationNotSupported(Exception):
         self.poly = poly
         self.func = func
 
-    def __str__(self):
+    def __str__(self): # pragma: no cover
         return "`%s` operation not supported by %s representation" % (self.func, self.poly.rep.__class__.__name__)
 
 class ExactQuotientFailed(Exception):
