@@ -729,7 +729,7 @@ EEZ_NUM_TRY   = 5
 EEZ_MOD_STEP  = 2
 
 @cythonized("u,mod,i,j,s_arg,negative")
-def dmp_zz_wang(f, u, K):
+def dmp_zz_wang(f, u, K, **args):
     """Factor primitive square-free polynomials in `Z[X]`.
 
        Given a multivariate polynomial `f` in `Z[x_1,...,x_n]`, which
@@ -764,14 +764,15 @@ def dmp_zz_wang(f, u, K):
     b = dmp_zz_mignotte_bound(f, u, K)
     p = K(nextprime(b))
 
-    history, configs = set([]), []
+    eez_mod = args.get('mod', None)
 
-    if u == 1:
-        mod = 2
-    else:
-        mod = 1
+    if eez_mod is None:
+        if u == 1:
+            eez_mod = 2
+        else:
+            eez_mod = 1
 
-    A = [K.zero]*u
+    history, configs, A, r = set([]), [], [K.zero]*u, None
 
     try:
         cs, s, E = dmp_zz_wang_test_points(f, T, ct, A, u, K)
@@ -786,11 +787,11 @@ def dmp_zz_wang(f, u, K):
         bad_points = set([tuple(A)])
         configs = [(s, cs, E, H, A)]
     except EvaluationFailed:
-        r = None
+        pass
 
     while len(configs) < EEZ_NUM_OK:
         for _ in xrange(EEZ_NUM_TRY):
-            A = [ K(randint(-mod, mod)) for _ in xrange(u) ]
+            A = [ K(randint(-eez_mod, eez_mod)) for _ in xrange(u) ]
 
             if tuple(A) not in history:
                 history.add(tuple(A))
@@ -823,7 +824,7 @@ def dmp_zz_wang(f, u, K):
             if len(configs) == EEZ_NUM_OK:
                 break
         else:
-            mod += EEZ_MOD_STEP
+            eez_mod += EEZ_MOD_STEP
 
     s_norm, s_arg, i = None, 0, 0
 
@@ -845,7 +846,10 @@ def dmp_zz_wang(f, u, K):
         f, H, LC = dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K)
         factors = dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K)
     except ExtraneousFactors: # pragma: no cover
-        raise NotImplementedError("we need to restart algorithm with better parameters")
+        if args.get('restart', True):
+            return dmp_zz_wang(f, u, K, mod=eez_mod+1)
+        else:
+            raise ExtraneousFactors("we need to restart algorithm with better parameters")
 
     negative, result = 0, []
 
