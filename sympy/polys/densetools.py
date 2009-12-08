@@ -1776,7 +1776,7 @@ def _dup_right_decompose(f, s, K):
             fc, gc = f[n+j-i], g[s-j]
             coeff += (i - r*j)*fc*gc
 
-        g[s-i] = K.quo(coeff, i*r*lc)
+        g[s-i] = K.exquo(coeff, i*r*lc)
 
     return dup_from_raw_dict(g, K)
 

@@ -48,6 +48,8 @@ from sympy.polys.densetools import (
     dup_sturm,
 )
 
+from sympy.polys.polyclasses import DMP
+
 from sympy.polys.polyerrors import (
     HeuristicGCDFailed, ExactQuotientFailed,
 )
@@ -1001,6 +1003,11 @@ def test_dup_decompose():
     f = [1,0,20,-8,150,-120,524,-600,865,-1034,600,-170,29]
 
     assert dup_decompose(f, ZZ) == [[1,-8,24,-34,29], [1,0,5,0]]
+
+    f = [DMP([6,0,-42], ZZ), DMP([48,0,96], ZZ), DMP([144,648,288], ZZ),
+         DMP([624,864,384], ZZ), DMP([108,312,432,192], ZZ)]
+
+    assert dup_decompose(f, ZZ['a']) == [f]
 
 def test_dup_sturm():
     assert dup_sturm([QQ(5)], QQ) == [[QQ(1)]]
