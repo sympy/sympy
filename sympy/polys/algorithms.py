@@ -122,7 +122,7 @@ def poly_pdiv(f, g, *symbols):
        For more information on the implemented algorithm refer to:
 
        [1] M. Bronstein, Symbolic Integration I: Transcendental
-           Functions, Second Edition, Springer-Verlang, 2005
+           Functions, Second Edition, Springer-Verlag, 2005
 
     """
     if not isinstance(f, Poly):
@@ -500,7 +500,7 @@ def poly_gcdex(f, g, *symbols):
        For more information on the implemented algorithm refer to:
 
        [1] M. Bronstein, Symbolic Integration I: Transcendental
-           Functions, Second Edition, Springer-Verlang, 2005
+           Functions, Second Edition, Springer-Verlag, 2005
 
     """
     s, h = poly_half_gcdex(f, g, *symbols)
@@ -517,7 +517,7 @@ def poly_half_gcdex(f, g, *symbols):
        For more information on the implemented algorithm refer to:
 
        [1] M. Bronstein, Symbolic Integration I: Transcendental
-           Functions, Second Edition, Springer-Verlang, 2005
+           Functions, Second Edition, Springer-Verlag, 2005
 
     """
     if not isinstance(f, Poly):
@@ -664,7 +664,7 @@ def poly_subresultants(f, g, *symbols, **flags):
        For more information on the implemented algorithm refer to:
 
        [1] M. Bronstein, Symbolic Integration I: Transcendental
-           Functions, Second Edition, Springer-Verlang, 2005
+           Functions, Second Edition, Springer-Verlag, 2005
 
        [2] M. Keber, Division-Free computation of subresultants
            using Bezout matrices, Tech. Report MPI-I-2006-1-006,
@@ -769,7 +769,7 @@ def poly_sqf(f, *symbols):
        For more information on the implemented algorithm refer to:
 
        [1] M. Bronstein, Symbolic Integration I: Transcendental
-           Functions, Second Edition, Springer-Verlang, 2005
+           Functions, Second Edition, Springer-Verlag, 2005
 
        [2] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
            Second Edition, Cambridge University Press, 2003

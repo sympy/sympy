@@ -115,7 +115,7 @@ class Polygon(GeometryEntity):
 
     @property
     def sides(self):
-        """A list of the segments that form the sides fo the polygon."""
+        """A list of the segments that form the sides of the polygon."""
         res = []
         for ind in xrange(0, len(self.vertices)-1):
             res.append( Segment(self.vertices[ind], self.vertices[ind+1]) )

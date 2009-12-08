@@ -323,7 +323,7 @@ class Poly(Basic):
            New York, USA, 1976, pp. 136-148
 
        [6] M. Bronstein, Symbolic Integration I: Transcendental
-           Functions, Second Edition, Springer-Verlang, 2005
+           Functions, Second Edition, Springer-Verlag, 2005
 
        See also documentation of particular methods.
 

@@ -211,7 +211,7 @@ class LatticeOp(AssocOp):
     commutative (op(a, b) = op(b, a)) and idempotent (op(a, a) = op(a) = a).
     Common examples are AND, OR, Union, Intersection, max or min. They have an
     identity element (op(identity, a) = a) and an absorbing element
-    conventionnallly called zero (op(zero, a) = zero).
+    conventionally called zero (op(zero, a) = zero).
 
     This is an abstract base class, concrete derived classes must declare
     attributes zero and identity. All defining properties are then respected.

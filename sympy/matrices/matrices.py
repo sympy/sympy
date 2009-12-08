@@ -1444,7 +1444,7 @@ class Matrix(object):
     eigenvals = berkowitz_eigenvals
 
     def eigenvects(self, **flags):
-        """Return list of triples (eigenval, multiplicty, basis)."""
+        """Return list of triples (eigenval, multiplicity, basis)."""
 
         if 'multiple' in flags:
             del flags['multiple']

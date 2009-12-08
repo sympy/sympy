@@ -87,7 +87,7 @@ def heurisch(f, x, **kwargs):
        Bessel, Whittaker and Lambert.
 
        Note that this algorithm is not a decision procedure. If it isn't
-       able to compute antiderivative for a given function, then this is
+       able to compute the antiderivative for a given function, then this is
        not a proof that such a functions does not exist.  One should use
        recursive Risch algorithm in such case.  It's an open question if
        this algorithm can be made a full decision procedure.

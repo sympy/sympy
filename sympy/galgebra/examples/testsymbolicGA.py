@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
     D = (b**2-4*a*c).expand()
     print 'Setting to 0 and solving for C gives:'
-    print 'Descriminant D = b^2-4*a*c =',D
+    print 'Discriminant D = b^2-4*a*c =',D
     C = (-b/(2*a)).expand()
     print 'C = cosh(alpha) = -b/(2*a) =',C
     """

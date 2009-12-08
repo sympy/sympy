@@ -343,8 +343,8 @@ def rsolve_ratio(coeffs, f, n, **hints):
 
        This procedure accepts only polynomials, however if you are
        interested in solving recurrence with rational coefficients
-       then use rsolve() with will pre-process equation given and
-       run this procedure with polynomial arguments.
+       then use rsolve() which will pre-process the given equation
+       and run this procedure with polynomial arguments.
 
        The algorithm performs two basic steps:
 

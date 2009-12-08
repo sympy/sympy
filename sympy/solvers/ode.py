@@ -123,7 +123,7 @@ then send this to dsolve(), which will send it to your function as the
 match argument. Your function should be named ode_hint(eq, func, order,
 match). If you need to send more information, put it in the dictionary
 match.  For example, if you used a dummy variable in classify_ode to
-match your expression, you will ned to pass it to your function using
+match your expression, you will need to pass it to your function using
 the match dict to access it.  You can access the independent variable
 using func.args[0], and the dependent variable (function to solve for)
 as func.func.  If, while trying to solve the ODE, you find that you
@@ -437,7 +437,7 @@ def classify_ode(eq, func, dict=False):
     docstring for different meta-hints you can use.
 
     If dict is true, classify_ode() will return a dictionary of
-    hint:match expression terms. This is indendened for internal use by
+    hint:match expression terms. This is intended for internal use by
     dsolve().  Note that because dictionaries are ordered arbitrarily,
     this will most likely not be in the same order as the tuple.
 
@@ -464,7 +464,7 @@ def classify_ode(eq, func, dict=False):
         method. For example, nth order linear homogeneous ODEs with
         constant coefficients do not require integration to solve, so
         there is no "nth_linear_homogeneous_constant_coeff_Integrate"
-        hint. You can easliy evaluate any unevaluated Integrals in an
+        hint. You can easily evaluate any unevaluated Integrals in an
         expression by doing expr.doit().
 
     *Ordinals*
@@ -1156,7 +1156,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     example, C1, C2, C3.  The symbolname here would be 'C', the
     startnumber would be 1, and the end number would be 3.  If the
     arbitrary constants are independent of the variable x, then the
-    independentsymbol would be x.  There is no need to specify the
+    independent symbol would be x.  There is no need to specify the
     dependent function, such as f(x), because it already has the
     independent symbol, x, in it.
 
@@ -2036,13 +2036,13 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     This is an equation of the form a_n*f(x)^(n) + a_(n-1)*f(x)^(n-1) +
     ... + a1*f'(x) + a0*f(x) = 0
 
-    These equations can be solved in a general mannar, by taking the
+    These equations can be solved in a general manner, by taking the
     roots of the characteristic equation a_n*m**n + a_(n-1)*m**(n-1) +
     ... + a1*m + a0 = 0.  The solution will then be the sum of
     Cn*x**i*exp(r*x) terms, for each  where Cn is an arbitrary constant,
     r is a root of the characteristic equation and i is is one of each
     from 0 to the multiplicity of the root - 1 (for example, a root 3 of
-    multilpicity 2 would create the terms C1*exp(3*x) + C2*x*exp(3*x)).
+    multiplicity 2 would create the terms C1*exp(3*x) + C2*x*exp(3*x)).
     The exponential is usually expanded for complex roots using Euler's
     equation exp(I*x) = cos(x) + I*sin(x).  Complex roots always come in
     conjugate pars in polynomials with real coefficients, so the two
@@ -2483,7 +2483,7 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     This method works by assuming that the particular solution takes the
     form Sum(c_i(x)*y_i(x), (x, 1, n)), where y_i is the ith solution to
     the homogeneous equation.  The solution is then solved using
-    Wronskians and Cramer's Rule.  The particular solution is given by
+    Wronskian's and Cramer's Rule.  The particular solution is given by
     Sum(Integral(W_i(x)/W(x), x)*y_i(x), (x, 1, n)), where W(x) is the
     Wronskian of the fundamental system (the system of n linearly
     independent solutions to the homogeneous equation), and W_i(x) is

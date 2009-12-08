@@ -231,7 +231,7 @@ def test_1st_exact1():
 def test_1st_exact2():
     """
     This is an exact equation that fails under the exact engine. It is caught
-    by first order homogeneous albiet with a much contorted solution.  The
+    by first order homogeneous albeit with a much contorted solution.  The
     exact engine fails because of a poorly simplified integral of q(0,y)dy,
     where q is the function multiplying f'.  The solutions should be
     Eq((x**2+f(x)**2)**Rational(3,2)+y**3, C1).  The equation below is

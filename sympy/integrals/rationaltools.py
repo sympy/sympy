@@ -23,7 +23,7 @@ def ratint(f, x, **flags):
        ==========
 
        .. [Bro05] M. Bronstein, Symbolic Integration I: Transcendental
-          Functions, Second Edition, Springer-Verlang, 2005, pp. 35-70
+          Functions, Second Edition, Springer-Verlag, 2005, pp. 35-70
 
     """
     if type(f) is not tuple:

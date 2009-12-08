@@ -738,7 +738,7 @@ def latex(expr, profile=None, **kargs):
         '$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$'
 
         Besides all Basic based expressions, you can recursively
-        convert Pyhon containers (lists, tuples and dicts) and
+        convert Python containers (lists, tuples and dicts) and
         also SymPy matrices:
 
         >>> latex([2/x, y])

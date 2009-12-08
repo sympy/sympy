@@ -176,7 +176,7 @@ class SymTuple(Basic):
 
 def _tuple_wrapper(method):
     """
-    Decoreator that makes any tuple in arguments into SymTuple
+    Decorator that makes any tuple in arguments into SymTuple
     """
     def wrap_tuples(*args, **kw_args):
         newargs=[]
@@ -515,12 +515,12 @@ class KroneckerDelta(Function):
 
 
     @property
-    def preffered_index(self):
+    def preferred_index(self):
         """
-        Returns the index which is preffered to keep in the final expression.
+        Returns the index which is preferred to keep in the final expression.
 
-        The preffered index is the index with more information regarding fermi
-        level.  If indices contain same information, 'a' is preffered before
+        The preferred index is the index with more information regarding fermi
+        level.  If indices contain same information, 'a' is preferred before
         'b'.
 
         >>> from sympy.physics.secondquant import KroneckerDelta
@@ -529,15 +529,15 @@ class KroneckerDelta(Function):
         >>> i = Symbol('i',below_fermi=True)
         >>> j = Symbol('j',below_fermi=True)
         >>> p = Symbol('p')
-        >>> KroneckerDelta(p,i).preffered_index
+        >>> KroneckerDelta(p,i).preferred_index
         i
-        >>> KroneckerDelta(p,a).preffered_index
+        >>> KroneckerDelta(p,a).preferred_index
         a
-        >>> KroneckerDelta(i,j).preffered_index
+        >>> KroneckerDelta(i,j).preferred_index
         i
 
         """
-        if self._get_preffered_index():
+        if self._get_preferred_index():
             return self.args[1]
         else:
             return self.args[0]
@@ -545,10 +545,10 @@ class KroneckerDelta(Function):
     @property
     def killable_index(self):
         """
-        Returns the index which is preffered to substitute in the final expression.
+        Returns the index which is preferred to substitute in the final expression.
 
         The index to substitute is the index with less information regarding fermi
-        level.  If indices contain same information, 'a' is preffered before
+        level.  If indices contain same information, 'a' is preferred before
         'b'.
 
         >>> from sympy.physics.secondquant import KroneckerDelta
@@ -565,16 +565,16 @@ class KroneckerDelta(Function):
         j
 
         """
-        if self._get_preffered_index():
+        if self._get_preferred_index():
             return self.args[0]
         else:
             return self.args[1]
 
-    def _get_preffered_index(self):
+    def _get_preferred_index(self):
         """
-        Returns the index which is preffered to keep in the final expression.
+        Returns the index which is preferred to keep in the final expression.
 
-        The preffered index is the index with more information regarding fermi
+        The preferred index is the index with more information regarding fermi
         level.  If indices contain same information, index 0 is returned.
         """
         if not self.is_above_fermi:
@@ -1230,7 +1230,7 @@ class FermionState(FockState):
     occupied orbits rather than a tuple with occupation numbers (zeros and ones).
 
     states below fermi level are holes, and are represented by negative labels
-    in the occuptation list
+    in the occupation list
 
     For symbolic state labels, the fermi_level caps the number of allowed hole-
     states
@@ -1307,7 +1307,7 @@ class FermionState(FockState):
 
     def down(self, i):
         """
-        Performes the action of an annihilation operator.
+        Performs the action of an annihilation operator.
 
         If below fermi we try to create a hole,
         if above fermi we try to remove a particle.
@@ -2081,12 +2081,12 @@ class NO(Function):
 
     def _expand_operators(self):
         """
-        Returns a sum of NO objects that contain no ambigous q-operators.
+        Returns a sum of NO objects that contain no ambiguous q-operators.
 
         If an index q has range both above and below fermi, the operator F(q)
-        is ambigous in the sense that it can be both a q-creator and a q-annihilator.
+        is ambiguous in the sense that it can be both a q-creator and a q-annihilator.
         If q is dummy, it is assumed to be a summation variable and this method
-        rewrites it into a sum of NO terms with unambigous operators:
+        rewrites it into a sum of NO terms with unambiguous operators:
 
         {Fd(p)*F(q)} = {Fd(a)*F(b)} + {Fd(a)*F(i)} + {Fd(j)*F(b)} -{F(i)*Fd(j)}
 
@@ -2312,18 +2312,18 @@ def _sort_anticommuting_fermions(string1):
 
 def evaluate_deltas(e):
     """
-    We evaluate KroneckerDelta symbols in the expression assuming Einsten summation.
+    We evaluate KroneckerDelta symbols in the expression assuming Einstein summation.
 
-    If one index is repeated it is summed over and in effect substituded with
+    If one index is repeated it is summed over and in effect substituted with
     the other one. If both indices are repeated we substitute according to what
     is the preferred index.  this is determined by
-    KroneckerDelta.preffered_index and KroneckerDelta.killable_index.
+    KroneckerDelta.preferred_index and KroneckerDelta.killable_index.
 
     In case there are no possible substitutions or if a substitution would
     imply a loss of information, nothing is done.
 
     In case an index appears in more than one KroneckerDelta, the resulting
-    final substitution depends on the larger expression.  Behaviour of
+    final substitution depends on the larger expression.  Behavior of
     evaluate_deltas is in that case undefined.
 
     Examples:  We assume that
@@ -2401,10 +2401,10 @@ def evaluate_deltas(e):
             # If we do something, and there are more deltas, we should recurse
             # to treat the resulting expression properly
             if indices[d.killable_index]:
-                e = e.subs(d.killable_index,d.preffered_index)
+                e = e.subs(d.killable_index,d.preferred_index)
                 if len(deltas)>1: return evaluate_deltas(e)
-            elif indices[d.preffered_index] and d.indices_contain_equal_information:
-                e = e.subs(d.preffered_index,d.killable_index)
+            elif indices[d.preferred_index] and d.indices_contain_equal_information:
+                e = e.subs(d.preferred_index,d.killable_index)
                 if len(deltas)>1: return evaluate_deltas(e)
             else:
                 pass
@@ -2421,7 +2421,7 @@ def _get_dummies(expr, _reverse, **require):
     Starting at right end to prioritize indices of non-commuting terms.
 
     FIXME: A more sophisticated predictable order would work better.
-    Current implementetation does not always work if factors commute. Since
+    Current implementation does not always work if factors commute. Since
     commuting factors are sorted also by dummy indices, it may happen that
     all terms have exactly the same index order, so that no term will
     obtain a substitution of dummies.
@@ -2560,7 +2560,7 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
     In order to simplify as much as possible, the indices related to
     non-commuting factors have highest priority when approaching canonical
     indexing.  This is done by giving highest priority to the rightmost
-    dummyindices in each term.  (reverse_order=True by default)  The default
+    dummy indices in each term.  (reverse_order=True by default)  The default
     substitution gives:
 
     >>> substitute_dummies(expr, reverse_order=True)

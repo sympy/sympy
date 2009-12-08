@@ -1,4 +1,4 @@
-"""Symbolic primitives + unicode/ascii abstraction  for pretty.py"""
+"""Symbolic primitives + unicode/ASCII abstraction  for pretty.py"""
 
 import sys
 warnings = ''

@@ -239,7 +239,7 @@ class Point(GeometryEntity):
 
     def __neg__(self):
         """
-        Create a new point where each oordinate in this point is negated.
+        Create a new point where each coordinate in this point is negated.
         """
         return Point( [-x for x in self] )
 

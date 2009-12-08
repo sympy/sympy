@@ -45,7 +45,7 @@ def monomials(variables, degree):
 def monomial_count(V, N):
     """Computes the number of monomials of degree N in #V variables.
 
-       The number of monomials is given as (#V + N)! / (#V! N!), eg:
+       The number of monomials is given as (#V + N)! / (#V! N!), e.g.:
 
        >>> from sympy.polys.monomial import monomial_count, monomials
        >>> from sympy.abc import x, y

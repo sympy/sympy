@@ -866,7 +866,7 @@ def expand(e, deep=True, power_base=True, power_exp=True, mul=True, \
     Hints are applied with arbitrary order so your code shouldn't
     depend on the way hints are passed to this method.
 
-    Hints evaluated unless explicity set to False are:
+    Hints evaluated unless explicitly set to False are:
       basic, log, multinomial, mul, power_base, and power_exp
     The following hints are supported but not applied unless set to True:
       complex, func, and trig.

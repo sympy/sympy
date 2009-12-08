@@ -1,6 +1,6 @@
 """Printing subsystem driver
 
-Sympy's printing system works the following way: Any expression can be passed to
+SymPy's printing system works the following way: Any expression can be passed to
 a designated Printer who then is responsible to return a adequate representation
 of that expression.
 
@@ -148,7 +148,7 @@ class Printer(object):
                     i += 1
                 return s
 
-        # Overide the __str__ method of to use CustromStrPrinter
+        # Override the __str__ method of to use CustromStrPrinter
         Basic.__str__ = lambda self: CustomStrPrinter().doprint(self)
         # Demonstration of CustomStrPrinter:
         t = Symbol('t')

@@ -1,5 +1,5 @@
 """
-This module contains query handlers resposible for calculus queries:
+This module contains query handlers responsible for calculus queries:
 infinitesimal, bounded, etc.
 """
 from sympy.logic.boolalg import conjuncts

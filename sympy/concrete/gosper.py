@@ -26,7 +26,7 @@ def normal(f, g, n=None):
        equations solving. It can be also used to decide if two
        hypergeometric are similar or not.
 
-       This procedure will return a tuple containig elements
+       This procedure will return a tuple containing elements
        of this factorization in the form (Z*A, B, C). For example:
 
        >>> from sympy import Symbol, normal
