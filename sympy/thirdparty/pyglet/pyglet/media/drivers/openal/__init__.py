@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -31,7 +31,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-# $Id: __init__.py 1352 2007-11-04 03:35:06Z Alex.Holkner $
+# $Id: __init__.py 2270 2008-09-21 08:01:58Z Alex.Holkner $
 
 import ctypes
 import sys
@@ -64,9 +64,9 @@ def _split_nul_strings(s):
 def get_version():
     major = alc.ALCint()
     minor = alc.ALCint()
-    alc.alcGetIntegerv(_device, alc.ALC_MAJOR_VERSION,
+    alc.alcGetIntegerv(_device, alc.ALC_MAJOR_VERSION, 
                        ctypes.sizeof(major), major)
-    alc.alcGetIntegerv(_device, alc.ALC_MINOR_VERSION,
+    alc.alcGetIntegerv(_device, alc.ALC_MINOR_VERSION, 
                        ctypes.sizeof(minor), minor)
     return major.value, minor.value
 
@@ -75,6 +75,11 @@ def have_version(major, minor):
 
 def get_extensions():
     extensions = alc.alcGetString(_device, alc.ALC_EXTENSIONS)
+
+    # Check for null pointer
+    if not ctypes.cast(extensions, ctypes.c_void_p).value:
+        return []
+
     if sys.platform == 'darwin':
         return ctypes.cast(extensions, ctypes.c_char_p).value.split(' ')
     else:
@@ -100,6 +105,8 @@ class OpenALAudioPlayer(AudioPlayer):
 
     #: Maximum size of an OpenAL buffer, in bytes.  TODO: use OpenAL maximum
     _max_buffer_size = 65536
+
+    UPDATE_PERIOD = 0.05
 
     def __init__(self, audio_format):
         super(OpenALAudioPlayer, self).__init__(audio_format)
@@ -151,12 +158,12 @@ class OpenALAudioPlayer(AudioPlayer):
     def write(self, audio_data):
         buffer = al.ALuint()
         al.alGenBuffers(1, buffer)
-        al.alBufferData(buffer,
+        al.alBufferData(buffer, 
                         self._al_format,
                         audio_data.data,
                         audio_data.length,
                         self.audio_format.sample_rate)
-        al.alSourceQueueBuffers(self._al_source, 1, ctypes.byref(buffer))
+        al.alSourceQueueBuffers(self._al_source, 1, ctypes.byref(buffer)) 
 
         self._buffered_time += audio_data.duration
         self._timestamps.append((audio_data.timestamp, audio_data.duration))
@@ -207,9 +214,11 @@ class OpenALAudioPlayer(AudioPlayer):
 
         self._pause_timestamp = 0.0
         self._buffered_time = 0.0
+        self._current_buffer_time = 0.0
         self._timestamps = []
 
     def pump(self):
+
         # Release spent buffers
         processed = al.ALint()
         al.alGetSourcei(self._al_source, al.AL_BUFFERS_PROCESSED, processed)
@@ -243,14 +252,18 @@ class OpenALAudioPlayer(AudioPlayer):
             self._current_buffer_time = time.time() - \
                 self._timestamp_system_time
 
-        # Begin playing if underrun previously
+        # Check for underrun
         if self._playing:
-            self._al_play()
+            state = al.ALint()
+            al.alGetSourcei(self._al_source, al.AL_SOURCE_STATE, state)
+            if state.value != al.AL_PLAYING:
+                al.alSourcePlay(self._al_source)
+                return True # underrun notification
 
     def get_time(self):
         state = al.ALint()
         al.alGetSourcei(self._al_source, al.AL_SOURCE_STATE, state)
-        if state.value != al.AL_PLAYING:
+        if not self._playing:
             return self._pause_timestamp
 
         if not self._timestamps:
@@ -303,7 +316,7 @@ class OpenALListener(Listener):
     def _set_position(self, position):
         x, y, z = position
         al.alListener3f(al.AL_POSITION, x, y, z)
-        self._position = position
+        self._position = position 
 
     def _set_forward_orientation(self, orientation):
         val = (al.ALfloat * 6)(*(orientation + self._up_orientation))
@@ -327,7 +340,7 @@ def driver_init(device_name = None):
 
     _device = alc.alcOpenDevice(device_name)
     if not _device:
-        raise Exception('No OpenAL device.')
+        raise OpenALException('No OpenAL device.')
 
     alcontext = alc.alcCreateContext(_device, None)
     alc.alcMakeContextCurrent(alcontext)

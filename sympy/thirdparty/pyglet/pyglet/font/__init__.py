@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -68,16 +68,18 @@ by this package.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1493 2007-12-08 09:20:38Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 2136 2008-07-24 00:50:15Z Alex.Holkner $'
 
 import sys
 import os
 import math
+import weakref
 
 import pyglet
 from pyglet.gl import *
-from pyglet import window
+from pyglet import gl
 from pyglet import image
+from pyglet import window
 
 class GlyphString(object):
     '''An immutable string of glyphs that can be rendered quickly.
@@ -86,17 +88,19 @@ class GlyphString(object):
     of text that use the same font.  To wrap text using a glyph string,
     call `get_break_index` to find the optimal breakpoint for each line,
     the repeatedly call `draw` for each breakpoint.
+
+    :deprecated: Use `pyglet.text.layout` classes.
     '''
 
     def __init__(self, text, glyphs, x=0, y=0):
         '''Create a glyph string.
-
+        
         The `text` string is used to determine valid breakpoints; all glyphs
         must have already been determined using
         `pyglet.font.base.Font.get_glyphs`.  The string
         will be positioned with the baseline of the left-most glyph at the
         given coordinates.
-
+        
         :Parameters:
             `text` : str or unicode
                 String to represent.
@@ -110,7 +114,7 @@ class GlyphString(object):
         '''
         # Create an interleaved array in GL_T2F_V3F format and determine
         # state changes required.
-
+        
         lst = []
         texture = None
         self.text = text
@@ -144,18 +148,18 @@ class GlyphString(object):
 
     def get_break_index(self, from_index, width):
         '''Find a breakpoint within the text for a given width.
-
+        
         Returns a valid breakpoint after `from_index` so that the text
         between `from_index` and the breakpoint fits within `width` pixels.
 
         This method uses precomputed cumulative glyph widths to give quick
-        answer, and so is much faster than
-        `pyglet.font.base.Font.get_glyphs_for_width`.
+        answer, and so is much faster than 
+        `pyglet.font.base.Font.get_glyphs_for_width`.  
 
         :Parameters:
             `from_index` : int
                 Index of text to begin at, or 0 for the beginning of the
-                string.
+                string. 
             `width` : float
                 Maximum width to use.
 
@@ -169,14 +173,14 @@ class GlyphString(object):
         if from_index:
             width += self.cumulative_advance[from_index-1]
         for i, (c, w) in enumerate(
-                zip(self.text[from_index:],
+                zip(self.text[from_index:], 
                     self.cumulative_advance[from_index:])):
             if c in u'\u0020\u200b':
                 to_index = i + from_index + 1
             if c == '\n':
                 return i + from_index + 1
             if w > width:
-                return to_index
+                return to_index 
         return to_index
 
     def get_subwidth(self, from_index, to_index):
@@ -192,14 +196,14 @@ class GlyphString(object):
         '''
         if to_index <= from_index:
             return 0
-        width = self.cumulative_advance[to_index-1]
+        width = self.cumulative_advance[to_index-1] 
         if from_index:
             width -= self.cumulative_advance[from_index-1]
         return width
 
     def draw(self, from_index=0, to_index=None):
         '''Draw a region of the glyph string.
-
+        
         Assumes texture state is enabled.  To enable the texture state::
 
             from pyglet.gl import *
@@ -243,6 +247,15 @@ class GlyphString(object):
         if from_index:
             glPopMatrix()
 
+class _TextZGroup(pyglet.graphics.Group):
+    z = 0
+
+    def set_state(self):
+        glTranslatef(0, 0, self.z)
+
+    def unset_state(self):
+        glTranslatef(0, 0, -self.z)
+
 class Text(object):
     '''Simple displayable text.
 
@@ -259,14 +272,8 @@ class Text(object):
         `y` : int
             Y coordinate of the text
 
+    :deprecated: Use `pyglet.text.Label`.
     '''
-
-    _layout_width = None  # Width to layout text to
-    _text_width = 0       # Calculated width of text
-    _text_height = 0      # Calculated height of text (bottom descender to top
-                          # ascender)
-
-    _dirty = False        # Flag if require layout
 
     # Alignment constants
 
@@ -286,8 +293,13 @@ class Text(object):
     #: Y coordinate.
     TOP = 'top'
 
-    _halign = LEFT
-    _valign = BASELINE
+    # None: no multiline
+    # 'width': multiline, wrapped to width
+    # 'multiline': multiline, no wrap
+    _wrap = None
+
+    # Internal bookkeeping for wrap only.
+    _width = None
 
     def __init__(self, font, text='', x=0, y=0, z=0, color=(1,1,1,1),
             width=None, halign=LEFT, valign=BASELINE):
@@ -317,132 +329,154 @@ class Text(object):
                 Controls positioning of the text based off the y coordinate.
                 One of BASELINE, BOTTOM, CENTER or TOP. Defaults to BASELINE.
         '''
-        self._dirty = True
+        multiline = False
+        if width is not None:
+            self._width = width
+            self._wrap = 'width'
+            multiline = True
+        elif '\n' in text:
+            self._wrap = 'multiline'
+            multiline = True
+
+        self._group = _TextZGroup()
+        self._document = pyglet.text.decode_text(text)
+        self._layout = pyglet.text.layout.TextLayout(self._document, 
+                                              width=width,
+                                              multiline=multiline,
+                                              dpi=font.dpi,
+                                              group=self._group)
+
+        self._layout.begin_update()
+        if self._wrap == 'multiline':
+            self._document.set_style(0, len(text), dict(wrap=False))
         self.font = font
-        self._text = text
         self.color = color
-        self.x = x
+        self._x = x
         self.y = y
-        self.leading = 0
-        self._layout_width = width
-        self._halign = halign
-        self._valign = valign
+        self.z = z
+        self.width = width
+        self.halign = halign
+        self.valign = valign
+        self._update_layout_halign()
+        self._layout.end_update()
 
-    def _clean(self):
-        '''Resolve changed layout'''
-        # Adding a space to the end of the text simplifies the inner loop
-        # of the wrapping layout.  It ensures there is a breakpoint returned at
-        # the end of the string (GlyphString cannot guarantee this otherwise
-        # it would not be useable with styled layout algorithms).
-        text = self._text + ' '
-        glyphs = self.font.get_glyphs(text)
-        self._glyph_string = GlyphString(text, glyphs)
+    def _get_font(self):
+        return self._font
 
-        self.lines = []
-        i = 0
-        if self._layout_width is None:
-            self._text_width = 0
-            while '\n' in text[i:]:
-                end = text.index('\n', i)
-                self.lines.append((i, end))
-                self._text_width = max(self._text_width,
-                                       self._glyph_string.get_subwidth(i, end))
-                i = end + 1
-            # Discard the artifical appended space.
-            end = len(text) - 1
-            if i < end:
-                self.lines.append((i, end))
-                self._text_width = max(self._text_width,
-                                       self._glyph_string.get_subwidth(i, end))
+    def _set_font(self, font):
+        self._font = font
+        self._layout.begin_update()
+        self._document.set_style(0, len(self._document.text), {
+            'font_name': font.name,
+            'font_size': font.size,
+            'bold': font.bold,
+            'italic': font.italic,
+        })
+        self._layout._dpi = font.dpi
+        self._layout.end_update()
 
+    font = property(_get_font, _set_font)
+
+    def _get_color(self):
+        color = self._document.get_style('color')
+        if color is None:
+            return (1., 1., 1., 1.)
+        return tuple([c/255. for c in color])
+
+    def _set_color(self, color):
+        color = [int(c * 255) for c in color]
+        self._document.set_style(0, len(self._document.text), {
+            'color': color,
+        })
+
+    color = property(_get_color, _set_color)
+
+    def _update_layout_halign(self):
+        if self._layout.multiline:
+            # TextLayout has a different interpretation of halign that doesn't
+            # consider the width to be a special factor; here we emulate the
+            # old behaviour by fudging the layout x value.
+            if self._layout.anchor_x == 'left':
+                self._layout.x = self.x
+            elif self._layout.anchor_x == 'center':
+                self._layout.x = self.x + self._layout.width - \
+                    self._layout.content_width // 2
+            elif self._layout.anchor_x == 'right': 
+                self._layout.x = self.x + 2 * self._layout.width - \
+                    self._layout.content_width
         else:
-            bp = self._glyph_string.get_break_index(i, self._layout_width)
-            while i < len(text) and bp > i:
-                if text[bp-1] == '\n':
-                    self.lines.append((i, bp - 1))
-                else:
-                    self.lines.append((i, bp))
-                i = bp
-                bp = self._glyph_string.get_break_index(i, self._layout_width)
-            if i < len(text) - 1:
-                self.lines.append((i, len(text)))
+            self._layout.x = self.x
 
-        self.line_height = self.font.ascent - self.font.descent + self.leading
-        self._text_height = self.line_height * len(self.lines)
+    def _get_x(self):
+        return self._x
 
-        self._dirty = False
+    def _set_x(self, x):
+        self._x = x
+        self._update_layout_halign()
 
-    def draw(self):
-        '''Render the text.
+    x = property(_get_x, _set_x)
 
-        This method makes no assumptions about the projection.  Using the
-        default projection set up by pyglet, coordinates refer to window-space
-        and the text will be aligned to the window.  Other projections can
-        be used to render text into 3D space.
+    def _get_y(self):
+        return self._layout.y
 
-        The OpenGL state is not modified by this method.
-        '''
-        if self._dirty:
-            self._clean()
+    def _set_y(self, y):
+        self._layout.y = y
 
-        y = self.y
-        if self._valign == self.BOTTOM:
-            y += self.height - self.font.ascent
-        elif self._valign == self.CENTER:
-            y += self.height // 2 - self.font.ascent
-        elif self._valign == self.TOP:
-            y -= self.font.ascent
+    y = property(_get_y, _set_y)
 
-        glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT)
-        glEnable(GL_TEXTURE_2D)
-        glColor4f(*self.color)
-        glPushMatrix()
-        glTranslatef(0, y, 0)
-        for start, end in self.lines:
-            width = self._glyph_string.get_subwidth(start, end)
+    def _get_z(self):
+        return self._group.z
 
-            x = self.x
-            align_width = self._layout_width or 0
-            if self._halign == self.RIGHT:
-                x += align_width - width
-            elif self._halign == self.CENTER:
-                x += align_width // 2 - width // 2
+    def _set_z(self, z):
+        self._group.z = z
 
-            glTranslatef(x, 0, 0)
-            self._glyph_string.draw(start, end)
-            glTranslatef(-x, -self.line_height, 0)
-        glPopMatrix()
-        glPopAttrib()
+    z = property(_get_z, _set_z)
+
+    def _update_wrap(self):
+        if self._width is not None:
+            self._wrap = 'width'
+        elif '\n' in self.text:
+            self._wrap = 'multiline'
+
+        self._layout.begin_update()
+        if self._wrap == None:
+            self._layout.multiline = False
+        elif self._wrap == 'width':
+            self._layout.multiline = True
+            self._layout.width = self._width
+            self._document.set_style(0, len(self.text), dict(wrap=True))
+        elif self._wrap == 'multiline':
+            self._layout.multiline = True
+            self._document.set_style(0, len(self.text), dict(wrap=False))
+        self._update_layout_halign()
+        self._layout.end_update()
 
     def _get_width(self):
-        if self._dirty:
-            self._clean()
-        if self._layout_width:
-            return self._layout_width
-        return self._text_width
+        if self._wrap == 'width':
+            return self._layout.width
+        else:
+            return self._layout.content_width
 
     def _set_width(self, width):
-        self._layout_width = width
-        self._dirty = True
+        self._width = width
+        self._update_wrap()
 
-    width = property(_get_width, _set_width,
+    width = property(_get_width, _set_width, 
         doc='''Width of the text.
 
         When set, this enables word-wrapping to the specified width.
         Otherwise, the width of the text as it will be rendered can be
         determined.
-
+        
         :type: float
         ''')
 
     def _get_height(self):
-        if self._dirty:
-            self._clean()
-        return self._text_height
+        return self._layout.content_height
 
     height = property(_get_height,
         doc='''Height of the text.
-
+        
         This property is the ascent minus the descent of the font, unless
         there is more than one line of word-wrapped text, in which case
         the height takes into account the line leading.  Read-only.
@@ -450,24 +484,30 @@ class Text(object):
         :type: float
         ''')
 
-    def _set_text(self, text):
-        self._text = text
-        self._dirty = True
+    def _get_text(self):
+        return self._document.text
 
-    text = property(lambda self: self._text, _set_text,
+    def _set_text(self, text):
+        self._document.text = text
+        self._update_wrap()
+
+    text = property(_get_text, _set_text,
         doc='''Text to render.
 
         The glyph vertices are only recalculated as needed, so multiple
         changes to the text can be performed with no performance penalty.
-
+        
         :type: str
         ''')
 
-    def _set_halign(self, halign):
-        self._halign = halign
-        self._dirty = True
+    def _get_halign(self):
+        return self._layout.anchor_x
 
-    halign = property(lambda self: self._halign, _set_halign,
+    def _set_halign(self, halign):
+        self._layout.anchor_x = halign
+        self._update_layout_halign()
+
+    halign = property(_get_halign, _set_halign,
         doc='''Horizontal alignment of the text.
 
         The text is positioned relative to `x` and `width` according to this
@@ -477,11 +517,13 @@ class Text(object):
         :type: str
         ''')
 
-    def _set_valign(self, valign):
-        self._valign = valign
-        self._dirty = True
+    def _get_valign(self):
+        return self._layout.anchor_y
 
-    valign = property(lambda self: self._valign, _set_valign,
+    def _set_valign(self, valign):
+        self._layout.anchor_y = valign
+
+    valign = property(_get_valign, _set_valign,
         doc='''Vertical alignment of the text.
 
         The text is positioned relative to `y` according to this property,
@@ -490,6 +532,35 @@ class Text(object):
 
         :type: str
         ''')
+
+    def _get_leading(self):
+        return self._document.get_style('leading') or 0
+
+    def _set_leading(self, leading):
+        self._document.set_style(0, len(self._document.text), {
+            'leading': leading,
+        })
+
+    leading = property(_get_leading, _set_leading,
+        doc='''Vertical space between adjacent lines, in pixels.
+
+        :type: int
+        ''')
+
+    def _get_line_height(self):
+        return self._font.ascent - self._font.descent + self.leading
+
+    def _set_line_height(self, line_height):
+        self.leading = line_height - (self._font.ascent - self._font.descent)
+
+    line_height = property(_get_line_height, _set_line_height,
+        doc='''Vertical distance between adjacent baselines, in pixels.
+
+        :type: int
+        ''')
+
+    def draw(self):
+        self._layout.draw()
 
 if not getattr(sys, 'is_epydoc', False):
     if sys.platform == 'darwin':
@@ -508,17 +579,19 @@ if not getattr(sys, 'is_epydoc', False):
         from pyglet.font.freetype import FreeTypeFont
         _font_class = FreeTypeFont
 
-def load(name, size, bold=False, italic=False, dpi=None):
+def load(name=None, size=None, bold=False, italic=False, dpi=None):
     '''Load a font for rendering.
 
     :Parameters:
         `name` : str, or list of str
             Font family, for example, "Times New Roman".  If a list of names
             is provided, the first one matching a known font is used.  If no
-            font can be matched to the name(s), a default font is used.
+            font can be matched to the name(s), a default font is used.  In
+            pyglet 1.1, the name may be omitted.
         `size` : float
             Size of the font, in points.  The returned font may be an exact
-            match or the closest available.
+            match or the closest available.  In pyglet 1.1, the size may be
+            omitted, and defaults to 12pt.
         `bold` : bool
             If True, a bold variant is returned, if one exists for the given
             family and size.
@@ -526,14 +599,18 @@ def load(name, size, bold=False, italic=False, dpi=None):
             If True, an italic variant is returned, if one exists for the given
             family and size.
         `dpi` : float
-            If specified, the assumed resolution of the display device, for
-            the purposes of determining the pixel size of the font.  If not
-            specified, the platform's native resolution is used (72 DPI on Mac
-            OS X, 96 DPI on Windows, 120 DPI on Windows with large fonts, and
-            user-settable on Linux).
+            The assumed resolution of the display device, for the purposes of
+            determining the pixel size of the font.  Defaults to 96. 
 
     :rtype: `Font`
     '''
+    # Arbitrary default size
+    if size is None:
+        size = 12
+
+    if dpi is None:
+        dpi = 96
+
     # Find first matching name
     if type(name) in (tuple, list):
         for n in name:
@@ -543,11 +620,14 @@ def load(name, size, bold=False, italic=False, dpi=None):
         else:
             name = None
 
-    # Locate or create font cache
-    shared_object_space = get_current_context().object_space
+    # Locate or create font cache   
+    shared_object_space = gl.current_context.object_space
     if not hasattr(shared_object_space, 'pyglet_font_font_cache'):
-        shared_object_space.pyglet_font_font_cache = {}
+        shared_object_space.pyglet_font_font_cache = \
+            weakref.WeakValueDictionary()
+        shared_object_space.pyglet_font_font_hold = []
     font_cache = shared_object_space.pyglet_font_font_cache
+    font_hold = shared_object_space.pyglet_font_font_hold
 
     # Look for font name in font cache
     descriptor = (name, size, bold, italic, dpi)
@@ -556,7 +636,22 @@ def load(name, size, bold=False, italic=False, dpi=None):
 
     # Not in cache, create from scratch
     font = _font_class(name, size, bold=bold, italic=italic, dpi=dpi)
+
+    # Save parameters for new-style layout classes to recover
+    font.name = name
+    font.size = size
+    font.bold = bold
+    font.italic = italic
+    font.dpi = dpi
+
+    # Cache font in weak-ref dictionary to avoid reloading while still in use
     font_cache[descriptor] = font
+
+    # Hold onto refs of last three loaded fonts to prevent them being
+    # collected if momentarily dropped.
+    del font_hold[3:]
+    font_hold.insert(0, font)
+    
     return font
 
 def add_file(font):

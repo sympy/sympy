@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -61,7 +61,7 @@ Usage::
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: key.py 1325 2007-10-23 15:24:37Z Alex.Holkner $'
+__version__ = '$Id: key.py 1919 2008-03-19 07:47:01Z Alex.Holkner $'
 
 class KeyStateHandler(dict):
     '''Simple handler that tracks the state of keys on the keyboard. If a
@@ -125,7 +125,7 @@ def symbol_string(symbol):
     '''Return a string describing a key symbol.
 
     Example::
-
+        
         >>> symbol_string(BACKSPACE)
         'BACKSPACE'
 
@@ -144,8 +144,8 @@ def motion_string(motion):
     '''Return a string describing a text motion.
 
     Example::
-
-        >>> motion_string(MOTION_NEXT_WORD)
+        
+        >>> motion_string(MOTION_NEXT_WORD):
         'MOTION_NEXT_WORD'
 
     :Parameters:
@@ -157,8 +157,8 @@ def motion_string(motion):
     return _motion_names.get(motion, str(motion))
 
 def user_key(scancode):
-    '''Return a key symbol for a key not supported by pyglet.
-
+    '''Return a key symbol for a key not supported by pyglet.  
+    
     This can be used to map virtual keys or scancodes from unsupported
     keyboard layouts into a machine-specific symbol.  The symbol will
     be meaningless on any other machine, or under a different keyboard layout.
@@ -180,6 +180,12 @@ MOD_COMMAND     = 1 << 6
 MOD_OPTION      = 1 << 7
 MOD_SCROLLLOCK  = 1 << 8
 
+#: Accelerator modifier.  On Windows and Linux, this is ``MOD_CTRL``, on
+#: Mac OS X it's ``MOD_COMMAND``.
+MOD_ACCEL       = MOD_CTRL
+import sys as _sys
+if _sys.platform == 'darwin':
+    MOD_ACCEL   = MOD_COMMAND
 
 
 # Key symbol constants

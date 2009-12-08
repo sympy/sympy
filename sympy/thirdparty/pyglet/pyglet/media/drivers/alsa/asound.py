@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -36,13 +36,13 @@
 Generated with:
 tools/wraptypes/wrap.py -o asound.py -lasound /usr/include/alsa/alisp.h /usr/include/alsa/asoundef.h /usr/include/alsa/asoundlib.h /usr/include/alsa/conf.h /usr/include/alsa/control.h /usr/include/alsa/control_external.h /usr/include/alsa/conv.h /usr/include/alsa/error.h /usr/include/alsa/global.h /usr/include/alsa/hwdep.h /usr/include/alsa/iatomic.h /usr/include/alsa/input.h /usr/include/alsa/instr.h /usr/include/alsa/mixer.h /usr/include/alsa/mixer_abst.h /usr/include/alsa/pcm.h /usr/include/alsa/pcm_external.h /usr/include/alsa/pcm_extplug.h /usr/include/alsa/pcm_ioplug.h /usr/include/alsa/pcm_old.h /usr/include/alsa/pcm_plugin.h /usr/include/alsa/pcm_rate.h /usr/include/alsa/rawmidi.h /usr/include/alsa/seq.h /usr/include/alsa/seq_event.h /usr/include/alsa/seq_midi_event.h /usr/include/alsa/seqmid.h /usr/include/alsa/timer.h /usr/include/alsa/version.h
 
- -- And then hacked to work with libasound.so, grep for XXX
+ -- And then hacked to work with libasound.so, grep for XXX  
 
 Do not regenerate this file.
 '''
 
 __docformat__ =  'restructuredtext'
-__version__ = '$Id: asound.py 1286 2007-09-29 02:33:49Z Alex.Holkner $'
+__version__ = '$Id: asound.py 1579 2008-01-15 14:47:19Z Alex.Holkner $'
 
 import ctypes
 from ctypes import *

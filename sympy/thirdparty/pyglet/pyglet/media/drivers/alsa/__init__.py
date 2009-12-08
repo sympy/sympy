@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -36,7 +36,7 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1484 2007-12-06 22:51:23Z Alex.Holkner $'
+__version__ = '$Id: __init__.py 2084 2008-05-27 12:42:19Z Alex.Holkner $'
 
 import ctypes
 
@@ -64,7 +64,7 @@ class ALSAAudioPlayer(AudioPlayer):
     _device_name = 'default'
     _buffer_time = 0.3
     _min_write_bytes = 10000
-
+    
     def __init__(self, audio_format):
         super(ALSAAudioPlayer, self).__init__(audio_format)
 
@@ -76,10 +76,10 @@ class ALSAAudioPlayer(AudioPlayer):
         }.get(audio_format.sample_size)
         if format is None:
             raise ALSAException('Unsupported audio format.')
-
+            
         self.pcm = ctypes.POINTER(asound.snd_pcm_t)()
         self.hwparams = ctypes.POINTER(asound.snd_pcm_hw_params_t)()
-        self.swparams = ctypes.POINTER(asound.snd_pcm_sw_params_t)()
+        self.swparams = ctypes.POINTER(asound.snd_pcm_sw_params_t)() 
 
         check(asound.snd_pcm_open(ctypes.byref(self.pcm),
                                   self._device_name,
@@ -112,7 +112,7 @@ class ALSAAudioPlayer(AudioPlayer):
         check(asound.snd_pcm_hw_params(self.pcm, self.hwparams))
 
         if alsa_debug:
-            asound.snd_output_printf(debug_output,
+            asound.snd_output_printf(debug_output, 
                 'New device: %s\n' % self._device_name)
             check(asound.snd_pcm_dump(self.pcm, debug_output))
 
@@ -127,7 +127,7 @@ class ALSAAudioPlayer(AudioPlayer):
     def __del__(self):
         try:
             check(asound.snd_pcm_close(self.pcm))
-        except (NameError, AttributeError):
+        except:
             pass
 
     def get_write_size(self):
@@ -218,8 +218,19 @@ class ALSAAudioPlayer(AudioPlayer):
         return timestamp.tv_sec + timestamp.tv_usec * 0.000001
 
     def pump(self):
+        underrun = False
+
         if self._stop_alsatime is not None:
-            return
+            return underrun
+
+        # Check that ALSA's still playing
+        if self._playing:
+            state = asound.snd_pcm_state(self.pcm)
+            if state not in (asound.SND_PCM_STATE_RUNNING,
+                             asound.SND_PCM_STATE_PREPARED):
+                # Underrun!
+                check(asound.snd_pcm_prepare(self.pcm))
+                underrun = True
 
         alsatime = self._get_asound_time()
         try:
@@ -230,6 +241,8 @@ class ALSAAudioPlayer(AudioPlayer):
                     self._timestamps.pop(0)
         except IndexError:
             pass
+
+        return underrun
 
     def get_time(self):
         if self._stop_alsatime is None:

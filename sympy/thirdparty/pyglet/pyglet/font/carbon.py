@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -130,10 +130,34 @@ carbon.CGBitmapContextCreate.restype = POINTER(c_void_p)
 UniCharArrayOffset  = c_uint32
 UniCharCount = c_uint32
 
-def fixed(value):
-    # This is a guess... could easily be wrong
-    #return c_int32(int(value) * (1 << 16))
+kATSULayoutOperationJustification = 1
+kATSULayoutOperationPostLayoutAdjustment = 0x20
+kATSULayoutOperationCallbackStatusHandled = 0
+kATSULayoutOperationCallbackStatusContinue = c_long(1)
+kATSULayoutOperationOverrideTag = 15
+kATSUDirectDataAdvanceDeltaFixedArray = 0
+kATSUDirectDataDeviceDeltaSInt16Array = 2
+kATSUDirectDataLayoutRecordATSLayoutRecordVersion1 = 100
 
+ATSUDirectLayoutOperationOverrideUPP = CFUNCTYPE(c_int,
+    c_int, c_void_p, c_uint32, c_void_p, POINTER(c_int))
+
+class ATSULayoutOperationOverrideSpecifier(Structure):
+    _fields_ = [
+        ('operationSelector', c_uint32),
+        ('overrideUPP', ATSUDirectLayoutOperationOverrideUPP)
+    ]
+
+class ATSLayoutRecord(Structure):
+    _pack_ = 2
+    _fields_ = [
+        ('glyphID', c_uint16),
+        ('flags', c_uint32),
+        ('originalOffset', c_uint32),
+        ('realPos', Fixed),
+    ]
+
+def fixed(value):
     return c_int32(carbon.Long2Fix(c_long(int(value))))
 
 carbon.Fix2X.restype = c_double
@@ -162,7 +186,8 @@ def set_layout_attributes(layout, attributes):
         values = (c_void_p * len(values))(*[cast(pointer(v), c_void_p) \
                                             for v in values])
 
-        carbon.ATSUSetLayoutControls(layout, len(tags), tags, sizes, values)
+        r = carbon.ATSUSetLayoutControls(layout, len(tags), tags, sizes, values)
+        _oscheck(r)
 
 def str_ucs2(text):
     if byteorder == 'big':
@@ -171,10 +196,13 @@ def str_ucs2(text):
         text = text.encode('utf_16_le')   # explicit endian avoids BOM
     return create_string_buffer(text + '\0')
 
+
 class CarbonGlyphRenderer(base.GlyphRenderer):
     _bitmap = None
     _bitmap_context = None
     _bitmap_rect = None
+
+    _glyph_advance = 0 # set through callback
 
     def __init__(self, font):
         super(CarbonGlyphRenderer, self).__init__(font)
@@ -182,34 +210,65 @@ class CarbonGlyphRenderer(base.GlyphRenderer):
         self.font = font
 
     def __del__(self):
-        if self._bitmap_context:
-            carbon.CGContextRelease(self._bitmap_context)
+        try:
+            if self._bitmap_context:
+                carbon.CGContextRelease(self._bitmap_context)
+        except:
+            pass
+
+    def _layout_callback(self, operation, line, ref, extra, callback_status):
+        records = c_void_p()
+        n_records = c_uint()
+
+        r = carbon.ATSUDirectGetLayoutDataArrayPtrFromLineRef(line,
+            kATSUDirectDataLayoutRecordATSLayoutRecordVersion1,
+            0,
+            byref(records),
+            byref(n_records))
+        _oscheck(r)
+
+        records = cast(records, 
+                       POINTER(ATSLayoutRecord * n_records.value)).contents
+        self._glyph_advance = fix2float(records[-1].realPos)
+
+        callback_status.contents = kATSULayoutOperationCallbackStatusContinue
+        return 0
 
     def render(self, text):
         # Convert text to UCS2
         text_len = len(text)
-        text = str_ucs2(text)
+        text_ucs2 = str_ucs2(text)
+
+        # Create layout override handler to extract device advance value.
+        override_spec = ATSULayoutOperationOverrideSpecifier()
+        override_spec.operationSelector = \
+            kATSULayoutOperationPostLayoutAdjustment
+        override_spec.overrideUPP = \
+            ATSUDirectLayoutOperationOverrideUPP(self._layout_callback)
 
         # Create ATSU text layout for this text and font
         layout = c_void_p()
         carbon.ATSUCreateTextLayout(byref(layout))
         set_layout_attributes(layout, {
-            kATSUCGContextTag: self._bitmap_context})
+            kATSUCGContextTag: self._bitmap_context,
+            kATSULayoutOperationOverrideTag: override_spec})
         carbon.ATSUSetTextPointerLocation(layout,
-            text,
+            text_ucs2,
             kATSUFromTextBeginning,
             kATSUToTextEnd,
             text_len)
-        carbon.ATSUSetRunStyle(layout, self.font.atsu_style,
+        carbon.ATSUSetRunStyle(layout, self.font.atsu_style, 
             kATSUFromTextBeginning, kATSUToTextEnd)
 
         # Turning on transient font matching screws up font layout
         # predictability when strange fonts are installed
-        carbon.ATSUSetTransientFontMatching(layout, False)
+        # <ah> Don't believe this.  Can't get foreign/special characters
+        #      without transient on.
+        carbon.ATSUSetTransientFontMatching(layout, True)
 
         # Get bitmap dimensions required
         rect = Rect()
-        carbon.ATSUMeasureTextImage(layout,
+        carbon.ATSUMeasureTextImage(layout, 
             kATSUFromTextBeginning,
             kATSUToTextEnd,
             0, 0,
@@ -218,43 +277,43 @@ class CarbonGlyphRenderer(base.GlyphRenderer):
         image_height = rect.bottom - rect.top + 2
         baseline = rect.bottom + 1
         lsb = rect.left
-
+        
         # Resize Quartz context if necessary
         if (image_width > self._bitmap_rect.size.width or
             image_height > self._bitmap_rect.size.height):
             self._create_bitmap_context(
                 int(max(image_width, self._bitmap_rect.size.width)),
                 int(max(image_height, self._bitmap_rect.size.height)))
-
+            
             set_layout_attributes(layout, {
                 kATSUCGContextTag: self._bitmap_context})
-
-        # Get typographic box, which gives advance.
-        bounds_actual = c_uint32()
-        bounds = ATSTrapezoid()
-        carbon.ATSUGetGlyphBounds(
-            layout,
-            0, 0,
-            kATSUFromTextBeginning,
-            kATSUToTextEnd,
-            kATSUseDeviceOrigins,
-            1,
-            byref(bounds),
-            byref(bounds_actual))
-        advance = fix2float(bounds.lowerRight.x) - fix2float(bounds.lowerLeft.x)
 
         # Draw to the bitmap
         carbon.CGContextClearRect(self._bitmap_context, self._bitmap_rect)
         carbon.ATSUDrawText(layout,
             0,
             kATSUToTextEnd,
-            fixed(-lsb + 1), fixed(baseline))
+            fixed(-lsb + 1), fixed(baseline)) 
+
+        advance = self._glyph_advance
+
+        # Round advance to nearest int.  It actually looks good with sub-pixel
+        # advance as well -- Helvetica at 12pt is more tightly spaced, but
+        # Times New Roman at 12pt is too light.  With integer positioning
+        # overall look seems darker and perhaps more uniform.  It's also more
+        # similar (programmatically) to Win32 and FreeType.  Still, worth
+        # messing around with (comment out next line) if you're interested.
+        advance = int(round(advance))
+
+        # Fix advance for zero-width space
+        if text == u'\u200b':
+            advance = 0
 
         # A negative pitch is required, but it is much faster to load the
         # glyph upside-down and flip the tex_coords.  Note region used
         # to start at top of glyph image.
         pitch = int(4 * self._bitmap_rect.size.width)
-        image = pyglet.image.ImageData(image_width,
+        image = pyglet.image.ImageData(image_width, 
             self._bitmap_rect.size.height, 'RGBA', self._bitmap, pitch)
         skip_rows = int(self._bitmap_rect.size.height - image_height)
         image = image.get_region(0, skip_rows, image.width, image_height)
@@ -262,7 +321,7 @@ class CarbonGlyphRenderer(base.GlyphRenderer):
         glyph.set_bearings(baseline, lsb - 1, int(advance))
         t = list(glyph.tex_coords)
         glyph.tex_coords = t[9:12] + t[6:9] + t[3:6] + t[:3]
-
+        
         return glyph
 
     def _create_bitmap_context(self, width, height):
@@ -273,8 +332,8 @@ class CarbonGlyphRenderer(base.GlyphRenderer):
         pitch = width * components
         self._bitmap = (c_ubyte * (pitch * height))()
         color_space = carbon.CGColorSpaceCreateDeviceRGB()
-        context = carbon.CGBitmapContextCreate(self._bitmap,
-            width, height, 8, pitch,
+        context = carbon.CGBitmapContextCreate(self._bitmap, 
+            width, height, 8, pitch, 
             color_space, kCGImageAlphaPremultipliedLast)
         carbon.CGColorSpaceRelease(color_space)
 
@@ -283,13 +342,13 @@ class CarbonGlyphRenderer(base.GlyphRenderer):
         carbon.CGContextSetShouldSmoothFonts(context, False)
         carbon.CGContextSetShouldAntialias(context, True)
 
-        self._bitmap_context = context
+        self._bitmap_context = context 
         self._bitmap_rect = CGRect()
         self._bitmap_rect.origin.x = 0
         self._bitmap_rect.origin.y = 0
         self._bitmap_rect.size.width = width
         self._bitmap_rect.size.height = height
-
+        
 
 class CarbonFont(base.Font):
     glyph_renderer_class = CarbonGlyphRenderer
@@ -300,11 +359,15 @@ class CarbonFont(base.Font):
         if not name:
             name = 'Helvetica'
 
-        if dpi is not None:
-            # If application is not DPI-aware, DPI is fixed at 72.  Scale
-            # font size to emulate other DPI if necessary.  This will need
-            # to be fixed if issue #87 is implemented.
-            size = size * dpi / 72.
+        if dpi is None:
+            dpi = 96 # pyglet 1.1; in pyglet 1.0 this was 72.
+
+        # If application is not DPI-aware, DPI is fixed at 72.  Scale
+        # font size to emulate other DPI.  This will need to be fixed if issue
+        # #87 is implemented.
+        size = size * dpi / 72.
+
+        name = name.encode('ascii', 'ignore')
 
         font_id = ATSUFontID()
         carbon.ATSUFindFontFromName(
@@ -330,6 +393,7 @@ class CarbonFont(base.Font):
     @classmethod
     def have_font(cls, name):
         font_id = ATSUFontID()
+        name = name.encode('ascii', 'ignore')
         r = carbon.ATSUFindFontFromName(
             name,
             len(name),
@@ -337,7 +401,7 @@ class CarbonFont(base.Font):
             kFontNoPlatformCode,
             kFontNoScriptCode,
             kFontNoLanguageCode,
-            byref(font_id))
+            byref(font_id)) 
         return r != kATSUInvalidFontErr
 
     def calculate_metrics(self):
@@ -351,14 +415,14 @@ class CarbonFont(base.Font):
         carbon.ATSUCreateTextLayout(byref(layout))
         carbon.ATSUSetTextPointerLocation(layout, text,
             kATSUFromTextBeginning, kATSUToTextEnd, 1)
-        carbon.ATSUSetRunStyle(layout, self.atsu_style,
+        carbon.ATSUSetRunStyle(layout, self.atsu_style, 
             kATSUFromTextBeginning, kATSUToTextEnd)
 
         # determine the metrics for this font only
         carbon.ATSUSetTransientFontMatching(layout, False)
 
         value = ATSUTextMeasurement()
-        carbon.ATSUGetLineControl(layout, 0, kATSULineAscentTag,
+        carbon.ATSUGetLineControl(layout, 0, kATSULineAscentTag, 
             sizeof(value), byref(value), None)
         self.ascent = int(math.ceil(fix2float(value)))
         carbon.ATSUGetLineControl(layout, 0, kATSULineDescentTag,

@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -89,7 +89,7 @@ class PackedImageData(AbstractImage):
 
         self._current_texture = texture
         return texture
-
+    
     texture = property(_get_texture)
 
 def decode_dxt1_rgb(data, width, height):
@@ -147,7 +147,7 @@ def decode_dxt1_rgb(data, width, height):
         advance_row = (image_offset + 4) % width == 0
         image_offset += width * 3 * advance_row + 4
 
-    return PackedImageData(width, height,
+    return PackedImageData(width, height, 
         GL_RGB, GL_UNSIGNED_SHORT_5_6_5, out)
 
 def decode_dxt1_rgba(data, width, height):
@@ -223,7 +223,7 @@ def decode_dxt3(data, width, height):
     image_offset = 0
     col = 0
     for (a0, a1, a2, a3, a4, a5, a6, a7,
-         c0_lo, c0_hi, c1_lo, c1_hi,
+         c0_lo, c0_hi, c1_lo, c1_hi, 
          b0, b1, b2, b3) in split_16byte.findall(data):
         color0 = ord(c0_lo) | ord(c0_hi) << 8
         color1 = ord(c1_lo) | ord(c1_hi) << 8
@@ -290,8 +290,8 @@ def decode_dxt5(data, width, height):
     # Read 16 bytes at a time
     image_offset = 0
     col = 0
-    for (alpha0, alpha1, ab0, ab1, ab2, ab3, ab4, ab5,
-         c0_lo, c0_hi, c1_lo, c1_hi,
+    for (alpha0, alpha1, ab0, ab1, ab2, ab3, ab4, ab5, 
+         c0_lo, c0_hi, c1_lo, c1_hi, 
          b0, b1, b2, b3) in split_16byte.findall(data):
         color0 = ord(c0_lo) | ord(c0_hi) << 8
         color1 = ord(c1_lo) | ord(c1_hi) << 8
@@ -335,7 +335,7 @@ def decode_dxt5(data, width, height):
                         r = (r0 + r1) / 2
                         g = (g0 + g1) / 2
                         b = (b0 + b1) / 2
-
+                
                 if acode == 0:
                     a = alpha0
                 elif acode == 1:

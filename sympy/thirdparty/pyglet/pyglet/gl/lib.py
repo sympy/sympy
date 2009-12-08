@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -36,12 +36,18 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: lib.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
+__version__ = '$Id: lib.py 1978 2008-03-28 15:11:48Z Alex.Holkner $'
 
 import sys
 import ctypes
 
+import pyglet
+
 __all__ = ['link_GL', 'link_GLU', 'link_AGL', 'link_GLX', 'link_WGL']
+
+_debug_gl = pyglet.options['debug_gl']
+_debug_gl_trace = pyglet.options['debug_gl_trace']
+_debug_gl_trace_args = pyglet.options['debug_gl_trace_args']
 
 class MissingFunctionException(Exception):
     def __init__(self, name, requires=None, suggestions=None):
@@ -77,37 +83,46 @@ class GLException(Exception):
     pass
 
 def errcheck(result, func, arguments):
-    from pyglet.gl import get_current_context
-    context = get_current_context()
+    if _debug_gl_trace:
+        try:
+            name = func.__name__
+        except AttributeError:
+            name = repr(func)
+        if _debug_gl_trace_args:
+            trace_args = ', '.join([repr(arg)[:20] for arg in arguments])
+            print '%s(%s)' % (name, trace_args)
+        else:
+            print name
+
+    from pyglet import gl
+    context = gl.current_context
     if not context:
         raise GLException('No GL context; create a Window first')
     if not context._gl_begin:
-        from pyglet.gl import glGetError, gluErrorString
-        error = glGetError()
+        error = gl.glGetError()
         if error:
-            message = ctypes.cast(gluErrorString(error), ctypes.c_char_p).value
-            raise GLException(message)
+            msg = ctypes.cast(gl.gluErrorString(error), ctypes.c_char_p).value
+            raise GLException(msg)
         return result
 
 def errcheck_glbegin(result, func, arguments):
-    from pyglet.gl import get_current_context
-    context = get_current_context()
+    from pyglet import gl
+    context = gl.current_context
     if not context:
         raise GLException('No GL context; create a Window first')
     context._gl_begin = True
     return result
 
 def errcheck_glend(result, func, arguments):
-    from pyglet.gl import get_current_context
-    context = get_current_context()
+    from pyglet import gl
+    context = gl.current_context
     if not context:
         raise GLException('No GL context; create a Window first')
     context._gl_begin = False
     return errcheck(result, func, arguments)
 
 def decorate_function(func, name):
-    from pyglet import options
-    if options['debug_gl']:
+    if _debug_gl:
         if name == 'glBegin':
             func.errcheck = errcheck_glbegin
         elif name == 'glEnd':

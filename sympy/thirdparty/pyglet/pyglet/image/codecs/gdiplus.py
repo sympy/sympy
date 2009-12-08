@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -49,7 +49,6 @@ from pyglet.window.win32.types import *
 ole32 = windll.ole32
 kernel32 = windll.kernel32
 gdiplus = windll.gdiplus
-mapi32 = windll.mapi32
 
 LPSTREAM = c_void_p
 REAL = c_float
@@ -109,12 +108,27 @@ class Rect(Structure):
 kernel32.GlobalAlloc.restype = HGLOBAL
 kernel32.GlobalLock.restype = c_void_p
 
+PropertyTagFrameDelay = 0x5100
+
+class PropertyItem(Structure):
+    _fields_ = [
+        ('id', c_uint),
+        ('length', c_ulong),
+        ('type', c_short),
+        ('value', c_void_p)
+    ]
+
 class GDIPlusDecoder(ImageDecoder):
     def get_file_extensions(self):
-        return ['.bmp', '.gif', '.jpg', '.jpeg', '.exif', '.png', '.tif',
+        return ['.bmp', '.gif', '.jpg', '.jpeg', '.exif', '.png', '.tif', 
                 '.tiff']
 
-    def decode(self, file, filename):
+    def get_animation_file_extensions(self):
+        # TIFF also supported as a multi-page image; but that's not really an
+        # animation, is it?
+        return ['.gif']
+
+    def _load_bitmap(self, file, filename):
         data = file.read()
 
         # Create a HGLOBAL with image data
@@ -135,6 +149,9 @@ class GDIPlusDecoder(ImageDecoder):
             raise ImageDecodeException(
                 'GDI+ cannot load %r' % (filename or file))
 
+        return bitmap
+
+    def _get_image(self, bitmap):
         # Get size of image (Bitmap subclasses Image)
         width = REAL()
         height = REAL()
@@ -169,21 +186,73 @@ class GDIPlusDecoder(ImageDecoder):
         rect.Width = width
         rect.Height = height
         bitmap_data = BitmapData()
-        gdiplus.GdipBitmapLockBits(bitmap,
+        gdiplus.GdipBitmapLockBits(bitmap, 
             byref(rect), ImageLockModeRead, pf, byref(bitmap_data))
-
+        
         # Create buffer for RawImage
         buffer = create_string_buffer(bitmap_data.Stride * height)
         memmove(buffer, bitmap_data.Scan0, len(buffer))
-
+        
         # Unlock data
         gdiplus.GdipBitmapUnlockBits(bitmap, byref(bitmap_data))
 
+        return ImageData(width, height, format, buffer, -bitmap_data.Stride)
+
+    def _delete_bitmap(self, bitmap):
         # Release image and stream
         gdiplus.GdipDisposeImage(bitmap)
         # TODO: How to call IUnknown::Release on stream?
 
-        return ImageData(width, height, format, buffer, -bitmap_data.Stride)
+    def decode(self, file, filename):
+        bitmap = self._load_bitmap(file, filename)
+        image = self._get_image(bitmap)
+        self._delete_bitmap(bitmap)
+        return image
+
+    def decode_animation(self, file, filename):
+        bitmap = self._load_bitmap(file, filename)
+        
+        dimension_count = c_uint()
+        gdiplus.GdipImageGetFrameDimensionsCount(bitmap, byref(dimension_count))
+        if dimension_count.value < 1:
+            self._delete_bitmap(bitmap)
+            raise ImageDecodeException('Image has no frame dimensions')
+        
+        # XXX Make sure this dimension is time?
+        dimensions = (c_void_p * dimension_count.value)()
+        gdiplus.GdipImageGetFrameDimensionsList(bitmap, dimensions,
+                                                dimension_count.value)
+
+        frame_count = c_uint()
+        gdiplus.GdipImageGetFrameCount(bitmap, dimensions, byref(frame_count))
+
+        prop_id = PropertyTagFrameDelay
+        prop_size = c_uint()
+        gdiplus.GdipGetPropertyItemSize(bitmap, prop_id, byref(prop_size))
+
+        prop_buffer = c_buffer(prop_size.value)
+        prop_item = cast(prop_buffer, POINTER(PropertyItem)).contents 
+        gdiplus.GdipGetPropertyItem(bitmap, prop_id, prop_size.value,
+            prop_buffer)
+
+        # XXX Sure it's long?
+        n_delays = prop_item.length / sizeof(c_long)
+        delays = cast(prop_item.value, POINTER(c_long * n_delays)).contents
+
+        frames = []
+        
+        for i in range(frame_count.value):
+            gdiplus.GdipImageSelectActiveFrame(bitmap, dimensions, i)
+            image = self._get_image(bitmap)
+
+            delay = delays[i]
+            if delay <= 1:
+                delay = 10
+            frames.append(AnimationFrame(image, delay/100.))
+
+        self._delete_bitmap(bitmap)
+
+        return Animation(frames)
 
 def get_decoders():
     return [GDIPlusDecoder()]

@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -31,13 +31,13 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 # ----------------------------------------------------------------------------
-# $Id: ttf.py 1484 2007-12-06 22:51:23Z Alex.Holkner $
+# $Id: ttf.py 1579 2008-01-15 14:47:19Z Alex.Holkner $
 
 """
 Implementation of the Truetype file format.
 
 Typical applications will not need to use this module directly; look at
-`pyglyph.font` instead.
+`pyglyph.font` instead.  
 
 References:
  * http://developer.apple.com/fonts/TTRefMan/RM06
@@ -45,7 +45,7 @@ References:
 """
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: ttf.py 1484 2007-12-06 22:51:23Z Alex.Holkner $'
+__version__ = '$Id: ttf.py 1579 2008-01-15 14:47:19Z Alex.Holkner $'  
 
 import codecs
 import os
@@ -63,7 +63,7 @@ class TruetypeInfo:
     Currently only the name and metric tables are read; in particular
     there is no glyph or hinting information.
     """
-
+    
     _name_id_lookup = {
         'copyright': 0,
         'family': 1,
@@ -129,7 +129,7 @@ class TruetypeInfo:
 
         offsets = _read_offset_table(self._data, 0)
         self._tables = {}
-        for table in _read_table_directory_entry.array(self._data,
+        for table in _read_table_directory_entry.array(self._data, 
             offsets.size, offsets.num_tables):
             self._tables[table.tag] = table
 
@@ -169,7 +169,7 @@ class TruetypeInfo:
         The key of each item is a tuple of ``platform_id``, ``name_id``,
         where each ID is the number as described in the Truetype format.
 
-        The value of each item is a tuple of
+        The value of each item is a tuple of 
         ``encoding_id``, ``language_id``, ``value``, where ``value`` is
         an encoded string.
         """
@@ -199,7 +199,7 @@ class TruetypeInfo:
         :Parameters:
             `name`
                 Either an integer, representing the name_id desired (see
-                font format); or a string describing it, see below for
+                font format); or a string describing it, see below for 
                 valid names.
             `platform`
                 Platform for the requested name.  Can be the integer ID,
@@ -244,7 +244,7 @@ class TruetypeInfo:
             'microsoft'
             'custom'
         """
-
+        
         names = self.get_names()
         if type(name) == str:
             name = self._name_id_lookup[name]
@@ -268,17 +268,17 @@ class TruetypeInfo:
             if not languages:
                 # Default to english for macintosh
                 languages = (0,)
-
+            
         for record in names[(platform, name)]:
             if record[1] in languages and record[0] in encodings:
                 decoder = codecs.getdecoder(encodings[record[0]])
                 return decoder(record[2])[0]
-        return None
+        return None                
 
     def get_horizontal_metrics(self):
         """Return all horizontal metric entries in table format."""
         if not self._horizontal_metrics:
-            ar = _read_long_hor_metric.array(self._data,
+            ar = _read_long_hor_metric.array(self._data, 
                  self._tables['hmtx'].offset,
                  self.horizontal_header.number_of_h_metrics)
             self._horizontal_metrics = ar
@@ -353,10 +353,10 @@ class TruetypeInfo:
             offset += header.length
         self._glyph_kernings = kernings
         return kernings
-
+                
     def _add_kernings_format0(self, kernings, offset):
         header = _read_kern_subtable_format0(self._data, offset)
-        kerning_pairs = _read_kern_subtable_format0Pair.array(self._data,
+        kerning_pairs = _read_kern_subtable_format0Pair.array(self._data, 
             offset + header.size, header.n_pairs)
         for pair in kerning_pairs:
             if (pair.left, pair.right) in kernings:
@@ -385,7 +385,7 @@ class TruetypeInfo:
         """Return the character map.
 
         Returns a dictionary where the key is a unit-length unicode
-        string and the value is a glyph index.  Currently only
+        string and the value is a glyph index.  Currently only 
         format 4 character maps are read.
         """
         if self._character_map:
@@ -408,19 +408,19 @@ class TruetypeInfo:
     def _get_character_map_format4(self, offset):
         # This is absolutely, without question, the *worst* file
         # format ever.  Whoever the fuckwit is that thought this up is
-        # a fuckwit.
+        # a fuckwit. 
         header = _read_cmap_format4Header(self._data, offset)
         seg_count = header.seg_count_x2 / 2
         array_size = struct.calcsize('>%dH' % seg_count)
-        end_count = self._read_array('>%dH' % seg_count,
+        end_count = self._read_array('>%dH' % seg_count, 
             offset + header.size)
-        start_count = self._read_array('>%dH' % seg_count,
+        start_count = self._read_array('>%dH' % seg_count, 
             offset + header.size + array_size + 2)
         id_delta = self._read_array('>%dh' % seg_count,
             offset + header.size + array_size + 2 + array_size)
         id_range_offset_address = \
             offset + header.size + array_size + 2 + array_size + array_size
-        id_range_offset = self._read_array('>%dH' % seg_count,
+        id_range_offset = self._read_array('>%dH' % seg_count, 
             id_range_offset_address)
         character_map = {}
         for i in range(0, seg_count):
@@ -451,7 +451,7 @@ class TruetypeInfo:
         until this method is called.  After closing cannot rely on the
         ``get_*`` methods.
         """
-
+        
         self._data.close()
         os.close(self._fileno)
 

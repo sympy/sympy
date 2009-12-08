@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -35,7 +35,7 @@
 '''Additional hand-coded GL extensions.
 
 These are hand-wrapped extension tokens and functions that are in
-the OpenGL Extension Registry but have not yet been added to either
+the OpenGL Extension Registry but have not yet been added to either 
 the registry's glext.h or nVidia's glext.h.  Remove wraps from here
 when the headers are updated (and glext_arb.py or glext_nv.py are
 regenerated).
@@ -48,7 +48,7 @@ Unnumbered extensions in the registry are not included.
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: glext_missing.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
+__version__ = '$Id: glext_missing.py 1579 2008-01-15 14:47:19Z Alex.Holkner $'
 
 from ctypes import *
 from pyglet.gl.lib import link_GL as _link_function

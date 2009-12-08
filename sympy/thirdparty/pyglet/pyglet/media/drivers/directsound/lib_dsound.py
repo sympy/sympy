@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -65,7 +65,7 @@ class WAVEFORMATEX(ctypes.Structure):
         ('nAvgBytesPerSec', DWORD),
         ('nBlockAlign', WORD),
         ('wBitsPerSample', WORD),
-        ('cbSize', WORD),
+        ('cbSize', WORD), 
     ]
 LPWAVEFORMATEX = ctypes.POINTER(WAVEFORMATEX)
 WAVE_FORMAT_PCM = 1
@@ -74,7 +74,7 @@ class DSCAPS(ctypes.Structure):
     _fields_ = [
         ('dwSize', DWORD),
         ('dwFlags', DWORD),
-        ('dwMinSecondarySampleRate', DWORD),
+        ('dwMinSecondarySampleRate', DWORD), 
         ('dwMaxSecondarySampleRate', DWORD),
         ('dwPrimaryBuffers', DWORD),
         ('dwMaxHwMixingAllBuffers', DWORD),
@@ -166,9 +166,9 @@ class IDirectSoundBuffer(com.IUnknown):
         ('Initialize',
          com.STDMETHOD(ctypes.c_void_p, LPDSBUFFERDESC)),
         ('Lock',
-         com.STDMETHOD(DWORD, DWORD,
-                       ctypes.POINTER(ctypes.c_void_p), LPDWORD,
-                       ctypes.POINTER(ctypes.c_void_p), LPDWORD,
+         com.STDMETHOD(DWORD, DWORD, 
+                       ctypes.POINTER(ctypes.c_void_p), LPDWORD, 
+                       ctypes.POINTER(ctypes.c_void_p), LPDWORD, 
                        DWORD)),
         ('Play',
          com.STDMETHOD(DWORD, DWORD, DWORD)),
@@ -216,7 +216,7 @@ class IDirectSound3DListener(com.IUnknown):
         ('SetDopplerFactor',
          com.STDMETHOD(D3DVALUE, DWORD)),
         ('SetOrientation',
-         com.STDMETHOD(D3DVALUE, D3DVALUE, D3DVALUE,
+         com.STDMETHOD(D3DVALUE, D3DVALUE, D3DVALUE, 
                        D3DVALUE, D3DVALUE, D3DVALUE, DWORD)),
         ('SetPosition',
          com.STDMETHOD(D3DVALUE, D3DVALUE, D3DVALUE, DWORD)),
@@ -273,24 +273,24 @@ class IDirectSound3DBuffer(com.IUnknown):
 
 class IDirectSound(com.IUnknown):
     _methods_ = [
-        ('CreateSoundBuffer',
-         com.STDMETHOD(LPDSBUFFERDESC,
-                       ctypes.POINTER(IDirectSoundBuffer),
+        ('CreateSoundBuffer', 
+         com.STDMETHOD(LPDSBUFFERDESC, 
+                       ctypes.POINTER(IDirectSoundBuffer), 
                        LPUNKNOWN)),
-        ('GetCaps',
+        ('GetCaps', 
          com.STDMETHOD(LPDSCAPS)),
-        ('DuplicateSoundBuffer',
-         com.STDMETHOD(IDirectSoundBuffer,
+        ('DuplicateSoundBuffer', 
+         com.STDMETHOD(IDirectSoundBuffer, 
                        ctypes.POINTER(IDirectSoundBuffer))),
-        ('SetCooperativeLevel',
+        ('SetCooperativeLevel', 
          com.STDMETHOD(HWND, DWORD)),
-        ('Compact',
+        ('Compact', 
          com.STDMETHOD()),
-        ('GetSpeakerConfig',
+        ('GetSpeakerConfig', 
          com.STDMETHOD(LPDWORD)),
-        ('SetSpeakerConfig',
+        ('SetSpeakerConfig', 
          com.STDMETHOD(DWORD)),
-        ('Initialize',
+        ('Initialize', 
          com.STDMETHOD(com.LPGUID)),
     ]
     _type_ = com.COMInterface

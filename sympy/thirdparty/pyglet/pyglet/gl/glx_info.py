@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -52,7 +52,7 @@ Or, if using more than one display::
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: glx_info.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
+__version__ = '$Id: glx_info.py 1579 2008-01-15 14:47:19Z Alex.Holkner $'
 
 from ctypes import *
 
@@ -83,13 +83,13 @@ class GLXInfo(object):
 
         server = [int(i) for i in server_version.split('.')]
         client = [int(i) for i in client_version.split('.')]
-        return (tuple(server) >= (major, minor) and
+        return (tuple(server) >= (major, minor) and 
                 tuple(client) >= (major, minor))
 
     def get_server_vendor(self):
         self.check_display()
         return glXQueryServerString(self.display, 0, GLX_VENDOR)
-
+    
     def get_server_version(self):
         # glXQueryServerString was introduced in GLX 1.1, so we need to use the
         # 1.0 function here which queries the server implementation for its

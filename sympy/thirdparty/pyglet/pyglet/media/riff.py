@@ -1,19 +1,19 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2006-2007 Alex Holkner
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-#
+# 
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
+# modification, are permitted provided that the following conditions 
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
+#  * Redistributions in binary form must reproduce the above copyright 
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
-#  * Neither the name of the pyglet nor the names of its
+#  * Neither the name of pyglet nor the names of its
 #    contributors may be used to endorse or promote products
 #    derived from this software without specific prior written
 #    permission.
@@ -36,7 +36,7 @@
 '''
 
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: riff.py 1322 2007-10-23 12:58:03Z Alex.Holkner $'
+__version__ = '$Id: riff.py 2005 2008-04-13 01:03:03Z Alex.Holkner $'
 
 # RIFF reference:
 # http://www.saettler.com/RIFFMCI/riffmci.html
@@ -122,7 +122,7 @@ class RIFFForm(object):
 class RIFFType(RIFFChunk):
     def __init__(self, *args, **kwargs):
         super(RIFFType, self).__init__(*args, **kwargs)
-
+        
         self.file.seek(self.offset)
         form = self.file.read(4)
         if form != 'WAVE':
@@ -149,7 +149,7 @@ class RIFFFile(RIFFForm):
 class WaveFormatChunk(RIFFChunk):
     def __init__(self, *args, **kwargs):
         super(WaveFormatChunk, self).__init__(*args, **kwargs)
-
+        
         fmt = '<HHLLHH'
         if struct.calcsize(fmt) != self.length:
             raise RIFFFormatException('Size of format chunk is incorrect.')
@@ -174,7 +174,7 @@ class WaveForm(RIFFForm):
         for chunk in self.get_chunks():
             if isinstance(chunk, WaveFormatChunk):
                 return chunk
-
+        
     def get_data_chunk(self):
         for chunk in self.get_chunks():
             if isinstance(chunk, WaveDataChunk):
@@ -195,10 +195,18 @@ class WaveSource(StreamingSource):
             data_chunk = wave_form.get_data_chunk()
 
         if not wave_form or not format or not data_chunk:
-            raise WAVEFormatException('Not a WAVE file')
+            if not filename or filename.lower().endswith('.wav'):
+                raise WAVEFormatException('Not a WAVE file')
+            else:
+                raise WAVEFormatException(
+                    'AVbin is required to decode compressed media')
 
         if format.wFormatTag != WAVE_FORMAT_PCM:
             raise WAVEFormatException('Unsupported WAVE format category')
+
+        if format.wBitsPerSample not in (8, 16):
+            raise WAVEFormatException('Unsupported sample bit size: %d' %
+                format.wBitsPerSample)
 
         self.audio_format = AudioFormat(
             channels=format.wChannels,
