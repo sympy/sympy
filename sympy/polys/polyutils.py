@@ -173,23 +173,32 @@ def _dict_from_basic_if_gens(ex, gens, **args):
 
 def _dict_from_basic_no_gens(ex, **args):
     """Figure out generators and convert `ex` to a multinomial. """
-    greedy = args.get('greedy', True)
+    domain = args.get('domain', None)
+
+    if domain is not None:
+        def _is_coeff(factor):
+            return factor in domain
+    else:
+        if args.get('greedy', True):
+            def _is_coeff(factor):
+                return False
+        else:
+            def _is_coeff(factor):
+                return factor.is_number
+
     gens, terms = set([]), []
 
     for term in ex.as_Add():
         coeff, elements = [], {}
 
         for factor in term.as_Mul():
-            if factor.is_Number:
+            if factor.is_Number or _is_coeff(factor):
                 coeff.append(factor)
             else:
-                if not greedy and factor.is_number:
-                    coeff.append(factor)
-                else:
-                    base, exp = _analyze_power(*factor.as_Pow())
+                base, exp = _analyze_power(*factor.as_Pow())
 
-                    elements[base] = exp
-                    gens.add(base)
+                elements[base] = exp
+                gens.add(base)
 
         terms.append((coeff, elements))
 

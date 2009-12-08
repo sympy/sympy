@@ -17,6 +17,8 @@ from sympy.polys.polyerrors import (
     PolynomialError,
 )
 
+from sympy.polys.algebratools import ZZ, QQ, EX
+
 x,y,z,p,q,r,s,t,u,v,w = symbols('x,y,z,p,q,r,s,t,u,v,w')
 
 def test__sort_gens():
@@ -145,4 +147,7 @@ def test__dict_from_basic_no_gens():
 
     assert _dict_from_basic_no_gens(sqrt(2)) == ({(1,): Integer(1)}, (sqrt(2),))
     raises(GeneratorsNeeded, "_dict_from_basic_no_gens(sqrt(2), greedy=False)")
+
+    assert _dict_from_basic_no_gens(x*y, domain=ZZ[x]) == ({(1,): x}, (y,))
+    assert _dict_from_basic_no_gens(x*y, domain=ZZ[y]) == ({(1,): y}, (x,))
 

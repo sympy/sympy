@@ -107,6 +107,15 @@ class Algebra(object):
         else:
             return True
 
+    def __contains__(self, a):
+        """Check if `a` belongs to this domain. """
+        try:
+            self.convert(a)
+        except CoercionFailed:
+            return False
+
+        return True
+
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         raise NotImplementedError
