@@ -53,10 +53,10 @@ def _sort_gens(gens, **args):
 
     try:
         gens = sorted(gens, compare)
-    except TypeError: # pragma: no cover
-        gens = list(gens)
+    except TypeError:
+        pass
 
-    return gens
+    return tuple(gens)
 
 def _unify_gens(f_gens, g_gens):
     """Unify generators in a reasonably intelligent way. """
@@ -64,7 +64,7 @@ def _unify_gens(f_gens, g_gens):
     g_gens = list(g_gens)
 
     if f_gens == g_gens:
-        return f_gens
+        return tuple(f_gens)
 
     gens, common, k = [], [], 0
 
@@ -92,19 +92,7 @@ def _unify_gens(f_gens, g_gens):
     gens.extend(f_gens)
     gens.extend(g_gens)
 
-    return gens
-
-def _analyze_extension(args):
-    """Convert `extension` to an internal representation. """
-    extension = args.get('extension')
-
-    if extension is not None:
-        if not hasattr(extension, '__iter__'):
-            return set([extension])
-        else:
-            return set(extension)
-    else:
-        return set([])
+    return tuple(gens)
 
 def _analyze_power(base, exp):
     """Extract non-integer part of `exp` to the `base`. """

@@ -349,10 +349,16 @@ def dup_from_dict(f, K):
     if not f:
         return []
 
-    n, h = max([ k for (k,) in f.iterkeys() ]), []
+    n, h = max(f.iterkeys()), []
 
-    for k in xrange(n, -1, -1):
-        h.append(f.get((k,), K.zero))
+    if type(n) is int:
+        for k in xrange(n, -1, -1):
+            h.append(f.get(k, K.zero))
+    else:
+        (n,) = n
+
+        for k in xrange(n, -1, -1):
+            h.append(f.get((k,), K.zero))
 
     return dup_strip(h)
 

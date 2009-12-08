@@ -109,7 +109,9 @@ from sympy.polys.groebnertools import (
 )
 
 from sympy.polys.polyerrors import (
-    UnificationFailed, DomainError,
+    UnificationFailed,
+    PolynomialError,
+    DomainError,
 )
 
 def init_normal_GFP(rep, mod, dom):
@@ -131,9 +133,6 @@ class GFP(object):
                 self.rep = gf_normal([rep], mod, dom)
             else:
                 self.rep = gf_reduce(rep, mod)
-
-        if not isinstance(mod, int) or mod < 2:
-            raise ValueError("modulus must be an integer >= 2, got %s" % mod)
 
         self.mod = mod
         self.lev = 0
@@ -1013,7 +1012,7 @@ class DUP(object):
         return bool(f.rep)
 
 def init_normal_DMP(rep, lev, dom):
-    return DUP(dmp_normal(rep, lev, dom), dom, lev)
+    return DMP(dmp_normal(rep, lev, dom), dom, lev)
 
 class DMP(object):
     """Dense Multivariate Polynomials over `K`. """

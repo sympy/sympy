@@ -18,7 +18,6 @@ from sympy.polys.polyutils import (
     _sort_gens,
     _unify_gens,
     _dict_reorder,
-    _analyze_extension,
     _dict_from_basic_no_gens,
 )
 
@@ -47,191 +46,183 @@ _re_dom_frac = re.compile("^(Z|ZZ|Q|QQ)\(([^\]]+)\)$")
 
 from sympy.polys.algebratools import Algebra, ZZ, QQ, EX
 
-def _find_out_domain(rep, **args):
-    """Finds the minimal domain that the coefficients of `rep` fit in. """
+def _construct_domain(rep, **args):
+    """Constructs the minimal domain that the coefficients of `rep` fit in. """
     field = args.get('field', False)
-    has_rational = False
 
-    for coeff in rep.itervalues():
-        coeff = sympify(coeff)
+    def _construct_simple(rep):
+        result, rational = {}, False
 
-        if coeff.is_Rational:
-            if not coeff.is_Integer:
-                has_rational = True
-        elif coeff.is_Real:
-            raise NotImplementedError('inexact coefficients')
-        else:
-            numers, denoms = [], []
-
-            for coeff in rep.itervalues():
-                num, den = coeff.as_numer_denom()
-
-                try:
-                    numers.append(_dict_from_basic_no_gens(num))
-                except GeneratorsNeeded:
-                    numers.append((num, None))
-
-                try:
-                    denoms.append(_dict_from_basic_no_gens(den))
-                except GeneratorsNeeded:
-                    denoms.append((den, None))
-
-            gens = set([])
-
-            for _, n_gens in numers:
-                if n_gens is not None:
-                    gens.update(n_gens)
-
-            has_fractions = False
-
-            for _, d_gens in denoms:
-                if d_gens is not None:
-                    gens.update(d_gens)
-                    has_fractions = True
-
-            gens = _sort_gens(gens, **args)
-
-            if any(gen.is_Pow for gen in gens) or I in gens:
-                # XXX: this should really go into algebraic function fields
-                K, coeffs = EX, []
-
-                for coeff in rep.itervalues():
-                    coeffs.append(K.from_sympy(coeff))
-
-                return EX, coeffs
-
-            k, coeffs = len(gens), []
-
-            if not field and not has_fractions:
-                if all(den is S.One for den, _ in denoms):
-                    K = ZZ.poly_ring(*gens)
-
-                    for num, n_gens in numers:
-                        if n_gens is not None:
-                            n_monoms, n_coeffs = _dict_reorder(num, n_gens, gens)
-                        else:
-                            n_monoms, n_coeffs = [(0,)*k], [num]
-
-                        n_coeffs = [ K.dom.from_sympy(c) for c in n_coeffs ]
-                        coeffs.append(K(dict(zip(n_monoms, n_coeffs))))
-                else:
-                    K = QQ.poly_ring(*gens)
-
-                    for (num, n_gens), (den, _) in zip(numers, denoms):
-                        if n_gens is not None:
-                            n_monoms, n_coeffs = _dict_reorder(num, n_gens, gens)
-                            n_coeffs = [ coeff/den for coeff in n_coeffs ]
-                        else:
-                            n_monoms, n_coeffs = [(0,)*k], [num/den]
-
-                        n_coeffs = [ K.dom.from_sympy(c) for c in n_coeffs ]
-                        coeffs.append(K(dict(zip(n_monoms, n_coeffs))))
-
+        for coeff in rep.itervalues():
+            if coeff.is_Rational:
+                if not coeff.is_Integer:
+                    rational = True
+            elif coeff.is_Real:
+                raise NotImplementedError('inexact coefficients')
             else:
-                K = ZZ.frac_field(*gens)
+                return None
 
-                for (num, n_gens), (den, d_gens) in zip(numers, denoms):
-                    if n_gens is not None:
-                        n_monoms, n_coeffs = _dict_reorder(num, n_gens, gens)
+        if field or rational:
+            K = QQ
+        else:
+            K = ZZ
+
+        for monom, coeff in rep.iteritems():
+            result[monom] = K.from_sympy(coeff)
+
+        return K, result
+
+    def _construct_composite(rep):
+        numers, denoms = [], []
+
+        for coeff in rep.itervalues():
+            num, den = coeff.as_numer_denom()
+
+            try:
+                numers.append(_dict_from_basic_no_gens(num))
+            except GeneratorsNeeded:
+                numers.append((num, None))
+
+            try:
+                denoms.append(_dict_from_basic_no_gens(den))
+            except GeneratorsNeeded:
+                denoms.append((den, None))
+
+        gens = set([])
+
+        for _, num_gens in numers:
+            if num_gens is not None:
+                gens.update(num_gens)
+
+        fractions = False
+
+        for _, den_gens in denoms:
+            if den_gens is not None:
+                gens.update(den_gens)
+                fractions = True
+
+        gens = _sort_gens(gens, **args)
+
+        if any(gen.is_Pow and gen.is_number for gen in gens) or I in gens:
+            return None # XXX: implement algebraic number fields
+
+        k, coeffs = len(gens), []
+
+        if not field and not fractions:
+            if all(den is S.One for den, _ in denoms):
+                K = ZZ.poly_ring(*gens)
+
+                for num, num_gens in numers:
+                    if num_gens is not None:
+                        num_monoms, num_coeffs = _dict_reorder(num, num_gens, gens)
                     else:
-                        n_monoms, n_coeffs = [(0,)*k], [num]
+                        num_monoms, num_coeffs = [(0,)*k], [num]
 
-                    if d_gens is not None:
-                        d_monoms, d_coeffs = _dict_reorder(den, d_gens, gens)
+                    num_coeffs = [ K.dom.from_sympy(c) for c in num_coeffs ]
+                    coeffs.append(K(dict(zip(num_monoms, num_coeffs))))
+            else:
+                K = QQ.poly_ring(*gens)
+
+                for (num, num_gens), (den, _) in zip(numers, denoms):
+                    if num_gens is not None:
+                        num_monoms, num_coeffs = _dict_reorder(num, num_gens, gens)
+                        num_coeffs = [ coeff/den for coeff in num_coeffs ]
                     else:
-                        d_monoms, d_coeffs = [(0,)*k], [den]
+                        num_monoms, num_coeffs = [(0,)*k], [num/den]
 
-                    n_coeffs = [ K.dom.from_sympy(c) for c in n_coeffs ]
-                    d_coeffs = [ K.dom.from_sympy(c) for c in d_coeffs ]
+                    num_coeffs = [ K.dom.from_sympy(c) for c in num_coeffs ]
+                    coeffs.append(K(dict(zip(num_monoms, num_coeffs))))
 
-                    num = dict(zip(n_monoms, n_coeffs))
-                    den = dict(zip(d_monoms, d_coeffs))
+        else:
+            K = ZZ.frac_field(*gens)
 
-                    coeffs.append(K((num, den)))
+            for (num, num_gens), (den, den_gens) in zip(numers, denoms):
+                if num_gens is not None:
+                    num_monoms, num_coeffs = _dict_reorder(num, num_gens, gens)
+                else:
+                    num_monoms, num_coeffs = [(0,)*k], [num]
 
-            return K, coeffs
+                if den_gens is not None:
+                    den_monoms, den_coeffs = _dict_reorder(den, den_gens, gens)
+                else:
+                    den_monoms, den_coeffs = [(0,)*k], [den]
 
-    if field or has_rational:
-        K = QQ
+                num_coeffs = [ K.dom.from_sympy(c) for c in num_coeffs ]
+                den_coeffs = [ K.dom.from_sympy(c) for c in den_coeffs ]
+
+                num = dict(zip(num_monoms, num_coeffs))
+                den = dict(zip(den_monoms, den_coeffs))
+
+                coeffs.append(K((num, den)))
+
+        return K, dict(zip(rep.keys(), coeffs))
+
+    def _construct_expression(rep):
+        result, K = {}, EX
+
+        for monom, coeff in rep.iteritems():
+            result[monom] = K.from_sympy(coeff)
+
+        return EX, result
+
+    rep = dict(rep)
+
+    for monom, coeff in rep.items():
+        rep[monom] = sympify(coeff)
+
+    result = _construct_simple(rep)
+
+    if result is not None:
+        return result
     else:
-        K = ZZ
+        result = _construct_composite(rep)
 
-    coeffs = []
+        if result is not None:
+            return result
+        else:
+            return _construct_expression(rep)
 
-    for coeff in rep.itervalues():
-        coeffs.append(K.from_sympy(coeff))
-
-    return K, coeffs
-
-def _init_poly_from_dict(rep, *gens, **args):
-    """Initialize a Poly given a ... Poly instance. """
+def _init_poly_from_dict(dict_rep, *gens, **args):
+    """Initialize a Poly given a dict instance. """
     domain = args.get('domain')
     modulus = args.get('modulus')
+
+    if not gens:
+        raise GeneratorsNeeded("can't initialize from a dictionary without generators")
 
     if modulus is not None:
         if len(gens) != 1:
-            raise GeneratorsNeeded("can't init from %s" % rep)
-
-        if domain is not None:
-            rep, _rep = {}, rep
-
-            for k, v in _rep.iteritems():
-                rep[k] = domain.convert(v)
+            raise PolynomialError("multivariate polynomials over GF(p) are not supported")
         else:
-            domain, coeffs = _find_out_domain(rep, **args)
-            rep = dict(zip(rep.keys(), coeffs))
+            return GFP(dict_rep, modulus, domain)
     else:
-        if not gens:
-            raise GeneratorsNeeded("can't init from %s" % rep)
-
-        rep, _rep = {}, rep
-
         if domain is not None:
-            for k, v in _rep.iteritems():
-                if type(k) is not tuple:
-                    rep[(k,)] = domain.convert(v)
-                else:
-                    rep[k] = domain.convert(v)
+            for k, v in dict_rep.iteritems():
+                dict_rep[k] = domain.convert(v)
         else:
-            domain, coeffs = _find_out_domain(_rep, **args)
+            domain, dict_rep = _construct_domain(dict_rep, **args)
 
-            for k, v in zip(_rep.keys(), coeffs):
-                if type(k) is not tuple:
-                    rep[(k,)] = v
-                else:
-                    rep[k] = v
+        return DMP(dict_rep, domain, len(gens)-1)
 
-    if modulus is not None:
-        rep = GFP(rep, modulus, domain)
-    else:
-        rep = DMP(rep, domain, len(gens)-1)
-
-    return rep
-
-def _init_poly_from_poly(rep, *gens, **args):
-    """Initialize a Poly given a ... Poly instance. """
+def _init_poly_from_poly(poly_rep, *gens, **args):
+    """Initialize a Poly given a Poly instance. """
     domain = args.get('domain')
     modulus = args.get('modulus')
 
-    rep_gens = rep.gens
-
-    if isinstance(rep.rep, DMP):
-        if not gens or rep.gens == gens:
+    if isinstance(poly_rep.rep, DMP):
+        if not gens or poly_rep.gens == gens:
             if domain is not None or modulus is not None:
-                rep = rep.rep
+                rep = poly_rep.rep
             else:
-                return rep
+                return poly_rep
         else:
-            if set(gens) != set(rep.gens):
-                return Poly(rep.as_basic(), *gens, **args)
+            if set(gens) != set(poly_rep.gens):
+                return Poly(poly_rep.as_basic(), *gens, **args)
             else:
-                monoms, coeffs = _dict_reorder(
-                    rep.rep.to_dict(), rep.gens, gens)
+                dict_rep = dict(zip(*_dict_reorder(
+                    poly_rep.rep.to_dict(), poly_rep.gens, gens)))
 
-                lev = len(gens) - 1
-
-                _rep = dict(zip(monoms, coeffs))
-                rep = DMP(_rep, rep.rep.dom, lev)
+                rep = DMP(dict_rep, poly_rep.rep.dom, len(gens)-1)
 
         if domain is not None:
             rep = rep.convert(domain)
@@ -240,59 +231,62 @@ def _init_poly_from_poly(rep, *gens, **args):
             if not rep.lev and rep.dom.is_ZZ:
                 rep = GFP(rep.rep, modulus, rep.dom)
             else:
-                raise PolynomialError("can't make GFP out of %s" % rep)
+                raise PolynomialError("can't make GF(p) polynomial out of %s" % rep)
     else:
-        if not gens or rep.gens == gens:
-            if modulus is not None:
-                rep = GFP(rep.rep, modulus, rep.rep.dom)
+        if not gens or poly_rep.gens == gens:
+            if domain is not None or modulus is not None:
+                if modulus is not None:
+                    rep = GFP(poly_rep.rep.rep, modulus, poly_rep.rep.dom)
+                else:
+                    rep = poly_rep.rep
 
-            if domain is not None:
-                rep = rep.convert(domain)
+                if domain is not None:
+                    rep = rep.convert(domain)
+            else:
+                return poly_rep
         else:
-            raise PolynomialError("GFP multivariate polynomials are not supported")
+            raise PolynomialError("multivariate polynomials over GF(p) are not supported")
 
-    return rep, gens or rep_gens
+    return (rep, gens or poly_rep.gens)
 
-def _init_poly_from_basic(ex, *gens, **args):
+def _init_poly_from_basic(basic_rep, *gens, **args):
     """Initialize a Poly given a Basic expression. """
     if not gens:
         try:
-            rep, gens = dict_from_basic(ex, **args)
+            dict_rep, gens = dict_from_basic(basic_rep, **args)
         except GeneratorsNeeded:
-            return ex
+            return basic_rep
     else:
-        rep = dict_from_basic(ex, gens, **args)
+        dict_rep = dict_from_basic(basic_rep, gens, **args)
+
+    def _dict_set_domain(rep, domain):
+        result = {}
+
+        for k, v in rep.iteritems():
+            result[k] = domain.from_sympy(v)
+
+        return result
 
     domain = args.get('domain')
     modulus = args.get('modulus')
 
     if modulus is not None:
         if len(gens) > 1:
-            raise PolynomialError("GFP multivariate polynomials not supported")
-
-        if domain is None:
-            domain = ZZ
-
-        rep, _rep = {}, rep
-
-        for (k,), v in _rep.iteritems():
-            rep[k] = domain.from_sympy(v)
-
-        rep = GFP(rep, modulus, domain)
+            raise PolynomialError("multivariate polynomials over GF(p) are not supported")
+        else:
+            result = GFP(_dict_set_domain(dict_rep, domain), modulus, domain)
     else:
         if domain is not None:
-            for k, v in rep.iteritems():
-                rep[k] = domain.from_sympy(v)
+            dict_rep = _dict_set_domain(dict_rep, domain)
         else:
-            domain, coeffs = _find_out_domain(rep, **args)
-            rep = dict(zip(rep.keys(), coeffs))
+            domain, dict_rep = _construct_domain(dict_rep, **args)
 
-        rep = DMP(rep, domain, len(gens)-1)
+        result = DMP(dict_rep, domain, len(gens)-1)
 
-    return rep, gens
+    return result, gens
 
 class Poly(Basic):
-    """General class for representing polynomials in SymPy. """
+    """Generic class for representing polynomials in SymPy. """
 
     __slots__ = ['rep', 'gens']
 
@@ -301,21 +295,41 @@ class Poly(Basic):
     def __new__(cls, rep, *gens, **args):
         """Create a new polynomial instance out of something useful. """
         if len(set(gens)) != len(gens):
-            raise PolynomialError("duplicated generators: %s" % gens)
+            raise PolynomialError("duplicated generators: %s" % str(gens))
 
         if isinstance(rep, (DMP, GFP)):
             if rep.lev != len(gens)-1 or args:
-                raise PolynomialError("invalid data for a polynomial")
+                raise PolynomialError("invalid arguments to construct a polynomial")
         else:
             domain = cls._analyze_domain(args)
             modulus = cls._analyze_modulus(args)
+            extension = cls._analyze_extension(args)
 
             args = dict(args)
 
             if domain is not None:
                 args['domain'] = domain
+            elif modulus is not None:
+                args['domain'] = ZZ
+
             if modulus is not None:
                 args['modulus'] = modulus
+            if extension is not None:
+                args['extension'] = extension
+
+            if domain is not None:
+                if domain.is_Composite and set(domain.gens) & set(gens):
+                    raise PolynomialError("ground domain and generators interfere together")
+
+                if modulus is not None and not domain.is_ZZ:
+                    raise PolynomialError("modulus specification requires ZZ ground domain")
+
+            if extension is not None:
+                if domain is not None:
+                    raise PolynomialError("extension is not allowed together with domain")
+
+                if modulus is not None:
+                    raise PolynomialError("extension is not allowed together with modulus")
 
             if type(rep) is dict:
                 rep = _init_poly_from_dict(rep, *gens, **args)
@@ -381,21 +395,14 @@ class Poly(Basic):
                 G = DMP(dict(zip(g_monoms, g_coeffs)), dom, lev)
             else:
                 G = g.rep.convert(dom)
-        elif isinstance(f.rep, GFP) and isinstance(g.rep, GFP):
-            if f.gens != g.gens or f.mod != g.mod:
-                raise UnificationFailed("can't unify %s with %s" % (f, g))
-            else:
-                F, G, gens = f.rep, g.rep, f.gens
-        elif isinstance(f.rep, GFP) and isinstance(g.rep, DMP):
-            if f.gens != g.gens:
-                raise UnificationFailed("can't unify %s with %s" % (f, g))
-            else:
-                G, F, gens = GFP(g.rep.convert(f.rep.dom), f.mod, g.rep.dom), f.rep, f.gens
-        elif isinstance(f.rep, DMP) and isinstance(g.rep, GFP):
-            if f.gens != g.gens:
-                raise UnificationFailed("can't unify %s with %s" % (f, g))
-            else:
-                F, G, gens = GFP(f.rep.convert(g.rep.dom), g.mod, g.rep.dom), g.rep, g.gens
+        elif isinstance(f.rep, GFP) and isinstance(g.rep, DMP) and f.gens == g.gens:
+            dom, G, F, gens = f.rep.dom, GFP(g.rep.convert(f.rep.dom).rep, f.rep.mod, g.rep.dom), f.rep, f.gens
+        elif isinstance(f.rep, DMP) and isinstance(g.rep, GFP) and f.gens == g.gens:
+            dom, F, G, gens = g.rep.dom, GFP(f.rep.convert(g.rep.dom).rep, g.rep.mod, g.rep.dom), g.rep, g.gens
+        elif isinstance(f.rep, GFP) and isinstance(g.rep, GFP) and f.gens == g.gens and f.rep.mod == g.rep.mod:
+            dom, gens = f.rep.dom.unify(g.rep.dom), f.gens
+            F = GFP(f.rep.convert(dom).rep, f.rep.mod, dom)
+            G = GFP(g.rep.convert(dom).rep, g.rep.mod, dom)
         else:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
@@ -517,6 +524,19 @@ class Poly(Basic):
             return Integer(f.rep.mod)
         else:
             raise PolynomialError("not a polynomial over a Galois field")
+
+    @classmethod
+    def _analyze_extension(cls, args):
+        """Convert `extension` to an internal representation. """
+        extension = args.get('extension')
+
+        if extension is not None:
+            if not hasattr(extension, '__iter__'):
+                extension = set([extension])
+            else:
+                extension = set(extension)
+
+        return extension
 
     def to_ring(f):
         """Make the ground domain a ring. """
@@ -1332,7 +1352,7 @@ class Poly(Basic):
             except PolynomialError:
                 return False
 
-        return f.rep == g.rep
+        return f.rep == g.rep and f.gens == g.gens
 
     @_sympifyit('g', NotImplemented)
     def __ne__(f, g):
@@ -1342,7 +1362,7 @@ class Poly(Basic):
             except PolynomialError:
                 return True
 
-        return f.rep != g.rep
+        return f.rep != g.rep or f.gens != g.gens
 
     def __nonzero__(f):
         return not f.is_zero
@@ -1913,7 +1933,7 @@ def cancel(f, *gens, **args):
 
     try:
         F, G = _polify_basic(p, q, *gens, **args)
-    except CoercionFailed: # pragma: no cover
+    except CoercionFailed:
         if type(f) is not tuple:
             return f
         else:

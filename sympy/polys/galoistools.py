@@ -166,8 +166,14 @@ def gf_from_dict(f, p, K):
     """Create `GF(p)[x]` polynomial from a dict. """
     n, h = max(f.iterkeys()), []
 
-    for k in xrange(n, -1, -1):
-        h.append(f.get(k, K.zero) % p)
+    if type(n) is int:
+        for k in xrange(n, -1, -1):
+            h.append(f.get(k, K.zero) % p)
+    else:
+        (n,) = n
+
+        for k in xrange(n, -1, -1):
+            h.append(f.get((k,), K.zero) % p)
 
     return gf_reduce(h, p)
 
