@@ -1,5 +1,3 @@
-from sympy import Symbol,I,Integer
-
 """
 This module implements Pauli algebra by subclassing Symbol. Only algebraic
 properties of Pauli matrices are used (we don't use the Matrix class).
@@ -9,6 +7,8 @@ See the documentation to the class Pauli for examples.
 See also:
     http://en.wikipedia.org/wiki/Pauli_matrices
 """
+
+from sympy import Symbol, I
 
 def delta(i,j):
     if i==j:

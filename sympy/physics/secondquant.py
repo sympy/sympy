@@ -6,12 +6,11 @@ of Many-Particle Systems."
 """
 
 from sympy import (
-    Basic, Function, var, Mul, sympify, Integer, Add, sqrt,
-    Number, Matrix, zeros, Pow, I, S,Symbol, latex, cache
+    Basic, Function, Mul, sympify, Integer, Add, sqrt,
+    zeros, Pow, I, S, Symbol,
 )
 
-from sympy.utilities import deprecated, iff
-
+from sympy.utilities import iff
 from sympy.core.cache import cacheit
 
 
