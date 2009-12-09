@@ -144,11 +144,11 @@ def test_kronecker_delta():
     assert D(a,b).indices_contain_equal_information
     assert D(i,j).indices_contain_equal_information
 
-    assert D(q,b).preffered_index == b
+    assert D(q,b).preferred_index == b
     assert D(q,b).killable_index == q
-    assert D(q,i).preffered_index == i
+    assert D(q,i).preferred_index == i
     assert D(q,i).killable_index == q
-    assert D(q,p).preffered_index == p
+    assert D(q,p).preferred_index == p
     assert D(q,p).killable_index == q
 
 
