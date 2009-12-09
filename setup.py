@@ -45,6 +45,7 @@ if sys.version_info[:2] < (2,4):
 # $ find * -name __init__.py |sort
 modules = [
     'sympy.assumptions',
+    'sympy.assumptions.handlers',
     'sympy.concrete',
     'sympy.core',
     'sympy.functions',
@@ -60,7 +61,6 @@ modules = [
     'sympy.parsing',
     'sympy.physics',
     'sympy.plotting',
-    'sympy.queries',
     'sympy.thirdparty',
     'sympy.logic',
     'sympy.logic.algorithms',
@@ -69,7 +69,6 @@ modules = [
     'sympy.polys',
     'sympy.printing',
     'sympy.printing.pretty',
-    'sympy.refine',
     'sympy.series',
     'sympy.simplify',
     'sympy.solvers',
@@ -218,6 +217,7 @@ class run_benchmarks(Command):
 # Check that this list is uptodate against the result of the command:
 # $ python bin/generate_test_list.py
 tests = [
+    'sympy.assumptions.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
     'sympy.functions.combinatorial.tests',
@@ -249,20 +249,30 @@ tests = [
 # http://pyglet.googlecode.com/svn/trunk/setup.py
 # (whenever we update pyglet in sympy)
 pyglet_packages=[
-    'pyglet',
-    'pyglet.gl',
-    'pyglet.font',
-    'pyglet.image',
-    'pyglet.image.codecs',
-    'pyglet.media',
-    'pyglet.media.drivers',
-    'pyglet.media.drivers.alsa',
-    'pyglet.media.drivers.directsound',
-    'pyglet.media.drivers.openal',
-    'pyglet.window',
-    'pyglet.window.carbon',
-    'pyglet.window.win32',
-    'pyglet.window.xlib',
+        'pyglet',
+        'pyglet.app',
+        'pyglet.canvas',
+        'pyglet.font',
+        'pyglet.gl',
+        'pyglet.graphics',
+        'pyglet.image',
+        'pyglet.image.codecs',
+        'pyglet.input',
+        'pyglet.libs',
+        'pyglet.libs.darwin',
+        'pyglet.libs.win32',
+        'pyglet.libs.x11',
+        'pyglet.media',
+        'pyglet.media.drivers',
+        'pyglet.media.drivers.directsound',
+        'pyglet.media.drivers.openal',
+        'pyglet.media.drivers.pulse',
+        'pyglet.text',
+        'pyglet.text.formats',
+        'pyglet.window',
+        'pyglet.window.carbon',
+        'pyglet.window.win32',
+        'pyglet.window.xlib',
 ]
 pyglet_packages = ["sympy.thirdparty.pyglet." + s for s in pyglet_packages]
 
