@@ -14,6 +14,7 @@ from polytools import (
     factor_list, factor,
     cancel, sturm,
     groebner,
+    minpoly,
 )
 
 from polyerrors import (
@@ -24,6 +25,7 @@ from polyerrors import (
     PolynomialError,
     CoercionFailed,
     NotInvertible,
+    NotAlgebraic,
     DomainError,
 )
 

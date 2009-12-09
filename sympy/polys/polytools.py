@@ -1,7 +1,7 @@
 """User-friendly public interface to polynomial functions. """
 
 from sympy.core import (
-    S, Basic, I, Integer, Mul, sympify,
+    S, Basic, I, Integer, Add, Mul, sympify,
 )
 
 from sympy.core.decorators import (
@@ -33,11 +33,14 @@ from sympy.polys.polyerrors import (
     OperationNotSupported, DomainError,
     CoercionFailed, UnificationFailed,
     GeneratorsNeeded, PolynomialError,
+    NotAlgebraic,
 )
 
 from sympy.ntheory import isprime
 
-from sympy.utilities import any, all
+from sympy.utilities import (
+    any, all, numbered_symbols,
+)
 
 import re
 
@@ -1982,4 +1985,69 @@ def groebner(F, *gens, **args):
         return [ g.as_basic() for g in G ]
     else:
         return G
+
+def minpoly(ex, x, **args):
+    """Computes the minimal polynomial of an algebraic number. """
+    generator = numbered_symbols('a', dummy=True)
+    mapping, symbols = {}, {}
+
+    ex = sympify(ex)
+
+    def update_mapping(ex, exp, base):
+        a = generator.next()
+
+        symbols[ex] = a
+        mapping[ex] = a**exp + base
+
+        return a
+
+    def bottom_up_scan(ex):
+        if ex.is_Atom:
+            if ex is S.ImaginaryUnit:
+                if ex not in mapping:
+                    return update_mapping(ex, 2, 1)
+                else:
+                    return symbols[ex]
+            elif ex.is_Rational:
+                return ex
+        elif ex.is_Add:
+            return Add(*[ bottom_up_scan(g) for g in ex.args ])
+        elif ex.is_Mul:
+            return Mul(*[ bottom_up_scan(g) for g in ex.args ])
+        elif ex.is_Pow:
+            if ex.exp.is_Rational:
+                base = bottom_up_scan(ex.base)
+
+                if base != ex.base:
+                    power = base**ex.exp
+                else:
+                    power = ex
+
+                if power not in mapping:
+                    return update_mapping(power, 1/ex.exp, -base)
+                else:
+                    return symbols[power]
+
+                return a
+
+        raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
+
+    F = [x - bottom_up_scan(ex)] + mapping.values()
+    G = groebner(F, *(symbols.values() + [x]))
+
+    _, factors = factor_list(G[-1])
+
+    if len(factors) == 1:
+        ((result, _),) = factors
+    else:
+        for result, _ in factors:
+            if result.subs(x, ex).expand().is_zero:
+                break
+        else: # pragma: no cover
+            raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % ex)
+
+    if args.get('polys', False):
+        return Poly(result)
+    else:
+        return result
 
