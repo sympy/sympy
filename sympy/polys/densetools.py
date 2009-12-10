@@ -15,8 +15,8 @@ from sympy.polys.densebasic import (
 )
 
 from sympy.polys.densearith import (
-    dup_add_term,
-    dmp_mul_term,
+    dup_add_term, dmp_add_term,
+    dup_mul_term, dmp_mul_term,
     dup_neg, dmp_neg,
     dup_add, dmp_add,
     dup_sub, dmp_sub,
@@ -1558,22 +1558,37 @@ def dmp_sqf_p(f, u, K):
     else:
         return not dmp_degree(dmp_gcd(f, dmp_diff(f, 1, u, K), u, K), u)
 
+@cythonized("s")
 def dup_sqf_norm(f, K):
-    """Square-free norm of `f`, useful over algebraic domains. """
-    s, g = 0, dmp_raise(K.mod, 1, K.dom)
+    """Square-free norm of `f` in `K[x]`, useful over algebraic domains. """
+    s, g = 0, dmp_raise(K.mod.rep, 1, 0, K.dom)
 
     while True:
-        h, _ = dmp_inject(f, K, front=True)
+        h, _ = dmp_inject(f, 0, K, front=True)
         r = dmp_resultant(g, h, 1, K.dom)
 
         if dup_sqf_p(r, K.dom):
-            return s, h, r
+            break
         else:
-            f = dup_compose(f, [K.one,-K.alpha], K)
+            f, s = dup_compose(f, [K.one,-K.alpha], K), s+1
 
+    return s, f, r
+
+@cythonized("s,u")
 def dmp_sqf_norm(f, u, K):
-    """Square-free norm of `f`, useful over algebraic domains. """
-    raise NotImplementedError('algebraic numbers')
+    """Square-free norm of `f` in `K[X]`, useful over algebraic domains. """
+    s, g = 0, dmp_raise(K.mod.rep, u+1, 0, K.dom)
+
+    while True:
+        h, _ = dmp_inject(f, 0, K, front=True)
+        r = dmp_resultant(g, h, u+1, K.dom)
+
+        if dmp_sqf_p(r, u, K.dom):
+            break
+        else:
+            f, s = dmp_compose(f, [K.one,-K.alpha], u, K), s+1
+
+    return s, f, r
 
 def dup_sqf_part(f, K):
     """Returns square-free part of a polynomial in `K[x]`. """
@@ -1749,6 +1764,26 @@ def dup_compose(f, g, K):
     for c in f[1:]:
         h = dup_mul(h, g, K)
         h = dup_add_term(h, c, 0, K)
+
+    return h
+
+@cythonized("u")
+def dmp_compose(f, g, u, K):
+    """Evaluate functional composition `f(g)` in `K[X]`. """
+    if not u:
+        return dup_compose(f, g, K)
+
+    if len(g) <= 1:
+        return dmp_strip([dmp_eval(f, dup_LC(g, K), u, K)], u)
+
+    if dmp_zero_p(f, u):
+        return f
+
+    g, h = dmp_raise(g, u, 0, K), [f[0]]
+
+    for c in f[1:]:
+        h = dmp_mul(h, g, u, K)
+        h = dmp_add_term(h, c, 0, u, K)
 
     return h
 
