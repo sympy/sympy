@@ -68,6 +68,46 @@ from sympy.utilities import any, all, subsets, cythonized
 from math import ceil, log
 from random import randint
 
+@cythonized("k")
+def dup_trial_division(f, factors, K):
+    """Determine multiplicities of factors using trial division. """
+    result = []
+
+    for factor in factors:
+        k = 0
+
+        while True:
+            q, r = dup_div(f, factor, K)
+
+            if not r:
+                f, k = q, k+1
+            else:
+                break
+
+        result.append((factor, k))
+
+    return sort_factors_if_mult(result)
+
+@cythonized("u,k")
+def dmp_trial_division(f, factors, u, K):
+    """Determine multiplicities of factors using trial division. """
+    result = []
+
+    for factor in factors:
+        k = 0
+
+        while True:
+            q, r = dmp_div(f, factor, u, K)
+
+            if dmp_zero_p(r, u):
+                f, k = q, k+1
+            else:
+                break
+
+        result.append((factor, k))
+
+    return sort_factors_if_mult(result)
+
 def dup_zz_mignotte_bound(f, K):
     """Mignotte bound for univariate polynomials in `K[x]`. """
     a = dup_max_norm(f, K)

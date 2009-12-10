@@ -17,6 +17,7 @@ from sympy.polys.densetools import (
 )
 
 from sympy.polys.factortools import (
+    dup_trial_division, dmp_trial_division,
     dup_zz_mignotte_bound, dmp_zz_mignotte_bound,
     dup_zz_hensel_step, dup_zz_hensel_lift,
     dup_zz_irreducible_p,
@@ -41,7 +42,15 @@ from sympy.polys.polyclasses import DMP, DMF
 
 from sympy.polys.algebratools import ZZ, QQ, EX
 
-from sympy import raises, nextprime, sin
+from sympy import raises, nextprime, sin, sqrt, I
+
+def test_dup_trial_division():
+    assert dup_trial_division([1,8,25,38,28,8],
+        ([1,1], [1,2]), ZZ) == [([1,1], 2), ([1,2], 3)]
+
+def test_dmp_trial_division():
+    assert dmp_trial_division([[1],[8],[25],[38],[28],[8]],
+        ([[1],[1]], [[1],[2]]), 1, ZZ) == [([[1],[1]], 2), ([[1],[2]], 3)]
 
 def test_dup_zz_mignotte_bound():
     assert dup_zz_mignotte_bound([2,3,4], ZZ) == 32
