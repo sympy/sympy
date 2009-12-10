@@ -1364,5 +1364,6 @@ def test_minpoly():
     raises(NotAlgebraic, "minpoly(2**y, x)")
     raises(NotAlgebraic, "minpoly(sin(1), x)")
 
+    assert minpoly(sqrt(2), polys=True).is_Poly == True
     assert minpoly(sqrt(2), x, polys=True) == Poly(x**2 - 2)
 

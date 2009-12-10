@@ -1,7 +1,7 @@
 """User-friendly public interface to polynomial functions. """
 
 from sympy.core import (
-    S, Basic, I, Integer, Add, Mul, sympify,
+    S, Basic, I, Integer, Symbol, Add, Mul, sympify,
 )
 
 from sympy.core.decorators import (
@@ -1986,12 +1986,15 @@ def groebner(F, *gens, **args):
     else:
         return G
 
-def minpoly(ex, x, **args):
+def minpoly(ex, x=None, **args):
     """Computes the minimal polynomial of an algebraic number. """
     generator = numbered_symbols('a', dummy=True)
     mapping, symbols = {}, {}
 
     ex = sympify(ex)
+
+    if x is None:
+        x = Symbol('x', dummy=True)
 
     def update_mapping(ex, exp, base):
         a = generator.next()
@@ -2047,7 +2050,7 @@ def minpoly(ex, x, **args):
             raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % ex)
 
     if args.get('polys', False):
-        return Poly(result)
+        return Poly(result, x)
     else:
         return result
 
