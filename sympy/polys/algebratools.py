@@ -281,6 +281,10 @@ class Algebra(object):
         """Returns a fraction field, i.e. `K(X)`. """
         return FractionField(self, *gens)
 
+    def algebraic_field(self, *extension):
+        """Returns an algebraic field, i.e. `K(alpha, ...)`. """
+        raise DomainError("can't create algebraic field over %s" % self)
+
     def is_zero(self, a):
         """Returns True if `a` is zero. """
         return not a
@@ -474,6 +478,10 @@ class RationalField(Field):
     rep   = 'QQ'
 
     has_CharacteristicZero = True
+
+    def algebraic_field(self, *extension):
+        """Returns an algebraic field, i.e. `QQ(alpha, ...)`. """
+        return AlgebraicField(self, extension)
 
 class ZZ_python(IntegerRing):
     pass
@@ -1015,14 +1023,21 @@ class AlgebraicField(Field):
 
     has_CharacteristicZero = True
 
-    def __init__(self, dom, mod):
-        if not dom.has_Field:
-            raise DomainError("ground domain must be a field")
+    def __init__(self, dom, ext):
+        if not dom.is_QQ:
+            raise DomainError("ground domain must be a rational field")
 
-        mod = mod.as_poly(domain=dom)
+        from sympy import minpoly
 
-        if not mod.is_Poly or not mod.is_univariate:
-            raise PolynomialError("minimal polynomial must be univariate")
+        if type(ext) is tuple:
+            (self.ext,) = ext
+        else:
+             self.ext   = ext
+
+        self.gens = (self.ext,)
+
+        mod = minpoly(self.ext, polys=True)
+        mod = mod.set_domain(dom).rep
 
         self.zero = self.dtype.zero(mod.rep, dom)
         self.one  = self.dtype.one(mod.rep, dom)
@@ -1030,37 +1045,56 @@ class AlgebraicField(Field):
         self.dom  = dom
         self.mod  = mod
 
+        self.alpha = self([dom(1), dom(0)])
+
     def __str__(self):
-        return str(self.dom) + '(' + str(self.mod) + ')'
+        return str(self.dom) + '<' + str(self.ext) + '>'
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.dtype, self.dom, self.mod))
+        return hash((self.__class__.__name__, self.dtype,
+            self.dom, self.ext, self.mod))
 
     def __call__(self, a):
         """Construct an element of `self` domain from `a`. """
-        return ANP(a, self.mod.rep, self.dom)
+        return ANP(a, self.mod, self.dom)
 
     def __eq__(self, other):
         """Returns `True` if two algebras are equivalent. """
         if self.dtype == other.dtype:
-            return self.mod == other.mod
+            return self.ext == other.ext
         else:
             return False
 
     def __ne__(self, other):
         """Returns `False` if two algebras are equivalent. """
         if self.dtype == other.dtype:
-            return self.mod != other.mod
+            return self.ext != other.ext
         else:
             return True
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
-        raise NotImplementedError('expression support')
+        return basic_from_dict(a.to_sympy_dict(), self.ext)
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """
-        raise NotImplementedError('expression support')
+        try:
+            return self(self.dom.from_sympy(a))
+        except CoercionFailed:
+            pass
+
+        p, q = a.as_numer_denom()
+
+        num = dict_from_basic(p, self.gens)
+        den = dict_from_basic(q, self.gens)
+
+        for k, v in num.iteritems():
+            num[k] = self.dom.from_sympy(v)
+
+        for k, v in den.iteritems():
+            den[k] = self.dom.from_sympy(v)
+
+        return self(num).exquo(self(den))
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """

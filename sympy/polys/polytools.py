@@ -44,8 +44,10 @@ from sympy.utilities import (
 
 import re
 
-_re_dom_poly = re.compile("^(Z|ZZ|Q|QQ)\[([^\]]+)\]$")
-_re_dom_frac = re.compile("^(Z|ZZ|Q|QQ)\(([^\]]+)\)$")
+_re_dom_poly = re.compile("^(Z|ZZ|Q|QQ)\[(.+)\]$")
+_re_dom_frac = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
+
+_re_dom_algebraic = re.compile("^(Q|QQ)\<(.+)\>$")
 
 from sympy.polys.algebratools import Algebra, ZZ, QQ, EX
 
@@ -334,6 +336,8 @@ class Poly(Basic):
                 if modulus is not None:
                     raise PolynomialError("extension is not allowed together with modulus")
 
+                args['domain'] = domain = QQ.algebraic_field(*extension)
+
             if type(rep) is dict:
                 rep = _init_poly_from_dict(rep, *gens, **args)
             else:
@@ -482,6 +486,12 @@ class Poly(Basic):
                 else:
                     return QQ.frac_field(*gens)
 
+            r = re.match(_re_dom_algebraic, dom)
+
+            if r is not None:
+                gens = map(sympify, r.groups()[1].split(','))
+                return QQ.algebraic_field(*gens)
+
         raise ValueError('expected a valid domain specification, got %s' % dom)
 
     def set_domain(f, domain):
@@ -532,12 +542,21 @@ class Poly(Basic):
     def _analyze_extension(cls, args):
         """Convert `extension` to an internal representation. """
         extension = args.get('extension')
+        gaussian = args.get('gaussian')
 
         if extension is not None:
+            if gaussian is not None:
+                raise PolynomialError("extension is not allowed together with gaussian")
+
             if not hasattr(extension, '__iter__'):
                 extension = set([extension])
             else:
-                extension = set(extension)
+                if not extension:
+                    extension = None
+                else:
+                    extension = set(extension)
+        elif gaussian is not None and gaussian:
+            extension = set([S.ImaginaryUnit])
 
         return extension
 
@@ -1352,20 +1371,14 @@ class Poly(Basic):
         if not g.is_Poly:
             try:
                 g = Poly(g, *f.gens, domain=f.get_domain())
-            except PolynomialError:
+            except (PolynomialError, DomainError, CoercionFailed):
                 return False
 
         return f.rep == g.rep and f.gens == g.gens
 
     @_sympifyit('g', NotImplemented)
     def __ne__(f, g):
-        if not g.is_Poly:
-            try:
-                g = Poly(g, *f.gens, domain=f.get_domain())
-            except PolynomialError:
-                return True
-
-        return f.rep != g.rep or f.gens != g.gens
+        return not f.__eq__(g)
 
     def __nonzero__(f):
         return not f.is_zero

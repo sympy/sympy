@@ -15,7 +15,7 @@ from sympy.polys.densebasic import (
     dup_nth, dmp_ground_nth,
     dmp_zero, dmp_one, dmp_ground,
     dmp_zero_p, dmp_one_p, dmp_ground_p,
-    dup_from_raw_dict, dmp_from_dict,
+    dup_from_dict, dmp_from_dict,
     dup_to_raw_dict, dmp_to_dict,
     dup_deflate, dmp_deflate,
     dup_terms_gcd, dmp_terms_gcd,
@@ -517,7 +517,7 @@ class DUP(object):
 
     def __init__(self, rep, dom):
         if type(rep) is dict:
-            self.rep = dup_from_raw_dict(rep, dom)
+            self.rep = dup_from_dict(rep, dom)
         else:
             if type(rep) is not list:
                 rep = [dom.convert(rep)]
@@ -1955,7 +1955,7 @@ class ANP(object):
 
     def __init__(self, rep, mod, dom):
         if type(rep) is dict:
-            self.rep = dup_from_raw_dict(rep, dom)
+            self.rep = dup_from_dict(rep, dom)
         else:
             if type(rep) is not list:
                 rep = [dom.convert(rep)]
@@ -1966,7 +1966,7 @@ class ANP(object):
             self.mod = mod.rep
         else:
             if type(mod) is dict:
-                self.mod = dup_from_raw_dict(mod, dom)
+                self.mod = dup_from_dict(mod, dom)
             else:
                 self.mod = dup_strip(mod)
 
@@ -2019,6 +2019,19 @@ class ANP(object):
     @classmethod
     def one(cls, mod, dom):
         return ANP(1, mod, dom)
+
+    def to_dict(f):
+        """Convert `f` to a dict representation with native coefficients. """
+        return dmp_to_dict(f.rep, 0)
+
+    def to_sympy_dict(f):
+        """Convert `f` to a dict representation with SymPy coefficients. """
+        rep = dmp_to_dict(f.rep, 0)
+
+        for k, v in rep.iteritems():
+            rep[k] = f.dom.to_sympy(v)
+
+        return rep
 
     def neg(f):
         return f.per(dup_neg(f.rep, f.dom))

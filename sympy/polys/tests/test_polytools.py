@@ -218,6 +218,8 @@ def test_Poly__new__():
     assert Poly({(2,1): 1, (1,2): 2, (1,1): 3}, x, y) == \
         Poly(x**2*y + 2*x*y**2 + 3*x*y, x, y)
 
+    assert Poly(x**2 + 1, extension=I).get_domain() == QQ.algebraic_field(I)
+
 def test_Poly__args():
     assert Poly(x**2 + 1).args == [x**2 + 1]
 
@@ -350,6 +352,12 @@ def test_Poly__parse_domain():
     assert Poly._parse_domain('ZZ(x,y)') == ZZ.frac_field(x,y)
     assert Poly._parse_domain('QQ(x,y)') == QQ.frac_field(x,y)
 
+    assert Poly._parse_domain('Q<I>') == QQ.algebraic_field(I)
+    assert Poly._parse_domain('QQ<I>') == QQ.algebraic_field(I)
+
+    #assert Poly._parse_domain('Q<sqrt(2), I>') == QQ.algebraic_field(sqrt(2), I)
+    #assert Poly._parse_domain('QQ<sqrt(2), I>') == QQ.algebraic_field(sqrt(2), I)
+
 def test_Poly_get_domain():
     assert Poly(2*x).get_domain() == ZZ
 
@@ -397,8 +405,14 @@ def test_Poly_set_modulus():
 
 def test_Poly__analyze_extension():
     assert Poly._analyze_extension({}) is None
+    assert Poly._analyze_extension({'extension': []}) is None
     assert Poly._analyze_extension({'extension': sqrt(2)}) == set([sqrt(2)])
     assert Poly._analyze_extension({'extension': [sqrt(2),sqrt(3)]}) == set([sqrt(2),sqrt(3)])
+
+    assert Poly._analyze_extension({'extension': I}) == set([I])
+    assert Poly._analyze_extension({'gaussian': True}) == set([I])
+
+    raises(PolynomialError, "Poly._analyze_extension({'gaussian': True, 'extension': I})")
 
 def test_Poly_abs():
     assert Poly(-x+1, x).abs() == abs(Poly(-x+1, x)) == Poly(x+1, x)
