@@ -52,8 +52,9 @@ def transform(name, X, Y, g_correct=None, recursive=False):
     print "Jacobian:"
     pprint(J)
     g = J.T*eye(J.shape[0])*J
-    #g = g.applyfunc(lambda x: trigsimp(x, recursive=recursive))
-    g = g.applyfunc(lambda x: expand(x))
+
+    g = g.applyfunc(expand)
+    #g = g.applyfunc(trigsimp)
     print "metric tensor g_{ij}:"
     pprint(g)
     if g_correct is not None:

@@ -100,7 +100,7 @@ def curvature(Rmn):
 #        return r"\lambda"
 #        return r"lambda"
 nu = Function("nu")
-lam = Function("lamda")
+lam = Function("lambda")
 
 t=Symbol("t")
 r=Symbol("r")
@@ -208,9 +208,9 @@ def main():
     #print "scalar curvature:"
     #print curvature(Rmn)
     print "-"*40
-    print "solve the Einstein's equations:"
+    print "Solve Einstein's equations:"
     e = e.subs(nu(r), -lam(r))
-    l =  dsolve(e, [lam(r)])
+    l =  dsolve(e, lam(r))
     pprint( Eq(lam(r), l) )
     metric = gdd.subs(lam(r), l).subs(nu(r),-l)#.combine()
     print "metric:"

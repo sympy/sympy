@@ -65,11 +65,7 @@ def pslash(p):
     return gamma0*p0-gamma1*p1-gamma2*p2-gamma3*p3
 
 def Tr(M):
-    assert M.lines == M.cols
-    t = 0
-    for i in range(M.lines):
-        t+=M[i,i]
-    return t
+    return M.trace()
 
 def xprint(lhs, rhs):
     pprint( Eq(sympify(lhs), rhs ) )
