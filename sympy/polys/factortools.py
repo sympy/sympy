@@ -52,10 +52,14 @@ from sympy.polys.densetools import (
     dup_sqf_part, dmp_sqf_part,
     dup_trunc, dmp_ground_trunc,
     dup_content, dmp_ground_content,
+    dup_monic, dmp_ground_monic,
     dup_primitive, dmp_primitive, dmp_ground_primitive,
     dup_ground_to_ring, dmp_ground_to_ring,
     dup_eval, dmp_eval_tail,
-    dmp_eval_in, dmp_diff_eval_in
+    dmp_eval_in, dmp_diff_eval_in,
+    dup_inner_gcd, dmp_inner_gcd,
+    dup_sqf_norm, dmp_sqf_norm,
+    dup_compose, dmp_compose
 )
 
 from sympy.polys.polyerrors import (
@@ -980,20 +984,75 @@ def dmp_zz_factor(f, u, K):
 
     return cont, sort_factors_if_mult(factors)
 
-def dup_ext_factor(f, K):
+def dup_ext_factor(f, K, **args):
     """Factor polynomials over algebraic number fields. """
-    raise NotImplementedError('algebraic numbers')
+    n, lc = dup_degree(f), dup_LC(f, K)
+
+    f = dup_monic(f, K)
+
+    if n <= 0:
+        return lc, []
+    if n == 1:
+        return lc, [(f, 1)]
+
+    f, F = dup_sqf_part(f, K), f
+    s, g, r = dup_sqf_norm(f, K)
+
+    coeff, factors = dup_factor_list(r, K.dom)
+
+    if len(factors) == 1:
+        return lc, [(f, n//dup_degree(f))]
+
+    H = [K.one, s*K.alpha]
+
+    for i, (factor, _) in enumerate(factors):
+        h = dup_convert(factor, K.dom, K)
+        h, _, g = dup_inner_gcd(h, g, K)
+        h = dup_compose(h, H, K)
+        factors[i] = h
+
+    coeff = lc * K.convert(coeff, K.dom)
+    factors = dup_trial_division(F, factors, K)
+
+    return coeff, factors
 
 @cythonized("u")
-def dmp_ext_factor(f, u, K):
+def dmp_ext_factor(f, u, K, **args):
     """Factor polynomials over algebraic number fields. """
-    raise NotImplementedError('algebraic numbers')
+    if not u:
+        return dup_ext_factor(f, K, **args)
+
+    lc = dmp_ground_LC(f, u, K)
+    f = dmp_ground_monic(f, u, K)
+
+    f, F = dmp_sqf_part(f, u, K), f
+    s, g, r = dmp_sqf_norm(f, u, K)
+
+    coeff, factors = dmp_factor_list(r, u, K.dom)
+
+    if len(factors) == 1:
+        coeff, factors = lc, [f]
+    else:
+        H = [K.one, s*K.alpha]
+
+        for i, (factor, _) in enumerate(factors):
+            h = dmp_convert(factor, u, K.dom, K)
+            h, _, g = dmp_inner_gcd(h, g, u, K)
+            h = dmp_compose(h, H, u, K)
+            factors[i] = h
+
+        coeff = lc * K.convert(coeff, K.dom)
+
+    return coeff, dmp_trial_division(F, factors, u, K)
 
 @cythonized("i,k,u")
 def dup_factor_list(f, K0, **args):
     """Factor polynomials into irreducibles in `K[x]`. """
     if not K0.has_CharacteristicZero: # pragma: no cover
         raise DomainError('only characteristic zero allowed')
+
+    if K0.is_Algebraic:
+        return dup_ext_factor(f, K0, **args)
 
     if K0.has_Field:
         K = K0.get_ring()
@@ -1056,6 +1115,9 @@ def dmp_factor_list(f, u, K0, **args):
 
     if not K0.has_CharacteristicZero: # pragma: no cover
         raise DomainError('only characteristic zero allowed')
+
+    if K0.is_Algebraic:
+        return dmp_ext_factor(f, u, K0, **args)
 
     if K0.has_Field:
         K = K0.get_ring()

@@ -1,6 +1,8 @@
 """Tools for polynomial factorization routines in characteristic zero. """
 
 from sympy.polys.densearith import (
+    dup_mul_ground, dmp_mul_ground,
+    dup_pow, dmp_pow,
     dmp_expand,
 )
 
@@ -29,6 +31,7 @@ from sympy.polys.factortools import (
     dup_zz_diophantine, dmp_zz_diophantine,
     dup_zz_cyclotomic_poly, dup_zz_cyclotomic_factor,
     dup_zz_factor, dup_zz_factor_sqf, dmp_zz_factor,
+    dup_ext_factor, dmp_ext_factor,
     dup_factor_list, dmp_factor_list,
 )
 
@@ -38,7 +41,7 @@ from sympy.polys.specialpolys import (
 
 from sympy.polys.polyerrors import DomainError
 
-from sympy.polys.polyclasses import DMP, DMF
+from sympy.polys.polyclasses import DMP, DMF, ANP
 
 from sympy.polys.algebratools import ZZ, QQ, EX
 
@@ -401,6 +404,107 @@ def test_dmp_zz_factor():
         (-12, [([[1, 0]], 1),
                ([[1], [], [-1, 0]], 6),
                ([[1], [], [6, 0], [], [1, 0, 0]], 1)])
+
+def test_dup_ext_factor():
+    h = [QQ(1),QQ(0),QQ(1)]
+    K = QQ.algebraic_field(I)
+
+    assert dup_ext_factor([], K) == (ANP([], h, QQ), [])
+
+    f = [ANP([QQ(1)], h, QQ), ANP([QQ(1)], h, QQ)]
+
+    assert dup_ext_factor(f, K) == (ANP([QQ(1)], h, QQ), [(f, 1)])
+
+    g = [ANP([QQ(2)], h, QQ), ANP([QQ(2)], h, QQ)]
+
+    assert dup_ext_factor(g, K) == (ANP([QQ(2)], h, QQ), [(f, 1)])
+
+    f = [ANP([QQ(7)], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1,1)], h, QQ)]
+    g = [ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1,7)], h, QQ)]
+
+    assert dup_ext_factor(f, K) == (ANP([QQ(7)], h, QQ), [(g, 1)])
+
+    f = [ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1)], h, QQ)]
+
+    assert dup_ext_factor(f, K) == \
+        (ANP([QQ(1,1)], h, QQ), [
+            ([ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([QQ(-1),QQ(0)], h, QQ)], 1),
+            ([ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([QQ( 1),QQ(0)], h, QQ)], 1),
+         ])
+
+    f = [ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1)], h, QQ)]
+
+    assert dup_ext_factor(f, K) == \
+        (ANP([QQ(1,1)], h, QQ), [
+            ([ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([QQ(-1),QQ(0)], h, QQ)], 1),
+            ([ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([QQ( 1),QQ(0)], h, QQ)], 1),
+         ])
+
+    h = [QQ(1),QQ(0),QQ(-2)]
+    K = QQ.algebraic_field(sqrt(2))
+
+    f = [ANP([QQ(1)], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([], h, QQ), ANP([QQ(1,1)], h, QQ)]
+
+    assert dup_ext_factor(f, K) == \
+        (ANP([QQ(1)], h, QQ), [
+            ([ANP([QQ(1)], h, QQ), ANP([QQ(-1),QQ(0)], h, QQ), ANP([QQ(1)], h, QQ)], 1),
+            ([ANP([QQ(1)], h, QQ), ANP([QQ( 1),QQ(0)], h, QQ), ANP([QQ(1)], h, QQ)], 1),
+         ])
+
+    f = [ANP([QQ(1,1)], h, QQ), ANP([2,0], h, QQ), ANP([QQ(2,1)], h, QQ)]
+
+    assert dup_ext_factor(f, K) == \
+        (ANP([QQ(1,1)], h, QQ), [
+            ([ANP([1], h, QQ), ANP([1,0], h, QQ)], 2),
+        ])
+
+    assert dup_ext_factor(dup_pow(f, 3, K), K) == \
+        (ANP([QQ(1,1)], h, QQ), [
+            ([ANP([1], h, QQ), ANP([1,0], h, QQ)], 6),
+        ])
+
+    f = dup_mul_ground(f, ANP([QQ(2,1)], h, QQ), K)
+
+    assert dup_ext_factor(f, K) == \
+        (ANP([QQ(2,1)], h, QQ), [
+            ([ANP([1], h, QQ), ANP([1,0], h, QQ)], 2),
+        ])
+
+    assert dup_ext_factor(dup_pow(f, 3, K), K) == \
+        (ANP([QQ(8,1)], h, QQ), [
+            ([ANP([1], h, QQ), ANP([1,0], h, QQ)], 6),
+        ])
+
+def test_dmp_ext_factor():
+    h = [QQ(1),QQ(0),QQ(-2)]
+    K = QQ.algebraic_field(sqrt(2))
+
+    assert dmp_ext_factor([], 0, K) == (ANP([], h, QQ), [])
+    assert dmp_ext_factor([[]], 1, K) == (ANP([], h, QQ), [])
+
+    f = [[ANP([QQ(1)], h, QQ)], [ANP([QQ(1)], h, QQ)]]
+
+    assert dmp_ext_factor(f, 1, K) == (ANP([QQ(1)], h, QQ), [(f, 1)])
+
+    g = [[ANP([QQ(2)], h, QQ)], [ANP([QQ(2)], h, QQ)]]
+
+    assert dmp_ext_factor(g, 1, K) == (ANP([QQ(2)], h, QQ), [(f, 1)])
+
+    f = [[ANP([QQ(1)], h, QQ)], [], [ANP([QQ(-2)], h, QQ), ANP([], h, QQ), ANP([], h, QQ)]]
+
+    assert dmp_ext_factor(f, 1, K) == \
+        (ANP([QQ(1)], h, QQ), [
+            ([[ANP([QQ(1)], h, QQ)], [ANP([QQ(-1),QQ(0)], h, QQ), ANP([], h, QQ)]], 1),
+            ([[ANP([QQ(1)], h, QQ)], [ANP([QQ( 1),QQ(0)], h, QQ), ANP([], h, QQ)]], 1),
+        ])
+
+    f = [[ANP([QQ(2)], h, QQ)], [], [ANP([QQ(-4)], h, QQ), ANP([], h, QQ), ANP([], h, QQ)]]
+
+    assert dmp_ext_factor(f, 1, K) == \
+        (ANP([QQ(2)], h, QQ), [
+            ([[ANP([QQ(1)], h, QQ)], [ANP([QQ(-1),QQ(0)], h, QQ), ANP([], h, QQ)]], 1),
+            ([[ANP([QQ(1)], h, QQ)], [ANP([QQ( 1),QQ(0)], h, QQ), ANP([], h, QQ)]], 1),
+        ])
 
 def test_dup_factor_list():
     assert dup_factor_list([], ZZ) == (ZZ(0), [])

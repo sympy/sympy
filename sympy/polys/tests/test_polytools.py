@@ -1268,6 +1268,23 @@ def test_factor():
 
     assert f.factor_list() == (1, [(f, 1)])
 
+    f = x**4 + 1
+
+    assert factor(f) == f
+    assert factor(f, extension=I) == (x**2 - I)*(x**2 + I)
+    assert factor(f, gaussian=True) == (x**2 - I)*(x**2 + I)
+    assert factor(f, extension=sqrt(2)) == (x**2 + sqrt(2)*x + 1)*(x**2 - sqrt(2)*x + 1)
+
+    f = x**2 + 2*sqrt(2)*x + 2
+
+    assert factor(f, extension=sqrt(2)) == (x + sqrt(2))**2
+    assert factor(f**3, extension=sqrt(2)) == (x + sqrt(2))**6
+
+    assert factor(x**2 - 2*y**2, extension=sqrt(2)) == \
+        (x + sqrt(2)*y)*(x - sqrt(2)*y)
+    assert factor(2*x**2 - 4*y**2, extension=sqrt(2)) == \
+        2*((x + sqrt(2)*y)*(x - sqrt(2)*y))
+
 def test_sturm():
     f, F = x, Poly(x, domain='QQ')
     g, G = 1, Poly(1, x, domain='QQ')

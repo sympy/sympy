@@ -1984,6 +1984,15 @@ class ANP(object):
     def __getnewargs__(self):
         return (self.rep, self.mod, self.dom)
 
+    def __cmp__(f, g):
+        """Make sorting deterministic. """
+        k = len(f.rep) - len(g.rep)
+
+        if not k:
+            return cmp(f.rep, g.rep)
+        else:
+            return k
+
     def unify(f, g):
         """Unify representations of two algebraic numbers. """
         if not isinstance(g, ANP) or f.mod != g.mod:

@@ -1580,7 +1580,7 @@ def dmp_sqf_norm(f, u, K):
     s, g = 0, dmp_raise(K.mod.rep, u+1, 0, K.dom)
 
     while True:
-        h, _ = dmp_inject(f, 0, K, front=True)
+        h, _ = dmp_inject(f, u, K, front=True)
         r = dmp_resultant(g, h, u+1, K.dom)
 
         if dmp_sqf_p(r, u, K.dom):
