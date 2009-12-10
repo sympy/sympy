@@ -56,7 +56,7 @@ from sympy.core import sympify
 
 from sympy.simplify import simplify, hypersimp, hypersimilar, collect
 from sympy.solvers import solve, solve_undetermined_coeffs
-from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
+from sympy.polys import Poly, exquo, gcd, lcm, roots, resultant
 from sympy.functions import Binomial, FallingFactorial
 from sympy.matrices import Matrix, casoratian
 from sympy.concrete import product
@@ -390,7 +390,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
 
     if not res.is_polynomial(h):
         p, q = res.as_numer_denom()
-        res = quo(p, q, h)
+        res = exquo(p, q, h)
 
     nni_roots = roots(res, h, filter='Z',
         predicate=lambda r: r >= 0).keys()
@@ -403,8 +403,8 @@ def rsolve_ratio(coeffs, f, n, **hints):
         for i in xrange(int(max(nni_roots)), -1, -1):
             d = gcd(A, B.subs(n, n+i), n)
 
-            A = quo(A, d, n)
-            B = quo(B, d.subs(n, n-i), n)
+            A = exquo(A, d, n)
+            B = exquo(B, d.subs(n, n-i), n)
 
             C *= Mul(*[ d.subs(n, n-j) for j in xrange(0, i+1) ])
 
@@ -413,8 +413,8 @@ def rsolve_ratio(coeffs, f, n, **hints):
         for i in range(0, r+1):
             g = gcd(coeffs[i], denoms[i], n)
 
-            numers[i] = quo(coeffs[i], g, n)
-            denoms[i] = quo(denoms[i], g, n)
+            numers[i] = exquo(coeffs[i], g, n)
+            denoms[i] = exquo(denoms[i], g, n)
 
         for i in xrange(0, r+1):
             numers[i] *= Mul(*(denoms[:i] + denoms[i+1:]))
@@ -557,7 +557,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
             a = Mul(*[ A.subs(n, n+j) for j in xrange(0, i) ])
             b = Mul(*[ B.subs(n, n+j) for j in xrange(i, r) ])
 
-            poly = quo(coeffs[i]*a*b, D, n)
+            poly = exquo(coeffs[i]*a*b, D, n)
             polys.append(poly.as_poly(n))
 
             if not poly.is_zero:
@@ -699,9 +699,9 @@ def rsolve(f, y, init=None):
     if common is not S.One:
         for k, coeff in h_part.iteritems():
             numer, denom = coeff.as_numer_denom()
-            h_part[k] = numer*quo(common, denom, n)
+            h_part[k] = numer*exquo(common, denom, n)
 
-        i_part = i_numer*quo(common, i_denom, n)
+        i_part = i_numer*exquo(common, i_denom, n)
 
     K_min = min(h_part.keys())
 
