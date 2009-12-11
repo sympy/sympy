@@ -684,7 +684,7 @@ def collect(expr, syms, evaluate=True, exact=False):
     else:
         return collected
 
-def separatevars(expr, dict=False, symbols=[]):
+def separatevars(expr, symbols=[], dict=False):
     """
     Separates variables in an expression, if possible.  By
     default, it separates with respect to all symbols in an
@@ -710,14 +710,9 @@ def separatevars(expr, dict=False, symbols=[]):
 
     >>> separatevars(2*x+y*sin(x))
     2*x + y*sin(x)
-    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, dict=True, symbols=(x, y))
+    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, symbols=(x, y), dict=True)
     {'coeff': 2*z, x: x**2, y: 1 + sin(y)}
-
-    If symbols are given for `dict` then `dict` will be set to
-    True and those symbols are used for keys (even if they aren't
-    in the expression).
-
-    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, [x, y, alpha])
+    >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, [x, y, alpha], dict=True)
     {'coeff': 2*z, alpha: 1, x: x**2, y: 1 + sin(y)}
 
     If the expression is not really separable, or is only partially
@@ -732,18 +727,12 @@ def separatevars(expr, dict=False, symbols=[]):
     >>> eq = 2*x+y*sin(x)
     >>> separatevars(eq) == eq
     True
-    >>> separatevars(2*x+y*sin(x), dict=True, symbols=(x, y)) == None
+    >>> separatevars(2*x+y*sin(x), symbols=(x, y), dict=True) == None
     True
 
     """
 
     if dict:
-        if not symbols:
-            try:
-                symbols = list(dict)
-            except TypeError:
-                symbols = expr.atoms(Symbol)
-        symbols = [x for x in symbols if x.is_Symbol]
         return _separatevars_dict(_separatevars(expr), *symbols)
     else:
         return _separatevars(expr)
