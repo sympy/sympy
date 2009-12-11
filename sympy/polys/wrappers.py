@@ -1,4 +1,3 @@
-
 from polynomial import Poly
 
 def LexPoly(*args):
@@ -86,4 +85,3 @@ def subresultants(*args, **kwargs):
 
 
 subresultants.__doc__ = poly_subresultants.__doc__
-

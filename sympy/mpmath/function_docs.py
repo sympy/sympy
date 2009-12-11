@@ -2104,7 +2104,7 @@ For some reference values with `a = 1`, see e.g. [4].
 
 2. M. W. Coffey, "The Stieltjes constants, their relation to the
    `\eta_j` coefficients, and representation of the Hurwitz
-   zeta function", 	arXiv:0706.0343v1 http://arxiv.org/abs/0706.0343
+   zeta function",      arXiv:0706.0343v1 http://arxiv.org/abs/0706.0343
 
 3. http://mathworld.wolfram.com/StieltjesConstants.html
 

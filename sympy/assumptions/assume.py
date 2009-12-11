@@ -134,4 +134,3 @@ def eliminate_assume(expr, symbol=None):
     for a in expr.args:
         args.append(eliminate_assume(a))
     return type(expr)(*args)
-

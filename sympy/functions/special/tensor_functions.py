@@ -1,4 +1,3 @@
-
 from sympy.core.function import Function
 from sympy.core import sympify, S
 from sympy.utilities.decorator import deprecated

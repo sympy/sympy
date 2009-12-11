@@ -1,4 +1,3 @@
-
 from sympy import S, symbols, Integer, Rational, Poly, \
     PolynomialError, sqrt, I, solve_poly_system, raises
 

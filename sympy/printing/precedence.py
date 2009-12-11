@@ -54,7 +54,7 @@ def precedence(item):
     Returns the precedence of a given object.
     """
     if hasattr(item, "precedence"):
-            return item.precedence
+        return item.precedence
     for i in item.__class__.__mro__:
         n = i.__name__
         if n in PRECEDENCE_FUNCTIONS:

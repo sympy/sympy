@@ -88,6 +88,3 @@ def dn(n):
     else:
         f = int((math.log10(n//1000))+18)
     return f
-
-
-

@@ -1,4 +1,3 @@
-
 from sympy.core.numbers import igcdex
 
 def crt(m, v, symmetric=False):

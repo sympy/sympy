@@ -1,4 +1,3 @@
-
 from sympy.polys.integerpolys import (
     INT_TYPE,
     poly_LC, poly_TC,
@@ -1416,4 +1415,3 @@ def test_zzX_factor():
     assert zzX_factor(f_6) == \
         (1, [([[[[47]], [[]]], [[[1, 0, 0], [], [], [-1, 0, 0]]]], 1),
              ([[[[45]]], [[[]]], [[[]]], [[[-9]], [[-1]], [[]], [[3], [], [2, 0], []]]], 1)])
-

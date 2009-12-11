@@ -87,4 +87,3 @@ eqT2 = wicks(NO(Fd(i)*Fd(j)*F(b)*F(a))*eq,simplify_dummies=True, keep_only_fully
 P = PermutationOperator
 eqT2 = simplify_index_permutations(eqT2,[P(a,b),P(i,j)])
 print latex(eqT2)
-

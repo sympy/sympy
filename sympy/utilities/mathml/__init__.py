@@ -53,4 +53,3 @@ def c2p(mml, simple=False):
         return apply_xsl(mml, 'mathml/data/simple_mmlctop.xsl')
 
     return apply_xsl(mml, 'mathml/data/mmlctop.xsl')
-

@@ -295,5 +295,3 @@ def test_constructor():
     assert str(MV('a')) == 'a+a__0*e_1+a__1*e_2+a__2*e_3+a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3+a__012*e_1e_2e_3'
     assert str(MV([2,'a'],'grade')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
     assert str(MV('a','grade2')) == 'a__01*e_1e_2+a__02*e_1e_3+a__12*e_2e_3'
-
-

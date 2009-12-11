@@ -229,5 +229,3 @@ def main(args=None):
     config._getsessionclass = lambda : BenchSession
 
     py.test.cmdline.main(args)
-
-

@@ -162,4 +162,3 @@ class PlotInterval(object):
     def frange(self):
         for i in self.vrange():
             yield float(i.evalf())
-

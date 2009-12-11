@@ -352,7 +352,7 @@ class LatexPrinter(Printer):
 
     def coefficient(self,coef,first_flg):
         if isinstance(coef, C.AssocOp) and isinstance(-coef, C.AssocOp):
-                coef_str =  r"\lp %s\rp " % self._print(coef)
+            coef_str =  r"\lp %s\rp " % self._print(coef)
         else:
             coef_str = self._print(coef)
         if first_flg:
@@ -1218,4 +1218,3 @@ def str_format(str_fmt):
 
 def ext_str(xstr):
     return(LatexPrinter.extended_symbol(xstr))
-

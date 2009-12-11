@@ -217,9 +217,9 @@ def test_match_bug2():
     assert (p+q+r).subs(res) == x+y
 
 def test_match_bug3():
-     x,a,b = map(Symbol, 'xab')
-     p = Wild('p')
-     assert (b*x*exp(a*x)).match(x*exp(p*x)) == None
+    x,a,b = map(Symbol, 'xab')
+    p = Wild('p')
+    assert (b*x*exp(a*x)).match(x*exp(p*x)) == None
 
 def test_match_bug4():
     x = Symbol('x')
@@ -340,4 +340,3 @@ def test_combine_inverse():
     assert Mul._combine_inverse(oo*I*y, oo*I) == y
     assert Add._combine_inverse(oo, oo) == S(0)
     assert Add._combine_inverse(oo*I, oo*I) == S(0)
-

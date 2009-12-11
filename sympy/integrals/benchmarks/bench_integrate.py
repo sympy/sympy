@@ -13,4 +13,3 @@ def bench_integrate_x2sin():
 
 def bench_integrate_x3sin():
     integrate(x**3*sin(x), x)
-

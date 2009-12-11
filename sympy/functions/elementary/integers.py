@@ -1,4 +1,3 @@
-
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Lambda, Function
 
@@ -168,4 +167,3 @@ class ceiling(RoundFunction):
                 return r
         else:
             return r
-

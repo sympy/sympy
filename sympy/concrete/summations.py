@@ -1,4 +1,3 @@
-
 from sympy.core import (Basic, S, C, Add, Mul, Symbol, Equality, Interval,
     sympify, symbols, Wild)
 from sympy.functions import factorial

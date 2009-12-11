@@ -2639,4 +2639,3 @@ def zzX_factor(f):
             return i
 
     return cont, sorted(factors, compare)
-

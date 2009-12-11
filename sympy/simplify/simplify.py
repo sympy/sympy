@@ -1116,7 +1116,7 @@ def powsimp(expr, deep=False, combine='all'):
 
     """
     if combine not in ['all', 'exp', 'base']:
-            raise ValueError, "combine must be one of ('all', 'exp', 'base')."
+        raise ValueError, "combine must be one of ('all', 'exp', 'base')."
     y = Symbol('y', dummy=True)
     if expr.is_Pow:
         if deep:
@@ -1459,7 +1459,7 @@ def _logcombine(expr, assume_pos_real=False):
 
     if type(expr) in (int, float) or expr.is_Number or expr.is_Rational or \
         expr.is_NumberSymbol or type(expr) == C.Integral:
-            return expr
+        return expr
 
     if isinstance(expr, Equality):
         retval = Equality(_logcombine(expr.lhs-expr.rhs, assume_pos_real),\
@@ -1499,7 +1499,7 @@ def _logcombine(expr, assume_pos_real=False):
                         and not getattr(i.extract_multiplicatively(loglargs),\
                         'is_real')==False):
 
-                            coeflogs += _logcombine(i, assume_pos_real)
+                    coeflogs += _logcombine(i, assume_pos_real)
                 else:
                     notlogs += i
             elif i.has(log):
@@ -1528,7 +1528,7 @@ def _logcombine(expr, assume_pos_real=False):
                 or (not getattr(coef[a],'is_real')==False\
                     and getattr(x, 'is_positive'))):
 
-                        return log(coef[x]**coef[a])
+            return log(coef[x]**coef[a])
         else:
             return _logcombine(expr.args[0], assume_pos_real)*reduce(lambda x, y:\
              _logcombine(x, assume_pos_real)*_logcombine(y, assume_pos_real),\
@@ -1543,4 +1543,3 @@ def _logcombine(expr, assume_pos_real=False):
         _logcombine(expr.args[1], assume_pos_real)
 
     return expr
-

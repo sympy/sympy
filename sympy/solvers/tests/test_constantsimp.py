@@ -143,6 +143,3 @@ def test_ode_solutions():
         [Eq(f(x), (-C1*x + x**2)**Rational(1,2)), Eq(f(x), -(-C1*x +
         x**2)**Rational(1,2))]) == [Eq(f(x), (C1*x + x**2)**Rational(1,2)),
         Eq(f(x), -(C1*x + x**2)**Rational(1,2))]
-
-
-

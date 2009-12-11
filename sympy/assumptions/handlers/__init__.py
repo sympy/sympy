@@ -40,4 +40,3 @@ class AskCommutativeHandler(CommonHandler):
     @staticmethod
     def NaN(expr, assumptions):
         return True
-

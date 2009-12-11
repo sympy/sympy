@@ -936,29 +936,29 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
         order = ode_order(ode, func)
     if solve_for_func and not (sol.lhs == func and not sol.rhs.has(func)) and not \
         (sol.rhs == func and not sol.lhs.has(func)):
-            try:
-                solved = solve(sol, func)
-                if solved == []:
-                    raise NotImplementedError
-            except NotImplementedError:
-                pass
+        try:
+            solved = solve(sol, func)
+            if solved == []:
+                raise NotImplementedError
+        except NotImplementedError:
+            pass
+        else:
+            if len(solved) == 1:
+                result = checkodesol(ode, func, Eq(func, solved[0]), \
+                    order=order, solve_for_func=False)
             else:
-                if len(solved) == 1:
-                    result = checkodesol(ode, func, Eq(func, solved[0]), \
-                        order=order, solve_for_func=False)
-                else:
-                    result = checkodesol(ode, func, map(lambda t: Eq(func, t), \
-                        solved), order=order, solve_for_func=False)
+                result = checkodesol(ode, func, map(lambda t: Eq(func, t), \
+                    solved), order=order, solve_for_func=False)
 
-                return result
+            return result
     while s:
         if testnum == 0:
-            # First pass, try substituting a solved solution directly into the ode
-            # This has the highest chance of succeeding.
+        # First pass, try substituting a solved solution directly into the ode
+        # This has the highest chance of succeeding.
             if sol.lhs == func:
-                    s = ode.subs(func, sol.rhs)
+                s = ode.subs(func, sol.rhs)
             elif sol.rhs == func:
-                    s = ode.subs(func, sol.lhs)
+                s = ode.subs(func, sol.lhs)
             else:
                 testnum += 1
                 continue
@@ -1101,10 +1101,10 @@ def compare_ode_sol(sol1, sol2, func, *args):
     # First, see if they are already solved
     if sol1.lhs == func and not sol1.rhs.has(func) or\
         sol1.rhs == func and not sol1.lhs.has(func):
-            sol1s = 1
+        sol1s = 1
     if sol2.lhs == func and not sol2.rhs.has(func) or\
         sol2.rhs == func and not sol2.lhs.has(func):
-            sol2s = 1
+        sol2s = 1
     if sol2s - sol1s:
         return sol2s - sol1s
     # We are not so lucky, try solving manually
@@ -2392,7 +2392,7 @@ def _undetermined_coefficients_match(expr, x):
                 return False
         elif expr.is_Pow and expr.base.is_Symbol and expr.exp.is_Integer and \
             expr.exp >= 0:
-                return True
+            return True
         elif expr.is_Pow and expr.base.is_number:
             if expr.exp.match(a*x + b):
                 return True
@@ -2634,4 +2634,3 @@ def ode_separable(eq, func, order, match):
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
         (r['y'], None, f(x))), C.Integral(-r['m1']['coeff']*r['m1'][x]/
         r['m2'][x], x)+C1)
-

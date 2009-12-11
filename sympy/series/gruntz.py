@@ -422,16 +422,16 @@ class Limit2(Basic):
 
 
     def __pretty__(self):
-         e, x, t = [a.__pretty__() for a in (self.e,self.x,self.x0)]
-         a = prettyForm('lim')
-         a = prettyForm(*a.below('%s->%s' % (x, t)))
-         a = prettyForm(*stringPict.next(a, e))
-         return a
+        e, x, t = [a.__pretty__() for a in (self.e,self.x,self.x0)]
+        a = prettyForm('lim')
+        a = prettyForm(*a.below('%s->%s' % (x, t)))
+        a = prettyForm(*stringPict.next(a, e))
+        return a
 
     def __latex__(self):
-         return r"\lim_{%s \to %s}%s" % (self.x.__latex__(), \
-                                                 self.x0.__latex__(),
-                                                 self.e.__latex__() )
+        return r"\lim_{%s \to %s}%s" % (self.x.__latex__(), \
+                                                self.x0.__latex__(),
+                                                self.e.__latex__() )
 
     @property
     def e(self):

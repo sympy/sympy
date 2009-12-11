@@ -1,4 +1,3 @@
-
 from sympy.core import Basic, S, C, Symbol, Wild, Pow, Add, sympify, diff, oo
 
 from sympy.integrals.trigonometry import trigintegrate

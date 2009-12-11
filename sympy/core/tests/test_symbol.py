@@ -76,11 +76,11 @@ def test_Wild_properties():
 
     for A in given_wildcards:
         for pat in given_patterns:
-                d = pat.match(A)
-                if pat in goodmatch[A]:
-                    assert d[A] in goodmatch[A]
-                else:
-                    assert d == None
+            d = pat.match(A)
+            if pat in goodmatch[A]:
+                assert d[A] in goodmatch[A]
+            else:
+                assert d == None
 
 def test_symbols():
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
@@ -90,4 +90,3 @@ def test_symbols():
     assert symbols('xyz', each_char=False) == Symbol('xyz')
     x, y = symbols('x y', each_char=False, real=True)
     assert x.is_real and y.is_real
-

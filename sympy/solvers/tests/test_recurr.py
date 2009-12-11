@@ -92,4 +92,3 @@ def test_rsolve():
     assert rsolve(f, y(n), [      0,      3 ]) == h
     assert rsolve(f, y(n), {   0 :0,   1 :3 }) == h
     assert rsolve(f, y(n), { y(0):0, y(1):3 }) == h
-

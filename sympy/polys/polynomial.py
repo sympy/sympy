@@ -1,4 +1,3 @@
-
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
@@ -2243,4 +2242,3 @@ def multinomial_as_basic(multinomial, *symbols):
         l.append(Mul(*term))
     result = Add(*l)
     return result
-

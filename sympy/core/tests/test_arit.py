@@ -1073,4 +1073,3 @@ def test_Pow_as_coeff_terms_doesnt_expand():
 
 def test_issue974():
     assert -1/(-1-x)    == 1/(1+x)
-

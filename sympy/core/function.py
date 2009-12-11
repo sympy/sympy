@@ -641,7 +641,7 @@ class Derivative(Basic):
         if isinstance(expr, Derivative):
             if len(expr.symbols) == len(self.symbols):
                     #print "MAYBE:",self, expr, repl_dict, evaluate
-                    return Basic.matches(self, expr, repl_dict, evaluate)
+                return Basic.matches(self, expr, repl_dict, evaluate)
         #print "NONE:",self, expr, repl_dict, evaluate
         return None
         #print self, expr, repl_dict, evaluate

@@ -87,4 +87,3 @@ if MODE == 'gmpy':
     int_types = (int, long, MP_BASE_TYPE)
 else:
     int_types = (int, long)
-

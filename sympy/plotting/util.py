@@ -101,9 +101,9 @@ def scale_value(v, v_min, v_len):
     return (v-v_min)/v_len
 
 def scale_value_list(flist):
-        v_min, v_max = min(flist), max(flist)
-        v_len = v_max-v_min
-        return list(scale_value(f,v_min,v_len) for f in flist)
+    v_min, v_max = min(flist), max(flist)
+    v_len = v_max-v_min
+    return list(scale_value(f,v_min,v_len) for f in flist)
 
 def strided_range(r_min, r_max, stride, max_steps=50):
     o_min, o_max = r_min, r_max

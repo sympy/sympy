@@ -1,4 +1,3 @@
-
 from sympy.core import Basic, Add, S, C, sympify
 from sympy.core.function import Function
 from zeta_functions import zeta

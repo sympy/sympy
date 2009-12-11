@@ -1,4 +1,3 @@
-
 def intersection(*entities):
     """
     Finds the intersection between a list GeometryEntity instances. Returns a

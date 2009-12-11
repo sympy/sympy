@@ -42,5 +42,3 @@ def test_Dirac():
 
     assert mgamma(5,True) == \
         mgamma(0,True)*mgamma(1,True)*mgamma(2,True)*mgamma(3,True)*I
-
-

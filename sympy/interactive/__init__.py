@@ -1,4 +1,3 @@
-
 from sympy import *
 
 x, y, z = symbols('xyz')

@@ -325,4 +325,3 @@ class Not(Logic):
 Logic.op_2class['&'] = And
 Logic.op_2class['|'] = Or
 Logic.op_2class['!'] = Not
-

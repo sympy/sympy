@@ -170,4 +170,3 @@ class AskBoundedHandler(CommonHandler):
     @staticmethod
     def sign(expr, assumptions):
         return True
-

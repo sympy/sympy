@@ -1,4 +1,3 @@
-
 from sympy.core import Function, S, C, Basic, sympify, pi
 from sympy.utilities.decorator import deprecated
 

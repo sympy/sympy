@@ -1,4 +1,3 @@
-
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Function, Lambda
 from sympy.core.cache import cacheit

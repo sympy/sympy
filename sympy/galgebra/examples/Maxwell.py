@@ -50,12 +50,3 @@ if __name__ == '__main__':
     print 'Curl $E$ and Div $B$ equations'
     print '<\\nabla F>_3 =',gradF.project(3),' = 0'
     tex.xdvi(filename='Maxwell.tex')
-
-
-
-
-
-
-
-
-

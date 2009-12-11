@@ -54,5 +54,3 @@ def test_trigintegrate_even():
     assert trigintegrate(cos(x)**(-6),x) == sin(x)/(5*cos(x)**5)\
                                             + 4*sin(x)/(15*cos(x)**3)\
                                             + 8*sin(x)/(15*cos(x))
-
-

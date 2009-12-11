@@ -39,7 +39,7 @@ def threaded(**flags):
             if isinstance(expr, Matrix):
                 return expr.applyfunc(lambda f: func(f, *args, **kwargs))
             elif isinstance(expr, bool):
-                    return expr
+                return expr
             elif hasattr(expr, '__iter__'):
                 return expr.__class__([ func(f, *args, **kwargs) for f in expr ])
             else:

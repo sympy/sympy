@@ -475,4 +475,3 @@ def test_hash_vs_eq():
 
     assert a == b
     assert ha== hb
-

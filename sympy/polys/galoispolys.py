@@ -1105,4 +1105,3 @@ def gf_factor_sqf(f, p, **flags):
         factors += gf_edf(factor, n, p, **flags)
 
     return LC, factors
-

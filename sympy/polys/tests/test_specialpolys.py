@@ -1,4 +1,3 @@
-
 from sympy.polys.specialpolys import (
     fateman_poly_F_1, zzX_fateman_poly_F_1,
     fateman_poly_F_2, zzX_fateman_poly_F_2,
@@ -39,4 +38,3 @@ def test_fateman_poly_F_3():
     F,G,H = zzX_fateman_poly_F_3(3)
 
     assert map(zzX_from_poly, [f,g,h]) == [F,G,H]
-

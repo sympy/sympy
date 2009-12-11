@@ -145,7 +145,7 @@ if __name__ == "__main__":
     sympy_top  = os.path.split(bintest_dir)[0]      # ../
     sympy_dir  = os.path.join(sympy_top, 'sympy')  # ../sympy/
     if os.path.isdir(sympy_dir):
-       sys.path.insert(0, sympy_top)
+        sys.path.insert(0, sympy_top)
 
     parser = OptionParser()
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",

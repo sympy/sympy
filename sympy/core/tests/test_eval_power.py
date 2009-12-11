@@ -120,4 +120,3 @@ def test_issue1496():
     assert (3-y)**n == (y-3)**n
     assert (-3+y-x)**2 == (3-y+x)**2
     assert (y-3)**3 == -(3-y)**3
-

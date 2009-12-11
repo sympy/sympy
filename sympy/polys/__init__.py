@@ -1,4 +1,3 @@
-
 from monomial import monomials, monomial_count
 
 from polynomial import Poly, PolynomialError, SymbolsError, \
@@ -11,4 +10,3 @@ from wrappers import div, quo, rem, pdiv, pquo, prem, groebner, lcm,  \
     root_factors, sturm, LexPoly, discriminant
 
 from factortools import factors, factor
-

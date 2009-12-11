@@ -1,4 +1,3 @@
-
 from sympy.polys.galoispolys import gf_from_dict, gf_factor, gf_factor_sqf
 
 from sympy import pi, nextprime

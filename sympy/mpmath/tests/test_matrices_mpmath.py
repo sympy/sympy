@@ -138,4 +138,3 @@ def test_matrix_numpy():
     l = [[1, 2], [3, 4], [5, 6]]
     a = numpy.matrix(l)
     assert matrix(l) == matrix(a)
-

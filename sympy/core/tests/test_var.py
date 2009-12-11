@@ -62,4 +62,3 @@ def test_var_accepts_comma():
 def test_var_keywords():
     var('x y', real=True)
     assert x.is_real and y.is_real
-

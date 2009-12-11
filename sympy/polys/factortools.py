@@ -118,7 +118,7 @@ def kronecker_mv(f, **flags):
     def combinations(lisp, m):
         def recursion(fa, lisp, m):
             if m == 0:
-                 yield fa
+                yield fa
             else:
                 for i, fa2 in enumerate(lisp[0 : len(lisp) + 1 - m]):
                     for el in recursion(zzx_mul(fa2, fa), list(lisp[i + 1:]), m - 1):
@@ -243,4 +243,3 @@ def kronecker_mv(f, **flags):
             factors[ff] = 1
 
     return cont*const, sorted(factors.items())
-

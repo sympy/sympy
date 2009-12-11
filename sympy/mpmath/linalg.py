@@ -527,4 +527,3 @@ def exp_pade(a):
     finally:
         mp.dps -= extra
     return f
-

@@ -139,18 +139,18 @@ class stringPict(object):
         return '\n'.join(newPicture), newBaseline
 
     def below(self, *args):
-         """Put pictures under this picture.
-         Returns string, baseline arguments for stringPict.
-         Baseline is baseline of top picture
-         >>> from sympy.printing.pretty.stringpict import stringPict
-         >>> print stringPict("x+3").below(stringPict.LINE, '3')[0] #doctest: +NORMALIZE_WHITESPACE
-         x+3
-         ---
-          3
+        """Put pictures under this picture.
+        Returns string, baseline arguments for stringPict.
+        Baseline is baseline of top picture
+        >>> from sympy.printing.pretty.stringpict import stringPict
+        >>> print stringPict("x+3").below(stringPict.LINE, '3')[0] #doctest: +NORMALIZE_WHITESPACE
+        x+3
+        ---
+         3
 
-         """
-         s, baseline = stringPict.stack(self, *args)
-         return s, self.baseline
+        """
+        s, baseline = stringPict.stack(self, *args)
+        return s, self.baseline
 
     def above(self, *args):
         """Put pictures above this picture.

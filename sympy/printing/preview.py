@@ -1,4 +1,3 @@
-
 import os
 import time
 import tempfile
@@ -198,4 +197,3 @@ def preview(expr, output='png', viewer=None, euler=True):
 
     os.remove(src)
     os.chdir(cwd)
-

@@ -1,4 +1,3 @@
-
 from sympy.core.basic import Basic, S, C, sympify
 from sympy.core.function import Lambda, Function
 from miscellaneous import sqrt
@@ -1081,4 +1080,3 @@ class atan2(Function):
 
     def _eval_is_real(self):
         return self.args[0].is_real and self.args[1].is_real
-

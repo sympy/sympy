@@ -56,4 +56,3 @@ def split_super_sub(text):
         subs.append(sub)
 
     return name, supers, subs
-

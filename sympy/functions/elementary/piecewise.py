@@ -1,4 +1,3 @@
-
 from sympy.core.basic import Basic, S
 from sympy.core.function import Function, diff
 from sympy.core.numbers import Number
@@ -259,4 +258,3 @@ def piecewise_fold(expr):
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))
     return Piecewise(*new_args)
-

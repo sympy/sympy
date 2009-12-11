@@ -6,7 +6,7 @@ Usage:
 
 $ bin/coverage_report.py
 
-This will create a directory covhtml with the coverage reports.To restrict the analysis 
+This will create a directory covhtml with the coverage reports.To restrict the analysis
 to a directory, you just need to pass its name as
 argument. For example:
 
@@ -52,7 +52,7 @@ def make_report(source_dir, report_dir, use_cache=False):
     sympy_top  = os.path.split(bin_dir)[0]      # ../
     sympy_dir  = os.path.join(sympy_top, 'sympy')  # ../sympy/
     if os.path.isdir(sympy_dir):
-       sys.path.insert(0, sympy_top)
+        sys.path.insert(0, sympy_top)
     os.chdir(sympy_top)
 
     cov = coverage.coverage()

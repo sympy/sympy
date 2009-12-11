@@ -258,4 +258,3 @@ def test_issue1689():
 
 def test_issue1699_None():
     assert S(None) == None
-

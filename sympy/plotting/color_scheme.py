@@ -298,4 +298,3 @@ default_color_schemes['zfade4'] = ColorScheme( z, (None, None, z), [ 0.0,  (0.3,
                                                                      0.65, (1.0,0.95, 0.2),
                                                                      0.85, (1.0, 0.7, 0.2),
                                                                      1.0,  (1.0, 0.3, 0.2) ] )
-

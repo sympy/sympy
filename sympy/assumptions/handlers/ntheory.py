@@ -215,4 +215,3 @@ class AskOddHandler(CommonHandler):
             if _even is None: return None
             return not _even
         return _integer
-

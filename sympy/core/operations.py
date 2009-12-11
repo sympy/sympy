@@ -1,4 +1,3 @@
-
 from basic import Basic, S, C
 from sympify import _sympify
 from cache import cacheit
@@ -273,5 +272,3 @@ class LatticeOp(AssocOp):
     @staticmethod
     def _compare_pretty(a, b):
         return cmp(str(a), str(b))
-
-

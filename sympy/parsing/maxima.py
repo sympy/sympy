@@ -58,4 +58,3 @@ def parse_maxima(str, globals=None, name_dict={}):
         globals[assign_var] = obj
 
     return obj
-

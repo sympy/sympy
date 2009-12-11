@@ -94,4 +94,3 @@ def shanks(A, k, n, m=1):
             table2[j] = (z*x - y**2) / (z + x - 2*y)
         table = table2[:]
     return table[n]
-

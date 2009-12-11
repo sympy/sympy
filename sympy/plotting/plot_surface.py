@@ -83,4 +83,3 @@ class PlotSurface(PlotModeBase):
                     glVertex3f(*pb)
                 glEnd()
         return f
-

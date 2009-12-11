@@ -1,4 +1,3 @@
-
 from sympy.utilities.decorator import threaded
 
 from sympy import symbols, Eq, Matrix

@@ -576,14 +576,14 @@ class Mul(AssocOp):
         if not isinstance(expr, self.__class__):
             # if we can omit the first factor, we can match it to sign * one
             if Mul(*self.args[1:]) == expr:
-               return self.args[0].matches(Rational(sign), repl_dict, evaluate)
+                return self.args[0].matches(Rational(sign), repl_dict, evaluate)
             # two-factor product: if the 2nd factor matches, the first part must be sign * one
             if len(self.args[:]) == 2:
-               dd = self.args[1].matches(expr, repl_dict, evaluate)
-               if dd == None:
-                   return None
-               dd = self.args[0].matches(Rational(sign), dd, evaluate)
-               return dd
+                dd = self.args[1].matches(expr, repl_dict, evaluate)
+                if dd == None:
+                    return None
+                dd = self.args[0].matches(Rational(sign), dd, evaluate)
+                return dd
             return None
 
         if len(self.args[:])==0:
@@ -602,11 +602,11 @@ class Mul(AssocOp):
 
         # only one symbol left in pattern -> match the remaining expression
         if len(pp) == 1 and isinstance(pp[0], Wild):
-          if len(ee) == 1:
-              d[pp[0]] = sign * ee[0]
-          else:
-              d[pp[0]] = sign * (type(expr)(*ee))
-          return d
+            if len(ee) == 1:
+                d[pp[0]] = sign * ee[0]
+            else:
+                d[pp[0]] = sign * (type(expr)(*ee))
+            return d
 
         if len(ee) != len(pp):
             return None
@@ -614,10 +614,10 @@ class Mul(AssocOp):
         i = 0
         for p, e in zip(pp, ee):
             if i == 0 and sign != 1:
-              try:
-                  e = sign * e
-              except TypeError:
-                  return None
+                try:
+                    e = sign * e
+                except TypeError:
+                    return None
             d = p.matches(e, d, evaluate=not i)
             i += 1
             if d is None:

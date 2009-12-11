@@ -1,4 +1,3 @@
-
 from sympy.core.symbol import Symbol
 from sympy.core.add import Add
 from sympy.core.mul import Mul
@@ -298,7 +297,7 @@ def roots(f, *symbols, **flags):
         f = Poly(f, *(symbols or S(f).atoms(Symbol)))
 
     if len(symbols) > 1:
-       raise SymbolsError("Too many symbols given.")
+        raise SymbolsError("Too many symbols given.")
 
     if f.is_multivariate:
         if len(symbols) == 1:

@@ -79,6 +79,3 @@ def test_multiple_expressions():
     substs, reduced = cse([e1, e2], optimizations=[])
     assert substs == [(x0, x+y)]
     assert reduced == [x0*z, x0*w]
-
-
-

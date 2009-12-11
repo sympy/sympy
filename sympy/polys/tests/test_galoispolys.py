@@ -1,4 +1,3 @@
-
 from sympy.polys.galoispolys import (
     gf_degree, gf_strip, gf_normal,
     gf_from_dict, gf_to_dict,
@@ -471,4 +470,3 @@ def test_gf_factor():
 
     assert gf_factor_sqf(f, p, method='zassenhaus') == g
     assert gf_factor_sqf(f, p, method='shoup') == g
-

@@ -103,4 +103,3 @@ def test_WildFunction():
 
 def test_Zero():
     sT(S.Zero, "Zero")
-

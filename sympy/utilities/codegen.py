@@ -447,4 +447,3 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
 
     # Write the code.
     return code_gen.write(routines, prefix, to_files, header, empty)
-

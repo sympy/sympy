@@ -57,7 +57,3 @@ def test_pde_separate_mul():
     res = pde_separate_mul(eq, u(theta, r), [R(r), T(theta)])
     assert res == [r*D(R(r), r)/R(r) + r**2*D(R(r), r, r)/R(r) + c*r**2, \
             -D(T(theta), theta, theta)/T(theta)]
-
-
-
-

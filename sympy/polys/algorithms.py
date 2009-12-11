@@ -1,4 +1,3 @@
-
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
@@ -270,9 +269,9 @@ def poly_groebner(f, *symbols, **flags):
                     continue
 
                 if i < j:
-                   k = (i, j)
+                    k = (i, j)
                 else:
-                   k = (j, i)
+                    k = (j, i)
 
                 if k not in B:
                     B[k] = monomial_lcm(f[i].LM, f[j].LM)
@@ -1012,4 +1011,3 @@ def poly_discriminant(p, symbol):
         return S.Zero
     return (S(int((-1)**((p.degree)*(S(p.degree) - 1)/2)))/p.lead_coeff*\
     poly_resultant(p, p.diff(symbol))).expand()
-

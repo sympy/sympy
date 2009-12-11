@@ -112,4 +112,3 @@ def zzX_fateman_poly_F_3(n):
     h = zzX_sqr(zzX_add_term([v], zzX_const(n, 1), n+1))
 
     return zzX_mul(f,h), zzX_mul(g,h), h
-

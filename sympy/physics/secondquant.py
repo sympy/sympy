@@ -703,9 +703,9 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
 
     def apply_operator(self, state):
         if not self.is_symbolic and isinstance(state, FockStateKet):
-                element = self.state
-                amp = sqrt(state[element])
-                return amp*state.down(element)
+            element = self.state
+            amp = sqrt(state[element])
+            return amp*state.down(element)
         else:
             return Mul(self,state)
 
@@ -724,9 +724,9 @@ class CreateBoson(BosonicOperator, Creator):
 
     def apply_operator(self, state):
         if not self.is_symbolic and isinstance(state, FockStateKet):
-                element = self.state
-                amp = sqrt(state[element] + 1)
-                return amp*state.up(element)
+            element = self.state
+            amp = sqrt(state[element] + 1)
+            return amp*state.up(element)
         else:
             return Mul(self,state)
 
@@ -2440,7 +2440,7 @@ def _get_dummies(expr, _reverse, **require):
         except AttributeError:
             try:
                 if arg.args:
-                   result.extend(_get_dummies(arg, _reverse, **require))
+                    result.extend(_get_dummies(arg, _reverse, **require))
             except AttributeError:
                 pass
     return result
@@ -2930,7 +2930,7 @@ def simplify_index_permutations(expr, permutation_operators):
             else:
                 try:
                     if arg.args:
-                       result.extend(_get_indices(arg,ind))
+                        result.extend(_get_indices(arg,ind))
                 except AttributeError:
                     pass
         return result

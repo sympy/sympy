@@ -16,9 +16,9 @@ def bench_R1():
 def bench_R2():
     "Hermite polynomial hermite(15, y)"
     def hermite(n, y):
-      if n == 1: return 2*y
-      if n == 0: return 1
-      return (2*y*hermite(n-1,y) - 2*(n-1)*hermite(n-2,y)).expand()
+        if n == 1: return 2*y
+        if n == 0: return 1
+        return (2*y*hermite(n-1,y) - 2*(n-1)*hermite(n-2,y)).expand()
 
     #def phi(n, y):
     #  return 1/(sqrt(2**n*factorial(n))*pi**(Integer(1)/4))*exp(-y**2/2)* \

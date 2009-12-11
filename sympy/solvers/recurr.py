@@ -762,4 +762,3 @@ def rsolve(f, y, init=None):
                     solution = solution.subs(k, v)
 
     return (solution.expand()) / common
-

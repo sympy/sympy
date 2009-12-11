@@ -773,15 +773,15 @@ class MV(object):
                     if x != ZERO:
                         xstr = x.__str__()
                         if xstr == '+1' or xstr == '1' or xstr == '-1':
-                           if xstr == '+1' or xstr == '1':
-                               xstr = '+'
-                           else:
-                               xstr = '-'
+                            if xstr == '+1' or xstr == '1':
+                                xstr = '+'
+                            else:
+                                xstr = '-'
                         else:
-                           if xstr[0] != '+':
-                               xstr = '+('+xstr+')'
-                           else:
-                               xstr = '+('+xstr[1:]+')'
+                            if xstr[0] != '+':
+                                xstr = '+('+xstr+')'
+                            else:
+                                xstr = '+('+xstr[1:]+')'
                         value += xstr+labels[igrade][j]
                         if MV.str_mode and not lst_mode:
                             value += value+'\n'
@@ -1260,7 +1260,7 @@ class MV(object):
         if debug:
             print 'Representation of Original Basis Vectors'
             for evec in MV.org_basis:
-                 print evec
+                print evec
 
             print 'Renormalized Reciprocal Vectors '+\
                   '$\\bfrac{'+bmhat+'^{k}}{\\abs{\\bm{'+LaTeX_base+'}_{k}}}$'
@@ -2565,6 +2565,3 @@ def reciprocal_frame(vlst,names=''):
 
 def S(value):
     return(MV(value,'scalar'))
-
-
-

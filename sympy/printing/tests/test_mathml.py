@@ -256,4 +256,3 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[1].childNodes[2].nodeName == 'mml:mi'
     assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
     del mml
-

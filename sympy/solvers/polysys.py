@@ -1,4 +1,3 @@
-
 from sympy.polys import Poly, LexPoly, roots, \
     SymbolsError, PolynomialError
 from sympy.polys.algorithms import poly_groebner
@@ -118,4 +117,3 @@ def solve_poly_system(system, *symbols):
         return None
     else:
         return sorted(tuple(s) for s in solutions)
-

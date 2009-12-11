@@ -163,7 +163,7 @@ class Number(Atom):
 
     def __new__(cls, *obj):
         if len(obj)==1:
-          obj=obj[0]
+            obj=obj[0]
         if isinstance(obj, (int, long)):
             return Integer(obj)
         if isinstance(obj,tuple) and len(obj)==2:

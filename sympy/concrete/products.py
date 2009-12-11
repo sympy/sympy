@@ -1,4 +1,3 @@
-
 from sympy.core import Basic, S, C, Add, Mul, Symbol, sympify
 
 from sympy.polys import quo, roots

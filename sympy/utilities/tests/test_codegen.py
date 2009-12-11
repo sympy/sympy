@@ -229,5 +229,3 @@ def test_complicated_codegen():
         'double test2(double x, double y, double z);\n'
         '#endif\n'
     )
-
-

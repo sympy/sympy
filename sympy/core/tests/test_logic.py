@@ -118,4 +118,3 @@ def test_logic_not():
     # functionality into some method.
     assert Not(And('a','b'))  == Or ('!a','!b')
     assert Not(Or ('a','b'))  == And('!a','!b')
-

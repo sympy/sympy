@@ -52,4 +52,3 @@ def get_resource(identifier, pkgname=__name__):
         else:
             return StringIO(data)
     return file(os.path.normpath(path), 'rb')
-

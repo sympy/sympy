@@ -118,23 +118,23 @@ class LatexPrinter(Printer):
                 mainvar = var(mainvar)
 
             def compare_exponents(a, b):
-               p1, p2 = Wild("p1"), Wild("p2")
-               r_a = a.match(p1 * mainvar**p2)
-               r_b = b.match(p1 * mainvar**p2)
-               if r_a is None and r_b is None:
-                   c = Basic._compare_pretty(a,b)
-                   return c
-               elif r_a is not None:
-                   if r_b is None:
-                       return 1
-                   else:
-                       c = Basic.compare(r_a[p2], r_b[p2])
-                       if c!=0:
-                           return c
-                       else:
-                           c = Basic._compare_pretty(a,b)
-                           return c
-               elif r_b is not None and r_a is None:
+                p1, p2 = Wild("p1"), Wild("p2")
+                r_a = a.match(p1 * mainvar**p2)
+                r_b = b.match(p1 * mainvar**p2)
+                if r_a is None and r_b is None:
+                    c = Basic._compare_pretty(a,b)
+                    return c
+                elif r_a is not None:
+                    if r_b is None:
+                        return 1
+                    else:
+                        c = Basic.compare(r_a[p2], r_b[p2])
+                        if c!=0:
+                            return c
+                        else:
+                            c = Basic._compare_pretty(a,b)
+                            return c
+                elif r_b is not None and r_a is None:
                     return -1
 
             args.sort(compare_exponents)

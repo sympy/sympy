@@ -143,4 +143,3 @@ def cse(exprs, symbols=None, optimizations=None):
     reduced_exprs = [postprocess_for_cse(e, optimizations) for e in reduced_exprs]
 
     return replacements, reduced_exprs
-

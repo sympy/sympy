@@ -1,4 +1,3 @@
-
 def recurrence_memo(initial):
     """
     Memo decorator for sequences defined by recurrence
@@ -51,6 +50,3 @@ def assoc_recurrence_memo(base_seq):
 
         return g
     return decorator
-
-
-

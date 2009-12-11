@@ -215,5 +215,3 @@ def test_complicated_codegen():
             expected = N(expr.subs(x, xval).subs(y, yval).subs(z, zval))
             numerical_tests.append((name, (xval,yval,zval), expected, 1e-12))
     run_cc_test("complicated_codegen", name_expr, numerical_tests)
-
-

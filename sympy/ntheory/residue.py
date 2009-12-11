@@ -61,12 +61,3 @@ def legendre_symbol(a,p):
         a=a%p
     if is_quad_residue(a,p)==True: return 1
     else : return -1
-
-
-
-
-
-
-
-
-

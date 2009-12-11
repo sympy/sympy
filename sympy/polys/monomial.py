@@ -1,4 +1,3 @@
-
 from sympy.core.mul import Mul
 from sympy.core.basic import S
 from sympy.core.cache import cacheit
