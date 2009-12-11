@@ -134,7 +134,6 @@ def fixup_tables():
 g   = lambda l: U('GREEK SMALL LETTER %s' % l.upper())
 G   = lambda l: U('GREEK CAPITAL LETTER %s' % l.upper())
 
-# XXX lambda <-> lamda
 greek_letters = [
     'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta',
     'iota', 'kappa', 'lamda', 'mu', 'nu', 'xi', 'omicron', 'pi', 'rho',
@@ -142,7 +141,8 @@ greek_letters = [
 
 # {}  greek letter -> (g,G)
 greek = dict([(l, (g(l), G(l))) for l in greek_letters])
-
+# aliases
+greek['lambda'] = greek['lamda']
 
 digit_2txt = {
     '0' :   'ZERO',
