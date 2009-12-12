@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, sinh, nan, oo, pi, asinh, acosh, log, sqrt, \
         coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
-        Integer
+        Integer, O
 
 from sympy.utilities.pytest import XFAIL
 
@@ -249,9 +249,7 @@ def test_coth():
     assert coth(k*pi*I) == -cot(k*pi)*I
 
 def test_asinh():
-    # TODO please write more tests  -- see #652
     x, y = symbols('xy')
-    #http://functions.wolfram.com/ElementaryFunctions/ArcSinh/
     assert asinh(x) == asinh(x)
     assert asinh(-x) == -asinh(x)
     assert asinh(nan) == nan
@@ -270,6 +268,14 @@ def test_asinh():
     assert asinh(I*oo) == oo
     assert asinh(-I *oo) == -oo
 
+def test_asinh_series():
+    x = Symbol('x')
+    assert asinh(x).series(x, 0, 8) == \
+                x - x**3/6 + 3*x**5/40 - 5*x**7/112 + O(x**8)
+    t5 = asinh(x).taylor_term(5, x)
+    assert t5 == 3*x**5/40
+    assert asinh(x).taylor_term(7, x, t5, 0) == -5*x**7/112
+
 @XFAIL
 # not yet implemented cases which should live in test_asinh
 def test_asinh_noimpl():
@@ -287,6 +293,15 @@ def test_acosh():
     # TODO please write more tests  -- see #652
     assert acosh(1) == 0
     assert acosh(Rational(1,2))  == I*pi/3
+
+def test_acosh_series():
+    x = Symbol('x')
+    assert acosh(x).series(x, 0, 8) == \
+            -I*x + pi*I/2 - I*x**3/6 - 3*I*x**5/40 - 5*I*x**7/112 + O(x**8)
+    t5 = acosh(x).taylor_term(5, x)
+    assert t5 == - 3*I*x**5/40
+    assert acosh(x).taylor_term(7, x, t5, 0) == - 5*I*x**7/112
+
 
 
 # TODO please write more tests -- see #652

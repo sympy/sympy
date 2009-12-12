@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, nan, oo, I, sinh, sin, acot, pi, atan, \
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos, \
-        cosh, atan2, exp, asinh, acoth, atanh
+        cosh, atan2, exp, asinh, acoth, atanh, O
 
 def test_sin():
     x, y = symbols('xy')
@@ -196,6 +196,15 @@ def test_tan():
 
     assert tan(r).is_real == True
 
+def test_tan_rewrite():
+    x = Symbol('x')
+    neg_exp, pos_exp = exp(-x*I), exp(x*I)
+    assert tan(x).rewrite(exp) == I*(neg_exp-pos_exp)/(neg_exp+pos_exp)
+    assert tan(x).rewrite(sin) == 2*sin(x)**2/sin(2*x)
+    assert tan(x).rewrite(cos) == -cos(x + S.Pi/2)/cos(x)
+    assert tan(x).rewrite(cot) == 1/cot(x)
+
+
 def test_cot():
     x, y = symbols('xy')
 
@@ -240,6 +249,14 @@ def test_cot():
 
     assert cot(r).is_real == True
 
+def test_cot_rewrite():
+    x = Symbol('x')
+    neg_exp, pos_exp = exp(-x*I), exp(x*I)
+    assert cot(x).rewrite(exp) == I*(pos_exp+neg_exp)/(pos_exp-neg_exp)
+    assert cot(x).rewrite(sin) == 2*sin(2*x)/sin(x)**2
+    assert cot(x).rewrite(cos) == -cos(x)/cos(x + S.Pi/2)
+    assert cot(x).rewrite(tan) == 1/tan(x)
+
 def test_asin():
     x = Symbol('x')
 
@@ -260,13 +277,19 @@ def test_asin():
 
     assert asin(-2*I) == -I*asinh(2)
 
+def test_asin_series():
+    x = Symbol('x')
+    assert asin(x).series(x, 0, 9) == \
+                    x + x**3/6 + 3*x**5/40 + 5*x**7/112 + O(x**9)
+    t5 = asin(x).taylor_term(5, x)
+    assert t5 == 3*x**5/40
+    assert asin(x).taylor_term(7, x, t5, 0) == 5*x**7/112
+
 def test_acos():
     x = Symbol('x')
-
     r = Symbol('r', real=True)
 
     assert acos(nan) == nan
-
     assert acos(oo) == I*oo
     assert acos(-oo) == -I*oo
 
@@ -279,6 +302,15 @@ def test_acos():
 
     assert acos(0.2).is_real == True
     assert acos(-2).is_real == False
+
+def test_acos_series():
+    x = Symbol('x')
+    assert acos(x).series(x, 0, 8) == \
+            pi/2 - x - x**3/6 - 3*x**5/40 - 5*x**7/112 + O(x**8)
+    assert acos(x).series(x, 0, 8) == pi/2 - asin(x).series(x, 0, 8)
+    t5 = acos(x).taylor_term(5, x)
+    assert t5 == -3*x**5/40
+    assert acos(x).taylor_term(7, x, t5, 0) == -5*x**7/112
 
 def test_atan():
     x = Symbol('x')

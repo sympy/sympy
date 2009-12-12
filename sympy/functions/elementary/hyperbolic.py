@@ -520,16 +520,13 @@ class asinh(Function):
             return S.Zero
         else:
             x = sympify(x)
-
-            if len(previous_terms) > 2:
+            if len(previous_terms) >= 2 and n > 2:
                 p = previous_terms[-2]
-                return -p * (n-2)**2/(k*(k-1)) * x**2
+                return -p * (n-2)**2/(n*(n-1)) * x**2
             else:
                 k = (n - 1) // 2
-
                 R = C.RisingFactorial(S.Half, k)
                 F = C.Factorial(k)
-
                 return (-1)**k * R / F * x**n / n
 
     def _eval_as_leading_term(self, x):
@@ -599,16 +596,13 @@ class acosh(Function):
             return S.Zero
         else:
             x = sympify(x)
-
-            if len(previous_terms) > 2:
+            if len(previous_terms) >= 2 and n > 2:
                 p = previous_terms[-2]
-                return p * (n-2)**2/(k*(k-1)) * x**2
+                return p * (n-2)**2/(n*(n-1)) * x**2
             else:
                 k = (n - 1) // 2
-
                 R = C.RisingFactorial(S.Half, k)
                 F = C.Factorial(k)
-
                 return -R / F * S.ImaginaryUnit * x**n / n
 
     def _eval_as_leading_term(self, x):

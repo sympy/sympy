@@ -559,10 +559,10 @@ class tan(Function):
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(neg_exp-pos_exp)/(neg_exp+pos_exp)
 
-    def _eval_rewrite_as_sin(self, arg):
+    def _eval_rewrite_as_sin(self, x):
         return 2*sin(x)**2/sin(2*x)
 
-    def _eval_rewrite_as_cos(self, arg):
+    def _eval_rewrite_as_cos(self, x):
         return -cos(x + S.Pi/2)/cos(x)
 
     def _eval_rewrite_as_cot(self, arg):
@@ -694,10 +694,10 @@ class cot(Function):
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(pos_exp+neg_exp)/(pos_exp-neg_exp)
 
-    def _eval_rewrite_as_sin(self, arg):
+    def _eval_rewrite_as_sin(self, x):
         return 2*sin(2*x)/sin(x)**2
 
-    def _eval_rewrite_as_cos(self, arg):
+    def _eval_rewrite_as_cos(self, x):
         return -cos(x)/cos(x + S.Pi/2)
 
     def _eval_rewrite_as_tan(self, arg):
@@ -783,16 +783,13 @@ class asin(Function):
             return S.Zero
         else:
             x = sympify(x)
-
-            if len(previous_terms) > 2:
+            if len(previous_terms) >= 2 and n > 2:
                 p = previous_terms[-2]
-                return p * (n-2)**2/(k*(k-1)) * x**2
+                return p * (n-2)**2/(n*(n-1)) * x**2
             else:
                 k = (n - 1) // 2
-
                 R = C.RisingFactorial(S.Half, k)
                 F = C.Factorial(k)
-
                 return R / F * x**n / n
 
     def _eval_as_leading_term(self, x):
@@ -866,16 +863,13 @@ class acos(Function):
             return S.Zero
         else:
             x = sympify(x)
-
-            if len(previous_terms) > 2:
+            if len(previous_terms) >= 2 and n > 2:
                 p = previous_terms[-2]
-                return p * (n-2)**2/(k*(k-1)) * x**2
+                return p * (n-2)**2/(n*(n-1)) * x**2
             else:
                 k = (n - 1) // 2
-
                 R = C.RisingFactorial(S.Half, k)
                 F = C.Factorial(k)
-
                 return -R / F * x**n / n
 
     def _eval_as_leading_term(self, x):
