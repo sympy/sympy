@@ -14,7 +14,6 @@ from polytools import (
     factor_list, factor,
     cancel, sturm,
     groebner,
-    minpoly,
 )
 
 from polyerrors import (
@@ -27,6 +26,10 @@ from polyerrors import (
     NotInvertible,
     NotAlgebraic,
     DomainError,
+)
+
+from numberfields import (
+    minpoly, AlgebraicNumber,
 )
 
 from monomialtools import (
