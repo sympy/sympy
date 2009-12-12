@@ -379,7 +379,7 @@ class Matrix(object):
         return (self.rows, self.cols)
 
     def __rmul__(self,a):
-        if hasattr(a, "__array__"):
+        if hasattr(a, "__array__") and a.shape != ():
             return matrix_multiply(a,self)
         out = Matrix(self.rows,self.cols,map(lambda i: a*i,self.mat))
         return out
@@ -400,7 +400,7 @@ class Matrix(object):
         return self + (-a)
 
     def __mul__(self,a):
-        if hasattr(a, "__array__"):
+        if hasattr(a, "__array__") and a.shape != ():
             return matrix_multiply(self,a)
         out = Matrix(self.rows,self.cols,map(lambda i: i*a,self.mat))
         return out

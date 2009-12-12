@@ -173,6 +173,9 @@ def test_Matrix_mul():
                          [       7*x,    2*x + 6*y,          9*x],
                          [x + x*z**2, 2*x + y*z**2, 3*x + x*z**2],
                          ])
+    a = array([2])
+    assert a[0] * M == 2 * M
+    assert M * a[0] == 2 * M
 
 def test_Matrix_array():
     class matarray(object):
