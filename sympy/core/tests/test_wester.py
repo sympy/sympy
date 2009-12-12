@@ -11,7 +11,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     normal, I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, assoc_legendre, Function, re, im, DiracDelta, chebyshevt, atan,
-    sinh, cosh, Symbol, floor, ceiling)
+    sinh, cosh, Symbol, floor, ceiling, solve, asinh, LambertW)
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, skip
 from sympy.mpmath import mpi, mpc
@@ -536,7 +536,8 @@ def test_K4():
 
 def test_K5():
     x, y = symbols('x', 'y', real=True)
-    assert tan(x+I*y).expand(complex=True) == sin(x)*cos(x) / (cos(x)**2 + sinh(y)**2) + I*sinh(y)*cosh(y) / (cos(x)**2 + sinh(y)**2)
+    assert tan(x+I*y).expand(complex=True) == sin(x)*cos(x) / (cos(x)**2 +
+    sinh(y)**2) + I*sinh(y)*cosh(y) / (cos(x)**2 + sinh(y)**2)
 
 @XFAIL
 def test_K6():
@@ -595,7 +596,8 @@ def test_L7():
 
 @XFAIL
 def test_L8():
-    assert (4*x+4*sqrt(x)+1)**(sqrt(x)/(2*sqrt(x)+1))*(2*sqrt(x)+1)**(1/(2*sqrt(x)+1))-2*sqrt(x)-1 == 0
+    assert (4*x+4*sqrt(x)+1)**(sqrt(x)/(2*sqrt(x)+1))*(2*sqrt(x)+1)**
+    (1/(2*sqrt(x)+1))-2*sqrt(x)-1 == 0
 
 @XFAIL
 def test_L9():
@@ -617,7 +619,7 @@ def test_M2():
         assert im(i) == 0
 
 def test_M3():
-    solve(x**4+x**3+x**2+x+1)
+    # solve(x**4+x**3+x**2+x+1,x)
     # This produces horrible output now.  Hopefully someone will fix this so
     # that I don't have to mark this as an XFAIL.  Same for M4.
 
@@ -630,9 +632,16 @@ def test_M6():
     # The paper asks for exp terms, but sin's and cos's are acceptable to me
 
 def test_M7():
-    assert solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 + 226*x**2 - 140*x + 46,x) == [1 + (-6 + 2*(-3 - 4*3**(1/2))**(1/2))**(1/2)/2, 1 + (-6 - 2*(-3 + 4*3**(1/2))**(1/2))**(1/2)/2, 1 + (-6 + 2*(-3 + 4*3**(1/2))**(1/2))**(1/2)/2, 1 - (-6 - 2*(-3 + 4*3**(1/2))**(1/2))**(1/2)/2, 1 - (-6 + 2*(-3 + 4*3**(1/2))**(1/2))**(1/2)/2, 1 - (-6 - 2*(-3 - 4*3**(1/2))**(1/2))**(1/2)/2, 1 - (-6 + 2*(-3 - 4*3**(1/2))**(1/2))**(1/2)/2, 1 + (-6 - 2*(-3 - 4*3**(1/2))**(1/2))**(1/2)/2]
+    assert solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
+    226*x**2 - 140*x + 46,x) == [1 + (-6 + 2*(-3 - 4*3**(1/2))**(1/2))**(1/2)/2,
+    1 + (-6 - 2*(-3 + 4*3**(1/2))**(1/2))**(1/2)/2, 1 + (-6 + 2*(-3 +
+    4*3**(1/2))**(1/2))**(1/2)/2, 1 - (-6 - 2*(-3 + 4*3**(1/2))**(1/2))**(1/2)/2,
+    1 - (-6 + 2*(-3 + 4*3**(1/2))**(1/2))**(1/2)/2, 1 - (-6 - 2*(-3 - 4*3**(1/2))
+    **(1/2))**(1/2)/2, 1 - (-6 + 2*(-3 - 4*3**(1/2))**(1/2))**(1/2)/2, 1 + (-6 -
+     2*(-3 - 4*3**(1/2))**(1/2))**(1/2)/2]
 
 def test_M8():
+    z = symbols('z', complex = True)
     assert solve(exp(2*x)+2*exp(x)+1-z,x) == [log(1 + z - 2*z**(1/2))/2, log(1 + z + 2*z**(1/2))/2]
     # This one could be simplified better (the 1/2 could be pulled into the log
     # as a sqrt, and the function inside the log can be factored as a square,
@@ -640,3 +649,52 @@ def test_M8():
     # infinite number of solutions.
     # x = {log(sqrt(z) - 1), log(sqrt(z) + 1) + i pi} [+ n 2 pi i, + n 2 pi i]
     # where n is an arbitrary integer.  See url of detailed output above.
+
+@XFAIL
+def test_M9():
+    assert solve(exp(2-x**2)-exp(-x),x) == [-1, 2]
+    # There are also complex solutions
+
+def test_M10():
+    assert solve(exp(x)-x,x) == [-LambertW(-1)]
+
+@XFAIL
+def test_M11():
+    assert solve(x**x-x,x) == [-1, 1]
+
+@XFAIL
+def test_M12():
+    raise NotImplementedError("solve((x+1)*(sin(x)**2+1)**2*cos(3*x)**3,x)")
+
+@XFAIL
+def test_M13():
+    raise NotImplementedError("solve(sin(x)-cos(x),x)")
+
+def test_M14():
+    assert solve(tan(x)-1,x) == [pi/4]
+
+@XFAIL
+def test_M15():
+    assert solve(sin(x)-1/2) == [pi/6, 5*pi/6]
+
+@XFAIL
+def test_M16():
+    raise NotImplementedError("solve(sin(x)-tan(x),x)")
+
+@XFAIL
+def test_M17():
+    raise NotImplementedError("solve(asin(x)-atan(x),x)")
+
+@XFAIL
+def test_M18():
+    raise NotImplementedError("solve(acos(x)-atan(x),x)")
+
+@XFAIL
+def test_M19():
+    raise NotImplementedError("solve((x-2)/x**(1/3),x)")
+
+@XFAIL
+def test_M20():
+    assert solve(sqrt(x**2+1)-x+2,x) == []
+    # This equation has no solutions
+

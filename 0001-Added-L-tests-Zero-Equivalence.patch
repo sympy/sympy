@@ -1,4 +1,4 @@
-From 2f5c9e2c972762fcff96cfe2fa66191ed0e8ace3 Mon Sep 17 00:00:00 2001
+﻿From 2f5c9e2c972762fcff96cfe2fa66191ed0e8ace3 Mon Sep 17 00:00:00 2001
 From: Aaron Meurer <asmeurer@gmail.com>
 Date: Wed, 8 Apr 2009 23:01:56 -0600
 Subject: [PATCH 1/1] Added L tests (Zero Equivalence)
@@ -16,10 +16,10 @@ index 80f5321..37e9920
 +++ b/sympy/core/tests/test_wester.py
 @@ -565,4 +565,37 @@ def test_K10():
      assert simplify(sqrt(1/z) + 1/sqrt(z)) == 0
- 
- 
+
+
 +# L. Determining Zero Equivalence
- 
+
 +def test_L1():
 +    assert sqrt(997)-(997**3)**R(1,6) == 0
 +
@@ -53,6 +53,6 @@ index 80f5321..37e9920
 +    z = symbols('z', complex=True)
 +    assert 2**(1-z)*gamma(z)*zeta(z)*cos(z*pi/2)-pi**2*zeta(1-z) == 0
 \ No newline at end of file
--- 
+--
 1.6.2
 
