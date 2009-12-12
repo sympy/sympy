@@ -423,15 +423,16 @@ class Poly(Basic):
 
         return dom, per, F, G
 
-    def per(f, rep, remove=None):
+    def per(f, rep, gens=None, remove=None):
         """Create a Poly out of the given representation. """
+        if gens is None:
+            gens = f.gens
+
         if remove is not None:
-            gens = f.gens[:remove]+f.gens[remove+1:]
+            gens = gens[:remove]+gens[remove+1:]
 
             if not gens:
                 return f.rep.dom.to_sympy(rep)
-        else:
-            gens = f.gens
 
         return Poly(rep, *gens)
 
@@ -1126,6 +1127,15 @@ class Poly(Basic):
             raise OperationNotSupported(f, 'sturm')
 
         return map(f.per, result)
+
+    def sqf_norm(f):
+        """Computes square-free norm of `f`. """
+        try:
+            s, g, r = f.rep.sqf_norm()
+        except AttributeError: # pragma: no cover
+            raise OperationNotSupported(f, 'sqf_norm')
+
+        return s, f.per(g), f.per(r)
 
     def sqf_part(f):
         """Computes square-free part of `f`. """
@@ -1825,6 +1835,20 @@ def sturm(f, *gens, **args):
         return [ r.as_basic() for r in result ]
     else:
         return result
+
+def sqf_norm(f, *gens, **args):
+    """Computes square-free norm of `f`. """
+    F = Poly(f, *_analyze_gens(gens), **args)
+
+    if not F.is_Poly:
+        raise GeneratorsNeeded("can't compute square-free norm of %s without generators" % f)
+
+    s, g, r = F.sqf_norm()
+
+    if _should_return_basic(f, **args):
+        return Integer(s), g.as_basic(), r.as_basic()
+    else:
+        return Integer(s), g, r
 
 def sqf_part(f, *gens, **args):
     """Computes square-free part of `f`. """

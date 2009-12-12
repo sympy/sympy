@@ -65,6 +65,7 @@ from sympy.polys.densetools import (
     dup_content, dmp_ground_content,
     dup_primitive, dmp_ground_primitive,
     dup_monic, dmp_ground_monic,
+    dup_sqf_norm, dmp_sqf_norm,
     dup_sqf_part, dmp_sqf_part,
     dup_sqf_list, dmp_sqf_list,
     dup_sqf_p, dmp_sqf_p,
@@ -1068,7 +1069,7 @@ class DMP(object):
 
             return lev, dom, per, F, G
 
-    def per(f, rep, kill=False):
+    def per(f, rep, dom=None, kill=False):
         """Create a DMP out of the given representation. """
         lev = f.lev
 
@@ -1078,7 +1079,10 @@ class DMP(object):
             else:
                 lev -= 1
 
-        return DMP(rep, f.dom, lev)
+        if dom is None:
+            dom = f.dom
+
+        return DMP(rep, dom, lev)
 
     @classmethod
     def zero(cls, lev, dom):
@@ -1430,6 +1434,11 @@ class DMP(object):
             return map(f.per, dup_sturm(f.rep, f.dom))
         else:
             raise ValueError('univariate polynomial expected')
+
+    def sqf_norm(f):
+        """Computes square-free norm of `f`. """
+        s, g, r = dmp_sqf_norm(f.rep, f.lev, f.dom)
+        return s, f.per(g), f.per(r, dom=f.dom.dom)
 
     def sqf_part(f):
         """Computes square-free part of `f`. """

@@ -1561,6 +1561,9 @@ def dmp_sqf_p(f, u, K):
 @cythonized("s")
 def dup_sqf_norm(f, K):
     """Square-free norm of `f` in `K[x]`, useful over algebraic domains. """
+    if not K.is_Algebraic:
+        raise DomainError("ground domain must be algebraic")
+
     s, g = 0, dmp_raise(K.mod.rep, 1, 0, K.dom)
 
     while True:
@@ -1577,6 +1580,12 @@ def dup_sqf_norm(f, K):
 @cythonized("s,u")
 def dmp_sqf_norm(f, u, K):
     """Square-free norm of `f` in `K[X]`, useful over algebraic domains. """
+    if not u:
+        return dup_sqf_norm(f, K)
+
+    if not K.is_Algebraic:
+        raise DomainError("ground domain must be algebraic")
+
     s, g = 0, dmp_raise(K.mod.rep, u+1, 0, K.dom)
 
     while True:
