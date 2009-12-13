@@ -34,6 +34,9 @@ class Algebra(object):
     has_Ring  = False
     has_Field = False
 
+    has_assoc_Ring  = False
+    has_assoc_Field = False
+
     is_ZZ = False
     is_QQ = False
 
@@ -476,6 +479,7 @@ class IntegerRing(Ring):
 
     is_Numerical = True
 
+    has_assoc_Field        = True
     has_CharacteristicZero = True
 
 class RationalField(Field):
@@ -486,6 +490,7 @@ class RationalField(Field):
 
     is_Numerical = True
 
+    has_assoc_Ring         = True
     has_CharacteristicZero = True
 
     def algebraic_field(self, *extension):
@@ -1166,6 +1171,7 @@ class PolynomialRing(Ring):
     is_Poly      = True
     is_Composite = True
 
+    has_assoc_Field        = True
     has_CharacteristicZero = True
 
     def __init__(self, dom, *gens):
@@ -1311,6 +1317,7 @@ class FractionField(Field):
     is_Frac      = True
     is_Composite = True
 
+    has_assoc_Ring         = True
     has_CharacteristicZero = True
 
     def __init__(self, dom, *gens):

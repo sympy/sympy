@@ -1185,7 +1185,7 @@ class Poly(Basic):
         if F.is_zero or G.is_zero:
             return S.One, per(F), per(G)
 
-        if dom.has_Field and not dom.is_EX:
+        if dom.has_assoc_Ring:
             cF, F = F.ground_to_ring()
             cG, G = G.ground_to_ring()
 
@@ -1197,7 +1197,7 @@ class Poly(Basic):
         except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'cofactors')
 
-        if dom.has_Field and not dom.is_EX:
+        if dom.has_assoc_Ring:
             P, Q = P.to_field(), Q.to_field()
 
             cF = dom.to_sympy(cF)
