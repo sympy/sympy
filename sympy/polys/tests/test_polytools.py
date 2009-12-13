@@ -21,6 +21,7 @@ from sympy.polys.polytools import (
 )
 
 from sympy.polys.polyerrors import (
+    OperationNotSupported,
     UnificationFailed,
     GeneratorsNeeded,
     PolynomialError,
@@ -1138,6 +1139,8 @@ def test_monic():
 
     raises(GeneratorsNeeded, "monic(4)")
 
+    assert monic(2*x**2 + 3*x + 4, modulus=5) == x**2 - x + 2
+
 def test_content():
     f, F = 4*x + 2, Poly(4*x + 2)
 
@@ -1145,6 +1148,7 @@ def test_content():
     content(f) == 2
 
     raises(GeneratorsNeeded, "content(4)")
+    raises(OperationNotSupported, "Poly(2*x, modulus=3).content()")
 
 def test_primitive():
     f, g = 4*x + 2, 2*x + 1
@@ -1159,6 +1163,7 @@ def test_primitive():
     assert primitive(F, polys=False) == (2, g)
 
     raises(GeneratorsNeeded, "primitive(4)")
+    raises(OperationNotSupported, "Poly(2*x, modulus=3).primitive()")
 
 def test_compose():
     f = x**12+20*x**10+150*x**8+500*x**6+625*x**4-2*x**3-10*x+9
