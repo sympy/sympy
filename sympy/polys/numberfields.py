@@ -67,6 +67,12 @@ def minpoly(ex, x=None, **args):
 
         raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
 
+    if ex.is_AlgebraicNumber:
+        if args.get('polys', False):
+            return ex.minpoly
+        else:
+            return ex.minpoly.as_basic()
+
     F = [x - bottom_up_scan(ex)] + mapping.values()
     G = groebner(F, *(symbols.values() + [x]), order='lex')
 
@@ -88,4 +94,28 @@ def minpoly(ex, x=None, **args):
 
 class AlgebraicNumber(Basic):
     """Class for representing algebraic numbers in SymPy. """
+
+    __slots__ = ['expr', 'alias', 'minpoly']
+
+    is_AlgebraicNumber = True
+
+    def __new__(cls, ex, alias=None):
+        obj = Basic.__new__(cls)
+
+        obj.expr = sympify(ex)
+        obj.minpoly = minpoly(obj.expr)
+
+        if alias is not None:
+            if isinstance(alias, basestring):
+                obj.alias = Symbol(alias)
+            else:
+                obj.alias = alias
+        else:
+            obj.alias = None
+
+        return obj
+
+    @property
+    def is_aliased(self):
+        return self.alias is not None
 

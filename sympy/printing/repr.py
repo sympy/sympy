@@ -109,6 +109,10 @@ class ReprPrinter(Printer):
     def _print_Zero(self, expr):
         return "Zero"
 
+    def _print_AlgebraicNumber(self, expr):
+        return "%s(%s, %s)" % (self.__class__.__name__,
+            self._print(expr.expr), self._print(expr.alias))
+
 RPrinter = ReprPrinter()
 
 def srepr(expr):

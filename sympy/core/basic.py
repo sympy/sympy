@@ -288,6 +288,7 @@ class Basic(AssumeMeths):
     is_Derivative = False
     is_Piecewise = False
     is_Poly = False
+    is_AlgebraicNumber = False
 
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)

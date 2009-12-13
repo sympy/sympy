@@ -636,6 +636,11 @@ class PrettyPrinter(Printer):
     _print_set       = __print_set
     _print_frozenset = __print_set
 
+    def _print_AlgebraicNumber(self, a):
+        if a.is_aliased:
+            return self._print(a.alias)
+        else:
+            return self._print(a.expr)
 
 def pretty(expr, profile=None, **kargs):
     """
@@ -669,3 +674,4 @@ def pretty_print(expr, use_unicode=None):
     print pretty(expr, use_unicode = use_unicode)
 
 pprint = pretty_print
+
