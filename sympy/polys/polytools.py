@@ -35,11 +35,15 @@ from sympy.polys.polyerrors import (
     GeneratorsNeeded, PolynomialError,
 )
 
-from sympy.ntheory import isprime
+from sympy.mpmath import (
+    polyroots as npolyroots,
+)
 
 from sympy.utilities import (
     any, all, numbered_symbols,
 )
+
+from sympy.ntheory import isprime
 
 import re
 
@@ -1204,6 +1208,18 @@ class Poly(Basic):
             coeff = S.One
 
         return coeff, per(P), per(Q)
+
+    def nroots(f, **args):
+        """Compute numerical approximations of roots of `f`. """
+        if not f.rep.dom.is_Numerical:
+            raise DomainError("numerical domain expected, got %s" % f.rep.dom)
+
+        if f.is_multivariate:
+            raise PolynomialError("can't compute roots of a multivariate polynomial")
+
+        coeffs = [ f.rep.dom.evalf(c) for c in f.all_coeffs() ]
+
+        return sympify(npolyroots(coeffs, **args))
 
     @property
     def is_zero(f):

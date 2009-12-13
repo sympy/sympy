@@ -1373,3 +1373,18 @@ def test_groebner():
     assert groebner([x**2 + 1, y**4*x + x**3, x*y*z**3], x, y, z, order='grevlex', polys=True) == \
         [Poly(-1 + y**4, x, y, z), Poly(z**3, x, y, z), Poly(1 + x**2, x, y, z)]
 
+def test_nroots():
+    assert Poly(x**2 - 1, x).nroots() == [-1.0, 1.0]
+    assert Poly(x**2 + 1, x).nroots() == [-I, I]
+
+    roots, error = Poly(x**2 - 1, x).nroots(error=True)
+
+    assert roots == [-1.0, 1.0] and error < 1e25;
+
+    roots, error = Poly(x**2 + 1, x).nroots(error=True)
+
+    assert roots == [-I, I] and error < 1e25;
+
+    raises(DomainError, "Poly(x+y, x).nroots()")
+    raises(PolynomialError, "Poly(x+y).nroots()")
+

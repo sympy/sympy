@@ -40,6 +40,7 @@ class Algebra(object):
     is_Poly = False
     is_Frac = False
 
+    is_Numerical = False
     is_Algebraic = False
     is_Composite = False
 
@@ -385,6 +386,10 @@ class Algebra(object):
         """Returns factorial of `a`. """
         return self.dtype(factorial(a))
 
+    def evalf(self, a, **args):
+        """Returns numerical approximation of `a`. """
+        return self.to_sympy(a).evalf(**args)
+
 class Ring(Algebra):
     """Represents a ring domain. """
 
@@ -469,6 +474,8 @@ class IntegerRing(Ring):
     is_ZZ = True
     rep   = 'ZZ'
 
+    is_Numerical = True
+
     has_CharacteristicZero = True
 
 class RationalField(Field):
@@ -476,6 +483,8 @@ class RationalField(Field):
 
     is_QQ = True
     rep   = 'QQ'
+
+    is_Numerical = True
 
     has_CharacteristicZero = True
 
@@ -1019,6 +1028,8 @@ class AlgebraicField(Field):
     """A class for representing algebraic number fields. """
 
     dtype        = ANP
+
+    is_Numerical = True
     is_Algebraic = True
 
     has_CharacteristicZero = True
