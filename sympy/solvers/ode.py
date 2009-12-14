@@ -182,6 +182,7 @@ from sympy.core.sympify import sympify
 from sympy.functions import cos, exp, im, log, re, sin, sign
 from sympy.matrices import wronskian
 from sympy.polys import RootsOf, discriminant, RootOf
+from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp
 from sympy.solvers import solve
@@ -1770,7 +1771,7 @@ def _homogeneous_order(eq, *symbols):
                     symbols = tuple(symbols)
 
     # The following are not supported
-    if eq.is_Order or eq.is_Derivative:
+    if eq.has(Order) or eq.has(Derivative):
         return None
 
     # These are all constants

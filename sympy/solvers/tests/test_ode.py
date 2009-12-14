@@ -1,7 +1,7 @@
 from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         I, exp, log, simplify, normal, together, ratsimp, powsimp, \
         fraction, radsimp, Eq, sqrt, pi, erf,  diff, Rational, asinh, trigsimp, \
-        S, RootOf, Poly, Integral, atan, Equality, solve
+        S, RootOf, Poly, Integral, atan, Equality, solve, O
 from sympy.abc import x, y, z
 from sympy.solvers.ode import ode_order, homogeneous_order, \
         _undetermined_coefficients_match, classify_ode, checkodesol, ode_renumber
@@ -381,6 +381,10 @@ def test_homogeneous_order():
     assert homogeneous_order(2*log(1/y) + 2*log(x), x, y) == 0
     a = Symbol('a')
     assert homogeneous_order(a*log(1/y) + a*log(x), x, y) == 0
+    assert homogeneous_order(f(x).diff(x), x, y) == None
+    assert homogeneous_order(-f(x).diff(x) + x, x, y) == None
+    assert homogeneous_order(O(x), x, y) == None
+    assert homogeneous_order(x + O(x**2), x, y) == None
 
 
 def test_1st_homogeneous_coeff_ode1():
