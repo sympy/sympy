@@ -1066,3 +1066,11 @@ def test_1686():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
     assert classify_ode(eq, f(x)) == ('1st_linear', '1st_linear_Integral')
+
+def test_1726():
+    raises(ValueError, "dsolve(f(x, y).diff(x) - y*f(x, y), f(x))")
+    assert classify_ode(f(x, y).diff(x) - y*f(x, y), f(x), dict=True) == \
+    {'default': None, 'order': 0}
+    # See also issue 694, test Z13.
+    raises(ValueError, "dsolve(f(x).diff(x), f(y))")
+    assert classify_ode(f(x).diff(x), f(y), dict=True) == {'default': None, 'order': 0}

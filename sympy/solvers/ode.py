@@ -357,12 +357,13 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
                             hint: kwargs['match'],
                             'order': kwargs['order']})
 
-    if not hints['default']:
-        # classify_ode will set hints['default'] to None if no hints match.
-        raise NotImplementedError("dsolve: Cannot solve " + str(eq))
 
     if hints['order'] == 0:
         raise ValueError(str(eq) + "is not a differential equation in " + str(func))
+
+    if not hints['default']:
+        # classify_ode will set hints['default'] to None if no hints match.
+        raise NotImplementedError("dsolve: Cannot solve " + str(eq))
 
     if hint == 'default':
         return dsolve(eq, func, hint=hints['default'], simplify=simplify, classify=False,
@@ -552,6 +553,7 @@ def classify_ode(eq, func, dict=False):
 
     if not order:
         if dict:
+            matching_hints["default"] = None
             return matching_hints
         else:
             return ()
