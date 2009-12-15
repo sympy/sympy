@@ -571,7 +571,7 @@ def classify_ode(eq, func, dict=False):
 
     eq = expand(eq)
 
-    # Precondition to remove f(x) from highest order derivative
+    # Precondition to try remove f(x) from highest order derivative
     reduced_eq = None
     if eq.is_Add:
         deriv_coef = eq.coeff(f(x).diff(x, order))
@@ -593,10 +593,11 @@ def classify_ode(eq, func, dict=False):
             u = Symbol('u', dummy=True)
             ind, dep = (reduced_eq + u).as_independent(f)
             ind, dep = [tmp.subs(u, 0) for tmp in [ind, dep]]
-        r = {a: dep.coeff(df, expand=False) or 0,
-             b: dep.coeff(f(x), expand=False) or 0,
+        r = {a: dep.coeff(df, expand=False) or S.Zero, # if we get None for coeff, take 0
+             b: dep.coeff(f(x), expand=False) or S.Zero, # ditto
              c: ind}
-        if (r[a]*df + r[b]*f(x) + r[c]).expand() - reduced_eq == 0:
+        # double check f[a] since the preconditioning may have failed
+        if not r[a].has(f) and (r[a]*df + r[b]*f(x) + r[c]).expand() - reduced_eq == 0:
             r['a'] = a
             r['b'] = b
             r['c'] = c

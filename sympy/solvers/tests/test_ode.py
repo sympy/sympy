@@ -1070,6 +1070,14 @@ def test_1686():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
     assert classify_ode(eq, f(x)) == ('1st_linear', '1st_linear_Integral')
+    # 1765
+    eq=(x**2 + f(x)**2)*f(x).diff(x) - 2*x*f(x)
+    assert classify_ode(eq, f(x)) == (
+        '1st_homogeneous_coeff_best',
+        '1st_homogeneous_coeff_subs_indep_div_dep',
+        '1st_homogeneous_coeff_subs_dep_div_indep',
+        '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
+        '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
 
 def test_1726():
     raises(ValueError, "dsolve(f(x, y).diff(x) - y*f(x, y), f(x))")
