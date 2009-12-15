@@ -6,6 +6,7 @@ from sympy.polys.densebasic import (
     dmp_validate,
     dup_normal, dmp_normal,
     dup_convert, dmp_convert,
+    dup_from_sympy, dmp_from_sympy,
     dup_strip, dmp_strip,
     dup_degree, dmp_degree_in,
     dmp_degree_list,
@@ -1092,6 +1093,16 @@ class DMP(object):
     def one(cls, lev, dom):
         return DMP(1, dom, lev)
 
+    @classmethod
+    def from_list(cls, rep, lev, dom):
+        """Create an instance of `cls` given a list of native coefficients. """
+        return cls(dmp_convert(rep, lev, None, dom), dom, lev)
+
+    @classmethod
+    def from_sympy_list(cls, rep, lev, dom):
+        """Create an instance of `cls` given a list of SymPy coefficients. """
+        return cls(dmp_from_sympy(rep, lev, dom), dom, lev)
+
     def to_dict(f):
         """Convert `f` to a dict representation with native coefficients. """
         return dmp_to_dict(f.rep, f.lev)
@@ -2050,6 +2061,14 @@ class ANP(object):
             rep[k] = f.dom.to_sympy(v)
 
         return rep
+
+    def to_list(f):
+        """Convert `f` to a list representation with native coefficients. """
+        return f.rep
+
+    def to_sympy_list(f):
+        """Convert `f` to a list representation with SymPy coefficients. """
+        return [ f.dom.to_sympy(c) for c in f.rep ]
 
     def neg(f):
         return f.per(dup_neg(f.rep, f.dom))

@@ -111,7 +111,7 @@ class ReprPrinter(Printer):
 
     def _print_AlgebraicNumber(self, expr):
         return "%s(%s, %s)" % (self.__class__.__name__,
-            self._print(expr.expr), self._print(expr.alias))
+            self._print(self.coeffs()), self._print(expr.root))
 
 RPrinter = ReprPrinter()
 

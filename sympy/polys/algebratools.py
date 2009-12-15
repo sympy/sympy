@@ -4,10 +4,12 @@ from sympy.core import Basic, sympify
 
 from sympy.polys.polyerrors import (
     ExactQuotientFailed,
+    IsomorphismFailed,
     UnificationFailed,
     GeneratorsNeeded,
     CoercionFailed,
     NotInvertible,
+    NotAlgebraic,
     DomainError,
 )
 
@@ -176,6 +178,10 @@ class Algebra(object):
                 raise UnificationFailed("can't unify %s with %s, given %s generators" % (K0, K1, tuple(gens)))
         elif K0 == K1:
             return K0
+
+        if K0.is_Numerical and K1.is_Numerical:
+            if K0 == K1:
+                return K0
 
         if K0.is_EX:
             return K0
@@ -495,7 +501,7 @@ class RationalField(Field):
 
     def algebraic_field(self, *extension):
         """Returns an algebraic field, i.e. `QQ(alpha, ...)`. """
-        return AlgebraicField(self, extension)
+        return AlgebraicField(self, *extension)
 
 class ZZ_python(IntegerRing):
     pass
@@ -1039,40 +1045,35 @@ class AlgebraicField(Field):
 
     has_CharacteristicZero = True
 
-    def __init__(self, dom, ext):
+    def __init__(self, dom, *ext):
         if not dom.is_QQ:
             raise DomainError("ground domain must be a rational field")
 
-        from sympy import minpoly
+        from sympy.polys.numberfields import AlgebraicNumber
 
-        if type(ext) is tuple:
-            (self.ext,) = ext
-        else:
-             self.ext   = ext
+        if len(ext) == 1:
+            (ext,) = ext
 
-        self.gens = (self.ext,)
-
-        mod = minpoly(self.ext, polys=True)
-        mod = mod.set_domain(dom).rep
-
-        self.zero = self.dtype.zero(mod.rep, dom)
-        self.one  = self.dtype.one(mod.rep, dom)
+        self.ext = AlgebraicNumber(ext)
+        self.mod = self.ext.minpoly.rep
 
         self.dom  = dom
-        self.mod  = mod
 
-        self.alpha = self([dom(1), dom(0)])
+        self.gens = (self.ext,)
+        self.unit = self([dom(1), dom(0)])
+
+        self.zero = self.dtype.zero(self.mod.rep, dom)
+        self.one  = self.dtype.one(self.mod.rep, dom)
 
     def __str__(self):
         return str(self.dom) + '<' + str(self.ext) + '>'
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.dtype,
-            self.dom, self.ext, self.mod))
+        return hash((self.__class__.__name__, self.dtype, self.dom, self.ext))
 
     def __call__(self, a):
         """Construct an element of `self` domain from `a`. """
-        return ANP(a, self.mod, self.dom)
+        return ANP(a, self.mod.rep, self.dom)
 
     def __eq__(self, other):
         """Returns `True` if two algebras are equivalent. """
@@ -1090,27 +1091,16 @@ class AlgebraicField(Field):
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
-        return basic_from_dict(a.to_sympy_dict(), self.ext)
+        from sympy.polys.numberfields import AlgebraicNumber
+        return AlgebraicNumber(a, self.ext).as_basic()
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """
+        from sympy.polys.numberfields import AlgebraicNumber
         try:
-            return self(self.dom.from_sympy(a))
-        except CoercionFailed:
-            pass
-
-        p, q = a.as_numer_denom()
-
-        num = dict_from_basic(p, self.gens)
-        den = dict_from_basic(q, self.gens)
-
-        for k, v in num.iteritems():
-            num[k] = self.dom.from_sympy(v)
-
-        for k, v in den.iteritems():
-            den[k] = self.dom.from_sympy(v)
-
-        return self(num).exquo(self(den))
+            return self(AlgebraicNumber(a, self.ext).rep.all_coeffs()) # XXX: simplify this
+        except (NotAlgebraic, IsomorphismFailed):
+            raise CoercionFailed("%s is not a valid algebraic number in %s" % (a, self))
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """

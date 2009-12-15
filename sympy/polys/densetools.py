@@ -1573,7 +1573,7 @@ def dup_sqf_norm(f, K):
         if dup_sqf_p(r, K.dom):
             break
         else:
-            f, s = dup_compose(f, [K.one,-K.alpha], K), s+1
+            f, s = dup_compose(f, [K.one,-K.unit], K), s+1
 
     return s, f, r
 
@@ -1595,7 +1595,7 @@ def dmp_sqf_norm(f, u, K):
         if dmp_sqf_p(r, u, K.dom):
             break
         else:
-            f, s = dmp_compose(f, [K.one,-K.alpha], u, K), s+1
+            f, s = dmp_compose(f, [K.one,-K.unit], u, K), s+1
 
     return s, f, r
 

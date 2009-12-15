@@ -1003,7 +1003,7 @@ def dup_ext_factor(f, K, **args):
     if len(factors) == 1:
         return lc, [(f, n//dup_degree(f))]
 
-    H = [K.one, s*K.alpha]
+    H = [K.one, s*K.unit]
 
     for i, (factor, _) in enumerate(factors):
         h = dup_convert(factor, K.dom, K)
@@ -1033,7 +1033,7 @@ def dmp_ext_factor(f, u, K, **args):
     if len(factors) == 1:
         coeff, factors = lc, [f]
     else:
-        H = [K.one, s*K.alpha]
+        H = [K.one, s*K.unit]
 
         for i, (factor, _) in enumerate(factors):
             h = dmp_convert(factor, u, K.dom, K)

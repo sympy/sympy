@@ -18,6 +18,9 @@ class HeuristicGCDFailed(Exception):
 class HomomorphismFailed(Exception):
     pass
 
+class IsomorphismFailed(Exception):
+    pass
+
 class ExtraneousFactors(Exception):
     pass
 

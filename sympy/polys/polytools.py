@@ -378,8 +378,13 @@ class Poly(Basic):
 
     def unify(f, g):
         """Make `f` and `g` belong to the same domain. """
-        if not f.is_Poly or not g.is_Poly:
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+        g = sympify(g)
+
+        if not g.is_Poly:
+            try:
+                return f.rep.dom, f.per, f.rep, f.rep.per(f.rep.dom.from_sympy(g))
+            except CoercionFailed:
+                raise UnificationFailed("can't unify %s with %s" % (f, g))
 
         if isinstance(f.rep, DMP) and isinstance(g.rep, DMP):
             gens = _unify_gens(f.gens, g.gens)
@@ -439,6 +444,10 @@ class Poly(Basic):
                 return f.rep.dom.to_sympy(rep)
 
         return Poly(rep, *gens)
+
+    def unit(f):
+        """Return unit of `f`'s polynomial algebra. """
+        return f.per(f.rep.unit())
 
     @classmethod
     def _analyze_domain(cls, args):
@@ -614,9 +623,9 @@ class Poly(Basic):
         """Switch to a dict representation with SymPy coefficients. """
         return f.rep.to_sympy_dict()
 
-    def as_basic(f):
+    def as_basic(f, *gens):
         """Convert a polynomial instance to a SymPy expression. """
-        return basic_from_dict(f.rep.to_sympy_dict(), *f.gens)
+        return basic_from_dict(f.rep.to_sympy_dict(), *(gens or f.gens))
 
     def deflate(f):
         """Reduce degree of `f` by mapping `x_i**m` to `y_i`. """

@@ -29,7 +29,10 @@ from polyerrors import (
 )
 
 from numberfields import (
-    minpoly, AlgebraicNumber,
+    minpoly,
+    primitive_element,
+    field_isomorphism,
+    AlgebraicNumber,
 )
 
 from monomialtools import (

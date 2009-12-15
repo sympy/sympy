@@ -309,11 +309,11 @@ class StrPrinter(Printer):
 
         return format % (' '.join(terms), ', '.join(gens))
 
-    def _print_AlgebraicNumber(self, a):
-        if a.is_aliased:
-            return self._print(a.alias)
+    def _print_AlgebraicNumber(self, expr):
+        if expr.is_aliased:
+            return self._print(expr.as_poly().as_basic())
         else:
-            return self._print(a.expr)
+            return self._print(expr.as_basic())
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
