@@ -363,6 +363,10 @@ def test_separatevars():
     assert separatevars((x*(y+1))**z) == x**z*(1 + y)**z
     assert separatevars(1+x+y+x*y) == (x+1)*(y+1)
     assert separatevars(y / pi * exp(-(z - x) / cos(n))) == y * exp((x - z) / cos(n)) / pi
+    # 1759
+    p=Symbol('p',positive=True)
+    assert separatevars(sqrt(p**2 + x*p**2)) == p*sqrt(1 + x)
+    assert separatevars(sqrt(y*(p**2 + x*p**2))) == p*sqrt(y)*sqrt(1 + x)
 
 @XFAIL
 def test_separatevars_advanced_factor():

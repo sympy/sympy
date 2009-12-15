@@ -738,6 +738,10 @@ def separatevars(expr, symbols=[], dict=False):
         return _separatevars(expr)
 
 def _separatevars(expr):
+    # get a Pow ready for expansion
+    if expr.is_Pow:
+        expr = separatevars(expr.base)**expr.exp
+
     # First try other expansion methods
     expr = expr.expand(mul=False, multinomial=False)
     try:
@@ -750,7 +754,7 @@ def _separatevars(expr):
     if expr.is_Add:
 
         nonsepar = sympify(0)
-        # Find any common coeficients to pull out
+        # Find any common coefficients to pull out
         commoncsetlist = []
         for i in expr.args:
             if i.is_Mul:
