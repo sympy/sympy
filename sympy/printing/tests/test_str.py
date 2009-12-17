@@ -105,6 +105,7 @@ def test_ImaginaryUnit():
 
 def test_Infinity():
     assert str(oo) == "oo"
+    assert str(I * oo) == "(oo)*I"
 
 def test_Integer():
     assert str(Integer(-3)) == "-3"
