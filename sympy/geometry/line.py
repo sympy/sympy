@@ -332,7 +332,30 @@ class LinearEntity(GeometryEntity):
 
 
 class Line(LinearEntity):
-    """A line in space."""
+    """A line in space.
+
+    A line is declared with two distinct points.
+
+    Note:
+    At the moment only lines in a 2D space can be declared, because
+    Points can be defined only for 2D spaces.
+
+    Example:
+    ========
+        >>> import sympy
+        >>> from sympy import Point
+        >>> from sympy.abc import L
+        >>> from sympy.geometry import Line
+        >>> L = Line(Point(2,3), Point(3,5))
+        >>> L
+        Line(Point(Integer(2), Integer(3)), Point(Integer(3), Integer(5)))
+        >>> L.points
+        (Point(Integer(2), Integer(3)), Point(Integer(3), Integer(5)))
+        >>> L.equation
+        1 + y - 2*x
+        >>> L.coefficients
+        (-2, 1, 1)
+    """
 
     def arbitrary_point(self, parameter_name='t'):
         """Returns a symbolic point that is on this line."""
@@ -377,7 +400,39 @@ class Line(LinearEntity):
 
 
 class Ray(LinearEntity):
-    """A ray in space."""
+    """
+    A ray is a semi-line in the space. It starts at one point and
+    propagates in one unique direction.
+
+    A ray is declared with two distinct points: the first point is the source,
+    whereas the second point lies on the semi-line. Therefore, the second
+    point determines the direction to which the semi-line propagates.
+
+    Note:
+    At the moment only rays in a 2D space can be declared, because
+    Points can be defined only for 2D spaces.
+
+    Example:
+    ========
+        >>> import sympy
+        >>> from sympy import Point
+        >>> from sympy.abc import r
+        >>> from sympy.geometry import Ray
+        >>> r = Ray(Point(2,3), Point(3,5))
+        >>> r = Ray(Point(2,3),Point(3,5))
+        >>> r
+        Ray(Point(Integer(2), Integer(3)), Point(Integer(3), Integer(5)))
+        >>> r.points
+        (Point(Integer(2), Integer(3)), Point(Integer(3), Integer(5)))
+        >>> r.source
+        Point(Integer(2), Integer(3))
+        >>> r.xdirection
+        oo
+        >>> r.ydirection
+        oo
+        >>> r.slope
+        2
+    """
 
     @property
     def source(self):
@@ -452,7 +507,32 @@ class Ray(LinearEntity):
 
 
 class Segment(LinearEntity):
-    """An undirected line segment in space."""
+    """An undirected line segment in space.
+
+    A segment is declared with two distinct points.
+
+    Note:
+    At the moment only segments in a 2D space can be declared, because
+    Points can be defined only for 2D spaces.
+
+    Example:
+    ========
+        >>> import sympy
+        >>> from sympy import Point
+        >>> from sympy.abc import s
+        >>> from sympy.geometry import Segment
+        >>> s = Segment(Point(4,3), Point(1,1))
+        >>> s
+        Segment(Point(One, One), Point(Integer(4), Integer(3)))
+        >>> s.points
+        (Point(One, One), Point(Integer(4), Integer(3)))
+        >>> s.slope
+        2/3
+        >>> s.length
+        13**(1/2)
+        >>> s.midpoint
+        Point(Rational(5, 2), Integer(2))
+    """
 
     def __new__(cls, p1, p2, **kwargs):
         # Reorder the two points under the following ordering:
