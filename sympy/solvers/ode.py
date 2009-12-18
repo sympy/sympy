@@ -360,7 +360,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
 
 
     if hints['order'] == 0:
-        raise ValueError(str(eq) + "is not a differential equation in " + str(func))
+        raise ValueError(str(eq) + " is not a differential equation in " + str(func))
 
     if not hints['default']:
         # classify_ode will set hints['default'] to None if no hints match.
@@ -2261,7 +2261,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     if len(gensols) != order:
         raise NotImplementedError("Cannot find " + str(order) + \
         " solutions to the homogeneous equation nessesary to apply " + \
-        "undetermined coefficients to " + str(eq) + "(number of terms != order)")
+        "undetermined coefficients to " + str(eq) + " (number of terms != order)")
     usedsin = set([])
     mult = 0 # The multiplicity of the root
     getmult = True
@@ -2570,11 +2570,11 @@ def _solve_variation_of_parameters(eq, func, order, match):
         # The wronskian will be 0 iff the solutions are not linearly independent.
         raise NotImplementedError("Cannot find " + str(order) + \
         " solutions to the homogeneous equation nessesary to apply " + \
-        "variation of parameters to " + str(eq) + "(Wronskian == 0)")
+        "variation of parameters to " + str(eq) + " (Wronskian == 0)")
     if len(gensols) != order:
         raise NotImplementedError("Cannot find " + str(order) + \
         " solutions to the homogeneous equation nessesary to apply " + \
-        "variation of parameters to " + str(eq) + "(number of terms != order)")
+        "variation of parameters to " + str(eq) + " (number of terms != order)")
     negoneterm = (-1)**(order)
     for i in gensols:
         psol += negoneterm*C.Integral(wronskian(filter(lambda x: x != i, \

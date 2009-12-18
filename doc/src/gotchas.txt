@@ -417,7 +417,7 @@ Aside from the usage described :ref:`above <equals-signs>`, equals signs (``=``)
     >>> x = Symbol('x', positive=True) # One example of keyword arguments is assumptions for Symbols
     >>> sqrt(x**2) # only == x if x >= 0
     x
-    >>> pprint(powsimp((x*y)**(n + m))) # powsimp has a default argument, combine='all'
+    >>> pprint(powsimp(x**n*x**m*y**n*y**m)) # powsimp has a default argument, combine='all'
          m + n
     (x*y)
     >>> # Setting combine to the default value is the same as not setting it.
