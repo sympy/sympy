@@ -62,11 +62,14 @@ if SymPy is installed somewhere in your PATH.
 3. Tests
 --------
 
-to execute tests, run
+To execute all tests, run
 
 ./setup.py test
 
 in the current directory.
+
+For more fine-grained running of tests, use bin/test or respectively
+bin/doctest.
 
 
 4. Clean
@@ -95,8 +98,7 @@ left. You can see the full list in doc/src/aboutus.txt, or online at:
 
 http://docs.sympy.org/aboutus.html#sympy-development-team
 
-People who preferred not to be associated with the project anymore have "not
-active anymore" written near their names.
+For people that don't want to be listed there, see the git history.
 
 
 6. Citation
