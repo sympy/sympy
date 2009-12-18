@@ -298,11 +298,15 @@ def test_acosh():
     assert acosh(0) == I*pi/2
     assert acosh(Rational(1,2))  == I*pi/3
     assert acosh(Rational(-1,2)) == 2*pi*I/3
-    # at infinites
+
+
+@XFAIL
+def test_acosh_infinities():
     assert acosh(oo) == oo
-    assert acosh(-oo) == oo
-    assert acosh(I*oo) == oo
-    assert acosh(-I*oo) == oo
+    assert acosh(-oo) == oo + I*pi
+    assert acosh(I*oo) == oo + I*pi/2
+    assert acosh(-I*oo) == oo - I*pi/2
+
 
 
 def test_acosh_series():
@@ -351,13 +355,16 @@ def test_atanh():
     assert atanh(-1) == -oo
 
     # at infinites
-    assert atanh(oo) == -I*pi/2
-    assert atanh(-oo) == I*pi/2
     assert atanh(I*oo) == I*pi/2
     assert atanh(-I*oo) == -I*pi/2
 
     #properties
     assert atanh(-x) == -atanh(x)
+
+@XFAIL
+def test_atanh_infinities():
+    assert atanh(oo) == -I*pi/2
+    assert atanh(-oo) == I*pi/2
 
 @XFAIL
 # not yet implemented cases which should live in test_atanh
@@ -376,6 +383,8 @@ def test_atanh_noimpl():
     assert atanh(-I*(2+sqrt(3))) == -5*pi*I/5
     assert atanh(I*(2-sqrt(3))) == pi*I/12
     assert atanh(I*(sqrt(3)-2)) == -pi*I/12
+    assert atanh(oo) == -I*pi/2
+
 
 # TODO please write more tests -- see #652
 def test_acoth():
