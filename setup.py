@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Distutils based setup script for Sympy.
+"""Distutils based setup script for SymPy.
 
 This uses Distutils (http://python.org/sigs/distutils-sig/) the standard
 python mechanism for installing packages. For the easiest installation
@@ -16,7 +16,6 @@ In addition, there are some other commands:
 
     python setup.py clean -> will clean all trash (*.pyc and stuff)
     python setup.py test  -> will run the complete test suite
-    python setup.py test_core -> will run only tests concerning core features
     python setup.py test_doc -> will run tests on the examples of the documentation
     python setup.py bench   -> will run the complete benchmark suite
 
@@ -100,28 +99,6 @@ class clean(Command):
         os.system("rm -rf dist")
         os.system("rm -rf doc/_build")
 
-# FIXME: outdated
-class gen_doc(Command):
-    """Generate the (html) api documentation using epydoc
-
-    output is sent to the directory ../api/
-    """
-
-    description = "generate the api doc"
-    user_options = []
-
-    target_dir = "../api/"
-
-    def initialize_options(self):
-        self.all = None
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        import os
-        os.system("epydoc --no-frames -o %s sympy" % self.target_dir)
-
 
 class test_sympy(Command):
     """Runs all tests under the sympy/ folder
@@ -145,6 +122,7 @@ class test_sympy(Command):
             # all regular tests run successfuly, so let's also run doctests
             # (if some regular test fails, the doctests are not run)
             sympy.doctest()
+
 
 class test_sympy_doc(Command):
 
@@ -261,7 +239,6 @@ setup(
       cmdclass    = {'test': test_sympy,
                      'test_doc': test_sympy_doc,
                      'bench': run_benchmarks,
-                     'gen_doc': gen_doc,
                      'clean': clean,
                      },
       )
