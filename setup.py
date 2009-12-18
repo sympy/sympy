@@ -16,7 +16,6 @@ In addition, there are some other commands:
 
     python setup.py clean -> will clean all trash (*.pyc and stuff)
     python setup.py test  -> will run the complete test suite
-    python setup.py test_doc -> will run tests on the examples of the documentation
     python setup.py bench   -> will run the complete benchmark suite
 
 To get a full list of avaiable commands, read the output of:
@@ -124,21 +123,6 @@ class test_sympy(Command):
             sympy.doctest()
 
 
-class test_sympy_doc(Command):
-
-    description = "Run the tests for the examples in the documentation"
-    user_options = []  # distutils complains if this is not here.
-
-    def initialize_options(self):  # distutils wants this
-        pass
-
-    def finalize_options(self):    # this too
-        pass
-
-    def run(self):
-        sympy.doctest()
-
-
 class run_benchmarks(Command):
     """Runs all SymPy benchmarks"""
 
@@ -237,7 +221,6 @@ setup(
       package_data = { 'sympy.utilities.mathml' : ['data/*.xsl'] },
       data_files = [('share/man/man1', ['doc/man/isympy.1'])],
       cmdclass    = {'test': test_sympy,
-                     'test_doc': test_sympy_doc,
                      'bench': run_benchmarks,
                      'clean': clean,
                      },
