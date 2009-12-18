@@ -92,7 +92,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Renato Coutinho: derivative improvements
 #. Oscar Benjamin: latex printer fix
 #. Øyvind Jensen: implemented coupled cluster expansion and wick theorem
-#. Julio Idichekop Filho: indentation fixes
+#. Julio Idichekop Filho: indentation fixes, docstring improvements
 #. Łukasz Pankowski: fix matrix multiplication with numpy scalars
 
 
