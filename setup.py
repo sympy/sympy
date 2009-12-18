@@ -122,33 +122,6 @@ class gen_doc(Command):
         import os
         os.system("epydoc --no-frames -o %s sympy" % self.target_dir)
 
-# FIXME: use own test runner
-class test_sympy_core(Command):
-    """Run only the tests concerning features of sympy.core.
-    It's a lot faster than running the complete test suite.
-    """
-
-    description = "Automatically run the core test suite for Sympy."
-    user_options = []  # distutils complains if this is not here.
-
-    def initialize_options(self):  # distutils wants this
-        pass
-
-    def finalize_options(self):    # this too
-        pass
-
-
-    def run(self):
-        try:
-            import py
-        except ImportError:
-            print """In order to run the tests, you need codespeak's py.lib
-            web page: http://codespeak.net/py/dist/
-            If you are on debian systems, the package is named python-codespeak-lib
-            """
-            sys.exit(-1)
-        py.test.cmdline.main(args=["sympy/core/tests"])
-
 
 class test_sympy(Command):
     """Runs all tests under the sympy/ folder
@@ -286,7 +259,6 @@ setup(
       package_data = { 'sympy.utilities.mathml' : ['data/*.xsl'] },
       data_files = [('share/man/man1', ['doc/man/isympy.1'])],
       cmdclass    = {'test': test_sympy,
-                     'test_core': test_sympy_core,
                      'test_doc': test_sympy_doc,
                      'bench': run_benchmarks,
                      'gen_doc': gen_doc,
