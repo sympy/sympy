@@ -16,7 +16,7 @@ In addition, there are some other commands:
 
     python setup.py clean -> will clean all trash (*.pyc and stuff)
     python setup.py test  -> will run the complete test suite
-    python setup.py bench   -> will run the complete benchmark suite
+    python setup.py bench -> will run the complete benchmark suite
 
 To get a full list of avaiable commands, read the output of:
 
@@ -80,7 +80,7 @@ class clean(Command):
     is in the VCS.
     """
 
-    description = "Clean everything"
+    description = "remove build files"
     user_options = [("all","a","the same")]
 
     def initialize_options(self):
@@ -103,7 +103,7 @@ class test_sympy(Command):
     """Runs all tests under the sympy/ folder
     """
 
-    description = "Automatically run the test suite for Sympy."
+    description = "run all tests and doctests; also see bin/test and bin/doctest"
     user_options = []  # distutils complains if this is not here.
 
     def __init__(self, *args):
@@ -126,7 +126,7 @@ class test_sympy(Command):
 class run_benchmarks(Command):
     """Runs all SymPy benchmarks"""
 
-    description = "Automatically run the test suite for Sympy."
+    description = "run all benchmarks"
     user_options = []  # distutils complains if this is not here.
 
     def __init__(self, *args):
