@@ -79,7 +79,7 @@ modules = [
 
 class clean(Command):
     """Cleans *.pyc and debian trashs, so you should get the same copy as
-    is in the svn.
+    is in the VCS.
     """
 
     description = "Clean everything"
@@ -98,7 +98,9 @@ class clean(Command):
         os.system("rm -f MANIFEST")
         os.system("rm -rf build")
         os.system("rm -rf dist")
+        os.system("rm -rf doc/_build")
 
+# FIXME: outdated
 class gen_doc(Command):
     """Generate the (html) api documentation using epydoc
 
@@ -120,7 +122,7 @@ class gen_doc(Command):
         import os
         os.system("epydoc --no-frames -o %s sympy" % self.target_dir)
 
-
+# FIXME: use own test runner
 class test_sympy_core(Command):
     """Run only the tests concerning features of sympy.core.
     It's a lot faster than running the complete test suite.
@@ -248,25 +250,19 @@ tests = [
 # update the following list from:
 # http://pyglet.googlecode.com/svn/trunk/setup.py
 # (whenever we update pyglet in sympy)
+# try ./setup.py sdist to see if it works
 pyglet_packages=[
         'pyglet',
         'pyglet.app',
-        'pyglet.canvas',
         'pyglet.font',
         'pyglet.gl',
         'pyglet.graphics',
         'pyglet.image',
         'pyglet.image.codecs',
-        'pyglet.input',
-        'pyglet.libs',
-        'pyglet.libs.darwin',
-        'pyglet.libs.win32',
-        'pyglet.libs.x11',
         'pyglet.media',
         'pyglet.media.drivers',
         'pyglet.media.drivers.directsound',
         'pyglet.media.drivers.openal',
-        'pyglet.media.drivers.pulse',
         'pyglet.text',
         'pyglet.text.formats',
         'pyglet.window',
@@ -280,6 +276,8 @@ setup(
       name = 'sympy',
       version = sympy.__version__,
       description = 'Computer algebra system (CAS) in Python',
+      author = 'SymPy development team',
+      author_email = 'sympy@googlegroups.com',
       license = 'BSD',
       url = 'http://code.google.com/p/sympy',
       packages = ['sympy'] + modules + tests + pyglet_packages,
@@ -288,11 +286,11 @@ setup(
       package_data = { 'sympy.utilities.mathml' : ['data/*.xsl'] },
       data_files = [('share/man/man1', ['doc/man/isympy.1'])],
       cmdclass    = {'test': test_sympy,
-                     'test_core' : test_sympy_core,
-                     'test_doc' : test_sympy_doc,
-                     'bench'    : run_benchmarks,
-                     'gen_doc' : gen_doc,
-                     'clean' : clean,
+                     'test_core': test_sympy_core,
+                     'test_doc': test_sympy_doc,
+                     'bench': run_benchmarks,
+                     'gen_doc': gen_doc,
+                     'clean': clean,
                      },
       )
 

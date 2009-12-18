@@ -1,6 +1,7 @@
 recursive-include data *
 recursive-include doc *
-recursive-include examples *
+prune doc/_build
+recursive-include examples *.py README
 
 recursive-include sympy/thirdparty/pyglet *
 
