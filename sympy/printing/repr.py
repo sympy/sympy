@@ -82,6 +82,9 @@ class ReprPrinter(Printer):
     def _print_Rational(self, expr):
         return '%s(%s, %s)' % (expr.__class__.__name__, self._print(expr.p), self._print(expr.q))
 
+    def _print_Fraction(self, expr):
+        return '%s(%s, %s)' % (expr.__class__.__name__, self._print(expr.numerator), self._print(expr.denominator))
+
     def _print_Real(self, expr):
         dps = prec_to_dps(expr._prec)
         r = mlib.to_str(expr._mpf_, repr_dps(expr._prec))

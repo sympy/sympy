@@ -324,7 +324,10 @@ class StrPrinter(Printer):
                              self.parenthesize(expr.exp, PREC))
 
     def _print_Rational(self, expr):
-        return '%s/%s'%(expr.p, expr.q)
+        return '%s/%s' % (expr.p, expr.q)
+
+    def _print_Fraction(self, expr):
+        return '%s/%s' % (expr.numerator, expr.denominator)
 
     def _print_Real(self, expr):
         prec = expr._prec

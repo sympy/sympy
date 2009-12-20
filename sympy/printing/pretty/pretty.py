@@ -526,21 +526,37 @@ class PrettyPrinter(Printer):
         b,e = power.as_base_exp()
         return self._print(b)**self._print(e)
 
-    def _print_Rational(self, r):
-        if r.q == 1:
-            if r.is_negative:
-                return prettyForm(str(r.p),binding=prettyForm.NEG)
+    def __print_numer_denom(self, p, q):
+        if q == 1:
+            if p < 0:
+                return prettyForm(str(p),binding=prettyForm.NEG)
             else:
-                return prettyForm(str(r.p))
-        elif abs(r.p) >= 10 and abs(r.q) >= 10:
+                return prettyForm(str(p))
+        elif abs(p) >= 10 and abs(q) >= 10:
             # If more than one digit in numer and denom, print larger fraction
-            if r.is_negative:
-                pform = prettyForm(str(-r.p))/prettyForm(str(r.q))
+            if p < 0:
+                pform = prettyForm(str(-p))/prettyForm(str(q))
                 return prettyForm(binding=prettyForm.NEG, *pform.left('- '))
             else:
-                return prettyForm(str(r.p))/prettyForm(str(r.q))
+                return prettyForm(str(p))/prettyForm(str(q))
         else:
-            return self.emptyPrinter(r)
+            return None
+
+    def _print_Rational(self, expr):
+        result = self.__print_numer_denom(expr.p, expr.q)
+
+        if result is not None:
+            return result
+        else:
+            return self.emptyPrinter(expr)
+
+    def _print_Fraction(self, expr):
+        result = self.__print_numer_denom(expr.numerator, expr.denominator)
+
+        if result is not None:
+            return result
+        else:
+            return self.emptyPrinter(expr)
 
     def _print_Interval(self, i):
         if i.start == i.end:
