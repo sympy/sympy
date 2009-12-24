@@ -446,6 +446,9 @@ def classify_ode(eq, func, dict=False):
     You can get help on different hints by doing help(ode.ode_hintname),
     where hintname is the name of the hint without "_Integral".
 
+    See sympy.ode.allhints or the sympy.ode docstring for a list of all
+    supported hints that can be returned from classify_ode.
+
     **Notes on Hint Names**
 
     *"_Integral"*
@@ -689,14 +692,13 @@ def classify_ode(eq, func, dict=False):
         # nth order linear ODE:
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x) = b
 
-        # Build a match expression for a nth order linear ode
+        # Build a match expression for an nth order linear ode
         # and store wilds so they can be remapped later to 0, 1, ... and 'b'
         i = numbered_symbols(prefix='a', function=Wild, exclude=[f(x)])
         wilds = {}
         for j in range(order+1):
             wilds[i.next()] = j
         s = Add(*[i*f(x).diff(x,wilds[i]) for i in wilds])
-        wilds[b] = 'b'
 
         # Since multiple constant terms will not always be captured
         # (see issues 1429 and 1601) the constant term is captured here:
@@ -707,14 +709,14 @@ def classify_ode(eq, func, dict=False):
 
         r = depe.match(s)
         if r:
-            r[b] = inde
-            # Constant coefficient case (a_i is constant for all i)
-            if not any(r[i].has(x) for i in r if i != b):
-                for i in wilds:
-                    r[wilds[i]] = r.pop(i)
+            r[-1] = inde
+            for i in wilds:
+                r[wilds[i]] = r.pop(i)
+            # Constant coefficient case (a_i(x) is constant for all i)
+            if all(not r[i].has(x) for i in r if i >= 0):
                 # Inhomogeneous case: F(x) is not identically 0
-                if r['b']:
-                    undetcoeff = _undetermined_coefficients_match(r['b'], x)
+                if r[-1]:
+                    undetcoeff = _undetermined_coefficients_match(r[-1], x)
                     matching_hints["nth_linear_constant_coeff_variation_of_parameters"] = r
                     matching_hints["nth_linear_constant_coeff_variation_of_parameters" + \
                         "_Integral"] = r
@@ -2111,7 +2113,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     m = Symbol('m', dummy=True)
     chareq = S.Zero
     for i in r.keys():
-        if type(i) == str:
+        if type(i) == str or i < 0:
             pass
         else:
             chareq += r[i]*m**i
@@ -2578,7 +2580,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
     negoneterm = (-1)**(order)
     for i in gensols:
         psol += negoneterm*C.Integral(wronskian(filter(lambda x: x != i, \
-        gensols), x)*r['b']/wr, x)*i/r[order]
+        gensols), x)*r[-1]/wr, x)*i/r[order]
         negoneterm *= -1
 
     if r.get('simplify', True):
