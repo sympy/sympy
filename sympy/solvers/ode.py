@@ -1,12 +1,13 @@
 """
-This module contains dsolve() and different helper functions that it uses.
+This module contains dsolve() and different helper functions that it
+uses.
 
 dsolve() solves ordinary differential equations. See the docstring on
 the various functions for their uses. Note that partial differential
 equations support is in pde.py.  Note that ode_hint() functions have
-docstrings describing their various methods, but they are intended
-for internal use.  Use dsolve(ode, func, hint=hint) to solve an ode
-using a specific hint.  See also the docstring on dsolve().
+docstrings describing their various methods, but they are intended for
+internal use.  Use dsolve(ode, func, hint=hint) to solve an ode using a
+specific hint.  See also the docstring on dsolve().
 
 **Functions in this module**
 
@@ -19,9 +20,9 @@ using a specific hint.  See also the docstring on dsolve().
     - homogeneous_order() - Returns the homogeneous order of an
       expression.
 
-    See also the docstrings of these functions.  There are also quite
-    a few functions that are not imported into the global namespace.
-    See the docstrings of those functions for more info.
+    See also the docstrings of these functions.  There are also quite a
+    few functions that are not imported into the global namespace. See
+    the docstrings of those functions for more info.
 
 **Solving methods currently implemented**
 
@@ -72,7 +73,7 @@ possible.
 
 To add a new method, there are a few things that you need to do.  First,
 you need a hint name for your method.  Try to name your hint so that it
-is unambiguous with all other methods, include ones that may not be
+is unambiguous with all other methods, including ones that may not be
 implemented yet.  If your method uses integrals, also include a
 "hint_Integral" hint.  If there is more than one way to solve ODEs with
 your method, include a hint for each one, as well as a "hint_best" hint.
@@ -100,10 +101,10 @@ should go at the end of the list, and "_best" variants should go before
 the various hints they apply to.  For example, the
 "undetermined_coefficients" hint comes before the
 "variation_of_parameters" hint because, even though variation of
-parameters can be used to solve all ODEs that undetermined coefficients
-can solve and more, undetermined coefficients generally returns cleaner
-results for the ODEs that it can solve than variation of parameters
-does, and it does not require integration, so it is much faster.
+parameters is more general than undetermined coefficients, undetermined
+coefficients generally returns cleaner results for the ODEs that it can
+solve than variation of parameters does, and it does not require
+integration, so it is much faster.
 
 Next, you need to have a match expression or a function that matches the
 type of the ODE, which you should put in classify_ode() (if the match
@@ -121,14 +122,15 @@ parts that you need to solve it. You should put that in a dictionary
 = matchdict in the relevant part of classify_ode.  classify_ode will
 then send this to dsolve(), which will send it to your function as the
 match argument. Your function should be named ode_hint(eq, func, order,
-match). If you need to send more information, put it in the dictionary
-match.  For example, if you used a dummy variable in classify_ode to
-match your expression, you will need to pass it to your function using
-the match dict to access it.  You can access the independent variable
-using func.args[0], and the dependent variable (function to solve for)
-as func.func.  If, while trying to solve the ODE, you find that you
-cannot, raise NotImplementedError.  dsolve() will catch this error with
-the "all" meta-hint, rather than causing the whole routine to fail.
+match). If you need to send more information, put it in the match
+dictionary.  For example, if you had to substitute in a dummy variable
+in classify_ode to match the ODE, you will need to pass it to your
+function using the match dict to access it.  You can access the
+independent variable using func.args[0], and the dependent variable (the
+function you are trying to solve for) as func.func.  If, while trying to
+solve the ODE, you find that you cannot, raise NotImplementedError.
+dsolve() will catch this error with the "all" meta-hint, rather than
+causing the whole routine to fail.
 
 Add a docstring to your function that describes the method employed.
 Like with anything else in SymPy, you will need to add a doctest to the
@@ -136,7 +138,9 @@ docstring, in addition to real tests in test_ode.py.  Try to maintain
 consistency with the other hint functions' docstrings.  Add your method
 to the list at the top of this docstring.  Also, add your method to
 ode.txt in the docs/src directory, so that the Sphinx docs will pull its
-docstring into the main SymPy documentation.
+docstring into the main SymPy documentation.  Be sure to make the Sphinx
+documentation by running "make html" from within the doc directory to
+verify that the docstring formats correctly.
 
 If your solution method involves integrating, use C.Integral() instead
 of integrate().  This allows the user to bypass hard/slow integration by
@@ -164,11 +168,26 @@ extraneous simplification in your function, be sure to only run it using
 "if match.get('simplify', True):", especially if it can be slow or if it
 can reduce the domain of the solution.
 
+Finally, as with every contribution to SymPy, your method will need to
+be tested. Add a test for each method in test_ode.py.  Follow the
+conventions there, i.e., test the solver using dsolve(eq, f(x),
+hint=your_hint), and also test the solution using checkodesol (you can
+put these in a separate tests and skip/XFAIL if it runs too slow/doesn't
+work).  Be sure to call your hint specifically in dsolve, that way the
+test won't be broken simply by the introduction of another matching
+hint. If your method works for higher order (>1) ODEs, you will need to
+run sol = ode_renumber(sol, 'C', 1, order), for each solution, where
+order is the order of the ODE. This is because ode_renumber renumbers
+the arbitrary constants by printing order, which is platform dependent.
+Try to test every corner case of your solver, including a range of
+orders if it is a nth order solver, but if your solver is slow, auch as
+if it involves hard integration, try to keep the test run time down.
+
 Feel free to refactor existing hints to avoid duplicating code or
 creating inconsistencies.  If you can show that your method exactly
 duplicates an existing method, including in the simplicity and speed of
 obtaining the solutions, then you can remove the old, less general
-method.  The existing code is tested extensively in test_ode.py, so if
+method. The existing code is tested extensively in test_ode.py, so if
 anything is broken, one of those tests will surely fail.
 
 """
@@ -342,6 +361,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
 
     """
     # TODO: Implement initial conditions
+    # See issue 1621.  We first need a way to represent things like f'(0).
     if isinstance(eq, Equality):
         if eq.rhs != 0:
             return dsolve(eq.lhs-eq.rhs, func, hint=hint, simplify=simplify, **kwargs)
@@ -425,10 +445,6 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
 def classify_ode(eq, func, dict=False):
     """
     Returns a tuple of possible dsolve() classifications for an ODE.
-
-    Except for the first-order exact case, the ODE will be reduced to remove
-    any powers of f(x) from the coefficient of the highest order derivative,
-    e.g. f(x)*D(f(x), x) + 1 --> D(f(x), x) + 1/f(x).
 
     The tuple is ordered so that first item is the classification that
     dsolve() uses to solve the ODE by default.  In general,
@@ -587,7 +603,6 @@ def classify_ode(eq, func, dict=False):
         reduced_eq = eq
 
     if order == 1:
-        # We can save a lot of time by skipping these if the ODE isn't 1st order
 
         # Linear case: a(x)*y'+b(x)*y+c(x) == 0
         if eq.is_Add:
