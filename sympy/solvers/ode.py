@@ -704,44 +704,27 @@ def classify_ode(eq, func, dict=False):
 
 
     if order > 0:
-        # nth order linear ODE:
+        # nth order linear ODE
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x) = b
 
-        # Build a match expression for an nth order linear ode
-        # and store wilds so they can be remapped later to 0, 1, ... and 'b'
-        i = numbered_symbols(prefix='a', function=Wild, exclude=[f(x)])
-        wilds = {}
-        for j in range(order+1):
-            wilds[i.next()] = j
-        s = Add(*[i*f(x).diff(x,wilds[i]) for i in wilds])
+        r = _nth_linear_match(reduced_eq, func, order)
 
-        # Since multiple constant terms will not always be captured
-        # (see issues 1429 and 1601) the constant term is captured here:
-        if reduced_eq.is_Add:
-            inde, depe = reduced_eq.as_independent(f(x))
-        else:
-            inde, depe = S.Zero, reduced_eq
+        # Constant coefficient case (a_i is constant for all i)
+        if r and not any(r[i].has(x) for i in r if i >= 0):
+            # Inhomogeneous case: F(x) is not identically 0
+            if r[-1]:
+                undetcoeff = _undetermined_coefficients_match(r[-1], x)
+                matching_hints["nth_linear_constant_coeff_variation_of_parameters"] = r
+                matching_hints["nth_linear_constant_coeff_variation_of_parameters" + \
+                    "_Integral"] = r
+                if undetcoeff['test']:
+                    r['trialset'] = undetcoeff['trialset']
+                    matching_hints["nth_linear_constant_coeff_undetermined_" + \
+                        "coefficients"] = r
+            # Homogeneous case: F(x) is identically 0
+            else:
+                matching_hints["nth_linear_constant_coeff_homogeneous"] = r
 
-        r = depe.match(s)
-        if r:
-            r[-1] = inde
-            for i in wilds:
-                r[wilds[i]] = r.pop(i)
-            # Constant coefficient case (a_i(x) is constant for all i)
-            if all(not r[i].has(x) for i in r if i >= 0):
-                # Inhomogeneous case: F(x) is not identically 0
-                if r[-1]:
-                    undetcoeff = _undetermined_coefficients_match(r[-1], x)
-                    matching_hints["nth_linear_constant_coeff_variation_of_parameters"] = r
-                    matching_hints["nth_linear_constant_coeff_variation_of_parameters" + \
-                        "_Integral"] = r
-                    if undetcoeff['test']:
-                        r['trialset'] = undetcoeff['trialset']
-                        matching_hints["nth_linear_constant_coeff_undetermined_" + \
-                            "coefficients"] = r
-                # Homogeneous case: F(x) is identically 0
-                else:
-                    matching_hints["nth_linear_constant_coeff_homogeneous"] = r
 
     # Order keys based on allhints.
     retlist = []
@@ -2048,6 +2031,52 @@ def ode_Liouville(eq, func, order, match):
     int = C.Integral(exp(C.Integral(r['g'], y)), (y, None, f(x)))
     sol = Eq(int + C1*C.Integral(exp(-C.Integral(r['h'], x)), x) + C2, 0)
     return sol
+
+
+def _nth_linear_match(eq, func, order):
+    """
+    Matches a differential equation to the linear form:
+
+    a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y + B(x) = 0
+
+    Returns a dict of order:coeff terms, where order is the order of the
+    derivative on each term, and coeff is the coefficient of that
+    derivative.  The key -1 holds the function B(x). Returns None if
+    the ode is not linear.  This function assumes that func has already
+    been checked to be good.
+
+    **Examples**
+        >>> from sympy import Function, cos, sin
+        >>> from sympy.abc import x
+        >>> from sympy.solvers.ode import _nth_linear_match
+        >>> f = Function('f')
+        >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
+        ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
+        ... sin(x), f(x), 3)
+        {1: 2 + cos(x), 0: -1, -1: x - sin(x), 2: x, 3: 1}
+        >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
+        ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
+        ... sin(f(x)), f(x), 3) == None
+        True
+
+    """
+    from sympy import S
+    from sympy.utilities.iterables import make_list
+
+    x = func.args[0]
+    one_x = set([x])
+    terms = dict([(i, S.Zero) for i in range(-1, order+1)])
+    for i in make_list(eq, Add):
+        if not i.has(func):
+            terms[-1] += i
+        else:
+            c, f = i.as_independent(func)
+            if not ((isinstance(f, Derivative) and set(f.symbols) == one_x) or\
+                    f == func):
+                return None
+            else:
+                terms[len(f.args[1:])] += c
+    return terms
 
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='sol'):
     """
