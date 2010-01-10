@@ -1452,27 +1452,6 @@ class Basic(AssumeMeths):
         pattern = sympify(pattern)
         return pattern.matches(self, {})
 
-    def solve4linearsymbol(eqn, rhs, symbols = None):
-        """
-        Solve equation "eqn == rhs" with respect to some linear symbol in eqn.
-
-        Returns (symbol, solution). If eqn is nonlinear with respect to all
-        symbols, then return trivial solution (eqn, rhs).
-        """
-        if eqn.is_Symbol:
-            return (eqn, rhs)
-        if symbols is None:
-            symbols = eqn.atoms(Symbol)
-        if symbols:
-            # find  symbol
-            for s in symbols:
-                deqn = eqn.diff(s)
-                if deqn.diff(s) is S.Zero:
-                    # eqn = a + b*c, a=eqn(c=0),b=deqn(c=0)
-                    return s, (rhs - eqn.subs(s,0))/deqn.subs(s,0)
-        # no linear symbol, return trivial solution
-        return eqn, rhs
-
     @cacheit
     def count_ops(self, symbolic=True):
         """ Return the number of operations in expressions.

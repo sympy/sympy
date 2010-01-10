@@ -2,6 +2,27 @@ from sympy.core.basic import Basic, S, C, sympify, Expr
 from sympy.core import oo, Rational
 from sympy.core.cache import cacheit
 
+def solve4linearsymbol(eqn, rhs, symbols = None):
+    """
+    Solve equation "eqn == rhs" with respect to some linear symbol in eqn.
+
+    Returns (symbol, solution). If eqn is nonlinear with respect to all
+    symbols, then return trivial solution (eqn, rhs).
+    """
+    if eqn.is_Symbol:
+        return (eqn, rhs)
+    if symbols is None:
+        symbols = eqn.atoms(Symbol)
+    if symbols:
+        # find  symbol
+        for s in symbols:
+            deqn = eqn.diff(s)
+            if deqn.diff(s) is S.Zero:
+                # eqn = a + b*c, a=eqn(c=0),b=deqn(c=0)
+                return s, (rhs - eqn.subs(s,0))/deqn.subs(s,0)
+    # no linear symbol, return trivial solution
+    return eqn, rhs
+
 class Order(Expr):
     """
     Represents O(f(x)) at the point x = 0.
@@ -112,7 +133,7 @@ class Order(Expr):
                     new_symbols.append(s)
                     continue
                 z = C.Symbol('z',dummy=True)
-                x1,s1 = s.solve4linearsymbol(z)
+                x1,s1 = solve4linearsymbol(s, z)
                 expr = expr.subs(x1,s1)
                 symbol_map[z] = s
                 new_symbols.append(z)
