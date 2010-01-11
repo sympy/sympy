@@ -1439,7 +1439,7 @@ class FockStateBra(FockState):
         if isinstance(other, FockStateKet):
             return InnerProduct(self, other)
         else:
-            return Basic.__mul__(self, other)
+            return Expr.__mul__(self, other)
 
 class FockStateBosonKet(BosonState,FockStateKet):
     def _dagger_(self):

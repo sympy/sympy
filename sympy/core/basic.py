@@ -678,56 +678,6 @@ class Basic(AssumeMeths):
             return dif.is_nonnegative
         return Inequality(other, self)
 
-
-    # ***************
-    # * Arithmetics *
-    # ***************
-
-    def __pos__(self):
-        return self
-    def __neg__(self):
-        return Mul(S.NegativeOne, self)
-    def __abs__(self):
-        return abs_(self)
-
-    @_sympifyit('other', NotImplemented)
-    def __add__(self, other):
-        return Add(self, other)
-    @_sympifyit('other', NotImplemented)
-    def __radd__(self, other):
-        return Add(other, self)
-
-    @_sympifyit('other', NotImplemented)
-    def __sub__(self, other):
-        return Add(self, -other)
-    @_sympifyit('other', NotImplemented)
-    def __rsub__(self, other):
-        return Add(other, -self)
-
-    @_sympifyit('other', NotImplemented)
-    def __mul__(self, other):
-        return Mul(self, other)
-    @_sympifyit('other', NotImplemented)
-    def __rmul__(self, other):
-        return Mul(other, self)
-
-    @_sympifyit('other', NotImplemented)
-    def __pow__(self, other):
-        return Pow(self, other)
-    @_sympifyit('other', NotImplemented)
-    def __rpow__(self, other):
-        return Pow(other, self)
-
-    @_sympifyit('other', NotImplemented)
-    def __div__(self, other):
-        return Mul(self, Pow(other, S.NegativeOne))
-    @_sympifyit('other', NotImplemented)
-    def __rdiv__(self, other):
-        return Mul(other, Pow(self, S.NegativeOne))
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
-
     # *******************
     # * Logic operators *
     # *******************
@@ -1645,6 +1595,56 @@ class EvalfMixin(object):
 
 class Expr(Basic, EvalfMixin):
     __slots__ = []
+
+    # ***************
+    # * Arithmetics *
+    # ***************
+
+    def __pos__(self):
+        return self
+    def __neg__(self):
+        return Mul(S.NegativeOne, self)
+    def __abs__(self):
+        return abs_(self)
+
+    @_sympifyit('other', NotImplemented)
+    def __add__(self, other):
+        return Add(self, other)
+    @_sympifyit('other', NotImplemented)
+    def __radd__(self, other):
+        return Add(other, self)
+
+    @_sympifyit('other', NotImplemented)
+    def __sub__(self, other):
+        return Add(self, -other)
+    @_sympifyit('other', NotImplemented)
+    def __rsub__(self, other):
+        return Add(other, -self)
+
+    @_sympifyit('other', NotImplemented)
+    def __mul__(self, other):
+        return Mul(self, other)
+    @_sympifyit('other', NotImplemented)
+    def __rmul__(self, other):
+        return Mul(other, self)
+
+    @_sympifyit('other', NotImplemented)
+    def __pow__(self, other):
+        return Pow(self, other)
+    @_sympifyit('other', NotImplemented)
+    def __rpow__(self, other):
+        return Pow(other, self)
+
+    @_sympifyit('other', NotImplemented)
+    def __div__(self, other):
+        return Mul(self, Pow(other, S.NegativeOne))
+    @_sympifyit('other', NotImplemented)
+    def __rdiv__(self, other):
+        return Mul(other, Pow(self, S.NegativeOne))
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
 
     def __float__(self):
         result = self.evalf()
