@@ -287,7 +287,8 @@ class Integral(Basic):
         # we are going to handle Add terms separately,
         # if `f` is not Add -- we only have one term
         parts = []
-        for g in make_list(f, Add):
+        args = make_list(f, Add)
+        for g in args:
             coeff, g = g.as_independent(x)
 
             # g(x) = const
@@ -333,6 +334,23 @@ class Integral(Basic):
 
             # fall back to the more general algorithm
             h = heurisch(g, x, hints=[])
+
+            # if we failed maybe it was because we had
+            # a product that could have been expanded,
+            # so let's try an expansion of the whole
+            # thing before giving up; we don't try this
+            # out the outset because there are things
+            # that cannot be solved unless they are
+            # NOT expanded e.g., x**x*(1+log(x)). There
+            # should probably be a checker somewhere in this
+            # routine to look for such cases and try to do
+            # collection on the expressions if they are already
+            # in an expanded form
+            if not h and len(args) == 1:
+                f = f.expand(mul=True, deep=False)
+                if f.is_Add:
+                    return self._eval_integral(f, x)
+
 
             if h is not None:
                 parts.append(coeff * h)

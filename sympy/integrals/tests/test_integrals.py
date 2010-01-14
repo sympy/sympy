@@ -409,3 +409,11 @@ def test_doit2():
     e = Integral(Integral(2*x), (x, 0, 1))
     # risch currently chokes on the contained integral.
     assert e.doit(deep = False) == e
+
+def issue_1785():
+    assert integrate(sqrt(x)*(1+x)) == 2*x**Rational(3, 2)/3 + 2*x**Rational(5, 2)/5
+    assert integrate(x**x*(1+log(x))) is not None
+
+@XFAIL
+def issue_1785_fail():
+    assert integrate(x**x*(1+log(x)).expand(mul=True)) is None
