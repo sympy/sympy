@@ -486,15 +486,6 @@ class log(Function):
             return (self.args[0] - 1).as_leading_term(x)
         return self.func(arg)
 
-    #this is a lot faster:
-    @classmethod
-    def _eval_apply_evalf(cls, arg):
-        arg = arg.evalf()
-        if arg.is_number:
-            import math
-            from sympy import Real
-            return Real(math.log(arg))
-
     def _sage_(self):
         import sage.all as sage
         return sage.log(self.args[0]._sage_())

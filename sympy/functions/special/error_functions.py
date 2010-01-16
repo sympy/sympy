@@ -61,14 +61,3 @@ class erf(Function):
 
     def _eval_is_real(self):
         return self.args[0].is_real
-
-    @classmethod
-    def _eval_apply_evalf(self, arg):
-        arg = arg.evalf()
-
-        if arg.is_Number:
-            # XXX: Temporary hack. FIX THIS
-            from sympy.core.numbers import Real
-            from sympy.mpmath import erf
-            e = erf(float(arg))
-            return Real(str(e))

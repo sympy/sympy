@@ -237,16 +237,6 @@ class abs(Function):
                 return arg
         return
 
-    @classmethod
-    def _eval_apply_evalf(cls, arg):
-        # XXX this is weird!!!
-        # XXX remove me when 'abs -> abs_' is done
-        arg = arg.evalf()
-
-        if arg.is_Number:
-            import operator
-            return operator.abs(float(arg))
-
     def _eval_is_nonzero(self):
         return self._args[0].is_nonzero
 

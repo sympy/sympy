@@ -1298,18 +1298,6 @@ class Basic(AssumeMeths):
     def _eval_derivative(self, s):
         return
 
-    def _eval_fapply(self, *args, **assumptions):
-        return
-
-    def _eval_fpower(b, e):
-        return
-
-    def _eval_apply_evalf(self,*args):
-        return
-
-    def _eval_eq_nonzero(self, other):
-        return
-
     def _eval_conjugate(self):
         if self.is_real:
             return self

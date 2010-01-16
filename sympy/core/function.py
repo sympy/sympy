@@ -264,13 +264,6 @@ class Function(Expr):
             if not c: r = False
         return r
 
-    def _eval_eq_nonzero(self, other):
-        if isinstance(other.func, self.func.__class__) and len(self)==len(other):
-            for a1,a2 in zip(self,other):
-                if not (a1==a2):
-                    return False
-            return True
-
     def as_base_exp(self):
         return self, S.One
 
@@ -441,17 +434,6 @@ class Function(Expr):
                 raise TypeError("argument index %r is out of range [1,%s]" % (argindex,nargs))
         return Derivative(self,self.args[argindex-1],evaluate=False)
 
-    @classmethod
-    def _eval_apply_evalf(cls, arg):
-        arg = arg.evalf(prec)
-
-        #if cls.nargs == 1:
-        # common case for functions with 1 argument
-        #if arg.is_Number:
-        if arg.is_number:
-            func_evalf = getattr(arg, cls.__name__)
-            return func_evalf()
-
     def _eval_as_leading_term(self, x):
         """General method for the leading term"""
         arg = self.args[0].as_leading_term(x)
@@ -499,10 +481,6 @@ class WildFunction(Function, Atom):
         repl_dict = repl_dict.copy()
         repl_dict[self] = expr
         return repl_dict
-
-    @classmethod
-    def _eval_apply_evalf(cls, arg):
-        return
 
     @property
     def is_number(self):
