@@ -1259,71 +1259,6 @@ class Basic(AssumeMeths):
                 return True
         return False
 
-    def _eval_interval(self, x, a, b):
-        """
-        Returns evaluation over an interval.  For most functions this is:
-
-        self.subs(x, b) - self.subs(x, a),
-
-        possibly using limit() if NaN is returned from subs.
-
-        If b or a is None, it only evaluates -self.subs(x, a) or self.subs(b, x),
-        respectively.
-
-        """
-        from sympy.series import limit
-        if a is None:
-            A = 0
-        else:
-            A = self.subs(x, a)
-
-        if A is S.NaN:
-            A = limit(self, x, a)
-            if A is S.NaN:
-                return self
-        if b is None:
-            B = 0
-        else:
-            B = self.subs(x, b)
-
-        if B is S.NaN:
-            B = limit(self, x, b)
-        if B is S.NaN:
-            return self
-        return B - A
-
-    def _eval_power(self, other):
-        return None
-
-    def _eval_derivative(self, s):
-        return
-
-    def _eval_conjugate(self):
-        if self.is_real:
-            return self
-
-    def conjugate(self):
-        from sympy.functions.elementary.complexes import conjugate as c
-        return c(self)
-
-    def removeO(self):
-        "Removes the O(..) symbol if there is one"
-        if self.is_Order:
-            return Integer(0)
-        for i,x in enumerate(self.args):
-            if x.is_Order:
-                return Add(*(self.args[:i]+self.args[i+1:]))
-        return self
-
-    def getO(e):
-        "Returns the O(..) symbol, or None if there is none."
-        if e.is_Order:
-            return e
-        if e.is_Add:
-            for x in e.args:
-                if x.is_Order:
-                    return x
-
     def matches(self, expr, repl_dict={}, evaluate=False):
         """
         Helper method for match() - switches the pattern and expr.
@@ -1657,6 +1592,72 @@ class Expr(Basic, EvalfMixin):
             return re+im
         else:
             raise TypeError("expected mpmath number (mpf or mpc)")
+
+
+    def _eval_interval(self, x, a, b):
+        """
+        Returns evaluation over an interval.  For most functions this is:
+
+        self.subs(x, b) - self.subs(x, a),
+
+        possibly using limit() if NaN is returned from subs.
+
+        If b or a is None, it only evaluates -self.subs(x, a) or self.subs(b, x),
+        respectively.
+
+        """
+        from sympy.series import limit
+        if a is None:
+            A = 0
+        else:
+            A = self.subs(x, a)
+
+        if A is S.NaN:
+            A = limit(self, x, a)
+            if A is S.NaN:
+                return self
+        if b is None:
+            B = 0
+        else:
+            B = self.subs(x, b)
+
+        if B is S.NaN:
+            B = limit(self, x, b)
+        if B is S.NaN:
+            return self
+        return B - A
+
+    def _eval_power(self, other):
+        return None
+
+    def _eval_derivative(self, s):
+        return
+
+    def _eval_conjugate(self):
+        if self.is_real:
+            return self
+
+    def conjugate(self):
+        from sympy.functions.elementary.complexes import conjugate as c
+        return c(self)
+
+    def removeO(self):
+        "Removes the O(..) symbol if there is one"
+        if self.is_Order:
+            return Integer(0)
+        for i,x in enumerate(self.args):
+            if x.is_Order:
+                return Add(*(self.args[:i]+self.args[i+1:]))
+        return self
+
+    def getO(e):
+        "Returns the O(..) symbol, or None if there is none."
+        if e.is_Order:
+            return e
+        if e.is_Add:
+            for x in e.args:
+                if x.is_Order:
+                    return x
 
     def coeff(self, x, expand=True):
         """
