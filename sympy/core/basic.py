@@ -1365,57 +1365,6 @@ class Basic(AssumeMeths):
         else:
             return self
 
-    ###########################################################################
-    ###################### EXPRESSION EXPANSION METHODS #######################
-    ###########################################################################
-
-    # These should be overridden in subclasses
-
-    def _eval_expand_basic(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_power_base(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_mul(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_multinomial(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_log(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_trig(self, deep=True, **hints):
-        return self
-
-    def _eval_expand_func(self, deep=True, **hints):
-        return self
-
-    def expand(self, deep=True, power_base=True, power_exp=True, mul=True, \
-           log=True, multinomial=True, basic=True, **hints):
-        """
-        Expand an expression using hints.
-
-        See the docstring in function.expand for more information.
-        """
-        hints.update(power_base=power_base, power_exp=power_exp, mul=mul, \
-           log=log, multinomial=multinomial, basic=basic)
-
-        expr = self
-        for hint, use_hint in hints.iteritems():
-            if use_hint:
-                func = getattr(expr, '_eval_expand_'+hint, None)
-                if func is not None:
-                    expr = func(deep=deep, **hints)
-        return expr
-
     def _eval_rewrite(self, pattern, rule, **hints):
         if self.is_Atom:
             return self
@@ -2325,9 +2274,58 @@ class Expr(Basic, EvalfMixin):
         from sympy.integrals import integrate
         return integrate(self, *args, **kwargs)
 
-    ##########################################################################
-    ##################### END OF BASIC CLASS #################################
-    ##########################################################################
+
+    ###########################################################################
+    ###################### EXPRESSION EXPANSION METHODS #######################
+    ###########################################################################
+
+    # These should be overridden in subclasses
+
+    def _eval_expand_basic(self, deep=True, **hints):
+        return self
+
+    def _eval_expand_power_exp(self, deep=True, **hints):
+        return self
+
+    def _eval_expand_power_base(self, deep=True, **hints):
+        return self
+
+    def _eval_expand_mul(self, deep=True, **hints):
+        return self
+
+    def _eval_expand_multinomial(self, deep=True, **hints):
+        return self
+
+    def _eval_expand_log(self, deep=True, **hints):
+        return self
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        return self
+
+    def _eval_expand_trig(self, deep=True, **hints):
+        return self
+
+    def _eval_expand_func(self, deep=True, **hints):
+        return self
+
+    def expand(self, deep=True, power_base=True, power_exp=True, mul=True, \
+           log=True, multinomial=True, basic=True, **hints):
+        """
+        Expand an expression using hints.
+
+        See the docstring in function.expand for more information.
+        """
+        hints.update(power_base=power_base, power_exp=power_exp, mul=mul, \
+           log=log, multinomial=multinomial, basic=basic)
+
+        expr = self
+        for hint, use_hint in hints.iteritems():
+            if use_hint:
+                func = getattr(expr, '_eval_expand_'+hint, None)
+                if func is not None:
+                    expr = func(deep=deep, **hints)
+        return expr
+
 
 class Atom(Basic):
     """
