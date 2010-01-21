@@ -733,29 +733,3 @@ def test_Basic_keep_sign():
     Basic.keep_sign = False
     assert Mul(x - 1, x + 1) == -(1 - x)*(1 + x)
     assert (1/(x - 1)).as_coeff_terms()[0] == -1
-
-################# Tests involving only Basic instances ########
-b1 = Basic(); b2 = Basic(b1); b3 = Basic(b2)
-b21 = Basic(b2, b1)
-
-def test_equality():
-    instances = [b1, b2, b3, b21, Basic(b1,b1,b1)]
-    for i, b_i in enumerate(instances):
-        for j, b_j in enumerate(instances):
-            assert (b_i == b_j) == (i == j)
-
-def test_matches_basic():
-    instances = [Basic(b1,b1,b2), Basic(b1,b2,b1), Basic(b2, b1, b1),
-                    Basic(b1, b2), Basic(b2, b1), b2, b1]
-    for i, b_i in enumerate(instances):
-        for j, b_j in enumerate(instances):
-            if i ==j:
-                assert b_i.matches(b_j) == {}
-            else:
-                assert b_i.matches(b_j) is None
-
-def test_subs():
-    assert b21.subs(b2, b1) == Basic(b1, b1)
-    assert b21.subs(b2, b21) == Basic(b21, b1)
-    assert b3.subs(b2, b1) == b2
-
