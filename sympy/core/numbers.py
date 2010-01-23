@@ -1151,6 +1151,9 @@ class Zero(Integer):
         # Order(0,x) -> 0
         return self
 
+    def __nonzero__(self):
+        return False
+
 class One(Integer):
     __metaclass__ = SingletonMeta
 

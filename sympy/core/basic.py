@@ -439,40 +439,6 @@ class Basic(AssumeMeths):
         # relevant attributes as tuple.
         return self._args
 
-    def __nonzero__(self):
-        """Tests if 'self' is an instance of Zero class.
-
-           This should be understand as an idiom:
-
-               [1] bool(x) <=> bool(x is not S.Zero)
-
-               [2] bool(not x) <=> bool(x is S.Zero)
-
-           Allowing definition of __nonzero__ method is important in
-           algorithms where uniform handling of int, long values and
-           and sympy expressions is required.
-
-           >>> from sympy import S
-           >>> from sympy.abc import x, y
-
-           >>> bool(0)
-           False
-           >>> bool(1)
-           True
-
-           >>> bool(S.Zero)
-           False
-           >>> bool(S.One)
-           True
-
-           >>> bool(x*y)
-           True
-           >>> bool(x + y)
-           True
-
-        """
-        return self is not S.Zero
-
     def compare(self, other):
         """
         Return -1,0,1 if the object is smaller, equal, or greater than other.
