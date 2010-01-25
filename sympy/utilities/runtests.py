@@ -262,12 +262,12 @@ def doctest(*paths, **kwargs):
             if out[0] != 0:
                 doc_tests_succeeded = False
 
-    # the doctests for *py will have printed this message already if there was
-    # a failure, so now only print it if there was intervening reporting by
-    # testing the *txt.
-    if matched and not doc_tests_succeeded:
-        print("DO *NOT* COMMIT!")
-    return doc_tests_succeeded
+        # the doctests for *py will have printed this message already if there was
+        # a failure, so now only print it if there was intervening reporting by
+        # testing the *txt.
+        if matched and not doc_tests_succeeded:
+            print("DO *NOT* COMMIT!")
+        return doc_tests_succeeded
 
 class SymPyTests(object):
 
