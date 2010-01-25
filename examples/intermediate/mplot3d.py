@@ -17,9 +17,12 @@ def mplot3d(f, var1, var2, show=True):
 
     try:
         import pylab as p
-        import matplotlib.axes3d as p3
+        import mpl_toolkits.mplot3d as p3
     except ImportError:
-        raise ImportError("Matplotlib is required to use mplot3d.")
+        try:
+            import matplotlib.axes3d as p3 # older matplotlib
+        except ImportError:
+            raise ImportError("Matplotlib is required to use mplot3d.")
 
     x, y, z = sample(f, var1, var2)
 
