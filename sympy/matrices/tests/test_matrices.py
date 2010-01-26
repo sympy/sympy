@@ -833,12 +833,12 @@ def test_subs():
 
 def test_simplify():
     x,y,f,n = symbols('xyfn')
-    M = Matrix([ [    1/x + 1/y,               (x+x*y)/ x             ],
-                 [(f(x)+y*f(x))/f(x), (2 * (1/n - cos(n * pi)/n))/ pi ]
+    M = Matrix([ [    1/x + 1/y,               (x + x*y)/ x             ],
+                 [(f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n)/ pi ]
                  ])
     M.simplify()
-    assert M ==  Matrix([[(x+y)/(x*y),               1 + y           ],
-                         [   1 + y,       (2 - 2*cos(pi*n))/ (pi*n)   ]])
+    assert M ==  Matrix([[(x + y)/(x * y),               1 + y           ],
+                         [   1 + y,       (2 - 2*cos(pi*n))/(pi*n) ]])
 
 def test_transpose():
     M = Matrix([[1,2,3,4,5,6,7,8,9,0],

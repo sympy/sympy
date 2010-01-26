@@ -95,9 +95,9 @@ def test_factorial_simplify():
     assert simplify(factorial(factorial(x))) == factorial(factorial(x))
 
 def test_simplify():
-    x,y,z,k,n,m,w,f,s,A = symbols('xyzknmwfsA')
+    x, y, z, k, n, m, w, f, s, A = symbols('xyzknmwfsA')
 
-    assert all(simplify(tmp)==tmp for tmp in [I,E,oo,x,-x,-oo,-E,-I])
+    assert all(simplify(tmp) == tmp for tmp in [I, E, oo, x, -x, -oo, -E, -I])
 
     e = 1/x + 1/y
     assert e != (x+y)/(x*y)
@@ -130,25 +130,25 @@ def test_simplify():
     e = integrate(x/(x**2+3*x+1), x).diff(x)
     assert simplify(e) == x/(x**2+3*x+1)
 
-    A = Matrix([[2*k-m*w**2, -k],[-k,k-m*w**2]]).inv()
+    A = Matrix([[2*k-m*w**2, -k], [-k, k-m*w**2]]).inv()
 
     assert simplify((A*Matrix([0,f]))[1]) == \
-        (2*f*k - f*m*w**2)/(k**2 - 3*k*m*w**2 + m**2*w**4)
+        (2*k*f - f*m*w**2)/(k**2 - 3*k*m*w**2 + m**2*w**4)
 
-    a,b,c,d,e,f,g,h,i = symbols('abcdefghi')
+    a, b, c, d, e, f, g, h, i = symbols('abcdefghi')
 
     f_1 = x*a + y*b + z*c - 1
     f_2 = x*d + y*e + z*f - 1
     f_3 = x*g + y*h + z*i - 1
 
-    solutions = solve([f_1,f_2,f_3], x,y,z, simplified=False)
+    solutions = solve([f_1, f_2, f_3], x, y, z, simplified=False)
 
     assert simplify(solutions[y]) == \
         (a*i+c*d+f*g-a*f-c*g-d*i)/(a*e*i+b*f*g+c*d*h-a*f*h-b*d*i-c*e*g)
 
 def test_simplify_issue_1308():
-    assert simplify(exp(-Rational(1,2)) + exp(-Rational(3,2))) == \
-        (1 + E)*exp(-Rational(3,2))
+    assert simplify(exp(-Rational(1, 2)) + exp(-Rational(3, 2))) == \
+        (1 + E)*exp(-Rational(3, 2))
     assert simplify(exp(1)+exp(-exp(1))) == (1 + exp(1 + E))*exp(-E)
 
 
@@ -202,12 +202,12 @@ def test_together():
     assert together(sin(1/x+1/y)) == sin(1/x+1/y)
     assert together(sin(1/x+1/y), deep=True) == sin((x+y)/(x*y))
 
-    assert together(Rational(1,2) + x/2) == (x+1)/2
+    assert together(Rational(1, 2) + x/2) == (x+1)/2
 
     assert together(1/x**y + 1/x**(y-1)) == x**(-y)*(1 + x)
 
 def test_separate():
-    x, y, z = map(Symbol, 'xyz')
+    x, y, z = symbols('xyz')
 
     assert separate((x*y*z)**4) == x**4*y**4*z**4
     assert separate((x*y*z)**x) == x**x*y**x*z**x
@@ -227,7 +227,7 @@ def test_separate_X1():
     assert separate((exp(x)*exp(y))**z) == exp(x*z)*exp(y*z)
 
 def test_powsimp():
-    x,y,z,n = symbols('xyzn')
+    x, y, z, n = symbols('xyzn')
     f = Function('f')
     assert powsimp( 4**x * 2**(-x) * 2**(-x) ) == 1
     assert powsimp( (-4)**x * (-2)**(-x) * 2**(-x) ) == 1
@@ -289,7 +289,7 @@ def test_collect_3():
     """Collect with respect to a product"""
     a, b, c = symbols('abc')
     f = Function('f')
-    x,y,z, n = symbols('xyzn')
+    x, y, z, n = symbols('xyzn')
 
     assert collect(-x/8 + x*y, -x) == -x*(S.One/8 - y)
 
@@ -317,17 +317,18 @@ def test_collect_5():
     assert collect(x**2*y**4 + z*(x*y**2)**2 + z + a*z, [x*y**2, z]) in [
                 z*(1 + a + x**2*y**4) + x**2*y**4,
                 z*(1 + a) + x**2*y**4*(1 + z) ]
-    assert collect((1+ (x+y) + (x+y)**2).expand(), [x,y]) == 1 + y + x*(1 + 2*y) + x**2  + y**2
+    assert collect((1+ (x+y) + (x+y)**2).expand(),
+                   [x, y]) == 1 + y + x*(1 + 2*y) + x**2  + y**2
 
 def test_collect_D():
     D = Derivative
     f = Function('f')
-    x,a,b = symbols('xab')
+    x, a, b = symbols('xab')
     fx  = D(f(x), x)
-    fxx = D(f(x), x,x)
+    fxx = D(f(x), x, x)
 
     assert collect(a*fx + b*fx, fx) == (a + b)*fx
-    assert collect(a*D(fx,x) + b*D(fx,x), fx)   == (a + b)*D(fx, x)
+    assert collect(a*D(fx, x) + b*D(fx, x), fx)   == (a + b)*D(fx, x)
     assert collect(a*fxx     + b*fxx    , fx)   == (a + b)*D(fx, x)
     # 1685
     assert collect(5*f(x)+3*fx, fx) == 5*f(x) + 3*fx
@@ -346,11 +347,11 @@ def collect_issues():
 def test_collect_D_0():
     D = Derivative
     f = Function('f')
-    x,a,b = symbols('xab')
-    fxx = D(f(x), x,x)
+    x, a, b = symbols('xab')
+    fxx = D(f(x), x, x)
 
     # collect does not distinguish nested derivatives, so it returns
-    #                                           -- (a + b)*D(D(f,x), x)
+    #                                           -- (a + b)*D(D(f, x), x)
     assert collect(a*fxx     + b*fxx    , fxx)  == (a + b)*fxx
 
 def test_separatevars():
@@ -413,7 +414,7 @@ def test_nsimplify():
     assert nsimplify(-1) == -1
     assert nsimplify(1) == 1
     assert nsimplify(1+x) == 1+x
-    assert nsimplify(2.7) == Rational(27,10)
+    assert nsimplify(2.7) == Rational(27, 10)
     assert nsimplify(1-GoldenRatio) == (1-sqrt(5))/2
     assert nsimplify((1+sqrt(5))/4, [GoldenRatio]) == GoldenRatio/2
     assert nsimplify(2/GoldenRatio, [GoldenRatio]) == 2*GoldenRatio - 2
@@ -421,11 +422,11 @@ def test_nsimplify():
     assert nsimplify(sin(3*pi/5, evaluate=False)) == sympify('(5/8 + 1/8*5**(1/2))**(1/2)')
     assert nsimplify(sqrt(atan('1', evaluate=False))*(2+I), [pi]) == sqrt(pi) + sqrt(pi)/2*I
     assert nsimplify(2 + exp(2*atan('1/4')*I)) == sympify('49/17 + 8*I/17')
-    assert nsimplify(pi, tolerance=0.01) == Rational(22,7)
-    assert nsimplify(pi, tolerance=0.001) == Rational(355,113)
-    assert nsimplify(0.33333, tolerance=1e-4) == Rational(1,3)
-    assert nsimplify(2.0**(1/3.), tolerance=0.001) == Rational(635,504)
-    assert nsimplify(2.0**(1/3.), tolerance=0.001, full=True) == 2**Rational(1,3)
+    assert nsimplify(pi, tolerance=0.01) == Rational(22, 7)
+    assert nsimplify(pi, tolerance=0.001) == Rational(355, 113)
+    assert nsimplify(0.33333, tolerance=1e-4) == Rational(1, 3)
+    assert nsimplify(2.0**(1/3.), tolerance=0.001) == Rational(635, 504)
+    assert nsimplify(2.0**(1/3.), tolerance=0.001, full=True) == 2**Rational(1, 3)
 
 def test_extract_minus_sign():
     x = Symbol("x")
@@ -446,9 +447,9 @@ def test_diff():
     f = Function("f")
     g = Function("g")
     assert simplify(g(x).diff(x)*f(x).diff(x)-f(x).diff(x)*g(x).diff(x)) == 0
-    assert simplify(2*f(x)*f(x).diff(x)-diff(f(x)**2,x)) == 0
-    assert simplify(diff(1/f(x),x)+f(x).diff(x)/f(x)**2) == 0
-    assert simplify(f(x).diff(x,y)-f(x).diff(y,x)) == 0
+    assert simplify(2*f(x)*f(x).diff(x)-diff(f(x)**2, x)) == 0
+    assert simplify(diff(1/f(x), x)+f(x).diff(x)/f(x)**2) == 0
+    assert simplify(f(x).diff(x, y)-f(x).diff(y, x)) == 0
 
 def test_logcombine_1():
     x, y = symbols("xy")
@@ -470,11 +471,11 @@ def test_logcombine_1():
         log(x**(1/(x*y))*y**(-1/(x*y)))+x/y
     assert logcombine(log(x)*2*log(y)+log(z), assume_pos_real=True) == \
         log(z*y**log(x**2))
-    assert logcombine((x*y+sqrt(x**4+y**4)+log(x)-log(y))/(pi*x**Rational(2,3)*\
-        y**Rational(3,2)), assume_pos_real=True) == \
-        log(x**(1/(pi*x**Rational(2,3)*y**Rational(3,2)))*y**(-1/(pi*\
-        x**Rational(2,3)*y**Rational(3,2)))) + (x**4 + y**4)**Rational(1,2)/(pi*\
-        x**Rational(2,3)*y**Rational(3,2)) + x**Rational(1,3)/(pi*y**Rational(1,2))
+    assert logcombine((x*y+sqrt(x**4+y**4)+log(x)-log(y))/(pi*x**Rational(2, 3)*\
+        y**Rational(3, 2)), assume_pos_real=True) == \
+        log(x**(1/(pi*x**Rational(2, 3)*y**Rational(3, 2)))*y**(-1/(pi*\
+        x**Rational(2, 3)*y**Rational(3, 2)))) + (x**4 + y**4)**Rational(1, 2)/(pi*\
+        x**Rational(2, 3)*y**Rational(3, 2)) + x**Rational(1, 3)/(pi*y**Rational(1, 2))
     assert logcombine(Eq(log(x), -2*log(y)), assume_pos_real=True) == \
         Eq(log(x*y**2), Integer(0))
     assert logcombine(Eq(y, x*acos(-log(x/y))), assume_pos_real=True) == \
@@ -484,15 +485,15 @@ def test_logcombine_1():
     assert logcombine((2+3*I)*log(x), assume_pos_real=True) == \
         log(x**2)+3*I*log(x)
     assert logcombine(Eq(y, -log(x)), assume_pos_real=True) == Eq(y, log(1/x))
-    assert logcombine(Integral((sin(x**2)+cos(x**3))/x,x), assume_pos_real=True) == \
-        Integral((sin(x**2)+cos(x**3))/x,x)
-    assert logcombine(Integral((sin(x**2)+cos(x**3))/x,x)+ (2+3*I)*log(x), \
+    assert logcombine(Integral((sin(x**2)+cos(x**3))/x, x), assume_pos_real=True) == \
+        Integral((sin(x**2)+cos(x**3))/x, x)
+    assert logcombine(Integral((sin(x**2)+cos(x**3))/x, x)+ (2+3*I)*log(x), \
         assume_pos_real=True) == log(x**2)+3*I*log(x) + \
-        Integral((sin(x**2)+cos(x**3))/x,x)
+        Integral((sin(x**2)+cos(x**3))/x, x)
 
 @XFAIL
 def test_logcombine_2():
-    # The same as one of the tests above, but with Rational(a,b) replaced with a/b.
+    # The same as one of the tests above, but with Rational(a, b) replaced with a/b.
     # This fails because of a bug in matches.  See issue 1274.
     x, y = symbols("xy")
     assert logcombine((x*y+sqrt(x**4+y**4)+log(x)-log(y))/(pi*x**(2/3)*y**(3/2)), \

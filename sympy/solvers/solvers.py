@@ -260,7 +260,7 @@ def solve(f, *symbols, **flags):
                 if len(exponents_denom) == 1:
                     m = exponents_denom[0]
                 else:
-                    # get the GCD of the denominators
+                    # get the LCM of the denominators
                     m = reduce(ilcm, exponents_denom)
                 # x -> y**m.
                 # we assume positive for simplification purposes

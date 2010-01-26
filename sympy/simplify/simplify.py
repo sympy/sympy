@@ -816,7 +816,7 @@ def _separatevars_dict(expr, *symbols):
 def ratsimp(expr):
     """
     == Usage ==
-        ratsimp(expr) -> joins two rational expressions and returns the simples form
+        ratsimp(expr) -> joins two rational expressions and returns the simplest form
 
     == Notes ==
         Currently can simplify only simple expressions, for this to be really useful
