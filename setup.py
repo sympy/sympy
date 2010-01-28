@@ -216,7 +216,7 @@ setup(
       license = 'BSD',
       url = 'http://code.google.com/p/sympy',
       packages = ['sympy'] + modules + tests + pyglet_packages,
-      scripts = ['bin/isympy', 'bin/test', 'bin/doctest'],
+      scripts = ['bin/isympy'],
       ext_modules = [],
       package_data = { 'sympy.utilities.mathml' : ['data/*.xsl'] },
       data_files = [('share/man/man1', ['doc/man/isympy.1'])],
