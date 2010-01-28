@@ -43,7 +43,7 @@ from sympy.polys.polyerrors import DomainError
 
 from sympy.polys.polyclasses import DMP, DMF, ANP
 
-from sympy.polys.algebratools import ZZ, QQ, EX
+from sympy.polys.algebratools import ZZ, QQ, RR, EX
 
 from sympy import raises, nextprime, sin, sqrt, I
 
@@ -522,6 +522,11 @@ def test_dup_factor_list():
     assert dup_factor_list([QQ(1,2),QQ(1),QQ(1,2)], QQ) == \
         (QQ(1,2), [([QQ(1),QQ(1)], 2)])
 
+    assert dup_factor_list([RR(1.0),RR(2.0),RR(1.0)], RR) == \
+        (RR(1.0), [([RR(1.0),RR(1.0)], 2)])
+    assert dup_factor_list([RR(2.0),RR(4.0),RR(2.0)], RR) == \
+        (RR(2.0), [([RR(1.0),RR(1.0)], 2)])
+
     f = [DMP([ZZ(4),ZZ(0)],ZZ),DMP([ZZ(4),ZZ(0),ZZ(0)],ZZ),DMP([],ZZ)]
 
     assert dup_factor_list(f, ZZ['y']) == \
@@ -580,6 +585,12 @@ def test_dmp_factor_list():
         (QQ(1,2), [([[QQ(1)],[]], 1),
                    ([[QQ(1),QQ(0)]], 1),
                    ([[QQ(1)],[QQ(1),QQ(0)]], 1)])
+
+    f = [[RR(2.0)],[],[-RR(8.0),RR(0.0),RR(0.0)]]
+
+    assert dmp_factor_list(f, 1, RR) == \
+        (RR(2.0), [([[RR(1.0)],[-RR(2.0),RR(0.0)]], 1),
+                   ([[RR(1.0)],[ RR(2.0),RR(0.0)]], 1)])
 
     f = [[DMP([ZZ(4),ZZ(0)],ZZ)],[DMP([ZZ(4),ZZ(0),ZZ(0)],ZZ)],[DMP([],ZZ)]]
 

@@ -52,28 +52,31 @@ _re_dom_frac = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
 
 _re_dom_algebraic = re.compile("^(Q|QQ)\<(.+)\>$")
 
-from sympy.polys.algebratools import Algebra, ZZ, QQ, EX
+from sympy.polys.algebratools import Algebra, ZZ, QQ, RR, EX
 
 def _construct_domain(rep, **args):
     """Constructs the minimal domain that the coefficients of `rep` fit in. """
     field = args.get('field', False)
 
     def _construct_simple(rep):
-        result, rational = {}, False
+        result, rational, inexact = {}, False, False
 
         for coeff in rep.itervalues():
             if coeff.is_Rational:
                 if not coeff.is_Integer:
                     rational = True
             elif coeff.is_Real:
-                raise NotImplementedError('inexact coefficients')
+                inexact = True
             else:
                 return None
 
-        if field or rational:
-            K = QQ
+        if inexact:
+            K = RR
         else:
-            K = ZZ
+            if field or rational:
+                K = QQ
+            else:
+                K = ZZ
 
         for monom, coeff in rep.iteritems():
             result[monom] = K.from_sympy(coeff)
@@ -471,6 +474,9 @@ class Poly(Basic):
 
             if dom in ['Q', 'QQ']:
                 return QQ
+
+            if dom in ['R', 'RR']:
+                return RR
 
             if dom == 'EX':
                 return EX
@@ -1772,8 +1778,9 @@ def terms_gcd(f, *gens, **args):
         return f
 
     J, result = F.terms_gcd()
+    dom = result.get_domain()
 
-    if result.get_domain().has_Field:
+    if dom.has_Field or not dom.is_Exact:
         C, result = result.LC(), result.monic()
     else:
         C, result = result.primitive()

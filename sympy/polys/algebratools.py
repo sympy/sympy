@@ -13,6 +13,8 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
+import math
+
 def factorial(m):
     """Returns `m!`. """
     if not m:
@@ -44,6 +46,8 @@ class Algebra(object):
 
     is_Poly = False
     is_Frac = False
+
+    is_Exact = True
 
     is_Numerical = False
     is_Algebraic = False
@@ -152,6 +156,14 @@ class Algebra(object):
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
+        return None
+
+    def from_RR_sympy(K1, a, K0):
+        """Convert a SymPy `Real` object to `dtype`. """
+        return None
+
+    def from_RR_mpmath(K1, a, K0):
+        """Convert a mpmath `mpf` object to `dtype`. """
         return None
 
     def from_AlgebraicField(K1, a, K0):
@@ -606,6 +618,20 @@ class ZZ_python(IntegerRing):
         if a.denom() == 1:
             return python_int(a.numer())
 
+    def from_RR_sympy(K1, a, K0):
+        """Convert a SymPy `Real` object to `dtype`. """
+        p, q = K0.as_integer_ratio(a)
+
+        if q == 1:
+            return python_int(p)
+
+    def from_RR_mpmath(K1, a, K0):
+        """Convert a mpmath `mpf` object to `dtype`. """
+        p, q = K0.as_integer_ratio(a)
+
+        if q == 1:
+            return python_int(p)
+
     def get_field(self):
         """Returns a field associated with `self`. """
         if HAS_FRACTION:
@@ -677,6 +703,14 @@ if HAS_FRACTION:
             """Convert a GMPY `mpq` object to `dtype`. """
             return python_rat(python_int(a.numer()),
                               python_int(a.denom()))
+
+        def from_RR_sympy(K1, a, K0):
+            """Convert a SymPy `Real` object to `dtype`. """
+            return python_rat(*K0.as_integer_ratio(a))
+
+        def from_RR_mpmath(K1, a, K0):
+            """Convert a mpmath `mpf` object to `dtype`. """
+            return python_rat(*K0.as_integer_ratio(a))
 
         def get_ring(self):
             """Returns a ring associated with `self`. """
@@ -753,6 +787,20 @@ class ZZ_sympy(IntegerRing):
         if a.denom() == 1:
             return sympy_int(python_int(a.numer()))
 
+    def from_RR_sympy(K1, a, K0):
+        """Convert a SymPy `Real` object to `dtype`. """
+        p, q = K0.as_integer_ratio(a)
+
+        if q == 1:
+            return sympy_int(p)
+
+    def from_RR_mpmath(K1, a, K0):
+        """Convert a mpmath `mpf` object to `dtype`. """
+        p, q = K0.as_integer_ratio(a)
+
+        if q == 1:
+            return sympy_int(p)
+
     def get_field(self):
         """Returns a field associated with `self`. """
         return QQ_sympy()
@@ -818,6 +866,14 @@ class QQ_sympy(RationalField):
         """Convert a GMPY `mpq` object to `dtype`. """
         return sympy_rat(python_int(a.numer()),
                          python_int(a.denom()))
+
+    def from_RR_sympy(K1, a, K0):
+        """Convert a SymPy `Real` object to `dtype`. """
+        return sympy_rat(*K0.as_integer_ratio(a))
+
+    def from_RR_mpmath(K1, a, K0):
+        """Convert a mpmath `mpf` object to `dtype`. """
+        return sympy_rat(*K0.as_integer_ratio(a))
 
     def get_ring(self):
         """Returns a ring associated with `self`. """
@@ -892,6 +948,20 @@ if HAS_GMPY:
             if a.denom() == 1:
                 return a.numer()
 
+        def from_RR_sympy(K1, a, K0):
+            """Convert a SymPy `Real` object to `dtype`. """
+            p, q = K0.as_integer_ratio(a)
+
+            if q == 1:
+                return gmpy_int(p)
+
+        def from_RR_mpmath(K1, a, K0):
+            """Convert a mpmath `mpf` object to `dtype`. """
+            p, q = K0.as_integer_ratio(a)
+
+            if q == 1:
+                return gmpy_int(p)
+
         def get_field(self):
             """Returns a field associated with `self`. """
             return QQ_gmpy()
@@ -963,6 +1033,14 @@ if HAS_GMPY:
             """Convert a GMPY `mpq` object to `dtype`. """
             return a
 
+        def from_RR_sympy(K1, a, K0):
+            """Convert a SymPy `Real` object to `dtype`. """
+            return gmpy_rat(*K0.as_integer_ratio(a))
+
+        def from_RR_mpmath(K1, a, K0):
+            """Convert a mpmath `mpf` object to `dtype`. """
+            return gmpy_rat(*K0.as_integer_ratio(a))
+
         def get_ring(self):
             """Returns a ring associated with `self`. """
             return ZZ_gmpy()
@@ -995,6 +1073,215 @@ if HAS_GMPY:
             """Returns factorial of `a`. """
             return gmpy_rat(gmpy_factorial(int(a)))
 
+class RealAlgebra(Algebra):
+    """Abstract algebra for real numbers. """
+
+    rep   = 'RR'
+
+    is_Exact     = False
+    is_Numerical = True
+
+    has_assoc_Ring  = True
+    has_assoc_Field = True
+
+    has_CharacteristicZero = True
+
+    def as_integer_ratio(self, a, **args):
+        """Convert real number to a (numer, denom) pair. """
+        v, n = math.frexp(a) # XXX: hack, will work only for floats
+
+        for i in xrange(300):
+            if v != math.floor(v):
+                v, n = 2*v, n-1
+            else:
+                break
+
+        numer, denom = int(v), 1
+
+        m = 1 << abs(n)
+
+        if n > 0:
+            numer *= m
+        else:
+            denom = m
+
+        return self.limit_denom(numer, denom, **args)
+
+    def limit_denom(self, n, d, **args):
+        """Find closest rational to `n/d` (up to `max_denom`). """
+        max_denom = args.get('max_denom', 1000000)
+
+        if d <= max_denom:
+            return n, d
+
+        self = QQ(n, d)
+
+        p0, q0, p1, q1 = 0, 1, 1, 0
+
+        while True:
+            a  = n//d
+            q2 = q0 + a*q1
+
+            if q2 > max_denom:
+                break
+
+            p0, q0, p1, q1, n, d = \
+                p1, q1, p0 + a*p1, q2, d, n - a*d
+
+        k = (max_denom - q0)//q1
+
+        P1, Q1 = p0 + k*p1, q0 + k*q1
+
+        bound1 = QQ(P1, Q1)
+        bound2 = QQ(p1, q1)
+
+        if abs(bound2 - self) <= abs(bound1 - self):
+            return p1, q1
+        else:
+            return P1, Q1
+
+    def get_ring(self):
+        """Returns a ring associated with `self`. """
+        return ZZ
+
+    def get_field(self):
+        """Returns a field associated with `self`. """
+        return QQ
+
+    def exquo(self, a, b):
+        """Exact quotient of `a` and `b`, implies `__div__`.  """
+        return a / b
+
+    def quo(self, a, b):
+        """Quotient of `a` and `b`, implies `__div__`. """
+        return a / b
+
+    def rem(self, a, b):
+        """Remainder of `a` and `b`, implies nothing.  """
+        return self.zero
+
+    def div(self, a, b):
+        """Division of `a` and `b`, implies `__div__`. """
+        return a / b, self.zero
+
+from sympy import (
+    Real as sympy_mpf,
+)
+
+class RR_sympy(RealAlgebra):
+    """Algebra for real numbers based on SymPy Real type. """
+
+    dtype = sympy_mpf
+    zero  = dtype(0)
+    one   = dtype(1)
+
+    def __init__(self):
+        pass
+
+    def to_sympy(self, a):
+        """Convert `a` to a SymPy object. """
+        return a
+
+    def from_sympy(self, a):
+        """Convert SymPy's Integer to `dtype`. """
+        b = a.evalf()
+
+        if b.is_Real:
+            return b
+        else:
+            raise CoercionFailed("expected Real object, got %s" % a)
+
+    def from_ZZ_python(K1, a, K0):
+        """Convert a Python `int` object to `dtype`. """
+        return sympy_mpf(a)
+
+    def from_QQ_python(K1, a, K0):
+        """Convert a Python `Fraction` object to `dtype`. """
+        return sympy_mpf(a.numerator) / a.denominator
+
+    def from_ZZ_sympy(K1, a, K0):
+        """Convert a SymPy `Integer` object to `dtype`. """
+        return sympy_mpf(a.p)
+
+    def from_QQ_sympy(K1, a, K0):
+        """Convert a SymPy `Rational` object to `dtype`. """
+        return sympy_mpf(a.p) / a.q
+
+    def from_ZZ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpz` object to `dtype`. """
+        return sympy_mpf(int(a))
+
+    def from_QQ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpq` object to `dtype`. """
+        return sympy_mpf(int(a.numer())) / int(a.denom)
+
+    def from_RR_sympy(K1, a, K0):
+        """Convert a SymPy `Real` object to `dtype`. """
+        return a
+
+    def from_RR_mpmath(K1, a, K0):
+        """Convert a mpmath `mpf` object to `dtype`. """
+        return sympy_mpf(a)
+
+from sympy.mpmath import (
+    mpf as mpmath_mpf,
+)
+
+class RR_mpmath(RealAlgebra):
+    """Algebra for real numbers based on mpmath mpf type. """
+
+    dtype = mpmath_mpf
+    zero  = dtype(0)
+    one   = dtype(1)
+
+    def __init__(self):
+        pass
+
+    def to_sympy(self, a):
+        """Convert `a` to a SymPy object. """
+        return sympy_mpf(a)
+
+    def from_sympy(self, a):
+        """Convert SymPy's Integer to `dtype`. """
+        b = a.evalf()
+
+        if b.is_Real:
+            return mpmath_mpf(b)
+        else:
+            raise CoercionFailed("expected Real object, got %s" % a)
+
+    def from_ZZ_python(K1, a, K0):
+        """Convert a Python `int` object to `dtype`. """
+        return mpmath_mpf(a)
+
+    def from_QQ_python(K1, a, K0):
+        """Convert a Python `Fraction` object to `dtype`. """
+        return mpmath_mpf(a.numerator) / a.denominator
+
+    def from_ZZ_sympy(K1, a, K0):
+        """Convert a SymPy `Integer` object to `dtype`. """
+        return mpmath_mpf(a.p)
+
+    def from_QQ_sympy(K1, a, K0):
+        """Convert a SymPy `Rational` object to `dtype`. """
+        return mpmath_mpf(a.p) / a.q
+
+    def from_ZZ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpz` object to `dtype`. """
+        return mpmath_mpf(int(a))
+
+    def from_QQ_gmpy(K1, a, K0):
+        """Convert a GMPY `mpq` object to `dtype`. """
+        return mpmath_mpf(int(a.numer())) / int(a.denom)
+
+    def from_RR_sympy(K1, a, K0):
+        """Convert a SymPy `Real` object to `dtype`. """
+        return mpmath_mpf(a)
+
+    def from_RR_mpmath(K1, a, K0):
+        """Convert a mpmath `mpf` object to `dtype`. """
+        return a
+
 def _getenv(key, default=None):
     from os import getenv
     return getenv(key, default)
@@ -1010,9 +1297,12 @@ if GROUND_TYPES == 'python':  # XXX: needs 2.6 or better (at least for now)
         QQ = QQ_gmpy()
     else:
         QQ = QQ_sympy()
+
+    RR = RR_mpmath()
 elif GROUND_TYPES == 'sympy': # XXX: this is *very* slow, guess why ;)
     ZZ = ZZ_sympy()
     QQ = QQ_sympy()
+    RR = RR_sympy()
 elif GROUND_TYPES == 'gmpy':  # XXX: should be fine? sorry, but no, try -Qnew, damn
     if HAS_GMPY:
         ZZ = ZZ_gmpy()
@@ -1024,6 +1314,8 @@ elif GROUND_TYPES == 'gmpy':  # XXX: should be fine? sorry, but no, try -Qnew, d
             QQ = QQ_python()
         else:
             QQ = QQ_sympy()
+
+    RR = RR_mpmath()
 else:
     raise ValueError("invalid ground types: %s" % GROUND_TYPES)
 
@@ -1124,6 +1416,14 @@ class AlgebraicField(Field):
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_RR_sympy(K1, a, K0):
+        """Convert a SymPy `Real` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_RR_mpmath(K1, a, K0):
+        """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
     def get_ring(self):
@@ -1235,6 +1535,14 @@ class PolynomialRing(Ring):
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_RR_sympy(K1, a, K0):
+        """Convert a SymPy `Real` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_RR_mpmath(K1, a, K0):
+        """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
     def from_PolynomialRing(K1, a, K0):
@@ -1388,6 +1696,14 @@ class FractionField(Field):
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_RR_sympy(K1, a, K0):
+        """Convert a SymPy `Real` object to `dtype`. """
+        return K1(K1.dom.convert(a, K0))
+
+    def from_RR_mpmath(K1, a, K0):
+        """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
     def from_PolynomialRing(K1, a, K0):
@@ -1581,6 +1897,14 @@ class ExpressionDomain(Field):
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
+        return K1(K0.to_sympy(a))
+
+    def from_RR_sympy(K1, a, K0):
+        """Convert a SymPy `Real` object to `dtype`. """
+        return K1(K0.to_sympy(a))
+
+    def from_RR_mpmath(K1, a, K0):
+        """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K0.to_sympy(a))
 
     def from_PolynomialRing(K1, a, K0):

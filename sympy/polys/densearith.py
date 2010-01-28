@@ -159,7 +159,7 @@ def dup_exquo_ground(f, c, K):
     if not f:
         return f
 
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         return [ K.quo(cf, c) for cf in f ]
     else:
         return [ cf // c for cf in f ]
@@ -827,7 +827,7 @@ def dmp_ff_div(f, g, u, K):
 
 def dup_div(f, g, K):
     """Polynomial division with remainder in `K[x]`. """
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         return dup_ff_div(f, g, K)
     else:
         return dup_rr_div(f, g, K)
@@ -852,7 +852,7 @@ def dup_exquo(f, g, K):
 @cythonized("u")
 def dmp_div(f, g, u, K):
     """Polynomial division with remainder in `K[X]`. """
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         return dmp_ff_div(f, g, u, K)
     else:
         return dmp_rr_div(f, g, u, K)

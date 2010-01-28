@@ -32,7 +32,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.polyclasses import GFP, DMP, DMF
 
-from sympy.polys.algebratools import ZZ, QQ, EX
+from sympy.polys.algebratools import ZZ, QQ, RR, EX
 
 from sympy import S, Integer, Rational, symbols, sqrt, exp, sin, expand, raises, oo, I
 
@@ -369,12 +369,17 @@ def test_Poly_get_domain():
     raises(CoercionFailed, "Poly(x/2, domain='ZZ')")
     assert Poly(x/2, domain='QQ').get_domain() == QQ
 
+    assert Poly(0.2*x).get_domain() == RR
+
 def test_Poly_set_domain():
     assert Poly(2*x + 1).set_domain(ZZ) == Poly(2*x + 1)
     assert Poly(2*x + 1).set_domain('ZZ') == Poly(2*x + 1)
 
     assert Poly(2*x + 1).set_domain(QQ) == Poly(2*x + 1, domain='QQ')
     assert Poly(2*x + 1).set_domain('QQ') == Poly(2*x + 1, domain='QQ')
+
+    assert Poly(S(2)/10*x + S(1)/10).set_domain('RR') == Poly(0.2*x + 0.1)
+    assert Poly(0.2*x + 0.1).set_domain('QQ') == Poly(S(2)/10*x + S(1)/10)
 
     raises(CoercionFailed, "Poly(x/2 + 1).set_domain(ZZ)")
     raises(DomainError, "Poly(x + 1, modulus=2).set_domain(QQ)")
@@ -1113,6 +1118,20 @@ def test_gcd():
     assert gcd(F, G, polys=False) == h
     assert lcm(F, G, polys=False) == r
 
+    f, g = x**2 - 1, x - 1.0
+    h, s, t = g, x + 1.0, 1.0
+
+    assert cofactors(f, g) == (h, s, t)
+    assert gcd(f, g) == h
+    assert lcm(f, g) == f
+
+    f, g = x**2 - 1.0, x - 1
+    h, s, t = g, x + 1.0, 1.0
+
+    assert cofactors(f, g) == (h, s, t)
+    assert gcd(f, g) == h
+    assert lcm(f, g) == f
+
     assert cofactors(8, 6) == (2, 4, 3)
     assert gcd(8, 6) == 2
     assert lcm(8, 6) == 24
@@ -1396,6 +1415,8 @@ def test_nroots():
 
     assert Poly(x**2 + 2*I, x).nroots() == [-1.0 + I, 1.0 - I]
     assert Poly(x**2 + 2*I, x, extension=I).nroots() == [-1.0 + I, 1.0 - I]
+
+    assert Poly(0.2*x + 0.1).nroots() == [-0.5]
 
     raises(DomainError, "Poly(x+y, x).nroots()")
     raises(PolynomialError, "Poly(x+y).nroots()")

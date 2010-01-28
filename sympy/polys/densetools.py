@@ -1219,7 +1219,7 @@ USE_DMP_HEU_GCD = 1
 
 def dup_inner_gcd(f, g, K):
     """Computes polynomial GCD and cofactors of `f` and `g` in `K[x]`. """
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         if USE_DUP_HEU_GCD:
             if K.is_QQ:
                 try:
@@ -1241,7 +1241,7 @@ def dup_inner_gcd(f, g, K):
 @cythonized("u")
 def _dmp_inner_gcd(f, g, u, K):
     """Helper function for `dmp_inner_gcd()`. """
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         if USE_DMP_HEU_GCD:
             if K.is_QQ:
                 try:
@@ -1303,7 +1303,7 @@ def dup_ff_lcm(f, g, K):
 
 def dup_lcm(f, g, K):
     """Computes polynomial LCM of `f` and `g` in `K[x]`. """
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         return dup_ff_lcm(f, g, K)
     else:
         return dup_rr_lcm(f, g, K)
@@ -1335,7 +1335,7 @@ def dmp_lcm(f, g, u, K):
     if not u:
         return dup_lcm(f, g, K)
 
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         return dmp_ff_lcm(f, g, u, K)
     else:
         return dmp_rr_lcm(f, g, u, K)
@@ -1421,7 +1421,7 @@ def dup_ff_content(f, K):
 
 def dup_content(f, K):
     """Returns GCD of coefficients in `K[x]`. """
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         return dup_ff_content(f, K)
     else:
         return dup_rr_content(f, K)
@@ -1476,7 +1476,7 @@ def dmp_ground_content(f, u, K):
     if not u:
         return dup_content(f, K)
 
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         return dmp_ff_ground_content(f, u, K)
     else:
         return dmp_rr_ground_content(f, u, K)
@@ -1496,7 +1496,7 @@ def dup_ff_primitive(f, K):
 
 def dup_primitive(f, K):
     """Returns content and a primitive polynomial in `K[x]`. """
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         return dup_ff_primitive(f, K)
     else:
         return dup_rr_primitive(f, K)
@@ -1538,7 +1538,7 @@ def dmp_ground_primitive(f, u, K):
     if dmp_zero_p(f, u):
         return K.zero, f
 
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         return dmp_ff_ground_primitive(f, u, K)
     else:
         return dmp_rr_ground_primitive(f, u, K)
@@ -1610,7 +1610,7 @@ def dup_sqf_part(f, K):
     gcd = dup_gcd(f, dup_diff(f, 1, K), K)
     sqf = dup_exquo(f, gcd, K)
 
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         return dup_monic(sqf, K)
     else:
         return dup_primitive(sqf, K)[1]
@@ -1627,7 +1627,7 @@ def dmp_sqf_part(f, u, K):
     gcd = dmp_gcd(f, dmp_diff(f, 1, u, K), u, K)
     sqf = dmp_exquo(f, gcd, u, K)
 
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         return dmp_ground_monic(sqf, u, K)
     else:
         return dmp_ground_primitive(sqf, u, K)[1]
@@ -1635,7 +1635,7 @@ def dmp_sqf_part(f, u, K):
 @cythonized("i")
 def dup_sqf_list(f, K, **args):
     """Returns square-free decomposition of a polynomial in `K[x]`. """
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         coeff = dup_LC(f, K)
         f = dup_monic(f, K)
     else:
@@ -1687,7 +1687,7 @@ def dmp_sqf_list(f, u, K, **args):
     if not u:
         return dup_sqf_list(f, K, **args)
 
-    if K.has_Field:
+    if K.has_Field or not K.is_Exact:
         coeff = dmp_ground_LC(f, u, K)
         f = dmp_ground_monic(f, u, K)
     else:

@@ -1054,6 +1054,12 @@ def dup_factor_list(f, K0, **args):
     if K0.is_Algebraic:
         return dup_ext_factor(f, K0, **args)
 
+    if not K0.is_Exact:
+        K0_inexact, K0 = K0, K0.get_field()
+        f = dup_convert(f, K0_inexact, K0)
+    else:
+        K0_inexact = None
+
     if K0.has_Field:
         K = K0.get_ring()
 
@@ -1084,6 +1090,12 @@ def dup_factor_list(f, K0, **args):
         denom = K0.convert(denom, K)
 
         coeff = K0.quo(coeff, denom)
+
+    if K0_inexact is not None:
+        for i, (f, k) in enumerate(factors):
+            factors[i] = (dup_convert(f, K0, K0_inexact), k)
+
+        coeff = K0_inexact.convert(coeff, K0)
 
     return coeff, factors
 
@@ -1119,6 +1131,12 @@ def dmp_factor_list(f, u, K0, **args):
     if K0.is_Algebraic:
         return dmp_ext_factor(f, u, K0, **args)
 
+    if not K0.is_Exact:
+        K0_inexact, K0 = K0, K0.get_field()
+        f = dmp_convert(f, u, K0_inexact, K0)
+    else:
+        K0_inexact = None
+
     if K0.has_Field:
         K = K0.get_ring()
 
@@ -1149,6 +1167,12 @@ def dmp_factor_list(f, u, K0, **args):
         denom = K0.convert(denom, K)
 
         coeff = K0.quo(coeff, denom)
+
+    if K0_inexact is not None:
+        for i, (f, k) in enumerate(factors):
+            factors[i] = (dmp_convert(f, u, K0, K0_inexact), k)
+
+        coeff = K0_inexact.convert(coeff, K0)
 
     return coeff, factors
 
