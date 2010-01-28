@@ -1220,13 +1220,13 @@ class Poly(Basic):
 
     def nroots(f, **args):
         """Compute numerical approximations of roots of `f`. """
-        if not f.rep.dom.is_Numerical:
-            raise DomainError("numerical domain expected, got %s" % f.rep.dom)
-
         if f.is_multivariate:
             raise PolynomialError("can't compute roots of a multivariate polynomial")
 
-        coeffs = [ f.rep.dom.evalf(c) for c in f.all_coeffs() ]
+        try:
+            coeffs = [ complex(c) for c in f.all_coeffs() ]
+        except ValueError:
+            raise DomainError("numerical domain expected, got %s" % f.rep.dom)
 
         return sympify(npolyroots(coeffs, **args))
 
