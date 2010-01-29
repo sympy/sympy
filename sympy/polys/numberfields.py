@@ -5,7 +5,7 @@ from sympy.core import (
 )
 
 from sympy.polys.polytools import (
-    Poly, sqf_norm, factor_list, groebner,
+    Poly, sqf_norm, invert, factor_list, groebner,
 )
 
 from sympy.polys.polyutils import (
@@ -28,7 +28,7 @@ from sympy.utilities import (
 def minpoly(ex, x=None, **args):
     """Computes the minimal polynomial of an algebraic number. """
     generator = numbered_symbols('a', dummy=True)
-    mapping, symbols = {}, {}
+    mapping, symbols, replace = {}, {}, []
 
     ex = sympify(ex)
 
@@ -63,6 +63,23 @@ def minpoly(ex, x=None, **args):
             return Mul(*[ bottom_up_scan(g) for g in ex.args ])
         elif ex.is_Pow:
             if ex.exp.is_Rational:
+                if ex.exp < 0 and ex.base.is_Add:
+                    coeff, terms = ex.base.as_coeff_factors()
+                    elt, _ = primitive_element(*terms)
+
+                    alg = ex.base - coeff
+
+                    inverse = invert(elt.gen + coeff, elt)
+                    base = inverse.subs(elt.gen, alg).expand()
+
+                    inverted_ex = base**(-ex.exp)
+                    replace.append((ex, inverted_ex))
+
+                    if ex.exp == -1:
+                        return bottom_up_scan(inverted_ex)
+                    else:
+                        ex = inverted_ex
+
                 base = bottom_up_scan(ex.base)
 
                 if base != ex.base:
@@ -102,6 +119,9 @@ def minpoly(ex, x=None, **args):
         if len(factors) == 1:
             ((result, _),) = factors
         else:
+            for old_ex, new_ex in replace:
+                ex = ex.subs(old_ex, new_ex)
+
             for result, _ in factors:
                 if result.subs(x, ex).expand().is_zero:
                     break

@@ -43,6 +43,8 @@ def test_minpoly():
     assert minpoly(sqrt(2) + sqrt(3), x) == x**4 - 10*x**2 + 1
     assert minpoly(sqrt(2) + sqrt(3) + sqrt(6), x) == x**4 - 22*x**2 - 48*x - 23
 
+    assert minpoly(1/(1 - 9*sqrt(2) + 7*sqrt(3)), x) == 392*x**4 - 1232*x**3 + 612*x**2 + 4*x - 1
+
     raises(NotAlgebraic, "minpoly(a, x)")
     raises(NotAlgebraic, "minpoly(2**y, x)")
     raises(NotAlgebraic, "minpoly(sin(1), x)")

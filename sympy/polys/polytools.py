@@ -379,6 +379,11 @@ class Poly(Basic):
         """Don't mess up with the core. """
         return [self.as_basic()]
 
+    @property
+    def gen(self):
+        """Return principal generator. """
+        return self.gens[0]
+
     def unify(f, g):
         """Make `f` and `g` belong to the same domain. """
         g = sympify(g)
