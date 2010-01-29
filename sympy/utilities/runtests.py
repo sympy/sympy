@@ -267,7 +267,7 @@ def doctest(*paths, **kwargs):
         # testing the *txt.
         if matched and not doc_tests_succeeded:
             print("DO *NOT* COMMIT!")
-        return doc_tests_succeeded
+    return doc_tests_succeeded
 
 class SymPyTests(object):
 
