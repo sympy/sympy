@@ -156,7 +156,7 @@ def isprime(n):
     performs a safe Miller-Rabin strong pseudoprime test with bases
     that are known to prove a number prime. Finally, a general Miller-Rabin
     test is done with the first k bases which, which will report a
-    psuedoprime as a prime with an error of about 4**-k. The current value
+    pseudoprime as a prime with an error of about 4**-k. The current value
     of k is 46 so the error is about 2 x 10**-28.
 
     Example usage
@@ -170,10 +170,14 @@ def isprime(n):
     """
     from sympy import primerange
     n = int(n)
-    if n < 2: return False
-    if n & 1 == 0: return n == 2
-    if _is_tiny_prime(n):   return True
-    if _has_tiny_factor(n): return False
+    if n < 2:
+        return False
+    if n & 1 == 0:
+        return n == 2
+    if _is_tiny_prime(n):
+        return True
+    if _has_tiny_factor(n):
+        return False
     try:
         return _mr_safe(n)
     except ValueError:
@@ -188,7 +192,7 @@ def _mr_safe_helper(_s):
     e.g.
     >>> from sympy.ntheory.primetest import _mr_safe_helper
     >>> print _mr_safe_helper("if n < 170584961: return mr(n, [350, 3958281543])")
-     # [350, 3958281543L] stot = 1 pmax = 1319427181
+     # [350, 3958281543] stot = 1 pmax = 1319427181
     """
 
     def _maxfac(smalln):
@@ -204,10 +208,10 @@ def _mr_safe_helper(_s):
             if p > maxp:
                 return smalln
             if smalln % p == 0:
-                return max([smalln/p, p])
+                return max([smalln//p, p])
         for p in range(_max_tiny_prime + 2, maxp, 2):
             if smalln % p == 0:
-                return max([smalln/p, p])
+                return max([smalln//p, p])
         return smalln
 
     def _info(bases):
@@ -224,8 +228,8 @@ def _mr_safe_helper(_s):
         for b in bases:
             tot += _factor_pow2(b-1)[0]
             pmax = max([pmax, _maxfac(b)])
-        return ' # %s stot = %s pmax = %s' % tuple([str(x) for x in (list(bases),
-                                                                  tot, pmax)])
+        return ' # %s stot = %s pmax = %s' % tuple(
+                [str(x).replace('L','') for x in (list(bases), tot, pmax)])
 
     _r = [int(_x) for _x in _s.split('[')[1].split(']')[0].split(',')]
     return _info(_r)
