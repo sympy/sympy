@@ -1341,12 +1341,9 @@ class AlgebraicField(Field):
         if not dom.is_QQ:
             raise DomainError("ground domain must be a rational field")
 
-        from sympy.polys.numberfields import AlgebraicNumber
+        from sympy.polys.numberfields import to_number_field
 
-        if len(ext) == 1:
-            (ext,) = ext
-
-        self.ext = AlgebraicNumber(ext)
+        self.ext = to_number_field(ext)
         self.mod = self.ext.minpoly.rep
 
         self.dom  = dom
@@ -1384,13 +1381,13 @@ class AlgebraicField(Field):
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         from sympy.polys.numberfields import AlgebraicNumber
-        return AlgebraicNumber(a, self.ext).as_basic()
+        return AlgebraicNumber(self.ext, a).as_basic()
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """
-        from sympy.polys.numberfields import AlgebraicNumber
+        from sympy.polys.numberfields import to_number_field
         try:
-            return self(AlgebraicNumber(a, self.ext).rep.all_coeffs()) # XXX: simplify this
+            return self(to_number_field(a, self.ext).native_coeffs())
         except (NotAlgebraic, IsomorphismFailed):
             raise CoercionFailed("%s is not a valid algebraic number in %s" % (a, self))
 

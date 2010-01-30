@@ -29,9 +29,10 @@ from polyerrors import (
 )
 
 from numberfields import (
-    minpoly,
-    primitive_element,
+    minimal_polynomial, minpoly,
+    primitive_element, primelt,
     field_isomorphism,
+    to_number_field,
     AlgebraicNumber,
 )
 
