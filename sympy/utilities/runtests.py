@@ -125,7 +125,7 @@ def test(*paths, **kwargs):
 
     test_files = t.get_test_files('sympy')
     if len(paths) == 0:
-        t._tests.extend(test_files)
+        t._testfiles.extend(test_files)
     else:
         paths = convert_to_native_paths(paths)
         matched = []
@@ -135,7 +135,7 @@ def test(*paths, **kwargs):
                 if p in f or fnmatch(basename, p):
                     matched.append(f)
                     break
-        t._tests.extend(matched)
+        t._testfiles.extend(matched)
 
     return t.test(sort=sort)
 
@@ -192,7 +192,7 @@ def doctest(*paths, **kwargs):
     not_blacklisted = [f for f in test_files
                          if not any(b in f for b in blacklist)]
     if len(paths) == 0:
-        t._tests.extend(not_blacklisted)
+        t._testfiles.extend(not_blacklisted)
     else:
         # take only what was requested...but not blacklisted items
         # and allow for partial match anywhere or fnmatch of name
@@ -204,13 +204,13 @@ def doctest(*paths, **kwargs):
                 if p in f or fnmatch(basename, p):
                     matched.append(f)
                     break
-        t._tests.extend(matched)
+        t._testfiles.extend(matched)
 
     # run the tests and record the result for this *py portion of the tests
-    if t._tests:
-        doc_tests_succeeded = t.test()
+    if t._testfiles:
+        failed = not t.test()
     else:
-        doc_tests_succeeded = True
+        failed = False
 
     # test *txt files only if we are running python newer than 2.4
     if sys.version_info[:2] > (2,4):
@@ -245,6 +245,7 @@ def doctest(*paths, **kwargs):
                         break
 
         setup_pprint()
+        first_report = True
         for txt_file in matched:
             if not os.path.isfile(txt_file):
                 continue
@@ -257,17 +258,32 @@ def doctest(*paths, **kwargs):
                 # make sure we return to the original displayhook in case some
                 # doctest has changed that
                 sys.displayhook = old_displayhook
-            print "Testing ", txt_file
-            print "Failed %s, tested %s" % out
-            if out[0] != 0:
-                doc_tests_succeeded = False
+
+            txtfailed, tested = out
+            if tested:
+                failed = txtfailed or failed
+                if first_report:
+                    first_report = False
+                    msg = 'txt doctests start'
+                    lhead = '='*((80 - len(msg))//2 - 1)
+                    rhead = '='*(79 - len(msg) - len(lhead) - 1)
+                    print ' '.join([lhead, msg, rhead])
+                    print
+                # use as the id, everything past the first 'sympy'
+                file_id = txt_file[txt_file.find('sympy') + len('sympy') + 1:]
+                print file_id, # get at least the name out so it is know who is being tested
+                wid = 80 - len(file_id) - 1 #update width
+                test_file = '[%s]' % (tested)
+                report = '[%s]' % (txtfailed or 'OK')
+                print ''.join([test_file,' '*(wid-len(test_file)-len(report)), report])
 
         # the doctests for *py will have printed this message already if there was
         # a failure, so now only print it if there was intervening reporting by
-        # testing the *txt.
-        if matched and not doc_tests_succeeded:
+        # testing the *txt as evidenced by first_report no longer being True.
+        if not first_report and failed:
+            print
             print("DO *NOT* COMMIT!")
-    return doc_tests_succeeded
+    return not failed
 
 class SymPyTests(object):
 
@@ -278,7 +294,7 @@ class SymPyTests(object):
         self._root_dir = sympy_dir
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
-        self._tests = []
+        self._testfiles = []
 
     def test(self, sort=False):
         """
@@ -287,12 +303,12 @@ class SymPyTests(object):
         If sort=False run tests in random order.
         """
         if sort:
-            self._tests.sort()
+            self._testfiles.sort()
         else:
             from random import shuffle
-            shuffle(self._tests)
+            shuffle(self._testfiles)
         self._reporter.start()
-        for f in self._tests:
+        for f in self._testfiles:
             try:
                 self.test_file(f)
             except KeyboardInterrupt:
@@ -344,6 +360,8 @@ class SymPyTests(object):
             # drop functions that are not selected with the keyword expression:
             funcs = [x for x in funcs if self.matches(x)]
 
+        if not funcs:
+            return
         self._reporter.entering_filename(filename, len(funcs))
         for f in funcs:
             self._reporter.entering_test(f)
@@ -403,14 +421,14 @@ class SymPyDocTests(object):
         self._reporter.root_dir(self._root_dir)
         self._normal = normal
 
-        self._tests = []
+        self._testfiles = []
 
     def test(self):
         """
         Runs the tests and returns True if all tests pass, otherwise False.
         """
         self._reporter.start()
-        for f in self._tests:
+        for f in self._testfiles:
             try:
                 self.test_file(f)
             except KeyboardInterrupt:
@@ -441,6 +459,8 @@ class SymPyDocTests(object):
         # and for now one must just search for these by text and function name.
         tests.sort(key=lambda x: -x.lineno)
 
+        if not tests:
+            return
         self._reporter.entering_filename(filename, len(tests))
         for test in tests:
             assert len(test.examples) != 0
