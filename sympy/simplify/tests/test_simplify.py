@@ -368,10 +368,8 @@ def test_separatevars():
     assert separatevars(sqrt(p**2 + x*p**2)) == p*sqrt(1 + x)
     assert separatevars(sqrt(y*(p**2 + x*p**2))) == p*sqrt(y)*sqrt(1 + x)
 
-@XFAIL
 def test_separatevars_advanced_factor():
-    # If factor() is ever improved to factor non-symbolic expressions, this
-    # should XPASS
+    x,y,z = symbols('xyz')
     assert separatevars(1 + log(x)*log(y) + log(x) + log(y)) == (log(x) + 1)*(log(y) + 1)
     assert separatevars(1 + x - log(z) - x*log(z) - exp(y)*log(z) - \
         x*exp(y)*log(z) + x*exp(y) + exp(y)) == \
