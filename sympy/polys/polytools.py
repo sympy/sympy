@@ -1415,7 +1415,7 @@ class Poly(Basic):
     def __eq__(f, g):
         if not g.is_Poly:
             try:
-                g = Poly(g, *f.gens, domain=f.get_domain())
+                g = Poly(g, *f.gens, **{'domain': f.get_domain()})
             except (PolynomialError, DomainError, CoercionFailed):
                 return False
 

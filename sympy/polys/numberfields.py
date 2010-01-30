@@ -112,7 +112,7 @@ def minimal_polynomial(ex, x=None, **args):
         result = ex.q*x - ex.p
     else:
         F = [x - bottom_up_scan(ex)] + mapping.values()
-        G = groebner(F, *(symbols.values() + [x]), order='lex')
+        G = groebner(F, symbols.values() + [x], order='lex')
 
         _, factors = factor_list(G[-1])
 
