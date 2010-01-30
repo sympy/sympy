@@ -30,6 +30,10 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
+from sympy.polys.monomialtools import (
+    monomial_lex_cmp,
+)
+
 from sympy.polys.polyclasses import GFP, DMP, DMF
 
 from sympy.polys.algebratools import ZZ, QQ, RR, EX
@@ -215,6 +219,9 @@ def test_Poly__new__():
     raises(PolynomialError, "Poly(x+2, x, domain=ZZ, extension=[sqrt(3)])")
     raises(PolynomialError, "Poly(x+2, x, modulus=3, extension=[sqrt(3)])")
 
+    raises(PolynomialError, "Poly(x+1, x, modulus=3, order='grlex')")
+    raises(NotImplementedError, "Poly(x+1, x, order='grlex')")
+
     assert Poly({(2,1): 1, (1,2): 2, (1,1): 3}, x, y) == \
         Poly(x**2*y + 2*x*y**2 + 3*x*y, x, y)
 
@@ -305,6 +312,12 @@ def test_Poly_unify():
 
     assert Poly(x+5, x, modulus=3).unify(Poly(x+7, x, modulus=3))[2:] == (GFP([1, 2], 3, ZZ), GFP([1, 1], 3, ZZ))
 
+def test_Poly__analyze_order():
+    assert Poly._analyze_order({}) is None
+    assert Poly._analyze_order({'order': 'lex'}) == monomial_lex_cmp
+
+    raises(ValueError, "Poly._analyze_order({'order': 1})")
+
 def test_Poly__analyze_domain():
     assert Poly._analyze_domain({}) is None
     assert Poly._analyze_domain({'domain': ZZ}) == ZZ
@@ -355,8 +368,8 @@ def test_Poly__parse_domain():
     assert Poly._parse_domain('Q<I>') == QQ.algebraic_field(I)
     assert Poly._parse_domain('QQ<I>') == QQ.algebraic_field(I)
 
-    #assert Poly._parse_domain('Q<sqrt(2), I>') == QQ.algebraic_field(sqrt(2), I)
-    #assert Poly._parse_domain('QQ<sqrt(2), I>') == QQ.algebraic_field(sqrt(2), I)
+    assert Poly._parse_domain('Q<sqrt(2), I>') == QQ.algebraic_field(sqrt(2), I)
+    assert Poly._parse_domain('QQ<sqrt(2), I>') == QQ.algebraic_field(sqrt(2), I)
 
 def test_Poly_get_domain():
     assert Poly(2*x).get_domain() == ZZ

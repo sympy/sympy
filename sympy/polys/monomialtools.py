@@ -94,7 +94,7 @@ def monomial_cmp(order):
     try:
         return _monomial_order[order]
     except KeyError:
-        raise ValueError("Unknown monomial order: %s" % order)
+        raise ValueError("expected valid monomial order, got %s" % order)
 
 @cythonized("a,b")
 def monomial_mul(A, B):

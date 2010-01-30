@@ -312,6 +312,7 @@ class Poly(Basic):
             if rep.lev != len(gens)-1 or args:
                 raise PolynomialError("invalid arguments to construct a polynomial")
         else:
+            order = cls._analyze_order(args)
             domain = cls._analyze_domain(args)
             modulus = cls._analyze_modulus(args)
             extension = cls._analyze_extension(args)
@@ -328,9 +329,15 @@ class Poly(Basic):
             if extension is not None:
                 args['extension'] = extension
 
+            if order is not None:
+                if modulus is not None:
+                    raise PolynomialError("monomial order specification interferes with modulus")
+
+                raise NotImplementedError("'order' keyword is not yet implemented")
+
             if domain is not None:
                 if domain.is_Composite and set(domain.gens) & set(gens):
-                    raise PolynomialError("ground domain and generators interfere together")
+                    raise PolynomialError("ground domain and generators interferes together")
 
                 if modulus is not None and not domain.is_ZZ:
                     raise PolynomialError("modulus specification requires ZZ ground domain")
@@ -456,6 +463,19 @@ class Poly(Basic):
     def unit(f):
         """Return unit of `f`'s polynomial algebra. """
         return f.per(f.rep.unit())
+
+    @classmethod
+    def _analyze_order(cls, args):
+        """Convert `order` to an internal representation. """
+        order = args.get('order')
+
+        if order is not None:
+            if isinstance(order, str):
+                order = monomial_cmp(order)
+            elif not hasattr(order, '__call__'):
+                raise ValueError("expected monomial order declaration or a function, got %s" % order)
+
+        return order
 
     @classmethod
     def _analyze_domain(cls, args):
