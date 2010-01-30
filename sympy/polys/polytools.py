@@ -198,9 +198,6 @@ def _init_poly_from_dict(dict_rep, *gens, **args):
     domain = args.get('domain')
     modulus = args.get('modulus')
 
-    if not gens:
-        raise GeneratorsNeeded("can't initialize from a dictionary without generators")
-
     if modulus is not None:
         if len(gens) != 1:
             raise PolynomialError("multivariate polynomials over GF(p) are not supported")
@@ -214,6 +211,25 @@ def _init_poly_from_dict(dict_rep, *gens, **args):
             domain, dict_rep = _construct_domain(dict_rep, **args)
 
         return DMP(dict_rep, domain, len(gens)-1)
+
+def _init_poly_from_list(list_rep, *gens, **args):
+    """Initialize a Poly given a list instance. """
+    domain = args.get('domain')
+    modulus = args.get('modulus')
+
+    if len(gens) != 1:
+        raise PolynomialError("can't create a multivariate polynomial from a list")
+
+    if modulus is not None:
+        return GFP(list_rep, modulus, domain)
+    else:
+        if domain is not None:
+            rep = map(domain.convert, list_rep)
+        else:
+            dict_rep = dict(enumerate(reversed(list_rep)))
+            domain, rep = _construct_domain(dict_rep, **args)
+
+        return DMP(rep, domain, len(gens)-1)
 
 def _init_poly_from_poly(poly_rep, *gens, **args):
     """Initialize a Poly given a Poly instance. """
@@ -351,8 +367,14 @@ class Poly(Basic):
 
                 args['domain'] = domain = QQ.algebraic_field(*extension)
 
-            if type(rep) is dict:
-                rep = _init_poly_from_dict(rep, *gens, **args)
+            if isinstance(rep, (dict, list)):
+                if not gens:
+                    raise GeneratorsNeeded("can't initialize from %s without generators", type(rep))
+
+                if isinstance(rep, dict):
+                    rep = _init_poly_from_dict(rep, *gens, **args)
+                else:
+                    rep = _init_poly_from_list(rep, *gens, **args)
             else:
                 rep = sympify(rep)
 

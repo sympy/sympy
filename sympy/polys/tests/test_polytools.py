@@ -4,6 +4,7 @@ from sympy.polys.polytools import (
     Poly, _polify_basic,
     _construct_domain,
     _init_poly_from_dict,
+    _init_poly_from_list,
     _init_poly_from_poly,
     _init_poly_from_basic,
     pdiv, prem, pquo, pexquo,
@@ -72,9 +73,6 @@ def test__construct_domain():
         (ZZ.frac_field(x,y), {(0,): DMF(([[2]], [[1],[]]), ZZ), (1,): DMF(([[3,0]], [[1]]), ZZ)})
 
 def test__init_poly_from_dict():
-    raises(GeneratorsNeeded, "_init_poly_from_dict({0: 1, 1: 2})")
-    raises(GeneratorsNeeded, "_init_poly_from_dict({0: 1, 1: 2}, modulus=3, domain=ZZ)")
-
     raises(PolynomialError, "_init_poly_from_dict({0: 1, 1: 2}, x, y, modulus=3, domain=ZZ)")
 
     assert _init_poly_from_dict({0: 1, 1: 2}, x, modulus=3, domain=ZZ) == GFP([2,1], 3, ZZ)
@@ -96,6 +94,18 @@ def test__init_poly_from_dict():
 
     assert _init_poly_from_dict({(0,): 1, (1,): 2}, x, domain=ZZ) == DMP([ZZ(2),ZZ(1)], ZZ)
     assert _init_poly_from_dict({(0,): 1, (1,): 2}, x, domain=QQ) == DMP([QQ(2),QQ(1)], QQ)
+
+def test__init_poly_from_list():
+    raises(PolynomialError, "_init_poly_from_list([[]], x, y)")
+
+    assert _init_poly_from_list([2,1], x, modulus=3, domain=ZZ) == GFP([2,1], 3, ZZ)
+    assert _init_poly_from_list([5,1], x, modulus=3, domain=ZZ) == GFP([2,1], 3, ZZ)
+
+    assert _init_poly_from_list([2,1], x) == DMP([ZZ(2),ZZ(1)], ZZ)
+    assert _init_poly_from_list([2,1], x, field=True) == DMP([QQ(2),QQ(1)], QQ)
+
+    assert _init_poly_from_list([2,1], x, domain=ZZ) == DMP([ZZ(2),ZZ(1)], ZZ)
+    assert _init_poly_from_list([2,1], x, domain=QQ) == DMP([QQ(2),QQ(1)], QQ)
 
 def test__init_poly_from_poly():
     f = Poly(x+7, x, domain=ZZ)
@@ -221,6 +231,9 @@ def test_Poly__new__():
 
     raises(PolynomialError, "Poly(x+1, x, modulus=3, order='grlex')")
     raises(NotImplementedError, "Poly(x+1, x, order='grlex')")
+
+    raises(GeneratorsNeeded, "Poly({1: 2, 0: 1})")
+    raises(GeneratorsNeeded, "Poly([2, 1])")
 
     assert Poly({(2,1): 1, (1,2): 2, (1,1): 3}, x, y) == \
         Poly(x**2*y + 2*x*y**2 + 3*x*y, x, y)
