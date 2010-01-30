@@ -463,8 +463,8 @@ def root_factors(f, *gens, **args):
        Examples
        ========
 
-           >>> from sympy.polys.rootfinding import root_factors
            >>> from sympy.abc import x, y
+           >>> from sympy.polys.polyroots import root_factors
 
            >>> root_factors(x**2-y, x)
            [x - y**(1/2), x + y**(1/2)]
@@ -508,9 +508,10 @@ def number_of_real_roots(f, *gens, **args):
        Examples
        ========
 
-           >>> from sympy.polys.rootfinding import number_of_real_roots
+           >>> from sympy import Poly
            >>> from sympy.abc import x, y
-           >>> from sympy import Poly, sqrt
+
+           >>> from sympy.polys.polyroots import number_of_real_roots
 
            >>> f = Poly(x**2 - 1, x)
 
