@@ -369,7 +369,7 @@ class Poly(Basic):
 
             if isinstance(rep, (dict, list)):
                 if not gens:
-                    raise GeneratorsNeeded("can't initialize from %s without generators", type(rep))
+                    raise GeneratorsNeeded("can't initialize from %s without generators" % type(rep).__name__)
 
                 if isinstance(rep, dict):
                     rep = _init_poly_from_dict(rep, *gens, **args)
@@ -2069,32 +2069,29 @@ def cancel(f, *gens, **args):
 
 def groebner(F, *gens, **args):
     """Computes reduced Groebner basis for a set of polynomials. """
-    if not F:
-        return []
+    if 'modulus' in args:
+        raise PolynomialError("can't compute Groebner basis over over a finite field")
 
-    order = args.pop('order', 'lex')
+    order = Poly._analyze_order({'order': args.pop('order', 'lex')})
     basic = _should_return_basic(*F, **args)
 
     args = _update_args(args, 'field', True)
     gens = _analyze_gens(gens)
 
-    if gens:
-        F = [ Poly(f, *gens, **args) for f in F ]
-
-        if any(f.rep.dom.is_EX for f in F):
-            F = [ f.set_domain('EX') for f in F ]
-    else:
+    if not gens:
         raise GeneratorsNeeded("can't compute Groebner basis without generators")
 
-    gens, lev, dom = F[0].gens, F[0].rep.lev, F[0].rep.dom
+    if not F:
+        return []
 
-    if isinstance(order, basestring):
-        order = monomial_cmp(order)
+    F = [ Poly(f, *gens, **args) for f in F ]
+    dom, lev = F[0].get_domain(), len(gens)-1
 
-    F = [ sdp_from_dict(f.rep.to_dict(), order) for f in F ]
+    for f in F[1:]:
+        dom = dom.unify(f.get_domain(), gens)
 
-    G = [ Poly(DMP(dict(g), dom, lev), *gens)
-        for g in sdp_groebner(F, lev, order, dom) ]
+    F = [ sdp_from_dict(f.set_domain(dom).rep.to_dict(), order) for f in F ]
+    G = [ Poly(DMP(dict(g), dom, lev), *gens) for g in sdp_groebner(F, lev, order, dom) ]
 
     if basic:
         return [ g.as_basic() for g in G ]

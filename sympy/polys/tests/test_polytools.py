@@ -1410,6 +1410,7 @@ def test_cancel():
 
 def test_groebner():
     raises(GeneratorsNeeded, "groebner([x, y], order='lex')")
+    raises(PolynomialError, "groebner([x], x, modulus=3)")
 
     assert groebner([], x, y, z) == []
 
