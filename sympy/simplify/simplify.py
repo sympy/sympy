@@ -744,7 +744,12 @@ def _separatevars(expr):
 
     # First try other expansion methods
     expr = expr.expand(mul=False, multinomial=False)
-    expr = factor(expr, expand=False)
+
+    _expr = expr.expand(power_exp=False, deep=False)
+    _expr = factor(_expr, expand=False)
+
+    if not _expr.is_Add:
+        expr = _expr
 
     _coeff = Symbol('_coeff', dummy=True)
 
@@ -1552,3 +1557,4 @@ def _logcombine(expr, assume_pos_real=False):
         _logcombine(expr.args[1], assume_pos_real)
 
     return expr
+
