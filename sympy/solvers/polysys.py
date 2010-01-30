@@ -54,7 +54,7 @@ def solve_poly_system(system, *gens):
 
     def solve_reduced_system(system, gens, entry=False):
         """Recursively solves reduced polynomial systems. """
-        basis = groebner(system, *gens, polys=True)
+        basis = groebner(system, gens, polys=True)
 
         if len(basis) == 1 and basis[0].is_ground:
             if not entry:
