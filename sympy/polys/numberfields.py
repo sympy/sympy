@@ -181,9 +181,6 @@ def field_isomorphism(a, b):
     A = a.minpoly.LC()
     B = b.minpoly.LC()
 
-    a = a.to_algebraic_integer()
-    b = b.to_algebraic_integer()
-
     _, factors = factor_list(a.minpoly, extension=b)
 
     for f, _ in factors:
@@ -192,7 +189,6 @@ def field_isomorphism(a, b):
             d, terms = len(coeffs)-1, []
 
             for i, coeff in enumerate(coeffs):
-                coeffs[i] = coeff = B**(d-i)*coeff/A
                 terms.append(coeff*b.root**(d-i))
 
             root = Add(*terms).expand()

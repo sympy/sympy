@@ -65,6 +65,26 @@ def test_primitive_element():
     raises(ValueError, "primitive_element([], x)")
 
 def test_field_isomorphism():
+    assert field_isomorphism(3, sqrt(2)) == [3]
+
+    assert field_isomorphism( I*sqrt(3), I*sqrt(3)/2) == [ 2, 0]
+    assert field_isomorphism(-I*sqrt(3), I*sqrt(3)/2) == [-2, 0]
+
+    assert field_isomorphism( I*sqrt(3),-I*sqrt(3)/2) == [-2, 0]
+    assert field_isomorphism(-I*sqrt(3),-I*sqrt(3)/2) == [ 2, 0]
+
+    assert field_isomorphism( 2*I*sqrt(3)/7, 5*I*sqrt(3)/3) == [ S(6)/35, 0]
+    assert field_isomorphism(-2*I*sqrt(3)/7, 5*I*sqrt(3)/3) == [-S(6)/35, 0]
+
+    assert field_isomorphism( 2*I*sqrt(3)/7,-5*I*sqrt(3)/3) == [-S(6)/35, 0]
+    assert field_isomorphism(-2*I*sqrt(3)/7,-5*I*sqrt(3)/3) == [ S(6)/35, 0]
+
+    assert field_isomorphism( 2*I*sqrt(3)/7+27, 5*I*sqrt(3)/3) == [ S(6)/35, 27]
+    assert field_isomorphism(-2*I*sqrt(3)/7+27, 5*I*sqrt(3)/3) == [-S(6)/35, 27]
+
+    assert field_isomorphism( 2*I*sqrt(3)/7+27,-5*I*sqrt(3)/3) == [-S(6)/35, 27]
+    assert field_isomorphism(-2*I*sqrt(3)/7+27,-5*I*sqrt(3)/3) == [ S(6)/35, 27]
+
     p = AlgebraicNumber( sqrt(2) + sqrt(3))
     q = AlgebraicNumber(-sqrt(2) + sqrt(3))
     r = AlgebraicNumber( sqrt(2) - sqrt(3))
