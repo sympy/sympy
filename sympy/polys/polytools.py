@@ -626,6 +626,27 @@ class Poly(Basic):
 
         return extension
 
+    def replace(f, x, y=None):
+        """Replace `x` with `y` in generators list. """
+        if y is None:
+            if f.is_univariate:
+                x, y = f.gen, x
+            else:
+                raise PolynomialError("syntax supported only in univariate case")
+
+        if x == y:
+            return f
+
+        if x in f.gens and y not in f.gens:
+            dom = f.get_domain()
+
+            if not dom.is_Composite or y not in dom.gens:
+                gens = list(f.gens)
+                gens[gens.index(x)] = y
+                return f.per(f.rep, gens=gens)
+
+        raise PolynomialError("can't replace %s with %s in %s" % (x, y, f))
+
     def to_ring(f):
         """Make the ground domain a ring. """
         try:
