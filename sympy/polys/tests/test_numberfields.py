@@ -121,6 +121,9 @@ def test_field_isomorphism():
     assert field_isomorphism(a, r) == [ S(5)/2, S(0), -S(49)/2, S(1)]
     assert field_isomorphism(a, s) == [-S(1)/2, S(0),  S(5)/2,  S(1)]
 
+    assert field_isomorphism(sqrt(2), sqrt(3)) is None
+    assert field_isomorphism(sqrt(3), sqrt(2)) is None
+
 def test_to_number_field():
     assert to_number_field(sqrt(2)) == AlgebraicNumber(sqrt(2))
     assert to_number_field([sqrt(2), sqrt(3)]) == AlgebraicNumber(sqrt(2)+sqrt(3))
