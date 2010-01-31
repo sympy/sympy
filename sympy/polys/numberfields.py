@@ -1,7 +1,8 @@
 """Computational algebraic number field theory. """
 
 from sympy import (
-    S, Basic, I, Integer, Real, Symbol, Add, Mul, sympify, Q, ask,
+    S, Basic, I, Integer, Rational, Real,
+    Symbol, Add, Mul, sympify, Q, ask,
 )
 
 from sympy.polys.polytools import (
@@ -77,17 +78,18 @@ def minimal_polynomial(ex, x=None, **args):
                     else:
                         ex = base**(-ex.exp)
 
-                base = bottom_up_scan(ex.base)
-
-                if base != ex.base:
-                    power = base**ex.exp
+                if not ex.exp.is_Integer:
+                    base, exp = (ex.base**ex.exp.p).expand(), Rational(1, ex.exp.q)
                 else:
-                    power = ex
+                    base, exp = ex.base, ex.exp
 
-                if power not in mapping:
-                    return update_mapping(power, 1/ex.exp, -base)
+                base = bottom_up_scan(base)
+                expr = base**exp
+
+                if expr not in mapping:
+                    return update_mapping(expr, 1/exp, -base)
                 else:
-                    return symbols[power]
+                    return symbols[expr]
         elif ex.is_AlgebraicNumber:
             if ex.root not in mapping:
                 return update_mapping(ex.root, ex.minpoly)
