@@ -16,7 +16,7 @@ from sympy.polys.polyerrors import (
 from sympy.polys.polyclasses import DMP
 from sympy.polys.algebratools import QQ
 
-from sympy.abc import x, y, a
+from sympy.abc import x, y
 
 def test_minimal_polynomial():
     assert minimal_polynomial(-7, x) == x + 7
@@ -49,14 +49,36 @@ def test_minimal_polynomial():
     assert minimal_polynomial(sqrt(2) + sqrt(3), x) == x**4 - 10*x**2 + 1
     assert minimal_polynomial(sqrt(2) + sqrt(3) + sqrt(6), x) == x**4 - 22*x**2 - 48*x - 23
 
-    assert minimal_polynomial(1/(1 - 9*sqrt(2) + 7*sqrt(3)), x) == 392*x**4 - 1232*x**3 + 612*x**2 + 4*x - 1
+    a = 1 - 9*sqrt(2) + 7*sqrt(3)
 
-    raises(NotAlgebraic, "minimal_polynomial(a, x)")
+    assert minimal_polynomial(1/a, x) == 392*x**4 - 1232*x**3 + 612*x**2 + 4*x - 1
+    assert minimal_polynomial(1/sqrt(a), x) == 392*x**8 - 1232*x**6 + 612*x**4 + 4*x**2 - 1
+
+    raises(NotAlgebraic, "minimal_polynomial(y, x)")
     raises(NotAlgebraic, "minimal_polynomial(2**y, x)")
     raises(NotAlgebraic, "minimal_polynomial(sin(1), x)")
 
     assert minimal_polynomial(sqrt(2), polys=True).is_Poly == True
     assert minimal_polynomial(sqrt(2), x, polys=True) == Poly(x**2 - 2)
+
+    a = AlgebraicNumber(sqrt(2))
+    b = AlgebraicNumber(sqrt(3))
+
+    assert minimal_polynomial(a, x) == x**2 - 2
+    assert minimal_polynomial(b, x) == x**2 - 3
+
+    assert minimal_polynomial(a, x, polys=True) == Poly(x**2 - 2)
+    assert minimal_polynomial(b, x, polys=True) == Poly(x**2 - 3)
+
+    assert minimal_polynomial(sqrt(a/2 + 17), x) == 2*x**4 -  68*x**2 +  577
+    assert minimal_polynomial(sqrt(b/2 + 17), x) == 4*x**4 - 136*x**2 + 1153
+
+    a, b = sqrt(2)/3 + 7, AlgebraicNumber(sqrt(2)/3 + 7)
+
+    f = 81*x**8 - 2268*x**6 - 4536*x**5 + 22644*x**4 + 63216*x**3 - 31608*x**2 - 189648*x + 141358
+
+    assert minimal_polynomial(sqrt(a) + sqrt(sqrt(a)), x) == f
+    assert minimal_polynomial(sqrt(b) + sqrt(sqrt(b)), x) == f
 
 def test_primitive_element():
     assert primitive_element([sqrt(2), sqrt(3)], x) == (x**4 - 10*x**2 + 1, sqrt(2) + sqrt(3))
@@ -246,6 +268,8 @@ def test_AlgebraicNumber():
 
     assert a != b and a != sqrt(2)+3
 
+    assert (a == x) == False and (a != x) == True
+
     a = AlgebraicNumber(sqrt(2), [1,0])
     b = AlgebraicNumber(sqrt(2), [1,0], alias=y)
 
@@ -259,6 +283,10 @@ def test_AlgebraicNumber():
 
     a = AlgebraicNumber(sqrt(2), [2,3])
     b = AlgebraicNumber(sqrt(2), [2,3], alias=y)
+
+    p = a.as_poly()
+
+    assert p == Poly(2*p.gen+3)
 
     assert a.as_poly(x) == Poly(2*x+3)
     assert b.as_poly()  == Poly(2*y+3)

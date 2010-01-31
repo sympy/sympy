@@ -1,7 +1,7 @@
 """Computational algebraic number field theory. """
 
 from sympy import (
-    S, Basic, I, Integer, Symbol, Add, Mul, sympify, Q, ask,
+    S, Basic, I, Integer, Real, Symbol, Add, Mul, sympify, Q, ask,
 )
 
 from sympy.polys.polytools import (
@@ -72,13 +72,10 @@ def minimal_polynomial(ex, x=None, **args):
                     inverse = invert(elt.gen + coeff, elt)
                     base = inverse.subs(elt.gen, alg).expand()
 
-                    inverted_ex = base**(-ex.exp)
-                    replace.append((ex, inverted_ex))
-
                     if ex.exp == -1:
-                        return bottom_up_scan(inverted_ex)
+                        return bottom_up_scan(base)
                     else:
-                        ex = inverted_ex
+                        ex = base**(-ex.exp)
 
                 base = bottom_up_scan(ex.base)
 
@@ -91,8 +88,6 @@ def minimal_polynomial(ex, x=None, **args):
                     return update_mapping(power, 1/ex.exp, -base)
                 else:
                     return symbols[power]
-
-                return a
         elif ex.is_AlgebraicNumber:
             if ex.root not in mapping:
                 return update_mapping(ex.root, ex.minpoly)
@@ -105,9 +100,9 @@ def minimal_polynomial(ex, x=None, **args):
 
     if ex.is_AlgebraicNumber:
         if not polys:
-            return ex.minpoly.as_basic()
+            return ex.minpoly.as_basic(x)
         else:
-            return ex.minpoly
+            return ex.minpoly.replace(x)
     elif ex.is_Rational:
         result = ex.q*x - ex.p
     else:
@@ -119,11 +114,8 @@ def minimal_polynomial(ex, x=None, **args):
         if len(factors) == 1:
             ((result, _),) = factors
         else:
-            for old_ex, new_ex in replace:
-                ex = ex.subs(old_ex, new_ex)
-
             for result, _ in factors:
-                if result.subs(x, ex).expand().is_zero:
+                if result.subs(x, ex).evalf(chop=True) == 0:
                     break
             else: # pragma: no cover
                 raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % ex)
@@ -156,7 +148,7 @@ def primitive_element(extension, x=None, **args):
 
 primelt = primitive_element
 
-def field_isomorphism(a, b):
+def field_isomorphism(a, b, **args):
     """Construct an isomorphism between two number fields. """
     a, b = sympify(a), sympify(b)
 
@@ -191,15 +183,13 @@ def field_isomorphism(a, b):
             for i, coeff in enumerate(coeffs):
                 terms.append(coeff*b.root**(d-i))
 
-            root = Add(*terms).expand()
+            root = Add(*terms)
 
-            if a.root != root:
-                if a.root == -root:
-                    coeffs = [ -c for c in coeffs ]
-                else:
-                    continue
+            if (a.root - root).evalf(chop=True) == 0:
+                return coeffs
 
-            return coeffs
+            if (a.root + root).evalf(chop=True) == 0:
+                return [ -c for c in coeffs ]
     else:
         return None
 
@@ -300,6 +290,9 @@ class AlgebraicNumber(Basic):
 
         return a.rep != b.rep or \
             a.minpoly.all_coeffs() != b.minpoly.all_coeffs()
+
+    def _eval_evalf(self, prec):
+        return self.as_basic()._evalf(prec)
 
     @property
     def is_aliased(self):
