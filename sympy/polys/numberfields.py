@@ -56,7 +56,7 @@ def minimal_polynomial(ex, x=None, **args):
                     return update_mapping(ex, 2, 1)
                 else:
                     return symbols[ex]
-            elif ex.is_Rational:
+            elif ex.is_Rational and ex.q != 0:
                 return ex
         elif ex.is_Add:
             return Add(*[ bottom_up_scan(g) for g in ex.args ])
@@ -105,7 +105,7 @@ def minimal_polynomial(ex, x=None, **args):
             return ex.minpoly.as_basic(x)
         else:
             return ex.minpoly.replace(x)
-    elif ex.is_Rational:
+    elif ex.is_Rational and ex.q != 0:
         result = ex.q*x - ex.p
     else:
         F = [x - bottom_up_scan(ex)] + mapping.values()

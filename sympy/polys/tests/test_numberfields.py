@@ -1,6 +1,6 @@
 """Tests for computational algebraic number field theory. """
 
-from sympy import S, Rational, Symbol, Poly, raises, sin, sqrt, I
+from sympy import S, Rational, Symbol, Poly, raises, sin, sqrt, I, oo
 
 from sympy.polys.numberfields import (
     minimal_polynomial, primitive_element,
@@ -55,6 +55,7 @@ def test_minimal_polynomial():
     assert minimal_polynomial(1/sqrt(a), x) == 392*x**8 - 1232*x**6 + 612*x**4 + 4*x**2 - 1
 
     raises(NotAlgebraic, "minimal_polynomial(y, x)")
+    raises(NotAlgebraic, "minimal_polynomial(oo, x)")
     raises(NotAlgebraic, "minimal_polynomial(2**y, x)")
     raises(NotAlgebraic, "minimal_polynomial(sin(1), x)")
 
