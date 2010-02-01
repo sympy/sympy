@@ -14,6 +14,8 @@ _gens_order = {
     'y': 125, 'z': 126,
 }
 
+_max_order = 1000
+
 def _sort_gens(gens, **args):
     """Sort generators in a reasonably intelligent way. """
     sort = args.get('sort')
@@ -23,37 +25,32 @@ def _sort_gens(gens, **args):
 
     if sort is not None:
         for i, elt in enumerate(sort.split('<')):
-            gens_order[elt.strip()] = i
+            gens_order[elt.strip()] = i+1
 
     if wrt is not None:
         wrt = str(wrt)
 
-    def compare(a, b):
-        a, b = str(a), str(b)
+    def order_key(x):
+        x = str(x)
 
-        if a == b:
-            return 0
-
-        if a == wrt:
-            return -1
-        if b == wrt:
-            return +1
+        if x == wrt:
+            return (0, x)
 
         try:
-            return gens_order[a] - gens_order[b]
+            return ( gens_order[x], x)
         except KeyError:
             pass
 
         try:
-            return _gens_order[a] - _gens_order[b]
+            return (_gens_order[x], x)
         except KeyError:
             pass
 
-        return cmp(a, b)
+        return (_max_order, x)
 
     try:
-        gens = sorted(gens, compare)
-    except TypeError:
+        gens = sorted(gens, key=order_key)
+    except TypeError: # pragma: no cover
         pass
 
     return tuple(gens)
