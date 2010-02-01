@@ -91,6 +91,19 @@ def _unify_gens(f_gens, g_gens):
 
     return tuple(gens)
 
+def _sort_factors(factors, **args):
+    """Sort low-level factors in increasing 'complexity' order. """
+    def order_if_multiple_key((f, n)):
+        return (len(f), n, f)
+
+    def order_no_multiple_key(f):
+        return (len(f), f)
+
+    if args.get('multiple', True):
+        return sorted(factors, key=order_if_multiple_key)
+    else:
+        return sorted(factors, key=order_no_multiple_key)
+
 def _analyze_power(base, exp):
     """Extract non-integer part of `exp` to the `base`. """
     if exp.is_Number:

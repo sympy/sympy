@@ -3,48 +3,17 @@
 from random import uniform
 from math import ceil, sqrt, log
 
-from sympy.utilities import any, all
+from sympy.polys.polyutils import (
+    _sort_factors
+)
 
 from sympy.polys.polyerrors import (
     ExactQuotientFailed
 )
 
-from sympy.utilities import cythonized
-
-@cythonized("k")
-def _cmp_factors_no_mult(f, g):
-    """Compare factors without multiplicites. """
-    k = len(f) - len(g)
-
-    if not k:
-        return cmp(f, g)
-    else:
-        return k
-
-def sort_factors_no_mult(factors):
-    """Sort factors list without multiplicities. """
-    return sorted(factors, _cmp_factors_no_mult)
-
-@cythonized("n,m,i,j")
-def _cmp_factors_if_mult(F, G):
-    """Compare factors with multiplicites. """
-    (f, n), (g, m) = F, G
-
-    i = len(f) - len(g)
-
-    if not i:
-        j = n - m
-
-        if not j:
-            return cmp(f, g)
-        else:
-            return j
-    else:
-        return i
-
-def sort_factors_if_mult(factors):
-    """Sort factors list with multiplicities. """
-    return sorted(factors, _cmp_factors_if_mult)
+from sympy.utilities import (
+    any, all, cythonized
+)
 
 def gf_crt(U, M, K):
     """Chinese Remainder Theorem.
@@ -954,11 +923,11 @@ def gf_berlekamp(f, p, K):
                     factors.extend([f, h])
 
                 if len(factors) == len(V):
-                    return sort_factors_no_mult(factors)
+                    return _sort_factors(factors, multiple=False)
 
                 s += K.one
 
-    return sort_factors_no_mult(factors)
+    return _sort_factors(factors, multiple=False)
 
 @cythonized("i")
 def gf_ddf_zassenhaus(f, p, K):
@@ -1071,7 +1040,7 @@ def gf_edf_zassenhaus(f, n, p, K):
             factors = gf_edf_zassenhaus(g, n, p, K) \
                     + gf_edf_zassenhaus(gf_exquo(f, g, p, K), n, p, K)
 
-    return sort_factors_no_mult(factors)
+    return _sort_factors(factors, multiple=False)
 
 @cythonized("n,k,i,j")
 def gf_ddf_shoup(f, p, K):
@@ -1201,7 +1170,7 @@ def gf_edf_shoup(f, n, p, K):
                 + gf_edf_shoup(h2, n, p, K) \
                 + gf_edf_shoup(h3, n, p, K)
 
-    return sort_factors_no_mult(factors)
+    return _sort_factors(factors, multiple=False)
 
 @cythonized("n")
 def gf_zassenhaus(f, p, K):
@@ -1211,7 +1180,7 @@ def gf_zassenhaus(f, p, K):
     for factor, n in gf_ddf_zassenhaus(f, p, K):
         factors += gf_edf_zassenhaus(factor, n, p, K)
 
-    return sort_factors_no_mult(factors)
+    return _sort_factors(factors, multiple=False)
 
 @cythonized("n")
 def gf_shoup(f, p, K):
@@ -1221,7 +1190,7 @@ def gf_shoup(f, p, K):
     for factor, n in gf_ddf_shoup(f, p, K):
         factors += gf_edf_shoup(factor, n, p, K)
 
-    return sort_factors_no_mult(factors)
+    return _sort_factors(factors, multiple=False)
 
 _factor_methods = {
     'berlekamp'  : gf_berlekamp,  # `p` : small
@@ -1303,5 +1272,5 @@ def gf_factor(f, p, K, **args):
         for h in gf_factor_sqf(g, p, K, **args)[1]:
             factors.append((h, n))
 
-    return lc, sort_factors_if_mult(factors)
+    return lc, _sort_factors(factors)
 

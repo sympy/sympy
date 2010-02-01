@@ -1,8 +1,6 @@
 """Polynomial factorization routines in characteristic zero. """
 
 from sympy.polys.galoistools import (
-    sort_factors_no_mult,
-    sort_factors_if_mult,
     gf_from_int_poly, gf_to_int_poly,
     gf_degree, gf_from_dict,
     gf_lshift, gf_add_mul, gf_mul,
@@ -62,6 +60,10 @@ from sympy.polys.densetools import (
     dup_compose, dmp_compose
 )
 
+from sympy.polys.polyutils import (
+    _sort_factors
+)
+
 from sympy.polys.polyerrors import (
     ExtraneousFactors, DomainError, EvaluationFailed
 )
@@ -90,7 +92,7 @@ def dup_trial_division(f, factors, K):
 
         result.append((factor, k))
 
-    return sort_factors_if_mult(result)
+    return _sort_factors(result)
 
 @cythonized("u,k")
 def dmp_trial_division(f, factors, u, K):
@@ -110,6 +112,7 @@ def dmp_trial_division(f, factors, u, K):
 
         result.append((factor, k))
 
+    return _sort_factors(result)
     return sort_factors_if_mult(result)
 
 def dup_zz_mignotte_bound(f, K):
@@ -419,7 +422,7 @@ def dup_zz_factor_sqf(f, K, **args):
     if factors is None:
         factors = dup_zz_zassenhaus(g, K)
 
-    return cont, sort_factors_no_mult(factors)
+    return cont, _sort_factors(factors, multiple=False)
 
 @cythonized("n,k")
 def dup_zz_factor(f, K, **args):
@@ -499,7 +502,7 @@ def dup_zz_factor(f, K, **args):
 
         factors.append((h, k))
 
-    return cont, sort_factors_if_mult(factors)
+    return cont, _sort_factors(factors)
 
 def dmp_zz_wang_non_divisors(E, cs, ct, K):
     """Wang/EEZ: Compute a set of valid divisors.  """
@@ -982,7 +985,7 @@ def dmp_zz_factor(f, u, K):
     for g, k in dmp_zz_factor(G, u-1, K)[1]:
         factors.insert(0, ([g], k))
 
-    return cont, sort_factors_if_mult(factors)
+    return cont, _sort_factors(factors)
 
 def dup_ext_factor(f, K, **args):
     """Factor polynomials over algebraic number fields. """

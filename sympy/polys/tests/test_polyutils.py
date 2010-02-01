@@ -5,6 +5,7 @@ from sympy import S, I, Integer, sqrt, symbols, raises
 from sympy.polys.polyutils import (
     _sort_gens,
     _unify_gens,
+    _sort_factors,
     _analyze_power,
     _dict_from_basic_if_gens,
     _dict_from_basic_no_gens,
@@ -70,6 +71,45 @@ def test__unify_gens():
     assert _unify_gens([z,y,x], [z,y,x]) == (z,y,x)
 
     assert _unify_gens([x,y,z], [t,x,p,q,z]) == (t,x,y,p,q,z)
+
+def test__sort_factors():
+    assert _sort_factors([], multiple=True) == []
+    assert _sort_factors([], multiple=False) == []
+
+    F = [[1,2,3], [1,2], [1]]
+    G = [[1], [1,2], [1,2,3]]
+
+    assert _sort_factors(F, multiple=False) == G
+
+    F = [[1,2], [1,2,3], [1,2], [1]]
+    G = [[1], [1,2], [1,2], [1,2,3]]
+
+    assert _sort_factors(F, multiple=False) == G
+
+    F = [[2,2], [1,2,3], [1,2], [1]]
+    G = [[1], [1,2], [2,2], [1,2,3]]
+
+    assert _sort_factors(F, multiple=False) == G
+
+    F = [([1,2,3], 1), ([1,2], 1), ([1], 1)]
+    G = [([1], 1), ([1,2], 1), ([1,2,3], 1)]
+
+    assert _sort_factors(F, multiple=True) == G
+
+    F = [([1,2], 1), ([1,2,3], 1), ([1,2], 1), ([1], 1)]
+    G = [([1], 1), ([1,2], 1), ([1,2], 1), ([1,2,3], 1)]
+
+    assert _sort_factors(F, multiple=True) == G
+
+    F = [([2,2], 1), ([1,2,3], 1), ([1,2], 1), ([1], 1)]
+    G = [([1], 1), ([1,2], 1), ([2,2], 1), ([1,2,3], 1)]
+
+    assert _sort_factors(F, multiple=True) == G
+
+    F = [([2,2], 1), ([1,2,3], 1), ([1,2], 2), ([1], 1)]
+    G = [([1], 1), ([2,2], 1), ([1,2], 2), ([1,2,3], 1)]
+
+    assert _sort_factors(F, multiple=True) == G
 
 def test__analyze_power():
     assert _analyze_power(x, S(1)) == (x, S(1))
