@@ -1,6 +1,6 @@
 """Classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy.core import Basic, sympify
+from sympy.core import S, Basic, sympify
 
 from sympy.polys.polyerrors import (
     ExactQuotientFailed,
@@ -674,7 +674,7 @@ if HAS_FRACTION:
 
         def from_sympy(self, a):
             """Convert SymPy's Rational to `dtype`. """
-            if a.is_Rational:
+            if a.is_Rational and a.q != 0:
                 return python_rat(a.p, a.q)
             else:
                 raise CoercionFailed("expected `Rational` object, got %s" % a)
@@ -837,7 +837,7 @@ class QQ_sympy(RationalField):
 
     def from_sympy(self, a):
         """Convert SymPy's Rational to `dtype`. """
-        if a.is_Rational:
+        if a.is_Rational and a.q != 0:
             return a
         else:
             raise CoercionFailed("expected `Rational` object, got %s" % a)
@@ -1004,7 +1004,7 @@ if HAS_GMPY:
 
         def from_sympy(self, a):
             """Convert SymPy's Integer to `dtype`. """
-            if a.is_Rational:
+            if a.is_Rational and a.q != 0:
                 return gmpy_rat(a.p, a.q)
             else:
                 raise CoercionFailed("expected `Rational` object, got %s" % a)
@@ -1186,7 +1186,7 @@ class RR_sympy(RealAlgebra):
         """Convert SymPy's Integer to `dtype`. """
         b = a.evalf()
 
-        if b.is_Real:
+        if b.is_Real and b not in [S.Infinity, S.NegativeInfinity]:
             return b
         else:
             raise CoercionFailed("expected Real object, got %s" % a)
@@ -1245,7 +1245,7 @@ class RR_mpmath(RealAlgebra):
         """Convert SymPy's Integer to `dtype`. """
         b = a.evalf()
 
-        if b.is_Real:
+        if b.is_Real and b not in [S.Infinity, S.NegativeInfinity]:
             return mpmath_mpf(b)
         else:
             raise CoercionFailed("expected Real object, got %s" % a)
