@@ -204,6 +204,9 @@ def test_Poly():
     assert str(Poly(x**2 + 1 + y, x)) == "Poly(x**2 + 1 + y, x, domain='ZZ[y]')"
     assert str(Poly(x**2 - 1 + y, x)) == "Poly(x**2 - 1 + y, x, domain='ZZ[y]')"
 
+    assert str(Poly(x**2 + I*x, x)) == "Poly(x**2 + I*x, x, domain='EX')"
+    assert str(Poly(x**2 - I*x, x)) == "Poly(x**2 - I*x, x, domain='EX')"
+
     assert str(Poly(-x*y*z + x*y - 1, x, y, z)) == "Poly(-x*y*z + x*y - 1, x, y, z, domain='ZZ')"
     assert str(Poly(-w*x**21*y**7*z + (1 + w)*z**3 - 2*x*z + 1, x, y, z)) == \
         "Poly(-w*x**21*y**7*z - 2*x*z + (1 + w)*z**3 + 1, x, y, z, domain='ZZ[w]')"
@@ -404,3 +407,4 @@ def test_empty_printer():
     assert StrPrinter.emptyPrinter("foo") == "foo"
     assert StrPrinter.emptyPrinter(x*y) == "x*y"
     assert StrPrinter.emptyPrinter(32) == "32"
+

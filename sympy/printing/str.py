@@ -272,15 +272,16 @@ class StrPrinter(Printer):
                 else:
                     s_coeff = self._print(coeff)
             else:
-                if s_monom and abs(coeff) is S.One:
-                    if coeff.is_negative:
-                        terms.extend(['-', s_monom])
-                    else:
+                if s_monom:
+                    if coeff is S.One:
                         terms.extend(['+', s_monom])
+                        continue
 
-                    continue
-                else:
-                    s_coeff = self._print(coeff)
+                    if coeff is S.NegativeOne:
+                        terms.extend(['-', s_monom])
+                        continue
+
+                s_coeff = self._print(coeff)
 
             if not s_monom:
                 s_term = s_coeff
