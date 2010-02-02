@@ -4,6 +4,8 @@ from sympy.polys.densebasic import (
     dup_strip, dmp_strip,
     dup_convert, dmp_convert,
     dup_degree, dmp_degree, dmp_degree_in,
+    dup_to_dict, dmp_to_dict,
+    dup_from_dict, dmp_from_dict,
     dup_LC, dmp_LC, dmp_ground_LC,
     dup_TC, dmp_TC, dmp_ground_TC,
     dmp_zero, dmp_one, dmp_ground,
@@ -27,6 +29,7 @@ from sympy.polys.densearith import (
     dup_quo, dmp_quo,
     dup_exquo, dmp_exquo,
     dup_prem, dmp_prem,
+    dup_expand, dmp_expand,
     dup_add_mul, dup_sub_mul,
     dup_mul_ground, dmp_mul_ground,
     dup_quo_ground, dmp_quo_ground,
@@ -46,7 +49,10 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.ntheory import nextprime
-from sympy.utilities import cythonized
+
+from sympy.utilities import (
+    cythonized, variations
+)
 
 def dup_ground_to_ring(f, K0, K1=None):
     """Clear denominators, i.e. transform `K_0` to `K_1`, but don't normalize. """
@@ -1935,4 +1941,29 @@ def dup_sturm(f, K):
         sturm.append(dup_neg(s, K))
 
     return sturm[:-1]
+
+@cythonized("u")
+def dmp_lift(f, u, K):
+    """Convert algebraic coefficients to integers in `K[X]`. """
+    if not K.is_Algebraic:
+        raise DomainError('computation can be done only in an algebraic domain')
+
+    F, monoms, polys = dmp_to_dict(f, u), [], []
+
+    for monom, coeff in F.iteritems():
+        if not coeff.is_ground:
+            monoms.append(monom)
+
+    perms = variations([-1, 1], len(monoms), repetition=True)
+
+    for perm in perms:
+        G = dict(F)
+
+        for sign, monom in zip(perm, monoms):
+            if sign == -1:
+                G[monom] = -G[monom]
+
+        polys.append(dmp_from_dict(G, u, K))
+
+    return dmp_convert(dmp_expand(polys, u, K), u, K, K.dom)
 

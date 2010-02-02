@@ -47,9 +47,10 @@ from sympy.polys.densetools import (
     dup_compose, dmp_compose,
     dup_decompose,
     dup_sturm,
+    dmp_lift,
 )
 
-from sympy.polys.polyclasses import DMP
+from sympy.polys.polyclasses import DMP, ANP
 
 from sympy.polys.polyerrors import (
     ExactQuotientFailed,
@@ -66,7 +67,7 @@ from sympy.polys.specialpolys import (
 
 from sympy.polys.algebratools import ZZ, QQ, EX
 
-from sympy import raises
+from sympy import raises, I
 
 def test_dup_ground_to_ring():
     assert dup_ground_to_ring([], QQ, ZZ) == (ZZ(1), [])
@@ -1046,4 +1047,16 @@ def test_dup_sturm():
 
     assert dup_sturm(f, QQ) == \
         [f, [QQ(3),QQ(-4),QQ(3)], [QQ(-10,9),QQ(13,3)], [QQ(-3303,100)]]
+
+def test_dmp_lift():
+    q = [QQ(1,1),QQ(0,1),QQ(1,1)]
+
+    f = [ANP([QQ(1,1)], q, QQ), ANP([], q, QQ), ANP([], q, QQ),
+         ANP([QQ(1,1),QQ(0,1)], q, QQ), ANP([QQ(17,1),QQ(0,1)], q, QQ)]
+
+    assert dmp_lift(f, 0, QQ.algebraic_field(I)) == \
+        [QQ(1),QQ(0),QQ(0),QQ(0),QQ(0),QQ(0),QQ(2),QQ(0),QQ(578),
+         QQ(0),QQ(0),QQ(0),QQ(1),QQ(0),QQ(-578),QQ(0),QQ(83521)]
+
+    raises(DomainError, "dmp_lift([EX(1), EX(2)], 0, EX)")
 

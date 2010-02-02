@@ -72,6 +72,7 @@ from sympy.polys.densetools import (
     dup_sqf_p, dmp_sqf_p,
     dup_compose, dup_decompose,
     dup_sturm,
+    dmp_lift,
 )
 
 from sympy.polys.factortools import (
@@ -1177,6 +1178,10 @@ class DMP(object):
         else:
             raise PolynomialError('multivariate polynomials not supported')
 
+    def lift(f):
+        """Convert algebraic coefficients to rationals. """
+        return f.per(dmp_lift(f.rep, f.lev, f.dom), dom=f.dom.dom)
+
     def deflate(f):
         """Reduce degree of `f` by mapping `x_i**m` to `y_i`. """
         J, F = dmp_deflate(f.rep, f.lev, f.dom)
@@ -2128,6 +2133,11 @@ class ANP(object):
     def is_one(f):
         """Returns `True` if `f` is a unit algebraic number. """
         return f.rep == [f.dom.one]
+
+    @property
+    def is_ground(f):
+        """Returns `True` if `f` is an element of the ground domain. """
+        return not f.rep or len(f.rep) == 1
 
     def __neg__(f):
         return f.neg()

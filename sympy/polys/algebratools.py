@@ -500,6 +500,11 @@ class IntegerRing(Ring):
     has_assoc_Field        = True
     has_CharacteristicZero = True
 
+    def from_AlgebraicField(K1, a, K0):
+        """Convert a `ANP` object to `dtype`. """
+        if a.is_ground:
+            return K1.convert(a.LC(), K0.dom)
+
 class RationalField(Field):
     """General class for rational fields. """
 
@@ -514,6 +519,11 @@ class RationalField(Field):
     def algebraic_field(self, *extension):
         """Returns an algebraic field, i.e. `QQ(alpha, ...)`. """
         return AlgebraicField(self, *extension)
+
+    def from_AlgebraicField(K1, a, K0):
+        """Convert a `ANP` object to `dtype`. """
+        if a.is_ground:
+            return K1.convert(a.LC(), K0.dom)
 
 class ZZ_python(IntegerRing):
     pass

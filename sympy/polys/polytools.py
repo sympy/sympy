@@ -701,6 +701,15 @@ class Poly(Basic):
         """Convert a polynomial instance to a SymPy expression. """
         return basic_from_dict(f.rep.to_sympy_dict(), *(gens or f.gens))
 
+    def lift(f):
+        """Convert algebraic coefficients to rationals. """
+        try:
+            result = f.rep.lift()
+        except AttributeError: # pragma: no cover
+            raise OperationNotSupported(f, 'lift')
+
+        return f.per(result)
+
     def deflate(f):
         """Reduce degree of `f` by mapping `x_i**m` to `y_i`. """
         try:

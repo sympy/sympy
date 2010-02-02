@@ -703,6 +703,10 @@ def test_Poly_as_basic():
 
     assert Poly(3*x**2*y*z**3+4*x*y+5*x*z).as_basic() == 3*x**2*y*z**3+4*x*y+5*x*z
 
+def test_Poly_lift():
+    assert Poly(x**4 - I*x + 17*I, x, gaussian=True).lift() == \
+        Poly(x**16 + 2*x**10 + 578*x**8 + x**4 - 578*x**2 + 83521, x, domain='QQ')
+
 def test_Poly_deflate():
     assert Poly(0, x).deflate() == ((1,), Poly(0, x))
     assert Poly(1, x).deflate() == ((1,), Poly(1, x))
