@@ -52,7 +52,9 @@ from sympy.polys.densetools import (
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.polyerrors import (
-    HeuristicGCDFailed, ExactQuotientFailed,
+    ExactQuotientFailed,
+    HeuristicGCDFailed,
+    DomainError,
 )
 
 from sympy.polys.specialpolys import (
@@ -62,7 +64,7 @@ from sympy.polys.specialpolys import (
     dmp_fateman_poly_F_3,
 )
 
-from sympy.polys.algebratools import ZZ, QQ
+from sympy.polys.algebratools import ZZ, QQ, EX
 
 from sympy import raises
 
@@ -72,10 +74,13 @@ def test_dup_ground_to_ring():
     assert dup_ground_to_ring([QQ(1)], QQ, ZZ) == (ZZ(1), [QQ(1)])
     assert dup_ground_to_ring([QQ(7)], QQ, ZZ) == (ZZ(1), [QQ(7)])
 
+    assert dup_ground_to_ring([QQ(7,3)], QQ) == (ZZ(3), [QQ(7)])
     assert dup_ground_to_ring([QQ(7,3)], QQ, ZZ) == (ZZ(3), [QQ(7)])
 
     assert dup_ground_to_ring([QQ(3),QQ(1),QQ(0)], QQ, ZZ) == (ZZ(1), [QQ(3),QQ(1),QQ(0)])
     assert dup_ground_to_ring([QQ(1),QQ(1,2),QQ(0)], QQ, ZZ) == (ZZ(2), [QQ(2),QQ(1),QQ(0)])
+
+    raises(DomainError, "dup_ground_to_ring([EX(7)], EX)")
 
 def test_dmp_ground_to_ring():
     assert dmp_ground_to_ring([[]], 1, QQ, ZZ) == (ZZ(1), [[]])
@@ -83,10 +88,13 @@ def test_dmp_ground_to_ring():
     assert dmp_ground_to_ring([[QQ(1)]], 1, QQ, ZZ) == (ZZ(1), [[QQ(1)]])
     assert dmp_ground_to_ring([[QQ(7)]], 1, QQ, ZZ) == (ZZ(1), [[QQ(7)]])
 
+    assert dmp_ground_to_ring([[QQ(7,3)]], 1, QQ) == (ZZ(3), [[QQ(7)]])
     assert dmp_ground_to_ring([[QQ(7,3)]], 1, QQ, ZZ) == (ZZ(3), [[QQ(7)]])
 
     assert dmp_ground_to_ring([[QQ(3)],[QQ(1)],[]], 1, QQ, ZZ) == (ZZ(1), [[QQ(3)],[QQ(1)],[]])
     assert dmp_ground_to_ring([[QQ(1)],[QQ(1,2)],[]], 1, QQ, ZZ) == (ZZ(2), [[QQ(2)],[QQ(1)],[]])
+
+    raises(DomainError, "dmp_ground_to_ring([[EX(7)]], 1, EX)")
 
 def test_dup_integrate():
     assert dup_integrate([], 1, QQ) == []

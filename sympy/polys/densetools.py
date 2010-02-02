@@ -48,8 +48,11 @@ from sympy.polys.polyerrors import (
 from sympy.ntheory import nextprime
 from sympy.utilities import cythonized
 
-def dup_ground_to_ring(f, K0, K1):
+def dup_ground_to_ring(f, K0, K1=None):
     """Clear denominators, i.e. transform `K_0` to `K_1`, but don't normalize. """
+    if K1 is None:
+        K1 = K0.get_ring()
+
     common = K1.one
 
     for c in f:
@@ -77,10 +80,13 @@ def _rec_ground_to_ring(g, v, K0, K1):
     return common
 
 @cythonized("u")
-def dmp_ground_to_ring(f, u, K0, K1):
+def dmp_ground_to_ring(f, u, K0, K1=None):
     """Clear denominators, i.e. transform `K_0` to `K_1`, but don't normalize. """
     if not u:
         return dup_ground_to_ring(f, K0, K1)
+
+    if K1 is None:
+        K1 = K0.get_ring()
 
     common = _rec_ground_to_ring(f, u, K0, K1)
 
