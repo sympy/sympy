@@ -282,11 +282,15 @@ class Algebra(object):
 
     def get_ring(self):
         """Returns a ring associated with `self`. """
-        raise NotImplementedError
+        raise DomainError('there is no ring associated with %s' % self)
 
     def get_field(self):
         """Returns a field associated with `self`. """
-        raise NotImplementedError
+        raise DomainError('there is no field associated with %s' % self)
+
+    def get_exact(self):
+        """Returns an exact domain associated with `self`. """
+        return self
 
     def __getitem__(self, gens):
         """The mathematical way do make a polynomial ring. """
@@ -497,7 +501,9 @@ class IntegerRing(Ring):
 
     is_Numerical = True
 
+    has_assoc_Ring         = True
     has_assoc_Field        = True
+
     has_CharacteristicZero = True
 
     def from_AlgebraicField(K1, a, K0):
@@ -514,6 +520,8 @@ class RationalField(Field):
     is_Numerical = True
 
     has_assoc_Ring         = True
+    has_assoc_Field        = True
+
     has_CharacteristicZero = True
 
     def algebraic_field(self, *extension):
@@ -1091,9 +1099,6 @@ class RealAlgebra(Algebra):
     is_Exact     = False
     is_Numerical = True
 
-    has_assoc_Ring  = True
-    has_assoc_Field = True
-
     has_CharacteristicZero = True
 
     def as_integer_ratio(self, a, **args):
@@ -1152,10 +1157,14 @@ class RealAlgebra(Algebra):
 
     def get_ring(self):
         """Returns a ring associated with `self`. """
-        return ZZ
+        raise DomainError('there is no ring associated with %s' % self)
 
     def get_field(self):
         """Returns a field associated with `self`. """
+        raise DomainError('there is no field associated with %s' % self)
+
+    def get_exact(self):
+        """Returns an exact domain associated with `self`. """
         return QQ
 
     def exquo(self, a, b):
@@ -1345,6 +1354,9 @@ class AlgebraicField(Field):
     is_Numerical = True
     is_Algebraic = True
 
+    has_assoc_Ring  = False
+    has_assoc_Field = True
+
     has_CharacteristicZero = True
 
     def __init__(self, dom, *ext):
@@ -1435,7 +1447,7 @@ class AlgebraicField(Field):
 
     def get_ring(self):
         """Returns a ring associated with `self`. """
-        raise DomainError("no associated ring")
+        raise DomainError('there is no ring associated with %s' % self)
 
     def is_positive(self, a):
         """Returns True if `a` is positive. """
@@ -1468,7 +1480,9 @@ class PolynomialRing(Ring):
     is_Poly      = True
     is_Composite = True
 
+    has_assoc_Ring         = True
     has_assoc_Field        = True
+
     has_CharacteristicZero = True
 
     def __init__(self, dom, *gens):
@@ -1623,6 +1637,8 @@ class FractionField(Field):
     is_Composite = True
 
     has_assoc_Ring         = True
+    has_assoc_Field        = True
+
     has_CharacteristicZero = True
 
     def __init__(self, dom, *gens):
@@ -1869,6 +1885,9 @@ class ExpressionDomain(Field):
 
     rep   = 'EX'
 
+    has_assoc_Ring         = False
+    has_assoc_Field        = True
+
     has_CharacteristicZero = True
 
     def __init__(self):
@@ -1928,7 +1947,7 @@ class ExpressionDomain(Field):
 
     def get_ring(self):
         """Returns a ring associated with `self`. """
-        raise DomainError('there is no ring associated with EX')
+        raise DomainError('there is no ring associated with %s' % self)
 
     def get_field(self):
         """Returns a field associated with `self`. """

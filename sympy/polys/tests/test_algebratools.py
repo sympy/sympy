@@ -7,11 +7,14 @@ from sympy.polys.algebratools import (
 from sympy.polys.polyerrors import (
     UnificationFailed,
     GeneratorsNeeded,
+    DomainError,
 )
 
 from sympy import S, sqrt, sin, oo, raises
 
 from sympy.abc import x, y
+
+ALG = QQ.algebraic_field(sqrt(2)+sqrt(3))
 
 def test_Algebra__unify():
     assert ZZ.unify(ZZ) == ZZ
@@ -171,8 +174,6 @@ def test_Algebra__unify():
     raises(UnificationFailed, "ZZ.unify(ZZ.poly_ring('x','y'), gens=('y', 'z'))")
 
 def test_Algebra__contains__():
-    ALG = QQ.algebraic_field(sqrt(2)+sqrt(3))
-
     assert (-7 in ZZ) == True
     assert ( 0 in ZZ) == True
     assert (17 in ZZ) == True
@@ -288,6 +289,75 @@ def test_Algebra__contains__():
     assert (x**2 + y**2 in ZZ[x,y]) == True
     assert (x**2 + y**2 in QQ[x,y]) == True
     assert (x**2 + y**2 in RR[x,y]) == True
+
+def test_Algebra_get_ring():
+    assert ZZ.has_assoc_Ring == True
+    assert QQ.has_assoc_Ring == True
+    assert ZZ[x].has_assoc_Ring == True
+    assert QQ[x].has_assoc_Ring == True
+    assert ZZ[x,y].has_assoc_Ring == True
+    assert QQ[x,y].has_assoc_Ring == True
+    assert ZZ.frac_field(x).has_assoc_Ring == True
+    assert QQ.frac_field(x).has_assoc_Ring == True
+    assert ZZ.frac_field(x,y).has_assoc_Ring == True
+    assert QQ.frac_field(x,y).has_assoc_Ring == True
+
+    assert EX.has_assoc_Ring == False
+    assert RR.has_assoc_Ring == False
+    assert ALG.has_assoc_Ring == False
+
+    assert ZZ.get_ring() == ZZ
+    assert QQ.get_ring() == ZZ
+    assert ZZ[x].get_ring() == ZZ[x]
+    assert QQ[x].get_ring() == ZZ[x]
+    assert ZZ[x,y].get_ring() == ZZ[x,y]
+    assert QQ[x,y].get_ring() == ZZ[x,y]
+    assert ZZ.frac_field(x).get_ring() == ZZ[x]
+    assert QQ.frac_field(x).get_ring() == ZZ[x]
+    assert ZZ.frac_field(x,y).get_ring() == ZZ[x,y]
+    assert QQ.frac_field(x,y).get_ring() == ZZ[x,y]
+
+    raises(DomainError, "EX.get_ring()")
+    raises(DomainError, "RR.get_ring()")
+    raises(DomainError, "ALG.get_ring()")
+
+def test_Algebra_get_field():
+    assert EX.has_assoc_Field == True
+    assert ZZ.has_assoc_Field == True
+    assert QQ.has_assoc_Field == True
+    assert ALG.has_assoc_Field == True
+    assert ZZ[x].has_assoc_Field == True
+    assert QQ[x].has_assoc_Field == True
+    assert ZZ[x,y].has_assoc_Field == True
+    assert QQ[x,y].has_assoc_Field == True
+
+    assert RR.has_assoc_Field == False
+
+    assert EX.get_field() == EX
+    assert ZZ.get_field() == QQ
+    assert QQ.get_field() == QQ
+    assert ALG.get_field() == ALG
+    assert ZZ[x].get_field() == ZZ.frac_field(x)
+    assert QQ[x].get_field() == ZZ.frac_field(x)
+    assert ZZ[x,y].get_field() == ZZ.frac_field(x,y)
+    assert QQ[x,y].get_field() == ZZ.frac_field(x,y)
+
+    raises(DomainError, "RR.get_field()")
+
+def test_Algebra_get_exact():
+    assert EX.get_exact() == EX
+    assert ZZ.get_exact() == ZZ
+    assert QQ.get_exact() == QQ
+    assert RR.get_exact() == QQ
+    assert ALG.get_exact() == ALG
+    assert ZZ[x].get_exact() == ZZ[x]
+    assert QQ[x].get_exact() == QQ[x]
+    assert ZZ[x,y].get_exact() == ZZ[x,y]
+    assert QQ[x,y].get_exact() == QQ[x,y]
+    assert ZZ.frac_field(x).get_exact() == ZZ.frac_field(x)
+    assert QQ.frac_field(x).get_exact() == QQ.frac_field(x)
+    assert ZZ.frac_field(x,y).get_exact() == ZZ.frac_field(x,y)
+    assert QQ.frac_field(x,y).get_exact() == QQ.frac_field(x,y)
 
 def test_PolynomialRing__init():
     raises(GeneratorsNeeded, "ZZ.poly_ring()")

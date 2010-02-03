@@ -1058,7 +1058,7 @@ def dup_factor_list(f, K0, **args):
         return dup_ext_factor(f, K0, **args)
 
     if not K0.is_Exact:
-        K0_inexact, K0 = K0, K0.get_field()
+        K0_inexact, K0 = K0, K0.get_exact()
         f = dup_convert(f, K0_inexact, K0)
     else:
         K0_inexact = None
@@ -1135,7 +1135,7 @@ def dmp_factor_list(f, u, K0, **args):
         return dmp_ext_factor(f, u, K0, **args)
 
     if not K0.is_Exact:
-        K0_inexact, K0 = K0, K0.get_field()
+        K0_inexact, K0 = K0, K0.get_exact()
         f = dmp_convert(f, u, K0_inexact, K0)
     else:
         K0_inexact = None
