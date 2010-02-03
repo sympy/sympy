@@ -1359,6 +1359,11 @@ class Poly(Basic):
         return f.rep.is_homogeneous
 
     @property
+    def is_irreducible(f):
+        """Returns `True` if `f` has no factors over its domain. """
+        return f.rep.is_irreducible
+
+    @property
     def is_univariate(f):
         """Returns `True` if `f` is an univariate polynomial. """
         return len(f.gens) == 1

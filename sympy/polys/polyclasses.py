@@ -93,7 +93,7 @@ from sympy.polys.galoistools import (
     gf_gcd, gf_gcdex,
     gf_monic, gf_diff, gf_eval, gf_compose,
     gf_sqf_p, gf_sqf_part, gf_sqf_list,
-    gf_factor,
+    gf_factor, gf_irreducible_p,
 )
 
 from sympy.polys.groebnertools import (
@@ -433,6 +433,11 @@ class GFP(object):
     def is_monic(f):
         """Returns `True` if the leading coefficient of `f` is one. """
         return f.dom.is_one(gf_LC(f.rep, f.dom))
+
+    @property
+    def is_irreducible(f):
+        """Returns `True` if `f` has no factors over its domain. """
+        return gf_irreducible_p(f.rep, f.mod, f.dom)
 
     def __neg__(f):
         return f.neg()

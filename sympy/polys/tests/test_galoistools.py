@@ -14,8 +14,8 @@ from sympy.polys.galoistools import (
     gf_eval, gf_multi_eval,
     gf_compose, gf_compose_mod,
     gf_trace_map,
-    gf_irreducible,
     gf_diff, gf_random,
+    gf_irreducible, gf_irreducible_p,
     gf_sqf_list, gf_sqf_part, gf_sqf_p,
     gf_Qmatrix, gf_Qbasis,
     gf_ddf_zassenhaus, gf_ddf_shoup,
@@ -356,13 +356,18 @@ def test_gf_trace_map():
         ([1, 10, 6, 0], [10])
 
 def test_gf_irreducible():
-    assert len(gf_factor(gf_irreducible(1, 11, ZZ), 11, ZZ)[1]) == 1
-    assert len(gf_factor(gf_irreducible(2, 11, ZZ), 11, ZZ)[1]) == 1
-    assert len(gf_factor(gf_irreducible(3, 11, ZZ), 11, ZZ)[1]) == 1
-    assert len(gf_factor(gf_irreducible(4, 11, ZZ), 11, ZZ)[1]) == 1
-    assert len(gf_factor(gf_irreducible(5, 11, ZZ), 11, ZZ)[1]) == 1
-    assert len(gf_factor(gf_irreducible(6, 11, ZZ), 11, ZZ)[1]) == 1
-    assert len(gf_factor(gf_irreducible(7, 11, ZZ), 11, ZZ)[1]) == 1
+    assert gf_irreducible_p(gf_irreducible(1, 11, ZZ), 11, ZZ) == True
+    assert gf_irreducible_p(gf_irreducible(2, 11, ZZ), 11, ZZ) == True
+    assert gf_irreducible_p(gf_irreducible(3, 11, ZZ), 11, ZZ) == True
+    assert gf_irreducible_p(gf_irreducible(4, 11, ZZ), 11, ZZ) == True
+    assert gf_irreducible_p(gf_irreducible(5, 11, ZZ), 11, ZZ) == True
+    assert gf_irreducible_p(gf_irreducible(6, 11, ZZ), 11, ZZ) == True
+    assert gf_irreducible_p(gf_irreducible(7, 11, ZZ), 11, ZZ) == True
+
+def test_gf_irreducible_p():
+    assert gf_irreducible_p([7], 11, ZZ) == True
+    assert gf_irreducible_p([7,3], 11, ZZ) == True
+    assert gf_irreducible_p([7,3,1], 11, ZZ) == False
 
 def test_gf_squarefree():
     assert gf_sqf_list([], 11, ZZ) == (0, [])

@@ -580,6 +580,10 @@ def test_Poly_properties():
     assert Poly(x*y).is_multivariate == True
     assert Poly(x).is_multivariate == False
 
+def test_Poly_is_irreducible():
+    assert Poly(7*x + 3, modulus=11).is_irreducible == True
+    assert Poly(7*x**2 + 3*x + 1, modulus=11).is_irreducible == False
+
 def test_Poly_replace():
     assert Poly(x+1).replace(x) == Poly(x+1)
     assert Poly(x+1).replace(y) == Poly(y+1)

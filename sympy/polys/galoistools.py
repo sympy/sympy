@@ -15,6 +15,8 @@ from sympy.utilities import (
     any, all, cythonized
 )
 
+from sympy.ntheory import factorint
+
 def gf_crt(U, M, K):
     """Chinese Remainder Theorem.
 
@@ -722,6 +724,29 @@ def gf_irreducible(n, p, K):
                 break
         else:
             return f
+
+@cythonized("i,n,d")
+def gf_irreducible_p(f, p, K):
+    """Deterministic irreducibility test of `f` in `GF(p)[x]`. """
+    n, x = gf_degree(f), [K.one, K.zero]
+
+    if n <= 1:
+        return True
+
+    g = h = gf_pow_mod(x, p, f, p, K)
+
+    indices = set([ n//d for d in factorint(n) ])
+
+    for i in xrange(1, n):
+        if i in indices:
+            F = gf_sub(g, x, p, K)
+
+            if gf_gcd(f, F, p, K) != [K.one]:
+                return False
+
+        g = gf_compose_mod(g, h, f, p, K)
+
+    return g == x
 
 def gf_sqf_p(f, p, K):
     """Returns `True` if `f` is square-free in `GF(p)[x]`. """
