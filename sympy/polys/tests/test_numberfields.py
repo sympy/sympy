@@ -3,9 +3,9 @@
 from sympy import S, Rational, Symbol, Poly, raises, sin, sqrt, I, oo
 
 from sympy.polys.numberfields import (
+    is_isomorphism_possible, field_isomorphism,
     minimal_polynomial, primitive_element,
-    field_isomorphism, to_number_field,
-    AlgebraicNumber,
+    to_number_field, AlgebraicNumber,
 )
 
 from sympy.polys.polyerrors import (
@@ -120,54 +120,131 @@ def test_field_isomorphism():
 
     a = AlgebraicNumber(sqrt(2))
 
-    assert field_isomorphism(a, p) == pos_coeffs
-    assert field_isomorphism(a, q) == neg_coeffs
-    assert field_isomorphism(a, r) == pos_coeffs
-    assert field_isomorphism(a, s) == neg_coeffs
+    assert is_isomorphism_possible(a, p) == True
+    assert is_isomorphism_possible(a, q) == True
+    assert is_isomorphism_possible(a, r) == True
+    assert is_isomorphism_possible(a, s) == True
+
+    assert field_isomorphism(a, p, fast=True) == pos_coeffs
+    assert field_isomorphism(a, q, fast=True) == neg_coeffs
+    assert field_isomorphism(a, r, fast=True) == pos_coeffs
+    assert field_isomorphism(a, s, fast=True) == neg_coeffs
+
+    assert field_isomorphism(a, p, fast=False) == pos_coeffs
+    assert field_isomorphism(a, q, fast=False) == neg_coeffs
+    assert field_isomorphism(a, r, fast=False) == pos_coeffs
+    assert field_isomorphism(a, s, fast=False) == neg_coeffs
 
     a = AlgebraicNumber(-sqrt(2))
 
-    assert field_isomorphism(a, p) == neg_coeffs
-    assert field_isomorphism(a, q) == pos_coeffs
-    assert field_isomorphism(a, r) == neg_coeffs
-    assert field_isomorphism(a, s) == pos_coeffs
+    assert is_isomorphism_possible(a, p) == True
+    assert is_isomorphism_possible(a, q) == True
+    assert is_isomorphism_possible(a, r) == True
+    assert is_isomorphism_possible(a, s) == True
+
+    assert field_isomorphism(a, p, fast=True) == neg_coeffs
+    assert field_isomorphism(a, q, fast=True) == pos_coeffs
+    assert field_isomorphism(a, r, fast=True) == neg_coeffs
+    assert field_isomorphism(a, s, fast=True) == pos_coeffs
+
+    assert field_isomorphism(a, p, fast=False) == neg_coeffs
+    assert field_isomorphism(a, q, fast=False) == pos_coeffs
+    assert field_isomorphism(a, r, fast=False) == neg_coeffs
+    assert field_isomorphism(a, s, fast=False) == pos_coeffs
 
     pos_coeffs = [ S(1)/2, S(0), -S(11)/2, S(0)]
     neg_coeffs = [-S(1)/2, S(0),  S(11)/2, S(0)]
 
     a = AlgebraicNumber(sqrt(3))
 
-    assert field_isomorphism(a, p) == neg_coeffs
-    assert field_isomorphism(a, q) == neg_coeffs
-    assert field_isomorphism(a, r) == pos_coeffs
-    assert field_isomorphism(a, s) == pos_coeffs
+    assert is_isomorphism_possible(a, p) == True
+    assert is_isomorphism_possible(a, q) == True
+    assert is_isomorphism_possible(a, r) == True
+    assert is_isomorphism_possible(a, s) == True
+
+    assert field_isomorphism(a, p, fast=True) == neg_coeffs
+    assert field_isomorphism(a, q, fast=True) == neg_coeffs
+    assert field_isomorphism(a, r, fast=True) == pos_coeffs
+    assert field_isomorphism(a, s, fast=True) == pos_coeffs
+
+    assert field_isomorphism(a, p, fast=False) == neg_coeffs
+    assert field_isomorphism(a, q, fast=False) == neg_coeffs
+    assert field_isomorphism(a, r, fast=False) == pos_coeffs
+    assert field_isomorphism(a, s, fast=False) == pos_coeffs
 
     a = AlgebraicNumber(-sqrt(3))
 
-    assert field_isomorphism(a, p) == pos_coeffs
-    assert field_isomorphism(a, q) == pos_coeffs
-    assert field_isomorphism(a, r) == neg_coeffs
-    assert field_isomorphism(a, s) == neg_coeffs
+    assert is_isomorphism_possible(a, p) == True
+    assert is_isomorphism_possible(a, q) == True
+    assert is_isomorphism_possible(a, r) == True
+    assert is_isomorphism_possible(a, s) == True
+
+    assert field_isomorphism(a, p, fast=True) == pos_coeffs
+    assert field_isomorphism(a, q, fast=True) == pos_coeffs
+    assert field_isomorphism(a, r, fast=True) == neg_coeffs
+    assert field_isomorphism(a, s, fast=True) == neg_coeffs
+
+    assert field_isomorphism(a, p, fast=False) == pos_coeffs
+    assert field_isomorphism(a, q, fast=False) == pos_coeffs
+    assert field_isomorphism(a, r, fast=False) == neg_coeffs
+    assert field_isomorphism(a, s, fast=False) == neg_coeffs
 
     pos_coeffs = [ S(3)/2, S(0), -S(33)/2, -S(8)]
     neg_coeffs = [-S(3)/2, S(0),  S(33)/2, -S(8)]
 
     a = AlgebraicNumber(3*sqrt(3)-8)
 
-    assert field_isomorphism(a, p) == neg_coeffs
-    assert field_isomorphism(a, q) == neg_coeffs
-    assert field_isomorphism(a, r) == pos_coeffs
-    assert field_isomorphism(a, s) == pos_coeffs
+    assert is_isomorphism_possible(a, p) == True
+    assert is_isomorphism_possible(a, q) == True
+    assert is_isomorphism_possible(a, r) == True
+    assert is_isomorphism_possible(a, s) == True
+
+    assert field_isomorphism(a, p, fast=True) == neg_coeffs
+    assert field_isomorphism(a, q, fast=True) == neg_coeffs
+    assert field_isomorphism(a, r, fast=True) == pos_coeffs
+    assert field_isomorphism(a, s, fast=True) == pos_coeffs
+
+    assert field_isomorphism(a, p, fast=False) == neg_coeffs
+    assert field_isomorphism(a, q, fast=False) == neg_coeffs
+    assert field_isomorphism(a, r, fast=False) == pos_coeffs
+    assert field_isomorphism(a, s, fast=False) == pos_coeffs
 
     a = AlgebraicNumber(3*sqrt(2)+2*sqrt(3)+1)
 
-    assert field_isomorphism(a, p) == [ S(1)/2, S(0), -S(5)/2,  S(1)]
-    assert field_isomorphism(a, q) == [-S(5)/2, S(0),  S(49)/2, S(1)]
-    assert field_isomorphism(a, r) == [ S(5)/2, S(0), -S(49)/2, S(1)]
-    assert field_isomorphism(a, s) == [-S(1)/2, S(0),  S(5)/2,  S(1)]
+    pos_1_coeffs = [ S(1)/2, S(0), -S(5)/2,  S(1)]
+    neg_5_coeffs = [-S(5)/2, S(0),  S(49)/2, S(1)]
+    pos_5_coeffs = [ S(5)/2, S(0), -S(49)/2, S(1)]
+    neg_1_coeffs = [-S(1)/2, S(0),  S(5)/2,  S(1)]
 
-    assert field_isomorphism(sqrt(2), sqrt(3)) is None
-    assert field_isomorphism(sqrt(3), sqrt(2)) is None
+    assert is_isomorphism_possible(a, p) == True
+    assert is_isomorphism_possible(a, q) == True
+    assert is_isomorphism_possible(a, r) == True
+    assert is_isomorphism_possible(a, s) == True
+
+    assert field_isomorphism(a, p, fast=True) == pos_1_coeffs
+    assert field_isomorphism(a, q, fast=True) == neg_5_coeffs
+    assert field_isomorphism(a, r, fast=True) == pos_5_coeffs
+    assert field_isomorphism(a, s, fast=True) == neg_1_coeffs
+
+    assert field_isomorphism(a, p, fast=False) == pos_1_coeffs
+    assert field_isomorphism(a, q, fast=False) == neg_5_coeffs
+    assert field_isomorphism(a, r, fast=False) == pos_5_coeffs
+    assert field_isomorphism(a, s, fast=False) == neg_1_coeffs
+
+    a = AlgebraicNumber(sqrt(2))
+    b = AlgebraicNumber(sqrt(3))
+    c = AlgebraicNumber(sqrt(7))
+
+    assert is_isomorphism_possible(a, b) == True
+    assert is_isomorphism_possible(b, a) == True
+
+    assert is_isomorphism_possible(c, p) == False
+
+    assert field_isomorphism(sqrt(2), sqrt(3), fast=True) is None
+    assert field_isomorphism(sqrt(3), sqrt(2), fast=True) is None
+
+    assert field_isomorphism(sqrt(2), sqrt(3), fast=False) is None
+    assert field_isomorphism(sqrt(3), sqrt(2), fast=False) is None
 
 def test_to_number_field():
     assert to_number_field(sqrt(2)) == AlgebraicNumber(sqrt(2))
