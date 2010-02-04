@@ -1,4 +1,4 @@
-from sympy.core import Symbol, symbols, S, Rational, Integer
+from sympy.core import Symbol, symbols, S, Rational, Integer, I, pi, oo
 from sympy.functions import exp, log, sin, cos, sign, re, im, sqrt
 from sympy.assumptions import (Assume, global_assumptions, Q, ask,
     register_handler, remove_handler)
@@ -907,7 +907,33 @@ def test_real():
     assert ask(re(x), Q.real) == True
     assert ask(im(x), Q.real) == True
 
+def test_algebraic():
+    x, y = symbols('x,y')
 
+    assert ask(x, 'algebraic') == None
+
+    assert ask(I, 'algebraic') == True
+    assert ask(2*I, 'algebraic') == True
+    assert ask(I/3, 'algebraic') == True
+
+    assert ask(sqrt(7), 'algebraic') == True
+    assert ask(2*sqrt(7), 'algebraic') == True
+    assert ask(sqrt(7)/3, 'algebraic') == True
+
+    assert ask(I*sqrt(3), 'algebraic') == True
+    assert ask(sqrt(1+I*sqrt(3)), 'algebraic') == True
+
+    assert ask((1+I*sqrt(3)**(S(17)/31)), 'algebraic') == True
+    assert ask((1+I*sqrt(3)**(S(17)/pi)), 'algebraic') == False
+
+    assert ask(sin(7), 'algebraic') == None
+    assert ask(sqrt(sin(7)), 'algebraic') == None
+    assert ask(sqrt(y+I*sqrt(7)), 'algebraic') == None
+
+    assert ask(oo, 'algebraic') == False
+    assert ask(-oo, 'algebraic') == False
+
+    assert ask(2.47, 'algebraic') == False
 
 def test_global():
     """Test ask with global assumptions"""
@@ -961,3 +987,4 @@ def test_type_extensibility():
     a = MyType()
     register_handler(Q.prime, MyAskHandler)
     assert ask(a, Q.prime) == True
+

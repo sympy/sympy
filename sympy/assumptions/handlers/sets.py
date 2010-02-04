@@ -407,6 +407,36 @@ class AskImaginaryHandler(CommonHandler):
     def ImaginaryUnit(expr, assumptions):
         return True
 
+class AskAlgebraicHandler(CommonHandler):
+    """Handler for 'algebraic' key. """
+
+    @staticmethod
+    def Add(expr, assumptions):
+        return test_closed_group(expr, assumptions, 'algebraic')
+
+    @staticmethod
+    def Mul(expr, assumptions):
+        return test_closed_group(expr, assumptions, 'algebraic')
+
+    @staticmethod
+    def Pow(expr, assumptions):
+        return expr.exp.is_Rational and ask(expr.base, 'algebraic', assumptions)
+
+    @staticmethod
+    def Number(expr, assumptions):
+        return False
+
+    @staticmethod
+    def Rational(expr, assumptions):
+        return expr.q != 0
+
+    @staticmethod
+    def ImaginaryUnit(expr, assumptions):
+        return True
+
+    @staticmethod
+    def AlgebraicNumber(expr, assumptions):
+        return True
 
 #### Helper methods
 
@@ -424,3 +454,4 @@ def test_closed_group(expr, assumptions, key):
             else: break
     else:
         return result
+

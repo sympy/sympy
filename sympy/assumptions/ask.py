@@ -157,6 +157,7 @@ handlers_dict = {
     'prime'          : ['sympy.assumptions.handlers.ntheory.AskPrimeHandler'],
     'real'           : ['sympy.assumptions.handlers.sets.AskRealHandler'],
     'odd'            : ['sympy.assumptions.handlers.ntheory.AskOddHandler'],
+    'algebraic'      : ['sympy.assumptions.handlers.sets.AskAlgebraicHandler'],
 }
 
 known_facts_keys = []
@@ -207,3 +208,4 @@ for _c in known_facts:
 print out
 """
 known_facts_compiled = [[11, -14], [15, -1], [-1, -17], [1, 17, -15], [3, -4], [3, -14], [4, 14, -3], [15, -17], [-1, -17], [1, 17, -15], [15, -10], [7, -10], [-6, -10], [6, 10, -15, -7], [13, -15], [11, -16], [-16, -14], [2, -9], [-9, -7], [9, 7, -2], [2, -7], [-9, -7], [9, 7, -2], [14, -13], [-18, -13], [18, 13, -14], [14, -18], [14, -13], [18, 13, -14], [14, -2], [2, -9], [2, -7], [9, 7, -2]]
+
