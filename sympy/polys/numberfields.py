@@ -28,7 +28,7 @@ from sympy.utilities import (
 
 from sympy.ntheory import sieve
 
-from sympy.mpmath import pslq
+from sympy.mpmath import pslq, mp
 
 def minimal_polynomial(ex, x=None, **args):
     """Computes the minimal polynomial of an algebraic number. """
@@ -192,20 +192,32 @@ def field_isomorphism_pslq(a, b):
     f = a.minpoly
     g = b.minpoly.replace(f.gen)
 
-    n, m, prev = 30, b.minpoly.degree(), None
+    n, m, prev = 100, b.minpoly.degree(), None
 
-    while True:
+    for i in xrange(1, 5):
         A = a.root.evalf(n)
         B = b.root.evalf(n)
 
-        basis = [ B**i for i in xrange(0, m) ]
-        coeffs = pslq([A] + list(reversed(basis)))
+        basis = [1, B] + [ B**i for i in xrange(2, m) ] + [A]
 
-        if coeffs == prev:
-            return None
+        dps, mp.dps = mp.dps, n
+        coeffs = pslq(basis, maxcoeff=int(1e10), maxsteps=1000)
+        mp.dps = dps
 
-        coeffs, prev = [S(c)/coeffs[0] for c in coeffs[1:]], coeffs
+        if coeffs is None:
+            break
 
+        if coeffs != prev:
+            prev = coeffs
+        else:
+            break
+
+        coeffs = [S(c)/coeffs[-1] for c in coeffs[:-1]]
+
+        while not coeffs[-1]:
+            coeffs.pop()
+
+        coeffs = list(reversed(coeffs))
         h = Poly(coeffs, f.gen, domain='QQ')
 
         if f.compose(h).rem(g).is_zero:
@@ -222,6 +234,8 @@ def field_isomorphism_pslq(a, b):
             return [ -c for c in coeffs ]
         else:
             n *= 2
+
+    return None
 
 def field_isomorphism_factor(a, b):
     """Construct field isomorphism via factorization. """
@@ -271,7 +285,7 @@ def field_isomorphism(a, b, **args):
         try:
             result = field_isomorphism_pslq(a, b)
 
-            if not args.get('prove', False) or result is not None:
+            if result is not None:
                 return result
         except NotImplementedError:
             pass
