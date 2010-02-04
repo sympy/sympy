@@ -1,6 +1,6 @@
 """Useful utilities for higher level polynomial classes. """
 
-from sympy import S, sympify, Integer, Rational, Symbol, Add, Mul, Pow
+from sympy import S, sympify, Integer, Rational, Symbol, Add, Mul, Pow, ask
 
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
 
@@ -171,18 +171,26 @@ def _dict_from_basic_if_gens(ex, gens, **args):
 
 def _dict_from_basic_no_gens(ex, **args):
     """Figure out generators and convert `ex` to a multinomial. """
-    domain = args.get('domain', None)
+    domain = args.get('domain')
 
     if domain is not None:
         def _is_coeff(factor):
             return factor in domain
     else:
-        if args.get('greedy', True):
+        extension = args.get('extension')
+
+        if extension is True:
             def _is_coeff(factor):
-                return False
+                return ask(factor, 'algebraic')
         else:
-            def _is_coeff(factor):
-                return factor.is_number
+            greedy = args.get('greedy', True)
+
+            if greedy is True:
+                def _is_coeff(factor):
+                    return False
+            else:
+                def _is_coeff(factor):
+                    return factor.is_number
 
     gens, terms = set([]), []
 

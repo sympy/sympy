@@ -57,6 +57,27 @@ def test__construct_domain():
     assert _construct_domain({(0,): S(1)/2, (1,): S(2)}) == \
         (QQ, {(0,): QQ(1,2), (1,): QQ(2)})
 
+    assert _construct_domain({(0,): 3.14, (1,): 1, (2,): S(1)/2}) == \
+        (RR, {(0,): RR(3.14), (1,): RR(1.0), (2,): RR(0.5)})
+
+    assert _construct_domain({(0,): 3.14, (1,): sqrt(2)}, extension=None) == \
+        (EX, {(0,): EX(3.14), (1,): EX(sqrt(2))})
+    assert _construct_domain({(0,): 3.14, (1,): sqrt(2)}, extension=True) == \
+        (EX, {(0,): EX(3.14), (1,): EX(sqrt(2))})
+
+    assert _construct_domain({(0,): 1, (1,): sqrt(2)}, extension=None) == \
+        (EX, {(0,): EX(1), (1,): EX(sqrt(2))})
+
+    ALG = QQ.algebraic_field(sqrt(2))
+
+    assert _construct_domain({(0,): 7, (1,): S(1)/2, (2,): sqrt(2)}, extension=True) == \
+        (ALG, {(0,): ALG.convert(7), (1,): ALG.convert(S(1)/2), (2,): ALG.convert(sqrt(2))})
+
+    ALG = QQ.algebraic_field(sqrt(2)+sqrt(3))
+
+    assert _construct_domain({(0,): 7, (1,): sqrt(2), (2,): sqrt(3)}, extension=True) == \
+        (ALG, {(0,): ALG.convert(7), (1,): ALG.convert(sqrt(2)), (2,): ALG.convert(sqrt(3))})
+
     assert _construct_domain({(0,): 2*x, (1,): 3}) == \
         (ZZ[x], {(0,): DMP([2,0], ZZ), (1,): DMP([3], ZZ)})
     assert _construct_domain({(0,): 2*x, (1,): 3*y}) == \
@@ -226,8 +247,20 @@ def test_Poly__new__():
 
     raises(PolynomialError, "Poly(x+2, x, modulus=3, domain=QQ)")
 
+    raises(PolynomialError, "Poly(x+2, x, domain=ZZ, gaussian=True)")
+    raises(PolynomialError, "Poly(x+2, x, modulus=3, gaussian=True)")
+
     raises(PolynomialError, "Poly(x+2, x, domain=ZZ, extension=[sqrt(3)])")
     raises(PolynomialError, "Poly(x+2, x, modulus=3, extension=[sqrt(3)])")
+
+    raises(PolynomialError, "Poly(x+2, x, domain=ZZ, extension=True)")
+    raises(PolynomialError, "Poly(x+2, x, modulus=3, extension=True)")
+
+    raises(PolynomialError, "Poly(x+2, x, domain=ZZ, greedy=True)")
+    raises(PolynomialError, "Poly(x+2, x, domain=QQ, field=True)")
+
+    raises(PolynomialError, "Poly(x+2, x, domain=ZZ, greedy=False)")
+    raises(PolynomialError, "Poly(x+2, x, domain=QQ, field=False)")
 
     raises(PolynomialError, "Poly(x+1, x, modulus=3, order='grlex')")
     raises(NotImplementedError, "Poly(x+1, x, order='grlex')")
@@ -439,6 +472,9 @@ def test_Poly__analyze_extension():
     assert Poly._analyze_extension({'extension': []}) is None
     assert Poly._analyze_extension({'extension': sqrt(2)}) == set([sqrt(2)])
     assert Poly._analyze_extension({'extension': [sqrt(2),sqrt(3)]}) == set([sqrt(2),sqrt(3)])
+
+    assert Poly._analyze_extension({'extension': True}) is True
+    assert Poly._analyze_extension({'extension': False}) is None
 
     assert Poly._analyze_extension({'extension': I}) == set([I])
     assert Poly._analyze_extension({'gaussian': True}) == set([I])

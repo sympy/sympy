@@ -2048,8 +2048,8 @@ class ANP(object):
 
         return dom, per, F, G, mod
 
-    def per(f, rep):
-        return ANP(rep, f.mod, f.dom)
+    def per(f, rep, mod=None, dom=None):
+        return ANP(rep, mod or f.mod, dom or f.dom)
 
     @classmethod
     def zero(cls, mod, dom):
@@ -2079,6 +2079,10 @@ class ANP(object):
     def to_sympy_list(f):
         """Convert `f` to a list representation with SymPy coefficients. """
         return [ f.dom.to_sympy(c) for c in f.rep ]
+
+    @classmethod
+    def from_list(cls, rep, mod, dom):
+        return ANP(dup_strip(map(dom.convert, rep)), mod, dom)
 
     def neg(f):
         return f.per(dup_neg(f.rep, f.dom))

@@ -1,7 +1,7 @@
 """User-friendly public interface to polynomial functions. """
 
-from sympy.core import (
-    S, Basic, I, Integer, Mul, sympify,
+from sympy import (
+    S, Basic, I, Integer, Mul, sympify, ask,
 )
 
 from sympy.core.decorators import (
@@ -9,7 +9,7 @@ from sympy.core.decorators import (
 )
 
 from sympy.polys.polyclasses import (
-    GFP, DMP, SDP, DMF,
+    GFP, DMP, SDP, ANP, DMF,
 )
 
 from sympy.polys.polyutils import (
@@ -56,34 +56,90 @@ from sympy.polys.algebratools import Algebra, ZZ, QQ, RR, EX
 
 def _construct_domain(rep, **args):
     """Constructs the minimal domain that the coefficients of `rep` fit in. """
+    extension = args.get('extension', None)
     field = args.get('field', False)
 
     def _construct_simple(rep):
-        result, rational, inexact = {}, False, False
+        """Handle ZZ, QQ, RR and algebraic number domains. """
+        result, rational, inexact, algebraic = {}, False, False, False
+
+        if extension is True:
+            is_algebraic = lambda coeff: ask(coeff, 'algebraic')
+        else:
+            is_algebraic = lambda coeff: False
 
         for coeff in rep.itervalues():
             if coeff.is_Rational:
                 if not coeff.is_Integer:
                     rational = True
             elif coeff.is_Real:
-                inexact = True
+                if not algebraic:
+                    inexact = True
+                else:
+                    return False
+            elif is_algebraic(coeff):
+                if not inexact:
+                    algebraic = True
+                else:
+                    return False
             else:
                 return None
 
-        if inexact:
-            K = RR
-        else:
-            if field or rational:
-                K = QQ
-            else:
-                K = ZZ
+        if algebraic:
+            from numberfields import primitive_element
 
-        for monom, coeff in rep.iteritems():
-            result[monom] = K.from_sympy(coeff)
+            monoms, coeffs, exts = [], [], set([])
+
+            for monom, coeff in rep.iteritems():
+                if coeff.is_Rational:
+                    coeff = (None, 0, QQ.from_sympy(coeff))
+                else:
+                    a, _ = coeff.as_coeff_factors()
+                    coeff -= a
+
+                    b, _ = coeff.as_coeff_terms()
+                    coeff /= b
+
+                    exts.add(coeff)
+
+                    a = QQ.from_sympy(a)
+                    b = QQ.from_sympy(b)
+
+                    coeff = (coeff, b, a)
+
+                monoms.append(monom)
+                coeffs.append(coeff)
+
+            exts = list(exts)
+
+            g, span, H = primitive_element(exts, ex=True, polys=True)
+            root = sum([ s*ext for s, ext in zip(span, exts) ])
+
+            K, g = QQ.algebraic_field((g, root)), g.rep.rep
+
+            for monom, (coeff, a, b) in zip(monoms, coeffs):
+                if coeff is not None:
+                    coeff = a*ANP.from_list(H[exts.index(coeff)], g, QQ) + b
+                else:
+                    coeff = ANP.from_list([b], g, QQ)
+
+                result[monom] = coeff
+        else:
+            if inexact:
+                K = RR
+            else:
+                if field or rational:
+                    K = QQ
+                else:
+                    K = ZZ
+
+            for monom, coeff in rep.iteritems():
+                result[monom] = K.from_sympy(coeff)
 
         return K, result
 
     def _construct_composite(rep):
+        """Handle domains like ZZ[X], QQ[X], ZZ(X) or QQ(X). """
         numers, denoms = [], []
 
         for coeff in rep.itervalues():
@@ -112,11 +168,10 @@ def _construct_domain(rep, **args):
                 gens.update(den_gens)
                 fractions = True
 
+        if any(gen.is_number for gen in gens):
+            return None
+
         gens = _sort_gens(gens, **args)
-
-        if any(gen.is_Pow and gen.is_number for gen in gens) or I in gens:
-            return None # XXX: implement algebraic number fields
-
         k, coeffs = len(gens), []
 
         if not field and not fractions:
@@ -143,7 +198,6 @@ def _construct_domain(rep, **args):
 
                     num_coeffs = [ K.dom.from_sympy(c) for c in num_coeffs ]
                     coeffs.append(K(dict(zip(num_monoms, num_coeffs))))
-
         else:
             K = ZZ.frac_field(*gens)
 
@@ -169,6 +223,7 @@ def _construct_domain(rep, **args):
         return K, dict(zip(rep.keys(), coeffs))
 
     def _construct_expression(rep):
+        """The last resort case, i.e. use EX domain. """
         result, K = {}, EX
 
         for monom, coeff in rep.iteritems():
@@ -184,7 +239,10 @@ def _construct_domain(rep, **args):
     result = _construct_simple(rep)
 
     if result is not None:
-        return result
+        if result is not False:
+            return result
+        else:
+            return _construct_expression(rep)
     else:
         result = _construct_composite(rep)
 
@@ -345,9 +403,12 @@ class Poly(Basic):
             if extension is not None:
                 args['extension'] = extension
 
+            greedy = args.get('greedy')
+            field = args.get('field')
+
             if order is not None:
                 if modulus is not None:
-                    raise PolynomialError("monomial order specification interferes with modulus")
+                    raise PolynomialError("'order' keyword is not allowed together with 'modulus'")
 
                 raise NotImplementedError("'order' keyword is not yet implemented")
 
@@ -356,16 +417,29 @@ class Poly(Basic):
                     raise PolynomialError("ground domain and generators interferes together")
 
                 if modulus is not None and not domain.is_ZZ:
-                    raise PolynomialError("modulus specification requires ZZ ground domain")
+                    raise PolynomialError("'modulus' keyword requires ZZ ground domain")
+
+                if greedy is not None:
+                    raise PolynomialError("'domain' keyword in not allowed together with 'greedy'")
+
+                if field is not None:
+                    raise PolynomialError("'domain' keyword in not allowed together with 'field'")
 
             if extension is not None:
                 if domain is not None:
-                    raise PolynomialError("extension is not allowed together with domain")
+                    raise PolynomialError("'extension' keyword is not allowed together with 'domain'")
 
                 if modulus is not None:
-                    raise PolynomialError("extension is not allowed together with modulus")
+                    raise PolynomialError("'extension' keyword is not allowed together with 'modulus'")
 
-                args['domain'] = domain = QQ.algebraic_field(*extension)
+                if greedy is not None:
+                    raise PolynomialError("'extension' keyword in not allowed together with 'greedy'")
+
+                if field is not None:
+                    raise PolynomialError("'extension' keyword in not allowed together with 'field'")
+
+                if extension is not True:
+                    args['domain'] = domain = QQ.algebraic_field(*extension)
 
             if isinstance(rep, (dict, list)):
                 if not gens:
@@ -614,13 +688,17 @@ class Poly(Basic):
             if gaussian is not None:
                 raise PolynomialError("extension is not allowed together with gaussian")
 
-            if not hasattr(extension, '__iter__'):
-                extension = set([extension])
-            else:
-                if not extension:
+            if isinstance(extension, bool):
+                if extension is False:
                     extension = None
+            else:
+                if not hasattr(extension, '__iter__'):
+                    extension = set([extension])
                 else:
-                    extension = set(extension)
+                    if not extension:
+                        extension = None
+                    else:
+                        extension = set(extension)
         elif gaussian is not None and gaussian:
             extension = set([S.ImaginaryUnit])
 

@@ -355,6 +355,9 @@ def to_number_field(extension, theta=None, **args):
     else:
         extension = [extension]
 
+    if len(extension) == 1 and type(extension[0]) is tuple:
+        return AlgebraicNumber(extension[0])
+
     minpoly, coeffs = primitive_element(extension, gen, polys=True)
     root = sum([ coeff*ext for coeff, ext in zip(coeffs, extension) ])
 
