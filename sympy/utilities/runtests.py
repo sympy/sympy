@@ -786,20 +786,31 @@ class PyTestReporter(Reporter):
     def finish(self):
         self._t_end = clock()
         self.write("\n")
+        global text, linelen
         text = "tests finished: %d passed" % self._passed
+        linelen = len(text)
+        def add_text(mytext):
+            global text, linelen
+            """Break new text if too long."""
+            if linelen + len(mytext) > 80:
+                text += '\n'
+                linelen = 0
+            text += mytext
+            linelen += len(mytext)
+
         if len(self._failed) > 0:
-            text += ", %d failed" % len(self._failed)
+            add_text(", %d failed" % len(self._failed))
         if len(self._failed_doctest) > 0:
-            text += ", %d failed" % len(self._failed_doctest)
+            add_text(", %d failed" % len(self._failed_doctest))
         if self._skipped > 0:
-            text += ", %d skipped" % self._skipped
+            add_text(", %d skipped" % self._skipped)
         if self._xfailed > 0:
-            text += ", %d expected to fail" % self._xfailed
+            add_text(", %d expected to fail" % self._xfailed)
         if len(self._xpassed) > 0:
-            text += ", %d expected to fail but passed" % len(self._xpassed)
+            add_text(", %d expected to fail but passed" % len(self._xpassed))
         if len(self._exceptions) > 0:
-            text += ", %d exceptions" % len(self._exceptions)
-        text += " in %.2f seconds" % (self._t_end - self._t_start)
+            add_text(", %d exceptions" % len(self._exceptions))
+        add_text(" in %.2f seconds" % (self._t_end - self._t_start))
 
 
         if len(self._xpassed) > 0:
