@@ -1,12 +1,13 @@
 """
-This module contains dsolve() and different helper functions that it uses.
+This module contains dsolve() and different helper functions that it
+uses.
 
 dsolve() solves ordinary differential equations. See the docstring on
 the various functions for their uses. Note that partial differential
 equations support is in pde.py.  Note that ode_hint() functions have
-docstrings describing their various methods, but they are intended
-for internal use.  Use dsolve(ode, func, hint=hint) to solve an ode
-using a specific hint.  See also the docstring on dsolve().
+docstrings describing their various methods, but they are intended for
+internal use.  Use dsolve(ode, func, hint=hint) to solve an ode using a
+specific hint.  See also the docstring on dsolve().
 
 **Functions in this module**
 
@@ -19,9 +20,9 @@ using a specific hint.  See also the docstring on dsolve().
     - homogeneous_order() - Returns the homogeneous order of an
       expression.
 
-    See also the docstrings of these functions.  There are also quite
-    a few functions that are not imported into the global namespace.
-    See the docstrings of those functions for more info.
+    See also the docstrings of these functions.  There are also quite a
+    few functions that are not imported into the global namespace. See
+    the docstrings of those functions for more info.
 
 **Solving methods currently implemented**
 
@@ -72,7 +73,7 @@ possible.
 
 To add a new method, there are a few things that you need to do.  First,
 you need a hint name for your method.  Try to name your hint so that it
-is unambiguous with all other methods, include ones that may not be
+is unambiguous with all other methods, including ones that may not be
 implemented yet.  If your method uses integrals, also include a
 "hint_Integral" hint.  If there is more than one way to solve ODEs with
 your method, include a hint for each one, as well as a "hint_best" hint.
@@ -100,10 +101,10 @@ should go at the end of the list, and "_best" variants should go before
 the various hints they apply to.  For example, the
 "undetermined_coefficients" hint comes before the
 "variation_of_parameters" hint because, even though variation of
-parameters can be used to solve all ODEs that undetermined coefficients
-can solve and more, undetermined coefficients generally returns cleaner
-results for the ODEs that it can solve than variation of parameters
-does, and it does not require integration, so it is much faster.
+parameters is more general than undetermined coefficients, undetermined
+coefficients generally returns cleaner results for the ODEs that it can
+solve than variation of parameters does, and it does not require
+integration, so it is much faster.
 
 Next, you need to have a match expression or a function that matches the
 type of the ODE, which you should put in classify_ode() (if the match
@@ -121,14 +122,15 @@ parts that you need to solve it. You should put that in a dictionary
 = matchdict in the relevant part of classify_ode.  classify_ode will
 then send this to dsolve(), which will send it to your function as the
 match argument. Your function should be named ode_hint(eq, func, order,
-match). If you need to send more information, put it in the dictionary
-match.  For example, if you used a dummy variable in classify_ode to
-match your expression, you will need to pass it to your function using
-the match dict to access it.  You can access the independent variable
-using func.args[0], and the dependent variable (function to solve for)
-as func.func.  If, while trying to solve the ODE, you find that you
-cannot, raise NotImplementedError.  dsolve() will catch this error with
-the "all" meta-hint, rather than causing the whole routine to fail.
+match). If you need to send more information, put it in the match
+dictionary.  For example, if you had to substitute in a dummy variable
+in classify_ode to match the ODE, you will need to pass it to your
+function using the match dict to access it.  You can access the
+independent variable using func.args[0], and the dependent variable (the
+function you are trying to solve for) as func.func.  If, while trying to
+solve the ODE, you find that you cannot, raise NotImplementedError.
+dsolve() will catch this error with the "all" meta-hint, rather than
+causing the whole routine to fail.
 
 Add a docstring to your function that describes the method employed.
 Like with anything else in SymPy, you will need to add a doctest to the
@@ -136,7 +138,9 @@ docstring, in addition to real tests in test_ode.py.  Try to maintain
 consistency with the other hint functions' docstrings.  Add your method
 to the list at the top of this docstring.  Also, add your method to
 ode.txt in the docs/src directory, so that the Sphinx docs will pull its
-docstring into the main SymPy documentation.
+docstring into the main SymPy documentation.  Be sure to make the Sphinx
+documentation by running "make html" from within the doc directory to
+verify that the docstring formats correctly.
 
 If your solution method involves integrating, use C.Integral() instead
 of integrate().  This allows the user to bypass hard/slow integration by
@@ -164,11 +168,26 @@ extraneous simplification in your function, be sure to only run it using
 "if match.get('simplify', True):", especially if it can be slow or if it
 can reduce the domain of the solution.
 
+Finally, as with every contribution to SymPy, your method will need to
+be tested. Add a test for each method in test_ode.py.  Follow the
+conventions there, i.e., test the solver using dsolve(eq, f(x),
+hint=your_hint), and also test the solution using checkodesol (you can
+put these in a separate tests and skip/XFAIL if it runs too slow/doesn't
+work).  Be sure to call your hint specifically in dsolve, that way the
+test won't be broken simply by the introduction of another matching
+hint. If your method works for higher order (>1) ODEs, you will need to
+run sol = ode_renumber(sol, 'C', 1, order), for each solution, where
+order is the order of the ODE. This is because ode_renumber renumbers
+the arbitrary constants by printing order, which is platform dependent.
+Try to test every corner case of your solver, including a range of
+orders if it is a nth order solver, but if your solver is slow, auch as
+if it involves hard integration, try to keep the test run time down.
+
 Feel free to refactor existing hints to avoid duplicating code or
 creating inconsistencies.  If you can show that your method exactly
 duplicates an existing method, including in the simplicity and speed of
 obtaining the solutions, then you can remove the old, less general
-method.  The existing code is tested extensively in test_ode.py, so if
+method. The existing code is tested extensively in test_ode.py, so if
 anything is broken, one of those tests will surely fail.
 
 """
@@ -342,6 +361,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
 
     """
     # TODO: Implement initial conditions
+    # See issue 1621.  We first need a way to represent things like f'(0).
     if isinstance(eq, Equality):
         if eq.rhs != 0:
             return dsolve(eq.lhs-eq.rhs, func, hint=hint, simplify=simplify, **kwargs)
@@ -426,10 +446,6 @@ def classify_ode(eq, func, dict=False):
     """
     Returns a tuple of possible dsolve() classifications for an ODE.
 
-    Except for the first-order exact case, the ODE will be reduced to remove
-    any powers of f(x) from the coefficient of the highest order derivative,
-    e.g. f(x)*D(f(x), x) + 1 --> D(f(x), x) + 1/f(x).
-
     The tuple is ordered so that first item is the classification that
     dsolve() uses to solve the ODE by default.  In general,
     classifications at the near the beginning of the list will produce
@@ -445,6 +461,9 @@ def classify_ode(eq, func, dict=False):
 
     You can get help on different hints by doing help(ode.ode_hintname),
     where hintname is the name of the hint without "_Integral".
+
+    See sympy.ode.allhints or the sympy.ode docstring for a list of all
+    supported hints that can be returned from classify_ode.
 
     **Notes on Hint Names**
 
@@ -584,7 +603,6 @@ def classify_ode(eq, func, dict=False):
         reduced_eq = eq
 
     if order == 1:
-        # We can save a lot of time by skipping these if the ODE isn't 1st order
 
         # Linear case: a(x)*y'+b(x)*y+c(x) == 0
         if eq.is_Add:
@@ -686,45 +704,27 @@ def classify_ode(eq, func, dict=False):
 
 
     if order > 0:
-        # nth order linear ODE:
+        # nth order linear ODE
         # a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y = F(x) = b
 
-        # Build a match expression for a nth order linear ode
-        # and store wilds so they can be remapped later to 0, 1, ... and 'b'
-        i = numbered_symbols(prefix='a', function=Wild, exclude=[f(x)])
-        wilds = {}
-        for j in range(order+1):
-            wilds[i.next()] = j
-        s = Add(*[i*f(x).diff(x,wilds[i]) for i in wilds])
-        wilds[b] = 'b'
+        r = _nth_linear_match(reduced_eq, func, order)
 
-        # Since multiple constant terms will not always be captured
-        # (see issues 1429 and 1601) the constant term is captured here:
-        if reduced_eq.is_Add:
-            inde, depe = reduced_eq.as_independent(f(x))
-        else:
-            inde, depe = S.Zero, reduced_eq
+        # Constant coefficient case (a_i is constant for all i)
+        if r and not any(r[i].has(x) for i in r if i >= 0):
+            # Inhomogeneous case: F(x) is not identically 0
+            if r[-1]:
+                undetcoeff = _undetermined_coefficients_match(r[-1], x)
+                matching_hints["nth_linear_constant_coeff_variation_of_parameters"] = r
+                matching_hints["nth_linear_constant_coeff_variation_of_parameters" + \
+                    "_Integral"] = r
+                if undetcoeff['test']:
+                    r['trialset'] = undetcoeff['trialset']
+                    matching_hints["nth_linear_constant_coeff_undetermined_" + \
+                        "coefficients"] = r
+            # Homogeneous case: F(x) is identically 0
+            else:
+                matching_hints["nth_linear_constant_coeff_homogeneous"] = r
 
-        r = depe.match(s)
-        if r:
-            r[b] = inde
-            # Constant coefficient case (a_i is constant for all i)
-            if not any(r[i].has(x) for i in r if i != b):
-                for i in wilds:
-                    r[wilds[i]] = r.pop(i)
-                # Inhomogeneous case: F(x) is not identically 0
-                if r['b']:
-                    undetcoeff = _undetermined_coefficients_match(r['b'], x)
-                    matching_hints["nth_linear_constant_coeff_variation_of_parameters"] = r
-                    matching_hints["nth_linear_constant_coeff_variation_of_parameters" + \
-                        "_Integral"] = r
-                    if undetcoeff['test']:
-                        r['trialset'] = undetcoeff['trialset']
-                        matching_hints["nth_linear_constant_coeff_undetermined_" + \
-                            "coefficients"] = r
-                # Homogeneous case: F(x) is identically 0
-                else:
-                    matching_hints["nth_linear_constant_coeff_homogeneous"] = r
 
     # Order keys based on allhints.
     retlist = []
@@ -2032,6 +2032,52 @@ def ode_Liouville(eq, func, order, match):
     sol = Eq(int + C1*C.Integral(exp(-C.Integral(r['h'], x)), x) + C2, 0)
     return sol
 
+
+def _nth_linear_match(eq, func, order):
+    """
+    Matches a differential equation to the linear form:
+
+    a_n(x)y^(n) + ... + a_1(x)y' + a_0(x)y + B(x) = 0
+
+    Returns a dict of order:coeff terms, where order is the order of the
+    derivative on each term, and coeff is the coefficient of that
+    derivative.  The key -1 holds the function B(x). Returns None if
+    the ode is not linear.  This function assumes that func has already
+    been checked to be good.
+
+    **Examples**
+        >>> from sympy import Function, cos, sin
+        >>> from sympy.abc import x
+        >>> from sympy.solvers.ode import _nth_linear_match
+        >>> f = Function('f')
+        >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
+        ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
+        ... sin(x), f(x), 3)
+        {1: 2 + cos(x), 0: -1, -1: x - sin(x), 2: x, 3: 1}
+        >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
+        ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
+        ... sin(f(x)), f(x), 3) == None
+        True
+
+    """
+    from sympy import S
+    from sympy.utilities.iterables import make_list
+
+    x = func.args[0]
+    one_x = set([x])
+    terms = dict([(i, S.Zero) for i in range(-1, order+1)])
+    for i in make_list(eq, Add):
+        if not i.has(func):
+            terms[-1] += i
+        else:
+            c, f = i.as_independent(func)
+            if not ((isinstance(f, Derivative) and set(f.symbols) == one_x) or\
+                    f == func):
+                return None
+            else:
+                terms[len(f.args[1:])] += c
+    return terms
+
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='sol'):
     """
     Solves an nth order linear homogeneous differential equation with
@@ -2111,7 +2157,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     m = Symbol('m', dummy=True)
     chareq = S.Zero
     for i in r.keys():
-        if type(i) == str:
+        if type(i) == str or i < 0:
             pass
         else:
             chareq += r[i]*m**i
@@ -2578,7 +2624,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
     negoneterm = (-1)**(order)
     for i in gensols:
         psol += negoneterm*C.Integral(wronskian(filter(lambda x: x != i, \
-        gensols), x)*r['b']/wr, x)*i/r[order]
+        gensols), x)*r[-1]/wr, x)*i/r[order]
         negoneterm *= -1
 
     if r.get('simplify', True):

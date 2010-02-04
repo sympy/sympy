@@ -1069,7 +1069,10 @@ def test_unexpanded_Liouville_ODE():
 def test_1686():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
-    assert classify_ode(eq, f(x)) == ('1st_linear', '1st_linear_Integral')
+    assert classify_ode(eq, f(x)) == ('1st_linear', \
+    'nth_linear_constant_coeff_undetermined_coefficients', \
+    'nth_linear_constant_coeff_variation_of_parameters', '1st_linear_Integral', \
+    'nth_linear_constant_coeff_variation_of_parameters_Integral')
     # 1765
     eq=(x**2 + f(x)**2)*f(x).diff(x) - 2*x*f(x)
     assert classify_ode(eq, f(x)) == (
