@@ -26,7 +26,7 @@ from sympy.utilities import (
     any, all, numbered_symbols,
 )
 
-from sympy.ntheory import nextprime
+from sympy.ntheory import sieve
 
 from sympy.mpmath import pslq
 
@@ -154,6 +154,36 @@ def primitive_element(extension, x=None, **args):
 
 primelt = primitive_element
 
+def is_isomorphism_possible(a, b):
+    """Returns `True` if there is a chance for isomorphism. """
+    n = a.minpoly.degree()
+    m = b.minpoly.degree()
+
+    if m % n != 0:
+        return False
+
+    if n == m:
+        return True
+
+    da = a.minpoly.discriminant()
+    db = b.minpoly.discriminant()
+
+    i, k, half = 1, m//n, db//2
+
+    while True:
+        p = sieve[i]
+        P = p**k
+
+        if P > half:
+            break
+
+        if ((da % p) % 2) and not (db % P):
+            return False
+
+        i += 1
+
+    return True
+
 def field_isomorphism_pslq(a, b):
     """Construct field isomorphism using PSLQ algorithm. """
     if not a.root.is_real or not b.root.is_real:
@@ -214,41 +244,6 @@ def field_isomorphism_factor(a, b):
                 return [ -c for c in coeffs ]
     else:
         return None
-
-_primes = []
-
-def is_isomorphism_possible(a, b):
-    """Returns `True` if there is a chance for isomorphism. """
-    n = a.minpoly.degree()
-    m = b.minpoly.degree()
-
-    if m % n != 0:
-        return False
-
-    if n == m:
-        return True
-
-    da = a.minpoly.discriminant()
-    db = b.minpoly.discriminant()
-
-    p, k, half, i = 3, m//n, db//2, 0
-
-    while True:
-        P = p**k
-
-        if P > half:
-            break
-
-        if ((da % p) % 2) and not (db % P):
-            return False
-
-        if len(_primes) > i:
-            p, i = _primes[i], i+1
-        else:
-            p = nextprime(p)
-            _primes.append(p)
-
-    return True
 
 def field_isomorphism(a, b, **args):
     """Construct an isomorphism between two number fields. """
