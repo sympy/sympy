@@ -794,9 +794,9 @@ class PyTestReporter(Reporter):
         if self._skipped > 0:
             text += ", %d skipped" % self._skipped
         if self._xfailed > 0:
-            text += ", %d xfailed" % self._xfailed
+            text += ", %d expected to fail" % self._xfailed
         if len(self._xpassed) > 0:
-            text += ", %d xpassed" % len(self._xpassed)
+            text += ", %d expected to fail but passed" % len(self._xpassed)
         if len(self._exceptions) > 0:
             text += ", %d exceptions" % len(self._exceptions)
         text += " in %.2f seconds" % (self._t_end - self._t_start)
