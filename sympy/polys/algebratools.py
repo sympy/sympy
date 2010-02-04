@@ -1407,7 +1407,13 @@ class AlgebraicField(Field):
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """
+        try:
+            return self([self.dom.from_sympy(a)])
+        except CoercionFailed:
+            pass
+
         from sympy.polys.numberfields import to_number_field
+
         try:
             return self(to_number_field(a, self.ext).native_coeffs())
         except (NotAlgebraic, IsomorphismFailed):
