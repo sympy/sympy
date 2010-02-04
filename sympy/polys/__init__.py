@@ -44,3 +44,7 @@ from polyroots import (
     RootOf, RootsOf, RootSum, roots,
 )
 
+from algebratools import (
+    ZZ, QQ, RR, EX,
+)
+
