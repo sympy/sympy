@@ -19,11 +19,12 @@ from sympy.polys.polyclasses import (
 
 from sympy.polys.polyerrors import (
     IsomorphismFailed,
+    CoercionFailed,
     NotAlgebraic,
 )
 
 from sympy.utilities import (
-    any, all, numbered_symbols,
+    any, all, numbered_symbols, variations,
 )
 
 from sympy.ntheory import sieve
@@ -133,24 +134,77 @@ def minimal_polynomial(ex, x=None, **args):
 
 minpoly = minimal_polynomial
 
+def _coeffs_generator(n):
+    """Generate coefficients for `primitive_element()`. """
+    for coeffs in variations([1,-1], n, repetition=True):
+        yield coeffs
+
 def primitive_element(extension, x=None, **args):
     """Construct a common number field for all extensions. """
     if not extension:
-        raise ValueError("can't compute primitive element for nothing")
+        raise ValueError("can't compute primitive element for empty extension")
 
-    extension = [ AlgebraicNumber(ext, gen=x) for ext in extension ]
+    if x is not None:
+        x = sympify(x)
+    else:
+        x = Symbol('x', dummy=True)
 
-    minpoly = extension[0].minpoly
-    root    = extension[0].root
+    if not args.get('ex', False):
+        extension = [ AlgebraicNumber(ext, gen=x) for ext in extension ]
 
-    for ext in extension[1:]:
-        s, _, minpoly = sqf_norm(minpoly, extension=ext)
-        root = s*root + ext.root
+        g, coeffs = extension[0].minpoly, [1]
+
+        for ext in extension[1:]:
+            s, _, g = sqf_norm(g, x, extension=ext)
+            coeffs = [ s*c for c in coeffs ] + [1]
+
+        if not args.get('polys', False):
+            return g.as_basic(), coeffs
+        else:
+            return g, coeffs
+
+    generator = numbered_symbols('y', dummy=True)
+
+    F, Y = [], []
+
+    for ext in extension:
+        y = generator.next()
+
+        if ext.is_Poly:
+            if ext.is_univariate:
+                f = ext.as_basic(y)
+            else:
+                raise ValueError("expected minimal polynomial, got %s" % ext)
+        else:
+            f = minpoly(ext, y)
+
+        F.append(f)
+        Y.append(y)
+
+    coeffs_generator = args.get('coeffs', _coeffs_generator)
+
+    for coeffs in coeffs_generator(len(Y)):
+        f = x - sum([ c*y for c, y in zip(coeffs, Y)])
+        G = groebner(F + [f], Y + [x], order='lex')
+
+        H, g = G[:-1], Poly(G[-1], x, domain='QQ')
+
+        for i, (h, y) in enumerate(zip(H, Y)):
+            try:
+                H[i] = Poly(y - h, x, domain='QQ').all_coeffs()
+            except CoercionFailed: # pragma: no cover
+                break # G is not a triangular set
+        else:
+            break
+    else: # pragma: no cover
+        raise RuntimeError("run out of coefficient configurations")
+
+    _, g = g.ground_to_ring()
 
     if not args.get('polys', False):
-        return minpoly.as_basic(), root
+        return g.as_basic(), coeffs, H
     else:
-        return minpoly, root
+        return g, coeffs, H
 
 primelt = primitive_element
 
@@ -301,7 +355,8 @@ def to_number_field(extension, theta=None, **args):
     else:
         extension = [extension]
 
-    minpoly, root = primitive_element(extension, gen, polys=True)
+    minpoly, coeffs = primitive_element(extension, gen, polys=True)
+    root = sum([ coeff*ext for coeff, ext in zip(coeffs, extension) ])
 
     if theta is None:
         return AlgebraicNumber((minpoly, root))

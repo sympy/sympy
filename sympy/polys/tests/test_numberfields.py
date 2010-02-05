@@ -90,10 +90,22 @@ def test_minimal_polynomial():
     assert minimal_polynomial(a**Rational(3, 2), x) == 729*x**4 - 506898*x**2 + 84604519
 
 def test_primitive_element():
-    assert primitive_element([sqrt(2), sqrt(3)], x) == (x**4 - 10*x**2 + 1, sqrt(2) + sqrt(3))
-    assert primitive_element([sqrt(2), sqrt(3)], x, polys=True) == (Poly(x**4 - 10*x**2 + 1), sqrt(2) + sqrt(3))
+    assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])
+    assert primitive_element([sqrt(2), sqrt(3)], x) == (x**4 - 10*x**2 + 1, [1, 1])
 
-    raises(ValueError, "primitive_element([], x)")
+    assert primitive_element([sqrt(2)], x, polys=True) == (Poly(x**2 - 2), [1])
+    assert primitive_element([sqrt(2), sqrt(3)], x, polys=True) == (Poly(x**4 - 10*x**2 + 1), [1, 1])
+
+    assert primitive_element([sqrt(2)], x, ex=True) == (x**2 - 2, [1], [[1, 0]])
+    assert primitive_element([sqrt(2), sqrt(3)], x, ex=True) == \
+        (x**4 - 10*x**2 + 1, [1, 1], [[Q(1,2), 0, -Q(9,2), 0], [-Q(1,2), 0, Q(11,2), 0]])
+
+    assert primitive_element([sqrt(2)], x, ex=True, polys=True) == (Poly(x**2 - 2), [1], [[1, 0]])
+    assert primitive_element([sqrt(2), sqrt(3)], x, ex=True, polys=True) == \
+        (Poly(x**4 - 10*x**2 + 1), [1, 1], [[Q(1,2), 0, -Q(9,2), 0], [-Q(1,2), 0, Q(11,2), 0]])
+
+    raises(ValueError, "primitive_element([], x, ex=False)")
+    raises(ValueError, "primitive_element([], x, ex=True)")
 
 def test_field_isomorphism_pslq():
     a = AlgebraicNumber(I)
