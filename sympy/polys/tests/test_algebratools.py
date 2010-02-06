@@ -174,55 +174,70 @@ def test_Algebra__unify():
     raises(UnificationFailed, "ZZ.unify(ZZ.poly_ring('x','y'), gens=('y', 'z'))")
 
 def test_Algebra__contains__():
+    assert (0 in EX) == True
+    assert (0 in ZZ) == True
+    assert (0 in QQ) == True
+    assert (0 in RR) == True
+    assert (0 in ALG) == True
+    assert (0 in ZZ[x,y]) == True
+    assert (0 in QQ[x,y]) == True
+    assert (0 in RR[x,y]) == True
+
+    assert (-7 in EX) == True
     assert (-7 in ZZ) == True
-    assert ( 0 in ZZ) == True
-    assert (17 in ZZ) == True
-
     assert (-7 in QQ) == True
-    assert ( 0 in QQ) == True
-    assert (17 in QQ) == True
-
     assert (-7 in RR) == True
-    assert ( 0 in RR) == True
-    assert (17 in RR) == True
-
     assert (-7 in ALG) == True
-    assert ( 0 in ALG) == True
-    assert (17 in ALG) == True
-
     assert (-7 in ZZ[x,y]) == True
-    assert ( 0 in ZZ[x,y]) == True
-    assert (17 in ZZ[x,y]) == True
-
     assert (-7 in QQ[x,y]) == True
-    assert ( 0 in QQ[x,y]) == True
-    assert (17 in QQ[x,y]) == True
-
     assert (-7 in RR[x,y]) == True
-    assert ( 0 in RR[x,y]) == True
+
+    assert (17 in EX) == True
+    assert (17 in ZZ) == True
+    assert (17 in QQ) == True
+    assert (17 in RR) == True
+    assert (17 in ALG) == True
+    assert (17 in ZZ[x,y]) == True
+    assert (17 in QQ[x,y]) == True
     assert (17 in RR[x,y]) == True
 
+    assert (-S(1)/7 in EX) == True
     assert (-S(1)/7 in ZZ) == False
-    assert ( S(3)/5 in ZZ) == False
-
     assert (-S(1)/7 in QQ) == True
-    assert ( S(3)/5 in QQ) == True
-
     assert (-S(1)/7 in RR) == True
-    assert ( S(3)/5 in RR) == True
-
     assert (-S(1)/7 in ALG) == True
-    assert ( S(3)/5 in ALG) == True
-
     assert (-S(1)/7 in ZZ[x,y]) == False
-    assert ( S(3)/5 in ZZ[x,y]) == False
-
     assert (-S(1)/7 in QQ[x,y]) == True
-    assert ( S(3)/5 in QQ[x,y]) == True
-
     assert (-S(1)/7 in RR[x,y]) == True
-    assert ( S(3)/5 in RR[x,y]) == True
 
+    assert (S(3)/5 in EX) == True
+    assert (S(3)/5 in ZZ) == False
+    assert (S(3)/5 in QQ) == True
+    assert (S(3)/5 in RR) == True
+    assert (S(3)/5 in ALG) == True
+    assert (S(3)/5 in ZZ[x,y]) == False
+    assert (S(3)/5 in QQ[x,y]) == True
+    assert (S(3)/5 in RR[x,y]) == True
+
+    assert (3.0 in EX) == True
+    assert (3.0 in ZZ) == True
+    assert (3.0 in QQ) == True
+    assert (3.0 in RR) == True
+    assert (3.0 in ALG) == True
+    assert (3.0 in ZZ[x,y]) == True
+    assert (3.0 in QQ[x,y]) == True
+    assert (3.0 in RR[x,y]) == True
+
+    assert (3.14 in EX) == True
+    assert (3.14 in ZZ) == False
+    assert (3.14 in QQ) == True
+    assert (3.14 in RR) == True
+    assert (3.14 in ALG) == True
+    assert (3.14 in ZZ[x,y]) == False
+    assert (3.14 in QQ[x,y]) == True
+    assert (3.14 in RR[x,y]) == True
+
+    assert (oo in EX) == True
     assert (oo in ZZ) == False
     assert (oo in QQ) == False
     assert (oo in RR) == False
@@ -231,6 +246,7 @@ def test_Algebra__contains__():
     assert (oo in QQ[x,y]) == False
     assert (oo in RR[x,y]) == False
 
+    assert (-oo in EX) == True
     assert (-oo in ZZ) == False
     assert (-oo in QQ) == False
     assert (-oo in RR) == False

@@ -268,6 +268,22 @@ def test_Poly__new__():
     raises(GeneratorsNeeded, "Poly({1: 2, 0: 1})")
     raises(GeneratorsNeeded, "Poly([2, 1])")
 
+    assert Poly(3*x**2 + 2*x + 1, domain='ZZ').all_coeffs() == [3, 2, 1]
+    assert Poly(3*x**2 + 2*x + 1, domain='QQ').all_coeffs() == [3, 2, 1]
+    assert Poly(3*x**2 + 2*x + 1, domain='RR').all_coeffs() == [3.0, 2.0, 1.0]
+
+    raises(CoercionFailed, "Poly(3*x**2/5 + 2*x/5 + 1, domain='ZZ')")
+    assert Poly(3*x**2/5 + 2*x/5 + 1, domain='QQ').all_coeffs() == [S(3)/5, S(2)/5, 1]
+    assert Poly(3*x**2/5 + 2*x/5 + 1, domain='RR').all_coeffs() == [0.6, 0.4, 1.0]
+
+    assert Poly(3.0*x**2 + 2.0*x + 1, domain='ZZ').all_coeffs() == [3, 2, 1]
+    assert Poly(3.0*x**2 + 2.0*x + 1, domain='QQ').all_coeffs() == [3, 2, 1]
+    assert Poly(3.0*x**2 + 2.0*x + 1, domain='RR').all_coeffs() == [3.0, 2.0, 1.0]
+
+    raises(CoercionFailed, "Poly(3.1*x**2 + 2.1*x + 1, domain='ZZ')")
+    assert Poly(3.1*x**2 + 2.1*x + 1, domain='QQ').all_coeffs() == [S(31)/10, S(21)/10, 1]
+    assert Poly(3.1*x**2 + 2.1*x + 1, domain='RR').all_coeffs() == [3.1, 2.1, 1.0]
+
     assert Poly({(2,1): 1, (1,2): 2, (1,1): 3}, x, y) == \
         Poly(x**2*y + 2*x*y**2 + 3*x*y, x, y)
 

@@ -603,11 +603,12 @@ class ZZ_python(IntegerRing):
 
     def from_sympy(self, a):
         """Convert SymPy's Integer to `dtype`. """
-        if a.is_Rational:
-            if a.is_Integer or a.q == 1:
-                return python_int(a.p)
-
-        raise CoercionFailed("expected `Integer` object, got %s" % a)
+        if a.is_Integer:
+            return python_int(a.p)
+        elif a.is_Real and int(a) == a:
+            return sympy_int(int(a))
+        else:
+            raise CoercionFailed("expected `Integer` object, got %s" % a)
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
@@ -694,6 +695,8 @@ if HAS_FRACTION:
             """Convert SymPy's Rational to `dtype`. """
             if a.is_Rational and a.q != 0:
                 return python_rat(a.p, a.q)
+            elif a.is_Real:
+                return python_rat(*RR.as_integer_ratio(a))
             else:
                 raise CoercionFailed("expected `Rational` object, got %s" % a)
 
@@ -775,6 +778,8 @@ class ZZ_sympy(IntegerRing):
         """Convert SymPy's Integer to `dtype`. """
         if a.is_Integer:
             return a
+        elif a.is_Real and int(a) == a:
+            return sympy_int(int(a))
         else:
             raise CoercionFailed("expected Integer object, got %s" % a)
 
@@ -857,6 +862,8 @@ class QQ_sympy(RationalField):
         """Convert SymPy's Rational to `dtype`. """
         if a.is_Rational and a.q != 0:
             return a
+        elif a.is_Real:
+            return sympy_rat(*RR.as_integer_ratio(a))
         else:
             raise CoercionFailed("expected `Rational` object, got %s" % a)
 
@@ -936,6 +943,8 @@ if HAS_GMPY:
             """Convert SymPy's Integer to `dtype`. """
             if a.is_Integer:
                 return gmpy_int(a.p)
+            elif a.is_Real and int(a) == a:
+                return gmpy_int(int(a))
             else:
                 raise CoercionFailed("expected Integer object, got %s" % a)
 
@@ -1024,6 +1033,8 @@ if HAS_GMPY:
             """Convert SymPy's Integer to `dtype`. """
             if a.is_Rational and a.q != 0:
                 return gmpy_rat(a.p, a.q)
+            elif a.is_Real:
+                return gmpy_rat(*RR.as_integer_ratio(a))
             else:
                 raise CoercionFailed("expected `Rational` object, got %s" % a)
 
