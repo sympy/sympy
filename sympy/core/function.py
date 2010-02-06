@@ -52,6 +52,7 @@ class FunctionClass(BasicMeta):
     Use Function('<function name>' [ , signature ]) to create
     undefined function classes.
     """
+    __metaclass__ = BasicMeta
 
     _new = type.__new__
 
@@ -73,10 +74,10 @@ class FunctionClass(BasicMeta):
             if signature is not None:
                 attrdict['signature'] = signature
             bases = (ftype,)
-            return type.__new__(cls, name, bases, attrdict)
+            return BasicMeta.__new__(cls, name, bases, attrdict)
         else:
             name, bases, attrdict = arg1, arg2, arg3
-            return type.__new__(cls, name, bases, attrdict)
+            return BasicMeta.__new__(cls, name, bases, attrdict)
 
     def __repr__(cls):
         return cls.__name__

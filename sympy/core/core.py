@@ -71,14 +71,15 @@ class BasicType(type):
 class BasicMeta(BasicType):
 
     classnamespace = {}
+    all_classes = set()
     singleton = {}
 
     keep_sign = False
 
     def __init__(cls, *args, **kws):
         n = cls.__name__
+        BasicMeta.all_classes.add(cls)
         BasicMeta.classnamespace[n] = cls
-        super(BasicMeta, cls).__init__(cls)
 
         # --- assumptions ---
 
@@ -224,6 +225,7 @@ class BasicMeta(BasicType):
             return True
         return False
 
+BasicMeta.all_classes.add(BasicMeta)
 
 class ClassesRegistry:
     """Namespace for SymPy classes
