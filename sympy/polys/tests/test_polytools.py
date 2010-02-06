@@ -1492,6 +1492,14 @@ def test_cancel():
 
     assert cancel((exp(2*x) + 2*exp(x) + 1)/(exp(x) + 1)) == exp(x) + 1
 
+    f = Poly(x**2 - a**2, x)
+    g = Poly(x - a, x)
+
+    F = Poly(x + a, x)
+    G = Poly(1, x)
+
+    assert cancel((f, g)) == (1, F, G)
+
 def test_groebner():
     raises(GeneratorsNeeded, "groebner([x, y], order='lex')")
     raises(PolynomialError, "groebner([x], x, modulus=3)")

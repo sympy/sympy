@@ -294,7 +294,7 @@ class Algebra(object):
 
     def __getitem__(self, gens):
         """The mathematical way do make a polynomial ring. """
-        if type(gens) is tuple:
+        if hasattr(gens, '__iter__'):
             return self.poly_ring(*gens)
         else:
             return self.poly_ring(gens)
