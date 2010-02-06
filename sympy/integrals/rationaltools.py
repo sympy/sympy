@@ -3,7 +3,7 @@
 from sympy import S, Add, Symbol, symbols, I, log, atan, \
     div, quo, resultant, roots, collect, solve, RootSum, Lambda, cancel
 
-from sympy.polys import Poly, subresultants, resultant
+from sympy.polys import Poly, subresultants, resultant, ZZ
 from sympy.polys.polyroots import number_of_real_roots
 
 def ratint(f, x, **flags):
@@ -107,26 +107,29 @@ def ratint_ratpart(f, g, x):
        such that f/g = A' + B and B has square-free denominator.
 
     """
-    f, g = Poly(f, x), Poly(g, x)
+    f = Poly(f, x)
+    g = Poly(g, x)
 
     u, v, _ = g.cofactors(g.diff())
 
-    n = u.degree() - 1
-    m = v.degree() - 1
+    n = u.degree()
+    m = v.degree()
     d = g.degree()
 
-    A_coeff = [ Symbol('a' + str(n-i), dummy=True) for i in xrange(0, n+1) ]
-    B_coeff = [ Symbol('b' + str(m-i), dummy=True) for i in xrange(0, m+1) ]
+    A_coeffs = [ Symbol('a' + str(n-i), dummy=True) for i in xrange(0, n) ]
+    B_coeffs = [ Symbol('b' + str(m-i), dummy=True) for i in xrange(0, m) ]
 
-    A = Poly(dict(zip(xrange(n, -1, -1), A_coeff)), x)
-    B = Poly(dict(zip(xrange(m, -1, -1), B_coeff)), x)
+    C_coeffs = A_coeffs + B_coeffs
+
+    A = Poly(A_coeffs, x, domain=ZZ[C_coeffs])
+    B = Poly(B_coeffs, x, domain=ZZ[C_coeffs])
 
     H = f - A.diff()*v + A*(u.diff()*v).exquo(u) - B*u
 
-    result = solve(H.coeffs(), A_coeff + B_coeff)
+    result = solve(H.coeffs(), C_coeffs)
 
-    A = A.as_basic().subs(result) # A = A.eval_ground(result)
-    B = B.as_basic().subs(result) # B = B.eval_ground(result)
+    A = A.as_basic().subs(result)
+    B = B.as_basic().subs(result)
 
     rat_part = cancel(A/u.as_basic(), x)
     log_part = cancel(B/v.as_basic(), x)
@@ -284,3 +287,4 @@ def log_to_real(h, q, x, t):
         result += r*log(h.as_basic().subs(t, r))
 
     return result
+

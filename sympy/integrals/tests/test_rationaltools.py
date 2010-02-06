@@ -3,7 +3,8 @@ from sympy import symbols, S, I, atan, log, Poly
 from sympy.integrals.rationaltools import ratint, \
     ratint_ratpart, ratint_logpart, log_to_atan, log_to_real
 
-x, t = symbols('x t')
+from sympy.abc import a, x, t
+
 half = S(1)/2
 
 def test_ratint():
@@ -25,6 +26,11 @@ def test_ratint():
     g = x - 1
 
     assert ratint(f/g, x) == x**3/3 + x**2/2
+
+    f = x
+    g = (x - a)*(x + a)
+
+    assert ratint(f/g, x) == log(x**2 - a**2)/2
 
     f = S(1)
     g = x**2 + 1
@@ -82,3 +88,4 @@ def test_ratint_logpart():
         [(Poly(x**2 - 9, x), Poly(-2*t + 1, t))]
     assert ratint_logpart(x**2, x**3-5, x, t) == \
         [(Poly(x**3 - 5, x), Poly(-3*t + 1, t))]
+
