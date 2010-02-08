@@ -713,40 +713,73 @@ def gf_irreducible(n, p, K):
     while True:
         f = gf_random(n, p, K)
 
-        H = h = gf_pow_mod([K.one, K.zero], int(p), f, p, K)
-
-        for i in xrange(1, n//2 + 1):
-            g = gf_sub(h, [K.one, K.zero], p, K)
-
-            if gf_gcd(f, g, p, K) == [K.one]:
-                h = gf_compose_mod(h, H, f, p, K)
-            else:
-                break
-        else:
+        if gf_irreducible_p(f, p, K):
             return f
 
-@cythonized("i,n,d")
-def gf_irreducible_p(f, p, K):
-    """Deterministic irreducibility test of `f` in `GF(p)[x]`. """
-    n, x = gf_degree(f), [K.one, K.zero]
+@cythonized("i,n")
+def gf_irred_p_ben_or(f, p, K):
+    """Ben-Or's polynomial irreducibility test over finite fields. """
+    n = gf_degree(f)
 
     if n <= 1:
         return True
 
-    g = h = gf_pow_mod(x, p, f, p, K)
+    _, f = gf_monic(f, p, K)
+
+    H = h = gf_pow_mod([K.one, K.zero], p, f, p, K)
+
+    for i in xrange(0, n//2):
+        g = gf_sub(h, [K.one, K.zero], p, K)
+
+        if gf_gcd(f, g, p, K) == [K.one]:
+            h = gf_compose_mod(h, H, f, p, K)
+        else:
+            return False
+
+    return True
+
+@cythonized("i,n,d")
+def gf_irred_p_rabin(f, p, K):
+    """Rabin's polynomial irreducibility test over finite fields. """
+    n = gf_degree(f)
+
+    if n <= 1:
+        return True
+
+    _, f = gf_monic(f, p, K)
+
+    x = [K.one, K.zero]
+
+    H = h = gf_pow_mod(x, p, f, p, K)
 
     indices = set([ n//d for d in factorint(n) ])
 
     for i in xrange(1, n):
         if i in indices:
-            F = gf_sub(g, x, p, K)
+            g = gf_sub(h, x, p, K)
 
-            if gf_gcd(f, F, p, K) != [K.one]:
+            if gf_gcd(f, g, p, K) != [K.one]:
                 return False
 
-        g = gf_compose_mod(g, h, f, p, K)
+        h = gf_compose_mod(h, H, f, p, K)
 
-    return g == x
+    return h == x
+
+_irred_methods = {
+    'ben-or' : gf_irred_p_ben_or,
+    'rabin'  : gf_irred_p_rabin,
+}
+
+def gf_irreducible_p(f, p, K, **args):
+    """Test irreducibility of a polynomial `f` in `GF(p)[x]`. """
+    method = args.get('method')
+
+    if method is not None:
+        irred = _irred_methods[method](f, p, K)
+    else:
+        irred = gf_irred_p_rabin(f, p, K)
+
+    return irred
 
 def gf_sqf_p(f, p, K):
     """Returns `True` if `f` is square-free in `GF(p)[x]`. """

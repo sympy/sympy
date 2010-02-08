@@ -16,6 +16,7 @@ from sympy.polys.galoistools import (
     gf_trace_map,
     gf_diff, gf_random,
     gf_irreducible, gf_irreducible_p,
+    gf_irred_p_ben_or, gf_irred_p_rabin,
     gf_sqf_list, gf_sqf_part, gf_sqf_p,
     gf_Qmatrix, gf_Qbasis,
     gf_ddf_zassenhaus, gf_ddf_shoup,
@@ -365,9 +366,38 @@ def test_gf_irreducible():
     assert gf_irreducible_p(gf_irreducible(7, 11, ZZ), 11, ZZ) == True
 
 def test_gf_irreducible_p():
-    assert gf_irreducible_p([7], 11, ZZ) == True
-    assert gf_irreducible_p([7,3], 11, ZZ) == True
-    assert gf_irreducible_p([7,3,1], 11, ZZ) == False
+    assert gf_irred_p_ben_or([7], 11, ZZ) == True
+    assert gf_irred_p_ben_or([7,3], 11, ZZ) == True
+    assert gf_irred_p_ben_or([7,3,1], 11, ZZ) == False
+
+    assert gf_irred_p_rabin([7], 11, ZZ) == True
+    assert gf_irred_p_rabin([7,3], 11, ZZ) == True
+    assert gf_irred_p_rabin([7,3,1], 11, ZZ) == False
+
+    assert gf_irreducible_p([7], 11, ZZ, method='ben-or') == True
+    assert gf_irreducible_p([7,3], 11, ZZ, method='ben-or') == True
+    assert gf_irreducible_p([7,3,1], 11, ZZ, method='ben-or') == False
+
+    assert gf_irreducible_p([7], 11, ZZ, method='rabin') == True
+    assert gf_irreducible_p([7,3], 11, ZZ, method='rabin') == True
+    assert gf_irreducible_p([7,3,1], 11, ZZ, method='rabin') == False
+
+    raises(KeyError, "gf_irreducible_p([7], 11, ZZ, method='other')")
+
+    f = [1, 9,  9, 13, 16, 15,  6,  7,  7,  7, 10]
+    g = [1, 7, 16,  7, 15, 13, 13, 11, 16, 10,  9]
+
+    h = gf_mul(f, g, 17, ZZ)
+
+    assert gf_irred_p_ben_or(f, 17, ZZ) == True
+    assert gf_irred_p_ben_or(g, 17, ZZ) == True
+
+    assert gf_irred_p_ben_or(h, 17, ZZ) == False
+
+    assert gf_irred_p_rabin(f, 17, ZZ) == True
+    assert gf_irred_p_rabin(g, 17, ZZ) == True
+
+    assert gf_irred_p_rabin(h, 17, ZZ) == False
 
 def test_gf_squarefree():
     assert gf_sqf_list([], 11, ZZ) == (0, [])
