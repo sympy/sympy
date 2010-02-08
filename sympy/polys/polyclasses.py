@@ -70,7 +70,8 @@ from sympy.polys.densetools import (
     dup_sqf_part, dmp_sqf_part,
     dup_sqf_list, dmp_sqf_list,
     dup_sqf_p, dmp_sqf_p,
-    dup_compose, dup_decompose,
+    dup_compose, dmp_compose,
+    dup_decompose,
     dup_sturm,
     dmp_lift,
 )
@@ -1436,11 +1437,7 @@ class DMP(object):
     def compose(f, g):
         """Computes functional composition of `f` and `g`. """
         lev, dom, per, F, G = f.unify(g)
-
-        if not lev:
-            return per(dup_compose(F, G, dom))
-        else:
-            raise ValueError('univariate polynomial expected')
+        return per(dmp_compose(F, G, lev, dom))
 
     def decompose(f):
         """Computes functional decomposition of `f`. """

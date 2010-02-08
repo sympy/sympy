@@ -481,9 +481,7 @@ def test_DMP_functionality():
 
     f = DMP([[1],[2],[3]], QQ)
 
-    raises(ValueError, "f.compose(f)")
     raises(ValueError, "f.decompose()")
-
     raises(ValueError, "f.sturm()")
 
 def test_DMF__init__():

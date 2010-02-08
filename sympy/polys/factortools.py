@@ -1036,7 +1036,7 @@ def dmp_ext_factor(f, u, K, **args):
     if len(factors) == 1:
         coeff, factors = lc, [f]
     else:
-        H = [K.one, s*K.unit]
+        H = dmp_raise([K.one, s*K.unit], u, 0, K)
 
         for i, (factor, _) in enumerate(factors):
             h = dmp_convert(factor, u, K.dom, K)

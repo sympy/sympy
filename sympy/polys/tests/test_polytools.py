@@ -1320,6 +1320,9 @@ def test_compose():
     raises(GeneratorsNeeded, "compose(4, 2)")
     raises(GeneratorsNeeded, "decompose(4)")
 
+    assert compose(x**2 - y**2, x - y, x, y) ==  x**2 - 2*x*y
+    assert compose(x**2 - y**2, x - y, y, x) == -y**2 + 2*x*y
+
 def test_sqf_norm():
     assert sqf_norm(x**2-2, extension=sqrt(3)) == \
         (1, x**2 - 2*sqrt(3)*x + 1, x**4 - 10*x**2 + 1)
