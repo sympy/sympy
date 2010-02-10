@@ -87,59 +87,42 @@ def sympify(a, locals=None, convert_xor=True, strict=False):
             except KeyError:
                 continue
 
-    from numbers import Integer, Real
+    try:
+        return a._sympy_()
+    except AttributeError:
+        pass
 
-    # let's see if 'a' implements conversion methods such as '_sympy_' or
-    # '__int__', that returns a SymPy (by definition) or SymPy compatible
-    # expression, so we just use it
-    for methname, conv in [
-            ('_sympy_',None),
-            ('__float__', Real),
-            ('__int__', Integer),
-            ]:
-        meth = getattr(a, methname, None)
-        if meth is None:
-            continue
-
-        # we have to be careful -- calling Class.__int__() almost always is not
-        # a good idea
-        try:
-            v = meth()
-        except TypeError:
-            continue
-
-        if conv is not None:
-            v = conv(v)
-
-        return v
+    if not isinstance(a, basestring):
+        for coerce in (float, int):
+            try:
+                return sympify(coerce(a))
+            except (TypeError, ValueError, AttributeError, SympifyError):
+                continue
 
     if strict:
         raise SympifyError(a)
 
-    if isinstance(a, (list,tuple,set)):
+    if isinstance(a, (list, tuple, set)):
         return type(a)([sympify(x) for x in a])
 
-    # XXX this is here because of cyclic-import issues
-    from sympy.matrices import Matrix
-    if isinstance(a, Matrix):
-        raise NotImplementedError('matrix support')
-
-    if not isinstance(a, str):
-        # At this point we were given an arbitrary expression
-        # which does not inherit from Basic and doesn't implement
-        # _sympy_ (which is a canonical and robust way to convert
-        # anything to SymPy expression).
-        #
-        # As a last chance, we try to take "a"'s  normal form via str()
-        # and try to parse it. If it fails, then we have no luck and
-        # return an exception
-        a = str(a)
+    # At this point we were given an arbitrary expression
+    # which does not inherit from Basic and doesn't implement
+    # _sympy_ (which is a canonical and robust way to convert
+    # anything to SymPy expression).
+    #
+    # As a last chance, we try to take "a"'s  normal form via unicode()
+    # and try to parse it. If it fails, then we have no luck and
+    # return an exception
+    try:
+        a = unicode(a)
+    except Exception, exc:
+        raise SympifyError(a, exc)
 
     if locals is None:
         locals = {}
-
     if convert_xor:
         a = a.replace('^','**')
+
     import ast_parser
     return ast_parser.parse_expr(a, locals)
 
