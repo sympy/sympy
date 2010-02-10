@@ -369,9 +369,21 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
     # Magic that should only be used internally.  Prevents classify_ode from
     # being called more than it needs to be by passing its results through
     # recursive calls.
-    if not kwargs.get('classify', False):
+    if kwargs.get('classify', True):
         hints = classify_ode(eq, func, dict=True)
     else:
+        # Here is what all this means:
+        #
+        # hint:    The hint method given to dsolve() by the user.
+        # hints:   The dictionary of hints that match the ODE, along with
+        #          other information (including the internal pass-through magic).
+        # default: The default hint to return, the first hint from allhints
+        #          that matches the hint.  This is obtained from classify_ode().
+        # match:   The hints dictionary contains a match dictionary for each hint
+        #          (the parts of the ODE for solving).  When going through the
+        #          hints in "all", this holds the match string for the current
+        #          hint.
+        # order:   The order of the ODE, as determined by ode_order().
         hints = kwargs.get('hint',
                            {'default': hint,
                             hint: kwargs['match'],
@@ -388,10 +400,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
     if hint == 'default':
         return dsolve(eq, func, hint=hints['default'], simplify=simplify, classify=False,
         order=hints['order'], match=hints[hints['default']])
-    elif hint == 'best':
-        return dsolve(eq, func, hint='all', simplify=simplify, classify=False,
-            order=hints['order'], hints = hints)['best']
-    elif hint in ('all', 'all_Integral'):
+    elif hint in ('all', 'all_Integral', 'best'):
         retdict = {}
         failedhints = {}
         gethints = set(hints) - set(['order', 'default', 'ordered_hints'])
@@ -412,6 +421,8 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
                 retdict[i] = sol
         retdict['best'] = sorted(retdict.values(), cmp=lambda x, y:\
             compare_ode_sol(x, y, func))[0]
+        if hint == 'best':
+            return retdict['best']
         for i in hints['ordered_hints']:
             if retdict['best'] == retdict.get(i, None):
                 retdict['best_hint'] = i
@@ -420,7 +431,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         retdict['order'] = sympify(hints['order'])
         retdict.update(failedhints)
         return retdict
-    elif hint not in allhints:# and hint not in ('default', 'ordered_hints'):
+    elif hint not in allhints: # and hint not in ('default', 'ordered_hints'):
         raise ValueError("Hint not recognized: " + hint)
     elif hint not in hints:
         raise ValueError("ODE " + str(eq) + " does not match hint " + hint)
@@ -551,8 +562,6 @@ def classify_ode(eq, func, dict=False):
     from sympy import expand
     from sympy.core import S
 
-    if not isinstance(func, Basic):
-        raise ValueError("not a SymPy expression: %s" % func)
     if len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only work with functions " + \
             "of one variable")
@@ -815,13 +824,12 @@ def odesimp(eq, func, order, hint):
     # Lastly, now that we have cleaned up the expression, try solving for func.
     # When RootOf is implemented in solve(), we will want to return a RootOf
     # everytime instead of an Equality.
-
+    """
     if hint[:21] == "1st_homogeneous_coeff":
-        # Solutions from this hint can almost always be logcombined
         eq = logcombine(eq, assume_pos_real=True)
         if eq.lhs.is_Function and eq.lhs.func is log and eq.rhs == 0:
             eq = Eq(eq.lhs.args[0]/C1,C1)
-
+    """
     if eq.lhs == func and not eq.rhs.has(func):
         # The solution is already solved
         pass
@@ -835,17 +843,23 @@ def odesimp(eq, func, order, hint):
             if eqsol == []:
                 raise NotImplementedError
         except NotImplementedError:
-            pass
+            eq = [eq]
         else:
             eq = [Eq(f(x), t) for t in eqsol]
+        finally:
             # Special handling for certain hints that we know will usually take a
             # certain form
             if hint[:21] == "1st_homogeneous_coeff":
                 neweq = []
                 for i in eq:
+                    # Solutions from this hint can almost always be logcombined
                     newi = logcombine(i, assume_pos_real=True)
                     if newi.lhs.is_Function and newi.lhs.func is log and newi.rhs == 0:
-                        newi = Eq(newi.lhs.args[0]*C1,C1)
+                        # log(C1*stuff) == 0 --> stuff == C1
+                        # Note that this is a form of constant simplification.
+                        # And also, the division of C1 relies on constantsimp()
+                        # making it C1*stuff.
+                        newi = Eq(newi.lhs.args[0]/C1,C1)
                     neweq.append(newi)
                 eq = neweq
             if len(eq) == 1:
@@ -2210,7 +2224,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
                 collectterms = [(i, reroot, imroot)] + collectterms
     if returns == 'sol':
         return Eq(f(x), gsol)
-    elif returns == 'list' or returns == 'both':
+    elif returns in ('list' 'both'):
         # Create a list of (hopefully) linearly independent solutions
         gensols = []
         # Keep track of when to use sin or cos for nonzero imroot

@@ -1,7 +1,7 @@
 from sympy import Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh, \
         I, exp, log, simplify, normal, together, ratsimp, powsimp, \
         fraction, radsimp, Eq, sqrt, pi, erf,  diff, Rational, asinh, trigsimp, \
-        S, RootOf, Poly, Integral, atan, Equality, solve, O
+        S, RootOf, Poly, Integral, atan, Equality, solve, O, LambertW
 from sympy.abc import x, y, z
 from sympy.solvers.ode import ode_order, homogeneous_order, \
         _undetermined_coefficients_match, classify_ode, checkodesol, ode_renumber
@@ -27,6 +27,7 @@ def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
     raises(ValueError, "checkodesol(f(x).diff(x), f(x), x)")
+    raises(ValueError, "checkodesol(f(x).diff(x), f(x, y), Eq(f(x), x))")
     assert checkodesol(f(x).diff(x), f(x), Eq(f(x), x)) is not True
     assert checkodesol(f(x).diff(x), f(x), Eq(f(x), x)) == (False, 1)
     sol1 = Eq(f(x)**5 + 11*f(x) - 2*f(x) + x, 0)
@@ -51,6 +52,7 @@ def test_dsolve_options():
     eq = x*f(x).diff(x) + f(x)
     a = dsolve(eq, f(x), hint='all')
     b = dsolve(eq, f(x), hint='all', simplify=False)
+    c = dsolve(eq, f(x), hint='all_Integral')
     keys = ['1st_exact', '1st_exact_Integral', '1st_homogeneous_coeff_best', \
         '1st_homogeneous_coeff_subs_dep_div_indep', \
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral', \
@@ -58,9 +60,14 @@ def test_dsolve_options():
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear', \
         '1st_linear_Integral', 'best', 'best_hint', 'default', 'order', \
         'separable', 'separable_Integral']
+    Integral_keys = ['1st_exact_Integral',
+    '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
+    '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear_Integral',
+    'best', 'best_hint', 'default', 'order', 'separable_Integral']
     assert sorted(a.keys()) == keys
     assert a['order'] == ode_order(eq, f(x))
     assert a['best'] == Eq(f(x), C1/x)
+    assert dsolve(eq, f(x), hint='best') == Eq(f(x), C1/x)
     assert a['default'] == 'separable'
     assert a['best_hint'] == 'separable'
     assert not a['1st_exact'].has(Integral)
@@ -77,6 +84,7 @@ def test_dsolve_options():
     assert sorted(b.keys()) == keys
     assert b['order'] == ode_order(eq, f(x))
     assert b['best'] == Eq(f(x), C1/x)
+    assert dsolve(eq, f(x), hint='best', simplify=False) == Eq(f(x), C1/x)
     assert b['default'] == 'separable'
     assert b['best_hint'] == '1st_linear'
     assert a['separable'] != b['separable']
@@ -95,13 +103,16 @@ def test_dsolve_options():
     assert b['1st_homogeneous_coeff_subs_dep_div_indep_Integral'].has(Integral)
     assert b['1st_homogeneous_coeff_subs_indep_div_dep_Integral'].has(Integral)
     assert b['separable_Integral'].has(Integral)
+    assert sorted(c.keys()) == Integral_keys
+    raises(ValueError, "dsolve(eq, f(x), 'notarealhint')")
+    raises(ValueError, "dsolve(eq, f(x), 'Liouville')")
 
 
 def test_classify_ode():
     assert classify_ode(f(x).diff(x, 2), f(x)) == \
         ('nth_linear_constant_coeff_homogeneous', 'Liouville', 'Liouville_Integral')
     assert classify_ode(f(x), f(x)) == ()
-    assert classify_ode(f(x).diff(x), f(x)) == ('separable', '1st_linear', \
+    assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == ('separable', '1st_linear', \
         '1st_homogeneous_coeff_best', '1st_homogeneous_coeff_subs_indep_div_dep', \
         '1st_homogeneous_coeff_subs_dep_div_indep', \
         'nth_linear_constant_coeff_homogeneous', 'separable_Integral', \
@@ -109,12 +120,13 @@ def test_classify_ode():
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     assert classify_ode(f(x).diff(x)**2, f(x)) == ()
     # 1650: f(x) should be cleared from highest derivative before classifying
-    a = classify_ode(f(x).diff(x) + f(x) - x, f(x))
+    a = classify_ode(Eq(f(x).diff(x) + f(x), x), f(x))
     b = classify_ode(f(x).diff(x)*f(x) + f(x)*f(x) - x*f(x), f(x))
     c = classify_ode(f(x).diff(x)/f(x) + f(x)/f(x) - x/f(x), f(x))
     assert a == b == c != ()
     assert classify_ode(2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)) ==\
         ('Bernoulli', 'Bernoulli_Integral')
+    raises(ValueError, "classify_ode(x + f(x, y).diff(x).diff(y), f(x, y))")
 
 def test_ode_order():
     f = Function('f')
@@ -399,7 +411,7 @@ def test_1st_homogeneous_coeff_ode1():
     eq8 = x+f(x)-(x-f(x))*f(x).diff(x)
     sol1 = Eq(f(x)*sin(f(x)/x), C1)
     sol2 = Eq(x*sqrt(1 + cos(f(x)/x))/sqrt(-1 + cos(f(x)/x)), C1)
-    sol3 = Eq(-f(x)/(1+log(x/f(x))),C1)
+    sol3 = Eq(f(x), x*exp(1 - LambertW(C1*x)))
     sol4 = Eq(log(C1*f(x)) + 2*exp(x/f(x)), 0)
     #sol5 = Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
     sol5 = Eq(log(C1*x*sqrt(f(x)/x)) + x**2/(2*f(x)**2), 0)
@@ -440,7 +452,7 @@ def test_1st_homogeneous_coeff_ode1_sol():
 
 @XFAIL
 def test_1st_homogeneous_coeff_ode1_sol_fail():
-    skip("Takes too long.")
+    #skip("Takes too long.")
     _u2 = Symbol('u2', dummy=True)
     __a = Symbol('a', dummy=True)
     eq2 = x*f(x).diff(x) - f(x) - x*sin(f(x)/x)
@@ -1022,8 +1034,9 @@ def test_nth_linear_constant_coeff_variation_of_parameters_simplify_False():
         2*x - exp(I*x), f(x), hint + "_Integral", simplify=False))) == 2522
 
 def test_Liouville_ODE():
-    # First part used to be test_ODE_1() from test_solvers.py
-    eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
+    hint = 'Liouville'
+    # The first part here used to be test_ODE_1() from test_solvers.py
+    eq1 = diff(f(x),x)/x + diff(f(x),x,x)/2 - diff(f(x),x)**2/2
     eq1a = diff(x*exp(-f(x)), x, x)
     eq2 = (eq1*exp(-f(x))/exp(f(x))).expand() # see test_unexpanded_Liouville_ODE() below
     eq3 = diff(f(x), x, x) + 1/f(x)*(diff(f(x), x))**2 + 1/x*diff(f(x), x)
@@ -1041,12 +1054,12 @@ def test_Liouville_ODE():
     sol3s = ode_renumber(sol3, 'C', 1, 2)
     sol4s = ode_renumber(sol4, 'C', 1, 2)
     sol5s = ode_renumber(sol5, 'C', 1, 2)
-    assert dsolve(eq1, f(x)) in (sol1, sol1s)
-    assert dsolve(eq1a, f(x)) in (sol1, sol1s)
-    assert dsolve(eq2, f(x)) in (sol2, sol2s)
-    assert dsolve(eq3, f(x)) in (sol3, sol3s)
-    assert dsolve(eq4, f(x)) in (sol4, sol4s)
-    assert dsolve(eq5, f(x)) in (sol5, sol5s)
+    assert dsolve(eq1, f(x), hint) in (sol1, sol1s)
+    assert dsolve(eq1a, f(x), hint) in (sol1, sol1s)
+    assert dsolve(eq2, f(x), hint) in (sol2, sol2s)
+    assert dsolve(eq3, f(x), hint) in (sol3, sol3s)
+    assert dsolve(eq4, f(x), hint) in (sol4, sol4s)
+    assert dsolve(eq5, f(x), hint) in (sol5, sol5s)
     assert checkodesol(sol1, f(x), sol1a, order=2, solve_for_func=False)[0]
     assert checkodesol(eq1, f(x), sol1a, order=2, solve_for_func=False)[0]
     assert checkodesol(eq1a, f(x), sol1a, order=2, solve_for_func=False)[0]
@@ -1055,6 +1068,15 @@ def test_Liouville_ODE():
     assert checkodesol(eq3, f(x), sol3[0], order=2, solve_for_func=False)[0]
     assert checkodesol(eq3, f(x), sol3[1], order=2, solve_for_func=False)[0]
     assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
+    not_Liouville1 = classify_ode(diff(f(x),x)/x + f(x)*diff(f(x),x,x)/2 -
+        diff(f(x),x)**2/2, f(x))
+    not_Liouville2 = classify_ode(diff(f(x),x)/x + diff(f(x),x,x)/2 -
+        x*diff(f(x),x)**2/2, f(x))
+    assert hint not in not_Liouville1
+    assert hint not in not_Liouville2
+    assert hint+'_Integral' not in not_Liouville1
+    assert hint+'_Integral' not in not_Liouville2
+
 
 @XFAIL
 def test_Liouville_ODE_xfail():
@@ -1066,7 +1088,7 @@ def test_Liouville_ODE_xfail():
     assert checkodesol(eq4, f(x), sol4[1], order=2, solve_for_func=False)[0]
 
 def test_unexpanded_Liouville_ODE():
-    # It is the same as from test_Liouville_ODE() above.
+    # This is the same as eq1 from test_Liouville_ODE() above.
     eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
     eq2 = eq1*exp(-f(x))/exp(f(x))
     sol2 = Eq(C1 + C2/x - exp(-f(x)), 0)
