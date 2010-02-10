@@ -8,6 +8,7 @@ from sympy.polys.densebasic import (
     dmp_degree_in, dmp_degree_list,
     dup_strip, dmp_strip,
     dmp_validate,
+    dup_reverse,
     dup_copy, dmp_copy,
     dup_normal, dmp_normal,
     dup_convert, dmp_convert,
@@ -156,6 +157,10 @@ def test_dmp_validate():
     assert dmp_validate([[0],[],[0],[1],[0]]) == ([[1],[]], 1)
 
     raises(ValueError, 'dmp_validate([[0],0,[0],[1],[0]])')
+
+def test_dup_reverse():
+    assert dup_reverse([1,2,0,3]) == [3,0,2,1]
+    assert dup_reverse([1,2,3,0]) == [3,2,1]
 
 def test_dup_copy():
     f = [ZZ(1),ZZ(0),ZZ(2)]

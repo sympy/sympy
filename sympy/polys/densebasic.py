@@ -170,6 +170,10 @@ def dmp_validate(f, K=None):
     else:
         raise ValueError("invalid data structure for a multivariate polynomial")
 
+def dup_reverse(f):
+    """Compute x**n * f(1/x), i.e.: reverse `f` in `K[x]`. """
+    return dup_strip(list(reversed(f)))
+
 def dup_copy(f):
     """Create a new copy of a polynomial `f` in `K[x]`. """
     return list(f)

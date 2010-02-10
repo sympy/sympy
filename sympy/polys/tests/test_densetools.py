@@ -44,6 +44,7 @@ from sympy.polys.densetools import (
     dup_sqf_part, dmp_sqf_part,
     dup_sqf_list, dmp_sqf_list,
     dup_extract, dmp_ground_extract,
+    dup_transform,
     dup_compose, dmp_compose,
     dup_decompose,
     dup_sturm,
@@ -972,6 +973,14 @@ def test_dmp_ground_extract():
     G = dmp_normal([[384], [], [192], [], [24], []], 1, ZZ)
 
     assert dmp_ground_extract(f, g, 1, ZZ) == (45796, F, G)
+
+def test_dup_transform():
+    assert dup_transform([], [], [1,1], ZZ) == []
+    assert dup_transform([], [1], [1,1], ZZ) == []
+    assert dup_transform([], [1,2], [1,1], ZZ) == []
+
+    assert dup_transform([6,-5,4,-3,17], [1,-3,4], [2,-3], ZZ) == \
+        [6,-82,541,-2205,6277,-12723,17191,-13603,4773]
 
 def test_dup_compose():
     assert dup_compose([], [], ZZ) == []

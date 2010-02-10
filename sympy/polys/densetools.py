@@ -1775,6 +1775,23 @@ def dmp_ground_extract(f, g, u, K):
 
     return gcd, f, g
 
+def dup_transform(f, p, q, K):
+    """Evaluate functional transformation `q**n * f(p/q)` in `K[x]`. """
+    if not f:
+        return []
+
+    h, Q = [f[0]], [[K.one]]
+
+    for i in xrange(0, dup_degree(f)):
+        Q.append(dup_mul(Q[-1], q, K))
+
+    for c, q in zip(f[1:], Q[1:]):
+        h = dup_mul(h, p, K)
+        q = dup_mul_ground(q, c, K)
+        h = dup_add(h, q, K)
+
+    return h
+
 def dup_compose(f, g, K):
     """Evaluate functional composition `f(g)` in `K[x]`. """
     if len(g) <= 1:
