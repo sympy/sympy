@@ -1,5 +1,7 @@
 """sympify -- convert objects SymPy internal format"""
 
+from types import NoneType
+
 # from basic import Basic, BasicType, S
 # from numbers  import Integer, Real
 import decimal
@@ -12,7 +14,7 @@ class SympifyError(ValueError):
         self.base_exc = base_exc
     def __str__(self):
         if self.base_exc is None:
-            return "SympifyError: %s" % (self.expr,)
+            return "SympifyError: %r" % (self.expr,)
 
         return "Sympify of expression '%s' failed, because of exception being raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__, str(self.base_exc))
 
@@ -50,76 +52,39 @@ def sympify(a, locals=None, convert_xor=True):
        True
 
     """
-    # XXX instead of duplicating _sympify it would be better to call _sympify
-    # directly from here, but a lot of SymPy still calls sympify (no '_') and
-    # this will add unneccesary overhead.
-    #
-    # When everything settles, let's refactor this.
-    #                                      -- kirr
-    if locals is None:
-        locals = {}
-    if isinstance(a, (Basic, BasicType, bool)):
+    try:
+        return _sympify(a)
+    except SympifyError:
+        pass
+    if isinstance(a, (bool, NoneType)):
         return a
-    if a is None:
-        return a
-    from numbers import Integer, Real
-    if isinstance(a, (int, long)):
-        return Integer(a)
-    elif isinstance(a, (float, decimal.Decimal)):
-        return Real(a)
-    elif isinstance(a, complex):
-        real, imag = map(sympify, (a.real, a.imag))
-        return real + S.ImaginaryUnit * imag
-    elif isinstance(a, (list,tuple,set)):
+
+    if isinstance(a, (list,tuple,set)):
         return type(a)([sympify(x) for x in a])
 
-    # let's see if 'a' implements conversion methods such as '_sympy_' or
-    # '__int__', that returns a SymPy (by definition) or SymPy compatible
-    # expression, so we just use it
-    for methname, conv in [
-            ('_sympy_',None),
-            ('__float__', Real),
-            ('__int__', Integer),
-            ]:
-        meth = getattr(a, methname, None)
-        if meth is None:
-            continue
+    # XXX this is here because of cyclic-import issues
+    from sympy.matrices import Matrix
+    if isinstance(a, Matrix):
+        raise NotImplementedError('matrix support')
 
-        # we have to be careful -- calling Class.__int__() almost always is not
-        # a good idea
-        try:
-            v = meth()
-        except TypeError:
-            continue
+    if not isinstance(a, str):
+        # At this point we were given an arbitrary expression
+        # which does not inherit from Basic and doesn't implement
+        # _sympy_ (which is a canonical and robust way to convert
+        # anything to SymPy expression).
+        #
+        # As a last chance, we try to take "a"'s  normal form via str()
+        # and try to parse it. If it fails, then we have no luck and
+        # return an exception
+        a = str(a)
 
-        if conv is not None:
-            v = conv(v)
+    if locals is None:
+        locals = {}
 
-        return v
-
-    else:
-        # XXX this is here because of cyclic-import issues
-        from sympy.matrices import Matrix
-
-        if isinstance(a, Matrix):
-            raise NotImplementedError('matrix support')
-
-        if not isinstance(a, str):
-            # At this point we were given an arbitrary expression
-            # which does not inherit from Basic and doesn't implement
-            # _sympy_ (which is a canonical and robust way to convert
-            # anything to SymPy expression).
-            #
-            # As a last chance, we try to take "a"'s  normal form via str()
-            # and try to parse it. If it fails, then we have no luck and
-            # return an exception
-            a = str(a)
-
-        if convert_xor:
-            a = a.replace('^','**')
-        import ast_parser
-        return ast_parser.parse_expr(a, locals)
-    raise SympifyError("%r is NOT a valid SymPy expression" % a)
+    if convert_xor:
+        a = a.replace('^','**')
+    import ast_parser
+    return ast_parser.parse_expr(a, locals)
 
 
 def _sympify(a):
@@ -147,10 +112,10 @@ def _sympify(a):
 
        see: sympify
     """
-    if isinstance(a, Basic):
+    if isinstance(a, (Basic, BasicType)):
         return a
-    if isinstance(a, BasicType):
-        return a
+    if isinstance(a, (bool, NoneType)):
+        raise SympifyError(a)
 
     from numbers import Integer, Real
     if isinstance(a, (int, long)):
@@ -159,10 +124,6 @@ def _sympify(a):
         return Real(a)
     elif isinstance(a, complex):
         real, imag = map(sympify, (a.real, a.imag))
-        ireal, iimag = int(real), int(imag)
-
-        if ireal + iimag*1j == a:
-            return ireal + iimag*S.ImaginaryUnit
         return real + S.ImaginaryUnit * imag
 
     # let's see if 'a' implements conversion methods such as '_sympy_' or
@@ -189,7 +150,7 @@ def _sympify(a):
 
         return v
 
-    raise SympifyError("%r is NOT a valid SymPy expression" % (a,))
+    raise SympifyError(a)
 
 
 from basic import Basic
