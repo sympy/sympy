@@ -1362,6 +1362,18 @@ class Poly(Basic):
 
         return [ (dom.to_sympy(s), dom.to_sympy(t)) for (s, t) in result ]
 
+    def nroots(f, **args):
+        """Compute numerical approximations of roots of `f`. """
+        if f.is_multivariate:
+            raise PolynomialError("can't compute roots of a multivariate polynomial")
+
+        try:
+            coeffs = [ complex(c) for c in f.all_coeffs() ]
+        except ValueError:
+            raise DomainError("numerical domain expected, got %s" % f.rep.dom)
+
+        return sympify(npolyroots(coeffs, **args))
+
     def cancel(f, g):
         """Cancel common factors in a rational function `f/g`.  """
         dom, per, F, G = f.unify(g)
@@ -1392,18 +1404,6 @@ class Poly(Basic):
             coeff = S.One
 
         return coeff, per(P), per(Q)
-
-    def nroots(f, **args):
-        """Compute numerical approximations of roots of `f`. """
-        if f.is_multivariate:
-            raise PolynomialError("can't compute roots of a multivariate polynomial")
-
-        try:
-            coeffs = [ complex(c) for c in f.all_coeffs() ]
-        except ValueError:
-            raise DomainError("numerical domain expected, got %s" % f.rep.dom)
-
-        return sympify(npolyroots(coeffs, **args))
 
     @property
     def is_zero(f):
@@ -2170,6 +2170,15 @@ def intervals(f, *gens, **args):
         return F.intervals(**args)
     else:
         raise GeneratorsNeeded("can't isolate roots of %s without generators" % f)
+
+def nroots(f, *gens, **args):
+    """Compute numerical approximations of roots of `f`. """
+    F = Poly(f, *_analyze_gens(gens), **args)
+
+    if F.is_Poly:
+        return F.nroots(**args)
+    else:
+        raise GeneratorsNeeded("can't approximate roots of %s without generators" % f)
 
 def cancel(f, *gens, **args):
     """Cancel common factors in a rational function `f`.  """

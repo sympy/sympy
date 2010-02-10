@@ -18,7 +18,7 @@ from sympy.polys.polytools import (
     sturm,
     sqf_norm, sqf_part, sqf_list, sqf,
     factor_list, factor,
-    intervals,
+    intervals, nroots,
     cancel,
     groebner,
 )
@@ -1480,6 +1480,37 @@ def test_intervals():
 
     raises(GeneratorsNeeded, "intervals(0)")
 
+def test_nroots():
+    assert Poly(x**2 - 1, x).nroots() == [-1.0, 1.0]
+    assert Poly(x**2 + 1, x).nroots() == [-I, I]
+
+    roots, error = Poly(x**2 - 1, x).nroots(error=True)
+    assert roots == [-1.0, 1.0] and error < 1e25;
+
+    roots, error = Poly(x**2 + 1, x).nroots(error=True)
+    assert roots == [-I, I] and error < 1e25;
+
+    roots, error = Poly(x**2/3 - S(1)/3, x).nroots(error=True)
+    assert roots == [-1.0, 1.0] and error < 1e25;
+
+    roots, error = Poly(x**2/3 + S(1)/3, x).nroots(error=True)
+    assert roots == [-I, I] and error < 1e25;
+
+    assert Poly(x**2 + 2*I, x).nroots() == [-1.0 + I, 1.0 - I]
+    assert Poly(x**2 + 2*I, x, extension=I).nroots() == [-1.0 + I, 1.0 - I]
+
+    assert Poly(0.2*x + 0.1).nroots() == [-0.5]
+
+    raises(DomainError, "Poly(x+y, x).nroots()")
+    raises(PolynomialError, "Poly(x+y).nroots()")
+
+    assert nroots(x**2 - 1) == [-1.0, 1.0]
+
+    roots, error = nroots(x**2 - 1, error=True)
+    assert roots == [-1.0, 1.0] and error < 1e25;
+
+    raises(GeneratorsNeeded, "nroots(0)")
+
 def test_cancel():
     assert cancel(0) == 0
     assert cancel(7) == 7
@@ -1549,28 +1580,4 @@ def test_groebner():
         [Poly(1 + x**2, x, y), Poly(-1 + y**4, x, y)]
     assert groebner([x**2 + 1, y**4*x + x**3, x*y*z**3], x, y, z, order='grevlex', polys=True) == \
         [Poly(-1 + y**4, x, y, z), Poly(z**3, x, y, z), Poly(1 + x**2, x, y, z)]
-
-def test_nroots():
-    assert Poly(x**2 - 1, x).nroots() == [-1.0, 1.0]
-    assert Poly(x**2 + 1, x).nroots() == [-I, I]
-
-    roots, error = Poly(x**2 - 1, x).nroots(error=True)
-    assert roots == [-1.0, 1.0] and error < 1e25;
-
-    roots, error = Poly(x**2 + 1, x).nroots(error=True)
-    assert roots == [-I, I] and error < 1e25;
-
-    roots, error = Poly(x**2/3 - S(1)/3, x).nroots(error=True)
-    assert roots == [-1.0, 1.0] and error < 1e25;
-
-    roots, error = Poly(x**2/3 + S(1)/3, x).nroots(error=True)
-    assert roots == [-I, I] and error < 1e25;
-
-    assert Poly(x**2 + 2*I, x).nroots() == [-1.0 + I, 1.0 - I]
-    assert Poly(x**2 + 2*I, x, extension=I).nroots() == [-1.0 + I, 1.0 - I]
-
-    assert Poly(0.2*x + 0.1).nroots() == [-0.5]
-
-    raises(DomainError, "Poly(x+y, x).nroots()")
-    raises(PolynomialError, "Poly(x+y).nroots()")
 
