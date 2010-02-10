@@ -174,6 +174,19 @@ def dmp_exquo_ground(f, c, u, K):
 
     return [ dmp_exquo_ground(cf, c, v, K) for cf in f ]
 
+@cythonized("n")
+def dup_lshift(f, n, K):
+    """Efficiently multiply `f` by `x**n` in `K[x]`. """
+    if not f:
+        return f
+    else:
+        return f + [K.zero]*n
+
+@cythonized("n")
+def dup_rshift(f, n, K):
+    """Efficiently divide `f` by `x**n` in `K[x]`. """
+    return f[:-n]
+
 def dup_abs(f, K):
     """Make all coefficients positive in `K[x]`. """
     return [ K.abs(coeff) for coeff in f ]

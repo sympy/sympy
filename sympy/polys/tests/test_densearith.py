@@ -11,6 +11,7 @@ from sympy.polys.densearith import (
     dup_mul_ground, dmp_mul_ground,
     dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
+    dup_lshift, dup_rshift,
     dup_abs, dmp_abs,
     dup_neg, dmp_neg,
     dup_add, dmp_add,
@@ -205,6 +206,14 @@ def test_dmp_exquo_ground():
     assert dmp_exquo_ground(f, ZZ(2), 1, ZZ) == dmp_normal([[3],[1],[4]], 1, ZZ)
 
     assert dmp_normal(dmp_exquo_ground(f, ZZ(3), 1, ZZ), 1, ZZ) == dmp_normal([[2],[],[2]], 1, ZZ)
+
+def test_dup_lshift():
+    assert dup_lshift([], 3, ZZ) == []
+    assert dup_lshift([1], 3, ZZ) == [1,0,0,0]
+
+def test_dup_rshift():
+    assert dup_rshift([], 3, ZZ) == []
+    assert dup_rshift([1,0,0,0], 3, ZZ) == [1]
 
 def test_dup_abs():
     assert dup_abs([], ZZ) == []
