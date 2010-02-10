@@ -54,8 +54,8 @@ from sympy.utilities import (
     cythonized, variations
 )
 
-def dup_ground_to_ring(f, K0, K1=None):
-    """Clear denominators, i.e. transform `K_0` to `K_1`, but don't normalize. """
+def dup_ground_to_ring(f, K0, K1=None, **args):
+    """Clear denominators, i.e. transform `K_0` to `K_1`. """
     if K1 is None:
         K1 = K0.get_ring()
 
@@ -64,10 +64,13 @@ def dup_ground_to_ring(f, K0, K1=None):
     for c in f:
         common = K1.lcm(common, K0.denom(c))
 
-    if K1.is_one(common):
+    if not K1.is_one(common):
+        f = dup_mul_ground(f, common, K0)
+
+    if not args.get('convert'):
         return common, f
     else:
-        return common, dup_mul_ground(f, common, K0)
+        return common, dup_convert(f, K0, K1)
 
 @cythonized("v,w")
 def _rec_ground_to_ring(g, v, K0, K1):
@@ -86,8 +89,8 @@ def _rec_ground_to_ring(g, v, K0, K1):
     return common
 
 @cythonized("u")
-def dmp_ground_to_ring(f, u, K0, K1=None):
-    """Clear denominators, i.e. transform `K_0` to `K_1`, but don't normalize. """
+def dmp_ground_to_ring(f, u, K0, K1=None, **args):
+    """Clear denominators, i.e. transform `K_0` to `K_1`. """
     if not u:
         return dup_ground_to_ring(f, K0, K1)
 
@@ -99,7 +102,10 @@ def dmp_ground_to_ring(f, u, K0, K1=None):
     if not K1.is_one(common):
         f = dmp_mul_ground(f, common, u, K0)
 
-    return common, f
+    if not args.get('convert'):
+        return common, f
+    else:
+        return common, dmp_convert(f, u, K0, K1)
 
 @cythonized("m,n,i,j")
 def dup_integrate(f, m, K):

@@ -82,6 +82,9 @@ def test_dup_ground_to_ring():
     assert dup_ground_to_ring([QQ(3),QQ(1),QQ(0)], QQ, ZZ) == (ZZ(1), [QQ(3),QQ(1),QQ(0)])
     assert dup_ground_to_ring([QQ(1),QQ(1,2),QQ(0)], QQ, ZZ) == (ZZ(2), [QQ(2),QQ(1),QQ(0)])
 
+    assert dup_ground_to_ring([QQ(3),QQ(1),QQ(0)], QQ, ZZ, convert=True) == (ZZ(1), [ZZ(3),ZZ(1),ZZ(0)])
+    assert dup_ground_to_ring([QQ(1),QQ(1,2),QQ(0)], QQ, ZZ, convert=True) == (ZZ(2), [ZZ(2),ZZ(1),ZZ(0)])
+
     raises(DomainError, "dup_ground_to_ring([EX(7)], EX)")
 
 def test_dmp_ground_to_ring():
@@ -95,6 +98,9 @@ def test_dmp_ground_to_ring():
 
     assert dmp_ground_to_ring([[QQ(3)],[QQ(1)],[]], 1, QQ, ZZ) == (ZZ(1), [[QQ(3)],[QQ(1)],[]])
     assert dmp_ground_to_ring([[QQ(1)],[QQ(1,2)],[]], 1, QQ, ZZ) == (ZZ(2), [[QQ(2)],[QQ(1)],[]])
+
+    assert dmp_ground_to_ring([[QQ(3)],[QQ(1)],[]], 1, QQ, ZZ, convert=True) == (ZZ(1), [[QQ(3)],[QQ(1)],[]])
+    assert dmp_ground_to_ring([[QQ(1)],[QQ(1,2)],[]], 1, QQ, ZZ, convert=True) == (ZZ(2), [[QQ(2)],[QQ(1)],[]])
 
     raises(DomainError, "dmp_ground_to_ring([[EX(7)]], 1, EX)")
 
