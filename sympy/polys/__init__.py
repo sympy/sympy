@@ -10,9 +10,11 @@ from polytools import (
     cofactors, gcd, lcm, terms_gcd,
     monic, content, primitive,
     compose, decompose,
+    sturm,
     sqf_norm, sqf_part, sqf_list, sqf,
     factor_list, factor,
-    cancel, sturm,
+    intervals,
+    cancel,
     groebner,
 )
 

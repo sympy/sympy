@@ -2,6 +2,7 @@
 
 from sympy.polys.densebasic import (
     dup_strip, dmp_strip,
+    dup_reverse,
     dup_convert, dmp_convert,
     dup_degree, dmp_degree, dmp_degree_in,
     dup_to_dict, dmp_to_dict,
@@ -19,6 +20,7 @@ from sympy.polys.densebasic import (
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
     dup_mul_term, dmp_mul_term,
+    dup_lshift, dup_rshift,
     dup_neg, dmp_neg,
     dup_add, dmp_add,
     dup_sub, dmp_sub,
@@ -1989,4 +1991,153 @@ def dmp_lift(f, u, K):
         polys.append(dmp_from_dict(G, u, K))
 
     return dmp_convert(dmp_expand(polys, u, K), u, K, K.dom)
+
+def dup_sign_variations(f, K):
+    """Compute the number of sign variations of `f` in `K[x]`. """
+    prev, k = K.zero, 0
+
+    for coeff in f:
+        if coeff*prev < 0:
+            k += 1
+
+        if coeff:
+            prev = coeff
+
+    return k
+
+# Mobius transforms (real root isolation)
+_T0 = lambda (a, b, c, d), t: [a, t*a+b, c, t*c+d]
+_T1 = lambda (a, b, c, d):    [a,   a+b, c,   c+d]
+_T2 = lambda (a, b, c, d):    [b,   a+b, d,   c+d]
+
+_V0 = lambda (a, b, c, d), K: (K(b, d), K(b, d))
+_V1 = lambda (a, b, c, d), K: (K(a, c), K(b, d))
+
+def dup_inner_refine_real_root(f, M, eps, K):
+    """Refine a real root up to `eps` given Mobius transform `M`. """
+    h, F = [K.one, K.one], K.get_field()
+
+    if eps is not None:
+        ok = lambda (a, b, c, d): bool(c) and abs(F(a, c) - F(b, d)) < eps
+    else:
+        ok = lambda (a, b, c, d): bool(c)
+
+    while not ok(M):
+        g, N = dup_compose(f, h, K), _T1(M)
+
+        if not dup_eval(g, K.zero, K):
+            return _V0(N, F)
+
+        k = dup_sign_variations(g, K)
+
+        if k == 1:
+            f, M = g, N
+        else:
+            f, M = dup_compose(dup_reverse(f), h, K), _T2(M)
+
+            if not dup_eval(f, K.zero, K):
+                f = dup_rshift(f, 1, K)
+
+    s, t = _V1(M, F)
+
+    if s <= t:
+        return (s, t)
+    else:
+        return (t, s)
+
+def dup_refine_real_root(f, s, t, K, **args):
+    """Refine real root's approximating interval up to `eps`. """
+    if K.is_QQ:
+        (_, f), K = dup_ground_to_ring(f, K, convert=True), K.get_ring()
+    elif not K.is_ZZ:
+        raise DomainError("real root refinement not supported over %s" % K)
+
+    if s == t:
+        return (s, t)
+
+    if s > t:
+        s, t = t, s
+
+    if s >= 0:
+        negative = False
+    else:
+        if t <= 0:
+            s, t, negative = -t, -s, True
+        else:
+            raise ValueError("real root refinement can't be performed on (%s, %s)" % (s, t))
+
+    F, eps = K.get_field(), args.get('eps')
+
+    a, c = F.numer(s), F.denom(s)
+    b, d = F.numer(t), F.denom(t)
+
+    p, q = dup_strip([a, b]), dup_strip([c, d])
+
+    if negative:
+        f = dup_compose(f, [-K.one, K.zero], K)
+
+    f = dup_transform(f, p, q, K)
+
+    s, t = dup_inner_refine_real_root(f, [a, b, c, d], eps, K)
+
+    if negative:
+        return (-t, -s)
+    else:
+        return ( s,  t)
+
+def dup_inner_isolate_real_roots(f, M, eps, K):
+    """Recursively compute disjoint real isolation intervals. """
+    if not dup_eval(f, K.zero, K):
+        f, I = dup_rshift(f, 1, K), [_V0(M, K.get_field())]
+        return I + dup_inner_isolate_real_roots(f, M, eps, K)
+
+    k = dup_sign_variations(f, K)
+
+    if k == 0:
+        return []
+    if k == 1:
+        return [dup_inner_refine_real_root(f, M, eps, K)]
+
+    g = dup_compose(f, [K.one, K.one], K)
+    I = dup_inner_isolate_real_roots(g, _T1(M), eps, K)
+
+    m = dup_sign_variations(g, K)
+
+    if k > m:
+        g = dup_compose(dup_reverse(f), [K.one, K.one], K)
+
+        if not dup_eval(g, K.zero, K):
+            g = dup_rshift(g, 1, K)
+
+        I += dup_inner_isolate_real_roots(g, _T2(M), eps, K)
+
+    return I
+
+def dup_isolate_real_roots(f, K, **args):
+    """Isolate real roots using continued fractions approach. """
+    if K.is_QQ:
+        (_, f), K = dup_ground_to_ring(f, K, convert=True), K.get_ring()
+    elif not K.is_ZZ:
+        raise DomainError("isolation of real roots not supported over %s" % K)
+
+    if dup_degree(f) <= 0:
+        return []
+
+    M, eps = [K.one, K.zero, K.zero, K.one], args.get('eps')
+
+    p, q = dup_strip(M[0:2]), dup_strip(M[2:4])
+
+    g = dup_transform(f, p, q, K)
+    I_pos = dup_inner_isolate_real_roots(g, M, eps, K)
+
+    f = dup_compose(f, [-K.one, K.zero], K)
+
+    g = dup_transform(f, p, q, K)
+    I_neg = dup_inner_isolate_real_roots(g, M, eps, K)
+
+    return sorted([ (-v, -u) for (u, v) in I_neg ] + I_pos)
+
+def dup_isolate_complex_roots(f, K, **args):
+    """Isolate complex roots using Collins-Krandick algorithm. """
+    raise NotImplementedError("complex root isolation is not yet implemented")
 

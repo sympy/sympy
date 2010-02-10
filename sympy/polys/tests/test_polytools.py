@@ -15,9 +15,11 @@ from sympy.polys.polytools import (
     cofactors, gcd, lcm, terms_gcd,
     monic, content, primitive,
     compose, decompose,
+    sturm,
     sqf_norm, sqf_part, sqf_list, sqf,
     factor_list, factor,
-    cancel, sturm,
+    intervals,
+    cancel,
     groebner,
 )
 
@@ -1323,6 +1325,20 @@ def test_compose():
     assert compose(x**2 - y**2, x - y, x, y) ==  x**2 - 2*x*y
     assert compose(x**2 - y**2, x - y, y, x) == -y**2 + 2*x*y
 
+def test_sturm():
+    f, F = x, Poly(x, domain='QQ')
+    g, G = 1, Poly(1, x, domain='QQ')
+
+    assert F.sturm() == [F, G]
+    assert sturm(f) == [f, g]
+    assert sturm(f, x) == [f, g]
+    assert sturm(f, (x,)) == [f, g]
+    assert sturm(F) == [F, G]
+    assert sturm(f, polys=True) == [F, G]
+    assert sturm(F, polys=False) == [f, g]
+
+    raises(GeneratorsNeeded, "sturm(4)")
+
 def test_sqf_norm():
     assert sqf_norm(x**2-2, extension=sqrt(3)) == \
         (1, x**2 - 2*sqrt(3)*x + 1, x**4 - 10*x**2 + 1)
@@ -1435,19 +1451,34 @@ def test_factor():
     assert factor(2*x**2 - 4*y**2, extension=sqrt(2)) == \
         2*((x + sqrt(2)*y)*(x - sqrt(2)*y))
 
-def test_sturm():
-    f, F = x, Poly(x, domain='QQ')
-    g, G = 1, Poly(1, x, domain='QQ')
+def test_intervals():
+    f = Poly((2*x/5 - S(17)/3)*(4*x + S(1)/257))
 
-    assert F.sturm() == [F, G]
-    assert sturm(f) == [f, g]
-    assert sturm(f, x) == [f, g]
-    assert sturm(f, (x,)) == [f, g]
-    assert sturm(F) == [F, G]
-    assert sturm(f, polys=True) == [F, G]
-    assert sturm(F, polys=False) == [f, g]
+    assert f.intervals() == [(-1, 0), (14, 15)]
 
-    raises(GeneratorsNeeded, "sturm(4)")
+    assert f.intervals(eps=S(1)/10) == f.intervals(eps=0.1) == \
+        [(-S(1)/11, 0), (S(85)/6, S(85)/6)]
+    assert f.intervals(eps=S(1)/100) == f.intervals(eps=0.01) == \
+        [(-S(1)/101, 0), (S(85)/6, S(85)/6)]
+    assert f.intervals(eps=S(1)/1000) == f.intervals(eps=0.001) == \
+        [(-S(1)/1001, 0), (S(85)/6, S(85)/6)]
+    assert f.intervals(eps=S(1)/10000) == f.intervals(eps=0.0001) == \
+        [(-S(1)/1028, -S(1)/1028), (S(85)/6, S(85)/6)]
+
+    f = (2*x/5 - S(17)/3)*(4*x + S(1)/257)
+
+    assert intervals(f) == [(-1, 0), (14, 15)]
+
+    assert intervals(f, eps=S(1)/10) == intervals(f, eps=0.1) == \
+        [(-S(1)/11, 0), (S(85)/6, S(85)/6)]
+    assert intervals(f, eps=S(1)/100) == intervals(f, eps=0.01) == \
+        [(-S(1)/101, 0), (S(85)/6, S(85)/6)]
+    assert intervals(f, eps=S(1)/1000) == intervals(f, eps=0.001) == \
+        [(-S(1)/1001, 0), (S(85)/6, S(85)/6)]
+    assert intervals(f, eps=S(1)/10000) == intervals(f, eps=0.0001) == \
+        [(-S(1)/1028, -S(1)/1028), (S(85)/6, S(85)/6)]
+
+    raises(GeneratorsNeeded, "intervals(0)")
 
 def test_cancel():
     assert cancel(0) == 0

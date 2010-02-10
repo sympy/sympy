@@ -49,6 +49,9 @@ from sympy.polys.densetools import (
     dup_decompose,
     dup_sturm,
     dmp_lift,
+    dup_sign_variations,
+    dup_inner_refine_real_root, dup_refine_real_root,
+    dup_inner_isolate_real_roots, dup_isolate_real_roots,
 )
 
 from sympy.polys.polyclasses import DMP, ANP
@@ -1074,4 +1077,124 @@ def test_dmp_lift():
          QQ(0),QQ(0),QQ(0),QQ(1),QQ(0),QQ(-578),QQ(0),QQ(83521)]
 
     raises(DomainError, "dmp_lift([EX(1), EX(2)], 0, EX)")
+
+def test_dup_sign_variations():
+    assert dup_sign_variations([], ZZ) == 0
+    assert dup_sign_variations([1,0], ZZ) == 0
+    assert dup_sign_variations([1,0,2], ZZ) == 0
+    assert dup_sign_variations([1,0,3,0], ZZ) == 0
+    assert dup_sign_variations([1,0,4,0,5], ZZ) == 0
+
+    assert dup_sign_variations([-1,0,2], ZZ) == 1
+    assert dup_sign_variations([-1,0,3,0], ZZ) == 1
+    assert dup_sign_variations([-1,0,4,0,5], ZZ) == 1
+
+    assert dup_sign_variations([-1,-4,-5], ZZ) == 0
+    assert dup_sign_variations([ 1,-4,-5], ZZ) == 1
+    assert dup_sign_variations([ 1, 4,-5], ZZ) == 1
+    assert dup_sign_variations([ 1,-4, 5], ZZ) == 2
+    assert dup_sign_variations([-1, 4,-5], ZZ) == 2
+    assert dup_sign_variations([-1, 4, 5], ZZ) == 1
+    assert dup_sign_variations([-1,-4, 5], ZZ) == 1
+    assert dup_sign_variations([ 1, 4, 5], ZZ) == 0
+
+    assert dup_sign_variations([-1,0,-4,0,-5], ZZ) == 0
+    assert dup_sign_variations([ 1,0,-4,0,-5], ZZ) == 1
+    assert dup_sign_variations([ 1,0, 4,0,-5], ZZ) == 1
+    assert dup_sign_variations([ 1,0,-4,0, 5], ZZ) == 2
+    assert dup_sign_variations([-1,0, 4,0,-5], ZZ) == 2
+    assert dup_sign_variations([-1,0, 4,0, 5], ZZ) == 1
+    assert dup_sign_variations([-1,0,-4,0, 5], ZZ) == 1
+    assert dup_sign_variations([ 1,0, 4,0, 5], ZZ) == 0
+
+def test_dup_refine_real_root():
+    pass
+
+def test_dup_isolate_real_roots():
+    assert dup_isolate_real_roots([], ZZ) == []
+    assert dup_isolate_real_roots([5], ZZ) == []
+
+    assert dup_isolate_real_roots([1,-1], ZZ) == \
+        [(QQ(1), QQ(1))]
+    assert dup_isolate_real_roots([1,-3,2], ZZ) == \
+        [(QQ(1), QQ(1)), (QQ(2), QQ(2))]
+    assert dup_isolate_real_roots([1,-6,11,-6], ZZ) == \
+        [(QQ(1), QQ(1)), (QQ(2), QQ(2)), (QQ(3), QQ(3))]
+    assert dup_isolate_real_roots([1,-10,35,-50,24], ZZ) == \
+        [(QQ(1), QQ(1)), (QQ(2), QQ(2)), (QQ(3), QQ(3)), (QQ(4), QQ(4))]
+    assert dup_isolate_real_roots([1,-15,85,-225,274,-120], ZZ) == \
+        [(QQ(1), QQ(1)), (QQ(2), QQ(2)), (QQ(3), QQ(3)), (QQ(4), QQ(4)), (QQ(5), QQ(5))]
+
+    assert dup_isolate_real_roots([1,-10], ZZ) == \
+        [(QQ(10), QQ(10))]
+    assert dup_isolate_real_roots([1,-30,200], ZZ) == \
+        [(QQ(10), QQ(10)), (QQ(20), QQ(20))]
+    assert dup_isolate_real_roots([1,-60,1100,-6000], ZZ) == \
+        [(QQ(10), QQ(10)), (QQ(20), QQ(20)), (QQ(30), QQ(30))]
+    assert dup_isolate_real_roots([1,-100,3500,-50000,240000], ZZ) == \
+        [(QQ(10), QQ(10)), (QQ(20), QQ(20)), (QQ(30), QQ(30)), (QQ(40), QQ(40))]
+    assert dup_isolate_real_roots([1,-150,8500,-225000,2740000,-12000000], ZZ) == \
+        [(QQ(10), QQ(10)), (QQ(20), QQ(20)), (QQ(30), QQ(30)), (QQ(40), QQ(40)), (QQ(50), QQ(50))]
+
+    assert dup_isolate_real_roots([1,1], ZZ) == \
+        [(-QQ(1), -QQ(1))]
+    assert dup_isolate_real_roots([1,3,2], ZZ) == \
+        [(-QQ(2), -QQ(2)), (-QQ(1), -QQ(1))]
+    assert dup_isolate_real_roots([1,6,11,6], ZZ) == \
+        [(-QQ(3), -QQ(3)), (-QQ(2), -QQ(2)), (-QQ(1), -QQ(1))]
+    assert dup_isolate_real_roots([1,10,35,50,24], ZZ) == \
+        [(-QQ(4), -QQ(4)), (-QQ(3), -QQ(3)), (-QQ(2), -QQ(2)), (-QQ(1), -QQ(1))]
+    assert dup_isolate_real_roots([1,15,85,225,274,120], ZZ) == \
+        [(-QQ(5), -QQ(5)), (-QQ(4), -QQ(4)), (-QQ(3), -QQ(3)), (-QQ(2), -QQ(2)), (-QQ(1), -QQ(1))]
+
+    assert dup_isolate_real_roots([1,10], ZZ) == \
+        [(-QQ(10), -QQ(10))]
+    assert dup_isolate_real_roots([1,30,200], ZZ) == \
+        [(-QQ(20), -QQ(20)), (-QQ(10), -QQ(10))]
+    assert dup_isolate_real_roots([1,60,1100,6000], ZZ) == \
+        [(-QQ(30), -QQ(30)), (-QQ(20), -QQ(20)), (-QQ(10), -QQ(10))]
+    assert dup_isolate_real_roots([1,100,3500,50000,240000], ZZ) == \
+        [(-QQ(40), -QQ(40)), (-QQ(30), -QQ(30)), (-QQ(20), -QQ(20)), (-QQ(10), -QQ(10))]
+    assert dup_isolate_real_roots([1,150,8500,225000,2740000,12000000], ZZ) == \
+        [(-QQ(50), -QQ(50)), (-QQ(40), -QQ(40)), (-QQ(30), -QQ(30)), (-QQ(20), -QQ(20)), (-QQ(10), -QQ(10))]
+
+    assert dup_isolate_real_roots([1,0,-5], ZZ) == \
+        [(QQ(-3), QQ(-2)), (QQ(2), QQ(3))]
+    assert dup_isolate_real_roots([1,0,0,-5], ZZ) == \
+        [(QQ(1), QQ(2))]
+    assert dup_isolate_real_roots([1,0,0,0,-5], ZZ) == \
+        [(QQ(-2), QQ(-1)), (QQ(1), QQ(2))]
+    assert dup_isolate_real_roots([1,0,0,0,0,-5], ZZ) == \
+        [(QQ(1), QQ(2))]
+    assert dup_isolate_real_roots([1,0,0,0,0,0,-5], ZZ) == \
+        [(QQ(-2), QQ(-1)), (QQ(1), QQ(2))]
+    assert dup_isolate_real_roots([1,0,0,0,0,0,0,-5], ZZ) == \
+        [(QQ(1), QQ(2))]
+    assert dup_isolate_real_roots([1,0,0,0,0,0,0,0,-5], ZZ) == \
+        [(QQ(-2), QQ(-1)), (QQ(1), QQ(2))]
+    assert dup_isolate_real_roots([1,0,0,0,0,0,0,0,0,-5], ZZ) == \
+        [(QQ(1), QQ(2))]
+
+    f = [9,0,-2]
+
+    assert dup_isolate_real_roots(f, ZZ) == \
+        [(QQ(-1), QQ(0)), (QQ(0), QQ(1))]
+
+    assert dup_isolate_real_roots(f, ZZ, eps=QQ(1,10)) == \
+        [(QQ(-1,2), QQ(-3,7)), (QQ(3,7), QQ(1,2))]
+    assert dup_isolate_real_roots(f, ZZ, eps=QQ(1,100)) == \
+        [(QQ(-9,19), QQ(-8,17)), (QQ(8,17), QQ(9,19))]
+    assert dup_isolate_real_roots(f, ZZ, eps=QQ(1,1000)) == \
+        [(QQ(-33,70), QQ(-8,17)), (QQ(8,17), QQ(33,70))]
+    assert dup_isolate_real_roots(f, ZZ, eps=QQ(1,10000)) == \
+        [(QQ(-33,70), QQ(-74,157)), (QQ(74,157), QQ(33,70))]
+    assert dup_isolate_real_roots(f, ZZ, eps=QQ(1,100000)) == \
+        [(QQ(-305,647), QQ(-272,577)), (QQ(272,577), QQ(305,647))]
+    assert dup_isolate_real_roots(f, ZZ, eps=QQ(1,1000000)) == \
+        [(QQ(-849,1801), QQ(-272,577)), (QQ(272,577), QQ(849,1801))]
+
+    assert dup_isolate_real_roots([QQ(8,5), QQ(-87374,3855), QQ(-17,771)], QQ) == \
+        [(QQ(-1), QQ(0)), (QQ(14), QQ(15))]
+
+    raises(DomainError, "dup_isolate_real_roots([EX(1), EX(2)], EX)")
 

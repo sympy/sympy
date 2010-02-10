@@ -1348,6 +1348,20 @@ class Poly(Basic):
 
         return f._perify_factors(result)
 
+    def intervals(f, **args):
+        """Compute isolating intervals for roots of `f`. """
+        dom, eps = f.rep.dom.get_field(), args.get('eps')
+
+        if eps is not None:
+            eps = dom.convert(eps)
+
+        try:
+            result = f.rep.intervals(eps=eps)
+        except AttributeError:
+            raise OperationNotSupported(f, 'intervals')
+
+        return [ (dom.to_sympy(s), dom.to_sympy(t)) for (s, t) in result ]
+
     def cancel(f, g):
         """Cancel common factors in a rational function `f/g`.  """
         dom, per, F, G = f.unify(g)
@@ -2147,6 +2161,15 @@ def factor(f, *gens, **args):
         factors = factors_p / factors_q
 
     return coeff * factors
+
+def intervals(f, *gens, **args):
+    """Compute isolating intervals for roots of `f`. """
+    F = Poly(f, *_analyze_gens(gens), **args)
+
+    if F.is_Poly:
+        return F.intervals(**args)
+    else:
+        raise GeneratorsNeeded("can't isolate roots of %s without generators" % f)
 
 def cancel(f, *gens, **args):
     """Cancel common factors in a rational function `f`.  """

@@ -403,6 +403,10 @@ class Algebra(object):
         """Returns LCM of `a` and `b`. """
         raise NotImplementedError
 
+    def log(self, a):
+        """Returns logarithm of `a`. """
+        raise NotImplementedError
+
     def sqrt(self, a):
         """Returns square root of `a`. """
         raise NotImplementedError
@@ -510,6 +514,10 @@ class IntegerRing(Ring):
         """Convert a `ANP` object to `dtype`. """
         if a.is_ground:
             return K1.convert(a.LC(), K0.dom)
+
+    def log(self, a):
+        """Returns logarithm of `a`. """
+        return self.dtype(math.floor(math.log(a)))
 
 class RationalField(Field):
     """General class for rational fields. """

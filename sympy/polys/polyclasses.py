@@ -74,6 +74,7 @@ from sympy.polys.densetools import (
     dup_decompose,
     dup_sturm,
     dmp_lift,
+    dup_isolate_real_roots,
 )
 
 from sympy.polys.factortools import (
@@ -1475,6 +1476,13 @@ class DMP(object):
         """Returns a list of irreducible factors of `f`. """
         coeff, factors = dmp_factor_list(f.rep, f.lev, f.dom, **args)
         return coeff, [ (f.per(g), k) for g, k in factors ]
+
+    def intervals(f, **args):
+        """Compute isolating intervals for roots of `f`. """
+        if not f.lev:
+            return dup_isolate_real_roots(f.rep, f.dom, **args)
+        else:
+            raise PolynomialError("can't isolate roots of a multivariate polynomial")
 
     @property
     def is_zero(f):
