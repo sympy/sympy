@@ -481,7 +481,7 @@ class PrettyPrinter(Printer):
     def _print_Pow(self, power):
         # square roots, other roots or n-th roots
         #test for fraction 1/n or power x**-1
-        if (isinstance(power.exp, C.Rational) and power.exp.p==1) or \
+        if (isinstance(power.exp, C.Rational) and power.exp.p==1 and power.exp.q !=1) or \
            (   isinstance(power.exp, C.Pow) and
                isinstance(power.exp.args[0], C.Symbol) and
                power.exp.args[1]==S.NegativeOne):
