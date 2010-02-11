@@ -1457,11 +1457,11 @@ def test_intervals():
     assert f.intervals() == [(-1, 0), (14, 15)]
 
     assert f.intervals(eps=S(1)/10) == f.intervals(eps=0.1) == \
-        [(-S(1)/11, 0), (S(85)/6, S(85)/6)]
+        [(-S(1)/258, 0), (S(85)/6, S(85)/6)]
     assert f.intervals(eps=S(1)/100) == f.intervals(eps=0.01) == \
-        [(-S(1)/101, 0), (S(85)/6, S(85)/6)]
+        [(-S(1)/258, 0), (S(85)/6, S(85)/6)]
     assert f.intervals(eps=S(1)/1000) == f.intervals(eps=0.001) == \
-        [(-S(1)/1001, 0), (S(85)/6, S(85)/6)]
+        [(-S(1)/1005, 0), (S(85)/6, S(85)/6)]
     assert f.intervals(eps=S(1)/10000) == f.intervals(eps=0.0001) == \
         [(-S(1)/1028, -S(1)/1028), (S(85)/6, S(85)/6)]
 
@@ -1470,11 +1470,11 @@ def test_intervals():
     assert intervals(f) == [(-1, 0), (14, 15)]
 
     assert intervals(f, eps=S(1)/10) == intervals(f, eps=0.1) == \
-        [(-S(1)/11, 0), (S(85)/6, S(85)/6)]
+        [(-S(1)/258, 0), (S(85)/6, S(85)/6)]
     assert intervals(f, eps=S(1)/100) == intervals(f, eps=0.01) == \
-        [(-S(1)/101, 0), (S(85)/6, S(85)/6)]
+        [(-S(1)/258, 0), (S(85)/6, S(85)/6)]
     assert intervals(f, eps=S(1)/1000) == intervals(f, eps=0.001) == \
-        [(-S(1)/1001, 0), (S(85)/6, S(85)/6)]
+        [(-S(1)/1005, 0), (S(85)/6, S(85)/6)]
     assert intervals(f, eps=S(1)/10000) == intervals(f, eps=0.0001) == \
         [(-S(1)/1028, -S(1)/1028), (S(85)/6, S(85)/6)]
 

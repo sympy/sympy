@@ -1175,6 +1175,25 @@ def test_dup_isolate_real_roots():
     assert dup_isolate_real_roots([1,0,0,0,0,0,0,0,0,-5], ZZ) == \
         [(QQ(1), QQ(2))]
 
+    assert dup_isolate_real_roots([1,0,-1], ZZ) == \
+        [(-QQ(1), -QQ(1)), (QQ(1), QQ(1))]
+    assert dup_isolate_real_roots([1,2,-1,-2], ZZ) == \
+        [(-QQ(2), -QQ(2)), (-QQ(1), -QQ(1)), (QQ(1), QQ(1))]
+    assert dup_isolate_real_roots([1,0,-5,0,4], ZZ) == \
+        [(-QQ(2), -QQ(2)), (-QQ(1), -QQ(1)), (QQ(1), QQ(1)), (QQ(2), QQ(2))]
+    assert dup_isolate_real_roots([1,3,-5,-15,4,12], ZZ) == \
+        [(-QQ(3), -QQ(3)), (-QQ(2), -QQ(2)), (-QQ(1), -QQ(1)), (QQ(1), QQ(1)),
+         ( QQ(2),  QQ(2))]
+    assert dup_isolate_real_roots([1,0,-14,0,49,0,-36], ZZ) == \
+        [(-QQ(3), -QQ(3)), (-QQ(2), -QQ(2)), (-QQ(1), -QQ(1)), (QQ(1), QQ(1)),
+         ( QQ(2),  QQ(2)), ( QQ(3),  QQ(3))]
+    assert dup_isolate_real_roots([2,1,-28,-14,98,49,-72,-36], ZZ) == \
+        [(-QQ(3), -QQ(3)), (-QQ(2), -QQ(2)), (-QQ(1), -QQ(1)), (-QQ(1), QQ(0)),
+         ( QQ(1),  QQ(1)), ( QQ(2),  QQ(2)), ( QQ(3),  QQ(3))]
+    assert dup_isolate_real_roots([4,0,-57,0,210,0,-193,0,36], ZZ) == \
+        [(-QQ(3), -QQ(3)), (-QQ(2), -QQ(2)), (-QQ(1), -QQ(1)), (-QQ(1), QQ(0)),
+         ( QQ(0),  QQ(1)), ( QQ(1),  QQ(1)), ( QQ(2),  QQ(2)), ( QQ(3), QQ(3))]
+
     f = [9,0,-2]
 
     assert dup_isolate_real_roots(f, ZZ) == \
@@ -1187,11 +1206,40 @@ def test_dup_isolate_real_roots():
     assert dup_isolate_real_roots(f, ZZ, eps=QQ(1,1000)) == \
         [(QQ(-33,70), QQ(-8,17)), (QQ(8,17), QQ(33,70))]
     assert dup_isolate_real_roots(f, ZZ, eps=QQ(1,10000)) == \
-        [(QQ(-33,70), QQ(-74,157)), (QQ(74,157), QQ(33,70))]
+        [(QQ(-33,70), QQ(-107,227)), (QQ(107,227), QQ(33,70))]
     assert dup_isolate_real_roots(f, ZZ, eps=QQ(1,100000)) == \
         [(QQ(-305,647), QQ(-272,577)), (QQ(272,577), QQ(305,647))]
     assert dup_isolate_real_roots(f, ZZ, eps=QQ(1,1000000)) == \
-        [(QQ(-849,1801), QQ(-272,577)), (QQ(272,577), QQ(849,1801))]
+        [(QQ(-1121,2378), QQ(-272,577)), (QQ(272,577), QQ(1121,2378))]
+
+    f = [200100012, -700390052, 700490079, -200240054, 40017, -2]
+
+    assert dup_isolate_real_roots(f, ZZ) == \
+        [(QQ(0), QQ(1,10002)), (QQ(1,10002), QQ(1,10002)), (QQ(1,2), QQ(1,2)), (QQ(1), QQ(1)), (QQ(2), QQ(2))]
+
+    assert dup_isolate_real_roots(f, ZZ, eps=QQ(1,100000)) == \
+        [(QQ(1,10003), QQ(1,10003)), (QQ(1,10002), QQ(1,10002)), (QQ(1,2), QQ(1,2)), (QQ(1), QQ(1)), (QQ(2), QQ(2))]
+
+    a, b, c, d = 10000090000001, 2000100003, 10000300007, 10000005000008
+
+    f = [ 20001600074001600021,
+          1700135866278935491773999857,
+         -2000179008931031182161141026995283662899200197,
+         -800027600594323913802305066986600025,
+          100000950000540000725000008]
+
+    assert dup_isolate_real_roots(f, ZZ) == \
+        [(-QQ(a), -QQ(a)), (-QQ(1,1),  QQ(0,1)), (QQ(0,1), QQ(1,1)), (QQ(d), QQ(d))]
+
+    assert dup_isolate_real_roots(f, ZZ, eps=QQ(1,100000000000)) == \
+        [(-QQ(a), -QQ(a)), (-QQ(1,b), -QQ(1,b)), (QQ(1,c), QQ(1,c)), (QQ(d), QQ(d))]
+
+    (u, v), B, C, (s, t) = dup_isolate_real_roots(f, ZZ, fast=True)
+
+    assert u < -a < v and B == (-QQ(1), QQ(0)) and C == (QQ(0), QQ(1)) and s < d < t
+
+    assert dup_isolate_real_roots(f, ZZ, fast=True, eps=QQ(1,100000000000000000000000000000)) == \
+        [(-QQ(a), -QQ(a)), (-QQ(1,b), -QQ(1,b)), (QQ(1,c), QQ(1,c)), (QQ(d), QQ(d))]
 
     assert dup_isolate_real_roots([QQ(8,5), QQ(-87374,3855), QQ(-17,771)], QQ) == \
         [(QQ(-1), QQ(0)), (QQ(14), QQ(15))]

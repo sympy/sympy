@@ -403,8 +403,8 @@ class Algebra(object):
         """Returns LCM of `a` and `b`. """
         raise NotImplementedError
 
-    def log(self, a):
-        """Returns logarithm of `a`. """
+    def log(self, a, b):
+        """Returns b-base logarithm of `a`. """
         raise NotImplementedError
 
     def sqrt(self, a):
@@ -515,9 +515,9 @@ class IntegerRing(Ring):
         if a.is_ground:
             return K1.convert(a.LC(), K0.dom)
 
-    def log(self, a):
-        """Returns logarithm of `a`. """
-        return self.dtype(math.floor(math.log(a)))
+    def log(self, a, b):
+        """Returns b-base logarithm of `a`. """
+        return self.dtype(math.floor(math.log(a, b)))
 
 class RationalField(Field):
     """General class for rational fields. """

@@ -2005,40 +2005,93 @@ def dup_sign_variations(f, K):
 
     return k
 
-# Mobius transforms (real root isolation)
-_T0 = lambda (a, b, c, d), t: [a, t*a+b, c, t*c+d]
-_T1 = lambda (a, b, c, d):    [a,   a+b, c,   c+d]
-_T2 = lambda (a, b, c, d):    [b,   a+b, d,   c+d]
+def dup_root_upper_bound(f, K):
+    """Compute LMQ upper bound for `f`'s positive roots. """
+    n, t, P = len(f), K.one, []
 
-_V0 = lambda (a, b, c, d), K: (K(b, d), K(b, d))
-_V1 = lambda (a, b, c, d), K: (K(a, c), K(b, d))
+    if dup_LC(f, K) < 0:
+        f = dup_neg(f, K)
 
-def dup_inner_refine_real_root(f, M, eps, K):
-    """Refine a real root up to `eps` given Mobius transform `M`. """
-    h, F = [K.one, K.one], K.get_field()
+    f = list(reversed(f))
 
-    if eps is not None:
-        ok = lambda (a, b, c, d): bool(c) and abs(F(a, c) - F(b, d)) < eps
+    for i in xrange(0, n):
+        if f[i] >= 0:
+            continue
+
+        a, Q = K.log(-f[i], 2), []
+
+        for j in xrange(i+1, n):
+
+            if f[j] <= 0:
+                continue
+
+            q = t + a - K.log(f[j], 2)
+            Q.append(q // (j - i))
+
+            t += 1
+
+        if not Q:
+            continue
+
+        P.append(min(Q))
+
+    if not P:
+        return None
     else:
-        ok = lambda (a, b, c, d): bool(c)
+        return 2.0**(max(P)+1)
 
-    while not ok(M):
-        g, N = dup_compose(f, h, K), _T1(M)
+def dup_root_lower_bound(f, K):
+    """Compute LMQ lower bound for `f`'s positive roots. """
+    bound = dup_root_upper_bound(dup_reverse(f), K)
 
-        if not dup_eval(g, K.zero, K):
-            return _V0(N, F)
+    if bound is not None:
+        return 1.0 / bound
+    else:
+        return None
 
-        k = dup_sign_variations(g, K)
+def dup_inner_refine_real_root(f, (a, b, c, d), eps, fast, K):
+    """Refine a positive root of `f` given a Mobius transform. """
+    F = K.get_field()
+
+    while not c or (eps and abs(F(a, c) - F(b, d)) >= eps):
+        A = dup_root_lower_bound(f, K)
+
+        if A is not None:
+            A = K(int(A))
+        else:
+            A = K.zero
+
+        if fast and A > 16:
+            f = dup_compose(f, [A, K.zero], K)
+            a, c, A = A*a, A*c, K.one
+
+        if A >= K.one:
+            f = dup_compose(f, [K.one, A], K)
+            b, d = A*a + b, A*c + d
+
+            if not dup_eval(f, K.zero, K):
+                return F(b, d), F(b, d)
+
+        f, g = dup_compose(f, [K.one, K.one], K), f
+
+        a1, b1, c1, d1 = a, a+b, c, c+d
+
+        if not dup_eval(f, K.zero, K):
+            return F(b1, d1), F(b1, d1)
+
+        k = dup_sign_variations(f, K)
 
         if k == 1:
-            f, M = g, N
+            a, b, c, d = a1, b1, c1, d1
         else:
-            f, M = dup_compose(dup_reverse(f), h, K), _T2(M)
+            f = dup_compose(dup_reverse(g), [K.one, K.one], K)
 
             if not dup_eval(f, K.zero, K):
                 f = dup_rshift(f, 1, K)
 
-    s, t = _V1(M, F)
+            a, b, c, d = b, a+b, d, c+d
+
+    s, t = F(a, c), F(b, d)
 
     if s <= t:
         return (s, t)
@@ -2046,7 +2099,7 @@ def dup_inner_refine_real_root(f, M, eps, K):
         return (t, s)
 
 def dup_refine_real_root(f, s, t, K, **args):
-    """Refine real root's approximating interval up to `eps`. """
+    """Refine real root's approximating interval to the given precision. """
     if K.is_QQ:
         (_, f), K = dup_ground_to_ring(f, K, convert=True), K.get_ring()
     elif not K.is_ZZ:
@@ -2058,60 +2111,121 @@ def dup_refine_real_root(f, s, t, K, **args):
     if s > t:
         s, t = t, s
 
-    if s >= 0:
-        negative = False
-    else:
+    neg = False
+
+    if s < 0:
         if t <= 0:
-            s, t, negative = -t, -s, True
+            f, s, t, neg = dup_compose(f, [-K.one, K.zero], K), -t, -s, True
         else:
             raise ValueError("real root refinement can't be performed on (%s, %s)" % (s, t))
 
-    F, eps = K.get_field(), args.get('eps')
+    eps, fast = args.get('eps'), args.get('fast')
+
+    F = K.get_field()
 
     a, c = F.numer(s), F.denom(s)
     b, d = F.numer(t), F.denom(t)
 
-    p, q = dup_strip([a, b]), dup_strip([c, d])
+    f = dup_transform(f, dup_strip([a, b]),
+                         dup_strip([c, d]), K)
 
-    if negative:
-        f = dup_compose(f, [-K.one, K.zero], K)
+    s, t = dup_inner_refine_real_root(f, (a, b, c, d), eps, fast, K)
 
-    f = dup_transform(f, p, q, K)
-
-    s, t = dup_inner_refine_real_root(f, [a, b, c, d], eps, K)
-
-    if negative:
+    if neg:
         return (-t, -s)
     else:
         return ( s,  t)
 
-def dup_inner_isolate_real_roots(f, M, eps, K):
-    """Recursively compute disjoint real isolation intervals. """
-    if not dup_eval(f, K.zero, K):
-        f, I = dup_rshift(f, 1, K), [_V0(M, K.get_field())]
-        return I + dup_inner_isolate_real_roots(f, M, eps, K)
+def dup_inner_isolate_real_roots(f, eps, fast, K):
+    """Iteratively compute disjoint positive root isolation intervals. """
+    a, b, c, d = K.one, K.zero, K.zero, K.one
 
     k = dup_sign_variations(f, K)
 
     if k == 0:
         return []
     if k == 1:
-        return [dup_inner_refine_real_root(f, M, eps, K)]
+        roots = [dup_inner_refine_real_root(
+           f, (a, b, c, d), eps, fast, K)]
+    else:
+        roots, stack = [], [(a, b, c, d, f, k)]
 
-    g = dup_compose(f, [K.one, K.one], K)
-    I = dup_inner_isolate_real_roots(g, _T1(M), eps, K)
+        F = K.get_field()
 
-    m = dup_sign_variations(g, K)
+        while stack:
+            a, b, c, d, f, k = stack.pop()
 
-    if k > m:
-        g = dup_compose(dup_reverse(f), [K.one, K.one], K)
+            A = dup_root_lower_bound(f, K)
 
-        if not dup_eval(g, K.zero, K):
-            g = dup_rshift(g, 1, K)
+            if A is not None:
+                A = K(int(A))
+            else:
+                A = K.zero
 
-        I += dup_inner_isolate_real_roots(g, _T2(M), eps, K)
+            if fast and A > 16:
+                f = dup_compose(f, [A, K.zero], K)
+                a, c, A = A*a, A*c, K.one
 
-    return I
+            if A >= K.one:
+                f = dup_compose(f, [K.one, A], K)
+                b, d = A*a + b, A*c + d
+
+                if not dup_eval(f, K.zero, K):
+                    roots.append((F(b, d), F(b, d)))
+                    f = dup_rshift(f, 1, K)
+
+                k = dup_sign_variations(f, K)
+
+                if k == 0:
+                    continue
+                if k == 1:
+                    roots.append(dup_inner_refine_real_root(
+                        f, (a, b, c, d), eps, fast, K))
+                    continue
+
+            f1 = dup_compose(f, [K.one, K.one], K)
+
+            a1, b1, c1, d1, r = a, a+b, c, c+d, 0
+
+            if not dup_eval(f1, K.zero, K):
+                roots.append((F(b1, d1), F(b1, d1)))
+                f1, r = dup_rshift(f1, 1, K), 1
+
+            k1 = dup_sign_variations(f1, K)
+            k2 = k - k1 - r
+
+            a2, b2, c2, d2 = b, a+b, d, c+d
+
+            if k2 > 1 or (k1 > 0 and k2 == 1):
+                f2 = dup_compose(dup_reverse(f), [K.one, K.one], K)
+
+                if not dup_eval(f2, K.zero, K):
+                    f2 = dup_rshift(f2, 1, K)
+
+                k2 = dup_sign_variations(f2, K)
+
+            if k1 < k2:
+                a1, a2, b1, b2 = a2, a1, b2, b1
+                c1, c2, d1, d2 = c2, c1, d2, d1
+                f1, f2, k1, k2 = f2, f1, k2, k1
+
+            if k1 == 0:
+                continue
+            if k1 == 1:
+                roots.append(dup_inner_refine_real_root(
+                    f1, (a1, b1, c1, d1), eps, fast, K))
+            else:
+                stack.append((a1, b1, c1, d1, f1, k1))
+
+            if k2 == 0:
+                continue
+            if k2 == 1:
+                roots.append(dup_inner_refine_real_root(
+                    f2, (a2, b2, c2, d2), eps, fast, K))
+            else:
+                stack.append((a2, b2, c2, d2, f2, k2))
+
+    return sorted(roots)
 
 def dup_isolate_real_roots(f, K, **args):
     """Isolate real roots using continued fractions approach. """
@@ -2123,19 +2237,13 @@ def dup_isolate_real_roots(f, K, **args):
     if dup_degree(f) <= 0:
         return []
 
-    M, eps = [K.one, K.zero, K.zero, K.one], args.get('eps')
+    eps, fast = args.get('eps'), args.get('fast')
 
-    p, q = dup_strip(M[0:2]), dup_strip(M[2:4])
-
-    g = dup_transform(f, p, q, K)
-    I_pos = dup_inner_isolate_real_roots(g, M, eps, K)
-
+    pos = dup_inner_isolate_real_roots(f, eps, fast, K)
     f = dup_compose(f, [-K.one, K.zero], K)
+    neg = dup_inner_isolate_real_roots(f, eps, fast, K)
 
-    g = dup_transform(f, p, q, K)
-    I_neg = dup_inner_isolate_real_roots(g, M, eps, K)
-
-    return sorted([ (-v, -u) for (u, v) in I_neg ] + I_pos)
+    return sorted([ (-v, -u) for (u, v) in neg ]) + pos
 
 def dup_isolate_complex_roots(f, K, **args):
     """Isolate complex roots using Collins-Krandick algorithm. """

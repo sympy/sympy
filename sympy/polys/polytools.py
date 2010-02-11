@@ -1353,10 +1353,10 @@ class Poly(Basic):
         dom, eps = f.rep.dom.get_field(), args.get('eps')
 
         if eps is not None:
-            eps = dom.convert(eps)
+            args['eps'] = dom.convert(eps)
 
         try:
-            result = f.rep.intervals(eps=eps)
+            result = f.rep.intervals(**args)
         except AttributeError:
             raise OperationNotSupported(f, 'intervals')
 
