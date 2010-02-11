@@ -1,5 +1,5 @@
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
-        multinomial_coefficients, raises
+        multinomial_coefficients, raises, Mul, S, Pow
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, npartitions, totient, \
     factorint, primefactors, divisors, randprime, nextprime, prevprime, \
@@ -224,6 +224,14 @@ def test_factorint():
     assert factorint(3,2) == {3: 1}
     assert factorint(12345) == {3: 1, 5: 1, 823: 1}
     assert factorint(12345, 3) == {12345: 1} # there are no factors less than 3
+
+def test_visual_factorint():
+    assert type(factorint(42, visual=True)) == Mul
+    assert str(factorint(42, visual=True)) == '2**1*3**1*7**1'
+    assert factorint(1, visual=True) is S.One
+    assert factorint(42**2, visual=True) == Mul(Pow(2, 2, evaluate=False),
+    Pow(3, 2, evaluate=False), Pow(7, 2, evaluate=False), evaluate=False)
+    assert Pow(-1, 1, evaluate=False) in factorint(-42, visual=True).args
 
 def test_totient():
     assert [totient(k) for k in range(1, 12)] == \
