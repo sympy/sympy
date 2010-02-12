@@ -964,10 +964,11 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
                 result = checkodesol(ode, func, Eq(func, solved[0]), \
                     order=order, solve_for_func=False)
             else:
-                result = checkodesol(ode, func, map(lambda t: Eq(func, t), \
-                    solved), order=order, solve_for_func=False)
+                result = checkodesol(ode, func, [Eq(func, t) for t in solved],
+                order=order, solve_for_func=False)
 
             return result
+
     while s:
         if testnum == 0:
             # First pass, try substituting a solved solution directly into the ode
@@ -1369,13 +1370,13 @@ def ode_renumber(expr, symbolname, startnumber, endnumber):
             return newconst
         else:
             if expr.is_Function or expr.is_Pow:
-                return expr.new(*map(lambda x: _ode_renumber(x, symbolname, \
-                startnumber, endnumber), expr.args))
+                return expr.new(*[_ode_renumber(x, symbolname, startnumber,
+                endnumber) for x in expr.args])
             else:
                 sortedargs = list(expr.args)
                 sortedargs.sort(Basic._compare_pretty)
-                return expr.new(*map(lambda x: _ode_renumber(x, symbolname, \
-                startnumber, endnumber), sortedargs))
+                return expr.new(*[_ode_renumber(x, symbolname, startnumber,
+                endnumber) for x in sortedargs])
 
 
     return _ode_renumber(expr, symbolname, startnumber, endnumber)
@@ -1780,7 +1781,7 @@ def _homogeneous_order(eq, *symbols):
     if any(getattr(i, 'is_Function') for i in symbols):
         for i in symbols:
             if i.is_Function:
-                if not all(map((lambda i: i in symbols), i.args)):
+                if not all([j in symbols for j in i.args]):
                     return None
                 elif i not in symbols:
                     pass
