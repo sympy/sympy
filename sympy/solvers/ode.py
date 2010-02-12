@@ -1509,6 +1509,8 @@ def ode_1st_exact(eq, func, order, match):
         - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
           Dover 1963, pp. 73
 
+        # indirect doctest
+
     """
     x = func.args[0]
     f = func.func
@@ -1556,6 +1558,8 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
         - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
         - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
           Dover 1963, pp. 59
+
+        # indirect doctest
 
     """
     # There are two substitutions that solve the equation, u1=y/x and u2=x/y
@@ -1633,6 +1637,8 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
         - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
           Dover 1963, pp. 59
 
+        # indirect doctest
+
     """
     x = func.args[0]
     f = func.func
@@ -1706,6 +1712,8 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
         - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
         - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
           Dover 1963, pp. 59
+
+        # indirect doctest
 
     """
     x = func.args[0]
@@ -1919,6 +1927,8 @@ def ode_1st_linear(eq, func, order, match):
         - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
           Dover 1963, pp. 92
 
+        # indirect doctest
+
     """
     x = func.args[0]
     f = func.func
@@ -1991,6 +2001,8 @@ def ode_Bernoulli(eq, func, order, match):
         - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
           Dover 1963, pp. 95
 
+        # indirect doctest
+
     """
     x = func.args[0]
     f = func.func
@@ -2038,6 +2050,8 @@ def ode_Liouville(eq, func, order, match):
         - Goldstein and Braun, "Advanced Methods for the Solution of
           Differential Equations", pp. 98
         - http://www.maplesoft.com/support/help/view.aspx?path=odeadvisor/Liouville
+
+        # indirect doctest
 
     """
     # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x, 2))**2 + h(x)*f(x).diff(x)
@@ -2169,6 +2183,8 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
         - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
           Dover 1963, pp. 211
 
+        # indirect doctest
+
     """
     x = func.args[0]
     f = func.func
@@ -2291,6 +2307,8 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
         - http://en.wikipedia.org/wiki/Method_of_undetermined_coefficients
         - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
           Dover 1963, pp. 221
+
+        # indirect doctest
 
     """
     gensol = ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
@@ -2598,6 +2616,8 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
         - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
           Dover 1963, pp. 233
 
+        # indirect doctest
+
     """
     gensol = ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
         returns='both')
@@ -2697,6 +2717,8 @@ def ode_separable(eq, func, order, match):
     **Reference**
         - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
           Dover 1963, pp. 52
+
+        # indirect doctest
 
     """
     x = func.args[0]
