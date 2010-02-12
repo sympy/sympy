@@ -47,6 +47,9 @@ def test_checkodesol():
     assert checkodesol(f(x).diff(x, 2), f(x), [Eq(f(x), C1 + C2*x), \
         Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)]) == \
             [(True, 0), (True, 0), (False, 2*C2)]
+    assert checkodesol(f(x).diff(x) - 1/f(x)/2, f(x), Eq(f(x)**2, x)) == \
+        [(True, 0), (True, 0)]
+    assert checkodesol(f(x).diff(x) - f(x), f(x), Eq(C1*exp(x), f(x))) == (True, 0)
 
 def test_dsolve_options():
     eq = x*f(x).diff(x) + f(x)
@@ -106,6 +109,8 @@ def test_dsolve_options():
     assert sorted(c.keys()) == Integral_keys
     raises(ValueError, "dsolve(eq, f(x), 'notarealhint')")
     raises(ValueError, "dsolve(eq, f(x), 'Liouville')")
+    assert dsolve(f(x).diff(x) - 1/f(x)**2, f(x), 'all')['best'] == \
+        dsolve(f(x).diff(x) - 1/f(x)**2, f(x), 'best')
 
 
 def test_classify_ode():

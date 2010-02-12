@@ -974,6 +974,7 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
             # First pass, try substituting a solved solution directly into the ode
             # This has the highest chance of succeeding.
             ode_diff = ode.lhs - ode.rhs
+
             if sol.lhs == func:
                 s = ode_diff.subs(func, sol.rhs)
             elif sol.rhs == func:
@@ -990,15 +991,16 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
                 s = 0
             testnum += 1
         elif testnum == 1:
-            # If we cannot substitute f, try seeing if the nth derivative is equal
-            # This will only work for odes that are exact, by definition.
+            # Second pass. If we cannot substitute f, try seeing if the nth
+            # derivative is equal, this will only work for odes that are exact,
+            # by definition.
             s = simplify(trigsimp(diff(sol.lhs, x, order) - diff(sol.rhs, x, order)) - \
                 trigsimp(ode.lhs) + trigsimp(ode.rhs))
 #            s2 = simplify(diff(sol.lhs, x, order) - diff(sol.rhs, x, order) - \
 #                ode.lhs + ode.rhs)
             testnum += 1
         elif testnum == 2:
-            # Try solving for df/dx and substituting that into the ode.
+            # Third pass. Try solving for df/dx and substituting that into the ode.
             # Thanks to Chris Smith for suggesting this method.  Many of the
             # comments below are his too.
             # The method:
@@ -1099,17 +1101,19 @@ def compare_ode_sol(sol1, sol2, func, *args):
     if sol1 == sol2:
         return 0
 
-    # If the solutions are lists (like [Eq(f(x), sqrt(x)), Eq(f(x), -sqrt(x))],
+    # If the solutions are lists (like [Eq(f(x), sqrt(x)), Eq(f(x), -sqrt(x))]),
     # then base the comparison off the worst solution in the list.
-    # But when, we look at the length of the expressions at the end, use the
+    # But when we look at the length of the expressions at the end, use the
     # whole list.
     if isinstance(sol1, list) or isinstance(sol1, tuple):
+        print 'test 1'
         sol1len = sum([len(str(i)) for i in sol1])
         sol1 = sorted(sol1, cmp=lambda x, y: compare_ode_sol(x, y,
             func, *args))[len(sol1) - 1]
     else:
         sol1len = len(str(sol1))
     if isinstance(sol2, list) or isinstance(sol2, tuple):
+        print 'test 2', sol1
         sol2len = sum([len(str(i)) for i in sol2])
         sol2 = sorted(sol2, cmp=lambda x, y: compare_ode_sol(x, y,
             func, *args))[len(sol2) - 1]
