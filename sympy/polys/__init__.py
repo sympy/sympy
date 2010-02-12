@@ -23,6 +23,7 @@ from polyerrors import (
     ExactQuotientFailed,
     UnificationFailed,
     GeneratorsNeeded,
+    RefinementFailed,
     PolynomialError,
     CoercionFailed,
     NotInvertible,

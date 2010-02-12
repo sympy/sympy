@@ -1454,29 +1454,38 @@ def test_factor():
 def test_intervals():
     f = Poly((2*x/5 - S(17)/3)*(4*x + S(1)/257))
 
-    assert f.intervals() == [(-1, 0), (14, 15)]
+    assert f.intervals(sqf=True) == [(-1, 0), (14, 15)]
+    assert f.intervals(sqf=False) == [((-1, 0), 1), ((14, 15), 1)]
 
     assert f.intervals(eps=S(1)/10) == f.intervals(eps=0.1) == \
-        [(-S(1)/258, 0), (S(85)/6, S(85)/6)]
+        [((-S(1)/258, 0), 1), ((S(85)/6, S(85)/6), 1)]
     assert f.intervals(eps=S(1)/100) == f.intervals(eps=0.01) == \
-        [(-S(1)/258, 0), (S(85)/6, S(85)/6)]
+        [((-S(1)/258, 0), 1), ((S(85)/6, S(85)/6), 1)]
     assert f.intervals(eps=S(1)/1000) == f.intervals(eps=0.001) == \
-        [(-S(1)/1005, 0), (S(85)/6, S(85)/6)]
+        [((-S(1)/1005, 0), 1), ((S(85)/6, S(85)/6), 1)]
     assert f.intervals(eps=S(1)/10000) == f.intervals(eps=0.0001) == \
-        [(-S(1)/1028, -S(1)/1028), (S(85)/6, S(85)/6)]
+        [((-S(1)/1028, -S(1)/1028), 1), ((S(85)/6, S(85)/6), 1)]
 
     f = (2*x/5 - S(17)/3)*(4*x + S(1)/257)
 
-    assert intervals(f) == [(-1, 0), (14, 15)]
+    assert intervals(f, sqf=True) == [(-1, 0), (14, 15)]
+    assert intervals(f, sqf=False) == [((-1, 0), 1), ((14, 15), 1)]
 
     assert intervals(f, eps=S(1)/10) == intervals(f, eps=0.1) == \
-        [(-S(1)/258, 0), (S(85)/6, S(85)/6)]
+        [((-S(1)/258, 0), 1), ((S(85)/6, S(85)/6), 1)]
     assert intervals(f, eps=S(1)/100) == intervals(f, eps=0.01) == \
-        [(-S(1)/258, 0), (S(85)/6, S(85)/6)]
+        [((-S(1)/258, 0), 1), ((S(85)/6, S(85)/6), 1)]
     assert intervals(f, eps=S(1)/1000) == intervals(f, eps=0.001) == \
-        [(-S(1)/1005, 0), (S(85)/6, S(85)/6)]
+        [((-S(1)/1005, 0), 1), ((S(85)/6, S(85)/6), 1)]
     assert intervals(f, eps=S(1)/10000) == intervals(f, eps=0.0001) == \
-        [(-S(1)/1028, -S(1)/1028), (S(85)/6, S(85)/6)]
+        [((-S(1)/1028, -S(1)/1028), 1), ((S(85)/6, S(85)/6), 1)]
+
+    f = Poly((x**2 - 2)*(x**2-3)**7*(x+1)*(7*x+3)**3)
+
+    assert f.intervals() == \
+        [((-2, -S(3)/2), 7), ((-S(3)/2, -1), 1),
+         ((-1, -1), 1), ((-1, 0), 3),
+         ((1, S(3)/2), 1), ((S(3)/2, 2), 7)]
 
     raises(GeneratorsNeeded, "intervals(0)")
 

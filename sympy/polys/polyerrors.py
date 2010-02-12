@@ -33,6 +33,9 @@ class GeneratorsNeeded(Exception):
 class EvaluationFailed(Exception):
     pass
 
+class RefinementFailed(Exception):
+    pass
+
 class PolynomialError(Exception):
     pass
 

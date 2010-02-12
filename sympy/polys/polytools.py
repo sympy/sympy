@@ -1357,10 +1357,13 @@ class Poly(Basic):
 
         try:
             result = f.rep.intervals(**args)
-        except AttributeError:
+        except AttributeError: # pragma: no cover
             raise OperationNotSupported(f, 'intervals')
 
-        return [ (dom.to_sympy(s), dom.to_sympy(t)) for (s, t) in result ]
+        if not args.get('sqf'):
+            return [ ((dom.to_sympy(s), dom.to_sympy(t)), k) for ((s, t), k) in result ]
+        else:
+            return [ (dom.to_sympy(s), dom.to_sympy(t)) for (s, t) in result ]
 
     def nroots(f, **args):
         """Compute numerical approximations of roots of `f`. """
