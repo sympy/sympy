@@ -1594,7 +1594,7 @@ def dup_sqf_norm(f, K):
         if dup_sqf_p(r, K.dom):
             break
         else:
-            f, s = dup_compose(f, [K.one,-K.unit], K), s+1
+            f, s = dup_taylor(f, -K.unit, K), s+1
 
     return s, f, r
 
@@ -1783,6 +1783,25 @@ def dmp_ground_extract(f, g, u, K):
         g = dmp_exquo_ground(g, gcd, u, K)
 
     return gcd, f, g
+
+def dup_embed(f, a, K):
+    """Evaluate efficiently composition `f(a*x)` in `K[x]`. """
+    f, n, b = list(f), dup_degree(f), a
+
+    for i in xrange(n-1, -1, -1):
+        f[i], b = b*f[i], b*a
+
+    return f
+
+def dup_taylor(f, a, K):
+    """Evaluate efficiently Taylor shift `f(x + a)` in `K[x]`. """
+    f, n = list(f), dup_degree(f)
+
+    for i in xrange(n, 0, -1):
+        for j in xrange(0, i):
+            f[j+1] += a*f[j]
+
+    return f
 
 def dup_transform(f, p, q, K):
     """Evaluate functional transformation `q**n * f(p/q)` in `K[x]`. """
@@ -2063,17 +2082,17 @@ def dup_inner_refine_real_root(f, (a, b, c, d), cond, fast, K):
             A = K.zero
 
         if fast and A > 16:
-            f = dup_compose(f, [A, K.zero], K)
+            f = dup_embed(f, A, K)
             a, c, A = A*a, A*c, K.one
 
         if A >= K.one:
-            f = dup_compose(f, [K.one, A], K)
+            f = dup_taylor(f, A, K)
             b, d = A*a + b, A*c + d
 
             if not dup_eval(f, K.zero, K):
                 return F(b, d), F(b, d)
 
-        f, g = dup_compose(f, [K.one, K.one], K), f
+        f, g = dup_taylor(f, K.one, K), f
 
         a1, b1, c1, d1 = a, a+b, c, c+d
 
@@ -2085,7 +2104,7 @@ def dup_inner_refine_real_root(f, (a, b, c, d), cond, fast, K):
         if k == 1:
             a, b, c, d = a1, b1, c1, d1
         else:
-            f = dup_compose(dup_reverse(g), [K.one, K.one], K)
+            f = dup_taylor(dup_reverse(g), K.one, K)
 
             if not dup_eval(f, K.zero, K):
                 f = dup_rshift(f, 1, K)
@@ -2136,7 +2155,7 @@ def dup_refine_real_root(f, s, t, n, K, **args):
 
     if s < 0:
         if t <= 0:
-            f, s, t, negative = dup_compose(f, [-K.one, K.zero], K), -t, -s, True
+            f, s, t, negative = dup_embed(f, -K.one, K), -t, -s, True
         else:
             raise ValueError("can't refine a real root on (%s, %s)" % (s, t))
 
@@ -2181,11 +2200,11 @@ def dup_inner_isolate_real_roots(f, cond, fast, K):
                 A = K.zero
 
             if fast and A > 16:
-                f = dup_compose(f, [A, K.zero], K)
+                f = dup_embed(f, A, K)
                 a, c, A = A*a, A*c, K.one
 
             if A >= K.one:
-                f = dup_compose(f, [K.one, A], K)
+                f = dup_taylor(f, A, K)
                 b, d = A*a + b, A*c + d
 
                 if not dup_eval(f, K.zero, K):
@@ -2201,7 +2220,7 @@ def dup_inner_isolate_real_roots(f, cond, fast, K):
                         f, (a, b, c, d), cond, fast, K))
                     continue
 
-            f1 = dup_compose(f, [K.one, K.one], K)
+            f1 = dup_taylor(f, K.one, K)
 
             a1, b1, c1, d1, r = a, a+b, c, c+d, 0
 
@@ -2215,7 +2234,7 @@ def dup_inner_isolate_real_roots(f, cond, fast, K):
             a2, b2, c2, d2 = b, a+b, d, c+d
 
             if k2 > 1 or (k1 > 0 and k2 == 1):
-                f2 = dup_compose(dup_reverse(f), [K.one, K.one], K)
+                f2 = dup_taylor(dup_reverse(f), K.one, K)
 
                 if not dup_eval(f2, K.zero, K):
                     f2 = dup_rshift(f2, 1, K)
@@ -2264,7 +2283,7 @@ def dup_isolate_real_roots(f, K, **args):
 
     if args.get('sqf', False):
         I_pos = dup_inner_isolate_real_roots(f, cond, fast, K)
-        f = dup_compose(f, [-K.one, K.zero], K)
+        f = dup_embed(f, -K.one, K)
         I_neg = dup_inner_isolate_real_roots(f, cond, fast, K)
 
         return sorted([ (-v, -u) for (u, v) in I_neg ] + I_pos)
@@ -2275,7 +2294,7 @@ def dup_isolate_real_roots(f, K, **args):
         ((f, k),) = factors
 
         I_pos = dup_inner_isolate_real_roots(f, cond, fast, K)
-        f = dup_compose(f, [-K.one, K.zero], K)
+        f = dup_embed(f, -K.one, K)
         I_neg = dup_inner_isolate_real_roots(f, cond, fast, K)
 
         return sorted([ ((-v, -u), k) for (u, v) in I_neg ] + \
@@ -2288,7 +2307,7 @@ def dup_isolate_real_roots(f, K, **args):
         for u, v in dup_inner_isolate_real_roots(f, cond, fast, K):
             I_pos.append((u, v, k))
 
-        g = dup_compose(f, [-K.one, K.zero], K)
+        g = dup_embed(f, -K.one, K)
 
         for s, t in dup_inner_isolate_real_roots(g, cond, fast, K):
             I_neg.append((s, t, k))

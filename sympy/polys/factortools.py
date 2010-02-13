@@ -57,7 +57,8 @@ from sympy.polys.densetools import (
     dmp_eval_in, dmp_diff_eval_in,
     dup_inner_gcd, dmp_inner_gcd,
     dup_sqf_norm, dmp_sqf_norm,
-    dup_compose, dmp_compose
+    dup_compose, dmp_compose,
+    dup_taylor
 )
 
 from sympy.polys.polyutils import (
@@ -1006,12 +1007,12 @@ def dup_ext_factor(f, K, **args):
     if len(factors) == 1:
         return lc, [(f, n//dup_degree(f))]
 
-    H = [K.one, s*K.unit]
+    H = s*K.unit
 
     for i, (factor, _) in enumerate(factors):
         h = dup_convert(factor, K.dom, K)
         h, _, g = dup_inner_gcd(h, g, K)
-        h = dup_compose(h, H, K)
+        h = dup_taylor(h, H, K)
         factors[i] = h
 
     coeff = lc * K.convert(coeff, K.dom)
