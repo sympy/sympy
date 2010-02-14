@@ -3,7 +3,7 @@ from operations import AssocOp
 from cache import cacheit
 from logic import fuzzy_not
 from numbers import Integer, Rational
-from symbol import Symbol
+from symbol import Symbol, Wild
 from sympy.utilities.iterables import make_list
 
 # internal marker to indicate:
