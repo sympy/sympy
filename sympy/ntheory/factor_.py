@@ -336,15 +336,17 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     forms using the following list comprehensions:
 
         >>> from sympy import Mul, Pow
-        >>> a = factorint(1764); a
+        >>> regular = factorint(1764); regular
         {2: 2, 3: 2, 7: 2}
-        >>> b = factorint(1764, visual=True); pprint(b)
+        >>> pprint(Mul(*[Pow(*i, evaluate=False) for i in regular.items()],
+        ... evaluate=False))
          2  2  2
         2 *3 *7
-        >>> pprint(Mul(*[Pow(*i, evaluate=False) for i in a.items()], evaluate=False))
+
+        >>> visual = factorint(1764, visual=True); pprint(visual)
          2  2  2
         2 *3 *7
-        >>> dict([i.args for i in b.args])
+        >>> dict([i.args for i in visual.args])
         {2: 2, 3: 2, 7: 2}
 
     Miscellaneous Options
