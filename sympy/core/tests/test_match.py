@@ -1,5 +1,5 @@
 from sympy import abc, Function, Symbol, Wild, Derivative, sin, cos, Real, \
-        Rational, exp, I, Integer, diff, Mul, var, oo, S, Add
+        Rational, exp, I, Integer, diff, Mul, var, oo, S, Add, Poly
 from sympy.utilities.pytest import XFAIL
 
 
@@ -109,6 +109,9 @@ def test_mul():
 
     e = exp(x)
     assert e.match(x**p*exp(x*q)) == {p: 0, q: 1}
+
+    e = I*Poly(x, x)
+    assert e.match(I*p) == {p: Poly(x, x)}
 
 def test_complex():
     a,b,c = map(Symbol, 'abc')
