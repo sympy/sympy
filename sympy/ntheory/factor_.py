@@ -3,12 +3,14 @@ Integer factorization
 """
 
 from sympy.core.numbers import igcd
-from sympy.core.power import integer_nthroot
+from sympy.core.power import integer_nthroot, Pow
+from sympy.core.mul import Mul
 import random
 import math
 from primetest import isprime
 from generate import sieve, prime, primerange
 from sympy.utilities.iterables import iff
+from sympy.core.sympify import S
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1,8)) \
     for i in range(256)]
@@ -244,7 +246,7 @@ rho_msg = "Pollard's rho with retries %i, max_steps %i and seed %i"
 pm1_msg = "Pollard's p-1 with smoothness bound %i and seed %i"
 
 def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
-    verbose=False):
+    verbose=False, visual=False):
     """
     Given a positive integer ``n``, ``factorint(n)`` returns a dict containing
     the prime factors of ``n`` as keys and their respective multiplicities
@@ -290,7 +292,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     ``factorint`` also periodically checks if the remaining part is
     a prime number or a perfect power, and in those cases stops.
 
-    Partial factorization
+    Partial Factorization
     =====================
 
     If ``limit`` is specified, the search is stopped after performing
@@ -312,11 +314,52 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         >>> isprime(max(f))
         False
 
-    Miscellaneous options
+    Visual Factorization
+    ====================
+    If ``visual`` is set to ``True``, then it will return a visual
+    factorization of the integer.  For example:
+
+        >>> from sympy import pprint
+        >>> pprint(factorint(4200, visual=True))
+         3  1  2  1
+        2 *3 *5 *7
+
+    Note that this is achieved by using the evaluate=False flag in Mul
+    and Pow. If you do other manipulations with an expression where
+    evaluate=False, it may evaluate.  Therefore, you should use the
+    visual option only for visualization, and use the normal dictionary
+    returned by visual=False if you want to perform operations on the
+    factors.
+
+    If you find that you want one from the other but you do not want to
+    run expensive factorint again, you can easily switch between the two
+    forms using the following list comprehensions:
+
+        >>> from sympy import Mul, Pow
+        >>> regular = factorint(1764); regular
+        {2: 2, 3: 2, 7: 2}
+        >>> pprint(Mul(*[Pow(*i, evaluate=False) for i in regular.items()],
+        ... evaluate=False))
+         2  2  2
+        2 *3 *7
+
+        >>> visual = factorint(1764, visual=True); pprint(visual)
+         2  2  2
+        2 *3 *7
+        >>> dict([i.args for i in visual.args])
+        {2: 2, 3: 2, 7: 2}
+
+    Miscellaneous Options
     =====================
 
     If ``verbose`` is set to ``True``, detailed progress is printed.
     """
+    if visual:
+        factordict = factorint(n, limit=limit, use_trial=use_trial, use_rho=use_rho,
+        use_pm1=use_pm1, verbose=verbose, visual=False)
+        if factordict == {}:
+            return S.One
+        return Mul(*[Pow(*i, evaluate=False) for i in factordict.items()], evaluate=False)
     assert use_trial or use_rho or use_pm1
     n = int(n)
     if not n:
