@@ -4,7 +4,7 @@ from sympy import Function, Piecewise, Rational, Integer
 from sympy.printing import ccode
 from sympy.utilities.pytest import XFAIL
 
-x, y = symbols('xy')
+x, y, z = symbols('xyz')
 g = Function('g')
 
 def test_printmethod():
@@ -41,6 +41,15 @@ def test_ccode_functions():
 def test_ccode_exceptions():
     assert ccode(ceiling(x)) == "ceil(x)"
     assert ccode(abs(x)) == "fabs(x)"
+
+def test_ccode_boolean():
+    assert ccode(x&y) == "x&&y"
+    assert ccode(x|y) == "x||y"
+    assert ccode(~x) == "!x"
+    assert ccode(x&y&z) == "x&&y&&z"
+    assert ccode(x|y|z) == "x||y||z"
+    assert ccode((x&y)|z) == "x&&y||z"
+    assert ccode((x|y)&z) == "(x||y)&&z"
 
 def test_ccode_Piecewise():
     p = ccode(Piecewise((x,x<1),(x**2,True)))
