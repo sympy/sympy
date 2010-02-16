@@ -54,6 +54,18 @@ class CCodePrinter(StrPrinter):
         code = "if %s" + last_line
         return code % "else if ".join(ecpairs)
 
+    def _print_And(self, expr):
+        PREC = precedence(expr)
+        return '&&'.join(self.parenthesize(a, PREC) for a in expr.args)
+
+    def _print_Or(self, expr):
+        PREC = precedence(expr)
+        return '||'.join(self.parenthesize(a, PREC) for a in expr.args)
+
+    def _print_Not(self, expr):
+        PREC = precedence(expr)
+        return '!'+self.parenthesize(expr.args[0], PREC)
+
     def _print_Function(self, expr):
         if expr.func.__name__ == "ceiling":
             return "ceil(%s)" % self.stringify(expr.args, ", ")
