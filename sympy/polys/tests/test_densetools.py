@@ -44,7 +44,7 @@ from sympy.polys.densetools import (
     dup_sqf_part, dmp_sqf_part,
     dup_sqf_list, dmp_sqf_list,
     dup_extract, dmp_ground_extract,
-    dup_embed, dup_taylor,
+    dup_mirror, dup_scale, dup_taylor,
     dup_transform,
     dup_compose, dmp_compose,
     dup_decompose,
@@ -985,12 +985,19 @@ def test_dmp_ground_extract():
 
     assert dmp_ground_extract(f, g, 1, ZZ) == (45796, F, G)
 
-def test_dup_embed():
-    assert dup_embed([], -1, ZZ) == []
-    assert dup_embed([1], -1, ZZ) == [1]
+def test_dup_mirror():
+    assert dup_mirror([], ZZ) == []
+    assert dup_mirror([1], ZZ) == [1]
 
-    assert dup_embed([1,2,3,4,5], -1, ZZ) == [1,-2,3,-4,5]
-    assert dup_embed([1,2,3,4,5], -7, ZZ) == [2401,-686,147,-28,5]
+    assert dup_mirror([1,2,3,4,5], ZZ) == [1,-2,3,-4,5]
+    assert dup_mirror([1,2,3,4,5,6], ZZ) == [-1,2,-3,4,-5,6]
+
+def test_dup_scale():
+    assert dup_scale([], -1, ZZ) == []
+    assert dup_scale([1], -1, ZZ) == [1]
+
+    assert dup_scale([1,2,3,4,5], -1, ZZ) == [1,-2,3,-4,5]
+    assert dup_scale([1,2,3,4,5], -7, ZZ) == [2401,-686,147,-28,5]
 
 def test_dup_taylor():
     assert dup_taylor([], 1, ZZ) == []

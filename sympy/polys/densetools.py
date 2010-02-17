@@ -1784,7 +1784,16 @@ def dmp_ground_extract(f, g, u, K):
 
     return gcd, f, g
 
-def dup_embed(f, a, K):
+def dup_mirror(f, K):
+    """Evaluate efficiently composition `f(-x)` in `K[x]`. """
+    f, n, a = list(f), dup_degree(f), -K.one
+
+    for i in xrange(n-1, -1, -1):
+        f[i], a = a*f[i], -a
+
+    return f
+
+def dup_scale(f, a, K):
     """Evaluate efficiently composition `f(a*x)` in `K[x]`. """
     f, n, b = list(f), dup_degree(f), a
 
@@ -2082,7 +2091,7 @@ def dup_inner_refine_real_root(f, (a, b, c, d), cond, fast, K):
             A = K.zero
 
         if fast and A > 16:
-            f = dup_embed(f, A, K)
+            f = dup_scale(f, A, K)
             a, c, A = A*a, A*c, K.one
 
         if A >= K.one:
@@ -2155,7 +2164,7 @@ def dup_refine_real_root(f, s, t, n, K, **args):
 
     if s < 0:
         if t <= 0:
-            f, s, t, negative = dup_embed(f, -K.one, K), -t, -s, True
+            f, s, t, negative = dup_mirror(f, K), -t, -s, True
         else:
             raise ValueError("can't refine a real root on (%s, %s)" % (s, t))
 
@@ -2200,7 +2209,7 @@ def dup_inner_isolate_real_roots(f, cond, fast, K):
                 A = K.zero
 
             if fast and A > 16:
-                f = dup_embed(f, A, K)
+                f = dup_scale(f, A, K)
                 a, c, A = A*a, A*c, K.one
 
             if A >= K.one:
@@ -2283,7 +2292,7 @@ def dup_isolate_real_roots(f, K, **args):
 
     if args.get('sqf', False):
         I_pos = dup_inner_isolate_real_roots(f, cond, fast, K)
-        f = dup_embed(f, -K.one, K)
+        f = dup_mirror(f, K)
         I_neg = dup_inner_isolate_real_roots(f, cond, fast, K)
 
         return sorted([ (-v, -u) for (u, v) in I_neg ] + I_pos)
@@ -2294,7 +2303,7 @@ def dup_isolate_real_roots(f, K, **args):
         ((f, k),) = factors
 
         I_pos = dup_inner_isolate_real_roots(f, cond, fast, K)
-        f = dup_embed(f, -K.one, K)
+        f = dup_mirror(f, K)
         I_neg = dup_inner_isolate_real_roots(f, cond, fast, K)
 
         return sorted([ ((-v, -u), k) for (u, v) in I_neg ] + \
@@ -2307,7 +2316,7 @@ def dup_isolate_real_roots(f, K, **args):
         for u, v in dup_inner_isolate_real_roots(f, cond, fast, K):
             I_pos.append((u, v, k))
 
-        g = dup_embed(f, -K.one, K)
+        g = dup_mirror(f, K)
 
         for s, t in dup_inner_isolate_real_roots(g, cond, fast, K):
             I_neg.append((s, t, k))
