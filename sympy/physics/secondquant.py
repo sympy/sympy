@@ -2269,8 +2269,8 @@ def _sort_anticommuting_fermions(string1):
     """Sort fermionic operators to canonical order, assuming all pairs anticommute.
 
     Uses a bidirectional bubble sort.  Items in string1 are not referenced
-    so in principle they may be any comparable objects. Sorting is
-    done according to the >= operator.
+    so in principle they may be any comparable objects.   The sorting depends on the
+    operators '>' and '=='.
 
     If the Pauli principle is violated, an exception is raised.
 
