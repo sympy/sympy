@@ -2417,11 +2417,9 @@ def evaluate_deltas(e):
     else:
         return e
 
-def _get_dummies(expr, _reverse, **require):
+def _get_dummies(expr, arg_iterator, **require):
     """
-    Collects dummies recursively in predictable order.
-
-    Starting at right end to prioritize indices of non-commuting terms.
+    Collects dummies recursively in predictable order as defined by arg_iterator.
 
     FIXME: A more sophisticated predictable order would work better.
     Current implementation does not always work if factors commute. Since
@@ -2431,7 +2429,7 @@ def _get_dummies(expr, _reverse, **require):
 
     """
     result = []
-    for arg in _reverse(expr.args):
+    for arg in arg_iterator(expr.args):
         try:
             if arg.dummy_index:
                 # here we check that the dummy matches requirements
@@ -2443,7 +2441,7 @@ def _get_dummies(expr, _reverse, **require):
         except AttributeError:
             try:
                 if arg.args:
-                    result.extend(_get_dummies(arg, _reverse, **require))
+                    result.extend(_get_dummies(arg, arg_iterator, **require))
             except AttributeError:
                 pass
     return result
@@ -2496,9 +2494,9 @@ def _get_subslist(chaos,order):
 
     return subslist
 
-def _substitute(expr, ordered_dummies, _reverse, **require):
+def _substitute(expr, ordered_dummies, arg_iterator, **require):
     """
-    Substitute dummies in expr (which should be a Mul object)
+    Substitute dummies in expr
 
     If keyword arguments are given, those dummies that have an identical
     keyword in .assumptions0 must provide the same value (True or False)
@@ -2525,8 +2523,7 @@ def _substitute(expr, ordered_dummies, _reverse, **require):
 
     """
 
-    dummies = _remove_duplicates(_get_dummies(expr, _reverse, **require))
-
+    dummies = _remove_duplicates(_get_dummies(expr, arg_iterator, **require))
     subslist = _get_subslist(dummies, ordered_dummies)
 
     result =  expr.subs(subslist)
@@ -2603,13 +2600,13 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
 
     # reverse iterator for use in _get_dummies()
     if reverse_order:
-        def _reverse(seq):
+        def arg_iterator(seq):
             i=len(seq)
             while i>0:
                 i += -1
                 yield seq[i]
     else:
-        def _reverse(seq):
+        def arg_iterator(seq):
             for i in xrange(len(seq)):
                 yield seq[i]
 
@@ -2659,7 +2656,7 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
     for req, dummylist in cases:
         if isinstance(expr,Add):
             new_dummies = dummylist
-            expr = (Add(*[_substitute(term, new_dummies, _reverse, **req) for term in expr.args]))
+            expr = (Add(*[_substitute(term, new_dummies, arg_iterator, **req) for term in expr.args]))
 
     return expr
 
