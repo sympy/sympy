@@ -2325,10 +2325,15 @@ def evaluate_deltas(e):
     imply a loss of information, nothing is done.
 
     In case an index appears in more than one KroneckerDelta, the resulting
-    final substitution depends on the larger expression.  Behavior of
-    evaluate_deltas is in that case undefined.
+    substitution depends on the order of the factors.  Since the ordering is platform
+    dependent, the literal expression resulting from this function may be hard to
+    predict.
 
-    Examples:  We assume that
+    Examples:
+    =========
+
+    We assume that
+
     >>> from sympy import symbols, Function
     >>> from sympy.physics.secondquant import evaluate_deltas, KroneckerDelta
     >>> i,j = symbols('ij',below_fermi=True, dummy=True)
@@ -2338,9 +2343,9 @@ def evaluate_deltas(e):
     >>> t = Function('t')
 
     The order of preference for these indices according to KroneckerDelta is
-    (a,b,i,j,p,q)  So we get
+    (a,b,i,j,p,q).
 
-    ==Trivial cases===
+    Trivial cases:
 
     >>> evaluate_deltas(KroneckerDelta(i,j)*f(i))       # d_ij f(i) -> f(j)
     f(_j)
@@ -2353,8 +2358,7 @@ def evaluate_deltas(e):
     >>> evaluate_deltas(KroneckerDelta(q,p)*f(q))       # d_qp f(q) -> f(p)
     f(_p)
 
-
-    ==more interesting cases===
+    More interesting cases:
 
     >>> evaluate_deltas(KroneckerDelta(i,p)*t(a,i)*f(p,q))
     f(_i, _q)*t(_a, _i)
@@ -2363,16 +2367,13 @@ def evaluate_deltas(e):
     >>> evaluate_deltas(KroneckerDelta(p,q)*f(p,q))
     f(_p, _p)
 
-
-    == Do nothing to prevent loss of information ===
+    Finally, here are some cases where nothing is done, because that would
+    imply a loss of information:
 
     >>> evaluate_deltas(KroneckerDelta(i,p)*f(q))
     KroneckerDelta(_i, _p)*f(_q)
-
     >>> evaluate_deltas(KroneckerDelta(i,p)*f(i))
     KroneckerDelta(_i, _p)*f(_i)
-
-
     """
 
 
