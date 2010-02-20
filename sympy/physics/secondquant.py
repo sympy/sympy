@@ -2541,7 +2541,7 @@ def _substitute(expr, ordered_dummies, arg_iterator, **require):
     return result
 
 
-def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indices=True):
+def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indices={}):
     """
     Collect terms by substitution of dummy variables.
 
@@ -2551,19 +2551,22 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
     The idea is to substitute all dummy variables consistently depending on
     position in the term.  For each term, we collect a sequence of all dummy
     variables, where the order is determined by index position.  These indices
-    are then substituted consistently in each term.  E.g.
+    are then substituted consistently in each term.
+
+    Examples
+    ========
 
     >>> from sympy import symbols, Function
     >>> from sympy.physics.secondquant import substitute_dummies
-    >>> a,b = symbols('ab',dummy=True)
-    >>> c,d = symbols('cd',dummy=True)
+    >>> a,b,c,d = symbols('abcd',dummy=True, above_fermi=True)
+    >>> i,j = symbols('ij',dummy=True, below_fermi=True)
     >>> f = Function('f')
 
     >>> expr = f(a,b) + f(c,d); expr
     f(_a, _b) + f(_c, _d)
 
-    Since a, b, c and d are summation indices, this can be simplified to a
-    single summation term with a factor 2
+    Since a, b, c and d are equivalent summation indices, the expression can be
+    simplified to a single term (for which the dummy indices are still summed over)
 
     >>> substitute_dummies(expr, reverse_order=False)
     2*f(_a, _b)
@@ -2577,37 +2580,67 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
     >>> substitute_dummies(expr, reverse_order=True)
     2*f(_b, _a)
 
+    Controlling output
+    ==================
+
+    By default the dummy symbols that are already present in the expression
+    will be reused.  However, if new_indices=True, new dummies will be
+    generated and inserted.
+
+    The keyword 'pretty_indices' can be used to control this generation of new
+    symbols.
+
+    By default the new dummies will be generated on the form i_1, i_2, a_1,
+    etc.  If you supply a dictionary with key:value pairs in the form:
+
+        { index_group: string_of_letters }
+
+    The letters will be used as labels for the new dummy symbols.  The
+    index_groups must be one of 'above', 'below' or 'general'.
+
+    >>> expr = f(a,b,i,j)
+    >>> my_dummies = { 'above':'st','below':'uv' }
+    >>> substitute_dummies(expr, new_indices=True, pretty_indices=my_dummies)
+    f(_t, _s, _v, _u)
+
+    If we run out of letters, or if there is no keyword for some index_group
+    the default dummy generator will be used as a fallback:
+
+    >>> p,q = symbols('pq',dummy=True)  # general indices
+    >>> expr = f(p,q)
+    >>> substitute_dummies(expr, new_indices=True, pretty_indices=my_dummies)
+    f(_p_1, _p_0)
+
     """
 
-    # pretty_indices = True    # Prettier
-    # pretty_indices = False   # Easier to debug
+    # setup the replacing dummies
+    if new_indices:
+        letters_above  = pretty_indices.get('above',"")
+        letters_below  = pretty_indices.get('below',"")
+        letters_general= pretty_indices.get('general',"")
+        len_above  = len(letters_above)
+        len_below  = len(letters_below)
+        len_general= len(letters_general)
 
-
-    if not pretty_indices:
         def _i(number):
-            return 'i_'+str(number)
+            try:
+                return letters_below[number]
+            except IndexError:
+                return 'i_'+str(number-len_below)
+
         def _a(number):
-            return 'a_'+str(number)
+            try:
+                return letters_above[number]
+            except IndexError:
+                return 'a_'+str(number-len_above)
+
         def _p(number):
-            return 'p_'+str(number)
+            try:
+                return letters_general[number]
+            except IndexError:
+                return 'p_'+str(number-len_general)
 
 
-    else:
-        def _i(number):
-            if number<5:
-                return "klmno"[number]
-            else:
-                return 'o_'+str(number-5)
-        def _a(number):
-            if number<6:
-                return "cdefgh"[number]
-            else:
-                return 'h_'+str(number-6)
-        def _p(number):
-            if number<7:
-                return "tuvwxyz"[number]
-            else:
-                return 'z_'+str(number-7)
 
     # reverse iterator for use in _get_dummies()
     if reverse_order:
@@ -2632,29 +2665,26 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
     dummies = [ d for d in expr.atoms() if isinstance(d,Dummy) ]
     dummies.sort()
 
+    # generate lists with the dummies we will insert
     a = i = p = 0
     for d in dummies:
         assum = d.assumptions0
         assum["dummy"]=True
+
         if assum.get("above_fermi"):
-            sym = _a(a)
-            a +=1
+            if new_indices: sym = _a(a); a +=1
             l1 = aboves
         elif assum.get("below_fermi"):
-            sym = _i(i)
-            i +=1
+            if new_indices: sym = _i(i); i +=1
             l1 = belows
         else:
-            sym = _p(p)
-            p +=1
+            if new_indices: sym = _p(p); p +=1
             l1 = generals
 
         if new_indices:
             l1.append(Symbol(sym, **assum))
         else:
             l1.append(d)
-
-
 
 
     cases = (
