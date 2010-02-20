@@ -2505,27 +2505,38 @@ def _substitute(expr, ordered_dummies, arg_iterator, **require):
     Dummies without the keyword in .assumptions0 will be default to
     give the value False.
 
+    Warning
+    =======
+
+    Apart from checking the keyword requirements, nothing is done to prevent
+    loss of information during substitution.
+
+
+    Examples
+    ========
+
     >>> from sympy import Symbol
-    >>> from sympy.physics.secondquant import substitute_dummies, _substitute
+    >>> from sympy.physics.secondquant import substitute_dummies, _substitute,F
     >>> q = Symbol('q', dummy=True)
     >>> i = Symbol('i', below_fermi=True, dummy=True)
     >>> a = Symbol('a', above_fermi=True, dummy=True)
-
     >>> reverse = lambda x: reversed(x)
-    >>> _substitute(a, [q], reverse, above_fermi=True)   # will succeed
-    _a
-    >>> _substitute(i, [q], reverse, above_fermi=True)   # will not succeed
-    _i
-    >>> _substitute(i, [q], reverse, above_fermi=False)  # will succeed
-    _i
+
+    >>> _substitute(F(a), [q], reverse, above_fermi=True)   # will succeed
+    AnnihilateFermion(_q)
+    >>> _substitute(F(i), [q], reverse, above_fermi=True)   # will not succeed
+    AnnihilateFermion(_i)
+    >>> _substitute(F(i), [q], reverse, above_fermi=False)  # will succeed
+    AnnihilateFermion(_q)
 
     With no keywords, all dummies are substituted.
 
+    >>> _substitute(F(i), [q], reverse)   # will succeed
+    AnnihilateFermion(_q)
     """
 
     dummies = _remove_duplicates(_get_dummies(expr, arg_iterator, **require))
     subslist = _get_subslist(dummies, ordered_dummies)
-
     result =  expr.subs(subslist)
     return result
 
