@@ -77,19 +77,20 @@ is unambiguous with all other methods, including ones that may not be
 implemented yet.  If your method uses integrals, also include a
 "hint_Integral" hint.  If there is more than one way to solve ODEs with
 your method, include a hint for each one, as well as a "hint_best" hint.
-Your ode_hint_best() function should choose the best using
-compare_ode_sol.  See ode_1st_homogeneous_coeff_best(), for example. The
-function that uses your method will be called ode_hint(), so the hint
-must only use characters that are allowed in a Python function name
-(alphanumeric characters and the underscore '_' character).  Include a
-function for every hint, except for "_Integral" hints (dsolve() takes
-care of those automatically).  Hint names should be all lowercase,
-unless a word is commonly capitalized (such as Integral or Bernoulli).
-If you have a hint that you do not want to run with "all_Integral" that
-doesn't have an "_Integral" counterpart (such as a best hint that would
-defeat the purpose of "all_Integral"), you will need to remove it
-manually in the dsolve() code.  See also the classify_ode() docstring
-for guidelines on writing a hint name.
+Your ode_hint_best() function should choose the best using min with
+ode_sol_simplicity as the key argument.  See
+ode_1st_homogeneous_coeff_best(), for example. The function that uses
+your method will be called ode_hint(), so the hint must only use
+characters that are allowed in a Python function name (alphanumeric
+characters and the underscore '_' character).  Include a function for
+every hint, except for "_Integral" hints (dsolve() takes care of those
+automatically).  Hint names should be all lowercase, unless a word is
+commonly capitalized (such as Integral or Bernoulli). If you have a hint
+that you do not want to run with "all_Integral" that doesn't have an
+"_Integral" counterpart (such as a best hint that would defeat the
+purpose of "all_Integral"), you will need to remove it manually in the
+dsolve() code.  See also the classify_ode() docstring for guidelines on
+writing a hint name.
 
 Determine **in general** how the solutions returned by your method
 compare with other methods that can potentially solve the same ODEs.
@@ -191,7 +192,7 @@ method. The existing code is tested extensively in test_ode.py, so if
 anything is broken, one of those tests will surely fail.
 
 """
-from sympy.core import Add, Basic, C, S, Mul, Pow
+from sympy.core import Add, Basic, C, S, Mul, Pow, oo
 from sympy.core.function import Derivative, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
@@ -419,8 +420,8 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
                 failedhints[i] = detail
             else:
                 retdict[i] = sol
-        retdict['best'] = sorted(retdict.values(), cmp=lambda x, y:\
-            compare_ode_sol(x, y, func))[0]
+        retdict['best'] = min(retdict.values(), key=lambda x:
+            ode_sol_simplicity(x, func, trysolving=not simplify))
         if hint == 'best':
             return retdict['best']
         for i in hints['ordered_hints']:
@@ -1063,110 +1064,121 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
     else:
         return (False, s)
 
-# FIXME: rewrite this as a key function, so it works in Python 3
-# Python 3 removes the cmp key from sorted.  key should be better, because you
-# can use it with min(), but I have no idea how to convert this into a key function
-def compare_ode_sol(sol1, sol2, func, *args):
+
+def ode_sol_simplicity(sol, func, trysolving=True):
     """
-    Return -1 if eq1 is simpler than eq2, 0 if they are equally complex,
-    1 otherwise.
+    Returns an extended integer representing how simple a solution to an
+    ODE is.
 
-    This works like a standard Python cmp function, for use with
-    functions like sort().  For example, to get the simplest expression
-    from a list, you can use:
+    The following things are considered, in order from most simple to
+    least:
+    - sol is solved for func.
+    - sol is not solved for func, but can be if passed to solve (e.g.,
+    a solution returned by dsolve(ode, func, simplify=False)
+    - If sol is not solved for func, then base the result on the length
+    of sol, as computed by len(str(sol)).
+    - If sol has any unevaluated Integrals, this will automatically be
+    considered less simple than any of the above.
 
-    sorted(listofodes, cmp=lambda x, y: compare_ode_sol(x, y, func))[0]
+    This function returns an integer such that if solution A is simpler
+    than solution B by above metric, then ode_sol_simplicity(sola, func)
+    < ode_sol_simplicity(solb, func).
 
-    This takes into consideration if the equations are solvable in func,
-    if they contain any Integral classes (unevaluated integrals), and
-    barring that, the length of the string representation of the
-    expression.  Improvements to this heuristic are welcome!
+    Currently, the following are the numbers returned, but if the
+    heuristic is ever improved, this may change.  Only the ordering is
+    guaranteed.
+
+    sol solved for func                        -2
+    sol not solved for func but can be         -1
+    sol is not solved or solvable for func     len(str(sol))
+    sol contains an Integral                   oo
+
+    oo here means the SymPy infinity, which should compare greater than
+    any integer.
+
+    If you already know solve() cannot solve sol, you can use
+    trysolving=False to skip that step, which is the only potentially
+    slow step.  For example, dsolve with the simplify=False flag should
+    do this.
+
+    If sol is a list of solutions, if the worst solution in the list
+    returns oo it returns that, otherwise it returns len(str(sol)), that
+    is, the length of the string representation of the whole list.
 
     **Examples**
-        >>> from sympy import symbols, Function, Eq, tan, cos, sqrt
-        >>> from sympy.solvers.ode import compare_ode_sol
+
+    This function is designed to be passed to min as the key argument,
+    such as min(listofsolutions, key=lambda i: ode_sol_simplicity(i, f(x))).
+
+        >>> from sympy import symbols, Function, Eq, tan, cos, sqrt, Integral
+        >>> from sympy.solvers.ode import ode_sol_simplicity
         >>> x, C1 = symbols('x C1')
         >>> f = Function('f')
-        >>> # # This is from dsolve(x*f(x).diff(x) - f(x) - x*sin(f(x)/x), \
+
+        >>> ode_sol_simplicity(Eq(f(x), C1*x**2), f(x))
+        -2
+        >>> ode_sol_simplicity(Eq(x**2 + f(x), C1), f(x))
+        -1
+        >>> ode_sol_simplicity(Eq(f(x), C1*Integral(2*x, x)), f(x))
+        oo
+        >>> # This is from dsolve(x*f(x).diff(x) - f(x) - x*sin(f(x)/x), \
         >>> # f(x), hint='1st_homogeneous_coeff_subs_indep_div_dep')
         >>> eq1 = Eq(x/tan(f(x)/(2*x)), C1)
         >>> # This is from the same ode with the
         >>> # '1st_homogeneous_coeff_subs_dep_div_indep' hint.
         >>> eq2 = Eq(x*sqrt(1 + cos(f(x)/x))/sqrt(-1 + cos(f(x)/x)), C1)
-        >>> compare_ode_sol(eq1, eq2, f(x))
-        -1
+        >>> ode_sol_simplicity(eq1, f(x))
+        23
+        >>> min([eq1, eq2], key=lambda i: ode_sol_simplicity(i, f(x)))
+        x/tan(f(x)/(2*x)) == C1
 
     """
-    # First, if they are the same, don't bother testing which one to use
-    if sol1 == sol2:
-        return 0
+    #TODO: write examples
 
-    # If the solutions are lists (like [Eq(f(x), sqrt(x)), Eq(f(x), -sqrt(x))]),
-    # then base the comparison off the worst solution in the list.
-    # But when we look at the length of the expressions at the end, use the
-    # whole list.
-    if isinstance(sol1, list) or isinstance(sol1, tuple):
-        print 'test 1'
-        sol1len = sum([len(str(i)) for i in sol1])
-        sol1 = sorted(sol1, cmp=lambda x, y: compare_ode_sol(x, y,
-            func, *args))[len(sol1) - 1]
-    else:
-        sol1len = len(str(sol1))
-    if isinstance(sol2, list) or isinstance(sol2, tuple):
-        print 'test 2', sol1
-        sol2len = sum([len(str(i)) for i in sol2])
-        sol2 = sorted(sol2, cmp=lambda x, y: compare_ode_sol(x, y,
-            func, *args))[len(sol2) - 1]
-    else:
-        sol2len = len(str(sol2))
-    # Second, prefer expressions without unevaluated integrals (Integrals):
-    intcmp = int(sol1.has(C.Integral)) - int(sol2.has(C.Integral))
-    if intcmp:
-        return intcmp
+    # See the docstring for the coercion rules.  We check easier (faster)
+    # things here first, to save time.
+
+    if type(sol) in (list, tuple):
+        # See if there are Integrals
+        for i in sol:
+            if ode_sol_simplicity(i, func, trysolving=trysolving) == oo:
+                return oo
+
+        return len(str(sol))
+
+    if sol.has(C.Integral):
+        return oo
 
     # Next, try to solve for func.  This code will change slightly when RootOf
-    # is implemented in solve().
-    sol1s = 0
-    sol2s = 0
+    # is implemented in solve().  Probably a RootOf solution should fall somewhere
+    # between a normal solution and an unsolvable expression.
+
     # First, see if they are already solved
-    if sol1.lhs == func and not sol1.rhs.has(func) or\
-        sol1.rhs == func and not sol1.lhs.has(func):
-        sol1s = 1
-    if sol2.lhs == func and not sol2.rhs.has(func) or\
-        sol2.rhs == func and not sol2.lhs.has(func):
-        sol2s = 1
-    if sol2s - sol1s:
-        return sol2s - sol1s
+    if sol.lhs == func and not sol.rhs.has(func) or\
+        sol.rhs == func and not sol.lhs.has(func):
+            return -2
     # We are not so lucky, try solving manually
-    try:
-        sol1sol = solve(sol1, func)
-        if sol1sol == []:
-            raise NotImplementedError
-    except NotImplementedError:
-        pass
-    else:
-        sol1s = 1
-    try:
-        sol2sol = solve(sol2, func)
-        if sol2sol == []:
-            raise NotImplementedError
-    except NotImplementedError:
-        pass
-    else:
-        sol2s = 1
-    if sol2s - sol1s:
-        return sol2s - sol1s
+    if trysolving:
+        try:
+            sols = solve(sol, func)
+            if sols == []:
+                raise NotImplementedError
+        except NotImplementedError:
+            pass
+        else:
+            return -1
 
-    # Finally, try to return the shortest expression, naively computed
-    # based on the length of the string version of the expression.  This
-    # may favor combined fractions because they will not have duplicate
-    # denominators, and may slightly favor expressions with fewer
-    # additions and subtractions, as those are separated by spaces by
-    # the printer.
+    # Finally, a naive computation based on the length of the string version
+    # of the expression.  This may favor combined fractions because they
+    # will not have duplicate denominators, and may slightly favor expressions
+    # with fewer additions and subtractions, as those are separated by spaces
+    # by the printer.
 
-    # Additional ideas for simplicity comparison are welcome, like maybe
-    # checking if a equation has a larger domain.
-    return cmp(sol1len, sol2len)
+    # Additional ideas for simplicity heuristics are welcome, like maybe
+    # checking if a equation has a larger domain, or if constantsimp has
+    # introduced arbitrary constants numbered higher than the order of a
+    # given ode that sol is a solution of.
+    return len(str(sol))
 
 
 @vectorize(0)
@@ -1537,7 +1549,7 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     '1st_homogeneous_coeff_subs_dep_div_indep' and
     '1st_homogeneous_coeff_subs_indep_div_dep'.
 
-    This is as determined by compare_ode_sol().
+    This is as determined by ode_sol_simplicity().
 
     See the ode_1st_homogeneous_coeff_subs_indep_div_dep() and
     ode_1st_homogeneous_coeff_subs_dep_div_indep() docstrings for more
@@ -1573,10 +1585,12 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     func, order, match)
     sol2 = ode_1st_homogeneous_coeff_subs_dep_div_indep(eq,
     func, order, match)
-    if match.get('simplify', True):
+    simplify = match.get('simplify', True)
+    if simplify:
         sol1 = odesimp(sol1, func, order, "1st_homogeneous_coeff_subs_indep_div_dep")
         sol2 = odesimp(sol2, func, order, "1st_homogeneous_coeff_subs_dep_div_indep")
-    return sorted([sol1, sol2], cmp=lambda x, y: compare_ode_sol(x, y, func))[0]
+    return min(sol1, sol2, key=lambda x: ode_sol_simplicity(x, func,
+        trysolving=not simplify))
 
 def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     r"""

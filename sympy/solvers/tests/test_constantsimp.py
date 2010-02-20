@@ -139,7 +139,7 @@ def test_ode_solutions():
         (u2, _a, x/f(x))) + log(f(x)/C1), 0), x, 1), 'C', 1, 1) == \
         Eq(-Integral(-1/(u2*(1 - u2**2)**Rational(1,2)), (u2, _a, x/f(x))) + \
         log(C1*f(x)), 0)
-    assert map(lambda i: ode_renumber(constantsimp(i, x, 1), 'C', 1, 1),
+    assert [ode_renumber(constantsimp(i, x, 1), 'C', 1, 1) for i in
         [Eq(f(x), (-C1*x + x**2)**Rational(1,2)), Eq(f(x), -(-C1*x +
-        x**2)**Rational(1,2))]) == [Eq(f(x), (C1*x + x**2)**Rational(1,2)),
+        x**2)**Rational(1,2))]] == [Eq(f(x), (C1*x + x**2)**Rational(1,2)),
         Eq(f(x), -(C1*x + x**2)**Rational(1,2))]
