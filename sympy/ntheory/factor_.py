@@ -338,8 +338,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         >>> from sympy import Mul, Pow
         >>> regular = factorint(1764); regular
         {2: 2, 3: 2, 7: 2}
-        >>> pprint(Mul(*[Pow(*i, evaluate=False) for i in regular.items()],
-        ... evaluate=False))
+        >>> pprint(Mul(*[Pow(*i, **{'evaluate':False}) for i in regular.items()],
+        ... **{'evaluate':False}))
          2  2  2
         2 *3 *7
 
@@ -359,7 +359,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         use_pm1=use_pm1, verbose=verbose, visual=False)
         if factordict == {}:
             return S.One
-        return Mul(*[Pow(*i, evaluate=False) for i in factordict.items()], evaluate=False)
+        return Mul(*[Pow(*i, **{'evaluate':False}) for i in factordict.items()],
+            **{'evaluate':False})
     assert use_trial or use_rho or use_pm1
     n = int(n)
     if not n:
