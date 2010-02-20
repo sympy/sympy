@@ -2666,8 +2666,10 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
 
     for req, dummylist in cases:
         if isinstance(expr,Add):
-            new_dummies = dummylist
-            expr = (Add(*[_substitute(term, new_dummies, arg_iterator, **req) for term in expr.args]))
+            expr = (Add(*[_substitute(term, dummylist, arg_iterator, **req) for term in expr.args]))
+        else:
+            expr = _substitute(expr, dummylist, arg_iterator, **req)
+
 
     return expr
 
