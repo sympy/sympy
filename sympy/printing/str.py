@@ -16,16 +16,10 @@ from sympy.polys.polyerrors import PolynomialError
 
 class StrPrinter(Printer):
     printmethod = "_sympystr_"
-
-    def __init__(self, profile=None):
-        Printer.__init__(self)
-
-        self._settings = {
-                "full_prec" : "auto",
-        }
-
-        if profile is not None:
-            self._settings.update(profile)
+    _default_settings = {
+        "order": None,
+        "full_prec": "auto",
+    }
 
     def parenthesize(self, item, level):
         if precedence(item) <= level:
@@ -418,15 +412,10 @@ class StrPrinter(Printer):
         return "0"
 
 
-def sstr(expr, profile=None, **kargs):
+def sstr(expr, **settings):
     """return expr in str form"""
 
-    if profile is not None:
-        profile.update(kargs)
-    else:
-        profile = kargs
-
-    p = StrPrinter(profile)
+    p = StrPrinter(settings)
     s = p.doprint(expr)
 
     return s
@@ -438,7 +427,7 @@ class StrReprPrinter(StrPrinter):
     def _print_str(self, s):
         return repr(s)
 
-def sstrrepr(expr):
+def sstrrepr(expr, **settings):
     """return expr in mixed str/repr form
 
        i.e. strings are returned in repr form with quotes, and everything else
@@ -447,7 +436,7 @@ def sstrrepr(expr):
        This function could be useful for hooking into sys.displayhook
     """
 
-    p = StrReprPrinter()
+    p = StrReprPrinter(settings)
     s = p.doprint(expr)
 
     return s

@@ -1,7 +1,7 @@
 from sympy import symbols, Rational, Symbol, Integral, log, diff, sin, exp, \
         Function, factorial, floor, ceiling, abs, re, im, conjugate, gamma, \
         Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum, \
-        Limit, oo, Poly
+        Limit, oo, Poly, raises
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL
@@ -201,11 +201,11 @@ def test_latex_Matrix():
     M = Matrix([[1+x, y],[y, x-1]])
     assert latex(M) == '\\left(\\begin{smallmatrix}1 + x & y\\\\y & -1 + '\
                        'x\\end{smallmatrix}\\right)'
-    profile = {'mat_str' : 'bmatrix'}
-    assert latex(M, profile) == '\\left(\\begin{bmatrix}1 + x & y\\\\y & -1 + '+ \
-           'x\\end{bmatrix}\\right)'
-    profile['mat_delim'] = None
-    assert latex(M, profile) == '\\begin{bmatrix}1 + x & y\\\\y & -1 + '\
+    settings = {'mat_str' : 'bmatrix'}
+    assert latex(M, **settings) == '\\left(\\begin{bmatrix}1 + x & y\\\\y &'\
+           ' -1 + x\\end{bmatrix}\\right)'
+    settings['mat_delim'] = None
+    assert latex(M, **settings) == '\\begin{bmatrix}1 + x & y\\\\y & -1 + '\
                        'x\\end{bmatrix}'
     assert latex(M) == '\\left(\\begin{smallmatrix}1 + x & y\\\\y & -1 + '\
                        'x\\end{smallmatrix}\\right)'
@@ -251,12 +251,14 @@ def test_latex_issue1477():
 
 def test_mainvar():
     expr = 3*x*y**3+x**2*y+x**3+y**4
-    profile_y = {'mainvar' : y}
-    assert latex(expr, profile_y) == 'x^{3} + y x^{2} + 3 x y^{3} + y^{4}'
-    profile_x = {'mainvar' : x}
-    assert latex(expr, profile_x) == 'y^{4} + 3 x y^{3} + y x^{2} + x^{3}'
-    profile_y['descending'] = True
-    assert latex(expr, profile_y) == 'y^{4} + 3 x y^{3} + y x^{2} + x^{3}'
-    profile_x['descending'] = True
-    assert latex(expr, profile_x) == 'x^{3} + y x^{2} + 3 x y^{3} + y^{4}'
+    settings_y = {'mainvar' : y}
+    assert latex(expr, **settings_y) == 'x^{3} + y x^{2} + 3 x y^{3} + y^{4}'
+    settings_x = {'mainvar' : x}
+    assert latex(expr, **settings_x) == 'y^{4} + 3 x y^{3} + y x^{2} + x^{3}'
+    settings_y['descending'] = True
+    assert latex(expr, **settings_y) == 'y^{4} + 3 x y^{3} + y x^{2} + x^{3}'
+    settings_x['descending'] = True
+    assert latex(expr, **settings_x) == 'x^{3} + y x^{2} + 3 x y^{3} + y^{4}'
 
+def test_settings():
+    raises(TypeError, 'latex(x*y, method="garbage")')

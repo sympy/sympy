@@ -115,9 +115,6 @@ class ReprPrinter(Printer):
         return "%s(%s, %s)" % (self.__class__.__name__,
             self._print(self.coeffs()), self._print(expr.root))
 
-RPrinter = ReprPrinter()
-
-def srepr(expr):
+def srepr(expr, **settings):
     """return expr in repr form"""
-    return RPrinter.doprint(expr)
-
+    return ReprPrinter(settings).doprint(expr)

@@ -16,8 +16,41 @@ import re, warnings
 class LatexPrinter(Printer):
     printmethod = "_latex_"
 
-    def __init__(self, profile=None):
-        Printer.__init__(self)
+    _default_settings = {
+        "order": None,
+        "descending": False,
+        "mode": "plain",
+        "itex": False,
+        "mainvar": None,
+        "fold_frac_powers": False,
+        "fold_func_brackets": False,
+        "mul_symbol": None,
+        "inv_trig_style": "abbreviated",
+        "mat_str": "smallmatrix",
+        "mat_delim": "(",
+    }
+
+    def __init__(self, settings=None):
+        if settings is not None and settings.has_key('inline') and not settings['inline']:
+            # Change to "good" defaults for inline=False
+            settings['mat_str'] = 'bmatrix'
+            settings['mat_delim'] = None
+        Printer.__init__(self, settings)
+
+        if self._settings.has_key('inline'):
+            warnings.warn("'inline' is deprecated, please use 'mode'. "
+                "'mode' can be one of 'inline', 'plain', 'equation', or "
+                "'equation*'.")
+            if self._settings['inline']:
+                self._settings['mode'] = 'inline'
+            else:
+                self._settings['mode'] = 'equation*'
+        if self._settings.has_key('mode'):
+            valid_modes = ['inline', 'plain', 'equation', \
+                            'equation*']
+            if self._settings['mode'] not in valid_modes:
+                raise ValueError, "'mode' must be one of 'inline', 'plain', " \
+                    "'equation' or 'equation*'"
 
         mul_symbol_table = {
             None : r" ",
@@ -26,41 +59,10 @@ class LatexPrinter(Printer):
             "times" : r" \times "
         }
 
-        self._settings = {
-            "itex": False,
-            "descending" : False,
-            "mainvar" : None,
-            "mode" : 'plain',
-            "fold_frac_powers" : False,
-            "fold_func_brackets" : False,
-            "mul_symbol" : None,
-            "inv_trig_style" : "abbreviated",
-            "mat_str" : "smallmatrix",
-            "mat_delim" : "(",
-        }
-
-        self._delim_dict = {'(':')','[':']'}
-
-        if profile is not None:
-            if profile.has_key('inline'):
-                warnings.warn("'inline' is deprecated, please use 'mode'. "
-                    "'mode' can be one of 'inline', 'plain', 'equation', or "
-                    "'equation*'.")
-                if profile['inline']:
-                    profile['mode'] = 'inline'
-                else:
-                    profile['mode'] = 'equation*'
-            if profile.has_key('mode'):
-                valid_modes = ['inline', 'plain', 'equation', \
-                               'equation*']
-                if profile['mode'] not in valid_modes:
-                    msg = "'mode' must be one of 'inline', 'plain', \n" + \
-                          "'equation' or 'equation*'"
-                    raise ValueError, msg
-            self._settings.update(profile)
-
         self._settings['mul_symbol_latex'] = \
             mul_symbol_table[self._settings['mul_symbol']]
+
+        self._delim_dict = {'(':')','[':']'}
 
     def doprint(self, expr):
         tex = Printer.doprint(self, expr)
@@ -727,7 +729,8 @@ class LatexPrinter(Printer):
     def _print_EmptySet(self, e):
         return r"\emptyset"
 
-def latex(expr, profile=None, **kargs):
+
+def latex(expr, **settings):
     r"""Convert the given expression to LaTeX representation.
 
         You can specify how the generated code will be delimited using
@@ -770,13 +773,8 @@ def latex(expr, profile=None, **kargs):
 
     """
 
-    if profile is not None:
-        profile.update(kargs)
-    else:
-        profile = kargs
+    return LatexPrinter(settings).doprint(expr)
 
-    return LatexPrinter(profile).doprint(expr)
-
-def print_latex(expr):
+def print_latex(expr, **settings):
     """Prints LaTeX representation of the given expression."""
-    print latex(expr)
+    print latex(expr, **settings)

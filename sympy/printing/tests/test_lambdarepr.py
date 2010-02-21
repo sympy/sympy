@@ -1,4 +1,4 @@
-from sympy import symbols, sin, Matrix
+from sympy import symbols, sin, Matrix, raises
 from sympy.printing.lambdarepr import lambdarepr
 x,y,z = symbols("xyz")
 
@@ -10,3 +10,6 @@ def test_basic():
 def test_matrix():
     A = Matrix([[x,y],[y*x,z**2]])
     assert lambdarepr(A)=="Matrix([[  x,    y],[x*y, z**2]])"
+
+def test_settings():
+    raises(TypeError, 'lambdarepr(sin(x),method="garbage")')

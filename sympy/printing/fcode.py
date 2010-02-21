@@ -37,11 +37,28 @@ class FCodePrinter(StrPrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
     printmethod = "_fcode_"
 
+    _default_settings = {
+        'order': None,
+        'full_prec': 'auto',
+        'assign_to': None,
+        'precision': 15,
+        'user_functions': {},
+        'human': True,
+    }
+
     def doprint(self, expr):
         """Returns Fortran code for expr (as a string)"""
+        # find all number symbols
+        number_symbols = set([])
+        for sub in postorder_traversal(expr):
+            if isinstance(sub, NumberSymbol):
+                number_symbols.add(sub)
+        number_symbols = [(str(ns), ns.evalf(self._settings["precision"]))
+                          for ns in sorted(number_symbols)]
+
         # keep a set of expressions that are not strictly translatable to
         # Fortran.
-        self.not_fortran = set([])
+        self._not_fortran = set([])
 
         lines = []
         if isinstance(expr, Piecewise):
@@ -58,13 +75,31 @@ class FCodePrinter(StrPrinter):
                 else:
                     lines.append("        %s = %s" % (self._settings["assign_to"], self._print(e)))
             lines.append("      end if")
-            return "\n".join(lines)
+            text = "\n".join(lines)
         else:
             line = StrPrinter.doprint(self, expr)
             if self._settings["assign_to"] is None:
-                return "      %s" % line
+                text = "      %s" % line
             else:
-                return "      %s = %s" % (self._settings["assign_to"], line)
+                text = "      %s = %s" % (self._settings["assign_to"], line)
+
+        # format the output
+        if self._settings["human"]:
+            lines = []
+            if len(self._not_fortran) > 0:
+                lines.append("C     Not Fortran 77:")
+                for expr in sorted(self._not_fortran):
+                    lines.append("C     %s" % expr)
+            for name, value in number_symbols:
+                lines.append("      parameter (%s = %s)" % (name, value))
+            lines.extend(text.split("\n"))
+            lines = wrap_fortran(lines)
+            result = "\n".join(lines)
+        else:
+            result = number_symbols, self._not_fortran, text
+
+        del self._not_fortran
+        return result
 
     def _print_Add(self, expr):
         # purpose: print complex numbers nicely in Fortran.
@@ -113,7 +148,7 @@ class FCodePrinter(StrPrinter):
             else:
                 name = expr.func.__name__
             if expr.func not in implicit_functions:
-                self.not_fortran.add(expr)
+                self._not_fortran.add(expr)
         return "%s(%s)" % (name, self.stringify(expr.args, ", "))
 
     _print_Factorial = _print_Function
@@ -160,7 +195,7 @@ class FCodePrinter(StrPrinter):
         return '%d.0/%d.0' % (p, q)
 
     def _print_not_fortran(self, expr):
-        self.not_fortran.add(expr)
+        self._not_fortran.add(expr)
         return StrPrinter.emptyPrinter(self, expr)
 
     # The following can not be simply translated into Fortran.
@@ -258,7 +293,7 @@ def wrap_fortran(lines):
     return result
 
 
-def fcode(expr, assign_to=None, precision=15, user_functions={}, human=True):
+def fcode(expr, **settings):
     """Converts an expr to a string of Fortran 77 code
 
        Arguments:
@@ -287,40 +322,15 @@ def fcode(expr, assign_to=None, precision=15, user_functions={}, human=True):
              pi
 
     """
-    # find all number symbols
-    number_symbols = set([])
-    for sub in postorder_traversal(expr):
-        if isinstance(sub, NumberSymbol):
-            number_symbols.add(sub)
-    number_symbols = [(str(ns), ns.evalf(precision)) for ns in sorted(number_symbols)]
     # run the printer
-    profile = {
-        "full_prec": False, # programmers don't care about trailing zeros.
-        "assign_to": assign_to,
-        "user_functions": user_functions,
-    }
-    printer = FCodePrinter(profile)
-    result = printer.doprint(expr)
-    # format the output
-    if human:
-        lines = []
-        if len(printer.not_fortran) > 0:
-            lines.append("C     Not Fortran 77:")
-            for expr in sorted(printer.not_fortran):
-                lines.append("C     %s" % expr)
-        for name, value in number_symbols:
-            lines.append("      parameter (%s = %s)" % (name, value))
-        lines.extend(result.split("\n"))
-        lines = wrap_fortran(lines)
-        return "\n".join(lines)
-    else:
-        return number_symbols, printer.not_fortran, result
+    printer = FCodePrinter(settings)
+    return printer.doprint(expr)
 
 
-def print_fcode(expr, assign_to=None, precision=15, user_functions={}):
+def print_fcode(expr, **settings):
     """Prints the Fortran representation of the given expression.
 
        See fcode for the meaning of the optional arguments.
     """
-    print fcode(expr, assign_to, precision, user_functions)
+    print fcode(expr, **settings)
 

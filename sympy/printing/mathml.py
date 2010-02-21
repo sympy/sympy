@@ -16,14 +16,19 @@ class MathMLPrinter(Printer):
     References: http://www.w3.org/TR/MathML2/
     """
     printmethod = "_mathml_"
+    _default_settings = {
+        "order": None,
+        "encoding": "utf-8"
+    }
 
-    def __init__(self, *args, **kwargs):
-        Printer.__init__(self, *args, **kwargs)
+    def __init__(self, settings=None):
+        Printer.__init__(self, settings)
         from xml.dom.minidom import Document
         self.dom = Document()
 
-    def doprint(self, e):
-        return self._print(e).toxml(encoding="utf-8")
+    def doprint(self, expr):
+        mathML = Printer._print(self, expr)
+        return mathML.toxml(encoding=self._settings['encoding'])
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -332,12 +337,11 @@ class MathMLPrinter(Printer):
         dom_element.appendChild(self.dom.createTextNode(str(p)))
         return dom_element
 
-def mathml(expr):
+def mathml(expr, **settings):
     """Returns the MathML representation of expr"""
-    s = MathMLPrinter()
-    return s.doprint(sympify(expr))
+    return MathMLPrinter(settings).doprint(expr)
 
-def print_mathml(expr):
+def print_mathml(expr, **settings):
     """
     Prints a pretty representation of the MathML code for expr
 
@@ -356,5 +360,5 @@ def print_mathml(expr):
     </apply>
 
     """
-    s = MathMLPrinter()
+    s = MathMLPrinter(settings)
     print s._print(sympify(expr)).toprettyxml(encoding="utf-8")

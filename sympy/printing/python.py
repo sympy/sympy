@@ -11,9 +11,9 @@ STRPRINT = ("Add", "Infinity", "Integer", "Mul", "NegativeInfinity",
 class PythonPrinter(ReprPrinter, StrPrinter):
     """A printer which converts an expression into its Python interpretation."""
 
-    def __init__(self):
+    def __init__(self, settings=None):
         ReprPrinter.__init__(self)
-        StrPrinter.__init__(self)
+        StrPrinter.__init__(self, settings)
         self.symbols = []
         self.functions = []
 
@@ -41,11 +41,11 @@ class PythonPrinter(ReprPrinter, StrPrinter):
         raise ValueError('Modules in the expression are unacceptable')
 
 
-def python(expr):
+def python(expr, **settings):
     """Return Python interpretation of passed expression
     (can be passed to the exec() function without any modifications)"""
 
-    printer = PythonPrinter()
+    printer = PythonPrinter(settings)
     expr = printer.doprint(expr)
 
     result = ''
@@ -58,6 +58,6 @@ def python(expr):
     result += 'e = ' + printer._str(expr)
     return result
 
-def print_python(expr):
+def print_python(expr, **settings):
     """Print output of python() function"""
-    print python(expr)
+    print python(expr, **settings)

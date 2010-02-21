@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from sympy import Symbol, Matrix, Integral, log, Rational, Derivative, exp, \
         sqrt, pi, Function, sin, cos, pprint_use_unicode, oo, Eq, Le, \
-        Gt, Ne, Limit, factorial, gamma, conjugate, I, Piecewise, S, pprint, Pow
+        Gt, Ne, Limit, factorial, gamma, conjugate, I, Piecewise, S, pprint, \
+        Pow, raises
 from sympy.printing.pretty import pretty as xpretty
 
 x = Symbol('x')
@@ -382,3 +383,5 @@ def test_pprint():
         sys.stdout = sso
     assert fd.getvalue() == 'pi\n'
 
+def test_settings():
+    raises(TypeError, 'pretty(S(4), method="garbage")')

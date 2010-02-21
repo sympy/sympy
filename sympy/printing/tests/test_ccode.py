@@ -1,4 +1,4 @@
-from sympy import sin, cos, abs, exp, pi, oo, symbols, ceiling
+from sympy import sin, cos, abs, exp, pi, oo, symbols, ceiling, raises
 from sympy import Function, Piecewise, Rational, Integer
 
 from sympy.printing import ccode
@@ -63,3 +63,7 @@ pow(x,2)
 }\
 """
     assert p == s
+
+def test_ccode_settings():
+    raises(TypeError, 'ccode(sin(x),method="garbage")')
+

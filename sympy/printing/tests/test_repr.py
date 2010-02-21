@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import XFAIL
 from sympy import Symbol, symbols, Function, Integer, Matrix, nan, oo, abs, \
-    Rational, Real, S, WildFunction
+    Rational, Real, S, WildFunction, raises
 from sympy.geometry import Point, Circle, Ellipse
 from sympy.printing import srepr
 
@@ -97,3 +97,6 @@ def test_WildFunction():
 
 def test_Zero():
     sT(S.Zero, "Zero")
+
+def test_settins():
+    raises(TypeError, 'srepr(x, method="garbage")')

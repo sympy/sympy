@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from sympy import Symbol, symbols, oo, limit, Rational, Integral, Derivative
-from sympy import log, exp, sqrt, pi, Function, sin, Eq, Le, Gt, Ne
+from sympy import Symbol, symbols, oo, limit, Rational, Integral, Derivative, \
+    log, exp, sqrt, pi, Function, sin, Eq, Le, Gt, Ne, raises
 
 from sympy.printing.python import python
 
@@ -144,3 +144,6 @@ def test_python_integrals():
 def test_python_limits():
     assert python(limit(x, x, oo)) == 'e = oo'
     assert python(limit(x**2, x, 0)) == 'e = 0'
+
+def test_settings():
+    raises(TypeError, 'python(x, method="garbage")')

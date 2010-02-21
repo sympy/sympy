@@ -15,18 +15,16 @@ pprint_try_use_unicode = pretty_try_use_unicode
 class PrettyPrinter(Printer):
     """Printer, which converts an expression into 2D ASCII-art figure."""
 
-    def __init__(self, order=None, profile=None):
-        Printer.__init__(self, order)
+    _default_settings = {
+        "order": None,
+        "full_prec": "auto",
+        "use_unicode": True,
+        "wrap_line": True,
+    }
+
+    def __init__(self, settings=None):
+        Printer.__init__(self, settings)
         self.emptyPrinter = lambda x : prettyForm(xstr(x))
-
-        self._settings = {
-                "full_prec" : "auto",
-                "use_unicode" : True,
-                "wrap_line" : True,
-        }
-
-        if profile is not None:
-            self._settings.update(profile)
 
     def doprint(self, expr):
         return self._print(expr).render(**self._settings)
@@ -666,7 +664,7 @@ class PrettyPrinter(Printer):
         else:
             return self._print(expr.as_basic())
 
-def pretty(expr, order=None, profile=None, **kargs):
+def pretty(expr, **settings):
     """
     Returns a string containing the prettified form of expr.
 
@@ -678,24 +676,21 @@ def pretty(expr, order=None, profile=None, **kargs):
         the string pi. Values should be boolean or None
     full_prec: use full precision. Default to "auto"
     """
-    if profile is not None:
-        profile.update(kargs)
-    else:
-        profile = kargs
-    uflag = pretty_use_unicode(kargs.get("use_unicode", None))
+    uflag = pretty_use_unicode(settings.get("use_unicode", None))
     try:
-        pp = PrettyPrinter(order, profile)
+        pp = PrettyPrinter(settings)
         return pp.doprint(expr)
     finally:
         pretty_use_unicode(uflag)
 
-def pretty_print(expr, order=None, use_unicode=None):
+
+def pretty_print(expr, **settings):
     """
     Prints expr in pretty form.
 
     pprint is just a shortcut for this function
     """
-    print pretty(expr, order=order, use_unicode=use_unicode)
+    print pretty(expr, **settings)
 
 pprint = pretty_print
 

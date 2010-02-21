@@ -1,5 +1,5 @@
 from sympy import sin, cos, atan2, gamma, conjugate, sqrt, Factorial, \
-    Integral, Piecewise, Add, diff, symbols, raises
+    Integral, Piecewise, Add, diff, symbols, S, raises
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer
 
@@ -215,3 +215,5 @@ def test_wrap_fortran():
         assert w == e
     assert len(wrapped_lines) == len(expected_lines)
 
+def test_settings():
+    raises(TypeError, 'fcode(S(4), method="garbage")')

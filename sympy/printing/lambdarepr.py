@@ -59,8 +59,8 @@ class LambdaPrinter(StrPrinter):
         result = ['(', 'not (', self._print(expr.args[0]), '))']
         return ''.join(result)
 
-def lambdarepr(expr):
+def lambdarepr(expr, **settings):
     """
     Returns a string usable for lambdifying.
     """
-    return LambdaPrinter().doprint(expr)
+    return LambdaPrinter(settings).doprint(expr)

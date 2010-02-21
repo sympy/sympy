@@ -2,7 +2,7 @@ from sympy import abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,\
                   Function, GoldenRatio, I, Integer, Integral, Interval, Lambda,\
                   Limit, log, Matrix, nan, O, oo, pi, Rational, Real, Rel, S,\
                   sin, SMatrix, sqrt, sum, Sum, Sum2, Symbol, symbols, Wild,\
-                  WildFunction, zeta, zoo
+                  WildFunction, zeta, zoo, raises
 from sympy.core.basic import Basic
 from sympy.physics.units import second
 from sympy.polys import Poly, RootsOf, RootOf, RootSum
@@ -408,3 +408,5 @@ def test_empty_printer():
     assert StrPrinter.emptyPrinter(x*y) == "x*y"
     assert StrPrinter.emptyPrinter(32) == "32"
 
+def test_settings():
+    raises(TypeError, 'sstr(S(4), method="garbage")')

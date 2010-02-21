@@ -176,19 +176,32 @@ class Printer(object):
     is subclassed from Basic.
 
     """
-    def __init__(self, order=None):
+
+    _default_settings = {
+        "order": None,
+    }
+
+    def __init__(self, settings=None):
         self._str = str
         if not hasattr(self, "printmethod"):
             self.printmethod = None
         if not hasattr(self, "emptyPrinter"):
             self.emptyPrinter = str
+        self._settings = self._default_settings.copy()
+        if settings is not None:
+            self._settings.update(settings)
+            if len(self._settings) > len(self._default_settings):
+                for key in self._settings:
+                    if key not in self._default_settings:
+                        raise TypeError("Unknown setting '%s'." % key)
 
         # _print_level is the number of times self._print() was recursively
         # called. See StrPrinter._print_Real() for an example of usage
         self._print_level = 0
 
         # configure ordering of terms in Add (e.g. lexicographic ordering)
-        if order is not None:
+        if self._settings["order"] is not None:
+            order = self._settings["order"]
             if order.startswith('rev-'):
                 self.order = monomial_cmp(order[4:])
                 self.reverse = True

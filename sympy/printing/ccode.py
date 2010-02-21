@@ -75,7 +75,7 @@ class CCodePrinter(StrPrinter):
             return StrPrinter._print_Function(self, expr)
 
 
-def ccode(expr):
+def ccode(expr, **settings):
     r"""Converts an expr to a string of c code
 
         Works for simple expressions using math.h functions.
@@ -87,8 +87,8 @@ def ccode(expr):
         '8*pow(2,(1.0/2.0))*pow(tau,(7.0/2.0))'
 
     """
-    return CCodePrinter().doprint(expr)
+    return CCodePrinter(settings).doprint(expr)
 
-def print_ccode(expr):
+def print_ccode(expr, **settings):
     """Prints C representation of the given expression."""
-    print ccode(expr)
+    print ccode(expr, **settings)
