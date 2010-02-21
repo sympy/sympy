@@ -174,6 +174,10 @@ def postorder_traversal(node):
         for arg in node.args:
             for subtree in postorder_traversal(arg):
                 yield subtree
+    elif hasattr(node, "__len__"):
+        for item in node:
+            for subtree in postorder_traversal(item):
+                yield subtree
     yield node
 
 def preorder_traversal(node):
@@ -207,6 +211,10 @@ def preorder_traversal(node):
     if isinstance(node, Basic):
         for arg in node.args:
             for subtree in preorder_traversal(arg):
+                yield subtree
+    elif hasattr(node, "__len__"):
+        for item in node:
+            for subtree in preorder_traversal(item):
                 yield subtree
 
 def subsets(M, k):
