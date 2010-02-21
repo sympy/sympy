@@ -5,6 +5,12 @@ from sympy import (
     symbols, expand, pprint, Number, latex
 )
 
+pretty_dummies_dict={
+        'above':'cdefgh',
+        'below':'klmno',
+        'general':'pqrstu'
+        }
+
 
 print
 print "Calculates the Coupled-Cluster energy- and amplitude equations"
@@ -65,7 +71,8 @@ print "construct Hausdoff expansion..."
 eq = H + comm1+comm2/2+comm3/6+comm4/24
 eq = eq.expand()
 eq = evaluate_deltas(eq)
-eq = substitute_dummies(eq, new_indices=True, reverse_order=False)
+eq = substitute_dummies(eq, new_indices=True, reverse_order=False,
+        pretty_indices=pretty_dummies_dict)
 print "*********************"
 print
 
