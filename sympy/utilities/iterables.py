@@ -174,7 +174,7 @@ def postorder_traversal(node):
         for arg in node.args:
             for subtree in postorder_traversal(arg):
                 yield subtree
-    elif hasattr(node, "__len__"):
+    elif hasattr(node, "__iter__"):
         for item in node:
             for subtree in postorder_traversal(item):
                 yield subtree
@@ -212,7 +212,7 @@ def preorder_traversal(node):
         for arg in node.args:
             for subtree in preorder_traversal(arg):
                 yield subtree
-    elif hasattr(node, "__len__"):
+    elif hasattr(node, "__iter__"):
         for item in node:
             for subtree in preorder_traversal(item):
                 yield subtree
