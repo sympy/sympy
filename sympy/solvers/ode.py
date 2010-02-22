@@ -101,7 +101,7 @@ purpose of "all_Integral"), you will need to remove it manually in the
 dsolve() code.  See also the classify_ode() docstring for guidelines on
 writing a hint name.
 
-Determine **in general** how the solutions returned by your method
+Determine *in general* how the solutions returned by your method
 compare with other methods that can potentially solve the same ODEs.
 Then, put your hints in the allhints tuple in the order that they should
 be called.  The ordering of this tuple determines which hints are
@@ -1813,20 +1813,17 @@ def _homogeneous_order(eq, *symbols):
 
     # Replace all functions with dummy variables
 
-    if any(getattr(i, 'is_Function') for i in symbols):
-        for i in symbols:
-            if i.is_Function:
-                if not all([j in symbols for j in i.args]):
-                    return None
-                elif i not in symbols:
-                    pass
-                else:
-                    dummyvar = numbered_symbols(prefix='d', dummy=True).next()
-                    eq = eq.subs(i, dummyvar)
-                    symbols = list(symbols)
-                    symbols.remove(i)
-                    symbols.append(dummyvar)
-                    symbols = tuple(symbols)
+    for i in symbols:
+        if i.is_Function:
+            if not all([j in symbols for j in i.args]):
+                return None
+            else:
+                dummyvar = numbered_symbols(prefix='d', dummy=True).next()
+                eq = eq.subs(i, dummyvar)
+                symbols = list(symbols)
+                symbols.remove(i)
+                symbols.append(dummyvar)
+                symbols = tuple(symbols)
 
     # The following are not supported
     if eq.has(Order) or eq.has(Derivative):
@@ -1848,13 +1845,13 @@ def _homogeneous_order(eq, *symbols):
             n = s
 
     if eq.is_Pow:
-        if not eq.args[1].is_Number:
+        if not eq.exp.is_number:
             return None
-        o = _homogeneous_order(eq.args[0], *symbols)
+        o = _homogeneous_order(eq.base, *symbols)
         if o == None:
             return None
         else:
-            n.add(sympify(o*eq.args[1]))
+            n.add(sympify(o*eq.exp))
 
     t = Symbol('t', dummy=True, positive=True) # It is sufficient that t > 0
     r = Wild('r', exclude=[t])
@@ -2182,16 +2179,16 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
 
     The following is for internal use:
 
-    returns = 'sol' returns the solution to the ODE.
-    returns = 'list'  returns a list of linearly independent solutions,
-    for use with non homogeneous solution methods like variation of
-    parameters and undetermined coefficients.  Note that, though the
-    solutions should be linearly independent, this function does not
-    explicitly check that.  You can do "assert
-    simplify(wronskian(sollist)) != 0" to check for linear independence.
-     Also, "assert len(sollist) == order" will need to pass.
-     returns = 'both', return a dictionary {'sol':solution to ODE,
-     'list': list of linearly independent solutions}.
+    - returns = 'sol' returns the solution to the ODE.
+    - returns = 'list'  returns a list of linearly independent
+      solutions, for use with non homogeneous solution methods like
+      variation of parameters and undetermined coefficients.  Note that,
+      though the solutions should be linearly independent, this function
+      does not explicitly check that.  You can do "assert
+      simplify(wronskian(sollist)) != 0" to check for linear independence.
+      Also, "assert len(sollist) == order" will need to pass.
+    - returns = 'both', return a dictionary {'sol':solution to ODE,
+      'list': list of linearly independent solutions}.
 
     **Example**
         >>> from sympy import Function, dsolve, pprint

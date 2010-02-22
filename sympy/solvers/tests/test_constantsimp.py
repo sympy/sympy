@@ -143,3 +143,7 @@ def test_ode_solutions():
         [Eq(f(x), (-C1*x + x**2)**Rational(1,2)), Eq(f(x), -(-C1*x +
         x**2)**Rational(1,2))]] == [Eq(f(x), (C1*x + x**2)**Rational(1,2)),
         Eq(f(x), -(C1*x + x**2)**Rational(1,2))]
+
+def test_constant_Eq():
+    # C1 on the rhs is well-tested, but the lhs is only tested here
+    assert constantsimp(Eq(C1, 3 + f(x)*x),  x, 1) == Eq(C1, f(x)*x)

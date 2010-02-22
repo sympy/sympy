@@ -402,6 +402,9 @@ def test_homogeneous_order():
     assert homogeneous_order(-f(x).diff(x) + x, x, y) == None
     assert homogeneous_order(O(x), x, y) == None
     assert homogeneous_order(x + O(x**2), x, y) == None
+    assert homogeneous_order(x**pi, x) == pi
+    assert homogeneous_order(x**x, x) == None
+    raises(ValueError, "homogeneous_order(x*y)")
 
 
 def test_1st_homogeneous_coeff_ode1():
