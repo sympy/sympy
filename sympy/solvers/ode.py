@@ -177,8 +177,8 @@ put these in a separate tests and skip/XFAIL if it runs too slow/doesn't
 work).  Be sure to call your hint specifically in dsolve, that way the
 test won't be broken simply by the introduction of another matching
 hint. If your method works for higher order (>1) ODEs, you will need to
-run sol = ode_renumber(sol, 'C', 1, order), for each solution, where
-order is the order of the ODE. This is because ode_renumber renumbers
+run sol = constant_renumber(sol, 'C', 1, order), for each solution, where
+order is the order of the ODE. This is because constant_renumber renumbers
 the arbitrary constants by printing order, which is platform dependent.
 Try to test every corner case of your solver, including a range of
 orders if it is a nth order solver, but if your solver is slow, auch as
@@ -884,7 +884,7 @@ def odesimp(eq, func, order, hint):
     # We cleaned up the costants before solving to help the solve engine with
     # a simpler expression, but the solved expression could have introduced
     # things like -C1, so rerun constantsimp() one last time before returning.
-    eq = ode_renumber(constantsimp(eq, x, 2*order), 'C', 1, 2*order)
+    eq = constant_renumber(constantsimp(eq, x, 2*order), 'C', 1, 2*order)
 
     return eq
 
@@ -1217,7 +1217,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     So for example, exp(C1)*exp(x) will be simplified to C1*exp(x), but
     exp(C1 + x) will be left alone.
 
-    Use ode_renumber() to renumber constants after simplification.
+    Use constant_renumber() to renumber constants after simplification.
     Without using that function, simplified constants may end up
     having any numbering to them.
 
@@ -1326,7 +1326,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                 return newexpr
 
 @vectorize(0)
-def ode_renumber(expr, symbolname, startnumber, endnumber):
+def constant_renumber(expr, symbolname, startnumber, endnumber):
     """
     Renumber arbitrary constants in expr.
 
@@ -1345,12 +1345,12 @@ def ode_renumber(expr, symbolname, startnumber, endnumber):
 
     **Example**
         >>> from sympy import symbols, Eq, pprint
-        >>> from sympy.solvers.ode import ode_renumber
+        >>> from sympy.solvers.ode import constant_renumber
         >>> x, C1, C2, C3 = symbols('x C1 C2 C3')
         >>> pprint(C2 + C1*x + C3*x**2)
                         2
         C2 + C1*x + C3*x
-        >>> pprint(ode_renumber(C2 + C1*x + C3*x**2, 'C', 1, 3))
+        >>> pprint(constant_renumber(C2 + C1*x + C3*x**2, 'C', 1, 3))
                         2
         C1 + C2*x + C3*x
 
@@ -1359,7 +1359,7 @@ def ode_renumber(expr, symbolname, startnumber, endnumber):
     global newstartnumber
     newstartnumber = 1
 
-    def _ode_renumber(expr, symbolname, startnumber, endnumber):
+    def _constant_renumber(expr, symbolname, startnumber, endnumber):
         """
         We need to have an internal recursive function so that
         newstartnumber maintains its values throughout recursive calls.
@@ -1371,8 +1371,8 @@ def ode_renumber(expr, symbolname, startnumber, endnumber):
         global newstartnumber
 
         if isinstance(expr, Equality):
-            return Eq(_ode_renumber(expr.lhs, symbolname, startnumber, endnumber),
-            _ode_renumber(expr.rhs, symbolname, startnumber, endnumber))
+            return Eq(_constant_renumber(expr.lhs, symbolname, startnumber, endnumber),
+            _constant_renumber(expr.rhs, symbolname, startnumber, endnumber))
 
         if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and\
         not any(expr.has(t) for t in constantsymbols):
@@ -1386,16 +1386,16 @@ def ode_renumber(expr, symbolname, startnumber, endnumber):
             return newconst
         else:
             if expr.is_Function or expr.is_Pow:
-                return expr.new(*[_ode_renumber(x, symbolname, startnumber,
+                return expr.new(*[_constant_renumber(x, symbolname, startnumber,
                 endnumber) for x in expr.args])
             else:
                 sortedargs = list(expr.args)
                 sortedargs.sort(Basic._compare_pretty)
-                return expr.new(*[_ode_renumber(x, symbolname, startnumber,
+                return expr.new(*[_constant_renumber(x, symbolname, startnumber,
                 endnumber) for x in sortedargs])
 
 
-    return _ode_renumber(expr, symbolname, startnumber, endnumber)
+    return _constant_renumber(expr, symbolname, startnumber, endnumber)
 
 
 def _handle_Integral(expr, func, order, hint):
