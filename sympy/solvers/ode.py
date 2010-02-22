@@ -20,9 +20,18 @@ specific hint.  See also the docstring on dsolve().
     - homogeneous_order() - Returns the homogeneous order of an
       expression.
 
-    See also the docstrings of these functions.  There are also quite a
-    few functions that are not imported into the global namespace. See
-    the docstrings of those functions for more info.
+    These are the non-solver helper functions that are for internal use.
+    The user should use the various options to dsolve() to obtain the
+    functionality provided by these functions:
+
+    - odesimp() - Does all forms of ODE simplification.
+    - ode_sol_simplicity() - A key function for comparing solutions by
+      simplicity.
+    - constantsimp() - Simplifies arbitrary constants.
+    - constant_renumber() - Renumber arbitrary constants
+    - _handle_Integral() - Evaluate unevaluated Integrals.
+
+    See also the docstrings of these functions.
 
 **Solving methods currently implemented**
 
