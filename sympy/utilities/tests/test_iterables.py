@@ -21,6 +21,9 @@ def test_postorder_traversal():
         Integral(x**2, (x, 0, 1)), x**2, x, 2, ((x, (0, 1)),), (x, (0, 1)),
         x, (0, 1), 0, 1
     ]
+    assert list(preorder_traversal(('abc', ('d', 'ef')))) == [
+        ('abc', ('d', 'ef')), 'abc', ('d', 'ef'), 'd', 'ef']
+
 
 
 def test_preorder_traversal():
@@ -39,6 +42,8 @@ def test_preorder_traversal():
         x, 2, x**2, x, 0, 1, (0, 1), (x, (0, 1)), ((x, (0, 1)),),
         Integral(x**2, (x, 0, 1))
     ]
+    assert list(postorder_traversal(('abc', ('d', 'ef')))) == [
+        'abc', 'd', 'ef', ('d', 'ef'), ('abc', ('d', 'ef'))]
 
 
 def test_flatten():
