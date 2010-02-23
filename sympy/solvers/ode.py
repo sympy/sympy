@@ -2413,17 +2413,16 @@ def _solve_undetermined_coefficients(eq, func, order, match):
         trialfunc += c*i
 
     eqs = eq.subs(f(x), trialfunc)
-    coeffsdict = dict(zip(trialset, [0 for i in range(len(trialset) + 1)]))
+    coeffsdict = dict(zip(trialset, [0]*(len(trialset) + 1)))
+
+    # XXX: Replace this with as_Add
+    # The else clause actually should never be run unless the ode is only one
+    # term, in which case it must be a derivative term and so will be inhomogeneous
     if eqs.is_Add:
         eqs = expand_mul(eqs)
         for i in eqs.args:
             s = separatevars(i, dict=True, symbols=[x])
-            if coeffsdict.has_key(s[x]):
-                coeffsdict[s[x]] += s['coeff']
-            else:
-                # We removed that term above because we already know its coeff
-                # will be 0
-                pass
+            coeffsdict[s[x]] += s['coeff']
     else:
         s = separatevars(eqs, dict=True, symbols=[x])
         coeffsdict[s[x]] += s['coeff']
