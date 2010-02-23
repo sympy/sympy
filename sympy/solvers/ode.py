@@ -1879,7 +1879,7 @@ def _homogeneous_order(eq, *symbols):
         if eq.func is log:
             # The only possibility to pull a t out of a function is a power in
             # a logarithm.  This is very likely due to calling of logcombine().
-            args = make_list(eq.args[0], Mul) # TODO what about log(a, b) which has args[1]?
+            args = make_list(eq.args[0], Mul)
             if all(i.is_Pow for i in args):
                 base = 1
                 expos = set()
@@ -2121,7 +2121,6 @@ def _nth_linear_match(eq, func, order):
 
     """
     from sympy import S
-    from sympy.utilities.iterables import make_list
 
     x = func.args[0]
     one_x = set([x])
@@ -2415,16 +2414,13 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     eqs = eq.subs(f(x), trialfunc)
     coeffsdict = dict(zip(trialset, [0]*(len(trialset) + 1)))
 
-    # XXX: Replace this with as_Add
+    # XXX: Replace this with as_Add when Mateusz's Polys branch gets merged in
     # The else clause actually should never be run unless the ode is only one
     # term, in which case it must be a derivative term and so will be inhomogeneous
-    if eqs.is_Add:
-        eqs = expand_mul(eqs)
-        for i in eqs.args:
-            s = separatevars(i, dict=True, symbols=[x])
-            coeffsdict[s[x]] += s['coeff']
-    else:
-        s = separatevars(eqs, dict=True, symbols=[x])
+    eqs = expand_mul(eqs)
+    eqslist = make_list(eqs, Add)
+    for i in eqslist:
+        s = separatevars(i, dict=True, symbols=[x])
         coeffsdict[s[x]] += s['coeff']
 
     coeffvals = solve(coeffsdict.values(), coefflist)

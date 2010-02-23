@@ -809,6 +809,8 @@ def test_undetermined_coefficients_match():
     # converted from sin(2*x)*sin(x)
     assert _undetermined_coefficients_match(cos(x)/2 - cos(3*x)/2, x) == \
         {'test': True, 'trialset': set([cos(x), cos(3*x), sin(x), sin(3*x)])}
+    assert _undetermined_coefficients_match(cos(x**2), x) == {'test': False}
+    assert _undetermined_coefficients_match(2**(x**2), x) == {'test': False}
 
 def test_nth_linear_constant_coeff_undetermined_coefficients():
     hint = 'nth_linear_constant_coeff_undetermined_coefficients'
