@@ -75,7 +75,12 @@ def ask(expr, key, assumptions=True):
             if hasattr(handler, subclass.__name__):
                 res = getattr(handler, subclass.__name__)(expr, assumptions)
                 if _res is None: _res = res
-                elif _res != res: raise ValueError, 'incompatible resolutors'
+                elif res is None:
+                    # since first resolutor was conclusive, we keep that value
+                    res = _res
+                else:
+                    # only check consistency if both resolutors have concluded
+                    if _res != res: raise ValueError, 'incompatible resolutors'
                 break
     if res is not None:
         return res

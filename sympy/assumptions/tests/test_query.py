@@ -952,6 +952,15 @@ def test_incompatible_resolutors():
             return True
     register_handler('prime', Prime2AskHandler)
     raises(ValueError, 'ask(4, Q.prime)')
+    remove_handler('prime', Prime2AskHandler)
+
+    class InconclusiveHandler(AskHandler):
+        @staticmethod
+        def Number(expr, assumptions):
+            return None
+    register_handler('prime', InconclusiveHandler)
+    assert ask(3, Q.prime) == True
+
 
 def test_key_extensibility():
     """test that you can add keys to the ask system at runtime"""
