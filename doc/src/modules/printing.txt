@@ -84,6 +84,102 @@ This class implements Python printing. Usage::
     x = Symbol('x')
     e = sin(x) + 5*x**3
 
+fcode
+-----
+
+The fcode function translates a sympy expression into Fortran code. The main
+purpose is to take away the burden of manually translating long mathematical
+expressions. Therefore the resulting expression should also require no (or very
+little) manual tweaking to make it compilable. The optional arguments of fcode
+can be used to fine-tune the behavior of fcode in such a way that manual changes
+in the result are no longer needed.
+
+.. module:: sympy.printing.fcode
+.. autofunction:: fcode
+.. autofunction:: print_fcode
+
+Two basic examples:
+
+    >>> from sympy import *
+    >>> x = symbols("x")
+    >>> fcode(sqrt(1-x**2))
+    '      sqrt(1 - x**2)'
+    >>> fcode((3 + 4*I)/(1 - conjugate(x)))
+    '      (cmplx(3,4))/(1 - conjg(x))'
+
+An example where line wrapping is required:
+
+    >>> expr = sqrt(1-x**2).series(x,n=20).removeO()
+    >>> print fcode(expr)
+          1 - x**2/2 - x**4/8 - x**6/16 - 5*x**8/128 - 7*x**10/256 - 21*x
+         @ **12/1024 - 33*x**14/2048 - 429*x**16/32768 - 715*x**18/65536
+
+In case of line wrapping, it is handy to include the assignment so that lines
+are wrapped properly when the assignment part is added.
+
+    >>> print fcode(expr, assign_to="var")
+          var = 1 - x**2/2 - x**4/8 - x**6/16 - 5*x**8/128 - 7*x**10/256 -
+         @ 21*x**12/1024 - 33*x**14/2048 - 429*x**16/32768 - 715*x**18/65536
+
+Also for piecewise functions, the assign_to option can be helpful:
+
+    >>> print fcode(Piecewise((x,x<1),(x**2,True)), assign_to="var")
+          if (x < 1) then
+            var = x
+          else
+            var = x**2
+          end if
+
+Note that only top-level piecewise functions are supported due to the lack of
+a conditional operator in Fortran. Nested piecewise functions would require the
+introduction of temporary variables, which is a type of expression manipulation
+that goes beyond the scope of fcode.
+
+By default, number symbols such as ``pi`` and ``E`` are detected and defined as
+Fortran parameters. The precision of the constants can be tuned with the
+precision argument. Parameter definitions are easily avoided using the ``N``
+function.
+
+    >>> print fcode(x - pi**2 - E)
+          parameter (E = 2.71828182845905)
+          parameter (pi = 3.14159265358979)
+          x - E - pi**2
+    >>> print fcode(x - pi**2 - E, precision=25)
+          parameter (E = 2.718281828459045235360287)
+          parameter (pi = 3.141592653589793238462643)
+          x - E - pi**2
+    >>> print fcode(N(x - pi**2, 25))
+          -9.869604401089358618834491 + x
+
+When some functions are not part of the Fortran standard, it might be desirable
+to introduce the names of user-defined functions in the Fortran expression.
+
+    >>> print fcode(1 - gamma(x)**2, user_functions={gamma: 'mygamma'})
+          1 - mygamma(x)**2
+
+However, when the user_functions argument is not provided, fcode attempts to
+use a reasonable default and adds a comment to inform the user of the issue.
+
+    >>> print fcode(1 - gamma(x)**2)
+    C     Not Fortran 77:
+    C     gamma(x)
+          1 - gamma(x)**2
+
+By default the output is human readable code, ready for copy and paste. With the
+option ``human=False``, the return value is suitable for post-processing with
+source code generators that write routines with multiple instructions. The
+return value is a three-tuple containing: (i) the list of number symbols that
+must be defined as 'Fortran parameters', (ii) a list functions that can not be
+translated in pure Fortran and (iii) a string of Fortran code. A few examples:
+
+    >>> fcode(1 - gamma(x)**2, human=False)
+    ([], set([gamma(x)]), '      1 - gamma(x)**2')
+    >>> fcode(1 - sin(x)**2, human=False)
+    ([], set(), '      1 - sin(x)**2')
+    >>> fcode(x - pi**2, human=False)
+    ([('pi', 3.14159265358979)], set(), '      x - pi**2')
+
+
 Preview
 -------
 
