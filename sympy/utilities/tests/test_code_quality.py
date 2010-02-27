@@ -40,7 +40,7 @@ def check_directory_tree(base_path):
         for fname in glob(join(root, "*.py")):
             if filter(lambda ex: ex in fname, EXCLUDE):
                 continue
-            file = open(fname, "r")
+            file = open(fname, "rb") # without "b" the lines from all systems will appear to be \n terminated
             try:
                 for idx, line in enumerate(file):
                     if line.endswith(" \n"):
