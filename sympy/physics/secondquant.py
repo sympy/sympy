@@ -2880,11 +2880,8 @@ def wicks(e, **kw_args):
 
         return result
 
-    # It seems there is nothing to do, we are probably called in error.
-    # Instead of silently returning None, we raise exception to prevent
-    # strange errors in applications.
-    else:
-        raise WicksTheoremDoesNotApply
+    # there was nothing to do
+    return e
 
 class PermutationOperator(Basic):
     """
