@@ -121,8 +121,11 @@ class Relational(Basic):
         else:
             rop_cls, swap = Relational.get_relational_class(rop)
             if swap: lhs, rhs = rhs, lhs
-        obj = Basic.__new__(rop_cls, lhs, rhs, **assumptions)
-        return obj
+        if lhs.is_real and lhs.is_number and rhs.is_real and rhs.is_number:
+            return rop_cls._eval_relation(lhs.evalf(), rhs.evalf())
+        else:
+            obj = Basic.__new__(rop_cls, lhs, rhs, **assumptions)
+            return obj
 
     @property
     def lhs(self):
@@ -141,6 +144,10 @@ class Equality(Relational):
 
     __slots__ = []
 
+    @classmethod
+    def _eval_relation(cls, lhs, rhs):
+        return lhs == rhs
+
     def __nonzero__(self):
         return self.lhs.compare(self.rhs)==0
 
@@ -149,6 +156,10 @@ class Unequality(Relational):
     rel_op = '!='
 
     __slots__ = []
+
+    @classmethod
+    def _eval_relation(cls, lhs, rhs):
+        return lhs != rhs
 
     def __nonzero__(self):
         return self.lhs.compare(self.rhs)!=0
@@ -159,11 +170,11 @@ class StrictInequality(Relational):
 
     __slots__ = []
 
+    @classmethod
+    def _eval_relation(cls, lhs, rhs):
+        return lhs < rhs
+
     def __nonzero__(self):
-        if self.lhs.is_comparable and self.rhs.is_comparable:
-            if self.lhs.is_Number and self.rhs.is_Number:
-                return self.lhs < self.rhs
-            return self.lhs.evalf()<self.rhs.evalf()
         return self.lhs.compare(self.rhs)==-1
 
 class Inequality(Relational):
@@ -172,9 +183,9 @@ class Inequality(Relational):
 
     __slots__ = []
 
+    @classmethod
+    def _eval_relation(cls, lhs, rhs):
+        return lhs <= rhs
+
     def __nonzero__(self):
-        if self.lhs.is_comparable and self.rhs.is_comparable:
-            if self.lhs.is_Number and self.rhs.is_Number:
-                return self.lhs <= self.rhs
-            return self.lhs.evalf()<=self.rhs.evalf()
         return self.lhs.compare(self.rhs)<=0

@@ -927,6 +927,7 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
         (False, 2)
 
     """
+    from sympy import S
     if not func.is_Function or len(func.args) != 1:
         raise ValueError("func must be a function of one variable, not " + str(func))
     x = func.args[0]
@@ -957,20 +958,21 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
             return result
     while s:
         if testnum == 0:
-        # First pass, try substituting a solved solution directly into the ode
-        # This has the highest chance of succeeding.
+            # First pass, try substituting a solved solution directly into the ode
+            # This has the highest chance of succeeding.
+            ode_diff = ode.lhs - ode.rhs
             if sol.lhs == func:
-                s = ode.subs(func, sol.rhs)
+                s = ode_diff.subs(func, sol.rhs)
             elif sol.rhs == func:
-                s = ode.subs(func, sol.lhs)
+                s = ode_diff.subs(func, sol.lhs)
             else:
                 testnum += 1
                 continue
-            ss = simplify(s.lhs - s.rhs)
+            ss = simplify(s)
             if ss:
                 # with the new numer_denom in power.py, if we do a simple
                 # expansion then testnum == 0 verifies all solutions.
-                s = (s.lhs - s.rhs).expand()
+                s = ss.expand()
             else:
                 s = 0
             testnum += 1
@@ -1019,12 +1021,21 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
             if testnum > 2:
                 continue
             else:
-                # Substitute it into ode to check for self consistency
+                # Substitute it into ode to check for self consistency.
+                lhs, rhs = ode.lhs, ode.rhs
                 for i in range(order, 0, -1):
-                    # It may help if we simplify as we go
-                    ode = simplify(ode.subs(func.diff(x, i), diffsols[i]))
+                    lhs = lhs.subs(func.diff(x, i), diffsols[i])
+                    rhs = rhs.subs(func.diff(x, i), diffsols[i])
+                    ode_or_bool = Eq(lhs,rhs)
+                    if isinstance(ode_or_bool, bool):
+                        if ode_or_bool:
+                            lhs = rhs = S.Zero
+                    else:
+                        ode_or_bool = simplify(ode_or_bool)
+                        lhs = ode_or_bool.lhs
+                        rhs = ode_or_bool.rhs
                 # No sense in overworking simplify--just prove the numerator goes to zero
-                s = simplify(trigsimp((ode.lhs-ode.rhs).as_numer_denom()[0]))
+                s = simplify(trigsimp((lhs-rhs).as_numer_denom()[0]))
                 testnum += 1
         else:
             break
