@@ -87,14 +87,9 @@ This class implements Python printing. Usage::
 Preview
 -------
 
-Useful function is ``preview``:
+A useful function is ``preview``:
 
 .. module:: sympy.printing.preview
 
 .. autofunction:: preview
 
-And convenience functions:
-
-.. autofunction:: pngview
-.. autofunction:: pdfview
-.. autofunction:: dviview

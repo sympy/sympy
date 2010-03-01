@@ -2269,8 +2269,8 @@ def _sort_anticommuting_fermions(string1):
     """Sort fermionic operators to canonical order, assuming all pairs anticommute.
 
     Uses a bidirectional bubble sort.  Items in string1 are not referenced
-    so in principle they may be any comparable objects. Sorting is
-    done according to the >= operator.
+    so in principle they may be any comparable objects.   The sorting depends on the
+    operators '>' and '=='.
 
     If the Pauli principle is violated, an exception is raised.
 
@@ -2325,10 +2325,15 @@ def evaluate_deltas(e):
     imply a loss of information, nothing is done.
 
     In case an index appears in more than one KroneckerDelta, the resulting
-    final substitution depends on the larger expression.  Behavior of
-    evaluate_deltas is in that case undefined.
+    substitution depends on the order of the factors.  Since the ordering is platform
+    dependent, the literal expression resulting from this function may be hard to
+    predict.
 
-    Examples:  We assume that
+    Examples:
+    =========
+
+    We assume that
+
     >>> from sympy import symbols, Function
     >>> from sympy.physics.secondquant import evaluate_deltas, KroneckerDelta
     >>> i,j = symbols('ij',below_fermi=True, dummy=True)
@@ -2338,9 +2343,9 @@ def evaluate_deltas(e):
     >>> t = Function('t')
 
     The order of preference for these indices according to KroneckerDelta is
-    (a,b,i,j,p,q)  So we get
+    (a,b,i,j,p,q).
 
-    ==Trivial cases===
+    Trivial cases:
 
     >>> evaluate_deltas(KroneckerDelta(i,j)*f(i))       # d_ij f(i) -> f(j)
     f(_j)
@@ -2353,8 +2358,7 @@ def evaluate_deltas(e):
     >>> evaluate_deltas(KroneckerDelta(q,p)*f(q))       # d_qp f(q) -> f(p)
     f(_p)
 
-
-    ==more interesting cases===
+    More interesting cases:
 
     >>> evaluate_deltas(KroneckerDelta(i,p)*t(a,i)*f(p,q))
     f(_i, _q)*t(_a, _i)
@@ -2363,16 +2367,13 @@ def evaluate_deltas(e):
     >>> evaluate_deltas(KroneckerDelta(p,q)*f(p,q))
     f(_p, _p)
 
-
-    == Do nothing to prevent loss of information ===
+    Finally, here are some cases where nothing is done, because that would
+    imply a loss of information:
 
     >>> evaluate_deltas(KroneckerDelta(i,p)*f(q))
     KroneckerDelta(_i, _p)*f(_q)
-
     >>> evaluate_deltas(KroneckerDelta(i,p)*f(i))
     KroneckerDelta(_i, _p)*f(_i)
-
-
     """
 
 
@@ -2416,11 +2417,9 @@ def evaluate_deltas(e):
     else:
         return e
 
-def _get_dummies(expr, _reverse, **require):
+def _get_dummies(expr, arg_iterator, **require):
     """
-    Collects dummies recursively in predictable order.
-
-    Starting at right end to prioritize indices of non-commuting terms.
+    Collects dummies recursively in predictable order as defined by arg_iterator.
 
     FIXME: A more sophisticated predictable order would work better.
     Current implementation does not always work if factors commute. Since
@@ -2430,7 +2429,7 @@ def _get_dummies(expr, _reverse, **require):
 
     """
     result = []
-    for arg in _reverse(expr.args):
+    for arg in arg_iterator(expr.args):
         try:
             if arg.dummy_index:
                 # here we check that the dummy matches requirements
@@ -2442,7 +2441,7 @@ def _get_dummies(expr, _reverse, **require):
         except AttributeError:
             try:
                 if arg.args:
-                    result.extend(_get_dummies(arg, _reverse, **require))
+                    result.extend(_get_dummies(arg, arg_iterator, **require))
             except AttributeError:
                 pass
     return result
@@ -2495,9 +2494,9 @@ def _get_subslist(chaos,order):
 
     return subslist
 
-def _substitute(expr, ordered_dummies, _reverse, **require):
+def _substitute(expr, ordered_dummies, arg_iterator, **require):
     """
-    Substitute dummies in expr (which should be a Mul object)
+    Substitute dummies in expr
 
     If keyword arguments are given, those dummies that have an identical
     keyword in .assumptions0 must provide the same value (True or False)
@@ -2506,33 +2505,43 @@ def _substitute(expr, ordered_dummies, _reverse, **require):
     Dummies without the keyword in .assumptions0 will be default to
     give the value False.
 
+    Warning
+    =======
+
+    Apart from checking the keyword requirements, nothing is done to prevent
+    loss of information during substitution.
+
+
+    Examples
+    ========
+
     >>> from sympy import Symbol
-    >>> from sympy.physics.secondquant import substitute_dummies, _substitute
+    >>> from sympy.physics.secondquant import substitute_dummies, _substitute,F
     >>> q = Symbol('q', dummy=True)
     >>> i = Symbol('i', below_fermi=True, dummy=True)
     >>> a = Symbol('a', above_fermi=True, dummy=True)
-
     >>> reverse = lambda x: reversed(x)
-    >>> _substitute(a, [q], reverse, above_fermi=True)   # will succeed
-    _a
-    >>> _substitute(i, [q], reverse, above_fermi=True)   # will not succeed
-    _i
-    >>> _substitute(i, [q], reverse, above_fermi=False)  # will succeed
-    _i
+
+    >>> _substitute(F(a), [q], reverse, above_fermi=True)   # will succeed
+    AnnihilateFermion(_q)
+    >>> _substitute(F(i), [q], reverse, above_fermi=True)   # will not succeed
+    AnnihilateFermion(_i)
+    >>> _substitute(F(i), [q], reverse, above_fermi=False)  # will succeed
+    AnnihilateFermion(_q)
 
     With no keywords, all dummies are substituted.
 
+    >>> _substitute(F(i), [q], reverse)   # will succeed
+    AnnihilateFermion(_q)
     """
 
-    dummies = _remove_duplicates(_get_dummies(expr, _reverse, **require))
-
+    dummies = _remove_duplicates(_get_dummies(expr, arg_iterator, **require))
     subslist = _get_subslist(dummies, ordered_dummies)
-
     result =  expr.subs(subslist)
     return result
 
 
-def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indices=True):
+def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indices={}):
     """
     Collect terms by substitution of dummy variables.
 
@@ -2542,19 +2551,22 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
     The idea is to substitute all dummy variables consistently depending on
     position in the term.  For each term, we collect a sequence of all dummy
     variables, where the order is determined by index position.  These indices
-    are then substituted consistently in each term.  E.g.
+    are then substituted consistently in each term.
+
+    Examples
+    ========
 
     >>> from sympy import symbols, Function
     >>> from sympy.physics.secondquant import substitute_dummies
-    >>> a,b = symbols('ab',dummy=True)
-    >>> c,d = symbols('cd',dummy=True)
+    >>> a,b,c,d = symbols('abcd',dummy=True, above_fermi=True)
+    >>> i,j = symbols('ij',dummy=True, below_fermi=True)
     >>> f = Function('f')
 
     >>> expr = f(a,b) + f(c,d); expr
     f(_a, _b) + f(_c, _d)
 
-    Since a, b, c and d are summation indices, this can be simplified to a
-    single summation term with a factor 2
+    Since a, b, c and d are equivalent summation indices, the expression can be
+    simplified to a single term (for which the dummy indices are still summed over)
 
     >>> substitute_dummies(expr, reverse_order=False)
     2*f(_a, _b)
@@ -2568,47 +2580,77 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
     >>> substitute_dummies(expr, reverse_order=True)
     2*f(_b, _a)
 
+    Controlling output
+    ==================
+
+    By default the dummy symbols that are already present in the expression
+    will be reused.  However, if new_indices=True, new dummies will be
+    generated and inserted.
+
+    The keyword 'pretty_indices' can be used to control this generation of new
+    symbols.
+
+    By default the new dummies will be generated on the form i_1, i_2, a_1,
+    etc.  If you supply a dictionary with key:value pairs in the form:
+
+        { index_group: string_of_letters }
+
+    The letters will be used as labels for the new dummy symbols.  The
+    index_groups must be one of 'above', 'below' or 'general'.
+
+    >>> expr = f(a,b,i,j)
+    >>> my_dummies = { 'above':'st','below':'uv' }
+    >>> substitute_dummies(expr, new_indices=True, pretty_indices=my_dummies)
+    f(_t, _s, _v, _u)
+
+    If we run out of letters, or if there is no keyword for some index_group
+    the default dummy generator will be used as a fallback:
+
+    >>> p,q = symbols('pq',dummy=True)  # general indices
+    >>> expr = f(p,q)
+    >>> substitute_dummies(expr, new_indices=True, pretty_indices=my_dummies)
+    f(_p_1, _p_0)
+
     """
 
-    # pretty_indices = True    # Prettier
-    # pretty_indices = False   # Easier to debug
+    # setup the replacing dummies
+    if new_indices:
+        letters_above  = pretty_indices.get('above',"")
+        letters_below  = pretty_indices.get('below',"")
+        letters_general= pretty_indices.get('general',"")
+        len_above  = len(letters_above)
+        len_below  = len(letters_below)
+        len_general= len(letters_general)
 
-
-    if not pretty_indices:
         def _i(number):
-            return 'i_'+str(number)
+            try:
+                return letters_below[number]
+            except IndexError:
+                return 'i_'+str(number-len_below)
+
         def _a(number):
-            return 'a_'+str(number)
+            try:
+                return letters_above[number]
+            except IndexError:
+                return 'a_'+str(number-len_above)
+
         def _p(number):
-            return 'p_'+str(number)
+            try:
+                return letters_general[number]
+            except IndexError:
+                return 'p_'+str(number-len_general)
 
 
-    else:
-        def _i(number):
-            if number<5:
-                return "klmno"[number]
-            else:
-                return 'o_'+str(number-5)
-        def _a(number):
-            if number<6:
-                return "cdefgh"[number]
-            else:
-                return 'h_'+str(number-6)
-        def _p(number):
-            if number<7:
-                return "tuvwxyz"[number]
-            else:
-                return 'z_'+str(number-7)
 
     # reverse iterator for use in _get_dummies()
     if reverse_order:
-        def _reverse(seq):
+        def arg_iterator(seq):
             i=len(seq)
             while i>0:
                 i += -1
                 yield seq[i]
     else:
-        def _reverse(seq):
+        def arg_iterator(seq):
             for i in xrange(len(seq)):
                 yield seq[i]
 
@@ -2623,29 +2665,26 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
     dummies = [ d for d in expr.atoms() if isinstance(d,Dummy) ]
     dummies.sort()
 
+    # generate lists with the dummies we will insert
     a = i = p = 0
     for d in dummies:
         assum = d.assumptions0
         assum["dummy"]=True
+
         if assum.get("above_fermi"):
-            sym = _a(a)
-            a +=1
+            if new_indices: sym = _a(a); a +=1
             l1 = aboves
         elif assum.get("below_fermi"):
-            sym = _i(i)
-            i +=1
+            if new_indices: sym = _i(i); i +=1
             l1 = belows
         else:
-            sym = _p(p)
-            p +=1
+            if new_indices: sym = _p(p); p +=1
             l1 = generals
 
         if new_indices:
             l1.append(Symbol(sym, **assum))
         else:
             l1.append(d)
-
-
 
 
     cases = (
@@ -2657,8 +2696,10 @@ def substitute_dummies(expr, new_indices=False, reverse_order=True, pretty_indic
 
     for req, dummylist in cases:
         if isinstance(expr,Add):
-            new_dummies = dummylist
-            expr = (Add(*[_substitute(term, new_dummies, _reverse, **req) for term in expr.args]))
+            expr = (Add(*[_substitute(term, dummylist, arg_iterator, **req) for term in expr.args]))
+        else:
+            expr = _substitute(expr, dummylist, arg_iterator, **req)
+
 
     return expr
 
@@ -2839,11 +2880,8 @@ def wicks(e, **kw_args):
 
         return result
 
-    # It seems there is nothing to do, we are probably called in error.
-    # Instead of silently returning None, we raise exception to prevent
-    # strange errors in applications.
-    else:
-        raise WicksTheoremDoesNotApply
+    # there was nothing to do
+    return e
 
 class PermutationOperator(Basic):
     """

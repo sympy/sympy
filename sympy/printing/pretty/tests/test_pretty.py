@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sympy import Symbol, Matrix, Integral, log, Rational, Derivative, exp, \
         sqrt, pi, Function, sin, cos, pprint_use_unicode, oo, Eq, Le, \
-        Gt, Ne, Limit, factorial, gamma, conjugate, I, Piecewise, S, pprint
+        Gt, Ne, Limit, factorial, gamma, conjugate, I, Piecewise, S, pprint, Pow
 from sympy.printing.pretty import pretty as xpretty
 
 x = Symbol('x')
@@ -49,6 +49,8 @@ def test_pretty_basic():
     assert pretty( y*x**-2 ) == 'y \n--\n 2\nx '
     assert pretty( x**Rational(-5,2) ) == ' 1  \n----\n 5/2\nx   '
     assert pretty( (-2)**x ) == '    x\n(-2) '
+    # See issue 1824
+    assert pretty(Pow(3, 1, evaluate=False)) == ' 1\n3 '
 
     # Sums of terms
     assert pretty( (x**2 + x + 1))  in [

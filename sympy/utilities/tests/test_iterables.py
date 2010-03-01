@@ -1,7 +1,7 @@
-from sympy import symbols
+from sympy import symbols, Integral
 from sympy.utilities.iterables import postorder_traversal, \
     preorder_traversal, flatten, subsets, variations
-
+from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 
 w,x,y,z= symbols('wxyz')
 
@@ -12,6 +12,19 @@ def test_postorder_traversal():
     expected3 = [w, y, x, x + y, w*(x + y), z, z + w*(x + y)]
     assert list(postorder_traversal(expr)) in [expected1, expected2, expected3]
 
+    expr = Piecewise((x,x<1),(x**2,True))
+    assert list(postorder_traversal(expr)) == [
+        x, x, 1, x < 1, ExprCondPair(x, x < 1), x, 2, x**2, True,
+        ExprCondPair(x**2, True), Piecewise((x, x < 1), (x**2, True))
+    ]
+    assert list(preorder_traversal(Integral(x**2, (x, 0, 1)))) == [
+        Integral(x**2, (x, 0, 1)), x**2, x, 2, ((x, (0, 1)),), (x, (0, 1)),
+        x, (0, 1), 0, 1
+    ]
+    assert list(preorder_traversal(('abc', ('d', 'ef')))) == [
+        ('abc', ('d', 'ef')), 'abc', ('d', 'ef'), 'd', 'ef']
+
+
 
 def test_preorder_traversal():
     expr = z+w*(x+y)
@@ -19,6 +32,18 @@ def test_preorder_traversal():
     expected2 = [z + w*(x + y), z, w*(x + y), w, x + y, x, y]
     expected3 = [z + w*(x + y), w*(x + y), w, x + y, y, x, z]
     assert list(preorder_traversal(expr)) in [expected1, expected2, expected3]
+
+    expr = Piecewise((x,x<1),(x**2,True))
+    assert list(preorder_traversal(expr)) == [
+        Piecewise((x, x < 1), (x**2, True)), ExprCondPair(x, x < 1), x, x < 1,
+        x, 1, ExprCondPair(x**2, True), x**2, x, 2, True
+    ]
+    assert list(postorder_traversal(Integral(x**2, (x, 0, 1)))) == [
+        x, 2, x**2, x, 0, 1, (0, 1), (x, (0, 1)), ((x, (0, 1)),),
+        Integral(x**2, (x, 0, 1))
+    ]
+    assert list(postorder_traversal(('abc', ('d', 'ef')))) == [
+        'abc', 'd', 'ef', ('d', 'ef'), ('abc', ('d', 'ef'))]
 
 
 def test_flatten():

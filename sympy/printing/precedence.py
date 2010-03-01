@@ -4,9 +4,12 @@
 PRECEDENCE = {
     "Lambda":1,
     "Relational":20,
+    "Or":20,
+    "And":30,
     "Add":40,
     "Mul":50,
     "Pow":60,
+    "Not":100,
     "Atom":1000
 }
 
@@ -14,10 +17,13 @@ PRECEDENCE = {
 # treated like they were inherited, so not every single class has to be named
 # here.
 PRECEDENCE_VALUES = {
+    "Or" : PRECEDENCE["Or"],
+    "And" : PRECEDENCE["And"],
     "Add" : PRECEDENCE["Add"],
     "Pow" : PRECEDENCE["Pow"],
     "Relational" : PRECEDENCE["Relational"],
     "Sub" : PRECEDENCE["Add"],
+    "Not": PRECEDENCE["Not"],
 }
 
 # Sometimes it's not enough to assign a fixed precedence value to a

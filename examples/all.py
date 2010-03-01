@@ -54,6 +54,7 @@ TERMINAL_EXAMPLES = [
     "beginner.series",
     "beginner.substitution",
     "beginner.expansion",
+    "intermediate.coupled_cluster",
     "intermediate.differential_equations",
     "intermediate.partial_differential_eqs",
     "intermediate.trees",

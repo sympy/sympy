@@ -28,6 +28,10 @@ def iff(condition, result1, result2):
     else:
         return rv
 
+
+from sympy.core.basic import Basic
+
+
 def all(iterable):
     """
     Return True if all elements are set to True. This
@@ -166,9 +170,14 @@ def postorder_traversal(node):
     True
 
     """
-    for arg in node.args:
-        for subtree in postorder_traversal(arg):
-            yield subtree
+    if isinstance(node, Basic):
+        for arg in node.args:
+            for subtree in postorder_traversal(arg):
+                yield subtree
+    elif hasattr(node, "__iter__"):
+        for item in node:
+            for subtree in postorder_traversal(item):
+                yield subtree
     yield node
 
 def preorder_traversal(node):
@@ -199,9 +208,14 @@ def preorder_traversal(node):
 
     """
     yield node
-    for arg in node.args:
-        for subtree in preorder_traversal(arg):
-            yield subtree
+    if isinstance(node, Basic):
+        for arg in node.args:
+            for subtree in preorder_traversal(arg):
+                yield subtree
+    elif hasattr(node, "__iter__"):
+        for item in node:
+            for subtree in preorder_traversal(item):
+                yield subtree
 
 def subsets(M, k):
     """
