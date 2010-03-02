@@ -1,6 +1,6 @@
 from sympy import (
-    Symbol, Set, Union, Interval, oo, S, 
-    Inequality, max_, min_, raises, And
+    Symbol, Set, Union, Interval, oo, S,
+    Inequality, max_, min_, raises, And, Or
 )
 from sympy.mpmath import mpi
 
@@ -159,9 +159,23 @@ def test_contains():
     assert S.EmptySet.contains(1) == False
 
 def test_interval_symbolic():
-    e = Interval(0,1)
     x = Symbol('x')
-    assert e.contains(x) == And(0<=x,x<=1)
+    e = Interval(0, 1)
+    assert e.contains(x) == And(0<=x, x<=1)
     raises(TypeError, "x in e")
-    e = Interval(0,1,True,True)
-    assert e.contains(x) == And(0<x,x<1)
+    e = Interval(0, 1, True, True)
+    assert e.contains(x) == And(0<x, x<1)
+
+def test_union_contains():
+    x = Symbol('x')
+    i1 = Interval(0, 1)
+    i2 = Interval(2, 3)
+    i3 = Union(i1, i2)
+    raises(TypeError, "x in i3")
+    e = i3.contains(x)
+    assert e == Or(And(0 <= x, x <= 1), And(2 <= x, x <= 3))
+    assert e.subs(x, -0.5) is False
+    assert e.subs(x, 0.5) is True
+    assert e.subs(x, 1.5) is False
+    assert e.subs(x, 2.5) is True
+    assert e.subs(x, 3.5) is False

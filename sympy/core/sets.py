@@ -2,6 +2,7 @@ from basic import Basic, SingletonMeta, S
 from sympify import _sympify
 from sympy.mpmath import mpi
 
+
 class Set(Basic):
     """
     Represents any kind of set.
@@ -528,10 +529,9 @@ class Union(Set):
         return complement
 
     def _contains(self, other):
-        for set in self.args:
-            if other in set:
-                return True
-        return False
+        from sympy.logic.boolalg import Or
+        or_args = [the_set.contains(other) for the_set in self.args]
+        return Or(*or_args)
 
     @property
     def _measure(self):
