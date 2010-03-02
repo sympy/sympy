@@ -30,84 +30,84 @@ Degree-radian conversion
 
 :func:`degrees`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.degrees(x)
+.. autofunction:: mpmath.degrees(x)
 
 :func:`radians`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.radians(x)
+.. autofunction:: mpmath.radians(x)
 
 Trigonometric functions
 .......................
 
 :func:`cos`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.cos(x, **kwargs)
+.. autofunction:: mpmath.cos(x, **kwargs)
 
 :func:`sin`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.sin(x, **kwargs)
+.. autofunction:: mpmath.sin(x, **kwargs)
 
 :func:`tan`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.tan(x, **kwargs)
+.. autofunction:: mpmath.tan(x, **kwargs)
 
 :func:`sec`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.sec(x)
+.. autofunction:: mpmath.sec(x)
 
 :func:`csc`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.csc(x)
+.. autofunction:: mpmath.csc(x)
 
 :func:`cot`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.cot(x)
+.. autofunction:: mpmath.cot(x)
 
 Trigonometric functions with modified argument
 ........................................................
 
 :func:`cospi`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.cospi(x, **kwargs)
+.. autofunction:: mpmath.cospi(x, **kwargs)
 
 :func:`sinpi`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.sinpi(x, **kwargs)
+.. autofunction:: mpmath.sinpi(x, **kwargs)
 
 Inverse trigonometric functions
 ................................................
 
 :func:`acos`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.acos(x, **kwargs)
+.. autofunction:: mpmath.acos(x, **kwargs)
 
 :func:`asin`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.asin(x, **kwargs)
+.. autofunction:: mpmath.asin(x, **kwargs)
 
 :func:`atan`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.atan(x, **kwargs)
+.. autofunction:: mpmath.atan(x, **kwargs)
 
 :func:`asec`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.asec(x)
+.. autofunction:: mpmath.asec(x)
 
 :func:`acsc`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.acsc(x)
+.. autofunction:: mpmath.acsc(x)
 
 :func:`acot`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.acot(x)
+.. autofunction:: mpmath.acot(x)
 
 Sinc function
 .............
 
 :func:`sinc`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.sinc(x)
+.. autofunction:: mpmath.sinc(x)
 
 :func:`sincpi`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.sincpi(x)
+.. autofunction:: mpmath.sincpi(x)

@@ -212,10 +212,36 @@ The number of digits with which numbers are printed by default is determined by 
     >>> nstr(a, 50)
     '0.16666666666666665741480812812369549646973609924316'
 
+Fast low-precision arithmetic
+--------------------------------
+
+Many of the algorithms used in mpmath work perfectly well with ordinary Python ``float`` and ``complex`` numbers, which use double precision (53 bits). Although the global functions (which are methods of the ``mp`` object) always convert inputs to mpmath numbers, the alternative ``fp`` object instead converts them to ``float`` or ``complex``, and uses internal functions designed for double precision. When large amounts of function evaluations (numerical integration, plotting, etc) are required, and when ``fp`` arithmetic provides sufficient accuracy, this can give a significant speedup over ``mp`` arithmetic.
+
+To take advantage of this feature, simply use ``fp.func`` instead of ``func`` or ``mp.func``::
+
+    >>> u = fp.erfc(2.5)
+    >>> print u
+    0.000406952017445
+    >>> type(u)
+    <type 'float'>
+    >>> print mp.erfc(2.5)
+    0.000406952017444959
+    >>> fp.matrix([[1,2],[3,4]]) ** 2
+    matrix(
+    [['7.0', '10.0'],
+     ['15.0', '22.0']])
+    >>>
+    >>> type(_[0,0])
+    <type 'float'>
+    >>> print fp.quad(fp.sin, [0, fp.pi])    # numerical integration
+    2.0
+
+Due to intermediate rounding and cancellation errors, results computed with ``fp`` arithmetic may be much less accurate than those computed with ``mp`` using an equivalent precision (``mp.prec = 53``), since the latter often uses increased internal precision. The accuracy is highly problem-dependent: for some functions, ``fp`` almost always gives 14-15 correct digits; for others, results can be accurate to only 2-3 digits or even completely wrong. The recommended use for ``fp`` is therefore to speed up large-scale computations where accuracy can be verified in advance on a subset of the input set, or where results can be verified afterwards.
+
 Plotting
 --------
 
-If `matplotlib <http://matplotlib.sourceforge.net/>`_ is available, the functions ``plot`` and ``cplot`` in mpmath can be used to plot functions respectively as x-y graphs and in the complex plane.
+If `matplotlib <http://matplotlib.sourceforge.net/>`_ is available, the functions ``plot`` and ``cplot`` in mpmath can be used to plot functions respectively as x-y graphs and in the complex plane. Also, ``splot`` can be used to produce 3D surface plots.
 
 .. image:: plot.png
 
@@ -225,9 +251,15 @@ Output of ``plot([cos, sin], [-4, 4])``
 
 .. image:: cplot.png
 
-Output of ``cplot(gamma, points=10000)``
+Output of ``fp.cplot(fp.gamma, points=100000)``
 
 .. autofunction:: mpmath.cplot
+
+.. image:: splot.png
+
+Output of ``splot`` for the donut example.
+
+.. autofunction:: mpmath.splot
 
 Utility functions
 -----------------

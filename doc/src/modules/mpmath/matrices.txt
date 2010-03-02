@@ -49,23 +49,14 @@ concerning elements are discarded::
     [['0.0', '0.0'],
      ['0.0', '0.0']])
 
-Internally ``convert_lossless`` is used every time an element is set. This is
+Internally ``convert`` is applied every time an element is set. This is
 done using the syntax A[row,column], counting from 0::
 
     >>> A = matrix(2)
     >>> A[1,1] = 1 + 1j
-    >>> A
-    matrix(
-    [['0.0', '0.0'],
-     ['0.0', '(1.0 + 1.0j)']])
-
-You can use the keyword ``force_type`` to change the function which is called on
-every new element::
-
-    >>> matrix(2, 5, force_type=int)
-    matrix(
-    [[0, 0, 0, 0, 0],
-     [0, 0, 0, 0, 0]])
+    >>> print A
+    [0.0           0.0]
+    [0.0  (1.0 + 1.0j)]
 
 A more comfortable way to create a matrix lets you use nested lists::
 
@@ -73,14 +64,6 @@ A more comfortable way to create a matrix lets you use nested lists::
     matrix(
     [['1.0', '2.0'],
      ['3.0', '4.0']])
-
-If you want to preserve the type of the elements you can use
-``force_type=None``::
-
-    >>> matrix([[1, 2.5], [1j, mpf(2)]], force_type=None)
-    matrix(
-    [[1, 2.5],
-     [1j, '2.0']])
 
 Advanced methods
 ................
@@ -269,9 +252,9 @@ multidimensional nature it's not possible to compare them, but there are
 several functions to map a matrix or a vector to a positive real number, the
 so called norms.
 
-.. autofunction :: mpmath.linalg.norm
+.. autofunction :: mpmath.norm
 
-.. autofunction :: mpmath.linalg.mnorm
+.. autofunction :: mpmath.mnorm
 
 
 Linear algebra
@@ -310,13 +293,15 @@ inaccuracy of the internal floating point arithmetic. Though, it's even smaller
 than the current machine epsilon, which basically means you can trust the
 result.
 
-If you need more speed, use NumPy. Or choose a faster data type using the
-keyword ``force_type``::
+If you need more speed, use NumPy, or use ``fp`` instead ``mp`` matrices
+and methods::
 
-    >>> lu_solve(A, b, force_type=float)
+    >>> A = fp.matrix([[1, 2], [3, 4]])
+    >>> b = fp.matrix([-10, 10])
+    >>> fp.lu_solve(A, b)
     matrix(
-    [[29.999999999999996],
-     [-19.999999999999996]])
+    [['30.0'],
+     ['-20.0']])
 
 ``lu_solve`` accepts overdetermined systems. It is usually not possible to solve
 such systems, so the residual is minimized instead. Internally this is done
@@ -363,13 +348,20 @@ and equation solving with rigorous error bounds::
     >>> b = matrix(['4','0.6','0.5'], force_type=mpi)
     >>> c = lu_solve(a, b)
     >>> print c
-    [  [5.2582327113062393041, 5.2582327113062749951]]
-    [[-13.155049396267856583, -13.155049396267821167]]
-    [  [7.4206915477497212555, 7.4206915477497310922]]
+    [ [5.2582327113062393162, 5.2582327113062749448]]
+    [[-13.15504939626785654, -13.155049396267821172]]
+    [ [7.4206915477497212581, 7.4206915477497310818]]
     >>> print a*c
     [  [3.9999999999999866773, 4.0000000000000133227]]
     [[0.59999999999972430942, 0.60000000000027142733]]
     [[0.49999999999982236432, 0.50000000000018474111]]
 
+Matrix functions
+----------------
 
-
+.. autofunction :: mpmath.expm
+.. autofunction :: mpmath.cosm
+.. autofunction :: mpmath.sinm
+.. autofunction :: mpmath.sqrtm
+.. autofunction :: mpmath.logm
+.. autofunction :: mpmath.powm

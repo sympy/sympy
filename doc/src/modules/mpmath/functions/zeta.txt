@@ -4,43 +4,34 @@ Zeta functions, L-series and polylogarithms
 This section includes the Riemann zeta functions
 and associated functions pertaining to analytic number theory.
 
-Riemann zeta function
-.....................
+Riemann-Hurwitz zeta function and Dirichlet series
+..................................................
 
 :func:`zeta`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.zeta(s)
-
-
-Hurwitz zeta function
-.....................
-
-:func:`hurwitz`
-^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.hurwitz(s,a,derivative=0)
-
-
-Zeta-type L-functions
-.....................
+.. autofunction:: mpmath.zeta(s,a=1,derivative=0)
 
 :func:`altzeta`
 ^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.altzeta(s)
+.. autofunction:: mpmath.altzeta(s)
 
 :func:`dirichletl`
 ^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.dirichlet(s,chi,derivative=0)
+.. autofunction:: mpmath.dirichlet(s,chi,derivative=0)
+
+Prime zeta function
+...................
 
 :func:`primezeta`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.primezeta(s)
+.. autofunction:: mpmath.primezeta(s)
 
 Zeta function zeros
 ......................................
 
 :func:`zetazero`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.zetazero(n, url='http://www.dtc.umn.edu/~odlyzko/zeta_tables/zeros1')
+.. autofunction:: mpmath.zetazero(n, url='http://www.dtc.umn.edu/~odlyzko/zeta_tables/zeros1')
 
 Riemann-Siegel functions and Gram points
 ........................................
@@ -50,44 +41,44 @@ in the critical strip.
 
 :func:`siegelz`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.siegelz(t)
+.. autofunction:: mpmath.siegelz(t)
 
 :func:`siegeltheta`
 ^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.siegeltheta(t)
+.. autofunction:: mpmath.siegeltheta(t)
 
 :func:`grampoint`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.grampoint(n)
+.. autofunction:: mpmath.grampoint(n)
 
 Stieltjes constants
 ...................
 
 :func:`stieltjes`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.stieltjes(n,a=1)
+.. autofunction:: mpmath.stieltjes(n,a=1)
 
 Polylogarithms
 ................................
 
 :func:`polylog`
 ^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.polylog(s,z)
+.. autofunction:: mpmath.polylog(s,z)
 
 Clausen functions
 .................
 
 :func:`clsin`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.clsin(s, z)
+.. autofunction:: mpmath.clsin(s, z)
 
 :func:`clcos`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.clcos(s, z)
+.. autofunction:: mpmath.clcos(s, z)
 
 Polyexponentials
 ..................................
 
 :func:`polyexp`
 ^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.polyexp(s,z)
+.. autofunction:: mpmath.polyexp(s,z)

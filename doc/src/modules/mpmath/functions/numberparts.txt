@@ -6,23 +6,23 @@ Arithmetic operations
 
 :func:`fadd`
 ^^^^^^^^^^^^
-.. autofunction:: mpmath.mptypes.fadd
+.. autofunction:: mpmath.fadd
 
 :func:`fsub`
 ^^^^^^^^^^^^
-.. autofunction:: mpmath.mptypes.fsub
+.. autofunction:: mpmath.fsub
 
 :func:`fneg`
 ^^^^^^^^^^^^
-.. autofunction:: mpmath.mptypes.fneg
+.. autofunction:: mpmath.fneg
 
 :func:`fmul`
 ^^^^^^^^^^^^
-.. autofunction:: mpmath.mptypes.fmul
+.. autofunction:: mpmath.fmul
 
 :func:`fdiv`
 ^^^^^^^^^^^^
-.. autofunction:: mpmath.mptypes.fdiv
+.. autofunction:: mpmath.fdiv
 
 
 Complex components
@@ -30,24 +30,35 @@ Complex components
 
 :func:`fabs`
 ^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.fabs(x)
+.. autofunction:: mpmath.fabs(x)
+
+:func:`sign`
+^^^^^^^^^^^^
+.. autofunction:: mpmath.sign(x)
 
 :func:`re`
 ^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.re(x)
+.. autofunction:: mpmath.re(x)
 
 :func:`im`
 ^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.im(x)
+.. autofunction:: mpmath.im(x)
 
 :func:`arg`
 ^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.arg(x)
+.. autofunction:: mpmath.arg(x)
 
 :func:`conj`
 ^^^^^^^^^^^^
+.. autofunction:: mpmath.conj(x)
 
-.. autofunction:: mpmath.functions.conj(x)
+:func:`polar`
+^^^^^^^^^^^^^
+.. autofunction:: mpmath.polar(x)
+
+:func:`rect`
+^^^^^^^^^^^^^
+.. autofunction:: mpmath.rect(x)
 
 
 Floor and ceiling functions
@@ -56,12 +67,12 @@ Floor and ceiling functions
 :func:`floor`
 ^^^^^^^^^^^^^
 
-.. autofunction:: mpmath.functions.floor(x, **kwargs)
+.. autofunction:: mpmath.floor(x, **kwargs)
 
 :func:`ceil`
 ^^^^^^^^^^^^
 
-.. autofunction:: mpmath.functions.ceil(x, **kwargs)
+.. autofunction:: mpmath.ceil(x, **kwargs)
 
 
 Modulo
@@ -70,7 +81,7 @@ Modulo
 :func:`modf`
 ^^^^^^^^^^^^
 
-.. autofunction:: mpmath.functions.modf(x, y)
+.. autofunction:: mpmath.modf(x, y)
 
 
 Exponent decomposition
@@ -78,11 +89,11 @@ Exponent decomposition
 
 :func:`ldexp`
 ^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.ldexp(x, n)
+.. autofunction:: mpmath.ldexp(x, n)
 
 :func:`frexp`
 ^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.frexp(x, n)
+.. autofunction:: mpmath.frexp(x, n)
 
 
 Vector components
@@ -91,9 +102,9 @@ Vector components
 :func:`hypot`
 ^^^^^^^^^^^^^
 
-.. autofunction:: mpmath.functions.hypot(x, y)
+.. autofunction:: mpmath.hypot(x, y)
 
 :func:`atan2`
 ^^^^^^^^^^^^^
 
-.. autofunction:: mpmath.functions.atan2(y, x)
+.. autofunction:: mpmath.atan2(y, x)
