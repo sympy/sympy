@@ -179,3 +179,7 @@ def test_union_contains():
     assert e.subs(x, 1.5) is False
     assert e.subs(x, 2.5) is True
     assert e.subs(x, 3.5) is False
+
+def test_is_number():
+    assert Interval(0, 1).is_number is False
+    assert Set().is_number is False

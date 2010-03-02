@@ -193,6 +193,10 @@ class Set(Basic):
                 new_args.append(arg)
         return self.__class__(*new_args)
 
+    @property
+    def is_number(self):
+        return False
+
 class Interval(Set):
     """
     Represents a real interval as a Set.
