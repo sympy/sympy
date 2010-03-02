@@ -6,7 +6,7 @@ Incomplete gamma functions
 
 :func:`gammainc`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.gammainc(z, a=0, b=inf, regularized=False)
+.. autofunction:: mpmath.gammainc(z, a=0, b=inf, regularized=False)
 
 
 Exponential integrals
@@ -14,15 +14,15 @@ Exponential integrals
 
 :func:`ei`
 ^^^^^^^^^^
-.. autofunction:: mpmath.functions.ei(x, **kwargs)
+.. autofunction:: mpmath.ei(x, **kwargs)
 
 :func:`e1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.e1(x, **kwargs)
+.. autofunction:: mpmath.e1(x, **kwargs)
 
 :func:`expint`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.expint(*args)
+.. autofunction:: mpmath.expint(*args)
 
 
 Logarithmic integral
@@ -30,7 +30,7 @@ Logarithmic integral
 
 :func:`li`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.li(x, **kwargs)
+.. autofunction:: mpmath.li(x, **kwargs)
 
 
 Trigonometric integrals
@@ -38,11 +38,11 @@ Trigonometric integrals
 
 :func:`ci`
 ^^^^^^^^^^
-.. autofunction:: mpmath.functions.ci(x, **kwargs)
+.. autofunction:: mpmath.ci(x, **kwargs)
 
 :func:`si`
 ^^^^^^^^^^
-.. autofunction:: mpmath.functions.si(x, **kwargs)
+.. autofunction:: mpmath.si(x, **kwargs)
 
 
 Hyperbolic integrals
@@ -50,11 +50,11 @@ Hyperbolic integrals
 
 :func:`chi`
 ^^^^^^^^^^^
-.. autofunction:: mpmath.functions.chi(x, **kwargs)
+.. autofunction:: mpmath.chi(x, **kwargs)
 
 :func:`shi`
 ^^^^^^^^^^^
-.. autofunction:: mpmath.functions.shi(x, **kwargs)
+.. autofunction:: mpmath.shi(x, **kwargs)
 
 
 Error functions
@@ -62,30 +62,30 @@ Error functions
 
 :func:`erf`
 ^^^^^^^^^^^
-.. autofunction:: mpmath.functions.erf(x, **kwargs)
+.. autofunction:: mpmath.erf(x, **kwargs)
 
 :func:`erfc`
 ^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.erfc(x, **kwargs)
+.. autofunction:: mpmath.erfc(x, **kwargs)
 
 :func:`erfi`
 ^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.erfi(x)
+.. autofunction:: mpmath.erfi(x)
 
 :func:`erfinv`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.erfinv(x)
+.. autofunction:: mpmath.erfinv(x)
 
 The normal distribution
 ....................................................
 
 :func:`npdf`
 ^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.npdf(x, mu=0, sigma=1)
+.. autofunction:: mpmath.npdf(x, mu=0, sigma=1)
 
 :func:`ncdf`
 ^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.ncdf(x, mu=0, sigma=1)
+.. autofunction:: mpmath.ncdf(x, mu=0, sigma=1)
 
 
 Fresnel integrals
@@ -93,8 +93,8 @@ Fresnel integrals
 
 :func:`fresnels`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.fresnels(x)
+.. autofunction:: mpmath.fresnels(x)
 
 :func:`fresnelc`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.fresnelc(x)
+.. autofunction:: mpmath.fresnelc(x)

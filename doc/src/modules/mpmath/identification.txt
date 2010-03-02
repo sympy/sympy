@@ -12,14 +12,14 @@ The number identification facilities in mpmath are inspired by the `Inverse Symb
 Constant recognition (``identify``)
 -----------------------------------
 
-.. autofunction:: mpmath.identification.identify
+.. autofunction:: mpmath.identify
 
 Algebraic identification (``findpoly``)
 ---------------------------------------
 
-.. autofunction:: mpmath.identification.findpoly
+.. autofunction:: mpmath.findpoly
 
 Integer relations (``pslq``)
 ----------------------------
 
-.. autofunction:: mpmath.identification.pslq
+.. autofunction:: mpmath.pslq

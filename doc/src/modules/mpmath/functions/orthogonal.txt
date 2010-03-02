@@ -6,52 +6,58 @@ Legendre functions
 
 :func:`legendre`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.legendre(n, x)
+.. autofunction:: mpmath.legendre(n, x)
 
 :func:`legenp`
 ^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.legenp(n, m, z)
+.. autofunction:: mpmath.legenp(n, m, z)
 
 :func:`legenq`
 ^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.legenq(n, m, z, version=2)
+.. autofunction:: mpmath.legenq(n, m, z, version=2)
 
 Chebyshev polynomials
 .....................
 
 :func:`chebyt`
 ^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.chebyt(n, x)
+.. autofunction:: mpmath.chebyt(n, x)
 
 :func:`chebyu`
 ^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.chebyu(n, x)
+.. autofunction:: mpmath.chebyu(n, x)
 
 Jacobi polynomials
 ..................
 
 :func:`jacobi`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.jacobi(n, a, b, z)
+.. autofunction:: mpmath.jacobi(n, a, b, z)
 
 Gegenbauer polynomials
 .....................................
 
 :func:`gegenbauer`
 ^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.gegenbauer(n, a, z)
+.. autofunction:: mpmath.gegenbauer(n, a, z)
 
 Hermite polynomials
 .....................................
 
 :func:`hermite`
 ^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.hermite(n, z)
-
+.. autofunction:: mpmath.hermite(n, z)
 
 Laguerre polynomials
 .......................................
 
 :func:`laguerre`
 ^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.laguerre(n, a, z)
+.. autofunction:: mpmath.laguerre(n, a, z)
+
+Spherical harmonics
+.....................................
+
+:func:`spherharm`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.spherharm(l, m, theta, phi)

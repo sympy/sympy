@@ -8,21 +8,21 @@ Bessel functions
 :func:`besselj` / :func:`j0` / :func:`j1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autofunction:: mpmath.functions.besselj(n,x,derivative=0)
-.. autofunction:: mpmath.functions.j0(x)
-.. autofunction:: mpmath.functions.j1(x)
+.. autofunction:: mpmath.besselj(n,x,derivative=0)
+.. autofunction:: mpmath.j0(x)
+.. autofunction:: mpmath.j1(x)
 
 :func:`bessely`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.bessely(n,x,derivative=0)
+.. autofunction:: mpmath.bessely(n,x,derivative=0)
 
 :func:`besseli`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.besseli(n,x,derivative=0)
+.. autofunction:: mpmath.besseli(n,x,derivative=0)
 
 :func:`besselk`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.besselk(n,x)
+.. autofunction:: mpmath.besselk(n,x)
 
 
 Hankel functions
@@ -30,11 +30,11 @@ Hankel functions
 
 :func:`hankel1`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.hankel1(n,x)
+.. autofunction:: mpmath.hankel1(n,x)
 
 :func:`hankel2`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.hankel2(n,x)
+.. autofunction:: mpmath.hankel2(n,x)
 
 
 Kelvin functions
@@ -42,20 +42,20 @@ Kelvin functions
 
 :func:`ber`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.ber
+.. autofunction:: mpmath.ber
 
 :func:`bei`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autofunction:: mpmath.functions.bei
+.. autofunction:: mpmath.bei
 
 :func:`ker`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.ker
+.. autofunction:: mpmath.ker
 
 :func:`kei`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.kei
+.. autofunction:: mpmath.kei
 
 
 Struve functions
@@ -63,11 +63,11 @@ Struve functions
 
 :func:`struveh`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.struveh
+.. autofunction:: mpmath.struveh
 
 :func:`struvel`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.struvel
+.. autofunction:: mpmath.struvel
 
 
 Airy functions
@@ -75,11 +75,11 @@ Airy functions
 
 :func:`airyai`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.airyai(x)
+.. autofunction:: mpmath.airyai(x)
 
 :func:`airybi`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.airybi(x)
+.. autofunction:: mpmath.airybi(x)
 
 
 Coulomb wave functions
@@ -87,14 +87,14 @@ Coulomb wave functions
 
 :func:`coulombf`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.coulombf(l,eta,z)
+.. autofunction:: mpmath.coulombf(l,eta,z)
 
 :func:`coulombg`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.coulombg(l,eta,z)
+.. autofunction:: mpmath.coulombg(l,eta,z)
 
 :func:`coulombc`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: mpmath.functions.coulombc(l,eta)
+.. autofunction:: mpmath.coulombc(l,eta)
 
 
