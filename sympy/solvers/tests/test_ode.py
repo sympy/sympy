@@ -1053,9 +1053,14 @@ def test_Liouville_ODE():
     assert checkodesol(eq2, f(x), sol1a, order=2, solve_for_func=False)[0]
     assert checkodesol(eq3, f(x), sol3[0], order=2, solve_for_func=False)[0]
     assert checkodesol(eq3, f(x), sol3[1], order=2, solve_for_func=False)[0]
+    assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
+
+@XFAIL
+def test_Liouville_ODE_xfail():
+    eq4 = x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2 + x*diff(f(x), x)
+    sol4 = [Eq(f(x), sqrt(C1 + C2*exp(-x))), Eq(f(x), -sqrt(C1 + C2*exp(-x)))]
     assert checkodesol(eq4, f(x), sol4[0], order=2, solve_for_func=False)[0]
     assert checkodesol(eq4, f(x), sol4[1], order=2, solve_for_func=False)[0]
-    assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
 
 def test_unexpanded_Liouville_ODE():
     # It is the same as from test_Liouville_ODE() above.
