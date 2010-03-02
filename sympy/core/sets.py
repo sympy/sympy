@@ -175,7 +175,10 @@ class Set(Basic):
         return self.complement
 
     def __contains__(self, other):
-        return self.contains(other)
+        result = self.contains(other)
+        if not isinstance(result, bool):
+            raise TypeError('contains did not evaluate to a bool: %r' % result)
+        return result
 
     def _eval_subs(self, old, new):
         if self == old: return new
