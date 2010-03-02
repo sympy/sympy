@@ -24,6 +24,10 @@ def test_rel_subs():
     assert e.lhs == z
     assert e.rhs == y
 
+    e = Eq(x,0)
+    assert e.subs(x,0) == True
+    assert e.subs(x,1) == False
+
 
 def test_wrappers():
     e = x+x**2
@@ -77,3 +81,26 @@ def test_rel_Infinity():
     assert (-oo <= oo) is True
     assert (-oo <= -oo) is True
     assert (-oo <= 1) is True
+
+def test_bool():
+    assert Eq(0,0) is True
+    assert Eq(1,0) is False
+    assert Ne(0,0) is False
+    assert Ne(1,0) is True
+    assert Lt(0,1) is True
+    assert Lt(1,0) is False
+    assert Le(0,1) is True
+    assert Le(1,0) is False
+    assert Le(0,0) is True
+    assert Gt(1,0) is True
+    assert Gt(0,1) is False
+    assert Ge(1,0) is True
+    assert Ge(0,1) is False
+    assert Ge(1,1) is True
+
+def test_rich_cmp():
+    assert (x<y) == Lt(x,y)
+    assert (x<=y) == Le(x,y)
+    assert (x>y) == Gt(x,y)
+    assert (x>=y) == Ge(x,y)
+

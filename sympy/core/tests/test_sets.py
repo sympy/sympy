@@ -1,4 +1,7 @@
-from sympy import Symbol, Set, Union, Interval, oo, S, Inequality, max_, min_, raises
+from sympy import (
+    Symbol, Set, Union, Interval, oo, S, 
+    Inequality, max_, min_, raises, And
+)
 from sympy.mpmath import mpi
 
 def test_interval_arguments():
@@ -154,3 +157,11 @@ def test_contains():
     assert Union(Interval(0, 1), Interval(2, 5)).contains(6) == False
 
     assert S.EmptySet.contains(1) == False
+
+def test_interval_symbolic():
+    e = Interval(0,1)
+    x = Symbol('x')
+    assert e.contains(x) == And(0<=x,x<=1)
+    raises(TypeError, "x in e")
+    e = Interval(0,1,True,True)
+    assert e.contains(x) == And(0<x,x<1)
